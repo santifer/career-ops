@@ -46,6 +46,8 @@ Sección de **gaps** con estrategia de mitigación para cada uno. Para cada gap:
 
 ## Bloque D — Comp y Demanda
 
+**First check:** If `reports/deep-{company-slug}-*.md` exists, read it — deep research may already have comp data, funding info, and hiring signals. Use it as a starting point instead of duplicating WebSearch effort.
+
 Usar WebSearch para:
 - Salarios actuales del rol (Glassdoor, Levels.fyi, Blind)
 - Reputación de compensación de la empresa
