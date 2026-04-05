@@ -97,7 +97,7 @@ Notas:
 Si el candidato confirma que envió la aplicación:
 1. Actualizar estado en `applications.md` de "Evaluada" a "Aplicado"
 2. Actualizar Section G del report con las respuestas finales
-3. Sugerir siguiente paso: `/career-ops contacto` para LinkedIn outreach
+3. Sugerir siguiente paso: `/career-ops contacto` para LinkedIn outreach — contacto will automatically load this evaluation report and use the top proof points from Block B to craft targeted messages
 
 ## Scroll handling
 
