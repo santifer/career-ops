@@ -84,17 +84,29 @@ Los niveles son aditivos — se ejecutan todos, los resultados se mezclan y dedu
    - 0 keywords de `negative` deben aparecer
    - `seniority_boost` keywords dan prioridad pero no son obligatorios
 
-7. **Deduplicar** contra 3 fuentes:
+7. **Deduplicar** contra 3 fuentes (URL-exact + fuzzy company+role):
+
+   **Layer 1 — URL-exact:**
    - `scan-history.tsv` → URL exacta ya vista
-   - `applications.md` → empresa + rol normalizado ya evaluado
    - `pipeline.md` → URL exacta ya en pendientes o procesadas
+
+   **Layer 2 — Company + role fuzzy match (catches reposts with new URLs):**
+   - `applications.md` → normalize company name (lowercase, strip non-alphanumeric) + fuzzy role match (2+ significant words in common, words > 3 chars). This is the same logic used in `dedup-tracker.mjs` and `merge-tracker.mjs`.
+   - `scan-history.tsv` → same fuzzy match against company + title columns (not just URL). A role reposted on a new URL but with the same company and similar title is a duplicate.
+   - `pipeline.md` → same fuzzy match against company + title in pending items that include metadata (format: `- [ ] {url} | {company} | {title}`)
+
+   **Fuzzy match rules:**
+   - Normalize company: `company.toLowerCase().replace(/[^a-z0-9]/g, '')`
+   - Fuzzy role match: split both titles into words > 3 chars, match if 2+ words overlap (substring match, case-insensitive). E.g., "Senior AI Engineer" and "Staff AI Engineer" share "engineer" — only 1 overlap, not a match. But "AI Platform Engineer" and "AI Platform Eng" share "platform" + partial "engineer" — match.
+   - When a fuzzy match is found but the URL is new, log it as `skipped_repost` (not `skipped_dup`) with a note referencing the original entry number.
 
 8. **Para cada oferta nueva que pase filtros**:
    a. Añadir a `pipeline.md` sección "Pendientes": `- [ ] {url} | {company} | {title}`
    b. Registrar en `scan-history.tsv`: `{url}\t{date}\t{query_name}\t{title}\t{company}\tadded`
 
 9. **Ofertas filtradas por título**: registrar en `scan-history.tsv` con status `skipped_title`
-10. **Ofertas duplicadas**: registrar con status `skipped_dup`
+10. **Ofertas duplicadas (URL-exact)**: registrar con status `skipped_dup`
+11. **Ofertas duplicadas (fuzzy repost)**: registrar con status `skipped_repost` and note `repost of #{original_entry_num}`
 
 ## Extracción de título y empresa de WebSearch results
 
