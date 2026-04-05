@@ -119,6 +119,9 @@ This system is designed to be customized by YOU (Claude). When the user asks you
 | Searches for new offers | `scan` |
 | Processes pending URLs | `pipeline` |
 | Batch processes offers | `batch` |
+| Asks what needs follow-up | `followup` |
+| Reports a rejection | `rejection` |
+| Receives a job offer | `negotiation` |
 
 ### CV Source of Truth
 
