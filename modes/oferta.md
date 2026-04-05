@@ -71,7 +71,16 @@ Top 5 cambios al CV + Top 5 cambios a LinkedIn para maximizar match.
 
 The **Reflection** column captures what was learned or what would be done differently. This signals seniority — junior candidates describe what happened, senior candidates extract lessons.
 
-**Story Bank:** If `interview-prep/story-bank.md` exists, check if any of these stories are already there. If not, append new ones. Over time this builds a reusable bank of 5-10 master stories that can be adapted to any interview question.
+**Story Bank:** If `interview-prep/story-bank.md` exists, manage it actively — not just append:
+
+1. **Check for existing stories** that cover the same theme (e.g., "technical leadership", "delivery under pressure"). Use the `**Best for questions about:**` tags to match.
+2. **If a new story covers the same theme as an existing one**, compare them. Keep the one with stronger quantified results and broader applicability. Update the match count on the keeper. Remove the weaker one.
+3. **If a new story covers a NEW theme**, append it.
+4. **Update match counts**: Each story should have a `**Matched N evaluations:**` line listing which reports used it (e.g., `Matched 5 evaluations: #012, #045, #078, #102, #115`). Stories that match many JDs are the most versatile — they should be practiced first.
+5. **Cap at 10-12 stories max.** If adding a new story would exceed 12, retire the story with the fewest matches and narrowest applicability. Move retired stories to a `## Retired` section at the bottom (don't delete — they might be useful for niche roles).
+6. **Tag archetypes**: Each story should have `**Archetypes:**` listing which role archetypes it's strongest for (e.g., `LLMOps, Platform`).
+
+The goal is a curated bank of 10 versatile stories, not an ever-growing log.
 
 **Seleccionadas y enmarcadas según el arquetipo:**
 - FDE → enfatizar velocidad de entrega y client-facing
