@@ -137,6 +137,36 @@ If the candidate has a live demo/dashboard (check profile.yml), offer access in 
 
 ---
 
+## Canonical Scoring Model (SINGLE SOURCE OF TRUTH)
+
+**ALL evaluation modes MUST use this exact model.** Whether the offer is evaluated via `oferta`, `auto-pipeline`, `batch`, or compared via `ofertas`, the score is computed the same way. This ensures scores are comparable across the entire pipeline.
+
+| # | Dimension | Weight | 1 | 3 | 5 |
+|---|-----------|--------|---|---|---|
+| 1 | North Star alignment | 25% | Unrelated to any target archetype | Adjacent — transferable skills apply | Exact target archetype match |
+| 2 | CV match | 15% | <40% requirements covered | 60-75% covered, gaps are soft | 90%+ covered with proof points |
+| 3 | Seniority fit | 15% | Junior / 2+ levels below | Mid-senior, manageable positioning | Staff+ or exact level match |
+| 4 | Comp estimate | 10% | Well below market / no data | Median for role+location | Top quartile or above target |
+| 5 | Growth trajectory | 10% | Dead end, no progression path | Some growth, unclear timeline | Clear path to next level |
+| 6 | Remote quality | 5% | On-site only, no flexibility | Hybrid with some flexibility | Full remote, async-friendly |
+| 7 | Company reputation | 5% | Red flags, poor reviews | Average employer, neutral signals | Top employer, strong brand |
+| 8 | Tech stack modernity | 5% | Legacy, no AI/ML relevance | Some modern tooling | Cutting-edge AI/ML stack |
+| 9 | Speed to offer | 5% | 6+ month process, bureaucratic | Standard 4-6 week process | Fast-track, <4 weeks typical |
+| 10 | Cultural signals | 5% | Bureaucratic, risk-averse | Mixed signals | Builder culture, high ownership |
+
+**Final score** = weighted sum, rounded to 1 decimal (e.g., 4.2/5).
+
+**Score interpretation (use consistently everywhere):**
+- **4.5-5.0** — Strong match. Generate PDF + draft answers. Apply promptly.
+- **3.5-4.4** — Good match. Generate PDF + draft answers. Worth applying with tailored CV.
+- **3.0-3.4** — Moderate match. Generate PDF. Flag gaps to candidate before applying.
+- **< 3.0** — Weak match. Report only. Explicitly discourage applying unless candidate has a specific reason.
+
+**PDF generation threshold:** >= 3.0 (consistent across all modes).
+**Draft answer threshold:** >= 3.5 (consistent across all modes).
+
+---
+
 ## Global Rules
 
 ### NEVER

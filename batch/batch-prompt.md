@@ -140,14 +140,21 @@ Top 5 cambios al CV + Top 5 cambios a LinkedIn.
 
 #### Score Global
 
-| Dimensión | Score |
-|-----------|-------|
-| Match con CV | X/5 |
-| Alineación North Star | X/5 |
-| Comp | X/5 |
-| Señales culturales | X/5 |
-| Red flags | -X (si hay) |
-| **Global** | **X/5** |
+**Use the Canonical Scoring Model from `modes/_shared.md`.** All 10 dimensions, weighted exactly as defined there. This ensures scores from batch workers are directly comparable to scores from interactive evaluations and the `ofertas` comparison mode.
+
+| # | Dimension | Weight | Score |
+|---|-----------|--------|-------|
+| 1 | North Star alignment | 25% | X/5 |
+| 2 | CV match | 15% | X/5 |
+| 3 | Seniority fit | 15% | X/5 |
+| 4 | Comp estimate | 10% | X/5 |
+| 5 | Growth trajectory | 10% | X/5 |
+| 6 | Remote quality | 5% | X/5 |
+| 7 | Company reputation | 5% | X/5 |
+| 8 | Tech stack modernity | 5% | X/5 |
+| 9 | Speed to offer | 5% | X/5 |
+| 10 | Cultural signals | 5% | X/5 |
+| | **Weighted total** | | **X.X/5** |
 
 ### Paso 3 — Guardar Report .md
 

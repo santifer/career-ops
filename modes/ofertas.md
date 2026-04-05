@@ -1,21 +1,23 @@
 # Modo: ofertas — Comparación Multi-Oferta
 
-Scoring matrix de 10 dimensiones ponderadas:
+**Uses the Canonical Scoring Model from `modes/_shared.md`** — the same 10 weighted dimensions used in `oferta`, `auto-pipeline`, and `batch` evaluations. This means scores from prior evaluations are directly comparable. No need to re-score unless the user explicitly requests it.
 
-| Dimensión | Peso | Criterios 1-5 |
-|-----------|------|----------------|
-| Alineación North Star | 25% | 5=rol target exacto, 1=no relacionado |
-| Match CV | 15% | 5=90%+ match, 1=<40% match |
-| Nivel (senior+) | 15% | 5=staff+, 4=senior, 3=mid-senior, 2=mid, 1=junior |
-| Comp estimada | 10% | 5=top quartile, 1=below market |
-| Trayectoria crecimiento | 10% | 5=clear path to next level, 1=dead end |
-| Calidad remoto | 5% | 5=full remote async, 1=onsite only |
-| Reputación empresa | 5% | 5=top employer, 1=red flags |
-| Modernidad tech stack | 5% | 5=cutting edge AI/ML, 1=legacy |
-| Velocidad a oferta | 5% | 5=fast process, 1=6+ months |
-| Señales culturales | 5% | 5=builder culture, 1=bureaucratic |
+## Workflow
 
-Para cada oferta: score en cada dimensión, score ponderado total.
-Ranking final + recomendación con consideraciones de time-to-offer.
+1. **Gather offers**: Ask the user for offers if not in context. Can be text, URLs, or references to already-evaluated offers in the tracker.
+2. **Score each offer**: If an offer was already evaluated (has a report in `reports/`), read the existing per-dimension scores from the report. If not yet evaluated, score using the full Canonical Scoring Model.
+3. **Build comparison matrix**: Show all 10 dimensions side-by-side across offers, with the weighted total.
+4. **Rank and recommend**: Final ranking with recommendation. Highlight where offers differ most (the dimensions that actually discriminate). Include time-to-offer as a tiebreaker when scores are close (within 0.3).
 
-Pedir al usuario las ofertas si no están en contexto. Puede ser texto, URLs, o referencias a ofertas ya evaluadas en el tracker.
+## Output format
+
+```
+| Dimension (weight) | Offer A | Offer B | Offer C |
+|---------------------|---------|---------|---------|
+| North Star (25%) | X/5 | X/5 | X/5 |
+| CV match (15%) | ... | ... | ... |
+| ... | ... | ... | ... |
+| **Weighted total** | **X.X** | **X.X** | **X.X** |
+```
+
+Then: narrative recommendation explaining which offer to prioritize and why, considering both score and practical factors (timeline, leverage for negotiation, etc.).

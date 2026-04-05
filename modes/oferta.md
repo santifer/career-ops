@@ -138,6 +138,10 @@ Guardar evaluación completa en `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 (lista de 15-20 keywords del JD para ATS optimization)
 ```
 
+### Score Global
+
+**Use the Canonical Scoring Model from `modes/_shared.md`.** All 10 weighted dimensions. Show the per-dimension breakdown in the report, then compute the weighted total as the final score.
+
 ### 2. Registrar en tracker
 
 **SIEMPRE** registrar en `data/applications.md`:
@@ -145,7 +149,7 @@ Guardar evaluación completa en `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 - Fecha actual
 - Empresa
 - Rol
-- Score: promedio de match (1-5)
+- Score: weighted total from the Canonical Scoring Model (1-5)
 - Estado: `Evaluada`
 - PDF: ❌ (o ✅ si auto-pipeline generó PDF)
 - Report: link relativo al report .md (ej: `[001](reports/001-company-2026-01-01.md)`)

@@ -25,9 +25,9 @@ Guardar la evaluación completa en `reports/{###}-{company-slug}-{YYYY-MM-DD}.md
 ## Paso 3 — Generar PDF
 Ejecutar el pipeline completo de `pdf` (leer `modes/pdf.md`).
 
-## Paso 4 — Draft Application Answers (solo si score >= 4.5)
+## Paso 4 — Draft Application Answers (si score >= 3.5)
 
-Si el score final es >= 4.5, generar borrador de respuestas para el formulario de aplicación:
+Si el score final es >= 3.5 (per Canonical Scoring Model thresholds in `_shared.md`), generar borrador de respuestas para el formulario de aplicación:
 
 1. **Extraer preguntas del formulario**: Usar Playwright para navegar al formulario y hacer snapshot. Si no se pueden extraer, usar las preguntas genéricas.
 2. **Generar respuestas** siguiendo el tono (ver abajo).
