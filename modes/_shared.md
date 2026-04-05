@@ -149,6 +149,7 @@ If the candidate has a live demo/dashboard (check profile.yml), offer access in 
 6. Generate a PDF without reading the JD first
 7. Use corporate-speak
 8. Ignore the tracker (every evaluated offer gets registered)
+9. Use AI-hallmark words: "leveraged", "utilized", "spearheaded", "orchestrated" (as metaphor), "cutting-edge", "passionate about", "drive innovation", "synergy", "holistic approach", "navigate complex", "foster collaboration". ATS platforms flag these. Use plain, specific verbs instead.
 
 ### ALWAYS
 

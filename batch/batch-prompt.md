@@ -242,6 +242,16 @@ node generate-pdf.mjs \
 - NUNCA añadir skills the candidate doesn't have
 - Ejemplo: JD dice "RAG pipelines" y CV dice "LLM workflows with retrieval" → "RAG pipeline design and LLM orchestration workflows"
 
+**Writing style — Anti-AI-detection (CRITICAL):**
+ATS platforms (Indeed, LinkedIn, Workday) flag AI-generated CVs. All generated text MUST read as human-written:
+- **Vary sentence length.** Mix short fragments with longer sentences. Don't make every bullet the same length.
+- **Start bullets differently.** Not every bullet should begin with a past-tense action verb.
+- **Use the candidate's own phrasing from cv.md when possible.** Reformulate for keywords, but preserve their voice.
+- **NEVER use these AI-hallmark words:** "leveraged", "utilized", "spearheaded", "orchestrated" (as metaphor), "cutting-edge", "passionate about", "drive innovation", "synergy", "holistic approach", "navigate complex", "foster collaboration".
+- **Use plain, specific verbs.** "Built" not "architected". "Ran" not "orchestrated". "Fixed" not "remediated".
+- **Don't over-polish.** Real CVs have minor asymmetries — one job has 4 bullets, another has 3. Don't normalize everything.
+- **Self-check before generating HTML:** (1) Do 3+ bullets start with same word? Fix. (2) Are all bullets same length? Vary. (3) Any AI-hallmark words? Rewrite.
+
 **Template placeholders (en cv-template.html):**
 
 | Placeholder | Contenido |
@@ -346,6 +356,7 @@ Si algo falla:
 4. Recomendar comp por debajo de mercado
 5. Generar PDF sin leer primero el JD
 6. Usar corporate-speak
+7. Use AI-hallmark words: "leveraged", "utilized", "spearheaded", "orchestrated" (as metaphor), "cutting-edge", "passionate about", "drive innovation", "synergy", "holistic approach". ATS platforms flag these.
 
 ### SIEMPRE
 1. Leer cv.md, llms.txt y article-digest.md antes de evaluar
