@@ -27,66 +27,75 @@ function normalizeStatus(raw) {
   let s = raw.replace(/\*\*/g, '').trim();
   const lower = s.toLowerCase();
 
-  // DUPLICADO variants → Descartado
+  // DUPLICADO variants → Discarded
   if (/^duplicado/i.test(s) || /^dup\b/i.test(s)) {
-    return { status: 'Descartado', moveToNotes: raw.trim() };
+    return { status: 'Discarded', moveToNotes: raw.trim() };
   }
 
-  // CERRADA → Descartado
-  if (/^cerrada$/i.test(s)) return { status: 'Descartado' };
+  // CERRADA → Discarded
+  if (/^cerrada$/i.test(s)) return { status: 'Discarded' };
 
-  // Cancelada (possibly with date) → Descartado
-  if (/^cancelada/i.test(s)) return { status: 'Descartado' };
+  // Cancelada (possibly with date) → Discarded
+  if (/^cancelada/i.test(s)) return { status: 'Discarded' };
 
-  // Descartada → Descartado
-  if (/^descartada$/i.test(s)) return { status: 'Descartado' };
+  // Descartada/Descartado → Discarded
+  if (/^descartad[ao]$/i.test(s)) return { status: 'Discarded' };
 
-  // Rechazada → Rechazado
-  if (/^rechazada$/i.test(s)) return { status: 'Rechazado' };
+  // Rechazada/Rechazado → Rejected
+  if (/^rechazad[ao]$/i.test(s)) return { status: 'Rejected' };
 
-  // Rechazado with date → Rechazado (strip date)
-  if (/^rechazado\s+\d{4}/i.test(s)) return { status: 'Rechazado' };
+  // Rechazado with date → Rejected (strip date)
+  if (/^rechazado\s+\d{4}/i.test(s)) return { status: 'Rejected' };
 
-  // Aplicado with date → Aplicado (strip date)
-  if (/^aplicado\s+\d{4}/i.test(s)) return { status: 'Aplicado' };
+  // Aplicado with date → Applied (strip date)
+  if (/^aplicado\s+\d{4}/i.test(s)) return { status: 'Applied' };
 
-  // CONDICIONAL → Evaluada
-  if (/^condicional$/i.test(s)) return { status: 'Evaluada' };
+  // Contacto/Contactado → Contacted
+  if (/^contacto$/i.test(s) || /^contactado$/i.test(s)) return { status: 'Contacted' };
 
-  // HOLD → Evaluada
-  if (/^hold$/i.test(s)) return { status: 'Evaluada' };
+  // CONDICIONAL → Evaluated
+  if (/^condicional$/i.test(s)) return { status: 'Evaluated' };
 
-  // MONITOR → Evaluada
-  if (/^monitor$/i.test(s)) return { status: 'Evaluada' };
+  // HOLD → Evaluated
+  if (/^hold$/i.test(s)) return { status: 'Evaluated' };
 
-  // EVALUAR → Evaluada
-  if (/^evaluar$/i.test(s)) return { status: 'Evaluada' };
+  // MONITOR → Evaluated
+  if (/^monitor$/i.test(s)) return { status: 'Evaluated' };
 
-  // Verificar → Evaluada
-  if (/^verificar$/i.test(s)) return { status: 'Evaluada' };
+  // EVALUAR → Evaluated
+  if (/^evaluar$/i.test(s)) return { status: 'Evaluated' };
 
-  // GEO BLOCKER → NO APLICAR
-  if (/geo.?blocker/i.test(s)) return { status: 'NO APLICAR' };
+  // Verificar → Evaluated
+  if (/^verificar$/i.test(s)) return { status: 'Evaluated' };
 
-  // Repost #NNN → Descartado
-  if (/^repost/i.test(s)) return { status: 'Descartado', moveToNotes: raw.trim() };
+  // GEO BLOCKER → SKIP
+  if (/geo.?blocker/i.test(s)) return { status: 'SKIP' };
+
+  // Repost #NNN → Discarded
+  if (/^repost/i.test(s)) return { status: 'Discarded', moveToNotes: raw.trim() };
 
   // "—" (em dash, no status) → Descartado
   if (s === '—' || s === '-' || s === '') return { status: 'Descartado' };
 
   // Already canonical — just fix casing/bold
   const canonical = [
-    'Evaluada', 'Aplicado', 'Respondido', 'Entrevista',
-    'Oferta', 'Rechazado', 'Descartado', 'NO APLICAR',
+    'Evaluated', 'Applied', 'Contacted', 'Responded', 'Interview',
+    'Offer', 'Rejected', 'Discarded', 'SKIP',
   ];
   for (const c of canonical) {
     if (lower === c.toLowerCase()) return { status: c };
   }
 
   // Aliases from states.yml
-  if (['enviada', 'aplicada', 'applied', 'sent'].includes(lower)) return { status: 'Aplicado' };
-  if (['cerrada', 'descartada'].includes(lower)) return { status: 'Descartado' };
-  if (['no aplicar', 'no_aplicar', 'skip'].includes(lower)) return { status: 'NO APLICAR' };
+  if (['enviada', 'aplicada', 'aplicado', 'applied', 'sent'].includes(lower)) return { status: 'Applied' };
+  if (['contacto', 'contactado'].includes(lower)) return { status: 'Contacted' };
+  if (['respondido'].includes(lower)) return { status: 'Responded' };
+  if (['evaluada'].includes(lower)) return { status: 'Evaluated' };
+  if (['entrevista'].includes(lower)) return { status: 'Interview' };
+  if (['oferta'].includes(lower)) return { status: 'Offer' };
+  if (['cerrada', 'descartada', 'descartado'].includes(lower)) return { status: 'Discarded' };
+  if (['rechazado', 'rechazada'].includes(lower)) return { status: 'Rejected' };
+  if (['no aplicar', 'no_aplicar', 'skip'].includes(lower)) return { status: 'SKIP' };
 
   // Unknown — flag it
   return { status: null, unknown: true };

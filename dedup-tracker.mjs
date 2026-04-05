@@ -22,14 +22,15 @@ const DRY_RUN = process.argv.includes('--dry-run');
 // Status advancement order (higher = more advanced in pipeline)
 // Aplicado > Rechazado because active application > terminal state
 const STATUS_RANK = {
-  'no aplicar': 0,
-  'descartado': 0,
-  'rechazado': 1,  // Terminal — below active states
-  'evaluada': 2,
-  'aplicado': 3,
-  'respondido': 4,
-  'entrevista': 5,
-  'oferta': 6,
+  'skip': 0, 'no aplicar': 0,
+  'discarded': 0, 'descartado': 0,
+  'rejected': 1, 'rechazado': 1,  // Terminal — below active states
+  'evaluated': 2, 'evaluada': 2,
+  'applied': 3, 'aplicado': 3,
+  'contacted': 3.5, 'contacto': 3.5, 'contactado': 3.5,
+  'responded': 4, 'respondido': 4,
+  'interview': 5, 'entrevista': 5,
+  'offer': 6, 'oferta': 6,
 };
 
 function normalizeCompany(name) {

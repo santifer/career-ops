@@ -7,11 +7,13 @@ Lee y muestra `data/applications.md`.
 | # | Fecha | Empresa | Rol | Score | Estado | PDF | Report |
 ```
 
-Estados posibles: `Evaluada` → `Aplicado` → `Respondido` → `Contacto` → `Entrevista` → `Oferta` / `Rechazada` / `Descartada` / `NO APLICAR`
+Estados posibles (canonical, per `templates/states.yml`):
 
-- `Aplicado` = el candidato envió su candidatura
-- `Respondido` = Un recruiter/empresa contactó y el candidato respondió (inbound)
-- `Contacto` = El candidato contactó proactivamente a alguien de la empresa (outbound, ej: LinkedIn power move)
+`Evaluated` → `Applied` → `Contacted` → `Responded` → `Interview` → `Offer` / `Rejected` / `Discarded` / `SKIP`
+
+- `Applied` = the candidate submitted their application
+- `Contacted` = the candidate proactively reached out to someone at the company (outbound, e.g., LinkedIn power move via `/career-ops contacto`)
+- `Responded` = a recruiter/company contacted back and the candidate responded (inbound)
 
 Si el usuario pide actualizar un estado, editar la fila correspondiente.
 
