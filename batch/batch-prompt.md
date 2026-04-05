@@ -43,9 +43,12 @@ Eres un worker de evaluación de ofertas de empleo for the candidate (read name 
 
 ### Paso 1 — Obtener JD
 
+**Note: Batch workers do NOT have Playwright/browser access.** Use WebFetch only.
+
 1. Lee el archivo JD en `{{JD_FILE}}`
 2. Si el archivo está vacío o no existe, intenta obtener el JD desde `{{URL}}` con WebFetch
-3. Si ambos fallan, reporta error y termina
+3. If WebFetch returns content but it looks like a shell page (no JD text, just navbar/footer), add `**Verification: unconfirmed**` to the report header and proceed — the conductor or user will verify later
+4. Si ambos fallan, reporta error y termina
 
 ### Paso 2 — Evaluación A-F
 

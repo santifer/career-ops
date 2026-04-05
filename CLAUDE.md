@@ -141,10 +141,18 @@ This system is designed to be customized by YOU (Claude). When the user asks you
 
 ## Offer Verification -- MANDATORY
 
-**NEVER trust WebSearch/WebFetch to verify if an offer is still active.** ALWAYS use Playwright:
+**When Playwright is available** (interactive sessions, `--chrome` mode), ALWAYS use it to verify offers:
 1. `browser_navigate` to the URL
 2. `browser_snapshot` to read content
 3. Only footer/navbar without JD = closed. Title + description + Apply = active.
+
+**When Playwright is NOT available** (batch workers via `claude -p`, headless environments):
+1. Use WebFetch to retrieve the page content
+2. Check for JD text, job title, and apply button/link in the response
+3. If WebFetch returns only a shell/navbar (no JD content), mark the offer as `**Verification: unconfirmed**` in the report header
+4. Do NOT skip the evaluation — proceed but flag the uncertainty so the user can verify manually before applying
+
+The goal is to never waste time on closed offers, but also never silently assume a role is active when verification was incomplete.
 
 ---
 
