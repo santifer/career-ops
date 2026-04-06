@@ -2,6 +2,21 @@
 
 ## Pipeline completo
 
+## Paso 0 — Resolver Persona
+
+Antes de generar el PDF, determinar qué bloque de contacto usar:
+
+1. Escanear el mensaje del usuario en busca de señal de persona (en orden de prioridad):
+   - `--persona <id>` en cualquier parte del mensaje
+   - `[persona:<id>]` en cualquier parte del mensaje
+   - Lenguaje natural: "usa mi contacto X", "persona X", "aplica como X"
+2. Si se encontró señal → usar `personas[id]` de `config/profile.yml`; anotar como `user-specified`
+3. Si no hay señal + solo hay una persona definida → usar esa; anotar como `auto-selected`
+4. Si no hay señal + hay múltiples personas definidas → preguntar al usuario antes de continuar; anotar como `prompted`
+5. Si no hay sección `personas` en `profile.yml` → leer de `candidate.phone`, `candidate.location`, `location.visa_status` (fallback bootstrap)
+
+Guardar: `PERSONA_ID`, `PERSONA_LABEL`, `PERSONA_SOURCE` (user-specified | auto-selected | prompted) para usar en el report.
+
 1. Lee `cv.md` como fuentes de verdad
 2. Pide al usuario el JD si no está en contexto (texto o URL)
 3. Extrae 15-20 keywords del JD
@@ -74,7 +89,9 @@ Usar el template en `cv-template.html`. Reemplazar los placeholders `{{...}}` co
 | `{{LINKEDIN_DISPLAY}}` | [from profile.yml] |
 | `{{PORTFOLIO_URL}}` | [from profile.yml] (o /es según idioma) |
 | `{{PORTFOLIO_DISPLAY}}` | [from profile.yml] (o /es según idioma) |
-| `{{LOCATION}}` | [from profile.yml] |
+| `{{PHONE}}` | `personas[selected].phone` (or `candidate.phone` if no personas) |
+| `{{LOCATION_LINE}}` | `personas[selected].location_line` (or `candidate.location`) |
+| `{{AUTHORIZATION}}` | `personas[selected].authorization_line` (or `location.visa_status`) |
 | `{{SECTION_SUMMARY}}` | Professional Summary / Resumen Profesional |
 | `{{SUMMARY_TEXT}}` | Summary personalizado con keywords |
 | `{{SECTION_COMPETENCIES}}` | Core Competencies / Competencias Core |
@@ -93,3 +110,6 @@ Usar el template en `cv-template.html`. Reemplazar los placeholders `{{...}}` co
 ## Post-generación
 
 Actualizar tracker si la oferta ya está registrada: cambiar PDF de ❌ a ✅.
+
+Al guardar o actualizar el report, incluir en el header:
+**Persona:** {PERSONA_ID} ({PERSONA_SOURCE})
