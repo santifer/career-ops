@@ -53,37 +53,34 @@ Read `cv.md`. Ejecuta TODOS los bloques:
 
 #### Paso 0 — Detección de Arquetipo
 
-Clasifica la oferta en uno de los 6 arquetipos. Si es híbrido, indica los 2 más cercanos.
+Clasifica la oferta en uno de los arquetipos actuales del candidato. Si es híbrido, indica los 2 más cercanos.
 
-**Los 6 arquetipos (todos igual de válidos):**
+**Arquetipos actuales:**
 
 | Arquetipo | Ejes temáticos | Qué compran |
 |-----------|----------------|-------------|
-| **AI Platform / LLMOps Engineer** | Evaluation, observability, reliability, pipelines | Alguien que ponga AI en producción con métricas |
-| **Agentic Workflows / Automation** | HITL, tooling, orchestration, multi-agent | Alguien que construya sistemas de agentes fiables |
-| **Technical AI Product Manager** | GenAI/Agents, PRDs, discovery, delivery | Alguien que traduzca negocio → producto AI |
-| **AI Solutions Architect** | Hyperautomation, enterprise, integrations | Alguien que diseñe arquitecturas AI end-to-end |
-| **AI Forward Deployed Engineer** | Client-facing, fast delivery, prototyping | Alguien que entregue soluciones AI a clientes rápido |
-| **AI Transformation Lead** | Change management, adoption, org enablement | Alguien que lidere el cambio AI en una organización |
+| **Senior Frontend / Product Engineer** | React, TypeScript, UI systems, product collaboration, delivery | Alguien que envía producto web pulido |
+| **Frontend Software Engineer** | Component design, state tradeoffs, APIs, debugging, testing | Alguien creíble en equipos frontend modernos |
+| **Commerce / Shopify Engineer** | Shopify, Liquid, storefront architecture, integrations, merchant UX | Alguien que mejora experiencias comerciales que mueven revenue |
+| **Merchant Platform / Ecommerce Engineer** | Experimentation, analytics, ecommerce systems, conversion | Alguien que conecta frontend con impacto comercial |
+| **Senior Web Developer** | Responsive implementation, performance, accessibility, stakeholder delivery | Alguien que puede adueñarse de ejecución web amplia |
 
 **Framing adaptativo:**
 
 > **Las métricas concretas se leen de `cv.md` + `article-digest.md` en cada evaluación. NUNCA hardcodear números aquí.**
 
 | Si el rol es... | Emphasize about the candidate... | Fuentes de proof points |
-|-----------------|--------------------------|--------------------------|
-| Platform / LLMOps | Builder de sistemas en producción, observability, evals, closed-loop | article-digest.md + cv.md |
-| Agentic / Automation | Orquestación multi-agente, HITL, reliability, cost | article-digest.md + cv.md |
-| Technical AI PM | Product discovery, PRDs, métricas, stakeholder mgmt | cv.md + article-digest.md |
-| Solutions Architect | Diseño de sistemas, integrations, enterprise-ready | article-digest.md + cv.md |
-| Forward Deployed Engineer | Fast delivery, client-facing, prototype → prod | cv.md + article-digest.md |
-| AI Transformation Lead | Change management, team enablement, adoption | cv.md + article-digest.md |
+|-----------------|----------------------------------|--------------------------|
+| Senior Frontend / Product Engineer | React práctico, TypeScript, UI pulida, colaboración con producto, shipped work | `cv.md` + `article-digest.md` |
+| Frontend Software Engineer | Component boundaries, tradeoffs, debugging, APIs, practical architecture language | `cv.md` + `article-digest.md` |
+| Commerce / Shopify Engineer | Shopify depth, storefront implementation, accessibility, performance, analytics | `article-digest.md` + `cv.md` |
+| Merchant Platform / Ecommerce Engineer | Experimentation, measurement, integrations, commercial reasoning | `article-digest.md` + `cv.md` |
+| Senior Web Developer | Broad frontend delivery, responsive implementation, stakeholder communication | `cv.md` + `article-digest.md` |
 
-**Ventaja transversal**: Enmarcar perfil como **"Technical builder"** que adapta su framing al rol:
-- Para PM: "builder que reduce incertidumbre con prototipos y luego productioniza con disciplina"
-- Para FDE: "builder que entrega fast con observability y métricas desde día 1"
-- Para SA: "builder que diseña sistemas end-to-end con experiencia real en integrations"
-- Para LLMOps: "builder que pone AI en producción con closed-loop quality systems — leer métricas de article-digest.md"
+**Ventaja transversal**: Enmarcar perfil como **"senior frontend builder con juicio comercial y de producto"**:
+- Para roles product/frontend: builder que envía trabajo pulido y explica tradeoffs con claridad
+- Para roles commerce: builder que conecta accesibilidad, performance, analytics y UX con impacto comercial
+- Para roles híbridos: builder que se mueve bien entre implementación detallada y contexto de negocio
 
 Convertir "builder" en señal profesional, no en "hobby maker". El framing cambia, la verdad es la misma.
 

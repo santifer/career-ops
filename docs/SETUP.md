@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- [Claude Code](https://claude.ai/code) installed and configured
+- [Claude Code](https://claude.ai/code) installed and configured, or Codex working in this repo
 - Node.js 18+ (for PDF generation and utility scripts)
 - (Optional) Go 1.21+ (for the dashboard TUI)
 
@@ -44,25 +44,38 @@ Edit `portals.yml`:
 
 ### 5. Start using
 
-Open Claude Code in this directory:
+Use either agent path:
+
+**Claude Code**
 
 ```bash
 claude
 ```
 
-Then paste a job offer URL or description. Career-ops will automatically evaluate it, generate a report, create a tailored PDF, and track it.
+Then paste a job offer URL or description, or use `/career-ops`.
+
+**Codex**
+
+- Open the repo in Codex
+- Read `AGENTS.md`
+- Ask naturally, for example:
+  - `Evaluate this role`
+  - `Generate a tailored resume for this JD`
+  - `Scan the configured portals`
+
+Both paths use the same `cv.md`, `article-digest.md`, `config/profile.yml`, and `portals.yml`.
 
 ## Available Commands
 
 | Action | How |
 |--------|-----|
 | Evaluate an offer | Paste a URL or JD text |
-| Search for offers | `/career-ops scan` |
-| Process pending URLs | `/career-ops pipeline` |
-| Generate a PDF | `/career-ops pdf` |
-| Batch evaluate | `/career-ops batch` |
-| Check tracker status | `/career-ops tracker` |
-| Fill application form | `/career-ops apply` |
+| Search for offers | Claude: `/career-ops scan` · Codex: `Scan the configured portals` |
+| Process pending URLs | Claude: `/career-ops pipeline` · Codex: `Process data/pipeline.md` |
+| Generate a PDF | Claude: `/career-ops pdf` · Codex: `Generate a tailored PDF for this JD` |
+| Batch evaluate | Claude: `/career-ops batch` · Codex: manual/sequential until batch runner is generalized |
+| Check tracker status | Claude: `/career-ops tracker` · Codex: `Show tracker status` |
+| Fill application form | Claude: `/career-ops apply` · Codex: `Help me fill this application` |
 
 ## Verify Setup
 
