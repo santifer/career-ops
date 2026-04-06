@@ -2,10 +2,11 @@
 
 ## Pipeline completo
 
-## Paso 0 — Resolver Persona
+## Paso 0 — Resolver Persona y Track
 
-Antes de generar el PDF, determinar qué bloque de contacto usar:
+Antes de generar el PDF, determinar qué bloque de contacto usar y qué track aplicar:
 
+**Persona:**
 1. Escanear el mensaje del usuario en busca de señal de persona (en orden de prioridad):
    - `--persona <id>` en cualquier parte del mensaje
    - `[persona:<id>]` en cualquier parte del mensaje
@@ -16,6 +17,13 @@ Antes de generar el PDF, determinar qué bloque de contacto usar:
 5. Si no hay sección `personas` en `profile.yml` → leer de `candidate.phone`, `candidate.location`, `location.visa_status` (fallback bootstrap)
 
 Guardar: `PERSONA_ID`, `PERSONA_LABEL`, `PERSONA_SOURCE` (user-specified | auto-selected | prompted) para usar en el report.
+
+**Track:**
+1. Si viene contexto de `TRACK_ID` de auto-pipeline → usar ese valor directamente
+2. Si no (llamada standalone) → aplicar reglas de inferencia de `_shared.md` sobre el JD
+3. Si no hay sección `tracks:` en `profile.yml` → omitir toda lógica de track
+
+Guardar: `TRACK_ID`, `TRACK_SOURCE` para usar en selección de proyectos, bullets y summary.
 
 1. Lee `cv.md` como fuentes de verdad
 2. Pide al usuario el JD si no está en contexto (texto o URL)
@@ -107,9 +115,29 @@ Usar el template en `cv-template.html`. Reemplazar los placeholders `{{...}}` co
 | `{{SECTION_SKILLS}}` | Skills / Competencias |
 | `{{SKILLS}}` | HTML de skills |
 
+## Selección de Contenido por Track
+
+Si `TRACK_ID` está disponible y `profile.yml` tiene sección `tracks:`:
+
+**Proyectos:** Rankear proyectos de cv.md por:
+1. Overlap con `tracks[TRACK_ID].evidence_tags` (si el proyecto menciona esas palabras)
+2. Relevancia a keywords del JD
+Seleccionar top 3-4.
+
+**Bullets de experiencia:** Para cada rol en cv.md:
+- Si los bullets tienen tags inline `<!-- tags: ... -->`: filtrar por `tracks[TRACK_ID].evidence_tags`; si quedan < 3, usar todos los bullets del rol
+- Si no hay tags: rankear todos los bullets usando `tracks[TRACK_ID].evidence_tags` como señales de peso adicionales sobre la relevancia al JD. No filtrar — todos los bullets se consideran.
+
+**Summary:** Usar `tracks[TRACK_ID].summary_focus` como directriz de framing. Inyectar top 5 keywords del JD. Citar solo proof points reales de cv.md.
+
+**Headline:** Usar `tracks[TRACK_ID].headline` en lugar del headline genérico del profile.
+
+Si no hay sección `tracks:` o `TRACK_ID` es `no-tracks` → usar selección actual (single-profile, sin cambios).
+
 ## Post-generación
 
 Actualizar tracker si la oferta ya está registrada: cambiar PDF de ❌ a ✅.
 
 Al guardar o actualizar el report, incluir en el header:
 **Persona:** {PERSONA_ID} ({PERSONA_SOURCE})
+**Track:** {TRACK_ID} ({TRACK_SOURCE})
