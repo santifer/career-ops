@@ -62,6 +62,17 @@ Tabla con datos y fuentes citadas. Si no hay datos, decirlo en vez de inventar.
 
 Top 5 cambios al CV + Top 5 cambios a LinkedIn para maximizar match.
 
+### Track Context
+
+Si se ha resuelto un track (`TRACK_ID` disponible y `profile.yml` tiene sección `tracks:`):
+
+- **Framing del summary:** Usar `tracks[TRACK_ID].summary_focus` como directriz principal
+- **Prioridad de bullets:** Los 5 cambios al CV deben priorizar bullets que contengan o puedan reformularse con `tracks[TRACK_ID].evidence_tags`
+- **Headline:** Proponer `tracks[TRACK_ID].headline` como headline del CV
+- **LinkedIn:** Los 5 cambios a LinkedIn deben alinear el "About" y los títulos de roles con el framing del track
+
+Si no hay track resuelto → ignorar esta sección.
+
 ## Bloque F — Plan de Entrevistas
 
 6-10 historias STAR+R mapeadas a requisitos del JD (STAR + **Reflection**):
@@ -108,7 +119,8 @@ Guardar evaluación completa en `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 **Arquetipo:** {detectado}
 **Score:** {X/5}
 **URL:** {URL de la oferta original}
-**Persona:** {id} ({source})
+**Persona:** {PERSONA_ID} ({PERSONA_SOURCE})
+**Track:** {TRACK_ID} ({TRACK_SOURCE})
 **PDF:** {ruta o pendiente}
 
 ---
