@@ -1,0 +1,66 @@
+# Career-Ops Profile Configuration
+# Single source of truth for personal data across all modes.
+
+candidate:
+  full_name: "Fernando Costa Xavier"
+  email: "fernandocostaxavier@gmail.com"
+  phone: "+55 11 96480-1913"
+  location: "Sao Paulo, Brazil"
+  linkedin: "linkedin.com/in/fernandoxavier02"
+  portfolio_url: ""
+  github: ""
+  twitter: ""
+
+target_roles:
+  primary:
+    - "Finance Director / Chief Accounting & Finance Director"
+    - "Group Business Controller / Senior Business Controller"
+    - "Head of Controllership / Regional Controller LATAM"
+  archetypes:
+    - name: "Finance & Controllership Director"
+      level: "Director/C-level"
+      fit: "primary"
+    - name: "Regional Controller LATAM"
+      level: "Senior/Director"
+      fit: "primary"
+    - name: "Finance Transformation Lead"
+      level: "Director"
+      fit: "secondary"
+    - name: "FP&A Director"
+      level: "Senior/Director"
+      fit: "secondary"
+    - name: "M&A Integration Lead"
+      level: "Senior"
+      fit: "adjacent"
+
+narrative:
+  headline: "Finance Director | Executive | Controller | Head of Accounting LATAM | Leader of Digital Transformation | AI & Automation | CRC | ACCA Certified (IFR) | FMVA | IFRS Expert | US GAAP"
+  exit_story: "Built and scaled financial operations from the ground up across 5 LATAM countries for NYSE-listed companies. Now focused on driving finance transformation and AI adoption at the executive level."
+  superpowers:
+    - "Multi-entity LATAM financial operations (5 countries, 3 accounting frameworks)"
+    - "Process automation — eliminated 70% of manual tasks, reduced close cycle 40%"
+    - "M&A due diligence and post-merger integration (3 projects end-to-end)"
+    - "Cross-border compliance (IFRS, US GAAP, BR GAAP simultaneously)"
+    - "Digital transformation with SAP, Power BI, and AI tools"
+  proof_points:
+    - name: "Integrated Accounting Intelligence"
+      url: ""
+      hero_metric: "Automated 70% of manual tasks, reduced close cycle by 40% across 5 LATAM entities"
+    - name: "LATAM M&A Integration"
+      url: ""
+      hero_metric: "Led 3 M&A due diligence and post-merger integrations from scratch"
+    - name: "PMO Governance & Finance Academy"
+      url: ""
+      hero_metric: "Recognised by global HQ for leadership during hyperinflation challenges"
+
+compensation:
+  target_range: "R$35K-50K/month"
+  currency: "BRL"
+  minimum: "R$30K/month"
+  location_flexibility: "Sao Paulo preferred, remote/hybrid possible, open to travel across LATAM"
+
+location:
+  country: "Brazil"
+  city: "Sao Paulo"
+  timezone: "BRT (UTC-3)"
+  visa_status: "Brazilian citizen, no sponsorship needed for LATAM"
