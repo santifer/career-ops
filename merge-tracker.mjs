@@ -179,7 +179,12 @@ function parseTsvContent(content, filename) {
   return addition;
 }
 
+// ---- Exports ----
+export { validateStatus, normalizeCompany, roleFuzzyMatch, extractReportNum, parseScore, parseAppLine, parseTsvContent };
+
 // ---- Main ----
+
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
 
 // Read applications.md
 if (!existsSync(APPS_FILE)) {
@@ -329,3 +334,5 @@ if (VERIFY && !DRY_RUN) {
     process.exit(1);
   }
 }
+
+} // end main guard

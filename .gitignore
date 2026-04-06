@@ -24,8 +24,12 @@ modes/_profile.md
 
 # Generated
 .resolved-prompt-*
+.batch-context-*.md
 node_modules/
 bun.lock
+
+# Comp research cache (personal salary data, local only)
+data/comp-cache.yml
 
 # OS
 .DS_Store

@@ -20,6 +20,7 @@ STATE_LOCK_DIR="$BATCH_DIR/.batch-state.lock"
 STATE_LOCK_PID_FILE="$STATE_LOCK_DIR/pid"
 STATE_LOCK_TIMEOUT_SECONDS=30
 MAIN_PID="${BASHPID:-$$}"
+BATCH_CONTEXT_FILE="$BATCH_DIR/.batch-context-$$.md"
 
 # Defaults
 PARALLEL=1
@@ -100,6 +101,7 @@ release_lock() {
     return
   fi
   rm -f "$LOCK_FILE"
+  rm -f "$BATCH_CONTEXT_FILE"
 }
 
 trap release_lock EXIT
@@ -122,6 +124,42 @@ check_prerequisites() {
   fi
 
   mkdir -p "$LOGS_DIR" "$TRACKER_DIR" "$REPORTS_DIR"
+}
+
+# Pre-build shared context (cv.md + profile.yml) once for all workers.
+# Workers reference {{CONTEXT_PRELOADED}} which gets substituted with this content,
+# so they don't need to issue separate Read tool calls for these static files.
+build_context() {
+  local cv_file="$PROJECT_DIR/cv.md"
+  local profile_file="$PROJECT_DIR/config/profile.yml"
+  local cv_content=""
+  local profile_content=""
+
+  [[ -f "$cv_file" ]] && cv_content=$(cat "$cv_file")
+  [[ -f "$profile_file" ]] && profile_content=$(cat "$profile_file")
+
+  if [[ -z "$cv_content" && -z "$profile_content" ]]; then
+    # No files to preload — substitute with empty string so placeholder is removed
+    echo "" > "$BATCH_CONTEXT_FILE"
+    return
+  fi
+
+  cat > "$BATCH_CONTEXT_FILE" <<CONTEXT_EOF
+
+## CV y Perfil Pre-cargados
+
+### cv.md
+\`\`\`markdown
+${cv_content}
+\`\`\`
+
+### config/profile.yml
+\`\`\`yaml
+${profile_content}
+\`\`\`
+
+CONTEXT_EOF
+  echo "📋 Pre-loaded context: cv.md (${#cv_content} chars) + profile.yml (${#profile_content} chars)"
 }
 
 # Initialize state file if it doesn't exist
@@ -339,6 +377,8 @@ process_offer() {
   esc_report_num="${report_num//|/\\|}"
   esc_date="${date//|/\\|}"
   esc_id="${id//|/\\|}"
+  local context_content=""
+  [[ -f "$BATCH_CONTEXT_FILE" ]] && context_content=$(cat "$BATCH_CONTEXT_FILE")
   sed \
     -e "s|{{URL}}|${esc_url}|g" \
     -e "s|{{JD_FILE}}|${esc_jd_file}|g" \
@@ -346,6 +386,24 @@ process_offer() {
     -e "s|{{DATE}}|${esc_date}|g" \
     -e "s|{{ID}}|${esc_id}|g" \
     "$PROMPT_FILE" > "$resolved_prompt"
+
+  # Inline the pre-built context — sed can't handle large multi-line substitutions safely,
+  # so we do a two-pass approach: replace the placeholder line with the context file content.
+  if [[ -s "$BATCH_CONTEXT_FILE" ]]; then
+    local tmp_prompt="$BATCH_DIR/.resolved-prompt-${id}-ctx.md"
+    awk -v ctx_file="$BATCH_CONTEXT_FILE" '
+      /\{\{CONTEXT_PRELOADED\}\}/ {
+        while ((getline line < ctx_file) > 0) print line
+        close(ctx_file)
+        next
+      }
+      { print }
+    ' "$resolved_prompt" > "$tmp_prompt"
+    mv "$tmp_prompt" "$resolved_prompt"
+  else
+    # No context file — just remove the placeholder
+    sed -i 's/{{CONTEXT_PRELOADED}}//g' "$resolved_prompt"
+  fi
 
   # Launch claude -p worker (uses default model from Claude Max subscription)
   local exit_code=0
@@ -437,6 +495,7 @@ main() {
   fi
 
   init_state
+  build_context
 
   # Count input offers (skip header, ignore blank lines)
   local total_input

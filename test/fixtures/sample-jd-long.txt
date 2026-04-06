@@ -1,0 +1,65 @@
+Staff AI Platform Engineer — Enterprise AI Solutions Inc.
+
+About Us:
+Enterprise AI Solutions Inc. is a rapidly growing company specializing in enterprise-grade AI automation. Founded in 2021, we have grown to 350 employees across 12 countries. Our platform processes over 10 million AI-powered workflows per day for Fortune 500 customers. We are backed by top-tier investors and recently closed a Series C round of $120M.
+
+Our engineering team is passionate about building reliable, scalable AI systems that enterprises can trust. We believe in a culture of ownership, transparency, and continuous learning. We hold weekly all-hands meetings, monthly retrospectives, and quarterly planning sessions. We offer flexible remote work options across North America, Europe, and APAC regions.
+
+The Role:
+We are seeking a Staff AI Platform Engineer to join our core platform team. You will be responsible for designing and implementing the foundational infrastructure that powers our AI capabilities. This is a senior individual contributor role with significant scope and impact.
+
+In this role, you will architect and build the systems that allow our product teams to ship AI features rapidly and reliably. You will work closely with ML researchers, product managers, and customer success teams to understand requirements and translate them into robust technical solutions.
+
+Key Responsibilities:
+- Design and implement scalable LLM inference infrastructure serving production traffic
+- Build evaluation frameworks to measure model performance, safety, and reliability
+- Develop monitoring and observability systems for AI model behavior in production
+- Create developer tooling that enables product teams to integrate AI capabilities efficiently
+- Lead technical reviews and architectural decisions for AI platform components
+- Collaborate with ML research team to productionize new models and techniques
+- Drive best practices for prompt engineering, model evaluation, and deployment
+- Mentor junior engineers and contribute to technical culture
+- Partner with security team to ensure AI systems meet compliance requirements
+- Contribute to internal technical blog and engineering documentation
+
+Requirements:
+- 7+ years of software engineering experience with 3+ years focused on AI/ML systems
+- Strong Python programming skills; experience with TypeScript a plus
+- Production experience with LLMs (OpenAI, Anthropic, open-source models)
+- Experience with RAG architectures, vector databases, and semantic search
+- Deep understanding of distributed systems, API design, and microservices
+- Experience with containerization (Docker, Kubernetes) and cloud platforms (AWS, GCP, or Azure)
+- Strong understanding of software testing, CI/CD pipelines, and reliability engineering
+- Experience with evaluation frameworks for LLMs (automated evals, human eval pipelines)
+- Excellent communication skills — you can explain complex technical concepts to non-engineers
+- Track record of leading technical projects from conception to production
+- Experience working in a fast-paced startup or scale-up environment
+
+Nice to Have:
+- Experience with multi-agent AI systems and orchestration frameworks (LangChain, LlamaIndex, AutoGen)
+- Familiarity with fine-tuning and model adaptation techniques (LoRA, QLoRA, RLHF)
+- Experience with MLOps platforms (MLflow, Weights & Biases, Arize, Datadog LLM observability)
+- Contributions to open-source AI/ML projects
+- Experience with regulatory compliance in AI (EU AI Act, NIST AI RMF)
+- Background in designing AI systems for regulated industries (healthcare, finance, legal)
+
+What We Offer:
+- Competitive compensation: $220,000 - $300,000 base salary + equity package
+- Comprehensive benefits including health, dental, vision, and mental health coverage
+- $5,000 annual learning and development budget
+- Flexible remote work with optional access to offices in San Francisco, New York, London, and Toronto
+- 25 days PTO plus company holidays
+- Home office stipend of $2,000 to set up your workspace
+- Regular team offsites and company retreats
+- Access to latest AI tools and research papers
+
+Our Interview Process:
+1. Initial recruiter call (30 min)
+2. Technical phone screen with engineering manager (45 min)
+3. Take-home technical assessment (3-4 hours)
+4. Virtual onsite: 4 interviews over one day (system design, coding, behavioral, cross-functional)
+5. Reference checks and offer
+
+We are committed to building a diverse and inclusive team. We encourage applications from candidates of all backgrounds. We provide reasonable accommodations for candidates with disabilities throughout our interview process.
+
+To apply, submit your resume and a brief cover letter explaining why you are interested in this role and what excites you about AI platform engineering. Applications without cover letters will be reviewed but prioritized lower.

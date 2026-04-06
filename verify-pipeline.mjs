@@ -45,6 +45,74 @@ const ALIASES = {
   'no aplicar': 'skip', 'no_aplicar': 'skip', 'monitor': 'skip', 'geo blocker': 'skip',
 };
 
+// --- Pure validation functions (exported for testing) ---
+
+/** Returns true if the status string (after stripping bold/dates) is canonical or a known alias. */
+function isValidStatus(rawStatus) {
+  const clean = rawStatus.replace(/\*\*/g, '').trim();
+  const statusOnly = clean.replace(/\s+\d{4}-\d{2}-\d{2}.*$/, '').trim().toLowerCase();
+  return CANONICAL_STATUSES.includes(statusOnly) || !!ALIASES[statusOnly];
+}
+
+/** Returns true if the string contains markdown bold (**). */
+function hasMarkdownBold(str) {
+  return str.includes('**');
+}
+
+/** Returns true if the string contains a date pattern YYYY-MM-DD. */
+function hasDateInStatus(str) {
+  return /\d{4}-\d{2}-\d{2}/.test(str);
+}
+
+/** Returns true if the score string matches the valid format. */
+function isValidScoreFormat(score) {
+  const s = score.replace(/\*\*/g, '').trim();
+  return /^\d+\.?\d*\/5$/.test(s) || s === 'N/A' || s === 'DUP';
+}
+
+/**
+ * Find groups of entries that share the same company+role key.
+ * Returns array of groups with length > 1 (duplicates only).
+ */
+function findDuplicates(entries) {
+  const map = new Map();
+  for (const e of entries) {
+    const key = e.company.toLowerCase().replace(/[^a-z0-9]/g, '') + '::' +
+      e.role.toLowerCase().replace(/[^a-z0-9 ]/g, '');
+    if (!map.has(key)) map.set(key, []);
+    map.get(key).push(e);
+  }
+  return [...map.values()].filter(group => group.length > 1);
+}
+
+/**
+ * Parse pipe-delimited tracker lines from raw content string.
+ * Returns array of entry objects.
+ */
+function parseTrackerEntries(content) {
+  const lines = content.split('\n');
+  const entries = [];
+  for (const line of lines) {
+    if (!line.startsWith('|')) continue;
+    const parts = line.split('|').map(s => s.trim());
+    if (parts.length < 9) continue;
+    const num = parseInt(parts[1]);
+    if (isNaN(num)) continue;
+    entries.push({
+      num, date: parts[2], company: parts[3], role: parts[4],
+      score: parts[5], status: parts[6], pdf: parts[7], report: parts[8],
+      notes: parts[9] || '', raw: line,
+    });
+  }
+  return entries;
+}
+
+export { isValidStatus, hasMarkdownBold, hasDateInStatus, isValidScoreFormat, findDuplicates, parseTrackerEntries };
+
+// --- Main (only runs when executed directly) ---
+
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+
 let errors = 0;
 let warnings = 0;
 
@@ -61,42 +129,22 @@ if (!existsSync(APPS_FILE)) {
 const content = readFileSync(APPS_FILE, 'utf-8');
 const lines = content.split('\n');
 
-const entries = [];
-for (const line of lines) {
-  if (!line.startsWith('|')) continue;
-  const parts = line.split('|').map(s => s.trim());
-  if (parts.length < 9) continue;
-  const num = parseInt(parts[1]);
-  if (isNaN(num)) continue;
-  entries.push({
-    num, date: parts[2], company: parts[3], role: parts[4],
-    score: parts[5], status: parts[6], pdf: parts[7], report: parts[8],
-    notes: parts[9] || '',
-  });
-}
+const entries = parseTrackerEntries(content);
 
 console.log(`\n📊 Checking ${entries.length} entries in applications.md\n`);
 
 // --- Check 1: Canonical statuses ---
 let badStatuses = 0;
 for (const e of entries) {
-  const clean = e.status.replace(/\*\*/g, '').trim().toLowerCase();
-  // Strip trailing dates
-  const statusOnly = clean.replace(/\s+\d{4}-\d{2}-\d{2}.*$/, '').trim();
-
-  if (!CANONICAL_STATUSES.includes(statusOnly) && !ALIASES[statusOnly]) {
+  if (!isValidStatus(e.status)) {
     error(`#${e.num}: Non-canonical status "${e.status}"`);
     badStatuses++;
   }
-
-  // Check for markdown bold in status
-  if (e.status.includes('**')) {
+  if (hasMarkdownBold(e.status)) {
     error(`#${e.num}: Status contains markdown bold: "${e.status}"`);
     badStatuses++;
   }
-
-  // Check for dates in status
-  if (/\d{4}-\d{2}-\d{2}/.test(e.status)) {
+  if (hasDateInStatus(e.status)) {
     error(`#${e.num}: Status contains date: "${e.status}" — dates go in date column`);
     badStatuses++;
   }
@@ -104,21 +152,11 @@ for (const e of entries) {
 if (badStatuses === 0) ok('All statuses are canonical');
 
 // --- Check 2: Duplicates ---
-const companyRoleMap = new Map();
-let dupes = 0;
-for (const e of entries) {
-  const key = e.company.toLowerCase().replace(/[^a-z0-9]/g, '') + '::' +
-    e.role.toLowerCase().replace(/[^a-z0-9 ]/g, '');
-  if (!companyRoleMap.has(key)) companyRoleMap.set(key, []);
-  companyRoleMap.get(key).push(e);
+const dupeGroups = findDuplicates(entries);
+for (const group of dupeGroups) {
+  warn(`Possible duplicates: ${group.map(e => `#${e.num}`).join(', ')} (${group[0].company} — ${group[0].role})`);
 }
-for (const [key, group] of companyRoleMap) {
-  if (group.length > 1) {
-    warn(`Possible duplicates: ${group.map(e => `#${e.num}`).join(', ')} (${group[0].company} — ${group[0].role})`);
-    dupes++;
-  }
-}
-if (dupes === 0) ok('No exact duplicates found');
+if (dupeGroups.length === 0) ok('No exact duplicates found');
 
 // --- Check 3: Report links ---
 let brokenReports = 0;
@@ -136,8 +174,7 @@ if (brokenReports === 0) ok('All report links valid');
 // --- Check 4: Score format ---
 let badScores = 0;
 for (const e of entries) {
-  const s = e.score.replace(/\*\*/g, '').trim();
-  if (!/^\d+\.?\d*\/5$/.test(s) && s !== 'N/A' && s !== 'DUP') {
+  if (!isValidScoreFormat(e.score)) {
     error(`#${e.num}: Invalid score format: "${e.score}"`);
     badScores++;
   }
@@ -171,7 +208,7 @@ if (pendingTsvs === 0) ok('No pending TSVs');
 // --- Check 7: Bold in scores ---
 let boldScores = 0;
 for (const e of entries) {
-  if (e.score.includes('**')) {
+  if (hasMarkdownBold(e.score)) {
     warn(`#${e.num}: Score has markdown bold: "${e.score}"`);
     boldScores++;
   }
@@ -190,3 +227,5 @@ if (errors === 0 && warnings === 0) {
 }
 
 process.exit(errors > 0 ? 1 : 0);
+
+} // end main guard

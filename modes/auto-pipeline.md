@@ -16,8 +16,16 @@ Si el input es una **URL** (no texto de JD pegado), seguir esta estrategia para 
 
 **Si el input es texto de JD** (no URL): usar directamente, sin necesidad de fetch.
 
-## Paso 1 — Evaluación A-G
-Ejecutar exactamente igual que el modo `oferta` (leer `modes/oferta.md` para todos los bloques A-F + Block G Posting Legitimacy).
+## Paso 0b — JD Summarization (solo si JD largo)
+
+Antes del Stage 0 pre-screen, si el JD es largo (> ~1500 palabras):
+1. Extraer un resumen compacto: título, nivel, top 5 must-haves, top 3 nice-to-haves, ubicación, comp si se menciona (~200 palabras)
+2. Usar este resumen para el Stage 0 pre-screen
+3. Si el pre-screen pasa (≥ 3.0): usar el JD COMPLETO para los bloques A-F (la precisión importa aquí)
+4. Si JD ≤ 1500 palabras: usar el JD completo directamente para todo
+
+## Paso 1 — Evaluación con Pre-screen
+Ejecutar Stage 0 pre-screen primero (ver `modes/oferta.md`). Si pasa, ejecutar bloques A-F según el tier de score.
 
 ## Paso 2 — Guardar Report .md
 Guardar la evaluación completa en `reports/{###}-{company-slug}-{YYYY-MM-DD}.md` (ver formato en `modes/oferta.md`).
@@ -65,4 +73,6 @@ Si el score final es >= 4.5, generar borrador de respuestas para el formulario d
 ## Paso 5 — Actualizar Tracker
 Registrar en `data/applications.md` con todas las columnas incluyendo Report y PDF en ✅.
 
-**Si algún paso falla**, continuar con los siguientes y marcar el paso fallido como pendiente en el tracker.
+**Si el Stage 0 pre-screen falla (< 3.0)**: escribir TSV con status `NO APLICAR`, no generar PDF ni report completo, notificar al candidato con el preliminary score y razón.
+
+**Si algún otro paso falla**, continuar con los siguientes y marcar el paso fallido como pendiente en el tracker.

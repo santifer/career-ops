@@ -1,0 +1,16 @@
+Senior AI Engineer — Acme Corp
+
+We are looking for a Senior AI Engineer to join our platform team. You will build and maintain LLM-powered systems in production.
+
+Requirements:
+- 3+ years experience with Python and ML frameworks
+- Experience deploying LLMs to production (RAG, fine-tuning, or inference)
+- Familiarity with evaluation frameworks (evals, observability)
+- Strong communication skills
+
+Nice to have:
+- Experience with multi-agent systems
+- Familiarity with LangChain or similar orchestration frameworks
+
+Location: Remote (North America preferred)
+Compensation: $180,000 - $240,000 USD + equity

@@ -83,7 +83,10 @@ function normalizeStatus(raw) {
   return { status: null, unknown: true };
 }
 
+export { normalizeStatus };
+
 // Read applications.md
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
 if (!existsSync(APPS_FILE)) {
   console.log('No applications.md found. Nothing to normalize.');
   process.exit(0);
@@ -162,3 +165,5 @@ if (!DRY_RUN && changes > 0) {
 } else {
   console.log('✅ No changes needed');
 }
+
+} // end main guard

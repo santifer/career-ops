@@ -85,6 +85,108 @@ Classify every offer into one of these types (or hybrid of 2):
 
 After detecting archetype, read `modes/_profile.md` for the user's specific framing and proof points for that archetype.
 
+Convert "builder" into a professional signal, not a "hobby maker". Real proof points make this credible.
+
+### Portfolio as Proof Point (use in high-value applications)
+
+<!-- [CUSTOMIZE] If you have a live demo, dashboard, or public project, configure it here.
+     Example:
+     dashboard:
+       url: "https://yoursite.dev/demo"
+       password: "demo-2026"
+       when_to_share: "LLMOps, AI Platform, observability roles"
+     Read from config/profile.yml → narrative.proof_points and narrative.dashboard -->
+
+If the candidate has a live demo/dashboard (check profile.yml), offer access in applications for relevant roles.
+
+### Comp Intelligence
+
+<!-- [CUSTOMIZE] Research comp ranges for YOUR target roles and update these ranges -->
+
+**General guidance:**
+- Use WebSearch for current market data (Glassdoor, Levels.fyi, Blind)
+- Frame by role title, not by skills -- titles determine comp bands
+- Contractor rates are typically 30-50% higher than employee base to account for benefits
+- Geographic arbitrage works for remote roles: lower CoL = better net
+
+**Cache-first protocol (saves 3 WebSearch calls per repeated role type):**
+
+Before running WebSearch for comp data in Bloque D:
+1. Normalize: role title + level (e.g. "senior-ai-engineer"), company stage (seed/series-a/series-b/series-c/public), location (e.g. "remote" or "toronto")
+2. Check cache: `node comp-cache.mjs lookup "{role-level}" "{stage}" "{location}"`
+3. If output is JSON (hit and not expired) → use cached data, skip WebSearch
+4. If output is "miss" → run WebSearch (Glassdoor, Levels.fyi, Blind), then save: `node comp-cache.mjs save "{role-level}" "{stage}" "{location}" '{"p25":N,"p50":N,"p75":N,"currency":"USD","sources":["glassdoor"]}'`
+
+### Negotiation Scripts
+
+<!-- [CUSTOMIZE] Adapt these to your situation -->
+
+**Salary expectations (general framework):**
+> "Based on market data for this role, I'm targeting [RANGE from profile.yml]. I'm flexible on structure -- what matters is the total package and the opportunity."
+
+**Geographic discount pushback:**
+> "The roles I'm competitive for are output-based, not location-based. My track record doesn't change based on postal code."
+
+**When offered below target:**
+> "I'm comparing with opportunities in the [higher range]. I'm drawn to [company] because of [reason]. Can we explore [target]?"
+
+### Location Policy
+
+<!-- [CUSTOMIZE] Adapt to your situation. Read from config/profile.yml → location -->
+
+**In forms:**
+- Binary "can you be on-site?" questions: follow your actual availability from profile.yml
+- In free-text fields: specify your timezone overlap and availability
+
+**In evaluations (scoring):**
+- Remote dimension for hybrid outside your country: score **3.0** (not 1.0)
+- Only score 1.0 if JD explicitly says "must be on-site 4-5 days/week, no exceptions"
+
+### Time-to-offer priority
+- Working demo + metrics > perfection
+- Apply sooner > learn more
+- 80/20 approach, timebox everything
+
+---
+
+## Tiered Evaluation — Token Efficiency
+
+**MANDATORY: Always run Stage 0 before any full evaluation.**
+
+### Stage 0 — Pre-screen (cheap, ~1K tokens output)
+
+Run BEFORE Bloque A. No WebSearch, no STAR stories.
+
+1. Extract from JD: title, domain, top 5 requirements
+2. **North Star alignment** (1–5): does the role domain map to any of the 6 archetypes?
+   - 5 = exact archetype match (e.g. LLMOps role → LLMOps archetype)
+   - 3 = adjacent match (e.g. PM role with AI focus)
+   - 1 = unrelated domain (e.g. pure frontend, finance, legal)
+3. **Must-have overlap** (1–5): check top 5 JD requirements against cv.md
+   - 5 = 5/5 requirements present or strongly adjacent
+   - 3 = 3/5 present
+   - 1 = ≤1/5 present
+4. **Preliminary score** = 0.4 × alignment + 0.6 × must-have overlap
+5. Decision:
+   - **< 3.0** → Write SKIP TSV to `batch/tracker-additions/`, stop. No further blocks.
+   - **≥ 3.0** → Proceed to full evaluation (Bloque A onwards)
+
+### Verbosity tiers (after Stage 0 passes)
+
+After computing the final score from Bloque B (CV match gives enough signal):
+
+| Score | Sections to generate | Report type |
+|-------|---------------------|-------------|
+| < 3.0 | Stage 0 only → SKIP | No report |
+| 3.0 – 3.9 | A + B + short recommendation | Abbreviated |
+| 4.0 – 4.4 | A + B + C + D (with comp cache) + E | Full minus interview prep |
+| ≥ 4.5 | A + B + C + D + E + F + G | Full with STAR stories + draft answers |
+
+**Do NOT generate Bloque F (interview prep / STAR stories) unless score ≥ 4.0.**
+**Do NOT generate Bloque G (draft answers) unless score ≥ 4.5.**
+
+---
+
 ## Global Rules
 
 ### NEVER

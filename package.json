@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "description": "AI-powered job search pipeline built on Claude Code",
   "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "test:watch": "node --test --watch test/*.test.mjs",
     "doctor": "node doctor.mjs",
     "verify": "node verify-pipeline.mjs",
     "normalize": "node normalize-statuses.mjs",
@@ -14,7 +16,8 @@
     "update": "node update-system.mjs apply",
     "rollback": "node update-system.mjs rollback",
     "liveness": "node check-liveness.mjs",
-    "scan": "node scan.mjs"
+    "scan": "node scan.mjs",
+    "comp-cache": "node comp-cache.mjs"
   },
   "keywords": [
     "ai",

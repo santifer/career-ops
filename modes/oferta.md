@@ -1,6 +1,17 @@
-# Modo: oferta — Evaluación Completa A-G
+# Modo: oferta — Evaluación con Pre-screen y Tiers
 
-Cuando el candidato pega una oferta (texto o URL), entregar SIEMPRE los 7 bloques (A-F evaluation + G legitimacy):
+Cuando el candidato pega una oferta (texto o URL), seguir este flujo en orden. Ver reglas de tiering en `_shared.md`.
+
+## Stage 0 — Pre-screen (OBLIGATORIO, ejecutar primero)
+
+Antes de cualquier bloque completo:
+
+1. Extraer del JD: título, dominio, top 5 requisitos
+2. Puntuar **alineación North Star** (1–5): ¿el dominio del rol encaja en alguno de los 6 arquetipos?
+3. Puntuar **overlap de must-haves** (1–5): leer `cv.md`, ¿cuántos de los top 5 requisitos están presentes?
+4. **Preliminary score** = 0.4 × alineación + 0.6 × overlap
+5. Si < 3.0 → escribir TSV con status `NO APLICAR` a `batch/tracker-additions/`, notificar al candidato y PARAR aquí
+6. Si ≥ 3.0 → continuar con Bloque A
 
 ## Paso 0 — Detección de Arquetipo
 
@@ -46,10 +57,15 @@ Sección de **gaps** con estrategia de mitigación para cada uno. Para cada gap:
 
 ## Bloque D — Comp y Demanda
 
-Usar WebSearch para:
-- Salarios actuales del rol (Glassdoor, Levels.fyi, Blind)
-- Reputación de compensación de la empresa
-- Tendencia de demanda del rol
+**Primero verificar caché** (evita WebSearch si ya investigamos este rol):
+```bash
+node comp-cache.mjs lookup "{role-level}" "{company-stage}" "{location}"
+```
+- Si retorna JSON → usar datos cacheados, no hacer WebSearch
+- Si retorna "miss" → hacer WebSearch (Glassdoor, Levels.fyi, Blind) → guardar resultado:
+```bash
+node comp-cache.mjs save "{role-level}" "{company-stage}" "{location}" '{"p25":N,"p50":N,"p75":N,"currency":"USD","sources":["glassdoor"]}'
+```
 
 Tabla con datos y fuentes citadas. Si no hay datos, decirlo en vez de inventar.
 
@@ -62,7 +78,9 @@ Tabla con datos y fuentes citadas. Si no hay datos, decirlo en vez de inventar.
 
 Top 5 cambios al CV + Top 5 cambios a LinkedIn para maximizar match.
 
-## Bloque F — Plan de Entrevistas
+## Bloque F — Plan de Entrevistas *(solo si score ≥ 4.0)*
+
+**SKIP este bloque si el score final es < 4.0.** El candidato no debe invertir en prep de entrevistas para ofertas borderline.
 
 6-10 historias STAR+R mapeadas a requisitos del JD (STAR + **Reflection**):
 
@@ -146,9 +164,13 @@ Analyze the job posting for signals that indicate whether this is a real, active
 
 **SIEMPRE** después de generar los bloques A-G:
 
+### 0. Abbreviated report (score 3.0–3.9)
+
+Si el score final es 3.0–3.9: guardar solo bloques A + B + una recomendación breve (3 frases máximo). No generar C-F. El report se guarda igualmente en `reports/` para referencia.
+
 ### 1. Guardar report .md
 
-Guardar evaluación completa en `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
+Guardar evaluación en `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 
 - `{###}` = siguiente número secuencial (3 dígitos, zero-padded)
 - `{company-slug}` = nombre de empresa en lowercase, sin espacios (usar guiones)

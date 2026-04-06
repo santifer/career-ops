@@ -1,0 +1,17 @@
+entries:
+  senior-ml-engineer-series-b-remote-2026-Q1:
+    p25: 180000
+    p50: 210000
+    p75: 260000
+    currency: USD
+    sources: glassdoor,levels.fyi
+    fetched: "2026-03-15"
+    ttl_days: 60
+  staff-ai-engineer-public-toronto-2026-Q1:
+    p25: 150000
+    p50: 180000
+    p75: 220000
+    currency: CAD
+    sources: glassdoor
+    fetched: "2025-12-01"
+    ttl_days: 60
