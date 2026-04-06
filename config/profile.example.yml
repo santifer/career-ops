@@ -65,3 +65,93 @@ location:
   visa_status: "No sponsorship needed"
   # For remote roles outside your country:
   # onsite_availability: "1 week/month in any city"
+
+# ── NEW: feature flags ──────────────────────────────────────────────────────
+# Set to false to disable a feature and fall back to current single-profile behavior.
+features:
+  profile_tracks: false    # set true to enable multi-track CV generation
+  personas: false          # set true to enable persona/contact variants
+
+# ── NEW: profile tracks ─────────────────────────────────────────────────────
+# Tracks let you foreground different slices of your experience depending on
+# the role type. Each track has its own headline, summary framing, and a set
+# of evidence tags used to filter and rank bullets/projects from cv.md.
+#
+# Optional: tag bullets in cv.md with <!-- tags: built, agent --> to enable
+# tag-based filtering. Untagged bullets are included in all tracks (current behavior).
+tracks:
+  default: builder          # used when no --track flag and JD signal is ambiguous
+
+  builder:
+    label: "AI / Product Builder"
+    headline: "AI Engineer & Product Builder — shipping agent systems end to end"
+    summary_focus: |
+      Frame as hands-on technical builder: agent systems, LLM pipelines,
+      applied ML, fast prototyping, production delivery.
+    primary_sections:
+      - experience
+      - projects
+      - skills
+    preferred_archetypes:
+      - llmops
+      - agentic
+      - forward_deployed
+    evidence_tags:
+      - built
+      - shipped
+      - architected
+      - automated
+      - llm
+      - agent
+      - api
+
+  leadership:
+    label: "Leadership / Design-Facing / Cross-Functional"
+    headline: "Head of Applied AI — leading AI teams across product, design, and engineering"
+    summary_focus: |
+      Frame as leader and multiplier: team building, cross-functional alignment,
+      strategic AI roadmaps, executive communication, adoption at scale.
+    primary_sections:
+      - experience
+      - projects
+      - skills
+    preferred_archetypes:
+      - ai_pm
+      - transformation
+      - solutions_architect
+    evidence_tags:
+      - led
+      - managed
+      - directed
+      - aligned
+      - stakeholder
+      - strategy
+      - team
+
+# ── NEW: personas (contact / region variants) ────────────────────────────────
+# Personas let you switch the contact block (phone, location, work auth) for
+# applications in different countries. CV content is unchanged — only the
+# header contact row and page format are affected.
+personas:
+  default: primary          # which persona to use when no --persona flag is set
+
+  primary:
+    label: "Primary"
+    phone: "+1-555-0123"
+    location_line: "San Francisco, CA"
+    address_display: "San Francisco, United States"
+    timezone: "PST (UTC-8)"
+    page_format_override: null    # null = let JD region detection decide
+    authorization_line: "No sponsorship needed"
+    date_format: "MM/DD/YYYY"
+
+  # Example second persona — uncomment and fill in for a second country/region
+  # secondary:
+  #   label: "UK"
+  #   phone: "+44 7XXX XXXXXX"
+  #   location_line: "London, UK"
+  #   address_display: "London, United Kingdom"
+  #   timezone: "GMT / BST (UTC+0 / UTC+1)"
+  #   page_format_override: a4
+  #   authorization_line: "Right to Work: British Citizen"
+  #   date_format: "DD/MM/YYYY"
