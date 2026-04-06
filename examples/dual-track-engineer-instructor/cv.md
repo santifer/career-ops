@@ -8,13 +8,13 @@
 
 ## Professional Summary
 
-Senior AI engineer **and** senior technical instructor -- a rare combination. 7 years shipping production AI systems (60K+ LOC in production at a knowledge-graph SaaS, real-time agent infrastructure handling 4M+ events/month) **and** 5,200+ hours teaching applied AI to working engineers (80+ careers launched into ML/AI roles, 92% course completion rate across 11 cohorts). Teaching keeps the engineering sharp; engineering keeps the teaching grounded. Comfortable owning either side or both.
+Two jobs at once for the last four years: senior AI engineer at a knowledge-graph SaaS (60K LOC of the AI subsystem, agent infra handling 4M+ events/month), and lead instructor at an applied AI bootcamp (5,200 teaching hours, 80 alumni placed into ML/AI roles, 92% completion across 11 cohorts). I keep doing both because the bootcamp work forces me to write code people can actually read, and the production work keeps the curriculum from becoming a fairy tale. I will take a role that is mostly engineering, mostly teaching, or both.
 
-## Recent Engineering (last 12 months)
+## Recent engineering (last 12 months)
 
-- Shipped a multi-agent LangGraph orchestration layer for an internal agent platform: planner + executor + critic loop with HITL checkpoints. ~14K LOC TypeScript, deployed on Bun + Redis. Cut average task-completion latency 38%.
-- Open-sourced `agent-skills-kit` (fictional example project): 2.4K GitHub stars, 11 contributors, used by ~120 weekly active developers.
-- Wrote and merged 47 PRs in the last 12 months across two production codebases. Open to walking through any of them in interview.
+- Wrote a planner / executor / critic loop on top of LangGraph for the internal agent platform. HITL checkpoints, Redis-backed checkpointer, ~14K LOC TypeScript on Bun. Average task-completion latency went from 9.2s to 5.7s after the executor stopped re-running the planner on retries (this was the bug that cost me a weekend).
+- `agent-skills-kit` (fictional example) is the open source spinoff of the same loop. 2.4K stars, 11 outside contributors. I mostly maintain it on Sundays.
+- 47 merged PRs across two production codebases in the last year. Happy to walk through any of them in an interview, including the ones I would write differently now.
 
 ## Work Experience
 
@@ -22,68 +22,59 @@ Senior AI engineer **and** senior technical instructor -- a rare combination. 7 
 **Senior AI Engineer / Team Lead**
 2022-2026
 
-- Owned the AI subsystem of a Neo4j-backed enterprise knowledge graph product (97K LOC across the AI layer at handover, ~60K of which I wrote or substantially refactored).
-- Designed and shipped the embedding pipeline (chunker -> dedupe -> Azure OpenAI embed -> Chroma + Neo4j sync). Throughput went from ~50 docs/min to ~1,800 docs/min after a rewrite around batched async + connection pooling.
-- Built the agent layer: LangChain + LangGraph, 12-factor agents pattern, Redis-backed checkpointer, observability via LangSmith. Handled 4M+ agent events/month at peak.
-- Led a team of 3 engineers + 1 designer. Ran weekly architecture reviews and pair-programming sessions. Shipped on-call rotation and incident review playbook.
-- Built the customer-facing eval dashboard: latency, cost-per-query, hallucination rate, retrieval precision/recall. Used in monthly customer business reviews.
+- Owned the AI subsystem of a Neo4j-backed enterprise knowledge graph product. The AI layer was 97K LOC at handover; I wrote or rewrote around 60K of that.
+- Embedding pipeline: chunker, dedupe, Azure OpenAI embed, Chroma + Neo4j sync. Throughput was ~50 docs/min when I picked it up. After I rewrote it around batched async and a real connection pool, it sat at 1,800 docs/min in production. The bottleneck the whole time was a single sync HTTP client nobody had thought to look at.
+- Built the agent layer with LangChain and LangGraph using the 12-factor agents pattern. Redis-backed checkpointer, observability through LangSmith. 4M+ agent events/month at peak.
+- Ran a team of three engineers and one designer. Weekly architecture review, pair programming on Tuesdays, an on-call rotation that went from "we don't have one" to a 30-minute response SLO with a written playbook.
+- Built the customer-facing eval dashboard: latency, cost-per-query, hallucination rate, retrieval precision and recall. We walked through it with customers in their monthly business reviews.
 
 ### Applied AI Bootcamp -- Berlin (parallel role, same window)
 **Lead Instructor, AI Engineering Track**
 2022-2026
 
-- Designed and delivered a 4-week immersive AI Engineering curriculum (Bun, TypeScript, LangChain, LangGraph, Redis, Neo4j, LangSmith, MCP, Anthropic SDK). Ran 6 cohorts. Average cohort size 14.
-- Designed and delivered a 4-week immersive Applied Python for AI curriculum (Python, FastAPI, ChromaDB, Gradio, HuggingFace Transformers, wandb). Ran 5 cohorts.
-- 5,200+ teaching hours total across both tracks (lecture + lab + 1:1 office hours).
-- 80+ alumni placed into AI/ML engineering roles. Maintained the alumni outcomes spreadsheet personally.
-- Course NPS: 71. Completion rate: 92% (industry average for intensive bootcamps is 60-75%).
-- Built the assessment rubric and the capstone-week format adopted by the school across all technical tracks.
+- Wrote and ran a 4-week AI Engineering curriculum: Bun, TypeScript, LangChain, LangGraph, Redis, Neo4j, LangSmith, MCP, Anthropic SDK. Six cohorts, average size 14.
+- Wrote and ran a 4-week Applied Python for AI curriculum: Python, FastAPI, ChromaDB, Gradio, HuggingFace Transformers, wandb. Five cohorts.
+- 5,200 teaching hours total across both tracks (lecture + lab + 1:1 office hours). I keep a real spreadsheet, not a vibes count.
+- 80 alumni placed into AI/ML engineering roles so far. I personally maintain the outcomes tracker because the school does not.
+- NPS 71. Completion rate 92%, against an industry baseline of 60-75% for intensive bootcamps.
+- Wrote the assessment rubric and the capstone-week format the school later adopted across all technical tracks. I lost an argument about timeboxing the capstone and was right two cohorts later.
 
 ### Mid-stage AI Consultancy -- Remote
 **ML Engineer**
 2019-2022
 
-- Delivered ~9 client engagements: NLP classification, recommender systems, and 2 early LLM prototypes (GPT-3 era).
-- Built the internal eval harness adopted across the consultancy. Reduced "vibes-check" review cycles to a 20-minute structured CI run.
-- Mentored 4 junior engineers. Two are now senior ICs at FAANG-tier companies. (This is when I discovered I liked teaching as much as building.)
+- Nine client engagements: NLP classification, two recommender systems, and two early LLM prototypes back when GPT-3 was the only game in town.
+- Wrote the internal eval harness the rest of the consultancy adopted. Cut "vibes-check" review cycles down to a 20-minute structured CI run.
+- Mentored four junior engineers. Two are now senior ICs at FAANG-tier companies. This is the job where I figured out I liked teaching as much as building.
 
 ### Mobile Games Studio -- Remote
 **Backend Engineer**
 2017-2019
 
-- Built backend services for a live-ops mobile game: matchmaking, leaderboards, in-app purchase reconciliation. Python + Postgres + Redis.
-- Wrote the internal SDK onboarding doc that cut new-hire ramp-up from 3 weeks to 8 days.
+- Backend services for a live-ops mobile game: matchmaking, leaderboards, IAP reconciliation. Python, Postgres, Redis.
+- Rewrote the internal SDK onboarding doc. New-hire ramp-up went from three weeks to eight days. The old doc had a 14-step setup that nobody on the current team had actually run end-to-end.
 
 ## Projects
 
-- **`agent-skills-kit`** (fictional example, open source) -- TypeScript scaffolding for building agent skills with HITL approval gates. **2,400+ GitHub stars**, 11 contributors, ~120 weekly active devs. Featured in 2 community newsletters.
-- **`pplx-embed-local-runner`** (fictional example, open source) -- Local runner for small open embedding models with a drop-in OpenAI-compatible API. **610 stars**, used in 3 of the bootcamp's lab exercises.
-- **Curriculum: AI Engineering 4-Week Intensive** -- complete syllabus + 38 lecture scripts + 16 graded projects with BRONZE/SILVER/GOLD/DIAMOND difficulty tiers. Used by 6 cohorts; written entirely by me.
+- `agent-skills-kit` (fictional example, open source) -- TypeScript scaffolding for agent skills with HITL approval gates. 2.4K GitHub stars, 11 outside contributors, ~120 weekly active developers. Newsletter mentions in TLDR AI and Ben's Bites.
+- `pplx-embed-local-runner` (fictional example, open source) -- a small local runner for open embedding models with a drop-in OpenAI-compatible API. 610 stars. Three of the bootcamp lab exercises run against it instead of paid APIs.
+- AI Engineering 4-Week Intensive -- the full curriculum: syllabus, 38 lecture scripts, 16 graded projects on Bronze / Silver / Gold / Diamond difficulty tiers. Used in six cohorts. Written by me, debugged by the students.
 
 ## Education
 
 - BSc Computer Science, TU Example (2017)
 - Self-directed: Andrew Ng MLOps specialization, fast.ai Part 1+2, hand-rolled implementations of attention + RAG from scratch.
 
-## Speaking and Writing
+## Speaking and writing
 
-- "Why your bootcamp's LLM module is wrong" -- BerlinML meetup, 2025. ~120 attendees.
-- "Production agents, the boring parts" -- internal talk at 2 partner companies.
-- ~12 long-form blog posts on agent architecture, eval design, and teaching technical material to working engineers.
+- "Why your bootcamp's LLM module is wrong" -- BerlinML meetup, 2025. ~120 in the room.
+- "Production agents, the boring parts" -- internal talk at two partner companies. The boring parts are timeouts and idempotency.
+- About 12 long-form blog posts on agent architecture, eval design, and teaching technical material to working engineers. The eval-design one is the only one I'd link unprompted.
 
 ## Skills
 
-### Engineering
-- **Languages:** TypeScript, Python, Go (read-comfortable), SQL
-- **AI/ML:** LangChain, LangGraph, Anthropic Claude SDK, HuggingFace Transformers/Trainer, scikit-learn, PyTorch (basics), MCP
-- **Infra:** Bun, Node.js, FastAPI, Gradio, Redis, Neo4j, ChromaDB, Postgres, Docker, GitHub Actions
-- **Observability:** LangSmith, Grafana, custom eval dashboards, wandb
+Engineering: TypeScript, Python (daily), Go (I can read it and write small things), SQL. LangChain, LangGraph, Anthropic SDK, HuggingFace Transformers/Trainer, scikit-learn, PyTorch (basics, not research-level), MCP. Bun, Node.js, FastAPI, Gradio, Redis, Neo4j, ChromaDB, Postgres, Docker, GitHub Actions. LangSmith, Grafana, custom eval dashboards, wandb.
 
-### Teaching
-- **Curriculum design:** Bronze/Silver/Gold/Diamond difficulty tiering, capstone formats, lab/lecture split
-- **Delivery:** Lecture, hands-on lab, 1:1 office hours, code review at scale, pair programming
-- **Audience:** Working engineers (career-changers), university CS students, internal team enablement
-- **Assessment:** Rubrics, capstone projects, portfolio review, mock-interview design
+Teaching: curriculum design with Bronze/Silver/Gold/Diamond difficulty tiering, capstone formats, lab vs lecture split. Delivery: lecture, hands-on lab, 1:1 office hours, code review at scale, pair programming. I have taught working engineers (career-changers), university CS students, and internal teams. Assessment work: rubrics, capstone projects, portfolio review, mock-interview design.
 
-### Cross-cutting
-- Public speaking (German + English), technical writing, hiring loop design, mentorship.
+Other: public speaking in German and English, technical writing, hiring loop design, mentorship.

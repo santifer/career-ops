@@ -1,15 +1,15 @@
-# Example -- Dual-Track Engineer + Instructor
+# Example -- dual-track engineer + instructor
 
-This example demonstrates the **dual-track career pattern**: a candidate whose track record is strong on **two distinct archetypes** at the same time -- in this case, a Senior AI Engineer who is also a Senior Technical Instructor.
+This is for the case where one candidate has a real track record on two different archetypes at once. The example here is a senior AI engineer who is also a senior technical instructor, but the same structure works for backend + SRE, ML + research, IC + manager, or engineer + product manager.
 
-The default career-ops examples (`cv-example.md`, `article-digest-example.md`) assume a candidate optimizing for a **single** archetype. Real-world hybrid careers (technical instructors at bootcamps, university lecturers, AI/ML educators, DevRel engineers, training architects, internal-enablement leads) need a different setup.
+The default career-ops examples assume one north-star archetype. Hybrid careers do not fit that mould. Bootcamp instructors, university lecturers, AI/ML educators inside companies, DevRel engineers, training architects, internal-enablement leads -- these people have two real jobs on the CV and the existing single-archetype config either flattens one side or the other.
 
 This folder shows how to:
 
-1. Configure `archetypes:` in `profile.yml` with **two `fit: primary` entries** instead of one.
-2. Write a `cv.md` that surfaces measurable wins on **both tracks** without diluting either.
-3. Set **two compensation ranges** -- engineering and teaching pay differently, and the system needs to know which range to apply per offer.
-4. Decide at evaluation time which track to lead with for a given JD.
+1. Configure `archetypes:` in `profile.yml` with two `fit: primary` entries instead of one.
+2. Write a `cv.md` that puts measurable wins on both sides in front of the recruiter without diluting either.
+3. Set two compensation ranges. Engineering and teaching pay differently, often by 20-40%, and the evaluator needs to know which range applies to a given offer.
+4. At evaluation time, decide which track to lead with for the specific JD on the desk.
 
 ---
 
@@ -27,71 +27,74 @@ The persona is fictional (`Sam Rivera <sam@example.com>`). Do not copy values di
 
 ## When to use the dual-track pattern
 
-Use it if **all three** of the following are true:
+Use it only if all of these are true:
 
-1. You have measurable, recent (< 3 years) wins on two distinct archetypes -- not "I taught a workshop once", but real proof points (hours taught, careers launched, retention, OR LOC shipped, systems owned, impact metrics).
-2. You are willing to accept offers from **either** track. If you would only take one and tolerate the other, do single-track and treat the other side as a "superpower bullet".
-3. Your two tracks are at a **similar seniority level**. A junior teacher + staff engineer is single-track engineer with teaching as a flavor.
+1. You have measurable, recent (under 3 years old) wins on two different archetypes. Not "I taught a workshop once", but real numbers: hours taught, alumni placed, retention rates, NPS -- and on the engineering side, LOC shipped, systems owned, latency or cost moved.
+2. You will actually take an offer from either side. If you would only really accept one and grudgingly take the other, do single-track and treat the other side as one strong bullet in the summary.
+3. The two tracks are at roughly the same seniority. A junior teacher who is also a staff engineer is a single-track engineer who happens to mentor.
 
-Use **single-track** instead if:
+Use single-track instead if:
 
-- One side is clearly hobby-grade ("I mentor on weekends").
-- The two tracks are at very different seniorities.
-- You are early in your career and still figuring out which side dominates.
-- Your salary expectations on one track are non-negotiable -- pick that track and frame the other as a differentiator.
+- One side is hobby-grade. "I mentor on weekends" does not count as a teaching career.
+- The seniorities are mismatched.
+- You are early enough in your career that you don't actually know yet which side is the main one.
+- Your salary expectations on one track are non-negotiable. Pick that track and use the other as a differentiator in the cover letter.
 
 ---
 
 ## How dual-track changes the rest of career-ops
 
 ### `modes/_shared.md`
-You will want **both** archetypes listed in the "North Star -- Target Roles" table with `fit: primary`. The skill applies equal rigor to all primary archetypes -- which is exactly what dual-track candidates need.
+List both archetypes in the "North Star -- Target Roles" table with `fit: primary`. The skill applies equal rigor to all primary archetypes, which is what you need here.
 
 ### `cv.md`
-Two viable structures:
+Two ways to structure it:
 
-- **Layered** (recommended): one Professional Summary that names both tracks in the first sentence, then experience entries that include both engineering AND teaching bullets per role. Use this when your roles literally combined both. See `cv.md` in this folder.
-- **Sectioned**: separate "Engineering Experience" and "Teaching Experience" headings. Use this when the two tracks happened at different employers.
+- Layered (what I recommend): one Professional Summary that names both tracks in the first sentence, then experience entries that include both engineering and teaching bullets per role. Use this when the roles actually combined both. See the `cv.md` in this folder.
+- Sectioned: separate "Engineering Experience" and "Teaching Experience" headings. Use this when the two tracks happened at different employers and don't need to be told as one story.
 
-Always lead the Professional Summary with the **rare combination** framing ("Senior AI engineer who also runs the curriculum"). This is the differentiator -- it is harder to hire than either side alone.
+Lead the Professional Summary with the combination itself -- "senior AI engineer who runs the curriculum", or whatever the equivalent is for your stack. The combination is the thing that's hard to hire. Either side alone is not.
 
 ### `profile.yml` -- compensation
-Set `compensation.target_range` to your engineering range (typically higher), and use the optional `compensation.alternate_ranges` block to register the teaching range. The evaluator will pick the right one based on the JD.
+Put your engineering range in `compensation.target_range` (it's usually the higher one) and the teaching range in the optional `compensation.alternate_ranges` block. The evaluator picks the right one based on the JD.
 
 ### Evaluation reports
-When career-ops evaluates an offer, it should detect which archetype the JD targets and pick the matching salary range, the matching CV emphasis, and the matching STAR stories. With two `fit: primary` entries this should "just work" -- but always verify the `Archetype` line in the report header matches the JD.
+When career-ops evaluates an offer, it should detect which archetype the JD targets and pick the matching salary range, the matching CV emphasis, and the matching STAR stories. With two `fit: primary` entries this mostly just works, but check the `Archetype:` line in the report header. If it picked wrong, the rest of the report is wrong too.
 
 ---
 
 ## Interview objection handling
 
-The dual-track CV will trigger objections in interviews. The two most common:
+A dual-track CV triggers objections that single-track CVs do not. Three you should expect.
 
 ### "Why are you applying for an engineering role if you also teach?"
-Answer template:
-> "Teaching is how I keep my engineering sharp -- I have to ship code that students can actually run, debug, and extend. The reason I am applying for [role] is [specific reason about the team / product / scope]. The teaching side stays as a side activity, not a competing job."
 
-Lead with the engineering wins. Mention teaching only as a credibility signal ("I have explained transformers 200 times -- I know what the hard parts are"), never as a co-equal commitment.
+The answer template I use:
 
-### "Are you sure you want a teaching role? Your engineering background is intense -- you will be bored."
-Answer template:
-> "The students I want to teach are the ones who are going to ship production systems, not pass a quiz. My engineering background is exactly why I can take them there. I have done both for [N] years -- this is not a step down, it is the same work in a different format."
+> "Teaching is how I keep the engineering sharp. I have to ship code that students can actually run, debug, and extend, so I cannot get away with hand-waving. The reason I am here for [role] is [specific reason about the team / product / scope]. Teaching stays as a side activity, not a competing job."
 
-Lead with the teaching wins (hours, careers launched, retention, NPS). Use the engineering background as proof of credibility, not as a backup plan.
+Lead with engineering wins. Mention teaching as a credibility signal ("I have explained transformers about 200 times so I know exactly which parts trip people up"), not as a co-equal commitment.
+
+### "Are you sure you want a teaching role? Your engineering background is intense, you will be bored."
+
+> "The students I want to teach are going to ship production systems, not pass a quiz. My engineering background is exactly why I can get them there. I have done both for [N] years. This is not a step down. It is the same work in a different format."
+
+Lead with the teaching wins (hours, alumni placed, retention, NPS). Use the engineering background as proof of credibility, not as a fallback plan.
 
 ### "Why not just pick one?"
-> "Because the rare combination is the value. Engineers who can teach get hired to lead onboarding, write internal docs that people actually read, and run technical interviews. Teachers who can ship get hired to design curriculum that survives contact with production. I am optimizing for roles where both matter."
+
+> "Because the combination is the actual value. Engineers who can teach end up leading onboarding, writing internal docs people actually read, and running technical interviews. Teachers who can ship get hired to design curriculum that survives contact with production. I am looking for roles where both matter."
 
 ---
 
 ## Over/underqualified failure modes
 
-Dual-track candidates risk being read as **overqualified** for pure teaching roles ("you will leave in 6 months for an eng job") and **underqualified** for pure engineering roles ("you have not been a full-time IC in 2 years"). Mitigations:
+Dual-track candidates get read as overqualified for pure teaching roles ("you will leave in six months for an engineering job") and as underqualified for pure engineering roles ("you have not been a full-time IC in two years"). Both kill applications. The mitigations:
 
 | Risk | Mitigation in CV | Mitigation in interview |
 |------|------------------|-------------------------|
-| Overqualified for teaching | Lead the Summary with curriculum + outcomes, not LOC | Tell a story about a course you redesigned that improved student outcomes -- show you care about pedagogy, not just code |
-| Underqualified for engineering | Surface recent shipping work (last 12 months) as a separate "Recent Engineering" section | Bring code. Pull up a PR you wrote in the last month. Walk through the architecture decisions out loud |
+| Overqualified for teaching | Lead the Summary with curriculum and outcomes, not LOC | Tell a story about a course you redesigned that moved student outcomes. Show you care about pedagogy, not just shipping. |
+| Underqualified for engineering | Add a "Recent Engineering" section that lists shipping work from the last 12 months | Bring code. Pull up a PR you wrote in the last month. Walk through the architecture decisions in plain language. |
 
 ---
 
