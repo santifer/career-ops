@@ -4,23 +4,29 @@
 
 ## Your Target Roles
 
-| Archetype | Thematic axes | What they buy |
-|-----------|---------------|---------------|
-| **Finance & Controllership Director** | GL accounting, financial reporting, compliance, internal controls | Someone who runs multi-entity finance operations at scale |
-| **Regional Controller LATAM** | Multi-country ops, statutory accounting, consolidation, transfer pricing | Someone who owns end-to-end financial operations across LATAM |
-| **Finance Transformation Lead** | Process automation, AI adoption, digital tools, change management | Someone who modernises finance functions with technology |
-| **FP&A Director** | Budgeting, forecasting, variance analysis, financial modelling, KPIs | Someone who drives data-driven financial planning |
-| **M&A Integration Lead** | Due diligence, post-merger integration, new-entity setup, compliance | Someone who stands up financial operations for acquired entities |
+**Core background: Accounting & Controllership. This is the primary fit.**
+
+| Archetype | Priority | Thematic axes | What they buy |
+|-----------|----------|---------------|---------------|
+| **Controllership / Head of Accounting** | PRIMARY | GL accounting, close, consolidation, statutory reporting, internal controls, compliance, audit | Someone who runs multi-entity accounting operations at scale |
+| **Regional Controller LATAM** | PRIMARY | Multi-country ops, statutory accounting, IFRS/US GAAP/BR GAAP, transfer pricing | Someone who owns end-to-end accounting across LATAM |
+| **Finance Transformation Lead** | PRIMARY | Process automation, AI adoption, digital tools + accounting foundation | Someone who modernises the accounting/controllership function with technology |
+| **FP&A Director** | SECONDARY | Budgeting, forecasting, variance analysis, financial modelling, KPIs | Someone who drives data-driven financial planning |
+| **Treasury / AP-AR Director** | SECONDARY | Cash management, accounts payable/receivable, working capital | Someone who manages cash flow and operational finance |
+| **M&A Integration Lead** | SECONDARY | Due diligence, post-merger integration, new-entity setup, compliance | Someone who stands up financial operations for acquired entities |
+
+**Scoring rule:** Roles with accounting/controllership as core function → score bonus. Pure AP/AR/Treasury roles without accounting scope → score as secondary fit.
 
 ## Your Adaptive Framing
 
-| If the role is... | Emphasise about you... | Proof point sources |
-|-------------------|------------------------|---------------------|
-| Controllership / CAO | Multi-entity LATAM ops, IFRS/US GAAP/BR GAAP, audit readiness, internal controls | cv.md achievements + AgroFresh experience |
-| Regional Controller | 5-country operations, transfer pricing, statutory reporting, cross-border compliance | cv.md AgroFresh section |
-| Finance Transformation | Automation (70% reduction), AI adoption, SAP/Power BI, process optimisation | cv.md key achievements + Forvis Mazars |
-| FP&A / Planning | Budgeting, forecasting, KPIs, dashboards, management reporting, financial modelling | cv.md across all roles |
-| M&A / Integration | 3 due diligence projects, post-merger integration, new-entity setup from scratch | cv.md key achievements |
+| If the role is... | Priority | Emphasise about you... | Proof point sources |
+|-------------------|----------|------------------------|---------------------|
+| Controllership / CAO / Head of Accounting | PRIMARY | Multi-entity LATAM ops, GL close, consolidation, IFRS/US GAAP/BR GAAP, audit readiness, internal controls | cv.md achievements + AgroFresh experience |
+| Regional Controller | PRIMARY | 5-country accounting operations, statutory reporting, transfer pricing, cross-border compliance | cv.md AgroFresh section |
+| Finance + AI Transformation | PRIMARY | Automation (70% reduction), "Inteligencia Contabil Integrada com Microsoft + GPT", SAP/Power BI | cv.md key achievements + Forvis Mazars + LinkedIn posts |
+| FP&A / Planning | SECONDARY | Budgeting, forecasting, KPIs, dashboards, management reporting, financial modelling | cv.md across all roles |
+| AP/AR / Treasury | SECONDARY | Cash flow management, regional cash flows, intercompany operations | cv.md AgroFresh section |
+| M&A / Integration | SECONDARY | 3 due diligence projects, post-merger integration, new-entity accounting setup | cv.md key achievements |
 
 ## Your Exit Narrative
 

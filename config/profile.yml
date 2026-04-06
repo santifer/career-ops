@@ -95,6 +95,16 @@ preferences:
     - "Roles that do NOT require English — deal-breaker"
   # Dream scenario
   dream_role: "Finance role at the intersection of AI/ML — rare but highly desired"
+  # Functional area priority
+  functional_priority:
+    primary:
+      - "Accounting (GL, close, consolidation, statutory reporting)"
+      - "Controllership (internal controls, compliance, audit)"
+    secondary:
+      - "FP&A (budgeting, forecasting, variance analysis)"
+      - "Accounts Payable / Accounts Receivable"
+      - "Treasury"
+      - "Other finance areas"
   # Industry preferences
   preferred_industries:
     - "Technology (top priority)"
