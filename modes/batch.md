@@ -5,21 +5,21 @@ Dos modos de uso: **conductor --chrome** (navega portales en tiempo real) o **st
 ## Arquitectura
 
 ```
-Claude Conductor (claude --chrome --dangerously-skip-permissions)
+Interactive conductor agent (browser-capable runtime)
   │
   │  Chrome: navega portales (sesiones logueadas)
   │  Lee DOM directo — el usuario ve todo en tiempo real
   │
   ├─ Oferta 1: lee JD del DOM + URL
-  │    └─► claude -p worker → report .md + PDF + tracker-line
+  │    └─► backend worker → report .md + PDF + tracker-line
   │
   ├─ Oferta 2: click siguiente, lee JD + URL
-  │    └─► claude -p worker → report .md + PDF + tracker-line
+  │    └─► backend worker → report .md + PDF + tracker-line
   │
   └─ Fin: merge tracker-additions → applications.md + resumen
 ```
 
-Cada worker es un `claude -p` hijo con contexto limpio de 200K tokens. El conductor solo orquesta.
+Cada worker es una ejecución headless del backend configurado. El conductor solo orquesta.
 
 ## Archivos
 
@@ -44,9 +44,8 @@ batch/
    c. Calcular siguiente REPORT_NUM secuencial
    d. Ejecutar via Bash:
       ```bash
-      claude -p --dangerously-skip-permissions \
-        --append-system-prompt-file batch/batch-prompt.md \
-        "Procesa esta oferta. URL: {url}. JD: /tmp/batch-jd-{id}.txt. Report: {num}. ID: {id}"
+      CAREER_OPS_AGENT=codex batch/batch-runner.sh --start-from {id}
+      # o usa el backend configurado (`claude`, `codex`, `gemini`, o un comando custom) para procesar la oferta
       ```
    e. Actualizar `batch-state.tsv` (completed/failed + score + report_num)
    f. Log a `logs/{report_num}-{id}.log`
@@ -82,15 +81,15 @@ id	url	status	started_at	completed_at	report_num	score	error	retries
 - Lock file (`batch-runner.pid`) previene ejecución doble
 - Cada worker es independiente: fallo en oferta #47 no afecta a las demás
 
-## Workers (claude -p)
+## Workers (backend configurable)
 
-Cada worker recibe `batch-prompt.md` como system prompt. Es self-contained.
+Cada worker recibe el prompt resuelto de `batch-prompt.md`. Es self-contained.
 
 El worker produce:
 1. Report `.md` en `reports/`
 2. PDF en `output/`
 3. Línea de tracker en `batch/tracker-additions/{id}.tsv`
-4. JSON de resultado por stdout
+4. JSON de resultado parseable por el orquestador
 
 ## Gestión de errores
 

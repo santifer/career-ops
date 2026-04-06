@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# career-ops batch runner — standalone orchestrator for claude -p workers
-# Reads batch-input.tsv, delegates each offer to a claude -p worker,
-# tracks state in batch-state.tsv for resumability.
+# career-ops batch runner — standalone orchestrator for pluggable agent workers.
+# Reads batch-input.tsv, delegates each offer to the configured backend,
+# and tracks state in batch-state.tsv for resumability.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -12,22 +12,25 @@ INPUT_FILE="$BATCH_DIR/batch-input.tsv"
 STATE_FILE="$BATCH_DIR/batch-state.tsv"
 PROMPT_FILE="$BATCH_DIR/batch-prompt.md"
 LOGS_DIR="$BATCH_DIR/logs"
+RESULTS_DIR="$BATCH_DIR/results"
 TRACKER_DIR="$BATCH_DIR/tracker-additions"
 REPORTS_DIR="$PROJECT_DIR/reports"
-APPLICATIONS_FILE="$PROJECT_DIR/data/applications.md"
 LOCK_FILE="$BATCH_DIR/batch-runner.pid"
+STATE_LOCK_DIR="$BATCH_DIR/.state-lock"
+STATE_LOCK_PID_FILE="$STATE_LOCK_DIR/pid"
+REPORT_COUNTER_FILE="$BATCH_DIR/.report-counter"
 
-# Defaults
 PARALLEL=1
 DRY_RUN=false
 RETRY_FAILED=false
 START_FROM=0
 MAX_RETRIES=2
+AGENT_BACKEND="${CAREER_OPS_AGENT:-claude}"
+CUSTOM_AGENT_COMMAND="${CAREER_OPS_AGENT_COMMAND:-}"
 
 usage() {
   cat <<'USAGE'
-career-ops batch runner — process job offers in batch via claude -p workers
-Uses your default Claude model (Claude Max subscription).
+career-ops batch runner — process job offers in batch via pluggable coding-agent workers
 
 Usage: batch-runner.sh [OPTIONS]
 
@@ -39,29 +42,32 @@ Options:
   --max-retries N      Max retry attempts per offer (default: 2)
   -h, --help           Show this help
 
+Environment:
+  CAREER_OPS_AGENT           Backend to use: claude, codex, gemini, copilot, custom
+  CAREER_OPS_AGENT_COMMAND   Required for custom backends and recommended for copilot.
+                             The command is executed via `bash -lc` with these env vars:
+                             CAREER_OPS_PROJECT_DIR, CAREER_OPS_PROMPT_FILE,
+                             CAREER_OPS_LOG_FILE, CAREER_OPS_OFFER_URL,
+                             CAREER_OPS_BACKEND.
+
 Files:
   batch-input.tsv      Input offers (id, url, source, notes)
   batch-state.tsv      Processing state (auto-managed)
   batch-prompt.md      Prompt template for workers
   logs/                Per-offer logs
+  results/             Parsed JSON result artifacts
   tracker-additions/   Tracker lines for post-batch merge
 
 Examples:
-  # Dry run to see pending offers
   ./batch-runner.sh --dry-run
-
-  # Process all pending
-  ./batch-runner.sh
-
-  # Retry only failed offers
-  ./batch-runner.sh --retry-failed
-
-  # Process 2 at a time starting from ID 10
-  ./batch-runner.sh --parallel 2 --start-from 10
+  CAREER_OPS_AGENT=codex ./batch-runner.sh
+  CAREER_OPS_AGENT=gemini ./batch-runner.sh --parallel 2
+  CAREER_OPS_AGENT=custom \
+    CAREER_OPS_AGENT_COMMAND='copilot -p "$(cat "$CAREER_OPS_PROMPT_FILE")"' \
+    ./batch-runner.sh
 USAGE
 }
 
-# Parse arguments
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --parallel) PARALLEL="$2"; shift 2 ;;
@@ -74,7 +80,6 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-# Lock file to prevent double execution
 acquire_lock() {
   if [[ -f "$LOCK_FILE" ]]; then
     local old_pid
@@ -97,7 +102,48 @@ release_lock() {
 
 trap release_lock EXIT
 
-# Validate prerequisites
+acquire_state_lock() {
+  local attempts=0
+
+  while ! mkdir "$STATE_LOCK_DIR" 2>/dev/null; do
+    attempts=$((attempts + 1))
+
+    if [[ -f "$STATE_LOCK_PID_FILE" ]]; then
+      local owner_pid
+      owner_pid=$(cat "$STATE_LOCK_PID_FILE" 2>/dev/null || true)
+      if [[ -n "$owner_pid" ]] && ! kill -0 "$owner_pid" 2>/dev/null; then
+        rm -f "$STATE_LOCK_PID_FILE"
+        rmdir "$STATE_LOCK_DIR" 2>/dev/null || true
+        continue
+      fi
+    fi
+
+    if (( attempts % 100 == 0 )); then
+      echo "WARN: Waiting on batch state lock..." >&2
+    fi
+    sleep 0.05
+  done
+
+  printf '%s\n' "${BASHPID:-$$}" > "$STATE_LOCK_PID_FILE"
+}
+
+release_state_lock() {
+  local owner_pid=""
+  owner_pid=$(cat "$STATE_LOCK_PID_FILE" 2>/dev/null || true)
+  if [[ "$owner_pid" == "${BASHPID:-$$}" ]]; then
+    rm -f "$STATE_LOCK_PID_FILE"
+    rmdir "$STATE_LOCK_DIR" 2>/dev/null || true
+  fi
+}
+
+require_command() {
+  local cmd="$1"
+  if ! command -v "$cmd" &>/dev/null; then
+    echo "ERROR: '$cmd' CLI not found in PATH."
+    exit 1
+  fi
+}
+
 check_prerequisites() {
   if [[ ! -f "$INPUT_FILE" ]]; then
     echo "ERROR: $INPUT_FILE not found. Add offers first."
@@ -109,22 +155,38 @@ check_prerequisites() {
     exit 1
   fi
 
-  if ! command -v claude &>/dev/null; then
-    echo "ERROR: 'claude' CLI not found in PATH."
-    exit 1
-  fi
+  case "$AGENT_BACKEND" in
+    claude) require_command claude ;;
+    codex) require_command codex ;;
+    gemini) require_command gemini ;;
+    custom)
+      if [[ -z "$CUSTOM_AGENT_COMMAND" ]]; then
+        echo "ERROR: CAREER_OPS_AGENT_COMMAND is required when CAREER_OPS_AGENT=custom."
+        exit 1
+      fi
+      ;;
+    copilot)
+      if [[ -z "$CUSTOM_AGENT_COMMAND" ]]; then
+        echo "ERROR: CAREER_OPS_AGENT=copilot requires CAREER_OPS_AGENT_COMMAND with your local non-interactive Copilot invocation."
+        exit 1
+      fi
+      ;;
+    *)
+      echo "ERROR: Unsupported CAREER_OPS_AGENT '$AGENT_BACKEND'. Use claude, codex, gemini, copilot, or custom."
+      exit 1
+      ;;
+  esac
 
-  mkdir -p "$LOGS_DIR" "$TRACKER_DIR" "$REPORTS_DIR"
+  require_command node
+  mkdir -p "$LOGS_DIR" "$RESULTS_DIR" "$TRACKER_DIR" "$REPORTS_DIR"
 }
 
-# Initialize state file if it doesn't exist
 init_state() {
   if [[ ! -f "$STATE_FILE" ]]; then
     printf 'id\turl\tstatus\tstarted_at\tcompleted_at\treport_num\tscore\terror\tretries\n' > "$STATE_FILE"
   fi
 }
 
-# Get status of an offer from state file
 get_status() {
   local id="$1"
   if [[ ! -f "$STATE_FILE" ]]; then
@@ -136,7 +198,6 @@ get_status() {
   echo "${status:-none}"
 }
 
-# Get retry count for an offer
 get_retries() {
   local id="$1"
   if [[ ! -f "$STATE_FILE" ]]; then
@@ -148,22 +209,31 @@ get_retries() {
   echo "${retries:-0}"
 }
 
-# Calculate next report number
-next_report_num() {
+next_report_num_unlocked() {
   local max_num=0
+
+  if [[ -f "$REPORT_COUNTER_FILE" ]]; then
+    local cached
+    cached=$(cat "$REPORT_COUNTER_FILE" 2>/dev/null || true)
+    if [[ -n "$cached" ]]; then
+      printf '%03d' "$cached"
+      return
+    fi
+  fi
+
   if [[ -d "$REPORTS_DIR" ]]; then
     for f in "$REPORTS_DIR"/*.md; do
       [[ -f "$f" ]] || continue
-      local basename
+      local basename num
       basename=$(basename "$f")
-      local num="${basename%%-*}"
-      num=$((10#$num)) # Remove leading zeros for arithmetic
+      num="${basename%%-*}"
+      num=$((10#$num))
       if (( num > max_num )); then
         max_num=$num
       fi
     done
   fi
-  # Also check state file for assigned report numbers
+
   if [[ -f "$STATE_FILE" ]]; then
     while IFS=$'\t' read -r _ _ _ _ _ rnum _ _ _; do
       [[ "$rnum" == "report_num" || "$rnum" == "-" || -z "$rnum" ]] && continue
@@ -173,11 +243,20 @@ next_report_num() {
       fi
     done < "$STATE_FILE"
   fi
+
   printf '%03d' $((max_num + 1))
 }
 
-# Update or insert state for an offer
-update_state() {
+reserve_next_report_num() {
+  local next_num
+  acquire_state_lock
+  next_num=$(next_report_num_unlocked)
+  printf '%s\n' "$((10#$next_num + 1))" > "$REPORT_COUNTER_FILE"
+  release_state_lock
+  printf '%s\n' "$next_num"
+}
+
+update_state_unlocked() {
   local id="$1" url="$2" status="$3" started="$4" completed="$5" report_num="$6" score="$7" error="$8" retries="$9"
 
   if [[ ! -f "$STATE_FILE" ]]; then
@@ -187,12 +266,10 @@ update_state() {
   local tmp="$STATE_FILE.tmp"
   local found=false
 
-  # Write header
   head -1 "$STATE_FILE" > "$tmp"
 
-  # Process existing lines
   while IFS=$'\t' read -r sid surl sstatus sstarted scompleted sreport sscore serror sretries; do
-    [[ "$sid" == "id" ]] && continue  # skip header
+    [[ "$sid" == "id" ]] && continue
     if [[ "$sid" == "$id" ]]; then
       printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
         "$id" "$url" "$status" "$started" "$completed" "$report_num" "$score" "$error" "$retries" >> "$tmp"
@@ -211,12 +288,80 @@ update_state() {
   mv "$tmp" "$STATE_FILE"
 }
 
-# Process a single offer
+update_state() {
+  acquire_state_lock
+  update_state_unlocked "$@"
+  release_state_lock
+}
+
+run_worker_backend() {
+  local resolved_prompt="$1"
+  local log_file="$2"
+  local offer_url="$3"
+  local exit_code=0
+
+  case "$AGENT_BACKEND" in
+    claude)
+      claude -p \
+        --dangerously-skip-permissions \
+        --append-system-prompt-file "$resolved_prompt" \
+        "Process this career-ops batch offer and return only the final JSON object." \
+        > "$log_file" 2>&1 || exit_code=$?
+      ;;
+    codex)
+      codex exec \
+        --dangerously-bypass-approvals-and-sandbox \
+        --skip-git-repo-check \
+        -C "$PROJECT_DIR" \
+        -o "$log_file" \
+        - < "$resolved_prompt" 2>> "$log_file" || exit_code=$?
+      ;;
+    gemini)
+      gemini -p "$(cat "$resolved_prompt")" > "$log_file" 2>&1 || exit_code=$?
+      ;;
+    custom|copilot)
+      CAREER_OPS_PROJECT_DIR="$PROJECT_DIR" \
+      CAREER_OPS_PROMPT_FILE="$resolved_prompt" \
+      CAREER_OPS_LOG_FILE="$log_file" \
+      CAREER_OPS_OFFER_URL="$offer_url" \
+      CAREER_OPS_BACKEND="$AGENT_BACKEND" \
+      bash -lc "$CUSTOM_AGENT_COMMAND" > "$log_file" 2>&1 || exit_code=$?
+      ;;
+  esac
+
+  return "$exit_code"
+}
+
+parse_worker_result() {
+  local log_file="$1"
+  local result_file="$2"
+
+  if ! node "$BATCH_DIR/extract-worker-result.mjs" "$log_file" > "$result_file"; then
+    return 1
+  fi
+
+  node -e '
+const fs = require("fs");
+const result = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+const fields = [
+  result.status,
+  result.report_num || "",
+  result.company || "",
+  result.role || "",
+  result.score ?? "",
+  result.pdf || "",
+  result.report || "",
+  result.error || "",
+].map((value) => String(value).replace(/[\t\n\r]+/g, " "));
+process.stdout.write(fields.join("\t"));
+' "$result_file"
+}
+
 process_offer() {
   local id="$1" url="$2" source="$3" notes="$4"
 
   local report_num
-  report_num=$(next_report_num)
+  report_num=$(reserve_next_report_num)
   local date
   date=$(date +%Y-%m-%d)
   local started_at
@@ -224,25 +369,14 @@ process_offer() {
   local retries
   retries=$(get_retries "$id")
   local jd_file="/tmp/batch-jd-${id}.txt"
+  local log_file="$LOGS_DIR/${report_num}-${id}.log"
+  local result_file="$RESULTS_DIR/${id}.json"
+  local resolved_prompt="$BATCH_DIR/.resolved-prompt-${id}.md"
 
-  echo "--- Processing offer #$id: $url (report $report_num, attempt $((retries + 1)))"
+  echo "--- Processing offer #$id: $url (report $report_num, attempt $((retries + 1)), backend: $AGENT_BACKEND)"
 
-  # Mark as in-progress
   update_state "$id" "$url" "processing" "$started_at" "-" "$report_num" "-" "-" "$retries"
 
-  # Build the prompt with placeholders replaced
-  local prompt
-  prompt="Procesa esta oferta de empleo. Ejecuta el pipeline completo: evaluación A-F + report .md + PDF + tracker line."
-  prompt="$prompt URL: $url"
-  prompt="$prompt JD file: $jd_file"
-  prompt="$prompt Report number: $report_num"
-  prompt="$prompt Date: $date"
-  prompt="$prompt Batch ID: $id"
-
-  local log_file="$LOGS_DIR/${report_num}-${id}.log"
-
-  # Prepare system prompt with placeholders resolved
-  local resolved_prompt="$BATCH_DIR/.resolved-prompt-${id}.md"
   sed \
     -e "s|{{URL}}|${url}|g" \
     -e "s|{{JD_FILE}}|${jd_file}|g" \
@@ -251,51 +385,61 @@ process_offer() {
     -e "s|{{ID}}|${id}|g" \
     "$PROMPT_FILE" > "$resolved_prompt"
 
-  # Launch claude -p worker (uses default model from Claude Max subscription)
   local exit_code=0
-  claude -p \
-    --dangerously-skip-permissions \
-    --append-system-prompt-file "$resolved_prompt" \
-    "$prompt" \
-    > "$log_file" 2>&1 || exit_code=$?
-
-  # Cleanup resolved prompt
+  run_worker_backend "$resolved_prompt" "$log_file" "$url" || exit_code=$?
   rm -f "$resolved_prompt"
 
   local completed_at
   completed_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 
-  if [[ $exit_code -eq 0 ]]; then
-    # Try to extract score from worker output
-    local score="-"
-    local score_match
-    score_match=$(grep -oP '"score":\s*[\d.]+' "$log_file" 2>/dev/null | head -1 | grep -oP '[\d.]+' || true)
-    if [[ -n "$score_match" ]]; then
-      score="$score_match"
+  local parsed
+  if [[ $exit_code -eq 0 ]] && parsed=$(parse_worker_result "$log_file" "$result_file"); then
+    local result_status result_report_num result_company result_role result_score result_pdf result_report result_error
+    IFS=$'\t' read -r result_status result_report_num result_company result_role result_score result_pdf result_report result_error <<< "$parsed"
+
+    local score_for_state="-"
+    if [[ -n "$result_score" ]]; then
+      score_for_state="$result_score"
     fi
 
-    update_state "$id" "$url" "completed" "$started_at" "$completed_at" "$report_num" "$score" "-" "$retries"
-    echo "    ✅ Completed (score: $score, report: $report_num)"
-  else
+    if [[ "$result_status" == "completed" ]]; then
+      update_state "$id" "$url" "completed" "$started_at" "$completed_at" "${result_report_num:-$report_num}" "$score_for_state" "-" "$retries"
+      echo "    ✅ Completed (score: ${score_for_state}, report: ${result_report_num:-$report_num})"
+      return
+    fi
+
     retries=$((retries + 1))
-    local error_msg
-    error_msg=$(tail -5 "$log_file" 2>/dev/null | tr '\n' ' ' | cut -c1-200 || echo "Unknown error (exit code $exit_code)")
-    update_state "$id" "$url" "failed" "$started_at" "$completed_at" "$report_num" "-" "$error_msg" "$retries"
-    echo "    ❌ Failed (attempt $retries, exit code $exit_code)"
+    update_state "$id" "$url" "failed" "$started_at" "$completed_at" "${result_report_num:-$report_num}" "$score_for_state" "${result_error:-Worker reported failure}" "$retries"
+    echo "    ❌ Failed (worker reported failure)"
+    return
   fi
+
+  retries=$((retries + 1))
+  local error_msg
+  if [[ -f "$log_file" ]]; then
+    error_msg=$(tail -5 "$log_file" | tr '\n' ' ' | cut -c1-200)
+  else
+    error_msg="No log output captured"
+  fi
+  if [[ $exit_code -eq 0 ]]; then
+    error_msg="Worker exited successfully but did not emit parseable JSON. ${error_msg}"
+  elif [[ -z "$error_msg" ]]; then
+    error_msg="Unknown error (exit code $exit_code)"
+  fi
+
+  update_state "$id" "$url" "failed" "$started_at" "$completed_at" "$report_num" "-" "$error_msg" "$retries"
+  echo "    ❌ Failed (attempt $retries, exit code $exit_code)"
 }
 
-# Merge tracker additions into applications.md
 merge_tracker() {
   echo ""
   echo "=== Merging tracker additions ==="
-  node "$PROJECT_DIR/career-ops/merge-tracker.mjs"
+  node "$PROJECT_DIR/merge-tracker.mjs"
   echo ""
   echo "=== Verifying pipeline integrity ==="
-  node "$PROJECT_DIR/career-ops/verify-pipeline.mjs" || echo "⚠️  Verification found issues (see above)"
+  node "$PROJECT_DIR/verify-pipeline.mjs" || echo "⚠️  Verification found issues (see above)"
 }
 
-# Print summary
 print_summary() {
   echo ""
   echo "=== Batch Summary ==="
@@ -312,7 +456,8 @@ print_summary() {
     [[ "$sid" == "id" ]] && continue
     total=$((total + 1))
     case "$sstatus" in
-      completed) completed=$((completed + 1))
+      completed)
+        completed=$((completed + 1))
         if [[ "$sscore" != "-" && -n "$sscore" ]]; then
           score_sum=$(echo "$score_sum + $sscore" | bc 2>/dev/null || echo "$score_sum")
           score_count=$((score_count + 1))
@@ -332,7 +477,6 @@ print_summary() {
   fi
 }
 
-# Main
 main() {
   check_prerequisites
 
@@ -342,7 +486,6 @@ main() {
 
   init_state
 
-  # Count input offers (skip header, ignore blank lines)
   local total_input
   total_input=$(tail -n +2 "$INPUT_FILE" | grep -c '[^[:space:]]' 2>/dev/null || true)
   total_input="${total_input:-0}"
@@ -353,21 +496,22 @@ main() {
   fi
 
   echo "=== career-ops batch runner ==="
-  echo "Parallel: $PARALLEL | Max retries: $MAX_RETRIES"
+  echo "Backend: $AGENT_BACKEND | Parallel: $PARALLEL | Max retries: $MAX_RETRIES"
+  if [[ -n "$CUSTOM_AGENT_COMMAND" ]]; then
+    echo "Custom command override: enabled"
+  fi
   echo "Input: $total_input offers"
   echo ""
 
-  # Build list of offers to process
   local -a pending_ids=()
   local -a pending_urls=()
   local -a pending_sources=()
   local -a pending_notes=()
 
   while IFS=$'\t' read -r id url source notes; do
-    [[ "$id" == "id" ]] && continue  # skip header
+    [[ "$id" == "id" ]] && continue
     [[ -z "$id" || -z "$url" ]] && continue
 
-    # Skip if before start-from
     if (( id < START_FROM )); then
       continue
     fi
@@ -376,11 +520,9 @@ main() {
     status=$(get_status "$id")
 
     if [[ "$RETRY_FAILED" == "true" ]]; then
-      # Only process failed offers
       if [[ "$status" != "failed" ]]; then
         continue
       fi
-      # Check retry limit
       local retries
       retries=$(get_retries "$id")
       if (( retries >= MAX_RETRIES )); then
@@ -388,11 +530,9 @@ main() {
         continue
       fi
     else
-      # Skip completed offers
       if [[ "$status" == "completed" ]]; then
         continue
       fi
-      # Skip failed offers that hit retry limit (unless --retry-failed)
       if [[ "$status" == "failed" ]]; then
         local retries
         retries=$(get_retries "$id")
@@ -420,7 +560,6 @@ main() {
   echo "Pending: $pending_count offers"
   echo ""
 
-  # Dry run: just list
   if [[ "$DRY_RUN" == "true" ]]; then
     echo "=== DRY RUN (no processing) ==="
     for i in "${!pending_ids[@]}"; do
@@ -433,53 +572,38 @@ main() {
     exit 0
   fi
 
-  # Process offers
   if (( PARALLEL <= 1 )); then
-    # Sequential processing
     for i in "${!pending_ids[@]}"; do
       process_offer "${pending_ids[$i]}" "${pending_urls[$i]}" "${pending_sources[$i]}" "${pending_notes[$i]}"
     done
   else
-    # Parallel processing with job control
     local running=0
     local -a pids=()
-    local -a pid_ids=()
 
     for i in "${!pending_ids[@]}"; do
-      # Wait if we're at parallel limit
       while (( running >= PARALLEL )); do
-        # Wait for any child to finish
         for j in "${!pids[@]}"; do
           if ! kill -0 "${pids[$j]}" 2>/dev/null; then
             wait "${pids[$j]}" 2>/dev/null || true
             unset 'pids[j]'
-            unset 'pid_ids[j]'
             running=$((running - 1))
           fi
         done
-        # Compact arrays
         pids=("${pids[@]}")
-        pid_ids=("${pid_ids[@]}")
         sleep 1
       done
 
-      # Launch worker in background
       process_offer "${pending_ids[$i]}" "${pending_urls[$i]}" "${pending_sources[$i]}" "${pending_notes[$i]}" &
       pids+=($!)
-      pid_ids+=("${pending_ids[$i]}")
       running=$((running + 1))
     done
 
-    # Wait for remaining workers
     for pid in "${pids[@]}"; do
       wait "$pid" 2>/dev/null || true
     done
   fi
 
-  # Merge tracker additions
   merge_tracker
-
-  # Print summary
   print_summary
 }
 

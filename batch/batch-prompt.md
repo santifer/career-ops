@@ -44,7 +44,7 @@ Eres un worker de evaluación de ofertas de empleo for the candidate (read name 
 ### Paso 1 — Obtener JD
 
 1. Lee el archivo JD en `{{JD_FILE}}`
-2. Si el archivo está vacío o no existe, intenta obtener el JD desde `{{URL}}` con WebFetch
+2. Si el archivo está vacío o no existe, intenta obtener el JD desde `{{URL}}` con una herramienta de HTTP fetch o browser automation disponible en el runtime
 3. Si ambos fallan, reporta error y termina
 
 ### Paso 2 — Evaluación A-F
@@ -117,7 +117,7 @@ Sección de **gaps** con estrategia de mitigación para cada uno:
 
 #### Bloque D — Comp y Demanda
 
-Usar WebSearch para salarios actuales (Glassdoor, Levels.fyi, Blind), reputación comp de la empresa, tendencia demanda. Tabla con datos y fuentes citadas. Si no hay datos, decirlo.
+Usar web search para salarios actuales (Glassdoor, Levels.fyi, Blind), reputación comp de la empresa y tendencia de demanda. Tabla con datos y fuentes citadas. Si no hay datos, decirlo.
 
 Score de comp (1-5): 5=top quartile, 4=above market, 3=median, 2=slightly below, 1=well below.
 
@@ -304,7 +304,7 @@ Donde `{next_num}` se calcula leyendo la última línea de `data/applications.md
 
 ### Paso 6 — Output final
 
-Al terminar, imprime por stdout un resumen JSON para que el orquestador lo parsee:
+Al terminar, imprime por stdout SOLO un resumen JSON válido para que el orquestador lo parsee:
 
 ```json
 {
@@ -351,7 +351,7 @@ Si algo falla:
 1. Leer cv.md, llms.txt y article-digest.md antes de evaluar
 2. Detectar el arquetipo del rol y adaptar el framing
 3. Citar líneas exactas del CV cuando haga match
-4. Usar WebSearch para datos de comp y empresa
+4. Usar web search para datos de comp y empresa
 5. Generar contenido en el idioma del JD (EN default)
 6. Ser directo y accionable — sin fluff
 7. Cuando generes texto en inglés (PDF summaries, bullets, STAR stories), usa inglés nativo de tech: frases cortas, verbos de acción, sin passive voice innecesaria, sin "in order to" ni "utilized"

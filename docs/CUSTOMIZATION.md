@@ -30,7 +30,7 @@ Copy from `templates/portals.example.yml` and customize:
 
 1. **title_filter.positive**: Keywords matching your target roles
 2. **title_filter.negative**: Tech stacks or domains to exclude
-3. **search_queries**: WebSearch queries for job boards (Ashby, Greenhouse, Lever)
+3. **search_queries**: web search queries for job boards (Ashby, Greenhouse, Lever)
 4. **tracked_companies**: Companies to check directly
 
 ## CV Template (templates/cv-template.html)
@@ -51,7 +51,7 @@ The negotiation section provides frameworks for salary discussions. Replace the 
 
 ## Hooks (Optional)
 
-Career-ops can integrate with external systems via Claude Code hooks. Example hooks:
+Career-ops can integrate with external systems via agent-specific hooks or MCP integrations. Claude Code hooks remain supported. Example hook configuration:
 
 ```json
 {
@@ -66,7 +66,7 @@ Career-ops can integrate with external systems via Claude Code hooks. Example ho
 }
 ```
 
-Save hooks in `.claude/settings.json`.
+Save Claude hooks in `.claude/settings.json`. For other agents, keep the shared logic in repo files and configure runtime-specific hooks in that agent’s native settings.
 
 ## States (templates/states.yml)
 

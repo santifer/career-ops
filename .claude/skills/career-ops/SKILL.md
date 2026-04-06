@@ -7,6 +7,8 @@ args: mode
 
 # career-ops -- Router
 
+`AGENTS.md` is now the canonical instruction file for this repository. Treat this Claude skill as a wrapper over the shared repo instructions.
+
 ## Mode Routing
 
 Determine the mode from `{{mode}}`:

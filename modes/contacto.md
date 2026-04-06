@@ -1,6 +1,6 @@
 # Modo: contacto — LinkedIn Power Move
 
-1. **Identificar targets** via WebSearch:
+1. **Identificar targets** via web search:
    - Hiring manager del equipo
    - Recruiter asignado
    - 2-3 peers del equipo (gente con rol similar)

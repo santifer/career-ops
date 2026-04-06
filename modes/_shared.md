@@ -100,7 +100,7 @@ If the candidate has a live demo/dashboard (check profile.yml), offer access in 
 <!-- [CUSTOMIZE] Research comp ranges for YOUR target roles and update these ranges -->
 
 **General guidance:**
-- Use WebSearch for current market data (Glassdoor, Levels.fyi, Blind)
+- Use web search for current market data (Glassdoor, Levels.fyi, Blind)
 - Frame by role title, not by skills -- titles determine comp bands
 - Contractor rates are typically 30-50% higher than employee base to account for benefits
 - Geographic arbitrage works for remote roles: lower CoL = better net
@@ -157,7 +157,7 @@ If the candidate has a live demo/dashboard (check profile.yml), offer access in 
 1b. **First evaluation of each session:** Run `node cv-sync-check.mjs` with Bash. If it reports warnings, notify the candidate before continuing
 2. Detect the role archetype and adapt framing
 3. Cite exact lines from CV when matching
-4. Use WebSearch for comp and company data
+4. Use web search for comp and company data
 5. Register in tracker after evaluating
 6. Generate content in the language of the JD (EN default)
 7. Be direct and actionable -- no fluff
@@ -170,9 +170,9 @@ If the candidate has a live demo/dashboard (check profile.yml), offer access in 
 
 | Tool | Use |
 |------|-----|
-| WebSearch | Comp research, trends, company culture, LinkedIn contacts, fallback for JDs |
-| WebFetch | Fallback for extracting JDs from static pages |
-| Playwright | Verify if offers are still active (browser_navigate + browser_snapshot), extract JDs from SPAs. **CRITICAL: NEVER launch 2+ agents with Playwright in parallel -- they share a single browser instance.** |
+| Browser automation | Verify if offers are still active and extract JDs from SPAs. **CRITICAL: NEVER launch 2+ browser-heavy agents in parallel if they share one browser instance.** |
+| HTTP fetch | Fallback for extracting JDs from static pages |
+| Web search | Comp research, trends, company culture, LinkedIn contacts, fallback discovery for JDs |
 | Read | cv.md, article-digest.md, cv-template.html |
 | Write | Temporary HTML for PDF, applications.md, reports .md |
 | Edit | Update tracker |

@@ -46,7 +46,7 @@ Sección de **gaps** con estrategia de mitigación para cada uno. Para cada gap:
 
 ## Bloque D — Comp y Demanda
 
-Usar WebSearch para:
+Usar web search para:
 - Salarios actuales del rol (Glassdoor, Levels.fyi, Blind)
 - Reputación de compensación de la empresa
 - Tendencia de demanda del rol

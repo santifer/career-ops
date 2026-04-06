@@ -2,9 +2,12 @@
 
 **[:gb: English](#what-is-this)** | **[:es: Español](#es-versión-en-español)**
 
-> AI-powered job search pipeline built on Claude Code. Evaluate offers, generate tailored CVs, scan portals, and track everything -- powered by AI agents.
+> AI-powered job search pipeline for coding agents. Evaluate offers, generate tailored CVs, scan portals, and track everything -- using portable prompts, scripts, and agent adapters.
 
+![Codex](https://img.shields.io/badge/Codex-412991?style=flat)
 ![Claude Code](https://img.shields.io/badge/Claude_Code-000?style=flat&logo=anthropic&logoColor=white)
+![Gemini CLI](https://img.shields.io/badge/Gemini_CLI-4285F4?style=flat)
+![GitHub Copilot](https://img.shields.io/badge/GitHub_Copilot-000000?style=flat&logo=githubcopilot&logoColor=white)
 ![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat&logo=node.js&logoColor=white)
 ![Go](https://img.shields.io/badge/Go-00ADD8?style=flat&logo=go&logoColor=white)
 ![Playwright](https://img.shields.io/badge/Playwright-2EAD33?style=flat&logo=playwright&logoColor=white)
@@ -18,7 +21,7 @@
 
 ## What Is This
 
-Career-Ops turns Claude Code into a full job search command center. Instead of manually tracking applications in a spreadsheet, you get an AI-powered pipeline that:
+Career-Ops turns modern coding agents into a full job search command center. Instead of manually tracking applications in a spreadsheet, you get an AI-powered pipeline that:
 
 - **Evaluates offers** with a structured A-F scoring system (10 weighted dimensions)
 - **Generates tailored PDFs** -- ATS-optimized CVs customized per job description
@@ -30,6 +33,21 @@ Career-Ops turns Claude Code into a full job search command center. Instead of m
 
 Built by someone who used it to evaluate 740+ job offers, generate 100+ tailored CVs, and land a Head of Applied AI role. [Read the full case study](https://santifer.io/career-ops-system).
 
+## Agent Support
+
+Career-Ops now has a portable instruction layer:
+
+- `AGENTS.md` is the canonical repo instruction file
+- `CLAUDE.md`, `GEMINI.md`, and `.github/copilot-instructions.md` are wrappers
+- `batch/batch-runner.sh` supports pluggable backends (`claude`, `codex`, `gemini`, or a custom command)
+
+Current recommendation:
+
+1. **Codex** for the cleanest local agent workflow
+2. **Claude Code** for backwards compatibility
+3. **Gemini CLI** for headless and MCP-heavy setups
+4. **GitHub Copilot** for repo/IDE/cloud-agent workflows
+
 ## Features
 
 | Feature | Description |
@@ -40,7 +58,7 @@ Built by someone who used it to evaluate 740+ job offers, generate 100+ tailored
 | **Negotiation Scripts** | Salary negotiation frameworks, geographic discount pushback, competing offer leverage |
 | **ATS PDF Generation** | Keyword-injected CVs with Space Grotesk + DM Sans design |
 | **Portal Scanner** | 45+ companies pre-configured (Anthropic, OpenAI, ElevenLabs, Retool, n8n...) + custom queries across Ashby, Greenhouse, Lever, Wellfound |
-| **Batch Processing** | Parallel evaluation with `claude -p` workers |
+| **Batch Processing** | Parallel evaluation with pluggable agent workers (`claude`, `codex`, `gemini`, or custom commands) |
 | **Dashboard TUI** | Terminal UI to browse, filter, and sort your pipeline |
 | **Pipeline Integrity** | Automated merge, dedup, status normalization, health checks |
 
@@ -59,10 +77,17 @@ cp templates/portals.example.yml portals.yml       # Customize companies
 # 3. Add your CV
 # Create cv.md in the project root with your CV in markdown
 
-# 4. Personalize with Claude
-claude   # Open Claude Code in this directory
+# 4. Personalize with your agent
+# Codex
+codex
 
-# Then ask Claude to adapt the system to you:
+# Claude Code
+claude
+
+# Gemini CLI
+gemini
+
+# Then ask your agent to adapt the system to you:
 # "Change the archetypes to backend engineering roles"
 # "Translate the modes to English"
 # "Add these 5 companies to portals.yml"
@@ -72,7 +97,7 @@ claude   # Open Claude Code in this directory
 # Paste a job URL or run /career-ops
 ```
 
-> **The system is designed to be customized by Claude itself.** Modes, archetypes, scoring weights, negotiation scripts -- just ask Claude to change them. It reads the same files it uses, so it knows exactly what to edit.
+> **The system is designed to be customized by the active agent.** Modes, archetypes, scoring weights, and negotiation scripts live in the repo, so any capable coding agent can update them directly.
 
 See [docs/SETUP.md](docs/SETUP.md) for the full setup guide.
 
@@ -150,7 +175,9 @@ Features: 6 filter tabs, 4 sort modes, grouped/flat view, lazy-loaded previews, 
 
 ```
 career-ops/
-├── CLAUDE.md                    # Agent instructions
+├── AGENTS.md                    # Canonical agent instructions
+├── CLAUDE.md                    # Claude Code wrapper
+├── GEMINI.md                    # Gemini CLI wrapper
 ├── cv.md                        # Your CV (create this)
 ├── article-digest.md            # Your proof points (optional)
 ├── config/
@@ -180,15 +207,18 @@ career-ops/
 
 ## Tech Stack
 
+![Codex](https://img.shields.io/badge/Codex-412991?style=flat)
 ![Claude Code](https://img.shields.io/badge/Claude_Code-000?style=flat&logo=anthropic&logoColor=white)
+![Gemini CLI](https://img.shields.io/badge/Gemini_CLI-4285F4?style=flat)
+![GitHub Copilot](https://img.shields.io/badge/GitHub_Copilot-000000?style=flat&logo=githubcopilot&logoColor=white)
 ![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat&logo=node.js&logoColor=white)
 ![Playwright](https://img.shields.io/badge/Playwright-2EAD33?style=flat&logo=playwright&logoColor=white)
 ![Go](https://img.shields.io/badge/Go-00ADD8?style=flat&logo=go&logoColor=white)
 ![Bubble Tea](https://img.shields.io/badge/Bubble_Tea-FF75B5?style=flat&logo=go&logoColor=white)
 
-- **Agent**: Claude Code with custom skills and modes
+- **Agent layer**: Portable prompts + agent-specific wrappers (Codex, Claude Code, Gemini CLI, Copilot)
 - **PDF**: Playwright/Puppeteer + HTML template
-- **Scanner**: Playwright + Greenhouse API + WebSearch
+- **Scanner**: Browser automation + Greenhouse API + web search
 - **Dashboard**: Go + Bubble Tea + Lipgloss (Catppuccin Mocha theme)
 - **Data**: Markdown tables + YAML config + TSV batch files
 
@@ -212,7 +242,7 @@ MIT
 
 ## Que es esto
 
-Career-Ops convierte Claude Code en un centro de mando de busqueda de empleo. En vez de trackear aplicaciones en un spreadsheet, tienes un pipeline AI que:
+Career-Ops convierte los coding agents modernos en un centro de mando de busqueda de empleo. En vez de trackear aplicaciones en un spreadsheet, tienes un pipeline AI que:
 
 - **Evalua ofertas** con scoring estructurado A-F (10 dimensiones ponderadas)
 - **Genera PDFs personalizados** -- CVs ATS-optimizados por oferta
@@ -238,10 +268,17 @@ cp templates/portals.example.yml portals.yml       # Personalizar empresas
 # 3. Añadir tu CV
 # Crear cv.md en la raiz del proyecto con tu CV en markdown
 
-# 4. Personalizar con Claude
-claude   # Abrir Claude Code en este directorio
+# 4. Personalizar con tu agente
+# Codex
+codex
 
-# Pidele a Claude que adapte el sistema a ti:
+# Claude Code
+claude
+
+# Gemini CLI
+gemini
+
+# Pidele a tu agente que adapte el sistema a ti:
 # "Cambia los arquetipos a roles de backend"
 # "Traduce los modes a ingles"
 # "Añade estas empresas a portals.yml"
@@ -251,7 +288,7 @@ claude   # Abrir Claude Code en este directorio
 # Pega una URL de oferta o ejecuta /career-ops
 ```
 
-> **El sistema esta diseñado para que Claude lo personalice.** Modes, arquetipos, scoring, scripts de negociacion -- solo pidelo. Claude lee los mismos archivos que usa, asi que sabe exactamente que editar.
+> **El sistema esta diseñado para que el agente activo lo personalice.** Modes, arquetipos, scoring y scripts de negociacion viven en el repo, asi que cualquier coding agent competente puede editarlos directamente.
 
 Guia completa en [docs/SETUP.md](docs/SETUP.md).
 
