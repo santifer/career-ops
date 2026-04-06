@@ -176,4 +176,5 @@ If the candidate has a live demo/dashboard (check profile.yml), offer access in 
 | Read | cv.md, article-digest.md, cv-template.html |
 | Write | Temporary HTML for PDF, applications.md, reports .md |
 | Edit | Update tracker |
+| browser-use | LinkedIn Jobs scanning (Level 4 in scan mode). Uses `--profile` for logged-in Chrome. **Conflicts with Playwright -- never run simultaneously.** |
 | Bash | `node generate-pdf.mjs` |

@@ -15,6 +15,7 @@ git clone https://github.com/santifer/career-ops.git
 cd career-ops
 npm install
 npx playwright install chromium   # Required for PDF generation
+pip install browser-use           # Optional: LinkedIn Jobs scanning
 ```
 
 ### 2. Configure your profile
@@ -41,6 +42,7 @@ Edit `portals.yml`:
 - Update `title_filter.positive` with keywords matching your target roles
 - Add companies you want to track in `tracked_companies`
 - Customize `search_queries` for your preferred job boards
+- (Optional) Enable `linkedin.enabled: true` for LinkedIn Jobs scanning — requires browser-use CLI and being logged into LinkedIn in Chrome
 
 ### 5. Start using
 

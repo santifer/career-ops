@@ -148,6 +148,8 @@ This system is designed to be customized by YOU (Claude). When the user asks you
 
 **Exception for batch workers (`claude -p`):** Playwright is not available in headless pipe mode. Use WebFetch as fallback and mark the report header with `**Verification:** unconfirmed (batch mode)`. The user can verify manually later.
 
+**browser-use and Playwright conflict:** Both launch Chrome. The scan mode handles this by running Levels 1-3 (Playwright) first, closing the browser, then running Level 4 (browser-use). If you need Playwright after a browser-use session, ensure `browser-use close` was called.
+
 ---
 
 ## Stack and Conventions

@@ -20,8 +20,9 @@ Leer `portals.yml` que contiene:
 - `search_queries`: Lista de queries WebSearch con `site:` filters por portal (descubrimiento amplio)
 - `tracked_companies`: Empresas específicas con `careers_url` para navegación directa
 - `title_filter`: Keywords positive/negative/seniority_boost para filtrado de títulos
+- `linkedin`: Configuración de LinkedIn Jobs scan via browser-use CLI
 
-## Estrategia de descubrimiento (3 niveles)
+## Estrategia de descubrimiento (4 niveles)
 
 ### Nivel 1 — Playwright directo (PRINCIPAL)
 
@@ -41,12 +42,21 @@ Para empresas con Greenhouse, la API JSON (`boards-api.greenhouse.io/v1/boards/{
 
 Los `search_queries` con `site:` filters cubren portales de forma transversal (todos los Ashby, todos los Greenhouse, etc.). Útil para descubrir empresas NUEVAS que aún no están en `tracked_companies`, pero los resultados pueden estar desfasados.
 
+### Nivel 4 — LinkedIn Jobs (browser-use)
+
+Busca en LinkedIn Jobs usando la sesión de Chrome del usuario via `browser-use` CLI con `--profile`. Construye búsquedas a partir de los keywords en `title_filter.positive` y aplica filtros de ubicación/tipo de trabajo desde la sección `linkedin` de portals.yml.
+
+Requiere: browser-use CLI instalado (`pip install browser-use`), perfil de Chrome con sesión de LinkedIn activa.
+
+**CRÍTICO: browser-use y Playwright ambos lanzan Chrome. Los Niveles 1-3 DEBEN completarse y cerrar su navegador ANTES de iniciar el Nivel 4. Después del Nivel 4, ejecutar `browser-use close` antes de cualquier operación posterior con Playwright.**
+
 **Prioridad de ejecución:**
 1. Nivel 1: Playwright → todas las `tracked_companies` con `careers_url`
 2. Nivel 2: API → todas las `tracked_companies` con `api:`
 3. Nivel 3: WebSearch → todos los `search_queries` con `enabled: true`
+4. Nivel 4: LinkedIn → keywords de `title_filter.positive` (si `linkedin.enabled`)
 
-Los niveles son aditivos — se ejecutan todos, los resultados se mezclan y deduplicar.
+Los niveles son aditivos — se ejecutan todos, los resultados se mezclan y deduplican.
 
 ## Workflow
 
@@ -79,22 +89,67 @@ Los niveles son aditivos — se ejecutan todos, los resultados se mezclan y dedu
       - **company**: después del " @ " en el título, o extraer del dominio/path
    c. Acumular en lista de candidatos (dedup con Nivel 1+2)
 
-6. **Filtrar por título** usando `title_filter` de `portals.yml`:
+7. **Nivel 4 — LinkedIn Jobs** (secuencial, DESPUÉS de cerrar Playwright):
+
+   **Pre-check:** Verificar `linkedin.enabled: true` en portals.yml. Si es false o no existe, saltar.
+   Verificar que `browser-use` está instalado (Bash: `which browser-use`). Si no, saltar con mensaje.
+   **CRÍTICO:** Cerrar el navegador Playwright ANTES de iniciar browser-use.
+
+   a. Leer config `linkedin` de portals.yml
+   b. Determinar ubicación: usar `linkedin.location` si está definido, sino `config/profile.yml` → `location.country`
+   c. Construir queries de búsqueda desde `title_filter.positive`:
+      - Términos multi-palabra (ej: "Data Scientist") → búsquedas individuales
+      - Términos de una palabra (ej: "AI", "ML") → combinar con OR (ej: "AI OR ML")
+      - Limitar a `max_queries` (priorizar términos multi-palabra)
+   d. Mapear `time_posted`: "24h"→`r86400`, "7d"→`r604800`, "30d"→`r2592000`
+   e. Mapear `work_type`: "onsite"→`f_WT=1`, "remote"→`f_WT=2`, "hybrid"→`f_WT=3`, "any"→omitir
+   f. Para cada query:
+      i.   `browser-use --profile "{chrome_profile}" open "https://www.linkedin.com/jobs/search/?keywords={encoded}&location={location}&f_TPR={time}&sortBy=DD{&f_WT=N}"`
+      ii.  `browser-use state` → verificar que cargó (no página de login)
+      iii. Si detecta página de login (presencia de "Sign in", redirect a `/login`) → abortar Nivel 4 con warning, `browser-use close`, continuar
+      iv.  Extraer jobs via `browser-use eval` con JS que busca job cards en el DOM:
+           ```javascript
+           JSON.stringify(Array.from(document.querySelectorAll(
+             '.job-card-container, .jobs-search-results__list-item, [data-job-id]'
+           )).map(card => {
+             const titleEl = card.querySelector('.job-card-list__title, .job-card-container__link');
+             const companyEl = card.querySelector('.job-card-container__primary-description, .job-card-container__company-name');
+             const href = titleEl?.href || titleEl?.closest('a')?.href || '';
+             const jobId = href.match(/\/jobs\/view\/(\d+)/)?.[1] || card.getAttribute('data-job-id') || '';
+             return {
+               title: titleEl?.textContent?.trim() || '',
+               company: companyEl?.textContent?.trim() || '',
+               url: jobId ? 'https://www.linkedin.com/jobs/view/' + jobId + '/' : href,
+               jobId: jobId
+             };
+           }).filter(j => j.title && j.jobId))
+           ```
+      v.   Si eval retorna vacío → fallback: `browser-use state` y parsear elementos con links a `/jobs/view/`
+      vi.  Si `max_results_per_query > 25`: `browser-use scroll down`, esperar 2s, re-extraer, merge
+      vii. Acumular resultados: `{title, url, company}`
+      viii. Esperar `delay_between_searches` segundos antes del siguiente query
+   g. `browser-use close` (OBLIGATORIO — libera Chrome para futuro uso de Playwright)
+   h. Merge resultados con candidatos de Niveles 1-3
+
+8. **Filtrar por título** usando `title_filter` de `portals.yml`:
    - Al menos 1 keyword de `positive` debe aparecer en el título (case-insensitive)
    - 0 keywords de `negative` deben aparecer
    - `seniority_boost` keywords dan prioridad pero no son obligatorios
 
-7. **Deduplicar** contra 3 fuentes:
+9. **Deduplicar** contra 3 fuentes:
    - `scan-history.tsv` → URL exacta ya vista
    - `applications.md` → empresa + rol normalizado ya evaluado
    - `pipeline.md` → URL exacta ya en pendientes o procesadas
 
-8. **Para cada oferta nueva que pase filtros**:
-   a. Añadir a `pipeline.md` sección "Pendientes": `- [ ] {url} | {company} | {title}`
-   b. Registrar en `scan-history.tsv`: `{url}\t{date}\t{query_name}\t{title}\t{company}\tadded`
+   **Dedup cross-platform (Nivel 4):** Las URLs de LinkedIn difieren de las de Greenhouse/Ashby para el mismo puesto. Para resultados de LinkedIn, además del dedup por URL, verificar si `company + título normalizado` ya existe en los resultados de Niveles 1-3, pipeline.md, o applications.md. Normalización: lowercase, eliminar info entre paréntesis. Registrar como `skipped_dup_xplatform`.
 
-9. **Ofertas filtradas por título**: registrar en `scan-history.tsv` con status `skipped_title`
-10. **Ofertas duplicadas**: registrar con status `skipped_dup`
+10. **Para cada oferta nueva que pase filtros**:
+    a. Añadir a `pipeline.md` sección "Pendientes": `- [ ] {url} | {company} | {title}`
+    b. Registrar en `scan-history.tsv`: `{url}\t{date}\t{query_name}\t{title}\t{company}\tadded`
+    Para resultados de LinkedIn, usar `linkedin-jobs` como portal en scan-history.tsv.
+
+11. **Ofertas filtradas por título**: registrar en `scan-history.tsv` con status `skipped_title`
+12. **Ofertas duplicadas**: registrar con status `skipped_dup` o `skipped_dup_xplatform`
 
 ## Extracción de título y empresa de WebSearch results
 
@@ -129,13 +184,15 @@ https://...	2026-02-10	Ashby — AI PM	SA AI	OldCo	skipped_dup
 ```
 Portal Scan — {YYYY-MM-DD}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
-Queries ejecutados: N
+Queries ejecutados: N (Playwright: N, API: N, WebSearch: N, LinkedIn: N)
 Ofertas encontradas: N total
 Filtradas por título: N relevantes
 Duplicadas: N (ya evaluadas o en pipeline)
+  - URL dups: N
+  - Cross-platform dups: N
 Nuevas añadidas a pipeline.md: N
 
-  + {company} | {title} | {query_name}
+  + {company} | {title} | {source}
   ...
 
 → Ejecuta /career-ops pipeline para evaluar las nuevas ofertas.

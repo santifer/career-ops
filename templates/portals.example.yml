@@ -1,10 +1,11 @@
 # Portal Scanner Configuration
 # Used by /career-ops scan to discover new offers automatically.
 #
-# Strategy (3 levels):
+# Strategy (4 levels):
 #   1. Playwright → careers_url of each company (real-time, reliable)
 #   2. Greenhouse API → structured JSON (fast, Greenhouse-only)
 #   3. WebSearch with site: filters (broad discovery, may be stale)
+#   4. LinkedIn Jobs → browser-use CLI with logged-in Chrome profile
 #
 # IMPORTANT: Each company in tracked_companies MUST have careers_url.
 #
@@ -87,6 +88,29 @@ title_filter:
     - "Lead"
     - "Head"
     - "Director"
+
+# -- LinkedIn Jobs scan --
+# Level 4: Searches LinkedIn Jobs using browser-use CLI with your logged-in Chrome profile.
+# Requires: browser-use CLI installed, Chrome profile logged into LinkedIn.
+#
+# SETUP:
+#   1. Install browser-use: pip install browser-use
+#   2. Log into LinkedIn in your Chrome browser
+#   3. Set chrome_profile below (usually "Default")
+#   4. Test: browser-use --profile "Default" open "https://www.linkedin.com"
+#
+# The scanner builds LinkedIn search URLs from title_filter.positive keywords.
+# Location falls back to config/profile.yml -> location if not set here.
+
+linkedin:
+  enabled: false  # Set to true after completing setup above
+  chrome_profile: "Default"
+  max_queries: 10
+  time_posted: "7d"       # Options: "24h", "7d", "30d"
+  location: ""            # Falls back to profile.yml location. Use "Remote" for remote-only.
+  work_type: "any"        # Options: "any", "onsite", "remote", "hybrid"
+  max_results_per_query: 25
+  delay_between_searches: 5
 
 # -- Search queries --
 # Each query triggers a WebSearch. Use site: to filter by portal.
