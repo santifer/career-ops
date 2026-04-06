@@ -1,93 +1,116 @@
-# Temisan Gerrard
+# Gerrard Agbajoh
 
 ## Contact
-- **Email:** temisan@settley.co
-- **Location:** London, UK (British citizen)
+- **Email:** tagbajoh@gmail.com
+- **Location:** Manchester, UK
 - **LinkedIn:** linkedin.com/in/temisangerrard
 - **GitHub:** github.com/temisangerrard
 - **Website:** temisangerrard.com
 
 ---
 
-## Summary
+## Profile
 
-AI engineer who ships production systems. Not prototypes — live products with real users and real transactions. 5 products deployed in 90 days including a blockchain betting arena run by autonomous AI agents, an open-source agent framework with 90+ tools, and a voice-powered shopping agent. Total infrastructure cost: £122/month. I build the full stack: smart contracts, backend services, AI agent orchestration, and production ops. Currently accepting senior/staff roles and consulting engagements where the brief is "make AI actually work."
+Solutions Architect who bridges compliance, finance, and engineering to design blockchain infrastructure that works in regulated environments.
 
----
+I translate complex financial requirements into technical architectures — from tokenised fund lifecycles and multi-rail payment settlement to KYC/AML credential systems and NAV-driven smart contract flows. I speak the language of regulators, fund operators, and engineering teams equally well.
 
-## Experience
-
-### Founder & AI Engineer — Settley
-*October 2025 – Present · London, UK*
-
-One-person AI product studio. Every product ships to production with real users.
-
-**Autonomous Arena (Autobett)** — [autobett.xyz](https://autobett.xyz)
-Multiplayer betting platform on Base mainnet. 5 game modes including live BTC price prediction. AI bots manage wallets, match players, and settle bets 24/7 without human intervention. 444 commits to production. Players stake real USDC.
-- Solidity smart contracts, TypeScript backend, WebSockets, Chainlink oracles
-- 9 custom AI skills for autonomous operations
-- Self-healing with incident response — bots detect failures and recover without human escalation
-
-**Hermes Agent** — [github.com/temisangerrard/hermes-agent](https://github.com/temisangerrard/hermes-agent)
-Open-source autonomous AI agent that runs my entire operation — deploys code, publishes articles, monitors systems, manages multi-platform workflows on a cron schedule. 90+ tools, 5 platform adapters (Telegram, Discord, Slack, WhatsApp, Signal).
-- Python agent loop with tool registry, context compression, prompt caching
-- MCP (Model Context Protocol) client and server implementation
-- Cron scheduling with persistent state across restarts
-- Profile-based isolation for multi-tenant usage
-
-**EchoCart** — [echocart.xyz](https://echocart.xyz)
-AI shopping agent. Tell it what you want by text or voice — it finds the product and completes the purchase. Users set budgets, fund wallets, EchoCart handles the rest.
-- Next.js 16, ElevenLabs voice integration, WebAuthn, Base USDC payments
-- Firecrawl for real-time product search
-
-**Peppera** — [peppera.co.uk](https://peppera.co.uk)
-Meal engine that builds complete meals from whatever's in your kitchen. "Infinite meals from one pantry" — limited ingredients transformed across cuisines, textures, and tastes.
-- Next.js 16, Supabase, Qwen AI, shadcn/ui
-
-**Mira**
-Autonomous GTM agent handling growth operations without human triggers — content writing, investor outreach, competitor tracking, hackathon submissions. Runs continuously with its own incident response process.
-
-### AI Consultant — Independent
-*January 2026 – Present · London, UK*
-
-Deliver architecture sprints, production builds, and system audits for UK businesses moving AI from prototype to production. Developed the "5-Layer AI Operating Stack" framework: Core System → State → AI Execution → Ops → Reliability.
+Beyond client delivery, I've built and deployed 5 live AI/blockchain products in 90 days — including an autonomous betting arena on Base mainnet and an open-source AI agent framework with 90+ tools. This proves I don't just design systems on paper; I ship them to production and keep them running.
 
 ---
 
-## Technical Skills
+## Technical Expertise
 
-**AI & Agent Systems:** Autonomous agent design (tool orchestration, scheduling, multi-platform dispatch, safety boundaries), LLM integration (OpenAI, Anthropic, Qwen, OpenRouter), RAG and retrieval systems, MCP protocol, voice AI (ElevenLabs)
+**Architecture & Modelling:** C4 Architecture (Structurizr DSL), BPMN 2.0 Process Mapping, Event-Driven Architecture, Event Sourcing & State Management
 
-**Backend:** Python (async, multiprocessing, SQLite, REST), TypeScript/Node.js (Next.js, WebSockets), Solidity smart contracts (Base/Ethereum), Docker, Netlify, Fly.io
+**Blockchain & Digital Assets:** Tokenisation (Funds, Real Estate, Deposits), Smart Contract Lifecycle Design, On-chain/Off-chain Coordination, Token Standards (ERC-1400, ERC-20), Custody & Settlement Architecture, Base Mainnet Deployment
 
-**Frontend:** Next.js, React, Tailwind CSS, shadcn/ui, WebAuthn, Capacitor (iOS)
+**AI & Autonomous Systems:** AI Agent Architecture (tool orchestration, scheduling, multi-platform dispatch), LLM Integration (OpenAI, Anthropic, Qwen), Voice AI (ElevenLabs), MCP Protocol, Autonomous Operations
 
-**Infrastructure:** CI/CD, structured logging, alerting, incident response, cron orchestration, cost-optimised hosting (£122/month for 5 products)
+**Financial Systems & Compliance:** Fund Operations (Subscriptions, Redemptions, NAV, Distributions), Multi-Rail Payments (Fiat PSPs, Stablecoins, Tokenised Deposits), KYC/AML Credential Architecture, Regulatory Mapping & Compliance-by-Design
 
----
-
-## Key Metrics
-
-| Metric | Value |
-|--------|-------|
-| Live products shipped | 5 in 90 days |
-| Production commits (Arena alone) | 444 |
-| Open-source tools (Hermes) | 90+ |
-| Platform adapters | 5 (Telegram, Discord, Slack, WhatsApp, Signal) |
-| Monthly infra cost (all products) | £122 |
+**Infrastructure:** Python, TypeScript/Node.js, Solidity, Docker, Netlify, Fly.io, Structured Logging & Incident Response
 
 ---
 
-## Education
+## Professional Experience
 
-**BSc Computer Science** — London Metropolitan University
+### Digital Assets Solutions Architect | ZILO | London
+*April 2025 – Present*
+
+Solutions architect for institutional digital asset initiative, bridging blockchain infrastructure and traditional fund operations for ZILO's transfer agency platform.
+
+**Client Delivery & Technical Leadership:**
+- Led multi-month State Street engagement including workshop preparation, BPM documentation, and client-facing technical sessions
+- Delivered complex blockchain concepts in accessible terms to audiences with limited web3 experience, receiving strong positive feedback from institutional stakeholders
+- Shaped how web3 infrastructure can practically serve ZILO's traditional fund management client base
+
+**Solution Design & Architecture:**
+- Designed end-to-end tokenised MMF platform architecture: API gateway, Intent Service, payment/pricing ingestion, blockchain indexer, custody, and notifications orchestrated around ERC-1400 lifecycle
+- Built Structurizr DSL models and BPMN 2.0 process documentation for complete fund workflows (subscriptions, redemptions, NAV-driven mint/burn, distributions)
+- Architected event-driven settlement pipeline with blockchain as single source of truth and multi-rail payment support (fiat PSPs, stablecoins, tokenised deposits)
+
+**Compliance Innovation:**
+- Initiated and designed soulbound token strategy for on-chain compliance, creating market differentiator
+- Solved highly complex use cases with no existing on-chain precedent through first-principles thinking
+
+**Impact:** Translated abstract blockchain capabilities into concrete, fund-industry-ready solutions. Built deep traditional funds knowledge in seven months while maintaining blockchain expertise, enabling ZILO to move toward production with institutional clients in 2026.
+
+### Founder | Settley
+*2024 – Present · London, UK*
+
+Designed and shipped multiple production AI/blockchain products.
+
+**Tokenised Real Estate Platform:**
+- Architected SPV → DAO governance → on-chain tokenised title structure for digital-native property ownership
+- Designed token mechanics, investor onboarding, and liquidation processes
+- Managed 10-person distributed team building platform and back-office operations
+
+**AI Product Studio (5 products in 90 days):**
+- **Autonomous Arena (Autobett):** Multiplayer betting platform on Base mainnet. AI bots manage wallets, match players, and settle bets 24/7. Real USDC staking. 444 commits to production. [autobett.xyz](https://autobett.xyz)
+- **Hermes Agent:** Open-source autonomous AI agent — deploys code, publishes articles, monitors systems across Discord, Telegram, Slack. 90+ tools, 5 platform adapters. [github.com/temisangerrard/hermes-agent](https://github.com/temisangerrard/hermes-agent)
+- **EchoCart:** Voice-powered AI shopping agent. Next.js, ElevenLabs, WebAuthn, Base USDC. [echocart.xyz](https://echocart.xyz)
+- **Peppera:** Meal engine generating complete meals from limited pantry ingredients. [peppera.co.uk](https://peppera.co.uk)
+- **Mira:** Autonomous GTM agent handling growth operations without human triggers
+- Total infrastructure: £122/month across all 5 products
+
+### Product Manager | ICEO Venture Studio | Poland
+*2022 – 2023*
+
+Led product architecture for DeFi protocols, liquid restaking, and stablecoin infrastructure.
+- Drove end-to-end product development: user research, technical requirements, regulatory analysis, and delivery
+- Delivered 2-phase liquid restaking platform coordinating engineering, legal, and operations
+- Designed proof-of-concept systems balancing innovation with regulatory viability
+
+### Finance Analyst – Digital Assets | Kudy Financials | Luxembourg
+*2022*
+
+Developed risk frameworks and liquidity strategies for institutional digital asset products.
+- Designed DeFi risk models and compliance-ready product structures
+- Contributed to regulatory submissions and fund documentation
+
+### Business Analyst | GTBank & Access Bank | Nigeria
+*2016 – 2021*
+
+Optimised core banking operations: digital platforms, procurement, bulk payments, and operational workflows.
+- Led process transformation delivering 15–40% efficiency improvements
+- Designed system requirements and coordinated cross-functional implementation
+- Built financial models and operational dashboards for executive reporting
+
+---
+
+## Education & Certifications
+
+- **MSc Finance (FinTech & Risk)** — University of Salford, UK (2024)
+- **DeFi & Blockchain Executive Programme** — Duke University
+- **Agile Product Management & Web Development** (2021–2022)
 
 ---
 
 ## What I'm Looking For
 
-Senior/Staff AI Engineer, AI Architect, or Technical Lead roles. Particularly interested in:
-- AI agent platforms and infrastructure
-- Autonomous systems (trading, operations, growth)
-- Companies where shipping fast is a value, not a risk
-- Remote-first, London/European timezone
+Senior Solutions Architect, Digital Assets Architect, or Technical Lead roles in:
+- Tokenisation and digital asset infrastructure
+- AI/blockchain convergence (autonomous systems, agent architecture)
+- Fintech with blockchain compliance requirements
+- Remote-first, UK/European timezone
