@@ -44,6 +44,26 @@ The skill applies with EQUAL rigor to ALL target roles. None is primary or secon
      - Engineering Manager
      etc. -->
 
+### Profile Track Inference
+
+When generating a CV or evaluating a role, infer the profile track from the JD using these signal lists:
+
+**Builder signals** (infer `builder` track):
+"implement", "engineer", "architect", "ship", "build", "develop", "deploy", "prototype", "hands-on", "IC role", "individual contributor", "write code"
+
+**Leadership signals** (infer `leadership` track):
+"manage a team", "people manager", "director", "VP", "head of", "OKRs", "headcount", "hiring", "strategy", "stakeholders", "cross-functional", "roadmap ownership"
+
+**Ambiguous signals** (neither clearly wins — prompt user or use `tracks.default`):
+"lead" (alone, without "a team"), "senior" (alone), "principal" (alone), "AI initiative", "AI strategy" (without team context)
+
+**Inference rules:**
+- Builder signals present, leadership signals absent → auto-select `builder`; annotate as `auto-selected`
+- Leadership signals present, builder signals absent → auto-select `leadership`; annotate as `auto-selected`
+- Both present, or only ambiguous signals → prompt user once; fall back to `tracks.default` if no response; annotate as `prompted` or `user-selected`
+- `--track <id>` flag or `[track:<id>]` tag or natural language ("use leadership track") → use that track; annotate as `user-specified`
+- No `tracks:` block in profile.yml → skip track logic entirely; use single-profile behavior
+
 ### Adaptive Framing by Archetype
 
 > **Concrete metrics: read from `cv.md` + `article-digest.md` at evaluation time. NEVER hardcode numbers here.**
@@ -167,6 +187,7 @@ If the candidate has a live demo/dashboard (check profile.yml), offer access in 
 10. **Include `**URL:**` in every report header** -- between Score and PDF.
 11. **Template contact rendering:** When filling `cv-template.html`, if any contact field (`{{PHONE}}`, `{{LOCATION_LINE}}`, `{{AUTHORIZATION}}`) resolves to an empty string or null, omit that `<span>` AND its adjacent `<span class="separator">` from the HTML before writing the file. Never leave orphaned separators.
 12. **Persona field integrity:** ALL contact fields in a generated CV must come from the same persona block. Never mix `phone` from one persona with `location_line` from another.
+13. **Track resolution fallback:** If `config/profile.yml` has no `tracks:` block, treat all track-aware steps as no-ops and use single-profile behavior throughout. Never error or prompt the user about missing tracks.
 
 ### Tools
 
