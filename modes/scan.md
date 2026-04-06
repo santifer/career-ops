@@ -107,18 +107,22 @@ Los niveles son aditivos — se ejecutan todos, los resultados se mezclan y dedu
       i.   `browser-use --profile "{chrome_profile}" open "https://www.linkedin.com/jobs/search/?keywords={encoded}&location={location}&f_TPR={time}&sortBy=DD{&f_WT=N}"`
       ii.  `browser-use state` → verificar que cargó (no página de login)
       iii. Si detecta página de login (presencia de "Sign in", redirect a `/login`) → abortar Nivel 4 con warning, `browser-use close`, continuar
-      iv.  Extraer jobs via `browser-use eval` con JS que busca job cards en el DOM:
+      iv.  Extraer jobs via `browser-use eval` con JS que busca job cards en el DOM.
+           LinkedIn usa selectores diferentes según si el usuario está logueado o no:
            ```javascript
            JSON.stringify(Array.from(document.querySelectorAll(
-             '.job-card-container, .jobs-search-results__list-item, [data-job-id]'
+             '.base-card, .job-card-container, .jobs-search-results__list-item, [data-job-id]'
            )).map(card => {
-             const titleEl = card.querySelector('.job-card-list__title, .job-card-container__link');
-             const companyEl = card.querySelector('.job-card-container__primary-description, .job-card-container__company-name');
-             const href = titleEl?.href || titleEl?.closest('a')?.href || '';
-             const jobId = href.match(/\/jobs\/view\/(\d+)/)?.[1] || card.getAttribute('data-job-id') || '';
+             const link = card.querySelector('a[href*="/jobs/view/"]');
+             const titleEl = card.querySelector('.base-search-card__title, h3, .job-card-list__title, .job-card-container__link');
+             const companyEl = card.querySelector('.base-search-card__subtitle, h4, .job-card-container__primary-description, .job-card-container__company-name');
+             const locationEl = card.querySelector('.job-search-card__location, .job-card-container__metadata-item');
+             const href = link?.href || titleEl?.href || titleEl?.closest('a')?.href || '';
+             const jobId = href.match(/jobs\/view\/[^/]*?(\d+)/)?.[1] || card.getAttribute('data-job-id') || '';
              return {
                title: titleEl?.textContent?.trim() || '',
                company: companyEl?.textContent?.trim() || '',
+               location: locationEl?.textContent?.trim() || '',
                url: jobId ? 'https://www.linkedin.com/jobs/view/' + jobId + '/' : href,
                jobId: jobId
              };
