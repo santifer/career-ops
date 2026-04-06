@@ -1,0 +1,12 @@
+FROM node:22
+RUN npm install -g @anthropic-ai/claude-code
+RUN npx playwright install --with-deps chromium
+RUN mkdir -p /home/node/.claude /home/node/.cache && chown -R node:node /home/node
+WORKDIR /app
+COPY web/package.json web/package-lock.json* ./
+RUN npm ci --omit=dev
+COPY web/ ./
+RUN chown -R node:node /app
+USER node
+EXPOSE 3007
+CMD ["node", "server.mjs"]

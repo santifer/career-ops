@@ -1,0 +1,1678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Career-Ops</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-0: #09090b;
+      --bg-1: #0c0c0f;
+      --bg-2: #141419;
+      --bg-3: #1c1c24;
+      --bg-4: #25252f;
+      --bg-5: #2e2e3a;
+      --text-0: #fafafa;
+      --text-1: #e4e4e7;
+      --text-2: #a1a1aa;
+      --text-3: #71717a;
+      --text-4: #52525b;
+      --border-1: rgba(255,255,255,0.06);
+      --border-2: rgba(255,255,255,0.1);
+      --border-3: rgba(255,255,255,0.15);
+      --blue: #3b82f6;
+      --blue-soft: rgba(59,130,246,0.12);
+      --blue-glow: rgba(59,130,246,0.25);
+      --green: #22c55e;
+      --green-soft: rgba(34,197,94,0.12);
+      --red: #ef4444;
+      --red-soft: rgba(239,68,68,0.12);
+      --amber: #f59e0b;
+      --amber-soft: rgba(245,158,11,0.12);
+      --purple: #a855f7;
+      --purple-soft: rgba(168,85,247,0.12);
+      --cyan: #06b6d4;
+      --cyan-soft: rgba(6,182,212,0.12);
+      --rose: #f43f5e;
+      --rose-soft: rgba(244,63,94,0.12);
+      --r: 10px;
+    }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { height: 100%; }
+    body {
+      font-family: 'Inter', -apple-system, system-ui, sans-serif;
+      background: var(--bg-0);
+      color: var(--text-1);
+      line-height: 1.55;
+      height: 100%;
+      -webkit-font-smoothing: antialiased;
+    }
+    ::selection { background: var(--blue); color: white; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--bg-5); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-4); }
+    .app { display: flex; height: 100vh; overflow: hidden; }
+
+    .sidebar {
+      width: 280px;
+      background: var(--bg-1);
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--border-1);
+      position: relative;
+      z-index: 10;
+    }
+    .sidebar::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: -1px;
+      bottom: 0;
+      width: 1px;
+      background: linear-gradient(180deg, transparent, var(--blue-glow) 50%, transparent);
+      opacity: 0.3;
+      pointer-events: none;
+    }
+    .brand {
+      padding: 24px 24px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--blue) 0%, #8b5cf6 100%);
+      font-size: 18px;
+      box-shadow: 0 0 20px var(--blue-glow);
+    }
+    .brand-text h1 { font-size: 15px; font-weight: 700; color: var(--text-0); letter-spacing: -0.3px; }
+    .brand-text span { font-size: 11px; color: var(--text-3); font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase; }
+
+    .nav {
+      flex: 1;
+      padding: 8px 12px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .nav-label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-4);
+      padding: 18px 12px 8px;
+      user-select: none;
+    }
+    .nav-label:first-child { padding-top: 8px; }
+    .nav-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: 8px;
+      border: none;
+      background: none;
+      color: var(--text-2);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      width: 100%;
+      text-align: left;
+      font-family: inherit;
+      transition: all 0.15s ease;
+      position: relative;
+    }
+    .nav-btn:hover { background: var(--bg-3); color: var(--text-1); }
+    .nav-btn.active { background: var(--blue-soft); color: var(--blue); }
+    .nav-btn.active::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 16px;
+      background: var(--blue);
+      border-radius: 0 2px 2px 0;
+    }
+    .nav-btn svg { width: 18px; height: 18px; opacity: 0.7; flex-shrink: 0; }
+    .nav-btn.active svg { opacity: 1; }
+    .nav-badge {
+      margin-left: auto;
+      font-size: 11px;
+      font-weight: 600;
+      min-width: 20px;
+      text-align: center;
+      padding: 1px 6px;
+      border-radius: 6px;
+    }
+    .nav-badge.live {
+      background: var(--amber-soft);
+      color: var(--amber);
+      animation: glow 2s ease-in-out infinite;
+    }
+    @keyframes glow { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+    .sidebar-foot {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border-1);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-3);
+    }
+    .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .dot-ok { background: var(--green); box-shadow: 0 0 8px var(--green); }
+    .dot-warn { background: var(--amber); box-shadow: 0 0 8px var(--amber); }
+    .dot-err { background: var(--red); box-shadow: 0 0 8px var(--red); }
+
+    .main {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      background: var(--bg-0);
+    }
+    .main-inner {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 32px 40px 60px;
+    }
+    .page-enter { animation: pageIn 0.2s ease; }
+    @keyframes pageIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+    .pg-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .pg-head h2 { font-size: 22px; font-weight: 700; color: var(--text-0); letter-spacing: -0.5px; }
+    .pg-head-sub { font-size: 14px; color: var(--text-3); margin-top: 4px; font-weight: 400; max-width: 760px; }
+    .pg-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 9px 18px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s ease;
+      border: 1px solid transparent;
+      white-space: nowrap;
+      text-decoration: none;
+    }
+    .btn svg { width: 16px; height: 16px; }
+    .btn-primary {
+      background: var(--blue);
+      color: white;
+      border-color: var(--blue);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.3), 0 0 12px var(--blue-glow);
+    }
+    .btn-primary:hover { filter: brightness(1.12); transform: translateY(-1px); box-shadow: 0 4px 12px var(--blue-glow); }
+    .btn-primary:active { transform: none; }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; filter: none; box-shadow: none; }
+    .btn-soft { background: var(--bg-3); color: var(--text-1); border-color: var(--border-2); }
+    .btn-soft:hover { background: var(--bg-4); border-color: var(--border-3); }
+    .btn-ghost { background: none; border: none; color: var(--text-3); padding: 7px 10px; }
+    .btn-ghost:hover { color: var(--blue); }
+    .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 6px; }
+    .btn-icon {
+      padding: 8px;
+      border-radius: 8px;
+      background: var(--bg-3);
+      border: 1px solid var(--border-1);
+      color: var(--text-2);
+      cursor: pointer;
+    }
+    .btn-icon:hover { background: var(--bg-4); color: var(--text-0); }
+
+    .card {
+      background: var(--bg-2);
+      border: 1px solid var(--border-1);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .card:hover { border-color: var(--border-2); }
+    .card-head {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border-1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-2);
+    }
+    .card-body { padding: 0; }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+    .stat {
+      background: var(--bg-2);
+      border: 1px solid var(--border-1);
+      border-radius: 12px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .stat::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; }
+    .stat[data-color="blue"]::before { background: linear-gradient(90deg, transparent, var(--blue), transparent); }
+    .stat[data-color="green"]::before { background: linear-gradient(90deg, transparent, var(--green), transparent); }
+    .stat[data-color="amber"]::before { background: linear-gradient(90deg, transparent, var(--amber), transparent); }
+    .stat[data-color="purple"]::before { background: linear-gradient(90deg, transparent, var(--purple), transparent); }
+    .stat[data-color="cyan"]::before { background: linear-gradient(90deg, transparent, var(--cyan), transparent); }
+    .stat[data-color="rose"]::before { background: linear-gradient(90deg, transparent, var(--rose), transparent); }
+    .stat-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-3); margin-bottom: 8px; }
+    .stat-val { font-size: 32px; font-weight: 800; letter-spacing: -1px; font-variant-numeric: tabular-nums; }
+    .stat-sub { font-size: 12px; color: var(--text-4); margin-top: 8px; }
+    .stat-val.c-blue { color: var(--blue); }
+    .stat-val.c-green { color: var(--green); }
+    .stat-val.c-amber { color: var(--amber); }
+    .stat-val.c-purple { color: var(--purple); }
+    .stat-val.c-cyan { color: var(--cyan); }
+    .stat-val.c-rose { color: var(--rose); }
+
+    .tabs {
+      display: flex;
+      gap: 2px;
+      padding: 3px;
+      background: var(--bg-2);
+      border: 1px solid var(--border-1);
+      border-radius: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      padding: 7px 14px;
+      border-radius: 7px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      color: var(--text-3);
+      border: none;
+      background: none;
+      font-family: inherit;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tab-btn:hover { color: var(--text-1); background: var(--bg-3); }
+    .tab-btn.on { background: var(--bg-4); color: var(--text-0); font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+    .tab-cnt {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 0 5px;
+      border-radius: 4px;
+      background: var(--bg-4);
+      color: var(--text-3);
+      min-width: 18px;
+      text-align: center;
+    }
+    .tab-btn.on .tab-cnt { background: var(--blue-soft); color: var(--blue); }
+
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      padding: 10px 16px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-4);
+      border-bottom: 1px solid var(--border-1);
+      background: var(--bg-2);
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+      transition: color 0.15s;
+    }
+    thead th:hover { color: var(--text-2); }
+    thead th.sorted { color: var(--blue); }
+    thead th .sort-arrow { font-size: 10px; margin-left: 2px; }
+    tbody tr { border-bottom: 1px solid var(--border-1); transition: background 0.1s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: rgba(255,255,255,0.02); }
+    td { padding: 12px 16px; font-size: 13px; color: var(--text-2); white-space: nowrap; vertical-align: top; }
+    td.w { white-space: normal; max-width: 300px; }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .chip-blue { background: var(--blue-soft); color: var(--blue); }
+    .chip-green { background: var(--green-soft); color: var(--green); }
+    .chip-amber { background: var(--amber-soft); color: var(--amber); }
+    .chip-red { background: var(--red-soft); color: var(--red); }
+    .chip-purple { background: var(--purple-soft); color: var(--purple); }
+    .chip-cyan { background: var(--cyan-soft); color: var(--cyan); }
+    .chip-muted { background: rgba(255,255,255,0.04); color: var(--text-4); }
+
+    .score-num { font-weight: 700; font-variant-numeric: tabular-nums; font-size: 13px; }
+    .s-hi { color: var(--green); }
+    .s-md { color: var(--amber); }
+    .s-lo { color: var(--red); }
+
+    .sel {
+      appearance: none;
+      background: var(--bg-3);
+      color: var(--text-1);
+      border: 1px solid var(--border-2);
+      border-radius: 6px;
+      padding: 5px 26px 5px 10px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      outline: none;
+      font-family: inherit;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+      transition: border-color 0.15s;
+    }
+    .sel:hover { border-color: var(--border-3); }
+    .sel:focus { border-color: var(--blue); }
+
+    .ipt, .txt {
+      width: 100%;
+      padding: 12px 16px;
+      background: var(--bg-2);
+      border: 1px solid var(--border-2);
+      border-radius: 10px;
+      color: var(--text-0);
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      transition: all 0.2s;
+    }
+    .txt {
+      min-height: 220px;
+      resize: vertical;
+      line-height: 1.6;
+    }
+    .ipt:focus, .txt:focus { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-soft); }
+    .ipt::placeholder, .txt::placeholder { color: var(--text-4); }
+    .ipt-row { display: flex; gap: 10px; margin-bottom: 20px; }
+    .field-label {
+      display: block;
+      font-size: 12px;
+      color: var(--text-3);
+      margin-bottom: 8px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+    }
+    .field-help { font-size: 12px; color: var(--text-4); margin-top: 8px; }
+
+    .editor {
+      background: var(--bg-2);
+      border: 1px solid var(--border-1);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .editor-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: var(--bg-3);
+      border-bottom: 1px solid var(--border-1);
+    }
+    .editor-file { font-size: 12px; font-weight: 600; color: var(--text-3); font-family: 'SF Mono', monospace; }
+    .editor-status { font-size: 12px; color: var(--text-4); }
+    .editor textarea {
+      width: 100%;
+      min-height: 500px;
+      padding: 20px;
+      background: transparent;
+      border: none;
+      color: var(--text-1);
+      font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 13px;
+      line-height: 1.7;
+      resize: vertical;
+      outline: none;
+      tab-size: 2;
+    }
+    .saved-flash { color: var(--green); font-size: 12px; font-weight: 600; opacity: 0; transition: opacity 0.3s; }
+    .saved-flash.on { opacity: 1; }
+
+    .act-list { display: flex; flex-direction: column; }
+    .act-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border-1);
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .act-item:last-child { border-bottom: none; }
+    .act-item:hover { background: rgba(255,255,255,0.02); }
+    .act-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .act-dot.running { background: var(--amber); box-shadow: 0 0 10px var(--amber); animation: glow 2s ease-in-out infinite; }
+    .act-dot.completed { background: var(--green); }
+    .act-dot.failed { background: var(--red); }
+    .act-label { flex: 1; font-size: 13px; font-weight: 500; color: var(--text-1); }
+    .act-time { font-size: 12px; color: var(--text-4); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+    .pipe-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border-1);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .pipe-item:hover { background: rgba(255,255,255,0.02); }
+    .pipe-item:last-child { border-bottom: none; }
+    .pipe-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+    .pipe-icon.pending { background: var(--blue-soft); color: var(--blue); }
+    .pipe-icon.error { background: var(--red-soft); color: var(--red); }
+    .pipe-icon.done { background: var(--green-soft); color: var(--green); }
+    .pipe-info { flex: 1; min-width: 0; }
+    .pipe-company { font-size: 14px; font-weight: 600; color: var(--text-0); }
+    .pipe-role { font-size: 13px; color: var(--text-2); margin-top: 2px; }
+    .pipe-url-sm {
+      font-size: 11px;
+      color: var(--text-4);
+      word-break: break-all;
+      margin-top: 3px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 420px;
+    }
+    .pipe-actions { display: flex; gap: 8px; flex-shrink: 0; flex-wrap: wrap; }
+    .pipe-url {
+      color: var(--blue);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+      word-break: break-all;
+      flex: 1;
+    }
+    .pipe-url:hover { text-decoration: underline; }
+    .pipe-meta { color: var(--text-4); font-size: 12px; white-space: nowrap; }
+    .sec-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-3);
+      padding: 16px 20px 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .jd-content {
+      white-space: pre-wrap;
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--text-1);
+      max-height: 70vh;
+      overflow-y: auto;
+      padding: 0 4px;
+    }
+    .jd-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-1);
+    }
+    .jd-header-info h4 { margin: 0; font-size: 16px; color: var(--text-0); }
+    .jd-header-info p { margin: 4px 0 0; font-size: 12px; color: var(--text-3); }
+    .jd-header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .modal-bg {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      animation: fadeIn 0.15s;
+    }
+    @keyframes fadeIn { from { opacity: 0; } }
+    .modal-box {
+      background: var(--bg-2);
+      border: 1px solid var(--border-2);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 960px;
+      max-height: 88vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 24px 48px rgba(0,0,0,0.4);
+      animation: modalIn 0.2s ease;
+    }
+    @keyframes modalIn { from { opacity: 0; transform: scale(0.96) translateY(8px); } }
+    .modal-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border-1);
+      gap: 16px;
+    }
+    .modal-top h3 { font-size: 15px; font-weight: 600; color: var(--text-0); }
+    .modal-content { padding: 24px; overflow-y: auto; flex: 1; }
+    .modal-content pre {
+      font-family: 'SF Mono', monospace;
+      font-size: 12px;
+      line-height: 1.7;
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: var(--text-2);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 80px 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    .empty-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 16px;
+      background: var(--bg-3);
+      border: 1px solid var(--border-1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+    .empty-state h3 { font-size: 16px; font-weight: 600; color: var(--text-1); }
+    .empty-state p { font-size: 14px; color: var(--text-3); max-width: 420px; line-height: 1.6; }
+
+    .chk-list { display: flex; flex-direction: column; }
+    .chk-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border-1);
+      flex-wrap: wrap;
+    }
+    .chk-item:last-child { border-bottom: none; }
+    .chk-mark {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .chk-mark.ok { background: var(--green-soft); color: var(--green); }
+    .chk-mark.no { background: var(--red-soft); color: var(--red); }
+    .chk-info { flex: 1; min-width: 240px; }
+    .chk-info strong { display: block; font-size: 14px; font-weight: 600; color: var(--text-0); }
+    .chk-info span { font-size: 12px; color: var(--text-3); }
+
+    .report {
+      background: var(--bg-2);
+      border: 1px solid var(--border-1);
+      border-radius: 12px;
+      padding: 40px;
+    }
+    .report h1 { font-size: 22px; font-weight: 700; color: var(--text-0); margin-bottom: 8px; letter-spacing: -0.5px; }
+    .report h2 { font-size: 17px; font-weight: 700; color: var(--text-0); margin: 32px 0 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border-1); }
+    .report h3 { font-size: 14px; font-weight: 600; color: var(--text-2); margin: 20px 0 8px; }
+    .report p { margin-bottom: 12px; color: var(--text-2); font-size: 14px; }
+    .report strong { color: var(--text-0); }
+    .report a { color: var(--blue); }
+    .report table { margin: 16px 0; border: 1px solid var(--border-1); border-radius: 8px; overflow: hidden; }
+    .report th { background: var(--bg-3); padding: 8px 14px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-3); text-align: left; }
+    .report td { padding: 10px 14px; border-top: 1px solid var(--border-1); font-size: 13px; color: var(--text-2); white-space: normal; }
+    .report hr { border: none; border-top: 1px solid var(--border-1); margin: 24px 0; }
+    .report code { background: var(--bg-4); padding: 2px 7px; border-radius: 5px; font-size: 12px; font-family: 'SF Mono', monospace; }
+    .report ul, .report ol { padding-left: 24px; margin-bottom: 12px; color: var(--text-2); font-size: 14px; }
+    .report li { margin-bottom: 4px; }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-3);
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 20px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      font-family: inherit;
+      transition: color 0.15s;
+    }
+    .back-link:hover { color: var(--blue); }
+
+    .hero-card {
+      background: linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(168,85,247,0.06) 100%);
+      border: 1px solid var(--border-1);
+      border-radius: 16px;
+      padding: 28px;
+      margin-bottom: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--blue), var(--purple), transparent);
+    }
+    .hero-card h2 { font-size: 20px; font-weight: 700; color: var(--text-0); margin-bottom: 6px; }
+    .hero-card p { color: var(--text-3); font-size: 14px; margin-bottom: 0; }
+
+    .profile-strip {
+      display: grid;
+      grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .profile-panel {
+      background: var(--bg-2);
+      border: 1px solid var(--border-1);
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .profile-panel h3 { font-size: 16px; color: var(--text-0); margin-bottom: 8px; }
+    .profile-panel p { font-size: 13px; color: var(--text-2); margin-bottom: 10px; }
+    .pill-row { display: flex; flex-wrap: wrap; gap: 8px; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: var(--bg-3);
+      color: var(--text-2);
+      font-size: 12px;
+      border: 1px solid var(--border-1);
+    }
+
+    .mode-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+    .mode-card {
+      background: var(--bg-2);
+      border: 1px solid var(--border-1);
+      border-radius: 12px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-height: 168px;
+    }
+    .mode-card h3 { font-size: 15px; color: var(--text-0); }
+    .mode-card p { font-size: 13px; color: var(--text-3); line-height: 1.6; }
+    .mode-card .btn { margin-top: auto; width: fit-content; }
+
+    .form-shell {
+      display: grid;
+      grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+      gap: 16px;
+      align-items: start;
+    }
+    .form-panel {
+      background: var(--bg-2);
+      border: 1px solid var(--border-1);
+      border-radius: 12px;
+      padding: 24px;
+    }
+    .helper-list { display: flex; flex-direction: column; gap: 12px; }
+    .helper-item {
+      padding: 14px 16px;
+      border-radius: 10px;
+      background: var(--bg-3);
+      border: 1px solid var(--border-1);
+    }
+    .helper-item strong { display: block; color: var(--text-0); font-size: 13px; margin-bottom: 4px; }
+    .helper-item span { display: block; color: var(--text-3); font-size: 12px; line-height: 1.6; }
+
+    .state-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .state-card {
+      padding: 14px;
+      border-radius: 10px;
+      background: var(--bg-3);
+      border: 1px solid var(--border-1);
+    }
+    .state-card h4 { font-size: 13px; color: var(--text-0); margin-bottom: 4px; }
+    .state-card p { font-size: 12px; color: var(--text-3); line-height: 1.6; }
+
+    .pdf-list { display: flex; flex-direction: column; }
+    .pdf-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border-1);
+      flex-wrap: wrap;
+    }
+    .pdf-row:last-child { border-bottom: none; }
+    .pdf-meta { flex: 1; min-width: 220px; }
+    .pdf-meta strong { display: block; color: var(--text-0); font-size: 14px; }
+    .pdf-meta span { display: block; color: var(--text-4); font-size: 12px; margin-top: 2px; }
+    .pdf-frame {
+      width: 100%;
+      min-height: 70vh;
+      border: 1px solid var(--border-1);
+      border-radius: 10px;
+      background: white;
+    }
+
+    .loading-state {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 80px;
+      color: var(--text-4);
+      gap: 10px;
+      font-size: 14px;
+    }
+    .spin {
+      width: 18px;
+      height: 18px;
+      border: 2px solid var(--bg-5);
+      border-top-color: var(--blue);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      z-index: 300;
+      pointer-events: none;
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    }
+    .toast.show { transform: none; opacity: 1; }
+    .toast.success { background: var(--green); color: #000; }
+    .toast.error { background: var(--red); color: white; }
+    .toast.info { background: var(--blue); color: white; }
+
+    @media (max-width: 1024px) {
+      .form-shell,
+      .profile-strip { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .main-inner { padding: 16px; }
+      .stats { grid-template-columns: 1fr 1fr; }
+      .ipt-row { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+      <div class="brand-text"><h1>Career-Ops</h1><span>Full Coverage</span></div>
+    </div>
+    <nav class="nav">
+      <div class="nav-label">Overview</div>
+      <button class="nav-btn active" data-page="dashboard" onclick="go('dashboard')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </button>
+      <button class="nav-btn" data-page="tracker" onclick="go('tracker')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>
+        Tracker
+      </button>
+      <button class="nav-btn" data-page="pdfs" onclick="go('pdfs')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h2.5a1.5 1.5 0 0 1 0 3H8z"/><path d="M14 13v6"/><path d="M17 19h2"/></svg>
+        PDFs
+      </button>
+
+      <div class="nav-label">Core</div>
+      <button class="nav-btn" data-page="evaluate" onclick="go('evaluate')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+        Evaluate Job
+      </button>
+      <button class="nav-btn" data-page="pdf" onclick="go('pdf')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><rect x="4" y="17" width="16" height="4" rx="1"/></svg>
+        Generate PDF
+      </button>
+      <button class="nav-btn" data-page="pipeline" onclick="go('pipeline')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Pipeline
+      </button>
+      <button class="nav-btn" data-page="scans" onclick="go('scans')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        Scan Portals
+      </button>
+      <button class="nav-btn" data-page="batch" onclick="go('batch')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5h18"/><path d="M3 12h18"/><path d="M3 19h18"/></svg>
+        Batch
+      </button>
+
+      <div class="nav-label">Playbooks</div>
+      <button class="nav-btn" data-page="compare" onclick="go('compare')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 3H5a2 2 0 0 0-2 2v5"/><path d="M14 21h5a2 2 0 0 0 2-2v-5"/><path d="M21 10V5a2 2 0 0 0-2-2h-5"/><path d="M3 14v5a2 2 0 0 0 2 2h5"/><path d="m8 8 8 8"/><path d="m16 8-8 8"/></svg>
+        Compare Offers
+      </button>
+      <button class="nav-btn" data-page="apply" onclick="go('apply')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Apply Assistant
+      </button>
+      <button class="nav-btn" data-page="deep" onclick="go('deep')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/><path d="M11 8v6"/><path d="M8 11h6"/></svg>
+        Deep Research
+      </button>
+      <button class="nav-btn" data-page="contacto" onclick="go('contacto')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4Z"/></svg>
+        Outreach
+      </button>
+      <button class="nav-btn" data-page="training" onclick="go('training')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 7 12 2l10 5-10 5-10-5Z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg>
+        Training
+      </button>
+      <button class="nav-btn" data-page="project" onclick="go('project')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="2"/></svg>
+        Project
+      </button>
+      <button class="nav-btn" data-page="jobs" onclick="go('jobs')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        Activity <span class="nav-badge" id="run-badge"></span>
+      </button>
+
+      <div class="nav-label">Data</div>
+      <button class="nav-btn" data-page="reports" onclick="go('reports')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Reports
+      </button>
+      <button class="nav-btn" data-page="cv" onclick="go('cv')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        My CV
+      </button>
+      <button class="nav-btn" data-page="profile" onclick="go('profile')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+        Profile
+      </button>
+      <button class="nav-btn" data-page="portals" onclick="go('portals')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 4 10 15 15 0 0 1-4 10 15 15 0 0 1-4-10 15 15 0 0 1 4-10z"/></svg>
+        Portals
+      </button>
+      <button class="nav-btn" data-page="setup" onclick="go('setup')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        Setup
+      </button>
+    </nav>
+    <div class="sidebar-foot">
+      <span class="dot" id="h-dot"></span>
+      <span id="h-text">Checking...</span>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="main-inner page-enter" id="content">
+      <div class="loading-state"><div class="spin"></div>Loading...</div>
+    </div>
+  </main>
+</div>
+
+<div id="modal-root"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const MODE_ENDPOINTS = {
+  evaluate: '/api/evaluate',
+  pdf: '/api/pdf',
+  ofertas: '/api/ofertas',
+  deep: '/api/deep',
+  contacto: '/api/contacto',
+  apply: '/api/apply',
+  training: '/api/training',
+  project: '/api/project',
+  tracker: '/api/tracker',
+  scan: '/api/scan',
+  pipeline: '/api/process-pipeline',
+  batch: '/api/batch',
+};
+
+const MODE_PAGES = {
+  evaluate: 'evaluate',
+  pdf: 'pdf',
+  ofertas: 'compare',
+  deep: 'deep',
+  contacto: 'contacto',
+  apply: 'apply',
+  training: 'training',
+  project: 'project',
+  batch: 'batch',
+};
+
+const MODE_FALLBACKS = {
+  evaluate: { mode: 'evaluate', title: 'Auto-Pipeline', cta: 'Evaluate Job', description: 'Run the full evaluation pipeline from a job URL or pasted JD text.', inputLabel: 'Job URL or description', placeholder: 'https://careers.example.com/job/12345 or paste the full JD text here', multiline: true, requiresInput: true },
+  pdf: { mode: 'pdf', title: 'Generate PDF', cta: 'Generate PDF', description: 'Run the ATS PDF mode with a job URL or pasted JD text.', inputLabel: 'Job URL or description', placeholder: 'Paste the job URL or JD you want to target with a tailored PDF', multiline: true, requiresInput: true },
+  ofertas: { mode: 'ofertas', title: 'Compare Offers', cta: 'Compare Offers', description: 'Compare multiple job offers or evaluated reports side by side.', inputLabel: 'Offers to compare', placeholder: 'Paste two or more offers, URLs, or report references to compare', multiline: true, requiresInput: true },
+  deep: { mode: 'deep', title: 'Deep Research', cta: 'Generate Research Brief', description: 'Produce the deep research prompt for a company and role.', inputLabel: 'Company and role context', placeholder: 'Company, role, JD link, and any interview context you want included', multiline: true, requiresInput: true },
+  contacto: { mode: 'contacto', title: 'LinkedIn Outreach', cta: 'Draft Outreach', description: 'Generate the LinkedIn power move outreach message.', inputLabel: 'Company and target role context', placeholder: 'Company, role, hiring team context, report #, or notes for the outreach draft', multiline: true, requiresInput: true },
+  apply: { mode: 'apply', title: 'Apply Assistant', cta: 'Draft Answers', description: 'Generate tailored application answers from pasted form questions or context.', inputLabel: 'Application form context', placeholder: 'Paste the company, role, URL, and visible form questions or prompts', multiline: true, requiresInput: true },
+  training: { mode: 'training', title: 'Training Evaluation', cta: 'Evaluate Training', description: 'Assess a course or certification against your job-search goals.', inputLabel: 'Course or certification details', placeholder: 'Paste the training name, URL, syllabus, pricing, and why you are considering it', multiline: true, requiresInput: true },
+  project: { mode: 'project', title: 'Project Evaluation', cta: 'Evaluate Project', description: 'Score a portfolio project idea and produce an interview-pack direction.', inputLabel: 'Project idea', placeholder: 'Describe the project, target roles, and any constraints or goals', multiline: true, requiresInput: true },
+  tracker: { mode: 'tracker', title: 'Tracker Review', cta: 'Run Tracker Review', description: 'Have Claude summarize your tracker state or answer tracker questions.', inputLabel: 'Optional tracker question', placeholder: 'Optional: What should I prioritize next?', multiline: true, requiresInput: false },
+  scan: { mode: 'scan', title: 'Scan Portals', cta: 'Scan Now', description: 'Run the configured portal scanner.', inputLabel: '', placeholder: '', multiline: false, requiresInput: false },
+  pipeline: { mode: 'pipeline', title: 'Process Pipeline', cta: 'Process Pipeline', description: 'Process every pending URL in data/pipeline.md.', inputLabel: '', placeholder: '', multiline: false, requiresInput: false },
+  batch: { mode: 'batch', title: 'Batch Evaluate', cta: 'Run Batch', description: 'Run batch processing against the current batch inputs, optionally with extra instructions.', inputLabel: 'Optional batch instructions', placeholder: 'Optional: dry-run notes, retry guidance, or a short instruction for the batch run', multiline: true, requiresInput: false },
+};
+
+let D = {
+  apps: [],
+  metrics: {},
+  pipeline: { pending: [], errors: [], processed: [] },
+  scans: [],
+  health: { checks: {} },
+  reports: [],
+  jobs: [],
+  pdfs: [],
+  profile: {},
+  states: [],
+  modes: [],
+};
+
+let page = 'dashboard';
+let filter = 'all';
+let sField = 'number';
+let sDir = -1;
+let poll = null;
+
+const $ = id => document.getElementById(id);
+const enc = value => encodeURIComponent(value == null ? '' : String(value));
+const esc = value => value == null ? '' : String(value)
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;');
+
+function toast(message, type = 'info') {
+  const t = $('toast');
+  t.textContent = message;
+  t.className = `toast show ${type}`;
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+async function load() {
+  const [appsRes, pipelineRes, scansRes, healthRes, reportsRes, jobsRes, pdfsRes, profileRes, statesRes, modesRes] = await Promise.all([
+    fetch('/api/applications').then(r => r.json()).catch(() => ({ applications: [], metrics: {} })),
+    fetch('/api/pipeline').then(r => r.json()).catch(() => ({ pending: [], errors: [], processed: [] })),
+    fetch('/api/scan-history').then(r => r.json()).catch(() => []),
+    fetch('/api/health').then(r => r.json()).catch(() => ({ checks: {} })),
+    fetch('/api/reports').then(r => r.json()).catch(() => []),
+    fetch('/api/jobs').then(r => r.json()).catch(() => []),
+    fetch('/api/pdfs').then(r => r.json()).catch(() => []),
+    fetch('/api/profile').then(r => r.json()).catch(() => ({})),
+    fetch('/api/states').then(r => r.json()).catch(() => []),
+    fetch('/api/modes').then(r => r.json()).catch(() => []),
+  ]);
+
+  D.apps = appsRes.applications || [];
+  D.metrics = appsRes.metrics || {};
+  D.pipeline = pipelineRes || { pending: [], errors: [], processed: [] };
+  D.scans = scansRes || [];
+  D.health = healthRes || { checks: {} };
+  D.reports = reportsRes || [];
+  D.jobs = jobsRes || [];
+  D.pdfs = pdfsRes || [];
+  D.profile = profileRes || {};
+  D.states = statesRes || [];
+  D.modes = modesRes || [];
+
+  updHealth();
+  updBadge();
+}
+
+function updHealth() {
+  const c = D.health.checks || {};
+  const ok = c.cv && c.profile && c.portals;
+  $('h-dot').className = `dot ${ok ? 'dot-ok' : c.profile ? 'dot-warn' : 'dot-err'}`;
+  $('h-text').textContent = ok ? 'All systems go' : 'Setup incomplete';
+}
+
+function updBadge() {
+  const running = D.jobs.filter(job => job.status === 'running').length;
+  $('run-badge').innerHTML = running > 0 ? `<span class="nav-badge live">${running}</span>` : '';
+}
+
+function go(nextPage, extra) {
+  page = nextPage;
+  document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.page === nextPage));
+  draw(extra);
+}
+
+function draw(extra) {
+  const el = $('content');
+  el.className = 'main-inner page-enter';
+  void el.offsetWidth;
+
+  switch (page) {
+    case 'dashboard': el.innerHTML = vDash(); break;
+    case 'tracker': el.innerHTML = vTracker(); break;
+    case 'pdfs': el.innerHTML = vPdfs(); break;
+    case 'evaluate': el.innerHTML = vModePage('evaluate'); break;
+    case 'pdf': el.innerHTML = vModePage('pdf'); break;
+    case 'compare': el.innerHTML = vModePage('ofertas'); break;
+    case 'apply': el.innerHTML = vModePage('apply'); break;
+    case 'deep': el.innerHTML = vModePage('deep'); break;
+    case 'contacto': el.innerHTML = vModePage('contacto'); break;
+    case 'training': el.innerHTML = vModePage('training'); break;
+    case 'project': el.innerHTML = vModePage('project'); break;
+    case 'pipeline': el.innerHTML = vPipe(); break;
+    case 'scans': el.innerHTML = vScans(); break;
+    case 'batch': el.innerHTML = vModePage('batch'); break;
+    case 'jobs': el.innerHTML = vJobs(); break;
+    case 'reports':
+      el.innerHTML = extra ? '' : vReports();
+      if (extra) vReport(extra);
+      break;
+    case 'report-detail':
+      el.innerHTML = '';
+      vReport(extra);
+      break;
+    case 'cv':
+      vEditor('cv');
+      break;
+    case 'profile':
+      vEditor('profile');
+      break;
+    case 'portals':
+      vEditor('portals');
+      break;
+    case 'setup':
+      el.innerHTML = vSetup();
+      break;
+    default:
+      el.innerHTML = vDash();
+  }
+}
+
+function getMode(mode) {
+  return D.modes.find(item => item.mode === mode) || MODE_FALLBACKS[mode];
+}
+
+function getStatusDefs() {
+  return D.states.length ? D.states : [
+    { id: 'evaluated', label: 'Evaluated', description: 'Offer evaluated with report, pending decision' },
+    { id: 'applied', label: 'Applied', description: 'Application submitted' },
+    { id: 'responded', label: 'Responded', description: 'Company has responded' },
+    { id: 'interview', label: 'Interview', description: 'Active interview process' },
+    { id: 'offer', label: 'Offer', description: 'Offer received' },
+    { id: 'rejected', label: 'Rejected', description: 'Rejected by company' },
+    { id: 'discarded', label: 'Discarded', description: 'Discarded by candidate or offer closed' },
+    { id: 'skip', label: 'SKIP', description: "Doesn't fit, don't apply" },
+  ];
+}
+
+function chipFor(status) {
+  const key = String(status || '').toLowerCase();
+  const map = {
+    evaluated: 'chip-blue',
+    applied: 'chip-green',
+    responded: 'chip-cyan',
+    interview: 'chip-amber',
+    offer: 'chip-purple',
+    rejected: 'chip-red',
+    discarded: 'chip-muted',
+    skip: 'chip-muted',
+  };
+  return map[key] || 'chip-muted';
+}
+
+function sc(score) {
+  return score >= 4 ? 's-hi' : score >= 3 ? 's-md' : score > 0 ? 's-lo' : '';
+}
+
+function timeAgo(ts) {
+  if (!ts) return '';
+  const seconds = ((Date.now() - ts) / 1000) | 0;
+  if (seconds < 60) return `${seconds}s`;
+  if (seconds < 3600) return `${(seconds / 60) | 0}m`;
+  return `${(seconds / 3600) | 0}h`;
+}
+
+function renderRunning() {
+  const running = D.jobs.filter(job => job.status === 'running');
+  if (!running.length) return '';
+  const items = running.map(job => `<div class="act-item" onclick="jobOut(${job.id})"><span class="act-dot running"></span><span class="act-label">${esc(job.label)}</span><span class="act-time">${timeAgo(job.startedAt)}</span></div>`).join('');
+  return `<div class="pg-head"><h2>Running Now</h2></div><div class="card"><div class="act-list">${items}</div></div><div style="height:24px"></div>`;
+}
+
+function vDash() {
+  const running = renderRunning();
+  const c = D.health.checks || {};
+  const profile = D.profile || {};
+  const candidate = profile.candidate || {};
+  const narrative = profile.narrative || {};
+  const location = profile.location || {};
+  const compensation = profile.compensation || {};
+  const roles = (profile.target_roles && profile.target_roles.primary) || [];
+  const metrics = D.metrics || {};
+  const hasApps = D.apps.length > 0;
+  const quickModes = ['evaluate', 'pdf', 'ofertas', 'apply', 'deep', 'contacto', 'training', 'project'];
+
+  if (!c.cv || !c.profile) {
+    return `${running}<div class="empty-state"><div class="empty-icon">🚀</div><h3>Welcome to Career-Ops</h3><p>Start by adding your CV and configuring your profile. The web app now covers the full Career-Ops mode surface, but it still needs the source-of-truth files first.</p><div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-primary" onclick="go('cv')">Add CV</button><button class="btn btn-soft" onclick="go('profile')">Configure Profile</button><button class="btn btn-soft" onclick="go('setup')">View Setup</button></div></div>`;
+  }
+
+  const recent = [...D.apps].slice(-5).reverse();
+  const rows = recent.map(app => `<tr style="cursor:pointer" onclick="go('report-detail', decodeURIComponent('${enc(app.reportPath ? app.reportPath.split('/').pop() : '')}'))"><td style="color:var(--text-4);font-weight:600">${app.number}</td><td style="color:var(--text-0);font-weight:500">${esc(app.company)}</td><td class="w">${esc(app.role)}</td><td><span class="score-num ${sc(app.scoreNum)}">${esc(app.score)}</span></td><td><span class="chip ${chipFor(app.status)}">${esc(app.status)}</span></td></tr>`).join('');
+
+  const modeCards = quickModes.map(mode => {
+    const def = getMode(mode);
+    const pageName = MODE_PAGES[mode] || mode;
+    return `<div class="mode-card"><h3>${esc(def.title)}</h3><p>${esc(def.description)}</p><button class="btn btn-soft btn-sm" onclick="go('${pageName}')">${esc(def.cta || 'Open')}</button></div>`;
+  }).join('');
+
+  return `${running}
+    <div class="pg-head"><div><h2>Dashboard</h2><div class="pg-head-sub">Coverage now spans the full Career-Ops web surface: pipeline ops, PDF generation, compare/offreach/apply workflows, training, and project review.</div></div><div class="pg-actions"><button class="btn btn-primary" onclick="go('evaluate')">${ico.target} Evaluate Job</button><button class="btn btn-soft" onclick="go('tracker')">${ico.board} Open Tracker</button></div></div>
+    <div class="profile-strip">
+      <div class="profile-panel"><h3>${esc(candidate.full_name || 'Profile not configured')}</h3><p>${esc(narrative.headline || 'Add a headline in profile.yml')}</p><div class="pill-row">${roles.map(role => `<span class="pill">${esc(role)}</span>`).join('') || '<span class="pill">No target roles configured</span>'}</div></div>
+      <div class="profile-panel"><h3>Search Snapshot</h3><p>${esc([location.city, location.country].filter(Boolean).join(', ') || candidate.location || 'Location not set')}</p><div class="pill-row"><span class="pill">${esc(compensation.target_range || 'No target range')}</span><span class="pill">${esc(location.timezone || 'Timezone missing')}</span><span class="pill">${esc(D.pdfs.length)} PDFs</span></div></div>
+    </div>
+    <div class="stats">
+      <div class="stat" data-color="blue"><div class="stat-label">Total</div><div class="stat-val c-blue">${metrics.total || 0}</div></div>
+      <div class="stat" data-color="green"><div class="stat-label">Avg Score</div><div class="stat-val c-green">${metrics.avgScore || '0'}</div></div>
+      <div class="stat" data-color="amber"><div class="stat-label">Top Score</div><div class="stat-val c-amber">${metrics.topScore || '0.0'}</div></div>
+      <div class="stat" data-color="cyan"><div class="stat-label">PDFs</div><div class="stat-val c-cyan">${metrics.withPDF || 0}</div><div class="stat-sub">${metrics.withReport || 0} with reports</div></div>
+      <div class="stat" data-color="purple"><div class="stat-label">Actionable</div><div class="stat-val c-purple">${metrics.actionable || 0}</div></div>
+      <div class="stat" data-color="rose"><div class="stat-label">Pipeline</div><div class="stat-val c-rose">${(D.pipeline.pending || []).length}</div><div class="stat-sub">${(D.pipeline.errors || []).length} errors</div></div>
+    </div>
+    <div class="pg-head"><h2>Quick Modes</h2><button class="btn btn-ghost btn-sm" onclick="go('jobs')">View activity →</button></div>
+    <div class="mode-grid">${modeCards}</div>
+    <div class="pg-head"><h2>Recent Tracker Activity</h2><div class="pg-actions"><button class="btn btn-soft btn-sm" onclick="go('tracker')">Open Tracker</button><button class="btn btn-soft btn-sm" onclick="go('pdfs')">Open PDFs</button></div></div>
+    ${hasApps ? `<div class="card"><table><thead><tr><th>#</th><th>Company</th><th>Role</th><th>Score</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table></div>` : `<div class="empty-state"><div class="empty-icon">📊</div><h3>No applications yet</h3><p>Evaluate a job posting or scan portals to start populating the tracker.</p><div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-primary" onclick="go('evaluate')">Evaluate Job</button><button class="btn btn-soft" onclick="doScan()">Scan Portals</button></div></div>`}`;
+}
+
+function vTracker() {
+  const states = getStatusDefs();
+  const tabs = [{ key: 'all', label: 'All' }, { key: 'top', label: 'Score ≥ 4' }, ...states.map(state => ({ key: state.label, label: state.label }))];
+  let apps = [...D.apps];
+
+  if (filter === 'top') apps = apps.filter(app => app.scoreNum >= 4);
+  else if (filter !== 'all') apps = apps.filter(app => app.status === filter);
+
+  apps.sort((a, b) => {
+    const va = a[sField];
+    const vb = b[sField];
+    if (sField === 'scoreNum' || sField === 'number') return (va - vb) * sDir;
+    return String(va).localeCompare(String(vb)) * sDir;
+  });
+
+  const counts = {};
+  tabs.forEach(tab => {
+    if (tab.key === 'all') counts[tab.key] = D.apps.length;
+    else if (tab.key === 'top') counts[tab.key] = D.apps.filter(app => app.scoreNum >= 4).length;
+    else counts[tab.key] = D.apps.filter(app => app.status === tab.key).length;
+  });
+
+  const tabHtml = tabs.map(tab => `<button class="tab-btn ${filter === tab.key ? 'on' : ''}" onclick="filter='${tab.key}';draw()">${esc(tab.label)}<span class="tab-cnt">${counts[tab.key] || 0}</span></button>`).join('');
+  const rows = apps.map(app => {
+    const options = states.map(state => `<option value="${esc(state.label)}"${app.status === state.label ? ' selected' : ''}>${esc(state.label)}</option>`).join('');
+    return `<tr>
+      <td style="color:var(--text-4);font-weight:600">${app.number}</td>
+      <td style="font-size:12px;color:var(--text-3)">${esc(app.date)}</td>
+      <td style="color:var(--text-0);font-weight:500">${esc(app.company)}</td>
+      <td class="w">${esc(app.role)}</td>
+      <td><span class="score-num ${sc(app.scoreNum)}">${esc(app.score)}</span></td>
+      <td><select class="sel" onchange="updSt(${app.number},this.value)" onclick="event.stopPropagation()">${options}</select></td>
+      <td>${app.hasPDF ? '<span class="chip chip-green" style="font-size:10px">PDF</span>' : '<span style="color:var(--text-4)">—</span>'}</td>
+      <td>${app.hasReport ? '<span class="chip chip-blue" style="font-size:10px">REPORT</span>' : '<span style="color:var(--text-4)">—</span>'}</td>
+      <td class="w" style="font-size:12px;color:var(--text-3)">${esc(app.notes)}</td>
+      <td>${app.reportPath ? `<button class="btn-icon" onclick="go('report-detail', decodeURIComponent('${enc(app.reportPath.split('/').pop())}'))" title="View Report">${ico.eye}</button>` : ''}</td>
+    </tr>`;
+  }).join('');
+
+  const sortArrow = field => `<span class="sort-arrow">${sField === field ? (sDir > 0 ? '↑' : '↓') : ''}</span>`;
+  const legend = states.map(state => `<div class="state-card"><h4>${esc(state.label)}</h4><p>${esc(state.description || '')}</p></div>`).join('');
+
+  return `<div class="pg-head"><div><h2>Tracker</h2><div class="pg-head-sub">This page now uses canonical statuses from <code>templates/states.yml</code> and can also run the AI tracker review mode.</div></div><div class="pg-actions"><button class="btn btn-primary" onclick="runMode('tracker')">${ico.zap} AI Review</button><button class="btn btn-soft" onclick="go('pdfs')">${ico.file} Open PDFs</button></div></div>
+    <div class="stats">
+      <div class="stat" data-color="blue"><div class="stat-label">Applications</div><div class="stat-val c-blue">${D.metrics.total || 0}</div></div>
+      <div class="stat" data-color="green"><div class="stat-label">Reports</div><div class="stat-val c-green">${D.metrics.withReport || 0}</div></div>
+      <div class="stat" data-color="cyan"><div class="stat-label">PDFs</div><div class="stat-val c-cyan">${D.metrics.withPDF || 0}</div></div>
+      <div class="stat" data-color="amber"><div class="stat-label">Avg Score</div><div class="stat-val c-amber">${D.metrics.avgScore || '0'}</div></div>
+    </div>
+    <div class="tabs">${tabHtml}</div>
+    <div class="card"><table><thead><tr>
+      <th class="${sField === 'number' ? 'sorted' : ''}" onclick="doSort('number')"># ${sortArrow('number')}</th>
+      <th class="${sField === 'date' ? 'sorted' : ''}" onclick="doSort('date')">Date ${sortArrow('date')}</th>
+      <th class="${sField === 'company' ? 'sorted' : ''}" onclick="doSort('company')">Company ${sortArrow('company')}</th>
+      <th>Role</th>
+      <th class="${sField === 'scoreNum' ? 'sorted' : ''}" onclick="doSort('scoreNum')">Score ${sortArrow('scoreNum')}</th>
+      <th>Status</th><th>PDF</th><th>Report</th><th>Notes</th><th></th></tr></thead><tbody>${rows || '<tr><td colspan="10"><div class="empty-state" style="padding:40px"><p>No matches</p></div></td></tr>'}</tbody></table></div>
+    <div class="pg-head" style="margin-top:24px"><h2>Canonical States</h2></div>
+    <div class="state-grid">${legend}</div>`;
+}
+
+function vPdfs() {
+  if (!D.pdfs.length) {
+    return `<div class="pg-head"><div><h2>PDF Library</h2><div class="pg-head-sub">The PDF endpoints are now wired into the frontend. Generate a tailored CV and it will appear here.</div></div><div class="pg-actions"><button class="btn btn-primary" onclick="go('pdf')">${ico.file} Generate PDF</button></div></div><div class="empty-state"><div class="empty-icon">📄</div><h3>No PDFs yet</h3><p>Run the PDF mode with a job URL or pasted JD text to create your first tailored resume.</p></div>`;
+  }
+
+  const rows = D.pdfs.map(file => {
+    const match = file.match(/^cv-candidate-(.*)-(\d{4}-\d{2}-\d{2})\.pdf$/);
+    const label = match ? match[1].replace(/-/g, ' ') : file;
+    const date = match ? match[2] : '';
+    return `<div class="pdf-row"><div class="pipe-icon done">PDF</div><div class="pdf-meta"><strong>${esc(label)}</strong><span>${esc(date || file)}</span></div><button class="btn btn-soft btn-sm" onclick="openPdf(decodeURIComponent('${enc(file)}'))">${ico.eye} View</button><a class="btn btn-soft btn-sm" href="/api/pdfs/${encodeURIComponent(file)}" target="_blank" rel="noopener">${ico.ext} Open</a></div>`;
+  }).join('');
+
+  return `<div class="pg-head"><div><h2>PDF Library</h2><div class="pg-head-sub">Browsing uses <code>/api/pdfs</code> and viewing streams the files from <code>/api/pdfs/:filename</code>.</div></div><div class="pg-actions"><button class="btn btn-primary" onclick="go('pdf')">${ico.file} Generate PDF</button></div></div><div class="card"><div class="pdf-list">${rows}</div></div>`;
+}
+
+function vModePage(mode) {
+  const def = getMode(mode);
+  const isLarge = def.multiline !== false;
+  const helperCards = helperCardsForMode(mode);
+  const helperHtml = helperCards.map(item => `<div class="helper-item"><strong>${esc(item.title)}</strong><span>${esc(item.text)}</span></div>`).join('');
+  const helperDefault = helperHtml || `<div class="helper-item"><strong>Execution</strong><span>The job runs through Claude in the repository root and streams output to Activity.</span></div>`;
+
+  const inputField = (def.requiresInput || def.inputLabel)
+    ? `${def.inputLabel ? `<label class="field-label" for="mode-input">${esc(def.inputLabel)}</label>` : ''}${isLarge ? `<textarea id="mode-input" class="txt" placeholder="${esc(def.placeholder || '')}"></textarea>` : `<input id="mode-input" class="ipt" placeholder="${esc(def.placeholder || '')}" />`}${def.description ? `<div class="field-help">${esc(def.description)}</div>` : ''}`
+    : `<div class="helper-item"><strong>No extra input required</strong><span>${esc(def.description || 'This mode runs against the existing repository state.')}</span></div>`;
+
+  return `<div class="pg-head"><div><h2>${esc(def.title)}</h2><div class="pg-head-sub">${esc(def.description || '')}</div></div><div class="pg-actions"><button class="btn btn-soft" onclick="go('jobs')">${ico.zap} Activity</button></div></div>
+    <div class="form-shell">
+      <div class="form-panel">
+        ${mode === 'evaluate' ? `<div class="hero-card" style="margin-bottom:20px"><h2>URL or pasted JD both work</h2><p>The evaluate route now accepts either a normal job URL or full job description text instead of being URL-only.</p></div>` : ''}
+        ${inputField}
+        <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="runModeFromInput('${mode}')">${ico.play} ${esc(def.cta || 'Run')}</button>
+          ${mode === 'pdf' ? `<button class="btn btn-soft" onclick="go('pdfs')">${ico.file} PDF Library</button>` : ''}
+          ${mode === 'batch' ? `<button class="btn btn-soft" onclick="go('pipeline')">${ico.board} Open Pipeline</button>` : ''}
+          ${mode === 'apply' ? `<button class="btn btn-soft" onclick="go('reports')">${ico.file} Open Reports</button>` : ''}
+        </div>
+      </div>
+      <div class="form-panel">
+        <div class="card-head" style="padding:0 0 12px;border:none">How To Use</div>
+        <div class="helper-list">${helperDefault}</div>
+      </div>
+    </div>`;
+}
+
+function helperCardsForMode(mode) {
+  const map = {
+    evaluate: [
+      { title: 'Input', text: 'Paste either a normal careers URL or the full JD text. Auto-pipeline handles both.' },
+      { title: 'Output', text: 'The run can create a report, a tailored PDF, and tracker updates depending on the mode result.' },
+    ],
+    pdf: [
+      { title: 'Best input', text: 'Provide a JD or URL with enough detail for keyword extraction and role framing.' },
+      { title: 'Where output lands', text: 'Generated PDFs are written into output/ and listed in the PDFs page.' },
+    ],
+    ofertas: [
+      { title: 'Format', text: 'Paste multiple offers, URLs, or report references in one block so Claude can score them together.' },
+      { title: 'Expected output', text: 'This mode produces a ranking with weighted comparison rather than a tracker mutation.' },
+    ],
+    deep: [
+      { title: 'Use case', text: 'Feed a company, role, and any evaluated JD so the research prompt is specific instead of generic.' },
+      { title: 'Expected output', text: 'The mode returns a structured deep-research brief you can use in another model or interview prep.' },
+    ],
+    contacto: [
+      { title: 'Best context', text: 'Include the company, role, and ideally the report number or JD summary for a sharper message.' },
+      { title: 'Constraint', text: 'The outreach mode is designed for a short LinkedIn-style message, not a full cover letter.' },
+    ],
+    apply: [
+      { title: 'Best input', text: 'Paste the visible form questions, the role, and any company context already on screen.' },
+      { title: 'Fallback path', text: 'Without live browser control, this mode uses pasted form text and existing reports as context.' },
+    ],
+    training: [
+      { title: 'Paste details', text: 'Include syllabus, provider, price, and what role signal you expect from the course.' },
+      { title: 'Expected output', text: 'The result should be a do / do-not-do verdict with timeboxing or alternatives.' },
+    ],
+    project: [
+      { title: 'Paste details', text: 'Describe the project idea, target role, scope, and what you want it to prove.' },
+      { title: 'Expected output', text: 'The mode scores the idea and should return build/skip/pivot guidance plus interview-pack direction.' },
+    ],
+    batch: [
+      { title: 'What it runs', text: 'Batch mode operates on your existing batch inputs and tracker-additions flow inside the repo.' },
+      { title: 'Optional notes', text: 'Use the optional field for dry-run or retry guidance if you want Claude to run with extra context.' },
+    ],
+  };
+  return map[mode] || [];
+}
+
+async function runMode(mode, input = '') {
+  const endpoint = MODE_ENDPOINTS[mode];
+  if (!endpoint) return toast('Unknown mode', 'error');
+
+  const body = input != null ? { input } : {};
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Failed to start job');
+    toast(`${getMode(mode).title} #${data.jobId} started`, 'success');
+    startPoll();
+  } catch (err) {
+    toast(err.message || 'Failed to start job', 'error');
+  }
+}
+
+function runModeFromInput(mode) {
+  const inputEl = $('mode-input');
+  const input = inputEl ? inputEl.value.trim() : '';
+  runMode(mode, input);
+}
+
+async function doScan() {
+  await runMode('scan');
+}
+
+async function doPipe() {
+  await runMode('pipeline');
+}
+
+async function doBatch() {
+  await runMode('batch', $('mode-input') ? $('mode-input').value.trim() : '');
+}
+
+async function updSt(num, status) {
+  try {
+    const response = await fetch(`/api/applications/${num}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
+    });
+    if (!response.ok) throw new Error('Update failed');
+    toast(`#${num} → ${status}`, 'success');
+    await load();
+    draw();
+  } catch {
+    toast('Update failed', 'error');
+  }
+}
+
+function doSort(field) {
+  if (sField === field) sDir *= -1;
+  else {
+    sField = field;
+    sDir = field === 'scoreNum' ? -1 : 1;
+  }
+  draw();
+}
+
+function vPipe() {
+  const pipeline = D.pipeline || { pending: [], errors: [], processed: [] };
+  const actions = `<div class="pg-actions"><button class="btn btn-primary" onclick="doPipe()">${ico.zap} Process All</button><button class="btn btn-soft" onclick="doScan()">${ico.search} Scan</button><button class="btn btn-soft" onclick="go('batch')">${ico.board} Batch</button></div>`;
+  const sections = [];
+
+  if (pipeline.pending && pipeline.pending.length) {
+    const items = pipeline.pending.map((item, idx) => {
+      let domain = '';
+      try { domain = new URL(item.url).hostname.replace(/^www\./, ''); } catch { domain = item.url.startsWith('local:') ? 'local file' : ''; }
+      return `<div class="pipe-item" onclick="viewJD(${idx})"><div class="pipe-icon pending">⏳</div><div class="pipe-info"><div class="pipe-company">${esc(item.company || 'Unknown')}</div><div class="pipe-role">${esc(item.role || 'Open Position')}</div><div class="pipe-url-sm">${esc(domain)}</div></div><div class="pipe-actions"><button class="btn btn-sm btn-soft" onclick="event.stopPropagation();viewJD(${idx})">${ico.eye} View</button>${item.url.startsWith('local:') ? '' : `<a class="btn btn-sm btn-soft" href="${esc(item.url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${ico.ext} Open</a>`}<button class="btn btn-sm btn-primary" onclick="event.stopPropagation();doEvalUrl(decodeURIComponent('${enc(item.url)}'))">${ico.zap} Evaluate</button></div></div>`;
+    }).join('');
+    sections.push(`<div class="sec-title">Pending · ${pipeline.pending.length}</div>${items}`);
+  }
+
+  if (pipeline.errors && pipeline.errors.length) {
+    const items = pipeline.errors.map(item => `<div class="pipe-item"><div class="pipe-icon error">!</div><span style="color:var(--red);font-size:13px">${esc(item.text)}</span></div>`).join('');
+    sections.push(`<div class="sec-title" style="color:var(--red)">Errors · ${pipeline.errors.length}</div>${items}`);
+  }
+
+  if (pipeline.processed && pipeline.processed.length) {
+    const items = pipeline.processed.map(item => `<div class="pipe-item"><div class="pipe-icon done">✓</div><span style="font-size:13px;font-weight:500">${esc(item.company)} · ${esc(item.role)}</span><span class="pipe-meta">${esc(item.score)} ${esc(item.pdf)}</span></div>`).join('');
+    sections.push(`<div class="sec-title" style="color:var(--green)">Done · ${pipeline.processed.length}</div>${items}`);
+  }
+
+  if (!sections.length) {
+    return `<div class="pg-head"><div><h2>Pipeline</h2><div class="pg-head-sub">Pipeline processing now pairs with batch mode and local JD preview support.</div></div>${actions}</div><div class="empty-state"><div class="empty-icon">📥</div><h3>Pipeline empty</h3><p>Run a scan to discover job postings or add URLs directly into <code>data/pipeline.md</code>.</p></div>`;
+  }
+
+  return `<div class="pg-head"><div><h2>Pipeline</h2><div class="pg-head-sub">Pending items can be previewed directly in the UI. Local JDs using the <code>local:</code> prefix are supported too.</div></div>${actions}</div><div class="card">${sections.join('')}</div>`;
+}
+
+function doEvalUrl(url) {
+  runMode('evaluate', url);
+}
+
+async function viewJD(idx) {
+  const item = (D.pipeline.pending || [])[idx];
+  if (!item) return;
+
+  const root = $('modal-root');
+  root.innerHTML = `<div class="modal-bg" onclick="if(event.target===this)clModal()"><div class="modal-box"><div class="modal-top"><h3>${esc(item.company || 'Job Details')}</h3><button class="btn-icon" onclick="clModal()">${ico.x}</button></div><div class="modal-content"><div class="jd-header"><div class="jd-header-info"><h4>${esc(item.role || 'Open Position')}</h4><p>${esc(item.company || '')} · ${item.url.startsWith('local:') ? esc(item.url) : `<a href="${esc(item.url)}" target="_blank" rel="noopener" style="color:var(--blue)">${esc(item.url)}</a>`}</p></div><div class="jd-header-actions"><button class="btn btn-primary btn-sm" onclick="clModal();doEvalUrl(decodeURIComponent('${enc(item.url)}'))">${ico.zap} Evaluate</button>${item.url.startsWith('local:') ? '' : `<a class="btn btn-soft btn-sm" href="${esc(item.url)}" target="_blank" rel="noopener">${ico.ext} Original</a>`}</div></div><div class="jd-content"><div class="loading-state"><div class="spin"></div><p style="margin-top:12px;color:var(--text-3)">Fetching job details...</p></div></div></div></div></div>`;
+
+  try {
+    const response = await fetch(`/api/jd?url=${encodeURIComponent(item.url)}`);
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Failed');
+    root.querySelector('.jd-content').textContent = data.text || '(No content extracted)';
+  } catch (err) {
+    root.querySelector('.jd-content').innerHTML = `<div style="color:var(--red);padding:20px;"><p style="font-weight:600">Could not fetch job details</p><p style="font-size:12px;margin-top:8px">${esc(err.message || 'Failed')}</p></div>`;
+  }
+}
+
+function vScans() {
+  const scans = D.scans || [];
+  const header = `<div class="pg-head"><div><h2>Scan History</h2><div class="pg-head-sub">Portal scan execution is now paired with the batch and pipeline surfaces.</div></div><button class="btn btn-primary" onclick="doScan()">${ico.search} Scan Now</button></div>`;
+  if (!scans.length) {
+    return `${header}<div class="empty-state"><div class="empty-icon">🔍</div><h3>No scans yet</h3><p>Run a scan to search your configured portals and seed the pipeline.</p></div>`;
+  }
+  const rows = scans.map(scan => `<tr><td style="font-size:12px">${esc(scan.date)}</td><td style="font-weight:500;color:var(--text-0)">${esc(scan.company)}</td><td class="w">${esc(scan.title)}</td><td style="font-size:12px;color:var(--text-3)">${esc(scan.queryName)}</td><td><span class="chip ${scan.status === 'added' ? 'chip-green' : scan.status === 'skipped_title' ? 'chip-amber' : 'chip-muted'}">${esc(scan.status)}</span></td><td><a class="pipe-url" href="${esc(scan.url)}" target="_blank" rel="noopener">Open</a></td></tr>`).join('');
+  return `${header}<div class="card"><table><thead><tr><th>Date</th><th>Company</th><th>Title</th><th>Query</th><th>Result</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
+function vJobs() {
+  if (!D.jobs.length) {
+    return `<div class="pg-head"><h2>Activity</h2></div><div class="empty-state"><div class="empty-icon">⚡</div><h3>No activity</h3><p>Actions you trigger anywhere in the UI will appear here with live output.</p></div>`;
+  }
+  const items = D.jobs.map(job => `<div class="act-item" onclick="jobOut(${job.id})"><span class="act-dot ${job.status}"></span><span class="act-label">${esc(job.label)}</span><span class="act-time">${timeAgo(job.startedAt)}${job.finishedAt ? ` · ${((job.finishedAt - job.startedAt) / 1000) | 0}s` : ''}</span><button class="btn-icon" onclick="event.stopPropagation();jobOut(${job.id})">${ico.eye}</button></div>`).join('');
+  return `<div class="pg-head"><div><h2>Activity</h2><div class="pg-head-sub">Every workflow page streams here, including compare/offreach/apply/training/project runs.</div></div></div><div class="card"><div class="act-list">${items}</div></div>`;
+}
+
+async function jobOut(id) {
+  const root = $('modal-root');
+  root.innerHTML = `<div class="modal-bg" onclick="if(event.target===this)clModal()"><div class="modal-box"><div class="modal-top"><h3>Loading...</h3><button class="btn-icon" onclick="clModal()">${ico.x}</button></div><div class="modal-content"><div class="loading-state"><div class="spin"></div></div></div></div></div>`;
+  try {
+    const response = await fetch(`/api/jobs/${id}`);
+    const job = await response.json();
+    root.querySelector('h3').textContent = `${job.label} — ${job.status}`;
+    const refresh = job.status === 'running' ? `<br><button class="btn btn-sm btn-soft" style="margin-top:12px" onclick="jobOut(${id})">${ico.refresh} Refresh</button>` : '';
+    root.querySelector('.modal-content').innerHTML = `<pre>${esc(job.output || '(waiting for output...)')}</pre>${refresh}`;
+  } catch {
+    root.querySelector('.modal-content').innerHTML = '<pre>Failed to load</pre>';
+  }
+}
+
+function openPdf(filename) {
+  const root = $('modal-root');
+  root.innerHTML = `<div class="modal-bg" onclick="if(event.target===this)clModal()"><div class="modal-box"><div class="modal-top"><h3>${esc(filename)}</h3><div class="pg-actions"><a class="btn btn-sm btn-soft" href="/api/pdfs/${encodeURIComponent(filename)}" target="_blank" rel="noopener">${ico.ext} Open</a><button class="btn-icon" onclick="clModal()">${ico.x}</button></div></div><div class="modal-content" style="padding:18px"><iframe class="pdf-frame" src="/api/pdfs/${encodeURIComponent(filename)}"></iframe></div></div></div>`;
+}
+
+function clModal() {
+  $('modal-root').innerHTML = '';
+}
+
+function vReports() {
+  if (!D.reports.length) {
+    return `<div class="pg-head"><h2>Reports</h2></div><div class="empty-state"><div class="empty-icon">📄</div><h3>No reports</h3><p>Evaluate a job to generate your first report.</p></div>`;
+  }
+  const rows = D.reports.map(file => {
+    const match = file.match(/^(\d+)-(.*)-(\d{4}-\d{2}-\d{2})\.md$/);
+    return `<tr style="cursor:pointer" onclick="go('report-detail', decodeURIComponent('${enc(file)}'))"><td style="font-weight:600;color:var(--text-4)">${match ? match[1] : ''}</td><td style="text-transform:capitalize;font-weight:500;color:var(--text-0)">${esc(match ? match[2].replace(/-/g, ' ') : file)}</td><td style="font-size:12px;color:var(--text-3)">${match ? match[3] : ''}</td></tr>`;
+  }).join('');
+  return `<div class="pg-head"><div><h2>Reports</h2><div class="pg-head-sub">Generated reports remain browsable here, while workflow modes write their detailed output into Activity.</div></div></div><div class="card"><table><thead><tr><th>#</th><th>Company / Role</th><th>Date</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
+async function vReport(filename) {
+  if (!filename) return;
+  const el = $('content');
+  el.innerHTML = '<div class="loading-state"><div class="spin"></div>Loading report...</div>';
+  try {
+    const response = await fetch(`/api/reports/${encodeURIComponent(filename)}`);
+    if (!response.ok) throw new Error('Not found');
+    const data = await response.json();
+    el.innerHTML = `<button class="back-link" onclick="go('reports')">${ico.back} Back to Reports</button><div class="report">${data.html}</div>`;
+  } catch {
+    el.innerHTML = `<button class="back-link" onclick="go('reports')">${ico.back} Back</button><div class="empty-state"><div class="empty-icon">📄</div><h3>Not found</h3></div>`;
+  }
+}
+
+async function vEditor(type) {
+  const el = $('content');
+  const cfg = {
+    cv: { title: 'My CV', ep: '/api/cv', file: 'cv.md', hint: 'Paste your CV in Markdown. Sections: Summary, Experience, Education, Skills, Projects.' },
+    profile: { title: 'Profile Settings', ep: '/api/profile/raw', file: 'config/profile.yml', hint: 'This editor writes the profile source of truth. The parsed profile summary above is loaded from /api/profile.' },
+    portals: { title: 'Portal Configuration', ep: '/api/portals/raw', file: 'portals.yml', hint: 'YAML config for companies, search queries, and title filters used by the scanner.' },
+  }[type];
+
+  el.innerHTML = '<div class="loading-state"><div class="spin"></div></div>';
+  try {
+    const response = await fetch(cfg.ep);
+    const data = await response.json();
+    const profile = D.profile || {};
+    const summary = type === 'profile'
+      ? `<div class="profile-strip"><div class="profile-panel"><h3>${esc((profile.candidate || {}).full_name || 'Profile summary')}</h3><p>${esc((profile.narrative || {}).headline || 'No headline parsed yet')}</p></div><div class="profile-panel"><h3>Parsed Targets</h3><div class="pill-row">${(((profile.target_roles || {}).primary) || []).map(role => `<span class="pill">${esc(role)}</span>`).join('') || '<span class="pill">No primary roles</span>'}</div></div></div>`
+      : '';
+    el.innerHTML = `${summary}<div class="pg-head"><div><h2>${cfg.title}</h2><div class="pg-head-sub">${cfg.hint}</div></div><div class="pg-actions"><span class="saved-flash" id="sf">✓ Saved</span><button class="btn btn-primary" onclick="doSave('${type}')">${ico.save} Save</button></div></div><div class="editor"><div class="editor-bar"><span class="editor-file">${cfg.file}</span><span class="editor-status">${data.exists ? 'Editing' : 'New file'}</span></div><textarea id="ed-content" spellcheck="false">${esc(data.content || '')}</textarea></div>`;
+  } catch (err) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">❌</div><h3>Failed to load</h3><p>${esc(err.message || 'Failed')}</p></div>`;
+  }
+}
+
+async function doSave(type) {
+  const content = $('ed-content').value;
+  const endpoint = { cv: '/api/cv', profile: '/api/profile/raw', portals: '/api/portals/raw' }[type];
+  try {
+    const response = await fetch(endpoint, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content }),
+    });
+    if (!response.ok) throw new Error('Save failed');
+    toast('Saved!', 'success');
+    const flash = $('sf');
+    if (flash) {
+      flash.classList.add('on');
+      setTimeout(() => flash.classList.remove('on'), 2000);
+    }
+    await load();
+  } catch {
+    toast('Save failed', 'error');
+  }
+}
+
+function vSetup() {
+  const checks = D.health.checks || {};
+  const items = [
+    { key: 'cv', label: 'CV', description: 'Your resume in Markdown format', page: 'cv' },
+    { key: 'profile', label: 'Profile', description: 'Name, target roles, compensation, and preferences', page: 'profile' },
+    { key: 'portals', label: 'Portals', description: 'Companies and queries for the scanner', page: 'portals' },
+    { key: 'applications', label: 'Applications Tracker', description: 'Auto-created on first evaluation', page: 'tracker' },
+    { key: 'pipeline', label: 'Pipeline Inbox', description: 'Auto-created on first scan', page: 'pipeline' },
+  ];
+  const list = items.map(item => `<div class="chk-item"><div class="chk-mark ${checks[item.key] ? 'ok' : 'no'}">${checks[item.key] ? '✓' : '✗'}</div><div class="chk-info"><strong>${esc(item.label)}</strong><span>${esc(item.description)}</span></div>${item.page ? `<button class="btn btn-sm ${checks[item.key] ? 'btn-ghost' : 'btn-primary'}" onclick="go('${item.page}')">${checks[item.key] ? 'Open' : 'Set up'}</button>` : ''}</div>`).join('');
+  const states = getStatusDefs().map(state => `<div class="state-card"><h4>${esc(state.label)}</h4><p>${esc(state.description || '')}</p></div>`).join('');
+  return `<div class="pg-head"><div><h2>Setup</h2><div class="pg-head-sub">This page now reflects the same source-of-truth files and canonical states the backend reads.</div></div></div><div class="card"><div class="chk-list">${list}</div></div><div class="pg-head" style="margin-top:24px"><h2>Canonical States</h2></div><div class="state-grid">${states}</div>`;
+}
+
+function startPoll() {
+  if (poll) return;
+  poll = setInterval(async () => {
+    await load();
+    const running = D.jobs.filter(job => job.status === 'running').length;
+    if (!running) {
+      clearInterval(poll);
+      poll = null;
+      toast('All jobs done!', 'success');
+    }
+    if (['jobs', 'dashboard', 'tracker', 'pdfs'].includes(page)) draw();
+  }, 5000);
+}
+
+const ico = {
+  target: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>',
+  search: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>',
+  zap: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>',
+  play: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>',
+  save: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>',
+  x: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>',
+  back: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>',
+  eye: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>',
+  refresh: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>',
+  ext: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>',
+  file: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
+  board: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5h18"/><path d="M3 12h18"/><path d="M3 19h18"/></svg>',
+};
+
+load().then(() => draw());
+setInterval(load, 30000);
+</script>
+</body>
+</html>

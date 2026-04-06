@@ -1,0 +1,24 @@
+services:
+  career-ops-web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    container_name: career-ops-web
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3007:3007"
+    volumes:
+      - .:/workspace
+      - /home/koolaid/.claude:/home/node/.claude
+      - /home/koolaid/.claude.json:/home/node/.claude.json
+      - /home/koolaid/.cache/ms-playwright:/home/node/.cache/ms-playwright
+    environment:
+      - PORT=3007
+      - CAREER_OPS_ROOT=/workspace
+      - HOME=/home/node
+    networks:
+      - shared
+
+networks:
+  shared:
+    external: true

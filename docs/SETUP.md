@@ -71,6 +71,25 @@ node cv-sync-check.mjs      # Check configuration
 node verify-pipeline.mjs     # Check pipeline integrity
 ```
 
+## Run The Web App (Optional)
+
+```bash
+npm run web:install
+npm run web:start
+```
+
+Open `http://localhost:3007`.
+
+The web app reads the same project files as the CLI, so you do not maintain a second config surface.
+
+## Run The Web App With Docker (Optional)
+
+```bash
+docker compose -f docker-compose.web.yml up --build
+```
+
+This uses `Dockerfile.web` and mounts the repository into the container so the browser UI operates on the real tracker, reports, PDFs, and config files.
+
 ## Build Dashboard (Optional)
 
 ```bash

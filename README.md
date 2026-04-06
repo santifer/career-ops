@@ -146,6 +146,36 @@ go build -o career-dashboard .
 
 Features: 6 filter tabs, 4 sort modes, grouped/flat view, lazy-loaded previews, inline status changes.
 
+## Web App
+
+The repo also includes a browser UI that now covers the full Career-Ops mode surface: dashboard, tracker, PDF library, auto-pipeline, PDF generation, scan, pipeline, batch, offer comparison, apply, outreach, deep research, training, project evaluation, reports, and source-of-truth editors.
+
+### Run locally
+
+```bash
+npm run web:install
+npm run web:start
+```
+
+Open `http://localhost:3007`.
+
+The web app reads the same source-of-truth files as the CLI:
+- `cv.md`
+- `config/profile.yml`
+- `portals.yml`
+- `templates/states.yml`
+- `data/applications.md`
+- `reports/`
+- `output/`
+
+### Run with Docker
+
+```bash
+docker compose -f docker-compose.web.yml up --build
+```
+
+The containerized web app mounts the repo into `/workspace` and reads live project state through `CAREER_OPS_ROOT=/workspace`.
+
 ## Project Structure
 
 ```
@@ -170,6 +200,9 @@ career-ops/
 │   ├── batch-prompt.md          # Self-contained worker prompt
 │   └── batch-runner.sh          # Orchestrator script
 ├── dashboard/                   # Go TUI pipeline viewer
+├── web/                         # Full browser UI + API wrapper for every mode
+├── Dockerfile.web               # Container image for the web app
+├── docker-compose.web.yml       # Local Docker orchestration for the web app
 ├── data/                        # Your tracking data (gitignored)
 ├── reports/                     # Evaluation reports (gitignored)
 ├── output/                      # Generated PDFs (gitignored)

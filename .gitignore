@@ -18,10 +18,16 @@ jds/*
 # User config
 config/profile.yml
 portals.yml
+cv.md
+article-digest.md
 
 # Generated
 .resolved-prompt-*
 node_modules/
+web/node_modules/
+web/.env
+web/.env.*
+web/*.log
 
 # OS
 .DS_Store
