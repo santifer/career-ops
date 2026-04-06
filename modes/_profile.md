@@ -39,30 +39,62 @@ No live demo. Key proof points are metric-driven achievements in CV.
 
 ## Your Comp Targets
 
+**By seniority level:**
+- Director / Head: R$35K-40K/month
+- Senior Manager / Controller: R$28K-30K/month
+- Minimum CLT: R$35K/month | Minimum PJ: R$30K/month
+- Accepts: CLT, PJ, Associado
+
 **General guidance:**
 - Use WebSearch for current market data for Finance Director roles in Sao Paulo
 - Frame by role title and seniority, considering multinational vs local companies
-- Consider that trilingual (PT/EN/ES) candidates command a premium for LATAM roles
+- Trilingual (PT/EN/ES) candidates command a premium for LATAM roles
 
 ## Your Negotiation Scripts
 
-**Salary expectations:**
-> "Based on market data for Finance Director roles in Sao Paulo with LATAM scope, I'm targeting R$35K-50K/month in total compensation. I'm flexible on structure — what matters is the total package and the opportunity to drive transformation."
+**Salary expectations (Director/Head):**
+> "Based on market data for Finance Director roles in Sao Paulo with LATAM scope, I'm targeting R$35K-40K/month. I'm flexible on structure (CLT or PJ) — what matters is the total package and the opportunity to drive transformation."
+
+**Salary expectations (Senior Manager/Controller):**
+> "For this level of responsibility, I'm targeting R$28K-30K/month. I'm open to CLT, PJ, or associate structures."
 
 **Geographic discount pushback:**
 > "My experience spans 5 LATAM countries with US-headquartered companies. The complexity of multi-GAAP, multi-jurisdiction operations doesn't simplify based on location."
 
 **When offered below target:**
-> "I'm comparing with opportunities at the Director level in multinational environments. I'm drawn to [company] because of [reason]. Can we explore the R$35K-50K range?"
+> "I'm comparing with opportunities at multinational companies. I'm drawn to [company] because of [reason]. Can we explore the [appropriate range]?"
 
 ## Your Location Policy
 
 **In forms:**
-- Based in Sao Paulo, Brazil
-- Available for travel across LATAM
-- Open to hybrid/remote arrangements
+- Based in Sao Paulo, Brazil (Grande Sao Paulo also OK)
+- Available for travel
+- Remote, hybrid, or on-site — all acceptable
+- Immediate start
 
 **In evaluations (scoring):**
-- Remote dimension for hybrid in Sao Paulo: score **5.0**
-- Remote for other Brazil cities: score **3.5**
-- Fully on-site outside Brazil: score **2.0**
+- Sao Paulo / Grande SP (any model): score **5.0**
+- Other Brazil cities (remote OK): score **3.0**
+- Fully on-site outside Grande SP: score **1.5**
+
+## Your Company Preferences (CRITICAL for scoring)
+
+**Strongly preferred (score bonus):**
+- Multinationals, especially in technology sector
+- Companies with AI/digital transformation agenda
+- Finance + AI intersection roles (dream scenario — score **5.0** automatically)
+
+**Acceptable:**
+- International startups with tech focus
+- Any multinational with English as working language
+
+**AVOID — score 1.0 or lower:**
+- Big 4 (Deloitte, EY, PwC, KPMG) — explicitly rejected
+- Small/medium accounting firms — explicitly rejected
+- National-only companies with no international scope
+- Roles that do NOT require English — deal-breaker, score **0.5**
+
+**Deal-breakers (auto-SKIP):**
+- No English required → SKIP
+- Below R$30K/month PJ or R$35K/month CLT → SKIP
+- Small/medium accounting firm → SKIP
