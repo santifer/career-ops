@@ -182,9 +182,9 @@ If the candidate has a live demo/dashboard (check profile.yml), offer access in 
 
 ## Anti-AI-Detection Rules (apply to ALL generated CV / cover letter / form text)
 
-ATS vendors and LinkedIn now run AI-text classifiers (CVViZ, GoHire, copyleaks, originality.ai) on incoming applications. If the text reads like ChatGPT, the CV gets pre-filtered before a human sees it. See issue #1.
+ATS vendors and LinkedIn run AI-text classifiers (CVViZ, GoHire, copyleaks, originality.ai) on incoming applications. If the text reads like ChatGPT, the CV gets pre-filtered before a human sees it. See issue #1.
 
-These rules apply whenever you write text that ends up in a candidate-facing document: PDF summary, bullets, cover letter, form answers, LinkedIn messages. They do NOT apply to internal evaluation reports.
+These rules apply whenever you write text that ends up in a candidate-facing document: PDF summary, bullets, cover letter, form answers, LinkedIn messages. They do NOT apply to internal evaluation reports, where you should write normally.
 
 ### 1. Forbidden phrases (do not use, ever)
 
@@ -234,4 +234,4 @@ These are the phrases AI detectors weight most heavily. Strip them on sight.
 
 ### 5. The honesty floor
 
-These rules reduce LOW-HANGING TELLS. They do not make the text undetectable. The only way to fully beat AI detectors is for the candidate to write the text themselves. When generating CV content, leave the candidate's original phrasing alone wherever possible -- only rewrite when the JD genuinely needs different keywords. Do NOT "polish" prose that is already specific and human.
+These rules take out the low-hanging tells. They do not make the text undetectable. The only way to actually beat AI detectors is for the candidate to write the text themselves. When generating CV content, leave the candidate's original phrasing alone wherever you can. Only rewrite when the JD genuinely needs different keywords. Do not "polish" prose that is already specific and human -- you will make it worse.
