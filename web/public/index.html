@@ -694,6 +694,80 @@
       transition: color 0.15s;
     }
     .back-link:hover { color: var(--blue); }
+    .report-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 14px;
+    }
+    .report-card {
+      background: var(--bg-2);
+      border: 1px solid var(--border-1);
+      border-radius: 14px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      min-height: 220px;
+    }
+    .report-card h3 {
+      font-size: 17px;
+      color: var(--text-0);
+      letter-spacing: -0.3px;
+      margin: 0;
+    }
+    .report-card p {
+      color: var(--text-2);
+      font-size: 13px;
+      line-height: 1.6;
+      margin: 0;
+    }
+    .report-kv {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .report-kv span {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: var(--bg-3);
+      color: var(--text-2);
+      font-size: 11px;
+      border: 1px solid var(--border-1);
+    }
+    .report-sections {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .report-sections span {
+      font-size: 11px;
+      color: var(--text-3);
+      border: 1px dashed var(--border-2);
+      border-radius: 999px;
+      padding: 5px 10px;
+    }
+    .report-card-foot {
+      margin-top: auto;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .report-raw {
+      margin-top: 16px;
+      border-top: 1px solid var(--border-1);
+      padding-top: 16px;
+    }
+    .report-raw summary {
+      cursor: pointer;
+      color: var(--text-3);
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
 
     .hero-card {
       background: linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(168,85,247,0.06) 100%);
@@ -1056,6 +1130,21 @@ const esc = value => value == null ? '' : String(value)
   .replace(/</g, '&lt;')
   .replace(/>/g, '&gt;')
   .replace(/"/g, '&quot;');
+
+function reportFilename(report) {
+  return typeof report === 'string' ? report : (report && report.filename) || '';
+}
+
+function findReportMeta(filename) {
+  return D.reports.find(report => reportFilename(report) === filename) || null;
+}
+
+function reportTitle(report) {
+  if (report && typeof report === 'object' && report.title) return report.title;
+  const filename = reportFilename(report);
+  const match = filename.match(/^(\d+)-(.*)-(\d{4}-\d{2}-\d{2})\.md$/);
+  return match ? match[2].replace(/-/g, ' ') : filename.replace(/\.md$/, '');
+}
 
 function toast(message, type = 'info') {
   const t = $('toast');
@@ -1544,7 +1633,11 @@ async function jobOut(id) {
     const job = await response.json();
     root.querySelector('h3').textContent = `${job.label} — ${job.status}`;
     const refresh = job.status === 'running' ? `<br><button class="btn btn-sm btn-soft" style="margin-top:12px" onclick="jobOut(${id})">${ico.refresh} Refresh</button>` : '';
-    root.querySelector('.modal-content').innerHTML = `<pre>${esc(job.output || '(waiting for output...)')}</pre>${refresh}`;
+    const summary = job.summary ? `<div class="hero-card" style="margin-bottom:16px"><h2>${esc(job.label)}</h2><p>${esc(job.summary)}</p></div>` : '';
+    const formatted = job.html
+      ? `<div class="report">${job.html}</div><details class="report-raw"><summary>Raw output</summary><pre>${esc(job.output || '(waiting for output...)')}</pre></details>`
+      : `<pre>${esc(job.output || '(waiting for output...)')}</pre>`;
+    root.querySelector('.modal-content').innerHTML = `${summary}${formatted}${refresh}`;
   } catch {
     root.querySelector('.modal-content').innerHTML = '<pre>Failed to load</pre>';
   }
@@ -1563,11 +1656,32 @@ function vReports() {
   if (!D.reports.length) {
     return `<div class="pg-head"><h2>Reports</h2></div><div class="empty-state"><div class="empty-icon">📄</div><h3>No reports</h3><p>Evaluate a job to generate your first report.</p></div>`;
   }
-  const rows = D.reports.map(file => {
-    const match = file.match(/^(\d+)-(.*)-(\d{4}-\d{2}-\d{2})\.md$/);
-    return `<tr style="cursor:pointer" onclick="go('report-detail', decodeURIComponent('${enc(file)}'))"><td style="font-weight:600;color:var(--text-4)">${match ? match[1] : ''}</td><td style="text-transform:capitalize;font-weight:500;color:var(--text-0)">${esc(match ? match[2].replace(/-/g, ' ') : file)}</td><td style="font-size:12px;color:var(--text-3)">${match ? match[3] : ''}</td></tr>`;
+  const cards = D.reports.map(report => {
+    const filename = reportFilename(report);
+    const meta = typeof report === 'object' ? report : {};
+    const bits = [
+      meta.number ? `#${meta.number}` : '',
+      meta.date || '',
+      meta.score ? `Score ${meta.score}` : '',
+      meta.status || '',
+      meta.hasPDF ? 'PDF ready' : '',
+    ].filter(Boolean).map(bit => `<span>${esc(bit)}</span>`).join('');
+    const sections = (meta.sections || []).slice(0, 4).map(section => `<span>${esc(section)}</span>`).join('');
+    return `<div class="report-card">
+      <div>
+        <h3>${esc(reportTitle(report))}</h3>
+        <p>${esc(meta.company && meta.role ? `${meta.company} · ${meta.role}` : meta.company || meta.role || filename)}</p>
+      </div>
+      <div class="report-kv">${bits || '<span>Report</span>'}</div>
+      <p>${esc(meta.excerpt || 'Open the report to review the full evaluation summary.')}</p>
+      ${sections ? `<div class="report-sections">${sections}</div>` : ''}
+      <div class="report-card-foot">
+        <button class="btn btn-primary btn-sm" onclick="go('report-detail', decodeURIComponent('${enc(filename)}'))">${ico.eye} Open Report</button>
+        <span class="pipe-meta">${esc(filename)}</span>
+      </div>
+    </div>`;
   }).join('');
-  return `<div class="pg-head"><div><h2>Reports</h2><div class="pg-head-sub">Generated reports remain browsable here, while workflow modes write their detailed output into Activity.</div></div></div><div class="card"><table><thead><tr><th>#</th><th>Company / Role</th><th>Date</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  return `<div class="pg-head"><div><h2>Reports</h2><div class="pg-head-sub">Reports are now indexed with extracted summaries and section tags, not just filenames.</div></div></div><div class="report-grid">${cards}</div>`;
 }
 
 async function vReport(filename) {
@@ -1578,7 +1692,19 @@ async function vReport(filename) {
     const response = await fetch(`/api/reports/${encodeURIComponent(filename)}`);
     if (!response.ok) throw new Error('Not found');
     const data = await response.json();
-    el.innerHTML = `<button class="back-link" onclick="go('reports')">${ico.back} Back to Reports</button><div class="report">${data.html}</div>`;
+    const meta = data.meta || findReportMeta(filename) || {};
+    const bits = [
+      meta.number ? `#${meta.number}` : '',
+      meta.date || '',
+      meta.score ? `Score ${meta.score}` : '',
+      meta.status || '',
+      meta.hasPDF ? 'PDF ready' : '',
+    ].filter(Boolean).map(bit => `<span class="pill">${esc(bit)}</span>`).join('');
+    const sections = (meta.sections || []).map(section => `<span class="pill">${esc(section)}</span>`).join('');
+    const summary = meta.title || meta.excerpt
+      ? `<div class="hero-card"><h2>${esc(meta.title || reportTitle(meta.filename ? meta : filename))}</h2><p>${esc(meta.excerpt || 'Full evaluation report')}</p><div class="pill-row">${bits}${sections}</div></div>`
+      : '';
+    el.innerHTML = `<button class="back-link" onclick="go('reports')">${ico.back} Back to Reports</button>${summary}<div class="report">${data.html}</div>`;
   } catch {
     el.innerHTML = `<button class="back-link" onclick="go('reports')">${ico.back} Back</button><div class="empty-state"><div class="empty-icon">📄</div><h3>Not found</h3></div>`;
   }

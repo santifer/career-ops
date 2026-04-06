@@ -259,6 +259,99 @@ function sendModeJob(res, mode, body = {}) {
 
 // --- Data Parsers ---
 
+function stripAnsi(text = '') {
+  return String(text)
+    .replace(/\u001b\[[0-9;?]*[ -/]*[@-~]/g, '')
+    .replace(/\u001b\][^\u0007]*(?:\u0007|\u001b\\)/g, '')
+    .replace(/\r/g, '');
+}
+
+function humanizeSlug(slug = '') {
+  return String(slug)
+    .replace(/[-_]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/\b\w/g, char => char.toUpperCase());
+}
+
+function extractMarkdownTitle(content, fallback = '') {
+  const clean = stripAnsi(content);
+  const heading = clean.match(/^#\s+(.+)$/m);
+  return heading ? heading[1].trim() : fallback;
+}
+
+function extractMarkdownSummary(content) {
+  const clean = stripAnsi(content);
+  const blocks = clean
+    .split(/\n\s*\n/)
+    .map(block => block.trim())
+    .filter(Boolean);
+
+  for (const block of blocks) {
+    if (/^#{1,6}\s/.test(block)) continue;
+    if (/^```/.test(block)) continue;
+    if (/^[*-]\s/.test(block)) continue;
+    if (/^\d+\.\s/.test(block)) continue;
+    if (/^\|/.test(block)) continue;
+    const singleLine = block.replace(/\n+/g, ' ').trim();
+    if (singleLine.length >= 40) return singleLine;
+  }
+
+  const line = clean.split('\n').map(item => item.trim()).find(item => item && !item.startsWith('#'));
+  return line || '';
+}
+
+function extractMarkdownSections(content, limit = 4) {
+  const clean = stripAnsi(content);
+  return [...clean.matchAll(/^##+\s+(.+)$/gm)]
+    .map(match => match[1].trim())
+    .filter(Boolean)
+    .slice(0, limit);
+}
+
+function looksLikeMarkdown(content) {
+  const clean = stripAnsi(content).trim();
+  if (!clean) return false;
+  return [
+    /^#{1,6}\s/m,
+    /^\s*[-*]\s/m,
+    /^\s*\d+\.\s/m,
+    /^\|.+\|/m,
+    /```/,
+    /\*\*[^*]+\*\*/,
+  ].some(pattern => pattern.test(clean));
+}
+
+function buildReportMeta(filename, apps = []) {
+  const filePath = path.join(ROOT, 'reports', filename);
+  if (!fs.existsSync(filePath)) return null;
+
+  const content = fs.readFileSync(filePath, 'utf-8');
+  const fileMatch = filename.match(/^(\d+)-(.*)-(\d{4}-\d{2}-\d{2})\.md$/);
+  const app = apps.find(item => path.basename(item.reportPath || '') === filename)
+    || apps.find(item => fileMatch && item.number === parseInt(fileMatch[1], 10));
+
+  const fallbackTitle = app
+    ? `${app.company}${app.role ? ` · ${app.role}` : ''}`
+    : humanizeSlug(fileMatch?.[2] || filename.replace(/\.md$/, ''));
+
+  return {
+    filename,
+    number: fileMatch ? parseInt(fileMatch[1], 10) : app?.number || null,
+    date: fileMatch?.[3] || app?.date || '',
+    company: app?.company || '',
+    role: app?.role || '',
+    score: app?.score || '',
+    scoreNum: app?.scoreNum || 0,
+    status: app?.status || '',
+    hasPDF: Boolean(app?.hasPDF),
+    title: extractMarkdownTitle(content, fallbackTitle),
+    excerpt: extractMarkdownSummary(content),
+    sections: extractMarkdownSections(content),
+    markdown: content,
+  };
+}
+
 function parseApplications() {
   const file = path.join(ROOT, 'data', 'applications.md');
   if (!fs.existsSync(file)) return [];
@@ -588,8 +681,15 @@ app.get('/api/states', (req, res) => {
 app.get('/api/reports', (req, res) => {
   const reportsDir = path.join(ROOT, 'reports');
   if (!fs.existsSync(reportsDir)) return res.json([]);
-  const files = fs.readdirSync(reportsDir).filter(file => file.endsWith('.md')).sort().reverse();
-  res.json(files);
+  const apps = parseApplications();
+  const reports = fs.readdirSync(reportsDir)
+    .filter(file => file.endsWith('.md'))
+    .sort()
+    .reverse()
+    .map(file => buildReportMeta(file, apps))
+    .filter(Boolean)
+    .map(({ markdown, ...meta }) => meta);
+  res.json(reports);
 });
 
 app.get('/api/reports/:filename', (req, res) => {
@@ -600,7 +700,13 @@ app.get('/api/reports/:filename', (req, res) => {
   if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'Report not found' });
 
   const content = fs.readFileSync(filePath, 'utf-8');
-  res.json({ filename, markdown: content, html: marked(content) });
+  const meta = buildReportMeta(filename, parseApplications());
+  res.json({
+    filename,
+    markdown: content,
+    html: marked(content),
+    meta: meta ? { ...meta, markdown: undefined } : null,
+  });
 });
 
 app.get('/api/pdfs', (req, res) => {
@@ -701,11 +807,15 @@ app.get('/api/jobs/:id', (req, res) => {
   const job = jobs.get(parseInt(req.params.id, 10));
   if (!job) return res.status(404).json({ error: 'Job not found' });
 
+  const output = stripAnsi(job.output || '');
+
   res.json({
     id: job.id,
     label: job.label,
     status: job.status,
-    output: job.output,
+    output,
+    summary: extractMarkdownSummary(output),
+    html: looksLikeMarkdown(output) ? marked(output) : '',
     startedAt: job.startedAt,
     finishedAt: job.finishedAt,
     exitCode: job.exitCode,
