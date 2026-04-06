@@ -107,6 +107,8 @@ Guardar evaluación completa en `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 **Fecha:** {YYYY-MM-DD}
 **Arquetipo:** {detectado}
 **Score:** {X/5}
+**URL:** {URL de la oferta original}
+**Persona:** {id} ({source})
 **PDF:** {ruta o pendiente}
 
 ---
