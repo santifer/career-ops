@@ -174,6 +174,6 @@ If the candidate has a live demo/dashboard (check profile.yml), offer access in 
 | HTTP fetch | Fallback for extracting JDs from static pages |
 | Web search | Comp research, trends, company culture, LinkedIn contacts, fallback discovery for JDs |
 | Read | cv.md, article-digest.md, cv-template.html |
-| Write | Temporary HTML for PDF, applications.md, reports .md |
-| Edit | Update tracker |
+| Write | Temporary HTML for PDF, reports .md, tracker TSV additions |
+| Edit | Update existing tracker rows only when explicitly needed |
 | Bash | `node generate-pdf.mjs` |

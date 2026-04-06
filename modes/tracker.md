@@ -7,11 +7,20 @@ Lee y muestra `data/applications.md`.
 | # | Fecha | Empresa | Rol | Score | Estado | PDF | Report |
 ```
 
-Estados posibles: `Evaluada` → `Aplicado` → `Respondido` → `Contacto` → `Entrevista` → `Oferta` / `Rechazada` / `Descartada` / `NO APLICAR`
+**Estados canónicos:** `Evaluated`, `Applied`, `Responded`, `Interview`, `Offer`, `Rejected`, `Discarded`, `SKIP`
 
-- `Aplicado` = el candidato envió su candidatura
-- `Respondido` = Un recruiter/empresa contactó y el candidato respondió (inbound)
-- `Contacto` = El candidato contactó proactivamente a alguien de la empresa (outbound, ej: LinkedIn power move)
+Usar siempre los labels de `templates/states.yml` en `applications.md`.
+Las variantes en español (`Evaluada`, `Aplicado`, `Respondido`, etc.) solo cuentan como aliases de entrada; el estado persistido debe quedar canónico.
+
+- `Applied` = el candidato envió su candidatura
+- `Responded` = la empresa respondió, pero aún no está en entrevista
+- `Interview` = proceso de entrevistas activo
+- `Offer` = oferta recibida
+- `Rejected` = rechazo de la empresa
+- `Discarded` = el candidato descarta la oferta o la vacante se cierra
+- `SKIP` = no merece aplicar
+
+`Contacto` no es un estado canónico. Si hubo outreach manual (ej. LinkedIn power move), guardarlo en la columna de notas.
 
 Si el usuario pide actualizar un estado, editar la fila correspondiente.
 

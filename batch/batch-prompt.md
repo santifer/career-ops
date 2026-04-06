@@ -290,7 +290,7 @@ Formato TSV (una sola línea, sin header, 9 columnas tab-separated):
 | 2 | date | YYYY-MM-DD | `2026-03-14` | Fecha de evaluación |
 | 3 | company | string | `Datadog` | Nombre corto de empresa |
 | 4 | role | string | `Staff AI Engineer` | Título del rol |
-| 5 | status | canonical | `Evaluada` | DEBE ser canónico (ver states.yml) |
+| 5 | status | canonical | `Evaluated` | DEBE ser canónico (ver states.yml) |
 | 6 | score | X.XX/5 | `4.55/5` | O `N/A` si no evaluable |
 | 7 | pdf | emoji | `✅` o `❌` | Si se generó PDF |
 | 8 | report | md link | `[647](reports/647-...)` | Link al report |
@@ -298,7 +298,7 @@ Formato TSV (una sola línea, sin header, 9 columnas tab-separated):
 
 **IMPORTANTE:** El orden TSV tiene status ANTES de score (col 5→status, col 6→score). En applications.md el orden es inverso (col 5→score, col 6→status). merge-tracker.mjs maneja la conversión.
 
-**Estados canónicos válidos:** `Evaluada`, `Aplicado`, `Respondido`, `Entrevista`, `Oferta`, `Rechazado`, `Descartado`, `NO APLICAR`
+**Estados canónicos válidos:** `Evaluated`, `Applied`, `Responded`, `Interview`, `Offer`, `Rejected`, `Discarded`, `SKIP`
 
 Donde `{next_num}` se calcula leyendo la última línea de `data/applications.md`.
 

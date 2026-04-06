@@ -146,7 +146,7 @@ Guardar evaluación completa en `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 - Empresa
 - Rol
 - Score: promedio de match (1-5)
-- Estado: `Evaluada`
+- Estado: `Evaluated`
 - PDF: ❌ (o ✅ si auto-pipeline generó PDF)
 - Report: link relativo al report .md (ej: `[001](reports/001-company-2026-01-01.md)`)
 
