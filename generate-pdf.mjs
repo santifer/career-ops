@@ -1,13 +1,16 @@
 #!/usr/bin/env node
 
 /**
- * generate-pdf.mjs — HTML → PDF via Playwright
+ * generate-pdf.mjs - HTML to PDF via Playwright
  *
  * Usage:
  *   node career-ops/generate-pdf.mjs <input.html> <output.pdf> [--format=letter|a4]
  *
  * Requires: @playwright/test (or playwright) installed.
  * Uses Chromium headless to render the HTML and produce a clean, ATS-parseable PDF.
+ *
+ * Also runs an anti-AI-detection sanitization pass on the HTML body text
+ * before rendering. See sanitizeAITells() and issue #1.
  */
 
 import { chromium } from 'playwright';
@@ -16,6 +19,87 @@ import { readFile } from 'fs/promises';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+
+/**
+ * Strip AI-detection tells from CV HTML before rendering.
+ *
+ * Background: AI-text classifiers (CVViZ, GoHire, copyleaks, originality.ai)
+ * are now wired into ATS pipelines and LinkedIn Easy Apply. They flag CVs
+ * that contain Unicode artifacts typical of LLM output (em-dashes, smart
+ * quotes, zero-width characters). See issue #1.
+ *
+ * This pass is surgical: it only touches the body text inside HTML tags,
+ * never tag names, attributes, URLs, or content inside <style>/<script>.
+ * Em-dashes and smart quotes inside CSS strings (e.g. font-family names)
+ * are preserved.
+ *
+ * Returns { html, replacements } so the caller can log what was changed.
+ */
+function sanitizeAITells(html) {
+  const replacements = {};
+  const bump = (key, n) => { replacements[key] = (replacements[key] || 0) + n; };
+
+  // Mask out <style>...</style> and <script>...</script> blocks so we don't
+  // touch CSS or JS. We restore them at the end.
+  const masks = [];
+  const masked = html.replace(
+    /<(style|script)\b[^>]*>[\s\S]*?<\/\1>/gi,
+    (match) => {
+      const token = `\u0000MASK${masks.length}\u0000`;
+      masks.push(match);
+      return token;
+    }
+  );
+
+  // Walk the masked HTML and only sanitize text outside tags.
+  let out = '';
+  let i = 0;
+  while (i < masked.length) {
+    const lt = masked.indexOf('<', i);
+    if (lt === -1) {
+      out += sanitizeText(masked.slice(i));
+      break;
+    }
+    out += sanitizeText(masked.slice(i, lt));
+    const gt = masked.indexOf('>', lt);
+    if (gt === -1) {
+      out += masked.slice(lt);
+      break;
+    }
+    out += masked.slice(lt, gt + 1); // tag verbatim
+    i = gt + 1;
+  }
+
+  // Restore masked style/script blocks unchanged.
+  const restored = out.replace(/\u0000MASK(\d+)\u0000/g, (_, n) => masks[Number(n)]);
+
+  return { html: restored, replacements };
+
+  function sanitizeText(text) {
+    if (!text) return text;
+    let t = text;
+
+    // Em-dash and en-dash -> hyphen. Strongest AI tell.
+    t = t.replace(/\u2014/g, (m) => { bump('em-dash', 1); return '-'; });
+    t = t.replace(/\u2013/g, (m) => { bump('en-dash', 1); return '-'; });
+
+    // Smart quotes -> ASCII. Both curly double and curly single.
+    t = t.replace(/[\u201C\u201D\u201E\u201F]/g, (m) => { bump('smart-double-quote', 1); return '"'; });
+    t = t.replace(/[\u2018\u2019\u201A\u201B]/g, (m) => { bump('smart-single-quote', 1); return "'"; });
+
+    // Ellipsis character -> three ASCII dots.
+    t = t.replace(/\u2026/g, (m) => { bump('ellipsis', 1); return '...'; });
+
+    // Zero-width and invisible characters: strip entirely.
+    // U+200B zero-width space, U+200C ZWNJ, U+200D ZWJ, U+2060 word joiner, U+FEFF BOM.
+    t = t.replace(/[\u200B\u200C\u200D\u2060\uFEFF]/g, (m) => { bump('zero-width', 1); return ''; });
+
+    // Non-breaking space -> regular space.
+    t = t.replace(/\u00A0/g, (m) => { bump('nbsp', 1); return ' '; });
+
+    return t;
+  }
+}
 
 async function generatePDF() {
   const args = process.argv.slice(2);
@@ -66,6 +150,18 @@ async function generatePDF() {
     /file:\/\/([^'")]+)\.woff2['"]\)/g,
     `file://$1.woff2')`
   );
+
+  // Strip AI-detection tells from body text. See sanitizeAITells() above
+  // and modes/_shared.md "Anti-AI-Detection Rules". Issue #1.
+  const sanitized = sanitizeAITells(html);
+  html = sanitized.html;
+  const totalReplacements = Object.values(sanitized.replacements).reduce((a, b) => a + b, 0);
+  if (totalReplacements > 0) {
+    const breakdown = Object.entries(sanitized.replacements)
+      .map(([k, v]) => `${k}=${v}`)
+      .join(', ');
+    console.log(`🧹 Anti-AI sanitization: ${totalReplacements} replacements (${breakdown})`);
+  }
 
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();

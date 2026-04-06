@@ -177,3 +177,61 @@ If the candidate has a live demo/dashboard (check profile.yml), offer access in 
 | Write | Temporary HTML for PDF, applications.md, reports .md |
 | Edit | Update tracker |
 | Bash | `node generate-pdf.mjs` |
+
+---
+
+## Anti-AI-Detection Rules (apply to ALL generated CV / cover letter / form text)
+
+ATS vendors and LinkedIn now run AI-text classifiers (CVViZ, GoHire, copyleaks, originality.ai) on incoming applications. If the text reads like ChatGPT, the CV gets pre-filtered before a human sees it. See issue #1.
+
+These rules apply whenever you write text that ends up in a candidate-facing document: PDF summary, bullets, cover letter, form answers, LinkedIn messages. They do NOT apply to internal evaluation reports.
+
+### 1. Forbidden phrases (do not use, ever)
+
+These are the phrases AI detectors weight most heavily. Strip them on sight.
+
+- "passionate about" / "deeply passionate" / "driven by passion"
+- "results-oriented" / "results-driven professional"
+- "leveraged" / "leveraging" (use "used" or name the tool)
+- "spearheaded" (use "led" or "ran")
+- "facilitated" (use "ran" or "set up")
+- "crafted" (use "wrote" or "built")
+- "synergies" / "synergy" (banned outright)
+- "robust" / "seamless" / "cutting-edge" / "innovative"
+- "in today's fast-paced world" and any variant
+- "X years of experience in Y" as the opening line of a summary
+- "proven track record of"
+- "demonstrated ability to"
+- "strategic" used as filler (only if you can name the strategy)
+- "best practices" (name the practice instead)
+- "stakeholder management" as a standalone bullet (say WHICH stakeholders)
+
+### 2. Forbidden punctuation and characters
+
+- **Em-dash (—, U+2014)**: never. Use a hyphen `-` or rewrite the sentence. Em-dashes are the single strongest AI tell.
+- **En-dash (–, U+2013)**: never in body text. Use a hyphen. OK in numeric ranges only if you must (`2020-2024` is preferred).
+- **Smart quotes ("", '')**: never. Use ASCII `"` and `'`.
+- **Ellipsis character (…, U+2026)**: never. Use three ASCII dots `...`.
+- **Zero-width space (U+200B), zero-width non-joiner (U+200C), word joiner (U+2060), BOM (U+FEFF)**: never. These are invisible AI watermarks in some models.
+- **Non-breaking space (U+00A0)**: never. Use a regular space.
+
+`generate-pdf.mjs` runs a sanitization pass that strips these from the HTML before rendering, but you should not generate them in the first place.
+
+### 3. Forbidden formatting patterns
+
+- **Perfectly parallel bullets**: do not write 5 bullets that all start with a verb of the same length and follow the same `Verb + noun + metric` template. Vary the structure. Some bullets start with the project name. Some start with the metric. Some are two sentences.
+- **Rule of three everywhere**: AI loves "X, Y, and Z". Mix it up. Sometimes use just two items. Sometimes four.
+- **Same sentence length**: vary it. Short sentence. Then a longer one that explains the context. Then short again.
+- **Identical opening words across bullets**: don't start every bullet with "Built" or "Led".
+
+### 4. Required style
+
+- **Specific numbers > vague claims**: "cut p95 latency from 2.1s to 380ms" beats "improved performance significantly". If you don't have a number, name the user, the project, or the tool.
+- **Concrete tools and project names > abstract skills**: "Postgres + pgvector for retrieval over 12k internal docs" beats "designed scalable RAG architecture".
+- **Name people and customers when allowed**: "for the BMW connected-car team" beats "for an enterprise automotive client".
+- **One idiosyncratic detail per role**: a specific bug, a weird constraint, a postmortem. Real careers have texture. AI summaries don't.
+- **Active voice, but not robotically so**: "We shipped" is fine. "I owned the migration end-to-end" is fine. "The migration was owned by me" is not.
+
+### 5. The honesty floor
+
+These rules reduce LOW-HANGING TELLS. They do not make the text undetectable. The only way to fully beat AI detectors is for the candidate to write the text themselves. When generating CV content, leave the candidate's original phrasing alone wherever possible -- only rewrite when the JD genuinely needs different keywords. Do NOT "polish" prose that is already specific and human.
