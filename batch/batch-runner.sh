@@ -19,6 +19,7 @@ LOCK_FILE="$BATCH_DIR/batch-runner.pid"
 STATE_LOCK_DIR="$BATCH_DIR/.state-lock"
 STATE_LOCK_PID_FILE="$STATE_LOCK_DIR/pid"
 REPORT_COUNTER_FILE="$BATCH_DIR/.report-counter"
+CODEX_OUTPUT_SCHEMA="$BATCH_DIR/worker-result.schema.json"
 
 PARALLEL=1
 DRY_RUN=false
@@ -44,7 +45,7 @@ Options:
 
 Environment:
   CAREER_OPS_AGENT           Backend to use: claude, codex, gemini, copilot, custom
-  CAREER_OPS_AGENT_COMMAND   Required for custom backends and recommended for copilot.
+  CAREER_OPS_AGENT_COMMAND   Required for custom backends.
                              The command is executed via `bash -lc` with these env vars:
                              CAREER_OPS_PROJECT_DIR, CAREER_OPS_PROMPT_FILE,
                              CAREER_OPS_LOG_FILE, CAREER_OPS_OFFER_URL,
@@ -62,8 +63,9 @@ Examples:
   ./batch-runner.sh --dry-run
   CAREER_OPS_AGENT=codex ./batch-runner.sh
   CAREER_OPS_AGENT=gemini ./batch-runner.sh --parallel 2
+  CAREER_OPS_AGENT=copilot ./batch-runner.sh
   CAREER_OPS_AGENT=custom \
-    CAREER_OPS_AGENT_COMMAND='copilot -p "$(cat "$CAREER_OPS_PROMPT_FILE")"' \
+    CAREER_OPS_AGENT_COMMAND='my-agent --prompt "$(cat "$CAREER_OPS_PROMPT_FILE")"' \
     ./batch-runner.sh
 USAGE
 }
@@ -159,15 +161,10 @@ check_prerequisites() {
     claude) require_command claude ;;
     codex) require_command codex ;;
     gemini) require_command gemini ;;
+    copilot) require_command copilot ;;
     custom)
       if [[ -z "$CUSTOM_AGENT_COMMAND" ]]; then
         echo "ERROR: CAREER_OPS_AGENT_COMMAND is required when CAREER_OPS_AGENT=custom."
-        exit 1
-      fi
-      ;;
-    copilot)
-      if [[ -z "$CUSTOM_AGENT_COMMAND" ]]; then
-        echo "ERROR: CAREER_OPS_AGENT=copilot requires CAREER_OPS_AGENT_COMMAND with your local non-interactive Copilot invocation."
         exit 1
       fi
       ;;
@@ -179,6 +176,11 @@ check_prerequisites() {
 
   require_command node
   mkdir -p "$LOGS_DIR" "$RESULTS_DIR" "$TRACKER_DIR" "$REPORTS_DIR"
+
+  if [[ "$AGENT_BACKEND" == "codex" && ! -f "$CODEX_OUTPUT_SCHEMA" ]]; then
+    echo "ERROR: $CODEX_OUTPUT_SCHEMA not found."
+    exit 1
+  fi
 }
 
 init_state() {
@@ -313,13 +315,27 @@ run_worker_backend() {
         --dangerously-bypass-approvals-and-sandbox \
         --skip-git-repo-check \
         -C "$PROJECT_DIR" \
+        --output-schema "$CODEX_OUTPUT_SCHEMA" \
         -o "$log_file" \
         - < "$resolved_prompt" 2>> "$log_file" || exit_code=$?
       ;;
     gemini)
-      gemini -p "$(cat "$resolved_prompt")" > "$log_file" 2>&1 || exit_code=$?
+      gemini \
+        --approval-mode=yolo \
+        --output-format json \
+        -p "$(cat "$resolved_prompt")" \
+        > "$log_file" 2>&1 || exit_code=$?
       ;;
-    custom|copilot)
+    copilot)
+      copilot \
+        --agent=career-ops \
+        --prompt "$(cat "$resolved_prompt")" \
+        --output-format json \
+        --no-ask-user \
+        --yolo \
+        > "$log_file" 2>&1 || exit_code=$?
+      ;;
+    custom)
       CAREER_OPS_PROJECT_DIR="$PROJECT_DIR" \
       CAREER_OPS_PROMPT_FILE="$resolved_prompt" \
       CAREER_OPS_LOG_FILE="$log_file" \

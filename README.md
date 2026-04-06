@@ -39,7 +39,7 @@ Career-Ops now has a portable instruction layer:
 
 - `AGENTS.md` is the canonical repo instruction file
 - `CLAUDE.md`, `GEMINI.md`, and `.github/copilot-instructions.md` are wrappers
-- `batch/batch-runner.sh` supports pluggable backends (`claude`, `codex`, `gemini`, or a custom command)
+- `batch/batch-runner.sh` supports pluggable backends (`claude`, `codex`, `gemini`, `copilot`, or a custom command)
 
 Current recommendation:
 
@@ -47,6 +47,17 @@ Current recommendation:
 2. **Claude Code** for backwards compatibility
 3. **Gemini CLI** for headless and MCP-heavy setups
 4. **GitHub Copilot** for repo/IDE/cloud-agent workflows
+
+### Current support matrix
+
+| Runtime | Repo instructions | Skill discovery | Batch backend | Notes |
+|---------|-------------------|-----------------|---------------|-------|
+| Codex | `AGENTS.md` | `.agents/skills/` | ✅ | Best-supported local workflow in this repo |
+| Claude Code | `CLAUDE.md` + `AGENTS.md` | `.claude/skills/` | ✅ | Backwards-compatible with the original setup |
+| Gemini CLI | `GEMINI.md` + `AGENTS.md` | `.gemini/skills/` and `.agents/skills/` | ✅ | Use browser/web tools or MCP for scanner-heavy flows |
+| GitHub Copilot CLI | `.github/copilot-instructions.md` + `AGENTS.md` | `.github/skills/` and `.agents/skills/` | ✅ | Uses `.github/agents/career-ops.agent.md` for the batch backend |
+
+**Important:** evaluation, report generation, PDF generation, tracker updates, and batch processing are portable. Browser-heavy flows like `scan`, `apply`, and live JD verification still depend on the active runtime having browser automation and web/search access (or equivalent MCP tools).
 
 ## Features
 
@@ -58,7 +69,7 @@ Current recommendation:
 | **Negotiation Scripts** | Salary negotiation frameworks, geographic discount pushback, competing offer leverage |
 | **ATS PDF Generation** | Keyword-injected CVs with Space Grotesk + DM Sans design |
 | **Portal Scanner** | 45+ companies pre-configured (Anthropic, OpenAI, ElevenLabs, Retool, n8n...) + custom queries across Ashby, Greenhouse, Lever, Wellfound |
-| **Batch Processing** | Parallel evaluation with pluggable agent workers (`claude`, `codex`, `gemini`, or custom commands) |
+| **Batch Processing** | Parallel evaluation with pluggable agent workers (`claude`, `codex`, `gemini`, `copilot`, or custom commands) |
 | **Dashboard TUI** | Terminal UI to browse, filter, and sort your pipeline |
 | **Pipeline Integrity** | Automated merge, dedup, status normalization, health checks |
 
@@ -87,6 +98,9 @@ claude
 # Gemini CLI
 gemini
 
+# GitHub Copilot CLI
+copilot
+
 # Then ask your agent to adapt the system to you:
 # "Change the archetypes to backend engineering roles"
 # "Translate the modes to English"
@@ -103,7 +117,7 @@ See [docs/SETUP.md](docs/SETUP.md) for the full setup guide.
 
 ## Usage
 
-Career-ops is a single slash command with multiple modes:
+In runtimes that support project skills/commands, career-ops is a single slash command with multiple modes:
 
 ```
 /career-ops                → Show all available commands
@@ -121,6 +135,8 @@ Career-ops is a single slash command with multiple modes:
 ```
 
 Or just paste a job URL or description directly -- career-ops auto-detects it and runs the full pipeline.
+
+If your agent runtime does **not** expose `/career-ops` directly, open the repo and ask the agent to use the corresponding mode from `modes/` (for example: “run the `scan` mode from career-ops”).
 
 ## How It Works
 

@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- One supported coding agent installed and configured (`codex`, `claude`, or `gemini`)
+- One supported coding agent installed and configured (`codex`, `claude`, `gemini`, or `copilot`)
 - Node.js 18+ (for PDF generation and utility scripts)
 - (Optional) Go 1.21+ (for the dashboard TUI)
 
@@ -55,11 +55,16 @@ claude
 
 # Gemini CLI
 gemini
+
+# GitHub Copilot CLI
+copilot
 ```
 
 Then paste a job offer URL or description. Career-ops will automatically evaluate it, generate a report, create a tailored PDF, and track it.
 
 ## Available Commands
+
+If your runtime supports repository skills/commands, use the following command surface directly. Otherwise, ask the agent to run the matching mode file from `modes/`.
 
 | Action | How |
 |--------|-----|

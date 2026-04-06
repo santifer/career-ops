@@ -1,7 +1,6 @@
 ---
 name: career-ops
 description: Evaluate job descriptions, tailor CVs, generate reports, and maintain the application pipeline.
-target: github-copilot
 ---
 
 Read `AGENTS.md` first.

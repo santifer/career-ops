@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "status",
+    "id",
+    "report_num",
+    "company",
+    "role",
+    "score",
+    "pdf",
+    "report",
+    "error"
+  ],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": ["completed", "failed"]
+    },
+    "id": {
+      "type": "string"
+    },
+    "report_num": {
+      "type": "string"
+    },
+    "company": {
+      "type": ["string", "null"]
+    },
+    "role": {
+      "type": ["string", "null"]
+    },
+    "score": {
+      "type": ["number", "null"]
+    },
+    "pdf": {
+      "type": ["string", "null"]
+    },
+    "report": {
+      "type": ["string", "null"]
+    },
+    "error": {
+      "type": ["string", "null"]
+    }
+  }
+}
