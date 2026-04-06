@@ -1,0 +1,23 @@
+name: Feature Request
+description: Suggest a new feature or improvement
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What problem does this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: How would you like this to work?
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        Built by [santifer](https://santifer.io) — see the [architecture docs](docs/ARCHITECTURE.md) for how the system works.

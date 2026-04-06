@@ -1,0 +1,33 @@
+name: Bug Report
+description: Report a bug in career-ops
+labels: ["bug"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: A clear description of the bug
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: How can we reproduce this?
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What should have happened?
+  - type: input
+    id: os
+    attributes:
+      label: OS
+      placeholder: "e.g., macOS 15, Ubuntu 24.04, Windows 11"
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        Built by [santifer](https://santifer.io) — need direct help? [Open a discussion](https://github.com/santifer/career-ops/discussions) or reach out at [santifer.io](https://santifer.io).
