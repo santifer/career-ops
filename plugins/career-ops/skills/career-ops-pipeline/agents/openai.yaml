@@ -1,0 +1,4 @@
+interface:
+  display_name: "Career-Ops Pipeline"
+  short_description: "Process the queued URLs in the Career-Ops inbox"
+  default_prompt: "Process the pending URLs in data/pipeline.md with the existing Career-Ops flow."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Career-Ops Training"
+  short_description: "Evaluate a course or certificate against the user’s north star"
+  default_prompt: "Evaluate this course or certification against my Career-Ops north star."

@@ -43,6 +43,7 @@ These files contain system logic, scripts, templates, and instructions that impr
 | `modes/training.md` | Training evaluation instructions |
 | `modes/de/*` | German language modes |
 | `CLAUDE.md` | Agent instructions |
+| `AGENTS.md` | Codex instructions |
 | `*.mjs` | Utility scripts |
 | `batch/batch-prompt.md` | Batch worker prompt |
 | `batch/batch-runner.sh` | Batch orchestrator |
@@ -50,6 +51,8 @@ These files contain system logic, scripts, templates, and instructions that impr
 | `templates/*` | Base templates |
 | `fonts/*` | Self-hosted fonts |
 | `.claude/skills/*` | Skill definitions |
+| `plugins/career-ops/*` | Repo-local Codex plugin and skills |
+| `.agents/plugins/marketplace.json` | Repo-local Codex marketplace entry |
 | `docs/*` | Documentation |
 | `VERSION` | Current version number |
 | `DATA_CONTRACT.md` | This file |

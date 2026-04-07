@@ -1,0 +1,4 @@
+interface:
+  display_name: "Career-Ops Project"
+  short_description: "Evaluate a portfolio project idea for job-search leverage"
+  default_prompt: "Evaluate this project idea for portfolio and job-search leverage."

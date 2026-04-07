@@ -1,0 +1,4 @@
+interface:
+  display_name: "Career-Ops Contact"
+  short_description: "Draft recruiter and referral outreach with the existing contact mode"
+  default_prompt: "Find the best contact path for this company and draft a sharp outreach message."

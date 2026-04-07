@@ -1,0 +1,4 @@
+interface:
+  display_name: "Career-Ops Core"
+  short_description: "Discovery, onboarding, routing, and compare-offers flow"
+  default_prompt: "Show me the Career-Ops command menu and tell me which mode I should use next."

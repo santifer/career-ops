@@ -1,0 +1,4 @@
+interface:
+  display_name: "Career-Ops Batch"
+  short_description: "Run the existing batch workflow across multiple roles"
+  default_prompt: "Batch-evaluate the jobs in my pipeline using the existing Career-Ops batch workflow."

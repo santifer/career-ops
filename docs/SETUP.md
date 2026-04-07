@@ -3,6 +3,7 @@
 ## Prerequisites
 
 - [Claude Code](https://claude.ai/code) installed and configured
+- Codex CLI or Codex desktop with repo `AGENTS.md` support
 - Node.js 18+ (for PDF generation and utility scripts)
 - (Optional) Go 1.21+ (for the dashboard TUI)
 
@@ -42,7 +43,7 @@ Edit `portals.yml`:
 - Add companies you want to track in `tracked_companies`
 - Customize `search_queries` for your preferred job boards
 
-### 5. Start using
+### 5. Start using with Claude
 
 Open Claude Code in this directory:
 
@@ -51,6 +52,18 @@ claude
 ```
 
 Then paste a job offer URL or description. Career-ops will automatically evaluate it, generate a report, create a tailored PDF, and track it.
+
+### 6. Start using with Codex
+
+- Open the repo in Codex.
+- If your client supports repo-local plugins, enable the `Career-Ops` plugin from `.agents/plugins/marketplace.json`.
+- If not, Codex will still follow `AGENTS.md` and the checked-in plugin skill folders.
+
+Starter prompts:
+
+- `Evaluate this job URL with Career-Ops and run the full pipeline.`
+- `Scan my configured portals for new roles that match my profile.`
+- `Help me fill this application carefully, but stop before final submit.`
 
 ## Available Commands
 
@@ -63,12 +76,14 @@ Then paste a job offer URL or description. Career-ops will automatically evaluat
 | Batch evaluate | `/career-ops batch` |
 | Check tracker status | `/career-ops tracker` |
 | Fill application form | `/career-ops apply` |
+| Codex plugin and skill setup | `docs/CODEX.md` |
 
 ## Verify Setup
 
 ```bash
 node cv-sync-check.mjs      # Check configuration
 node verify-pipeline.mjs     # Check pipeline integrity
+npm run verify:codex         # Check Codex plugin + skill parity
 ```
 
 ## Build Dashboard (Optional)

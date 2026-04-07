@@ -2,9 +2,10 @@
 
 **[:gb: English](#what-is-this)** | **[:es: Español](#es-versión-en-español)**
 
-> AI-powered job search pipeline built on Claude Code. Evaluate offers, generate tailored CVs, scan portals, and track everything -- powered by AI agents.
+> AI-powered job search pipeline for Claude Code and Codex. Evaluate offers, generate tailored CVs, scan portals, and track everything with the same file-based workflow.
 
 ![Claude Code](https://img.shields.io/badge/Claude_Code-000?style=flat&logo=anthropic&logoColor=white)
+![Codex](https://img.shields.io/badge/Codex-111827?style=flat&logo=openai&logoColor=white)
 ![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat&logo=node.js&logoColor=white)
 ![Go](https://img.shields.io/badge/Go-00ADD8?style=flat&logo=go&logoColor=white)
 ![Playwright](https://img.shields.io/badge/Playwright-2EAD33?style=flat&logo=playwright&logoColor=white)
@@ -18,7 +19,7 @@
 
 ## What Is This
 
-Career-Ops turns Claude Code into a full job search command center. Instead of manually tracking applications in a spreadsheet, you get an AI-powered pipeline that:
+Career-Ops turns Claude Code or Codex into a full job search command center. Instead of manually tracking applications in a spreadsheet, you get an AI-powered pipeline that:
 
 - **Evaluates offers** with a structured A-F scoring system (10 weighted dimensions)
 - **Generates tailored PDFs** -- ATS-optimized CVs customized per job description
@@ -28,7 +29,7 @@ Career-Ops turns Claude Code into a full job search command center. Instead of m
 
 > **Important: This is NOT a spray-and-pray tool.** Career-ops is a filter -- it helps you find the few offers worth your time out of hundreds. The system strongly recommends against applying to anything scoring below 4.0/5. Your time is valuable, and so is the recruiter's. Always review before submitting.
 
-Career-ops is agentic: Claude Code navigates career pages with Playwright, evaluates fit by reasoning about your CV vs the job description (not keyword matching), and adapts your resume per listing.
+Career-ops is agentic: Claude Code or Codex navigates career pages with Playwright, evaluates fit by reasoning about your CV vs the job description (not keyword matching), and adapts your resume per listing.
 
 > **Heads up: the first evaluations won't be great.** The system doesn't know you yet. Feed it context -- your CV, your career story, your proof points, your preferences, what you're good at, what you want to avoid. The more you nurture it, the better it gets. Think of it as onboarding a new recruiter: the first week they need to learn about you, then they become invaluable.
 
@@ -63,25 +64,40 @@ cp templates/portals.example.yml portals.yml       # Customize companies
 
 # 3. Add your CV
 # Create cv.md in the project root with your CV in markdown
-
-# 4. Personalize with Claude
-claude   # Open Claude Code in this directory
-
-# Then ask Claude to adapt the system to you:
-# "Change the archetypes to backend engineering roles"
-# "Translate the modes to English"
-# "Add these 5 companies to portals.yml"
-# "Update my profile with this CV I'm pasting"
-
-# 5. Start using
-# Paste a job URL or run /career-ops
 ```
 
-> **The system is designed to be customized by Claude itself.** Modes, archetypes, scoring weights, negotiation scripts -- just ask Claude to change them. It reads the same files it uses, so it knows exactly what to edit.
+### Claude quick start
 
-See [docs/SETUP.md](docs/SETUP.md) for the full setup guide.
+```bash
+claude
+```
+
+Then use:
+
+- paste a job URL or JD
+- `/career-ops`
+- `/career-ops scan`
+- `/career-ops pdf`
+
+### Codex quick start
+
+- Open the repo in Codex.
+- Use the repo-local plugin from `.agents/plugins/marketplace.json` if your client exposes repo plugins.
+- If your client does not expose repo-local plugins, Codex will still use `AGENTS.md` and the checked-in plugin skill folders.
+
+Starter prompts:
+
+- `Evaluate this job URL with Career-Ops and run the full pipeline.`
+- `Scan my configured portals for new roles that match my profile.`
+- `Generate the tailored ATS PDF for this role using Career-Ops.`
+
+> **The system is designed to be customized by the agent itself.** Modes, archetypes, scoring weights, negotiation scripts, and portal targeting are meant to be adapted in the checked-in user-layer files.
+
+See [docs/SETUP.md](docs/SETUP.md) for the full setup guide and [docs/CODEX.md](docs/CODEX.md) for the Codex-specific flow.
 
 ## Usage
+
+### Claude
 
 Career-ops is a single slash command with multiple modes:
 
@@ -101,6 +117,25 @@ Career-ops is a single slash command with multiple modes:
 ```
 
 Or just paste a job URL or description directly -- career-ops auto-detects it and runs the full pipeline.
+
+### Codex
+
+Codex uses the same mode inventory through repo-local skills:
+
+| Codex skill or prompt | Underlying mode |
+|-----------------------|-----------------|
+| `career-ops-evaluate` or a raw JD / job URL | `auto-pipeline` or `oferta` |
+| `career-ops-scan` | `scan` |
+| `career-ops-pdf` | `pdf` |
+| `career-ops-batch` | `batch` |
+| `career-ops-tracker` | `tracker` |
+| `career-ops-apply` | `apply` |
+| `career-ops-pipeline` | `pipeline` |
+| `career-ops-contact` | `contacto` |
+| `career-ops-deep` | `deep` |
+| `career-ops-training` | `training` |
+| `career-ops-project` | `project` |
+| `career-ops-core` | discovery, onboarding, compare-offers routing |
 
 ## How It Works
 
@@ -160,6 +195,8 @@ career-ops/
 ├── article-digest.md            # Your proof points (optional)
 ├── config/
 │   └── profile.example.yml      # Template for your profile
+├── .agents/plugins/marketplace.json  # Repo-local Codex marketplace
+├── plugins/career-ops/         # Repo-local Codex plugin + skills
 ├── modes/                       # 14 skill modes
 │   ├── _shared.md               # Shared context (customize this)
 │   ├── oferta.md                # Single evaluation
@@ -179,19 +216,20 @@ career-ops/
 ├── reports/                     # Evaluation reports (gitignored)
 ├── output/                      # Generated PDFs (gitignored)
 ├── fonts/                       # Space Grotesk + DM Sans
-├── docs/                        # Setup, customization, architecture
+├── docs/                        # Setup, customization, architecture, Codex guide
 └── examples/                    # Sample CV, report, proof points
 ```
 
 ## Tech Stack
 
 ![Claude Code](https://img.shields.io/badge/Claude_Code-000?style=flat&logo=anthropic&logoColor=white)
+![Codex](https://img.shields.io/badge/Codex-111827?style=flat&logo=openai&logoColor=white)
 ![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat&logo=node.js&logoColor=white)
 ![Playwright](https://img.shields.io/badge/Playwright-2EAD33?style=flat&logo=playwright&logoColor=white)
 ![Go](https://img.shields.io/badge/Go-00ADD8?style=flat&logo=go&logoColor=white)
 ![Bubble Tea](https://img.shields.io/badge/Bubble_Tea-FF75B5?style=flat&logo=go&logoColor=white)
 
-- **Agent**: Claude Code with custom skills and modes
+- **Agents**: Claude Code with slash-command routing, Codex with `AGENTS.md` plus a repo-local plugin
 - **PDF**: Playwright/Puppeteer + HTML template
 - **Scanner**: Playwright + Greenhouse API + WebSearch
 - **Dashboard**: Go + Bubble Tea + Lipgloss (Catppuccin Mocha theme)

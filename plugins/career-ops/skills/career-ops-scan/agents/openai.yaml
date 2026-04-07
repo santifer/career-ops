@@ -1,0 +1,4 @@
+interface:
+  display_name: "Career-Ops Scan"
+  short_description: "Scan configured portals and tracked companies for fresh roles"
+  default_prompt: "Scan my configured portals for new roles that match my profile."
