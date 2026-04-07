@@ -26,109 +26,78 @@
 
 ## North Star -- Target Roles
 
-The skill applies with EQUAL rigor to ALL target roles. None is primary or secondary -- any is a success if comp and growth are right:
+The skill applies with EQUAL rigor to ALL target roles. None is primary or secondary -- any is a success if comp and remote alignment are right:
 
 | Archetype | Thematic axes | What they buy |
 |-----------|---------------|---------------|
-| **AI Platform / LLMOps Engineer** | Evaluation, observability, reliability, pipelines | Someone who puts AI in production with metrics |
-| **Agentic Workflows / Automation** | HITL, tooling, orchestration, multi-agent | Someone who builds reliable agent systems |
-| **Technical AI Product Manager** | GenAI/Agents, PRDs, discovery, delivery | Someone who translates business to AI product |
-| **AI Solutions Architect** | Hyperautomation, enterprise, integrations | Someone who designs end-to-end AI architectures |
-| **AI Forward Deployed Engineer** | Client-facing, fast delivery, prototyping | Someone who delivers AI solutions to clients fast |
-| **AI Transformation Lead** | Change management, adoption, org enablement | Someone who leads AI transformation in an org |
-
-<!-- [CUSTOMIZE] Edit the archetypes above to match YOUR target roles.
-     For example, if you're a backend engineer, replace with:
-     - Senior Backend Engineer
-     - Staff Platform Engineer
-     - Engineering Manager
-     etc. -->
+| **HR Generalist / HR Operations** | Full-cycle HR, compliance, HRIS, onboarding, employee relations | Someone who owns the employee lifecycle end-to-end with systems rigor |
+| **HRIS Analyst / Systems Specialist** | HRIS implementation, data integrity, reporting, optimization | Someone who makes HRIS work and generates actionable workforce data |
+| **People Operations** | Scalable processes, employee experience, cross-functional alignment | Someone who builds HR infrastructure that supports company growth |
+| **Talent Acquisition Specialist** | Full-cycle recruiting, sourcing, onboarding design, ATS management | Someone who fills roles efficiently and creates a great candidate experience |
+| **HR Business Partner** | Strategic partnership, employee relations, org development, coaching | Someone who aligns HR to business objectives at the manager/leader level |
 
 ### Adaptive Framing by Archetype
 
-> **Concrete metrics: read from `cv.md` + `article-digest.md` at evaluation time. NEVER hardcode numbers here.**
+> **Concrete metrics: read from `cv.md` + `config/profile.yml` at evaluation time. NEVER hardcode numbers here.**
 
-| If the role is... | Emphasize about the candidate... | Proof point sources |
-|-------------------|----------------------------------|---------------------|
-| Platform / LLMOps | Production systems builder, observability, evals, closed-loop | article-digest.md + cv.md |
-| Agentic / Automation | Multi-agent orchestration, HITL, reliability, cost | article-digest.md + cv.md |
-| Technical AI PM | Product discovery, PRDs, metrics, stakeholder mgmt | cv.md + article-digest.md |
-| Solutions Architect | System design, integrations, enterprise-ready | article-digest.md + cv.md |
-| Forward Deployed Engineer | Fast delivery, client-facing, prototype to prod | cv.md + article-digest.md |
-| AI Transformation Lead | Change management, team enablement, adoption | cv.md + article-digest.md |
-
-<!-- [CUSTOMIZE] Map YOUR specific projects/articles to each archetype above -->
+| If the role is... | Emphasize about the candidate... | Key proof points |
+|-------------------|----------------------------------|-----------------|
+| HR Generalist / Operations | HRIS implementation lead, compliance owner, onboarding architect | NeoGov implementation, 150+ hires/yr, EEO/ACA/FMLA reporting |
+| HRIS Analyst / Systems | Enterprise HRIS implementation, data integrity at scale, system optimization | NeoGov OHC across 35+ depts, 2,900+ employee data integrity, 20% error reduction |
+| People Operations | Scalable processes, cross-functional partnership, compliance infrastructure | Onboarding program design, manager training delivery, regulatory audit readiness |
+| Talent Acquisition | ATS management, requisition workflows, manager enablement | NeoGov recruitment module, manager training on hiring, 150+ annual hires |
+| HR Business Partner | Employee relations, policy interpretation, multi-stakeholder partnership | Cross-dept employee relations work, leadership training, SHRM-CP credential |
 
 ### Exit Narrative (use in ALL framings)
 
-<!-- [CUSTOMIZE] Replace with YOUR narrative. Examples:
-     - "Built and sold my SaaS after 5 years. Now focused on applied AI at scale."
-     - "Led engineering at a Series B startup through 10x growth. Now seeking my next challenge."
-     - "Transitioned from consulting to building product. Looking for high-ownership roles."
-     Read from config/profile.yml → narrative.exit_story -->
-
-Use the candidate's exit story from `config/profile.yml` to frame ALL content:
-- **In PDF Summaries:** Bridge from past to future -- "Now applying the same [skill] to [JD domain]."
-- **In STAR stories:** Reference proof points from article-digest.md
-- **In Draft Answers (Section G):** The transition narrative should appear in the first response.
-- **When the JD asks for "entrepreneurial", "ownership", "builder", "end-to-end":** This is the #1 differentiator. Increase match weight.
+Use the candidate's exit story from `config/profile.yml → narrative.exit_story` to frame ALL content:
+- **In PDF Summaries:** Bridge from implementation leadership to new opportunity — "Built HR infrastructure from the ground up at a 2,900-person org. Now seeking a fully remote role to apply the same rigor at scale."
+- **In STAR stories:** Lead with the scope (35+ departments, 2,900+ employees) and tie to compliance outcomes.
+- **In Draft Answers:** Emphasize SHRM-CP, HRIS implementation ownership, and cross-functional partnership as differentiators.
+- **When the JD asks for "systems thinker", "process builder", "compliance-minded", "self-starter":** This is the #1 differentiator. Increase match weight.
 
 ### Cross-cutting Advantage
 
-Frame profile as **"Technical builder with real-world proof"** that adapts framing to the role:
-- For PM: "builder who reduces uncertainty with prototypes then productionizes with discipline"
-- For FDE: "builder who delivers fast with observability and metrics from day 1"
-- For SA: "builder who designs end-to-end systems with real integration experience"
-- For LLMOps: "builder who puts AI in production with closed-loop quality systems"
+Frame profile as **"HR systems owner with real compliance outcomes"** that adapts framing to the role:
+- For HR Generalist: "practitioner who owns compliance AND builds the systems that enforce it"
+- For HRIS: "implementation leader with data integrity ownership at enterprise scale"
+- For People Ops: "process builder who reduces errors and improves employee experience simultaneously"
+- For TA: "recruiter-turned-systems-owner who redesigned the full talent acquisition workflow"
+- For HRBP: "generalist with deep compliance depth and cross-functional credibility"
 
-Convert "builder" into a professional signal, not a "hobby maker". Real proof points make this credible.
-
-### Portfolio as Proof Point (use in high-value applications)
-
-<!-- [CUSTOMIZE] If you have a live demo, dashboard, or public project, configure it here.
-     Example:
-     dashboard:
-       url: "https://yoursite.dev/demo"
-       password: "demo-2026"
-       when_to_share: "LLMOps, AI Platform, observability roles"
-     Read from config/profile.yml → narrative.proof_points and narrative.dashboard -->
-
-If the candidate has a live demo/dashboard (check profile.yml), offer access in applications for relevant roles.
+The SHRM-CP + HRIS implementation combo is unusual at the generalist level — lead with it.
 
 ### Comp Intelligence
 
-<!-- [CUSTOMIZE] Research comp ranges for YOUR target roles and update these ranges -->
+**Target range:** $70K–$90K (read from `config/profile.yml → compensation`)
 
-**General guidance:**
-- Use WebSearch for current market data (Glassdoor, Levels.fyi, Blind)
-- Frame by role title, not by skills -- titles determine comp bands
-- Contractor rates are typically 30-50% higher than employee base to account for benefits
-- Geographic arbitrage works for remote roles: lower CoL = better net
+**Market benchmarks (verify with WebSearch at evaluation time):**
+- HR Generalist (remote, 2-4 yrs exp): $55K–$80K nationally; $65K–$90K in major markets
+- HRIS Analyst (remote): $65K–$95K
+- People Operations Specialist (remote, tech companies): $70K–$100K
+- Government/public sector HR pays below market — private sector remote roles typically pay more
 
-### Negotiation Scripts
+**When asked about salary:**
+> "Based on market data for remote HR roles with HRIS implementation experience, I'm targeting $70K–$90K. I'm flexible on structure depending on the full package."
 
-<!-- [CUSTOMIZE] Adapt these to your situation -->
+**If offered below $70K:**
+> "I appreciate the offer. I'm targeting $70K as a minimum based on market research for this scope of role. Is there flexibility to get there?"
 
-**Salary expectations (general framework):**
-> "Based on market data for this role, I'm targeting [RANGE from profile.yml]. I'm flexible on structure -- what matters is the total package and the opportunity."
-
-**Geographic discount pushback:**
-> "The roles I'm competitive for are output-based, not location-based. My track record doesn't change based on postal code."
-
-**When offered below target:**
-> "I'm comparing with opportunities in the [higher range]. I'm drawn to [company] because of [reason]. Can we explore [target]?"
+**When asked about relocation:**
+> "I'm relocating to Chicago and open to roles nationally — I'm targeting fully remote positions."
 
 ### Location Policy
 
-<!-- [CUSTOMIZE] Adapt to your situation. Read from config/profile.yml → location -->
+**Non-negotiable:** Role must be fully remote. This is an automatic disqualifier if not met.
 
 **In forms:**
-- Binary "can you be on-site?" questions: follow your actual availability from profile.yml
-- In free-text fields: specify your timezone overlap and availability
+- Binary "can you be on-site?" questions: answer No unless role is confirmed remote-friendly
+- In free-text fields: "Fully remote preferred. Chicago-area relocation in progress. Available in EST/CST."
 
 **In evaluations (scoring):**
-- Remote dimension for hybrid outside your country: score **3.0** (not 1.0)
-- Only score 1.0 if JD explicitly says "must be on-site 4-5 days/week, no exceptions"
+- Hybrid = automatic disqualifier. Score **1.0** on remote dimension regardless of other factors.
+- "Remote-friendly" with occasional travel = discuss with candidate before applying.
+- Only score **5.0** if JD explicitly says "fully remote" or "100% remote".
 
 ### Time-to-offer priority
 - Working demo + metrics > perfection
