@@ -1,0 +1,118 @@
+# Career-Ops Profile -- Dual-Track (IT Support Engineer + Cybersecurity Engineer)
+#
+# Sandesh Gurung | North Bergen, NJ
+# Tracks: IT Support / Desktop Support  AND  Cybersecurity Engineer
+# Optimized for healthcare IT and cybersecurity hybrid roles in the NY/NJ metro area.
+
+candidate:
+  full_name: "Sandesh Gurung"
+  email: "gurungsandesh@gmail.com"
+  phone: "+1 551-2739267"                              # add your number before submitting
+  location: "North Bergen, NJ"
+  linkedin: "linkedin.com/in/sandeshgrg"
+  portfolio_url: "https://gurungsandesh.com.np"
+  github: "github.com/gurungsandex"
+  #twitter: ""                            # add if relevant
+
+target_roles:
+  # North Star -- TWO primary tracks, not one.
+  primary:
+    - "Cybersecurity Engineer"
+    - "IT Support Specialist"
+    - "Desktop Support Engineer"
+    - "Healthcare IT Security Analyst"
+  # Archetypes -- the evaluator picks whichever fits the JD at scoring time.
+  archetypes:
+    - name: "Cybersecurity Engineer"
+      level: "Entry-Level"
+      fit: "primary"
+      track: "security"
+      sell_when: "JD emphasizes threat detection, SIEM (Sentinel/Splunk), endpoint security, incident response, HIPAA compliance, vulnerability management, or blue team operations"
+    - name: "IT Support / Desktop Support Engineer"
+      level: "Mid"
+      fit: "primary"
+      track: "support"
+      sell_when: "JD emphasizes Active Directory, endpoint management, user onboarding/offboarding, ticketing systems, network troubleshooting, or healthcare/HIPAA-regulated environments"
+    - name: "Healthcare IT Security Specialist"
+      level: "Entry"
+      fit: "secondary"
+      track: "hybrid"
+      sell_when: "JD wants someone who owns both IT infrastructure and HIPAA/security compliance -- the natural dual-track landing zone in healthcare orgs"
+    - name: "GRC / Compliance Analyst"
+      level: "Entry"
+      fit: "secondary"
+      track: "security"
+      sell_when: "JD focuses on NIST CSF, risk assessments, vendor risk management, policy writing, or audit readiness"
+    - name: "Network/Systems Engineer"
+      level: "Entry"
+      fit: "adjacent"
+      track: "support"
+      sell_when: "JD wants PowerShell scripting, automation, endpoint hardening, or infrastructure tooling"
+
+narrative:
+  headline: "IT Support Engineer turned cybersecurity builder -- HIPAA healthcare environments, Security+/CC certified"
+  exit_story: "Spent years as the IT backbone of a large multi-site medical practice -- owning AD, endpoint security, network ops, and HIPAA compliance from the ground up -- while simultaneously building a cybersecurity project portfolio (threat intelligence dashboards, IR playbooks, Sentinel detection rules) and earning Security+, ISC2 CC, and the Google Cybersecurity Certificate. Ready to move into a dedicated security or senior support role where both sides of that skill set are fully utilized."
+  superpowers:
+    - "Operate confidently in HIPAA-regulated healthcare environments -- compliance isn't overhead, it's habit"
+    - "Build and automate AD lifecycle management with PowerShell (Joiner/Mover/Leaver frameworks)"
+    - "Bridge IT support and security -- harden endpoints and respond to incidents without losing the user-first mindset"
+  proof_points:
+    - name: "Microsoft Sentinel Detection Rules"
+      url: "https://gurungsandesh.com.np"
+      hero_metric: "Ransomware and DDoS detection use cases built in home lab; mapped to MITRE ATT&CK"
+      track: "security"
+
+compensation:
+  target_range: "USD 75,000 - 100,000"
+  currency: "USD"
+  minimum: "USD 65,000"
+  location_flexibility: "On-site or hybrid in NY/NJ metro area preferred; open to remote for the right role"
+
+  alternate_ranges:
+    - track: "support"
+      target_range: "USD 70,000 - 90,000"
+      minimum: "USD 60,000"
+      note: "Desktop/IT Support Engineer roles -- competitive for senior-level in NJ metro healthcare."
+    - track: "security"
+      target_range: "USD 80,000 - 105,000"
+      minimum: "USD 70,000"
+      note: "Cybersecurity Engineer / Security Analyst roles -- reflects Security+, ISC2 CC, and active project portfolio."
+    - track: "hybrid"
+      target_range: "USD 75,000 - 100,000"
+      minimum: "USD 65,000"
+      note: "Healthcare IT security hybrid roles -- bridging support and security ops."
+
+location:
+  country: "United States"
+  city: "North Bergen"
+  state: "NJ"
+  metro: "New York / New Jersey"
+  timezone: "EST/EDT"
+  visa_status: "Check with candidate"   # update with your actual work authorization status
+  onsite_availability: "Full on-site or hybrid; commutable to Manhattan, Jersey City, Newark, and broader NJ"
+
+credentials:
+  degrees:
+    - "MSc in IT Management"
+    - "BSc in Computer Networking & IT Security (London Metropolitan University)"
+  certifications:
+    - "CompTIA Security+"
+    - "ISC2 Certified in Cybersecurity (CC)"
+    - "Google Cybersecurity Certificate"
+    - "Blue Team Junior Analyst"
+  in_progress:
+    - "Microsoft Sentinel / Azure Security home lab (ongoing)"
+    - "Healthcare IT/Cybersecurity certificate program (evaluating)"
+
+current_role:
+  title: "IT Support Engineer"
+  org: "Medical Offices of Manhattan"
+  location: "North Bergen, NJ area"
+  environment: "HIPAA-regulated, multi-site healthcare; large user base"
+  scope:
+    - "Active Directory management and lifecycle automation"
+    - "Endpoint security and device management"
+    - "Network troubleshooting and infrastructure support"
+    - "User onboarding/offboarding (JML)"
+    - "IT asset management"
+    - "HIPAA compliance"
