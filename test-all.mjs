@@ -15,7 +15,7 @@ import { execSync } from 'child_process';
 import { readFileSync, existsSync, readdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { validateAdapterReferences } from './runtime/validate-adapters.mjs';
+import { DEFERRED_SCOPE_REQUIREMENTS, validateAdapterReferences } from './runtime/validate-adapters.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = __dirname;
@@ -243,13 +243,7 @@ if (adapterFailures.length === 0) {
 
 console.log('\n9b. Deferred worker scope wording');
 
-const deferredScopeChecks = [
-  { file: 'README.md', text: 'batch/background worker abstraction is deferred and not part of this PR' },
-  { file: 'docs/ARCHITECTURE.md', text: 'batch/background worker abstraction is deferred and not part of this PR' },
-  { file: 'docs/SETUP.md', text: 'workers later: batch/background worker abstraction is deferred and not part of this PR.' },
-];
-
-for (const { file, text } of deferredScopeChecks) {
+for (const { file, text } of DEFERRED_SCOPE_REQUIREMENTS) {
   if (readFile(file).includes(text)) {
     pass(`${file} documents deferred worker scope`);
   } else {

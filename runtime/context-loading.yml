@@ -3,6 +3,7 @@ description: Canonical mode-to-context loading contract for interactive adapters
 
 shared_context:
   file: modes/_shared.md
+  semantics: descriptive-only; adapters must treat each mode's `loads` list as the exact canonical file-loading contract.
 
 modes:
   auto-pipeline:

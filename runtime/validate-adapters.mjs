@@ -49,7 +49,7 @@ const DOCUMENTED_ONLY_DOC_REQUIREMENTS = [
   'batch/background worker abstraction is deferred',
 ];
 
-const DEFERRED_SCOPE_REQUIREMENTS = [
+export const DEFERRED_SCOPE_REQUIREMENTS = [
   {
     file: 'README.md',
     text: 'batch/background worker abstraction is deferred and not part of this PR',
@@ -63,10 +63,6 @@ const DEFERRED_SCOPE_REQUIREMENTS = [
     text: 'workers later: batch/background worker abstraction is deferred and not part of this PR.',
   },
 ];
-
-function readFile(root, relativePath) {
-  return readFileSync(join(root, relativePath), 'utf-8');
-}
 
 function readIfExists(root, relativePath) {
   const absolutePath = join(root, relativePath);
@@ -148,7 +144,9 @@ function validateEntrypointReferences(root, adapter, failures) {
   }
 }
 
-function validateDeferredScopeDocs(root, failures) {
+export function validateDeferredScopeDocs(root) {
+  const failures = [];
+
   for (const requirement of DEFERRED_SCOPE_REQUIREMENTS) {
     const content = readIfExists(root, requirement.file);
     if (!content) {
@@ -160,6 +158,8 @@ function validateDeferredScopeDocs(root, failures) {
       failures.push(`${requirement.file} must state that ${requirement.text}`);
     }
   }
+
+  return failures;
 }
 
 export function validateAdapterReferences(root) {
@@ -176,7 +176,7 @@ export function validateAdapterReferences(root) {
     validateEntrypointReferences(root, adapter, failures);
   }
 
-  validateDeferredScopeDocs(root, failures);
+  failures.push(...validateDeferredScopeDocs(root));
 
   return failures;
 }
