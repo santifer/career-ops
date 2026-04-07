@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "Career Dashboard (TUI)",
+      "runtimeExecutable": "go",
+      "runtimeArgs": ["run", "./dashboard", "-path", "data/applications.md"],
+      "port": null
+    },
+    {
+      "name": "Generate PDF",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["generate-pdf.mjs"],
+      "port": null
+    }
+  ]
+}
