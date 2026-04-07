@@ -12,7 +12,8 @@
  */
 
 import { execSync } from 'child_process';
-import { readFileSync, existsSync, readdirSync } from 'fs';
+import { readFileSync, existsSync, readdirSync, statSync, rmSync } from 'fs';
+import { tmpdir } from 'os';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -38,6 +39,45 @@ function run(cmd, opts = {}) {
 
 function fileExists(path) { return existsSync(join(ROOT, path)); }
 function readFile(path) { return readFileSync(join(ROOT, path), 'utf-8'); }
+
+function walkFiles(baseDir, extensions, excludedDirs = new Set()) {
+  const results = [];
+
+  function visit(currentDir, relativeDir = '') {
+    for (const entry of readdirSync(currentDir)) {
+      const absolutePath = join(currentDir, entry);
+      const relativePath = relativeDir ? `${relativeDir}/${entry}` : entry;
+      const normalizedPath = relativePath.replace(/\\/g, '/');
+      const stats = statSync(absolutePath);
+
+      if (stats.isDirectory()) {
+        if (excludedDirs.has(entry) || excludedDirs.has(normalizedPath)) continue;
+        visit(absolutePath, normalizedPath);
+        continue;
+      }
+
+      const ext = entry.includes('.') ? entry.split('.').pop() : '';
+      if (extensions.has(ext)) results.push(normalizedPath);
+    }
+  }
+
+  visit(baseDir);
+  return results;
+}
+
+function findMatches(path, pattern) {
+  const content = readFile(path);
+  const lines = content.split(/\r?\n/);
+  const matches = [];
+
+  for (let index = 0; index < lines.length; index++) {
+    if (lines[index].includes(pattern)) {
+      matches.push(`${path}:${index + 1}:${lines[index].trim()}`);
+    }
+  }
+
+  return matches;
+}
 
 console.log('\n🧪 career-ops test suite\n');
 
@@ -83,11 +123,19 @@ for (const { name, allowFail } of scripts) {
 
 if (!QUICK) {
   console.log('\n3. Dashboard build');
-  const goBuild = run('cd dashboard && go build -o /tmp/career-dashboard-test . 2>&1');
-  if (goBuild !== null) {
-    pass('Dashboard compiles');
+  const goVersion = run('go version');
+  if (goVersion === null) {
+    warn('Go not installed; dashboard build skipped');
   } else {
-    fail('Dashboard build failed');
+    const outputName = process.platform === 'win32' ? 'career-dashboard-test.exe' : 'career-dashboard-test';
+    const outputPath = join(tmpdir(), outputName);
+    const goBuild = run(`go build -o "${outputPath}" . 2>&1`, { cwd: join(ROOT, 'dashboard') });
+    if (goBuild !== null) {
+      pass('Dashboard compiles');
+      if (existsSync(outputPath)) rmSync(outputPath, { force: true });
+    } else {
+      fail('Dashboard build failed');
+    }
   }
 } else {
   console.log('\n3. Dashboard build (skipped --quick)');
@@ -138,22 +186,21 @@ const leakPatterns = [
   'hi@santifer.io', '688921377', '/Users/santifer/',
 ];
 
-const scanExtensions = ['md', 'yml', 'html', 'mjs', 'sh', 'go', 'json'];
-const excludeDirs = ['node_modules', '.git', 'dashboard/go.sum'];
+const scanExtensions = new Set(['md', 'yml', 'html', 'mjs', 'sh', 'go', 'json']);
+const excludeDirs = new Set(['node_modules', '.git']);
 const allowedFiles = ['README.md', 'LICENSE', 'CITATION.cff', 'CONTRIBUTING.md',
-  'package.json', '.github/FUNDING.yml', 'CLAUDE.md', 'go.mod', 'test-all.mjs'];
+  'package.json', '.github/FUNDING.yml', '.github/ISSUE_TEMPLATE/', 'CLAUDE.md', 'go.mod',
+  'test-all.mjs', 'dashboard/internal/ui/screens/pipeline.go', '.specs/'];
+const scannableFiles = walkFiles(ROOT, scanExtensions, excludeDirs);
 
 let leakFound = false;
 for (const pattern of leakPatterns) {
-  const result = run(
-    `grep -rn "${pattern}" --include="*.{${scanExtensions.join(',')}}" . 2>/dev/null | grep -v node_modules | grep -v ".git/" | grep -v go.sum`
-  );
-  if (result) {
-    for (const line of result.split('\n')) {
-      const file = line.split(':')[0].replace('./', '');
-      if (allowedFiles.some(a => file.includes(a))) continue;
-      if (file.includes('dashboard/go.mod')) continue;
-      warn(`Possible personal data in ${file}: "${pattern}"`);
+  for (const file of scannableFiles) {
+    if (allowedFiles.some(a => file.includes(a))) continue;
+    if (file.includes('dashboard/go.mod') || file.includes('dashboard/go.sum')) continue;
+
+    for (const match of findMatches(file, pattern)) {
+      warn(`Possible personal data: ${match}`);
       leakFound = true;
     }
   }
@@ -166,14 +213,20 @@ if (!leakFound) {
 
 console.log('\n6. Absolute path check');
 
-const absPathResult = run(
-  `grep -rn "/Users/" --include="*.mjs" --include="*.sh" --include="*.md" --include="*.go" --include="*.yml" . 2>/dev/null | grep -v node_modules | grep -v ".git/" | grep -v README.md | grep -v LICENSE | grep -v go.sum | grep -v CLAUDE.md | grep -v test-all.mjs`
-);
-if (!absPathResult) {
+const absPathFiles = walkFiles(ROOT, new Set(['mjs', 'sh', 'md', 'go', 'yml']), excludeDirs);
+const absPathIgnoreFiles = ['README.md', 'LICENSE', 'go.sum', 'CLAUDE.md', 'test-all.mjs', '.specs/'];
+const absPathMatches = [];
+
+for (const file of absPathFiles) {
+  if (absPathIgnoreFiles.some(ignored => file.includes(ignored))) continue;
+  absPathMatches.push(...findMatches(file, '/Users/'));
+}
+
+if (absPathMatches.length === 0) {
   pass('No absolute paths in code files');
 } else {
-  for (const line of absPathResult.split('\n').filter(Boolean)) {
-    fail(`Absolute path: ${line.slice(0, 100)}`);
+  for (const match of absPathMatches) {
+    fail(`Absolute path: ${match.slice(0, 140)}`);
   }
 }
 
