@@ -7,6 +7,19 @@ args: mode
 
 # career-ops -- Router
 
+## Flags
+
+Optional flags can be prepended to any command or JD paste. All three input forms work:
+
+| Flag | Forms | Effect |
+|------|-------|--------|
+| Track | `--track builder`, `[track:leadership]`, "use builder track" | Force profile track for CV generation |
+| Persona | `--persona uk`, `[persona:us]`, "use my UK contact" | Force contact block persona for PDF |
+
+Flags can be combined: `--track leadership --persona us https://jobs.example.com/123`
+
+If no flag is given: track is inferred from JD signals; persona is auto-selected if only one is defined, otherwise Claude asks.
+
 ## Mode Routing
 
 Determine the mode from `{{mode}}`:

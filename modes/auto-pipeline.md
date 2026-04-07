@@ -2,7 +2,34 @@
 
 Cuando el usuario pega un JD (texto o URL) sin sub-comando explícito, ejecutar TODO el pipeline en secuencia:
 
-## Paso 0 — Extraer JD
+## Paso 0 — Resolver Track y Persona
+
+Antes de extraer el JD, resolver el track y la persona que se usarán en toda la evaluación:
+
+**Track:**
+1. Escanear el mensaje del usuario en busca de señal de track (en orden de prioridad):
+   - `--track <id>` en cualquier parte del mensaje
+   - `[track:<id>]` en cualquier parte del mensaje
+   - Lenguaje natural: "usa el track X", "track de liderazgo", "perfil builder"
+2. Si se encontró señal → anotar como `user-specified`
+3. Si no → extraer el JD primero (Paso 1), luego aplicar las reglas de inferencia de `_shared.md`
+4. Si no hay sección `tracks:` en `profile.yml` → marcar como `no-tracks` y omitir toda lógica de track
+
+Guardar: `TRACK_ID`, `TRACK_SOURCE` para pasar a los pasos siguientes.
+
+**Persona:**
+1. Escanear el mensaje del usuario en busca de señal de persona (en orden de prioridad):
+   - `--persona <id>` en cualquier parte del mensaje
+   - `[persona:<id>]` en cualquier parte del mensaje
+   - Lenguaje natural: "usa mi contacto X", "persona X", "aplica como X"
+2. Si se encontró señal → usar `personas[id]` de `config/profile.yml`; anotar como `user-specified`
+3. Si no hay señal + solo hay una persona definida → usar esa; anotar como `auto-selected`
+4. Si no hay señal + hay múltiples personas definidas → preguntar al usuario antes de continuar; anotar como `prompted`
+5. Si no hay sección `personas` en `profile.yml` → leer de `candidate.phone`, `candidate.location`, `location.visa_status` (fallback bootstrap)
+
+Guardar: `PERSONA_ID`, `PERSONA_LABEL`, `PERSONA_SOURCE` (user-specified | auto-selected | prompted) para pasar a los pasos siguientes.
+
+## Paso 1 — Extraer JD
 
 Si el input es una **URL** (no texto de JD pegado), seguir esta estrategia para extraer el contenido:
 
@@ -16,16 +43,18 @@ Si el input es una **URL** (no texto de JD pegado), seguir esta estrategia para 
 
 **Si el input es texto de JD** (no URL): usar directamente, sin necesidad de fetch.
 
-## Paso 1 — Evaluación A-F
+## Paso 2 — Evaluación A-F
 Ejecutar exactamente igual que el modo `oferta` (leer `modes/oferta.md` para todos los bloques A-F).
 
-## Paso 2 — Guardar Report .md
+## Paso 3 — Guardar Report .md
 Guardar la evaluación completa en `reports/{###}-{company-slug}-{YYYY-MM-DD}.md` (ver formato en `modes/oferta.md`).
 
-## Paso 3 — Generar PDF
+El header del report debe incluir **Persona:** entre **URL:** y **PDF:** y **Track:** {TRACK_ID} ({TRACK_SOURCE}) después de **Persona:** (ver formato en modes/oferta.md).
+
+## Paso 4 — Generar PDF
 Ejecutar el pipeline completo de `pdf` (leer `modes/pdf.md`).
 
-## Paso 4 — Draft Application Answers (solo si score >= 4.5)
+## Paso 5 — Draft Application Answers (solo si score >= 4.5)
 
 Si el score final es >= 4.5, generar borrador de respuestas para el formulario de aplicación:
 
@@ -61,7 +90,7 @@ Si el score final es >= 4.5, generar borrador de respuestas para el formulario d
 
 **Idioma**: Siempre en el idioma del JD (EN default). Aplicar `/tech-translate`.
 
-## Paso 5 — Actualizar Tracker
+## Paso 6 — Actualizar Tracker
 Registrar en `data/applications.md` con todas las columnas incluyendo Report y PDF en ✅.
 
 **Si algún paso falla**, continuar con los siguientes y marcar el paso fallido como pendiente en el tracker.

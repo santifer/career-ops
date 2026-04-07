@@ -2,7 +2,34 @@
 
 Cuando el candidato pega una oferta (texto o URL), entregar SIEMPRE los 6 bloques:
 
-## Paso 0 — Detección de Arquetipo
+## Paso 0 — Resolver Track y Persona
+
+Antes de analizar el JD, resolver el track y la persona:
+
+**Track:**
+1. Escanear el mensaje del usuario en busca de señal de track (en orden de prioridad):
+   - `--track <id>` en cualquier parte del mensaje
+   - `[track:<id>]` en cualquier parte del mensaje
+   - Lenguaje natural: "usa el track X", "track de liderazgo", "perfil builder"
+2. Si se encontró señal → anotar como `user-specified`
+3. Si no → extraer el JD primero, luego aplicar las reglas de inferencia de `_shared.md`
+4. Si no hay sección `tracks:` en `profile.yml` → marcar como `no-tracks` y omitir toda lógica de track
+
+Guardar: `TRACK_ID`, `TRACK_SOURCE` para usar en Block E.
+
+**Persona:**
+1. Escanear el mensaje del usuario en busca de señal de persona (en orden de prioridad):
+   - `--persona <id>` en cualquier parte del mensaje
+   - `[persona:<id>]` en cualquier parte del mensaje
+   - Lenguaje natural: "usa mi contacto X", "persona X"
+2. Si se encontró señal → usar `personas[id]` de `config/profile.yml`; anotar como `user-specified`
+3. Si no hay señal + solo hay una persona definida → usar esa; anotar como `auto-selected`
+4. Si no hay señal + hay múltiples personas definidas → preguntar al usuario antes de continuar; anotar como `prompted`
+5. Si no hay sección `personas` en `profile.yml` → usar `candidate.phone`, `candidate.location`, `location.visa_status`
+
+Guardar: `PERSONA_ID`, `PERSONA_SOURCE` para incluir en el header del report.
+
+## Paso 1 — Detección de Arquetipo
 
 Clasificar la oferta en uno de los 6 arquetipos (ver `_shared.md`). Si es híbrido, indicar los 2 más cercanos. Esto determina:
 - Qué proof points priorizar en bloque B
@@ -62,6 +89,17 @@ Tabla con datos y fuentes citadas. Si no hay datos, decirlo en vez de inventar.
 
 Top 5 cambios al CV + Top 5 cambios a LinkedIn para maximizar match.
 
+### Track Context
+
+Si se ha resuelto un track (`TRACK_ID` disponible y `profile.yml` tiene sección `tracks:`):
+
+- **Framing del summary:** Usar `tracks[TRACK_ID].summary_focus` como directriz principal
+- **Prioridad de bullets:** Los 5 cambios al CV deben priorizar bullets que contengan o puedan reformularse con `tracks[TRACK_ID].evidence_tags`
+- **Headline:** Proponer `tracks[TRACK_ID].headline` como headline del CV
+- **LinkedIn:** Los 5 cambios a LinkedIn deben alinear el "About" y los títulos de roles con el framing del track
+
+Si no hay track resuelto → ignorar esta sección.
+
 ## Bloque F — Plan de Entrevistas
 
 6-10 historias STAR+R mapeadas a requisitos del JD (STAR + **Reflection**):
@@ -107,6 +145,9 @@ Guardar evaluación completa en `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 **Fecha:** {YYYY-MM-DD}
 **Arquetipo:** {detectado}
 **Score:** {X/5}
+**URL:** {URL de la oferta original}
+**Persona:** {PERSONA_ID} ({PERSONA_SOURCE})
+**Track:** {TRACK_ID} ({TRACK_SOURCE})
 **PDF:** {ruta o pendiente}
 
 ---

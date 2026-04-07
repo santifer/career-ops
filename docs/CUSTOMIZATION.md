@@ -74,3 +74,38 @@ The canonical states rarely need changing. If you add new states, update:
 1. `templates/states.yml`
 2. `normalize-statuses.mjs` (alias mappings)
 3. `modes/_shared.md` (any references)
+
+## Profile Tracks (config/profile.yml)
+
+Tracks let you foreground different slices of your experience depending on the role type. Define them under `tracks:` in `profile.yml`:
+
+- **builder**: Foregrounds IC/technical work — agent systems, shipping, prototyping
+- **leadership**: Foregrounds team leadership, strategy, cross-functional work
+
+Claude auto-infers the track from the JD. You can also force it:
+- `--track builder` anywhere in your message
+- `[track:leadership]` anywhere in your message
+- Natural language: "use the leadership track"
+
+## Personas (config/profile.yml)
+
+Personas let you switch the contact block (phone, location, work authorization) for applications in different countries. Define them under `personas:` in `profile.yml`.
+
+Claude auto-selects if only one persona is defined. If multiple are defined and none is specified, Claude will ask before generating the PDF.
+
+Force a persona:
+- `--persona uk` anywhere in your message
+- `[persona:us]` anywhere in your message
+- Natural language: "use my UK contact details"
+
+## Bullet Tagging (cv.md) — Optional
+
+Add inline tags to bullets in `cv.md` to improve track-based filtering:
+
+```markdown
+- Built multi-agent orchestration system handling 50K daily transactions. <!-- tags: built, agent, llm -->
+- Managed team of 8 engineers across 3 time zones. <!-- tags: led, managed, team -->
+- Defined AI roadmap with CPO and CTO, aligned 4 product squads. <!-- tags: strategy, stakeholder, aligned -->
+```
+
+Tags are optional. Without them, Claude uses the track's `evidence_tags` as weighted ranking signals — all bullets are still considered, just reordered.

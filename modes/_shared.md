@@ -42,6 +42,26 @@ The evaluation uses 6 blocks (A-F) with a global score of 1-5:
 - 3.5-3.9 → Decent but not ideal, apply only if specific reason
 - Below 3.5 → Recommend against applying (see Ethical Use in CLAUDE.md)
 
+### Profile Track Inference
+
+When generating a CV or evaluating a role, infer the profile track from the JD using these signal lists:
+
+**Builder signals** (infer `builder` track):
+"implement", "engineer", "architect", "ship", "build", "develop", "deploy", "prototype", "hands-on", "IC role", "individual contributor", "write code"
+
+**Leadership signals** (infer `leadership` track):
+"manage a team", "people manager", "director", "VP", "head of", "OKRs", "headcount", "hiring", "strategy", "stakeholders", "cross-functional", "roadmap ownership"
+
+**Ambiguous signals** (neither clearly wins — prompt user or use `tracks.default`):
+"lead" (alone, without "a team"), "senior" (alone), "principal" (alone), "AI initiative", "AI strategy" (without team context)
+
+**Inference rules:**
+- Builder signals present, leadership signals absent → auto-select `builder`; annotate as `auto-selected`
+- Leadership signals present, builder signals absent → auto-select `leadership`; annotate as `auto-selected`
+- Both present, or only ambiguous signals → prompt user once; fall back to `tracks.default` if no response; annotate as `prompted` or `user-selected`
+- `--track <id>` flag or `[track:<id>]` tag or natural language ("use leadership track") → use that track; annotate as `user-specified`
+- No `tracks:` block in profile.yml → skip track logic entirely; use single-profile behavior
+
 ## Archetype Detection
 
 Classify every offer into one of these types (or hybrid of 2):
@@ -81,10 +101,13 @@ After detecting archetype, read `modes/_profile.md` for the user's specific fram
 5. Register in tracker after evaluating
 6. Generate content in the language of the JD (EN default)
 7. Be direct and actionable -- no fluff
-8. Native tech English for generated text. Short sentences, action verbs, no passive voice.
-8b. Case study URLs in PDF Professional Summary (recruiter may only read this).
-9. **Tracker additions as TSV** -- NEVER edit applications.md directly. Write TSV in `batch/tracker-additions/`.
-10. **Include `**URL:**` in every report header.**
+8. When generating English text (PDF summaries, bullets, LinkedIn messages, STAR stories): native tech English, not translated. Short sentences, action verbs, no unnecessary passive voice.
+8b. **Case study URLs in PDF Professional Summary:** If the PDF mentions case studies or demos, URLs MUST appear in the first paragraph (Professional Summary). The recruiter may only read the summary. All URLs with `white-space: nowrap` in HTML.
+9. **Tracker additions as TSV** -- NEVER edit applications.md to add new entries. Write TSV in `batch/tracker-additions/` and `merge-tracker.mjs` handles the merge.
+10. **Include `**URL:**` in every report header** -- between Score and PDF.
+11. **Template contact rendering:** When filling `cv-template.html`, if any contact field (`{{PHONE}}`, `{{LOCATION_LINE}}`, `{{AUTHORIZATION}}`) resolves to an empty string or null, omit that `<span>` AND its adjacent `<span class="separator">` from the HTML before writing the file. Never leave orphaned separators.
+12. **Persona field integrity:** ALL contact fields in a generated CV must come from the same persona block. Never mix `phone` from one persona with `location_line` from another.
+13. **Track resolution fallback:** If `config/profile.yml` has no `tracks:` block, treat all track-aware steps as no-ops and use single-profile behavior throughout. Never error or prompt the user about missing tracks.
 
 ### Tools
 
