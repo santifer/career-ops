@@ -89,12 +89,31 @@ Los niveles son aditivos — se ejecutan todos, los resultados se mezclan y dedu
    - `applications.md` → empresa + rol normalizado ya evaluado
    - `pipeline.md` → URL exacta ya en pendientes o procesadas
 
-8. **Para cada oferta nueva que pase filtros**:
+7.5. **Verificar liveness de resultados de WebSearch (Nivel 3)** — ANTES de añadir a pipeline:
+
+   Los resultados de WebSearch pueden estar desactualizados (Google cachea resultados durante semanas o meses). Para evitar evaluar ofertas expiradas, verificar con Playwright cada URL nueva que provenga del Nivel 3. Los Niveles 1 y 2 son inherentemente en tiempo real y no requieren esta verificación.
+
+   Para cada URL nueva de Nivel 3 (secuencial — NUNCA Playwright en paralelo):
+   a. `browser_navigate` a la URL
+   b. `browser_snapshot` para leer el contenido
+   c. Clasificar:
+      - **Activa**: título del puesto visible + descripción del rol + botón Apply/Submit/Solicitar
+      - **Expirada** (cualquiera de estas señales):
+        - URL final contiene `?error=true` (Greenhouse redirige así cuando la oferta está cerrada)
+        - Página contiene: "job no longer available" / "no longer open" / "position has been filled" / "this job has expired" / "page not found"
+        - Solo navbar y footer visibles, sin contenido JD (contenido < ~300 chars)
+   d. Si expirada: registrar en `scan-history.tsv` con status `skipped_expired` y descartar
+   e. Si activa: continuar al paso 8
+
+   **No interrumpir el scan entero si una URL falla.** Si `browser_navigate` da error (timeout, 403, etc.), marcar como `skipped_expired` y continuar con la siguiente.
+
+8. **Para cada oferta nueva verificada que pase filtros**:
    a. Añadir a `pipeline.md` sección "Pendientes": `- [ ] {url} | {company} | {title}`
    b. Registrar en `scan-history.tsv`: `{url}\t{date}\t{query_name}\t{title}\t{company}\tadded`
 
 9. **Ofertas filtradas por título**: registrar en `scan-history.tsv` con status `skipped_title`
 10. **Ofertas duplicadas**: registrar con status `skipped_dup`
+11. **Ofertas expiradas (Nivel 3)**: registrar con status `skipped_expired`
 
 ## Extracción de título y empresa de WebSearch results
 
@@ -122,6 +141,7 @@ url	first_seen	portal	title	company	status
 https://...	2026-02-10	Ashby — AI PM	PM AI	Acme	added
 https://...	2026-02-10	Greenhouse — SA	Junior Dev	BigCo	skipped_title
 https://...	2026-02-10	Ashby — AI PM	SA AI	OldCo	skipped_dup
+https://...	2026-02-10	WebSearch — AI PM	PM AI	ClosedCo	skipped_expired
 ```
 
 ## Resumen de salida
@@ -133,6 +153,7 @@ Queries ejecutados: N
 Ofertas encontradas: N total
 Filtradas por título: N relevantes
 Duplicadas: N (ya evaluadas o en pipeline)
+Expiradas descartadas: N (links muertos, Nivel 3)
 Nuevas añadidas a pipeline.md: N
 
   + {company} | {title} | {query_name}
