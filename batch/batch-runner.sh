@@ -34,6 +34,7 @@ career-ops batch runner — process job offers in batch via agent workers
 
 Built-in verified provider:
   - claude
+  - codex
 
 All other providers must be wired through an adapter script. This avoids
 guessing unsupported CLI flags for Codex, Gemini CLI, or custom runtimes.
@@ -69,8 +70,11 @@ Examples:
   # Process 2 at a time starting from ID 10
   ./batch-runner.sh --parallel 2 --start-from 10
 
+  # Use the verified Codex CLI path
+  CAREER_OPS_AGENT=codex ./batch-runner.sh
+
   # Use a custom adapter for another runtime
-  CAREER_OPS_AGENT=codex CAREER_OPS_AGENT_ADAPTER=./batch/my-codex-adapter.sh ./batch-runner.sh
+  CAREER_OPS_AGENT=gemini CAREER_OPS_AGENT_ADAPTER=./batch/my-gemini-adapter.sh ./batch-runner.sh
 USAGE
 }
 
@@ -126,21 +130,35 @@ check_prerequisites() {
     exit 1
   fi
 
-  if [[ "$AGENT" == "claude" ]]; then
-    if ! command -v claude &>/dev/null; then
-      echo "ERROR: 'claude' CLI not found in PATH."
-      exit 1
-    fi
-  else
-    if [[ -z "$AGENT_ADAPTER" ]]; then
-      echo "ERROR: CAREER_OPS_AGENT_ADAPTER is required for agent '$AGENT'."
-      echo "Use batch/agent-adapter.example.sh as a starting point."
-      exit 1
-    fi
-    if [[ ! -x "$AGENT_ADAPTER" ]]; then
-      echo "ERROR: Adapter is not executable: $AGENT_ADAPTER"
-      exit 1
-    fi
+  case "$AGENT" in
+    claude)
+      if ! command -v claude &>/dev/null; then
+        echo "ERROR: 'claude' CLI not found in PATH."
+        exit 1
+      fi
+      ;;
+    codex)
+      if ! command -v codex &>/dev/null; then
+        echo "ERROR: 'codex' CLI not found in PATH."
+        exit 1
+      fi
+      ;;
+    *)
+      if [[ -z "$AGENT_ADAPTER" ]]; then
+        echo "ERROR: CAREER_OPS_AGENT_ADAPTER is required for agent '$AGENT'."
+        echo "Use batch/agent-adapter.example.sh as a starting point."
+        exit 1
+      fi
+      if [[ ! -x "$AGENT_ADAPTER" ]]; then
+        echo "ERROR: Adapter is not executable: $AGENT_ADAPTER"
+        exit 1
+      fi
+      ;;
+  esac
+
+  if ! command -v grep &>/dev/null; then
+    echo "ERROR: 'grep' is required in PATH for log parsing."
+    exit 1
   fi
 
   mkdir -p "$LOGS_DIR" "$TRACKER_DIR" "$REPORTS_DIR"
@@ -155,6 +173,19 @@ invoke_worker() {
       --dangerously-skip-permissions \
       --append-system-prompt-file "$resolved_prompt" \
       "$prompt"
+    return
+  fi
+
+  if [[ "$AGENT" == "codex" ]]; then
+    {
+      cat "$resolved_prompt"
+      printf '\n\n'
+      printf '%s\n' "$prompt"
+    } | codex exec \
+      --color never \
+      --dangerously-bypass-approvals-and-sandbox \
+      -C "$PROJECT_DIR" \
+      -
     return
   fi
 

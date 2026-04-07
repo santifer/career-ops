@@ -31,8 +31,9 @@ If `modes/_profile.md` is missing, create it from `modes/_profile.template.md`.
 
 ## Claude-Specific Notes
 
-- The verified built-in batch worker provider is still `claude`.
-- For other agents, the batch runner now expects an external adapter contract documented in `AGENTS.md` and `docs/AGENT_COMPATIBILITY.md`.
+- Claude still needs this compatibility file because it does not use `AGENTS.md` natively.
+- The batch runner now has two verified built-in worker providers: `claude` and `codex`.
+- Other runtimes still use the external adapter contract documented in `AGENTS.md` and `docs/AGENT_COMPATIBILITY.md`.
 - OpenCode and Claude share the same core `modes/*` files and the same data contract.
 
 ## Data Contract

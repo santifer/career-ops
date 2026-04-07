@@ -20,4 +20,4 @@ body:
     attributes:
       value: |
         ---
-        Built by [santifer](https://santifer.io) — see the [architecture docs](docs/ARCHITECTURE.md) for how the system works.
+        See the [architecture docs](docs/ARCHITECTURE.md) for how the system works before proposing larger changes.

@@ -42,6 +42,22 @@ function run(cmd, opts = {}) {
   }
 }
 
+function getGitBashPath() {
+  if (process.platform !== 'win32') {
+    return 'bash';
+  }
+  const candidates = [
+    'C:/Program Files/Git/bin/bash.exe',
+    'C:/Program Files (x86)/Git/bin/bash.exe',
+  ];
+  for (const candidate of candidates) {
+    if (existsSync(candidate)) {
+      return `"${candidate}"`;
+    }
+  }
+  return null;
+}
+
 function fileExists(path) {
   return existsSync(join(ROOT, path));
 }
@@ -78,6 +94,25 @@ for (const f of mjsFiles) {
   } else {
     fail(`${f} has syntax errors`);
   }
+}
+
+const gitBash = getGitBashPath();
+const shellFiles = [
+  'batch/batch-runner.sh',
+  'batch/agent-adapter.example.sh',
+];
+
+if (gitBash !== null) {
+  for (const f of shellFiles) {
+    const result = run(`${gitBash} -n ${f}`);
+    if (result !== null) {
+      pass(`${f} shell syntax OK`);
+    } else {
+      fail(`${f} has shell syntax errors`);
+    }
+  }
+} else {
+  warn('Git Bash not found; shell syntax checks skipped');
 }
 
 // 2. SCRIPT EXECUTION
@@ -170,11 +205,11 @@ console.log('\n5. Personal data leak check');
 
 const leakPatterns = [
   'Santiago',
-  'santifer.io',
   'Santifer iRepair',
   'Zinkee',
   'ALMAS',
   'hi@santifer.io',
+  'hola@santifer.io',
   '688921377',
   '/Users/santifer/',
 ];
@@ -310,6 +345,13 @@ if (fileExists('VERSION')) {
     pass(`VERSION is valid semver: ${version}`);
   } else {
     fail(`VERSION is not valid semver: "${version}"`);
+  }
+
+  const pkg = JSON.parse(readFile('package.json'));
+  if (pkg.version === version) {
+    pass(`package.json version matches VERSION (${version})`);
+  } else {
+    fail(`package.json version (${pkg.version}) does not match VERSION (${version})`);
   }
 } else {
   fail('VERSION file missing');

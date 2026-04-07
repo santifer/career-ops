@@ -44,7 +44,7 @@ Built by someone who used it to evaluate 740+ job offers, generate 100+ tailored
 | **Negotiation Scripts** | Salary negotiation frameworks, geographic discount pushback, competing offer leverage |
 | **ATS PDF Generation** | Keyword-injected CVs with Space Grotesk + DM Sans design |
 | **Portal Scanner** | 45+ companies pre-configured (Anthropic, OpenAI, ElevenLabs, Retool, n8n...) + custom queries across Ashby, Greenhouse, Lever, Wellfound |
-| **Batch Processing** | Parallel evaluation through an agent adapter contract |
+| **Batch Processing** | Parallel evaluation through verified `claude` / `codex` workers or a custom agent adapter |
 | **Dashboard TUI** | Terminal UI to browse, filter, and sort your pipeline |
 | **Human-in-the-Loop** | AI evaluates and recommends, you decide and act. The system never submits an application -- you always have the final call |
 | **Pipeline Integrity** | Automated merge, dedup, status normalization, health checks |
@@ -80,7 +80,7 @@ cp templates/portals.example.yml portals.yml       # Customize companies
 # Paste a job URL or run /career-ops
 ```
 
-> **The system is designed to be customized by the agent you already use.** Modes, archetypes, scoring weights, negotiation scripts -- just ask it to change them. The core rules now live in `AGENTS.md`, while platform-specific files stay thin.
+> **The system is designed to be customized by the agent you already use.** Modes, archetypes, scoring weights, negotiation scripts -- just ask it to change them. The core rules now live in `AGENTS.md`, while runtime-specific folders are kept only for special integrations like Claude skills or OpenCode commands.
 
 See [docs/SETUP.md](docs/SETUP.md) for the full setup guide.
 
@@ -195,7 +195,7 @@ career-ops/
 ![Go](https://img.shields.io/badge/Go-00ADD8?style=flat&logo=go&logoColor=white)
 ![Bubble Tea](https://img.shields.io/badge/Bubble_Tea-FF75B5?style=flat&logo=go&logoColor=white)
 
-- **Agent layer**: universal core (`AGENTS.md`) + thin adapters for Claude/OpenCode and external runtimes
+- **Agent layer**: universal core (`AGENTS.md`) + thin special-feature wrappers for Claude/OpenCode, plus verified batch support for `claude` and `codex`
 - **PDF**: Playwright/Puppeteer + HTML template
 - **Scanner**: Playwright + Greenhouse API + WebSearch
 - **Dashboard**: Go + Bubble Tea + Lipgloss (Catppuccin Mocha theme)

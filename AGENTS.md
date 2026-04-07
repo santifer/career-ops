@@ -131,7 +131,7 @@ In headless batch mode, Playwright may be unavailable depending on the agent run
 
 The batch runner is agent-agnostic:
 
-- built-in verified provider: `claude`
+- built-in verified providers: `claude`, `codex`
 - all other providers must use an adapter executable supplied by the user
 
 Adapter contract:
