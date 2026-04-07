@@ -9,8 +9,8 @@
  * Requires: @playwright/test (or playwright) installed.
  * Uses Chromium headless to render the HTML and produce a clean, ATS-parseable PDF.
  *
- * Also runs an anti-AI-detection sanitization pass on the HTML body text
- * before rendering. See sanitizeAITells() and issue #1.
+ * Also runs an ATS-compatibility normalization pass on the HTML body text
+ * before rendering. See normalizeTextForATS() and issue #1.
  */
 
 import { chromium } from 'playwright';
@@ -21,12 +21,11 @@ import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 /**
- * Strip AI-detection tells from CV HTML before rendering.
+ * Normalize text for ATS compatibility by removing problematic Unicode characters.
  *
- * Background: AI-text classifiers (CVViZ, GoHire, copyleaks, originality.ai)
- * are now wired into ATS pipelines and LinkedIn Easy Apply. They flag CVs
- * that contain Unicode artifacts typical of LLM output (em-dashes, smart
- * quotes, zero-width characters). See issue #1.
+ * Background: ATS parsers and legacy systems often fail on Unicode artifacts
+ * like em-dashes, smart quotes, zero-width characters, and non-breaking spaces.
+ * These can cause mojibake, parsing errors, or display issues. See issue #1.
  *
  * This pass is surgical: it only touches the body text inside HTML tags,
  * never tag names, attributes, URLs, or content inside <style>/<script>.
@@ -35,7 +34,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
  *
  * Returns { html, replacements } so the caller can log what was changed.
  */
-function sanitizeAITells(html) {
+function normalizeTextForATS(html) {
   const replacements = {};
   const bump = (key, n) => { replacements[key] = (replacements[key] || 0) + n; };
 
@@ -151,16 +150,16 @@ async function generatePDF() {
     `file://$1.woff2')`
   );
 
-  // Strip AI-detection tells from body text. See sanitizeAITells() above
-  // and modes/_shared.md "Anti-AI-Detection Rules". Issue #1.
-  const sanitized = sanitizeAITells(html);
+  // Normalize text for ATS compatibility. See normalizeTextForATS() above
+  // and modes/_shared.md "Professional Writing & ATS Compatibility". Issue #1.
+  const sanitized = normalizeTextForATS(html);
   html = sanitized.html;
   const totalReplacements = Object.values(sanitized.replacements).reduce((a, b) => a + b, 0);
   if (totalReplacements > 0) {
     const breakdown = Object.entries(sanitized.replacements)
       .map(([k, v]) => `${k}=${v}`)
       .join(', ');
-    console.log(`🧹 Anti-AI sanitization: ${totalReplacements} replacements (${breakdown})`);
+    console.log(`🧹 ATS normalization: ${totalReplacements} replacements (${breakdown})`);
   }
 
   const browser = await chromium.launch({ headless: true });

@@ -180,7 +180,7 @@ If the candidate has a live demo/dashboard (check profile.yml), offer access in 
 
 ---
 
-## Anti-AI-Detection Rules (apply to ALL generated CV / cover letter / form text)
+## Professional Writing & ATS Compatibility (apply to ALL generated CV / cover letter / form text)
 
 ATS vendors and LinkedIn run AI-text classifiers (CVViZ, GoHire, copyleaks, originality.ai) on incoming applications. If the text reads like ChatGPT, the CV gets pre-filtered before a human sees it. See issue #1.
 
@@ -208,8 +208,8 @@ These are the phrases AI detectors weight most heavily. Strip them on sight.
 
 ### 2. Forbidden punctuation and characters
 
-- **Em-dash (—, U+2014)**: never. Use a hyphen `-` or rewrite the sentence. Em-dashes are the single strongest AI tell.
-- **En-dash (–, U+2013)**: never in body text. Use a hyphen. OK in numeric ranges only if you must (`2020-2024` is preferred).
+- **Em-dash (—, U+2014)**: normalize to hyphen for ATS compatibility. The sanitizer converts these automatically.
+- **En-dash (–, U+2013)**: normalize to hyphen for body text. OK in numeric ranges only if you must (`2020-2024` is preferred).
 - **Smart quotes ("", '')**: never. Use ASCII `"` and `'`.
 - **Ellipsis character (…, U+2026)**: never. Use three ASCII dots `...`.
 - **Zero-width space (U+200B), zero-width non-joiner (U+200C), word joiner (U+2060), BOM (U+FEFF)**: never. These are invisible AI watermarks in some models.
@@ -231,7 +231,3 @@ These are the phrases AI detectors weight most heavily. Strip them on sight.
 - **Name people and customers when allowed**: "for the BMW connected-car team" beats "for an enterprise automotive client".
 - **One idiosyncratic detail per role**: a specific bug, a weird constraint, a postmortem. Real careers have texture. AI summaries don't.
 - **Active voice, but not robotically so**: "We shipped" is fine. "I owned the migration end-to-end" is fine. "The migration was owned by me" is not.
-
-### 5. The honesty floor
-
-These rules take out the low-hanging tells. They do not make the text undetectable. The only way to actually beat AI detectors is for the candidate to write the text themselves. When generating CV content, leave the candidate's original phrasing alone wherever you can. Only rewrite when the JD genuinely needs different keywords. Do not "polish" prose that is already specific and human -- you will make it worse.
