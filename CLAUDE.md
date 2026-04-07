@@ -59,20 +59,31 @@ AI-powered job search automation built on Claude Code: pipeline tracking, offer 
 | `interview-prep/story-bank.md` | Accumulated STAR+R stories across evaluations |
 | `reports/` | Evaluation reports (format: `{###}-{company-slug}-{YYYY-MM-DD}.md`) |
 
-### First Run — Onboarding (IMPORTANT)
+### First Run -- Onboarding (IMPORTANT)
 
-**Before doing ANYTHING else, check if the system is set up.** Run these checks silently every time a session starts:
+**On every session start, silently check setup state.** Run these checks without narrating them:
 
 1. Does `cv.md` exist?
 2. Does `config/profile.yml` exist (not just profile.example.yml)?
 3. Does `modes/_profile.md` exist (not just _profile.template.md)?
 4. Does `portals.yml` exist (not just templates/portals.example.yml)?
 
-If `modes/_profile.md` is missing, copy from `modes/_profile.template.md` silently. This is the user's customization file — it will never be overwritten by updates.
+If `modes/_profile.md` is missing, copy from `modes/_profile.template.md` silently.
 
-**If ANY of these is missing, enter onboarding mode.** Do NOT proceed with evaluations, scans, or any other mode until the basics are in place. Guide the user step by step:
+**Progressive onboarding -- never block the user.** If files are missing:
+- If the user pastes a JD or URL and `cv.md` exists: proceed with evaluation, even if other files are missing. Note what is degraded (e.g., "PDF will use placeholder contact info until you set up profile.yml").
+- If the user pastes a JD or URL and `cv.md` is missing: explain that you need their CV first to evaluate match, then guide them through Step 1 only.
+- If the user says "scan" and `portals.yml` is missing: explain that scanning requires portal configuration, then guide them through Step 3 only.
+- If ALL core files are missing (first-time user): enter full onboarding flow (Steps 1-6 below).
+- In all cases, tell the user what they can do NOW and what requires additional setup.
+
+**After completing any onboarding step, briefly show what it unlocked:**
+> "cv.md created. You can now evaluate offers, generate PDFs, and draft application answers."
 
 #### Step 1: CV (required)
+**Unlocks:** Offer evaluation (Block B match), PDF generation, form answer drafting, LinkedIn outreach, offer comparison, batch processing.
+**Without it:** Only company research, training evaluation, and portal scanning (discovery only) work.
+
 If `cv.md` is missing, ask:
 > "I don't have your CV yet. You can either:
 > 1. Paste your CV here and I'll convert it to markdown
@@ -84,6 +95,9 @@ If `cv.md` is missing, ask:
 Create `cv.md` from whatever they provide. Make it clean markdown with standard sections (Summary, Experience, Projects, Education, Skills).
 
 #### Step 2: Profile (required)
+**Unlocks:** Real contact info in PDFs (name, email, LinkedIn, portfolio), comp target benchmarking, archetype-to-role mapping.
+**Without it:** PDFs show placeholder data. Comp analysis has no reference point for your salary range.
+
 If `config/profile.yml` is missing, copy from `config/profile.example.yml` and then ask:
 > "I need a few details to personalize the system:
 > - Your full name and email
@@ -96,10 +110,15 @@ If `config/profile.yml` is missing, copy from `config/profile.example.yml` and t
 Fill in `config/profile.yml` with their answers. For archetypes, map their target roles to the closest matches and update `modes/_shared.md` if needed.
 
 #### Step 3: Portals (recommended)
+**Unlocks:** Automated portal scanning (`/career-ops scan`), batch discovery from 45+ company career pages, title-based filtering.
+**Without it:** You can still paste individual URLs or JDs for evaluation. Only automated discovery is unavailable.
+
 If `portals.yml` is missing:
 > "I'll set up the job scanner with 45+ pre-configured companies. Want me to customize the search keywords for your target roles?"
 
 Copy `templates/portals.example.yml` → `portals.yml`. If they gave target roles in Step 2, update `title_filter.positive` to match.
+
+**Cross-validation:** If profile.yml already exists, check that `title_filter.positive` in portals.yml includes keywords matching the user's `target_roles.primary`. If a target role keyword is not in positive keywords, suggest adding it.
 
 #### Step 4: Tracker
 If `data/applications.md` doesn't exist, create it:
@@ -111,6 +130,8 @@ If `data/applications.md` doesn't exist, create it:
 ```
 
 #### Step 5: Get to know the user (important for quality)
+**Unlocks:** Personalized archetype framing, tailored negotiation scripts, exit narrative in PDF summaries, proof-point-backed STAR stories.
+**Without it:** Evaluations use generic framing from `_shared.md` defaults. Still functional, but less tailored.
 
 After the basics are set up, proactively ask for more context. The more you know, the better your evaluations will be:
 
@@ -128,15 +149,23 @@ Store any insights the user shares in `config/profile.yml` (under narrative) or 
 **After every evaluation, learn.** If the user says "this score is too high, I wouldn't apply here" or "you missed that I have experience in X", update your understanding. Adjust the framing in `_shared.md` or add notes to `profile.yml`. The system should get smarter with every interaction.
 
 #### Step 6: Ready
-Once all files exist, confirm:
-> "You're all set! You can now:
-> - Paste a job URL to evaluate it
-> - Run `/career-ops scan` to search portals
-> - Run `/career-ops` to see all commands
+Once core files exist, show the setup confirmation:
+
+> **Setup complete.** Here's what you can do:
 >
-> Everything is customizable — just ask me to change anything.
+> | Capability | Status |
+> |---|---|
+> | Evaluate offers | Ready (cv.md + profile.yml) |
+> | Generate PDFs | Ready (cv.md + profile.yml + template) |
+> | Scan portals | {Ready / Needs portals.yml} |
+> | Personalized framing | {Ready / Needs _profile.md customization} |
+> | Proof-point enrichment | {Ready / Needs article-digest.md} |
 >
-> Tip: Having a personal portfolio dramatically improves your job search. If you don't have one yet, the author's portfolio is also open source: github.com/santifer/cv-santiago — feel free to fork it and make it yours."
+> **Quick start:** Paste a job posting URL and I'll evaluate it, generate a tailored PDF, and register it in your tracker -- all in one step.
+>
+> Run `/career-ops status` anytime to check your setup.
+>
+> Tip: Having a personal portfolio dramatically improves your job search. If you don't have one yet, the author's portfolio is also open source: github.com/santifer/cv-santiago -- feel free to fork it and make it yours.
 
 Then suggest automation:
 > "Want me to scan for new offers automatically? I can set up a recurring scan every few days so you don't miss anything. Just say 'scan every 3 days' and I'll configure it."
@@ -185,6 +214,7 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 | Searches for new offers | `scan` |
 | Processes pending URLs | `pipeline` |
 | Batch processes offers | `batch` |
+| Asks about setup status / readiness | `status` |
 
 ### CV Source of Truth
 

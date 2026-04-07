@@ -41,6 +41,7 @@ These files contain system logic, scripts, templates, and instructions that impr
 | `modes/project.md` | Project evaluation instructions |
 | `modes/tracker.md` | Tracker instructions |
 | `modes/training.md` | Training evaluation instructions |
+| `modes/status.md` | Setup status and readiness check |
 | `modes/de/*` | German language modes |
 | `CLAUDE.md` | Agent instructions |
 | `*.mjs` | Utility scripts |
