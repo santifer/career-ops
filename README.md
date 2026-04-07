@@ -26,7 +26,11 @@ Career-Ops turns Claude Code into a full job search command center. Instead of m
 - **Processes in batch** -- evaluate 10+ offers in parallel with sub-agents
 - **Tracks everything** in a single source of truth with integrity checks
 
-> **Important: This is NOT a spray-and-pray tool.** The whole point is to apply only where there's a real match -- for your sake and for the recruiter reading your application. The scoring system helps you focus on high-fit opportunities instead of wasting everyone's time. Always review before submitting.
+> **Important: This is NOT a spray-and-pray tool.** Career-ops is a filter -- it helps you find the few offers worth your time out of hundreds. The system strongly recommends against applying to anything scoring below 4.0/5. Your time is valuable, and so is the recruiter's. Always review before submitting.
+
+Career-ops is agentic: Claude Code navigates career pages with Playwright, evaluates fit by reasoning about your CV vs the job description (not keyword matching), and adapts your resume per listing.
+
+> **Heads up: the first evaluations won't be great.** The system doesn't know you yet. Feed it context -- your CV, your career story, your proof points, your preferences, what you're good at, what you want to avoid. The more you nurture it, the better it gets. Think of it as onboarding a new recruiter: the first week they need to learn about you, then they become invaluable.
 
 Built by someone who used it to evaluate 740+ job offers, generate 100+ tailored CVs, and land a Head of Applied AI role. [Read the full case study](https://santifer.io/career-ops-system).
 
@@ -42,6 +46,7 @@ Built by someone who used it to evaluate 740+ job offers, generate 100+ tailored
 | **Portal Scanner** | 45+ companies pre-configured (Anthropic, OpenAI, ElevenLabs, Retool, n8n...) + custom queries across Ashby, Greenhouse, Lever, Wellfound |
 | **Batch Processing** | Parallel evaluation with `claude -p` workers |
 | **Dashboard TUI** | Terminal UI to browse, filter, and sort your pipeline |
+| **Human-in-the-Loop** | AI evaluates and recommends, you decide and act. The system never submits an application -- you always have the final call |
 | **Pipeline Integrity** | Automated merge, dedup, status normalization, health checks |
 
 ## Quick Start
@@ -52,14 +57,17 @@ git clone https://github.com/santifer/career-ops.git
 cd career-ops && npm install
 npx playwright install chromium   # Required for PDF generation
 
-# 2. Configure
+# 2. Check setup
+npm run doctor                     # Validates all prerequisites
+
+# 3. Configure
 cp config/profile.example.yml config/profile.yml  # Edit with your details
 cp templates/portals.example.yml portals.yml       # Customize companies
 
-# 3. Add your CV
+# 4. Add your CV
 # Create cv.md in the project root with your CV in markdown
 
-# 4. Personalize with Claude
+# 5. Personalize with Claude
 claude   # Open Claude Code in this directory
 
 # Then ask Claude to adapt the system to you:
@@ -68,7 +76,7 @@ claude   # Open Claude Code in this directory
 # "Add these 5 companies to portals.yml"
 # "Update my profile with this CV I'm pasting"
 
-# 5. Start using
+# 6. Start using
 # Paste a job URL or run /career-ops
 ```
 
@@ -202,6 +210,19 @@ I'm Santiago -- Head of Applied AI, former founder (built and sold a business th
 
 My portfolio and other open source projects → [santifer.io](https://santifer.io)
 
+☕ [Buy me a coffee](https://buymeacoffee.com/santifer) if career-ops helped your job search.
+
+## Disclaimer
+
+**career-ops is a local, open-source tool — NOT a hosted service.** By using this software, you acknowledge:
+
+1. **You control your data.** Your CV, contact info, and personal data stay on your machine and are sent directly to the AI provider you choose (Anthropic, OpenAI, etc.). We do not collect, store, or have access to any of your data.
+2. **You control the AI.** The default prompts instruct the AI not to auto-submit applications, but AI models can behave unpredictably. If you modify the prompts or use different models, you do so at your own risk. **Always review AI-generated content for accuracy before submitting.**
+3. **You comply with third-party ToS.** You must use this tool in accordance with the Terms of Service of the career portals you interact with (Greenhouse, Lever, Workday, LinkedIn, etc.). Do not use this tool to spam employers or overwhelm ATS systems.
+4. **No guarantees.** Evaluations are recommendations, not truth. AI models may hallucinate skills or experience. The authors are not liable for employment outcomes, rejected applications, account restrictions, or any other consequences.
+
+See [LEGAL_DISCLAIMER.md](LEGAL_DISCLAIMER.md) for full details. This software is provided under the [MIT License](LICENSE) "as is", without warranty of any kind.
+
 ## License
 
 MIT
@@ -220,7 +241,9 @@ Career-Ops convierte Claude Code en un centro de mando de busqueda de empleo. En
 - **Procesa en batch** -- evalua 10+ ofertas en paralelo con sub-agentes
 - **Trackea todo** en una fuente de verdad unica con checks de integridad
 
-> **Importante: Esto NO es para spamear empresas.** El objetivo es aplicar solo donde hay match real -- por tu bien y por el de quien lea tu aplicacion. El scoring te ayuda a centrarte en las oportunidades de alto fit en vez de perder el tiempo de todos. Siempre revisa antes de enviar.
+> **Importante: Esto NO es para spamear empresas.** Career-ops es un filtro -- te ayuda a encontrar las pocas ofertas que merecen tu tiempo entre cientos. El sistema recomienda encarecidamente no aplicar a nada por debajo de 4.0/5. Tu tiempo es valioso, y el del recruiter tambien. Siempre revisa antes de enviar.
+
+> **Aviso: las primeras evaluaciones no seran buenas.** El sistema no te conoce todavia. Dale contexto -- tu CV, tu historia profesional, tus proof points, tus preferencias, en que eres bueno, que quieres evitar. Cuanto mas lo nutras, mejor filtra. Piensa en ello como hacer onboarding a un recruiter nuevo: la primera semana necesita conocerte, luego se vuelve invaluable.
 
 Construido por alguien que lo uso para evaluar 740+ ofertas, generar 100+ CVs personalizados, y conseguir un rol de Head of Applied AI. [Lee el case study completo](https://santifer.io/career-ops).
 
@@ -231,14 +254,17 @@ Construido por alguien que lo uso para evaluar 740+ ofertas, generar 100+ CVs pe
 git clone https://github.com/santifer/career-ops.git
 cd career-ops && npm install
 
-# 2. Configurar
+# 2. Verificar setup
+npm run doctor                     # Valida todos los prerequisitos
+
+# 3. Configurar
 cp config/profile.example.yml config/profile.yml  # Editar con tus datos
 cp templates/portals.example.yml portals.yml       # Personalizar empresas
 
-# 3. Añadir tu CV
+# 4. Añadir tu CV
 # Crear cv.md en la raiz del proyecto con tu CV en markdown
 
-# 4. Personalizar con Claude
+# 5. Personalizar con Claude
 claude   # Abrir Claude Code en este directorio
 
 # Pidele a Claude que adapte el sistema a ti:
@@ -247,7 +273,7 @@ claude   # Abrir Claude Code en este directorio
 # "Añade estas empresas a portals.yml"
 # "Actualiza mi perfil con este CV que te pego"
 
-# 5. Usar
+# 6. Usar
 # Pega una URL de oferta o ejecuta /career-ops
 ```
 
@@ -299,8 +325,22 @@ O simplemente pega una URL o descripcion de oferta -- career-ops la detecta y ej
 - [CUSTOMIZATION.md](docs/CUSTOMIZATION.md) -- Como personalizar
 - [ARCHITECTURE.md](docs/ARCHITECTURE.md) -- Como funciona el sistema
 
+☕ [Invitame a un cafe](https://buymeacoffee.com/santifer) si career-ops te ayudo en tu busqueda.
+
+## Aviso legal
+
+**career-ops es una herramienta local y open source — NO un servicio alojado.** Al usar este software, aceptas que:
+
+1. **Tu controlas tus datos.** Tu CV, datos de contacto e informacion personal se quedan en tu maquina y se envian directamente al proveedor de IA que elijas (Anthropic, OpenAI, etc.). No recopilamos, almacenamos ni tenemos acceso a tus datos.
+2. **Tu controlas la IA.** Los prompts por defecto instruyen a la IA a no enviar aplicaciones automaticamente, pero los modelos pueden comportarse de forma impredecible. Si modificas los prompts o usas otros modelos, lo haces bajo tu responsabilidad. **Revisa siempre el contenido generado antes de enviarlo.**
+3. **Tu cumples con los terminos de terceros.** Debes usar esta herramienta de acuerdo con los Terminos de Servicio de los portales de empleo (Greenhouse, Lever, Workday, LinkedIn, etc.). No uses esta herramienta para spamear empresas.
+4. **Sin garantias.** Las evaluaciones son recomendaciones, no verdad absoluta. Los modelos pueden inventar habilidades o experiencia. Los autores no son responsables de resultados laborales, candidaturas rechazadas, restricciones de cuenta ni ninguna otra consecuencia.
+
+Ver [LEGAL_DISCLAIMER.md](LEGAL_DISCLAIMER.md) para mas detalles. Este software se proporciona bajo la [Licencia MIT](LICENSE) "tal cual", sin garantia de ningun tipo.
+
 ## Let's Connect
 
 [![Website](https://img.shields.io/badge/santifer.io-000?style=for-the-badge&logo=safari&logoColor=white)](https://santifer.io)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/in/santifer)
 [![Email](https://img.shields.io/badge/Email-EA4335?style=for-the-badge&logo=gmail&logoColor=white)](mailto:hola@santifer.io)
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy_Me_a_Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/santifer)

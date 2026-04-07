@@ -6,7 +6,40 @@ This system was built and used by [santifer](https://santifer.io) to evaluate 74
 
 The portfolio that goes with this system is also open source: [cv-santiago](https://github.com/santifer/cv-santiago).
 
-**It will work out of the box, but it's designed to be made yours.** If the archetypes don't match your career, the modes are in the wrong language, or the scoring doesn't fit your priorities -- just ask. You (Claude) can edit any file in this system. The user says "change the archetypes to data engineering roles" and you do it. That's the whole point.
+**It will work out of the box, but it's designed to be made yours.** If the archetypes don't match your career, the modes are in the wrong language, or the scoring doesn't fit your priorities -- just ask. You (AI Agent) can edit the user's files. The user says "change the archetypes to data engineering roles" and you do it. That's the whole point.
+
+## Data Contract (CRITICAL)
+
+There are two layers. Read `DATA_CONTRACT.md` for the full list.
+
+**User Layer (NEVER auto-updated, personalization goes HERE):**
+- `cv.md`, `config/profile.yml`, `modes/_profile.md`, `article-digest.md`, `portals.yml`
+- `data/*`, `reports/*`, `output/*`, `interview-prep/*`
+
+**System Layer (auto-updatable, DON'T put user data here):**
+- `modes/_shared.md`, `modes/oferta.md`, all other modes
+- `CLAUDE.md`, `*.mjs` scripts, `dashboard/*`, `templates/*`, `batch/*`
+
+**THE RULE: When the user asks to customize anything (archetypes, narrative, negotiation scripts, proof points, location policy, comp targets), ALWAYS write to `modes/_profile.md` or `config/profile.yml`. NEVER edit `modes/_shared.md` for user-specific content.** This ensures system updates don't overwrite their customizations.
+
+## Update Check
+
+On the first message of each session, run the update checker silently:
+
+```bash
+node update-system.mjs check
+```
+
+Parse the JSON output:
+- `{"status": "update-available", "local": "1.0.0", "remote": "1.1.0", "changelog": "..."}` → tell the user:
+  > "career-ops update available (v{local} → v{remote}). Your data (CV, profile, tracker, reports) will NOT be touched. Want me to update?"
+  If yes → run `node update-system.mjs apply`. If no → run `node update-system.mjs dismiss`.
+- `{"status": "up-to-date"}` → say nothing
+- `{"status": "dismissed"}` → say nothing
+- `{"status": "offline"}` → say nothing
+
+The user can also say "check for updates" or "update career-ops" at any time to force a check.
+To rollback: `node update-system.mjs rollback`
 
 ## What is career-ops
 
@@ -21,10 +54,32 @@ AI-powered job search automation built on Claude Code: pipeline tracking, offer 
 | `data/scan-history.tsv` | Scanner dedup history |
 | `portals.yml` | Query and company config |
 | `templates/cv-template.html` | HTML template for CVs |
-| `generate-pdf.mjs` | Puppeteer: HTML to PDF |
+| `generate-pdf.mjs` | Playwright: HTML to PDF |
 | `article-digest.md` | Compact proof points from portfolio (optional) |
 | `interview-prep/story-bank.md` | Accumulated STAR+R stories across evaluations |
 | `reports/` | Evaluation reports (format: `{###}-{company-slug}-{YYYY-MM-DD}.md`) |
+
+### OpenCode Commands
+
+When using [OpenCode](https://opencode.ai), the following slash commands are available (defined in `.opencode/commands/`):
+
+| Command | Claude Code Equivalent | Description |
+|---------|------------------------|-------------|
+| `/career-ops` | `/career-ops` | Show menu or evaluate JD with args |
+| `/career-ops-pipeline` | `/career-ops pipeline` | Process pending URLs from inbox |
+| `/career-ops-evaluate` | `/career-ops oferta` | Evaluate job offer (A-F scoring) |
+| `/career-ops-compare` | `/career-ops ofertas` | Compare and rank multiple offers |
+| `/career-ops-contact` | `/career-ops contacto` | LinkedIn outreach (find contacts + draft) |
+| `/career-ops-deep` | `/career-ops deep` | Deep company research |
+| `/career-ops-pdf` | `/career-ops pdf` | Generate ATS-optimized CV |
+| `/career-ops-training` | `/career-ops training` | Evaluate course/cert against goals |
+| `/career-ops-project` | `/career-ops project` | Evaluate portfolio project idea |
+| `/career-ops-tracker` | `/career-ops tracker` | Application status overview |
+| `/career-ops-apply` | `/career-ops apply` | Live application assistant |
+| `/career-ops-scan` | `/career-ops scan` | Scan portals for new offers |
+| `/career-ops-batch` | `/career-ops batch` | Batch processing with parallel workers |
+
+**Note:** OpenCode commands invoke the same `.claude/skills/career-ops/SKILL.md` skill used by Claude Code. The `modes/*` files are shared between both platforms.
 
 ### First Run — Onboarding (IMPORTANT)
 
@@ -32,7 +87,10 @@ AI-powered job search automation built on Claude Code: pipeline tracking, offer 
 
 1. Does `cv.md` exist?
 2. Does `config/profile.yml` exist (not just profile.example.yml)?
-3. Does `portals.yml` exist (not just templates/portals.example.yml)?
+3. Does `modes/_profile.md` exist (not just _profile.template.md)?
+4. Does `portals.yml` exist (not just templates/portals.example.yml)?
+
+If `modes/_profile.md` is missing, copy from `modes/_profile.template.md` silently. This is the user's customization file — it will never be overwritten by updates.
 
 **If ANY of these is missing, enter onboarding mode.** Do NOT proceed with evaluations, scans, or any other mode until the basics are in place. Guide the user step by step:
 
@@ -74,11 +132,28 @@ If `data/applications.md` doesn't exist, create it:
 |---|------|---------|------|-------|--------|-----|--------|-------|
 ```
 
-#### Step 5: Ready
+#### Step 5: Get to know the user (important for quality)
+
+After the basics are set up, proactively ask for more context. The more you know, the better your evaluations will be:
+
+> "The basics are ready. But the system works much better when it knows you well. Can you tell me more about:
+> - What makes you unique? What's your 'superpower' that other candidates don't have?
+> - What kind of work excites you? What drains you?
+> - Any deal-breakers? (e.g., no on-site, no startups under 20 people, no Java shops)
+> - Your best professional achievement — the one you'd lead with in an interview
+> - Any projects, articles, or case studies you've published?
+>
+> The more context you give me, the better I filter. Think of it as onboarding a recruiter — the first week I need to learn about you, then I become invaluable."
+
+Store any insights the user shares in `config/profile.yml` (under narrative) or in `article-digest.md` if they share proof points. Update `modes/_shared.md` archetypes and framing if what they describe doesn't match the defaults.
+
+**After every evaluation, learn.** If the user says "this score is too high, I wouldn't apply here" or "you missed that I have experience in X", update your understanding. Adjust the framing in `_shared.md` or add notes to `profile.yml`. The system should get smarter with every interaction.
+
+#### Step 6: Ready
 Once all files exist, confirm:
 > "You're all set! You can now:
 > - Paste a job URL to evaluate it
-> - Run `/career-ops scan` to search portals
+> - Run `/career-ops scan` (or `/career-ops-scan` if using OpenCode) to search portals
 > - Run `/career-ops` to see all commands
 >
 > Everything is customizable — just ask me to change anything.
@@ -88,11 +163,11 @@ Once all files exist, confirm:
 Then suggest automation:
 > "Want me to scan for new offers automatically? I can set up a recurring scan every few days so you don't miss anything. Just say 'scan every 3 days' and I'll configure it."
 
-If the user accepts, use the `/loop` or `/schedule` skill (if available) to set up a recurring `/career-ops scan`. If those aren't available, suggest adding a cron job or remind them to run `/career-ops scan` periodically.
+If the user accepts, use the `/loop` or `/schedule` skill (if available) to set up a recurring `/career-ops scan` (or `/career-ops-scan` if using OpenCode). If those aren't available, suggest adding a cron job or remind them to run `/career-ops scan` (or `/career-ops-scan` if using OpenCode) periodically.
 
 ### Personalization
 
-This system is designed to be customized by YOU (Claude). When the user asks you to change archetypes, translate modes, adjust scoring, add companies, or modify negotiation scripts -- do it directly. You read the same files you use, so you know exactly what to edit.
+This system is designed to be customized by YOU (AI Agent). When the user asks you to change archetypes, translate modes, adjust scoring, add companies, or modify negotiation scripts -- do it directly. You read the same files you use, so you know exactly what to edit.
 
 **Common customization requests:**
 - "Change the archetypes to [backend/frontend/data/devops] roles" → edit `modes/_shared.md`
@@ -101,6 +176,25 @@ This system is designed to be customized by YOU (Claude). When the user asks you
 - "Update my profile" → edit `config/profile.yml`
 - "Change the CV template design" → edit `templates/cv-template.html`
 - "Adjust the scoring weights" → edit `modes/_shared.md` and `batch/batch-prompt.md`
+
+### Language Modes
+
+Default modes are in `modes/` (English). Additional language-specific modes are available:
+
+- **German (DACH market):** `modes/de/` — native German translations with DACH-specific vocabulary (13. Monatsgehalt, Probezeit, Kündigungsfrist, AGG, Tarifvertrag, etc.). Includes `_shared.md`, `angebot.md` (evaluation), `bewerben.md` (apply), `pipeline.md`.
+- **French (Francophone market):** `modes/fr/` — native French translations with France/Belgium/Switzerland/Luxembourg-specific vocabulary (CDI/CDD, convention collective SYNTEC, RTT, mutuelle, prévoyance, 13e mois, intéressement/participation, titres-restaurant, CSE, portage salarial, etc.). Includes `_shared.md`, `offre.md` (evaluation), `postuler.md` (apply), `pipeline.md`.
+
+**When to use German modes:** If the user is targeting German-language job postings, lives in DACH, or asks for German output. Either:
+1. User says "use German modes" → read from `modes/de/` instead of `modes/`
+2. User sets `language.modes_dir: modes/de` in `config/profile.yml` → always use German modes
+3. You detect a German JD → suggest switching to German modes
+
+**When to use French modes:** If the user is targeting French-language job postings, lives in France/Belgium/Switzerland/Luxembourg/Quebec, or asks for French output. Either:
+1. User says "use French modes" → read from `modes/fr/` instead of `modes/`
+2. User sets `language.modes_dir: modes/fr` in `config/profile.yml` → always use French modes
+3. You detect a French JD → suggest switching to French modes
+
+**When NOT to:** If the user applies to English-language roles, even at French or German companies, use the default English modes.
 
 ### Skill Modes
 
@@ -133,7 +227,7 @@ This system is designed to be customized by YOU (Claude). When the user asks you
 **This system is designed for quality, not quantity.** The goal is to help the user find and apply to roles where there is a genuine match -- not to spam companies with mass applications.
 
 - **NEVER submit an application without the user reviewing it first.** Fill forms, draft answers, generate PDFs -- but always STOP before clicking Submit/Send/Apply. The user makes the final call.
-- **Discourage low-fit applications.** If a score is below 3.0/5, explicitly tell the user this is a weak match and recommend skipping unless they have a specific reason.
+- **Strongly discourage low-fit applications.** If a score is below 4.0/5, explicitly recommend against applying. The user's time and the recruiter's time are both valuable. Only proceed if the user has a specific reason to override the score.
 - **Quality over speed.** A well-targeted application to 5 companies beats a generic blast to 50. Guide the user toward fewer, better applications.
 - **Respect recruiters' time.** Every application a human reads costs someone's attention. Only send what's worth reading.
 
@@ -152,7 +246,7 @@ This system is designed to be customized by YOU (Claude). When the user asks you
 
 ## Stack and Conventions
 
-- Node.js (mjs modules), Playwright (PDF + scraping), YAML (config), HTML/CSS (template), Markdown (data)
+- Node.js (mjs modules), Playwright (PDF + scraping), YAML (config), HTML/CSS (template), Markdown (data), Canva MCP (optional visual CV)
 - Scripts in `.mjs`, configuration in YAML
 - Output in `output/` (gitignored), Reports in `reports/`
 - JDs in `jds/` (referenced as `local:jds/{file}` in pipeline.md)

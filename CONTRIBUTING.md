@@ -46,10 +46,18 @@ PRs without a corresponding issue may be closed if they don't align with the pro
 - Dashboard changes require `go build` — test with real data before submitting
 - Don't commit personal data (cv.md, profile.yml, applications.md, reports/)
 
+## What we do NOT accept
+
+- **PRs that scrape platforms prohibiting automated access** (LinkedIn, etc.). We actively reject these to respect third-party ToS.
+- **PRs that enable auto-submitting applications** without human review. career-ops is a decision-support tool, not a spam bot.
+- **PRs that add external API dependencies** without prior discussion in an issue.
+- **PRs containing personal data** (real CVs, emails, phone numbers). Use `examples/` with fictional data instead.
+
 ## Development
 
 ```bash
 # Scripts
+npm run doctor                # Setup validation
 node verify-pipeline.mjs     # Health check
 node cv-sync-check.mjs        # Config check
 

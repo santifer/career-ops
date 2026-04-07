@@ -16,6 +16,8 @@ TRACKER_DIR="$BATCH_DIR/tracker-additions"
 REPORTS_DIR="$PROJECT_DIR/reports"
 APPLICATIONS_FILE="$PROJECT_DIR/data/applications.md"
 LOCK_FILE="$BATCH_DIR/batch-runner.pid"
+STATE_LOCK_DIR="$BATCH_DIR/.batch-state.lock"
+MAIN_PID="${BASHPID:-$$}"
 
 # Defaults
 PARALLEL=1
@@ -88,10 +90,13 @@ acquire_lock() {
       rm -f "$LOCK_FILE"
     fi
   fi
-  echo $$ > "$LOCK_FILE"
+  echo "$MAIN_PID" > "$LOCK_FILE"
 }
 
 release_lock() {
+  if [[ "${BASHPID:-$$}" != "$MAIN_PID" ]]; then
+    return
+  fi
   rm -f "$LOCK_FILE"
 }
 
@@ -124,6 +129,16 @@ init_state() {
   fi
 }
 
+acquire_state_lock() {
+  while ! mkdir "$STATE_LOCK_DIR" 2>/dev/null; do
+    sleep 0.1
+  done
+}
+
+release_state_lock() {
+  rmdir "$STATE_LOCK_DIR" 2>/dev/null || true
+}
+
 # Get status of an offer from state file
 get_status() {
   local id="$1"
@@ -148,8 +163,9 @@ get_retries() {
   echo "${retries:-0}"
 }
 
-# Calculate next report number
-next_report_num() {
+# Calculate next report number.
+# Caller must hold STATE_LOCK_DIR while this runs.
+next_report_num_unlocked() {
   local max_num=0
   if [[ -d "$REPORTS_DIR" ]]; then
     for f in "$REPORTS_DIR"/*.md; do
@@ -176,8 +192,9 @@ next_report_num() {
   printf '%03d' $((max_num + 1))
 }
 
-# Update or insert state for an offer
-update_state() {
+# Update or insert state for an offer.
+# Caller must hold STATE_LOCK_DIR while this runs.
+update_state_unlocked() {
   local id="$1" url="$2" status="$3" started="$4" completed="$5" report_num="$6" score="$7" error="$8" retries="$9"
 
   if [[ ! -f "$STATE_FILE" ]]; then
@@ -211,24 +228,62 @@ update_state() {
   mv "$tmp" "$STATE_FILE"
 }
 
+update_state() {
+  acquire_state_lock
+
+  local status=0
+  if update_state_unlocked "$@"; then
+    status=0
+  else
+    status=$?
+  fi
+
+  release_state_lock
+  return "$status"
+}
+
+reserve_report_num() {
+  local id="$1" url="$2" started="$3" retries="$4"
+
+  acquire_state_lock
+
+  local report_num=""
+  local status=0
+
+  if report_num=$(next_report_num_unlocked); then
+    if update_state_unlocked "$id" "$url" "processing" "$started" "-" "$report_num" "-" "-" "$retries"; then
+      status=0
+    else
+      status=$?
+    fi
+  else
+    status=$?
+  fi
+
+  release_state_lock
+
+  if (( status != 0 )); then
+    return "$status"
+  fi
+
+  printf '%s\n' "$report_num"
+}
+
 # Process a single offer
 process_offer() {
   local id="$1" url="$2" source="$3" notes="$4"
 
-  local report_num
-  report_num=$(next_report_num)
-  local date
-  date=$(date +%Y-%m-%d)
   local started_at
   started_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
   local retries
   retries=$(get_retries "$id")
+  local report_num
+  report_num=$(reserve_report_num "$id" "$url" "$started_at" "$retries")
+  local date
+  date=$(date +%Y-%m-%d)
   local jd_file="/tmp/batch-jd-${id}.txt"
 
   echo "--- Processing offer #$id: $url (report $report_num, attempt $((retries + 1)))"
-
-  # Mark as in-progress
-  update_state "$id" "$url" "processing" "$started_at" "-" "$report_num" "-" "-" "$retries"
 
   # Build the prompt with placeholders replaced
   local prompt
@@ -289,10 +344,10 @@ process_offer() {
 merge_tracker() {
   echo ""
   echo "=== Merging tracker additions ==="
-  node "$PROJECT_DIR/career-ops/merge-tracker.mjs"
+  node "$PROJECT_DIR/merge-tracker.mjs"
   echo ""
   echo "=== Verifying pipeline integrity ==="
-  node "$PROJECT_DIR/career-ops/verify-pipeline.mjs" || echo "⚠️  Verification found issues (see above)"
+  node "$PROJECT_DIR/verify-pipeline.mjs" || echo "⚠️  Verification found issues (see above)"
 }
 
 # Print summary
