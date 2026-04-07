@@ -1,0 +1,16 @@
+adapter:
+  id: codex
+  entrypoints:
+    - docs/runtime-adapters/codex.md
+  supports:
+    interactive: false
+    manual_flows: false
+    batch_workers: false
+    documented_only: true
+  extensions:
+    - id: future-codex-adapter
+      additive_only: true
+      must_preserve:
+        - routing
+        - context_loading
+        - safeguards

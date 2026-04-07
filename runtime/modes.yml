@@ -1,0 +1,39 @@
+version: 1
+description: Canonical input-to-mode routing for every interactive adapter.
+
+discovery:
+  when:
+    - no_arguments
+    - unknown_non_jd_input
+  response: show_command_menu
+
+raw_inputs:
+  job_description_or_offer_url:
+    mode: auto-pipeline
+    detection:
+      urls: true
+      jd_keywords:
+        - responsibilities
+        - requirements
+        - qualifications
+        - about the role
+        - we're looking for
+
+commands:
+  "/career-ops oferta": oferta
+  "/career-ops ofertas": ofertas
+  "/career-ops contacto": contacto
+  "/career-ops deep": deep
+  "/career-ops pdf": pdf
+  "/career-ops training": training
+  "/career-ops project": project
+  "/career-ops tracker": tracker
+  "/career-ops pipeline": pipeline
+  "/career-ops apply": apply
+  "/career-ops scan": scan
+  "/career-ops batch": batch
+
+notes:
+  - Raw JD text or offer URLs always resolve to auto-pipeline.
+  - Explicit subcommands always win over heuristic detection.
+  - Adapters may improve discovery UX, but they must preserve this routing contract.

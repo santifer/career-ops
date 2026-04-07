@@ -5,86 +5,28 @@ user_invocable: true
 args: mode
 ---
 
-# career-ops -- Router
+# career-ops -- Claude Adapter
 
-## Mode Routing
+This is a thin Claude wrapper over the canonical runtime core.
 
-Determine the mode from `{{mode}}`:
+## Required runtime sources
 
-| Input | Mode |
-|-------|------|
-| (empty / no args) | `discovery` -- Show command menu |
-| JD text or URL (no sub-command) | **`auto-pipeline`** |
-| `oferta` | `oferta` |
-| `ofertas` | `ofertas` |
-| `contacto` | `contacto` |
-| `deep` | `deep` |
-| `pdf` | `pdf` |
-| `training` | `training` |
-| `project` | `project` |
-| `tracker` | `tracker` |
-| `pipeline` | `pipeline` |
-| `apply` | `apply` |
-| `scan` | `scan` |
-| `batch` | `batch` |
+Before deciding anything, read these files and treat them as canonical:
 
-**Auto-pipeline detection:** If `{{mode}}` is not a known sub-command AND contains JD text (keywords: "responsibilities", "requirements", "qualifications", "about the role", "we're looking for", company name + role) or a URL to a JD, execute `auto-pipeline`.
+1. `runtime/modes.yml` -- input classification and mode resolution
+2. `runtime/context-loading.yml` -- which mode files to load for the resolved mode
+3. `runtime/operating-rules.md` -- shared safeguards, ownership rules, and deferred scope
 
-If `{{mode}}` is not a sub-command AND doesn't look like a JD, show discovery.
+## Claude adapter contract
 
----
+- Use Claude slash-command UX as the entry surface only.
+- Resolve raw JDs / offer URLs and `/career-ops` subcommands from `runtime/modes.yml`.
+- Load the required mode files exactly as defined in `runtime/context-loading.yml`.
+- Execute business logic from `modes/*` and `CLAUDE.md`; do not restate or fork that logic here.
+- Preserve shared safeguards from `runtime/operating-rules.md`, especially Playwright-only verification and the manual-submit boundary.
 
-## Discovery Mode (no arguments)
+## Claude-specific affordances
 
-Show this menu:
-
-```
-career-ops -- Command Center
-
-Available commands:
-  /career-ops {JD}      → AUTO-PIPELINE: evaluate + report + PDF + tracker (paste text or URL)
-  /career-ops pipeline  → Process pending URLs from inbox (data/pipeline.md)
-  /career-ops oferta    → Evaluation only A-F (no auto PDF)
-  /career-ops ofertas   → Compare and rank multiple offers
-  /career-ops contacto  → LinkedIn power move: find contacts + draft message
-  /career-ops deep      → Deep research prompt about company
-  /career-ops pdf       → PDF only, ATS-optimized CV
-  /career-ops training  → Evaluate course/cert against North Star
-  /career-ops project   → Evaluate portfolio project idea
-  /career-ops tracker   → Application status overview
-  /career-ops apply     → Live application assistant (reads form + generates answers)
-  /career-ops scan      → Scan portals and discover new offers
-  /career-ops batch     → Batch processing with parallel workers
-
-Inbox: add URLs to data/pipeline.md → /career-ops pipeline
-Or paste a JD directly to run the full pipeline.
-```
-
----
-
-## Context Loading by Mode
-
-After determining the mode, load the necessary files before executing:
-
-### Modes that require `_shared.md` + their mode file:
-Read `modes/_shared.md` + `modes/{mode}.md`
-
-Applies to: `auto-pipeline`, `oferta`, `ofertas`, `pdf`, `contacto`, `apply`, `pipeline`, `scan`, `batch`
-
-### Standalone modes (only their mode file):
-Read `modes/{mode}.md`
-
-Applies to: `tracker`, `deep`, `training`, `project`
-
-### Modes delegated to subagent:
-For `scan`, `apply` (with Playwright), and `pipeline` (3+ URLs): launch as Agent with the content of `_shared.md` + `modes/{mode}.md` injected into the subagent prompt.
-
-```
-Agent(
-  subagent_type="general-purpose",
-  prompt="[content of modes/_shared.md]\n\n[content of modes/{mode}.md]\n\n[invocation-specific data]",
-  description="career-ops {mode}"
-)
-```
-
-Execute the instructions from the loaded mode file.
+- If the resolved mode is `discovery`, present the available `/career-ops` commands using Claude-friendly slash-command formatting.
+- If the resolved mode needs a delegated/manual flow, keep the same resolved mode and context contract while using Claude-native agent UX.
+- If user input is neither a recognized subcommand nor a raw JD/offer URL, fall back to the `discovery` behavior defined by the runtime core.

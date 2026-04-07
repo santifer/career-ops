@@ -1,0 +1,16 @@
+adapter:
+  id: claude
+  entrypoints:
+    - .claude/skills/career-ops/SKILL.md
+  supports:
+    interactive: true
+    manual_flows: true
+    batch_workers: false
+    documented_only: false
+  extensions:
+    - id: slash-command-entrypoint
+      additive_only: true
+      must_preserve:
+        - routing
+        - context_loading
+        - safeguards

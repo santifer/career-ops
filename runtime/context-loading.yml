@@ -1,0 +1,60 @@
+version: 1
+description: Canonical mode-to-context loading contract for interactive adapters.
+
+shared_context:
+  file: modes/_shared.md
+
+modes:
+  auto-pipeline:
+    loads:
+      - modes/_shared.md
+      - modes/auto-pipeline.md
+  oferta:
+    loads:
+      - modes/_shared.md
+      - modes/oferta.md
+  ofertas:
+    loads:
+      - modes/_shared.md
+      - modes/ofertas.md
+  pdf:
+    loads:
+      - modes/_shared.md
+      - modes/pdf.md
+  contacto:
+    loads:
+      - modes/_shared.md
+      - modes/contacto.md
+  apply:
+    loads:
+      - modes/_shared.md
+      - modes/apply.md
+  pipeline:
+    loads:
+      - modes/_shared.md
+      - modes/pipeline.md
+  scan:
+    loads:
+      - modes/_shared.md
+      - modes/scan.md
+  batch:
+    loads:
+      - modes/_shared.md
+      - modes/batch.md
+  tracker:
+    loads:
+      - modes/tracker.md
+  deep:
+    loads:
+      - modes/deep.md
+  training:
+    loads:
+      - modes/training.md
+  project:
+    loads:
+      - modes/project.md
+
+adapter_notes:
+  - Adapters may choose their own command UX, but the files loaded for each mode must remain canonical.
+  - Tracker, deep, training, and project are the only standalone modes in this batch.
+  - Worker and background abstractions stay out of scope for this runtime contract.

@@ -15,10 +15,12 @@ import { execSync } from 'child_process';
 import { readFileSync, existsSync, readdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { validateAdapterReferences } from './runtime/validate-adapters.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = __dirname;
 const QUICK = process.argv.includes('--quick');
+const adapterFailures = validateAdapterReferences(ROOT);
 
 let passed = 0;
 let failed = 0;
@@ -104,6 +106,11 @@ const systemFiles = [
   'modes/oferta.md', 'modes/pdf.md', 'modes/scan.md',
   'templates/states.yml', 'templates/cv-template.html',
   '.claude/skills/career-ops/SKILL.md',
+  'AGENTS.md', '.opencode/commands/career-ops.md', '.opencode/agents/career-ops.md',
+  'runtime/modes.yml', 'runtime/context-loading.yml', 'runtime/operating-rules.md',
+  'runtime/adapters/claude.yml', 'runtime/adapters/opencode.yml',
+  'runtime/adapters/codex.yml', 'runtime/adapters/gemini-cli.yml', 'runtime/adapters/copilot-cli.yml',
+  'docs/runtime-adapters/codex.md', 'docs/runtime-adapters/gemini-cli.md', 'docs/runtime-adapters/copilot-cli.md',
 ];
 
 for (const f of systemFiles) {
@@ -222,9 +229,37 @@ for (const section of requiredSections) {
   }
 }
 
-// ── 9. VERSION FILE ─────────────────────────────────────────────
+// ── 9. ADAPTER RUNTIME REFERENCES ───────────────────────────────
 
-console.log('\n9. Version file');
+console.log('\n9. Adapter runtime references');
+
+for (const failure of adapterFailures) {
+  fail(failure);
+}
+
+if (adapterFailures.length === 0) {
+  pass('Adapters reference canonical runtime files and documented-only adapters stay bounded');
+}
+
+console.log('\n9b. Deferred worker scope wording');
+
+const deferredScopeChecks = [
+  { file: 'README.md', text: 'batch/background worker abstraction is deferred and not part of this PR' },
+  { file: 'docs/ARCHITECTURE.md', text: 'batch/background worker abstraction is deferred and not part of this PR' },
+  { file: 'docs/SETUP.md', text: 'workers later: batch/background worker abstraction is deferred and not part of this PR.' },
+];
+
+for (const { file, text } of deferredScopeChecks) {
+  if (readFile(file).includes(text)) {
+    pass(`${file} documents deferred worker scope`);
+  } else {
+    fail(`${file} must explain that batch/background worker abstraction is deferred and not part of this PR`);
+  }
+}
+
+// ── 10. VERSION FILE ────────────────────────────────────────────
+
+console.log('\n10. Version file');
 
 if (fileExists('VERSION')) {
   const version = readFile('VERSION').trim();

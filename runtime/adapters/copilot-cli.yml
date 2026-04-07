@@ -1,0 +1,16 @@
+adapter:
+  id: copilot-cli
+  entrypoints:
+    - docs/runtime-adapters/copilot-cli.md
+  supports:
+    interactive: false
+    manual_flows: false
+    batch_workers: false
+    documented_only: true
+  extensions:
+    - id: future-copilot-cli-adapter
+      additive_only: true
+      must_preserve:
+        - routing
+        - context_loading
+        - safeguards

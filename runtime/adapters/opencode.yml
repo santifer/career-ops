@@ -1,0 +1,18 @@
+adapter:
+  id: opencode
+  entrypoints:
+    - AGENTS.md
+    - .opencode/commands/career-ops.md
+    - .opencode/agents/career-ops.md
+  supports:
+    interactive: true
+    manual_flows: true
+    batch_workers: false
+    documented_only: false
+  extensions:
+    - id: opencode-premium-manual-ux
+      additive_only: true
+      must_preserve:
+        - routing
+        - context_loading
+        - safeguards

@@ -1,0 +1,16 @@
+adapter:
+  id: gemini-cli
+  entrypoints:
+    - docs/runtime-adapters/gemini-cli.md
+  supports:
+    interactive: false
+    manual_flows: false
+    batch_workers: false
+    documented_only: true
+  extensions:
+    - id: future-gemini-cli-adapter
+      additive_only: true
+      must_preserve:
+        - routing
+        - context_loading
+        - safeguards
