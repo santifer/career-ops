@@ -38,9 +38,15 @@ google:
 # ─── Local AI (Gemma) ───────────────────────────────────────────────────────────
 
 gemma:
-  model: "gemma4:26b"                     # Ollama model name for local reasoning
+  model: "gemma4-opus-distill:q8_0"       # Ollama model — Gemma 4 31B Opus distill, best for eval loops
+  ollama_host: "http://100.76.84.16:11434" # Remote Ollama instance (Tailscale IP)
   max_iterations: 20                      # Max self-improvement iterations per cycle
   fallback_to_builtin: true               # Fall back to Claude if Gemma is unavailable
+  # Alternative models on this host:
+  #   gemma4-opus-distill:bf16             # Full precision (slower, higher quality)
+  #   gemma4-opus-distill:Q4_K_M           # Faster, slightly less quality
+  #   gemma4:31b-it-q8_0                   # Base Gemma 4 (non-distilled)
+  #   gemma4:31b                           # Base Q4_K_M (fastest)
 
 # ─── Schedules ──────────────────────────────────────────────────────────────────
 # Intervals use shorthand: h = hours, d = days, "overnight" = 02:00-06:00 local
