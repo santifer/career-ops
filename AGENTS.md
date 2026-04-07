@@ -8,6 +8,258 @@ The portfolio that goes with this system is also open source: [cv-santiago](http
 
 **It'll work out of the box, but it's designed to be made yours.** If the archetypes don't match your career, the modes are in the wrong language, or the scoring doesn't fit your priorities -- just ask. You (the AI) can edit any file in this system. The user says "change the archetypes to data engineering roles" and you do it. That's the whole point.
 
+---
+
+## Build/Lint/Test Commands
+
+### Node.js Scripts
+
+```bash
+# Verify pipeline integrity (health check)
+npm run verify              # or: node verify-pipeline.mjs
+
+# Normalize statuses to canonical states
+npm run normalize           # or: node normalize-statuses.mjs
+
+# Remove duplicate tracker entries
+npm run dedup               # or: node dedup-tracker.mjs
+
+# Merge TSV additions into applications.md
+npm run merge               # or: node merge-tracker.mjs
+
+# Generate PDF from HTML CV
+npm run pdf                 # or: node generate-pdf.mjs <input.html> <output.pdf>
+
+# Check CV/config consistency
+npm run sync-check          # or: node cv-sync-check.mjs
+```
+
+### Go Dashboard (TUI)
+
+```bash
+# Build dashboard
+cd dashboard && go build -o career-dashboard .
+
+# Run dashboard
+./career-dashboard --path /path/to/career-ops
+
+# Development
+cd dashboard && go run main.go --path ..
+```
+
+### Running Single Scripts
+
+All `.mjs` scripts are executable and can be run directly:
+
+```bash
+# Run with Node
+node verify-pipeline.mjs
+node merge-tracker.mjs --dry-run
+
+# Or make executable and run directly (Unix)
+chmod +x verify-pipeline.mjs
+./verify-pipeline.mjs
+```
+
+**Important:** Always run `merge-tracker.mjs` after batch evaluations to prevent duplicates.
+
+---
+
+## Code Style Guidelines
+
+### General Conventions
+
+- **Language:** Node.js (ES modules `.mjs`), Go (dashboard), Markdown (data/config), YAML (config), HTML/CSS (templates)
+- **Line Length:** Soft limit 120 chars for code, flexible for markdown
+- **Indentation:** 2 spaces (JavaScript/YAML), tabs (Go), 2 spaces (HTML/CSS)
+- **File Naming:** kebab-case for scripts (`merge-tracker.mjs`), PascalCase for Go packages
+
+### JavaScript/Node.js (.mjs files)
+
+#### Imports
+
+```javascript
+// Standard library first, third-party second, local third
+import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { join, dirname } from 'path';
+import { chromium } from 'playwright';
+```
+
+#### Error Handling
+
+```javascript
+// Always check file existence before reading
+if (!existsSync(filePath)) {
+  console.log('File not found. Exiting gracefully.');
+  process.exit(0);  // Use 0 for "nothing to do", 1 for errors
+}
+
+// Catch errors at top level
+try {
+  const content = readFileSync(filePath, 'utf-8');
+} catch (err) {
+  console.error(`❌ Failed: ${err.message}`);
+  process.exit(1);
+}
+```
+
+#### Logging Conventions
+
+Use emoji prefixes consistently:
+- `✅` Success/completion
+- `❌` Errors/failures
+- `⚠️` Warnings
+- `📊` Statistics/summary
+- `🗑️` Deletions/removals
+- `➕` Additions
+- `🔄` Updates/changes
+- `⏭️` Skipped items
+- `📄` File operations
+- `📁` Directory operations
+
+#### Types and Validation
+
+```javascript
+// Always validate parsed integers
+const num = parseInt(parts[1]);
+if (isNaN(num)) {
+  console.warn(`⚠️ Skipping invalid entry number: ${parts[1]}`);
+  continue;
+}
+
+// Always normalize strings before comparison
+function normalizeCompany(name) {
+  return name.toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+```
+
+#### CLI Arguments
+
+```javascript
+// Use simple flag detection
+const DRY_RUN = process.argv.includes('--dry-run');
+const VERIFY = process.argv.includes('--verify');
+
+// Named arguments with defaults
+let format = 'a4';
+for (const arg of process.argv.slice(2)) {
+  if (arg.startsWith('--format=')) {
+    format = arg.split('=')[1].toLowerCase();
+  }
+}
+```
+
+### Go (Dashboard)
+
+#### Package Structure
+
+```
+dashboard/
+├── main.go                    # Entry point
+├── go.mod                     # Dependencies
+├── internal/
+│   ├── data/                  # Data layer (parsers, updaters)
+│   ├── model/                 # Business logic
+│   ├── theme/                 # UI theming
+│   └── ui/screens/            # TUI screens
+```
+
+#### Imports
+
+```go
+// Standard library first
+import (
+    "flag"
+    "fmt"
+    "os"
+)
+
+// External packages second
+import (
+    tea "github.com/charmbracelet/bubbletea"
+)
+
+// Local packages third
+import (
+    "github.com/santifer/career-ops/dashboard/internal/data"
+)
+```
+
+#### Naming Conventions
+
+- Types: `PascalCase` (e.g., `PipelineModel`)
+- Functions: `PascalCase` for exported, `camelCase` for internal
+- Constants: `camelCase` for internal, `PascalCase` for exported
+- Enums: `camelCase` with type prefix (e.g., `viewPipeline`)
+
+### Markdown (Modes/Reports/Data)
+
+#### Front Matter (Reports)
+
+All evaluation reports follow this structure:
+
+```markdown
+**Company:** [Name]
+**Role:** [Job Title]
+**Score:** X.X/5 (Grade)
+**URL:** https://...
+**PDF:** ✅/❌ output/XXX-company-slug.pdf
+
+---
+
+[6-block evaluation content]
+```
+
+#### Data Files
+
+- `data/applications.md` — Markdown table, 9 pipe-delimited columns
+- `data/pipeline.md` — Simple list of URLs or `local:jds/{file}`
+- `data/scan-history.tsv` — TSV format for dedup
+
+#### Mode Files
+
+Mode files (`modes/*.md`) are prompt templates:
+- Always include `<!-- [CUSTOMIZE] -->` comments for user-editable sections
+- Always read from `cv.md`, `article-digest.md`, `config/profile.yml` — NEVER hardcode metrics
+- Use `**RULE:**` prefix for critical constraints
+- Use tables for structured data (archetypes, comp ranges, etc.)
+
+### YAML (Configuration)
+
+```yaml
+# Use snake_case for keys
+full_name: "John Doe"
+target_roles:
+  - "Senior Backend Engineer"
+  - "Staff Platform Engineer"
+
+# Comments for guidance
+salary:
+  min: 150000  # USD, base only
+  target: 180000
+```
+
+### HTML/CSS (CV Templates)
+
+```html
+<!-- Use semantic HTML5 -->
+<section class="experience">
+  <h2>Experience</h2>
+  <div class="job">
+    <h3 class="job-title">Senior Engineer</h3>
+    <p class="job-company">Acme Corp</p>
+  </div>
+</section>
+
+<!-- Inline critical CSS for PDF generation -->
+<style>
+  body { font-family: 'Space Grotesk', sans-serif; }
+  .job-title { font-weight: 600; color: #1a1a1a; }
+</style>
+```
+
+---
+
 ## What is career-ops
 
 AI-powered job search automation for AI coding agents (Claude Code, OpenCode): pipeline tracking, offer evaluation, CV generation, portal scanning, batch processing.

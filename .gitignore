@@ -32,3 +32,5 @@ node_modules/
 .claude/settings.local.json
 .claude/memory/
 career-dashboard
+
+cv.md
