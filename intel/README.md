@@ -23,13 +23,18 @@ Not all keys are required. The engine gracefully degrades when a source is unava
 
 ### 2. Install Google Tools (Optional)
 
-For Gmail monitoring and Google Docs cover letter generation:
+For Gmail monitoring, Google Docs cover letter generation, and push-sync to Google Sheets:
 
 ```bash
 # Google Docs MCP — follow OAuth setup in SETUP.md
 # gogcli — Google Calendar & Contacts CLI
 brew install gogcli
 gogcli auth login
+
+# gws CLI — push operations (Sheets, Drive, Gmail send)
+brew install googleworkspace-cli
+gws auth setup
+gws auth login
 ```
 
 ### 3. Install Gemma 4 (Optional)
@@ -63,6 +68,17 @@ The engine is ready. It will run on the schedules defined in `config/intel.yml` 
 | `/career-ops intel` | Generate an intelligence briefing with prospects, signals, and trends |
 | `/career-ops improve` | Run a self-improvement cycle: calibrate scores, refine strategy, update prompts |
 | `/career-ops osint [company]` | Deep OSINT research on a specific company (funding, team, tech stack, culture) |
+| `/career-ops sync` | Bidirectional sync: push tracker updates to Google Sheets, pull recruiter responses from Gmail |
+
+### Google Sync
+
+The engine supports bidirectional sync with Google Workspace when `gws` is installed:
+
+- **Push**: New evaluations and status changes are written to the configured tracking spreadsheet (`google.tracking_sheet_id` in `intel.yml`) via `gws sheets`.
+- **Pull**: Gmail is polled on the `gmail_monitor` schedule for recruiter responses matching `gmail_recruiter_patterns`. Matching threads update the tracker status automatically.
+- **Cover Letters**: Generated docs are saved to the configured Drive folder (`google.cover_letter_folder_id`) via the Google Docs MCP server.
+
+All three tools are optional and independent. The engine degrades gracefully when any is unavailable.
 
 ---
 
@@ -93,10 +109,30 @@ intel/
   schedules/        # Schedule runners and cron configuration
   market/           # Market intelligence files (per-country)
   templates/        # Output templates (HM reports, outreach drafts, briefings)
+  orchestrator.mjs  # Top-level pipeline coordinator — routes commands to pipelines
+  engine.mjs        # Setup checker — validates config, APIs, Gemma, gogcli, gws
+  wiring.mjs        # Outcome recording, draft diffing, voice pattern extraction
+  router.mjs        # Command router — maps user intent to pipeline
 config/
   intel.yml         # Runtime configuration (copied from intel.example.yml)
   strategy-ledger.md    # Learned principles and calibration log
   voice-profile.md      # User writing style profile
+```
+
+### Orchestrator Flow
+
+```
+User command
+    │
+    ▼
+router.mjs — parse intent
+    │
+    ▼
+orchestrator.mjs — coordinate pipeline
+    ├─► sources/      — fetch data (Exa, Tavily, BrightData, …)
+    ├─► pipelines/    — prospect / outreach / research / improve
+    ├─► wiring.mjs    — record outcomes, diff drafts, update voice profile
+    └─► Google Sync   — gws (Sheets push), Gmail poll, Docs MCP
 ```
 
 For the full system specification, see the project documentation.

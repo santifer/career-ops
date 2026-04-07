@@ -34,6 +34,16 @@ parallel:
 google:
   docs_mcp: true                          # Enable Google Docs MCP server for cover letters & docs
   gogcli: true                            # Enable gogcli for Google Calendar & Contacts
+  gws_cli: true                           # Enable gws CLI for push operations
+  tracking_sheet_id: ""                   # Google Sheet ID for application tracking
+  cover_letter_folder_id: ""              # Google Drive folder for generated docs
+  gmail_monitor: true                     # Enable Gmail polling for recruiter responses
+  gmail_labels: ["INBOX"]                 # Labels to monitor
+  gmail_recruiter_patterns:               # Subject line patterns to match
+    - "interview"
+    - "application"
+    - "next steps"
+    - "offer"
 
 # ─── Local AI (Gemma) ───────────────────────────────────────────────────────────
 

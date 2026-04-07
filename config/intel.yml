@@ -1,0 +1,48 @@
+# intel.yml — intelligence engine configuration
+# Generated 2026-04-07 for Basit Mustafa
+
+candidate:
+  full_name: "Basit Mustafa"
+  location: "Location"
+  target_roles: [CTO, CIO, CPO, CEO, VP AI]
+
+apis:
+  exa:
+    key_env: EXA_API_KEY
+    max_results: 20
+  google:
+    cx_env: GOOGLE_CX
+    key_env: GOOGLE_API_KEY
+    max_results: 10
+  brightdata:
+    key_env: BRIGHTDATA_API_KEY
+    zone: residential
+
+google:
+  alerts:
+    - query: "CTO, CIO, CPO, CEO, VP AI hiring Location"
+    - query: "CTO, CIO, CPO, CEO, VP AI open roles"
+  docs_mcp: true                          # Enable Google Docs MCP server for cover letters & docs
+  gogcli: true                            # Enable gogcli for Google Calendar & Contacts
+  gws_cli: true                           # Enable gws CLI for push operations
+  tracking_sheet_id: ""                   # Google Sheet ID for application tracking
+  cover_letter_folder_id: ""              # Google Drive folder for generated docs
+  gmail_monitor: true                     # Enable Gmail polling for recruiter responses
+  gmail_labels: ["INBOX"]                 # Labels to monitor
+  gmail_recruiter_patterns:               # Subject line patterns to match
+    - "interview"
+    - "application"
+    - "next steps"
+    - "offer"
+
+schedules:
+  scan_interval_hours: 72
+  briefing_day: monday
+  prospect_refresh_days: 7
+
+gemma:
+  enabled: false
+  model: gemma-3
+  tasks:
+    - classify_prospects
+    - summarize_intel

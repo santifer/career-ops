@@ -75,6 +75,15 @@ export function checkSetup(projectRoot) {
     // gog not found — silently ignore
   }
 
+  // gws CLI
+  let gwsAvailable = false;
+  try {
+    execFileSync('which', ['gws'], { encoding: 'utf-8', timeout: 3000 });
+    gwsAvailable = true;
+  } catch {
+    // gws not found
+  }
+
   // Ready = core data files + intel config
   const ready =
     fileStatus.intelYml &&
@@ -88,6 +97,7 @@ export function checkSetup(projectRoot) {
     gemmaAvailable,
     gemmaHost,
     gogcliAvailable,
+    gwsAvailable,
     ready,
   };
 }
@@ -113,6 +123,7 @@ export function getSetupStatus(status) {
     `  APIs: ${status.availableAPIs.length > 0 ? status.availableAPIs.join(', ') : 'none (will use WebSearch + Playwright)'}`,
     `  Gemma 4: ${status.gemmaAvailable ? `available (${status.gemmaHost})` : 'not found'}`,
     `  gogcli:  ${status.gogcliAvailable ? 'available' : 'not found'}`,
+    `  gws:    ${status.gwsAvailable ? 'available' : 'not found'}`,
     '',
     `  Ready: ${status.ready ? 'YES' : 'NO'}`,
   ];

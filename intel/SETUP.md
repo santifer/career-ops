@@ -99,6 +99,51 @@ Ask Claude: "Create a test Google Doc called 'Intel Engine Test'" -- if it works
 
 ---
 
+## Google Workspace Setup
+
+The `gws` CLI provides push operations to Google Sheets, Drive, and Gmail — enabling bidirectional sync between the intelligence engine and your Google Workspace.
+
+### Step 1: Install gws CLI
+
+```bash
+brew install googleworkspace-cli
+```
+
+### Step 2: Authenticate
+
+```bash
+gws auth setup
+gws auth login
+```
+
+`gws auth setup` registers the CLI with your Google account and configures OAuth scopes. `gws auth login` completes the browser-based OAuth flow.
+
+### Step 3: Create the Tracking Spreadsheet
+
+1. Open [Google Sheets](https://sheets.google.com) and create a new spreadsheet named "Career-Ops Tracker".
+2. Copy the Sheet ID from the URL (`https://docs.google.com/spreadsheets/d/**SHEET_ID**/edit`).
+3. Paste the ID into `config/intel.yml` under `google.tracking_sheet_id`.
+
+The engine will maintain the header row and sync evaluation results automatically on the `gmail_monitor` schedule.
+
+### Step 4: Create the Cover Letter Folder
+
+1. Open [Google Drive](https://drive.google.com) and create a new folder named "Career-Ops Cover Letters".
+2. Copy the Folder ID from the URL (`https://drive.google.com/drive/folders/**FOLDER_ID**`).
+3. Paste the ID into `config/intel.yml` under `google.cover_letter_folder_id`.
+
+Generated cover letters and tailored docs will be saved here via the Google Docs MCP server.
+
+### Verify
+
+```bash
+gws sheets list
+```
+
+You should see your spreadsheet listed. If you get an auth error, re-run `gws auth login`.
+
+---
+
 ## gogcli Setup
 
 `gogcli` provides CLI access to Google Calendar and Contacts, useful for scheduling interviews and managing recruiter contacts.
