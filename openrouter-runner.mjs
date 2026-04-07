@@ -4,7 +4,7 @@
  * No Claude Code CLI required — uses OpenRouter free models with automatic fallback.
  *
  * Usage:
- *   node openrouter-runner.mjs scan              → Scan Greenhouse APIs for new job listings
+ *   node openrouter-runner.mjs scan              → Scan Greenhouse API companies for new listings
  *   node openrouter-runner.mjs evaluate <url>    → Evaluate a job by URL
  *   node openrouter-runner.mjs evaluate          → Paste job text interactively
  *   node openrouter-runner.mjs pipeline          → Process all pending URLs from pipeline.md
@@ -84,8 +84,6 @@ const blacklistedModels = new Set(loadPersistedBlacklist());
 if (blacklistedModels.size > 0) {
   console.log(`[blacklist] Loaded ${blacklistedModels.size} pre-blacklisted model(s) from disk.`);
 }
-// Timeout failure count per model — blacklist after 1 timeout
-const timeoutCounts = {};
 // 429 failure count per model — auto-blacklist after 3 consecutive 429s
 const rateLimitCounts = {};
 
@@ -126,9 +124,13 @@ async function loadFreeModels() {
 
     console.log(`[models] ${freeModels.length} free models loaded from OpenRouter API.`);
   } catch (e) {
-    console.warn(`[models] Could not fetch model list (${e.message}). Using provider-priority fallback.`);
-    // Fallback: return an empty list so callOpenRouter will throw a clear error
-    freeModels = [];
+    const reason = e instanceof Error ? e.message : String(e);
+    const hasKey = Boolean(process.env.OPENROUTER_API_KEY);
+    throw new Error(
+      `[models] Failed to fetch free model list: ${reason}. ` +
+      (hasKey ? 'Check that your API key is valid and that network access to OpenRouter is available.'
+               : 'OPENROUTER_API_KEY is not set — copy .env.example to .env and add your key.')
+    );
   }
 
   return freeModels;
@@ -173,12 +175,61 @@ async function callOpenRouter(systemPrompt, userMessage) {
     );
   }
 
+  // Allow pinning a specific model via CAREER_OPS_MODEL env var
+  const pinnedModel = process.env.CAREER_OPS_MODEL;
+  if (pinnedModel) {
+    process.stdout.write(`[model] ${pinnedModel} (pinned) ... `);
+    const body = JSON.stringify({
+      model: pinnedModel,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user',   content: userMessage  },
+      ],
+      max_tokens: MAX_TOKENS,
+    });
+    const ctrl = new AbortController();
+    const timerId = setTimeout(() => ctrl.abort(), MODEL_TIMEOUT_MS);
+    try {
+      const resp = await fetch(OPENROUTER_API_URL, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${key}`,
+          'Content-Type':  'application/json',
+          'HTTP-Referer':  'https://github.com/santifer/career-ops',
+          'X-Title':       'career-ops',
+        },
+        body,
+        signal: ctrl.signal,
+      });
+      if (!resp.ok) {
+        const t = await resp.text();
+        throw new Error(`HTTP ${resp.status}: ${t.slice(0, 120)}`);
+      }
+      const data = await resp.json();
+      if (data.error) throw new Error(data.error.message);
+      const content = data.choices?.[0]?.message?.content ?? '';
+      if (!content) throw new Error('Empty response');
+      console.log('OK');
+      return content;
+    } catch (e) {
+      if (e.name === 'AbortError') throw new Error(`Pinned model timed out after ${MODEL_TIMEOUT_MS / 1000}s`);
+      throw e;
+    } finally {
+      clearTimeout(timerId);
+    }
+  }
+
   const models = await loadFreeModels();
   let lastError;
 
+  if (models.length === 0) {
+    throw new Error(
+      'No free OpenRouter models are available. Model loading may have failed, or your account currently has no free models.'
+    );
+  }
   // Build the active (non-blacklisted) model list in rotation order
   const active = models.filter(m => !blacklistedModels.has(m));
-  if (active.length === 0) throw new Error('All models have been blacklisted this session.');
+  if (active.length === 0) throw new Error('All loaded models have been blacklisted this session.');
 
   for (let attempt = 0; attempt < active.length; attempt++) {
     const model = active[(modelIndex % active.length + attempt) % active.length];
@@ -194,27 +245,32 @@ async function callOpenRouter(systemPrompt, userMessage) {
         max_tokens: MAX_TOKENS,
       });
 
-      const timeout = new Promise((_, rej) =>
-        setTimeout(() => rej(new Error(`Timeout after ${MODEL_TIMEOUT_MS / 1000}s`)), MODEL_TIMEOUT_MS)
-      );
-
-      const request = fetch(OPENROUTER_API_URL, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${key}`,
-          'Content-Type':  'application/json',
-          'HTTP-Referer':  'https://github.com/santifer/career-ops',
-          'X-Title':       'career-ops',
-        },
-        body,
-      }).then(resp => {
+      const controller = new AbortController();
+      const timerId = setTimeout(() => controller.abort(), MODEL_TIMEOUT_MS);
+      let data;
+      try {
+        const resp = await fetch(OPENROUTER_API_URL, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${key}`,
+            'Content-Type':  'application/json',
+            'HTTP-Referer':  'https://github.com/santifer/career-ops',
+            'X-Title':       'career-ops',
+          },
+          body,
+          signal: controller.signal,
+        });
         if (!resp.ok) {
-          return resp.text().then(t => { throw new Error(`HTTP ${resp.status}: ${t.slice(0, 120)}`); });
+          const t = await resp.text();
+          throw new Error(`HTTP ${resp.status}: ${t.slice(0, 120)}`);
         }
-        return resp.json();
-      });
-
-      const data = await Promise.race([request, timeout]);
+        data = await resp.json();
+      } catch (e) {
+        if (e.name === 'AbortError') throw new Error(`Timeout after ${MODEL_TIMEOUT_MS / 1000}s`);
+        throw e;
+      } finally {
+        clearTimeout(timerId);
+      }
       if (data.error) throw new Error(data.error.message);
 
       const content = data.choices?.[0]?.message?.content ?? '';
@@ -318,6 +374,7 @@ async function fetchJobPage(url) {
     const r = await fetch(url, {
       headers: { 'User-Agent': 'Mozilla/5.0 (compatible; career-ops/1.0)' }
     });
+    if (!r.ok) throw new Error(`HTTP ${r.status} ${r.statusText}`);
     const html = await r.text();
     return html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 16_000);
   } catch (e) {
@@ -327,6 +384,10 @@ async function fetchJobPage(url) {
 
 // ---------------------------------------------------------------------------
 // portals.yml parser
+// Note: this is a minimal YAML subset parser. It handles simple scalar values,
+// quoted strings, and list items. It does NOT support: anchors/aliases (&/*),
+// multi-line strings (|/>), inline maps/sequences, or comments after values.
+// If portals.yml uses any of these, consider switching to the js-yaml package.
 // ---------------------------------------------------------------------------
 function parsePortals() {
   const raw = readFile('portals.yml');
@@ -466,10 +527,19 @@ function nextReportNum() {
   } catch { return 1; }
 }
 
-function extractCompanySlug(text) {
+function extractCompanySlug(text, url) {
+  // Try to extract from text (e.g. "Senior Engineer at Acme" or "Company: Acme")
   const m = text.match(/(?:at|@|company[:\s]+)\s*([A-Z][A-Za-z0-9]{2,25})/);
-  const name = m ? m[1] : 'company';
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  if (m) return m[1].toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  // Fall back to URL hostname (e.g. job-boards.greenhouse.io/acme → acme)
+  if (url) {
+    try {
+      const parts = new URL(url).pathname.split('/').filter(Boolean);
+      const slug = parts[0] ?? 'company';
+      return slug.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    } catch { /* not a valid URL */ }
+  }
+  return 'company';
 }
 
 // ---------------------------------------------------------------------------
@@ -477,8 +547,10 @@ function extractCompanySlug(text) {
 // ---------------------------------------------------------------------------
 
 // -- SCAN --
+// Note: scan currently supports Greenhouse API companies only (configured in portals.yml).
+// Ashby and Lever portal scanning are not implemented in this runner.
 async function cmdScan() {
-  console.log('Scanning portals...\n');
+  console.log('Scanning Greenhouse portals...\n');
 
   let portals;
   try { portals = parsePortals(); }
@@ -523,9 +595,13 @@ async function cmdEvaluate(input, ctx) {
     console.log('Paste job description or URL, then press Enter on an empty line:\n');
     const rl = readline.createInterface({ input: process.stdin });
     const lines = [];
-    for await (const line of rl) {
-      if (line === '') break;
-      lines.push(line);
+    try {
+      for await (const line of rl) {
+        if (line === '') break;
+        lines.push(line);
+      }
+    } finally {
+      rl.close();
     }
     jdText = lines.join('\n');
     if (!jdText.trim()) { console.log('No input provided.'); return null; }
@@ -554,11 +630,20 @@ async function cmdEvaluate(input, ctx) {
   // Save report
   const today   = new Date().toISOString().split('T')[0];
   const num     = nextReportNum();
-  const slug    = extractCompanySlug(jdText);
+  const slug    = extractCompanySlug(jdText, typeof input === 'string' ? input : null);
   const numStr  = String(num).padStart(3, '0');
   const relPath = `reports/${numStr}-${slug}-${today}.md`;
 
   writeFile(relPath, `**URL:** ${input || '(pasted)'}\n\n${result}`);
+
+  // Write a TSV entry to batch/tracker-additions/ so merge-tracker.mjs can
+  // pick it up and add the report to data/applications.md
+  const scoreMatch  = result.match(/(?:score|puntuaci[oó]n)[^\d]*(\d+\.?\d*)/i);
+  const scoreStr    = scoreMatch ? scoreMatch[1] : '';
+  const companyName = slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  const tsvLine     = `${num}\t${today}\t${companyName}\t(see report)\tEvaluada\t${scoreStr}\t\treports/${numStr}-${slug}-${today}.md\n`;
+  const tsvFile     = `batch/tracker-additions/or-${numStr}-${slug}.tsv`;
+  writeFile(tsvFile, `num\tdate\tcompany\trole\tstatus\tscore\tpdf\treport\n${tsvLine}`);
 
   console.log(`\n✅ Report saved: ${relPath}`);
   console.log('\n─── EVALUATION ──────────────────────────────────────\n');
@@ -689,6 +774,6 @@ SETUP:
 MODEL SELECTION:
   - Free models are fetched automatically via the OpenRouter API at runtime.
   - They are tried in sequence; if one fails the next is used automatically.
-  - Override with: CAREER_OPS_MODEL=deepseek/deepseek-r1:free node openrouter-runner.mjs eval <url>
+  - Pin a model:  CAREER_OPS_MODEL=deepseek/deepseek-r1:free node openrouter-runner.mjs eval <url>
 `);
 }
