@@ -178,7 +178,7 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 | Asks to compare offers | `ofertas` |
 | Wants LinkedIn outreach | `contacto` |
 | Asks for company research | `deep` |
-| Preps for interview at specific company | `interview-intel` |
+| Preps for interview at specific company | `interview-prep` |
 | Wants to generate CV/PDF | `pdf` |
 | Evaluates a course/cert | `training` |
 | Evaluates portfolio project | `project` |

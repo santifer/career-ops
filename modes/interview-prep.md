@@ -1,4 +1,4 @@
-# Mode: interview-intel — Company-Specific Interview Intelligence
+# Mode: interview-prep — Company-Specific Interview Intelligence
 
 When the user asks to prep for an interview at a specific company+role, or when an evaluation scores 4.0+ and the user updates status to `Interview`, run this mode.
 
