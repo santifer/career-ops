@@ -125,6 +125,8 @@ Same content generation as the HTML flow (Steps 1-11 above):
 - Select top competencies from JD requirements
 - Inject keywords naturally (NEVER invent)
 
+**IMPORTANT — Character budget rule:** Each replacement text MUST be approximately the same length as the original text it replaces (within ±15% character count). If tailored content is longer, condense it. The Canva design has fixed-size text boxes — longer text causes overlapping with adjacent elements. Count the characters in each original element from Step 2 and enforce this budget when generating replacements.
+
 #### Step 4 — Apply edits
 
 a. `start-editing-transaction` on the duplicate design
@@ -133,14 +135,32 @@ b. `perform-editing-operations` with `find_and_replace_text` for each section:
    - Replace each experience bullet with reordered/rewritten bullets
    - Replace competency/skills text with JD-matched terms
    - Replace project descriptions with top relevant projects
-c. Show the user what was changed and ask for approval
-d. `commit-editing-transaction` to save (ONLY after user approval)
+c. **Verify layout before commit:**
+   - `get-design-thumbnail` with the transaction_id and page_index=1
+   - Visually inspect the thumbnail for: text overlapping between sections, text cut off or extending beyond its container, uneven spacing between entries, text too small to read
+   - If issues are found:
+     - Use `resize_element` to adjust text box widths
+     - Use `position_element` to reposition overlapping elements
+     - Use `format_text` to reduce font_size (by 1-2px) or line_height (e.g., 1.5 → 1.2) if text overflows
+     - Re-check with another `get-design-thumbnail`
+   - Repeat until layout is clean
+d. Show the user the final preview and ask for approval
+e. `commit-editing-transaction` to save (ONLY after user approval)
 
-#### Step 5 — Export PDF
+#### Step 5 — Export and download PDF
 
 a. `export-design` the duplicate as PDF (format: a4 or letter based on JD location)
-b. Save to `output/cv-{candidate}-{company}-canva-{YYYY-MM-DD}.pdf`
-c. Report: PDF path, Canva design URL (for manual tweaking), page count
+b. **IMMEDIATELY** download the PDF using Bash:
+   ```bash
+   curl -sL -o "output/cv-{candidate}-{company}-canva-{YYYY-MM-DD}.pdf" "{download_url}"
+   ```
+   The export URL is a pre-signed S3 link that expires in ~2 hours. Download it right away.
+c. Verify the download:
+   ```bash
+   file output/cv-{candidate}-{company}-canva-{YYYY-MM-DD}.pdf
+   ```
+   Must show "PDF document". If it shows XML or HTML, the URL expired — re-export and retry.
+d. Report: PDF path, file size, Canva design URL (for manual tweaking)
 
 #### Error handling
 
