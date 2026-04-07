@@ -1,0 +1,58 @@
+# US Job Board Configuration
+# Maps job boards to their optimal data source and search strategy.
+
+boards:
+  - name: LinkedIn Jobs
+    url: https://www.linkedin.com/jobs
+    source: brightdata
+    method: scrape
+    notes: >
+      Largest US job board. Bright Data handles LinkedIn's anti-bot measures.
+      Use structured data extraction for job title, company, location, and posting date.
+    enabled: true
+
+  - name: Indeed
+    url: https://www.indeed.com
+    source: tavily
+    method: web_search
+    notes: >
+      Broadest reach across industries. Tavily web search retrieves structured
+      job listings with salary estimates when available.
+    enabled: true
+
+  - name: Wellfound
+    url: https://wellfound.com
+    source: exa
+    method: semantic
+    notes: >
+      Startup-focused board (formerly AngelList Talent). Exa semantic search
+      excels here because Wellfound listings include detailed role descriptions
+      and salary/equity transparency.
+    enabled: true
+
+  - name: Built In
+    url: https://builtin.com
+    source: tavily
+    method: web_search
+    notes: >
+      Local tech community boards organized by city. Good for finding roles
+      at mid-size companies that may not post on LinkedIn.
+    enabled: true
+
+  - name: Otta
+    url: https://otta.com
+    source: firecrawl
+    method: structured_extract
+    notes: >
+      Curated job matching platform. Requires authenticated scraping for full
+      listing data. Disabled by default due to rate limits.
+    enabled: false
+
+  - name: Levels.fyi Jobs
+    url: https://www.levels.fyi/jobs
+    source: firecrawl
+    method: structured_extract
+    notes: >
+      Every listing includes total compensation data. Invaluable for
+      negotiation preparation and salary benchmarking.
+    enabled: true

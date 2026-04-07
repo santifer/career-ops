@@ -1,0 +1,54 @@
+# Career-Ops Intelligence Engine Configuration
+# Copy this file to config/intel.yml and fill in your API keys.
+# All API keys should be set as environment variables (never hardcode secrets).
+
+# ─── API Sources ────────────────────────────────────────────────────────────────
+
+exa:
+  key_env: EXA_API_KEY                    # https://exa.ai — semantic search
+  monthly_budget: 50                      # USD cap for Exa API usage per month
+
+brightdata:
+  key_env: BRIGHTDATA_API_KEY             # https://brightdata.com — web scraping & LinkedIn
+  monthly_budget: 100                     # USD cap for Bright Data usage per month
+  max_linkedin_lookups_per_session: 10    # Rate-limit LinkedIn profile lookups per scan session
+
+tavily:
+  key_env: TAVILY_API_KEY                 # https://tavily.com — AI-powered web search
+  monthly_budget: 30                      # USD cap for Tavily API usage per month
+
+firecrawl:
+  key_env: FIRECRAWL_API_KEY              # https://firecrawl.dev — structured web extraction
+  monthly_budget: 30                      # USD cap for Firecrawl API usage per month
+
+valyu:
+  key_env: VALYU_API_KEY                  # https://valyu.network — real-time data marketplace
+  monthly_budget: 20                      # USD cap for Valyu API usage per month
+
+parallel:
+  key_env: PARALLEL_API_KEY               # https://parallel.ai — enrichment & analysis
+  monthly_budget: 25                      # USD cap for Parallel API usage per month
+
+# ─── Google Integration ─────────────────────────────────────────────────────────
+
+google:
+  docs_mcp: true                          # Enable Google Docs MCP server for cover letters & docs
+  gogcli: true                            # Enable gogcli for Google Calendar & Contacts
+
+# ─── Local AI (Gemma) ───────────────────────────────────────────────────────────
+
+gemma:
+  model: "gemma4:26b"                     # Ollama model name for local reasoning
+  max_iterations: 20                      # Max self-improvement iterations per cycle
+  fallback_to_builtin: true               # Fall back to Claude if Gemma is unavailable
+
+# ─── Schedules ──────────────────────────────────────────────────────────────────
+# Intervals use shorthand: h = hours, d = days, "overnight" = 02:00-06:00 local
+
+schedules:
+  prospect_scan: "6h"                     # Scan portals for new job postings
+  company_watch: "12h"                    # Monitor target companies for signals (funding, layoffs, hiring surges)
+  market_trends: "24h"                    # Aggregate market-level salary & demand trends
+  self_improve_cycle: "overnight"         # Run calibration & strategy refinement (low-priority, off-peak)
+  outreach_research: "24h"               # Research hiring managers & draft outreach for high-score offers
+  gmail_monitor: "4h"                     # Check Gmail for recruiter responses & interview invites

@@ -1,0 +1,13 @@
+{
+  "name": "@career-ops/intel",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "OSINT intelligence engine for career-ops",
+  "scripts": {
+    "test": "node --test 'intel/**/*.test.mjs'",
+    "test:router": "node --test intel/router.test.mjs",
+    "test:sources": "node --test 'intel/sources/*.test.mjs'"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
