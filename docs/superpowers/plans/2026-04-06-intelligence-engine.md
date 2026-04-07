@@ -8,6 +8,8 @@
 
 **Tech Stack:** Node.js (ESM/mjs), existing Playwright, 6 OSINT APIs (Exa, BrightData, Tavily, Firecrawl, Valyu, Parallel.ai), Google Docs MCP server, gogcli CLI, Gemma 4 via Ollama, Gmail MCP tools, Claude Code scheduling.
 
+**Scope:** This is **Phase 1** of the intelligence engine — foundation, router, modes, templates, and setup. Phase 2 (pipeline .mjs implementations, self-improvement runners, Gemma 4 eval loop) will be planned separately once Phase 1 is tested and the system has accumulated evaluation data.
+
 **Spec:** `docs/superpowers/specs/2026-04-06-intelligence-engine-design.md`
 
 ---
@@ -402,10 +404,27 @@ Write the full onboarding README as specified in the design spec Section 12. Con
 
 Write the detailed setup guide as specified in the design spec Section 12. Content: Prerequisites, API key table, Google Docs MCP setup, gogcli setup, Gemma 4 setup, verify instructions.
 
-- [ ] **Step 14: Commit scaffolding**
+- [ ] **Step 14: Create intel/sources/README.md**
+
+```markdown
+# OSINT Source Modules
+
+Source modules will be added in Phase 2. Each module wraps one OSINT API
+and exposes a standard interface:
+
+- `execute(query)` → `{ results, confidence, cost }`
+- `estimateCost(queryType)` → estimated cost in USD
+- `isAvailable()` → boolean (checks env var for API key)
+
+The router (../router.mjs) determines which source to call.
+For now, Claude uses MCP tools and skills directly, guided by
+the router's `formatRoutingInstructions()` output.
+```
+
+- [ ] **Step 15: Commit scaffolding**
 
 ```bash
-git add intel/ config/intel.example.yml config/strategy-ledger.template.md config/voice-profile.template.md
+git add intel/ config/intel.example.yml config/strategy-ledger.template.md config/voice-profile.template.md intel/sources/README.md
 git commit -m "feat(intel): add intelligence engine scaffolding
 
 Directory structure, config templates, US market files,
@@ -507,6 +526,20 @@ describe('getRoutingChain', () => {
     assert.equal(chain[0], 'valyu');
   });
 });
+
+describe('classifyQuery edge cases (ambiguous queries)', () => {
+  it('prefers FIND_EMAIL over FIND_PERSON when both could match', () => {
+    assert.equal(classifyQuery('Find email for the VP of Engineering at Stripe'), QUERY_TYPES.FIND_EMAIL);
+  });
+
+  it('prefers SCRAPE_URL when query contains a URL regardless of other keywords', () => {
+    assert.equal(classifyQuery('Find the hiring manager from https://jobs.lever.co/stripe/123'), QUERY_TYPES.SCRAPE_URL);
+  });
+
+  it('routes financial queries to COMPANY_INTEL_DEEP (merged type)', () => {
+    assert.equal(classifyQuery('Stripe financial health and regulatory filings'), QUERY_TYPES.COMPANY_INTEL_DEEP);
+  });
+});
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
@@ -531,12 +564,11 @@ export const QUERY_TYPES = {
   DISCOVER_JOBS: 'discover_jobs',
   SCRAPE_URL: 'scrape_url',
   COMPANY_INTEL_QUICK: 'company_intel_quick',
-  COMPANY_INTEL_DEEP: 'company_intel_deep',
+  COMPANY_INTEL_DEEP: 'company_intel_deep',  // also covers financial/regulatory queries
   SIMILAR_COMPANIES: 'similar_companies',
   LINKEDIN_PROFILE: 'linkedin_profile',
   LINKEDIN_JOBS: 'linkedin_jobs',
   MARKET_TRENDS: 'market_trends',
-  FINANCIAL_REGULATORY: 'financial_regulatory',
   MONITOR_CHANGES: 'monitor_changes',
   INFER_EMAIL_FORMAT: 'infer_email_format',
 };
@@ -552,7 +584,6 @@ const ROUTING_TABLE = {
   [QUERY_TYPES.LINKEDIN_PROFILE]:    ['brightdata'],
   [QUERY_TYPES.LINKEDIN_JOBS]:       ['brightdata', 'exa'],
   [QUERY_TYPES.MARKET_TRENDS]:       ['tavily', 'valyu', 'exa'],
-  [QUERY_TYPES.FINANCIAL_REGULATORY]:['valyu', 'tavily'],
   [QUERY_TYPES.MONITOR_CHANGES]:     ['parallel', 'brightdata'],
   [QUERY_TYPES.INFER_EMAIL_FORMAT]:  ['firecrawl', 'exa'],
 };
@@ -567,7 +598,7 @@ const PATTERNS = [
   { type: QUERY_TYPES.INFER_EMAIL_FORMAT,  re: /\bemail\s+(format|pattern)\b/i },
   { type: QUERY_TYPES.SIMILAR_COMPANIES,   re: /\b(similar|like)\b.*\b(compan|startup)/i },
   { type: QUERY_TYPES.COMPANY_INTEL_DEEP,  re: /\b(deep|full|comprehensive)\b.*\b(research|analysis|intel)/i },
-  { type: QUERY_TYPES.COMPANY_INTEL_DEEP,  re: /\b(financial|regulatory|funding|runway)\b/i },
+  { type: QUERY_TYPES.COMPANY_INTEL_DEEP,  re: /\b(financial|regulatory|funding|runway|filings|revenue)\b/i },  // merged: covers financial/regulatory queries
   { type: QUERY_TYPES.COMPANY_INTEL_QUICK, re: /\b(tell me about|what is|company info|tech stack)\b/i },
   { type: QUERY_TYPES.MARKET_TRENDS,       re: /\b(trend|market|salary|compensation|hiring rate)\b/i },
   { type: QUERY_TYPES.MONITOR_CHANGES,     re: /\b(monitor|watch|alert|notify)\b/i },
@@ -617,7 +648,7 @@ export function formatRoutingInstructions(query, queryType, chain) {
     return `${i + 1}. [${role}] ${desc}`;
   });
 
-  return `Query type: ${queryType}\nQuery: "${query}"\n\nRouting chain:\n${steps.join('\n')}\n\nUse PRIMARY first. If it returns low-confidence results or fails, try FALLBACK.`;
+  return `Query type: ${queryType}\nQuery: "${query}"\n\nRouting chain:\n${steps.join('\n')}\n\nUse PRIMARY first. If it returns low-confidence results or fails, try FALLBACK.\nAccumulate partial results across sources — combine and deduplicate before returning.`;
 }
 ```
 
@@ -1089,7 +1120,7 @@ describe('Integration: Router end-to-end', () => {
 - [ ] **Step 2: Run all tests**
 
 ```bash
-node --test intel/*.test.mjs
+node --test 'intel/**/*.test.mjs'
 ```
 
 Expected: All tests PASS.
@@ -1106,17 +1137,15 @@ git commit -m "test(intel): add integration tests for setup flow and router"
 ### Task 13: Final Assembly
 
 **Files:**
-- Modify: root `package.json` (add intel scripts)
 - Create: `intel/.gitignore`
 
-- [ ] **Step 1: Add npm scripts to root package.json**
+- [ ] **Step 1: Verify intel/package.json scripts work**
 
-Add to `scripts`:
-```json
-"intel:test": "node --test intel/*.test.mjs",
-"intel:setup-check": "node -e \"import('./intel/engine.mjs').then(m => console.log(m.getSetupStatus(m.checkSetup('.'))))\"",
-"intel:route": "node -e \"import('./intel/router.mjs').then(r => { const q = process.argv[1]; const t = r.classifyQuery(q); const c = r.getRoutingChain(t, []); console.log(r.formatRoutingInstructions(q, t, c)); })\" --"
+```bash
+cd intel && npm test && cd ..
 ```
+
+All npm scripts live in `intel/package.json`, NOT the root. This preserves the additive-only constraint.
 
 - [ ] **Step 2: Create intel/.gitignore**
 
@@ -1127,7 +1156,7 @@ Add to `scripts`:
 - [ ] **Step 3: Run final test suite**
 
 ```bash
-npm run intel:test
+cd intel && npm test && cd ..
 ```
 
 Expected: All tests PASS.
@@ -1135,7 +1164,7 @@ Expected: All tests PASS.
 - [ ] **Step 4: Run setup check**
 
 ```bash
-npm run intel:setup-check
+node -e "import('./intel/engine.mjs').then(m => console.log(m.getSetupStatus(m.checkSetup('.'))))"
 ```
 
 Expected: Status with "Ready: NO" (user hasn't run setup yet).
@@ -1143,9 +1172,135 @@ Expected: Status with "Ready: NO" (user hasn't run setup yet).
 - [ ] **Step 5: Commit**
 
 ```bash
-git add package.json intel/.gitignore
-git commit -m "feat(intel): finalize phase 1 with npm scripts and test suite"
+git add intel/.gitignore
+git commit -m "feat(intel): finalize phase 1 with gitignore and test verification"
 ```
+
+---
+
+## Phase 2: Pipeline Implementations (builds on Phase 1)
+
+> Phase 2 should be planned AFTER Phase 1 is deployed and has accumulated 10+ evaluations with user feedback. The tasks below are stubs — each will be fully specified in a separate planning cycle.
+
+### Task 14: File Locking Module
+
+**Files:**
+- Create: `intel/lock.mjs`
+- Create: `intel/lock.test.mjs`
+
+Implement advisory file locking for concurrent schedule writes. Pattern: acquire lock → read → write → release. Stale lock detection (>60s). Used by all pipelines that write to shared data files.
+
+### Task 15: Budget Reservation Module
+
+**Files:**
+- Create: `intel/budget.mjs`
+- Create: `intel/budget.test.mjs`
+- Create: `data/intel-usage.log` (on first use)
+
+Pre-debit budget reservation before API calls. `reserveBudget(source, estimate)` → `commitBudget(source, actual)` → `releaseBudget(source)` on failure. Atomic operations using lockfile.
+
+### Task 16: Strategy Engine
+
+**Files:**
+- Create: `intel/self-improve/strategy-engine.mjs`
+- Create: `intel/self-improve/strategy-engine.test.mjs`
+
+Read/write strategy-ledger.md. Principle promotion (n>=10 across 3+ companies). Conflict detection vs profile.yml deal-breakers. Bias detection (re-evaluate principles every 30 days). Pruning when accuracy <60%.
+
+### Task 17: Exemplar Manager
+
+**Files:**
+- Create: `intel/self-improve/exemplar-manager.mjs`
+- Create: `intel/self-improve/exemplar-manager.test.mjs`
+
+Manage config/exemplars/ directory. Store best past evaluations as few-shot examples. Replace weaker exemplars when better ones arrive. Convergence toward user's actual preferences.
+
+### Task 18: Gemma 4 Runner
+
+**Files:**
+- Create: `intel/self-improve/gemma-runner.mjs`
+- Create: `intel/self-improve/gemma-runner.test.mjs`
+
+Ollama integration for local Gemma 4 eval loops. Autoresearch pattern: iterate → evaluate → keep if better → discard if not. Transfer validation: run 3-5 test evals on Claude after Gemma 4 proposes changes. Graceful fallback if Ollama not running.
+
+### Task 19: HM Discovery Pipeline
+
+**Files:**
+- Create: `intel/pipelines/hm-discovery.mjs`
+- Create: `intel/pipelines/hm-discovery.test.mjs`
+
+6-stage pipeline from spec Section 5. Dual confidence scoring (person vs email). PII tagging for purge command. Lockfile for outreach.md writes.
+
+### Task 20: Email Inference Pipeline
+
+**Files:**
+- Create: `intel/pipelines/email-inference.mjs`
+- Create: `intel/pipelines/email-inference.test.mjs`
+
+Email format detection via Firecrawl team page scraping + Exa search. Pattern library (first.last, flast, first, etc.). Ambiguity detection for common names.
+
+### Task 21: Prospector Pipeline
+
+**Files:**
+- Create: `intel/pipelines/prospector.mjs`
+- Create: `intel/pipelines/prospector.test.mjs`
+
+3 discovery modes (semantic, signal, sweep). Cross-source dedup by normalized company+role tuple. 30-day prospect expiry. Lockfile for prospects.md writes.
+
+### Task 22: Gmail IO Pipeline
+
+**Files:**
+- Create: `intel/pipelines/gmail-io.mjs`
+- Create: `intel/pipelines/gmail-io.test.mjs`
+
+Gmail draft creation, response monitoring with resilient thread matching (thread ID + subject+recipient fallback + company+date proximity). Voice learning with scoped rules (universal vs industry-specific vs one-off). ATS email suggestions (to intelligence.md, NOT applications.md).
+
+### Task 23: Google Docs Resume Pipeline
+
+**Files:**
+- Create: `intel/pipelines/gdocs-resume.mjs`
+- Create: `intel/pipelines/gdocs-resume.test.mjs`
+
+Create/update personalized CVs in Google Docs via MCP. Two-way sync with cv.md. Share link tracking in outreach.md. Export via gogcli.
+
+### Task 24: Company Intel Pipeline
+
+**Files:**
+- Create: `intel/pipelines/company-intel.mjs`
+- Create: `intel/pipelines/company-intel.test.mjs`
+
+Deep company research using router chain. Synthesize findings into structured report. Save to intelligence.md. Lockfile for shared file writes.
+
+### Task 25: Outreach Drafter Pipeline
+
+**Files:**
+- Create: `intel/pipelines/outreach-drafter.mjs`
+- Create: `intel/pipelines/outreach-drafter.test.mjs`
+
+Voice-profile-aware outreach drafting. 2 variants (LinkedIn DM + email). Gmail draft creation with error handling for OAuth expiry. Google Docs resume creation per role.
+
+### Task 26: PII Purge Command
+
+**Files:**
+- Create: `intel/purge-pii.mjs`
+- Create: `modes/purge.md`
+
+Scan data/outreach.md, data/intelligence.md, reports/ for PII tags. Offer redaction/deletion for entries older than configurable retention (default 90 days).
+
+### Task 27: Eval Loop Runner
+
+**Files:**
+- Create: `intel/self-improve/eval-loop.mjs`
+- Create: `intel/self-improve/eval-loop.test.mjs`
+
+Autoresearch-style tight eval loop. Reads test set from applications + reports. Binary eval criteria (GEPA-inspired). Gemma 4 reflection on failures. Transfer validation on Claude. Human gate for all changes.
+
+### Task 28: Harness Optimizer
+
+**Files:**
+- Create: `intel/self-improve/harness-optimizer.mjs`
+
+Meta-harness optimization (Ouroboros pattern). Analyzes Loop 2 history. Proposes updated eval criteria when Loop 2 plateaus. Monthly trigger.
 
 ---
 
@@ -1153,23 +1308,39 @@ git commit -m "feat(intel): finalize phase 1 with npm scripts and test suite"
 
 ### What's Built After This Plan
 
-| Component | Files | Tested |
-|-----------|-------|--------|
-| Directory scaffolding + templates | `intel/`, `config/` templates | N/A |
-| OSINT Router (query classification + routing) | `intel/router.mjs` | Yes |
-| Engine orchestrator (setup checker) | `intel/engine.mjs` | Yes |
-| Setup generators (onboarding) | `intel/setup.mjs` | Yes |
-| OSINT mode (deep research) | `modes/osint.md` | N/A (mode file) |
-| Prospect mode (job discovery) | `modes/prospect.md` | N/A (mode file) |
-| Outreach mode (HM + Gmail + GDocs) | `modes/outreach.md` | N/A (mode file) |
-| Improve mode (self-improvement) | `modes/improve.md` | N/A (mode file) |
-| Self-improvement prompts | `intel/self-improve/prompts/` | N/A (prompts) |
-| Schedule definitions | `intel/schedules/` | N/A (definitions) |
-| US market knowledge | `intel/market/` | N/A (content) |
-| Output templates | `intel/templates/` | N/A (templates) |
-| Onboarding docs | `intel/README.md`, `SETUP.md` | N/A (docs) |
-| Integration templates | `intel/*-append.md` | N/A (templates) |
-| Integration tests | `intel/integration.test.mjs` | Yes |
+| Component | Files | Tested | Phase |
+|-----------|-------|--------|-------|
+| Directory scaffolding + templates | `intel/`, `config/` templates | N/A | Phase 1 |
+| OSINT Router (query classification + routing) | `intel/router.mjs` | Yes | Phase 1 |
+| Engine orchestrator (setup checker) | `intel/engine.mjs` | Yes | Phase 1 |
+| Setup generators (onboarding) | `intel/setup.mjs` | Yes | Phase 1 |
+| OSINT mode (deep research) | `modes/osint.md` | N/A (mode file) | Phase 1 |
+| Prospect mode (job discovery) | `modes/prospect.md` | N/A (mode file) | Phase 1 |
+| Outreach mode (HM + Gmail + GDocs) | `modes/outreach.md` | N/A (mode file) | Phase 1 |
+| Improve mode (self-improvement) | `modes/improve.md` | N/A (mode file) | Phase 1 |
+| Self-improvement prompts | `intel/self-improve/prompts/` | N/A (prompts) | Phase 1 |
+| Schedule definitions | `intel/schedules/` | N/A (definitions) | Phase 1 |
+| US market knowledge | `intel/market/` | N/A (content) | Phase 1 |
+| Output templates | `intel/templates/` | N/A (templates) | Phase 1 |
+| Source modules README | `intel/sources/README.md` | N/A (docs) | Phase 1 |
+| Onboarding docs | `intel/README.md`, `SETUP.md` | N/A (docs) | Phase 1 |
+| Integration templates | `intel/*-append.md` | N/A (templates) | Phase 1 |
+| Integration tests | `intel/integration.test.mjs` | Yes | Phase 1 |
+| File locking module | `intel/lock.mjs` | Yes | Phase 2 (stub) |
+| Budget reservation module | `intel/budget.mjs` | Yes | Phase 2 (stub) |
+| Strategy engine | `intel/self-improve/strategy-engine.mjs` | Yes | Phase 2 (stub) |
+| Exemplar manager | `intel/self-improve/exemplar-manager.mjs` | Yes | Phase 2 (stub) |
+| Gemma 4 runner | `intel/self-improve/gemma-runner.mjs` | Yes | Phase 2 (stub) |
+| HM discovery pipeline | `intel/pipelines/hm-discovery.mjs` | Yes | Phase 2 (stub) |
+| Email inference pipeline | `intel/pipelines/email-inference.mjs` | Yes | Phase 2 (stub) |
+| Prospector pipeline | `intel/pipelines/prospector.mjs` | Yes | Phase 2 (stub) |
+| Gmail IO pipeline | `intel/pipelines/gmail-io.mjs` | Yes | Phase 2 (stub) |
+| Google Docs resume pipeline | `intel/pipelines/gdocs-resume.mjs` | Yes | Phase 2 (stub) |
+| Company intel pipeline | `intel/pipelines/company-intel.mjs` | Yes | Phase 2 (stub) |
+| Outreach drafter pipeline | `intel/pipelines/outreach-drafter.mjs` | Yes | Phase 2 (stub) |
+| PII purge command | `intel/purge-pii.mjs` | N/A | Phase 2 (stub) |
+| Eval loop runner | `intel/self-improve/eval-loop.mjs` | Yes | Phase 2 (stub) |
+| Harness optimizer | `intel/self-improve/harness-optimizer.mjs` | N/A | Phase 2 (stub) |
 
 ### Post-Plan: User Runs Setup
 
@@ -1180,11 +1351,12 @@ After executing this plan, the user says **"set up the intelligence engine"** wh
 4. Sets up background schedules (if `/schedule` available)
 5. Runs first prospect scan
 
-### Future Enhancement Plans (separate planning cycles)
+### Phase 2: What Comes Next
 
-- Exemplar library management (needs 10+ evaluations)
-- Gemma 4 eval loop runner script (needs exemplar library)
-- BrightData / Parallel.ai API wrapper scripts
-- Google Docs resume sync pipeline
-- Voice profile Gmail analysis pipeline
-- Dashboard integration (extend Go TUI)
+Phase 2 tasks (14-28) are stubs above. Each will be fully specified in a separate planning cycle after Phase 1 is deployed and the system has accumulated 10+ evaluations with user feedback. Key Phase 2 deliverables:
+
+- File locking and budget reservation (infrastructure)
+- Strategy engine, exemplar manager, Gemma 4 runner (self-improvement)
+- HM discovery, email inference, prospector, company intel (OSINT pipelines)
+- Gmail IO, Google Docs resume, outreach drafter (communication pipelines)
+- PII purge, eval loop runner, harness optimizer (maintenance and meta-optimization)

@@ -27,6 +27,14 @@ Career-ops today is reactive: the user pastes a URL, the system evaluates it. Di
 - Replacing Claude as the production model (Gemma 4 is experimentation only)
 - Modifying existing career-ops files or breaking the data contract
 
+### Controlled Exceptions
+
+Two existing files receive clearly-delimited appends during intel setup (wrapped in HTML comments for clean identification and removal):
+- `CLAUDE.md` — new commands table appended
+- `DATA_CONTRACT.md` — new file classifications appended
+
+These are the ONLY modifications to existing files. They are necessary because Claude must know about intel commands, and the data contract must classify new files.
+
 ---
 
 ## 2. Architecture Overview
@@ -174,12 +182,15 @@ config/                                 # NEW user config files
 | `config/strategy-ledger.md` | User | Never |
 | `config/voice-profile.md` | User | Never |
 | `config/exemplars/` | User | Never |
+| `data/intel-usage.log` | User | Never |
 
 ---
 
 ## 4. OSINT Router — Intelligent API Dispatch
 
 The router classifies each query and routes to the optimal API(s) based on query type, cost, and availability.
+
+> **Note:** The `FINANCIAL_REGULATORY` query type was merged into `COMPANY_INTEL_DEEP` since both route to Valyu as the primary source. Keeping them separate created dead code (no regex mapped to the financial type). Deep company intel now covers financial, regulatory, and market position research.
 
 ### Routing Table
 
@@ -190,12 +201,11 @@ The router classifies each query and routes to the optimal API(s) based on query
 | Discover matching jobs | Exa (semantic) | Parallel (Search) | Tavily (web) |
 | Scrape a job posting URL | Firecrawl (extract) | Browser (Playwright) | Tavily (extract) |
 | Company intel (quick) | Tavily (search) | Exa (company) | — |
-| Company intel (deep) | Valyu (DeepResearch) | Parallel (Task) | Tavily + Firecrawl |
+| Company intel (deep) | Valyu (DeepResearch) | Parallel (Task) | Tavily + Firecrawl | <!-- also handles financial/regulatory queries -->
 | Find similar companies | Exa (findSimilar) | Parallel (FindAll) | — |
 | LinkedIn profile data | BrightData | — | — |
 | LinkedIn job search | BrightData | Exa | — |
 | Market trends / tactics | Tavily (search) | Valyu (Answer) | Exa |
-| Financial / regulatory | Valyu | Tavily | — |
 | Monitor for changes | Parallel (Monitor) | BrightData (scheduled) | — |
 | Infer email format | Firecrawl (team pages) | Exa | — |
 
@@ -204,23 +214,31 @@ The router classifies each query and routes to the optimal API(s) based on query
 ```javascript
 // router.mjs pseudocode
 async function route(query) {
-  const type = classifyQuery(query);        // LLM or pattern match
-  const available = getEnabledAPIs();        // from config/intel.yml
-  const chain = ROUTING_TABLE[type];         // primary → secondary → tertiary
+  const type = classifyQuery(query);
+  const available = getEnabledAPIs();
+  const chain = ROUTING_TABLE[type];
+  const partialResults = [];
   
+  // Pre-debit budget reservation (not post-debit logging)
   for (const source of chain) {
     if (!available.includes(source)) continue;
-    if (overBudget(source)) continue;
+    if (!reserveBudget(source, estimatedCost(type))) continue;
     
     const result = await sources[source].execute(query);
-    logUsage(source, result.cost);
+    commitBudget(source, result.actualCost);  // adjust reservation to actual
     
     if (result.confidence >= 0.7) return result;
-    // Low confidence: try next in chain
+    partialResults.push(result);  // keep low-confidence results for aggregation
+  }
+  
+  // Attempt to merge partial results before falling back
+  if (partialResults.length > 0) {
+    const merged = mergeResults(partialResults);
+    if (merged.confidence >= 0.5) return merged;
   }
   
   // All OSINT sources exhausted: fall back to WebSearch + Playwright
-  return builtinFallback(query);
+  return builtinFallback(query, partialResults);  // pass partials as context
 }
 ```
 
@@ -231,6 +249,16 @@ If an API key is missing, the router skips it. The system always works with what
 ### Cost Awareness
 
 Each source module tracks credits/cost per call. The router respects `monthly_budget` caps in `config/intel.yml` and logs usage to `data/intel-usage.log`. At 80% budget: warn user and shift to cheaper alternatives.
+
+### Concurrency Safety
+
+Background schedules can overlap (e.g., 6h + 12h + 24h all fire at the 24h mark). Two mechanisms prevent corruption:
+
+**File locking:** All writes to shared data files (`data/outreach.md`, `data/prospects.md`, `data/intelligence.md`) use advisory lockfiles (`data/.outreach.lock`, etc.). A schedule acquires the lock before reading, writes atomically, then releases. Stale locks (>60s) are auto-cleared.
+
+**Budget reservation:** API budget is pre-debited before the call (not post-logged). `reserveBudget(source, estimate)` atomically decrements the budget in `data/intel-usage.log`. If the call costs less, `commitBudget()` refunds the difference. If the call fails, `releaseBudget()` returns the full reservation. This prevents concurrent schedules from each reading "under budget" simultaneously.
+
+**Staged writes:** As an alternative to in-place file locking, schedules can write to individual staging files (e.g., `data/.pending/prospects-{timestamp}.md`) and a merge step consolidates them. This mirrors the existing `batch/tracker-additions/` pattern.
 
 ### `config/intel.yml` Structure
 
@@ -327,7 +355,13 @@ Given a company + role, find WHO is hiring and how to reach them — from the pe
   3. Pattern detection: `first.last@` vs `flast@` vs `first@` etc.
   4. Validate against known patterns
 - BrightData: check if LinkedIn profile has public contact info
-- Output: email (confirmed or inferred with confidence), LinkedIn URL
+- Output: email address with TWO separate confidence scores:
+  - **Person confidence:** HIGH/MEDIUM/LOW — how sure we are this is the right hiring manager (from Stage 3)
+  - **Email confidence:** HIGH/MEDIUM/LOW — how sure we are this email reaches them specifically
+  - HIGH email = verified (found on public page or confirmed pattern + unique name)
+  - MEDIUM email = pattern-inferred (common format, but name could be ambiguous — e.g., multiple John Smiths)
+  - LOW email = best guess (unverified pattern or partial match)
+  - Always display BOTH scores to the user so they can judge risk before sending
 
 **Stage 5: Outreach Preparation**
 - Read evaluation report (blocks A-F) for role context
@@ -351,6 +385,14 @@ Given a company + role, find WHO is hiring and how to reach them — from the pe
 - **Be honest in all outreach** — no fabricated connections, no fake mutual interests.
 - **Respect the user's time** — don't surface low-quality prospects just to look busy.
 - **Rate limit BrightData** — max 10 LinkedIn profile lookups per session (cost + account safety).
+
+### PII Management
+
+BrightData LinkedIn scraping produces personally identifiable information stored in user-layer files. To manage this responsibly:
+
+- **`/career-ops purge-pii`** command: scans `data/outreach.md`, `data/intelligence.md`, and `reports/` for scraped PII (names, emails, LinkedIn URLs from HM discovery). Offers to redact or delete entries older than a configurable retention period (default: 90 days).
+- **PII inventory:** Each HM report in `data/intelligence.md` is tagged with `<!-- PII: {name}, {source}, {date} -->` so the purge command can find all PII entries efficiently.
+- **No PII in strategy-ledger:** Learned principles must be anonymized. "User prefers companies 50-500 employees" is fine. "User liked Jane Doe's team at Stripe" is not — use "User liked [HM with eval experience] at [Series C fintech]" instead.
 
 ---
 
@@ -430,6 +472,26 @@ Strategy engine analyzes patterns periodically:
 
 Updates `config/strategy-ledger.md` with new guiding/cautionary principles.
 
+### Prospect Expiry & Archival
+
+Prospects go stale. Unreviewed prospects older than 30 days are auto-archived:
+
+1. Prospects in "New (unreviewed)" older than 30 days → moved to `## Expired` section
+2. Expired prospects do NOT generate negative learning signals (absence of action ≠ rejection)
+3. The prospect scan skips re-discovering expired URLs for 90 days
+4. User can say "show expired" to review archived prospects
+5. `data/prospects.md` is periodically compacted: expired entries older than 90 days are removed entirely
+
+### Cross-Source Deduplication
+
+Different OSINT sources return different URLs for the same role (Exa redirect URL vs LinkedIn URL vs company careers page). Dedup uses TWO strategies:
+
+1. **URL match** (exact) — catches same-source duplicates
+2. **Company + role title normalization** — catches cross-source duplicates:
+   - Normalize company name: lowercase, strip Inc/Ltd/GmbH, collapse whitespace
+   - Normalize role title: lowercase, strip seniority prefixes (Senior/Staff/Lead/Principal), strip location suffixes
+   - If normalized company + title match an existing entry → merge as same role, keep multiple source URLs
+
 ---
 
 ## 7. Gmail Intelligence & Response Pipeline
@@ -469,6 +531,14 @@ Direct. Slightly informal. Technical but accessible.
 
 1. `gmail_search_messages`: replies to outreach threads we created
 2. Match against `data/outreach.md` entries by Gmail thread ID
+
+**Resilient matching:** Thread IDs can break (user replies from different client, forwards to another device, or composes new email instead of replying to draft). Use a multi-signal matching strategy:
+1. **Thread ID match** (primary, exact)
+2. **Subject line + recipient match** (fallback: same subject line pattern + same HM email)
+3. **Company + date proximity match** (last resort: email from/to same company domain within 14 days of outreach)
+
+Before classifying as GHOSTED, run the fallback matchers to check for orphaned replies. Flag uncertain matches for user confirmation rather than auto-classifying.
+
 3. Classify each response:
    - **POSITIVE**: interview invite, "let's chat", scheduling link
    - **NEUTRAL**: "we'll get back to you", acknowledgment
@@ -510,7 +580,12 @@ Every time the user manually edits a draft before sending:
 4. Update `config/voice-profile.md` with learned adjustments
 5. Next draft incorporates changes
 
-Monthly broader refresh:
+**Scoping:** Voice learning distinguishes three contexts:
+- **Universal patterns** (sign-off, sentence length, vocabulary): applied to all drafts
+- **Industry-specific patterns** (formality level for enterprise vs startup): tagged with industry and applied selectively
+- **One-off edits** (specific to one person/company): noted but NOT promoted to rules unless seen 3+ times across different recipients
+
+Monthly broader refresh (ONLY analyzes professional external communications, NOT internal team messages — different register):
 1. Scan user's recent professional emails beyond job search
 2. Has their style evolved?
 3. Look for new proof points (project wins, metrics, launches)
@@ -521,7 +596,7 @@ Monthly broader refresh:
 Beyond outreach, mine Gmail for job search signals:
 
 - LinkedIn job alert emails → extract roles → cross-reference `prospects.md`
-- ATS status emails (Greenhouse, Lever, Ashby) → update `applications.md` status
+- ATS status emails (Greenhouse, Lever, Ashby) → surface as suggestions in `data/intelligence.md`: "ATS email detected: [Company] status changed to [status]. Update applications.md?" (user confirms before any write to the user-layer tracker)
 - Interview invitation emails → flag in briefing → trigger interview prep
 - Industry newsletters → extract market signals → feed `intelligence.md`
 
@@ -538,13 +613,25 @@ Runs inline during normal use. No separate process.
 **Trigger:** After every evaluation where user takes action (apply/skip/dismiss).
 
 1. Record outcome in `config/strategy-ledger.md` calibration log
-2. If 5+ entries since last analysis:
+2. If 10+ entries since last analysis:
    a. Analyze: which scores led to applies vs skips
    b. Identify systematic biases
    c. Distill into guiding or cautionary principles
-   d. Promote to active when 5+ supporting data points
+   d. Promote to active when 10+ supporting data points across at least 3 different companies/industries (prevents overfitting to one company type)
    e. Prune when contradicted by recent evidence
 3. Principles are read at the start of every future evaluation
+
+### Precedence Rule
+
+**`config/profile.yml` deal-breakers ALWAYS override learned strategy-ledger principles.** If a principle contradicts a deal-breaker (e.g., principle says "hybrid roles score well" but profile says "deal-breaker: no on-site"), the principle is flagged as conflicting and presented to the user for resolution rather than silently applied. A conflict detection step runs before each evaluation.
+
+### Bias Detection
+
+To prevent reinforcement spirals where early noisy data becomes entrenched:
+- Principles require data diversity: 10+ data points across 3+ different companies/industries
+- Every 30 days, all principles are re-evaluated against the full calibration log (not just recent data)
+- If a principle's accuracy drops below 60% on re-evaluation, it is automatically demoted to "Active Hypothesis"
+- Loop 2 includes a "bias check" criterion: "Does the evaluation score differ by more than 0.5 when strategy-ledger principles are removed?" If yes for >30% of test cases, the principles are too influential and should be weakened
 
 ### Loop 2: Prompt Optimization (weekly, Gemma 4)
 
@@ -571,6 +658,14 @@ The autoresearch pattern applied to career-ops evaluation prompts.
      g. Log iteration, pass rate, changes, outcome
 4. **Output:** Proposed changes (staged, not applied) + summary
 5. **Human gate:** User reviews and approves before any mode file changes
+
+**Transfer validation:** Because Gemma 4 and Claude have different capabilities, proposed prompt changes are validated before adoption:
+1. After Gemma 4 proposes changes (overnight, free), run 3-5 test evaluations using Claude with the proposed changes
+2. Compare Claude's results to the expected outcomes
+3. Only present changes to the user if they improve (or maintain) Claude's pass rate
+4. If Gemma 4 improvements don't transfer to Claude, log the divergence and skip
+
+This uses minimal Claude quota (3-5 evaluations, not the full 20-iteration loop) while ensuring optimizations actually work on the production model.
 
 ### Loop 3: Meta-Harness Optimization (monthly or when Loop 2 plateaus)
 
@@ -747,6 +842,14 @@ NEW (intel creates and owns):
 
 Upstream updates touch existing files only. Intel lives in new directories and new files that don't exist upstream. Zero merge conflicts possible.
 
+### Semantic Compatibility
+
+Git merge conflicts are impossible (all new files), but semantic conflicts can occur if upstream changes file formats that intel reads. To detect this:
+
+- `intel/engine.mjs` checks a `SCHEMA_VERSION` comment at the top of `data/applications.md` and `modes/_shared.md` at startup
+- If the version doesn't match what intel expects, it warns: "Intel engine was built for applications.md schema v2. Current file is v3. Some features may not work correctly. Run /career-ops improve to recalibrate."
+- This is advisory only — it never blocks functionality
+
 ### CLAUDE.md Addition (append-only)
 
 A clearly marked section appended to CLAUDE.md during setup:
@@ -824,3 +927,65 @@ For free overnight self-improvement. System works without it.
 | `/career-ops intel` | (reads `data/intelligence.md`) | Show latest intelligence briefing |
 | `/career-ops improve` | `modes/improve.md` | Run self-improvement cycle now |
 | (paste URL, enhanced) | existing `auto-pipeline.md` | Existing eval + NEW HM discovery suggestion |
+
+### Relationship to Existing Modes
+
+`modes/outreach.md` is the OSINT-enhanced evolution of the existing `modes/contacto.md` (LinkedIn outreach). Key differences:
+
+| Aspect | `contacto.md` (existing) | `outreach.md` (new) |
+|--------|-------------------------|---------------------|
+| HM discovery | WebSearch only | 6 OSINT APIs with intelligent routing |
+| Email finding | Not supported | Pattern inference with dual confidence scoring |
+| Outreach drafting | 3-sentence LinkedIn template | Voice-profile-aware, 2 variants (LinkedIn + email) |
+| Gmail integration | None | Creates drafts, monitors responses |
+| Google Docs | None | Creates personalized resume per role |
+| Tracking | None | Full pipeline in `data/outreach.md` |
+| Learning | None | Feeds strategy-ledger + voice-profile |
+
+Use `outreach` for the full OSINT pipeline. Use `contacto` for a quick LinkedIn-only message when you already know who to contact.
+
+---
+
+## 14. Google Docs & Resume Collaboration
+
+Collaborative resume editing between agent and user using Google Docs MCP (`@a-bonus/google-docs-mcp`) and gogcli CLI (`steipete/gogcli`).
+
+### Tools
+
+**google-docs-mcp** (primary — native MCP tools for Claude):
+- `createDocument` — create new personalized CV
+- `readDocument` — read current state (user may have edited)
+- `replaceDocumentWithMarkdown` — push updated CV content
+- `appendMarkdown` — add sections
+- `applyTextStyle` / `applyParagraphStyle` — formatting
+- `addComment` — leave review notes for user
+- `listComments` — read user's feedback comments
+
+**gogcli** (supplementary — CLI for batch operations):
+- `gog docs export --format=md` — export to markdown (sync back to cv.md)
+- `gog docs create --title "..." --body "..."` — create from script
+- `gog drive share --email "..." --role writer` — share with user
+- `gog drive list` — find existing CV documents
+
+### Resume Pipeline
+
+When the outreach pipeline generates a personalized CV (Block E from evaluation):
+
+1. **Create Google Doc**: `createDocument` with title "CV - [Name] - [Company] [Role]"
+2. **Write content**: `replaceDocumentWithMarkdown` with personalized CV markdown
+3. **Share**: record the Google Doc URL in `data/outreach.md` alongside the outreach entry
+4. **User edits**: user opens the link, makes changes directly in Google Docs
+5. **Sync back** (on demand): `readDocument` → compare with `cv.md` → offer to merge changes back
+
+### Two-Way Sync
+
+The agent can read changes the user made in Google Docs and offer to update `cv.md`:
+
+```
+Agent: "I notice you edited the Stripe CV in Google Docs — you added a new bullet about 
+       your eval framework. Want me to add this to your master cv.md?"
+User: "Yes"
+Agent: [updates cv.md with the new bullet]
+```
+
+This ensures `cv.md` remains the canonical source of truth while Google Docs serves as the collaboration surface.
