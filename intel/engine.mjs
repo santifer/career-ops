@@ -48,13 +48,22 @@ export function checkSetup(projectRoot) {
   // Available API keys
   const availableAPIs = KNOWN_API_KEYS.filter((k) => !!process.env[k]);
 
-  // Gemma 4 via ollama
+  // Gemma 4 via ollama (check local first, then remote host)
   let gemmaAvailable = false;
+  let gemmaHost = 'local';
+  const remoteOllamaHost = process.env.OLLAMA_HOST || 'http://100.76.84.16:11434';
   try {
     const out = execFileSync('ollama', ['list'], { encoding: 'utf-8', timeout: 5000 });
     gemmaAvailable = /gemma4/i.test(out);
   } catch {
-    // ollama not installed or not running — silently ignore
+    // local ollama not available — try remote host
+    try {
+      const out = execFileSync('curl', ['-s', '--max-time', '5', `${remoteOllamaHost}/api/tags`], { encoding: 'utf-8', timeout: 8000 });
+      gemmaAvailable = /gemma4/i.test(out);
+      if (gemmaAvailable) gemmaHost = remoteOllamaHost;
+    } catch {
+      // remote also unreachable
+    }
   }
 
   // gogcli
@@ -77,6 +86,7 @@ export function checkSetup(projectRoot) {
     ...fileStatus,
     availableAPIs,
     gemmaAvailable,
+    gemmaHost,
     gogcliAvailable,
     ready,
   };
@@ -101,7 +111,7 @@ export function getSetupStatus(status) {
     `  data/intelligence.md      ${tag(status.intelligenceMd)}`,
     '',
     `  APIs: ${status.availableAPIs.length > 0 ? status.availableAPIs.join(', ') : 'none (will use WebSearch + Playwright)'}`,
-    `  Gemma 4: ${status.gemmaAvailable ? 'available' : 'not found'}`,
+    `  Gemma 4: ${status.gemmaAvailable ? `available (${status.gemmaHost})` : 'not found'}`,
     `  gogcli:  ${status.gogcliAvailable ? 'available' : 'not found'}`,
     '',
     `  Ready: ${status.ready ? 'YES' : 'NO'}`,
