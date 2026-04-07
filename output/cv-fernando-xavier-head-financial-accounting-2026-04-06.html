@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fernando Costa Xavier — CV</title>
+<style>
+  @font-face {
+    font-family: 'Space Grotesk';
+    src: url('./fonts/space-grotesk-latin.woff2') format('woff2');
+    font-weight: 300 700;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  }
+  @font-face {
+    font-family: 'Space Grotesk';
+    src: url('./fonts/space-grotesk-latin-ext.woff2') format('woff2');
+    font-weight: 300 700;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0100-02AF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  }
+  @font-face {
+    font-family: 'DM Sans';
+    src: url('./fonts/dm-sans-latin.woff2') format('woff2');
+    font-weight: 100 1000;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  }
+  @font-face {
+    font-family: 'DM Sans';
+    src: url('./fonts/dm-sans-latin-ext.woff2') format('woff2');
+    font-weight: 100 1000;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0100-02AF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    line-height: 1.5;
+    color: #1a1a2e;
+    background: #ffffff;
+    padding: 0;
+    margin: 0;
+  }
+  .page { width: 100%; max-width: 210mm; margin: 0 auto; padding: 0; }
+
+  .header { margin-bottom: 16px; }
+  .header h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    color: #1a1a2e;
+    letter-spacing: -0.02em;
+    margin-bottom: 4px;
+  }
+  .header-gradient {
+    height: 2px;
+    background: linear-gradient(to right, hsl(187, 74%, 32%), hsl(270, 70%, 45%));
+    border-radius: 1px;
+    margin-bottom: 8px;
+  }
+  .contact-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    color: #555;
+  }
+  .contact-row a { color: #555; text-decoration: none; }
+  .contact-row .separator { color: #ccc; }
+
+  .section { margin-bottom: 14px; }
+  .section-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: hsl(187, 74%, 32%);
+    border-bottom: 1px solid #e5e5e5;
+    padding-bottom: 3px;
+    margin-bottom: 8px;
+  }
+  .summary-text { font-size: 11px; line-height: 1.6; color: #333; }
+  a { white-space: nowrap; }
+
+  .competencies-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+  .competency-tag {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+    color: hsl(187, 74%, 28%);
+    background: hsl(187, 40%, 95%);
+    padding: 3px 10px;
+    border-radius: 3px;
+    border: 1px solid hsl(187, 40%, 88%);
+  }
+
+  .job { margin-bottom: 12px; }
+  .job-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px; }
+  .job-company { font-family: 'Space Grotesk', sans-serif; font-size: 12px; font-weight: 600; color: hsl(270, 70%, 45%); }
+  .job-period { font-size: 10px; color: #777; white-space: nowrap; }
+  .job-role { font-size: 11px; font-weight: 500; color: #444; margin-bottom: 4px; }
+  .job-location { font-size: 10px; color: #888; }
+  .job ul { padding-left: 16px; margin-top: 4px; }
+  .job li { font-size: 10.5px; line-height: 1.5; color: #333; margin-bottom: 2px; }
+  .job li strong { font-weight: 600; }
+
+  .edu-item { margin-bottom: 6px; }
+  .edu-header { display: flex; justify-content: space-between; align-items: baseline; }
+  .edu-title { font-weight: 600; font-size: 11px; color: #333; }
+  .edu-org { color: hsl(270, 70%, 45%); font-weight: 500; }
+  .edu-year { font-size: 10px; color: #777; }
+
+  .cert-item { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+  .cert-title { font-size: 10.5px; font-weight: 500; color: #333; }
+  .cert-org { color: hsl(270, 70%, 45%); }
+  .cert-year { font-size: 10px; color: #777; }
+
+  .skill-category { font-weight: 600; color: #333; font-size: 10.5px; }
+  .skill-item { font-size: 10.5px; color: #444; margin-bottom: 3px; }
+
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .page { padding: 0; }
+  }
+  .avoid-break { break-inside: avoid; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <h1>Fernando Costa Xavier</h1>
+    <div class="header-gradient"></div>
+    <div class="contact-row">
+      <span>fernandocostaxavier@gmail.com</span>
+      <span class="separator">|</span>
+      <span>+55 11 96480-1913</span>
+      <span class="separator">|</span>
+      <a href="https://linkedin.com/in/fernandoxavier02">linkedin.com/in/fernandoxavier02</a>
+      <span class="separator">|</span>
+      <span>Sao Paulo, Brazil</span>
+    </div>
+  </div>
+
+  <!-- PROFESSIONAL SUMMARY -->
+  <div class="section">
+    <div class="section-title">Professional Summary</div>
+    <div class="summary-text">
+      Finance & Controllership Director with 15+ years leading statutory accounting, IFRS group reporting, tax compliance, and internal controls for multinational organisations across Latin America. Proven track record overseeing end-to-end financial accounting operations for subsidiaries in 5 countries, ensuring audit readiness and compliant reporting under IFRS, US GAAP, and local standards. Recognised for driving process automation that eliminated 70% of manual accounting tasks and reduced month-end close cycles by 40%. Experienced in leading finance teams, partnering with global stakeholders, and driving ERP-based system enhancements. CRC-certified, ACCA (IFR), FMVA. Trilingual: Portuguese (native), English (C2), Spanish (C1).
+    </div>
+  </div>
+
+  <!-- CORE COMPETENCIES -->
+  <div class="section">
+    <div class="section-title">Core Competencies</div>
+    <div class="competencies-grid">
+      <span class="competency-tag">Statutory Accounting</span>
+      <span class="competency-tag">IFRS Reporting</span>
+      <span class="competency-tag">Group Reporting</span>
+      <span class="competency-tag">Tax Compliance</span>
+      <span class="competency-tag">Transfer Pricing</span>
+      <span class="competency-tag">Internal Controls</span>
+      <span class="competency-tag">Financial Governance</span>
+      <span class="competency-tag">Audit Readiness</span>
+      <span class="competency-tag">Month-End Close</span>
+      <span class="competency-tag">Financial Consolidation</span>
+      <span class="competency-tag">Cash Flow Management</span>
+      <span class="competency-tag">ERP System Enhancement</span>
+      <span class="competency-tag">Process Automation</span>
+      <span class="competency-tag">Team Leadership</span>
+      <span class="competency-tag">SAP</span>
+      <span class="competency-tag">Power BI</span>
+    </div>
+  </div>
+
+  <!-- WORK EXPERIENCE -->
+  <div class="section">
+    <div class="section-title">Professional Experience</div>
+
+    <div class="job avoid-break">
+      <div class="job-header">
+        <span class="job-company">Forvis Mazars</span>
+        <span class="job-period">May 2025 - Present</span>
+      </div>
+      <div class="job-role">Chief Accounting & Finance Director</div>
+      <div class="job-location">Sao Paulo, Brazil</div>
+      <ul>
+        <li>Set strategic vision for <strong>accounting and finance functions</strong>, partnering with CFOs, auditors, and boards to align operations with corporate strategy across multiple business units.</li>
+        <li>Drive digital transformation and AI adoption using <strong>SAP, Power BI, ClickUp, and Microsoft GPT</strong>, enabling continuous improvement in financial close and reporting processes.</li>
+        <li>Lead <strong>FP&A, budgeting, forecasting, and cost optimisation</strong>; support M&A due diligence, valuation, and post-merger integration.</li>
+        <li>Ensure compliance with <strong>IFRS, US GAAP, BR GAAP</strong>, and regulatory bodies; design internal controls framework and manage audit readiness.</li>
+      </ul>
+    </div>
+
+    <div class="job avoid-break">
+      <div class="job-header">
+        <span class="job-company">AgroFresh (NYSE-listed)</span>
+        <span class="job-period">Sep 2018 - May 2025</span>
+      </div>
+      <div class="job-role">Regional Controller LATAM & Head of Statutory Accounting</div>
+      <div class="job-location">Sao Paulo, Brazil | LATAM Region (Brazil, Mexico, Chile, Argentina, Peru)</div>
+      <ul>
+        <li>Oversaw <strong>statutory and IFRS accounting, tax, and financial reporting</strong> for subsidiaries in 5 countries, ensuring accuracy, compliance, and timely closing.</li>
+        <li>Managed <strong>group reporting</strong> and delivered high-quality financial information to US-based global headquarters.</li>
+        <li>Oversaw all <strong>tax matters including direct taxes, indirect taxes, transfer pricing</strong>, and regulatory obligations across the region.</li>
+        <li>Strengthened <strong>internal controls, financial governance, and audit readiness</strong>; coordinated internal and external audits.</li>
+        <li>Managed <strong>cash flow, working capital</strong>, and implemented transfer pricing policies across 5 countries.</li>
+        <li>Drove <strong>3 M&A due diligence</strong> processes and post-acquisition integration, establishing statutory reporting and compliance frameworks from the ground up.</li>
+        <li>Spearheaded the <strong>"Integrated Accounting Intelligence"</strong> initiative, automating 70% of manual tasks and reducing close cycle by 40%.</li>
+      </ul>
+    </div>
+
+    <div class="job avoid-break">
+      <div class="job-header">
+        <span class="job-company">Capgemini Brazil</span>
+        <span class="job-period">Apr 2017 - Sep 2018</span>
+      </div>
+      <div class="job-role">Accounting Manager & Head of IFRS Reporting LATAM</div>
+      <div class="job-location">Sao Paulo, Brazil</div>
+      <ul>
+        <li>Managed Brazilian monthly close (BR GAAP) and <strong>consolidated statements</strong> for a multinational group; produced <strong>IFRS reporting packages</strong> and FP&A analyses for headquarters.</li>
+        <li>Led M&A initiatives, <strong>transfer pricing</strong> studies, and impairment reviews; developed financial models and internal accounting policies across Latin America.</li>
+        <li><strong>Supervised a team of 11 analysts</strong> and deployed automation via SAP, Power BI, and automated reporting systems.</li>
+        <li>Reviewed taxes (IRPJ/CSLL, PIS, COFINS); managed internal and external audits and prepared financial statements.</li>
+      </ul>
+    </div>
+
+    <div class="job avoid-break">
+      <div class="job-header">
+        <span class="job-company">Early Career</span>
+        <span class="job-period">2011 - 2018</span>
+      </div>
+      <div class="job-role">Accounting Coordinator / Analyst / Tax Specialist</div>
+      <ul>
+        <li>Assessor Bordin Business Consultants (2017-2018) | Watanabe Assessoria Contabil (2015-2017) | Lune Business Advisory (2014-2015) | Carvalho Advogados (2011-2014)</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- EDUCATION & CERTIFICATIONS -->
+  <div class="section avoid-break">
+    <div class="section-title">Education</div>
+    <div class="edu-item">
+      <div class="edu-header">
+        <span class="edu-title">MBA in Corporate Finance - <span class="edu-org">Fundacao Getulio Vargas (FGV)</span></span>
+        <span class="edu-year">Expected Jun 2027</span>
+      </div>
+    </div>
+    <div class="edu-item">
+      <div class="edu-header">
+        <span class="edu-title">Bachelor in Accounting - <span class="edu-org">Anhembi Morumbi University</span></span>
+        <span class="edu-year">2018</span>
+      </div>
+    </div>
+    <div class="edu-item">
+      <div class="edu-header">
+        <span class="edu-title">Bachelor in Law - <span class="edu-org">Unifieo University Center</span></span>
+        <span class="edu-year">2006</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section avoid-break">
+    <div class="section-title">Certifications</div>
+    <div class="cert-item">
+      <span class="cert-title">ACCA Certificate in International Financial Reporting (Cert IFR) | IFRS Advanced Certificate</span>
+    </div>
+    <div class="cert-item">
+      <span class="cert-title">Financial Modelling & Valuation Analyst (FMVA) - <span class="cert-org">Corporate Finance Institute</span></span>
+    </div>
+    <div class="cert-item">
+      <span class="cert-title">Connected Manager / Leading People - <span class="cert-org">Harvard Business School</span></span>
+    </div>
+    <div class="cert-item">
+      <span class="cert-title">Certified Accountant - CRC/SP (Active, Reg. 1SP-346248/O)</span>
+    </div>
+    <div class="cert-item">
+      <span class="cert-title">Modeling Data in Power BI - <span class="cert-org">Microsoft</span></span>
+    </div>
+    <div class="cert-item">
+      <span class="cert-title">Member of IBEF (Instituto Brasileiro de Executivos de Financas)</span>
+    </div>
+  </div>
+
+  <!-- SKILLS -->
+  <div class="section avoid-break">
+    <div class="section-title">Technical Skills & Languages</div>
+    <div class="skill-item"><span class="skill-category">Accounting & Compliance:</span> IFRS, US GAAP, BR GAAP, Statutory Reporting, Financial Close & Consolidation, Internal Controls, Audit Management, Tax Compliance, Transfer Pricing</div>
+    <div class="skill-item"><span class="skill-category">Planning & Analysis:</span> FP&A, Budgeting & Forecasting, Cash Flow Management, Working Capital, Financial Modelling, M&A Due Diligence & Integration</div>
+    <div class="skill-item"><span class="skill-category">Systems & Tools:</span> SAP (primary ERP), Oracle (working knowledge), Power BI, Power Automate, BFC, ClickUp, Microsoft 365, AI Tools (Microsoft GPT)</div>
+    <div class="skill-item"><span class="skill-category">Languages:</span> Portuguese (Native) | English (C2 - Fluent) | Spanish (C1 - Advanced)</div>
+  </div>
+
+</div>
+</body>
+</html>

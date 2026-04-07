@@ -118,5 +118,10 @@ preferences:
   deal_breakers:
     - "No English required in the role"
     - "Small/medium accounting firms"
+    - "BPO accounting/contabil — never"
     - "Purely national companies with no international operations"
     - "Below R$30K/month (PJ) or R$35K/month (CLT)"
+  low_fit_roles:
+    - "Head of Tax / Tax Director — tax is not a strength"
+    - "Pure treasury roles without accounting scope"
+    - "BPO / shared services / outsourcing firms"

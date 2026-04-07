@@ -100,7 +100,13 @@ No live demo. Key proof points are metric-driven achievements in CV.
 - National-only companies with no international scope
 - Roles that do NOT require English — deal-breaker, score **0.5**
 
+**Low-fit roles (score 2.0 or lower):**
+- Head of Tax / Tax Director → tax is NOT a strength, score **2.0**
+- BPO accounting / shared services → SKIP immediately
+- Pure treasury without accounting scope → score **2.5**
+
 **Deal-breakers (auto-SKIP):**
 - No English required → SKIP
 - Below R$30K/month PJ or R$35K/month CLT → SKIP
 - Small/medium accounting firm → SKIP
+- BPO contabil / outsourcing firm → SKIP
