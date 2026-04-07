@@ -135,14 +135,17 @@ b. `perform-editing-operations` with `find_and_replace_text` for each section:
    - Replace each experience bullet with reordered/rewritten bullets
    - Replace competency/skills text with JD-matched terms
    - Replace project descriptions with top relevant projects
-c. **Verify layout before commit:**
+c. **Reflow layout after text replacement:**
+   After applying all text replacements, the text boxes auto-resize but neighboring elements stay in place. This causes uneven spacing between work experience sections. Fix this:
+   1. Read the updated element positions and dimensions from the `perform-editing-operations` response
+   2. For each work experience section (top to bottom), calculate where the bullets text box ends: `end_y = top + height`
+   3. The next section's header should start at `end_y + consistent_gap` (use the original gap from the template, typically ~30px)
+   4. Use `position_element` to move the next section's date, company name, role title, and bullets elements to maintain even spacing
+   5. Repeat for all work experience sections
+d. **Verify layout before commit:**
    - `get-design-thumbnail` with the transaction_id and page_index=1
-   - Visually inspect the thumbnail for: text overlapping between sections, text cut off or extending beyond its container, uneven spacing between entries, text too small to read
-   - If issues are found:
-     - Use `resize_element` to adjust text box widths
-     - Use `position_element` to reposition overlapping elements
-     - Use `format_text` to reduce font_size (by 1-2px) or line_height (e.g., 1.5 → 1.2) if text overflows
-     - Re-check with another `get-design-thumbnail`
+   - Visually inspect the thumbnail for: text overlapping, uneven spacing, text cut off, text too small
+   - If issues remain, adjust with `position_element`, `resize_element`, or `format_text`
    - Repeat until layout is clean
 d. Show the user the final preview and ask for approval
 e. `commit-editing-transaction` to save (ONLY after user approval)
