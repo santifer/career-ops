@@ -90,6 +90,65 @@ Usar el template en `cv-template.html`. Reemplazar los placeholders `{{...}}` co
 | `{{SECTION_SKILLS}}` | Skills / Competencias |
 | `{{SKILLS}}` | HTML de skills |
 
+## Canva CV Generation (optional)
+
+If `config/profile.yml` has `canva_resume_design_id` set, offer the user a choice before generating:
+- **"HTML/PDF (fast, ATS-optimized)"** — existing flow above
+- **"Canva CV (visual, design-preserving)"** — new flow below
+
+If the user has no `canva_resume_design_id`, skip this prompt and use the HTML/PDF flow.
+
+### Canva workflow
+
+#### Step 1 — Duplicate the base design
+
+a. `export-design` the base design (using `canva_resume_design_id`) as PDF → get download URL
+b. `import-design-from-url` using that download URL → creates a new editable design (the duplicate)
+c. Note the new `design_id` for the duplicate
+
+#### Step 2 — Read the design structure
+
+a. `get-design-content` on the new design → returns all text elements (richtexts) with their content
+b. Map text elements to CV sections by content matching:
+   - Look for the candidate's name → header section
+   - Look for "Summary" or "Professional Summary" → summary section
+   - Look for company names from cv.md → experience sections
+   - Look for degree/school names → education section
+   - Look for skill keywords → skills section
+c. If mapping fails, show the user what was found and ask for guidance
+
+#### Step 3 — Generate tailored content
+
+Same content generation as the HTML flow (Steps 1-11 above):
+- Rewrite Professional Summary with JD keywords + exit narrative
+- Reorder experience bullets by JD relevance
+- Select top competencies from JD requirements
+- Inject keywords naturally (NEVER invent)
+
+#### Step 4 — Apply edits
+
+a. `start-editing-transaction` on the duplicate design
+b. `perform-editing-operations` with `find_and_replace_text` for each section:
+   - Replace summary text with tailored summary
+   - Replace each experience bullet with reordered/rewritten bullets
+   - Replace competency/skills text with JD-matched terms
+   - Replace project descriptions with top relevant projects
+c. Show the user what was changed and ask for approval
+d. `commit-editing-transaction` to save (ONLY after user approval)
+
+#### Step 5 — Export PDF
+
+a. `export-design` the duplicate as PDF (format: a4 or letter based on JD location)
+b. Save to `output/cv-{candidate}-{company}-canva-{YYYY-MM-DD}.pdf`
+c. Report: PDF path, Canva design URL (for manual tweaking), page count
+
+#### Error handling
+
+- If `import-design-from-url` fails → fall back to HTML/PDF pipeline with message
+- If text elements can't be mapped → warn user, show what was found, ask for manual mapping
+- If `find_and_replace_text` finds no matches → try broader substring matching
+- Always provide the Canva design URL so the user can edit manually if auto-edit fails
+
 ## Post-generación
 
 Actualizar tracker si la oferta ya está registrada: cambiar PDF de ❌ a ✅.
