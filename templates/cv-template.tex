@@ -1,0 +1,57 @@
+\documentclass[10pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=0.5in]{geometry}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{longtable,booktabs}
+
+% Colors — all black, no blue
+\definecolor{text}{HTML}{000000}
+\definecolor{muted}{HTML}{444444}
+
+% No section numbering
+\setcounter{secnumdepth}{0}
+
+% Section formatting
+\titleformat{\section}{\large\bfseries\color{text}}{}{0em}{}[\titlerule]
+\titleformat{\subsection}{\normalsize\bfseries\color{text}}{}{0em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{text}}{}{0em}{}
+\titlespacing{\section}{0pt}{8pt}{4pt}
+\titlespacing{\subsection}{0pt}{6pt}{3pt}
+\titlespacing{\subsubsection}{0pt}{4pt}{2pt}
+
+% Remove page numbers
+\pagestyle{empty}
+
+% Hyperlink setup — no colored links, just black text
+\hypersetup{
+    colorlinks=true,
+    linkcolor=text,
+    urlcolor=text
+}
+
+% Allow URL line breaks at any character
+\expandafter\def\expandafter\UrlBreaks\expandafter{\UrlBreaks\do\/\do\-\do\.}
+
+% List styling
+\setlist[itemize]{nosep, leftmargin=1.5em}
+
+% Tight spacing
+\setlength{\parskip}{2pt}
+\setlength{\parindent}{0pt}
+
+% Pandoc tightlist support
+\providecommand{\tightlist}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+
+\color{text}
+
+\begin{document}
+
+$body$
+
+\end{document}
