@@ -30,12 +30,10 @@ The skill applies with EQUAL rigor to ALL target roles. None is primary or secon
 
 | Archetype | Thematic axes | What they buy |
 |-----------|---------------|---------------|
-| **AI Platform / LLMOps Engineer** | Evaluation, observability, reliability, pipelines | Someone who puts AI in production with metrics |
-| **Agentic Workflows / Automation** | HITL, tooling, orchestration, multi-agent | Someone who builds reliable agent systems |
-| **Technical AI Product Manager** | GenAI/Agents, PRDs, discovery, delivery | Someone who translates business to AI product |
-| **AI Solutions Architect** | Hyperautomation, enterprise, integrations | Someone who designs end-to-end AI architectures |
-| **AI Forward Deployed Engineer** | Client-facing, fast delivery, prototyping | Someone who delivers AI solutions to clients fast |
-| **AI Transformation Lead** | Change management, adoption, org enablement | Someone who leads AI transformation in an org |
+| **AI Product Manager** | GenAI roadmap, discovery, PRDs, delivery, metrics | Someone who owns AI product from 0→1 with technical depth |
+| **Technical Program Manager (TPM)** | Cross-functional delivery, dependencies, execution at scale | Someone who ships complex programs on time with stakeholder alignment |
+| **Associate / Junior PM** | Discovery, user research, feature delivery, data-driven iteration | A technical builder becoming a product owner |
+| **Product Strategy / BizOps** | Market analysis, go-to-market, OKRs, decision frameworks | Someone who combines technical and business thinking |
 
 <!-- [CUSTOMIZE] Edit the archetypes above to match YOUR target roles.
      For example, if you're a backend engineer, replace with:
@@ -50,12 +48,10 @@ The skill applies with EQUAL rigor to ALL target roles. None is primary or secon
 
 | If the role is... | Emphasize about the candidate... | Proof point sources |
 |-------------------|----------------------------------|---------------------|
-| Platform / LLMOps | Production systems builder, observability, evals, closed-loop | article-digest.md + cv.md |
-| Agentic / Automation | Multi-agent orchestration, HITL, reliability, cost | article-digest.md + cv.md |
-| Technical AI PM | Product discovery, PRDs, metrics, stakeholder mgmt | cv.md + article-digest.md |
-| Solutions Architect | System design, integrations, enterprise-ready | article-digest.md + cv.md |
-| Forward Deployed Engineer | Fast delivery, client-facing, prototype to prod | cv.md + article-digest.md |
-| AI Transformation Lead | Change management, team enablement, adoption | cv.md + article-digest.md |
+| AI Product Manager | AI roadmap ownership, PRD depth, technical-to-business translation | cv.md + article-digest.md |
+| Technical PM / TPM | Google-scale delivery, cross-team coordination, dependency management | cv.md |
+| Associate / Junior PM | Learning velocity, ownership mindset, shipping track record | cv.md |
+| Product Strategy / BizOps | Analytical rigor, market context, structured decision-making | cv.md + article-digest.md |
 
 <!-- [CUSTOMIZE] Map YOUR specific projects/articles to each archetype above -->
 
@@ -75,11 +71,11 @@ Use the candidate's exit story from `config/profile.yml` to frame ALL content:
 
 ### Cross-cutting Advantage
 
-Frame profile as **"Technical builder with real-world proof"** that adapts framing to the role:
-- For PM: "builder who reduces uncertainty with prototypes then productionizes with discipline"
-- For FDE: "builder who delivers fast with observability and metrics from day 1"
-- For SA: "builder who designs end-to-end systems with real integration experience"
-- For LLMOps: "builder who puts AI in production with closed-loop quality systems"
+Frame profile as **"Technical TPM with Google-scale delivery experience making the move to product ownership"**:
+- For AI PM: "shipped global applications at Google — now driving product strategy, not just delivery"
+- For TPM: "proven program management at scale, cross-functional alignment, real stakeholder ownership"
+- For Associate PM: "technical depth + delivery track record = rare combination for an early-career PM"
+- For Strategy/BizOps: "systems thinker who can translate business goals into executable plans"
 
 Convert "builder" into a professional signal, not a "hobby maker". Real proof points make this credible.
 

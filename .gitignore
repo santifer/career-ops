@@ -18,6 +18,7 @@ jds/*
 # User config
 config/profile.yml
 portals.yml
+cv.md
 
 # Generated
 .resolved-prompt-*
