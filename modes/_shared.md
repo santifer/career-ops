@@ -93,10 +93,27 @@ After detecting archetype, read `modes/_profile.md` for the user's specific fram
 | WebSearch | Comp research, trends, company culture, LinkedIn contacts, fallback for JDs |
 | WebFetch | Fallback for extracting JDs from static pages |
 | Playwright | Verify offers (browser_navigate + browser_snapshot). **NEVER 2+ agents with Playwright in parallel.** |
+| browser_click | Click an element by ARIA ref (buttons, links, checkboxes). Use after browser_snapshot to get ref. |
+| browser_fill_form | Fill multiple form fields at once. Provide array of {ref, value} pairs. Re-snapshot after to verify. |
+| browser_type | Type text into a focused input field. Use for single-field entry. |
+| browser_wait_for | Wait for text to appear, element to load, or fixed timeout. Use between actions on dynamic pages. |
 | Read | cv.md, _profile.md, article-digest.md, cv-template.html |
 | Write | Temporary HTML for PDF, applications.md, reports .md |
 | Edit | Update tracker |
 | Bash | `node generate-pdf.mjs` |
+
+### HITL Boundaries
+
+**MANDATORY STOP** before any irreversible action. No exceptions.
+
+1. **Submit / Apply / Send** -- Before clicking any button that could submit an application: present a summary of all filled fields and proposed answers. Wait for explicit user confirmation ("go" / "abort"). Do NOT proceed on silence.
+2. **CAPTCHA** -- Signals: "verify you are human", "recaptcha", "hcaptcha", "I'm not a robot". Stop immediately. Notify user with page context. Wait for user to resolve and type "resume".
+3. **2FA** -- Signals: "verification code", "authenticator app", "two-factor". Stop immediately. Notify user. Wait for user to complete and type "resume".
+4. **Session expiry** -- Portal redirects to login or shows "session expired" message. Stop and notify user that re-authentication is required. Log completed steps so flow can resume.
+
+**Resume protocol (all stops):** Agent pauses -> user acts -> user types "resume" / "go" / "done" -> agent re-snapshots current page -> agent continues.
+
+> Full pattern details: `modes/browser-session.md`
 
 ### Time-to-offer priority
 - Working demo + metrics > perfection

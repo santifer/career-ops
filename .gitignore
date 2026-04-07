@@ -1,6 +1,7 @@
 # Personal data (user fills these)
 data/applications.md
 data/pipeline.md
+data/sessions/
 data/scan-history.tsv
 reports/*.md
 !reports/.gitkeep
@@ -26,6 +27,9 @@ modes/_profile.md
 .resolved-prompt-*
 node_modules/
 
+# Browser automation
+logs/
+
 # OS
 .DS_Store
 *.mov
@@ -35,3 +39,4 @@ node_modules/
 .claude/settings.local.json
 .claude/memory/
 career-dashboard
+.specs/scratchpad/

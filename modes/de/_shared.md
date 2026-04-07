@@ -195,7 +195,24 @@ In deutschen Stellenanzeigen und Vertragsverhandlungen tauchen Begriffe auf, die
 | WebSearch | Vergütungs-Recherche, Trends, Unternehmenskultur, LinkedIn-Kontakte, Fallback für Stellenanzeigen |
 | WebFetch | Fallback, um Stellenanzeigen aus statischen Seiten zu extrahieren |
 | Playwright | Prüfen, ob Stellenanzeigen noch aktiv sind (browser_navigate + browser_snapshot), Stellenanzeigen aus SPAs extrahieren. **KRITISCH: NIEMALS 2+ Agenten parallel mit Playwright starten — sie teilen sich eine Browser-Instanz** |
+| browser_click | Klicke auf ein Element per ARIA-Ref (Buttons, Links, Checkboxen). Nach `browser_snapshot` verwenden, um den Ref zu erhalten. |
+| browser_fill_form | Fülle mehrere Formularfelder gleichzeitig. Array von `{ref, value}` Paaren übergeben. Danach re-snapshotten zur Prüfung. |
+| browser_type | Tippe Text in ein fokussiertes Eingabefeld. Für einzelne Feldeingaben. |
+| browser_wait_for | Warte auf Text, Element oder feste Zeit. Zwischen Aktionen auf dynamischen Seiten verwenden. |
 | Read | cv.md, article-digest.md, cv-template.html |
 | Write | Temporäres HTML für PDF, applications.md, Reports .md |
 | Edit | Tracker aktualisieren |
 | Bash | `node generate-pdf.mjs` |
+
+### HITL-Grenzen (Human-in-the-Loop)
+
+**PFLICHT-STOPP** vor jeder irreversiblen Aktion. Keine Ausnahmen.
+
+1. **PFLICHT-STOPP vor Submit / Apply / Send** -- Bevor ein Button geklickt wird, der eine Bewerbung absenden könnte: Zusammenfassung aller ausgefüllten Felder und vorgeschlagenen Antworten anzeigen. Auf ausdrückliche Bestätigung des Nutzers warten ("go" / "abort"). Bei Stille NICHT fortfahren.
+2. **PFLICHT-STOPP bei CAPTCHA** -- Signale: "verify you are human", "recaptcha", "hcaptcha", "I'm not a robot". Sofort stoppen. Nutzer mit Seitenkontext benachrichtigen. Warten, bis der Nutzer das CAPTCHA gelöst und "resume" tippt.
+3. **PFLICHT-STOPP bei 2FA** -- Signale: "verification code", "authenticator app", "two-factor". Sofort stoppen. Nutzer benachrichtigen. Warten, bis der Nutzer die 2FA abgeschlossen und "resume" tippt.
+4. **STOPP und Benachrichtigung bei Session-Ablauf** -- Portal leitet zur Login-Seite weiter oder zeigt "session expired"-Nachricht. Stoppen und Nutzer informieren, dass eine erneute Anmeldung erforderlich ist. Abgeschlossene Schritte protokollieren, damit der Flow wiederaufgenommen werden kann.
+
+**Resume-Protokoll (für alle Stopps):** Agent pausiert -> Nutzer handelt -> Nutzer tippt "resume" / "go" / "done" -> Agent re-snapshottet aktuelle Seite -> Agent fährt fort.
+
+> Vollständige Muster-Details: `modes/browser-session.md`

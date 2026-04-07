@@ -31,6 +31,8 @@ Leer `portals.yml` que contiene:
 - Detecta ofertas nuevas al instante
 - No depende de la indexación de Google
 
+> Browser autonomy patterns (obstacle dismissal, retry, CAPTCHA): see `modes/browser-session.md`
+
 **Cada empresa DEBE tener `careers_url` en portals.yml.** Si no la tiene, buscarla una vez, guardarla, y usar en futuros scans.
 
 ### Nivel 2 — Greenhouse API (COMPLEMENTARIO)
@@ -58,6 +60,7 @@ Los niveles son aditivos — se ejecutan todos, los resultados se mezclan y dedu
    Para cada empresa en `tracked_companies` con `enabled: true` y `careers_url` definida:
    a. `browser_navigate` a la `careers_url`
    b. `browser_snapshot` para leer todos los job listings
+   - **Obstacle check**: If snapshot shows cookie consent banner (look for: "Accept all", "Accept cookies", "Allow all", "OK", "Got it"), dismiss it with `browser_click` on the accept button ref. Re-snapshot to confirm content is now accessible. For full protocol, see `modes/browser-session.md` → Obstacle Dismissal.
    c. Si la página tiene filtros/departamentos, navegar las secciones relevantes
    d. Para cada job listing extraer: `{title, url, company}`
    e. Si la página pagina resultados, navegar páginas adicionales

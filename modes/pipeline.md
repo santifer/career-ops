@@ -8,6 +8,10 @@ Procesa URLs de ofertas acumuladas en `data/pipeline.md`. El usuario agrega URLs
 2. **Para cada URL pendiente**:
    a. Calcular siguiente `REPORT_NUM` secuencial (leer `reports/`, tomar el número más alto + 1)
    b. **Extraer JD** usando Playwright (browser_navigate + browser_snapshot) → WebFetch → WebSearch
+      - **Obstacle check**: After `browser_snapshot`, check for cookie banners (look for: "Accept all", "Accept cookies", "Allow all"). Dismiss with `browser_click` before reading content. See `modes/browser-session.md` → Obstacle Dismissal.
+      - **CAPTCHA detection**: If CAPTCHA signals found ("verify you are human", "recaptcha", "hcaptcha", "I'm not a robot") → mark as `- [!]` with note "CAPTCHA — requires manual resolution". Behavior depends on `captcha_strategy` in portals.yml (default: "stop" per `templates/portals.example.yml`): "stop" → HITL pause; "skip" → mark [!] and continue.
+      - **Session handling**: For portals with `requires_login: true` in portals.yml, load session from `data/sessions/<portal>.json` before navigate. If session expired (login redirect), mark as [!] with note "Session expired".
+      - **Retry on failure**: If navigate/snapshot fails, retry up to 3 times (2s, 5s, 10s waits) per `modes/browser-session.md` → Retry Policy. After 3 failures → fall back to WebFetch.
    c. Si la URL no es accesible → marcar como `- [!]` con nota y continuar
    d. **Ejecutar auto-pipeline completo**: Evaluación A-F → Report .md → PDF (si score >= 3.0) → Tracker
    e. **Mover de "Pendientes" a "Procesadas"**: `- [x] #NNN | URL | Empresa | Rol | Score/5 | PDF ✅/❌`

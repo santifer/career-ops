@@ -9,6 +9,9 @@ Si el input es una **URL** (no texto de JD pegado), seguir esta estrategia para 
 **Orden de prioridad:**
 
 1. **Playwright (preferido):** La mayoría de portales de empleo (Lever, Ashby, Greenhouse, Workday) son SPAs. Usar `browser_navigate` + `browser_snapshot` para renderizar y leer el JD.
+   - **Obstacle check**: After `browser_snapshot`, check for cookie banners and popup overlays (look for: "Accept all", "Accept cookies", "Close", "×"). Dismiss with `browser_click` before reading JD. Re-snapshot after dismissal. See `modes/browser-session.md` → Obstacle Dismissal.
+   - **CAPTCHA detection**: If CAPTCHA signals found ("verify you are human", "recaptcha", "hcaptcha", "I'm not a robot") → **STOP immediately** and notify user. Wait for user to resolve and type "resume". Do NOT continue until resolved. See `modes/browser-session.md` → CAPTCHA Detection.
+   - **Retry on failure**: If JD extraction fails (empty content, 404, timeout), retry up to 3 times with increasing waits (2s, 5s, 10s). After 3 failures, mark error and skip. See `modes/browser-session.md` → Retry Policy.
 2. **WebFetch (fallback):** Para páginas estáticas (ZipRecruiter, WeLoveProduct, company career pages).
 3. **WebSearch (último recurso):** Buscar título del rol + empresa en portales secundarios que indexan el JD en HTML estático.
 

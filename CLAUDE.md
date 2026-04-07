@@ -216,6 +216,33 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 
 ---
 
+## Browser Autonomy
+
+Autonomous browser interaction uses a **snapshot-decide-act-re-snapshot** decision loop: read page state (`browser_snapshot`), decide next action, execute it, re-snapshot to verify. This is the standard pattern for ALL browser workflows (scan, apply, pipeline).
+
+### HITL Gates -- MANDATORY STOPS
+
+The agent **MUST STOP** and wait for user input in these situations. No exceptions:
+
+- **Submission Gate**: Before clicking ANY Submit/Apply/Send button, STOP. Present a summary of all filled fields and values. Wait for the user to say "go" or "abort". This reinforces the ethical rule in "Ethical Use -- CRITICAL" above.
+- **CAPTCHA Detection**: If page contains signals like "verify you are human", "recaptcha", "hcaptcha", "I'm not a robot" -- STOP immediately. Notify user to resolve manually.
+- **2FA Detection**: If page contains signals like "verification code", "authenticator", "two-factor" -- STOP and wait for user to complete authentication.
+- **Session Expiry**: If portal redirects to login or shows session-expired message -- STOP and notify user that re-authentication is required.
+
+### Action Logging
+
+Every autonomous browser flow **MUST** be logged. Each action (navigate, click, fill, snapshot, HITL pause) recorded as NDJSON with timestamp, action type, target element, and outcome. Logs stored in `logs/`.
+
+### Session Security
+
+Imported cookie/session data is used ONLY for the active browser session. Never write cookies to logs, output files, or persist them beyond the session.
+
+### Reference
+
+Full patterns and implementation details: `modes/browser-session.md` -- decision loop protocol, session management, obstacle dismissal, retry policy, logging schema.
+
+---
+
 ## Stack and Conventions
 
 - Node.js (mjs modules), Playwright (PDF + scraping), YAML (config), HTML/CSS (template), Markdown (data)

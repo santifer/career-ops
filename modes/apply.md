@@ -2,10 +2,12 @@
 
 Modo interactivo para cuando el candidato está rellenando un formulario de aplicación en Chrome. Lee lo que hay en pantalla, carga el contexto previo de la oferta, y genera respuestas personalizadas para cada pregunta del formulario.
 
+> **Browser autonomy patterns**: decision loop, session management, obstacle dismissal, CAPTCHA/2FA detection, submission gate, retry, action logging — see `modes/browser-session.md`
+
 ## Requisitos
 
-- **Mejor con Playwright visible**: En modo visible, el candidato ve el navegador y Claude puede interactuar con la página.
-- **Sin Playwright**: el candidato comparte un screenshot o pega las preguntas manualmente.
+- **Playwright-first (default)**: Use Playwright MCP tools (`browser_navigate`, `browser_snapshot`, `browser_click`, `browser_fill_form`, `browser_type`, `browser_wait_for`) for active browser interaction. The agent reads page state, fills fields, and handles obstacles autonomously — stopping only at HITL gates (submission, CAPTCHA, 2FA).
+- **Sin Playwright (fallback)**: Si Playwright no está disponible, el candidato comparte un screenshot o pega las preguntas manualmente. Ver sección "Sin Playwright" abajo.
 
 ## Workflow
 
@@ -22,7 +24,12 @@ Modo interactivo para cuando el candidato está rellenando un formulario de apli
 
 ## Paso 1 — Detectar la oferta
 
-**Con Playwright:** Tomar snapshot de la página activa. Leer título, URL, y contenido visible.
+**Con Playwright:**
+1. If portal has `requires_login: true` in portals.yml, load session from `data/sessions/<portal>.json` per `modes/browser-session.md` → Session Management.
+2. `browser_navigate` to the application URL.
+3. `browser_snapshot` to read page state.
+4. **Obstacle check**: If cookie banner or popup overlay detected, dismiss per `modes/browser-session.md` → Obstacle Dismissal. Re-snapshot after dismissal.
+5. Identify the application form from clean snapshot — extract company name, role title, and form structure.
 
 **Sin Playwright:** Pedir al candidato que:
 - Comparta un screenshot del formulario (Read tool lee imágenes)
@@ -47,7 +54,15 @@ Si el rol en pantalla difiere del evaluado:
 
 ## Paso 4 — Analizar preguntas del formulario
 
-Identificar TODAS las preguntas visibles:
+Identificar TODAS las preguntas visibles usando **decision loop** per `modes/browser-session.md`:
+1. `browser_snapshot` → identify all visible form fields (textboxes, dropdowns, checkboxes, textareas)
+2. Note each field's ARIA ref (e.g., `textbox "Cover Letter" [ref=e12]`) and label
+3. If page is scrollable or has multiple sections: `browser_evaluate` with `window.scrollTo(0, document.body.scrollHeight)` → re-snapshot for newly visible fields
+4. Check for "Next"/"Continue" buttons indicating multi-page forms → click → re-snapshot
+5. Repeat until all fields found (max 50 iterations per `modes/browser-session.md`)
+6. Match each field to profile data from cv.md and config/profile.yml
+
+Field types to identify:
 - Campos de texto libre (cover letter, why this role, etc.)
 - Dropdowns (how did you hear, work authorization, etc.)
 - Yes/No (relocation, visa, etc.)
@@ -92,6 +107,47 @@ Notas:
 - [Sugerencias de personalización que el candidato debería revisar]
 ```
 
+## Paso 5b — Fill Form Fields (Playwright only)
+
+For each form field identified in Paso 4, fill using Playwright tools:
+
+1. **Text fields**: `browser_fill_form` with `{ref, value}` pairs, or `browser_type` for individual fields
+2. **Dropdowns**: `browser_click` to open dropdown → find option ref → `browser_click` to select
+3. **Checkboxes**: `browser_click` to toggle
+4. **Multi-page forms**: After filling visible fields, check for "Next"/"Continue" → `browser_click` → `browser_snapshot` for next page fields
+5. **After each fill**: Re-snapshot to verify the value was accepted
+6. **Action logging**: Log each fill action per `modes/browser-session.md` → Action Logging
+
+**CAPTCHA/2FA during fill**: If CAPTCHA or 2FA detected at any point during form fill, STOP immediately per `modes/browser-session.md`. Wait for user to resolve and type "resume".
+
+**Partial form preservation**: If flow is interrupted, the action log records all filled fields and values for resumption.
+
+## SUBMISSION GATE (CRITICAL — MANDATORY)
+
+**Before clicking ANY Submit/Apply/Send/Bewerben/Absenden button:**
+
+1. **STOP.** Do NOT click the submit button.
+2. **Present summary** to the user:
+   ```
+   ## Submission Review — [Empresa] / [Rol]
+
+   Filled fields:
+   - Name: [value]
+   - Email: [value]
+   - Cover Letter: [first 100 chars]...
+   - [All other fields with values]
+
+   Files uploaded: [list]
+
+   ⚠️ Review carefully. Type "go" to submit or "abort" to cancel.
+   ```
+3. **Wait for user response**:
+   - User types `"go"` → `browser_click` the submit button
+   - User types `"abort"` → do NOT submit. Ask if they want to save progress.
+4. **Log the submission decision** to action log.
+
+**NO EXCEPTIONS.** This enforces the CLAUDE.md ethical rule: "NEVER submit without user review."
+
 ## Paso 6 — Post-apply (opcional)
 
 Si el candidato confirma que envió la aplicación:
@@ -99,9 +155,18 @@ Si el candidato confirma que envió la aplicación:
 2. Actualizar Section G del report con las respuestas finales
 3. Sugerir siguiente paso: `/career-ops contacto` para LinkedIn outreach
 
-## Scroll handling
+## Scroll handling (Playwright)
 
 Si el formulario tiene más preguntas que las visibles:
-- Pedir al candidato que haga scroll y comparta otro screenshot
-- O que pegue las preguntas restantes
-- Procesar en iteraciones hasta cubrir todo el formulario
+- Use `browser_evaluate` with `window.scrollTo(0, document.body.scrollHeight)` to scroll down → re-snapshot for new fields
+- For SPAs with lazy-loaded sections: `browser_wait_for` with `networkidle` → re-snapshot
+- **Manual fallback**: If browser_evaluate fails, ask the candidate to scroll manually and type "done" when ready → re-snapshot
+
+## Sin Playwright (fallback workflow)
+
+Si Playwright no está disponible, usar el workflow manual:
+1. El candidato comparte un screenshot del formulario (Read tool lee imágenes)
+2. O pega las preguntas del formulario como texto
+3. O dice empresa + rol para buscar en reports/
+4. Generate respuestas y presentarlas para copy-paste
+5. Para submit: siempre pedir confirmación del candidato antes de que envíe

@@ -190,6 +190,23 @@ search_queries:
 # Companies whose career pages are checked directly.
 # scan_method: playwright (default), websearch, greenhouse_api
 # For Greenhouse companies, add api: field for faster structured JSON access.
+#
+# Browser Autonomy Enhancement fields:
+# - requires_login: false  # true if portal needs authentication before scanning/applying
+# - cookie_file: ""  # path to storageState JSON (e.g., data/sessions/example.json)
+# - captcha_strategy: "stop"  # "stop" (HITL) or "skip" (mark [!] and continue)
+
+# -- Authenticated portals --
+# Portals that require login for JD extraction or application.
+# Session files are stored in data/sessions/<portal>.json (gitignored).
+
+authenticated_portals:
+  - name: LinkedIn
+    domain: linkedin.com
+    requires_login: true
+    cookie_file: "data/sessions/linkedin.json"
+    captcha_strategy: "stop"  # LinkedIn may trigger CAPTCHA; HITL required
+    notes: "Session captured via Playwright. Expires when cookies expire (~1 year for bcookie)."
 
 tracked_companies:
 
@@ -199,12 +216,18 @@ tracked_companies:
     careers_url: https://job-boards.greenhouse.io/anthropic
     api: https://boards-api.greenhouse.io/v1/boards/anthropic/jobs
     enabled: true
+    requires_login: false  # true if portal needs authentication before scanning/applying
+    cookie_file: ""  # path to storageState JSON (e.g., data/sessions/example.json)
+    captcha_strategy: "stop"  # "stop" (HITL) or "skip" (mark [!] and continue)
 
   - name: OpenAI
     careers_url: https://openai.com/careers
     scan_method: websearch
     scan_query: 'site:openai.com/careers "Solutions" OR "Forward Deployed" OR "AI Engineer"'
     enabled: true
+    requires_login: true
+    cookie_file: "data/sessions/openai.json"
+    captcha_strategy: "stop"
 
   # -- Voice AI & Conversational AI --
 
