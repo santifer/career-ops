@@ -599,9 +599,9 @@ const PATTERNS = [
   { type: QUERY_TYPES.SIMILAR_COMPANIES,   re: /\b(similar|like)\b.*\b(compan|startup)/i },
   { type: QUERY_TYPES.COMPANY_INTEL_DEEP,  re: /\b(deep|full|comprehensive)\b.*\b(research|analysis|intel)/i },
   { type: QUERY_TYPES.COMPANY_INTEL_DEEP,  re: /\b(financial|regulatory|funding|runway|filings|revenue)\b/i },  // merged: covers financial/regulatory queries
+  { type: QUERY_TYPES.MARKET_TRENDS,       re: /\b(trend|market|salary|compensation|hiring rate)\b/i },  // before QUICK to avoid "tell me about trends" shadowing
+  { type: QUERY_TYPES.MONITOR_CHANGES,     re: /\b(monitor|alert|notify)\b.*\b(company|role|job|posting|change)/i },  // requires intent word + target word (not just "watch")
   { type: QUERY_TYPES.COMPANY_INTEL_QUICK, re: /\b(tell me about|what is|company info|tech stack)\b/i },
-  { type: QUERY_TYPES.MARKET_TRENDS,       re: /\b(trend|market|salary|compensation|hiring rate)\b/i },
-  { type: QUERY_TYPES.MONITOR_CHANGES,     re: /\b(monitor|watch|alert|notify)\b/i },
   { type: QUERY_TYPES.FIND_PERSON,         re: /\b(who is|find|hiring manager|VP|head of|director)\b.*\bat\b/i },
   { type: QUERY_TYPES.FIND_PERSON,         re: /\b(manager|lead|director|VP)\b.*\b(for|of|at)\b/i },
   { type: QUERY_TYPES.DISCOVER_JOBS,       re: /\b(find|search|discover|look for)\b.*\b(job|role|position|opening)/i },
@@ -1253,7 +1253,7 @@ Email format detection via Firecrawl team page scraping + Exa search. Pattern li
 - Create: `intel/pipelines/gmail-io.mjs`
 - Create: `intel/pipelines/gmail-io.test.mjs`
 
-Gmail draft creation, response monitoring with resilient thread matching (thread ID + subject+recipient fallback + company+date proximity). Voice learning with scoped rules (universal vs industry-specific vs one-off). ATS email suggestions (to intelligence.md, NOT applications.md).
+Two cadences: (1) **Response monitoring (every 4h):** resilient thread matching (thread ID + subject+recipient fallback + company+date proximity), response classification, reply drafting, follow-up scheduling. (2) **Daily Gmail intelligence mining:** extract LinkedIn job alert emails → cross-reference prospects.md via dedup module, detect ATS status emails → surface as suggestions in intelligence.md (NOT applications.md — data contract), detect interview invitations → flag in briefing. Voice learning with scoped rules (universal vs industry-specific vs one-off).
 
 ### Task 23: Google Docs Resume Pipeline
 
@@ -1301,6 +1301,28 @@ Autoresearch-style tight eval loop. Reads test set from applications + reports. 
 - Create: `intel/self-improve/harness-optimizer.mjs`
 
 Meta-harness optimization (Ouroboros pattern). Analyzes Loop 2 history. Proposes updated eval criteria when Loop 2 plateaus. Monthly trigger.
+
+### Task 29: Schema Version Checker
+
+**Files:**
+- Modify: `intel/engine.mjs` (add SCHEMA_VERSION check)
+
+Add SCHEMA_VERSION comment detection for `data/applications.md` and `modes/_shared.md`. Warn if format has changed since intel was built. Advisory only — never blocks. Per spec Section 11 (Semantic Compatibility).
+
+### Task 30: Dedup Module (shared)
+
+**Files:**
+- Create: `intel/dedup.mjs`
+- Create: `intel/dedup.test.mjs`
+
+Shared cross-source deduplication module used by prospector, Gmail IO, and any pipeline that discovers roles. URL-exact matching + normalized company+role tuple matching. Per spec Section 6 (Cross-Source Deduplication). Extracted as shared module rather than embedded in one pipeline.
+
+### Task 31: Prospect Lifecycle Manager
+
+**Files:**
+- Create: `intel/pipelines/prospect-lifecycle.mjs`
+
+Handles prospect expiry (30-day auto-archive), compaction (90-day removal), and the "show expired" command. Runs as part of prospect_scan schedule. Per spec Section 6 (Prospect Expiry & Archival). Expired prospects do NOT generate negative learning signals unless user actively reviews and dismisses them.
 
 ---
 

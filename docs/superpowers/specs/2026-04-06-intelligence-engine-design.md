@@ -18,7 +18,7 @@ Career-ops today is reactive: the user pastes a URL, the system evaluates it. Di
 4. **Recursive self-improvement** — The system gets measurably better at scoring, discovering, and drafting with every interaction. Uses autoresearch/autoharness patterns with Gemma 4 for free overnight experimentation.
 5. **Gmail integration** — Full bidirectional: draft outreach, monitor responses, handle reply pipeline, learn the user's voice from sent email history.
 6. **US market first-class** — Compensation conventions, job boards, legal/cultural norms, outreach expectations.
-7. **Upstream-friendly** — Zero modifications to existing files. All new code in `intel/`, new modes additive, new data files in `data/` and `config/`.
+7. **Upstream-friendly** — Near-zero modifications to existing files (see Controlled Exceptions). All new code in `intel/`, new modes additive, new data files in `data/` and `config/`.
 
 ### Non-Goals
 
@@ -376,12 +376,45 @@ Given a company + role, find WHO is hiring and how to reach them — from the pe
 
 **Stage 6: Queue to Outreach Tracker**
 - Append to `data/outreach.md` with all discovered info
+- If Google Docs configured: create personalized CV via google-docs-mcp (see Section 14)
 - Status: `Drafted` (LinkedIn) or `Gmail Draft` (email, with draft ID)
+
+### Outreach Tracker Format (`data/outreach.md`)
+
+```markdown
+# Outreach Tracker
+
+## Queue (review and send)
+
+| # | Date | Company | Role | HM Name | Title | P.Conf | E.Conf | Channel | Status | Gmail ID | GDoc URL |
+|---|------|---------|------|---------|-------|--------|--------|---------|--------|----------|----------|
+
+P.Conf = Person confidence (HIGH/MED/LOW) — how sure we are this is the right HM
+E.Conf = Email confidence (HIGH/MED/LOW) — how sure we are the email reaches them
+
+## Drafts
+
+### {#} — {HM Name}, {Company}
+**LinkedIn DM:** {draft}
+**Email Subject:** {subject}
+**Email Body:** {body}
+**Personalized CV:** {google_docs_link}
+
+## Sent
+
+| # | Sent Date | Company | HM | Channel | Reply? | Notes |
+|---|-----------|---------|-----|---------|--------|-------|
+
+## Closed
+
+| # | Company | HM | Outcome | Lesson Learned |
+|---|---------|-----|---------|---------------|
+```
 
 ### Ethical Guardrails (Job Seeker Edition)
 
 - **NEVER auto-send outreach.** Creates drafts only — user reviews and sends.
-- **Email confidence is clearly labeled** — HIGH/MEDIUM/LOW so user knows what they're working with.
+- **Both confidence scores (person + email) are clearly labeled** — HIGH/MEDIUM/LOW so user knows what they're working with.
 - **Be honest in all outreach** — no fabricated connections, no fake mutual interests.
 - **Respect the user's time** — don't surface low-quality prospects just to look busy.
 - **Rate limit BrightData** — max 10 LinkedIn profile lookups per session (cost + account safety).
@@ -692,13 +725,13 @@ The Ouroboros/meta-harness pattern — optimize the optimizer itself.
 ```markdown
 # Strategy Ledger
 
-## Guiding Principles (validated, n >= 5)
-- {principle}. (n={count}, {accuracy}% accuracy)
+## Guiding Principles (validated, n >= 10, 3+ industries)
+- {principle}. (n={count}, {accuracy}% accuracy, industries={list})
 
-## Cautionary Principles (validated, n >= 5)
-- {principle}. (n={count})
+## Cautionary Principles (validated, n >= 10, 3+ industries)
+- {principle}. (n={count}, industries={list})
 
-## Active Hypotheses (testing, n < 5)
+## Active Hypotheses (testing, n < 10)
 - [ ] H1: {hypothesis} (n={count}, trending {positive/negative})
 
 ## Calibration Log
@@ -826,7 +859,7 @@ NEW: Cron → Gemma 4 eval loop → proposed changes →
 ### File Dependencies
 
 ```
-EXISTING (read-only by intel, never modified):
+EXISTING (read-only by intel, never modified — except CLAUDE.md and DATA_CONTRACT.md which receive delimited appends per Controlled Exceptions):
   cv.md, config/profile.yml, modes/_shared.md, modes/_profile.md,
   modes/oferta.md, data/applications.md, data/pipeline.md,
   data/scan-history.tsv, article-digest.md
@@ -865,6 +898,7 @@ A clearly marked section appended to CLAUDE.md during setup:
 | Wants to review outreach queue | outreach |
 | Wants to run self-improvement | improve |
 | Wants intelligence briefing | intel |
+| Wants to purge scraped PII data | purge-pii |
 
 See intel/README.md for full documentation.
 <!-- END INTEL ENGINE -->
@@ -910,10 +944,11 @@ For free overnight self-improvement. System works without it.
 3. Generate `config/intel.yml` from `profile.yml`
 4. Ask about Gmail mining → create `config/voice-profile.md`
 5. Check for Gemma 4 (`ollama list | grep gemma4`)
-6. Create empty data files (`outreach.md`, `prospects.md`, `intelligence.md`)
-7. Set up background schedules
-8. Run first discovery cycle immediately
-9. Confirm: "Intelligence engine is live."
+6. Check for Google Docs tools (`google-docs-mcp` configured? `gog` CLI available?) → enable/disable resume collaboration features accordingly
+7. Create empty data files (`outreach.md`, `prospects.md`, `intelligence.md`)
+8. Set up background schedules
+9. Run first discovery cycle immediately
+10. Confirm: "Intelligence engine is live."
 
 ---
 
@@ -926,6 +961,7 @@ For free overnight self-improvement. System works without it.
 | `/career-ops outreach` | `modes/outreach.md` | Review outreach queue, Gmail drafts, responses |
 | `/career-ops intel` | (reads `data/intelligence.md`) | Show latest intelligence briefing |
 | `/career-ops improve` | `modes/improve.md` | Run self-improvement cycle now |
+| `/career-ops purge-pii` | `modes/purge.md` | Scan and redact scraped PII data older than retention period |
 | (paste URL, enhanced) | existing `auto-pipeline.md` | Existing eval + NEW HM discovery suggestion |
 
 ### Relationship to Existing Modes
