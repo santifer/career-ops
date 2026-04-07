@@ -57,14 +57,17 @@ git clone https://github.com/santifer/career-ops.git
 cd career-ops && npm install
 npx playwright install chromium   # Required for PDF generation
 
-# 2. Configure
+# 2. Check setup
+npm run doctor                     # Validates all prerequisites
+
+# 3. Configure
 cp config/profile.example.yml config/profile.yml  # Edit with your details
 cp templates/portals.example.yml portals.yml       # Customize companies
 
-# 3. Add your CV
+# 4. Add your CV
 # Create cv.md in the project root with your CV in markdown
 
-# 4. Personalize with Claude
+# 5. Personalize with Claude
 claude   # Open Claude Code in this directory
 
 # Then ask Claude to adapt the system to you:
@@ -73,7 +76,7 @@ claude   # Open Claude Code in this directory
 # "Add these 5 companies to portals.yml"
 # "Update my profile with this CV I'm pasting"
 
-# 5. Start using
+# 6. Start using
 # Paste a job URL or run /career-ops
 ```
 
@@ -240,14 +243,17 @@ Construido por alguien que lo uso para evaluar 740+ ofertas, generar 100+ CVs pe
 git clone https://github.com/santifer/career-ops.git
 cd career-ops && npm install
 
-# 2. Configurar
+# 2. Verificar setup
+npm run doctor                     # Valida todos los prerequisitos
+
+# 3. Configurar
 cp config/profile.example.yml config/profile.yml  # Editar con tus datos
 cp templates/portals.example.yml portals.yml       # Personalizar empresas
 
-# 3. Añadir tu CV
+# 4. Añadir tu CV
 # Crear cv.md en la raiz del proyecto con tu CV en markdown
 
-# 4. Personalizar con Claude
+# 5. Personalizar con Claude
 claude   # Abrir Claude Code en este directorio
 
 # Pidele a Claude que adapte el sistema a ti:
@@ -256,7 +262,7 @@ claude   # Abrir Claude Code en este directorio
 # "Añade estas empresas a portals.yml"
 # "Actualiza mi perfil con este CV que te pego"
 
-# 5. Usar
+# 6. Usar
 # Pega una URL de oferta o ejecuta /career-ops
 ```
 
