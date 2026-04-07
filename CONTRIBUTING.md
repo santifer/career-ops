@@ -63,7 +63,7 @@ node cv-sync-check.mjs        # Config check
 
 # Dashboard
 cd dashboard && go build -o career-dashboard .
-./career-dashboard --path .
+./career-dashboard --path ..
 ```
 
 ## Need Help?

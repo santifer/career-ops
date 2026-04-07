@@ -149,7 +149,7 @@ The built-in terminal dashboard lets you browse your pipeline visually:
 ```bash
 cd dashboard
 go build -o career-dashboard .
-./career-dashboard
+./career-dashboard --path ..
 ```
 
 Features: 6 filter tabs, 4 sort modes, grouped/flat view, lazy-loaded previews, inline status changes.
