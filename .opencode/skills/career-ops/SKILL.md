@@ -72,6 +72,4 @@ Once you've determined the mode:
 1. **For discovery mode:** Show the menu above
 2. **For all other modes:** Delegate to the corresponding command file in `.opencode/commands/{mode}.md`
 
-The command files handle loading the actual mode logic from `modes/` and executing the workflow.
-
-**Note:** Mode files in `modes/` are in Spanish. The command files will translate and execute instructions in English for the user.
+The command files are thin wrappers that delegate to the actual mode logic in `modes/`. Follow the instructions in the mode files to execute the workflow.
