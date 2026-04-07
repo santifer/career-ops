@@ -50,6 +50,7 @@ PRs without a corresponding issue may be closed if they don't align with the pro
 
 ```bash
 # Scripts
+npm run doctor                # Setup validation
 node verify-pipeline.mjs     # Health check
 node cv-sync-check.mjs        # Config check
 

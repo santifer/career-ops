@@ -1,3 +1,7 @@
+---
+description: AI job search command center fallback command for the OpenCode career-ops agent
+---
+
 # /career-ops Command (OpenCode)
 
 Use this command as a thin OpenCode wrapper over the runtime core.
