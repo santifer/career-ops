@@ -19,7 +19,7 @@ These files are personalization/work-product assets and must never be overwritte
 
 ### System Layer
 
-- `runtime/*`, `modes/_shared.md`, `modes/*.md`, `CLAUDE.md`, `AGENTS.md`
+- `runtime/*`, `modes/_shared.md`, `modes/*.md` (excluding `modes/_profile.md`), `CLAUDE.md`, `AGENTS.md`
 - `.claude/*`, `.opencode/*`, `*.mjs`, `dashboard/*`, `templates/*`, `docs/*`
 
 These files define shared system behavior and may be updated centrally.

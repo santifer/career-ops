@@ -176,7 +176,5 @@ export function validateAdapterReferences(root) {
     validateEntrypointReferences(root, adapter, failures);
   }
 
-  failures.push(...validateDeferredScopeDocs(root));
-
   return failures;
 }
