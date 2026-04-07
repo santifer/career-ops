@@ -1,0 +1,10 @@
+schema: spec-driven
+
+context: |
+  Project: career-ops
+  Runtime contract is canonical under `runtime/*`.
+  OpenCode premium UX is additive-only and MUST preserve routing, context loading, and safeguards.
+
+rules:
+  archive:
+    - Warn before merging destructive deltas

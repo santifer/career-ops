@@ -43,6 +43,11 @@ These files contain system logic, scripts, templates, and instructions that impr
 | `modes/training.md` | Training evaluation instructions |
 | `modes/de/*` | German language modes |
 | `CLAUDE.md` | Agent instructions |
+| `runtime/*` | Vendor-neutral runtime core |
+| `runtime/adapters/*` | Adapter capability manifests |
+| `AGENTS.md` | OpenCode premium adapter entry |
+| `.opencode/*` | OpenCode adapter command and agent entrypoints |
+| `docs/runtime-adapters/*` | Documented-only adapter guidance |
 | `*.mjs` | Utility scripts |
 | `batch/batch-prompt.md` | Batch worker prompt |
 | `batch/batch-runner.sh` | Batch orchestrator |
@@ -53,6 +58,8 @@ These files contain system logic, scripts, templates, and instructions that impr
 | `docs/*` | Documentation |
 | `VERSION` | Current version number |
 | `DATA_CONTRACT.md` | This file |
+
+The runtime core remains the source of truth. Adapter wrappers may add CLI-specific ergonomics, but they are still system-layer assets because they must stay aligned with `runtime/*`.
 
 ## The Rule
 

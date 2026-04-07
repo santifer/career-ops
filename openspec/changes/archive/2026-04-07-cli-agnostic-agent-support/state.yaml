@@ -1,0 +1,33 @@
+change: cli-agnostic-agent-support
+project: career-ops
+artifact_store:
+  mode: hybrid
+status: archived
+current_phase: archive
+next_recommended: none
+completed_phases:
+  - proposal
+  - spec
+  - design
+  - tasks
+  - apply
+  - verify
+  - archive
+artifacts:
+  proposal: openspec/changes/archive/2026-04-07-cli-agnostic-agent-support/proposal.md
+  specs:
+    - openspec/changes/archive/2026-04-07-cli-agnostic-agent-support/specs/agent-runtime-core/spec.md
+    - openspec/changes/archive/2026-04-07-cli-agnostic-agent-support/specs/cli-adapters/spec.md
+    - openspec/changes/archive/2026-04-07-cli-agnostic-agent-support/specs/runtime-compatibility-docs/spec.md
+  design: openspec/changes/archive/2026-04-07-cli-agnostic-agent-support/design.md
+  tasks: openspec/changes/archive/2026-04-07-cli-agnostic-agent-support/tasks.md
+  verify_report: openspec/changes/archive/2026-04-07-cli-agnostic-agent-support/verify-report.md
+  archive_report: openspec/changes/archive/2026-04-07-cli-agnostic-agent-support/archive-report.md
+engram_traceability:
+  archive_report_observation_id: 371
+  state_observation_id: 345
+  proposal_observation_id: 344
+  spec_observation_id: 348
+  design_observation_id: 352
+  tasks_observation_id: 355
+  verify_report_observation_id: 363

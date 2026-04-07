@@ -2,37 +2,50 @@
 
 ## System Overview
 
+```text
+                       ┌──────────────────────────────┐
+                       │ Adapter entrypoint           │
+                       │ Claude / OpenCode / future   │
+                       └──────────────┬───────────────┘
+                                      │
+                         ┌────────────▼────────────┐
+                         │ Vendor-neutral runtime  │
+                         │ runtime/modes.yml       │
+                         │ runtime/context-loading │
+                         │ runtime/operating-rules │
+                         └────────────┬────────────┘
+                                      │
+                   ┌──────────────────┼──────────────────┐
+                   │                  │                  │
+            ┌──────▼──────┐    ┌──────▼──────┐    ┌──────▼──────┐
+            │ Single Eval │    │ Portal Scan │    │ Shared mode │
+            │ auto-pipeline│   │  scan.md    │    │ business    │
+            └──────┬──────┘    └──────┬──────┘    │ modes/* +   │
+                   │                  │           │ CLAUDE.md   │
+                   └──────────┬───────┘           └──────┬──────┘
+                              │                           │
+                    ┌─────────▼──────────────────────────▼─────────┐
+                    │ Output pipeline: reports, PDFs, tracker TSVs │
+                    └──────────────────────┬───────────────────────┘
+                                           │
+                                 ┌─────────▼─────────┐
+                                 │ data/applications │
+                                 └───────────────────┘
 ```
-                    ┌─────────────────────────────────┐
-                    │         Claude Code Agent        │
-                    │   (reads CLAUDE.md + modes/*.md) │
-                    └──────────┬──────────────────────┘
-                               │
-            ┌──────────────────┼──────────────────────┐
-            │                  │                       │
-     ┌──────▼──────┐   ┌──────▼──────┐   ┌───────────▼────────┐
-     │ Single Eval  │   │ Portal Scan │   │   Batch Process    │
-     │ (auto-pipe)  │   │  (scan.md)  │   │   (batch-runner)   │
-     └──────┬──────┘   └──────┬──────┘   └───────────┬────────┘
-            │                  │                       │
-            │           ┌──────▼──────┐          ┌────▼─────┐
-            │           │ pipeline.md │          │ N workers│
-            │           │ (URL inbox) │          │ (claude -p)
-            │           └─────────────┘          └────┬─────┘
-            │                                          │
-     ┌──────▼──────────────────────────────────────────▼──────┐
-     │                    Output Pipeline                      │
-     │  ┌──────────┐  ┌────────────┐  ┌───────────────────┐  │
-     │  │ Report.md│  │  PDF (HTML  │  │ Tracker TSV       │  │
-     │  │ (A-F eval)│  │  → Puppeteer)│  │ (merge-tracker)  │  │
-     │  └──────────┘  └────────────┘  └───────────────────┘  │
-     └────────────────────────────────────────────────────────┘
-                               │
-                    ┌──────────▼──────────┐
-                    │  data/applications.md │
-                    │  (canonical tracker)  │
-                    └──────────────────────┘
-```
+
+`runtime/modes.yml`, `runtime/context-loading.yml`, and `runtime/operating-rules.md` are the source of truth. Adapters are wrappers over that contract, not alternate implementations.
+
+## Adapter Status
+
+| Adapter | Status | Contract |
+|---|---|---|
+| Claude | Production-ready | Thin wrapper over the runtime core |
+| OpenCode premium | First-class | Same runtime contract, additive-only premium/manual UX |
+| Codex CLI | Documented-only | Compatibility guidance only; no shipped parity in this PR |
+| Gemini CLI | Documented-only | Compatibility guidance only; no shipped parity in this PR |
+| Copilot CLI | Documented-only | Compatibility guidance only; no shipped parity in this PR |
+
+Documented-only adapters must not imply full parity. They exist to show how future adapters should bind to the same canonical core without forking routing, context loading, or safeguards.
 
 ## Evaluation Flow (Single Offer)
 
@@ -53,7 +66,7 @@
 
 ## Batch Processing
 
-The batch system processes multiple offers in parallel:
+The repo still contains a Claude-oriented batch system for existing workflows:
 
 ```
 batch-input.tsv    →  batch-runner.sh  →  N × claude -p workers
@@ -70,6 +83,8 @@ Each worker is a headless Claude instance (`claude -p`) that receives the full `
 
 The orchestrator manages parallelism, state, retries, and resume.
 
+**Boundary:** batch/background worker abstraction is deferred and not part of this PR. The runtime core in this change standardizes interactive/manual behavior only; it does not claim that OpenCode premium, Codex CLI, Gemini CLI, or Copilot CLI have equivalent worker support.
+
 ## Data Flow
 
 ```
@@ -80,6 +95,18 @@ portals.yml              →  Scanner configuration
 templates/states.yml     →  Canonical status values
 templates/cv-template.html → PDF generation template
 ```
+
+## Runtime Contract Flow
+
+```text
+adapter
+  -> runtime/modes.yml resolves the mode
+  -> runtime/context-loading.yml selects the files
+  -> runtime/operating-rules.md enforces safeguards
+  -> modes/* + CLAUDE.md provide business logic
+```
+
+That split keeps the core vendor-neutral while still allowing adapter-scoped ergonomics.
 
 ## File Naming Conventions
 

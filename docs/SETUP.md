@@ -2,9 +2,19 @@
 
 ## Prerequisites
 
-- [Claude Code](https://claude.ai/code) installed and configured
+- One supported interactive adapter:
+  - [Claude Code](https://claude.ai/code) for the production-ready path
+  - OpenCode premium for the first-class additive adapter path
 - Node.js 18+ (for PDF generation and utility scripts)
 - (Optional) Go 1.21+ (for the dashboard TUI)
+
+The runtime core is adapter-neutral:
+
+- `runtime/modes.yml`
+- `runtime/context-loading.yml`
+- `runtime/operating-rules.md`
+
+Claude and OpenCode premium bind to that same core. Codex CLI, Gemini CLI, and Copilot CLI are documented-only compatibility guides in this PR; they are not shipped with full interactive or worker parity.
 
 ## Quick Start (5 steps)
 
@@ -44,13 +54,27 @@ Edit `portals.yml`:
 
 ### 5. Start using
 
-Open Claude Code in this directory:
+Open your adapter in this directory:
 
 ```bash
 claude
 ```
 
+If you use OpenCode premium, follow `AGENTS.md` plus `.opencode/commands/career-ops.md` / `.opencode/agents/career-ops.md`.
+
 Then paste a job offer URL or description. Career-ops will automatically evaluate it, generate a report, create a tailored PDF, and track it.
+
+## Adapter Support Matrix
+
+| Adapter | Status | Notes |
+|--------|--------|-------|
+| Claude | Production-ready | Canonical interactive/manual path today |
+| OpenCode premium | First-class | Same runtime contract, additive-only premium/manual UX |
+| Codex CLI | documented-only | See `docs/runtime-adapters/codex.md`; must not imply full parity |
+| Gemini CLI | documented-only | See `docs/runtime-adapters/gemini-cli.md`; must not imply full parity |
+| Copilot CLI | documented-only | See `docs/runtime-adapters/copilot-cli.md`; must not imply full parity |
+
+**Scope note:** interactive/manual parity is the goal of this change. workers later: batch/background worker abstraction is deferred and not part of this PR.
 
 ## Available Commands
 
@@ -69,6 +93,7 @@ Then paste a job offer URL or description. Career-ops will automatically evaluat
 ```bash
 node cv-sync-check.mjs      # Check configuration
 node verify-pipeline.mjs     # Check pipeline integrity
+node test-all.mjs --quick    # Validate runtime/docs/adapter references
 ```
 
 ## Build Dashboard (Optional)

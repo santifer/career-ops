@@ -2,7 +2,7 @@
 
 **[:gb: English](#what-is-this)** | **[:es: Español](#es-versión-en-español)**
 
-> AI-powered job search pipeline built on Claude Code. Evaluate offers, generate tailored CVs, scan portals, and track everything -- powered by AI agents.
+> AI-powered job search pipeline with a vendor-neutral runtime core. Claude is production-ready, OpenCode premium is a first-class adapter, and other CLI adapters are documented without faking parity.
 
 ![Claude Code](https://img.shields.io/badge/Claude_Code-000?style=flat&logo=anthropic&logoColor=white)
 ![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat&logo=node.js&logoColor=white)
@@ -18,7 +18,7 @@
 
 ## What Is This
 
-Career-Ops turns Claude Code into a full job search command center. Instead of manually tracking applications in a spreadsheet, you get an AI-powered pipeline that:
+Career-Ops turns a neutral agent runtime into a full job search command center. Instead of manually tracking applications in a spreadsheet, you get an AI-powered pipeline that:
 
 - **Evaluates offers** with a structured A-F scoring system (10 weighted dimensions)
 - **Generates tailored PDFs** -- ATS-optimized CVs customized per job description
@@ -44,7 +44,7 @@ Built by someone who used it to evaluate 740+ job offers, generate 100+ tailored
 | **Negotiation Scripts** | Salary negotiation frameworks, geographic discount pushback, competing offer leverage |
 | **ATS PDF Generation** | Keyword-injected CVs with Space Grotesk + DM Sans design |
 | **Portal Scanner** | 45+ companies pre-configured (Anthropic, OpenAI, ElevenLabs, Retool, n8n...) + custom queries across Ashby, Greenhouse, Lever, Wellfound |
-| **Batch Processing** | Parallel evaluation with `claude -p` workers |
+| **Batch Processing** | Parallel evaluation with Claude workers today; cross-adapter worker abstraction is deferred |
 | **Dashboard TUI** | Terminal UI to browse, filter, and sort your pipeline |
 | **Human-in-the-Loop** | AI evaluates and recommends, you decide and act. The system never submits an application -- you always have the final call |
 | **Pipeline Integrity** | Automated merge, dedup, status normalization, health checks |
@@ -64,8 +64,9 @@ cp templates/portals.example.yml portals.yml       # Customize companies
 # 3. Add your CV
 # Create cv.md in the project root with your CV in markdown
 
-# 4. Personalize with Claude
-claude   # Open Claude Code in this directory
+# 4. Pick an adapter
+claude   # Claude Code (current production-ready adapter)
+# or use the OpenCode premium adapter surface documented in AGENTS.md
 
 # Then ask Claude to adapt the system to you:
 # "Change the archetypes to backend engineering roles"
@@ -77,9 +78,29 @@ claude   # Open Claude Code in this directory
 # Paste a job URL or run /career-ops
 ```
 
-> **The system is designed to be customized by Claude itself.** Modes, archetypes, scoring weights, negotiation scripts -- just ask Claude to change them. It reads the same files it uses, so it knows exactly what to edit.
+> **The runtime core is vendor-neutral, but not every adapter has the same implementation status.** Claude is production-ready, OpenCode premium is first-class and additive-only, and Codex CLI / Gemini CLI / Copilot CLI are documented-only guidance surfaces for now.
 
 See [docs/SETUP.md](docs/SETUP.md) for the full setup guide.
+
+## Runtime Core and Adapter Model
+
+The source of truth is the runtime core:
+
+- `runtime/modes.yml` — canonical input → mode routing
+- `runtime/context-loading.yml` — canonical mode → context loading
+- `runtime/operating-rules.md` — canonical safeguards and scope boundaries
+
+Adapters must point to that core instead of re-implementing it.
+
+| Adapter | Status | Scope today |
+|---------|--------|-------------|
+| Claude | Production-ready | Interactive/manual flows over the canonical runtime core |
+| OpenCode premium | First-class adapter | Same runtime contract, with additive-only premium/manual UX |
+| Codex CLI | Documented-only | Compatibility guidance only; not a shipped adapter in this PR |
+| Gemini CLI | Documented-only | Compatibility guidance only; not a shipped adapter in this PR |
+| Copilot CLI | Documented-only | Compatibility guidance only; not a shipped adapter in this PR |
+
+**Important:** batch/background worker abstraction is deferred and not part of this PR. The repo still contains Claude-oriented batch tooling, but that does NOT mean Codex CLI, Gemini CLI, Copilot CLI, or OpenCode premium have worker parity.
 
 ## Usage
 
@@ -124,6 +145,16 @@ You paste a job URL or description
   .md   .pdf   .tsv
 ```
 
+Runtime resolution for interactive/manual flows is adapter-neutral:
+
+```text
+adapter entrypoint
+  -> runtime/modes.yml
+  -> runtime/context-loading.yml
+  -> runtime/operating-rules.md
+  -> modes/* + CLAUDE.md
+```
+
 ## Pre-configured Portals
 
 The scanner comes with **45+ companies** ready to scan and **19 search queries** across major job boards. Copy `templates/portals.example.yml` to `portals.yml` and add your own:
@@ -161,7 +192,8 @@ career-ops/
 ├── config/
 │   └── profile.example.yml      # Template for your profile
 ├── modes/                       # 14 skill modes
-│   ├── _shared.md               # Shared context (customize this)
+│   ├── _shared.md               # Shared system context (do not personalize)
+│   ├── _profile.md              # Your personal overrides and framing
 │   ├── oferta.md                # Single evaluation
 │   ├── pdf.md                   # PDF generation
 │   ├── scan.md                  # Portal scanner
@@ -192,6 +224,8 @@ career-ops/
 ![Bubble Tea](https://img.shields.io/badge/Bubble_Tea-FF75B5?style=flat&logo=go&logoColor=white)
 
 - **Agent**: Claude Code with custom skills and modes
+- **Runtime core**: `runtime/*` is the vendor-neutral source of truth
+- **Adapters**: Claude + OpenCode premium today, Codex CLI / Gemini CLI / Copilot CLI documented-only for future compatibility
 - **PDF**: Playwright/Puppeteer + HTML template
 - **Scanner**: Playwright + Greenhouse API + WebSearch
 - **Dashboard**: Go + Bubble Tea + Lipgloss (Catppuccin Mocha theme)
