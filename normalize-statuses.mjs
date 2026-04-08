@@ -26,10 +26,6 @@ const DRY_RUN = process.argv.includes('--dry-run');
 function normalizeStatus(raw) {
   // Strip markdown bold
   let s = raw.replace(/\*\*/g, '').trim();
-
-  // Strip trailing date suffix (YYYY-MM-DD and everything after) generically before any alias matching
-  s = s.replace(/\s+\d{4}-\d{2}-\d{2}.*$/, '').trim();
-
   const lower = s.toLowerCase();
 
   // DUPLICADO variants → Discarded
@@ -45,6 +41,10 @@ function normalizeStatus(raw) {
 
   // Rechazada / Rechazado → Rejected
   if (/^rechazada?$/i.test(s)) return { status: 'Rejected' };
+  if (/^rechazado\s+\d{4}/i.test(s)) return { status: 'Rejected' };
+
+  // Aplicado with date → Applied (strip date)
+  if (/^aplicado\s+\d{4}/i.test(s)) return { status: 'Applied' };
 
   // CONDICIONAL / HOLD / EVALUAR / Verificar → Evaluated
   if (/^(condicional|hold|evaluar|verificar)$/i.test(s)) return { status: 'Evaluated' };
@@ -70,15 +70,14 @@ function normalizeStatus(raw) {
     if (lower === c.toLowerCase()) return { status: c };
   }
 
-  // Spanish and Russian aliases → English canonicals
-  if (['evaluada', 'оценена', 'ожидает'].includes(lower)) return { status: 'Evaluated' };
-  if (['aplicado', 'enviada', 'aplicada', 'applied', 'sent', 'отклик отправлен', 'откликнулся'].includes(lower)) return { status: 'Applied' };
-  if (['respondido', 'скрининг', 'ответили'].includes(lower)) return { status: 'Responded' };
-  if (['entrevista', 'собеседование', 'техническое интервью'].includes(lower)) return { status: 'Interview' };
-  if (['oferta', 'оффер', 'предложение', 'принят'].includes(lower)) return { status: 'Offer' };
-  if (['rechazado', 'rechazada', 'отказ', 'отказано'].includes(lower)) return { status: 'Rejected' };
-  if (['cerrada', 'descartada', 'отозвано', 'закрыта', 'нет ответа'].includes(lower)) return { status: 'Discarded' };
-  if (['no aplicar', 'no_aplicar', 'skip', 'пропустить', 'не откликаться'].includes(lower)) return { status: 'SKIP' };
+  // Spanish aliases → English canonicals
+  if (['evaluada'].includes(lower)) return { status: 'Evaluated' };
+  if (['aplicado', 'enviada', 'aplicada', 'applied', 'sent'].includes(lower)) return { status: 'Applied' };
+  if (['respondido'].includes(lower)) return { status: 'Responded' };
+  if (['entrevista'].includes(lower)) return { status: 'Interview' };
+  if (['oferta'].includes(lower)) return { status: 'Offer' };
+  if (['cerrada', 'descartada'].includes(lower)) return { status: 'Discarded' };
+  if (['no aplicar', 'no_aplicar', 'skip'].includes(lower)) return { status: 'SKIP' };
 
   // Unknown — flag it
   return { status: null, unknown: true };
