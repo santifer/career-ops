@@ -71,6 +71,12 @@ Built by someone who used it to evaluate 740+ job offers, generate 100+ tailored
 
 ## Quick Start
 
+**Choose your interface:**
+- **[Option A: Claude Code](#option-a-claude-code)** - Full AI assistant 
+- **[Option B: CLI](#option-b-standalone-cli)** - Command-line interface (pay-as-you-go, no subscription)
+
+### Option A: Claude Code (Recommended for AI Experience)
+
 ```bash
 # 1. Clone and install
 git clone https://github.com/santifer/career-ops.git
@@ -100,11 +106,41 @@ claude   # Open Claude Code in this directory
 # Paste a job URL or run /career-ops
 ```
 
+### Option B: Standalone CLI (No Subscription Required)
+
+```bash
+# 1. Clone and install (same as above)
+git clone https://github.com/santifer/career-ops.git
+cd career-ops && npm install
+npx playwright install chromium
+
+# 2. Get API key (free from openrouter.ai)
+# Sign up at https://openrouter.ai → Keys → Create Key
+
+# 3. Configure
+cp config/profile.example.yml config/profile.yml
+cp templates/portals.example.yml portals.yml
+echo "OPENROUTER_API_KEY=sk-or-v1-..." > .env  # Add your API key
+
+# 4. Add your CV
+# Create cv.md in the project root
+
+# 5. Start using the CLI
+career-ops evaluate "https://jobs.company.com/123" -t "Frontend Developer"
+career-ops tracker list
+career-ops pdf google
+```
+
+See [CLI-GUIDE.md](CLI-GUIDE.md) for complete CLI documentation.
+```
+
 > **The system is designed to be customized by Claude itself.** Modes, archetypes, scoring weights, negotiation scripts -- just ask Claude to change them. It reads the same files it uses, so it knows exactly what to edit.
 
 See [docs/SETUP.md](docs/SETUP.md) for the full setup guide.
 
 ## Usage
+
+### Claude Code Interface
 
 Career-ops is a single slash command with multiple modes:
 
@@ -124,6 +160,26 @@ Career-ops is a single slash command with multiple modes:
 ```
 
 Or just paste a job URL or description directly -- career-ops auto-detects it and runs the full pipeline.
+
+### CLI Interface
+
+Same commands, CLI syntax:
+
+```bash
+# Evaluate job
+career-ops evaluate "https://jobs.company.com/123" -t "Frontend Developer"
+
+# View tracker
+career-ops tracker
+
+# Generate PDF
+career-ops pdf company-slug
+
+# See all commands
+career-ops --help
+```
+
+See [CLI-GUIDE.md](CLI-GUIDE.md) for complete documentation.
 
 ## How It Works
 

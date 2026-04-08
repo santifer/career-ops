@@ -1,7 +1,8 @@
 {
   "name": "career-ops",
   "version": "1.0.0",
-  "description": "AI-powered job search pipeline built on Claude Code",
+  "description": "AI-powered job search pipeline built on Claude Code - now with standalone CLI support",
+  "type": "module",
   "scripts": {
     "doctor": "node doctor.mjs",
     "verify": "node verify-pipeline.mjs",
@@ -13,9 +14,26 @@
     "update:check": "node update-system.mjs check",
     "update": "node update-system.mjs apply",
     "rollback": "node update-system.mjs rollback",
-    "liveness": "node check-liveness.mjs"
+    "liveness": "node check-liveness.mjs",
+    "cli": "node cli/bin/career-ops-cli.js",
+    "cli:evaluate": "node cli/bin/career-ops-cli.js evaluate",
+    "cli:tracker": "node cli/bin/career-ops-cli.js tracker",
+    "cli:pdf": "node cli/bin/career-ops-cli.js pdf",
+    "cli:doctor": "node cli/bin/career-ops-cli.js doctor",
+    "cli:scan": "node cli/bin/career-ops-cli.js scan",
+    "cli:batch": "node cli/bin/career-ops-cli.js batch",
+    "cli:apply": "node cli/bin/career-ops-cli.js apply",
+    "cli:contact": "node cli/bin/career-ops-cli.js contact",
+    "cli:deep": "node cli/bin/career-ops-cli.js deep",
+    "cli:training": "node cli/bin/career-ops-cli.js training",
+    "cli:project": "node cli/bin/career-ops-cli.js project",
+    "cli:add-companies": "node cli/bin/career-ops-cli.js add-companies",
+    "cli:job-search": "node cli/bin/career-ops-cli.js job-search"
   },
-  "keywords": ["ai", "job-search", "claude-code", "career", "automation"],
+  "bin": {
+    "career-ops": "./cli/bin/career-ops-cli.js"
+  },
+  "keywords": ["ai", "job-search", "claude-code", "career", "automation", "cli", "open-source"],
   "author": "Santiago Fernández de Valderrama <hi@santifer.io> (https://santifer.io)",
   "homepage": "https://santifer.io",
   "repository": {
@@ -24,6 +42,18 @@
   },
   "license": "MIT",
   "dependencies": {
-    "playwright": "^1.58.1"
+    "playwright": "^1.58.1",
+    "commander": "^11.1.0",
+    "chalk": "^5.3.0",
+    "cheerio": "^1.0.0-rc.12",
+    "yaml": "^2.3.4",
+    "dotenv": "^16.3.1",
+    "cli-table3": "^0.6.3",
+    "ora": "^7.0.1",
+    "inquirer": "^9.2.12",
+    "node-fetch": "^3.3.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
