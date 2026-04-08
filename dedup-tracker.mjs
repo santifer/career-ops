@@ -66,18 +66,20 @@ const STATUS_RANK = {
 };
 
 function normalizeCompany(name) {
-  return name.toLowerCase()
+  return name.normalize('NFKC')
+    .toLowerCase()
     .replace(/[()]/g, '')
     .replace(/\s+/g, ' ')
-    .replace(/[^a-z0-9 ]/g, '')
+    .replace(/[^\p{L}\p{N} ]/gu, '')
     .trim();
 }
 
 function normalizeRole(role) {
-  return role.toLowerCase()
+  return role.normalize('NFKC')
+    .toLowerCase()
     .replace(/[()]/g, ' ')
     .replace(/\s+/g, ' ')
-    .replace(/[^a-z0-9 /]/g, '')
+    .replace(/[^\p{L}\p{N} /]/gu, '')
     .trim();
 }
 
