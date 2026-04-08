@@ -13,7 +13,7 @@
 import { chromium } from 'playwright';
 import { resolve, dirname } from 'path';
 import { readFile } from 'fs/promises';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -70,6 +70,41 @@ function normalizeTextForATS(html) {
   }
 }
 
+function normalizePathForMatch(path) {
+  return resolve(path).replace(/\\/g, '/').toLowerCase();
+}
+
+function isPathInsideAllowedRoots(pathToCheck, allowedRoots) {
+  const normalizedPath = normalizePathForMatch(pathToCheck);
+  return allowedRoots.some((root) => (
+    normalizedPath === root || normalizedPath.startsWith(`${root}/`)
+  ));
+}
+
+function isAllowedResourceUrl(rawUrl, allowedRoots) {
+  let parsed;
+  try {
+    parsed = new URL(rawUrl);
+  } catch {
+    return false;
+  }
+
+  if (parsed.protocol === 'about:' || parsed.protocol === 'data:') {
+    return true;
+  }
+
+  if (parsed.protocol !== 'file:') {
+    return false;
+  }
+
+  try {
+    const localPath = fileURLToPath(parsed);
+    return isPathInsideAllowedRoots(localPath, allowedRoots);
+  } catch {
+    return false;
+  }
+}
+
 async function generatePDF() {
   const args = process.argv.slice(2);
 
@@ -109,15 +144,23 @@ async function generatePDF() {
   let html = await readFile(inputPath, 'utf-8');
 
   // Resolve font paths relative to career-ops/fonts/
+  const inputDir = dirname(inputPath);
+  const assetsDir = resolve(inputDir, 'assets');
   const fontsDir = resolve(__dirname, 'fonts');
+  const fontsBaseUrl = pathToFileURL(`${fontsDir}/`).href;
+  const allowedRoots = [
+    normalizePathForMatch(fontsDir),
+    normalizePathForMatch(assetsDir),
+  ];
+
   html = html.replace(
     /url\(['"]?\.\/fonts\//g,
-    `url('file://${fontsDir}/`
+    `url('${fontsBaseUrl}`
   );
   // Close any unclosed quotes from the replacement
   html = html.replace(
-    /file:\/\/([^'")]+)\.woff2['"]\)/g,
-    `file://$1.woff2')`
+    /(file:\/\/\/[^'")]+\.woff2)['"]?\)/g,
+    `$1')`
   );
 
   // Normalize text for ATS compatibility (issue #1)
@@ -132,10 +175,19 @@ async function generatePDF() {
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
 
+  await page.route('**/*', async (route) => {
+    const requestUrl = route.request().url();
+    if (isAllowedResourceUrl(requestUrl, allowedRoots)) {
+      await route.continue();
+      return;
+    }
+    await route.abort('blockedbyclient');
+  });
+
   // Set content with file base URL for any relative resources
   await page.setContent(html, {
     waitUntil: 'networkidle',
-    baseURL: `file://${dirname(inputPath)}/`,
+    baseURL: pathToFileURL(`${inputDir}/`).href,
   });
 
   // Wait for fonts to load

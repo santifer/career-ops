@@ -36,3 +36,9 @@ node_modules/
 .claude/settings.local.json
 .claude/memory/
 career-dashboard
+dashboard/career-dashboard
+dashboard/career-dashboard.exe
+dashboard/career-dashboard-test
+dashboard/career-dashboard-test.exe
+dashboard/career-dashboard*
+dashboard/*.exe

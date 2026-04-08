@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  core-validation:
+    name: Core Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run setup readiness checks
+        run: npm run doctor
+
+      - name: Run quick repository test suite
+        run: node test-all.mjs --quick
+
+      - name: Verify pipeline contracts
+        run: npm run verify
+
+  dashboard-validation:
+    name: Dashboard Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    defaults:
+      run:
+        working-directory: dashboard
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: dashboard/go.mod
+
+      - name: Run dashboard tests
+        run: go test ./...
+
+      - name: Build dashboard binary
+        run: go build ./...

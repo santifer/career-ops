@@ -12,7 +12,7 @@
  */
 
 import { execFileSync, execSync } from 'child_process';
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'fs';
+import { chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { delimiter, dirname, join, relative } from 'path';
 import { fileURLToPath } from 'url';
@@ -127,6 +127,20 @@ cat >/dev/null
   }
 }
 
+function runNode(args, opts = {}) {
+  try {
+    return execFileSync('node', args, {
+      cwd: ROOT,
+      encoding: 'utf-8',
+      timeout: 60000,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      ...opts,
+    }).trim();
+  } catch {
+    return null;
+  }
+}
+
 function listFiles(dir, out = []) {
   for (const entry of readdirSync(dir)) {
     const full = join(dir, entry);
@@ -235,6 +249,87 @@ if (codexSafeArgv === null || codexUnsafeArgv === null || claudeSafeArgv === nul
   }
 }
 
+console.log('\n2c. PDF generation smoke test');
+
+const pdfSmokeRoot = mkdtempSync(join(tmpdir(), 'career-ops-pdf-smoke-'));
+const pdfSmokeInput = join(pdfSmokeRoot, 'smoke.html');
+const pdfSmokeOutput = join(pdfSmokeRoot, 'smoke.pdf');
+
+try {
+  writeFileSync(
+    pdfSmokeInput,
+    `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Career-Ops PDF Smoke</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 32px; color: #111; }
+      h1 { font-size: 22px; margin-bottom: 12px; }
+      p { font-size: 12px; line-height: 1.5; }
+    </style>
+  </head>
+  <body>
+    <h1>Career-Ops PDF Smoke</h1>
+    <p>This smoke test exercises ATS normalization for smart quotes, em dashes, ellipsis, and non-breaking spaces.</p>
+    <p>“Quoted text” — Product-minded platform engineer… Remote&nbsp;friendly.</p>
+  </body>
+</html>\n`,
+    'utf-8',
+  );
+
+  const atsSmokeLine = `${String.fromCodePoint(0x201c)}Quoted text${String.fromCodePoint(0x201d)} ` +
+    `${String.fromCodePoint(0x2014)} Product-minded platform engineer${String.fromCodePoint(0x2026)} ` +
+    `Remote${String.fromCodePoint(0x00a0)}friendly.`;
+  const normalizedSmokeHtml = readFileSync(pdfSmokeInput, 'utf-8').replace(
+    /<p>.*Product-minded platform engineer.*<\/p>/,
+    `<p>${atsSmokeLine}</p>`,
+  );
+  writeFileSync(pdfSmokeInput, normalizedSmokeHtml, 'utf-8');
+
+  const pdfResult = runNode(['generate-pdf.mjs', pdfSmokeInput, pdfSmokeOutput, '--format=a4']);
+  const hasPdf = existsSync(pdfSmokeOutput);
+  const pdfBytes = hasPdf ? statSync(pdfSmokeOutput).size : 0;
+  const normalizationSignals = ['smart-double-quote=', 'em-dash=', 'ellipsis=', 'nbsp='];
+  const normalizationLogged = pdfResult !== null && pdfResult.includes('ATS normalization:') &&
+    normalizationSignals.every(signal => pdfResult.includes(signal));
+  const pageCountLogged = pdfResult !== null && /Pages:\s*[1-9]\d*/.test(pdfResult);
+
+  if (pdfResult !== null && hasPdf && pdfBytes > 0 && normalizationLogged && pageCountLogged) {
+    pass('generate-pdf.mjs normalizes ATS-sensitive glyphs and produces a paginated PDF fixture');
+  } else {
+    fail('generate-pdf.mjs failed ATS normalization/PDF smoke expectations');
+  }
+} finally {
+  rmSync(pdfSmokeRoot, { recursive: true, force: true });
+}
+
+console.log('\n2d. Fixture-backed pipeline verification');
+
+const fixtureBundle = join(ROOT, 'fixtures', 'pipeline');
+if (!existsSync(fixtureBundle)) {
+  fail('Missing fixtures/pipeline bundle required for reproducible verification');
+} else {
+  const fixtureVerifyRoot = mkdtempSync(join(tmpdir(), 'career-ops-verify-fixture-'));
+  try {
+    cpSync(fixtureBundle, fixtureVerifyRoot, { recursive: true });
+    writeFileSync(join(fixtureVerifyRoot, 'verify-pipeline.mjs'), readFile('verify-pipeline.mjs'), 'utf-8');
+
+    const fixtureVerifyOutput = run('node verify-pipeline.mjs', { cwd: fixtureVerifyRoot });
+    if (
+      fixtureVerifyOutput !== null &&
+      fixtureVerifyOutput.includes('Checking 1 entries') &&
+      fixtureVerifyOutput.includes('Pipeline is clean')
+    ) {
+      pass('verify-pipeline.mjs validates the committed fixture bundle');
+    } else {
+      fail('verify-pipeline.mjs fixture validation failed');
+    }
+  } finally {
+    rmSync(fixtureVerifyRoot, { recursive: true, force: true });
+  }
+}
+
 // 3. DASHBOARD BUILD
 if (!QUICK) {
   console.log('\n3. Dashboard build');
@@ -242,12 +337,18 @@ if (!QUICK) {
   if (goVersion === null) {
     warn('Go not installed; dashboard build skipped');
   } else {
-    const outputName = process.platform === 'win32' ? 'career-dashboard-test.exe' : 'career-dashboard-test';
-    const build = run(`go build -o ${outputName} .`, { cwd: join(ROOT, 'dashboard') });
-    if (build !== null) {
-      pass('Dashboard compiles');
-    } else {
-      fail('Dashboard build failed');
+    const dashboardBuildRoot = mkdtempSync(join(tmpdir(), 'career-ops-dashboard-build-'));
+    try {
+      const outputName = process.platform === 'win32' ? 'career-dashboard-test.exe' : 'career-dashboard-test';
+      const outputPath = join(dashboardBuildRoot, outputName);
+      const build = run(`go build -o "${outputPath}" .`, { cwd: join(ROOT, 'dashboard') });
+      if (build !== null && existsSync(outputPath)) {
+        pass('Dashboard compiles');
+      } else {
+        fail('Dashboard build failed');
+      }
+    } finally {
+      rmSync(dashboardBuildRoot, { recursive: true, force: true });
     }
   }
 } else {
