@@ -55,7 +55,6 @@ narrative:
   superpowers:
     - "Operate confidently in HIPAA-regulated healthcare environments -- compliance isn't overhead, it's habit"
     - "Build and automate AD lifecycle management with PowerShell (Joiner/Mover/Leaver frameworks)"
-    - "Bridge IT support and security -- harden endpoints and respond to incidents without losing the user-first mindset"
   proof_points:
     - name: "Microsoft Sentinel Detection Rules"
       url: "https://gurungsandesh.com.np"
@@ -63,23 +62,23 @@ narrative:
       track: "security"
 
 compensation:
-  target_range: "USD 75,000 - 100,000"
+  target_range: "USD 75,000 - 120,000"
   currency: "USD"
-  minimum: "USD 65,000"
+  minimum: "USD 70,000"
   location_flexibility: "On-site or hybrid in NY/NJ metro area preferred; open to remote for the right role"
 
   alternate_ranges:
     - track: "support"
       target_range: "USD 70,000 - 90,000"
-      minimum: "USD 60,000"
+      minimum: "USD 70,000"
       note: "Desktop/IT Support Engineer roles -- competitive for senior-level in NJ metro healthcare."
     - track: "security"
-      target_range: "USD 80,000 - 105,000"
+      target_range: "USD 80,000 - 120,000"
       minimum: "USD 70,000"
       note: "Cybersecurity Engineer / Security Analyst roles -- reflects Security+, ISC2 CC, and active project portfolio."
     - track: "hybrid"
-      target_range: "USD 75,000 - 100,000"
-      minimum: "USD 65,000"
+      target_range: "USD 75,000 - 120,000"
+      minimum: "USD 70,000"
       note: "Healthcare IT security hybrid roles -- bridging support and security ops."
 
 location:
@@ -101,8 +100,7 @@ credentials:
     - "Google Cybersecurity Certificate"
     - "Blue Team Junior Analyst"
   in_progress:
-    - "Microsoft Sentinel / Azure Security home lab (ongoing)"
-    - "Healthcare IT/Cybersecurity certificate program (evaluating)"
+    - "Wazuh home lab (ongoing)"
 
 current_role:
   title: "IT Support Engineer"
