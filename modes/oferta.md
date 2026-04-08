@@ -155,3 +155,22 @@ Guardar evaluación completa en `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 ```markdown
 | # | Fecha | Empresa | Rol | Score | Estado | PDF | Report |
 ```
+
+### 3. Sync to Airtable
+
+If `modes/_profile.md` contains an `## Your Airtable Sync` section, sync the evaluation to Airtable:
+
+1. **Look up company** in Companies table by name. If not found, create a new company record.
+2. **Create a Roles record** with these fields:
+   - Company → linked record ID from step 1
+   - Role → role title from JD
+   - Link → JD URL
+   - Rating → score rounded to nearest integer (1-5)
+   - Notes → one-line evaluation summary (same as tracker notes)
+   - Salary Low / Salary High → comp range from Block D (if available, in USD)
+   - Remote? → "Remote", "Hybrid", or "On-site" based on detected policy
+3. **Report sync status** to user (e.g., "Synced to Airtable: Notion — Enterprise Technical Premium Support Specialist")
+
+**If Airtable MCP is unavailable** (tools not loaded, auth error), log a warning and continue — don't block the evaluation.
+
+Use the field IDs from `_profile.md` Airtable config. Use `list_records_for_table` with a filter on company name to look up existing companies before creating duplicates.
