@@ -23,6 +23,8 @@ Supported directly:
 
 - slash-command routing remains available,
 - the built-in batch worker providers `claude` and `codex` are verified,
+- built-in providers omit dangerous bypass flags by default,
+- provider-specific dangerous bypass flags require explicit opt-in via `CAREER_OPS_UNSAFE_AGENT_EXEC=1`,
 - the same `modes/*` files are reused.
 
 ### Codex, Gemini CLI, and Other Runtimes
@@ -37,7 +39,7 @@ Supported through the universal core:
 
 ## Batch Adapter Contract
 
-Out of the box, the runner ships with verified `claude` and `codex` providers. To avoid inventing unsupported flags for other tools, all other runtimes use an explicit adapter.
+Out of the box, the runner ships with verified `claude` and `codex` providers that omit dangerous bypass flags by default. To avoid inventing unsupported flags for other tools, all other runtimes use an explicit adapter.
 
 Runner inputs:
 
@@ -60,5 +62,12 @@ Expected behavior:
 - invoke the target runtime,
 - stream final worker output to stdout,
 - exit `0` on success, non-zero on failure.
+
+Security posture:
+
+- built-in runtimes should stay safe-by-default because batch prompts may contain untrusted third-party job content,
+- dangerous bypass flags are an explicit local opt-in, not the default,
+- the exact bypass flag is runtime-specific,
+- custom adapters should follow the same principle unless the user deliberately chooses otherwise.
 
 See `batch/agent-adapter.example.sh` for the skeleton.

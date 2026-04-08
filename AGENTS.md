@@ -133,6 +133,8 @@ The batch runner is agent-agnostic:
 
 - built-in verified providers: `claude`, `codex`
 - all other providers must use an adapter executable supplied by the user
+- built-in providers omit dangerous bypass flags by default
+- provider-specific dangerous bypass flags must be explicitly enabled with `CAREER_OPS_UNSAFE_AGENT_EXEC=1`
 
 Adapter contract:
 
@@ -150,6 +152,12 @@ Environment passed through by the runner:
 - `CAREER_OPS_TARGET_URL`
 
 The adapter must write the worker output to stdout and use exit code `0` on success.
+
+Important:
+
+- batch prompts may include third-party or scraped job content,
+- treat that content as untrusted,
+- do not make dangerous bypass flags the default for built-in runtimes.
 
 ## Pipeline Integrity
 

@@ -11,9 +11,10 @@
  *   node test-all.mjs --quick   # Skip dashboard build (faster)
  */
 
-import { execSync } from 'child_process';
-import { existsSync, readFileSync, readdirSync, statSync } from 'fs';
-import { dirname, join, relative } from 'path';
+import { execFileSync, execSync } from 'child_process';
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'fs';
+import { tmpdir } from 'os';
+import { delimiter, dirname, join, relative } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -52,7 +53,7 @@ function getGitBashPath() {
   ];
   for (const candidate of candidates) {
     if (existsSync(candidate)) {
-      return `"${candidate}"`;
+      return candidate;
     }
   }
   return null;
@@ -64,6 +65,66 @@ function fileExists(path) {
 
 function readFile(path) {
   return readFileSync(join(ROOT, path), 'utf-8');
+}
+
+function runBatchRunnerSmoke(agent, unsafe = false) {
+  const shellBinary = getGitBashPath();
+  if (shellBinary === null) {
+    return null;
+  }
+
+  const tempRoot = mkdtempSync(join(tmpdir(), 'career-ops-batch-smoke-'));
+  const batchDir = join(tempRoot, 'batch');
+  const binDir = join(tempRoot, 'bin');
+  const argvFile = join(tempRoot, `${agent}-argv.txt`);
+
+  try {
+    mkdirSync(batchDir, { recursive: true });
+    mkdirSync(binDir, { recursive: true });
+    mkdirSync(join(tempRoot, 'reports'), { recursive: true });
+    mkdirSync(join(tempRoot, 'data'), { recursive: true });
+
+    writeFileSync(join(batchDir, 'batch-runner.sh'), readFile('batch/batch-runner.sh'));
+    chmodSync(join(batchDir, 'batch-runner.sh'), 0o755);
+
+    writeFileSync(
+      join(batchDir, 'batch-input.tsv'),
+      'id\turl\tsource\tnotes\n1\thttps://example.com/job\tmanual\t-\n',
+    );
+    writeFileSync(join(batchDir, 'batch-prompt.md'), 'Smoke test prompt.\n');
+    writeFileSync(join(tempRoot, 'merge-tracker.mjs'), 'process.exit(0);\n');
+    writeFileSync(join(tempRoot, 'verify-pipeline.mjs'), 'process.exit(0);\n');
+
+    const stub = `#!/usr/bin/env bash
+printf '%s\n' "$*" > "$CAREER_OPS_TEST_ARGV_FILE"
+cat >/dev/null
+`;
+    writeFileSync(join(binDir, agent), stub);
+    chmodSync(join(binDir, agent), 0o755);
+
+    const env = {
+      ...process.env,
+      PATH: `${binDir}${delimiter}${process.env.PATH ?? ''}`,
+      CAREER_OPS_AGENT: agent,
+      CAREER_OPS_TEST_ARGV_FILE: argvFile,
+    };
+    if (unsafe) {
+      env.CAREER_OPS_UNSAFE_AGENT_EXEC = '1';
+    }
+
+    execFileSync(shellBinary, ['batch/batch-runner.sh'], {
+      cwd: tempRoot,
+      env,
+      encoding: 'utf-8',
+      timeout: 30000,
+    });
+
+    return readFileSync(argvFile, 'utf-8').trim();
+  } catch {
+    return null;
+  } finally {
+    rmSync(tempRoot, { recursive: true, force: true });
+  }
 }
 
 function listFiles(dir, out = []) {
@@ -103,8 +164,9 @@ const shellFiles = [
 ];
 
 if (gitBash !== null) {
+  const shellBinary = process.platform === 'win32' ? `"${gitBash}"` : gitBash;
   for (const f of shellFiles) {
-    const result = run(`${gitBash} -n ${f}`);
+    const result = run(`${shellBinary} -n ${f}`);
     if (result !== null) {
       pass(`${f} shell syntax OK`);
     } else {
@@ -135,6 +197,41 @@ for (const { name, allowFail } of scripts) {
     warn(`${name} exited with error (expected without user data)`);
   } else {
     fail(`${name} crashed`);
+  }
+}
+
+console.log('\n2b. Batch runner safety smoke tests');
+
+const codexSafeArgv = runBatchRunnerSmoke('codex', false);
+const codexUnsafeArgv = runBatchRunnerSmoke('codex', true);
+const claudeSafeArgv = runBatchRunnerSmoke('claude', false);
+const claudeUnsafeArgv = runBatchRunnerSmoke('claude', true);
+
+if (codexSafeArgv === null || codexUnsafeArgv === null || claudeSafeArgv === null || claudeUnsafeArgv === null) {
+  warn('Batch runner safety smoke tests skipped or failed to initialize');
+} else {
+  if (!codexSafeArgv.includes('--dangerously-bypass-approvals-and-sandbox')) {
+    pass('Codex default path omits dangerous bypass flag');
+  } else {
+    fail('Codex default path still enables dangerous bypass flag');
+  }
+
+  if (codexUnsafeArgv.includes('--dangerously-bypass-approvals-and-sandbox')) {
+    pass('Codex unsafe opt-in enables dangerous bypass flag');
+  } else {
+    fail('Codex unsafe opt-in does not enable dangerous bypass flag');
+  }
+
+  if (!claudeSafeArgv.includes('--dangerously-skip-permissions')) {
+    pass('Claude default path omits dangerous permission bypass flag');
+  } else {
+    fail('Claude default path still enables dangerous permission bypass flag');
+  }
+
+  if (claudeUnsafeArgv.includes('--dangerously-skip-permissions')) {
+    pass('Claude unsafe opt-in enables dangerous permission bypass flag');
+  } else {
+    fail('Claude unsafe opt-in does not enable dangerous permission bypass flag');
   }
 }
 
@@ -334,6 +431,12 @@ if (batchRunner.includes('CAREER_OPS_AGENT') && batchRunner.includes('CAREER_OPS
   pass('Batch runner exposes agent adapter configuration');
 } else {
   fail('Batch runner is still missing agent adapter configuration');
+}
+
+if (batchRunner.includes('CAREER_OPS_UNSAFE_AGENT_EXEC')) {
+  pass('Batch runner exposes explicit unsafe execution opt-in');
+} else {
+  fail('Batch runner missing explicit unsafe execution opt-in');
 }
 
 // 9. VERSION FILE

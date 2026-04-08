@@ -27,6 +27,7 @@ START_FROM=0
 MAX_RETRIES=2
 AGENT="${CAREER_OPS_AGENT:-claude}"
 AGENT_ADAPTER="${CAREER_OPS_AGENT_ADAPTER:-}"
+UNSAFE_AGENT_EXEC="${CAREER_OPS_UNSAFE_AGENT_EXEC:-0}"
 
 usage() {
   cat <<'USAGE'
@@ -37,7 +38,13 @@ Built-in verified provider:
   - codex
 
 All other providers must be wired through an adapter script. This avoids
-guessing unsupported CLI flags for Codex, Gemini CLI, or custom runtimes.
+guessing unsupported CLI flags for non-built-in runtimes such as Gemini CLI
+or custom adapters.
+
+Safe by default:
+  - built-in providers omit dangerous bypass flags by default
+  - to opt into provider-specific dangerous bypass flags, set CAREER_OPS_UNSAFE_AGENT_EXEC=1
+  - use unsafe mode only in a trusted local environment
 
 Usage: batch-runner.sh [OPTIONS]
 
@@ -72,6 +79,9 @@ Examples:
 
   # Use the verified Codex CLI path
   CAREER_OPS_AGENT=codex ./batch-runner.sh
+
+  # Opt into unsafe local execution explicitly
+  CAREER_OPS_AGENT=codex CAREER_OPS_UNSAFE_AGENT_EXEC=1 ./batch-runner.sh
 
   # Use a custom adapter for another runtime
   CAREER_OPS_AGENT=gemini CAREER_OPS_AGENT_ADAPTER=./batch/my-gemini-adapter.sh ./batch-runner.sh
@@ -164,28 +174,41 @@ check_prerequisites() {
   mkdir -p "$LOGS_DIR" "$TRACKER_DIR" "$REPORTS_DIR"
 }
 
+unsafe_exec_enabled() {
+  [[ "$UNSAFE_AGENT_EXEC" == "1" ]]
+}
+
 invoke_worker() {
   local resolved_prompt="$1"
   local prompt="$2"
 
   if [[ "$AGENT" == "claude" ]]; then
-    claude -p \
-      --dangerously-skip-permissions \
-      --append-system-prompt-file "$resolved_prompt" \
-      "$prompt"
+    local -a claude_args=(
+      -p
+      --append-system-prompt-file "$resolved_prompt"
+    )
+    if unsafe_exec_enabled; then
+      claude_args+=(--dangerously-skip-permissions)
+    fi
+    claude "${claude_args[@]}" "$prompt"
     return
   fi
 
   if [[ "$AGENT" == "codex" ]]; then
+    local -a codex_args=(
+      exec
+      --color never
+      -C "$PROJECT_DIR"
+      -
+    )
+    if unsafe_exec_enabled; then
+      codex_args+=(--dangerously-bypass-approvals-and-sandbox)
+    fi
     {
       cat "$resolved_prompt"
       printf '\n\n'
       printf '%s\n' "$prompt"
-    } | codex exec \
-      --color never \
-      --dangerously-bypass-approvals-and-sandbox \
-      -C "$PROJECT_DIR" \
-      -
+    } | codex "${codex_args[@]}"
     return
   fi
 
@@ -482,6 +505,11 @@ main() {
 
   echo "=== career-ops batch runner ==="
   echo "Agent: $AGENT | Parallel: $PARALLEL | Max retries: $MAX_RETRIES"
+  if unsafe_exec_enabled; then
+    echo "Execution mode: UNSAFE (approval/sandbox bypass enabled by explicit opt-in)"
+  else
+    echo "Execution mode: safe default"
+  fi
   echo "Input: $total_input offers"
   echo ""
 

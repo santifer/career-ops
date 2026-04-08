@@ -33,6 +33,7 @@ If `modes/_profile.md` is missing, create it from `modes/_profile.template.md`.
 
 - Claude still needs this compatibility file because it does not use `AGENTS.md` natively.
 - The batch runner now has two verified built-in worker providers: `claude` and `codex`.
+- Built-in runtimes now omit dangerous bypass flags by default. Provider-specific bypass flags are opt-in via `CAREER_OPS_UNSAFE_AGENT_EXEC=1`.
 - Other runtimes still use the external adapter contract documented in `AGENTS.md` and `docs/AGENT_COMPATIBILITY.md`.
 - OpenCode and Claude share the same core `modes/*` files and the same data contract.
 

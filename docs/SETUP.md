@@ -64,6 +64,18 @@ Then paste a job offer URL or description. Career-ops will evaluate it, generate
 
 If your runtime does not support slash commands, ask for the corresponding mode conversationally (for example: "run scan mode" or "evaluate this JD with auto-pipeline").
 
+## Runtime Safety
+
+- Built-in batch providers: `claude`, `codex`
+- Default behavior: dangerous bypass flags are omitted
+- Unsafe automation is opt-in only and intended for trusted local environments:
+
+```bash
+CAREER_OPS_AGENT=codex CAREER_OPS_UNSAFE_AGENT_EXEC=1 ./batch/batch-runner.sh
+```
+
+This matters because batch prompts may include scraped or third-party job content.
+
 ## Verify Setup
 
 ```bash
