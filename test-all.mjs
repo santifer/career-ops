@@ -439,6 +439,25 @@ if (batchRunner.includes('CAREER_OPS_UNSAFE_AGENT_EXEC')) {
   fail('Batch runner missing explicit unsafe execution opt-in');
 }
 
+const updaterContent = readFile('update-system.mjs');
+if (updaterContent.includes("execFileSync('git', args")) {
+  pass('Updater uses argument-based git execution');
+} else {
+  fail('Updater does not use argument-based git execution');
+}
+
+if (updaterContent.includes('const VERSION_RE = /^\\d+\\.\\d+\\.\\d+$/;') && updaterContent.includes('assertVersion(')) {
+  pass('Updater validates VERSION as strict semver');
+} else {
+  fail('Updater missing strict VERSION validation');
+}
+
+if (!updaterContent.includes('execSync(`git ${cmd}`')) {
+  pass('Updater no longer constructs git shell commands from strings');
+} else {
+  fail('Updater still constructs git shell commands from strings');
+}
+
 // 9. VERSION FILE
 console.log('\n9. Version file');
 
