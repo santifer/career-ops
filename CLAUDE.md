@@ -235,12 +235,34 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 
 ## Offer Verification -- MANDATORY
 
+### Rule 1: Verify on the EMPLOYER'S job board — CRITICAL
+
+**NEVER trust aggregator sites** (Flexionis, CyberSecJobs, Indeed, ZipRecruiter, Glassdoor, TeaHQ, DailyRemote, Lensa, etc.) as proof that a job exists. Aggregators scrape stale data, fabricate listings, and link to expired roles. A job is only real if it appears on the **employer's own careers page or their ATS** (Greenhouse, Ashby, Lever, Workable, iCIMS, etc.).
+
+**Validation workflow for every discovered role:**
+1. Identify the employer's official careers URL (check `portals.yml` or search `"{company}" careers`)
+2. Navigate to the employer's careers page with Playwright (`browser_navigate` + `browser_snapshot`)
+3. Search/filter for the role title on their page
+4. **The role MUST appear on the employer's own site.** If it only exists on aggregators, mark as `stale/unverified` and do NOT add to pipeline or tracker
+5. Capture the **canonical employer URL** (the direct link on their ATS/careers page) — this is the URL that goes into pipeline.md and reports
+
+**If you cannot find the role on the employer's site:**
+- It is likely closed, filled, or was never real
+- Do NOT evaluate it, do NOT generate a PDF, do NOT add to tracker
+- Log it in `scan-history.tsv` with status `skipped_unverified`
+
+### Rule 2: Verify the posting is still active
+
 **NEVER trust WebSearch/WebFetch to verify if an offer is still active.** ALWAYS use Playwright:
-1. `browser_navigate` to the URL
+1. `browser_navigate` to the canonical employer URL
 2. `browser_snapshot` to read content
 3. Only footer/navbar without JD = closed. Title + description + Apply = active.
 
-**Exception for batch workers (`claude -p`):** Playwright is not available in headless pipe mode. Use WebFetch as fallback and mark the report header with `**Verification:** unconfirmed (batch mode)`. The user can verify manually later.
+### Rule 3: Aggregator URLs are NEVER canonical
+
+When reporting results to the user, always provide the **employer's direct URL**, not the aggregator link. If you only have an aggregator URL, you haven't finished validation yet.
+
+**Exception for batch workers (`claude -p`):** Playwright is not available in headless pipe mode. Use WebFetch on the employer's careers page as fallback and mark the report header with `**Verification:** unconfirmed (batch mode)`. The user can verify manually later.
 
 ---
 

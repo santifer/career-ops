@@ -89,12 +89,21 @@ Los niveles son aditivos — se ejecutan todos, los resultados se mezclan y dedu
    - `applications.md` → empresa + rol normalizado ya evaluado
    - `pipeline.md` → URL exacta ya en pendientes o procesadas
 
-7.5. **Verificar liveness de resultados de WebSearch (Nivel 3)** — ANTES de añadir a pipeline:
+7.5. **Verificar en el sitio del EMPLEADOR — OBLIGATORIO para TODOS los niveles**
 
-   Los resultados de WebSearch pueden estar desactualizados (Google cachea resultados durante semanas o meses). Para evitar evaluar ofertas expiradas, verificar con Playwright cada URL nueva que provenga del Nivel 3. Los Niveles 1 y 2 son inherentemente en tiempo real y no requieren esta verificación.
+   **REGLA CRÍTICA: Un puesto solo es real si aparece en la página de empleo del empleador o su ATS directo.** Los agregadores (Flexionis, Indeed, ZipRecruiter, Glassdoor, Lensa, CyberSecJobs, TeaHQ, DailyRemote, etc.) scrappean datos obsoletos, fabrican listings, y enlazan a ofertas expiradas. NUNCA confiar en un agregador como prueba de que un puesto existe.
 
-   Para cada URL nueva de Nivel 3 (secuencial — NUNCA Playwright en paralelo):
-   a. `browser_navigate` a la URL
+   **Workflow de validación (aplica a TODOS los niveles, no solo Nivel 3):**
+
+   Para cada URL nueva candidata (secuencial — NUNCA Playwright en paralelo):
+
+   **Paso A — Identificar URL canónica del empleador:**
+   - Si la URL ya está en el ATS del empleador (Greenhouse, Ashby, Lever, Workable, iCIMS, careers page propia) → usar directamente
+   - Si la URL es de un agregador → buscar la página de careers del empleador (revisar `portals.yml` o buscar `"{company}" careers`)
+   - Navegar a la careers page del empleador con Playwright y buscar/filtrar el puesto
+
+   **Paso B — Verificar liveness en el sitio del empleador:**
+   a. `browser_navigate` a la URL canónica del empleador
    b. `browser_snapshot` para leer el contenido
    c. Clasificar:
       - **Activa**: título del puesto visible + descripción del rol + botón Apply/Submit/Solicitar
@@ -102,10 +111,17 @@ Los niveles son aditivos — se ejecutan todos, los resultados se mezclan y dedu
         - URL final contiene `?error=true` (Greenhouse redirige así cuando la oferta está cerrada)
         - Página contiene: "job no longer available" / "no longer open" / "position has been filled" / "this job has expired" / "page not found"
         - Solo navbar y footer visibles, sin contenido JD (contenido < ~300 chars)
-   d. Si expirada: registrar en `scan-history.tsv` con status `skipped_expired` y descartar
-   e. Si activa: continuar al paso 8
+      - **No encontrada en sitio del empleador**: el puesto NO aparece en su careers page → tratar como stale/fake
 
-   **No interrumpir el scan entero si una URL falla.** Si `browser_navigate` da error (timeout, 403, etc.), marcar como `skipped_expired` y continuar con la siguiente.
+   **Paso C — Clasificar resultado:**
+   - Si activa en sitio del empleador → continuar al paso 8, usando la URL canónica del empleador (NO la del agregador)
+   - Si expirada: registrar en `scan-history.tsv` con status `skipped_expired` y descartar
+   - Si no encontrada en sitio del empleador: registrar con status `skipped_unverified` y descartar
+   - Si `browser_navigate` da error (timeout, 403, etc.): marcar como `skipped_unverified` y continuar
+
+   **No interrumpir el scan entero si una URL falla.** Continuar con la siguiente.
+
+   **URLs canónicas**: La URL que se guarda en pipeline.md y reports SIEMPRE es la del empleador directo, NUNCA la del agregador.
 
 8. **Para cada oferta nueva verificada que pase filtros**:
    a. Añadir a `pipeline.md` sección "Pendientes": `- [ ] {url} | {company} | {title}`
@@ -113,7 +129,8 @@ Los niveles son aditivos — se ejecutan todos, los resultados se mezclan y dedu
 
 9. **Ofertas filtradas por título**: registrar en `scan-history.tsv` con status `skipped_title`
 10. **Ofertas duplicadas**: registrar con status `skipped_dup`
-11. **Ofertas expiradas (Nivel 3)**: registrar con status `skipped_expired`
+11. **Ofertas expiradas**: registrar con status `skipped_expired`
+12. **Ofertas no verificables en sitio del empleador**: registrar con status `skipped_unverified` (solo existía en agregadores)
 
 ## Extracción de título y empresa de WebSearch results
 
@@ -182,6 +199,54 @@ Cada empresa en `tracked_companies` debe tener `careers_url` — la URL directa 
 1. Anotar en el resumen de salida
 2. Intentar scan_query como fallback
 3. Marcar para actualización manual
+
+## Búsqueda ampliada para roles ejecutivos (VP+/C-suite)
+
+Los Niveles 1-3 están optimizados para roles IC-to-Director. Para roles VP+/C-suite, añadir estas estrategias:
+
+### Nivel 4 — Greenhouse/Ashby/Lever API bulk scan (EXECUTIVE DISCOVERY)
+
+Muchas empresas top usan Greenhouse, Ashby, o Lever. Sus APIs devuelven JSON con TODOS los roles abiertos — filtrar por título es rápido y confiable.
+
+**Greenhouse API pattern:**
+```
+curl -s https://boards-api.greenhouse.io/v1/boards/{slug}/jobs | jq '.jobs[] | select(.title | test("VP|Vice President|Head of|Director|Chief|Principal|SVP|Senior Director"; "i")) | {title, location: .location.name, url: .absolute_url}'
+```
+
+**Ashby GraphQL pattern:**
+```
+curl -s "https://jobs.ashbyhq.com/api/non-user-graphql?operationName=ApiJobBoardWithTeams" \
+  -H "Content-Type: application/json" \
+  -d '{"operationName":"ApiJobBoardWithTeams","variables":{"organizationHostedJobsPageName":"{slug}"},"query":"query ApiJobBoardWithTeams($organizationHostedJobsPageName: String!) { jobBoard: jobBoardWithTeams(organizationHostedJobsPageName: $organizationHostedJobsPageName) { teams { name jobPostings { id title locationName } } } }"}'
+```
+
+**Lever API pattern:**
+```
+curl -s https://api.lever.co/v0/postings/{slug}?mode=json | jq '.[] | select(.text | test("VP|Head|Director|Chief"; "i")) | {title: .text, location: .categories.location, url: .hostedUrl}'
+```
+
+**Empresas recomendadas para bulk scan ejecutivo:** Databricks, Datadog, Stripe, Cloudflare, GitLab, Elastic, Okta, MongoDB, Brex, Scale AI, OpenAI, Palantir, Salesforce, HashiCorp, Twilio — además de todas las `tracked_companies` con `api:` field.
+
+### Nivel 5 — Startup discovery (BROADER NET)
+
+Para descubrir startups que no están en `tracked_companies`:
+1. **Exa/parallel.ai semantic search:** Buscar "Head of AI" OR "VP AI" at recently funded startups
+2. **LinkedIn search:** `site:linkedin.com/jobs "VP AI" OR "Head of AI" remote`
+3. **Wellfound/AngelList:** `site:wellfound.com "Head of AI" OR "CTO" remote`
+4. **YC companies:** `site:ycombinator.com/companies "hiring" "Head of" OR "CTO" AI`
+5. **Gemini CLI:** Use `gemini -m gemini-3.1-pro-preview -p "search query"` for grounded web search
+
+**REGLA: Nivel 5 results SIEMPRE require employer-site verification (Paso 7.5).** Estos canales devuelven mixed quality — LinkedIn especially links to aggregator mirrors.
+
+### Lesson aprendida: Aggregator staleness rates
+
+De testing empírico (Abril 2026):
+- **Greenhouse/Ashby/Lever API:** ~100% reliable (live employer data)
+- **Employer careers page via Playwright:** ~95% reliable
+- **WebSearch with site: filters:** ~70% reliable (Google caches for weeks)
+- **Aggregators (Flexionis, Indeed, ZipRecruiter, etc.):** ~30% reliable for exec roles (high staleness, some fabricated)
+
+**SIEMPRE preferir API > Playwright > WebSearch > Aggregator.**
 
 ## Mantenimiento del portals.yml
 

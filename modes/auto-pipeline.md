@@ -16,6 +16,16 @@ Si el input es una **URL** (no texto de JD pegado), seguir esta estrategia para 
 
 **Si el input es texto de JD** (no URL): usar directamente, sin necesidad de fetch.
 
+## Paso 0.5 — Validar en el sitio del empleador (OBLIGATORIO)
+
+**Un puesto solo es real si aparece en la página de empleo del empleador o su ATS directo.** Si la URL proviene de un agregador (Flexionis, Indeed, ZipRecruiter, Glassdoor, Lensa, CyberSecJobs, TeaHQ, DailyRemote, etc.), DEBES encontrar el puesto en el sitio del empleador antes de continuar.
+
+1. Si la URL ya está en el ATS del empleador (Greenhouse, Ashby, Lever, Workable, iCIMS, careers page propia) → proceder directamente
+2. Si es un agregador → buscar la careers page del empleador (`portals.yml` o WebSearch `"{company}" careers`)
+3. Navegar con Playwright a la careers page del empleador y confirmar que el puesto existe
+4. **Si el puesto NO aparece en el sitio del empleador → PARAR.** No evaluar. Informar al usuario: "This role could not be verified on {company}'s careers page — it may be stale or fabricated by the aggregator."
+5. Usar la URL canónica del empleador (no la del agregador) para todo: report, tracker, pipeline
+
 ## Paso 1 — Evaluación A-F
 Ejecutar exactamente igual que el modo `oferta` (leer `modes/oferta.md` para todos los bloques A-F).
 
