@@ -28,71 +28,57 @@ function normalizeStatus(raw) {
   let s = raw.replace(/\*\*/g, '').trim();
   const lower = s.toLowerCase();
 
-  // DUPLICADO variants → Descartado
+  // DUPLICADO variants → Discarded
   if (/^duplicado/i.test(s) || /^dup\b/i.test(s)) {
-    return { status: 'Descartado', moveToNotes: raw.trim() };
+    return { status: 'Discarded', moveToNotes: raw.trim() };
   }
 
-  // CERRADA → Descartado
-  if (/^cerrada$/i.test(s)) return { status: 'Descartado' };
+  // CERRADA / Cancelada / Descartada → Discarded
+  if (/^cerrada$/i.test(s)) return { status: 'Discarded' };
+  if (/^cancelada/i.test(s)) return { status: 'Discarded' };
+  if (/^descartada$/i.test(s)) return { status: 'Discarded' };
+  if (/^descartado$/i.test(s)) return { status: 'Discarded' };
 
-  // Cancelada (possibly with date) → Descartado
-  if (/^cancelada/i.test(s)) return { status: 'Descartado' };
+  // Rechazada / Rechazado → Rejected
+  if (/^rechazada?$/i.test(s)) return { status: 'Rejected' };
+  if (/^rechazado\s+\d{4}/i.test(s)) return { status: 'Rejected' };
 
-  // Descartada → Descartado
-  if (/^descartada$/i.test(s)) return { status: 'Descartado' };
+  // Aplicado with date → Applied (strip date)
+  if (/^aplicado\s+\d{4}/i.test(s)) return { status: 'Applied' };
 
-  // Rechazada → Rechazado
-  if (/^rechazada$/i.test(s)) return { status: 'Rechazado' };
+  // CONDICIONAL / HOLD / EVALUAR / Verificar → Evaluated
+  if (/^(condicional|hold|evaluar|verificar)$/i.test(s)) return { status: 'Evaluated' };
 
-  // Rechazado with date → Rechazado (strip date)
-  if (/^rechazado\s+\d{4}/i.test(s)) return { status: 'Rechazado' };
+  // MONITOR → SKIP
+  if (/^monitor$/i.test(s)) return { status: 'SKIP' };
 
-  // Aplicado with date → Aplicado (strip date)
-  if (/^aplicado\s+\d{4}/i.test(s)) return { status: 'Aplicado' };
+  // GEO BLOCKER → SKIP
+  if (/geo.?blocker/i.test(s)) return { status: 'SKIP' };
 
-  // CONDICIONAL → Evaluada
-  if (/^condicional$/i.test(s)) return { status: 'Evaluada' };
+  // Repost #NNN → Discarded
+  if (/^repost/i.test(s)) return { status: 'Discarded', moveToNotes: raw.trim() };
 
-  // HOLD → Evaluada
-  if (/^hold$/i.test(s)) return { status: 'Evaluada' };
+  // "—" (em dash, no status) → Discarded
+  if (s === '—' || s === '-' || s === '') return { status: 'Discarded' };
 
-  // MONITOR → Evaluada
-  if (/^monitor$/i.test(s)) return { status: 'Evaluada' };
-
-  // EVALUAR → Evaluada
-  if (/^evaluar$/i.test(s)) return { status: 'Evaluada' };
-
-  // Verificar → Evaluada
-  if (/^verificar$/i.test(s)) return { status: 'Evaluada' };
-
-  // GEO BLOCKER → NO APLICAR
-  if (/geo.?blocker/i.test(s)) return { status: 'NO APLICAR' };
-
-  // Repost #NNN → Descartado
-  if (/^repost/i.test(s)) return { status: 'Descartado', moveToNotes: raw.trim() };
-
-  // "—" (em dash, no status) → Descartado
-  if (s === '—' || s === '-' || s === '') return { status: 'Descartado' };
-
-  // Already canonical — just fix casing/bold
+  // Already canonical (English, per states.yml) — just fix casing/bold
   const canonical = [
-    'Evaluada', 'Aplicado', 'Respondido', 'Entrevista',
-    'Oferta', 'Rechazado', 'Descartado', 'NO APLICAR',
+    'Evaluated', 'Applied', 'Responded', 'Interview',
+    'Offer', 'Rejected', 'Discarded', 'SKIP',
   ];
   for (const c of canonical) {
     if (lower === c.toLowerCase()) return { status: c };
   }
 
-  // Aliases from states.yml
-  if (['enviada', 'aplicada', 'applied', 'sent', 'отклик отправлен', 'откликнулся'].includes(lower)) return { status: 'Aplicado' };
-  if (['cerrada', 'descartada', 'отозвано', 'закрыта', 'нет ответа'].includes(lower)) return { status: 'Descartado' };
-  if (['no aplicar', 'no_aplicar', 'skip', 'пропустить', 'не откликаться'].includes(lower)) return { status: 'NO APLICAR' };
-  if (['respondido', 'responded', 'скрининг', 'ответили'].includes(lower)) return { status: 'Respondido' };
-  if (['entrevista', 'interview', 'собеседование', 'техническое интервью'].includes(lower)) return { status: 'Entrevista' };
-  if (['oferta', 'offer', 'оффер', 'предложение', 'принят'].includes(lower)) return { status: 'Oferta' };
-  if (['rechazado', 'rejected', 'отказ', 'отказано'].includes(lower)) return { status: 'Rechazado' };
-  if (['evaluada', 'evaluated', 'оценена', 'ожидает'].includes(lower)) return { status: 'Evaluada' };
+  // Spanish and Russian aliases → English canonicals
+  if (['evaluada', 'оценена', 'ожидает'].includes(lower)) return { status: 'Evaluated' };
+  if (['aplicado', 'enviada', 'aplicada', 'applied', 'sent', 'отклик отправлен', 'откликнулся'].includes(lower)) return { status: 'Applied' };
+  if (['respondido', 'скрининг', 'ответили'].includes(lower)) return { status: 'Responded' };
+  if (['entrevista', 'собеседование', 'техническое интервью'].includes(lower)) return { status: 'Interview' };
+  if (['oferta', 'оффер', 'предложение', 'принят'].includes(lower)) return { status: 'Offer' };
+  if (['rechazado', 'rechazada', 'отказ', 'отказано'].includes(lower)) return { status: 'Rejected' };
+  if (['cerrada', 'descartada', 'отозвано', 'закрыта', 'нет ответа'].includes(lower)) return { status: 'Discarded' };
+  if (['no aplicar', 'no_aplicar', 'skip', 'пропустить', 'не откликаться'].includes(lower)) return { status: 'SKIP' };
 
   // Unknown — flag it
   return { status: null, unknown: true };
