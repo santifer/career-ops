@@ -10,6 +10,20 @@ When the user asks to prep for an interview at a specific company+role, or when 
 4. **CV** at `cv.md` + `article-digest.md` — read for proof points
 5. **Profile** at `config/profile.yml` + `modes/_profile.md` — read for candidate context
 
+## Step 0 — Load Static Intel Baseline (if available)
+
+Before running any WebSearch, check if a pre-built guide exists:
+
+```
+modes/interview-intel/{Company}.md
+```
+
+**If the file exists:** Read it. Use it as your baseline for Steps 1-7. You still run WebSearch to freshen the data — the static guide is a starting point, not a replacement. Note at the top of your output: "Base intel loaded from `modes/interview-intel/{Company}.md` — supplemented with live research."
+
+**If the file does not exist:** Proceed directly to Step 1. The full WebSearch is your only source.
+
+**File name lookup:** Match the company name to PascalCase (e.g., "OpenAI" → `OpenAI.md`, "Hugging Face" → `HuggingFace.md`, "Perplexity" → `PerplexityAI.md`). If unsure, list files in `modes/interview-intel/` and pick the closest match.
+
 ## Step 1 — Research
 
 Run these WebSearch queries. Extract structured data, not summaries. Cite sources for every claim.
