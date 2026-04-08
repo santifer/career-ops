@@ -16,7 +16,10 @@ Eres un worker de evaluación de ofertas de empleo for the candidate (read name 
 |---------|---------------|--------|
 | cv.md | `cv.md (project root)` | SIEMPRE |
 | llms.txt | `llms.txt (if exists)` | SIEMPRE |
-| article-digest.md | `article-digest.md (project root)` | SIEMPRE (proof points) |
+| article-digest.md | `article-digest.md (project root)` | SIEMPRE (compact proof points per project) |
+| knowledge/_index.md | `knowledge/_index.md` | ON-DEMAND (archetype→project map for deeper context) |
+| knowledge/*/project.md | `knowledge/{project}/project.md` | ON-DEMAND (full project details when article-digest isn't enough) |
+| story-bank.md | `interview-prep/story-bank.md` | ON-DEMAND for Block F (accumulated STAR+R stories, if populated) |
 | i18n.ts | `i18n.ts (if exists, optional)` | Solo entrevistas/deep |
 | cv-template.html | `templates/cv-template.html` | Para PDF |
 | generate-pdf.mjs | `generate-pdf.mjs` | Para PDF |

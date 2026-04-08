@@ -31,6 +31,13 @@ node_modules/
 *.mov
 *.mp4
 
+# Knowledge base (user career docs, populated via voice-to-knowledge)
+knowledge/*
+!knowledge/.gitkeep
+!knowledge/_index.example.md
+!knowledge/example-project/
+!knowledge/example-project/*
+
 # Claude Code local
 .claude/settings.local.json
 .claude/memory/

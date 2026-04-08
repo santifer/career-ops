@@ -13,13 +13,18 @@
 | File | Path | When |
 |------|------|------|
 | cv.md | `cv.md` (project root) | ALWAYS |
-| article-digest.md | `article-digest.md` (if exists) | ALWAYS (detailed proof points) |
+| article-digest.md | `article-digest.md` (project root) | ALWAYS (compact proof points per project) |
+| knowledge/_index.md | `knowledge/_index.md` | ON-DEMAND (archetype → project mapping for deep context) |
+| knowledge/*/project.md | `knowledge/{project}/project.md` | ON-DEMAND (full project details when deeper context needed) |
+| knowledge/*/star.md | `knowledge/{project}/star.md` | ON-DEMAND (STAR frameworks for interview prep) |
+| story-bank.md | `interview-prep/story-bank.md` | ON-DEMAND for Block F (accumulated STAR+R stories, if populated) |
 | profile.yml | `config/profile.yml` | ALWAYS (candidate identity and targets) |
 | _profile.md | `modes/_profile.md` | ALWAYS (user archetypes, narrative, negotiation) |
 
 **RULE: NEVER hardcode metrics from proof points.** Read them from cv.md + article-digest.md at evaluation time.
 **RULE: For article/project metrics, article-digest.md takes precedence over cv.md.**
 **RULE: Read _profile.md AFTER this file. User customizations in _profile.md override defaults here.**
+**RULE: For deep project context during evals, search `knowledge/_index.md` for projects matching the detected archetype, then read relevant `project.md` and `star.md` files.**
 
 ---
 

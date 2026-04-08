@@ -22,7 +22,9 @@ Tabla con:
 
 ## Bloque B — Match con CV
 
-Lee `cv.md`. Crea tabla con cada requisito del JD mapeado a líneas exactas del CV.
+Lee `cv.md` y `article-digest.md`. Crea tabla con cada requisito del JD mapeado a líneas exactas del CV o proof points del digest.
+
+**Deep context:** After mapping CV, search `knowledge/_index.md` for projects matching the detected archetype. Read relevant `knowledge/{project}/project.md` files for deeper proof points, specific metrics, and architectural decisions that strengthen the match.
 
 **Adaptado al arquetipo:**
 - Si FDE → priorizar proof points de delivery rápida y client-facing
@@ -35,7 +37,7 @@ Lee `cv.md`. Crea tabla con cada requisito del JD mapeado a líneas exactas del 
 Sección de **gaps** con estrategia de mitigación para cada uno. Para cada gap:
 1. ¿Es un hard blocker o un nice-to-have?
 2. ¿Puede el candidato demostrar experiencia adyacente?
-3. ¿Hay un proyecto portfolio que cubra este gap?
+3. ¿Hay un proyecto portfolio que cubra este gap? Check `knowledge/` for deeper evidence.
 4. Plan de mitigación concreto (frase para cover letter, proyecto rápido, etc.)
 
 ## Bloque C — Nivel y Estrategia
@@ -71,7 +73,9 @@ Top 5 cambios al CV + Top 5 cambios a LinkedIn para maximizar match.
 
 The **Reflection** column captures what was learned or what would be done differently. This signals seniority — junior candidates describe what happened, senior candidates extract lessons.
 
-**Story Bank:** If `interview-prep/story-bank.md` exists, check if any of these stories are already there. If not, append new ones. Over time this builds a reusable bank of 5-10 master stories that can be adapted to any interview question.
+**Story Bank:** If `interview-prep/story-bank.md` has stories, match them to JD requirements using archetype and JD signal tags. Stories accumulate over time as you evaluate offers and populate the knowledge base.
+
+**Deep STAR context:** For stories needing more depth than the story bank provides, read the corresponding `knowledge/{project}/star.md` file for full STAR framework details including specific metrics, technical decisions, and narrative context.
 
 **Seleccionadas y enmarcadas según el arquetipo:**
 - FDE → enfatizar velocidad de entrega y client-facing
