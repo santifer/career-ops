@@ -465,7 +465,7 @@ print_summary() {
     case "$sstatus" in
       completed) completed=$((completed + 1))
         if [[ "$sscore" != "-" && -n "$sscore" ]]; then
-          score_sum=$(echo "$score_sum + $sscore" | bc 2>/dev/null || echo "$score_sum")
+          score_sum=$(awk -v a="$score_sum" -v b="$sscore" 'BEGIN { printf "%.10f", a + b }' 2>/dev/null || echo "$score_sum")
           score_count=$((score_count + 1))
         fi
         ;;
@@ -478,7 +478,7 @@ print_summary() {
 
   if (( score_count > 0 )); then
     local avg
-    avg=$(echo "scale=1; $score_sum / $score_count" | bc 2>/dev/null || echo "N/A")
+    avg=$(awk -v sum="$score_sum" -v count="$score_count" 'BEGIN { printf "%.1f", sum / count }' 2>/dev/null || echo "N/A")
     echo "Average score: $avg/5 ($score_count scored)"
   fi
 }

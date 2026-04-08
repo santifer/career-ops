@@ -54,7 +54,7 @@ Built by someone who used it to evaluate 740+ job offers, generate 100+ tailored
 ```bash
 # 1. Clone and install
 git clone https://github.com/santifer/career-ops.git
-cd career-ops && npm install
+cd career-ops && npm ci
 npx playwright install chromium   # Required for PDF generation
 
 # 2. Check setup
@@ -253,7 +253,7 @@ Construido por alguien que lo uso para evaluar 740+ ofertas, generar 100+ CVs pe
 ```bash
 # 1. Clonar
 git clone https://github.com/santifer/career-ops.git
-cd career-ops && npm install
+cd career-ops && npm ci
 
 # 2. Verificar setup
 npm run doctor                     # Valida todos los prerequisitos

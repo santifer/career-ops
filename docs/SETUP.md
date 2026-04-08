@@ -15,7 +15,7 @@
 ```bash
 git clone https://github.com/santifer/career-ops.git
 cd career-ops
-npm install
+npm ci
 npx playwright install chromium   # Required for PDF generation
 ```
 

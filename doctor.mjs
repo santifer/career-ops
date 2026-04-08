@@ -11,6 +11,8 @@ import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectRoot = __dirname;
+const args = new Set(process.argv.slice(2));
+const isCiMode = args.has('--ci') || process.env.CI === '1' || process.env.CI === 'true';
 
 // ANSI colors (only on TTY)
 const isTTY = process.stdout.isTTY;
@@ -37,7 +39,7 @@ function checkDependencies() {
   return {
     pass: false,
     label: 'Dependencies not installed',
-    fix: 'Run: npm install',
+    fix: 'Run: npm ci',
   };
 }
 
@@ -66,6 +68,9 @@ function checkCv() {
   if (existsSync(join(projectRoot, 'cv.md'))) {
     return { pass: true, label: 'cv.md found' };
   }
+  if (isCiMode && existsSync(join(projectRoot, 'examples'))) {
+    return { pass: true, label: 'cv.md optional in CI (examples/ available)' };
+  }
   return {
     pass: false,
     label: 'cv.md not found',
@@ -80,6 +85,9 @@ function checkProfile() {
   if (existsSync(join(projectRoot, 'config', 'profile.yml'))) {
     return { pass: true, label: 'config/profile.yml found' };
   }
+  if (isCiMode && existsSync(join(projectRoot, 'config', 'profile.example.yml'))) {
+    return { pass: true, label: 'config/profile.yml optional in CI (example available)' };
+  }
   return {
     pass: false,
     label: 'config/profile.yml not found',
@@ -93,6 +101,9 @@ function checkProfile() {
 function checkPortals() {
   if (existsSync(join(projectRoot, 'portals.yml'))) {
     return { pass: true, label: 'portals.yml found' };
+  }
+  if (isCiMode && existsSync(join(projectRoot, 'templates', 'portals.example.yml'))) {
+    return { pass: true, label: 'portals.yml optional in CI (example available)' };
   }
   return {
     pass: false,

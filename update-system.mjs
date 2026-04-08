@@ -8,16 +8,18 @@
  *
  * Usage:
  *   node update-system.mjs check      # Check if update available
- *   node update-system.mjs apply      # Apply update (after user confirms)
+ *   node update-system.mjs apply --reviewed                   # Apply update after review gate
+ *   node update-system.mjs apply --reviewed --install-deps    # Optional locked deps install
  *   node update-system.mjs rollback   # Rollback last update
  *   node update-system.mjs dismiss    # Dismiss update check
  *
  * See DATA_CONTRACT.md for the full system/user layer definitions.
  */
 
-import { execFileSync, execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 import { readFileSync, writeFileSync, existsSync, unlinkSync } from 'fs';
 import { join, dirname } from 'path';
+import { createInterface } from 'readline';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -71,6 +73,7 @@ const SYSTEM_PATHS = [
   'CITATION.cff',
   '.github/',
   'package.json',
+  'package-lock.json',
 ];
 
 // User layer paths — NEVER touch these (safety check)
@@ -112,6 +115,21 @@ function compareVersions(a, b) {
 
 function git(...args) {
   return execFileSync('git', args, { cwd: ROOT, encoding: 'utf-8', timeout: 30000 }).trim();
+}
+
+async function confirmReviewedInteractively() {
+  const rl = createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+  try {
+    const answer = await new Promise((resolve) => {
+      rl.question('Type "yes" to confirm you reviewed the incoming update diff: ', resolve);
+    });
+    return String(answer).trim().toLowerCase() === 'yes';
+  } finally {
+    rl.close();
+  }
 }
 
 // ── CHECK ───────────────────────────────────────────────────────
@@ -166,6 +184,20 @@ async function check() {
 
 async function apply() {
   const local = localVersion();
+  const installDeps = process.argv.includes('--install-deps');
+  let reviewed = process.argv.includes('--reviewed');
+
+  if (!reviewed && process.stdin.isTTY && process.stdout.isTTY) {
+    console.log('Review gate required before applying system updates.');
+    reviewed = await confirmReviewedInteractively();
+  }
+
+  if (!reviewed) {
+    console.error('Refusing to apply update without review gate.');
+    console.error('Review changes first, then run:');
+    console.error('  node update-system.mjs apply --reviewed [--install-deps]');
+    process.exit(1);
+  }
 
   // Check for lock
   const lockFile = join(ROOT, '.update-lock');
@@ -223,22 +255,56 @@ async function apply() {
 
     if (userFileTouched) {
       console.error('Aborting: user files were touched. Rolling back...');
-      git('checkout', '.');
+      for (const path of updated) {
+        try {
+          git('checkout', 'HEAD', '--', path);
+        } catch {
+          // Path may have been newly introduced by FETCH_HEAD.
+          try {
+            git('rm', '-r', '--ignore-unmatch', path);
+          } catch {
+            // Ignore cleanup failures; we still abort.
+          }
+        }
+      }
       unlinkSync(lockFile);
       process.exit(1);
     }
 
-    // 5. Install any new dependencies
-    try {
-      execSync('npm install --silent', { cwd: ROOT, timeout: 60000 });
-    } catch {
-      console.log('npm install skipped (may need manual run)');
+    // 5. Optional dependency install.
+    // Disabled by default so freshly fetched code is never executed automatically.
+    if (installDeps) {
+      const lockPath = join(ROOT, 'package-lock.json');
+      if (existsSync(lockPath)) {
+        try {
+          execFileSync('npm', ['ci', '--ignore-scripts', '--silent'], {
+            cwd: ROOT,
+            timeout: 120000,
+            stdio: ['ignore', 'pipe', 'pipe'],
+          });
+          console.log('Dependencies installed with npm ci --ignore-scripts');
+        } catch {
+          console.log('Dependency install failed; run npm ci --ignore-scripts manually');
+        }
+      } else {
+        console.log('Skipping dependency install: package-lock.json not found (lockfile install required)');
+      }
+    } else {
+      console.log('Dependency install skipped by default. Review changes, then run npm ci manually if needed.');
     }
 
     // 6. Commit the update
     const remote = localVersion(); // Re-read after checkout updated VERSION
     try {
-      git('add', '.');
+      for (const path of SYSTEM_PATHS) {
+        try {
+          git('add', '-A', path);
+        } catch {
+          // Path may not exist in this checkout.
+        }
+      }
+      // If the dismiss marker was removed, stage that deletion explicitly.
+      git('add', '-A', '.update-dismissed');
       git('commit', '-m', `chore: auto-update system files to v${remote}`);
     } catch {
       // Nothing to commit (already up to date)
@@ -285,7 +351,13 @@ function rollback() {
       }
     }
 
-    git('add', '.');
+    for (const path of SYSTEM_PATHS) {
+      try {
+        git('add', '-A', path);
+      } catch {
+        // Path may not exist in this checkout.
+      }
+    }
     git('commit', '-m', `chore: rollback system files from ${latest}`);
 
     console.log(`Rollback complete. System files restored from ${latest}.`);
@@ -313,6 +385,6 @@ switch (cmd) {
   case 'rollback': rollback(); break;
   case 'dismiss': dismiss(); break;
   default:
-    console.log('Usage: node update-system.mjs [check|apply|rollback|dismiss]');
+    console.log('Usage: node update-system.mjs [check|apply|rollback|dismiss] [--reviewed] [--install-deps]');
     process.exit(1);
 }
