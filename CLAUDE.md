@@ -205,7 +205,7 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 
 ### Russian Command Aliases
 
-When Russian modes are active, the system also accepts Russian subcommands:
+When Russian modes are active, the system also accepts Russian subcommands. These aliases are resolved by the LLM (not by a CLI router), so they work in conversational invocations but will not be recognized by the underlying skill router or OpenCode slash-command parser — use the canonical English subcommand when scripting or chaining commands.
 
 | Русская команда | Эквивалент | Описание |
 |----------------|------------|----------|

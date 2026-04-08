@@ -51,6 +51,15 @@ function validateStatus(status) {
     'descartado': 'Discarded', 'descartada': 'Discarded', 'cerrada': 'Discarded', 'cancelada': 'Discarded',
     'no aplicar': 'SKIP', 'no_aplicar': 'SKIP', 'skip': 'SKIP', 'monitor': 'SKIP',
     'geo blocker': 'SKIP',
+    // Russian → English
+    'оценена': 'Evaluated', 'ожидает': 'Evaluated',
+    'отклик отправлен': 'Applied', 'откликнулся': 'Applied',
+    'скрининг': 'Responded', 'ответили': 'Responded',
+    'собеседование': 'Interview', 'техническое интервью': 'Interview',
+    'оффер': 'Offer', 'предложение': 'Offer', 'принят': 'Offer',
+    'отказ': 'Rejected', 'отказано': 'Rejected',
+    'отозвано': 'Discarded', 'закрыта': 'Discarded', 'нет ответа': 'Discarded',
+    'пропустить': 'SKIP', 'не откликаться': 'SKIP',
   };
 
   if (aliases[lower]) return aliases[lower];

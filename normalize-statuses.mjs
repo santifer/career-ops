@@ -70,14 +70,15 @@ function normalizeStatus(raw) {
     if (lower === c.toLowerCase()) return { status: c };
   }
 
-  // Spanish aliases → English canonicals
-  if (['evaluada'].includes(lower)) return { status: 'Evaluated' };
-  if (['aplicado', 'enviada', 'aplicada', 'applied', 'sent'].includes(lower)) return { status: 'Applied' };
-  if (['respondido'].includes(lower)) return { status: 'Responded' };
-  if (['entrevista'].includes(lower)) return { status: 'Interview' };
-  if (['oferta'].includes(lower)) return { status: 'Offer' };
-  if (['cerrada', 'descartada'].includes(lower)) return { status: 'Discarded' };
-  if (['no aplicar', 'no_aplicar', 'skip'].includes(lower)) return { status: 'SKIP' };
+  // Spanish and Russian aliases → English canonicals
+  if (['evaluada', 'оценена', 'ожидает'].includes(lower)) return { status: 'Evaluated' };
+  if (['aplicado', 'enviada', 'aplicada', 'applied', 'sent', 'отклик отправлен', 'откликнулся'].includes(lower)) return { status: 'Applied' };
+  if (['respondido', 'скрининг', 'ответили'].includes(lower)) return { status: 'Responded' };
+  if (['entrevista', 'собеседование', 'техническое интервью'].includes(lower)) return { status: 'Interview' };
+  if (['oferta', 'оффер', 'предложение', 'принят'].includes(lower)) return { status: 'Offer' };
+  if (['rechazado', 'rechazada', 'отказ', 'отказано'].includes(lower)) return { status: 'Rejected' };
+  if (['cerrada', 'descartada', 'отозвано', 'закрыта', 'нет ответа'].includes(lower)) return { status: 'Discarded' };
+  if (['no aplicar', 'no_aplicar', 'skip', 'пропустить', 'не откликаться'].includes(lower)) return { status: 'SKIP' };
 
   // Unknown — flag it
   return { status: null, unknown: true };
