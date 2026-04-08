@@ -36,3 +36,4 @@ node_modules/
 .claude/memory/
 career-dashboard
 dashboard/career-dashboard.exe*
+package-lock.json

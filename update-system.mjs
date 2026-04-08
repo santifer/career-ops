@@ -46,6 +46,7 @@ const SYSTEM_PATHS = [
   'modes/training.md',
   'modes/de/',
   'CLAUDE.md',
+  'AGENTS.md',
   'generate-pdf.mjs',
   'merge-tracker.mjs',
   'verify-pipeline.mjs',
