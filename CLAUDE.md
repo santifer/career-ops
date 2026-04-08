@@ -58,6 +58,7 @@ AI-powered job search automation built on Claude Code: pipeline tracking, offer 
 | `article-digest.md` | Compact proof points from portfolio (optional) |
 | `interview-prep/story-bank.md` | Accumulated STAR+R stories across evaluations |
 | `interview-prep/{company}-{role}.md` | Company-specific interview intel reports |
+| `analyze-patterns.mjs` | Pattern analysis script (JSON output) |
 | `reports/` | Evaluation reports (format: `{###}-{company-slug}-{YYYY-MM-DD}.md`) |
 
 ### OpenCode Commands
@@ -79,6 +80,7 @@ When using [OpenCode](https://opencode.ai), the following slash commands are ava
 | `/career-ops-apply` | `/career-ops apply` | Live application assistant |
 | `/career-ops-scan` | `/career-ops scan` | Scan portals for new offers |
 | `/career-ops-batch` | `/career-ops batch` | Batch processing with parallel workers |
+| `/career-ops-patterns` | `/career-ops patterns` | Analyze rejection patterns and improve targeting |
 
 **Note:** OpenCode commands invoke the same `.claude/skills/career-ops/SKILL.md` skill used by Claude Code. The `modes/*` files are shared between both platforms.
 
@@ -215,6 +217,7 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 | Searches for new offers | `scan` |
 | Processes pending URLs | `pipeline` |
 | Batch processes offers | `batch` |
+| Asks about rejection patterns or wants to improve targeting | `patterns` |
 
 ### CV Source of Truth
 
