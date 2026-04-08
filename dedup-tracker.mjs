@@ -68,7 +68,6 @@ const STATUS_RANK = {
 function normalizeCompany(name) {
   return name.normalize('NFKC')
     .toLowerCase()
-    .replace(/[()]/g, '')
     .replace(/\s+/g, ' ')
     .replace(/[^\p{L}\p{N} ]/gu, '')
     .trim();
@@ -77,7 +76,6 @@ function normalizeCompany(name) {
 function normalizeRole(role) {
   return role.normalize('NFKC')
     .toLowerCase()
-    .replace(/[()]/g, ' ')
     .replace(/\s+/g, ' ')
     .replace(/[^\p{L}\p{N} /]/gu, '')
     .trim();

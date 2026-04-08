@@ -27,7 +27,7 @@ function normalizeStatus(raw) {
   // Strip markdown bold
   let s = raw.replace(/\*\*/g, '').trim();
 
-  // Strip trailing date suffix (YYYY-MM-DD...) generically before any alias matching
+  // Strip trailing date suffix (YYYY-MM-DD and everything after) generically before any alias matching
   s = s.replace(/\s+\d{4}-\d{2}-\d{2}.*$/, '').trim();
 
   const lower = s.toLowerCase();
