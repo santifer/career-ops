@@ -4,7 +4,7 @@
 
 ## Workflow
 
-1. **Прочитать** `data/pipeline.md` → найти `- [ ]` в секции "Pendientes" / "Ожидающие"
+1. **Прочитать** `data/pipeline.md` → найти `- [ ]` в секции "Ожидающие"
 2. **Для каждого URL**:
    a. Вычислить следующий `REPORT_NUM` (прочитать `reports/`, взять макс + 1)
    b. **Извлечь JD** через Playwright → WebFetch → WebSearch

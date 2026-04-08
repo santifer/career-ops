@@ -43,10 +43,21 @@ function validateStatus(status) {
   const aliases = {
     'enviada': 'Aplicado', 'aplicada': 'Aplicado', 'applied': 'Aplicado', 'sent': 'Aplicado',
     'cerrada': 'Descartado', 'descartada': 'Descartado', 'cancelada': 'Descartado',
-    'rechazada': 'Rechazado',
+    'rechazada': 'Rechazado', 'rejected': 'Rechazado',
     'no aplicar': 'NO APLICAR', 'no_aplicar': 'NO APLICAR', 'skip': 'NO APLICAR', 'monitor': 'NO APLICAR',
     'condicional': 'Evaluada', 'hold': 'Evaluada', 'evaluar': 'Evaluada', 'verificar': 'Evaluada',
+    'evaluated': 'Evaluada',
     'geo blocker': 'NO APLICAR',
+    'responded': 'Respondido', 'interview': 'Entrevista', 'offer': 'Oferta', 'discarded': 'Descartado',
+    // Russian aliases
+    'оценена': 'Evaluada', 'ожидает': 'Evaluada',
+    'отклик отправлен': 'Aplicado', 'откликнулся': 'Aplicado',
+    'скрининг': 'Respondido', 'ответили': 'Respondido',
+    'собеседование': 'Entrevista', 'техническое интервью': 'Entrevista',
+    'оффер': 'Oferta', 'предложение': 'Oferta', 'принят': 'Oferta',
+    'отказ': 'Rechazado', 'отказано': 'Rechazado',
+    'отозвано': 'Descartado', 'закрыта': 'Descartado', 'нет ответа': 'Descartado',
+    'пропустить': 'NO APLICAR', 'не откликаться': 'NO APLICAR',
   };
 
   if (aliases[lower]) return aliases[lower];

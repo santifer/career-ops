@@ -85,9 +85,14 @@ function normalizeStatus(raw) {
   }
 
   // Aliases from states.yml
-  if (['enviada', 'aplicada', 'applied', 'sent'].includes(lower)) return { status: 'Aplicado' };
-  if (['cerrada', 'descartada'].includes(lower)) return { status: 'Descartado' };
-  if (['no aplicar', 'no_aplicar', 'skip'].includes(lower)) return { status: 'NO APLICAR' };
+  if (['enviada', 'aplicada', 'applied', 'sent', 'отклик отправлен', 'откликнулся'].includes(lower)) return { status: 'Aplicado' };
+  if (['cerrada', 'descartada', 'отозвано', 'закрыта', 'нет ответа'].includes(lower)) return { status: 'Descartado' };
+  if (['no aplicar', 'no_aplicar', 'skip', 'пропустить', 'не откликаться'].includes(lower)) return { status: 'NO APLICAR' };
+  if (['respondido', 'responded', 'скрининг', 'ответили'].includes(lower)) return { status: 'Respondido' };
+  if (['entrevista', 'interview', 'собеседование', 'техническое интервью'].includes(lower)) return { status: 'Entrevista' };
+  if (['oferta', 'offer', 'оффер', 'предложение', 'принят'].includes(lower)) return { status: 'Oferta' };
+  if (['rechazado', 'rejected', 'отказ', 'отказано'].includes(lower)) return { status: 'Rechazado' };
+  if (['evaluada', 'evaluated', 'оценена', 'ожидает'].includes(lower)) return { status: 'Evaluada' };
 
   // Unknown — flag it
   return { status: null, unknown: true };
