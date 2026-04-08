@@ -66,7 +66,7 @@ title_filter:
     - "Infrastructure Support"
     - "Systems Support"
     - "IT Infrastructure"
-     - "Network Deployment"
+    - "Network Deployment"
 
   negative:
     # Roles outside target scope
@@ -99,14 +99,13 @@ title_filter:
     - "C-Suite"
 
   seniority_boost:
-    - "Senior"
-    - "Lead"
-    - "Staff"
-    - "Principal"
+    - "Tier I"
     - "Tier II"
     - "Tier III"
     - "Level II"
     - "Level III"
+    - "Entry-Level"
+    - "Mid-Level"
 
 # -- Search queries --
 
