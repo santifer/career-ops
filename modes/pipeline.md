@@ -33,14 +33,16 @@ Procesa URLs de ofertas acumuladas en `data/pipeline.md`. El usuario agrega URLs
 
 ## Detección inteligente de JD desde URL
 
-1. **Playwright (preferido):** `browser_navigate` + `browser_snapshot`. Funciona con todas las SPAs.
-2. **WebFetch (fallback):** Para páginas estáticas o cuando Playwright no está disponible.
-3. **WebSearch (último recurso):** Buscar en portales secundarios que indexan el JD.
+1. **Flowxtra fast-path:** Si `URL.host` es `flowxtra.com`, extraer `{has_id}` de `/apply/{has_id}` y llamar directamente a `GET https://app.flowxtra.com/api/candidate/jobs/{has_id}` (público, sin auth). Es más rápido y fiable que renderizar el SPA. Convertir los campos HTML (`description`, `tasks`, `requirements`) a markdown. **Cachear `company.subdomain`, `hash_id` (interno, ≠ has_id), y `company_id` en el metadata del report** — los necesita `apply-flowxtra.md` para no refetching.
+2. **Playwright (preferido):** `browser_navigate` + `browser_snapshot`. Funciona con todas las SPAs.
+3. **WebFetch (fallback):** Para páginas estáticas o cuando Playwright no está disponible.
+4. **WebSearch (último recurso):** Buscar en portales secundarios que indexan el JD.
 
 **Casos especiales:**
 - **LinkedIn**: Puede requerir login → marcar `[!]` y pedir al usuario que pegue el texto
 - **PDF**: Si la URL apunta a un PDF, leerlo directamente con Read tool
 - **`local:` prefix**: Leer el archivo local. Ejemplo: `local:jds/linkedin-pm-ai.md` → leer `jds/linkedin-pm-ai.md`
+- **`flowxtra.com`**: Usar el fast-path API arriba (no intentar Playwright salvo que la API falle)
 
 ## Numeración automática
 

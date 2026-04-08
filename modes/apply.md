@@ -2,6 +2,15 @@
 
 Modo interactivo para cuando el candidato está rellenando un formulario de aplicación en Chrome. Lee lo que hay en pantalla, carga el contexto previo de la oferta, y genera respuestas personalizadas para cada pregunta del formulario.
 
+## Router por origen de la URL
+
+Antes de ejecutar el workflow genérico, comprobar el host de la URL del report:
+
+- **`flowxtra.com`** → seguir `modes/apply-flowxtra.md` (envío vía API pública, sin scraping).
+- Cualquier otro host → seguir el workflow genérico de este archivo (Playwright + copy-paste).
+
+**Regla inamovible:** en ambos modos, NUNCA enviar una aplicación sin aprobación explícita del candidato en el chat (ver "Ethical Use" en `CLAUDE.md`).
+
 ## Requisitos
 
 - **Mejor con Playwright visible**: En modo visible, el candidato ve el navegador y Claude puede interactuar con la página.

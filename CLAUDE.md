@@ -59,6 +59,11 @@ AI-powered job search automation built on Claude Code: pipeline tracking, offer 
 | `interview-prep/story-bank.md` | Accumulated STAR+R stories across evaluations |
 | `interview-prep/{company}-{role}.md` | Company-specific interview intel reports |
 | `reports/` | Evaluation reports (format: `{###}-{company-slug}-{YYYY-MM-DD}.md`) |
+| `modes/apply-flowxtra.md` | Flowxtra API apply adapter (public, no auth) |
+
+### Supported Portal Sources
+
+In addition to Playwright scraping and Greenhouse APIs (hardcoded in `modes/scan.md`), `career-ops` ships with a built-in adapter for **Flowxtra** (`https://flowxtra.com`) — a multi-tenant ATS aggregator with a fully public API (no tokens). Enable via the `flowxtra:` block in `portals.yml`. The default configuration targets the DACH market (`bewerben.link` → DE/AT/CH). Scanning goes through `modes/scan.md` Nivel 4, JD extraction uses a fast-path in `modes/pipeline.md`, and optional auto-apply goes through `modes/apply-flowxtra.md` (always gated by explicit user approval per the Ethical Use rules).
 
 ### OpenCode Commands
 

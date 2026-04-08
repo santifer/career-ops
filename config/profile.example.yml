@@ -69,3 +69,15 @@ location:
   visa_status: "No sponsorship needed"
   # For remote roles outside your country:
   # onsite_availability: "1 week/month in any city"
+
+# Flowxtra integration — used ONLY by modes/apply-flowxtra.md when submitting
+# applications through Flowxtra's public API. Listing (scan) and evaluation
+# (pipeline) need zero credentials. Leave this block as-is if you don't use
+# Flowxtra, or uncomment and fill in the contact fields to enable auto-apply.
+#
+# flowxtra:
+#   apply_defaults:
+#     first_name: "Jane"
+#     last_name:  "Smith"
+#     email:      "jane@example.com"
+#     phone:      "+49-30-12345678"

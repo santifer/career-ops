@@ -21,7 +21,7 @@ Leer `portals.yml` que contiene:
 - `tracked_companies`: Empresas específicas con `careers_url` para navegación directa
 - `title_filter`: Keywords positive/negative/seniority_boost para filtrado de títulos
 
-## Estrategia de descubrimiento (3 niveles)
+## Estrategia de descubrimiento (4 niveles)
 
 ### Nivel 1 — Playwright directo (PRINCIPAL)
 
@@ -41,10 +41,21 @@ Para empresas con Greenhouse, la API JSON (`boards-api.greenhouse.io/v1/boards/{
 
 Los `search_queries` con `site:` filters cubren portales de forma transversal (todos los Ashby, todos los Greenhouse, etc.). Útil para descubrir empresas NUEVAS que aún no están en `tracked_companies`, pero los resultados pueden estar desfasados.
 
+### Nivel 4 — Flowxtra API (AGREGADOR MULTI-TENANT)
+
+Si `portals.yml` tiene un bloque `flowxtra` con `enabled: true`, escanear el agregador público de Flowxtra (`https://app.flowxtra.com`). Flowxtra expone tres endpoints públicos sin autenticación que cubren postings de todos sus tenants:
+
+- `GET /api/central/jobs` — catálogo completo
+- `GET /api/locations/jobs` — filtrado por país/ciudad
+- `/feed.json`, `/feed.xml`, `/atom.xml` — feeds con ETag (HTTP 304)
+
+La estrategia se elige con `flowxtra.strategy: central | locations | feeds`. Ver la sección "Nivel 4 — Flowxtra" más abajo para el workflow detallado.
+
 **Prioridad de ejecución:**
 1. Nivel 1: Playwright → todas las `tracked_companies` con `careers_url`
 2. Nivel 2: API → todas las `tracked_companies` con `api:`
 3. Nivel 3: WebSearch → todos los `search_queries` con `enabled: true`
+4. Nivel 4: Flowxtra API → si `flowxtra.enabled: true`
 
 Los niveles son aditivos — se ejecutan todos, los resultados se mezclan y deduplicar.
 
@@ -78,6 +89,71 @@ Los niveles son aditivos — se ejecutan todos, los resultados se mezclan y dedu
       - **url**: URL del resultado
       - **company**: después del " @ " en el título, o extraer del dominio/path
    c. Acumular en lista de candidatos (dedup con Nivel 1+2)
+
+6.5. **Nivel 4 — Flowxtra API** (si `flowxtra.enabled: true` en `portals.yml`):
+
+   Flowxtra es un agregador multi-tenant con API pública sin autenticación. Elegir workflow según `flowxtra.strategy`:
+
+   **Strategy `central`** — catálogo completo:
+   ```
+   queries = cartesian(central.filters.search_keys || [null],
+                       central.filters.locations   || [null])
+   for (search_key, location) in queries:
+     page = 1
+     loop:
+       WebFetch GET {base_url}/central/jobs
+         ?page={page}&per_page={central.per_page}&status=Live
+         [+search-key={search_key}] [+location={location}]
+         [+workplace={central.filters.workplace}]
+         [+employment_type={central.filters.employment_type}]
+       items = body.data.data
+       for job in items:
+         title   = job.title
+         company = job.name_company || "Unknown"
+         url     = job.urlJobApplay
+                   || `https://flowxtra.com/apply/${job.has_id || job.hash_id || 'job-' + job.id}`
+         # Aplicar title_filter + dedup (scan-history.tsv + applications.md + pipeline.md)
+         # Si nueva: añadir a pipeline.md con portal="Flowxtra"
+       if page >= body.data.last_page: break
+       page += 1
+       if page > central.max_pages: break
+   ```
+
+   **Strategy `locations`** — filtrado por país/ciudad:
+   ```
+   for target in locations.targets:
+     page = 1
+     loop:
+       WebFetch GET {base_url}/locations/jobs
+         ?country={target.country}[&city={target.city}]
+         [&career_domain={locations.career_domain}]
+         &page={page}&per_page={locations.per_page}
+       # mismo handling que central
+       if page >= body.data.last_page: break
+       page += 1
+       if page > locations.max_pages: break
+   ```
+
+   **Strategy `feeds`** — polling con ETag:
+   ```
+   last_etag = read data/flowxtra-feed-etag.txt (may be empty)
+   WebFetch GET {feeds.json_feed_url} with header If-None-Match: {last_etag}
+   on 304 Not Modified: no hay cambios, continuar
+   on 200 OK:
+     parse JSON Feed v1.1 → items[]
+     for item in items:
+       url   = item.url                 # ya es el urlJobApplay
+       title = item.title
+       # title_filter + dedup + pipeline.md append
+     save new ETag to data/flowxtra-feed-etag.txt
+   ```
+
+   **Budget:** WebFetch calls Flowxtra ≤ 20 por scan. Si se excede, advertir en resumen.
+
+   **Gestión de errores:**
+   - Timeout/500: saltar y anotar, no abortar el scan
+   - 429 Too Many Requests: respetar `retry_after` (Flowxtra limita a 300 rpm)
+   - Campo `has_id` null en el response: usar fallback `hash_id || 'job-' + id` (bug documentado del backend)
 
 6. **Filtrar por título** usando `title_filter` de `portals.yml`:
    - Al menos 1 keyword de `positive` debe aparecer en el título (case-insensitive)
@@ -142,6 +218,7 @@ https://...	2026-02-10	Ashby — AI PM	PM AI	Acme	added
 https://...	2026-02-10	Greenhouse — SA	Junior Dev	BigCo	skipped_title
 https://...	2026-02-10	Ashby — AI PM	SA AI	OldCo	skipped_dup
 https://...	2026-02-10	WebSearch — AI PM	PM AI	ClosedCo	skipped_expired
+https://flowxtra.com/en/apply/BgRN	2026-04-08	Flowxtra	Customer Service	Keemail	added
 ```
 
 ## Resumen de salida

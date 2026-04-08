@@ -752,3 +752,65 @@ tracked_companies:
     scan_query: 'site:jobs.ashbyhq.com/workos "Solutions Engineer" OR "Developer Success" OR "Engineer"'
     notes: "Developer tools and enterprise-ready auth/platform APIs."
     enabled: true
+
+# ============================================================================
+# Flowxtra — Multi-tenant ATS aggregator (public API, no auth)
+# ============================================================================
+# Flowxtra (https://flowxtra.com) is an ATS platform with a public central jobs
+# API that aggregates postings across all of its tenant companies. Listing,
+# job detail, and application submission are ALL public — no token required.
+#
+# Docs: https://app.flowxtra.com/api/doc
+#
+# Strategy (pick ONE):
+#   - central    → widest catalog (/api/central/jobs)
+#   - locations  → targeted country/city filtering (/api/locations/jobs)
+#   - feeds      → ETag-cached JSON/RSS feed polling (/feed.json, /feed.xml)
+#
+# All three respect the global `title_filter` above.
+
+flowxtra:
+  enabled: false                  # Flip to true to activate
+  base_url: https://app.flowxtra.com/api
+
+  # Default strategy targets the DACH market (Germany, Austria, Switzerland)
+  # via the bewerben.link career domain. Swap to `central` for the full global
+  # catalog, or change `locations.career_domain` for other language markets.
+  strategy: locations             # central | locations | feeds
+
+  central:
+    path: /central/jobs
+    per_page: 100
+    max_pages: 3                  # Hard cap per scan
+    filters:
+      # One scan runs the cartesian product of search_keys × locations.
+      # Leave empty to fetch the full catalog and rely on title_filter.
+      search_keys: []             # e.g. ["AI", "Machine Learning", "Agent"]
+      locations: []               # Free-text, e.g. ["Remote", "Berlin"]
+      workplace: null             # On-site | Hybrid | Remote
+      employment_type: null       # Full Time | Part Time | Contract | ...
+
+  locations:
+    path: /locations/jobs
+    per_page: 12
+    max_pages: 5
+    # DACH default: bewerben.link targets DE, AT, CH.
+    # Other domains: appliquer.net (FR/BE/CH/LU/MC), apply-link.net (EN),
+    # postular.link (ES), aplikuj.link (PL), etc.
+    career_domain: bewerben.link
+    targets:                      # list of {country, city?} pairs
+      - { country: DE }
+      - { country: AT }
+      - { country: CH }
+      # - { country: DE, city: Berlin }
+      # - { country: AT, city: Wien }
+      # - { country: CH, city: Zürich }
+
+  feeds:
+    # Optional fast-path using the official feed endpoints with ETag caching.
+    # For DACH, use the German career domain feed.
+    json_feed_url: null           # e.g. https://bewerben.link/feed.json
+    rss_feed_url: null            # e.g. https://bewerben.link/feed.xml
+
+  detail:
+    path: /candidate/jobs/{has_id}
