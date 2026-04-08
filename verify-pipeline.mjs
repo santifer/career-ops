@@ -43,15 +43,6 @@ const ALIASES = {
   'rechazado': 'rejected', 'rechazada': 'rejected',
   'descartado': 'discarded', 'descartada': 'discarded', 'cerrada': 'discarded', 'cancelada': 'discarded',
   'no aplicar': 'skip', 'no_aplicar': 'skip', 'monitor': 'skip', 'geo blocker': 'skip',
-  // Russian → English
-  'оценена': 'evaluated', 'ожидает': 'evaluated',
-  'отклик отправлен': 'applied', 'откликнулся': 'applied',
-  'скрининг': 'responded', 'ответили': 'responded',
-  'собеседование': 'interview', 'техническое интервью': 'interview',
-  'оффер': 'offer', 'предложение': 'offer', 'принят': 'offer',
-  'отказ': 'rejected', 'отказано': 'rejected',
-  'отозвано': 'discarded', 'закрыта': 'discarded', 'нет ответа': 'discarded',
-  'пропустить': 'skip', 'не откликаться': 'skip',
 };
 
 let errors = 0;
@@ -116,8 +107,8 @@ if (badStatuses === 0) ok('All statuses are canonical');
 const companyRoleMap = new Map();
 let dupes = 0;
 for (const e of entries) {
-  const key = e.company.normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}]/gu, '') + '::' +
-    e.role.normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N} ]/gu, '');
+  const key = e.company.toLowerCase().replace(/[^a-z0-9]/g, '') + '::' +
+    e.role.toLowerCase().replace(/[^a-z0-9 ]/g, '');
   if (!companyRoleMap.has(key)) companyRoleMap.set(key, []);
   companyRoleMap.get(key).push(e);
 }
