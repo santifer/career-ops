@@ -41,23 +41,17 @@ language:
 
 ## Что переведено?
 
+Первая итерация охватывает режимы с наибольшим влиянием:
+
 | Файл | Оригинал | Назначение |
 |------|----------|------------|
 | `_shared.md` | `modes/_shared.md` (EN) | Общий контекст, архетипы, глобальные правила, специфика рынка РФ |
 | `oferta.md` | `modes/oferta.md` (ES) | Полная оценка вакансии (блоки A-F) |
-| `pdf.md` | `modes/pdf.md` (ES) | Генерация ATS-оптимизированного PDF-резюме |
-| `scan.md` | `modes/scan.md` (ES) | Сканер порталов вакансий |
-| `batch.md` | `modes/batch.md` (ES) | Пакетная обработка вакансий |
 | `apply.md` | `modes/apply.md` (EN) | Ассистент заполнения форм откликов |
-| `auto-pipeline.md` | `modes/auto-pipeline.md` (ES) | Автоматический полный пайплайн |
-| `contacto.md` | `modes/contacto.md` (ES) | LinkedIn/Telegram-сообщения |
-| `deep.md` | `modes/deep.md` (ES) | Глубокий анализ компании |
+| `pipeline.md` | `modes/pipeline.md` (ES) | Очередь URL-ов / Second Brain для собранных вакансий |
 | `interview-prep.md` | `modes/interview-prep.md` (EN) | Подготовка к собеседованию |
-| `ofertas.md` | `modes/ofertas.md` (ES) | Сравнение нескольких вакансий |
-| `pipeline.md` | `modes/pipeline.md` (ES) | Очередь URL-ов для обработки |
-| `project.md` | `modes/project.md` (ES) | Оценка портфолио-проекта |
-| `tracker.md` | `modes/tracker.md` (ES) | Трекер откликов |
-| `training.md` | `modes/training.md` (ES) | Оценка курса/сертификации |
+
+Остальные режимы (`scan`, `batch`, `pdf`, `tracker`, `auto-pipeline`, `deep`, `contacto`, `ofertas`, `project`, `training`) остаются на EN/ES. Их содержимое — в основном tooling, пути и команды — не зависит от языка.
 
 ## Что остаётся на английском?
 
