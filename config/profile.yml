@@ -1,0 +1,80 @@
+# Career-Ops Profile Configuration
+# Copy this file to config/profile.yml and fill in your details.
+# This is the single source of truth for your personal data across all modes.
+
+candidate:
+  full_name: "Aaliya Bashir"
+  email: "bashiraaliya@gmail.com"
+  phone: "+1-678-594-1031"
+  location: "Atlanta, GA"
+  linkedin: "linkedin.com/in/aaliya-bashir/"
+  portfolio_url: ""
+  github: ""
+  twitter: ""
+  # (Optional) Canva resume design ID for visual CV generation via /career-ops pdf.
+  # Find it in your Canva design URL: https://www.canva.com/design/DAxxxxxxx/...
+  # The ID starts with "D" and is 11 characters long.
+  # canva_resume_design_id: "DAxxxxxxxxx"
+
+target_roles:
+  # Your North Star roles — what you're optimizing for
+  primary:
+    - "Total Rewards Program Manager"
+    - "People Analytics Program Manager"
+    - "Senior HR Program Manager"
+    - "Compensation Program Manager"
+  # Archetypes help the evaluation system score fit
+  archetypes:
+    - name: "Total Rewards Program Manager"
+      level: "Senior"
+      fit: "primary"        # primary = dream role, secondary = good fit, adjacent = stretch
+    - name: "People Analytics Manager"
+      level: "Senior"
+      fit: "secondary"
+    - name: "HR Program Manager"
+      level: "Senior"
+      fit: "secondary"
+    - name: "Compensation Program Manager"
+      level: "Senior"
+      fit: "secondary"
+    - name: "Technical Program Manager"
+      level: "Senior"
+      fit: "adjacent"
+
+narrative:
+  # Your professional headline (1 line)
+  headline: "Total Rewards Program Manager and HR data strategist"
+  # Your exit story — what makes you unique
+  exit_story: "Program and operations leader with 13+ years translating complex people, systems, and stakeholder needs into executive-ready decisions."
+  # Your top 3-5 superpowers
+  superpowers:
+    - "Executive storytelling with data"
+    - "Cross-functional program leadership"
+    - "Dashboard development and decision support"
+    - "Process design and workflow improvement"
+  # Proof points — projects, articles, case studies with measurable impact
+  proof_points:
+    - name: "Harvard Medical School Initiative"
+      url: ""
+      hero_metric: "Led a $4.5M multi-stakeholder program redesign initiative"
+    - name: "KSW Real Estate Roadmap"
+      url: ""
+      hero_metric: "Contributed to more than $14M in savings and cost avoidance"
+  # Optional: dashboard/demo URL with credentials
+  # dashboard:
+  #   url: "https://janesmith.dev/demo"
+  #   password: "demo-2026"
+
+compensation:
+  target_range: "$150K+"     # Replace with your target total comp
+  currency: "USD"
+  minimum: "$150K"               # Replace with your walk-away number
+  location_flexibility: "Open to Atlanta-based and remote opportunities"
+
+location:
+  country: "United States"
+  city: "Atlanta"
+  timezone: "America/New_York"
+  visa_status: "U.S. citizen"
+  # For remote roles outside your country:
+  # onsite_availability: "1 week/month in any city"
