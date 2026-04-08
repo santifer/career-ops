@@ -1,7 +1,7 @@
 # Portal Scanner Configuration
 # Profile: Sandesh Gurung — IT Support Engineer / Cybersecurity
 # Location: North Bergen, NJ | Targeting: NYC metro + remote US
-# Focus: IT Support, Desktop Support, Cybersecurity Analyst/Engineer, Healthcare IT
+# Focus: IT Support, Desktop Support, Cybersecurity Analyst/Engineer, Healthcare IT, IAM Analyst, GRC Analyst
 #
 # Strategy (3 levels):
 #   1. Playwright → careers_url of each company (real-time, reliable)
@@ -19,7 +19,7 @@ title_filter:
     - "Help Desk"
     - "Service Desk"
     - "Technical Support"
-    - "IT Specialist"
+    - "IT Support Specialist"
     - "End User Support"
     - "Deskside Support"
     - "Field Technician"
@@ -46,7 +46,7 @@ title_filter:
     - "Compliance Analyst"
 
     # -- Identity & Access --
-    - "Identity"
+    - "Identity and Access Management"
     - "Access Management"
     - "IAM"
     - "Active Directory"
@@ -66,6 +66,7 @@ title_filter:
     - "Infrastructure Support"
     - "Systems Support"
     - "IT Infrastructure"
+     - "Network Deployment"
 
   negative:
     # Roles outside target scope
@@ -231,6 +232,57 @@ tracked_companies:
     notes: "NJ. Major NJ health system, strong IT team."
     enabled: true
 
+  # ── NEW: Healthcare systems ────────────────────────────────────────────────
+
+  - name: Atlantic Health System
+    careers_url: https://www.atlantichealth.org/careers
+    scan_method: websearch
+    scan_query: '"Atlantic Health" "IT Support" OR "Desktop Support" OR "Cybersecurity" OR "Help Desk" OR "Systems Administrator" careers'
+    notes: "NJ. Multi-hospital health system (Morristown, Overlook). Strong NJ IT hiring."
+    enabled: true
+
+  - name: Valley Health System
+    careers_url: https://www.valleyhealth.com/careers
+    scan_method: websearch
+    scan_query: '"Valley Health" "IT Support" OR "Desktop Support" OR "Security Analyst" OR "Help Desk" New Jersey careers'
+    notes: "NJ. Ridgewood-based health system. Close to North Bergen commute range."
+    enabled: true
+
+  - name: Montefiore Health System
+    careers_url: https://www.montefiore.org/careers
+    scan_method: websearch
+    scan_query: 'site:montefiore.org/careers "IT Support" OR "Desktop Support" OR "Cybersecurity" OR "Help Desk"'
+    notes: "Bronx/NYC. Large academic medical center with significant IT org."
+    enabled: true
+
+  - name: NYC Health + Hospitals
+    careers_url: https://jobs.nychhc.org
+    scan_method: websearch
+    scan_query: 'site:jobs.nychhc.org "IT Support" OR "Desktop Support" OR "Information Security" OR "Help Desk" OR "Systems Administrator"'
+    notes: "NYC public health system. Largest municipal health system in the US. Stable government-adjacent roles."
+    enabled: true
+
+  - name: Barnabas Health (RWJ) — Clara Maass
+    careers_url: https://jobs.rwjbh.org
+    scan_method: websearch
+    scan_query: '"Clara Maass" OR "Belleville" "IT Support" OR "Desktop Support" OR "Help Desk" site:jobs.rwjbh.org'
+    notes: "NJ. Clara Maass Medical Center in Belleville — very close to North Bergen. Same RWJBH portal."
+    enabled: true
+
+  - name: CarePoint Health
+    careers_url: https://carepointhealth.org/careers
+    scan_method: websearch
+    scan_query: '"CarePoint Health" "IT Support" OR "Desktop Support" OR "Help Desk" OR "Cybersecurity" careers'
+    notes: "NJ. Hudson County health system (Bayonne, Hoboken, Jersey City). Right in your backyard."
+    enabled: true
+
+  - name: Weill Cornell Medicine
+    careers_url: https://cornell.wd1.myworkdayjobs.com/wcm
+    scan_method: websearch
+    scan_query: '"Weill Cornell" "IT Support" OR "Desktop Support" OR "Information Security" OR "Help Desk" careers'
+    notes: "NYC. Academic medical center with large IT department."
+    enabled: true
+
   # ── Healthcare IT vendors ──────────────────────────────────────────────────
 
   - name: Epic Systems
@@ -257,6 +309,35 @@ tracked_companies:
     careers_url: https://job-boards.greenhouse.io/veeva
     api: https://boards-api.greenhouse.io/v1/boards/veeva/jobs
     notes: "Life sciences cloud. IT support and compliance-adjacent roles."
+    enabled: true
+
+  # ── NEW: Healthcare IT vendors ─────────────────────────────────────────────
+
+  - name: Meditech
+    careers_url: https://www.meditech.com/careers
+    scan_method: websearch
+    scan_query: '"Meditech" "IT Support" OR "Technical Support" OR "Help Desk" OR "Security" OR "Implementation" careers'
+    notes: "EHR vendor widely used in NJ/NY community hospitals. Support and implementation roles."
+    enabled: true
+
+  - name: Netsmart Technologies
+    careers_url: https://job-boards.greenhouse.io/netsmart
+    api: https://boards-api.greenhouse.io/v1/boards/netsmart/jobs
+    notes: "Healthcare IT for behavioral health and social services. Technical support and security roles."
+    enabled: true
+
+  - name: HealthFirst (NY)
+    careers_url: https://jobs.healthfirst.org
+    scan_method: websearch
+    scan_query: 'site:jobs.healthfirst.org "IT Support" OR "Desktop Support" OR "Cybersecurity" OR "Security Analyst" OR "Help Desk"'
+    notes: "NY nonprofit health plan. Large IT and compliance org, HIPAA-heavy environment."
+    enabled: true
+
+  - name: EmblemHealth
+    careers_url: https://emblemhealth.com/careers
+    scan_method: websearch
+    scan_query: '"EmblemHealth" "IT Support" OR "Desktop Support" OR "Information Security" OR "Cybersecurity" careers'
+    notes: "NYC-based health plan. IT security and support roles in insurance/healthcare crossover."
     enabled: true
 
   # ── Cybersecurity vendors (endpoint/SIEM/identity — matching your stack) ──
@@ -316,6 +397,62 @@ tracked_companies:
     notes: "GRC/compliance automation. Your GRC self-study is directly relevant."
     enabled: true
 
+  # ── NEW: Cybersecurity vendors ─────────────────────────────────────────────
+
+  - name: Malwarebytes
+    careers_url: https://job-boards.greenhouse.io/malwarebytes
+    api: https://boards-api.greenhouse.io/v1/boards/malwarebytes/jobs
+    notes: "Endpoint security. You previously targeted Malwarebytes roles. Direct match on endpoint security background."
+    enabled: true
+
+  - name: Arctic Wolf
+    careers_url: https://job-boards.greenhouse.io/arcticwolf
+    api: https://boards-api.greenhouse.io/v1/boards/arcticwolf/jobs
+    notes: "Managed detection and response (MDR). SOC Analyst and Security Engineer roles. Security+ is a standard requirement."
+    enabled: true
+
+  - name: Abnormal Security
+    careers_url: https://jobs.ashbyhq.com/abnormalsecurity
+    notes: "Email security / threat detection. Fast-growing. Security analyst and support roles."
+    enabled: true
+
+  - name: Huntress
+    careers_url: https://job-boards.greenhouse.io/huntress
+    api: https://boards-api.greenhouse.io/v1/boards/huntress/jobs
+    notes: "MDR focused on SMB/MSP market. SOC Analyst roles match your blue team background."
+    enabled: true
+
+  - name: Netskopeë
+    careers_url: https://job-boards.greenhouse.io/netskope
+    api: https://boards-api.greenhouse.io/v1/boards/netskope/jobs
+    notes: "SASE/cloud security. Security engineer and support roles."
+    enabled: true
+
+  - name: Cybereason
+    careers_url: https://job-boards.greenhouse.io/cybereason
+    api: https://boards-api.greenhouse.io/v1/boards/cybereason/jobs
+    notes: "EDR/XDR. SOC and threat analyst roles align with your endpoint security focus."
+    enabled: true
+
+  - name: Recorded Future
+    careers_url: https://job-boards.greenhouse.io/recordedfuture
+    api: https://boards-api.greenhouse.io/v1/boards/recordedfuture/jobs
+    notes: "Threat intelligence platform. Your Healthcare Threat Intelligence Dashboard is a direct portfolio match."
+    enabled: true
+
+  - name: Darktrace
+    careers_url: https://job-boards.greenhouse.io/darktrace
+    api: https://boards-api.greenhouse.io/v1/boards/darktrace/jobs
+    notes: "AI-driven cybersecurity. Technical support and security analyst roles. NYC office."
+    enabled: true
+
+  - name: Check Point Software
+    careers_url: https://jobs.lever.co/checkpoint
+    scan_method: websearch
+    scan_query: 'site:jobs.lever.co/checkpoint "IT Support" OR "Security Analyst" OR "Technical Support" OR "SOC" remote OR "New York"'
+    notes: "Firewall and network security leader. NYC area office. Technical support and security roles."
+    enabled: true
+
   # ── MSPs & IT services (NYC/NJ market) ────────────────────────────────────
 
   - name: Xantrion
@@ -346,6 +483,49 @@ tracked_companies:
     notes: "DC/NYC MSP. IT support and security services."
     enabled: true
 
+  # ── NEW: MSPs & IT services ────────────────────────────────────────────────
+
+  - name: Interlinked (NJ)
+    careers_url: https://www.interlinked.com/careers
+    scan_method: websearch
+    scan_query: '"Interlinked" "IT Support" OR "Help Desk" OR "Desktop Support" OR "Security" New Jersey careers'
+    notes: "NJ-based MSP. IT support and managed security. Close to North Bergen."
+    enabled: true
+
+  - name: Fluid IT Services (NJ)
+    careers_url: https://fluiditservices.com/careers
+    scan_method: websearch
+    scan_query: '"Fluid IT" "IT Support" OR "Help Desk" OR "Desktop Support" New Jersey careers'
+    notes: "NJ-based MSP serving SMB market. IT support roles."
+    enabled: true
+
+  - name: Executech
+    careers_url: https://www.executech.com/careers
+    scan_method: websearch
+    scan_query: '"Executech" "IT Support" OR "Help Desk" OR "Desktop Support" OR "Security" careers'
+    notes: "National MSP. Remote-friendly IT support and security roles."
+    enabled: true
+
+  - name: Kforce (staffing/MSP)
+    careers_url: https://job-boards.greenhouse.io/kforce
+    api: https://boards-api.greenhouse.io/v1/boards/kforce/jobs
+    notes: "IT staffing firm. Often posts direct IT support and security contract-to-hire roles in NYC metro."
+    enabled: true
+
+  - name: Insight Global
+    careers_url: https://jobs.ashbyhq.com/insightglobal
+    scan_method: websearch
+    scan_query: '"Insight Global" "IT Support" OR "Desktop Support" OR "Help Desk" OR "Security Analyst" "New York" OR "New Jersey" careers'
+    notes: "Large IT staffing. Frequently places IT support and cybersecurity contractors in healthcare and finance."
+    enabled: true
+
+  - name: Carousel Industries (Converge)
+    careers_url: https://www.convergeone.com/careers
+    scan_method: websearch
+    scan_query: '"Carousel" OR "Converge" "IT Support" OR "Desktop Support" OR "Security" OR "Network" "New York" OR "New Jersey" careers'
+    notes: "IT managed services. Strong East Coast presence. Networking and security support roles."
+    enabled: true
+
   # ── Financial services & insurance (NYC) ──────────────────────────────────
 
   - name: JPMorgan Chase
@@ -365,6 +545,50 @@ tracked_companies:
     careers_url: https://job-boards.greenhouse.io/bloomberg
     api: https://boards-api.greenhouse.io/v1/boards/bloomberg/jobs
     notes: "NYC. Large IT and security team. Desktop support and IT engineer roles."
+    enabled: true
+
+  # ── NEW: Financial services & insurance ────────────────────────────────────
+
+  - name: MetLife
+    careers_url: https://jobs.metlife.com
+    scan_method: websearch
+    scan_query: 'site:jobs.metlife.com "IT Support" OR "Desktop Support" OR "Cybersecurity" OR "Security Analyst" OR "Help Desk" "New York" OR remote'
+    notes: "NYC-based insurer. Large IT and cybersecurity org. HIPAA-adjacent compliance environment."
+    enabled: true
+
+  - name: Fidelity Investments
+    careers_url: https://jobs.fidelity.com
+    scan_method: websearch
+    scan_query: 'site:jobs.fidelity.com "IT Support" OR "Desktop Support" OR "Security Analyst" OR "Cybersecurity" OR "Help Desk" "New York" OR "New Jersey" OR remote'
+    notes: "Major financial firm. IT support and security roles. Strong remote presence."
+    enabled: true
+
+  - name: Goldman Sachs
+    careers_url: https://www.goldmansachs.com/careers
+    scan_method: websearch
+    scan_query: 'site:goldmansachs.com/careers "IT Support" OR "Desktop Support" OR "Cybersecurity" OR "Security Engineer" OR "Help Desk" "New York"'
+    notes: "NYC. Massive IT and security org. Enterprise IT support and security analyst roles."
+    enabled: true
+
+  - name: Citi
+    careers_url: https://jobs.citi.com
+    scan_method: websearch
+    scan_query: 'site:jobs.citi.com "IT Support" OR "Desktop Support" OR "Cybersecurity" OR "Security Analyst" OR "IAM" "New York" OR "New Jersey"'
+    notes: "NYC HQ. Large IT and security division. IAM and SIEM roles highly relevant."
+    enabled: true
+
+  - name: Ropes & Gray
+    careers_url: https://www.ropesgray.com/en/careers
+    scan_method: websearch
+    scan_query: '"Ropes & Gray" "IT Support" OR "Desktop Support" OR "Cybersecurity" OR "Security Analyst" OR "Help Desk" careers'
+    notes: "Law firm. You previously targeted Ropes & Gray cybersecurity roles. Legal sector has strong IT compliance needs."
+    enabled: true
+
+  - name: Prudential Financial
+    careers_url: https://jobs.prudential.com
+    scan_method: websearch
+    scan_query: 'site:jobs.prudential.com "IT Support" OR "Desktop Support" OR "Cybersecurity" OR "Security Analyst" OR "IAM" "New Jersey" OR remote'
+    notes: "NJ-headquartered insurer. Large IT and cybersecurity team. NJ commutable."
     enabled: true
 
   # ── Government & public sector (NYC/NJ) ───────────────────────────────────
@@ -388,6 +612,50 @@ tracked_companies:
     scan_method: websearch
     scan_query: 'site:statejobs.ny.gov "IT Support" OR "Desktop Support" OR "Cybersecurity" OR "Security Analyst" OR "Help Desk"'
     notes: "NYS ITS. Stable government IT/cybersecurity roles."
+    enabled: true
+
+  # ── NEW: Government & public sector ────────────────────────────────────────
+
+  - name: NJ Office of Information Technology (NJOIT)
+    careers_url: https://www.nj.gov/it/careers
+    scan_method: websearch
+    scan_query: '"NJ Office of Information Technology" OR "NJOIT" "IT Support" OR "Desktop Support" OR "Cybersecurity" OR "Security Analyst" site:jobs.nj.gov'
+    notes: "NJ state IT agency. Cybersecurity and IT support roles. NJ residency often required — confirm eligibility."
+    enabled: true
+
+  - name: NJ Judiciary
+    careers_url: https://www.njcourts.gov/careers
+    scan_method: websearch
+    scan_query: '"NJ Judiciary" OR "New Jersey Courts" "IT Support" OR "Desktop Support" OR "Cybersecurity" OR "Security Analyst" OR "Help Desk"'
+    notes: "You previously targeted NJ Judiciary cybersecurity roles. Government stability, HIPAA-adjacent compliance."
+    enabled: true
+
+  - name: Port Authority of NY & NJ
+    careers_url: https://www.jointheportauthority.com
+    scan_method: websearch
+    scan_query: '"Port Authority" "IT Support" OR "Desktop Support" OR "Cybersecurity" OR "Information Security" OR "Help Desk" careers'
+    notes: "Bi-state agency. Large IT org. Strong NJ/NY commuter-friendly roles."
+    enabled: true
+
+  - name: NYC Cyber Command (NYC3)
+    careers_url: https://www.nyc.gov/jobs
+    scan_method: websearch
+    scan_query: '"NYC Cyber Command" OR "NYC3" "Cybersecurity" OR "Security Analyst" OR "SOC" OR "Incident Response" site:nyc.gov/jobs'
+    notes: "NYC's dedicated municipal cybersecurity agency. Direct match for cybersecurity track."
+    enabled: true
+
+  - name: Federal — CISA (USAJobs)
+    careers_url: https://www.usajobs.gov
+    scan_method: websearch
+    scan_query: 'site:usajobs.gov "CISA" OR "Cybersecurity and Infrastructure" "IT Support" OR "Security Analyst" OR "Cybersecurity" "New York" OR "New Jersey" OR remote'
+    notes: "Federal cybersecurity agency. GS-scale roles. Security+ meets many entry-level federal security requirements."
+    enabled: true
+
+  - name: Federal — VA (Veterans Affairs IT)
+    careers_url: https://www.usajobs.gov
+    scan_method: websearch
+    scan_query: 'site:usajobs.gov "Department of Veterans Affairs" "IT Support" OR "Desktop Support" OR "Cybersecurity" OR "Help Desk" "New York" OR "New Jersey"'
+    notes: "VA has large IT footprint in NYC/NJ area. HIPAA-regulated. Healthcare IT directly applicable."
     enabled: true
 
   # ── Tech companies with strong IT support/security teams ──────────────────
@@ -428,4 +696,107 @@ tracked_companies:
     scan_method: websearch
     scan_query: '"SmartChoice" "IT Support" OR "Desktop Support Engineer" "North Bergen" OR "New Jersey" careers'
     notes: "North Bergen NJ. You have an active application for Desktop Support Engineer here."
+    enabled: true
+
+  # ── NEW: Tech companies ────────────────────────────────────────────────────
+
+  - name: Palantir Technologies
+    careers_url: https://job-boards.greenhouse.io/palantir
+    api: https://boards-api.greenhouse.io/v1/boards/palantir/jobs
+    notes: "NYC office. IT support and security operations roles. Government/defense contracts make security clearance-adjacent experience valuable."
+    enabled: true
+
+  - name: Stripe
+    careers_url: https://job-boards.greenhouse.io/stripe
+    api: https://boards-api.greenhouse.io/v1/boards/stripe/jobs
+    notes: "Fintech. NYC office. IT support engineer and security analyst roles. PCI-DSS compliance environment similar to HIPAA."
+    enabled: true
+
+  - name: Twilio
+    careers_url: https://job-boards.greenhouse.io/twilio
+    api: https://boards-api.greenhouse.io/v1/boards/twilio/jobs
+    notes: "Cloud communications. IT support and security engineer roles. Remote-friendly."
+    enabled: true
+
+  - name: Figma
+    careers_url: https://job-boards.greenhouse.io/figma
+    api: https://boards-api.greenhouse.io/v1/boards/figma/jobs
+    notes: "Design platform. NYC office. IT support and corporate security roles."
+    enabled: true
+
+  - name: Notion
+    careers_url: https://job-boards.greenhouse.io/notion
+    api: https://boards-api.greenhouse.io/v1/boards/notion/jobs
+    notes: "Productivity SaaS. IT support and security roles. Remote-friendly."
+    enabled: true
+
+  - name: Airtable
+    careers_url: https://job-boards.greenhouse.io/airtable
+    api: https://boards-api.greenhouse.io/v1/boards/airtable/jobs
+    notes: "SaaS platform. IT support engineer and corporate security roles."
+    enabled: true
+
+  - name: Brex
+    careers_url: https://job-boards.greenhouse.io/brex
+    api: https://boards-api.greenhouse.io/v1/boards/brex/jobs
+    notes: "Fintech. IT support and information security roles. SOC 2 / compliance culture."
+    enabled: true
+
+  - name: Headspace Health / Ginger
+    careers_url: https://job-boards.greenhouse.io/headspacehealth
+    api: https://boards-api.greenhouse.io/v1/boards/headspacehealth/jobs
+    notes: "Digital health platform. HIPAA-regulated. IT support and security roles crossover with healthcare IT background."
+    enabled: true
+
+  - name: Hims & Hers Health
+    careers_url: https://job-boards.greenhouse.io/himshers
+    api: https://boards-api.greenhouse.io/v1/boards/himshers/jobs
+    notes: "Digital health / telehealth. HIPAA environment. IT support and security roles."
+    enabled: true
+
+  - name: Ro (Roman Health)
+    careers_url: https://jobs.ashbyhq.com/ro
+    notes: "NYC telehealth company. HIPAA-regulated. IT support and security in a fast-growing health tech environment."
+    enabled: true
+
+  - name: Oscar Health
+    careers_url: https://job-boards.greenhouse.io/oscar
+    api: https://boards-api.greenhouse.io/v1/boards/oscar/jobs
+    notes: "NYC health insurance tech company. HIPAA environment. IT and security roles."
+    enabled: true
+
+  - name: Zocdoc
+    careers_url: https://job-boards.greenhouse.io/zocdoc
+    api: https://boards-api.greenhouse.io/v1/boards/zocdoc/jobs
+    notes: "NYC healthcare platform. HIPAA-regulated IT org. IT support and security roles."
+    enabled: true
+
+  # ── NEW: Insurance & managed care (NYC/NJ) ────────────────────────────────
+
+  - name: UnitedHealth Group / Optum
+    careers_url: https://careers.unitedhealthgroup.com
+    scan_method: websearch
+    scan_query: 'site:careers.unitedhealthgroup.com "IT Support" OR "Desktop Support" OR "Cybersecurity" OR "Security Analyst" OR "Help Desk" "New York" OR "New Jersey" OR remote'
+    notes: "Largest US health insurer. Large IT and cybersecurity team. Remote roles common. HIPAA-core environment."
+    enabled: true
+
+  - name: Cigna / Evernorth
+    careers_url: https://jobs.cigna.com
+    scan_method: websearch
+    scan_query: 'site:jobs.cigna.com "IT Support" OR "Desktop Support" OR "Cybersecurity" OR "Security Analyst" OR "IAM" "New York" OR "New Jersey" OR remote'
+    notes: "Major health insurer. IT and cybersecurity roles. Remote-friendly. HIPAA environment."
+    enabled: true
+
+  - name: Centene Corporation
+    careers_url: https://jobs.centene.com
+    scan_method: websearch
+    scan_query: 'site:jobs.centene.com "IT Support" OR "Desktop Support" OR "Cybersecurity" OR "Security Analyst" OR "Help Desk" remote OR "New York"'
+    notes: "You previously targeted Centene cybersecurity roles. Managed care / HIPAA. Remote roles available."
+    enabled: true
+
+  - name: Horizon Blue Cross Blue Shield of NJ
+    careers_url: https://careers.horizonblue.com
+    scan_method: websearch
+    scan_query: '"Horizon Blue Cross" OR "Horizon BCBS" "IT Support" OR "Desktop Support" OR "Cybersecurity" OR "Security Analyst" New Jersey careers'
+    notes: "NJ's largest health insurer. Large IT and security org. NJ-based, commutable."
     enabled: true
