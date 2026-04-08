@@ -5,6 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{{NAME}} — Резюме</title>
 <style>
+  /*
+   * Cyrillic font files required in fonts/:
+   *   space-grotesk-cyrillic-ext.woff2, space-grotesk-cyrillic.woff2
+   *   dm-sans-cyrillic-ext.woff2, dm-sans-cyrillic.woff2
+   * Download from Google Fonts (variable font, subset=cyrillic,cyrillic-ext).
+   * If absent, the browser falls back to the system font stack (Arial), which
+   * supports Cyrillic but may affect PDF layout slightly.
+   */
+
   /* Space Grotesk — Cyrillic Extended */
   @font-face {
     font-family: 'Space Grotesk';
