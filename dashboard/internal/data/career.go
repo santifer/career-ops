@@ -14,14 +14,20 @@ import (
 var (
 	reReportLink     = regexp.MustCompile(`\[(\d+)\]\(([^)]+)\)`)
 	reScoreValue     = regexp.MustCompile(`(\d+\.?\d*)/5`)
-	reArchetype      = regexp.MustCompile(`(?i)\*\*Arquetipo(?:\s+detectado)?\*\*\s*\|\s*(.+)`)
+	reArchetype      = regexp.MustCompile(`(?i)\*\*(?:Arquetipo|Archetype)(?:\s+detectado)?\*\*\s*\|\s*(.+)`)
 	reTlDr           = regexp.MustCompile(`(?i)\*\*TL;DR\*\*\s*\|\s*(.+)`)
 	reTlDrColon      = regexp.MustCompile(`(?i)\*\*TL;DR:\*\*\s*(.+)`)
 	reRemote         = regexp.MustCompile(`(?i)\*\*Remote\*\*\s*\|\s*(.+)`)
 	reComp           = regexp.MustCompile(`(?i)\*\*Comp\*\*\s*\|\s*(.+)`)
-	reArchetypeColon = regexp.MustCompile(`(?i)\*\*Arquetipo:\*\*\s*(.+)`)
+	reArchetypeColon = regexp.MustCompile(`(?i)\*\*(?:Arquetipo|Archetype):\*\*\s*(.+)`)
 	reReportURL      = regexp.MustCompile(`(?m)^\*\*URL:\*\*\s*(https?://\S+)`)
 	reBatchID        = regexp.MustCompile(`(?m)^\*\*Batch ID:\*\*\s*(\d+)`)
+
+	// Comp extraction fallbacks: Scores table row and dollar range patterns
+	reCompScoreRow = regexp.MustCompile(`(?im)^\|\s*Comp\s*\|\s*[\d.]+/?\d*\s*\|\s*(.+)`)
+	reDollarRange  = regexp.MustCompile(`\$[\d,]+[KkMm]?\s*[-–—]\s*\$[\d,]+[KkMm]?`)
+	reCompSection  = regexp.MustCompile(`(?im)^##\s*D\)\s*Comp`)
+	reNextH2       = regexp.MustCompile(`(?m)^##\s`)
 )
 
 // ParseApplications reads applications.md and returns parsed applications.
@@ -527,6 +533,24 @@ func LoadReportSummary(careerOpsPath, reportPath string) (archetype, tldr, remot
 		comp = cleanTableCell(m[1])
 	}
 
+	// Fallback 1: Scores table — | Comp | 5.0 | $197K-$278K + equity... |
+	if comp == "" {
+		if m := reCompScoreRow.FindStringSubmatch(text); m != nil {
+			if dr := reDollarRange.FindString(m[1]); dr != "" {
+				comp = NormalizeDollarRange(dr)
+			}
+		}
+	}
+
+	// Fallback 2: D) Comp & Market section — find first dollar range
+	if comp == "" {
+		if section := extractCompSection(text); section != "" {
+			if dr := reDollarRange.FindString(section); dr != "" {
+				comp = NormalizeDollarRange(dr)
+			}
+		}
+	}
+
 	// Truncate long fields
 	if len(tldr) > 120 {
 		tldr = tldr[:117] + "..."
@@ -581,6 +605,76 @@ func cleanTableCell(s string) string {
 	s = strings.TrimSpace(s)
 	s = strings.TrimRight(s, "|")
 	return strings.TrimSpace(s)
+}
+
+// extractCompSection returns the text of the "D) Comp & Market" section, if present.
+func extractCompSection(text string) string {
+	loc := reCompSection.FindStringIndex(text)
+	if loc == nil {
+		return ""
+	}
+	rest := text[loc[0]:]
+	lines := strings.SplitN(rest, "\n", 2)
+	if len(lines) < 2 {
+		return ""
+	}
+	body := lines[1]
+	if end := reNextH2.FindStringIndex(body); end != nil {
+		body = body[:end[0]]
+	}
+	// Cap to 2000 chars to avoid scanning huge sections
+	if len(body) > 2000 {
+		body = body[:2000]
+	}
+	return body
+}
+
+// NormalizeDollarRange converts a dollar range to compact form (e.g. $200,000-$260,000 -> $200K-$260K).
+func NormalizeDollarRange(s string) string {
+	s = strings.ReplaceAll(s, ",", "")
+	s = strings.ReplaceAll(s, "—", "-")
+	s = strings.ReplaceAll(s, "–", "-")
+
+	parts := strings.SplitN(s, "-", 2)
+	if len(parts) != 2 {
+		return s
+	}
+	lo := compactDollar(strings.TrimSpace(parts[0]))
+	hi := compactDollar(strings.TrimSpace(parts[1]))
+	return lo + "-" + hi
+}
+
+// compactDollar converts $200000 to $200K, $1500000 to $1.5M. Already-compact values pass through.
+func compactDollar(s string) string {
+	s = strings.TrimSpace(s)
+	if !strings.HasPrefix(s, "$") {
+		return s
+	}
+	// Already has K or M suffix
+	upper := strings.ToUpper(s)
+	if strings.HasSuffix(upper, "K") || strings.HasSuffix(upper, "M") {
+		return s
+	}
+	numStr := strings.TrimPrefix(s, "$")
+	num, err := strconv.Atoi(numStr)
+	if err != nil {
+		return s
+	}
+	if num >= 1000000 {
+		fval := float64(num) / 1000000.0
+		if fval == float64(int(fval)) {
+			return fmt.Sprintf("$%dM", int(fval))
+		}
+		return fmt.Sprintf("$%.1fM", fval)
+	}
+	if num >= 1000 {
+		fval := float64(num) / 1000.0
+		if fval == float64(int(fval)) {
+			return fmt.Sprintf("$%dK", int(fval))
+		}
+		return fmt.Sprintf("$%.0fK", fval)
+	}
+	return s
 }
 
 // StatusPriority returns the sort priority for a status (lower = higher priority).

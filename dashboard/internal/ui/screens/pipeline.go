@@ -3,6 +3,7 @@ package screens
 import (
 	"fmt"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -13,6 +14,8 @@ import (
 	"github.com/santifer/career-ops/dashboard/internal/model"
 	"github.com/santifer/career-ops/dashboard/internal/theme"
 )
+
+var reNotesDollarRange = regexp.MustCompile(`\$[\d,]+[KkMm]?\s*[-–—]\s*\$[\d,]+[KkMm]?`)
 
 // PipelineClosedMsg is emitted when the pipeline screen is dismissed.
 type PipelineClosedMsg struct{}
@@ -667,15 +670,21 @@ func (m PipelineModel) renderAppLine(app model.CareerApplication, selected bool)
 	statusStyle := lipgloss.NewStyle().Foreground(statusColor).Width(statusW)
 	statusText := statusStyle.Render(statusLabel(norm))
 
-	// Comp from report cache -- fixed column
+	// Comp from report cache, with notes fallback
 	compText := ""
+	compVal := ""
 	if summary, ok := m.reportCache[app.ReportPath]; ok && summary.comp != "" {
-		comp := summary.comp
-		if len(comp) > compW-1 {
-			comp = comp[:compW-4] + "..."
+		compVal = summary.comp
+	}
+	if compVal == "" && app.Notes != "" {
+		compVal = extractCompFromNotes(app.Notes)
+	}
+	if compVal != "" {
+		if len(compVal) > compW-1 {
+			compVal = compVal[:compW-4] + "..."
 		}
 		compStyle := lipgloss.NewStyle().Foreground(m.theme.Yellow)
-		compText = compStyle.Render(comp)
+		compText = compStyle.Render(compVal)
 	}
 
 	line := fmt.Sprintf(" %s %s %s %s %s",
@@ -868,4 +877,12 @@ func statusLabel(norm string) string {
 	default:
 		return norm
 	}
+}
+
+// extractCompFromNotes pulls a dollar range from the Notes column as a last resort.
+func extractCompFromNotes(notes string) string {
+	if m := reNotesDollarRange.FindString(notes); m != "" {
+		return data.NormalizeDollarRange(m)
+	}
+	return ""
 }
