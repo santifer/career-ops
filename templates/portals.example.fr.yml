@@ -1,0 +1,317 @@
+# Portal Scanner Configuration — Marché francophone
+# Exemple pour développeurs Full-Stack / AI/LLM ciblant :
+# France, Belgique, Suisse, Maroc, Côte d'Ivoire, Sénégal
+#
+# Pour l'utiliser : copier vers portals.yml à la racine du projet.
+#
+# Strategy (3 levels):
+#   1. Playwright → careers_url de chaque entreprise (temps réel, fiable)
+#   2. Greenhouse API → JSON structuré (rapide, Greenhouse uniquement)
+#   3. WebSearch avec filtres site: (découverte large, peut être obsolète)
+
+title_filter:
+  positive:
+    # -- Rôles full-stack / web --
+    - "Full-Stack"
+    - "Fullstack"
+    - "Full Stack"
+    - "Next.js"
+    - "React"
+    - "TypeScript"
+    - "JavaScript"
+    - "Développeur"
+    - "Developer"
+    - "Software Engineer"
+    - "Ingénieur logiciel"
+    - "Backend"
+    - "Frontend"
+    - "Node.js"
+    # -- Rôles IA / LLM --
+    - "AI"
+    - "IA"
+    - "LLM"
+    - "Intelligence Artificielle"
+    - "Generative AI"
+    - "GenAI"
+    - "AI Engineer"
+    - "AI Developer"
+
+  negative:
+    # Niveaux hors cible
+    - "Staff Engineer"
+    - "Principal Engineer"
+    - "Engineering Manager"
+    - "Director"
+    - "VP "
+    - "Head of"
+    # Stacks hors cible
+    - ".NET"
+    - "Ruby on Rails"
+    - "Embedded"
+    - "Firmware"
+    # Rôles non ciblés
+    - "DevOps"
+    - "SRE"
+    - "Data Engineer"
+    - "Data Scientist"
+    - "QA Engineer"
+    - "Blockchain"
+    - "Web3"
+    # Contraintes de présence
+    - "on-site only"
+    - "présentiel obligatoire"
+
+  seniority_boost:
+    - "Senior"
+    - "Lead"
+    - "Confirmé"
+    - "Expérimenté"
+
+# -- Search queries --
+
+search_queries:
+
+  # -- WelcomeToTheJungle (portail phare en France) --
+  - name: WTTJ — Développeur Full-Stack remote
+    query: 'site:welcometothejungle.com "développeur full-stack" OR "full-stack developer" remote'
+    enabled: true
+
+  - name: WTTJ — Next.js / React remote France
+    query: 'site:welcometothejungle.com "Next.js" OR "React" "développeur" OR "developer" remote'
+    enabled: true
+
+  - name: WTTJ — AI Developer remote France
+    query: 'site:welcometothejungle.com "AI developer" OR "développeur IA" OR "LLM" remote'
+    enabled: true
+
+  # -- Lever --
+  - name: Lever — Full-Stack francophone remote
+    query: 'site:jobs.lever.co "full-stack" OR "fullstack" "React" OR "Next.js" remote france OR francophone'
+    enabled: true
+
+  - name: Lever — AI Engineer remote
+    query: 'site:jobs.lever.co "AI engineer" OR "LLM developer" OR "AI developer" remote'
+    enabled: true
+
+  # -- Greenhouse --
+  - name: Greenhouse — Full-Stack React remote
+    query: 'site:job-boards.greenhouse.io "full-stack" "React" OR "Next.js" OR "TypeScript" remote'
+    enabled: true
+
+  - name: Greenhouse — AI/LLM Developer remote
+    query: 'site:job-boards.greenhouse.io "AI engineer" OR "LLM" OR "Generative AI" "developer" remote'
+    enabled: true
+
+  # -- Ashby --
+  - name: Ashby — Full-Stack remote
+    query: 'site:jobs.ashbyhq.com "full-stack" OR "fullstack" "React" OR "Next.js" remote'
+    enabled: true
+
+  - name: Ashby — AI Developer remote
+    query: 'site:jobs.ashbyhq.com "AI engineer" OR "LLM engineer" OR "AI developer" remote'
+    enabled: true
+
+  # -- Requêtes libres --
+  - name: Libre — fullstack remote francophone
+    query: '"développeur fullstack remote" OR "full-stack developer remote" France OR Belgique OR Suisse OR Maroc'
+    enabled: true
+
+  - name: Libre — healthtech AI developer remote
+    query: '"healthtech" OR "health tech" OR "medtech" "AI developer" OR "LLM" OR "full-stack" remote francophone'
+    enabled: true
+
+# -- Tracked companies --
+
+tracked_companies:
+
+  # ====================================================
+  # STARTUPS FRANÇAISES — Remote-first, stack JS/TS
+  # ====================================================
+
+  - name: Pennylane
+    careers_url: https://jobs.lever.co/pennylane
+    notes: "Paris FR. Accounting SaaS PME. Stack React. Remote OK."
+    enabled: true
+
+  - name: Dougs
+    careers_url: https://job-boards.greenhouse.io/dougs
+    scan_method: websearch
+    scan_query: 'site:job-boards.greenhouse.io "dougs" "engineer" OR "developer" OR "développeur"'
+    notes: "Lyon FR. Comptabilité en ligne. Full remote. Node.js/React."
+    enabled: true
+
+  - name: Alan
+    careers_url: https://jobs.ashbyhq.com/Alan
+    scan_method: websearch
+    scan_query: 'site:welcometothejungle.com "Alan" "développeur" OR "developer" remote'
+    notes: "Paris FR. Assurance santé digitale. Full remote. React/TypeScript."
+    enabled: true
+
+  - name: lemlist
+    careers_url: https://www.welcometothejungle.com/fr/companies/lemlist/jobs
+    scan_method: websearch
+    scan_query: 'site:welcometothejungle.com "lemlist" "développeur" OR "developer" OR "engineer"'
+    notes: "Paris FR. Sales automation. Full remote. Stack JS/TS."
+    enabled: true
+
+  - name: Doctrine
+    careers_url: https://www.welcometothejungle.com/fr/companies/doctrine/jobs
+    scan_method: websearch
+    scan_query: 'site:welcometothejungle.com "Doctrine" "développeur" OR "developer" OR "engineer"'
+    notes: "Paris FR. LegalTech + IA. Remote partiel. React."
+    enabled: true
+
+  - name: Partoo
+    careers_url: https://www.welcometothejungle.com/fr/companies/partoo/jobs
+    scan_method: websearch
+    scan_query: 'site:welcometothejungle.com "Partoo" "développeur" OR "developer" OR "engineer"'
+    notes: "Paris FR. Présence locale pour entreprises. Remote partiel. React."
+    enabled: true
+
+  - name: ManoMano
+    careers_url: https://www.welcometothejungle.com/fr/companies/manomano/jobs
+    scan_method: websearch
+    scan_query: 'site:welcometothejungle.com "ManoMano" "développeur" OR "developer" React OR TypeScript'
+    notes: "Paris FR. Marketplace bricolage. Remote. React/TypeScript."
+    enabled: true
+
+  - name: 360Learning
+    careers_url: https://www.welcometothejungle.com/fr/companies/360learning/jobs
+    scan_method: websearch
+    scan_query: 'site:welcometothejungle.com "360Learning" "développeur" OR "developer" OR "engineer"'
+    notes: "Paris FR. LMS collaboratif. Remote. JS/TypeScript."
+    enabled: true
+
+  - name: Indy
+    careers_url: https://www.welcometothejungle.com/fr/companies/indy/jobs
+    scan_method: websearch
+    scan_query: 'site:welcometothejungle.com "Indy" "développeur" OR "developer" React OR TypeScript'
+    notes: "Paris FR. Compta freelances. Remote. React."
+    enabled: true
+
+  - name: AssessFirst
+    careers_url: https://www.welcometothejungle.com/fr/companies/assessfirst/jobs
+    scan_method: websearch
+    scan_query: 'site:welcometothejungle.com "AssessFirst" "développeur" OR "developer" OR "engineer"'
+    notes: "Paris FR. RH/recrutement SaaS. Remote. JS/TS."
+    enabled: true
+
+  - name: Joko
+    careers_url: https://www.welcometothejungle.com/fr/companies/joko/jobs
+    scan_method: websearch
+    scan_query: 'site:welcometothejungle.com "Joko" "développeur" OR "developer" OR "engineer"'
+    notes: "Paris FR. Cashback app. Full remote. Stack JS."
+    enabled: true
+
+  # ====================================================
+  # SCALE-UPS FRANÇAISES TECH
+  # ====================================================
+
+  - name: Qonto
+    careers_url: https://jobs.lever.co/qonto
+    notes: "Paris FR. Néobanque PME. Remote partiel."
+    enabled: true
+
+  - name: Mistral AI
+    careers_url: https://jobs.lever.co/mistral
+    notes: "Paris FR. Lab IA européen. Remote partiel. AI Engineer roles."
+    enabled: true
+
+  - name: Hugging Face
+    careers_url: https://apply.workable.com/huggingface/
+    scan_method: websearch
+    scan_query: 'site:apply.workable.com/huggingface "engineer" OR "developer" remote'
+    notes: "Paris FR / Remote global. Hub ML open-source. Remote-first."
+    enabled: true
+
+  - name: Photoroom
+    careers_url: https://jobs.ashbyhq.com/photoroom
+    scan_method: websearch
+    scan_query: 'site:jobs.ashbyhq.com/photoroom'
+    notes: "Paris FR. AI photo editor. React + IA."
+    enabled: true
+
+  - name: Pigment
+    careers_url: https://jobs.lever.co/pigment
+    notes: "Paris FR. FP&A IA. Full remote possible."
+    enabled: true
+
+  # ====================================================
+  # MARCHÉ AFRICAIN FRANCOPHONE
+  # ====================================================
+
+  - name: Wave Mobile Money
+    careers_url: https://wavemobilemoney.com/careers
+    scan_method: websearch
+    scan_query: '"Wave Mobile Money" "engineer" OR "developer" OR "développeur" remote'
+    notes: "Dakar SN / Abidjan CI. Fintech #1 Afrique de l'Ouest. Stack React/TS."
+    enabled: true
+
+  - name: Djamo
+    careers_url: https://djamo.com/careers
+    scan_method: websearch
+    scan_query: '"Djamo" "engineer" OR "developer" OR "développeur" site:linkedin.com OR site:welcometothejungle.com'
+    notes: "Abidjan CI. Néobanque Côte d'Ivoire. Stack JS/TS."
+    enabled: true
+
+  - name: Expensya
+    careers_url: https://www.welcometothejungle.com/fr/companies/expensya/jobs
+    scan_method: websearch
+    scan_query: 'site:welcometothejungle.com "Expensya" "développeur" OR "developer" OR "engineer"'
+    notes: "Tunis TN / Paris FR. SaaS notes de frais. Remote. Francophone."
+    enabled: true
+
+  # ====================================================
+  # MARCHÉ MAROC
+  # ====================================================
+
+  - name: YouCan
+    careers_url: https://youcan.shop/careers
+    scan_method: websearch
+    scan_query: '"YouCan" "developer" OR "développeur" OR "engineer" remote Maroc OR Morocco'
+    notes: "Casablanca MA. E-commerce builder. Stack JS/TS. Full remote."
+    enabled: true
+
+  - name: Rekrute (portail Maroc)
+    careers_url: https://www.rekrute.com
+    scan_method: websearch
+    scan_query: 'site:rekrute.com "développeur full-stack" OR "Next.js" OR "React TypeScript" remote Casablanca OR Maroc'
+    notes: "Portail emploi tech Maroc."
+    enabled: true
+
+  # ====================================================
+  # INTERNATIONAL REMOTE — Stack moderne
+  # ====================================================
+
+  - name: Vercel
+    careers_url: https://job-boards.greenhouse.io/vercel
+    api: https://boards-api.greenhouse.io/v1/boards/vercel/jobs
+    notes: "Remote-first. Next.js creator. Engineering roles."
+    enabled: true
+
+  - name: Anthropic
+    careers_url: https://job-boards.greenhouse.io/anthropic
+    api: https://boards-api.greenhouse.io/v1/boards/anthropic/jobs
+    notes: "Remote. Claude API. AI Engineer roles."
+    enabled: true
+
+  - name: Supabase
+    careers_url: https://supabase.com/careers
+    scan_method: websearch
+    scan_query: '"supabase" careers "engineer" OR "developer" remote site:supabase.com OR site:jobs.ashbyhq.com'
+    notes: "Remote-first. Backend-as-a-service."
+    enabled: true
+
+  - name: n8n
+    careers_url: https://jobs.ashbyhq.com/n8n
+    scan_method: websearch
+    scan_query: 'site:jobs.ashbyhq.com/n8n'
+    notes: "Berlin / Remote EU. Workflow automation. Full-Stack JS/TS roles."
+    enabled: true
+
+  - name: Attio
+    careers_url: https://jobs.ashbyhq.com/attio
+    scan_method: websearch
+    scan_query: 'site:attio.com/careers OR site:jobs.ashbyhq.com/attio'
+    notes: "Remote EU. CRM IA-native. React/TypeScript."
+    enabled: true
