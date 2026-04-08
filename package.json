@@ -15,7 +15,13 @@
     "rollback": "node update-system.mjs rollback",
     "liveness": "node check-liveness.mjs"
   },
-  "keywords": ["ai", "job-search", "claude-code", "career", "automation"],
+  "keywords": [
+    "ai",
+    "job-search",
+    "claude-code",
+    "career",
+    "automation"
+  ],
   "author": "Santiago Fernández de Valderrama <hi@santifer.io> (https://santifer.io)",
   "homepage": "https://santifer.io",
   "repository": {
@@ -24,6 +30,6 @@
   },
   "license": "MIT",
   "dependencies": {
-    "playwright": "^1.58.1"
+    "playwright": "1.59.1"
   }
 }
