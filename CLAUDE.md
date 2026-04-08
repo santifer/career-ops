@@ -184,6 +184,7 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 
 - **German (DACH market):** `modes/de/` — native German translations with DACH-specific vocabulary (13. Monatsgehalt, Probezeit, Kündigungsfrist, AGG, Tarifvertrag, etc.). Includes `_shared.md`, `angebot.md` (evaluation), `bewerben.md` (apply), `pipeline.md`.
 - **French (Francophone market):** `modes/fr/` — native French translations with France/Belgium/Switzerland/Luxembourg-specific vocabulary (CDI/CDD, convention collective SYNTEC, RTT, mutuelle, prévoyance, 13e mois, intéressement/participation, titres-restaurant, CSE, portage salarial, etc.). Includes `_shared.md`, `offre.md` (evaluation), `postuler.md` (apply), `pipeline.md`.
+- **Russian (Russian market):** `modes/ru/` — full Russian translations with Russia-specific vocabulary (ТК РФ, НДФЛ 13%, ДМС, испытательный срок, gross vs net, ГПХ, самозанятость, etc.). Includes ALL 15 mode files: `_shared.md`, `oferta.md` (evaluation), `pdf.md`, `scan.md`, `batch.md`, `apply.md`, `auto-pipeline.md`, `contacto.md`, `deep.md`, `interview-prep.md`, `ofertas.md`, `pipeline.md`, `project.md`, `tracker.md`, `training.md`. Also includes Russian job portals (hh.ru, Хабр Карьера, trudvsem.ru, rabota.ru, Superjob, Geekjob, budu.jobs) and Russian role archetypes (Backend, Frontend, DevOps/SRE, System Analyst, PM, Tech Lead, Data/ML Engineer, QA/SDET, Architect).
 
 **When to use German modes:** If the user is targeting German-language job postings, lives in DACH, or asks for German output. Either:
 1. User says "use German modes" → read from `modes/de/` instead of `modes/`
@@ -195,7 +196,31 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 2. User sets `language.modes_dir: modes/fr` in `config/profile.yml` → always use French modes
 3. You detect a French JD → suggest switching to French modes
 
-**When NOT to:** If the user applies to English-language roles, even at French or German companies, use the default English modes.
+**When to use Russian modes:** If the user is targeting Russian-language job postings, lives in Russia, or asks for Russian output. Either:
+1. User says "use Russian modes" / "используй русские режимы" → read from `modes/ru/` instead of `modes/`
+2. User sets `language.modes_dir: modes/ru` in `config/profile.yml` → always use Russian modes
+3. You detect a Russian JD (hh.ru, Хабр Карьера, etc.) → suggest switching to Russian modes
+
+**When NOT to:** If the user applies to English-language roles, even at French, German, or Russian companies, use the default English modes.
+
+### Russian Command Aliases
+
+When Russian modes are active, the system also accepts Russian subcommands:
+
+| Русская команда | Эквивалент | Описание |
+|----------------|------------|----------|
+| `/career-ops оценка {JD}` | `/career-ops oferta` | Полная оценка вакансии |
+| `/career-ops резюме` | `/career-ops pdf` | Генерация PDF-резюме |
+| `/career-ops сканер` | `/career-ops scan` | Сканирование порталов |
+| `/career-ops пакет` | `/career-ops batch` | Пакетная обработка |
+| `/career-ops трекер` | `/career-ops tracker` | Статус откликов |
+| `/career-ops отклик` | `/career-ops apply` | Заполнение форм |
+| `/career-ops контакт` | `/career-ops contacto` | Сообщение в LinkedIn/Telegram |
+| `/career-ops глубоко` | `/career-ops deep` | Глубокий анализ компании |
+| `/career-ops курс` | `/career-ops training` | Оценка курса/сертификации |
+| `/career-ops проект` | `/career-ops project` | Оценка портфолио-проекта |
+| `/career-ops очередь` | `/career-ops pipeline` | Обработка очереди URL |
+| `/career-ops подготовка` | `/career-ops interview-prep` | Подготовка к собеседованию |
 
 ### Skill Modes
 

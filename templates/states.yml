@@ -54,3 +54,29 @@ states:
     aliases: [no_aplicar, no aplicar, skip, monitor]
     description: Doesn't fit, don't apply
     dashboard_group: skip
+
+# === Русские маппинги статусов ===
+# Используются при language.primary: ru в profile.yml.
+# Маппинг: русский ввод → каноническое английское состояние.
+# Статусы в applications.md ВСЕГДА остаются на английском (Evaluated, Applied и т.д.),
+# но система принимает русские алиасы при вводе от пользователя.
+
+statuses_ru:
+  оценена: evaluated
+  ожидает: evaluated
+  отклик отправлен: applied
+  откликнулся: applied
+  скрининг: responded
+  ответили: responded
+  собеседование: interview
+  техническое интервью: interview
+  оффер: offer
+  предложение: offer
+  принят: offer
+  отказ: rejected
+  отказано: rejected
+  отозвано: discarded
+  закрыта: discarded
+  нет ответа: discarded
+  пропустить: skip
+  не откликаться: skip

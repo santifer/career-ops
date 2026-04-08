@@ -69,3 +69,36 @@ location:
   visa_status: "No sponsorship needed"
   # For remote roles outside your country:
   # onsite_availability: "1 week/month in any city"
+
+# === Пример профиля для российского рынка ===
+# Раскомментируйте и заполните, если ищете работу в РФ.
+# Этот блок перезаписывает соответствующие поля выше.
+#
+# profile_ru:
+#   name: "Иванов Сергей Петрович"
+#   location: "Москва, Россия"
+#   citizenship: "РФ"
+#   relocation: "Не готов"              # Готов / Не готов / Обсуждаемо
+#   remote: "Гибрид"                    # Офис / Удалённо / Гибрид
+#   salary:
+#     min: 350000
+#     desired: 450000
+#     currency: "RUB"
+#     gross: true                       # true = до вычета НДФЛ, false = на руки
+#   experience_years: 14
+#   grade: "Senior / Lead"
+#   languages:
+#     - { lang: "Русский", level: "Родной" }
+#     - { lang: "English", level: "B2" }
+#   stack:
+#     primary: ["PHP 8", "Go", "PostgreSQL", "Redis", "Docker", "Kafka"]
+#     secondary: ["Python", "Symfony", "RabbitMQ", "Kubernetes"]
+#   preferences:
+#     industries: ["Финтех", "E-commerce", "Медиа", "AdTech"]
+#     avoid: ["Gambling", "Криптобиржи"]
+#     team_size: "10-50"
+#     company_stage: "Рост / Зрелость"
+#
+# language:
+#   primary: ru
+#   modes_dir: modes/ru

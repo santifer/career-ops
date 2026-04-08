@@ -752,3 +752,93 @@ tracked_companies:
     scan_query: 'site:jobs.ashbyhq.com/workos "Solutions Engineer" OR "Developer Success" OR "Engineer"'
     notes: "Developer tools and enterprise-ready auth/platform APIs."
     enabled: true
+
+  # ==========================================
+  # 🇷🇺 РОССИЙСКИЕ ПЛОЩАДКИ
+  # ==========================================
+  # Russian job boards and portals. Enable if targeting Russian market.
+  # hh.ru and trudvsem.ru have open APIs for structured data access.
+
+russian_portals:
+
+  # --- Основные джоб-борды ---
+
+  - name: "HeadHunter (hh.ru)"
+    url: "https://hh.ru"
+    search_url: "https://hh.ru/search/vacancy?text={query}&area=1&salary=&currency_code=RUR&experience=between3And6&order_by=relevance&search_period=30"
+    api: "https://api.hh.ru/vacancies?text={query}&area=1&per_page=20"
+    type: "api+web"
+    notes: "Главная площадка РФ. API открытый, не требует авторизации для поиска. area=1 — Москва, area=2 — Питер."
+    enabled: true
+
+  - name: "Хабр Карьера"
+    url: "https://career.habr.com"
+    search_url: "https://career.habr.com/vacancies?type=all&q={query}&sort=relevance"
+    type: "web"
+    notes: "IT-вакансии, сильное техническое комьюнити. Указывают грейды и вилки."
+    enabled: true
+
+  - name: "Работа в России (trudvsem.ru)"
+    url: "https://trudvsem.ru"
+    search_url: "https://trudvsem.ru/vacancy/search?query={query}&regionCode=77"
+    api: "https://opendata.trudvsem.ru/api/v1/vacancies?text={query}&regionCode=77&limit=20"
+    type: "api+web"
+    notes: "Госпортал Роструда. Открытый API. regionCode=77 — Москва."
+    enabled: true
+
+  - name: "Rabota.ru"
+    url: "https://rabota.ru"
+    search_url: "https://rabota.ru/vacancy?query={query}&city=moskva"
+    type: "web"
+    notes: "Принадлежит Сберу. Много вакансий крупных компаний."
+    enabled: true
+
+  # --- Дополнительные площадки ---
+
+  - name: "Superjob"
+    url: "https://www.superjob.ru"
+    search_url: "https://www.superjob.ru/vacancy/search/?keywords={query}&geo%5Bt%5D%5B0%5D=4"
+    type: "web"
+    notes: "Вторая по величине площадка после hh.ru."
+    enabled: true
+
+  - name: "Geekjob"
+    url: "https://geekjob.ru"
+    search_url: "https://geekjob.ru/vacancies?search={query}"
+    type: "web"
+    notes: "IT-вакансии, часто с указанием вилок."
+    enabled: true
+
+  - name: "Буду (budu.jobs)"
+    url: "https://budu.jobs"
+    search_url: "https://budu.jobs/vacancies?q={query}"
+    type: "web"
+    notes: "IT-вакансии, бывший Хантфлоу Джобс."
+    enabled: true
+
+  - name: "Remote Job (remote-job.ru)"
+    url: "https://remote-job.ru"
+    search_url: "https://remote-job.ru/search?search%5Bquery%5D={query}"
+    type: "web"
+    notes: "Удалённая работа в РФ."
+    enabled: true
+
+  - name: "LinkedIn (Россия)"
+    url: "https://www.linkedin.com"
+    search_url: "https://www.linkedin.com/jobs/search/?keywords={query}&location=Russia"
+    type: "web"
+    notes: "Заблокирован в РФ, но используется через VPN. Много международных вакансий."
+    enabled: false
+
+  - name: "Telegram-каналы"
+    type: "manual"
+    channels:
+      - "@devjobs"
+      - "@frontendjob"
+      - "@gophersjob"
+      - "@phpjobsru"
+      - "@remote_it"
+      - "@jobforjunior"
+      - "@djinni_jobs_rus"
+    notes: "Мониторить вручную или через бот. Часто эксклюзивные вакансии."
+    enabled: false
