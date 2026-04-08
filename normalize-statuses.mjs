@@ -26,6 +26,10 @@ const DRY_RUN = process.argv.includes('--dry-run');
 function normalizeStatus(raw) {
   // Strip markdown bold
   let s = raw.replace(/\*\*/g, '').trim();
+
+  // Strip trailing date suffix (YYYY-MM-DD and everything after) generically before any alias matching
+  s = s.replace(/\s+\d{4}-\d{2}-\d{2}.*$/, '').trim();
+
   const lower = s.toLowerCase();
 
   // DUPLICADO variants → Discarded
@@ -41,10 +45,6 @@ function normalizeStatus(raw) {
 
   // Rechazada / Rechazado → Rejected
   if (/^rechazada?$/i.test(s)) return { status: 'Rejected' };
-  if (/^rechazado\s+\d{4}/i.test(s)) return { status: 'Rejected' };
-
-  // Aplicado with date → Applied (strip date)
-  if (/^aplicado\s+\d{4}/i.test(s)) return { status: 'Applied' };
 
   // CONDICIONAL / HOLD / EVALUAR / Verificar → Evaluated
   if (/^(condicional|hold|evaluar|verificar)$/i.test(s)) return { status: 'Evaluated' };
