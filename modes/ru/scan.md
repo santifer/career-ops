@@ -59,7 +59,7 @@ Agent(
 2. **Прочитать историю**: `data/scan-history.tsv` → уже виденные URL
 3. **Прочитать источники деdup**: `data/applications.md` + `data/pipeline.md`
 
-4. **Уровень 1 — Playwright scan** (параллельно батчами по 3-5):
+4. **Уровень 1 — Playwright scan** (последовательно, по одному за раз):
    Для каждой компании в `tracked_companies` с `enabled: true` и `careers_url`:
    a. `browser_navigate` на `careers_url`
    b. `browser_snapshot` для чтения всех вакансий
@@ -72,10 +72,10 @@ Agent(
 6. **Уровень 3 — WebSearch запросы** (параллельно):
    Для каждого запроса с `enabled: true` — WebSearch → извлечь результаты
 
-7. **Уровень 4 — Российские площадки** (параллельно):
+7. **Уровень 4 — Российские площадки** (параллельно API; Playwright последовательно):
    a. hh.ru API → WebFetch JSON
    b. trudvsem.ru API → WebFetch JSON
-   c. Остальные → Playwright
+   c. Остальные → Playwright (по одному за раз)
 
 8. **Фильтровать по названию** используя `title_filter` из `portals.yml`:
    - Минимум 1 keyword из `positive` (case-insensitive)
@@ -87,7 +87,7 @@ Agent(
    - `applications.md` → компания + роль
    - `pipeline.md` → точный URL
 
-10. **Верифицировать liveness** для результатов WebSearch (Уровень 3) через Playwright
+10. **Верифицировать liveness** для результатов WebSearch (Уровень 3) через Playwright (по одному за раз)
 
 11. **Для каждой новой верифицированной вакансии**:
     a. Добавить в `pipeline.md`: `- [ ] {url} | {company} | {title}`

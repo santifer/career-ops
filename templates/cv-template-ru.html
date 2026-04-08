@@ -5,24 +5,84 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{{NAME}} — Резюме</title>
 <style>
-  /* Latin glyphs — Space Grotesk */
+  /* Space Grotesk — Cyrillic Extended */
   @font-face {
     font-family: 'Space Grotesk';
-    src: url('./fonts/space-grotesk-latin.woff2') format('woff2'),
-         url('./fonts/space-grotesk-latin-ext.woff2') format('woff2');
+    src: url('./fonts/space-grotesk-cyrillic-ext.woff2') format('woff2');
     font-weight: 300 700;
     font-style: normal;
     font-display: swap;
+    unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
   }
 
-  /* Latin glyphs — DM Sans */
+  /* Space Grotesk — Cyrillic */
+  @font-face {
+    font-family: 'Space Grotesk';
+    src: url('./fonts/space-grotesk-cyrillic.woff2') format('woff2');
+    font-weight: 300 700;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+  }
+
+  /* Space Grotesk — Latin Extended */
+  @font-face {
+    font-family: 'Space Grotesk';
+    src: url('./fonts/space-grotesk-latin-ext.woff2') format('woff2');
+    font-weight: 300 700;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  }
+
+  /* Space Grotesk — Latin */
+  @font-face {
+    font-family: 'Space Grotesk';
+    src: url('./fonts/space-grotesk-latin.woff2') format('woff2');
+    font-weight: 300 700;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  }
+
+  /* DM Sans — Cyrillic Extended */
   @font-face {
     font-family: 'DM Sans';
-    src: url('./fonts/dm-sans-latin.woff2') format('woff2'),
-         url('./fonts/dm-sans-latin-ext.woff2') format('woff2');
+    src: url('./fonts/dm-sans-cyrillic-ext.woff2') format('woff2');
     font-weight: 100 1000;
     font-style: normal;
     font-display: swap;
+    unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+  }
+
+  /* DM Sans — Cyrillic */
+  @font-face {
+    font-family: 'DM Sans';
+    src: url('./fonts/dm-sans-cyrillic.woff2') format('woff2');
+    font-weight: 100 1000;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+  }
+
+  /* DM Sans — Latin Extended */
+  @font-face {
+    font-family: 'DM Sans';
+    src: url('./fonts/dm-sans-latin-ext.woff2') format('woff2');
+    font-weight: 100 1000;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  }
+
+  /* DM Sans — Latin */
+  @font-face {
+    font-family: 'DM Sans';
+    src: url('./fonts/dm-sans-latin.woff2') format('woff2');
+    font-weight: 100 1000;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
   }
 
   * {
