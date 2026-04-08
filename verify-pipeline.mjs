@@ -43,6 +43,15 @@ const ALIASES = {
   'rechazado': 'rejected', 'rechazada': 'rejected',
   'descartado': 'discarded', 'descartada': 'discarded', 'cerrada': 'discarded', 'cancelada': 'discarded',
   'no aplicar': 'skip', 'no_aplicar': 'skip', 'monitor': 'skip', 'geo blocker': 'skip',
+  // Russian → English
+  'оценена': 'evaluated', 'ожидает': 'evaluated',
+  'отклик отправлен': 'applied', 'откликнулся': 'applied',
+  'скрининг': 'responded', 'ответили': 'responded',
+  'собеседование': 'interview', 'техническое интервью': 'interview',
+  'оффер': 'offer', 'предложение': 'offer', 'принят': 'offer',
+  'отказ': 'rejected', 'отказано': 'rejected',
+  'отозвано': 'discarded', 'закрыта': 'discarded', 'нет ответа': 'discarded',
+  'пропустить': 'skip', 'не откликаться': 'skip',
 };
 
 let errors = 0;
