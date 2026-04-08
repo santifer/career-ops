@@ -1,4 +1,0 @@
-interface:
-  display_name: "Career-Ops Tracker"
-  short_description: "Summarize tracker state and update existing application rows"
-  default_prompt: "Summarize my application tracker and flag the next actions."

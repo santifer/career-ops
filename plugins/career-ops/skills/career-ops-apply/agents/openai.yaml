@@ -1,4 +1,0 @@
-interface:
-  display_name: "Career-Ops Apply"
-  short_description: "Draft answers and assist with forms, but stop before submit"
-  default_prompt: "Help me fill this application carefully, but stop before the final submit."

@@ -1,9 +1,11 @@
 # Codex Setup
 
-Career-Ops supports Codex in two layers:
+Career-Ops supports Codex through the root `AGENTS.md` file.
 
-1. Root `AGENTS.md` for baseline repo behavior
-2. A repo-local plugin under `plugins/career-ops/` for discoverable skills
+If your Codex client reads project instructions automatically, `AGENTS.md`
+is enough for routing and behavior. Codex should reuse the same checked-in
+mode files, templates, tracker flow, and scripts that already power the
+Claude workflow.
 
 ## Prerequisites
 
@@ -19,34 +21,31 @@ npm install
 npx playwright install chromium
 ```
 
-## Repo-Local Plugin
-
-The repo ships a local marketplace entry at `.agents/plugins/marketplace.json` and a plugin at `plugins/career-ops/`.
-
-If your Codex client supports repo-local plugins, install or enable the `Career-Ops` plugin from the repo marketplace. If it does not, the repo still works through `AGENTS.md` plus the checked-in skill folders.
-
 ## Recommended Starting Prompts
 
 - `Evaluate this job URL with Career-Ops and run the full pipeline.`
 - `Scan my configured portals for new roles that match my profile.`
 - `Generate the tailored ATS PDF for this role using Career-Ops.`
 
-## Skill Map
+## Routing Map
 
-| Codex skill | Purpose | Source files |
-|-------------|---------|--------------|
-| `career-ops-core` | Discovery, routing, onboarding, compare-offers fallback | `AGENTS.md`, `.claude/skills/career-ops/SKILL.md` |
-| `career-ops-evaluate` | Raw JD/URL auto-pipeline, single evaluation, compare flow handoff | `modes/_shared.md`, `modes/auto-pipeline.md`, `modes/oferta.md`, `modes/ofertas.md` |
-| `career-ops-scan` | Portal scanning | `modes/_shared.md`, `modes/scan.md` |
-| `career-ops-pdf` | ATS PDF generation | `modes/_shared.md`, `modes/pdf.md`, `generate-pdf.mjs` |
-| `career-ops-batch` | Batch evaluation | `modes/_shared.md`, `modes/batch.md`, `batch/batch-prompt.md`, `batch/batch-runner.sh` |
-| `career-ops-tracker` | Tracker summaries and status updates | `modes/tracker.md`, `data/applications.md` |
-| `career-ops-apply` | Form filling assistance with stop-before-submit | `modes/_shared.md`, `modes/apply.md` |
-| `career-ops-pipeline` | Process queued URLs | `modes/_shared.md`, `modes/pipeline.md` |
-| `career-ops-contact` | Outreach drafting | `modes/_shared.md`, `modes/contacto.md` |
-| `career-ops-deep` | Deep company research | `modes/deep.md` |
-| `career-ops-training` | Course/cert evaluation | `modes/training.md` |
-| `career-ops-project` | Portfolio project evaluation | `modes/project.md` |
+| User intent | Files Codex should read |
+|-------------|-------------------------|
+| Raw JD text or job URL | `modes/_shared.md` + `modes/auto-pipeline.md` |
+| Single evaluation only | `modes/_shared.md` + `modes/oferta.md` |
+| Multiple offers | `modes/_shared.md` + `modes/ofertas.md` |
+| Portal scan | `modes/_shared.md` + `modes/scan.md` |
+| PDF generation | `modes/_shared.md` + `modes/pdf.md` |
+| Live application help | `modes/_shared.md` + `modes/apply.md` |
+| Pipeline inbox processing | `modes/_shared.md` + `modes/pipeline.md` |
+| Tracker status | `modes/tracker.md` |
+| Deep company research | `modes/deep.md` |
+| Training / certification review | `modes/training.md` |
+| Project evaluation | `modes/project.md` |
+
+The key point: Codex support is additive. It should route into the existing
+Career-Ops modes and scripts rather than introducing a parallel automation
+layer.
 
 ## Behavioral Rules
 
@@ -60,6 +59,7 @@ If your Codex client supports repo-local plugins, install or enable the `Career-
 
 ```bash
 npm run verify
-npm run verify:codex
+
+# optional dashboard build
 cd dashboard && go build ./...
 ```

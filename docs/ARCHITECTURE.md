@@ -3,37 +3,35 @@
 ## System Overview
 
 ```
-                    ┌─────────────────────────────────────┐
-                    │         Claude Code Agent           │
-                    │   (CLAUDE.md + .claude/skills/*)    │
-                    └────────────────┬────────────────────┘
-                                     │
-                    ┌────────────────▼────────────────────┐
-                    │            Codex Agent               │
-                    │  (AGENTS.md + plugins/career-ops/*)  │
-                    └────────────────┬────────────────────┘
-                                     │
-            ┌────────────────────────┼────────────────────────┐
-            │                        │                        │
-     ┌──────▼──────┐         ┌──────▼──────┐         ┌──────▼────────┐
-     │ Single Eval  │         │ Portal Scan │         │ Batch Process  │
-     │ auto-pipeline│         │  scan.md    │         │ batch-runner   │
-     └──────┬──────┘         └──────┬──────┘         └──────┬────────┘
-            │                        │                        │
-            │                 ┌──────▼──────┐          ┌──────▼──────┐
-            │                 │ pipeline.md │          │ batch prompt │
-            │                 │ URL inbox   │          │ + workers    │
-            │                 └──────┬──────┘          └──────┬──────┘
-            │                        │                        │
-     ┌──────▼────────────────────────▼────────────────────────▼──────┐
-     │                        Output Pipeline                         │
-     │   report.md        PDF via Playwright        tracker TSV       │
-     └──────────────────────────────┬─────────────────────────────────┘
-                                    │
-                         ┌──────────▼──────────┐
-                         │ data/applications.md │
-                         │ canonical tracker    │
-                         └──────────────────────┘
+                    ┌─────────────────────────────────┐
+                    │         Claude Code Agent        │
+                    │   (reads CLAUDE.md + modes/*.md) │
+                    └──────────┬──────────────────────┘
+                               │
+            ┌──────────────────┼──────────────────────┐
+            │                  │                       │
+     ┌──────▼──────┐   ┌──────▼──────┐   ┌───────────▼────────┐
+     │ Single Eval  │   │ Portal Scan │   │   Batch Process    │
+     │ (auto-pipe)  │   │  (scan.md)  │   │   (batch-runner)   │
+     └──────┬──────┘   └──────┬──────┘   └───────────┬────────┘
+            │                  │                       │
+            │           ┌──────▼──────┐          ┌────▼─────┐
+            │           │ pipeline.md │          │ N workers│
+            │           │ (URL inbox) │          │ (claude -p)
+            │           └─────────────┘          └────┬─────┘
+            │                                          │
+     ┌──────▼──────────────────────────────────────────▼──────┐
+     │                    Output Pipeline                      │
+     │  ┌──────────┐  ┌────────────┐  ┌───────────────────┐  │
+     │  │ Report.md│  │  PDF (HTML  │  │ Tracker TSV       │  │
+     │  │ (A-F eval)│  │  → Puppeteer)│  │ (merge-tracker)  │  │
+     │  └──────────┘  └────────────┘  └───────────────────┘  │
+     └────────────────────────────────────────────────────────┘
+                               │
+                    ┌──────────▼──────────┐
+                    │  data/applications.md │
+                    │  (canonical tracker)  │
+                    └──────────────────────┘
 ```
 
 ## Evaluation Flow (Single Offer)
@@ -65,7 +63,7 @@ batch-input.tsv    →  batch-runner.sh  →  N × claude -p workers
                     (tracks progress)
 ```
 
-Each worker is a headless Claude instance (`claude -p`) that receives the full `batch-prompt.md` as context. Codex support does not replace this batch engine; it routes users into the same existing flow. Workers produce:
+Each worker is a headless Claude instance (`claude -p`) that receives the full `batch-prompt.md` as context. Workers produce:
 - Report .md
 - PDF
 - Tracker TSV line
@@ -82,13 +80,6 @@ portals.yml              →  Scanner configuration
 templates/states.yml     →  Canonical status values
 templates/cv-template.html → PDF generation template
 ```
-
-## Dual-Agent Surface
-
-- Claude keeps the slash-command router in `.claude/skills/career-ops/SKILL.md`.
-- Codex uses `AGENTS.md` plus the repo-local plugin in `plugins/career-ops/`.
-- Both agents load the same `modes/*.md`, templates, scripts, and data files.
-- User-specific changes belong in the user layer from `DATA_CONTRACT.md`, not in system prompts.
 
 ## File Naming Conventions
 

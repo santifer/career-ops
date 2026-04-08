@@ -1,4 +1,0 @@
-interface:
-  display_name: "Career-Ops Evaluate"
-  short_description: "Run the single-offer evaluation or full auto-pipeline"
-  default_prompt: "Evaluate this job URL with Career-Ops and run the full pipeline."

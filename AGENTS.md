@@ -38,8 +38,6 @@ These files can be updated from upstream:
 - `templates/*`
 - `fonts/*`
 - `.claude/skills/*`
-- `plugins/career-ops/*`
-- `.agents/plugins/marketplace.json`
 - `docs/*`
 - `VERSION`
 - `DATA_CONTRACT.md`
@@ -92,7 +90,6 @@ If any required file is missing, do onboarding before evaluations, scans, or tra
 Once the basics exist, point the user to:
 
 - raw JD or job URL paste for the full auto-pipeline
-- the plugin skills
 - `docs/CODEX.md`
 
 ## Routing
@@ -117,8 +114,6 @@ Once the basics exist, point the user to:
 
 - For `auto-pipeline`, `oferta`, `ofertas`, `pdf`, `contacto`, `apply`, `pipeline`, `scan`, and `batch`: read `modes/_shared.md` plus the mode file.
 - For `tracker`, `deep`, `training`, and `project`: read only the mode file.
-
-Repo-local Codex skills under `plugins/career-ops/skills/` mirror this routing and should be preferred when they match the request.
 
 ## Ethical Use
 
@@ -157,4 +152,3 @@ If Playwright is unavailable in a headless batch-style path, mark the verificati
 - Keep `npm` as the primary package manager.
 - Reuse the checked-in Node scripts instead of inventing parallel automation.
 - Build the dashboard from `dashboard/` with Go when needed.
-- Use `npm run verify:codex` to validate the Codex layer and Claude/Codex parity.

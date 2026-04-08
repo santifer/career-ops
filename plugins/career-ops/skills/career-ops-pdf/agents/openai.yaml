@@ -1,4 +1,0 @@
-interface:
-  display_name: "Career-Ops PDF"
-  short_description: "Generate the ATS-tailored PDF using the existing template pipeline"
-  default_prompt: "Generate the tailored ATS PDF for this role using Career-Ops."

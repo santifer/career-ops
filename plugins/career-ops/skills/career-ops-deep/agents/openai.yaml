@@ -1,4 +1,0 @@
-interface:
-  display_name: "Career-Ops Deep"
-  short_description: "Run the deep company research mode"
-  default_prompt: "Do a deep company read on this target and surface risks, signals, and talking points."
