@@ -79,6 +79,8 @@ When using [OpenCode](https://opencode.ai), the following slash commands are ava
 | `/career-ops-apply` | `/career-ops apply` | Live application assistant |
 | `/career-ops-scan` | `/career-ops scan` | Scan portals for new offers |
 | `/career-ops-batch` | `/career-ops batch` | Batch processing with parallel workers |
+| `/career-ops-interview-prep` | `/career-ops interview-prep` | Full interview prep package (research + story mapping) |
+| `/career-ops-interview-intel` | `/career-ops interview-intel` | Static interview guide for a specific company |
 
 **Note:** OpenCode commands invoke the same `.claude/skills/career-ops/SKILL.md` skill used by Claude Code. The `modes/*` files are shared between both platforms.
 
@@ -207,6 +209,7 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 | Wants LinkedIn outreach | `contacto` |
 | Asks for company research | `deep` |
 | Preps for interview at specific company | `interview-prep` |
+| Wants a quick company interview guide | `interview-intel` |
 | Wants to generate CV/PDF | `pdf` |
 | Evaluates a course/cert | `training` |
 | Evaluates portfolio project | `project` |

@@ -27,6 +27,8 @@ Determine the mode from `{{mode}}`:
 | `apply` | `apply` |
 | `scan` | `scan` |
 | `batch` | `batch` |
+| `interview-prep` + company + role | `interview-prep` |
+| `interview-intel` + company | `interview-intel` |
 
 **Auto-pipeline detection:** If `{{mode}}` is not a known sub-command AND contains JD text (keywords: "responsibilities", "requirements", "qualifications", "about the role", "we're looking for", company name + role) or a URL to a JD, execute `auto-pipeline`.
 
@@ -55,6 +57,8 @@ Available commands:
   /career-ops apply     → Live application assistant (reads form + generates answers)
   /career-ops scan      → Scan portals and discover new offers
   /career-ops batch     → Batch processing with parallel workers
+  /career-ops interview-prep {Company} {Role}  → Full interview prep package (research + story mapping)
+  /career-ops interview-intel {Company}        → Static interview guide for a specific company
 
 Inbox: add URLs to data/pipeline.md → /career-ops pipeline
 Or paste a JD directly to run the full pipeline.
@@ -74,7 +78,13 @@ Applies to: `auto-pipeline`, `oferta`, `ofertas`, `pdf`, `contacto`, `apply`, `p
 ### Standalone modes (only their mode file):
 Read `modes/{mode}.md`
 
-Applies to: `tracker`, `deep`, `training`, `project`
+Applies to: `tracker`, `deep`, `training`, `project`, `interview-prep`
+
+### interview-intel mode:
+1. Parse company name from `{{mode}}` args (e.g., `interview-intel OpenAI` → `OpenAI`)
+2. Check if `modes/interview-intel/{Company}.md` exists
+3. If yes, read and display the guide
+4. If no, list available guides from `modes/interview-intel/` and suggest the closest match
 
 ### Modes delegated to subagent:
 For `scan`, `apply` (with Playwright), and `pipeline` (3+ URLs): launch as Agent with the content of `_shared.md` + `modes/{mode}.md` injected into the subagent prompt.
