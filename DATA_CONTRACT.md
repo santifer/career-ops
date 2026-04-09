@@ -14,7 +14,8 @@ These files contain your personal data, customizations, and work product. Update
 | `article-digest.md` | Your proof points from portfolio |
 | `interview-prep/story-bank.md` | Your accumulated STAR+R stories |
 | `portals.yml` | Your customized company list |
-| `data/applications.md` | Your application tracker |
+| `data/applications.json` | Your application tracker (JSON format) |
+| `data/applications.md` | Legacy markdown format (deprecated, use migrate-applications-to-json.mjs) |
 | `data/pipeline.md` | Your URL inbox |
 | `data/scan-history.tsv` | Your scan history |
 | `reports/*` | Your evaluation reports |

@@ -1,19 +1,47 @@
 # Modo: tracker — Tracker de Aplicaciones
 
-Lee y muestra `data/applications.md`.
+Lee `data/applications.json` (preferido) o `data/applications.md` (deprecated).
 
-**Formato del tracker:**
-```markdown
-| # | Fecha | Empresa | Rol | Score | Estado | PDF | Report |
+**Formato JSON del tracker:**
+```json
+{
+  "version": "1.0",
+  "applications": [
+    {
+      "number": 1,
+      "date": "2026-03-12",
+      "company": "Acme Corp",
+      "role": "Senior Engineer",
+      "status": "Applied",
+      "score": 4.5,
+      "scoreRaw": "4.5/5",
+      "hasPdf": true,
+      "reportPath": "reports/001.md",
+      "reportNumber": "001",
+      "notes": "Strong match"
+    }
+  ]
+}
 ```
 
-Estados posibles: `Evaluada` → `Aplicado` → `Respondido` → `Contacto` → `Entrevista` → `Oferta` / `Rechazada` / `Descartada` / `NO APLICAR`
+**Estados canonicos (ingles, sensibles a mayusculas):**
+`Evaluated` → `Applied` → `Responded` → `Interview` → `Offer` / `Rejected` / `Discarded` / `SKIP`
 
-- `Aplicado` = el candidato envió su candidatura
-- `Respondido` = Un recruiter/empresa contactó y el candidato respondió (inbound)
-- `Contacto` = El candidato contactó proactivamente a alguien de la empresa (outbound, ej: LinkedIn power move)
+Alias soportados (se normalizan automaticamente):
+- `Aplicado`, `aplicado`, `enviada`, `aplicada`, `sent` → `Applied`
+- `Respondido` → `Responded`
+- `Entrevista` → `Interview`
+- `Rechazada`, `rechazado` → `Rejected`
+- `Descartada`, `cerrada`, `cancelada`, `duplicado` → `Discarded`
+- `NO APLICAR`, `skip`, `geo blocker` → `SKIP`
 
-Si el usuario pide actualizar un estado, editar la fila correspondiente.
+**Legacy (deprecated):** Si el archivo JSON no existe, cae back a `applications.md` en formato markdown:
+```markdown
+| # | Fecha | Empresa | Rol | Score | Status | PDF | Report | Notas |
+|---|-------|---------|-----|-------|--------|-----|--------|-------|
+```
+
+Si el usuario pide actualizar un estado, editar el archivo JSON directamente.
 
 Mostrar también estadísticas:
 - Total de aplicaciones
