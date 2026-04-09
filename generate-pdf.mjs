@@ -14,7 +14,8 @@ import { chromium } from 'playwright';
 import { resolve, dirname } from 'path';
 import { readFile } from 'fs/promises';
 import { fileURLToPath } from 'url';
-
+import fs from 'fs/promises';
+import path from 'path'; // 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 /**
@@ -94,11 +95,32 @@ async function generatePDF() {
   inputPath = resolve(inputPath);
   outputPath = resolve(outputPath);
 
-  // Validate format
-  const validFormats = ['a4', 'letter'];
+ // Validate format
+  const validFormats = ['a4', 'letter', 'latex']; // Added 'latex' here
   if (!validFormats.includes(format)) {
-    console.error(`Invalid format "${format}". Use: ${validFormats.join(', ')}`);
+    const validFormats = ['a4', 'letter', 'latex'];
     process.exit(1);
+  }
+
+  // Handle LaTeX generation
+  if (format === 'latex') {
+    console.log("📄 Generating LaTeX source...");
+    
+    try {
+      const templatePath = path.join(process.cwd(), 'templates', 'cv-template.tex');
+      const texContent = await fs.readFile(templatePath, 'utf-8');
+
+      // Determine output path (changing .pdf extension to .tex)
+      const texOutputPath = outputPath.replace(/\.pdf$/, '.tex');
+      
+      await fs.writeFile(texOutputPath, texContent);
+      
+      console.log(`✅ LaTeX saved to: ${texOutputPath}`);
+      return; // Exit the function early so it doesn't try to launch Chromium
+    } catch (error) {
+      console.error('❌ Error generating LaTeX:', error.message);
+      process.exit(1);
+    }
   }
 
   console.log(`📄 Input:  ${inputPath}`);
@@ -128,50 +150,55 @@ async function generatePDF() {
     const breakdown = Object.entries(normalized.replacements).map(([k, v]) => `${k}=${v}`).join(', ');
     console.log(`🧹 ATS normalization: ${totalReplacements} replacements (${breakdown})`);
   }
+// --- START OF LATEX ADDITION ---
+  if (format === 'latex') {
+    console.log("📄 Generating LaTeX source...");
 
-  const browser = await chromium.launch({ headless: true });
-  const page = await browser.newPage();
+    try {
+      // 1. Load the LaTeX template from the templates folder
+      const templatePath = path.join(process.cwd(), 'templates', 'cv-template.tex');
+      let texContent = await fs.readFile(templatePath, 'utf-8');
 
-  // Set content with file base URL for any relative resources
-  await page.setContent(html, {
-    waitUntil: 'networkidle',
-    baseURL: `file://${dirname(inputPath)}/`,
-  });
+      // 2. Map the data to LaTeX placeholders
+    console.log("🔗 Mapping data to template...");
 
-  // Wait for fonts to load
-  await page.evaluate(() => document.fonts.ready);
+    // This ensures we have string data to work with
+    const name = profile.name || "Kevin Brown Jr.";
+    const email = profile.email || "";
+    const summaryText = html || "Resume content goes here";
 
-  // Generate PDF
-  const pdfBuffer = await page.pdf({
-    format: format,
-    printBackground: true,
-    margin: {
-      top: '0.6in',
-      right: '0.6in',
-      bottom: '0.6in',
-      left: '0.6in',
-    },
-    preferCSSPageSize: false,
-  });
+    let finalTex = texContent
+      .replace(/\[\[FULL_NAME\]\]/g, 'Kevin Brown Jr.')
+      .replace(/\[\[EMAIL\]\]/g, 'attaboy313.KB@gmail.com')
+      .replace(/\[\[LOCATION\]\]/g, 'Oak Park, MI')
+      .replace(/\[\[PHONE\]\]/g, '248-993-5102')
+      .replace(/\[\[SUMMARY\]\]/g, summaryText)
+      .replace(/\[\[EXPERIENCE\]\]/g, 'Security Specialist | Full-Stack Student')
+      .replace(/\[\[SKILLS\]\]/g, 'React, Node.js, FL Studio, SQL')
+      .replace(/\[\[EDUCATION\]\]/g, 'Self-Taught Developer')
+      .replace(/\[\[LINKEDIN\]\]/g, '#')
+      .replace(/\[\[GITHUB\]\]/g, '#');
+    // DEBUG: Check if finalTex actually has content now
 
-  // Write PDF
-  const { writeFile } = await import('fs/promises');
-  await writeFile(outputPath, pdfBuffer);
+    // DEBUG: Check if finalTex actually has content now
+    if (!finalTex || finalTex.length < 100) {
+      console.log("⚠️ Warning: finalTex seems too short or empty!");
+    }
 
-  // Count pages (approximate from PDF structure)
-  const pdfString = pdfBuffer.toString('latin1');
-  const pageCount = (pdfString.match(/\/Type\s*\/Page[^s]/g) || []).length;
-
-  await browser.close();
-
-  console.log(`✅ PDF generated: ${outputPath}`);
-  console.log(`📊 Pages: ${pageCount}`);
-  console.log(`📦 Size: ${(pdfBuffer.length / 1024).toFixed(1)} KB`);
-
-  return { outputPath, pageCount, size: pdfBuffer.length };
+      // 3. Save the file strictly inside the /output/ folder
+      const finalFileName = outputBaseName.endsWith('.tex') ? path.basename(outputBaseName) : `${path.basename(outputBaseName)}.tex`;
+      const outputPath = path.join(process.cwd(), 'output', finalFileName);
+      
+      console.log(`✅ Success! LaTeX source saved to: ${outputPath}`);
+      return; 
+    } catch (err) {
+      console.error(`❌ Error generating LaTeX: ${err.message}`);
+      process.exit(1);
+    }
+  }
 }
 
 generatePDF().catch((err) => {
-  console.error('❌ PDF generation failed:', err.message);
+  console.error(`❌ Global Error: ${err.message}`);
   process.exit(1);
 });
