@@ -25,6 +25,12 @@ states:
     description: Company has responded (not yet interview)
     dashboard_group: responded
 
+  - id: contacted
+    label: Contacted
+    aliases: [contacto, contactado]
+    description: Candidate proactively reached out (outbound, e.g. LinkedIn)
+    dashboard_group: contacted
+
   - id: interview
     label: Interview
     aliases: [entrevista]

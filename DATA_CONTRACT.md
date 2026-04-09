@@ -42,9 +42,18 @@ These files contain system logic, scripts, templates, and instructions that impr
 | `modes/tracker.md` | Tracker instructions |
 | `modes/training.md` | Training evaluation instructions |
 | `modes/de/*` | German language modes |
+| `modes/fr/*` | French language modes |
+| `modes/pt/*` | Portuguese language modes |
+| `modes/es/*` | Spanish language modes (original translations) |
+| `modes/interview-prep.md` | Interview intelligence mode |
+| `modes/patterns.md` | Rejection pattern analysis mode |
 | `CLAUDE.md` | Agent instructions |
 | `AGENTS.md` | Codex instructions |
-| `*.mjs` | Utility scripts |
+| `analyze-patterns.mjs` | Pattern analysis script |
+| `check-liveness.mjs` | Offer URL liveness checker |
+| `doctor.mjs` | Setup validator |
+| `test-all.mjs` | Test suite |
+| `*.mjs` | Other utility scripts |
 | `batch/batch-prompt.md` | Batch worker prompt |
 | `batch/batch-runner.sh` | Batch orchestrator |
 | `dashboard/*` | Go TUI dashboard |
@@ -53,6 +62,9 @@ These files contain system logic, scripts, templates, and instructions that impr
 | `.claude/skills/*` | Skill definitions |
 | `docs/*` | Documentation |
 | `VERSION` | Current version number |
+| `LEGAL_DISCLAIMER.md` | Legal disclaimer |
+| `README.es.md` | Spanish README |
+| `AGENTS.md` | Codex agent instructions |
 | `DATA_CONTRACT.md` | This file |
 
 ## The Rule

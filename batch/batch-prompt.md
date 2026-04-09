@@ -138,16 +138,23 @@ Top 5 cambios al CV + Top 5 cambios a LinkedIn.
 - 1 case study recomendado (cuál proyecto presentar y cómo)
 - Preguntas red-flag y cómo responderlas
 
-#### Score Global
+#### Global Score
 
-| Dimensión | Score |
-|-----------|-------|
-| Match con CV | X/5 |
-| Alineación North Star | X/5 |
-| Comp | X/5 |
-| Señales culturales | X/5 |
-| Red flags | -X (si hay) |
-| **Global** | **X/5** |
+10 weighted dimensions (same system used in single and multi-offer comparisons):
+
+| Dimension | Weight | Score |
+|-----------|--------|-------|
+| North Star alignment | 25% | X/5 |
+| CV match | 15% | X/5 |
+| Level (senior+) | 15% | X/5 |
+| Estimated comp | 10% | X/5 |
+| Growth trajectory | 10% | X/5 |
+| Remote quality | 5% | X/5 |
+| Company reputation | 5% | X/5 |
+| Tech stack modernity | 5% | X/5 |
+| Speed to offer | 5% | X/5 |
+| Cultural signals | 5% | X/5 |
+| **Global** | **100%** | **X.X/5** |
 
 ### Paso 3 — Guardar Report .md
 
@@ -298,7 +305,7 @@ Formato TSV (una sola línea, sin header, 9 columnas tab-separated):
 
 **IMPORTANTE:** El orden TSV tiene status ANTES de score (col 5→status, col 6→score). En applications.md el orden es inverso (col 5→score, col 6→status). merge-tracker.mjs maneja la conversión.
 
-**Estados canónicos válidos:** `Evaluada`, `Aplicado`, `Respondido`, `Entrevista`, `Oferta`, `Rechazado`, `Descartado`, `NO APLICAR`
+**Valid canonical states:** `Evaluated`, `Applied`, `Responded`, `Contacted`, `Interview`, `Offer`, `Rejected`, `Discarded`, `SKIP`
 
 Donde `{next_num}` se calcula leyendo la última línea de `data/applications.md`.
 

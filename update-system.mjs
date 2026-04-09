@@ -45,6 +45,11 @@ const SYSTEM_PATHS = [
   'modes/tracker.md',
   'modes/training.md',
   'modes/de/',
+  'modes/fr/',
+  'modes/pt/',
+  'modes/es/',
+  'modes/interview-prep.md',
+  'modes/patterns.md',
   'CLAUDE.md',
   'AGENTS.md',
   'generate-pdf.mjs',
@@ -54,6 +59,10 @@ const SYSTEM_PATHS = [
   'normalize-statuses.mjs',
   'cv-sync-check.mjs',
   'update-system.mjs',
+  'analyze-patterns.mjs',
+  'check-liveness.mjs',
+  'doctor.mjs',
+  'test-all.mjs',
   'batch/batch-prompt.md',
   'batch/batch-runner.sh',
   'dashboard/',
@@ -69,6 +78,8 @@ const SYSTEM_PATHS = [
   'CITATION.cff',
   '.github/',
   'package.json',
+  'LEGAL_DISCLAIMER.md',
+  'README.es.md',
 ];
 
 // User layer paths — NEVER touch these (safety check)
