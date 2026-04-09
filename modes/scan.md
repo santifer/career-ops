@@ -97,7 +97,7 @@ Los niveles son aditivos — se ejecutan todos, los resultados se mezclan y dedu
    a. `browser_navigate` a la URL
    b. `browser_snapshot` para leer el contenido
    c. Clasificar:
-      - **Activa**: título del puesto visible + descripción del rol + botón Apply/Submit/Solicitar
+      - **Activa**: título del puesto visible + descripción del rol + control visible de Apply/Submit/Solicitar dentro del contenido principal. No contar texto genérico de header/navbar/footer.
       - **Expirada** (cualquiera de estas señales):
         - URL final contiene `?error=true` (Greenhouse redirige así cuando la oferta está cerrada)
         - Página contiene: "job no longer available" / "no longer open" / "position has been filled" / "this job has expired" / "page not found"
