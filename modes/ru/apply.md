@@ -91,4 +91,4 @@
 Если кандидат подтвердил отправку:
 1. Обновить статус в `data/applications.md` с "Evaluated" на "Applied"
 2. Обновить секцию G отчёта финальными ответами
-3. Предложить: `/career-ops contacto` для LinkedIn/Telegram outreach
+3. Предложить: `/career-ops contacto` для LinkedIn outreach
