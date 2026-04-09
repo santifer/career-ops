@@ -103,7 +103,7 @@
 Сохранить полную оценку в `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 
 - `{###}` = следующий порядковый номер (3 цифры, zero-padded)
-- `{company-slug}` = название компании в lowercase, без пробелов (через дефис)
+- `{company-slug}` = название компании: lowercase, пробелы заменить на `-`, убрать спецсимволы (например, `Acme Corp` → `acme-corp`)
 - `{YYYY-MM-DD}` = текущая дата
 
 **Формат отчёта:**
@@ -151,12 +151,12 @@
 Для **новой** записи не редактировать `data/applications.md` напрямую. Вместо этого записать одну TSV-строку в `batch/tracker-additions/{num}-{company-slug}.tsv` с 8 или 9 колонками через табуляцию:
 
 ```
-{num}\t{date}\t{company}\t{role}\t{status}\t{score}/5\t{pdf_emoji}\t[{num}](reports/{num}-{slug}-{date}.md)\t{note}
+{num}\t{date}\t{company}\t{role}\t{status}\t{score}\t{pdf_emoji}\t[{num}](reports/{num}-{slug}-{date}.md)\t{note}
 ```
 
 - `{num}` = следующий порядковый номер (целое число, вычислить из `reports/`)
 - `{status}` = `Evaluated`
-- `{score}` = формат `X.X/5`
+- `{score}` = формат `X.X/5` (например, `4.2/5`)
 - `{pdf_emoji}` = `✅` или `❌`
 - `{note}` = краткий комментарий (опционально, колонку можно опустить)
 
