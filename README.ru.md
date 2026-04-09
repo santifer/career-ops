@@ -149,7 +149,7 @@ Career-ops поддерживает ключевые российские джо
 **AI Platforms:** Retool, Airtable, Vercel, Temporal, Glean
 **Automation:** n8n, Zapier, Make.com
 
-**🇷🇺 Россия:** Добавьте вручную в `portals.yml`: hh.ru, Хабр Карьера, trudvsem.ru, rabota.ru, Superjob, Geekjob — пример конфигурации в `templates/portals.example.yml`.
+**🇷🇺 Россия:** Добавьте вручную в `portals.yml`: hh.ru, Хабр Карьера, trudvsem.ru, rabota.ru, Superjob, Geekjob — используйте структуру `templates/portals.example.yml` как образец формата (готовых RU-записей в шаблоне нет).
 
 **Джоб-борды:** Ashby, Greenhouse, Lever, Wellfound, Workable (поддерживаются через WebSearch/WebFetch)
 
