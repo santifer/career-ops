@@ -186,6 +186,112 @@ search_queries:
     query: 'site:remotefront.com "AI Engineer" OR "Solutions Engineer" OR "Automation" OR "LLM" OR "Agent" remote'
     enabled: true
 
+  # -- Remote-friendly Europe boards --
+
+  - name: Remotive — AI/DevRel/SA/FDE
+    query: 'site:remotive.com "AI Engineer" OR "Developer Advocate" OR "Solutions Architect" OR "Forward Deployed" OR "DevRel" Europe'
+    enabled: true
+
+  - name: WeWorkRemotely — AI & DX
+    query: 'site:weworkremotely.com "AI" OR "DevRel" OR "Solutions Engineer" OR "Forward Deployed" OR "Founding Engineer"'
+    enabled: true
+
+  - name: Working Nomads — AI/DevRel/SA
+    query: 'site:workingnomads.com "AI Engineer" OR "Developer Advocate" OR "Solutions Architect" OR "Forward Deployed"'
+    enabled: true
+
+  - name: EU Remote Jobs — AI/DevRel/SA
+    query: 'site:euremotejobs.com "AI" OR "DevRel" OR "Solutions Architect" OR "Forward Deployed" OR "Founding Engineer"'
+    enabled: true
+
+  - name: RemoteOK — AI/DevRel/SA
+    query: 'site:remoteok.com "AI Engineer" OR "Developer Advocate" OR "Solutions Architect" OR "Forward Deployed" OR "Founding Engineer"'
+    enabled: true
+
+  # -- Specialized AI / Dev-Tools / FDE boards --
+
+  - name: ai-jobs.net — DevRel/SA/FDE
+    query: 'site:ai-jobs.net "Developer Advocate" OR "Solutions Architect" OR "Forward Deployed" OR "DevRel" remote Europe'
+    enabled: true
+
+  - name: ai-jobs.net — Founding/Applied AI
+    query: 'site:ai-jobs.net "Founding Engineer" OR "Applied AI Engineer" OR "Founding" remote'
+    enabled: true
+
+  - name: fwddeploy.com — Forward Deployed roles
+    query: 'site:fwddeploy.com "Forward Deployed" OR "Deployed Engineer" remote Europe OR EMEA'
+    enabled: true
+
+  - name: YC Jobs — DevRel/SA/FDE/Founding
+    query: 'site:ycombinator.com/jobs OR site:workatastartup.com "Forward Deployed" OR "Developer Advocate" OR "Founding Engineer" OR "Solutions Architect" remote'
+    enabled: true
+
+  - name: YC Jobs — Applied AI
+    query: 'site:workatastartup.com "Applied AI" OR "AI Engineer" OR "AI Agent" remote Europe'
+    enabled: true
+
+  # -- Spanish market specialized (high-value for Madrid/Barcelona-based candidates) --
+
+  - name: Manfred — Tech Senior España
+    query: 'site:getmanfred.com/en/job-offers "Solutions Architect" OR "DevRel" OR "Forward Deployed" OR "AI Engineer" OR "Founding"'
+    enabled: true
+
+  - name: Manfred — Remote AI/Senior
+    query: 'site:getmanfred.com "remote" "AI" OR "Senior" OR "Staff" OR "Lead"'
+    enabled: true
+
+  - name: Tecnoempleo — España IT
+    query: 'site:tecnoempleo.com "AI Engineer" OR "Solutions Architect" OR "DevRel" OR "Forward Deployed" OR "Founding Engineer"'
+    enabled: true
+
+  - name: Tecnoempleo — Remoto Senior
+    query: 'site:tecnoempleo.com "remoto" OR "remote" Senior "AI" OR "Architect" OR "Lead"'
+    enabled: true
+
+  - name: JobFluent — Spain startups
+    query: 'site:jobfluent.com Madrid OR Barcelona "AI" OR "Engineer" OR "Solutions" OR "DevRel"'
+    enabled: true
+
+  - name: Welcome to the Jungle — Spain tech
+    query: 'site:welcometothejungle.com Spain OR Madrid OR Barcelona "AI Engineer" OR "Solutions Architect" OR "DevRel" OR "Forward Deployed"'
+    enabled: true
+
+  # -- DevRel-specific boards --
+
+  - name: DevRelX Jobs
+    query: 'site:devrelx.com/jobs remote OR Europe OR EMEA'
+    enabled: true
+
+  - name: TrueUp — DevRel roles
+    query: 'site:trueup.io/devrel OR site:trueup.io "Developer Advocate" OR "DevRel" remote Europe'
+    enabled: true
+
+  - name: Remote Rocketship — DevRel
+    query: 'site:remoterocketship.com/jobs/developer-relations OR site:remoterocketship.com "DevRel" remote'
+    enabled: true
+
+  - name: DevRel Job board
+    query: 'site:devreljob.com remote OR Europe OR EMEA'
+    enabled: true
+
+  # -- European / global aggregators --
+
+  - name: Himalayas — Remote AI/Dev-tools
+    query: 'site:himalayas.app "AI Engineer" OR "Solutions Architect" OR "Developer Advocate" OR "Forward Deployed" OR "Founding Engineer" Europe'
+    enabled: true
+
+  - name: Jooble — España Tech Senior
+    query: 'site:jooble.org "AI Engineer" OR "Solutions Architect" OR "DevRel" Madrid OR remote España'
+    enabled: true
+
+  - name: EU Data Jobs — AI/ML Europe
+    query: 'site:eudatajobs.com "AI" OR "ML" OR "Data" "Engineer" OR "Architect" remote Europe'
+    enabled: true
+
+  - name: HN Who's Hiring — Remote AI
+    query: 'site:news.ycombinator.com OR site:hnrss.org "AI Engineer" OR "Forward Deployed" OR "DevRel" OR "Founding Engineer" remote'
+    enabled: true
+
 # -- Tracked companies --
 # Companies whose career pages are checked directly.
 # scan_method: playwright (default), websearch, greenhouse_api
@@ -751,4 +857,54 @@ tracked_companies:
     scan_method: websearch
     scan_query: 'site:jobs.ashbyhq.com/workos "Solutions Engineer" OR "Developer Success" OR "Engineer"'
     notes: "Developer tools and enterprise-ready auth/platform APIs."
+    enabled: true
+
+  # -- Dev Tools / AI Infra (DevRel, SA, FDE focus) --
+
+  - name: Supabase
+    careers_url: https://jobs.ashbyhq.com/supabase
+    scan_method: websearch
+    scan_query: 'site:jobs.ashbyhq.com/supabase'
+    notes: "Open-source Firebase alternative. Remote-first. Postgres + Auth + Storage. Strong DevRel/DX hiring."
+    enabled: true
+
+  - name: Resend
+    careers_url: https://jobs.ashbyhq.com/resend
+    scan_method: websearch
+    scan_query: 'site:jobs.ashbyhq.com/resend'
+    notes: "Email API for developers. Remote-first. DX/DevRel focused."
+    enabled: true
+
+  - name: Clerk
+    careers_url: https://jobs.ashbyhq.com/clerk
+    scan_method: websearch
+    scan_query: 'site:jobs.ashbyhq.com/clerk'
+    notes: "Auth & user management for developers. SE / TAM / PM roles."
+    enabled: true
+
+  - name: Inngest
+    careers_url: https://jobs.ashbyhq.com/inngest
+    scan_method: websearch
+    scan_query: 'site:jobs.ashbyhq.com/inngest'
+    notes: "Durable workflow engine for serverless. DX/DevRel/Engineering hiring."
+    enabled: true
+
+  - name: PlanetScale
+    careers_url: https://job-boards.greenhouse.io/planetscale
+    api: https://boards-api.greenhouse.io/v1/boards/planetscale/jobs
+    notes: "Serverless MySQL platform. Customer Engineering, Engineering, Sales."
+    enabled: true
+
+  - name: Zep AI
+    careers_url: https://www.getzep.com/careers
+    scan_method: websearch
+    scan_query: '"Zep" "Forward Deployed" OR "Developer Relations" OR "Founding" site:workatastartup.com OR site:getzep.com'
+    notes: "Context engineering platform for AI agents. YC W24. Lead FDE + DevRel Lead roles. US-only currently."
+    enabled: true
+
+  - name: Maxim AI
+    careers_url: https://www.getmaxim.ai/careers
+    scan_method: websearch
+    scan_query: '"Maxim AI" OR "getmaxim" careers "engineer" OR "product"'
+    notes: "AI evaluation and observability platform. Bangalore-based, mostly on-site."
     enabled: true
