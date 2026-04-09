@@ -41,12 +41,25 @@ Para empresas con Greenhouse, la API JSON (`boards-api.greenhouse.io/v1/boards/{
 
 Los `search_queries` con `site:` filters cubren portales de forma transversal (todos los Ashby, todos los Greenhouse, etc.). Útil para descubrir empresas NUEVAS que aún no están en `tracked_companies`, pero los resultados pueden estar desfasados.
 
+### Nivel 4 — Adzuna API (COMPLEMENTO ESPAÑA + MULTI-PAÍS)
+
+Si el usuario tiene credenciales de Adzuna configuradas (`.env.adzuna` o env vars `ADZUNA_APP_ID`/`ADZUNA_APP_KEY`), ejecutar `scan-adzuna.mjs` como complemento:
+
+```bash
+node scan-adzuna.mjs                    # default: España
+node scan-adzuna.mjs --countries=es,gb  # multi-país
+node scan-adzuna.mjs --remote-only      # filtra remoto
+```
+
+Adzuna es la única fuente que da cobertura nativa del mercado español con datos salariales estructurados. Es API REST gratuita (250 calls/mes en tier free), agrega listings de LinkedIn/Indeed/empresas, y no tiene riesgo de scraping. Si el usuario menciona estar buscando en España, **siempre** sugerir configurar Adzuna.
+
 **Prioridad de ejecución:**
 1. Nivel 1: Playwright → todas las `tracked_companies` con `careers_url`
 2. Nivel 2: API → todas las `tracked_companies` con `api:`
 3. Nivel 3: WebSearch → todos los `search_queries` con `enabled: true`
+4. Nivel 4: Adzuna API → si credenciales configuradas (especialmente para España)
 
-Los niveles son aditivos — se ejecutan todos, los resultados se mezclan y deduplicar.
+Los niveles son aditivos — se ejecutan todos, los resultados se mezclan y deduplican via `data/scan-history.tsv`.
 
 ## Workflow
 

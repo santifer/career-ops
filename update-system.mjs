@@ -54,6 +54,7 @@ const SYSTEM_PATHS = [
   'normalize-statuses.mjs',
   'cv-sync-check.mjs',
   'update-system.mjs',
+  'scan-adzuna.mjs',
   'batch/batch-prompt.md',
   'batch/batch-runner.sh',
   'dashboard/',
