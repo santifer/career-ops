@@ -39,7 +39,7 @@ func ParseApplications(careerOpsPath string) []model.CareerApplication {
 	}
 
 	lines := strings.Split(string(content), "\n")
-	var apps []model.CareerApplication
+	apps := make([]model.CareerApplication, 0)
 	num := 0
 
 	for _, line := range lines {
@@ -540,7 +540,11 @@ func UpdateApplicationStatus(careerOpsPath string, app model.CareerApplication, 
 	filePath := filepath.Join(careerOpsPath, "applications.md")
 	content, err := os.ReadFile(filePath)
 	if err != nil {
-		return err
+		filePath = filepath.Join(careerOpsPath, "data", "applications.md")
+		content, err = os.ReadFile(filePath)
+		if err != nil {
+			return err
+		}
 	}
 
 	lines := strings.Split(string(content), "\n")

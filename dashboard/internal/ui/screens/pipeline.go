@@ -77,7 +77,7 @@ var pipelineTabs = []pipelineTab{
 	{filterEvaluated, "EVALUATED"},
 	{filterApplied, "APPLIED"},
 	{filterInterview, "INTERVIEW"},
-	{filterTop, "TOP \u22654"},
+	{filterTop, "TOP ≥4"},
 	{filterSkip, "SKIP"},
 }
 
@@ -248,7 +248,7 @@ func (m PipelineModel) handleKey(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
 	case "enter":
 		if app, ok := m.CurrentApp(); ok && app.ReportPath != "" {
 			fullPath := filepath.Join(m.careerOpsPath, app.ReportPath)
-			title := fmt.Sprintf("%s \u2014 %s", app.Company, app.Role)
+			title := fmt.Sprintf("%s — %s", app.Company, app.Role)
 			jobURL := app.JobURL
 			return m, func() tea.Msg {
 				return PipelineOpenReportMsg{Path: fullPath, Title: title, JobURL: jobURL}
@@ -343,7 +343,7 @@ func (m *PipelineModel) applyFilterAndSort() {
 		case filterAll:
 			filtered = append(filtered, app)
 		case filterTop:
-			if app.Score >= 4.0 && norm != "no_aplicar" {
+			if app.Score >= 4.0 && norm != "skip" {
 				filtered = append(filtered, app)
 			}
 		default:
@@ -520,13 +520,13 @@ func (m PipelineModel) renderTabs() string {
 				Foreground(m.theme.Blue).
 				Padding(0, 0)
 			tabs = append(tabs, style.Render(label))
-			underParts = append(underParts, strings.Repeat("\u2501", lipgloss.Width(label)))
+			underParts = append(underParts, strings.Repeat("━", lipgloss.Width(label)))
 		} else {
 			style := lipgloss.NewStyle().
 				Foreground(m.theme.Subtext).
 				Padding(0, 0)
 			tabs = append(tabs, style.Render(label))
-			underParts = append(underParts, strings.Repeat("\u2500", lipgloss.Width(label)))
+			underParts = append(underParts, strings.Repeat("─", lipgloss.Width(label)))
 		}
 	}
 
@@ -545,7 +545,7 @@ func (m PipelineModel) countForFilter(filter string) int {
 		case filterAll:
 			count++
 		case filterTop:
-			if app.Score >= 4.0 && norm != "no_aplicar" {
+			if app.Score >= 4.0 && norm != "skip" {
 				count++
 			}
 		default:
@@ -614,9 +614,9 @@ func (m PipelineModel) renderBody() string {
 				Bold(true).
 				Foreground(m.theme.Subtext)
 			lines = append(lines, padStyle.Render(
-				headerStyle.Render(fmt.Sprintf("\u2500\u2500 %s (%d) %s",
+				headerStyle.Render(fmt.Sprintf("── %s (%d) %s",
 					strings.ToUpper(statusLabel(norm)), count,
-					strings.Repeat("\u2500", max(0, m.width-30-len(statusLabel(norm)))))),
+					strings.Repeat("─", max(0, m.width-30-len(statusLabel(norm)))))),
 			))
 			prevStatus = norm
 		}
@@ -705,7 +705,7 @@ func (m PipelineModel) renderPreview() string {
 	divider := lipgloss.NewStyle().Foreground(m.theme.Overlay)
 
 	var lines []string
-	lines = append(lines, padStyle.Render(divider.Render(strings.Repeat("\u2500", m.width-4))))
+	lines = append(lines, padStyle.Render(divider.Render(strings.Repeat("─", m.width-4))))
 
 	labelStyle := lipgloss.NewStyle().Foreground(m.theme.Sky).Bold(true)
 	valueStyle := lipgloss.NewStyle().Foreground(m.theme.Text)
