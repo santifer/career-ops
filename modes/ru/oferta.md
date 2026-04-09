@@ -148,7 +148,7 @@
 
 ### 2. Зарегистрировать в трекере
 
-Для **новой** записи не редактировать `data/applications.md` напрямую. Вместо этого записать одну TSV-строку в `batch/tracker-additions/{num}-{company-slug}.tsv` с 9 колонками через табуляцию:
+Для **новой** записи не редактировать `data/applications.md` напрямую. Вместо этого записать одну TSV-строку в `batch/tracker-additions/{num}-{company-slug}.tsv` с 8 или 9 колонками через табуляцию:
 
 ```
 {num}\t{date}\t{company}\t{role}\t{status}\t{score}/5\t{pdf_emoji}\t[{num}](reports/{num}-{slug}-{date}.md)\t{note}
@@ -158,6 +158,7 @@
 - `{status}` = `Evaluated`
 - `{score}` = формат `X.X/5`
 - `{pdf_emoji}` = `✅` или `❌`
+- `{note}` = краткий комментарий (опционально, колонку можно опустить)
 
 Затем выполнить `node merge-tracker.mjs` для слияния в `data/applications.md`.
 
