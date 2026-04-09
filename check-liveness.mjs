@@ -53,6 +53,19 @@ const APPLY_PATTERNS = [
 // Below this length the page is probably just nav/footer (closed ATS page)
 const MIN_CONTENT_CHARS = 300;
 
+/** Validate that a URL is safe to navigate to (https only, no internal hosts) */
+function validateUrl(raw) {
+  let parsed;
+  try { parsed = new URL(raw); } catch { return false; }
+  if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return false;
+  const host = parsed.hostname.toLowerCase();
+  if (host === 'localhost' || host === '127.0.0.1' || host === '[::1]' || host === '0.0.0.0') return false;
+  if (host.endsWith('.local') || host.endsWith('.internal')) return false;
+  // Block private IP ranges (10.x, 172.16-31.x, 192.168.x)
+  if (/^(10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.)/.test(host)) return false;
+  return true;
+}
+
 async function checkUrl(page, url) {
   try {
     const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 15000 });
@@ -125,6 +138,12 @@ async function main() {
 
   // Sequential — project rule: never Playwright in parallel
   for (const url of urls) {
+    if (!validateUrl(url)) {
+      console.log(`⛔ blocked    ${url}`);
+      console.log(`           only http(s) URLs to public hosts are allowed`);
+      expired++;
+      continue;
+    }
     const { result, reason } = await checkUrl(page, url);
     const icon = { active: '✅', expired: '❌', uncertain: '⚠️' }[result];
     console.log(`${icon} ${result.padEnd(10)} ${url}`);

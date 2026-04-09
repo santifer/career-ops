@@ -94,6 +94,13 @@ async function generatePDF() {
   inputPath = resolve(inputPath);
   outputPath = resolve(outputPath);
 
+  // Validate output path stays within CWD or the project's output/ directory
+  const cwd = process.cwd();
+  if (!outputPath.startsWith(cwd) && !outputPath.startsWith(resolve(__dirname, 'output'))) {
+    console.error(`Output path must be within the working directory or output/. Got: ${outputPath}`);
+    process.exit(1);
+  }
+
   // Validate format
   const validFormats = ['a4', 'letter'];
   if (!validFormats.includes(format)) {
