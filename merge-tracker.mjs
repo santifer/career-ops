@@ -66,6 +66,11 @@ function normalizeCompany(name) {
   return name.toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
+/** Escape pipe and newline chars so they don't break markdown table rows */
+function escapeTableCell(val) {
+  return String(val).replace(/\|/g, '\\|').replace(/\n/g, ' ');
+}
+
 function roleFuzzyMatch(a, b) {
   const wordsA = a.toLowerCase().split(/\s+/).filter(w => w.length > 3);
   const wordsB = b.toLowerCase().split(/\s+/).filter(w => w.length > 3);
@@ -269,7 +274,7 @@ for (const file of tsvFiles) {
       console.log(`🔄 Update: #${duplicate.num} ${addition.company} — ${addition.role} (${oldScore}→${newScore})`);
       const lineIdx = appLines.indexOf(duplicate.raw);
       if (lineIdx >= 0) {
-        const updatedLine = `| ${duplicate.num} | ${addition.date} | ${addition.company} | ${addition.role} | ${addition.score} | ${duplicate.status} | ${duplicate.pdf} | ${addition.report} | Re-eval ${addition.date} (${oldScore}→${newScore}). ${addition.notes} |`;
+        const updatedLine = `| ${duplicate.num} | ${escapeTableCell(addition.date)} | ${escapeTableCell(addition.company)} | ${escapeTableCell(addition.role)} | ${escapeTableCell(addition.score)} | ${escapeTableCell(duplicate.status)} | ${escapeTableCell(duplicate.pdf)} | ${escapeTableCell(addition.report)} | Re-eval ${addition.date} (${oldScore}→${newScore}). ${escapeTableCell(addition.notes)} |`;
         appLines[lineIdx] = updatedLine;
         updated++;
       }
@@ -282,7 +287,7 @@ for (const file of tsvFiles) {
     const entryNum = addition.num > maxNum ? addition.num : ++maxNum;
     if (addition.num > maxNum) maxNum = addition.num;
 
-    const newLine = `| ${entryNum} | ${addition.date} | ${addition.company} | ${addition.role} | ${addition.score} | ${addition.status} | ${addition.pdf} | ${addition.report} | ${addition.notes} |`;
+    const newLine = `| ${entryNum} | ${escapeTableCell(addition.date)} | ${escapeTableCell(addition.company)} | ${escapeTableCell(addition.role)} | ${escapeTableCell(addition.score)} | ${escapeTableCell(addition.status)} | ${escapeTableCell(addition.pdf)} | ${escapeTableCell(addition.report)} | ${escapeTableCell(addition.notes)} |`;
     newLines.push(newLine);
     added++;
     console.log(`➕ Add #${entryNum}: ${addition.company} — ${addition.role} (${addition.score})`);

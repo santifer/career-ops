@@ -100,8 +100,14 @@ function compareVersions(a, b) {
   return 0;
 }
 
-function git(cmd) {
-  return execSync(`git ${cmd}`, { cwd: ROOT, encoding: 'utf-8', timeout: 30000 }).trim();
+const SEMVER_RE = /^\d+\.\d+\.\d+$/;
+
+function git(args) {
+  // Accept an array of args to avoid shell injection, or a string for simple commands
+  if (Array.isArray(args)) {
+    return execSync('git ' + args.map(a => `'${a.replace(/'/g, "'\\''")}'`).join(' '), { cwd: ROOT, encoding: 'utf-8', timeout: 30000 }).trim();
+  }
+  return execSync(`git ${args}`, { cwd: ROOT, encoding: 'utf-8', timeout: 30000 }).trim();
 }
 
 // ── CHECK ───────────────────────────────────────────────────────
@@ -117,9 +123,13 @@ async function check() {
   let remote;
 
   try {
-    const res = await fetch(RAW_VERSION_URL);
+    const res = await fetch(RAW_VERSION_URL, { signal: AbortSignal.timeout(10000) });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     remote = (await res.text()).trim();
+    if (!SEMVER_RE.test(remote)) {
+      console.log(JSON.stringify({ status: 'offline', local, error: 'invalid remote version format' }));
+      return;
+    }
   } catch {
     console.log(JSON.stringify({ status: 'offline', local }));
     return;
@@ -168,10 +178,14 @@ async function apply() {
   writeFileSync(lockFile, new Date().toISOString());
 
   try {
-    // 1. Backup: create branch
+    // 1. Backup: create branch (validate version is semver to prevent injection)
+    if (!SEMVER_RE.test(local)) {
+      console.error(`Invalid local version format: "${local}". Expected X.Y.Z`);
+      process.exit(1);
+    }
     const backupBranch = `backup-pre-update-${local}`;
     try {
-      git(`branch ${backupBranch}`);
+      git(['branch', backupBranch]);
       console.log(`Backup branch created: ${backupBranch}`);
     } catch {
       console.log(`Backup branch already exists (${backupBranch}), continuing...`);
@@ -179,15 +193,15 @@ async function apply() {
 
     // 2. Fetch from canonical repo
     console.log('Fetching latest from upstream...');
-    git(`fetch ${CANONICAL_REPO} main`);
+    git(['fetch', CANONICAL_REPO, 'main']);
 
     // 3. Checkout system files only
     console.log('Updating system files...');
     const updated = [];
-    for (const path of SYSTEM_PATHS) {
+    for (const sysPath of SYSTEM_PATHS) {
       try {
-        git(`checkout FETCH_HEAD -- ${path}`);
-        updated.push(path);
+        git(['checkout', 'FETCH_HEAD', '--', sysPath]);
+        updated.push(sysPath);
       } catch {
         // File may not exist in remote (new additions), skip
       }
@@ -266,10 +280,16 @@ function rollback() {
     const latest = branchList[branchList.length - 1];
     console.log(`Rolling back to: ${latest}`);
 
+    // Validate branch name format before using it
+    if (!/^backup-pre-update-\d+\.\d+\.\d+$/.test(latest)) {
+      console.error(`Suspicious backup branch name: "${latest}". Aborting.`);
+      process.exit(1);
+    }
+
     // Checkout system files from backup branch
-    for (const path of SYSTEM_PATHS) {
+    for (const sysPath of SYSTEM_PATHS) {
       try {
-        git(`checkout ${latest} -- ${path}`);
+        git(['checkout', latest, '--', sysPath]);
       } catch {
         // File may not have existed in backup
       }

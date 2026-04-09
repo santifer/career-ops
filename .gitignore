@@ -1,4 +1,7 @@
 # Personal data (user fills these)
+cv.md
+article-digest.md
+interview-prep/
 data/applications.md
 data/pipeline.md
 data/scan-history.tsv
@@ -24,10 +27,12 @@ modes/_profile.md
 
 # Generated
 .resolved-prompt-*
+*.bak
 node_modules/
 
 # OS
 .DS_Store
+*.swp
 *.mov
 *.mp4
 

@@ -19,6 +19,11 @@ LOCK_FILE="$BATCH_DIR/batch-runner.pid"
 STATE_LOCK_DIR="$BATCH_DIR/.batch-state.lock"
 MAIN_PID="${BASHPID:-$$}"
 
+# Escape a string for safe use as sed replacement text
+sed_escape() {
+  printf '%s\n' "$1" | sed -e 's/[&/\]/\\&/g'
+}
+
 # Defaults
 PARALLEL=1
 DRY_RUN=false
@@ -281,7 +286,8 @@ process_offer() {
   report_num=$(reserve_report_num "$id" "$url" "$started_at" "$retries")
   local date
   date=$(date +%Y-%m-%d)
-  local jd_file="/tmp/batch-jd-${id}.txt"
+  local jd_file
+  jd_file=$(mktemp "${TMPDIR:-/tmp}/batch-jd-XXXXXX.txt")
 
   echo "--- Processing offer #$id: $url (report $report_num, attempt $((retries + 1)))"
 
@@ -296,26 +302,39 @@ process_offer() {
 
   local log_file="$LOGS_DIR/${report_num}-${id}.log"
 
-  # Prepare system prompt with placeholders resolved
+  # Prepare system prompt with placeholders resolved (escape for safe sed replacement)
   local resolved_prompt="$BATCH_DIR/.resolved-prompt-${id}.md"
+  local escaped_url escaped_jd escaped_rnum escaped_date escaped_id
+  escaped_url=$(sed_escape "$url")
+  escaped_jd=$(sed_escape "$jd_file")
+  escaped_rnum=$(sed_escape "$report_num")
+  escaped_date=$(sed_escape "$date")
+  escaped_id=$(sed_escape "$id")
   sed \
-    -e "s|{{URL}}|${url}|g" \
-    -e "s|{{JD_FILE}}|${jd_file}|g" \
-    -e "s|{{REPORT_NUM}}|${report_num}|g" \
-    -e "s|{{DATE}}|${date}|g" \
-    -e "s|{{ID}}|${id}|g" \
+    -e "s|{{URL}}|${escaped_url}|g" \
+    -e "s|{{JD_FILE}}|${escaped_jd}|g" \
+    -e "s|{{REPORT_NUM}}|${escaped_rnum}|g" \
+    -e "s|{{DATE}}|${escaped_date}|g" \
+    -e "s|{{ID}}|${escaped_id}|g" \
     "$PROMPT_FILE" > "$resolved_prompt"
 
   # Launch claude -p worker (uses default model from Claude Max subscription)
+  # NOTE: Uses --permission-mode=default instead of --dangerously-skip-permissions.
+  # In -p (pipe) mode with default permissions, claude will skip tools that need
+  # confirmation rather than hang waiting for input. This is safer than bypassing
+  # all permission checks, which allows unrestricted shell commands and file writes.
+  # If your batch workflow genuinely requires unrestricted access (e.g. in an
+  # isolated sandbox/container with no network), you can change this back to
+  # --dangerously-skip-permissions, but only behind --allow-dangerously-skip-permissions.
   local exit_code=0
   claude -p \
-    --dangerously-skip-permissions \
+    --permission-mode=default \
     --append-system-prompt-file "$resolved_prompt" \
     "$prompt" \
     > "$log_file" 2>&1 || exit_code=$?
 
-  # Cleanup resolved prompt
-  rm -f "$resolved_prompt"
+  # Cleanup resolved prompt and temp JD file
+  rm -f "$resolved_prompt" "$jd_file"
 
   local completed_at
   completed_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
