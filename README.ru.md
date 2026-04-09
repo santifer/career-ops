@@ -172,19 +172,18 @@ career-ops/
 ├── CLAUDE.md                    # Инструкции для агента
 ├── cv.md                        # Ваше CV (создайте)
 ├── config/
-│   └── profile.example.yml      # Шаблон профиля (включая RU-секцию)
+│   └── profile.example.yml      # Шаблон профиля
 ├── modes/                       # 14 режимов навыков
 │   ├── _shared.md               # Общий контекст
 │   ├── oferta.md                # Оценка вакансии
 │   ├── pdf.md                   # Генерация PDF
 │   ├── scan.md                  # Сканер порталов
 │   ├── batch.md                 # Пакетная обработка
-│   ├── ru/                      # 🇷🇺 Русские режимы (15 файлов)
+│   ├── ru/                      # 🇷🇺 Русские режимы (6 файлов)
 │   └── ...
 ├── templates/
 │   ├── cv-template.html         # ATS-шаблон резюме
-│   ├── cv-template-ru.html      # 🇷🇺 Русский ATS-шаблон
-│   ├── portals.example.yml      # Конфигурация сканера (🇷🇺 площадки — добавляются вручную)
+│   ├── portals.example.yml      # Конфигурация сканера
 │   └── states.yml               # Канонические статусы
 ├── batch/                       # Пакетная обработка
 ├── dashboard/                   # Go TUI
