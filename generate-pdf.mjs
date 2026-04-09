@@ -149,6 +149,7 @@ async function generatePDF() {
         .replace(/\[\[SKILLS\]\]/g, skills || 'Your skills here')
         .replace(/\[\[EDUCATION\]\]/g, education || 'Your education here');
       
+      
       // Debug: verify replacements happened
       const unreplacedCount = (finalTex.match(/\[\[/g) || []).length;
       if (unreplacedCount > 0) {
