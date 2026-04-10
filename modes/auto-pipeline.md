@@ -61,6 +61,21 @@ Si el score final es >= 4.5, generar borrador de respuestas para el formulario d
 
 **Idioma**: Siempre en el idioma del JD (EN default). Aplicar `/tech-translate`.
 
+## Paso 4b — Generate Cover Letter (solo si score >= 4.5)
+
+Si el score final es >= 4.5, generar también un cover letter PDF de 1 página.
+
+**Workflow:**
+1. Cargar `modes/cover-letter.md` (ya con `_shared.md` cargado)
+2. Seguir el workflow definido ahí (LOAD → DETECT → SELECT → MAP → COMPOSE → BUILD JSON → RUN SCRIPT → APPEND → VERIFY)
+3. Output: `output/cover-letter-{candidate-slug}-{company-slug}-{YYYY-MM-DD}.pdf`
+4. Append `## H) Cover Letter` section to the report .md (path + plain-text fallback + JD quotes used)
+5. Si la generación falla, continuar con Paso 5 y marcar `cover_letter: pending` en las notas del tracker
+
+**Cuándo NO generar (override del trigger ≥4.5):**
+- JD dice explícitamente "no cover letter accepted"
+- Score >= 4.5 pero el formulario no tiene campo de cover letter Y tampoco un campo de free-text donde pegarlo
+
 ## Paso 5 — Actualizar Tracker
 Registrar en `data/applications.md` con todas las columnas incluyendo Report y PDF en ✅.
 
