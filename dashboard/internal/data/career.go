@@ -115,7 +115,11 @@ func loadFromMarkdown(careerOpsPath, filePath string) []model.CareerApplication 
 			}
 		}
 
-		if len(fields) < 8 {
+		if len(fields) < 7 {
+			continue
+		}
+
+		if fields[0] == "#" || fields[0] == "" {
 			continue
 		}
 
