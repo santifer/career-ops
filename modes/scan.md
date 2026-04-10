@@ -112,7 +112,7 @@ Levels are additive — all run, results are merged and deduplicated.
    a. `browser_navigate` to the URL
    b. `browser_snapshot` to read the content
    c. Classify:
-      - **Active**: job title visible + role description + Apply/Submit button
+      - **Active**: job title visible + role description + Apply/Submit control visible in main content. Do not count generic header/navbar/footer text.
       - **Expired** (any of these signals):
         - Final URL contains `?error=true` (Greenhouse redirects this way for closed offers)
         - Page contains: "job no longer available" / "no longer open" / "position has been filled" / "this job has expired" / "page not found"
