@@ -108,3 +108,9 @@ cp templates/portals.example.yml portals.yml       # 自定义目标公司
 **career-ops-cn 是一个本地开源工具，并非托管服务。** 使用本软件即表示你知晓：
 1. **隐私**: 你的所有数据（简历、报告、Cookie）均保存在本地。
 2. **合规**: 请遵守各招聘平台的规则。本系统从不代表用户点击“投递”按钮——最终决定权始终在你手中。
+
+---
+
+## 致谢
+
+本项目灵感及部分逻辑源自 [career-ops](https://github.com/santifer/career-ops) ，感谢原作者 [@santifer](https://github.com/santifer) 的开源贡献。
