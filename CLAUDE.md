@@ -184,6 +184,7 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 
 - **German (DACH market):** `modes/de/` — native German translations with DACH-specific vocabulary (13. Monatsgehalt, Probezeit, Kündigungsfrist, AGG, Tarifvertrag, etc.). Includes `_shared.md`, `angebot.md` (evaluation), `bewerben.md` (apply), `pipeline.md`.
 - **French (Francophone market):** `modes/fr/` — native French translations with France/Belgium/Switzerland/Luxembourg-specific vocabulary (CDI/CDD, convention collective SYNTEC, RTT, mutuelle, prévoyance, 13e mois, intéressement/participation, titres-restaurant, CSE, portage salarial, etc.). Includes `_shared.md`, `offre.md` (evaluation), `postuler.md` (apply), `pipeline.md`.
+- **Spanish (Latin America / Spain):** `modes/es/` — native Spanish originals with appropriate vocabulary. Includes all core mode files.
 
 **When to use German modes:** If the user is targeting German-language job postings, lives in DACH, or asks for German output. Either:
 1. User says "use German modes" → read from `modes/de/` instead of `modes/`
@@ -195,7 +196,12 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 2. User sets `language.modes_dir: modes/fr` in `config/profile.yml` → always use French modes
 3. You detect a French JD → suggest switching to French modes
 
-**When NOT to:** If the user applies to English-language roles, even at French or German companies, use the default English modes.
+**When to use Spanish modes:** If the user is targeting Spanish-language job postings, lives in Latin America or Spain, or asks for Spanish output. Either:
+1. User says "use Spanish modes" → read from `modes/es/` instead of `modes/`
+2. User sets `language.modes_dir: modes/es` in `config/profile.yml` → always use Spanish modes
+3. You detect a Spanish JD → suggest switching to Spanish modes
+
+**When NOT to:** If the user applies to English-language roles, even at French, German, or Spanish companies, use the default English modes.
 
 ### Skill Modes
 
@@ -224,14 +230,20 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 
 ---
 
-## Ethical Use -- CRITICAL
+## Apply Automation
 
-**This system is designed for quality, not quantity.** The goal is to help the user find and apply to roles where there is a genuine match -- not to spam companies with mass applications.
+The system supports three apply modes. All read candidate identity and EEO data from `config/profile.yml` (`apply:` section).
 
-- **NEVER submit an application without the user reviewing it first.** Fill forms, draft answers, generate PDFs -- but always STOP before clicking Submit/Send/Apply. The user makes the final call.
-- **Strongly discourage low-fit applications.** If a score is below 4.0/5, explicitly recommend against applying. The user's time and the recruiter's time are both valuable. Only proceed if the user has a specific reason to override the score.
-- **Quality over speed.** A well-targeted application to 5 companies beats a generic blast to 50. Guide the user toward fewer, better applications.
-- **Respect recruiters' time.** Every application a human reads costs someone's attention. Only send what's worth reading.
+- **Auto-Fill** (`apply-auto.mjs --mode fill`): Playwright opens a visible browser, fills all form fields (identity, EEO, resume, cover letter), then pauses for the user to review and click Submit.
+- **Auto-Submit** (`apply-auto.mjs --mode submit`): Same filling, plus clicks Submit automatically. Runs headless by default. Captures a confirmation screenshot and logs the result to `data/apply-log.tsv`.
+- **AI-Driven Apply** (via `modes/apply.md` or `modes/auto-pipeline.md`): The agent orchestrates the full flow -- generates PDFs, drafts answers, calls `apply-auto.mjs`, and updates the tracker.
+
+**Quality guidance:**
+- **Discourage low-fit applications.** If a score is below 3.5/5, recommend against applying. Only proceed if the user has a specific reason.
+- **Quality over speed.** A well-targeted application to 5 companies beats a generic blast to 50.
+- **Batch guardrails:** In batch mode, only auto-apply if score >= `apply.batch_score_threshold` (default 4.5). Stop at `apply.batch_max_per_run` (default 10) applications per run.
+- **CAPTCHA fallback:** If auto-submit detects a CAPTCHA, it falls back to auto-fill mode (visible browser, user solves CAPTCHA manually).
+- **Duplicate detection:** The script checks for "already applied" indicators before filling. The dashboard checks application status before offering apply buttons.
 
 ---
 

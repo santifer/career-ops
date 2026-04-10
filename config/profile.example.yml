@@ -69,3 +69,32 @@ location:
   visa_status: "No sponsorship needed"
   # For remote roles outside your country:
   # onsite_availability: "1 week/month in any city"
+
+apply:
+  # Years of relevant professional experience
+  years_experience: 8
+  # Work authorization status (used for application forms)
+  work_authorization: "Authorized to work in the US"
+  sponsorship_required: false
+  available_start: "Immediately"
+  # EEOC Voluntary Self-Identification (US applications)
+  # These fields are optional and used for equal opportunity reporting.
+  # Common values:
+  #   gender: "Male", "Female", "Non-binary", "Decline to self-identify"
+  #   race_ethnicity: "White", "Black or African American", "Hispanic or Latino",
+  #                   "Asian", "Native Hawaiian or Other Pacific Islander",
+  #                   "American Indian or Alaska Native", "Two or More Races",
+  #                   "Decline to self-identify"
+  #   veteran_status: "I am not a protected veteran",
+  #                   "I identify as one or more of the classifications of a protected veteran",
+  #                   "I don't wish to answer"
+  #   disability_status: "No, I do not have a disability",
+  #                      "Yes, I have a disability (or previously had a disability)",
+  #                      "I don't wish to answer"
+  gender: "Decline to self-identify"
+  race_ethnicity: "Decline to self-identify"
+  veteran_status: "I don't wish to answer"
+  disability_status: "I don't wish to answer"
+  # Batch auto-apply guardrails
+  batch_score_threshold: 4.5    # only auto-apply in batch if score >= this
+  batch_max_per_run: 10         # max applications per single batch run

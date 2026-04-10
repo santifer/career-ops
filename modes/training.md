@@ -1,27 +1,27 @@
-# Modo: training — Evaluación de Formación
+# Mode: training — Training / Learning Evaluation
 
-Para cada curso/cert que el candidato pregunte, evaluar 6 dimensiones:
+For each course or cert the candidate asks about, evaluate 6 dimensions:
 
-| Dimensión | Qué evalúa |
-|-----------|------------|
-| Alineación North Star | ¿Acerca o aleja del objetivo? |
-| Señal recruiter | ¿Qué piensan HMs al ver esto en un CV? |
-| Tiempo y esfuerzo | Semanas × horas/semana |
-| Coste de oportunidad | ¿Qué no puede hacer durante ese tiempo? |
-| Riesgos | ¿Contenido outdated? ¿Brand débil? ¿Demasiado básico? |
-| Entregable portfolio | ¿Produce un artefacto demostrable? |
+| Dimension | What it assesses |
+|-----------|------------------|
+| North Star alignment | Moves toward or away from the goal? |
+| Recruiter signal | What do HMs think seeing this on a CV? |
+| Time and effort | Weeks × hours/week |
+| Opportunity cost | What they cannot do during that time? |
+| Risks | Outdated content? Weak brand? Too basic? |
+| Portfolio deliverable | Produces a demonstrable artifact? |
 
-## Veredictos
+## Verdicts
 
-- **HACER** → plan de 4-12 semanas con entregables semanales y scoreboard
-- **NO HACER** → alternativa mejor con justificación
-- **HACER CON TIMEBOX** (máx X semanas) → plan condensado, solo lo esencial
+- **DO** → 4–12 week plan with weekly deliverables and a scoreboard
+- **SKIP** → better alternative with rationale
+- **DO WITH TIMEBOX** (max X weeks) → condensed plan, essentials only
 
-## Prioridad
+## Priority
 
-Formación que mejore credibilidad en "production-grade AI":
-1. Evals y testing de LLMs
-2. Observability y monitoring
+Training that boosts credibility in "production-grade AI":
+1. LLM evals and testing
+2. Observability and monitoring
 3. Cost/reliability trade-offs
-4. AI governance y safety
+4. AI governance and safety
 5. Enterprise AI architecture

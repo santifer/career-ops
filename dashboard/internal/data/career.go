@@ -700,3 +700,67 @@ func StatusPriority(status string) int {
 		return 8
 	}
 }
+
+// ParseApplyLog reads data/apply-log.tsv and returns entries sorted newest first.
+func ParseApplyLog(careerOpsPath string) []model.ApplyLogEntry {
+	paths := []string{
+		filepath.Join(careerOpsPath, "data", "apply-log.tsv"),
+		filepath.Join(careerOpsPath, "apply-log.tsv"),
+	}
+	var content []byte
+	found := false
+	for _, p := range paths {
+		var err error
+		content, err = os.ReadFile(p)
+		if err == nil {
+			found = true
+			break
+		}
+	}
+	if !found {
+		return nil
+	}
+
+	lines := strings.Split(strings.TrimSpace(string(content)), "\n")
+	var entries []model.ApplyLogEntry
+
+	for i, line := range lines {
+		if i == 0 { // skip header
+			continue
+		}
+		fields := strings.Split(line, "\t")
+		if len(fields) < 7 {
+			continue
+		}
+		entry := model.ApplyLogEntry{
+			Date:     fields[0],
+			Time:     fields[1],
+			Company:  fields[2],
+			Role:     fields[3],
+			Mode:     fields[4],
+			Platform: fields[5],
+			Result:   fields[6],
+		}
+		if len(fields) > 7 {
+			entry.Captcha = strings.EqualFold(fields[7], "yes")
+		}
+		if len(fields) > 8 {
+			s := strings.TrimSpace(fields[8])
+			if s != "" && !filepath.IsAbs(s) {
+				s = filepath.Join(careerOpsPath, "output", s)
+			}
+			entry.Screenshot = s
+		}
+		if len(fields) > 9 {
+			entry.Notes = fields[9]
+		}
+		entries = append(entries, entry)
+	}
+
+	// Reverse for newest first
+	for i, j := 0, len(entries)-1; i < j; i, j = i+1, j-1 {
+		entries[i], entries[j] = entries[j], entries[i]
+	}
+
+	return entries
+}

@@ -13,13 +13,18 @@
 | File | Path | When |
 |------|------|------|
 | cv.md | `cv.md` (project root) | ALWAYS |
-| article-digest.md | `article-digest.md` (if exists) | ALWAYS (detailed proof points) |
+| article-digest.md | `article-digest.md` (project root) | ALWAYS (compact proof points per project) |
+| knowledge/_index.md | `knowledge/_index.md` | ON-DEMAND (archetype → project mapping for deep context) |
+| knowledge/*/project.md | `knowledge/{project}/project.md` | ON-DEMAND (full project details when deeper context needed) |
+| knowledge/*/star.md | `knowledge/{project}/star.md` | ON-DEMAND (STAR frameworks for interview prep) |
+| story-bank.md | `interview-prep/story-bank.md` | ON-DEMAND for Block F (accumulated STAR+R stories, if populated) |
 | profile.yml | `config/profile.yml` | ALWAYS (candidate identity and targets) |
 | _profile.md | `modes/_profile.md` | ALWAYS (user archetypes, narrative, negotiation) |
 
 **RULE: NEVER hardcode metrics from proof points.** Read them from cv.md + article-digest.md at evaluation time.
 **RULE: For article/project metrics, article-digest.md takes precedence over cv.md.**
 **RULE: Read _profile.md AFTER this file. User customizations in _profile.md override defaults here.**
+**RULE: For deep project context during evals, search `knowledge/_index.md` for projects matching the detected archetype, then read relevant `project.md` and `star.md` files.**
 
 ---
 
@@ -48,9 +53,9 @@ Classify every offer into one of these types (or hybrid of 2):
 
 | Archetype | Key signals in JD |
 |-----------|-------------------|
-| AI Platform / LLMOps | "observability", "evals", "pipelines", "monitoring", "reliability" |
-| Agentic / Automation | "agent", "HITL", "orchestration", "workflow", "multi-agent" |
-| Technical AI PM | "PRD", "roadmap", "discovery", "stakeholder", "product manager" |
+| AI Customer Success / Deployment | "deployment", "adoption", "enablement", "success engineer", "customer success", "onboarding", "activation", "workshops", "account health", "value realization" |
+| AI Consultant / Strategy | "consultant", "strategy", "advisory", "engagement manager", "practice", "go-to-market", "GTM", "commercial", "business value" |
+| AI Product Manager | "PRD", "roadmap", "discovery", "stakeholder", "product manager", "product strategy", "GTM", "go-to-market", "product lead", "commercialization", "product operations" |
 | AI Solutions Architect | "architecture", "enterprise", "integration", "design", "systems" |
 | AI Forward Deployed | "client-facing", "deploy", "prototype", "fast delivery", "field" |
 | AI Transformation | "change management", "adoption", "enablement", "transformation" |
@@ -63,12 +68,11 @@ After detecting archetype, read `modes/_profile.md` for the user's specific fram
 
 1. Invent experience or metrics
 2. Modify cv.md or portfolio files
-3. Submit applications on behalf of the candidate
-4. Share phone number in generated messages
-5. Recommend comp below market rate
-6. Generate a PDF without reading the JD first
-7. Use corporate-speak
-8. Ignore the tracker (every evaluated offer gets registered)
+3. Share phone number in generated messages
+4. Recommend comp below market rate
+5. Generate a PDF without reading the JD first
+6. Use corporate-speak
+7. Ignore the tracker (every evaluated offer gets registered)
 
 ### ALWAYS
 

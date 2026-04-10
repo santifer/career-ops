@@ -2,6 +2,7 @@ package screens
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -45,6 +46,20 @@ type PipelineUpdateStatusMsg struct {
 	NewStatus     string
 }
 
+// PipelineAutoApplyMsg requests launching the auto-apply script.
+type PipelineAutoApplyMsg struct {
+	CareerOpsPath   string
+	App             model.CareerApplication
+	Mode            string // "fill" or "submit"
+	ResumePath      string
+	CoverLetterPath string
+}
+
+// PipelineOpenLogMsg requests opening the apply log screen.
+type PipelineOpenLogMsg struct {
+	CareerOpsPath string
+}
+
 type reportSummary struct {
 	archetype string
 	tldr      string
@@ -68,6 +83,7 @@ const (
 	filterInterview = "interview"
 	filterSkip      = "skip"
 	filterTop       = "top"
+	filterLog       = "log"
 )
 
 type pipelineTab struct {
@@ -82,6 +98,7 @@ var pipelineTabs = []pipelineTab{
 	{filterInterview, "INTERVIEW"},
 	{filterTop, "TOP ≥4"},
 	{filterSkip, "SKIP"},
+	{filterLog, "APPLY LOG"},
 }
 
 var sortCycle = []string{sortScore, sortDate, sortCompany, sortStatus}
@@ -108,6 +125,11 @@ type PipelineModel struct {
 	// Status picker sub-state
 	statusPicker bool
 	statusCursor int
+	// Auto-apply sub-state
+	applyConfirm    bool
+	applyMode       string
+	statusMessage   string
+	confirmOverride bool
 }
 
 // NewPipelineModel creates a new pipeline screen.
@@ -145,6 +167,12 @@ func (m PipelineModel) Width() int { return m.width }
 // Height returns the current height.
 func (m PipelineModel) Height() int { return m.height }
 
+// ResetToAllTab resets the active tab to ALL (index 0).
+func (m *PipelineModel) ResetToAllTab() {
+	m.activeTab = 0
+	m.applyFilterAndSort()
+}
+
 // CopyReportCache copies the report cache from another pipeline model.
 func (m *PipelineModel) CopyReportCache(other *PipelineModel) {
 	for k, v := range other.reportCache {
@@ -174,6 +202,9 @@ func (m PipelineModel) CurrentApp() (model.CareerApplication, bool) {
 func (m PipelineModel) Update(msg tea.Msg) (PipelineModel, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
+		if m.applyConfirm {
+			return m.handleApplyConfirm(msg)
+		}
 		if m.statusPicker {
 			return m.handleStatusPicker(msg)
 		}
@@ -187,6 +218,12 @@ func (m PipelineModel) Update(msg tea.Msg) (PipelineModel, tea.Cmd) {
 }
 
 func (m PipelineModel) handleKey(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
+	keyStr := msg.String()
+	if keyStr != "a" && keyStr != "A" {
+		m.statusMessage = ""
+		m.confirmOverride = false
+	}
+
 	switch msg.String() {
 	case "q", "esc":
 		return m, func() tea.Msg { return PipelineClosedMsg{} }
@@ -228,6 +265,11 @@ func (m PipelineModel) handleKey(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
 		if m.activeTab >= len(pipelineTabs) {
 			m.activeTab = 0
 		}
+		if pipelineTabs[m.activeTab].filter == filterLog {
+			return m, func() tea.Msg {
+				return PipelineOpenLogMsg{CareerOpsPath: m.careerOpsPath}
+			}
+		}
 		m.applyFilterAndSort()
 		m.cursor = 0
 		m.scrollOffset = 0
@@ -236,6 +278,11 @@ func (m PipelineModel) handleKey(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
 		m.activeTab--
 		if m.activeTab < 0 {
 			m.activeTab = len(pipelineTabs) - 1
+		}
+		if pipelineTabs[m.activeTab].filter == filterLog {
+			return m, func() tea.Msg {
+				return PipelineOpenLogMsg{CareerOpsPath: m.careerOpsPath}
+			}
 		}
 		m.applyFilterAndSort()
 		m.cursor = 0
@@ -269,6 +316,73 @@ func (m PipelineModel) handleKey(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
 		if len(m.filtered) > 0 {
 			m.statusPicker = true
 			m.statusCursor = 0
+		}
+
+	case "a":
+		app, ok := m.CurrentApp()
+		if !ok {
+			m.statusMessage = "No application selected"
+			return m, nil
+		}
+		if app.JobURL == "" {
+			m.statusMessage = "No job URL for this application"
+			return m, nil
+		}
+		resumePath, coverPath := m.findApplyDocs(app)
+		if resumePath == "" {
+			m.statusMessage = fmt.Sprintf("No resume PDF in output/ matching cv-*-%s*.pdf", companySlugForApply(app.Company))
+			return m, nil
+		}
+		norm := data.NormalizeStatus(app.Status)
+		blocked := norm == "applied" || norm == "interview" || norm == "offer" || norm == "rejected"
+		if blocked && !m.confirmOverride {
+			m.statusMessage = "Already applied — press again to override"
+			m.confirmOverride = true
+			return m, nil
+		}
+		m.confirmOverride = false
+		m.statusMessage = ""
+		return m, func() tea.Msg {
+			return PipelineAutoApplyMsg{
+				CareerOpsPath:   m.careerOpsPath,
+				App:             app,
+				Mode:            "fill",
+				ResumePath:      resumePath,
+				CoverLetterPath: coverPath,
+			}
+		}
+
+	case "A":
+		app, ok := m.CurrentApp()
+		if !ok {
+			m.statusMessage = "No application selected"
+			return m, nil
+		}
+		if app.JobURL == "" {
+			m.statusMessage = "No job URL for this application"
+			return m, nil
+		}
+		resumePath, _ := m.findApplyDocs(app)
+		if resumePath == "" {
+			m.statusMessage = fmt.Sprintf("No resume PDF in output/ matching cv-*-%s*.pdf", companySlugForApply(app.Company))
+			return m, nil
+		}
+		norm := data.NormalizeStatus(app.Status)
+		blocked := norm == "applied" || norm == "interview" || norm == "offer" || norm == "rejected"
+		if blocked && !m.confirmOverride {
+			m.statusMessage = "Already applied — press again to override"
+			m.confirmOverride = true
+			return m, nil
+		}
+		m.confirmOverride = false
+		m.applyMode = "submit"
+		m.applyConfirm = true
+		m.statusMessage = ""
+		return m, nil
+
+	case "L":
+		return m, func() tea.Msg {
+			return PipelineOpenLogMsg{CareerOpsPath: m.careerOpsPath}
 		}
 
 	case "pgdown", "ctrl+d":
@@ -316,6 +430,35 @@ func (m PipelineModel) handleStatusPicker(msg tea.KeyMsg) (PipelineModel, tea.Cm
 				}
 			}
 		}
+	}
+	return m, nil
+}
+
+func (m PipelineModel) handleApplyConfirm(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
+	switch msg.String() {
+	case "enter":
+		m.applyConfirm = false
+		m.confirmOverride = false
+		app, ok := m.CurrentApp()
+		if !ok {
+			return m, nil
+		}
+		resumePath, coverPath := m.findApplyDocs(app)
+		mode := m.applyMode
+		path := m.careerOpsPath
+		return m, func() tea.Msg {
+			return PipelineAutoApplyMsg{
+				CareerOpsPath:   path,
+				App:             app,
+				Mode:            mode,
+				ResumePath:      resumePath,
+				CoverLetterPath: coverPath,
+			}
+		}
+	case "esc", "q":
+		m.applyConfirm = false
+		m.confirmOverride = false
+		return m, nil
 	}
 	return m, nil
 }
@@ -475,6 +618,9 @@ func (m PipelineModel) View() string {
 	if m.statusPicker {
 		body = m.overlayStatusPicker(body)
 	}
+	if m.applyConfirm {
+		body = m.overlayConfirmApply(body)
+	}
 
 	return lipgloss.JoinVertical(lipgloss.Left,
 		header,
@@ -513,9 +659,13 @@ func (m PipelineModel) renderTabs() string {
 	var underParts []string
 
 	for i, tab := range pipelineTabs {
-		// Count items for this tab
-		count := m.countForFilter(tab.filter)
-		label := fmt.Sprintf(" %s (%d) ", tab.label, count)
+		var label string
+		if tab.filter == filterLog {
+			label = fmt.Sprintf(" %s ", tab.label)
+		} else {
+			count := m.countForFilter(tab.filter)
+			label = fmt.Sprintf(" %s (%d) ", tab.label, count)
+		}
 
 		if i == m.activeTab {
 			style := lipgloss.NewStyle().
@@ -724,7 +874,7 @@ func (m PipelineModel) renderPreview() string {
 	if summary, ok := m.reportCache[app.ReportPath]; ok {
 		if summary.archetype != "" {
 			lines = append(lines, padStyle.Render(
-				labelStyle.Render("Arquetipo: ")+valueStyle.Render(summary.archetype)))
+				labelStyle.Render("Archetype: ")+valueStyle.Render(summary.archetype)))
 		}
 		if summary.tldr != "" {
 			lines = append(lines, padStyle.Render(
@@ -769,6 +919,12 @@ func (m PipelineModel) renderHelp() string {
 				keyStyle.Render("Esc") + descStyle.Render(" cancel"))
 	}
 
+	if m.applyConfirm {
+		return style.Render(
+			keyStyle.Render("Enter") + descStyle.Render(" confirm  ") +
+				keyStyle.Render("Esc") + descStyle.Render(" cancel"))
+	}
+
 	brand := lipgloss.NewStyle().Foreground(m.theme.Overlay).Render("career-ops by santifer.io")
 
 	keys := keyStyle.Render("↑↓") + descStyle.Render(" nav  ") +
@@ -778,7 +934,26 @@ func (m PipelineModel) renderHelp() string {
 		keyStyle.Render("o") + descStyle.Render(" open URL  ") +
 		keyStyle.Render("c") + descStyle.Render(" change  ") +
 		keyStyle.Render("v") + descStyle.Render(" view  ") +
+		keyStyle.Render("a") + descStyle.Render(" fill  ") +
+		keyStyle.Render("A") + descStyle.Render(" submit  ") +
+		keyStyle.Render("L") + descStyle.Render(" log  ") +
 		keyStyle.Render("Esc") + descStyle.Render(" quit")
+
+	warn := ""
+	if m.statusMessage != "" {
+		warnStyle := lipgloss.NewStyle().Bold(true).Foreground(m.theme.Red)
+		warn = warnStyle.Render(m.statusMessage)
+	}
+
+	if warn != "" {
+		sep := descStyle.Render(" │ ")
+		line := warn + sep + keys
+		gap := m.width - lipgloss.Width(line) - lipgloss.Width(brand) - 2
+		if gap < 1 {
+			gap = 1
+		}
+		return style.Render(line + strings.Repeat(" ", gap) + brand)
+	}
 
 	gap := m.width - lipgloss.Width(keys) - lipgloss.Width(brand) - 2
 	if gap < 1 {
@@ -816,6 +991,83 @@ func (m PipelineModel) overlayStatusPicker(body string) string {
 	// Append picker to body
 	bodyLines = append(bodyLines, picker...)
 	return strings.Join(bodyLines, "\n")
+}
+
+func (m PipelineModel) overlayConfirmApply(body string) string {
+	bodyLines := strings.Split(body, "\n")
+	padStyle := lipgloss.NewStyle().Padding(0, 2)
+	borderStyle := lipgloss.NewStyle().
+		Foreground(m.theme.Yellow).
+		Bold(true)
+	textStyle := lipgloss.NewStyle().Foreground(m.theme.Text)
+	dimStyle := lipgloss.NewStyle().Foreground(m.theme.Subtext)
+
+	app, ok := m.CurrentApp()
+	if !ok {
+		return body
+	}
+	resumePath, coverPath := m.findApplyDocs(app)
+	resumeName := filepath.Base(resumePath)
+	coverName := "(none)"
+	if coverPath != "" {
+		coverName = filepath.Base(coverPath)
+	}
+	urlDisp := app.JobURL
+	if len(urlDisp) > m.width-16 {
+		urlDisp = urlDisp[:m.width-19] + "..."
+	}
+
+	var box []string
+	box = append(box, padStyle.Render(borderStyle.Render("AUTO-SUBMIT: "+app.Company+" — "+app.Role)))
+	box = append(box, padStyle.Render(textStyle.Render("Resume:       ")+dimStyle.Render(resumeName)))
+	box = append(box, padStyle.Render(textStyle.Render("Cover Letter: ")+dimStyle.Render(coverName)))
+	box = append(box, padStyle.Render(textStyle.Render("Job URL:      ")+dimStyle.Render(urlDisp)))
+	box = append(box, padStyle.Render(textStyle.Render("Score:        ")+dimStyle.Render(fmt.Sprintf("%.1f/5", app.Score))))
+	box = append(box, padStyle.Render(dimStyle.Render("Enter = submit  |  Esc = cancel")))
+
+	bodyLines = append(bodyLines, box...)
+	return strings.Join(bodyLines, "\n")
+}
+
+func (m PipelineModel) findApplyDocs(app model.CareerApplication) (resumePath, coverLetterPath string) {
+	slug := companySlugForApply(app.Company)
+	outDir := filepath.Join(m.careerOpsPath, "output")
+	cvPat := filepath.Join(outDir, fmt.Sprintf("cv-*-%s*.pdf", slug))
+	clPat := filepath.Join(outDir, fmt.Sprintf("cl-*-%s*.pdf", slug))
+	cvs, _ := filepath.Glob(cvPat)
+	cls, _ := filepath.Glob(clPat)
+	resumePath = pickNewestPDF(cvs)
+	coverLetterPath = pickNewestPDF(cls)
+	return resumePath, coverLetterPath
+}
+
+func companySlugForApply(company string) string {
+	s := strings.ToLower(strings.TrimSpace(company))
+	s = strings.ReplaceAll(s, " ", "-")
+	return s
+}
+
+func pickNewestPDF(matches []string) string {
+	if len(matches) == 0 {
+		return ""
+	}
+	best := ""
+	var bestTime int64 = -1
+	for _, p := range matches {
+		fi, err := os.Stat(p)
+		if err != nil {
+			continue
+		}
+		t := fi.ModTime().UnixNano()
+		if best == "" || t >= bestTime {
+			bestTime = t
+			best = p
+		}
+	}
+	if best == "" {
+		return matches[0]
+	}
+	return best
 }
 
 // -- Helpers --

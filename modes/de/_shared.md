@@ -165,9 +165,8 @@ In deutschen Stellenanzeigen und Vertragsverhandlungen tauchen Begriffe auf, die
 
 1. Erfahrung oder Kennzahlen erfinden
 2. `cv.md` oder Portfolio-Dateien verändern
-3. Bewerbungen im Namen des Kandidaten absenden
-4. Telefonnummer in generierten Nachrichten teilen
-5. Vergütung unter Marktniveau empfehlen
+3. Telefonnummer in generierten Nachrichten teilen
+4. Vergütung unter Marktniveau empfehlen
 6. PDF generieren, ohne vorher die Stellenanzeige gelesen zu haben
 7. Marketing-Floskeln oder "Corporate-Sprech" verwenden
 8. Den Tracker ignorieren (jede bewertete Stellenanzeige wird eingetragen)

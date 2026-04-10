@@ -169,9 +169,8 @@ Dans les offres et negociations francophones, certains termes n'existent pas sur
 
 1. Inventer de l'experience ou des metriques
 2. Modifier `cv.md` ou les fichiers portfolio
-3. Soumettre des candidatures au nom du candidat
-4. Partager un numero de telephone dans les messages generes
-5. Recommander une remuneration en dessous du marche
+3. Partager un numero de telephone dans les messages generes
+4. Recommander une remuneration en dessous du marche
 6. Generer un PDF sans avoir lu l'offre avant
 7. Utiliser du jargon corporate ou des formules creuses
 8. Ignorer le tracker (chaque offre evaluee est enregistree)

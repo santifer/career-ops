@@ -209,7 +209,7 @@ console.log('\n8. CLAUDE.md integrity');
 
 const claude = readFile('CLAUDE.md');
 const requiredSections = [
-  'Data Contract', 'Update Check', 'Ethical Use',
+  'Data Contract', 'Update Check', 'Apply Automation',
   'Offer Verification', 'Canonical States', 'TSV Format',
   'First Run', 'Onboarding',
 ];

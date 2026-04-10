@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -19,11 +20,13 @@ type viewState int
 const (
 	viewPipeline viewState = iota
 	viewReport
+	viewLog
 )
 
 type appModel struct {
 	pipeline      screens.PipelineModel
 	viewer        screens.ViewerModel
+	logViewer     screens.ApplyLogModel
 	state         viewState
 	careerOpsPath string
 }
@@ -38,6 +41,9 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.pipeline.Resize(msg.Width, msg.Height)
 		if m.state == viewReport {
 			m.viewer.Resize(msg.Width, msg.Height)
+		}
+		if m.state == viewLog {
+			m.logViewer.Resize(msg.Width, msg.Height)
 		}
 		pm, cmd := m.pipeline.Update(msg)
 		m.pipeline = pm
@@ -98,10 +104,48 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return nil
 		}
 
+	case screens.PipelineAutoApplyMsg:
+		args := []string{"apply-auto.mjs",
+			"--url", msg.App.JobURL,
+			"--resume", msg.ResumePath,
+			"--mode", msg.Mode,
+			"--profile", filepath.Join(msg.CareerOpsPath, "config", "profile.yml"),
+		}
+		if msg.CoverLetterPath != "" {
+			args = append(args, "--cover-letter", msg.CoverLetterPath)
+		}
+		opsPath := msg.CareerOpsPath
+		return m, func() tea.Msg {
+			cmd := exec.Command("node", args...)
+			cmd.Dir = opsPath
+			_ = cmd.Start()
+			return nil
+		}
+
+	case screens.PipelineOpenLogMsg:
+		logEntries := data.ParseApplyLog(msg.CareerOpsPath)
+		m.logViewer = screens.NewApplyLogModel(
+			theme.NewTheme("catppuccin-mocha"),
+			logEntries,
+			m.pipeline.Width(), m.pipeline.Height(),
+		)
+		m.state = viewLog
+		return m, nil
+
+	case screens.ApplyLogClosedMsg:
+		m.state = viewPipeline
+		m.pipeline.ResetToAllTab()
+		return m, nil
+
 	default:
 		if m.state == viewReport {
 			vm, cmd := m.viewer.Update(msg)
 			m.viewer = vm
+			return m, cmd
+		}
+		if m.state == viewLog {
+			lm, cmd := m.logViewer.Update(msg)
+			m.logViewer = lm
 			return m, cmd
 		}
 		pm, cmd := m.pipeline.Update(msg)
@@ -111,10 +155,14 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m appModel) View() string {
-	if m.state == viewReport {
+	switch m.state {
+	case viewReport:
 		return m.viewer.View()
+	case viewLog:
+		return m.logViewer.View()
+	default:
+		return m.pipeline.View()
 	}
-	return m.pipeline.View()
 }
 
 func main() {

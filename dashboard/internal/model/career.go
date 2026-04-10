@@ -30,3 +30,17 @@ type PipelineMetrics struct {
 	WithPDF    int
 	Actionable int
 }
+
+// ApplyLogEntry represents one row from data/apply-log.tsv.
+type ApplyLogEntry struct {
+	Date       string
+	Time       string
+	Company    string
+	Role       string
+	Mode       string // "fill" or "submit"
+	Platform   string // "greenhouse", "lever", "ashby", "generic"
+	Result     string // "submitted", "filled", "duplicate", "captcha-fallback", "error"
+	Captcha    bool
+	Screenshot string
+	Notes      string
+}

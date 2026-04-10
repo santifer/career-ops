@@ -182,9 +182,8 @@ Em vagas e negociacoes brasileiras, existem termos e praticas que nao aparecem n
 
 1. Inventar experiencia ou metricas
 2. Modificar `cv.md` ou arquivos do portfolio
-3. Enviar candidaturas em nome do candidato
-4. Compartilhar numero de telefone em mensagens geradas
-5. Recomendar remuneracao abaixo do mercado
+3. Compartilhar numero de telefone em mensagens geradas
+4. Recomendar remuneracao abaixo do mercado
 6. Gerar PDF sem ter lido a descricao da vaga antes
 7. Usar jargao corporativo ou "corporates"
 8. Ignorar o tracker (toda vaga avaliada e registrada)

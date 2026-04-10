@@ -20,7 +20,7 @@ The maintainers do not act as a Data Controller or Data Processor under GDPR or 
 This tool interfaces with AI models via third-party CLI tools. The maintainers do not control these models and cannot guarantee their behavior.
 
 - **Hallucinations:** AI models may fabricate skills, job history, qualifications, or company information. You must manually verify all generated documents before submitting them to an employer.
-- **Safety guardrails:** The default prompts instruct the AI never to auto-submit applications and to stop before the final send/apply action. However, AI compliance is not guaranteed. If you use different models, modify the system prompts, or override the safety instructions, you accept full responsibility for the AI's actions.
+- **Safety guardrails:** The system supports configurable auto-submission. When enabled, the AI will fill and submit applications according to your configured preferences in `config/profile.yml`. CAPTCHA detection automatically falls back to manual review. However, AI compliance is not guaranteed. You accept full responsibility for all applications submitted through this tool.
 - **Evaluation accuracy:** Job offer scores and recommendations are AI-generated opinions based on pattern matching, not professional career advice. They should inform your judgment, not replace it.
 
 ## 4. Third-Party Platforms
@@ -44,7 +44,7 @@ career-ops is designed to help individuals make better career decisions, not to 
 
 Unacceptable use includes:
 
-- Auto-submitting applications without human review
+- Submitting applications with fabricated or unverified information
 - Scraping platforms that prohibit automated access
 - Submitting AI-generated content without verifying its accuracy
 - Using the tool to discriminate, deceive, or misrepresent qualifications

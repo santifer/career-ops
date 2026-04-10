@@ -67,7 +67,7 @@ Construido por alguien que lo uso para evaluar 740+ ofertas, generar 100+ CVs pe
 | **Scanner de portales** | 45+ empresas pre-configuradas (Anthropic, OpenAI, ElevenLabs, Retool, n8n...) + queries en Ashby, Greenhouse, Lever, Wellfound |
 | **Batch** | Evaluacion en paralelo con workers `claude -p` |
 | **Dashboard TUI** | Terminal UI para navegar, filtrar y ordenar tu pipeline |
-| **Human-in-the-Loop** | La IA evalua y recomienda, tu decides y actuas. El sistema nunca envia una aplicacion -- tu siempre tienes la ultima palabra |
+| **Human-in-the-Loop** | Tres modos de aplicación: auto-fill (la IA rellena, tú envías), auto-submit (automatización completa), o manual. Umbrales de puntuación y límites de lote configurables |
 | **Integridad de pipeline** | Merge automatico, dedup, normalizacion de estados, health checks |
 
 ## Inicio rapido
@@ -252,7 +252,7 @@ Mi portfolio y otros proyectos open source → [santifer.io](https://santifer.io
 **career-ops es una herramienta local y open source — NO un servicio alojado.** Al usar este software, aceptas que:
 
 1. **Tu controlas tus datos.** Tu CV, datos de contacto e informacion personal se quedan en tu maquina y se envian directamente al proveedor de IA que elijas (Anthropic, OpenAI, etc.). No recopilamos, almacenamos ni tenemos acceso a tus datos.
-2. **Tu controlas la IA.** Los prompts por defecto instruyen a la IA a no enviar aplicaciones automaticamente, pero los modelos pueden comportarse de forma impredecible. Si modificas los prompts o usas otros modelos, lo haces bajo tu responsabilidad. **Revisa siempre el contenido generado antes de enviarlo.**
+2. **Tu controlas la IA.** El sistema soporta envío automático opt-in. Configura las preferencias de aplicación en `config/profile.yml` incluyendo umbrales de puntuación y límites por lote. **Siempre revisa el contenido generado por IA antes de enviarlo.**
 3. **Tu cumples con los terminos de terceros.** Debes usar esta herramienta de acuerdo con los Terminos de Servicio de los portales de empleo (Greenhouse, Lever, Workday, LinkedIn, etc.). No uses esta herramienta para spamear empresas.
 4. **Sin garantias.** Las evaluaciones son recomendaciones, no verdad absoluta. Los modelos pueden inventar habilidades o experiencia. Los autores no son responsables de resultados laborales, candidaturas rechazadas, restricciones de cuenta ni ninguna otra consecuencia.
 
