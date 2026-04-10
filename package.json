@@ -14,7 +14,16 @@
     "update": "node update-system.mjs apply",
     "rollback": "node update-system.mjs rollback",
     "liveness": "node check-liveness.mjs",
-    "scan": "node scan.mjs"
+    "scan": "node scan.mjs",
+    "codex": "node codex-runner.mjs",
+    "codex:scan": "node codex-runner.mjs scan",
+    "codex:evaluate": "node codex-runner.mjs evaluate",
+    "codex:pdf": "node codex-runner.mjs pdf",
+    "codex:pipeline": "node codex-runner.mjs pipeline",
+    "codex:tracker": "node codex-runner.mjs tracker",
+    "codex:patterns": "node codex-runner.mjs patterns",
+    "codex:followup": "node codex-runner.mjs followup",
+    "codex:validate": "node validate-agents.mjs"
   },
   "keywords": [
     "ai",
