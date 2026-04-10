@@ -24,6 +24,8 @@ modes/_profile.md
 
 # Generated
 .resolved-prompt-*
+.agents/cache/
+runs/codex-runs.jsonl
 node_modules/
 bun.lock
 
