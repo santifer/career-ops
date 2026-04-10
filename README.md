@@ -1,10 +1,6 @@
 # Career-Ops-CN (中文版)
 
 <p align="center">
-  <a href="https://x.com/santifer"><img src="docs/hero-banner.jpg" alt="Career-Ops — 多智能体求职自动化系统" width="800"></a>
-</p>
-
-<p align="center">
   <em>我曾花费数月用最笨的方法投递简历。所以我开发了这套我梦寐以求的系统。</em><br>
   公司使用 AI 来筛选候选人。<strong>我给候选人 AI 来<em>挑选</em>公司。</strong><br>
   <em>现在它已开源。</em>
