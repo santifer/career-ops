@@ -93,7 +93,7 @@ claude   # Abrir Claude Code en este directorio
 
 # Pidele a Claude que adapte el sistema a ti:
 # "Cambia los arquetipos a roles de backend"
-# "Traduce los modes a ingles"
+# "Cambia a los prompts en espanol/aleman/frances/portugues"
 # "Añade estas empresas a portals.yml"
 # "Actualiza mi perfil con este CV que te pego"
 
@@ -112,17 +112,21 @@ Career-ops es un unico slash command con multiples modos:
 ```
 /career-ops                → Mostrar todos los comandos
 /career-ops {pega un JD}   → Pipeline completo (evaluar + PDF + tracker)
+/career-ops offer          → Evaluar una oferta individual
+/career-ops compare        → Comparar y ordenar varias ofertas
 /career-ops scan           → Escanear portales
 /career-ops pdf            → Generar CV ATS-optimizado
 /career-ops batch          → Evaluar ofertas en batch
 /career-ops tracker        → Ver estado de aplicaciones
 /career-ops apply          → Rellenar formularios con IA
 /career-ops pipeline       → Procesar URLs pendientes
-/career-ops contacto       → Mensaje LinkedIn outreach
+/career-ops outreach       → Mensaje de outreach por LinkedIn
 /career-ops deep           → Research profundo de empresa
 ```
 
 O simplemente pega una URL o descripcion de oferta -- career-ops la detecta y ejecuta el pipeline completo.
+
+Los aliases historicos en espanol siguen funcionando: `/career-ops oferta`, `/career-ops ofertas` y `/career-ops contacto`.
 
 ## Como funciona
 
@@ -182,12 +186,18 @@ career-ops/
 ├── article-digest.md            # Tus proof points (opcional)
 ├── config/
 │   └── profile.example.yml      # Template para tu perfil
-├── modes/                       # 14 modos
-│   ├── _shared.md               # Contexto compartido (personalizable)
-│   ├── oferta.md                # Evaluacion individual
+├── modes/                       # Modos por defecto en ingles + carpetas localizadas
+│   ├── _shared.md               # Contexto compartido (defaults del sistema)
+│   ├── offer.md                 # Evaluacion individual
+│   ├── compare.md               # Comparacion de varias ofertas
+│   ├── outreach.md              # Outreach por LinkedIn
 │   ├── pdf.md                   # Generacion de PDF
 │   ├── scan.md                  # Scanner de portales
 │   ├── batch.md                 # Procesamiento batch
+│   ├── esp/                     # Prompts preservados en espanol
+│   ├── de/                      # Prompts en aleman
+│   ├── fr/                      # Prompts en frances
+│   ├── pt/                      # Prompts en portugues
 │   └── ...
 ├── templates/
 │   ├── cv-template.html         # Template de CV ATS-optimizado

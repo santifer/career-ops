@@ -2,7 +2,7 @@
 description: Evaluate job offer (A-F scoring, no auto PDF)
 ---
 
-Evaluate the following job description using career-ops oferta mode:
+Evaluate the following job description using career-ops offer mode:
 
 $ARGUMENTS
 

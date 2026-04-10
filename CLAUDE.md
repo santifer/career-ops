@@ -17,7 +17,7 @@ There are two layers. Read `DATA_CONTRACT.md` for the full list.
 - `data/*`, `reports/*`, `output/*`, `interview-prep/*`
 
 **System Layer (auto-updatable, DON'T put user data here):**
-- `modes/_shared.md`, `modes/oferta.md`, all other modes
+- `modes/_shared.md`, `modes/offer.md`, all other modes
 - `CLAUDE.md`, `*.mjs` scripts, `dashboard/*`, `templates/*`, `batch/*`
 
 **THE RULE: When the user asks to customize anything (archetypes, narrative, negotiation scripts, proof points, location policy, comp targets), ALWAYS write to `modes/_profile.md` or `config/profile.yml`. NEVER edit `modes/_shared.md` for user-specific content.** This ensures system updates don't overwrite their customizations.
@@ -69,9 +69,9 @@ When using [OpenCode](https://opencode.ai), the following slash commands are ava
 |---------|------------------------|-------------|
 | `/career-ops` | `/career-ops` | Show menu or evaluate JD with args |
 | `/career-ops-pipeline` | `/career-ops pipeline` | Process pending URLs from inbox |
-| `/career-ops-evaluate` | `/career-ops oferta` | Evaluate job offer (A-F scoring) |
-| `/career-ops-compare` | `/career-ops ofertas` | Compare and rank multiple offers |
-| `/career-ops-contact` | `/career-ops contacto` | LinkedIn outreach (find contacts + draft) |
+| `/career-ops-evaluate` | `/career-ops offer` | Evaluate job offer (A-F scoring) |
+| `/career-ops-compare` | `/career-ops compare` | Compare and rank multiple offers |
+| `/career-ops-contact` | `/career-ops outreach` | LinkedIn outreach (find contacts + draft) |
 | `/career-ops-deep` | `/career-ops deep` | Deep company research |
 | `/career-ops-pdf` | `/career-ops pdf` | Generate ATS-optimized CV |
 | `/career-ops-training` | `/career-ops training` | Evaluate course/cert against goals |
@@ -174,7 +174,7 @@ This system is designed to be customized by YOU (AI Agent). When the user asks y
 
 **Common customization requests:**
 - "Change the archetypes to [backend/frontend/data/devops] roles" → edit `modes/_profile.md` or `config/profile.yml`
-- "Translate the modes to English" → edit all files in `modes/`
+- "Switch the prompts to Spanish/German/French/Portuguese" → use the corresponding language folder under `modes/`
 - "Add these companies to my portals" → edit `portals.yml`
 - "Update my profile" → edit `config/profile.yml`
 - "Change the CV template design" → edit `templates/cv-template.html`
@@ -184,8 +184,15 @@ This system is designed to be customized by YOU (AI Agent). When the user asks y
 
 Default modes are in `modes/` (English). Additional language-specific modes are available:
 
+- **Spanish (legacy prompts):** `modes/esp/` — preserved Spanish versions of the original prompts, including `oferta.md`, `ofertas.md`, and `contacto.md` naming where needed for continuity.
 - **German (DACH market):** `modes/de/` — native German translations with DACH-specific vocabulary (13. Monatsgehalt, Probezeit, Kündigungsfrist, AGG, Tarifvertrag, etc.). Includes `_shared.md`, `angebot.md` (evaluation), `bewerben.md` (apply), `pipeline.md`.
 - **French (Francophone market):** `modes/fr/` — native French translations with France/Belgium/Switzerland/Luxembourg-specific vocabulary (CDI/CDD, convention collective SYNTEC, RTT, mutuelle, prévoyance, 13e mois, intéressement/participation, titres-restaurant, CSE, portage salarial, etc.). Includes `_shared.md`, `offre.md` (evaluation), `postuler.md` (apply), `pipeline.md`.
+- **Portuguese (Brazil market):** `modes/pt/` — native Portuguese translations with Brazil-specific vocabulary (CLT/PJ, FGTS, PLR, 13o salário, aviso prévio, plano de saúde, etc.). Includes `_shared.md`, `oferta.md` (evaluation), `aplicar.md` (apply), `pipeline.md`.
+
+**When to use Spanish modes:** If the user wants the historical Spanish prompts or prefers Spanish output. Either:
+1. User says "use Spanish modes" → read from `modes/esp/` instead of `modes/`
+2. User sets `language.modes_dir: modes/esp` in `config/profile.yml` → always use Spanish modes
+3. The user is already working from Spanish-language historical docs and wants continuity
 
 **When to use German modes:** If the user is targeting German-language job postings, lives in DACH, or asks for German output. Either:
 1. User says "use German modes" → read from `modes/de/` instead of `modes/`
@@ -197,6 +204,11 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 2. User sets `language.modes_dir: modes/fr` in `config/profile.yml` → always use French modes
 3. You detect a French JD → suggest switching to French modes
 
+**When to use Portuguese modes:** If the user is targeting Brazilian Portuguese job postings, lives in Brazil, or asks for Portuguese output. Either:
+1. User says "use Portuguese modes" → read from `modes/pt/` instead of `modes/`
+2. User sets `language.modes_dir: modes/pt` in `config/profile.yml` → always use Portuguese modes
+3. You detect a Portuguese JD → suggest switching to Portuguese modes
+
 **When NOT to:** If the user applies to English-language roles, even at French or German companies, use the default English modes.
 
 ### Skill Modes
@@ -204,9 +216,9 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 | If the user... | Mode |
 |----------------|------|
 | Pastes JD or URL | auto-pipeline (evaluate + report + PDF + tracker) |
-| Asks to evaluate offer | `oferta` |
-| Asks to compare offers | `ofertas` |
-| Wants LinkedIn outreach | `contacto` |
+| Asks to evaluate offer | `offer` (alias: `oferta`) |
+| Asks to compare offers | `compare` (alias: `ofertas`) |
+| Wants LinkedIn outreach | `outreach` (alias: `contacto`) |
 | Asks for company research | `deep` |
 | Preps for interview at specific company | `interview-prep` |
 | Wants to generate CV/PDF | `pdf` |

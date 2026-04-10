@@ -95,7 +95,7 @@ claude   # Open Claude Code in this directory
 
 # Then ask Claude to adapt the system to you:
 # "Change the archetypes to backend engineering roles"
-# "Translate the modes to English"
+# "Switch to the Spanish/German/French/Portuguese prompts"
 # "Add these 5 companies to portals.yml"
 # "Update my profile with this CV I'm pasting"
 
@@ -114,19 +114,23 @@ Career-ops is a single slash command with multiple modes:
 ```
 /career-ops                → Show all available commands
 /career-ops {paste a JD}   → Full auto-pipeline (evaluate + PDF + tracker)
+/career-ops offer          → Evaluate a single job offer
+/career-ops compare        → Compare and rank multiple offers
 /career-ops scan           → Scan portals for new offers
 /career-ops pdf            → Generate ATS-optimized CV
 /career-ops batch          → Batch evaluate multiple offers
 /career-ops tracker        → View application status
 /career-ops apply          → Fill application forms with AI
 /career-ops pipeline       → Process pending URLs
-/career-ops contacto       → LinkedIn outreach message
+/career-ops outreach       → LinkedIn outreach message
 /career-ops deep           → Deep company research
 /career-ops training       → Evaluate a course/cert
 /career-ops project        → Evaluate a portfolio project
 ```
 
 Or just paste a job URL or description directly -- career-ops auto-detects it and runs the full pipeline.
+
+Legacy Spanish aliases still work: `/career-ops oferta`, `/career-ops ofertas`, and `/career-ops contacto`.
 
 ## How It Works
 
@@ -186,12 +190,18 @@ career-ops/
 ├── article-digest.md            # Your proof points (optional)
 ├── config/
 │   └── profile.example.yml      # Template for your profile
-├── modes/                       # 14 skill modes
-│   ├── _shared.md               # Shared context (customize this)
-│   ├── oferta.md                # Single evaluation
+├── modes/                       # English default modes + localized folders
+│   ├── _shared.md               # Shared context (system defaults)
+│   ├── offer.md                 # Single evaluation
+│   ├── compare.md               # Compare multiple offers
+│   ├── outreach.md              # LinkedIn outreach
 │   ├── pdf.md                   # PDF generation
 │   ├── scan.md                  # Portal scanner
 │   ├── batch.md                 # Batch processing
+│   ├── esp/                     # Preserved Spanish-language prompts
+│   ├── de/                      # German prompts
+│   ├── fr/                      # French prompts
+│   ├── pt/                      # Portuguese prompts
 │   └── ...
 ├── templates/
 │   ├── cv-template.html         # ATS-optimized CV template

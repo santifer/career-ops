@@ -104,7 +104,7 @@ Notes :
 Si le candidat confirme que la candidature est envoyee :
 1. Mettre a jour le statut dans `applications.md` de "Evaluated" a "Applied"
 2. Mettre a jour le Bloc G du report avec les reponses finales
-3. Suggerer l'etape suivante : `/career-ops contacto` pour du LinkedIn outreach vers le hiring manager
+3. Suggerer l'etape suivante : `/career-ops outreach` pour du LinkedIn outreach vers le hiring manager
 
 ## Gestion du defilement
 

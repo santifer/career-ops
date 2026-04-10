@@ -104,7 +104,7 @@ Notas:
 Se o candidato confirmar que enviou a candidatura:
 1. Atualizar status em `applications.md` de "Evaluated" para "Applied"
 2. Atualizar Bloco G do report com as respostas finais
-3. Sugerir proximo passo: `/career-ops contacto` para LinkedIn outreach
+3. Sugerir proximo passo: `/career-ops outreach` para LinkedIn outreach
 
 ## Scroll handling
 

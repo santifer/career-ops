@@ -32,8 +32,8 @@ npx playwright install chromium
 | User intent | Files Codex should read |
 |-------------|-------------------------|
 | Raw JD text or job URL | `modes/_shared.md` + `modes/auto-pipeline.md` |
-| Single evaluation only | `modes/_shared.md` + `modes/oferta.md` |
-| Multiple offers | `modes/_shared.md` + `modes/ofertas.md` |
+| Single evaluation only | `modes/_shared.md` + `modes/offer.md` |
+| Multiple offers | `modes/_shared.md` + `modes/compare.md` |
 | Portal scan | `modes/_shared.md` + `modes/scan.md` |
 | PDF generation | `modes/_shared.md` + `modes/pdf.md` |
 | Live application help | `modes/_shared.md` + `modes/apply.md` |
