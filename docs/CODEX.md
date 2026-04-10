@@ -7,6 +7,10 @@ is enough for routing and behavior. Codex should reuse the same checked-in
 mode files, templates, tracker flow, and scripts that already power the
 Claude workflow.
 
+For repo-scoped Codex usage, this repo exposes Career-Ops as a repo skill:
+
+- Skill path: `.agents/skills/career-ops/SKILL.md`
+
 ## Prerequisites
 
 - A Codex client that can work with project `AGENTS.md`
@@ -46,6 +50,24 @@ npx playwright install chromium
 The key point: Codex support is additive. It should route into the existing
 Career-Ops modes and scripts rather than introducing a parallel automation
 layer.
+
+## Skill Discovery
+
+Codex's official docs recommend direct skill folders for local authoring and
+repo-scoped workflows. In this repo, that means launching Codex from the repo
+so it can see `.agents/skills/career-ops/SKILL.md`.
+
+Use Career-Ops through the skill system:
+
+- `$career-ops https://company.example/job-posting`
+- `$career-ops tracker`
+- `$career-ops pdf`
+- `Evaluate this job URL with Career-Ops and run the full pipeline.`
+
+Codex docs also describe explicit skill invocation via `/skills` or `$`, and
+say enabled skills can appear in the `/` menu. The exact UI surface still
+depends on the client build, so if `career-ops` does not appear in the `/`
+menu, invoke it directly with `$career-ops` or ask in plain language.
 
 ## Behavioral Rules
 
