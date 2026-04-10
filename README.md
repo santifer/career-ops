@@ -1,6 +1,6 @@
 # Career-Ops
 
-[English](README.md) | [Español](README.es.md)
+[English](README.md) | [Español](README.es.md) | [简体中文](README.zh.md)
 
 <p align="center">
   <a href="https://x.com/santifer"><img src="docs/hero-banner.jpg" alt="Career-Ops — Multi-Agent Job Search System" width="800"></a>
@@ -24,6 +24,7 @@
   <br>
   <img src="https://img.shields.io/badge/EN-blue?style=flat" alt="EN">
   <img src="https://img.shields.io/badge/ES-red?style=flat" alt="ES">
+  <img src="https://img.shields.io/badge/ZH-red?style=flat" alt="ZH">
   <img src="https://img.shields.io/badge/DE-grey?style=flat" alt="DE">
   <img src="https://img.shields.io/badge/FR-blue?style=flat" alt="FR">
   <img src="https://img.shields.io/badge/PT--BR-green?style=flat" alt="PT-BR">
@@ -38,6 +39,23 @@
 <p align="center"><strong>740+ job listings evaluated · 100+ personalized CVs · 1 dream role landed</strong></p>
 
 <p align="center"><a href="https://discord.gg/8pRpHETxa4"><img src="https://img.shields.io/badge/Join_the_community-Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord"></a></p>
+
+## 🚀 CN Edition: Chinese Job Board Support
+
+This version of Career-Ops has been specifically adapted for the **Chinese job market**, supporting:
+- **BOSS Zhipin (BOSS直聘)**: Session cookie capture & bypass protection.
+- **Liepin (猎聘)**: Automated JD fetching with cookie injection.
+- **51job (前程无忧)**: Multi-platform scanner configuration.
+- **Bilingual Support**: Profile & Portal configuration with Chinese comments.
+
+### Quick Start (CN)
+```bash
+# Capture session cookies for BOSS/Liepin
+node save-cookies.mjs boss
+node save-cookies.mjs liepin
+```
+
+---
 
 ## What Is This
 

@@ -1,7 +1,10 @@
 # Personal data (user fills these)
+cv.md
+docs/*.pdf
 data/applications.md
 data/pipeline.md
 data/scan-history.tsv
+data/cookies/
 reports/*.md
 !reports/.gitkeep
 output/*
