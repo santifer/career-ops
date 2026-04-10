@@ -1,6 +1,6 @@
 {
   "name": "career-ops-cn",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "AI-powered job search pipeline adapted for the Chinese market",
   "scripts": {
     "doctor": "node doctor.mjs",
@@ -13,7 +13,8 @@
     "update:check": "node update-system.mjs check",
     "update": "node update-system.mjs apply",
     "rollback": "node update-system.mjs rollback",
-    "liveness": "node check-liveness.mjs"
+    "liveness": "node check-liveness.mjs",
+    "fetch:jd": "node fetch-jd-stealth.mjs"
   },
   "keywords": ["ai", "job-search", "claude-code", "career", "automation"],
   "author": "Santiago Fernández de Valderrama <hi@santifer.io> (https://santifer.io)",

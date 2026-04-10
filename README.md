@@ -34,6 +34,9 @@
 # 捕获 BOSS直聘/猎聘 的登录状态
 node save-cookies.mjs boss
 node save-cookies.mjs liepin
+
+# 使用隐身抓取脚本获取 JD (v1.1.0 新增)
+npm run fetch:jd "职位URL" boss
 ```
 
 ---
