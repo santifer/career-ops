@@ -32,6 +32,8 @@ const EXPIRED_PATTERNS = [
   /search for jobs page is loaded/i, // Workday SPA indicator for listing page
   /diese stelle (ist )?(nicht mehr|bereits) besetzt/i,
   /offre (expirée|n'est plus disponible)/i,
+  /채용(이)?\s*(마감|종료)되었/i,
+  /더 이상 지원(을)? 받지 않/i,
 ];
 
 // URL patterns that indicate an ATS has redirected away from the job (closed/expired)
@@ -44,6 +46,9 @@ const APPLY_PATTERNS = [
   /\bsolicitar\b/i,
   /\bbewerben\b/i,
   /\bpostuler\b/i,
+  /지원하기/,
+  /입사지원/,
+  /지원서 제출/,
   /submit application/i,
   /easy apply/i,
   /start application/i,  // Ashby

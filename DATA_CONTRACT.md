@@ -45,6 +45,7 @@ These files contain system logic, scripts, templates, and instructions that impr
 | `modes/de/*` | German language modes |
 | `modes/fr/*` | French language modes |
 | `modes/pt/*` | Portuguese language modes |
+| `modes/ko/*` | Korean language modes |
 | `CLAUDE.md` | Agent instructions |
 | `AGENTS.md` | Codex instructions |
 | `*.mjs` | Utility scripts |

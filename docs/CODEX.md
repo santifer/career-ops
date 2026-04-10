@@ -47,6 +47,10 @@ The key point: Codex support is additive. It should route into the existing
 Career-Ops modes and scripts rather than introducing a parallel automation
 layer.
 
+For Korean-language workflows, route into `modes/ko/` instead of the default
+`modes/` when the user explicitly asks for Korean output or the JD is clearly
+in Korean.
+
 ## Behavioral Rules
 
 - Treat raw JD text or a job URL as the full auto-pipeline path unless the user explicitly asks for evaluation only.

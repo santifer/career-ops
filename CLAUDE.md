@@ -188,6 +188,7 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 - **German (DACH market):** `modes/de/` — native German translations with DACH-specific vocabulary (13. Monatsgehalt, Probezeit, Kündigungsfrist, AGG, Tarifvertrag, etc.). Includes `_shared.md`, `angebot.md` (evaluation), `bewerben.md` (apply), `pipeline.md`.
 - **French (Francophone market):** `modes/fr/` — native French translations with France/Belgium/Switzerland/Luxembourg-specific vocabulary (CDI/CDD, convention collective SYNTEC, RTT, mutuelle, prévoyance, 13e mois, intéressement/participation, titres-restaurant, CSE, portage salarial, etc.). Includes `_shared.md`, `offre.md` (evaluation), `postuler.md` (apply), `pipeline.md`.
 - **Portuguese (Brazil market):** `modes/pt/` — native Portuguese translations with Brazil-specific vocabulary (CLT/PJ, FGTS, PLR, 13o salário, aviso prévio, plano de saúde, etc.). Includes `_shared.md`, `oferta.md` (evaluation), `aplicar.md` (apply), `pipeline.md`.
+- **Korean (Korea market):** `modes/ko/` — native Korean translations with Korea-specific vocabulary (정규직/계약직, 수습기간, 포괄임금제, 퇴직금, 4대보험, 복지포인트, 스톡옵션, 비자/work authorization, etc.). Includes `_shared.md`, `offer.md` (evaluation), `apply.md` (apply), `pipeline.md`.
 
 **When to use Spanish modes:** If the user wants the historical Spanish prompts or prefers Spanish output. Either:
 1. User says "use Spanish modes" → read from `modes/esp/` instead of `modes/`
@@ -209,7 +210,12 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 2. User sets `language.modes_dir: modes/pt` in `config/profile.yml` → always use Portuguese modes
 3. You detect a Portuguese JD → suggest switching to Portuguese modes
 
-**When NOT to:** If the user applies to English-language roles, even at French or German companies, use the default English modes.
+**When to use Korean modes:** If the user is targeting Korean-language job postings, lives in South Korea, or asks for Korean output. Either:
+1. User says "use Korean modes" → read from `modes/ko/` instead of `modes/`
+2. User sets `language.modes_dir: modes/ko` in `config/profile.yml` → always use Korean modes
+3. You detect a Korean JD → suggest switching to Korean modes
+
+**When NOT to:** If the user applies to English-language roles, even at French, German, Korean, or Brazilian companies, use the default English modes.
 
 ### Skill Modes
 

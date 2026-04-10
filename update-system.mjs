@@ -50,6 +50,7 @@ const SYSTEM_PATHS = [
   'modes/de/',
   'modes/fr/',
   'modes/pt/',
+  'modes/ko/',
   'CLAUDE.md',
   'AGENTS.md',
   'generate-pdf.mjs',
