@@ -19,6 +19,7 @@ jds/*
 config/profile.yml
 portals.yml
 modes/_profile.md
+/cv.md
 .update-dismissed
 .update-lock
 
@@ -36,3 +37,4 @@ node_modules/
 .claude/memory/
 career-dashboard
 package-lock.json
+.playwright-cli/

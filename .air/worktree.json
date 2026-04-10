@@ -1,0 +1,14 @@
+{
+    "environment": [
+        {
+            "type": "env",
+            "key": "EXAMPLE_KEY",
+            "value": "example_value"
+        }
+    ],
+    "setup": {
+        "macos": [
+            "echo \\\"Setup ran successfully with $EXAMPLE_KEY!\\\" > /tmp/setup-test.txt"
+        ]
+    }
+}
