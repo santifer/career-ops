@@ -1,0 +1,15 @@
+# Exclude from Cursor indexing for performance
+node_modules/
+.git/
+fonts/
+output/*.pdf
+dashboard/career-dashboard
+*.mov
+*.mp4
+*.gif
+docs/demo.gif
+docs/hero-banner.jpg
+package-lock.json
+.DS_Store
+batch/logs/
+batch/.resolved-prompt-*

@@ -78,3 +78,26 @@ cd dashboard
 go build -o career-dashboard .
 ./career-dashboard --path ..  # Opens TUI pipeline viewer
 ```
+
+---
+
+## IDE Setup (Cursor / Antigravity / Others)
+
+If you prefer an IDE-based agent instead of Claude Code CLI:
+
+### Cursor
+```bash
+cursor .    # Open in Cursor — .cursorrules auto-loads
+```
+No extra config needed. Just tell the agent what you want in natural language.
+
+### Antigravity
+Open the folder in Antigravity. On first message:
+> "Read INSTRUCTIONS.md for the project context"
+
+### Other IDEs
+Point your IDE's project context to `INSTRUCTIONS.md`.
+
+### Command mapping
+Instead of `/career-ops scan`, just say "Scan for new jobs". See [IDE-SETUP.md](IDE-SETUP.md) for the full mapping table.
+

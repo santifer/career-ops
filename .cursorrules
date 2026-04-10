@@ -1,0 +1,285 @@
+# Career-Ops — Project Rules for Cursor IDE
+
+> This file makes career-ops work natively in Cursor. It replaces the slash-command
+> routing from Claude Code CLI with natural-language intent detection.
+> For the full system docs, see `INSTRUCTIONS.md` (platform-agnostic) and `CLAUDE.md` (original).
+
+---
+
+## What Is career-ops
+
+AI-powered job search pipeline: evaluate offers, generate ATS-optimized CVs, scan portals, track applications, prep for interviews — all driven by an AI agent reading your CV, profile, and proof points.
+
+**740+ job listings evaluated · 100+ personalized CVs · 1 dream role landed**
+
+---
+
+## Session Start Checklist (run silently every session)
+
+1. Check if `cv.md` exists
+2. Check if `config/profile.yml` exists (not profile.example.yml)
+3. Check if `modes/_profile.md` exists → if missing, copy from `modes/_profile.template.md`
+4. Check if `portals.yml` exists (not templates/portals.example.yml)
+5. Check if `data/applications.md` exists
+
+**If ANY file is missing → enter onboarding mode** (see Onboarding section in `INSTRUCTIONS.md`).
+
+After onboarding, run silently on first message:
+```bash
+node update-system.mjs check
+```
+
+Parse JSON output and notify if update available. Say nothing if up-to-date, dismissed, or offline.
+
+---
+
+## Intent Routing (replaces /career-ops slash commands)
+
+Since Cursor doesn't have slash commands, detect the user's intent from their message and route to the appropriate mode. Load the specified files before executing.
+
+### How to use career-ops in Cursor
+
+Instead of `/career-ops scan`, the user just says what they want naturally:
+
+| User says something like... | Mode | Files to load |
+|-----------------------------|------|---------------|
+| *Pastes a job URL or JD text* | `auto-pipeline` | `modes/_shared.md` + `modes/auto-pipeline.md` |
+| "Evaluate this offer" / "Score this job" | `oferta` | `modes/_shared.md` + `modes/oferta.md` |
+| "Compare these offers" / "Rank my options" | `ofertas` | `modes/_shared.md` + `modes/ofertas.md` |
+| "Generate my CV" / "Create a PDF" / "Make my resume" | `pdf` | `modes/_shared.md` + `modes/pdf.md` |
+| "Scan for jobs" / "Search portals" / "Find new offers" | `scan` | `modes/_shared.md` + `modes/scan.md` |
+| "Process my pipeline" / "Check inbox" | `pipeline` | `modes/_shared.md` + `modes/pipeline.md` |
+| "Help me apply" / "Fill application form" / "Apply to this" | `apply` | `modes/_shared.md` + `modes/apply.md` + `modes/auto-apply.md` |
+| "Batch process" / "Evaluate all pending" | `batch` | `modes/_shared.md` + `modes/batch.md` |
+| "Show tracker" / "Application status" | `tracker` | `modes/tracker.md` |
+| "Research this company" / "Deep dive on..." | `deep` | `modes/deep.md` |
+| "LinkedIn outreach" / "Draft message for..." | `contacto` | `modes/_shared.md` + `modes/contacto.md` |
+| "Evaluate this course" / "Is this cert worth it?" | `training` | `modes/training.md` |
+| "Evaluate this project idea" | `project` | `modes/project.md` |
+| "Prep for interview at..." / "Interview prep" | `interview-prep` | `modes/_shared.md` + `modes/interview-prep.md` |
+| "Analyze rejections" / "Why am I getting rejected?" | `patterns` | `modes/patterns.md` |
+| "Show commands" / "What can you do?" / "Help" | `discovery` | Show the command menu (see below) |
+
+### Auto-pipeline detection
+
+If the user's message contains job description text (keywords: "responsibilities", "requirements", "qualifications", "about the role", "we're looking for") or a URL to a career page, automatically run the `auto-pipeline` mode — evaluate + report + PDF + tracker.
+
+### Discovery menu
+
+When the user asks for help or available commands, show:
+
+```
+career-ops — AI Job Search Command Center
+
+Available actions (just tell me what you need):
+
+• Paste a job URL or JD     → Full pipeline: evaluate + report + PDF + tracker
+• "Evaluate this offer"     → A-F scoring evaluation only
+• "Compare these offers"    → Rank multiple offers side-by-side
+• "Generate my CV/PDF"      → ATS-optimized CV tailored to a role
+• "Scan for jobs"           → Search 45+ company portals for matches
+• "Process my pipeline"     → Evaluate pending URLs from data/pipeline.md
+• "Help me apply"           → Fill application forms with AI-drafted answers
+• "Batch process"           → Evaluate multiple offers sequentially
+• "Show tracker"            → Application status overview
+• "Research [company]"      → Deep company intel report
+• "LinkedIn outreach"       → Find contacts + draft outreach message
+• "Evaluate [course/cert]"  → Worth your time? Score against your goals
+• "Evaluate [project idea]" → Portfolio project ROI analysis
+• "Interview prep"          → STAR stories + company-specific intel
+• "Analyze rejections"      → Pattern analysis to improve targeting
+
+Your inbox: data/pipeline.md — add URLs and say "process my pipeline"
+```
+
+---
+
+## Data Contract (CRITICAL)
+
+**User Layer (NEVER auto-updated, personalization goes HERE):**
+- `cv.md`, `config/profile.yml`, `modes/_profile.md`, `article-digest.md`, `portals.yml`
+- `data/*`, `reports/*`, `output/*`, `interview-prep/*`
+
+**System Layer (auto-updatable, DON'T put user data here):**
+- `modes/_shared.md`, `modes/oferta.md`, all other mode files
+- `CLAUDE.md`, `INSTRUCTIONS.md`, `*.mjs` scripts, `dashboard/*`, `templates/*`, `batch/*`
+
+**THE RULE: When the user asks to customize anything (archetypes, narrative, negotiation scripts, proof points, location policy, comp targets), ALWAYS write to `modes/_profile.md` or `config/profile.yml`. NEVER edit `modes/_shared.md` for user-specific content.**
+
+---
+
+## CV Source of Truth
+
+- `cv.md` in project root is the canonical CV
+- `article-digest.md` has detailed proof points (optional)
+- **NEVER hardcode metrics** — read them from these files at evaluation time
+
+---
+
+## Sources of Truth
+
+| File | Path | When |
+|------|------|------|
+| cv.md | `cv.md` (project root) | ALWAYS |
+| article-digest.md | `article-digest.md` (if exists) | ALWAYS (detailed proof points) |
+| profile.yml | `config/profile.yml` | ALWAYS (candidate identity and targets) |
+| _profile.md | `modes/_profile.md` | ALWAYS (user archetypes, narrative, negotiation) |
+
+**RULE: Read _profile.md AFTER _shared.md. User customizations override defaults.**
+
+---
+
+## Scoring System
+
+6 blocks (A-F) with a global score of 1-5:
+
+| Dimension | What it measures |
+|-----------|-----------------|
+| Match con CV | Skills, experience, proof points alignment |
+| North Star alignment | Fit with user's target archetypes (from _profile.md) |
+| Comp | Salary vs market (5=top quartile, 1=well below) |
+| Cultural signals | Culture, growth, stability, remote policy |
+| Red flags | Blockers, warnings (negative adjustments) |
+| **Global** | Weighted average of above |
+
+**Score interpretation:**
+- 4.5+ → Strong match, recommend applying immediately
+- 4.0-4.4 → Good match, worth applying
+- 3.5-3.9 → Decent but not ideal, apply only if specific reason
+- Below 3.5 → Recommend against applying
+
+---
+
+## Ethical Use — CRITICAL
+
+- **Automated Submission is ENABLED.** When the user explicitly says "apply to this" or "use auto-apply", use Playwright to fill the form and submit on their behalf via `modes/auto-apply.md`.
+- **Strongly discourage low-fit applications.** Below 4.0/5 → recommend against applying.
+- **Quality over speed.** 5 well-targeted applications beat 50 generic ones.
+- **Respect recruiters' time.** Only send what's worth reading.
+
+---
+
+## Offer Verification
+
+For verifying if a job posting is still active, prefer browser-based verification when available:
+1. Navigate to the URL
+2. Read the page content
+3. If only footer/navbar without JD content → offer is closed
+4. If title + description + Apply button → offer is active
+
+If browser tools are not available, use web fetch as fallback and mark: `**Verification:** unconfirmed (IDE mode)`
+
+---
+
+## Stack and Conventions
+
+- Node.js (mjs modules), Playwright (PDF + scraping), YAML (config), HTML/CSS (template), Markdown (data)
+- Scripts in `.mjs`, configuration in YAML
+- Output in `output/` (gitignored), Reports in `reports/`
+- JDs in `jds/` (referenced as `local:jds/{file}` in pipeline.md)
+- Report numbering: sequential 3-digit zero-padded, max existing + 1
+- **After each batch of evaluations, run `node merge-tracker.mjs`**
+- **NEVER create new entries in applications.md if company+role already exists.** Update existing.
+
+### TSV Format for Tracker Additions
+
+Write one TSV file per evaluation to `batch/tracker-additions/{num}-{company-slug}.tsv`. Single line, 9 tab-separated columns:
+
+```
+{num}\t{date}\t{company}\t{role}\t{status}\t{score}/5\t{pdf_emoji}\t[{num}](reports/{num}-{slug}-{date}.md)\t{note}
+```
+
+**Column order (status BEFORE score):**
+1. num, 2. date, 3. company, 4. role, 5. status, 6. score, 7. pdf, 8. report, 9. notes
+
+### Canonical States
+
+| State | When to use |
+|-------|-------------|
+| `Evaluated` | Report completed, pending decision |
+| `Applied` | Application sent |
+| `Responded` | Company responded |
+| `Interview` | In interview process |
+| `Offer` | Offer received |
+| `Rejected` | Rejected by company |
+| `Discarded` | Discarded by candidate or offer closed |
+| `SKIP` | Doesn't fit, don't apply |
+
+---
+
+## Pipeline Integrity
+
+1. **NEVER edit applications.md to ADD new entries** — Write TSV in `batch/tracker-additions/` and `merge-tracker.mjs` handles the merge.
+2. **YES you can edit applications.md to UPDATE status/notes of existing entries.**
+3. All reports MUST include `**URL:**` in the header.
+4. All statuses MUST be canonical (see `templates/states.yml`).
+5. Health check: `node verify-pipeline.mjs`
+6. Normalize statuses: `node normalize-statuses.mjs`
+7. Dedup: `node dedup-tracker.mjs`
+
+---
+
+## Global Rules
+
+### NEVER
+1. Invent experience or metrics
+2. Modify cv.md or portfolio files without user permission
+3. [REMOVED] Applications CAN be submitted automatically via the apply mode when user requests
+4. Share phone number in generated messages
+5. Recommend comp below market rate
+6. Generate a PDF without reading the JD first
+7. Use corporate-speak
+8. Ignore the tracker (every evaluated offer gets registered)
+
+### ALWAYS
+1. Read cv.md, _profile.md, and article-digest.md (if exists) before evaluating
+2. First evaluation of session: run `node cv-sync-check.mjs`
+3. Detect the role archetype and adapt framing per _profile.md
+4. Cite exact lines from CV when matching
+5. Use web search for comp and company data
+6. Register in tracker after evaluating
+7. Generate content in the language of the JD (EN default)
+8. Be direct and actionable — no fluff
+9. Native tech English for generated text. Short sentences, action verbs, no passive voice.
+10. Tracker additions as TSV — write in `batch/tracker-additions/`
+11. Include `**URL:**` in every report header
+
+---
+
+## Professional Writing & ATS Compatibility
+
+These rules apply to ALL candidate-facing documents (PDFs, cover letters, form answers, LinkedIn messages). NOT internal reports.
+
+### Avoid cliché phrases
+- "passionate about" / "results-oriented" / "proven track record"
+- "leveraged" (use "used" or name the tool)
+- "spearheaded" (use "led" or "ran")
+- "synergies" / "robust" / "seamless" / "cutting-edge" / "innovative"
+
+### Prefer specifics over abstractions
+- "Cut p95 latency from 2.1s to 380ms" beats "improved performance"
+- Name tools, projects, and customers when allowed
+
+---
+
+## Personalization
+
+This system is designed to be customized by YOU (AI Agent). When the user asks to change archetypes, translate modes, adjust scoring, add companies, or modify negotiation scripts — do it directly.
+
+**Common requests:**
+- "Change archetypes to [backend/frontend/data]" → edit `modes/_profile.md` or `config/profile.yml`
+- "Translate modes to English" → edit all files in `modes/`
+- "Add these companies" → edit `portals.yml`
+- "Update my profile" → edit `config/profile.yml`
+- "Change CV template" → edit `templates/cv-template.html`
+
+---
+
+## Language Modes
+
+Default modes are in `modes/` (English). Additional:
+- **German (DACH):** `modes/de/` — Use when targeting German JDs
+- **French:** `modes/fr/` — Use when targeting French JDs
+- **Portuguese:** `modes/pt/` — Use when targeting Portuguese JDs
+
+Detect JD language and suggest switching modes. English for English JDs even at non-English companies.

@@ -14,6 +14,8 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Claude_Code-000?style=flat&logo=anthropic&logoColor=white" alt="Claude Code">
+  <img src="https://img.shields.io/badge/Cursor_IDE-000?style=flat&logo=cursor&logoColor=white" alt="Cursor">
+  <img src="https://img.shields.io/badge/Antigravity-6C3AE0?style=flat&logo=google&logoColor=white" alt="Antigravity">
   <img src="https://img.shields.io/badge/OpenCode-111827?style=flat&logo=terminal&logoColor=white" alt="OpenCode">
   <img src="https://img.shields.io/badge/Codex_(soon)-6B7280?style=flat&logo=openai&logoColor=white" alt="Codex">
   <img src="https://img.shields.io/badge/Node.js-339933?style=flat&logo=node.js&logoColor=white" alt="Node.js">
@@ -41,7 +43,7 @@
 
 ## What Is This
 
-Career-Ops turns any AI coding CLI into a full job search command center. Instead of manually tracking applications in a spreadsheet, you get an AI-powered pipeline that:
+Career-Ops turns any AI coding agent — CLI or IDE — into a full job search command center. Works with **Claude Code**, **Cursor**, **Antigravity**, **OpenCode**, and more. Instead of manually tracking applications in a spreadsheet, you get an AI-powered pipeline that:
 
 - **Evaluates offers** with a structured A-F scoring system (10 weighted dimensions)
 - **Generates tailored PDFs** -- ATS-optimized CVs customized per job description
@@ -90,22 +92,26 @@ cp templates/portals.example.yml portals.yml       # Customize companies
 # 4. Add your CV
 # Create cv.md in the project root with your CV in markdown
 
-# 5. Personalize with Claude
-claude   # Open Claude Code in this directory
+# 5. Open in your AI agent
+# Option A: Claude Code CLI
+claude
+# Option B: Cursor IDE
+cursor .
+# Option C: Antigravity — open folder, then tell it to read INSTRUCTIONS.md
 
-# Then ask Claude to adapt the system to you:
+# Then ask your agent to adapt the system to you:
 # "Change the archetypes to backend engineering roles"
 # "Translate the modes to English"
 # "Add these 5 companies to portals.yml"
 # "Update my profile with this CV I'm pasting"
 
 # 6. Start using
-# Paste a job URL or run /career-ops
+# Paste a job URL or say "evaluate this offer"
 ```
 
-> **The system is designed to be customized by Claude itself.** Modes, archetypes, scoring weights, negotiation scripts -- just ask Claude to change them. It reads the same files it uses, so it knows exactly what to edit.
+> **The system is designed to be customized by the AI agent itself.** Modes, archetypes, scoring weights, negotiation scripts -- just ask to change them. It reads the same files it uses, so it knows exactly what to edit.
 
-See [docs/SETUP.md](docs/SETUP.md) for the full setup guide.
+See [docs/SETUP.md](docs/SETUP.md) for CLI setup or [docs/IDE-SETUP.md](docs/IDE-SETUP.md) for Cursor/Antigravity/IDE setup.
 
 ## Usage
 

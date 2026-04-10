@@ -36,3 +36,12 @@ node_modules/
 .claude/memory/
 career-dashboard
 package-lock.json
+
+# Personal CV and instructions (user-specific, never push)
+cv.md
+INSTRUCTIONS.md
+
+# Auto-generated scratch scripts (may contain hardcoded personal data)
+scratch-*.mjs
+scratch-*.cjs
+

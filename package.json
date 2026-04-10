@@ -1,7 +1,7 @@
 {
   "name": "career-ops",
   "version": "1.0.0",
-  "description": "AI-powered job search pipeline built on Claude Code",
+  "description": "AI-powered job search pipeline — works with Claude Code, Cursor, Antigravity, and any AI coding agent",
   "scripts": {
     "doctor": "node doctor.mjs",
     "verify": "node verify-pipeline.mjs",
@@ -13,9 +13,17 @@
     "update:check": "node update-system.mjs check",
     "update": "node update-system.mjs apply",
     "rollback": "node update-system.mjs rollback",
-    "liveness": "node check-liveness.mjs"
+    "liveness": "node check-liveness.mjs",
+    "setup": "node doctor.mjs",
+    "batch:sequential": "node batch/batch-sequential.mjs"
   },
-  "keywords": ["ai", "job-search", "claude-code", "career", "automation"],
+  "keywords": [
+    "ai",
+    "job-search",
+    "claude-code",
+    "career",
+    "automation"
+  ],
   "author": "Santiago Fernández de Valderrama <hi@santifer.io> (https://santifer.io)",
   "homepage": "https://santifer.io",
   "repository": {
@@ -24,6 +32,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "playwright": "^1.58.1"
+    "playwright": "^1.58.1",
+    "yaml": "^2.8.3"
   }
 }
