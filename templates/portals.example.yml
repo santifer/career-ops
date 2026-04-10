@@ -13,6 +13,7 @@
 #   2. Edit title_filter.positive with YOUR target role keywords
 #   3. Add/remove companies in tracked_companies
 #   4. Adjust search_queries for your preferred job boards
+#      (for example: Wanted, Saramin, JobKorea, Jumpit in Korea)
 #   5. Set enabled: false on companies you don't care about
 
 # -- Title filter --
@@ -36,6 +37,17 @@ title_filter:
     - "Voice AI"
     - "Conversational AI"
     - "Speech"
+    # -- Korean AI/ML keywords --
+    - "AI 엔지니어"
+    - "ML 엔지니어"
+    - "머신러닝 엔지니어"
+    - "딥러닝 엔지니어"
+    - "LLM 엔지니어"
+    - "생성형 AI"
+    - "MLOps"
+    - "프로덕트 매니저"
+    - "솔루션 아키텍트"
+    - "솔루션 엔지니어"
     # -- German AI/ML keywords (DACH market) --
     - "KI"
     - "Künstliche Intelligenz"
@@ -68,6 +80,8 @@ title_filter:
     # [CUSTOMIZE] Add keywords for roles you want to exclude
     - "Junior"
     - "Intern"
+    - "신입"
+    - "인턴"
     - ".NET"
     - "Java "
     - "iOS"
@@ -94,6 +108,10 @@ title_filter:
     - "Lead"
     - "Head"
     - "Director"
+    - "시니어"
+    - "책임"
+    - "수석"
+    - "리드"
 
 # -- Search queries --
 # Each query triggers a WebSearch. Use site: to filter by portal.
@@ -147,6 +165,23 @@ search_queries:
   # -- Workable --
   - name: Workable — AI Roles
     query: 'site:apply.workable.com "AI" "Product Manager" OR "Solutions Architect" OR "AI Engineer" remote'
+    enabled: true
+
+  # -- Korea job boards --
+  - name: Wanted — Korea AI/ML
+    query: 'site:wanted.co.kr/wd "AI 엔지니어" OR "ML 엔지니어" OR "머신러닝 엔지니어" OR "LLM 엔지니어" OR "MLOps"'
+    enabled: true
+
+  - name: Saramin — Korea AI/Data
+    query: 'site:saramin.co.kr/zf_user/jobs/relay/view "AI 엔지니어" OR "머신러닝" OR "데이터 엔지니어" OR "MLOps"'
+    enabled: true
+
+  - name: JobKorea — Korea Product/AI
+    query: 'site:jobkorea.co.kr/Recruit/GI_Read "AI" OR "생성형 AI" OR "프로덕트 매니저" OR "솔루션 아키텍트"'
+    enabled: true
+
+  - name: Jumpit — Korea Engineering
+    query: 'site:jumpit.saramin.co.kr "AI 엔지니어" OR "백엔드" OR "플랫폼" OR "MLOps" OR "LLM"'
     enabled: true
 
   # -- No-Code / Low-Code / Automation --

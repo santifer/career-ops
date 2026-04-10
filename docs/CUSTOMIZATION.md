@@ -33,6 +33,8 @@ Copy from `templates/portals.example.yml` and customize:
 3. **search_queries**: WebSearch queries for job boards (Ashby, Greenhouse, Lever)
 4. **tracked_companies**: Companies to check directly
 
+The default template also includes Korean-market examples for `Wanted`, `Saramin`, `JobKorea`, and `Jumpit`. If you're targeting Korea, add Korean title keywords like `AI 엔지니어`, `머신러닝 엔지니어`, `MLOps`, or `프로덕트 매니저` to improve filtering.
+
 ## CV Template (templates/cv-template.html)
 
 The HTML template uses these design tokens:
