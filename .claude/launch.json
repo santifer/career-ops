@@ -1,0 +1,34 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "Dashboard (TUI)",
+      "runtimeExecutable": "go",
+      "runtimeArgs": ["run", "."],
+      "cwd": "dashboard",
+      "port": null,
+      "note": "Terminal UI built with Bubbletea — runs in the terminal, no web port"
+    },
+    {
+      "name": "Portal Scanner",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["scan.mjs"],
+      "port": null,
+      "note": "Scans job portals for new offers — runs and exits"
+    },
+    {
+      "name": "Pipeline Health Check",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["verify-pipeline.mjs"],
+      "port": null,
+      "note": "Verifies pipeline integrity — runs and exits"
+    },
+    {
+      "name": "Doctor",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["doctor.mjs"],
+      "port": null,
+      "note": "System health diagnostics — runs and exits"
+    }
+  ]
+}
