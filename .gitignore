@@ -2,16 +2,22 @@
 data/applications.md
 data/pipeline.md
 data/scan-history.tsv
-reports/*.md
+reports/*
 !reports/.gitkeep
 output/*
 !output/.gitkeep
+archive/reports/*
+!archive/reports/.gitkeep
+archive/output/*
+!archive/output/.gitkeep
 batch/logs/*
 !batch/logs/.gitkeep
 batch/batch-state.tsv
 batch/batch-input.tsv
 batch/tracker-additions/*.tsv
 !batch/tracker-additions/.gitkeep
+batch/tracker-additions/merged/*
+!batch/tracker-additions/merged/.gitkeep
 jds/*
 !jds/.gitkeep
 
@@ -21,6 +27,11 @@ portals.yml
 modes/_profile.md
 .update-dismissed
 .update-lock
+article-digest.md
+cv.md
+package-lock.json
+
+
 
 # Generated
 .resolved-prompt-*

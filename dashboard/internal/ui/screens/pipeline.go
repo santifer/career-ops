@@ -42,6 +42,9 @@ type PipelineUpdateStatusMsg struct {
 	NewStatus     string
 }
 
+// PipelineRefreshMsg requests a full reload of applications and report summaries from disk.
+type PipelineRefreshMsg struct{}
+
 type reportSummary struct {
 	archetype string
 	tldr      string
@@ -147,6 +150,23 @@ func (m *PipelineModel) CopyReportCache(other *PipelineModel) {
 	for k, v := range other.reportCache {
 		m.reportCache[k] = v
 	}
+}
+
+// CopyNavState preserves navigation state (cursor, scroll, tab, sort, view) from another model.
+func (m *PipelineModel) CopyNavState(other *PipelineModel) {
+	m.activeTab = other.activeTab
+	m.sortMode = other.sortMode
+	m.viewMode = other.viewMode
+	m.applyFilterAndSort()
+	// Clamp cursor to new filtered length
+	m.cursor = other.cursor
+	if m.cursor >= len(m.filtered) {
+		m.cursor = len(m.filtered) - 1
+	}
+	if m.cursor < 0 {
+		m.cursor = 0
+	}
+	m.scrollOffset = other.scrollOffset
 }
 
 // EnrichReport caches report summary data for preview.
@@ -267,6 +287,9 @@ func (m PipelineModel) handleKey(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
 			m.statusPicker = true
 			m.statusCursor = 0
 		}
+
+	case "r":
+		return m, func() tea.Msg { return PipelineRefreshMsg{} }
 
 	case "pgdown", "ctrl+d":
 		if len(m.filtered) > 0 {
@@ -774,6 +797,7 @@ func (m PipelineModel) renderHelp() string {
 		keyStyle.Render("o") + descStyle.Render(" open URL  ") +
 		keyStyle.Render("c") + descStyle.Render(" change  ") +
 		keyStyle.Render("v") + descStyle.Render(" view  ") +
+		keyStyle.Render("r") + descStyle.Render(" refresh  ") +
 		keyStyle.Render("Esc") + descStyle.Render(" quit")
 
 	gap := m.width - lipgloss.Width(keys) - lipgloss.Width(brand) - 2
