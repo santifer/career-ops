@@ -9,8 +9,9 @@ Processa URLs de vagas acumuladas em `data/pipeline.md`. O candidato adiciona UR
    a. Calcular proximo `REPORT_NUM` sequencial (ler `reports/`, pegar o numero mais alto + 1)
    b. **Extrair JD** usando Playwright (browser_navigate + browser_snapshot) → WebFetch → WebSearch
    c. Se a URL nao for acessivel → marcar como `- [!]` com nota e continuar
-   d. **Executar auto-pipeline completa**: Avaliacao A-F → Report .md → PDF (se score >= 3.0) → Tracker
-   e. **Mover de "Pendentes" para "Processadas"**: `- [x] #NNN | URL | Empresa | Vaga | Score/5 | PDF ✅/❌`
+   d. **Salvar JD bruto** em `jds/{empresa}-{vaga-slug}.md` (criar `jds/` se nao existir). Formato do slug: minusculas, hifens, somente ASCII. Ignorar se a URL ja tiver prefixo `local:`. Salvar tambem se o texto foi colado diretamente.
+   e. **Executar auto-pipeline completa**: Avaliacao A-F → Report .md → PDF (se score >= 3.0) → Tracker
+   f. **Mover de "Pendentes" para "Processadas"**: `- [x] #NNN | URL | Empresa | Vaga | Score/5 | PDF ✅/❌`
 3. **Se houver 3+ URLs pendentes**, lancar agentes em paralelo (Agent tool com `run_in_background`) para maximizar velocidade.
 4. **Ao terminar**, mostrar tabela resumo:
 

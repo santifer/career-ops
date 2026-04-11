@@ -9,8 +9,9 @@
    a. 次の `REPORT_NUM` を連番で計算（`reports/` を読み、最大番号 + 1）
    b. **JD を抽出** Playwright（browser_navigate + browser_snapshot）→ WebFetch → WebSearch の順で
    c. URL にアクセスできない場合 → `- [!]` にマークし注記、次へ進む
-   d. **完全な auto-pipeline を実行**：評価 A-F → Report .md → PDF（スコア >= 3.0 の場合）→ Tracker
-   e. **「未処理」から「処理済み」へ移動**：`- [x] #NNN | URL | 企業名 | 求人タイトル | スコア/5 | PDF ✅/❌`
+   d. **生の JD を保存**：`jds/{企業スラグ}-{役割スラグ}.md` に保存（`jds/` が存在しない場合は作成）。スラグ形式：小文字・ハイフン・ASCII のみ。URL に既に `local:` プレフィックスがある場合はスキップ。テキストを直接貼り付けた場合も保存する。
+   e. **完全な auto-pipeline を実行**：評価 A-F → Report .md → PDF（スコア >= 3.0 の場合）→ Tracker
+   f. **「未処理」から「処理済み」へ移動**：`- [x] #NNN | URL | 企業名 | 求人タイトル | スコア/5 | PDF ✅/❌`
 3. **3 つ以上の URL がある場合**、エージェントを並列起動（Agent tool の `run_in_background`）して速度を最大化。
 4. **完了後**、サマリーテーブルを表示：
 

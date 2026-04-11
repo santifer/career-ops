@@ -9,8 +9,9 @@ Traite les URLs d'offres accumulees dans `data/pipeline.md`. Le candidat ajoute 
    a. Calculer le prochain `REPORT_NUM` sequentiel (lire `reports/`, prendre le numero le plus eleve + 1)
    b. **Extraire l'offre** avec Playwright (`browser_navigate` + `browser_snapshot`) -> WebFetch -> WebSearch
    c. Si l'URL n'est pas accessible -> marquer comme `- [!]` avec une note et continuer
-   d. **Executer l'auto-pipeline complet** : Evaluation A-F -> Report .md -> PDF (si score >= 3.0) -> Tracker
-   e. **Deplacer de "En attente" vers "Traitees"** : `- [x] #NNN | URL | Entreprise | Role | Score/5 | PDF oui/non`
+   d. **Sauvegarder l'offre brute** dans `jds/{entreprise}-{role-slug}.md` (creer `jds/` si absent). Format du slug : minuscules, tirets, ASCII uniquement. Ignorer si l'URL a deja un prefixe `local:`. Sauvegarder egalement si le texte a ete colle directement.
+   e. **Executer l'auto-pipeline complet** : Evaluation A-F -> Report .md -> PDF (si score >= 3.0) -> Tracker
+   f. **Deplacer de "En attente" vers "Traitees"** : `- [x] #NNN | URL | Entreprise | Role | Score/5 | PDF oui/non`
 3. **Si 3+ URLs en attente**, lancer des agents en parallele (Agent tool avec `run_in_background`) pour maximiser la vitesse.
 4. **A la fin**, afficher un tableau recapitulatif :
 
