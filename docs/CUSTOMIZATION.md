@@ -28,10 +28,33 @@ Also update the "Adaptive Framing" table to map YOUR specific projects to each a
 
 Copy from `templates/portals.example.yml` and customize:
 
-1. **title_filter.positive**: Keywords matching your target roles
-2. **title_filter.negative**: Tech stacks or domains to exclude
-3. **search_queries**: WebSearch queries for job boards (Ashby, Greenhouse, Lever)
-4. **tracked_companies**: Companies to check directly
+1. **freshness**: How aggressively to filter stale postings (see below)
+2. **title_filter.positive**: Keywords matching your target roles
+3. **title_filter.negative**: Tech stacks or domains to exclude
+4. **search_queries**: WebSearch queries for job boards (Ashby, Greenhouse, Lever)
+5. **tracked_companies**: Companies to check directly
+
+### Tuning freshness
+
+```yaml
+freshness:
+  max_age_days: 60        # Hard skip — postings older than this aren't evaluated
+  warn_age_days: 30       # Evaluate but apply automatic Red Flags penalty
+  linkedin_suspect: true  # Treat LinkedIn search-cache results as unverified
+  require_date: false     # If true, missing posting date = uncertain (strict mode)
+```
+
+**When to lower `max_age_days`:**
+- Hot/competitive markets (AI, FAANG, top startups) where postings turn over weekly
+- High-volume scans where you'd rather miss a few than waste eval tokens on ghosts
+
+**When to raise `max_age_days`:**
+- Niche specialist roles (audio C++, hardware, scientific computing) that legitimately stay open for months
+- Smaller companies that don't aggressively churn job boards
+
+**Strict mode (`require_date: true`):** Skips any posting where no `datePosted` can be extracted. Recommended only if you're seeing false positives from sites that don't expose structured dates (e.g., custom careers pages).
+
+See `docs/ARCHITECTURE.md` → "Freshness Filtering" for the full detection pipeline.
 
 ## CV Template (templates/cv-template.html)
 

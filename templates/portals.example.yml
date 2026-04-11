@@ -15,6 +15,23 @@
 #   4. Adjust search_queries for your preferred job boards
 #   5. Set enabled: false on companies you don't care about
 
+# -- Freshness filtering --
+# scan and pipeline use these thresholds (via check-liveness.mjs) to filter
+# out stale or expired postings before they consume evaluation tokens.
+#
+# Posting age is detected from JSON-LD `datePosted` (Greenhouse, Ashby, Lever,
+# LinkedIn all embed this) or visible "Posted N days ago" text. LinkedIn job
+# IDs are also checked against a year-bucketing heuristic for fast pre-filter.
+#
+# Tune lower for hot/competitive markets, higher for niche specialist roles
+# that legitimately stay open longer.
+
+freshness:
+  max_age_days: 60        # Hard skip — postings older than this aren't evaluated
+  warn_age_days: 30       # Evaluate but apply automatic Red Flags penalty
+  linkedin_suspect: true  # Treat LinkedIn WebSearch results as unverified (Google caches LinkedIn aggressively)
+  require_date: false     # If true, missing posting date = uncertain (strict mode)
+
 # -- Title filter --
 # The scanner uses these keywords to decide if a title is relevant.
 # At least 1 positive must match AND 0 negatives must match (case-insensitive).

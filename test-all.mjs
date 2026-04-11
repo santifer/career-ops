@@ -79,6 +79,16 @@ for (const { name, allowFail } of scripts) {
   }
 }
 
+// ── 2b. FRESHNESS UNIT TESTS ────────────────────────────────────
+
+console.log('\n2b. Freshness unit tests (check-liveness.mjs)');
+const freshnessResult = run('node test-freshness.mjs 2>&1');
+if (freshnessResult !== null && freshnessResult.includes('All freshness tests passed')) {
+  pass('test-freshness.mjs all-pass');
+} else {
+  fail('test-freshness.mjs has failing assertions — run `node test-freshness.mjs` for details');
+}
+
 // ── 3. DASHBOARD BUILD ──────────────────────────────────────────
 
 if (!QUICK) {
