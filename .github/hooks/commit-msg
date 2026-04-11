@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+#
+# Validates commit messages against Conventional Commits format.
+# Install: npm run setup-hooks
+
+commit_msg=$(head -1 "$1")
+
+if [[ "$commit_msg" =~ ^Merge ]]; then
+  exit 0
+fi
+
+if [[ "$commit_msg" =~ ^Revert ]]; then
+  exit 0
+fi
+
+# type(scope)!: description
+# - scope is optional, must not contain closing paren
+# - ! for breaking change is optional
+# - description must have at least one non-space char after ": "
+pattern='^(fix|feat|chore|docs|refactor|test|ci|release|style|perf|build)(\([^)]+\))?!?:[[:space:]]+[^[:space:]]'
+
+if [[ "$commit_msg" =~ $pattern ]]; then
+  exit 0
+fi
+
+echo ""
+echo "ERROR: Commit message does not follow Conventional Commits format."
+echo ""
+echo "  Expected: type(scope): description"
+echo "  Got:      $commit_msg"
+echo ""
+echo "  Valid types: fix | feat | chore | docs | refactor | test | ci | release | style | perf | build"
+echo "  Scope is optional: feat(dashboard): add chart view"
+echo ""
+echo "  See .github/commit-convention.md for details."
+echo ""
+exit 1

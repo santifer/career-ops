@@ -14,15 +14,28 @@ PRs without a corresponding issue may be closed if they don't align with the pro
 - Includes a clear description of what changed and why
 - Follows the existing code style and project philosophy (simple, minimal, quality over quantity)
 
+## Commit Messages
+
+This project uses [Conventional Commits](https://www.conventionalcommits.org/). Every commit message must follow:
+
+```
+type(scope): description
+```
+
+Valid types: `fix`, `feat`, `chore`, `docs`, `refactor`, `test`, `ci`, `release`, `style`, `perf`, `build`. Scope is optional.
+
+Run `npm run setup-hooks` to install a local git hook that validates your messages before commit. See [.github/commit-convention.md](.github/commit-convention.md) for full details and examples.
+
 ## Quick Start
 
 1. Open an issue to discuss your idea
 2. Fork the repo
 3. Create a branch (`git checkout -b feature/my-feature`)
-4. Make your changes
-5. Test with a fresh clone (see [docs/SETUP.md](docs/SETUP.md))
-6. Commit and push
-7. Open a Pull Request referencing the issue
+4. Run `npm run setup-hooks` to enable commit message validation
+5. Make your changes
+6. Test with a fresh clone (see [docs/SETUP.md](docs/SETUP.md))
+7. Commit and push
+8. Open a Pull Request referencing the issue
 
 ## What to Contribute
 
