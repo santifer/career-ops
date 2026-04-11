@@ -16,6 +16,8 @@
  */
 
 import { readFileSync, writeFileSync, appendFileSync, existsSync } from 'fs';
+import { exec } from 'child_process';
+import { resolve } from 'path';
 import yaml from 'js-yaml';
 const parseYaml = yaml.load;
 
@@ -244,6 +246,64 @@ async function parallelFetch(tasks, limit) {
   return results;
 }
 
+// ── Dashboard Generator ─────────────────────────────────────────────
+
+function generatePipelineHtml() {
+  const historyRaw = existsSync(SCAN_HISTORY_PATH) ? readFileSync(SCAN_HISTORY_PATH, 'utf-8') : '';
+  const historyMap = {};
+  for (const row of historyRaw.split('\n')) {
+    const parts = row.split('\t');
+    if (parts.length >= 5) {
+      historyMap[parts[0]] = { date: parts[1], portal: parts[2] };
+    }
+  }
+
+  if (!existsSync(PIPELINE_PATH)) return null;
+  const content = readFileSync(PIPELINE_PATH, 'utf-8');
+  
+  const jobs = [];
+  let pendingCount = 0;
+  let appliedCount = 0;
+  const lines = content.split('\n');
+  
+  for (const line of lines) {
+    const match = line.match(/-\s+\[(.)\]\s*(?:#[a-zA-Z0-9-]+\s*\|\s*)?(https?:\/\/[^\s|]+)\s+\|\s+([^|]+)\s+\|\s+(.+)/);
+    if (!match) continue;
+
+    const checked = match[1].trim().toLowerCase() === 'x';
+    const url = match[2].trim();
+    const company = match[3].trim();
+    const titleParts = match[4].trim().split('|');
+    const title = titleParts[0].trim();
+    
+    if (checked) appliedCount++;
+    else pendingCount++;
+
+    const meta = historyMap[url] || { date: 'Unknown', portal: 'Direct' };
+
+    jobs.push({
+      status: checked ? 'applied' : 'pending',
+      url,
+      company,
+      title,
+      date: meta.date,
+      portal: meta.portal
+    });
+  }
+
+  // Sort jobs: pending first, then applied, then by date desc
+  jobs.sort((a, b) => {
+    if (a.status !== b.status) return a.status === 'pending' ? -1 : 1;
+    return b.date.localeCompare(a.date);
+  });
+
+  const pendingJobs = jobs.filter(j => j.status === 'pending');
+
+  const jsContent = `window.PIPELINE_JOBS = ${JSON.stringify(jobs, null, 2)};`;
+  writeFileSync('data/pipeline_data.js', jsContent, 'utf-8');
+  return resolve('data/dashboard.html');
+}
+
 // ── Main ────────────────────────────────────────────────────────────
 
 async function main() {
@@ -356,6 +416,16 @@ async function main() {
 
   console.log(`\n→ Run /career-ops pipeline to evaluate new offers.`);
   console.log('→ Share results and get help: https://discord.gg/8pRpHETxa4');
+
+  if (!dryRun) {
+    const htmlPath = generatePipelineHtml();
+    if (htmlPath) {
+      console.log(`\n🌐 Opening Pipeline Dashboard in browser...`);
+      exec(`start "" "${htmlPath}"`, (error) => {
+        if (error) console.error("Failed to simultaneously open the dashboard.", error);
+      });
+    }
+  }
 }
 
 main().catch(err => {
