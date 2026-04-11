@@ -21,7 +21,7 @@ const APPS_FILE = existsSync(join(CAREER_OPS, 'data/applications.md'))
 const DRY_RUN = process.argv.includes('--dry-run');
 
 // Status advancement order (higher = more advanced in pipeline)
-// Aplicado > Rechazado because active application > terminal state
+// Applied > Rejected because an active application outranks a terminal state
 const STATUS_RANK = {
   // English canonicals (states.yml labels)
   'skip': 0,
