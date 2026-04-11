@@ -70,6 +70,7 @@ Construído por alguém que usou isso para avaliar 740+ vagas, gerar 100+ CVs pe
 | **Processamento em lote** | Avaliação paralela com workers `claude -p` |
 | **Dashboard TUI** | Interface no terminal para navegar, filtrar e ordenar seu pipeline |
 | **Humano no loop** | A IA avalia e recomenda, você decide e age. O sistema nunca envia candidatura automaticamente -- a decisão final é sempre sua |
+| **Filtro de visto/sponsorship** | Scoring F-1/H-1B: detecção de keywords no JD, histórico USCIS H-1B, score 1-5 de visa-friendliness (modos hard-filter/penalty/info) |
 | **Integridade do pipeline** | Merge automatizado, deduplicação, normalização de status e health checks |
 
 ## Início rápido
