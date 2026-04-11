@@ -26,6 +26,7 @@ type appModel struct {
 	viewer        screens.ViewerModel
 	state         viewState
 	careerOpsPath string
+	theme         theme.Theme
 }
 
 func (m appModel) Init() tea.Cmd {
@@ -61,7 +62,7 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		metrics := data.ComputeMetrics(apps)
 		old := m.pipeline
 		m.pipeline = screens.NewPipelineModel(
-			theme.NewTheme("catppuccin-mocha"),
+			m.theme,
 			apps, metrics, m.careerOpsPath,
 			old.Width(), old.Height(),
 		)
@@ -70,7 +71,7 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case screens.PipelineOpenReportMsg:
 		m.viewer = screens.NewViewerModel(
-			theme.NewTheme("catppuccin-mocha"),
+			m.theme,
 			msg.Path, msg.Title,
 			m.pipeline.Width(), m.pipeline.Height(),
 		)
@@ -135,7 +136,7 @@ func main() {
 	metrics := data.ComputeMetrics(apps)
 
 	// Batch-load all report summaries
-	t := theme.NewTheme("catppuccin-mocha")
+	t := theme.NewTheme("auto")
 	pm := screens.NewPipelineModel(t, apps, metrics, careerOpsPath, 120, 40)
 
 	for _, app := range apps {
@@ -151,6 +152,7 @@ func main() {
 	m := appModel{
 		pipeline:      pm,
 		careerOpsPath: careerOpsPath,
+		theme:         t,
 	}
 
 	p := tea.NewProgram(m, tea.WithAltScreen())
