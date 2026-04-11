@@ -29,6 +29,7 @@ const RELEASES_API = 'https://api.github.com/repos/santifer/career-ops/releases/
 
 // System layer paths — ONLY these files get updated
 const SYSTEM_PATHS = [
+  // Modes (English)
   'modes/_shared.md',
   'modes/_profile.template.md',
   'modes/oferta.md',
@@ -44,7 +45,14 @@ const SYSTEM_PATHS = [
   'modes/project.md',
   'modes/tracker.md',
   'modes/training.md',
+  'modes/followup.md',
+  'modes/patterns.md',
+  'modes/interview-prep.md',
+  // Modes (i18n)
   'modes/de/',
+  'modes/fr/',
+  'modes/ja/',
+  // Core scripts
   'CLAUDE.md',
   'AGENTS.md',
   'generate-pdf.mjs',
@@ -54,21 +62,46 @@ const SYSTEM_PATHS = [
   'normalize-statuses.mjs',
   'cv-sync-check.mjs',
   'update-system.mjs',
+  'doctor.mjs',
+  'test-all.mjs',
+  'scan.mjs',
+  'analyze-patterns.mjs',
+  'check-liveness.mjs',
+  'liveness-core.mjs',
+  'followup-cadence.mjs',
+  // Batch
   'batch/batch-prompt.md',
   'batch/batch-runner.sh',
+  // Dashboard, templates, fonts
   'dashboard/',
   'templates/',
   'fonts/',
+  // Skills, docs, config
   '.claude/skills/',
+  '.opencode/',
   'docs/',
+  'examples/',
+  // Root metadata
   'VERSION',
   'DATA_CONTRACT.md',
   'CONTRIBUTING.md',
+  'CODE_OF_CONDUCT.md',
+  'GOVERNANCE.md',
+  'SECURITY.md',
+  'SUPPORT.md',
+  'LEGAL_DISCLAIMER.md',
   'README.md',
+  'README.es.md',
+  'README.ja.md',
+  'README.ko-KR.md',
+  'README.pt-BR.md',
+  'README.ru.md',
   'LICENSE',
   'CITATION.cff',
   '.github/',
   'package.json',
+  'flake.nix',
+  'flake.lock',
 ];
 
 // User layer paths — NEVER touch these (safety check)
@@ -222,6 +255,9 @@ async function apply() {
       for (const entry of gitStatusEntries()) {
         const file = entry.path;
         if (initialStatusPaths.has(file)) continue;
+        // Untracked files (??) cannot have been created by git checkout —
+        // they are user-created local files.  Skip them.  Fixes #169.
+        if (entry.code === '??') continue;
         for (const userPath of USER_PATHS) {
           if (file.startsWith(userPath)) {
             console.error(`SAFETY VIOLATION: User file was modified: ${file}`);
