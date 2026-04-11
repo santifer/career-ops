@@ -43,13 +43,15 @@ Processes offer URLs accumulated in `data/pipeline.md`. The user adds URLs whene
 - **PDF**: If the URL points to a PDF, read it directly with the Read tool
 - **`local:` prefix**: Read the local file. Example: `local:jds/linkedin-pm-ai.md` → read `jds/linkedin-pm-ai.md`
 
-## JD file naming
+## JD file naming and format
 
-Save raw JD text as: `jds/{company-slug}-{role-slug}.md`
+Save as: `jds/{company-slug}-{role-slug}.md`
 
 - Use the same slug conventions as report filenames: lowercase, hyphens, ASCII only
 - Example: `Braintrust · Senior ML Engineer` → `jds/braintrust-senior-ml-engineer.md`
-- File format: plain markdown — paste the full JD text as-is, preceded by a single frontmatter block:
+- If a `local:` URL was already pointing to an existing file in `jds/`, do not overwrite it — just update the `report` frontmatter field.
+
+File structure: **two parts separated by `---`**
 
 ```markdown
 ---
@@ -58,11 +60,37 @@ fetched: YYYY-MM-DD
 report: reports/{num}-{company-slug}-{date}.md
 ---
 
-{full JD text here}
+# {Job Title}
+
+**Company:** ...
+**Location:** ...
+**Employment Type:** ...
+
+## About the Company
+...
+
+## Role Description
+...
+
+## Key Responsibilities
+- ...
+
+## Required Qualifications
+- ...
+
+## Compensation
+- ...
+
+---
+
+## Raw JD
+
+{verbatim text from the page, exactly as fetched — no edits}
 ```
 
+- The structured section above `---` is a clean markdown summary (reformatted for readability).
+- The `## Raw JD` section below `---` is the verbatim text captured from the page snapshot, preserved exactly.
 - The `report` field links the saved JD back to its evaluation. Fill it in after the report is created.
-- If a `local:` URL was already pointing to an existing file in `jds/`, do not overwrite it — just update the `report` frontmatter field.
 
 ## Auto-numbering
 

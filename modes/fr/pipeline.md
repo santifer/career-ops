@@ -47,6 +47,12 @@ Traite les URLs d'offres accumulees dans `data/pipeline.md`. Le candidat ajoute 
 - **Welcome to the Jungle / Indeed FR / APEC** : Portails francophones courants. Playwright gere bien les cookie banners
 - **France Travail (ex-Pole emploi)** : Offres structurees, bien lisibles par machine. WebFetch suffit generalement
 
+## Format du fichier JD sauvegarde
+
+Nom de fichier : `jds/{entreprise-slug}-{role-slug}.md` — minuscules, tirets, ASCII.
+
+Deux parties separees par `---` : en haut un resume structure en markdown, en bas `## Raw JD` avec le texte verbatim capture sur la page, sans modification.
+
 ## Numerotation automatique
 
 1. Lister tous les fichiers dans `reports/`

@@ -47,6 +47,12 @@ Verarbeitet URLs von Stellenanzeigen, die in `data/pipeline.md` gesammelt wurden
 - **StepStone / XING / kununu**: Häufig deutscher Markt, oft Cookie-Banner. Playwright kann in Snapshot scrollen, um den Anzeigentext zu erfassen
 - **Bundesagentur für Arbeit (arbeitsagentur.de)**: Strukturierte Stellenanzeigen, gut maschinenlesbar. WebFetch reicht meist
 
+## Dateiformat für gespeicherte Stellenanzeigen
+
+Dateiname: `jds/{firma-slug}-{rolle-slug}.md` — Kleinbuchstaben, Bindestriche, ASCII.
+
+Zwei Teile, getrennt durch `---`: oben eine strukturierte Markdown-Zusammenfassung, unten `## Raw JD` mit dem verbatim-Text aus dem Seiteninhalt, unverändert.
+
 ## Automatische Nummerierung
 
 1. Alle Dateien in `reports/` listen

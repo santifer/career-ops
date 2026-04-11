@@ -48,6 +48,12 @@ Processa URLs de vagas acumuladas em `data/pipeline.md`. O candidato adiciona UR
 - **Vagas.com.br / InfoJobs / Catho**: Portais brasileiros, geralmente acessiveis via WebFetch
 - **LinkedIn BR**: Mesmas restricoes do LinkedIn global — pode exigir login
 
+## Formato do arquivo JD salvo
+
+Nome do arquivo: `jds/{empresa-slug}-{vaga-slug}.md` — minusculas, hifens, ASCII.
+
+Duas partes separadas por `---`: acima um resumo estruturado em markdown, abaixo `## Raw JD` com o texto verbatim capturado da pagina, sem edicoes.
+
 ## Numeracao automatica
 
 1. Listar todos os arquivos em `reports/`
