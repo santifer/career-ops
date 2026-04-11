@@ -156,7 +156,7 @@ You paste a job URL or description
 
 ## Pre-configured Portals
 
-The scanner comes with **45+ companies** ready to scan and **19 search queries** across major job boards. Copy `templates/portals.example.yml` to `portals.yml` and add your own:
+The scanner comes with **45+ companies** ready to scan and **45+ search queries** across major job boards, including Korean sources. Copy `templates/portals.example.yml` to `portals.yml` and add your own:
 
 **AI Labs:** Anthropic, OpenAI, Mistral, Cohere, LangChain, Pinecone
 **Voice AI:** ElevenLabs, PolyAI, Parloa, Hume AI, Deepgram, Vapi, Bland AI
@@ -167,7 +167,7 @@ The scanner comes with **45+ companies** ready to scan and **19 search queries**
 **Automation:** n8n, Zapier, Make.com
 **European:** Factorial, Attio, Tinybird, Clarity AI, Travelperk
 
-**Job boards searched:** Ashby, Greenhouse, Lever, Wellfound, Workable, RemoteFront
+**Job boards searched:** Ashby, Greenhouse, Lever, Wellfound, Workable, RemoteFront, Wanted, Saramin, JobKorea, Jumpit
 
 ## Dashboard TUI
 
