@@ -3,15 +3,16 @@
 /**
  * check-liveness.mjs — Job posting liveness + freshness checker
  *
- * Tests whether job posting URLs are still active AND fresh.
- * Two modes:
- *   - default:    Playwright-based (renders SPAs, follows redirects, sees innerText)
- *   - --fetch-mode: HTTP-only (no JS, no browser; for batch workers / claude -p)
+ * Two execution modes:
+ *   - default:    Playwright (renders SPAs, follows redirects, sees innerText)
+ *   - --fetch-mode: HTTP-only via fetch() (no JS, no browser; for batch workers)
  *
- * Freshness (NEW):
- *   Extracts `datePosted` from JSON-LD metadata or visible text and classifies
- *   the posting as fresh / stale / expired against thresholds in `portals.yml`.
- *   Use --classify or --json to consume the freshness result.
+ * Liveness comes from `classifyLiveness` in liveness-core.mjs.
+ * Freshness comes from `classifyFreshness` in liveness-core.mjs.
+ *
+ * LinkedIn ToS: per CONTRIBUTING.md, fetch-mode never makes HTTP requests
+ * to linkedin.com. The LinkedIn URL ID heuristic catches old postings at
+ * zero network cost; recent LinkedIn URLs in fetch mode return `unverified`.
  *
  * Usage:
  *   node check-liveness.mjs <url1> [url2] ...
@@ -26,253 +27,18 @@
  */
 
 import { chromium } from 'playwright';
-import { readFile, readFileSync, existsSync } from 'fs';
-import { readFile as readFileAsync } from 'fs/promises';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-// ─────────────────────────────────────────────────────────────────────
-// Liveness patterns (used by both Playwright and fetch modes)
-// ─────────────────────────────────────────────────────────────────────
-
-const EXPIRED_PATTERNS = [
-  /job (is )?no longer available/i,
-  /job.*no longer open/i,           // Greenhouse: "The job you are looking for is no longer open."
-  /position has been filled/i,
-  /this job has expired/i,
-  /job posting has expired/i,
-  /no longer accepting applications/i,
-  /this (position|role|job) (is )?no longer/i,
-  /this job (listing )?is closed/i,
-  /job (listing )?not found/i,
-  /the page you are looking for doesn.t exist/i, // Workday /job/ 404
-  /\d+\s+jobs?\s+found/i,           // Workday: landed on listing page ("663 JOBS FOUND") instead of a specific job
-  /search for jobs page is loaded/i, // Workday SPA indicator for listing page
-  /diese stelle (ist )?(nicht mehr|bereits) besetzt/i,
-  /offre (expirée|n'est plus disponible)/i,
-];
-
-// URL patterns that indicate an ATS has redirected away from the job (closed/expired)
-const EXPIRED_URL_PATTERNS = [
-  /[?&]error=true/i,   // Greenhouse redirect on closed jobs
-];
-
-const APPLY_PATTERNS = [
-  /\bapply\b/i,          // catches "Apply", "Apply Now", "Apply for this Job"
-  /\bsolicitar\b/i,
-  /\bbewerben\b/i,
-  /\bpostuler\b/i,
-  /submit application/i,
-  /easy apply/i,
-  /start application/i,  // Ashby
-  /ich bewerbe mich/i,   // German Greenhouse
-];
-
-// Below this length the page is probably just nav/footer (closed ATS page)
-const MIN_CONTENT_CHARS = 300;
+import { readFile } from 'fs/promises';
+import {
+  classifyLiveness,
+  classifyFreshness,
+  extractPostingDate,
+  linkedinIdToYear,
+  ageInDays,
+  loadFreshnessConfig,
+} from './liveness-core.mjs';
 
 // ─────────────────────────────────────────────────────────────────────
-// Freshness: defaults + config loader
-// ─────────────────────────────────────────────────────────────────────
-
-const FRESHNESS_DEFAULTS = {
-  max_age_days: 60,        // Hard skip — don't even evaluate
-  warn_age_days: 30,       // Evaluate but flag as stale (Red Flags penalty)
-  linkedin_suspect: true,  // Treat LinkedIn search-cache results as unverified
-  require_date: false,     // If true, missing date = uncertain (strict mode)
-};
-
-/**
- * Read `freshness:` block from portals.yml. Falls back to defaults.
- * Minimal parser — only handles flat key:value pairs under `freshness:`.
- * Avoids adding a YAML dependency.
- */
-function loadFreshnessConfig() {
-  const portalsPath = join(__dirname, 'portals.yml');
-  if (!existsSync(portalsPath)) return { ...FRESHNESS_DEFAULTS };
-
-  try {
-    const text = readFileSync(portalsPath, 'utf-8');
-    const block = text.match(/^freshness:\s*\n((?:[ \t]+.+\n?)+)/m);
-    if (!block) return { ...FRESHNESS_DEFAULTS };
-
-    const cfg = { ...FRESHNESS_DEFAULTS };
-    const lines = block[1].split('\n');
-    for (const line of lines) {
-      const m = line.match(/^[ \t]+(\w+):\s*(.+?)\s*(?:#.*)?$/);
-      if (!m) continue;
-      const key = m[1];
-      let val = m[2].trim();
-      if (val === 'true') val = true;
-      else if (val === 'false') val = false;
-      else if (/^\d+$/.test(val)) val = parseInt(val, 10);
-      else val = val.replace(/^["']|["']$/g, '');
-      cfg[key] = val;
-    }
-    return cfg;
-  } catch {
-    return { ...FRESHNESS_DEFAULTS };
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────
-// Date extraction (JSON-LD primary, visible text fallback)
-// ─────────────────────────────────────────────────────────────────────
-
-/**
- * Extract `datePosted` from raw HTML.
- * Priority:
- *   1. JSON-LD <script type="application/ld+json"> with `datePosted`
- *   2. Visible text "Posted on YYYY-MM-DD" / "Posted Mon DD, YYYY"
- *   3. Visible text "Posted N days/months/weeks ago"
- *   4. Inline meta tags ("datePosted":"...")
- * Returns Date | null.
- */
-function extractPostingDate(html) {
-  if (!html || typeof html !== 'string') return null;
-
-  // 1. JSON-LD blocks
-  const jsonLdRegex = /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
-  let match;
-  while ((match = jsonLdRegex.exec(html)) !== null) {
-    const block = match[1].trim();
-    try {
-      const data = JSON.parse(block);
-      const items = Array.isArray(data) ? data : [data];
-      for (const item of items) {
-        const found = findDatePostedDeep(item);
-        if (found) {
-          const d = new Date(found);
-          if (!isNaN(d)) return d;
-        }
-      }
-    } catch {
-      // Malformed JSON-LD — fall through to other strategies
-    }
-  }
-
-  // 2. Inline "datePosted":"..." (covers minified embeds outside JSON-LD)
-  const inline = html.match(/"datePosted"\s*:\s*"([^"]+)"/);
-  if (inline) {
-    const d = new Date(inline[1]);
-    if (!isNaN(d)) return d;
-  }
-
-  // 3. Visible text patterns
-  const isoMatch = html.match(/Posted\s+(?:on\s+)?(\d{4}-\d{2}-\d{2})/i);
-  if (isoMatch) {
-    const d = new Date(isoMatch[1]);
-    if (!isNaN(d)) return d;
-  }
-
-  const longMatch = html.match(/Posted\s+(?:on\s+)?((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{1,2},?\s+\d{4})/i);
-  if (longMatch) {
-    const d = new Date(longMatch[1]);
-    if (!isNaN(d)) return d;
-  }
-
-  const daysAgo = html.match(/Posted\s+(\d+)\s+days?\s+ago/i);
-  if (daysAgo) {
-    const d = new Date();
-    d.setDate(d.getDate() - parseInt(daysAgo[1], 10));
-    return d;
-  }
-
-  const weeksAgo = html.match(/Posted\s+(\d+)\s+weeks?\s+ago/i);
-  if (weeksAgo) {
-    const d = new Date();
-    d.setDate(d.getDate() - parseInt(weeksAgo[1], 10) * 7);
-    return d;
-  }
-
-  const monthsAgo = html.match(/Posted\s+(\d+)\s+months?\s+ago/i);
-  if (monthsAgo) {
-    const d = new Date();
-    d.setMonth(d.getMonth() - parseInt(monthsAgo[1], 10));
-    return d;
-  }
-
-  return null;
-}
-
-/** Recursively walk a JSON-LD object looking for a `datePosted` field. */
-function findDatePostedDeep(obj, depth = 0) {
-  if (depth > 6 || obj == null) return null;
-  if (typeof obj !== 'object') return null;
-  if (typeof obj.datePosted === 'string') return obj.datePosted;
-  if (Array.isArray(obj)) {
-    for (const item of obj) {
-      const found = findDatePostedDeep(item, depth + 1);
-      if (found) return found;
-    }
-    return null;
-  }
-  for (const key of Object.keys(obj)) {
-    const found = findDatePostedDeep(obj[key], depth + 1);
-    if (found) return found;
-  }
-  return null;
-}
-
-// ─────────────────────────────────────────────────────────────────────
-// LinkedIn URL ID year heuristic
-// ─────────────────────────────────────────────────────────────────────
-
-/**
- * LinkedIn job IDs are roughly sequential. Returns the approximate year
- * the posting was created, or null if URL doesn't match LinkedIn format.
- *
- * Calibration table — recalibrate yearly. Buckets are conservative
- * (round down) so we err on flagging fresh postings as stale rather than
- * the reverse.
- */
-function linkedinIdToYear(url) {
-  if (!url || typeof url !== 'string') return null;
-  const m = url.match(/linkedin\.com\/jobs\/view\/[^?#]*?-(\d{8,})/i);
-  if (!m) return null;
-  const id = parseInt(m[1], 10);
-  if (!Number.isFinite(id)) return null;
-
-  if (id < 3_000_000_000) return 2020;
-  if (id < 3_500_000_000) return 2021;
-  if (id < 3_800_000_000) return 2022;
-  if (id < 4_100_000_000) return 2023;
-  if (id < 4_400_000_000) return 2024;
-  return 2025;
-}
-
-// ─────────────────────────────────────────────────────────────────────
-// Freshness classification
-// ─────────────────────────────────────────────────────────────────────
-
-function ageInDays(date) {
-  if (!date) return null;
-  const ms = Date.now() - date.getTime();
-  return Math.floor(ms / (1000 * 60 * 60 * 24));
-}
-
-/**
- * Returns "fresh" | "stale" | "expired" | "unverified"
- *   fresh:      age <= warn_age_days OR no date and require_date is false
- *   stale:      warn < age <= max_age_days
- *   expired:    age > max_age_days
- *   unverified: no date and require_date is true
- */
-function classifyFreshness(date, config) {
-  if (date == null) {
-    return config.require_date ? 'unverified' : 'fresh';
-  }
-  const days = ageInDays(date);
-  if (days > config.max_age_days) return 'expired';
-  if (days > config.warn_age_days) return 'stale';
-  return 'fresh';
-}
-
-// ─────────────────────────────────────────────────────────────────────
-// Playwright check (existing behavior, extended with date extraction)
+// Playwright check (santifer's logic + freshness layer)
 // ─────────────────────────────────────────────────────────────────────
 
 async function checkUrlPlaywright(page, url, config) {
@@ -294,52 +60,87 @@ async function checkUrlPlaywright(page, url, config) {
 
   try {
     const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 15000 });
-
     const status = response?.status() ?? 0;
-    if (status === 404 || status === 410) {
-      return { url, result: 'expired', reason: `HTTP ${status}`, datePosted: null, ageInDays: null, freshness: 'expired' };
-    }
 
-    await page.waitForTimeout(2000); // SPA hydration
+    // Give SPAs (Ashby, Lever, Workday) time to hydrate
+    await page.waitForTimeout(2000);
 
     const finalUrl = page.url();
-    for (const pattern of EXPIRED_URL_PATTERNS) {
-      if (pattern.test(finalUrl)) {
-        return { url, result: 'expired', reason: `redirect to ${finalUrl}`, datePosted: null, ageInDays: null, freshness: 'expired' };
-      }
-    }
-
-    // Get full HTML for date extraction
+    const bodyText = await page.evaluate(() => document.body?.innerText ?? '');
     const html = await page.content();
+
+    // Extract apply controls — santifer's improved logic that filters out
+    // nav/header/footer (fixes the Workday split-view false-positive bug)
+    const applyControls = await page.evaluate(() => {
+      const candidates = Array.from(
+        document.querySelectorAll('a, button, input[type="submit"], input[type="button"], [role="button"]')
+      );
+
+      return candidates
+        .filter((element) => {
+          if (element.closest('nav, header, footer')) return false;
+          if (element.closest('[aria-hidden="true"]')) return false;
+
+          const style = window.getComputedStyle(element);
+          if (style.display === 'none' || style.visibility === 'hidden') return false;
+          if (!element.getClientRects().length) return false;
+
+          return Array.from(element.getClientRects()).some((rect) => rect.width > 0 && rect.height > 0);
+        })
+        .map((element) => {
+          const label = [
+            element.innerText,
+            element.value,
+            element.getAttribute('aria-label'),
+            element.getAttribute('title'),
+          ]
+            .filter(Boolean)
+            .join(' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+
+          return label;
+        })
+        .filter(Boolean);
+    });
+
+    // Liveness from santifer's classifier
+    const liveness = classifyLiveness({ status, finalUrl, bodyText, applyControls });
+
+    // Freshness layer — extract date from rendered HTML
     const datePosted = extractPostingDate(html);
     const days = ageInDays(datePosted);
     const freshness = classifyFreshness(datePosted, config);
+    const dateStr = datePosted?.toISOString().slice(0, 10) ?? null;
 
-    const bodyText = await page.evaluate(() => document.body?.innerText ?? '');
-
-    // Apply button is the strongest positive signal
-    if (APPLY_PATTERNS.some(p => p.test(bodyText))) {
-      // Override liveness with freshness if posting is too old
-      if (freshness === 'expired') {
-        return { url, result: 'expired', reason: `posting is ${days}d old (max: ${config.max_age_days})`, datePosted: datePosted?.toISOString().slice(0, 10), ageInDays: days, freshness };
-      }
-      return { url, result: 'active', reason: 'apply button detected', datePosted: datePosted?.toISOString().slice(0, 10) ?? null, ageInDays: days, freshness };
+    // If liveness says expired, that wins (URL is dead, age is moot)
+    if (liveness.result === 'expired') {
+      return { url, ...liveness, datePosted: dateStr, ageInDays: days, freshness: 'expired' };
     }
 
-    for (const pattern of EXPIRED_PATTERNS) {
-      if (pattern.test(bodyText)) {
-        return { url, result: 'expired', reason: `pattern matched: ${pattern.source}`, datePosted: datePosted?.toISOString().slice(0, 10) ?? null, ageInDays: days, freshness: 'expired' };
-      }
+    // If freshness says expired, override active liveness — too old to bother
+    if (freshness === 'expired') {
+      return {
+        url,
+        result: 'expired',
+        reason: `posting is ${days}d old (max: ${config.max_age_days})`,
+        datePosted: dateStr,
+        ageInDays: days,
+        freshness,
+      };
     }
 
-    if (bodyText.trim().length < MIN_CONTENT_CHARS) {
-      return { url, result: 'expired', reason: 'insufficient content — likely nav/footer only', datePosted: null, ageInDays: null, freshness: 'expired' };
-    }
-
-    return { url, result: 'uncertain', reason: 'content present but no apply button found', datePosted: datePosted?.toISOString().slice(0, 10) ?? null, ageInDays: days, freshness };
+    return { url, ...liveness, datePosted: dateStr, ageInDays: days, freshness };
 
   } catch (err) {
-    return { url, result: 'expired', reason: `navigation error: ${err.message.split('\n')[0]}`, datePosted: null, ageInDays: null, freshness: 'expired' };
+    return {
+      url,
+      result: 'expired',
+      reason: `navigation error: ${err.message.split('\n')[0]}`,
+      datePosted: null,
+      ageInDays: null,
+      freshness: 'expired',
+    };
   }
 }
 
@@ -348,20 +149,33 @@ async function checkUrlPlaywright(page, url, config) {
 // ─────────────────────────────────────────────────────────────────────
 
 async function checkUrlFetch(url, config) {
-  // LinkedIn ID heuristic — fast pre-filter
-  const linkedinYear = linkedinIdToYear(url);
-  if (linkedinYear !== null) {
-    const ageYears = new Date().getFullYear() - linkedinYear;
-    if (ageYears >= 2) {
-      return {
-        url,
-        result: 'expired',
-        reason: `LinkedIn URL ID maps to ~${linkedinYear} (${ageYears}y old)`,
-        datePosted: null,
-        ageInDays: ageYears * 365,
-        freshness: 'expired',
-      };
+  // LinkedIn ToS guard — never hit linkedin.com directly
+  if (/linkedin\.com\//i.test(url)) {
+    const linkedinYear = linkedinIdToYear(url);
+    if (linkedinYear !== null) {
+      const ageYears = new Date().getFullYear() - linkedinYear;
+      if (ageYears >= 2) {
+        return {
+          url,
+          result: 'expired',
+          reason: `LinkedIn URL ID maps to ~${linkedinYear} (${ageYears}y old)`,
+          datePosted: null,
+          ageInDays: ageYears * 365,
+          freshness: 'expired',
+        };
+      }
     }
+    // Recent LinkedIn URL — heuristic doesn't catch it. Per CONTRIBUTING.md
+    // we don't fetch LinkedIn directly. Return uncertain so the caller can
+    // decide (Playwright path is OK if user runs it interactively).
+    return {
+      url,
+      result: 'uncertain',
+      reason: 'LinkedIn fetch blocked by ToS — use Playwright mode if needed',
+      datePosted: null,
+      ageInDays: null,
+      freshness: 'unverified',
+    };
   }
 
   try {
@@ -376,24 +190,15 @@ async function checkUrlFetch(url, config) {
     });
 
     const status = response.status;
-    if (status === 404 || status === 410) {
-      return { url, result: 'expired', reason: `HTTP ${status}`, datePosted: null, ageInDays: null, freshness: 'expired' };
-    }
-
     const finalUrl = response.url;
-    for (const pattern of EXPIRED_URL_PATTERNS) {
-      if (pattern.test(finalUrl)) {
-        return { url, result: 'expired', reason: `redirect to ${finalUrl}`, datePosted: null, ageInDays: null, freshness: 'expired' };
-      }
-    }
-
     const html = await response.text();
+
     const datePosted = extractPostingDate(html);
     const days = ageInDays(datePosted);
     const freshness = classifyFreshness(datePosted, config);
     const dateStr = datePosted?.toISOString().slice(0, 10) ?? null;
 
-    // Strip HTML tags for liveness pattern matching (rough but adequate)
+    // Strip HTML tags for liveness pattern matching
     const bodyText = html
       .replace(/<script[\s\S]*?<\/script>/gi, ' ')
       .replace(/<style[\s\S]*?<\/style>/gi, ' ')
@@ -401,7 +206,7 @@ async function checkUrlFetch(url, config) {
       .replace(/\s+/g, ' ')
       .trim();
 
-    // ── Strongest positive: JSON-LD datePosted is present + fresh ──
+    // Strongest positive: JSON-LD datePosted is present + fresh ──
     // ATS platforms only embed JSON-LD when the job is live. SPAs (Ashby,
     // Lever, Workday) have minimal stripped text but rich JSON-LD payloads,
     // so this short-circuit avoids false "insufficient content" rejections.
@@ -412,25 +217,26 @@ async function checkUrlFetch(url, config) {
       return { url, result: 'active', reason: `JSON-LD datePosted (${days}d old)`, datePosted: dateStr, ageInDays: days, freshness };
     }
 
-    // ── No date — fall back to body text signals ──
-    if (APPLY_PATTERNS.some(p => p.test(bodyText))) {
-      return { url, result: 'active', reason: 'apply button detected', datePosted: null, ageInDays: null, freshness };
-    }
+    // No date — fall back to liveness classifier with empty applyControls
+    // (fetch-mode can't reliably extract them without rendering)
+    const liveness = classifyLiveness({
+      status,
+      finalUrl,
+      bodyText,
+      applyControls: [], // fetch-mode has no DOM, so no apply controls
+    });
 
-    for (const pattern of EXPIRED_PATTERNS) {
-      if (pattern.test(bodyText)) {
-        return { url, result: 'expired', reason: `pattern matched: ${pattern.source}`, datePosted: null, ageInDays: null, freshness: 'expired' };
-      }
-    }
-
-    if (bodyText.length < MIN_CONTENT_CHARS) {
-      return { url, result: 'expired', reason: 'insufficient content — likely nav/footer only', datePosted: null, ageInDays: null, freshness: 'expired' };
-    }
-
-    return { url, result: 'uncertain', reason: 'content present but no apply button or date found', datePosted: null, ageInDays: null, freshness };
+    return { url, ...liveness, datePosted: null, ageInDays: null, freshness };
 
   } catch (err) {
-    return { url, result: 'expired', reason: `fetch error: ${err.message.split('\n')[0]}`, datePosted: null, ageInDays: null, freshness: 'expired' };
+    return {
+      url,
+      result: 'expired',
+      reason: `fetch error: ${err.message.split('\n')[0]}`,
+      datePosted: null,
+      ageInDays: null,
+      freshness: 'expired',
+    };
   }
 }
 
@@ -474,10 +280,10 @@ async function main() {
 
   let urls;
   if (fileIdx !== -1) {
-    const text = await readFileAsync(argv[fileIdx + 1], 'utf-8');
+    const text = await readFile(argv[fileIdx + 1], 'utf-8');
     urls = text.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#'));
   } else {
-    urls = argv.filter(a => !a.startsWith('--') && a !== argv[fileIdx + 1]);
+    urls = argv.filter((a, i) => !a.startsWith('--') && i !== fileIdx + 1);
   }
 
   if (urls.length === 0) {
@@ -493,14 +299,11 @@ async function main() {
   }
 
   let active = 0, expired = 0, uncertain = 0, stale = 0;
-  const results = [];
 
   if (fetchMode) {
-    // Fetch mode — can run in parallel safely (no shared browser state)
-    const promises = urls.map(u => checkUrlFetch(u, config));
-    const fetched = await Promise.all(promises);
-    for (const r of fetched) {
-      results.push(r);
+    // Fetch mode — parallel-safe (no shared browser state)
+    const results = await Promise.all(urls.map(u => checkUrlFetch(u, config)));
+    for (const r of results) {
       formatter(r);
       if (r.result === 'active' && r.freshness !== 'stale') active++;
       else if (r.result === 'expired' || r.freshness === 'expired') expired++;
@@ -513,7 +316,6 @@ async function main() {
     const page = await browser.newPage();
     for (const url of urls) {
       const r = await checkUrlPlaywright(page, url, config);
-      results.push(r);
       formatter(r);
       if (r.result === 'active' && r.freshness !== 'stale') active++;
       else if (r.result === 'expired' || r.freshness === 'expired') expired++;
@@ -530,20 +332,6 @@ async function main() {
 
   if (expired > 0 || uncertain > 0 || stale > 0) process.exit(1);
 }
-
-// ─────────────────────────────────────────────────────────────────────
-// Exports for tests
-// ─────────────────────────────────────────────────────────────────────
-
-export {
-  extractPostingDate,
-  linkedinIdToYear,
-  ageInDays,
-  classifyFreshness,
-  loadFreshnessConfig,
-  checkUrlFetch,
-  FRESHNESS_DEFAULTS,
-};
 
 // Only run main() when invoked directly, not when imported by tests
 if (import.meta.url === `file://${process.argv[1]}`) {

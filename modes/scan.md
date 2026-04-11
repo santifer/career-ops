@@ -93,7 +93,9 @@ Los niveles son aditivos — se ejecutan todos, los resultados se mezclan y dedu
 
    Los resultados de WebSearch pueden estar desactualizados (Google cachea resultados durante semanas o meses). Para evitar evaluar ofertas expiradas o stale, verificar cada URL nueva que provenga del Nivel 3. Los Niveles 1 y 2 son inherentemente en tiempo real y no requieren esta verificación.
 
-   **LinkedIn URL pre-filter (sin red):** Antes de cualquier fetch, si la URL es `linkedin.com/jobs/view/...-{id}`, comprobar el ID contra la heurística de año en `check-liveness.mjs` (`linkedinIdToYear`). Si el año mapeado es ≤ (año_actual − 1), descartar inmediatamente y registrar como `skipped_stale` sin gastar bandwidth.
+   **LinkedIn URL pre-filter (sin red, ToS-safe):** Antes de cualquier fetch, si la URL es `linkedin.com/jobs/view/...-{id}`, comprobar el ID contra `linkedinIdToYear()` en `liveness-core.mjs`. Si el año mapeado es ≤ (año_actual − 2), descartar inmediatamente y registrar como `skipped_stale` sin gastar bandwidth. Para LinkedIn URLs recientes en batch mode, NO hacer fetch directo (per CONTRIBUTING.md "no LinkedIn scraping" rule) — marcar como `unverified` y dejar que el usuario verifique manualmente.
+
+   **Criterio de actividad** (santifer's spec): "Activa" requiere control visible de Apply/Submit/Solicitar **dentro del contenido principal**, NO en header/navbar/footer. La función `classifyLiveness` en `liveness-core.mjs` filtra automáticamente los apply controls que están dentro de `nav, header, footer` para evitar falsos positivos en layouts SPA tipo Workday.
 
    **Verificación principal — usar `check-liveness.mjs`:**
 

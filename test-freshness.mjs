@@ -24,7 +24,7 @@ import {
   classifyFreshness,
   loadFreshnessConfig,
   FRESHNESS_DEFAULTS,
-} from './check-liveness.mjs';
+} from './liveness-core.mjs';
 
 let pass = 0;
 let fail = 0;

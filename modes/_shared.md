@@ -36,9 +36,9 @@ The evaluation uses 6 blocks (A-F) with a global score of 1-5:
 | Red flags | Blockers, warnings (negative adjustments) |
 | **Global** | Weighted average of above |
 
-### Automatic Red Flags penalties
+### Automatic Red Flags penalties (freshness pre-filter)
 
-These adjustments are applied automatically based on data extracted by `check-liveness.mjs`. The evaluator does NOT need to score them manually — they're deductions on top of whatever Red Flags score the JD content warrants.
+These are **hard pipeline rules**, applied automatically by `check-liveness.mjs` / `liveness-core.mjs` before A-F evaluation begins. Block G below uses the same `datePosted` signal qualitatively; this section is the deterministic filter that runs first so the evaluator never sees postings that are clearly too old to bother with.
 
 | Condition | Penalty | Note in report |
 |-----------|---------|----------------|
@@ -47,11 +47,41 @@ These adjustments are applied automatically based on data extracted by `check-li
 | Missing `datePosted` and `freshness.require_date: false` | none — flag header as `unverified` | "posting date unverified" |
 | Missing `datePosted` and `freshness.require_date: true` | **Skip entirely** — pipeline.md filters before scoring | n/a (no report) |
 
+The same `datePosted` value also feeds Block G's "Posting age" signal below — one extraction, two consumers. Configure thresholds in `portals.yml` `freshness:` block.
+
 **Score interpretation:**
 - 4.5+ → Strong match, recommend applying immediately
 - 4.0-4.4 → Good match, worth applying
 - 3.5-3.9 → Decent but not ideal, apply only if specific reason
 - Below 3.5 → Recommend against applying (see Ethical Use in CLAUDE.md)
+
+## Posting Legitimacy (Block G)
+
+Block G assesses whether a posting is likely a real, active opening. It does NOT affect the 1-5 global score -- it is a separate qualitative assessment.
+
+**Three tiers:**
+- **High Confidence** -- Real, active opening (most signals positive)
+- **Proceed with Caution** -- Mixed signals, worth noting (some concerns)
+- **Suspicious** -- Multiple ghost indicators, user should investigate first
+
+**Key signals (weighted by reliability):**
+
+| Signal | Source | Reliability | Notes |
+|--------|--------|-------------|-------|
+| Posting age | Page snapshot | High | Under 30d=good, 30-60d=mixed, 60d+=concerning (adjusted for role type) |
+| Apply button active | Page snapshot | High | Direct observable fact |
+| Tech specificity in JD | JD text | Medium | Generic JDs correlate with ghost postings but also with poor writing |
+| Requirements realism | JD text | Medium | Contradictions are a strong signal, vagueness is weaker |
+| Recent layoff news | WebSearch | Medium | Must consider department, timing, and company size |
+| Reposting pattern | scan-history.tsv | Medium | Same role reposted 2+ times in 90 days is concerning |
+| Salary transparency | JD text | Low | Jurisdiction-dependent, many legitimate reasons to omit |
+| Role-company fit | Qualitative | Low | Subjective, use only as supporting signal |
+
+**Ethical framing (MANDATORY):**
+- This helps users prioritize time on real opportunities
+- NEVER present findings as accusations of dishonesty
+- Present signals and let the user decide
+- Always note legitimate explanations for concerning signals
 
 ## Archetype Detection
 
