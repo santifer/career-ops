@@ -14,7 +14,7 @@
 import { execSync } from 'child_process';
 import { readFileSync, existsSync, readdirSync } from 'fs';
 import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = __dirname;
@@ -79,10 +79,46 @@ for (const { name, allowFail } of scripts) {
   }
 }
 
-// ── 3. DASHBOARD BUILD ──────────────────────────────────────────
+// ── 3. LIVENESS CLASSIFICATION ──────────────────────────────────
+
+console.log('\n3. Liveness classification');
+
+try {
+  const { classifyLiveness } = await import(pathToFileURL(join(ROOT, 'liveness-core.mjs')).href);
+
+  const expiredChromeApply = classifyLiveness({
+    finalUrl: 'https://example.com/jobs/closed-role',
+    bodyText: 'Company Careers\nApply\nThe job you are looking for is no longer open.',
+    applyControls: [],
+  });
+  if (expiredChromeApply.result === 'expired') {
+    pass('Expired pages are not revived by nav/footer "Apply" text');
+  } else {
+    fail(`Expired page misclassified as ${expiredChromeApply.result}`);
+  }
+
+  const activeWorkdayPage = classifyLiveness({
+    finalUrl: 'https://example.workday.com/job/123',
+    bodyText: [
+      '663 JOBS FOUND',
+      'Senior AI Engineer',
+      'Join our applied AI team to ship production systems, partner with customers, and own delivery across evaluation, deployment, and reliability.',
+    ].join('\n'),
+    applyControls: ['Apply for this Job'],
+  });
+  if (activeWorkdayPage.result === 'active') {
+    pass('Visible apply controls still keep real job pages active');
+  } else {
+    fail(`Active job page misclassified as ${activeWorkdayPage.result}`);
+  }
+} catch (e) {
+  fail(`Liveness classification tests crashed: ${e.message}`);
+}
+
+// ── 4. DASHBOARD BUILD ──────────────────────────────────────────
 
 if (!QUICK) {
-  console.log('\n3. Dashboard build');
+  console.log('\n4. Dashboard build');
   const goBuild = run('cd dashboard && go build -o /tmp/career-dashboard-test . 2>&1');
   if (goBuild !== null) {
     pass('Dashboard compiles');
@@ -90,12 +126,12 @@ if (!QUICK) {
     fail('Dashboard build failed');
   }
 } else {
-  console.log('\n3. Dashboard build (skipped --quick)');
+  console.log('\n4. Dashboard build (skipped --quick)');
 }
 
-// ── 4. DATA CONTRACT ────────────────────────────────────────────
+// ── 5. DATA CONTRACT ────────────────────────────────────────────
 
-console.log('\n4. Data contract validation');
+console.log('\n5. Data contract validation');
 
 // Check system files exist
 const systemFiles = [
@@ -129,9 +165,9 @@ for (const f of userFiles) {
   }
 }
 
-// ── 5. PERSONAL DATA LEAK CHECK ─────────────────────────────────
+// ── 6. PERSONAL DATA LEAK CHECK ─────────────────────────────────
 
-console.log('\n5. Personal data leak check');
+console.log('\n6. Personal data leak check');
 
 const leakPatterns = [
   'Santiago', 'santifer.io', 'Santifer iRepair', 'Zinkee', 'ALMAS',
@@ -162,9 +198,9 @@ if (!leakFound) {
   pass('No personal data leaks outside allowed files');
 }
 
-// ── 6. ABSOLUTE PATH CHECK ──────────────────────────────────────
+// ── 7. ABSOLUTE PATH CHECK ──────────────────────────────────────
 
-console.log('\n6. Absolute path check');
+console.log('\n7. Absolute path check');
 
 const absPathResult = run(
   `grep -rn "/Users/" --include="*.mjs" --include="*.sh" --include="*.md" --include="*.go" --include="*.yml" . 2>/dev/null | grep -v node_modules | grep -v ".git/" | grep -v README.md | grep -v LICENSE | grep -v go.sum | grep -v CLAUDE.md | grep -v test-all.mjs`
@@ -177,9 +213,9 @@ if (!absPathResult) {
   }
 }
 
-// ── 7. MODE FILE INTEGRITY ──────────────────────────────────────
+// ── 8. MODE FILE INTEGRITY ──────────────────────────────────────
 
-console.log('\n7. Mode file integrity');
+console.log('\n8. Mode file integrity');
 
 const expectedModes = [
   '_shared.md', '_profile.template.md', 'oferta.md', 'pdf.md', 'scan.md',
@@ -203,9 +239,9 @@ if (shared.includes('_profile.md')) {
   fail('_shared.md does NOT reference _profile.md');
 }
 
-// ── 8. CLAUDE.md INTEGRITY ──────────────────────────────────────
+// ── 9. CLAUDE.md INTEGRITY ──────────────────────────────────────
 
-console.log('\n8. CLAUDE.md integrity');
+console.log('\n9. CLAUDE.md integrity');
 
 const claude = readFile('CLAUDE.md');
 const requiredSections = [
@@ -222,9 +258,9 @@ for (const section of requiredSections) {
   }
 }
 
-// ── 9. VERSION FILE ─────────────────────────────────────────────
+// ── 10. VERSION FILE ─────────────────────────────────────────────
 
-console.log('\n9. Version file');
+console.log('\n10. Version file');
 
 if (fileExists('VERSION')) {
   const version = readFile('VERSION').trim();
