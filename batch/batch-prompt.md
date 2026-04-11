@@ -2,7 +2,7 @@
 
 Eres un worker de evaluación de ofertas de empleo for the candidate (read name from config/profile.yml). Recibes una oferta (URL + JD text) y produces:
 
-1. Evaluación completa A-G (report .md)
+1. Evaluación completa A-F (report .md)
 2. PDF personalizado ATS-optimizado
 3. Línea de tracker para merge posterior
 
@@ -47,7 +47,19 @@ Eres un worker de evaluación de ofertas de empleo for the candidate (read name 
 2. Si el archivo está vacío o no existe, intenta obtener el JD desde `{{URL}}` con WebFetch
 3. Si ambos fallan, reporta error y termina
 
-### Paso 2 — Evaluación A-G
+### Paso 1.5 — Visa Pre-Filter (solo si config/visa.yml existe)
+
+Si `config/visa.yml` existe Y `sponsorship_mode` es `hard_filter`:
+1. Buscar keywords de sponsorship en el texto del JD (same keyword detection as oferta mode, using `config/sponsorship-keywords.yml`)
+2. Si `WONT_SPONSOR`:
+   - Escribir TSV con status `SKIP` y nota: "Auto-skipped: WONT_SPONSOR (hard_filter)"
+   - Escribir log entry: "SKIP: {company} - WONT_SPONSOR detected"
+   - NO continuar a Paso 2 -- terminar este job
+3. Si `WILL_SPONSOR` o `UNKNOWN`: continuar con Paso 2
+
+Nota: keyword detection solo necesita el texto del JD (no Playwright), asi que funciona en batch headless mode.
+
+### Paso 2 — Evaluación A-F
 
 Read `cv.md`. Ejecuta TODOS los bloques:
 
@@ -138,21 +150,30 @@ Top 5 cambios al CV + Top 5 cambios a LinkedIn.
 - 1 case study recomendado (cuál proyecto presentar y cómo)
 - Preguntas red-flag y cómo responderlas
 
-#### Bloque G — Posting Legitimacy
+#### Block G — Visa Sponsorship Analysis (solo si config/visa.yml existe)
 
-Analyze posting signals to assess whether this is a real, active opening.
+Si `config/visa.yml` existe:
+1. Clasificar JD: buscar keywords de sponsorship en el texto -> WILL_SPONSOR / WONT_SPONSOR / UNKNOWN (using `config/sponsorship-keywords.yml`)
+2. Buscar historial H-1B de la empresa en datos USCIS locales (using employer name + aliases)
+3. Calcular visa score compuesto (1-5): JD signals 30%, H-1B 30%, E-Verify 20% (neutral), company size 10%, STEM 10% (neutral)
+4. Aplicar penalidad si sponsorship_mode es score_penalty (-0.7 WONT_SPONSOR, -0.3 UNKNOWN)
 
-**Batch mode limitations:** Playwright is not available, so posting freshness signals (exact days posted, apply button state) cannot be directly verified. Mark these as "unverified (batch mode)."
+Incluir tabla de visa-friendliness en el report (same format as oferta mode Block G):
 
-**What IS available in batch mode:**
-1. **Description quality analysis** -- Full JD text is available. Analyze specificity, requirements realism, salary transparency, boilerplate ratio.
-2. **Company hiring signals** -- WebSearch queries for layoff/freeze news (combine with Block D comp research).
-3. **Reposting detection** -- Read `data/scan-history.tsv` to check for prior appearances.
-4. **Role market context** -- Qualitative assessment from JD content.
+```
+## G) Visa Sponsorship Analysis
 
-**Output format:** Same as interactive mode (Assessment tier + Signals table + Context Notes), but with a note that posting freshness is unverified.
+| Factor | Value | Score |
+|--------|-------|-------|
+| JD Sponsorship Signal | {classification} | {1-5}/5 |
+| H-1B Filing History | {summary} | {1-5}/5 |
+| E-Verify Status | Pending (Phase 5) | 3/5 |
+| Company Size Signal | {inferred} | {1-5}/5 |
+| STEM Job Match | Pending (Phase 5) | 3/5 |
+| **Visa-Friendliness** | **Composite** | **{X.X}/5** |
+```
 
-**Assessment:** Apply the same three tiers (High Confidence / Proceed with Caution / Suspicious), weighting available signals more heavily. If insufficient signals are available to make a determination, default to "Proceed with Caution" with a note about limited data.
+Si `config/visa.yml` NO existe, omitir este bloque.
 
 #### Score Global
 
@@ -182,7 +203,6 @@ Donde `{company-slug}` es el nombre de empresa en lowercase, sin espacios, con g
 **Fecha:** {{DATE}}
 **Arquetipo:** {detectado}
 **Score:** {X/5}
-**Legitimacy:** {High Confidence | Proceed with Caution | Suspicious}
 **URL:** {URL de la oferta original}
 **PDF:** career-ops/output/cv-candidate-{company-slug}-{{DATE}}.pdf
 **Batch ID:** {{ID}}
@@ -205,9 +225,6 @@ Donde `{company-slug}` es el nombre de empresa en lowercase, sin espacios, con g
 (contenido completo)
 
 ## F) Plan de Entrevistas
-(contenido completo)
-
-## G) Posting Legitimacy
 (contenido completo)
 
 ---
@@ -334,7 +351,8 @@ Al terminar, imprime por stdout un resumen JSON para que el orquestador lo parse
   "company": "{empresa}",
   "role": "{rol}",
   "score": {score_num},
-  "legitimacy": "{High Confidence|Proceed with Caution|Suspicious}",
+  "visa_score": {visa_score_num},
+  "visa_classification": "{WILL_SPONSOR|WONT_SPONSOR|UNKNOWN}",
   "pdf": "{ruta_pdf}",
   "report": "{ruta_report}",
   "error": null
@@ -350,6 +368,8 @@ Si algo falla:
   "company": "{empresa_o_unknown}",
   "role": "{rol_o_unknown}",
   "score": null,
+  "visa_score": null,
+  "visa_classification": null,
   "pdf": null,
   "report": "{ruta_report_si_existe}",
   "error": "{descripción_del_error}"

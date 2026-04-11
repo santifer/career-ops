@@ -72,6 +72,7 @@ Built by someone who used it to evaluate 740+ job offers, generate 100+ tailored
 | **Batch Processing** | Parallel evaluation with `claude -p` workers |
 | **Dashboard TUI** | Terminal UI to browse, filter, and sort your pipeline |
 | **Human-in-the-Loop** | AI evaluates and recommends, you decide and act. The system never submits an application -- you always have the final call |
+| **Visa Sponsorship Filter** | F-1/H-1B visa scoring: JD keyword detection, USCIS H-1B history lookup, composite 1-5 visa-friendliness score with hard-filter/penalty/info modes |
 | **Pipeline Integrity** | Automated merge, dedup, status normalization, health checks |
 
 ## Quick Start

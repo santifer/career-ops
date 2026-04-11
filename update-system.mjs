@@ -69,6 +69,10 @@ const SYSTEM_PATHS = [
   'CITATION.cff',
   '.github/',
   'package.json',
+  'config/visa.example.yml',
+  'config/employer-aliases.yml',
+  'config/sponsorship-keywords.yml',
+  'sponsorship-detect.mjs',
 ];
 
 // User layer paths — NEVER touch these (safety check)

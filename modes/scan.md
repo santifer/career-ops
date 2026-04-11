@@ -97,7 +97,7 @@ Los niveles son aditivos — se ejecutan todos, los resultados se mezclan y dedu
    a. `browser_navigate` a la URL
    b. `browser_snapshot` para leer el contenido
    c. Clasificar:
-      - **Activa**: título del puesto visible + descripción del rol + control visible de Apply/Submit/Solicitar dentro del contenido principal. No contar texto genérico de header/navbar/footer.
+      - **Activa**: título del puesto visible + descripción del rol + botón Apply/Submit/Solicitar
       - **Expirada** (cualquiera de estas señales):
         - URL final contiene `?error=true` (Greenhouse redirige así cuando la oferta está cerrada)
         - Página contiene: "job no longer available" / "no longer open" / "position has been filled" / "this job has expired" / "page not found"
@@ -143,6 +143,18 @@ https://...	2026-02-10	Greenhouse — SA	Junior Dev	BigCo	skipped_title
 https://...	2026-02-10	Ashby — AI PM	SA AI	OldCo	skipped_dup
 https://...	2026-02-10	WebSearch — AI PM	PM AI	ClosedCo	skipped_expired
 ```
+
+## Sponsorship Indicator (solo si config/visa.yml existe)
+
+Si visa features estan activas (config/visa.yml existe), agregar columna de sponsorship al output de scan:
+- Para cada oferta encontrada, si el titulo o snippet del job posting contiene keywords de sponsorship (from `config/sponsorship-keywords.yml`):
+  - Positive keywords found (e.g., "visa sponsorship", "will sponsor"): mostrar `[SPONSOR]`
+  - Negative keywords found (e.g., "will not sponsor", "security clearance required"): mostrar `[NO-SPNS]`
+  - No keywords found: mostrar `[?]`
+- Esta columna es SOLO indicativa -- NO filtrar ofertas. Todas se muestran al usuario.
+- El usuario decide cuales evaluar.
+
+Nota: el scan solo tiene acceso al titulo y snippet, no al JD completo. La deteccion completa de sponsorship ocurre durante la evaluacion (oferta/batch mode) cuando se obtiene el JD completo.
 
 ## Resumen de salida
 

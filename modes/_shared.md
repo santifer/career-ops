@@ -42,33 +42,24 @@ The evaluation uses 6 blocks (A-F) with a global score of 1-5:
 - 3.5-3.9 → Decent but not ideal, apply only if specific reason
 - Below 3.5 → Recommend against applying (see Ethical Use in CLAUDE.md)
 
-## Posting Legitimacy (Block G)
+### Visa-Friendliness (Block G) -- solo si config/visa.yml existe
 
-Block G assesses whether a posting is likely a real, active opening. It does NOT affect the 1-5 global score -- it is a separate qualitative assessment.
+Dimension adicional que evalua la probabilidad de sponsorship de visa:
+- Score compuesto 1-5 basado en: senales en JD (30%), historial H-1B (30%), E-Verify (20%), tamano de empresa (10%), match STEM (10%)
+- En modo `score_penalty`: el score global se ajusta con penalidades (-0.7 WONT_SPONSOR, -0.3 UNKNOWN)
+- En modo `info_only`: el Block G aparece en el report pero NO afecta el score global
+- En modo `hard_filter`: JDs WONT_SPONSOR se filtran antes de la evaluacion (pre-check en oferta.md/batch-prompt.md)
 
-**Three tiers:**
-- **High Confidence** -- Real, active opening (most signals positive)
-- **Proceed with Caution** -- Mixed signals, worth noting (some concerns)
-- **Suspicious** -- Multiple ghost indicators, user should investigate first
+Si config/visa.yml NO existe, esta dimension no se evalua y no aparece en el report.
 
-**Key signals (weighted by reliability):**
+Scripts:
+- `node sponsorship-detect.mjs --file <jd-file> --json` -- keyword detection
+- `node h1b-lookup.mjs <company> --json` -- H-1B employer history
+- `node visa-score.mjs --json` -- composite score calculation
 
-| Signal | Source | Reliability | Notes |
-|--------|--------|-------------|-------|
-| Posting age | Page snapshot | High | Under 30d=good, 30-60d=mixed, 60d+=concerning (adjusted for role type) |
-| Apply button active | Page snapshot | High | Direct observable fact |
-| Tech specificity in JD | JD text | Medium | Generic JDs correlate with ghost postings but also with poor writing |
-| Requirements realism | JD text | Medium | Contradictions are a strong signal, vagueness is weaker |
-| Recent layoff news | WebSearch | Medium | Must consider department, timing, and company size |
-| Reposting pattern | scan-history.tsv | Medium | Same role reposted 2+ times in 90 days is concerning |
-| Salary transparency | JD text | Low | Jurisdiction-dependent, many legitimate reasons to omit |
-| Role-company fit | Qualitative | Low | Subjective, use only as supporting signal |
+Report structure: Blocks A-F + G (Visa Sponsorship Analysis, if configured) + H (Draft Application Answers).
 
-**Ethical framing (MANDATORY):**
-- This helps users prioritize time on real opportunities
-- NEVER present findings as accusations of dishonesty
-- Present signals and let the user decide
-- Always note legitimate explanations for concerning signals
+---
 
 ## Archetype Detection
 

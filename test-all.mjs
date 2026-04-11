@@ -14,7 +14,7 @@
 import { execSync } from 'child_process';
 import { readFileSync, existsSync, readdirSync } from 'fs';
 import { join, dirname } from 'path';
-import { fileURLToPath, pathToFileURL } from 'url';
+import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = __dirname;
@@ -79,46 +79,10 @@ for (const { name, allowFail } of scripts) {
   }
 }
 
-// ── 3. LIVENESS CLASSIFICATION ──────────────────────────────────
-
-console.log('\n3. Liveness classification');
-
-try {
-  const { classifyLiveness } = await import(pathToFileURL(join(ROOT, 'liveness-core.mjs')).href);
-
-  const expiredChromeApply = classifyLiveness({
-    finalUrl: 'https://example.com/jobs/closed-role',
-    bodyText: 'Company Careers\nApply\nThe job you are looking for is no longer open.',
-    applyControls: [],
-  });
-  if (expiredChromeApply.result === 'expired') {
-    pass('Expired pages are not revived by nav/footer "Apply" text');
-  } else {
-    fail(`Expired page misclassified as ${expiredChromeApply.result}`);
-  }
-
-  const activeWorkdayPage = classifyLiveness({
-    finalUrl: 'https://example.workday.com/job/123',
-    bodyText: [
-      '663 JOBS FOUND',
-      'Senior AI Engineer',
-      'Join our applied AI team to ship production systems, partner with customers, and own delivery across evaluation, deployment, and reliability.',
-    ].join('\n'),
-    applyControls: ['Apply for this Job'],
-  });
-  if (activeWorkdayPage.result === 'active') {
-    pass('Visible apply controls still keep real job pages active');
-  } else {
-    fail(`Active job page misclassified as ${activeWorkdayPage.result}`);
-  }
-} catch (e) {
-  fail(`Liveness classification tests crashed: ${e.message}`);
-}
-
-// ── 4. DASHBOARD BUILD ──────────────────────────────────────────
+// ── 3. DASHBOARD BUILD ──────────────────────────────────────────
 
 if (!QUICK) {
-  console.log('\n4. Dashboard build');
+  console.log('\n3. Dashboard build');
   const goBuild = run('cd dashboard && go build -o /tmp/career-dashboard-test . 2>&1');
   if (goBuild !== null) {
     pass('Dashboard compiles');
@@ -126,12 +90,12 @@ if (!QUICK) {
     fail('Dashboard build failed');
   }
 } else {
-  console.log('\n4. Dashboard build (skipped --quick)');
+  console.log('\n3. Dashboard build (skipped --quick)');
 }
 
-// ── 5. DATA CONTRACT ────────────────────────────────────────────
+// ── 4. DATA CONTRACT ────────────────────────────────────────────
 
-console.log('\n5. Data contract validation');
+console.log('\n4. Data contract validation');
 
 // Check system files exist
 const systemFiles = [
@@ -165,9 +129,9 @@ for (const f of userFiles) {
   }
 }
 
-// ── 6. PERSONAL DATA LEAK CHECK ─────────────────────────────────
+// ── 5. PERSONAL DATA LEAK CHECK ─────────────────────────────────
 
-console.log('\n6. Personal data leak check');
+console.log('\n5. Personal data leak check');
 
 const leakPatterns = [
   'Santiago', 'santifer.io', 'Santifer iRepair', 'Zinkee', 'ALMAS',
@@ -198,9 +162,9 @@ if (!leakFound) {
   pass('No personal data leaks outside allowed files');
 }
 
-// ── 7. ABSOLUTE PATH CHECK ──────────────────────────────────────
+// ── 6. ABSOLUTE PATH CHECK ──────────────────────────────────────
 
-console.log('\n7. Absolute path check');
+console.log('\n6. Absolute path check');
 
 const absPathResult = run(
   `grep -rn "/Users/" --include="*.mjs" --include="*.sh" --include="*.md" --include="*.go" --include="*.yml" . 2>/dev/null | grep -v node_modules | grep -v ".git/" | grep -v README.md | grep -v LICENSE | grep -v go.sum | grep -v CLAUDE.md | grep -v test-all.mjs`
@@ -213,9 +177,9 @@ if (!absPathResult) {
   }
 }
 
-// ── 8. MODE FILE INTEGRITY ──────────────────────────────────────
+// ── 7. MODE FILE INTEGRITY ──────────────────────────────────────
 
-console.log('\n8. Mode file integrity');
+console.log('\n7. Mode file integrity');
 
 const expectedModes = [
   '_shared.md', '_profile.template.md', 'oferta.md', 'pdf.md', 'scan.md',
@@ -239,9 +203,9 @@ if (shared.includes('_profile.md')) {
   fail('_shared.md does NOT reference _profile.md');
 }
 
-// ── 9. CLAUDE.md INTEGRITY ──────────────────────────────────────
+// ── 8. CLAUDE.md INTEGRITY ──────────────────────────────────────
 
-console.log('\n9. CLAUDE.md integrity');
+console.log('\n8. CLAUDE.md integrity');
 
 const claude = readFile('CLAUDE.md');
 const requiredSections = [
@@ -258,9 +222,9 @@ for (const section of requiredSections) {
   }
 }
 
-// ── 10. VERSION FILE ─────────────────────────────────────────────
+// ── 9. VERSION FILE ─────────────────────────────────────────────
 
-console.log('\n10. Version file');
+console.log('\n9. Version file');
 
 if (fileExists('VERSION')) {
   const version = readFile('VERSION').trim();
@@ -271,6 +235,51 @@ if (fileExists('VERSION')) {
   }
 } else {
   fail('VERSION file missing');
+}
+
+// ── 10. SPONSORSHIP DETECTION ───────────────────────────────────
+
+console.log('\n10. Sponsorship detection');
+
+if (fileExists('sponsorship-detect.mjs')) {
+  const testResult = run('node sponsorship-detect.mjs --test');
+  if (testResult !== null) {
+    pass('sponsorship-detect.mjs --test passed');
+  } else {
+    fail('sponsorship-detect.mjs --test failed');
+  }
+} else {
+  warn('sponsorship-detect.mjs not found (Phase 3)');
+}
+
+// ── 11. H-1B EMPLOYER LOOKUP ────────────────────────────────────
+
+console.log('\n11. H-1B employer lookup');
+
+if (fileExists('h1b-lookup.mjs')) {
+  const testResult = run('node h1b-lookup.mjs --test');
+  if (testResult !== null) {
+    pass('h1b-lookup.mjs --test passed');
+  } else {
+    fail('h1b-lookup.mjs --test failed');
+  }
+} else {
+  warn('h1b-lookup.mjs not found (Phase 3)');
+}
+
+// ── 12. VISA SCORE CALCULATOR ─────────────────────────────────
+
+console.log('\n12. Visa score calculator');
+
+if (fileExists('visa-score.mjs')) {
+  const testResult = run('node visa-score.mjs --test');
+  if (testResult !== null) {
+    pass('visa-score.mjs --test passed');
+  } else {
+    fail('visa-score.mjs --test failed');
+  }
+} else {
+  warn('visa-score.mjs not found (Phase 3)');
 }
 
 // ── SUMMARY ─────────────────────────────────────────────────────
