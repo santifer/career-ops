@@ -1,0 +1,106 @@
+name: Daily Scan
+
+on:
+  schedule:
+    # 8:00 PM IST = 14:30 UTC
+    - cron: "30 14 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Restore previous scanner state
+        uses: actions/cache@v4
+        with:
+          path: |
+            data/pipeline.md
+            data/scan-history.tsv
+            data/applications.md
+          key: career-ops-state-${{ github.run_id }}
+          restore-keys: |
+            career-ops-state-
+
+      - name: Initialize runtime files
+        shell: bash
+        env:
+          PROFILE_YML: ${{ secrets.CAREER_OPS_PROFILE_YML }}
+          PORTALS_YML: ${{ secrets.CAREER_OPS_PORTALS_YML }}
+        run: |
+          set -euo pipefail
+          mkdir -p data config
+
+          if [[ ! -f data/pipeline.md ]]; then
+            cat > data/pipeline.md <<'EOF'
+          # Job Pipeline Inbox
+
+          ## Pendientes
+
+          ## Procesadas
+          EOF
+          fi
+
+          if [[ ! -f data/scan-history.tsv ]]; then
+            printf 'url\tfirst_seen\tportal\ttitle\tcompany\tstatus\n' > data/scan-history.tsv
+          fi
+
+          if [[ ! -f data/applications.md ]]; then
+            cat > data/applications.md <<'EOF'
+          # Applications Tracker
+
+          | # | Date | Company | Role | Score | Status | PDF | Report | Notes |
+          |---|------|---------|------|-------|--------|-----|--------|-------|
+          EOF
+          fi
+
+          if [[ ! -f config/profile.yml ]]; then
+            if [[ -n "${PROFILE_YML:-}" ]]; then
+              printf '%s\n' "$PROFILE_YML" > config/profile.yml
+            else
+              cp config/profile.example.yml config/profile.yml
+            fi
+          fi
+
+          if [[ ! -f portals.yml ]]; then
+            if [[ -n "${PORTALS_YML:-}" ]]; then
+              printf '%s\n' "$PORTALS_YML" > portals.yml
+            else
+              cp templates/portals.example.yml portals.yml
+            fi
+          fi
+
+      - name: Run scanner
+        id: run_scan
+        shell: bash
+        run: |
+          set -o pipefail
+          node scan.mjs | tee scan-output.txt
+
+      - name: Upload scan artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scan-results-${{ github.run_id }}
+          path: |
+            scan-output.txt
+            data/pipeline.md
+            data/scan-history.tsv
+            data/applications.md
+          retention-days: 14
+
