@@ -62,11 +62,41 @@ function normalizeRole(role) {
     .trim();
 }
 
+// Words that appear in many titles but carry no role-identifying signal.
+// Without filtering these, "Client Partner, Tokyo" and "Client Account Manager, Tokyo"
+// match on {client, tokyo} — a false positive.  See GitHub issue #157.
+const ROLE_STOPWORDS = new Set([
+  // Locations and regions
+  'tokyo', 'japan', 'apac', 'emea', 'asia', 'asean',
+  'europe', 'americas', 'latam', 'global', 'remote',
+  'london', 'berlin', 'paris', 'singapore', 'korea',
+  // Generic seniority / level
+  'senior', 'junior', 'staff', 'principal', 'associate', 'intern',
+  // Generic title words (present in most postings)
+  'lead', 'head', 'chief', 'manager', 'director', 'executive', 'officer',
+  // Generic descriptors
+  'strategic', 'enterprise', 'commercial', 'business',
+]);
+
 function roleMatch(a, b) {
-  const wordsA = normalizeRole(a).split(/\s+/).filter(w => w.length > 3);
-  const wordsB = normalizeRole(b).split(/\s+/).filter(w => w.length > 3);
+  const getContentWords = (role) =>
+    normalizeRole(role)
+      .split(/\s+/)
+      .filter(w => w.length > 3)
+      .filter(w => !ROLE_STOPWORDS.has(w));
+
+  const wordsA = getContentWords(a);
+  const wordsB = getContentWords(b);
+
+  // If either title reduces to zero content words, we can't match on role alone.
+  if (wordsA.length === 0 || wordsB.length === 0) return false;
+
   const overlap = wordsA.filter(w => wordsB.some(wb => wb.includes(w) || w.includes(wb)));
-  return overlap.length >= 2;
+  const minContentLen = Math.min(wordsA.length, wordsB.length);
+
+  // Require both an absolute minimum (2 words) and a relative overlap (60%)
+  // so short titles aren't trivially matched by incidental words.
+  return overlap.length >= 2 && (overlap.length / minContentLen) >= 0.6;
 }
 
 function parseScore(s) {
