@@ -16,6 +16,9 @@ PRs without a corresponding issue may be closed if they don't align with the pro
 
 ## Quick Start
 
+Before changing prompts, workflow docs, or localized mode files, read [docs/README.md](docs/README.md) and [docs/FILE_MAP.md](docs/FILE_MAP.md) for the repository map.
+
+
 1. Open an issue to discuss your idea
 2. Fork the repo
 3. Create a branch (`git checkout -b feature/my-feature`)
@@ -41,7 +44,7 @@ PRs without a corresponding issue may be closed if they don't align with the pro
 
 ## Guidelines
 
-- Keep modes language-agnostic when possible (Claude handles both EN and ES)
+- When adding language-specific modes, mirror the English root structure (EN, ES, DE, FR, KO, PT are all supported — each language lives in its own subfolder under `modes/`)
 - Scripts should handle missing files gracefully (check `existsSync` before `readFileSync`)
 - Dashboard changes require `go build` — test with real data before submitting
 - Don't commit personal data (cv.md, profile.yml, applications.md, reports/)

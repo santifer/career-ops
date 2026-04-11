@@ -1,78 +1,84 @@
 # Customization Guide
 
-## Profile (config/profile.yml)
+Use this guide when adapting Career-Ops to a specific person's background, goals, or search strategy. For file ownership rules, read [DATA_CONTRACT.md](../DATA_CONTRACT.md) first.
 
-This is the single source of truth for your identity. All modes read from here.
+## Personalization Rules
 
-Key sections:
-- **candidate**: Name, email, phone, location, LinkedIn, portfolio
-- **target_roles**: Your North Star roles and archetypes
-- **narrative**: Your headline, exit story, superpowers, proof points
-- **compensation**: Target range, minimum, currency
-- **location**: Country, timezone, visa status, on-site availability
+Store user-specific identity, targets, narrative, negotiation preferences, and role framing in:
 
-## Target Roles (modes/_shared.md)
+- `config/profile.yml`
+- `modes/_profile.md`
+- `article-digest.md`
+- `portals.yml`
+- other user-layer files listed in [DATA_CONTRACT.md](../DATA_CONTRACT.md)
 
-The archetype table in `_shared.md` determines how offers are scored and CVs are framed. Edit the table to match YOUR career targets:
+Do not store personal customization in `modes/_shared.md`. That file is the shared system-layer instruction base.
 
-```markdown
-| Archetype | Thematic axes | What they buy |
-|-----------|---------------|---------------|
-| **Your Role 1** | key skills | what they need |
-| **Your Role 2** | key skills | what they need |
-```
+## Profile (`config/profile.yml`)
 
-Also update the "Adaptive Framing" table to map YOUR specific projects to each archetype.
+This is the main structured source of truth for the user's identity and search constraints.
 
-## Portals (portals.yml)
+Key sections usually include:
 
-Copy from `templates/portals.example.yml` and customize:
+- **candidate** — name, contact details, location, links
+- **target_roles** — role targets, archetypes, or role families
+- **narrative** — headline, positioning, strengths, proof points
+- **compensation** — targets, minimums, currency, negotiation guardrails
+- **location** — country, timezone, visa status, remote/on-site constraints
 
-1. **title_filter.positive**: Keywords matching your target roles
-2. **title_filter.negative**: Tech stacks or domains to exclude
-3. **search_queries**: WebSearch queries for job boards (Ashby, Greenhouse, Lever)
-4. **tracked_companies**: Companies to check directly
+This file connects to the main mode flows because shared and task-specific prompts read profile context from it.
 
-The default template also includes Korean-market examples for `Wanted`, `Saramin`, `JobKorea`, and `Jumpit`. If you're targeting Korea, add Korean title keywords like `AI 엔지니어`, `머신러닝 엔지니어`, `MLOps`, or `프로덕트 매니저` to improve filtering.
+## Personal Positioning (`modes/_profile.md`)
 
-## CV Template (templates/cv-template.html)
+Use this file for user-specific prompt customization that should survive system updates.
 
-The HTML template uses these design tokens:
-- **Fonts**: Space Grotesk (headings) + DM Sans (body) -- self-hosted in `fonts/`
-- **Colors**: Cyan primary (`hsl(187,74%,32%)`) + Purple accent (`hsl(270,70%,45%)`)
-- **Layout**: Single-column, ATS-optimized
+Good fits for this file:
 
-To customize fonts/colors, edit the CSS in the template. Update font files in `fonts/` if switching fonts.
+- personalized archetypes or role framing
+- transition narrative and positioning
+- negotiation preferences and pushback language
+- user-specific proof-point emphasis
+- market or location preferences that belong in prose rather than YAML
 
-## Negotiation Scripts (modes/_shared.md)
+Start from `modes/_profile.template.md` if the profile file does not exist yet.
 
-The negotiation section provides frameworks for salary discussions. Replace the example scripts with your own:
-- Target ranges
-- Geographic arbitrage strategy
-- Pushback responses
+## Proof Points (`article-digest.md`)
+
+Use `article-digest.md` for compact summaries of portfolio projects, case studies, shipped work, or proof points that the evaluation and PDF flows can reuse.
+
+The example file in `examples/article-digest-example.md` shows the intended style and density.
+
+## Portals (`portals.yml`)
+
+Create `portals.yml` from `templates/portals.example.yml` and customize:
+
+1. `title_filter.positive` for matching target roles
+2. `title_filter.negative` for filtering out bad-fit roles
+3. `search_queries` for board-specific discovery patterns
+4. `tracked_companies` for direct company-page checks
+
+This file connects directly to the scanner and discovery workflows.
+
+## CV Template (`templates/cv-template.html`)
+
+This is a shared system template, not a user profile file. Edit it only when you want to change the output design or rendering behavior for everyone using that template.
+
+The template connects to `generate-pdf.mjs`, `modes/pdf.md`, and the example CV/output flow.
+
+## Shared Workflow Logic (`modes/_shared.md`)
+
+`modes/_shared.md` documents the common system logic used by multiple modes: scoring, shared rules, reusable instructions, and workflow conventions.
+
+Contributors may edit it when changing the shared product behavior. Users should not use it as the place for their personal profile or negotiation preferences.
 
 ## Hooks (Optional)
 
-Career-ops can integrate with external systems via Claude Code hooks. Example hooks:
+Career-Ops can integrate with external systems through local Claude hooks. If you use them, keep the hook definitions in `.claude/settings.json` and treat them as environment-specific configuration.
 
-```json
-{
-  "hooks": {
-    "SessionStart": [{
-      "hooks": [{
-        "type": "command",
-        "command": "echo 'Career-ops session started'"
-      }]
-    }]
-  }
-}
-```
+## States (`templates/states.yml`)
 
-Save hooks in `.claude/settings.json`.
+The canonical tracker states rarely need to change. If you do change them, update the connected files together:
 
-## States (templates/states.yml)
-
-The canonical states rarely need changing. If you add new states, update:
 1. `templates/states.yml`
-2. `normalize-statuses.mjs` (alias mappings)
-3. `modes/_shared.md` (any references)
+2. `normalize-statuses.mjs`
+3. any mode or tracker docs that describe those states

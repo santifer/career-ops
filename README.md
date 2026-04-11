@@ -26,6 +26,7 @@
   <img src="https://img.shields.io/badge/ES-red?style=flat" alt="ES">
   <img src="https://img.shields.io/badge/DE-grey?style=flat" alt="DE">
   <img src="https://img.shields.io/badge/FR-blue?style=flat" alt="FR">
+  <img src="https://img.shields.io/badge/KO-red?style=flat" alt="KO">
   <img src="https://img.shields.io/badge/PT--BR-green?style=flat" alt="PT-BR">
 </p>
 
@@ -56,6 +57,16 @@ Career-ops is agentic: Claude Code navigates career pages with Playwright, evalu
 > **Heads up: the first evaluations won't be great.** The system doesn't know you yet. Feed it context -- your CV, your career story, your proof points, your preferences, what you're good at, what you want to avoid. The more you nurture it, the better it gets. Think of it as onboarding a new recruiter: the first week they need to learn about you, then they become invaluable.
 
 Built by someone who used it to evaluate 740+ job offers, generate 100+ tailored CVs, and land a Head of Applied AI role. [Read the full case study](https://santifer.io/career-ops-system).
+
+## Contributor Documentation
+
+If you are trying to understand the repository rather than just run it, start with:
+
+- [docs/README.md](docs/README.md)
+- [docs/FILE_MAP.md](docs/FILE_MAP.md)
+- [modes/README.md](modes/README.md)
+
+Then use [DATA_CONTRACT.md](DATA_CONTRACT.md) to decide whether a change belongs in the user layer or the system layer.
 
 ## Features
 

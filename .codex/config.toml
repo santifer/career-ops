@@ -1,0 +1,6 @@
+[mcp_servers.linkedin]
+command = "uvx"
+args = ["linkedin-scraper-mcp==4.8.3"]
+
+[mcp_servers.linkedin.env]
+UV_HTTP_TIMEOUT = "300"
