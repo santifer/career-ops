@@ -9,8 +9,9 @@ Verarbeitet URLs von Stellenanzeigen, die in `data/pipeline.md` gesammelt wurden
    a. Nächste fortlaufende `REPORT_NUM` berechnen (in `reports/` lesen, höchste Nummer + 1)
    b. **Stellenanzeige extrahieren** mit Playwright (`browser_navigate` + `browser_snapshot`) → WebFetch → WebSearch
    c. Wenn die URL nicht erreichbar ist → als `- [!]` mit Notiz markieren und weitermachen
-   d. **Vollständige Auto-Pipeline ausführen**: A-F-Bewertung → Report .md → PDF (wenn Score >= 3.0) → Tracker
-   e. **Von "Offen" nach "Verarbeitet" verschieben**: `- [x] #NNN | URL | Firma | Rolle | Score/5 | PDF ✅/❌`
+   d. **Rohe Stellenanzeige speichern** unter `jds/{firma}-{role-slug}.md` (`jds/` anlegen falls nicht vorhanden). Slug-Format: Kleinbuchstaben, Bindestriche, keine Sonderzeichen. Überspringen wenn URL bereits `local:`-Präfix hat. Bei eingefügtem Text (statt URL) trotzdem speichern.
+   e. **Vollständige Auto-Pipeline ausführen**: A-F-Bewertung → Report .md → PDF (wenn Score >= 3.0) → Tracker
+   f. **Von "Offen" nach "Verarbeitet" verschieben**: `- [x] #NNN | URL | Firma | Rolle | Score/5 | PDF ✅/❌`
 3. **Bei 3+ offenen URLs** Agenten parallel starten (Agent-Tool mit `run_in_background`), um Tempo zu machen.
 4. **Am Ende** eine Zusammenfassungstabelle ausgeben:
 
@@ -45,6 +46,12 @@ Verarbeitet URLs von Stellenanzeigen, die in `data/pipeline.md` gesammelt wurden
 - **`local:`-Präfix**: Lokale Datei lesen. Beispiel: `local:jds/linkedin-pm-ai.md` → `jds/linkedin-pm-ai.md` lesen
 - **StepStone / XING / kununu**: Häufig deutscher Markt, oft Cookie-Banner. Playwright kann in Snapshot scrollen, um den Anzeigentext zu erfassen
 - **Bundesagentur für Arbeit (arbeitsagentur.de)**: Strukturierte Stellenanzeigen, gut maschinenlesbar. WebFetch reicht meist
+
+## Dateiformat für gespeicherte Stellenanzeigen
+
+Dateiname: `jds/{firma-slug}-{rolle-slug}.md` — Kleinbuchstaben, Bindestriche, ASCII.
+
+Zwei Teile, getrennt durch `---`: oben eine strukturierte Markdown-Zusammenfassung, unten `## Raw JD` mit dem verbatim-Text aus dem Seiteninhalt, unverändert.
 
 ## Automatische Nummerierung
 
