@@ -221,7 +221,7 @@ async function apply() {
     try {
       for (const entry of gitStatusEntries()) {
         const file = entry.path;
-        if (initialStatusPaths.has(file)) continue;
+        if (entry.code === '??' || initialStatusPaths.has(file)) continue;
         for (const userPath of USER_PATHS) {
           if (file.startsWith(userPath)) {
             console.error(`SAFETY VIOLATION: User file was modified: ${file}`);
