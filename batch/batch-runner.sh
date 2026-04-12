@@ -27,6 +27,7 @@ DRY_RUN=false
 RETRY_FAILED=false
 START_FROM=0
 MAX_RETRIES=2
+MIN_SCORE=0
 
 usage() {
   cat <<'USAGE'
@@ -41,6 +42,7 @@ Options:
   --retry-failed       Only retry offers marked as "failed" in state
   --start-from N       Start from offer ID N (skip earlier IDs)
   --max-retries N      Max retry attempts per offer (default: 2)
+  --min-score N        Minimum score required to save the report (default: 0)
   -h, --help           Show this help
 
 Files:
@@ -73,6 +75,7 @@ while [[ $# -gt 0 ]]; do
     --retry-failed) RETRY_FAILED=true; shift ;;
     --start-from) START_FROM="$2"; shift 2 ;;
     --max-retries) MAX_RETRIES="$2"; shift 2 ;;
+    --min-score) MIN_SCORE="$2"; shift 2 ;;
     -h|--help) usage; exit 0 ;;
     *) echo "Unknown option: $1"; usage; exit 1 ;;
   esac
@@ -334,6 +337,7 @@ process_offer() {
   local esc_url esc_jd_file esc_report_num esc_date esc_id
   esc_url="${url//\\/\\\\}"
   esc_url="${esc_url//|/\\|}"
+  esc_url="${esc_url//&/\\&}"
   esc_jd_file="${jd_file//\\/\\\\}"
   esc_jd_file="${esc_jd_file//|/\\|}"
   esc_report_num="${report_num//|/\\|}"
@@ -365,13 +369,22 @@ process_offer() {
     # Try to extract score from worker output
     local score="-"
     local score_match
-    score_match=$(grep -oP '"score":\s*[\d.]+' "$log_file" 2>/dev/null | head -1 | grep -oP '[\d.]+' || true)
+    score_match=$(grep -oE '"score":\s*[0-9.]+' "$log_file" 2>/dev/null | head -1 | grep -oE '[0-9.]+' || true)
     if [[ -n "$score_match" ]]; then
       score="$score_match"
     fi
 
-    update_state "$id" "$url" "completed" "$started_at" "$completed_at" "$report_num" "$score" "-" "$retries"
-    echo "    ✅ Completed (score: $score, report: $report_num)"
+    # Check minimum score threshold
+    if [[ "$score" != "-" ]] && awk -v score="$score" -v min="$MIN_SCORE" 'BEGIN{exit !(score >= min)}'; then
+      update_state "$id" "$url" "completed" "$started_at" "$completed_at" "$report_num" "$score" "-" "$retries"
+      echo "    ✅ Completed (score: $score, report: $report_num)"
+    elif [[ "$score" != "-" ]]; then
+      update_state "$id" "$url" "skipped" "$started_at" "$completed_at" "$report_num" "$score" "Score $score below min $MIN_SCORE" "$retries"
+      echo "    ⏭️  Skipped (score: $score < min $MIN_SCORE, report: $report_num)"
+    else
+      update_state "$id" "$url" "completed" "$started_at" "$completed_at" "$report_num" "$score" "-" "$retries"
+      echo "    ✅ Completed (score: -, report: $report_num)"
+    fi
   else
     retries=$((retries + 1))
     local error_msg
@@ -401,7 +414,7 @@ print_summary() {
     return
   fi
 
-  local total=0 completed=0 failed=0 pending=0
+  local total=0 completed=0 failed=0 pending=0 skipped=0
   local score_sum=0 score_count=0
 
   while IFS=$'\t' read -r sid _ sstatus _ _ _ sscore _ _; do
@@ -415,11 +428,12 @@ print_summary() {
         fi
         ;;
       failed) failed=$((failed + 1)) ;;
+      skipped) skipped=$((skipped + 1)) ;;
       *) pending=$((pending + 1)) ;;
     esac
   done < "$STATE_FILE"
 
-  echo "Total: $total | Completed: $completed | Failed: $failed | Pending: $pending"
+  echo "Total: $total | Completed: $completed | Skipped: $skipped | Failed: $failed | Pending: $pending"
 
   if (( score_count > 0 )); then
     local avg

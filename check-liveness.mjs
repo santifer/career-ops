@@ -17,8 +17,14 @@
 import { chromium } from 'playwright';
 import { readFile } from 'fs/promises';
 import { classifyLiveness } from './liveness-core.mjs';
+import { resolve, dirname } from 'path';
+import { fileURLToPath } from 'url';
 
 async function checkUrl(page, url) {
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    return { result: 'expired', reason: 'Invalid URL protocol' };
+  }
+
   try {
     const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 15000 });
 
@@ -80,7 +86,13 @@ async function main() {
 
   let urls;
   if (args[0] === '--file') {
-    const text = await readFile(args[1], 'utf-8');
+    const filePath = resolve(args[1]);
+    const rootDir = dirname(fileURLToPath(import.meta.url));
+    if (!filePath.startsWith(rootDir)) {
+      console.error('Security Error: Path traversal attempt blocked for --file');
+      process.exit(1);
+    }
+    const text = await readFile(filePath, 'utf-8');
     urls = text.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#'));
   } else {
     urls = args;

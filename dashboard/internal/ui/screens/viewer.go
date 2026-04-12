@@ -23,6 +23,74 @@ type ViewerModel struct {
 	theme        theme.Theme
 }
 
+// formatTables aligns markdown tables properly
+func formatTables(lines []string) []string {
+	var out []string
+	var tableLines []string
+
+	flushTable := func() {
+		if len(tableLines) == 0 {
+			return
+		}
+		var colWidths []int
+		var rows [][]string
+		for _, tl := range tableLines {
+			cols := strings.Split(tl, "|")
+			rows = append(rows, cols)
+			for i, c := range cols {
+				// Don't count separator lines for max width
+				if strings.Contains(c, "---") {
+					continue
+				}
+				w := len([]rune(strings.TrimSpace(c)))
+				if i >= len(colWidths) {
+					colWidths = append(colWidths, w)
+				} else if w > colWidths[i] {
+					colWidths[i] = w
+				}
+			}
+		}
+		for _, cols := range rows {
+			var formattedCols []string
+			for i, c := range cols {
+				if i == 0 || i == len(cols)-1 {
+					if strings.TrimSpace(c) == "" {
+						formattedCols = append(formattedCols, "")
+						continue
+					}
+				}
+				w := 0
+				if i < len(colWidths) {
+					w = colWidths[i]
+				}
+				c = strings.TrimSpace(c)
+				if strings.Contains(c, "---") {
+					if w < 3 { w = 3 }
+					formattedCols = append(formattedCols, strings.Repeat("─", w+2))
+				} else {
+					pad := w - len([]rune(c))
+					if pad < 0 { pad = 0 }
+					formattedCols = append(formattedCols, " "+c+strings.Repeat(" ", pad)+" ")
+				}
+			}
+			out = append(out, strings.Join(formattedCols, "|"))
+		}
+		tableLines = nil
+	}
+
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if strings.HasPrefix(trimmed, "|") && strings.HasSuffix(trimmed, "|") {
+			tableLines = append(tableLines, trimmed)
+		} else {
+			flushTable()
+			out = append(out, line)
+		}
+	}
+	flushTable()
+	return out
+}
+
 // NewViewerModel creates a new file viewer for the given path.
 func NewViewerModel(t theme.Theme, path, title string, width, height int) ViewerModel {
 	content, err := os.ReadFile(path)
@@ -30,8 +98,11 @@ func NewViewerModel(t theme.Theme, path, title string, width, height int) Viewer
 		content = []byte("Error reading file: " + err.Error())
 	}
 
+	lines := strings.Split(string(content), "\n")
+	lines = formatTables(lines)
+
 	return ViewerModel{
-		lines:  strings.Split(string(content), "\n"),
+		lines:  lines,
 		title:  title,
 		width:  width,
 		height: height,
@@ -257,7 +328,7 @@ func (m ViewerModel) styleLine(line string) string {
 			Render(line)
 	}
 	// Table headers/separators
-	if strings.HasPrefix(trimmed, "|") && strings.Contains(trimmed, "---") {
+	if strings.HasPrefix(trimmed, "|") && (strings.Contains(trimmed, "---") || strings.Contains(trimmed, "─")) {
 		return lipgloss.NewStyle().
 			Foreground(m.theme.Overlay).
 			Render(line)

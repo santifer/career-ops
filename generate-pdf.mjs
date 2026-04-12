@@ -91,8 +91,17 @@ async function generatePDF() {
     process.exit(1);
   }
 
-  inputPath = resolve(inputPath);
-  outputPath = resolve(outputPath);
+  function enforceSafePath(p) {
+    const resolvedPath = resolve(p);
+    if (!resolvedPath.startsWith(__dirname)) {
+      console.error(`Security Error: Path traversal attempt blocked for path: ${p}`);
+      process.exit(1);
+    }
+    return resolvedPath;
+  }
+
+  inputPath = enforceSafePath(inputPath);
+  outputPath = enforceSafePath(outputPath);
 
   // Validate format
   const validFormats = ['a4', 'letter'];

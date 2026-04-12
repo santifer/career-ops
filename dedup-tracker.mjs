@@ -62,11 +62,26 @@ function normalizeRole(role) {
     .trim();
 }
 
+const STOPWORDS = new Set([
+  'senior', 'junior', 'lead', 'manager', 'director', 'intern', 'remote', 
+  'hybrid', 'onsite', 'engineer', 'developer', 'staff', 'principal',
+  'london', 'york', 'francisco', 'seattle', 'boston', 'austin', 'berlin',
+  'paris', 'sydney', 'toronto', 'chicago', 'usa', 'uk', 'eu',
+  'level', 'tier', 'parttime', 'fulltime', 'contract', 'role', 'team'
+]);
+
 function roleMatch(a, b) {
-  const wordsA = normalizeRole(a).split(/\s+/).filter(w => w.length > 3);
-  const wordsB = normalizeRole(b).split(/\s+/).filter(w => w.length > 3);
+  const wordsA = normalizeRole(a).split(/\s+/).filter(w => w.length > 3 && !STOPWORDS.has(w));
+  const wordsB = normalizeRole(b).split(/\s+/).filter(w => w.length > 3 && !STOPWORDS.has(w));
+  
+  if (wordsA.length === 0 || wordsB.length === 0) return false;
+
   const overlap = wordsA.filter(w => wordsB.some(wb => wb.includes(w) || w.includes(wb)));
-  return overlap.length >= 2;
+  
+  const ratioA = overlap.length / wordsA.length;
+  const ratioB = overlap.length / wordsB.length;
+  
+  return overlap.length >= 2 || (overlap.length >= 1 && Math.max(ratioA, ratioB) >= 0.5);
 }
 
 function parseScore(s) {
