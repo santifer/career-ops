@@ -13,7 +13,7 @@ const PORT = process.env.PORT || 3737;
 
 const app = express();
 const server = createServer(app);
-const wss = new WebSocketServer({ server });
+let wss = null;
 
 app.use(express.static(join(__dirname, 'public')));
 app.use(express.json());
@@ -422,14 +422,9 @@ app.post('/api/session/:id/stop', (req, res) => {
 const watchPaths = ['data/applications.md', 'data/pipeline.md', 'data/scan-history.tsv'].map(p => join(ROOT, p));
 
 function broadcast(msg) {
+  if (!wss) return;
   const payload = JSON.stringify(msg);
   wss.clients.forEach(client => { if (client.readyState === 1) client.send(payload); });
-}
-
-for (const p of watchPaths) {
-  if (existsSync(p)) {
-    watch(p, { persistent: false }, () => broadcast({ type: 'refresh' }));
-  }
 }
 
 server.on('error', (err) => {
@@ -442,5 +437,14 @@ server.on('error', (err) => {
 });
 
 server.listen(PORT, () => {
+  // Create WebSocket server only after HTTP server is listening
+  wss = new WebSocketServer({ server });
+
+  for (const p of watchPaths) {
+    if (existsSync(p)) {
+      watch(p, { persistent: false }, () => broadcast({ type: 'refresh' }));
+    }
+  }
+
   console.log(`\n  career-ops dashboard → http://localhost:${PORT}\n`);
 });
