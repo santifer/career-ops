@@ -28,29 +28,46 @@ function normalizeStatus(raw) {
   let s = raw.replace(/\*\*/g, '').trim();
   const lower = s.toLowerCase();
 
-  // DUPLICADO variants → Discarded
-  if (/^duplicado/i.test(s) || /^dup\b/i.test(s)) {
+  // DUPLICADO/DUPLICATE variants → Discarded
+  if (/^duplicado/i.test(s) || /^duplicated?/i.test(s) || /^dup\b/i.test(s)) {
     return { status: 'Discarded', moveToNotes: raw.trim() };
   }
 
-  // CERRADA / Cancelada / Descartada → Discarded
-  if (/^cerrada$/i.test(s)) return { status: 'Discarded' };
-  if (/^cancelada/i.test(s)) return { status: 'Discarded' };
-  if (/^descartada$/i.test(s)) return { status: 'Discarded' };
+  // CERRADA/CLOSED → Discarded
+  if (/^cerrada$/i.test(s) || /^closed$/i.test(s)) return { status: 'Discarded' };
+
+  // Cancelada/Canceled (possibly with date) → Discarded
+  if (/^cancelada/i.test(s) || /^canceled?/i.test(s)) return { status: 'Discarded' };
+
+  // Descartada/Discarded → Discarded
+  if (/^descartada$/i.test(s) || /^discarded$/i.test(s)) return { status: 'Discarded' };
+
+  // Descartado → Discarded
   if (/^descartado$/i.test(s)) return { status: 'Discarded' };
 
-  // Rechazada / Rechazado → Rejected
-  if (/^rechazada?$/i.test(s)) return { status: 'Rejected' };
-  if (/^rechazado\s+\d{4}/i.test(s)) return { status: 'Rejected' };
+  // Rechazada/Rejected → Rejected
+  if (/^rechazada?$/i.test(s) || /^rejected$/i.test(s)) return { status: 'Rejected' };
 
-  // Aplicado with date → Applied (strip date)
-  if (/^aplicado\s+\d{4}/i.test(s)) return { status: 'Applied' };
+  // Rechazado/Rejected with date → Rejected (strip date)
+  if (/^rechazado\s+\d{4}/i.test(s) || /^rejected\s+\d{4}/i.test(s)) return { status: 'Rejected' };
 
-  // CONDICIONAL / HOLD / EVALUAR / Verificar → Evaluated
-  if (/^(condicional|hold|evaluar|verificar)$/i.test(s)) return { status: 'Evaluated' };
+  // Aplicado/Applied with date → Applied (strip date)
+  if (/^aplicado\s+\d{4}/i.test(s) || /^applied\s+\d{4}/i.test(s)) return { status: 'Applied' };
+
+  // CONDICIONAL/CONDITIONAL → Evaluated
+  if (/^condicional$/i.test(s) || /^conditional$/i.test(s)) return { status: 'Evaluated' };
+
+  // HOLD → Evaluated
+  if (/^hold$/i.test(s)) return { status: 'Evaluated' };
 
   // MONITOR → SKIP
   if (/^monitor$/i.test(s)) return { status: 'SKIP' };
+
+  // EVALUAR/EVALUATE → Evaluated
+  if (/^evaluar$/i.test(s) || /^evaluate$/i.test(s)) return { status: 'Evaluated' };
+
+  // Verificar/VERIFY → Evaluated
+  if (/^verificar$/i.test(s) || /^verify$/i.test(s)) return { status: 'Evaluated' };
 
   // GEO BLOCKER → SKIP
   if (/geo.?blocker/i.test(s)) return { status: 'SKIP' };
@@ -67,16 +84,21 @@ function normalizeStatus(raw) {
     'Offer', 'Rejected', 'Discarded', 'SKIP',
   ];
   for (const c of canonical) {
-    if (lower === c.toLowerCase()) return { status: c };
+    const mapping = {
+      'Evaluada': 'Evaluated', 'Aplicado': 'Applied', 'Respondido': 'Responded',
+      'Entrevista': 'Interview', 'Oferta': 'Offer', 'Rechazado': 'Rejected',
+      'Descartado': 'Discarded', 'NO APLICAR': 'SKIP',
+    };
+    if (lower === c.toLowerCase()) return { status: mapping[c] || c };
   }
 
-  // Spanish aliases → English canonicals
+  // Spanish → English aliases
   if (['evaluada'].includes(lower)) return { status: 'Evaluated' };
   if (['aplicado', 'enviada', 'aplicada', 'applied', 'sent'].includes(lower)) return { status: 'Applied' };
   if (['respondido'].includes(lower)) return { status: 'Responded' };
   if (['entrevista'].includes(lower)) return { status: 'Interview' };
   if (['oferta'].includes(lower)) return { status: 'Offer' };
-  if (['cerrada', 'descartada'].includes(lower)) return { status: 'Discarded' };
+  if (['cerrada', 'descartada', 'closed', 'discarded', 'canceled'].includes(lower)) return { status: 'Discarded' };
   if (['no aplicar', 'no_aplicar', 'skip'].includes(lower)) return { status: 'SKIP' };
 
   // Unknown — flag it

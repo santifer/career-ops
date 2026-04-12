@@ -11,7 +11,7 @@ import { normalizeStatus } from '../normalize-statuses.mjs';
 // ---------------------------------------------------------------------------
 describe('normalizeStatus - already canonical', () => {
   test('returns canonical as-is (no change)', () => {
-    const canonical = ['Evaluada', 'Aplicado', 'Respondido', 'Entrevista', 'Oferta', 'Rechazado', 'Descartado', 'NO APLICAR'];
+    const canonical = ['Evaluated', 'Applied', 'Responded', 'Interview', 'Offer', 'Rejected', 'Discarded', 'SKIP'];
     for (const s of canonical) {
       const result = normalizeStatus(s);
       assert.equal(result.status, s, `Expected "${s}" to remain unchanged`);
@@ -19,138 +19,138 @@ describe('normalizeStatus - already canonical', () => {
   });
 
   test('case-insensitive match still returns proper casing', () => {
-    assert.equal(normalizeStatus('evaluada').status, 'Evaluada');
-    assert.equal(normalizeStatus('APLICADO').status, 'Aplicado');
-    assert.equal(normalizeStatus('no aplicar').status, 'NO APLICAR');
+    assert.equal(normalizeStatus('evaluada').status, 'Evaluated');
+    assert.equal(normalizeStatus('APLICADO').status, 'Applied');
+    assert.equal(normalizeStatus('no aplicar').status, 'SKIP');
   });
 });
 
 describe('normalizeStatus - markdown bold stripping', () => {
   test('strips ** and returns canonical', () => {
-    assert.equal(normalizeStatus('**Evaluada**').status, 'Evaluada');
-    assert.equal(normalizeStatus('**Rechazado**').status, 'Rechazado');
-    assert.equal(normalizeStatus('**Applied**').status, 'Aplicado');
+    assert.equal(normalizeStatus('**Evaluada**').status, 'Evaluated');
+    assert.equal(normalizeStatus('**Rechazado**').status, 'Rejected');
+    assert.equal(normalizeStatus('**Applied**').status, 'Applied');
   });
 });
 
 describe('normalizeStatus - date stripping', () => {
-  test('Aplicado with date → Aplicado', () => {
-    assert.equal(normalizeStatus('Aplicado 2026-01-15').status, 'Aplicado');
+  test('Applied with date → Applied', () => {
+    assert.equal(normalizeStatus('Applied 2026-01-15').status, 'Applied');
   });
 
-  test('Rechazado with date → Rechazado', () => {
-    assert.equal(normalizeStatus('Rechazado 2026-03-10').status, 'Rechazado');
+  test('Rechazado with date → Rejected', () => {
+    assert.equal(normalizeStatus('Rechazado 2026-03-10').status, 'Rejected');
   });
 });
 
 describe('normalizeStatus - alias mapping', () => {
-  test('enviada → Aplicado', () => {
-    assert.equal(normalizeStatus('enviada').status, 'Aplicado');
+  test('enviada → Applied', () => {
+    assert.equal(normalizeStatus('enviada').status, 'Applied');
   });
 
-  test('aplicada → Aplicado', () => {
-    assert.equal(normalizeStatus('aplicada').status, 'Aplicado');
+  test('aplicada → Applied', () => {
+    assert.equal(normalizeStatus('aplicada').status, 'Applied');
   });
 
-  test('applied → Aplicado', () => {
-    assert.equal(normalizeStatus('applied').status, 'Aplicado');
+  test('applied → Applied', () => {
+    assert.equal(normalizeStatus('applied').status, 'Applied');
   });
 
-  test('sent → Aplicado', () => {
-    assert.equal(normalizeStatus('sent').status, 'Aplicado');
+  test('sent → Applied', () => {
+    assert.equal(normalizeStatus('sent').status, 'Applied');
   });
 
-  test('cerrada → Descartado', () => {
-    assert.equal(normalizeStatus('cerrada').status, 'Descartado');
+  test('cerrada → Discarded', () => {
+    assert.equal(normalizeStatus('cerrada').status, 'Discarded');
   });
 
-  test('descartada → Descartado', () => {
-    assert.equal(normalizeStatus('descartada').status, 'Descartado');
+  test('descartada → Discarded', () => {
+    assert.equal(normalizeStatus('descartada').status, 'Discarded');
   });
 
-  test('rechazada → Rechazado', () => {
-    assert.equal(normalizeStatus('rechazada').status, 'Rechazado');
+  test('rechazada → Rejected', () => {
+    assert.equal(normalizeStatus('rechazada').status, 'Rejected');
   });
 
-  test('no_aplicar → NO APLICAR', () => {
-    assert.equal(normalizeStatus('no_aplicar').status, 'NO APLICAR');
+  test('no_aplicar → SKIP', () => {
+    assert.equal(normalizeStatus('no_aplicar').status, 'SKIP');
   });
 
-  test('no aplicar → NO APLICAR', () => {
-    assert.equal(normalizeStatus('no aplicar').status, 'NO APLICAR');
+  test('no aplicar → SKIP', () => {
+    assert.equal(normalizeStatus('no aplicar').status, 'SKIP');
   });
 
-  test('skip → NO APLICAR', () => {
-    assert.equal(normalizeStatus('skip').status, 'NO APLICAR');
+  test('skip → SKIP', () => {
+    assert.equal(normalizeStatus('skip').status, 'SKIP');
   });
 });
 
 describe('normalizeStatus - DUPLICADO variants', () => {
-  test('duplicado → Descartado with moveToNotes', () => {
+  test('duplicado → Discarded with moveToNotes', () => {
     const result = normalizeStatus('duplicado');
-    assert.equal(result.status, 'Descartado');
+    assert.equal(result.status, 'Discarded');
     assert.ok(result.moveToNotes);
   });
 
-  test('DUPLICADO #123 → Descartado with moveToNotes', () => {
+  test('DUPLICADO #123 → Discarded with moveToNotes', () => {
     const result = normalizeStatus('DUPLICADO #123');
-    assert.equal(result.status, 'Descartado');
+    assert.equal(result.status, 'Discarded');
     assert.ok(result.moveToNotes);
   });
 
-  test('dup → Descartado', () => {
-    assert.equal(normalizeStatus('dup').status, 'Descartado');
+  test('dup → Discarded', () => {
+    assert.equal(normalizeStatus('dup').status, 'Discarded');
   });
 
-  test('repost → Descartado', () => {
+  test('repost → Discarded', () => {
     const result = normalizeStatus('repost #456');
-    assert.equal(result.status, 'Descartado');
+    assert.equal(result.status, 'Discarded');
     assert.ok(result.moveToNotes);
   });
 });
 
 describe('normalizeStatus - other aliases', () => {
-  test('condicional → Evaluada', () => {
-    assert.equal(normalizeStatus('condicional').status, 'Evaluada');
+  test('condicional → Evaluated', () => {
+    assert.equal(normalizeStatus('condicional').status, 'Evaluated');
   });
 
-  test('hold → Evaluada', () => {
-    assert.equal(normalizeStatus('hold').status, 'Evaluada');
+  test('hold → Evaluated', () => {
+    assert.equal(normalizeStatus('hold').status, 'Evaluated');
   });
 
-  test('monitor → Evaluada', () => {
-    assert.equal(normalizeStatus('monitor').status, 'Evaluada');
+  test('monitor → Evaluated', () => {
+    assert.equal(normalizeStatus('monitor').status, 'Evaluated');
   });
 
-  test('evaluar → Evaluada', () => {
-    assert.equal(normalizeStatus('evaluar').status, 'Evaluada');
+  test('evaluar → Evaluated', () => {
+    assert.equal(normalizeStatus('evaluar').status, 'Evaluated');
   });
 
-  test('verificar → Evaluada', () => {
-    assert.equal(normalizeStatus('verificar').status, 'Evaluada');
+  test('verificar → Evaluated', () => {
+    assert.equal(normalizeStatus('verificar').status, 'Evaluated');
   });
 
-  test('geo blocker → NO APLICAR', () => {
-    assert.equal(normalizeStatus('geo blocker').status, 'NO APLICAR');
-    assert.equal(normalizeStatus('geo-blocker').status, 'NO APLICAR');
+  test('geo blocker → SKIP', () => {
+    assert.equal(normalizeStatus('geo blocker').status, 'SKIP');
+    assert.equal(normalizeStatus('geo-blocker').status, 'SKIP');
   });
 
-  test('cancelada → Descartado', () => {
-    assert.equal(normalizeStatus('cancelada').status, 'Descartado');
+  test('cancelada → Discarded', () => {
+    assert.equal(normalizeStatus('cancelada').status, 'Discarded');
   });
 });
 
 describe('normalizeStatus - edge cases', () => {
-  test('em dash → Descartado', () => {
-    assert.equal(normalizeStatus('—').status, 'Descartado');
+  test('em dash → Discarded', () => {
+    assert.equal(normalizeStatus('—').status, 'Discarded');
   });
 
-  test('hyphen → Descartado', () => {
-    assert.equal(normalizeStatus('-').status, 'Descartado');
+  test('hyphen → Discarded', () => {
+    assert.equal(normalizeStatus('-').status, 'Discarded');
   });
 
-  test('empty string → Descartado', () => {
-    assert.equal(normalizeStatus('').status, 'Descartado');
+  test('empty string → Discarded', () => {
+    assert.equal(normalizeStatus('').status, 'Discarded');
   });
 
   test('unknown status → { status: null, unknown: true }', () => {

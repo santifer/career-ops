@@ -11,57 +11,54 @@ import { validateStatus, normalizeCompany, roleFuzzyMatch, extractReportNum, par
 // ---------------------------------------------------------------------------
 describe('validateStatus', () => {
   test('canonical statuses pass through unchanged', () => {
-    assert.equal(validateStatus('Evaluada'), 'Evaluada');
-    assert.equal(validateStatus('Aplicado'), 'Aplicado');
-    assert.equal(validateStatus('Respondido'), 'Respondido');
-    assert.equal(validateStatus('Entrevista'), 'Entrevista');
-    assert.equal(validateStatus('Oferta'), 'Oferta');
-    assert.equal(validateStatus('Rechazado'), 'Rechazado');
-    assert.equal(validateStatus('Descartado'), 'Descartado');
-    assert.equal(validateStatus('NO APLICAR'), 'NO APLICAR');
+    assert.equal(validateStatus('Evaluated'), 'Evaluated');
+    assert.equal(validateStatus('Applied'), 'Applied');
+    assert.equal(validateStatus('Responded'), 'Responded');
+    assert.equal(validateStatus('Interview'), 'Interview');
+    assert.equal(validateStatus('Offer'), 'Offer');
+    assert.equal(validateStatus('Rejected'), 'Rejected');
+    assert.equal(validateStatus('Discarded'), 'Discarded');
+    assert.equal(validateStatus('SKIP'), 'SKIP');
   });
 
   test('canonical statuses are case-insensitive', () => {
-    assert.equal(validateStatus('evaluada'), 'Evaluada');
-    assert.equal(validateStatus('APLICADO'), 'Aplicado');
-    assert.equal(validateStatus('no aplicar'), 'NO APLICAR');
+    assert.equal(validateStatus('evaluated'), 'Evaluated');
+    assert.equal(validateStatus('APPLIED'), 'Applied');
+    assert.equal(validateStatus('skip'), 'SKIP');
   });
 
   test('strips markdown bold before matching', () => {
-    assert.equal(validateStatus('**Evaluada**'), 'Evaluada');
-    assert.equal(validateStatus('**Rechazado**'), 'Rechazado');
+    assert.equal(validateStatus('**Evaluated**'), 'Evaluated');
+    assert.equal(validateStatus('**Rejected**'), 'Rejected');
   });
 
   test('strips trailing dates before matching', () => {
-    assert.equal(validateStatus('Aplicado 2026-01-15'), 'Aplicado');
-    assert.equal(validateStatus('Rechazado 2026-03-10 notes'), 'Rechazado');
+    assert.equal(validateStatus('Applied 2026-01-15'), 'Applied');
+    assert.equal(validateStatus('Rejected 2026-03-10 notes'), 'Rejected');
   });
 
   test('known aliases map to canonical', () => {
-    assert.equal(validateStatus('enviada'), 'Aplicado');
-    assert.equal(validateStatus('aplicada'), 'Aplicado');
-    assert.equal(validateStatus('applied'), 'Aplicado');
-    assert.equal(validateStatus('sent'), 'Aplicado');
-    assert.equal(validateStatus('cerrada'), 'Descartado');
-    assert.equal(validateStatus('descartada'), 'Descartado');
-    assert.equal(validateStatus('cancelada'), 'Descartado');
-    assert.equal(validateStatus('rechazada'), 'Rechazado');
-    assert.equal(validateStatus('no aplicar'), 'NO APLICAR');
-    assert.equal(validateStatus('no_aplicar'), 'NO APLICAR');
-    assert.equal(validateStatus('skip'), 'NO APLICAR');
-    assert.equal(validateStatus('monitor'), 'NO APLICAR');
+    assert.equal(validateStatus('sent'), 'Applied');
+    assert.equal(validateStatus('applied'), 'Applied');
+    assert.equal(validateStatus('closed'), 'Discarded');
+    assert.equal(validateStatus('discarded'), 'Discarded');
+    assert.equal(validateStatus('canceled'), 'Discarded');
+    assert.equal(validateStatus('rejected'), 'Rejected');
+    assert.equal(validateStatus('skip'), 'SKIP');
+    assert.equal(validateStatus('skip_apply'), 'SKIP');
+    assert.equal(validateStatus('monitor'), 'SKIP');
   });
 
-  test('DUPLICADO variants map to Descartado', () => {
-    assert.equal(validateStatus('duplicado'), 'Descartado');
-    assert.equal(validateStatus('DUPLICADO #123'), 'Descartado');
-    assert.equal(validateStatus('dup'), 'Descartado');
-    assert.equal(validateStatus('repost'), 'Descartado');
+  test('DUPLICATE variants map to Discarded', () => {
+    assert.equal(validateStatus('duplicate'), 'Discarded');
+    assert.equal(validateStatus('DUPLICATED #123'), 'Discarded');
+    assert.equal(validateStatus('dup'), 'Discarded');
+    assert.equal(validateStatus('repost'), 'Discarded');
   });
 
   test('unknown status defaults to Evaluada', () => {
-    assert.equal(validateStatus('something-unknown'), 'Evaluada');
-    assert.equal(validateStatus('pending'), 'Evaluada');
+    assert.equal(validateStatus('something-unknown'), 'Evaluated');
+    assert.equal(validateStatus('pending'), 'Evaluated');
   });
 });
 
@@ -165,7 +162,7 @@ describe('parseTsvContent - 9-col status-before-score', () => {
     assert.equal(result.num, 11);
     assert.equal(result.company, 'Glean');
     assert.equal(result.role, 'AI Solutions Architect');
-    assert.equal(result.status, 'Evaluada');
+    assert.equal(result.status, 'Evaluated');
     assert.equal(result.score, '4.3/5');
     assert.equal(result.pdf, '✅');
     assert.equal(result.notes, 'Strong match');
@@ -175,7 +172,7 @@ describe('parseTsvContent - 9-col status-before-score', () => {
     const content = '12\t2026-02-12\tArize AI\tML Observability Engineer\t4.1/5\tEvaluada\t✅\t[12](reports/012-arize-2026-02-12.md)\tSwapped columns';
     const result = parseTsvContent(content, '002-swapped.tsv');
     assert.ok(result !== null);
-    assert.equal(result.status, 'Evaluada');
+    assert.equal(result.status, 'Evaluated');
     assert.equal(result.score, '4.1/5');
     assert.equal(result.company, 'Arize AI');
   });
@@ -198,9 +195,9 @@ describe('parseTsvContent - 9-col status-before-score', () => {
   });
 
   test('normalizes alias statuses in TSV', () => {
-    const content = '13\t2026-02-15\tAcme\tSenior Engineer\taplicada\t3.5/5\t❌\t[13](reports/013-acme-2026-02-15.md)\tnotes';
+    const content = '13\t2026-02-15\tAcme\tSenior Engineer\tapplied\t3.5/5\t❌\t[13](reports/013-acme-2026-02-15.md)\tnotes';
     const result = parseTsvContent(content, 'alias.tsv');
-    assert.equal(result.status, 'Aplicado');
+    assert.equal(result.status, 'Applied');
   });
 });
 
@@ -215,7 +212,7 @@ describe('parseTsvContent - pipe-delimited', () => {
     assert.equal(result.num, 15);
     assert.equal(result.company, 'Mistral');
     assert.equal(result.score, '3.9/5');
-    assert.equal(result.status, 'Evaluada');
+    assert.equal(result.status, 'Evaluated');
   });
 
   test('returns null for pipe-delimited with fewer than 8 fields', () => {

@@ -1,48 +1,48 @@
-# Modo: auto-pipeline — Pipeline Completo Automático
+# Mode: auto-pipeline — Full Automatic Pipeline
 
-Cuando el usuario pega un JD (texto o URL) sin sub-comando explícito, ejecutar TODO el pipeline en secuencia:
+When the user pastes a JD (text or URL) without an explicit sub-command, execute the ENTIRE pipeline in sequence:
 
-## Paso 0 — Extraer JD
+## Step 0 — Extract JD
 
-Si el input es una **URL** (no texto de JD pegado), seguir esta estrategia para extraer el contenido:
+If the input is a **URL** (not pasted JD text), follow this strategy to extract content:
 
-**Orden de prioridad:**
+**Priority order:**
 
-1. **Playwright (preferido):** La mayoría de portales de empleo (Lever, Ashby, Greenhouse, Workday) son SPAs. Usar `browser_navigate` + `browser_snapshot` para renderizar y leer el JD.
-2. **WebFetch (fallback):** Para páginas estáticas (ZipRecruiter, WeLoveProduct, company career pages).
-3. **WebSearch (último recurso):** Buscar título del rol + empresa en portales secundarios que indexan el JD en HTML estático.
+1. **Playwright (preferred):** Most job portals (Lever, Ashby, Greenhouse, Workday) are SPAs. Use `browser_navigate` + `browser_snapshot` to render and read the JD.
+2. **WebFetch (fallback):** For static pages (ZipRecruiter, WeLoveProduct, company career pages).
+3. **WebSearch (last resort):** Search role title + company on secondary portals that index JD in static HTML.
 
-**Si ningún método funciona:** Pedir al candidato que pegue el JD manualmente o comparta un screenshot.
+**If no method works:** Ask candidate to paste JD manually or share a screenshot.
 
-**Si el input es texto de JD** (no URL): usar directamente, sin necesidad de fetch.
+**If input is JD text** (not URL): use directly, no fetch needed.
 
-## Paso 0b — JD Summarization (solo si JD largo)
+## Step 0b — JD Summarization (only if JD is long)
 
-Antes del Stage 0 pre-screen, si el JD es largo (> ~1500 palabras):
-1. Extraer un resumen compacto: título, nivel, top 5 must-haves, top 3 nice-to-haves, ubicación, comp si se menciona (~200 palabras)
-2. Usar este resumen para el Stage 0 pre-screen
-3. Si el pre-screen pasa (≥ 3.0): usar el JD COMPLETO para los bloques A-F (la precisión importa aquí)
-4. Si JD ≤ 1500 palabras: usar el JD completo directamente para todo
+Before Stage 0 pre-screen, if JD is long (> ~1500 words):
+1. Extract a compact summary: title, level, top 5 must-haves, top 3 nice-to-haves, location, comp if mentioned (~200 words)
+2. Use this summary for Stage 0 pre-screen
+3. If pre-screen passes (≥ 3.0): use FULL JD for blocks A-F (precision matters here)
+4. If JD ≤ 1500 words: use complete JD directly for everything
 
-## Paso 1 — Evaluación con Pre-screen
-Ejecutar Stage 0 pre-screen primero (ver `modes/oferta.md`). Si pasa, ejecutar bloques A-F según el tier de score.
+## Step 1 — Evaluation with Pre-screen
+Execute Stage 0 pre-screen first (see `modes/offer.md`). If it passes, execute blocks A-F per score tier.
 
-## Paso 2 — Guardar Report .md
-Guardar la evaluación completa en `reports/{###}-{company-slug}-{YYYY-MM-DD}.md` (ver formato en `modes/oferta.md`).
+## Step 2 — Save Report .md
+Save complete evaluation to `reports/{###}-{company-slug}-{YYYY-MM-DD}.md` (see format in `modes/offer.md`).
 Include Block G in the saved report. Add `**Legitimacy:** {tier}` to the report header.
 
-## Paso 3 — Generar PDF
-Ejecutar el pipeline completo de `pdf` (leer `modes/pdf.md`).
+## Step 3 — Generate PDF
+Execute full `pdf` pipeline (see `modes/pdf.md`).
 
-## Paso 4 — Draft Application Answers (solo si score >= 4.5)
+## Step 4 — Draft Application Answers (only if score >= 4.5)
 
-Si el score final es >= 4.5, generar borrador de respuestas para el formulario de aplicación:
+If final score is >= 4.5, generate draft answers for the application form:
 
-1. **Extraer preguntas del formulario**: Usar Playwright para navegar al formulario y hacer snapshot. Si no se pueden extraer, usar las preguntas genéricas.
-2. **Generar respuestas** siguiendo el tono (ver abajo).
-3. **Guardar en el report** como sección `## H) Draft Application Answers`.
+1. **Extract form questions**: Use Playwright to navigate to form and snapshot. If unable to extract, use generic questions.
+2. **Generate answers** following tone guidelines (see below).
+3. **Save in report** as section `## H) Draft Application Answers`.
 
-### Preguntas genéricas (usar si no se pueden extraer del formulario)
+### Generic questions (use if unable to extract from form)
 
 - Why are you interested in this role?
 - Why do you want to work at [Company]?
@@ -50,29 +50,29 @@ Si el score final es >= 4.5, generar borrador de respuestas para el formulario d
 - What makes you a good fit for this position?
 - How did you hear about this role?
 
-### Tono para Form Answers
+### Tone for Form Answers
 
-**Posición: "I'm choosing you."** el candidato tiene opciones y está eligiendo esta empresa por razones concretas.
+**Position: "I'm choosing you."** The candidate has options and is choosing this company for concrete reasons.
 
-**Reglas de tono:**
-- **Confiado sin arrogancia**: "I've spent the past year building production AI agent systems — your role is where I want to apply that experience next"
-- **Selectivo sin soberbia**: "I've been intentional about finding a team where I can contribute meaningfully from day one"
-- **Específico y concreto**: Siempre referenciar algo REAL del JD o de la empresa, y algo REAL de la experiencia del candidato
-- **Directo, sin fluff**: 2-4 frases por respuesta. Sin "I'm passionate about..." ni "I would love the opportunity to..."
-- **El hook es la prueba, no la afirmación**: En vez de "I'm great at X", decir "I built X that does Y"
+**Tone rules:**
+- **Confident without arrogance**: "I've spent the past year building production AI agent systems — your role is where I want to apply that experience next"
+- **Selective without snobbery**: "I've been intentional about finding a team where I can contribute meaningfully from day one"
+- **Specific and concrete**: Always reference something REAL from the JD or company, and something REAL from the candidate's experience
+- **Direct, no fluff**: 2-4 sentences per answer. No "I'm passionate about..." or "I would love the opportunity to..."
+- **The hook is the proof, not the claim**: Instead of "I'm great at X", say "I built X that does Y"
 
-**Framework por pregunta:**
+**Framework by question:**
 - **Why this role?** → "Your [specific thing] maps directly to [specific thing I built]."
-- **Why this company?** → Mencionar algo concreto sobre la empresa. "I've been using [product] for [time/purpose]."
-- **Relevant experience?** → Un proof point cuantificado. "Built [X] that [metric]. Sold the company in 2025."
+- **Why this company?** → Mention something concrete about the company. "I've been using [product] for [time/purpose]."
+- **Relevant experience?** → A quantified proof point. "Built [X] that [metric]. Sold the company in 2025."
 - **Good fit?** → "I sit at the intersection of [A] and [B], which is exactly where this role lives."
-- **How did you hear?** → Honesto: "Found through [portal/scan], evaluated against my criteria, and it scored highest."
+- **How did you hear?** → Honest: "Found through [portal/scan], evaluated against my criteria, and it scored highest."
 
-**Idioma**: Siempre en el idioma del JD (EN default). Aplicar `/tech-translate`.
+**Language**: Always in the JD's language (EN default). Apply `/tech-translate`.
 
-## Paso 5 — Actualizar Tracker
-Registrar en `data/applications.md` con todas las columnas incluyendo Report y PDF en ✅.
+## Step 5 — Update Tracker
+Register in `data/applications.md` with all columns including Report and PDF as ✅.
 
-**Si el Stage 0 pre-screen falla (< 3.0)**: escribir TSV con status `NO APLICAR`, no generar PDF ni report completo, notificar al candidato con el preliminary score y razón.
+**If Stage 0 pre-screen fails (< 3.0)**: write TSV with status `SKIP`, don't generate PDF or full report, notify candidate with preliminary score and reason.
 
-**Si algún otro paso falla**, continuar con los siguientes y marcar el paso fallido como pendiente en el tracker.
+**If any other step fails**, continue with remaining steps and mark failed step as pending in tracker.

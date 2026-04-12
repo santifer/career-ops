@@ -11,16 +11,16 @@ import { isValidStatus, hasMarkdownBold, hasDateInStatus, isValidScoreFormat, fi
 // ---------------------------------------------------------------------------
 describe('isValidStatus', () => {
   test('accepts all canonical statuses (lowercase)', () => {
-    const canonical = ['evaluada', 'aplicado', 'respondido', 'entrevista', 'oferta', 'rechazado', 'descartado', 'no aplicar'];
+    const canonical = ['evaluated', 'applied', 'responded', 'interview', 'offer', 'rejected', 'discarded', 'skip'];
     for (const s of canonical) {
       assert.ok(isValidStatus(s), `Expected "${s}" to be valid`);
     }
   });
 
   test('accepts canonical statuses with proper casing', () => {
-    assert.ok(isValidStatus('Evaluada'));
-    assert.ok(isValidStatus('NO APLICAR'));
-    assert.ok(isValidStatus('Descartado'));
+    assert.ok(isValidStatus('Evaluated'));
+    assert.ok(isValidStatus('SKIP'));
+    assert.ok(isValidStatus('Discarded'));
   });
 
   test('accepts known aliases', () => {
@@ -43,8 +43,8 @@ describe('isValidStatus', () => {
   });
 
   test('strips trailing dates before checking', () => {
-    assert.ok(isValidStatus('Aplicado 2026-01-15'));
-    assert.ok(isValidStatus('Rechazado 2026-03-10 extra'));
+    assert.ok(isValidStatus('Applied 2026-01-15'));
+    assert.ok(isValidStatus('Rejected 2026-03-10 extra'));
   });
 
   test('rejects unknown statuses', () => {
@@ -83,8 +83,8 @@ describe('hasDateInStatus', () => {
   });
 
   test('returns false for status without date', () => {
-    assert.ok(!hasDateInStatus('Evaluada'));
-    assert.ok(!hasDateInStatus('NO APLICAR'));
+    assert.ok(!hasDateInStatus('Evaluated'));
+    assert.ok(!hasDateInStatus('SKIP'));
     assert.ok(!hasDateInStatus('Applied'));
   });
 });

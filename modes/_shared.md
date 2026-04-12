@@ -111,7 +111,7 @@ If the candidate has a live demo/dashboard (check profile.yml), offer access in 
 
 **Cache-first protocol (saves 3 WebSearch calls per repeated role type):**
 
-Before running WebSearch for comp data in Bloque D:
+Before running WebSearch for comp data in Block D:
 1. Normalize: role title + level (e.g. "senior-ai-engineer"), company stage (seed/series-a/series-b/series-c/public), location (e.g. "remote" or "toronto")
 2. Check cache: `node comp-cache.mjs lookup "{role-level}" "{stage}" "{location}"`
 3. If output is JSON (hit and not expired) → use cached data, skip WebSearch
@@ -155,7 +155,7 @@ Before running WebSearch for comp data in Bloque D:
 
 ### Stage 0 — Pre-screen (cheap, ~1K tokens output)
 
-Run BEFORE Bloque A. No WebSearch, no STAR stories.
+Run BEFORE Block A. No WebSearch, no STAR stories.
 
 1. Extract from JD: title, domain, top 5 requirements
 2. **North Star alignment** (1–5): does the role domain map to any of the 6 archetypes?
@@ -173,7 +173,7 @@ Run BEFORE Bloque A. No WebSearch, no STAR stories.
 
 ### Verbosity tiers (after Stage 0 passes)
 
-After computing the final score from Bloque B (CV match gives enough signal):
+After computing the final score from Block B (CV match gives enough signal):
 
 | Score | Sections to generate | Report type |
 |-------|---------------------|-------------|
@@ -182,8 +182,8 @@ After computing the final score from Bloque B (CV match gives enough signal):
 | 4.0 – 4.4 | A + B + C + D (with comp cache) + E | Full minus interview prep |
 | ≥ 4.5 | A + B + C + D + E + F + G | Full with STAR stories + draft answers |
 
-**Do NOT generate Bloque F (interview prep / STAR stories) unless score ≥ 4.0.**
-**Do NOT generate Bloque G (draft answers) unless score ≥ 4.5.**
+**Do NOT generate Block F (interview prep / STAR stories) unless score ≥ 4.0.**
+**Do NOT generate Block G (draft answers) unless score ≥ 4.5.**
 
 ---
 

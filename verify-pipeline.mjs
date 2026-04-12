@@ -35,14 +35,24 @@ const CANONICAL_STATUSES = [
 ];
 
 const ALIASES = {
+  // Spanish → English
   'evaluada': 'evaluated', 'condicional': 'evaluated', 'hold': 'evaluated', 'evaluar': 'evaluated', 'verificar': 'evaluated',
-  'aplicado': 'applied', 'enviada': 'applied', 'aplicada': 'applied', 'applied': 'applied', 'sent': 'applied',
+  'aplicado': 'applied', 'enviada': 'applied', 'aplicada': 'applied',
   'respondido': 'responded',
   'entrevista': 'interview',
   'oferta': 'offer',
   'rechazado': 'rejected', 'rechazada': 'rejected',
   'descartado': 'discarded', 'descartada': 'discarded', 'cerrada': 'discarded', 'cancelada': 'discarded',
   'no aplicar': 'skip', 'no_aplicar': 'skip', 'monitor': 'skip', 'geo blocker': 'skip',
+  // English → English passthrough
+  'applied': 'applied', 'sent': 'applied', 'evaluated': 'evaluated',
+  'responded': 'responded',
+  'interview': 'interview',
+  'offer': 'offer',
+  'rejected': 'rejected',
+  'closed': 'discarded', 'discarded': 'discarded', 'canceled': 'discarded',
+  'skip': 'skip', 'skipped': 'skip', 'no_apply': 'skip', 'skip_apply': 'skip',
+  'geo_blocker': 'skip',
 };
 
 // --- Pure validation functions (exported for testing) ---
