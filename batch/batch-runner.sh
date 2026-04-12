@@ -365,7 +365,7 @@ process_offer() {
     # Try to extract score from worker output
     local score="-"
     local score_match
-    score_match=$(grep -oP '"score":\s*[\d.]+' "$log_file" 2>/dev/null | head -1 | grep -oP '[\d.]+' || true)
+   score_match=$(sed -nE 's/.*"score":[[:space:]]*([0-9.]+).*/\1/p' "$log_file" 2>/dev/null | head -1 || true)
     if [[ -n "$score_match" ]]; then
       score="$score_match"
     fi
