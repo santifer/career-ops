@@ -290,9 +290,9 @@ app.post('/api/session/start', async (req, res) => {
     proc.stdin.write(userMessage);
     proc.stdin.end();
 
-    let stdout = '';
+    let stdout = '', stderr = '';
     proc.stdout.on('data', c => { stdout += c.toString(); });
-    proc.stderr.on('data', () => {});
+    proc.stderr.on('data', c => { stderr += c.toString(); });
 
     proc.on('close', code => {
       let result = stdout, claudeSid = null;
@@ -300,10 +300,17 @@ app.post('/api/session/start', async (req, res) => {
         const parsed = JSON.parse(stdout);
         result = parsed.result || '';
         claudeSid = parsed.session_id || null;
-      } catch {}
+      } catch {
+        // If JSON parse failed, use raw output or stderr as error
+        if (!result.trim() && stderr.trim()) {
+          result = `Error: ${stderr.trim()}`;
+        } else if (!result.trim()) {
+          result = '(no output from claude)';
+        }
+      }
 
       session.claudeSessionId = claudeSid;
-      session.status = 'waiting';
+      session.status = code === 0 ? 'waiting' : 'error';
       session.messages.push({ role: 'assistant', text: result, ts: Date.now() });
       session.proc = null;
       broadcast({ type: 'session-response', sessionId, text: result, status: 'waiting' });
@@ -359,9 +366,9 @@ app.post('/api/session/:id/reply', (req, res) => {
   proc.stdin.write(input);
   proc.stdin.end();
 
-  let stdout = '';
+  let stdout = '', stderr = '';
   proc.stdout.on('data', c => { stdout += c.toString(); });
-  proc.stderr.on('data', () => {});
+  proc.stderr.on('data', c => { stderr += c.toString(); });
 
   proc.on('close', code => {
     let result = stdout, claudeSid = session.claudeSessionId;
@@ -369,13 +376,16 @@ app.post('/api/session/:id/reply', (req, res) => {
       const parsed = JSON.parse(stdout);
       result = parsed.result || '';
       claudeSid = parsed.session_id || claudeSid;
-    } catch {}
+    } catch {
+      if (!result.trim() && stderr.trim()) result = `Error: ${stderr.trim()}`;
+      else if (!result.trim()) result = '(no output from claude)';
+    }
 
     session.claudeSessionId = claudeSid;
-    session.status = 'waiting';
+    session.status = code === 0 ? 'waiting' : 'error';
     session.messages.push({ role: 'assistant', text: result, ts: Date.now() });
     session.proc = null;
-    broadcast({ type: 'session-response', sessionId: session.id, text: result, status: 'waiting' });
+    broadcast({ type: 'session-response', sessionId: session.id, text: result, status: session.status });
   });
 
   proc.on('error', err => {
