@@ -182,7 +182,7 @@ const allowedFiles = ['README.md', 'LICENSE', 'CITATION.cff', 'CONTRIBUTING.md',
 let leakFound = false;
 for (const pattern of leakPatterns) {
   const result = run(
-    `grep -rn "${pattern}" --include="*.{${scanExtensions.join(',')}}" . 2>/dev/null | grep -v node_modules | grep -v ".git/" | grep -v go.sum`
+    `git grep -n "${pattern}" -- "*.mjs" "*.sh" "*.md" "*.go" "*.yml" "*.html" "*.json" 2>/dev/null || true`
   );
   if (result) {
     for (const line of result.split('\n')) {
@@ -203,12 +203,22 @@ if (!leakFound) {
 console.log('\n7. Absolute path check');
 
 const absPathResult = run(
-  `grep -rn "/Users/" --include="*.mjs" --include="*.sh" --include="*.md" --include="*.go" --include="*.yml" . 2>/dev/null | grep -v node_modules | grep -v ".git/" | grep -v README.md | grep -v LICENSE | grep -v go.sum | grep -v CLAUDE.md | grep -v test-all.mjs`
+  `git grep -n "/Users/" -- "*.mjs" "*.sh" "*.md" "*.go" "*.yml" "*.html" "*.json" 2>/dev/null || true`
 );
-if (!absPathResult) {
+// Remove allowed files from result
+let filteredAbsResult = '';
+if (absPathResult) {
+  filteredAbsResult = absPathResult.split('\\n').filter(line => {
+    const file = line.split(':')[0];
+    if (file.includes('README.md') || file.includes('LICENSE') || file.includes('go.sum') || file.includes('CLAUDE.md') || file.includes('test-all.mjs') || file.includes('test-all.sh')) return false;
+    return true;
+  }).join('\\n');
+}
+
+if (!filteredAbsResult) {
   pass('No absolute paths in code files');
 } else {
-  for (const line of absPathResult.split('\n').filter(Boolean)) {
+  for (const line of filteredAbsResult.split('\n').filter(Boolean)) {
     fail(`Absolute path: ${line.slice(0, 100)}`);
   }
 }
