@@ -260,13 +260,13 @@ func (m ViewerModel) styleLine(line string) string {
 	if strings.HasPrefix(trimmed, "|") && strings.Contains(trimmed, "---") {
 		return lipgloss.NewStyle().
 			Foreground(m.theme.Overlay).
-			Render(line)
+			Render(truncateLine(line, m.width-4))
 	}
-	// Table rows
+	// Table rows -- truncate long cells to fit terminal width
 	if strings.HasPrefix(trimmed, "|") {
 		return lipgloss.NewStyle().
 			Foreground(m.theme.Text).
-			Render(line)
+			Render(truncateLine(line, m.width-4))
 	}
 	// Bullet points
 	if strings.HasPrefix(trimmed, "- ") || strings.HasPrefix(trimmed, "* ") {
@@ -279,6 +279,18 @@ func (m ViewerModel) styleLine(line string) string {
 	return lipgloss.NewStyle().
 		Foreground(m.theme.Subtext).
 		Render(line)
+}
+
+// truncateLine shortens a line to maxWidth, appending "…" if it was cut.
+func truncateLine(line string, maxWidth int) string {
+	if maxWidth < 4 {
+		maxWidth = 4
+	}
+	runes := []rune(line)
+	if len(runes) <= maxWidth {
+		return line
+	}
+	return string(runes[:maxWidth-1]) + "…"
 }
 
 func (m ViewerModel) renderFooter() string {
