@@ -37,7 +37,7 @@
 ## Evaluation Flow (Single Offer)
 
 1. **Input**: User pastes JD text or URL
-2. **Extract**: Playwright/WebFetch extracts JD from URL
+2. **Extract**: Patchright/WebFetch extracts JD from URL
 3. **Classify**: Detect archetype (1 of 6 types)
 4. **Evaluate**: 6 blocks (A-F):
    - A: Role summary

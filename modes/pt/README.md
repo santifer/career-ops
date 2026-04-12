@@ -63,7 +63,7 @@ Se a comunidade adotar os modos em portugues, mais modos serao traduzidos em PRs
 Propositalmente nao traduzido, porque e vocabulario padrao de tech:
 
 - `cv.md`, `pipeline`, `tracker`, `report`, `score`, `archetype`, `proof point`
-- Nomes de tools (`Playwright`, `WebSearch`, `WebFetch`, `Read`, `Write`, `Edit`, `Bash`)
+- Nomes de tools (`Patchright`, `WebSearch`, `WebFetch`, `Read`, `Write`, `Edit`, `Bash`)
 - Valores de status no tracker (`Evaluated`, `Applied`, `Interview`, `Offer`, `Rejected`)
 - Code snippets, caminhos de arquivo, comandos
 

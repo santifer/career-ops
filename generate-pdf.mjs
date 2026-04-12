@@ -1,16 +1,16 @@
 #!/usr/bin/env node
 
 /**
- * generate-pdf.mjs — HTML → PDF via Playwright
+ * generate-pdf.mjs — HTML → PDF via Patchright
  *
  * Usage:
  *   node career-ops/generate-pdf.mjs <input.html> <output.pdf> [--format=letter|a4]
  *
- * Requires: @playwright/test (or playwright) installed.
- * Uses Chromium headless to render the HTML and produce a clean, ATS-parseable PDF.
+ * Requires: patchright installed (npm i patchright).
+ * Uses Patchright (undetectable Chromium) to render the HTML and produce a clean, ATS-parseable PDF.
  */
 
-import { chromium } from 'playwright';
+import { chromium } from 'patchright';
 import { resolve, dirname } from 'path';
 import { readFile } from 'fs/promises';
 import { fileURLToPath } from 'url';

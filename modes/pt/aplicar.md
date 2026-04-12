@@ -4,8 +4,8 @@ Modo interativo para quando o candidato esta preenchendo um formulario de candid
 
 ## Requisitos
 
-- **Melhor com Playwright visivel**: No modo visivel, o candidato ve o navegador e Claude pode interagir com a pagina.
-- **Sem Playwright**: o candidato compartilha um screenshot ou cola as perguntas manualmente.
+- **Melhor com Patchright visivel**: No modo visivel, o candidato ve o navegador e Claude pode interagir com a pagina.
+- **Sem Patchright**: o candidato compartilha um screenshot ou cola as perguntas manualmente.
 
 ## Workflow
 
@@ -22,9 +22,9 @@ Modo interativo para quando o candidato esta preenchendo um formulario de candid
 
 ## Passo 1 -- Detectar a vaga
 
-**Com Playwright:** Tirar snapshot da pagina ativa. Ler titulo, URL e conteudo visivel.
+**Com Patchright:** Tirar snapshot da pagina ativa. Ler titulo, URL e conteudo visivel.
 
-**Sem Playwright:** Pedir ao candidato que:
+**Sem Patchright:** Pedir ao candidato que:
 - Compartilhe um screenshot do formulario (o Read tool le imagens)
 - Ou cole as perguntas do formulario como texto
 - Ou diga empresa + vaga para buscarmos o contexto

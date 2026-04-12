@@ -23,9 +23,9 @@ Leer `portals.yml` que contiene:
 
 ## Estrategia de descubrimiento (3 niveles)
 
-### Nivel 1 — Playwright directo (PRINCIPAL)
+### Nivel 1 — Patchright directo (PRINCIPAL)
 
-**Para cada empresa en `tracked_companies`:** Navegar a su `careers_url` con Playwright (`browser_navigate` + `browser_snapshot`), leer TODOS los job listings visibles, y extraer título + URL de cada uno. Este es el método más fiable porque:
+**Para cada empresa en `tracked_companies`:** Navegar a su `careers_url` con Patchright (`browser_navigate` + `browser_snapshot`), leer TODOS los job listings visibles, y extraer título + URL de cada uno. Este es el método más fiable porque:
 - Ve la página en tiempo real (no resultados cacheados de Google)
 - Funciona con SPAs (Ashby, Lever, Workday)
 - Detecta ofertas nuevas al instante
@@ -35,7 +35,7 @@ Leer `portals.yml` que contiene:
 
 ### Nivel 2 — ATS APIs / Feeds (COMPLEMENTARIO)
 
-Para empresas con API pública o feed estructurado, usar la respuesta JSON/XML como complemento rápido de Nivel 1. Es más rápido que Playwright y reduce errores de scraping visual.
+Para empresas con API pública o feed estructurado, usar la respuesta JSON/XML como complemento rápido de Nivel 1. Es más rápido que Patchright y reduce errores de scraping visual.
 
 **Soporte actual (variables entre `{}`):**
 - **Greenhouse**: `https://boards-api.greenhouse.io/v1/boards/{company}/jobs`
@@ -58,7 +58,7 @@ Para empresas con API pública o feed estructurado, usar la respuesta JSON/XML c
 Los `search_queries` con `site:` filters cubren portales de forma transversal (todos los Ashby, todos los Greenhouse, etc.). Útil para descubrir empresas NUEVAS que aún no están en `tracked_companies`, pero los resultados pueden estar desfasados.
 
 **Prioridad de ejecución:**
-1. Nivel 1: Playwright → todas las `tracked_companies` con `careers_url`
+1. Nivel 1: Patchright → todas las `tracked_companies` con `careers_url`
 2. Nivel 2: API → todas las `tracked_companies` con `api:`
 3. Nivel 3: WebSearch → todos los `search_queries` con `enabled: true`
 
@@ -70,7 +70,7 @@ Los niveles son aditivos — se ejecutan todos, los resultados se mezclan y dedu
 2. **Leer historial**: `data/scan-history.tsv` → URLs ya vistas
 3. **Leer dedup sources**: `data/applications.md` + `data/pipeline.md`
 
-4. **Nivel 1 — Playwright scan** (paralelo en batches de 3-5):
+4. **Nivel 1 — Patchright scan** (paralelo en batches de 3-5):
    Para cada empresa en `tracked_companies` con `enabled: true` y `careers_url` definida:
    a. `browser_navigate` a la `careers_url`
    b. `browser_snapshot` para leer todos los job listings
@@ -114,9 +114,9 @@ Los niveles son aditivos — se ejecutan todos, los resultados se mezclan y dedu
 
 7.5. **Verificar liveness de resultados de WebSearch (Nivel 3)** — ANTES de añadir a pipeline:
 
-   Los resultados de WebSearch pueden estar desactualizados (Google cachea resultados durante semanas o meses). Para evitar evaluar ofertas expiradas, verificar con Playwright cada URL nueva que provenga del Nivel 3. Los Niveles 1 y 2 son inherentemente en tiempo real y no requieren esta verificación.
+   Los resultados de WebSearch pueden estar desactualizados (Google cachea resultados durante semanas o meses). Para evitar evaluar ofertas expiradas, verificar con Patchright cada URL nueva que provenga del Nivel 3. Los Niveles 1 y 2 son inherentemente en tiempo real y no requieren esta verificación.
 
-   Para cada URL nueva de Nivel 3 (secuencial — NUNCA Playwright en paralelo):
+   Para cada URL nueva de Nivel 3 (secuencial — NUNCA Patchright en paralelo):
    a. `browser_navigate` a la URL
    b. `browser_snapshot` para leer el contenido
    c. Clasificar:
@@ -208,7 +208,7 @@ Cada empresa en `tracked_companies` debe tener `careers_url` — la URL directa 
 **Si `careers_url` no existe** para una empresa:
 1. Intentar el patrón de su plataforma conocida
 2. Si falla, hacer un WebSearch rápido: `"{company}" careers jobs`
-3. Navegar con Playwright para confirmar que funciona
+3. Navegar con Patchright para confirmar que funciona
 4. **Guardar la URL encontrada en portals.yml** para futuros scans
 
 **Si `careers_url` devuelve 404 o redirect:**

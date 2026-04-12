@@ -4,8 +4,8 @@ Interaktiver Modus für den Moment, in dem der Kandidat in Chrome ein Bewerbungs
 
 ## Voraussetzungen
 
-- **Empfohlen mit sichtbarem Playwright**: Im sichtbaren Modus sieht der Kandidat den Browser, und Claude kann mit der Seite interagieren.
-- **Ohne Playwright**: Der Kandidat teilt einen Screenshot oder fügt die Fragen manuell ein.
+- **Empfohlen mit sichtbarem Patchright**: Im sichtbaren Modus sieht der Kandidat den Browser, und Claude kann mit der Seite interagieren.
+- **Ohne Patchright**: Der Kandidat teilt einen Screenshot oder fügt die Fragen manuell ein.
 
 ## Workflow
 
@@ -22,9 +22,9 @@ Interaktiver Modus für den Moment, in dem der Kandidat in Chrome ein Bewerbungs
 
 ## Schritt 1 — Stellenanzeige erkennen
 
-**Mit Playwright:** Snapshot der aktiven Seite. Titel, URL und sichtbaren Inhalt lesen.
+**Mit Patchright:** Snapshot der aktiven Seite. Titel, URL und sichtbaren Inhalt lesen.
 
-**Ohne Playwright:** Den Kandidaten bitten, eines der folgenden zu tun:
+**Ohne Patchright:** Den Kandidaten bitten, eines der folgenden zu tun:
 - Einen Screenshot des Formulars teilen (das Read-Tool kann Bilder lesen)
 - Die Fragen des Formulars als Text einfügen
 - Firma + Rolle nennen, damit wir den Kontext suchen können

@@ -63,7 +63,7 @@ Wenn die Community die deutschen Modi annimmt, werden weitere Modi in einem Folg
 Bewusst nicht eingedeutscht, weil Standard-Tech-Vokabular:
 
 - `cv.md`, `pipeline`, `tracker`, `report`, `score`, `archetype`, `proof point`
-- Tool-Namen (`Playwright`, `WebSearch`, `WebFetch`, `Read`, `Write`, `Edit`, `Bash`)
+- Tool-Namen (`Patchright`, `WebSearch`, `WebFetch`, `Read`, `Write`, `Edit`, `Bash`)
 - Status-Werte im Tracker (`Evaluated`, `Applied`, `Interview`, `Offer`, `Rejected`)
 - Code-Snippets, Pfade, Befehle
 

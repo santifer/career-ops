@@ -7,7 +7,7 @@
 1. **読み取り** `data/pipeline.md` → 「未処理」セクションの `- [ ]` アイテムを検索
 2. **各未処理 URL に対して**：
    a. 次の `REPORT_NUM` を連番で計算（`reports/` を読み、最大番号 + 1）
-   b. **JD を抽出** Playwright（browser_navigate + browser_snapshot）→ WebFetch → WebSearch の順で
+   b. **JD を抽出** Patchright（browser_navigate + browser_snapshot）→ WebFetch → WebSearch の順で
    c. URL にアクセスできない場合 → `- [!]` にマークし注記、次へ進む
    d. **完全な auto-pipeline を実行**：評価 A-F → Report .md → PDF（スコア >= 3.0 の場合）→ Tracker
    e. **「未処理」から「処理済み」へ移動**：`- [x] #NNN | URL | 企業名 | 求人タイトル | スコア/5 | PDF ✅/❌`
@@ -35,15 +35,15 @@
 
 ## URL からの JD インテリジェント検出
 
-1. **Playwright（推奨）：** `browser_navigate` + `browser_snapshot`。すべての SPA で動作。
-2. **WebFetch（フォールバック）：** 静的ページ、または Playwright が利用できない場合。
+1. **Patchright（推奨）：** `browser_navigate` + `browser_snapshot`。すべての SPA で動作。
+2. **WebFetch（フォールバック）：** 静的ページ、または Patchright が利用できない場合。
 3. **WebSearch（最終手段）：** JD をインデックスしているセカンダリポータルで検索。
 
 **特殊ケース：**
 - **LinkedIn**：ログインが必要な場合あり → `[!]` にマークし、候補者にテキストを貼り付けてもらう
 - **PDF**：URL が PDF を指す場合、Read tool で直接読む
 - **`local:` プレフィックス**：ローカルファイルを読む。例：`local:jds/linkedin-pm-ai.md` → `jds/linkedin-pm-ai.md` を読む
-- **Wantedly / Green / Findy**：日本の主要プラットフォーム。Playwright でうまく動作
+- **Wantedly / Green / Findy**：日本の主要プラットフォーム。Patchright でうまく動作
 - **doda / リクナビNEXT / マイナビ転職**：日本の大手求人ポータル。通常 WebFetch でアクセス可能
 - **ビズリーチ**：ハイクラス求人。ログインが必要な場合あり
 - **LinkedIn JP**：グローバル LinkedIn と同じ制約 — ログインが必要な場合あり

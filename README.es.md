@@ -18,7 +18,7 @@
   <img src="https://img.shields.io/badge/Codex_(pronto)-6B7280?style=flat&logo=openai&logoColor=white" alt="Codex">
   <img src="https://img.shields.io/badge/Node.js-339933?style=flat&logo=node.js&logoColor=white" alt="Node.js">
   <img src="https://img.shields.io/badge/Go-00ADD8?style=flat&logo=go&logoColor=white" alt="Go">
-  <img src="https://img.shields.io/badge/Playwright-2EAD33?style=flat&logo=playwright&logoColor=white" alt="Playwright">
+  <img src="https://img.shields.io/badge/Patchright-2EAD33?style=flat&logo=playwright&logoColor=white" alt="Patchright">
   <img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="MIT">
   <a href="https://discord.gg/8pRpHETxa4"><img src="https://img.shields.io/badge/Discord-5865F2?style=flat&logo=discord&logoColor=white" alt="Discord"></a>
   <br>
@@ -77,7 +77,7 @@ Construido por alguien que lo uso para evaluar 740+ ofertas, generar 100+ CVs pe
 # 1. Clonar e instalar
 git clone https://github.com/santifer/career-ops.git
 cd career-ops && npm install
-npx playwright install chromium   # Necesario para generar PDFs
+npx patchright install chromium   # Necesario para generar PDFs
 
 # 2. Verificar setup
 npm run doctor                     # Valida todos los prerequisitos
@@ -210,13 +210,13 @@ career-ops/
 
 ![Claude Code](https://img.shields.io/badge/Claude_Code-000?style=flat&logo=anthropic&logoColor=white)
 ![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat&logo=node.js&logoColor=white)
-![Playwright](https://img.shields.io/badge/Playwright-2EAD33?style=flat&logo=playwright&logoColor=white)
+![Patchright](https://img.shields.io/badge/Patchright-2EAD33?style=flat&logo=playwright&logoColor=white)
 ![Go](https://img.shields.io/badge/Go-00ADD8?style=flat&logo=go&logoColor=white)
 ![Bubble Tea](https://img.shields.io/badge/Bubble_Tea-FF75B5?style=flat&logo=go&logoColor=white)
 
 - **Agente**: Claude Code con skills y modos personalizados
-- **PDF**: Playwright/Puppeteer + template HTML
-- **Scanner**: Playwright + Greenhouse API + WebSearch
+- **PDF**: Patchright/Puppeteer + template HTML
+- **Scanner**: Patchright + Greenhouse API + WebSearch
 - **Dashboard**: Go + Bubble Tea + Lipgloss (tema Catppuccin Mocha)
 - **Datos**: Tablas Markdown + config YAML + ficheros TSV batch
 

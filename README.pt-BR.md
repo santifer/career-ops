@@ -18,7 +18,7 @@
   <img src="https://img.shields.io/badge/Codex_(soon)-6B7280?style=flat&logo=openai&logoColor=white" alt="Codex">
   <img src="https://img.shields.io/badge/Node.js-339933?style=flat&logo=node.js&logoColor=white" alt="Node.js">
   <img src="https://img.shields.io/badge/Go-00ADD8?style=flat&logo=go&logoColor=white" alt="Go">
-  <img src="https://img.shields.io/badge/Playwright-2EAD33?style=flat&logo=playwright&logoColor=white" alt="Playwright">
+  <img src="https://img.shields.io/badge/Patchright-2EAD33?style=flat&logo=playwright&logoColor=white" alt="Patchright">
   <img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="MIT">
   <a href="https://discord.gg/8pRpHETxa4"><img src="https://img.shields.io/badge/Discord-5865F2?style=flat&logo=discord&logoColor=white" alt="Discord"></a>
   <br>
@@ -51,7 +51,7 @@ Career-Ops transforma qualquer CLI de código com IA em uma central completa de 
 
 > **Importante: isso NÃO é uma ferramenta de disparo em massa.** Career-ops é um filtro -- ajuda você a encontrar as poucas vagas que realmente valem seu tempo entre centenas. O sistema recomenda fortemente não se candidatar a nada com nota abaixo de 4.0/5. Seu tempo é valioso, e o do recrutador também. Sempre revise antes de enviar.
 
-Career-ops é agentic: Claude Code navega páginas de carreira com Playwright, avalia aderência comparando seu CV com a descrição da vaga (não por simples correspondência de palavras-chave) e adapta seu currículo para cada vaga.
+Career-ops é agentic: Claude Code navega páginas de carreira com Patchright, avalia aderência comparando seu CV com a descrição da vaga (não por simples correspondência de palavras-chave) e adapta seu currículo para cada vaga.
 
 > **Aviso: as primeiras avaliações não vão ser ótimas.** O sistema ainda não conhece você. Dê contexto -- seu CV, sua trajetória profissional, suas provas de resultado, suas preferências, no que você é bom e o que quer evitar. Quanto mais você alimenta, melhor ele fica. Pense nisso como o onboarding de um novo recrutador: na primeira semana ele precisa te conhecer, depois se torna indispensável.
 
@@ -78,7 +78,7 @@ Construído por alguém que usou isso para avaliar 740+ vagas, gerar 100+ CVs pe
 # 1. Clone e instale
 git clone https://github.com/santifer/career-ops.git
 cd career-ops && npm install
-npx playwright install chromium   # Necessário para geração de PDF
+npx patchright install chromium   # Necessário para geração de PDF
 
 # 2. Verifique o setup
 npm run doctor                     # Valida todos os pré-requisitos
@@ -213,13 +213,13 @@ career-ops/
 
 ![Claude Code](https://img.shields.io/badge/Claude_Code-000?style=flat&logo=anthropic&logoColor=white)
 ![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat&logo=node.js&logoColor=white)
-![Playwright](https://img.shields.io/badge/Playwright-2EAD33?style=flat&logo=playwright&logoColor=white)
+![Patchright](https://img.shields.io/badge/Patchright-2EAD33?style=flat&logo=playwright&logoColor=white)
 ![Go](https://img.shields.io/badge/Go-00ADD8?style=flat&logo=go&logoColor=white)
 ![Bubble Tea](https://img.shields.io/badge/Bubble_Tea-FF75B5?style=flat&logo=go&logoColor=white)
 
 - **Agente**: Claude Code com skills e modos customizados
-- **PDF**: Playwright/Puppeteer + template HTML
-- **Scanner**: Playwright + Greenhouse API + WebSearch
+- **PDF**: Patchright/Puppeteer + template HTML
+- **Scanner**: Patchright + Greenhouse API + WebSearch
 - **Dashboard**: Go + Bubble Tea + Lipgloss (tema Catppuccin Mocha)
 - **Dados**: Tabelas em Markdown + configuração YAML + arquivos TSV de lote
 

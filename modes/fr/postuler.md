@@ -4,8 +4,8 @@ Mode interactif pour le moment ou le candidat remplit un formulaire de candidatu
 
 ## Prerequis
 
-- **Ideal avec Playwright visible** : En mode visible, le candidat voit le navigateur et Claude peut interagir avec la page.
-- **Sans Playwright** : le candidat partage une capture d'ecran ou colle les questions manuellement.
+- **Ideal avec Patchright visible** : En mode visible, le candidat voit le navigateur et Claude peut interagir avec la page.
+- **Sans Patchright** : le candidat partage une capture d'ecran ou colle les questions manuellement.
 
 ## Workflow
 
@@ -22,9 +22,9 @@ Mode interactif pour le moment ou le candidat remplit un formulaire de candidatu
 
 ## Etape 1 -- Detecter l'offre
 
-**Avec Playwright :** Snapshot de la page active. Lire titre, URL et contenu visible.
+**Avec Patchright :** Snapshot de la page active. Lire titre, URL et contenu visible.
 
-**Sans Playwright :** Demander au candidat de :
+**Sans Patchright :** Demander au candidat de :
 - Partager une capture d'ecran du formulaire (le Read tool lit les images)
 - Ou coller les questions du formulaire en texte
 - Ou indiquer entreprise + role pour qu'on cherche le contexte

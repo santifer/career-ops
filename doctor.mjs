@@ -43,21 +43,21 @@ function checkDependencies() {
 
 async function checkPlaywright() {
   try {
-    const { chromium } = await import('playwright');
+    const { chromium } = await import('patchright');
     const execPath = chromium.executablePath();
     if (existsSync(execPath)) {
-      return { pass: true, label: 'Playwright chromium installed' };
+      return { pass: true, label: 'Patchright chromium installed' };
     }
     return {
       pass: false,
-      label: 'Playwright chromium not installed',
-      fix: 'Run: npx playwright install chromium',
+      label: 'Patchright chromium not installed',
+      fix: 'Run: npx patchright install chromium',
     };
   } catch {
     return {
       pass: false,
-      label: 'Playwright chromium not installed',
-      fix: 'Run: npx playwright install chromium',
+      label: 'Patchright chromium not installed',
+      fix: 'Run: npx patchright install chromium',
     };
   }
 }

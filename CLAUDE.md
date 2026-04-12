@@ -1,3 +1,7 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 # Career-Ops -- AI Job Search Pipeline
 
 ## Origin
@@ -54,7 +58,7 @@ AI-powered job search automation built on Claude Code: pipeline tracking, offer 
 | `data/scan-history.tsv` | Scanner dedup history |
 | `portals.yml` | Query and company config |
 | `templates/cv-template.html` | HTML template for CVs |
-| `generate-pdf.mjs` | Playwright: HTML to PDF |
+| `generate-pdf.mjs` | Patchright: HTML to PDF |
 | `article-digest.md` | Compact proof points from portfolio (optional) |
 | `interview-prep/story-bank.md` | Accumulated STAR+R stories across evaluations |
 | `interview-prep/{company}-{role}.md` | Company-specific interview intel reports |
@@ -240,6 +244,95 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 
 ---
 
+## Commands
+
+```sh
+node verify-pipeline.mjs     # Health check: statuses, duplicates, broken report links
+node normalize-statuses.mjs  # Map status aliases to canonical values
+node dedup-tracker.mjs       # Remove duplicate entries (same company+role)
+node merge-tracker.mjs       # Merge batch/tracker-additions/*.tsv into applications.md
+node generate-pdf.mjs        # Generate PDF from last HTML written to output/
+node cv-sync-check.mjs       # Validate setup consistency (cv.md, profile.yml, portals.yml)
+```
+
+```sh
+# npm script aliases
+npm run verify
+npm run normalize
+npm run dedup
+npm run merge
+npm run pdf
+npm run sync-check
+```
+
+```sh
+# Dashboard TUI (Go)
+cd dashboard && go run main.go
+```
+
+```sh
+# Batch processing
+bash batch/batch-runner.sh   # Orchestrates parallel claude -p workers for bulk evaluation
+```
+
+---
+
+## Architecture
+
+### Mode System
+
+All behavior is driven by mode files in `modes/`. Claude reads the relevant mode file at runtime — there is no compiled routing. The shared context (`modes/_shared.md`) is the foundation for every mode: it defines archetypes, scoring weights, global rules, and tool policy. Mode files layer on top of it.
+
+```
+modes/_shared.md          ← Always loaded (archetypes, rules, tools)
+modes/oferta.md           ← Single offer evaluation
+modes/auto-pipeline.md    ← Full pipeline: evaluate → report → PDF → tracker
+modes/scan.md             ← Portal scraping via portals.yml
+modes/batch.md            ← Orchestrate batch-runner.sh
+modes/pdf.md              ← CV generation only
+modes/pipeline.md         ← Process pending URLs from data/pipeline.md
+modes/tracker.md          ← Query/update application status
+modes/apply.md            ← Fill application forms
+modes/contacto.md         ← LinkedIn outreach drafts
+modes/deep.md             ← Company research
+modes/training.md         ← Course/cert evaluation
+modes/project.md          ← Portfolio project evaluation
+modes/ofertas.md          ← Offer comparison
+```
+
+### Evaluation Flow (auto-pipeline)
+
+1. Input: JD text or URL
+2. Patchright verifies URL is still active (`browser_navigate` + `browser_snapshot`)
+3. Detect archetype (one of 6 in `modes/_shared.md`)
+4. Evaluate blocks A–F (role summary, CV match, level, comp, CV personalization, interview prep)
+5. Score: weighted average across 10 dimensions (1–5)
+6. Write report → `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`
+7. Generate PDF → `output/cv-candidate-{slug}-{date}.pdf` via `generate-pdf.mjs`
+8. Write tracker TSV → `batch/tracker-additions/{num}-{slug}.tsv`
+9. Run `node merge-tracker.mjs` to merge TSV into `data/applications.md`
+
+### Batch System
+
+`batch/batch-runner.sh` orchestrates N parallel `claude -p` worker processes. Each worker receives `batch/batch-prompt.md` as full context and produces a report, PDF, and TSV line independently. State is tracked in `batch/batch-state.tsv` to support resume. After all workers finish, run `node merge-tracker.mjs`.
+
+**CRITICAL: NEVER launch 2+ agents with Patchright in parallel.** They share a single browser instance. Batch mode uses headless `claude -p` (no browser) — Patchright is only for interactive single-offer verification.
+
+### Dashboard TUI
+
+Standalone Go app in `dashboard/`. Reads `data/applications.md` directly. Filter tabs (All, Evaluated, Applied, Interview, Top ≥4, SKIP), sort modes, grouped/flat view, inline status picker, lazy-loaded report previews. Run separately from the main Claude workflow.
+
+### Data Ownership
+
+- `data/applications.md` — canonical tracker; NEVER add rows directly, only via TSV merge
+- `data/pipeline.md` — URL inbox; Claude reads this in `pipeline` mode and processes each entry
+- `data/scan-history.tsv` — dedup log for the scanner; prevents re-evaluating seen URLs
+- `config/profile.yml` — candidate identity, salary targets, archetypes, narrative; read at eval time
+- `cv.md` — canonical CV; NEVER modify during evaluations
+- `article-digest.md` — proof points with exact metrics; takes precedence over cv.md for numbers
+
+---
+
 ## Ethical Use -- CRITICAL
 
 **This system is designed for quality, not quantity.** The goal is to help the user find and apply to roles where there is a genuine match -- not to spam companies with mass applications.
@@ -253,12 +346,12 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 
 ## Offer Verification -- MANDATORY
 
-**NEVER trust WebSearch/WebFetch to verify if an offer is still active.** ALWAYS use Playwright:
+**NEVER trust WebSearch/WebFetch to verify if an offer is still active.** ALWAYS use Patchright:
 1. `browser_navigate` to the URL
 2. `browser_snapshot` to read content
 3. Only footer/navbar without JD = closed. Title + description + Apply = active.
 
-**Exception for batch workers (`claude -p`):** Playwright is not available in headless pipe mode. Use WebFetch as fallback and mark the report header with `**Verification:** unconfirmed (batch mode)`. The user can verify manually later.
+**Exception for batch workers (`claude -p`):** Patchright is not available in headless pipe mode. Use WebFetch as fallback and mark the report header with `**Verification:** unconfirmed (batch mode)`. The user can verify manually later.
 
 ---
 
@@ -279,7 +372,7 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 
 ## Stack and Conventions
 
-- Node.js (mjs modules), Playwright (PDF + scraping), YAML (config), HTML/CSS (template), Markdown (data), Canva MCP (optional visual CV)
+- Node.js (mjs modules), Patchright (PDF + scraping), YAML (config), HTML/CSS (template), Markdown (data), Canva MCP (optional visual CV)
 - Scripts in `.mjs`, configuration in YAML
 - Output in `output/` (gitignored), Reports in `reports/`
 - JDs in `jds/` (referenced as `local:jds/{file}` in pipeline.md)

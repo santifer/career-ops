@@ -7,7 +7,7 @@ Procesa URLs de ofertas acumuladas en `data/pipeline.md`. El usuario agrega URLs
 1. **Leer** `data/pipeline.md` → buscar items `- [ ]` en la sección "Pendientes"
 2. **Para cada URL pendiente**:
    a. Calcular siguiente `REPORT_NUM` secuencial (leer `reports/`, tomar el número más alto + 1)
-   b. **Extraer JD** usando Playwright (browser_navigate + browser_snapshot) → WebFetch → WebSearch
+   b. **Extraer JD** usando Patchright (browser_navigate + browser_snapshot) → WebFetch → WebSearch
    c. Si la URL no es accesible → marcar como `- [!]` con nota y continuar
    d. **Ejecutar auto-pipeline completo**: Evaluación A-F → Report .md → PDF (si score >= 3.0) → Tracker
    e. **Mover de "Pendientes" a "Procesadas"**: `- [x] #NNN | URL | Empresa | Rol | Score/5 | PDF ✅/❌`
@@ -33,8 +33,8 @@ Procesa URLs de ofertas acumuladas en `data/pipeline.md`. El usuario agrega URLs
 
 ## Detección inteligente de JD desde URL
 
-1. **Playwright (preferido):** `browser_navigate` + `browser_snapshot`. Funciona con todas las SPAs.
-2. **WebFetch (fallback):** Para páginas estáticas o cuando Playwright no está disponible.
+1. **Patchright (preferido):** `browser_navigate` + `browser_snapshot`. Funciona con todas las SPAs.
+2. **WebFetch (fallback):** Para páginas estáticas o cuando Patchright no está disponible.
 3. **WebSearch (último recurso):** Buscar en portales secundarios que indexan el JD.
 
 **Casos especiales:**

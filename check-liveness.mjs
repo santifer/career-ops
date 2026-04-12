@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
 /**
- * check-liveness.mjs — Playwright job link liveness checker
+ * check-liveness.mjs — Patchright job link liveness checker
  *
  * Tests whether job posting URLs are still active or have expired.
  * Uses the same detection logic as scan.md step 7.5.
- * Zero Claude API tokens — pure Playwright.
+ * Zero Claude API tokens — pure Patchright.
  *
  * Usage:
  *   node check-liveness.mjs <url1> [url2] ...
@@ -14,7 +14,7 @@
  * Exit code: 0 if all active, 1 if any expired or uncertain
  */
 
-import { chromium } from 'playwright';
+import { chromium } from 'patchright';
 import { readFile } from 'fs/promises';
 import { classifyLiveness } from './liveness-core.mjs';
 
@@ -93,7 +93,7 @@ async function main() {
 
   let active = 0, expired = 0, uncertain = 0;
 
-  // Sequential — project rule: never Playwright in parallel
+  // Sequential — project rule: never Patchright in parallel
   for (const url of urls) {
     const { result, reason } = await checkUrl(page, url);
     const icon = { active: '✅', expired: '❌', uncertain: '⚠️' }[result];

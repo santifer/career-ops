@@ -63,7 +63,7 @@ language:
 これらは意図的に翻訳していません。標準的なテック用語だからです：
 
 - `cv.md`、`pipeline`、`tracker`、`report`、`score`、`archetype`、`proof point`
-- ツール名（`Playwright`、`WebSearch`、`WebFetch`、`Read`、`Write`、`Edit`、`Bash`）
+- ツール名（`Patchright`、`WebSearch`、`WebFetch`、`Read`、`Write`、`Edit`、`Bash`）
 - tracker のステータス値（`Evaluated`、`Applied`、`Interview`、`Offer`、`Rejected`）
 - コードスニペット、ファイルパス、コマンド
 

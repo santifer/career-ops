@@ -7,7 +7,7 @@ Verarbeitet URLs von Stellenanzeigen, die in `data/pipeline.md` gesammelt wurden
 1. **Lesen** von `data/pipeline.md` → alle Items mit `- [ ]` im Abschnitt "Pendientes" / "Pending" / "Offen" finden
 2. **Für jede offene URL**:
    a. Nächste fortlaufende `REPORT_NUM` berechnen (in `reports/` lesen, höchste Nummer + 1)
-   b. **Stellenanzeige extrahieren** mit Playwright (`browser_navigate` + `browser_snapshot`) → WebFetch → WebSearch
+   b. **Stellenanzeige extrahieren** mit Patchright (`browser_navigate` + `browser_snapshot`) → WebFetch → WebSearch
    c. Wenn die URL nicht erreichbar ist → als `- [!]` mit Notiz markieren und weitermachen
    d. **Vollständige Auto-Pipeline ausführen**: A-F-Bewertung → Report .md → PDF (wenn Score >= 3.0) → Tracker
    e. **Von "Offen" nach "Verarbeitet" verschieben**: `- [x] #NNN | URL | Firma | Rolle | Score/5 | PDF ✅/❌`
@@ -35,15 +35,15 @@ Verarbeitet URLs von Stellenanzeigen, die in `data/pipeline.md` gesammelt wurden
 
 ## Intelligente Erkennung der Stellenanzeige aus der URL
 
-1. **Playwright (bevorzugt):** `browser_navigate` + `browser_snapshot`. Funktioniert mit allen SPAs.
-2. **WebFetch (Fallback):** Für statische Seiten oder wenn Playwright nicht verfügbar ist.
+1. **Patchright (bevorzugt):** `browser_navigate` + `browser_snapshot`. Funktioniert mit allen SPAs.
+2. **WebFetch (Fallback):** Für statische Seiten oder wenn Patchright nicht verfügbar ist.
 3. **WebSearch (letzter Ausweg):** In sekundären Portalen suchen, die die Stellenanzeige indexieren.
 
 **Sonderfälle:**
 - **LinkedIn**: Kann Login erfordern → mit `[!]` markieren und den Kandidaten bitten, den Text einzufügen
 - **PDF**: Wenn die URL auf ein PDF zeigt, direkt mit dem Read-Tool lesen
 - **`local:`-Präfix**: Lokale Datei lesen. Beispiel: `local:jds/linkedin-pm-ai.md` → `jds/linkedin-pm-ai.md` lesen
-- **StepStone / XING / kununu**: Häufig deutscher Markt, oft Cookie-Banner. Playwright kann in Snapshot scrollen, um den Anzeigentext zu erfassen
+- **StepStone / XING / kununu**: Häufig deutscher Markt, oft Cookie-Banner. Patchright kann in Snapshot scrollen, um den Anzeigentext zu erfassen
 - **Bundesagentur für Arbeit (arbeitsagentur.de)**: Strukturierte Stellenanzeigen, gut maschinenlesbar. WebFetch reicht meist
 
 ## Automatische Nummerierung

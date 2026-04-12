@@ -7,7 +7,7 @@ Processa URLs de vagas acumuladas em `data/pipeline.md`. O candidato adiciona UR
 1. **Ler** `data/pipeline.md` → buscar itens `- [ ]` na secao "Pendentes"
 2. **Para cada URL pendente**:
    a. Calcular proximo `REPORT_NUM` sequencial (ler `reports/`, pegar o numero mais alto + 1)
-   b. **Extrair JD** usando Playwright (browser_navigate + browser_snapshot) → WebFetch → WebSearch
+   b. **Extrair JD** usando Patchright (browser_navigate + browser_snapshot) → WebFetch → WebSearch
    c. Se a URL nao for acessivel → marcar como `- [!]` com nota e continuar
    d. **Executar auto-pipeline completa**: Avaliacao A-F → Report .md → PDF (se score >= 3.0) → Tracker
    e. **Mover de "Pendentes" para "Processadas"**: `- [x] #NNN | URL | Empresa | Vaga | Score/5 | PDF ✅/❌`
@@ -35,15 +35,15 @@ Processa URLs de vagas acumuladas em `data/pipeline.md`. O candidato adiciona UR
 
 ## Deteccao inteligente de JD a partir da URL
 
-1. **Playwright (preferido):** `browser_navigate` + `browser_snapshot`. Funciona com todas as SPAs.
-2. **WebFetch (fallback):** Para paginas estaticas ou quando Playwright nao esta disponivel.
+1. **Patchright (preferido):** `browser_navigate` + `browser_snapshot`. Funciona com todas as SPAs.
+2. **WebFetch (fallback):** Para paginas estaticas ou quando Patchright nao esta disponivel.
 3. **WebSearch (ultimo recurso):** Buscar em portais secundarios que indexam o JD.
 
 **Casos especiais:**
 - **LinkedIn**: Pode exigir login → marcar com `[!]` e pedir ao candidato para colar o texto
 - **PDF**: Se a URL aponta para um PDF, ler diretamente com o Read tool
 - **`local:` prefix**: Ler arquivo local. Exemplo: `local:jds/linkedin-pm-ai.md` → ler `jds/linkedin-pm-ai.md`
-- **Gupy / Greenhouse / Lever**: Plataformas comuns no Brasil. Playwright funciona bem com todas
+- **Gupy / Greenhouse / Lever**: Plataformas comuns no Brasil. Patchright funciona bem com todas
 - **Vagas.com.br / InfoJobs / Catho**: Portais brasileiros, geralmente acessiveis via WebFetch
 - **LinkedIn BR**: Mesmas restricoes do LinkedIn global — pode exigir login
 

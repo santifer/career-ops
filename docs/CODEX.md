@@ -11,14 +11,14 @@ Claude workflow.
 
 - A Codex client that can work with project `AGENTS.md`
 - Node.js 18+
-- Playwright Chromium installed for PDF generation and reliable job verification
+- Patchright Chromium installed for PDF generation and reliable job verification
 - Go 1.21+ if you want the TUI dashboard
 
 ## Install
 
 ```bash
 npm install
-npx playwright install chromium
+npx patchright install chromium
 ```
 
 ## Recommended Starting Prompts
@@ -51,7 +51,7 @@ layer.
 
 - Treat raw JD text or a job URL as the full auto-pipeline path unless the user explicitly asks for evaluation only.
 - Keep all personalization in `config/profile.yml`, `modes/_profile.md`, `article-digest.md`, or `portals.yml`.
-- Never verify a job’s live status with generic web fetch when Playwright is available.
+- Never verify a job’s live status with generic web fetch when Patchright is available.
 - Never submit an application for the user.
 - Never add new tracker rows directly to `data/applications.md`; use the TSV addition flow and `merge-tracker.mjs`.
 
