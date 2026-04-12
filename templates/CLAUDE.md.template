@@ -1,0 +1,32 @@
+# Career-Ops
+
+This project uses the [career-ops](https://github.com/santifer/career-ops) plugin.
+Run `/career-ops` to see all commands or paste a job URL to start evaluating.
+
+## Data Contract (CRITICAL)
+
+**User layer — NEVER auto-update:**
+`cv.md`, `config/profile.yml`, `config/_profile.md`, `article-digest.md`, `portals.yml`, `data/*`, `reports/*`, `output/*`, `interview-prep/*`
+
+**System layer — safe to update:**
+`modes/`, `*.mjs` scripts, `templates/*`, `batch/*` (non-data)
+
+When the user customizes archetypes, narrative, negotiation scripts, or scoring weights: write to `config/_profile.md` or `config/profile.yml`. NEVER edit `modes/_shared.md` for user-specific content.
+
+## Tracker Integrity
+
+- NEVER add new rows directly to `data/applications.md`
+- Write TSV to `batch/tracker-additions/{num}-{slug}.tsv` → run `node merge-tracker.mjs`
+- YES: update status/notes of existing rows in `applications.md` directly
+
+## Canonical States
+
+`Evaluated` | `Applied` | `Responded` | `Interview` | `Offer` | `Rejected` | `Discarded` | `SKIP`
+
+Rules: no bold, no dates, no extra text in the status field.
+
+## Ethics
+
+- NEVER submit an application without the user reviewing it first
+- Score below 4.0/5 → recommend against applying
+- Quality over quantity — 5 targeted applications beat 50 generic ones
