@@ -170,28 +170,46 @@ app.get('/api/cv', (req, res) => {
 const sessions = new Map();
 let sessionCounter = 0;
 
+// Build prompts by reading mode files directly — claude -p doesn't process slash commands
+function buildModePrompt(mode) {
+  const shared = readFileSafe(join(ROOT, 'modes/_shared.md')) || '';
+  const profile = readFileSafe(join(ROOT, 'modes/_profile.md')) || '';
+  const modeFile = readFileSafe(join(ROOT, `modes/${mode}.md`));
+
+  // Modes that need _shared.md + mode file
+  const needsShared = ['oferta', 'ofertas', 'pdf', 'contacto', 'apply', 'pipeline', 'scan', 'batch', 'auto-pipeline'];
+
+  let context = '';
+  if (needsShared.includes(mode) && modeFile) {
+    context = `${shared}\n\n${profile}\n\n${modeFile}`;
+  } else if (modeFile) {
+    context = `${profile}\n\n${modeFile}`;
+  }
+  return context;
+}
+
 const COMMANDS = {
-  'scan':         { prompt: '/career-ops scan', needsInput: false },
-  'pipeline':     { prompt: '/career-ops pipeline', needsInput: false },
-  'tracker':      { prompt: '/career-ops tracker', needsInput: false },
-  'patterns':     { prompt: '/career-ops patterns', needsInput: false },
-  'followup':     { prompt: '/career-ops followup', needsInput: false },
-  'evaluate':     { prompt: '/career-ops', needsInput: true, inputLabel: 'Paste JD text or URL' },
-  'oferta':       { prompt: '/career-ops oferta', needsInput: true, inputLabel: 'Paste JD text or URL' },
-  'ofertas':      { prompt: '/career-ops ofertas', needsInput: true, inputLabel: 'Report numbers or company names to compare' },
-  'pdf':          { prompt: '/career-ops pdf', needsInput: true, inputLabel: 'Paste JD text or URL for CV tailoring' },
-  'contacto':     { prompt: '/career-ops contacto', needsInput: true, inputLabel: 'Company name or job URL' },
-  'deep':         { prompt: '/career-ops deep', needsInput: true, inputLabel: 'Company name to research' },
-  'training':     { prompt: '/career-ops training', needsInput: true, inputLabel: 'Course or certification name + URL' },
-  'project':      { prompt: '/career-ops project', needsInput: true, inputLabel: 'Project idea description' },
-  'apply':        { prompt: '/career-ops apply', needsInput: true, inputLabel: 'Application URL or company + role' },
-  'batch':        { prompt: '/career-ops batch', needsInput: false },
-  'interview-prep': { prompt: '/career-ops interview-prep', needsInput: true, inputLabel: 'Company name + role for interview prep' },
+  'scan':         { mode: 'scan', needsInput: false },
+  'pipeline':     { mode: 'pipeline', needsInput: false },
+  'tracker':      { mode: 'tracker', needsInput: false },
+  'patterns':     { mode: 'patterns', needsInput: false },
+  'followup':     { mode: 'followup', needsInput: false },
+  'evaluate':     { mode: 'auto-pipeline', needsInput: true, inputLabel: 'Paste JD text or URL' },
+  'oferta':       { mode: 'oferta', needsInput: true, inputLabel: 'Paste JD text or URL' },
+  'ofertas':      { mode: 'ofertas', needsInput: true, inputLabel: 'Report numbers or company names to compare' },
+  'pdf':          { mode: 'pdf', needsInput: true, inputLabel: 'Paste JD text or URL for CV tailoring' },
+  'contacto':     { mode: 'contacto', needsInput: true, inputLabel: 'Company name or job URL' },
+  'deep':         { mode: 'deep', needsInput: true, inputLabel: 'Company name to research' },
+  'training':     { mode: 'training', needsInput: true, inputLabel: 'Course or certification name + URL' },
+  'project':      { mode: 'project', needsInput: true, inputLabel: 'Project idea description' },
+  'apply':        { mode: 'apply', needsInput: true, inputLabel: 'Application URL or company + role' },
+  'batch':        { mode: 'batch', needsInput: false },
+  'interview-prep': { mode: 'interview-prep', needsInput: true, inputLabel: 'Company name + role for interview prep' },
 };
 
 app.get('/api/commands', (req, res) => {
   const cmds = Object.entries(COMMANDS).map(([id, c]) => ({
-    id, prompt: c.prompt, needsInput: c.needsInput, inputLabel: c.inputLabel || ''
+    id, mode: c.mode, needsInput: c.needsInput, inputLabel: c.inputLabel || ''
   }));
   res.json(cmds);
 });
@@ -240,22 +258,28 @@ app.post('/api/session/start', async (req, res) => {
   if (cmd.needsInput && !input) return res.status(400).json({ error: 'Input required' });
 
   const sessionId = ++sessionCounter;
-  const prompt = input ? `${cmd.prompt}\n\n${input}` : cmd.prompt;
+  const modeContext = buildModePrompt(cmd.mode);
+  const userMessage = input || `Run the ${command} mode.`;
 
   const session = {
     id: sessionId,
     command,
+    mode: cmd.mode,
     status: 'running',
-    messages: [{ role: 'user', text: prompt, ts: Date.now() }],
+    messages: [{ role: 'user', text: userMessage, ts: Date.now() }],
     claudeSessionId: null,
-    proc: null
+    proc: null,
+    systemPrompt: modeContext
   };
   sessions.set(sessionId, session);
   res.json({ sessionId, command });
 
-  // Run claude in background
+  // Run claude in background with mode context as system prompt
   try {
     const args = ['-p', '--output-format', 'json', '--permission-mode', 'bypassPermissions'];
+    if (modeContext) {
+      args.push('--system-prompt', modeContext);
+    }
     const proc = spawn('claude', args, {
       cwd: ROOT,
       env: { ...process.env, TERM: 'dumb' },
@@ -263,7 +287,7 @@ app.post('/api/session/start', async (req, res) => {
     });
     session.proc = proc;
 
-    proc.stdin.write(prompt);
+    proc.stdin.write(userMessage);
     proc.stdin.end();
 
     let stdout = '';
