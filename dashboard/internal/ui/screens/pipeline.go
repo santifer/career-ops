@@ -51,6 +51,7 @@ type reportSummary struct {
 
 // Sort modes
 const (
+	sortID      = "id"
 	sortScore   = "score"
 	sortDate    = "date"
 	sortCompany = "company"
@@ -81,7 +82,7 @@ var pipelineTabs = []pipelineTab{
 	{filterSkip, "SKIP"},
 }
 
-var sortCycle = []string{sortScore, sortDate, sortCompany, sortStatus}
+var sortCycle = []string{sortScore, sortDate, sortCompany, sortStatus, sortID}
 
 var statusOptions = []string{"Evaluated", "Applied", "Responded", "Interview", "Offer", "Rejected", "Discarded", "SKIP"}
 
@@ -372,6 +373,10 @@ func (m *PipelineModel) applyFilterAndSort() {
 
 	// Sort
 	switch m.sortMode {
+	case sortID:
+		sort.SliceStable(filtered, func(i, j int) bool {
+			return filtered[i].Number > filtered[j].Number
+		})
 	case sortScore:
 		sort.SliceStable(filtered, func(i, j int) bool {
 			return filtered[i].Score > filtered[j].Score
@@ -400,6 +405,8 @@ func (m *PipelineModel) applyFilterAndSort() {
 			}
 			// Within same group, use selected sort
 			switch m.sortMode {
+			case sortID:
+				return filtered[i].Number > filtered[j].Number
 			case sortScore:
 				return filtered[i].Score > filtered[j].Score
 			case sortDate:
@@ -650,15 +657,20 @@ func (m PipelineModel) renderAppLine(app model.CareerApplication, selected bool)
 	padStyle := lipgloss.NewStyle().Padding(0, 2)
 
 	// Column widths
+	idW := 5      // "#156 "
 	scoreW := 5   // "4.5  "
 	companyW := 20
 	statusW := 12
 	compW := 14
 	// Role gets remaining space
-	roleW := m.width - scoreW - companyW - statusW - compW - 10
+	roleW := m.width - idW - scoreW - companyW - statusW - compW - 10
 	if roleW < 15 {
 		roleW = 15
 	}
+
+	// ID
+	idStyle := lipgloss.NewStyle().Foreground(m.theme.Overlay).Width(idW)
+	id := idStyle.Render(fmt.Sprintf("#%d", app.Number))
 
 	// Score with color
 	scoreStyle := m.scoreStyle(app.Score)
@@ -686,7 +698,8 @@ func (m PipelineModel) renderAppLine(app model.CareerApplication, selected bool)
 		compText = compStyle.Render(comp)
 	}
 
-	line := fmt.Sprintf(" %s %s %s %s %s",
+	line := fmt.Sprintf(" %s %s %s %s %s %s",
+		id,
 		score,
 		companyStyle.Render(company),
 		roleStyle.Render(role),

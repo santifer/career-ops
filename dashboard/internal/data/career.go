@@ -40,7 +40,6 @@ func ParseApplications(careerOpsPath string) []model.CareerApplication {
 
 	lines := strings.Split(string(content), "\n")
 	apps := make([]model.CareerApplication, 0)
-	num := 0
 
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
@@ -74,7 +73,8 @@ func ParseApplications(careerOpsPath string) []model.CareerApplication {
 			continue
 		}
 
-		num++
+		// Parse the actual tracker ID from column 0
+		num, _ := strconv.Atoi(fields[0])
 		app := model.CareerApplication{
 			Number:  num,
 			Date:    fields[1],

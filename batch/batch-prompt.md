@@ -36,6 +36,7 @@ Eres un worker de evaluación de ofertas de empleo for the candidate (read name 
 | `{{REPORT_NUM}}` | Número de report (3 dígitos, zero-padded: 001, 002...) |
 | `{{DATE}}` | Fecha actual YYYY-MM-DD |
 | `{{ID}}` | ID único de la oferta en batch-input.tsv |
+| `{{NO_PDF}}` | `true` to skip PDF generation, `false` to generate |
 
 ---
 
@@ -184,7 +185,7 @@ Donde `{company-slug}` es el nombre de empresa en lowercase, sin espacios, con g
 **Score:** {X/5}
 **Legitimacy:** {High Confidence | Proceed with Caution | Suspicious}
 **URL:** {URL de la oferta original}
-**PDF:** career-ops/output/cv-candidate-{company-slug}-{{DATE}}.pdf
+**PDF:** career-ops/output/{LastName}-{Company}-{Role_Slug}-{ID}.pdf
 **Batch ID:** {{ID}}
 
 ---
@@ -218,6 +219,10 @@ Donde `{company-slug}` es el nombre de empresa en lowercase, sin espacios, con g
 
 ### Paso 4 — Generar PDF
 
+**⚠️ SKIP THIS STEP when `{{NO_PDF}}` is `true`.** Set pdf emoji to `❌` in the tracker line and move to Paso 5.
+
+When PDF generation IS enabled (`{{NO_PDF}}` is `false`):
+
 1. Lee `cv.md` + `i18n.ts`
 2. Extrae 15-20 keywords del JD
 3. Detecta idioma del JD → idioma del CV (EN default)
@@ -229,15 +234,22 @@ Donde `{company-slug}` es el nombre de empresa en lowercase, sin espacios, con g
 9. Construye competency grid (6-8 keyword phrases)
 10. Inyecta keywords en logros existentes (**NUNCA inventa**)
 11. Genera HTML completo desde template (lee `templates/cv-template.html`)
-12. Escribe HTML a `/tmp/cv-candidate-{company-slug}.html`
-13. Ejecuta:
+12. Escribe HTML a `/tmp/cv-{company-slug}.html`
+13. Read `config/profile.yml` to get candidate last name. Build the canonical filename:
+    - Format: `{LastName}-{Company}-{Role_Slug}-{ID}.pdf`
+    - `{LastName}` = second-to-last word of `candidate.full_name` (e.g., "Rodrigo Landeros Ramos" → "Landeros")
+    - `{Company}` = company name, spaces→underscores, strip special chars
+    - `{Role_Slug}` = role title, spaces→underscores, strip special chars
+    - `{ID}` = `{{REPORT_NUM}}` zero-padded to 4 digits
+    - Example: `Landeros-Anthropic-FDE_Applied_AI-0151.pdf`
+14. Ejecuta:
 ```bash
 node generate-pdf.mjs \
-  /tmp/cv-candidate-{company-slug}.html \
-  output/cv-candidate-{company-slug}-{{DATE}}.pdf \
+  /tmp/cv-{company-slug}.html \
+  output/{LastName}-{Company}-{Role_Slug}-{ID}.pdf \
   --format={letter|a4}
 ```
-14. Reporta: ruta PDF, nº páginas, % cobertura keywords
+15. Reporta: ruta PDF, nº páginas, % cobertura keywords
 
 **Reglas ATS:**
 - Single-column (sin sidebars)

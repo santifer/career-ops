@@ -27,6 +27,7 @@ DRY_RUN=false
 RETRY_FAILED=false
 START_FROM=0
 MAX_RETRIES=2
+NO_PDF=false
 
 usage() {
   cat <<'USAGE'
@@ -41,6 +42,7 @@ Options:
   --retry-failed       Only retry offers marked as "failed" in state
   --start-from N       Start from offer ID N (skip earlier IDs)
   --max-retries N      Max retry attempts per offer (default: 2)
+  --no-pdf             Skip PDF generation (evaluate only)
   -h, --help           Show this help
 
 Files:
@@ -73,6 +75,7 @@ while [[ $# -gt 0 ]]; do
     --retry-failed) RETRY_FAILED=true; shift ;;
     --start-from) START_FROM="$2"; shift 2 ;;
     --max-retries) MAX_RETRIES="$2"; shift 2 ;;
+    --no-pdf) NO_PDF=true; shift ;;
     -h|--help) usage; exit 0 ;;
     *) echo "Unknown option: $1"; usage; exit 1 ;;
   esac
@@ -345,6 +348,7 @@ process_offer() {
     -e "s|{{REPORT_NUM}}|${esc_report_num}|g" \
     -e "s|{{DATE}}|${esc_date}|g" \
     -e "s|{{ID}}|${esc_id}|g" \
+    -e "s|{{NO_PDF}}|${NO_PDF}|g" \
     "$PROMPT_FILE" > "$resolved_prompt"
 
   # Launch claude -p worker (uses default model from Claude Max subscription)
