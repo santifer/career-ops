@@ -195,8 +195,9 @@ const allowedFiles = [
   // Community / governance files (added in v1.3.0, all legitimately reference the maintainer)
   'CODE_OF_CONDUCT.md', 'GOVERNANCE.md', 'SECURITY.md', 'SUPPORT.md',
   '.github/SECURITY.md',
-  // Dashboard credit string
+  // Dashboard credit strings
   'dashboard/internal/ui/screens/pipeline.go',
+  'dashboard/internal/ui/screens/progress.go',
 ];
 
 // Build pathspec for git grep — only scan tracked files matching these
