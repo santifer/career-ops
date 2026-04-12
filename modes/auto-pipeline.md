@@ -1,6 +1,6 @@
 # Modo: auto-pipeline — Pipeline Completo Automático
 
-Cuando el usuario pega un JD (texto o URL) sin sub-comando explícito, ejecutar TODO el pipeline en secuencia:
+Cuando el usuario pega un JD (texto o URL) sin sub-comando explícito, ejecutar el pipeline por defecto en secuencia:
 
 ## Paso 0 — Extraer JD
 
@@ -16,14 +16,24 @@ Si el input es una **URL** (no texto de JD pegado), seguir esta estrategia para 
 
 **Si el input es texto de JD** (no URL): usar directamente, sin necesidad de fetch.
 
-## Paso 1 — Evaluación A-F
-Ejecutar exactamente igual que el modo `oferta` (leer `modes/oferta.md` para todos los bloques A-F).
+## Paso 1 — Evaluación A-G
+Ejecutar exactamente igual que el modo `oferta` (leer `modes/oferta.md` para todos los bloques A-F + Block G Posting Legitimacy).
 
 ## Paso 2 — Guardar Report .md
 Guardar la evaluación completa en `reports/{###}-{company-slug}-{YYYY-MM-DD}.md` (ver formato en `modes/oferta.md`).
+Include Block G in the saved report. Add `**Legitimacy:** {tier}` to the report header.
 
-## Paso 3 — Generar PDF
-Ejecutar el pipeline completo de `pdf` (leer `modes/pdf.md`).
+## Paso 3 — PDF solo bajo confirmación explícita
+
+**Por defecto NO generar PDF automáticamente.**
+
+Después de guardar el report, mostrar el resultado al usuario y esperar confirmación explícita tipo:
+
+- "genera el PDF"
+- "sí, haz el CV"
+- "tailor the resume for this role"
+
+Solo entonces ejecutar el pipeline completo de `pdf` (leer `modes/pdf.md`).
 
 ## Paso 4 — Draft Application Answers (solo si score >= 4.5)
 
@@ -31,7 +41,7 @@ Si el score final es >= 4.5, generar borrador de respuestas para el formulario d
 
 1. **Extraer preguntas del formulario**: Usar Playwright para navegar al formulario y hacer snapshot. Si no se pueden extraer, usar las preguntas genéricas.
 2. **Generar respuestas** siguiendo el tono (ver abajo).
-3. **Guardar en el report** como sección `## G) Draft Application Answers`.
+3. **Guardar en el report** como sección `## H) Draft Application Answers`.
 
 ### Preguntas genéricas (usar si no se pueden extraer del formulario)
 
@@ -61,9 +71,15 @@ Si el score final es >= 4.5, generar borrador de respuestas para el formulario d
 
 **Idioma**: Siempre en el idioma del JD (EN default). Aplicar `/tech-translate`.
 
-## Paso 4b — Generate Cover Letter (solo si score >= 4.5)
+## Paso 4b — Cover letter solo bajo confirmación explícita
 
-Si el score final es >= 4.5, generar también un cover letter PDF de 1 página.
+**Por defecto NO generar cover letter automáticamente**, incluso si el score final es >= 4.5.
+
+Primero evaluar si tendría sentido proponerlo. Luego esperar confirmación explícita del usuario tipo:
+
+- "genera cover letter"
+- "sí, prepara carta"
+- "write the cover letter too"
 
 **Workflow:**
 1. Cargar `modes/cover-letter.md` (ya con `_shared.md` cargado)
@@ -72,7 +88,7 @@ Si el score final es >= 4.5, generar también un cover letter PDF de 1 página.
 4. Append `## H) Cover Letter` section to the report .md (path + plain-text fallback + JD quotes used)
 5. Si la generación falla, continuar con Paso 5 y marcar `cover_letter: pending` en las notas del tracker
 
-**Cuándo NO generar (override del trigger ≥4.5):**
+**Cuándo NO generar incluso si el usuario lo pide:**
 - JD dice explícitamente "no cover letter accepted"
 - Score >= 4.5 pero el formulario no tiene campo de cover letter Y tampoco un campo de free-text donde pegarlo
 

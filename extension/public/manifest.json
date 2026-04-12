@@ -1,0 +1,43 @@
+{
+  "manifest_version": 3,
+  "name": "career-ops",
+  "short_name": "career-ops",
+  "version": "0.2.0",
+  "description": "Local-first job posting evaluation. Bridges your browser to the career-ops pipeline running on your machine.",
+  "action": {
+    "default_title": "career-ops — toggle panel"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [],
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage",
+    "notifications",
+    "tabs",
+    "webNavigation"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1/*",
+    "https://www.newgrad-jobs.com/*",
+    "https://jobright.ai/*"
+  ],
+  "optional_host_permissions": [
+    "https://*/*"
+  ],
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Alt+Shift+C",
+        "mac": "Alt+Shift+C"
+      },
+      "description": "Toggle career-ops panel"
+    }
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
+}

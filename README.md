@@ -1,6 +1,6 @@
 # Career-Ops
 
-[English](README.md) | [Español](README.es.md)
+[English](README.md) | [Español](README.es.md) | [Português (Brasil)](README.pt-BR.md) | [한국어](README.ko-KR.md) | [日本語](README.ja.md) | [Русский](README.ru.md)
 
 <p align="center">
   <a href="https://x.com/santifer"><img src="docs/hero-banner.jpg" alt="Career-Ops — Multi-Agent Job Search System" width="800"></a>
@@ -27,6 +27,8 @@
   <img src="https://img.shields.io/badge/DE-grey?style=flat" alt="DE">
   <img src="https://img.shields.io/badge/FR-blue?style=flat" alt="FR">
   <img src="https://img.shields.io/badge/PT--BR-green?style=flat" alt="PT-BR">
+  <img src="https://img.shields.io/badge/KO-white?style=flat" alt="KO">
+  <img src="https://img.shields.io/badge/JA-red?style=flat" alt="JA">
 </p>
 
 ---
@@ -44,7 +46,7 @@
 Career-Ops turns any AI coding CLI into a full job search command center. Instead of manually tracking applications in a spreadsheet, you get an AI-powered pipeline that:
 
 - **Evaluates offers** with a structured A-F scoring system (10 weighted dimensions)
-- **Generates tailored PDFs** -- ATS-optimized CVs customized per job description
+- **Generates tailored PDFs on demand** -- ATS-optimized CVs customized per job description when you explicitly ask for them
 - **Scans portals** automatically (Greenhouse, Ashby, Lever, company pages)
 - **Processes in batch** -- evaluate 10+ offers in parallel with sub-agents
 - **Tracks everything** in a single source of truth with integrity checks
@@ -61,11 +63,11 @@ Built by someone who used it to evaluate 740+ job offers, generate 100+ tailored
 
 | Feature | Description |
 |---------|-------------|
-| **Auto-Pipeline** | Paste a URL, get a full evaluation + PDF + tracker entry |
+| **Auto-Pipeline** | Paste a URL, get a full evaluation + tracker entry, then choose whether to generate PDFs |
 | **6-Block Evaluation** | Role summary, CV match, level strategy, comp research, personalization, interview prep (STAR+R) |
 | **Interview Story Bank** | Accumulates STAR+Reflection stories across evaluations -- 5-10 master stories that answer any behavioral question |
 | **Negotiation Scripts** | Salary negotiation frameworks, geographic discount pushback, competing offer leverage |
-| **Cover Letter PDF** | Single-page cover letter PDF that matches CV design, auto-generated for offers scoring ≥ 4.5 (or on-demand via `/career-ops cover-letter`) |
+| **Cover Letter PDF** | Single-page cover letter PDF that matches CV design, generated only on demand via `/career-ops cover-letter` |
 | **ATS PDF Generation** | Keyword-injected CVs with Space Grotesk + DM Sans design |
 | **Portal Scanner** | 45+ companies pre-configured (Anthropic, OpenAI, ElevenLabs, Retool, n8n...) + custom queries across Ashby, Greenhouse, Lever, Wellfound |
 | **Batch Processing** | Parallel evaluation with `claude -p` workers |
@@ -107,6 +109,7 @@ claude   # Open Claude Code in this directory
 > **The system is designed to be customized by Claude itself.** Modes, archetypes, scoring weights, negotiation scripts -- just ask Claude to change them. It reads the same files it uses, so it knows exactly what to edit.
 
 See [docs/SETUP.md](docs/SETUP.md) for the full setup guide.
+For the Chrome extension + local bridge workflow, see [docs/BROWSER_EXTENSION.md](docs/BROWSER_EXTENSION.md).
 
 ## Usage
 
@@ -114,7 +117,7 @@ Career-ops is a single slash command with multiple modes:
 
 ```
 /career-ops                → Show all available commands
-/career-ops {paste a JD}   → Full auto-pipeline (evaluate + PDF + tracker)
+/career-ops {paste a JD}   → Full auto-pipeline (evaluate + tracker, then optional PDF)
 /career-ops scan           → Scan portals for new offers
 /career-ops pdf            → Generate ATS-optimized CV
 /career-ops cover-letter   → Generate single-page cover letter PDF
@@ -129,6 +132,15 @@ Career-ops is a single slash command with multiple modes:
 ```
 
 Or just paste a job URL or description directly -- career-ops auto-detects it and runs the full pipeline.
+
+## Browser Workflow
+
+If you want to evaluate job pages directly in Chrome, the repo also includes:
+
+- `extension/` — a Manifest V3 popup that captures the active job page
+- `bridge/` — a local Fastify companion that reuses the existing career-ops pipeline
+
+Use [docs/BROWSER_EXTENSION.md](docs/BROWSER_EXTENSION.md) for setup, bridge modes (`fake`, `real`, `sdk`), verification, and loading the extension in Chrome.
 
 ## How It Works
 
@@ -148,8 +160,8 @@ You paste a job URL or description
          │
     ┌────┼────┐
     ▼    ▼    ▼
- Report  PDF  Tracker
-  .md   .pdf   .tsv
+ Report  Tracker  Optional PDF
+  .md     .tsv       .pdf
 ```
 
 ## Pre-configured Portals

@@ -13,6 +13,7 @@ STATE_FILE="$BATCH_DIR/batch-state.tsv"
 PROMPT_FILE="$BATCH_DIR/batch-prompt.md"
 LOGS_DIR="$BATCH_DIR/logs"
 TRACKER_DIR="$BATCH_DIR/tracker-additions"
+METRICS_FILE="$BATCH_DIR/run-metrics.jsonl"
 REPORTS_DIR="$PROJECT_DIR/reports"
 APPLICATIONS_FILE="$PROJECT_DIR/data/applications.md"
 LOCK_FILE="$BATCH_DIR/batch-runner.pid"
@@ -313,7 +314,20 @@ process_offer() {
   report_num=$(reserve_report_num "$id" "$url" "$started_at" "$retries")
   local date
   date=$(date +%Y-%m-%d)
-  local jd_file="/tmp/batch-jd-${id}.txt"
+  local jd_cache_hit=false
+  local jd_fallback_required=true
+  # Extract [local:jds/...] tag from notes if present
+  local jd_file=""
+  if [[ "$notes" =~ \[local:([^]]+)\] ]]; then
+    jd_file="${PROJECT_DIR}/${BASH_REMATCH[1]}"
+  fi
+  # Fall back to empty tmp path if no pre-extracted JD
+  if [[ -n "$jd_file" && -f "$jd_file" ]]; then
+    jd_cache_hit=true
+    jd_fallback_required=false
+  else
+    jd_file="/tmp/batch-jd-${id}.txt"
+  fi
 
   echo "--- Processing offer #$id: $url (report $report_num, attempt $((retries + 1)))"
 
@@ -330,12 +344,21 @@ process_offer() {
 
   # Prepare system prompt with placeholders resolved
   local resolved_prompt="$BATCH_DIR/.resolved-prompt-${id}.md"
+  # Escape sed delimiter characters in variables to prevent substitution breakage
+  local esc_url esc_jd_file esc_report_num esc_date esc_id
+  esc_url="${url//\\/\\\\}"
+  esc_url="${esc_url//|/\\|}"
+  esc_jd_file="${jd_file//\\/\\\\}"
+  esc_jd_file="${esc_jd_file//|/\\|}"
+  esc_report_num="${report_num//|/\\|}"
+  esc_date="${date//|/\\|}"
+  esc_id="${id//|/\\|}"
   sed \
-    -e "s|{{URL}}|${url}|g" \
-    -e "s|{{JD_FILE}}|${jd_file}|g" \
-    -e "s|{{REPORT_NUM}}|${report_num}|g" \
-    -e "s|{{DATE}}|${date}|g" \
-    -e "s|{{ID}}|${id}|g" \
+    -e "s|{{URL}}|${esc_url}|g" \
+    -e "s|{{JD_FILE}}|${esc_jd_file}|g" \
+    -e "s|{{REPORT_NUM}}|${esc_report_num}|g" \
+    -e "s|{{DATE}}|${esc_date}|g" \
+    -e "s|{{ID}}|${esc_id}|g" \
     "$PROMPT_FILE" > "$resolved_prompt"
 
   # Launch claude -p worker (uses default model from Claude Max subscription)
@@ -351,12 +374,24 @@ process_offer() {
 
   local completed_at
   completed_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+  local worker_record_json=""
+  worker_record_json=$(node "$BATCH_DIR/worker-result.mjs" record \
+    "$log_file" \
+    "$METRICS_FILE" \
+    "$id" \
+    "$url" \
+    "$source" \
+    "$report_num" \
+    "$jd_file" \
+    "$jd_cache_hit" \
+    "$jd_fallback_required" \
+    "$exit_code" 2>/dev/null || true)
 
   if [[ $exit_code -eq 0 ]]; then
-    # Try to extract score from worker output
+    # Try to extract score from normalized worker metrics record
     local score="-"
     local score_match
-    score_match=$(grep -oP '"score":\s*[\d.]+' "$log_file" 2>/dev/null | head -1 | grep -oP '[\d.]+' || true)
+    score_match=$(printf '%s\n' "$worker_record_json" | grep -oE '"score":[0-9.]+' | head -1 | grep -oE '[0-9.]+' || true)
     if [[ -n "$score_match" ]]; then
       score="$score_match"
     fi
@@ -417,6 +452,10 @@ print_summary() {
     avg=$(echo "scale=1; $score_sum / $score_count" | bc 2>/dev/null || echo "N/A")
     echo "Average score: $avg/5 ($score_count scored)"
   fi
+
+  if [[ -f "$METRICS_FILE" ]]; then
+    node "$BATCH_DIR/worker-result.mjs" summary "$METRICS_FILE" --human
+  fi
 }
 
 # Main
@@ -428,6 +467,9 @@ main() {
   fi
 
   init_state
+  if [[ "$DRY_RUN" == "false" ]]; then
+    : > "$METRICS_FILE"
+  fi
 
   # Count input offers (skip header, ignore blank lines)
   local total_input
@@ -453,6 +495,9 @@ main() {
   while IFS=$'\t' read -r id url source notes; do
     [[ "$id" == "id" ]] && continue  # skip header
     [[ -z "$id" || -z "$url" ]] && continue
+
+    # Guard against non-numeric id values
+    [[ "$id" =~ ^[0-9]+$ ]] || continue
 
     # Skip if before start-from
     if (( id < START_FROM )); then
@@ -515,7 +560,19 @@ main() {
       status=$(get_status "${pending_ids[$i]}")
       echo "  #${pending_ids[$i]}: ${pending_urls[$i]} [${pending_sources[$i]}] (status: $status)"
     done
+    # JD pre-extraction hit rate
+    local jd_hits=0
+    local jd_misses=0
+    for i in "${!pending_ids[@]}"; do
+      local n="${pending_notes[$i]}"
+      if [[ "$n" =~ \[local:([^]]+)\] ]] && [[ -f "${PROJECT_DIR}/${BASH_REMATCH[1]}" ]]; then
+        ((jd_hits++))
+      else
+        ((jd_misses++))
+      fi
+    done
     echo ""
+    echo "JD pre-extraction: $jd_hits/$pending_count cached, $jd_misses will WebFetch"
     echo "Would process $pending_count offers"
     exit 0
   fi

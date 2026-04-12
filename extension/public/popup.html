@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>career-ops</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <main id="app" class="state-idle">
+    <header class="header">
+      <h1 class="wordmark">career-ops</h1>
+      <div class="header-right">
+        <button class="bridge-chip" id="bridge-chip" type="button"
+                aria-expanded="false" aria-controls="mode-panel"
+                title="Bridge configuration">
+          <span class="dot" id="health-dot"></span>
+          <span class="bridge-chip-label" id="bridge-chip-label">checking…</span>
+        </button>
+        <div class="health" id="health" data-state="unknown" aria-live="polite">
+          <span class="sr-only" id="health-sr">Bridge status: checking</span>
+        </div>
+      </div>
+    </header>
+
+    <div id="offline-banner" class="offline-banner hidden" role="alert">
+      Bridge not reachable. Run: <code>cd bridge &amp;&amp; npm run start</code>
+    </div>
+
+    <section id="mode-panel" class="mode-panel hidden" aria-label="Bridge configuration">
+      <div class="section-label">Bridge Mode</div>
+      <label class="mode-field">
+        <span class="mode-label">Preferred mode</span>
+        <select id="mode-select" class="mode-select">
+          <option value="real-codex">real / codex</option>
+          <option value="real-claude">real / claude</option>
+          <option value="sdk">sdk</option>
+          <option value="fake">fake</option>
+        </select>
+      </label>
+      <div class="mode-meta">
+        <div class="mode-current" id="mode-current">Current bridge: unknown</div>
+        <div class="mode-match" id="mode-match">Select a preset to see the startup command.</div>
+      </div>
+      <div class="mode-help" id="mode-help"></div>
+      <code class="mode-command" id="mode-command"></code>
+      <button class="btn" id="mode-copy-btn" type="button">Copy start command</button>
+    </section>
+
+    <section id="setup" class="panel primary hidden">
+      <div class="section-label">First-time setup</div>
+      <p class="setup-hint">
+        Paste your bridge token. Run this in your terminal to get it:<br/>
+        <code class="inline-code">cat &lt;repo&gt;/bridge/.bridge-token</code>
+      </p>
+      <input type="password" id="setup-token" class="setup-input" placeholder="paste token…" />
+      <button class="btn primary" id="setup-save-btn" type="button">Save token</button>
+    </section>
+
+    <section id="capture" class="panel primary hidden">
+      <div class="section-label">Detected page</div>
+      <div class="capture-url" id="capture-url"></div>
+      <div class="capture-title" id="capture-title"></div>
+      <div class="capture-detection" id="capture-detection"></div>
+      <div id="expiry-warning" class="expiry-warning hidden" role="alert">
+        <div class="expiry-warning-text" id="expiry-warning-text"></div>
+        <div class="expiry-warning-actions">
+          <button class="btn" id="expiry-evaluate-btn" type="button">Evaluate anyway</button>
+          <button class="btn ghost" id="expiry-dismiss-btn" type="button">Cancel</button>
+        </div>
+      </div>
+      <button class="btn primary" id="evaluate-btn" type="button">Evaluate this job</button>
+    </section>
+
+    <section id="not-detected" class="panel primary hidden">
+      <div class="section-label">No job posting detected</div>
+      <p class="muted-body">This page doesn't look like a job posting. If it is, you can still evaluate it.</p>
+      <button class="btn" id="evaluate-anyway-btn" type="button">Evaluate anyway</button>
+    </section>
+
+    <section id="running" class="panel primary hidden" aria-label="Evaluation progress">
+      <div class="section-label">Running evaluation</div>
+      <div class="job-id" id="job-id"></div>
+      <ol class="stepper" id="phase-list" aria-live="polite"></ol>
+      <div class="phase-counter" id="phase-counter"></div>
+    </section>
+
+    <section id="done" class="panel primary hidden" aria-label="Evaluation result">
+      <div class="section-label">Evaluation complete</div>
+      <div class="result-score" id="result-score" aria-live="assertive"></div>
+      <div class="result-meta" id="result-header"></div>
+      <div class="result-tldr" id="result-tldr"></div>
+      <div class="result-actions">
+        <button class="btn" id="open-report-btn" type="button">Open report</button>
+        <button class="btn" id="copy-summary-btn" type="button">Copy summary</button>
+        <button class="btn" id="merge-tracker-btn" type="button">Save to tracker</button>
+      </div>
+    </section>
+
+    <section id="error" class="panel primary hidden" role="alert">
+      <div class="error-category" id="error-category"></div>
+      <div class="error-explanation" id="error-explanation"></div>
+      <div class="error-recovery" id="error-recovery"></div>
+      <button class="btn" id="retry-btn" type="button">Try again</button>
+    </section>
+
+    <section id="recent" class="section-secondary" aria-label="Recent evaluations">
+      <div class="section-label">Recent evaluations</div>
+      <div class="recent-list-wrap" id="recent-list-wrap">
+        <div class="recent-list" id="recent-list">
+          <div class="recent-empty" id="recent-empty">
+            <div class="recent-empty-icon" aria-hidden="true">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+                <polyline points="10 9 9 9 8 9"/>
+              </svg>
+            </div>
+            <div class="recent-empty-text">No evaluations yet</div>
+            <div class="recent-empty-hint">Navigate to a job posting and hit Evaluate to start.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <span class="version" id="footer-version">local bridge</span>
+    </footer>
+  </main>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

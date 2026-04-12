@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>career-ops — authorize domain</title>
+    <link rel="stylesheet" href="permission.css" />
+  </head>
+  <body>
+    <main class="card">
+      <header>
+        <h1>career-ops</h1>
+        <p class="tag">authorize host</p>
+      </header>
+
+      <section class="body">
+        <p class="intro">
+          To evaluate job postings on this site, career-ops needs your
+          permission to read its pages.
+        </p>
+        <dl class="detail">
+          <dt>Site family</dt>
+          <dd id="label">—</dd>
+          <dt>Permission pattern</dt>
+          <dd id="origin" class="mono">—</dd>
+        </dl>
+        <p class="fine">
+          Granted only for this origin. Pages are read locally; nothing
+          leaves your machine except the extracted JD text, which is
+          sent to your local bridge. Revoke any time from
+          <code>chrome://extensions</code>.
+        </p>
+      </section>
+
+      <footer>
+        <button id="grant" class="primary">Authorize</button>
+        <button id="cancel" class="secondary">Cancel</button>
+        <p id="status" class="status"></p>
+      </footer>
+    </main>
+    <script type="module" src="permission.js"></script>
+  </body>
+</html>

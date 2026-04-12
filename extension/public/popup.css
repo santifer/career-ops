@@ -1,0 +1,603 @@
+/* ================================================================
+   career-ops extension — design tokens & popup styles
+   ================================================================
+   Surface tiers:
+     primary   → elevated panel (job context, results, progress)
+     secondary → flush divider (recent evaluations)
+     chrome    → inline header elements (bridge chip, health)
+   ================================================================ */
+
+:root {
+  /* ---- color system ---- */
+  --bg:           #0f0f10;
+  --bg-primary:   #1c1c1e;
+  --bg-input:     #111112;
+  --fg:           #e8e8ea;
+  --fg-muted:     #8f8f94;
+  --fg-dim:       #5a5a5e;
+  --border:       #2a2a2e;
+  --border-subtle:#1f1f22;
+  --accent:       #7aa7ff;
+  --accent-strong:#5c8eff;
+  --ok:           #4ecb71;
+  --warn:         #e5b93c;
+  --err:          #ef5f5f;
+
+  /* ---- spacing (4px base) ---- */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+
+  /* ---- type scale ---- */
+  --fs-caption:  10px;
+  --fs-small:    11px;
+  --fs-body:     13px;
+  --fs-title:    13px;
+  --fs-score:    30px;
+
+  /* ---- font ---- */
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, Menlo, "Cascadia Mono", monospace;
+
+  /* ---- radii ---- */
+  --r-sm: 4px;
+  --r-md: 6px;
+}
+
+/* ================================================================
+   Reset & base
+   ================================================================ */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font);
+  font-size: var(--fs-body);
+  line-height: 1.45;
+}
+
+/* ================================================================
+   Layout shell
+   ================================================================ */
+
+#app {
+  width: 360px;
+  min-height: 200px;
+  max-height: 560px;
+  padding: var(--sp-3) var(--sp-3) var(--sp-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.hidden { display: none !important; }
+
+/* screen-reader-only */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ================================================================
+   Header chrome (tier: chrome — no panel, inline)
+   ================================================================ */
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 28px;
+}
+
+.wordmark {
+  margin: 0;
+  font-size: var(--fs-body);
+  letter-spacing: 0.02em;
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+/* bridge status chip */
+.bridge-chip {
+  appearance: none;
+  background: var(--bg-primary);
+  color: var(--fg-muted);
+  border: 1px solid var(--border-subtle);
+  border-radius: 100px;
+  padding: 3px 10px 3px 8px;
+  font-family: inherit;
+  font-size: var(--fs-small);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: border-color 120ms ease, background 120ms ease;
+  line-height: 1.3;
+}
+.bridge-chip:hover {
+  border-color: var(--border);
+  background: #202024;
+}
+.bridge-chip[aria-expanded="true"] {
+  border-color: var(--accent);
+  color: var(--fg);
+}
+.bridge-chip .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--fg-dim);
+  flex-shrink: 0;
+}
+.bridge-chip .dot[data-state="ok"]   { background: var(--ok); }
+.bridge-chip .dot[data-state="bad"]  { background: var(--err); }
+.bridge-chip .dot[data-state="warn"] { background: var(--warn); }
+
+/* hidden health container — only for aria-live announcements */
+.health { position: absolute; width: 1px; height: 1px; overflow: hidden; }
+
+/* ================================================================
+   Offline banner
+   ================================================================ */
+
+.offline-banner {
+  background: #1e1214;
+  border: 1px solid rgba(239,95,95,0.25);
+  border-radius: var(--r-sm);
+  padding: var(--sp-2) var(--sp-3);
+  font-size: var(--fs-small);
+  color: var(--err);
+}
+.offline-banner code { color: var(--fg); }
+
+/* ================================================================
+   Bridge mode panel (expandable from chip)
+   ================================================================ */
+
+.mode-panel {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: var(--sp-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  animation: slideDown 150ms ease;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ================================================================
+   Panels — primary surface tier
+   ================================================================ */
+
+.panel.primary {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: var(--sp-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+/* ================================================================
+   Section labels (shared)
+   ================================================================ */
+
+.section-label {
+  font-size: var(--fs-caption);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--fg-dim);
+}
+
+/* ================================================================
+   Setup section
+   ================================================================ */
+
+.setup-hint {
+  margin: 0;
+  font-size: var(--fs-small);
+  color: var(--fg-muted);
+  line-height: 1.5;
+}
+.inline-code {
+  font-family: var(--font-mono);
+  background: var(--bg-input);
+  padding: 2px 6px;
+  border-radius: 3px;
+  color: var(--accent);
+  font-size: var(--fs-small);
+}
+.setup-input {
+  appearance: none;
+  background: var(--bg-input);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: var(--sp-2) var(--sp-3);
+  font-family: var(--font-mono);
+  font-size: var(--fs-small);
+  outline: none;
+}
+.setup-input:focus { border-color: var(--accent); }
+
+/* ================================================================
+   Capture section
+   ================================================================ */
+
+.capture-url {
+  font-size: var(--fs-small);
+  color: var(--fg-muted);
+  word-break: break-all;
+}
+.capture-title {
+  font-size: var(--fs-body);
+  font-weight: 500;
+  color: var(--fg);
+}
+.capture-detection {
+  font-size: var(--fs-small);
+  color: var(--fg-muted);
+}
+
+/* Inline expiry warning (replaces confirm()) */
+.expiry-warning {
+  background: #1e1a12;
+  border: 1px solid rgba(229,185,60,0.3);
+  border-radius: var(--r-sm);
+  padding: var(--sp-2) var(--sp-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+.expiry-warning-text {
+  font-size: var(--fs-small);
+  color: var(--warn);
+  line-height: 1.5;
+}
+.expiry-warning-actions {
+  display: flex;
+  gap: var(--sp-2);
+}
+
+/* ================================================================
+   Mode panel fields
+   ================================================================ */
+
+.mode-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.mode-label {
+  font-size: var(--fs-small);
+  color: var(--fg-muted);
+}
+.mode-select {
+  appearance: none;
+  background: var(--bg-input);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: var(--sp-2) var(--sp-3);
+  font-family: inherit;
+  font-size: var(--fs-body);
+  outline: none;
+}
+.mode-select:focus { border-color: var(--accent); }
+
+.mode-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.mode-current,
+.mode-match,
+.mode-help {
+  font-size: var(--fs-small);
+  color: var(--fg-muted);
+  line-height: 1.5;
+}
+.mode-match[data-match="yes"] { color: var(--ok); }
+.mode-match[data-match="no"]  { color: var(--warn); }
+
+.mode-command {
+  display: block;
+  background: var(--bg-input);
+  color: var(--accent);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: var(--sp-2) var(--sp-3);
+  font-family: var(--font-mono);
+  font-size: var(--fs-small);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ================================================================
+   Buttons
+   ================================================================ */
+
+.btn {
+  appearance: none;
+  background: transparent;
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: var(--fs-body);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 100ms ease, border-color 100ms ease;
+}
+.btn:hover { background: #202024; }
+.btn:disabled { opacity: 0.4; cursor: default; }
+
+.btn.primary {
+  background: var(--accent);
+  color: #000;
+  border-color: var(--accent);
+}
+.btn.primary:hover {
+  background: var(--accent-strong);
+  border-color: var(--accent-strong);
+}
+
+.btn.ghost {
+  border-color: transparent;
+  color: var(--fg-muted);
+}
+.btn.ghost:hover {
+  background: transparent;
+  color: var(--fg);
+}
+
+/* Focus visible — all interactive elements */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ================================================================
+   Stepper — vertical progress (replaces plain <ol>)
+   ================================================================ */
+
+.stepper {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.stepper li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  padding: 5px 0;
+  font-size: var(--fs-body);
+  color: var(--fg-dim);
+  line-height: 1.4;
+}
+
+/* Step indicator icons */
+.stepper li::before {
+  content: "○";
+  flex-shrink: 0;
+  width: 16px;
+  text-align: center;
+  font-size: 11px;
+  line-height: 1.65;
+}
+.stepper li.completed::before { content: "✓"; color: var(--ok); }
+.stepper li.active::before    { content: "●"; color: var(--accent); }
+.stepper li.failed::before    { content: "✕"; color: var(--err); }
+
+.stepper li.completed { color: var(--fg-muted); }
+.stepper li.active    { color: var(--fg); font-weight: 500; }
+.stepper li.failed    { color: var(--err); }
+
+/* Pulse animation on active step */
+.stepper li.active::before {
+  animation: pulse 1.8s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.35; }
+}
+
+.phase-counter {
+  font-size: var(--fs-small);
+  color: var(--fg-dim);
+  padding-top: var(--sp-1);
+}
+
+.job-id {
+  font-family: var(--font-mono);
+  font-size: var(--fs-small);
+  color: var(--fg-dim);
+}
+
+/* ================================================================
+   Result — done state
+   ================================================================ */
+
+.result-score {
+  font-size: var(--fs-score);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  padding: var(--sp-1) 0;
+}
+
+.result-meta {
+  font-size: var(--fs-body);
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.result-tldr {
+  font-size: var(--fs-small);
+  color: var(--fg-muted);
+  line-height: 1.5;
+}
+
+.result-actions {
+  display: flex;
+  gap: var(--sp-2);
+  padding-top: var(--sp-1);
+}
+
+/* ================================================================
+   Error — contextual recovery
+   ================================================================ */
+
+.error-category {
+  font-size: var(--fs-small);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--err);
+}
+.error-explanation {
+  font-size: var(--fs-body);
+  color: var(--fg);
+  line-height: 1.5;
+}
+.error-recovery {
+  font-size: var(--fs-small);
+  color: var(--fg-muted);
+  line-height: 1.5;
+}
+.error-recovery code {
+  font-family: var(--font-mono);
+  background: var(--bg-input);
+  padding: 2px 6px;
+  border-radius: 3px;
+  color: var(--accent);
+}
+
+.muted-body {
+  margin: 0;
+  font-size: var(--fs-small);
+  color: var(--fg-muted);
+  line-height: 1.5;
+}
+
+/* ================================================================
+   Recent evaluations — secondary surface tier
+   ================================================================ */
+
+.section-secondary {
+  border-top: 1px solid var(--border-subtle);
+  padding: var(--sp-3) 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.recent-list-wrap {
+  position: relative;
+  max-height: 240px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+/* Fade mask when scrollable */
+.recent-list-wrap.has-overflow::after {
+  content: "";
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: block;
+  height: 28px;
+  background: linear-gradient(to bottom, transparent, var(--bg));
+  pointer-events: none;
+}
+
+.recent-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.recent-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-4) 0 var(--sp-2);
+  text-align: center;
+}
+.recent-empty-icon {
+  color: var(--fg-dim);
+  opacity: 0.5;
+}
+.recent-empty-text {
+  font-size: var(--fs-body);
+  color: var(--fg-muted);
+  font-weight: 500;
+}
+.recent-empty-hint {
+  font-size: var(--fs-small);
+  color: var(--fg-dim);
+  max-width: 240px;
+  line-height: 1.5;
+}
+
+.recent-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--fs-small);
+  padding: 7px var(--sp-1);
+  border-bottom: 1px solid var(--border-subtle);
+  cursor: pointer;
+  border-radius: 3px;
+  transition: background 80ms ease;
+}
+.recent-item:last-child { border-bottom: none; }
+.recent-item:hover { background: rgba(255,255,255,0.03); }
+.recent-item .company { font-weight: 500; color: var(--fg); }
+.recent-item .role { color: var(--fg-muted); margin-left: var(--sp-1); }
+.recent-item .score { font-weight: 600; white-space: nowrap; }
+
+/* ================================================================
+   Footer
+   ================================================================ */
+
+.footer {
+  margin-top: auto;
+  text-align: center;
+  font-size: var(--fs-caption);
+  color: var(--fg-dim);
+  padding-top: var(--sp-1);
+}

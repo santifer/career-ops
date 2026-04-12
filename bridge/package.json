@@ -1,0 +1,26 @@
+{
+  "name": "@career-ops/bridge",
+  "version": "0.1.0-phase1",
+  "private": true,
+  "description": "Local HTTP companion that bridges the Chrome extension to the career-ops CLI pipeline. Phase 1 = contracts only.",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.17",
+    "tsx": "^4.21.0",
+    "typescript": "^5.6.3",
+    "vitest": "^4.1.4"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.87.0",
+    "fastify": "^5.8.4",
+    "nanoid": "^5.1.7",
+    "yaml": "^2.8.3",
+    "zod": "^3.25.76"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "@career-ops/extension",
+  "version": "0.1.0-phase1",
+  "private": true,
+  "description": "Chrome Manifest V3 extension popup for career-ops. Phase 1 = contracts only.",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "build": "node build.mjs"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.280",
+    "esbuild": "^0.24.2",
+    "typescript": "^5.6.3"
+  }
+}

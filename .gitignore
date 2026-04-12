@@ -27,6 +27,7 @@ modes/_profile.md
 # Generated
 .resolved-prompt-*
 node_modules/
+bun.lock
 
 # OS
 .DS_Store
@@ -36,5 +37,22 @@ node_modules/
 # Claude Code local
 .claude/settings.local.json
 .claude/memory/
+.claude/projects/
 career-dashboard
 package-lock.json
+
+# Bridge
+bridge/.bridge-token
+bridge/node_modules/
+bridge/dist/
+bridge/package-lock.json
+
+# Extension
+extension/node_modules/
+extension/dist/
+extension/package-lock.json
+
+# Session artifacts
+.agents/
+**/CLAUDE.md
+!/CLAUDE.md
