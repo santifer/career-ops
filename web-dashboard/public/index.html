@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>career-ops — Command Center</title>
+<style>
+:root {
+  --bg: #1e1e2e; --surface: #181825; --overlay: #313244; --card: #24243a;
+  --text: #cdd6f4; --subtext: #a6adc8; --dim: #585b70;
+  --blue: #89b4fa; --mauve: #cba6f7; --green: #a6e3a1; --yellow: #f9e2af;
+  --peach: #fab387; --red: #f38ba8; --sky: #89dceb; --pink: #f5c2e7;
+  --teal: #94e2d5; --lavender: #b4befe;
+  --radius: 12px; --radius-sm: 8px;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
+
+.sidebar { width: 260px; background: var(--surface); border-right: 1px solid var(--overlay); display: flex; flex-direction: column; flex-shrink: 0; }
+.sidebar-header { padding: 24px 20px 16px; border-bottom: 1px solid var(--overlay); }
+.sidebar-header h1 { font-size: 18px; font-weight: 700; background: linear-gradient(135deg, var(--sky), var(--mauve)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.sidebar-header .subtitle { font-size: 11px; color: var(--dim); margin-top: 4px; letter-spacing: 0.5px; text-transform: uppercase; }
+.nav { flex: 1; overflow-y: auto; padding: 12px 8px; }
+.nav-section { font-size: 10px; color: var(--dim); text-transform: uppercase; letter-spacing: 1px; padding: 12px 12px 6px; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--radius-sm); cursor: pointer; color: var(--subtext); font-size: 13px; transition: all 0.15s; }
+.nav-item:hover { background: var(--overlay); color: var(--text); }
+.nav-item.active { background: rgba(137,180,250,0.12); color: var(--blue); }
+.nav-item .icon { width: 18px; text-align: center; font-size: 14px; }
+.nav-item .badge { margin-left: auto; background: var(--overlay); color: var(--subtext); font-size: 11px; padding: 2px 8px; border-radius: 10px; }
+.nav-item.active .badge { background: rgba(137,180,250,0.2); color: var(--blue); }
+
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.topbar { height: 56px; border-bottom: 1px solid var(--overlay); display: flex; align-items: center; padding: 0 24px; gap: 16px; flex-shrink: 0; }
+.topbar h2 { font-size: 16px; font-weight: 600; }
+.topbar .search { flex: 1; max-width: 400px; margin-left: auto; }
+.topbar .search input { width: 100%; background: var(--overlay); border: 1px solid transparent; border-radius: var(--radius-sm); padding: 8px 14px; color: var(--text); font-size: 13px; outline: none; }
+.topbar .search input:focus { border-color: var(--blue); }
+.topbar .search input::placeholder { color: var(--dim); }
+.content { flex: 1; overflow-y: auto; padding: 24px; }
+
+.metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.metric-card { background: var(--card); border: 1px solid var(--overlay); border-radius: var(--radius); padding: 20px; }
+.metric-card .label { font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.5px; }
+.metric-card .value { font-size: 28px; font-weight: 700; margin-top: 6px; }
+.metric-card .sub { font-size: 12px; color: var(--subtext); margin-top: 4px; }
+
+.table-wrapper { background: var(--card); border: 1px solid var(--overlay); border-radius: var(--radius); overflow: hidden; }
+.table-header { display: flex; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--overlay); gap: 12px; }
+.table-header h3 { font-size: 14px; font-weight: 600; }
+.filter-tabs { display: flex; gap: 4px; margin-left: auto; }
+.filter-tab { padding: 5px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; color: var(--subtext); background: transparent; border: none; }
+.filter-tab:hover { background: var(--overlay); color: var(--text); }
+.filter-tab.active { background: rgba(137,180,250,0.15); color: var(--blue); }
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; padding: 10px 16px; font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--overlay); background: var(--surface); }
+td { padding: 12px 16px; font-size: 13px; border-bottom: 1px solid rgba(49,50,68,0.5); }
+tr:hover td { background: rgba(49,50,68,0.3); }
+.score-badge { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+.score-high { background: rgba(166,227,161,0.15); color: var(--green); }
+.score-mid { background: rgba(249,226,175,0.15); color: var(--yellow); }
+.score-low { background: rgba(243,139,168,0.15); color: var(--red); }
+.status-pill { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 500; }
+.status-evaluated { background: rgba(137,180,250,0.15); color: var(--blue); }
+.status-applied { background: rgba(203,166,247,0.15); color: var(--mauve); }
+.status-interview { background: rgba(166,227,161,0.15); color: var(--green); }
+.status-offer { background: rgba(148,226,213,0.15); color: var(--teal); }
+.status-rejected { background: rgba(243,139,168,0.1); color: var(--red); }
+.status-discarded, .status-skip { background: rgba(88,91,112,0.2); color: var(--dim); }
+.status-responded { background: rgba(249,226,175,0.15); color: var(--yellow); }
+
+.cmd-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.cmd-card { background: var(--card); border: 1px solid var(--overlay); border-radius: var(--radius); padding: 16px 20px; transition: all 0.2s; }
+.cmd-card:hover { border-color: var(--blue); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+.cmd-card .cmd-name { font-size: 14px; font-weight: 600; color: var(--blue); font-family: 'SF Mono', 'Fira Code', monospace; }
+.cmd-card .cmd-desc { font-size: 12px; color: var(--subtext); margin-top: 6px; line-height: 1.5; }
+.cmd-card .cmd-hint { font-size: 11px; color: var(--dim); margin-top: 8px; font-style: italic; }
+.cmd-actions { margin-top: 10px; display: flex; gap: 6px; }
+
+.pipeline-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; border-bottom: 1px solid rgba(49,50,68,0.5); }
+.pipeline-item:hover { background: rgba(49,50,68,0.3); }
+.pipeline-item .company { font-weight: 600; color: var(--mauve); min-width: 120px; font-size: 13px; }
+.pipeline-item .title { flex: 1; font-size: 13px; }
+.pipeline-item a { color: var(--blue); text-decoration: none; font-size: 12px; }
+
+.profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.profile-card { background: var(--card); border: 1px solid var(--overlay); border-radius: var(--radius); padding: 20px; }
+.profile-card h4 { font-size: 12px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+.profile-card .field { margin-bottom: 8px; }
+.profile-card .field-label { font-size: 11px; color: var(--dim); }
+.profile-card .field-value { font-size: 14px; margin-top: 2px; }
+.tag { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 12px; margin: 2px; background: var(--overlay); color: var(--subtext); }
+
+.empty-state { text-align: center; padding: 60px 20px; color: var(--dim); }
+.empty-state .icon { font-size: 48px; margin-bottom: 16px; }
+.empty-state h3 { color: var(--subtext); margin-bottom: 8px; }
+.section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.section-header h3 { font-size: 16px; font-weight: 600; }
+.section-header .count { font-size: 12px; color: var(--dim); }
+
+.btn { padding: 6px 14px; border-radius: 6px; border: none; cursor: pointer; font-size: 12px; font-weight: 500; transition: all 0.15s; }
+.btn-run { border: 1px solid var(--blue); background: transparent; color: var(--blue); display: inline-flex; align-items: center; gap: 5px; }
+.btn-run:hover { background: rgba(137,180,250,0.1); }
+.btn-copy { border: 1px solid var(--dim); background: transparent; color: var(--dim); }
+.btn-copy:hover { color: var(--subtext); border-color: var(--subtext); }
+.btn-primary { background: var(--blue); color: var(--bg); padding: 8px 20px; }
+.btn-primary:hover { filter: brightness(1.1); }
+.btn-secondary { background: var(--overlay); color: var(--subtext); padding: 8px 20px; }
+
+/* Chat panel — slides in from right */
+.chat-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 90; display: none; }
+.chat-overlay.open { display: block; }
+.chat-panel { position: fixed; top: 0; right: 0; bottom: 0; width: 520px; max-width: 90vw; background: var(--surface); border-left: 1px solid var(--overlay); z-index: 95; display: flex; flex-direction: column; transform: translateX(100%); transition: transform 0.25s ease; }
+.chat-panel.open { transform: translateX(0); }
+.chat-bar { display: flex; align-items: center; padding: 14px 20px; border-bottom: 1px solid var(--overlay); gap: 10px; flex-shrink: 0; }
+.chat-bar h3 { flex: 1; font-size: 14px; font-weight: 600; }
+.chat-bar .status-dot { width: 8px; height: 8px; border-radius: 50%; }
+.chat-bar .status-dot.running { background: var(--yellow); animation: pulse 1.5s infinite; }
+.chat-bar .status-dot.waiting { background: var(--green); }
+.chat-bar .status-dot.stopped { background: var(--red); }
+@keyframes pulse { 0%,100%{opacity:1}50%{opacity:.4} }
+.chat-bar button { background: none; border: none; color: var(--dim); cursor: pointer; font-size: 18px; padding: 2px 6px; }
+.chat-bar button:hover { color: var(--text); }
+.chat-messages { flex: 1; overflow-y: auto; padding: 16px 20px; display: flex; flex-direction: column; gap: 16px; }
+.chat-msg { max-width: 100%; }
+.chat-msg.user .chat-bubble { background: rgba(137,180,250,0.1); border: 1px solid rgba(137,180,250,0.2); border-radius: 12px 12px 4px 12px; padding: 12px 16px; font-size: 13px; line-height: 1.6; color: var(--blue); white-space: pre-wrap; word-break: break-word; max-height: 120px; overflow-y: auto; }
+.chat-msg.assistant .chat-bubble { background: var(--card); border: 1px solid var(--overlay); border-radius: 12px 12px 12px 4px; padding: 16px 20px; font-size: 13px; line-height: 1.7; color: var(--subtext); white-space: pre-wrap; word-break: break-word; }
+.chat-msg .chat-label { font-size: 10px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+.chat-thinking { display: flex; gap: 6px; padding: 16px 20px; }
+.chat-thinking span { width: 8px; height: 8px; background: var(--dim); border-radius: 50%; animation: bounce 1.2s infinite; }
+.chat-thinking span:nth-child(2) { animation-delay: 0.2s; }
+.chat-thinking span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes bounce { 0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-8px)} }
+.chat-input-area { padding: 12px 16px; border-top: 1px solid var(--overlay); display: flex; gap: 8px; flex-shrink: 0; }
+.chat-input-area textarea { flex: 1; background: var(--overlay); border: 1px solid transparent; border-radius: var(--radius-sm); padding: 10px 14px; color: var(--text); font-size: 13px; font-family: inherit; resize: none; outline: none; min-height: 44px; max-height: 120px; }
+.chat-input-area textarea:focus { border-color: var(--blue); }
+.chat-input-area textarea::placeholder { color: var(--dim); }
+.chat-input-area button { background: var(--blue); border: none; color: var(--bg); border-radius: var(--radius-sm); padding: 10px 16px; cursor: pointer; font-weight: 600; font-size: 13px; align-self: flex-end; }
+.chat-input-area button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Input modal for initial command input */
+.input-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; display: none; align-items: center; justify-content: center; }
+.input-modal.show { display: flex; }
+.input-box { background: var(--surface); border: 1px solid var(--overlay); border-radius: var(--radius); width: 600px; max-width: 90vw; padding: 24px; }
+.input-box h3 { font-size: 16px; margin-bottom: 4px; }
+.input-box .input-label { font-size: 12px; color: var(--dim); margin-bottom: 12px; }
+.input-box textarea { width: 100%; background: var(--overlay); border: 1px solid transparent; border-radius: var(--radius-sm); padding: 12px; color: var(--text); font-size: 13px; font-family: inherit; outline: none; resize: vertical; min-height: 120px; }
+.input-box textarea:focus { border-color: var(--blue); }
+.input-box textarea::placeholder { color: var(--dim); }
+.input-box .input-actions { display: flex; gap: 8px; margin-top: 12px; justify-content: flex-end; }
+
+.toast { position: fixed; bottom: 24px; right: 24px; background: var(--card); border: 1px solid var(--blue); border-radius: var(--radius-sm); padding: 12px 20px; font-size: 13px; color: var(--blue); z-index: 200; transform: translateY(100px); opacity: 0; transition: all 0.3s; }
+.toast.show { transform: translateY(0); opacity: 1; }
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--overlay); border-radius: 3px; }
+
+@media (max-width: 900px) {
+  .sidebar { width: 60px; }
+  .sidebar-header h1, .sidebar-header .subtitle, .nav-section, .nav-item span:not(.icon) { display: none; }
+  .nav-item { justify-content: center; padding: 12px; }
+  .profile-grid { grid-template-columns: 1fr; }
+  .chat-panel { width: 100vw; max-width: 100vw; }
+}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-header"><h1>career-ops</h1><div class="subtitle">Command Center</div></div>
+  <nav class="nav">
+    <div class="nav-section">Overview</div>
+    <div class="nav-item active" data-page="dashboard"><span class="icon">◉</span><span>Dashboard</span></div>
+    <div class="nav-item" data-page="pipeline"><span class="icon">⟡</span><span>Pipeline</span><span class="badge" id="pipeline-badge">0</span></div>
+    <div class="nav-item" data-page="applications"><span class="icon">◫</span><span>Applications</span><span class="badge" id="apps-badge">0</span></div>
+    <div class="nav-section">Discovery</div>
+    <div class="nav-item" data-page="scan"><span class="icon">◎</span><span>Scan History</span></div>
+    <div class="nav-item" data-page="reports"><span class="icon">◧</span><span>Reports</span></div>
+    <div class="nav-section">Analytics</div>
+    <div class="nav-item" data-page="patterns"><span class="icon">◈</span><span>Patterns</span></div>
+    <div class="nav-item" data-page="followups"><span class="icon">◔</span><span>Follow-ups</span></div>
+    <div class="nav-section">Tools</div>
+    <div class="nav-item" data-page="commands"><span class="icon">▸</span><span>Commands</span></div>
+    <div class="nav-item" data-page="profile"><span class="icon">◑</span><span>Profile</span></div>
+    <div class="nav-item" data-page="cv"><span class="icon">◱</span><span>CV Preview</span></div>
+  </nav>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <h2 id="page-title">Dashboard</h2>
+    <div class="search"><input type="text" id="search-input" placeholder="Search companies, roles..."></div>
+  </div>
+  <div class="content" id="content"></div>
+</main>
+
+<!-- Chat slide-over panel -->
+<div class="chat-overlay" id="chat-overlay" onclick="closeChat()"></div>
+<div class="chat-panel" id="chat-panel">
+  <div class="chat-bar">
+    <div class="status-dot" id="chat-dot"></div>
+    <h3 id="chat-title">Command</h3>
+    <button onclick="stopSession()" title="Stop">◼</button>
+    <button onclick="closeChat()" title="Close">&times;</button>
+  </div>
+  <div class="chat-messages" id="chat-messages"></div>
+  <div class="chat-input-area">
+    <textarea id="chat-reply" placeholder="Reply to Claude..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendReply()}"></textarea>
+    <button id="chat-send-btn" onclick="sendReply()">Send</button>
+  </div>
+</div>
+
+<!-- Initial input modal -->
+<div class="input-modal" id="input-modal">
+  <div class="input-box">
+    <h3 id="input-title">Run Command</h3>
+    <div class="input-label" id="input-label">Provide input</div>
+    <textarea id="input-textarea" placeholder="Paste content here..."></textarea>
+    <div class="input-actions">
+      <button class="btn btn-secondary" onclick="closeInputModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitInput()">Run</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let data = { apps: [], pipeline: { pending: [], processed: [] }, scanHistory: [], profile: null, reports: [], metrics: {} };
+let currentPage = 'dashboard';
+let searchQuery = '';
+let activeSessionId = null;
+let sessionStatus = 'idle';
+let pendingCommand = null;
+
+async function fetchData() {
+  try {
+    const res = await fetch('/api/dashboard');
+    data = await res.json();
+    document.getElementById('pipeline-badge').textContent = data.pipeline.pending.length;
+    document.getElementById('apps-badge').textContent = data.apps.length;
+    renderPage();
+  } catch(e) { console.error(e); }
+}
+
+// Navigation
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => {
+    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+    item.classList.add('active');
+    currentPage = item.dataset.page;
+    document.getElementById('page-title').textContent = item.querySelector('span:not(.icon):not(.badge)')?.textContent || '';
+    renderPage();
+  });
+});
+document.getElementById('search-input').addEventListener('input', e => { searchQuery = e.target.value.toLowerCase(); renderPage(); });
+
+function renderPage() {
+  const el = document.getElementById('content');
+  switch(currentPage) {
+    case 'dashboard': el.innerHTML = renderDashboard(); break;
+    case 'pipeline': el.innerHTML = renderPipeline(); break;
+    case 'applications': el.innerHTML = renderApplications(); break;
+    case 'scan': el.innerHTML = renderScanHistory(); break;
+    case 'reports': el.innerHTML = renderReports(); break;
+    case 'patterns': renderAsync(el, '/api/patterns', 'Patterns'); break;
+    case 'followups': renderAsync(el, '/api/followups', 'Follow-ups'); break;
+    case 'commands': el.innerHTML = renderCommands(); break;
+    case 'profile': el.innerHTML = renderProfile(); break;
+    case 'cv': renderCV(el); break;
+  }
+}
+
+function scoreBadge(s){const n=parseFloat(s);return `<span class="score-badge ${n>=4?'score-high':n>=3.5?'score-mid':'score-low'}">${s}</span>`;}
+function statusPill(s){return `<span class="status-pill status-${(s||'').toLowerCase().replace(/\s/g,'')}">${s}</span>`;}
+
+function renderDashboard() {
+  const m=data.metrics, p=data.pipeline.pending.length;
+  return `<div class="metrics-grid">
+    <div class="metric-card"><div class="label">Pipeline</div><div class="value" style="color:var(--sky)">${p}</div><div class="sub">pending</div></div>
+    <div class="metric-card"><div class="label">Applications</div><div class="value" style="color:var(--mauve)">${m.total||0}</div><div class="sub">${m.actionable||0} actionable</div></div>
+    <div class="metric-card"><div class="label">Avg Score</div><div class="value" style="color:var(--green)">${m.avgScore||'--'}</div><div class="sub">Top: ${m.topScore||'--'}/5</div></div>
+    <div class="metric-card"><div class="label">PDFs</div><div class="value" style="color:var(--peach)">${m.pdfCount||0}</div><div class="sub">${data.reports.length} reports</div></div>
+    <div class="metric-card"><div class="label">Scanned</div><div class="value" style="color:var(--yellow)">${data.scanHistory.length}</div><div class="sub">discovered</div></div>
+  </div>
+  <div class="section-header"><h3>Quick Actions</h3></div>
+  <div style="display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap">
+    <button class="btn btn-run" onclick="runCommand('scan')">◎ Scan Portals</button>
+    <button class="btn btn-run" onclick="runCommand('pipeline')">⟡ Process Pipeline (${p})</button>
+    <button class="btn btn-run" onclick="runCommand('evaluate')">▸ Evaluate JD</button>
+    <button class="btn btn-run" onclick="runCommand('pdf')">◱ Generate PDF</button>
+    <button class="btn btn-run" onclick="runCommand('deep')">◎ Deep Research</button>
+    <button class="btn btn-run" onclick="runCommand('contacto')">◑ LinkedIn Outreach</button>
+    <button class="btn btn-run" onclick="runCommand('interview-prep')">◧ Interview Prep</button>
+  </div>
+  <div class="section-header"><h3>Recent Pipeline</h3><span class="count">${p} pending</span></div>
+  <div class="table-wrapper">${data.pipeline.pending.slice(0,10).map(i=>`<div class="pipeline-item"><span class="company">${i.company}</span><span class="title">${i.title}</span><a href="${i.url}" target="_blank">Open ↗</a></div>`).join('')||'<div class="empty-state"><h3>Pipeline empty</h3></div>'}</div>
+  ${data.apps.length?`<div class="section-header" style="margin-top:24px"><h3>Recent Applications</h3></div><div class="table-wrapper"><table><tr><th>Company</th><th>Role</th><th>Score</th><th>Status</th><th>Date</th></tr>${data.apps.slice(0,8).map(a=>`<tr><td>${a.company}</td><td>${a.role}</td><td>${scoreBadge(a.score)}</td><td>${statusPill(a.status)}</td><td style="color:var(--dim)">${a.date}</td></tr>`).join('')}</table></div>`:''}`;
+}
+
+function renderPipeline() {
+  const items=data.pipeline.pending.filter(p=>!searchQuery||p.company.toLowerCase().includes(searchQuery)||p.title.toLowerCase().includes(searchQuery));
+  return `<div class="section-header"><h3>Pending</h3><span class="count">${items.length}</span><button class="btn btn-run" style="margin-left:auto" onclick="runCommand('pipeline')">▸ Process All</button></div>
+  <div class="table-wrapper"><table><tr><th>#</th><th>Company</th><th>Role</th><th>Link</th></tr>${items.map((p,i)=>`<tr><td style="color:var(--dim)">${i+1}</td><td style="font-weight:600;color:var(--mauve)">${p.company}</td><td>${p.title}</td><td><a href="${p.url}" target="_blank" style="color:var(--blue);text-decoration:none">Open ↗</a></td></tr>`).join('')||'<tr><td colspan="4"><div class="empty-state"><h3>Empty</h3></div></td></tr>'}</table></div>`;
+}
+
+function renderApplications() {
+  let apps=data.apps.filter(a=>!searchQuery||a.company.toLowerCase().includes(searchQuery)||a.role.toLowerCase().includes(searchQuery));
+  if(!apps.length) return '<div class="empty-state"><div class="icon">◫</div><h3>No applications yet</h3></div>';
+  return `<div class="table-wrapper"><div class="table-header"><h3>Applications</h3><div class="filter-tabs">${['All','Evaluated','Applied','Interview','Offer','Top ≥4'].map(f=>`<button class="filter-tab${f==='All'?' active':''}" onclick="filterApps(this,'${f}')">${f}</button>`).join('')}</div></div><div style="overflow-x:auto"><table id="apps-table"><tr><th>#</th><th>Date</th><th>Company</th><th>Role</th><th>Score</th><th>Status</th><th>PDF</th><th>Notes</th></tr>${apps.map(a=>`<tr data-status="${a.status}" data-score="${parseFloat(a.score)}"><td style="color:var(--dim)">${a.num}</td><td style="color:var(--dim);font-size:12px">${a.date}</td><td style="font-weight:600;color:var(--mauve)">${a.company}</td><td>${a.role}</td><td>${scoreBadge(a.score)}</td><td>${statusPill(a.status)}</td><td>${a.pdf}</td><td style="color:var(--subtext);font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.notes}</td></tr>`).join('')}</table></div></div>`;
+}
+
+function filterApps(btn,f) {
+  btn.parentElement.querySelectorAll('.filter-tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active');
+  document.querySelectorAll('#apps-table tr[data-status]').forEach(r=>{let s=true;if(f==='Evaluated')s=r.dataset.status==='Evaluated';else if(f==='Applied')s=r.dataset.status==='Applied';else if(f==='Interview')s=r.dataset.status==='Interview';else if(f==='Offer')s=r.dataset.status==='Offer';else if(f==='Top ≥4')s=parseFloat(r.dataset.score)>=4;r.style.display=s?'':'none';});
+}
+
+function renderScanHistory() {
+  let items=data.scanHistory.filter(s=>!searchQuery||s.company?.toLowerCase().includes(searchQuery)||s.title?.toLowerCase().includes(searchQuery));
+  const added=items.filter(s=>s.status==='added').length;
+  return `<div class="metrics-grid" style="margin-bottom:20px"><div class="metric-card"><div class="label">Total</div><div class="value" style="color:var(--sky)">${items.length}</div></div><div class="metric-card"><div class="label">Added</div><div class="value" style="color:var(--green)">${added}</div></div></div>
+  <div class="section-header"><h3>History</h3><button class="btn btn-run" style="margin-left:auto" onclick="runCommand('scan')">◎ New Scan</button></div>
+  <div class="table-wrapper"><table><tr><th>Date</th><th>Company</th><th>Title</th><th>Source</th><th>Status</th></tr>${items.map(s=>`<tr><td style="color:var(--dim);font-size:12px">${s.first_seen}</td><td style="font-weight:600;color:var(--mauve)">${s.company}</td><td><a href="${s.url}" target="_blank" style="color:var(--text);text-decoration:none">${s.title}</a></td><td style="color:var(--dim);font-size:12px">${s.portal}</td><td>${s.status==='added'?'<span style="color:var(--green)">added</span>':`<span style="color:var(--dim)">${s.status}</span>`}</td></tr>`).join('')}</table></div>`;
+}
+
+function renderReports() {
+  if(!data.reports.length) return '<div class="empty-state"><div class="icon">◧</div><h3>No reports yet</h3></div>';
+  return `<div class="table-wrapper"><table><tr><th>Report</th><th>Score</th><th>Legitimacy</th><th></th></tr>${data.reports.map(r=>`<tr><td style="font-weight:600">${r.filename}</td><td>${r.score?scoreBadge(r.score):'--'}</td><td style="font-size:12px;color:var(--subtext)">${r.legitimacy||'--'}</td><td><button class="btn btn-run" onclick="viewReport('${r.filename}')">View</button></td></tr>`).join('')}</table></div>`;
+}
+
+async function viewReport(fn) {
+  try { const r=await fetch(`/api/reports/${fn}`); const d=await r.json(); openChatWith(`Report: ${fn}`, d.content||'Empty'); } catch { toast('Failed'); }
+}
+
+async function renderAsync(el,url,label) {
+  el.innerHTML=`<div class="empty-state"><h3>Loading ${label}...</h3></div>`;
+  try { const r=await fetch(url); const d=await r.json(); if(d.error){el.innerHTML=`<div class="empty-state"><h3>No data yet</h3></div>`;return;} el.innerHTML=`<div class="table-wrapper" style="padding:20px"><pre style="font-size:13px;line-height:1.6;color:var(--subtext);white-space:pre-wrap">${JSON.stringify(d,null,2)}</pre></div>`; } catch { el.innerHTML=`<div class="empty-state"><h3>Unavailable</h3></div>`; }
+}
+
+function renderCommands() {
+  const cmds=[
+    {id:'evaluate',name:'/career-ops {JD}',desc:'Full auto-pipeline: evaluate + report + PDF + tracker',hint:'Paste job text or URL'},
+    {id:'scan',name:'/career-ops scan',desc:'Scan 70+ career pages for new offers',hint:'Discovery'},
+    {id:'pipeline',name:'/career-ops pipeline',desc:'Process pending URLs from inbox',hint:`${data.pipeline.pending.length} pending`},
+    {id:'oferta',name:'/career-ops oferta',desc:'Deep evaluation (Blocks A-G)',hint:'Evaluation'},
+    {id:'ofertas',name:'/career-ops ofertas',desc:'Compare and rank multiple offers',hint:'Comparison'},
+    {id:'contacto',name:'/career-ops contacto',desc:'Find contacts + draft LinkedIn messages',hint:'Networking'},
+    {id:'deep',name:'/career-ops deep',desc:'Deep company research',hint:'Due diligence'},
+    {id:'pdf',name:'/career-ops pdf',desc:'Generate ATS-optimized CV tailored to JD',hint:'CV generation'},
+    {id:'training',name:'/career-ops training',desc:'Evaluate course/cert',hint:'Learning'},
+    {id:'project',name:'/career-ops project',desc:'Evaluate portfolio project idea',hint:'Projects'},
+    {id:'tracker',name:'/career-ops tracker',desc:'Application status overview',hint:'Status'},
+    {id:'apply',name:'/career-ops apply',desc:'Live application form assistant',hint:'Apply'},
+    {id:'batch',name:'/career-ops batch',desc:'Batch process 50+ offers',hint:'Bulk'},
+    {id:'patterns',name:'/career-ops patterns',desc:'Analyze rejection patterns',hint:'Analytics'},
+    {id:'followup',name:'/career-ops followup',desc:'Follow-up cadence tracker',hint:'Cadence'},
+    {id:'interview-prep',name:'/career-ops interview-prep',desc:'Interview intel',hint:'Interview'},
+  ];
+  return `<div class="section-header"><h3>All Commands</h3></div><div class="cmd-grid">${cmds.map(c=>`<div class="cmd-card"><div class="cmd-name">${c.name}</div><div class="cmd-desc">${c.desc}</div><div class="cmd-hint">${c.hint}</div><div class="cmd-actions"><button class="btn btn-run" onclick="runCommand('${c.id}')">▸ Run</button><button class="btn btn-copy" onclick="copyCmd('${c.name}')">Copy</button></div></div>`).join('')}</div>`;
+}
+
+function renderProfile() {
+  const p=data.profile;if(!p) return '<div class="empty-state"><h3>No profile</h3></div>';
+  const c=p.candidate||{},comp=p.compensation||{},loc=p.location||{},n=p.narrative||{};
+  return `<div class="profile-grid"><div class="profile-card"><h4>Identity</h4><div class="field"><div class="field-label">Name</div><div class="field-value">${c.full_name||'--'}</div></div><div class="field"><div class="field-label">Email</div><div class="field-value">${c.email||'--'}</div></div><div class="field"><div class="field-label">Location</div><div class="field-value">${c.location||'--'}</div></div><div class="field"><div class="field-label">LinkedIn</div><div class="field-value">${c.linkedin||'--'}</div></div></div><div class="profile-card"><h4>Compensation</h4><div class="field"><div class="field-label">Target</div><div class="field-value" style="color:var(--green);font-size:18px;font-weight:600">${comp.target_range||'--'}</div></div><div class="field"><div class="field-label">Minimum</div><div class="field-value">${comp.minimum||'--'}</div></div></div><div class="profile-card"><h4>Location & Visa</h4><div class="field"><div class="field-label">Cities</div><div class="field-value">${loc.city||'--'}</div></div><div class="field"><div class="field-label">Visa</div><div class="field-value" style="color:var(--yellow)">${loc.visa_status||'--'}</div></div></div><div class="profile-card"><h4>Superpowers</h4><div style="display:flex;flex-wrap:wrap;gap:6px">${(n.superpowers||[]).map(s=>`<div class="tag" style="background:rgba(137,180,250,0.1);color:var(--blue)">${s}</div>`).join('')}</div></div></div>`;
+}
+
+async function renderCV(el) { const r=await fetch('/api/cv'); const d=await r.json(); el.innerHTML=`<div class="table-wrapper" style="padding:24px"><pre style="font-size:13px;line-height:1.7;color:var(--subtext);white-space:pre-wrap">${d.content||'No CV'}</pre></div>`; }
+
+// ========== Chat / Session logic ==========
+const CMD_DEFS = {
+  'scan':{needsInput:false},'pipeline':{needsInput:false},'tracker':{needsInput:false},
+  'patterns':{needsInput:false},'followup':{needsInput:false},'batch':{needsInput:false},
+  'evaluate':{needsInput:true,inputLabel:'Paste JD text or URL',title:'/career-ops {JD}'},
+  'oferta':{needsInput:true,inputLabel:'Paste JD text or URL',title:'/career-ops oferta'},
+  'ofertas':{needsInput:true,inputLabel:'Report numbers or company names',title:'/career-ops ofertas'},
+  'pdf':{needsInput:true,inputLabel:'Paste JD text or URL for CV tailoring',title:'/career-ops pdf'},
+  'contacto':{needsInput:true,inputLabel:'Company name or job URL',title:'/career-ops contacto'},
+  'deep':{needsInput:true,inputLabel:'Company name to research',title:'/career-ops deep'},
+  'training':{needsInput:true,inputLabel:'Course or cert name + URL',title:'/career-ops training'},
+  'project':{needsInput:true,inputLabel:'Project idea',title:'/career-ops project'},
+  'apply':{needsInput:true,inputLabel:'Application URL or company + role',title:'/career-ops apply'},
+  'interview-prep':{needsInput:true,inputLabel:'Company + role',title:'/career-ops interview-prep'},
+};
+
+function runCommand(cmdId) {
+  const def=CMD_DEFS[cmdId]; if(!def) return;
+  if(def.needsInput) {
+    pendingCommand=cmdId;
+    document.getElementById('input-title').textContent=def.title||`/career-ops ${cmdId}`;
+    document.getElementById('input-label').textContent=def.inputLabel;
+    document.getElementById('input-textarea').value='';
+    document.getElementById('input-modal').classList.add('show');
+    setTimeout(()=>document.getElementById('input-textarea').focus(),100);
+  } else {
+    startSession(cmdId,'');
+  }
+}
+
+function closeInputModal(){document.getElementById('input-modal').classList.remove('show');pendingCommand=null;}
+function submitInput(){const v=document.getElementById('input-textarea').value.trim();if(!v){toast('Input required');return;}closeInputModal();startSession(pendingCommand,v);}
+
+async function startSession(cmdId, input) {
+  // Open chat panel
+  document.getElementById('chat-panel').classList.add('open');
+  document.getElementById('chat-overlay').classList.add('open');
+  document.getElementById('chat-title').textContent=`/career-ops ${cmdId}`;
+  document.getElementById('chat-messages').innerHTML='';
+  setDot('running');
+  setSendEnabled(false);
+
+  // Show user message
+  addMsg('user', input ? `${cmdId}: ${input.substring(0,200)}${input.length>200?'...':''}` : cmdId);
+  addThinking();
+
+  try {
+    const res=await fetch('/api/session/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({command:cmdId,input})});
+    const d=await res.json();
+    if(d.error){removeThinking();addMsg('assistant','Error: '+d.error);setDot('stopped');return;}
+    activeSessionId=d.sessionId;
+    sessionStatus='running';
+  } catch(e){removeThinking();addMsg('assistant','Failed: '+e.message);setDot('stopped');}
+}
+
+async function sendReply() {
+  if(!activeSessionId||sessionStatus!=='waiting') return;
+  const ta=document.getElementById('chat-reply');
+  const msg=ta.value.trim();
+  if(!msg) return;
+  ta.value='';
+  addMsg('user',msg);
+  addThinking();
+  setDot('running');
+  setSendEnabled(false);
+  try {
+    await fetch(`/api/session/${activeSessionId}/reply`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg})});
+    sessionStatus='running';
+  } catch(e){removeThinking();addMsg('assistant','Error: '+e.message);setDot('stopped');}
+}
+
+async function stopSession() {
+  if(!activeSessionId) return;
+  try{await fetch(`/api/session/${activeSessionId}/stop`,{method:'POST'});}catch{}
+}
+
+function closeChat() {
+  document.getElementById('chat-panel').classList.remove('open');
+  document.getElementById('chat-overlay').classList.remove('open');
+}
+
+function openChatWith(title,text) {
+  document.getElementById('chat-panel').classList.add('open');
+  document.getElementById('chat-overlay').classList.add('open');
+  document.getElementById('chat-title').textContent=title;
+  document.getElementById('chat-messages').innerHTML='';
+  setDot('waiting');
+  setSendEnabled(false);
+  addMsg('assistant',text);
+}
+
+function addMsg(role,text) {
+  const el=document.getElementById('chat-messages');
+  const d=document.createElement('div');
+  d.className='chat-msg '+role;
+  d.innerHTML=`<div class="chat-label">${role==='user'?'You':'Claude'}</div><div class="chat-bubble">${escHtml(text)}</div>`;
+  el.appendChild(d);
+  el.scrollTop=el.scrollHeight;
+}
+function addThinking(){removeThinking();const el=document.getElementById('chat-messages');const d=document.createElement('div');d.id='thinking';d.className='chat-thinking';d.innerHTML='<span></span><span></span><span></span>';el.appendChild(d);el.scrollTop=el.scrollHeight;}
+function removeThinking(){document.getElementById('thinking')?.remove();}
+
+function setDot(s){const d=document.getElementById('chat-dot');d.className='status-dot '+s;}
+function setSendEnabled(v){document.getElementById('chat-send-btn').disabled=!v;document.getElementById('chat-reply').disabled=!v;}
+function escHtml(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function copyCmd(c){navigator.clipboard.writeText(c).then(()=>toast('Copied: '+c)).catch(()=>toast(c));}
+function toast(m){const e=document.getElementById('toast');e.textContent=m;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),3000);}
+
+// WebSocket
+function connectWS() {
+  const ws=new WebSocket(`ws://${location.host}`);
+  ws.onmessage=(e)=>{
+    const msg=JSON.parse(e.data);
+    if(msg.type==='refresh') fetchData();
+    if(msg.type==='session-chunk'&&msg.sessionId===activeSessionId) {
+      // Streaming chunk — could accumulate, but we show full on complete
+    }
+    if(msg.type==='session-response'&&msg.sessionId===activeSessionId) {
+      removeThinking();
+      addMsg('assistant',msg.text);
+      sessionStatus=msg.status;
+      setDot(msg.status);
+      setSendEnabled(msg.status==='waiting');
+      if(msg.status==='waiting') document.getElementById('chat-reply').focus();
+      fetchData();
+    }
+    if(msg.type==='session-error'&&msg.sessionId===activeSessionId) {
+      removeThinking();
+      addMsg('assistant','Error: '+msg.error);
+      setDot('stopped');
+    }
+    if(msg.type==='session-thinking'&&msg.sessionId===activeSessionId) {
+      addThinking();setDot('running');setSendEnabled(false);
+    }
+  };
+  ws.onclose=()=>setTimeout(connectWS,3000);
+}
+
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeInputModal();closeChat();}if(e.key==='Enter'&&e.metaKey&&document.getElementById('input-modal').classList.contains('show'))submitInput();});
+
+fetchData();
+connectWS();
+</script>
+</body>
+</html>
