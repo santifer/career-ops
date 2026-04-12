@@ -28,7 +28,9 @@ type Theme struct {
 // NewTheme creates a theme by name. Currently only "catppuccin-mocha" is supported.
 func NewTheme(name string) Theme {
 	switch name {
-	case "catppuccin-mocha", "":
+	case "catppuccin-latte", "light":
+		return newCatppuccinLatte()
+	case "catppuccin-mocha", "dark", "":
 		return newCatppuccinMocha()
 	default:
 		return newCatppuccinMocha()
