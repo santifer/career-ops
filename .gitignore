@@ -6,6 +6,12 @@ reports/*.md
 !reports/.gitkeep
 output/*
 !output/.gitkeep
+!output/pdf/
+!output/markdown/
+output/pdf/*
+output/markdown/*
+!output/pdf/.gitkeep
+!output/markdown/.gitkeep
 batch/logs/*
 !batch/logs/.gitkeep
 batch/batch-state.tsv

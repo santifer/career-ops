@@ -23,8 +23,14 @@ Ejecutar exactamente igual que el modo `oferta` (leer `modes/oferta.md` para tod
 Guardar la evaluación completa en `reports/{###}-{company-slug}-{YYYY-MM-DD}.md` (ver formato en `modes/oferta.md`).
 Include Block G in the saved report. Add `**Legitimacy:** {tier}` to the report header.
 
-## Paso 3 — Generar PDF
+## Paso 3 — Generar PDF + MD tailored
 Ejecutar el pipeline completo de `pdf` (leer `modes/pdf.md`).
+
+El pipeline produce **dos artefactos** (comparten el mismo `{NNN}` que el report):
+- `output/pdf/{NNN}-cv-{candidate}-{company}-{YYYY-MM-DD}.pdf` — PDF listo para aplicar
+- `output/markdown/{NNN}-cv-{candidate}-{company}-{YYYY-MM-DD}.md` — MD tailored (misma estructura que `cv.md`) para que el usuario pueda editar a mano
+
+Si el usuario después edita el MD y quiere regenerar el PDF, usa `/career-ops render {NNN}` (ver `modes/render.md`) para pasarlo de nuevo por el template fill sin tailoring.
 
 ## Paso 4 — Draft Application Answers (solo si score >= 4.5)
 

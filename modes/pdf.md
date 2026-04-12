@@ -17,9 +17,68 @@
 11. Inyecta keywords naturalmente en logros existentes (NUNCA inventa)
 12. Genera HTML completo desde template + contenido personalizado
 13. Lee `name` de `config/profile.yml` → normaliza a kebab-case lowercase (e.g. "John Doe" → "john-doe") → `{candidate}`
-14. Escribe HTML a `/tmp/cv-{candidate}-{company}.html`
-15. Ejecuta: `node generate-pdf.mjs /tmp/cv-{candidate}-{company}.html output/cv-{candidate}-{company}-{YYYY-MM-DD}.pdf --format={letter|a4}`
-15. Reporta: ruta del PDF, nº páginas, % cobertura de keywords
+14. Resuelve `{NNN}` (numeración compartida — ver sección "Numeración y Rutas" abajo)
+15. Escribe también el contenido personalizado como **Markdown tailored** (misma estructura que `cv.md`) a `output/markdown/{NNN}-cv-{candidate}-{company}-{YYYY-MM-DD}.md`. Ver sección "Output Markdown" abajo.
+16. Escribe HTML a `/tmp/cv-{candidate}-{company}.html`
+17. Ejecuta: `node generate-pdf.mjs /tmp/cv-{candidate}-{company}.html output/pdf/{NNN}-cv-{candidate}-{company}-{YYYY-MM-DD}.pdf --format={letter|a4}`
+18. Reporta: rutas del PDF y MD, nº páginas, % cobertura de keywords
+
+## Numeración y Rutas
+
+El PDF y el MD comparten el **mismo número de 3 dígitos** (`{NNN}`) que el report de la evaluación en `reports/`. Esto asegura una correlación 1-a-1 entre report ↔ PDF ↔ MD.
+
+**Cómo resolver `{NNN}`:**
+
+1. **Si fue invocado desde `auto-pipeline`**: usar el número del report que acaba de ser creado en Paso 2.
+2. **Si fue invocado standalone (`/career-ops pdf`)**:
+   - Primero intentar encontrar el report existente para esta empresa+fecha en `reports/`. Si existe, usar su número.
+   - Si no existe report: computar `max(números existentes en output/markdown/ + reports/) + 1`, zero-padded a 3 dígitos.
+
+**Layout de salida:**
+
+```
+output/
+├── pdf/
+│   └── {NNN}-cv-{candidate}-{company}-{YYYY-MM-DD}.pdf
+└── markdown/
+    └── {NNN}-cv-{candidate}-{company}-{YYYY-MM-DD}.md
+```
+
+**Importante:** Antes de escribir, asegurar que `output/pdf/` y `output/markdown/` existen (crear si no). El comando `node generate-pdf.mjs` no crea directorios automáticamente.
+
+## Output Markdown (Paso 15)
+
+Tras producir el contenido personalizado en memoria, emitirlo **también como Markdown en el mismo shape que `cv.md`** (mismo nivel de headings, mismo estilo de bullets, misma estructura de líneas de empresa/rol). El objetivo: que el MD resultante pueda volver a ser alimentado al pipeline vía el modo `render` sin ninguna transformación de estructura.
+
+**Reglas:**
+- H1 = Nombre del candidato
+- Línea siguiente en **bold** = título profesional (del JD tailoring)
+- Línea de contacto: `email | phone | [linkedin](url) | [portfolio](url) | location`
+- `---` separador entre secciones
+- `## Professional Summary` → párrafo del summary tailored
+- `## Core Competencies` → bullets (uno por competencia, como lista markdown)
+- `## Technical Skills` → bullets con formato `**Categoría:** items, separados, por, coma`
+- `## Professional Experience` → bloques por trabajo:
+  - `### {Rol}`
+  - `**{Empresa}** | {Período}`
+  - Bullets con logros tailored
+- `## Projects` → bloques por proyecto:
+  - `### {Proyecto} — {Descripción corta}`
+  - `**{Rol}** | {Período}`
+  - Bullets + línea `**Stack:** ...`
+- `## Education`, `## Professional Certifications`, `## Writing & Community` según cv.md original
+
+**Metadata para re-render:** Al comienzo del archivo, incluir un comentario HTML con el contexto de render (permite al modo `render` reproducir formato/idioma sin flags):
+
+```markdown
+<!-- career-ops:render format=letter language=en company="Bitovi" date=2026-04-12 number=001 -->
+# {Candidate Name}
+...
+```
+
+Este comentario es invisible en renderers markdown. El modo `render` lo parsea; si está ausente, usa flags CLI o defaults.
+
+**NUNCA incluir HTML/CSS classes en el MD.** El MD es para edición humana y para pasar al modo `render`, no para render directo. El mapeo MD → HTML lo hace el template fill.
 
 ## Reglas ATS (parseo limpio)
 
@@ -156,12 +215,13 @@ e. `commit-editing-transaction` to save (ONLY after user approval)
 a. `export-design` the duplicate as PDF (format: a4 or letter based on JD location)
 b. **IMMEDIATELY** download the PDF using Bash:
    ```bash
-   curl -sL -o "output/cv-{candidate}-{company}-canva-{YYYY-MM-DD}.pdf" "{download_url}"
+   mkdir -p output/pdf
+   curl -sL -o "output/pdf/{NNN}-cv-{candidate}-{company}-canva-{YYYY-MM-DD}.pdf" "{download_url}"
    ```
    The export URL is a pre-signed S3 link that expires in ~2 hours. Download it right away.
 c. Verify the download:
    ```bash
-   file output/cv-{candidate}-{company}-canva-{YYYY-MM-DD}.pdf
+   file output/pdf/{NNN}-cv-{candidate}-{company}-canva-{YYYY-MM-DD}.pdf
    ```
    Must show "PDF document". If it shows XML or HTML, the URL expired — re-export and retry.
 d. Report: PDF path, file size, Canva design URL (for manual tweaking)

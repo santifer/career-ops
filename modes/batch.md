@@ -87,10 +87,13 @@ id	url	status	started_at	completed_at	report_num	score	error	retries
 Cada worker recibe `batch-prompt.md` como system prompt. Es self-contained.
 
 El worker produce:
-1. Report `.md` en `reports/`
-2. PDF en `output/`
-3. Línea de tracker en `batch/tracker-additions/{id}.tsv`
-4. JSON de resultado por stdout
+1. Report `.md` en `reports/{NNN}-{company-slug}-{date}.md`
+2. PDF en `output/pdf/{NNN}-cv-...-{date}.pdf`
+3. MD tailored en `output/markdown/{NNN}-cv-...-{date}.md`
+4. Línea de tracker en `batch/tracker-additions/{id}.tsv`
+5. JSON de resultado por stdout
+
+`{NNN}` es el mismo 3-dígitos para report/PDF/MD (correlación 1-a-1).
 
 ## Gestión de errores
 

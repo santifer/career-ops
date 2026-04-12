@@ -118,6 +118,7 @@ Career-ops is a single slash command with multiple modes:
 /career-ops {paste a JD}   → Full auto-pipeline (evaluate + PDF + tracker)
 /career-ops scan           → Scan portals for new offers
 /career-ops pdf            → Generate ATS-optimized CV
+/career-ops render         → Re-render a hand-edited tailored CV MD to PDF
 /career-ops batch          → Batch evaluate multiple offers
 /career-ops tracker        → View application status
 /career-ops apply          → Fill application forms with AI
@@ -205,7 +206,9 @@ career-ops/
 ├── dashboard/                   # Go TUI pipeline viewer
 ├── data/                        # Your tracking data (gitignored)
 ├── reports/                     # Evaluation reports (gitignored)
-├── output/                      # Generated PDFs (gitignored)
+├── output/
+│   ├── pdf/                     # Generated tailored PDFs (gitignored)
+│   └── markdown/                # Tailored CV as MD, editable by hand (gitignored)
 ├── fonts/                       # Space Grotesk + DM Sans
 ├── docs/                        # Setup, customization, architecture
 └── examples/                    # Sample CV, report, proof points

@@ -84,7 +84,8 @@ templates/cv-template.html → PDF generation template
 ## File Naming Conventions
 
 - Reports: `{###}-{company-slug}-{YYYY-MM-DD}.md` (3-digit zero-padded)
-- PDFs: `cv-candidate-{company-slug}-{YYYY-MM-DD}.pdf`
+- PDFs: `output/pdf/{NNN}-cv-{candidate}-{company-slug}-{YYYY-MM-DD}.pdf` (same `{NNN}` as matching report)
+- Tailored CV Markdown: `output/markdown/{NNN}-cv-{candidate}-{company-slug}-{YYYY-MM-DD}.md` (shares `{NNN}` with the PDF; hand-editable; re-render with `/career-ops render {NNN}`)
 - Tracker TSVs: `batch/tracker-additions/{id}.tsv`
 
 ## Pipeline Integrity

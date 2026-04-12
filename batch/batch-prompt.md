@@ -184,7 +184,7 @@ Donde `{company-slug}` es el nombre de empresa en lowercase, sin espacios, con g
 **Score:** {X/5}
 **Legitimacy:** {High Confidence | Proceed with Caution | Suspicious}
 **URL:** {URL de la oferta original}
-**PDF:** career-ops/output/cv-candidate-{company-slug}-{{DATE}}.pdf
+**PDF:** career-ops/output/pdf/{NNN}-cv-candidate-{company-slug}-{{DATE}}.pdf
 **Batch ID:** {{ID}}
 
 ---
@@ -230,14 +230,16 @@ Donde `{company-slug}` es el nombre de empresa en lowercase, sin espacios, con g
 10. Inyecta keywords en logros existentes (**NUNCA inventa**)
 11. Genera HTML completo desde template (lee `templates/cv-template.html`)
 12. Escribe HTML a `/tmp/cv-candidate-{company-slug}.html`
-13. Ejecuta:
+13. Escribe también MD tailored (shape de `cv.md`) a `output/markdown/{NNN}-cv-candidate-{company-slug}-{{DATE}}.md` con comentario HTML de render-context al comienzo (ver `modes/pdf.md` → "Output Markdown").
+14. Ejecuta:
 ```bash
+mkdir -p output/pdf output/markdown
 node generate-pdf.mjs \
   /tmp/cv-candidate-{company-slug}.html \
-  output/cv-candidate-{company-slug}-{{DATE}}.pdf \
+  output/pdf/{NNN}-cv-candidate-{company-slug}-{{DATE}}.pdf \
   --format={letter|a4}
 ```
-14. Reporta: ruta PDF, nº páginas, % cobertura keywords
+15. Reporta: rutas PDF y MD, nº páginas, % cobertura keywords
 
 **Reglas ATS:**
 - Single-column (sin sidebars)

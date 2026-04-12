@@ -19,7 +19,8 @@ These files contain your personal data, customizations, and work product. Update
 | `data/scan-history.tsv` | Your scan history |
 | `data/follow-ups.md` | Your follow-up history |
 | `reports/*` | Your evaluation reports |
-| `output/*` | Your generated PDFs |
+| `output/pdf/*` | Your generated tailored CV PDFs |
+| `output/markdown/*` | Your generated tailored CV Markdown files (editable; re-render via `/career-ops render {NNN}`) |
 | `jds/*` | Your saved job descriptions |
 
 ## System Layer (safe to auto-update)
