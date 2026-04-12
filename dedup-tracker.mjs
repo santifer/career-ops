@@ -66,8 +66,11 @@ const STOPWORDS = new Set([
   'senior', 'junior', 'lead', 'manager', 'director', 'intern', 'remote', 
   'hybrid', 'onsite', 'engineer', 'developer', 'staff', 'principal',
   'london', 'york', 'francisco', 'seattle', 'boston', 'austin', 'berlin',
-  'paris', 'sydney', 'toronto', 'chicago', 'usa', 'uk', 'eu',
-  'level', 'tier', 'parttime', 'fulltime', 'contract', 'role', 'team'
+  'paris', 'sydney', 'toronto', 'chicago', 'usa', 'uk', 'eu', 'emea', 'apac',
+  'latam', 'namer', 'america', 'north', 'south', 'asia', 'europe', 'global',
+  'regional', 'm/f/d', 'm/f/x', 'w/m/d', 'f/m/d', 'm/w/d',
+  'level', 'tier', 'parttime', 'fulltime', 'contract', 'role', 'team',
+  'position', 'department', 'opportunity', 'group'
 ]);
 
 function roleMatch(a, b) {

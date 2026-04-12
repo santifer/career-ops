@@ -256,6 +256,20 @@ search_queries:
     query: 'site:welcometothejungle.com Spain OR Madrid OR Barcelona "AI Engineer" OR "Solutions Architect" OR "DevRel" OR "Forward Deployed"'
     enabled: true
 
+  # -- Latin & Central American boards (LATAM) --
+
+  - name: Torre — LATAM Roles
+    query: 'site:torre.co "AI Engineer" OR "Solutions Architect" OR "Developer" remote'
+    enabled: true
+
+  - name: GetOnBoard — LATAM Remote
+    query: 'site:getonbrd.com "AI" OR "Developer" OR "Engineer" remote'
+    enabled: true
+
+  - name: Computrabajo — Central America
+    query: 'site:computrabajo.com "IA" OR "Ingeniero" OR "Desarrollador" remoto'
+    enabled: true
+
   # -- DevRel-specific boards --
 
   - name: DevRelX Jobs
@@ -797,6 +811,48 @@ tracked_companies:
     scan_method: websearch
     scan_query: 'site:jobs.ashbyhq.com/causaly'
     notes: "London / Athens. Biomedical knowledge graph + AI."
+    enabled: true
+
+  # -- LATAM & Central American ecosystem --
+
+  - name: Mercado Libre
+    careers_url: https://careers-meli.mercadolibre.com
+    scan_method: websearch
+    scan_query: 'site:careers-meli.mercadolibre.com "Machine Learning" OR "AI" OR "Software"'
+    notes: "Latam standard, offices across Central and South America."
+    enabled: true
+
+  - name: Rappi
+    careers_url: https://jobs.lever.co/rappi
+    scan_method: websearch
+    scan_query: 'site:jobs.lever.co/rappi'
+    notes: "Bogota / Mexico City / Remote. Superapp."
+    enabled: true
+
+  - name: Nubank (Mexico/Colombia)
+    careers_url: https://job-boards.greenhouse.io/nubank
+    api: https://boards-api.greenhouse.io/v1/boards/nubank/jobs
+    notes: "Fintech giant expanding in LATAM."
+    enabled: true
+
+  - name: Kavak
+    careers_url: https://jobs.lever.co/kavak
+    scan_method: websearch
+    scan_query: 'site:jobs.lever.co/kavak'
+    notes: "Mexico City based unicorn."
+    enabled: true
+
+  - name: Bitso
+    careers_url: https://jobs.lever.co/bitso
+    scan_method: websearch
+    scan_query: 'site:jobs.lever.co/bitso'
+    notes: "Remote Latam crypto."
+    enabled: true
+
+  - name: Clip
+    careers_url: https://job-boards.greenhouse.io/clip
+    api: https://boards-api.greenhouse.io/v1/boards/clip/jobs
+    notes: "Mexico fintech unicorn."
     enabled: true
 
   # -- Nordics AI --
