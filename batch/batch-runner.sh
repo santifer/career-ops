@@ -372,6 +372,13 @@ process_offer() {
 
     update_state "$id" "$url" "completed" "$started_at" "$completed_at" "$report_num" "$score" "-" "$retries"
     echo "    ✅ Completed (score: $score, report: $report_num)"
+
+    # Warn when a freshly-scored offer falls below --min-score
+    if [[ "$score" != "-" && -n "$score" ]] && (( $(echo "$MIN_SCORE > 0" | bc -l) )); then
+      if (( $(echo "$score < $MIN_SCORE" | bc -l) )); then
+        echo "    ⚠️  Score $score is below --min-score $MIN_SCORE"
+      fi
+    fi
   else
     retries=$((retries + 1))
     local error_msg
@@ -401,7 +408,7 @@ print_summary() {
     return
   fi
 
-  local total=0 completed=0 failed=0 pending=0
+  local total=0 completed=0 failed=0 pending=0 below_min=0
   local score_sum=0 score_count=0
 
   while IFS=$'\t' read -r sid _ sstatus _ _ _ sscore _ _; do
@@ -412,6 +419,9 @@ print_summary() {
         if [[ "$sscore" != "-" && -n "$sscore" ]]; then
           score_sum=$(echo "$score_sum + $sscore" | bc 2>/dev/null || echo "$score_sum")
           score_count=$((score_count + 1))
+          if (( $(echo "$MIN_SCORE > 0" | bc -l) )) && (( $(echo "$sscore < $MIN_SCORE" | bc -l) )); then
+            below_min=$((below_min + 1))
+          fi
         fi
         ;;
       failed) failed=$((failed + 1)) ;;
@@ -425,6 +435,10 @@ print_summary() {
     local avg
     avg=$(echo "scale=1; $score_sum / $score_count" | bc 2>/dev/null || echo "N/A")
     echo "Average score: $avg/5 ($score_count scored)"
+  fi
+
+  if (( below_min > 0 )); then
+    echo "Below --min-score $MIN_SCORE: $below_min offers"
   fi
 }
 
@@ -473,6 +487,18 @@ main() {
 
     local status
     status=$(get_status "$id")
+
+    # --min-score: skip completed offers that already scored below the threshold
+    if [[ "$status" == "completed" ]] && (( $(echo "$MIN_SCORE > 0" | bc -l) )); then
+      local prev_score
+      prev_score=$(get_score "$id")
+      if [[ "$prev_score" != "-" && -n "$prev_score" ]]; then
+        if (( $(echo "$prev_score < $MIN_SCORE" | bc -l) )); then
+          echo "SKIP #$id: score $prev_score below --min-score $MIN_SCORE"
+          continue
+        fi
+      fi
+    fi
 
     if [[ "$RETRY_FAILED" == "true" ]]; then
       # Only process failed offers
