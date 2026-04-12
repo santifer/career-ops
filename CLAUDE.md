@@ -61,6 +61,9 @@ AI-powered job search automation built on Claude Code: pipeline tracking, offer 
 | `analyze-patterns.mjs` | Pattern analysis script (JSON output) |
 | `followup-cadence.mjs` | Follow-up cadence calculator (JSON output) |
 | `data/follow-ups.md` | Follow-up history tracker |
+| `scan.mjs` | Zero-token portal scanner — hits Greenhouse/Ashby/Lever APIs directly, zero LLM cost |
+| `check-liveness.mjs` | Job posting liveness checker |
+| `liveness-core.mjs` | Shared liveness logic (expired signals win over generic Apply text) |
 | `reports/` | Evaluation reports (format: `{###}-{company-slug}-{YYYY-MM-DD}.md`). Blocks A-F + G (Posting Legitimacy). Header includes `**Legitimacy:** {tier}`. |
 
 ### OpenCode Commands
@@ -258,6 +261,21 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 **Exception for batch workers (`claude -p`):** Playwright is not available in headless pipe mode. Use WebFetch as fallback and mark the report header with `**Verification:** unconfirmed (batch mode)`. The user can verify manually later.
 
 ---
+
+## CI/CD and Quality
+
+- **GitHub Actions** run on every PR: `test-all.mjs` (63+ checks), auto-labeler (risk-based: 🔴 core-architecture, ⚠️ agent-behavior, 📄 docs), welcome bot for first-time contributors
+- **Branch protection** on `main`: status checks must pass before merge. No direct pushes to main (except admin bypass).
+- **Dependabot** monitors npm, Go modules, and GitHub Actions for security updates
+- **Contributing process**: issue first → discussion → PR with linked issue → CI passes → maintainer review → merge
+
+## Community and Governance
+
+- **Code of Conduct**: Contributor Covenant 2.1 with enforcement actions (see `CODE_OF_CONDUCT.md`)
+- **Governance**: BDFL model with contributor ladder — Participant → Contributor → Triager → Reviewer → Maintainer (see `GOVERNANCE.md`)
+- **Security**: private vulnerability reporting via email (see `SECURITY.md`)
+- **Support**: help questions go to Discord/Discussions, not issues (see `SUPPORT.md`)
+- **Discord**: https://discord.gg/8pRpHETxa4
 
 ## Stack and Conventions
 

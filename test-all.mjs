@@ -175,18 +175,35 @@ const leakPatterns = [
 ];
 
 const scanExtensions = ['md', 'yml', 'html', 'mjs', 'sh', 'go', 'json'];
-const excludeDirs = ['node_modules', '.git', 'dashboard/go.sum'];
-const allowedFiles = ['README.md', 'LICENSE', 'CITATION.cff', 'CONTRIBUTING.md',
-  'package.json', '.github/FUNDING.yml', 'CLAUDE.md', 'go.mod', 'test-all.mjs'];
+const allowedFiles = [
+  // English README + localized translations (all legitimately credit Santiago)
+  'README.md', 'README.es.md', 'README.ja.md', 'README.ko-KR.md',
+  'README.pt-BR.md', 'README.ru.md',
+  // Standard project files
+  'LICENSE', 'CITATION.cff', 'CONTRIBUTING.md',
+  'package.json', '.github/FUNDING.yml', 'CLAUDE.md', 'go.mod', 'test-all.mjs',
+  // Community / governance files (added in v1.3.0, all legitimately reference the maintainer)
+  'CODE_OF_CONDUCT.md', 'GOVERNANCE.md', 'SECURITY.md', 'SUPPORT.md',
+  '.github/SECURITY.md',
+  // Dashboard credit string
+  'dashboard/internal/ui/screens/pipeline.go',
+];
+
+// Build pathspec for git grep — only scan tracked files matching these
+// extensions. This is what `grep -rn` was trying to do, but git-aware:
+// untracked files (debate artifacts, AI tool scratch, local plans/) and
+// gitignored files can't trigger false positives because they were never
+// going to reach a commit anyway.
+const grepPathspec = scanExtensions.map(e => `'*.${e}'`).join(' ');
 
 let leakFound = false;
 for (const pattern of leakPatterns) {
   const result = run(
-    `grep -rn "${pattern}" --include="*.{${scanExtensions.join(',')}}" . 2>/dev/null | grep -v node_modules | grep -v ".git/" | grep -v go.sum`
+    `git grep -n "${pattern}" -- ${grepPathspec} 2>/dev/null`
   );
   if (result) {
     for (const line of result.split('\n')) {
-      const file = line.split(':')[0].replace('./', '');
+      const file = line.split(':')[0];
       if (allowedFiles.some(a => file.includes(a))) continue;
       if (file.includes('dashboard/go.mod')) continue;
       warn(`Possible personal data in ${file}: "${pattern}"`);
@@ -202,8 +219,10 @@ if (!leakFound) {
 
 console.log('\n7. Absolute path check');
 
+// Same git grep approach: only scans tracked files. Untracked AI tool
+// outputs, local debate artifacts, etc. can't false-positive here.
 const absPathResult = run(
-  `grep -rn "/Users/" --include="*.mjs" --include="*.sh" --include="*.md" --include="*.go" --include="*.yml" . 2>/dev/null | grep -v node_modules | grep -v ".git/" | grep -v README.md | grep -v LICENSE | grep -v go.sum | grep -v CLAUDE.md | grep -v test-all.mjs`
+  `git grep -n "/Users/" -- '*.mjs' '*.sh' '*.md' '*.go' '*.yml' 2>/dev/null | grep -v README.md | grep -v LICENSE | grep -v CLAUDE.md | grep -v test-all.mjs`
 );
 if (!absPathResult) {
   pass('No absolute paths in code files');
