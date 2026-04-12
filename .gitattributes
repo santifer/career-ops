@@ -1,0 +1,15 @@
+# git-crypt configuration for career-ops
+#
+# To encrypt your personal data:
+# 1. Install git-crypt: brew install git-crypt
+# 2. Initialize: git-crypt init
+# 3. Add yourself: git-crypt add-gpg-user YOUR_EMAIL
+# 4. Uncomment the lines below to encrypt sensitive files
+# 5. Commit these changes
+
+# cv.md filter=git-crypt diff=git-crypt
+# config/profile.yml filter=git-crypt diff=git-crypt
+# modes/_profile.md filter=git-crypt diff=git-crypt
+# portals.yml filter=git-crypt diff=git-crypt
+# data/** filter=git-crypt diff=git-crypt
+# reports/** filter=git-crypt diff=git-crypt
