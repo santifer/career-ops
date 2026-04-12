@@ -435,3 +435,12 @@ for (const p of watchPaths) {
 server.listen(PORT, () => {
   console.log(`\n  career-ops dashboard → http://localhost:${PORT}\n`);
 });
+
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`\n  Port ${PORT} is already in use. Either:\n    1. Kill the existing process: kill $(lsof -ti :${PORT})\n    2. Use a different port: PORT=4000 node server.mjs\n`);
+  } else {
+    console.error(err);
+  }
+  process.exit(1);
+});
