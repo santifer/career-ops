@@ -33,9 +33,25 @@ Leer `portals.yml` que contiene:
 
 **Cada empresa DEBE tener `careers_url` en portals.yml.** Si no la tiene, buscarla una vez, guardarla, y usar en futuros scans.
 
-### Nivel 2 — Greenhouse API (COMPLEMENTARIO)
+### Nivel 2 — ATS APIs / Feeds (COMPLEMENTARIO)
 
-Para empresas con Greenhouse, la API JSON (`boards-api.greenhouse.io/v1/boards/{slug}/jobs`) devuelve datos estructurados limpios. Usar como complemento rápido de Nivel 1 — es más rápido que Playwright pero solo funciona con Greenhouse.
+Para empresas con API pública o feed estructurado, usar la respuesta JSON/XML como complemento rápido de Nivel 1. Es más rápido que Playwright y reduce errores de scraping visual.
+
+**Soporte actual (variables entre `{}`):**
+- **Greenhouse**: `https://boards-api.greenhouse.io/v1/boards/{company}/jobs`
+- **Ashby**: `https://jobs.ashbyhq.com/api/non-user-graphql?op=ApiJobBoardWithTeams`
+- **BambooHR**: lista `https://{company}.bamboohr.com/careers/list`; detalle de una oferta `https://{company}.bamboohr.com/careers/{id}/detail`
+- **Lever**: `https://api.lever.co/v0/postings/{company}?mode=json`
+- **Teamtailor**: `https://{company}.teamtailor.com/jobs.rss`
+- **Workday**: `https://{company}.{shard}.myworkdayjobs.com/wday/cxs/{company}/{site}/jobs`
+
+**Convención de parsing por provider:**
+- `greenhouse`: `jobs[]` → `title`, `absolute_url`
+- `ashby`: GraphQL `ApiJobBoardWithTeams` con `organizationHostedJobsPageName={company}` → `jobBoard.jobPostings[]` (`title`, `id`; construir URL pública si no viene en payload)
+- `bamboohr`: lista `result[]` → `jobOpeningName`, `id`; construir URL de detalle `https://{company}.bamboohr.com/careers/{id}/detail`; para leer el JD completo, hacer GET del detalle y usar `result.jobOpening` (`jobOpeningName`, `description`, `datePosted`, `minimumExperience`, `compensation`, `jobOpeningShareUrl`)
+- `lever`: array raíz `[]` → `text`, `hostedUrl` (fallback: `applyUrl`)
+- `teamtailor`: RSS items → `title`, `link`
+- `workday`: `jobPostings[]`/`jobPostings` (según tenant) → `title`, `externalPath` o URL construida desde el host
 
 ### Nivel 3 — WebSearch queries (DESCUBRIMIENTO AMPLIO)
 
@@ -64,11 +80,18 @@ Los niveles son aditivos — se ejecutan todos, los resultados se mezclan y dedu
    f. Acumular en lista de candidatos
    g. Si `careers_url` falla (404, redirect), intentar `scan_query` como fallback y anotar para actualizar la URL
 
-5. **Nivel 2 — Greenhouse APIs** (paralelo):
+5. **Nivel 2 — ATS APIs / feeds** (paralelo):
    Para cada empresa en `tracked_companies` con `api:` definida y `enabled: true`:
-   a. WebFetch de la URL de API → JSON con lista de jobs
-   b. Para cada job extraer: `{title, url, company}`
-   c. Acumular en lista de candidatos (dedup con Nivel 1)
+   a. WebFetch de la URL de API/feed
+   b. Si `api_provider` está definido, usar su parser; si no está definido, inferir por dominio (`boards-api.greenhouse.io`, `jobs.ashbyhq.com`, `api.lever.co`, `*.bamboohr.com`, `*.teamtailor.com`, `*.myworkdayjobs.com`)
+   c. Para **Ashby**, enviar POST con:
+      - `operationName: ApiJobBoardWithTeams`
+      - `variables.organizationHostedJobsPageName: {company}`
+      - query GraphQL de `jobBoardWithTeams` + `jobPostings { id title locationName employmentType compensationTierSummary }`
+   d. Para **BambooHR**, la lista solo trae metadatos básicos. Para cada item relevante, leer `id`, hacer GET a `https://{company}.bamboohr.com/careers/{id}/detail`, y extraer el JD completo desde `result.jobOpening`. Usar `jobOpeningShareUrl` como URL pública si viene; si no, usar la URL de detalle.
+   e. Para **Workday**, enviar POST JSON con al menos `{"appliedFacets":{},"limit":20,"offset":0,"searchText":""}` y paginar por `offset` hasta agotar resultados
+   f. Para cada job extraer y normalizar: `{title, url, company}`
+   g. Acumular en lista de candidatos (dedup con Nivel 1)
 
 6. **Nivel 3 — WebSearch queries** (paralelo si posible):
    Para cada query en `search_queries` con `enabled: true`:
@@ -170,7 +193,17 @@ Cada empresa en `tracked_companies` debe tener `careers_url` — la URL directa 
 - **Ashby:** `https://jobs.ashbyhq.com/{slug}`
 - **Greenhouse:** `https://job-boards.greenhouse.io/{slug}` o `https://job-boards.eu.greenhouse.io/{slug}`
 - **Lever:** `https://jobs.lever.co/{slug}`
+- **BambooHR:** lista `https://{company}.bamboohr.com/careers/list`; detalle `https://{company}.bamboohr.com/careers/{id}/detail`
+- **Teamtailor:** `https://{company}.teamtailor.com/jobs`
+- **Workday:** `https://{company}.{shard}.myworkdayjobs.com/{site}`
 - **Custom:** La URL propia de la empresa (ej: `https://openai.com/careers`)
+
+**Patrones de API/feed por plataforma:**
+- **Ashby API:** `https://jobs.ashbyhq.com/api/non-user-graphql?op=ApiJobBoardWithTeams`
+- **BambooHR API:** lista `https://{company}.bamboohr.com/careers/list`; detalle `https://{company}.bamboohr.com/careers/{id}/detail` (`result.jobOpening`)
+- **Lever API:** `https://api.lever.co/v0/postings/{company}?mode=json`
+- **Teamtailor RSS:** `https://{company}.teamtailor.com/jobs.rss`
+- **Workday API:** `https://{company}.{shard}.myworkdayjobs.com/wday/cxs/{company}/{site}/jobs`
 
 **Si `careers_url` no existe** para una empresa:
 1. Intentar el patrón de su plataforma conocida
