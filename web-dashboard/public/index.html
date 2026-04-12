@@ -123,8 +123,27 @@ tr:hover td { background: rgba(49,50,68,0.3); }
 .chat-messages { flex: 1; overflow-y: auto; padding: 16px 20px; display: flex; flex-direction: column; gap: 16px; }
 .chat-msg { max-width: 100%; }
 .chat-msg.user .chat-bubble { background: rgba(137,180,250,0.1); border: 1px solid rgba(137,180,250,0.2); border-radius: 12px 12px 4px 12px; padding: 12px 16px; font-size: 13px; line-height: 1.6; color: var(--blue); white-space: pre-wrap; word-break: break-word; max-height: 120px; overflow-y: auto; }
-.chat-msg.assistant .chat-bubble { background: var(--card); border: 1px solid var(--overlay); border-radius: 12px 12px 12px 4px; padding: 16px 20px; font-size: 13px; line-height: 1.7; color: var(--subtext); white-space: pre-wrap; word-break: break-word; }
+.chat-msg.assistant .chat-bubble { background: var(--card); border: 1px solid var(--overlay); border-radius: 12px 12px 12px 4px; padding: 16px 20px; font-size: 13px; line-height: 1.7; color: var(--subtext); word-break: break-word; }
 .chat-msg .chat-label { font-size: 10px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+.chat-msg.assistant .chat-bubble { white-space: normal; }
+
+/* Markdown rendering inside chat bubbles */
+.md-table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 12px; }
+.md-table th { text-align: left; padding: 6px 10px; background: var(--overlay); color: var(--text); font-weight: 600; border-bottom: 2px solid var(--dim); font-size: 11px; text-transform: uppercase; letter-spacing: 0.3px; }
+.md-table td { padding: 6px 10px; border-bottom: 1px solid rgba(49,50,68,0.5); color: var(--subtext); }
+.md-table tr:hover td { background: rgba(49,50,68,0.2); }
+.md-h { margin: 12px 0 6px; color: var(--text); }
+h2.md-h { font-size: 16px; border-bottom: 1px solid var(--overlay); padding-bottom: 6px; }
+h3.md-h { font-size: 14px; color: var(--blue); }
+h4.md-h { font-size: 13px; color: var(--mauve); }
+h5.md-h { font-size: 12px; color: var(--subtext); }
+.md-p { margin: 4px 0; line-height: 1.6; }
+.md-list { margin: 6px 0; padding-left: 20px; }
+.md-list li { margin: 3px 0; line-height: 1.5; }
+.md-code { background: var(--bg); border: 1px solid var(--overlay); border-radius: 6px; padding: 10px 14px; margin: 8px 0; font-size: 12px; overflow-x: auto; line-height: 1.5; }
+.md-code code { color: var(--green); font-family: 'SF Mono', 'Fira Code', monospace; }
+.md-inline-code { background: var(--overlay); padding: 1px 5px; border-radius: 3px; font-size: 12px; font-family: 'SF Mono', 'Fira Code', monospace; color: var(--peach); }
+.md-hr { border: none; border-top: 1px solid var(--overlay); margin: 12px 0; }
 .chat-thinking { display: flex; gap: 6px; padding: 16px 20px; }
 .chat-thinking span { width: 8px; height: 8px; background: var(--dim); border-radius: 50%; animation: bounce 1.2s infinite; }
 .chat-thinking span:nth-child(2) { animation-delay: 0.2s; }
@@ -583,7 +602,8 @@ function addMsg(role,text) {
   const el=document.getElementById('chat-messages');
   const d=document.createElement('div');
   d.className='chat-msg '+role;
-  d.innerHTML=`<div class="chat-label">${role==='user'?'You':'Claude'}</div><div class="chat-bubble">${escHtml(text)}</div>`;
+  const rendered = role==='assistant' ? renderMd(text) : escHtml(text);
+  d.innerHTML=`<div class="chat-label">${role==='user'?'You':'Claude'}</div><div class="chat-bubble">${rendered}</div>`;
   el.appendChild(d);
   el.scrollTop=el.scrollHeight;
 }
@@ -593,6 +613,87 @@ function removeThinking(){document.getElementById('thinking')?.remove();}
 function setDot(s){const d=document.getElementById('chat-dot');d.className='status-dot '+s;}
 function setSendEnabled(v){document.getElementById('chat-send-btn').disabled=!v;document.getElementById('chat-reply').disabled=!v;}
 function escHtml(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function renderMd(text) {
+  const lines = text.split('\n');
+  let html = '';
+  let inTable = false;
+  let inCode = false;
+  let inList = false;
+
+  for (let i = 0; i < lines.length; i++) {
+    let line = lines[i];
+
+    // Code blocks
+    if (line.trim().startsWith('```')) {
+      if (inCode) { html += '</code></pre>'; inCode = false; }
+      else { html += '<pre class="md-code"><code>'; inCode = true; }
+      continue;
+    }
+    if (inCode) { html += escHtml(line) + '\n'; continue; }
+
+    // Table rows
+    if (line.trim().match(/^\|(.+)\|$/)) {
+      // Skip separator rows
+      if (line.trim().match(/^\|[\s\-:|]+\|$/)) continue;
+      if (!inTable) { html += '<table class="md-table">'; inTable = true; }
+      const cells = line.trim().slice(1, -1).split('|').map(c => c.trim());
+      // First data row after start = header
+      const isHeader = inTable && !html.includes('<td');
+      const tag = isHeader ? 'th' : 'td';
+      html += '<tr>' + cells.map(c => `<${tag}>${inlineMd(escHtml(c))}</${tag}>`).join('') + '</tr>';
+      continue;
+    }
+    if (inTable) { html += '</table>'; inTable = false; }
+
+    // Close list if line doesn't continue it
+    if (inList && !line.trim().match(/^[-*]\s/) && !line.trim().match(/^\d+\.\s/) && line.trim() !== '') {
+      html += '</ul>'; inList = false;
+    }
+
+    // Headers
+    if (line.match(/^#{1,4}\s/)) {
+      const lvl = line.match(/^(#+)/)[1].length;
+      const txt = line.replace(/^#+\s*/, '');
+      html += `<h${lvl+1} class="md-h">${inlineMd(escHtml(txt))}</h${lvl+1}>`;
+      continue;
+    }
+
+    // List items
+    if (line.trim().match(/^[-*]\s/)) {
+      if (!inList) { html += '<ul class="md-list">'; inList = true; }
+      html += `<li>${inlineMd(escHtml(line.trim().replace(/^[-*]\s+/, '')))}</li>`;
+      continue;
+    }
+    if (line.trim().match(/^\d+\.\s/)) {
+      if (!inList) { html += '<ul class="md-list">'; inList = true; }
+      html += `<li>${inlineMd(escHtml(line.trim().replace(/^\d+\.\s+/, '')))}</li>`;
+      continue;
+    }
+
+    // Horizontal rule
+    if (line.trim().match(/^[-*_]{3,}$/)) { html += '<hr class="md-hr">'; continue; }
+
+    // Empty line
+    if (line.trim() === '') { html += '<div style="height:8px"></div>'; continue; }
+
+    // Paragraph
+    html += `<p class="md-p">${inlineMd(escHtml(line))}</p>`;
+  }
+
+  if (inTable) html += '</table>';
+  if (inList) html += '</ul>';
+  if (inCode) html += '</code></pre>';
+  return html;
+}
+
+function inlineMd(text) {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/`(.+?)`/g, '<code class="md-inline-code">$1</code>')
+    .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank" style="color:var(--blue)">$1</a>');
+}
 function copyCmd(c){navigator.clipboard.writeText(c).then(()=>toast('Copied: '+c)).catch(()=>toast(c));}
 function toast(m){const e=document.getElementById('toast');e.textContent=m;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),3000);}
 
