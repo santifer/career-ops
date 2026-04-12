@@ -85,9 +85,19 @@ const USER_PATHS = [
   'jds/',
 ];
 
+const SEMVER_RE = /^\d+\.\d+\.\d+$/;
+
+function validateVersion(v, label) {
+  if (!SEMVER_RE.test(v)) {
+    throw new Error(`Invalid ${label} version string: "${v}" — expected semver (X.Y.Z)`);
+  }
+  return v;
+}
+
 function localVersion() {
   const vPath = join(ROOT, 'VERSION');
-  return existsSync(vPath) ? readFileSync(vPath, 'utf-8').trim() : '0.0.0';
+  const raw = existsSync(vPath) ? readFileSync(vPath, 'utf-8').trim() : '0.0.0';
+  return validateVersion(raw, 'local');
 }
 
 function compareVersions(a, b) {
@@ -142,7 +152,12 @@ async function check() {
     const res = await fetch(RAW_VERSION_URL);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     remote = (await res.text()).trim();
-  } catch {
+    validateVersion(remote, 'remote');
+  } catch (err) {
+    if (err.message.startsWith('Invalid remote version')) {
+      console.error(err.message);
+      process.exit(1);
+    }
     console.log(JSON.stringify({ status: 'offline', local }));
     return;
   }
@@ -246,8 +261,12 @@ async function apply() {
       console.log('npm install skipped (may need manual run)');
     }
 
+    // 5.5. Validate fetched VERSION is sane (prevents command injection via crafted VERSION)
+    const fetchedVersion = readFileSync(join(ROOT, 'VERSION'), 'utf-8').trim();
+    validateVersion(fetchedVersion, 'fetched');
+
     // 6. Commit the update
-    const remote = localVersion(); // Re-read after checkout updated VERSION
+    const remote = fetchedVersion;
     try {
       const pathsToStage = [...updated];
       const dismissFile = join(ROOT, '.update-dismissed');

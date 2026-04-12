@@ -18,8 +18,46 @@ import { chromium } from 'playwright';
 import { readFile } from 'fs/promises';
 import { classifyLiveness } from './liveness-core.mjs';
 
+/**
+ * Validate that a URL is a public HTTP(S) URL -- blocks SSRF vectors like
+ * file://, localhost, 127.x, 169.254.x (cloud metadata), and private ranges.
+ */
+function validatePublicUrl(raw) {
+  let parsed;
+  try {
+    parsed = new URL(raw);
+  } catch {
+    throw new Error(`Invalid URL: ${raw}`);
+  }
+
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    throw new Error(`Blocked protocol "${parsed.protocol}" in URL: ${raw} -- only http/https allowed`);
+  }
+
+  const hostname = parsed.hostname.toLowerCase();
+
+  // Block localhost variants
+  if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]' || hostname === '0.0.0.0') {
+    throw new Error(`Blocked localhost URL: ${raw}`);
+  }
+
+  // Block private/reserved IP ranges (RFC 1918, link-local, cloud metadata)
+  const ipMatch = hostname.match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/);
+  if (ipMatch) {
+    const [, a, b] = ipMatch.map(Number);
+    if (a === 10) throw new Error(`Blocked private IP (10.x): ${raw}`);
+    if (a === 172 && b >= 16 && b <= 31) throw new Error(`Blocked private IP (172.16-31.x): ${raw}`);
+    if (a === 192 && b === 168) throw new Error(`Blocked private IP (192.168.x): ${raw}`);
+    if (a === 169 && b === 254) throw new Error(`Blocked link-local/metadata IP (169.254.x): ${raw}`);
+    if (a === 0) throw new Error(`Blocked reserved IP (0.x): ${raw}`);
+  }
+
+  return raw;
+}
+
 async function checkUrl(page, url) {
   try {
+    validatePublicUrl(url);
     const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 15000 });
 
     const status = response?.status() ?? 0;

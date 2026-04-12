@@ -27,6 +27,9 @@ modes/_profile.md
 node_modules/
 bun.lock
 
+# Backup files (contain user application data, must not be committed)
+*.bak
+
 # OS
 .DS_Store
 *.mov

@@ -27,6 +27,7 @@ DRY_RUN=false
 RETRY_FAILED=false
 START_FROM=0
 MAX_RETRIES=2
+MIN_SCORE=0
 
 usage() {
   cat <<'USAGE'
@@ -41,6 +42,7 @@ Options:
   --retry-failed       Only retry offers marked as "failed" in state
   --start-from N       Start from offer ID N (skip earlier IDs)
   --max-retries N      Max retry attempts per offer (default: 2)
+  --min-score N        Skip offers scoring below N (e.g. 3.5)
   -h, --help           Show this help
 
 Files:
@@ -62,6 +64,9 @@ Examples:
 
   # Process 2 at a time starting from ID 10
   ./batch-runner.sh --parallel 2 --start-from 10
+
+  # Only process offers that scored 3.5 or higher
+  ./batch-runner.sh --min-score 3.5
 USAGE
 }
 
@@ -73,6 +78,7 @@ while [[ $# -gt 0 ]]; do
     --retry-failed) RETRY_FAILED=true; shift ;;
     --start-from) START_FROM="$2"; shift 2 ;;
     --max-retries) MAX_RETRIES="$2"; shift 2 ;;
+    --min-score) MIN_SCORE="$2"; shift 2 ;;
     -h|--help) usage; exit 0 ;;
     *) echo "Unknown option: $1"; usage; exit 1 ;;
   esac
@@ -217,6 +223,18 @@ get_retries() {
   echo "${retries:-0}"
 }
 
+# Get score for an offer from state file
+get_score() {
+  local id="$1"
+  if [[ ! -f "$STATE_FILE" ]]; then
+    echo "-"
+    return
+  fi
+  local score
+  score=$(awk -F'\t' -v id="$id" '$1 == id { print $7 }' "$STATE_FILE")
+  echo "${score:--}"
+}
+
 # Calculate next report number.
 # Caller must hold STATE_LOCK_DIR while this runs.
 next_report_num_unlocked() {
@@ -313,7 +331,9 @@ process_offer() {
   report_num=$(reserve_report_num "$id" "$url" "$started_at" "$retries")
   local date
   date=$(date +%Y-%m-%d)
-  local jd_file="/tmp/batch-jd-${id}.txt"
+  # Use mktemp for unpredictable temp paths (prevents symlink race / TOCTOU)
+  local jd_file
+  jd_file=$(mktemp "${TMPDIR:-/tmp}/batch-jd-${id}.XXXXXXXXXX")
 
   echo "--- Processing offer #$id: $url (report $report_num, attempt $((retries + 1)))"
 
@@ -330,33 +350,35 @@ process_offer() {
 
   # Prepare system prompt with placeholders resolved
   local resolved_prompt="$BATCH_DIR/.resolved-prompt-${id}.md"
-  # Escape sed delimiter characters in variables to prevent substitution breakage
-  local esc_url esc_jd_file esc_report_num esc_date esc_id
-  esc_url="${url//\\/\\\\}"
-  esc_url="${esc_url//|/\\|}"
-  esc_jd_file="${jd_file//\\/\\\\}"
-  esc_jd_file="${esc_jd_file//|/\\|}"
-  esc_report_num="${report_num//|/\\|}"
-  esc_date="${date//|/\\|}"
-  esc_id="${id//|/\\|}"
-  sed \
-    -e "s|{{URL}}|${esc_url}|g" \
-    -e "s|{{JD_FILE}}|${esc_jd_file}|g" \
-    -e "s|{{REPORT_NUM}}|${esc_report_num}|g" \
-    -e "s|{{DATE}}|${esc_date}|g" \
-    -e "s|{{ID}}|${esc_id}|g" \
-    "$PROMPT_FILE" > "$resolved_prompt"
+  # Use awk for safe placeholder replacement -- immune to sed metacharacter injection
+  awk \
+    -v url="$url" \
+    -v jd_file="$jd_file" \
+    -v report_num="$report_num" \
+    -v date_val="$date" \
+    -v id_val="$id" \
+    '{
+      gsub(/\{\{URL\}\}/, url)
+      gsub(/\{\{JD_FILE\}\}/, jd_file)
+      gsub(/\{\{REPORT_NUM\}\}/, report_num)
+      gsub(/\{\{DATE\}\}/, date_val)
+      gsub(/\{\{ID\}\}/, id_val)
+      print
+    }' "$PROMPT_FILE" > "$resolved_prompt"
 
   # Launch claude -p worker (uses default model from Claude Max subscription)
+  # Workers run with scoped permissions -- --dangerously-skip-permissions removed
+  # to prevent prompt injection in job descriptions from executing arbitrary commands.
   local exit_code=0
   claude -p \
-    --dangerously-skip-permissions \
+    --allowedTools 'Read,Write,Edit,Bash(node *),Bash(npx playwright *),WebFetch' \
     --append-system-prompt-file "$resolved_prompt" \
     "$prompt" \
     > "$log_file" 2>&1 || exit_code=$?
 
-  # Cleanup resolved prompt
+  # Cleanup resolved prompt and temp JD file
   rm -f "$resolved_prompt"
+  rm -f "$jd_file"
 
   local completed_at
   completed_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
@@ -449,7 +471,7 @@ main() {
   fi
 
   echo "=== career-ops batch runner ==="
-  echo "Parallel: $PARALLEL | Max retries: $MAX_RETRIES"
+  echo "Parallel: $PARALLEL | Max retries: $MAX_RETRIES | Min score: $MIN_SCORE"
   echo "Input: $total_input offers"
   echo ""
 
