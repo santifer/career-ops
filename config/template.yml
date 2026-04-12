@@ -1,0 +1,12 @@
+# Resume Template Configuration
+colors:
+  primary: "#2563EB"
+  accent: "#0F172A"
+  text: "#334155"
+  background: "#FFFFFF"
+fonts:
+  primary: "Inter, sans-serif"
+  secondary: "Georgia, serif"
+layout:
+  spacing: "1.5rem"
+  borderRadius: "4px"

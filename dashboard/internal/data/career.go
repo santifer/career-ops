@@ -1,6 +1,7 @@
 package data
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -10,6 +11,11 @@ import (
 
 	"github.com/santifer/career-ops/dashboard/internal/model"
 )
+
+type ApplicationData struct {
+	Version      string                    `json:"version"`
+	Applications []model.CareerApplication `json:"applications"`
+}
 
 var (
 	reReportLink     = regexp.MustCompile(`\[(\d+)\]\(([^)]+)\)`)
@@ -24,13 +30,35 @@ var (
 	reBatchID        = regexp.MustCompile(`(?m)^\*\*Batch ID:\*\*\s*(\d+)`)
 )
 
-// ParseApplications reads applications.md and returns parsed applications.
-// It tries both {path}/applications.md and {path}/data/applications.md for compatibility.
+// ParseApplications reads applications data and returns parsed applications.
 func ParseApplications(careerOpsPath string) []model.CareerApplication {
+	// Try JSON format first
+	jsonPath := filepath.Join(careerOpsPath, "data", "applications.json")
+	if content, err := os.ReadFile(jsonPath); err == nil {
+		var data ApplicationData
+		if err := json.Unmarshal(content, &data); err == nil {
+			apps := data.Applications
+			enrichAppsWithURLs(careerOpsPath, apps)
+			return apps
+		}
+	}
+
+	// Try fallback to applications.json in root
+	jsonPathRoot := filepath.Join(careerOpsPath, "applications.json")
+	if content, err := os.ReadFile(jsonPathRoot); err == nil {
+		var data ApplicationData
+		if err := json.Unmarshal(content, &data); err == nil {
+			apps := data.Applications
+			enrichAppsWithURLs(careerOpsPath, apps)
+			return apps
+		}
+	}
+
+	fmt.Println("[DEPRECATED] Using legacy markdown parsing for applications.md. Please run the JSON migration script.")
+
 	filePath := filepath.Join(careerOpsPath, "applications.md")
 	content, err := os.ReadFile(filePath)
 	if err != nil {
-		// Fallback: try data/ subdirectory
 		filePath = filepath.Join(careerOpsPath, "data", "applications.md")
 		content, err = os.ReadFile(filePath)
 		if err != nil {
@@ -104,12 +132,12 @@ func ParseApplications(careerOpsPath string) []model.CareerApplication {
 		apps = append(apps, app)
 	}
 
-	// Enrich with job URLs using 5-tier strategy:
-	// 1. **URL:** field in report header (newest reports)
-	// 2. **Batch ID:** in report -> batch-input.tsv URL lookup
-	// 3. report_num -> batch-state completed mapping (legacy)
-	// 4. scan-history.tsv (pipeline scan entries matched by company+role)
-	// 5. company name fallback from batch-input.tsv
+	enrichAppsWithURLs(careerOpsPath, apps)
+
+	return apps
+}
+
+func enrichAppsWithURLs(careerOpsPath string, apps []model.CareerApplication) {
 	batchURLs := loadBatchInputURLs(careerOpsPath)
 	reportNumURLs := loadJobURLs(careerOpsPath)
 
@@ -156,8 +184,6 @@ func ParseApplications(careerOpsPath string) []model.CareerApplication {
 
 	// Strategy 5: company name fallback from batch-input.tsv
 	enrichAppURLsByCompany(careerOpsPath, apps)
-
-	return apps
 }
 
 // loadBatchInputURLs reads batch-input.tsv and returns a map of batch ID -> job URL.

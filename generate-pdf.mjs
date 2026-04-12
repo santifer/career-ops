@@ -117,6 +117,35 @@ async function generatePDF() {
   // Read HTML to inject font paths as absolute file:// URLs
   let html = await readFile(inputPath, 'utf-8');
 
+  try {
+    const configPath = resolve(__dirname, 'config/template.yml');
+    const configData = await readFile(configPath, 'utf-8');
+    const getVal = (key) => {
+      const m = configData.match(new RegExp(`${key}:\\s*['"]?([^'"\\n]+)['"]?`));
+      return m ? m[1] : null;
+    };
+    const cssOverride = `
+    <style>
+      :root {
+        --color-primary: ${getVal('primary') || '#2563EB'} !important;
+        --color-accent: ${getVal('accent') || '#0F172A'} !important;
+        --color-text: ${getVal('text') || '#334155'} !important;
+        --color-bg: ${getVal('background') || '#FFFFFF'} !important;
+      }
+      body {
+        font-family: ${getVal('primary') || 'Inter, sans-serif'} !important;
+        background-color: var(--color-bg) !important;
+        color: var(--color-text) !important;
+      }
+      h1, h2, h3, h4 { color: var(--color-accent) !important; }
+      a { color: var(--color-primary) !important; }
+    </style>
+    `;
+    html = html.replace('</head>', `${cssOverride}\n</head>`);
+  } catch (err) {
+    // No config or parsing error, fallback to default PDF styling
+  }
+
   // Resolve font paths relative to career-ops/fonts/
   const fontsDir = resolve(__dirname, 'fonts');
   html = html.replace(

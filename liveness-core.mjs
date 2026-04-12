@@ -43,7 +43,17 @@ function hasApplyControl(controls = []) {
   return controls.some((control) => APPLY_PATTERNS.some((pattern) => pattern.test(control)));
 }
 
-export function classifyLiveness({ status = 0, finalUrl = '', bodyText = '', applyControls = [] } = {}) {
+export function classifyLiveness({ status = 0, finalUrl = '', bodyText = '', applyControls = [], postingDate = null, staleThresholdDays = 45 } = {}) {
+  if (postingDate) {
+    const postDate = new Date(postingDate);
+    if (!isNaN(postDate.getTime())) {
+      const daysOld = (Date.now() - postDate.getTime()) / (1000 * 60 * 60 * 24);
+      if (daysOld > staleThresholdDays) {
+         return { result: 'expired', reason: `job posted ${Math.round(daysOld)} days ago (limit ${staleThresholdDays})` };
+      }
+    }
+  }
+
   if (status === 404 || status === 410) {
     return { result: 'expired', reason: `HTTP ${status}` };
   }

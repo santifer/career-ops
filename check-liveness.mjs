@@ -68,7 +68,50 @@ async function checkUrl(page, url) {
         .filter(Boolean);
     });
 
-    return classifyLiveness({ status, finalUrl, bodyText, applyControls });
+    const postingDate = await page.evaluate(() => {
+      // Strategy 1: ld+json schema
+      try {
+        const scripts = document.querySelectorAll('script[type="application/ld+json"]');
+        for (const script of scripts) {
+          const data = JSON.parse(script.textContent);
+          const findDate = (obj) => {
+            if (!obj) return null;
+            if (obj['@type'] === 'JobPosting' && obj.datePosted) return obj.datePosted;
+            if (Array.isArray(obj)) {
+              for (const item of obj) {
+                const res = findDate(item);
+                if (res) return res;
+              }
+            }
+            if (typeof obj === 'object') {
+              if (obj['@graph']) return findDate(obj['@graph']);
+            }
+            return null;
+          };
+          const date = findDate(data);
+          if (date) return date;
+        }
+      } catch (e) {}
+
+      // Strategy 2: meta itemProp
+      const meta = document.querySelector('meta[itemprop="datePosted"]');
+      if (meta && meta.content) return meta.content;
+
+      // Strategy 3: time element with datetime
+      const time = document.querySelector('time[datetime]');
+      if (time) return time.getAttribute('datetime');
+
+      return null;
+    });
+
+    return classifyLiveness({
+      status,
+      finalUrl,
+      bodyText,
+      applyControls,
+      postingDate,
+      staleThresholdDays: 45
+    });
 
   } catch (err) {
     return { result: 'expired', reason: `navigation error: ${err.message.split('\n')[0]}` };
