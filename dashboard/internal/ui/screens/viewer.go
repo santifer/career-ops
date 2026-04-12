@@ -17,6 +17,7 @@ type ViewerClosedMsg struct{}
 type ViewerModel struct {
 	lines        []string
 	title        string
+	path         string
 	scrollOffset int
 	width        int
 	height       int
@@ -92,8 +93,8 @@ func formatTables(lines []string) []string {
 }
 
 // NewViewerModel creates a new file viewer for the given path.
-func NewViewerModel(t theme.Theme, path, title string, width, height int) ViewerModel {
-	content, err := os.ReadFile(path)
+func NewViewerModel(t theme.Theme, fullPath, title string, width, height int) ViewerModel {
+	content, err := os.ReadFile(fullPath)
 	if err != nil {
 		content = []byte("Error reading file: " + err.Error())
 	}
@@ -104,6 +105,7 @@ func NewViewerModel(t theme.Theme, path, title string, width, height int) Viewer
 	return ViewerModel{
 		lines:  lines,
 		title:  title,
+		path:   fullPath,
 		width:  width,
 		height: height,
 		theme:  t,
@@ -160,6 +162,12 @@ func (m ViewerModel) Update(msg tea.Msg) (ViewerModel, tea.Cmd) {
 
 		case "home", "g":
 			m.scrollOffset = 0
+
+		case "o":
+			url := "file://" + m.path
+			return m, func() tea.Msg {
+				return PipelineOpenURLMsg{URL: url}
+			}
 
 		case "end", "G":
 			maxScroll := len(m.lines) - m.bodyHeight()
@@ -366,5 +374,6 @@ func (m ViewerModel) renderFooter() string {
 		keyStyle.Render("↑↓") + descStyle.Render(" scroll  ") +
 			keyStyle.Render("PgUp/Dn") + descStyle.Render(" page  ") +
 			keyStyle.Render("g/G") + descStyle.Render(" top/end  ") +
+			keyStyle.Render("o") + descStyle.Render(" open file  ") +
 			keyStyle.Render("Esc") + descStyle.Render(" back"))
 }
