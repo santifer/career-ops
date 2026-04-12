@@ -229,6 +229,15 @@ career-ops/
 
 - **[cv-santiago](https://github.com/santifer/cv-santiago)** -- The portfolio website (santifer.io) with AI chatbot, LLMOps dashboard, and case studies. If you need a portfolio to showcase alongside your job search, fork it and make it yours.
 
+## Security & Privacy (git-crypt)
+
+If you plan to store your `career-ops` repository in a private GitHub repository but want to encrypt your personal data (CV, tracker, reports), we provide a `.gitattributes` configuration for `git-crypt`.
+
+1. Install: `brew install git-crypt`
+2. Initialize: `git-crypt init`
+3. Uncomment the files in `.gitattributes`
+4. Everything in `data/`, `reports/`, and your `cv.md` will be encrypted on GitHub but readable locally by Claude Code.
+
 ## About the Author
 
 I'm Santiago -- Head of Applied AI, former founder (built and sold a business that still runs with my name on it). I built career-ops to manage my own job search. It worked: I used it to land my current role.

@@ -75,6 +75,7 @@ When using [OpenCode](https://opencode.ai), the following slash commands are ava
 | `/career-ops-compare` | `/career-ops ofertas` | Compare and rank multiple offers |
 | `/career-ops-contact` | `/career-ops contacto` | LinkedIn outreach (find contacts + draft) |
 | `/career-ops-deep` | `/career-ops deep` | Deep company research |
+| `/career-ops-cover-letter` | `/career-ops cover-letter` | Generate a tailored cover letter |
 | `/career-ops-pdf` | `/career-ops pdf` | Generate ATS-optimized CV |
 | `/career-ops-training` | `/career-ops training` | Evaluate course/cert against goals |
 | `/career-ops-project` | `/career-ops project` | Evaluate portfolio project idea |
@@ -217,6 +218,7 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 | Asks to compare offers | `ofertas` |
 | Wants LinkedIn outreach | `contacto` |
 | Asks for company research | `deep` |
+| Wants to generate cover letter | `cover-letter` |
 | Preps for interview at specific company | `interview-prep` |
 | Wants to generate CV/PDF | `pdf` |
 | Evaluates a course/cert | `training` |

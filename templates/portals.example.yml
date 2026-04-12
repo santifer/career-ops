@@ -292,6 +292,15 @@ search_queries:
     query: 'site:news.ycombinator.com OR site:hnrss.org "AI Engineer" OR "Forward Deployed" OR "DevRel" OR "Founding Engineer" remote'
     enabled: true
 
+  # -- Chinese Job Boards (Community Adaptation) --
+  - name: BOSS Zhipin — AI Roles
+    query: 'site:zhipin.com "AI" OR "大模型" OR "算法"'
+    enabled: false
+
+  - name: Liepin — AI Roles
+    query: 'site:liepin.com "人工智能" OR "AIGC" OR "算法工程师"'
+    enabled: false
+
 # -- Tracked companies --
 # Companies whose career pages are checked directly.
 # scan_method: playwright (default), websearch, greenhouse_api

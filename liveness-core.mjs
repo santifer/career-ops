@@ -13,6 +13,8 @@ const HARD_EXPIRED_PATTERNS = [
   /offre (expirée|n'est plus disponible)/i,
   /(此職缺|該職缺).*已經?關閉/i,
   /已經?(下架|招滿|停止招募)/i,
+  /(该职位|该岗位)已(关闭|下线|停止招聘)/i,
+  /(职位|岗位)发布已过期/i,
 ];
 
 const LISTING_PAGE_PATTERNS = [
@@ -35,7 +37,9 @@ const APPLY_PATTERNS = [
   /ich bewerbe mich/i,
   /立即應徵/i,
   /申請職缺/i,
-  /(投遞|發送)履歷/i,
+  /(投遞|發送|投递|发送)(履歷|简历)/i,
+  /申请职位/i,
+  /立即沟通/i,
 ];
 
 const MIN_CONTENT_CHARS = 300;
