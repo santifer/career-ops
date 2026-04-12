@@ -523,6 +523,7 @@ async function startSession(cmdId, input) {
   document.getElementById('chat-overlay').classList.add('open');
   document.getElementById('chat-title').textContent=`/career-ops ${cmdId}`;
   document.getElementById('chat-messages').innerHTML='';
+  document.getElementById('chat-reply').placeholder='Reply to Claude...';
   setDot('running');
   setSendEnabled(false);
 
@@ -566,12 +567,15 @@ function closeChat() {
 }
 
 function openChatWith(title,text) {
+  activeSessionId=null;
+  sessionStatus='idle';
   document.getElementById('chat-panel').classList.add('open');
   document.getElementById('chat-overlay').classList.add('open');
   document.getElementById('chat-title').textContent=title;
   document.getElementById('chat-messages').innerHTML='';
   setDot('waiting');
   setSendEnabled(false);
+  document.getElementById('chat-reply').placeholder='Read-only view';
   addMsg('assistant',text);
 }
 

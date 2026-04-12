@@ -134,7 +134,17 @@ function skipBlock(lines, start, end, parentIndent) {
 
 function unquote(s) {
   if (!s) return '';
-  if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'")))
-    return s.slice(1, -1);
+  // Quoted value: extract content between quotes, ignore everything after
+  if (s.startsWith('"')) {
+    const end = s.indexOf('"', 1);
+    return end > 0 ? s.slice(1, end) : s.slice(1);
+  }
+  if (s.startsWith("'")) {
+    const end = s.indexOf("'", 1);
+    return end > 0 ? s.slice(1, end) : s.slice(1);
+  }
+  // Unquoted: strip inline comments (but not # inside URLs)
+  const commentMatch = s.match(/^(.*?\S)\s+#\s/);
+  if (commentMatch) return commentMatch[1];
   return s;
 }
