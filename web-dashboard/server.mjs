@@ -1,7 +1,7 @@
 import express from 'express';
 import { WebSocketServer } from 'ws';
 import { createServer } from 'http';
-import { readFileSync, existsSync, readdirSync, watch } from 'fs';
+import { readFileSync, writeFileSync, existsSync, readdirSync, rmSync, watch } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { execSync, spawn } from 'child_process';
@@ -164,6 +164,59 @@ app.get('/api/followups', (req, res) => {
 app.get('/api/cv', (req, res) => {
   const content = readFileSafe(join(ROOT, 'cv.md'));
   res.json({ content: content || '' });
+});
+
+// Purge all pipeline data and start fresh
+app.post('/api/purge', (req, res) => {
+  const results = [];
+
+  // Reset applications tracker
+  const appsPath = join(ROOT, 'data/applications.md');
+  writeFileSync(appsPath, '# Applications Tracker\n\n| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n|---|------|---------|------|-------|--------|-----|--------|-------|\n');
+  results.push('applications.md reset');
+
+  // Reset pipeline
+  const pipePath = join(ROOT, 'data/pipeline.md');
+  writeFileSync(pipePath, '# Pipeline — Pending URLs\n\n## Pendientes\n\n## Procesadas\n');
+  results.push('pipeline.md reset');
+
+  // Reset scan history
+  const scanPath = join(ROOT, 'data/scan-history.tsv');
+  writeFileSync(scanPath, 'url\tfirst_seen\tportal\ttitle\tcompany\tstatus\n');
+  results.push('scan-history.tsv reset');
+
+  // Delete all reports
+  const reportsDir = join(ROOT, 'reports');
+  if (existsSync(reportsDir)) {
+    const files = readdirSync(reportsDir).filter(f => f.endsWith('.md'));
+    files.forEach(f => rmSync(join(reportsDir, f)));
+    results.push(`${files.length} reports deleted`);
+  }
+
+  // Delete batch tracker additions
+  const batchDir = join(ROOT, 'batch/tracker-additions');
+  if (existsSync(batchDir)) {
+    const files = readdirSync(batchDir).filter(f => f.endsWith('.tsv'));
+    files.forEach(f => rmSync(join(batchDir, f)));
+    results.push(`${files.length} tracker TSVs deleted`);
+  }
+
+  // Delete output PDFs
+  const outputDir = join(ROOT, 'output');
+  if (existsSync(outputDir)) {
+    const files = readdirSync(outputDir).filter(f => f.endsWith('.pdf') || f.endsWith('.html'));
+    files.forEach(f => rmSync(join(outputDir, f)));
+    results.push(`${files.length} output files deleted`);
+  }
+
+  // Clear follow-ups
+  const followPath = join(ROOT, 'data/follow-ups.md');
+  if (existsSync(followPath)) {
+    writeFileSync(followPath, '# Follow-up History\n');
+    results.push('follow-ups.md reset');
+  }
+
+  res.json({ ok: true, results });
 });
 
 // Interactive conversation sessions with claude

@@ -314,6 +314,7 @@ function renderDashboard() {
     <button class="btn btn-run" onclick="runCommand('deep')">◎ Deep Research</button>
     <button class="btn btn-run" onclick="runCommand('contacto')">◑ LinkedIn Outreach</button>
     <button class="btn btn-run" onclick="runCommand('interview-prep')">◧ Interview Prep</button>
+    <button class="btn" style="border:1px solid var(--red);color:var(--red);margin-left:auto" onclick="purgeAll()">Purge & Reset</button>
   </div>
   <div class="section-header"><h3>Recent Pipeline</h3><span class="count">${p} pending</span></div>
   <div class="table-wrapper">${data.pipeline.pending.slice(0,10).map(i=>`<div class="pipeline-item"><span class="company">${i.company}</span><span class="title">${i.title}</span><a href="${i.url}" target="_blank">Open ↗</a></div>`).join('')||'<div class="empty-state"><h3>Pipeline empty</h3></div>'}</div>
@@ -719,6 +720,21 @@ function inlineMd(text) {
     .replace(/`(.+?)`/g, '<code class="md-inline-code">$1</code>')
     .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank" style="color:var(--blue)">$1</a>');
 }
+async function purgeAll() {
+  if(!confirm('This will DELETE all applications, pipeline URLs, scan history, reports, and output PDFs.\n\nYour profile, CV, and config will NOT be touched.\n\nAre you sure?')) return;
+  if(!confirm('Final confirmation: purge everything and start fresh?')) return;
+  try {
+    const res = await fetch('/api/purge', { method: 'POST' });
+    const d = await res.json();
+    if (d.ok) {
+      toast('Purged: ' + d.results.join(', '));
+      fetchData();
+    } else {
+      toast('Purge failed');
+    }
+  } catch(e) { toast('Purge error: ' + e.message); }
+}
+
 function copyCmd(c){navigator.clipboard.writeText(c).then(()=>toast('Copied: '+c)).catch(()=>toast(c));}
 function toast(m){const e=document.getElementById('toast');e.textContent=m;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),3000);}
 
