@@ -30,10 +30,19 @@ function parseApplications() {
   return lines.map(line => {
     const cols = line.split('|').map(c => c.trim()).filter(Boolean);
     if (cols.length < 8) return null;
+    const report = cols[7];
+    // Extract report filename to get job URL
+    const reportMatch = report.match(/\(reports\/(.+?)\)/);
+    let jobUrl = '';
+    if (reportMatch) {
+      const reportContent = readFileSafe(join(ROOT, 'reports', reportMatch[1]));
+      const urlMatch = reportContent?.match(/\*\*URL:\*\*\s*(.+)/);
+      if (urlMatch) jobUrl = urlMatch[1].trim();
+    }
     return {
       num: cols[0], date: cols[1], company: cols[2], role: cols[3],
-      score: cols[4], status: cols[5], pdf: cols[6], report: cols[7],
-      notes: cols[8] || ''
+      score: cols[4], status: cols[5], pdf: cols[6], report,
+      notes: cols[8] || '', jobUrl
     };
   }).filter(Boolean);
 }

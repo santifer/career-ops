@@ -309,7 +309,7 @@ function renderPipeline() {
 function renderApplications() {
   let apps=data.apps.filter(a=>!searchQuery||a.company.toLowerCase().includes(searchQuery)||a.role.toLowerCase().includes(searchQuery));
   if(!apps.length) return '<div class="empty-state"><div class="icon">◫</div><h3>No applications yet</h3></div>';
-  return `<div class="table-wrapper"><div class="table-header"><h3>Applications</h3><div class="filter-tabs">${['All','Evaluated','Applied','Interview','Offer','Top ≥4'].map(f=>`<button class="filter-tab${f==='All'?' active':''}" onclick="filterApps(this,'${f}')">${f}</button>`).join('')}</div></div><div style="overflow-x:auto"><table id="apps-table"><tr><th>#</th><th>Date</th><th>Company</th><th>Role</th><th>Score</th><th>Status</th><th>PDF</th><th>Notes</th></tr>${apps.map(a=>`<tr data-status="${a.status}" data-score="${parseFloat(a.score)}"><td style="color:var(--dim)">${a.num}</td><td style="color:var(--dim);font-size:12px">${a.date}</td><td style="font-weight:600;color:var(--mauve)">${a.company}</td><td>${a.role}</td><td>${scoreBadge(a.score)}</td><td>${statusPill(a.status)}</td><td>${a.pdf}</td><td style="color:var(--subtext);font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.notes}</td></tr>`).join('')}</table></div></div>`;
+  return `<div class="table-wrapper"><div class="table-header"><h3>Applications</h3><div class="filter-tabs">${['All','Evaluated','Applied','Interview','Offer','Top ≥4'].map(f=>`<button class="filter-tab${f==='All'?' active':''}" onclick="filterApps(this,'${f}')">${f}</button>`).join('')}</div></div><div style="overflow-x:auto"><table id="apps-table"><tr><th>#</th><th>Date</th><th>Company</th><th>Role</th><th>Score</th><th>Status</th><th>PDF</th><th></th><th>Notes</th></tr>${apps.map(a=>`<tr data-status="${a.status}" data-score="${parseFloat(a.score)}"><td style="color:var(--dim)">${a.num}</td><td style="color:var(--dim);font-size:12px">${a.date}</td><td style="font-weight:600;color:var(--mauve)">${a.company}</td><td>${a.role}</td><td>${scoreBadge(a.score)}</td><td>${statusPill(a.status)}</td><td>${a.pdf}</td><td>${a.jobUrl?`<a href="${a.jobUrl}" target="_blank" style="color:var(--green);text-decoration:none;font-size:12px;white-space:nowrap">Apply ↗</a>`:''}</td><td style="color:var(--subtext);font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.notes}</td></tr>`).join('')}</table></div></div>`;
 }
 
 function filterApps(btn,f) {
@@ -334,9 +334,79 @@ async function viewReport(fn) {
   try { const r=await fetch(`/api/reports/${fn}`); const d=await r.json(); openChatWith(`Report: ${fn}`, d.content||'Empty'); } catch { toast('Failed'); }
 }
 
-async function renderAsync(el,url,label) {
-  el.innerHTML=`<div class="empty-state"><h3>Loading ${label}...</h3></div>`;
-  try { const r=await fetch(url); const d=await r.json(); if(d.error){el.innerHTML=`<div class="empty-state"><h3>No data yet</h3></div>`;return;} el.innerHTML=`<div class="table-wrapper" style="padding:20px"><pre style="font-size:13px;line-height:1.6;color:var(--subtext);white-space:pre-wrap">${JSON.stringify(d,null,2)}</pre></div>`; } catch { el.innerHTML=`<div class="empty-state"><h3>Unavailable</h3></div>`; }
+async function renderAsync(el, url, label) {
+  el.innerHTML = `<div class="empty-state"><h3>Loading ${label}...</h3></div>`;
+  try {
+    const r = await fetch(url); const d = await r.json();
+    if (d.error) { el.innerHTML = `<div class="empty-state"><h3>No data yet</h3></div>`; return; }
+
+    if (label === 'Follow-ups') {
+      el.innerHTML = renderFollowupsUI(d);
+    } else if (label === 'Patterns') {
+      el.innerHTML = renderPatternsUI(d);
+    } else {
+      el.innerHTML = `<div class="table-wrapper" style="padding:20px"><pre style="font-size:13px;line-height:1.6;color:var(--subtext);white-space:pre-wrap">${JSON.stringify(d,null,2)}</pre></div>`;
+    }
+  } catch { el.innerHTML = `<div class="empty-state"><h3>Unavailable</h3></div>`; }
+}
+
+function renderFollowupsUI(d) {
+  const m = d.metadata || {};
+  const entries = d.entries || [];
+  let html = `<div class="metrics-grid" style="margin-bottom:20px">
+    <div class="metric-card"><div class="label">Tracked</div><div class="value" style="color:var(--sky)">${m.totalTracked||0}</div></div>
+    <div class="metric-card"><div class="label">Overdue</div><div class="value" style="color:var(--red)">${m.overdue||0}</div></div>
+    <div class="metric-card"><div class="label">Urgent</div><div class="value" style="color:var(--yellow)">${m.urgent||0}</div></div>
+    <div class="metric-card"><div class="label">Actionable</div><div class="value" style="color:var(--green)">${m.actionable||0}</div></div>
+  </div>`;
+
+  if (!entries.length) {
+    html += `<div class="empty-state"><h3>No follow-ups needed right now</h3><p>Apply to some roles and check back — this tracks when to follow up on each application.</p></div>`;
+  } else {
+    html += `<div class="table-wrapper"><table><tr><th>Company</th><th>Role</th><th>Status</th><th>Last Action</th><th>Next Follow-up</th><th>Days Since</th><th>Priority</th></tr>`;
+    entries.forEach(e => {
+      const priority = e.overdue ? '<span style="color:var(--red);font-weight:600">OVERDUE</span>'
+        : e.urgent ? '<span style="color:var(--yellow)">Urgent</span>'
+        : '<span style="color:var(--dim)">OK</span>';
+      html += `<tr><td style="font-weight:600;color:var(--mauve)">${e.company||''}</td><td>${e.role||''}</td><td>${statusPill(e.status||'')}</td><td style="font-size:12px;color:var(--dim)">${e.lastActionDate||'--'}</td><td style="font-size:12px">${e.nextFollowUp||'--'}</td><td>${e.daysSinceLastAction||'--'}</td><td>${priority}</td></tr>`;
+    });
+    html += `</table></div>`;
+  }
+  return html;
+}
+
+function renderPatternsUI(d) {
+  let html = '';
+  const funnel = d.funnel || {};
+  const recs = d.recommendations || [];
+
+  if (funnel && Object.keys(funnel).length) {
+    html += `<div class="section-header"><h3>Funnel</h3></div><div class="metrics-grid" style="margin-bottom:20px">`;
+    Object.entries(funnel).forEach(([k,v]) => {
+      html += `<div class="metric-card"><div class="label">${k}</div><div class="value" style="color:var(--mauve)">${v}</div></div>`;
+    });
+    html += `</div>`;
+  }
+
+  if (d.scoreComparison) {
+    const sc = d.scoreComparison;
+    html += `<div class="metrics-grid" style="margin-bottom:20px">
+      <div class="metric-card"><div class="label">Avg Score (all)</div><div class="value" style="color:var(--green)">${sc.avgAll?.toFixed(1)||'--'}</div></div>
+      <div class="metric-card"><div class="label">Avg Score (applied)</div><div class="value" style="color:var(--blue)">${sc.avgApplied?.toFixed(1)||'--'}</div></div>
+      <div class="metric-card"><div class="label">Avg Score (skipped)</div><div class="value" style="color:var(--dim)">${sc.avgSkipped?.toFixed(1)||'--'}</div></div>
+    </div>`;
+  }
+
+  if (recs.length) {
+    html += `<div class="section-header"><h3>Recommendations</h3></div><div class="table-wrapper" style="padding:20px">`;
+    recs.forEach(r => { html += `<div style="margin-bottom:12px;padding:12px;background:var(--overlay);border-radius:8px;font-size:13px;color:var(--subtext)">${r}</div>`; });
+    html += `</div>`;
+  }
+
+  if (!html) {
+    html = `<div class="table-wrapper" style="padding:20px"><pre style="font-size:13px;line-height:1.6;color:var(--subtext);white-space:pre-wrap">${JSON.stringify(d,null,2)}</pre></div>`;
+  }
+  return html;
 }
 
 function renderCommands() {
@@ -362,9 +432,54 @@ function renderCommands() {
 }
 
 function renderProfile() {
-  const p=data.profile;if(!p) return '<div class="empty-state"><h3>No profile</h3></div>';
-  const c=p.candidate||{},comp=p.compensation||{},loc=p.location||{},n=p.narrative||{};
-  return `<div class="profile-grid"><div class="profile-card"><h4>Identity</h4><div class="field"><div class="field-label">Name</div><div class="field-value">${c.full_name||'--'}</div></div><div class="field"><div class="field-label">Email</div><div class="field-value">${c.email||'--'}</div></div><div class="field"><div class="field-label">Location</div><div class="field-value">${c.location||'--'}</div></div><div class="field"><div class="field-label">LinkedIn</div><div class="field-value">${c.linkedin||'--'}</div></div></div><div class="profile-card"><h4>Compensation</h4><div class="field"><div class="field-label">Target</div><div class="field-value" style="color:var(--green);font-size:18px;font-weight:600">${comp.target_range||'--'}</div></div><div class="field"><div class="field-label">Minimum</div><div class="field-value">${comp.minimum||'--'}</div></div></div><div class="profile-card"><h4>Location & Visa</h4><div class="field"><div class="field-label">Cities</div><div class="field-value">${loc.city||'--'}</div></div><div class="field"><div class="field-label">Visa</div><div class="field-value" style="color:var(--yellow)">${loc.visa_status||'--'}</div></div></div><div class="profile-card"><h4>Superpowers</h4><div style="display:flex;flex-wrap:wrap;gap:6px">${(n.superpowers||[]).map(s=>`<div class="tag" style="background:rgba(137,180,250,0.1);color:var(--blue)">${s}</div>`).join('')}</div></div></div>`;
+  const p=data.profile; if(!p) return '<div class="empty-state"><h3>No profile</h3></div>';
+  // Helper: dig into nested or flat keys (parser may produce either)
+  const dig = (obj, ...keys) => { let v=obj; for(const k of keys){if(!v||typeof v!=='object')return'';v=v[k];} return v||''; };
+  const c = typeof p.candidate === 'object' && !Array.isArray(p.candidate) ? p.candidate : p;
+  const comp = typeof p.compensation === 'object' && !Array.isArray(p.compensation) ? p.compensation : p;
+  const loc = typeof p.location === 'object' && !Array.isArray(p.location) ? p.location : p;
+  const n = typeof p.narrative === 'object' && !Array.isArray(p.narrative) ? p.narrative : p;
+  const tr = typeof p.target_roles === 'object' && !Array.isArray(p.target_roles) ? p.target_roles : p;
+  const primaryRoles = Array.isArray(tr.primary) ? tr.primary : (Array.isArray(p.primary) ? p.primary : []);
+  const archetypes = Array.isArray(tr.archetypes) ? tr.archetypes : (Array.isArray(p.archetypes) ? p.archetypes : []);
+  const superpowers = Array.isArray(n.superpowers) ? n.superpowers : (Array.isArray(p.superpowers) ? p.superpowers : []);
+  const proofPoints = Array.isArray(n.proof_points) ? n.proof_points : (Array.isArray(p.proof_points) ? p.proof_points : []);
+
+  return `<div class="profile-grid">
+    <div class="profile-card"><h4>Identity</h4>
+      <div class="field"><div class="field-label">Name</div><div class="field-value">${c.full_name||p.full_name||'--'}</div></div>
+      <div class="field"><div class="field-label">Email</div><div class="field-value">${c.email||p.email||'--'}</div></div>
+      <div class="field"><div class="field-label">Phone</div><div class="field-value">${c.phone||p.phone||'--'}</div></div>
+      <div class="field"><div class="field-label">Location</div><div class="field-value">${c.location||p.location||'--'}</div></div>
+      <div class="field"><div class="field-label">LinkedIn</div><div class="field-value">${c.linkedin||p.linkedin||'--'}</div></div>
+    </div>
+    <div class="profile-card"><h4>Compensation</h4>
+      <div class="field"><div class="field-label">Target Range</div><div class="field-value" style="color:var(--green);font-size:20px;font-weight:700">${comp.target_range||p.target_range||'--'}</div></div>
+      <div class="field"><div class="field-label">Minimum</div><div class="field-value">${comp.minimum||p.minimum||'--'}</div></div>
+      <div class="field"><div class="field-label">Flexibility</div><div class="field-value">${comp.location_flexibility||p.location_flexibility||'--'}</div></div>
+    </div>
+    <div class="profile-card"><h4>Location & Visa</h4>
+      <div class="field"><div class="field-label">Country</div><div class="field-value">${loc.country||p.country||'--'}</div></div>
+      <div class="field"><div class="field-label">Target Cities</div><div class="field-value">${loc.city||p.city||'--'}</div></div>
+      <div class="field"><div class="field-label">Timezone</div><div class="field-value">${loc.timezone||p.timezone||'--'}</div></div>
+      <div class="field"><div class="field-label">Visa Status</div><div class="field-value" style="color:var(--yellow);font-weight:600">${loc.visa_status||p.visa_status||'--'}</div></div>
+    </div>
+    <div class="profile-card"><h4>Target Roles</h4>
+      ${primaryRoles.map(r=>`<div class="tag" style="background:rgba(203,166,247,0.1);color:var(--mauve)">${typeof r==='object'?r.name||JSON.stringify(r):r}</div>`).join('')}
+      <h4 style="margin-top:16px">Archetypes</h4>
+      ${archetypes.map(a=>`<div class="tag">${typeof a==='object'?(a.name||'')+(a.level?' ('+a.level+')':'')+(a.fit?' — '+a.fit:''):a}</div>`).join('')}
+    </div>
+    <div class="profile-card" style="grid-column:1/-1"><h4>Narrative</h4>
+      <div class="field"><div class="field-label">Headline</div><div class="field-value" style="font-size:15px;font-weight:600">${n.headline||p.headline||'--'}</div></div>
+      <div class="field" style="margin-top:12px"><div class="field-label">Exit Story</div><div class="field-value" style="line-height:1.6;color:var(--subtext)">${n.exit_story||p.exit_story||'--'}</div></div>
+    </div>
+    <div class="profile-card"><h4>Superpowers</h4>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">${superpowers.map(s=>`<div class="tag" style="background:rgba(137,180,250,0.1);color:var(--blue)">${typeof s==='object'?JSON.stringify(s):s}</div>`).join('')||'<span style="color:var(--dim)">None configured</span>'}</div>
+    </div>
+    <div class="profile-card"><h4>Proof Points</h4>
+      ${proofPoints.length?proofPoints.map(pp=>`<div style="margin-bottom:10px;padding:10px;background:var(--overlay);border-radius:8px"><div style="font-weight:600;font-size:13px">${typeof pp==='object'?pp.name||'':pp}</div>${typeof pp==='object'&&pp.hero_metric?`<div style="font-size:12px;color:var(--green);margin-top:4px">${pp.hero_metric}</div>`:''}${typeof pp==='object'&&pp.url?`<a href="${pp.url}" target="_blank" style="font-size:11px;color:var(--blue);text-decoration:none">${pp.url}</a>`:''}</div>`).join(''):'<span style="color:var(--dim)">None configured</span>'}
+    </div>
+  </div>`;
 }
 
 async function renderCV(el) { const r=await fetch('/api/cv'); const d=await r.json(); el.innerHTML=`<div class="table-wrapper" style="padding:24px"><pre style="font-size:13px;line-height:1.7;color:var(--subtext);white-space:pre-wrap">${d.content||'No CV'}</pre></div>`; }
