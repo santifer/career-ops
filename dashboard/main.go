@@ -60,8 +60,12 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		apps := data.ParseApplications(m.careerOpsPath)
 		metrics := data.ComputeMetrics(apps)
 		old := m.pipeline
+		themeName := os.Getenv("CAREER_OPS_THEME")
+		if themeName == "" {
+			themeName = "catppuccin-mocha"
+		}
 		m.pipeline = screens.NewPipelineModel(
-			theme.NewTheme("catppuccin-mocha"),
+			theme.NewTheme(themeName),
 			apps, metrics, m.careerOpsPath,
 			old.Width(), old.Height(),
 		)
@@ -69,8 +73,12 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case screens.PipelineOpenReportMsg:
+		themeName := os.Getenv("CAREER_OPS_THEME")
+		if themeName == "" {
+			themeName = "catppuccin-mocha"
+		}
 		m.viewer = screens.NewViewerModel(
-			theme.NewTheme("catppuccin-mocha"),
+			theme.NewTheme(themeName),
 			msg.Path, msg.Title,
 			m.pipeline.Width(), m.pipeline.Height(),
 		)
@@ -134,8 +142,11 @@ func main() {
 	// Compute metrics
 	metrics := data.ComputeMetrics(apps)
 
-	// Batch-load all report summaries
-	t := theme.NewTheme("catppuccin-mocha")
+	themeName := os.Getenv("CAREER_OPS_THEME")
+	if themeName == "" {
+		themeName = "catppuccin-mocha"
+	}
+	t := theme.NewTheme(themeName)
 	pm := screens.NewPipelineModel(t, apps, metrics, careerOpsPath, 120, 40)
 
 	for _, app := range apps {

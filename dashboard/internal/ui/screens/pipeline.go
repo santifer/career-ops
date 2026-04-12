@@ -697,10 +697,14 @@ func (m PipelineModel) renderAppLine(app model.CareerApplication, selected bool)
 	if selected {
 		selStyle := lipgloss.NewStyle().
 			Background(m.theme.Overlay).
-			Width(m.width - 4)
+			Width(m.width - 4).
+			MaxWidth(m.width - 4).
+			Inline(true)
 		return padStyle.Render(selStyle.Render(line))
 	}
-	return padStyle.Render(line)
+	
+	rowStyle := lipgloss.NewStyle().MaxWidth(m.width - 4).Inline(true)
+	return padStyle.Render(rowStyle.Render(line))
 }
 
 func (m PipelineModel) renderPreview() string {
