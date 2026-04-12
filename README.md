@@ -76,6 +76,39 @@ Built by someone who used it to evaluate 740+ job offers, generate 100+ tailored
 
 ## Quick Start
 
+Two ways to set up career-ops: **plugin** (recommended) or **classic clone**.
+
+### Option A — Plugin Install (recommended)
+
+Install once, use from any directory. Your job search data lives in its own folder, separate from the career-ops source.
+
+```bash
+# 1. Clone and register as a plugin
+git clone https://github.com/santifer/career-ops.git
+cd career-ops && npm install
+npx playwright install chromium   # Required for PDF generation
+claude plugin install ./          # Register with Claude Code
+
+# 2. Create your job search workspace (anywhere you like)
+mkdir ~/job-search && cd ~/job-search
+
+# 3. Open Claude Code — onboarding runs automatically
+claude
+# Claude will detect a fresh workspace and walk you through:
+# - Setting up cv.md
+# - Configuring config/profile.yml
+# - Initializing portals.yml and the tracker
+# - Generating CLAUDE.md with critical rules
+```
+
+After setup, use `/career-ops` from `~/job-search` (or any directory with your data files).
+
+To update later: `cd career-ops && git pull && claude plugin install ./`
+
+### Option B — Classic Clone
+
+Run career-ops directly from the cloned repo. Your data lives alongside the source.
+
 ```bash
 # 1. Clone and install
 git clone https://github.com/santifer/career-ops.git
@@ -92,17 +125,8 @@ cp templates/portals.example.yml portals.yml       # Customize companies
 # 4. Add your CV
 # Create cv.md in the project root with your CV in markdown
 
-# 5. Personalize with Claude
-claude   # Open Claude Code in this directory
-
-# Then ask Claude to adapt the system to you:
-# "Change the archetypes to backend engineering roles"
-# "Translate the modes to English"
-# "Add these 5 companies to portals.yml"
-# "Update my profile with this CV I'm pasting"
-
-# 6. Start using
-# Paste a job URL or run /career-ops
+# 5. Open Claude Code — onboarding runs automatically
+claude
 ```
 
 > **The system is designed to be customized by Claude itself.** Modes, archetypes, scoring weights, negotiation scripts -- just ask Claude to change them. It reads the same files it uses, so it knows exactly what to edit.
@@ -181,34 +205,57 @@ Features: 6 filter tabs, 4 sort modes, grouped/flat view, lazy-loaded previews, 
 
 ## Project Structure
 
+### Source repo (career-ops)
+
 ```
 career-ops/
-├── CLAUDE.md                    # Agent instructions
-├── cv.md                        # Your CV (create this)
-├── article-digest.md            # Your proof points (optional)
-├── config/
-│   └── profile.example.yml      # Template for your profile
-├── modes/                       # 14 skill modes
-│   ├── _shared.md               # Shared context (customize this)
+├── .claude-plugin/
+│   ├── plugin.json              # Plugin manifest (name, version, permissions)
+│   └── marketplace.json         # Marketplace listing
+├── skills/career-ops/
+│   └── SKILL.md                 # Skill router + all agent instructions
+├── modes/                       # System skill modes (auto-updatable)
+│   ├── _shared.md               # Shared scoring context
 │   ├── oferta.md                # Single evaluation
 │   ├── pdf.md                   # PDF generation
 │   ├── scan.md                  # Portal scanner
 │   ├── batch.md                 # Batch processing
-│   └── ...
+│   └── ...                      # de/ fr/ ja/ language variants
+├── config/
+│   ├── profile.example.yml      # Profile template
+│   └── _profile.template.md     # Archetypes/framing template
 ├── templates/
 │   ├── cv-template.html         # ATS-optimized CV template
+│   ├── CLAUDE.md.template       # Minimal always-on rules for user workspace
 │   ├── portals.example.yml      # Scanner config template
 │   └── states.yml               # Canonical statuses
-├── batch/
-│   ├── batch-prompt.md          # Self-contained worker prompt
-│   └── batch-runner.sh          # Orchestrator script
+├── batch/                       # Batch runner scripts
 ├── dashboard/                   # Go TUI pipeline viewer
-├── data/                        # Your tracking data (gitignored)
-├── reports/                     # Evaluation reports (gitignored)
-├── output/                      # Generated PDFs (gitignored)
 ├── fonts/                       # Space Grotesk + DM Sans
 ├── docs/                        # Setup, customization, architecture
 └── examples/                    # Sample CV, report, proof points
+```
+
+### Your workspace (plugin mode)
+
+When using the plugin install, your job search data lives in a separate directory:
+
+```
+~/job-search/               # (or wherever you choose)
+├── CLAUDE.md               # Critical rules — auto-created by onboarding
+├── cv.md                   # Your CV (canonical source of truth)
+├── article-digest.md       # Your proof points (optional)
+├── portals.yml             # Portal scanner config (your companies)
+├── config/
+│   ├── profile.yml         # Your identity, targets, comp range
+│   └── _profile.md         # Your archetypes, narrative, negotiation scripts
+├── data/
+│   ├── applications.md     # Application tracker
+│   ├── pipeline.md         # Pending URL inbox
+│   └── scan-history.tsv    # Scanner dedup log
+├── reports/                # Evaluation reports (gitignored)
+├── output/                 # Generated PDFs (gitignored)
+└── interview-prep/         # STAR story bank + company prep
 ```
 
 ## Tech Stack
