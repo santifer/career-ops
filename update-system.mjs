@@ -112,7 +112,7 @@ function gitStatusEntries() {
     .filter(Boolean)
     .map(line => ({
       code: line.slice(0, 2),
-      path: line.slice(3),
+      path: line.slice(3).replace(/^"|"$/g, ''),
     }));
 }
 
@@ -221,6 +221,7 @@ async function apply() {
     try {
       for (const entry of gitStatusEntries()) {
         const file = entry.path;
+        if (entry.code === '??') continue; // Skip untracked files
         if (initialStatusPaths.has(file)) continue;
         for (const userPath of USER_PATHS) {
           if (file.startsWith(userPath)) {

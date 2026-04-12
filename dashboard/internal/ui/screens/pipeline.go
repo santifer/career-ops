@@ -188,7 +188,7 @@ func (m PipelineModel) handleKey(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
 	case "q", "esc":
 		return m, func() tea.Msg { return PipelineClosedMsg{} }
 
-	case "down":
+	case "down", "j":
 		if len(m.filtered) > 0 {
 			m.cursor++
 			if m.cursor >= len(m.filtered) {
@@ -198,7 +198,7 @@ func (m PipelineModel) handleKey(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
 			return m, m.loadCurrentReport()
 		}
 
-	case "up":
+	case "up", "k":
 		if len(m.filtered) > 0 {
 			m.cursor--
 			if m.cursor < 0 {
@@ -220,7 +220,7 @@ func (m PipelineModel) handleKey(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
 		m.cursor = 0
 		m.scrollOffset = 0
 
-	case "f", "right":
+	case "f", "right", "l":
 		m.activeTab++
 		if m.activeTab >= len(pipelineTabs) {
 			m.activeTab = 0
@@ -229,7 +229,7 @@ func (m PipelineModel) handleKey(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
 		m.cursor = 0
 		m.scrollOffset = 0
 
-	case "left":
+	case "left", "h":
 		m.activeTab--
 		if m.activeTab < 0 {
 			m.activeTab = len(pipelineTabs) - 1
@@ -243,6 +243,20 @@ func (m PipelineModel) handleKey(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
 			m.viewMode = "flat"
 		} else {
 			m.viewMode = "grouped"
+		}
+
+	case "g":
+		if len(m.filtered) > 0 {
+			m.cursor = 0
+			m.adjustScroll()
+			return m, m.loadCurrentReport()
+		}
+
+	case "G":
+		if len(m.filtered) > 0 {
+			m.cursor = len(m.filtered) - 1
+			m.adjustScroll()
+			return m, m.loadCurrentReport()
 		}
 
 	case "enter":
