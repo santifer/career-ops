@@ -15,7 +15,7 @@
  *   node scan.mjs --company Cohere # scan a single company
  */
 
-import { readFileSync, writeFileSync, appendFileSync, existsSync } from 'fs';
+import { readFileSync, writeFileSync, appendFileSync, existsSync, mkdirSync } from 'fs';
 import yaml from 'js-yaml';
 const parseYaml = yaml.load;
 
@@ -185,6 +185,12 @@ function loadSeenCompanyRoles() {
 function appendToPipeline(offers) {
   if (offers.length === 0) return;
 
+  // Ensure data/ directory and pipeline.md exist before reading
+  mkdirSync('data', { recursive: true });
+  if (!existsSync(PIPELINE_PATH)) {
+    writeFileSync(PIPELINE_PATH, '# Pipeline\n\n## Pendientes\n\n## Procesadas\n', 'utf-8');
+  }
+
   let text = readFileSync(PIPELINE_PATH, 'utf-8');
 
   // Find "## Pendientes" section and append after it
@@ -214,7 +220,8 @@ function appendToPipeline(offers) {
 }
 
 function appendToScanHistory(offers, date) {
-  // Ensure file + header exist
+  // Ensure data/ directory and file + header exist
+  mkdirSync('data', { recursive: true });
   if (!existsSync(SCAN_HISTORY_PATH)) {
     writeFileSync(SCAN_HISTORY_PATH, 'url\tfirst_seen\tportal\ttitle\tcompany\tstatus\n', 'utf-8');
   }
