@@ -42,9 +42,9 @@ The HTML template uses these design tokens:
 
 To customize fonts/colors, edit the CSS in the template. Update font files in `fonts/` if switching fonts.
 
-## Negotiation Scripts (modes/_shared.md)
+## Negotiation Scripts (config/profile.yml or modes/_profile.md)
 
-The negotiation section provides frameworks for salary discussions. Replace the example scripts with your own:
+The negotiation section provides frameworks for salary discussions. Replace the example scripts with your own by adding them to `config/profile.yml` or `modes/_profile.md` instead of editing `modes/_shared.md` (which gets automatically updated):
 - Target ranges
 - Geographic arbitrage strategy
 - Pushback responses
