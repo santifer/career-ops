@@ -253,6 +253,7 @@ let searchQuery = '';
 let activeSessionId = null;
 let sessionStatus = 'idle';
 let pendingCommand = null;
+let activeCommandName = null;
 
 async function fetchData() {
   try {
@@ -521,6 +522,16 @@ const CMD_DEFS = {
 
 function runCommand(cmdId) {
   const def=CMD_DEFS[cmdId]; if(!def) return;
+
+  // Check if a command is already running
+  if(activeSessionId && sessionStatus==='running') {
+    if(!confirm(`"${activeCommandName || 'A command'}" is still running.\n\nStop it and start "${cmdId}"?`)) return;
+    // Stop the running session
+    fetch(`/api/session/${activeSessionId}/stop`,{method:'POST'}).catch(()=>{});
+    activeSessionId=null;
+    sessionStatus='idle';
+  }
+
   if(def.needsInput) {
     pendingCommand=cmdId;
     document.getElementById('input-title').textContent=def.title||`/career-ops ${cmdId}`;
@@ -537,6 +548,13 @@ function closeInputModal(){document.getElementById('input-modal').classList.remo
 function submitInput(){const v=document.getElementById('input-textarea').value.trim();if(!v){toast('Input required');return;}closeInputModal();startSession(pendingCommand,v);}
 
 async function startSession(cmdId, input) {
+  // Stop any existing running session first
+  if(activeSessionId && sessionStatus==='running') {
+    fetch(`/api/session/${activeSessionId}/stop`,{method:'POST'}).catch(()=>{});
+  }
+
+  activeCommandName = cmdId;
+
   // Open chat panel
   document.getElementById('chat-panel').classList.add('open');
   document.getElementById('chat-overlay').classList.add('open');
@@ -581,6 +599,13 @@ async function stopSession() {
 }
 
 function closeChat() {
+  // Stop running session when closing the panel
+  if(activeSessionId && sessionStatus==='running') {
+    fetch(`/api/session/${activeSessionId}/stop`,{method:'POST'}).catch(()=>{});
+  }
+  activeSessionId=null;
+  sessionStatus='idle';
+  activeCommandName=null;
   document.getElementById('chat-panel').classList.remove('open');
   document.getElementById('chat-overlay').classList.remove('open');
 }
