@@ -149,6 +149,22 @@ function checkAutoDir(name) {
   }
 }
 
+function checkVisaData() {
+  const uscisDir = join(projectRoot, 'data', 'visa', 'uscis');
+  if (!existsSync(uscisDir)) {
+    return { pass: true, label: 'Visa data not configured (optional)' };
+  }
+  const csvFiles = readdirSync(uscisDir).filter(f => f.endsWith('.csv'));
+  if (csvFiles.length === 0) {
+    return {
+      pass: false,
+      label: 'data/visa/uscis/ exists but has no CSV files',
+      fix: 'Run: node download-uscis.mjs',
+    };
+  }
+  return { pass: true, label: `Visa USCIS data ready (${csvFiles.length} CSV files)` };
+}
+
 async function main() {
   console.log('\ncareer-ops doctor');
   console.log('================\n');
@@ -164,6 +180,7 @@ async function main() {
     checkAutoDir('data'),
     checkAutoDir('output'),
     checkAutoDir('reports'),
+    checkVisaData(),
   ];
 
   let failures = 0;
@@ -187,6 +204,8 @@ async function main() {
     process.exit(1);
   } else {
     console.log('Result: All checks passed. You\'re ready to go! Run `claude` to start.');
+    console.log('');
+    console.log('Join the community: https://discord.gg/8pRpHETxa4');
     process.exit(0);
   }
 }

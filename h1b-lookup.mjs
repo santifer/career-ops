@@ -46,9 +46,10 @@ const DEFAULT_TTL = { uscis: 90, everify: 7, salary: 30 };
  * @returns {string} Cache key like "uscis-google-1a2b3c"
  */
 function cacheKey(source, identifier) {
+  const safeSource = source.toLowerCase().replace(/[^a-z0-9]/g, '');
   const hash = createHash('md5').update(identifier.toLowerCase()).digest('hex').slice(0, 6);
   const sanitized = identifier.toLowerCase().replace(/[^a-z0-9]/g, '-').slice(0, 20);
-  return `${source}-${sanitized}-${hash}`;
+  return `${safeSource}-${sanitized}-${hash}`;
 }
 
 /**
@@ -120,10 +121,11 @@ function cacheSet(key, source, payload, ttlDaysOverride) {
  * @param {string} filePath - Path to employer-aliases.yml
  * @returns {Map<string, string>} Map of lowercase brand names to uppercase legal entities
  */
-function loadAliases(filePath) {
+function loadAliasFile(filePath) {
   const aliases = new Map();
   if (!existsSync(filePath)) return aliases;
 
+  const UNSAFE_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
   const text = readFileSync(filePath, 'utf-8');
   for (const line of text.split('\n')) {
     const trimmed = line.trim();
@@ -134,9 +136,21 @@ function loadAliases(filePath) {
     const match = trimmed.match(/^["']?([^"':]+?)["']?\s*:\s*["']?([^"'#]+?)["']?\s*(?:#.*)?$/);
     if (match) {
       const brandName = match[1].trim().toLowerCase();
+      if (UNSAFE_KEYS.has(brandName)) continue; // prototype pollution guard
       const legalEntity = match[2].trim();
       aliases.set(brandName, legalEntity);
     }
+  }
+  return aliases;
+}
+
+function loadAliases(filePath) {
+  const aliases = loadAliasFile(filePath);
+  // Load user-local overrides (not overwritten by system updates)
+  const localPath = filePath.replace('.yml', '.local.yml');
+  if (existsSync(localPath)) {
+    const localAliases = loadAliasFile(localPath);
+    for (const [k, v] of localAliases) aliases.set(k, v);
   }
   return aliases;
 }
@@ -198,7 +212,27 @@ function resolveEmployer(searchName, aliases) {
  * @returns {string[]} Array of field values
  */
 function parseCSVLine(line) {
-  return line.split(',').map(field => field.replace(/^"/, '').replace(/"$/, '').trim());
+  const fields = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQuotes && line[i + 1] === '"') {
+        current += '"';
+        i++; // skip escaped quote
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (ch === ',' && !inQuotes) {
+      fields.push(current.trim());
+      current = '';
+    } else {
+      current += ch;
+    }
+  }
+  fields.push(current.trim());
+  return fields;
 }
 
 /**

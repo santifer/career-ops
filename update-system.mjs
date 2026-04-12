@@ -114,10 +114,15 @@ function gitStatusEntries() {
 
   return status.split('\n')
     .filter(Boolean)
-    .map(line => ({
-      code: line.slice(0, 2),
-      path: line.slice(3),
-    }));
+    .map(line => {
+      const code = line.slice(0, 2);
+      let path = line.slice(3);
+      // Handle renamed files: "R  old -> new" — use the new path
+      if (code.startsWith('R') && path.includes(' -> ')) {
+        path = path.split(' -> ').pop();
+      }
+      return { code, path };
+    });
 }
 
 function revertPaths(paths) {

@@ -107,6 +107,14 @@ async function downloadYear(year, force) {
     }
 
     const text = await response.text();
+
+    // Validate response looks like CSV (header row with commas, not HTML)
+    const firstLine = text.split('\n')[0] || '';
+    if (!firstLine.includes(',') || firstLine.toLowerCase().includes('<html')) {
+      console.error(`  FY${year}: response is not CSV data (got HTML or empty)`);
+      return { status: 'error', year, message: 'Invalid content (not CSV)' };
+    }
+
     writeFileSync(filepath, text, 'utf-8');
     const size = formatSize(Buffer.byteLength(text, 'utf-8'));
     console.log(`  FY${year}: downloaded (${size})`);

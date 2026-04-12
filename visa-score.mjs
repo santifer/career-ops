@@ -98,6 +98,10 @@ function loadVisaConfig() {
       }
     }
 
+    // Clamp penalty values to valid range (T-03-10 mitigation)
+    wontSponsor = Math.max(-2.0, Math.min(0, wontSponsor));
+    unknown = Math.max(-2.0, Math.min(0, unknown));
+
     return { sponsorship_mode: mode, penalties: { wont_sponsor: wontSponsor, unknown } };
   } catch {
     return defaults;
@@ -153,7 +157,8 @@ function inferCompanySizeScore(jdText, h1bFound) {
   const isLarge = /fortune\s*500|fortune\s*100|f500|s&p\s*500/i.test(lower);
 
   // Check employee count
-  const empMatch = lower.match(/(\d[\d,]*)\+?\s*(employees|people|team members)/i);
+  // Require at least 2 digits to reduce false positives on small numbers like "3 people"
+  const empMatch = lower.match(/\b(\d{2,}[\d,]*)\+?\s*(employees|people|team members)/i);
   let empCount = null;
   if (empMatch) {
     empCount = parseInt(empMatch[1].replace(/,/g, ''), 10);
@@ -171,7 +176,7 @@ function inferCompanySizeScore(jdText, h1bFound) {
 
   // Medium company by employee count
   if (empCount !== null) {
-    if (empCount > 500 && !h1bFound) return 2;
+    if (empCount > 500 && h1bFound === false) return 2;
     if (empCount <= 500) return 4; // Small-medium, may be new sponsor
   }
 
@@ -457,6 +462,13 @@ async function main() {
 
     try {
       const components = JSON.parse(input);
+      if (typeof components !== 'object' || components === null) {
+        throw new Error('Input must be a JSON object');
+      }
+      if (components.h1bSummary !== null && components.h1bSummary !== undefined
+          && typeof components.h1bSummary !== 'object') {
+        throw new Error('h1bSummary must be an object or null');
+      }
       const config = loadVisaConfig();
       const scoreResult = calculateVisaScore(components);
       const penaltyResult = components.globalScore != null

@@ -32,10 +32,13 @@ const KEYWORDS_PATH = join(ROOT, 'config', 'sponsorship-keywords.yml');
 
 // --- YAML Parser ---
 
+const UNSAFE_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+
 /**
  * Minimal YAML parser for flat array-of-strings structure.
  * Only recognizes category keys (word:) and array items (- "value").
  * No eval, no exec -- safe against injection (T-03-02 mitigation).
+ * Rejects prototype-pollution keys (T-03-02 hardening).
  *
  * @param {string} filePath - Path to sponsorship-keywords.yml
  * @returns {object} { positive_keywords: [], negative_keywords: [], government_blockers: [], authorization_blockers: [] }
@@ -56,6 +59,11 @@ function loadKeywords(filePath) {
     const keyMatch = line.replace(/\r$/, '').match(/^(\w+):$/);
     if (keyMatch) {
       currentKey = keyMatch[1];
+      if (UNSAFE_KEYS.has(currentKey)) {
+        console.warn(`Skipping unsafe YAML key: ${currentKey}`);
+        currentKey = null;
+        continue;
+      }
       result[currentKey] = [];
       continue;
     }

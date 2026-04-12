@@ -44,9 +44,10 @@ const DEFAULT_TTL = { uscis: 90, everify: 7, salary: 30 };
  * @returns {string} Cache key like "uscis-google-1a2b3c"
  */
 function cacheKey(source, identifier) {
+  const safeSource = source.toLowerCase().replace(/[^a-z0-9]/g, '');
   const hash = createHash('md5').update(identifier.toLowerCase()).digest('hex').slice(0, 6);
   const sanitized = identifier.toLowerCase().replace(/[^a-z0-9]/g, '-').slice(0, 20);
-  return `${source}-${sanitized}-${hash}`;
+  return `${safeSource}-${sanitized}-${hash}`;
 }
 
 /**
@@ -59,6 +60,11 @@ function cacheKey(source, identifier) {
  */
 function cacheGet(key) {
   const filepath = join(CACHE_DIR, key + '.json');
+  // Guard against path traversal (e.g. key = "../../package")
+  if (!filepath.startsWith(CACHE_DIR)) {
+    console.error('Invalid cache key (path traversal blocked)');
+    return null;
+  }
   if (!existsSync(filepath)) return null;
 
   let entry;
