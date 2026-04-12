@@ -45,8 +45,8 @@ function normalizeStatus(raw) {
   // Descartado → Discarded
   if (/^descartado$/i.test(s)) return { status: 'Discarded' };
 
-  // Rechazada/Rejected → Rejected
-  if (/^rechazada?$/i.test(s) || /^rejected$/i.test(s)) return { status: 'Rejected' };
+  // Rechazada/Rechazado/Rejected → Rejected
+  if (/^rechazad[ao]$/i.test(s) || /^rejected$/i.test(s)) return { status: 'Rejected' };
 
   // Rechazado/Rejected with date → Rejected (strip date)
   if (/^rechazado\s+\d{4}/i.test(s) || /^rejected\s+\d{4}/i.test(s)) return { status: 'Rejected' };

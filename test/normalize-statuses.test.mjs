@@ -118,8 +118,8 @@ describe('normalizeStatus - other aliases', () => {
     assert.equal(normalizeStatus('hold').status, 'Evaluated');
   });
 
-  test('monitor → Evaluated', () => {
-    assert.equal(normalizeStatus('monitor').status, 'Evaluated');
+  test('monitor → SKIP', () => {
+    assert.equal(normalizeStatus('monitor').status, 'SKIP');
   });
 
   test('evaluar → Evaluated', () => {
