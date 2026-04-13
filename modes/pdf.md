@@ -182,6 +182,7 @@ Actualizar tracker si la oferta ya está registrada: cambiar PDF de ❌ a ✅.
 ## Profile Photo (DACH market)
 
 If `config/profile.yml` contains a `photo:` field with a path to an image file:
+
 `photo:` must be a top-level key in `config/profile.yml` (not under `candidate:`).
 
 0. Validate image format first:
