@@ -14,7 +14,9 @@
     "update": "node update-system.mjs apply",
     "rollback": "node update-system.mjs rollback",
     "liveness": "node check-liveness.mjs",
-    "scan": "node scan.mjs"
+    "scan": "node scan.mjs",
+    "webapp": "npm --prefix webapp install --no-fund --no-audit && node webapp/server.js",
+    "webapp:dev": "npm --prefix webapp install --no-fund --no-audit && node --watch webapp/server.js"
   },
   "keywords": [
     "ai",

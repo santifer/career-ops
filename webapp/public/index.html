@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Career Ops — Dashboard</title>
+  <meta name="description" content="AI-powered job search dashboard — track applications, scores, and pipeline status." />
+
+  <!-- Preconnect for Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+  <!-- Claude design system -->
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- marked.js for markdown rendering (report viewer) -->
+  <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js" defer></script>
+</head>
+<body>
+
+  <!-- ─── Navigation ─────────────────────────────────────────── -->
+  <nav class="nav">
+    <div class="container nav-inner">
+
+      <!-- Logo -->
+      <a class="nav-logo" href="#" aria-label="Career Ops home">
+        <div class="nav-logo-mark" aria-hidden="true">C</div>
+        <span class="nav-logo-name">Career<span>Ops</span></span>
+      </a>
+
+      <!-- Tabs -->
+      <ul class="nav-tabs" role="tablist" aria-label="Main navigation">
+        <li role="presentation">
+          <button class="nav-tab active" role="tab" aria-selected="true"
+                  aria-controls="view-dashboard" data-view="dashboard">
+            Dashboard
+          </button>
+        </li>
+        <li role="presentation">
+          <button class="nav-tab" role="tab" aria-selected="false"
+                  aria-controls="view-pipeline" data-view="pipeline">
+            Pipeline
+          </button>
+        </li>
+        <li role="presentation">
+          <button class="nav-tab" role="tab" aria-selected="false"
+                  aria-controls="view-pending" data-view="pending">
+            Pending URLs
+          </button>
+        </li>
+      </ul>
+
+      <!-- Actions -->
+      <div class="nav-actions">
+        <span class="demo-badge" id="demo-badge" style="display:none">
+          Demo Mode
+        </span>
+        <button class="theme-toggle" id="theme-toggle"
+                aria-label="Toggle light / dark theme" title="Toggle theme">
+          <!-- Icon injected by JS -->
+          <svg id="icon-sun" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+               viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"/>
+            <line x1="12" y1="1" x2="12" y2="3"/>
+            <line x1="12" y1="21" x2="12" y2="23"/>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+            <line x1="1" y1="12" x2="3" y2="12"/>
+            <line x1="21" y1="12" x2="23" y2="12"/>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+          </svg>
+          <svg id="icon-moon" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+               viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+               style="display:none">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ─── Main ────────────────────────────────────────────────── -->
+  <main class="main">
+    <div class="container">
+
+      <!-- ══ DASHBOARD VIEW ══════════════════════════════════ -->
+      <section id="view-dashboard" class="view active" role="tabpanel"
+               aria-labelledby="tab-dashboard">
+
+        <div class="page-header">
+          <h1 class="page-title">Job Search Dashboard</h1>
+          <p class="page-subtitle" id="dashboard-subtitle">
+            Loading your pipeline…
+          </p>
+        </div>
+
+        <!-- Stat cards -->
+        <div class="stats-grid" id="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Total Evaluated</div>
+            <div class="stat-value" id="stat-total">—</div>
+            <div class="stat-sub">all applications</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Applied</div>
+            <div class="stat-value accent" id="stat-applied">—</div>
+            <div class="stat-sub">submitted</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Interviews</div>
+            <div class="stat-value green" id="stat-interviews">—</div>
+            <div class="stat-sub">in progress</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Offers</div>
+            <div class="stat-value green" id="stat-offers">—</div>
+            <div class="stat-sub">received</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Avg Score</div>
+            <div class="stat-value" id="stat-avg">—</div>
+            <div class="stat-sub" id="stat-top-score">top: —</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">With PDF</div>
+            <div class="stat-value" id="stat-pdf">—</div>
+            <div class="stat-sub" id="stat-actionable">≥4.0: —</div>
+          </div>
+        </div>
+
+        <!-- Rates row -->
+        <div class="rates-row">
+          <div class="rate-card">
+            <div class="rate-value" id="rate-response">—%</div>
+            <div class="rate-label">Response Rate</div>
+          </div>
+          <div class="rate-card">
+            <div class="rate-value" id="rate-interview">—%</div>
+            <div class="rate-label">Interview Rate</div>
+          </div>
+          <div class="rate-card">
+            <div class="rate-value" id="rate-offer">—%</div>
+            <div class="rate-label">Offer Rate</div>
+          </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="charts-grid">
+          <!-- Status distribution -->
+          <div class="chart-card">
+            <h2 class="chart-title">Status Distribution</h2>
+            <div id="status-chart"></div>
+          </div>
+
+          <!-- Score distribution -->
+          <div class="chart-card">
+            <h2 class="chart-title">Score Distribution</h2>
+            <div id="score-chart"></div>
+          </div>
+        </div>
+
+        <!-- Recent applications -->
+        <div>
+          <div class="section-header">
+            <h2 class="section-title">Recent Applications</h2>
+            <span class="section-action" id="view-all-btn">View all →</span>
+          </div>
+
+          <div class="table-card">
+            <div class="table-wrap">
+              <table aria-label="Recent applications">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Company</th>
+                    <th>Role</th>
+                    <th>Score</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                  </tr>
+                </thead>
+                <tbody id="recent-tbody">
+                  <tr><td colspan="6" class="table-empty">
+                    <div class="loading-spinner">
+                      <div class="spinner-ring"></div>
+                      <span>Loading…</span>
+                    </div>
+                  </td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ══ PIPELINE VIEW ════════════════════════════════════ -->
+      <section id="view-pipeline" class="view" role="tabpanel"
+               aria-labelledby="tab-pipeline">
+
+        <div class="page-header">
+          <h1 class="page-title">Application Pipeline</h1>
+          <p class="page-subtitle">
+            All evaluated jobs — filter, sort, and open evaluation reports.
+          </p>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+          <div class="search-wrap">
+            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg"
+                 width="16" height="16" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="8"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input type="search" class="search-input" id="pipeline-search"
+                   placeholder="Search company, role, notes…"
+                   aria-label="Search applications" />
+          </div>
+
+          <select class="filter-select" id="status-filter" aria-label="Filter by status">
+            <option value="">All statuses</option>
+            <option>Evaluated</option>
+            <option>Applied</option>
+            <option>Responded</option>
+            <option>Interview</option>
+            <option>Offer</option>
+            <option>Rejected</option>
+            <option>Discarded</option>
+            <option>SKIP</option>
+          </select>
+
+          <select class="filter-select" id="score-filter" aria-label="Filter by score">
+            <option value="">All scores</option>
+            <option value="4.5">≥ 4.5</option>
+            <option value="4.0">≥ 4.0</option>
+            <option value="3.5">≥ 3.5</option>
+          </select>
+
+          <select class="filter-select" id="sort-select" aria-label="Sort by">
+            <option value="date-desc">Newest first</option>
+            <option value="date-asc">Oldest first</option>
+            <option value="score-desc">Score ↓</option>
+            <option value="score-asc">Score ↑</option>
+            <option value="company">Company A–Z</option>
+            <option value="status">Status</option>
+          </select>
+
+          <span class="result-count" id="result-count" aria-live="polite">— jobs</span>
+        </div>
+
+        <!-- Table -->
+        <div class="table-card">
+          <div class="table-wrap">
+            <table aria-label="Application pipeline">
+              <thead>
+                <tr>
+                  <th data-sort="number">
+                    # <span class="sort-icon" aria-hidden="true">↕</span>
+                  </th>
+                  <th data-sort="date">
+                    Date <span class="sort-icon" aria-hidden="true">↕</span>
+                  </th>
+                  <th data-sort="company">
+                    Company <span class="sort-icon" aria-hidden="true">↕</span>
+                  </th>
+                  <th data-sort="role">Role</th>
+                  <th data-sort="score">
+                    Score <span class="sort-icon" aria-hidden="true">↕</span>
+                  </th>
+                  <th data-sort="status">Status</th>
+                  <th>PDF</th>
+                </tr>
+              </thead>
+              <tbody id="pipeline-tbody">
+                <tr><td colspan="7" class="table-empty">
+                  <div class="loading-spinner">
+                    <div class="spinner-ring"></div>
+                    <span>Loading pipeline…</span>
+                  </div>
+                </td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="table-footer" id="pipeline-footer" style="display:none">
+            <span id="pipeline-count-text">0 applications</span>
+            <span id="pipeline-has-report-text"></span>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ══ PENDING URLS VIEW ════════════════════════════════ -->
+      <section id="view-pending" class="view" role="tabpanel"
+               aria-labelledby="tab-pending">
+
+        <div class="page-header">
+          <h1 class="page-title">Pending URLs</h1>
+          <p class="page-subtitle">
+            Job postings in <code>data/pipeline.md</code> waiting to be evaluated.
+          </p>
+        </div>
+
+        <div id="pending-content">
+          <div class="loading-spinner">
+            <div class="spinner-ring"></div>
+            <span>Loading pipeline URLs…</span>
+          </div>
+        </div>
+
+      </section>
+
+    </div><!-- /container -->
+  </main>
+
+  <!-- ─── Report slide-in panel ───────────────────────────────── -->
+  <div class="modal-overlay" id="modal-overlay" role="dialog"
+       aria-modal="true" aria-labelledby="report-company">
+    <div class="report-panel" id="report-panel" tabindex="-1">
+
+      <div class="report-panel-header">
+        <div class="report-panel-info">
+          <div class="report-panel-company" id="report-company">Loading…</div>
+          <div class="report-panel-role"   id="report-role"></div>
+          <div class="report-panel-meta"   id="report-meta"></div>
+        </div>
+        <button class="close-btn" id="close-report" aria-label="Close report">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+               viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6"  x2="6"  y2="18"/>
+            <line x1="6"  y1="6"  x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="report-panel-body" id="report-body">
+        <div class="report-loading">Loading evaluation report…</div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,278 @@
+/**
+ * Career Ops Web Dashboard — Express API Server
+ *
+ * Reads career-ops data files and exposes a JSON API for the frontend.
+ * Set CAREER_OPS_PATH env var to point to your career-ops directory.
+ * Defaults to the parent directory of this webapp/ folder.
+ *
+ * Usage:
+ *   cd webapp && npm install && npm start
+ *   CAREER_OPS_PATH=/path/to/career-ops npm start
+ */
+
+import express from 'express';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const app = express();
+const PORT = process.env.PORT || 3000;
+const CAREER_OPS_PATH = process.env.CAREER_OPS_PATH
+  ? path.resolve(process.env.CAREER_OPS_PATH)
+  : path.resolve(__dirname, '..');
+
+// ─── Parsers ──────────────────────────────────────────────────────────────────
+
+/**
+ * Parse the markdown table in applications.md into structured objects.
+ * Handles both pure-pipe format and mixed pipe+tab formats used by career-ops.
+ *
+ * Table format:
+ *   | # | Date | Company | Role | Score | Status | PDF | Report | Notes |
+ */
+function parseApplicationsMd(content) {
+  const lines = content.split('\n');
+  const apps = [];
+
+  for (const raw of lines) {
+    const line = raw.trim();
+
+    // Skip empty, headers, separator rows, section titles
+    if (!line || !line.startsWith('|')) continue;
+    if (/^\|\s*[-:]+/.test(line)) continue;          // |---|---| separator
+    if (/^\|\s*#\s*\|/i.test(line)) continue;        // | # | Date | header
+
+    // Split on pipes, strip leading/trailing pipe, trim each cell
+    let parts;
+    if (line.includes('\t')) {
+      // Mixed format: starts with "| " then tab-separated inside
+      const inner = line.replace(/^\|/, '').replace(/\|$/, '');
+      parts = inner.split('\t').map((p) => p.replace(/^\||\|$/g, '').trim());
+    } else {
+      parts = line
+        .replace(/^\|/, '')
+        .replace(/\|$/, '')
+        .split('|')
+        .map((p) => p.trim());
+    }
+
+    if (parts.length < 7) continue;
+
+    const [num, date, company, role, scoreRaw, status, pdf, report, ...rest] = parts;
+    const notes = rest.join('|').trim();
+
+    // Parse score
+    const scoreMatch = scoreRaw.match(/(\d+\.?\d*)\/5/);
+    const score = scoreMatch ? parseFloat(scoreMatch[1]) : 0;
+
+    // Parse report link: [001](reports/001-company-date.md)
+    const reportMatch = report ? report.match(/\[(\d+)\]\(([^)]+)\)/) : null;
+
+    apps.push({
+      number: parseInt(num, 10) || apps.length + 1,
+      date: date || '',
+      company: company || '',
+      role: role || '',
+      scoreRaw: scoreRaw || '',
+      score,
+      status: status || 'Unknown',
+      hasPDF: pdf ? pdf.includes('✅') : false,
+      reportNumber: reportMatch ? reportMatch[1] : null,
+      reportPath: reportMatch ? reportMatch[2] : null,
+      notes,
+    });
+  }
+
+  return apps;
+}
+
+/**
+ * Compute aggregate metrics from parsed applications.
+ */
+function computeMetrics(apps) {
+  const byStatus = {};
+  let totalScore = 0;
+  let scoredCount = 0;
+  let topScore = 0;
+  let withPDF = 0;
+
+  for (const a of apps) {
+    byStatus[a.status] = (byStatus[a.status] || 0) + 1;
+    if (a.score > 0) {
+      totalScore += a.score;
+      scoredCount++;
+      if (a.score > topScore) topScore = a.score;
+    }
+    if (a.hasPDF) withPDF++;
+  }
+
+  const applied = apps.filter((a) =>
+    ['Applied', 'Responded', 'Interview', 'Offer'].includes(a.status)
+  ).length;
+  const responded = byStatus['Responded'] || 0;
+  const interviews = byStatus['Interview'] || 0;
+  const offers = byStatus['Offer'] || 0;
+
+  // Score buckets
+  const buckets = [
+    { label: '4.5 – 5.0', min: 4.5, max: 5.01, count: 0 },
+    { label: '4.0 – 4.4', min: 4.0, max: 4.5,  count: 0 },
+    { label: '3.5 – 3.9', min: 3.5, max: 4.0,  count: 0 },
+    { label: '3.0 – 3.4', min: 3.0, max: 3.5,  count: 0 },
+    { label: '< 3.0',     min: 0,   max: 3.0,  count: 0 },
+  ];
+  for (const a of apps) {
+    if (a.score <= 0) continue;
+    for (const b of buckets) {
+      if (a.score >= b.min && a.score < b.max) { b.count++; break; }
+    }
+  }
+
+  return {
+    total: apps.length,
+    byStatus,
+    applied,
+    responded,
+    interviews,
+    offers,
+    avgScore: scoredCount > 0 ? Math.round((totalScore / scoredCount) * 10) / 10 : 0,
+    topScore: Math.round(topScore * 10) / 10,
+    withPDF,
+    actionable: apps.filter((a) => a.score >= 4.0).length,
+    responseRate: applied > 0 ? Math.round((responded / applied) * 100) : 0,
+    interviewRate: applied > 0 ? Math.round((interviews / applied) * 100) : 0,
+    offerRate: applied > 0 ? Math.round((offers / applied) * 100) : 0,
+    scoreBuckets: buckets.map(({ label, count }) => ({ label, count })),
+  };
+}
+
+// ─── Demo data (used when no actual data files are found) ────────────────────
+
+const DEMO_APPLICATIONS = [
+  { number:1, date:'2026-04-01', company:'Anthropic', role:'Senior AI Engineer', scoreRaw:'4.8/5', score:4.8, status:'Interview', hasPDF:true,  reportNumber:'001', reportPath:'reports/001-anthropic-2026-04-01.md', notes:'Dream role' },
+  { number:2, date:'2026-04-02', company:'OpenAI', role:'Staff ML Engineer', scoreRaw:'4.5/5', score:4.5, status:'Applied', hasPDF:true,  reportNumber:'002', reportPath:'reports/002-openai-2026-04-02.md', notes:'' },
+  { number:3, date:'2026-04-03', company:'Cohere', role:'LLM Platform Engineer', scoreRaw:'4.2/5', score:4.2, status:'Applied', hasPDF:true,  reportNumber:'003', reportPath:null, notes:'Good comp' },
+  { number:4, date:'2026-04-04', company:'Mistral AI', role:'AI Infrastructure Lead', scoreRaw:'3.9/5', score:3.9, status:'Evaluated', hasPDF:false, reportNumber:'004', reportPath:null, notes:'' },
+  { number:5, date:'2026-04-05', company:'Acme Corp', role:'Data Scientist', scoreRaw:'3.2/5', score:3.2, status:'Rejected', hasPDF:false, reportNumber:'005', reportPath:null, notes:'Too junior' },
+  { number:6, date:'2026-04-06', company:'TechVenture', role:'Head of AI', scoreRaw:'4.6/5', score:4.6, status:'Responded', hasPDF:true,  reportNumber:'006', reportPath:null, notes:'Inbound from recruiter' },
+  { number:7, date:'2026-04-07', company:'Scale AI', role:'ML Engineer II', scoreRaw:'2.8/5', score:2.8, status:'Discarded', hasPDF:false, reportNumber:'007', reportPath:null, notes:'Comp below min' },
+  { number:8, date:'2026-04-08', company:'Perplexity', role:'Applied AI Researcher', scoreRaw:'4.7/5', score:4.7, status:'Applied', hasPDF:true,  reportNumber:'008', reportPath:null, notes:'' },
+  { number:9, date:'2026-04-09', company:'Runway ML', role:'AI Platform Architect', scoreRaw:'4.1/5', score:4.1, status:'Evaluated', hasPDF:false, reportNumber:'009', reportPath:null, notes:'' },
+  { number:10,date:'2026-04-10', company:'Inflection AI', role:'Senior Researcher', scoreRaw:'4.9/5', score:4.9, status:'Offer', hasPDF:true,  reportNumber:'010', reportPath:null, notes:'🔥 Strong match' },
+];
+
+// ─── Data loader ─────────────────────────────────────────────────────────────
+
+function loadApplications() {
+  const candidates = [
+    path.join(CAREER_OPS_PATH, 'data', 'applications.md'),
+    path.join(CAREER_OPS_PATH, 'applications.md'),
+  ];
+  for (const p of candidates) {
+    if (fs.existsSync(p)) {
+      try {
+        const content = fs.readFileSync(p, 'utf-8');
+        const apps = parseApplicationsMd(content);
+        if (apps.length > 0) return { apps, demo: false };
+      } catch (_) {}
+    }
+  }
+  return { apps: DEMO_APPLICATIONS, demo: true };
+}
+
+function loadPipeline() {
+  const pipelinePath = path.join(CAREER_OPS_PATH, 'data', 'pipeline.md');
+  if (!fs.existsSync(pipelinePath)) return { urls: [], raw: '', demo: true };
+  try {
+    const raw = fs.readFileSync(pipelinePath, 'utf-8');
+    const urlRegex = /https?:\/\/[^\s\)\]"']+/g;
+    const urls = [...new Set(raw.match(urlRegex) || [])];
+    return { urls, raw, demo: false };
+  } catch (_) {
+    return { urls: [], raw: '', demo: true };
+  }
+}
+
+// ─── Static files ─────────────────────────────────────────────────────────────
+
+app.use(express.static(path.join(__dirname, 'public')));
+
+// ─── API Routes ───────────────────────────────────────────────────────────────
+
+app.get('/api/status', (_req, res) => {
+  const { demo } = loadApplications();
+  res.json({
+    ok: true,
+    careerOpsPath: CAREER_OPS_PATH,
+    demo,
+    version: '1.0.0',
+  });
+});
+
+app.get('/api/applications', (_req, res) => {
+  try {
+    const { apps, demo } = loadApplications();
+    res.json({ applications: apps, demo });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/metrics', (_req, res) => {
+  try {
+    const { apps, demo } = loadApplications();
+    res.json({ metrics: computeMetrics(apps), demo });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/pipeline', (_req, res) => {
+  try {
+    res.json(loadPipeline());
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/report', (req, res) => {
+  try {
+    const reportPath = req.query.path;
+    if (!reportPath) return res.status(400).json({ error: 'path query param required' });
+
+    // Security: resolve relative to career-ops root, reject traversal
+    const fullPath = path.resolve(CAREER_OPS_PATH, reportPath);
+    const safePrefixA = path.resolve(CAREER_OPS_PATH);
+    if (!fullPath.startsWith(safePrefixA + path.sep) && fullPath !== safePrefixA) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    if (!fs.existsSync(fullPath)) {
+      return res.status(404).json({ error: 'Report not found' });
+    }
+    const content = fs.readFileSync(fullPath, 'utf-8');
+    res.json({ content });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── Start ────────────────────────────────────────────────────────────────────
+
+app.listen(PORT, () => {
+  console.log('');
+  console.log('  Career Ops Dashboard');
+  console.log('  ─────────────────────────────────────────');
+  console.log(`  URL:           http://localhost:${PORT}`);
+  console.log(`  Data source:   ${CAREER_OPS_PATH}`);
+  const { demo } = loadApplications();
+  if (demo) {
+    console.log('  Mode:          demo (no applications.md found)');
+    console.log('  Tip:           set CAREER_OPS_PATH env var to point to your career-ops directory');
+  } else {
+    console.log('  Mode:          live');
+  }
+  console.log('  ─────────────────────────────────────────');
+  console.log('');
+});
