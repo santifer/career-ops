@@ -154,6 +154,27 @@ Analyze posting signals to assess whether this is a real, active opening.
 
 **Assessment:** Apply the same three tiers (High Confidence / Proceed with Caution / Suspicious), weighting available signals more heavily. If insufficient signals are available to make a determination, default to "Proceed with Caution" with a note about limited data.
 
+#### OPT Timeline Status (solo si config/visa.yml tiene seccion opt:)
+
+Si `config/visa.yml` tiene seccion `opt:` configurada, ejecutar:
+`echo '{"jdText":"<full JD text>"}' | node opt-timeline.mjs --json`
+
+Con el resultado JSON, mostrar este banner despues de la tabla de legitimacy:
+
+> **OPT STATUS:** {remainingDays} days remaining (expires {endDate})
+> Unemployment: {unemployment.used}/{unemployment.limit} days used ({unemployment.remaining} remaining)
+> **Cap Season:** {capSeason.phase}. {capSeason.advice}
+> **Time-to-Hire:** {tthEstimate.type} company, est. {tthEstimate.minDays}-{tthEstimate.maxDays} days. Your OPT window: {remainingDays} days. {tthEstimate.warning || "Within range."}
+
+**Warning escalation:**
+- Si unemployment.severity == 'urgent' (<=14 days): Prefijo `URGENT`, lenguaje fuerte: "CRITICAL: Only {remaining} unemployment days left. Immediate employment required."
+- Si unemployment.severity == 'warning' (<=30 days): Prefijo `WARNING`, lenguaje firme: "WARNING: {remaining} unemployment days remaining. Accelerate job search."
+- Si unemployment.severity == 'info' (<=60 days): Nota informativa: "Note: {remaining} unemployment days remaining. Monitor closely."
+
+**Nota:** opt-timeline.mjs es pura computacion (no Playwright), seguro para batch mode.
+
+Si `opt:` no esta configurada en visa.yml, omitir esta subseccion silenciosamente.
+
 #### Score Global
 
 | Dimensión | Score |
@@ -335,6 +356,7 @@ Al terminar, imprime por stdout un resumen JSON para que el orquestador lo parse
   "role": "{rol}",
   "score": {score_num},
   "legitimacy": "{High Confidence|Proceed with Caution|Suspicious}",
+  "optStatus": { "remainingDays": null, "unemploymentRemaining": null, "capPhase": null },
   "pdf": "{ruta_pdf}",
   "report": "{ruta_report}",
   "error": null
