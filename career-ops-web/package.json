@@ -9,6 +9,10 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@base-ui/react": "^1.3.0",
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@heroicons/react": "^2.2.0",
     "@neondatabase/serverless": "^1.0.2",
     "class-variance-authority": "^0.7.1",
@@ -22,7 +26,9 @@
     "react-dom": "19.2.4",
     "react-markdown": "^10.1.0",
     "resend": "^6.10.0",
-    "tailwind-merge": "^3.5.0"
+    "shadcn": "^4.2.0",
+    "tailwind-merge": "^3.5.0",
+    "tw-animate-css": "^1.4.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
