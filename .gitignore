@@ -1,7 +1,12 @@
-# Personal data (user fills these)
+# Personal data (user fills these — NEVER commit)
+cv.md
+article-digest.md
 data/applications.md
 data/pipeline.md
 data/scan-history.tsv
+data/follow-ups.md
+interview-prep/
+logs/
 reports/*.md
 !reports/.gitkeep
 output/*
@@ -32,8 +37,16 @@ bun.lock
 *.mov
 *.mp4
 
+# User-added scripts (contain local paths)
+auto-search-agent.mjs
+setup-cron.sh
+
+# Agent summaries
+reports/agent-summaries/
+
 # Claude Code local
 .claude/settings.local.json
 .claude/memory/
+.claude/worktrees/
 career-dashboard
 package-lock.json
