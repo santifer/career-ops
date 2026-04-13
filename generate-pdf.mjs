@@ -11,7 +11,7 @@
  */
 
 import { chromium } from 'playwright';
-import { resolve, dirname } from 'path';
+import { resolve, dirname, relative, isAbsolute } from 'path';
 import { readFile } from 'fs/promises';
 import { existsSync, readFileSync, mkdirSync } from 'fs';
 import { fileURLToPath } from 'url';
@@ -37,13 +37,25 @@ function handlePhotoSubstitution(html, projectRoot) {
       return html.replace(/\{\{PHOTO_BLOCK\}\}/g, '');
     }
 
-    const fullPath = resolve(projectRoot, photoPath);
+    const trimmedPhotoPath = photoPath.trim();
+    if (isAbsolute(trimmedPhotoPath)) {
+      console.warn(`⚠️ Photo path must be project-relative: ${trimmedPhotoPath}`);
+      return html.replace(/\{\{PHOTO_BLOCK\}\}/g, '');
+    }
+
+    const fullPath = resolve(projectRoot, trimmedPhotoPath);
+    const relPath = relative(projectRoot, fullPath);
+    if (relPath.startsWith('..') || isAbsolute(relPath)) {
+      console.warn(`⚠️ Photo path escapes project root: ${trimmedPhotoPath}`);
+      return html.replace(/\{\{PHOTO_BLOCK\}\}/g, '');
+    }
+
     if (!existsSync(fullPath)) {
       console.warn(`⚠️ Photo file not found: ${fullPath}`);
       return html.replace(/\{\{PHOTO_BLOCK\}\}/g, '');
     }
 
-    const ext = photoPath.split('.').pop().toLowerCase();
+    const ext = trimmedPhotoPath.split('.').pop().toLowerCase();
     const supported = ['jpg', 'jpeg', 'png'];
     if (!supported.includes(ext)) {
       console.warn(`⚠️ Unsupported photo format: .${ext}. Supported: ${supported.join(', ')}`);
