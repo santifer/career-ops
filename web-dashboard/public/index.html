@@ -507,18 +507,22 @@ async function renderCV(el) { const r=await fetch('/api/cv'); const d=await r.js
 
 // ========== Chat / Session logic ==========
 const CMD_DEFS = {
-  'scan':{needsInput:false},'pipeline':{needsInput:false},'tracker':{needsInput:false},
-  'patterns':{needsInput:false},'followup':{needsInput:false},'batch':{needsInput:false},
-  'evaluate':{needsInput:true,inputLabel:'Paste JD text or URL',title:'/career-ops {JD}'},
-  'oferta':{needsInput:true,inputLabel:'Paste JD text or URL',title:'/career-ops oferta'},
-  'ofertas':{needsInput:true,inputLabel:'Report numbers or company names',title:'/career-ops ofertas'},
-  'pdf':{needsInput:true,inputLabel:'Paste JD text or URL for CV tailoring',title:'/career-ops pdf'},
-  'contacto':{needsInput:true,inputLabel:'Company name or job URL',title:'/career-ops contacto'},
-  'deep':{needsInput:true,inputLabel:'Company name to research',title:'/career-ops deep'},
-  'training':{needsInput:true,inputLabel:'Course or cert name + URL',title:'/career-ops training'},
-  'project':{needsInput:true,inputLabel:'Project idea',title:'/career-ops project'},
-  'apply':{needsInput:true,inputLabel:'Application URL or company + role',title:'/career-ops apply'},
-  'interview-prep':{needsInput:true,inputLabel:'Company + role',title:'/career-ops interview-prep'},
+  'scan':{needsInput:false, label:'Scan Portals'},
+  'pipeline':{needsInput:false, label:'Process Pipeline'},
+  'tracker':{needsInput:false, label:'Application Tracker'},
+  'patterns':{needsInput:false, label:'Pattern Analysis'},
+  'followup':{needsInput:false, label:'Follow-up Check'},
+  'batch':{needsInput:false, label:'Batch Processing'},
+  'evaluate':{needsInput:true, inputLabel:'Paste JD text or URL', title:'Evaluate JD', label:'Evaluate JD'},
+  'oferta':{needsInput:true, inputLabel:'Paste JD text or URL', title:'Evaluate Offer', label:'Evaluate Offer'},
+  'ofertas':{needsInput:true, inputLabel:'Report numbers or company names', title:'Compare Offers', label:'Compare Offers'},
+  'pdf':{needsInput:true, inputLabel:'Paste JD text or URL for CV tailoring', title:'Generate PDF', label:'Generate PDF'},
+  'contacto':{needsInput:true, inputLabel:'Company name or job URL', title:'LinkedIn Outreach', label:'LinkedIn Outreach'},
+  'deep':{needsInput:true, inputLabel:'Company name to research', title:'Deep Research', label:'Deep Research'},
+  'training':{needsInput:true, inputLabel:'Course or cert name + URL', title:'Evaluate Training', label:'Evaluate Training'},
+  'project':{needsInput:true, inputLabel:'Project idea', title:'Evaluate Project', label:'Evaluate Project'},
+  'apply':{needsInput:true, inputLabel:'Application URL or company + role', title:'Apply Assistant', label:'Apply Assistant'},
+  'interview-prep':{needsInput:true, inputLabel:'Company + role', title:'Interview Prep', label:'Interview Prep'},
 };
 
 function runCommand(cmdId) {
@@ -546,7 +550,7 @@ function runCommand(cmdId) {
 }
 
 function closeInputModal(){document.getElementById('input-modal').classList.remove('show');pendingCommand=null;}
-function submitInput(){const v=document.getElementById('input-textarea').value.trim();if(!v){toast('Input required');return;}closeInputModal();startSession(pendingCommand,v);}
+function submitInput(){const v=document.getElementById('input-textarea').value.trim();if(!v){toast('Input required');return;}const cmd=pendingCommand;document.getElementById('input-modal').classList.remove('show');pendingCommand=null;startSession(cmd,v);}
 
 async function startSession(cmdId, input) {
   // Stop any existing running session first
@@ -554,19 +558,20 @@ async function startSession(cmdId, input) {
     fetch(`/api/session/${activeSessionId}/stop`,{method:'POST'}).catch(()=>{});
   }
 
-  activeCommandName = cmdId;
+  const def = CMD_DEFS[cmdId] || {};
+  activeCommandName = def.label || cmdId;
 
   // Open chat panel
   document.getElementById('chat-panel').classList.add('open');
   document.getElementById('chat-overlay').classList.add('open');
-  document.getElementById('chat-title').textContent=`/career-ops ${cmdId}`;
+  document.getElementById('chat-title').textContent = activeCommandName;
   document.getElementById('chat-messages').innerHTML='';
   document.getElementById('chat-reply').placeholder='Reply to Claude...';
   setDot('running');
   setSendEnabled(false);
 
   // Show user message
-  addMsg('user', input ? `${cmdId}: ${input.substring(0,200)}${input.length>200?'...':''}` : cmdId);
+  addMsg('user', input || activeCommandName);
   addThinking();
 
   try {
