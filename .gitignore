@@ -41,8 +41,9 @@ bun.lock
 auto-search-agent.mjs
 setup-cron.sh
 
-# Agent summaries
+# Agent summaries and daily reports (contain personal data)
 reports/agent-summaries/
+reports/daily-reports/
 
 # Claude Code local
 .claude/settings.local.json
