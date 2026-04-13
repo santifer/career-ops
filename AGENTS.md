@@ -1,10 +1,16 @@
-# Career-Ops for Codex
+# Career-Ops — AI Job Search Pipeline
 
-Read `CLAUDE.md` for all project instructions, routing, and behavioral rules. They apply equally to Codex.
+This file provides instructions for all AI coding agents working on this project (Claude Code, OpenCode, Codex, etc.).
 
-Key points:
-- Reuse the existing modes, scripts, templates, and tracker flow — do not create parallel logic.
-- Store user-specific customization in `config/profile.yml`, `modes/_profile.md`, or `article-digest.md` — never in `modes/_shared.md`.
+## Shared Rules
+
+- Use the existing modes, scripts, templates, and tracker flow. Do not create parallel logic.
+- Store user-specific customizations in `config/profile.yml`, `modes/_profile.md`, or `article-digest.md`. Never edit `modes/_shared.md` with user data.
 - Never submit an application on the user's behalf.
+- Follow the data contract defined in `DATA_CONTRACT.md`.
 
-For Codex-specific setup, see `docs/CODEX.md`.
+## Agent-Specific Notes
+
+- **OpenCode**: MCP configuration is in `.opencode/opencode.json`. Use `/career-ops-scan` to scan portals.
+- **Claude Code**: Skills are in `.claude/skills/`. Use `claude -p` for batch workers.
+- **Codex**: See `docs/CODEX.md` for setup details.

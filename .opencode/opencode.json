@@ -1,0 +1,58 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "ollama/qwen2.5:3b",
+  "mcp": {
+    "open-web": {
+      "type": "remote",
+      "url": "http://localhost:3000/mcp"
+    }
+  },
+  "provider": {
+    "ollama": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Ollama",
+      "options": {
+        "baseURL": "http://localhost:11434/v1"
+      },
+      "models": {
+        "qwen2.5:3b": {
+          "name": "Qwen2.5 3B",
+          "tool_call": true,
+          "reasoning": true,
+          "limit": {
+            "context": 32768,
+            "output": 4096
+          }
+        },
+          "granite3.2:2b": {
+          "name": "Granite 3.2 2B",
+          "tool_call": true,
+          "reasoning": true,
+          "limit": {
+            "context": 32768,
+            "output": 4096
+          }
+        },
+
+           "gemma:2b-instruct": {
+          "name": "Gemma 2B Instruct",
+          "tool_call": true,
+          "reasoning": true,
+          "limit": {
+            "context": 32768,
+            "output": 4096
+          }
+        },
+         "phi3:mini": {
+          "name": "phi3:mini",
+          "tool_call": true,
+          "reasoning": true,
+          "limit": {
+            "context": 32768,
+            "output": 4096
+          }
+        }
+      }
+    }
+  }
+}
