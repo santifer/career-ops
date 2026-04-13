@@ -63,12 +63,10 @@ export const SOURCES = [
     name: 'greenhouse',
     type: 'ats-api',
     detect(company) {
-      if (company.api?.includes('greenhouse')) return { url: company.api };
+      if (company.api?.includes('boards-api.greenhouse.io')) return { url: company.api };
       const m = (company.careers_url || '')
         .match(/job-boards(?:\.eu)?\.greenhouse\.io\/([^/?#]+)/);
-      if (m && !company.api) {
-        return { url: `https://boards-api.greenhouse.io/v1/boards/${m[1]}/jobs` };
-      }
+      if (m) return { url: `https://boards-api.greenhouse.io/v1/boards/${m[1]}/jobs` };
       return null;
     },
     fetch: fetchJson,
@@ -132,8 +130,8 @@ export const SOURCES = [
     fetch: fetchJson,
     parse(json, companyName) {
       return (json.content || []).map(j => ({
-        title:    j.name || '',
-        url:      j.ref  || '',
+        title:    j.name        || '',
+        url:      j.postingUrl  || j.ref || '',
         company:  companyName,
         location: [j.location?.city, j.location?.region].filter(Boolean).join(', '),
       }));
