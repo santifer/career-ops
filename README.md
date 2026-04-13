@@ -16,7 +16,6 @@
   <img src="https://img.shields.io/badge/Codex_(soon)-6B7280?style=flat&logo=openai&logoColor=white" alt="Codex">
   <img src="https://img.shields.io/badge/Node.js-339933?style=flat&logo=node.js&logoColor=white" alt="Node.js">
   <img src="https://img.shields.io/badge/Go-00ADD8?style=flat&logo=go&logoColor=white" alt="Go">
-  <img src="https://img.shields.io/badge/Patchright-45B4F0?style=flat&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0NUI0RjAiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cmVjdCB4PSIyIiB5PSIyIiB3aWR0aD0iMjAiIGhlaWdodD0iMTYiIHJ4PSIyIj48L3JlY3Q+PHBhdGggZD0iTTEyIDIgQzguNjAyIDIgNiA0LjYwMiA2IDggUzguNjAyIDE0IDEyIDE0IFMxOCAxMS4zOTcgMTggOCBTMTUuMzk3IDIgMTIgMiBaIiBmaWxsPSIjNDVCNEYwIj48L3BhdGg+PC9zdmc+&logoColor=white" alt="Patchright">
   <img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="MIT">
   <a href="https://discord.gg/8pRpHETxa4"><img src="https://img.shields.io/badge/Discord-5865F2?style=flat&logo=discord&logoColor=white" alt="Discord"></a>
   <br>
@@ -39,7 +38,7 @@ Career-Ops turns any AI coding CLI into a full job search command center. Instea
 
 - **Evaluates offers** with a structured A-F scoring system (10 weighted dimensions)
 - **Generates tailored PDFs** -- ATS-optimized CVs customized per job description
-- **Scans portals** automatically (Greenhouse, Ashby, Lever, company pages)
+- **Scans portals** automatically (Greenhouse, Ashby, Lever, company pages) + authenticated portals (LinkedIn, Naukri, Indeed) via agent-browser session persistence
 - **Processes in batch** -- evaluate 10+ offers in parallel with sub-agents
 - **Tracks everything** in a single source of truth with integrity checks
 
@@ -61,7 +60,7 @@ Built by someone who used it to evaluate 740+ job offers, generate 100+ tailored
 | **Negotiation Scripts** | Salary negotiation frameworks, geographic discount pushback, competing offer leverage |
 | **ATS PDF Generation** | Keyword-injected CVs with Space Grotesk + DM Sans design |
 | **Portal Scanner** | 45+ companies pre-configured (Anthropic, OpenAI, ElevenLabs, Retool, n8n...) + custom queries across Ashby, Greenhouse, Lever, Wellfound |
-| **Auth Scanner** | Login-gated portals (LinkedIn, Naukri, Indeed) with session persistence, JD extraction, employer blocklist, and title+JD keyword filtering via `scan-auth.mjs` |
+| **Auth Scanner** | Login-gated portals (LinkedIn, Naukri, Indeed, Instahyre) with agent-browser session persistence, JD extraction, employer blocklist, and title+JD keyword filtering via `scan-auth.mjs` |
 | **Batch Processing** | Parallel evaluation with `claude -p` workers |
 | **Dashboard TUI** | Terminal UI to browse, filter, and sort your pipeline |
 | **Human-in-the-Loop** | AI evaluates and recommends, you decide and act. The system never submits an application -- you always have the final call |
