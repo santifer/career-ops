@@ -177,3 +177,19 @@ d. Report: PDF path, file size, Canva design URL (for manual tweaking)
 ## Post-generación
 
 Actualizar tracker si la oferta ya está registrada: cambiar PDF de ❌ a ✅.
+
+## Profile Photo (DACH market)
+
+If `config/profile.yml` contains a `photo:` field with a path to an image file:
+
+1. Read the image file and encode it as a base64 data URI:
+   `data:image/jpeg;base64,...` (or `image/png` for PNG files)
+2. Replace `{{PHOTO_BLOCK}}` in the template with:
+   ```html
+   <img class="cv-photo" src="data:image/jpeg;base64,ENCODED_DATA" alt="">
+   ```
+3. If `photo:` is absent or empty, replace `{{PHOTO_BLOCK}}` with an empty string `""`.
+
+This ensures the photo is embedded directly in the HTML and renders correctly
+when Playwright converts it to PDF, regardless of the working directory.
+
