@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "career_ops",
+  "project_id": "5f4156ee-2071-4b74-a06f-c42c8f93fb21"
+}

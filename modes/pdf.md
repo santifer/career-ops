@@ -1,5 +1,19 @@
 # Mode: pdf — ATS-Optimized PDF Generation
 
+## One-page constraint (MANDATORY)
+
+The generated CV MUST always fit on exactly ONE page. No exceptions. To achieve this:
+
+1. **Summary**: 2-3 lines max. Tight, keyword-dense, no filler.
+2. **Experience**: Include only the 2-3 most relevant roles. 2-3 bullets per role max. Each bullet is 1-2 lines.
+3. **Projects**: Top 2-3 most relevant only. One-line description each.
+4. **Education**: Degree + institution + date. No descriptions unless exceptional (honors, thesis).
+5. **Certifications**: List format, no descriptions. Skip if space is tight.
+6. **Skills**: Single line per category. Compact.
+7. **Competencies**: Inline comma-separated or pipe-separated keywords. No tags, no grid.
+
+If content overflows 1 page, CUT content — never shrink fonts or margins. Priority for cuts (lowest value first): certifications > older/less-relevant jobs > project descriptions > education details.
+
 ## Full pipeline
 
 1. Read `cv.md` as the source of truth
@@ -11,14 +25,16 @@
    - Rest of the world -> `a4`
 6. Detect the role archetype -> adapt the framing
 7. Rewrite the Professional Summary by injecting JD keywords + the exit narrative bridge ("Built and sold a business. Now applying systems thinking to [JD domain].")
-8. Select the top 3-4 projects that are most relevant to the offer
-9. Reorder experience bullets by JD relevance
-10. Build a competency grid from the JD requirements (6-8 keyword phrases)
+8. Select the top 2-3 projects that are most relevant to the offer
+9. Reorder experience bullets by JD relevance, keep only 2-3 bullets per role
+10. Build a competency list from the JD requirements (6-8 keyword phrases, inline text)
 11. Inject keywords naturally into existing achievements (NEVER invent)
-12. Generate the full HTML from the template + tailored content
-13. Write the HTML to `/tmp/cv-candidate-{company}.html`
-14. Run: `node generate-pdf.mjs /tmp/cv-candidate-{company}.html output/cv-candidate-{company}-{YYYY-MM-DD}.pdf --format={letter|a4}`
-15. Report the PDF path, page count, and keyword coverage %
+12. **Verify 1-page fit**: estimate total content — if it looks too long, trim further before generating HTML
+13. Generate the full HTML from the template + tailored content
+14. Write the HTML to `/tmp/cv-candidate-{company}.html`
+15. Run: `node generate-pdf.mjs /tmp/cv-candidate-{company}.html output/cv-candidate-{company}-{YYYY-MM-DD}.pdf --format={letter|a4}`
+16. Report the PDF path, page count, and keyword coverage %
+17. **If page count > 1**: go back, trim content, regenerate. Repeat until 1 page.
 
 ## ATS rules (clean parsing)
 
@@ -30,26 +46,29 @@
 - No nested tables
 - JD keywords distributed across Summary (top 5), the first bullet of each role, and the Skills section
 
-## PDF design
+## PDF design (consulting style — black & white, traditional, dense)
 
-- **Fonts**: Space Grotesk (headings, 600-700) + DM Sans (body, 400-500)
-- **Fonts self-hosted**: `fonts/`
-- **Header**: name in Space Grotesk 24px bold + gradient line `linear-gradient(to right, hsl(187,74%,32%), hsl(270,70%,45%))` 2px + contact row
-- **Section headers**: Space Grotesk 13px, uppercase, letter-spacing 0.05em, cyan primary
-- **Body**: DM Sans 11px, line-height 1.5
-- **Company names**: accent purple `hsl(270,70%,45%)`
-- **Margins**: 0.6in
+- **Font**: Times New Roman / Georgia (system serif) — no custom web fonts
+- **Header**: name centered 22px bold, contact row centered below with pipe separators
+- **Section headers**: 11px, bold, uppercase, black bottom border (1px solid), no color
+- **Body**: 10.5px, line-height 1.3
+- **Company names**: bold, black (no color accents)
+- **Role titles**: italic
+- **Competencies**: inline comma/pipe-separated text (no colored tags)
+- **Margins**: 0.5in all sides
 - **Background**: pure white
+- **Colors**: black only. Links: underlined blue (#0000CC)
+- **No gradients, no colored accents, no tags/badges**
 
 ## Section order ("6-second recruiter scan" optimized)
 
-1. Header (large name, gradient, contact info, portfolio link)
-2. Professional Summary (3-4 lines, keyword-dense)
-3. Core Competencies (6-8 keyword phrases in a flex grid)
-4. Work Experience (reverse chronological)
-5. Projects (top 3-4 most relevant)
+1. Header (centered name, contact row with pipes)
+2. Professional Summary (2-3 lines, keyword-dense)
+3. Core Competencies (6-8 keyword phrases, inline text)
+4. Work Experience (reverse chronological, 2-3 roles, 2-3 bullets each)
+5. Projects (top 2-3 most relevant, one-line descriptions)
 6. Education & Certifications
-7. Skills (languages + technical)
+7. Skills (compact, one line per category)
 
 ## Keyword injection strategy (ethical, truth-based)
 
