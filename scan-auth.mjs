@@ -7,6 +7,11 @@
  * using persistent browser sessions. First run: manual login. Subsequent
  * runs: reuse session.
  *
+ * For aggressive portals (LinkedIn), use agent-browser-stealth fork:
+ *   npm install -g agent-browser-stealth  # provides `abs` CLI
+ *   Then set BROWSER_CLI=abs in environment, or replace 'agent-browser'
+ *   with 'abs' in the ab() function below.
+ *
  * Usage:
  *   node scan-auth.mjs --login <portal>       Login (visible browser)
  *   node scan-auth.mjs --scan [portal]         Run scan
@@ -166,9 +171,11 @@ const PORTALS = {
 
 // ── agent-browser CLI helper ────────────────────────────────────────
 
+const BROWSER_CLI = process.env.BROWSER_CLI || 'agent-browser';
+
 function ab(args, timeout = 60000) {
   return new Promise((resolve, reject) => {
-    const proc = spawn('agent-browser', args, { timeout, stdio: ['ignore', 'pipe', 'pipe'] });
+    const proc = spawn(BROWSER_CLI, args, { timeout, stdio: ['ignore', 'pipe', 'pipe'] });
     let stdout = '', stderr = '';
     proc.stdout.on('data', d => stdout += d.toString());
     proc.stderr.on('data', d => stderr += d.toString());

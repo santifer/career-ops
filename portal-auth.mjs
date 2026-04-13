@@ -12,11 +12,13 @@
  *
  * Portals: linkedin, naukri, indeed, instahyre, wellfound
  *
- * For aggressive portals (LinkedIn), consider agent-browser-stealth fork:
- *   npm install -g agent-browser-stealth  # then use `abs` instead of agent-browser
+ * For aggressive portals (LinkedIn), use agent-browser-stealth fork:
+ *   npm install -g agent-browser-stealth  # provides `abs` CLI
+ *   Then set BROWSER_CLI=abs in environment.
  *
  * See also: scan-auth.mjs — full authenticated scanner with keyword search,
  *           pagination, dedup, and title filtering for job portals.
+ */
 
 import { spawn } from 'child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync, rmSync, readdirSync, unlinkSync } from 'fs';
@@ -89,9 +91,11 @@ const PORTALS = {
   },
 };
 
+const BROWSER_CLI = process.env.BROWSER_CLI || 'agent-browser';
+
 function ab(args, timeout = 60000) {
   return new Promise((resolve, reject) => {
-    const proc = spawn('agent-browser', args, { timeout, stdio: ['ignore', 'pipe', 'pipe'] });
+    const proc = spawn(BROWSER_CLI, args, { timeout, stdio: ['ignore', 'pipe', 'pipe'] });
     let stdout = '', stderr = '';
     proc.stdout.on('data', d => stdout += d);
     proc.stderr.on('data', d => stderr += d);
@@ -100,7 +104,7 @@ function ab(args, timeout = 60000) {
         try { resolve(JSON.parse(stdout)); }
         catch { resolve({ success: true, data: stdout }); }
       } else {
-        reject(new Error(stderr || `agent-browser exited ${code}`));
+        reject(new Error(stderr || `${BROWSER_CLI} exited ${code}`));
       }
     });
     proc.on('error', reject);
