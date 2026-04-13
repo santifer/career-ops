@@ -3,7 +3,7 @@
 /**
  * scan.mjs — Zero-token portal scanner
  *
- * Fetches Greenhouse, Ashby, and Lever APIs directly, applies title
+ * Fetches Greenhouse, Ashby, Lever, and A16Z APIs directly, applies title
  * filters from portals.yml, deduplicates against existing history,
  * and appends new offers to pipeline.md + scan-history.tsv.
  *
@@ -17,6 +17,7 @@
 
 import { readFileSync, writeFileSync, appendFileSync, existsSync } from 'fs';
 import yaml from 'js-yaml';
+import { getJobBoardProvider } from './providers/job-board-providers.mjs';
 const parseYaml = yaml.load;
 
 // ── Config ──────────────────────────────────────────────────────────
@@ -32,12 +33,21 @@ const FETCH_TIMEOUT_MS = 10_000;
 // ── API detection ───────────────────────────────────────────────────
 
 function detectApi(company) {
+  const providerId = typeof company.api_provider === 'string' ? company.api_provider.trim() : '';
+  if (providerId && getJobBoardProvider(providerId)) {
+    return { type: providerId, url: company.api || company.careers_url || '' };
+  }
+
   // Greenhouse: explicit api field
   if (company.api && company.api.includes('greenhouse')) {
     return { type: 'greenhouse', url: company.api };
   }
 
   const url = company.careers_url || '';
+
+  if (url.includes('jobs.a16z.com')) {
+    return { type: 'a16z', url };
+  }
 
   // Ashby
   const ashbyMatch = url.match(/jobs\.ashbyhq\.com\/([^/?#]+)/);
@@ -289,8 +299,30 @@ async function main() {
   const tasks = targets.map(company => async () => {
     const { type, url } = company._api;
     try {
-      const json = await fetchJson(url);
-      const jobs = PARSERS[type](json, company.name);
+      const provider = getJobBoardProvider(type);
+      let jobs;
+
+      if (provider) {
+        const apiFilters = company.api_filters && typeof company.api_filters === 'object' && !Array.isArray(company.api_filters)
+          ? company.api_filters
+          : {};
+        const result = await provider.searchJobs({
+          ...apiFilters,
+          size: company.api_size,
+        });
+
+        if (result.errors.length > 0 && result.jobs.length === 0) {
+          throw new Error(result.errors.join('; '));
+        }
+
+        jobs = result.jobs
+          .map(job => provider.mapToScanOffer(job))
+          .filter(Boolean);
+      } else {
+        const json = await fetchJson(url);
+        jobs = PARSERS[type](json, company.name);
+      }
+
       totalFound += jobs.length;
 
       for (const job of jobs) {
