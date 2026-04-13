@@ -27,6 +27,7 @@ Determine the mode from `{{mode}}`:
 | `pipeline` | `pipeline` |
 | `apply` | `apply` |
 | `scan` | `scan` |
+| `linkedin` | `linkedin` |
 | `batch` | `batch` |
 | `patterns` | `patterns` |
 | `followup` | `followup` |
@@ -57,6 +58,7 @@ Available commands:
   /career-ops tracker   → Application status overview
   /career-ops apply     → Live application assistant (reads form + generates answers)
   /career-ops scan      → Scan portals and discover new offers
+  /career-ops linkedin  → Scan LinkedIn with authenticated browser
   /career-ops batch     → Batch processing with parallel workers
   /career-ops patterns  → Analyze rejection patterns and improve targeting
   /career-ops followup  → Follow-up cadence tracker: flag overdue, generate drafts
