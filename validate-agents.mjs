@@ -89,6 +89,12 @@ for (const [agentFile, modeFiles] of Object.entries(AGENT_MODE_MAP)) {
 // ── 3. No unregistered agent files ────────────────────────────────────────
 console.log("\nChecking for unregistered agent files…");
 const agentsDir = join(__dir, ".agents");
+if (!existsSync(agentsDir)) {
+  err("Missing .agents/ directory — run setup or check the repository root");
+  console.log("\n" + "─".repeat(60));
+  console.error(`\n✗  1 error(s) — fix before committing`);
+  process.exit(1);
+}
 const actualFiles = readdirSync(agentsDir).filter((f) => f.endsWith(".md"));
 for (const f of actualFiles) {
   if (AGENT_MODE_MAP[f]) {

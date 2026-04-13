@@ -128,12 +128,14 @@ function buildPrompt(agentFile, rawArgs) {
     return raw.replace(/\$ARGUMENTS/g, "").replace(/[ \t]+\n/g, "\n").trim();
   }
 
-  // Validate: warn if the substituted value looks like it might break the prompt.
-  // We don't block — just surface it so users know what happened.
+  // Block characters that would corrupt the markdown prompt structure.
+  // Backticks can close code fences; "---" can be mis-parsed as YAML front-matter.
   if (rawArgs.includes("`") || rawArgs.includes("---")) {
     process.stderr.write(
-      `Warning: argument contains characters that may affect prompt formatting.\n`,
+      `Error: argument contains characters that may corrupt the prompt (\` or ---). ` +
+      `Save your input to a file and pass the path instead.\n`,
     );
+    process.exit(1);
   }
 
   return raw.replace(/\$ARGUMENTS/g, rawArgs);

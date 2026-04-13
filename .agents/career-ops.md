@@ -37,7 +37,7 @@ If the argument is not a sub-command AND doesn't look like a JD, show discovery.
 
 Show this menu:
 
-```
+```text
 career-ops -- Command Center
 
 Available commands:
@@ -64,6 +64,7 @@ Or paste a JD directly to run the full pipeline.
 ## Context Loading by Mode
 
 After determining the mode, read the necessary files before executing:
+
 
 ### Modes that require `_shared.md` + their mode file:
 Read `modes/_shared.md` then `modes/{mode}.md`
