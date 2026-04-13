@@ -45,7 +45,7 @@ const MAX_ROWS = 500; // T-05-10: limit rows to prevent DoS on large result page
  */
 function cacheKey(source, identifier) {
   const safeSource = source.toLowerCase().replace(/[^a-z0-9]/g, '');
-  const hash = createHash('md5').update(identifier.toLowerCase()).digest('hex').slice(0, 6);
+  const hash = createHash('sha256').update(identifier.toLowerCase()).digest('hex').slice(0, 6);
   const sanitized = identifier.toLowerCase().replace(/[^a-z0-9]/g, '-').slice(0, 20);
   return `${safeSource}-${sanitized}-${hash}`;
 }
