@@ -14,7 +14,7 @@
 git clone https://github.com/santifer/career-ops.git
 cd career-ops
 npm install
-npx patchright install chromium   # Required for PDF generation
+npm install -g agent-browser && agent-browser install   # Required for PDF generation and job verification
 ```
 
 ### 2. Configure your profile

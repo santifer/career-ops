@@ -58,7 +58,7 @@ AI-powered job search automation built on Claude Code: pipeline tracking, offer 
 | `data/scan-history.tsv` | Scanner dedup history |
 | `portals.yml` | Query and company config |
 | `templates/cv-template.html` | HTML template for CVs |
-| `generate-pdf.mjs` | Patchright: HTML to PDF |
+| `generate-pdf.mjs` | agent-browser: HTML to PDF |
 | `article-digest.md` | Compact proof points from portfolio (optional) |
 | `interview-prep/story-bank.md` | Accumulated STAR+R stories across evaluations |
 | `interview-prep/{company}-{role}.md` | Company-specific interview intel reports |
@@ -190,31 +190,6 @@ This system is designed to be customized by YOU (AI Agent). When the user asks y
 - "Change the CV template design" → edit `templates/cv-template.html`
 - "Adjust the scoring weights" → edit `modes/_profile.md` for user-specific weighting, or edit `modes/_shared.md` and `batch/batch-prompt.md` only when changing the shared system defaults for everyone
 
-### Language Modes
-
-Default modes are in `modes/` (English). Additional language-specific modes are available:
-
-- **German (DACH market):** `modes/de/` — native German translations with DACH-specific vocabulary (13. Monatsgehalt, Probezeit, Kündigungsfrist, AGG, Tarifvertrag, etc.). Includes `_shared.md`, `angebot.md` (evaluation), `bewerben.md` (apply), `pipeline.md`.
-- **French (Francophone market):** `modes/fr/` — native French translations with France/Belgium/Switzerland/Luxembourg-specific vocabulary (CDI/CDD, convention collective SYNTEC, RTT, mutuelle, prévoyance, 13e mois, intéressement/participation, titres-restaurant, CSE, portage salarial, etc.). Includes `_shared.md`, `offre.md` (evaluation), `postuler.md` (apply), `pipeline.md`.
-- **Japanese (Japan market):** `modes/ja/` — native Japanese translations with Japan-specific vocabulary (正社員, 業務委託, 賞与, 退職金, みなし残業, 年俸制, 36協定, 通勤手当, 住宅手当, etc.). Includes `_shared.md`, `kyujin.md` (evaluation), `oubo.md` (apply), `pipeline.md`.
-
-**When to use German modes:** If the user is targeting German-language job postings, lives in DACH, or asks for German output. Either:
-1. User says "use German modes" → read from `modes/de/` instead of `modes/`
-2. User sets `language.modes_dir: modes/de` in `config/profile.yml` → always use German modes
-3. You detect a German JD → suggest switching to German modes
-
-**When to use French modes:** If the user is targeting French-language job postings, lives in France/Belgium/Switzerland/Luxembourg/Quebec, or asks for French output. Either:
-1. User says "use French modes" → read from `modes/fr/` instead of `modes/`
-2. User sets `language.modes_dir: modes/fr` in `config/profile.yml` → always use French modes
-3. You detect a French JD → suggest switching to French modes
-
-**When to use Japanese modes:** If the user is targeting Japanese-language job postings, lives in Japan, or asks for Japanese output. Either:
-1. User says "use Japanese modes" → read from `modes/ja/` instead of `modes/`
-2. User sets `language.modes_dir: modes/ja` in `config/profile.yml` → always use Japanese modes
-3. You detect a Japanese JD → suggest switching to Japanese modes
-
-**When NOT to:** If the user applies to English-language roles, even at French, German, or Japanese companies, use the default English modes.
-
 ### Skill Modes
 
 | If the user... | Mode |
@@ -303,7 +278,7 @@ modes/ofertas.md          ← Offer comparison
 ### Evaluation Flow (auto-pipeline)
 
 1. Input: JD text or URL
-2. Patchright verifies URL is still active (`browser_navigate` + `browser_snapshot`)
+2. agent-browser verifies URL is still active (`open <url>` + `snapshot -i`)
 3. Detect archetype (one of 6 in `modes/_shared.md`)
 4. Evaluate blocks A–F (role summary, CV match, level, comp, CV personalization, interview prep)
 5. Score: weighted average across 10 dimensions (1–5)
@@ -316,7 +291,7 @@ modes/ofertas.md          ← Offer comparison
 
 `batch/batch-runner.sh` orchestrates N parallel `claude -p` worker processes. Each worker receives `batch/batch-prompt.md` as full context and produces a report, PDF, and TSV line independently. State is tracked in `batch/batch-state.tsv` to support resume. After all workers finish, run `node merge-tracker.mjs`.
 
-**CRITICAL: NEVER launch 2+ agents with Patchright in parallel.** They share a single browser instance. Batch mode uses headless `claude -p` (no browser) — Patchright is only for interactive single-offer verification.
+**CRITICAL: NEVER launch 2+ agents with browser automation in parallel.** Batch mode uses headless `claude -p` (no browser) -- agent-browser is only for interactive single-offer verification.
 
 ### Dashboard TUI
 
@@ -347,8 +322,7 @@ Standalone Go app in `dashboard/`. Reads `data/applications.md` directly. Filter
 ## Offer Verification -- MANDATORY
 
 **NEVER trust WebSearch/WebFetch to verify if an offer is still active.** ALWAYS use Patchright:
-1. `browser_navigate` to the URL
-2. `browser_snapshot` to read content
+2. agent-browser opens the URL + `snapshot -i` to read content
 3. Only footer/navbar without JD = closed. Title + description + Apply = active.
 
 **Exception for batch workers (`claude -p`):** Patchright is not available in headless pipe mode. Use WebFetch as fallback and mark the report header with `**Verification:** unconfirmed (batch mode)`. The user can verify manually later.
@@ -372,7 +346,7 @@ Standalone Go app in `dashboard/`. Reads `data/applications.md` directly. Filter
 
 ## Stack and Conventions
 
-- Node.js (mjs modules), Patchright (PDF + scraping), YAML (config), HTML/CSS (template), Markdown (data), Canva MCP (optional visual CV)
+- Node.js (mjs modules), agent-browser (PDF + scraping), YAML (config), HTML/CSS (template), Markdown (data), Canva MCP (optional visual CV)
 - Scripts in `.mjs`, configuration in YAML
 - Output in `output/` (gitignored), Reports in `reports/`
 - JDs in `jds/` (referenced as `local:jds/{file}` in pipeline.md)

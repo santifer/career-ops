@@ -93,7 +93,7 @@ Analyze the job posting for signals that indicate whether this is a real, active
 
 ### Signals to analyze (in order):
 
-**1. Posting Freshness** (from Patchright snapshot, already captured in Paso 0):
+**1. Posting Freshness** (from agent-browser snapshot, already captured in Step 0):
 - Date posted or "X days ago" -- extract from page
 - Apply button state (active / closed / missing / redirects to generic page)
 - If URL redirected to generic careers page, note it

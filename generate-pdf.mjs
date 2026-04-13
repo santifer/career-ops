@@ -1,89 +1,80 @@
 #!/usr/bin/env node
 
 /**
- * generate-pdf.mjs — HTML → PDF via Patchright
+ * generate-pdf.mjs — HTML → PDF via agent-browser
  *
  * Usage:
- *   node career-ops/generate-pdf.mjs <input.html> <output.pdf> [--format=letter|a4]
+ *   node generate-pdf.mjs <input.html> <output.pdf> [--format=letter|a4]
  *
- * Requires: patchright installed (npm i patchright).
- * Uses Patchright (undetectable Chromium) to render the HTML and produce a clean, ATS-parseable PDF.
+ * Requires: agent-browser installed + Chrome downloaded.
  */
 
-import { chromium } from 'patchright';
-import { resolve, dirname } from 'path';
+import { spawn } from 'child_process';
+import { resolve } from 'path';
 import { readFile } from 'fs/promises';
-import { fileURLToPath } from 'url';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+function ab(args, timeout = 60000) {
+  return new Promise((resolve, reject) => {
+    const proc = spawn('agent-browser', args, { timeout, stdio: ['ignore', 'pipe', 'pipe'] });
+    let stdout = '', stderr = '';
+    proc.stdout.on('data', d => stdout += d);
+    proc.stderr.on('data', d => stderr += d);
+    proc.on('close', code => {
+      if (code === 0) {
+        try { resolve(JSON.parse(stdout)); }
+        catch { resolve({ success: true }); }
+      } else {
+        reject(new Error(stderr || `agent-browser exited ${code}`));
+      }
+    });
+    proc.on('error', reject);
+  });
+}
 
-/**
- * Normalize text for ATS compatibility by converting problematic Unicode.
- *
- * ATS parsers and legacy systems often fail on em-dashes, smart quotes,
- * zero-width characters, and non-breaking spaces. These cause mojibake,
- * parsing errors, or display issues. See issue #1.
- *
- * Only touches body text — preserves CSS, JS, tag attributes, and URLs.
- * Returns { html, replacements } so the caller can log what was changed.
- */
 function normalizeTextForATS(html) {
   const replacements = {};
   const bump = (key, n) => { replacements[key] = (replacements[key] || 0) + n; };
 
   const masks = [];
-  const masked = html.replace(
-    /<(style|script)\b[^>]*>[\s\S]*?<\/\1>/gi,
-    (match) => {
-      const token = `\u0000MASK${masks.length}\u0000`;
-      masks.push(match);
-      return token;
-    }
-  );
+  const masked = html.replace(/<(style|script)\b[^>]*>[\s\S]*?<\/\1>/gi, (m) => {
+    masks.push(m);
+    return `\u0000MASK${masks.length - 1}\u0000`;
+  });
 
   let out = '';
-  let i = 0;
-  while (i < masked.length) {
+  for (let i = 0; i < masked.length; ) {
     const lt = masked.indexOf('<', i);
-    if (lt === -1) { out += sanitizeText(masked.slice(i)); break; }
-    out += sanitizeText(masked.slice(i, lt));
+    if (lt === -1) { out += sanitize(masked.slice(i)); break; }
+    out += sanitize(masked.slice(i, lt));
     const gt = masked.indexOf('>', lt);
     if (gt === -1) { out += masked.slice(lt); break; }
     out += masked.slice(lt, gt + 1);
     i = gt + 1;
   }
 
-  const restored = out.replace(/\u0000MASK(\d+)\u0000/g, (_, n) => masks[Number(n)]);
-  return { html: restored, replacements };
+  return { html: out.replace(/\u0000MASK(\d+)\u0000/g, (_, n) => masks[n]), replacements };
 
-  function sanitizeText(text) {
+  function sanitize(text) {
     if (!text) return text;
-    let t = text;
-    t = t.replace(/\u2014/g, () => { bump('em-dash', 1); return '-'; });
-    t = t.replace(/\u2013/g, () => { bump('en-dash', 1); return '-'; });
-    t = t.replace(/[\u201C\u201D\u201E\u201F]/g, () => { bump('smart-double-quote', 1); return '"'; });
-    t = t.replace(/[\u2018\u2019\u201A\u201B]/g, () => { bump('smart-single-quote', 1); return "'"; });
-    t = t.replace(/\u2026/g, () => { bump('ellipsis', 1); return '...'; });
-    t = t.replace(/[\u200B\u200C\u200D\u2060\uFEFF]/g, () => { bump('zero-width', 1); return ''; });
-    t = t.replace(/\u00A0/g, () => { bump('nbsp', 1); return ' '; });
-    return t;
+    return text
+      .replace(/\u2014/g, () => { bump('em-dash', 1); return '-'; })
+      .replace(/\u2013/g, () => { bump('en-dash', 1); return '-'; })
+      .replace(/[\u201C\u201D\u201E\u201F]/g, () => { bump('smart-double-quote', 1); return '"'; })
+      .replace(/[\u2018\u2019\u201A\u201B]/g, () => { bump('smart-single-quote', 1); return "'"; })
+      .replace(/\u2026/g, () => { bump('ellipsis', 1); return '...'; })
+      .replace(/[\u200B\u200C\u200D\u2060\uFEFF]/g, () => { bump('zero-width', 1); return ''; })
+      .replace(/\u00A0/g, () => { bump('nbsp', 1); return ' '; });
   }
 }
 
 async function generatePDF() {
   const args = process.argv.slice(2);
 
-  // Parse arguments
   let inputPath, outputPath, format = 'a4';
-
   for (const arg of args) {
-    if (arg.startsWith('--format=')) {
-      format = arg.split('=')[1].toLowerCase();
-    } else if (!inputPath) {
-      inputPath = arg;
-    } else if (!outputPath) {
-      outputPath = arg;
-    }
+    if (arg.startsWith('--format=')) format = arg.split('=')[1].toLowerCase();
+    else if (!inputPath) inputPath = arg;
+    else outputPath = arg;
   }
 
   if (!inputPath || !outputPath) {
@@ -94,7 +85,6 @@ async function generatePDF() {
   inputPath = resolve(inputPath);
   outputPath = resolve(outputPath);
 
-  // Validate format
   const validFormats = ['a4', 'letter'];
   if (!validFormats.includes(format)) {
     console.error(`Invalid format "${format}". Use: ${validFormats.join(', ')}`);
@@ -105,75 +95,39 @@ async function generatePDF() {
   console.log(`📁 Output: ${outputPath}`);
   console.log(`📏 Format: ${format.toUpperCase()}`);
 
-  // Read HTML to inject font paths as absolute file:// URLs
   let html = await readFile(inputPath, 'utf-8');
 
-  // Resolve font paths relative to career-ops/fonts/
-  const fontsDir = resolve(__dirname, 'fonts');
-  html = html.replace(
-    /url\(['"]?\.\/fonts\//g,
-    `url('file://${fontsDir}/`
-  );
-  // Close any unclosed quotes from the replacement (handles all font formats)
-  html = html.replace(
-    /file:\/\/([^'")]+)\.(woff2?|ttf|otf)['"]?\)/g,
-    `file://$1.$2')`
-  );
-
-  // Normalize text for ATS compatibility (issue #1)
-  const normalized = normalizeTextForATS(html);
-  html = normalized.html;
-  const totalReplacements = Object.values(normalized.replacements).reduce((a, b) => a + b, 0);
-  if (totalReplacements > 0) {
-    const breakdown = Object.entries(normalized.replacements).map(([k, v]) => `${k}=${v}`).join(', ');
-    console.log(`🧹 ATS normalization: ${totalReplacements} replacements (${breakdown})`);
+  const { html: normalized, replacements } = normalizeTextForATS(html);
+  html = normalized;
+  const total = Object.values(replacements).reduce((a, b) => a + b, 0);
+  if (total > 0) {
+    const breakdown = Object.entries(replacements).map(([k, v]) => `${k}=${v}`).join(', ');
+    console.log(`🧹 ATS normalization: ${total} replacements (${breakdown})`);
   }
 
-  const browser = await chromium.launch({ headless: true });
+  // Write normalized HTML to temp file and open it
+  const { writeFile, unlink } = await import('fs/promises');
+  const tmpPath = outputPath + '.tmp.html';
+  await writeFile(tmpPath, html, 'utf-8');
+
   try {
-    const page = await browser.newPage();
-
-    // Set content with file base URL for any relative resources
-    await page.setContent(html, {
-      waitUntil: 'networkidle',
-      baseURL: `file://${dirname(inputPath)}/`,
-    });
-
-    // Wait for fonts to load
-    await page.evaluate(() => document.fonts.ready);
-
-    // Generate PDF
-    const pdfBuffer = await page.pdf({
-      format: format,
-      printBackground: true,
-      margin: {
-        top: '0.6in',
-        right: '0.6in',
-        bottom: '0.6in',
-        left: '0.6in',
-      },
-      preferCSSPageSize: false,
-    });
-
-    // Write PDF
-    const { writeFile } = await import('fs/promises');
-    await writeFile(outputPath, pdfBuffer);
-
-    // Count pages (approximate from PDF structure)
-    const pdfString = pdfBuffer.toString('latin1');
-    const pageCount = (pdfString.match(/\/Type\s*\/Page[^s]/g) || []).length;
-
-    console.log(`✅ PDF generated: ${outputPath}`);
-    console.log(`📊 Pages: ${pageCount}`);
-    console.log(`📦 Size: ${(pdfBuffer.length / 1024).toFixed(1)} KB`);
-
-    return { outputPath, pageCount, size: pdfBuffer.length };
+    await ab(['open', `file://${tmpPath}`, '--json']);
+    await ab(['wait', '--load', 'networkidle', '--timeout', '10000', '--json']);
+    await ab(['eval', 'document.fonts.ready', '--json']);
+    await ab(['pdf', outputPath, '--json']);
   } finally {
-    await browser.close();
+    try { await unlink(tmpPath); } catch { /* ignore */ }
+    await ab(['close', '--json']);
   }
+
+  const { statSync } = await import('fs');
+  const size = statSync(outputPath).size;
+  const pdfString = await readFile(outputPath, 'latin1');
+  const pageCount = (pdfString.match(/\/Type\s*\/Page[^s]/g) || []).length;
+
+  console.log(`✅ PDF generated: ${outputPath}`);
+  console.log(`📊 Pages: ${pageCount}`);
+  console.log(`📦 Size: ${(size / 1024).toFixed(1)} KB`);
 }
 
-generatePDF().catch((err) => {
-  console.error('❌ PDF generation failed:', err.message);
-  process.exit(1);
-});
+generatePDF().catch(err => { console.error('❌ PDF generation failed:', err.message); process.exit(1); });

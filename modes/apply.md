@@ -1,33 +1,33 @@
-# Modo: apply — Asistente de Aplicación en Vivo
+# Mode: apply — Live Application Assistant
 
-Modo interactivo para cuando el candidato está rellenando un formulario de aplicación en Chrome. Lee lo que hay en pantalla, carga el contexto previo de la oferta, y genera respuestas personalizadas para cada pregunta del formulario.
+Interactive mode for when the candidate fills a job application form. Reads the page, loads prior offer context, and generates personalized answers for each form question.
 
-## Requisitos
+## Requirements
 
-- **Mejor con Patchright visible**: En modo visible, el candidato ve el navegador y Claude puede interactuar con la página.
-- **Sin Patchright**: el candidato comparte un screenshot o pega las preguntas manualmente.
+- **Best with agent-browser (visible)**: Candidate sees the browser, Claude can interact with the page.
+- **Without agent-browser**: Candidate shares a screenshot or pastes form questions manually.
 
 ## Workflow
 
 ```
-1. DETECTAR    → Leer Chrome tab activa (screenshot/URL/título)
-2. IDENTIFICAR → Extraer empresa + rol de la página
-3. BUSCAR      → Match contra reports existentes en reports/
-4. CARGAR      → Leer report completo + Section G (si existe)
-5. COMPARAR    → ¿El rol en pantalla coincide con el evaluado? Si cambió → avisar
-6. ANALIZAR    → Identificar TODAS las preguntas del formulario visibles
-7. GENERAR     → Para cada pregunta, generar respuesta personalizada
-8. PRESENTAR   → Mostrar respuestas formateadas para copy-paste
+1. DETECT     → Read active Chrome tab (screenshot/URL/title)
+2. IDENTIFY   → Extract company + role from page
+3. LOOKUP     → Match against existing reports in reports/
+4. LOAD       → Read full report + Section G (if exists)
+5. COMPARE    → Does page role match evaluated role? Changed → warn
+6. ANALYZE   → Identify ALL visible form questions
+7. GENERATE   → For each question, generate personalized answer
+8. PRESENT    → Show formatted answers for copy-paste
 ```
 
-## Paso 1 — Detectar la oferta
+## Step 1 — Detect the Offer
 
-**Con Patchright:** Tomar snapshot de la página activa. Leer título, URL, y contenido visible.
+**With agent-browser:** `agent-browser snapshot -i --json` to read title, URL, and visible content.
 
-**Sin Patchright:** Pedir al candidato que:
-- Comparta un screenshot del formulario (Read tool lee imágenes)
-- O pegue las preguntas del formulario como texto
-- O diga empresa + rol para que lo busquemos
+**Without:** Ask the candidate to:
+- Share a screenshot of the form (Read tool reads images)
+- Or paste form questions as text
+- Or name company + role so we can search
 
 ## Paso 2 — Identificar y buscar contexto
 

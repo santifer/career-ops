@@ -41,23 +41,17 @@ function checkDependencies() {
   };
 }
 
-async function checkPlaywright() {
+async function checkAgentBrowser() {
   try {
-    const { chromium } = await import('patchright');
-    const execPath = chromium.executablePath();
-    if (existsSync(execPath)) {
-      return { pass: true, label: 'Patchright chromium installed' };
-    }
-    return {
-      pass: false,
-      label: 'Patchright chromium not installed',
-      fix: 'Run: npx patchright install chromium',
-    };
+    const { execSync } = await import('child_process');
+    const version = execSync('agent-browser --version 2>/dev/null', { encoding: 'utf-8' }).trim();
+    if (!version) throw new Error('no version');
+    return { pass: true, label: `agent-browser ${version} installed` };
   } catch {
     return {
       pass: false,
-      label: 'Patchright chromium not installed',
-      fix: 'Run: npx patchright install chromium',
+      label: 'agent-browser not installed',
+      fix: 'Run: npm install -g agent-browser && agent-browser install',
     };
   }
 }
@@ -156,7 +150,7 @@ async function main() {
   const checks = [
     checkNodeVersion(),
     checkDependencies(),
-    await checkPlaywright(),
+    await checkAgentBrowser(),
     checkCv(),
     checkProfile(),
     checkPortals(),

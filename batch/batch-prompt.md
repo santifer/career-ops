@@ -142,7 +142,7 @@ Top 5 cambios al CV + Top 5 cambios a LinkedIn.
 
 Analyze posting signals to assess whether this is a real, active opening.
 
-**Batch mode limitations:** Patchright is not available, so posting freshness signals (exact days posted, apply button state) cannot be directly verified. Mark these as "unverified (batch mode)."
+**Batch mode limitations:** Browser automation is not available in headless mode, so posting freshness signals (exact days posted, apply button state) cannot be directly verified. Mark these as "unverified (batch mode)."
 
 **What IS available in batch mode:**
 1. **Description quality analysis** -- Full JD text is available. Analyze specificity, requirements realism, salary transparency, boilerplate ratio.

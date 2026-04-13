@@ -22,6 +22,9 @@ modes/_profile.md
 .update-dismissed
 .update-lock
 
+# Browser sessions (agent-browser session state + screenshots)
+.sessions/
+
 # Generated
 .resolved-prompt-*
 node_modules/
