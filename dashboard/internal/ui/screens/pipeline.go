@@ -42,6 +42,11 @@ type PipelineUpdateStatusMsg struct {
 	NewStatus     string
 }
 
+// PipelineRefreshMsg requests a full reload of applications and reports.
+type PipelineRefreshMsg struct {
+	CareerOpsPath string
+}
+
 type reportSummary struct {
 	archetype string
 	tldr      string
@@ -159,6 +164,23 @@ func (m *PipelineModel) EnrichReport(reportPath, archetype, tldr, remote, comp s
 	}
 }
 
+// Refresh replaces apps/metrics and clears the report cache so the next
+// render re-reads summaries from disk. Preserves cursor, tab, sort, view,
+// and scroll state. Clamps cursor if rows disappeared.
+func (m *PipelineModel) Refresh(apps []model.CareerApplication, metrics model.PipelineMetrics) {
+	m.apps = apps
+	m.metrics = metrics
+	m.reportCache = make(map[string]reportSummary)
+	m.applyFilterAndSort()
+	if m.cursor >= len(m.filtered) {
+		m.cursor = len(m.filtered) - 1
+	}
+	if m.cursor < 0 {
+		m.cursor = 0
+	}
+	m.adjustScroll()
+}
+
 // CurrentApp returns the currently selected application, if any.
 func (m PipelineModel) CurrentApp() (model.CareerApplication, bool) {
 	if m.cursor < 0 || m.cursor >= len(m.filtered) {
@@ -243,6 +265,12 @@ func (m PipelineModel) handleKey(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
 			m.viewMode = "flat"
 		} else {
 			m.viewMode = "grouped"
+		}
+
+	case "r":
+		path := m.careerOpsPath
+		return m, func() tea.Msg {
+			return PipelineRefreshMsg{CareerOpsPath: path}
 		}
 
 	case "enter":
@@ -774,6 +802,7 @@ func (m PipelineModel) renderHelp() string {
 		keyStyle.Render("o") + descStyle.Render(" open URL  ") +
 		keyStyle.Render("c") + descStyle.Render(" change  ") +
 		keyStyle.Render("v") + descStyle.Render(" view  ") +
+		keyStyle.Render("r") + descStyle.Render(" refresh  ") +
 		keyStyle.Render("Esc") + descStyle.Render(" quit")
 
 	gap := m.width - lipgloss.Width(keys) - lipgloss.Width(brand) - 2
