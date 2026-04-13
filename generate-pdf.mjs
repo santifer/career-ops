@@ -13,10 +13,55 @@
 import { chromium } from 'playwright';
 import { resolve, dirname } from 'path';
 import { readFile } from 'fs/promises';
-import { mkdirSync } from 'fs';
+import { existsSync, readFileSync, mkdirSync } from 'fs';
 import { fileURLToPath } from 'url';
+import yaml from 'js-yaml';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+
+/**
+ * Handle photo substitution from config/profile.yml.
+ * Validates format (.jpg/.jpeg/.png), encodes to base64, replaces {{PHOTO_BLOCK}}.
+ */
+function handlePhotoSubstitution(html, projectRoot) {
+  const configPath = resolve(projectRoot, 'config', 'profile.yml');
+  if (!existsSync(configPath)) {
+    return html.replace(/\{\{PHOTO_BLOCK\}\}/g, '');
+  }
+
+  try {
+    const config = yaml.load(readFileSync(configPath, 'utf8'));
+    const photoPath = config?.photo;
+
+    if (!photoPath || typeof photoPath !== 'string') {
+      return html.replace(/\{\{PHOTO_BLOCK\}\}/g, '');
+    }
+
+    const fullPath = resolve(projectRoot, photoPath);
+    if (!existsSync(fullPath)) {
+      console.warn(`⚠️ Photo file not found: ${fullPath}`);
+      return html.replace(/\{\{PHOTO_BLOCK\}\}/g, '');
+    }
+
+    const ext = photoPath.split('.').pop().toLowerCase();
+    const supported = ['jpg', 'jpeg', 'png'];
+    if (!supported.includes(ext)) {
+      console.warn(`⚠️ Unsupported photo format: .${ext}. Supported: ${supported.join(', ')}`);
+      return html.replace(/\{\{PHOTO_BLOCK\}\}/g, '');
+    }
+
+    const mime = ext === 'png' ? 'image/png' : 'image/jpeg';
+    const imgBuffer = readFileSync(fullPath);
+    const base64 = imgBuffer.toString('base64');
+    const dataUri = `data:${mime};base64,${base64}`;
+
+    const photoHtml = `<img class="cv-photo" src="${dataUri}" alt="">`;
+    return html.replace(/\{\{PHOTO_BLOCK\}\}/g, photoHtml);
+  } catch (err) {
+    console.warn(`⚠️ Photo handling error: ${err.message}`);
+    return html.replace(/\{\{PHOTO_BLOCK\}\}/g, '');
+  }
+}
 
 // Ensure output directory exists (fresh setup)
 mkdirSync(resolve(__dirname, 'output'), { recursive: true });
@@ -111,6 +156,9 @@ async function generatePDF() {
 
   // Read HTML to inject font paths as absolute file:// URLs
   let html = await readFile(inputPath, 'utf-8');
+
+  // Handle photo substitution from config/profile.yml
+  html = handlePhotoSubstitution(html, __dirname);
 
   // Resolve font paths relative to career-ops/fonts/
   const fontsDir = resolve(__dirname, 'fonts');
