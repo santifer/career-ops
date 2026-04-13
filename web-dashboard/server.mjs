@@ -327,12 +327,10 @@ app.post('/api/session/start', async (req, res) => {
   sessions.set(sessionId, session);
   res.json({ sessionId, command });
 
-  // Run claude in background with mode context as system prompt
+  // Run claude in background — prepend mode context to the message so Claude
+  // keeps its default system prompt (with tool access and project awareness)
   try {
     const args = ['-p', '--output-format', 'json', '--permission-mode', 'bypassPermissions'];
-    if (modeContext) {
-      args.push('--system-prompt', modeContext);
-    }
     const proc = spawn('claude', args, {
       cwd: ROOT,
       env: { ...process.env, TERM: 'dumb' },
@@ -340,7 +338,10 @@ app.post('/api/session/start', async (req, res) => {
     });
     session.proc = proc;
 
-    proc.stdin.write(userMessage);
+    const fullMessage = modeContext
+      ? `Follow these instructions:\n\n${modeContext}\n\n---\n\nUser request:\n\n${userMessage}`
+      : userMessage;
+    proc.stdin.write(fullMessage);
     proc.stdin.end();
 
     let stdout = '', stderr = '';
