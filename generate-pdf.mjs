@@ -84,6 +84,7 @@ function handlePhotoSubstitution(html, projectRoot) {
   }
 }
 
+
 // Ensure output directory exists (fresh setup)
 mkdirSync(resolve(__dirname, 'output'), { recursive: true });
 
