@@ -63,7 +63,13 @@ export const SOURCES = [
     name: 'greenhouse',
     type: 'ats-api',
     detect(company) {
-      if (company.api?.includes('boards-api.greenhouse.io')) return { url: company.api };
+      if (company.api) {
+        try {
+          if (new URL(company.api).hostname === 'boards-api.greenhouse.io') {
+            return { url: company.api };
+          }
+        } catch { /* invalid URL — fall through to careers_url inference */ }
+      }
       const m = (company.careers_url || '')
         .match(/job-boards(?:\.eu)?\.greenhouse\.io\/([^/?#]+)/);
       if (m) return { url: `https://boards-api.greenhouse.io/v1/boards/${m[1]}/jobs` };
