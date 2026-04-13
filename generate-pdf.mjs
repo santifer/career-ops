@@ -131,6 +131,12 @@ function normalizeTextForATS(html) {
   }
 }
 
+/**
+ * Main entry point — parse CLI args, read HTML, embed photo, normalize text,
+ * render with Playwright Chromium, and write the output PDF.
+ *
+ * CLI arguments: <input.html> <output.pdf> [--format=letter|a4]
+ */
 async function generatePDF() {
   const args = process.argv.slice(2);
 
