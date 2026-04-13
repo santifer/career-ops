@@ -77,6 +77,7 @@ Usar el template en `cv-template.html`. Reemplazar los placeholders `{{...}}` co
 | `{{PORTFOLIO_URL}}` | [from profile.yml] (o /es según idioma) |
 | `{{PORTFOLIO_DISPLAY}}` | [from profile.yml] (o /es según idioma) |
 | `{{LOCATION}}` | [from profile.yml] |
+| `{{PHOTO_BLOCK}}` | `<img class="cv-photo" ...>` o `""` si no hay `photo:` |
 | `{{SECTION_SUMMARY}}` | Professional Summary / Resumen Profesional |
 | `{{SUMMARY_TEXT}}` | Summary personalizado con keywords |
 | `{{SECTION_COMPETENCIES}}` | Core Competencies / Competencias Core |
@@ -181,6 +182,10 @@ Actualizar tracker si la oferta ya está registrada: cambiar PDF de ❌ a ✅.
 ## Profile Photo (DACH market)
 
 If `config/profile.yml` contains a `photo:` field with a path to an image file:
+
+0. Validate image format first:
+   - Supported: `.jpg`, `.jpeg`, `.png`
+   - If unsupported: log a warning and replace `{{PHOTO_BLOCK}}` with `""`
 
 1. Read the image file and encode it as a base64 data URI:
    `data:image/jpeg;base64,...` (or `image/png` for PNG files)
