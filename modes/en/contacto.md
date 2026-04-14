@@ -27,7 +27,7 @@
    - **Sentence 3 (CTA)**: "Would love to hear how your team is approaching [specific challenge]"
 
    ### Peer (referral)
-   - **Sentence 1 (Interest)**: Genuine reference to their work -- blog post, talk, open source project, or publication
+   - **Sentence 1 (Interest)**: Genuine reference to their work -- blog post, talk, open-source project, or publication
    - **Sentence 2 (Connection)**: Something the candidate is doing in the same space (NOT a job pitch)
    - **Sentence 3 (CTA)**: "I've been working on similar problems at [company], would love to hear your take on [topic]"
    - **Note**: Do NOT ask for a job. The referral happens naturally if the conversation flows.

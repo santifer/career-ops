@@ -42,7 +42,7 @@ Interactive mode for when the candidate is filling out an application form in Ch
 If the role on screen differs from the evaluated one:
 - **Warn the candidate**: "The role has changed from [X] to [Y]. Do you want me to re-evaluate or adapt the answers to the new title?"
 - **If adapting**: Adjust answers to the new role without re-evaluating
-- **If re-evaluating**: Run full A-F evaluation, update report, regenerate Section G
+- **If re-evaluating**: Run full A–G evaluation (including legitimacy), update report, regenerate Section G
 - **Update tracker**: Change role title in applications.md if appropriate
 
 ## Step 4 — Analyze form questions

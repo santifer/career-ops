@@ -205,13 +205,13 @@ Save the full evaluation to `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 - Current date
 - Company
 - Role
-- Score: match average (1-5)
 - Status: `Evaluated`
+- Score: match average (1-5)
 - PDF: ❌ (or ✅ if auto-pipeline generated PDF)
 - Report: relative link to the report .md (e.g.: `[001](reports/001-company-2026-01-01.md)`)
 
 **Tracker format:**
 
 ```markdown
-| # | Date | Company | Role | Score | Status | PDF | Report |
+| # | Date | Company | Role | Status | Score | PDF | Report |
 ```
