@@ -65,13 +65,13 @@ export function presetDescription(preset: BridgePreset): string {
 export function presetCommand(preset: BridgePreset): string {
   switch (preset) {
     case "fake":
-      return "npm --prefix bridge run start";
+      return "npm run ext:bridge:fake";
     case "real-claude":
-      return "CAREER_OPS_BRIDGE_MODE=real npm --prefix bridge run start";
+      return "npm run ext:bridge:claude";
     case "real-codex":
-      return "CAREER_OPS_BRIDGE_MODE=real CAREER_OPS_REAL_EXECUTOR=codex npm --prefix bridge run start";
+      return "npm run ext:bridge";
     case "sdk":
-      return "CAREER_OPS_BRIDGE_MODE=sdk ANTHROPIC_API_KEY=... npm --prefix bridge run start";
+      return "ANTHROPIC_API_KEY=... npm run ext:bridge:sdk";
   }
 }
 

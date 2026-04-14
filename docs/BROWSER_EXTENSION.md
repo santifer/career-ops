@@ -32,6 +32,51 @@ That now runs the existing tracker integrity checks plus:
 
 ## Start the Bridge
 
+The repo root now exposes short aliases so you do not have to type env vars by hand.
+
+Typical Codex flow:
+
+```bash
+npm run ext:start
+```
+
+That does two things from the repo root:
+
+- builds `extension/dist`
+- starts the bridge in `real / codex` mode
+
+Other common shortcuts:
+
+```bash
+npm run ext:build
+npm run ext:bridge
+npm run ext:bridge:claude
+npm run ext:bridge:fake
+ANTHROPIC_API_KEY=... npm run ext:bridge:sdk
+```
+
+If you want a simple macOS picker instead of remembering commands:
+
+```bash
+npm run ext:launcher
+```
+
+That opens a native dialog where you can choose build/start actions.
+
+The new default action is `Desktop launchpad (Codex)`, which will:
+
+- start `npm run ext:start` in Terminal
+- reveal `extension/dist` in Finder
+- open `chrome://extensions` in Chrome
+
+The first screen is now intentionally short:
+
+- `Desktop launchpad (Codex)`
+- `Desktop launchpad (Claude)`
+- `Advanced tools…`
+
+Less common maintenance actions live under `Advanced tools…` so the main launcher stays clean.
+
 Default mode is `fake`, which is safe for UI and integration testing.
 
 ```bash
@@ -45,6 +90,8 @@ CAREER_OPS_BRIDGE_MODE=real npm --prefix bridge run start
 CAREER_OPS_BRIDGE_MODE=real CAREER_OPS_REAL_EXECUTOR=codex npm --prefix bridge run start
 CAREER_OPS_BRIDGE_MODE=sdk ANTHROPIC_API_KEY=... npm --prefix bridge run start
 ```
+
+The raw commands above still work; the root aliases are just shorter wrappers around them.
 
 Bridge notes:
 
@@ -63,7 +110,7 @@ curl -s -H "x-career-ops-token: $(cat bridge/.bridge-token)" http://127.0.0.1:47
 ## Build and Load the Extension
 
 ```bash
-npm --prefix extension run build
+npm run ext:build
 ```
 
 Then in Chrome:
