@@ -30,9 +30,34 @@ Copy from `templates/portals.example.yml` and customize:
 
 1. **title_filter.positive**: Keywords matching your target roles
 2. **title_filter.negative**: Tech stacks or domains to exclude
-3. **location_filter** (optional): Constrain scans to specific cities/regions. Supports `allowed`, `blocked`, and `allow_remote` (default true). Omit the block entirely to keep the current behaviour of accepting all locations. See `templates/portals.example.yml` for a commented example.
+3. **location_filter** (optional): Constrain scans to specific cities/regions — see below
 4. **search_queries**: WebSearch queries for job boards (Ashby, Greenhouse, Lever)
 5. **tracked_companies**: Companies to check directly
+
+### location_filter (optional)
+
+Applied after `title_filter` and before dedup. If the block is omitted, or both
+`allowed` and `blocked` are empty, no location filtering happens (backward-compatible
+default).
+
+```yaml
+location_filter:
+  allowed: ["Sydney", "Melbourne", "Australia"]
+  blocked: ["Perth", "Adelaide"]
+  allow_remote: true
+```
+
+- **`allowed`** — case-insensitive substring OR-list. `"Sydney"` matches
+  `"Sydney NSW, Australia"`, `"Sydney (Hybrid)"`, etc.
+- **`blocked`** — explicit blocklist, always wins over `allowed`.
+- **`allow_remote`** — defaults to `true`. When on, any location containing
+  `remote`, `anywhere`, or `distributed` bypasses the `allowed` list so you
+  do not lose remote-friendly roles to a strict city allowlist. Set to
+  `false` to exclude remote roles too.
+- Jobs with empty/unknown location pass through only when `allowed` is empty.
+
+The scan summary prints a `Filtered by location` line so you can see how
+many results the filter dropped.
 
 ## CV Template (templates/cv-template.html)
 
