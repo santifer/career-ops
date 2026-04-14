@@ -131,18 +131,20 @@ search_queries:
     enabled: true
 
   # -- Lever --
+  # Disabled: jobs.lever.co returns 403 on liveness verification, making discovered URLs unverifiable (see issue #285)
   - name: Lever — AI PM
     query: 'site:jobs.lever.co "AI Product Manager" OR "Solutions Architect" AI remote'
-    enabled: true
+    enabled: false
 
   - name: Lever — AI Roles
     query: 'site:jobs.lever.co "AI Engineer" OR "Agentic" OR "LLMOps" OR "Automation" remote'
-    enabled: true
+    enabled: false
 
   # -- Wellfound (startups) --
+  # Disabled: wellfound.com returns 403 on liveness verification, making discovered URLs unverifiable (see issue #285)
   - name: Wellfound — AI PM
     query: 'site:wellfound.com "AI Product Manager" OR "AI Solutions" remote'
-    enabled: true
+    enabled: false
 
   # -- Workable --
   - name: Workable — AI Roles
@@ -182,9 +184,10 @@ search_queries:
     enabled: true
 
   # -- RemoteFront (aggregator) --
+  # Disabled: remotefront.com returns 403 on liveness verification, making discovered URLs unverifiable (see issue #285)
   - name: RemoteFront — AI & Automation
     query: 'site:remotefront.com "AI Engineer" OR "Solutions Engineer" OR "Automation" OR "LLM" OR "Agent" remote'
-    enabled: true
+    enabled: false
 
   # -- Remote-friendly Europe boards --
 
