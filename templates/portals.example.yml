@@ -7,6 +7,10 @@
 #   3. WebSearch with site: filters (broad discovery, may be stale)
 #
 # IMPORTANT: Each company in tracked_companies MUST have careers_url.
+#   careers_url must be the BRANDED company URL, never the raw ATS endpoint.
+#   ✅ careers.mastercard.com   ❌ mastercard.wd1.myworkdayjobs.com
+#   ✅ openai.com/careers        ❌ boards.greenhouse.io/openai
+#   Using raw ATS URLs causes false 410 errors — job IDs differ between branded and raw URLs.
 #
 # HOW TO CUSTOMIZE:
 #   1. Copy this file to portals.yml in the project root
