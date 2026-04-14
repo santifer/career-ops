@@ -18,6 +18,7 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = process.env.PORT || 3000;
+const HOST = process.env.HOST || '127.0.0.1';
 const CAREER_OPS_PATH = process.env.CAREER_OPS_PATH
   ? path.resolve(process.env.CAREER_OPS_PATH)
   : path.resolve(__dirname, '..');
@@ -198,29 +199,54 @@ const DEMO_APPLICATIONS = [
 
 // ─── Data loaders ─────────────────────────────────────────────────────────────
 
+// Short-lived cache so parallel /api/applications + /api/metrics requests fired
+// on page load share a single synchronous read+parse instead of doing it twice.
+let _appsCache = null;
+let _appsCacheAt = 0;
+const APPS_CACHE_TTL = 2000; // ms — collapses the parallel browser burst
+
 /**
  * Load and parse applications.md.
- * Returns { apps, demo } where demo=true only when no tracker file was found.
- * An existing file with zero parsed rows (e.g. fresh / header-only) is treated
- * as live with an empty list, not as demo mode.
+ * Returns { apps, demo } where demo=true only when no tracker file is found.
+ * An existing file with zero parsed rows (fresh / header-only) is treated as
+ * live with an empty list.  A file that exists but cannot be read returns an
+ * empty live list rather than falling through to demo data.
  */
 function loadApplications() {
+  if (_appsCache && Date.now() - _appsCacheAt < APPS_CACHE_TTL) {
+    return _appsCache;
+  }
+
   const candidates = [
     path.join(CAREER_OPS_PATH, 'data', 'applications.md'),
     path.join(CAREER_OPS_PATH, 'applications.md'),
   ];
 
+  let result;
+  let foundFile = false;
   for (const p of candidates) {
     if (fs.existsSync(p)) {
-      // File found — parse it even if it yields zero rows (live/empty state)
-      const content = fs.readFileSync(p, 'utf-8');
-      const apps = parseApplicationsMd(content);
-      return { apps, demo: false };
+      foundFile = true;
+      try {
+        const content = fs.readFileSync(p, 'utf-8');
+        const apps = parseApplicationsMd(content);
+        result = { apps, demo: false };
+      } catch (err) {
+        // File exists but is unreadable — stay live with empty list
+        console.error(`Failed to read ${p}:`, err.message);
+        result = { apps: [], demo: false };
+      }
+      break;
     }
   }
 
-  // No tracker file at all — show demo data
-  return { apps: DEMO_APPLICATIONS, demo: true };
+  if (!foundFile) {
+    result = { apps: DEMO_APPLICATIONS, demo: true };
+  }
+
+  _appsCache = result;
+  _appsCacheAt = Date.now();
+  return result;
 }
 
 /**
@@ -394,11 +420,11 @@ app.get('/api/pdf-path', (req, res) => {
 
 // ─── Start ────────────────────────────────────────────────────────────────────
 
-app.listen(PORT, '127.0.0.1', () => {
+app.listen(PORT, HOST, () => {
   console.log('');
   console.log('  Career Ops Dashboard');
   console.log('  ─────────────────────────────────────────');
-  console.log(`  URL:           http://localhost:${PORT}`);
+  console.log(`  URL:           http://${HOST}:${PORT}`);
   console.log(`  Data source:   ${CAREER_OPS_PATH}`);
   const { demo } = loadApplications();
   if (demo) {

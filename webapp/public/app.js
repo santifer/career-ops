@@ -179,9 +179,6 @@ async function loadAll() {
 
 function showError(msg) {
   document.getElementById('dashboard-subtitle').textContent = msg;
-  ['recent-tbody', 'pipeline-tbody'].forEach((id) => {
-    const el = document.getElementById(id);
-  });
   // Recent table has 6 columns, pipeline table has 7 — update each separately
   const recentTbody = document.getElementById('recent-tbody');
   if (recentTbody) recentTbody.innerHTML = `<tr><td colspan="6" class="table-empty">
@@ -579,14 +576,16 @@ function openReport(row) {
     })
     .then(({ content }) => {
       let html;
-      if (typeof marked !== 'undefined') {
+      if (typeof marked !== 'undefined' && typeof DOMPurify !== 'undefined') {
+        // Parse markdown then sanitize — DOMPurify must be present to render HTML
         const raw = marked.parse(content);
-        // Sanitize with DOMPurify when available to prevent XSS from
-        // report content that may include HTML copied from job postings.
-        html = typeof DOMPurify !== 'undefined'
-          ? DOMPurify.sanitize(raw, { USE_PROFILES: { html: true } })
-          : raw;
+        html = DOMPurify.sanitize(raw, { USE_PROFILES: { html: true } });
       } else {
+        // DOMPurify unavailable (CDN failure) — fall back to escaped plain text
+        // rather than injecting unsanitized HTML into the page.
+        if (typeof marked !== 'undefined') {
+          console.warn('DOMPurify not loaded; rendering report as plain text for safety');
+        }
         html = `<pre>${esc(content)}</pre>`;
       }
       bodyEl.innerHTML = `<div class="markdown-body">${html}</div>`;
@@ -624,7 +623,7 @@ async function openPDF(reportPath) {
   if (!overlay || !iframe) return;
 
   // Reset state
-  iframe.src = '';
+  iframe.src = 'about:blank';
   if (errorEl) errorEl.style.display = 'none';
   if (titleEl) titleEl.textContent = 'Loading PDF…';
 
@@ -667,7 +666,7 @@ function closePDF() {
   const overlay = document.getElementById('pdf-overlay');
   if (overlay) overlay.classList.remove('open');
   const iframe = document.getElementById('pdf-iframe');
-  if (iframe) iframe.src = ''; // Stop any in-progress download
+  if (iframe) iframe.src = 'about:blank'; // Stop any in-progress download
   document.body.style.overflow = '';
 }
 
