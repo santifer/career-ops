@@ -134,6 +134,26 @@ function buildTitleFilter(titleFilter) {
   };
 }
 
+/**
+ * Build a predicate that decides whether a job location passes the filter.
+ *
+ * Precedence, in order:
+ *   1. If no `allowed` and no `blocked` are configured, every location passes
+ *      (backward-compatible default — no filtering).
+ *   2. Empty / unknown `location` passes only when `allowed` is empty, so an
+ *      allowlist-only config does not silently accept unlabelled roles.
+ *   3. `blocked` is evaluated before everything else. It wins over remote
+ *      bypass and allowlist alike, so `"Remote - Perth WA"` is still dropped
+ *      when `blocked: ["Perth"]`.
+ *   4. Remote bypass: when `allow_remote !== false`, any location containing
+ *      `remote`, `anywhere`, or `distributed` bypasses the `allowed` list
+ *      (but never the blocklist — see step 3).
+ *   5. Allowlist: if `allowed` is empty, pass; otherwise require a case-
+ *      insensitive substring match against at least one entry.
+ *
+ * @param {{allowed?: string[], blocked?: string[], allow_remote?: boolean}} locationFilter
+ * @returns {(location: string|null|undefined) => boolean}
+ */
 function buildLocationFilter(locationFilter) {
   const allowed = (locationFilter?.allowed || []).map(k => k.toLowerCase());
   const blocked = (locationFilter?.blocked || []).map(k => k.toLowerCase());
@@ -146,10 +166,11 @@ function buildLocationFilter(locationFilter) {
     const lower = (location || '').toLowerCase();
     // Empty/unknown location: allow if no positive allowlist, block if allowlist is set
     if (!lower) return allowed.length === 0;
+    // Explicit blocklist wins over everything, including remote bypass.
+    // e.g. "Remote - Perth WA" is still blocked when blocked=["Perth"].
+    if (blocked.some(k => lower.includes(k))) return false;
     // Remote jobs bypass the city/region allowlist when allow_remote is on
     if (allowRemote && /\b(remote|anywhere|distributed)\b/.test(lower)) return true;
-    // Explicit blocklist always wins
-    if (blocked.some(k => lower.includes(k))) return false;
     // If an allowlist is set, location must match at least one entry
     if (allowed.length === 0) return true;
     return allowed.some(k => lower.includes(k));

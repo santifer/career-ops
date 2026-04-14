@@ -49,11 +49,14 @@ location_filter:
 
 - **`allowed`** — case-insensitive substring OR-list. `"Sydney"` matches
   `"Sydney NSW, Australia"`, `"Sydney (Hybrid)"`, etc.
-- **`blocked`** — explicit blocklist, always wins over `allowed`.
+- **`blocked`** — explicit blocklist, always wins. Evaluated before the
+  remote bypass, so `"Remote - Perth WA"` is still dropped when
+  `blocked: ["Perth"]`.
 - **`allow_remote`** — defaults to `true`. When on, any location containing
-  `remote`, `anywhere`, or `distributed` bypasses the `allowed` list so you
-  do not lose remote-friendly roles to a strict city allowlist. Set to
-  `false` to exclude remote roles too.
+  `remote`, `anywhere`, or `distributed` bypasses the `allowed` allowlist so
+  you do not lose remote-friendly roles to a strict city allowlist. Set to
+  `false` to exclude remote roles too. The remote bypass never overrides
+  `blocked`.
 - Jobs with empty/unknown location pass through only when `allowed` is empty.
 
 The scan summary prints a `Filtered by location` line so you can see how
