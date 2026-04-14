@@ -20,6 +20,7 @@ Leer `portals.yml` que contiene:
 - `search_queries`: Lista de queries WebSearch con `site:` filters por portal (descubrimiento amplio)
 - `tracked_companies`: Empresas específicas con `careers_url` para navegación directa
 - `title_filter`: Keywords positive/negative/seniority_boost para filtrado de títulos
+- `location_filter`: Keywords include/exclude para filtrar por ubicación (ej: `include: ["remote", "EMEA"]`)
 
 ## Estrategia de descubrimiento (3 niveles)
 
@@ -37,21 +38,33 @@ Leer `portals.yml` que contiene:
 
 Para empresas con API pública o feed estructurado, usar la respuesta JSON/XML como complemento rápido de Nivel 1. Es más rápido que Playwright y reduce errores de scraping visual.
 
-**Soporte actual (variables entre `{}`):**
-- **Greenhouse**: `https://boards-api.greenhouse.io/v1/boards/{company}/jobs`
-- **Ashby**: `https://jobs.ashbyhq.com/api/non-user-graphql?op=ApiJobBoardWithTeams`
-- **BambooHR**: lista `https://{company}.bamboohr.com/careers/list`; detalle de una oferta `https://{company}.bamboohr.com/careers/{id}/detail`
-- **Lever**: `https://api.lever.co/v0/postings/{company}?mode=json`
-- **Teamtailor**: `https://{company}.teamtailor.com/jobs.rss`
-- **Workday**: `https://{company}.{shard}.myworkdayjobs.com/wday/cxs/{company}/{site}/jobs`
+**`scan.mjs` soporta y auto-detecta los siguientes ATS desde `careers_url`:**
 
-**Convención de parsing por provider:**
-- `greenhouse`: `jobs[]` → `title`, `absolute_url`
-- `ashby`: GraphQL `ApiJobBoardWithTeams` con `organizationHostedJobsPageName={company}` → `jobBoard.jobPostings[]` (`title`, `id`; construir URL pública si no viene en payload)
-- `bamboohr`: lista `result[]` → `jobOpeningName`, `id`; construir URL de detalle `https://{company}.bamboohr.com/careers/{id}/detail`; para leer el JD completo, hacer GET del detalle y usar `result.jobOpening` (`jobOpeningName`, `description`, `datePosted`, `minimumExperience`, `compensation`, `jobOpeningShareUrl`)
-- `lever`: array raíz `[]` → `text`, `hostedUrl` (fallback: `applyUrl`)
-- `teamtailor`: RSS items → `title`, `link`
-- `workday`: `jobPostings[]`/`jobPostings` (según tenant) → `title`, `externalPath` o URL construida desde el host
+| ATS | Detección automática | Endpoint |
+|-----|---------------------|----------|
+| **Greenhouse** | `job-boards*.greenhouse.io` o campo `api:` explícito | GET JSON |
+| **Ashby** | `jobs.ashbyhq.com/{slug}` | GET JSON + compensación |
+| **Lever** | `jobs.lever.co/{slug}` | GET JSON |
+| **BambooHR** | `*.bamboohr.com` | GET JSON lista |
+| **Teamtailor** | `*.teamtailor.com` | GET RSS (XML) |
+| **Workday** | `*.myworkdayjobs.com/{site}` | POST JSON paginado |
+| **UKG / UltiPro** | `recruiting.ultipro.com/{orgId}/JobBoard/{boardId}` | POST JSON paginado |
+
+**Para ejecutar el scan de APIs sin tokens:** `node scan.mjs` o `node scan.mjs --dry-run`
+
+**Flags disponibles:**
+- `--dry-run`: preview sin escribir archivos
+- `--company {name}`: escanear solo una empresa
+- `--since {N}`: mostrar ofertas añadidas en los últimos N días (sin escanear)
+
+**Convención de parsing por provider (para uso manual con Playwright cuando scan.mjs no aplica):**
+- `greenhouse`: `jobs[]` → `title`, `absolute_url`, `location.name`
+- `ashby`: `jobs[]` → `title`, `jobUrl`, `location`, `compensationTierSummary`
+- `lever`: array raíz `[]` → `text`, `hostedUrl`, `categories.location`
+- `bamboohr`: `result[]` → `jobOpeningName`, `id`, `location.city`; URL pública: `https://{slug}.bamboohr.com/careers/{id}/detail`; JD completo vía GET detalle → `result.jobOpening`
+- `teamtailor`: RSS `<item>` → `<title>`, `<link>`, `<location>`
+- `workday`: POST → `jobPostings[]` → `title`, `externalPath`, `locationsText`; URL: `{host}{externalPath}`; paginado por `offset`
+- `ukg`: POST → `searchResults[]` → `title`, `requisitionId`, `location`; URL: `https://recruiting.ultipro.com/{orgId}/JobBoard/{boardId}?requisitionId={id}`; paginado por `pageNumber`
 
 ### Nivel 3 — WebSearch queries (DESCUBRIMIENTO AMPLIO)
 

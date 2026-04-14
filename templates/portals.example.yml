@@ -95,6 +95,25 @@ title_filter:
     - "Head"
     - "Director"
 
+# -- Location filter --
+# Optional. Filters based on the location field returned by the ATS.
+# include: if non-empty, at least one keyword must appear in the job's location (case-insensitive)
+# exclude: if any keyword appears in the location, the job is skipped
+# Leave both lists empty (default) to accept all locations.
+
+location_filter:
+  include: []
+    # [CUSTOMIZE] Uncomment and add your preferred locations, e.g.:
+    # - "remote"
+    # - "EMEA"
+    # - "Europe"
+    # - "Germany"
+    # - "Spain"
+  exclude: []
+    # [CUSTOMIZE] Uncomment to exclude specific locations, e.g.:
+    # - "on-site only"
+    # - "US only"
+
 # -- Search queries --
 # Each query triggers a WebSearch. Use site: to filter by portal.
 # The scanner extracts title, URL, and company from results.
@@ -889,3 +908,55 @@ tracked_companies:
     scan_query: '"Maxim AI" OR "getmaxim" careers "engineer" OR "product"'
     notes: "AI evaluation and observability platform. Bangalore-based, mostly on-site."
     enabled: true
+
+  # ── BambooHR ATS ─────────────────────────────────────────────────
+  # scan.mjs auto-detects *.bamboohr.com URLs and hits the /careers/list API.
+  # No extra config needed — just set careers_url to the bamboohr.com domain.
+
+  - name: Loom
+    careers_url: https://loom.bamboohr.com/careers/list
+    notes: "Video messaging platform (Atlassian). BambooHR ATS."
+    enabled: true
+
+  - name: Squarespace
+    careers_url: https://squarespace.bamboohr.com/careers/list
+    notes: "Website builder platform. BambooHR ATS."
+    enabled: true
+
+  # ── Teamtailor ATS ───────────────────────────────────────────────
+  # scan.mjs auto-detects *.teamtailor.com URLs and fetches the /jobs.rss feed.
+  # Popular in Nordics and European startups.
+
+  - name: Klarna
+    careers_url: https://jobs.klarna.com/jobs.rss
+    notes: "Stockholm SE. BNPL fintech unicorn. Teamtailor ATS."
+    enabled: true
+
+  - name: Northvolt
+    careers_url: https://northvolt.teamtailor.com/jobs.rss
+    notes: "Stockholm SE. Battery tech unicorn. Teamtailor ATS."
+    enabled: true
+
+  # ── Workday ATS ──────────────────────────────────────────────────
+  # scan.mjs auto-detects *.myworkdayjobs.com URLs and uses the paginated POST API.
+  # Use the full *.myworkdayjobs.com URL (not the company's vanity URL).
+
+  - name: Snowflake
+    careers_url: https://snowflake.wd1.myworkdayjobs.com/en-US/Snowflake_External
+    notes: "Data cloud platform. Workday ATS — use the myworkdayjobs.com URL."
+    enabled: true
+
+  - name: ServiceNow
+    careers_url: https://jobs.smartrecruiters.com/ServiceNow
+    notes: "Enterprise workflow automation. Check current ATS URL before enabling."
+    enabled: false
+
+  # ── UKG / UltiPro ATS ────────────────────────────────────────────
+  # scan.mjs auto-detects recruiting.ultipro.com/{orgId}/JobBoard/{boardId} URLs
+  # and uses the paginated POST API.
+  # The boardId is a UUID — copy it from the company's UKG careers page URL.
+
+  - name: Kronos (UKG example — replace with real company)
+    careers_url: https://recruiting.ultipro.com/EXAMPLEORG123/JobBoard/aabbccdd-1234-abcd-5678-ef1234567890/
+    notes: "UKG/UltiPro ATS example. Replace orgId and boardId UUID with the real values from the careers URL."
+    enabled: false

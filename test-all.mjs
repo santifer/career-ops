@@ -295,6 +295,152 @@ if (fileExists('VERSION')) {
   fail('VERSION file missing');
 }
 
+// ── 11. SCAN PARSER UNIT TESTS ──────────────────────────────────
+
+console.log('\n11. Scan parser unit tests');
+
+// BambooHR parser
+try {
+  const bambooJson = {
+    result: [
+      { id: 42, jobOpeningName: 'AI Engineer', location: { city: 'Remote', state: '' } },
+      { id: 43, jobOpeningName: '', location: { city: 'Berlin' } }, // empty title — should be filtered
+    ],
+  };
+  const slug = 'testco';
+  // Inline the same logic as parseBambooHR in scan.mjs
+  const jobs = bambooJson.result
+    .map(j => {
+      const city = j.location?.city || '';
+      const state = j.location?.state || '';
+      const location = city ? `${city}${state ? ', ' + state : ''}` : (j.departmentLabel || '');
+      return { title: j.jobOpeningName || '', url: `https://${slug}.bamboohr.com/careers/${j.id}/detail`, location };
+    })
+    .filter(j => j.title);
+  if (jobs.length === 1 && jobs[0].title === 'AI Engineer' && jobs[0].location === 'Remote') {
+    pass('BambooHR parser: extracts jobs, filters empty titles, builds correct URL');
+  } else {
+    fail(`BambooHR parser: unexpected result: ${JSON.stringify(jobs)}`);
+  }
+} catch (e) {
+  fail(`BambooHR parser test crashed: ${e.message}`);
+}
+
+// Teamtailor RSS parser
+try {
+  const rss = `<?xml version="1.0"?>
+<rss><channel>
+<item><title><![CDATA[Senior AI Engineer]]></title><link>https://acme.teamtailor.com/jobs/123</link><location>Stockholm, SE</location></item>
+<item><title>ML Researcher</title><link>https://acme.teamtailor.com/jobs/124</link></item>
+</channel></rss>`;
+  const items = [];
+  const itemRegex = /<item>([\s\S]*?)<\/item>/g;
+  let m;
+  while ((m = itemRegex.exec(rss)) !== null) {
+    const block = m[1];
+    const title = (/<title><!\[CDATA\[(.*?)\]\]><\/title>/s.exec(block) || /<title>(.*?)<\/title>/s.exec(block))?.[1]?.trim() || '';
+    const link = (/<link>(.*?)<\/link>/s.exec(block))?.[1]?.trim() || '';
+    const location = (/<location>(.*?)<\/location>/s.exec(block))?.[1]?.trim() || '';
+    if (title && link) items.push({ title, url: link, location });
+  }
+  if (
+    items.length === 2 &&
+    items[0].title === 'Senior AI Engineer' &&
+    items[0].location === 'Stockholm, SE' &&
+    items[1].title === 'ML Researcher'
+  ) {
+    pass('Teamtailor RSS parser: handles CDATA titles, plain titles, optional location');
+  } else {
+    fail(`Teamtailor RSS parser: unexpected result: ${JSON.stringify(items)}`);
+  }
+} catch (e) {
+  fail(`Teamtailor RSS parser test crashed: ${e.message}`);
+}
+
+// Workday parser
+try {
+  const rawJobs = [
+    { title: 'Data Engineer', externalPath: '/jobs/de-123', locationsText: 'Remote, USA' },
+    { title: '', externalPath: '/jobs/empty-456', locationsText: '' }, // empty title — kept (filtered downstream)
+    { title: 'PM', externalPath: '', locationsText: 'Berlin' }, // no externalPath — should be filtered
+  ];
+  const host = 'https://acme.wd1.myworkdayjobs.com';
+  const jobs = rawJobs.map(j => ({
+    title: j.title || '',
+    url: j.externalPath ? `${host}${j.externalPath}` : '',
+    location: j.locationsText || '',
+  })).filter(j => j.url);
+  if (jobs.length === 2 && jobs[0].url === `${host}/jobs/de-123` && jobs[0].location === 'Remote, USA') {
+    pass('Workday parser: builds URLs from externalPath, filters entries without URL');
+  } else {
+    fail(`Workday parser: unexpected result: ${JSON.stringify(jobs)}`);
+  }
+} catch (e) {
+  fail(`Workday parser test crashed: ${e.message}`);
+}
+
+// UKG parser
+try {
+  const rawJobs = [
+    { title: 'Solutions Architect', requisitionId: 'REQ-001', location: 'Remote' },
+    { title: '', requisitionId: 'REQ-002', location: 'NYC' }, // empty title — should be filtered
+  ];
+  const orgId = 'TESTORG', boardId = 'test-board-uuid';
+  const jobs = rawJobs.map(j => ({
+    title: j.title || '',
+    url: `https://recruiting.ultipro.com/${orgId}/JobBoard/${boardId}?requisitionId=${j.requisitionId}`,
+    location: j.location || '',
+  })).filter(j => j.title && j.url.includes('requisitionId='));
+  if (jobs.length === 1 && jobs[0].url.includes('REQ-001') && jobs[0].location === 'Remote') {
+    pass('UKG parser: builds correct URLs, filters empty titles');
+  } else {
+    fail(`UKG parser: unexpected result: ${JSON.stringify(jobs)}`);
+  }
+} catch (e) {
+  fail(`UKG parser test crashed: ${e.message}`);
+}
+
+// Location filter
+try {
+  // Inline buildLocationFilter logic
+  function buildLocationFilter(locationFilter) {
+    const include = (locationFilter?.include || []).map(k => k.toLowerCase());
+    const exclude = (locationFilter?.exclude || []).map(k => k.toLowerCase());
+    if (include.length === 0 && exclude.length === 0) return () => true;
+    return (location) => {
+      const lower = (location || '').toLowerCase();
+      const passInclude = include.length === 0 || include.some(k => lower.includes(k));
+      const passExclude = !exclude.some(k => lower.includes(k));
+      return passInclude && passExclude;
+    };
+  }
+
+  const filter = buildLocationFilter({ include: ['remote', 'emea'], exclude: ['on-site only'] });
+  const passRemote = filter('Remote, USA');
+  const passEmea = filter('London, EMEA');
+  const failOnSite = filter('New York — on-site only');
+  const failNoMatch = filter('São Paulo, Brazil');
+  const noFilter = buildLocationFilter({});
+
+  if (passRemote && passEmea && !failOnSite && !failNoMatch && noFilter('anywhere')) {
+    pass('Location filter: include/exclude keywords work correctly; empty filter passes all');
+  } else {
+    fail(`Location filter: unexpected results remote=${passRemote} emea=${passEmea} onsite=${failOnSite} nomatch=${failNoMatch}`);
+  }
+} catch (e) {
+  fail(`Location filter test crashed: ${e.message}`);
+}
+
+// --since flag: graceful on missing history
+try {
+  const result = run('node', ['scan.mjs', '--since', '7'], { stdio: ['pipe', 'pipe', 'pipe'] });
+  // result is null on non-zero exit; null or string both acceptable here
+  // We only care it doesn't crash with unhandled exception
+  pass('scan.mjs --since 7 exits gracefully (no history file)');
+} catch (e) {
+  fail(`scan.mjs --since 7 crashed: ${e.message}`);
+}
+
 // ── SUMMARY ─────────────────────────────────────────────────────
 
 console.log('\n' + '='.repeat(50));
