@@ -13,7 +13,7 @@
 import { chromium } from 'playwright';
 import { resolve, dirname, relative, isAbsolute } from 'path';
 import { readFile } from 'fs/promises';
-import { existsSync, readFileSync, mkdirSync, statSync } from 'fs';
+import { existsSync, readFileSync, mkdirSync, statSync, realpathSync } from 'fs';
 import { fileURLToPath } from 'url';
 import yaml from 'js-yaml';
 
@@ -45,7 +45,14 @@ function handlePhotoSubstitution(html, projectRoot) {
     }
 
     const fullPath = resolve(projectRoot, trimmedPhotoPath);
-    const relPath = relative(projectRoot, fullPath);
+    let realPath;
+    try {
+      realPath = realpathSync(fullPath);
+    } catch {
+      console.warn(`⚠️ Photo file not accessible: ${fullPath}`);
+      return html.replace(/\{\{PHOTO_BLOCK\}\}/g, '');
+    }
+    const relPath = relative(realpathSync(projectRoot), realPath);
     if (relPath.startsWith('..') || isAbsolute(relPath)) {
       console.warn(`⚠️ Photo path escapes project root: ${trimmedPhotoPath}`);
       return html.replace(/\{\{PHOTO_BLOCK\}\}/g, '');

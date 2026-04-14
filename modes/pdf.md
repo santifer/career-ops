@@ -184,7 +184,6 @@ Actualizar tracker si la oferta ya está registrada: cambiar PDF de ❌ a ✅.
 If `config/profile.yml` contains a `photo:` field with a path to an image file:
 `photo:` must be a top-level key in `config/profile.yml` (not under `candidate:`).
 
-`photo:` must be a top-level key in `config/profile.yml` (not under `candidate:`).
 0. Validate image format first:
    - Supported: `.jpg`, `.jpeg`, `.png`
    - If unsupported: log a warning and replace `{{PHOTO_BLOCK}}` with `""`
