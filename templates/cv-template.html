@@ -100,10 +100,21 @@
     line-height: 1.4;
     color: #555;
   }
+  .contact-row > * {
+    min-width: 0;
+  }
 
   .contact-row a {
     color: #555;
     text-decoration: none;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .contact-row span:not(.separator) {
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   .contact-row .separator {

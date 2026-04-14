@@ -13,11 +13,12 @@
 import { chromium } from 'playwright';
 import { resolve, dirname, relative, isAbsolute } from 'path';
 import { readFile } from 'fs/promises';
-import { existsSync, readFileSync, mkdirSync } from 'fs';
+import { existsSync, readFileSync, mkdirSync, statSync } from 'fs';
 import { fileURLToPath } from 'url';
 import yaml from 'js-yaml';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+const MAX_PHOTO_BYTES = 2 * 1024 * 1024; // 2 MB
 
 /**
  * Handle photo substitution from config/profile.yml.
@@ -59,6 +60,14 @@ function handlePhotoSubstitution(html, projectRoot) {
     const supported = ['jpg', 'jpeg', 'png'];
     if (!supported.includes(ext)) {
       console.warn(`⚠️ Unsupported photo format: .${ext}. Supported: ${supported.join(', ')}`);
+      return html.replace(/\{\{PHOTO_BLOCK\}\}/g, '');
+    }
+
+    const fileSizeBytes = statSync(fullPath).size;
+    if (fileSizeBytes > MAX_PHOTO_BYTES) {
+      const maxMb = (MAX_PHOTO_BYTES / (1024 * 1024)).toFixed(1);
+      const actualMb = (fileSizeBytes / (1024 * 1024)).toFixed(1);
+      console.warn(`⚠️ Photo file too large: ${actualMb} MB (max ${maxMb} MB). Skipping photo embedding.`);
       return html.replace(/\{\{PHOTO_BLOCK\}\}/g, '');
     }
 
