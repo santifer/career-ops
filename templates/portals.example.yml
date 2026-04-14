@@ -95,6 +95,31 @@ title_filter:
     - "Head"
     - "Director"
 
+# -- Location filter (optional) --
+# Constrain scan results by job location. If this whole block is omitted or both
+# `allowed` and `blocked` are empty, no location filtering happens (current default).
+#
+# Matching is case-insensitive substring: "Sydney" matches "Sydney NSW, Australia",
+# "Sydney (Hybrid)", etc. Jobs with empty/unknown location pass through only when
+# `allowed` is empty.
+#
+# allow_remote: when true (default), jobs whose location contains "remote",
+# "anywhere", or "distributed" bypass the `allowed` list. Set to false if you
+# want to exclude remote roles too.
+#
+# Example: Australia-only search focused on Sydney and Melbourne, excluding
+# state capitals you do not want.
+#
+# location_filter:
+#   allowed:
+#     - "Sydney"
+#     - "Melbourne"
+#     - "Australia"
+#   blocked:
+#     - "Perth"
+#     - "Adelaide"
+#   allow_remote: true
+
 # -- Search queries --
 # Each query triggers a WebSearch. Use site: to filter by portal.
 # The scanner extracts title, URL, and company from results.

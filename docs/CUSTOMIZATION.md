@@ -30,8 +30,9 @@ Copy from `templates/portals.example.yml` and customize:
 
 1. **title_filter.positive**: Keywords matching your target roles
 2. **title_filter.negative**: Tech stacks or domains to exclude
-3. **search_queries**: WebSearch queries for job boards (Ashby, Greenhouse, Lever)
-4. **tracked_companies**: Companies to check directly
+3. **location_filter** (optional): Constrain scans to specific cities/regions. Supports `allowed`, `blocked`, and `allow_remote` (default true). Omit the block entirely to keep the current behaviour of accepting all locations. See `templates/portals.example.yml` for a commented example.
+4. **search_queries**: WebSearch queries for job boards (Ashby, Greenhouse, Lever)
+5. **tracked_companies**: Companies to check directly
 
 ## CV Template (templates/cv-template.html)
 

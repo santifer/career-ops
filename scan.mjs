@@ -134,6 +134,28 @@ function buildTitleFilter(titleFilter) {
   };
 }
 
+function buildLocationFilter(locationFilter) {
+  const allowed = (locationFilter?.allowed || []).map(k => k.toLowerCase());
+  const blocked = (locationFilter?.blocked || []).map(k => k.toLowerCase());
+  const allowRemote = locationFilter?.allow_remote !== false;
+
+  // No config at all → pass everything through (backward compatible default)
+  if (allowed.length === 0 && blocked.length === 0) return () => true;
+
+  return (location) => {
+    const lower = (location || '').toLowerCase();
+    // Empty/unknown location: allow if no positive allowlist, block if allowlist is set
+    if (!lower) return allowed.length === 0;
+    // Remote jobs bypass the city/region allowlist when allow_remote is on
+    if (allowRemote && /\b(remote|anywhere|distributed)\b/.test(lower)) return true;
+    // Explicit blocklist always wins
+    if (blocked.some(k => lower.includes(k))) return false;
+    // If an allowlist is set, location must match at least one entry
+    if (allowed.length === 0) return true;
+    return allowed.some(k => lower.includes(k));
+  };
+}
+
 // ── Dedup ───────────────────────────────────────────────────────────
 
 function loadSeenUrls() {
@@ -264,6 +286,7 @@ async function main() {
   const config = parseYaml(readFileSync(PORTALS_PATH, 'utf-8'));
   const companies = config.tracked_companies || [];
   const titleFilter = buildTitleFilter(config.title_filter);
+  const locationFilter = buildLocationFilter(config.location_filter);
 
   // 2. Filter to enabled companies with detectable APIs
   const targets = companies
@@ -285,6 +308,7 @@ async function main() {
   const date = new Date().toISOString().slice(0, 10);
   let totalFound = 0;
   let totalFiltered = 0;
+  let totalFilteredLocation = 0;
   let totalDupes = 0;
   const newOffers = [];
   const errors = [];
@@ -299,6 +323,10 @@ async function main() {
       for (const job of jobs) {
         if (!titleFilter(job.title)) {
           totalFiltered++;
+          continue;
+        }
+        if (!locationFilter(job.location)) {
+          totalFilteredLocation++;
           continue;
         }
         if (seenUrls.has(job.url)) {
@@ -335,6 +363,7 @@ async function main() {
   console.log(`Companies scanned:     ${targets.length}`);
   console.log(`Total jobs found:      ${totalFound}`);
   console.log(`Filtered by title:     ${totalFiltered} removed`);
+  console.log(`Filtered by location:  ${totalFilteredLocation} removed`);
   console.log(`Duplicates:            ${totalDupes} skipped`);
   console.log(`New offers added:      ${newOffers.length}`);
 
