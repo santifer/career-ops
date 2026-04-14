@@ -1,8 +1,13 @@
-export default function ChatPage() {
-  return (
-    <div>
-      <h1 className="text-xl font-semibold text-neutral-800">Chat</h1>
-      <p className="text-sm text-neutral-500 mt-1">AI chat with Claude — coming in Phase 3.</p>
-    </div>
-  );
+import { redirect } from "next/navigation";
+import { getCurrentUser } from "@/lib/auth/session";
+import { listConversations } from "@/lib/db/queries/conversations";
+import { ChatLayout } from "@/components/chat/chat-layout";
+
+export default async function ChatPage() {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+
+  const conversations = await listConversations(user.id);
+
+  return <ChatLayout conversations={conversations} currentConversation={null} />;
 }
