@@ -115,7 +115,11 @@ function cachePrompt(command, prompt) {
   const cacheDir = join(__dir, ".agents", "cache");
   if (!existsSync(cacheDir)) mkdirSync(cacheDir, { recursive: true });
   const ts = new Date().toISOString().replace(/[:.]/g, "-");
-  const cachePath = join(cacheDir, `${command}-${ts}.md`);
+  const safeCommand = String(command || "router")
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "router";
+  const cachePath = join(cacheDir, `${safeCommand}-${ts}.md`);
   writeFileSync(cachePath, prompt, "utf-8");
   return cachePath;
 }
@@ -148,8 +152,13 @@ function buildPrompt(agentFile, rawArgs) {
 // ── Main ─────────────────────────────────────────────────────────────────
 
 const [, , mode, ...rest] = process.argv;
+const knownMode = MODES.includes(mode);
 // Join with a space but preserve multi-word quoted args passed by the shell
 const extraArgs = rest.join(" ").trim();
+// If first arg is not a known mode, treat it as part of the input (e.g. a URL passed directly)
+const routedArgs = knownMode
+  ? extraArgs
+  : [mode, ...rest].filter(Boolean).join(" ").trim();
 
 if (mode === "--help" || mode === "-h") {
   printUsage();
@@ -190,18 +199,18 @@ Install the Codex CLI to run these automatically: https://github.com/openai/code
 }
 
 // Resolve the agent file: known mode → specific file, else main router
-const agentFile = MODES.includes(mode)
+const agentFile = knownMode
   ? join(__dir, ".agents", `career-ops-${mode}.md`)
   : join(__dir, ".agents", "career-ops.md");
 
 if (!existsSync(agentFile)) {
   console.error(`Error: agent file not found — ${agentFile}`);
   console.error(`Run "node codex-runner.mjs --help" to see available commands.`);
-  logRun({ command: mode, args: extraArgs, status: "error", reason: "agent file not found" });
+  logRun({ command: mode, args: routedArgs, status: "error", reason: "agent file not found" });
   process.exit(1);
 }
 
-const prompt = buildPrompt(agentFile, NO_ARGS_MODES.has(mode) ? "" : extraArgs);
+const prompt = buildPrompt(agentFile, NO_ARGS_MODES.has(mode) ? "" : routedArgs);
 
 // Attempt to invoke the Codex CLI
 const result = spawnSync("codex", [prompt], {
@@ -214,7 +223,7 @@ if (result.error?.code === "ENOENT") {
   const cachePath = cachePrompt(mode, prompt);
   const relCache = cachePath.replace(__dir + "/", "");
 
-  logRun({ command: mode, args: extraArgs, status: "fallback", cache: relCache });
+  logRun({ command: mode, args: routedArgs, status: "fallback", cache: relCache });
 
   console.error("Codex CLI not found in PATH.\n");
   console.log(`Prompt cached to: ${relCache}\n`);
@@ -226,7 +235,7 @@ if (result.error?.code === "ENOENT") {
   process.exit(0);
 }
 
-logRun({ command: mode, args: extraArgs, status: result.status === 0 ? "ok" : "error", exitCode: result.status });
+logRun({ command: mode, args: routedArgs, status: result.status === 0 ? "ok" : "error", exitCode: result.status });
 
 if (result.status !== 0) {
   process.exit(result.status ?? 1);
