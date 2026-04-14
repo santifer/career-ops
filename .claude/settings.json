@@ -1,0 +1,39 @@
+{
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  },
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'input=$(cat); if echo \"$input\" | grep -q \"/clear\"; then bash .claude/scripts/sync-to-obsidian.sh 2>/dev/null; fi; exit 0'",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/scripts/sync-to-obsidian.sh 2>/dev/null || true",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  },
+  "enabledPlugins": {
+    "claude-mem@thedotmack": true,
+    "ralph-loop@claude-plugins-official": true,
+    "context7@claude-plugins-official": true,
+    "playground@claude-plugins-official": true,
+    "double-shot-latte@superpowers-marketplace": true,
+    "claude-md-management@claude-plugins-official": true,
+    "firecrawl@claude-plugins-official": true,
+    "obsidian@obsidian-skills": true
+  }
+}

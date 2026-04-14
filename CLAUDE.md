@@ -70,8 +70,8 @@ If `data/applications.md` doesn't exist, create it:
 ```markdown
 # Applications Tracker
 
-| # | Date | Company | Role | Score | Status | PDF | Report | Notes |
-|---|------|---------|------|-------|--------|-----|--------|-------|
+| # | Date | Company | Role | Location | Remote | Score | Status | PDF | Report | Notes |
+|---|------|---------|------|----------|--------|-------|--------|-----|--------|-------|
 ```
 
 #### Step 5: Ready
@@ -163,10 +163,10 @@ This system is designed to be customized by YOU (Claude). When the user asks you
 
 ### TSV Format for Tracker Additions
 
-Write one TSV file per evaluation to `batch/tracker-additions/{num}-{company-slug}.tsv`. Single line, 9 tab-separated columns:
+Write one TSV file per evaluation to `batch/tracker-additions/{num}-{company-slug}.tsv`. Single line, 11 tab-separated columns:
 
 ```
-{num}\t{date}\t{company}\t{role}\t{status}\t{score}/5\t{pdf_emoji}\t[{num}](reports/{num}-{slug}-{date}.md)\t{note}
+{num}\t{date}\t{company}\t{role}\t{location}\t{remote}\t{status}\t{score}/5\t{pdf_emoji}\t[{num}](reports/{num}-{slug}-{date}.md)\t{note}
 ```
 
 **Column order (IMPORTANT -- status BEFORE score):**
@@ -174,11 +174,13 @@ Write one TSV file per evaluation to `batch/tracker-additions/{num}-{company-slu
 2. `date` -- YYYY-MM-DD
 3. `company` -- short company name
 4. `role` -- job title
-5. `status` -- canonical status (e.g., `Evaluated`)
-6. `score` -- format `X.X/5` (e.g., `4.2/5`)
-7. `pdf` -- `✅` or `❌`
-8. `report` -- markdown link `[num](reports/...)`
-9. `notes` -- one-line summary
+5. `location` -- city/country from JD (e.g. `San Francisco, CA`, `Remote US`, `London, UK`)
+6. `remote` -- `remote`, `on-site`, or `unknown`
+7. `status` -- canonical status (e.g., `Evaluated`)
+8. `score` -- numeric (e.g., `4.2`)
+9. `pdf` -- `✅` or `❌`
+10. `report` -- markdown link `[num](reports/...)`
+11. `notes` -- one-line summary
 
 **Note:** In applications.md, score comes BEFORE status. The merge script handles this column swap automatically.
 
@@ -186,7 +188,7 @@ Write one TSV file per evaluation to `batch/tracker-additions/{num}-{company-slu
 
 1. **NEVER edit applications.md to ADD new entries** -- Write TSV in `batch/tracker-additions/` and `merge-tracker.mjs` handles the merge.
 2. **YES you can edit applications.md to UPDATE status/notes of existing entries.**
-3. All reports MUST include `**URL:**` in the header (between Score and PDF).
+3. All reports MUST include `**Location:**`, `**Remote:**`, and `**URL:**` in the header.
 4. All statuses MUST be canonical (see `templates/states.yml`).
 5. Health check: `node verify-pipeline.mjs`
 6. Normalize statuses: `node normalize-statuses.mjs`

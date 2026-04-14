@@ -6,7 +6,7 @@
  * 1. All statuses are canonical (per states.yml)
  * 2. No duplicate company+role entries
  * 3. All report links point to existing files
- * 4. Scores match format X.XX/5 or N/A or DUP
+ * 4. Scores match format X.XX (numeric) or N/A or DUP
  * 5. All rows have proper pipe-delimited format
  * 6. No pending TSVs in tracker-additions/ (only in merged/ or archived/)
  * 7. states.yml canonical IDs for cross-system consistency
@@ -29,15 +29,21 @@ const STATES_FILE = existsSync(join(CAREER_OPS, 'templates/states.yml'))
   : join(CAREER_OPS, 'states.yml');
 
 const CANONICAL_STATUSES = [
-  'evaluada', 'aplicado', 'respondido', 'entrevista',
-  'oferta', 'rechazado', 'descartado', 'no aplicar',
+  // English (canonical for this repo)
+  'evaluated', 'applied', 'responded', 'interview', 'offer', 'rejected', 'discarded', 'skip',
+  // Spanish aliases (kept for backwards compat)
+  'evaluada', 'aplicado', 'respondido', 'entrevista', 'oferta', 'rechazado', 'descartado', 'no aplicar',
 ];
 
 const ALIASES = {
-  'enviada': 'aplicado', 'aplicada': 'aplicado', 'applied': 'aplicado', 'sent': 'aplicado',
-  'cerrada': 'descartado', 'descartada': 'descartado', 'cancelada': 'descartado',
-  'rechazada': 'rechazado',
-  'no_aplicar': 'no aplicar', 'skip': 'no aplicar', 'monitor': 'no aplicar',
+  'enviada': 'applied', 'aplicada': 'applied', 'sent': 'applied',
+  'cerrada': 'discarded', 'descartada': 'discarded', 'cancelada': 'discarded',
+  'rechazada': 'rejected',
+  'no_aplicar': 'skip', 'no aplicar': 'skip', 'monitor': 'skip',
+  // legacy Spanish → English
+  'evaluada': 'evaluated', 'aplicado': 'applied', 'respondido': 'responded',
+  'entrevista': 'interview', 'oferta': 'offer', 'rechazado': 'rejected',
+  'descartado': 'discarded',
 };
 
 let errors = 0;
@@ -63,11 +69,23 @@ for (const line of lines) {
   if (parts.length < 9) continue;
   const num = parseInt(parts[1]);
   if (isNaN(num)) continue;
-  entries.push({
-    num, date: parts[2], company: parts[3], role: parts[4],
-    score: parts[5], status: parts[6], pdf: parts[7], report: parts[8],
-    notes: parts[9] || '',
-  });
+  // 13+ parts = 11-col format: # | date | company | role | location | remote | score | status | pdf | report | notes
+  // 9+ parts  = 9-col legacy:  # | date | company | role | score | status | pdf | report | notes
+  if (parts.length >= 13) {
+    entries.push({
+      num, date: parts[2], company: parts[3], role: parts[4],
+      location: parts[5], remote: parts[6],
+      score: parts[7], status: parts[8], pdf: parts[9], report: parts[10],
+      notes: parts[11] || '',
+    });
+  } else {
+    entries.push({
+      num, date: parts[2], company: parts[3], role: parts[4],
+      location: '', remote: '',
+      score: parts[5], status: parts[6], pdf: parts[7], report: parts[8],
+      notes: parts[9] || '',
+    });
+  }
 }
 
 console.log(`\n📊 Checking ${entries.length} entries in applications.md\n`);
@@ -132,7 +150,7 @@ if (brokenReports === 0) ok('All report links valid');
 let badScores = 0;
 for (const e of entries) {
   const s = e.score.replace(/\*\*/g, '').trim();
-  if (!/^\d+\.?\d*\/5$/.test(s) && s !== 'N/A' && s !== 'DUP') {
+  if (!/^\d+\.?\d*$/.test(s) && s !== 'N/A' && s !== 'DUP' && s !== '—') {
     error(`#${e.num}: Invalid score format: "${e.score}"`);
     badScores++;
   }

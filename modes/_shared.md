@@ -18,6 +18,7 @@
 | cv.md | `cv.md` (project root) | ALWAYS |
 | article-digest.md | `article-digest.md` (if exists) | ALWAYS (detailed proof points) |
 | profile.yml | `config/profile.yml` | ALWAYS (candidate identity and targets) |
+| _profile.md | `modes/_profile.md` (if exists) | ALWAYS — user overrides, wins over _shared.md |
 
 **RULE: NEVER hardcode metrics from proof points.** Read them from cv.md + article-digest.md at evaluation time.
 **RULE: For article/project metrics, article-digest.md takes precedence over cv.md** (cv.md may have older numbers).
@@ -30,19 +31,11 @@ The skill applies with EQUAL rigor to ALL target roles. None is primary or secon
 
 | Archetype | Thematic axes | What they buy |
 |-----------|---------------|---------------|
-| **AI Platform / LLMOps Engineer** | Evaluation, observability, reliability, pipelines | Someone who puts AI in production with metrics |
-| **Agentic Workflows / Automation** | HITL, tooling, orchestration, multi-agent | Someone who builds reliable agent systems |
-| **Technical AI Product Manager** | GenAI/Agents, PRDs, discovery, delivery | Someone who translates business to AI product |
-| **AI Solutions Architect** | Hyperautomation, enterprise, integrations | Someone who designs end-to-end AI architectures |
-| **AI Forward Deployed Engineer** | Client-facing, fast delivery, prototyping | Someone who delivers AI solutions to clients fast |
-| **AI Transformation Lead** | Change management, adoption, org enablement | Someone who leads AI transformation in an org |
-
-<!-- [CUSTOMIZE] Edit the archetypes above to match YOUR target roles.
-     For example, if you're a backend engineer, replace with:
-     - Senior Backend Engineer
-     - Staff Platform Engineer
-     - Engineering Manager
-     etc. -->
+| **Head / VP of Product Design** | Design leadership, AI-integrated UX, design org scale | A design leader who ships AI products with revenue proof |
+| **Head of AI Product** | AI product strategy, LLM-integrated flows, discovery to delivery | A founder who translates AI capabilities into measurable product outcomes |
+| **Staff / Principal Design Engineer** | Design systems, React/TS, AI-augmented product engineering | A builder who straddles design and code at scale |
+| **AI Transformation Lead** | Change management, AI adoption, org enablement, upskilling | Someone who led a team through AI transformation with hard metrics |
+| **Applied AI / Founder-in-Residence** | Zero-to-one, prototyping, AI product launch, entrepreneurial | A founder who has proven PMF, acquisition, and cross-functional ownership |
 
 ### Adaptive Framing by Archetype
 
@@ -50,38 +43,30 @@ The skill applies with EQUAL rigor to ALL target roles. None is primary or secon
 
 | If the role is... | Emphasize about the candidate... | Proof point sources |
 |-------------------|----------------------------------|---------------------|
-| Platform / LLMOps | Production systems builder, observability, evals, closed-loop | article-digest.md + cv.md |
-| Agentic / Automation | Multi-agent orchestration, HITL, reliability, cost | article-digest.md + cv.md |
-| Technical AI PM | Product discovery, PRDs, metrics, stakeholder mgmt | cv.md + article-digest.md |
-| Solutions Architect | System design, integrations, enterprise-ready | article-digest.md + cv.md |
-| Forward Deployed Engineer | Fast delivery, client-facing, prototype to prod | cv.md + article-digest.md |
-| AI Transformation Lead | Change management, team enablement, adoption | cv.md + article-digest.md |
-
-<!-- [CUSTOMIZE] Map YOUR specific projects/articles to each archetype above -->
+| Head / VP of Product Design | Design org build (0→10), design system at scale, AI-literacy programs, retention, feature velocity | cv.md (Bark.com section) |
+| Head of AI Product | CaseLab exit, Fetchd.ai launch, LLM product strategy, revenue impact from AI features | cv.md + article-digest.md |
+| Staff / Principal Design Engineer | React/TS, design engineering, design systems at scale, shipped AI-integrated UX | cv.md (Bark + Workday + Intuit) |
+| AI Transformation Lead | 25+ stakeholder alignment at Bark, AI literacy program, AI-first platform transformation, 63% YoY | cv.md (Bark.com leadership section) |
+| Applied AI / Founder | CaseLab PMF + acquisition in 10 months, Fetchd.ai zero-to-one, cross-functional ownership | cv.md (Fetchd + CaseLab sections) |
 
 ### Exit Narrative (use in ALL framings)
 
-<!-- [CUSTOMIZE] Replace with YOUR narrative. Examples:
-     - "Built and sold my SaaS after 5 years. Now focused on applied AI at scale."
-     - "Led engineering at a Series B startup through 10x growth. Now seeking my next challenge."
-     - "Transitioned from consulting to building product. Looking for high-ownership roles."
-     Read from config/profile.yml → narrative.exit_story -->
-
 Use the candidate's exit story from `config/profile.yml` to frame ALL content:
-- **In PDF Summaries:** Bridge from past to future -- "Now applying the same [skill] to [JD domain]."
-- **In STAR stories:** Reference proof points from article-digest.md
-- **In Draft Answers (Section G):** The transition narrative should appear in the first response.
-- **When the JD asks for "entrepreneurial", "ownership", "builder", "end-to-end":** This is the #1 differentiator. Increase match weight.
+- **In PDF Summaries:** "Founded and exited an AI SaaS. Now applying the same founder + design + AI instincts to [JD domain]."
+- **In STAR stories:** Lead with CaseLab/Fetchd as proof of end-to-end ownership — not just features, whole products.
+- **In Draft Answers (Section G):** The founder-to-leader narrative should appear in the first response.
+- **When the JD asks for "entrepreneurial", "ownership", "builder", "end-to-end", "zero-to-one":** This is the #1 differentiator. Increase match weight significantly — most design leaders lack founder credibility.
+- **When the JD asks for "AI literacy", "AI transformation", "cross-functional AI":** Bark.com is the proof point — led org-wide AI transformation with hard revenue numbers.
 
 ### Cross-cutting Advantage
 
-Frame profile as **"Technical builder with real-world proof"** that adapts framing to the role:
-- For PM: "builder who reduces uncertainty with prototypes then productionizes with discipline"
-- For FDE: "builder who delivers fast with observability and metrics from day 1"
-- For SA: "builder who designs end-to-end systems with real integration experience"
-- For LLMOps: "builder who puts AI in production with closed-loop quality systems"
+Frame profile as **"Design leader with founder credibility"** — rare combination that adapts by role:
+- For Design Leadership: "scaled a design function from 2→10 while shipping AI features that drove 63% YoY growth"
+- For AI Product: "founded and exited an AI SaaS — knows how to go from 0 to PMF to acquisition"
+- For Design Engineering: "straddles design and code — React, TS, design systems — ships production AI products"
+- For Transformation: "ran the AI transformation at Bark.com, trained non-technical stakeholders, built the measurement framework"
 
-Convert "builder" into a professional signal, not a "hobby maker". Real proof points make this credible.
+The differentiator is not "also has AI skills" — it's "built and sold an AI company while leading design at scale." Very few candidates have both sides of this.
 
 ### Portfolio as Proof Point (use in high-value applications)
 

@@ -73,7 +73,7 @@ Para cada pregunta, generar la respuesta siguiendo:
 ```
 ## Respuestas para [Empresa] — [Rol]
 
-Basado en: Report #NNN | Score: X.X/5 | Arquetipo: [tipo]
+Basado en: Report #NNN | Score: X.X | Arquetipo: [tipo]
 
 ---
 

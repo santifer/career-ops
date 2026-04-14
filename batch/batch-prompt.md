@@ -166,6 +166,8 @@ Donde `{company-slug}` es el nombre de empresa en lowercase, sin espacios, con g
 **Fecha:** {{DATE}}
 **Arquetipo:** {detectado}
 **Score:** {X/5}
+**Location:** {ciudad/país del JD — e.g. "San Francisco, CA" or "Remote US"}
+**Remote:** {remote|on-site|unknown}
 **URL:** {URL de la oferta original}
 **PDF:** career-ops/output/cv-candidate-{company-slug}-{{DATE}}.pdf
 **Batch ID:** {{ID}}
@@ -277,9 +279,9 @@ Escribir una línea TSV a:
 batch/tracker-additions/{{ID}}.tsv
 ```
 
-Formato TSV (una sola línea, sin header, 9 columnas tab-separated):
+Formato TSV (una sola línea, sin header, 11 columnas tab-separated):
 ```
-{next_num}\t{{DATE}}\t{empresa}\t{rol}\t{status}\t{score}/5\t{pdf_emoji}\t[{{REPORT_NUM}}](reports/{{REPORT_NUM}}-{company-slug}-{{DATE}}.md)\t{nota_1_frase}
+{next_num}\t{{DATE}}\t{empresa}\t{rol}\t{location}\t{remote}\t{status}\t{score}/5\t{pdf_emoji}\t[{{REPORT_NUM}}](reports/{{REPORT_NUM}}-{company-slug}-{{DATE}}.md)\t{nota_1_frase}
 ```
 
 **Columnas TSV (orden exacto):**
@@ -290,13 +292,15 @@ Formato TSV (una sola línea, sin header, 9 columnas tab-separated):
 | 2 | date | YYYY-MM-DD | `2026-03-14` | Fecha de evaluación |
 | 3 | company | string | `Datadog` | Nombre corto de empresa |
 | 4 | role | string | `Staff AI Engineer` | Título del rol |
-| 5 | status | canonical | `Evaluada` | DEBE ser canónico (ver states.yml) |
-| 6 | score | X.XX/5 | `4.55/5` | O `N/A` si no evaluable |
-| 7 | pdf | emoji | `✅` o `❌` | Si se generó PDF |
-| 8 | report | md link | `[647](reports/647-...)` | Link al report |
-| 9 | notes | string | `APPLY HIGH...` | Resumen 1 frase |
+| 5 | location | string | `San Francisco, CA` | Ciudad/país del JD; `Remote US` si remote |
+| 6 | remote | enum | `remote` | `remote`, `on-site`, o `unknown` |
+| 7 | status | canonical | `Evaluated` | DEBE ser canónico (ver states.yml) |
+| 8 | score | X.XX | `4.55` | O `N/A` si no evaluable |
+| 9 | pdf | emoji | `✅` o `❌` | Si se generó PDF |
+| 10 | report | md link | `[647](reports/647-...)` | Link al report |
+| 11 | notes | string | `APPLY HIGH...` | Resumen 1 frase |
 
-**IMPORTANTE:** El orden TSV tiene status ANTES de score (col 5→status, col 6→score). En applications.md el orden es inverso (col 5→score, col 6→status). merge-tracker.mjs maneja la conversión.
+**IMPORTANTE:** El orden TSV tiene status ANTES de score (col 7→status, col 8→score). En applications.md el orden es inverso (col 7→score, col 8→status). merge-tracker.mjs maneja la conversión.
 
 **Estados canónicos válidos:** `Evaluada`, `Aplicado`, `Respondido`, `Entrevista`, `Oferta`, `Rechazado`, `Descartado`, `NO APLICAR`
 

@@ -107,6 +107,9 @@ Guardar evaluación completa en `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 **Fecha:** {YYYY-MM-DD}
 **Arquetipo:** {detectado}
 **Score:** {X/5}
+**Location:** {ciudad/país del JD — e.g. "San Francisco, CA" or "Remote US"}
+**Remote:** {remote|on-site|unknown}
+**URL:** {URL de la oferta original}
 **PDF:** {ruta o pendiente}
 
 ---
@@ -145,13 +148,15 @@ Guardar evaluación completa en `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 - Fecha actual
 - Empresa
 - Rol
+- Location: ciudad/país del JD (ej: `San Francisco, CA`, `Remote US`)
+- Remote: `remote`, `on-site`, o `unknown`
 - Score: promedio de match (1-5)
-- Estado: `Evaluada`
+- Estado: `Evaluated`
 - PDF: ❌ (o ✅ si auto-pipeline generó PDF)
 - Report: link relativo al report .md (ej: `[001](reports/001-company-2026-01-01.md)`)
 
 **Formato del tracker:**
 
 ```markdown
-| # | Fecha | Empresa | Rol | Score | Estado | PDF | Report |
+| # | Date | Company | Role | Location | Remote | Score | Status | PDF | Report | Notes |
 ```

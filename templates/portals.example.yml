@@ -110,6 +110,10 @@ search_queries:
     query: 'site:jobs.ashbyhq.com "Agentic" OR "AI Agent" OR "Automation Architect" remote'
     enabled: true
 
+  - name: Ashby — Design Leadership
+    query: 'site:jobs.ashbyhq.com "Head of Design" OR "Head of Product Design" OR "Director of Design" OR "Director of Product Design" OR "VP of Design" OR "VP Design" OR "Principal Designer" OR "Principal Product Designer" OR "Staff Designer"'
+    enabled: true
+
   # -- Greenhouse --
   - name: Greenhouse — AI PM
     query: 'site:boards.greenhouse.io OR site:job-boards.greenhouse.io "AI Product Manager" OR "Senior Product Manager" AI remote'
@@ -123,6 +127,10 @@ search_queries:
     query: 'site:boards.greenhouse.io OR site:job-boards.greenhouse.io "AI Engineer" OR "LLM" OR "Agentic" remote'
     enabled: true
 
+  - name: Greenhouse — Design Leadership
+    query: 'site:boards.greenhouse.io OR site:job-boards.greenhouse.io "Head of Design" OR "Head of Product Design" OR "Director of Design" OR "Director of Product Design" OR "VP of Design" OR "Principal Designer" OR "Principal Product Designer" OR "Staff Designer"'
+    enabled: true
+
   # -- Lever --
   - name: Lever — AI PM
     query: 'site:jobs.lever.co "AI Product Manager" OR "Solutions Architect" AI remote'
@@ -132,14 +140,26 @@ search_queries:
     query: 'site:jobs.lever.co "AI Engineer" OR "Agentic" OR "LLMOps" OR "Automation" remote'
     enabled: true
 
+  - name: Lever — Design Leadership
+    query: 'site:jobs.lever.co "Head of Design" OR "Head of Product Design" OR "Director of Design" OR "Director of Product Design" OR "VP of Design" OR "Principal Designer" OR "Principal Product Designer" OR "Staff Designer"'
+    enabled: true
+
   # -- Wellfound (startups) --
   - name: Wellfound — AI PM
     query: 'site:wellfound.com "AI Product Manager" OR "AI Solutions" remote'
     enabled: true
 
+  - name: Wellfound — Design Leadership
+    query: 'site:wellfound.com "Head of Design" OR "Head of Product Design" OR "Director of Design" OR "Director of Product Design" OR "VP of Design" OR "Principal Designer" OR "Principal Product Designer"'
+    enabled: true
+
   # -- Workable --
   - name: Workable — AI Roles
     query: 'site:apply.workable.com "AI" "Product Manager" OR "Solutions Architect" OR "AI Engineer" remote'
+    enabled: true
+
+  - name: Workable — Design Leadership
+    query: 'site:apply.workable.com "Head of Design" OR "Head of Product Design" OR "Director of Design" OR "VP of Design" OR "Principal Designer" OR "Principal Product Designer"'
     enabled: true
 
   # -- No-Code / Low-Code / Automation --
@@ -177,6 +197,24 @@ search_queries:
   # -- RemoteFront (aggregator) --
   - name: RemoteFront — AI & Automation
     query: 'site:remotefront.com "AI Engineer" OR "Solutions Engineer" OR "Automation" OR "LLM" OR "Agent" remote'
+    enabled: true
+
+  # -- Generalist World (aggregator) --
+  - name: Generalist World — AI & Leadership
+    query: 'site:generalist.world/jobs "AI" OR "Head of" OR "Director" OR "VP" OR "Solutions" OR "Automation" remote'
+    enabled: true
+
+  - name: Generalist World — Design Leadership
+    query: 'site:generalist.world/jobs "Head of Design" OR "Head of Product Design" OR "Director of Design" OR "Director of Product Design" OR "VP of Design" OR "Principal Designer" OR "Principal Product Designer"'
+    enabled: true
+
+  # -- Remote Rocketship (aggregator) --
+  - name: Remote Rocketship — AI & Automation
+    query: 'site:remoterocketship.com "AI" OR "LLM" OR "Solutions Engineer" OR "Automation" OR "Forward Deployed" remote'
+    enabled: true
+
+  - name: Remote Rocketship — Design Leadership
+    query: 'site:remoterocketship.com "Head of Design" OR "Head of Product Design" OR "Director of Design" OR "Director of Product Design" OR "VP of Design" OR "Principal Designer" OR "Principal Product Designer"'
     enabled: true
 
 # -- Tracked companies --

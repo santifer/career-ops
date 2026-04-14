@@ -1,23 +1,28 @@
-# Modo: tracker — Tracker de Aplicaciones
+# Mode: tracker — Applications Tracker (US Pipeline)
 
-Lee y muestra `data/applications.md`.
+Read and display `data/applications.md`.
 
-**Formato del tracker:**
+**This is the US pipeline tracker.** Only show entries with `geo: US` or no geo specified. UK/EMEA roles belong in the co-uk pipeline and should not appear here.
+
+**Format:**
 ```markdown
-| # | Fecha | Empresa | Rol | Score | Estado | PDF | Report |
+| # | Date | Company | Role | Location | Remote | Score | Status | PDF | Report | Notes |
 ```
 
-Estados posibles: `Evaluada` → `Aplicado` → `Respondido` → `Contacto` → `Entrevista` → `Oferta` / `Rechazada` / `Descartada` / `NO APLICAR`
+- **Location**: city/country from JD (e.g. `San Francisco, CA`, `Remote US`, `London, UK`)
+- **Remote**: `remote`, `on-site`, or `unknown`
 
-- `Aplicado` = el candidato envió su candidatura
-- `Respondido` = Un recruiter/empresa contactó y el candidato respondió (inbound)
-- `Contacto` = El candidato contactó proactivamente a alguien de la empresa (outbound, ej: LinkedIn power move)
+Canonical statuses: `Evaluated` → `Applied` → `Responded` → `Interview` → `Offer` / `Rejected` / `Discarded` / `SKIP`
 
-Si el usuario pide actualizar un estado, editar la fila correspondiente.
+- `Applied` = application submitted by candidate
+- `Responded` = recruiter/company reached out and candidate replied (inbound)
+- `Interview` = active interview process
 
-Mostrar también estadísticas:
-- Total de aplicaciones
-- Por estado
-- Score promedio
-- % con PDF generado
-- % con report generado
+If the user asks to update a status, edit the row directly in `data/applications.md`.
+
+Also show stats:
+- Total evaluations
+- By status
+- Average score
+- % with PDF generated
+- % with report generated

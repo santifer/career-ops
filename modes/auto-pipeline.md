@@ -62,6 +62,42 @@ Si el score final es >= 4.5, generar borrador de respuestas para el formulario d
 **Idioma**: Siempre en el idioma del JD (EN default). Aplicar `/tech-translate`.
 
 ## Paso 5 — Actualizar Tracker
-Registrar en `data/applications.md` con todas las columnas incluyendo Report y PDF en ✅.
+Registrar en `data/applications.md` con todas las columnas incluyendo Location, Remote, Report y PDF en ✅.
+
+Column order: `# | Date | Company | Role | Location | Remote | Score | Status | PDF | Report | Notes`
+
+- **Location**: city/state extracted from JD (e.g. `San Francisco, CA` or `Remote US`)
+- **Remote**: `remote`, `on-site`, or `unknown`
+
+## Step 6 — Sync to Obsidian Vault
+
+Write the application note to the `_jobSeeking` vault so the Dataview dashboard picks it up.
+
+**Determine folder:**
+- Job US/Americas or explicitly Remote-US → `US Applications`
+- Job UK/Europe/EMEA → `UK Applications`
+- Unknown / fully remote → `US Applications` (default for this branch)
+
+**File name:** `{###} - {Company Name}.md` (e.g. `002 - Anthropic.md`)
+
+**Run:**
+```bash
+node obsidian-sync.mjs \
+  --file "{###} - {Company Name}.md" \
+  --content "reports/{###}-{slug}-{date}.md" \
+  --folder "{US Applications|UK Applications}" \
+  --geo "{US|UK}" \
+  --company "{Company}" \
+  --role "{Role Title}" \
+  --score "{X.X}" \
+  --status "{Canonical Status}" \
+  --archetype "{matched archetype from _profile.md}" \
+  --url "{JD URL}" \
+  --pdf {true|false} \
+  --location "{city, state/country from JD — e.g. 'San Francisco, CA' or 'Remote US'}" \
+  --remote "{remote|on-site|unknown}"
+```
+
+If Obsidian is closed or the API is unreachable, the script exits safely — the pipeline is not blocked.
 
 **Si algún paso falla**, continuar con los siguientes y marcar el paso fallido como pendiente en el tracker.
