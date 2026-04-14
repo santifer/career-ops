@@ -182,7 +182,11 @@ Actualizar tracker si la oferta ya está registrada: cambiar PDF de ❌ a ✅.
 ## Profile Photo (DACH market)
 
 If `config/profile.yml` contains a `photo:` field with a path to an image file:
-`photo:` must be a top-level key in `config/profile.yml` (not under `candidate:`).
+- `photo:` must be a top-level key in `config/profile.yml` (not under `candidate:`).
+- The path must be **project‑relative** (no leading `/` and must not escape the repository with `..`).
+- Symlinks are resolved; the resolved target must remain inside the project directory.
+- Files larger than **2 MiB** are ignored.
+- Supported image formats: `.jpg`, `.jpeg`, `.png`.
 
 0. Validate image format first:
    - Supported: `.jpg`, `.jpeg`, `.png`

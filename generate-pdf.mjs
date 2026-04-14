@@ -63,14 +63,14 @@ function handlePhotoSubstitution(html, projectRoot) {
       return html.replace(/\{\{PHOTO_BLOCK\}\}/g, '');
     }
 
-    const ext = trimmedPhotoPath.split('.').pop().toLowerCase();
+    const ext = realPath.split('.').pop()?.toLowerCase() ?? '';
     const supported = ['jpg', 'jpeg', 'png'];
     if (!supported.includes(ext)) {
       console.warn(`⚠️ Unsupported photo format: .${ext}. Supported: ${supported.join(', ')}`);
       return html.replace(/\{\{PHOTO_BLOCK\}\}/g, '');
     }
 
-    const fileSizeBytes = statSync(fullPath).size;
+    const fileSizeBytes = statSync(realPath).size;
     if (fileSizeBytes > MAX_PHOTO_BYTES) {
       const maxMb = (MAX_PHOTO_BYTES / (1024 * 1024)).toFixed(1);
       const actualMb = (fileSizeBytes / (1024 * 1024)).toFixed(1);
@@ -79,7 +79,7 @@ function handlePhotoSubstitution(html, projectRoot) {
     }
 
     const mime = ext === 'png' ? 'image/png' : 'image/jpeg';
-    const imgBuffer = readFileSync(fullPath);
+    const imgBuffer = readFileSync(realPath);
     const base64 = imgBuffer.toString('base64');
     const dataUri = `data:${mime};base64,${base64}`;
 
