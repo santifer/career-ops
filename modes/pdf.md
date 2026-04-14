@@ -184,9 +184,10 @@ Actualizar tracker si la oferta ya está registrada: cambiar PDF de ❌ a ✅.
 If `config/profile.yml` contains a `photo:` field with a path to an image file:
 - `photo:` must be a top-level key in `config/profile.yml` (not under `candidate:`).
 - The path must be **project‑relative** (no leading `/` and must not escape the repository with `..`).
+- Absolute paths or paths that resolve outside the project directory are rejected and cause the photo to be omitted.
 - Symlinks are resolved; the resolved target must remain inside the project directory.
-- Files larger than **2 MiB** are ignored.
-- Supported image formats: `.jpg`, `.jpeg`, `.png`.
+- Files larger than **2 MiB** are ignored (a warning is logged and the placeholder is cleared).
+- Supported image formats: `.jpg`, `.jpeg`, `.png`. 
 
 0. Validate image format first:
    - Supported: `.jpg`, `.jpeg`, `.png`

@@ -58,10 +58,6 @@ function handlePhotoSubstitution(html, projectRoot) {
       return html.replace(/\{\{PHOTO_BLOCK\}\}/g, '');
     }
 
-    if (!existsSync(fullPath)) {
-      console.warn(`⚠️ Photo file not found: ${fullPath}`);
-      return html.replace(/\{\{PHOTO_BLOCK\}\}/g, '');
-    }
 
     const ext = realPath.split('.').pop()?.toLowerCase() ?? '';
     const supported = ['jpg', 'jpeg', 'png'];
