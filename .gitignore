@@ -20,6 +20,8 @@ jds/*
 config/profile.yml
 portals.yml
 modes/_profile.md
+article-digest.md
+reference/
 .update-dismissed
 .update-lock
 
