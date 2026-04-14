@@ -95,6 +95,7 @@ node obsidian-sync.mjs \
   --archetype "{matched archetype from _profile.md}" \
   --url "{JD URL}" \
   --pdf {true|false} \
+  --pdf-file "{filename.pdf from Step 3 — e.g. cv-company-2026-04-13.pdf — omit if no PDF}" \
   --location "{city, state/country from JD — e.g. 'San Francisco, CA' or 'Remote US'}" \
   --remote "{remote|on-site|unknown}"
 ```

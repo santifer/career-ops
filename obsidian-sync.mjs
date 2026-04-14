@@ -81,6 +81,7 @@ const status    = get('--status')    ?? 'Evaluated';
 const archetype = get('--archetype') ?? '';
 const url       = get('--url')       ?? '';
 const pdf       = get('--pdf')       ?? 'false';
+const pdfFile   = get('--pdf-file')  ?? '';
 const geo       = get('--geo')       ?? (folder.startsWith('UK') ? 'UK' : 'US');
 const location  = get('--location')  ?? '';
 const remote    = get('--remote')    ?? '';
@@ -118,7 +119,22 @@ const frontmatter = [
   '',
 ].join('\n');
 
-const reportContent = readFileSync(content, 'utf8');
+function getRepoRoot() {
+  const p = resolve('config/profile.yml');
+  if (!existsSync(p)) return '';
+  const m = readFileSync(p, 'utf8').match(/repo_root:\s*"?([^"\n]+)"?/);
+  return m ? m[1].trim() : '';
+}
+const repoRoot = getRepoRoot();
+
+let reportContent = readFileSync(content, 'utf8');
+if (pdfFile && repoRoot) {
+  const absPath = `${repoRoot}/output/${pdfFile}`;
+  reportContent = reportContent.replace(
+    /\*\*PDF:\*\*.*/,
+    `**PDF:** ✅ [${pdfFile}](file://${absPath})`
+  );
+}
 const noteContent = frontmatter + reportContent;
 
 // -- PUT to vault --
