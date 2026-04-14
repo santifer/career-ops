@@ -17,6 +17,7 @@ let currentSort = { key: 'date', dir: 'desc' };
 let currentView = 'dashboard';
 let pendingLoaded = false;
 let reportFetchController = null;
+let pdfFetchController = null;
 
 // ─── Theme ────────────────────────────────────────────────────────────────────
 
@@ -147,8 +148,8 @@ function pdfHtml(app) {
 
 // ─── Data loading ─────────────────────────────────────────────────────────────
 
-async function fetchJSON(url) {
-  const res = await fetch(url);
+async function fetchJSON(url, signal) {
+  const res = await fetch(url, signal ? { signal } : undefined);
   if (!res.ok) throw new Error(`HTTP ${res.status}: ${url}`);
   return res.json();
 }
@@ -466,23 +467,24 @@ function handleColumnSort(key) {
   applyFiltersAndRender();
 }
 
-/** Refresh the ↕/↑/↓ icons on every sortable column header. */
+/** Refresh the ↕/↑/↓ icons on every sortable column header button. */
 function updateSortIcons() {
-  document.querySelectorAll('thead th[data-sort]').forEach((th) => {
-    const icon = th.querySelector('.sort-icon');
+  document.querySelectorAll('thead button[data-sort]').forEach((btn) => {
+    const icon = btn.querySelector('.sort-icon');
     if (!icon) return;
-    if (th.dataset.sort === currentSort.key) {
+    if (btn.dataset.sort === currentSort.key) {
       icon.textContent = currentSort.dir === 'desc' ? '↓' : '↑';
+      btn.setAttribute('aria-sort', currentSort.dir === 'desc' ? 'descending' : 'ascending');
     } else {
       icon.textContent = '↕';
+      btn.removeAttribute('aria-sort');
     }
   });
 }
 
-// Attach column header click handlers once the DOM is ready.
-document.querySelectorAll('thead th[data-sort]').forEach((th) => {
-  th.style.cursor = 'pointer';
-  th.addEventListener('click', () => handleColumnSort(th.dataset.sort));
+// Attach column header sort button click handlers.
+document.querySelectorAll('thead button[data-sort]').forEach((btn) => {
+  btn.addEventListener('click', () => handleColumnSort(btn.dataset.sort));
 });
 
 /** PDF button click — stop propagation (don't open report) then open PDF viewer. */
@@ -622,6 +624,11 @@ async function openPDF(reportPath) {
   const errorEl  = document.getElementById('pdf-panel-error');
   if (!overlay || !iframe) return;
 
+  // Cancel any in-flight pdf-path fetch before starting a new one
+  if (pdfFetchController) pdfFetchController.abort();
+  pdfFetchController = new AbortController();
+  const { signal } = pdfFetchController;
+
   // Reset state
   iframe.src = 'about:blank';
   if (errorEl) errorEl.style.display = 'none';
@@ -641,7 +648,7 @@ async function openPDF(reportPath) {
   }
 
   try {
-    const data = await fetchJSON(`/api/pdf-path?report=${encodeURIComponent(reportPath)}`);
+    const data = await fetchJSON(`/api/pdf-path?report=${encodeURIComponent(reportPath)}`, signal);
     if (data.pdfPath) {
       const filename = data.pdfPath.split('/').pop();
       if (titleEl) titleEl.textContent = filename;
@@ -654,6 +661,7 @@ async function openPDF(reportPath) {
       }
     }
   } catch (err) {
+    if (err.name === 'AbortError') return; // Superseded by a newer openPDF call — ignore
     if (titleEl) titleEl.textContent = 'PDF';
     if (errorEl) {
       errorEl.textContent = `Could not load PDF: ${esc(err.message)}`;
@@ -663,6 +671,8 @@ async function openPDF(reportPath) {
 }
 
 function closePDF() {
+  // Cancel any in-flight /api/pdf-path request
+  if (pdfFetchController) { pdfFetchController.abort(); pdfFetchController = null; }
   const overlay = document.getElementById('pdf-overlay');
   if (overlay) overlay.classList.remove('open');
   const iframe = document.getElementById('pdf-iframe');

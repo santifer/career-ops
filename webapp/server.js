@@ -148,6 +148,9 @@ function computeMetrics(apps) {
   const responded  = byStatus['Responded']  || 0;
   const interviews = byStatus['Interview']  || 0;
   const offers     = byStatus['Offer']      || 0;
+  const rejected   = byStatus['Rejected']   || 0;
+  // All statuses that imply the company responded (including later funnel stages)
+  const responses  = responded + interviews + offers + rejected;
 
   // Score buckets
   const buckets = [
@@ -175,7 +178,7 @@ function computeMetrics(apps) {
     topScore:      Math.round(topScore * 10) / 10,
     withPDF,
     actionable:    apps.filter((a) => a.score >= 4.0).length,
-    responseRate:  applied > 0 ? Math.round((responded  / applied) * 100) : 0,
+    responseRate:  applied > 0 ? Math.round((responses  / applied) * 100) : 0,
     interviewRate: applied > 0 ? Math.round((interviews / applied) * 100) : 0,
     offerRate:     applied > 0 ? Math.round((offers     / applied) * 100) : 0,
     scoreBuckets:  buckets.map(({ label, count }) => ({ label, count })),
@@ -288,7 +291,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/api/status', (_req, res) => {
   const { demo } = loadApplications();
-  res.json({ ok: true, careerOpsPath: CAREER_OPS_PATH, demo, version: '1.0.0' });
+  // careerOpsPath is intentionally omitted — it would expose local filesystem paths.
+  res.json({ ok: true, demo, version: '1.0.0' });
 });
 
 app.get('/api/applications', (_req, res) => {

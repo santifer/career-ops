@@ -1058,6 +1058,29 @@ td.td-pdf {
   .search-wrap { min-width: unset; }
 }
 
+/* ─── Sortable column header button ─────────────────────────────── */
+.th-sort-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  color: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  width: 100%;
+}
+
+.th-sort-btn:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
 /* ─── PDF button (pipeline table) ───────────────────────────────── */
 .pdf-btn {
   display: inline-flex;
