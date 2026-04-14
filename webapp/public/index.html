@@ -13,8 +13,14 @@
   <!-- Claude design system -->
   <link rel="stylesheet" href="styles.css" />
 
+  <!-- DOMPurify — HTML sanitizer (must load before marked) -->
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"
+          integrity="sha384-cwS6YdhLI7XS60eoDiC+egV0qHp8zI+Cms46R0nbn8JrmoAzV9uFL60etMZhAnSu"
+          crossorigin="anonymous" defer></script>
   <!-- marked.js for markdown rendering (report viewer) -->
-  <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"
+          integrity="sha384-odPBjvtXVM/5hOYIr3A1dB+flh0c3wAT3bSesIOqEGmyUA4JoKf/YTWy0XKOYAY7"
+          crossorigin="anonymous" defer></script>
 </head>
 <body>
 
@@ -31,20 +37,20 @@
       <!-- Tabs -->
       <ul class="nav-tabs" role="tablist" aria-label="Main navigation">
         <li role="presentation">
-          <button class="nav-tab active" role="tab" aria-selected="true"
-                  aria-controls="view-dashboard" data-view="dashboard">
+          <button id="tab-dashboard" type="button" class="nav-tab active" role="tab"
+                  aria-selected="true" aria-controls="view-dashboard" data-view="dashboard">
             Dashboard
           </button>
         </li>
         <li role="presentation">
-          <button class="nav-tab" role="tab" aria-selected="false"
-                  aria-controls="view-pipeline" data-view="pipeline">
+          <button id="tab-pipeline" type="button" class="nav-tab" role="tab"
+                  aria-selected="false" aria-controls="view-pipeline" data-view="pipeline">
             Pipeline
           </button>
         </li>
         <li role="presentation">
-          <button class="nav-tab" role="tab" aria-selected="false"
-                  aria-controls="view-pending" data-view="pending">
+          <button id="tab-pending" type="button" class="nav-tab" role="tab"
+                  aria-selected="false" aria-controls="view-pending" data-view="pending">
             Pending URLs
           </button>
         </li>
@@ -166,7 +172,7 @@
         <div>
           <div class="section-header">
             <h2 class="section-title">Recent Applications</h2>
-            <span class="section-action" id="view-all-btn">View all →</span>
+            <button type="button" class="section-action" id="view-all-btn">View all →</button>
           </div>
 
           <div class="table-card">

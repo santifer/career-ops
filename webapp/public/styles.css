@@ -4,12 +4,12 @@
    ================================================================ */
 
 /* ─── Google Fonts ─────────────────────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+@import 'https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap';
 
 /* ─── Design Tokens ────────────────────────────────────────────── */
 :root {
   /* Typography */
-  --font-serif:  'Lora', Georgia, 'Times New Roman', serif;
+  --font-serif:  'Lora', georgia, 'Times New Roman', serif;
   --font-sans:   'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-mono:   'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
 
@@ -768,12 +768,12 @@ td.td-pdf {
   background: var(--surface);
   border-left: 1px solid var(--border-strong);
   overflow-y: auto;
-  animation: slideIn 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: slide-in 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
 }
 
-@keyframes slideIn {
+@keyframes slide-in {
   from { transform: translateX(100%); opacity: 0; }
   to   { transform: translateX(0);    opacity: 1; }
 }
@@ -1060,4 +1060,22 @@ td.td-pdf {
 /* ─── Transition helpers ─────────────────────────────────────────── */
 .transition-all {
   transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+}
+
+/* ─── Reduced motion ─────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  /* Disable slide-in panel animation */
+  .report-panel {
+    animation: none;
+  }
+
+  /* Collapse all transition durations and animation durations site-wide */
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
 }

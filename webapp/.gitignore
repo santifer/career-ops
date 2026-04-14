@@ -1,2 +1,4 @@
 node_modules/
-package-lock.json
+# Un-ignore the webapp lockfile so installs are reproducible.
+# The root .gitignore excludes package-lock.json globally; this overrides it.
+!package-lock.json

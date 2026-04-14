@@ -177,11 +177,18 @@ function showError(msg) {
   document.getElementById('dashboard-subtitle').textContent = msg;
   ['recent-tbody', 'pipeline-tbody'].forEach((id) => {
     const el = document.getElementById(id);
-    if (el) el.innerHTML = `<tr><td colspan="7" class="table-empty">
-      <div class="pipeline-empty-icon">⚠️</div>
-      <div class="pipeline-empty-text">${esc(msg)}</div>
-    </td></tr>`;
   });
+  // Recent table has 6 columns, pipeline table has 7 — update each separately
+  const recentTbody = document.getElementById('recent-tbody');
+  if (recentTbody) recentTbody.innerHTML = `<tr><td colspan="6" class="table-empty">
+    <div class="pipeline-empty-icon">⚠️</div>
+    <div class="pipeline-empty-text">${esc(msg)}</div>
+  </td></tr>`;
+  const pipelineTbody = document.getElementById('pipeline-tbody');
+  if (pipelineTbody) pipelineTbody.innerHTML = `<tr><td colspan="7" class="table-empty">
+    <div class="pipeline-empty-icon">⚠️</div>
+    <div class="pipeline-empty-text">${esc(msg)}</div>
+  </td></tr>`;
 }
 
 // ─── Dashboard ────────────────────────────────────────────────────────────────
@@ -491,9 +498,17 @@ function openReport(row) {
       return r.json();
     })
     .then(({ content }) => {
-      const html = typeof marked !== 'undefined'
-        ? marked.parse(content)
-        : `<pre>${esc(content)}</pre>`;
+      let html;
+      if (typeof marked !== 'undefined') {
+        const raw = marked.parse(content);
+        // Sanitize with DOMPurify when available to prevent XSS from
+        // report content that may include HTML copied from job postings.
+        html = typeof DOMPurify !== 'undefined'
+          ? DOMPurify.sanitize(raw, { USE_PROFILES: { html: true } })
+          : raw;
+      } else {
+        html = `<pre>${esc(content)}</pre>`;
+      }
       bodyEl.innerHTML = `<div class="markdown-body">${html}</div>`;
     })
     .catch((err) => {
