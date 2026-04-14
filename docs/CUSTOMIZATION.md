@@ -47,7 +47,8 @@ The scanner will also remember companies it filters for:
 - `no_sponsorship`
 - `active_clearance_required`
 
-Once a company lands in that memory file, future scans skip it at the company
+Only blockers confirmed on the original employer posting are written into that
+memory file. Once a company lands there, future scans skip it at the company
 level before detail enrichment.
 
 ## CV Template (templates/cv-template.html)

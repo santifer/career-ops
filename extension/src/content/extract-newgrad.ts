@@ -29,7 +29,9 @@ export interface NewGradRow {
   qualifications: string;
   h1bSponsored: boolean;
   sponsorshipSupport: "yes" | "no" | "unknown";
+  confirmedSponsorshipSupport: "yes" | "no" | "unknown";
   requiresActiveSecurityClearance: boolean;
+  confirmedRequiresActiveSecurityClearance: boolean;
   isNewGrad: boolean;
 }
 
@@ -61,8 +63,10 @@ export interface NewGradDetail {
   companyCategories: string[];
   h1bSponsorLikely: boolean | null;
   sponsorshipSupport: "yes" | "no" | "unknown";
+  confirmedSponsorshipSupport: "yes" | "no" | "unknown";
   h1bSponsorshipHistory: { year: string; count: number }[];
   requiresActiveSecurityClearance: boolean;
+  confirmedRequiresActiveSecurityClearance: boolean;
   insiderConnections: number | null;
   originalPostUrl: string;
   applyNowUrl: string;
@@ -345,9 +349,11 @@ export function extractNewGradList(): NewGradRow[] {
       qualifications: qualsText.slice(0, 500),
       h1bSponsored: sponsorshipSupport === "yes",
       sponsorshipSupport,
+      confirmedSponsorshipSupport: "unknown",
       requiresActiveSecurityClearance: requiresActiveSecurityClearance(
         `${titleText} ${qualsText} ${rowText}`,
       ),
+      confirmedRequiresActiveSecurityClearance: false,
       isNewGrad: parseBooleanText(newGradText),
     });
   }
@@ -1054,8 +1060,10 @@ export function extractNewGradDetail(): NewGradDetail {
     companyCategories,
     h1bSponsorLikely,
     sponsorshipSupport,
+    confirmedSponsorshipSupport: "unknown",
     h1bSponsorshipHistory,
     requiresActiveSecurityClearance: activeSecurityClearanceRequired,
+    confirmedRequiresActiveSecurityClearance: false,
     insiderConnections,
     originalPostUrl,
     applyNowUrl,

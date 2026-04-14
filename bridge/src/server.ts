@@ -496,7 +496,9 @@ export function buildServer(args: BuildServerArgs) {
     qualifications: z.string().nullable(),
     h1bSponsored: z.boolean(),
     sponsorshipSupport: z.enum(["yes", "no", "unknown"]),
+    confirmedSponsorshipSupport: z.enum(["yes", "no", "unknown"]),
     requiresActiveSecurityClearance: z.boolean(),
+    confirmedRequiresActiveSecurityClearance: z.boolean(),
     isNewGrad: z.boolean(),
   });
 
@@ -579,6 +581,7 @@ export function buildServer(args: BuildServerArgs) {
     companyCategories: z.array(z.string()),
     h1bSponsorLikely: z.boolean().nullable(),
     sponsorshipSupport: z.enum(["yes", "no", "unknown"]),
+    confirmedSponsorshipSupport: z.enum(["yes", "no", "unknown"]),
     h1bSponsorshipHistory: z.array(
       z.object({
         year: z.string(),
@@ -586,6 +589,7 @@ export function buildServer(args: BuildServerArgs) {
       })
     ),
     requiresActiveSecurityClearance: z.boolean(),
+    confirmedRequiresActiveSecurityClearance: z.boolean(),
     insiderConnections: z.number().int().nullable(),
     originalPostUrl: z.string(),
     applyNowUrl: z.string(),
@@ -682,7 +686,13 @@ export function buildServer(args: BuildServerArgs) {
           });
         },
       );
-      write({ kind: "done", added: result.added, skipped: result.skipped, entries: result.entries });
+      write({
+        kind: "done",
+        added: result.added,
+        skipped: result.skipped,
+        entries: result.entries,
+        candidates: result.candidates,
+      });
     } catch (e) {
       const err = toBridgeError(e);
       write({ kind: "failed", error: { code: err.code, message: err.message } });

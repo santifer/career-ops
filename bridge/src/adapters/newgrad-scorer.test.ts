@@ -81,7 +81,9 @@ function makeRow(overrides?: Partial<NewGradRow>): NewGradRow {
     qualifications: "Experience with TypeScript, React, and Node.js",
     h1bSponsored: false,
     sponsorshipSupport: "unknown",
+    confirmedSponsorshipSupport: "unknown",
     requiresActiveSecurityClearance: false,
+    confirmedRequiresActiveSecurityClearance: false,
     isNewGrad: true,
   };
   if (!overrides) return base;
@@ -319,11 +321,28 @@ describe("scoreAndFilter", () => {
     expect(result.filtered[0]!.reason).toBe("negative_title");
   });
 
-  test("explicit no sponsorship is filtered when hard filter is enabled", () => {
+  test("unconfirmed no sponsorship signal is not hard-filtered", () => {
     const config = makeConfig({
       hard_filters: { exclude_no_sponsorship: true },
     });
     const rows = [makeRow({ sponsorshipSupport: "no" })];
+
+    const result = scoreAndFilter(rows, config, [], new Set());
+
+    expect(result.promoted).toHaveLength(1);
+    expect(result.filtered).toHaveLength(0);
+  });
+
+  test("original-post-confirmed no sponsorship is filtered when hard filter is enabled", () => {
+    const config = makeConfig({
+      hard_filters: { exclude_no_sponsorship: true },
+    });
+    const rows = [
+      makeRow({
+        sponsorshipSupport: "no",
+        confirmedSponsorshipSupport: "no",
+      }),
+    ];
 
     const result = scoreAndFilter(rows, config, [], new Set());
 
@@ -349,7 +368,7 @@ describe("scoreAndFilter", () => {
     expect(result.filtered[0]!.detail).toContain("blocklist");
   });
 
-  test("active secret clearance requirement is filtered when hard filter is enabled", () => {
+  test("unconfirmed clearance signal is not hard-filtered", () => {
     const config = makeConfig({
       hard_filters: { exclude_active_security_clearance: true },
     });
@@ -357,9 +376,8 @@ describe("scoreAndFilter", () => {
 
     const result = scoreAndFilter(rows, config, [], new Set());
 
-    expect(result.promoted).toHaveLength(0);
-    expect(result.filtered).toHaveLength(1);
-    expect(result.filtered[0]!.reason).toBe("active_clearance_required");
+    expect(result.promoted).toHaveLength(1);
+    expect(result.filtered).toHaveLength(0);
   });
 
   test("company on the active clearance blocklist is filtered before scoring", () => {
@@ -384,13 +402,15 @@ describe("scoreAndFilter", () => {
     expect(result.filtered[0]!.detail).toContain("blocklist");
   });
 
-  test("clearance keyword in qualifications is filtered when hard filter is enabled", () => {
+  test("original-post-confirmed clearance requirement is filtered when hard filter is enabled", () => {
     const config = makeConfig({
       hard_filters: { exclude_active_security_clearance: true },
     });
     const rows = [
       makeRow({
         qualifications: "Must have an active secret security clearance before start date",
+        requiresActiveSecurityClearance: true,
+        confirmedRequiresActiveSecurityClearance: true,
       }),
     ];
 

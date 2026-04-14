@@ -170,7 +170,7 @@ export function createSdkPipelineAdapter(
     },
 
     async runEvaluation(
-      _jobId: JobId,
+      jobId: JobId,
       input: EvaluationInput,
       onProgress: PipelineProgressHandler
     ): Promise<EvaluationResult | BridgeError> {
@@ -185,7 +185,7 @@ export function createSdkPipelineAdapter(
           return bridgeError("BRIDGE_NOT_READY", "cv.md is empty or missing");
         }
 
-        const reportNumber = reserveReportNumber(config.repoRoot);
+        const reportNumber = reserveReportNumber(config.repoRoot, jobId);
         const reportNumberText = String(reportNumber).padStart(3, "0");
         const today = todayDate();
 
@@ -345,6 +345,7 @@ export function createSdkPipelineAdapter(
       const existingPipelineUrls = loadPipelineUrls(config.repoRoot);
 
       const entries: PipelineEntry[] = [];
+      const candidates: PipelineEntry[] = [];
       let skipped = 0;
       let processed = 0;
 
@@ -362,9 +363,16 @@ export function createSdkPipelineAdapter(
             enrichedRow.detail.sponsorshipSupport !== "unknown"
               ? enrichedRow.detail.sponsorshipSupport
               : enrichedRow.row.row.sponsorshipSupport,
+          confirmedSponsorshipSupport:
+            enrichedRow.detail.confirmedSponsorshipSupport !== "unknown"
+              ? enrichedRow.detail.confirmedSponsorshipSupport
+              : enrichedRow.row.row.confirmedSponsorshipSupport,
           requiresActiveSecurityClearance:
             enrichedRow.detail.requiresActiveSecurityClearance ||
             enrichedRow.row.row.requiresActiveSecurityClearance,
+          confirmedRequiresActiveSecurityClearance:
+            enrichedRow.detail.confirmedRequiresActiveSecurityClearance ||
+            enrichedRow.row.row.confirmedRequiresActiveSecurityClearance,
         };
 
         const { promoted, filtered } = scoreAndFilter(
@@ -392,12 +400,6 @@ export function createSdkPipelineAdapter(
           enrichedRow.detail,
           enrichedRow.row.row,
         );
-        if (existingPipelineUrls.has(entryUrl)) {
-          skipped++;
-          onProgress?.(processed, rows.length, enrichedRow);
-          continue;
-        }
-
         const entry: PipelineEntry = {
           url: entryUrl,
           company: enrichedRow.row.row.company,
@@ -405,6 +407,14 @@ export function createSdkPipelineAdapter(
           score: scored.score,
           source: "newgrad-jobs.com",
         };
+        candidates.push(entry);
+
+        if (existingPipelineUrls.has(entryUrl)) {
+          skipped++;
+          onProgress?.(processed, rows.length, enrichedRow);
+          continue;
+        }
+
         entries.push(entry);
         existingPipelineUrls.add(entryUrl);
         onProgress?.(processed, rows.length, enrichedRow);
@@ -427,7 +437,7 @@ export function createSdkPipelineAdapter(
         appendFileSync(pipelinePath, "\n" + lines.join("\n") + "\n", "utf-8");
       }
 
-      return { added: entries.length, skipped, entries };
+      return { added: entries.length, skipped, entries, candidates };
     },
   };
 }
@@ -573,8 +583,9 @@ function writeTrackerTsv(repoRoot: string, num: number, slug: string, row: Track
   writeFileSync(join(dir, `${padded}-${slug}.tsv`), line + "\n", "utf-8");
 }
 
-function reserveReportNumber(repoRoot: string): number {
+function reserveReportNumber(repoRoot: string, jobId: string): number {
   const lockDir = join(repoRoot, "batch/.batch-state.lock");
+  const reservationsDir = join(repoRoot, "batch/.report-number-reservations");
   const deadline = Date.now() + 5000;
   for (;;) {
     try { mkdirSync(lockDir); break; }
@@ -587,10 +598,22 @@ function reserveReportNumber(repoRoot: string): number {
   }
   try {
     const dir = join(repoRoot, "reports");
+    mkdirSync(reservationsDir, { recursive: true });
     const names = existsSync(dir) ? readdirSync(dir) : [];
     let max = 0;
     for (const n of names) { const m = /^(\d+)-/.exec(n); if (m) max = Math.max(max, Number(m[1])); }
-    return max + 1;
+    const reservationNames = readdirSync(reservationsDir);
+    for (const n of reservationNames) {
+      const m = /^(\d+)-/.exec(n);
+      if (m) max = Math.max(max, Number(m[1]));
+    }
+    const next = max + 1;
+    writeFileSync(
+      join(reservationsDir, `${String(next).padStart(3, "0")}-${jobId}.reserved`),
+      `${jobId}\n`,
+      "utf-8",
+    );
+    return next;
   } finally { rmSync(lockDir, { recursive: true, force: true }); }
 }
 

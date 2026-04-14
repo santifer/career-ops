@@ -286,6 +286,21 @@ function isJobrightUrl(url: string | null | undefined): boolean {
   }
 }
 
+function isNewGradJobsUrl(url: string | null | undefined): boolean {
+  const normalized = normalizeUrlCandidate(url);
+  if (!normalized) return false;
+
+  try {
+    const parsed = new URL(normalized);
+    return (
+      parsed.hostname === "www.newgrad-jobs.com" ||
+      parsed.hostname.endsWith(".newgrad-jobs.com")
+    );
+  } catch {
+    return false;
+  }
+}
+
 function scoreUrlCandidate(url: string | null | undefined): number {
   const normalized = normalizeUrlCandidate(url);
   if (!normalized) return Number.NEGATIVE_INFINITY;
@@ -381,7 +396,131 @@ function hasExternalCandidateUrl(
   ...candidates: Array<string | null | undefined>
 ): boolean {
   const best = pickBestCandidateUrl(...candidates);
-  return Boolean(best && !isJobrightUrl(best));
+  return Boolean(best && !isJobrightUrl(best) && !isNewGradJobsUrl(best));
+}
+
+async function confirmOriginalPostingBlockers(
+  ...candidates: Array<string | null | undefined>
+): Promise<Pick<NewGradDetail,
+  "confirmedSponsorshipSupport" |
+  "confirmedRequiresActiveSecurityClearance"
+> & { confirmationUrl: string | null }> {
+  const emptyResult = {
+    confirmationUrl: null,
+    confirmedSponsorshipSupport: "unknown" as const,
+    confirmedRequiresActiveSecurityClearance: false,
+  };
+
+  const targetUrl = pickBestCandidateUrl(...candidates);
+  if (!targetUrl || isJobrightUrl(targetUrl) || isNewGradJobsUrl(targetUrl)) {
+    return emptyResult;
+  }
+
+  const perm = resolvePermissionOrigin(targetUrl);
+  if (perm) {
+    const alreadyGranted = await chrome.permissions.contains({
+      origins: [perm.pattern],
+    });
+    if (!alreadyGranted) {
+      return emptyResult;
+    }
+  }
+
+  let tabIdToClose: number | null = null;
+  try {
+    const tab = await chrome.tabs.create({ url: targetUrl, active: false });
+    if (tab.id === undefined) return emptyResult;
+    tabIdToClose = tab.id;
+
+    await waitForTabComplete(tab.id);
+    await new Promise((resolve) => setTimeout(resolve, 1200));
+
+    const results = await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: () => {
+        function collectText(): string {
+          const bodyText = document.body?.innerText ?? "";
+          const scriptText = Array.from(
+            document.querySelectorAll(
+              "script[type='application/ld+json'], script[type='application/json'], script#__NEXT_DATA__"
+            )
+          )
+            .map((script) => script.textContent ?? "")
+            .join("\n");
+          return `${bodyText}\n${scriptText}`;
+        }
+
+        function parseSponsorshipStatus(text: string): "yes" | "no" | "unknown" {
+          const normalized = text.toLowerCase().replace(/\s+/g, " ").trim();
+          if (!normalized) return "unknown";
+
+          const negativeSignals = [
+            "no sponsorship",
+            "without sponsorship",
+            "unable to sponsor",
+            "cannot sponsor",
+            "can't sponsor",
+            "will not sponsor",
+            "does not provide sponsorship",
+            "sponsorship not available",
+            "no visa sponsorship",
+            "not eligible for visa sponsorship",
+            "must be authorized to work without sponsorship",
+            "work authorization without sponsorship",
+          ];
+          if (negativeSignals.some((signal) => normalized.includes(signal))) {
+            return "no";
+          }
+
+          const positiveSignals = [
+            "visa sponsorship available",
+            "sponsorship available",
+            "work authorization support",
+            "immigration support",
+          ];
+          if (positiveSignals.some((signal) => normalized.includes(signal))) {
+            return "yes";
+          }
+
+          return "unknown";
+        }
+
+        function requiresActiveSecurityClearance(text: string): boolean {
+          const normalized = text.toLowerCase().replace(/\s+/g, " ").trim();
+          if (!normalized) return false;
+
+          const signals = [
+            "active secret security clearance",
+            "active secret clearance",
+            "current secret clearance",
+            "must have an active secret clearance",
+            "must possess an active secret clearance",
+            "requires an active secret clearance",
+            "active secret clearance required",
+          ];
+          return signals.some((signal) => normalized.includes(signal));
+        }
+
+        const combinedText = collectText();
+        return {
+          confirmationUrl: window.location.href,
+          confirmedSponsorshipSupport: parseSponsorshipStatus(combinedText),
+          confirmedRequiresActiveSecurityClearance:
+            requiresActiveSecurityClearance(combinedText),
+        };
+      },
+    });
+
+    return (
+      (results[0]?.result as typeof emptyResult | undefined) ?? emptyResult
+    );
+  } catch {
+    return emptyResult;
+  } finally {
+    if (tabIdToClose !== null) {
+      await chrome.tabs.remove(tabIdToClose).catch(() => undefined);
+    }
+  }
 }
 
 async function handleCapture(): Promise<PopupResponse> {
@@ -1532,8 +1671,10 @@ async function handleNewGradEnrichDetails(
               companyCategories,
               h1bSponsorLikely,
               sponsorshipSupport,
+              confirmedSponsorshipSupport: "unknown",
               h1bSponsorshipHistory,
               requiresActiveSecurityClearance: activeSecurityClearanceRequired,
+              confirmedRequiresActiveSecurityClearance: false,
               insiderConnections,
               originalPostUrl,
               applyNowUrl,
@@ -1817,6 +1958,25 @@ async function handleNewGradEnrichDetails(
           }
         }
 
+        const confirmation = await confirmOriginalPostingBlockers(
+          detail.originalPostUrl,
+          detail.applyNowUrl,
+          ...(detail.applyFlowUrls ?? []),
+          scored.row.applyUrl,
+        );
+        detail = {
+          ...detail,
+          originalPostUrl:
+            pickBestCandidateUrl(
+              detail.originalPostUrl,
+              confirmation.confirmationUrl,
+            ) ?? detail.originalPostUrl,
+          confirmedSponsorshipSupport:
+            confirmation.confirmedSponsorshipSupport,
+          confirmedRequiresActiveSecurityClearance:
+            confirmation.confirmedRequiresActiveSecurityClearance,
+        };
+
         return {
           row: scored,
           detail: { ...detail, position: scored.row.position },
@@ -1872,6 +2032,9 @@ async function handleNewGradEnrich(rows: EnrichedRow[], sessionId: string): Prom
             added: event.added as number,
             skipped: event.skipped as number,
             entries: event.entries as PipelineEntry[],
+            ...((event.candidates as PipelineEntry[] | undefined)
+              ? { candidates: event.candidates as PipelineEntry[] }
+              : {}),
           };
         } else if (event.kind === "failed") {
           const err = event.error as { code: string; message: string };
@@ -1891,7 +2054,28 @@ async function handleNewGradEnrich(rows: EnrichedRow[], sessionId: string): Prom
   }
 
   if (finalError) return { kind: "newgradEnrich", ok: false, error: finalError };
-  if (finalResult) return { kind: "newgradEnrich", ok: true, result: finalResult };
+  const enrichResult = finalResult as NewGradEnrichResult | null;
+  if (enrichResult !== null) {
+    const evaluationCandidates = enrichResult.candidates ?? enrichResult.entries;
+    const directEval = await runDirectNewGradEvaluations(
+      client,
+      evaluationCandidates,
+      rows,
+      sessionId,
+    );
+    return {
+      kind: "newgradEnrich",
+      ok: true,
+      result: {
+        ...enrichResult,
+        skipped: Math.max(rows.length - evaluationCandidates.length, 0),
+        queued: directEval.queued,
+        evaluated: directEval.queued,
+        failed: directEval.failed,
+        jobs: directEval.jobs,
+      },
+    };
+  }
 
   // Fallback — stream ended without done/failed event
   return {
@@ -1899,6 +2083,127 @@ async function handleNewGradEnrich(rows: EnrichedRow[], sessionId: string): Prom
     ok: false,
     error: { code: "INTERNAL", message: "enrich stream ended unexpectedly" },
   };
+}
+
+function matchesNewGradEntry(entry: PipelineEntry, row: EnrichedRow): boolean {
+  const entryCompany = entry.company.trim().toLowerCase();
+  const entryRole = entry.role.trim().toLowerCase();
+  const candidates = [
+    row.detail.company,
+    row.row.row.company,
+  ]
+    .map((value) => value.trim().toLowerCase());
+  const roleCandidates = [
+    row.detail.title,
+    row.row.row.title,
+  ]
+    .map((value) => value.trim().toLowerCase());
+  return candidates.includes(entryCompany) && roleCandidates.includes(entryRole);
+}
+
+async function runDirectNewGradEvaluations(
+  client: ReturnType<typeof bridgeClientFromState>,
+  entries: readonly PipelineEntry[],
+  rows: EnrichedRow[],
+  sessionId: string,
+): Promise<{
+  queued: number;
+  failed: number;
+  jobs: Array<{
+    jobId: string;
+    company: string;
+    role: string;
+    status: "queued" | "failed";
+    score?: number;
+    reportNumber?: number;
+    reportPath?: string;
+    error?: string;
+  }>;
+}> {
+  const jobs: Array<{
+    jobId: string;
+    company: string;
+    role: string;
+    status: "queued" | "failed";
+    score?: number;
+    reportNumber?: number;
+    reportPath?: string;
+    error?: string;
+  }> = [];
+  let queued = 0;
+  let failed = 0;
+  const recentQueuedAt: number[] = [];
+
+  for (let index = 0; index < entries.length; index++) {
+    const entry = entries[index]!;
+    while (recentQueuedAt.length >= 3) {
+      const waitMs = 60_000 - (Date.now() - recentQueuedAt[0]!);
+      if (waitMs <= 0) {
+        recentQueuedAt.shift();
+        continue;
+      }
+      await new Promise((resolve) => setTimeout(resolve, waitMs + 250));
+      while (recentQueuedAt.length > 0 && Date.now() - recentQueuedAt[0]! >= 60_000) {
+        recentQueuedAt.shift();
+      }
+    }
+
+    chrome.runtime.sendMessage({
+      kind: "enrichProgress",
+      sessionId,
+      current: index,
+      total: entries.length,
+      row: { company: entry.company, title: `Queueing ${entry.role}` },
+    }).catch(() => { /* popup/panel may be closed */ });
+
+    const matchedRow = rows.find((row) => matchesNewGradEntry(entry, row));
+    const evaluationInput = {
+      url: entry.url,
+      title: entry.role,
+      detection: {
+        label: "job_posting" as const,
+        confidence: 1,
+        signals: ["newgrad-scan"],
+      },
+      ...(matchedRow?.detail.description
+        ? { pageText: matchedRow.detail.description }
+        : {}),
+    };
+    const create = await client.createEvaluation({
+      ...evaluationInput,
+    });
+
+    if (!create.ok) {
+      failed += 1;
+      jobs.push({
+        jobId: `failed-${Date.now()}-${index}`,
+        company: entry.company,
+        role: entry.role,
+        status: "failed",
+        error: create.error.message,
+      });
+      continue;
+    }
+
+    recentQueuedAt.push(Date.now());
+    queued += 1;
+    jobs.push({
+      jobId: create.result.jobId,
+      company: entry.company,
+      role: entry.role,
+      status: "queued",
+    });
+
+    chrome.runtime.sendMessage({
+      kind: "enrichProgress",
+      sessionId,
+      current: index + 1,
+      total: entries.length,
+      row: { company: entry.company, title: `Queued ${entry.role}` },
+    }).catch(() => { /* popup/panel may be closed */ });
+  }
+
+  return { queued, failed, jobs };
 }
 
 /* -------------------------------------------------------------------------- */

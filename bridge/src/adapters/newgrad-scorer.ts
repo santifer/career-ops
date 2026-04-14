@@ -105,16 +105,6 @@ function normalizeText(value: string | null | undefined): string {
     .trim();
 }
 
-function includesAny(text: string, keywords: readonly string[]): string | null {
-  for (const keyword of keywords) {
-    const normalizedKeyword = normalizeText(keyword);
-    if (normalizedKeyword && text.includes(normalizedKeyword)) {
-      return keyword;
-    }
-  }
-  return null;
-}
-
 function equalsAny(value: string, candidates: readonly string[]): string | null {
   const normalizedValue = normalizeText(value);
   for (const candidate of candidates) {
@@ -123,22 +113,6 @@ function equalsAny(value: string, candidates: readonly string[]): string | null 
     }
   }
   return null;
-}
-
-function buildFilterText(row: NewGradRow): string {
-  return normalizeText(
-    [
-      row.title,
-      row.company,
-      row.location,
-      row.workModel,
-      row.qualifications,
-      row.industry,
-      row.salary,
-    ]
-      .filter(Boolean)
-      .join(" "),
-  );
 }
 
 /**
@@ -211,8 +185,8 @@ export function scoreRow(row: NewGradRow, config: NewGradScanConfig): ScoredRow 
  *   1. `negative_title` — title contains any negative keyword (case-insensitive)
  *   2. `no_sponsorship` — company is on the no-sponsorship blocklist
  *   3. `active_clearance_required` — company is on the clearance blocklist
- *   4. `no_sponsorship` — role explicitly does not provide sponsorship support
- *   5. `active_clearance_required` — role requires an active secret clearance
+ *   4. `no_sponsorship` — original employer posting confirms no sponsorship
+ *   5. `active_clearance_required` — original employer posting confirms active secret clearance
  *   6. `already_tracked` — `company|title` (lowercased) exists in trackedCompanyRoles
  *
  * **Soft filter:**
@@ -239,8 +213,6 @@ export function scoreAndFilter(
 
   for (const row of rows) {
     const titleLower = row.title.toLowerCase();
-    const filterText = buildFilterText(row);
-
     // Hard filter 1: negative title keywords
     const matchedNegative = negativeLower.find((kw) => titleLower.includes(kw));
     if (matchedNegative !== undefined) {
@@ -281,11 +253,11 @@ export function scoreAndFilter(
       continue;
     }
 
-    // Hard filter 4: no sponsorship support for a candidate who requires it
+    // Hard filter 4: original employer posting confirms no sponsorship support
     const matchedNoSponsorship = config.hard_filters.exclude_no_sponsorship
-      ? row.sponsorshipSupport === "no"
-        ? "listing sponsorship signal"
-        : includesAny(filterText, config.hard_filters.no_sponsorship_keywords)
+      ? row.confirmedSponsorshipSupport === "no"
+        ? "confirmed on original employer posting"
+        : null
       : null;
     if (matchedNoSponsorship !== null) {
       filtered.push({
@@ -296,11 +268,11 @@ export function scoreAndFilter(
       continue;
     }
 
-    // Hard filter 5: active secret clearance requirement
+    // Hard filter 5: original employer posting confirms active secret clearance requirement
     const matchedClearance = config.hard_filters.exclude_active_security_clearance
-      ? row.requiresActiveSecurityClearance
-        ? "listing clearance signal"
-        : includesAny(filterText, config.hard_filters.clearance_keywords)
+      ? row.confirmedRequiresActiveSecurityClearance
+        ? "confirmed on original employer posting"
+        : null
       : null;
     if (matchedClearance !== null) {
       filtered.push({

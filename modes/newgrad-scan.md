@@ -52,5 +52,7 @@ Company-level memory:
 - Auto-remembered companies live in `data/newgrad-company-memory.yml`
 - Once a company is remembered for `no_sponsorship` or
   `active_clearance_required`, future scans skip it before detail enrichment
+- Auto-memory only writes blockers confirmed on the original employer posting;
+  newgrad-jobs.com and Jobright signals alone are not enough to persist a company
 
 To customize: edit `config/profile.yml → newgrad_scan`.

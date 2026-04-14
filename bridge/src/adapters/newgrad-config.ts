@@ -324,13 +324,19 @@ export function persistBlockedCompanies(
     const company = filteredRow.row.company.trim();
     if (!company) continue;
 
-    if (filteredRow.reason === "no_sponsorship") {
+    if (
+      filteredRow.reason === "no_sponsorship" &&
+      filteredRow.row.confirmedSponsorshipSupport === "no"
+    ) {
       changed =
         insertUniqueCompany(memory.no_sponsorship_companies, company) || changed;
       continue;
     }
 
-    if (filteredRow.reason === "active_clearance_required") {
+    if (
+      filteredRow.reason === "active_clearance_required" &&
+      filteredRow.row.confirmedRequiresActiveSecurityClearance
+    ) {
       changed =
         insertUniqueCompany(
           memory.active_security_clearance_companies,
@@ -385,7 +391,7 @@ function writeBlockedCompanyMemory(
   mkdirSync(join(repoRoot, "data"), { recursive: true });
   const lines = [
     "# Auto-maintained by newgrad-scan.",
-    "# Companies remembered here are skipped at company level in future scans.",
+    "# Only companies confirmed on the original employer posting are persisted here.",
     "",
     "no_sponsorship_companies:",
     ...renderYamlArray(memory.no_sponsorship_companies),

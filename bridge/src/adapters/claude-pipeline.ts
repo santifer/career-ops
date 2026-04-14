@@ -233,7 +233,7 @@ export function createClaudePipelineAdapter(
       mkdirSync(trackerDir, { recursive: true });
       mkdirSync(reportDir, { recursive: true });
 
-      const reportNumber = reserveReportNumber(config.repoRoot);
+      const reportNumber = reserveReportNumber(config.repoRoot, jobId);
       const reportNumberText = formatReportNumber(reportNumber);
       const today = todayDate();
       const jdPath = join(tmpdir(), `career-ops-bridge-jd-${jobId}.txt`);
@@ -590,6 +590,7 @@ export function createClaudePipelineAdapter(
       const existingPipelineUrls = loadPipelineUrls(config.repoRoot);
 
       const entries: PipelineEntry[] = [];
+      const candidates: PipelineEntry[] = [];
       let skipped = 0;
       let processed = 0;
       const jdFileMap = new Map<string, string>();
@@ -609,9 +610,16 @@ export function createClaudePipelineAdapter(
             enrichedRow.detail.sponsorshipSupport !== "unknown"
               ? enrichedRow.detail.sponsorshipSupport
               : enrichedRow.row.row.sponsorshipSupport,
+          confirmedSponsorshipSupport:
+            enrichedRow.detail.confirmedSponsorshipSupport !== "unknown"
+              ? enrichedRow.detail.confirmedSponsorshipSupport
+              : enrichedRow.row.row.confirmedSponsorshipSupport,
           requiresActiveSecurityClearance:
             enrichedRow.detail.requiresActiveSecurityClearance ||
             enrichedRow.row.row.requiresActiveSecurityClearance,
+          confirmedRequiresActiveSecurityClearance:
+            enrichedRow.detail.confirmedRequiresActiveSecurityClearance ||
+            enrichedRow.row.row.confirmedRequiresActiveSecurityClearance,
         };
 
         const { promoted, filtered } = scoreAndFilter(
@@ -639,6 +647,15 @@ export function createClaudePipelineAdapter(
           enrichedRow.detail,
           enrichedRow.row.row,
         );
+        const entry: PipelineEntry = {
+          url: entryUrl,
+          company: enrichedRow.row.row.company,
+          role: enrichedRow.row.row.title,
+          score: scored.score,
+          source: "newgrad-jobs.com",
+        };
+        candidates.push(entry);
+
         if (existingPipelineUrls.has(entryUrl)) {
           skipped++;
           onProgress?.(processed, rows.length, enrichedRow);
@@ -650,13 +667,9 @@ export function createClaudePipelineAdapter(
         mkdirSync(jdsDir, { recursive: true });
 
         const h1bValue =
-          enrichedRow.detail.sponsorshipSupport !== "unknown"
-            ? enrichedRow.detail.sponsorshipSupport
-            : enrichedRow.detail.h1bSponsorLikely === true
-              ? "yes"
-              : enrichedRow.detail.h1bSponsorLikely === false
-                ? "no"
-                : "unknown";
+          enrichedRow.detail.confirmedSponsorshipSupport !== "unknown"
+            ? enrichedRow.detail.confirmedSponsorshipSupport
+            : "unknown";
 
         const jdFile = writeJdFile({
           jdsDir,
@@ -667,7 +680,7 @@ export function createClaudePipelineAdapter(
           ...(enrichedRow.detail.location ? { location: enrichedRow.detail.location } : {}),
           ...(enrichedRow.detail.salaryRange ? { salary: enrichedRow.detail.salaryRange } : {}),
           h1b: h1bValue,
-          ...(enrichedRow.detail.requiresActiveSecurityClearance
+          ...(enrichedRow.detail.confirmedRequiresActiveSecurityClearance
             ? { clearance: "active-secret-required" }
             : {}),
           ...(enrichedRow.detail.applyNowUrl ? { applyUrl: enrichedRow.detail.applyNowUrl } : {}),
@@ -677,13 +690,6 @@ export function createClaudePipelineAdapter(
           jdFileMap.set(entryUrl, jdFile);
         }
 
-        const entry: PipelineEntry = {
-          url: entryUrl,
-          company: enrichedRow.row.row.company,
-          role: enrichedRow.row.row.title,
-          score: scored.score,
-          source: "newgrad-jobs.com",
-        };
         entries.push(entry);
         existingPipelineUrls.add(entryUrl);
         onProgress?.(processed, rows.length, enrichedRow);
@@ -709,7 +715,7 @@ export function createClaudePipelineAdapter(
         appendFileSync(pipelinePath, "\n" + lines.join("\n") + "\n", "utf-8");
       }
 
-      return { added: entries.length, skipped, entries };
+      return { added: entries.length, skipped, entries, candidates };
     },
   };
 }
@@ -927,8 +933,9 @@ function buildCodexTerminalSchema(): Record<string, unknown> {
   };
 }
 
-function reserveReportNumber(repoRoot: string): number {
+function reserveReportNumber(repoRoot: string, jobId: string): number {
   const lockDir = join(repoRoot, "batch/.batch-state.lock");
+  const reservationsDir = join(repoRoot, "batch/.report-number-reservations");
   const deadline = Date.now() + LOCK_WAIT_MS;
 
   for (;;) {
@@ -955,6 +962,7 @@ function reserveReportNumber(repoRoot: string): number {
 
   try {
     const reportsDir = join(repoRoot, "reports");
+    mkdirSync(reservationsDir, { recursive: true });
     const names = existsSync(reportsDir) ? readdirSync(reportsDir) : [];
     let maxNum = 0;
     for (const name of names) {
@@ -965,7 +973,25 @@ function reserveReportNumber(repoRoot: string): number {
         maxNum = Math.max(maxNum, num);
       }
     }
-    return maxNum + 1;
+    const reservationNames = readdirSync(reservationsDir);
+    for (const name of reservationNames) {
+      const match = /^(\d+)-/.exec(name);
+      if (!match) continue;
+      const num = Number(match[1]);
+      if (Number.isFinite(num)) {
+        maxNum = Math.max(maxNum, num);
+      }
+    }
+    const next = maxNum + 1;
+    writeFileSync(
+      join(
+        reservationsDir,
+        `${formatReportNumber(next)}-${jobId}.reserved`
+      ),
+      `${jobId}\n`,
+      "utf-8"
+    );
+    return next;
   } finally {
     rmSync(lockDir, { recursive: true, force: true });
   }

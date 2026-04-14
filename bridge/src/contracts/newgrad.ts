@@ -50,8 +50,12 @@ export interface NewGradRow {
   h1bSponsored: boolean;
   /** Normalized sponsorship support signal from the listing. */
   sponsorshipSupport: SponsorshipStatus;
+  /** Sponsorship support confirmed on the original employer posting. */
+  confirmedSponsorshipSupport: SponsorshipStatus;
   /** Whether the listing already signals an active secret clearance requirement. */
   requiresActiveSecurityClearance: boolean;
+  /** Whether the original employer posting confirms active secret clearance is required. */
+  confirmedRequiresActiveSecurityClearance: boolean;
   /** Whether the listing is tagged as new-grad eligible. */
   isNewGrad: boolean;
 }
@@ -120,6 +124,10 @@ export interface NewGradDetail {
   h1bSponsorshipHistory: readonly { year: string; count: number }[];
   /** Whether the detail page requires an active secret security clearance. */
   requiresActiveSecurityClearance: boolean;
+  /** Sponsorship support confirmed on the original employer posting. */
+  confirmedSponsorshipSupport: SponsorshipStatus;
+  /** Whether the original employer posting confirms active secret clearance is required. */
+  confirmedRequiresActiveSecurityClearance: boolean;
   /** Count of visible insider connections on the page. */
   insiderConnections: number | null;
   /** URL of the original listing on the source site. */
@@ -223,15 +231,52 @@ export interface PipelineEntry {
 }
 
 /**
- * Result of the enrichment + pipeline-write phase.
+ * One evaluation launched from a promoted newgrad-scan row.
+ */
+export interface NewGradEvaluationSummary {
+  /** Bridge job id for the direct evaluation. */
+  jobId: string;
+  /** Company name used for the evaluation. */
+  company: string;
+  /** Role title used for the evaluation. */
+  role: string;
+  /** Whether the direct evaluation was queued or failed to queue. */
+  status: "queued" | "failed";
+  /** Final score when the evaluation completed successfully. */
+  score?: number;
+  /** Report number when the evaluation completed successfully. */
+  reportNumber?: number;
+  /** Absolute report path when the evaluation completed successfully. */
+  reportPath?: string;
+  /** Error message when the evaluation failed. */
+  error?: string;
+}
+
+/**
+ * Result of the enrichment phase. The bridge still returns the promoted
+ * entries that qualified, and extension-side callers may also attach
+ * direct-evaluation summaries for those entries.
  */
 export interface NewGradEnrichResult {
-  /** Number of entries successfully added to the pipeline. */
+  /** Number of entries successfully promoted by the bridge. */
   added: number;
   /** Number of entries skipped (e.g. duplicates already in pipeline). */
   skipped: number;
-  /** The pipeline entries that were written. */
+  /**
+   * Rows that passed re-scoring + hard filters and are eligible for direct
+   * evaluation, even if they were not appended to pipeline.md due to dedupe.
+   */
+  candidates?: readonly PipelineEntry[];
+  /** The promoted entries returned by the bridge. */
   entries: readonly PipelineEntry[];
+  /** Number of evaluation jobs queued directly by the extension. */
+  queued?: number;
+  /** Number of promoted entries evaluated directly by the extension. */
+  evaluated?: number;
+  /** Number of direct evaluations that failed after promotion. */
+  failed?: number;
+  /** Direct-evaluation summaries populated by the extension background worker. */
+  jobs?: readonly NewGradEvaluationSummary[];
 }
 
 /* -------------------------------------------------------------------------- */

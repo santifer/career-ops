@@ -64,9 +64,13 @@ describe("newgrad-config", () => {
     const repoRoot = makeRepoRoot();
 
     persistBlockedCompanies(repoRoot, [
-      makeFilteredRow("no_sponsorship", "Momentic"),
+      makeFilteredRow("no_sponsorship", "Momentic", {
+        confirmedSponsorshipSupport: "no",
+      }),
       makeFilteredRow("no_sponsorship", "momentic"),
-      makeFilteredRow("active_clearance_required", "Booz Allen Hamilton"),
+      makeFilteredRow("active_clearance_required", "Booz Allen Hamilton", {
+        confirmedRequiresActiveSecurityClearance: true,
+      }),
     ]);
 
     const content = readFileSync(
@@ -91,9 +95,10 @@ function makeRepoRoot(): string {
 function makeFilteredRow(
   reason: FilteredRow["reason"],
   company: string,
+  overrides?: Partial<NewGradRow>,
 ): FilteredRow {
   return {
-    row: makeRow({ company }),
+    row: makeRow({ company, ...overrides }),
     reason,
   };
 }
@@ -114,7 +119,9 @@ function makeRow(overrides?: Partial<NewGradRow>): NewGradRow {
     qualifications: "Experience with TypeScript, React, and Node.js",
     h1bSponsored: false,
     sponsorshipSupport: "unknown",
+    confirmedSponsorshipSupport: "unknown",
     requiresActiveSecurityClearance: false,
+    confirmedRequiresActiveSecurityClearance: false,
     isNewGrad: true,
   };
   return { ...base, ...overrides };
