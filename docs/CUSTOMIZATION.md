@@ -11,9 +11,11 @@ Key sections:
 - **compensation**: Target range, minimum, currency
 - **location**: Country, timezone, visa status, on-site availability
 
-## Target Roles (modes/_shared.md)
+## Target Roles (modes/_profile.md or config/profile.yml)
 
-The archetype table in `_shared.md` determines how offers are scored and CVs are framed. Edit the table to match YOUR career targets:
+> **Note:** `modes/_shared.md` is system-managed and may be overwritten by updates. Place all user-specific customizations in `modes/_profile.md` or `config/profile.yml` instead.
+
+The archetype table determines how offers are scored and CVs are framed. To customize it, add your overrides to `modes/_profile.md`:
 
 ```markdown
 | Archetype | Thematic axes | What they buy |
@@ -22,7 +24,7 @@ The archetype table in `_shared.md` determines how offers are scored and CVs are
 | **Your Role 2** | key skills | what they need |
 ```
 
-Also update the "Adaptive Framing" table to map YOUR specific projects to each archetype.
+Also add your "Adaptive Framing" overrides in `modes/_profile.md` to map YOUR specific projects to each archetype.
 
 ## Portals (portals.yml)
 
@@ -42,9 +44,9 @@ The HTML template uses these design tokens:
 
 To customize fonts/colors, edit the CSS in the template. Update font files in `fonts/` if switching fonts.
 
-## Negotiation Scripts (modes/_shared.md)
+## Negotiation Scripts (modes/_profile.md)
 
-The negotiation section provides frameworks for salary discussions. Replace the example scripts with your own:
+The negotiation section provides frameworks for salary discussions. Add your own scripts to `modes/_profile.md` (not `_shared.md` — it is system-managed):
 - Target ranges
 - Geographic arbitrage strategy
 - Pushback responses
@@ -73,4 +75,4 @@ Save hooks in `.claude/settings.json`.
 The canonical states rarely need changing. If you add new states, update:
 1. `templates/states.yml`
 2. `normalize-statuses.mjs` (alias mappings)
-3. `modes/_shared.md` (any references)
+3. `modes/_profile.md` (any user-facing references)

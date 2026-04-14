@@ -50,11 +50,14 @@ function normalizeLocation(loc) {
 // Threshold 0.75 avoids false positives from role specialisations like
 // "Applied AI Engineer, Seoul" vs "Applied AI Engineer, Startups".
 function roleMatch(a, b) {
+  // Keep tokens ≥ 2 chars so 2-char acronyms (AI, ML, QA) are preserved.
+  // Without this, "AI Engineer" and "ML Engineer" both collapse to {"engineer"}
+  // and score 1.0 Jaccard — incorrectly flagged as duplicates.
   const tokensA = new Set(
-    a.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(w => w.length > 3)
+    a.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(w => w.length > 1)
   );
   const tokensB = new Set(
-    b.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(w => w.length > 3)
+    b.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(w => w.length > 1)
   );
   if (tokensA.size === 0 || tokensB.size === 0) return false;
   const intersection = [...tokensA].filter(w => tokensB.has(w)).length;

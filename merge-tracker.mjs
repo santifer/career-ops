@@ -65,8 +65,9 @@ function normalizeCompany(name) {
 }
 
 function roleFuzzyMatch(a, b) {
-  const wordsA = a.toLowerCase().split(/\s+/).filter(w => w.length > 3);
-  const wordsB = b.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+  // Keep tokens ≥ 2 chars so 2-char acronyms (AI, ML, QA) are preserved.
+  const wordsA = a.toLowerCase().split(/\s+/).filter(w => w.length > 1);
+  const wordsB = b.toLowerCase().split(/\s+/).filter(w => w.length > 1);
   const overlap = wordsA.filter(w => wordsB.some(wb => wb.includes(w) || w.includes(wb)));
   return overlap.length >= 2;
 }
@@ -167,7 +168,7 @@ function parseTsvContent(content, filename) {
       const statusRaw = parts[6].trim();
       const scoreRaw  = parts[7].trim();
       const statusLooksLikeScore = /^\d+\.?\d*\/5$/.test(statusRaw) || statusRaw === 'N/A';
-      const scoreLooksLikeStatus = /^(evaluated|applied|responded|interview|offer|rejected|discarded|skip|evaluada|aplicado|respondido|entrevista|oferta|rechazado|descartado|no aplicar)/i.test(scoreRaw);
+      const scoreLooksLikeStatus = /^(evaluated|applied|responded|interview|offer|rejected|discarded|skip|evaluada|aplicado|respondido|entrevista|oferta|rechazado|rechazada|descartado|descartada|cancelada|no aplicar)/i.test(scoreRaw);
       addition = {
         num: parseInt(parts[0]),
         date: parts[1],
@@ -187,8 +188,8 @@ function parseTsvContent(content, filename) {
       const col5 = parts[5].trim();
       const col4LooksLikeScore = /^\d+\.?\d*\/5$/.test(col4) || col4 === 'N/A' || col4 === 'DUP';
       const col5LooksLikeScore = /^\d+\.?\d*\/5$/.test(col5) || col5 === 'N/A' || col5 === 'DUP';
-      const col4LooksLikeStatus = /^(evaluated|applied|responded|interview|offer|rejected|discarded|skip|evaluada|aplicado|respondido|entrevista|oferta|rechazado|descartado|no aplicar|cerrada|duplicado|repost|condicional|hold|monitor)/i.test(col4);
-      const col5LooksLikeStatus = /^(evaluated|applied|responded|interview|offer|rejected|discarded|skip|evaluada|aplicado|respondido|entrevista|oferta|rechazado|descartado|no aplicar|cerrada|duplicado|repost|condicional|hold|monitor)/i.test(col5);
+      const col4LooksLikeStatus = /^(evaluated|applied|responded|interview|offer|rejected|discarded|skip|evaluada|aplicado|respondido|entrevista|oferta|rechazado|rechazada|descartado|descartada|cancelada|no aplicar|cerrada|duplicado|repost|condicional|hold|monitor)/i.test(col4);
+      const col5LooksLikeStatus = /^(evaluated|applied|responded|interview|offer|rejected|discarded|skip|evaluada|aplicado|respondido|entrevista|oferta|rechazado|rechazada|descartado|descartada|cancelada|no aplicar|cerrada|duplicado|repost|condicional|hold|monitor)/i.test(col5);
 
       let statusCol, scoreCol;
       if (col4LooksLikeStatus && !col4LooksLikeScore) {

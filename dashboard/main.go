@@ -92,7 +92,9 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			default:
 				cmd = exec.Command("open", url)
 			}
-			_ = cmd.Start()
+			if err := cmd.Start(); err != nil {
+				fmt.Fprintf(os.Stderr, "WARN: open URL failed: %v\n", err)
+			}
 			return nil
 		}
 

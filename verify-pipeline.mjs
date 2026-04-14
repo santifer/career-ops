@@ -139,6 +139,12 @@ for (const e of entries) {
   const match = e.report.match(/\]\(([^)]+)\)/);
   if (!match) continue;
   const reportPath = join(CAREER_OPS, match[1]);
+  // Guard against path traversal (e.g. ../../outside.md)
+  if (!reportPath.startsWith(REPORTS_DIR + '/') && !reportPath.startsWith(REPORTS_DIR + '\\')) {
+    error(`#${e.num}: Report path escapes reports/ directory: ${match[1]}`);
+    brokenReports++;
+    continue;
+  }
   if (!existsSync(reportPath)) {
     error(`#${e.num}: Report not found: ${match[1]}`);
     brokenReports++;

@@ -705,7 +705,7 @@ func (m PipelineModel) renderPreview() string {
 	divider := lipgloss.NewStyle().Foreground(m.theme.Overlay)
 
 	var lines []string
-	lines = append(lines, padStyle.Render(divider.Render(strings.Repeat("\u2500", m.width-4))))
+	lines = append(lines, padStyle.Render(divider.Render(strings.Repeat("\u2500", max(0, m.width-4)))))
 
 	labelStyle := lipgloss.NewStyle().Foreground(m.theme.Sky).Bold(true)
 	valueStyle := lipgloss.NewStyle().Foreground(m.theme.Text)
@@ -715,7 +715,7 @@ func (m PipelineModel) renderPreview() string {
 	if summary, ok := m.reportCache[app.ReportPath]; ok {
 		if summary.archetype != "" {
 			lines = append(lines, padStyle.Render(
-				labelStyle.Render("Arquetipo: ")+valueStyle.Render(summary.archetype)))
+				labelStyle.Render("Archetype: ")+valueStyle.Render(summary.archetype)))
 		}
 		if summary.tldr != "" {
 			lines = append(lines, padStyle.Render(
@@ -732,8 +732,9 @@ func (m PipelineModel) renderPreview() string {
 	} else if app.Notes != "" {
 		// Fallback: show notes
 		notes := app.Notes
-		if len(notes) > m.width-10 {
-			notes = notes[:m.width-13] + "..."
+		notesWidth := max(0, m.width-10)
+		if notesWidth > 0 && len(notes) > notesWidth {
+			notes = notes[:max(0, m.width-13)] + "..."
 		}
 		lines = append(lines, padStyle.Render(dimStyle.Render(notes)))
 	} else {

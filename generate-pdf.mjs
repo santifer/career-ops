@@ -13,6 +13,7 @@
 import { chromium } from 'playwright';
 import { resolve, dirname } from 'path';
 import { readFile } from 'fs/promises';
+import { mkdirSync } from 'fs';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -91,6 +92,9 @@ async function generatePDF() {
     },
     preferCSSPageSize: false,
   });
+
+  // Ensure the output directory exists (handles nested paths like output/cv/foo.pdf)
+  mkdirSync(dirname(outputPath), { recursive: true });
 
   // Write PDF
   const { writeFile } = await import('fs/promises');

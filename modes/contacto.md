@@ -1,26 +1,26 @@
-# Modo: contacto — LinkedIn Power Move
+# Mode: contacto — LinkedIn Power Move
 
-1. **Identificar targets** via WebSearch:
-   - Hiring manager del equipo
-   - Recruiter asignado
-   - 2-3 peers del equipo (gente con rol similar)
+1. **Identify targets** via WebSearch:
+   - Hiring manager of the team
+   - Assigned recruiter
+   - 2-3 team peers (people with similar roles)
 
-2. **Seleccionar target primario**: la persona que más se beneficiaría de que el candidato estuviera allí
+2. **Select primary target**: the person who would benefit most from the candidate being there
 
-3. **Generar mensaje** con framework de 3 frases:
-   - **Frase 1 (Gancho)**: Algo específico sobre su empresa o reto actual con IA (NO genérico)
-   - **Frase 2 (Prueba)**: Mayor logro cuantificable del candidato relevante para ESE rol (ej: "I built an AI agent handling 90% of customer service at my company before selling it")
-   - **Frase 3 (Propuesta)**: Charla rápida, sin presión ("Would love to chat about [tema específico] for 15 min")
+3. **Generate message** with 3-sentence framework:
+   - **Sentence 1 (Hook)**: Something specific about their company or current AI challenge (NOT generic)
+   - **Sentence 2 (Proof)**: Candidate's most quantifiable achievement relevant to THAT role (e.g. "I built an AI agent handling 90% of customer service at my company before selling it")
+   - **Sentence 3 (Pitch)**: Quick, no-pressure chat ("Would love to chat about [specific topic] for 15 min")
 
-4. **Versiones**:
+4. **Versions**:
    - EN (default)
-   - ES (si empresa española)
+   - ES (if Spanish company)
 
-5. **Targets alternativos** con justificación de por qué son buenos second choices
+5. **Alternative targets** with justification for why they are good second choices
 
-**Reglas del mensaje:**
-- Máximo 300 caracteres (LinkedIn connection request limit)
+**Message rules:**
+- Maximum 300 characters (LinkedIn connection request limit)
 - NO corporate-speak
 - NO "I'm passionate about..."
-- Algo que haga que quieran responder
-- NUNCA compartir teléfono
+- Something that makes them want to reply
+- NEVER share phone number

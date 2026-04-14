@@ -156,7 +156,7 @@ career-ops/
 ├── config/
 │   └── profile.example.yml      # Template for your profile
 ├── modes/                       # 14 skill modes
-│   ├── _shared.md               # Shared context (customize this)
+│   ├── _shared.md               # Shared context (system-managed — do not edit)
 │   ├── oferta.md                # Single evaluation
 │   ├── pdf.md                   # PDF generation
 │   ├── scan.md                  # Portal scanner
