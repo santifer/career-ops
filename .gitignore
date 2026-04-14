@@ -4,6 +4,8 @@ article-digest.md
 data/applications.md
 data/pipeline.md
 data/scan-history.tsv
+data/market/*
+!data/market/.gitkeep
 reports/*.md
 !reports/.gitkeep
 output/*

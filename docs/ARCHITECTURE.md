@@ -17,8 +17,14 @@
             │                  │                       │
             │           ┌──────▼──────┐          ┌────▼─────┐
             │           │ pipeline.md │          │ N workers│
-            │           │ (URL inbox) │          │ (claude -p)
-            │           └─────────────┘          └────┬─────┘
+            │           │ (URL inbox) │          │ (claude/codex/manual)
+            │           └──────┬──────┘          └────┬─────┘
+            │                  │                       │
+            │           ┌──────▼───────────────────────▼──────┐
+            │           │        Market Scan Layer                   │
+            │           │ direct ATS import + browser fallback       │
+            │           │ → normalize → score → analyze → shortlist  │
+            │           └───────────────────────────────────────┘
             │                                          │
      ┌──────▼──────────────────────────────────────────▼──────┐
      │                    Output Pipeline                      │
@@ -56,14 +62,14 @@
 The batch system processes multiple offers in parallel:
 
 ```
-batch-input.tsv    →  batch-runner.sh  →  N × claude -p workers
-(id, url, source)     (orchestrator)       (self-contained prompt)
+batch-input.tsv    →  batch-runner.sh  →  N backend workers
+(id, url, source)     (orchestrator)       (claude/codex/manual)
                            │
                     batch-state.tsv
                     (tracks progress)
 ```
 
-Each worker is a headless Claude instance (`claude -p`) that receives the full `batch-prompt.md` as context. Workers produce:
+Each worker receives the full `batch-prompt.md` as context through the selected backend. Workers produce:
 - Report .md
 - PDF
 - Tracker TSV line
@@ -79,6 +85,10 @@ config/profile.yml       →  Candidate identity
 portals.yml              →  Scanner configuration
 templates/states.yml     →  Canonical status values
 templates/cv-template.html → PDF generation template
+data/market/jobs.jsonl   →  Normalized market dataset
+data/market/jobs-scored.jsonl → Lightweight fit scores
+data/market/market-report.md → Volume-based market analysis (source, freshness, title, remote, salary)
+data/market/deep-eval-queue.tsv → Batch-ready shortlist
 ```
 
 ## File Naming Conventions

@@ -14,7 +14,12 @@
     "update": "node update-system.mjs apply",
     "rollback": "node update-system.mjs rollback",
     "liveness": "node check-liveness.mjs",
-    "scan": "node scan.mjs"
+    "scan": "node scan.mjs",
+    "market:import": "node market-import.mjs",
+    "market:score": "node market-score.mjs",
+    "market:analyze": "node market-analyze.mjs",
+    "market:refresh": "node market-import.mjs && node market-score.mjs && node market-analyze.mjs",
+    "market:sync-batch": "node market-sync-batch.mjs"
   },
   "keywords": [
     "ai",
@@ -32,6 +37,7 @@
   "license": "MIT",
   "dependencies": {
     "js-yaml": "^4.1.1",
-    "playwright": "^1.58.1"
+    "playwright": "^1.58.1",
+    "yaml": "^2.8.3"
   }
 }

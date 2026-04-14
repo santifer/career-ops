@@ -65,6 +65,28 @@ Then paste a job offer URL or description, or use `/career-ops`.
 
 Both paths use the same `cv.md`, `article-digest.md`, `config/profile.yml`, and `portals.yml`.
 
+### 6. Batch processing
+
+```bash
+# Claude workers
+bash batch/batch-runner.sh --agent claude
+
+# Codex workers
+bash batch/batch-runner.sh --agent codex
+
+# Manual fallback
+bash batch/batch-runner.sh --agent manual
+```
+
+Use `--dry-run` first if you want to inspect `batch/batch-input.tsv` without executing anything.
+
+On Windows/PowerShell, prefer:
+
+```powershell
+.\batch\batch-runner.ps1 -Agent codex
+.\batch\batch-runner.ps1 -Agent manual
+```
+
 ## Available Commands
 
 | Action | How |
@@ -73,7 +95,7 @@ Both paths use the same `cv.md`, `article-digest.md`, `config/profile.yml`, and 
 | Search for offers | Claude: `/career-ops scan` · Codex: `Scan the configured portals` |
 | Process pending URLs | Claude: `/career-ops pipeline` · Codex: `Process data/pipeline.md` |
 | Generate a PDF | Claude: `/career-ops pdf` · Codex: `Generate a tailored PDF for this JD` |
-| Batch evaluate | Claude: `/career-ops batch` · Codex: manual/sequential until batch runner is generalized |
+| Batch evaluate | Claude: `/career-ops batch` or `bash batch/batch-runner.sh --agent claude` · Codex: `.\batch\batch-runner.ps1 -Agent codex` on Windows or `bash batch/batch-runner.sh --agent codex` on Unix |
 | Check tracker status | Claude: `/career-ops tracker` · Codex: `Show tracker status` |
 | Fill application form | Claude: `/career-ops apply` · Codex: `Help me fill this application` |
 

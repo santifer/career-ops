@@ -2,7 +2,7 @@
 
 ## Current state
 
-This fork works well with Claude Code today and works partially with Codex right now.
+This fork works well with Claude Code today and now has a real Codex batch path.
 
 What already transfers cleanly:
 
@@ -15,8 +15,7 @@ What is still Claude-native:
 
 - slash-command routing through `.claude/skills/career-ops/SKILL.md`
 - onboarding phrasing in `CLAUDE.md`
-- `claude -p` worker orchestration in `batch/batch-runner.sh`
-- some batch prompt wording in `batch/batch-prompt.md` and `modes/batch.md`
+- some slash-command ergonomics and Chrome-driven workflows
 
 ## What was added in this fork
 
@@ -29,12 +28,13 @@ What is still Claude-native:
 
 ## What Codex can do cleanly now
 
-Codex can already:
+Codex can now:
 
 - read `AGENTS.md` plus the same source-of-truth files Claude reads
 - evaluate a pasted JD or job URL by following `modes/_shared.md` and `modes/auto-pipeline.md`
 - update the profile, portals, and tracker files
 - generate reports and run repo scripts from the shell
+- run the standalone batch runner with `batch/batch-runner.sh --agent codex`
 
 The practical difference is interface:
 
@@ -43,35 +43,29 @@ The practical difference is interface:
 
 ## What still needs to be done for true parity
 
-### 1. Replace the Claude-only batch runner
+### 1. Batch parity is now functional, but not yet elegant
 
-Current blocker:
+Current state:
 
-- `batch/batch-runner.sh` shells out to `claude -p`
+- `batch/batch-runner.sh` supports `claude`, `codex`, `manual`, and `auto`
+- `codex` uses `codex exec`
+- `manual` prepares work packets without executing them
+- `batch/batch-runner.ps1` is the preferred Codex batch path on Windows
 
-Clean fix:
+Remaining improvement:
 
-- extract worker execution behind an agent-agnostic interface
-- example approach: `BATCH_AGENT=claude|manual`
-- `claude` mode keeps current behavior
-- `manual` mode writes ready-to-run work packets that Codex can process sequentially
+- move batch orchestration into Node so worker execution and JSON parsing are less shell-dependent
 
-Better long-term fix:
+### 2. The batch prompt is usable, but still too monolithic
 
-- move batch orchestration into Node so worker execution can target different agents through adapters
+Current state:
 
-### 2. Make the batch prompt agent-neutral
+- `batch/batch-prompt.md` is updated for the frontend/commerce target
+- it works for both Claude and Codex backends
 
-Current blocker:
+Remaining improvement:
 
-- `batch/batch-prompt.md` assumes a Claude worker and contains Spanish AI-role framing from the original author's search
-
-Clean fix:
-
-- split it into:
-  - `batch/batch-context.md`
-  - `batch/batch-worker-output.md`
-- keep role-specific logic in shared files instead of duplicating old AI-role assumptions
+- split shared reasoning context from output contract so the worker prompt is easier to maintain
 
 ### 3. Add Codex-oriented command docs
 
@@ -118,9 +112,9 @@ That makes the system more durable across Claude, Codex, and future agents.
 ## Recommended next implementation order
 
 1. Add `bootstrap.mjs`
-2. Refactor batch execution behind an agent adapter
-3. Normalize batch prompt files around the current frontend/commerce targets
-4. Add Node/Playwright helpers for verification and extraction
+2. Add Node/Playwright helpers for verification and extraction
+3. Move batch orchestration from Bash to Node
+4. Split the batch prompt into smaller reusable pieces
 
 ## Personalization assumptions to review
 
