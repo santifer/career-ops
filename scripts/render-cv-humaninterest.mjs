@@ -159,5 +159,8 @@ for (const [k, v] of Object.entries(vars)) {
   html = html.split(`{{${k}}}`).join(v);
 }
 
+// Scrub em and en dashes from final output per candidate preference.
+html = html.replace(/\u2014/g, ',').replace(/\u2013/g, '-');
+
 writeFileSync('output/cv-aaliya-humaninterest-2026-04-14.html', html);
-console.log('Wrote output/cv-aaliya-humaninterest-2026-04-14.html (' + html.length + ' bytes)');
+console.log('Wrote output/cv-aaliya-humaninterest-2026-04-14.html (' + html.length + ' bytes) -- dash-scrubbed');
