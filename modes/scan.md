@@ -189,17 +189,17 @@ Nuevas añadidas a pipeline.md: N
 
 Cada empresa en `tracked_companies` debe tener `careers_url` — la URL directa a su página de ofertas. Esto evita buscarlo cada vez.
 
-**RULE: Always use the branded company URL — never the raw ATS endpoint.**
+**REGLA: Usa siempre la URL corporativa de la empresa; recurre al endpoint ATS solo si no existe página corporativa propia.**
 
-The `careers_url` must point to the company's own careers page, not the underlying ATS platform URL. Many companies use Workday, Greenhouse, or Lever under the hood but expose job IDs only through their branded domain. Using the raw ATS URL causes false 410 errors on active roles because the job IDs don't match.
+El `careers_url` debe apuntar a la página de empleo propia de la empresa siempre que esté disponible. Muchas empresas usan Workday, Greenhouse o Lever por debajo, pero exponen los IDs de las vacantes solo a través de su dominio corporativo. Usar la URL ATS directa cuando existe una página corporativa puede causar falsos errores 410 porque los IDs de los puestos no coinciden.
 
-| ✅ Correct (branded) | ❌ Wrong (raw ATS) |
+| ✅ Correcto (corporativa) | ❌ Incorrecto como primera opción (ATS directo) |
 |---|---|
-| `careers.mastercard.com` | `mastercard.wd1.myworkdayjobs.com` |
-| `openai.com/careers` | `boards.greenhouse.io/openai` |
-| `stripe.com/jobs` | `stripe.lever.co` |
+| `https://careers.mastercard.com` | `https://mastercard.wd1.myworkdayjobs.com` |
+| `https://openai.com/careers` | `https://job-boards.greenhouse.io/openai` |
+| `https://stripe.com/jobs` | `https://jobs.lever.co/stripe` |
 
-If you only have the raw ATS URL, navigate to the company website first and find the branded careers link. Only fall back to the raw ATS URL if the company has no branded page.
+Fallback: si solo tienes la URL ATS directa, navega primero al sitio web de la empresa y localiza su página corporativa de empleo. Usa la URL ATS directa únicamente si la empresa no tiene página corporativa propia.
 
 **Patrones conocidos por plataforma:**
 - **Ashby:** `https://jobs.ashbyhq.com/{slug}`
