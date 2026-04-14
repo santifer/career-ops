@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# career-ops batch runner — standalone orchestrator for claude -p workers
-# Reads batch-input.tsv, delegates each offer to a claude -p worker,
+# career-ops batch runner — standalone orchestrator for provider-agnostic workers
+# Reads batch-input.tsv, delegates each offer to a provider worker (claude | qwen),
 # tracks state in batch-state.tsv for resumability.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 BATCH_DIR="$SCRIPT_DIR"
+LIB_DIR="$PROJECT_DIR/lib"
 INPUT_FILE="$BATCH_DIR/batch-input.tsv"
 STATE_FILE="$BATCH_DIR/batch-state.tsv"
 PROMPT_FILE="$BATCH_DIR/batch-prompt.md"
@@ -28,11 +29,12 @@ RETRY_FAILED=false
 START_FROM=0
 MAX_RETRIES=2
 MIN_SCORE=0
+PROVIDER=""
 
 usage() {
   cat <<'USAGE'
-career-ops batch runner — process job offers in batch via claude -p workers
-Uses your default Claude model (Claude Max subscription).
+career-ops batch runner — process job offers in batch via provider workers
+Uses your default provider model (Claude Max or Qwen subscription).
 
 Usage: batch-runner.sh [OPTIONS]
 
@@ -43,7 +45,14 @@ Options:
   --start-from N       Start from offer ID N (skip earlier IDs)
   --max-retries N      Max retry attempts per offer (default: 2)
   --min-score N        Skip PDF/tracker for offers scoring below N (default: 0 = off)
+  --provider NAME      Provider to use: claude (default) or qwen
   -h, --help           Show this help
+
+Provider selection (first match wins):
+  1. --provider flag on this command
+  2. CAREER_OPS_PROVIDER environment variable
+  3. provider.default in config/profile.yml
+  4. Fallback: claude
 
 Files:
   batch-input.tsv      Input offers (id, url, source, notes)
@@ -64,6 +73,9 @@ Examples:
 
   # Process 2 at a time starting from ID 10
   ./batch-runner.sh --parallel 2 --start-from 10
+
+  # Use Qwen instead of Claude
+  ./batch-runner.sh --provider qwen
 USAGE
 }
 
@@ -76,6 +88,7 @@ while [[ $# -gt 0 ]]; do
     --start-from) START_FROM="$2"; shift 2 ;;
     --max-retries) MAX_RETRIES="$2"; shift 2 ;;
     --min-score) MIN_SCORE="$2"; shift 2 ;;
+    --provider) PROVIDER="$2"; shift 2 ;;
     -h|--help) usage; exit 0 ;;
     *) echo "Unknown option: $1"; usage; exit 1 ;;
   esac
@@ -119,10 +132,12 @@ check_prerequisites() {
     exit 1
   fi
 
-  if ! command -v claude &>/dev/null; then
-    echo "ERROR: 'claude' CLI not found in PATH."
-    exit 1
+  # Validate provider binary via dispatch layer
+  local dispatch_args=()
+  if [[ -n "$PROVIDER" ]]; then
+    dispatch_args=(--provider "$PROVIDER")
   fi
+  "$LIB_DIR/provider-dispatch.sh" "${dispatch_args[@]}" --validate-only --prompt "validate" 2>&1 || exit $?
 
   mkdir -p "$LOGS_DIR" "$TRACKER_DIR" "$REPORTS_DIR"
 }
@@ -350,12 +365,17 @@ process_offer() {
     -e "s|{{ID}}|${esc_id}|g" \
     "$PROMPT_FILE" > "$resolved_prompt"
 
-  # Launch claude -p worker (uses default model from Claude Max subscription)
+  # Launch provider worker via dispatch layer
+  local dispatch_args=(
+    --prompt "$prompt"
+    --prompt-file "$resolved_prompt"
+  )
+  if [[ -n "$PROVIDER" ]]; then
+    dispatch_args=(--provider "$PROVIDER" "${dispatch_args[@]}")
+  fi
+
   local exit_code=0
-  claude -p \
-    --dangerously-skip-permissions \
-    --append-system-prompt-file "$resolved_prompt" \
-    "$prompt" \
+  "$LIB_DIR/provider-dispatch.sh" "${dispatch_args[@]}" \
     > "$log_file" 2>&1 || exit_code=$?
 
   # Cleanup resolved prompt
@@ -462,6 +482,16 @@ main() {
 
   echo "=== career-ops batch runner ==="
   echo "Parallel: $PARALLEL | Max retries: $MAX_RETRIES"
+  # Resolve and display active provider
+  local active_provider=""
+  if [[ -n "$PROVIDER" ]]; then
+    active_provider="$PROVIDER"
+  elif [[ -n "${CAREER_OPS_PROVIDER:-}" ]]; then
+    active_provider="$CAREER_OPS_PROVIDER"
+  else
+    active_provider="claude"  # fallback
+  fi
+  echo "Provider: $active_provider"
   echo "Input: $total_input offers"
   echo ""
 

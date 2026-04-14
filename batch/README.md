@@ -1,6 +1,6 @@
 # Batch Processing
 
-Process multiple job offers in parallel via `claude -p` workers. Each worker runs the full evaluation pipeline (A-F report + PDF + tracker line) autonomously.
+Process multiple job offers in parallel via provider workers (`claude -p` or `qwen -p`). Each worker runs the full evaluation pipeline (A-F report + PDF + tracker line) autonomously.
 
 ## Quick Start
 
@@ -8,7 +8,7 @@ Process multiple job offers in parallel via `claude -p` workers. Each worker run
 
    ```tsv
    id	url	source	notes
-   1	https://jobs.example.com/role-a	LinkedIn	
+   1	https://jobs.example.com/role-a	LinkedIn
    2	https://greenhouse.io/company/role-b	Greenhouse	priority
    ```
 
@@ -26,15 +26,26 @@ Process multiple job offers in parallel via `claude -p` workers. Each worker run
 
 4. **Results** are automatically merged into `data/applications.md` and verified with `verify-pipeline.mjs` at the end of the run.
 
+## Provider Selection
+
+The batch runner supports multiple AI providers. Selection order (first match wins):
+
+1. `--provider` flag: `./batch/batch-runner.sh --provider qwen`
+2. `CAREER_OPS_PROVIDER` env var: `CAREER_OPS_PROVIDER=qwen ./batch/batch-runner.sh`
+3. `provider.default` in `config/profile.yml`
+4. Fallback: `claude`
+
 ## Options
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `--parallel N` | `1` | Number of concurrent `claude -p` workers |
+| `--parallel N` | `1` | Number of concurrent provider workers |
 | `--dry-run` | off | Preview pending offers without processing |
 | `--retry-failed` | off | Only retry offers marked as `failed` in state |
 | `--start-from N` | `0` | Skip offers with ID below N |
 | `--max-retries N` | `2` | Max retry attempts per offer before giving up |
+| `--provider NAME` | claude | Provider: `claude` or `qwen` |
+| `--min-score N` | `0` | Skip PDF/tracker for offers scoring below N |
 
 ## Directory Layout
 
@@ -52,7 +63,7 @@ batch/
 ## How It Works
 
 1. **batch-runner.sh** reads `batch-input.tsv` and `batch-state.tsv` to determine which offers need processing.
-2. For each pending offer, it assigns a report number and launches a `claude -p` worker with `batch-prompt.md` as the system prompt (placeholders like `{{URL}}`, `{{REPORT_NUM}}` are resolved).
+2. For each pending offer, it assigns a report number and launches a provider worker via `lib/provider-dispatch.sh` with `batch-prompt.md` as the system prompt (placeholders like `{{URL}}`, `{{REPORT_NUM}}` are resolved).
 3. Each worker evaluates the offer, writes a report to `reports/`, generates a PDF to `output/`, and writes a tracker TSV to `tracker-additions/`.
 4. After all workers finish, batch-runner calls `merge-tracker.mjs` to merge TSVs into `data/applications.md` and runs `verify-pipeline.mjs` to check integrity.
 
@@ -75,6 +86,6 @@ A PID-based lock file (`batch-runner.pid`) prevents concurrent batch runs. If a 
 
 ## Prerequisites
 
-- `claude` CLI in PATH (Claude Max subscription for default model)
+- At least one provider CLI in PATH: `claude` (Claude Max) or `qwen` (Qwen Code v0.14.x)
 - Node.js >= 18, Playwright chromium installed (`npm run doctor` to verify)
 - `batch-input.tsv` with at least one offer

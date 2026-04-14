@@ -5,21 +5,21 @@ Dos modos de uso: **conductor --chrome** (navega portales en tiempo real) o **st
 ## Arquitectura
 
 ```
-Claude Conductor (claude --chrome --dangerously-skip-permissions)
+Provider Conductor (with Chrome/Playwright)
   │
   │  Chrome: navega portales (sesiones logueadas)
   │  Lee DOM directo — el usuario ve todo en tiempo real
   │
   ├─ Oferta 1: lee JD del DOM + URL
-  │    └─► claude -p worker → report .md + PDF + tracker-line
+  │    └─► provider -p worker → report .md + PDF + tracker-line
   │
   ├─ Oferta 2: click siguiente, lee JD + URL
-  │    └─► claude -p worker → report .md + PDF + tracker-line
+  │    └─► provider -p worker → report .md + PDF + tracker-line
   │
   └─ Fin: merge tracker-additions → applications.md + resumen
 ```
 
-Cada worker es un `claude -p` hijo con contexto limpio de 200K tokens. El conductor solo orquesta.
+Cada worker es un proceso hijo del provider activo (claude -p | qwen -p) con contexto limpio de 200K tokens. El conductor solo orquesta.
 
 ## Archivos
 
@@ -42,11 +42,11 @@ batch/
    a. Chrome: click en la oferta → leer JD text del DOM
    b. Guardar JD a `/tmp/batch-jd-{id}.txt`
    c. Calcular siguiente REPORT_NUM secuencial
-   d. Ejecutar via Bash:
+   d. Ejecutar via lib/provider-dispatch.sh:
       ```bash
-      claude -p --dangerously-skip-permissions \
-        --append-system-prompt-file batch/batch-prompt.md \
-        "Procesa esta oferta. URL: {url}. JD: /tmp/batch-jd-{id}.txt. Report: {num}. ID: {id}"
+      lib/provider-dispatch.sh \
+        --prompt "Procesa esta oferta. URL: {url}. JD: /tmp/batch-jd-{id}.txt. Report: {num}. ID: {id}" \
+        --prompt-file batch/batch-prompt.md
       ```
    e. Actualizar `batch-state.tsv` (completed/failed + score + report_num)
    f. Log a `logs/{report_num}-{id}.log`
@@ -82,7 +82,7 @@ id	url	status	started_at	completed_at	report_num	score	error	retries
 - Lock file (`batch-runner.pid`) previene ejecución doble
 - Cada worker es independiente: fallo en oferta #47 no afecta a las demás
 
-## Workers (claude -p)
+## Workers (provider -p)
 
 Cada worker recibe `batch-prompt.md` como system prompt. Es self-contained.
 
