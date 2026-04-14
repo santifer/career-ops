@@ -151,12 +151,24 @@ function buildTitleFilter(titleFilter) {
  *   5. Allowlist: if `allowed` is empty, pass; otherwise require a case-
  *      insensitive substring match against at least one entry.
  *
- * @param {{allowed?: string[], blocked?: string[], allow_remote?: boolean}} locationFilter
+ * Non-array inputs to `allowed` / `blocked` (e.g. the YAML scalar-instead-of-
+ * list mistake `allowed: Sydney`) are coerced to empty lists rather than
+ * crashing the scanner. Non-string entries inside an array are silently
+ * dropped, empty-string entries are dropped so they cannot accidentally
+ * disable the allowlist via `String.prototype.includes('')`.
+ *
+ * @param {{allowed?: unknown, blocked?: unknown, allow_remote?: boolean} | null | undefined} locationFilter
  * @returns {(location: string|null|undefined) => boolean}
  */
 function buildLocationFilter(locationFilter) {
-  const allowed = (locationFilter?.allowed || []).map(k => k.toLowerCase());
-  const blocked = (locationFilter?.blocked || []).map(k => k.toLowerCase());
+  const normalizeStringList = (value) =>
+    (Array.isArray(value) ? value : [])
+      .filter(v => typeof v === 'string')
+      .map(v => v.trim().toLowerCase())
+      .filter(Boolean);
+
+  const allowed = normalizeStringList(locationFilter?.allowed);
+  const blocked = normalizeStringList(locationFilter?.blocked);
   const allowRemote = locationFilter?.allow_remote !== false;
 
   // No config at all → pass everything through (backward compatible default)
