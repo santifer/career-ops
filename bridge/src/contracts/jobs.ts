@@ -134,11 +134,24 @@ export interface EvaluationResult {
   /** Short one-sentence TL;DR from block A of the report. */
   tldr: string;
   /**
-   * What tracker row was written, exactly as it will appear in
-   * data/applications.md after the next merge. The bridge computes this
-   * from the TSV drop file it wrote — it does not re-parse applications.md.
+   * What tracker row was written for this evaluation.
    */
   trackerRow: TrackerRow;
+  /**
+   * Whether the bridge also merged the tracker drop file into
+   * data/applications.md before returning the result.
+   */
+  trackerMerged: boolean;
+  /**
+   * Summary from merge-tracker.mjs when a merge was attempted.
+   */
+  trackerMergeSummary?: TrackerMergeSummary;
+}
+
+export interface TrackerMergeSummary {
+  added: number;
+  updated: number;
+  skipped: number;
 }
 
 /**

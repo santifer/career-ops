@@ -82,3 +82,35 @@ test("doctor reports sdk availability from api key presence", async () => {
     rmSync(repoRoot, { recursive: true, force: true });
   }
 });
+
+test("buildReport includes legitimacy block and high-score draft answers", () => {
+  const markdown = __internal.buildReport(
+    {
+      company: "Anthropic",
+      role: "Forward Deployed Engineer",
+      archetype: "AI Forward Deployed Engineer",
+      score: 4.7,
+      tldr: "Strong fit for fast client-facing AI delivery.",
+      legitimacy: "High Confidence",
+      blockA: "A",
+      blockB: "B",
+      blockC: "C",
+      blockD: "D",
+      blockE: "E",
+      blockF: "F",
+      blockG: "G",
+      draftAnswers: "Why this role?\n> Strong answer",
+      keywords: ["agents", "delivery", "python"],
+    },
+    {
+      url: "https://jobs.example.com/fde",
+      title: "Forward Deployed Engineer",
+    },
+    "2026-04-13",
+  );
+
+  expect(markdown).toContain("**Legitimacy:** High Confidence");
+  expect(markdown).toContain("## G) Posting Legitimacy");
+  expect(markdown).toContain("## H) Draft Application Answers");
+  expect(markdown).toContain("Why this role?");
+});

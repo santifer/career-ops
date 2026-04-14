@@ -129,11 +129,9 @@ export interface PipelineAdapter {
 
   /**
    * Kick off `node merge-tracker.mjs` to flush pending drop files.
-   * Called explicitly from POST /tracker/merge in Phase 3. NOT called
-   * automatically after evaluation — the bridge leaves the drop file in
-   * place so the user (or a Phase 3 explicit action) triggers the merge.
-   * This preserves the existing batch invariant that merges are an
-   * explicit step, not a side effect.
+   * Called explicitly from POST /tracker/merge and may also be used by
+   * bridge-side evaluation flows that want to fully sync the tracker
+   * before returning success to the extension UI.
    */
   mergeTracker(dryRun: boolean): Promise<MergeReport>;
 

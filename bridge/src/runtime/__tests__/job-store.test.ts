@@ -38,6 +38,8 @@ function makeResult(): EvaluationResult {
       report: "[1](reports/1-acme.md)",
       notes: "test",
     },
+    trackerMerged: true,
+    trackerMergeSummary: { added: 1, updated: 0, skipped: 0 },
   };
 }
 

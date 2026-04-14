@@ -116,6 +116,15 @@ let expiryBypassResolve: ((proceed: boolean) => void) | null = null;
 let lastErrorRetryable = true;
 let jobPollTimer: number | null = null;
 
+function trackerButtonLabel(result: EvaluationResult): string {
+  if (!result.trackerMerged) return "Save to tracker";
+  const summary = result.trackerMergeSummary;
+  if (!summary) return "Tracker synced";
+  if (summary.added > 0) return `Saved to tracker (${summary.added} added)`;
+  if (summary.updated > 0) return `Saved to tracker (${summary.updated} updated)`;
+  return "Tracker already up to date";
+}
+
 /* -------------------------------------------------------------------------- */
 /*  UI switching                                                              */
 /* -------------------------------------------------------------------------- */
@@ -519,7 +528,12 @@ function renderDone(result: EvaluationResult): void {
   resultHeaderEl.textContent = `${result.company} \u2014 ${result.role} \u00b7 ${result.archetype}`;
 
   resultTldrEl.textContent = result.tldr;
+  mergeTrackerBtn.disabled = result.trackerMerged;
+  mergeTrackerBtn.textContent = trackerButtonLabel(result);
   show("done");
+  if (result.trackerMerged) {
+    void loadRecentJobs();
+  }
 }
 
 async function onOpenReportClick(): Promise<void> {
@@ -785,11 +799,16 @@ async function onMergeTrackerClick(): Promise<void> {
   mergeTrackerBtn.disabled = true;
   mergeTrackerBtn.textContent = "Merging\u2026";
   const res = await sendRequest({ kind: "mergeTracker", dryRun: false });
-  mergeTrackerBtn.disabled = false;
   if (res.ok) {
-    mergeTrackerBtn.textContent = `\u2713 Merged (${res.result.added} added)`;
+    mergeTrackerBtn.textContent =
+      res.result.added > 0
+        ? `Saved to tracker (${res.result.added} added)`
+        : res.result.updated > 0
+          ? `Saved to tracker (${res.result.updated} updated)`
+          : "Tracker already up to date";
     void loadRecentJobs();
   } else {
+    mergeTrackerBtn.disabled = false;
     mergeTrackerBtn.textContent = "Merge failed";
   }
 }

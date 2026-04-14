@@ -190,6 +190,7 @@ export function createFakePipelineAdapter(
         archetype: "fake-archetype",
         tldr: `Fake evaluation of ${company} — ${role}. No files written.`,
         trackerRow,
+        trackerMerged: false,
       };
 
       return result;

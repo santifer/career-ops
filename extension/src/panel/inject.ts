@@ -407,6 +407,15 @@ function initPanel(shadow: ShadowRoot, root: HTMLElement): void {
   let currentBridgePreset: BridgePreset | null = null;
   let jobPollTimer: number | null = null;
 
+  function trackerButtonLabel(result: { trackerMerged?: boolean; trackerMergeSummary?: { added?: number; updated?: number } }): string {
+    if (!result?.trackerMerged) return "Save to tracker";
+    const summary = result.trackerMergeSummary;
+    if (!summary) return "Tracker synced";
+    if ((summary.added ?? 0) > 0) return "Saved to tracker (" + summary.added + " added)";
+    if ((summary.updated ?? 0) > 0) return "Saved to tracker (" + summary.updated + " updated)";
+    return "Tracker already up to date";
+  }
+
   // PHASE_ORDER, PHASE_LABEL imported from shared/utils
 
   function show(state: UiState): void {
@@ -711,7 +720,10 @@ function initPanel(shadow: ShadowRoot, root: HTMLElement): void {
     resultHeaderEl.appendChild(s);
     resultHeaderEl.appendChild(document.createTextNode(" · " + result.archetype));
     resultTldrEl.textContent = result.tldr;
+    mergeTrackerBtn.disabled = Boolean(result.trackerMerged);
+    mergeTrackerBtn.textContent = trackerButtonLabel(result);
     show("done");
+    if (result.trackerMerged) void loadRecentJobs();
   }
 
   function renderError(code: string, message: string): void {
@@ -900,9 +912,18 @@ function initPanel(shadow: ShadowRoot, root: HTMLElement): void {
     mergeTrackerBtn.disabled = true;
     mergeTrackerBtn.textContent = "Merging…";
     const res = await sendMsg({ kind: "mergeTracker", dryRun: false });
-    mergeTrackerBtn.disabled = false;
-    mergeTrackerBtn.textContent = res?.ok ? "✓ Merged (" + res.result.added + " added)" : "Merge failed";
-    if (res?.ok) void loadRecentJobs();
+    if (res?.ok) {
+      mergeTrackerBtn.textContent =
+        res.result.added > 0
+          ? "Saved to tracker (" + res.result.added + " added)"
+          : res.result.updated > 0
+            ? "Saved to tracker (" + res.result.updated + " updated)"
+            : "Tracker already up to date";
+      void loadRecentJobs();
+    } else {
+      mergeTrackerBtn.disabled = false;
+      mergeTrackerBtn.textContent = "Merge failed";
+    }
   });
 
   // Init

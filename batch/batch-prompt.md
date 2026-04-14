@@ -182,6 +182,25 @@ Analyze posting signals to assess whether this is a real, active opening.
 | Red flags | -X (si hay) |
 | **Global** | **X/5** |
 
+#### Bloque H — Draft Application Answers (solo si score >= 4.5)
+
+Si el **Global score** es **>= 4.5**, genera una sección adicional con borradores listos para pegar en formularios.
+
+**Preguntas mínimas a cubrir (aunque el formulario real no esté visible):**
+- Why are you interested in this role?
+- Why do you want to work at {company}?
+- Tell us about a relevant project or achievement.
+- What makes you a strong fit for this position?
+- How did you hear about this role?
+
+**Tono requerido:**
+- Seguro y selectivo, nunca suplicante
+- 2-4 frases por respuesta
+- Siempre anclado en algo concreto del JD y algo concreto del CV / article-digest
+- Sin frases vacías como "I'm passionate about..." o "I'd love the opportunity..."
+
+Si el score es < 4.5, NO inventes esta sección y no la incluyas en el report final.
+
 ### Paso 3 — Guardar Report .md
 
 Guardar evaluación completa en:
@@ -226,6 +245,9 @@ Donde `{company-slug}` es el nombre de empresa en lowercase, sin espacios, con g
 
 ## G) Posting Legitimacy
 (contenido completo)
+
+## H) Draft Application Answers
+(solo si score >= 4.5; si no, omitir esta sección)
 
 ---
 
