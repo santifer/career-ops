@@ -1048,13 +1048,78 @@ td.td-pdf {
   .nav-tabs { gap: 2px; }
   .nav-tab { padding: 6px 10px; font-size: 13px; }
   .page-title { font-size: 24px; }
-  .report-panel { width: 100vw; }
+  .report-panel,
+  .pdf-panel { width: 100vw; }
 }
 
 @media (max-width: 480px) {
   .stats-grid { grid-template-columns: 1fr; }
   .toolbar { flex-direction: column; align-items: stretch; }
   .search-wrap { min-width: unset; }
+}
+
+/* ─── PDF button (pipeline table) ───────────────────────────────── */
+.pdf-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: var(--font-sans);
+  color: var(--accent);
+  background: transparent;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.pdf-btn:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+.pdf-btn:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* ─── PDF viewer panel ───────────────────────────────────────────── */
+.pdf-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: min(860px, 92vw);
+  height: 100vh;
+  background: var(--surface);
+  border-left: 1px solid var(--border-strong);
+  display: flex;
+  flex-direction: column;
+  z-index: 200;
+  animation: slide-in 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pdf-panel-body {
+  flex: 1;
+  overflow: hidden;
+}
+
+.pdf-panel-body iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+
+.pdf-panel-error {
+  margin: 0;
+  padding: 16px 24px;
+  font-size: 13px;
+  color: var(--error, #c0392b);
+  background: var(--error-bg, #fdf0ef);
+  border-bottom: 1px solid var(--border-strong);
 }
 
 /* ─── Transition helpers ─────────────────────────────────────────── */
@@ -1065,7 +1130,8 @@ td.td-pdf {
 /* ─── Reduced motion ─────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   /* Disable slide-in panel animation */
-  .report-panel {
+  .report-panel,
+  .pdf-panel {
     animation: none;
   }
 

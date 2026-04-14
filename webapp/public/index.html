@@ -352,6 +352,35 @@
     </div>
   </div>
 
+  <!-- ─── PDF viewer panel ────────────────────────────────────────── -->
+  <div class="modal-overlay" id="pdf-overlay" role="dialog"
+       aria-modal="true" aria-label="PDF Viewer">
+    <div class="pdf-panel" id="pdf-panel" tabindex="-1">
+
+      <div class="report-panel-header">
+        <div class="report-panel-info">
+          <div class="report-panel-company" id="pdf-panel-title">PDF</div>
+        </div>
+        <button class="close-btn" id="close-pdf" aria-label="Close PDF viewer">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+               viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6"  x2="6"  y2="18"/>
+            <line x1="6"  y1="6"  x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <p class="pdf-panel-error" id="pdf-panel-error" style="display:none"></p>
+
+      <div class="pdf-panel-body">
+        <iframe id="pdf-iframe" src="" title="PDF viewer"
+                allow="fullscreen" loading="lazy"></iframe>
+      </div>
+
+    </div>
+  </div>
+
   <script src="app.js"></script>
 </body>
 </html>

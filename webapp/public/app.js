@@ -16,6 +16,7 @@ let metrics = null;
 let currentSort = { key: 'date', dir: 'desc' };
 let currentView = 'dashboard';
 let pendingLoaded = false;
+let reportFetchController = null;
 
 // ─── Theme ────────────────────────────────────────────────────────────────────
 
@@ -136,9 +137,12 @@ function scorePillHtml(app) {
   return `<span class="score-pill ${scoreClass(app.score)}">${esc(app.scoreRaw)}</span>`;
 }
 
-/** PDF indicator */
-function pdfHtml(hasPDF) {
-  return hasPDF ? '✅' : '<span style="color:var(--text-3)">—</span>';
+/** PDF cell: "View PDF" button when a PDF exists, dash otherwise. */
+function pdfHtml(app) {
+  if (!app.hasPDF) return '<span style="color:var(--text-3)">—</span>';
+  return `<button class="pdf-btn" type="button"
+    data-report-path="${esc(app.reportPath || '')}"
+    aria-label="View PDF for ${esc(app.company)}">View PDF</button>`;
 }
 
 // ─── Data loading ─────────────────────────────────────────────────────────────
@@ -332,10 +336,9 @@ function renderPipeline() {
 }
 
 function applyFiltersAndRender() {
-  const search = (document.getElementById('pipeline-search')?.value || '').toLowerCase().trim();
-  const status = document.getElementById('status-filter')?.value || '';
+  const search   = (document.getElementById('pipeline-search')?.value || '').toLowerCase().trim();
+  const status   = document.getElementById('status-filter')?.value || '';
   const scoreMin = parseFloat(document.getElementById('score-filter')?.value || '0') || 0;
-  const sort = document.getElementById('sort-select')?.value || 'date-desc';
 
   let apps = [...allApplications];
 
@@ -358,17 +361,20 @@ function applyFiltersAndRender() {
     apps = apps.filter((a) => a.score >= scoreMin);
   }
 
-  // Sort
+  // Sort — always driven by currentSort state (column clicks or dropdown)
   apps.sort((a, b) => {
-    switch (sort) {
-      case 'date-desc': return (b.date || '').localeCompare(a.date || '');
-      case 'date-asc':  return (a.date || '').localeCompare(b.date || '');
-      case 'score-desc': return b.score - a.score;
-      case 'score-asc':  return a.score - b.score;
-      case 'company':   return a.company.localeCompare(b.company);
-      case 'status':    return a.status.localeCompare(b.status);
+    let aVal, bVal;
+    switch (currentSort.key) {
+      case 'date':    aVal = a.date    || ''; bVal = b.date    || ''; break;
+      case 'number':  aVal = a.number;        bVal = b.number;        break;
+      case 'company': aVal = a.company;       bVal = b.company;       break;
+      case 'role':    aVal = a.role;          bVal = b.role;          break;
+      case 'score':   aVal = a.score;         bVal = b.score;         break;
+      case 'status':  aVal = a.status;        bVal = b.status;        break;
       default: return 0;
     }
+    const cmp = typeof aVal === 'string' ? aVal.localeCompare(bVal) : (aVal - bVal);
+    return currentSort.dir === 'desc' ? -cmp : cmp;
   });
 
   filteredApps = apps;
@@ -412,17 +418,85 @@ function renderPipelineTable(apps) {
       <td class="td-role">${esc(a.role)}</td>
       <td>${scorePillHtml(a)}</td>
       <td>${badgeHtml(a.status)}</td>
-      <td class="td-pdf">${pdfHtml(a.hasPDF)}</td>
+      <td class="td-pdf">${pdfHtml(a)}</td>
     </tr>`).join('');
 
   attachRowClickHandlers(tbody);
+  attachPdfBtnHandlers(tbody);
 }
 
 // Wire up filter controls
-['pipeline-search', 'status-filter', 'score-filter', 'sort-select'].forEach((id) => {
+['pipeline-search', 'status-filter', 'score-filter'].forEach((id) => {
   document.getElementById(id)?.addEventListener('input', applyFiltersAndRender);
   document.getElementById(id)?.addEventListener('change', applyFiltersAndRender);
 });
+
+// Sort dropdown — syncs with currentSort
+document.getElementById('sort-select')?.addEventListener('change', (e) => {
+  currentSort = parseSortDropdown(e.target.value);
+  updateSortIcons();
+  applyFiltersAndRender();
+});
+
+/** Map dropdown value → { key, dir } */
+function parseSortDropdown(val) {
+  switch (val) {
+    case 'date-asc':   return { key: 'date',    dir: 'asc' };
+    case 'score-desc': return { key: 'score',   dir: 'desc' };
+    case 'score-asc':  return { key: 'score',   dir: 'asc' };
+    case 'company':    return { key: 'company', dir: 'asc' };
+    case 'status':     return { key: 'status',  dir: 'asc' };
+    default:           return { key: 'date',    dir: 'desc' }; // date-desc
+  }
+}
+
+/** Column header click → toggle sort on that column. */
+function handleColumnSort(key) {
+  if (currentSort.key === key) {
+    currentSort = { key, dir: currentSort.dir === 'desc' ? 'asc' : 'desc' };
+  } else {
+    currentSort = { key, dir: 'desc' };
+  }
+  // Sync the dropdown to the nearest equivalent (best-effort)
+  const select = document.getElementById('sort-select');
+  if (select) {
+    const mapping = { 'date-desc': 'date-desc', 'date-asc': 'date-asc',
+      'score-desc': 'score-desc', 'score-asc': 'score-asc',
+      'company-asc': 'company', 'status-asc': 'status' };
+    select.value = mapping[`${currentSort.key}-${currentSort.dir}`] || 'date-desc';
+  }
+  updateSortIcons();
+  applyFiltersAndRender();
+}
+
+/** Refresh the ↕/↑/↓ icons on every sortable column header. */
+function updateSortIcons() {
+  document.querySelectorAll('thead th[data-sort]').forEach((th) => {
+    const icon = th.querySelector('.sort-icon');
+    if (!icon) return;
+    if (th.dataset.sort === currentSort.key) {
+      icon.textContent = currentSort.dir === 'desc' ? '↓' : '↑';
+    } else {
+      icon.textContent = '↕';
+    }
+  });
+}
+
+// Attach column header click handlers once the DOM is ready.
+document.querySelectorAll('thead th[data-sort]').forEach((th) => {
+  th.style.cursor = 'pointer';
+  th.addEventListener('click', () => handleColumnSort(th.dataset.sort));
+});
+
+/** PDF button click — stop propagation (don't open report) then open PDF viewer. */
+function attachPdfBtnHandlers(tbody) {
+  tbody.querySelectorAll('.pdf-btn').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openPDF(btn.dataset.reportPath);
+    });
+  });
+}
 
 // ─── Row click → Report panel ─────────────────────────────────────────────────
 
@@ -492,7 +566,13 @@ function openReport(row) {
 
   bodyEl.innerHTML = '<div class="report-loading">Loading evaluation report…</div>';
 
-  fetch(`/api/report?path=${encodeURIComponent(reportPath)}`)
+  // Cancel any in-flight report fetch before starting a new one
+  if (reportFetchController) reportFetchController.abort();
+  reportFetchController = new AbortController();
+
+  fetch(`/api/report?path=${encodeURIComponent(reportPath)}`, {
+    signal: reportFetchController.signal,
+  })
     .then((r) => {
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       return r.json();
@@ -512,6 +592,7 @@ function openReport(row) {
       bodyEl.innerHTML = `<div class="markdown-body">${html}</div>`;
     })
     .catch((err) => {
+      if (err.name === 'AbortError') return; // Superseded by a newer request — ignore
       bodyEl.innerHTML = `
         <div class="report-no-path">
           <div class="report-no-path-icon">⚠️</div>
@@ -533,19 +614,90 @@ document.getElementById('modal-overlay')?.addEventListener('click', (e) => {
   if (e.target === e.currentTarget) closeReport();
 });
 
+// ─── PDF viewer ───────────────────────────────────────────────────────────────
+
+async function openPDF(reportPath) {
+  const overlay  = document.getElementById('pdf-overlay');
+  const iframe   = document.getElementById('pdf-iframe');
+  const titleEl  = document.getElementById('pdf-panel-title');
+  const errorEl  = document.getElementById('pdf-panel-error');
+  if (!overlay || !iframe) return;
+
+  // Reset state
+  iframe.src = '';
+  if (errorEl) errorEl.style.display = 'none';
+  if (titleEl) titleEl.textContent = 'Loading PDF…';
+
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  document.getElementById('pdf-panel')?.focus();
+
+  if (!reportPath) {
+    if (titleEl) titleEl.textContent = 'PDF';
+    if (errorEl) {
+      errorEl.textContent = 'No report linked — PDF path unavailable.';
+      errorEl.style.display = 'block';
+    }
+    return;
+  }
+
+  try {
+    const data = await fetchJSON(`/api/pdf-path?report=${encodeURIComponent(reportPath)}`);
+    if (data.pdfPath) {
+      const filename = data.pdfPath.split('/').pop();
+      if (titleEl) titleEl.textContent = filename;
+      iframe.src = `/api/pdf?path=${encodeURIComponent(data.pdfPath)}`;
+    } else {
+      if (titleEl) titleEl.textContent = 'PDF';
+      if (errorEl) {
+        errorEl.textContent = 'PDF path not found in report. The report may not have a PDF attached yet.';
+        errorEl.style.display = 'block';
+      }
+    }
+  } catch (err) {
+    if (titleEl) titleEl.textContent = 'PDF';
+    if (errorEl) {
+      errorEl.textContent = `Could not load PDF: ${esc(err.message)}`;
+      errorEl.style.display = 'block';
+    }
+  }
+}
+
+function closePDF() {
+  const overlay = document.getElementById('pdf-overlay');
+  if (overlay) overlay.classList.remove('open');
+  const iframe = document.getElementById('pdf-iframe');
+  if (iframe) iframe.src = ''; // Stop any in-progress download
+  document.body.style.overflow = '';
+}
+
+document.getElementById('close-pdf')?.addEventListener('click', closePDF);
+
+document.getElementById('pdf-overlay')?.addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) closePDF();
+});
+
+// Escape closes whichever overlay is open (report takes priority if both open)
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') closeReport();
+  if (e.key === 'Escape') {
+    if (document.getElementById('pdf-overlay')?.classList.contains('open')) {
+      closePDF();
+    } else {
+      closeReport();
+    }
+  }
 });
 
 // ─── Pending URLs ─────────────────────────────────────────────────────────────
 
 async function loadPendingURLs() {
-  pendingLoaded = true;
+  // pendingLoaded is set to true only on success so a failed request can be retried
   const container = document.getElementById('pending-content');
   if (!container) return;
 
   try {
     const data = await fetchJSON('/api/pipeline');
+    pendingLoaded = true; // Only mark loaded once the fetch succeeds
     const urls = data.urls || [];
 
     if (urls.length === 0) {

@@ -22,6 +22,31 @@ const CAREER_OPS_PATH = process.env.CAREER_OPS_PATH
   ? path.resolve(process.env.CAREER_OPS_PATH)
   : path.resolve(__dirname, '..');
 
+// ─── Canonical status map ────────────────────────────────────────────────────
+
+/**
+ * Maps lower-cased raw status values to their canonical display form.
+ * SKIP must remain ALL-CAPS; all other statuses are Title-cased.
+ * Any unrecognised value falls back to title-casing the raw input.
+ */
+const STATUS_MAP = {
+  evaluated:  'Evaluated',
+  applied:    'Applied',
+  responded:  'Responded',
+  interview:  'Interview',
+  offer:      'Offer',
+  rejected:   'Rejected',
+  discarded:  'Discarded',
+  skip:       'SKIP',
+};
+
+function normalizeStatus(raw) {
+  if (!raw) return 'Unknown';
+  const key = raw.trim().toLowerCase();
+  return STATUS_MAP[key]
+    ?? (raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase());
+}
+
 // ─── Parsers ──────────────────────────────────────────────────────────────────
 
 /**
@@ -65,10 +90,8 @@ function parseApplicationsMd(content) {
     const [num, date, company, role, scoreRaw, statusRaw, pdf, report, ...rest] = parts;
     const notes = rest.join('|').trim();
 
-    // Normalise status to title-case (e.g. "applied" → "Applied")
-    const status = statusRaw
-      ? statusRaw.charAt(0).toUpperCase() + statusRaw.slice(1).toLowerCase()
-      : 'Unknown';
+    // Normalise status using canonical map (preserves SKIP, etc.)
+    const status = normalizeStatus(statusRaw);
 
     // Parse score
     const scoreMatch = scoreRaw.match(/(\d+\.?\d*)\/5/);
@@ -116,8 +139,10 @@ function computeMetrics(apps) {
     if (a.hasPDF) withPDF++;
   }
 
+  // "Applied" denominator = every post-submit status, including Rejected
+  // (Rejected means the company responded, so it counts toward the funnel)
   const applied = apps.filter((a) =>
-    ['Applied', 'Responded', 'Interview', 'Offer'].includes(a.status)
+    ['Applied', 'Responded', 'Interview', 'Offer', 'Rejected'].includes(a.status)
   ).length;
   const responded  = byStatus['Responded']  || 0;
   const interviews = byStatus['Interview']  || 0;
@@ -224,9 +249,10 @@ function loadPipeline() {
   return { urls: [...new Set(urls)], raw, demo: false };
 }
 
-// ─── Allowed reports directory (for /api/report allowlist) ───────────────────
+// ─── Allowed directories (for file-serving allowlists) ───────────────────────
 
 const REPORTS_DIR = path.resolve(CAREER_OPS_PATH, 'reports');
+const OUTPUT_DIR  = path.resolve(CAREER_OPS_PATH, 'output');
 
 // ─── Static files ─────────────────────────────────────────────────────────────
 
@@ -297,9 +323,78 @@ app.get('/api/report', (req, res) => {
   }
 });
 
+/**
+ * Serve a PDF from output/.
+ * Allowlisted to CAREER_OPS_PATH/output/ and .pdf extension only.
+ */
+app.get('/api/pdf', (req, res) => {
+  try {
+    const pdfPath = req.query.path;
+    if (!pdfPath || typeof pdfPath !== 'string') {
+      return res.status(400).json({ error: 'path query param required (string)' });
+    }
+
+    const fullPath    = path.resolve(CAREER_OPS_PATH, pdfPath);
+    const outputPrefix = OUTPUT_DIR + path.sep;
+
+    if (!fullPath.startsWith(outputPrefix) && fullPath !== OUTPUT_DIR) {
+      return res.status(403).json({ error: 'Access denied: must be inside output/' });
+    }
+    if (path.extname(fullPath).toLowerCase() !== '.pdf') {
+      return res.status(400).json({ error: 'Only .pdf files may be served' });
+    }
+    if (!fs.existsSync(fullPath)) {
+      return res.status(404).json({ error: 'PDF not found' });
+    }
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'inline');
+    fs.createReadStream(fullPath).pipe(res);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * Extract the PDF path from a report markdown file.
+ * Looks for a line matching: **PDF:** output/xxx.pdf
+ * or the link form: **PDF:** [text](output/xxx.pdf)
+ */
+app.get('/api/pdf-path', (req, res) => {
+  try {
+    const reportPath = req.query.report;
+    if (!reportPath || typeof reportPath !== 'string') {
+      return res.status(400).json({ error: 'report query param required (string)' });
+    }
+
+    const fullPath     = path.resolve(CAREER_OPS_PATH, reportPath);
+    const reportsPrefix = REPORTS_DIR + path.sep;
+
+    if (!fullPath.startsWith(reportsPrefix) && fullPath !== REPORTS_DIR) {
+      return res.status(403).json({ error: 'Access denied: must be inside reports/' });
+    }
+    if (path.extname(fullPath).toLowerCase() !== '.md') {
+      return res.status(400).json({ error: 'Only .md report files supported' });
+    }
+    if (!fs.existsSync(fullPath)) {
+      return res.status(404).json({ error: 'Report not found' });
+    }
+
+    const content = fs.readFileSync(fullPath, 'utf-8');
+    // Match **PDF:** [label](output/file.pdf)  OR  **PDF:** output/file.pdf
+    const match = content.match(
+      /\*\*PDF:\*\*\s*(?:\[[^\]]*\]\(([^)]+\.pdf)\)|([^\s\n(]+\.pdf))/i,
+    );
+    const pdfPath = match ? (match[1] || match[2]) : null;
+    res.json({ pdfPath });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ─── Start ────────────────────────────────────────────────────────────────────
 
-app.listen(PORT, () => {
+app.listen(PORT, '127.0.0.1', () => {
   console.log('');
   console.log('  Career Ops Dashboard');
   console.log('  ─────────────────────────────────────────');
