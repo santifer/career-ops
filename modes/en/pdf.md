@@ -10,7 +10,7 @@
    - US/Canada → `letter`
    - Rest of world → `a4`
 6. Detect role archetype → adapt framing
-7. Rewrite Professional Summary injecting JD keywords + exit narrative bridge ("Built and sold a business. Now applying systems thinking to [JD domain].")
+7. Rewrite Professional Summary injecting JD keywords + exit narrative bridge: read `narrative.exit_story` from `config/profile.yml` and use it as the bridge sentence (e.g. "Built and sold my SaaS after 5 years. Now focused on applied AI at scale."). If `narrative.exit_story` is absent, fall back to a one-sentence summary of the candidate's most recent career transition derived from `cv.md`.
 8. Select top 3-4 projects most relevant to the offer
 9. Reorder experience bullets by JD relevance
 10. Build competency grid from JD requirements (6-8 keyword phrases)
