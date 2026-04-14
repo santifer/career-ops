@@ -39,8 +39,8 @@ const AGENT_MODE_MAP = {
   "career-ops-tracker.md":  ["modes/tracker.md"],
   "career-ops-contact.md":  ["modes/_shared.md", "modes/contacto.md"],
   "career-ops-deep.md":     ["modes/deep.md"],
-  "career-ops-training.md": ["modes/training.md"],
-  "career-ops-project.md":  ["modes/project.md"],
+  "career-ops-training.md": ["modes/_shared.md", "modes/training.md"],
+  "career-ops-project.md":  ["modes/_shared.md", "modes/project.md"],
   "career-ops-patterns.md": ["modes/patterns.md"],
   "career-ops-followup.md": ["modes/followup.md"],
 };
@@ -48,7 +48,6 @@ const AGENT_MODE_MAP = {
 // Commands that must NOT contain $ARGUMENTS (they take no user input).
 const NO_ARGS_AGENTS = new Set([
   "career-ops-scan.md",
-  "career-ops-pdf.md",
   "career-ops-pipeline.md",
   "career-ops-tracker.md",
   "career-ops-patterns.md",

@@ -67,13 +67,15 @@ After determining the mode, read the necessary files before executing:
 
 
 ### Modes that require `_shared.md` + their mode file:
+
 Read `modes/_shared.md` then `modes/{mode}.md`
 
-Applies to: `auto-pipeline`, `oferta`, `ofertas`, `pdf`, `contacto`, `apply`, `pipeline`, `scan`, `batch`
+Applies to: `auto-pipeline`, `oferta`, `ofertas`, `pdf`, `contacto`, `apply`, `pipeline`, `scan`, `batch`, `training`, `project`
 
 ### Standalone modes (only their mode file):
+
 Read `modes/{mode}.md`
 
-Applies to: `tracker`, `deep`, `training`, `project`, `patterns`, `followup`
+Applies to: `tracker`, `deep`, `patterns`, `followup`
 
 Execute the instructions from the loaded mode file.

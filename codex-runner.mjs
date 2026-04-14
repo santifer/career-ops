@@ -52,7 +52,7 @@ const MODES = [
 ];
 
 // Commands that take no user arguments — warn if args are passed.
-const NO_ARGS_MODES = new Set(["scan", "pdf", "pipeline", "tracker", "patterns", "followup"]);
+const NO_ARGS_MODES = new Set(["scan", "pipeline", "tracker", "patterns", "followup"]);
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 
@@ -94,13 +94,17 @@ Requires the Codex CLI: https://github.com/openai/codex
  * Creates the file and directory on first use.
  */
 function logRun(entry) {
-  const runsDir = join(__dir, "runs");
-  if (!existsSync(runsDir)) mkdirSync(runsDir, { recursive: true });
-  appendFileSync(
-    join(runsDir, "codex-runs.jsonl"),
-    JSON.stringify({ ...entry, ts: new Date().toISOString() }) + "\n",
-    "utf-8",
-  );
+  try {
+    const runsDir = join(__dir, "runs");
+    if (!existsSync(runsDir)) mkdirSync(runsDir, { recursive: true });
+    appendFileSync(
+      join(runsDir, "codex-runs.jsonl"),
+      JSON.stringify({ ...entry, ts: new Date().toISOString() }) + "\n",
+      "utf-8",
+    );
+  } catch (err) {
+    console.error(`Warning: could not write run log — ${err.message}`);
+  }
 }
 
 /**
