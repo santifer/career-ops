@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// Cover letter for Headway - Head of Total Rewards and People Ops.
-// Healthcare mission alignment (mental health marketplace). Honest about stretch-level.
+// Cover letter for Headway - Director, HR Business Partner.
+// Strategic HRBP role (not Head of TR). Executive partnership + data-driven HR angle.
 // No em/en dashes. No Tier 2 (founder) disclosure.
 import { readFileSync, writeFileSync } from 'fs';
 
@@ -20,15 +20,15 @@ const candidate = {
 
 const addressee = {
   company: 'Headway',
-  role: 'Head of Total Rewards and People Ops',
+  role: 'Director, HR Business Partner',
   team: 'Headway Hiring Team',
 };
 
 const paragraphs = [
-  `I am applying for the ${addressee.role} role at ${addressee.company}. Total Rewards, People Analytics, and People Operations is the function I have been running in pieces for 13+ years, and Headway is the first posting I have seen that pulls them into a single role reporting directly to the CPO. I am also a healthcare practitioner on paper only: my day-to-day at Wellstar Health System is Total Rewards analytics inside a large healthcare enterprise, which means I already speak fluently about benefits economics, utilization, and the measurement discipline behind a mission-driven employer.`,
-  `Three pieces of evidence that map to this charter. First, Total Rewards analytics: I own the Wellstar dashboard suite (Compensation, Work-Life Services, Benefits, TOC navigation) in Tableau with data from BigQuery and SQL, built for decisions rather than reporting aesthetics. Second, People Analytics function-building: I would bring the same operating principle to Headway, which is that three KPIs leadership acts on beat thirty that look impressive. Third, executive and governance muscle: I led a $4.5M, 10-plus institution program at Harvard Medical School with audit-grade governance, which is the operating system a Head of TR needs for compensation committees, board reporting, and high-stakes cross-functional work.`,
-  `I want to be direct about level. I am a program leader stepping into a Head of role. I would accept a downlevel to Senior Director or Director of Total Rewards Programs if that is the honest fit, provided the scope stays intact (TR plus People Analytics plus People Ops). Strategic initiatives like exploring a self-funded benefits transition are exactly the work I want to run, and I would come in with the discipline to do it thoughtfully.`,
-  `On tooling I work across Tableau, Power BI, SQL, BigQuery, and PowerQuery with an AI-integrated workflow (Vertex AI, Gemini, OpenAI/Azure OpenAI, GCP, Cloud Run). That toolkit is increasingly the modern stack a Head of People Analytics is expected to operate in, and I already do. I would welcome a short conversation about the TR and People Analytics roadmap this year and where this seat fits. Thank you for the consideration.`,
+  `I am applying for the ${addressee.role} role at ${addressee.company}. I have spent 13+ years being the person senior leaders bring into hard conversations because I come with structure, data, and the judgment to tell them what they need to hear. At Wellstar Health System I partner with HR leadership and the C-suite on Total Rewards and Labor Optimization, owning the analytics that turn complex people-program data into decision-ready signal. Before that I was the primary executive partner on a $4.5M, 10-plus institution initiative at Harvard Medical School, where aligning clinical, operational, and leadership stakeholders around a single plan was the job.`,
+  `Three things I would bring to the HRBP role. First, trusted-advisor range: I am comfortable in rooms with CPOs, CFOs, and clinical leadership, and I know how to bring evidence without burying the conversation in it. Second, data-driven HR discipline: the Wellstar dashboard suite is a multi-pillar Tableau product (Compensation, Work-Life Services, Benefits, TOC navigation) built for decisions rather than reporting aesthetics, backed by Power BI, Tableau, SQL, BigQuery, and AI-integrated workflow. Third, program leadership at scale: Harvard was a $4.5M, multi-institution, politically sensitive initiative that required executive communication, governance design, and decision frameworks every week.`,
+  `I am drawn to Headway because the mission lives at the intersection of mental healthcare access and operational discipline, and because an HRBP role there means the people programs you support directly enable clinicians to reach more patients. I have spent my career building the analytics and governance that make mission-driven organizations faster without losing rigor, and that is the work I want to do next.`,
+  `I would welcome a short conversation about the business units you want this partnership to support and the first ninety-day priorities. Thank you for the consideration.`,
 ];
 
 const html = `<!DOCTYPE html>
@@ -75,4 +75,4 @@ ${sharedStyles}
 
 const clean = html.replace(/\u2014/g, ',').replace(/\u2013/g, '-');
 writeFileSync('output/cover-aaliya-headway-2026-04-14.html', clean);
-console.log('Wrote output/cover-aaliya-headway-2026-04-14.html (' + clean.length + ' bytes) -- dash-scrubbed');
+console.log('Wrote output/cover-aaliya-headway-2026-04-14.html (' + clean.length + ' bytes) -- dash-scrubbed -- HRBP Director framing');

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// Render CV for Headway - Head of Total Rewards and People Ops.
-// Primary archetype match (TR + People Ops + People Analytics). Stretch on title level.
+// Render CV for Headway - Director, HR Business Partner.
+// Strategic HRBP role requiring 12+ years HR/HR-adjacent; executive partnership focus.
 // Tier 1 skills lifted lightly. No Tier 2 (founder) disclosure. No em/en dashes.
 import { readFileSync, writeFileSync } from 'fs';
 
@@ -17,17 +17,17 @@ const vars = {
   PORTFOLIO_DISPLAY: 'Atlanta, GA',
   LOCATION: 'PMP, CSM',
   SECTION_SUMMARY: 'Professional Summary',
-  SUMMARY_TEXT: `Total Rewards, People Analytics, and People Operations leader with 13+ years building the analytics and governance that move executives off intuition and onto evidence. Currently owns the Total Rewards suite at Wellstar Health System: multi-pillar Tableau dashboards (Compensation, Work-Life Services, Benefits, TOC navigation) used by HR leadership and the C-suite for labor-optimization decisions. Led a $4.5M, 10-plus institution program at Harvard Medical School with audit-grade governance. Builds in Power BI, Tableau, SQL, BigQuery, and PowerQuery with AI-integrated workflow across Vertex AI, Gemini, OpenAI/Azure OpenAI, GCP, and Cloud Run. Looking to run Total Rewards, People Analytics, and People Operations as one integrated function at a mission-driven company.`,
+  SUMMARY_TEXT: `Strategic HR partner and program leader with 13+ years aligning people programs to business outcomes through executive partnership, data-driven decisions, and governance at scale. Currently owns Total Rewards analytics at Wellstar Health System: multi-pillar Tableau dashboards (Compensation, Work-Life Services, Benefits, TOC navigation) that HR leadership and the C-suite use to make labor-optimization decisions. Led a $4.5M, 10-plus institution program at Harvard Medical School where aligning executive, clinical, and operational constituencies around a single delivery plan was the job. Known for bringing structure to ambiguity and for building the trusted-partner relationships that let leaders make better calls.`,
   SECTION_COMPETENCIES: 'Core Competencies',
   COMPETENCIES: [
-    'Total Rewards Program Leadership',
-    'People Analytics Function Build',
-    'Benefits Strategy & Vendor Management',
-    'Executive & Board-Level Storytelling',
-    'HRIS & People Operations Partnership',
+    'Executive Partnership & Trusted Advisor',
+    'Data-Driven HR Decisions',
+    'Total Rewards & Benefits Fluency',
+    'People Analytics & Workforce Insights',
     'Cross-Functional Program Leadership',
-    'Compliance & Audit-Ready Governance',
-    'Healthcare & Benefits Domain Fluency',
+    'Change Management at Scale',
+    'Culture & Stakeholder Alignment',
+    'Governance & Audit-Ready Reporting',
   ].map(t => `<span class="competency-tag">${t}</span>`).join('\n      '),
   SECTION_EXPERIENCE: 'Work Experience',
   EXPERIENCE: `
@@ -36,12 +36,12 @@ const vars = {
         <span class="job-company">Wellstar Health System</span>
         <span class="job-period">Jan 2025 to Present</span>
       </div>
-      <div class="job-role">Technical Program Manager, Total Rewards &amp; People Analytics</div>
+      <div class="job-role">Technical Program Manager, Total Rewards (HR Business Partner adjacent)</div>
       <div class="job-location">Atlanta, GA</div>
       <ul>
-        <li>Own the <strong>Total Rewards analytics suite</strong> in Tableau (Compensation, Work-Life Services, Benefits, and TOC navigation pillars) used by HR leadership and the C-suite to make labor-optimization decisions.</li>
-        <li>Build the metric framework that connects benefits and workforce investments to <strong>ROI, utilization, and employee experience</strong>, turning HRIS and payroll data into decision-ready signal.</li>
-        <li>Partner across HRIS, Operations, and Engineering to retire data silos and stand up <strong>repeatable, audit-ready reporting</strong> for enterprise-scale people programs in a healthcare context.</li>
+        <li>Partner with HR leadership and the C-suite on <strong>Total Rewards and Labor Optimization</strong> strategy, turning complex people-program data into executive-ready dashboards and decisions.</li>
+        <li>Own the analytics layer that connects benefits and workforce investments to <strong>ROI, utilization, and employee experience</strong> for a large healthcare system.</li>
+        <li>Serve as a <strong>trusted advisor</strong> across HRIS, Operations, and leadership, translating business questions into actionable analysis and concrete recommendations.</li>
         <li>Operate in Power BI, Tableau, SQL, BigQuery, and PowerQuery; apply AI-integrated workflow (Vertex AI, Gemini, OpenAI/Azure OpenAI) to compress analysis cycles.</li>
       </ul>
     </div>
@@ -54,9 +54,9 @@ const vars = {
       <div class="job-role">Program Manager, Multi-Stakeholder Initiative</div>
       <div class="job-location">Remote</div>
       <ul>
-        <li>Led a <strong>$4.5M, 10+ institution</strong> academic medicine program, aligning clinical faculty, hospital partners, and internal stakeholders around a single delivery plan.</li>
-        <li>Designed operating rhythms, decision frameworks, and governance that kept politically sensitive work moving with audit-ready documentation. The exact operating muscle a Head of TR needs for compensation committees and board reporting.</li>
-        <li>Built the reporting and governance backbone for learning operations, curriculum mapping, and fiscal planning.</li>
+        <li>Partnered with clinical faculty, hospital executives, and internal leadership on a <strong>$4.5M, 10+ institution</strong> academic medicine initiative.</li>
+        <li>Designed the operating rhythms, decision frameworks, and governance that aligned senior stakeholders around timelines, accountability, and politically sensitive priorities. Executive partnership was the job.</li>
+        <li>Built the reporting backbone that gave leaders the evidence and the structure to act.</li>
       </ul>
     </div>
 
@@ -65,12 +65,12 @@ const vars = {
         <span class="job-company">Ideagen DevonWay</span>
         <span class="job-period">Nov 2022 to Jan 2024</span>
       </div>
-      <div class="job-role">Technical Project Manager</div>
+      <div class="job-role">Technical Project Manager, Client Partnership</div>
       <div class="job-location">Remote</div>
       <ul>
-        <li>Delivered <strong>$245K to $2.2M software implementations</strong> for Department of Energy, defense, and regulated-industry clients. Owned scope, schedule, risk, and executive communication end to end.</li>
-        <li><strong>Increased customer satisfaction by 25%</strong> through primary-client ownership of status reporting and issue resolution.</li>
-        <li>Kept cross-functional teams aligned across sales, engineering, and customer environments against regulatory deadlines.</li>
+        <li>Acted as primary executive contact on <strong>$245K to $2.2M implementations</strong> for Department of Energy, defense, and regulated-industry clients.</li>
+        <li><strong>Increased customer satisfaction by 25%</strong> through the trusted-advisor positioning and clear-eyed communication that kept client leadership informed and aligned.</li>
+        <li>Translated technical requirements into practical business decisions for client executives.</li>
       </ul>
     </div>
 
@@ -82,7 +82,7 @@ const vars = {
       <div class="job-role">Director of Operations</div>
       <div class="job-location">Tucker, GA</div>
       <ul>
-        <li>Directed operations, systems, and people programs for a growing wellness business. Managed and trained a 17-member team; improved customer satisfaction by 34% in six months through CRM, scheduling, and service-workflow redesign.</li>
+        <li>Directed operations, people programs, and performance management for a growing wellness business. Managed and trained a 17-member team; improved customer satisfaction by 34% in six months.</li>
       </ul>
     </div>
 
@@ -94,23 +94,23 @@ const vars = {
       <div class="job-role">Project Manager, Real Estate Operations</div>
       <div class="job-location">Atlanta, GA</div>
       <ul>
-        <li>Built a five-year roadmap and investment plan that contributed to <strong>$14M+ in savings and cost avoidance</strong>; supported 350% portfolio growth.</li>
+        <li>Built a five-year roadmap and investment plan that contributed to <strong>$14M+ in savings and cost avoidance</strong>.</li>
       </ul>
     </div>
   `,
-  SECTION_PROJECTS: 'Selected Program Highlights',
+  SECTION_PROJECTS: 'Selected Partnership Highlights',
   PROJECTS: `
     <div class="project">
-      <div class="project-title">Wellstar: Total Rewards Analytics Suite<span class="project-badge">Tableau, BigQuery, SQL</span></div>
-      <div class="project-desc">Multi-pillar executive analytics product connecting benefits and workforce spend to ROI. Three KPIs leadership acts on, not thirty they ignore.</div>
+      <div class="project-title">Harvard Medical School: $4.5M Multi-Institution Partnership<span class="project-badge">Executive alignment</span></div>
+      <div class="project-desc">Designed governance and decision frameworks that kept clinical faculty, hospital executives, and internal stakeholders aligned through delivery on a politically sensitive initiative.</div>
     </div>
     <div class="project">
-      <div class="project-title">Harvard Medical School: $4.5M Multi-Institution Program<span class="project-badge">Governance + reporting</span></div>
-      <div class="project-desc">Governance cadence, decision frameworks, and audit-ready reporting that aligned 10+ institutions through delivery on a politically sensitive academic-medicine initiative.</div>
+      <div class="project-title">Wellstar: Total Rewards Executive Analytics<span class="project-badge">Trusted advisor</span></div>
+      <div class="project-desc">Multi-pillar Tableau dashboard suite for HR leadership and C-suite. Three KPIs leadership acts on, not thirty they ignore.</div>
     </div>
     <div class="project">
-      <div class="project-title">DevonWay: Regulated Software Delivery<span class="project-badge">DoE, Defense</span></div>
-      <div class="project-desc">Shipped $245K to $2.2M implementations with +25% CSAT. Audit trails, compliance, and precision were non-negotiable.</div>
+      <div class="project-title">DevonWay: Regulated Client Partnership<span class="project-badge">+25% CSAT</span></div>
+      <div class="project-desc">Primary executive contact on DoE and defense implementations. Clear-eyed communication in high-stakes, compliance-heavy environments.</div>
     </div>
   `,
   SECTION_EDUCATION: 'Education',
@@ -127,11 +127,11 @@ const vars = {
   SECTION_SKILLS: 'Skills',
   SKILLS: `
     <div class="skills-grid">
+      <div class="skill-item"><span class="skill-category">HR / People:</span> Total Rewards, Benefits, People Analytics, HRIS partnership, Change Management, Executive Partnership</div>
       <div class="skill-item"><span class="skill-category">Analytics:</span> Tableau, Power BI, SQL, BigQuery, PowerQuery, Excel, ROI modeling, executive dashboards</div>
       <div class="skill-item"><span class="skill-category">AI / ML platform:</span> Google Vertex AI, Gemini 2.5, OpenAI / Azure OpenAI, prompt engineering, AI-integrated workflow</div>
-      <div class="skill-item"><span class="skill-category">Cloud / infra:</span> GCP, Cloud Run, Supabase, BigQuery</div>
+      <div class="skill-item"><span class="skill-category">Cloud / infra:</span> GCP, Cloud Run, BigQuery</div>
       <div class="skill-item"><span class="skill-category">Delivery:</span> Jira, Confluence, Asana, Agile, Waterfall</div>
-      <div class="skill-item"><span class="skill-category">Domain:</span> Total Rewards, Benefits, People Analytics, People Operations, HRIS, Healthcare</div>
     </div>
   `,
 };
@@ -143,4 +143,4 @@ for (const [k, v] of Object.entries(vars)) {
 html = html.replace(/\u2014/g, ',').replace(/\u2013/g, '-');
 
 writeFileSync('output/cv-aaliya-headway-2026-04-14.html', html);
-console.log('Wrote output/cv-aaliya-headway-2026-04-14.html (' + html.length + ' bytes) -- dash-scrubbed');
+console.log('Wrote output/cv-aaliya-headway-2026-04-14.html (' + html.length + ' bytes) -- dash-scrubbed -- HRBP Director framing');
