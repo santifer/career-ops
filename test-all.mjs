@@ -295,150 +295,298 @@ if (fileExists('VERSION')) {
   fail('VERSION file missing');
 }
 
-// ── 11. SCAN PARSER UNIT TESTS ──────────────────────────────────
+// ── 11. SCAN UNIT TESTS (via imports) ───────────────────────────
 
-console.log('\n11. Scan parser unit tests');
+console.log('\n11. Scan unit tests');
 
-// BambooHR parser
 try {
-  const bambooJson = {
-    result: [
-      { id: 42, jobOpeningName: 'AI Engineer', location: { city: 'Remote', state: '' } },
-      { id: 43, jobOpeningName: '', location: { city: 'Berlin' } }, // empty title — should be filtered
-    ],
-  };
-  const slug = 'testco';
-  // Inline the same logic as parseBambooHR in scan.mjs
-  const jobs = bambooJson.result
-    .map(j => {
-      const city = j.location?.city || '';
-      const state = j.location?.state || '';
-      const location = city ? `${city}${state ? ', ' + state : ''}` : (j.departmentLabel || '');
-      return { title: j.jobOpeningName || '', url: `https://${slug}.bamboohr.com/careers/${j.id}/detail`, location };
-    })
-    .filter(j => j.title);
-  if (jobs.length === 1 && jobs[0].title === 'AI Engineer' && jobs[0].location === 'Remote') {
-    pass('BambooHR parser: extracts jobs, filters empty titles, builds correct URL');
-  } else {
-    fail(`BambooHR parser: unexpected result: ${JSON.stringify(jobs)}`);
+  const scan = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
+  const {
+    detectApi, buildTitleFilter, buildLocationFilter,
+    formatPipelineEntry, parseBambooHR, parseTeamtailor,
+    parseWorkday, parseUkg, showSince, withRetry,
+  } = scan;
+
+  // ── detectApi: URL pattern detection ──
+
+  const cases = [
+    // Ashby
+    [{ careers_url: 'https://jobs.ashbyhq.com/cohere' }, 'ashby', 'api.ashbyhq.com/posting-api/job-board/cohere'],
+    // Lever
+    [{ careers_url: 'https://jobs.lever.co/mistral' }, 'lever', 'api.lever.co/v0/postings/mistral'],
+    // Greenhouse via explicit api field
+    [{ api: 'https://boards-api.greenhouse.io/v1/boards/anthropic/jobs' }, 'greenhouse', 'boards-api.greenhouse.io'],
+    // Greenhouse via EU board URL
+    [{ careers_url: 'https://job-boards.eu.greenhouse.io/parloa' }, 'greenhouse', 'boards-api.greenhouse.io/v1/boards/parloa'],
+    // Greenhouse via standard board URL
+    [{ careers_url: 'https://job-boards.greenhouse.io/vercel' }, 'greenhouse', 'boards-api.greenhouse.io/v1/boards/vercel'],
+    // BambooHR
+    [{ careers_url: 'https://loom.bamboohr.com/careers/list' }, 'bamboohr', 'loom.bamboohr.com/careers/list'],
+    // Teamtailor
+    [{ careers_url: 'https://klarna.teamtailor.com/jobs' }, 'teamtailor', 'klarna.teamtailor.com/jobs.rss'],
+    // Workday
+    [{ careers_url: 'https://snowflake.wd1.myworkdayjobs.com/en-US/Snowflake_External' }, 'workday', 'myworkdayjobs.com/wday/cxs/snowflake/Snowflake_External/jobs'],
+    // UKG
+    [{ careers_url: 'https://recruiting.ultipro.com/ACME123/JobBoard/aabb-1234-ccdd-5678/' }, 'ukg', 'JobSearchAPI/GetJobs'],
+    // Unknown — returns null
+    [{ careers_url: 'https://careers.example.com/jobs' }, null, ''],
+  ];
+
+  let detectOk = true;
+  for (const [input, expectedType, expectedUrlPart] of cases) {
+    const result = detectApi(input);
+    if (expectedType === null) {
+      if (result !== null) { fail(`detectApi: expected null for ${input.careers_url}, got ${result?.type}`); detectOk = false; }
+    } else {
+      if (!result) { fail(`detectApi: got null for ${JSON.stringify(input)}, expected type=${expectedType}`); detectOk = false; continue; }
+      if (result.type !== expectedType) { fail(`detectApi: expected type=${expectedType} for ${input.careers_url || input.api}, got ${result.type}`); detectOk = false; }
+      if (expectedUrlPart && !result.url.includes(expectedUrlPart)) { fail(`detectApi: expected URL to contain "${expectedUrlPart}", got ${result.url}`); detectOk = false; }
+    }
   }
-} catch (e) {
-  fail(`BambooHR parser test crashed: ${e.message}`);
-}
+  if (detectOk) pass(`detectApi: all ${cases.length} URL patterns correctly identified`);
 
-// Teamtailor RSS parser
-try {
+  // BambooHR slug extraction via detectApi
+  const bambooResult = detectApi({ careers_url: 'https://loom.bamboohr.com/careers/list' });
+  if (bambooResult?.slug === 'loom') {
+    pass('detectApi: BambooHR slug extracted correctly');
+  } else {
+    fail(`detectApi: BambooHR slug wrong — got ${bambooResult?.slug}`);
+  }
+
+  // Workday host extraction via detectApi
+  const wdResult = detectApi({ careers_url: 'https://snowflake.wd1.myworkdayjobs.com/en-US/Snowflake_External' });
+  if (wdResult?.host === 'https://snowflake.wd1.myworkdayjobs.com') {
+    pass('detectApi: Workday host extracted correctly');
+  } else {
+    fail(`detectApi: Workday host wrong — got ${wdResult?.host}`);
+  }
+
+  // UKG orgId/boardId extraction via detectApi
+  const ukgResult = detectApi({ careers_url: 'https://recruiting.ultipro.com/ACME123/JobBoard/aabb-1234-ccdd-5678/' });
+  if (ukgResult?.orgId === 'ACME123' && ukgResult?.boardId === 'aabb-1234-ccdd-5678') {
+    pass('detectApi: UKG orgId and boardId extracted correctly');
+  } else {
+    fail(`detectApi: UKG extraction wrong — orgId=${ukgResult?.orgId} boardId=${ukgResult?.boardId}`);
+  }
+
+  // ── parseBambooHR ──
+
+  const bambooJobs = parseBambooHR(
+    { result: [
+      { id: 42, jobOpeningName: 'AI Engineer', location: { city: 'Remote', state: '' } },
+      { id: 43, jobOpeningName: 'ML Lead', location: { city: 'Berlin', state: 'BE' } },
+      { id: 44, jobOpeningName: '', location: { city: 'NYC' } },       // empty title — filtered
+      { id: 45, jobOpeningName: 'DevRel', location: null, departmentLabel: 'Engineering' }, // no city — fallback
+    ]},
+    'Testco', 'testco'
+  );
+  if (
+    bambooJobs.length === 3 &&
+    bambooJobs[0].location === 'Remote' &&
+    bambooJobs[1].location === 'Berlin, BE' &&
+    bambooJobs[2].location === 'Engineering' &&
+    bambooJobs[0].url === 'https://testco.bamboohr.com/careers/42/detail'
+  ) {
+    pass('parseBambooHR: location variants, empty title filter, departmentLabel fallback');
+  } else {
+    fail(`parseBambooHR: unexpected result: ${JSON.stringify(bambooJobs)}`);
+  }
+
+  // ── parseTeamtailor ──
+
   const rss = `<?xml version="1.0"?>
 <rss><channel>
 <item><title><![CDATA[Senior AI Engineer]]></title><link>https://acme.teamtailor.com/jobs/123</link><location>Stockholm, SE</location></item>
 <item><title>ML Researcher</title><link>https://acme.teamtailor.com/jobs/124</link></item>
+<item><title><![CDATA[]]></title><link>https://acme.teamtailor.com/jobs/125</link></item>
 </channel></rss>`;
-  const items = [];
-  const itemRegex = /<item>([\s\S]*?)<\/item>/g;
-  let m;
-  while ((m = itemRegex.exec(rss)) !== null) {
-    const block = m[1];
-    const title = (/<title><!\[CDATA\[(.*?)\]\]><\/title>/s.exec(block) || /<title>(.*?)<\/title>/s.exec(block))?.[1]?.trim() || '';
-    const link = (/<link>(.*?)<\/link>/s.exec(block))?.[1]?.trim() || '';
-    const location = (/<location>(.*?)<\/location>/s.exec(block))?.[1]?.trim() || '';
-    if (title && link) items.push({ title, url: link, location });
-  }
+  const ttJobs = parseTeamtailor(rss, 'Acme');
   if (
-    items.length === 2 &&
-    items[0].title === 'Senior AI Engineer' &&
-    items[0].location === 'Stockholm, SE' &&
-    items[1].title === 'ML Researcher'
+    ttJobs.length === 2 &&
+    ttJobs[0].title === 'Senior AI Engineer' &&
+    ttJobs[0].location === 'Stockholm, SE' &&
+    ttJobs[1].title === 'ML Researcher' &&
+    ttJobs[1].location === ''
   ) {
-    pass('Teamtailor RSS parser: handles CDATA titles, plain titles, optional location');
+    pass('parseTeamtailor: CDATA titles, plain titles, empty CDATA filtered, optional location');
   } else {
-    fail(`Teamtailor RSS parser: unexpected result: ${JSON.stringify(items)}`);
+    fail(`parseTeamtailor: unexpected result: ${JSON.stringify(ttJobs)}`);
   }
-} catch (e) {
-  fail(`Teamtailor RSS parser test crashed: ${e.message}`);
-}
 
-// Workday parser
-try {
-  const rawJobs = [
-    { title: 'Data Engineer', externalPath: '/jobs/de-123', locationsText: 'Remote, USA' },
-    { title: '', externalPath: '/jobs/empty-456', locationsText: '' }, // empty title — kept (filtered downstream)
-    { title: 'PM', externalPath: '', locationsText: 'Berlin' }, // no externalPath — should be filtered
-  ];
-  const host = 'https://acme.wd1.myworkdayjobs.com';
-  const jobs = rawJobs.map(j => ({
-    title: j.title || '',
-    url: j.externalPath ? `${host}${j.externalPath}` : '',
-    location: j.locationsText || '',
-  })).filter(j => j.url);
-  if (jobs.length === 2 && jobs[0].url === `${host}/jobs/de-123` && jobs[0].location === 'Remote, USA') {
-    pass('Workday parser: builds URLs from externalPath, filters entries without URL');
+  // ── parseWorkday ──
+
+  const wdJobs = parseWorkday(
+    [
+      { title: 'Data Engineer', externalPath: '/jobs/de-123', locationsText: 'Remote, USA' },
+      { title: 'PM', externalPath: '', locationsText: 'Berlin' },     // no path — filtered
+      { title: '', externalPath: '/jobs/empty-456', locationsText: '' }, // empty title — kept (title filter downstream)
+    ],
+    'Snowflake', 'https://snowflake.wd1.myworkdayjobs.com'
+  );
+  if (
+    wdJobs.length === 2 &&
+    wdJobs[0].url === 'https://snowflake.wd1.myworkdayjobs.com/jobs/de-123' &&
+    wdJobs[0].location === 'Remote, USA'
+  ) {
+    pass('parseWorkday: builds URLs from externalPath, filters entries without path');
   } else {
-    fail(`Workday parser: unexpected result: ${JSON.stringify(jobs)}`);
+    fail(`parseWorkday: unexpected result: ${JSON.stringify(wdJobs)}`);
   }
-} catch (e) {
-  fail(`Workday parser test crashed: ${e.message}`);
-}
 
-// UKG parser
-try {
-  const rawJobs = [
-    { title: 'Solutions Architect', requisitionId: 'REQ-001', location: 'Remote' },
-    { title: '', requisitionId: 'REQ-002', location: 'NYC' }, // empty title — should be filtered
-  ];
-  const orgId = 'TESTORG', boardId = 'test-board-uuid';
-  const jobs = rawJobs.map(j => ({
-    title: j.title || '',
-    url: `https://recruiting.ultipro.com/${orgId}/JobBoard/${boardId}?requisitionId=${j.requisitionId}`,
-    location: j.location || '',
-  })).filter(j => j.title && j.url.includes('requisitionId='));
-  if (jobs.length === 1 && jobs[0].url.includes('REQ-001') && jobs[0].location === 'Remote') {
-    pass('UKG parser: builds correct URLs, filters empty titles');
+  // ── parseUkg ──
+
+  const ukgJobs = parseUkg(
+    [
+      { title: 'Solutions Architect', requisitionId: 'REQ-001', location: 'Remote' },
+      { title: '', requisitionId: 'REQ-002', location: 'NYC' },       // empty title — filtered
+      { title: 'Engineer', requisitionId: undefined, location: 'SF' }, // no requisitionId — filtered
+    ],
+    'Acme', 'ACME123', 'board-uuid'
+  );
+  if (
+    ukgJobs.length === 1 &&
+    ukgJobs[0].url === 'https://recruiting.ultipro.com/ACME123/JobBoard/board-uuid?requisitionId=REQ-001' &&
+    ukgJobs[0].location === 'Remote'
+  ) {
+    pass('parseUkg: correct URL format, filters empty title and missing requisitionId');
   } else {
-    fail(`UKG parser: unexpected result: ${JSON.stringify(jobs)}`);
-  }
-} catch (e) {
-  fail(`UKG parser test crashed: ${e.message}`);
-}
-
-// Location filter
-try {
-  // Inline buildLocationFilter logic
-  function buildLocationFilter(locationFilter) {
-    const include = (locationFilter?.include || []).map(k => k.toLowerCase());
-    const exclude = (locationFilter?.exclude || []).map(k => k.toLowerCase());
-    if (include.length === 0 && exclude.length === 0) return () => true;
-    return (location) => {
-      const lower = (location || '').toLowerCase();
-      const passInclude = include.length === 0 || include.some(k => lower.includes(k));
-      const passExclude = !exclude.some(k => lower.includes(k));
-      return passInclude && passExclude;
-    };
+    fail(`parseUkg: unexpected result: ${JSON.stringify(ukgJobs)}`);
   }
 
-  const filter = buildLocationFilter({ include: ['remote', 'emea'], exclude: ['on-site only'] });
-  const passRemote = filter('Remote, USA');
-  const passEmea = filter('London, EMEA');
-  const failOnSite = filter('New York — on-site only');
-  const failNoMatch = filter('São Paulo, Brazil');
-  const noFilter = buildLocationFilter({});
+  // ── buildTitleFilter ──
 
-  if (passRemote && passEmea && !failOnSite && !failNoMatch && noFilter('anywhere')) {
-    pass('Location filter: include/exclude keywords work correctly; empty filter passes all');
+  const tf = buildTitleFilter({ positive: ['AI', 'ML'], negative: ['Junior', 'Intern'] });
+  if (tf('AI Engineer') && tf('Senior ML Lead') && !tf('Junior AI Dev') && !tf('AI Intern')) {
+    pass('buildTitleFilter: positive/negative keyword matching works');
   } else {
-    fail(`Location filter: unexpected results remote=${passRemote} emea=${passEmea} onsite=${failOnSite} nomatch=${failNoMatch}`);
+    fail('buildTitleFilter: unexpected match result');
   }
-} catch (e) {
-  fail(`Location filter test crashed: ${e.message}`);
-}
+  const tfEmpty = buildTitleFilter({});
+  if (tfEmpty('Anything Goes')) {
+    pass('buildTitleFilter: empty config accepts all titles');
+  } else {
+    fail('buildTitleFilter: empty config should accept all');
+  }
 
-// --since flag: graceful on missing history
-try {
-  const result = run('node', ['scan.mjs', '--since', '7'], { stdio: ['pipe', 'pipe', 'pipe'] });
-  // result is null on non-zero exit; null or string both acceptable here
-  // We only care it doesn't crash with unhandled exception
-  pass('scan.mjs --since 7 exits gracefully (no history file)');
+  // ── buildLocationFilter ──
+
+  const lf = buildLocationFilter({ include: ['remote', 'emea'], exclude: ['on-site only'] });
+  if (
+    lf('Remote, USA') &&
+    lf('London, EMEA') &&
+    !lf('New York — on-site only') &&
+    !lf('São Paulo, Brazil')
+  ) {
+    pass('buildLocationFilter: include/exclude keywords, case-insensitive');
+  } else {
+    fail('buildLocationFilter: unexpected match result');
+  }
+  const lfEmpty = buildLocationFilter({});
+  if (lfEmpty('anywhere') && lfEmpty('')) {
+    pass('buildLocationFilter: empty config accepts all locations including empty string');
+  } else {
+    fail('buildLocationFilter: empty config should accept all');
+  }
+
+  // ── formatPipelineEntry ──
+
+  const e1 = formatPipelineEntry({ url: 'https://example.com/job/1', company: 'Acme', title: 'AI Eng', location: 'Remote', compensation: '$120K' });
+  const e2 = formatPipelineEntry({ url: 'https://example.com/job/2', company: 'Acme', title: 'ML Lead', location: '', compensation: '' });
+  const e3 = formatPipelineEntry({ url: 'https://example.com/job/3', company: 'Acme', title: 'DevRel', location: 'Berlin', compensation: '' });
+  if (
+    e1 === '- [ ] https://example.com/job/1 | Acme | AI Eng | Remote | $120K' &&
+    e2 === '- [ ] https://example.com/job/2 | Acme | ML Lead' &&
+    e3 === '- [ ] https://example.com/job/3 | Acme | DevRel | Berlin'
+  ) {
+    pass('formatPipelineEntry: includes location+comp when present, omits when absent');
+  } else {
+    fail(`formatPipelineEntry: unexpected output:\n  e1: ${e1}\n  e2: ${e2}\n  e3: ${e3}`);
+  }
+
+  // ── withRetry: succeeds on second attempt ──
+
+  let callCount = 0;
+  const retryResult = await withRetry(async () => {
+    callCount++;
+    if (callCount < 2) throw new Error('network blip');
+    return 'ok';
+  }, 3);
+  if (retryResult === 'ok' && callCount === 2) {
+    pass('withRetry: retries on transient error, succeeds on second attempt');
+  } else {
+    fail(`withRetry: expected success on attempt 2, got callCount=${callCount} result=${retryResult}`);
+  }
+
+  // withRetry: does NOT retry on 404
+  let calls404 = 0;
+  try {
+    await withRetry(async () => { calls404++; throw new Error('HTTP 404'); }, 3);
+    fail('withRetry: should have thrown on 404');
+  } catch (err) {
+    if (calls404 === 1 && err.message === 'HTTP 404') {
+      pass('withRetry: does not retry on 404 client error');
+    } else {
+      fail(`withRetry: expected 1 call for 404, got ${calls404}`);
+    }
+  }
+
+  // withRetry: DOES retry on 503
+  let calls503 = 0;
+  try {
+    await withRetry(async () => { calls503++; throw new Error('HTTP 503'); }, 2);
+    fail('withRetry: should have thrown after exhausting retries on 503');
+  } catch (err) {
+    if (calls503 === 3) { // initial + 2 retries
+      pass('withRetry: retries on 503 server error up to maxRetries');
+    } else {
+      fail(`withRetry: expected 3 attempts for 503, got ${calls503}`);
+    }
+  }
+
+  // ── showSince: reads history correctly ──
+
+  const { mkdtempSync, writeFileSync: wfs, rmSync } = await import('fs');
+  const { tmpdir } = await import('os');
+  const tmpDir = mkdtempSync(tmpdir() + '/scan-test-');
+  const historyPath = tmpDir + '/scan-history.tsv';
+  const today = new Date().toISOString().slice(0, 10);
+  const old = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
+  wfs(historyPath, [
+    'url\tfirst_seen\tportal\ttitle\tcompany\tstatus',
+    `https://example.com/job/1\t${today}\tashby-api\tAI Engineer\tAcme\tadded`,
+    `https://example.com/job/2\t${old}\tashby-api\tOld Job\tAcme\tadded`,
+    `https://example.com/job/3\t${today}\tashby-api\tFiltered Job\tAcme\tskipped_title`,
+  ].join('\n') + '\n');
+
+  // Capture console output
+  const lines = [];
+  const origLog = console.log;
+  console.log = (...args) => lines.push(args.join(' '));
+  showSince(7, historyPath);
+  console.log = origLog;
+
+  rmSync(tmpDir, { recursive: true });
+
+  const output = lines.join('\n');
+  const hasRecent = output.includes('AI Engineer') && output.includes('Acme');
+  const hasOld = output.includes('Old Job');
+  const hasFiltered = output.includes('Filtered Job');
+  if (hasRecent && !hasOld && !hasFiltered) {
+    pass('showSince: shows only added offers within date window, excludes old and skipped');
+  } else {
+    fail(`showSince: recent=${hasRecent} old=${hasOld} filtered=${hasFiltered}\noutput: ${output.slice(0, 200)}`);
+  }
+
+  // --since with invalid argument exits non-zero
+  const invalidResult = run('node', ['scan.mjs', '--since', 'abc'], { stdio: ['pipe', 'pipe', 'pipe'] });
+  if (invalidResult === null) {
+    pass('scan.mjs --since abc: exits non-zero for invalid argument');
+  } else {
+    fail('scan.mjs --since abc: should exit non-zero');
+  }
+
 } catch (e) {
-  fail(`scan.mjs --since 7 crashed: ${e.message}`);
+  fail(`Scan unit tests failed to load: ${e.message}`);
 }
 
 // ── SUMMARY ─────────────────────────────────────────────────────

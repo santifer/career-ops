@@ -18,6 +18,7 @@
  */
 
 import { readFileSync, writeFileSync, appendFileSync, existsSync, mkdirSync } from 'fs';
+import { fileURLToPath } from 'url';
 import yaml from 'js-yaml';
 const parseYaml = yaml.load;
 
@@ -143,7 +144,8 @@ function detectApi(company) {
   }
 
   // Workday (must come before UKG — different domain)
-  const workdayMatch = url.match(/([^./]+)\.([^./]+)\.myworkdayjobs\.com\/([^/?#]+)/);
+  // URLs may include an optional language prefix, e.g. /en-US/{site} — skip it
+  const workdayMatch = url.match(/([^./]+)\.([^./]+)\.myworkdayjobs\.com\/(?:[a-z]{2}-[A-Z]{2}\/)?([^/?#]+)/);
   if (workdayMatch) {
     const [, tenant, shard, site] = workdayMatch;
     return {
@@ -293,11 +295,11 @@ async function fetchUkg(apiUrl, orgId, boardId) {
 function parseUkg(jobs, companyName, orgId, boardId) {
   return jobs.map(j => ({
     title: j.title || '',
-    url: `https://recruiting.ultipro.com/${orgId}/JobBoard/${boardId}?requisitionId=${j.requisitionId}`,
+    url: j.requisitionId ? `https://recruiting.ultipro.com/${orgId}/JobBoard/${boardId}?requisitionId=${j.requisitionId}` : '',
     company: companyName,
     location: j.location || '',
     compensation: '',
-  })).filter(j => j.title && j.url.includes('requisitionId='));
+  })).filter(j => j.title && j.url);
 }
 
 // Standard JSON-based parsers dispatched by type
@@ -432,8 +434,8 @@ function appendToScanHistory(offers, date, status = 'added') {
 
 // ── --since: show recent offers from history ────────────────────────
 
-function showSince(days) {
-  if (!existsSync(SCAN_HISTORY_PATH)) {
+function showSince(days, historyPath = SCAN_HISTORY_PATH) {
+  if (!existsSync(historyPath)) {
     console.log('No scan history found. Run a scan first.');
     return;
   }
@@ -442,7 +444,7 @@ function showSince(days) {
   cutoff.setDate(cutoff.getDate() - days);
   const cutoffStr = cutoff.toISOString().slice(0, 10);
 
-  const lines = readFileSync(SCAN_HISTORY_PATH, 'utf-8').split('\n').slice(1);
+  const lines = readFileSync(historyPath, 'utf-8').split('\n').slice(1);
   const recent = lines
     .filter(l => l.trim())
     .map(l => {
@@ -641,7 +643,24 @@ async function main() {
   console.log('→ Share results and get help: https://discord.gg/8pRpHETxa4');
 }
 
-main().catch(err => {
-  console.error('Fatal:', err.message);
-  process.exit(1);
-});
+// Only run when executed directly (not when imported for testing)
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  main().catch(err => {
+    console.error('Fatal:', err.message);
+    process.exit(1);
+  });
+}
+
+// ── Exports (for testing) ───────────────────────────────────────────
+export {
+  detectApi,
+  buildTitleFilter,
+  buildLocationFilter,
+  formatPipelineEntry,
+  parseBambooHR,
+  parseTeamtailor,
+  parseWorkday,
+  parseUkg,
+  showSince,
+  withRetry,
+};
