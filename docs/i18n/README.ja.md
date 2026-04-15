@@ -196,7 +196,8 @@ career-ops/
 ├── templates/
 │   ├── cv-template.html         # ATS最適化CVテンプレート
 │   ├── portals.example.yml      # スキャナー設定テンプレート
-│   └── states.yml               # 正規ステータス
+│   ├── states.yml               # 正規ステータス
+│   └── fonts/                   # Space Grotesk + DM Sans
 ├── batch/
 │   ├── batch-prompt.md          # 自己完結型ワーカープロンプト
 │   └── batch-runner.sh          # オーケストレータースクリプト
@@ -204,11 +205,6 @@ career-ops/
 ├── data/                        # 追跡データ（gitignore対象）
 ├── reports/                     # 評価レポート（gitignore対象）
 ├── output/                      # 生成PDF（gitignore対象）
-├── templates/
-│   ├── cv-template.html         # ATS最適化CVテンプレート
-│   ├── portals.example.yml      # スキャナー設定テンプレート
-│   ├── states.yml               # 正規ステータス
-│   └── fonts/                   # Space Grotesk + DM Sans
 ├── docs/                        # セットアップ、カスタマイズ、アーキテクチャ
 └── examples/                    # サンプルCV、レポート、実績の裏付け
 ```
