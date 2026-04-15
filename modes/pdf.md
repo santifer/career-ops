@@ -1,4 +1,4 @@
-﻿# Modo: pdf — Generación de PDF ATS-Optimizado
+# Modo: pdf — Generación de PDF ATS-Optimizado
 
 ## Pipeline completo
 

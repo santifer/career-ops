@@ -1,4 +1,4 @@
-﻿# 共通コンテキスト -- career-ops（日本語）
+# 共通コンテキスト -- career-ops（日本語）
 
 <!-- ============================================================
      THIS FILE IS AUTO-UPDATABLE. Don't put personal data here.

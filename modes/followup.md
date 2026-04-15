@@ -1,4 +1,4 @@
-﻿# Mode: followup -- Follow-up Cadence Tracker
+# Mode: followup -- Follow-up Cadence Tracker
 
 ## Purpose
 

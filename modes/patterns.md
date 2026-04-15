@@ -1,4 +1,4 @@
-﻿# Mode: patterns -- Rejection Pattern Detector
+# Mode: patterns -- Rejection Pattern Detector
 
 ## Purpose
 

@@ -1,4 +1,4 @@
-﻿# Geteilter Kontext -- career-ops (Deutsch)
+# Geteilter Kontext -- career-ops (Deutsch)
 
 <!-- ============================================================
      ANPASSEN DIESER DATEI

@@ -199,7 +199,8 @@ career-ops/
 ├── templates/
 │   ├── cv-template.html         # ATS 最佳化履歷範本
 │   ├── portals.example.yml      # 掃描器設定範本
-│   └── states.yml               # 標準狀態清單
+│   ├── states.yml               # 標準狀態清單
+│   └── fonts/                   # Space Grotesk + DM Sans
 ├── batch/
 │   ├── batch-prompt.md          # 自包含工作器提示
 │   └── batch-runner.sh          # 協調器腳本
@@ -207,11 +208,6 @@ career-ops/
 ├── data/                        # 你的追蹤資料（已 gitignore）
 ├── reports/                     # 評估報告（已 gitignore）
 ├── output/                      # 生成的 PDF（已 gitignore）
-├── templates/
-│   ├── cv-template.html         # ATS 最佳化 CV 模板
-│   ├── portals.example.yml      # 掃描器設定模板
-│   ├── states.yml               # 標準狀態值
-│   └── fonts/                   # Space Grotesk + DM Sans
 ├── docs/                        # 設定、自訂化、架構說明
 └── examples/                    # 範例履歷、報告、成就佐證
 ```

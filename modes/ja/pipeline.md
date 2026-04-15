@@ -1,4 +1,4 @@
-﻿# モード: pipeline -- URL インボックス（Second Brain）
+# モード: pipeline -- URL インボックス（Second Brain）
 
 `data/pipeline.md` に蓄積された求人 URL を処理する。候補者がいつでも URL を追加し、後から `/career-ops pipeline` を実行してまとめて処理する。
 
