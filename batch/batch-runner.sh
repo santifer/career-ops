@@ -16,6 +16,10 @@ TRACKER_DIR="$BATCH_DIR/tracker-additions"
 REPORTS_DIR="$PROJECT_DIR/reports"
 APPLICATIONS_FILE="$PROJECT_DIR/data/applications.md"
 LOCK_FILE="$BATCH_DIR/batch-runner.pid"
+STATE_LOCK_DIR="$BATCH_DIR/.batch-state.lock"
+STATE_LOCK_PID_FILE="$STATE_LOCK_DIR/pid"
+STATE_LOCK_TIMEOUT_SECONDS=30
+MAIN_PID="${BASHPID:-$$}"
 
 # Defaults
 PARALLEL=1
@@ -88,10 +92,13 @@ acquire_lock() {
       rm -f "$LOCK_FILE"
     fi
   fi
-  echo $$ > "$LOCK_FILE"
+  echo "$MAIN_PID" > "$LOCK_FILE"
 }
 
 release_lock() {
+  if [[ "${BASHPID:-$$}" != "$MAIN_PID" ]]; then
+    return
+  fi
   rm -f "$LOCK_FILE"
 }
 
@@ -124,6 +131,68 @@ init_state() {
   fi
 }
 
+acquire_state_lock() {
+  local waited=0
+  local max_waits=$((STATE_LOCK_TIMEOUT_SECONDS * 10))
+
+  while true; do
+    if mkdir "$STATE_LOCK_DIR" 2>/dev/null; then
+      if printf '%s\n' "${BASHPID:-$$}" > "$STATE_LOCK_PID_FILE"; then
+        return 0
+      fi
+      rm -f "$STATE_LOCK_PID_FILE" 2>/dev/null || true
+      rmdir "$STATE_LOCK_DIR" 2>/dev/null || true
+      echo "ERROR: Failed to initialize state lock metadata at $STATE_LOCK_DIR"
+      return 1
+    fi
+
+    if [[ ! -d "$STATE_LOCK_DIR" ]]; then
+      echo "ERROR: Failed to create state lock directory $STATE_LOCK_DIR"
+      return 1
+    fi
+
+    if [[ -f "$STATE_LOCK_PID_FILE" ]]; then
+      local lock_pid
+      lock_pid=$(cat "$STATE_LOCK_PID_FILE" 2>/dev/null || true)
+      if [[ -n "$lock_pid" ]] && ! kill -0 "$lock_pid" 2>/dev/null; then
+        rm -f "$STATE_LOCK_PID_FILE"
+        if rmdir "$STATE_LOCK_DIR" 2>/dev/null; then
+          echo "WARN: Recovered stale state lock (PID $lock_pid not running)."
+          continue
+        fi
+      fi
+    fi
+
+    if (( waited >= max_waits )); then
+      echo "ERROR: Timed out waiting for state lock at $STATE_LOCK_DIR"
+      echo "If no batch-runner worker is active, remove the stale lock directory."
+      return 1
+    fi
+
+    sleep 0.1
+    ((waited += 1))
+  done
+}
+
+release_state_lock() {
+  rm -f "$STATE_LOCK_PID_FILE" 2>/dev/null || true
+  rmdir "$STATE_LOCK_DIR" 2>/dev/null || true
+}
+
+run_with_state_lock() {
+  acquire_state_lock || return $?
+
+  local status=0
+  if "$@"; then
+    status=0
+  else
+    status=$?
+  fi
+
+  release_state_lock
+  return "$status"
+}
+
 # Get status of an offer from state file
 get_status() {
   local id="$1"
@@ -148,8 +217,9 @@ get_retries() {
   echo "${retries:-0}"
 }
 
-# Calculate next report number
-next_report_num() {
+# Calculate next report number.
+# Caller must hold STATE_LOCK_DIR while this runs.
+next_report_num_unlocked() {
   local max_num=0
   if [[ -d "$REPORTS_DIR" ]]; then
     for f in "$REPORTS_DIR"/*.md; do
@@ -176,8 +246,9 @@ next_report_num() {
   printf '%03d' $((max_num + 1))
 }
 
-# Update or insert state for an offer
-update_state() {
+# Update or insert state for an offer.
+# Caller must hold STATE_LOCK_DIR while this runs.
+update_state_unlocked() {
   local id="$1" url="$2" status="$3" started="$4" completed="$5" report_num="$6" score="$7" error="$8" retries="$9"
 
   if [[ ! -f "$STATE_FILE" ]]; then
@@ -211,24 +282,40 @@ update_state() {
   mv "$tmp" "$STATE_FILE"
 }
 
+update_state() {
+  run_with_state_lock update_state_unlocked "$@"
+}
+
+reserve_report_num_unlocked() {
+  local id="$1" url="$2" started="$3" retries="$4"
+
+  local report_num=""
+  if report_num=$(next_report_num_unlocked); then
+    update_state_unlocked "$id" "$url" "processing" "$started" "-" "$report_num" "-" "-" "$retries"
+  fi
+
+  printf '%s\n' "$report_num"
+}
+
+reserve_report_num() {
+  run_with_state_lock reserve_report_num_unlocked "$@"
+}
+
 # Process a single offer
 process_offer() {
   local id="$1" url="$2" source="$3" notes="$4"
 
-  local report_num
-  report_num=$(next_report_num)
-  local date
-  date=$(date +%Y-%m-%d)
   local started_at
   started_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
   local retries
   retries=$(get_retries "$id")
+  local report_num
+  report_num=$(reserve_report_num "$id" "$url" "$started_at" "$retries")
+  local date
+  date=$(date +%Y-%m-%d)
   local jd_file="/tmp/batch-jd-${id}.txt"
 
   echo "--- Processing offer #$id: $url (report $report_num, attempt $((retries + 1)))"
-
-  # Mark as in-progress
-  update_state "$id" "$url" "processing" "$started_at" "-" "$report_num" "-" "-" "$retries"
 
   # Build the prompt with placeholders replaced
   local prompt
@@ -243,12 +330,21 @@ process_offer() {
 
   # Prepare system prompt with placeholders resolved
   local resolved_prompt="$BATCH_DIR/.resolved-prompt-${id}.md"
+  # Escape sed delimiter characters in variables to prevent substitution breakage
+  local esc_url esc_jd_file esc_report_num esc_date esc_id
+  esc_url="${url//\\/\\\\}"
+  esc_url="${esc_url//|/\\|}"
+  esc_jd_file="${jd_file//\\/\\\\}"
+  esc_jd_file="${esc_jd_file//|/\\|}"
+  esc_report_num="${report_num//|/\\|}"
+  esc_date="${date//|/\\|}"
+  esc_id="${id//|/\\|}"
   sed \
-    -e "s|{{URL}}|${url}|g" \
-    -e "s|{{JD_FILE}}|${jd_file}|g" \
-    -e "s|{{REPORT_NUM}}|${report_num}|g" \
-    -e "s|{{DATE}}|${date}|g" \
-    -e "s|{{ID}}|${id}|g" \
+    -e "s|{{URL}}|${esc_url}|g" \
+    -e "s|{{JD_FILE}}|${esc_jd_file}|g" \
+    -e "s|{{REPORT_NUM}}|${esc_report_num}|g" \
+    -e "s|{{DATE}}|${esc_date}|g" \
+    -e "s|{{ID}}|${esc_id}|g" \
     "$PROMPT_FILE" > "$resolved_prompt"
 
   # Launch claude -p worker (uses default model from Claude Max subscription)
@@ -289,10 +385,10 @@ process_offer() {
 merge_tracker() {
   echo ""
   echo "=== Merging tracker additions ==="
-  node "$PROJECT_DIR/career-ops/merge-tracker.mjs"
+  node "$PROJECT_DIR/merge-tracker.mjs"
   echo ""
   echo "=== Verifying pipeline integrity ==="
-  node "$PROJECT_DIR/career-ops/verify-pipeline.mjs" || echo "⚠️  Verification found issues (see above)"
+  node "$PROJECT_DIR/verify-pipeline.mjs" || echo "⚠️  Verification found issues (see above)"
 }
 
 # Print summary
@@ -366,6 +462,9 @@ main() {
   while IFS=$'\t' read -r id url source notes; do
     [[ "$id" == "id" ]] && continue  # skip header
     [[ -z "$id" || -z "$url" ]] && continue
+
+    # Guard against non-numeric id values
+    [[ "$id" =~ ^[0-9]+$ ]] || continue
 
     # Skip if before start-from
     if (( id < START_FROM )); then

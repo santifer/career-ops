@@ -540,7 +540,11 @@ func UpdateApplicationStatus(careerOpsPath string, app model.CareerApplication, 
 	filePath := filepath.Join(careerOpsPath, "applications.md")
 	content, err := os.ReadFile(filePath)
 	if err != nil {
-		return err
+		filePath = filepath.Join(careerOpsPath, "data", "applications.md")
+		content, err = os.ReadFile(filePath)
+		if err != nil {
+			return err
+		}
 	}
 
 	lines := strings.Split(string(content), "\n")

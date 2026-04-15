@@ -54,7 +54,8 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case screens.PipelineUpdateStatusMsg:
 		err := data.UpdateApplicationStatus(msg.CareerOpsPath, msg.App, msg.NewStatus)
 		if err != nil {
-			return m, nil
+			// Log the error but still reload data to keep UI consistent
+			fmt.Fprintf(os.Stderr, "WARN: status update failed: %v\n", err)
 		}
 		apps := data.ParseApplications(m.careerOpsPath)
 		metrics := data.ComputeMetrics(apps)
@@ -89,10 +90,12 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				cmd = exec.Command("open", url)
 			case "linux":
 				cmd = exec.Command("xdg-open", url)
+			case "windows":
+				cmd = exec.Command("cmd", "/c", "start", "", url)
 			default:
-				cmd = exec.Command("open", url)
+				cmd = exec.Command("xdg-open", url)
 			}
-			_ = cmd.Start()
+			_ = cmd.Run()
 			return nil
 		}
 
