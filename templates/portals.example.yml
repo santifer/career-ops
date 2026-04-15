@@ -95,6 +95,28 @@ title_filter:
     - "Head"
     - "Director"
 
+# -- LinkedIn searches --
+# Used by scan-auth.mjs for authenticated LinkedIn job search scraping.
+# Requires a one-time login: node scan-auth.mjs --login linkedin
+#
+# The scanner builds search URLs from keywords + experience level + date filter.
+# JDs are saved locally to jds/ since LinkedIn requires auth to view them.
+# Run with: node scan-auth.mjs linkedin (or /career-ops scan-auth linkedin)
+
+linkedin_searches:
+  # date_posted: filter by posting age. Options: 24, Week, Month
+  date_posted: Week
+  # experience_level: Options: Entry-level, Senior, Manager, Director, Executive
+  # experience_level: [Senior, Manager]
+  max_results_per_search: 25
+  delay_between_pages_ms: [3000, 8000]
+  delay_between_searches_ms: [5000, 15000]
+  keywords:
+    - AI Engineer
+    - Software Engineer
+  # employer_blocklist: companies to skip (case-insensitive, partial match)
+  # employer_blocklist: [Staffing Agency, Recruiting Firm]
+
 # -- Search queries --
 # Each query triggers a WebSearch. Use site: to filter by portal.
 # The scanner extracts title, URL, and company from results.
