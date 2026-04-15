@@ -16,8 +16,12 @@ If the scanner reports "Not logged in", tell the user to run the above command f
 
 ### 1. Run the scanner
 
+If a portal is specified, scan only that portal. If no portal is specified, scan **all supported portals** by running `node scan-auth.mjs <portal>` for each one in sequence.
+
+Supported portals: `linkedin`
+
 ```bash
-node scan-auth.mjs <portal>
+node scan-auth.mjs linkedin
 ```
 
 Optional flags (meant for user testing/debugging, not normal operation):
