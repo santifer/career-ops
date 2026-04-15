@@ -87,30 +87,6 @@ When using [OpenCode](https://opencode.ai), the following slash commands are ava
 
 **Note:** OpenCode commands invoke the same `.claude/skills/career-ops/SKILL.md` skill used by Claude Code. The `modes/*` files are shared between both platforms.
 
-### Codex Commands
-
-When using [OpenAI Codex](https://openai.com/codex), the following agent files are available (defined in `.agents/`):
-
-| Agent file | Claude Code Equivalent | Description |
-|------------|------------------------|-------------|
-| `.agents/career-ops.md` | `/career-ops` | Show menu or evaluate JD with args |
-| `.agents/career-ops-pipeline.md` | `/career-ops pipeline` | Process pending URLs from inbox |
-| `.agents/career-ops-evaluate.md` | `/career-ops oferta` | Evaluate job offer (A-F scoring) |
-| `.agents/career-ops-compare.md` | `/career-ops ofertas` | Compare and rank multiple offers |
-| `.agents/career-ops-contact.md` | `/career-ops contacto` | LinkedIn outreach (find contacts + draft) |
-| `.agents/career-ops-deep.md` | `/career-ops deep` | Deep company research |
-| `.agents/career-ops-pdf.md` | `/career-ops pdf` | Generate ATS-optimized CV |
-| `.agents/career-ops-training.md` | `/career-ops training` | Evaluate course/cert against goals |
-| `.agents/career-ops-project.md` | `/career-ops project` | Evaluate portfolio project idea |
-| `.agents/career-ops-tracker.md` | `/career-ops tracker` | Application status overview |
-| `.agents/career-ops-apply.md` | `/career-ops apply` | Live application assistant |
-| `.agents/career-ops-scan.md` | `/career-ops scan` | Scan portals for new offers |
-| `.agents/career-ops-batch.md` | `/career-ops batch` | Batch processing with parallel workers |
-| `.agents/career-ops-patterns.md` | `/career-ops patterns` | Analyze rejection patterns and improve targeting |
-| `.agents/career-ops-followup.md` | `/career-ops followup` | Follow-up cadence tracker |
-
-**Note:** Codex agent files load the same `modes/*` files used by Claude Code and OpenCode. No parallel logic — the same evaluation, scoring, and tracker flow applies.
-
 ### First Run — Onboarding (IMPORTANT)
 
 **Before doing ANYTHING else, check if the system is set up.** Run these checks silently every time a session starts:

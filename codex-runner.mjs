@@ -112,16 +112,22 @@ function logRun(entry) {
  * Returns the path so it can be shown to the user.
  */
 function cachePrompt(command, prompt) {
-  const cacheDir = join(__dir, ".agents", "cache");
-  if (!existsSync(cacheDir)) mkdirSync(cacheDir, { recursive: true });
-  const ts = new Date().toISOString().replace(/[:.]/g, "-");
-  const safeCommand = String(command || "router")
-    .toLowerCase()
-    .replace(/[^a-z0-9_-]+/g, "-")
-    .replace(/^-+|-+$/g, "") || "router";
-  const cachePath = join(cacheDir, `${safeCommand}-${ts}.md`);
-  writeFileSync(cachePath, prompt, "utf-8");
-  return cachePath;
+  try {
+    const cacheDir = join(__dir, ".agents", "cache");
+    if (!existsSync(cacheDir)) mkdirSync(cacheDir, { recursive: true });
+    const ts = new Date().toISOString().replace(/[:.]/g, "-");
+    const safeCommand = String(command || "router")
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]+/g, "-")
+      .replace(/^-+|-+$/g, "") || "router";
+    const basename = `${safeCommand}-${ts}`.slice(0, 60) + ".md";
+    const cachePath = join(cacheDir, basename);
+    writeFileSync(cachePath, prompt, "utf-8");
+    return cachePath;
+  } catch (err) {
+    console.error(`Warning: could not cache prompt — ${err.message}`);
+    return null;
+  }
 }
 
 /**
@@ -175,6 +181,14 @@ if (mode && NO_ARGS_MODES.has(mode) && extraArgs) {
 // No command → show the interactive career-ops menu via the main router agent
 if (!mode) {
   const routerFile = join(__dir, ".agents", "career-ops.md");
+
+  if (!existsSync(routerFile)) {
+    console.error(`Error: router agent file not found — ${routerFile}`);
+    console.error(`Ensure .agents/career-ops.md exists in the repository root.`);
+    logRun({ command: "(menu)", args: "", status: "error", reason: "router file not found" });
+    process.exit(1);
+  }
+
   const routerPrompt = buildPrompt(routerFile, "");
 
   console.log("career-ops -- Command Center\n");
@@ -221,13 +235,15 @@ const result = spawnSync("codex", [prompt], {
 if (result.error?.code === "ENOENT") {
   // Codex CLI not found — cache the prompt and tell the user exactly where it is
   const cachePath = cachePrompt(mode, prompt);
-  const relCache = cachePath.replace(__dir + "/", "");
+  const relCache = cachePath ? cachePath.replace(__dir + "/", "") : null;
 
   logRun({ command: mode, args: routedArgs, status: "fallback", cache: relCache });
 
   console.error("Codex CLI not found in PATH.\n");
-  console.log(`Prompt cached to: ${relCache}\n`);
-  console.log("Open that file and paste its contents into your Codex session, or:\n");
+  if (relCache) {
+    console.log(`Prompt cached to: ${relCache}\n`);
+    console.log("Open that file and paste its contents into your Codex session, or:\n");
+  }
   console.log("─".repeat(72));
   console.log(prompt);
   console.log("─".repeat(72));

@@ -119,6 +119,31 @@ for (const agentFile of Object.keys(AGENT_MODE_MAP)) {
   }
 }
 
+// ── 5. Mode reference presence and order in agent file content ────────────
+console.log("\nChecking mode references in agent file content…");
+for (const [agentFile, modeFiles] of Object.entries(AGENT_MODE_MAP)) {
+  const p = join(__dir, ".agents", agentFile);
+  if (!existsSync(p)) continue;
+
+  const content = readFileSync(p, "utf-8");
+  let lastIndex = -1;
+  let orderOk = true;
+
+  for (const modeFile of modeFiles) {
+    const idx = content.indexOf(modeFile);
+    if (idx === -1) {
+      err(`.agents/${agentFile} is missing reference to ${modeFile}`);
+      orderOk = false;
+    } else if (idx <= lastIndex) {
+      err(`.agents/${agentFile} references ${modeFile} out of expected order`);
+      orderOk = false;
+    } else {
+      lastIndex = idx;
+      ok(`.agents/${agentFile} references ${modeFile}`);
+    }
+  }
+}
+
 // ── Summary ───────────────────────────────────────────────────────────────
 console.log("\n" + "─".repeat(60));
 if (errors === 0 && warnings === 0) {
