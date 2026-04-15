@@ -11,7 +11,7 @@
  *   node test-all.mjs --quick   # Skip dashboard build (faster)
  */
 
-import { execSync } from 'child_process';
+import { execSync, execFileSync } from 'child_process';
 import { readFileSync, existsSync, readdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
@@ -28,8 +28,11 @@ function pass(msg) { console.log(`  ✅ ${msg}`); passed++; }
 function fail(msg) { console.log(`  ❌ ${msg}`); failed++; }
 function warn(msg) { console.log(`  ⚠️  ${msg}`); warnings++; }
 
-function run(cmd, opts = {}) {
+function run(cmd, args = [], opts = {}) {
   try {
+    if (Array.isArray(args) && args.length > 0) {
+      return execFileSync(cmd, args, { cwd: ROOT, encoding: 'utf-8', timeout: 30000, ...opts }).trim();
+    }
     return execSync(cmd, { cwd: ROOT, encoding: 'utf-8', timeout: 30000, ...opts }).trim();
   } catch (e) {
     return null;
@@ -47,7 +50,7 @@ console.log('1. Syntax checks');
 
 const mjsFiles = readdirSync(ROOT).filter(f => f.endsWith('.mjs'));
 for (const f of mjsFiles) {
-  const result = run(`node --check ${f}`);
+  const result = run('node', ['--check', f]);
   if (result !== null) {
     pass(`${f} syntax OK`);
   } else {
@@ -69,7 +72,7 @@ const scripts = [
 ];
 
 for (const { name, allowFail } of scripts) {
-  const result = run(`node ${name} 2>&1`);
+  const result = run('node', name.split(' '), { stdio: ['pipe', 'pipe', 'pipe'] });
   if (result !== null) {
     pass(`${name} runs OK`);
   } else if (allowFail) {
@@ -155,7 +158,7 @@ const userFiles = [
   'config/profile.yml', 'modes/_profile.md', 'portals.yml',
 ];
 for (const f of userFiles) {
-  const tracked = run(`git ls-files ${f}`);
+  const tracked = run('git', ['ls-files', f]);
   if (tracked === '') {
     pass(`User file gitignored: ${f}`);
   } else if (tracked === null) {
