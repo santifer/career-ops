@@ -184,17 +184,13 @@ career-ops/
 ├── templates/
 │   ├── cv-template.html         # ATS-шаблон резюме
 │   ├── portals.example.yml      # Конфигурация сканера
-│   └── states.yml               # Канонические статусы
+│   ├── states.yml               # Канонические статусы
+│   └── fonts/                   # Space Grotesk + DM Sans
 ├── batch/                       # Пакетная обработка
 ├── dashboard/                   # Go TUI
 ├── data/                        # Данные трекинга (gitignored)
 ├── reports/                     # Отчёты оценки (gitignored)
 ├── output/                      # Сгенерированные PDF (gitignored)
-├── templates/
-│   ├── cv-template.html         # ATS-оптимизированный шаблон CV
-│   ├── portals.example.yml      # Шаблон конфигурации сканера
-│   ├── states.yml               # Канонические статусы
-│   └── fonts/                   # Space Grotesk + DM Sans
 ├── docs/                        # Документация
 └── examples/                    # Примеры CV, отчётов
 ```
