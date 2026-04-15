@@ -196,7 +196,8 @@ career-ops/
 ├── templates/
 │   ├── cv-template.html         # Template de CV otimizado para ATS
 │   ├── portals.example.yml      # Template de configuração do scanner
-│   └── states.yml               # Status canônicos
+│   ├── states.yml               # Status canônicos
+│   └── fonts/                   # Space Grotesk + DM Sans
 ├── batch/
 │   ├── batch-prompt.md          # Prompt autocontido para workers
 │   └── batch-runner.sh          # Script orquestrador
@@ -204,11 +205,6 @@ career-ops/
 ├── data/                        # Seus dados de rastreamento (gitignored)
 ├── reports/                     # Relatórios de avaliação (gitignored)
 ├── output/                      # PDFs gerados (gitignored)
-├── templates/
-│   ├── cv-template.html         # Template de CV ATS-otimizado
-│   ├── portals.example.yml      # Template de config do scanner
-│   ├── states.yml               # Status canônicos
-│   └── fonts/                   # Space Grotesk + DM Sans
 ├── docs/                        # Setup, customização, arquitetura
 └── examples/                    # CV de exemplo, relatório e proof points
 ```
