@@ -15,6 +15,10 @@
 #   -p                              : headless / pipe mode
 #   --dangerously-skip-permissions  : auto-approve all tool calls
 #   --append-system-prompt-file     : inject resolved prompt as system context
+#
+# Environment variables (set by lib/provider-dispatch.sh):
+#   CAREER_OPS_PROVIDER_CLI_BIN  : Override binary path (default: "claude")
+#   CAREER_OPS_PROVIDER_MODEL    : Override model name (currently unused)
 
 set -euo pipefail
 

@@ -26,10 +26,21 @@ let passed = 0;
 let failed = 0;
 let warnings = 0;
 
+/** Record a passing test and increment counter. */
 function pass(msg) { console.log(`  ✅ ${msg}`); passed++; }
+/** Record a failing test and increment counter. */
 function fail(msg) { console.log(`  ❌ ${msg}`); failed++; }
+/** Record a warning and increment counter. */
 function warn(msg) { console.log(`  ⚠️  ${msg}`); warnings++; }
 
+/**
+ * Run a shell command synchronously, returning trimmed stdout or null on error.
+ * Supports both raw command strings and execFileSync-style args.
+ * @param {string} cmd - Shell command or executable path.
+ * @param {string[]} [args=[]] - Arguments passed to execFileSync when provided.
+ * @param {object} [opts={}] - Options forwarded to child_process.
+ * @returns {string|null} Trimmed stdout, or null on failure.
+ */
 function run(cmd, args = [], opts = {}) {
   try {
     if (Array.isArray(args) && args.length > 0) {
@@ -41,7 +52,18 @@ function run(cmd, args = [], opts = {}) {
   }
 }
 
+/**
+ * Check whether a path relative to the project root exists.
+ * @param {string} path - Relative path from project root.
+ * @returns {boolean} True if the path exists.
+ */
 function fileExists(path) { return existsSync(join(ROOT, path)); }
+
+/**
+ * Read a file relative to the project root as UTF-8 text.
+ * @param {string} path - Relative path from project root.
+ * @returns {string} File contents.
+ */
 function readFile(path) { return readFileSync(join(ROOT, path), 'utf-8'); }
 
 console.log('\n🧪 career-ops test suite\n');

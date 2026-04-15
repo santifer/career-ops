@@ -18,6 +18,10 @@
 #   --output-format json             : structured output for parsing
 #   --model, -m <name>               : select model
 #
+# Environment variables (set by lib/provider-dispatch.sh):
+#   CAREER_OPS_PROVIDER_CLI_BIN  : Override binary path (default: "qwen")
+#   CAREER_OPS_PROVIDER_MODEL    : Override model name (currently unused)
+#
 # The provider reads the prompt file content and passes it as a string
 # because Qwen's --append-system-prompt takes inline text, not a file path.
 

@@ -29,10 +29,19 @@ let passed = 0;
 let failed = 0;
 let skipped = 0;
 
+/** Record a passing test and increment counter. */
 function pass(msg) { console.log(`  ✅ ${msg}`); passed++; }
+/** Record a failing test and increment counter. */
 function fail(msg) { console.log(`  ❌ ${msg}`); failed++; }
+/** Record a skipped test and increment counter. */
 function skip(msg) { console.log(`  ⏭️  ${msg}`); skipped++; }
 
+/**
+ * Run a shell command synchronously, returning trimmed stdout or null on error.
+ * @param {string} cmd - Shell command to execute.
+ * @param {object} [opts={}] - Options forwarded to execSync.
+ * @returns {string|null} Trimmed stdout, or null on failure.
+ */
 function run(cmd, opts = {}) {
   try {
     return execSync(cmd, { cwd: ROOT, encoding: 'utf-8', timeout: 30000, ...opts }).trim();
@@ -41,7 +50,18 @@ function run(cmd, opts = {}) {
   }
 }
 
+/**
+ * Check whether a path relative to the project root exists.
+ * @param {string} path - Relative path from project root.
+ * @returns {boolean} True if the path exists.
+ */
 function fileExists(path) { return existsSync(join(ROOT, path)); }
+
+/**
+ * Read a file relative to the project root as UTF-8 text.
+ * @param {string} path - Relative path from project root.
+ * @returns {string} File contents.
+ */
 function readFile(path) { return readFileSync(join(ROOT, path), 'utf-8'); }
 
 console.log('\n🔷 Qwen provider test suite\n');

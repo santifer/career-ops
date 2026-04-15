@@ -21,9 +21,26 @@ import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = __dirname;
 
+/**
+ * Read a file relative to the project root as UTF-8 text.
+ * @param {string} path - Relative path from project root.
+ * @returns {string} File contents.
+ */
 function readFile(path) { return readFileSync(join(ROOT, path), 'utf-8'); }
+
+/**
+ * Check whether a path relative to the project root exists.
+ * @param {string} path - Relative path from project root.
+ * @returns {boolean} True if the path exists.
+ */
 function fileExists(path) { return existsSync(join(ROOT, path)); }
 
+/**
+ * Run a shell command synchronously, returning trimmed stdout or null on error.
+ * @param {string} cmd - Shell command to execute.
+ * @param {object} [opts={}] - Options forwarded to execSync.
+ * @returns {string|null} Trimmed stdout, or null on failure.
+ */
 function run(cmd, opts = {}) {
   try {
     return execSync(cmd, { cwd: ROOT, encoding: 'utf-8', timeout: 15000, ...opts }).trim();
@@ -54,14 +71,31 @@ let passed = 0;
 let failed = 0;
 let skipped = 0;
 
+/**
+ * Record a passing mode verification and increment counter.
+ * @param {string} mode - Mode name.
+ * @param {string} msg - Description of what passed.
+ */
 function check(mode, msg) {
   console.log(`  ✅ ${mode}: ${msg}`);
   passed++;
 }
+
+/**
+ * Record a failed mode verification and increment counter.
+ * @param {string} mode - Mode name.
+ * @param {string} msg - Description of what failed.
+ */
 function fail(mode, msg) {
   console.log(`  ❌ ${mode}: ${msg}`);
   failed++;
 }
+
+/**
+ * Record a skipped mode verification and increment counter.
+ * @param {string} mode - Mode name.
+ * @param {string} msg - Reason for skipping.
+ */
 function skipMode(mode, msg) {
   console.log(`  ⏭️  ${mode}: ${msg}`);
   skipped++;
