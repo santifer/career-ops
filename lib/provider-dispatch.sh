@@ -109,7 +109,8 @@ validate_provider() {
   fi
 
   if [[ ! -x "$script" ]]; then
-    chmod +x "$script"
+    echo "ERROR: Provider script not executable: $script" >&2
+    exit 1
   fi
 
   # Let the provider-specific script validate its own binary

@@ -47,6 +47,7 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
     *)
+      echo "Warning: unknown option: $1" >&2
       shift
       ;;
   esac

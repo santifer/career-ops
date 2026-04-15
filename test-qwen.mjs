@@ -388,32 +388,14 @@ for (const [desc, pattern] of dispatchChecks) {
   }
 }
 
-// ── 14. NO PROVIDER-SPECIFIC LOGIC IN MODES ──────────────────────
+// ── 14. NO PROVIDER-SPECIFIC LOGIC IN MODES (reuses Section 9) ───
 
+// Section 9 already scans all mode files with providerInvocationPatterns
+// (whitespace-normalized, word-boundary regexes). This section intentionally
+// left as a documentation placeholder — the single scan in Section 9 is
+// sufficient and authoritative.
 console.log('\n14. No provider-specific logic in modes');
-
-// Scan all mode files for any hardcoded provider CLI commands
-// (excluding descriptive text like "claude -p | qwen -p")
-const hardInvocationPatterns = [
-  /claude -p\s+--dangerously-skip-permissions\s+\\/,
-  /claude -p\s+--append-system-prompt-file/,
-  /qwen -p\s+--yolo\s+\\/,
-  /qwen -p\s+--append-system-prompt/,
-];
-
-let invocationIssues = 0;
-for (const mode of modeFiles) {
-  const content = readFile(`modes/${mode}`);
-  for (const pattern of hardInvocationPatterns) {
-    if (pattern.test(content)) {
-      fail(`modes/${mode} has hardcoded provider invocation`);
-      invocationIssues++;
-    }
-  }
-}
-if (invocationIssues === 0) {
-  pass('No hardcoded provider invocations in any mode file');
-}
+console.log('  (already verified in Section 9 — single authoritative scan)');
 
 // ── 15. QWEN WRAPPER OUTPUT FORMAT COMPATIBILITY ─────────────────
 
