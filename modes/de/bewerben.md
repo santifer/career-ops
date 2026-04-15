@@ -56,7 +56,7 @@ ALLE sichtbaren Fragen identifizieren:
 
 Jede Frage klassifizieren:
 - **Bereits in Block G beantwortet** → bestehende Antwort übernehmen
-- **Neue Frage** → Antwort aus dem Report + `cv.md` generieren
+- **Neue Frage** → Antwort aus dem Report + dem passenden CV aus `resumes/` generieren
 
 ## Schritt 5 — Antworten erzeugen
 

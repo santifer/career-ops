@@ -56,7 +56,7 @@ Identificar TODAS as perguntas visiveis:
 
 Classificar cada pergunta:
 - **Ja respondida no Bloco G** → adaptar a resposta existente
-- **Pergunta nova** → gerar resposta a partir do report + `cv.md`
+- **Pergunta nova** → gerar resposta a partir do report + CV relevante em `resumes/`
 
 ## Passo 5 -- Gerar respostas
 

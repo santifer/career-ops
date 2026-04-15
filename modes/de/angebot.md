@@ -22,7 +22,7 @@ Tabelle mit:
 
 ## Block B — Match mit dem Lebenslauf
 
-`cv.md` lesen. Tabelle erstellen, in der jede Anforderung aus der Stellenanzeige auf exakte Zeilen aus dem Lebenslauf gemappt wird.
+Den passendsten Lebenslauf aus `resumes/` lesen (z. B. `resumes/ai-engineer-cv.md`). Tabelle erstellen, in der jede Anforderung aus der Stellenanzeige auf exakte Zeilen aus dem Lebenslauf gemappt wird.
 
 **Angepasst an den Archetyp:**
 - FDE → Proof Points zu schneller Lieferung und Kundennähe priorisieren

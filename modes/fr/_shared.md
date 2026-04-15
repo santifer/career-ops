@@ -6,7 +6,7 @@
      Ce fichier contient le contexte partage pour tous les modes
      career-ops en version francaise. Avant d'utiliser career-ops, tu DOIS :
      1. Remplir config/profile.yml avec tes informations personnelles
-     2. Creer cv.md a la racine du projet (CV en Markdown)
+     2. Creer un fichier CV dans `resumes/` (ex : `resumes/ai-engineer-cv.md`)
      3. (Optionnel) Creer article-digest.md avec tes proof points
      4. Adapter les sections marquees [PERSONNALISER] ci-dessous
      ============================================================ -->
@@ -15,12 +15,12 @@
 
 | Fichier | Chemin | Quand |
 |---------|--------|-------|
-| cv.md | `cv.md` (racine du projet) | TOUJOURS |
+| CV (resumes/) | Fichier le plus pertinent dans `resumes/` (ex : `resumes/ai-engineer-cv.md`). Lister le dossier si le type de role n'est pas clair. | TOUJOURS |
 | article-digest.md | `article-digest.md` (si existant) | TOUJOURS (proof points detailles) |
 | profile.yml | `config/profile.yml` | TOUJOURS (identite et roles cibles) |
 
-**REGLE : Ne JAMAIS coder en dur des metriques issues des proof points.** Les lire depuis `cv.md` et `article-digest.md` au moment de l'evaluation.
-**REGLE : Pour les metriques d'articles/projets, `article-digest.md` a priorite sur `cv.md`** (`cv.md` peut contenir des chiffres plus anciens).
+**REGLE : Ne JAMAIS coder en dur des metriques issues des proof points.** Les lire depuis le CV selectionne dans `resumes/` et `article-digest.md` au moment de l'evaluation.
+**REGLE : Pour les metriques d'articles/projets, `article-digest.md` a priorite sur le fichier CV** (le CV dans `resumes/` peut contenir des chiffres plus anciens).
 
 ---
 
@@ -46,16 +46,16 @@ Le skill traite TOUS les roles cibles avec le meme soin. Aucun n'est primaire ou
 
 ### Framing adaptatif par archetype
 
-> **Metriques concretes : les lire depuis `cv.md` et `article-digest.md` au moment de l'evaluation. JAMAIS les coder en dur ici.**
+> **Metriques concretes : les lire depuis le CV selectionne dans `resumes/` et `article-digest.md` au moment de l'evaluation. JAMAIS les coder en dur ici.**
 
 | Si le role est... | Mettre en avant chez le candidat... | Sources de proof points |
 |-------------------|-------------------------------------|-------------------------|
-| Platform / LLMOps | Experience production, observability, evals, closed-loop | article-digest.md + cv.md |
-| Agentic / Automation | Orchestration multi-agent, HITL, fiabilite, couts | article-digest.md + cv.md |
-| Technical AI PM | Product discovery, PRDs, metriques, gestion des parties prenantes | cv.md + article-digest.md |
-| Solutions Architect | Conception systeme, integrations, pret pour l'entreprise | article-digest.md + cv.md |
-| Forward Deployed Engineer | Livraison rapide, proximite client, prototype a production | cv.md + article-digest.md |
-| AI Transformation Lead | Conduite du changement, enablement d'equipe, adoption | cv.md + article-digest.md |
+| Platform / LLMOps | Experience production, observability, evals, closed-loop | article-digest.md + resumes/ |
+| Agentic / Automation | Orchestration multi-agent, HITL, fiabilite, couts | article-digest.md + resumes/ |
+| Technical AI PM | Product discovery, PRDs, metriques, gestion des parties prenantes | resumes/ + article-digest.md |
+| Solutions Architect | Conception systeme, integrations, pret pour l'entreprise | article-digest.md + resumes/ |
+| Forward Deployed Engineer | Livraison rapide, proximite client, prototype a production | resumes/ + article-digest.md |
+| AI Transformation Lead | Conduite du changement, enablement d'equipe, adoption | resumes/ + article-digest.md |
 
 <!-- [PERSONNALISER] Associe tes projets/articles concrets aux archetypes ci-dessus -->
 
@@ -168,7 +168,7 @@ Dans les offres et negociations francophones, certains termes n'existent pas sur
 ### JAMAIS
 
 1. Inventer de l'experience ou des metriques
-2. Modifier `cv.md` ou les fichiers portfolio
+2. Modifier les fichiers CV dans `resumes/` ou les fichiers portfolio
 3. Soumettre des candidatures au nom du candidat
 4. Partager un numero de telephone dans les messages generes
 5. Recommander une remuneration en dessous du marche
@@ -179,7 +179,7 @@ Dans les offres et negociations francophones, certains termes n'existent pas sur
 ### TOUJOURS
 
 0. **Lettre de motivation :** Si le formulaire le permet, TOUJOURS en inclure une. PDF dans le meme design visuel que le CV. Citations de l'offre mappees sur les proof points. 1 page max.
-1. Lire `cv.md` et `article-digest.md` (si existant) avant d'evaluer une offre
+1. Lire le CV le plus pertinent dans `resumes/` et `article-digest.md` (si existant) avant d'evaluer une offre
 1b. **Premiere evaluation de chaque session :** Lancer `node cv-sync-check.mjs` via Bash. En cas d'alertes, prevenir le candidat
 2. Detecter l'archetype du role et adapter le framing
 3. Citer des lignes exactes du CV lors du matching
@@ -199,7 +199,7 @@ Dans les offres et negociations francophones, certains termes n'existent pas sur
 | WebSearch | Recherche remuneration, tendances, culture d'entreprise, contacts LinkedIn, fallback offres |
 | WebFetch | Fallback pour extraire les offres depuis des pages statiques |
 | Playwright | Verifier si les offres sont actives (browser_navigate + browser_snapshot), extraire les offres depuis des SPAs. **CRITIQUE : JAMAIS 2+ agents en parallele avec Playwright -- ils partagent la meme instance navigateur** |
-| Read | cv.md, article-digest.md, cv-template.html |
+| Read | CV de `resumes/`, article-digest.md, cv-template.html |
 | Write | HTML temporaire pour PDF, applications.md, reports .md |
 | Edit | Mettre a jour le tracker |
 | Bash | `node generate-pdf.mjs` |

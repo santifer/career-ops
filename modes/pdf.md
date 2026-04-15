@@ -16,7 +16,7 @@ If content overflows 1 page, CUT content — never shrink fonts or margins. Prio
 
 ## Full pipeline
 
-1. Read `cv.md` as the source of truth
+1. Identify the best-matching CV from the `resumes/` folder (e.g. `resumes/ai-engineer-cv.md`). List the files in `resumes/` if the role type is unclear and pick the most relevant one. Read that file as the source of truth.
 2. Ask the user for the JD if it is not already in context (text or URL)
 3. Extract 15-20 JD keywords
 4. Detect the JD language -> CV language (EN default)
@@ -138,7 +138,7 @@ a. `get-design-content` on the new design → returns all text elements (richtex
 b. Map text elements to CV sections by content matching:
    - Look for the candidate's name → header section
    - Look for "Summary" or "Professional Summary" → summary section
-   - Look for company names from cv.md → experience sections
+   - Look for company names from the selected `resumes/` CV file → experience sections
    - Look for degree/school names → education section
    - Look for skill keywords → skills section
 c. If mapping fails, show the user what was found and ask for guidance

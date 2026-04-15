@@ -22,7 +22,7 @@ Tabela com:
 
 ## Bloco B -- Match com o Curriculo
 
-Ler `cv.md`. Criar tabela com cada requisito do JD mapeado para linhas exatas do curriculo.
+Ler o CV mais adequado em `resumes/` (ex: `resumes/ai-engineer-cv.md`). Criar tabela com cada requisito do JD mapeado para linhas exatas do curriculo.
 
 **Adaptado ao arquetipo:**
 - Se FDE → priorizar proof points de entrega rapida e proximidade com cliente

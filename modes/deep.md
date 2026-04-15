@@ -38,7 +38,7 @@ Context: I am evaluating an application for [role] at [company]. I need actionab
 - How are they positioned vs the competition?
 
 ### 6. Candidate Angle
-Given my profile (read from cv.md and profile.yml for specific experience):
+Given my profile (read from the best-matching CV in `resumes/` and `profile.yml` for specific experience):
 - What unique value do I bring to this team?
 - Which of my projects are most relevant?
 - Which story should I tell in the interview?

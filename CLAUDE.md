@@ -13,7 +13,7 @@ The portfolio that goes with this system is also open source: [cv-santiago](http
 There are two layers. Read `DATA_CONTRACT.md` for the full list.
 
 **User Layer (NEVER auto-updated, personalization goes HERE):**
-- `cv.md`, `config/profile.yml`, `modes/_profile.md`, `article-digest.md`, `portals.yml`
+- `resumes/` (CV variants, e.g. `resumes/ai-engineer-cv.md`), `config/profile.yml`, `modes/_profile.md`, `article-digest.md`, `portals.yml`
 - `data/*`, `reports/*`, `output/*`, `interview-prep/*`
 
 **System Layer (auto-updatable, DON'T put user data here):**
@@ -88,7 +88,7 @@ When using [OpenCode](https://opencode.ai), the following slash commands are ava
 
 **Before doing ANYTHING else, check if the system is set up.** Run these checks silently every time a session starts:
 
-1. Does `cv.md` exist?
+1. Does the `resumes/` folder exist and contain at least one CV file (e.g. `resumes/ai-engineer-cv.md`)?
 2. Does `config/profile.yml` exist (not just profile.example.yml)?
 3. Does `modes/_profile.md` exist (not just _profile.template.md)?
 4. Does `portals.yml` exist (not just templates/portals.example.yml)?
@@ -98,7 +98,7 @@ If `modes/_profile.md` is missing, copy from `modes/_profile.template.md` silent
 **If ANY of these is missing, enter onboarding mode.** Do NOT proceed with evaluations, scans, or any other mode until the basics are in place. Guide the user step by step:
 
 #### Step 1: CV (required)
-If `cv.md` is missing, ask:
+If the `resumes/` folder is missing or empty, ask:
 > "I don't have your CV yet. You can either:
 > 1. Paste your CV here and I'll convert it to markdown
 > 2. Paste your LinkedIn URL and I'll extract the key info
@@ -106,7 +106,7 @@ If `cv.md` is missing, ask:
 >
 > Which do you prefer?"
 
-Create `cv.md` from whatever they provide. Make it clean markdown with standard sections (Summary, Experience, Projects, Education, Skills).
+Create a CV file in `resumes/` from whatever they provide (e.g. `resumes/ai-engineer-cv.md`). Use the role as the filename slug. Make it clean markdown with standard sections (Summary, Experience, Projects, Education, Skills).
 
 #### Step 2: Profile (required)
 If `config/profile.yml` is missing, copy from `config/profile.example.yml` and then ask:
@@ -239,7 +239,10 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 
 ### CV Source of Truth
 
-- `cv.md` in project root is the canonical CV
+- `resumes/` folder contains all CV variants (e.g. `resumes/ai-engineer-cv.md`, `resumes/product-manager-cv.md`)
+  - When generating a PDF or tailoring for a specific role, use the best-matching file from `resumes/`
+  - If the role type is unknown, list the files in `resumes/` and pick the most relevant one
+  - Never reference a root-level `cv.md` -- `resumes/` is the only CV source
 - `article-digest.md` has detailed proof points (optional)
 - **NEVER hardcode metrics** -- read them from these files at evaluation time
 

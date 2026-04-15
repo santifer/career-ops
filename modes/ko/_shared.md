@@ -9,13 +9,13 @@
 
 | 파일 | 경로 | 언제 읽나 |
 |------|------|-----------|
-| cv.md | `cv.md` | 항상 |
+| CV (resumes/) | `resumes/` 폴더에서 가장 적합한 파일 (예: `resumes/ai-engineer-cv.md`). 역할 유형이 불분명하면 폴더 목록 확인 후 선택. | 항상 |
 | article-digest.md | `article-digest.md` | 있으면 항상 |
 | profile.yml | `config/profile.yml` | 항상 |
 | _profile.md | `modes/_profile.md` | 항상 |
 
-**규칙: proof point의 수치와 성과는 절대 지어내지 말 것.** 평가 시 `cv.md`와 `article-digest.md`에서 직접 읽습니다.
-**규칙: article/project 관련 수치는 `article-digest.md`가 `cv.md`보다 우선합니다.**
+**규칙: proof point의 수치와 성과는 절대 지어내지 말 것.** 평가 시 선택한 `resumes/` CV 파일과 `article-digest.md`에서 직접 읽습니다.
+**규칙: article/project 관련 수치는 `article-digest.md`가 CV 파일보다 우선합니다.**
 **규칙: 이 파일 다음에 `_profile.md`를 읽습니다. 사용자 커스터마이징이 기본값보다 우선합니다.**
 
 ---
@@ -59,7 +59,7 @@ Archetype를 정한 뒤에는 반드시 `modes/_profile.md`를 읽고, 해당 ar
 ### 절대 하지 말 것
 
 1. 경력, 직함, 수치, 결과를 꾸며내지 말 것
-2. `cv.md`나 포트폴리오 원본을 임의 수정하지 말 것
+2. `resumes/` 폴더의 CV 파일이나 포트폴리오 원본을 임의 수정하지 말 것
 3. 사용자를 대신해 지원을 제출하지 말 것
 4. 생성 메시지에 전화번호를 임의로 넣지 말 것
 5. 시장보다 낮은 보상을 쉽게 수용하라고 권하지 말 것
@@ -70,7 +70,7 @@ Archetype를 정한 뒤에는 반드시 `modes/_profile.md`를 읽고, 해당 ar
 ### 항상 할 것
 
 0. **커버레터:** 지원서에서 허용되면 항상 포함합니다. CV와 같은 디자인, JD 문구와 proof point를 연결, 1페이지 이내.
-1. 평가 전에 `cv.md`, `_profile.md`, `article-digest.md`(있다면)를 읽습니다.
+1. 평가 전에 `resumes/`에서 가장 적합한 CV 파일, `_profile.md`, `article-digest.md`(있다면)를 읽습니다.
 1b. **세션 첫 평가 시** `node cv-sync-check.mjs`를 실행하고 경고가 있으면 사용자에게 알립니다.
 2. 역할 archetype를 감지하고 `_profile.md`에 맞게 포지셔닝합니다.
 3. 매칭 시 CV의 정확한 근거를 인용합니다.
@@ -90,7 +90,7 @@ Archetype를 정한 뒤에는 반드시 `modes/_profile.md`를 읽고, 해당 ar
 | WebSearch | 보상 조사, 시장 동향, 회사 문화, LinkedIn 연락처, JD fallback |
 | WebFetch | 정적 페이지 JD 추출 fallback |
 | Playwright | 공고 활성 여부 확인, SPA JD 추출. **Playwright는 절대 2개 이상 병렬 실행 금지.** |
-| Read | `cv.md`, `_profile.md`, `article-digest.md`, 템플릿 읽기 |
+| Read | `resumes/` CV 파일, `_profile.md`, `article-digest.md`, 템플릿 읽기 |
 | Write | 임시 HTML, report, TSV 초안 생성 |
 | Edit | tracker 관련 파일 수정 |
 | Canva MCP | 선택적 시각형 CV 생성 |

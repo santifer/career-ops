@@ -56,7 +56,7 @@ Identifier TOUTES les questions visibles :
 
 Classifier chaque question :
 - **Deja repondue dans le Bloc G** -> reprendre la reponse existante
-- **Nouvelle question** -> generer la reponse depuis le report + `cv.md`
+- **Nouvelle question** -> generer la reponse depuis le report + le CV pertinent dans `resumes/`
 
 ## Etape 5 -- Generer les reponses
 

@@ -22,7 +22,7 @@ Table with:
 
 ## Block B — CV Match
 
-Read `cv.md`. Build a table mapping each JD requirement to exact lines from the CV.
+Read the best-matching CV from `resumes/` (e.g. `resumes/ai-engineer-cv.md`). Build a table mapping each JD requirement to exact lines from the CV.
 
 **Adapted to the archetype:**
 - If FDE -> prioritize fast-delivery and client-facing proof points

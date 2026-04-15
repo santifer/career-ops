@@ -56,7 +56,7 @@ Identify ALL visible questions:
 
 Classify each question:
 - **Already answered in Section G** -> adapt the existing answer
-- **New question** -> generate a fresh answer from the report + `cv.md`
+- **New question** -> generate a fresh answer from the report + the relevant CV from `resumes/`
 
 ## Step 5 — Generate the answers
 

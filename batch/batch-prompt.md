@@ -14,16 +14,16 @@ You are a job-offer evaluation worker for the candidate (read name from `config/
 
 | File | Absolute path | When |
 |---------|---------------|--------|
-| cv.md | `cv.md (project root)` | ALWAYS |
+| CV (resumes/) | Best-matching file in `resumes/` (e.g. `resumes/ai-engineer-cv.md`). List folder if role type is unclear. | ALWAYS |
 | llms.txt | `llms.txt (if exists)` | ALWAYS |
 | article-digest.md | `article-digest.md (project root)` | ALWAYS (proof points) |
 | i18n.ts | `i18n.ts (if exists, optional)` | Interviews/deep only |
 | cv-template.html | `templates/cv-template.html` | For PDF |
 | generate-pdf.mjs | `generate-pdf.mjs` | For PDF |
 
-**RULE: NEVER write to `cv.md` or `i18n.ts`.** They are read-only.
-**RULE: NEVER hardcode metrics.** Read them from `cv.md` + `article-digest.md` at evaluation time.
-**RULE: For article metrics, `article-digest.md` takes precedence over `cv.md`.** `cv.md` may have older numbers — that is normal.
+**RULE: NEVER write to CV files in `resumes/` or `i18n.ts`.** They are read-only.
+**RULE: NEVER hardcode metrics.** Read them from the selected `resumes/` CV file + `article-digest.md` at evaluation time.
+**RULE: For article metrics, `article-digest.md` takes precedence over the CV file.** The CV in `resumes/` may have older numbers — that is normal.
 
 ---
 
@@ -49,7 +49,7 @@ You are a job-offer evaluation worker for the candidate (read name from `config/
 
 ### Step 2 — A-F Evaluation
 
-Read `cv.md`. Execute ALL blocks:
+Read the best-matching CV from `resumes/` (identified in Step 1). Execute ALL blocks:
 
 #### Step 0 — Archetype Detection
 
@@ -68,16 +68,16 @@ Classify the offer into one of the 6 archetypes. If it is hybrid, indicate the 2
 
 **Adaptive framing:**
 
-> **Concrete metrics are read from `cv.md` + `article-digest.md` on every evaluation. NEVER hardcode numbers here.**
+> **Concrete metrics are read from the selected `resumes/` CV file + `article-digest.md` on every evaluation. NEVER hardcode numbers here.**
 
 | If the role is... | Emphasize about the candidate... | Proof point sources |
 |-----------------|--------------------------|--------------------------|
-| Platform / LLMOps | Builder of production systems, observability, evals, closed-loop quality | `article-digest.md` + `cv.md` |
-| Agentic / Automation | Multi-agent orchestration, HITL, reliability, cost | `article-digest.md` + `cv.md` |
-| Technical AI PM | Product discovery, PRDs, metrics, stakeholder management | `cv.md` + `article-digest.md` |
-| Solutions Architect | Systems design, integrations, enterprise-ready execution | `article-digest.md` + `cv.md` |
-| Forward Deployed Engineer | Fast delivery, client-facing work, prototype → prod | `cv.md` + `article-digest.md` |
-| AI Transformation Lead | Change management, team enablement, adoption | `cv.md` + `article-digest.md` |
+| Platform / LLMOps | Builder of production systems, observability, evals, closed-loop quality | `article-digest.md` + `resumes/` |
+| Agentic / Automation | Multi-agent orchestration, HITL, reliability, cost | `article-digest.md` + `resumes/` |
+| Technical AI PM | Product discovery, PRDs, metrics, stakeholder management | `resumes/` + `article-digest.md` |
+| Solutions Architect | Systems design, integrations, enterprise-ready execution | `article-digest.md` + `resumes/` |
+| Forward Deployed Engineer | Fast delivery, client-facing work, prototype → prod | `resumes/` + `article-digest.md` |
+| AI Transformation Lead | Change management, team enablement, adoption | `resumes/` + `article-digest.md` |
 
 **Cross-cutting advantage**: Frame the profile as a **"Technical builder"** who adapts the framing to the role:
 - For PM: "builder who reduces uncertainty with prototypes and then productionizes with discipline"
@@ -93,7 +93,7 @@ Table with: Detected archetype, Domain, Function, Seniority, Remote, Team size, 
 
 #### Block B — Match vs CV
 
-Read `cv.md`. Table with each JD requirement mapped to exact CV lines or `i18n.ts` keys.
+Read the selected CV from `resumes/`. Table with each JD requirement mapped to exact CV lines or `i18n.ts` keys.
 
 **Adapted to the archetype:**
 - FDE → prioritize fast delivery and client-facing work
@@ -198,7 +198,7 @@ Where `{company-slug}` is the company name in lowercase, with spaces replaced by
 
 ### Step 4 — Generate PDF
 
-1. Read `cv.md` + `i18n.ts`
+1. Read the best-matching CV from `resumes/` + `i18n.ts`
 2. Extract 15-20 keywords from the JD
 3. Detect JD language → CV language (EN default)
 4. Detect company location → paper format: US/Canada → `letter`, everything else → `a4`
@@ -341,14 +341,14 @@ If something fails:
 
 ### NEVER
 1. Invent experience or metrics
-2. Modify `cv.md`, `i18n.ts`, or portfolio files
+2. Modify CV files in `resumes/`, `i18n.ts`, or portfolio files
 3. Share the phone number in generated messages
 4. Recommend compensation below market
 5. Generate a PDF without reading the JD first
 6. Use corporate-speak
 
 ### ALWAYS
-1. Read `cv.md`, `llms.txt`, and `article-digest.md` before evaluating
+1. Read the best-matching CV from `resumes/`, `llms.txt`, and `article-digest.md` before evaluating
 2. Detect the role archetype and adapt the framing
 3. Cite exact CV lines when there is a match
 4. Use WebSearch for compensation and company data

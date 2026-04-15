@@ -43,3 +43,4 @@ package-lock.json
 .dolt/
 *.db
 .beads-credential-key
+resumes/
