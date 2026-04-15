@@ -7,6 +7,7 @@
 import { readFile, writeFile } from 'fs/promises';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import yaml from 'js-yaml';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -29,21 +30,41 @@ async function generateHtmlCV() {
 
     // Get photo data if it exists
     let photoBlock = '';
-    if (profileData.candidate && profileData.candidate.photo) {
-      const photoPath = profileData.candidate.photo;
-      if (photoPath && photoPath.trim() !== '') { // If a photo path is set
+    // Get photo data if it exists
+    if (profileData.photo) {
+      const photoPath = profileData.photo;
+      if (photoPath && photoPath.trim() !== '') {
         try {
-          const fs = await import('fs/promises');
-          const pathModule = await import('path');
-          const photoFullPath = pathModule.resolve(photoPath);
-          const photoBuffer = await fs.readFile(photoFullPath);
-          const base64Photo = photoBuffer.toString('base64');
+          const trimmedPath = photoPath.trim();
+          // Reject absolute paths
+          if (trimmedPath.startsWith('/') || /^[a-zA-Z]:/.test(trimmedPath)) {
+            console.warn(`⚠️ Photo path must be project‑relative: ${trimmedPath}`);
+          } else {
+            const { promises: fs } = await import('fs');
+            const { resolve, relative, extname, isAbsolute } = await import('path');
+            const { realpathSync, statSync } = await import('fs');
+            const photoFullPath = resolve(__dirname, trimmedPath);
+            const realPath = realpathSync(photoFullPath);
+            const realRoot = realpathSync(__dirname);
+            const relPath = relative(realRoot, realPath);
 
-          // Determine MIME type from file extension
-          const ext = pathModule.extname(photoPath).toLowerCase();
-          const mimeType = ext === '.png' ? 'image/png' : 'image/jpeg';
-
-          photoBlock = `<img class="cv-photo" src="data:${mimeType};base64,${base64Photo}" alt="">`;
+            if (relPath.startsWith('..') || isAbsolute(relPath)) {
+              console.warn(`⚠️ Photo path escapes project root: ${trimmedPath}`);
+            } else {
+              const ext = extname(realPath).toLowerCase();
+              const supported = ['.jpg', '.jpeg', '.png'];
+              if (!supported.includes(ext)) {
+                console.warn(`⚠️ Unsupported photo format: ${ext}`);
+              } else if (statSync(realPath).size > 2 * 1024 * 1024) {
+                console.warn(`⚠️ Photo file too large (max 2 MB)`);
+              } else {
+                const photoBuffer = await fs.readFile(realPath);
+                const base64Photo = photoBuffer.toString('base64');
+                const mimeType = ext === '.png' ? 'image/png' : 'image/jpeg';
+                photoBlock = `<img class="cv-photo" src="data:${mimeType};base64,${base64Photo}" alt="">`;
+              }
+            }
+          }
         } catch (e) {
           console.log(`Could not load photo: ${e.message}`);
           photoBlock = '';
@@ -52,7 +73,7 @@ async function generateHtmlCV() {
     }
 
     // Determine if we should use German or English
-    const isGerman = profileData.language?.primary === 'de' || profileData.language?.primary === 'ua';
+    const isGerman = profileData.language?.primary === 'de';
     const lang = isGerman ? 'de' : 'en';
     const pageWidth = '210mm'; // A4
 
@@ -130,13 +151,6 @@ async function generateHtmlCV() {
       .replace('{{SECTION_SKILLS}}', sectionTitles.skills)
       .replace('{{SKILLS}}', skillsHtml);
 
-    // Handle photo block replacement
-    if (photoBlock) {
-      html = html.replace('{{PHOTO_BLOCK}}', photoBlock);
-    } else {
-      html = html.replace('{{PHOTO_BLOCK}}', '');
-    }
-
     // Write the temporary HTML file
     const tempHtmlPath = resolve(`/tmp/cv-${profileData.candidate.full_name.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '')}-${Date.now()}.html`);
     await writeFile(tempHtmlPath, html);
@@ -150,47 +164,9 @@ async function generateHtmlCV() {
   }
 }
 
-// Helper function to parse simple YAML
+// Helper function to parse simple YAML using js-yaml
 function parseYAML(yamlStr) {
-  const lines = yamlStr.split('\n');
-  const result = {};
-  let currentObj = result;
-  let stack = [result];
-
-  for (const line of lines) {
-    if (line.trim() === '' || line.startsWith('#')) continue;
-
-    const match = line.match(/^(\s*)([a-zA-Z0-9_-]+):\s*(.*)$/);
-    if (match) {
-      const indent = match[1].length;
-      const key = match[2];
-      const value = match[3];
-
-      // Adjust stack based on indentation
-      while (stack.length - 1 > indent / 2) {
-        stack.pop();
-      }
-
-      currentObj = stack[stack.length - 1];
-
-      if (value && value.trim() !== '') {
-        // Remove quotes if present
-        let parsedValue = value.trim();
-        if ((parsedValue.startsWith('"') && parsedValue.endsWith('"')) ||
-            (parsedValue.startsWith("'") && parsedValue.endsWith("'"))) {
-          parsedValue = parsedValue.substring(1, parsedValue.length - 1);
-        }
-        currentObj[key] = parsedValue;
-      } else {
-        // This is an object
-        currentObj[key] = {};
-        stack.push(currentObj[key]);
-        currentObj = currentObj[key];
-      }
-    }
-  }
-
-  return result;
+  return yaml.load(yamlStr) || {};
 }
 
 // Helper function to extract sections from markdown CV
@@ -477,7 +453,7 @@ generateHtmlCV()
     // Ensure output directory exists
     try {
       await import('fs').then(fs => fs.promises.mkdir('output', { recursive: true }));
-    } catch (e) {}
+    } catch (e) { console.warn(`⚠️ Could not create output directory: ${e.message}`); }
 
     const child = spawn('node', ['generate-pdf.mjs', htmlPath, pdfPath, '--format=a4'], {
       stdio: 'inherit'
