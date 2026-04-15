@@ -1,6 +1,6 @@
 # Career-Ops
 
-[English](README.md) | [Español](README.es.md) | [Português (Brasil)](README.pt-BR.md) | [한국어](README.ko-KR.md) | [日本語](README.ja.md) | [Русский](README.ru.md) | [繁體中文](README.zh-TW.md)
+[English](README.md) | [Español](README.es.md) | [Português (Brasil)](README.pt-BR.md) | [한국어](README.ko-KR.md) | [日本語](README.ja.md) | [Українська](README.ua.md) | [Русский](README.ru.md) | [繁體中文](README.zh-TW.md)
 
 <p align="center">
   <a href="https://x.com/santifer"><img src="docs/hero-banner.jpg" alt="Career-Ops -- 멀티 에이전트 취업 시스템" width="800"></a>
@@ -60,18 +60,18 @@ Career-ops는 에이전트 기반으로 작동합니다: Claude Code가 Playwrig
 
 ## 주요 기능
 
-| 기능 | 설명 |
-|------|------|
-| **자동 파이프라인** | URL 입력만으로 [평가 → PDF 생성 → 트래커 등록] 전 과정 자동화 |
-| **6단계 정밀 평가** | 직무 요약, 이력서 매치, 레벨링 전략, 연봉 리서치, 개인화, 면접 준비 (STAR+R) |
-| **면접 스토리 뱅크** | 평가 데이터 기반 STAR+Reflection 스토리 축적 -- 어떤 행동 면접 질문도 커버하는 5~10개의 마스터 답변 생성 |
-| **협상 전략 스크립트** | 연봉 협상 프레임워크, 거주지 기반 연봉 차등(Geographic Discount) 대응 논리, 경쟁 오퍼 활용 전략 |
-| **ATS PDF 생성** | Space Grotesk + DM Sans 디자인, 키워드가 주입된 이력서 |
-| **포털 스캐너** | 45개 이상의 기업 사전 설정 (Anthropic, OpenAI, ElevenLabs, Retool, n8n 등) + Ashby, Greenhouse, Lever, Wellfound 전반의 커스텀 검색 |
-| **일괄 처리** | `claude -p` 워커로 병렬 평가 |
-| **Dashboard TUI** | 터미널 UI에서 파이프라인 탐색, 필터링, 정렬 |
-| **Human-in-the-Loop** | AI가 평가하고 추천하면, 당신이 판단하고 행동합니다. 시스템은 절대 지원서를 자동 제출하지 않습니다 -- 최종 결정은 항상 당신의 몫 |
-| **파이프라인 무결성** | 자동 병합, 중복 제거, 상태 정규화, 헬스 체크 |
+| 기능                   | 설명                                                                                                                                |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| **자동 파이프라인**    | URL 입력만으로 [평가 → PDF 생성 → 트래커 등록] 전 과정 자동화                                                                       |
+| **6단계 정밀 평가**    | 직무 요약, 이력서 매치, 레벨링 전략, 연봉 리서치, 개인화, 면접 준비 (STAR+R)                                                        |
+| **면접 스토리 뱅크**   | 평가 데이터 기반 STAR+Reflection 스토리 축적 -- 어떤 행동 면접 질문도 커버하는 5~10개의 마스터 답변 생성                            |
+| **협상 전략 스크립트** | 연봉 협상 프레임워크, 거주지 기반 연봉 차등(Geographic Discount) 대응 논리, 경쟁 오퍼 활용 전략                                     |
+| **ATS PDF 생성**       | Space Grotesk + DM Sans 디자인, 키워드가 주입된 이력서                                                                              |
+| **포털 스캐너**        | 45개 이상의 기업 사전 설정 (Anthropic, OpenAI, ElevenLabs, Retool, n8n 등) + Ashby, Greenhouse, Lever, Wellfound 전반의 커스텀 검색 |
+| **일괄 처리**          | `claude -p` 워커로 병렬 평가                                                                                                        |
+| **Dashboard TUI**      | 터미널 UI에서 파이프라인 탐색, 필터링, 정렬                                                                                         |
+| **Human-in-the-Loop**  | AI가 평가하고 추천하면, 당신이 판단하고 행동합니다. 시스템은 절대 지원서를 자동 제출하지 않습니다 -- 최종 결정은 항상 당신의 몫     |
+| **파이프라인 무결성**  | 자동 병합, 중복 제거, 상태 정규화, 헬스 체크                                                                                        |
 
 ## 빠른 시작
 
