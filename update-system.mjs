@@ -147,12 +147,8 @@ async function check() {
     return;
   }
 
-  if (compareVersions(local, remote) >= 0) {
-    console.log(JSON.stringify({ status: 'up-to-date', local, remote }));
-    return;
-  }
-
-  // Fetch changelog from GitHub releases
+  // Fetch release info from GitHub API (used for changelog and as fallback version)
+  let releaseVersion = '';
   let changelog = '';
   try {
     const res = await fetch(RELEASES_API, {
@@ -161,9 +157,21 @@ async function check() {
     if (res.ok) {
       const release = await res.json();
       changelog = release.body || '';
+      releaseVersion = (release.tag_name || '').replace(/^v/, '');
     }
   } catch {
-    // No changelog available, that's OK
+    // No release info available, that's OK
+  }
+
+  // Use the higher version between VERSION file and GitHub Release
+  // (handles cases where VERSION file is not bumped after a release)
+  if (releaseVersion && compareVersions(releaseVersion, remote) > 0) {
+    remote = releaseVersion;
+  }
+
+  if (compareVersions(local, remote) >= 0) {
+    console.log(JSON.stringify({ status: 'up-to-date', local, remote }));
+    return;
   }
 
   console.log(JSON.stringify({
