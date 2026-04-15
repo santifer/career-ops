@@ -13,13 +13,13 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 async function generateHtmlCV() {
   try {
     // Read the template
-    const template = await readFile('templates/cv-template.html', 'utf-8');
+    const template = await readFile(resolve(__dirname, 'templates/cv-template.html'), 'utf-8');
 
     // Read the CV markdown
-    const cvMarkdown = await readFile('cv.md', 'utf-8');
+    const cvMarkdown = await readFile(resolve(__dirname, 'cv.md'), 'utf-8');
 
     // Read the profile
-    const profileYaml = await readFile('config/profile.yml', 'utf-8');
+    const profileYaml = await readFile(resolve(__dirname, 'config/profile.yml'), 'utf-8');
 
     // Basic YAML parsing to extract profile data
     const profileData = parseYAML(profileYaml);
