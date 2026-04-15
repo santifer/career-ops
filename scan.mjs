@@ -167,12 +167,12 @@ async function main() {
   const companyFlag = args.indexOf('--company');
   const filterCompany = companyFlag !== -1 ? args[companyFlag + 1]?.toLowerCase() : null;
   const typeFlag = args.indexOf('--type');
-  const typeValue = typeFlag !== -1 ? args[typeFlag + 1] : null;
-  if (typeFlag !== -1 && !typeValue) {
+  const rawTypeValue = typeFlag !== -1 ? args[typeFlag + 1] : null;
+  if (typeFlag !== -1 && (!rawTypeValue || rawTypeValue.startsWith('-') || !rawTypeValue.trim())) {
     console.error('Error: --type requires a value (e.g. --type ats-api)');
     process.exit(1);
   }
-  const filterTypes = typeValue ? [typeValue] : null;
+  const filterTypes = rawTypeValue ? [rawTypeValue.trim().toLowerCase()] : null;
 
   // 1. Read portals.yml
   if (!existsSync(PORTALS_PATH)) {
@@ -216,6 +216,7 @@ async function main() {
       totalFound += jobs.length;
 
       for (const job of jobs) {
+        if (!job.url || !job.title) continue;
         if (!titleFilter(job.title)) {
           totalFiltered++;
           continue;

@@ -47,12 +47,13 @@ export async function fetchJson(url) {
 // This guarantees core logic always receives clean strings, regardless
 // of how consistent or inconsistent an individual parser is.
 
-export function normalizeJob(job) {
+export function normalizeJob(job = {}) {
+  const toText = (v) => (v == null ? '' : String(v)).trim();
   return {
-    title:    (job.title    || '').trim(),
-    url:      (job.url      || '').trim(),
-    company:  (job.company  || '').trim(),
-    location: (job.location || '').trim(),
+    title:    toText(job.title),
+    url:      toText(job.url),
+    company:  toText(job.company),
+    location: toText(job.location),
   };
 }
 
@@ -63,12 +64,13 @@ export const SOURCES = [
     name: 'greenhouse',
     type: 'ats-api',
     detect(company) {
-      if (company.api) {
+      if (typeof company.api === 'string') {
         try {
-          if (new URL(company.api).hostname === 'boards-api.greenhouse.io') {
-            return { url: company.api };
+          const apiUrl = new URL(company.api);
+          if (apiUrl.protocol === 'https:' && apiUrl.hostname === 'boards-api.greenhouse.io') {
+            return { url: apiUrl.toString() };
           }
-        } catch { /* invalid URL — fall through to careers_url inference */ }
+        } catch { /* fall through */ }
       }
       const m = (company.careers_url || '')
         .match(/job-boards(?:\.eu)?\.greenhouse\.io\/([^/?#]+)/);
@@ -77,7 +79,7 @@ export const SOURCES = [
     },
     fetch: fetchJson,
     parse(json, companyName) {
-      return (json.jobs || []).map(j => ({
+      return (Array.isArray(json?.jobs) ? json.jobs : []).map(j => ({
         title:    j.title || '',
         url:      j.absolute_url || '',
         company:  companyName,
@@ -96,7 +98,7 @@ export const SOURCES = [
     },
     fetch: fetchJson,
     parse(json, companyName) {
-      return (json.jobs || []).map(j => ({
+      return (Array.isArray(json?.jobs) ? json.jobs : []).map(j => ({
         title:    j.title || '',
         url:      j.jobUrl || '',
         company:  companyName,
@@ -115,8 +117,7 @@ export const SOURCES = [
     },
     fetch: fetchJson,
     parse(json, companyName) {
-      if (!Array.isArray(json)) return [];
-      return json.map(j => ({
+      return (Array.isArray(json) ? json : []).map(j => ({
         title:    j.text || '',
         url:      j.hostedUrl || '',
         company:  companyName,
@@ -135,7 +136,7 @@ export const SOURCES = [
     },
     fetch: fetchJson,
     parse(json, companyName) {
-      return (json.content || []).map(j => ({
+      return (Array.isArray(json?.content) ? json.content : []).map(j => ({
         title:    j.name        || '',
         url:      j.postingUrl  || j.ref || '',
         company:  companyName,
@@ -154,7 +155,7 @@ export const SOURCES = [
     },
     fetch: fetchJson,
     parse(json, companyName) {
-      return (json.results || []).map(j => ({
+      return (Array.isArray(json?.results) ? json.results : []).map(j => ({
         title:    j.title || '',
         url:      j.url   || '',
         company:  companyName,
@@ -173,9 +174,16 @@ export const SOURCES = [
  * @returns {{ source: object, url: string } | null}
  */
 export function resolveSource(company, types) {
+  if (!company || typeof company !== 'object') return null;
+  const allowedTypes = Array.isArray(types) ? types : null;
   for (const source of SOURCES) {
-    if (types && !types.includes(source.type)) continue;
-    const result = source.detect(company);
+    if (allowedTypes && !allowedTypes.includes(source.type)) continue;
+    let result = null;
+    try {
+      result = source.detect(company);
+    } catch {
+      continue;
+    }
     if (result) return { source, url: result.url };
   }
   return null;
