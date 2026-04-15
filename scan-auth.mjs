@@ -174,6 +174,14 @@ async function waitForLogin(page) {
 // JD saving
 // ---------------------------------------------------------------------------
 
+function yamlEscape(str) {
+  const s = String(str).replace(/\n/g, ' ').trim();
+  if (/[":{}[\],&*?|<>=!%@#`]/.test(s) || s.includes("'")) {
+    return `"${s.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
+  }
+  return `"${s}"`;
+}
+
 function saveJd(detail) {
   mkdirSync(JDS_DIR, { recursive: true });
   const slug = slugify(`${detail.company}-${detail.title}`);
@@ -181,10 +189,10 @@ function saveJd(detail) {
   const filepath = join(JDS_DIR, filename);
 
   const content = `---
-title: "${detail.title}"
-company: "${detail.company}"
-url: "${detail.url}"
-application_url: "${detail.applicationUrl || ''}"
+title: ${yamlEscape(detail.title)}
+company: ${yamlEscape(detail.company)}
+url: ${yamlEscape(detail.url)}
+application_url: ${yamlEscape(detail.applicationUrl || '')}
 scraped: "${new Date().toISOString().split('T')[0]}"
 source: ${portalId}
 ---
