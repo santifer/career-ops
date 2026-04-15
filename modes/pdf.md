@@ -30,11 +30,18 @@ If content overflows 1 page, CUT content — never shrink fonts or margins. Prio
 10. Build a competency list from the JD requirements (6-8 keyword phrases, inline text)
 11. Inject keywords naturally into existing achievements (NEVER invent)
 12. **Verify 1-page fit**: estimate total content — if it looks too long, trim further before generating HTML
-13. Generate the full HTML from the template + tailored content
-14. Write the HTML to `/tmp/cv-candidate-{company}.html`
-15. Run: `node generate-pdf.mjs /tmp/cv-candidate-{company}.html output/cv-candidate-{company}-{YYYY-MM-DD}.pdf --format={letter|a4}`
-16. Report the PDF path, page count, and keyword coverage %
-17. **If page count > 1**: go back, trim content, regenerate. Repeat until 1 page.
+13. **Generate Markdown and wait for approval** — render the full tailored CV as clean Markdown, create the output directory (`mkdir -p output/{company-slug}/{position-slug}/`), and write it to `output/{company-slug}/{position-slug}/cv-{candidate}-{company-slug}-{YYYY-MM-DD}.md`. Show the full Markdown to the user and **STOP**. Ask:
+    > "Here's the tailored CV in Markdown. Does everything look correct? Reply 'yes' (or suggest changes) — I'll generate the PDF only after you approve."
+    - If the user requests changes: apply them **to the `.md` file on disk first**, then show the revised content from the file, and ask again. Never carry changes only in memory.
+    - **Do NOT proceed to PDF generation until the user explicitly approves.**
+14. **Re-read the `.md` file from disk** — after approval, always read `output/{company-slug}/{position-slug}/cv-{candidate}-{company-slug}-{YYYY-MM-DD}.md` fresh from disk. Use this as the source for HTML generation, not in-memory content.
+15. Generate the full HTML from the template + tailored content
+16. Write the HTML to `/tmp/cv-{candidate}-{company-slug}.html`
+17. Run: `node generate-pdf.mjs /tmp/cv-{candidate}-{company-slug}.html output/{company-slug}/{position-slug}/cv-{candidate}-{company-slug}-{YYYY-MM-DD}.pdf --format={letter|a4}`
+18. Report the PDF path, Markdown path, page count, and keyword coverage %
+19. **If page count > 1**: go back, trim content, update the `.md` file, re-read it from disk, regenerate PDF. Repeat until 1 page.
+
+**Output directory convention:** `output/{company-slug}/{position-slug}/` where slugs are lowercase-hyphenated (e.g., `output/openai/senior-ml-engineer/`). Both the `.md` and `.pdf` files live in this folder.
 
 ## ATS rules (clean parsing)
 
@@ -174,15 +181,16 @@ e. `commit-editing-transaction` to save (ONLY after user approval)
 a. `export-design` the duplicate as PDF (format: a4 or letter based on JD location)
 b. **IMMEDIATELY** download the PDF using Bash:
    ```bash
-   curl -sL -o "output/cv-{candidate}-{company}-canva-{YYYY-MM-DD}.pdf" "{download_url}"
+   mkdir -p "output/{company-slug}/{position-slug}/"
+   curl -sL -o "output/{company-slug}/{position-slug}/cv-{candidate}-{company-slug}-canva-{YYYY-MM-DD}.pdf" "{download_url}"
    ```
    The export URL is a pre-signed S3 link that expires in ~2 hours. Download it right away.
 c. Verify the download:
    ```bash
-   file output/cv-{candidate}-{company}-canva-{YYYY-MM-DD}.pdf
+   file "output/{company-slug}/{position-slug}/cv-{candidate}-{company-slug}-canva-{YYYY-MM-DD}.pdf"
    ```
    Must show "PDF document". If it shows XML or HTML, the URL expired — re-export and retry.
-d. Report: PDF path, file size, Canva design URL (for manual tweaking)
+d. Report: PDF path, Markdown path, file size, Canva design URL (for manual tweaking)
 
 #### Error handling
 
@@ -194,3 +202,4 @@ d. Report: PDF path, file size, Canva design URL (for manual tweaking)
 ## Post-generation
 
 Update the tracker if the offer is already registered: change PDF from ❌ to ✅.
+Both output files (`cv-...md` and `cv-...pdf`) will be in `output/{company-slug}/{position-slug}/`.
