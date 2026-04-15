@@ -49,24 +49,14 @@ The negotiation section provides frameworks for salary discussions. Replace the 
 - Geographic arbitrage strategy
 - Pushback responses
 
-## Hooks (Optional)
+## GitHub Copilot Files
 
-Career-ops can integrate with external systems via Claude Code hooks. Example hooks:
+Career-ops includes GitHub Copilot workspace files:
 
-```json
-{
-  "hooks": {
-    "SessionStart": [{
-      "hooks": [{
-        "type": "command",
-        "command": "echo 'Career-ops session started'"
-      }]
-    }]
-  }
-}
-```
+- `.github/copilot-instructions.md` — always-on project guidance
+- `.github/prompts/career-ops.prompt.md` — reusable `/career-ops` slash prompt
 
-Save hooks in `.claude/settings.json`.
+If you want to add more Copilot-specific workflows, put them under `.github/prompts/` or `.github/skills/`.
 
 ## States (templates/states.yml)
 

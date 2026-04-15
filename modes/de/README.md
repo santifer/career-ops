@@ -11,7 +11,7 @@ Verwende `modes/de/`, wenn mindestens eine der folgenden Bedingungen zutrifft:
 - Du brauchst Antworten und Anschreiben in **natürlichem Tech-Deutsch**, nicht maschinenübersetzt
 - Du musst mit **DACH-spezifischen Vertragselementen** umgehen: 13. Monatsgehalt, Probezeit, Kündigungsfrist, AGG, Tarifvertrag, Festanstellung vs. Freelance, VWL, bAV, Arbeitszeugnisse
 
-Wenn die meisten deiner Stellenanzeigen auf Englisch sind, bleib bei den Standard-Modi unter `modes/`. Die englischen Modi greifen automatisch zu deutschen Anzeigen, sobald Claude sie als deutschsprachig erkennt — aber sie kennen die DACH-Marktbesonderheiten nicht im selben Detail.
+Wenn die meisten deiner Stellenanzeigen auf Englisch sind, bleib bei den Standard-Modi unter `modes/`. Die englischen Modi greifen automatisch zu deutschen Anzeigen, sobald der Assistent sie als deutschsprachig erkennt — aber sie kennen die DACH-Marktbesonderheiten nicht im selben Detail.
 
 ## Wie aktivieren?
 
@@ -19,7 +19,7 @@ career-ops hat keinen "Sprach-Schalter" als Code-Flag. Stattdessen gibt es zwei 
 
 ### Weg 1 — Pro Session, per Befehl
 
-Sag Claude zu Beginn der Session ausdrücklich:
+Sag dem Assistenten zu Beginn der Session ausdrücklich:
 
 > "Nutze ab jetzt die deutschen Modi unter `modes/de/`."
 
@@ -27,7 +27,7 @@ oder
 
 > "Bewerten und Bewerbungen auf Deutsch — verwende `modes/de/_shared.md` und `modes/de/angebot.md`."
 
-Claude liest dann die Dateien aus diesem Ordner statt aus `modes/`.
+Der Assistent liest dann die Dateien aus diesem Ordner statt aus `modes/`.
 
 ### Weg 2 — Dauerhaft, per Profil
 
@@ -39,7 +39,7 @@ language:
   modes_dir: modes/de
 ```
 
-Erinnere Claude in deiner ersten Session daran, dieses Feld zu respektieren ("Schau in `profile.yml`, ich habe `language.modes_dir` gesetzt"). Ab dann nimmt Claude automatisch die deutschen Modi.
+Erinnere den Assistenten in deiner ersten Session daran, dieses Feld zu respektieren ("Schau in `profile.yml`, ich habe `language.modes_dir` gesetzt"). Ab dann nimmt der Assistent automatisch die deutschen Modi.
 
 > Hinweis: Das `language.modes_dir`-Feld ist eine Konvention dieser PR, kein hartcodiertes Schema. Wenn die Maintainer es anders strukturieren wollen, kann das Feld jederzeit umbenannt werden.
 

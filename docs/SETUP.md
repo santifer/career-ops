@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- [Claude Code](https://claude.ai/code) installed and configured
+- [GitHub Copilot Chat](https://code.visualstudio.com/docs/copilot/chat/copilot-chat) in VS Code
 - Node.js 18+ (for PDF generation and utility scripts)
 - (Optional) Go 1.21+ (for the dashboard TUI)
 
@@ -44,13 +44,14 @@ Edit `portals.yml`:
 
 ### 5. Start using
 
-Open Claude Code in this directory:
+Open this folder in VS Code and start GitHub Copilot Chat. The repo includes a workspace prompt at `.github/prompts/career-ops.prompt.md`, so you can run:
 
 ```bash
-claude
+/career-ops
 ```
 
-Then paste a job offer URL or description. Career-ops will automatically evaluate it, generate a report, create a tailored PDF, and track it.
+You can also paste a job offer URL or description directly in chat. Career-ops will automatically evaluate it, generate a report, create a tailored PDF, and track it.
+
 
 ## Available Commands
 

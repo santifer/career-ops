@@ -4,7 +4,7 @@ Interaktiver Modus für den Moment, in dem der Kandidat in Chrome ein Bewerbungs
 
 ## Voraussetzungen
 
-- **Empfohlen mit sichtbarem Playwright**: Im sichtbaren Modus sieht der Kandidat den Browser, und Claude kann mit der Seite interagieren.
+- **Empfohlen mit sichtbarem Playwright**: Im sichtbaren Modus sieht der Kandidat den Browser, und der Assistent kann mit der Seite interagieren.
 - **Ohne Playwright**: Der Kandidat teilt einen Screenshot oder fügt die Fragen manuell ein.
 
 ## Workflow

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# career-ops batch runner — standalone orchestrator for claude -p workers
-# Reads batch-input.tsv, delegates each offer to a claude -p worker,
+# career-ops batch runner — standalone orchestrator for headless AI workers
+# Reads batch-input.tsv, delegates each offer to an external CLI worker,
 # tracks state in batch-state.tsv for resumability.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -18,6 +18,7 @@ APPLICATIONS_FILE="$PROJECT_DIR/data/applications.md"
 LOCK_FILE="$BATCH_DIR/batch-runner.pid"
 STATE_LOCK_DIR="$BATCH_DIR/.batch-state.lock"
 MAIN_PID="${BASHPID:-$$}"
+WORKER_CMD_TEMPLATE="${CAREER_OPS_BATCH_WORKER_CMD:-}"
 
 # Defaults
 PARALLEL=1
@@ -28,8 +29,16 @@ MAX_RETRIES=2
 
 usage() {
   cat <<'USAGE'
-career-ops batch runner — process job offers in batch via claude -p workers
-Uses your default Claude model (Claude Max subscription).
+career-ops batch runner — process job offers in batch via an external worker command
+
+Set `CAREER_OPS_BATCH_WORKER_CMD` to a shell template that accepts these placeholders:
+  {{SYSTEM_PROMPT}}  absolute path to the system prompt file
+  {{PROMPT}}         user prompt text for the worker
+
+Example:
+  export CAREER_OPS_BATCH_WORKER_CMD='my-worker --system "{{SYSTEM_PROMPT}}" --prompt "{{PROMPT}}"'
+
+Note: the interactive GitHub Copilot workflow runs inside VS Code chat.
 
 Usage: batch-runner.sh [OPTIONS]
 
@@ -114,10 +123,23 @@ check_prerequisites() {
     exit 1
   fi
 
-  if ! command -v claude &>/dev/null; then
-    echo "ERROR: 'claude' CLI not found in PATH."
+  if [[ -z "$WORKER_CMD_TEMPLATE" ]]; then
+    echo "ERROR: CAREER_OPS_BATCH_WORKER_CMD is not set."
+    echo "Configure a non-interactive worker command template before using batch-runner.sh."
     exit 1
   fi
+run_worker() {
+  local system_prompt="$1"
+  local prompt="$2"
+  local log_file="$3"
+  local command
+
+  command="${WORKER_CMD_TEMPLATE//\{\{SYSTEM_PROMPT\}\}/$system_prompt}"
+  command="${command//\{\{PROMPT\}\}/$prompt}"
+
+  eval "$command" > "$log_file" 2>&1
+}
+
 
   mkdir -p "$LOGS_DIR" "$TRACKER_DIR" "$REPORTS_DIR"
 }
@@ -306,13 +328,9 @@ process_offer() {
     -e "s|{{ID}}|${id}|g" \
     "$PROMPT_FILE" > "$resolved_prompt"
 
-  # Launch claude -p worker (uses default model from Claude Max subscription)
+  # Launch external worker command configured by CAREER_OPS_BATCH_WORKER_CMD.
   local exit_code=0
-  claude -p \
-    --dangerously-skip-permissions \
-    --append-system-prompt-file "$resolved_prompt" \
-    "$prompt" \
-    > "$log_file" 2>&1 || exit_code=$?
+  run_worker "$resolved_prompt" "$prompt" "$log_file" || exit_code=$?
 
   # Cleanup resolved prompt
   rm -f "$resolved_prompt"

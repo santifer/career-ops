@@ -76,15 +76,8 @@ Read `modes/{mode}.md`
 
 Applies to: `tracker`, `deep`, `training`, `project`
 
-### Modes delegated to subagent:
-For `scan`, `apply` (with Playwright), and `pipeline` (3+ URLs): launch as Agent with the content of `_shared.md` + `modes/{mode}.md` injected into the subagent prompt.
+### Long-running modes
 
-```
-Agent(
-  subagent_type="general-purpose",
-  prompt="[content of modes/_shared.md]\n\n[content of modes/{mode}.md]\n\n[invocation-specific data]",
-  description="career-ops {mode}"
-)
-```
+For `scan`, `apply` (with browser automation), and `pipeline` with several pending URLs, prefer delegating to a subagent or handling them as a multi-step workflow so the main conversation stays focused.
 
-Execute the instructions from the loaded mode file.
+Execute the instructions from the loaded mode file and follow the project rules in `DATA_CONTRACT.md`.
