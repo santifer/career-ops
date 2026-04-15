@@ -1,23 +1,23 @@
 # Scripts Reference
 
-All scripts live in the project root as `.mjs` modules and are exposed via `npm run <name>`.
+All scripts live in `scripts/` as `.mjs` modules and are exposed via `npm run <name>`.
 
 ## Quick Reference
 
 | Command | Script | Purpose |
 |---------|--------|---------|
-| `npm run doctor` | `doctor.mjs` | Validate setup prerequisites |
-| `npm run verify` | `verify-pipeline.mjs` | Check pipeline data integrity |
-| `npm run normalize` | `normalize-statuses.mjs` | Fix non-canonical statuses |
-| `npm run dedup` | `dedup-tracker.mjs` | Remove duplicate tracker entries |
-| `npm run merge` | `merge-tracker.mjs` | Merge batch TSVs into applications.md |
-| `npm run pdf` | `generate-pdf.mjs` | Convert HTML to ATS-optimized PDF |
-| `npm run sync-check` | `cv-sync-check.mjs` | Validate CV/profile consistency |
-| `npm run update:check` | `update-system.mjs check` | Check for upstream updates |
-| `npm run update` | `update-system.mjs apply` | Apply upstream update |
-| `npm run rollback` | `update-system.mjs rollback` | Rollback last update |
-| `npm run liveness` | `check-liveness.mjs` | Test if job URLs are still active |
-| `npm run scan` | `scan.mjs` | Zero-token portal scanner |
+| `npm run doctor` | `scripts/doctor.mjs` | Validate setup prerequisites |
+| `npm run verify` | `scripts/verify-pipeline.mjs` | Check pipeline data integrity |
+| `npm run normalize` | `scripts/normalize-statuses.mjs` | Fix non-canonical statuses |
+| `npm run dedup` | `scripts/dedup-tracker.mjs` | Remove duplicate tracker entries |
+| `npm run merge` | `scripts/merge-tracker.mjs` | Merge batch TSVs into applications.md |
+| `npm run pdf` | `scripts/generate-pdf.mjs` | Convert HTML to ATS-optimized PDF |
+| `npm run sync-check` | `scripts/cv-sync-check.mjs` | Validate CV/profile consistency |
+| `npm run update:check` | `scripts/update-system.mjs check` | Check for upstream updates |
+| `npm run update` | `scripts/update-system.mjs apply` | Apply upstream update |
+| `npm run rollback` | `scripts/update-system.mjs rollback` | Rollback last update |
+| `npm run liveness` | `scripts/check-liveness.mjs` | Test if job URLs are still active |
+| `npm run scan` | `scripts/scan.mjs` | Zero-token portal scanner |
 
 ---
 

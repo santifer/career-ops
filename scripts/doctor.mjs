@@ -10,7 +10,7 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const projectRoot = __dirname;
+const projectRoot = join(__dirname, '..');
 
 // ANSI colors (only on TTY)
 const isTTY = process.stdout.isTTY;

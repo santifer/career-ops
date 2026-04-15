@@ -1,4 +1,4 @@
-# Contexto Compartilhado -- career-ops (Portugues BR)
+﻿# Contexto Compartilhado -- career-ops (Portugues BR)
 
 <!-- ============================================================
      THIS FILE IS AUTO-UPDATABLE. Don't put personal data here.
@@ -193,7 +193,7 @@ Em vagas e negociacoes brasileiras, existem termos e praticas que nao aparecem n
 
 0. **Carta de apresentacao:** Se o formulario permite anexar ou escrever uma carta, SEMPRE inclua uma. PDF no mesmo design visual do curriculo. Conteudo: citacoes da descricao da vaga mapeadas para proof points, links para case studies relevantes. Maximo 1 pagina.
 1. Ler `cv.md`, `_profile.md` e `article-digest.md` (se existir) antes de avaliar qualquer vaga
-1b. **Na primeira avaliacao de cada sessao:** Executar `node cv-sync-check.mjs` via Bash. Se houver avisos, informar o candidato antes de continuar
+1b. **Na primeira avaliacao de cada sessao:** Executar `node scripts/cv-sync-check.mjs` via Bash. Se houver avisos, informar o candidato antes de continuar
 2. Detectar o arquetipo da vaga e adaptar o framing conforme `_profile.md`
 3. Ao fazer matching, citar linhas exatas do curriculo
 4. Usar WebSearch para dados de remuneracao e empresa
@@ -215,4 +215,4 @@ Em vagas e negociacoes brasileiras, existem termos e praticas que nao aparecem n
 | Read | cv.md, _profile.md, article-digest.md, cv-template.html |
 | Write | HTML temporario para PDF, applications.md, reports .md |
 | Edit | Atualizar tracker |
-| Bash | `node generate-pdf.mjs` |
+| Bash | `node scripts/generate-pdf.mjs` |

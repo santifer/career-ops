@@ -204,6 +204,13 @@ career-ops/
 ├── batch/
 │   ├── batch-prompt.md          # Self-contained worker prompt
 │   └── batch-runner.sh          # Orchestrator script
+├── scripts/                     # Utility scripts (npm run <name>)
+│   ├── generate-pdf.mjs         # HTML → PDF via Playwright
+│   ├── scan.mjs                 # Zero-token portal scanner
+│   ├── doctor.mjs               # Setup validation
+│   ├── verify-pipeline.mjs      # Pipeline health check
+│   ├── merge-tracker.mjs        # Merge batch TSVs
+│   └── lib/liveness-core.mjs    # Shared liveness logic
 ├── dashboard/                   # Go TUI pipeline viewer
 ├── data/                        # Your tracking data (gitignored)
 ├── reports/                     # Evaluation reports (gitignored)

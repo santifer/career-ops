@@ -1,4 +1,4 @@
-# ATS Normalization Test Fixture
+﻿# ATS Normalization Test Fixture
 
 This file is a regression fixture for the text normalization pass added in `generate-pdf.mjs` (issue #1). It contains the Unicode artifacts that can cause parsing errors or display issues in ATS systems and legacy parsers. Use it to verify that the normalizer converts them to ASCII-safe equivalents.
 
@@ -43,7 +43,7 @@ import('./generate-pdf.mjs').catch(()=>{});
 For an end-to-end test, generate a CV PDF from a known dirty HTML file and inspect the output:
 
 ```bash
-node generate-pdf.mjs /tmp/dirty-cv.html /tmp/clean-cv.pdf --format=a4
+node scripts/generate-pdf.mjs /tmp/dirty-cv.html /tmp/clean-cv.pdf --format=a4
 # Expected log line:
 # 🧹 ATS normalization: N replacements (em-dash=X, smart-double-quote=Y, ...)
 ```

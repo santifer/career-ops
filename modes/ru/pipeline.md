@@ -1,4 +1,4 @@
-# Режим: pipeline — Очередь URL (Second Brain)
+﻿# Режим: pipeline — Очередь URL (Second Brain)
 
 Обрабатывает URL вакансий из `data/pipeline.md`. Пользователь добавляет URL когда угодно, затем запускает `/career-ops pipeline` для обработки.
 
@@ -53,6 +53,6 @@
 
 Перед обработкой URL:
 ```bash
-node cv-sync-check.mjs
+node scripts/cv-sync-check.mjs
 ```
 Если рассинхронизация — предупредить пользователя.

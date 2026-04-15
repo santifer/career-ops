@@ -16,7 +16,7 @@
 
 import { chromium } from 'playwright';
 import { readFile } from 'fs/promises';
-import { classifyLiveness } from './liveness-core.mjs';
+import { classifyLiveness } from './lib/liveness-core.mjs';
 
 async function checkUrl(page, url) {
   try {

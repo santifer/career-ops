@@ -1,4 +1,4 @@
-# Geteilter Kontext -- career-ops (Deutsch)
+﻿# Geteilter Kontext -- career-ops (Deutsch)
 
 <!-- ============================================================
      ANPASSEN DIESER DATEI
@@ -176,7 +176,7 @@ In deutschen Stellenanzeigen und Vertragsverhandlungen tauchen Begriffe auf, die
 
 0. **Anschreiben:** Wenn das Formular die Möglichkeit bietet, ein Anschreiben anzuhängen oder zu schreiben, IMMER eines mitliefern. PDF im selben visuellen Design wie der Lebenslauf erzeugen. Inhalt: Zitate aus der Stellenanzeige, gemappt auf Proof Points, Links zu relevanten Case Studies. Maximal 1 Seite.
 1. `cv.md` und `article-digest.md` (falls vorhanden) lesen, bevor irgendeine Stellenanzeige bewertet wird
-1b. **Bei der ersten Bewertung jeder Session:** `node cv-sync-check.mjs` per Bash ausführen. Bei Warnungen den Kandidaten informieren, bevor weitergearbeitet wird
+1b. **Bei der ersten Bewertung jeder Session:** `node scripts/cv-sync-check.mjs` per Bash ausführen. Bei Warnungen den Kandidaten informieren, bevor weitergearbeitet wird
 2. Den Rollen-Archetyp erkennen und das Framing anpassen
 3. Beim Matching exakte Zeilen aus dem Lebenslauf zitieren
 4. WebSearch für Vergütungs- und Firmendaten nutzen
@@ -198,4 +198,4 @@ In deutschen Stellenanzeigen und Vertragsverhandlungen tauchen Begriffe auf, die
 | Read | cv.md, article-digest.md, cv-template.html |
 | Write | Temporäres HTML für PDF, applications.md, Reports .md |
 | Edit | Tracker aktualisieren |
-| Bash | `node generate-pdf.mjs` |
+| Bash | `node scripts/generate-pdf.mjs` |
