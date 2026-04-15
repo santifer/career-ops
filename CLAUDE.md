@@ -210,11 +210,11 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 2. User sets `language.modes_dir: modes/ja` in `config/profile.yml` → always use Japanese modes
 3. You detect a Japanese JD → suggest switching to Japanese modes
 
-**When to use Ukrainian modes:** If the user is targeting the Ukrainian job market, lives in Ukraine, or asks for Ukrainian output. Most Ukrainian IT job postings are written in English but operate within the Ukrainian market (FOP contracts, USD salaries, DOU.ua benchmarks) — use Ukrainian modes for these too. Either:
+**When to use Ukrainian modes:** If the user is targeting the Ukrainian job market, lives in Ukraine, or asks for Ukrainian output. Most Ukrainian IT job postings are written in English but operate within the Ukrainian market (ФОП contracts, USD salaries, DOU.ua benchmarks) — use Ukrainian modes for these too. Translated content is available in `modes/ua/` (`_shared.md`, `oferta.md`, `apply.md`, `pipeline.md`, `interview-prep.md`). Either:
 
 1. User says "use Ukrainian modes" → read from `modes/ua/` instead of `modes/`
-2. User sets `language.modes_dir: modes/ua` in `config/profile.yml` → always use Ukrainian modes
-3. You detect a Ukrainian-market JD (DOU.ua, Djinni.co, Ukrainian company, FOP mentioned, etc.) → suggest switching to Ukrainian modes
+2. User sets `language.modes_dir: modes/ua` in `config/profile.yml` → always use Ukrainian modes.
+3. You detect a Ukrainian-market JD (DOU.ua, Djinni.co, Ukrainian company, ФОП mentioned, etc.) → suggest switching to Ukrainian modes
 
 **When NOT to:** If the user applies to English-language roles, even at French, German, or Japanese companies, use the default English modes.
 
