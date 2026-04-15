@@ -127,16 +127,13 @@ for (const [agentFile, modeFiles] of Object.entries(AGENT_MODE_MAP)) {
 
   const content = readFileSync(p, "utf-8");
   let lastIndex = -1;
-  let orderOk = true;
 
   for (const modeFile of modeFiles) {
     const idx = content.indexOf(modeFile);
     if (idx === -1) {
       err(`.agents/${agentFile} is missing reference to ${modeFile}`);
-      orderOk = false;
     } else if (idx <= lastIndex) {
       err(`.agents/${agentFile} references ${modeFile} out of expected order`);
-      orderOk = false;
     } else {
       lastIndex = idx;
       ok(`.agents/${agentFile} references ${modeFile}`);
