@@ -165,7 +165,15 @@ async function main() {
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
   const companyFlag = args.indexOf('--company');
-  const filterCompany = companyFlag !== -1 ? args[companyFlag + 1]?.toLowerCase() : null;
+  let filterCompany = null;
+  if (companyFlag !== -1) {
+    const companyValue = args[companyFlag + 1];
+    if (!companyValue || companyValue.startsWith('-')) {
+      console.error('Error: --company requires a value (e.g. --company Acme)');
+      process.exit(1);
+    }
+    filterCompany = companyValue.toLowerCase();
+  }
   const typeFlag = args.indexOf('--type');
   const rawTypeValue = typeFlag !== -1 ? args[typeFlag + 1] : null;
   if (typeFlag !== -1 && (!rawTypeValue || rawTypeValue.startsWith('-') || !rawTypeValue.trim())) {
