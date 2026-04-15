@@ -21,7 +21,7 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const ROOT = __dirname;
+const ROOT = join(__dirname, '..');
 
 const CANONICAL_REPO = 'https://github.com/santifer/career-ops.git';
 const RAW_VERSION_URL = 'https://raw.githubusercontent.com/santifer/career-ops/main/VERSION';
@@ -47,18 +47,24 @@ const SYSTEM_PATHS = [
   'modes/de/',
   'CLAUDE.md',
   'AGENTS.md',
-  'generate-pdf.mjs',
-  'merge-tracker.mjs',
-  'verify-pipeline.mjs',
-  'dedup-tracker.mjs',
-  'normalize-statuses.mjs',
-  'cv-sync-check.mjs',
-  'update-system.mjs',
+  'scripts/generate-pdf.mjs',
+  'scripts/merge-tracker.mjs',
+  'scripts/verify-pipeline.mjs',
+  'scripts/dedup-tracker.mjs',
+  'scripts/normalize-statuses.mjs',
+  'scripts/cv-sync-check.mjs',
+  'scripts/update-system.mjs',
+  'scripts/analyze-patterns.mjs',
+  'scripts/followup-cadence.mjs',
+  'scripts/check-liveness.mjs',
+  'scripts/scan.mjs',
+  'scripts/doctor.mjs',
+  'scripts/test-all.mjs',
+  'scripts/lib/liveness-core.mjs',
   'batch/batch-prompt.md',
   'batch/batch-runner.sh',
   'dashboard/',
   'templates/',
-  'fonts/',
   '.claude/skills/',
   'docs/',
   'VERSION',

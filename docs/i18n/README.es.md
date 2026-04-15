@@ -201,7 +201,11 @@ career-ops/
 ├── data/                        # Tus datos de tracking (gitignored)
 ├── reports/                     # Reports de evaluacion (gitignored)
 ├── output/                      # PDFs generados (gitignored)
-├── fonts/                       # Space Grotesk + DM Sans
+├── templates/
+│   ├── cv-template.html         # Plantilla CV ATS-optimizada
+│   ├── portals.example.yml      # Config del scanner
+│   ├── states.yml               # Estados canónicos
+│   └── fonts/                   # Space Grotesk + DM Sans
 ├── docs/                        # Setup, personalizacion, arquitectura
 └── examples/                    # CV de ejemplo, report, proof points
 ```

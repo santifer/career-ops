@@ -1,4 +1,4 @@
-# Modo: pipeline -- Inbox de URLs (Second Brain)
+﻿# Modo: pipeline -- Inbox de URLs (Second Brain)
 
 Processa URLs de vagas acumuladas em `data/pipeline.md`. O candidato adiciona URLs quando quiser e depois executa `/career-ops pipeline` para processar todas de uma vez.
 
@@ -58,7 +58,7 @@ Processa URLs de vagas acumuladas em `data/pipeline.md`. O candidato adiciona UR
 Antes de processar qualquer URL, verificar sincronizacao:
 
 ```bash
-node cv-sync-check.mjs
+node scripts/cv-sync-check.mjs
 ```
 
 Se houver dessincronizacao, avisar o candidato antes de continuar.

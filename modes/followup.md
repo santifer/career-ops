@@ -1,4 +1,4 @@
-# Mode: followup -- Follow-up Cadence Tracker
+﻿# Mode: followup -- Follow-up Cadence Tracker
 
 ## Purpose
 
@@ -17,7 +17,7 @@ Track follow-up cadence for active applications. Flag overdue follow-ups, extrac
 Execute:
 
 ```bash
-node followup-cadence.mjs
+node scripts/followup-cadence.mjs
 ```
 
 Parse the JSON output. It contains:
@@ -170,4 +170,4 @@ After showing all drafts, summarize:
 | Responded | 1 day (urgent reply) | Every 3 days | No limit |
 | Interview | 1 day after (thank-you) | Every 3 days | No limit |
 
-These defaults can be overridden via `node followup-cadence.mjs --applied-days N`.
+These defaults can be overridden via `node scripts/followup-cadence.mjs --applied-days N`.

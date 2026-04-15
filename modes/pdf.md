@@ -1,4 +1,4 @@
-# Modo: pdf — Generación de PDF ATS-Optimizado
+﻿# Modo: pdf — Generación de PDF ATS-Optimizado
 
 ## Pipeline completo
 
@@ -18,7 +18,7 @@
 12. Genera HTML completo desde template + contenido personalizado
 13. Lee `name` de `config/profile.yml` → normaliza a kebab-case lowercase (e.g. "John Doe" → "john-doe") → `{candidate}`
 14. Escribe HTML a `/tmp/cv-{candidate}-{company}.html`
-15. Ejecuta: `node generate-pdf.mjs /tmp/cv-{candidate}-{company}.html output/cv-{candidate}-{company}-{YYYY-MM-DD}.pdf --format={letter|a4}`
+15. Ejecuta: `node scripts/generate-pdf.mjs /tmp/cv-{candidate}-{company}.html output/cv-{candidate}-{company}-{YYYY-MM-DD}.pdf --format={letter|a4}`
 15. Reporta: ruta del PDF, nº páginas, % cobertura de keywords
 
 ## Reglas ATS (parseo limpio)
@@ -34,7 +34,7 @@
 ## Diseño del PDF
 
 - **Fonts**: Space Grotesk (headings, 600-700) + DM Sans (body, 400-500)
-- **Fonts self-hosted**: `fonts/`
+- **Fonts self-hosted**: `templates/fonts/`
 - **Header**: nombre en Space Grotesk 24px bold + línea gradiente `linear-gradient(to right, hsl(187,74%,32%), hsl(270,70%,45%))` 2px + fila de contacto
 - **Section headers**: Space Grotesk 13px, uppercase, letter-spacing 0.05em, color cyan primary
 - **Body**: DM Sans 11px, line-height 1.5

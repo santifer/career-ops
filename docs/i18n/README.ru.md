@@ -190,7 +190,11 @@ career-ops/
 ├── data/                        # Данные трекинга (gitignored)
 ├── reports/                     # Отчёты оценки (gitignored)
 ├── output/                      # Сгенерированные PDF (gitignored)
-├── fonts/                       # Space Grotesk + DM Sans
+├── templates/
+│   ├── cv-template.html         # ATS-оптимизированный шаблон CV
+│   ├── portals.example.yml      # Шаблон конфигурации сканера
+│   ├── states.yml               # Канонические статусы
+│   └── fonts/                   # Space Grotesk + DM Sans
 ├── docs/                        # Документация
 └── examples/                    # Примеры CV, отчётов
 ```

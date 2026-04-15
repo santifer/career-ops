@@ -1,4 +1,4 @@
-# Contributing to Career-Ops
+﻿# Contributing to Career-Ops
 
 Thanks for your interest in contributing! Career-Ops is built with Claude Code, and you can use it for development too.
 
@@ -58,8 +58,8 @@ PRs without a corresponding issue may be closed if they don't align with the pro
 ```bash
 # Scripts
 npm run doctor                # Setup validation
-node verify-pipeline.mjs     # Health check
-node cv-sync-check.mjs        # Config check
+node scripts/verify-pipeline.mjs     # Health check
+node scripts/cv-sync-check.mjs        # Config check
 
 # Dashboard
 cd dashboard && go build -o career-dashboard .

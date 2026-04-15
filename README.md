@@ -1,6 +1,6 @@
 # Career-Ops
 
-[English](README.md) | [Español](README.es.md) | [Português (Brasil)](README.pt-BR.md) | [한국어](README.ko-KR.md) | [日本語](README.ja.md) | [Русский](README.ru.md) | [繁體中文](README.zh-TW.md)
+[English](README.md) | [Español](docs/i18n/README.es.md) | [Português (Brasil)](docs/i18n/README.pt-BR.md) | [한국어](docs/i18n/README.ko-KR.md) | [日本語](docs/i18n/README.ja.md) | [Русский](docs/i18n/README.ru.md) | [繁體中文](docs/i18n/README.zh-TW.md)
 
 <p align="center">
   <a href="https://x.com/santifer"><img src="docs/hero-banner.jpg" alt="Career-Ops — Multi-Agent Job Search System" width="800"></a>
@@ -199,15 +199,22 @@ career-ops/
 ├── templates/
 │   ├── cv-template.html         # ATS-optimized CV template
 │   ├── portals.example.yml      # Scanner config template
-│   └── states.yml               # Canonical statuses
+│   ├── states.yml               # Canonical statuses
+│   └── fonts/                   # Space Grotesk + DM Sans
 ├── batch/
 │   ├── batch-prompt.md          # Self-contained worker prompt
 │   └── batch-runner.sh          # Orchestrator script
+├── scripts/                     # Utility scripts (npm run <name>)
+│   ├── generate-pdf.mjs         # HTML → PDF via Playwright
+│   ├── scan.mjs                 # Zero-token portal scanner
+│   ├── doctor.mjs               # Setup validation
+│   ├── verify-pipeline.mjs      # Pipeline health check
+│   ├── merge-tracker.mjs        # Merge batch TSVs
+│   └── lib/liveness-core.mjs    # Shared liveness logic
 ├── dashboard/                   # Go TUI pipeline viewer
 ├── data/                        # Your tracking data (gitignored)
 ├── reports/                     # Evaluation reports (gitignored)
 ├── output/                      # Generated PDFs (gitignored)
-├── fonts/                       # Space Grotesk + DM Sans
 ├── docs/                        # Setup, customization, architecture
 └── examples/                    # Sample CV, report, proof points
 ```

@@ -1,4 +1,4 @@
-# Mode: patterns -- Rejection Pattern Detector
+﻿# Mode: patterns -- Rejection Pattern Detector
 
 ## Purpose
 
@@ -26,7 +26,7 @@ Exit gracefully.
 Execute:
 
 ```bash
-node analyze-patterns.mjs
+node scripts/analyze-patterns.mjs
 ```
 
 Parse the JSON output. It contains:

@@ -1,4 +1,4 @@
-# career-ops Batch Worker — Evaluación Completa + PDF + Tracker Line
+﻿# career-ops Batch Worker — Evaluación Completa + PDF + Tracker Line
 
 Eres un worker de evaluación de ofertas de empleo for the candidate (read name from config/profile.yml). Recibes una oferta (URL + JD text) y produces:
 
@@ -232,7 +232,7 @@ Donde `{company-slug}` es el nombre de empresa en lowercase, sin espacios, con g
 12. Escribe HTML a `/tmp/cv-candidate-{company-slug}.html`
 13. Ejecuta:
 ```bash
-node generate-pdf.mjs \
+node scripts/generate-pdf.mjs \
   /tmp/cv-candidate-{company-slug}.html \
   output/cv-candidate-{company-slug}-{{DATE}}.pdf \
   --format={letter|a4}
@@ -249,7 +249,7 @@ node generate-pdf.mjs \
 
 **Diseño:**
 - Fonts: Space Grotesk (headings, 600-700) + DM Sans (body, 400-500)
-- Fonts self-hosted: `fonts/`
+- Fonts self-hosted: `templates/fonts/`
 - Header: Space Grotesk 24px bold + gradiente cyan→purple 2px + contacto
 - Section headers: Space Grotesk 13px uppercase, color cyan `hsl(187,74%,32%)`
 - Body: DM Sans 11px, line-height 1.5
