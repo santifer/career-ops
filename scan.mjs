@@ -20,7 +20,7 @@
 
 import { readFileSync, writeFileSync, appendFileSync, existsSync } from 'fs';
 import yaml from 'js-yaml';
-import { normalizeJob, resolveSource } from './scan-sources.mjs';
+import { SOURCES, normalizeJob, resolveSource } from './scan-sources.mjs';
 const parseYaml = yaml.load;
 
 // ── Config ──────────────────────────────────────────────────────────
@@ -180,7 +180,17 @@ async function main() {
     console.error('Error: --type requires a value (e.g. --type ats-api)');
     process.exit(1);
   }
-  const filterTypes = rawTypeValue ? [rawTypeValue.trim().toLowerCase()] : null;
+  const normalizedType = rawTypeValue ? rawTypeValue.trim().toLowerCase() : null;
+  if (normalizedType) {
+    const supportedTypes = new Set(SOURCES.map(s => s.type));
+    if (!supportedTypes.has(normalizedType)) {
+      console.error(
+        `Error: unsupported --type "${normalizedType}". Supported values: ${[...supportedTypes].join(', ')}`
+      );
+      process.exit(1);
+    }
+  }
+  const filterTypes = normalizedType ? [normalizedType] : null;
 
   // 1. Read portals.yml
   if (!existsSync(PORTALS_PATH)) {
@@ -220,11 +230,14 @@ async function main() {
     const { source, url } = company._resolved;
     try {
       const json = await source.fetch(url);
-      const jobs = source.parse(json, company.name).map(normalizeJob);
+      const jobs = source
+        .parse(json, company.name)
+        .map(normalizeJob)
+        .map(job => ({ ...job, company: job.company || company.name }));
       totalFound += jobs.length;
 
       for (const job of jobs) {
-        if (!job.url || !job.title) continue;
+        if (!job.url || !job.title || !job.company) continue;
         if (!titleFilter(job.title)) {
           totalFiltered++;
           continue;
