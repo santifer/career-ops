@@ -427,6 +427,7 @@ export default class LinkedInScanner {
   }
 
   async #extractDetailFromPanel(page) {
+    // Try to expand the description — some jobs are short or already expanded
     const hasMore = await page.evaluate(({ xpath }) => {
       const result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
       const moreSpan = result.singleNodeValue;
@@ -434,9 +435,7 @@ export default class LinkedInScanner {
       return false;
     }, { xpath: SELECTORS.xpathMoreButton });
 
-    if (!hasMore) return { title: '', company: '', applicationUrl: '', jdText: '', url: '' };
-
-    await sleep(500);
+    if (hasMore) await sleep(500);
 
     return page.evaluate(({ sel, noiseLabels, minLen }) => {
       function xpathAll(expression) {
