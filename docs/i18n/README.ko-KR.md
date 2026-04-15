@@ -196,7 +196,8 @@ career-ops/
 ├── templates/
 │   ├── cv-template.html         # ATS 최적화 이력서 템플릿
 │   ├── portals.example.yml      # 스캐너 설정 템플릿
-│   └── states.yml               # 정규 상태값
+│   ├── states.yml               # 정규 상태값
+│   └── fonts/                   # Space Grotesk + DM Sans
 ├── batch/
 │   ├── batch-prompt.md          # 독립형 워커 프롬프트(Self-contained)
 │   └── batch-runner.sh          # 오케스트레이터 스크립트
@@ -204,11 +205,6 @@ career-ops/
 ├── data/                        # 트래킹 데이터 (gitignored)
 ├── reports/                     # 평가 리포트 (gitignored)
 ├── output/                      # 생성된 PDF (gitignored)
-├── templates/
-│   ├── cv-template.html         # ATS 최적화 CV 템플릿
-│   ├── portals.example.yml      # 스캐너 설정 템플릿
-│   ├── states.yml               # 정규 상태값
-│   └── fonts/                   # Space Grotesk + DM Sans
 ├── docs/                        # 설정, 커스터마이즈, 아키텍처
 └── examples/                    # 예시 이력서, 리포트, 성과
 ```
