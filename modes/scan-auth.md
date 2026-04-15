@@ -10,7 +10,7 @@ The user must have logged in at least once for the target portal:
 ```bash
 node scan-auth.mjs --login <portal>
 ```
-If the scanner reports "Not logged in", tell the user to run the above command first.
+If the scanner reports "Not logged in", tell the user to run the above command **in a separate terminal window** (not via `!` prefix or Bash tool — the login flow opens an interactive browser that requires direct user interaction).
 
 ## Workflow
 
@@ -78,4 +78,4 @@ Errors: N
 
 - If the scanner exits with an error, show the error message to the user
 - If `<portal>-scan-results.json` has entries in `errors`, report them
-- If scanner reports CAPTCHA or login issues, tell the user to run `node scan-auth.mjs --login <portal>` and browse the portal manually to warm the session
+- If scanner reports CAPTCHA or login issues, tell the user to run `node scan-auth.mjs --login <portal>` **in a separate terminal window** and browse the portal manually to warm the session
