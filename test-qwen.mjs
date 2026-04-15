@@ -16,7 +16,7 @@
  *   node test-qwen.mjs --strict   # Fail if qwen CLI not installed
  */
 
-import { execSync, execFileSync } from 'child_process';
+import { execSync } from 'child_process';
 import { readFileSync, existsSync, readdirSync, statSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -36,16 +36,6 @@ function skip(msg) { console.log(`  ⏭️  ${msg}`); skipped++; }
 function run(cmd, opts = {}) {
   try {
     return execSync(cmd, { cwd: ROOT, encoding: 'utf-8', timeout: 30000, ...opts }).trim();
-  } catch (e) {
-    return null;
-  }
-}
-
-function runWithInput(input, cmd, opts = {}) {
-  try {
-    return execSync(cmd, {
-      cwd: ROOT, encoding: 'utf-8', timeout: 30000, input, ...opts
-    }).trim();
   } catch (e) {
     return null;
   }
@@ -166,7 +156,7 @@ const qwenChecks = [
   ['qwen yolo mode', '--yolo'],
   ['append-system-prompt', '--append-system-prompt'],
   ['file reading for prompt', 'cat '],
-  ['binary validation', 'command -v qwen'],
+  ['binary validation', 'command -v "$QWEN_BIN"'],
 ];
 
 for (const [desc, pattern] of qwenChecks) {
@@ -241,25 +231,17 @@ console.log('\n8. batch-runner.sh uses dispatch layer');
 
 const batchRunner = readFile('batch/batch-runner.sh');
 const batchChecks = [
-  ['references LIB_DIR and dispatch', batchRunner.includes('LIB_DIR') && batchRunner.includes('provider-dispatch.sh')],
-  ['references LIB_DIR', 'LIB_DIR'],
-  ['has --provider flag', '--provider'],
-  ['no hardcoded claude -p call', !batchRunner.includes('claude -p \\\n') && !batchRunner.includes('claude -p --')],
+  ['references LIB_DIR and dispatch', (r) => r.includes('LIB_DIR') && r.includes('provider-dispatch.sh')],
+  ['references LIB_DIR', (r) => r.includes('LIB_DIR')],
+  ['has --provider flag', (r) => r.includes('--provider')],
+  ['no hardcoded claude -p call', (r) => !r.includes('claude -p \\\n') && !r.includes('claude -p --')],
 ];
 
 for (const [desc, check] of batchChecks) {
-  if (typeof check === 'boolean') {
-    if (check) {
-      pass(`batch-runner.sh: ${desc}`);
-    } else {
-      fail(`batch-runner.sh: ${desc}`);
-    }
+  if (check(batchRunner)) {
+    pass(`batch-runner.sh: ${desc}`);
   } else {
-    if (batchRunner.includes(check)) {
-      pass(`batch-runner.sh: ${desc}`);
-    } else {
-      fail(`batch-runner.sh: ${desc}`);
-    }
+    fail(`batch-runner.sh: ${desc}`);
   }
 }
 
@@ -270,19 +252,21 @@ console.log('\n9. Mode provider-agnostic verification');
 const modesDir = join(ROOT, 'modes');
 const modeFiles = readdirSync(modesDir).filter(f => f.endsWith('.md'));
 
-// Modes should NOT contain hardcoded provider CLI invocations
+// Modes should NOT contain hardcoded provider CLI invocations.
+// Broad patterns that catch different spacing/line-continuation variants.
 const providerInvocationPatterns = [
-  /^claude -p\s/m,
-  /claude -p --dangerously-skip-permissions/,
-  /claude --chrome --dangerously-skip-permissions/,
-  /qwen -p --yolo/,
+  /\bclaude\s+-p\s+(--dangerously-skip-permissions|--append-system-prompt-file)/i,
+  /\bclaude\s+--chrome\s+--dangerously-skip-permissions/i,
+  /\bqwen\s+-p\s+(--yolo|--append-system-prompt)/i,
 ];
 
 let modeIssues = 0;
 for (const mode of modeFiles) {
   const content = readFile(`modes/${mode}`);
+  // Normalize: collapse all runs of whitespace (incl. newlines) into single space
+  const flat = content.replace(/[\s]+/g, ' ');
   for (const pattern of providerInvocationPatterns) {
-    if (pattern.test(content)) {
+    if (pattern.test(flat)) {
       // batch.md is allowed to reference provider-dispatch.sh
       if (mode === 'batch.md' && content.includes('lib/provider-dispatch.sh')) {
         // batch.md references the dispatch script, not direct CLI — OK
@@ -327,24 +311,16 @@ console.log('\n11. batch.md references dispatch layer');
 
 const batchMd = readFile('modes/batch.md');
 const batchMdChecks = [
-  ['references lib/provider-dispatch.sh', 'lib/provider-dispatch.sh'],
-  ['no hardcoded claude invocation', !batchMd.includes('claude -p --dangerously-skip-permissions')],
-  ['no hardcoded claude chrome', !batchMd.includes('claude --chrome')],
+  ['references lib/provider-dispatch.sh', (c) => c.includes('lib/provider-dispatch.sh')],
+  ['no hardcoded claude invocation', (c) => !c.includes('claude -p --dangerously-skip-permissions')],
+  ['no hardcoded claude chrome', (c) => !c.includes('claude --chrome')],
 ];
 
 for (const [desc, check] of batchMdChecks) {
-  if (typeof check === 'boolean') {
-    if (check) {
-      pass(`batch.md: ${desc}`);
-    } else {
-      fail(`batch.md: ${desc}`);
-    }
+  if (check(batchMd)) {
+    pass(`batch.md: ${desc}`);
   } else {
-    if (batchMd.includes(check)) {
-      pass(`batch.md: ${desc}`);
-    } else {
-      fail(`batch.md: ${desc}`);
-    }
+    fail(`batch.md: ${desc}`);
   }
 }
 

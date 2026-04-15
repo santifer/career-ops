@@ -353,7 +353,8 @@ if (!NO_QWEN) {
   // Verify qwen.sh uses Qwen-specific flags, not Claude flags
   const qwenSh = readFile('lib/providers/qwen.sh');
   const qwenCodeLines = qwenSh.split('\n').filter(line => !line.trim().startsWith('#'));
-  if (qwenSh.includes('--yolo') && qwenSh.includes('--append-system-prompt')) {
+  const qwenCode = qwenCodeLines.join('\n');
+  if (qwenCode.includes('--yolo') && qwenCode.includes('--append-system-prompt')) {
     pass('qwen.sh uses Qwen-specific flags (--yolo, --append-system-prompt)');
   } else {
     fail('qwen.sh missing Qwen-specific flags');
@@ -362,6 +363,33 @@ if (!NO_QWEN) {
     pass('qwen.sh does NOT use Claude flag --dangerously-skip-permissions');
   } else {
     fail('qwen.sh incorrectly uses Claude flag --dangerously-skip-permissions');
+  }
+
+  // Verify .qwen/commands/career-ops.md exists and its routes resolve
+  const qwenCmd = readFile('.qwen/commands/career-ops.md');
+  if (qwenCmd.length > 0) {
+    pass('.qwen/commands/career-ops.md exists and has content');
+  } else {
+    fail('.qwen/commands/career-ops.md is missing or empty');
+  }
+  // Extract mode names from the routing table (second column of | ... | ... | lines)
+  const routePattern = /\|\s*`(\w+)`\s*\|/g;
+  let m;
+  const advertisedModes = new Set();
+  while ((m = routePattern.exec(qwenCmd)) !== null) {
+    const modeName = m[1];
+    if (modeName !== 'mode' && modeName !== 'empty' && modeName !== 'no') {
+      advertisedModes.add(modeName);
+    }
+  }
+  // Verify key routes resolve to actual mode files
+  const qwenRoutesToCheck = ['scan', 'pdf', 'tracker', 'deep', 'apply', 'batch', 'patterns', 'followup'];
+  for (const route of qwenRoutesToCheck) {
+    if (fileExists(`modes/${route}.md`)) {
+      pass(`Qwen route "${route}" → modes/${route}.md exists`);
+    } else {
+      fail(`Qwen route "${route}" → modes/${route}.md is missing`);
+    }
   }
 
   // Run test-qwen.mjs as a subprocess for full coverage

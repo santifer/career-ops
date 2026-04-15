@@ -49,8 +49,9 @@ while [[ $# -gt 0 ]]; do
 done
 
 # ── Validate binary ───────────────────────────────────────────────
-if ! command -v claude &>/dev/null; then
-  echo "ERROR: 'claude' CLI not found in PATH. Install Claude Code or set CAREER_OPS_PROVIDER=qwen." >&2
+CLAUDE_BIN="${CAREER_OPS_PROVIDER_CLI_BIN:-claude}"
+if ! command -v "$CLAUDE_BIN" &>/dev/null; then
+  echo "ERROR: '$CLAUDE_BIN' CLI not found in PATH. Install Claude Code or set CAREER_OPS_PROVIDER=qwen." >&2
   exit 127
 fi
 
@@ -83,7 +84,7 @@ CLAUDE_ARGS+=("$PROMPT")
 
 # ── Execute ───────────────────────────────────────────────────────
 if [[ -n "$OUTPUT_FILE" ]]; then
-  claude "${CLAUDE_ARGS[@]}" > "$OUTPUT_FILE" 2>&1
+  "$CLAUDE_BIN" "${CLAUDE_ARGS[@]}" > "$OUTPUT_FILE" 2>&1
 else
-  claude "${CLAUDE_ARGS[@]}"
+  "$CLAUDE_BIN" "${CLAUDE_ARGS[@]}"
 fi

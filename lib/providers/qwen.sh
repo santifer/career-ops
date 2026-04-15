@@ -54,8 +54,9 @@ while [[ $# -gt 0 ]]; do
 done
 
 # ── Validate binary ───────────────────────────────────────────────
-if ! command -v qwen &>/dev/null; then
-  echo "ERROR: 'qwen' CLI not found in PATH. Install Qwen Code or set CAREER_OPS_PROVIDER=claude." >&2
+QWEN_BIN="${CAREER_OPS_PROVIDER_CLI_BIN:-qwen}"
+if ! command -v "$QWEN_BIN" &>/dev/null; then
+  echo "ERROR: '$QWEN_BIN' CLI not found in PATH. Install Qwen Code or set CAREER_OPS_PROVIDER=claude." >&2
   exit 127
 fi
 
@@ -89,7 +90,7 @@ QWEN_ARGS+=("$PROMPT")
 
 # ── Execute ───────────────────────────────────────────────────────
 if [[ -n "$OUTPUT_FILE" ]]; then
-  qwen "${QWEN_ARGS[@]}" > "$OUTPUT_FILE" 2>&1
+  "$QWEN_BIN" "${QWEN_ARGS[@]}" > "$OUTPUT_FILE" 2>&1
 else
-  qwen "${QWEN_ARGS[@]}"
+  "$QWEN_BIN" "${QWEN_ARGS[@]}"
 fi

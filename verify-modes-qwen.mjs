@@ -13,7 +13,7 @@
  *   node verify-modes-qwen.mjs
  */
 
-import { readFileSync, existsSync, readdirSync } from 'fs';
+import { readFileSync, existsSync, readdirSync, writeFileSync, unlinkSync } from 'fs';
 import { execSync } from 'child_process';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -52,6 +52,7 @@ const sharedContent = fileExists('modes/_shared.md') ? readFile('modes/_shared.m
 
 let passed = 0;
 let failed = 0;
+let skipped = 0;
 
 function check(mode, msg) {
   console.log(`  ✅ ${mode}: ${msg}`);
@@ -61,6 +62,10 @@ function fail(mode, msg) {
   console.log(`  ❌ ${mode}: ${msg}`);
   failed++;
 }
+function skipMode(mode, msg) {
+  console.log(`  ⏭️  ${mode}: ${msg}`);
+  skipped++;
+}
 
 // ── Step 1: Verify each mode file exists and has content ─────────
 
@@ -68,15 +73,19 @@ console.log('1. Mode file existence and content');
 
 for (const mode of allModes) {
   const modeFile = `modes/${mode}.md`;
-  if (fileExists(modeFile)) {
+  if (!fileExists(modeFile)) {
+    fail(mode, `file missing`);
+    continue;
+  }
+  try {
     const content = readFile(modeFile);
     if (content.length > 100) {
       check(mode, `exists (${content.length} chars)`);
     } else {
       fail(mode, `file too small (${content.length} chars)`);
     }
-  } else {
-    fail(mode, `file missing`);
+  } catch (e) {
+    fail(mode, `could not read file`);
   }
 }
 
@@ -96,9 +105,23 @@ if (sharedContent.length > 1000) {
 
 console.log('\n3. Provider dispatch routing per mode');
 
+const qwenInstalled = run('command -v qwen 2>/dev/null');
+
 for (const mode of allModes) {
   // Build combined prompt (shared + mode for shared modes, mode-only for standalone)
-  const modeContent = readFile(`modes/${mode}.md`);
+  if (!fileExists(`modes/${mode}.md`)) {
+    fail(mode, `mode file missing, cannot test dispatch`);
+    continue;
+  }
+
+  let modeContent;
+  try {
+    modeContent = readFile(`modes/${mode}.md`);
+  } catch (e) {
+    fail(mode, `could not read mode file`);
+    continue;
+  }
+
   const combinedPrompt = sharedModes.includes(mode)
     ? `${sharedContent}\n\n---\n\n${modeContent}`
     : modeContent;
@@ -106,7 +129,6 @@ for (const mode of allModes) {
   // Write to temp file
   const tmpFile = `/tmp/qwen-mode-test-${mode}.md`;
   try {
-    const { writeFileSync } = await import('fs');
     writeFileSync(tmpFile, combinedPrompt, 'utf-8');
   } catch (e) {
     fail(mode, `could not write temp prompt file`);
@@ -122,11 +144,8 @@ for (const mode of allModes) {
   if (result !== null) {
     check(mode, `dispatches to qwen OK`);
   } else {
-    // If qwen is not installed, this is expected
-    const noQwen = run('command -v qwen 2>/dev/null');
-    if (!noQwen) {
-      console.log(`  ⏭️  ${mode}: skipped (qwen CLI not installed)`);
-      passed++; // count as passed since it's a missing dependency, not a code issue
+    if (!qwenInstalled) {
+      skipMode(mode, `skipped (qwen CLI not installed)`);
     } else {
       fail(mode, `dispatch failed (qwen is installed)`);
     }
@@ -134,7 +153,6 @@ for (const mode of allModes) {
 
   // Cleanup
   try {
-    const { unlinkSync } = await import('fs');
     unlinkSync(tmpFile);
   } catch (e) { /* ignore */ }
 }
@@ -144,6 +162,10 @@ for (const mode of allModes) {
 console.log('\n4. Provider-agnostic mode verification');
 
 for (const mode of allModes) {
+  if (!fileExists(`modes/${mode}.md`)) {
+    fail(mode, `mode file missing`);
+    continue;
+  }
   const content = readFile(`modes/${mode}.md`);
   // Check for hardcoded provider invocations (not just mentions)
   const hasHardcoded = [
@@ -163,26 +185,42 @@ for (const mode of allModes) {
 
 console.log('\n5. Provider resolution correctness');
 
-// Test qwen resolution
-const qwenResolve = run(
-  `CAREER_OPS_PROVIDER=qwen bash -c 'source lib/provider-dispatch.sh 2>/dev/null || true'`,
-  { stdio: ['pipe', 'pipe', 'pipe'] }
-);
-console.log(`  ✅ CAREER_OPS_PROVIDER=qwen → routes to qwen`);
-passed++;
+// Test qwen resolution — dispatch returns 0 on --validate-only when binary exists
+const qwenResolveExit = run('CAREER_OPS_PROVIDER=qwen bash lib/provider-dispatch.sh --validate-only --prompt "test" >/dev/null 2>&1 && echo ok || echo fail');
+if (qwenResolveExit === 'ok') {
+  console.log(`  ✅ CAREER_OPS_PROVIDER=qwen → routes to qwen`);
+  passed++;
+} else {
+  if (!qwenInstalled) {
+    console.log(`  ⏭️  CAREER_OPS_PROVIDER=qwen → skipped (qwen not installed)`);
+    skipped++;
+  } else {
+    console.log(`  ❌ CAREER_OPS_PROVIDER=qwen → failed`);
+    failed++;
+  }
+}
 
 // Test claude resolution
-const claudeResolve = run(
-  `CAREER_OPS_PROVIDER=claude bash -c 'source lib/provider-dispatch.sh 2>/dev/null || true'`,
-  { stdio: ['pipe', 'pipe', 'pipe'] }
-);
-console.log(`  ✅ CAREER_OPS_PROVIDER=claude → routes to claude`);
-passed++;
+const claudeResolveExit = run('CAREER_OPS_PROVIDER=claude bash lib/provider-dispatch.sh --validate-only --prompt "test" >/dev/null 2>&1 && echo ok || echo fail');
+const claudeInstalled = run('command -v claude 2>/dev/null');
+if (claudeResolveExit === 'ok') {
+  console.log(`  ✅ CAREER_OPS_PROVIDER=claude → routes to claude`);
+  passed++;
+} else {
+  if (!claudeInstalled) {
+    console.log(`  ⏭️  CAREER_OPS_PROVIDER=claude → skipped (claude not installed)`);
+    skipped++;
+  } else {
+    console.log(`  ❌ CAREER_OPS_PROVIDER=claude → failed`);
+    failed++;
+  }
+}
 
 // ── SUMMARY ──────────────────────────────────────────────────────
 
+const total = passed + failed + skipped;
 console.log('\n' + '='.repeat(50));
-console.log(`📊 Results: ${passed} passed, ${failed} failed`);
+console.log(`📊 Results: ${passed}/${total} passed, ${failed} failed, ${skipped} skipped`);
 
 if (failed > 0) {
   console.log('🔴 MODE-TO-QWEN VERIFICATION FAILED\n');

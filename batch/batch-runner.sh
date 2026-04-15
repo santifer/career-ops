@@ -398,7 +398,7 @@ process_offer() {
       if (( $(echo "$score < $MIN_SCORE" | bc -l) )); then
         update_state "$id" "$url" "skipped" "$started_at" "$completed_at" "$report_num" "$score" "below-min-score" "$retries"
         echo "    ⏭️  Skipped (score: $score < min-score: $MIN_SCORE)"
-        continue
+        return
       fi
     fi
 
@@ -482,14 +482,21 @@ main() {
 
   echo "=== career-ops batch runner ==="
   echo "Parallel: $PARALLEL | Max retries: $MAX_RETRIES"
-  # Resolve and display active provider
+  # Resolve active provider using the same chain as provider-dispatch.sh:
+  #   --provider flag > CAREER_OPS_PROVIDER env > config/profile.yml > fallback
   local active_provider=""
   if [[ -n "$PROVIDER" ]]; then
     active_provider="$PROVIDER"
   elif [[ -n "${CAREER_OPS_PROVIDER:-}" ]]; then
     active_provider="$CAREER_OPS_PROVIDER"
   else
-    active_provider="claude"  # fallback
+    local profile="$PROJECT_DIR/config/profile.yml"
+    if [[ -f "$profile" ]]; then
+      active_provider=$(grep -E '^[[:space:]]+default:' "$profile" 2>/dev/null | head -1 | sed 's/.*default:[[:space:]]*//' | sed 's/#.*//' | tr -d ' \t' || true)
+    fi
+    if [[ -z "$active_provider" ]]; then
+      active_provider="claude"  # fallback — dispatch.sh uses the same default
+    fi
   fi
   echo "Provider: $active_provider"
   echo "Input: $total_input offers"

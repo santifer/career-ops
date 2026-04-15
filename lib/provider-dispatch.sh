@@ -4,7 +4,7 @@
 # Resolves the active provider (claude | qwen) from:
 #   1. CLI flag: --provider <name>
 #   2. Env var:  CAREER_OPS_PROVIDER=<name>
-#   3. Config:   config/profile.yml  (provider.default)
+#   3. Config:   config/profile.yml  (provider.default, provider.{name}.cli_bin)
 #   4. Fallback: claude
 #
 # Validates the provider binary, then delegates to lib/providers/<name>.sh
@@ -42,6 +42,22 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+# ── YAML value extractor (POSIX-safe, strips inline comments) ────
+# Usage: _yaml_val "$profile" "provider\.default"
+# Reads the value after a dotted YAML key, strips comments and whitespace.
+_yaml_val() {
+  local file="$1" key="$2"
+  local val
+  # Escape dots in key for grep regex
+  local escaped_key
+  escaped_key=$(printf '%s' "$key" | sed 's/\./\\./g')
+  val=$(grep -E "^[[:space:]]+${escaped_key}:" "$file" 2>/dev/null | head -1 \
+    | sed "s/.*${escaped_key}:[[:space:]]*//" \
+    | sed 's/#.*//' \
+    | tr -d ' \t' || true)
+  printf '%s' "$val"
+}
+
 # ── Provider resolution ───────────────────────────────────────────
 resolve_provider() {
   # 1. CLI flag
@@ -56,13 +72,24 @@ resolve_provider() {
     return
   fi
 
-  # 3. config/profile.yml (provider.default key)
+  # 3. config/profile.yml (provider.default, provider.{name}.cli_bin)
   local profile="$PROJECT_DIR/config/profile.yml"
   if [[ -f "$profile" ]]; then
-    local val
-    val=$(grep -E '^\s+default:' "$profile" 2>/dev/null | head -1 | sed 's/.*default:\s*//' | sed 's/#.*//' | tr -d ' \t' || true)
-    if [[ -n "$val" ]]; then
-      printf '%s\n' "$val"
+    local provider_name
+    provider_name=$(_yaml_val "$profile" "provider\.default")
+    if [[ -n "$provider_name" ]]; then
+      # Export cli_bin and model for the provider wrapper to use
+      local cli_bin
+      cli_bin=$(_yaml_val "$profile" "provider\.${provider_name}\.cli_bin")
+      if [[ -n "$cli_bin" ]]; then
+        export CAREER_OPS_PROVIDER_CLI_BIN="$cli_bin"
+      fi
+      local model
+      model=$(_yaml_val "$profile" "provider\.${provider_name}\.model")
+      if [[ -n "$model" ]]; then
+        export CAREER_OPS_PROVIDER_MODEL="$model"
+      fi
+      printf '%s\n' "$provider_name"
       return
     fi
   fi
