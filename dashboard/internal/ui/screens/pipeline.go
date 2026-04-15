@@ -42,6 +42,9 @@ type PipelineUpdateStatusMsg struct {
 	NewStatus     string
 }
 
+// PipelineRefreshMsg requests a full reload of applications from disk.
+type PipelineRefreshMsg struct{}
+
 type reportSummary struct {
 	archetype string
 	tldr      string
@@ -268,6 +271,9 @@ func (m PipelineModel) handleKey(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
 			m.statusPicker = true
 			m.statusCursor = 0
 		}
+
+	case "r":
+		return m, func() tea.Msg { return PipelineRefreshMsg{} }
 
 	case "pgdown", "ctrl+d":
 		if len(m.filtered) > 0 {
@@ -787,6 +793,7 @@ func (m PipelineModel) renderHelp() string {
 		keyStyle.Render("o") + descStyle.Render(" open URL  ") +
 		keyStyle.Render("c") + descStyle.Render(" change  ") +
 		keyStyle.Render("v") + descStyle.Render(" view  ") +
+		keyStyle.Render("r") + descStyle.Render(" refresh  ") +
 		keyStyle.Render("Esc") + descStyle.Render(" quit")
 
 	gap := m.width - lipgloss.Width(keys) - lipgloss.Width(brand) - 2

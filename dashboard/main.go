@@ -51,6 +51,30 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.pipeline.EnrichReport(msg.ReportPath, archetype, tldr, remote, comp)
 		return m, nil
 
+	case screens.PipelineRefreshMsg:
+		apps := data.ParseApplications(m.careerOpsPath)
+		if apps == nil {
+			return m, nil
+		}
+		metrics := data.ComputeMetrics(apps)
+		old := m.pipeline
+		m.pipeline = screens.NewPipelineModel(
+			theme.NewTheme("catppuccin-mocha"),
+			apps, metrics, m.careerOpsPath,
+			old.Width(), old.Height(),
+		)
+		m.pipeline.CopyReportCache(&old)
+		for _, app := range apps {
+			if app.ReportPath == "" {
+				continue
+			}
+			archetype, tldr, remote, comp := data.LoadReportSummary(m.careerOpsPath, app.ReportPath)
+			if archetype != "" || tldr != "" || remote != "" || comp != "" {
+				m.pipeline.EnrichReport(app.ReportPath, archetype, tldr, remote, comp)
+			}
+		}
+		return m, nil
+
 	case screens.PipelineUpdateStatusMsg:
 		err := data.UpdateApplicationStatus(msg.CareerOpsPath, msg.App, msg.NewStatus)
 		if err != nil {
