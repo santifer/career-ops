@@ -13,7 +13,7 @@
 import { chromium } from 'playwright';
 import { resolve, dirname, join } from 'path';
 import { readFile } from 'fs/promises';
-import { mkdirSync } from 'fs';
+import { mkdirSync, existsSync } from 'fs';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -115,6 +115,11 @@ async function generatePDF() {
 
   // Resolve font paths relative to career-ops/templates/fonts/
   const fontsDir = resolve(projectRoot, 'templates', 'fonts');
+  if (!existsSync(fontsDir)) {
+    console.error(`❌ Fonts directory not found: ${fontsDir}`);
+    console.error('   Run: npm run doctor  to diagnose setup issues.');
+    process.exit(1);
+  }
   html = html.replace(
     /url\(['"]?\.\/fonts\//g,
     `url('file://${fontsDir}/`

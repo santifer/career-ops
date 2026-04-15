@@ -1,6 +1,6 @@
 # Scripts
 
-All utility scripts for career-ops. Run via `npm run <name>` from the project root.
+All utility scripts for career-ops. Most are exposed via `npm run <name>` from the project root; others are invoked directly with `node scripts/<file>.mjs`.
 
 ## Runnable Scripts
 
@@ -16,9 +16,9 @@ All utility scripts for career-ops. Run via `npm run <name>` from the project ro
 | `update-system.mjs` | `npm run update` | Check and apply upstream updates |
 | `check-liveness.mjs` | `npm run liveness` | Test if job URLs are still active |
 | `scan.mjs` | `npm run scan` | Zero-token portal scanner |
-| `analyze-patterns.mjs` | — | Rejection pattern analysis (JSON output) |
-| `followup-cadence.mjs` | — | Follow-up cadence calculator (JSON output) |
-| `test-all.mjs` | — | Full test suite (CI) |
+| `analyze-patterns.mjs` | — | Rejection pattern analysis (JSON output) — `node scripts/analyze-patterns.mjs` |
+| `followup-cadence.mjs` | — | Follow-up cadence calculator (JSON output) — `node scripts/followup-cadence.mjs` |
+| `test-all.mjs` | — | Full test suite (CI) — `node scripts/test-all.mjs` |
 
 ## Shared Modules
 
