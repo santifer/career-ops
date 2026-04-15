@@ -26,6 +26,14 @@ const MAX_PHOTO_BYTES = 2 * 1024 * 1024; // 2 MB
  */
 function handlePhotoSubstitution(html, projectRoot) {
   const configPath = resolve(projectRoot, 'config', 'profile.yml');
+  let realProjectRoot;
+  try {
+    realProjectRoot = realpathSync(projectRoot);
+  } catch {
+    console.warn(`⚠️ Project root not accessible: ${projectRoot}`);
+    return html.replace(/\{\{PHOTO_BLOCK\}\}/g, '');
+  }
+
   if (!existsSync(configPath)) {
     return html.replace(/\{\{PHOTO_BLOCK\}\}/g, '');
   }
@@ -52,7 +60,7 @@ function handlePhotoSubstitution(html, projectRoot) {
       console.warn(`⚠️ Photo file not accessible: ${fullPath}`);
       return html.replace(/\{\{PHOTO_BLOCK\}\}/g, '');
     }
-    const relPath = relative(realpathSync(projectRoot), realPath);
+    const relPath = relative(realProjectRoot, realPath);
     if (relPath.startsWith('..') || isAbsolute(relPath)) {
       console.warn(`⚠️ Photo path escapes project root: ${trimmedPhotoPath}`);
       return html.replace(/\{\{PHOTO_BLOCK\}\}/g, '');
