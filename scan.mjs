@@ -175,7 +175,7 @@ function buildLocationFilter(locationFilter) {
   if (allowed.length === 0 && blocked.length === 0) return () => true;
 
   return (location) => {
-    const lower = (location || '').toLowerCase();
+    const lower = typeof location === 'string' ? location.trim().toLowerCase() : '';
     // Empty/unknown location: allow if no positive allowlist, block if allowlist is set
     if (!lower) return allowed.length === 0;
     // Explicit blocklist wins over everything, including remote bypass.
