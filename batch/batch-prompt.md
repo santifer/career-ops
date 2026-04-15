@@ -249,7 +249,7 @@ node generate-pdf.mjs \
 
 **Diseño:**
 - Fonts: Space Grotesk (headings, 600-700) + DM Sans (body, 400-500)
-- Fonts self-hosted: `fonts/`
+- Fonts self-hosted: `templates/fonts/`
 - Header: Space Grotesk 24px bold + gradiente cyan→purple 2px + contacto
 - Section headers: Space Grotesk 13px uppercase, color cyan `hsl(187,74%,32%)`
 - Body: DM Sans 11px, line-height 1.5

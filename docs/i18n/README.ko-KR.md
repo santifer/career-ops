@@ -204,7 +204,11 @@ career-ops/
 ├── data/                        # 트래킹 데이터 (gitignored)
 ├── reports/                     # 평가 리포트 (gitignored)
 ├── output/                      # 생성된 PDF (gitignored)
-├── fonts/                       # Space Grotesk + DM Sans
+├── templates/
+│   ├── cv-template.html         # ATS 최적화 CV 템플릿
+│   ├── portals.example.yml      # 스캐너 설정 템플릿
+│   ├── states.yml               # 정규 상태값
+│   └── fonts/                   # Space Grotesk + DM Sans
 ├── docs/                        # 설정, 커스터마이즈, 아키텍처
 └── examples/                    # 예시 이력서, 리포트, 성과
 ```

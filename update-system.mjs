@@ -58,7 +58,6 @@ const SYSTEM_PATHS = [
   'batch/batch-runner.sh',
   'dashboard/',
   'templates/',
-  'fonts/',
   '.claude/skills/',
   'docs/',
   'VERSION',

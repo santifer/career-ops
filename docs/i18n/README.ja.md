@@ -204,7 +204,11 @@ career-ops/
 ├── data/                        # 追跡データ（gitignore対象）
 ├── reports/                     # 評価レポート（gitignore対象）
 ├── output/                      # 生成PDF（gitignore対象）
-├── fonts/                       # Space Grotesk + DM Sans
+├── templates/
+│   ├── cv-template.html         # ATS最適化CVテンプレート
+│   ├── portals.example.yml      # スキャナー設定テンプレート
+│   ├── states.yml               # 正規ステータス
+│   └── fonts/                   # Space Grotesk + DM Sans
 ├── docs/                        # セットアップ、カスタマイズ、アーキテクチャ
 └── examples/                    # サンプルCV、レポート、実績の裏付け
 ```

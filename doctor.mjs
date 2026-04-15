@@ -105,12 +105,12 @@ function checkPortals() {
 }
 
 function checkFonts() {
-  const fontsDir = join(projectRoot, 'fonts');
+  const fontsDir = join(projectRoot, 'templates', 'fonts');
   if (!existsSync(fontsDir)) {
     return {
       pass: false,
-      label: 'fonts/ directory not found',
-      fix: 'The fonts/ directory is required for PDF generation',
+      label: 'templates/fonts/ directory not found',
+      fix: 'The templates/fonts/ directory is required for PDF generation',
     };
   }
   try {
@@ -118,18 +118,18 @@ function checkFonts() {
     if (files.length === 0) {
       return {
         pass: false,
-        label: 'fonts/ directory is empty',
-        fix: 'The fonts/ directory must contain font files for PDF generation',
+        label: 'templates/fonts/ directory is empty',
+        fix: 'The templates/fonts/ directory must contain font files for PDF generation',
       };
     }
   } catch {
     return {
       pass: false,
-      label: 'fonts/ directory not readable',
-      fix: 'Check permissions on the fonts/ directory',
+      label: 'templates/fonts/ directory not readable',
+      fix: 'Check permissions on the templates/fonts/ directory',
     };
   }
-  return { pass: true, label: 'Fonts directory ready' };
+  return { pass: true, label: 'Fonts directory ready (templates/fonts/)' };
 }
 
 function checkAutoDir(name) {
