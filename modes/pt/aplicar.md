@@ -56,7 +56,7 @@ Identificar TODAS as perguntas visiveis:
 
 Classificar cada pergunta:
 - **Ja respondida no Bloco G** → adaptar a resposta existente
-- **Pergunta nova** → gerar resposta a partir do report + CV relevante em `resumes/`
+- **Pergunta nova** → gerar resposta a partir do report + `cv.md`
 
 ## Passo 5 -- Gerar respostas
 
@@ -104,7 +104,7 @@ Notas:
 Se o candidato confirmar que enviou a candidatura:
 1. Atualizar status em `applications.md` de "Evaluated" para "Applied"
 2. Atualizar Bloco G do report com as respostas finais
-3. Sugerir proximo passo: `/career-ops outreach` para LinkedIn outreach
+3. Sugerir proximo passo: `/career-ops contacto` para LinkedIn outreach
 
 ## Scroll handling
 

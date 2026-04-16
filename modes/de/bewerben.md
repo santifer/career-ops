@@ -56,7 +56,7 @@ ALLE sichtbaren Fragen identifizieren:
 
 Jede Frage klassifizieren:
 - **Bereits in Block G beantwortet** → bestehende Antwort übernehmen
-- **Neue Frage** → Antwort aus dem Report + dem passenden CV aus `resumes/` generieren
+- **Neue Frage** → Antwort aus dem Report + `cv.md` generieren
 
 ## Schritt 5 — Antworten erzeugen
 
@@ -104,7 +104,7 @@ Hinweise:
 Wenn der Kandidat bestätigt, dass die Bewerbung raus ist:
 1. Status in `applications.md` von "Evaluated" auf "Applied" setzen
 2. Block G im Report mit den finalen Antworten aktualisieren
-3. Nächsten Schritt vorschlagen: `/career-ops outreach` für LinkedIn-Outreach an den Personalleiter / Hiring Manager
+3. Nächsten Schritt vorschlagen: `/career-ops contacto` für LinkedIn-Outreach an den Personalleiter / Hiring Manager
 
 ## Scroll-Handling
 

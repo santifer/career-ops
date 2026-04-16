@@ -22,7 +22,7 @@ Tableau avec :
 
 ## Bloc B -- Match avec le CV
 
-Lire le CV le plus pertinent dans `resumes/` (ex : `resumes/ai-engineer-cv.md`). Creer un tableau ou chaque prerequis de l'offre est mappe sur des lignes exactes du CV.
+Lire `cv.md`. Creer un tableau ou chaque prerequis de l'offre est mappe sur des lignes exactes du CV.
 
 **Adapte a l'archetype :**
 - FDE -> prioriser les proof points de livraison rapide et proximite client

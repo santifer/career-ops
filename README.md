@@ -1,6 +1,6 @@
 # Career-Ops
 
-[English](README.md) | [Español](README.es.md)
+[English](README.md) | [Español](README.es.md) | [Português (Brasil)](README.pt-BR.md) | [한국어](README.ko-KR.md) | [日本語](README.ja.md) | [Русский](README.ru.md) | [繁體中文](README.zh-TW.md)
 
 <p align="center">
   <a href="https://x.com/santifer"><img src="docs/hero-banner.jpg" alt="Career-Ops — Multi-Agent Job Search System" width="800"></a>
@@ -26,8 +26,10 @@
   <img src="https://img.shields.io/badge/ES-red?style=flat" alt="ES">
   <img src="https://img.shields.io/badge/DE-grey?style=flat" alt="DE">
   <img src="https://img.shields.io/badge/FR-blue?style=flat" alt="FR">
-  <img src="https://img.shields.io/badge/KO-red?style=flat" alt="KO">
   <img src="https://img.shields.io/badge/PT--BR-green?style=flat" alt="PT-BR">
+  <img src="https://img.shields.io/badge/KO-white?style=flat" alt="KO">
+  <img src="https://img.shields.io/badge/JA-red?style=flat" alt="JA">
+  <img src="https://img.shields.io/badge/ZH--TW-blue?style=flat" alt="ZH-TW">
 </p>
 
 ---
@@ -57,16 +59,6 @@ Career-ops is agentic: Claude Code navigates career pages with Playwright, evalu
 > **Heads up: the first evaluations won't be great.** The system doesn't know you yet. Feed it context -- your CV, your career story, your proof points, your preferences, what you're good at, what you want to avoid. The more you nurture it, the better it gets. Think of it as onboarding a new recruiter: the first week they need to learn about you, then they become invaluable.
 
 Built by someone who used it to evaluate 740+ job offers, generate 100+ tailored CVs, and land a Head of Applied AI role. [Read the full case study](https://santifer.io/career-ops-system).
-
-## Contributor Documentation
-
-If you are trying to understand the repository rather than just run it, start with:
-
-- [docs/README.md](docs/README.md)
-- [docs/FILE_MAP.md](docs/FILE_MAP.md)
-- [modes/README.md](modes/README.md)
-
-Then use [DATA_CONTRACT.md](DATA_CONTRACT.md) to decide whether a change belongs in the user layer or the system layer.
 
 ## Features
 
@@ -106,7 +98,7 @@ claude   # Open Claude Code in this directory
 
 # Then ask Claude to adapt the system to you:
 # "Change the archetypes to backend engineering roles"
-# "Switch to the Spanish/German/French/Portuguese prompts"
+# "Translate the modes to English"
 # "Add these 5 companies to portals.yml"
 # "Update my profile with this CV I'm pasting"
 
@@ -125,23 +117,19 @@ Career-ops is a single slash command with multiple modes:
 ```
 /career-ops                → Show all available commands
 /career-ops {paste a JD}   → Full auto-pipeline (evaluate + PDF + tracker)
-/career-ops offer          → Evaluate a single job offer
-/career-ops compare        → Compare and rank multiple offers
 /career-ops scan           → Scan portals for new offers
 /career-ops pdf            → Generate ATS-optimized CV
 /career-ops batch          → Batch evaluate multiple offers
 /career-ops tracker        → View application status
 /career-ops apply          → Fill application forms with AI
 /career-ops pipeline       → Process pending URLs
-/career-ops outreach       → LinkedIn outreach message
+/career-ops contacto       → LinkedIn outreach message
 /career-ops deep           → Deep company research
 /career-ops training       → Evaluate a course/cert
 /career-ops project        → Evaluate a portfolio project
 ```
 
 Or just paste a job URL or description directly -- career-ops auto-detects it and runs the full pipeline.
-
-Legacy Spanish aliases still work: `/career-ops oferta`, `/career-ops ofertas`, and `/career-ops contacto`.
 
 ## How It Works
 
@@ -167,7 +155,7 @@ You paste a job URL or description
 
 ## Pre-configured Portals
 
-The scanner comes with **45+ companies** ready to scan and **45+ search queries** across major job boards, including Korean sources. Copy `templates/portals.example.yml` to `portals.yml` and add your own:
+The scanner comes with **45+ companies** ready to scan and **19 search queries** across major job boards. Copy `templates/portals.example.yml` to `portals.yml` and add your own:
 
 **AI Labs:** Anthropic, OpenAI, Mistral, Cohere, LangChain, Pinecone
 **Voice AI:** ElevenLabs, PolyAI, Parloa, Hume AI, Deepgram, Vapi, Bland AI
@@ -178,7 +166,7 @@ The scanner comes with **45+ companies** ready to scan and **45+ search queries*
 **Automation:** n8n, Zapier, Make.com
 **European:** Factorial, Attio, Tinybird, Clarity AI, Travelperk
 
-**Job boards searched:** Ashby, Greenhouse, Lever, Wellfound, Workable, RemoteFront, Wanted, Saramin, JobKorea, Jumpit
+**Job boards searched:** Ashby, Greenhouse, Lever, Wellfound, Workable, RemoteFront
 
 ## Dashboard TUI
 
@@ -201,18 +189,12 @@ career-ops/
 ├── article-digest.md            # Your proof points (optional)
 ├── config/
 │   └── profile.example.yml      # Template for your profile
-├── modes/                       # English default modes + localized folders
-│   ├── _shared.md               # Shared context (system defaults)
-│   ├── offer.md                 # Single evaluation
-│   ├── compare.md               # Compare multiple offers
-│   ├── outreach.md              # LinkedIn outreach
+├── modes/                       # 14 skill modes
+│   ├── _shared.md               # Shared context (customize this)
+│   ├── oferta.md                # Single evaluation
 │   ├── pdf.md                   # PDF generation
 │   ├── scan.md                  # Portal scanner
 │   ├── batch.md                 # Batch processing
-│   ├── esp/                     # Preserved Spanish-language prompts
-│   ├── de/                      # German prompts
-│   ├── fr/                      # French prompts
-│   ├── pt/                      # Portuguese prompts
 │   └── ...
 ├── templates/
 │   ├── cv-template.html         # ATS-optimized CV template
@@ -276,6 +258,14 @@ My portfolio and other open source projects → [santifer.io](https://santifer.i
 4. **No guarantees.** Evaluations are recommendations, not truth. AI models may hallucinate skills or experience. The authors are not liable for employment outcomes, rejected applications, account restrictions, or any other consequences.
 
 See [LEGAL_DISCLAIMER.md](LEGAL_DISCLAIMER.md) for full details. This software is provided under the [MIT License](LICENSE) "as is", without warranty of any kind.
+
+## Contributors
+
+<a href="https://github.com/santifer/career-ops/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=santifer/career-ops" />
+</a>
+
+Got hired using career-ops? [Share your story!](https://github.com/santifer/career-ops/issues/new?template=i-got-hired.yml)
 
 ## License
 

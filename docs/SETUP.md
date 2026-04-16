@@ -41,7 +41,6 @@ Edit `portals.yml`:
 - Update `title_filter.positive` with keywords matching your target roles
 - Add companies you want to track in `tracked_companies`
 - Customize `search_queries` for your preferred job boards
-- If you're targeting Korea, start from the built-in `Wanted`, `Saramin`, `JobKorea`, and `Jumpit` examples
 
 ### 5. Start using
 
