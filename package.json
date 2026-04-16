@@ -14,6 +14,8 @@
     "scan": "node scratch-scan.mjs",
     "offer-list": "node rank-pipeline.mjs",
     "offer-match": "node agentic-tailor.mjs",
+    "ofertas": "node rank-pipeline.mjs",
+    "oferta": "node agentic-tailor.mjs",
     "apply": "node auto-apply.mjs",
     "pdf": "node prepare-pdf.mjs",
     "update": "node update-system.mjs apply",

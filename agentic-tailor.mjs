@@ -17,9 +17,12 @@ const TEMPLATE = 'templates/ats-template.html';
 
 const id = process.argv[2];
 if (!id) {
-  console.error("Usage: node agentic-tailor.mjs <id_from_ofertas>");
+  console.error("Usage: npm run offer-match -- <job_id>");
+  console.error("   or: npm run oferta -- <job_id>");
+  console.error("\nRun 'npm run offer-list' (or 'npm run ofertas') first to see available Job IDs.");
   process.exit(1);
 }
+
 
 // ── UTILITIES ──
 
