@@ -43,88 +43,139 @@ while [[ $# -gt 0 ]]; do
 done
 
 # ── YAML value extractor (POSIX-safe, strips inline comments) ────
-# Usage: _yaml_val "$profile" "provider\.default"
-# Reads the value after a dotted YAML key, strips comments and whitespace.
-# CONTEXT-AWARE: locates the parent top-level key (e.g. "provider:") and
-# searches only within that section (from parent line to the next top-level
-# key) to avoid matching duplicate keys in nested blocks.
+# Usage: _yaml_val "$profile" "provider.default"
+# Reads the value after a dotted YAML key by iteratively descending through
+# parent blocks. For "provider.default.cli_bin", it finds provider:, then
+# default: within that block, then cli_bin: within that sub-block.
 _yaml_val() {
   local file="$1" key="$2"
-  # Escape dots in key for grep regex
-  local escaped_key
-  escaped_key=$(printf '%s' "$key" | sed 's/\./\\./g')
-
-  # Extract the parent section name from the key (everything before the last dot)
-  # e.g. "provider\.default" → "^provider:"
-  local parent_key
-  parent_key=$(printf '%s' "$escaped_key" | sed 's/\\.[^.]*$//')
-  # Build a regex for the parent top-level key (no leading whitespace)
-  local parent_regex="^${parent_key}:"
-
-  # Find the line number of the parent key
-  local parent_line
-  parent_line=$(grep -nE "$parent_regex" "$file" 2>/dev/null | head -1 | cut -d: -f1 || true)
-  if [[ -z "$parent_line" ]]; then
-    printf ''
-    return
-  fi
-
-  # Find the next top-level key (no leading whitespace) after the parent
   local total_lines
   total_lines=$(wc -l < "$file")
-  local search_from=$((parent_line + 1))
-  local next_parent_line
-  next_parent_line=$(sed -n "${search_from},${total_lines}p" "$file" \
-    | grep -nE '^[a-zA-Z]' 2>/dev/null | head -1 | cut -d: -f1 || true)
 
-  local end_line
-  if [[ -n "$next_parent_line" ]]; then
-    end_line=$((parent_line + next_parent_line - 1))
-  else
-    end_line=$total_lines
+  # Split key on dots and iterate through segments
+  local search_start=1
+  local search_end=$total_lines
+  local current_indent=0
+  local segments
+  IFS='.' read -ra segments <<< "$key"
+  local num_segments=${#segments[@]}
+
+  for ((i = 0; i < num_segments; i++)); do
+    local segment="${segments[$i]}"
+    local is_last=$((i == num_segments - 1))
+
+    # Find the segment at the current indentation level
+    local segment_line
+    segment_line=$(awk -v start="$search_start" -v end="$search_end" \
+      -v seg="$segment" -v indent="$current_indent" '
+      NR >= start && NR <= end {
+        line = $0
+        # Count leading spaces
+        match(line, /^[[:space:]]*/)
+        leading_spaces = RLENGTH
+        # Check if indentation matches current level
+        if (leading_spaces == indent) {
+          # Strip leading whitespace and check if line starts with segment:
+          sub(/^[[:space:]]*/, "", line)
+          if (line ~ "^" seg ":") {
+            print NR
+            exit
+          }
+        }
+      }
+    ' "$file" 2>/dev/null || true)
+
+    if [[ -z "$segment_line" ]]; then
+      printf ''
+      return
+    fi
+
+    if [[ "$is_last" == "1" ]]; then
+      # Extract the scalar value from the last segment
+      local val
+      val=$(sed -n "${segment_line}p" "$file" \
+        | sed "s/.*${segment}:[[:space:]]*//" \
+        | sed 's/#.*//' \
+        | tr -d ' \t' || true)
+      printf '%s' "$val"
+      return
+    fi
+
+    # Update search range to the block under this segment
+    search_start=$((segment_line + 1))
+
+    # Find next key at same or lower indentation (end of this block)
+    local next_same_or_higher
+    next_same_or_higher=$(awk -v start="$search_start" -v end="$search_end" \
+      -v indent="$current_indent" '
+      NR >= start && NR <= end {
+        line = $0
+        if (line ~ /^[[:space:]]*$/) next  # skip empty lines
+        if (line ~ /^#/) next  # skip comments
+        match(line, /^[[:space:]]*/)
+        leading_spaces = RLENGTH
+        if (leading_spaces <= indent) {
+          print NR
+          exit
+        }
+      }
+    ' "$file" 2>/dev/null || true)
+
+    if [[ -n "$next_same_or_higher" ]]; then
+      search_end=$((next_same_or_higher - 1))
+    else
+      search_end=$total_lines
+    fi
+
+    # Next segment will be indented deeper (standard YAML: 2 spaces)
+    current_indent=$((current_indent + 2))
+  done
+
+  printf ''
+}
+
+# ── Helper: load provider-specific cli_bin and model from profile.yml ──
+_load_provider_config() {
+  local profile="$1" provider_name="$2"
+  local cli_bin model
+  cli_bin=$(_yaml_val "$profile" "provider\.${provider_name}\.cli_bin")
+  if [[ -n "$cli_bin" ]]; then
+    export CAREER_OPS_PROVIDER_CLI_BIN="$cli_bin"
   fi
-
-  # Search only within the parent section for the child key
-  local val
-  val=$(sed -n "${parent_line},${end_line}p" "$file" \
-    | grep -E "^[[:space:]]+${escaped_key}:" 2>/dev/null | head -1 \
-    | sed "s/.*${escaped_key}:[[:space:]]*//" \
-    | sed 's/#.*//' \
-    | tr -d ' \t' || true)
-  printf '%s' "$val"
+  model=$(_yaml_val "$profile" "provider\.${provider_name}\.model")
+  if [[ -n "$model" ]]; then
+    export CAREER_OPS_PROVIDER_MODEL="$model"
+  fi
 }
 
 # ── Provider resolution ───────────────────────────────────────────
 resolve_provider() {
+  local profile="$PROJECT_DIR/config/profile.yml"
+
   # 1. CLI flag
   if [[ -n "$PROVIDER_OVERRIDE" ]]; then
+    if [[ -f "$profile" ]]; then
+      _load_provider_config "$profile" "$PROVIDER_OVERRIDE"
+    fi
     printf '%s\n' "$PROVIDER_OVERRIDE"
     return
   fi
 
   # 2. Environment variable
   if [[ -n "${CAREER_OPS_PROVIDER:-}" ]]; then
+    if [[ -f "$profile" ]]; then
+      _load_provider_config "$profile" "$CAREER_OPS_PROVIDER"
+    fi
     printf '%s\n' "$CAREER_OPS_PROVIDER"
     return
   fi
 
   # 3. config/profile.yml (provider.default, provider.{name}.cli_bin)
-  local profile="$PROJECT_DIR/config/profile.yml"
   if [[ -f "$profile" ]]; then
     local provider_name
     provider_name=$(_yaml_val "$profile" "provider\.default")
     if [[ -n "$provider_name" ]]; then
-      # Export cli_bin and model for the provider wrapper to use
-      local cli_bin
-      cli_bin=$(_yaml_val "$profile" "provider\.${provider_name}\.cli_bin")
-      if [[ -n "$cli_bin" ]]; then
-        export CAREER_OPS_PROVIDER_CLI_BIN="$cli_bin"
-      fi
-      local model
-      model=$(_yaml_val "$profile" "provider\.${provider_name}\.model")
-      if [[ -n "$model" ]]; then
-        export CAREER_OPS_PROVIDER_MODEL="$model"
-      fi
+      _load_provider_config "$profile" "$provider_name"
       printf '%s\n' "$provider_name"
       return
     fi

@@ -360,11 +360,11 @@ if (!NO_QWEN) {
   let providerHardcoded = 0;
   for (const mode of modeFilesList) {
     const content = readFile(`modes/${mode}`);
-    if (/claude -p\s+--dangerously-skip-permissions\s+\\/.test(content)) {
+    if (/claude\s+-p\s+.*--dangerously-skip-permissions/.test(content)) {
       fail(`modes/${mode} has hardcoded claude -p invocation`);
       providerHardcoded++;
     }
-    if (/qwen -p\s+--yolo\s+\\/.test(content)) {
+    if (/qwen\s+-p\s+.*--yolo/.test(content)) {
       fail(`modes/${mode} has hardcoded qwen -p invocation`);
       providerHardcoded++;
     }
@@ -395,10 +395,10 @@ if (!NO_QWEN) {
     if (qwenCmd.length > 0) {
       pass('.qwen/commands/career-ops.md exists and has content');
     } else {
-      fail('.qwen/commands/career-ops.md is missing or empty');
+      fail("'.qwen/commands/career-ops.md' exists but is empty");
     }
   } else {
-    fail('.qwen/commands/career-ops.md is missing or empty');
+    fail("'.qwen/commands/career-ops.md' is missing");
   }
   // Extract mode names from the routing table (second column of | ... | ... | lines)
   const routePattern = /\|\s*`(\w+)`\s*\|/g;
