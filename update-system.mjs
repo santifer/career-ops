@@ -136,38 +136,47 @@ async function check() {
   }
 
   const local = localVersion();
-  let remote;
-
-  try {
-    const res = await fetch(RAW_VERSION_URL);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    remote = (await res.text()).trim();
-  } catch {
-    console.log(JSON.stringify({ status: 'offline', local }));
-    return;
-  }
-
-  // Fetch release info from GitHub API (used for changelog and as fallback version)
+  let remote = '';
   let releaseVersion = '';
   let changelog = '';
-  try {
-    const res = await fetch(RELEASES_API, {
-      headers: { 'Accept': 'application/vnd.github.v3+json' }
-    });
-    if (res.ok) {
-      const release = await res.json();
+
+  // Fetch both sources in parallel — only fail offline if BOTH are unreachable.
+  const [versionResult, releaseResult] = await Promise.allSettled([
+    fetch(RAW_VERSION_URL),
+    fetch(RELEASES_API, { headers: { 'Accept': 'application/vnd.github.v3+json' } }),
+  ]);
+
+  if (versionResult.status === 'fulfilled' && versionResult.value.ok) {
+    try {
+      remote = (await versionResult.value.text()).trim();
+    } catch {
+      // Body read failed; treat as no VERSION source
+    }
+  }
+
+  if (releaseResult.status === 'fulfilled' && releaseResult.value.ok) {
+    try {
+      const release = await releaseResult.value.json();
       changelog = release.body || '';
       const rawTag = String(release.tag_name || '').trim();
       const match = rawTag.match(/^v?(\d+\.\d+\.\d+)$/i);
       releaseVersion = match ? match[1] : '';
+    } catch {
+      // Body parse failed; treat as no release source
     }
-  } catch {
-    // No release info available, that's OK
+  }
+
+  if (!remote && !releaseVersion) {
+    console.log(JSON.stringify({ status: 'offline', local }));
+    return;
   }
 
   // Use the higher version between VERSION file and GitHub Release
-  // (handles cases where VERSION file is not bumped after a release)
-  if (releaseVersion && compareVersions(releaseVersion, remote) > 0) {
+  // (handles cases where VERSION file is not bumped after a release,
+  // or the raw host is unreachable but the API is).
+  if (!remote) {
+    remote = releaseVersion;
+  } else if (releaseVersion && compareVersions(releaseVersion, remote) > 0) {
     remote = releaseVersion;
   }
 
