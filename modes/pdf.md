@@ -12,7 +12,10 @@ The generated CV MUST always fit on exactly ONE page. No exceptions. To achieve 
 6. **Skills**: Single line per category. Compact.
 7. **Competencies**: Inline comma-separated or pipe-separated keywords. No tags, no grid.
 
-If content overflows 1 page, CUT content — never shrink fonts or margins. Priority for cuts (lowest value first): certifications > older/less-relevant jobs > project descriptions > education details.
+The CV MUST fill the full page — neither overflow nor leave significant whitespace. Target 90–100% page fill.
+
+- **Too long (> 1 page):** CUT content — never shrink fonts or margins. Priority for cuts (lowest value first): certifications > older/less-relevant jobs > project descriptions > education details.
+- **Too short (< ~85% of page):** EXPAND content to fill the page. Priority for additions (highest value first): add a 3rd bullet to top roles > add a 4th project > expand summary to 3-4 lines > restore trimmed certifications > expand education with thesis/honors if relevant. Never pad with filler — every added line must be truthful and relevant.
 
 ## Full pipeline
 
@@ -39,7 +42,7 @@ If content overflows 1 page, CUT content — never shrink fonts or margins. Prio
 16. Write the HTML to `/tmp/cv-{candidate}-{company-slug}.html`
 17. Run: `node generate-pdf.mjs /tmp/cv-{candidate}-{company-slug}.html output/{company-slug}/{position-slug}/cv-{candidate}-{company-slug}-{YYYY-MM-DD}.pdf --format={letter|a4}`
 18. Report the PDF path, Markdown path, page count, and keyword coverage %
-19. **If page count > 1**: go back, trim content, update the `.md` file, re-read it from disk, regenerate PDF. Repeat until 1 page.
+19. **If page count ≠ 1 or page fill < 85%**: go back, expand or trim content (see One-page constraint rules), update the `.md` file, re-read it from disk, regenerate PDF. Repeat until the page is full and within 1 page.
 
 **Output directory convention:** `output/{company-slug}/{position-slug}/` where slugs are lowercase-hyphenated (e.g., `output/openai/senior-ml-engineer/`). Both the `.md` and `.pdf` files live in this folder.
 

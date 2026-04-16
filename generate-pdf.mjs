@@ -141,10 +141,24 @@ async function generatePDF() {
   // Wait for fonts to load
   await page.evaluate(() => document.fonts.ready);
 
+  // Auto-scale to fit exactly 1 page (shrink only, never upscale)
+  const PAGE_HEIGHTS_PX = { a4: 1122.52, letter: 1056 };
+  const MARGIN_PX = 96; // 0.5in top + 0.5in bottom at 96dpi
+  const availableHeight = PAGE_HEIGHTS_PX[format] - MARGIN_PX;
+  const contentHeight = await page.evaluate(() => {
+    const el = document.querySelector('.page') || document.body;
+    return el.scrollHeight;
+  });
+  const scale = Math.min(1.0, availableHeight / contentHeight);
+  if (scale < 1.0) {
+    console.log(`📐 Auto-scaling to ${(scale * 100).toFixed(1)}% to fit 1 page (content: ${Math.round(contentHeight)}px, available: ${Math.round(availableHeight)}px)`);
+  }
+
   // Generate PDF
   const pdfBuffer = await page.pdf({
     format: format,
     printBackground: true,
+    scale: scale,
     margin: {
       top: '0.5in',
       right: '0.5in',
