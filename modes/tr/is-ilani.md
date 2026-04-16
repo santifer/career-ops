@@ -137,7 +137,10 @@ Değerlendirmenin tamamını `reports/{###}-{sirket-slug}-{YYYY-MM-DD}.md` olara
 ## F) Mülakat Hazırlığı
 (Blok F'nin tam içeriği)
 
-## G) Başvuru Formu Taslak Yanıtları
+## G) İlan Meşruiyeti
+(Blok G'nin tam içeriği)
+
+## H) Başvuru Formu Taslak Yanıtları
 (yalnızca puan >= 4,5 ise — form alanları için taslak yanıtlar)
 
 ---
@@ -150,7 +153,7 @@ Değerlendirmenin tamamını `reports/{###}-{sirket-slug}-{YYYY-MM-DD}.md` olara
 
 **Yeni** kayıt için `data/applications.md`'yi doğrudan düzenleme. Bunun yerine `batch/tracker-additions/{num}-{sirket-slug}.tsv` dosyasına tek satır TSV yaz (8 veya 9 sekme ile ayrılmış sütun):
 
-```
+```tsv
 {num}\t{date}\t{company}\t{role}\t{status}\t{score}\t{pdf_emoji}\t[{num}](reports/{num}-{slug}-{date}.md)\t{note}
 ```
 

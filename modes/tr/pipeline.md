@@ -36,7 +36,7 @@
 ## URL'den İlan İçeriği Çekme
 
 1. **Playwright (tercih edilen):** `browser_navigate` + `browser_snapshot` — tüm SPA'larla çalışır.
-2. **WebFetch (yedek):** Statik sayfalar veya Playwright yoksa.
+2. **WebFetch (yedek):** Playwright mevcut değilse (toplu/headless mod). Bu durumda rapor başlığına `**Doğrulama:** doğrulanmamış (toplu mod)` ekle — kullanıcı daha sonra manuel doğrulayabilir.
 3. **WebSearch (son çare):** İlanı indeksleyen diğer platformlarda ara.
 
 **Özel durumlar:**

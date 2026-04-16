@@ -242,8 +242,8 @@ Türkçe iş ilanlarında ve sözleşme müzakerelerinde, yabancı piyasalarda k
 | WebFetch | Statik sayfalardan ilan içeriği çekme |
 | Playwright | İlan doğrulama (browser_navigate + browser_snapshot). **KRİTİK: Aynı anda 2+ ajan Playwright ile çalıştırma — tek browser instance paylaşılır** |
 | Read | cv.md, _profile.md, article-digest.md, cv-template.html |
-| Write | PDF için geçici HTML, applications.md, rapor .md dosyaları |
-| Edit | Takipçi güncellemeleri |
+| Write | PDF için geçici HTML, rapor .md dosyaları, `batch/tracker-additions/*.tsv` (yeni takipçi girişleri) |
+| Edit | `data/applications.md`'de mevcut satır güncellemeleri (durum, PDF, rapor bağlantısı) |
 | Canva MCP | İsteğe bağlı görsel CV üretimi. Temel tasarımı çoğalt, metni düzenle, PDF olarak dışa aktar. `profile.yml`'de `canva_resume_design_id` gerektirir. |
 | Bash | `node generate-pdf.mjs` |
 
