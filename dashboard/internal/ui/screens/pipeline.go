@@ -48,6 +48,20 @@ type PipelineRefreshMsg struct{}
 // PipelineOpenProgressMsg is emitted when the progress screen should open.
 type PipelineOpenProgressMsg struct{}
 
+// PipelineScanMsg asks the app to kick off `node scan.mjs` in the background.
+type PipelineScanMsg struct{}
+
+// PipelineScanDoneMsg reports a finished scan so the UI can refresh and
+// display a summary. NewCount is parsed from scan.mjs stdout; Err holds any
+// fatal error (e.g. node not installed, portals.yml missing).
+type PipelineScanDoneMsg struct {
+	NewCount int
+	Err      error
+}
+
+// PipelineScanFlashClearMsg clears the post-scan flash message after a delay.
+type PipelineScanFlashClearMsg struct{}
+
 type reportSummary struct {
 	archetype string
 	tldr      string
@@ -111,6 +125,29 @@ type PipelineModel struct {
 	// Status picker sub-state
 	statusPicker bool
 	statusCursor int
+	// Scan button state
+	scanning  bool
+	scanFlash string // transient message shown after a scan completes
+}
+
+// SetScanning toggles the scanning state (called from app-level when scan starts/ends).
+func (m *PipelineModel) SetScanning(v bool) { m.scanning = v }
+
+// SetScanFlash sets a transient post-scan message (e.g., "✓ Found 3 new jobs").
+func (m *PipelineModel) SetScanFlash(msg string) { m.scanFlash = msg }
+
+// scanButtonLabel returns the current button label; bounds can be derived
+// from its rendered width. View and Update must use this same helper so
+// click detection matches what the user sees.
+func (m PipelineModel) scanButtonLabel() string {
+	switch {
+	case m.scanning:
+		return " ⠋ Scanning… "
+	case m.scanFlash != "":
+		return " " + m.scanFlash + " "
+	default:
+		return " 🔎 Scan Jobs (n) "
+	}
 }
 
 // NewPipelineModel creates a new pipeline screen.
@@ -228,6 +265,17 @@ func (m PipelineModel) Update(msg tea.Msg) (PipelineModel, tea.Cmd) {
 			return m.handleStatusPicker(msg)
 		}
 		return m.handleKey(msg)
+	case tea.MouseMsg:
+		if msg.Action == tea.MouseActionPress && msg.Button == tea.MouseButtonLeft {
+			// Button sits on the last visible row at columns [1, 1+width).
+			btnWidth := lipgloss.Width(m.scanButtonLabel())
+			btnRow := m.height - 1
+			if msg.Y == btnRow && msg.X >= 1 && msg.X < 1+btnWidth {
+				if !m.scanning {
+					return m, func() tea.Msg { return PipelineScanMsg{} }
+				}
+			}
+		}
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
@@ -320,6 +368,11 @@ func (m PipelineModel) handleKey(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
 
 	case "r":
 		return m, func() tea.Msg { return PipelineRefreshMsg{} }
+
+	case "n":
+		if !m.scanning {
+			return m, func() tea.Msg { return PipelineScanMsg{} }
+		}
 
 	case "c":
 		if len(m.filtered) > 0 {
@@ -830,6 +883,8 @@ func (m PipelineModel) renderPreview() string {
 	return strings.Join(lines, "\n")
 }
 
+// renderHelp renders the footer including a clickable Scan Jobs button.
+// Button bounds are recomputed on demand from scanButtonLabel() in Update.
 func (m PipelineModel) renderHelp() string {
 	style := lipgloss.NewStyle().
 		Foreground(m.theme.Subtext).
@@ -849,6 +904,19 @@ func (m PipelineModel) renderHelp() string {
 
 	brand := lipgloss.NewStyle().Foreground(m.theme.Overlay).Render("career-ops by santifer.io")
 
+	// Scan Jobs button — always visible, swaps label during scan / flash.
+	btnLabel := m.scanButtonLabel()
+	var btnStyle lipgloss.Style
+	switch {
+	case m.scanning:
+		btnStyle = lipgloss.NewStyle().Foreground(m.theme.Base).Background(m.theme.Yellow).Bold(true)
+	case m.scanFlash != "":
+		btnStyle = lipgloss.NewStyle().Foreground(m.theme.Base).Background(m.theme.Green).Bold(true)
+	default:
+		btnStyle = lipgloss.NewStyle().Foreground(m.theme.Base).Background(m.theme.Blue).Bold(true)
+	}
+	button := btnStyle.Render(btnLabel)
+
 	keys := keyStyle.Render("↑↓/jk") + descStyle.Render(" nav  ") +
 		keyStyle.Render("←→/hl") + descStyle.Render(" tabs  ") +
 		keyStyle.Render("s") + descStyle.Render(" sort  ") +
@@ -860,12 +928,14 @@ func (m PipelineModel) renderHelp() string {
 		keyStyle.Render("p") + descStyle.Render(" progress  ") +
 		keyStyle.Render("Esc") + descStyle.Render(" quit")
 
-	gap := m.width - lipgloss.Width(keys) - lipgloss.Width(brand) - 2
-	if gap < 1 {
-		gap = 1
+	// Layout: [button] [gap] keys [gap] brand
+	btnWidth := lipgloss.Width(button)
+	gap := m.width - btnWidth - lipgloss.Width(keys) - lipgloss.Width(brand) - 4
+	if gap < 2 {
+		gap = 2
 	}
 
-	return style.Render(keys + strings.Repeat(" ", gap) + brand)
+	return style.Render(button + "  " + keys + strings.Repeat(" ", gap) + brand)
 }
 
 func (m PipelineModel) overlayStatusPicker(body string) string {
