@@ -13,6 +13,7 @@ batch/batch-input.tsv
 batch/tracker-additions/**/*.tsv
 !batch/tracker-additions/.gitkeep
 !jds/.gitkeep
+jds/*.pdf
 
 # User config and customization (never auto-updated)
 config/profile.yml
