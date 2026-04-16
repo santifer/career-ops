@@ -83,6 +83,7 @@ func TestRenderAppLineIncludesDateColumn(t *testing.T) {
 	)
 
 	line := pm.renderAppLine(model.CareerApplication{
+		Number:  42,
 		Date:    "2026-04-13",
 		Company: "Anthropic",
 		Role:    "Forward Deployed Engineer",
@@ -92,5 +93,8 @@ func TestRenderAppLineIncludesDateColumn(t *testing.T) {
 
 	if !strings.Contains(line, "2026-04-13") {
 		t.Fatalf("expected rendered line to include date column, got %q", line)
+	}
+	if !strings.Contains(line, "#42") {
+		t.Fatalf("expected rendered line to include tracker number marker, got %q", line)
 	}
 }
