@@ -148,21 +148,21 @@ Değerlendirmenin tamamını `reports/{###}-{sirket-slug}-{YYYY-MM-DD}.md` olara
 
 ### 2. Takipçiye Kaydet
 
-`data/applications.md`'ye **HER ZAMAN** kayıt ekle:
-- Sıradaki numara
-- Bugünün tarihi
-- Şirket
-- Rol
-- Puan: eşleşme ortalaması (1-5)
-- Durum: `Evaluated`
-- PDF: ❌ (veya auto-pipeline PDF ürettiyse ✅)
-- Rapor: rapor dosyasına göreli bağlantı (örn. `[001](reports/001-sirket-2026-01-01.md)`)
+**Yeni** kayıt için `data/applications.md`'yi doğrudan düzenleme. Bunun yerine `batch/tracker-additions/{num}-{sirket-slug}.tsv` dosyasına tek satır TSV yaz (8 veya 9 sekme ile ayrılmış sütun):
 
-**Takipçi formatı:**
-
-```markdown
-| # | Tarih | Şirket | Rol | Puan | Durum | PDF | Rapor |
 ```
+{num}\t{date}\t{company}\t{role}\t{status}\t{score}\t{pdf_emoji}\t[{num}](reports/{num}-{slug}-{date}.md)\t{note}
+```
+
+- `{num}` = sıradaki numara (tam sayı, `reports/` klasöründen hesapla)
+- `{status}` = `Evaluated`
+- `{score}` = `X.X/5` formatı (örn. `4.2/5`)
+- `{pdf_emoji}` = `✅` veya `❌`
+- `{note}` = kısa not (isteğe bağlı, sütun atlanabilir)
+
+Ardından `node merge-tracker.mjs` çalıştır.
+
+**Mevcut** kayıt için `data/applications.md`'de ilgili satırı doğrudan güncelle (durum, PDF, rapor bağlantısı).
 
 ---
 

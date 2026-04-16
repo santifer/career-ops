@@ -1,14 +1,11 @@
 # Ortak Bağlam -- career-ops (Türkçe)
 
 <!-- ============================================================
-     BU DOSYAYI KENDİNE GÖRE AYARLA
-     ============================================================
-     Bu dosya, career-ops Türkçe modlarının tümü için ortak
-     bağlamı içerir. Kullanmadan önce:
-     1. config/profile.yml dosyasını kendi bilgilerinle doldur
-     2. Proje kök dizininde cv.md oluştur (Markdown formatında CV)
-     3. (İsteğe bağlı) article-digest.md ile kanıt noktaları ekle
-     4. Aşağıdaki [AYARLA] bölümlerini kendi durumuna göre düzenle
+     BU DOSYA OTOMATİK GÜNCELLENEBİLİR. Buraya kişisel veri ekleme.
+     
+     Özelleştirmeler modes/_profile.md dosyasına gider (hiçbir zaman
+     otomatik güncellenmez). Bu dosya sistem kurallarını, puanlama
+     mantığını ve her sürümde gelişen araç yapılandırmasını içerir.
      ============================================================ -->
 
 ## Temel Kaynaklar (Her değerlendirmeden önce MUTLAKA okunacak)
@@ -88,13 +85,6 @@ Sistem tüm hedef rollere eşit özenle yaklaşır. Maaş ve gelişim fırsatı 
 | **AI Forward Deployed Engineer** | Müşteri yönlü, hızlı teslimat, prototipleme | AI çözümlerini müşteride hızlıca hayata geçiren biri |
 | **AI Transformation Lead** | Değişim yönetimi, benimseme, kurumsal enablement | Organizasyonlarda AI dönüşümünü yöneten biri |
 
-<!-- [AYARLA] Yukarıdaki arketipleri kendi hedef rollerinle değiştir. Örnekler:
-     - Senior Backend Engineer / Staff Platform Engineer
-     - Frontend Engineer / React Developer
-     - Full-Stack Engineer
-     - Mobile Developer (React Native / Android / iOS)
-     - Data Engineer
-     Neyi hedeflediğini buraya yaz. -->
 
 ### Arketip Tespiti
 
@@ -115,7 +105,6 @@ Arketipi tespit ettikten sonra kullanıcıya özgü çerçeveleme ve kanıt nokt
 
 > **Somut rakamlar ve metrikler: değerlendirme sırasında `cv.md` ve `article-digest.md` dosyalarından okunacak. Buraya sabit yazma.**
 
-<!-- [AYARLA] Kendi projelerini aşağıdaki arketiplerle eşleştir -->
 
 | Rol ise... | Adayda şunu öne çıkar... | Kanıt kaynakları |
 |-----------|--------------------------|-----------------|
@@ -128,7 +117,6 @@ Arketipi tespit ettikten sonra kullanıcıya özgü çerçeveleme ve kanıt nokt
 
 ### Kariyer Anlatısı (Tüm içeriklerde kullanılacak)
 
-<!-- [AYARLA] Kendi hikayenle değiştir. `config/profile.yml` → narrative.exit_story'den okunur -->
 
 `config/profile.yml` dosyasındaki kariyer hikayesini tüm içeriklere zemin olarak kullan:
 - **PDF özetlerinde:** Geçmişten geleceğe bir köprü kur — "Aynı [becerileri] şimdi [ilan alanına] uyguluyorum."
@@ -138,7 +126,6 @@ Arketipi tespit ettikten sonra kullanıcıya özgü çerçeveleme ve kanıt nokt
 
 ### Temel Güç
 
-<!-- [AYARLA] Senin "imza hamlen" ne? Başkalarının yapamadığı ne var? -->
 
 Profili **"Gerçek dünya kanıtına sahip teknik builder"** olarak çerçevele — role göre uyarla:
 - PM için: "Prototiplerle belirsizliği azaltıp sonra disiplinli biçimde üretime taşıyan builder"
@@ -150,14 +137,11 @@ Profili **"Gerçek dünya kanıtına sahip teknik builder"** olarak çerçevele 
 
 ### Portfolyo / Demo
 
-<!-- [AYARLA] Canlı demo, dashboard veya kamuya açık projen varsa buraya ekle.
-     `config/profile.yml` → narrative.proof_points ve narrative.dashboard'dan okunur -->
 
 Adayın canlı bir demosu veya dashboardu varsa (`profile.yml`'ye bak), ilgili başvurularda erişim bilgisini paylaş.
 
 ### Ücret Araştırması
 
-<!-- [AYARLA] Hedef rollerin için güncel maaş aralıklarını araştır -->
 
 **Genel notlar:**
 - Güncel piyasa verisi için WebSearch kullan (Kariyer.net Maaş Rehberi, Glassdoor TR, LinkedIn Maaş, Secretcv.com)
@@ -191,7 +175,6 @@ Türkçe iş ilanlarında ve sözleşme müzakerelerinde, yabancı piyasalarda k
 
 ### Maaş Müzakere Kalıpları
 
-<!-- [AYARLA] Kendi durumuna göre uyarla -->
 
 **Maaş beklentisi:**
 > "Bu rol için piyasa araştırmama göre [profile.yml'deki ARALIK] aralığını hedefliyorum. Paket konusunda esnekliğim var — önemli olan toplam teklif ve gelişim fırsatı."
@@ -204,7 +187,6 @@ Türkçe iş ilanlarında ve sözleşme müzakerelerinde, yabancı piyasalarda k
 
 ### Lokasyon Politikası
 
-<!-- [AYARLA] `config/profile.yml` → location'dan okunur -->
 
 **Formlarda:**
 - "Ofise gelebilir misiniz?" sorularını `profile.yml`'deki gerçek duruma göre yanıtla
