@@ -88,14 +88,13 @@ QWEN_ARGS=(
 
 if [[ -n "$PROMPT_FILE" ]]; then
   # Guard against very large prompt files (ARG_MAX limit)
-  local prompt_size
   prompt_size=$(wc -c < "$PROMPT_FILE" 2>/dev/null || echo 0)
   if [[ "$prompt_size" -gt 102400 ]]; then
     echo "ERROR: Prompt file exceeds 100KB limit ($prompt_size bytes). Please reduce prompt size." >&2
     exit 1
   fi
-  local_prompt_content=$(cat "$PROMPT_FILE")
-  QWEN_ARGS+=(--append-system-prompt "$local_prompt_content")
+  prompt_content=$(cat "$PROMPT_FILE")
+  QWEN_ARGS+=(--append-system-prompt "$prompt_content")
 fi
 
 QWEN_ARGS+=("$PROMPT")

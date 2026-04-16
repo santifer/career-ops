@@ -138,11 +138,11 @@ _yaml_val() {
 _load_provider_config() {
   local profile="$1" provider_name="$2"
   local cli_bin model
-  cli_bin=$(_yaml_val "$profile" "provider\.${provider_name}\.cli_bin")
+  cli_bin=$(_yaml_val "$profile" "provider.${provider_name}.cli_bin")
   if [[ -n "$cli_bin" ]]; then
     export CAREER_OPS_PROVIDER_CLI_BIN="$cli_bin"
   fi
-  model=$(_yaml_val "$profile" "provider\.${provider_name}\.model")
+  model=$(_yaml_val "$profile" "provider.${provider_name}.model")
   if [[ -n "$model" ]]; then
     export CAREER_OPS_PROVIDER_MODEL="$model"
   fi

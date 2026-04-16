@@ -360,11 +360,11 @@ if (!NO_QWEN) {
   let providerHardcoded = 0;
   for (const mode of modeFilesList) {
     const content = readFile(`modes/${mode}`);
-    if (/claude\s+-p\s+.*--dangerously-skip-permissions/.test(content)) {
+    if (/\bclaude\b.*--dangerously-skip-permissions/.test(content)) {
       fail(`modes/${mode} has hardcoded claude -p invocation`);
       providerHardcoded++;
     }
-    if (/qwen\s+-p\s+.*--yolo/.test(content)) {
+    if (/\bqwen\b.*--yolo/.test(content)) {
       fail(`modes/${mode} has hardcoded qwen -p invocation`);
       providerHardcoded++;
     }
