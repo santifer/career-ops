@@ -8,10 +8,6 @@ Verarbeitet URLs von Stellenanzeigen, die in `data/pipeline.md` gesammelt wurden
 2. **Für jede offene URL**:
    a. Nächste fortlaufende `REPORT_NUM` berechnen (in `reports/` lesen, höchste Nummer + 1)
    b. **Stellenanzeige extrahieren** mit Playwright (`browser_navigate` + `browser_snapshot`) → WebFetch → WebSearch
-      - **Hindernisprüfung**: Nach `browser_snapshot` auf Cookie-Banner prüfen ("Accept all", "Accept cookies", "Allow all"). Mit `browser_click` schließen. Siehe `modes/browser-session.md` → Hindernisbeseitigung.
-      - **CAPTCHA-Erkennung**: CAPTCHA-Signale ("verify you are human", "recaptcha", "hcaptcha", "I'm not a robot") → als `- [!]` markieren mit Hinweis "CAPTCHA — erfordert manuelle Lösung". Abhängig von `captcha_strategy` in portals.yml (Standard: "stop" gemäß `templates/portals.example.yml`): "stop" → HITL-Pause; "skip" → [!] und weiter.
-      - **Session-Verwaltung**: Für Portale mit `requires_login: true` in portals.yml, Session aus `data/sessions/<portal>.json` laden. Bei Session-Ablauf → [!] markieren.
-      - **Wiederholung bei Fehler**: Bis zu 3 Wiederholungen (2s, 5s, 10s) pro `modes/browser-session.md` → Wiederholungsrichtlinie. Nach 3 Fehlern → Fallback auf WebFetch.
    c. Wenn die URL nicht erreichbar ist → als `- [!]` mit Notiz markieren und weitermachen
    d. **Vollständige Auto-Pipeline ausführen**: A-F-Bewertung → Report .md → PDF (wenn Score >= 3.0) → Tracker
    e. **Von "Offen" nach "Verarbeitet" verschieben**: `- [x] #NNN | URL | Firma | Rolle | Score/5 | PDF ✅/❌`

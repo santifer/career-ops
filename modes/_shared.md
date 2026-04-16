@@ -42,6 +42,34 @@ The evaluation uses 6 blocks (A-F) with a global score of 1-5:
 - 3.5-3.9 → Decent but not ideal, apply only if specific reason
 - Below 3.5 → Recommend against applying (see Ethical Use in CLAUDE.md)
 
+## Posting Legitimacy (Block G)
+
+Block G assesses whether a posting is likely a real, active opening. It does NOT affect the 1-5 global score -- it is a separate qualitative assessment.
+
+**Three tiers:**
+- **High Confidence** -- Real, active opening (most signals positive)
+- **Proceed with Caution** -- Mixed signals, worth noting (some concerns)
+- **Suspicious** -- Multiple ghost indicators, user should investigate first
+
+**Key signals (weighted by reliability):**
+
+| Signal | Source | Reliability | Notes |
+|--------|--------|-------------|-------|
+| Posting age | Page snapshot | High | Under 30d=good, 30-60d=mixed, 60d+=concerning (adjusted for role type) |
+| Apply button active | Page snapshot | High | Direct observable fact |
+| Tech specificity in JD | JD text | Medium | Generic JDs correlate with ghost postings but also with poor writing |
+| Requirements realism | JD text | Medium | Contradictions are a strong signal, vagueness is weaker |
+| Recent layoff news | WebSearch | Medium | Must consider department, timing, and company size |
+| Reposting pattern | scan-history.tsv | Medium | Same role reposted 2+ times in 90 days is concerning |
+| Salary transparency | JD text | Low | Jurisdiction-dependent, many legitimate reasons to omit |
+| Role-company fit | Qualitative | Low | Subjective, use only as supporting signal |
+
+**Ethical framing (MANDATORY):**
+- This helps users prioritize time on real opportunities
+- NEVER present findings as accusations of dishonesty
+- Present signals and let the user decide
+- Always note legitimate explanations for concerning signals
+
 ## Archetype Detection
 
 Classify every offer into one of these types (or hybrid of 2):
@@ -93,28 +121,11 @@ After detecting archetype, read `modes/_profile.md` for the user's specific fram
 | WebSearch | Comp research, trends, company culture, LinkedIn contacts, fallback for JDs |
 | WebFetch | Fallback for extracting JDs from static pages |
 | Playwright | Verify offers (browser_navigate + browser_snapshot). **NEVER 2+ agents with Playwright in parallel.** |
-| browser_click | Click an element by ARIA ref (buttons, links, checkboxes). Use after browser_snapshot to get ref. |
-| browser_fill_form | Fill multiple form fields at once. Provide array of {ref, value} pairs. Re-snapshot after to verify. |
-| browser_type | Type text into a focused input field. Use for single-field entry. |
-| browser_wait_for | Wait for text to appear, element to load, or fixed timeout. Use between actions on dynamic pages. |
 | Read | cv.md, _profile.md, article-digest.md, cv-template.html |
 | Write | Temporary HTML for PDF, applications.md, reports .md |
 | Edit | Update tracker |
 | Canva MCP | Optional visual CV generation. Duplicate base design, edit text, export PDF. Requires `canva_resume_design_id` in profile.yml. |
 | Bash | `node generate-pdf.mjs` |
-
-### HITL Boundaries
-
-**MANDATORY STOP** before any irreversible action. No exceptions.
-
-1. **Submit / Apply / Send** -- Before clicking any button that could submit an application: present a summary of all filled fields and proposed answers. Wait for explicit user confirmation ("go" / "abort"). Do NOT proceed on silence.
-2. **CAPTCHA** -- Signals: "verify you are human", "recaptcha", "hcaptcha", "I'm not a robot". Stop immediately. Notify user with page context. Wait for user to resolve and type "resume".
-3. **2FA** -- Signals: "verification code", "authenticator app", "two-factor". Stop immediately. Notify user. Wait for user to complete and type "resume".
-4. **Session expiry** -- Portal redirects to login or shows "session expired" message. Stop and notify user that re-authentication is required. Log completed steps so flow can resume.
-
-**Resume protocol (all stops):** Agent pauses -> user acts -> user types "resume" / "go" / "done" -> agent re-snapshots current page -> agent continues.
-
-> Full pattern details: `modes/browser-session.md`
 
 ### Time-to-offer priority
 - Working demo + metrics > perfection

@@ -9,9 +9,6 @@ Si el input es una **URL** (no texto de JD pegado), seguir esta estrategia para 
 **Orden de prioridad:**
 
 1. **Playwright (preferido):** La mayoría de portales de empleo (Lever, Ashby, Greenhouse, Workday) son SPAs. Usar `browser_navigate` + `browser_snapshot` para renderizar y leer el JD.
-   - **Obstacle check**: After `browser_snapshot`, check for cookie banners and popup overlays (look for: "Accept all", "Accept cookies", "Close", "×"). Dismiss with `browser_click` before reading JD. Re-snapshot after dismissal. See `modes/browser-session.md` → Obstacle Dismissal.
-   - **CAPTCHA detection**: If CAPTCHA signals found ("verify you are human", "recaptcha", "hcaptcha", "I'm not a robot") → **STOP immediately** and notify user. Wait for user to resolve and type "resume". Do NOT continue until resolved. See `modes/browser-session.md` → CAPTCHA Detection.
-   - **Retry on failure**: If JD extraction fails (empty content, 404, timeout), retry up to 3 times with increasing waits (2s, 5s, 10s). After 3 failures, mark error and skip. See `modes/browser-session.md` → Retry Policy.
 2. **WebFetch (fallback):** Para páginas estáticas (ZipRecruiter, WeLoveProduct, company career pages).
 3. **WebSearch (último recurso):** Buscar título del rol + empresa en portales secundarios que indexan el JD en HTML estático.
 
@@ -19,11 +16,12 @@ Si el input es una **URL** (no texto de JD pegado), seguir esta estrategia para 
 
 **Si el input es texto de JD** (no URL): usar directamente, sin necesidad de fetch.
 
-## Paso 1 — Evaluación A-F
-Ejecutar exactamente igual que el modo `oferta` (leer `modes/oferta.md` para todos los bloques A-F).
+## Paso 1 — Evaluación A-G
+Ejecutar exactamente igual que el modo `oferta` (leer `modes/oferta.md` para todos los bloques A-F + Block G Posting Legitimacy).
 
 ## Paso 2 — Guardar Report .md
 Guardar la evaluación completa en `reports/{###}-{company-slug}-{YYYY-MM-DD}.md` (ver formato en `modes/oferta.md`).
+Include Block G in the saved report. Add `**Legitimacy:** {tier}` to the report header.
 
 ## Paso 3 — Generar PDF
 Ejecutar el pipeline completo de `pdf` (leer `modes/pdf.md`).
@@ -34,7 +32,7 @@ Si el score final es >= 4.5, generar borrador de respuestas para el formulario d
 
 1. **Extraer preguntas del formulario**: Usar Playwright para navegar al formulario y hacer snapshot. Si no se pueden extraer, usar las preguntas genéricas.
 2. **Generar respuestas** siguiendo el tono (ver abajo).
-3. **Guardar en el report** como sección `## G) Draft Application Answers`.
+3. **Guardar en el report** como sección `## H) Draft Application Answers`.
 
 ### Preguntas genéricas (usar si no se pueden extraer del formulario)
 
