@@ -45,13 +45,49 @@ done
 # ── YAML value extractor (POSIX-safe, strips inline comments) ────
 # Usage: _yaml_val "$profile" "provider\.default"
 # Reads the value after a dotted YAML key, strips comments and whitespace.
+# CONTEXT-AWARE: locates the parent top-level key (e.g. "provider:") and
+# searches only within that section (from parent line to the next top-level
+# key) to avoid matching duplicate keys in nested blocks.
 _yaml_val() {
   local file="$1" key="$2"
-  local val
   # Escape dots in key for grep regex
   local escaped_key
   escaped_key=$(printf '%s' "$key" | sed 's/\./\\./g')
-  val=$(grep -E "^[[:space:]]+${escaped_key}:" "$file" 2>/dev/null | head -1 \
+
+  # Extract the parent section name from the key (everything before the last dot)
+  # e.g. "provider\.default" → "^provider:"
+  local parent_key
+  parent_key=$(printf '%s' "$escaped_key" | sed 's/\\.[^.]*$//')
+  # Build a regex for the parent top-level key (no leading whitespace)
+  local parent_regex="^${parent_key}:"
+
+  # Find the line number of the parent key
+  local parent_line
+  parent_line=$(grep -nE "$parent_regex" "$file" 2>/dev/null | head -1 | cut -d: -f1 || true)
+  if [[ -z "$parent_line" ]]; then
+    printf ''
+    return
+  fi
+
+  # Find the next top-level key (no leading whitespace) after the parent
+  local total_lines
+  total_lines=$(wc -l < "$file")
+  local search_from=$((parent_line + 1))
+  local next_parent_line
+  next_parent_line=$(sed -n "${search_from},${total_lines}p" "$file" \
+    | grep -nE '^[a-zA-Z]' 2>/dev/null | head -1 | cut -d: -f1 || true)
+
+  local end_line
+  if [[ -n "$next_parent_line" ]]; then
+    end_line=$((parent_line + next_parent_line - 1))
+  else
+    end_line=$total_lines
+  fi
+
+  # Search only within the parent section for the child key
+  local val
+  val=$(sed -n "${parent_line},${end_line}p" "$file" \
+    | grep -E "^[[:space:]]+${escaped_key}:" 2>/dev/null | head -1 \
     | sed "s/.*${escaped_key}:[[:space:]]*//" \
     | sed 's/#.*//' \
     | tr -d ' \t' || true)
@@ -114,7 +150,7 @@ validate_provider() {
   fi
 
   # Let the provider-specific script validate its own binary
-  "$script" --validate-only "${DISPATCH_ARGS[@]}" 2>&1 || exit $?
+  "$script" --validate-only 2>&1 || exit $?
 }
 
 # ── Dispatch ──────────────────────────────────────────────────────

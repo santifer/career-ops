@@ -389,9 +389,14 @@ if (!NO_QWEN) {
   }
 
   // Verify .qwen/commands/career-ops.md exists and its routes resolve
-  const qwenCmd = readFile('.qwen/commands/career-ops.md');
-  if (qwenCmd.length > 0) {
-    pass('.qwen/commands/career-ops.md exists and has content');
+  let qwenCmd = '';
+  if (fileExists('.qwen/commands/career-ops.md')) {
+    qwenCmd = readFile('.qwen/commands/career-ops.md');
+    if (qwenCmd.length > 0) {
+      pass('.qwen/commands/career-ops.md exists and has content');
+    } else {
+      fail('.qwen/commands/career-ops.md is missing or empty');
+    }
   } else {
     fail('.qwen/commands/career-ops.md is missing or empty');
   }
@@ -417,7 +422,7 @@ if (!NO_QWEN) {
 
   // Run test-qwen.mjs as a subprocess for full coverage
   console.log('\n    Running test-qwen.mjs for full Qwen suite...');
-  const qwenTestResult = run('node test-qwen.mjs', { stdio: ['pipe', 'pipe', 'pipe'] });
+  const qwenTestResult = run('node test-qwen.mjs', [], { stdio: ['pipe', 'pipe', 'pipe'] });
   if (qwenTestResult !== null) {
     pass('test-qwen.mjs completed successfully');
   } else {
