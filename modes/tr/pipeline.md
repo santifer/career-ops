@@ -1,0 +1,61 @@
+# Mod: pipeline — İlan Gelen Kutusu
+
+`data/pipeline.md` dosyasına biriktirilen iş ilanı URL'lerini işler. İstediğin zaman URL ekle, hazır olduğunda `/career-ops pipeline` komutunu çalıştır.
+
+## İş Akışı
+
+1. **Oku** `data/pipeline.md` → "Bekleyenler" bölümündeki `- [ ]` satırlarını bul
+2. **Her bekleyen URL için:**
+   a. Sıradaki rapor numarasını hesapla (`reports/` klasörüne bak, en büyük numara + 1)
+   b. **İlan içeriğini çek:** Playwright (browser_navigate + browser_snapshot) → WebFetch → WebSearch
+   c. URL erişilemiyorsa → `- [!]` olarak işaretle, not ekle ve bir sonrakine geç
+   d. **Tam pipeline'ı çalıştır:** A-G değerlendirmesi → Rapor (.md) → PDF (puan ≥ 3,0 ise) → Takipçi
+   e. **"Bekleyenler"den "İşlenenler"e taşı:** `- [x] #NNN | URL | Şirket | Rol | Puan/5 | PDF ✅/❌`
+3. **3 veya daha fazla URL varsa** paralel ajan başlat (Agent aracı, `run_in_background`) — hızı artırır
+4. **Tamamlanınca** özet tabloyu göster:
+
+```
+| # | Şirket | Rol | Puan | PDF | Önerilen eylem |
+```
+
+## pipeline.md Formatı
+
+```markdown
+## Bekleyenler
+- [ ] https://kariyer.net/is-ilani/12345
+- [ ] https://boards.greenhouse.io/sirket/jobs/456 | Şirket A.Ş. | Senior Backend Engineer
+- [!] https://ozel.url/ilan — Hata: giriş gerekiyor
+
+## İşlenenler
+- [x] #143 | https://kariyer.net/is-ilani/789 | Acme Teknoloji | Backend Developer | 4.2/5 | PDF ✅
+- [x] #144 | https://boards.greenhouse.io/xyz/jobs/012 | BigCo | Frontend Engineer | 2.1/5 | PDF ❌
+```
+
+> Not: Bölüm başlıkları EN ("Pending"/"Processed"), ES ("Pendientes"/"Procesadas") veya TR ("Bekleyenler"/"İşlenenler") olabilir. Okurken esnek ol; yazarken mevcut dosyanın stilini koru.
+
+## URL'den İlan İçeriği Çekme
+
+1. **Playwright (tercih edilen):** `browser_navigate` + `browser_snapshot` — tüm SPA'larla çalışır.
+2. **WebFetch (yedek):** Statik sayfalar veya Playwright yoksa.
+3. **WebSearch (son çare):** İlanı indeksleyen diğer platformlarda ara.
+
+**Özel durumlar:**
+- **Kariyer.net:** Playwright ile sorunsuz çalışır; giriş gerektirmez.
+- **Yenibiris.com:** Playwright ile çalışır.
+- **LinkedIn:** Giriş gerektirebilir → `[!]` olarak işaretle, adaydan ilan metnini yapıştırmasını iste.
+- **PDF linki:** URL doğrudan bir PDF'e işaret ediyorsa Read aracıyla oku.
+- **`local:` öneki:** Yerel dosyayı oku. Örnek: `local:jds/kariyer-backend.md` → `jds/kariyer-backend.md` oku.
+
+## Rapor Numaralandırma
+
+1. `reports/` klasöründeki tüm dosyaları listele
+2. Dosya adı önekinden numarayı çıkar (örn. `142-trendyol-backend...` → 142)
+3. Yeni numara = bulunan en büyük numara + 1
+
+## Başlamadan Önce
+
+Herhangi bir URL'yi işlemeden önce yapılandırma kontrolü çalıştır:
+```bash
+node cv-sync-check.mjs
+```
+Uyarı varsa adayı bilgilendirmeden devam etme.
