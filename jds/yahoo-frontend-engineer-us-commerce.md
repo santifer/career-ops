@@ -1,3 +1,13 @@
+---
+company: Yahoo
+role: Frontend Engineer US Commerce
+url: https://ouryahoo.wd5.myworkdayjobs.com/en-US/careers/job/Taiwan/Frontend-Engineer--US-Commerce-_JR0026939
+created: 2026-04-14
+evaluated: 2026-04-16
+score: 3.6/5
+status: pending
+notes: 薪資 band 待確認（底線 NTD 2M）；recruiter 電話中確認
+---
 latest update: 2026/04/14
 https://ouryahoo.wd5.myworkdayjobs.com/en-US/careers/job/Taiwan/Frontend-Engineer--US-Commerce-_JR0026939?source=LinkedIn
 

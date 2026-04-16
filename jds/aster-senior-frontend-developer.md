@@ -1,3 +1,13 @@
+---
+company: Aster (Pioneer Services)
+role: Senior Frontend Developer
+url: https://jobs.lever.co/pioneer-services/813a03b6-10a0-4b67-b2a2-fd95cfa74851
+created: 2026-04-10
+evaluated:
+score:
+status: pending
+notes:
+---
 latest update: 2026/04/10
 https://jobs.lever.co/pioneer-services/813a03b6-10a0-4b67-b2a2-fd95cfa74851
 

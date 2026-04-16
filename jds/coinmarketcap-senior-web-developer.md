@@ -1,3 +1,13 @@
+---
+company: CoinMarketCap
+role: Senior Web Developer
+url: https://www.linkedin.com/jobs/view/4245568201
+created: 2026-04-10
+evaluated:
+score:
+status: pending
+notes:
+---
 latest update: 2026/04/10
 https://www.linkedin.com/jobs/view/4245568201
 

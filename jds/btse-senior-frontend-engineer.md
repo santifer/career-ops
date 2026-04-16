@@ -1,3 +1,13 @@
+---
+company: BTSE
+role: Senior Frontend Engineer
+url: https://www.104.com.tw/job/8mxao
+created: 2026-04-10
+evaluated:
+score:
+status: pending
+notes:
+---
 latest update: 2026/04/10
 https://www.104.com.tw/job/8mxao
 

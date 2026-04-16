@@ -1,3 +1,13 @@
+---
+company: Yahoo
+role: Senior Frontend Engineer
+url: https://www.linkedin.com/jobs/view/4376011745
+created: 2026-04-09
+evaluated:
+score:
+status: pending
+notes:
+---
 latest update: 2026/04/09
 https://www.linkedin.com/jobs/view/4376011745
 
