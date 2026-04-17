@@ -67,15 +67,17 @@ Ask the user for confirmation:
 > "Ready to update. Apply changes? (This can be rolled back with `/career-ops update rollback`)"
 
 If yes:
-1. Run `node update-system.mjs apply`
+1. Capture the current commit as a run-specific pre-update baseline before apply runs, e.g. `PRE_UPDATE_REF=$(git rev-parse HEAD)`. Don't rely on `backup-pre-update-{local}` alone — `update-system.mjs apply` reuses that branch if it already exists, so it may point at an older snapshot.
+2. Run `node update-system.mjs apply`
    - If the command exits with a non-zero code, treat apply as failed. Show the captured output and offer:
      > "⚠️ Update apply failed. Want me to show the full error, or try `/career-ops update rollback`?"
    - Stop the flow here if apply failed — do not run doctor or reconciliation on a partially-applied update.
-2. Run `node doctor.mjs` to validate the installation
+3. Run `node doctor.mjs` to validate the installation
    - If the command exits with a non-zero code, treat validation as failed. Show the captured output and offer:
      > "⚠️ Validation failed after update. Want me to show the full error, or roll back with `/career-ops update rollback`?"
-3. If Step 3 flagged archetype/scoring changes, reconcile `modes/_profile.md` against the new `modes/_shared.md`:
-   - Read both the pre-update version (from the backup branch created by `update-system.mjs apply`, e.g. `backup-pre-update-{local}`) and the post-update version of `modes/_shared.md`.
+   - Stop the flow here if validation failed — do not run reconciliation or show the success message.
+4. If Step 3 flagged archetype/scoring changes, reconcile `modes/_profile.md` against the new `modes/_shared.md`:
+   - Read both the pre-update version (`git show $PRE_UPDATE_REF:modes/_shared.md`) and the post-update version of `modes/_shared.md`.
    - Extract the canonical archetype identifiers from each version (archetype headings/definitions, plus any slug/alias fields).
    - Read `modes/_profile.md` and look for tokens that match archetype names (inline text, Markdown links, YAML keys, code spans).
    - Classify each reference:
@@ -84,7 +86,7 @@ If yes:
      - **Removed**: no match at all → offer to delete or replace.
    - When a rename/removal is detected, ask before editing:
      > "Your _profile.md references archetype '{old_name}' which was renamed to '{new_name}'. Want me to update it?"
-4. Show final status:
+5. Show final status:
    > "✅ Updated to v{version}. Run `node doctor.mjs` anytime to verify setup."
 
 If no:
