@@ -68,13 +68,16 @@ Ask the user for confirmation:
 
 If yes:
 1. Run `node update-system.mjs apply`
+   - If the command exits with a non-zero code, treat apply as failed. Show the captured output and offer:
+     > "⚠️ Update apply failed. Want me to show the full error, or try `/career-ops update rollback`?"
+   - Stop the flow here if apply failed — do not run doctor or reconciliation on a partially-applied update.
 2. Run `node doctor.mjs` to validate the installation
    - If the command exits with a non-zero code, treat validation as failed. Show the captured output and offer:
      > "⚠️ Validation failed after update. Want me to show the full error, or roll back with `/career-ops update rollback`?"
 3. If Step 3 flagged archetype/scoring changes, reconcile `modes/_profile.md` against the new `modes/_shared.md`:
    - Read both the pre-update version (from the backup branch created by `update-system.mjs apply`, e.g. `backup-pre-update-{local}`) and the post-update version of `modes/_shared.md`.
    - Extract the canonical archetype identifiers from each version (archetype headings/definitions, plus any slug/alias fields).
-   - Read `modes/_profile.md` and look for tokens that match archetype names (inline text, markdown links, YAML keys, code spans).
+   - Read `modes/_profile.md` and look for tokens that match archetype names (inline text, Markdown links, YAML keys, code spans).
    - Classify each reference:
      - **Unchanged**: exact match in the new `_shared.md` → no action.
      - **Renamed**: no exact match, but a single strong fuzzy match in the new `_shared.md` (e.g. Levenshtein similarity ≥ 0.7) → offer to rename.
