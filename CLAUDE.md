@@ -238,6 +238,16 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 - `article-digest.md` has detailed proof points (optional)
 - **NEVER hardcode metrics** -- read them from these files at evaluation time
 
+### CV Generation -- MANDATORY
+
+**ALWAYS invoke the `/resume-builder` skill (via the Skill tool) before generating or updating any CV.** This applies to:
+- Generating a tailored CV for a job posting
+- Creating a new CV variant
+- Updating an existing CV file
+- Generating a PDF from a CV
+
+Do not skip this step even if the CV content seems straightforward.
+
 ---
 
 ## Ethical Use -- CRITICAL
