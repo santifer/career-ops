@@ -1,0 +1,4 @@
+interface:
+  display_name: "Korean Resume Builder"
+  short_description: "Generate Korean-market resumes and PDFs"
+  default_prompt: "Use $korean-resume-builder to create a Korean-style developer resume and A4 PDF in this career-ops repo."

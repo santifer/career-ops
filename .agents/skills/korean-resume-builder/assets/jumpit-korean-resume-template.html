@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{NAME}} - Korean Resume</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 12mm;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      color: #111;
+      background: #fff;
+      font-family: "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR", "Segoe UI", sans-serif;
+      line-height: 1.45;
+    }
+
+    .page {
+      width: 186mm;
+      min-height: 273mm;
+      margin: 0 auto;
+      page-break-after: always;
+    }
+
+    .page:last-child {
+      page-break-after: auto;
+    }
+
+    .hero {
+      display: flex;
+      justify-content: space-between;
+      gap: 12mm;
+      align-items: flex-start;
+      margin-bottom: 7mm;
+    }
+
+    .identity {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    .name {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      margin-bottom: 4px;
+    }
+
+    .role {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 0;
+    }
+
+    .facts {
+      width: 72mm;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .facts th,
+    .facts td {
+      border-bottom: 1px solid #999;
+      padding: 4px 6px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .facts th {
+      width: 26mm;
+      font-weight: 700;
+      background: #f2f2f2;
+    }
+
+    .section {
+      margin-bottom: 6mm;
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 3mm;
+      border-left: 5px solid #111;
+      padding-left: 8px;
+    }
+
+    .lead {
+      font-size: 12px;
+      margin-bottom: 2.5mm;
+    }
+
+    .about-list {
+      margin: 0;
+      padding-left: 18px;
+      font-size: 12px;
+    }
+
+    .about-list li {
+      margin-bottom: 1.5mm;
+    }
+
+    .total-experience {
+      font-size: 12px;
+      font-weight: 700;
+      color: #c96d16;
+      margin-bottom: 2mm;
+    }
+
+    .grid-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11.5px;
+    }
+
+    .grid-table th,
+    .grid-table td {
+      border: 1px solid #9f9f9f;
+      padding: 6px 8px;
+      vertical-align: top;
+    }
+
+    .grid-table thead th,
+    .grid-table .label-cell {
+      background: #efefef;
+      font-weight: 700;
+    }
+
+    .project-note {
+      font-size: 11px;
+      margin-bottom: 3mm;
+      color: #444;
+    }
+
+    .project-group {
+      margin-bottom: 6mm;
+    }
+
+    .project-group-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 2mm;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .company-intro {
+      font-size: 11.5px;
+      margin-bottom: 2mm;
+    }
+
+    .project-block {
+      margin-bottom: 4mm;
+    }
+
+    .project-title {
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 1.5mm;
+    }
+
+    .muted {
+      color: #666;
+      font-weight: 400;
+    }
+
+    a {
+      color: #111;
+      text-decoration: underline;
+      word-break: break-all;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="hero">
+      <div class="identity">
+        <div class="name">{{NAME}}</div>
+        <div class="role">{{TARGET_ROLE}}</div>
+      </div>
+      <table class="facts">
+        <tbody>
+          <tr><th>Birthday</th><td>{{BIRTHDAY}}</td></tr>
+          <tr><th>Email</th><td>{{EMAIL}}</td></tr>
+          <tr><th>Mobile</th><td>{{MOBILE}}</td></tr>
+          <tr><th>Address</th><td>{{ADDRESS_CITY_DISTRICT}}</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <section class="section">
+      <div class="section-title">소개 / About Me</div>
+      <ul class="about-list">
+        {{ABOUT_BULLETS}}
+      </ul>
+    </section>
+
+    <section class="section">
+      <div class="section-title">기술 스택 / Skill Set</div>
+      <div class="lead">{{SKILLSET_LEAD}}</div>
+      <table class="grid-table">
+        <thead>
+          <tr>
+            <th style="width: 34mm;">구분</th>
+            <th>Skill</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{SKILL_ROWS}}
+        </tbody>
+      </table>
+    </section>
+
+    <section class="section">
+      <div class="section-title">경력 사항 / Work Experience</div>
+      <div class="total-experience">총 {{TOTAL_EXPERIENCE}}</div>
+      <table class="grid-table">
+        <thead>
+          <tr>
+            <th style="width: 34mm;">재직 기간</th>
+            <th style="width: 28mm;">회사명</th>
+            <th style="width: 42mm;">부서/직급</th>
+            <th>담당 업무</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{CAREER_ROWS}}
+        </tbody>
+      </table>
+    </section>
+  </div>
+
+  <div class="page">
+    <section class="section">
+      <div class="section-title">{{PROJECT_SECTION_TITLE}}</div>
+      <div class="project-note">{{PROJECT_SECTION_NOTE}}</div>
+      {{PROJECT_BLOCKS}}
+    </section>
+  </div>
+
+  <!--
+    Experienced project block example:
+
+    <div class="project-group">
+      <div class="project-group-header">
+        <span>1. 2019. 03 ~ 재직중</span>
+        <span>A 회사 / 플랫폼팀 / 백엔드 리드</span>
+      </div>
+      <div class="company-intro">회사소개 : {{COMPANY_INTRO}}</div>
+
+      <div class="project-block">
+        <div class="project-title">A. {{PROJECT_NAME}} <span class="muted">({{PROJECT_PERIOD}})</span></div>
+        <table class="grid-table">
+          <tbody>
+            <tr><th class="label-cell" style="width: 34mm;">사용언어 및 개발환경</th><td>{{STACK}}</td></tr>
+            <tr><th class="label-cell">인력구성 및 기여도</th><td>{{TEAM_AND_CONTRIBUTION}}</td></tr>
+            <tr><th class="label-cell">주요업무 및 상세역할</th><td>{{ROLE_DETAIL_HTML}}</td></tr>
+            <tr><th class="label-cell">성과/결과</th><td>{{OUTCOMES_HTML}}</td></tr>
+            <tr><th class="label-cell">참고자료</th><td>{{REFERENCE_LINKS_HTML}}</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  -->
+
+  <!--
+    Junior or entry-level project block example:
+
+    <div class="project-block">
+      <div class="project-title">{{PROJECT_NAME}}</div>
+      <table class="grid-table">
+        <tbody>
+          <tr><th class="label-cell" style="width: 34mm;">작업 기간</th><td>{{PROJECT_PERIOD}}</td></tr>
+          <tr><th class="label-cell">인력 구성</th><td>{{TEAM}}</td></tr>
+          <tr><th class="label-cell">프로젝트 목적</th><td>{{PROJECT_GOAL}}</td></tr>
+          <tr><th class="label-cell">주요업무 및 상세역할</th><td>{{ROLE_DETAIL_HTML}}</td></tr>
+          <tr><th class="label-cell">사용언어 및 개발환경</th><td>{{STACK}}</td></tr>
+          <tr><th class="label-cell">느낀 점</th><td>{{LESSONS_LEARNED}}</td></tr>
+          <tr><th class="label-cell">참고자료</th><td>{{REFERENCE_LINKS_HTML}}</td></tr>
+        </tbody>
+      </table>
+    </div>
+  -->
+</body>
+</html>
