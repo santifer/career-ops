@@ -185,7 +185,14 @@ async function check() {
   }
 
   if (!remote && !releaseVersion) {
-    console.log(JSON.stringify({ status: 'offline', local }));
+    // Distinguish true network failures from "fetched OK but response was
+    // unparseable" — the latter shouldn't be silenced as offline since the
+    // network is actually fine.
+    const bothNetworkFailed =
+      versionResult.status !== 'fulfilled' &&
+      releaseResult.status !== 'fulfilled';
+    const status = bothNetworkFailed ? 'offline' : 'no-remote-version';
+    console.log(JSON.stringify({ status, local }));
     return;
   }
 
