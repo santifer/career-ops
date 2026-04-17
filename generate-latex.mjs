@@ -20,7 +20,7 @@ import { existsSync, mkdirSync } from 'fs';
 
 const REQUIRED_SECTIONS = [
   '\\\\section{Education}',
-  '\\\\section\\*?\\{Work Experience\\}',
+  '\\\\section{Work Experience}',
   '\\\\section{Personal Projects}',
   '\\\\section{Technical Skills}',
 ];
@@ -103,11 +103,6 @@ async function main() {
     file: basename(absPath),
     path: absPath,
     sizeKB: parseFloat(sizeKB),
-    sections: {
-      education: subheadingCount > 0,
-      experience: resumeItemCount > 0,
-      projects: projectHeadingCount > 0,
-    },
     counts: {
       resumeItems: resumeItemCount,
       subheadings: subheadingCount,
@@ -138,6 +133,7 @@ async function main() {
   try {
     // Run pdflatex twice for cross-references (standard practice)
     const pdflatexArgs = [
+      '-no-shell-escape',
       '-interaction=nonstopmode',
       '-halt-on-error',
       `-output-directory=${texDir}`,
@@ -158,23 +154,6 @@ async function main() {
       timeout: 120_000,
     });
 
-    // Move PDF to target location if different
-    if (resolve(defaultPdf) !== resolve(targetPdf)) {
-      await copyFile(defaultPdf, targetPdf);
-      await rm(defaultPdf).catch(() => {});
-    }
-
-    // Clean up auxiliary files
-    const auxExts = ['.aux', '.log', '.out', '.fls', '.fdb_latexmk', '.synctex.gz'];
-    for (const ext of auxExts) {
-      await rm(join(texDir, `${texBase}${ext}`)).catch(() => {});
-    }
-
-    const pdfStat = await stat(targetPdf);
-    report.pdf = {
-      path: targetPdf,
-      sizeKB: parseFloat((pdfStat.size / 1024).toFixed(1)),
-    };
     report.compiled = true;
   } catch (err) {
     // Try to extract useful error from pdflatex log
@@ -190,6 +169,31 @@ async function main() {
 
     report.compiled = false;
     report.compileError = latexError;
+  }
+
+  // Post-compile: move PDF and clean up (separate from compile errors)
+  if (report.compiled) {
+    try {
+      // Move PDF to target location if different
+      if (resolve(defaultPdf) !== resolve(targetPdf)) {
+        await copyFile(defaultPdf, targetPdf);
+        await rm(defaultPdf).catch(() => {});
+      }
+
+      const pdfStat = await stat(targetPdf);
+      report.pdf = {
+        path: targetPdf,
+        sizeKB: parseFloat((pdfStat.size / 1024).toFixed(1)),
+      };
+    } catch (err) {
+      report.postCompileError = `Failed to finalize PDF: ${err.message}`;
+    }
+
+    // Clean up auxiliary files (best-effort)
+    const auxExts = ['.aux', '.log', '.out', '.fls', '.fdb_latexmk', '.synctex.gz'];
+    for (const ext of auxExts) {
+      await rm(join(texDir, `${texBase}${ext}`)).catch(() => {});
+    }
   }
 
   console.log(JSON.stringify(report, null, 2));

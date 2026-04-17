@@ -30,9 +30,10 @@ The template at `templates/cv-template.tex` uses `{{PLACEHOLDER}}` syntax:
 | `{{NAME}}` | `profile.yml → candidate.full_name` |
 | `{{CONTACT_LINE}}` | Phone / City, State / Visa status — built from profile.yml |
 | `{{EMAIL}}` | `profile.yml → candidate.email` |
-| `{{LINKEDIN_URL}}` | `profile.yml → candidate.linkedin` |
-| `{{LINKEDIN_DISPLAY}}` | `profile.yml → candidate.linkedin` |
-| `{{GITHUB_URL}}` | `profile.yml → candidate.github` |
+| `{{LINKEDIN_URL}}` | Full URL with scheme: `https://linkedin.com/in/...` (from profile.yml) |
+| `{{LINKEDIN_DISPLAY}}` | Display text only: `linkedin.com/in/...` (from profile.yml) |
+| `{{GITHUB_URL}}` | Full URL with scheme: `https://github.com/...` (from profile.yml) |
+| `{{GITHUB_DISPLAY}}` | Display text only: `github.com/...` (from profile.yml) |
 | `{{EDUCATION}}` | LaTeX `\resumeSubheading` blocks from cv.md Education section |
 | `{{EXPERIENCE}}` | LaTeX `\resumeSubheading` + `\resumeItem` blocks — reordered bullets |
 | `{{PROJECTS}}` | LaTeX `\resumeProjectHeading` + `\resumeItem` blocks — top 3-4 selected |
@@ -104,12 +105,17 @@ All text content MUST be escaped for LaTeX before insertion:
 
 **Exception:** Do NOT escape LaTeX commands themselves (`\resumeItem`, `\textbf`, etc.) — only user-supplied text content.
 
+**Exception for URLs:** Do NOT escape text inside `\href{URL}{...}` first arguments. The URL must remain raw (or RFC 3986 percent-encoded). Only escape the *display text* (second argument). For example:
+```latex
+\href{https://example.com/path_with_underscores}{Example\_Display}
+```
+
 ## ATS Rules (same as pdf mode)
 
 - Single-column layout (enforced by template)
 - Standard section headers: Education, Work Experience, Personal Projects, Technical Skills
 - UTF-8, machine-readable via `\pdfgentounicode=1`
-- Keywords distributed: summary area (if added), first bullet of each role, skills section
+- Keywords distributed: first bullet of each role, skills section
 - No images, no graphics, no color in body text
 
 ## Keyword Injection Strategy
