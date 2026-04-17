@@ -8,7 +8,7 @@ Run `node update-system.mjs check` and parse the JSON output.
 
 - If `up-to-date`: Tell the user "career-ops is up to date (v{version})." and stop.
 - If `offline`: Tell the user "Cannot reach GitHub to check for updates. Try again later." and stop.
-- If `dismissed`: Tell the user "Update check was previously dismissed. Run again to re-check." Remove `.update-dismissed` if it exists, then re-run check.
+- If `dismissed`: Tell the user "Update check was previously dismissed. Clearing the dismissal and re-checking now." Remove `.update-dismissed`, then re-run `node update-system.mjs check` and branch on the new status.
 - If `update-available`: Continue to Step 2.
 
 ## Step 2 — Show What Changed
@@ -16,10 +16,15 @@ Run `node update-system.mjs check` and parse the JSON output.
 Show the user what will change. Run:
 
 ```bash
-git fetch https://github.com/santifer/career-ops.git main
+git fetch https://github.com/santifer/career-ops.git main || {
+  echo "Failed to fetch latest changes. Cannot generate an accurate diff preview."
+  exit 1
+}
 ```
 
-Then for each System Layer file category, show a summary:
+If the fetch fails, stop Step 2 and tell the user you couldn't preview the changes — don't proceed with a stale `FETCH_HEAD`.
+
+Then, only if the fetch succeeded, for each System Layer file category show a summary:
 
 ```bash
 git diff HEAD..FETCH_HEAD --stat -- modes/ CLAUDE.md AGENTS.md *.mjs batch/ dashboard/ templates/ docs/ VERSION DATA_CONTRACT.md
@@ -91,8 +96,9 @@ If the user says "rollback" or runs `/career-ops update rollback`:
 
 ## Rules
 
-- NEVER touch User Layer files during update (cv.md, profile.yml, data/, reports/, etc.)
-- The compatibility check in Step 3 only READS user files to check for potential issues — it never modifies them
-- Post-update _profile.md adjustments in Step 4.3 are ONLY done with explicit user confirmation
+- NEVER auto-modify User Layer files during update (cv.md, config/profile.yml, data/, reports/, output/, interview-prep/, article-digest.md, portals.yml)
+- `modes/_profile.md` is User Layer too: the compatibility check in Step 3 reads it strictly read-only
+- Exception: `modes/_profile.md` may be edited **only** in Step 4.3, and **only** after the user explicitly confirms each individual rename/removal. Never batch-edit without per-change consent.
+- User-specific customizations (archetypes, scoring weights, narrative) belong in `modes/_profile.md` or `config/profile.yml`, never in `modes/_shared.md`
 - If anything goes wrong, tell the user to run `node update-system.mjs rollback`
 - Keep the output concise — users don't want walls of text during an update
