@@ -1,7 +1,7 @@
 # Group Current Changes Into Commits
 
 **Date:** 2026-04-17
-**Status:** in_progress
+**Status:** completed
 **Owner:** Codex
 
 ## Background
@@ -54,6 +54,10 @@ Out of scope:
 - 2026-04-17: Read root instructions and Codex setup docs, then inspected current git status.
 - 2026-04-17: Identified three durable categories: execution-plan/docs artifacts, bridge+extension newgrad pipeline work, and the static web dashboard.
 - 2026-04-17: Identified likely runtime residue: `batch/.bridge-prompt-*`, `batch/.report-number-reservations/*`, and `.claude/scheduled_tasks.lock`.
+- 2026-04-17: Committed execution-plan and evaluation artifacts as `docs(exec-plans): add evaluation and execution logs`.
+- 2026-04-17: Committed bridge, extension, config, and supporting script changes as `feat(newgrad): harden bridge evaluation pipeline`.
+- 2026-04-17: Committed static dashboard files as `feat(web): add static career dashboard`.
+- 2026-04-17: Verified post-commit working tree; only excluded runtime residue remains.
 
 ## Key Decisions
 
@@ -67,4 +71,8 @@ Out of scope:
 
 ## Final Outcome
 
-In progress.
+Completed.
+
+- Created 3 category commits for the durable repository changes.
+- Left runtime residue uncommitted: `batch/.bridge-prompt-*`, `batch/.report-number-reservations/*`, and `.claude/scheduled_tasks.lock`.
+- Verification: reviewed `git status --short` and recent commit history after each commit.
