@@ -30,10 +30,10 @@ The template at `templates/cv-template.tex` uses `{{PLACEHOLDER}}` syntax:
 | `{{NAME}}` | `profile.yml → candidate.full_name` |
 | `{{CONTACT_LINE}}` | Phone / City, State / Visa status — built from profile.yml |
 | `{{EMAIL}}` | `profile.yml → candidate.email` |
-| `{{LINKEDIN_URL}}` | Full URL with scheme: `https://linkedin.com/in/...` (from profile.yml) |
-| `{{LINKEDIN_DISPLAY}}` | Display text only: `linkedin.com/in/...` (from profile.yml) |
-| `{{GITHUB_URL}}` | Full URL with scheme: `https://github.com/...` (from profile.yml) |
-| `{{GITHUB_DISPLAY}}` | Display text only: `github.com/...` (from profile.yml) |
+| `{{LINKEDIN_URL}}` | Full URL with scheme for `\href{}`: e.g. `https://linkedin.com/in/curtiscao`. If `profile.yml` stores a bare host+path (no scheme), prepend `https://` before substitution. |
+| `{{LINKEDIN_DISPLAY}}` | Display text only (no scheme): `linkedin.com/in/curtiscao` |
+| `{{GITHUB_URL}}` | Full URL with scheme for `\href{}`: e.g. `https://github.com/Cwcao`. If `profile.yml` stores a bare host+path, prepend `https://`. |
+| `{{GITHUB_DISPLAY}}` | Display text only (no scheme): `github.com/Cwcao` |
 | `{{EDUCATION}}` | LaTeX `\resumeSubheading` blocks from cv.md Education section |
 | `{{EXPERIENCE}}` | LaTeX `\resumeSubheading` + `\resumeItem` blocks — reordered bullets |
 | `{{PROJECTS}}` | LaTeX `\resumeProjectHeading` + `\resumeItem` blocks — top 3-4 selected |
