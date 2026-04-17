@@ -1,0 +1,1800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CAREER-OPS // CONSOLE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+<style>
+  :root {
+    --ink: #0b0b08;
+    --paper: #f5f6f8;
+    --paper-2: #e3e8e6;
+    --paper-3: #ffffff;
+    --rule: #1a1a14;
+    --muted: #64706b;
+    --signal: #e6401c;
+    --signal-soft: #ffe5dc;
+    --amber: #f0bd2d;
+    --green: #287a4d;
+    --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+    --serif: 'Fraunces', 'Times New Roman', serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    background-image:
+      linear-gradient(to right, rgba(11,11,8,0.04) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(11,11,8,0.04) 1px, transparent 1px);
+    background-size: 32px 32px;
+    min-height: 100vh;
+    padding: 24px 32px 64px;
+  }
+
+  ::selection { background: var(--signal); color: var(--paper); }
+
+  a { color: var(--ink); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+  a:hover { color: var(--signal); }
+
+  /* ============ LAYOUT ============ */
+  .shell { max-width: 1440px; margin: 0 auto; }
+
+  .masthead {
+    border-top: 2px solid var(--ink);
+    border-bottom: 1px solid var(--ink);
+    padding: 14px 0 10px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    gap: 20px;
+    margin-bottom: 0;
+  }
+
+  .masthead .brand {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 44px;
+    line-height: 0.95;
+    letter-spacing: 0;
+    font-style: italic;
+  }
+  .masthead .brand::after {
+    content: '●';
+    color: var(--signal);
+    font-style: normal;
+    font-size: 14px;
+    vertical-align: super;
+    margin-left: 6px;
+  }
+
+  .masthead .meta {
+    text-align: right;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0;
+    color: var(--muted);
+  }
+  .masthead .meta strong {
+    display: block;
+    color: var(--ink);
+    font-weight: 700;
+    font-size: 10px;
+    margin-bottom: 2px;
+  }
+
+  .ticker {
+    border-bottom: 1px solid var(--ink);
+    padding: 6px 0;
+    font-size: 10px;
+    letter-spacing: 0;
+    text-transform: uppercase;
+    display: flex;
+    gap: 28px;
+    overflow: hidden;
+    white-space: nowrap;
+    color: var(--muted);
+  }
+  .ticker span strong { color: var(--ink); font-weight: 700; }
+  .ticker .sep { color: var(--signal); }
+
+  /* ============ TABS ============ */
+  nav.tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--ink);
+    margin-bottom: 20px;
+    overflow-x: auto;
+  }
+  nav.tabs button {
+    background: transparent;
+    border: none;
+    border-right: 1px solid var(--ink);
+    padding: 14px 22px 12px;
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0;
+    text-transform: uppercase;
+    font-weight: 500;
+    color: var(--muted);
+    position: relative;
+    transition: color 0.15s ease;
+  }
+  nav.tabs button:hover { color: var(--ink); }
+  nav.tabs button .idx {
+    color: var(--signal);
+    margin-right: 8px;
+    font-weight: 700;
+  }
+  nav.tabs button.active {
+    color: var(--ink);
+    font-weight: 700;
+    background: var(--ink);
+    color: var(--paper);
+  }
+  nav.tabs button.active .idx { color: var(--signal); }
+
+  .pane { display: none; animation: fadeIn 0.25s ease; }
+  .pane.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  /* ============ APPLY NEXT ============ */
+  .apply-shell {
+    display: grid;
+    gap: 16px;
+  }
+  .apply-overview {
+    border: 1px solid var(--ink);
+    background: var(--paper);
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 0;
+  }
+  .apply-overview-copy {
+    padding: 20px 22px;
+    border-right: 1px solid var(--ink);
+  }
+  .apply-overview-copy .kicker {
+    font-size: 10px;
+    text-transform: uppercase;
+    color: var(--signal);
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+  .apply-overview-copy h2 {
+    font-family: var(--serif);
+    font-size: 28px;
+    line-height: 1.1;
+    font-style: italic;
+    margin-bottom: 10px;
+  }
+  .apply-overview-copy p {
+    color: var(--muted);
+    max-width: 58ch;
+  }
+  .apply-stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .apply-stat {
+    padding: 18px 18px 16px;
+    border-left: 1px solid rgba(11,11,8,0.12);
+    border-bottom: 1px solid rgba(11,11,8,0.12);
+  }
+  .apply-stat:nth-child(2n+1) { border-left: none; }
+  .apply-stat:nth-last-child(-n+2) { border-bottom: none; }
+  .apply-stat strong {
+    display: block;
+    font-size: 28px;
+    line-height: 1;
+    color: var(--signal);
+    margin-bottom: 6px;
+  }
+  .apply-stat span {
+    display: block;
+    font-size: 10px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .apply-band {
+    border: 1px solid var(--ink);
+    background: var(--paper);
+  }
+  .apply-band-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 18px 12px;
+    border-bottom: 1px solid var(--ink);
+    background: var(--paper-2);
+  }
+  .apply-band-head h3 {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0;
+  }
+  .apply-band-head p {
+    color: var(--muted);
+    font-size: 11px;
+  }
+  .apply-list {
+    display: grid;
+  }
+  .apply-card {
+    padding: 16px 18px;
+    border-top: 1px solid rgba(11,11,8,0.12);
+    display: grid;
+    gap: 10px;
+  }
+  .apply-card:first-child { border-top: none; }
+  .apply-card.is-local-done {
+    background: var(--paper-2);
+  }
+  .apply-card-head {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    align-items: start;
+  }
+  .apply-card-head .eyebrow {
+    font-size: 10px;
+    text-transform: uppercase;
+    color: var(--signal);
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .apply-card-head h4 {
+    font-family: var(--serif);
+    font-size: 20px;
+    line-height: 1.08;
+    margin-bottom: 4px;
+  }
+  .apply-role {
+    font-size: 13px;
+    line-height: 1.4;
+  }
+  .apply-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    color: var(--muted);
+    font-size: 11px;
+  }
+  .apply-note {
+    color: #343932;
+    line-height: 1.5;
+  }
+  .apply-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .action-btn,
+  .action-link {
+    border: 1px solid var(--ink);
+    background: transparent;
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    text-decoration: none;
+    padding: 7px 10px;
+    cursor: pointer;
+    border-radius: 6px;
+  }
+  .action-btn:hover,
+  .action-link:hover {
+    background: var(--paper-2);
+    color: var(--ink);
+  }
+  .action-btn.primary {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .action-btn.primary:hover {
+    background: var(--signal);
+    border-color: var(--signal);
+  }
+  .action-btn.done {
+    background: var(--green);
+    color: var(--paper);
+    border-color: var(--green);
+  }
+  .apply-empty {
+    padding: 28px 18px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  /* ============ FILTER BAR ============ */
+  .filter-bar {
+    border: 1px solid var(--ink);
+    background: var(--paper);
+    margin-bottom: 16px;
+  }
+
+  /* Primary row: big search + sort + count */
+  .bar-primary {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 0;
+    border-bottom: 1px solid var(--ink);
+    align-items: stretch;
+  }
+  .bar-primary .search-wrap {
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    border-right: 1px solid var(--ink);
+    min-width: 0;
+  }
+  .bar-primary .search-wrap::before {
+    content: '◆';
+    color: var(--signal);
+    font-size: 11px;
+    margin-right: 10px;
+    flex-shrink: 0;
+  }
+  .bar-primary input[type="search"] {
+    font-family: var(--mono);
+    font-size: 14px;
+    padding: 12px 0;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--ink);
+    width: 100%;
+    min-width: 0;
+    letter-spacing: 0;
+  }
+  .bar-primary input[type="search"]::placeholder {
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  .sort-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 14px;
+    border-right: 1px solid var(--ink);
+    background: var(--paper-2);
+  }
+  .sort-wrap label {
+    font-size: 9px;
+    letter-spacing: 0;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .sort-wrap select {
+    font-family: var(--mono);
+    font-size: 12px;
+    background: transparent;
+    border: none;
+    color: var(--ink);
+    outline: none;
+    padding: 10px 18px 10px 0;
+    font-weight: 600;
+    cursor: pointer;
+    appearance: none;
+    background-image: linear-gradient(45deg, transparent 50%, var(--ink) 50%), linear-gradient(135deg, var(--ink) 50%, transparent 50%);
+    background-position: calc(100% - 10px) 55%, calc(100% - 6px) 55%;
+    background-size: 4px 4px, 4px 4px;
+    background-repeat: no-repeat;
+  }
+
+  .count-wrap {
+    display: flex;
+    align-items: center;
+    padding: 0 18px;
+    background: var(--ink);
+    color: var(--paper);
+    font-size: 10px;
+    letter-spacing: 0;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .count-wrap strong {
+    color: var(--signal);
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0;
+    margin-right: 6px;
+  }
+  .count-wrap .total {
+    opacity: 0.55;
+    margin-left: 4px;
+  }
+
+  /* Secondary row: filter cards that wrap */
+  .bar-filters {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(176px, 1fr));
+    gap: 0;
+    align-items: stretch;
+  }
+  .f-cell {
+    padding: 8px 14px;
+    border-right: 1px dashed rgba(11,11,8,0.3);
+    border-bottom: 1px dashed rgba(11,11,8,0.18);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+  .f-cell:last-child { border-right: none; }
+  .f-cell > label {
+    font-size: 9px;
+    letter-spacing: 0;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .f-cell select,
+  .f-cell > input {
+    font-family: var(--mono);
+    font-size: 12px;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(11,11,8,0.25);
+    padding: 2px 0 3px;
+    color: var(--ink);
+    outline: none;
+    min-width: 0;
+    width: 100%;
+  }
+  .f-cell select { padding-right: 18px; cursor: pointer; appearance: none;
+    background-image: linear-gradient(45deg, transparent 50%, var(--ink) 50%), linear-gradient(135deg, var(--ink) 50%, transparent 50%);
+    background-position: calc(100% - 8px) 60%, calc(100% - 4px) 60%;
+    background-size: 4px 4px, 4px 4px;
+    background-repeat: no-repeat;
+  }
+  .f-cell select:focus,
+  .f-cell > input:focus {
+    border-bottom-color: var(--signal);
+    background: var(--signal-soft);
+  }
+
+  .range {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+  }
+  .range input {
+    font-family: var(--mono);
+    font-size: 12px;
+    width: 100%;
+    min-width: 56px;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(11,11,8,0.25);
+    text-align: center;
+    padding: 2px 0 3px;
+    outline: none;
+    color: var(--ink);
+  }
+  .range input:focus { border-bottom-color: var(--signal); background: var(--signal-soft); }
+  .range .dash { color: var(--muted); font-size: 11px; }
+  .range input[type="date"] { width: 118px; text-align: left; font-size: 11px; }
+
+  .toggle-group {
+    display: flex;
+    border: 1px solid var(--ink);
+  }
+  .toggle-group button {
+    background: var(--paper);
+    border: none;
+    border-right: 1px solid var(--ink);
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0;
+    text-transform: uppercase;
+    padding: 3px 9px;
+    cursor: pointer;
+    font-weight: 500;
+  }
+  .toggle-group button:last-child { border-right: none; }
+  .toggle-group button.active { background: var(--ink); color: var(--paper); }
+  .toggle-group button.active[data-v="skip"] { background: var(--signal); }
+  .toggle-group button:hover:not(.active) { background: var(--paper-2); }
+
+  .reset-cell {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 8px 14px;
+    border-left: 1px dashed rgba(11,11,8,0.3);
+    border-bottom: 1px dashed rgba(11,11,8,0.18);
+    min-width: 0;
+  }
+  .reset-btn {
+    background: transparent;
+    border: 1px solid var(--ink);
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    cursor: pointer;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .reset-btn:hover { background: var(--signal); color: var(--paper); border-color: var(--signal); }
+
+  /* ============ TABLES ============ */
+  .table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--ink);
+    background: var(--paper);
+    scrollbar-color: var(--ink) var(--paper-2);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    table-layout: fixed;
+  }
+  thead th {
+    background: var(--ink);
+    color: var(--paper);
+    text-align: left;
+    font-weight: 500;
+    font-size: 10px;
+    letter-spacing: 0;
+    text-transform: uppercase;
+    padding: 10px 10px;
+    border-right: 1px solid rgba(242,237,227,0.15);
+    white-space: nowrap;
+  }
+  thead th:last-child { border-right: none; }
+  tbody tr { border-bottom: 1px solid rgba(11,11,8,0.12); }
+  tbody tr:hover { background: var(--paper-2); }
+  tbody td {
+    padding: 9px 10px;
+    vertical-align: top;
+    border-right: 1px dotted rgba(11,11,8,0.15);
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
+  tbody td:last-child { border-right: none; }
+  tbody tr:last-child { border-bottom: none; }
+
+  /* Tracker column widths */
+  #tracker-table { min-width: 1180px; }
+  #tracker-table col.c-num     { width: 54px; }
+  #tracker-table col.c-date    { width: 108px; }
+  #tracker-table col.c-co      { width: 170px; }
+  #tracker-table col.c-role    { width: 270px; }
+  #tracker-table col.c-score   { width: 86px; }
+  #tracker-table col.c-status  { width: 118px; }
+  #tracker-table col.c-pdf     { width: 58px; }
+  #tracker-table col.c-doss    { width: 94px; }
+  #tracker-table col.c-notes   { width: 222px; }
+
+  /* Scan column widths */
+  #scan-table { min-width: 1040px; }
+  #scan-table col.s-date   { width: 108px; }
+  #scan-table col.s-portal { width: 138px; }
+  #scan-table col.s-co     { width: 190px; }
+  #scan-table col.s-title  { width: 420px; }
+  #scan-table col.s-status { width: 124px; }
+  #scan-table col.s-url    { width: 60px; }
+
+  tbody td.wrap-cell { white-space: normal; line-height: 1.4; }
+  tbody td.num-cell  { font-weight: 700; color: var(--signal); }
+  tbody td.center    { text-align: center; }
+  .role-cell,
+  .title-cell {
+    font-weight: 500;
+  }
+  .notes-cell,
+  .raw-cell {
+    color: #343932;
+    line-height: 1.45;
+  }
+
+  th.sortable { cursor: pointer; user-select: none; transition: background 0.1s ease; }
+  th.sortable:hover { background: #1e1e16; }
+  th.sortable::after { content: ' ◇'; opacity: 0.35; }
+  th.sortable.asc::after { content: ' ▲'; opacity: 1; color: var(--signal); }
+  th.sortable.desc::after { content: ' ▼'; opacity: 1; color: var(--signal); }
+
+  /* ============ SCORES, BADGES ============ */
+  .score {
+    font-weight: 700;
+    font-family: var(--mono);
+    display: inline-block;
+    padding: 2px 8px;
+    border: 1px solid var(--ink);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0;
+  }
+  .score-high { background: var(--ink); color: var(--paper); }
+  .score-mid  { background: var(--amber); color: var(--ink); }
+  .score-low  { background: var(--paper); color: var(--ink); }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    font-size: 10px;
+    letter-spacing: 0;
+    text-transform: uppercase;
+    font-weight: 500;
+    border: 1px solid var(--ink);
+    background: var(--paper);
+  }
+  .badge.done { background: var(--ink); color: var(--paper); }
+  .badge.skip { background: var(--signal); color: var(--paper); border-color: var(--signal); }
+  .badge.pending { background: var(--paper); color: var(--ink); border-style: dashed; }
+  .badge.added { background: var(--green); color: var(--paper); border-color: var(--green); }
+  .badge.promoted { background: var(--ink); color: var(--paper); }
+  .badge.below_threshold { background: var(--paper); color: var(--ink); border-style: dashed; }
+
+  .co { font-family: var(--serif); font-weight: 600; font-size: 13.5px; letter-spacing: 0; }
+
+  /* ============ REPORTS SPLIT ============ */
+  .split {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 0;
+    border: 1px solid var(--ink);
+    background: var(--paper);
+  }
+  .report-list {
+    max-height: 78vh;
+    overflow-y: auto;
+    border-right: 1px solid var(--ink);
+    background: var(--paper-2);
+  }
+  .report-list::-webkit-scrollbar { width: 8px; }
+  .report-list::-webkit-scrollbar-thumb { background: var(--ink); }
+  .report-list::-webkit-scrollbar-track { background: var(--paper-2); }
+
+  .report-item {
+    padding: 14px 16px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(11,11,8,0.15);
+    position: relative;
+    transition: background 0.1s ease;
+  }
+  .report-item:hover { background: var(--paper); }
+  .report-item.active {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .report-item.active::before,
+  .report-item.active::after {
+    content: '';
+    position: absolute;
+    width: 10px; height: 10px;
+    border: 2px solid var(--signal);
+  }
+  .report-item.active::before { top: -2px; left: -2px; border-right: none; border-bottom: none; }
+  .report-item.active::after  { bottom: -2px; right: -2px; border-left: none; border-top: none; }
+
+  .report-item .ri-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 6px;
+    align-items: baseline;
+  }
+  .report-item .num {
+    font-size: 10px;
+    color: var(--signal);
+    font-weight: 700;
+    letter-spacing: 0;
+    flex-shrink: 0;
+  }
+  .report-item.active .num { color: var(--signal); }
+  .report-item .title {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 14.5px;
+    line-height: 1.25;
+    letter-spacing: 0;
+  }
+  .report-item .meta {
+    font-size: 10px;
+    letter-spacing: 0;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+  .report-item.active .meta { color: var(--paper-2); opacity: 0.8; }
+  .report-item .meta .score { font-size: 10px; padding: 1px 6px; letter-spacing: 0; }
+
+  .report-view {
+    padding: 28px 36px;
+    max-height: 78vh;
+    overflow-y: auto;
+    font-family: var(--serif);
+    font-size: 15px;
+    line-height: 1.65;
+  }
+  .report-view::-webkit-scrollbar { width: 8px; }
+  .report-view::-webkit-scrollbar-thumb { background: var(--ink); }
+
+  .report-view h1 {
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 600;
+    font-size: 28px;
+    line-height: 1.15;
+    letter-spacing: 0;
+    margin: 4px 0 18px;
+    padding-bottom: 14px;
+    border-bottom: 2px solid var(--ink);
+  }
+  .report-view h2 {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin: 28px 0 10px;
+    padding-bottom: 4px;
+    border-bottom: 1px dashed var(--ink);
+  }
+  .report-view h3 { font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: 0; margin-top: 18px; }
+  .report-view p { margin-bottom: 12px; }
+  .report-view strong { font-family: var(--mono); font-weight: 700; font-size: 0.88em; }
+  .report-view code {
+    font-family: var(--mono);
+    background: var(--paper-2);
+    padding: 1px 6px;
+    font-size: 0.88em;
+    border: 1px solid rgba(11,11,8,0.2);
+  }
+  .report-view table { margin: 14px 0; border: 1px solid var(--ink); font-size: 12.5px; font-family: var(--mono); }
+  .report-view table th { font-family: var(--mono); font-size: 10px; }
+  .report-view ul, .report-view ol { margin: 10px 0 12px 24px; }
+  .report-view li { margin-bottom: 4px; }
+  .report-view hr { border: none; border-top: 1px solid var(--ink); margin: 24px 0; }
+  .report-view blockquote {
+    border-left: 3px solid var(--signal);
+    padding-left: 16px;
+    margin: 14px 0;
+    font-style: italic;
+    color: var(--muted);
+  }
+
+  .report-view .empty {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 40px 20px;
+    text-align: center;
+  }
+  .report-view .empty::before {
+    content: '◎';
+    display: block;
+    font-size: 40px;
+    color: var(--signal);
+    margin-bottom: 18px;
+    letter-spacing: 0;
+  }
+
+  /* ============ PIPELINE CARDS ============ */
+  .pipe-card {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 14px 18px;
+    padding: 14px 18px;
+    border: 1px solid var(--ink);
+    background: var(--paper);
+    margin-bottom: -1px;
+    align-items: start;
+  }
+  .pipe-card:hover { background: var(--paper-2); }
+  .pipe-card .tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0;
+    font-weight: 700;
+    padding: 4px 10px;
+    background: var(--ink);
+    color: var(--paper);
+    white-space: nowrap;
+    height: fit-content;
+  }
+  .pipe-card.skip .tag { background: var(--signal); }
+  .pipe-card.pending .tag { background: var(--paper); color: var(--ink); border: 1px dashed var(--ink); }
+  .pipe-card .body { font-size: 12px; line-height: 1.5; }
+  .pipe-card .body .url { font-size: 11px; color: var(--muted); word-break: break-all; display: block; margin-top: 4px; }
+  .pipe-card .body .url a { color: var(--muted); }
+  .pipe-card .body .url a:hover { color: var(--signal); }
+
+  /* ============ UTILITIES ============ */
+  .small { font-size: 11px; color: var(--muted); }
+  .url-cell { font-size: 11px; }
+  .truncate { max-width: 420px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
+
+  /* ============ FOOTER ============ */
+  footer.sig {
+    margin-top: 48px;
+    padding-top: 18px;
+    border-top: 2px solid var(--ink);
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    letter-spacing: 0;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  footer.sig .mark {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 16px;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--ink);
+  }
+
+  /* ============ RESPONSIVE ============ */
+  @media (max-width: 980px) {
+    body { padding: 16px; }
+    .masthead { grid-template-columns: 1fr; }
+    .masthead .meta { text-align: left; }
+    .masthead .brand { font-size: 32px; }
+    .apply-overview { grid-template-columns: 1fr; }
+    .apply-overview-copy { border-right: none; border-bottom: 1px solid var(--ink); }
+    .bar-primary { grid-template-columns: 1fr; }
+    .bar-primary .search-wrap,
+    .sort-wrap { border-right: none; border-bottom: 1px solid var(--ink); }
+    .count-wrap { min-height: 38px; }
+    .bar-filters { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+    .reset-cell { justify-content: stretch; }
+    .reset-btn { width: 100%; }
+    .split { grid-template-columns: 1fr; }
+    .report-list { max-height: 40vh; border-right: none; border-bottom: 1px solid var(--ink); }
+    .report-view { padding: 20px; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+<header class="masthead">
+  <div class="brand">Career-Ops <em>Console</em></div>
+  <div class="meta">
+    <strong>FIELD BRIEF // 04.2026</strong>
+    <span id="generated">—</span>
+  </div>
+</header>
+
+<div class="ticker" id="ticker">
+  <span>◉ <strong id="t-ready">0</strong> ready now</span>
+  <span class="sep">╱</span>
+  <span>◉ <strong id="t-reports">0</strong> reports</span>
+  <span class="sep">╱</span>
+  <span>◉ <strong id="t-apps">0</strong> applications</span>
+  <span class="sep">╱</span>
+  <span>◉ <strong id="t-pipeline">0</strong> in pipeline</span>
+  <span class="sep">╱</span>
+  <span>◉ <strong id="t-scan">0</strong> scan hits</span>
+  <span class="sep">╱</span>
+  <span>status · <strong>operational</strong></span>
+</div>
+
+<nav class="tabs">
+  <button data-tab="apply-next" class="active"><span class="idx">01</span>Apply Next</button>
+  <button data-tab="reports"><span class="idx">02</span>Reports</button>
+  <button data-tab="tracker"><span class="idx">03</span>Tracker</button>
+  <button data-tab="pipeline"><span class="idx">04</span>Pipeline</button>
+  <button data-tab="scan"><span class="idx">05</span>Scan Hist.</button>
+</nav>
+
+<section id="tab-apply-next" class="pane active">
+  <div class="apply-shell">
+    <section class="apply-overview">
+      <div class="apply-overview-copy">
+        <div class="kicker">Priority Queue</div>
+        <h2>Start with the strongest fits.</h2>
+        <p>Apply now shows `Evaluated` roles at `4.0/5` and above. Selective apply keeps the next layer visible without mixing it with the rest of the tracker. Local marks stay in this browser.</p>
+      </div>
+      <div class="apply-stats">
+        <div class="apply-stat"><strong id="apply-priority-n">0</strong><span>Apply now</span></div>
+        <div class="apply-stat"><strong id="apply-selective-n">0</strong><span>Selective apply</span></div>
+        <div class="apply-stat"><strong id="apply-localdone-n">0</strong><span>Marked applied</span></div>
+        <div class="apply-stat"><strong id="apply-totalready-n">0</strong><span>Total ready</span></div>
+      </div>
+    </section>
+
+    <section class="apply-band">
+      <div class="apply-band-head">
+        <h3>Apply Now</h3>
+        <p>Highest-priority roles from the current tracker</p>
+      </div>
+      <div class="apply-list" id="apply-priority-list"></div>
+    </section>
+
+    <section class="apply-band">
+      <div class="apply-band-head">
+        <h3>Selective Apply</h3>
+        <p>Strong options that still need judgement before time-heavy tailoring</p>
+      </div>
+      <div class="apply-list" id="apply-selective-list"></div>
+    </section>
+
+    <section class="apply-band">
+      <div class="apply-band-head">
+        <h3>Marked Applied</h3>
+        <p>Local completion marks from this browser</p>
+      </div>
+      <div class="apply-list" id="apply-completed-list"></div>
+    </section>
+  </div>
+</section>
+
+<section id="tab-reports" class="pane">
+  <div class="filter-bar">
+    <div class="bar-primary">
+      <div class="search-wrap">
+        <input id="report-search" type="search" placeholder="search company · arquetipo · dossier number">
+      </div>
+      <div class="sort-wrap">
+        <label>Sort</label>
+        <select id="report-sort">
+          <option value="score-desc">Score · high → low</option>
+          <option value="score-asc">Score · low → high</option>
+          <option value="num-desc" selected>Dossier № · new → old</option>
+          <option value="num-asc">Dossier № · old → new</option>
+          <option value="date-desc">Date · new → old</option>
+          <option value="date-asc">Date · old → new</option>
+        </select>
+      </div>
+      <div class="count-wrap"><strong id="report-count-n">0</strong>/ <span class="total" id="report-count-t">0</span></div>
+    </div>
+    <div class="bar-filters">
+      <div class="f-cell">
+        <label>Legitimacy</label>
+        <select id="report-legit"><option value="">all tiers</option></select>
+      </div>
+      <div class="f-cell">
+        <label>Score range</label>
+        <div class="range">
+          <input id="report-score-min" type="number" step="0.1" min="0" max="5" placeholder="0.0">
+          <span class="dash">—</span>
+          <input id="report-score-max" type="number" step="0.1" min="0" max="5" placeholder="5.0">
+        </div>
+      </div>
+      <div class="f-cell">
+        <label>Date seen</label>
+        <div class="range">
+          <input id="report-date-from" type="date">
+          <span class="dash">—</span>
+          <input id="report-date-to" type="date">
+        </div>
+      </div>
+      <div class="reset-cell"><button class="reset-btn" data-reset="reports">reset</button></div>
+    </div>
+  </div>
+  <div class="split">
+    <div class="report-list" id="report-list"></div>
+    <div class="report-view" id="report-view">
+      <div class="empty">No dossier selected</div>
+    </div>
+  </div>
+</section>
+
+<section id="tab-tracker" class="pane">
+  <div class="filter-bar">
+    <div class="bar-primary">
+      <div class="search-wrap">
+        <input id="tracker-search" type="search" placeholder="search company · role · notes">
+      </div>
+      <div class="sort-wrap">
+        <label>Sort</label>
+        <select id="tracker-sort">
+          <option value="score-desc">Score · high → low</option>
+          <option value="score-asc">Score · low → high</option>
+          <option value="num-desc" selected>№ · new → old</option>
+          <option value="num-asc">№ · old → new</option>
+          <option value="date-desc">Date · new → old</option>
+          <option value="date-asc">Date · old → new</option>
+          <option value="company-asc">Company · A → Z</option>
+          <option value="company-desc">Company · Z → A</option>
+          <option value="role-asc">Role · A → Z</option>
+          <option value="role-desc">Role · Z → A</option>
+          <option value="status-asc">Status · A → Z</option>
+          <option value="status-desc">Status · Z → A</option>
+        </select>
+      </div>
+      <div class="count-wrap"><strong id="tracker-count-n">0</strong>/ <span class="total" id="tracker-count-t">0</span></div>
+    </div>
+    <div class="bar-filters">
+      <div class="f-cell">
+        <label>Company</label>
+        <select id="tracker-company"><option value="">all</option></select>
+      </div>
+      <div class="f-cell">
+        <label>Status</label>
+        <select id="tracker-status"><option value="">all</option></select>
+      </div>
+      <div class="f-cell">
+        <label>Score range</label>
+        <div class="range">
+          <input id="tracker-score-min" type="number" step="0.1" min="0" max="5" placeholder="0.0">
+          <span class="dash">—</span>
+          <input id="tracker-score-max" type="number" step="0.1" min="0" max="5" placeholder="5.0">
+        </div>
+      </div>
+      <div class="f-cell">
+        <label>Date</label>
+        <div class="range">
+          <input id="tracker-date-from" type="date">
+          <span class="dash">—</span>
+          <input id="tracker-date-to" type="date">
+        </div>
+      </div>
+      <div class="f-cell">
+        <label>PDF</label>
+        <div class="toggle-group" data-group="tracker-pdf">
+          <button data-v="" class="active">any</button>
+          <button data-v="yes">✓</button>
+          <button data-v="no">✗</button>
+        </div>
+      </div>
+      <div class="f-cell">
+        <label>Dossier</label>
+        <div class="toggle-group" data-group="tracker-dossier">
+          <button data-v="" class="active">any</button>
+          <button data-v="yes">yes</button>
+          <button data-v="no">no</button>
+        </div>
+      </div>
+      <div class="reset-cell"><button class="reset-btn" data-reset="tracker">reset</button></div>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table id="tracker-table">
+      <colgroup>
+        <col class="c-num"><col class="c-date"><col class="c-co"><col class="c-role">
+        <col class="c-score"><col class="c-status"><col class="c-pdf"><col class="c-doss"><col class="c-notes">
+      </colgroup>
+      <thead>
+        <tr>
+          <th class="sortable" data-key="num">№</th>
+          <th class="sortable" data-key="date">Date</th>
+          <th class="sortable" data-key="company">Company</th>
+          <th class="sortable" data-key="role">Role</th>
+          <th class="sortable" data-key="score">Score</th>
+          <th class="sortable" data-key="status">Status</th>
+          <th>PDF</th>
+          <th>Dossier</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</section>
+
+<section id="tab-pipeline" class="pane">
+  <div class="filter-bar">
+    <div class="bar-primary">
+      <div class="search-wrap">
+        <input id="pipeline-search" type="search" placeholder="search url · company · role · reason">
+      </div>
+      <div class="sort-wrap">
+        <label>Sort</label>
+        <select id="pipeline-sort">
+          <option value="order-original" selected>Order · original</option>
+          <option value="order-reversed">Order · reversed</option>
+          <option value="state-first">State · pending first</option>
+          <option value="company-asc">Company · A → Z</option>
+          <option value="company-desc">Company · Z → A</option>
+          <option value="score-desc">Score · high → low</option>
+          <option value="score-asc">Score · low → high</option>
+        </select>
+      </div>
+      <div class="count-wrap"><strong id="pipeline-count-n">0</strong>/ <span class="total" id="pipeline-count-t">0</span></div>
+    </div>
+    <div class="bar-filters">
+      <div class="f-cell">
+        <label>Source</label>
+        <select id="pipeline-source"><option value="">all</option></select>
+      </div>
+      <div class="f-cell">
+        <label>Company</label>
+        <select id="pipeline-company"><option value="">all</option></select>
+      </div>
+      <div class="f-cell">
+        <label>State</label>
+        <div class="toggle-group" data-group="pipeline-state">
+          <button data-v="" class="active">all</button>
+          <button data-v="done">done</button>
+          <button data-v="pending">pending</button>
+          <button data-v="skip">skip</button>
+        </div>
+      </div>
+      <div class="f-cell">
+        <label>Score range</label>
+        <div class="range">
+          <input id="pipeline-score-min" type="number" step="0.1" min="0" max="5" placeholder="0.0">
+          <span class="dash">—</span>
+          <input id="pipeline-score-max" type="number" step="0.1" min="0" max="5" placeholder="5.0">
+        </div>
+      </div>
+      <div class="reset-cell"><button class="reset-btn" data-reset="pipeline">reset</button></div>
+    </div>
+  </div>
+  <div id="pipeline-list"></div>
+</section>
+
+<section id="tab-scan" class="pane">
+  <div class="filter-bar">
+    <div class="bar-primary">
+      <div class="search-wrap">
+        <input id="scan-search" type="search" placeholder="search company · title · url">
+      </div>
+      <div class="sort-wrap">
+        <label>Sort</label>
+        <select id="scan-sort">
+          <option value="date-desc" selected>Date · new → old</option>
+          <option value="date-asc">Date · old → new</option>
+          <option value="company-asc">Company · A → Z</option>
+          <option value="company-desc">Company · Z → A</option>
+          <option value="portal-asc">Portal · A → Z</option>
+          <option value="portal-desc">Portal · Z → A</option>
+          <option value="title-asc">Title · A → Z</option>
+          <option value="title-desc">Title · Z → A</option>
+          <option value="status-asc">Status · A → Z</option>
+          <option value="status-desc">Status · Z → A</option>
+        </select>
+      </div>
+      <div class="count-wrap"><strong id="scan-count-n">0</strong>/ <span class="total" id="scan-count-t">0</span></div>
+    </div>
+    <div class="bar-filters">
+      <div class="f-cell">
+        <label>Portal</label>
+        <select id="scan-portal"><option value="">all</option></select>
+      </div>
+      <div class="f-cell">
+        <label>Company</label>
+        <select id="scan-company"><option value="">all</option></select>
+      </div>
+      <div class="f-cell">
+        <label>Status</label>
+        <select id="scan-status"><option value="">all</option></select>
+      </div>
+      <div class="f-cell">
+        <label>First seen</label>
+        <div class="range">
+          <input id="scan-date-from" type="date">
+          <span class="dash">—</span>
+          <input id="scan-date-to" type="date">
+        </div>
+      </div>
+      <div class="reset-cell"><button class="reset-btn" data-reset="scan">reset</button></div>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table id="scan-table">
+      <colgroup>
+        <col class="s-date"><col class="s-portal"><col class="s-co">
+        <col class="s-title"><col class="s-status"><col class="s-url">
+      </colgroup>
+      <thead>
+        <tr>
+          <th class="sortable" data-key="first_seen">First seen</th>
+          <th class="sortable" data-key="portal">Portal</th>
+          <th class="sortable" data-key="company">Company</th>
+          <th class="sortable" data-key="title">Title</th>
+          <th class="sortable" data-key="status">Status</th>
+          <th>URL</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</section>
+
+<footer class="sig">
+  <span>Career-Ops · Console v1</span>
+  <span class="mark">Hongxi Chen</span>
+  <span>Signal · <strong style="color:var(--signal);">◉</strong> live</span>
+</footer>
+
+</div>
+
+<script>/*__DATA__*/</script>
+<script>
+const D = window.DATA;
+const gen = new Date(D.generated);
+document.getElementById('generated').textContent = gen.toLocaleString();
+document.getElementById('t-ready').textContent = '0';
+document.getElementById('t-reports').textContent = D.reports.length;
+document.getElementById('t-apps').textContent = D.applications.length;
+document.getElementById('t-pipeline').textContent = D.pipeline.length;
+document.getElementById('t-scan').textContent = D.scanHistory.rows.length;
+
+function escapeHtml(s) {
+  return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function setHtml(el, html) { el.innerHTML = html; }
+function setSanitizedHtml(el, html) { el.innerHTML = DOMPurify.sanitize(html); }
+
+document.querySelectorAll('nav.tabs button').forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll('nav.tabs button').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.pane').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    document.getElementById('tab-' + b.dataset.tab).classList.add('active');
+  };
+});
+
+function scoreClass(s) {
+  const n = parseFloat(s);
+  if (isNaN(n)) return '';
+  if (n >= 4) return 'score score-high';
+  if (n >= 3) return 'score score-mid';
+  return 'score score-low';
+}
+
+// ===== helpers =====
+const $ = (id) => document.getElementById(id);
+const val = (id) => $(id).value;
+const num = (v) => { const n = parseFloat(v); return isNaN(n) ? null : n; };
+const parseScore = (s) => { const m = (s || '').match(/([\d.]+)/); return m ? parseFloat(m[1]) : null; };
+const norm = (s) => (s || '').toLowerCase();
+const unique = (items) => [...new Set(items.filter(Boolean))].sort((a, b) => a.localeCompare(b));
+const optionsHtml = (items, allLabel = 'all') =>
+  `<option value="">${escapeHtml(allLabel)}</option>` +
+  items.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
+function hostOf(url) {
+  try {
+    return new URL(url).hostname.replace(/^www\./, '');
+  } catch {
+    return '';
+  }
+}
+function badgeClass(raw) {
+  const s = norm(raw).replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+  return `badge ${s}`;
+}
+const reportByPath = new Map(D.reports.map(r => [`reports/${r.filename}`, r]));
+const APPLY_DONE_KEY = 'career_ops_apply_done_v1';
+function loadApplyDone() {
+  try {
+    const raw = window.localStorage.getItem(APPLY_DONE_KEY);
+    const parsed = raw ? JSON.parse(raw) : {};
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+let applyDoneState = loadApplyDone();
+function saveApplyDone() {
+  try {
+    window.localStorage.setItem(APPLY_DONE_KEY, JSON.stringify(applyDoneState));
+  } catch {
+    // Ignore localStorage failures under restrictive browser settings.
+  }
+}
+function applyDoneKey(row) {
+  return row.reportPath || `${row.company}::${row.role}`;
+}
+function compareApplyRows(a, b) {
+  if ((b.scoreValue ?? -Infinity) !== (a.scoreValue ?? -Infinity)) {
+    return (b.scoreValue ?? -Infinity) - (a.scoreValue ?? -Infinity);
+  }
+  return (+b.num || 0) - (+a.num || 0);
+}
+function bindFilters(ids, render) {
+  ids.forEach(id => {
+    const el = $(id);
+    el.addEventListener('input', render);
+    el.addEventListener('change', render);
+  });
+}
+
+const toggleState = {};
+function wireToggles() {
+  document.querySelectorAll('.toggle-group').forEach(g => {
+    const key = g.dataset.group;
+    toggleState[key] = '';
+    g.querySelectorAll('button').forEach(btn => {
+      btn.onclick = () => {
+        g.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        toggleState[key] = btn.dataset.v;
+        if (key.startsWith('tracker')) renderTracker();
+        else if (key.startsWith('pipeline')) renderPipeline();
+        else if (key.startsWith('scan')) renderScan();
+      };
+    });
+  });
+}
+
+function setCount(prefix, n, t, suffix = '') {
+  $(`${prefix}-count-n`).textContent = n;
+  $(`${prefix}-count-t`).textContent = t + (suffix ? ' ' + suffix : '');
+}
+
+function resetGroup(g) {
+  if (g === 'reports') {
+    $('report-search').value = ''; $('report-legit').value = '';
+    $('report-score-min').value = ''; $('report-score-max').value = '';
+    $('report-date-from').value = ''; $('report-date-to').value = '';
+    $('report-sort').value = 'num-desc';
+    renderReports();
+  } else if (g === 'tracker') {
+    $('tracker-search').value = ''; $('tracker-company').value = ''; $('tracker-status').value = '';
+    $('tracker-score-min').value = ''; $('tracker-score-max').value = '';
+    $('tracker-date-from').value = ''; $('tracker-date-to').value = '';
+    $('tracker-sort').value = 'num-desc';
+    ['tracker-pdf', 'tracker-dossier'].forEach(k => {
+      toggleState[k] = '';
+      document.querySelectorAll(`[data-group="${k}"] button`).forEach(b =>
+        b.classList.toggle('active', b.dataset.v === ''));
+    });
+    renderTracker();
+  } else if (g === 'pipeline') {
+    $('pipeline-search').value = ''; $('pipeline-source').value = ''; $('pipeline-company').value = '';
+    $('pipeline-score-min').value = ''; $('pipeline-score-max').value = '';
+    $('pipeline-sort').value = 'order-original';
+    toggleState['pipeline-state'] = '';
+    document.querySelectorAll('[data-group="pipeline-state"] button').forEach(b =>
+      b.classList.toggle('active', b.dataset.v === ''));
+    renderPipeline();
+  } else if (g === 'scan') {
+    $('scan-search').value = ''; $('scan-portal').value = ''; $('scan-company').value = ''; $('scan-status').value = '';
+    $('scan-date-from').value = ''; $('scan-date-to').value = '';
+    $('scan-sort').value = 'date-desc';
+    renderScan();
+  }
+}
+document.querySelectorAll('.reset-btn').forEach(b => b.onclick = () => resetGroup(b.dataset.reset));
+
+function applySort(rows, sortKey, getters) {
+  const [field, dir] = sortKey.split('-');
+  const mul = dir === 'asc' ? 1 : -1;
+  const getter = getters[field];
+  if (!getter) return rows;
+  return [...rows].sort((a, b) => {
+    const av = getter(a), bv = getter(b);
+    if (av == null && bv == null) return 0;
+    if (av == null) return 1;
+    if (bv == null) return -1;
+    if (av < bv) return -1 * mul;
+    if (av > bv) return 1 * mul;
+    return 0;
+  });
+}
+
+function buildApplyNextRows() {
+  return D.applications.map((row) => {
+    const report = row.reportPath ? reportByPath.get(row.reportPath) : null;
+    const scoreValue = parseScore(row.score);
+    const key = applyDoneKey(row);
+    const canonicalDone = ['Applied', 'Responded', 'Interview', 'Offer'].includes(row.status);
+    return {
+      ...row,
+      report,
+      scoreValue,
+      key,
+      jobUrl: report?.url || '',
+      localDone: Boolean(applyDoneState[key]),
+      canonicalDone,
+    };
+  });
+}
+
+function renderApplyCard(row, mode) {
+  const eyebrow =
+    mode === 'priority' ? 'Apply now' :
+    mode === 'selective' ? 'Selective apply' :
+    row.canonicalDone ? row.status : 'Marked applied';
+  const toggleLabel = row.localDone ? 'Undo local mark' : 'Mark applied';
+  const note = row.notes || 'Open the dossier before tailoring.';
+  return `
+    <article class="apply-card ${row.localDone ? 'is-local-done' : ''}">
+      <div class="apply-card-head">
+        <div>
+          <div class="eyebrow">${escapeHtml(eyebrow)}</div>
+          <h4>${escapeHtml(row.company)}</h4>
+          <div class="apply-role">${escapeHtml(row.role)}</div>
+        </div>
+        <span class="${scoreClass(row.score)}">${escapeHtml(row.score || '—')}</span>
+      </div>
+      <div class="apply-meta">
+        <span>${escapeHtml(row.date)}</span>
+        <span>${escapeHtml(row.status)}</span>
+        ${row.reportPath ? `<span>Dossier ${escapeHtml(row.num)}</span>` : ''}
+        ${row.localDone ? '<span>Local mark saved</span>' : ''}
+      </div>
+      <div class="apply-note">${escapeHtml(note)}</div>
+      <div class="apply-actions">
+        ${row.jobUrl ? `<a class="action-link" href="${escapeHtml(row.jobUrl)}" target="_blank" rel="noreferrer">Open job</a>` : ''}
+        ${row.reportPath ? `<a class="action-link" href="../${escapeHtml(row.reportPath)}" target="_blank" rel="noreferrer">Open dossier</a>` : ''}
+        <button class="action-btn ${row.localDone ? 'done' : 'primary'} js-apply-toggle" data-key="${escapeHtml(row.key)}">${escapeHtml(toggleLabel)}</button>
+      </div>
+    </article>
+  `;
+}
+
+function renderApplyNext() {
+  const rows = buildApplyNextRows();
+  const recommended = rows.filter((row) => row.status === 'Evaluated' && row.scoreValue != null);
+  const priority = recommended.filter((row) => row.scoreValue >= 4 && !row.localDone).sort(compareApplyRows);
+  const selective = recommended.filter((row) => row.scoreValue >= 3.5 && row.scoreValue < 4 && !row.localDone).sort(compareApplyRows);
+  const completed = rows
+    .filter((row) => row.localDone || row.canonicalDone)
+    .sort(compareApplyRows);
+
+  $('apply-priority-n').textContent = priority.length;
+  $('apply-selective-n').textContent = selective.length;
+  $('apply-localdone-n').textContent = completed.length;
+  $('apply-totalready-n').textContent = priority.length + selective.length;
+  $('t-ready').textContent = priority.length;
+
+  setHtml(
+    $('apply-priority-list'),
+    priority.length
+      ? priority.map((row) => renderApplyCard(row, 'priority')).join('')
+      : '<div class="apply-empty">No 4.0+ roles are waiting right now.</div>'
+  );
+  setHtml(
+    $('apply-selective-list'),
+    selective.length
+      ? selective.map((row) => renderApplyCard(row, 'selective')).join('')
+      : '<div class="apply-empty">No 3.5-3.95 roles are waiting right now.</div>'
+  );
+  setHtml(
+    $('apply-completed-list'),
+    completed.length
+      ? completed.map((row) => renderApplyCard(row, 'completed')).join('')
+      : '<div class="apply-empty">Nothing marked yet in this browser.</div>'
+  );
+
+  document.querySelectorAll('.js-apply-toggle').forEach((button) => {
+    button.onclick = () => {
+      const key = button.dataset.key;
+      if (applyDoneState[key]) delete applyDoneState[key];
+      else applyDoneState[key] = { markedAt: new Date().toISOString() };
+      saveApplyDone();
+      renderApplyNext();
+    };
+  });
+}
+
+// ===== Reports =====
+let selectedReport = null;
+const legitSet = unique(D.reports.map(r => r.legitimacy));
+setHtml($('report-legit'), optionsHtml(legitSet));
+
+function renderReports() {
+  const q = norm(val('report-search'));
+  const legit = val('report-legit');
+  const sMin = num(val('report-score-min'));
+  const sMax = num(val('report-score-max'));
+  const dFrom = val('report-date-from');
+  const dTo = val('report-date-to');
+  let list = D.reports.filter(r => {
+    if (legit && r.legitimacy !== legit) return false;
+    const s = parseScore(r.score);
+    if (sMin != null && (s == null || s < sMin)) return false;
+    if (sMax != null && (s == null || s > sMax)) return false;
+    const rd = r.fecha || r.date || '';
+    if (dFrom && rd < dFrom) return false;
+    if (dTo && rd > dTo) return false;
+    if (!q) return true;
+    return norm(`${r.title} ${r.num} ${r.arquetipo || ''} ${r.legitimacy || ''}`).includes(q);
+  });
+  list = applySort(list, val('report-sort'), {
+    score: r => parseScore(r.score),
+    num: r => +r.num,
+    date: r => r.fecha || r.date || ''
+  });
+  setCount('report', list.length, D.reports.length);
+  const html = list.map(r => {
+    const extractCo = r.title.split('—')[0].replace(/Evaluación:/i, '').trim();
+    return `
+    <div class="report-item ${selectedReport === r.filename ? 'active' : ''}" data-file="${escapeHtml(r.filename)}">
+      <div class="ri-head"><span class="num">DOSSIER-${escapeHtml(r.num)}</span></div>
+      <div class="title">${escapeHtml(extractCo || r.title)}</div>
+      <div class="meta">
+        <span class="${scoreClass(r.score)}">${escapeHtml(r.score || '—')}</span>
+        <span>${escapeHtml(r.legitimacy || 'n/a')}</span>
+        <span>${escapeHtml(r.fecha || r.date || '')}</span>
+      </div>
+    </div>`;
+  }).join('') || '<div class="empty">No matches</div>';
+  setHtml($('report-list'), html);
+  document.querySelectorAll('.report-item').forEach(el => {
+    el.onclick = () => {
+      selectedReport = el.dataset.file;
+      const r = D.reports.find(x => x.filename === selectedReport);
+      setSanitizedHtml($('report-view'), marked.parse(r.content));
+      document.querySelectorAll('.report-item').forEach(x => x.classList.remove('active'));
+      el.classList.add('active');
+      $('report-view').scrollTop = 0;
+    };
+  });
+}
+bindFilters(['report-search', 'report-legit', 'report-score-min', 'report-score-max',
+ 'report-date-from', 'report-date-to', 'report-sort'], renderReports);
+
+// ===== Tracker =====
+const trackerCompanies = unique(D.applications.map(a => a.company));
+setHtml($('tracker-company'), optionsHtml(trackerCompanies));
+const statusSet = unique(D.applications.map(a => a.status));
+setHtml($('tracker-status'), optionsHtml(statusSet));
+
+function renderTracker() {
+  const q = norm(val('tracker-search'));
+  const company = val('tracker-company');
+  const st = val('tracker-status');
+  const sMin = num(val('tracker-score-min'));
+  const sMax = num(val('tracker-score-max'));
+  const dFrom = val('tracker-date-from');
+  const dTo = val('tracker-date-to');
+  const pdfF = toggleState['tracker-pdf'];
+  const docF = toggleState['tracker-dossier'];
+
+  let rows = D.applications.filter(a => {
+    if (company && a.company !== company) return false;
+    if (st && a.status !== st) return false;
+    const s = parseScore(a.score);
+    if (sMin != null && (s == null || s < sMin)) return false;
+    if (sMax != null && (s == null || s > sMax)) return false;
+    if (dFrom && a.date < dFrom) return false;
+    if (dTo && a.date > dTo) return false;
+    const hasPdf = (a.pdf || '').includes('✅');
+    if (pdfF === 'yes' && !hasPdf) return false;
+    if (pdfF === 'no' && hasPdf) return false;
+    if (docF === 'yes' && !a.reportPath) return false;
+    if (docF === 'no' && a.reportPath) return false;
+    if (!q) return true;
+    return norm((a.company || '') + ' ' + (a.role || '') + ' ' + (a.status || '') + ' ' + (a.notes || '')).includes(q);
+  });
+  rows = applySort(rows, val('tracker-sort'), {
+    score: a => parseScore(a.score),
+    num: a => +a.num,
+    date: a => a.date || '',
+    company: a => norm(a.company),
+    role: a => norm(a.role),
+    status: a => norm(a.status)
+  });
+  setCount('tracker', rows.length, D.applications.length);
+  const html = rows.map(a => `
+    <tr>
+      <td class="num-cell">${escapeHtml(a.num)}</td>
+      <td>${escapeHtml(a.date)}</td>
+      <td class="wrap-cell"><span class="co">${escapeHtml(a.company)}</span></td>
+      <td class="wrap-cell role-cell">${escapeHtml(a.role)}</td>
+      <td><span class="${scoreClass(a.score)}">${escapeHtml(a.score)}</span></td>
+      <td><span class="${badgeClass(a.status)}">${escapeHtml(a.status)}</span></td>
+      <td class="center">${escapeHtml(a.pdf)}</td>
+      <td>${a.reportPath ? `<a href="../${escapeHtml(a.reportPath)}" target="_blank">→ open</a>` : '—'}</td>
+      <td class="wrap-cell notes-cell"><span title="${escapeHtml(a.notes || '')}">${escapeHtml((a.notes || '').slice(0, 190))}${a.notes && a.notes.length > 190 ? '…' : ''}</span></td>
+    </tr>
+  `).join('');
+  setHtml(document.querySelector('#tracker-table tbody'), html);
+  // Reflect active sort dropdown in header arrows
+  const [sField, sDir] = val('tracker-sort').split('-');
+  document.querySelectorAll('#tracker-table .sortable').forEach(th => {
+    th.classList.remove('asc', 'desc');
+    if (th.dataset.key === sField) th.classList.add(sDir);
+  });
+}
+document.querySelectorAll('#tracker-table .sortable').forEach(th => {
+  th.onclick = () => {
+    const k = th.dataset.key;
+    const sel = $('tracker-sort');
+    const cur = sel.value;
+    const [curField, curDir] = cur.split('-');
+    const nextDir = curField === k && curDir === 'desc' ? 'asc' : 'desc';
+    const opt = `${k}-${nextDir}`;
+    if ([...sel.options].some(o => o.value === opt)) sel.value = opt;
+    renderTracker();
+  };
+});
+bindFilters(['tracker-search', 'tracker-company', 'tracker-status', 'tracker-score-min', 'tracker-score-max',
+ 'tracker-date-from', 'tracker-date-to', 'tracker-sort'], renderTracker);
+
+// ===== Pipeline =====
+function parsePipelineMeta(p) {
+  const parts = p.raw.split('|').map(s => s.trim());
+  const isSkip = /SKIP/i.test(p.tag);
+  let company = '';
+  let role = '';
+  let score = parseScore(p.raw);
+
+  if (/^#\d+/.test(parts[0] || '')) {
+    company = parts[2] || '';
+    role = parts[3] || '';
+  } else if (isSkip) {
+    const head = parts[1] || parts[0] || '';
+    company = (head.split('—')[1] || '').trim();
+    role = parts[2] || '';
+  } else if ((parts[0] || '').startsWith('http')) {
+    company = parts[1] || '';
+    role = parts[2] || '';
+  } else {
+    company = parts[1] || '';
+    role = parts[2] || '';
+  }
+
+  return {
+    company,
+    role,
+    score,
+    source: hostOf(p.url)
+  };
+}
+const pipelineMeta = D.pipeline.map(parsePipelineMeta);
+setHtml($('pipeline-source'), optionsHtml(unique(pipelineMeta.map(p => p.source))));
+setHtml($('pipeline-company'), optionsHtml(unique(pipelineMeta.map(p => p.company))));
+
+function renderPipeline() {
+  const q = norm(val('pipeline-search'));
+  const source = val('pipeline-source');
+  const company = val('pipeline-company');
+  const state = toggleState['pipeline-state'];
+  const sMin = num(val('pipeline-score-min'));
+  const sMax = num(val('pipeline-score-max'));
+  let rows = D.pipeline.map((p, i) => ({ ...p, ...pipelineMeta[i], _idx: i })).filter(p => {
+    const isSkip = /SKIP/i.test(p.tag);
+    if (source && p.source !== source) return false;
+    if (company && p.company !== company) return false;
+    if (state === 'done' && (!p.done || isSkip)) return false;
+    if (state === 'pending' && p.done) return false;
+    if (state === 'skip' && !isSkip) return false;
+    if (sMin != null && (p.score == null || p.score < sMin)) return false;
+    if (sMax != null && (p.score == null || p.score > sMax)) return false;
+    if (!q) return true;
+    return norm(`${p.raw} ${p.company} ${p.role} ${p.source}`).includes(q);
+  });
+  const sortMode = val('pipeline-sort');
+  if (sortMode === 'order-reversed') rows.reverse();
+  else if (sortMode === 'state-first') {
+    rows.sort((a, b) => {
+      const rank = (p) => p.done ? (/SKIP/i.test(p.tag) ? 2 : 1) : 0;
+      return rank(a) - rank(b);
+    });
+  } else if (sortMode === 'company-asc') {
+    rows.sort((a, b) => norm(a.company).localeCompare(norm(b.company)));
+  } else if (sortMode === 'company-desc') {
+    rows.sort((a, b) => norm(b.company).localeCompare(norm(a.company)));
+  } else if (sortMode === 'score-desc') {
+    rows.sort((a, b) => (b.score ?? -Infinity) - (a.score ?? -Infinity));
+  } else if (sortMode === 'score-asc') {
+    rows.sort((a, b) => (a.score ?? Infinity) - (b.score ?? Infinity));
+  }
+  setCount('pipeline', rows.length, D.pipeline.length);
+  const html = rows.map(p => {
+    const isSkip = /SKIP/i.test(p.tag);
+    const cls = !p.done ? 'pending' : (isSkip ? 'skip' : '');
+    const tag = !p.done ? 'PENDING' : (isSkip ? 'SKIP' : 'DONE');
+    const urlLink = p.url ? `<a class="url" href="${escapeHtml(p.url)}" target="_blank">${escapeHtml(p.url.slice(0, 120))}${p.url.length > 120 ? '…' : ''}</a>` : '';
+    return `<div class="pipe-card ${cls}">
+      <span class="tag">${tag}</span>
+      <div class="body">
+        <div class="raw-cell">${escapeHtml(p.raw.slice(0, 280))}${p.raw.length > 280 ? '…' : ''}</div>
+        <div class="small">${escapeHtml([p.company, p.role, p.source].filter(Boolean).join(' · '))}</div>
+        ${urlLink}
+      </div>
+    </div>`;
+  }).join('') || '<div class="empty" style="padding:40px;text-align:center;color:var(--muted);">No matches</div>';
+  setHtml($('pipeline-list'), html);
+}
+bindFilters(['pipeline-search', 'pipeline-source', 'pipeline-company', 'pipeline-score-min', 'pipeline-score-max', 'pipeline-sort'], renderPipeline);
+
+// ===== Scan History =====
+const portals = unique(D.scanHistory.rows.map(r => r.portal));
+setHtml($('scan-portal'), optionsHtml(portals));
+const scanCompanies = unique(D.scanHistory.rows.map(r => r.company));
+setHtml($('scan-company'), optionsHtml(scanCompanies));
+const scanStatuses = unique(D.scanHistory.rows.map(r => r.status));
+setHtml($('scan-status'), optionsHtml(scanStatuses));
+
+function renderScan() {
+  const q = norm(val('scan-search'));
+  const portal = val('scan-portal');
+  const company = val('scan-company');
+  const st = val('scan-status');
+  const dFrom = val('scan-date-from');
+  const dTo = val('scan-date-to');
+  let rows = D.scanHistory.rows.filter(r => {
+    if (portal && r.portal !== portal) return false;
+    if (company && r.company !== company) return false;
+    if (st && r.status !== st) return false;
+    if (dFrom && r.first_seen < dFrom) return false;
+    if (dTo && r.first_seen > dTo) return false;
+    if (!q) return true;
+    return norm((r.company || '') + ' ' + (r.title || '') + ' ' + (r.portal || '') + ' ' + (r.status || '') + ' ' + (r.url || '')).includes(q);
+  });
+  rows = applySort(rows, val('scan-sort'), {
+    date: r => r.first_seen || '',
+    company: r => norm(r.company),
+    portal: r => norm(r.portal),
+    title: r => norm(r.title),
+    status: r => norm(r.status)
+  });
+  const truncated = rows.length > 500;
+  setCount('scan', Math.min(rows.length, 500), D.scanHistory.rows.length,
+    truncated ? '· capped 500' : '');
+  const html = rows.slice(0, 500).map(r => `
+    <tr>
+      <td>${escapeHtml(r.first_seen)}</td>
+      <td><span class="${badgeClass(r.portal)}">${escapeHtml(r.portal)}</span></td>
+      <td class="wrap-cell"><span class="co">${escapeHtml(r.company)}</span></td>
+      <td class="wrap-cell title-cell">${escapeHtml(r.title)}</td>
+      <td><span class="${badgeClass(r.status)}">${escapeHtml(r.status)}</span></td>
+      <td class="center"><a href="${escapeHtml(r.url)}" target="_blank">→</a></td>
+    </tr>
+  `).join('');
+  setHtml(document.querySelector('#scan-table tbody'), html);
+  const [sField, sDir] = val('scan-sort').split('-');
+  const fieldMap = { date: 'first_seen' };
+  document.querySelectorAll('#scan-table .sortable').forEach(th => {
+    th.classList.remove('asc', 'desc');
+    if (th.dataset.key === (fieldMap[sField] || sField)) th.classList.add(sDir);
+  });
+}
+document.querySelectorAll('#scan-table .sortable').forEach(th => {
+  th.onclick = () => {
+    const keyMap = { first_seen: 'date' };
+    const k = keyMap[th.dataset.key] || th.dataset.key;
+    const sel = $('scan-sort');
+    const [curField, curDir] = sel.value.split('-');
+    const nextDir = curField === k && curDir === 'desc' ? 'asc' : 'desc';
+    const opt = `${k}-${nextDir}`;
+    if ([...sel.options].some(o => o.value === opt)) sel.value = opt;
+    renderScan();
+  };
+});
+bindFilters(['scan-search', 'scan-portal', 'scan-company', 'scan-status', 'scan-date-from', 'scan-date-to', 'scan-sort'], renderScan);
+
+// Wire toggles AFTER render functions defined
+wireToggles();
+renderApplyNext();
+renderReports();
+renderTracker();
+renderPipeline();
+renderScan();
+
+// Keyboard navigation for tabs: 1-5
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+  const keys = { '1': 'apply-next', '2': 'reports', '3': 'tracker', '4': 'pipeline', '5': 'scan' };
+  if (keys[e.key]) {
+    const btn = document.querySelector(`nav.tabs button[data-tab="${keys[e.key]}"]`);
+    if (btn) btn.click();
+  }
+});
+</script>
+</body>
+</html>
