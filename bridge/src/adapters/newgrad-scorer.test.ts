@@ -37,9 +37,13 @@ function makeConfig(overrides?: ConfigOverrides): NewGradScanConfig {
     freshness: { within_24h: 2, within_3d: 1, older: 0 },
     list_threshold: 3,
     pipeline_threshold: 5,
+    detail_value_threshold: 7,
+    compensation_min_usd: 0,
     hard_filters: {
+      blocked_companies: [],
       exclude_no_sponsorship: false,
       exclude_active_security_clearance: false,
+      max_years_experience: 99,
       no_sponsorship_keywords: [
         "no sponsorship",
         "unable to sponsor",
@@ -154,8 +158,18 @@ describe("parsePostedAgo", () => {
     expect(parsePostedAgo("45m ago")).toBe(45);
   });
 
+  test("parses common Date column abbreviations", () => {
+    expect(parsePostedAgo("12 mins ago")).toBe(12);
+    expect(parsePostedAgo("3 hrs ago")).toBe(180);
+  });
+
+  test("parses immediate/today strings as fresh", () => {
+    expect(parsePostedAgo("just now")).toBe(0);
+    expect(parsePostedAgo("today")).toBe(0);
+    expect(parsePostedAgo("moments ago")).toBe(0);
+  });
+
   test("returns Infinity for unparseable strings", () => {
-    expect(parsePostedAgo("just now")).toBe(Infinity);
     expect(parsePostedAgo("")).toBe(Infinity);
     expect(parsePostedAgo("unknown")).toBe(Infinity);
   });
@@ -296,6 +310,39 @@ describe("scoreRow", () => {
 /* -------------------------------------------------------------------------- */
 
 describe("scoreAndFilter", () => {
+  test("filters roles whose experience requirement exceeds the configured cutoff", () => {
+    const config = makeConfig({
+      hard_filters: { max_years_experience: 2 },
+    });
+    const rows = [
+      makeRow({
+        qualifications: "Requires 3+ years of backend experience with TypeScript.",
+      }),
+    ];
+
+    const result = scoreAndFilter(rows, config, [], new Set());
+
+    expect(result.promoted).toHaveLength(0);
+    expect(result.filtered).toHaveLength(1);
+    expect(result.filtered[0]!.reason).toBe("experience_too_high");
+  });
+
+  test("keeps early-career roles that stay within the experience cutoff", () => {
+    const config = makeConfig({
+      hard_filters: { max_years_experience: 2 },
+    });
+    const rows = [
+      makeRow({
+        qualifications: "1+ years of TypeScript or equivalent internship experience.",
+      }),
+    ];
+
+    const result = scoreAndFilter(rows, config, [], new Set());
+
+    expect(result.promoted).toHaveLength(1);
+    expect(result.filtered).toHaveLength(0);
+  });
+
   test("negative keyword in title filters row with reason 'negative_title'", () => {
     const config = makeConfig();
     const rows = [makeRow({ title: "Intern - Software Engineering" })];
@@ -351,6 +398,27 @@ describe("scoreAndFilter", () => {
     expect(result.filtered[0]!.reason).toBe("no_sponsorship");
   });
 
+  test("configured no-sponsorship phrase filters title and qualifications text", () => {
+    const config = makeConfig({
+      hard_filters: {
+        exclude_no_sponsorship: true,
+        no_sponsorship_keywords: ["only us citizens", "permanent residents"],
+      },
+    });
+    const rows = [
+      makeRow({
+        title: "Junior Software Engineer - Only US Citizens or Permanent residents",
+        confirmedSponsorshipSupport: "unknown",
+      }),
+    ];
+
+    const result = scoreAndFilter(rows, config, [], new Set());
+
+    expect(result.promoted).toHaveLength(0);
+    expect(result.filtered).toHaveLength(1);
+    expect(result.filtered[0]!.reason).toBe("no_sponsorship");
+  });
+
   test("company on the no sponsorship blocklist is filtered before scoring", () => {
     const config = makeConfig({
       hard_filters: {
@@ -366,6 +434,22 @@ describe("scoreAndFilter", () => {
     expect(result.filtered).toHaveLength(1);
     expect(result.filtered[0]!.reason).toBe("no_sponsorship");
     expect(result.filtered[0]!.detail).toContain("blocklist");
+  });
+
+  test("company on the user blacklist is filtered before scoring", () => {
+    const config = makeConfig({
+      hard_filters: {
+        blocked_companies: ["TikTok"],
+      },
+    });
+    const rows = [makeRow({ company: "TikTok" })];
+
+    const result = scoreAndFilter(rows, config, [], new Set());
+
+    expect(result.promoted).toHaveLength(0);
+    expect(result.filtered).toHaveLength(1);
+    expect(result.filtered[0]!.reason).toBe("company_blacklist");
+    expect(result.filtered[0]!.detail).toContain("user blacklist");
   });
 
   test("unconfirmed clearance signal is not hard-filtered", () => {
@@ -419,6 +503,48 @@ describe("scoreAndFilter", () => {
     expect(result.promoted).toHaveLength(0);
     expect(result.filtered).toHaveLength(1);
     expect(result.filtered[0]!.reason).toBe("active_clearance_required");
+  });
+
+  test("configured clearance phrase filters title and qualifications text", () => {
+    const config = makeConfig({
+      hard_filters: {
+        exclude_active_security_clearance: true,
+        clearance_keywords: ["top secret", "security clearance"],
+      },
+    });
+    const rows = [
+      makeRow({
+        title: "Junior Full Stack Software Developer / Top Secret",
+        confirmedRequiresActiveSecurityClearance: false,
+      }),
+    ];
+
+    const result = scoreAndFilter(rows, config, [], new Set());
+
+    expect(result.promoted).toHaveLength(0);
+    expect(result.filtered).toHaveLength(1);
+    expect(result.filtered[0]!.reason).toBe("active_clearance_required");
+  });
+
+  test("generic obtain-or-preferred clearance language is not hard-filtered", () => {
+    const config = makeConfig({
+      hard_filters: {
+        exclude_active_security_clearance: true,
+        clearance_keywords: ["top secret", "security clearance"],
+      },
+    });
+    const rows = [
+      makeRow({
+        title: "Software Engineer I",
+        qualifications: "Ability to obtain a security clearance is preferred.",
+        confirmedRequiresActiveSecurityClearance: false,
+      }),
+    ];
+
+    const result = scoreAndFilter(rows, config, [], new Set());
+
+    expect(result.promoted).toHaveLength(1);
+    expect(result.filtered).toHaveLength(0);
   });
 
   test("already tracked company|role is filtered with reason 'already_tracked'", () => {

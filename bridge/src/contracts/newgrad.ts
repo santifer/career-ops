@@ -226,8 +226,62 @@ export interface PipelineEntry {
   role: string;
   /** Score from the local scorer, for reference. */
   score: number;
+  /** Detailed value score from structured detail-page elements, 0-10. */
+  valueScore?: number;
+  /** Compact local reasons that explain the value-score decision. */
+  valueReasons?: readonly string[];
   /** Source identifier, e.g. "newgrad-jobs.com". */
   source: string;
+}
+
+/**
+ * One unchecked newgrad-scan entry recovered from data/pipeline.md.
+ */
+export interface NewGradPendingEntry extends PipelineEntry {
+  /** 1-based line number in data/pipeline.md for user-facing diagnostics. */
+  lineNumber: number;
+  /** Optional local JD cache path, relative to repo root, when available. */
+  localJdPath?: string;
+  /** Optional pre-extracted JD text loaded from localJdPath. */
+  pageText?: string;
+}
+
+export interface NewGradPendingResult {
+  /** Pending newgrad-scan entries that are not already in the tracker. */
+  entries: readonly NewGradPendingEntry[];
+  /** Total count before any caller-side display limit. */
+  total: number;
+}
+
+export interface NewGradPendingCacheBackfillInput {
+  /** Original pipeline URL for the unchecked entry. */
+  url: string;
+  /** Company name recorded in the pipeline row. */
+  company: string;
+  /** Role title recorded in the pipeline row. */
+  role: string;
+  /** 1-based line number from data/pipeline.md at read time. */
+  lineNumber: number;
+  /** Rich local JD text captured from the browser. */
+  pageText: string;
+}
+
+export interface NewGradPendingCacheBackfillOutcome {
+  url: string;
+  company: string;
+  role: string;
+  lineNumber: number;
+  status: "updated" | "skipped";
+  /** Relative jds/ path when the cache was persisted successfully. */
+  localJdPath?: string;
+  /** Machine-readable reason when the backfill was skipped. */
+  reason?: string;
+}
+
+export interface NewGradPendingCacheBackfillResult {
+  updated: number;
+  skipped: number;
+  outcomes: readonly NewGradPendingCacheBackfillOutcome[];
 }
 
 /**
@@ -309,12 +363,20 @@ export interface NewGradScanConfig {
   list_threshold: number;
   /** Minimum score required to append an enriched row to pipeline.md. */
   pipeline_threshold: number;
+  /** Minimum detailed value score required after reading detail-page elements. */
+  detail_value_threshold: number;
+  /** Walk-away compensation floor parsed from the user profile. */
+  compensation_min_usd: number;
   /** Profile-driven hard blockers that should skip roles before pipeline write. */
   hard_filters: {
+    /** Always skip roles from these user-blacklisted companies. */
+    blocked_companies: readonly string[];
     /** Skip roles that explicitly do not provide sponsorship support. */
     exclude_no_sponsorship: boolean;
     /** Skip roles that require an active secret security clearance. */
     exclude_active_security_clearance: boolean;
+    /** Skip roles whose explicit minimum experience exceeds this many years. */
+    max_years_experience: number;
     /** Lowercased phrases that indicate sponsorship is unavailable. */
     no_sponsorship_keywords: readonly string[];
     /** Company names that should be skipped because they do not sponsor. */

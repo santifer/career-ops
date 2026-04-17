@@ -191,6 +191,53 @@ function buildStyles(): string {
 .recent-item .role { color: #8f8f94; margin-left: 4px; }
 .recent-item .score { color: #7aa7ff; font-weight: 600; white-space: nowrap; }
 
+.newgrad-promoted-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+  border-top: 1px solid #26262a;
+  padding-top: 6px;
+}
+.newgrad-promoted-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11px;
+  line-height: 1.35;
+}
+.newgrad-promoted-item a {
+  color: #e8e8ea;
+  text-decoration: none;
+  word-break: break-word;
+}
+.newgrad-promoted-item a:hover { color: #7aa7ff; }
+.newgrad-promoted-item .meta { color: #8f8f94; }
+.newgrad-promoted-item .score { color: #7aa7ff; font-weight: 600; white-space: nowrap; }
+
+.newgrad-eval-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+.newgrad-eval-item {
+  border: 1px solid #26262a;
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 11px;
+}
+.newgrad-eval-item .top {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.newgrad-eval-item .title { color: #e8e8ea; font-weight: 500; }
+.newgrad-eval-item .phase { color: #7aa7ff; white-space: nowrap; }
+.newgrad-eval-item .meta { color: #8f8f94; margin-top: 2px; }
+.newgrad-eval-item[data-status="completed"] .phase { color: #4ecb71; }
+.newgrad-eval-item[data-status="failed"] .phase { color: #ef5f5f; }
+
 .footer { text-align: center; font-size: 10px; color: #8f8f94; padding: 4px 0; }
 `;
 }
@@ -276,14 +323,27 @@ function buildHTML(): string {
         <div id="ng-promoted" style="font-size:12px;color:#4ecb71;"></div>
         <div id="ng-filtered" style="font-size:12px;color:#8f8f94;"></div>
         <div id="ng-deduped" style="font-size:12px;color:#8f8f94;"></div>
+        <div id="ng-promoted-list" class="newgrad-promoted-list hidden"></div>
         <button class="cta primary" id="ng-enrich-btn" style="margin-top:4px;">Enrich detail pages</button>
+      </div>
+      <div id="ng-pending" style="display:flex;flex-direction:column;gap:6px;margin-top:8px;">
+        <div class="section-title">Pending candidates</div>
+        <div id="ng-pending-status" style="font-size:12px;color:#8f8f94;">Not loaded</div>
+        <div id="ng-pending-list" class="newgrad-promoted-list hidden"></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="cta" id="ng-load-pending-btn">Load pending</button>
+          <button class="cta hidden" id="ng-warm-pending-btn">Warm legacy cache</button>
+          <button class="cta primary hidden" id="ng-evaluate-pending-btn">Evaluate all pending</button>
+        </div>
       </div>
       <div id="ng-enrich-progress" class="hidden" style="font-size:12px;color:#8f8f94;margin-top:8px;"></div>
       <div id="ng-enrich-results" class="hidden" style="display:flex;flex-direction:column;gap:4px;margin-top:8px;">
         <div id="ng-added" style="font-size:12px;color:#4ecb71;"></div>
         <div id="ng-skipped" style="font-size:12px;color:#8f8f94;"></div>
+        <div id="ng-eval-progress" class="hidden" style="font-size:12px;color:#8f8f94;margin-top:4px;"></div>
+        <div id="ng-eval-list" class="newgrad-eval-list hidden"></div>
         <div style="font-size:11px;color:#8f8f94;margin-top:6px;">
-          Run <code style="color:#7aa7ff;">/career-ops pipeline</code> to start full evaluations.
+          Promoted rows are evaluated directly and synced to the tracker automatically.
         </div>
       </div>
     </div>
@@ -346,11 +406,19 @@ function initPanel(shadow: ShadowRoot, root: HTMLElement): void {
   const ngPromotedEl = $("ng-promoted");
   const ngFilteredEl = $("ng-filtered");
   const ngDedupedEl = $("ng-deduped");
+  const ngPromotedListEl = $("ng-promoted-list");
   const ngEnrichBtn = $("ng-enrich-btn") as HTMLButtonElement;
   const ngEnrichProgressEl = $("ng-enrich-progress");
   const ngEnrichResultsEl = $("ng-enrich-results");
   const ngAddedEl = $("ng-added");
   const ngSkippedEl = $("ng-skipped");
+  const ngEvalProgressEl = $("ng-eval-progress");
+  const ngEvalListEl = $("ng-eval-list");
+  const ngPendingStatusEl = $("ng-pending-status");
+  const ngPendingListEl = $("ng-pending-list");
+  const ngLoadPendingBtn = $("ng-load-pending-btn") as HTMLButtonElement;
+  const ngWarmPendingBtn = $("ng-warm-pending-btn") as HTMLButtonElement;
+  const ngEvaluatePendingBtn = $("ng-evaluate-pending-btn") as HTMLButtonElement;
 
   // --- Drag logic ---
   let isDragging = false;
@@ -406,6 +474,8 @@ function initPanel(shadow: ShadowRoot, root: HTMLElement): void {
   let preferredPreset: BridgePreset = "real-codex";
   let currentBridgePreset: BridgePreset | null = null;
   let jobPollTimer: number | null = null;
+  let batchEvaluationPollTimer: number | null = null;
+  let batchEvaluationPollInFlight = false;
 
   function trackerButtonLabel(result: { trackerMerged?: boolean; trackerMergeSummary?: { added?: number; updated?: number } }): string {
     if (!result?.trackerMerged) return "Save to tracker";
@@ -439,6 +509,21 @@ function initPanel(shadow: ShadowRoot, root: HTMLElement): void {
     stopJobPolling();
     jobPollTimer = window.setInterval(() => {
       void pollJobSnapshot(jobId);
+    }, 4000);
+  }
+
+  function stopBatchEvaluationPolling(): void {
+    if (batchEvaluationPollTimer !== null) {
+      window.clearInterval(batchEvaluationPollTimer);
+      batchEvaluationPollTimer = null;
+    }
+    batchEvaluationPollInFlight = false;
+  }
+
+  function startBatchEvaluationPolling(): void {
+    if (batchEvaluationPollTimer !== null) return;
+    batchEvaluationPollTimer = window.setInterval(() => {
+      void pollBatchEvaluationSnapshots();
     }, 4000);
   }
 
@@ -681,6 +766,72 @@ function initPanel(shadow: ShadowRoot, root: HTMLElement): void {
     applyJobSnapshot(res.result);
   }
 
+  async function pollBatchEvaluationSnapshots(): Promise<void> {
+    if (batchEvaluationPollInFlight) return;
+    if (evaluationRows.size === 0) {
+      stopBatchEvaluationPolling();
+      return;
+    }
+
+    const pendingJobIds = Array.from(evaluationRows.entries())
+      .filter(([, job]) => job.phase !== "completed" && job.phase !== "failed")
+      .map(([jobId]) => jobId);
+    if (pendingJobIds.length === 0) {
+      stopBatchEvaluationPolling();
+      return;
+    }
+
+    batchEvaluationPollInFlight = true;
+    try {
+      const snapshots = await Promise.all(
+        pendingJobIds.map(async (jobId) => ({
+          jobId,
+          response: await sendMsg({ kind: "getJob", jobId }),
+        })),
+      );
+
+      for (const { jobId, response } of snapshots) {
+        if (!response?.ok) continue;
+        const snapshot = response.result;
+        const existing = evaluationRows.get(jobId) ?? {};
+
+        if (snapshot.phase === "completed" && snapshot.result) {
+          evaluationRows.set(jobId, {
+            ...existing,
+            jobId,
+            company: snapshot.result.company,
+            role: snapshot.result.role,
+            phase: "completed",
+            score: snapshot.result.score,
+            reportNumber: snapshot.result.reportNumber,
+            reportPath: snapshot.result.reportPath,
+          });
+          continue;
+        }
+
+        if (snapshot.phase === "failed") {
+          evaluationRows.set(jobId, {
+            ...existing,
+            jobId,
+            phase: "failed",
+            error: snapshot.error?.message ?? "evaluation failed",
+          });
+          continue;
+        }
+
+        evaluationRows.set(jobId, {
+          ...existing,
+          jobId,
+          phase: snapshot.phase ?? existing.phase ?? "queued",
+        });
+      }
+
+      renderEvaluationProgress();
+    } finally {
+      batchEvaluationPollInFlight = false;
+    }
+  }
+
   function renderPhases(snap: any): void {
     while (phaseListEl.firstChild) phaseListEl.removeChild(phaseListEl.firstChild);
     const done = new Set((snap.progress?.phases ?? []).map((p: any) => p.phase));
@@ -760,6 +911,283 @@ function initPanel(shadow: ShadowRoot, root: HTMLElement): void {
 
   // --- Newgrad scan logic ---
   let storedPromotedRows: any[] = [];
+  let pendingNewGradEntries: any[] = [];
+  let activeEvaluationSessionId: string | null = null;
+  const evaluationRows = new Map<string, any>();
+
+  function clearPromotedList(): void {
+    while (ngPromotedListEl.firstChild) ngPromotedListEl.removeChild(ngPromotedListEl.firstChild);
+    ngPromotedListEl.classList.add("hidden");
+  }
+
+  function renderPromotedList(promoted: any[]): void {
+    clearPromotedList();
+    if (promoted.length === 0) return;
+
+    for (const scored of promoted) {
+      const row = scored.row ?? {};
+      const item = document.createElement("div");
+      item.className = "newgrad-promoted-item";
+
+      const left = document.createElement("div");
+      const link = document.createElement("a");
+      link.href = row.detailUrl || row.applyUrl || "#";
+      link.target = "_blank";
+      link.rel = "noreferrer";
+      link.textContent = (row.company ? row.company + " — " : "") + (row.title ?? "Untitled role");
+
+      const meta = document.createElement("div");
+      meta.className = "meta";
+      const metaParts = [row.postedAgo, row.location, row.workModel].filter(Boolean);
+      meta.textContent = metaParts.join(" · ");
+
+      left.appendChild(link);
+      if (meta.textContent) left.appendChild(meta);
+
+      const score = document.createElement("span");
+      score.className = "score";
+      score.textContent = typeof scored.score === "number" ? scored.score.toFixed(1) : String(scored.score ?? "");
+
+      item.appendChild(left);
+      item.appendChild(score);
+      ngPromotedListEl.appendChild(item);
+    }
+
+    ngPromotedListEl.classList.remove("hidden");
+  }
+
+  function renderPendingList(entries: any[]): void {
+    while (ngPendingListEl.firstChild) ngPendingListEl.removeChild(ngPendingListEl.firstChild);
+    ngPendingListEl.classList.add("hidden");
+    ngWarmPendingBtn.classList.add("hidden");
+    ngEvaluatePendingBtn.classList.add("hidden");
+
+    if (entries.length === 0) return;
+    for (const entry of entries) {
+      const item = document.createElement("div");
+      item.className = "newgrad-promoted-item";
+
+      const left = document.createElement("div");
+      const link = document.createElement("a");
+      link.href = entry.url;
+      link.target = "_blank";
+      link.rel = "noreferrer";
+      link.textContent = (entry.company ? entry.company + " — " : "") + (entry.role ?? "Untitled role");
+
+      const meta = document.createElement("div");
+      meta.className = "meta";
+      meta.textContent = "pipeline line " + entry.lineNumber +
+        (entry.localJdPath ? " · local cache ready" : " · legacy pending (no local cache)");
+
+      const score = document.createElement("span");
+      score.className = "score";
+      score.textContent = typeof entry.score === "number" ? entry.score.toFixed(1) : String(entry.score ?? "");
+
+      left.appendChild(link);
+      left.appendChild(meta);
+      item.appendChild(left);
+      item.appendChild(score);
+      ngPendingListEl.appendChild(item);
+    }
+
+    ngPendingListEl.classList.remove("hidden");
+    const legacyCount = countLegacyPendingEntries(entries);
+    if (legacyCount > 0) {
+      ngWarmPendingBtn.textContent = legacyCount === 1
+        ? "Warm 1 legacy cache"
+        : "Warm legacy cache (" + legacyCount + ")";
+      ngWarmPendingBtn.classList.remove("hidden");
+    }
+    ngEvaluatePendingBtn.classList.remove("hidden");
+  }
+
+  function countLegacyPendingEntries(entries: any[]): number {
+    return entries.filter((entry) => !entry.localJdPath).length;
+  }
+
+  async function loadPendingNewGradEntries(): Promise<{ shown: number; total: number; legacy: number } | null> {
+    ngLoadPendingBtn.disabled = true;
+    ngLoadPendingBtn.textContent = "Loading...";
+    const res = await sendMsg({ kind: "newgradPending", limit: 100 });
+    ngLoadPendingBtn.disabled = false;
+    ngLoadPendingBtn.textContent = "Load pending";
+
+    if (!res?.ok) {
+      ngPendingStatusEl.textContent = "Failed to load pending candidates: " +
+        (res?.error?.message ?? "unknown error");
+      return null;
+    }
+
+    pendingNewGradEntries = [...(res.result.entries ?? [])];
+    const legacyCount = countLegacyPendingEntries(pendingNewGradEntries);
+    ngPendingStatusEl.textContent = pendingNewGradEntries.length === 0
+      ? "No pending newgrad candidates in pipeline.md"
+      : "Found " + pendingNewGradEntries.length + " pending candidates" +
+        (res.result.total > pendingNewGradEntries.length ? " (" + res.result.total + " total)" : "") +
+        (legacyCount > 0 ? " · " + legacyCount + " missing local cache" : " · all locally cached");
+    renderPendingList(pendingNewGradEntries);
+    return {
+      shown: pendingNewGradEntries.length,
+      total: res.result.total ?? pendingNewGradEntries.length,
+      legacy: legacyCount,
+    };
+  }
+
+  async function evaluatePendingNewGradEntries(): Promise<void> {
+    if (pendingNewGradEntries.length === 0) {
+      await loadPendingNewGradEntries();
+      if (pendingNewGradEntries.length === 0) return;
+    }
+
+    resetEvaluationProgress();
+    activeEvaluationSessionId = "pending-" + Date.now() + "-" + Math.random().toString(36).slice(2, 8);
+    ngEvaluatePendingBtn.disabled = true;
+    ngEvaluatePendingBtn.textContent = "Queueing pending...";
+    ngEnrichResultsEl.classList.remove("hidden");
+    ngAddedEl.textContent = "Queueing " + pendingNewGradEntries.length + " pending evaluations...";
+    ngSkippedEl.textContent = "";
+
+    const res = await sendMsg({
+      kind: "newgradEvaluatePending",
+      sessionId: activeEvaluationSessionId,
+      limit: 100,
+    });
+
+    ngEvaluatePendingBtn.disabled = false;
+    ngEvaluatePendingBtn.textContent = "Evaluate all pending";
+    if (!res?.ok) {
+      renderError(res?.error?.code ?? "INTERNAL", res?.error?.message ?? "pending evaluation failed");
+      return;
+    }
+
+    const queued = res.result.queued ?? 0;
+    const skipped = res.result.skipped ?? 0;
+    const failed = res.result.failed ?? 0;
+    ngAddedEl.textContent = "\u2713 " + queued + " pending evaluations queued";
+    ngSkippedEl.textContent = "\u2717 " + skipped + " skipped, " + failed + " failed to queue";
+    seedEvaluationJobs(res.result.jobs ?? []);
+    await loadPendingNewGradEntries();
+  }
+
+  let activePendingBackfillSessionId: string | null = null;
+
+  async function warmPendingNewGradCache(): Promise<void> {
+    if (pendingNewGradEntries.length === 0) {
+      await loadPendingNewGradEntries();
+      if (pendingNewGradEntries.length === 0) return;
+    }
+
+    const legacyCount = countLegacyPendingEntries(pendingNewGradEntries);
+    if (legacyCount === 0) {
+      ngPendingStatusEl.textContent = "All pending candidates already have local cache";
+      renderPendingList(pendingNewGradEntries);
+      return;
+    }
+
+    activePendingBackfillSessionId = "pending-backfill-" + Date.now() + "-" + Math.random().toString(36).slice(2, 8);
+    ngWarmPendingBtn.disabled = true;
+    ngWarmPendingBtn.textContent = "Warming legacy...";
+    ngPendingStatusEl.textContent = "Warming local cache for " + legacyCount + " legacy pending candidates...";
+
+    const res = await sendMsg({
+      kind: "newgradWarmPendingCache",
+      sessionId: activePendingBackfillSessionId,
+      limit: 100,
+    });
+
+    activePendingBackfillSessionId = null;
+    ngWarmPendingBtn.disabled = false;
+    ngWarmPendingBtn.textContent = "Warm legacy cache";
+    if (!res?.ok) {
+      renderError(res?.error?.code ?? "INTERNAL", res?.error?.message ?? "legacy cache warm failed");
+      return;
+    }
+
+    const refreshed = await loadPendingNewGradEntries();
+    ngPendingStatusEl.textContent = "Warmed " + (res.result.warmed ?? 0) +
+      " legacy caches · " + (res.result.skipped ?? 0) + " skipped · " +
+      (res.result.failed ?? 0) + " failed" +
+      (refreshed ? " · now " + refreshed.legacy + " still missing local cache" : "");
+  }
+
+  function resetEvaluationProgress(): void {
+    activeEvaluationSessionId = null;
+    stopBatchEvaluationPolling();
+    evaluationRows.clear();
+    while (ngEvalListEl.firstChild) ngEvalListEl.removeChild(ngEvalListEl.firstChild);
+    ngEvalProgressEl.textContent = "";
+    ngEvalProgressEl.classList.add("hidden");
+    ngEvalListEl.classList.add("hidden");
+  }
+
+  function phaseLabel(phase: string): string {
+    return PHASE_LABEL[phase as JobPhase] ?? phase.replace(/_/g, " ");
+  }
+
+  function renderEvaluationProgress(summary?: { total?: number; completed?: number; failed?: number }): void {
+    const jobs = Array.from(evaluationRows.values());
+    const total = summary?.total ?? jobs.length;
+    const completed = summary?.completed ?? jobs.filter((job) => job.phase === "completed").length;
+    const failed = summary?.failed ?? jobs.filter((job) => job.phase === "failed").length;
+    if (total === 0) return;
+
+    ngEvalProgressEl.textContent = "Evaluation progress: " + completed + "/" + total +
+      " completed, " + failed + " failed";
+    ngEvalProgressEl.classList.remove("hidden");
+
+    while (ngEvalListEl.firstChild) ngEvalListEl.removeChild(ngEvalListEl.firstChild);
+    for (const job of jobs) {
+      const item = document.createElement("div");
+      item.className = "newgrad-eval-item";
+      item.dataset.status = job.phase === "completed" || job.phase === "failed" ? job.phase : "running";
+
+      const top = document.createElement("div");
+      top.className = "top";
+      const title = document.createElement("span");
+      title.className = "title";
+      title.textContent = (job.company ? job.company + " — " : "") + (job.role ?? "Untitled role");
+      const phase = document.createElement("span");
+      phase.className = "phase";
+      phase.textContent = phaseLabel(job.phase ?? job.status ?? "queued");
+      top.appendChild(title);
+      top.appendChild(phase);
+
+      const meta = document.createElement("div");
+      meta.className = "meta";
+      const metaParts = [];
+      if (typeof job.score === "number") metaParts.push("Score " + job.score.toFixed(1) + "/5");
+      if (typeof job.reportNumber === "number") metaParts.push("Report #" + String(job.reportNumber).padStart(3, "0"));
+      if (job.error) metaParts.push(job.error);
+      meta.textContent = metaParts.join(" · ");
+
+      item.appendChild(top);
+      if (meta.textContent) item.appendChild(meta);
+      ngEvalListEl.appendChild(item);
+    }
+    ngEvalListEl.classList.remove("hidden");
+
+    if (total > 0 && completed + failed >= total) {
+      stopBatchEvaluationPolling();
+      activeEvaluationSessionId = null;
+      void loadRecentJobs();
+    }
+  }
+
+  function seedEvaluationJobs(jobs: any[]): void {
+    for (const job of jobs) {
+      const existing = evaluationRows.get(job.jobId) ?? {};
+      evaluationRows.set(job.jobId, {
+        ...job,
+        ...existing,
+        phase: existing.phase ?? (job.status === "failed" ? "failed" : "queued"),
+      });
+    }
+    renderEvaluationProgress({ total: jobs.length });
+    if (jobs.some((job) => job.status !== "failed")) {
+      startBatchEvaluationPolling();
+      void pollBatchEvaluationSnapshots();
+    }
+  }
 
   async function onScanClick(): Promise<void> {
     ngScanBtn.disabled = true;
@@ -767,6 +1195,8 @@ function initPanel(shadow: ShadowRoot, root: HTMLElement): void {
     ngResultsEl.classList.add("hidden");
     ngEnrichResultsEl.classList.add("hidden");
     ngEnrichProgressEl.classList.add("hidden");
+    clearPromotedList();
+    resetEvaluationProgress();
 
     // Step 1: Extract listing rows from the page
     const extractRes = await sendMsg({ kind: "newgradExtractList" });
@@ -777,7 +1207,7 @@ function initPanel(shadow: ShadowRoot, root: HTMLElement): void {
       return;
     }
     const rows = extractRes.result.rows;
-    ngStatusEl.textContent = "Found " + rows.length + " Software Engineering listings from the last 24h";
+    ngStatusEl.textContent = "Extracted " + rows.length + " listings from the page; filtering recent/unscanned rows...";
 
     // Step 2: Score the rows
     const scoreRes = await sendMsg({ kind: "newgradScore", rows });
@@ -789,16 +1219,30 @@ function initPanel(shadow: ShadowRoot, root: HTMLElement): void {
     }
 
     const promoted = scoreRes.result.promoted ?? [];
-    const filtered = (scoreRes.result.filtered ?? []).filter(
-      (r: any) => r.reason !== "already_tracked",
+    const filteredRows = scoreRes.result.filtered ?? [];
+    const filtered = filteredRows.filter(
+      (r: any) => !["already_tracked", "already_scanned", "older_than_24h"].includes(r.reason),
     );
     const deduped = (scoreRes.result.filtered ?? []).filter(
       (r: any) => r.reason === "already_tracked",
     );
+    const alreadyScanned = filteredRows.filter(
+      (r: any) => r.reason === "already_scanned",
+    );
+    const olderThan24h = filteredRows.filter(
+      (r: any) => r.reason === "older_than_24h",
+    );
+    const recentUnscanned = promoted.length + filtered.length;
+
+    ngStatusEl.textContent = "Found " + recentUnscanned + " recent, not previously scanned listings";
 
     ngPromotedEl.textContent = "\u2713 " + promoted.length + " passed filter (score \u2265 threshold)";
-    ngFilteredEl.textContent = "\u2717 " + filtered.length + " filtered out";
-    ngDedupedEl.textContent = "\u2717 " + deduped.length + " already in tracker";
+    ngFilteredEl.textContent = "\u2717 " + filtered.length + " filtered out by fit rules";
+    ngDedupedEl.textContent =
+      "\u2717 " + alreadyScanned.length + " already scanned, " +
+      deduped.length + " already in tracker, " +
+      olderThan24h.length + " older than 24h";
+    renderPromotedList(promoted);
     ngResultsEl.classList.remove("hidden");
 
     storedPromotedRows = promoted;
@@ -815,12 +1259,41 @@ function initPanel(shadow: ShadowRoot, root: HTMLElement): void {
 
   // Listen for scoped enrich progress broadcasts from background
   let activeEnrichSessionId: string | null = null;
-  chrome.runtime.onMessage.addListener((msg: { kind?: string; sessionId?: string; current?: number; total?: number; row?: { company?: string; title?: string } }) => {
+  chrome.runtime.onMessage.addListener((msg: {
+    kind?: string;
+    sessionId?: string;
+    current?: number;
+    total?: number;
+    completed?: number;
+    failed?: number;
+    row?: { company?: string; title?: string };
+    job?: any;
+  }) => {
     if (msg?.kind === "enrichProgress"
       && msg.sessionId === activeEnrichSessionId
       && typeof msg.current === "number"
       && typeof msg.total === "number") {
       ngEnrichProgressEl.textContent = "Enriching (" + msg.current + "/" + msg.total + "): " +
+        (msg.row?.company ?? "") + " — " + (msg.row?.title ?? "");
+    }
+    if (msg?.kind === "newgradEvaluationProgress"
+      && msg.sessionId === activeEvaluationSessionId
+      && msg.job?.jobId) {
+      evaluationRows.set(msg.job.jobId, {
+        ...(evaluationRows.get(msg.job.jobId) ?? {}),
+        ...msg.job,
+      });
+      const summary: { total?: number; completed?: number; failed?: number } = {};
+      if (typeof msg.total === "number") summary.total = msg.total;
+      if (typeof msg.completed === "number") summary.completed = msg.completed;
+      if (typeof msg.failed === "number") summary.failed = msg.failed;
+      renderEvaluationProgress(summary);
+    }
+    if (msg?.kind === "newgradPendingBackfillProgress"
+      && msg.sessionId === activePendingBackfillSessionId
+      && typeof msg.current === "number"
+      && typeof msg.total === "number") {
+      ngPendingStatusEl.textContent = "Warming local cache (" + msg.current + "/" + msg.total + "): " +
         (msg.row?.company ?? "") + " — " + (msg.row?.title ?? "");
     }
   });
@@ -831,9 +1304,11 @@ function initPanel(shadow: ShadowRoot, root: HTMLElement): void {
     ngEnrichProgressEl.textContent = "Processing rows (0/" + storedPromotedRows.length + ")...";
     ngEnrichProgressEl.classList.remove("hidden");
     ngEnrichResultsEl.classList.add("hidden");
+    resetEvaluationProgress();
 
     // Generate a unique session ID for this enrich run
     activeEnrichSessionId = "enrich-" + Date.now() + "-" + Math.random().toString(36).slice(2, 8);
+    activeEvaluationSessionId = activeEnrichSessionId;
 
     // Step 1: Enrich detail pages
     const detailRes = await sendMsg({
@@ -861,13 +1336,17 @@ function initPanel(shadow: ShadowRoot, root: HTMLElement): void {
       return;
     }
 
-    const added = enrichRes.result.added ?? 0;
+    const queued = enrichRes.result.queued ?? enrichRes.result.evaluated ?? enrichRes.result.added ?? 0;
     const skipped = enrichRes.result.skipped ?? 0;
-    ngAddedEl.textContent = "\u2713 " + added + " added to pipeline.md";
-    ngSkippedEl.textContent = "\u2717 " + skipped + " skipped (below threshold or duplicate)";
+    const failed = enrichRes.result.failed ?? 0;
+    ngAddedEl.textContent = "\u2713 " + queued + " queued for direct evaluation";
+    ngSkippedEl.textContent = "\u2717 " + skipped + " skipped, " + failed + " failed to queue";
+    seedEvaluationJobs(enrichRes.result.jobs ?? []);
     ngEnrichResultsEl.classList.remove("hidden");
     ngEnrichProgressEl.classList.add("hidden");
     ngEnrichBtn.classList.add("hidden");
+    void loadPendingNewGradEntries();
+    void loadRecentJobs();
   }
 
   async function onCopySummaryClick(): Promise<void> {
@@ -887,6 +1366,9 @@ function initPanel(shadow: ShadowRoot, root: HTMLElement): void {
   // Wire events
   ngScanBtn.addEventListener("click", () => void onScanClick());
   ngEnrichBtn.addEventListener("click", () => void onEnrichClick());
+  ngLoadPendingBtn.addEventListener("click", () => void loadPendingNewGradEntries());
+  ngWarmPendingBtn.addEventListener("click", () => void warmPendingNewGradCache());
+  ngEvaluatePendingBtn.addEventListener("click", () => void evaluatePendingNewGradEntries());
   evaluateBtn.addEventListener("click", () => void onEvaluateClick());
   evaluateAnywayBtn.addEventListener("click", () => {
     if (capturedData) { show("captured"); void onEvaluateClick(); }
@@ -950,6 +1432,7 @@ function initPanel(shadow: ShadowRoot, root: HTMLElement): void {
         const currentHost = new URL(capturedUrl).hostname;
         if (currentHost.includes("newgrad-jobs.com")) {
           show("newgradScan");
+          void loadPendingNewGradEntries();
           void loadRecentJobs();
           return;
         }

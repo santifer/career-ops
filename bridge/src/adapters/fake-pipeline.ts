@@ -260,7 +260,27 @@ export function createFakePipelineAdapter(
       return {
         added: rows.length,
         skipped: 0,
+        candidates: entries,
         entries,
+      };
+    },
+
+    async readNewGradPendingEntries(_limit: number) {
+      return { entries: [], total: 0 };
+    },
+
+    async backfillNewGradPendingCache(entries) {
+      return {
+        updated: entries.length,
+        skipped: 0,
+        outcomes: entries.map((entry) => ({
+          url: entry.url,
+          company: entry.company,
+          role: entry.role,
+          lineNumber: entry.lineNumber,
+          status: "updated" as const,
+          localJdPath: `jds/fake-${entry.lineNumber}.txt`,
+        })),
       };
     },
   };

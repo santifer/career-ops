@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 import type { FilteredRow, NewGradScanConfig } from "../contracts/newgrad.js";
+import { canonicalizeJobUrl } from "../lib/canonical-job-url.js";
 
 const COMPANY_MEMORY_PATH = "data/newgrad-company-memory.yml";
 
@@ -23,9 +24,13 @@ const DEFAULT_SCAN_CONFIG: NewGradScanConfig = {
   freshness: { within_24h: 2, within_3d: 1, older: 0 },
   list_threshold: 3,
   pipeline_threshold: 5,
+  detail_value_threshold: 7,
+  compensation_min_usd: 0,
   hard_filters: {
+    blocked_companies: [],
     exclude_no_sponsorship: false,
     exclude_active_security_clearance: false,
+    max_years_experience: 99,
     no_sponsorship_keywords: [
       "no sponsorship",
       "without sponsorship",
@@ -37,6 +42,11 @@ const DEFAULT_SCAN_CONFIG: NewGradScanConfig = {
       "sponsorship not available",
       "no visa sponsorship",
       "must be authorized to work without sponsorship",
+      "only us citizens",
+      "only u.s. citizens",
+      "us citizens or permanent residents",
+      "u.s. citizens or permanent residents",
+      "permanent residents",
     ],
     no_sponsorship_companies: [],
     clearance_keywords: [
@@ -46,6 +56,10 @@ const DEFAULT_SCAN_CONFIG: NewGradScanConfig = {
       "must have an active secret clearance",
       "must possess an active secret clearance",
       "requires an active secret clearance",
+      "top secret",
+      "security clearance",
+      "secret clearance",
+      "ts/sci",
     ],
     active_security_clearance_companies: [],
   },
@@ -76,10 +90,12 @@ export function loadNewGradScanConfig(repoRoot: string): NewGradScanConfig {
 
   try {
     const lines = readFileSync(profilePath, "utf-8").split(/\r?\n/);
+    const compensationMinUsd = parseProfileCompensationMinimum(lines);
     const section = extractYamlBlock(lines, "newgrad_scan", 0);
     if (section.length === 0) {
       return {
         ...DEFAULT_SCAN_CONFIG,
+        compensation_min_usd: compensationMinUsd,
         hard_filters: {
           ...DEFAULT_SCAN_CONFIG.hard_filters,
           no_sponsorship_companies: mergeUniqueStrings(
@@ -104,6 +120,11 @@ export function loadNewGradScanConfig(repoRoot: string): NewGradScanConfig {
     const noSponsorshipKeywords = extractYamlArray(
       hardFiltersBlock,
       "no_sponsorship_keywords",
+      4,
+    );
+    const blockedCompanies = extractYamlArray(
+      hardFiltersBlock,
+      "blocked_companies",
       4,
     );
     const noSponsorshipCompanies = extractYamlArray(
@@ -185,7 +206,18 @@ export function loadNewGradScanConfig(repoRoot: string): NewGradScanConfig {
         2,
         DEFAULT_SCAN_CONFIG.pipeline_threshold,
       ),
+      detail_value_threshold: extractYamlNumber(
+        section,
+        "detail_value_threshold",
+        2,
+        DEFAULT_SCAN_CONFIG.detail_value_threshold,
+      ),
+      compensation_min_usd: compensationMinUsd,
       hard_filters: {
+        blocked_companies:
+          blockedCompanies.length > 0
+            ? blockedCompanies
+            : DEFAULT_SCAN_CONFIG.hard_filters.blocked_companies,
         exclude_no_sponsorship: extractYamlBoolean(
           hardFiltersBlock,
           "exclude_no_sponsorship",
@@ -197,6 +229,12 @@ export function loadNewGradScanConfig(repoRoot: string): NewGradScanConfig {
           "exclude_active_security_clearance",
           4,
           DEFAULT_SCAN_CONFIG.hard_filters.exclude_active_security_clearance,
+        ),
+        max_years_experience: extractYamlNumber(
+          hardFiltersBlock,
+          "max_years_experience",
+          4,
+          DEFAULT_SCAN_CONFIG.hard_filters.max_years_experience,
         ),
         no_sponsorship_keywords:
           noSponsorshipKeywords.length > 0
@@ -257,12 +295,8 @@ export function loadNegativeKeywords(repoRoot: string): string[] {
   if (!existsSync(portalsPath)) return [];
 
   try {
-    const content = readFileSync(portalsPath, "utf-8");
-    const negMatch = /negative:\s*\n((?:\s+-\s+.+\n?)*)/m.exec(content);
-    if (!negMatch) return [];
-    return [...negMatch[1]!.matchAll(/^\s+-\s+(.+)$/gm)].map((match) =>
-      match[1]!.trim().replace(/^["']|["']$/g, ""),
-    );
+    const lines = readFileSync(portalsPath, "utf-8").split(/\r?\n/);
+    return extractYamlArray(lines, "negative", 2);
   } catch {
     return [];
   }
@@ -303,7 +337,7 @@ export function loadPipelineUrls(repoRoot: string): Set<string> {
     for (const line of content.split("\n")) {
       const match = /^\s*-\s+\[[ xX]?\]\s+(\S+)/.exec(line);
       if (match?.[1]) {
-        urls.add(match[1]);
+        urls.add(canonicalizeJobUrl(match[1]) ?? match[1]);
       }
     }
   } catch {
@@ -487,6 +521,46 @@ function extractYamlBoolean(
   );
   const match = lines.find((line) => pattern.test(line))?.match(pattern);
   return match ? match[1]!.toLowerCase() === "true" : fallback;
+}
+
+function parseProfileCompensationMinimum(lines: readonly string[]): number {
+  const compensationBlock = extractYamlBlock(lines, "compensation", 0);
+  const minimum = extractYamlString(compensationBlock, "minimum", 2);
+  return parseMoneyUsd(minimum) ?? DEFAULT_SCAN_CONFIG.compensation_min_usd;
+}
+
+function extractYamlString(
+  lines: readonly string[],
+  key: string,
+  indent: number,
+): string | null {
+  const pattern = new RegExp(
+    `^${" ".repeat(indent)}${escapeRegExp(key)}:\\s*(.+?)\\s*$`,
+  );
+  const match = lines.find((line) => pattern.test(line))?.match(pattern);
+  if (!match?.[1]) return null;
+  return stripYamlScalar(match[1]);
+}
+
+function stripYamlScalar(value: string): string {
+  const withoutComment = value.replace(/\s+#.*$/, "").trim();
+  return withoutComment.replace(/^["']|["']$/g, "").trim();
+}
+
+function parseMoneyUsd(value: string | null): number | null {
+  if (!value) return null;
+
+  const match =
+    /\$?\s*(\d+(?:,\d{3})*(?:\.\d+)?|\d+(?:\.\d+)?)\s*([kK])?/.exec(
+      value,
+    );
+  if (!match?.[1]) return null;
+
+  const numeric = Number(match[1].replace(/,/g, ""));
+  if (!Number.isFinite(numeric)) return null;
+
+  const multiplier = match[2] !== undefined || numeric < 1_000 ? 1_000 : 1;
+  return Math.round(numeric * multiplier);
 }
 
 function countIndent(line: string): number {

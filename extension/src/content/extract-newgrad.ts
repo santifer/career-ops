@@ -81,8 +81,21 @@ export interface NewGradDetail {
  * Extracts all job rows from the newgrad-jobs.com listing table.
  * Must be completely self-contained for chrome.scripting.executeScript.
  */
-export function extractNewGradList(): NewGradRow[] {
+export async function extractNewGradList(): Promise<NewGradRow[]> {
   const MAX_AGE_MINUTES = 24 * 60;
+  const INITIAL_RENDER_SETTLE_MS = 400;
+  const SCROLL_POLL_MS = 250;
+  const MAX_SCROLL_SETTLE_MS = 2500;
+  const MAX_SCROLL_STEPS = 80;
+  const STABLE_SCROLL_LIMIT = 6;
+  type ScrollTarget = {
+    root: ParentNode;
+    getTop: () => number;
+    getMaxTop: () => number;
+    getClientHeight: () => number;
+    scrollTo: (top: number) => void;
+    reset: () => void;
+  };
 
   /* ---- helpers (inlined — no closures) ---- */
   function txt(el: Element | null | undefined): string {
@@ -150,24 +163,56 @@ export function extractNewGradList(): NewGradRow[] {
   function requiresActiveSecurityClearance(text: string): boolean {
     const normalized = text.trim().toLowerCase().replace(/\s+/g, " ");
     if (!normalized) return false;
-    return (
-      normalized.includes("active secret security clearance") ||
-      normalized.includes("active secret clearance") ||
-      normalized.includes("current secret clearance") ||
-      normalized.includes("must have an active secret clearance") ||
-      normalized.includes("must possess an active secret clearance") ||
-      normalized.includes("requires an active secret clearance")
-    );
+    const segments = normalized
+      .split(/[\n\r.;!?]+/)
+      .map((segment) => segment.trim())
+      .filter(Boolean);
+
+    for (const segment of segments) {
+      if (
+        /\b(preferred|preference|nice to have|plus|public trust)\b/.test(segment) ||
+        /\b(ability|eligible|eligibility|able)\s+to\s+obtain\b/.test(segment) ||
+        /\bobtain(?:ed|ing)?\b/.test(segment)
+      ) {
+        continue;
+      }
+      if (
+        /\b(active|current)\s+secret(?:\s+security)?\s+clearance\b/.test(segment) ||
+        /\b(active|current)\s+security\s+clearance\b/.test(segment) ||
+        /\btop\s+secret(?:\s+security)?\s+clearance\b/.test(segment) ||
+        /\b(?:current\s+)?ts\/sci(?:\s+security)?\s+clearance\b/.test(segment) ||
+        /\b(?:must\s+(?:have|possess)|requires?|required|need(?:ed)?|mandatory)\b.{0,40}\b(?:secret|top\s+secret|ts\/sci)(?:\s+security)?\s+clearance\b/.test(
+          segment,
+        ) ||
+        (
+          segment.length <= 120 &&
+          /\b(top secret|ts\/sci)\b/.test(segment)
+        )
+      ) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   function parsePostedAgoMinutes(text: string): number {
     const normalized = text.trim().toLowerCase();
+    if (
+      normalized === "just now" ||
+      normalized === "today" ||
+      normalized === "moments ago" ||
+      normalized === "a moment ago"
+    ) {
+      return 0;
+    }
+
     const longMatch = /^(\d+)\s+([a-z]+)\s+ago$/.exec(normalized);
     if (longMatch) {
       const value = Number(longMatch[1]);
       const unit = longMatch[2];
-      if (unit?.startsWith("minute")) return value;
-      if (unit?.startsWith("hour")) return value * 60;
+      if (unit?.startsWith("minute") || unit?.startsWith("min")) return value;
+      if (unit?.startsWith("hour") || unit === "hr" || unit === "hrs") return value * 60;
       if (unit?.startsWith("day")) return value * 1440;
       if (unit?.startsWith("week")) return value * 10080;
     }
@@ -185,180 +230,415 @@ export function extractNewGradList(): NewGradRow[] {
     return Number.POSITIVE_INFINITY;
   }
 
-  /* ---- locate rows ---- */
-  let rows = Array.from(document.querySelectorAll("table tbody tr"));
-  if (rows.length === 0) {
-    rows = Array.from(
-      document.querySelectorAll(
-        "[class*='job-row'], [class*='listing-row'], [class*='job'] tr, [class*='listing'] tr"
-      )
+  function extractPostedAgoText(rowText: string): string {
+    const normalized = rowText.replace(/\s+/g, " ").trim();
+    const match = normalized.match(
+      /\b(just now|today|moments ago|a moment ago|\d+\s*(?:minutes?|mins?|hours?|hrs?|days?|weeks?|months?)\s+ago|\d+\s*[mhdw]\s+ago)\b/i,
     );
-  }
-  if (rows.length === 0) {
-    // Fallback: any repeated card-like structure with links
-    rows = Array.from(
-      document.querySelectorAll(
-        "[class*='job-card'], [class*='job-item'], [class*='listing-item']"
-      )
-    );
+    return match?.[1]?.trim() ?? "";
   }
 
-  const results: NewGradRow[] = [];
+  function rowKey(row: NewGradRow): string {
+    return [
+      row.detailUrl || row.applyUrl || "",
+      row.title,
+      row.company,
+      row.location,
+      row.postedAgo,
+    ]
+      .join("|")
+      .trim()
+      .toLowerCase();
+  }
 
-  for (const [i, row] of rows.entries()) {
-    const cells = allCells(row);
+  function sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => window.setTimeout(resolve, ms));
+  }
 
-    // Try to find an apply link anywhere in the row
-    const applyLink = first(
-      row,
-      "a[href*='jobs/info/']",
-      "a[href*='apply']",
-      "a[href*='Apply']",
-      "a[class*='apply']",
-      "a[data-action*='apply']"
-    );
+  function rowDomSnapshot(root: ParentNode = document): string {
+    return locateRows(root)
+      .slice(0, 12)
+      .map((row) => {
+        const text = txt(row).replace(/\s+/g, " ").trim().slice(0, 160);
+        const links = Array.from(row.querySelectorAll("a[href]"))
+          .slice(0, 2)
+          .map((link) => href(link))
+          .join("|");
+        return `${links}::${text}`;
+      })
+      .join("\n");
+  }
 
-    // Try to find the detail/title link (first internal link that is NOT the apply link)
-    const allLinks = Array.from(row.querySelectorAll("a[href]"));
-    const detailLink = allLinks.find(
-      (a) =>
-        a !== applyLink &&
-        !href(a).toLowerCase().includes("apply") &&
-        href(a).startsWith("/")
-    ) ?? allLinks.find(
-      (a) =>
-        a !== applyLink &&
-        !href(a).toLowerCase().includes("apply") &&
-        href(a).includes("newgrad-jobs.com")
-    ) ?? allLinks[0] ?? null;
+  async function waitForRowsToChange(
+    root: ParentNode,
+    previousSnapshot: string,
+  ): Promise<string> {
+    let elapsed = 0;
+    while (elapsed < MAX_SCROLL_SETTLE_MS) {
+      await sleep(SCROLL_POLL_MS);
+      elapsed += SCROLL_POLL_MS;
+      const nextSnapshot = rowDomSnapshot(root);
+      if (nextSnapshot && nextSnapshot !== previousSnapshot) {
+        return nextSnapshot;
+      }
+    }
+    return rowDomSnapshot(root);
+  }
 
-    // Heuristic extraction: try cell-based first, fall back to row-level text
-    const titleEl = first(
-      row,
-      "[class*='title']",
-      "[class*='position']",
-      "[data-field='title']",
-      "a[href]:not([href*='apply'])"
-    );
+  function locateRows(root: ParentNode = document): Element[] {
+    let rows = Array.from(root.querySelectorAll("table tbody tr"));
+    if (rows.length === 0) {
+      rows = Array.from(
+        root.querySelectorAll(
+          "[class*='job-row'], [class*='listing-row'], [class*='job'] tr, [class*='listing'] tr"
+        )
+      );
+    }
+    if (rows.length === 0) {
+      // Fallback: any repeated card-like structure with links
+      rows = Array.from(
+        root.querySelectorAll(
+          "[class*='job-card'], [class*='job-item'], [class*='listing-item']"
+        )
+      );
+    }
+    return rows;
+  }
 
-    const companyEl = first(
-      row,
-      "[class*='company']",
-      "[data-field='company']"
-    );
+  function elementScrollTarget(element: HTMLElement): ScrollTarget {
+    return {
+      root: element,
+      getTop: () => element.scrollTop,
+      getMaxTop: () => Math.max(0, element.scrollHeight - element.clientHeight),
+      getClientHeight: () => element.clientHeight,
+      scrollTo: (top) => {
+        element.scrollTop = top;
+      },
+      reset: () => {
+        element.scrollTop = 0;
+      },
+    };
+  }
 
-    const locationEl = first(
-      row,
-      "[class*='location']",
-      "[data-field='location']"
-    );
+  function documentScrollTarget(): ScrollTarget | null {
+    const scrollElement = document.scrollingElement ?? document.documentElement;
+    const maxTop = Math.max(
+      scrollElement.scrollHeight,
+      document.body?.scrollHeight ?? 0,
+      document.documentElement.scrollHeight,
+    ) - window.innerHeight;
+    if (maxTop <= 120) return null;
 
-    const salaryEl = first(
-      row,
-      "[class*='salary']",
-      "[class*='compensation']",
-      "[data-field='salary']"
-    );
-
-    const postedEl = first(
-      row,
-      "[class*='posted']",
-      "[class*='date']",
-      "[class*='time']",
-      "[data-field='posted']",
-      "time"
-    );
-
-    const workModelEl = first(
-      row,
-      "[class*='work-model']",
-      "[class*='remote']",
-      "[class*='onsite']",
-      "[class*='hybrid']",
-      "[data-field='workModel']"
-    );
-
-    const companySizeEl = first(
-      row,
-      "[class*='size']",
-      "[class*='company-size']",
-      "[data-field='companySize']"
-    );
-
-    const industryEl = first(
-      row,
-      "[class*='industry']",
-      "[data-field='industry']"
-    );
-
-    const qualsEl = first(
-      row,
-      "[class*='qual']",
-      "[class*='requirement']",
-      "[data-field='qualifications']"
-    );
-
-    const h1bEl = first(
-      row,
-      "[class*='h1b']",
-      "[class*='sponsor']",
-      "[class*='visa']",
-      "[data-field='h1b']"
-    );
-
-    const newGradEl = first(
-      row,
-      "[class*='new-grad']",
-      "[class*='newgrad']",
-      "[class*='entry-level']",
-      "[data-field='isNewGrad']"
-    );
-
-    // The live Jobright table currently includes a sticky index column at 0.
-    const titleText = txt(titleEl) || (cells[1] ? txt(cells[1]) : "");
-    const postedText = txt(postedEl) || (cells[2] ? txt(cells[2]) : "");
-    const workModelText = txt(workModelEl) || (cells[4] ? txt(cells[4]) : "");
-    const locationText = txt(locationEl) || (cells[5] ? txt(cells[5]) : "");
-    const companyText = txt(companyEl) || (cells[6] ? txt(cells[6]) : "");
-    const salaryText = txt(salaryEl) || (cells[7] ? txt(cells[7]) : "");
-    const companySizeText =
-      txt(companySizeEl) || (cells[8] ? txt(cells[8]) : "");
-    const industryText = txt(industryEl) || (cells[9] ? txt(cells[9]) : "");
-    const qualsText = txt(qualsEl) || (cells[10] ? txt(cells[10]) : "");
-    const h1bText = txt(h1bEl) || (cells[11] ? txt(cells[11]) : "");
-    const newGradText = txt(newGradEl) || (cells[12] ? txt(cells[12]) : "");
-    const rowText = txt(row);
-    const sponsorshipSupport = parseSponsorshipStatus(h1bText);
-
-    // Skip completely empty rows (header, separator, etc.)
-    if (!titleText && !companyText) continue;
-    if (parsePostedAgoMinutes(postedText) > MAX_AGE_MINUTES) continue;
-
-    results.push({
-      position: i + 1,
-      title: titleText,
-      postedAgo: postedText,
-      applyUrl: href(applyLink),
-      detailUrl: href(detailLink),
-      workModel: workModelText,
-      location: locationText,
-      company: companyText,
-      salary: salaryText,
-      companySize: companySizeText,
-      industry: industryText,
-      qualifications: qualsText.slice(0, 500),
-      h1bSponsored: sponsorshipSupport === "yes",
-      sponsorshipSupport,
-      confirmedSponsorshipSupport: "unknown",
-      requiresActiveSecurityClearance: requiresActiveSecurityClearance(
-        `${titleText} ${qualsText} ${rowText}`,
+    return {
+      root: document,
+      getTop: () => window.scrollY || scrollElement.scrollTop,
+      getMaxTop: () => Math.max(
+        0,
+        Math.max(
+          scrollElement.scrollHeight,
+          document.body?.scrollHeight ?? 0,
+          document.documentElement.scrollHeight,
+        ) - window.innerHeight,
       ),
-      confirmedRequiresActiveSecurityClearance: false,
-      isNewGrad: parseBooleanText(newGradText),
-    });
+      getClientHeight: () => window.innerHeight,
+      scrollTo: (top) => {
+        window.scrollTo(0, top);
+        scrollElement.scrollTop = top;
+      },
+      reset: () => {
+        window.scrollTo(0, 0);
+        scrollElement.scrollTop = 0;
+      },
+    };
   }
 
-  return results;
+  function findScrollableTarget(): ScrollTarget | null {
+    const candidates = Array.from(
+      document.querySelectorAll<HTMLElement>(
+        "div, main, section, aside, ul, article, table, [role='list'], [role='grid'], [role='table'], [class*='scroll'], [class*='table']"
+      )
+    ).filter((el) => {
+      const style = window.getComputedStyle(el);
+      const overflowY = style.overflowY.toLowerCase();
+      const isScrollable =
+        overflowY === "auto" ||
+        overflowY === "scroll" ||
+        overflowY === "overlay" ||
+        el.scrollHeight > el.clientHeight + 120;
+      if (!isScrollable) return false;
+      if (el.scrollHeight <= el.clientHeight + 120) return false;
+
+      const visibleRows = locateRows(el).length;
+      const jobLinks = el.querySelectorAll("a[href]").length;
+      return visibleRows >= 3 || jobLinks >= 10;
+    });
+
+    candidates.sort((a, b) => {
+      const aRows = locateRows(a).length;
+      const bRows = locateRows(b).length;
+      if (aRows !== bRows) return bRows - aRows;
+      return b.clientHeight - a.clientHeight;
+    });
+
+    if (candidates[0]) return elementScrollTarget(candidates[0]);
+    return documentScrollTarget();
+  }
+
+  function extractVisibleRows(root: ParentNode = document): NewGradRow[] {
+    const rows = locateRows(root);
+    const results: NewGradRow[] = [];
+
+    for (const [i, row] of rows.entries()) {
+      const cells = allCells(row);
+
+      // Try to find an apply link anywhere in the row
+      const applyLink = first(
+        row,
+        "a[href*='jobs/info/']",
+        "a[href*='apply']",
+        "a[href*='Apply']",
+        "a[class*='apply']",
+        "a[data-action*='apply']"
+      );
+
+      // Try to find the detail/title link (first internal link that is NOT the apply link)
+      const allLinks = Array.from(row.querySelectorAll("a[href]"));
+      const detailLink = allLinks.find(
+        (a) =>
+          a !== applyLink &&
+          !href(a).toLowerCase().includes("apply") &&
+          href(a).startsWith("/")
+      ) ?? allLinks.find(
+        (a) =>
+          a !== applyLink &&
+          !href(a).toLowerCase().includes("apply") &&
+          href(a).includes("newgrad-jobs.com")
+      ) ?? allLinks[0] ?? null;
+
+      // Heuristic extraction: try cell-based first, fall back to row-level text
+      const titleEl = first(
+        row,
+        "[class*='title']",
+        "[class*='position']",
+        "[data-field='title']",
+        "a[href]:not([href*='apply'])"
+      );
+
+      const companyEl = first(
+        row,
+        "[class*='company']",
+        "[data-field='company']"
+      );
+
+      const locationEl = first(
+        row,
+        "[class*='location']",
+        "[data-field='location']"
+      );
+
+      const salaryEl = first(
+        row,
+        "[class*='salary']",
+        "[class*='compensation']",
+        "[data-field='salary']"
+      );
+
+      const postedEl = first(
+        row,
+        "[class*='posted']",
+        "[class*='date']",
+        "[class*='time']",
+        "[data-field='posted']",
+        "time"
+      );
+
+      const workModelEl = first(
+        row,
+        "[class*='work-model']",
+        "[class*='remote']",
+        "[class*='onsite']",
+        "[class*='hybrid']",
+        "[data-field='workModel']"
+      );
+
+      const companySizeEl = first(
+        row,
+        "[class*='size']",
+        "[class*='company-size']",
+        "[data-field='companySize']"
+      );
+
+      const industryEl = first(
+        row,
+        "[class*='industry']",
+        "[data-field='industry']"
+      );
+
+      const qualsEl = first(
+        row,
+        "[class*='qual']",
+        "[class*='requirement']",
+        "[data-field='qualifications']"
+      );
+
+      const h1bEl = first(
+        row,
+        "[class*='h1b']",
+        "[class*='sponsor']",
+        "[class*='visa']",
+        "[data-field='h1b']"
+      );
+
+      const newGradEl = first(
+        row,
+        "[class*='new-grad']",
+        "[class*='newgrad']",
+        "[class*='entry-level']",
+        "[data-field='isNewGrad']"
+      );
+
+      // The live Jobright table currently includes a sticky index column at 0.
+      const titleText = txt(titleEl) || (cells[1] ? txt(cells[1]) : "");
+      const rowText = txt(row);
+      const postedText =
+        extractPostedAgoText(rowText) ||
+        extractPostedAgoText(txt(postedEl)) ||
+        (cells[2] ? extractPostedAgoText(txt(cells[2])) || txt(cells[2]) : "");
+      const workModelText = txt(workModelEl) || (cells[4] ? txt(cells[4]) : "");
+      const locationText = txt(locationEl) || (cells[5] ? txt(cells[5]) : "");
+      const companyText = txt(companyEl) || (cells[6] ? txt(cells[6]) : "");
+      const salaryText = txt(salaryEl) || (cells[7] ? txt(cells[7]) : "");
+      const companySizeText =
+        txt(companySizeEl) || (cells[8] ? txt(cells[8]) : "");
+      const industryText = txt(industryEl) || (cells[9] ? txt(cells[9]) : "");
+      const qualsText = txt(qualsEl) || (cells[10] ? txt(cells[10]) : "");
+      const h1bText = txt(h1bEl) || (cells[11] ? txt(cells[11]) : "");
+      const newGradText = txt(newGradEl) || (cells[12] ? txt(cells[12]) : "");
+      const sponsorshipSupport = parseSponsorshipStatus(h1bText);
+
+      // Skip completely empty rows (header, separator, etc.)
+      if (!titleText && !companyText) continue;
+      if (parsePostedAgoMinutes(postedText) > MAX_AGE_MINUTES) continue;
+
+      results.push({
+        position: i + 1,
+        title: titleText,
+        postedAgo: postedText,
+        applyUrl: href(applyLink),
+        detailUrl: href(detailLink),
+        workModel: workModelText,
+        location: locationText,
+        company: companyText,
+        salary: salaryText,
+        companySize: companySizeText,
+        industry: industryText,
+        qualifications: qualsText.slice(0, 500),
+        h1bSponsored: sponsorshipSupport === "yes",
+        sponsorshipSupport,
+        confirmedSponsorshipSupport: "unknown",
+        requiresActiveSecurityClearance: requiresActiveSecurityClearance(
+          `${titleText} ${qualsText} ${rowText}`,
+        ),
+        confirmedRequiresActiveSecurityClearance: false,
+        isNewGrad: parseBooleanText(newGradText),
+      });
+    }
+
+    return results;
+  }
+
+  const collected = new Map<string, NewGradRow>();
+
+  function mergeRows(rows: NewGradRow[]): void {
+    for (const row of rows) {
+      const key = rowKey(row);
+      if (!key || collected.has(key)) continue;
+      collected.set(key, {
+        ...row,
+        position: collected.size + 1,
+      });
+    }
+  }
+
+  function visibleRowsAreOlderThan24h(root: ParentNode): boolean {
+    const rows = locateRows(root);
+    if (rows.length === 0) return false;
+
+    let parsed = 0;
+    let recent = 0;
+    let old = 0;
+
+    for (const row of rows) {
+      const postedText = extractPostedAgoText(txt(row));
+      const minutesAgo = parsePostedAgoMinutes(postedText);
+      if (!isFinite(minutesAgo)) continue;
+      parsed += 1;
+      if (minutesAgo < MAX_AGE_MINUTES) recent += 1;
+      else old += 1;
+    }
+
+    return parsed > 0 && old > 0 && recent === 0;
+  }
+
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    mergeRows(extractVisibleRows());
+    if (collected.size > 0) break;
+    await sleep(INITIAL_RENDER_SETTLE_MS);
+  }
+
+  const scrollTarget = findScrollableTarget();
+  if (!scrollTarget) {
+    return Array.from(collected.values());
+  }
+
+  let stableIterations = 0;
+  let oldOnlyIterations = 0;
+  let lastDomSnapshot = rowDomSnapshot(scrollTarget.root);
+  let lastIterationSnapshot = "";
+
+  for (let step = 0; step < MAX_SCROLL_STEPS; step += 1) {
+    const previousTop = scrollTarget.getTop();
+    const nextTop = Math.min(
+      previousTop + Math.max(Math.floor(scrollTarget.getClientHeight() * 0.85), 320),
+      scrollTarget.getMaxTop(),
+    );
+
+    if (nextTop === previousTop) {
+      stableIterations += 1;
+      if (stableIterations >= STABLE_SCROLL_LIMIT) break;
+    } else {
+      const previousSnapshot = lastDomSnapshot || rowDomSnapshot(scrollTarget.root);
+      scrollTarget.scrollTo(nextTop);
+      lastDomSnapshot = await waitForRowsToChange(scrollTarget.root, previousSnapshot);
+      mergeRows(extractVisibleRows(scrollTarget.root));
+    }
+
+    if (visibleRowsAreOlderThan24h(scrollTarget.root)) {
+      oldOnlyIterations += 1;
+      if (oldOnlyIterations >= 2) break;
+    } else {
+      oldOnlyIterations = 0;
+    }
+
+    const snapshot = [
+      collected.size,
+      scrollTarget.getTop(),
+      scrollTarget.getMaxTop(),
+      locateRows(scrollTarget.root).length,
+      lastDomSnapshot,
+    ].join(":");
+
+    if (snapshot === lastIterationSnapshot) {
+      stableIterations += 1;
+      if (stableIterations >= STABLE_SCROLL_LIMIT) break;
+    } else {
+      stableIterations = 0;
+      lastIterationSnapshot = snapshot;
+    }
+  }
+
+  scrollTarget.reset();
+  return Array.from(collected.values());
 }
 
 /* ========================================================================== */
@@ -467,14 +747,80 @@ export function extractNewGradDetail(): NewGradDetail {
   function requiresActiveSecurityClearance(text: string): boolean {
     const normalized = text.trim().toLowerCase().replace(/\s+/g, " ");
     if (!normalized) return false;
-    return (
-      normalized.includes("active secret security clearance") ||
-      normalized.includes("active secret clearance") ||
-      normalized.includes("current secret clearance") ||
-      normalized.includes("must have an active secret clearance") ||
-      normalized.includes("must possess an active secret clearance") ||
-      normalized.includes("requires an active secret clearance")
-    );
+    const segments = normalized
+      .split(/[\n\r.;!?]+/)
+      .map((segment) => segment.trim())
+      .filter(Boolean);
+
+    for (const segment of segments) {
+      if (
+        /\b(preferred|preference|nice to have|plus|public trust)\b/.test(segment) ||
+        /\b(ability|eligible|eligibility|able)\s+to\s+obtain\b/.test(segment) ||
+        /\bobtain(?:ed|ing)?\b/.test(segment)
+      ) {
+        continue;
+      }
+      if (
+        /\b(active|current)\s+secret(?:\s+security)?\s+clearance\b/.test(segment) ||
+        /\b(active|current)\s+security\s+clearance\b/.test(segment) ||
+        /\btop\s+secret(?:\s+security)?\s+clearance\b/.test(segment) ||
+        /\b(?:current\s+)?ts\/sci(?:\s+security)?\s+clearance\b/.test(segment) ||
+        /\b(?:must\s+(?:have|possess)|requires?|required|need(?:ed)?|mandatory)\b.{0,40}\b(?:secret|top\s+secret|ts\/sci)(?:\s+security)?\s+clearance\b/.test(
+          segment,
+        ) ||
+        (
+          segment.length <= 120 &&
+          /\b(top secret|ts\/sci)\b/.test(segment)
+        )
+      ) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  function normalizeEmploymentTypeValue(...candidates: string[]): string {
+    for (const candidate of candidates) {
+      const normalized = candidate.trim().toLowerCase();
+      if (!normalized) continue;
+      if (/\bfull[-\s]?time\b/.test(normalized)) return "Full-time";
+      if (/\bpart[-\s]?time\b/.test(normalized)) return "Part-time";
+      if (/\bcontract(or)?\b/.test(normalized)) return "Contract";
+      if (/\bintern(ship)?\b/.test(normalized)) return "Internship";
+    }
+    return "";
+  }
+
+  function normalizeSeniorityValue(titleText: string, ...candidates: string[]): string {
+    const titleNormalized = titleText.trim().toLowerCase();
+    if (
+      /\b(new grad|new graduate|graduate|entry level|entry-level|associate|junior|engineer i|engineer 1)\b/.test(
+        titleNormalized,
+      )
+    ) {
+      return "Early career";
+    }
+    if (/\b(senior|staff|principal|lead|manager|director|architect)\b/.test(titleNormalized)) {
+      return "Senior";
+    }
+
+    for (const candidate of candidates) {
+      const normalized = candidate.trim().toLowerCase();
+      if (!normalized) continue;
+      if (
+        /\b(entry|entry level|associate|junior|new grad|new graduate|graduate|early career|engineer i|engineer 1)\b/.test(
+          normalized,
+        )
+      ) {
+        return "Early career";
+      }
+      if (/\b(senior|staff|principal|lead|manager|director|architect)\b/.test(normalized)) {
+        return "Senior";
+      }
+    }
+
+    return "";
   }
 
   function addCandidate(set: Set<string>, value: string | null | undefined): void {
@@ -760,10 +1106,11 @@ export function extractNewGradDetail(): NewGradDetail {
   const location = txt(locationEl) || labelledValue("location");
 
   /* ---- employment type ---- */
-  const employmentType =
-    labelledValue("employment type") ||
-    labelledValue("job type") ||
-    labelledValue("type");
+  const employmentType = normalizeEmploymentTypeValue(
+    labelledValue("employment type"),
+    labelledValue("job type"),
+    labelledValue("time type"),
+  );
 
   /* ---- work model ---- */
   const workModelEl = first(
@@ -779,10 +1126,12 @@ export function extractNewGradDetail(): NewGradDetail {
     labelledValue("remote");
 
   /* ---- seniority level ---- */
-  const seniorityLevel =
-    labelledValue("seniority") ||
-    labelledValue("experience level") ||
-    labelledValue("level");
+  const seniorityLevel = normalizeSeniorityValue(
+    title,
+    labelledValue("seniority"),
+    labelledValue("experience level"),
+    labelledValue("career level"),
+  );
 
   /* ---- salary range ---- */
   const salaryEl = first(

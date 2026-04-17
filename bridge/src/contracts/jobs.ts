@@ -55,10 +55,47 @@ export interface EvaluationInput {
   /** Optional pre-captured JD text. See `JD_MIN_CHARS` below. */
   pageText?: string;
   /**
+   * Optional execution mode. `newgrad_quick` runs the fast screen first and
+   * only escalates to the full worker when the screen decides the role is
+   * genuinely worth a deep evaluation.
+   */
+  evaluationMode?: EvaluationMode;
+  /**
+   * Optional structured signals extracted locally from page elements. This is
+   * intended for fast screening paths so the model can score value without
+   * re-reading noisy full-page text.
+   */
+  structuredSignals?: StructuredJobSignals;
+  /**
    * Optional hints from the content script's heuristic detector.
    * Used for debugging and for the popup to explain "why this page".
    */
   detection?: PageDetection;
+}
+
+export type EvaluationMode = "default" | "newgrad_quick";
+
+export interface StructuredJobSignals {
+  source?: string;
+  company?: string;
+  role?: string;
+  location?: string;
+  workModel?: string;
+  employmentType?: string;
+  seniority?: string;
+  postedAgo?: string;
+  salaryRange?: string;
+  sponsorshipSupport?: "yes" | "no" | "unknown";
+  requiresActiveSecurityClearance?: boolean;
+  yearsExperienceRequired?: number | null;
+  companySize?: string | null;
+  taxonomy?: readonly string[];
+  recommendationTags?: readonly string[];
+  skillTags?: readonly string[];
+  requiredQualifications?: readonly string[];
+  responsibilities?: readonly string[];
+  localValueScore?: number;
+  localValueReasons?: readonly string[];
 }
 
 export const JD_MIN_CHARS = 400;

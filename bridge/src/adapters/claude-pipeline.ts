@@ -20,6 +20,7 @@ import type {
 } from "../contracts/pipeline.js";
 import type {
   EvaluationInput,
+  StructuredJobSignals,
   EvaluationResult,
   JobId,
   TrackerMergeSummary,
@@ -28,6 +29,7 @@ import type {
 } from "../contracts/jobs.js";
 import type { BridgeError } from "../contracts/envelope.js";
 import type {
+  FilteredRow,
   NewGradRow,
   EnrichedRow,
   NewGradScoreResult,
@@ -50,7 +52,9 @@ import { basename, join, resolve } from "node:path";
 
 import { bridgeError } from "../runtime/errors.js";
 import { scoreAndFilter } from "./newgrad-scorer.js";
+import { scoreEnrichedRowValue } from "./newgrad-value-scorer.js";
 import { pickPipelineEntryUrl } from "./newgrad-links.js";
+import { loadEvaluatedReportUrls } from "./evaluated-report-urls.js";
 import {
   loadNegativeKeywords,
   loadNewGradScanConfig,
@@ -58,6 +62,20 @@ import {
   persistBlockedCompanies,
   loadTrackedCompanyRoles,
 } from "./newgrad-config.js";
+import {
+  appendNewGradScanHistory,
+  isRecentNewGradRow,
+  loadNewGradSeenKeys,
+  newGradCompanyRoleKey,
+  newGradRowUrl,
+  wasNewGradRowSeen,
+} from "./newgrad-scan-history.js";
+import {
+  backfillNewGradPendingCache as backfillPendingNewGradCache,
+  readNewGradPendingEntries as readPendingNewGradEntries,
+} from "./newgrad-pending.js";
+import { canonicalizeJobUrl } from "../lib/canonical-job-url.js";
+import { detectActiveSecurityClearanceRequirement } from "../lib/security-clearance.js";
 import { JD_MIN_CHARS as JD_MIN_CHARS_VALUE } from "../contracts/jobs.js";
 import { writeJdFile } from "../lib/write-jd-file.js";
 
@@ -66,6 +84,31 @@ const LOCK_POLL_MS = 100;
 const REPORT_NUM_WIDTH = 3;
 const MAX_ERROR_TAIL_CHARS = 400;
 const COMMAND_HEARTBEAT_MS = 15_000;
+const EVALUATION_PAGE_TEXT_MAX_CHARS = 6_000;
+const QUICK_EVALUATION_PAGE_TEXT_MAX_CHARS = 2_500;
+// Keep this aligned with the extension's "rich pending context" heuristic so
+// hidden-tab hydration can actually avoid Codex web search on bulk replays.
+const LOCAL_ONLY_JD_MIN_CHARS = 1_200;
+const EXTRA_NO_SPONSORSHIP_PHRASES = [
+  "not eligible for immigration sponsorship",
+  "immigration sponsorship is not available",
+  "visa sponsorship unavailable",
+  "unable to provide visa sponsorship",
+  "must be authorized to work without sponsorship",
+  "work authorization without sponsorship",
+];
+const RESTRICTED_WORK_AUTHORIZATION_PHRASES = [
+  "u.s. citizenship required",
+  "us citizenship required",
+  "must be a u.s. citizen",
+  "must be a us citizen",
+  "only us citizens",
+  "u.s. persons only",
+  "us persons only",
+  "green card holders cannot be considered",
+  "permanent work authorization required",
+  "must be authorized to work in the united states without sponsorship",
+];
 
 interface ClaudeTerminalJson {
   status: "completed" | "failed";
@@ -93,6 +136,28 @@ interface ParsedReportMarkdown {
   tldr: string;
 }
 
+interface QuickEvaluationJson {
+  status: "completed" | "failed";
+  id: string;
+  company: string;
+  role: string;
+  score: number;
+  tldr: string;
+  legitimacy: string;
+  decision: "deep_eval" | "skip";
+  reasons: string[];
+  blockers: string[];
+  error: string | null;
+}
+
+interface QuickEvaluationCandidateProfile {
+  compensationMinUsd: number;
+  targetSkills: readonly string[];
+  requiresVisaSponsorship: boolean;
+  excludeActiveSecurityClearance: boolean;
+  maxYearsExperience: number;
+}
+
 interface CommandResult {
   exitCode: number | null;
   stdout: string;
@@ -115,7 +180,13 @@ interface TrackerMergeAttempt {
 }
 
 export const __internal = {
+  buildJdText,
   buildCodexTerminalSchema,
+  buildLocalQuickScreen,
+  buildQuickEvaluationSchema,
+  buildQuickEvaluationPrompt,
+  buildQuickEvaluationArtifacts,
+  shouldUseCodexSearch,
   extractTerminalJsonObject,
   parseReportMarkdown,
 };
@@ -233,6 +304,155 @@ export function createClaudePipelineAdapter(
       mkdirSync(trackerDir, { recursive: true });
       mkdirSync(reportDir, { recursive: true });
 
+      if (shouldRunQuickEvaluation(input)) {
+        const quickLogPath = join(logsDir, `quick-${jobId}.log`);
+        const quickConfig = loadNewGradScanConfig(config.repoRoot);
+        writeFileSync(quickLogPath, "", "utf-8");
+        appendJobLog(quickLogPath, "bridge", `job=${jobId} executor=${realExecutor} quick-eval`);
+        appendJobLog(quickLogPath, "bridge", `url=${input.url}`);
+
+        const localQuickScreen = buildLocalQuickScreen({
+          input,
+          quickConfig,
+          evaluatedReportUrls: loadEvaluatedReportUrls(config.repoRoot),
+          jobId,
+        });
+
+        if (localQuickScreen) {
+          appendJobLog(
+            quickLogPath,
+            "bridge",
+            `local quick-screen skip blockers=${localQuickScreen.blockers.join(",") || "none"} score=${localQuickScreen.score.toFixed(2)}`,
+          );
+          onProgress({
+            phase: "evaluating",
+            at: nowIso(),
+            note: "local structured precheck skip",
+          });
+
+          const reportNumber = reserveReportNumber(config.repoRoot, jobId);
+          const today = todayDate();
+          const artifacts = buildQuickEvaluationArtifacts({
+            repoRoot: config.repoRoot,
+            reportNumber,
+            date: today,
+            url: input.url,
+            screen: localQuickScreen,
+            signals: input.structuredSignals,
+          });
+
+          onProgress({
+            phase: "writing_report",
+            at: nowIso(),
+            note: basename(artifacts.reportPath),
+          });
+          onProgress({
+            phase: "generating_pdf",
+            at: nowIso(),
+            note: "local precheck skip; PDF not generated",
+          });
+
+          writeTrackerAddition(trackerDir, jobId, artifacts.trackerRow);
+          onProgress({
+            phase: "writing_tracker",
+            at: nowIso(),
+            note: artifacts.trackerRow.status,
+          });
+
+          return await syncTrackerAfterEvaluation(
+            config,
+            {
+              reportNumber,
+              reportPath: artifacts.reportPath,
+              pdfPath: null,
+              company: localQuickScreen.company,
+              role: localQuickScreen.role,
+              score: Number(localQuickScreen.score.toFixed(2)),
+              archetype: "quick-screen",
+              tldr: localQuickScreen.tldr,
+              trackerRow: artifacts.trackerRow,
+              trackerMerged: false,
+            },
+            quickLogPath,
+          );
+        }
+
+        const quickEvaluation = await runQuickEvaluation({
+          config,
+          quickConfig,
+          input,
+          jobId,
+          logsDir,
+          logPath: quickLogPath,
+          onProgress,
+        });
+
+        if ("code" in quickEvaluation) {
+          appendJobLog(
+            quickLogPath,
+            "bridge",
+            `quick-eval failed, falling back to full evaluation: ${quickEvaluation.message}`
+          );
+        } else if (quickEvaluation.decision !== "deep_eval") {
+          const reportNumber = reserveReportNumber(config.repoRoot, jobId);
+          const today = todayDate();
+          const artifacts = buildQuickEvaluationArtifacts({
+            repoRoot: config.repoRoot,
+            reportNumber,
+            date: today,
+            url: input.url,
+            screen: quickEvaluation,
+            signals: input.structuredSignals,
+          });
+
+          onProgress({
+            phase: "writing_report",
+            at: nowIso(),
+            note: basename(artifacts.reportPath),
+          });
+          onProgress({
+            phase: "generating_pdf",
+            at: nowIso(),
+            note: "quick screen skips PDF generation",
+          });
+
+          writeTrackerAddition(trackerDir, jobId, artifacts.trackerRow);
+          onProgress({
+            phase: "writing_tracker",
+            at: nowIso(),
+            note: artifacts.trackerRow.status,
+          });
+
+          return await syncTrackerAfterEvaluation(
+            config,
+            {
+              reportNumber,
+              reportPath: artifacts.reportPath,
+              pdfPath: null,
+              company: quickEvaluation.company,
+              role: quickEvaluation.role,
+              score: Number(quickEvaluation.score.toFixed(2)),
+              archetype: "quick-screen",
+              tldr: quickEvaluation.tldr,
+              trackerRow: artifacts.trackerRow,
+              trackerMerged: false,
+            },
+            quickLogPath
+          );
+        } else {
+          appendJobLog(
+            quickLogPath,
+            "bridge",
+            `quick-eval passed score=${quickEvaluation.score.toFixed(2)} decision=deep_eval`
+          );
+          onProgress({
+            phase: "evaluating",
+            at: nowIso(),
+            note: `quick-eval ${quickEvaluation.score.toFixed(1)}/5 passed; running deep eval`,
+          });
+        }
+      }
+
       const reportNumber = reserveReportNumber(config.repoRoot, jobId);
       const reportNumberText = formatReportNumber(reportNumber);
       const today = todayDate();
@@ -295,6 +515,7 @@ export function createClaudePipelineAdapter(
           task,
           logsDir,
           reportNumberText,
+          allowSearch: shouldUseCodexSearch(input),
         });
         appendJobLog(
           logPath,
@@ -575,9 +796,68 @@ export function createClaudePipelineAdapter(
       const scanConfig = loadNewGradScanConfig(config.repoRoot);
       const negativeKeywords = loadNegativeKeywords(config.repoRoot);
       const trackedSet = loadTrackedCompanyRoles(config.repoRoot);
-      const { promoted, filtered } = scoreAndFilter(rows, scanConfig, negativeKeywords, trackedSet);
+      const seenKeys = loadNewGradSeenKeys(config.repoRoot);
+      const recentUnseenRows: NewGradRow[] = [];
+      const preFiltered: FilteredRow[] = [];
+
+      for (const row of rows) {
+        if (!isRecentNewGradRow(row)) {
+          preFiltered.push({
+            row,
+            reason: "older_than_24h",
+            detail: `Posted ${row.postedAgo || "outside the last 24h"}`,
+          });
+          continue;
+        }
+
+        const trackedKey = newGradCompanyRoleKey(row);
+        if (trackedKey && trackedSet.has(trackedKey)) {
+          preFiltered.push({
+            row,
+            reason: "already_tracked",
+            detail: `Already tracked: ${row.company} | ${row.title}`,
+          });
+          continue;
+        }
+
+        if (wasNewGradRowSeen(row, seenKeys)) {
+          preFiltered.push({
+            row,
+            reason: "already_scanned",
+            detail: "Already seen in scan history or pipeline",
+          });
+          continue;
+        }
+
+        recentUnseenRows.push(row);
+      }
+
+      const { promoted, filtered } = scoreAndFilter(
+        recentUnseenRows,
+        scanConfig,
+        negativeKeywords,
+        trackedSet,
+      );
+      const statusByKey = new Map<string, string>();
+      for (const row of recentUnseenRows) {
+        statusByKey.set(newGradRowUrl(row) || newGradCompanyRoleKey(row), "scanned");
+      }
+      for (const row of promoted.map((p) => p.row)) {
+        statusByKey.set(newGradRowUrl(row) || newGradCompanyRoleKey(row), "promoted");
+      }
+      for (const item of filtered) {
+        statusByKey.set(
+          newGradRowUrl(item.row) || newGradCompanyRoleKey(item.row),
+          item.reason,
+        );
+      }
+      appendNewGradScanHistory(
+        config.repoRoot,
+        recentUnseenRows,
+        (row) => statusByKey.get(newGradRowUrl(row) || newGradCompanyRoleKey(row)) ?? "scanned",
+      );
       persistBlockedCompanies(config.repoRoot, filtered);
-      return { promoted, filtered };
+      return { promoted, filtered: [...preFiltered, ...filtered] };
     },
 
     async enrichNewGradRows(
@@ -588,6 +868,7 @@ export function createClaudePipelineAdapter(
       const negativeKeywords = loadNegativeKeywords(config.repoRoot);
       const trackedSet = loadTrackedCompanyRoles(config.repoRoot);
       const existingPipelineUrls = loadPipelineUrls(config.repoRoot);
+      const evaluatedReportUrls = loadEvaluatedReportUrls(config.repoRoot);
 
       const entries: PipelineEntry[] = [];
       const candidates: PipelineEntry[] = [];
@@ -643,6 +924,13 @@ export function createClaudePipelineAdapter(
           continue;
         }
 
+        const valueScore = scoreEnrichedRowValue(enrichedRow, scanConfig);
+        if (!valueScore.passed) {
+          skipped++;
+          onProgress?.(processed, rows.length, enrichedRow);
+          continue;
+        }
+
         const entryUrl = pickPipelineEntryUrl(
           enrichedRow.detail,
           enrichedRow.row.row,
@@ -652,15 +940,25 @@ export function createClaudePipelineAdapter(
           company: enrichedRow.row.row.company,
           role: enrichedRow.row.row.title,
           score: scored.score,
+          valueScore: valueScore.score,
+          valueReasons: [...valueScore.reasons, ...valueScore.penalties],
           source: "newgrad-jobs.com",
         };
-        candidates.push(entry);
+        const canonicalEntryUrl = canonicalizeJobUrl(entryUrl) ?? entryUrl;
 
-        if (existingPipelineUrls.has(entryUrl)) {
+        if (evaluatedReportUrls.has(canonicalEntryUrl)) {
           skipped++;
           onProgress?.(processed, rows.length, enrichedRow);
           continue;
         }
+
+        if (existingPipelineUrls.has(canonicalEntryUrl)) {
+          skipped++;
+          onProgress?.(processed, rows.length, enrichedRow);
+          continue;
+        }
+
+        candidates.push(entry);
 
         // Write pre-extracted JD to jds/ for batch consumption
         const jdsDir = join(config.repoRoot, "jds");
@@ -684,6 +982,24 @@ export function createClaudePipelineAdapter(
             ? { clearance: "active-secret-required" }
             : {}),
           ...(enrichedRow.detail.applyNowUrl ? { applyUrl: enrichedRow.detail.applyNowUrl } : {}),
+          ...(enrichedRow.detail.companyDescription
+            ? { companyDescription: enrichedRow.detail.companyDescription }
+            : {}),
+          ...(enrichedRow.detail.requiredQualifications.length > 0
+            ? { requiredQualifications: enrichedRow.detail.requiredQualifications }
+            : {}),
+          ...(enrichedRow.detail.responsibilities.length > 0
+            ? { responsibilities: enrichedRow.detail.responsibilities }
+            : {}),
+          ...(enrichedRow.detail.skillTags.length > 0
+            ? { skillTags: enrichedRow.detail.skillTags }
+            : {}),
+          ...(enrichedRow.detail.recommendationTags.length > 0
+            ? { recommendationTags: enrichedRow.detail.recommendationTags }
+            : {}),
+          ...(enrichedRow.detail.taxonomy.length > 0
+            ? { taxonomy: enrichedRow.detail.taxonomy }
+            : {}),
         });
 
         if (jdFile) {
@@ -691,7 +1007,7 @@ export function createClaudePipelineAdapter(
         }
 
         entries.push(entry);
-        existingPipelineUrls.add(entryUrl);
+        existingPipelineUrls.add(canonicalEntryUrl);
         onProgress?.(processed, rows.length, enrichedRow);
       }
 
@@ -704,7 +1020,8 @@ export function createClaudePipelineAdapter(
           scanConfig.freshness.within_24h;
         const lines = entries.map((e) => {
           const tag = jdFileMap.get(e.url);
-          const base = `- [ ] ${e.url} — ${e.company} | ${e.role} (via newgrad-scan, score: ${e.score}/${maxScore})`;
+          const value = e.valueScore !== undefined ? `, value: ${e.valueScore}/10` : "";
+          const base = `- [ ] ${e.url} — ${e.company} | ${e.role} (via newgrad-scan, score: ${e.score}/${maxScore}${value})`;
           return tag ? `${base} [local:jds/${tag}]` : base;
         });
 
@@ -716,6 +1033,14 @@ export function createClaudePipelineAdapter(
       }
 
       return { added: entries.length, skipped, entries, candidates };
+    },
+
+    async readNewGradPendingEntries(limit: number) {
+      return readPendingNewGradEntries(config.repoRoot, limit);
+    },
+
+    async backfillNewGradPendingCache(entries) {
+      return backfillPendingNewGradCache(config.repoRoot, entries);
     },
   };
 }
@@ -741,6 +1066,358 @@ function formatReportNumber(n: number): string {
   return String(n).padStart(REPORT_NUM_WIDTH, "0");
 }
 
+function shouldRunQuickEvaluation(input: EvaluationInput): boolean {
+  return input.evaluationMode === "newgrad_quick" && Boolean(input.structuredSignals);
+}
+
+function buildLocalQuickScreen(args: {
+  input: EvaluationInput;
+  quickConfig: ReturnType<typeof loadNewGradScanConfig>;
+  evaluatedReportUrls: ReadonlySet<string>;
+  jobId: string;
+}): QuickEvaluationJson | null {
+  const signals = args.input.structuredSignals;
+  if (!signals) return null;
+
+  const blockers: string[] = [];
+  const reasons = collectLocalQuickReasons(args.input, args.quickConfig);
+  const normalizedText = buildLocalQuickScreenText(args.input);
+  const candidateProfile = buildQuickCandidateProfile(args.quickConfig);
+  const canonicalUrl = canonicalizeJobUrl(args.input.url) ?? args.input.url.trim();
+  const salaryRange = parseQuickSalaryRangeUsd(signals.salaryRange);
+  const localValueScore = signals.localValueScore;
+
+  if (canonicalUrl && args.evaluatedReportUrls.has(canonicalUrl)) {
+    blockers.push("already_evaluated_report_url");
+  }
+
+  if (
+    candidateProfile.requiresVisaSponsorship &&
+    (
+      signals.sponsorshipSupport === "no" ||
+      containsAnyPhrase(
+        normalizedText,
+        args.quickConfig.hard_filters.no_sponsorship_keywords,
+        EXTRA_NO_SPONSORSHIP_PHRASES,
+      )
+    )
+  ) {
+    blockers.push("no_sponsorship_support");
+  }
+
+  if (
+    candidateProfile.requiresVisaSponsorship &&
+    containsAnyPhrase(normalizedText, RESTRICTED_WORK_AUTHORIZATION_PHRASES)
+  ) {
+    blockers.push("restricted_work_authorization_requirement");
+  }
+
+  if (
+    candidateProfile.excludeActiveSecurityClearance &&
+    (
+      signals.requiresActiveSecurityClearance ||
+      detectActiveSecurityClearanceRequirement(
+        normalizedText,
+        args.quickConfig.hard_filters.clearance_keywords,
+      )
+    )
+  ) {
+    blockers.push("active_security_clearance_required");
+  }
+
+  if (
+    typeof signals.yearsExperienceRequired === "number" &&
+    signals.yearsExperienceRequired > candidateProfile.maxYearsExperience
+  ) {
+    blockers.push("experience_requirement_above_limit");
+  }
+
+  if (
+    candidateProfile.compensationMinUsd > 0 &&
+    salaryRange &&
+    salaryRange.high < candidateProfile.compensationMinUsd
+  ) {
+    blockers.push("salary_below_minimum");
+  }
+
+  if (
+    typeof localValueScore === "number" &&
+    localValueScore < args.quickConfig.detail_value_threshold
+  ) {
+    blockers.push("local_value_score_below_threshold");
+  }
+
+  if (
+    localValueScore === undefined &&
+    looksClearlySenior(signals, args.input)
+  ) {
+    blockers.push("seniority_too_high");
+  }
+
+  if (blockers.length === 0) {
+    return null;
+  }
+
+  const company = nonEmptyString(signals.company) || "Unknown Company";
+  const role =
+    nonEmptyString(signals.role) ||
+    nonEmptyString(args.input.title) ||
+    "Untitled role";
+
+  return {
+    status: "completed",
+    id: args.jobId,
+    company,
+    role,
+    score: scoreLocalQuickSkip(signals, blockers),
+    tldr: buildLocalQuickTldr(blockers, reasons),
+    legitimacy: classifyLocalQuickLegitimacy(blockers),
+    decision: "skip",
+    reasons,
+    blockers,
+    error: null,
+  };
+}
+
+function buildQuickCandidateProfile(config: ReturnType<typeof loadNewGradScanConfig>): QuickEvaluationCandidateProfile {
+  return {
+    compensationMinUsd: config.compensation_min_usd,
+    targetSkills: config.skill_keywords.terms.slice(0, 16),
+    requiresVisaSponsorship: config.hard_filters.exclude_no_sponsorship,
+    excludeActiveSecurityClearance: config.hard_filters.exclude_active_security_clearance,
+    maxYearsExperience: config.hard_filters.max_years_experience,
+  };
+}
+
+function collectLocalQuickReasons(
+  input: EvaluationInput,
+  quickConfig: ReturnType<typeof loadNewGradScanConfig>,
+): string[] {
+  const signals = input.structuredSignals;
+  if (!signals) return ["structured_precheck_skip"];
+
+  const reasons = new Set<string>();
+  for (const reason of signals.localValueReasons ?? []) {
+    const normalized = normalizeMachineReason(reason);
+    if (normalized) reasons.add(normalized);
+  }
+
+  if (typeof signals.localValueScore === "number") {
+    if (signals.localValueScore >= quickConfig.detail_value_threshold) {
+      reasons.add("local_value_score_meets_threshold");
+    } else {
+      reasons.add("local_value_score_present");
+    }
+  }
+
+  if (
+    typeof signals.yearsExperienceRequired === "number" &&
+    signals.yearsExperienceRequired <= quickConfig.hard_filters.max_years_experience
+  ) {
+    reasons.add("experience_requirement_within_limit");
+  }
+
+  const salaryRange = parseQuickSalaryRangeUsd(signals.salaryRange);
+  if (
+    salaryRange &&
+    quickConfig.compensation_min_usd > 0 &&
+    salaryRange.high >= quickConfig.compensation_min_usd
+  ) {
+    reasons.add("salary_meets_minimum");
+  }
+
+  if (signals.sponsorshipSupport === "yes") {
+    reasons.add("sponsorship_supported");
+  }
+
+  for (const skill of (signals.skillTags ?? []).slice(0, 3)) {
+    const token = slugify(skill);
+    if (token) {
+      reasons.add(`skill_match_${token}`);
+    }
+  }
+
+  return [...reasons].slice(0, 6);
+}
+
+function buildLocalQuickScreenText(input: EvaluationInput): string {
+  const signals = input.structuredSignals;
+  return normalizeQuickScreenText(
+    [
+      input.title ?? "",
+      signals?.role ?? "",
+      signals?.employmentType ?? "",
+      signals?.seniority ?? "",
+      signals?.salaryRange ?? "",
+      signals?.requiredQualifications?.join(" ") ?? "",
+      signals?.responsibilities?.join(" ") ?? "",
+      signals?.recommendationTags?.join(" ") ?? "",
+      signals?.taxonomy?.join(" ") ?? "",
+      input.pageText ?? "",
+    ].join("\n"),
+  );
+}
+
+function normalizeQuickScreenText(value: string): string {
+  return value.toLowerCase().replace(/\s+/g, " ").trim();
+}
+
+function containsAnyPhrase(text: string, ...phraseGroups: Array<readonly string[]>): boolean {
+  for (const group of phraseGroups) {
+    for (const phrase of group) {
+      const normalized = normalizeQuickScreenText(phrase);
+      if (normalized && text.includes(normalized)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+function looksClearlySenior(
+  signals: StructuredJobSignals,
+  input: EvaluationInput,
+): boolean {
+  const titleAndRole = normalizeQuickScreenText([
+    input.title ?? "",
+    signals.role ?? "",
+  ].join(" "));
+  if (
+    /\b(new grad|new graduate|entry level|entry-level|associate|junior|engineer i|engineer 1)\b/.test(
+      titleAndRole,
+    )
+  ) {
+    return false;
+  }
+
+  if (/\b(senior|staff|principal|lead|manager|director|architect)\b/.test(titleAndRole)) {
+    return true;
+  }
+
+  return /\b(senior|staff|principal|lead|manager|director|architect)\b/.test(
+    normalizeQuickScreenText(signals.seniority ?? ""),
+  );
+}
+
+function parseQuickSalaryRangeUsd(
+  raw: string | null | undefined,
+): { low: number; high: number } | null {
+  if (!raw) return null;
+  const values = [...raw.matchAll(/\$?\s*(\d{2,3}(?:,\d{3})?(?:\.\d+)?)/g)]
+    .map((match) => Number.parseFloat((match[1] ?? "").replace(/,/g, "")))
+    .filter((value) => Number.isFinite(value));
+  if (values.length < 2) return null;
+
+  const scaled = values.map((value) => (value < 1000 ? value * 1000 : value));
+  return {
+    low: Math.min(...scaled),
+    high: Math.max(...scaled),
+  };
+}
+
+function scoreLocalQuickSkip(
+  signals: StructuredJobSignals,
+  blockers: readonly string[],
+): number {
+  let score = typeof signals.localValueScore === "number"
+    ? signals.localValueScore / 2
+    : 2.4;
+
+  for (const blocker of blockers) {
+    switch (blocker) {
+      case "already_evaluated_report_url":
+      case "no_sponsorship_support":
+      case "restricted_work_authorization_requirement":
+      case "active_security_clearance_required":
+        score -= 2.2;
+        break;
+      case "salary_below_minimum":
+      case "experience_requirement_above_limit":
+      case "seniority_too_high":
+        score -= 1.5;
+        break;
+      case "local_value_score_below_threshold":
+        score -= 1.0;
+        break;
+      default:
+        score -= 0.8;
+        break;
+    }
+  }
+
+  return roundToOneDecimal(clampNumber(score, 0.2, 4.8));
+}
+
+function classifyLocalQuickLegitimacy(blockers: readonly string[]): string {
+  if (
+    blockers.some((blocker) => [
+      "already_evaluated_report_url",
+      "no_sponsorship_support",
+      "restricted_work_authorization_requirement",
+      "active_security_clearance_required",
+    ].includes(blocker))
+  ) {
+    return "High Confidence";
+  }
+  return "Proceed with Caution";
+}
+
+function buildLocalQuickTldr(
+  blockers: readonly string[],
+  reasons: readonly string[],
+): string {
+  const blockerSummary = blockers.slice(0, 2).map(describeQuickToken).join(" and ");
+  const reasonSummary = reasons.slice(0, 2).map(describeQuickToken).join(" and ");
+  if (reasonSummary) {
+    return `Skip locally because ${blockerSummary}, despite ${reasonSummary}.`;
+  }
+  return `Skip locally because ${blockerSummary}.`;
+}
+
+function describeQuickToken(token: string): string {
+  switch (token) {
+    case "already_evaluated_report_url":
+      return "this canonical URL was already evaluated";
+    case "no_sponsorship_support":
+      return "the role does not support sponsorship";
+    case "restricted_work_authorization_requirement":
+      return "the JD requires restricted US work authorization";
+    case "active_security_clearance_required":
+      return "the JD requires active security clearance";
+    case "experience_requirement_above_limit":
+      return "the stated experience requirement exceeds the candidate limit";
+    case "salary_below_minimum":
+      return "the salary band is below the candidate minimum";
+    case "local_value_score_below_threshold":
+      return "the local value score is below the configured threshold";
+    case "seniority_too_high":
+      return "the role is clearly senior-level";
+    default:
+      return token.replace(/_/g, " ");
+  }
+}
+
+function normalizeMachineReason(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+function roundToOneDecimal(value: number): number {
+  return Math.round(value * 10) / 10;
+}
+
+function clampNumber(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), max);
+}
+
+function nonEmptyString(value: string | null | undefined): string | null {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : null;
+}
+
 function buildJdText(input: EvaluationInput): string {
   const pageText = input.pageText?.trim() ?? "";
   const header = [
@@ -750,7 +1427,7 @@ function buildJdText(input: EvaluationInput): string {
   ].join("\n");
 
   if (pageText.length >= JD_MIN_CHARS_VALUE) {
-    return `${header}${pageText}\n`;
+    return `${header}${compactEvaluationPageText(pageText)}\n`;
   }
 
   const fallback = [
@@ -762,6 +1439,228 @@ function buildJdText(input: EvaluationInput): string {
   ].join("\n");
 
   return `${header}${fallback}`;
+}
+
+function compactEvaluationPageText(pageText: string): string {
+  const normalized = pageText
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+
+  if (normalized.length <= EVALUATION_PAGE_TEXT_MAX_CHARS) {
+    return normalized;
+  }
+
+  const clipped = normalized.slice(0, EVALUATION_PAGE_TEXT_MAX_CHARS).trimEnd();
+  return [
+    clipped,
+    "",
+    `[bridge truncated ${normalized.length - clipped.length} trailing chars from local JD cache]`,
+  ].join("\n");
+}
+
+function buildQuickEvaluationArtifacts(args: {
+  repoRoot: string;
+  reportNumber: number;
+  date: string;
+  url: string;
+  screen: QuickEvaluationJson;
+  signals: StructuredJobSignals | undefined;
+}): {
+  reportMarkdown: string;
+  reportPath: string;
+  trackerRow: TrackerRow;
+} {
+  const slug = slugify(args.screen.company || args.screen.role || "quick-screen");
+  const reportMarkdown = buildQuickScreenReportMarkdown({
+    date: args.date,
+    url: args.url,
+    screen: args.screen,
+    signals: args.signals,
+  });
+  const reportPath = writeReport(
+    args.repoRoot,
+    args.reportNumber,
+    slug,
+    args.date,
+    reportMarkdown,
+  );
+  const trackerRow = buildTrackerRow({
+    num: nextTrackerEntryNumber(args.repoRoot),
+    date: args.date,
+    company: args.screen.company,
+    role: args.screen.role,
+    score: args.screen.score,
+    reportPath,
+    pdfPath: null,
+    tldr: args.screen.tldr,
+    status: args.screen.decision === "skip" ? "SKIP" : "Evaluated",
+  });
+
+  return {
+    reportMarkdown,
+    reportPath,
+    trackerRow,
+  };
+}
+
+function buildQuickScreenReportMarkdown(args: {
+  date: string;
+  url: string;
+  screen: QuickEvaluationJson;
+  signals: StructuredJobSignals | undefined;
+}): string {
+  const signalLines = [
+    args.signals?.location ? `- Location: ${args.signals.location}` : null,
+    args.signals?.workModel ? `- Work model: ${args.signals.workModel}` : null,
+    args.signals?.employmentType ? `- Employment type: ${args.signals.employmentType}` : null,
+    args.signals?.seniority ? `- Seniority: ${args.signals.seniority}` : null,
+    args.signals?.salaryRange ? `- Salary: ${args.signals.salaryRange}` : null,
+    args.signals?.sponsorshipSupport ? `- Sponsorship: ${args.signals.sponsorshipSupport}` : null,
+    args.signals?.requiresActiveSecurityClearance
+      ? "- Active security clearance requirement detected"
+      : null,
+    args.signals?.yearsExperienceRequired !== undefined &&
+    args.signals?.yearsExperienceRequired !== null
+      ? `- Years of experience required: ${args.signals.yearsExperienceRequired}+`
+      : null,
+    args.signals?.localValueScore !== undefined
+      ? `- Local value score: ${Number(args.signals.localValueScore.toFixed(1))}/10`
+      : null,
+  ].filter((line): line is string => Boolean(line));
+
+  const skillLines = (args.signals?.skillTags ?? []).slice(0, 12).map((skill) => `- ${skill}`);
+  const reasonLines = args.screen.reasons.map((reason) => `- ${reason}`);
+  const blockerLines =
+    args.screen.blockers.length > 0
+      ? args.screen.blockers.map((blocker) => `- ${blocker}`)
+      : ["- none"];
+
+  return [
+    `# Evaluación: ${args.screen.company} — ${args.screen.role}`,
+    "",
+    `**Fecha:** ${args.date}`,
+    "**Arquetipo:** quick-screen",
+    `**Score:** ${Number(args.screen.score.toFixed(1))}/5`,
+    `**Legitimacy:** ${args.screen.legitimacy}`,
+    `**URL:** ${args.url}`,
+    "**PDF:** not generated",
+    `**Decision:** ${args.screen.decision}`,
+    "",
+    "---",
+    "",
+    "## A) Quick Screen Summary",
+    args.screen.tldr,
+    "",
+    "## B) Structured Value Signals",
+    ...(signalLines.length > 0 ? signalLines : ["- no structured signals available"]),
+    "",
+    "## C) Why This Did Or Did Not Merit Deep Eval",
+    ...reasonLines,
+    "",
+    "### Blockers",
+    ...blockerLines,
+    "",
+    "## D) Key Skills",
+    ...(skillLines.length > 0 ? skillLines : ["- no skill tags extracted"]),
+    "",
+    "## G) Posting Legitimacy",
+    `Quick-screen assessment: ${args.screen.legitimacy}.`,
+  ].join("\n");
+}
+
+async function runQuickEvaluation(args: {
+  config: PipelineConfig;
+  quickConfig: ReturnType<typeof loadNewGradScanConfig>;
+  input: EvaluationInput;
+  jobId: string;
+  logsDir: string;
+  logPath: string;
+  onProgress: PipelineProgressHandler;
+}): Promise<QuickEvaluationJson | BridgeError> {
+  const prompt = buildQuickEvaluationPrompt({
+    input: args.input,
+    candidateProfile: buildQuickCandidateProfile(args.quickConfig),
+  });
+  const executionPlan = buildQuickExecutionPlan(args.config, {
+    jobId: args.jobId,
+    logsDir: args.logsDir,
+    prompt,
+  });
+
+  appendJobLog(
+    args.logPath,
+    "bridge",
+    `quick-command=${executionPlan.command} args=${formatArgsForLog(executionPlan.args)}`
+  );
+  if (executionPlan.terminalFilePath) {
+    appendJobLog(
+      args.logPath,
+      "bridge",
+      `quickTerminalFilePath=${executionPlan.terminalFilePath}`
+    );
+  }
+
+  args.onProgress({
+    phase: "evaluating",
+    at: nowIso(),
+    note: `${args.config.realExecutor === "codex" ? "codex exec" : "claude -p"} quick-eval`,
+  });
+
+  const command = await runCommand(
+    executionPlan.command,
+    executionPlan.args,
+    args.config.repoRoot,
+    Math.min(args.config.evaluationTimeoutSec * 1000, 120_000),
+    executionPlan.stdinText,
+    undefined,
+    (line) => {
+      appendJobLog(args.logPath, "quick", line);
+    }
+  );
+  appendJobLog(
+    args.logPath,
+    "bridge",
+    `quick command finished exitCode=${command.exitCode ?? "null"} timedOut=${command.timedOut} stdoutBytes=${Buffer.byteLength(command.stdout)} stderrBytes=${Buffer.byteLength(command.stderr)}`
+  );
+
+  try {
+    if (command.timedOut) {
+      return bridgeError("TIMEOUT", "quick evaluation timed out", { logPath: args.logPath });
+    }
+    if (command.exitCode !== 0) {
+      return bridgeError(
+        "EVAL_FAILED",
+        extractErrorMessage(command.stderr || command.stdout),
+        { logPath: args.logPath, exitCode: command.exitCode ?? -1 }
+      );
+    }
+
+    const terminal =
+      args.config.realExecutor === "codex" && executionPlan.terminalFilePath
+        ? readQuickEvaluationJson(executionPlan.terminalFilePath)
+        : extractQuickTerminalJsonObject(command.stdout);
+
+    if (terminal.status !== "completed") {
+      return bridgeError(
+        "EVAL_FAILED",
+        terminal.error ?? "quick evaluation did not complete successfully",
+        { logPath: args.logPath }
+      );
+    }
+    return terminal;
+  } finally {
+    for (const path of executionPlan.cleanupPaths) {
+      safeRemoveFile(path);
+    }
+  }
+}
+
+function shouldUseCodexSearch(input: EvaluationInput): boolean {
+  const pageTextLength = input.pageText?.trim().length ?? 0;
+  return pageTextLength < LOCAL_ONLY_JD_MIN_CHARS;
 }
 
 function buildResolvedPrompt(
@@ -813,6 +1712,7 @@ function buildExecutionPlan(
     task: string;
     logsDir: string;
     reportNumberText: string;
+    allowSearch: boolean;
   }
 ): ExecutionPlan {
   const realExecutor = config.realExecutor ?? "claude";
@@ -838,24 +1738,25 @@ function buildExecutionPlan(
     );
 
     const prompt = buildCodexPrompt(args.promptPath, args.task);
+    const commandArgs = [
+      ...(args.allowSearch ? ["--search"] : []),
+      "exec",
+      "--full-auto",
+      "-C",
+      config.repoRoot,
+      "--add-dir",
+      tmpdir(),
+      "--output-schema",
+      outputSchemaPath,
+      "-o",
+      outputMessagePath,
+      "--color",
+      "never",
+      "-",
+    ];
     return {
       command: config.codexBin,
-      args: [
-        "--search",
-        "exec",
-        "--full-auto",
-        "-C",
-        config.repoRoot,
-        "--add-dir",
-        tmpdir(),
-        "--output-schema",
-        outputSchemaPath,
-        "-o",
-        outputMessagePath,
-        "--color",
-        "never",
-        "-",
-      ],
+      args: commandArgs,
       stdinText: prompt,
       terminalFilePath: outputMessagePath,
       cleanupPaths: [outputSchemaPath],
@@ -880,6 +1781,61 @@ function buildExecutionPlan(
   };
 }
 
+function buildQuickExecutionPlan(
+  config: PipelineConfig,
+  args: {
+    jobId: string;
+    logsDir: string;
+    prompt: string;
+  }
+): ExecutionPlan {
+  const realExecutor = config.realExecutor ?? "claude";
+
+  if (realExecutor === "codex") {
+    if (!config.codexBin) {
+      throw new Error("codex CLI is not configured");
+    }
+
+    const outputSchemaPath = join(args.logsDir, `${args.jobId}-quick-codex-schema.json`);
+    const outputMessagePath = join(args.logsDir, `${args.jobId}-quick-codex-last-message.json`);
+
+    writeFileSync(
+      outputSchemaPath,
+      JSON.stringify(buildQuickEvaluationSchema(), null, 2),
+      "utf-8"
+    );
+
+    return {
+      command: config.codexBin,
+      args: [
+        "exec",
+        "-C",
+        config.repoRoot,
+        "--output-schema",
+        outputSchemaPath,
+        "-o",
+        outputMessagePath,
+        "--color",
+        "never",
+        "-",
+      ],
+      stdinText: args.prompt,
+      terminalFilePath: outputMessagePath,
+      cleanupPaths: [outputSchemaPath],
+    };
+  }
+
+  if (!config.claudeBin) {
+    throw new Error("claude CLI is not configured");
+  }
+
+  return {
+    command: config.claudeBin,
+    args: ["-p", args.prompt],
+    cleanupPaths: [],
+  };
+}
+
 function buildCodexPrompt(promptPath: string, task: string): string {
   const prompt = readFileSync(promptPath, "utf-8");
   return [
@@ -892,6 +1848,47 @@ function buildCodexPrompt(promptPath: string, task: string): string {
     "- Return only a JSON object. No prose, no markdown fences.",
     "- The JSON must match the provided output schema exactly.",
     "- Keep file writes in the normal career-ops locations required by the prompt.",
+  ].join("\n");
+}
+
+function buildQuickEvaluationPrompt(args: {
+  input: EvaluationInput;
+  candidateProfile: QuickEvaluationCandidateProfile;
+}): string {
+  const quickInput = {
+    url: args.input.url,
+    title: args.input.title ?? null,
+    structuredSignals: args.input.structuredSignals ?? null,
+    pageText:
+      args.input.pageText?.trim().slice(0, QUICK_EVALUATION_PAGE_TEXT_MAX_CHARS) || null,
+  };
+
+  return [
+    "You are screening a new-grad / early-career job before a full deep evaluation.",
+    "Goal: decide whether this role deserves the expensive full evaluation worker.",
+    "Do not browse, search, fetch, or write files.",
+    "Use only the supplied candidate profile, structured job signals, and compact JD excerpt.",
+    "",
+    "Candidate profile (JSON):",
+    JSON.stringify(args.candidateProfile, null, 2),
+    "",
+    "Job input (JSON):",
+    JSON.stringify(quickInput, null, 2),
+    "",
+    "Decision rules:",
+    "- Choose `deep_eval` only when the role looks genuinely strong for this candidate.",
+    "- Hard blockers should heavily push toward `skip`: no sponsorship support when visa sponsorship is required, active security clearance requirement, or explicit experience beyond the candidate max years.",
+    "- Treat active security clearance as a hard blocker only for active/current Secret, Top Secret, or TS/SCI requirements. Ignore preferred, public-trust-only, or ability-to-obtain language.",
+    "- Unknown sponsorship support and missing compensation are uncertainty signals, not standalone hard blockers.",
+    "- If title-level signals say new grad / junior / engineer I, do not let noisy employment-type or seniority metadata override that by itself.",
+    "- Prefer `skip` for vague, low-signal, clearly senior, or low-value roles.",
+    "- `score` is a 0-5 screening score, not the final deep-eval score.",
+    "- `reasons` should be 2-6 short machine-readable bullets for why the role is promising.",
+    "- `blockers` should be 0-6 short machine-readable bullets for why the role is risky or not worth deep eval.",
+    "- `tldr` must be one sentence.",
+    "- `legitimacy` must be one of: High Confidence, Proceed with Caution, Suspicious.",
+    "",
+    "Return only a JSON object matching the provided schema exactly.",
   ].join("\n");
 }
 
@@ -929,6 +1926,47 @@ function buildCodexTerminalSchema(): Record<string, unknown> {
       pdf: { anyOf: nullableString },
       report: { anyOf: nullableString },
       error: { anyOf: nullableString },
+    },
+  };
+}
+
+function buildQuickEvaluationSchema(): Record<string, unknown> {
+  return {
+    type: "object",
+    additionalProperties: false,
+    required: [
+      "status",
+      "id",
+      "company",
+      "role",
+      "score",
+      "tldr",
+      "legitimacy",
+      "decision",
+      "reasons",
+      "blockers",
+      "error",
+    ],
+    properties: {
+      status: { enum: ["completed", "failed"] },
+      id: { type: "string" },
+      company: { type: "string" },
+      role: { type: "string" },
+      score: { type: "number" },
+      tldr: { type: "string" },
+      legitimacy: { type: "string" },
+      decision: { enum: ["deep_eval", "skip"] },
+      reasons: {
+        type: "array",
+        items: { type: "string" },
+      },
+      blockers: {
+        type: "array",
+        items: { type: "string" },
+      },
+      error: {
+        anyOf: [{ type: "string" }, { type: "null" }],
+      },
     },
   };
 }
@@ -1141,6 +2179,41 @@ function readCodexTerminalJson(path: string): ClaudeTerminalJson {
   return parsed as ClaudeTerminalJson;
 }
 
+function readQuickEvaluationJson(path: string): QuickEvaluationJson {
+  const content = readFileSync(path, "utf-8").trim();
+  if (!content) {
+    throw new Error("quick evaluation output was empty");
+  }
+  const parsed = JSON.parse(content) as Partial<QuickEvaluationJson>;
+  if (
+    (parsed.status !== "completed" && parsed.status !== "failed") ||
+    typeof parsed.id !== "string" ||
+    typeof parsed.company !== "string" ||
+    typeof parsed.role !== "string" ||
+    typeof parsed.score !== "number" ||
+    typeof parsed.tldr !== "string" ||
+    typeof parsed.legitimacy !== "string" ||
+    (parsed.decision !== "deep_eval" && parsed.decision !== "skip") ||
+    !Array.isArray(parsed.reasons) ||
+    !Array.isArray(parsed.blockers)
+  ) {
+    throw new Error("quick evaluation JSON is missing required fields");
+  }
+  return {
+    status: parsed.status,
+    id: parsed.id,
+    company: parsed.company,
+    role: parsed.role,
+    score: parsed.score,
+    tldr: parsed.tldr,
+    legitimacy: parsed.legitimacy,
+    decision: parsed.decision,
+    reasons: parsed.reasons.map((item) => String(item)),
+    blockers: parsed.blockers.map((item) => String(item)),
+    error: parsed.error ? String(parsed.error) : null,
+  };
+}
+
 function extractTerminalJsonObject(stdout: string): ClaudeTerminalJson {
   const marker = stdout.lastIndexOf('"status"');
   if (marker === -1) {
@@ -1174,6 +2247,55 @@ function extractTerminalJsonObject(stdout: string): ClaudeTerminalJson {
   }
 
   throw new Error("Unable to parse terminal JSON from Claude output");
+}
+
+function extractQuickTerminalJsonObject(stdout: string): QuickEvaluationJson {
+  const marker = stdout.lastIndexOf('"status"');
+  if (marker === -1) {
+    throw new Error("Claude output did not include a quick terminal JSON block");
+  }
+
+  for (
+    let start = stdout.lastIndexOf("{", marker);
+    start >= 0;
+    start = stdout.lastIndexOf("{", start - 1)
+  ) {
+    const jsonText = sliceBalancedJson(stdout, start);
+    if (!jsonText) continue;
+    try {
+      const parsed = JSON.parse(jsonText) as Partial<QuickEvaluationJson>;
+      if (
+        (parsed.status === "completed" || parsed.status === "failed") &&
+        typeof parsed.id === "string" &&
+        typeof parsed.company === "string" &&
+        typeof parsed.role === "string" &&
+        typeof parsed.score === "number" &&
+        typeof parsed.tldr === "string" &&
+        typeof parsed.legitimacy === "string" &&
+        (parsed.decision === "deep_eval" || parsed.decision === "skip") &&
+        Array.isArray(parsed.reasons) &&
+        Array.isArray(parsed.blockers)
+      ) {
+        return {
+          status: parsed.status,
+          id: parsed.id,
+          company: parsed.company,
+          role: parsed.role,
+          score: parsed.score,
+          tldr: parsed.tldr,
+          legitimacy: parsed.legitimacy,
+          decision: parsed.decision,
+          reasons: parsed.reasons.map((item) => String(item)),
+          blockers: parsed.blockers.map((item) => String(item)),
+          error: parsed.error ? String(parsed.error) : null,
+        };
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  throw new Error("Unable to parse quick terminal JSON from Claude output");
 }
 
 function sliceBalancedJson(text: string, start: number): string | undefined {
@@ -1219,7 +2341,7 @@ function sliceBalancedJson(text: string, start: number): string | undefined {
 
 function parseReportMarkdown(markdown: string): ParsedReportMarkdown {
   const headingMatch = markdown.match(
-    /^#\s+(?:Evaluación|Evaluation):\s+(.+?)\s+[—-]\s+(.+)$/m
+    /^#\s+(?:Evaluación|Evaluacion|Evaluation):\s+(.+?)\s+[—-]\s+(.+)$/m
   );
   if (!headingMatch) {
     throw new Error("report header missing company/role heading");
@@ -1543,6 +2665,30 @@ function coerceScore(
   return Number(fallback.toFixed(2));
 }
 
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+function writeReport(
+  repoRoot: string,
+  reportNumber: number,
+  slug: string,
+  date: string,
+  markdown: string
+): string {
+  const reportsDir = join(repoRoot, "reports");
+  mkdirSync(reportsDir, { recursive: true });
+  const path = join(
+    reportsDir,
+    `${formatReportNumber(reportNumber)}-${slug}-${date}.md`
+  );
+  writeFileSync(path, markdown, "utf-8");
+  return path;
+}
+
 function nextTrackerEntryNumber(repoRoot: string): number {
   const trackerPath = join(repoRoot, "data/applications.md");
   if (!existsSync(trackerPath)) return 1;
@@ -1563,6 +2709,7 @@ function buildTrackerRow(args: {
   reportPath: string;
   pdfPath: string | null;
   tldr: string;
+  status?: TrackerStatus;
 }): TrackerRow {
   const scoreText = `${Number(args.score.toFixed(2))}/5` as TrackerRow["score"];
   const reportFile = basename(args.reportPath);
@@ -1571,7 +2718,7 @@ function buildTrackerRow(args: {
     date: args.date,
     company: args.company,
     role: args.role,
-    status: "Evaluated",
+    status: args.status ?? "Evaluated",
     score: scoreText,
     pdf: args.pdfPath ? "✅" : "❌",
     report: `[${formatReportNumber(extractReportNumberFromPath(reportFile))}](reports/${reportFile})`,

@@ -55,4 +55,11 @@ Company-level memory:
 - Auto-memory only writes blockers confirmed on the original employer posting;
   newgrad-jobs.com and Jobright signals alone are not enough to persist a company
 
+Scan de-duplication:
+- The list scan only promotes rows posted within the last 24 hours.
+- Rows already present in `data/scan-history.tsv`, `data/pipeline.md`, or
+  `data/applications.md` are skipped before scoring.
+- Newly seen rows are appended to `data/scan-history.tsv`, including rows that
+  fail score filters, so repeated scans do not resurface the same listing.
+
 To customize: edit `config/profile.yml → newgrad_scan`.

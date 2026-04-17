@@ -43,6 +43,37 @@ describe("writeJdFile", () => {
     expect(content).toContain("---\n\nThis is the full JD description text");
   });
 
+  it("appends structured sections to make the local cache richer", () => {
+    const result = writeJdFile({
+      jdsDir: TEST_DIR,
+      company: "RichCo",
+      role: "Software Engineer I",
+      url: "https://example.com/job/rich",
+      description: "A".repeat(420),
+      companyDescription: "RichCo builds developer infrastructure for internal platform teams.",
+      requiredQualifications: [
+        "BS in Computer Science or related field",
+        "Experience with TypeScript or Python",
+      ],
+      responsibilities: [
+        "Build internal developer tooling",
+        "Improve deployment reliability",
+      ],
+      skillTags: ["TypeScript", "Python", "AWS"],
+      recommendationTags: ["Early Career", "Platform"],
+      taxonomy: ["software-engineering", "developer-platform"],
+    });
+
+    expect(result).not.toBeNull();
+    const content = readFileSync(join(TEST_DIR, result!), "utf-8");
+    expect(content).toContain("Company summary:");
+    expect(content).toContain("Requirements\n- BS in Computer Science or related field");
+    expect(content).toContain("Responsibilities\n- Build internal developer tooling");
+    expect(content).toContain("Skill tags: TypeScript, Python, AWS");
+    expect(content).toContain("Recommendation tags: Early Career, Platform");
+    expect(content).toContain("Taxonomy: software-engineering, developer-platform");
+  });
+
   it("omits missing optional fields", () => {
     const result = writeJdFile({
       jdsDir: TEST_DIR,
@@ -61,7 +92,7 @@ describe("writeJdFile", () => {
     expect(content).not.toContain("applyUrl");
   });
 
-  it("returns null when description is too short", () => {
+  it("returns null when the combined JD cache content is too short", () => {
     const result = writeJdFile({
       jdsDir: TEST_DIR,
       company: "ShortCo",
@@ -72,6 +103,25 @@ describe("writeJdFile", () => {
 
     expect(result).toBeNull();
     expect(existsSync(join(TEST_DIR, jdFilename("ShortCo", "https://example.com/job/2")))).toBe(false);
+  });
+
+  it("writes a JD file when structured sections push short descriptions over the minimum", () => {
+    const result = writeJdFile({
+      jdsDir: TEST_DIR,
+      company: "StructuredCo",
+      role: "Associate Engineer",
+      url: "https://example.com/job/structured",
+      description: "Short introduction.",
+      requiredQualifications: Array.from({ length: 12 }, (_, index) => `Requirement ${index + 1}`),
+      responsibilities: Array.from({ length: 10 }, (_, index) => `Responsibility ${index + 1}`),
+      skillTags: ["Python", "SQL", "AWS", "Docker", "Kubernetes"],
+    });
+
+    expect(result).not.toBeNull();
+    const content = readFileSync(join(TEST_DIR, result!), "utf-8");
+    expect(content).toContain("Short introduction.");
+    expect(content).toContain("Requirements");
+    expect(content).toContain("Responsibilities");
   });
 
   it("handles special characters in company name and role", () => {

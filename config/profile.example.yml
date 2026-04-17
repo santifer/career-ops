@@ -72,6 +72,9 @@ location:
 
 newgrad_scan:
   hard_filters:
+    # Always skip these companies, regardless of sponsorship or clearance.
+    blocked_companies:
+      - "Example Company"
     # Skip roles that explicitly do not provide sponsorship support.
     exclude_no_sponsorship: false
     # Skip roles that require an active secret security clearance.

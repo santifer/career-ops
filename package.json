@@ -16,6 +16,8 @@
     "liveness": "node check-liveness.mjs",
     "cover-letter": "node generate-cover-letter.mjs",
     "scan": "node scan.mjs",
+    "pending:warm-cache": "node scripts/warm-legacy-pending-cache.mjs",
+    "dashboard": "node web/build-dashboard.mjs",
     "ext:build": "npm --prefix extension run build",
     "ext:bridge": "node scripts/bridge-start.mjs real-codex",
     "ext:bridge:claude": "node scripts/bridge-start.mjs real-claude",

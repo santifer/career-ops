@@ -45,6 +45,7 @@ import type {
 } from "../contracts/jobs.js";
 import type { BridgeError } from "../contracts/envelope.js";
 import type {
+  FilteredRow,
   NewGradRow,
   EnrichedRow,
   NewGradScoreResult,
@@ -66,7 +67,9 @@ import { join } from "node:path";
 
 import { bridgeError } from "../runtime/errors.js";
 import { scoreAndFilter } from "./newgrad-scorer.js";
+import { scoreEnrichedRowValue } from "./newgrad-value-scorer.js";
 import { pickPipelineEntryUrl } from "./newgrad-links.js";
+import { loadEvaluatedReportUrls } from "./evaluated-report-urls.js";
 import {
   loadNegativeKeywords,
   loadNewGradScanConfig,
@@ -74,6 +77,19 @@ import {
   persistBlockedCompanies,
   loadTrackedCompanyRoles,
 } from "./newgrad-config.js";
+import {
+  appendNewGradScanHistory,
+  isRecentNewGradRow,
+  loadNewGradSeenKeys,
+  newGradCompanyRoleKey,
+  newGradRowUrl,
+  wasNewGradRowSeen,
+} from "./newgrad-scan-history.js";
+import {
+  backfillNewGradPendingCache as backfillPendingNewGradCache,
+  readNewGradPendingEntries as readPendingNewGradEntries,
+} from "./newgrad-pending.js";
+import { canonicalizeJobUrl } from "../lib/canonical-job-url.js";
 
 /* -------------------------------------------------------------------------- */
 /*  Zod schema for structured evaluation output                                */
@@ -330,9 +346,68 @@ export function createSdkPipelineAdapter(
       const scanConfig = loadNewGradScanConfig(config.repoRoot);
       const negativeKeywords = loadNegativeKeywords(config.repoRoot);
       const trackedSet = loadTrackedCompanyRoles(config.repoRoot);
-      const { promoted, filtered } = scoreAndFilter(rows, scanConfig, negativeKeywords, trackedSet);
+      const seenKeys = loadNewGradSeenKeys(config.repoRoot);
+      const recentUnseenRows: NewGradRow[] = [];
+      const preFiltered: FilteredRow[] = [];
+
+      for (const row of rows) {
+        if (!isRecentNewGradRow(row)) {
+          preFiltered.push({
+            row,
+            reason: "older_than_24h",
+            detail: `Posted ${row.postedAgo || "outside the last 24h"}`,
+          });
+          continue;
+        }
+
+        const trackedKey = newGradCompanyRoleKey(row);
+        if (trackedKey && trackedSet.has(trackedKey)) {
+          preFiltered.push({
+            row,
+            reason: "already_tracked",
+            detail: `Already tracked: ${row.company} | ${row.title}`,
+          });
+          continue;
+        }
+
+        if (wasNewGradRowSeen(row, seenKeys)) {
+          preFiltered.push({
+            row,
+            reason: "already_scanned",
+            detail: "Already seen in scan history or pipeline",
+          });
+          continue;
+        }
+
+        recentUnseenRows.push(row);
+      }
+
+      const { promoted, filtered } = scoreAndFilter(
+        recentUnseenRows,
+        scanConfig,
+        negativeKeywords,
+        trackedSet,
+      );
+      const statusByKey = new Map<string, string>();
+      for (const row of recentUnseenRows) {
+        statusByKey.set(newGradRowUrl(row) || newGradCompanyRoleKey(row), "scanned");
+      }
+      for (const row of promoted.map((p) => p.row)) {
+        statusByKey.set(newGradRowUrl(row) || newGradCompanyRoleKey(row), "promoted");
+      }
+      for (const item of filtered) {
+        statusByKey.set(
+          newGradRowUrl(item.row) || newGradCompanyRoleKey(item.row),
+          item.reason,
+        );
+      }
+      appendNewGradScanHistory(
+        config.repoRoot,
+        recentUnseenRows,
+        (row) => statusByKey.get(newGradRowUrl(row) || newGradCompanyRoleKey(row)) ?? "scanned",
+      );
       persistBlockedCompanies(config.repoRoot, filtered);
-      return { promoted, filtered };
+      return { promoted, filtered: [...preFiltered, ...filtered] };
     },
 
     async enrichNewGradRows(
@@ -343,6 +418,7 @@ export function createSdkPipelineAdapter(
       const negativeKeywords = loadNegativeKeywords(config.repoRoot);
       const trackedSet = loadTrackedCompanyRoles(config.repoRoot);
       const existingPipelineUrls = loadPipelineUrls(config.repoRoot);
+      const evaluatedReportUrls = loadEvaluatedReportUrls(config.repoRoot);
 
       const entries: PipelineEntry[] = [];
       const candidates: PipelineEntry[] = [];
@@ -396,6 +472,13 @@ export function createSdkPipelineAdapter(
           continue;
         }
 
+        const valueScore = scoreEnrichedRowValue(enrichedRow, scanConfig);
+        if (!valueScore.passed) {
+          skipped++;
+          onProgress?.(processed, rows.length, enrichedRow);
+          continue;
+        }
+
         const entryUrl = pickPipelineEntryUrl(
           enrichedRow.detail,
           enrichedRow.row.row,
@@ -405,18 +488,27 @@ export function createSdkPipelineAdapter(
           company: enrichedRow.row.row.company,
           role: enrichedRow.row.row.title,
           score: scored.score,
+          valueScore: valueScore.score,
+          valueReasons: [...valueScore.reasons, ...valueScore.penalties],
           source: "newgrad-jobs.com",
         };
-        candidates.push(entry);
+        const canonicalEntryUrl = canonicalizeJobUrl(entryUrl) ?? entryUrl;
 
-        if (existingPipelineUrls.has(entryUrl)) {
+        if (evaluatedReportUrls.has(canonicalEntryUrl)) {
           skipped++;
           onProgress?.(processed, rows.length, enrichedRow);
           continue;
         }
 
+        if (existingPipelineUrls.has(canonicalEntryUrl)) {
+          skipped++;
+          onProgress?.(processed, rows.length, enrichedRow);
+          continue;
+        }
+
+        candidates.push(entry);
         entries.push(entry);
-        existingPipelineUrls.add(entryUrl);
+        existingPipelineUrls.add(canonicalEntryUrl);
         onProgress?.(processed, rows.length, enrichedRow);
       }
 
@@ -427,8 +519,10 @@ export function createSdkPipelineAdapter(
           scanConfig.skill_keywords.max_score +
           scanConfig.freshness.within_24h;
         const lines = entries.map(
-          (e) =>
-            `- [ ] ${e.url} — ${e.company} | ${e.role} (via newgrad-scan, score: ${e.score}/${maxScore})`,
+          (e) => {
+            const value = e.valueScore !== undefined ? `, value: ${e.valueScore}/10` : "";
+            return `- [ ] ${e.url} — ${e.company} | ${e.role} (via newgrad-scan, score: ${e.score}/${maxScore}${value})`;
+          },
         );
 
         if (!existsSync(pipelinePath)) {
@@ -438,6 +532,14 @@ export function createSdkPipelineAdapter(
       }
 
       return { added: entries.length, skipped, entries, candidates };
+    },
+
+    async readNewGradPendingEntries(limit: number) {
+      return readPendingNewGradEntries(config.repoRoot, limit);
+    },
+
+    async backfillNewGradPendingCache(entries) {
+      return backfillPendingNewGradCache(config.repoRoot, entries);
     },
   };
 }

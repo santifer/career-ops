@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import {
+  loadNegativeKeywords,
   loadNewGradScanConfig,
   persistBlockedCompanies,
 } from "./newgrad-config.js";
@@ -27,6 +28,8 @@ describe("newgrad-config", () => {
       [
         "newgrad_scan:",
         "  hard_filters:",
+        "    blocked_companies:",
+        '      - "TikTok"',
         "    no_sponsorship_companies:",
         '      - "Momentic"',
         "    active_security_clearance_companies:",
@@ -50,6 +53,7 @@ describe("newgrad-config", () => {
 
     const config = loadNewGradScanConfig(repoRoot);
 
+    expect(config.hard_filters.blocked_companies).toEqual(["TikTok"]);
     expect(config.hard_filters.no_sponsorship_companies).toEqual([
       "Momentic",
       "RemoteHunter",
@@ -58,6 +62,65 @@ describe("newgrad-config", () => {
       "Booz Allen Hamilton",
       "Shield AI",
     ]);
+  });
+
+  test("loadNewGradScanConfig reads max_years_experience from profile", () => {
+    const repoRoot = makeRepoRoot();
+    writeFileSync(
+      join(repoRoot, "config/profile.yml"),
+      [
+        "newgrad_scan:",
+        "  hard_filters:",
+        "    max_years_experience: 2",
+        "",
+      ].join("\n"),
+      "utf-8",
+    );
+
+    const config = loadNewGradScanConfig(repoRoot);
+
+    expect(config.hard_filters.max_years_experience).toBe(2);
+  });
+
+  test("loadNewGradScanConfig reads detail value and compensation thresholds", () => {
+    const repoRoot = makeRepoRoot();
+    writeFileSync(
+      join(repoRoot, "config/profile.yml"),
+      [
+        "compensation:",
+        '  minimum: "$125K"',
+        "",
+        "newgrad_scan:",
+        "  detail_value_threshold: 7.5",
+        "",
+      ].join("\n"),
+      "utf-8",
+    );
+
+    const config = loadNewGradScanConfig(repoRoot);
+
+    expect(config.detail_value_threshold).toBe(7.5);
+    expect(config.compensation_min_usd).toBe(125_000);
+  });
+
+  test("loadNegativeKeywords reads commented title filter arrays", () => {
+    const repoRoot = makeRepoRoot();
+    writeFileSync(
+      join(repoRoot, "portals.yml"),
+      [
+        "title_filter:",
+        "  positive:",
+        '    - "Software Engineer"',
+        "  negative:",
+        "    # Exclude poor-fit roles before LLM evaluation.",
+        '    - "PhD"',
+        '    - "Top Secret"',
+        "",
+      ].join("\n"),
+      "utf-8",
+    );
+
+    expect(loadNegativeKeywords(repoRoot)).toEqual(["PhD", "Top Secret"]);
   });
 
   test("persistBlockedCompanies writes deduped company memory", () => {

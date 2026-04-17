@@ -23,6 +23,9 @@ import {
   type TrackerListResult,
   type NewGradScoreResult,
   type NewGradEnrichResult,
+  type NewGradPendingResult,
+  type NewGradPendingCacheBackfillInput,
+  type NewGradPendingCacheBackfillResult,
 } from "../contracts/bridge-wire.js";
 import {
   PROTOCOL_VERSION,
@@ -52,6 +55,10 @@ export function bridgeClient(
   getTracker(limit: number): Promise<EnvelopedResponse<TrackerListResult>>;
   getReport(num: number): Promise<EnvelopedResponse<ReportReadResult>>;
   mergeTracker(dryRun: boolean): Promise<EnvelopedResponse<MergeReport>>;
+  getNewGradPending(limit: number): Promise<EnvelopedResponse<NewGradPendingResult>>;
+  backfillNewGradPendingCache(
+    entries: NewGradPendingCacheBackfillInput[],
+  ): Promise<EnvelopedResponse<NewGradPendingCacheBackfillResult>>;
   scoreNewGradRows(rows: NewGradRow[]): Promise<EnvelopedResponse<NewGradScoreResult>>;
   enrichNewGradRows(rows: EnrichedRow[]): Promise<EnvelopedResponse<NewGradEnrichResult>>;
   streamJob(
@@ -110,7 +117,17 @@ export function bridgeClient(
   ): Promise<EnvelopedResponse<TResult>> {
     try {
       const res = await fetch(base + path, init);
-      const body = await res.json();
+      const text = await res.text();
+      let body: unknown;
+      try {
+        body = text ? JSON.parse(text) : null;
+      } catch {
+        const snippet = text.slice(0, 200).replace(/\s+/g, " ").trim();
+        return failureFromError(
+          requestId,
+          new Error(`HTTP ${res.status}: ${snippet || res.statusText}`),
+        );
+      }
       if (isSuccess<TResult>(body) || isFailure(body)) {
         return body;
       }
@@ -241,6 +258,32 @@ export function bridgeClient(
           body: JSON.stringify(env),
         },
         env.requestId
+      );
+    },
+
+    async getNewGradPending(limit: number) {
+      const env = envelope({ limit });
+      return jsonRequest<NewGradPendingResult>(
+        "/v1/newgrad-scan/pending",
+        {
+          method: "POST",
+          headers: headers(),
+          body: JSON.stringify(env),
+        },
+        env.requestId,
+      );
+    },
+
+    async backfillNewGradPendingCache(entries: NewGradPendingCacheBackfillInput[]) {
+      const env = envelope({ entries });
+      return jsonRequest<NewGradPendingCacheBackfillResult>(
+        "/v1/newgrad-scan/pending/backfill",
+        {
+          method: "POST",
+          headers: headers(),
+          body: JSON.stringify(env),
+        },
+        env.requestId,
       );
     },
 

@@ -1,25 +1,9 @@
 import { createHash } from "node:crypto";
-
-const TRACKING_PARAMS = new Set([
-  "utm_source",
-  "utm_medium",
-  "utm_campaign",
-  "utm_content",
-  "utm_term",
-  "ref",
-  "source",
-  "gh_src",
-  "lever-source",
-]);
+import { canonicalizeJobUrl } from "./canonical-job-url.js";
 
 /** Strip tracking query params and hash fragments from a URL. */
 export function stripTrackingParams(raw: string): string {
-  const u = new URL(raw);
-  for (const key of [...u.searchParams.keys()]) {
-    if (TRACKING_PARAMS.has(key)) u.searchParams.delete(key);
-  }
-  u.hash = "";
-  return u.toString();
+  return canonicalizeJobUrl(raw) ?? raw;
 }
 
 /**

@@ -28,6 +28,9 @@ import type {
   EnrichedRow,
   NewGradScoreResult,
   NewGradEnrichResult,
+  NewGradPendingResult,
+  NewGradPendingCacheBackfillInput,
+  NewGradPendingCacheBackfillResult,
 } from "./newgrad.js";
 
 /**
@@ -155,6 +158,21 @@ export interface PipelineAdapter {
     rows: EnrichedRow[],
     onProgress?: (current: number, total: number, row: EnrichedRow) => void,
   ): Promise<NewGradEnrichResult>;
+
+  /**
+   * Read unchecked newgrad-scan candidates from data/pipeline.md, excluding
+   * roles already present in the tracker. Pure filesystem read.
+   */
+  readNewGradPendingEntries(limit: number): Promise<NewGradPendingResult>;
+
+  /**
+   * Persist richer local JD cache for legacy pending rows by writing a
+   * deterministic jds/*.txt artifact and backfilling the matching
+   * pipeline.md row with a [local:jds/...] marker.
+   */
+  backfillNewGradPendingCache(
+    entries: readonly NewGradPendingCacheBackfillInput[],
+  ): Promise<NewGradPendingCacheBackfillResult>;
 }
 
 /* -------------------------------------------------------------------------- */

@@ -16,6 +16,7 @@ import type {
   ScoreBreakdown,
   ScoredRow,
 } from "../contracts/newgrad.js";
+import { matchActiveSecurityClearanceRequirement } from "../lib/security-clearance.js";
 
 /* -------------------------------------------------------------------------- */
 /*  Parsing helpers                                                            */
@@ -52,19 +53,32 @@ const UNIT_TO_MINUTES: Record<string, number> = {
  * @returns Minutes since posted, or `Infinity` if the string is unparseable.
  */
 export function parsePostedAgo(text: string): number {
+  const normalized = text.trim().toLowerCase();
+  if (
+    normalized === "just now" ||
+    normalized === "today" ||
+    normalized === "moments ago" ||
+    normalized === "a moment ago"
+  ) {
+    return 0;
+  }
+
   // Long form: "2 hours ago", "30 minutes ago"
-  const longMatch = /^(\d+)\s+([a-z]+)\s+ago$/i.exec(text.trim());
+  const longMatch = /^(\d+)\s+([a-z]+)\s+ago$/i.exec(normalized);
   if (longMatch) {
     const value = Number(longMatch[1]);
     const unit = longMatch[2]!.toLowerCase();
-    const multiplier = UNIT_TO_MINUTES[unit];
+    const multiplier =
+      UNIT_TO_MINUTES[unit] ??
+      (unit === "min" || unit === "mins" ? 1 : undefined) ??
+      (unit === "hr" || unit === "hrs" ? 60 : undefined);
     if (multiplier !== undefined) {
       return value * multiplier;
     }
   }
 
   // Short form: "2h ago", "3d ago"
-  const shortMatch = /^(\d+)([a-z])\s+ago$/i.exec(text.trim());
+  const shortMatch = /^(\d+)([a-z])\s+ago$/i.exec(normalized);
   if (shortMatch) {
     const value = Number(shortMatch[1]);
     const unit = shortMatch[2]!.toLowerCase();
@@ -113,6 +127,34 @@ function equalsAny(value: string, candidates: readonly string[]): string | null 
     }
   }
   return null;
+}
+
+function containsConfiguredPhrase(text: string, phrases: readonly string[]): string | null {
+  const normalizedText = normalizeText(text);
+  if (!normalizedText) return null;
+
+  for (const phrase of phrases) {
+    const normalizedPhrase = normalizeText(phrase);
+    if (normalizedPhrase && normalizedText.includes(normalizedPhrase)) {
+      return phrase;
+    }
+  }
+  return null;
+}
+
+function extractMinimumYearsExperience(text: string): number | null {
+  const normalized = normalizeText(text);
+  if (!normalized) return null;
+
+  let minimum: number | null = null;
+  const matches = normalized.matchAll(/(\d+)\s*(?:\+|plus)?(?:\s*-\s*\d+)?\s*(?:years?|yrs?)/g);
+  for (const match of matches) {
+    const candidate = Number(match[1]);
+    if (!Number.isFinite(candidate)) continue;
+    minimum = minimum === null ? candidate : Math.min(minimum, candidate);
+  }
+
+  return minimum;
 }
 
 /**
@@ -213,6 +255,9 @@ export function scoreAndFilter(
 
   for (const row of rows) {
     const titleLower = row.title.toLowerCase();
+    const minYearsExperience = extractMinimumYearsExperience(
+      [row.title, row.qualifications ?? ""].join(" "),
+    );
     // Hard filter 1: negative title keywords
     const matchedNegative = negativeLower.find((kw) => titleLower.includes(kw));
     if (matchedNegative !== undefined) {
@@ -224,7 +269,32 @@ export function scoreAndFilter(
       continue;
     }
 
-    // Hard filter 2: company-level no sponsorship blocklist
+    if (minYearsExperience !== null && minYearsExperience > config.hard_filters.max_years_experience) {
+      filtered.push({
+        row,
+        reason: "experience_too_high",
+        detail:
+          `Role requires ${minYearsExperience}+ years of experience, above cutoff ` +
+          `${config.hard_filters.max_years_experience}`,
+      });
+      continue;
+    }
+
+    // Hard filter 2: explicit user company blacklist
+    const blockedCompany = equalsAny(
+      row.company,
+      config.hard_filters.blocked_companies,
+    );
+    if (blockedCompany !== null) {
+      filtered.push({
+        row,
+        reason: "company_blacklist",
+        detail: `Company is on the user blacklist: "${blockedCompany}"`,
+      });
+      continue;
+    }
+
+    // Hard filter 3: company-level no sponsorship blocklist
     const blockedNoSponsorshipCompany = config.hard_filters.exclude_no_sponsorship
       ? equalsAny(row.company, config.hard_filters.no_sponsorship_companies)
       : null;
@@ -237,7 +307,25 @@ export function scoreAndFilter(
       continue;
     }
 
-    // Hard filter 3: company-level active clearance blocklist
+    const hardFilterText = [row.title, row.qualifications ?? ""]
+      .filter(Boolean)
+      .join(". ");
+    const matchedNoSponsorshipPhrase = config.hard_filters.exclude_no_sponsorship
+      ? containsConfiguredPhrase(
+          hardFilterText,
+          config.hard_filters.no_sponsorship_keywords,
+        )
+      : null;
+    if (matchedNoSponsorshipPhrase !== null) {
+      filtered.push({
+        row,
+        reason: "no_sponsorship",
+        detail: `Role text contains no-sponsorship phrase: "${matchedNoSponsorshipPhrase}"`,
+      });
+      continue;
+    }
+
+    // Hard filter 4: company-level active clearance blocklist
     const blockedActiveClearanceCompany = config.hard_filters.exclude_active_security_clearance
       ? equalsAny(
           row.company,
@@ -253,7 +341,22 @@ export function scoreAndFilter(
       continue;
     }
 
-    // Hard filter 4: original employer posting confirms no sponsorship support
+    const matchedClearancePhrase = config.hard_filters.exclude_active_security_clearance
+      ? matchActiveSecurityClearanceRequirement(
+          hardFilterText,
+          config.hard_filters.clearance_keywords,
+        )
+      : null;
+    if (matchedClearancePhrase !== null) {
+      filtered.push({
+        row,
+        reason: "active_clearance_required",
+        detail: `Role text contains clearance phrase: "${matchedClearancePhrase}"`,
+      });
+      continue;
+    }
+
+    // Hard filter 5: original employer posting confirms no sponsorship support
     const matchedNoSponsorship = config.hard_filters.exclude_no_sponsorship
       ? row.confirmedSponsorshipSupport === "no"
         ? "confirmed on original employer posting"
@@ -268,7 +371,7 @@ export function scoreAndFilter(
       continue;
     }
 
-    // Hard filter 5: original employer posting confirms active secret clearance requirement
+    // Hard filter 6: original employer posting confirms active secret clearance requirement
     const matchedClearance = config.hard_filters.exclude_active_security_clearance
       ? row.confirmedRequiresActiveSecurityClearance
         ? "confirmed on original employer posting"
@@ -283,7 +386,7 @@ export function scoreAndFilter(
       continue;
     }
 
-    // Hard filter 6: already tracked
+    // Hard filter 7: already tracked
     const trackingKey = `${row.company.toLowerCase()}|${titleLower}`;
     if (trackedCompanyRoles.has(trackingKey)) {
       filtered.push({

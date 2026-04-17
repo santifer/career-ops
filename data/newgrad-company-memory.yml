@@ -2,5 +2,10 @@
 # Only companies confirmed on the original employer posting are persisted here.
 
 no_sponsorship_companies:
+  - "Boeing"
+  - "Palo Alto Networks"
+  - "QBE North America"
+  - "Transamerica"
 
 active_security_clearance_companies:
+  - "Vantor"

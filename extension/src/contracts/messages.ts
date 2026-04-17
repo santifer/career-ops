@@ -39,6 +39,8 @@ import type {
   NewGradRow,
   NewGradScoreResult,
   NewGradEnrichResult,
+  NewGradPendingEntry,
+  NewGradPendingResult,
   ScoredRow,
 } from "./bridge-wire.js";
 
@@ -47,6 +49,14 @@ export interface MergeReport {
   updated: number;
   skipped: number;
   dryRun: boolean;
+}
+
+export interface NewGradPendingCacheWarmResult {
+  total: number;
+  targeted: number;
+  warmed: number;
+  skipped: number;
+  failed: number;
 }
 
 export type BridgePreset =
@@ -100,6 +110,12 @@ export type PopupRequest =
   | { kind: "mergeTracker"; dryRun?: boolean }
   /** Trigger list page extraction on the active newgrad-jobs.com tab. */
   | { kind: "newgradExtractList" }
+  /** Read unchecked newgrad-scan candidates from data/pipeline.md. */
+  | { kind: "newgradPending"; limit?: number }
+  /** Queue direct evaluations for selected or all pending newgrad candidates. */
+  | { kind: "newgradEvaluatePending"; entries?: NewGradPendingEntry[]; sessionId: string; limit?: number }
+  /** Warm local JD cache for legacy pending rows that still lack local:jds artifacts. */
+  | { kind: "newgradWarmPendingCache"; entries?: NewGradPendingEntry[]; sessionId: string; limit?: number }
   /** Send extracted rows to bridge for scoring. */
   | { kind: "newgradScore"; rows: NewGradRow[] }
   /** Open detail pages for promoted rows in background tabs with throttling. */
@@ -156,6 +172,12 @@ export type PopupResponse =
   | { kind: "mergeTracker"; ok: false; error: BridgeError }
   | { kind: "newgradExtractList"; ok: true; result: { rows: NewGradRow[]; pageInfo: { currentPage: number; totalRows: number } } }
   | { kind: "newgradExtractList"; ok: false; error: BridgeError }
+  | { kind: "newgradPending"; ok: true; result: NewGradPendingResult }
+  | { kind: "newgradPending"; ok: false; error: BridgeError }
+  | { kind: "newgradEvaluatePending"; ok: true; result: NewGradEnrichResult }
+  | { kind: "newgradEvaluatePending"; ok: false; error: BridgeError }
+  | { kind: "newgradWarmPendingCache"; ok: true; result: NewGradPendingCacheWarmResult }
+  | { kind: "newgradWarmPendingCache"; ok: false; error: BridgeError }
   | { kind: "newgradScore"; ok: true; result: NewGradScoreResult }
   | { kind: "newgradScore"; ok: false; error: BridgeError }
   | { kind: "newgradEnrichDetails"; ok: true; result: { enrichedRows: EnrichedRow[]; failed: number } }

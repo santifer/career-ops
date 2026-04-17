@@ -48,6 +48,10 @@ export interface BridgeConfig {
   realExecutor: RealExecutor;
   /** Seconds an evaluation is allowed to run. */
   evaluationTimeoutSec: number;
+  /** Maximum number of in-flight evaluations. */
+  evaluationConcurrency: number;
+  /** Maximum accepted evaluation requests per minute. */
+  evaluationRateLimitPerMinute: number;
   /** Seconds a liveness check is allowed to run. */
   livenessTimeoutSec: number;
   /** Bridge semver, pulled from package.json. */
@@ -59,6 +63,8 @@ export interface BridgeConfig {
 const DEFAULT_HOST = "127.0.0.1";
 const DEFAULT_PORT = 47319;
 const DEFAULT_EVAL_TIMEOUT_SEC = 900;   // 15 min — claude -p can be slow
+const DEFAULT_EVAL_CONCURRENCY = 2;
+const DEFAULT_EVAL_RPM = 30;
 const DEFAULT_LIVENESS_TIMEOUT_SEC = 20;
 
 function here(): string {
@@ -181,6 +187,15 @@ function parsePort(raw: string | undefined, fallback: number): number {
   return n;
 }
 
+function parsePositiveInt(raw: string | undefined, fallback: number, envName: string): number {
+  if (raw === undefined || raw === "") return fallback;
+  const n = Number(raw);
+  if (!Number.isInteger(n) || n < 1) {
+    throw new Error(`${envName} invalid: "${raw}"`);
+  }
+  return n;
+}
+
 export function loadConfig(): BridgeConfig {
   const { repoRoot, bridgeDir } = findRepoRoot();
 
@@ -252,6 +267,16 @@ export function loadConfig(): BridgeConfig {
     mode,
     realExecutor,
     evaluationTimeoutSec: DEFAULT_EVAL_TIMEOUT_SEC,
+    evaluationConcurrency: parsePositiveInt(
+      process.env.CAREER_OPS_BRIDGE_EVAL_CONCURRENCY,
+      DEFAULT_EVAL_CONCURRENCY,
+      "CAREER_OPS_BRIDGE_EVAL_CONCURRENCY",
+    ),
+    evaluationRateLimitPerMinute: parsePositiveInt(
+      process.env.CAREER_OPS_BRIDGE_EVAL_RPM,
+      DEFAULT_EVAL_RPM,
+      "CAREER_OPS_BRIDGE_EVAL_RPM",
+    ),
     livenessTimeoutSec: DEFAULT_LIVENESS_TIMEOUT_SEC,
     bridgeVersion,
     careerOpsVersion,

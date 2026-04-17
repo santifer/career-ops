@@ -35,6 +35,8 @@ import type {
   EnrichedRow,
   NewGradScoreResult,
   NewGradEnrichResult,
+  NewGradPendingCacheBackfillInput,
+  NewGradPendingCacheBackfillResult,
 } from "./newgrad.js";
 
 /* -------------------------------------------------------------------------- */
@@ -70,6 +72,7 @@ export type EndpointId =
   | "jobGet"
   | "trackerList"
   | "reportRead"
+  | "newgradPendingBackfill"
   | "newgradScore"
   | "newgradEnrich";
 
@@ -162,6 +165,26 @@ export const LIVENESS: EndpointDescriptor<
   phase: 2,
   idempotent: true,
   errors: ["UNAUTHORIZED", "BAD_REQUEST", "TIMEOUT", "INTERNAL"],
+};
+
+/* -------------------------------------------------------------------------- */
+/*  /newgrad-scan/pending/backfill — persist local JD cache for legacy rows   */
+/* -------------------------------------------------------------------------- */
+
+export interface NewGradPendingBackfillRequest {
+  entries: readonly NewGradPendingCacheBackfillInput[];
+}
+
+export const NEWGRAD_PENDING_BACKFILL: EndpointDescriptor<
+  RequestEnvelope<NewGradPendingBackfillRequest>,
+  Response<NewGradPendingCacheBackfillResult>
+> = {
+  id: "newgradPendingBackfill",
+  method: "POST",
+  path: "/v1/newgrad-scan/pending/backfill",
+  phase: 2,
+  idempotent: false,
+  errors: ["UNAUTHORIZED", "BAD_REQUEST", "RATE_LIMITED", "INTERNAL"],
 };
 
 /* -------------------------------------------------------------------------- */

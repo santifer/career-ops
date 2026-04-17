@@ -21,6 +21,7 @@ import type {
   CapturedTab,
   ExtensionState,
   JobPortMessage,
+  NewGradPendingCacheWarmResult,
   PopupRequest,
   PopupResponse,
 } from "../contracts/messages.js";
@@ -28,14 +29,17 @@ import type {
   EvaluationResult,
   BridgeError,
   EnrichedRow,
+  FilteredRow,
   JobEvent,
   JobId,
   JobSnapshot,
   NewGradDetail,
   NewGradEnrichResult,
+  NewGradPendingEntry,
   NewGradRow,
   PipelineEntry,
   ScoredRow,
+  StructuredJobSignals,
 } from "../contracts/bridge-wire.js";
 
 import { loadState, patchState } from "./state.js";
@@ -141,6 +145,12 @@ async function handleRequest(req: PopupRequest): Promise<PopupResponse> {
         return await handleMergeTracker(req.dryRun);
       case "newgradExtractList":
         return await handleNewGradExtractList();
+      case "newgradPending":
+        return await handleNewGradPending(req.limit);
+      case "newgradEvaluatePending":
+        return await handleNewGradEvaluatePending(req.entries, req.sessionId, req.limit);
+      case "newgradWarmPendingCache":
+        return await handleNewGradWarmPendingCache(req.entries, req.sessionId, req.limit);
       case "newgradScore":
         return await handleNewGradScore(req.rows);
       case "newgradEnrichDetails":
@@ -256,6 +266,156 @@ async function waitForTabComplete(
   });
 }
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+type CaptureLogger = (event: string, payload: Record<string, unknown>) => void;
+
+function scoreCapturedTab(captured: CapturedTab): number {
+  const base = captured.pageText.length;
+  const bonus =
+    captured.detection?.label === "job_posting"
+      ? 5000
+      : captured.detection?.label === "likely_job_posting"
+        ? 2000
+        : 0;
+  return base + bonus;
+}
+
+async function captureTabContext(
+  tabId: number,
+  tabMeta: { url: string; title: string },
+  dbg: CaptureLogger,
+  options: { returnEmptyFallback: boolean },
+): Promise<CapturedTab | undefined> {
+  let frames: chrome.webNavigation.GetAllFrameResultDetails[] = [];
+  try {
+    frames = (await chrome.webNavigation.getAllFrames({ tabId })) ?? [];
+    dbg("frames", {
+      count: frames.length,
+      urls: frames.map((frame) => ({ id: frame.frameId, url: frame.url })),
+    });
+  } catch (err) {
+    dbg("frames.error", { err: String(err) });
+  }
+
+  const injectTop = async (): Promise<{
+    result: CapturedTab | undefined;
+    rawResults: chrome.scripting.InjectionResult<unknown>[];
+  }> => {
+    const results = await chrome.scripting.executeScript({
+      target: { tabId },
+      files: ["content.js"],
+    });
+    const raw = results[0]?.result as CapturedTab | undefined;
+    return { result: raw ? { ...raw, tabId } : undefined, rawResults: results };
+  };
+
+  let captured: CapturedTab | undefined;
+  try {
+    const first = await injectTop();
+    dbg("inject.top.first", {
+      resultsLen: first.rawResults.length,
+      frameIds: first.rawResults.map((result) => result.frameId),
+      hasResult: Boolean(first.result),
+      resultShape: first.result
+        ? {
+            titleLen: (first.result.title ?? "").length,
+            pageTextLen: (first.result.pageText ?? "").length,
+            captureState: first.result.captureState,
+            detection: first.result.detection?.label,
+          }
+        : null,
+    });
+    captured = first.result;
+
+    if (captured && captured.captureState === "hydrating") {
+      await sleep(800);
+      const retry = await injectTop();
+      dbg("inject.top.retry", {
+        hasResult: Boolean(retry.result),
+        pageTextLen: retry.result?.pageText.length,
+      });
+      if (retry.result) captured = retry.result;
+    }
+  } catch (err) {
+    dbg("inject.top.throw", { err: String(err) });
+  }
+
+  if (!captured || captured.pageText.length < 400) {
+    try {
+      const results = await chrome.scripting.executeScript({
+        target: { tabId, allFrames: true },
+        files: ["content.js"],
+      });
+      dbg("inject.allFrames", {
+        resultsLen: results.length,
+        perFrame: results.map((result) => ({
+          frameId: result.frameId,
+          hasResult: Boolean(result.result),
+          pageTextLen:
+            (result.result as CapturedTab | undefined)?.pageText?.length ?? 0,
+          detection: (result.result as CapturedTab | undefined)?.detection?.label,
+        })),
+      });
+
+      let best: CapturedTab | undefined;
+      let bestScore = -1;
+      for (const result of results) {
+        const current = result.result as CapturedTab | undefined;
+        if (!current) continue;
+        const score = scoreCapturedTab(current);
+        if (score > bestScore) {
+          best = current;
+          bestScore = score;
+        }
+      }
+      const currentScore = captured ? scoreCapturedTab(captured) : -1;
+      if (best && bestScore > currentScore) {
+        captured = { ...best, tabId };
+      }
+    } catch (err) {
+      dbg("inject.allFrames.throw", { err: String(err) });
+    }
+  }
+
+  if (!captured) {
+    dbg("final.fallback.empty", {});
+    if (!options.returnEmptyFallback) return undefined;
+    return {
+      tabId,
+      url: tabMeta.url,
+      title: tabMeta.title,
+      pageText: "",
+      detection: { label: "not_job_posting", confidence: 0.1, signals: [] },
+      captureState: "hydrating",
+      capturedAt: new Date().toISOString(),
+    };
+  }
+
+  dbg("final.ok", {
+    pageTextLen: captured.pageText.length,
+    captureState: captured.captureState,
+    detection: captured.detection?.label,
+  });
+  return captured;
+}
+
+const TRACKING_QUERY_PARAMS = new Set([
+  "utm_source",
+  "utm_medium",
+  "utm_campaign",
+  "utm_content",
+  "utm_term",
+  "utm_id",
+  "utm_name",
+  "ref",
+  "source",
+  "gh_src",
+  "lever-source",
+]);
+
 function normalizeUrlCandidate(url: string | null | undefined): string | null {
   if (!url) return null;
   const trimmed = url.trim();
@@ -264,11 +424,52 @@ function normalizeUrlCandidate(url: string | null | undefined): string | null {
   try {
     const parsed = new URL(trimmed);
     if (!/^https?:$/.test(parsed.protocol)) return null;
+    const keysToRemove: string[] = [];
+    parsed.searchParams.forEach((_value, key) => {
+      if (TRACKING_QUERY_PARAMS.has(key)) {
+        keysToRemove.push(key);
+      }
+    });
+    for (const key of keysToRemove) {
+      parsed.searchParams.delete(key);
+    }
+    parsed.pathname = trimTrailingSlash(parsed.pathname.replace(/\/{2,}/g, "/"));
     parsed.hash = "";
     return parsed.toString();
   } catch {
     return null;
   }
+}
+
+function canonicalizeJobUrlKey(url: string | null | undefined): string | null {
+  const normalized = normalizeUrlCandidate(url);
+  if (!normalized) return null;
+
+  try {
+    const parsed = new URL(normalized);
+    const oracleJobId = parsed.pathname.match(
+      /\/CandidateExperience\/(?:[^/]+\/)?(?:sites\/[^/]+\/)?job\/([^/?#]+)/i,
+    )?.[1];
+    if (oracleJobId) {
+      return `${parsed.origin}/hcmUI/CandidateExperience/job/${oracleJobId}`;
+    }
+
+    const genericJobIdMatch = parsed.pathname.match(
+      /^(.*?\/job\/)(?=[A-Za-z0-9_-]*\d)([A-Za-z0-9_-]{5,})(?:\/.*)?$/i,
+    );
+    if (genericJobIdMatch) {
+      return `${parsed.origin}${trimTrailingSlash(`${genericJobIdMatch[1]}${genericJobIdMatch[2]}`)}`;
+    }
+
+    return normalized;
+  } catch {
+    return normalized;
+  }
+}
+
+function trimTrailingSlash(value: string): string {
+  if (value === "/") return value;
+  return value.replace(/\/+$/, "");
 }
 
 function isJobrightUrl(url: string | null | undefined): boolean {
@@ -488,17 +689,37 @@ async function confirmOriginalPostingBlockers(
         function requiresActiveSecurityClearance(text: string): boolean {
           const normalized = text.toLowerCase().replace(/\s+/g, " ").trim();
           if (!normalized) return false;
+          const segments = normalized
+            .split(/[\n\r.;!?]+/)
+            .map((segment) => segment.trim())
+            .filter(Boolean);
 
-          const signals = [
-            "active secret security clearance",
-            "active secret clearance",
-            "current secret clearance",
-            "must have an active secret clearance",
-            "must possess an active secret clearance",
-            "requires an active secret clearance",
-            "active secret clearance required",
-          ];
-          return signals.some((signal) => normalized.includes(signal));
+          for (const segment of segments) {
+            if (
+              /\b(preferred|preference|nice to have|plus|public trust)\b/.test(segment) ||
+              /\b(ability|eligible|eligibility|able)\s+to\s+obtain\b/.test(segment) ||
+              /\bobtain(?:ed|ing)?\b/.test(segment)
+            ) {
+              continue;
+            }
+            if (
+              /\b(active|current)\s+secret(?:\s+security)?\s+clearance\b/.test(segment) ||
+              /\b(active|current)\s+security\s+clearance\b/.test(segment) ||
+              /\btop\s+secret(?:\s+security)?\s+clearance\b/.test(segment) ||
+              /\b(?:current\s+)?ts\/sci(?:\s+security)?\s+clearance\b/.test(segment) ||
+              /\b(?:must\s+(?:have|possess)|requires?|required|need(?:ed)?|mandatory)\b.{0,40}\b(?:secret|top\s+secret|ts\/sci)(?:\s+security)?\s+clearance\b/.test(
+                segment,
+              ) ||
+              (
+                segment.length <= 120 &&
+                /\b(top secret|ts\/sci)\b/.test(segment)
+              )
+            ) {
+              return true;
+            }
+          }
+
+          return false;
         }
 
         const combinedText = collectText();
@@ -594,147 +815,13 @@ async function handleCapture(): Promise<PopupResponse> {
   } catch (err) {
     dbg("perm.getAll.error", { err: String(err) });
   }
-
-  // Enumerate frames so we can see if the real JD lives in an iframe
-  // (common on Workday: top doc is a shell, content is in a child
-  // frame under wd*.myworkday.com or similar).
-  let frames: chrome.webNavigation.GetAllFrameResultDetails[] = [];
-  try {
-    frames = (await chrome.webNavigation.getAllFrames({ tabId })) ?? [];
-    dbg("frames", {
-      count: frames.length,
-      urls: frames.map((f) => ({ id: f.frameId, url: f.url })),
-    });
-  } catch (err) {
-    dbg("frames.error", { err: String(err) });
-  }
-
-  // First attempt — top frame only, matching prior behaviour.
-  const injectTop = async (): Promise<{
-    result: CapturedTab | undefined;
-    rawResults: chrome.scripting.InjectionResult<unknown>[];
-  }> => {
-    const results = await chrome.scripting.executeScript({
-      target: { tabId },
-      files: ["content.js"],
-    });
-    const raw = results[0]?.result as CapturedTab | undefined;
-    return { result: raw ? { ...raw, tabId } : undefined, rawResults: results };
-  };
-
-  let captured: CapturedTab | undefined;
-  try {
-    const first = await injectTop();
-    dbg("inject.top.first", {
-      resultsLen: first.rawResults.length,
-      frameIds: first.rawResults.map((r) => r.frameId),
-      hasResult: Boolean(first.result),
-      resultShape: first.result
-        ? {
-            titleLen: (first.result.title ?? "").length,
-            pageTextLen: (first.result.pageText ?? "").length,
-            captureState: first.result.captureState,
-            detection: first.result.detection?.label,
-          }
-        : null,
-    });
-    captured = first.result;
-
-    if (captured && captured.captureState === "hydrating") {
-      await new Promise((r) => setTimeout(r, 800));
-      const retry = await injectTop();
-      dbg("inject.top.retry", {
-        hasResult: Boolean(retry.result),
-        pageTextLen: retry.result?.pageText.length,
-      });
-      if (retry.result) captured = retry.result;
-    }
-  } catch (err) {
-    dbg("inject.top.throw", { err: String(err) });
-  }
-
-  // Fallback: if top-frame injection gave us nothing or near-empty
-  // text, try all frames and keep the richest result. This catches
-  // two patterns on Workday-like sites:
-  //  1. Real JD rendered inside a child iframe.
-  //  2. Top frame returned synchronously before SPA populated DOM,
-  //     while a child frame (or later-hydrated top) has content.
-  // Scoring prefers explicit job-posting detections over raw text
-  // length so a short nav-only top frame can't outrank a richer
-  // child frame that was actually identified as a JD.
-  if (!captured || captured.pageText.length < 400) {
-    try {
-      const results = await chrome.scripting.executeScript({
-        target: { tabId, allFrames: true },
-        files: ["content.js"],
-      });
-      dbg("inject.allFrames", {
-        resultsLen: results.length,
-        perFrame: results.map((r) => ({
-          frameId: r.frameId,
-          hasResult: Boolean(r.result),
-          pageTextLen:
-            (r.result as CapturedTab | undefined)?.pageText?.length ?? 0,
-          detection: (r.result as CapturedTab | undefined)?.detection?.label,
-        })),
-      });
-      const scoreFrame = (c: CapturedTab): number => {
-        const base = c.pageText.length;
-        const bonus =
-          c.detection?.label === "job_posting"
-            ? 5000
-            : c.detection?.label === "likely_job_posting"
-              ? 2000
-              : 0;
-        return base + bonus;
-      };
-      let best: CapturedTab | undefined;
-      let bestScore = -1;
-      for (const r of results) {
-        const c = r.result as CapturedTab | undefined;
-        if (!c) continue;
-        const s = scoreFrame(c);
-        if (s > bestScore) {
-          best = c;
-          bestScore = s;
-        }
-      }
-      const currentScore = captured ? scoreFrame(captured) : -1;
-      if (best && bestScore > currentScore) {
-        captured = { ...best, tabId };
-      }
-    } catch (err) {
-      dbg("inject.allFrames.throw", { err: String(err) });
-    }
-  }
-
-  if (!captured) {
-    // Last-resort: hand the tab's URL/title to the caller with an
-    // empty pageText and captureState:"hydrating". The bridge's
-    // Playwright fallback is expected to re-fetch and render the
-    // page properly; returning INTERNAL here blocks that path.
-    // INTERNAL is only correct when we cannot even identify the tab.
-    dbg("final.fallback.empty", {});
-    return {
-      kind: "captureActiveTab",
-      ok: true,
-      result: {
-        tabId,
-        url: tab.url,
-        title: tab.title ?? "",
-        pageText: "",
-        detection: { label: "not_job_posting", confidence: 0.1, signals: [] },
-        captureState: "hydrating",
-        capturedAt: new Date().toISOString(),
-      },
-    };
-  }
-  dbg("final.ok", {
-    pageTextLen: captured.pageText.length,
-    captureState: captured.captureState,
-    detection: captured.detection?.label,
-  });
-  return { kind: "captureActiveTab", ok: true, result: captured };
+  const captured = await captureTabContext(
+    tabId,
+    { url: tab.url, title: tab.title ?? "" },
+    dbg,
+    { returnEmptyFallback: true },
+  );
+  return { kind: "captureActiveTab", ok: true, result: captured! };
 }
 
 /**
@@ -899,17 +986,56 @@ async function handleNewGradExtractList(): Promise<PopupResponse> {
     const iframeResults = await chrome.scripting.executeScript({
       target: { tabId: tab.id },
       func: () => {
-        const preferred = Array.from(document.querySelectorAll("iframe[src]"))
-          .map((iframe) => (iframe as HTMLIFrameElement).src)
-          .find((src) => src.includes("jobright.ai/minisites-jobs/newgrad/us/swe"));
-        if (preferred) return preferred;
+        function withForwardedParams(baseUrl: string): string {
+          const sourceParams = new URLSearchParams(window.location.search);
+          const url = new URL(baseUrl);
+          url.searchParams.set("embed", "true");
+
+          for (const key of ["u", "utm_source", "utm_campaign"]) {
+            const value = sourceParams.get(key);
+            if (value) url.searchParams.set(key, value);
+          }
+
+          return url.toString();
+        }
+
+        function selectedJobrightUrl(): string | null {
+          const params = new URLSearchParams(window.location.search);
+          const key = params.get("k");
+          const selectedKey = params.get("selectedKey");
+          const items = Array.from(
+            document.querySelectorAll<HTMLElement>(".div-block-14, .airtable-trigger")
+          );
+
+          const selectedItem = items.find((item) => {
+            const shortLink = item.getAttribute("short-link");
+            const text = item.innerText.trim();
+            return (
+              (key !== null && shortLink === decodeURIComponent(key)) ||
+              (selectedKey !== null && text === decodeURIComponent(selectedKey))
+            );
+          }) ?? document.querySelector<HTMLElement>(
+            ".w-tab-pane.w--tab-active .div-block-14.active, .w-tab-pane.w--tab-active .airtable-trigger.active"
+          ) ?? document.querySelector<HTMLElement>(
+            ".w-tab-pane.w--tab-active .div-block-14, .w-tab-pane.w--tab-active .airtable-trigger"
+          );
+
+          const jobPath = selectedItem?.getAttribute("data-job-path");
+          if (!jobPath || jobPath.trim() === "") return null;
+
+          const cleanPath = jobPath.startsWith("/") ? jobPath.slice(1) : jobPath;
+          return withForwardedParams(`https://jobright.ai/minisites-jobs/newgrad/${cleanPath}`);
+        }
+
+        const selected = selectedJobrightUrl();
+        if (selected) return selected;
 
         const fallback = Array.from(document.querySelectorAll("iframe[src]"))
           .map((iframe) => (iframe as HTMLIFrameElement).src)
-          .find((src) => src.includes("jobright.ai/minisites-jobs"));
+          .find((src) => src.includes("jobright.ai/minisites-jobs/newgrad"));
         if (fallback) return fallback;
 
-        return "https://jobright.ai/minisites-jobs/newgrad/us/swe?embed=true";
+        return withForwardedParams("https://jobright.ai/minisites-jobs/newgrad/us/swe");
       },
     });
 
@@ -934,6 +1060,7 @@ async function handleNewGradExtractList(): Promise<PopupResponse> {
     sourceTabId = sourceTab.id;
     closeSourceTab = true;
     await waitForTabComplete(sourceTabId);
+    await new Promise((resolve) => setTimeout(resolve, 1000));
   }
 
   try {
@@ -967,12 +1094,182 @@ async function handleNewGradExtractList(): Promise<PopupResponse> {
   }
 }
 
+async function handleNewGradPending(limit = 100): Promise<PopupResponse> {
+  const { client, error } = await authenticatedClient();
+  if (error) return { kind: "newgradPending", ok: false, error };
+  const res = await client.getNewGradPending(limit);
+  if (!res.ok) return { kind: "newgradPending", ok: false, error: res.error };
+  return { kind: "newgradPending", ok: true, result: res.result };
+}
+
+async function handleNewGradEvaluatePending(
+  requestedEntries: NewGradPendingEntry[] | undefined,
+  sessionId: string,
+  limit = 100,
+): Promise<PopupResponse> {
+  const { client, error } = await authenticatedClient();
+  if (error) return { kind: "newgradEvaluatePending", ok: false, error };
+
+  const automaticBulkRun = !requestedEntries || requestedEntries.length === 0;
+  let entries = requestedEntries;
+  let skipped = 0;
+  if (!entries || entries.length === 0) {
+    const pending = await client.getNewGradPending(limit);
+    if (!pending.ok) return { kind: "newgradEvaluatePending", ok: false, error: pending.error };
+    const eligibleEntries = pending.result.entries.filter(canBulkDirectEvaluatePendingEntry);
+    skipped = pending.result.entries.length - eligibleEntries.length;
+    entries = [...eligibleEntries];
+  }
+
+  const directEval = await runDirectNewGradEvaluations(
+    client,
+    entries,
+    [],
+    sessionId,
+    { automaticBulkRun },
+  );
+  return {
+    kind: "newgradEvaluatePending",
+    ok: true,
+    result: {
+      added: 0,
+      skipped: skipped + directEval.skipped,
+      entries,
+      candidates: entries,
+      queued: directEval.queued,
+      evaluated: directEval.queued,
+      failed: directEval.failed,
+      jobs: directEval.jobs,
+    },
+  };
+}
+
+async function handleNewGradWarmPendingCache(
+  requestedEntries: NewGradPendingEntry[] | undefined,
+  sessionId: string,
+  limit = 100,
+): Promise<PopupResponse> {
+  const { client, error } = await authenticatedClient();
+  if (error) return { kind: "newgradWarmPendingCache", ok: false, error };
+
+  let entries = requestedEntries;
+  if (!entries || entries.length === 0) {
+    const pending = await client.getNewGradPending(limit);
+    if (!pending.ok) {
+      return { kind: "newgradWarmPendingCache", ok: false, error: pending.error };
+    }
+    entries = [...pending.result.entries];
+  }
+
+  const targets = entries.filter(needsLegacyPendingCacheBackfill);
+  const summary: NewGradPendingCacheWarmResult = {
+    total: entries.length,
+    targeted: targets.length,
+    warmed: 0,
+    skipped: entries.length - targets.length,
+    failed: 0,
+  };
+
+  if (targets.length === 0) {
+    return { kind: "newgradWarmPendingCache", ok: true, result: summary };
+  }
+
+  const backfillInputs: Array<{
+    url: string;
+    company: string;
+    role: string;
+    lineNumber: number;
+    pageText: string;
+  }> = [];
+
+  for (let index = 0; index < targets.length; index++) {
+    const entry = targets[index]!;
+    chrome.runtime.sendMessage({
+      kind: "newgradPendingBackfillProgress",
+      sessionId,
+      current: index + 1,
+      total: targets.length,
+      row: {
+        company: entry.company,
+        title: `Warming ${entry.role}`,
+      },
+    }).catch(() => { /* popup/panel may be closed */ });
+
+    const preparedEntry = await hydratePendingEntryForEvaluation(entry);
+    const pageText = preparedEntry.pageText?.trim();
+    if (!pageText || pageText.length < 1_200 || typeof entry.lineNumber !== "number") {
+      summary.skipped += 1;
+      continue;
+    }
+
+    backfillInputs.push({
+      url: entry.url,
+      company: entry.company,
+      role: entry.role,
+      lineNumber: entry.lineNumber,
+      pageText,
+    });
+  }
+
+  for (let index = 0; index < backfillInputs.length; index += PENDING_BACKFILL_BATCH_SIZE) {
+    const batch = backfillInputs.slice(index, index + PENDING_BACKFILL_BATCH_SIZE);
+    const backfill = await client.backfillNewGradPendingCache(batch);
+    if (!backfill.ok) {
+      summary.failed += batch.length;
+      continue;
+    }
+
+    for (const outcome of backfill.result.outcomes) {
+      if (outcome.status === "updated") {
+        summary.warmed += 1;
+      } else {
+        summary.failed += 1;
+      }
+    }
+  }
+
+  return { kind: "newgradWarmPendingCache", ok: true, result: summary };
+}
+
 async function handleNewGradScore(rows: NewGradRow[]): Promise<PopupResponse> {
   const { client, error } = await authenticatedClient();
   if (error) return { kind: "newgradScore", ok: false, error };
-  const res = await client.scoreNewGradRows(rows);
-  if (res.ok) return { kind: "newgradScore", ok: true, result: res.result };
-  return { kind: "newgradScore", ok: false, error: res.error };
+  const promoted: ScoredRow[] = [];
+  const filtered: FilteredRow[] = [];
+  const uniqueRows = dedupeNewGradRows(rows);
+  const chunkSize = 50;
+
+  for (let start = 0; start < uniqueRows.length; start += chunkSize) {
+    const chunk = uniqueRows.slice(start, start + chunkSize);
+    const res = await client.scoreNewGradRows(chunk);
+    if (!res.ok) return { kind: "newgradScore", ok: false, error: res.error };
+    promoted.push(...(res.result.promoted ?? []));
+    filtered.push(...(res.result.filtered ?? []));
+  }
+
+  promoted.sort((a, b) => b.score - a.score);
+  return {
+    kind: "newgradScore",
+    ok: true,
+    result: { promoted, filtered },
+  };
+}
+
+function dedupeNewGradRows(rows: NewGradRow[]): NewGradRow[] {
+  const seen = new Set<string>();
+  const uniqueRows: NewGradRow[] = [];
+
+  for (const row of rows) {
+    const key =
+      normalizeUrlCandidate(row.detailUrl) ??
+      normalizeUrlCandidate(row.applyUrl) ??
+      `${row.company.trim().toLowerCase()}|${row.title.trim().toLowerCase()}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    uniqueRows.push(row);
+  }
+
+  return uniqueRows;
 }
 
 async function handleNewGradEnrichDetails(
@@ -1282,14 +1579,80 @@ async function handleNewGradEnrichDetails(
             function requiresActiveSecurityClearance(text: string): boolean {
               const normalized = text.trim().toLowerCase().replace(/\s+/g, " ");
               if (!normalized) return false;
-              return (
-                normalized.includes("active secret security clearance") ||
-                normalized.includes("active secret clearance") ||
-                normalized.includes("current secret clearance") ||
-                normalized.includes("must have an active secret clearance") ||
-                normalized.includes("must possess an active secret clearance") ||
-                normalized.includes("requires an active secret clearance")
-              );
+              const segments = normalized
+                .split(/[\n\r.;!?]+/)
+                .map((segment) => segment.trim())
+                .filter(Boolean);
+
+              for (const segment of segments) {
+                if (
+                  /\b(preferred|preference|nice to have|plus|public trust)\b/.test(segment) ||
+                  /\b(ability|eligible|eligibility|able)\s+to\s+obtain\b/.test(segment) ||
+                  /\bobtain(?:ed|ing)?\b/.test(segment)
+                ) {
+                  continue;
+                }
+                if (
+                  /\b(active|current)\s+secret(?:\s+security)?\s+clearance\b/.test(segment) ||
+                  /\b(active|current)\s+security\s+clearance\b/.test(segment) ||
+                  /\btop\s+secret(?:\s+security)?\s+clearance\b/.test(segment) ||
+                  /\b(?:current\s+)?ts\/sci(?:\s+security)?\s+clearance\b/.test(segment) ||
+                  /\b(?:must\s+(?:have|possess)|requires?|required|need(?:ed)?|mandatory)\b.{0,40}\b(?:secret|top\s+secret|ts\/sci)(?:\s+security)?\s+clearance\b/.test(
+                    segment,
+                  ) ||
+                  (
+                    segment.length <= 120 &&
+                    /\b(top secret|ts\/sci)\b/.test(segment)
+                  )
+                ) {
+                  return true;
+                }
+              }
+
+              return false;
+            }
+
+            function normalizeEmploymentTypeValue(...candidates: string[]): string {
+              for (const candidate of candidates) {
+                const normalized = candidate.trim().toLowerCase();
+                if (!normalized) continue;
+                if (/\bfull[-\s]?time\b/.test(normalized)) return "Full-time";
+                if (/\bpart[-\s]?time\b/.test(normalized)) return "Part-time";
+                if (/\bcontract(or)?\b/.test(normalized)) return "Contract";
+                if (/\bintern(ship)?\b/.test(normalized)) return "Internship";
+              }
+              return "";
+            }
+
+            function normalizeSeniorityValue(titleText: string, ...candidates: string[]): string {
+              const titleNormalized = titleText.trim().toLowerCase();
+              if (
+                /\b(new grad|new graduate|graduate|entry level|entry-level|associate|junior|engineer i|engineer 1)\b/.test(
+                  titleNormalized,
+                )
+              ) {
+                return "Early career";
+              }
+              if (/\b(senior|staff|principal|lead|manager|director|architect)\b/.test(titleNormalized)) {
+                return "Senior";
+              }
+
+              for (const candidate of candidates) {
+                const normalized = candidate.trim().toLowerCase();
+                if (!normalized) continue;
+                if (
+                  /\b(entry|entry level|associate|junior|new grad|new graduate|graduate|early career|engineer i|engineer 1)\b/.test(
+                    normalized,
+                  )
+                ) {
+                  return "Early career";
+                }
+                if (/\b(senior|staff|principal|lead|manager|director|architect)\b/.test(normalized)) {
+                  return "Senior";
+                }
+              }
+
+              return "";
             }
 
             function parseJobrightData(): {
@@ -1380,10 +1743,11 @@ async function handleNewGradEnrichDetails(
             const location = txt(locationEl) || labelledValue("location");
 
             /* ---- employment type ---- */
-            const employmentType =
-              labelledValue("employment type") ||
-              labelledValue("job type") ||
-              labelledValue("type");
+            const employmentType = normalizeEmploymentTypeValue(
+              labelledValue("employment type"),
+              labelledValue("job type"),
+              labelledValue("time type"),
+            );
 
             /* ---- work model ---- */
             const workModelEl = first(
@@ -1399,10 +1763,12 @@ async function handleNewGradEnrichDetails(
               labelledValue("remote");
 
             /* ---- seniority level ---- */
-            const seniorityLevel =
-              labelledValue("seniority") ||
-              labelledValue("experience level") ||
-              labelledValue("level");
+            const seniorityLevel = normalizeSeniorityValue(
+              title,
+              labelledValue("seniority"),
+              labelledValue("experience level"),
+              labelledValue("career level"),
+            );
 
             /* ---- salary range ---- */
             const salaryEl = first(
@@ -2009,79 +2375,121 @@ async function handleNewGradEnrich(rows: EnrichedRow[], sessionId: string): Prom
   const { client, error } = await authenticatedClient();
   if (error) return { kind: "newgradEnrich", ok: false, error };
 
-  // Use streaming endpoint to get per-row progress.
+  // Use streaming endpoint in small batches. Enriched rows include long JD text,
+  // so sending all rows at once can exceed the bridge's body limit.
   // sessionId scopes broadcasts so multiple panels don't cross-contaminate.
-  const controller = new AbortController();
-  let finalResult: NewGradEnrichResult | null = null;
-  let finalError: BridgeError | null = null;
+  const chunkSize = 3;
+  const mergedResult: NewGradEnrichResult = {
+    added: 0,
+    skipped: 0,
+    entries: [],
+    candidates: [],
+  };
 
-  try {
-    await client.streamEnrich(
-      rows,
-      (event) => {
-        if (event.kind === "progress") {
-          chrome.runtime.sendMessage({
-            kind: "enrichProgress",
-            sessionId,
-            current: event.current,
-            total: event.total,
-            row: event.row,
-          }).catch(() => { /* no listeners — OK */ });
-        } else if (event.kind === "done") {
-          finalResult = {
-            added: event.added as number,
-            skipped: event.skipped as number,
-            entries: event.entries as PipelineEntry[],
-            ...((event.candidates as PipelineEntry[] | undefined)
-              ? { candidates: event.candidates as PipelineEntry[] }
-              : {}),
-          };
-        } else if (event.kind === "failed") {
-          const err = event.error as { code: string; message: string };
-          finalError = { code: err.code as BridgeError["code"], message: err.message };
-        }
-      },
-      controller.signal,
-    );
-  } catch (err) {
-    // Preserve structured BridgeError from non-2xx responses
-    const bridgeErr = (err as { bridgeError?: BridgeError }).bridgeError;
-    return {
-      kind: "newgradEnrich",
-      ok: false,
-      error: bridgeErr ?? { code: "INTERNAL", message: err instanceof Error ? err.message : "stream failed" },
-    };
+  for (let start = 0; start < rows.length; start += chunkSize) {
+    const chunk = rows.slice(start, start + chunkSize).map(truncateEnrichedRow);
+    const controller = new AbortController();
+    const chunkState: {
+      result?: NewGradEnrichResult;
+      error?: BridgeError;
+    } = {};
+
+    try {
+      await client.streamEnrich(
+        chunk,
+        (event) => {
+          if (event.kind === "progress") {
+            chrome.runtime.sendMessage({
+              kind: "enrichProgress",
+              sessionId,
+              current: Math.min(rows.length, start + Number(event.current ?? 0)),
+              total: rows.length,
+              row: event.row,
+            }).catch(() => { /* no listeners — OK */ });
+          } else if (event.kind === "done") {
+            chunkState.result = {
+              added: event.added as number,
+              skipped: event.skipped as number,
+              entries: event.entries as PipelineEntry[],
+              ...((event.candidates as PipelineEntry[] | undefined)
+                ? { candidates: event.candidates as PipelineEntry[] }
+                : {}),
+            };
+          } else if (event.kind === "failed") {
+            const err = event.error as { code: string; message: string };
+            chunkState.error = { code: err.code as BridgeError["code"], message: err.message };
+          }
+        },
+        controller.signal,
+      );
+    } catch (err) {
+      const bridgeErr = (err as { bridgeError?: BridgeError }).bridgeError;
+      return {
+        kind: "newgradEnrich",
+        ok: false,
+        error: bridgeErr ?? { code: "INTERNAL", message: err instanceof Error ? err.message : "stream failed" },
+      };
+    }
+
+    if (chunkState.error) return { kind: "newgradEnrich", ok: false, error: chunkState.error };
+    if (!chunkState.result) {
+      return {
+        kind: "newgradEnrich",
+        ok: false,
+        error: { code: "INTERNAL", message: "enrich stream ended unexpectedly" },
+      };
+    }
+
+    const chunkResult = chunkState.result;
+    mergedResult.added += chunkResult.added;
+    mergedResult.skipped += chunkResult.skipped;
+    mergedResult.entries = [...mergedResult.entries, ...chunkResult.entries];
+    mergedResult.candidates = [
+      ...(mergedResult.candidates ?? []),
+      ...(chunkResult.candidates ?? chunkResult.entries),
+    ];
   }
 
-  if (finalError) return { kind: "newgradEnrich", ok: false, error: finalError };
-  const enrichResult = finalResult as NewGradEnrichResult | null;
-  if (enrichResult !== null) {
-    const evaluationCandidates = enrichResult.candidates ?? enrichResult.entries;
-    const directEval = await runDirectNewGradEvaluations(
-      client,
-      evaluationCandidates,
-      rows,
-      sessionId,
-    );
-    return {
-      kind: "newgradEnrich",
-      ok: true,
-      result: {
-        ...enrichResult,
-        skipped: Math.max(rows.length - evaluationCandidates.length, 0),
-        queued: directEval.queued,
-        evaluated: directEval.queued,
-        failed: directEval.failed,
-        jobs: directEval.jobs,
-      },
-    };
-  }
-
-  // Fallback — stream ended without done/failed event
+  const evaluationCandidates = mergedResult.entries;
+  const directEval = await runDirectNewGradEvaluations(
+    client,
+    evaluationCandidates,
+    rows,
+    sessionId,
+  );
   return {
     kind: "newgradEnrich",
-    ok: false,
-    error: { code: "INTERNAL", message: "enrich stream ended unexpectedly" },
+    ok: true,
+    result: {
+      ...mergedResult,
+      skipped: Math.max(rows.length - evaluationCandidates.length, 0),
+      queued: directEval.queued,
+      evaluated: directEval.queued,
+      failed: directEval.failed,
+      jobs: directEval.jobs,
+    },
+  };
+}
+
+function truncateEnrichedRow(row: EnrichedRow): EnrichedRow {
+  return {
+    ...row,
+    detail: {
+      ...row.detail,
+      description: row.detail.description.slice(0, 12000),
+      responsibilities: row.detail.responsibilities.slice(0, 20),
+      requiredQualifications: row.detail.requiredQualifications.slice(0, 30),
+      skillTags: row.detail.skillTags.slice(0, 40),
+      recommendationTags: row.detail.recommendationTags.slice(0, 20),
+      industries: row.detail.industries.slice(0, 20),
+      taxonomy: row.detail.taxonomy.slice(0, 20),
+      companyDescription: row.detail.companyDescription
+        ? row.detail.companyDescription.slice(0, 2000)
+        : null,
+      applyFlowUrls: row.detail.applyFlowUrls.slice(0, 20),
+      h1bSponsorshipHistory: row.detail.h1bSponsorshipHistory.slice(0, 10),
+      companyCategories: row.detail.companyCategories.slice(0, 20),
+    },
   };
 }
 
@@ -2101,14 +2509,539 @@ function matchesNewGradEntry(entry: PipelineEntry, row: EnrichedRow): boolean {
   return candidates.includes(entryCompany) && roleCandidates.includes(entryRole);
 }
 
+interface DirectEvaluationSessionState {
+  total: number;
+  completed: number;
+  failed: number;
+}
+
+const PENDING_BACKFILL_BATCH_SIZE = 10;
+
+type DirectEvaluationEntry = PipelineEntry & {
+  pageText?: string;
+  lineNumber?: number;
+  localJdPath?: string;
+};
+
+function canBulkDirectEvaluatePendingEntry(
+  entry: NewGradPendingEntry,
+): boolean {
+  return (
+    entry.valueScore !== undefined ||
+    (entry.pageText?.trim().length ?? 0) >= 1_200 ||
+    entry.score >= 8
+  );
+}
+
+function needsLegacyPendingCacheBackfill(entry: DirectEvaluationEntry): boolean {
+  return !entry.localJdPath;
+}
+
+function normalizeQueueText(value: string): string {
+  return value.toLowerCase().replace(/\s+/g, " ").trim();
+}
+
+function directEvaluationCompanyRoleKey(entry: DirectEvaluationEntry): string {
+  return `${normalizeQueueText(entry.company)}|${normalizeQueueText(entry.role)}`;
+}
+
+function hasRichPendingContext(entry: DirectEvaluationEntry): boolean {
+  return (
+    entry.valueScore !== undefined ||
+    (entry.pageText?.trim().length ?? 0) >= 1_200
+  );
+}
+
+async function captureUrlInHiddenTab(url: string): Promise<CapturedTab | undefined> {
+  if (!/^https?:\/\//.test(url)) return undefined;
+
+  const perm = resolvePermissionOrigin(url);
+  if (perm) {
+    const alreadyGranted = await chrome.permissions.contains({
+      origins: [perm.pattern],
+    });
+    if (!alreadyGranted) return undefined;
+  }
+
+  let tabIdToClose: number | null = null;
+  try {
+    const tab = await chrome.tabs.create({ url, active: false });
+    if (tab.id === undefined) return undefined;
+    tabIdToClose = tab.id;
+
+    await waitForTabComplete(tab.id);
+    await sleep(1200);
+
+    return await captureTabContext(
+      tab.id,
+      { url: tab.url ?? url, title: tab.title ?? "" },
+      () => {},
+      { returnEmptyFallback: false },
+    );
+  } catch {
+    return undefined;
+  } finally {
+    if (tabIdToClose !== null) {
+      await chrome.tabs.remove(tabIdToClose).catch(() => undefined);
+    }
+  }
+}
+
+async function hydratePendingEntryForEvaluation(
+  entry: DirectEvaluationEntry,
+): Promise<DirectEvaluationEntry> {
+  if ((entry.pageText?.trim().length ?? 0) >= 1_200) {
+    return entry;
+  }
+
+  const captured = await captureUrlInHiddenTab(entry.url);
+  const capturedText = captured?.pageText?.trim();
+  if (!capturedText) return entry;
+
+  return { ...entry, pageText: capturedText };
+}
+
+async function persistPendingEntryLocalCache(
+  client: ReturnType<typeof bridgeClientFromState>,
+  originalEntry: DirectEvaluationEntry,
+  preparedEntry: DirectEvaluationEntry,
+): Promise<DirectEvaluationEntry> {
+  const pageText = preparedEntry.pageText?.trim();
+  if (!pageText || pageText.length < 1_200) {
+    return preparedEntry;
+  }
+  if (typeof originalEntry.lineNumber !== "number") {
+    return preparedEntry;
+  }
+
+  const originalLength = originalEntry.pageText?.trim().length ?? 0;
+  if (originalEntry.localJdPath && originalLength >= pageText.length) {
+    return preparedEntry;
+  }
+
+  const backfill = await client.backfillNewGradPendingCache([
+    {
+      url: originalEntry.url,
+      company: originalEntry.company,
+      role: originalEntry.role,
+      lineNumber: originalEntry.lineNumber,
+      pageText,
+    },
+  ]);
+  if (!backfill.ok) {
+    return preparedEntry;
+  }
+
+  const outcome = backfill.result.outcomes[0];
+  if (outcome?.status !== "updated" || !outcome.localJdPath) {
+    return preparedEntry;
+  }
+
+  return {
+    ...preparedEntry,
+    localJdPath: outcome.localJdPath,
+  };
+}
+
+function buildCompactEvaluationPageText(
+  entry: DirectEvaluationEntry,
+  matchedRow: EnrichedRow | undefined,
+): string | undefined {
+  if (!matchedRow) {
+    const raw = entry.pageText?.trim();
+    return raw ? raw.slice(0, 4_000) : undefined;
+  }
+
+  const { detail, row } = matchedRow;
+  const sections = [
+    `URL: ${entry.url}`,
+    `Company: ${detail.company || row.row.company}`,
+    `Role: ${detail.title || row.row.title}`,
+    detail.location ? `Location: ${detail.location}` : null,
+    detail.workModel ? `Work model: ${detail.workModel}` : null,
+    detail.employmentType ? `Employment type: ${detail.employmentType}` : null,
+    detail.seniorityLevel ? `Seniority: ${detail.seniorityLevel}` : null,
+    detail.salaryRange ? `Salary: ${detail.salaryRange}` : null,
+    detail.confirmedSponsorshipSupport !== "unknown"
+      ? `Confirmed sponsorship: ${detail.confirmedSponsorshipSupport}`
+      : null,
+    detail.confirmedRequiresActiveSecurityClearance
+      ? "Confirmed active security clearance requirement: yes"
+      : null,
+    detail.skillTags.length > 0
+      ? `Skill tags: ${detail.skillTags.slice(0, 15).join(", ")}`
+      : null,
+    detail.recommendationTags.length > 0
+      ? `Recommendation tags: ${detail.recommendationTags.slice(0, 8).join(", ")}`
+      : null,
+    detail.taxonomy.length > 0
+      ? `Taxonomy: ${detail.taxonomy.slice(0, 8).join(", ")}`
+      : null,
+    detail.requiredQualifications.length > 0
+      ? [
+          "Requirements:",
+          ...detail.requiredQualifications.slice(0, 10).map((item) => `- ${item}`),
+        ].join("\n")
+      : null,
+    detail.responsibilities.length > 0
+      ? [
+          "Responsibilities:",
+          ...detail.responsibilities.slice(0, 8).map((item) => `- ${item}`),
+        ].join("\n")
+      : null,
+    detail.description
+      ? `Description excerpt:\n${detail.description.slice(0, 1_800)}`
+      : null,
+  ]
+    .filter((section): section is string => Boolean(section))
+    .join("\n\n")
+    .trim();
+
+  return sections.length > 0 ? sections.slice(0, 4_000) : undefined;
+}
+
+function extractYearsExperienceRequired(text: string): number | null {
+  const normalized = text.toLowerCase();
+  const matches = Array.from(
+    normalized.matchAll(/\b(\d{1,2})\s*\+?\s*(?:years?|yrs?)(?:\s+of\s+experience)?\b/g),
+  );
+  if (matches.length === 0) return null;
+
+  let maxYears = 0;
+  for (const match of matches) {
+    const years = Number(match[1]);
+    if (Number.isFinite(years)) {
+      maxYears = Math.max(maxYears, years);
+    }
+  }
+
+  return maxYears > 0 ? maxYears : null;
+}
+
+function inferSponsorshipSupport(text: string): "yes" | "no" | "unknown" {
+  const normalized = text.toLowerCase().replace(/\s+/g, " ");
+  if (
+    normalized.includes("no sponsorship") ||
+    normalized.includes("without sponsorship") ||
+    normalized.includes("unable to sponsor") ||
+    normalized.includes("cannot sponsor") ||
+    normalized.includes("can't sponsor") ||
+    normalized.includes("does not provide sponsorship") ||
+    normalized.includes("not eligible for immigration sponsorship") ||
+    normalized.includes("visa sponsorship unavailable") ||
+    normalized.includes("must be authorized to work without sponsorship") ||
+    normalized.includes("work authorization without sponsorship")
+  ) {
+    return "no";
+  }
+  if (
+    normalized.includes("visa sponsorship") ||
+    normalized.includes("work authorization support") ||
+    normalized.includes("immigration support") ||
+    normalized.includes("we sponsor")
+  ) {
+    return "yes";
+  }
+  return "unknown";
+}
+
+function detectClearanceRequirement(text: string): boolean {
+  const normalized = text.toLowerCase().replace(/\s+/g, " ").trim();
+  if (!normalized) return false;
+
+  const segments = normalized
+    .split(/[\n\r.;!?]+/)
+    .map((segment) => segment.trim())
+    .filter(Boolean);
+
+  for (const segment of segments) {
+    if (
+      /\b(preferred|preference|nice to have|plus|public trust)\b/.test(segment) ||
+      /\b(ability|eligible|eligibility|able)\s+to\s+obtain\b/.test(segment) ||
+      /\bobtain(?:ed|ing)?\b/.test(segment)
+    ) {
+      continue;
+    }
+    if (
+      /\b(active|current)\s+secret(?:\s+security)?\s+clearance\b/.test(segment) ||
+      /\b(active|current)\s+security\s+clearance\b/.test(segment) ||
+      /\btop\s+secret(?:\s+security)?\s+clearance\b/.test(segment) ||
+      /\b(?:current\s+)?ts\/sci(?:\s+security)?\s+clearance\b/.test(segment) ||
+      /\b(?:must\s+(?:have|possess)|requires?|required|need(?:ed)?|mandatory)\b.{0,40}\b(?:secret|top\s+secret|ts\/sci)(?:\s+security)?\s+clearance\b/.test(
+        segment,
+      ) ||
+      (
+        segment.length <= 120 &&
+        /\b(top secret|ts\/sci)\b/.test(segment)
+      )
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function inferWorkModel(text: string): string | undefined {
+  const normalized = text.toLowerCase();
+  if (normalized.includes("hybrid")) return "Hybrid";
+  if (normalized.includes("remote")) return "Remote";
+  if (normalized.includes("on-site") || normalized.includes("onsite")) return "On-site";
+  return undefined;
+}
+
+function extractLabeledMetadataValue(
+  text: string,
+  labels: readonly string[],
+): string | undefined {
+  const lines = text
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .slice(0, 80);
+
+  for (const line of lines) {
+    for (const label of labels) {
+      const match = line.match(new RegExp(`^${label}\\s*:\\s*(.+)$`, "i"));
+      const value = match?.[1]?.trim();
+      if (value) return value;
+    }
+  }
+
+  return undefined;
+}
+
+function normalizeEmploymentType(
+  entry: DirectEvaluationEntry,
+  ...candidates: Array<string | null | undefined>
+): string | undefined {
+  const title = entry.role.toLowerCase();
+  if (/\bintern(ship)?\b/.test(title)) return "Internship";
+
+  for (const candidate of candidates) {
+    const normalized = candidate?.trim().toLowerCase();
+    if (!normalized) continue;
+    if (/\bfull[-\s]?time\b/.test(normalized)) return "Full-time";
+    if (/\bpart[-\s]?time\b/.test(normalized)) return "Part-time";
+    if (/\bcontract(or)?\b/.test(normalized)) return "Contract";
+    if (/\bintern(ship)?\b/.test(normalized) && /\bintern(ship)?\b/.test(title)) {
+      return "Internship";
+    }
+  }
+
+  return undefined;
+}
+
+function inferEmploymentType(
+  entry: DirectEvaluationEntry,
+  text: string,
+): string | undefined {
+  return normalizeEmploymentType(
+    entry,
+    extractLabeledMetadataValue(text, [
+      "employment type",
+      "job type",
+      "time type",
+      "schedule",
+    ]),
+  );
+}
+
+function normalizeStructuredSeniority(
+  entry: DirectEvaluationEntry,
+  ...candidates: Array<string | null | undefined>
+): string | undefined {
+  const title = entry.role.toLowerCase();
+  if (/\b(new grad|new graduate|graduate|entry level|entry-level|associate|junior|engineer i|engineer 1)\b/.test(title)) {
+    return "Early career";
+  }
+  if (/\b(senior|staff|principal|lead|manager|director|architect)\b/.test(title)) {
+    return "Senior";
+  }
+
+  for (const candidate of candidates) {
+    const normalized = candidate?.trim().toLowerCase();
+    if (!normalized) continue;
+    if (/\b(entry|entry level|associate|junior|new grad|new graduate|graduate|early career|engineer i|engineer 1)\b/.test(normalized)) {
+      return "Early career";
+    }
+    if (/\b(senior|staff|principal|lead|manager|director|architect)\b/.test(normalized)) {
+      return "Senior";
+    }
+  }
+
+  return undefined;
+}
+
+function inferSeniority(entry: DirectEvaluationEntry, text: string): string | undefined {
+  const explicit = extractLabeledMetadataValue(text, [
+    "seniority",
+    "experience level",
+    "career level",
+  ]);
+  if (explicit?.toLowerCase() === "i") {
+    return "Early career";
+  }
+  const titleAndExplicit = explicit ? `${entry.role}\n${explicit}` : entry.role;
+  if (/\b(engineer i|engineer 1)\b/i.test(titleAndExplicit)) {
+    return "Early career";
+  }
+  return normalizeStructuredSeniority(entry, explicit);
+}
+
+function inferPostingQualitySignals(text: string): string[] {
+  const reasons: string[] = [];
+  if (extractBulletLines(text, 6).length >= 4) reasons.push("structured_bullet_sections_present");
+  if (text.length >= 1_500) reasons.push("substantive_local_jd_cache");
+  return reasons;
+}
+
+function extractSalaryRange(text: string): string | undefined {
+  const compact = text.replace(/\s+/g, " ");
+  const match = compact.match(
+    /(\$|usd\s*)\s?\d{2,3}(?:,\d{3})?(?:\.\d+)?\s*(?:-|to|–)\s*(\$|usd\s*)?\s?\d{2,3}(?:,\d{3})?(?:\.\d+)?/i,
+  );
+  return match?.[0]?.trim() || undefined;
+}
+
+function extractTopSkills(text: string): string[] {
+  const candidates = [
+    "TypeScript",
+    "JavaScript",
+    "Python",
+    "Java",
+    "Go",
+    "Rust",
+    "C++",
+    "React",
+    "Node.js",
+    "AWS",
+    "GCP",
+    "Azure",
+    "SQL",
+    "PostgreSQL",
+    "Docker",
+    "Kubernetes",
+    "LLM",
+    "AI",
+    "Machine Learning",
+  ];
+  const normalized = text.toLowerCase();
+  return candidates.filter((skill) => normalized.includes(skill.toLowerCase())).slice(0, 12);
+}
+
+function extractBulletLines(text: string, maxItems: number): string[] {
+  return text
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => /^[-*•]\s+/.test(line))
+    .map((line) => line.replace(/^[-*•]\s+/, "").trim())
+    .filter(Boolean)
+    .slice(0, maxItems);
+}
+
+function buildStructuredEvaluationSignals(
+  entry: DirectEvaluationEntry,
+  matchedRow: EnrichedRow | undefined,
+): StructuredJobSignals {
+  if (matchedRow) {
+    const { detail, row } = matchedRow;
+    const valueScore = entry.valueScore;
+    const localValueReasons = entry.valueReasons ? [...entry.valueReasons] : [];
+    const yearsExperienceRequired = extractYearsExperienceRequired(
+      [detail.requiredQualifications.join(" "), detail.description].join("\n"),
+    );
+    const location = detail.location || row.row.location;
+    const workModel = detail.workModel || row.row.workModel;
+    const employmentType = normalizeEmploymentType(
+      entry,
+      detail.employmentType,
+      row.row.title,
+    );
+    const seniority = normalizeStructuredSeniority(
+      entry,
+      detail.seniorityLevel,
+      row.row.title,
+      detail.recommendationTags.join(" "),
+      detail.taxonomy.join(" "),
+    );
+    const postedAgo = row.row.postedAgo;
+    const salaryRange = detail.salaryRange || row.row.salary || undefined;
+    const sponsorshipSupport =
+      detail.confirmedSponsorshipSupport !== "unknown"
+        ? detail.confirmedSponsorshipSupport
+        : detail.sponsorshipSupport;
+    const companySize = detail.companySize || row.row.companySize || null;
+
+    return {
+      source: "newgrad-scan",
+      company: detail.company || row.row.company,
+      role: detail.title || row.row.title,
+      ...(location ? { location } : {}),
+      ...(workModel ? { workModel } : {}),
+      ...(employmentType ? { employmentType } : {}),
+      ...(seniority ? { seniority } : {}),
+      ...(postedAgo ? { postedAgo } : {}),
+      ...(salaryRange ? { salaryRange } : {}),
+      ...(sponsorshipSupport ? { sponsorshipSupport } : {}),
+      requiresActiveSecurityClearance:
+        detail.confirmedRequiresActiveSecurityClearance ||
+        detail.requiresActiveSecurityClearance,
+      ...(yearsExperienceRequired !== null ? { yearsExperienceRequired } : {}),
+      ...(companySize ? { companySize } : { companySize: null }),
+      taxonomy: detail.taxonomy.slice(0, 10),
+      recommendationTags: detail.recommendationTags.slice(0, 10),
+      skillTags: detail.skillTags.slice(0, 14),
+      requiredQualifications: detail.requiredQualifications.slice(0, 10),
+      responsibilities: detail.responsibilities.slice(0, 8),
+      ...(valueScore !== undefined ? { localValueScore: valueScore } : {}),
+      ...(localValueReasons.length > 0 ? { localValueReasons } : {}),
+    };
+  }
+
+  const rawText = entry.pageText?.trim() ?? "";
+  const bulletLines = extractBulletLines(rawText, 16);
+  const yearsExperienceRequired = extractYearsExperienceRequired(rawText);
+  const workModel = inferWorkModel(rawText);
+  const employmentType = inferEmploymentType(entry, rawText);
+  const seniority = inferSeniority(entry, rawText);
+  const salaryRange = extractSalaryRange(rawText);
+  const sponsorshipSupport = inferSponsorshipSupport(rawText);
+  const skillTags = extractTopSkills(rawText);
+  const localValueReasons = Array.from(new Set([
+    ...(entry.valueReasons ?? []),
+    ...inferPostingQualitySignals(rawText),
+  ]));
+
+  return {
+    source: "newgrad-scan",
+    company: entry.company,
+    role: entry.role,
+    ...(workModel ? { workModel } : {}),
+    ...(employmentType ? { employmentType } : {}),
+    ...(seniority ? { seniority } : {}),
+    ...(salaryRange ? { salaryRange } : {}),
+    ...(sponsorshipSupport ? { sponsorshipSupport } : {}),
+    requiresActiveSecurityClearance: detectClearanceRequirement(rawText),
+    ...(yearsExperienceRequired !== null ? { yearsExperienceRequired } : {}),
+    ...(skillTags.length > 0 ? { skillTags } : {}),
+    requiredQualifications: bulletLines.slice(0, 8),
+    responsibilities: bulletLines.slice(8, 14),
+    ...(entry.valueScore !== undefined ? { localValueScore: entry.valueScore } : {}),
+    ...(localValueReasons.length > 0 ? { localValueReasons } : {}),
+  };
+}
+
 async function runDirectNewGradEvaluations(
   client: ReturnType<typeof bridgeClientFromState>,
-  entries: readonly PipelineEntry[],
+  entries: readonly DirectEvaluationEntry[],
   rows: EnrichedRow[],
   sessionId: string,
+  options?: { automaticBulkRun?: boolean },
 ): Promise<{
   queued: number;
   failed: number;
+  skipped: number;
   jobs: Array<{
     jobId: string;
     company: string;
@@ -2132,21 +3065,17 @@ async function runDirectNewGradEvaluations(
   }> = [];
   let queued = 0;
   let failed = 0;
-  const recentQueuedAt: number[] = [];
+  let skipped = 0;
+  const sessionState: DirectEvaluationSessionState = {
+    total: entries.length,
+    completed: 0,
+    failed: 0,
+  };
+  const seenCanonicalUrls = new Set<string>();
+  const seenCompanyRoles = new Set<string>();
 
   for (let index = 0; index < entries.length; index++) {
     const entry = entries[index]!;
-    while (recentQueuedAt.length >= 3) {
-      const waitMs = 60_000 - (Date.now() - recentQueuedAt[0]!);
-      if (waitMs <= 0) {
-        recentQueuedAt.shift();
-        continue;
-      }
-      await new Promise((resolve) => setTimeout(resolve, waitMs + 250));
-      while (recentQueuedAt.length > 0 && Date.now() - recentQueuedAt[0]! >= 60_000) {
-        recentQueuedAt.shift();
-      }
-    }
 
     chrome.runtime.sendMessage({
       kind: "enrichProgress",
@@ -2156,17 +3085,78 @@ async function runDirectNewGradEvaluations(
       row: { company: entry.company, title: `Queueing ${entry.role}` },
     }).catch(() => { /* popup/panel may be closed */ });
 
+    const canonicalUrl = canonicalizeJobUrlKey(entry.url);
+    const companyRoleKey = directEvaluationCompanyRoleKey(entry);
+    if (
+      (canonicalUrl && seenCanonicalUrls.has(canonicalUrl)) ||
+      seenCompanyRoles.has(companyRoleKey)
+    ) {
+      skipped += 1;
+      sessionState.total = Math.max(sessionState.total - 1, 0);
+      chrome.runtime.sendMessage({
+        kind: "enrichProgress",
+        sessionId,
+        current: index + 1,
+        total: entries.length,
+        row: {
+          company: entry.company,
+          title: `Skipped ${entry.role} (duplicate pending job)`,
+        },
+      }).catch(() => { /* popup/panel may be closed */ });
+      continue;
+    }
+    if (canonicalUrl) seenCanonicalUrls.add(canonicalUrl);
+    seenCompanyRoles.add(companyRoleKey);
+
     const matchedRow = rows.find((row) => matchesNewGradEntry(entry, row));
+    let preparedEntry = entry;
+    if (!matchedRow && !hasRichPendingContext(preparedEntry)) {
+      chrome.runtime.sendMessage({
+        kind: "enrichProgress",
+        sessionId,
+        current: index,
+        total: entries.length,
+        row: { company: entry.company, title: `Hydrating ${entry.role}` },
+      }).catch(() => { /* popup/panel may be closed */ });
+
+      preparedEntry = await hydratePendingEntryForEvaluation(entry);
+    }
+    preparedEntry = await persistPendingEntryLocalCache(
+      client,
+      entry,
+      preparedEntry,
+    );
+
+    if (options?.automaticBulkRun && !matchedRow && !hasRichPendingContext(preparedEntry)) {
+      skipped += 1;
+      sessionState.total = Math.max(sessionState.total - 1, 0);
+      chrome.runtime.sendMessage({
+        kind: "enrichProgress",
+        sessionId,
+        current: index + 1,
+        total: entries.length,
+        row: {
+          company: entry.company,
+          title: `Skipped ${entry.role} (insufficient local context)`,
+        },
+      }).catch(() => { /* popup/panel may be closed */ });
+      continue;
+    }
+
+    const evaluationPageText = buildCompactEvaluationPageText(preparedEntry, matchedRow);
+    const structuredSignals = buildStructuredEvaluationSignals(preparedEntry, matchedRow);
     const evaluationInput = {
-      url: entry.url,
-      title: entry.role,
+      url: preparedEntry.url,
+      title: preparedEntry.role,
+      evaluationMode: "newgrad_quick" as const,
+      structuredSignals,
       detection: {
         label: "job_posting" as const,
         confidence: 1,
         signals: ["newgrad-scan"],
       },
-      ...(matchedRow?.detail.description
-        ? { pageText: matchedRow.detail.description }
+      ...(evaluationPageText
+        ? { pageText: evaluationPageText }
         : {}),
     };
     const create = await client.createEvaluation({
@@ -2175,35 +3165,159 @@ async function runDirectNewGradEvaluations(
 
     if (!create.ok) {
       failed += 1;
+      sessionState.failed += 1;
+      const failedJobId = `failed-${Date.now()}-${index}`;
       jobs.push({
-        jobId: `failed-${Date.now()}-${index}`,
-        company: entry.company,
-        role: entry.role,
+        jobId: failedJobId,
+        company: preparedEntry.company,
+        role: preparedEntry.role,
         status: "failed",
+        error: create.error.message,
+      });
+      broadcastNewGradEvaluationProgress(sessionId, sessionState, {
+        jobId: failedJobId,
+        company: preparedEntry.company,
+        role: preparedEntry.role,
+        phase: "failed",
         error: create.error.message,
       });
       continue;
     }
 
-    recentQueuedAt.push(Date.now());
     queued += 1;
     jobs.push({
       jobId: create.result.jobId,
-      company: entry.company,
-      role: entry.role,
+      company: preparedEntry.company,
+      role: preparedEntry.role,
       status: "queued",
     });
+
+    broadcastNewGradEvaluationProgress(sessionId, sessionState, {
+      jobId: create.result.jobId,
+      company: preparedEntry.company,
+      role: preparedEntry.role,
+      phase: "queued",
+    });
+    void monitorNewGradEvaluationJob(
+      client,
+      sessionId,
+      sessionState,
+      create.result.jobId,
+      preparedEntry.company,
+      preparedEntry.role,
+    );
 
     chrome.runtime.sendMessage({
       kind: "enrichProgress",
       sessionId,
       current: index + 1,
       total: entries.length,
-      row: { company: entry.company, title: `Queued ${entry.role}` },
+      row: { company: preparedEntry.company, title: `Queued ${preparedEntry.role}` },
     }).catch(() => { /* popup/panel may be closed */ });
   }
 
-  return { queued, failed, jobs };
+  return { queued, failed, skipped, jobs };
+}
+
+function broadcastNewGradEvaluationProgress(
+  sessionId: string,
+  sessionState: DirectEvaluationSessionState,
+  job: {
+    jobId: string;
+    company: string;
+    role: string;
+    phase: string;
+    score?: number;
+    reportNumber?: number;
+    reportPath?: string;
+    error?: string;
+  },
+): void {
+  chrome.runtime.sendMessage({
+    kind: "newgradEvaluationProgress",
+    sessionId,
+    total: sessionState.total,
+    completed: sessionState.completed,
+    failed: sessionState.failed,
+    job,
+  }).catch(() => { /* popup/panel may be closed */ });
+}
+
+async function monitorNewGradEvaluationJob(
+  client: ReturnType<typeof bridgeClientFromState>,
+  sessionId: string,
+  sessionState: DirectEvaluationSessionState,
+  jobId: JobId,
+  company: string,
+  role: string,
+): Promise<void> {
+  let lastPhase = "queued";
+  const startedAt = Date.now();
+  const timeoutMs = 20 * 60_000;
+
+  while (Date.now() - startedAt < timeoutMs) {
+    await new Promise((resolve) => setTimeout(resolve, 3_000));
+    const snapshotRes = await client.getJob(jobId);
+    if (!snapshotRes.ok) {
+      lastPhase = "failed";
+      sessionState.failed += 1;
+      broadcastNewGradEvaluationProgress(sessionId, sessionState, {
+        jobId,
+        company,
+        role,
+        phase: "failed",
+        error: snapshotRes.error.message,
+      });
+      return;
+    }
+
+    const snapshot = snapshotRes.result;
+    if (snapshot.phase === "completed" && snapshot.result) {
+      sessionState.completed += 1;
+      await persistLastResult(jobId, snapshot.result);
+      broadcastNewGradEvaluationProgress(sessionId, sessionState, {
+        jobId,
+        company: snapshot.result.company,
+        role: snapshot.result.role,
+        phase: "completed",
+        score: snapshot.result.score,
+        reportNumber: snapshot.result.reportNumber,
+        reportPath: snapshot.result.reportPath,
+      });
+      return;
+    }
+
+    if (snapshot.phase === "failed") {
+      sessionState.failed += 1;
+      broadcastNewGradEvaluationProgress(sessionId, sessionState, {
+        jobId,
+        company,
+        role,
+        phase: "failed",
+        error: snapshot.error?.message ?? "evaluation failed",
+      });
+      return;
+    }
+
+    if (snapshot.phase !== lastPhase) {
+      lastPhase = snapshot.phase;
+      broadcastNewGradEvaluationProgress(sessionId, sessionState, {
+        jobId,
+        company,
+        role,
+        phase: snapshot.phase,
+      });
+    }
+  }
+
+  sessionState.failed += 1;
+  broadcastNewGradEvaluationProgress(sessionId, sessionState, {
+    jobId,
+    company,
+    role,
+    phase: "failed",
+    error: "evaluation monitor timed out",
+  });
 }
 
 /* -------------------------------------------------------------------------- */

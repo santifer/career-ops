@@ -40,6 +40,7 @@ import { type BridgeConfig, inspectClaude, inspectCodex } from "./runtime/config
 import { bridgeError, httpStatusFor, toBridgeError } from "./runtime/errors.js";
 import { assertProtocol, failure, success } from "./runtime/envelope.js";
 import { createInMemoryJobStore } from "./runtime/job-store.js";
+import { createEvaluationWorkerPool } from "./runtime/evaluation-worker-pool.js";
 
 /* -------------------------------------------------------------------------- */
 /*  Zod schemas — runtime validation that matches the static contracts        */
@@ -51,10 +52,35 @@ const detectionSchema = z.object({
   signals: z.array(z.string()),
 });
 
+const structuredSignalsSchema = z.object({
+  source: z.string().max(64).optional(),
+  company: z.string().max(200).optional(),
+  role: z.string().max(200).optional(),
+  location: z.string().max(200).optional(),
+  workModel: z.string().max(64).optional(),
+  employmentType: z.string().max(64).optional(),
+  seniority: z.string().max(128).optional(),
+  postedAgo: z.string().max(64).optional(),
+  salaryRange: z.string().max(128).optional(),
+  sponsorshipSupport: z.enum(["yes", "no", "unknown"]).optional(),
+  requiresActiveSecurityClearance: z.boolean().optional(),
+  yearsExperienceRequired: z.number().min(0).max(30).nullable().optional(),
+  companySize: z.string().max(64).nullable().optional(),
+  taxonomy: z.array(z.string().max(120)).max(16).optional(),
+  recommendationTags: z.array(z.string().max(120)).max(16).optional(),
+  skillTags: z.array(z.string().max(120)).max(24).optional(),
+  requiredQualifications: z.array(z.string().max(400)).max(16).optional(),
+  responsibilities: z.array(z.string().max(400)).max(16).optional(),
+  localValueScore: z.number().min(0).max(10).optional(),
+  localValueReasons: z.array(z.string().max(120)).max(16).optional(),
+});
+
 const evaluationInputSchema = z.object({
   url: z.string().url(),
   title: z.string().optional(),
   pageText: z.string().max(50_000).optional(),
+  evaluationMode: z.enum(["default", "newgrad_quick"]).optional(),
+  structuredSignals: structuredSignalsSchema.optional(),
   detection: detectionSchema.optional(),
 });
 
@@ -122,8 +148,9 @@ export function buildServer(args: BuildServerArgs) {
   const { config, adapter } = args;
   const store = createInMemoryJobStore();
 
-  const evaluateRateLimit = new RateLimiter(60_000, 3);  // 3 evaluations per minute
+  const evaluateRateLimit = new RateLimiter(60_000, config.evaluationRateLimitPerMinute);
   const generalRateLimit = new RateLimiter(60_000, 60);   // 60 requests per minute for everything else
+  const evaluationWorkerPool = createEvaluationWorkerPool(config.evaluationConcurrency);
 
   const fastify = Fastify({
     logger: {
@@ -224,7 +251,10 @@ export function buildServer(args: BuildServerArgs) {
   fastify.post("/v1/evaluate", async (req, reply) => {
     if (!evaluateRateLimit.check("evaluate")) {
       return sendFailure(reply, requestIdFromBody(req.body),
-        bridgeError("RATE_LIMITED", "max 3 evaluations per minute"));
+        bridgeError(
+          "RATE_LIMITED",
+          `max ${config.evaluationRateLimitPerMinute} evaluations per minute`,
+        ));
     }
 
     const parsed = evaluateCreateSchema.safeParse(req.body);
@@ -256,12 +286,19 @@ export function buildServer(args: BuildServerArgs) {
     };
     await store.create(initial);
 
-    // Kick off the evaluation asynchronously. Do NOT await.
-    runEvaluationInBackground(adapter, store, jobId, env.payload.input, config.evaluationTimeoutSec).catch(
-      (err) => {
+    void evaluationWorkerPool
+      .enqueue(async () => {
+        await runEvaluationInBackground(
+          adapter,
+          store,
+          jobId,
+          env.payload.input,
+          config.evaluationTimeoutSec,
+        );
+      })
+      .catch((err) => {
         fastify.log.error({ err, jobId }, "background evaluation crashed");
-      }
-    );
+      });
 
     const base = `http://${config.host}:${config.port}`;
     reply.code(202).send(
@@ -503,8 +540,96 @@ export function buildServer(args: BuildServerArgs) {
   });
 
   const newGradScoreSchema = envelopeSchema(
-    z.object({ rows: z.array(newGradRowSchema).max(200) })
+    z.object({ rows: z.array(newGradRowSchema).max(500) })
   );
+
+  const newGradPendingSchema = envelopeSchema(
+    z.object({ limit: z.number().int().min(1).max(200).optional() })
+  );
+
+  const newGradPendingBackfillSchema = envelopeSchema(
+    z.object({
+      entries: z.array(
+        z.object({
+          url: z.string().url(),
+          company: z.string().min(1),
+          role: z.string().min(1),
+          lineNumber: z.number().int().min(1),
+          pageText: z.string().min(1).max(50_000),
+        }),
+      ).max(100),
+    })
+  );
+
+  fastify.post("/v1/newgrad-scan/pending", async (req, reply) => {
+    if (!generalRateLimit.check("general")) {
+      return sendFailure(reply, requestIdFromBody(req.body),
+        bridgeError("RATE_LIMITED", "too many requests"));
+    }
+
+    const parsed = newGradPendingSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return sendFailure(
+        reply,
+        requestIdFromBody(req.body),
+        bridgeError("BAD_REQUEST", "invalid envelope", {
+          issues: parsed.error.issues,
+        })
+      );
+    }
+    const env = parsed.data as RequestEnvelope<{ limit?: number }>;
+    try {
+      assertProtocol(env);
+    } catch (e) {
+      return sendFailure(reply, env.requestId, toBridgeError(e));
+    }
+
+    try {
+      const result = await adapter.readNewGradPendingEntries(env.payload.limit ?? 100);
+      reply.code(200).send(success(env.requestId, result));
+    } catch (e) {
+      return sendFailure(reply, env.requestId, toBridgeError(e));
+    }
+  });
+
+  fastify.post("/v1/newgrad-scan/pending/backfill", async (req, reply) => {
+    if (!generalRateLimit.check("general")) {
+      return sendFailure(reply, requestIdFromBody(req.body),
+        bridgeError("RATE_LIMITED", "too many requests"));
+    }
+
+    const parsed = newGradPendingBackfillSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return sendFailure(
+        reply,
+        requestIdFromBody(req.body),
+        bridgeError("BAD_REQUEST", "invalid envelope", {
+          issues: parsed.error.issues,
+        })
+      );
+    }
+    const env = parsed.data as RequestEnvelope<{
+      entries: Array<{
+        url: string;
+        company: string;
+        role: string;
+        lineNumber: number;
+        pageText: string;
+      }>;
+    }>;
+    try {
+      assertProtocol(env);
+    } catch (e) {
+      return sendFailure(reply, env.requestId, toBridgeError(e));
+    }
+
+    try {
+      const result = await adapter.backfillNewGradPendingCache(env.payload.entries);
+      reply.code(200).send(success(env.requestId, result));
+    } catch (e) {
+      return sendFailure(reply, env.requestId, toBridgeError(e));
+    }
+  });
 
   fastify.post("/v1/newgrad-scan/score", async (req, reply) => {
     if (!generalRateLimit.check("general")) {
