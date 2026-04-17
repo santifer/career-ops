@@ -141,14 +141,32 @@ async function check() {
   let changelog = '';
 
   // Fetch both sources in parallel — only fail offline if BOTH are unreachable.
-  const [versionResult, releaseResult] = await Promise.allSettled([
-    fetch(RAW_VERSION_URL),
-    fetch(RELEASES_API, { headers: { 'Accept': 'application/vnd.github.v3+json' } }),
-  ]);
+  // Use AbortSignal so a hung TCP connection can't stall the session-start check.
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
+  let versionResult, releaseResult;
+  try {
+    [versionResult, releaseResult] = await Promise.allSettled([
+      fetch(RAW_VERSION_URL, { signal: controller.signal }),
+      fetch(RELEASES_API, {
+        headers: {
+          'Accept': 'application/vnd.github.v3+json',
+          'User-Agent': 'career-ops-update-checker',
+        },
+        signal: controller.signal,
+      }),
+    ]);
+  } finally {
+    clearTimeout(timeoutId);
+  }
+
+  const SEMVER_RE = /^v?(\d+\.\d+\.\d+)$/i;
 
   if (versionResult.status === 'fulfilled' && versionResult.value.ok) {
     try {
-      remote = (await versionResult.value.text()).trim();
+      const raw = (await versionResult.value.text()).trim();
+      const match = raw.match(SEMVER_RE);
+      remote = match ? match[1] : '';
     } catch {
       // Body read failed; treat as no VERSION source
     }
@@ -159,7 +177,7 @@ async function check() {
       const release = await releaseResult.value.json();
       changelog = release.body || '';
       const rawTag = String(release.tag_name || '').trim();
-      const match = rawTag.match(/^v?(\d+\.\d+\.\d+)$/i);
+      const match = rawTag.match(SEMVER_RE);
       releaseVersion = match ? match[1] : '';
     } catch {
       // Body parse failed; treat as no release source
