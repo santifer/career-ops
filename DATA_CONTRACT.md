@@ -7,7 +7,7 @@ This document defines which files belong to the **system** (auto-updatable) and 
 These files contain your personal data, customizations, and work product. Updates will NEVER modify them.
 
 | File | Purpose |
-|------|---------|
+|------|-------|
 | `cv.md` | Your CV in markdown |
 | `config/profile.yml` | Your identity, targets, comp range |
 | `modes/_profile.md` | Your archetypes, narrative, negotiation scripts |
@@ -27,7 +27,7 @@ These files contain your personal data, customizations, and work product. Update
 These files contain system logic, scripts, templates, and instructions that improve with each release.
 
 | File | Purpose |
-|------|---------|
+|------|-------|
 | `modes/_shared.md` | Scoring system, global rules, tools |
 | `modes/oferta.md` | Evaluation mode instructions |
 | `modes/pdf.md` | PDF generation instructions |
@@ -45,6 +45,10 @@ These files contain system logic, scripts, templates, and instructions that impr
 | `modes/patterns.md` | Pattern analysis instructions |
 | `modes/followup.md` | Follow-up cadence instructions |
 | `modes/de/*` | German language modes |
+| `modes/fr/*` | French language modes |
+| `modes/ja/*` | Japanese language modes |
+| `modes/pt/*` | Portuguese language modes |
+| `modes/ru/*` | Russian language modes |
 | `CLAUDE.md` | Agent instructions |
 | `AGENTS.md` | Codex instructions |
 | `*.mjs` | Utility scripts |
