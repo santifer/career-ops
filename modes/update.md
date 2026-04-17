@@ -84,8 +84,11 @@ If yes:
      - **Unchanged**: exact match in the new `_shared.md` → no action.
      - **Renamed**: no exact match, but a single strong fuzzy match in the new `_shared.md` (e.g. Levenshtein similarity ≥ 0.7) → offer to rename.
      - **Removed**: no match at all → offer to delete or replace.
-   - When a rename/removal is detected, ask before editing:
-     > "Your _profile.md references archetype '{old_name}' which was renamed to '{new_name}'. Want me to update it?"
+   - When a rename or removal is detected, ask before editing:
+     - For renames:
+       > "Your _profile.md references archetype '{old_name}' which was renamed to '{new_name}'. Want me to update it?"
+     - For removals:
+       > "Your _profile.md references archetype '{old_name}' which was removed in the new _shared.md. Want me to delete the reference or replace it with another archetype?"
 5. Show final status:
    > "✅ Updated to v{version}. Run `node doctor.mjs` anytime to verify setup."
 
@@ -101,7 +104,7 @@ If the user says "rollback" or runs `/career-ops update rollback`:
 
 ## Rules
 
-- NEVER auto-modify User Layer files during update (cv.md, config/profile.yml, data/, reports/, output/, interview-prep/, article-digest.md, portals.yml)
+- NEVER auto-modify User Layer files during update (cv.md, config/profile.yml, data/, reports/, output/, interview-prep/, jds/, article-digest.md, portals.yml)
 - `modes/_profile.md` is User Layer too: the compatibility check in Step 3 reads it strictly read-only
 - Exception: `modes/_profile.md` may be edited **only** in Step 4.3, and **only** after the user explicitly confirms each individual rename/removal. Never batch-edit without per-change consent.
 - User-specific customizations (archetypes, scoring weights, narrative) belong in `modes/_profile.md` or `config/profile.yml`, never in `modes/_shared.md`
