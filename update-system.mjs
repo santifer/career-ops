@@ -137,33 +137,35 @@ async function check() {
 
   const local = localVersion();
   let remote;
+  let changelog = '';
 
+  // Primary: GitHub releases API. The release tag is the source of truth —
+  // the VERSION file on main can lag behind a tag if release-please config
+  // doesn't list it under extra-files.
   try {
-    const res = await fetch(RAW_VERSION_URL);
+    const res = await fetch(RELEASES_API, {
+      headers: { 'Accept': 'application/vnd.github.v3+json' }
+    });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    remote = (await res.text()).trim();
+    const release = await res.json();
+    remote = (release.tag_name || '').replace(/^v/, '').trim();
+    changelog = release.body || '';
+    if (!remote) throw new Error('no tag_name in latest release');
   } catch {
-    console.log(JSON.stringify({ status: 'offline', local }));
-    return;
+    // Fallback: raw VERSION file (e.g., private fork without releases)
+    try {
+      const res = await fetch(RAW_VERSION_URL);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      remote = (await res.text()).trim();
+    } catch {
+      console.log(JSON.stringify({ status: 'offline', local }));
+      return;
+    }
   }
 
   if (compareVersions(local, remote) >= 0) {
     console.log(JSON.stringify({ status: 'up-to-date', local, remote }));
     return;
-  }
-
-  // Fetch changelog from GitHub releases
-  let changelog = '';
-  try {
-    const res = await fetch(RELEASES_API, {
-      headers: { 'Accept': 'application/vnd.github.v3+json' }
-    });
-    if (res.ok) {
-      const release = await res.json();
-      changelog = release.body || '';
-    }
-  } catch {
-    // No changelog available, that's OK
   }
 
   console.log(JSON.stringify({
