@@ -29,7 +29,8 @@ The template at `templates/cv-template.tex` uses `{{PLACEHOLDER}}` syntax:
 |-------------|--------|
 | `{{NAME}}` | `profile.yml → candidate.full_name` |
 | `{{CONTACT_LINE}}` | Phone / City, State / Visa status — built from profile.yml |
-| `{{EMAIL}}` | `profile.yml → candidate.email` |
+| `{{EMAIL_URL}}` | Raw email for `mailto:` URL — must not be LaTeX-escaped (from profile.yml) |
+| `{{EMAIL_DISPLAY}}` | Escaped email for display text — LaTeX-special chars like `_` must be escaped, e.g. `first\_name@example.com` |
 | `{{LINKEDIN_URL}}` | Full URL with scheme for `\href{}`: e.g. `https://linkedin.com/in/curtiscao`. If `profile.yml` stores a bare host+path (no scheme), prepend `https://` before substitution. |
 | `{{LINKEDIN_DISPLAY}}` | Display text only (no scheme): `linkedin.com/in/curtiscao` |
 | `{{GITHUB_URL}}` | Full URL with scheme for `\href{}`: e.g. `https://github.com/Cwcao`. If `profile.yml` stores a bare host+path, prepend `https://`. |
