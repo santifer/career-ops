@@ -42,11 +42,11 @@ Cette premiere iteration couvre les quatre modes a plus fort impact :
 | Fichier | Traduit depuis | Role |
 |---------|----------------|------|
 | `_shared.md` | `modes/_shared.md` (EN) | Contexte partage, archetypes, regles globales, specificites marche francophone |
-| `offre.md` | `modes/oferta.md` (ES) | Evaluation complete d'une offre (Blocs A-F) |
+| `offre.md` | `modes/offer.md` (EN) | Evaluation complete d'une offre (Blocs A-F) |
 | `postuler.md` | `modes/apply.md` (EN) | Assistant live pour remplir les formulaires de candidature |
-| `pipeline.md` | `modes/pipeline.md` (ES) | Inbox d'URLs / Second Brain pour les offres collectees |
+| `pipeline.md` | `modes/pipeline.md` (EN) | Inbox d'URLs / Second Brain pour les offres collectees |
 
-Les autres modes (`scan`, `batch`, `pdf`, `tracker`, `auto-pipeline`, `deep`, `contacto`, `ofertas`, `project`, `training`) restent en EN/ES. Leur contenu est surtout du tooling, des chemins et des commandes -- il doit rester independant de la langue.
+Les autres modes (`scan`, `batch`, `pdf`, `tracker`, `auto-pipeline`, `deep`, `outreach`, `compare`, `project`, `training`) restent dans les modes anglais par defaut sous `modes/`; les variantes espagnoles historiques sont preservees dans `modes/esp/` si tu veux garder ce flux.
 
 ## Ce qui reste en anglais
 

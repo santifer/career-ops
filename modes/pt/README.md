@@ -50,11 +50,11 @@ Esta primeira iteracao cobre os quatro modos com maior impacto:
 | Arquivo | Traduzido de | Finalidade |
 |---------|-------------|------------|
 | `_shared.md` | `modes/_shared.md` (EN) | Contexto compartilhado, arquetipos, regras globais, especificidades do mercado BR |
-| `oferta.md` | `modes/oferta.md` (ES) | Avaliacao completa de uma vaga (Blocos A-F) |
+| `oferta.md` | `modes/offer.md` (EN) | Avaliacao completa de uma vaga (Blocos A-F) |
 | `aplicar.md` | `modes/apply.md` (EN) | Assistente ao vivo para formularios de candidatura |
-| `pipeline.md` | `modes/pipeline.md` (ES) | Inbox de URLs / Second Brain para vagas acumuladas |
+| `pipeline.md` | `modes/pipeline.md` (EN) | Inbox de URLs / Second Brain para vagas acumuladas |
 
-Os demais modos (`scan`, `batch`, `pdf`, `tracker`, `auto-pipeline`, `deep`, `contacto`, `ofertas`, `project`, `training`) nao estao neste PR de proposito. Eles continuam funcionando via os originais em EN/ES, pois seu conteudo e majoritariamente tooling, caminhos e comandos de configuracao — que devem ser independentes de idioma.
+Os demais modos (`scan`, `batch`, `pdf`, `tracker`, `auto-pipeline`, `deep`, `outreach`, `compare`, `project`, `training`) nao estao neste PR de proposito. Eles continuam funcionando via os modos padrao em ingles em `modes/`; as variantes historicas em espanhol ficam preservadas em `modes/esp/` para quem quiser manter esse fluxo.
 
 Se a comunidade adotar os modos em portugues, mais modos serao traduzidos em PRs futuros.
 

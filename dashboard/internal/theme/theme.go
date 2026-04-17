@@ -3,7 +3,6 @@ package theme
 
 import (
 	"github.com/charmbracelet/lipgloss"
-	"github.com/muesli/termenv"
 )
 
 // Theme holds all color definitions for the pipeline dashboard.
@@ -26,18 +25,11 @@ type Theme struct {
 	Pink   lipgloss.Color
 }
 
-// NewTheme creates a theme by name. Use "auto" or "" to detect from terminal background.
+// NewTheme creates a theme by name. Currently only "catppuccin-mocha" is supported.
 func NewTheme(name string) Theme {
 	switch name {
-	case "catppuccin-mocha":
+	case "catppuccin-mocha", "":
 		return newCatppuccinMocha()
-	case "catppuccin-latte":
-		return newCatppuccinLatte()
-	case "auto", "":
-		if termenv.HasDarkBackground() {
-			return newCatppuccinMocha()
-		}
-		return newCatppuccinLatte()
 	default:
 		return newCatppuccinMocha()
 	}

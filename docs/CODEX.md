@@ -32,8 +32,8 @@ npx playwright install chromium
 | User intent | Files Codex should read |
 |-------------|-------------------------|
 | Raw JD text or job URL | `modes/_shared.md` + `modes/auto-pipeline.md` |
-| Single evaluation only | `modes/_shared.md` + `modes/oferta.md` |
-| Multiple offers | `modes/_shared.md` + `modes/ofertas.md` |
+| Single evaluation only | `modes/_shared.md` + `modes/offer.md` |
+| Multiple offers | `modes/_shared.md` + `modes/compare.md` |
 | Portal scan | `modes/_shared.md` + `modes/scan.md` |
 | PDF generation | `modes/_shared.md` + `modes/pdf.md` |
 | Live application help | `modes/_shared.md` + `modes/apply.md` |
@@ -46,6 +46,10 @@ npx playwright install chromium
 The key point: Codex support is additive. It should route into the existing
 Career-Ops modes and scripts rather than introducing a parallel automation
 layer.
+
+For Korean-language workflows, route into `modes/ko/` instead of the default
+`modes/` when the user explicitly asks for Korean output or the JD is clearly
+in Korean.
 
 ## Behavioral Rules
 

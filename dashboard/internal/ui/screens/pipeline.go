@@ -42,12 +42,6 @@ type PipelineUpdateStatusMsg struct {
 	NewStatus     string
 }
 
-// PipelineRefreshMsg requests a full tracker reload from disk.
-type PipelineRefreshMsg struct{}
-
-// PipelineOpenProgressMsg is emitted when the progress screen should open.
-type PipelineOpenProgressMsg struct{}
-
 type reportSummary struct {
 	archetype string
 	tldr      string
@@ -165,53 +159,6 @@ func (m *PipelineModel) EnrichReport(reportPath, archetype, tldr, remote, comp s
 	}
 }
 
-// WithReloadedData rebuilds the pipeline with fresh tracker data while preserving
-// the current UI state so manual refresh feels seamless.
-func (m PipelineModel) WithReloadedData(apps []model.CareerApplication, metrics model.PipelineMetrics) PipelineModel {
-	selectedReportPath := ""
-	selectedCompany := ""
-	selectedRole := ""
-	if app, ok := m.CurrentApp(); ok {
-		selectedReportPath = app.ReportPath
-		selectedCompany = app.Company
-		selectedRole = app.Role
-	}
-
-	reloaded := NewPipelineModel(m.theme, apps, metrics, m.careerOpsPath, m.width, m.height)
-	reloaded.sortMode = m.sortMode
-	reloaded.activeTab = m.activeTab
-	reloaded.viewMode = m.viewMode
-	reloaded.applyFilterAndSort()
-	reloaded.CopyReportCache(&m)
-
-	for i, app := range reloaded.filtered {
-		if selectedReportPath != "" && app.ReportPath == selectedReportPath {
-			reloaded.cursor = i
-			reloaded.adjustScroll()
-			return reloaded
-		}
-		if selectedReportPath == "" && app.Company == selectedCompany && app.Role == selectedRole {
-			reloaded.cursor = i
-			reloaded.adjustScroll()
-			return reloaded
-		}
-	}
-
-	if len(reloaded.filtered) == 0 {
-		reloaded.cursor = 0
-		reloaded.scrollOffset = 0
-		return reloaded
-	}
-
-	if m.cursor >= len(reloaded.filtered) {
-		reloaded.cursor = len(reloaded.filtered) - 1
-	} else if m.cursor > 0 {
-		reloaded.cursor = m.cursor
-	}
-	reloaded.adjustScroll()
-	return reloaded
-}
-
 // CurrentApp returns the currently selected application, if any.
 func (m PipelineModel) CurrentApp() (model.CareerApplication, bool) {
 	if m.cursor < 0 || m.cursor >= len(m.filtered) {
@@ -241,7 +188,7 @@ func (m PipelineModel) handleKey(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
 	case "q", "esc":
 		return m, func() tea.Msg { return PipelineClosedMsg{} }
 
-	case "down", "j":
+	case "down":
 		if len(m.filtered) > 0 {
 			m.cursor++
 			if m.cursor >= len(m.filtered) {
@@ -251,7 +198,7 @@ func (m PipelineModel) handleKey(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
 			return m, m.loadCurrentReport()
 		}
 
-	case "up", "k":
+	case "up":
 		if len(m.filtered) > 0 {
 			m.cursor--
 			if m.cursor < 0 {
@@ -273,7 +220,7 @@ func (m PipelineModel) handleKey(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
 		m.cursor = 0
 		m.scrollOffset = 0
 
-	case "f", "right", "l":
+	case "f", "right":
 		m.activeTab++
 		if m.activeTab >= len(pipelineTabs) {
 			m.activeTab = 0
@@ -282,7 +229,7 @@ func (m PipelineModel) handleKey(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
 		m.cursor = 0
 		m.scrollOffset = 0
 
-	case "left", "h":
+	case "left":
 		m.activeTab--
 		if m.activeTab < 0 {
 			m.activeTab = len(pipelineTabs) - 1
@@ -315,59 +262,22 @@ func (m PipelineModel) handleKey(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
 			}
 		}
 
-	case "p":
-		return m, func() tea.Msg { return PipelineOpenProgressMsg{} }
-
-	case "r":
-		return m, func() tea.Msg { return PipelineRefreshMsg{} }
-
 	case "c":
 		if len(m.filtered) > 0 {
 			m.statusPicker = true
 			m.statusCursor = 0
 		}
 
-	case "g":
-		if len(m.filtered) > 0 {
-			m.cursor = 0
-			m.scrollOffset = 0
-			return m, m.loadCurrentReport()
-		}
-
-	case "G":
-		if len(m.filtered) > 0 {
-			m.cursor = len(m.filtered) - 1
-			m.adjustScroll()
-			return m, m.loadCurrentReport()
-		}
-
 	case "pgdown", "ctrl+d":
-		if len(m.filtered) > 0 {
-			halfPage := m.height / 2
-			if halfPage < 1 {
-				halfPage = 1
-			}
-			m.cursor += halfPage
-			if m.cursor >= len(m.filtered) {
-				m.cursor = len(m.filtered) - 1
-			}
-			m.adjustScroll()
-			return m, m.loadCurrentReport()
-		}
+		m.scrollOffset += m.height / 2
+		return m, nil
 
 	case "pgup", "ctrl+u":
-		if len(m.filtered) > 0 {
-			halfPage := m.height / 2
-			if halfPage < 1 {
-				halfPage = 1
-			}
-			m.cursor -= halfPage
-			if m.cursor < 0 {
-				m.cursor = 0
-			}
-			m.adjustScroll()
-			return m, m.loadCurrentReport()
+		m.scrollOffset -= m.height / 2
+		if m.scrollOffset < 0 {
+			m.scrollOffset = 0
 		}
+		return m, nil
 	}
 
 	return m, nil
@@ -379,13 +289,13 @@ func (m PipelineModel) handleStatusPicker(msg tea.KeyMsg) (PipelineModel, tea.Cm
 		m.statusPicker = false
 		return m, nil
 
-	case "down", "j":
+	case "down":
 		m.statusCursor++
 		if m.statusCursor >= len(statusOptions) {
 			m.statusCursor = len(statusOptions) - 1
 		}
 
-	case "up", "k":
+	case "up":
 		m.statusCursor--
 		if m.statusCursor < 0 {
 			m.statusCursor = 0
@@ -723,13 +633,12 @@ func (m PipelineModel) renderAppLine(app model.CareerApplication, selected bool)
 	padStyle := lipgloss.NewStyle().Padding(0, 2)
 
 	// Column widths
-	scoreW := 5 // "4.5  "
-	dateW := 10
-	companyW := 16
+	scoreW := 5   // "4.5  "
+	companyW := 20
 	statusW := 12
 	compW := 14
 	// Role gets remaining space
-	roleW := m.width - scoreW - dateW - companyW - statusW - compW - 12
+	roleW := m.width - scoreW - companyW - statusW - compW - 10
 	if roleW < 15 {
 		roleW = 15
 	}
@@ -739,18 +648,17 @@ func (m PipelineModel) renderAppLine(app model.CareerApplication, selected bool)
 	score := scoreStyle.Render(fmt.Sprintf("%.1f", app.Score))
 
 	// Company (truncate)
-	company := truncateRunes(app.Company, companyW)
+	company := app.Company
+	if len(company) > companyW {
+		company = company[:companyW-3] + "..."
+	}
 	companyStyle := lipgloss.NewStyle().Foreground(m.theme.Text).Width(companyW)
 
-	// Date (fixed width)
-	dateText := app.Date
-	if dateText == "" {
-		dateText = "—"
-	}
-	dateStyle := lipgloss.NewStyle().Foreground(m.theme.Subtext).Width(dateW)
-
 	// Role (truncate)
-	role := truncateRunes(app.Role, roleW)
+	role := app.Role
+	if len(role) > roleW {
+		role = role[:roleW-3] + "..."
+	}
 	roleStyle := lipgloss.NewStyle().Foreground(m.theme.Subtext).Width(roleW)
 
 	// Status with color -- fixed column
@@ -762,14 +670,16 @@ func (m PipelineModel) renderAppLine(app model.CareerApplication, selected bool)
 	// Comp from report cache -- fixed column
 	compText := ""
 	if summary, ok := m.reportCache[app.ReportPath]; ok && summary.comp != "" {
-		comp := truncateRunes(summary.comp, compW-1)
+		comp := summary.comp
+		if len(comp) > compW-1 {
+			comp = comp[:compW-4] + "..."
+		}
 		compStyle := lipgloss.NewStyle().Foreground(m.theme.Yellow)
 		compText = compStyle.Render(comp)
 	}
 
-	line := fmt.Sprintf(" %s %s %s %s %s %s",
+	line := fmt.Sprintf(" %s %s %s %s %s",
 		score,
-		dateStyle.Render(truncateRunes(dateText, dateW)),
 		companyStyle.Render(company),
 		roleStyle.Render(role),
 		statusText,
@@ -821,7 +731,10 @@ func (m PipelineModel) renderPreview() string {
 		}
 	} else if app.Notes != "" {
 		// Fallback: show notes
-		notes := truncateRunes(app.Notes, m.width-10)
+		notes := app.Notes
+		if len(notes) > m.width-10 {
+			notes = notes[:m.width-13] + "..."
+		}
 		lines = append(lines, padStyle.Render(dimStyle.Render(notes)))
 	} else {
 		lines = append(lines, padStyle.Render(dimStyle.Render("Loading preview...")))
@@ -842,22 +755,20 @@ func (m PipelineModel) renderHelp() string {
 
 	if m.statusPicker {
 		return style.Render(
-			keyStyle.Render("↑↓/jk") + descStyle.Render(" navigate  ") +
+			keyStyle.Render("↑↓") + descStyle.Render(" navigate  ") +
 				keyStyle.Render("Enter") + descStyle.Render(" confirm  ") +
 				keyStyle.Render("Esc") + descStyle.Render(" cancel"))
 	}
 
 	brand := lipgloss.NewStyle().Foreground(m.theme.Overlay).Render("career-ops by santifer.io")
 
-	keys := keyStyle.Render("↑↓/jk") + descStyle.Render(" nav  ") +
-		keyStyle.Render("←→/hl") + descStyle.Render(" tabs  ") +
+	keys := keyStyle.Render("↑↓") + descStyle.Render(" nav  ") +
+		keyStyle.Render("←→") + descStyle.Render(" tabs  ") +
 		keyStyle.Render("s") + descStyle.Render(" sort  ") +
-		keyStyle.Render("r") + descStyle.Render(" refresh  ") +
 		keyStyle.Render("Enter") + descStyle.Render(" report  ") +
 		keyStyle.Render("o") + descStyle.Render(" open URL  ") +
 		keyStyle.Render("c") + descStyle.Render(" change  ") +
 		keyStyle.Render("v") + descStyle.Render(" view  ") +
-		keyStyle.Render("p") + descStyle.Render(" progress  ") +
 		keyStyle.Render("Esc") + descStyle.Render(" quit")
 
 	gap := m.width - lipgloss.Width(keys) - lipgloss.Width(brand) - 2
@@ -934,18 +845,6 @@ func (m PipelineModel) countByNormStatus(status string) int {
 		}
 	}
 	return count
-}
-
-// truncateRunes truncates a string to at most maxRunes runes, appending "..." if truncated.
-func truncateRunes(s string, maxRunes int) string {
-	runes := []rune(s)
-	if len(runes) <= maxRunes {
-		return s
-	}
-	if maxRunes <= 3 {
-		return string(runes[:maxRunes])
-	}
-	return string(runes[:maxRunes-3]) + "..."
 }
 
 func statusLabel(norm string) string {

@@ -12,13 +12,13 @@
 
 | Arquivo | Caminho | Quando |
 |---------|---------|--------|
-| cv.md | `cv.md` (raiz do projeto) | SEMPRE |
+| CV (resumes/) | Arquivo mais adequado em `resumes/` (ex: `resumes/ai-engineer-cv.md`). Listar a pasta se o tipo de vaga nao estiver claro. | SEMPRE |
 | article-digest.md | `article-digest.md` (se existir) | SEMPRE (proof points detalhados) |
 | profile.yml | `config/profile.yml` | SEMPRE (identidade e vagas-alvo) |
 | _profile.md | `modes/_profile.md` | SEMPRE (arquetipos, narrativa, negociacao do usuario) |
 
-**REGRA: NUNCA fazer hardcode de metricas de proof points.** Leia-as de `cv.md` e `article-digest.md` no momento da avaliacao.
-**REGRA: Para metricas de artigos/projetos, `article-digest.md` tem prioridade sobre `cv.md`** (`cv.md` pode conter numeros desatualizados).
+**REGRA: NUNCA fazer hardcode de metricas de proof points.** Leia-as do CV selecionado em `resumes/` e de `article-digest.md` no momento da avaliacao.
+**REGRA: Para metricas de artigos/projetos, `article-digest.md` tem prioridade sobre o arquivo de CV** (o CV em `resumes/` pode conter numeros desatualizados).
 **REGRA: Leia `_profile.md` DEPOIS deste arquivo. As personalizacoes do usuario em `_profile.md` sobrescrevem os valores padrao aqui.**
 
 ---
@@ -64,16 +64,16 @@ O skill trata TODAS as vagas-alvo com o mesmo cuidado. Nenhuma e primaria ou sec
 
 ### Framing Adaptativo por Arquetipo
 
-> **Metricas concretas: ler de `cv.md` e `article-digest.md` no momento da avaliacao. NUNCA fazer hardcode aqui.**
+> **Metricas concretas: ler do CV selecionado em `resumes/` e de `article-digest.md` no momento da avaliacao. NUNCA fazer hardcode aqui.**
 
 | Se a vaga e... | Enfatizar no candidato... | Fontes de Proof Points |
 |----------------|--------------------------|------------------------|
-| Platform / LLMOps | Experiencia em producao, Observability, Evals, Closed-Loop | article-digest.md + cv.md |
-| Agentic / Automation | Orquestracao multi-agent, HITL, Confiabilidade, Custos | article-digest.md + cv.md |
-| Technical AI PM | Product Discovery, PRDs, Metricas, Gestao de stakeholders | cv.md + article-digest.md |
-| Solutions Architect | Design de sistemas, Integracoes, Enterprise-ready | article-digest.md + cv.md |
-| Forward Deployed Engineer | Entrega rapida, proximo do cliente, Prototipo a producao | cv.md + article-digest.md |
-| AI Transformation Lead | Gestao de mudanca, Enablement de equipe, Adocao | cv.md + article-digest.md |
+| Platform / LLMOps | Experiencia em producao, Observability, Evals, Closed-Loop | article-digest.md + resumes/ |
+| Agentic / Automation | Orquestracao multi-agent, HITL, Confiabilidade, Custos | article-digest.md + resumes/ |
+| Technical AI PM | Product Discovery, PRDs, Metricas, Gestao de stakeholders | resumes/ + article-digest.md |
+| Solutions Architect | Design de sistemas, Integracoes, Enterprise-ready | article-digest.md + resumes/ |
+| Forward Deployed Engineer | Entrega rapida, proximo do cliente, Prototipo a producao | resumes/ + article-digest.md |
+| AI Transformation Lead | Gestao de mudanca, Enablement de equipe, Adocao | resumes/ + article-digest.md |
 
 <!-- [PERSONALIZAR] Mapeie seus projetos/artigos concretos para os arquetipos acima -->
 
@@ -181,7 +181,7 @@ Em vagas e negociacoes brasileiras, existem termos e praticas que nao aparecem n
 ### NUNCA
 
 1. Inventar experiencia ou metricas
-2. Modificar `cv.md` ou arquivos do portfolio
+2. Modificar arquivos de CV em `resumes/` ou arquivos do portfolio
 3. Enviar candidaturas em nome do candidato
 4. Compartilhar numero de telefone em mensagens geradas
 5. Recomendar remuneracao abaixo do mercado
@@ -192,7 +192,7 @@ Em vagas e negociacoes brasileiras, existem termos e praticas que nao aparecem n
 ### SEMPRE
 
 0. **Carta de apresentacao:** Se o formulario permite anexar ou escrever uma carta, SEMPRE inclua uma. PDF no mesmo design visual do curriculo. Conteudo: citacoes da descricao da vaga mapeadas para proof points, links para case studies relevantes. Maximo 1 pagina.
-1. Ler `cv.md`, `_profile.md` e `article-digest.md` (se existir) antes de avaliar qualquer vaga
+1. Ler o CV mais adequado em `resumes/`, `_profile.md` e `article-digest.md` (se existir) antes de avaliar qualquer vaga
 1b. **Na primeira avaliacao de cada sessao:** Executar `node cv-sync-check.mjs` via Bash. Se houver avisos, informar o candidato antes de continuar
 2. Detectar o arquetipo da vaga e adaptar o framing conforme `_profile.md`
 3. Ao fazer matching, citar linhas exatas do curriculo
@@ -212,7 +212,7 @@ Em vagas e negociacoes brasileiras, existem termos e praticas que nao aparecem n
 | WebSearch | Pesquisa de remuneracao, tendencias, cultura da empresa, contatos LinkedIn, fallback para descricoes de vagas |
 | WebFetch | Fallback para extrair descricoes de vagas de paginas estaticas |
 | Playwright | Verificar se vagas ainda estao ativas (browser_navigate + browser_snapshot), extrair descricoes de SPAs. **CRITICO: NUNCA iniciar 2+ agentes com Playwright em paralelo — eles compartilham a mesma instancia do navegador** |
-| Read | cv.md, _profile.md, article-digest.md, cv-template.html |
+| Read | CV de `resumes/`, _profile.md, article-digest.md, cv-template.html |
 | Write | HTML temporario para PDF, applications.md, reports .md |
 | Edit | Atualizar tracker |
 | Bash | `node generate-pdf.mjs` |
