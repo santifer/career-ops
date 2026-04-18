@@ -748,6 +748,8 @@ function isDevJobUrl(url) {
   const hardReject = [
     'con-moto', 'moto-propia', 'canal-con-moto', '-vendedor', '-ventas-',
     'ventas-b2b', 'ejecutivo-comercial', 'asesor-comercial', 'representante-comercial',
+    'asesor-ejecutivo', 'ejecutivo-de-cuenta', 'consumo-masivo', 'sector-licores',
+    'cuenta-supermercado', 'canal-empresarial', 'apertura-de-empresas',
     'business-developer', 'business-development', 'coordinador-operaciones',
     'sector-energetico', 'sector-electrico', 'mercado-electrico',
     'torno-cnc', 'operador-maquina', '-mercaderista', '-tat-', 'corte-confeccion',
@@ -763,6 +765,17 @@ function isDevJobUrl(url) {
     'desarrollador-comercial',
     'programador-torno',      // "programador torno CNC" = manufactura
     'programador-de-turnos',  // turnos de trabajo, no software
+    'turnos-de-vigilancia',   // programador turnos vigilancia = RRHH
+    'programador-turnos',     // programador de turnos (cualquier sector)
+    'de-cuenta-supermercado', // desarrollador de cuenta supermercado = ventas
+    // Nivel — candidato es junior (8 meses), rechazar roles senior
+    '-senior',               // desarrollador-senior, senior-developer, semi-senior…
+    // "Programador" en roles NO relacionados con software
+    'programador-de-transporte', // planificador logístico
+    'programador-de-ruta',       // planificador de rutas
+    'programadora-de-ruta',
+    'programador-datos',         // analista BI/datos, no desarrollo
+    'programador-operario',      // operario de maquinaria
   ];
   if (hardReject.some(kw => slug.includes(kw))) return false;
   // Aceptar roles de desarrollo
@@ -1039,21 +1052,39 @@ async function fillForm(page, candidate, cvContent) {
         value = `Sí, tengo conocimientos en SQL (MySQL), y las siguientes tecnologías: ${skills}. He trabajado con bases de datos relacionales en proyectos de producción.`;
       else if (/condiciones solicitadas|condiciones del cargo|requisitos solicitados|cuentas con las condiciones/.test(q))
         value = 'Sí, cuento con las condiciones solicitadas para el cargo y tengo disponibilidad inmediata.';
+      else if (/medio de transporte|veh[ií]culo propio|moto propia|carro propio|transporte propio/.test(q))
+        value = 'Sí, cuento con transporte propio.';
+      else if (/consumo masivo|licores|bebidas|sector licores|canal empresarial/.test(q))
+        value = 'No tengo experiencia directa en ese sector, pero tengo disposición para aprender y adaptarme.';
+      else if (/carrera profesional.*culminaste|culminaste.*carrera|qu[eé] carrera.*termin|carrera.*titulad/.test(q))
+        value = 'Tecnólogo en Análisis y Desarrollo de Software — SENA 2024 (titulado).';
+      else if (/herramientas.*ia|herramientas.*inteligencia artificial|ia.*d[ií]a a d[ií]a|inteligencia.*trabajo|ia.*usar|copilot|chatgpt.*desarrollad/.test(q))
+        value = 'Uso GitHub Copilot para autocompletado y revisión de código, y ChatGPT para depurar errores, generar boilerplate y documentar funciones. Esto mejora mi productividad significativamente.';
+      else if (/desde cero|aplicaciones.*productivo|proyectos.*productivo|productivo.*cero/.test(q))
+        value = 'Sí, he desarrollado aplicaciones desde cero en entornos productivos. En SERVIMAX construí una plataforma institucional completa (Angular + Node.js + MySQL). En INTELIBPO implementé flujos RPA de producción con n8n.';
+      else if (/sicetac|tabla.*tarifa|tarifa.*negociaci|tarifa.*transport/.test(q))
+        value = 'No tengo experiencia directa con la tabla Sicetac ni negociación de tarifas de transporte, pero tengo disposición para aprenderlo.';
+      else if (/cu[aá]ntos lenguajes|lenguajes.*manejas|lenguajes.*dominas|lenguajes.*programaci/.test(q))
+        value = 'Manejo principalmente JavaScript y TypeScript (nivel avanzado), SQL (MySQL/PostgreSQL), Python básico y HTML/CSS. En total 5+ lenguajes con dominio real en proyectos de producción.';
+      else if (/dejar l[ií]nea|l[ií]nea.*contacto|n[uú]mero.*tel[eé]fono|tel[eé]fono.*contacto|celular.*contacto|contacto.*celular/.test(q))
+        value = 'Disponible por plataforma Computrabajo o al correo cm3642263@gmail.com.';
       else if (/disponibilidad|horario|turno/.test(q))
         value = 'Sí, tengo disponibilidad inmediata para jornada completa.';
       else if (/ciudad|municipio|reside/.test(q))
         value = cvLocation;
+      else if (/c[eé]dula|n[uú]mero de documento|fecha.*expedici[oó]n|expedici[oó]n.*c[eé]dula/.test(q))
+        value = 'Número de cédula: disponible a solicitud del empleador.';
       else if (/nombre completo|nombres y apellidos/.test(q))
         value = cvName;
       else if (/nivel acad[eé]mico|estudios|formaci[oó]n|t[ií]tulo|qu[eé] estudiaste/.test(q))
-        value = 'Tecnólogo en Análisis y Desarrollo de Software — SENA 2024. Formación complementaria en Ingeniería de Sistemas (Uniagustiniana) y cursos en Platzi/Udemy.';
+        value = 'Tecnólogo en Análisis y Desarrollo de Software — SENA 2024. Formación complementaria (Uniagustiniana) y cursos en Platzi/Udemy.';
       else if (/c#|csharp|\.net|net core|net framework/i.test(q))
         value = 'No tengo experiencia directa en C# y .NET, pero cuento con bases sólidas en programación orientada a objetos con TypeScript/Node.js y capacidad de aprendizaje rápido.';
       else if (/docker|kubernetes|contenedor|container/i.test(q))
         value = 'Tengo conocimientos básicos de Docker para entornos de desarrollo local. Lo he usado para contenedores de bases de datos y servicios. Estoy en proceso de profundizar.';
       else if (/git|github|control de versiones|repositorio|versionamiento/i.test(q))
         value = 'Sí, uso Git y GitHub en todos mis proyectos. Manejo branches, commits semánticos, pull requests, merge y resolución de conflictos. Repositorio: github.com/camilomont';
-      else if (/escala.*[1-5]|califica.*nivel|puntúa|[0-9].*siendo.*[0-9]/.test(q))
+      else if (/escala.*[1-5]|califica.*nivel|puntúa|[0-9].*siendo.*[0-9]|de [0-9]+ a [0-9]+|[0-9]+ al [0-9]+|cuanto manejas|cuánto manejas/.test(q))
         value = '3';
       else if (/angular/i.test(q))
         value = 'Sí, tengo experiencia en Angular (v14+). Usé Angular en SERVIMAX para desarrollar la interfaz de la página institucional con autenticación, consumo de APIs y gestión de estado.';
@@ -1069,6 +1100,9 @@ async function fillForm(page, candidate, cvContent) {
         value = 'No tengo experiencia en PHP/Laravel, pero tengo bases sólidas en programación web y puedo aprenderlo. Mi stack principal es JavaScript/TypeScript.';
       else if (/java\b/i.test(q) && !/javascript/i.test(q))
         value = 'No tengo experiencia en Java, pero manejo programación orientada a objetos con TypeScript y estoy dispuesto a aprender.';
+      // ── Catch-all: responde cualquier pregunta abierta no reconocida con perfil genérico ──
+      else if (q.length > 5)
+        value = 'Tecnólogo ADS SENA 2024 (titulado). 8 meses de exp. Full Stack: JavaScript, TypeScript, Angular, React, Node.js, NestJS, MySQL, Git. SERVIMAX (plataforma institucional) + INTELIBPO (RPA n8n). Inglés B1. Disponibilidad inmediata.';
     }
 
     // ── Fallback: IA si está disponible y aún no hay valor ──
