@@ -139,3 +139,35 @@ After delivering the report:
 - **Cite everything.** Every question, every stat, every claim gets a source or an `[inferred]` tag.
 - Generate in the language of the JD (EN default).
 - Be direct. This is a working prep document, not a pep talk.
+
+---
+
+## Locale-Specific Interview Context
+
+### Russian job market
+
+When preparing for interviews at Russian companies (hh.ru, Habr Career, Яндекс, Авито, VK, Ozon, Т-Банк, etc.), add these search queries to Step 1:
+
+| Query | What to extract |
+|-------|-----------------|
+| `"{company} собеседование отзывы site:habr.com"` | Russian-language interview reviews on Habr |
+| `"{company} отзывы собеседование site:hh.ru"` | Candidate reviews on hh.ru |
+
+**Typical Russian company interview structure (large tech companies):**
+1. **HR screening** (20–30 min): motivation, salary expectations, willingness to relocate/work format
+2. **Technical interview** (60–90 min): algorithms, system design, stack knowledge
+3. **Live coding** (45–60 min): algorithmic or practical problems
+4. **System design** (60 min): architecture (especially common at Яндекс, Авито, VK, Ozon, Т-Банк)
+5. **Culture fit** (30–45 min): values, teamwork, conflict resolution
+6. **Bar-raiser** (large companies): final approval from a senior engineer
+
+**Common Russian interview questions:**
+- "Расскажите о себе" / Tell me about yourself (2–3 minutes, structured)
+- "Почему уходите с текущего места?" / Why are you leaving your current role?
+- "Зарплатные ожидания?" / Salary expectations? (clarify gross/net)
+- "Готовность к переезду / формату работы?" / Relocation / work format preferences?
+- "Расскажите о самом сложном проекте" / Tell me about your hardest project
+- "Как решаете конфликты в команде?" / How do you handle team conflicts?
+- System design: "Спроектируйте URL shortener / chat / news feed / payment system"
+
+**STAR+R in Russian interviews:** The framework maps cleanly — Ситуация, Задача, Действия, Результат, Осмысление (reflection/lessons learned). Presenting the Осмысление column is a strong seniority signal in Russian interviews.

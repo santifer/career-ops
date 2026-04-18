@@ -60,7 +60,7 @@ function validateStatus(status) {
 
   if (aliases[lower]) return aliases[lower];
 
-  // DUPLICADO/Repost → Discarded
+  // DUPLICATE / DUPLICADO (legacy) / Repost → Discarded
   if (/^(duplicado|dup|repost)/i.test(lower)) return 'Discarded';
 
   console.warn(`⚠️  Non-canonical status "${status}" → defaulting to "Evaluated"`);
