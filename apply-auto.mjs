@@ -32,7 +32,9 @@ const MAX_NEW_APPS = 10;
 async function askAI(prompt, cvContext) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
-    // Cadena de IA gratuita: Gemini → Ollama local
+    // Cadena: OpenAI → Gemini → Ollama local
+    const openai = await askAIOpenAI(prompt, cvContext);
+    if (openai) return openai;
     const gemini = await askAIGemini(prompt, cvContext);
     if (gemini) return gemini;
     return askAILocal(prompt, cvContext);
@@ -80,7 +82,29 @@ async function askAIRaw(prompt) {
     } catch { /* continúa */ }
   }
 
-  // 2. Gemini
+  // 2. OpenAI
+  const openaiKey = process.env.OPENAI_API_KEY;
+  if (openaiKey) {
+    try {
+      const res = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${openaiKey}` },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          max_tokens: 10,
+          temperature: 0.1,
+          messages: [{ role: 'user', content: prompt }]
+        })
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      const text = data.choices?.[0]?.message?.content?.trim() || null;
+      if (text) console.log(`[IA-KQ-OPENAI] → "${text}"`);
+      return text;
+    } catch { /* continúa */ }
+  }
+
+  // 3. Gemini
   if (geminiKey) {
     try {
       const res = await fetch(
@@ -118,6 +142,32 @@ async function askAIRaw(prompt) {
     const data = await res.json();
     const text = data.response?.trim() || null;
     if (text) console.log(`[IA-KQ-LOCAL] → "${text}"`);
+    return text;
+  } catch { return null; }
+}
+
+// IA vía OpenAI (requiere OPENAI_API_KEY)
+async function askAIOpenAI(prompt, cvContext) {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) return null;
+  try {
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        max_tokens: 300,
+        temperature: 0.2,
+        messages: [
+          { role: 'system', content: 'Eres un asistente que completa formularios de empleo en Colombia. Responde SOLO con el valor del campo pedido, sin comillas ni explicaciones. Máximo 300 caracteres. Si el candidato no tiene experiencia en algo, responde con disposición de aprender.' },
+          { role: 'user', content: `CV del candidato:\n${cvContext.slice(0, 3000)}\n\nCampo del formulario: ${prompt}\n\nRespuesta:` }
+        ]
+      })
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const text = data.choices?.[0]?.message?.content?.trim() || null;
+    if (text) console.log(`[IA-OPENAI] "${prompt.slice(0,50)}" → "${text.slice(0,80)}"`);
     return text;
   } catch { return null; }
 }
