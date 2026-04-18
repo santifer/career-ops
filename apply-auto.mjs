@@ -96,11 +96,11 @@ async function askAIRaw(prompt) {
           messages: [{ role: 'user', content: prompt }]
         })
       });
-      if (!res.ok) return null;
-      const data = await res.json();
-      const text = data.choices?.[0]?.message?.content?.trim() || null;
-      if (text) console.log(`[IA-KQ-OPENAI] → "${text}"`);
-      return text;
+      if (res.ok) {
+        const data = await res.json();
+        const text = data.choices?.[0]?.message?.content?.trim() || null;
+        if (text) { console.log(`[IA-KQ-OPENAI] → "${text}"`); return text; }
+      }
     } catch { /* continúa */ }
   }
 
@@ -118,11 +118,11 @@ async function askAIRaw(prompt) {
           })
         }
       );
-      if (!res.ok) return null;
-      const data = await res.json();
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || null;
-      if (text) console.log(`[IA-KQ-GEMINI] → "${text}"`);
-      return text;
+      if (res.ok) {
+        const data = await res.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || null;
+        if (text) { console.log(`[IA-KQ-GEMINI] → "${text}"`); return text; }
+      }
     } catch { /* continúa */ }
   }
 
@@ -1093,15 +1093,21 @@ async function fillForm(page, candidate, cvContent) {
         value = 'Contrato a término fijo.';
       else if (/api[s]?|base[s]? de datos|bd|database/.test(q))
         value = 'Sí, tengo experiencia con APIs REST y bases de datos SQL (MySQL). He desarrollado endpoints con Node.js/NestJS/Express y consumido APIs de terceros en proyectos Angular y React.';
+      else if (/backend.*frontend|front.*back|experiencia.*como.*backend|cu[eé]ntanos.*backend|back.*apoyo.*front/i.test(q))
+        value = 'Backend: Desarrollé APIs REST con Node.js/NestJS/Express en SERVIMAX (autenticación, gestión de productos, pasarela de pago) e INTELIBPO (automatización RPA n8n). Frontend: Angular, interfaces web completas con consumo de APIs. Stack: JavaScript, TypeScript, MySQL, Git.';
       else if (/html|css|javascript|frontend|front.end/.test(q))
         value = 'Tengo conocimientos sólidos en HTML5, CSS3 y JavaScript ES6+/TypeScript. He trabajado con Angular y React en proyectos reales incluyendo una página institucional con autenticación y pasarela de pago.';
       else if (/nivel de ingl[eé]s|english|idioma/.test(q))
         value = 'B1. Lectura técnica fluida en inglés, conversación básica.';
+      else if (/\.net\b|blazor|netmaui|net maui/i.test(q))
+        value = 'No tengo experiencia directa con .NET, Blazor o NetMaui. Mi stack principal es JavaScript/TypeScript con Node.js en backend y Angular/React en frontend. Puedo aprender.';
       else if (/experiencia|funciones|cargo|tiempo/.test(q))
         value = `Tengo más de 1 año de experiencia en desarrollo de software. En SERVIMAX desarrollé una página institucional con autenticación, APIs de productos y pasarela de pago (Angular, Node.js, MySQL). En INTELIBPO implementé flujos RPA con n8n y Node.js/NestJS para automatización de cobranza.`;
       else if (/tecnol[oó]go|t[eé]cnico|estudiante|semestre|ingenier/.test(q))
         value = 'Sí, soy Tecnólogo en Análisis y Desarrollo de Software del SENA (2024) y cuento con formación adicional en Ingeniería de Sistemas.';
-      else if (/conocimiento|access|power.?bi|query|sql|python/.test(q))
+      else if (/power.?bi|tableau|qlik|looker|inteligencia.*negocios|business.*intelligen|dashboard.*visual|visualizaci[oó]n.*datos/i.test(q))
+        value = 'No tengo experiencia con Power BI ni herramientas de BI/visualización. Mi stack es desarrollo web con SQL (MySQL) para consultas de datos. Disposición para aprender.';
+      else if (/conocimiento|access|query|sql/.test(q))
         value = `Sí, tengo conocimientos en SQL (MySQL), y las siguientes tecnologías: ${skills}. He trabajado con bases de datos relacionales en proyectos de producción.`;
       else if (/condiciones solicitadas|condiciones del cargo|requisitos solicitados|cuentas con las condiciones/.test(q))
         value = 'Sí, cuento con las condiciones solicitadas para el cargo y tengo disponibilidad inmediata.';
@@ -1400,8 +1406,19 @@ Responde ÚNICAMENTE con el número de índice de la opción correcta (0, 1, 2, 
     }
 
     // 2. Tecnología que NO tiene → opción de "no" / sin experiencia / mínimo
-    const skillNo = CANDIDATE_KQ.no.find(s => q.includes(s));
+    const skillNo = CANDIDATE_KQ.no.find(s => {
+      if (!q.includes(s)) return false;
+      // 'java' no debe coincidir con 'javascript' (lenguaje completamente diferente)
+      if (s === 'java' && q.includes('javascript')) return false;
+      return true;
+    });
+
+    // 3. Skill que SÍ tiene → "sí" o nivel básico/intermedio (NUNCA avanzado)
+    const skillSi = CANDIDATE_KQ.si.find(s => q.includes(s));
+
     if (skillNo) {
+      // Pregunta mixta (ej. "PHP y/o Python"): si también tiene un skill → responde Sí
+      if (skillSi) return siOption();
       return (
         options.find(o => /^no\b|^no,|sin experiencia|no tengo|no cuento|no manejo|ninguna?$/i.test(o.label.trim()))
         || options.find(o => /pero aprendo|puedo aprender/i.test(o.label))
@@ -1412,8 +1429,6 @@ Responde ÚNICAMENTE con el número de índice de la opción correcta (0, 1, 2, 
       );
     }
 
-    // 3. Skill que SÍ tiene → "sí" o nivel básico/intermedio (NUNCA avanzado)
-    const skillSi = CANDIDATE_KQ.si.find(s => q.includes(s));
     if (skillSi) {
       return siOption();
     }
@@ -1448,6 +1463,11 @@ Responde ÚNICAMENTE con el número de índice de la opción correcta (0, 1, 2, 
     // 6. Pregunta de años/tiempo de experiencia (skill no en listas) → mínimo honesto
     if (/a[ñn]os?|tiempo.*experiencia|experiencia.*a[ñn]|llev.*desarrollando|llev.*trabaj|cuánto.*trabaj/i.test(q)) {
       return minOption();
+    }
+
+    // 6b. Desarrollo de aplicaciones / buenas prácticas en general → Sí (tiene experiencia real)
+    if (/desarrollo.*aplicaci|buenas pr[aá]cticas|desarrollo de software|dise[ñn]o.*software/i.test(q)) {
+      return siOption();
     }
 
     // 7. Pregunta "¿cuál herramienta?" — opciones son listas de skills
@@ -1980,12 +2000,13 @@ async function main() {
   const credentials = yaml.load(readFileSync(CREDENTIALS_PATH, 'utf8')) || {};
   const candidate   = profile.candidate || {};
   const cvContent   = existsSync(CV_PATH) ? readFileSync(CV_PATH, 'utf8') : '';
-  const hasAI       = !!process.env.ANTHROPIC_API_KEY;
+  const hasAI = !!(process.env.ANTHROPIC_API_KEY || process.env.OPENAI_API_KEY || process.env.GEMINI_API_KEY);
+  const aiProviders = [process.env.ANTHROPIC_API_KEY && 'Anthropic', process.env.OPENAI_API_KEY && 'OpenAI', process.env.GEMINI_API_KEY && 'Gemini'].filter(Boolean).join(' + ') || 'ninguno';
 
   console.log('═'.repeat(50));
   console.log('  PIPELINE DE APLICACIONES AUTÓNOMAS');
   console.log('═'.repeat(50));
-  console.log(`  IA para formularios: ${hasAI ? '✅ ACTIVADA' : '❌ desactivada (necesita ANTHROPIC_API_KEY)'}`);
+  console.log(`  IA para formularios: ${hasAI ? `✅ ACTIVADA (${aiProviders})` : '❌ desactivada — configura OPENAI_API_KEY o GEMINI_API_KEY en .env'}`);
 
   const entries = parsePipeline();
   if (!entries.length) {
