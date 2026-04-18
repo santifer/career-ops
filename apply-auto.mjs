@@ -325,7 +325,7 @@ function guessValue(name = '', placeholder = '', label = '', candidate = {}) {
   if (/phone|tel[eé]fono|celular|mobile/.test(k)) return candidate.phone || '';
   if (/location|ciudad|city|direcci[oó]n/.test(k)) return candidate.location || '';
   if (/linkedin/.test(k))                   return candidate.linkedin || '';
-  if (/portfolio|website|\bweb\b/.test(k))  return candidate.portfolio_url || '';
+  if (/portfolio|website|sitio.?web|p[aá]gina.?web.?personal|url.?web/.test(k))  return candidate.portfolio_url || '';
   if (/github/.test(k))                     return candidate.github || '';
   if (/message|cover|motivaci[oó]n|carta|por qu[eé]/.test(k)) {
     const skills = Array.isArray(candidate.skills) ? candidate.skills.join(', ') : 'desarrollo de software y automatización';
@@ -829,6 +829,12 @@ function isDevJobUrl(url) {
     'programadora-de-ruta',
     'programador-datos',         // analista BI/datos, no desarrollo
     'programador-operario',      // operario de maquinaria
+    // Stack tecnológico incompatible en URL
+    '-java-',                // desarrollador-backend-java-spring (evita bloquear javascript)
+    'java-spring',           // variante sin guión inicial
+    'spring-boot',           // Spring Boot = Java exclusivamente
+    // Ofertas exclusivas para personas con discapacidad certificada
+    'discapacidad',          // personal-con-discapacidad — requiere certificado que no tenemos
   ];
   if (hardReject.some(kw => slug.includes(kw))) return false;
   // Aceptar roles de desarrollo
@@ -1295,7 +1301,8 @@ async function fillForm(page, candidate, cvContent) {
       'nestjs', 'express', 'mysql', 'sql', 'mongodb', 'git', 'github', 'docker', 'bootstrap',
       'tailwind', 'n8n', 'postman', 'rest', 'api', 'python', 'rpa', 'automatización',
       'automatizacion', 'tres capas', 'mvc', 'scrum', 'agile', 'bases de datos',
-      'phyton',  // typo frecuente de "python" en formularios CT
+      'phyton',    // typo frecuente de "python" en formularios CT
+      'backend', 'back end', 'frontend', 'front end', 'fullstack', 'full stack',
     ],
     // Tecnologías que NO domina (responder honestamente "no" o nivel mínimo)
     no: [
