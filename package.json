@@ -32,6 +32,7 @@
   "license": "MIT",
   "dependencies": {
     "js-yaml": "^4.1.1",
+    "pdf-parse": "^1.1.1",
     "playwright": "^1.58.1"
   }
 }
