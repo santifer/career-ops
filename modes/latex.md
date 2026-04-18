@@ -43,13 +43,17 @@ The template at `templates/cv-template.tex` uses `{{PLACEHOLDER}}` syntax:
 ## LaTeX Content Generation Rules
 
 ### Education
+
 Each entry becomes:
+
 ```latex
     \resumeSubheading
     {Institution}{City, State}
     {Degree}{Date Range}
 ```
+
 If coursework exists, add:
+
 ```latex
         \resumeItemListStart
             \resumeItem{\textbf{Coursework:} Course1, Course2, ...}
@@ -57,7 +61,9 @@ If coursework exists, add:
 ```
 
 ### Experience
+
 Each role becomes:
+
 ```latex
     \resumeSubheading
       {Company}{Date Range}
@@ -69,7 +75,9 @@ Each role becomes:
 ```
 
 ### Projects
+
 Each project becomes:
+
 ```latex
 \resumeProjectHeading{Project Name \emph{$|$ Affiliation/Context}}{Date}
 \resumeItemListStart
@@ -79,6 +87,7 @@ Each project becomes:
 ```
 
 ### Skills
+
 ```latex
     \textbf{Languages}{: C, C++, Java, ...} \\
     \textbf{Frameworks \& ML}{: PyTorch, LangChain, ...} \\
@@ -130,8 +139,9 @@ Same ethical rules as `modes/pdf.md`:
 
 ## Overleaf Compatibility
 
-The generated `.tex` file is self-contained — it uses only standard CTAN packages:
+The generated `.tex` file uses only standard CTAN packages (no custom or bundled dependencies):
+
 - `latexsym`, `fullpage`, `titlesec`, `marvosym`, `color`, `verbatim`, `enumitem`
 - `hyperref`, `fancyhdr`, `babel`, `tabularx`, `fontawesome5`, `multicol`, `glyphtounicode`
 
-Upload the `.tex` file directly to Overleaf → compiles with no extra configuration.
+Upload the `.tex` file directly to Overleaf — compiles with no extra configuration.

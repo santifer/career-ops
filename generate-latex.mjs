@@ -86,7 +86,7 @@ async function main() {
 
   for (const line of lines) {
     if (/\\resumeItem\{/.test(line)) resumeItemCount++;
-    if (/\\resumeSubheading/.test(line)) subheadingCount++;
+    if (/\\resumeSubheading[^C]/.test(line)) subheadingCount++;
     if (/\\resumeProjectHeading/.test(line)) projectHeadingCount++;
   }
 
