@@ -10,19 +10,21 @@ permissions:
 jobs:
   dependency-review:
     runs-on: ubuntu-latest
-    # Non-blocking until GitHub's Dependency Graph is enabled for this repo.
-    # Without it, actions/dependency-review-action fails with:
-    #   "Dependency review is not supported on this repository.
-    #    Please ensure that Dependency graph is enabled"
-    # Once a maintainer enables Dependency Graph under Settings →
-    # Security & analysis, this line can be removed so the job becomes
-    # a required check again. See #343.
-    continue-on-error: true
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
+      # Non-blocking until GitHub's Dependency Graph is enabled for this repo.
+      # Without it, actions/dependency-review-action fails with:
+      #   "Dependency review is not supported on this repository.
+      #    Please ensure that Dependency graph is enabled"
+      # With step-level continue-on-error, the step can fail but the job
+      # still reports success, so the `dependency-review` check doesn't
+      # block merges. Once a maintainer enables Dependency Graph under
+      # Settings → Security & analysis, remove this one line to restore
+      # required-check behavior. See #343.
       - name: Dependency Review
+        continue-on-error: true
         uses: actions/dependency-review-action@v4
         with:
           fail-on-severity: high
