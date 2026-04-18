@@ -1103,18 +1103,21 @@ async function fillForm(page, candidate, cvContent) {
         value = 'No tengo experiencia en PHP/Laravel, pero tengo bases sólidas en programación web y puedo aprenderlo. Mi stack principal es JavaScript/TypeScript.';
       else if (/java\b/i.test(q) && !/javascript/i.test(q))
         value = 'No tengo experiencia en Java, pero manejo programación orientada a objetos con TypeScript y estoy dispuesto a aprender.';
-      // ── Catch-all: responde cualquier pregunta abierta no reconocida con perfil genérico ──
-      else if (q.length > 5)
+      // ── Catch-all offline: solo si NO hay IA disponible (con IA, Gemini responde mejor) ──
+      else if (q.length > 5 && !process.env.GEMINI_API_KEY && !process.env.ANTHROPIC_API_KEY)
         value = 'Tecnólogo ADS SENA 2024 (titulado). 8 meses de exp. Full Stack: JavaScript, TypeScript, Angular, React, Node.js, NestJS, MySQL, Git. SERVIMAX (plataforma institucional) + INTELIBPO (RPA n8n). Inglés B1. Disponibilidad inmediata.';
     }
 
-    // ── Fallback: IA si está disponible y aún no hay valor ──
+    // ── Fallback IA: Gemini/Claude responde con tu CV.md real ──
     if (!value && cvContent) {
       const question = label || placeholder || name;
       if (question && question.length > 2) {
-        const aiPrompt = `Eres un asistente honesto que completa formularios de empleo en Colombia.\nResponde de forma honesta basándote en este CV. Si el candidato no tiene experiencia en algo, dilo con disposición de aprender (máx 200 caracteres).\n\nCV:\nNombre: Cristian Camilo Montes Teheran\nTecnólogo en Análisis y Desarrollo de Software — SENA 2024\nExperiencia: SERVIMAX (dev full stack 6m, Angular/Node.js/MySQL) + INTELIBPO (RPA n8n/NestJS 2m)\nSkills: JavaScript, TypeScript, Angular, React, Node.js, NestJS, Express, MySQL, MongoDB, Git, Docker básico, n8n\nInglés B1\n\nCampo del formulario: ${question}`;
+        const aiPrompt = `Eres un asistente honesto que completa formularios de empleo en Colombia. Responde SOLO con el valor del campo, sin comillas ni explicaciones. Máximo 300 caracteres. Si el candidato no tiene experiencia en algo, responde con disposición de aprender.\n\nCampo del formulario: ${question}`;
         value = await askAI(aiPrompt, cvContent) || '';
         if (value) console.log(`[FORM/IA] "${question.slice(0,50)}" → "${value.slice(0,60)}"`);
+        // Si IA no disponible, usar respuesta genérica de respaldo
+        if (!value && question.length > 5)
+          value = 'Tecnólogo ADS SENA 2024 (titulado). 8 meses de exp. Full Stack: JavaScript, TypeScript, Angular, React, Node.js, NestJS, MySQL, Git. SERVIMAX (plataforma institucional) + INTELIBPO (RPA n8n). Inglés B1. Disponibilidad inmediata.';
       }
     }
 
