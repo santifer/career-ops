@@ -46,6 +46,11 @@ Create one commit containing the repository changes that should be versioned, ex
 
 - 2026-04-18: Inspected worktree; found untracked `batch/.bridge-prompt-*.md` and `data/newgrad-skill-stats.json` generated artifacts.
 - 2026-04-18: Confirmed one existing tracked prompt snapshot, `batch/.bridge-prompt-ToTf3Bemo5k5fy0dqZjsy.md`, should be removed from tracking.
+- 2026-04-18: Added ignore rules for `.claude/scheduled_tasks.lock`, `batch/.bridge-prompt-*.md`, and `data/newgrad-skill-stats.json`.
+- 2026-04-18: Removed `batch/.bridge-prompt-ToTf3Bemo5k5fy0dqZjsy.md` from git tracking while keeping the local file.
+- 2026-04-18: Ran `git diff --check`; passed.
+- 2026-04-18: Committed staged work as `4ede97a` with message `feat: add newgrad extension workflow`.
+- 2026-04-18: Pushed `jd-extension-work` to `origin`.
 
 ## Key Decisions
 
@@ -59,4 +64,16 @@ Create one commit containing the repository changes that should be versioned, ex
 
 ## Final Outcome
 
-Pending.
+Completed. Versioned repository changes were committed in `4ede97a` and pushed to `origin/jd-extension-work`.
+
+Privacy/runtime handling:
+
+- `.claude/scheduled_tasks.lock` is ignored and removed from the repository.
+- `batch/.bridge-prompt-*.md` files are ignored.
+- The previously tracked `batch/.bridge-prompt-ToTf3Bemo5k5fy0dqZjsy.md` was removed from git tracking.
+- `data/newgrad-skill-stats.json` is ignored.
+
+Verification:
+
+- Passed: `git diff --check`
+- Known pre-existing issue: `npm run verify` fails on malformed tracker row `#172` in `data/applications.md`.
