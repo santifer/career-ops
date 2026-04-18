@@ -13,9 +13,13 @@
 import { chromium } from 'playwright';
 import { resolve, dirname } from 'path';
 import { readFile } from 'fs/promises';
+import { mkdirSync } from 'fs';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+
+// Ensure output directory exists (fresh setup)
+mkdirSync(resolve(__dirname, 'output'), { recursive: true });
 
 /**
  * Normalize text for ATS compatibility by converting problematic Unicode.
@@ -114,10 +118,10 @@ async function generatePDF() {
     /url\(['"]?\.\/fonts\//g,
     `url('file://${fontsDir}/`
   );
-  // Close any unclosed quotes from the replacement
+  // Close any unclosed quotes from the replacement (handles all font formats)
   html = html.replace(
-    /file:\/\/([^'")]+)\.woff2['"]\)/g,
-    `file://$1.woff2')`
+    /file:\/\/([^'")]+)\.(woff2?|ttf|otf)['"]?\)/g,
+    `file://$1.$2')`
   );
 
   // Normalize text for ATS compatibility (issue #1)
@@ -130,59 +134,47 @@ async function generatePDF() {
   }
 
   const browser = await chromium.launch({ headless: true });
-  const page = await browser.newPage();
+  try {
+    const page = await browser.newPage();
 
-  // Set content with file base URL for any relative resources
-  await page.setContent(html, {
-    waitUntil: 'networkidle',
-    baseURL: `file://${dirname(inputPath)}/`,
-  });
+    // Set content with file base URL for any relative resources
+    await page.setContent(html, {
+      waitUntil: 'networkidle',
+      baseURL: `file://${dirname(inputPath)}/`,
+    });
 
-  // Wait for fonts to load
-  await page.evaluate(() => document.fonts.ready);
+    // Wait for fonts to load
+    await page.evaluate(() => document.fonts.ready);
 
-  // Auto-scale to fit exactly 1 page (shrink only, never upscale)
-  const PAGE_HEIGHTS_PX = { a4: 1122.52, letter: 1056 };
-  const MARGIN_PX = 96; // 0.5in top + 0.5in bottom at 96dpi
-  const availableHeight = PAGE_HEIGHTS_PX[format] - MARGIN_PX;
-  const contentHeight = await page.evaluate(() => {
-    const el = document.querySelector('.page') || document.body;
-    return el.scrollHeight;
-  });
-  const scale = Math.min(1.0, availableHeight / contentHeight);
-  if (scale < 1.0) {
-    console.log(`📐 Auto-scaling to ${(scale * 100).toFixed(1)}% to fit 1 page (content: ${Math.round(contentHeight)}px, available: ${Math.round(availableHeight)}px)`);
+    // Generate PDF
+    const pdfBuffer = await page.pdf({
+      format: format,
+      printBackground: true,
+      margin: {
+        top: '0.6in',
+        right: '0.6in',
+        bottom: '0.6in',
+        left: '0.6in',
+      },
+      preferCSSPageSize: false,
+    });
+
+    // Write PDF
+    const { writeFile } = await import('fs/promises');
+    await writeFile(outputPath, pdfBuffer);
+
+    // Count pages (approximate from PDF structure)
+    const pdfString = pdfBuffer.toString('latin1');
+    const pageCount = (pdfString.match(/\/Type\s*\/Page[^s]/g) || []).length;
+
+    console.log(`✅ PDF generated: ${outputPath}`);
+    console.log(`📊 Pages: ${pageCount}`);
+    console.log(`📦 Size: ${(pdfBuffer.length / 1024).toFixed(1)} KB`);
+
+    return { outputPath, pageCount, size: pdfBuffer.length };
+  } finally {
+    await browser.close();
   }
-
-  // Generate PDF
-  const pdfBuffer = await page.pdf({
-    format: format,
-    printBackground: true,
-    scale: scale,
-    margin: {
-      top: '0.5in',
-      right: '0.5in',
-      bottom: '0.5in',
-      left: '0.5in',
-    },
-    preferCSSPageSize: false,
-  });
-
-  // Write PDF
-  const { writeFile } = await import('fs/promises');
-  await writeFile(outputPath, pdfBuffer);
-
-  // Count pages (approximate from PDF structure)
-  const pdfString = pdfBuffer.toString('latin1');
-  const pageCount = (pdfString.match(/\/Type\s*\/Page[^s]/g) || []).length;
-
-  await browser.close();
-
-  console.log(`✅ PDF generated: ${outputPath}`);
-  console.log(`📊 Pages: ${pageCount}`);
-  console.log(`📦 Size: ${(pdfBuffer.length / 1024).toFixed(1)} KB`);
-
-  return { outputPath, pageCount, size: pdfBuffer.length };
 }
 
 generatePDF().catch((err) => {
