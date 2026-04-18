@@ -31,10 +31,10 @@ The template at `templates/cv-template.tex` uses `{{PLACEHOLDER}}` syntax:
 | `{{CONTACT_LINE}}` | Phone / City, State / Visa status — built from profile.yml |
 | `{{EMAIL_URL}}` | Raw email for `mailto:` URL — must not be LaTeX-escaped (from profile.yml) |
 | `{{EMAIL_DISPLAY}}` | Escaped email for display text — LaTeX-special chars like `_` must be escaped, e.g. `first\_name@example.com` |
-| `{{LINKEDIN_URL}}` | Full URL with scheme for `\href{}`: e.g. `https://linkedin.com/in/curtiscao`. If `profile.yml` stores a bare host+path (no scheme), prepend `https://` before substitution. |
-| `{{LINKEDIN_DISPLAY}}` | Display text only (no scheme): `linkedin.com/in/curtiscao` |
-| `{{GITHUB_URL}}` | Full URL with scheme for `\href{}`: e.g. `https://github.com/Cwcao`. If `profile.yml` stores a bare host+path, prepend `https://`. |
-| `{{GITHUB_DISPLAY}}` | Display text only (no scheme): `github.com/Cwcao` |
+| `{{LINKEDIN_URL}}` | Full URL with scheme for `\href{}`: e.g. `https://linkedin.com/in/username`. If `profile.yml` stores a bare host+path (no scheme), prepend `https://` before substitution. |
+| `{{LINKEDIN_DISPLAY}}` | Display text only (no scheme): `linkedin.com/in/username` |
+| `{{GITHUB_URL}}` | Full URL with scheme for `\href{}`: e.g. `https://github.com/username`. If `profile.yml` stores a bare host+path, prepend `https://`. |
+| `{{GITHUB_DISPLAY}}` | Display text only (no scheme): `github.com/username` |
 | `{{EDUCATION}}` | LaTeX `\resumeSubheading` blocks from cv.md Education section |
 | `{{EXPERIENCE}}` | LaTeX `\resumeSubheading` + `\resumeItem` blocks — reordered bullets |
 | `{{PROJECTS}}` | LaTeX `\resumeProjectHeading` + `\resumeItem` blocks — top 3-4 selected |
