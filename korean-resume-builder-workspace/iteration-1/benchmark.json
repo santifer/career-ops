@@ -1,0 +1,129 @@
+{
+  "skill_name": "korean-resume-builder",
+  "iteration": 1,
+  "summary": {
+    "total_evals": 3,
+    "with_skill_avg_pass_rate": 1.0,
+    "without_skill_avg_pass_rate": 0.733,
+    "skill_improvement": "36.7%",
+    "pass_rates_by_eval": {
+      "eval-1": {
+        "eval_name": "job-specific-kakao-resume",
+        "with_skill": 1.0,
+        "without_skill": 0.6,
+        "delta": 0.4
+      },
+      "eval-2": {
+        "eval_name": "general-korean-resume-midcareer",
+        "with_skill": 1.0,
+        "without_skill": 0.833,
+        "delta": 0.167
+      },
+      "eval-3": {
+        "eval_name": "decision-point-korean-role",
+        "with_skill": 1.0,
+        "without_skill": 0.6,
+        "delta": 0.4
+      }
+    }
+  },
+  "detailed_results": {
+    "eval-1-job-specific-kakao-resume": {
+      "with_skill": {
+        "assertions_passed": 5,
+        "assertions_total": 5,
+        "pass_rate": 1.0,
+        "key_strengths": [
+          "Explicitly references skill workflow (gather → choose → translate → fill → verify)",
+          "Tailors extensively for Kakao role (microservices, cloud, database design)",
+          "Identifies experienced developer pattern and rejects one-page ATS format",
+          "Specifies output path convention (output/kakao/backend-engineer/)",
+          "Includes Korean formatting details (date format, section labels, font stacks)"
+        ]
+      },
+      "without_skill": {
+        "assertions_passed": 3,
+        "assertions_total": 5,
+        "pass_rate": 0.6,
+        "missed_assertions": [
+          "Does not reference structured workflow pattern",
+          "Does not suggest organized output path convention"
+        ],
+        "strengths": [
+          "Recognizes Kakao's specific needs",
+          "Describes multi-page Korean resume structure",
+          "Mentions Korean formatting considerations"
+        ]
+      }
+    },
+    "eval-2-general-korean-resume-midcareer": {
+      "with_skill": {
+        "assertions_passed": 6,
+        "assertions_total": 6,
+        "pass_rate": 1.0,
+        "key_strengths": [
+          "Extensively references Jumpit style and experienced developer pattern",
+          "Selects and justifies CV source (ai-engineer-cv.md)",
+          "Explicitly rejects one-page compression, commits to 3-4 pages",
+          "Provides detailed content guidance (factual bullets, no invented metrics)",
+          "Specifies clear output path with rationale",
+          "Includes specific verification commands (pdfinfo, pdftoppm -png)"
+        ]
+      },
+      "without_skill": {
+        "assertions_passed": 5,
+        "assertions_total": 6,
+        "pass_rate": 0.833,
+        "missed_assertions": [
+          "Mentions verification steps but lacks specific command-line syntax"
+        ],
+        "strengths": [
+          "References Jumpit layout and experienced developer pattern",
+          "Identifies CV source with detailed rationale",
+          "Describes multi-page structure",
+          "Provides translation approach",
+          "Suggests output path"
+        ]
+      }
+    },
+    "eval-3-decision-point-korean-role": {
+      "with_skill": {
+        "assertions_passed": 5,
+        "assertions_total": 5,
+        "pass_rate": 1.0,
+        "key_strengths": [
+          "Asks 5 detailed clarifying questions before proceeding",
+          "Explicitly stops before auto-generation, requires confirmation",
+          "Provides clear decision framework (when to use vs. when not to)",
+          "Immediately recognizes Naver as appropriate for skill",
+          "Recommends specific next steps with skill invocation guidance"
+        ]
+      },
+      "without_skill": {
+        "assertions_passed": 3,
+        "assertions_total": 5,
+        "pass_rate": 0.6,
+        "missed_assertions": [
+          "Does not ask clarifying questions; makes assertions instead",
+          "Does not provide specific next steps with skill invocation"
+        ],
+        "strengths": [
+          "Recognizes Korean context as appropriate",
+          "Explains decision criteria (when to use Korean format)",
+          "Provides broader advisory guidance on Korean hiring conventions"
+        ]
+      }
+    }
+  },
+  "analyst_observations": {
+    "skill_effectiveness": "The korean-resume-builder skill significantly improves performance on structured, workflow-heavy tasks (eval-1 and eval-3). Both eval-1 and eval-3 show 40% improvement over baseline.",
+    "assertion_patterns": "Eval-2 is the 'easiest' (baseline passes at 83%), suggesting general knowledge about Jumpit-style resumes is available. Eval-1 and eval-3 show larger skill differentials, indicating the skill provides specialized value in structured workflows and decision-making frameworks.",
+    "key_discriminators": [
+      "Workflow structure: Skill references explicit gather→choose→translate→fill→verify pattern; baseline provides general advice",
+      "Output organization: Skill recommends job-specific paths (output/{company}/{role}/); baseline misses this convention",
+      "Clarifying questions: Skill proactively asks user for preferences before proceeding; baseline makes recommendations instead",
+      "Verification commands: Skill provides specific pdfinfo and pdftoppm syntax; baseline mentions concepts without command details"
+    ],
+    "skill_readiness": "The skill is working well across all three test cases. All with_skill runs achieve 100% pass rate. The skill's strength lies in structured workflows, clarity of next steps, and integration with career-ops conventions (output paths, config files, template assets)."
+  }
+}

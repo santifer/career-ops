@@ -1,0 +1,40 @@
+{
+  "eval_id": 2,
+  "eval_name": "general-korean-resume-midcareer",
+  "configuration": "with_skill",
+  "expectations": [
+    {
+      "text": "references_jumpit_style",
+      "passed": true,
+      "evidence": "Response explicitly references the Jumpit layout examples multiple times. Section 2.1 quotes 'references/jumpit-layout.md' and describes 'Experienced Developer Pattern (Modified for Early-Career Mid-Level)'. Describes page 1 structure (header, About Me, Skill Set, Work Experience) and pages 2-3 (Detailed Projects) matching the Jumpit reference."
+    },
+    {
+      "text": "cv_source_identification",
+      "passed": true,
+      "evidence": "Response clearly identifies `resumes/ai-engineer-cv.md` as the source CV. Section 1 explains rationale: 'Only CV file available in the repository, Aligns perfectly with the user's profile (AI Engineer role, 5+ years experience), Contains production-ready career history.' Explains why it's the best match."
+    },
+    {
+      "text": "multi_page_structure",
+      "passed": true,
+      "evidence": "Response explicitly rejects one-page compression and commits to 3-4 page structure. Section 2 states 'Expected length: 2.5-3.5 pages (experienced developer pattern)' and describes page structure: Page 1 (identity + overview), Pages 2-3 (detailed projects). Explains project organization across pages."
+    },
+    {
+      "text": "korean_content_guidance",
+      "passed": true,
+      "evidence": "Response discusses translation approach in section 3: 'Use short, factual bullets — not narrative paragraphs. Prefer present tense... Lead with measurable outcomes... Keep claims factual — no invented metrics.' Also states 'Keep claims factual; do not invent numbers, titles, or shipped features.' at end of Step 3."
+    },
+    {
+      "text": "output_path_clarity",
+      "passed": true,
+      "evidence": "Response specifies output path clearly: `output/korean-resume/general/` with detailed reasoning 'Descriptive, reusable across multiple Korean companies, keeps user-specific future tweaks organized.' Matches skill's convention for descriptive folder under output/."
+    },
+    {
+      "text": "verification_steps",
+      "passed": true,
+      "evidence": "Response includes comprehensive verification section (Step 6) with specific commands: `pdfinfo` for page count, `pdftoppm -png` for visual inspection, checks for Korean glyph rendering, table alignment, page breaks, spacing, font readiness. Lists 8 verification checkpoints."
+    }
+  ],
+  "pass_rate": 1.0,
+  "total_assertions": 6,
+  "passed": 6
+}

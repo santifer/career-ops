@@ -1,6 +1,6 @@
 ---
 name: korean-resume-builder
-description: Create and tailor Korean-style resumes for South Korean job applications, especially developer resumes that should resemble the Jumpit-inspired A4 reference PDFs in `examples/resumes/`. Use when Codex needs to draft, revise, localize, or export a Korean-market resume, project-heavy career document, or multi-page PDF in this `career-ops` repo while reusing the existing resume data and `generate-pdf.mjs` renderer.
+description: Generate Korean-language resumes (이력서) in multi-page A4 format for South Korean job applications. Use when the user applies to Korean-language job postings, Korean companies, Korean job portals (Jumpit, etc.), or explicitly asks for help with Korean resume format. Stop and redirect to resume-builder/resume-tailor if the user wants: one-page ATS CV, English-language application, or tailoring for a specific non-Korean role.
 ---
 
 # Korean Resume Builder
@@ -12,8 +12,8 @@ Generate Korean-market resumes in this repo without inventing a separate pipelin
 ## Decide The Path
 
 - If the user wants a one-page global or ATS resume, stop and use `modes/pdf.md`.
-- If the user wants a Korean-market resume, Korean copy, or a PDF that resembles the `examples/resumes/` references, continue with this skill.
-- If visual fidelity matters, render the reference PDFs to PNG before changing content or CSS.
+- If the user wants a Korean-market resume, Korean copy, or a multi-page A4 PDF in the Jumpit style, continue with this skill.
+- If visual fidelity matters, refer to `templates/jumpit-resume-template.pdf` or render it to PNG before changing layout or styling.
 
 ## Read Only What You Need
 
@@ -55,7 +55,7 @@ Generate Korean-market resumes in this repo without inventing a separate pipelin
 
 ## Layout Rules
 
-- Match the clean left-side resume content from the references, not the red/blue instruction callouts.
+- Match the clean, table-driven layout from `templates/jumpit-resume-template.pdf` and the bundled HTML template.
 - Use black text, light gray table headers, thin borders, generous row padding, and Korean system font stacks.
 - Keep section headers bold with a simple underline or block treatment.
 - Avoid sidebars, icon grids, gradients, and western two-column resume layouts.

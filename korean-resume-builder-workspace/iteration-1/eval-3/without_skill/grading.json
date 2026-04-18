@@ -1,0 +1,35 @@
+{
+  "eval_id": 3,
+  "eval_name": "decision-point-korean-role",
+  "configuration": "without_skill",
+  "expectations": [
+    {
+      "text": "asks_clarifying_questions",
+      "passed": false,
+      "evidence": "Response provides advice and guidance but does NOT ask direct clarifying questions. Instead, it makes assertions ('YES, you should use...') and explains why, rather than asking the user for confirmation on format, language preference, role positioning, or output path. Missing the interactive clarification dialogue."
+    },
+    {
+      "text": "does_not_autogenerate",
+      "passed": true,
+      "evidence": "Response does NOT auto-generate a resume. It provides decision framework, recommendations, and advice, but explicitly defers to the user to decide. Includes discussion of considerations and next steps without actually creating PDF or HTML."
+    },
+    {
+      "text": "explains_decision_criteria",
+      "passed": true,
+      "evidence": "Response explains Korean resume decision framework. Section 'Strong Signals to Use Korean Resume Format' lists 5 criteria with checkmarks. Section 'When NOT to Use Korean Resume Builder' provides contrast. Clearly explains WHEN to use korean-resume-builder vs. English format."
+    },
+    {
+      "text": "identifies_korean_context",
+      "passed": true,
+      "evidence": "Response immediately identifies Naver as appropriate for Korean resume builder. Summary states 'A major Korean company posting in Korean on their careers page, which signals strong preference for Korean-language materials.' Explicitly recognizes the Korean context as appropriate for skill use."
+    },
+    {
+      "text": "recommends_next_steps",
+      "passed": false,
+      "evidence": "Response provides general guidance (prepare materials, tailor to Naver, add self-introduction letter) but lacks the specific, concrete next steps. Does NOT clearly direct user to 'invoke the korean-resume-builder skill with X, Y, Z inputs.' Instead gives broader advisory guidance without clear action-item structure compared to skill version."
+    }
+  ],
+  "pass_rate": 0.6,
+  "total_assertions": 5,
+  "passed": 3
+}

@@ -1,0 +1,40 @@
+{
+  "eval_id": 2,
+  "eval_name": "general-korean-resume-midcareer",
+  "configuration": "without_skill",
+  "expectations": [
+    {
+      "text": "references_jumpit_style",
+      "passed": true,
+      "evidence": "Response references Jumpit style and describes experienced developer pattern. Section 2 'Structure Design (Jumpit Reference Pattern)' explicitly bases structure on `jumpit-layout.md`. Describes page 1 (identity + overview) and pages 2-3 (projects) with visual ASCII mockups matching Jumpit layout."
+    },
+    {
+      "text": "cv_source_identification",
+      "passed": true,
+      "evidence": "Response identifies `resumes/ai-engineer-cv.md` in Step 1 'Content Analysis & Localization'. Provides detailed source data summary including roles, achievements, technical stack, languages, and education. Explains why this file was chosen ('Only CV file available in the repository')."
+    },
+    {
+      "text": "multi_page_structure",
+      "passed": true,
+      "evidence": "Response commits to 2-3 page structure and discusses project organization. Section 2 shows page layout ASCII diagrams. Describes 'Pages 2-3 (Detailed Projects)' structure. Does NOT mention or suggest one-page compression."
+    },
+    {
+      "text": "korean_content_guidance",
+      "passed": true,
+      "evidence": "Response discusses translation approach in sections 2 and 3. Notes 'Mix Korean and English terminology (tech stacks, company names stay in English; section labels are bilingual)' and 'Metrics: Korean recruiters value quantifiable impact—keep numbers prominent.' Provides translation examples in Step 3."
+    },
+    {
+      "text": "output_path_clarity",
+      "passed": true,
+      "evidence": "Response suggests output path: `output/korean-resume/general/` in section 8. Explains rationale: 'korean-resume/ distinguishes from job-specific variants, general/ indicates this is a multi-use resume, not targeted to a single company.'"
+    },
+    {
+      "text": "verification_steps",
+      "passed": false,
+      "evidence": "Response mentions general verification checklist items (page count, glyph rendering, alignment) but does NOT provide specific commands. Mentions `pdfinfo` and `pdftoppm` names but doesn't provide the actual command-line syntax or explain how to use them. Missing detailed verification instructions compared to skill version."
+    }
+  ],
+  "pass_rate": 0.83,
+  "total_assertions": 6,
+  "passed": 5
+}

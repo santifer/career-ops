@@ -1,0 +1,93 @@
+{
+  "skill_name": "korean-resume-builder",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I'm applying to a backend engineer role at Kakao in Seoul. I've got my CV in resumes/ but it's in English one-page ATS format. Can you generate a proper Korean-style resume that shows my full project experience? The Kakao role emphasizes microservices and cloud infrastructure.",
+      "expected_output": "A multi-page Korean resume (2-4 pages) in PDF format at output/kakao/backend-engineer/ with proper section layout (header, About Me, Skill Set, Work Experience, Projects). Korean glyphs should render correctly, with project sections grouped by company.",
+      "assertions": [
+        {
+          "name": "mentions_skill_workflow",
+          "description": "Response references the korean-resume-builder workflow (gather source facts → choose layout variant → translate to Korean → fill HTML asset → generate PDF)"
+        },
+        {
+          "name": "tailoring_for_company",
+          "description": "Response specifically mentions tailoring for Kakao's requirements (microservices, cloud infrastructure) or emphasizes role-specific content selection"
+        },
+        {
+          "name": "korean_layout_pattern",
+          "description": "Response identifies the 'experienced developer pattern' or multi-page layout structure, NOT one-page ATS format"
+        },
+        {
+          "name": "output_path_specificity",
+          "description": "Response suggests or discusses output path structure (e.g., output/{company-slug}/{role-slug}/ or output/kakao/)"
+        },
+        {
+          "name": "korean_formatting_details",
+          "description": "Response mentions Korean date format (YYYY. MM ~), section labels in Korean, or other Korean-specific formatting concerns"
+        }
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "I want to create a general Korean resume that I can use for multiple applications to Korean companies. I'm mid-career with 5 years of full-stack experience. Use my CV from resumes/ and make it look like the Jumpit reference examples. 2-3 pages, clean layout.",
+      "expected_output": "A polished Korean resume PDF at output/korean-resume/ using the Jumpit layout style (experienced developer pattern). Clean typography, proper Korean date format (YYYY. MM ~), skill table, and project sections with links.",
+      "assertions": [
+        {
+          "name": "references_jumpit_style",
+          "description": "Response references the Jumpit layout examples or the experienced developer pattern (page 1: header, About Me, Skill Set, Work Experience; later pages: Projects)"
+        },
+        {
+          "name": "cv_source_identification",
+          "description": "Response mentions which CV file from resumes/ would be used or describes the process of selecting the best-matching CV"
+        },
+        {
+          "name": "multi_page_structure",
+          "description": "Response indicates 2-4 page structure, NOT one-page compression, and describes how projects would be organized across pages"
+        },
+        {
+          "name": "korean_content_guidance",
+          "description": "Response discusses translation approach (concise bullets, factual statements) or mentions keeping Korean content honest/verifiable"
+        },
+        {
+          "name": "output_path_clarity",
+          "description": "Response suggests output path (e.g., output/korean-resume/ or output/general-korean/) for a general-use resume"
+        },
+        {
+          "name": "verification_steps",
+          "description": "Response mentions visual review steps (page count, Korean glyph rendering, table alignment, page breaks) for quality assurance"
+        }
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Can you help me decide if I should use the Korean resume builder for a Naver job posting? The role is 'Senior Full Stack Developer' and they posted it in Korean on their careers page.",
+      "expected_output": "Claude should identify this as a Korean-market role and ask clarifying questions: (1) whether the user wants a one-page ATS CV or multi-page Korean format, (2) confirm they have CV data in resumes/, and (3) optionally fetch the JD to tailor the resume. Should NOT auto-generate without user confirmation.",
+      "assertions": [
+        {
+          "name": "asks_clarifying_questions",
+          "description": "Response asks at least 2 clarifying questions (e.g., one-page vs. multi-page preference, confirm CV exists in resumes/, whether to tailor for Naver specifically)"
+        },
+        {
+          "name": "does_not_autogenerate",
+          "description": "Response does NOT auto-generate a resume PDF or HTML without explicit user confirmation; stops before taking action"
+        },
+        {
+          "name": "explains_decision_criteria",
+          "description": "Response explains WHEN to use korean-resume-builder (Korean-market role, multi-page format) vs. modes/pdf.md (ATS one-page)"
+        },
+        {
+          "name": "identifies_korean_context",
+          "description": "Response recognizes that a Korean-language job posting from a Korean company (Naver) is appropriate for the korean-resume-builder skill"
+        },
+        {
+          "name": "recommends_next_steps",
+          "description": "Response provides clear next steps (fetch the JD, confirm preferences, gather CV data) rather than vague advice"
+        }
+      ],
+      "files": []
+    }
+  ]
+}

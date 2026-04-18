@@ -44,3 +44,5 @@ package-lock.json
 *.db
 .beads-credential-key
 resumes/
+
+*.pdf

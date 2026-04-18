@@ -1,0 +1,35 @@
+{
+  "eval_id": 1,
+  "eval_name": "job-specific-kakao-resume",
+  "configuration": "without_skill",
+  "expectations": [
+    {
+      "text": "mentions_skill_workflow",
+      "passed": false,
+      "evidence": "Response provides general guidance on Korean resumes but does NOT reference the skill's structured workflow. Instead discusses 'content analysis', 'structural transformation', 'language adaptation' in a more ad-hoc manner. No mention of the gather → choose → translate → fill → verify pattern."
+    },
+    {
+      "text": "tailoring_for_company",
+      "passed": true,
+      "evidence": "Response mentions Kakao-specific expectations including microservices, cloud platforms, database design, and GitHub presence. Notes 'Kakao backend role might downplay AI focus' and suggests reframing from 'AI engineer' to 'backend engineer'. Shows relevant project selection (TripleH platform) over JobHunt AI."
+    },
+    {
+      "text": "korean_layout_pattern",
+      "passed": true,
+      "evidence": "Response discusses multi-page structure (2-3 pages) and section order: 기본정보 → 학력 → 경력 → 기술스택 → 프로젝트. Emphasizes 'not 1 page' and discusses paragraph + bullet hybrid approach. Does not explicitly name 'experienced developer pattern' but describes it implicitly."
+    },
+    {
+      "text": "output_path_specificity",
+      "passed": false,
+      "evidence": "Response does NOT suggest a specific structured output path. Creates `resumes/kakao-backend-korean-cv.md` and `interview-prep/kakao-backend-profile.md` but these are in different folders and don't follow the `output/{company}/{role}/` convention from the skill. No mention of organized output structure."
+    },
+    {
+      "text": "korean_formatting_details",
+      "passed": true,
+      "evidence": "Response mentions Korean date format (YYYY.MM in 연도.월 format), section labels in Korean (기본정보, 학력, 경력, 기술스택, 프로젝트), and discusses formal business Korean tone (존댓말/높임말). Discusses translation of microservices-related terminology (마이크로서비스 아키텍처)."
+    }
+  ],
+  "pass_rate": 0.6,
+  "total_assertions": 5,
+  "passed": 3
+}

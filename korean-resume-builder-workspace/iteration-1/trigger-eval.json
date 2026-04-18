@@ -1,0 +1,102 @@
+[
+  {
+    "query": "I'm applying to a backend engineer role at Kakao in Seoul. I've got my CV in resumes/ but it's in English one-page ATS format. Can you generate a proper Korean-style resume that shows my full project experience?",
+    "should_trigger": true,
+    "reason": "Korean company (Kakao), Korean location (Seoul), multi-page resume request, explicitly asks for Korean-style resume"
+  },
+  {
+    "query": "I found this Naver job posting on their Korean careers page for a Senior Developer role. It's posted entirely in Korean. Should I generate a Korean resume for this or stick with my English CV?",
+    "should_trigger": true,
+    "reason": "Korean company (Naver), Korean job posting, decision-point about whether to use Korean resume - perfect trigger"
+  },
+  {
+    "query": "I'm mid-career with 5 years of full-stack experience and I want to create a general Korean resume that I can use for multiple applications to Korean companies. Make it look like the Jumpit reference examples, 2-3 pages.",
+    "should_trigger": true,
+    "reason": "Korean market targeting, multi-page resume, references Jumpit style, general Korean resume request"
+  },
+  {
+    "query": "I need to generate a PDF from my CV for this Korean company. Use the generate-pdf.mjs script and make it look professional.",
+    "should_trigger": false,
+    "reason": "Generic PDF generation request - this is what resume-builder or modes/pdf.md handles, not korean-resume-builder"
+  },
+  {
+    "query": "I'm based in Seoul but applying to tech jobs in the US. All the postings are in English and the companies are US-headquartered. Should I create an English one-page ATS CV?",
+    "should_trigger": false,
+    "reason": "English job postings, US-based companies, ATS-optimized one-page - use default modes/pdf.md instead"
+  },
+  {
+    "query": "Help me tailor my resume for this Google job posting. They want a one-page CV and I need to optimize for their ATS system.",
+    "should_trigger": false,
+    "reason": "One-page ATS optimization - use resume-tailor or resume-builder, not korean-resume-builder"
+  },
+  {
+    "query": "I'm looking at a Korean startup that posted a job in English but they're hiring in Seoul. I'm already here with a visa. Should I use the Korean resume builder?",
+    "should_trigger": true,
+    "reason": "Korean startup, Seoul location, English posting but Korean location signal - this is a borderline case where the skill can help clarify the decision"
+  },
+  {
+    "query": "Can you help me format my CV as a Korean resume (이력서) for applying to Korean companies? I want something that matches what Korean recruiters expect.",
+    "should_trigger": true,
+    "reason": "Explicitly asks for Korean resume format, mentions Korean recruiter expectations - clear trigger"
+  },
+  {
+    "query": "I just finished my portfolio case study and I want to add it to my resume. Can you help me reformat this section?",
+    "should_trigger": false,
+    "reason": "General resume editing/section building - use resume-section-builder or resume-formatter, not korean-resume-builder"
+  },
+  {
+    "query": "I'm applying to positions at LINE (Korean company) but they allow English CVs on their international track. Should I submit in Korean or English?",
+    "should_trigger": true,
+    "reason": "Korean company (LINE), decision-point about language/format - skill helps clarify when Korean format makes sense vs. English"
+  },
+  {
+    "query": "Generate a one-page summary resume that I can use for quick applications across multiple companies.",
+    "should_trigger": false,
+    "reason": "One-page format explicitly requested - contradicts korean-resume-builder's 2-4 page approach"
+  },
+  {
+    "query": "I'm in Seoul for the next 6 months and I want to apply to some local tech companies. Most of them posted in Korean. How should I approach the resume?",
+    "should_trigger": true,
+    "reason": "Seoul location, Korean job postings, unclear about approach - skill provides decision framework and workflow"
+  },
+  {
+    "query": "Can you check my resume for ATS compatibility and make sure it passes through the scanning systems at large tech companies?",
+    "should_trigger": false,
+    "reason": "ATS optimization focus - use resume-ats-optimizer, not korean-resume-builder"
+  },
+  {
+    "query": "I want to create a tailored resume for a specific job posting at Coupang. The posting is in Korean and they're hiring for a Seoul office position.",
+    "should_trigger": true,
+    "reason": "Korean company (Coupang), Korean posting, Seoul location, job-specific resume - perfect use case"
+  },
+  {
+    "query": "I'm an international candidate applying to jobs at Korean companies but I'm not in Korea. Should I still use a Korean resume?",
+    "should_trigger": true,
+    "reason": "Korean company targeting, question about whether to use Korean format - skill helps clarify decision criteria"
+  },
+  {
+    "query": "Generate my LinkedIn profile summary from my CV.",
+    "should_trigger": false,
+    "reason": "LinkedIn profile generation - use linkedin-profile-optimizer, completely different tool"
+  },
+  {
+    "query": "I'm applying to a multinational company with offices in Seoul, but the job posting is in English and they mention 'international team environment.' Do I need the Korean resume builder?",
+    "should_trigger": false,
+    "reason": "English posting, multinational/international team signal - default English resume is appropriate despite Seoul office"
+  },
+  {
+    "query": "My CV is in English but I want to apply to a Jumpit-listed job that requires a Korean 이력서. Can you help me convert it to the proper format?",
+    "should_trigger": true,
+    "reason": "Jumpit platform (Korean job portal), Korean resume format requirement (이력서), format conversion request"
+  },
+  {
+    "query": "I'm preparing for interviews at Korean companies and I need to practice my STAR stories. Can you help me prepare?",
+    "should_trigger": false,
+    "reason": "Interview prep, not resume generation - use interview-prep-generator, not korean-resume-builder"
+  },
+  {
+    "query": "I have offers from two Korean companies and I need to compare compensation packages and benefits. Help me analyze them side-by-side.",
+    "should_trigger": false,
+    "reason": "Offer comparison, not resume generation - use offer-comparison-analyzer"
+  }
+]

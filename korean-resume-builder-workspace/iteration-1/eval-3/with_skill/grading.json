@@ -1,0 +1,35 @@
+{
+  "eval_id": 3,
+  "eval_name": "decision-point-korean-role",
+  "configuration": "with_skill",
+  "expectations": [
+    {
+      "text": "asks_clarifying_questions",
+      "passed": true,
+      "evidence": "Response includes comprehensive 'Before You Proceed: Clarifying Questions' section with 5 specific questions: 1. CV Format & Length, 2. Language & Localization, 3. Role Positioning, 4. CV Source Availability, 5. Target Output Path. Each includes detailed guidance, exceeding the requirement for 2+ clarifying questions."
+    },
+    {
+      "text": "does_not_autogenerate",
+      "passed": true,
+      "evidence": "Response explicitly stops before auto-generation. Section 'Before You Proceed' states 'confirm these details'. Asks user for confirmation on all key decisions (format, language, positioning, etc.) BEFORE invoking the skill. Ends with 'Next Steps' section that requires user confirmation before proceeding to PDF generation."
+    },
+    {
+      "text": "explains_decision_criteria",
+      "passed": true,
+      "evidence": "Response provides 'Decision Framework: When to Use korean-resume-builder' section listing 5 clear signals to use korean-resume-builder, and a 'When NOT to use' section explaining when to use modes/pdf.md instead. Example: 'If the posting is in English but the company is Korean (→ use default `modes/pdf.md`).' Clear contrast between the two approaches."
+    },
+    {
+      "text": "identifies_korean_context",
+      "passed": true,
+      "evidence": "Response immediately recognizes Naver as a Korean company posting in Korean, stating in Executive Summary: 'YES, you should use the Korean resume builder for this role.' And: 'A Korean-language job posting from a major Korean company (Naver) signals that they expect a Korean-style resume formatted to Korean hiring norms.'"
+    },
+    {
+      "text": "recommends_next_steps",
+      "passed": true,
+      "evidence": "Response provides detailed 'Next Steps' section with 5 concrete steps: 1. Confirm clarifying questions, 2. Check CV source, 3. Prepare Naver-specific research, 4. Invoke the korean-resume-builder skill with specific inputs, 5. Review generated PDF. Also includes alternative path ('If You Want to Skip the Korean Resume') for completeness."
+    }
+  ],
+  "pass_rate": 1.0,
+  "total_assertions": 5,
+  "passed": 5
+}

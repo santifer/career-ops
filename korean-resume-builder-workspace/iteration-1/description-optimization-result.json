@@ -1,0 +1,61 @@
+{
+  "current_description": "Create and tailor Korean-style resumes for South Korean job applications, especially developer resumes that should resemble the bundled Jumpit-style template. Use when the user needs to draft, revise, localize, or export a Korean-market resume, project-heavy career document, or multi-page A4 PDF while reusing existing resume data and the `generate-pdf.mjs` renderer.",
+  "analysis": "Current description strengths: mentions Jumpit (Korean portal signal), multi-page A4 (format signal), Korean-market (locale signal). Gaps: (1) doesn't explicitly trigger on Korean company + Korean posting combinations, (2) doesn't clearly contrast with one-page ATS (what NOT to do), (3) 'especially developer resumes' creates uncertainty about scope, (4) doesn't emphasize the Korean vs English decision-point that often precedes skill invocation, (5) lacks signals around Jumpit platform or Korean recruiter expectations.",
+  "alternatives": [
+    {
+      "description": "Build multi-page Korean-market resumes (이력서) for South Korean companies or Jumpit-listed positions. Use when the user applies to Korean job postings, needs to decide between Korean vs English resume format, or explicitly requests a Korean-style resume for Korean recruiters. NOT for one-page ATS CVs or English-language job postings at non-Korean companies.",
+      "reasoning": "This version explicitly triggers on the three strongest patterns: (1) Korean company/posting context, (2) decision-point questions about format choice, (3) explicit Korean requests. It also adds boundary clarity by stating what NOT to use it for. The '이력서' Korean term signals cultural awareness. Jumpit mention moves to the right-hand context. The 'NOT for one-page ATS' prevents false triggers on ATS-optimization requests.",
+      "trigger_improvements": [
+        "Explicit trigger on Korean job postings (query #2, #8, #13)",
+        "Explicit trigger on format decision-point (queries #7, #14, #15, #17)",
+        "Clearer rejection of one-page ATS requests (queries #3, #10, #16)",
+        "Better signals for non-Korean companies in English (queries #16, #22)"
+      ]
+    },
+    {
+      "description": "Generate multi-page A4 Korean resumes (이력서) for Korean companies, Korean job postings, or Jumpit applications. Use when the user explicitly asks for a Korean-market resume, is applying to Korean companies, questions whether to use Korean format, or needs a Jumpit-style layout. Skip this if the posting is in English or the user wants a one-page ATS CV.",
+      "reasoning": "Similar to Alternative 1 but emphasizes the positive triggers more naturally and groups them by use case (explicit request, Korean company, format question, platform). Places the 'skip if' boundary conditions at the end for clarity. The A4 format is foregrounded earlier, and Jumpit is now an explicit positive trigger. More conversational structure makes it easier for Claude to pattern-match.",
+      "trigger_improvements": [
+        "Groups related triggers (Korean company + posting + Jumpit) together",
+        "Clearer format question detection (queries #7, #14, #15)",
+        "Better contrast with English postings at non-Korean companies",
+        "More natural language flow for decision-point questions"
+      ]
+    },
+    {
+      "description": "Create Korean-format resumes (이력서) for job applications at Korean companies or Korean job portals like Jumpit. Use when: (1) the user applies to Korean postings or Korean companies, (2) they ask whether to submit in Korean vs English, or (3) they explicitly request a multi-page Jumpit-style layout. Do NOT use for one-page ATS optimization or English-language postings at international companies.",
+      "reasoning": "This version uses numbered conditions to make triggers explicit and scannable. It reduces ambiguity by listing the three positive cases side-by-side. The conditional structure ('when:' followed by numbered conditions, then 'do NOT use for:') creates a checklist that maps directly to the evaluation queries. The '이력서' term and 'Korean portals like Jumpit' are both signaling mechanisms. This format is the most precise for training Claude to discriminate.",
+      "trigger_improvements": [
+        "Numbered conditions make each trigger explicit and testable",
+        "Easier for Claude to recognize borderline cases (queries #7, #15)",
+        "Clearer rejection of ATS-focused requests (queries #3, #10, #16)",
+        "Format question detection is now a primary trigger, not secondary"
+      ]
+    },
+    {
+      "description": "Build multi-page Korean resumes for Korean-market job applications. Primary triggers: user applies to a Korean company, a Korean job posting (in Korean language), a Jumpit-listed position, or explicitly requests 'Korean resume' or Korean-style format. Secondary trigger: user asks 'should I use a Korean resume?' or questions the format choice. NOT for: one-page ATS resumes, English postings (even at Korean companies with international tracks), or other resume specialties (tailor, ATS-optimize, etc.).",
+      "reasoning": "This version distinguishes between primary and secondary triggers, which helps Claude understand the confidence level for each signal. It explicitly calls out the 'Korean language' posting detail (avoiding false triggers on English postings at Korean companies). It also explicitly excludes other resume skills, which prevents conflicts with tailor/ats-optimize skills. The structure mirrors how a decision tree would be organized, making it easier to follow.",
+      "trigger_improvements": [
+        "Distinguishes primary (high-confidence) from secondary (clarification) triggers",
+        "Explicit mention of 'Korean language' posting prevents English posting false triggers",
+        "Clear skill boundary (not tailor, not ATS-optimize, not section-builder)",
+        "Better handles borderline case of Korean companies with English international tracks"
+      ]
+    },
+    {
+      "description": "Generate Korean-language resumes (이력서) in multi-page A4 format for South Korean job applications. Use when the user applies to Korean companies, Korean job portals (Jumpit, etc.), Korean-language job postings, or explicitly asks for help with Korean resume format. Stop and redirect to resume-builder/resume-tailor if the user wants: one-page ATS CV, English-language application, or tailoring for a specific non-Korean role.",
+      "reasoning": "This version is the most concise and action-oriented. It specifies 'Korean-language resumes' and 'Korean-language job postings' to prevent English posting false triggers. The 'Stop and redirect' language is direct and tells Claude what alternative to suggest. Emphasizing 'South Korean' grounds the scope geographically. The format mirrors common skill descriptions with 'Use when' followed by 'Stop if' conditions. This is the most likely to work in a real deployment.",
+      "trigger_improvements": [
+        "Most concise version while maintaining signal clarity",
+        "Explicitly mentions Korean-language (not just Korean company/location)",
+        "Action-oriented with 'Stop and redirect' guidance",
+        "Covers all three positive trigger patterns with clear examples"
+      ]
+    }
+  ],
+  "recommendation": {
+    "description": "Generate Korean-language resumes (이력서) in multi-page A4 format for South Korean job applications. Use when the user applies to Korean companies, Korean job portals (Jumpit, etc.), Korean-language job postings, or explicitly asks for help with Korean resume format. Stop and redirect to resume-builder/resume-tailor if the user wants: one-page ATS CV, English-language application, or tailoring for a specific non-Korean role.",
+    "rationale": "This description excels at discriminating between should-trigger and should-not-trigger cases by: (1) Foregrounding 'Korean-language' as the primary differentiator (avoiding false triggers on English postings at Korean companies), (2) Providing four explicit positive triggers with concrete examples (Korean companies, Jumpit, Korean postings, explicit requests), (3) Including a 'Stop and redirect' clause that prevents conflicts with related skills, (4) Using concise, action-oriented language that Claude can easily pattern-match, (5) Defining the geographic and format scope clearly (South Korean, multi-page A4). The description maps directly onto all 20 evaluation queries without ambiguity.",
+    "expected_trigger_accuracy": "94-96% (likely correct on 18-19 of 20 queries, with potential edge cases on multi-national companies with Korean offices where the posting is in English, which would correctly NOT trigger)"
+  }
+}
