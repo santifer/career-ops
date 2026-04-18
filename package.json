@@ -31,6 +31,7 @@
   },
   "license": "MIT",
   "dependencies": {
+    "dotenv": "^17.4.2",
     "js-yaml": "^4.1.1",
     "playwright": "^1.58.1"
   }

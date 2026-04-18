@@ -11,6 +11,9 @@
  */
 
 import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+require('dotenv').config();   // carga .env si existe
 import yaml from 'js-yaml';
 import { chromium } from 'playwright';
 
