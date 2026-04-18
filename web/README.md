@@ -22,10 +22,11 @@ Or double-click `web/index.html` in Finder.
 | Tracker       | `data/applications.md`       | Filter, status dropdown, sortable columns  |
 | Pipeline      | `data/pipeline.md`           | Filter, done/pending toggle                |
 | Scan History  | `data/scan-history.tsv`      | Filter, portal dropdown, sortable columns  |
+| Keywords      | `data/newgrad-skill-stats.json` | Last-scan and profile matched/missed skill coverage |
 
 ## How it works
 
-1. `build-dashboard.mjs` reads all four data sources.
+1. `build-dashboard.mjs` reads tracker, reports, pipeline, scan history, and keyword stats.
 2. The parsed data is inlined as `window.DATA = {...}` inside `template.html`.
 3. The filled template is written to `index.html`.
 

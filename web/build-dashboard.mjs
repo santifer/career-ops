@@ -86,12 +86,23 @@ function parseScanHistory() {
   return { headers, rows };
 }
 
+function parseKeywordStats() {
+  const raw = readOr(join(ROOT, 'data', 'newgrad-skill-stats.json'));
+  if (!raw.trim()) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
 const data = {
   generated: new Date().toISOString(),
   reports: parseReports(),
   applications: parseApplications(),
   pipeline: parsePipeline(),
-  scanHistory: parseScanHistory()
+  scanHistory: parseScanHistory(),
+  keywordStats: parseKeywordStats()
 };
 
 const template = readFileSync(join(__dirname, 'template.html'), 'utf8');

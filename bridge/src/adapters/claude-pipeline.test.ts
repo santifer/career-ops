@@ -1,6 +1,12 @@
 import { expect, test } from "vitest";
 
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
+import { createClaudePipelineAdapter } from "./claude-pipeline.js";
 import { __internal } from "./claude-pipeline.js";
+import type { NewGradRow } from "../contracts/newgrad.js";
 
 test("extractTerminalJsonObject returns the final Claude JSON payload", () => {
   const stdout = [
@@ -38,6 +44,44 @@ test("buildCodexTerminalSchema keeps legitimacy in the required schema", () => {
   expect(schema.properties?.legitimacy).toEqual({
     anyOf: [{ type: "string" }, { type: "null" }],
   });
+});
+
+test("scoreNewGradRows does not mark promoted rows as already scanned before enrich", async () => {
+  const repoRoot = makeRepoRoot();
+  try {
+    const adapter = createClaudePipelineAdapter({
+      repoRoot,
+      claudeBin: "claude",
+      codexBin: "codex",
+      nodeBin: process.execPath,
+      realExecutor: "codex",
+      evaluationTimeoutSec: 60,
+      livenessTimeoutSec: 20,
+      allowDangerousClaudeFlags: true,
+    });
+
+    const result = await adapter.scoreNewGradRows([
+      makeNewGradRow({
+        title: "Software Engineer",
+        company: "Promoted Co",
+        detailUrl: "https://jobright.ai/jobs/info/promoted",
+        qualifications: "TypeScript Python React Node AWS",
+      }),
+      makeNewGradRow({
+        title: "Office Coordinator",
+        company: "Filtered Co",
+        detailUrl: "https://jobright.ai/jobs/info/filtered",
+        qualifications: "Scheduling and office supplies",
+      }),
+    ]);
+
+    expect(result.promoted.map((row) => row.row.company)).toContain("Promoted Co");
+    const history = readFileSync(join(repoRoot, "data/scan-history.tsv"), "utf-8");
+    expect(history).not.toContain("Promoted Co");
+    expect(history).toContain("Filtered Co");
+  } finally {
+    rmSync(repoRoot, { recursive: true, force: true });
+  }
 });
 
 test("buildJdText truncates oversized local JD text before evaluation", () => {
@@ -194,6 +238,65 @@ test("buildLocalQuickScreen skips obvious hard blockers without invoking codex",
       "local_value_score_below_threshold",
     ]),
   );
+});
+
+test("buildLocalQuickScreen ignores penalty tokens when collecting positive reasons", () => {
+  const screen = __internal.buildLocalQuickScreen({
+    jobId: "job-local-skip-penalties",
+    evaluatedReportUrls: new Set<string>(),
+    quickConfig: {
+      role_keywords: { positive: ["software engineer"], weight: 3 },
+      skill_keywords: {
+        terms: ["typescript", "python", "aws"],
+        weight: 1,
+        max_score: 4,
+      },
+      freshness: { within_24h: 2, within_3d: 1, older: 0 },
+      list_threshold: 3,
+      pipeline_threshold: 7,
+      detail_value_threshold: 7,
+      compensation_min_usd: 120000,
+      hard_filters: {
+        blocked_companies: [],
+        exclude_no_sponsorship: true,
+        exclude_active_security_clearance: true,
+        max_years_experience: 2,
+        no_sponsorship_keywords: ["no sponsorship", "not eligible for immigration sponsorship"],
+        no_sponsorship_companies: [],
+        clearance_keywords: ["active secret clearance"],
+        active_security_clearance_companies: [],
+      },
+      detail_concurrent_tabs: 3,
+      detail_delay_min_ms: 1000,
+      detail_delay_max_ms: 2000,
+    },
+    input: {
+      url: "https://careers.example.com/job/22222",
+      title: "Software Engineer I",
+      evaluationMode: "newgrad_quick",
+      pageText: [
+        "This role is not eligible for immigration sponsorship.",
+        "Compensation: $90k - $100k.",
+      ].join("\n"),
+      structuredSignals: {
+        company: "Example",
+        role: "Software Engineer I",
+        sponsorshipSupport: "no",
+        salaryRange: "$90k - $100k",
+        localValueScore: 6.2,
+        localValueReasons: [
+          "strong_match_score",
+          "salary_below_minimum",
+          "no_sponsorship",
+        ],
+      },
+    },
+  });
+
+  expect(screen).not.toBeNull();
+  expect(screen?.reasons).toContain("strong_match_score");
+  expect(screen?.reasons).not.toContain("salary_below_minimum");
+  expect(screen?.reasons).not.toContain("no_sponsorship");
 });
 
 test("buildLocalQuickScreen skips canonical duplicates before model screening", () => {
@@ -420,3 +523,72 @@ test("parseReportMarkdown accepts unaccented Spanish report heading", () => {
   expect(parsed.role).toBe("Software Engineer, Backend Java");
   expect(parsed.score).toBe(3.7);
 });
+
+function makeRepoRoot(): string {
+  const repoRoot = `${tmpdir()}/career-ops-claude-pipeline-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  mkdirSync(join(repoRoot, "config"), { recursive: true });
+  mkdirSync(join(repoRoot, "data"), { recursive: true });
+  writeFileSync(
+    join(repoRoot, "config/profile.yml"),
+    [
+      "newgrad_scan:",
+      "  role_keywords:",
+      "    positive:",
+      "      - Software Engineer",
+      "    weight: 3",
+      "  skill_keywords:",
+      "    terms:",
+      "      - TypeScript",
+      "      - Python",
+      "      - React",
+      "      - Node",
+      "      - AWS",
+      "    weight: 1",
+      "    max_score: 4",
+      "  freshness:",
+      "    within_24h: 2",
+      "    within_3d: 1",
+      "    older: 0",
+      "  list_threshold: 3",
+      "  pipeline_threshold: 7",
+      "  detail_value_threshold: 7",
+      "  hard_filters:",
+      "    blocked_companies: []",
+      "    exclude_no_sponsorship: false",
+      "    exclude_active_security_clearance: false",
+      "    max_years_experience: 99",
+      "    no_sponsorship_keywords: []",
+      "    no_sponsorship_companies: []",
+      "    clearance_keywords: []",
+      "    active_security_clearance_companies: []",
+    ].join("\n"),
+    "utf-8",
+  );
+  writeFileSync(join(repoRoot, "data/applications.md"), "# Applications Tracker\n", "utf-8");
+  writeFileSync(join(repoRoot, "data/pipeline.md"), "# Pipeline Inbox\n", "utf-8");
+  return repoRoot;
+}
+
+function makeNewGradRow(overrides: Partial<NewGradRow>): NewGradRow {
+  return {
+    position: 1,
+    title: "Software Engineer",
+    postedAgo: "2 hours ago",
+    applyUrl: "https://example.com/apply",
+    detailUrl: "https://jobright.ai/jobs/info/default",
+    workModel: "Remote",
+    location: "Remote, USA",
+    company: "Example Co",
+    salary: "",
+    companySize: "",
+    industry: "",
+    qualifications: "",
+    h1bSponsored: false,
+    sponsorshipSupport: "unknown",
+    confirmedSponsorshipSupport: "unknown",
+    requiresActiveSecurityClearance: false,
+    confirmedRequiresActiveSecurityClearance: false,
+    isNewGrad: true,
+    ...overrides,
+  };
+}

@@ -120,6 +120,11 @@ Then in Chrome:
 3. Click `Load unpacked`
 4. Select `extension/dist`
 
+`chrome://extensions` is only for loading or reloading the unpacked extension.
+The toolbar action cannot open the in-page panel on Chrome's own pages. After
+loading, switch to a regular `http` or `https` job posting tab, then click the
+career-ops toolbar icon or press `Alt+Shift+C`.
+
 The popup will ask for the bridge token on first use. Paste the contents of `bridge/.bridge-token`.
 
 ## Typical Flow
@@ -155,6 +160,7 @@ Artifacts still land in the normal career-ops locations:
 
 ## Troubleshooting
 
+- Toolbar icon does nothing on `chrome://extensions`: switch to a normal web page or job posting first. Chrome blocks panel injection on browser-owned pages.
 - `UNAUTHORIZED`: token in the popup does not match `bridge/.bridge-token`
 - `BRIDGE_NOT_READY`: required local files like `cv.md` or `config/profile.yml` are missing
 - `RATE_LIMITED`: the bridge allows 3 evaluations per minute

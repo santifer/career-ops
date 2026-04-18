@@ -47,7 +47,7 @@ export function loadNewGradSeenKeys(repoRoot: string): NewGradSeenKeys {
   const companyRoles = new Set<string>();
 
   readScanHistory(repoRoot, urls, companyRoles);
-  readPipelineUrls(repoRoot, urls);
+  readPipelineUrls(repoRoot, urls, companyRoles);
 
   return { urls, companyRoles };
 }
@@ -106,13 +106,19 @@ function readScanHistory(
     const url = normalizeUrl(cells[0] ?? "");
     const title = (cells[3] ?? "").trim();
     const company = (cells[4] ?? "").trim();
+    const status = (cells[5] ?? "").trim();
+    if (!isTerminalScanStatus(status)) continue;
     if (url) urls.add(url);
     const key = companyRoleKey(company, title);
     if (key) companyRoles.add(key);
   }
 }
 
-function readPipelineUrls(repoRoot: string, urls: Set<string>): void {
+function readPipelineUrls(
+  repoRoot: string,
+  urls: Set<string>,
+  companyRoles: Set<string>,
+): void {
   const path = join(repoRoot, "data/pipeline.md");
   if (!existsSync(path)) return;
 
@@ -121,6 +127,14 @@ function readPipelineUrls(repoRoot: string, urls: Set<string>): void {
     const url = normalizeUrl(match[1] ?? "");
     if (url) urls.add(url);
   }
+  for (const match of text.matchAll(/- \[[ x]\] https?:\/\/\S+\s+—\s+(.+?)\s+\|\s+(.+?)\s+\(/g)) {
+    const key = companyRoleKey(match[1] ?? "", match[2] ?? "");
+    if (key) companyRoles.add(key);
+  }
+}
+
+function isTerminalScanStatus(status: string): boolean {
+  return status !== "" && status !== "promoted";
 }
 
 function normalizeUrl(value: string): string {

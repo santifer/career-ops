@@ -36,7 +36,7 @@ describe("newgrad-scan-history", () => {
       join(repoRoot, "data/scan-history.tsv"),
       [
         "url\tfirst_seen\tportal\ttitle\tcompany\tstatus",
-        "https://newgrad-jobs.com/detail/seen\t2026-04-14\tnewgrad-scan\tSoftware Engineer\tSeen Co\tpromoted",
+        "https://newgrad-jobs.com/detail/seen\t2026-04-14\tnewgrad-scan\tSoftware Engineer\tSeen Co\tbelow_threshold",
       ].join("\n"),
       "utf-8",
     );
@@ -66,13 +66,44 @@ describe("newgrad-scan-history", () => {
     expect(seen.companyRoles.has("tracker co|backend engineer")).toBe(false);
   });
 
+  test("loadNewGradSeenKeys ignores non-terminal promoted scan-history rows", () => {
+    const repoRoot = makeRepoRoot();
+    writeFileSync(
+      join(repoRoot, "data/scan-history.tsv"),
+      [
+        "url\tfirst_seen\tportal\ttitle\tcompany\tstatus",
+        "https://newgrad-jobs.com/detail/promoted\t2026-04-14\tnewgrad-scan\tSoftware Engineer\tPromoted Co\tpromoted",
+      ].join("\n"),
+      "utf-8",
+    );
+
+    const seen = loadNewGradSeenKeys(repoRoot);
+
+    expect(seen.urls.has("https://newgrad-jobs.com/detail/promoted")).toBe(false);
+    expect(seen.companyRoles.has("promoted co|software engineer")).toBe(false);
+  });
+
+  test("loadNewGradSeenKeys reads company-role keys from pipeline rows", () => {
+    const repoRoot = makeRepoRoot();
+    writeFileSync(
+      join(repoRoot, "data/pipeline.md"),
+      "- [ ] https://careers.example.com/job/123 — Vizient, Inc | Associate Software Engineer (via newgrad-scan, score: 9/9)\n",
+      "utf-8",
+    );
+
+    const seen = loadNewGradSeenKeys(repoRoot);
+
+    expect(seen.urls.has("https://careers.example.com/job/123")).toBe(true);
+    expect(seen.companyRoles.has("vizient, inc|associate software engineer")).toBe(true);
+  });
+
   test("loadNewGradSeenKeys canonicalizes tracking params in scan history and pipeline", () => {
     const repoRoot = makeRepoRoot();
     writeFileSync(
       join(repoRoot, "data/scan-history.tsv"),
       [
         "url\tfirst_seen\tportal\ttitle\tcompany\tstatus",
-        "https://jobs.example.com/role/123?utm_source=linkedin\t2026-04-14\tnewgrad-scan\tSoftware Engineer\tSeen Co\tpromoted",
+        "https://jobs.example.com/role/123?utm_source=linkedin\t2026-04-14\tnewgrad-scan\tSoftware Engineer\tSeen Co\tbelow_threshold",
       ].join("\n"),
       "utf-8",
     );

@@ -52,8 +52,10 @@ import { basename, join, resolve } from "node:path";
 
 import { bridgeError } from "../runtime/errors.js";
 import { scoreAndFilter } from "./newgrad-scorer.js";
+import { recordNewGradSkillStats } from "./newgrad-skill-stats.js";
 import { scoreEnrichedRowValue } from "./newgrad-value-scorer.js";
 import { pickPipelineEntryUrl } from "./newgrad-links.js";
+import { formatPendingValueReasonsTag } from "./newgrad-pipeline-metadata.js";
 import { loadEvaluatedReportUrls } from "./evaluated-report-urls.js";
 import {
   loadNegativeKeywords,
@@ -109,6 +111,17 @@ const RESTRICTED_WORK_AUTHORIZATION_PHRASES = [
   "permanent work authorization required",
   "must be authorized to work in the united states without sponsorship",
 ];
+const NEGATIVE_LOCAL_REASON_TOKENS = new Set([
+  "active_security_clearance_required",
+  "already_evaluated_report_url",
+  "experience_requirement_above_limit",
+  "local_value_score_below_threshold",
+  "no_sponsorship",
+  "no_sponsorship_support",
+  "restricted_work_authorization_requirement",
+  "salary_below_minimum",
+  "seniority_too_high",
+]);
 
 interface ClaudeTerminalJson {
   status: "completed" | "failed";
@@ -838,6 +851,7 @@ export function createClaudePipelineAdapter(
         negativeKeywords,
         trackedSet,
       );
+      recordNewGradSkillStats(config.repoRoot, scanConfig, recentUnseenRows);
       const statusByKey = new Map<string, string>();
       for (const row of recentUnseenRows) {
         statusByKey.set(newGradRowUrl(row) || newGradCompanyRoleKey(row), "scanned");
@@ -851,9 +865,13 @@ export function createClaudePipelineAdapter(
           item.reason,
         );
       }
+      const terminalRows = recentUnseenRows.filter((row) => {
+        const status = statusByKey.get(newGradRowUrl(row) || newGradCompanyRoleKey(row));
+        return status !== undefined && status !== "promoted";
+      });
       appendNewGradScanHistory(
         config.repoRoot,
-        recentUnseenRows,
+        terminalRows,
         (row) => statusByKey.get(newGradRowUrl(row) || newGradCompanyRoleKey(row)) ?? "scanned",
       );
       persistBlockedCompanies(config.repoRoot, filtered);
@@ -872,9 +890,16 @@ export function createClaudePipelineAdapter(
 
       const entries: PipelineEntry[] = [];
       const candidates: PipelineEntry[] = [];
+      const skipBreakdown: Record<string, number> = {};
       let skipped = 0;
       let processed = 0;
       const jdFileMap = new Map<string, string>();
+
+      const skipRow = (reason: string, row: EnrichedRow) => {
+        skipped++;
+        skipBreakdown[reason] = (skipBreakdown[reason] ?? 0) + 1;
+        onProgress?.(processed, rows.length, row);
+      };
 
       for (const enrichedRow of rows) {
         processed++;
@@ -912,22 +937,19 @@ export function createClaudePipelineAdapter(
         persistBlockedCompanies(config.repoRoot, filtered);
 
         if (promoted.length === 0) {
-          skipped++;
-          onProgress?.(processed, rows.length, enrichedRow);
+          skipRow(filtered[0]?.reason ?? "list_filter", enrichedRow);
           continue;
         }
 
         const scored = promoted[0]!;
         if (scored.score < scanConfig.pipeline_threshold) {
-          skipped++;
-          onProgress?.(processed, rows.length, enrichedRow);
+          skipRow("pipeline_threshold", enrichedRow);
           continue;
         }
 
         const valueScore = scoreEnrichedRowValue(enrichedRow, scanConfig);
         if (!valueScore.passed) {
-          skipped++;
-          onProgress?.(processed, rows.length, enrichedRow);
+          skipRow(valueScore.penalties[0] ?? "detail_value_threshold", enrichedRow);
           continue;
         }
 
@@ -941,20 +963,18 @@ export function createClaudePipelineAdapter(
           role: enrichedRow.row.row.title,
           score: scored.score,
           valueScore: valueScore.score,
-          valueReasons: [...valueScore.reasons, ...valueScore.penalties],
+          valueReasons: valueScore.reasons,
           source: "newgrad-jobs.com",
         };
         const canonicalEntryUrl = canonicalizeJobUrl(entryUrl) ?? entryUrl;
 
         if (evaluatedReportUrls.has(canonicalEntryUrl)) {
-          skipped++;
-          onProgress?.(processed, rows.length, enrichedRow);
+          skipRow("already_evaluated_report", enrichedRow);
           continue;
         }
 
         if (existingPipelineUrls.has(canonicalEntryUrl)) {
-          skipped++;
-          onProgress?.(processed, rows.length, enrichedRow);
+          skipRow("already_in_pipeline", enrichedRow);
           continue;
         }
 
@@ -1021,7 +1041,8 @@ export function createClaudePipelineAdapter(
         const lines = entries.map((e) => {
           const tag = jdFileMap.get(e.url);
           const value = e.valueScore !== undefined ? `, value: ${e.valueScore}/10` : "";
-          const base = `- [ ] ${e.url} — ${e.company} | ${e.role} (via newgrad-scan, score: ${e.score}/${maxScore}${value})`;
+          const valueReasons = formatPendingValueReasonsTag(e.valueReasons);
+          const base = `- [ ] ${e.url} — ${e.company} | ${e.role} (via newgrad-scan, score: ${e.score}/${maxScore}${value})${valueReasons}`;
           return tag ? `${base} [local:jds/${tag}]` : base;
         });
 
@@ -1032,7 +1053,7 @@ export function createClaudePipelineAdapter(
         appendFileSync(pipelinePath, "\n" + lines.join("\n") + "\n", "utf-8");
       }
 
-      return { added: entries.length, skipped, entries, candidates };
+      return { added: entries.length, skipped, skipBreakdown, entries, candidates };
     },
 
     async readNewGradPendingEntries(limit: number) {
@@ -1199,7 +1220,9 @@ function collectLocalQuickReasons(
   const reasons = new Set<string>();
   for (const reason of signals.localValueReasons ?? []) {
     const normalized = normalizeMachineReason(reason);
-    if (normalized) reasons.add(normalized);
+    if (normalized && !NEGATIVE_LOCAL_REASON_TOKENS.has(normalized)) {
+      reasons.add(normalized);
+    }
   }
 
   if (typeof signals.localValueScore === "number") {

@@ -815,6 +815,7 @@ export function buildServer(args: BuildServerArgs) {
         kind: "done",
         added: result.added,
         skipped: result.skipped,
+        skipBreakdown: result.skipBreakdown,
         entries: result.entries,
         candidates: result.candidates,
       });

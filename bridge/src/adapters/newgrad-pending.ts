@@ -19,6 +19,7 @@ import { canonicalizeJobUrl } from "../lib/canonical-job-url.js";
 import { detectActiveSecurityClearanceRequirement } from "../lib/security-clearance.js";
 import { writeJdFile } from "../lib/write-jd-file.js";
 import { loadEvaluatedReportUrls } from "./evaluated-report-urls.js";
+import { parsePendingValueReasons } from "./newgrad-pipeline-metadata.js";
 import {
   loadNegativeKeywords,
   loadNewGradScanConfig,
@@ -26,7 +27,7 @@ import {
 } from "./newgrad-config.js";
 
 const PENDING_LINE_RE =
-  /^-\s+\[\s\]\s+(https?:\/\/\S+)\s+—\s+(.+?)\s+\|\s+(.+?)\s+\(via newgrad-scan, score:\s*([0-9.]+)\/[0-9.]+(?:,\s+value:\s*([0-9.]+)\/10)?\)(?:\s+\[local:([^\]]+)\])?/;
+  /^-\s+\[\s\]\s+(?<url>https?:\/\/\S+)\s+—\s+(?<company>.+?)\s+\|\s+(?<role>.+?)\s+\(via newgrad-scan, score:\s*(?<score>[0-9.]+)\/[0-9.]+(?:,\s+value:\s*(?<valueScore>[0-9.]+)\/10)?\)(?:\s+\[value-reasons:(?<valueReasons>[^\]]+)\])?(?:\s+\[local:(?<localJdPath>[^\]]+)\])?/;
 const LOCAL_JD_CACHE_MAX_CHARS = 8_000;
 const LOCK_WAIT_MS = 5_000;
 const LOCK_POLL_MS = 100;
@@ -186,9 +187,10 @@ function readPipelineEntries(
     const match = PENDING_LINE_RE.exec(line);
     if (!match) continue;
 
-    const company = (match[2] ?? "").trim();
-    const role = (match[3] ?? "").trim();
-    const score = Number(match[4] ?? 0);
+    const groups = match.groups ?? {};
+    const company = (groups.company ?? "").trim();
+    const role = (groups.role ?? "").trim();
+    const score = Number(groups.score ?? 0);
     if (score < scanConfig.pipeline_threshold) continue;
     if (tracked.has(`${company.toLowerCase()}|${role.toLowerCase()}`)) {
       continue;
@@ -199,20 +201,23 @@ function readPipelineEntries(
     const companyRoleKey = pendingCompanyRoleKey(company, role);
     if (seenCompanyRoles.has(companyRoleKey)) continue;
 
-    const localJdPath = normalizeLocalPath(match[6]);
+    const localJdPath = normalizeLocalPath(groups.localJdPath);
     const pageText = localJdPath ? readLocalJd(repoRoot, localJdPath) : undefined;
-    const url = match[1] ?? "";
+    const url = groups.url ?? "";
     const canonicalUrl = canonicalizeJobUrl(url) ?? url;
     if (seenUrls.has(canonicalUrl) || evaluatedReportUrls.has(canonicalUrl)) continue;
     seenUrls.add(canonicalUrl);
     seenCompanyRoles.add(companyRoleKey);
+
+    const valueReasons = parsePendingValueReasons(groups.valueReasons);
 
     entries.push({
       url,
       company,
       role,
       score,
-      ...(match[5] ? { valueScore: Number(match[5]) } : {}),
+      ...(groups.valueScore ? { valueScore: Number(groups.valueScore) } : {}),
+      ...(valueReasons ? { valueReasons } : {}),
       source: "newgrad-jobs.com",
       lineNumber: index + 1,
       ...(localJdPath ? { localJdPath } : {}),
@@ -345,13 +350,14 @@ function pendingLineMatches(
   const match = PENDING_LINE_RE.exec(line);
   if (!match) return false;
 
-  const lineUrl = canonicalizeJobUrl(match[1] ?? "") ?? (match[1] ?? "");
+  const groups = match.groups ?? {};
+  const lineUrl = canonicalizeJobUrl(groups.url ?? "") ?? (groups.url ?? "");
   const inputUrl = canonicalizeJobUrl(input.url) ?? input.url;
   if (lineUrl !== inputUrl) return false;
 
   return (
-    normalizeSearchText(match[2] ?? "") === normalizeSearchText(input.company) &&
-    normalizeSearchText(match[3] ?? "") === normalizeSearchText(input.role)
+    normalizeSearchText(groups.company ?? "") === normalizeSearchText(input.company) &&
+    normalizeSearchText(groups.role ?? "") === normalizeSearchText(input.role)
   );
 }
 

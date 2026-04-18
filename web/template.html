@@ -235,6 +235,30 @@
   .apply-list {
     display: grid;
   }
+  .keyword-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0;
+  }
+  .keyword-item {
+    border-top: 1px solid rgba(11,11,8,0.12);
+    border-right: 1px solid rgba(11,11,8,0.12);
+    padding: 12px 14px;
+    display: grid;
+    gap: 3px;
+  }
+  .keyword-item strong {
+    font-size: 12px;
+  }
+  .keyword-item span {
+    color: var(--muted);
+    font-size: 10px;
+    text-transform: uppercase;
+  }
+  .keyword-empty {
+    padding: 18px;
+    color: var(--muted);
+  }
   .apply-card {
     padding: 16px 18px;
     border-top: 1px solid rgba(11,11,8,0.12);
@@ -912,6 +936,7 @@
   <button data-tab="tracker"><span class="idx">03</span>Tracker</button>
   <button data-tab="pipeline"><span class="idx">04</span>Pipeline</button>
   <button data-tab="scan"><span class="idx">05</span>Scan Hist.</button>
+  <button data-tab="keywords"><span class="idx">06</span>Keywords</button>
 </nav>
 
 <section id="tab-apply-next" class="pane active">
@@ -1220,6 +1245,56 @@
   </div>
 </section>
 
+<section id="tab-keywords" class="pane">
+  <div class="apply-shell">
+    <section class="apply-overview">
+      <div class="apply-overview-copy">
+        <div class="kicker">Keyword Coverage</div>
+        <h2>Use misses to expand the scanner.</h2>
+        <p>Last-scan counts come from the bridge scoring request. Profile coverage checks configured skills against `cv.md`, `article-digest.md`, and `modes/_profile.md`.</p>
+      </div>
+      <div class="apply-stats">
+        <div class="apply-stat"><strong id="keyword-rows-n">0</strong><span>Rows scored</span></div>
+        <div class="apply-stat"><strong id="keyword-scan-hit-n">0</strong><span>Scan matched</span></div>
+        <div class="apply-stat"><strong id="keyword-scan-miss-n">0</strong><span>Scan missed</span></div>
+        <div class="apply-stat"><strong id="keyword-profile-miss-n">0</strong><span>Profile missed</span></div>
+      </div>
+    </section>
+
+    <section class="apply-band">
+      <div class="apply-band-head">
+        <h3>Last Scan Matched Skills</h3>
+        <p id="keyword-generated">No scan stats yet</p>
+      </div>
+      <div class="keyword-grid" id="keyword-scan-matched"></div>
+    </section>
+
+    <section class="apply-band">
+      <div class="apply-band-head">
+        <h3>Last Scan Unmatched Skills</h3>
+        <p>Configured skills not found in the last scoring request</p>
+      </div>
+      <div class="keyword-grid" id="keyword-scan-unmatched"></div>
+    </section>
+
+    <section class="apply-band">
+      <div class="apply-band-head">
+        <h3>Profile Matched Skills</h3>
+        <p>Skills currently backed by candidate materials</p>
+      </div>
+      <div class="keyword-grid" id="keyword-profile-matched"></div>
+    </section>
+
+    <section class="apply-band">
+      <div class="apply-band-head">
+        <h3>Profile Unmatched Skills</h3>
+        <p>Configured skills that need proof or removal</p>
+      </div>
+      <div class="keyword-grid" id="keyword-profile-unmatched"></div>
+    </section>
+  </div>
+</section>
+
 <footer class="sig">
   <span>Career-Ops · Console v1</span>
   <span class="mark">Hongxi Chen</span>
@@ -1340,6 +1415,52 @@ function wireToggles() {
 function setCount(prefix, n, t, suffix = '') {
   $(`${prefix}-count-n`).textContent = n;
   $(`${prefix}-count-t`).textContent = t + (suffix ? ' ' + suffix : '');
+}
+
+function skillListHtml(items, countLabel = null) {
+  if (!items || items.length === 0) {
+    return '<div class="keyword-empty">No skills in this bucket.</div>';
+  }
+  return items.map((item) => {
+    const term = typeof item === 'string' ? item : item.term;
+    const count = typeof item === 'string' ? null : item.count;
+    return `
+      <div class="keyword-item">
+        <strong>${escapeHtml(term)}</strong>
+        <span>${countLabel && count != null ? `${escapeHtml(String(count))} ${countLabel}` : 'configured skill'}</span>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderKeywordStats() {
+  const stats = D.keywordStats;
+  if (!stats) {
+    $('keyword-generated').textContent = 'Run a newgrad scan to populate last-scan stats';
+    setHtml($('keyword-scan-matched'), '<div class="keyword-empty">No scan stats yet.</div>');
+    setHtml($('keyword-scan-unmatched'), '<div class="keyword-empty">No scan stats yet.</div>');
+    setHtml($('keyword-profile-matched'), '<div class="keyword-empty">No profile stats yet.</div>');
+    setHtml($('keyword-profile-unmatched'), '<div class="keyword-empty">No profile stats yet.</div>');
+    return;
+  }
+
+  const generatedAt = stats.generatedAt ? new Date(stats.generatedAt).toLocaleString() : 'unknown time';
+  const rowsScored = stats.rowsScored || 0;
+  $('keyword-generated').textContent = rowsScored > 0
+    ? `Generated ${generatedAt}`
+    : `Profile coverage generated ${generatedAt}; run a scan for row counts`;
+  $('keyword-rows-n').textContent = stats.rowsScored || 0;
+  $('keyword-scan-hit-n').textContent = (stats.matchedSkills || []).length;
+  $('keyword-scan-miss-n').textContent = (stats.unmatchedSkills || []).length;
+  $('keyword-profile-miss-n').textContent = (stats.profileUnmatchedSkills || []).length;
+  setHtml($('keyword-scan-matched'), rowsScored > 0
+    ? skillListHtml(stats.matchedSkills || [], 'rows')
+    : '<div class="keyword-empty">Run a newgrad scan to populate matched row counts.</div>');
+  setHtml($('keyword-scan-unmatched'), rowsScored > 0
+    ? skillListHtml(stats.unmatchedSkills || [])
+    : '<div class="keyword-empty">Run a newgrad scan to populate unmatched row counts.</div>');
+  setHtml($('keyword-profile-matched'), skillListHtml(stats.profileMatchedSkills || []));
+  setHtml($('keyword-profile-unmatched'), skillListHtml(stats.profileUnmatchedSkills || []));
 }
 
 function resetGroup(g) {
@@ -1785,11 +1906,12 @@ renderReports();
 renderTracker();
 renderPipeline();
 renderScan();
+renderKeywordStats();
 
-// Keyboard navigation for tabs: 1-5
+// Keyboard navigation for tabs: 1-6
 document.addEventListener('keydown', (e) => {
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
-  const keys = { '1': 'apply-next', '2': 'reports', '3': 'tracker', '4': 'pipeline', '5': 'scan' };
+  const keys = { '1': 'apply-next', '2': 'reports', '3': 'tracker', '4': 'pipeline', '5': 'scan', '6': 'keywords' };
   if (keys[e.key]) {
     const btn = document.querySelector(`nav.tabs button[data-tab="${keys[e.key]}"]`);
     if (btn) btn.click();

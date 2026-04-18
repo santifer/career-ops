@@ -36,6 +36,7 @@ bun.lock
 
 # Claude Code local
 .claude/settings.local.json
+.claude/scheduled_tasks.lock
 .claude/memory/
 .claude/projects/
 career-dashboard
@@ -56,3 +57,15 @@ extension/package-lock.json
 .agents/
 **/CLAUDE.md
 !/CLAUDE.md
+batch/.bridge-prompt-*.md
+data/newgrad-skill-stats.json
+
+batch/.report-number-reservations
+docs/exec-plans/*
+!docs/exec-plans/README.md
+!docs/exec-plans/active/
+!docs/exec-plans/active/*.md
+!docs/exec-plans/archive/
+!docs/exec-plans/archive/*.md
+!docs/exec-plans/summaries/
+!docs/exec-plans/summaries/*.md

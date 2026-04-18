@@ -316,6 +316,8 @@ export interface NewGradEnrichResult {
   added: number;
   /** Number of entries skipped (e.g. duplicates already in pipeline). */
   skipped: number;
+  /** Counts by machine-readable skip reason for rows not promoted after detail enrichment. */
+  skipBreakdown?: Readonly<Record<string, number>>;
   /**
    * Rows that passed re-scoring + hard filters and are eligible for direct
    * evaluation, even if they were not appended to pipeline.md due to dedupe.

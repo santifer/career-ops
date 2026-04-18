@@ -78,10 +78,31 @@ const subscriptions = new Map<JobId, Subscription>();
 /*  Toolbar icon click → toggle panel in active tab                           */
 /* -------------------------------------------------------------------------- */
 
-chrome.action.onClicked.addListener(async (tab) => {
-  if (!tab.id) return;
+function isPanelInjectableUrl(url: string | undefined): boolean {
+  return url !== undefined && /^https?:\/\//.test(url);
+}
+
+async function openUnsupportedActionPage(): Promise<void> {
+  await chrome.tabs.create({
+    active: true,
+    url: chrome.runtime.getURL("unsupported.html"),
+  });
+}
+
+async function sendTogglePanel(tabId: number): Promise<void> {
+  await chrome.tabs.sendMessage(tabId, { kind: "togglePanel" });
+}
+
+async function togglePanelForAction(tab: chrome.tabs.Tab): Promise<void> {
+  if (tab.id === undefined) return;
+
+  if (!isPanelInjectableUrl(tab.url)) {
+    await openUnsupportedActionPage();
+    return;
+  }
+
   try {
-    await chrome.tabs.sendMessage(tab.id, { kind: "togglePanel" });
+    await sendTogglePanel(tab.id);
   } catch {
     // Content script not yet loaded — inject it first, then toggle
     try {
@@ -89,14 +110,19 @@ chrome.action.onClicked.addListener(async (tab) => {
         target: { tabId: tab.id },
         files: ["panel.js"],
       });
-      // Give it a moment to register the listener
-      setTimeout(() => {
-        if (tab.id) chrome.tabs.sendMessage(tab.id, { kind: "togglePanel" });
-      }, 100);
-    } catch {
-      // Can't inject (chrome:// page, etc.) — ignore
+      // panel.js opens itself on first injection. Future clicks use
+      // sendTogglePanel above once the content-script listener exists.
+    } catch (err) {
+      console.warn("[career-ops] panel injection failed", err);
+      await openUnsupportedActionPage();
     }
   }
+}
+
+chrome.action.onClicked.addListener((tab) => {
+  togglePanelForAction(tab).catch((err: unknown) => {
+    console.warn("[career-ops] toolbar action failed", err);
+  });
 });
 
 /* -------------------------------------------------------------------------- */
@@ -2382,6 +2408,7 @@ async function handleNewGradEnrich(rows: EnrichedRow[], sessionId: string): Prom
   const mergedResult: NewGradEnrichResult = {
     added: 0,
     skipped: 0,
+    skipBreakdown: {},
     entries: [],
     candidates: [],
   };
@@ -2410,6 +2437,9 @@ async function handleNewGradEnrich(rows: EnrichedRow[], sessionId: string): Prom
             chunkState.result = {
               added: event.added as number,
               skipped: event.skipped as number,
+              ...((event.skipBreakdown as Record<string, number> | undefined)
+                ? { skipBreakdown: event.skipBreakdown as Record<string, number> }
+                : {}),
               entries: event.entries as PipelineEntry[],
               ...((event.candidates as PipelineEntry[] | undefined)
                 ? { candidates: event.candidates as PipelineEntry[] }
@@ -2443,6 +2473,7 @@ async function handleNewGradEnrich(rows: EnrichedRow[], sessionId: string): Prom
     const chunkResult = chunkState.result;
     mergedResult.added += chunkResult.added;
     mergedResult.skipped += chunkResult.skipped;
+    mergeSkipBreakdown(mergedResult.skipBreakdown, chunkResult.skipBreakdown);
     mergedResult.entries = [...mergedResult.entries, ...chunkResult.entries];
     mergedResult.candidates = [
       ...(mergedResult.candidates ?? []),
@@ -2462,13 +2493,23 @@ async function handleNewGradEnrich(rows: EnrichedRow[], sessionId: string): Prom
     ok: true,
     result: {
       ...mergedResult,
-      skipped: Math.max(rows.length - evaluationCandidates.length, 0),
+      skipped: mergedResult.skipped + directEval.skipped,
       queued: directEval.queued,
       evaluated: directEval.queued,
       failed: directEval.failed,
       jobs: directEval.jobs,
     },
   };
+}
+
+function mergeSkipBreakdown(
+  target: Record<string, number> | undefined,
+  source: Readonly<Record<string, number>> | undefined,
+): void {
+  if (!target || !source) return;
+  for (const [reason, count] of Object.entries(source)) {
+    target[reason] = (target[reason] ?? 0) + count;
+  }
 }
 
 function truncateEnrichedRow(row: EnrichedRow): EnrichedRow {
@@ -2940,6 +2981,34 @@ function extractBulletLines(text: string, maxItems: number): string[] {
     .slice(0, maxItems);
 }
 
+function pickBestSponsorshipSupport(
+  detail: NewGradDetail,
+  row: NewGradRow,
+): "yes" | "no" | "unknown" {
+  const signals = [
+    detail.confirmedSponsorshipSupport,
+    detail.sponsorshipSupport,
+    row.confirmedSponsorshipSupport,
+    row.sponsorshipSupport,
+  ];
+
+  if (signals.includes("no")) return "no";
+  if (signals.includes("yes")) return "yes";
+  return "unknown";
+}
+
+function hasStructuredClearanceRequirement(
+  detail: NewGradDetail,
+  row: NewGradRow,
+): boolean {
+  return (
+    detail.confirmedRequiresActiveSecurityClearance ||
+    detail.requiresActiveSecurityClearance ||
+    row.confirmedRequiresActiveSecurityClearance ||
+    row.requiresActiveSecurityClearance
+  );
+}
+
 function buildStructuredEvaluationSignals(
   entry: DirectEvaluationEntry,
   matchedRow: EnrichedRow | undefined,
@@ -2967,10 +3036,7 @@ function buildStructuredEvaluationSignals(
     );
     const postedAgo = row.row.postedAgo;
     const salaryRange = detail.salaryRange || row.row.salary || undefined;
-    const sponsorshipSupport =
-      detail.confirmedSponsorshipSupport !== "unknown"
-        ? detail.confirmedSponsorshipSupport
-        : detail.sponsorshipSupport;
+    const sponsorshipSupport = pickBestSponsorshipSupport(detail, row.row);
     const companySize = detail.companySize || row.row.companySize || null;
 
     return {
@@ -2984,9 +3050,10 @@ function buildStructuredEvaluationSignals(
       ...(postedAgo ? { postedAgo } : {}),
       ...(salaryRange ? { salaryRange } : {}),
       ...(sponsorshipSupport ? { sponsorshipSupport } : {}),
-      requiresActiveSecurityClearance:
-        detail.confirmedRequiresActiveSecurityClearance ||
-        detail.requiresActiveSecurityClearance,
+      requiresActiveSecurityClearance: hasStructuredClearanceRequirement(
+        detail,
+        row.row,
+      ),
       ...(yearsExperienceRequired !== null ? { yearsExperienceRequired } : {}),
       ...(companySize ? { companySize } : { companySize: null }),
       taxonomy: detail.taxonomy.slice(0, 10),

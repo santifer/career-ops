@@ -3,6 +3,7 @@ import type {
   NewGradScanConfig,
   SponsorshipStatus,
 } from "../contracts/newgrad.js";
+import { findSkillKeywordMatches } from "./newgrad-skill-match.js";
 
 export interface EnrichedValueScore {
   score: number;
@@ -223,10 +224,7 @@ function scorePostingQuality(row: EnrichedRow): number {
   return clamp(score, 0, 1.1);
 }
 
-function findConfiguredSkillMatches(
-  row: EnrichedRow,
-  config: NewGradScanConfig,
-): string[] {
+function findConfiguredSkillMatches(row: EnrichedRow, config: NewGradScanConfig): string[] {
   const text = normalizeText([
     row.row.row.qualifications ?? "",
     row.detail.skillTags.join(" "),
@@ -238,15 +236,7 @@ function findConfiguredSkillMatches(
     row.detail.companyCategories.join(" "),
   ].join(" "));
 
-  const matches: string[] = [];
-  for (const term of config.skill_keywords.terms) {
-    const normalizedTerm = normalizeText(term);
-    if (normalizedTerm && text.includes(normalizedTerm)) {
-      matches.push(normalizedTerm);
-    }
-  }
-
-  return Array.from(new Set(matches));
+  return findSkillKeywordMatches(text, config.skill_keywords.terms);
 }
 
 function bestSponsorshipSignal(row: EnrichedRow): SponsorshipStatus {

@@ -29,6 +29,13 @@ import {
 declare const __EXTENSION_VERSION__: string;
 const PANEL_ID = "career-ops-panel-root";
 const STORAGE_POS_KEY = "careerOps.panelPos";
+const PANEL_DEFAULT_TOP = 80;
+const PANEL_DEFAULT_RIGHT = 20;
+const PANEL_FALLBACK_WIDTH = 380;
+const PANEL_MIN_VISIBLE = 100;
+const EXTENSION_CONTEXT_INVALIDATED_CODE = "EXTENSION_CONTEXT_INVALIDATED";
+const EXTENSION_CONTEXT_INVALIDATED_MESSAGE =
+  "Extension was reloaded. Refresh this page and click the extension again.";
 
 function getOrCreatePanel(): { root: HTMLElement; shadow: ShadowRoot; existed: boolean } {
   const existing = document.getElementById(PANEL_ID);
@@ -42,6 +49,132 @@ function getOrCreatePanel(): { root: HTMLElement; shadow: ShadowRoot; existed: b
   const shadow = root.attachShadow({ mode: "open" });
   document.body.appendChild(root);
   return { root, shadow, existed: false };
+}
+
+function parsePixelValue(value: unknown): number | null {
+  if (typeof value !== "string") return null;
+  const parsed = Number.parseFloat(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(value, max));
+}
+
+function keepPanelInViewport(root: HTMLElement): void {
+  const rect = root.getBoundingClientRect();
+  const panelWidth = rect.width || PANEL_FALLBACK_WIDTH;
+  const panelHeight = rect.height || PANEL_MIN_VISIBLE;
+  const maxLeft = Math.max(0, window.innerWidth - Math.min(PANEL_MIN_VISIBLE, panelWidth));
+  const maxTop = Math.max(0, window.innerHeight - Math.min(PANEL_MIN_VISIBLE, panelHeight));
+  const currentLeft = parsePixelValue(root.style.left)
+    ?? Math.max(0, window.innerWidth - panelWidth - PANEL_DEFAULT_RIGHT);
+  const currentTop = parsePixelValue(root.style.top) ?? PANEL_DEFAULT_TOP;
+
+  root.style.left = clamp(currentLeft, 0, maxLeft) + "px";
+  root.style.top = clamp(currentTop, 0, maxTop) + "px";
+  root.style.right = "auto";
+}
+
+function errorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === "object" && error !== null && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === "string") return message;
+  }
+  return String(error);
+}
+
+function isExtensionContextInvalidated(error: unknown): boolean {
+  return errorMessage(error).toLowerCase().includes("extension context invalidated");
+}
+
+function runtimeErrorResponse(error: unknown): { ok: false; error: { code: string; message: string } } {
+  if (isExtensionContextInvalidated(error)) {
+    return {
+      ok: false,
+      error: {
+        code: EXTENSION_CONTEXT_INVALIDATED_CODE,
+        message: EXTENSION_CONTEXT_INVALIDATED_MESSAGE,
+      },
+    };
+  }
+  return {
+    ok: false,
+    error: {
+      code: "EXTENSION_RUNTIME_ERROR",
+      message: errorMessage(error),
+    },
+  };
+}
+
+function extensionContextInvalidatedResponse(): { ok: false; error: { code: string; message: string } } {
+  return {
+    ok: false,
+    error: {
+      code: EXTENSION_CONTEXT_INVALIDATED_CODE,
+      message: EXTENSION_CONTEXT_INVALIDATED_MESSAGE,
+    },
+  };
+}
+
+function isExtensionRuntimeAvailable(): boolean {
+  try {
+    return Boolean(chrome.runtime?.id);
+  } catch {
+    return false;
+  }
+}
+
+function addRuntimeMessageListener(listener: Parameters<typeof chrome.runtime.onMessage.addListener>[0]): void {
+  if (!isExtensionRuntimeAvailable()) return;
+  try {
+    chrome.runtime.onMessage.addListener(listener);
+  } catch (error) {
+    if (!isExtensionContextInvalidated(error)) console.error(error);
+  }
+}
+
+function newGradSkipReasonLabel(reason: string): string {
+  switch (reason) {
+    case "pipeline_threshold":
+      return "below pipeline threshold";
+    case "detail_value_threshold":
+      return "below detail value threshold";
+    case "below_threshold":
+      return "below list threshold after detail";
+    case "no_sponsorship":
+      return "no sponsorship";
+    case "no_sponsorship_support":
+      return "no sponsorship support";
+    case "active_clearance_required":
+    case "active_security_clearance_required":
+      return "active clearance required";
+    case "experience_too_high":
+    case "experience_requirement_above_limit":
+      return "experience too high";
+    case "seniority_too_high":
+      return "seniority too high";
+    case "salary_below_minimum":
+      return "salary below minimum";
+    case "negative_title":
+      return "title excluded";
+    case "already_evaluated_report":
+      return "already evaluated";
+    case "already_in_pipeline":
+      return "already in pipeline";
+    default:
+      return reason.replace(/_/g, " ");
+  }
+}
+
+function formatNewGradSkipBreakdown(breakdown: Readonly<Record<string, number>> | undefined): string {
+  if (!breakdown) return "";
+  return Object.entries(breakdown)
+    .filter(([, count]) => count > 0)
+    .sort((a, b) => b[1] - a[1])
+    .map(([reason, count]) => count + " " + newGradSkipReasonLabel(reason))
+    .join(", ");
 }
 
 function buildStyles(): string {
@@ -445,20 +578,40 @@ function initPanel(shadow: ShadowRoot, root: HTMLElement): void {
   document.addEventListener("mouseup", () => {
     if (!isDragging) return;
     isDragging = false;
-    chrome.storage.local.set({
-      [STORAGE_POS_KEY]: { left: root.style.left, top: root.style.top },
-    });
+    if (!isExtensionRuntimeAvailable()) return;
+    try {
+      chrome.storage.local.set({
+        [STORAGE_POS_KEY]: { left: root.style.left, top: root.style.top },
+      });
+    } catch (error) {
+      if (!isExtensionContextInvalidated(error)) console.error(error);
+    }
   });
 
   // Restore saved position
-  chrome.storage.local.get(STORAGE_POS_KEY, (data) => {
-    const pos = data[STORAGE_POS_KEY];
-    if (pos?.left && pos?.top) {
-      root.style.left = pos.left;
-      root.style.top = pos.top;
-      root.style.right = "auto";
+  if (isExtensionRuntimeAvailable()) {
+    try {
+      chrome.storage.local.get(STORAGE_POS_KEY, (data) => {
+        const lastError = chrome.runtime.lastError;
+        if (lastError) {
+          keepPanelInViewport(root);
+          return;
+        }
+        const pos = data[STORAGE_POS_KEY];
+        if (pos?.left && pos?.top) {
+          root.style.left = pos.left;
+          root.style.top = pos.top;
+          root.style.right = "auto";
+        }
+        keepPanelInViewport(root);
+      });
+    } catch (error) {
+      if (!isExtensionContextInvalidated(error)) console.error(error);
+      keepPanelInViewport(root);
     }
-  });
+  } else {
+    keepPanelInViewport(root);
+  }
 
   // --- Close ---
   closeBtn.addEventListener("click", () => {
@@ -534,7 +687,23 @@ function initPanel(shadow: ShadowRoot, root: HTMLElement): void {
   }
 
   function sendMsg(msg: any): Promise<any> {
-    return new Promise((resolve) => chrome.runtime.sendMessage(msg, resolve));
+    if (!isExtensionRuntimeAvailable()) {
+      return Promise.resolve(extensionContextInvalidatedResponse());
+    }
+    return new Promise((resolve) => {
+      try {
+        chrome.runtime.sendMessage(msg, (response) => {
+          const lastError = chrome.runtime.lastError;
+          if (lastError) {
+            resolve(runtimeErrorResponse(lastError));
+            return;
+          }
+          resolve(response);
+        });
+      } catch (error) {
+        resolve(runtimeErrorResponse(error));
+      }
+    });
   }
 
   // pct, scoreColor imported from shared/utils
@@ -657,7 +826,7 @@ function initPanel(shadow: ShadowRoot, root: HTMLElement): void {
   }
 
   // Listen for grant broadcast from permission.html. On match, auto-retry.
-  chrome.runtime.onMessage.addListener((msg) => {
+  addRuntimeMessageListener((msg) => {
     if (
       msg?.kind === "permissionGranted" &&
       typeof msg.origin === "string" &&
@@ -724,14 +893,27 @@ function initPanel(shadow: ShadowRoot, root: HTMLElement): void {
   }
 
   function subscribeToJob(jobId: string): void {
-    activePort?.disconnect();
-    const port = chrome.runtime.connect({ name: "career-ops.job" });
-    activePort = port;
-    port.postMessage({ jobId });
-    port.onMessage.addListener((raw: any) => {
-      if (raw?.channel !== "job") return;
-      handleJobEvent(raw.event);
-    });
+    try {
+      activePort?.disconnect();
+    } catch (error) {
+      if (!isExtensionContextInvalidated(error)) console.error(error);
+    }
+    if (!isExtensionRuntimeAvailable()) {
+      renderError(EXTENSION_CONTEXT_INVALIDATED_CODE, EXTENSION_CONTEXT_INVALIDATED_MESSAGE);
+      return;
+    }
+    try {
+      const port = chrome.runtime.connect({ name: "career-ops.job" });
+      activePort = port;
+      port.postMessage({ jobId });
+      port.onMessage.addListener((raw: any) => {
+        if (raw?.channel !== "job") return;
+        handleJobEvent(raw.event);
+      });
+    } catch (error) {
+      const response = runtimeErrorResponse(error);
+      renderError(response.error.code, response.error.message);
+    }
   }
 
   function handleJobEvent(event: any): void {
@@ -1259,7 +1441,7 @@ function initPanel(shadow: ShadowRoot, root: HTMLElement): void {
 
   // Listen for scoped enrich progress broadcasts from background
   let activeEnrichSessionId: string | null = null;
-  chrome.runtime.onMessage.addListener((msg: {
+  addRuntimeMessageListener((msg: {
     kind?: string;
     sessionId?: string;
     current?: number;
@@ -1339,8 +1521,14 @@ function initPanel(shadow: ShadowRoot, root: HTMLElement): void {
     const queued = enrichRes.result.queued ?? enrichRes.result.evaluated ?? enrichRes.result.added ?? 0;
     const skipped = enrichRes.result.skipped ?? 0;
     const failed = enrichRes.result.failed ?? 0;
-    ngAddedEl.textContent = "\u2713 " + queued + " queued for direct evaluation";
-    ngSkippedEl.textContent = "\u2717 " + skipped + " skipped, " + failed + " failed to queue";
+    const detailSucceeded = detailRes.result.enrichedRows.length;
+    const detailFailed = detailRes.result.failed ?? 0;
+    const skipDetail = formatNewGradSkipBreakdown(enrichRes.result.skipBreakdown);
+    ngAddedEl.textContent = "\u2713 " + queued + " queued for direct evaluation (" +
+      detailSucceeded + "/" + storedPromotedRows.length + " detail pages enriched)";
+    ngSkippedEl.textContent = "\u2717 " + skipped + " skipped after detail filters, " +
+      failed + " failed to queue, " + detailFailed + " detail pages failed" +
+      (skipDetail ? " — " + skipDetail : "");
     seedEvaluationJobs(enrichRes.result.jobs ?? []);
     ngEnrichResultsEl.classList.remove("hidden");
     ngEnrichProgressEl.classList.add("hidden");
@@ -1447,12 +1635,19 @@ function initPanel(shadow: ShadowRoot, root: HTMLElement): void {
 /*  Bootstrap                                                                  */
 /* -------------------------------------------------------------------------- */
 
+interface PanelWindow extends Window {
+  __careerOpsPanelLoaded?: boolean;
+}
+
 function togglePanel(): void {
   const { root, shadow, existed } = getOrCreatePanel();
 
   if (existed) {
     // Toggle visibility
     root.style.display = root.style.display === "none" ? "block" : "none";
+    if (root.style.display !== "none") {
+      keepPanelInViewport(root);
+    }
     return;
   }
 
@@ -1468,9 +1663,19 @@ function togglePanel(): void {
   initPanel(shadow, root);
 }
 
-// Listen for toggle messages from the background worker
-chrome.runtime.onMessage.addListener((msg) => {
-  if (msg?.kind === "togglePanel") {
-    togglePanel();
-  }
-});
+const panelWindow = window as PanelWindow;
+
+if (panelWindow.__careerOpsPanelLoaded) {
+  togglePanel();
+} else {
+  panelWindow.__careerOpsPanelLoaded = true;
+
+  // Listen for toggle messages from the background worker.
+  addRuntimeMessageListener((msg) => {
+    if (msg?.kind === "togglePanel") {
+      togglePanel();
+    }
+  });
+
+  togglePanel();
+}

@@ -17,6 +17,7 @@ import type {
   ScoredRow,
 } from "../contracts/newgrad.js";
 import { matchActiveSecurityClearanceRequirement } from "../lib/security-clearance.js";
+import { findSkillKeywordMatches } from "./newgrad-skill-match.js";
 
 /* -------------------------------------------------------------------------- */
 /*  Parsing helpers                                                            */
@@ -175,7 +176,7 @@ function extractMinimumYearsExperience(text: string): number | null {
  */
 export function scoreRow(row: NewGradRow, config: NewGradScanConfig): ScoredRow {
   const titleLower = row.title.toLowerCase();
-  const qualsLower = (row.qualifications ?? "").toLowerCase();
+  const qualifications = row.qualifications ?? "";
 
   // --- Role match ---
   const roleMatched = config.role_keywords.positive.some((kw) =>
@@ -184,12 +185,10 @@ export function scoreRow(row: NewGradRow, config: NewGradScanConfig): ScoredRow 
   const roleScore = roleMatched ? config.role_keywords.weight : 0;
 
   // --- Skill keywords ---
-  const matchedSkills: string[] = [];
-  for (const term of config.skill_keywords.terms) {
-    if (qualsLower.includes(term.toLowerCase())) {
-      matchedSkills.push(term);
-    }
-  }
+  const matchedSkills = findSkillKeywordMatches(
+    qualifications,
+    config.skill_keywords.terms,
+  );
   const skillScore = Math.min(
     matchedSkills.length * config.skill_keywords.weight,
     config.skill_keywords.max_score,

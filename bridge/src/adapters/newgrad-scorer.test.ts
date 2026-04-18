@@ -284,6 +284,85 @@ describe("scoreRow", () => {
     expect(scored.breakdown.skillKeywordsMatched).toContain("typescript");
   });
 
+  test("short skill terms require token boundaries", () => {
+    const config = makeConfig({
+      skill_keywords: { terms: ["AI", "Java", "JavaScript", "API"] },
+    });
+    const row = makeRow({
+      qualifications: "Maintain JavaScript services and public APIs.",
+    });
+    const scored = scoreRow(row, config);
+
+    expect(scored.breakdown.skillKeywordsMatched).not.toContain("AI");
+    expect(scored.breakdown.skillKeywordsMatched).not.toContain("Java");
+    expect(scored.breakdown.skillKeywordsMatched).toContain("JavaScript");
+    expect(scored.breakdown.skillKeywordsMatched).toContain("API");
+  });
+
+  test("single-letter R avoids R&D false positives but matches skill lists", () => {
+    const config = makeConfig({
+      skill_keywords: { terms: ["R", "Python"] },
+    });
+
+    const researchRow = makeRow({
+      qualifications: "Work with product R&D teams on developer tooling.",
+    });
+    const skillListRow = makeRow({
+      qualifications: "Experience with R, Python, and statistical analysis.",
+    });
+
+    expect(scoreRow(researchRow, config).breakdown.skillKeywordsMatched).toEqual([]);
+    expect(scoreRow(skillListRow, config).breakdown.skillKeywordsMatched).toEqual([
+      "R",
+      "Python",
+    ]);
+  });
+
+  test("C/C++ and iOS aliases match resume-style terms", () => {
+    const config = makeConfig({
+      skill_keywords: { terms: ["C/C++", "iOS", "iOS SDK"] },
+    });
+    const row = makeRow({
+      qualifications: "Experience with C++17 systems programming and iOS SDK work.",
+    });
+    const scored = scoreRow(row, config);
+
+    expect(scored.breakdown.skillKeywordsMatched).toEqual([
+      "C/C++",
+      "iOS",
+      "iOS SDK",
+    ]);
+  });
+
+  test("profile phrase aliases match common job-description variants", () => {
+    const config = makeConfig({
+      skill_keywords: {
+        terms: [
+          "HTML/CSS",
+          "Linux/Unix",
+          "Spring (IOC, AOP)",
+          "JUnit 5",
+          "CORS/CSRF protection",
+          "CI/CD pipeline",
+        ],
+      },
+    });
+    const row = makeRow({
+      qualifications:
+        "Build HTML5 frontends on Unix systems using Spring Framework, JUnit5, CORS controls, and CI/CD.",
+    });
+    const scored = scoreRow(row, config);
+
+    expect(scored.breakdown.skillKeywordsMatched).toEqual([
+      "HTML/CSS",
+      "Linux/Unix",
+      "Spring (IOC, AOP)",
+      "JUnit 5",
+      "CORS/CSRF protection",
+      "CI/CD pipeline",
+    ]);
+  });
+
   test("null qualifications yields 0 skill score", () => {
     const config = makeConfig();
     const row = makeRow({ qualifications: null });
