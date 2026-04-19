@@ -835,6 +835,9 @@ function isDevJobUrl(url) {
     'spring-boot',           // Spring Boot = Java exclusivamente
     // Ofertas exclusivas para personas con discapacidad certificada
     'discapacidad',          // personal-con-discapacidad — requiere certificado que no tenemos
+    // Roles financiero-contables (no son TI)
+    'analista-contable', 'analista-de-contabilidad', 'auxiliar-contable',
+    'contador-', 'auxiliar-financiero',
   ];
   if (hardReject.some(kw => slug.includes(kw))) return false;
   // Aceptar roles de desarrollo
@@ -1159,7 +1162,17 @@ async function fillForm(page, candidate, cvContent) {
         value = 'Sí, uso Node.js como runtime principal en el backend. He desarrollado APIs REST con Express y NestJS, incluyendo proyectos en SERVIMAX e INTELIBPO.';
       else if (/python/i.test(q))
         value = 'Tengo conocimientos básicos de Python. Lo he usado para scripts de automatización y procesamiento de datos, aunque mi stack principal es JavaScript/TypeScript.';
-      else if (/n8n|automatizaci[oó]n|rpa|bot/i.test(q))
+      else if (/nest\.?js/i.test(q))
+        value = 'Sí, uso NestJS en el backend. En SERVIMAX construí módulos de autenticación y gestión de productos con NestJS + TypeScript + MySQL. En INTELIBPO usé NestJS para servicios de automatización RPA conectados a n8n.';
+      else if (/crud|cru-d|crear.*leer|listar.*crear/i.test(q))
+        value = 'Con NestJS y TypeORM: defino entity, creo el DTO, genero el módulo/servicio/controller con CLI, implemento los 5 endpoints REST y agrego validaciones con class-validator. Tiempo estimado: 30-45 minutos.';
+      else if (/swift|xcode|ios.*m[oó]vil|m[oó]vil.*ios/i.test(q))
+        value = 'No tengo experiencia en desarrollo iOS con Swift/Xcode. Mi enfoque es desarrollo web y backend (JavaScript/TypeScript). Podría aprender, pero no es mi stack actual.';
+      else if (/kotlin|android.studio|android.*sdk|sdk.*android/i.test(q))
+        value = 'No tengo experiencia en Android nativo con Kotlin. Mi stack es web: Angular/React en frontend y Node.js/NestJS en backend.';
+      else if (/flutter|dart/i.test(q))
+        value = 'No tengo experiencia en Flutter/Dart, pero tengo sólidas bases en JavaScript/TypeScript y desarrollo web. Con disposición de aprender desarrollo móvil.';
+      else if (/n8n|automatizaci[oó]n|automatizad[oa]|rpa|bot/i.test(q))
         value = 'Sí, tengo experiencia en n8n y automatización RPA. En INTELIBPO implementé flujos para recepción de archivos SFTP/correo/nube y transformación de datos para clientes.';
       else if (/php|laravel|symfony/i.test(q))
         value = 'No tengo experiencia en PHP/Laravel, pero tengo bases sólidas en programación web y puedo aprenderlo. Mi stack principal es JavaScript/TypeScript.';
