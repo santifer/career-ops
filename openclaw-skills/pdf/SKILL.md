@@ -1,5 +1,5 @@
 ---
-name: resume-ats-generator
+name: pdf
 description: Generate ATS-optimized PDFs from cv.md, tailoring content to specific job descriptions with keyword injection and professional formatting.
 ---
 

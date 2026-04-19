@@ -1,5 +1,5 @@
 ---
-name: followup-tracker
+name: followup
 description: Track follow-up cadence for active job applications. Flag overdue and urgent follow-ups, generate tailored email and LinkedIn follow-up drafts, and maintain follow-up history. Use when asked to check follow-ups, draft follow-up messages, review application cadence, or manage post-application outreach.
 ---
 

@@ -1,5 +1,5 @@
 ---
-name: linkedin-outreach
+name: contacto
 description: Generate tailored LinkedIn outreach messages for job applications. Use when asked to write LinkedIn connection requests, reach out to recruiters/hiring managers/peers, or prepare pre-interview messages. Triggers on "linkedin message", "outreach", "connection request", "contact recruiter", "reach out to hiring manager".
 ---
 

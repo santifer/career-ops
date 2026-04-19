@@ -1,5 +1,5 @@
 ---
-name: openclaw-career-tracker
+name: tracker
 description: Read and display the applications tracker, show statistics, and update application statuses on request.
 ---
 

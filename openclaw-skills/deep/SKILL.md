@@ -1,5 +1,5 @@
 ---
-name: deep-research
+name: deep
 description: Deep company research for job applications using a 6-axis framework (AI Strategy, Recent Moves, Engineering Culture, Challenges, Competitors, Candidate Angle). Use when evaluating a company/role for an interview, preparing for a first-round call, or deciding whether to apply. Trigger on "research company", "deep research", "company analysis", "interview prep research", or when asked to investigate a specific employer before an application or interview.
 ---
 

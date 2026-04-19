@@ -1,5 +1,5 @@
 ---
-name: job-auto-submit
+name: batch
 description: Batch process job postings — navigate portals in real-time or script URLs already collected, spawning workers for each posting.
 ---
 

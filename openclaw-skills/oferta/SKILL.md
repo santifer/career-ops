@@ -1,13 +1,10 @@
 ---
-name: jd-evaluator
-description: >
-  Full 7-block job description evaluation (A-G) with scoring, archetype detection,
-  CV matching, comp research, personalization, interview planning, and ghost job detection.
-  Trigger on: "evaluate this JD", "rate this job", "score this offer", "is this job legit",
-  "analyze this listing", "evaluate oferta", "eval JD", or when user pastes a JD and wants analysis.
+name: oferta
+description: Full 7-block JD evaluation (A-G) with archetype detection, CV matching, comp research, personalization plan, interview prep, and posting legitimacy check.
 ---
 
-# JD Evaluator
+# Mode: oferta — Full JD Evaluation (A-G)
+
 
 Evaluate job descriptions against the candidate's CV and profile. Output all 7 blocks (A-G).
 

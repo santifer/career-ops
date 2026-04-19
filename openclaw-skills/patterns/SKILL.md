@@ -1,5 +1,5 @@
 ---
-name: rejection-patterns
+name: patterns
 description: Analyze tracked job applications for outcome patterns and conversion insights. Use when asked to analyze rejections, find application patterns, review conversion funnel, check score vs outcome correlations, or generate a pattern analysis report. Triggers on "analyze patterns", "rejection patterns", "conversion funnel", "what's working", "application insights".
 ---
 

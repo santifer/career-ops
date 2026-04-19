@@ -1,5 +1,5 @@
 ---
-name: job-api-search
+name: scan
 description: Scan configured job portals, filter by title relevance, and add new postings to the pipeline for later evaluation.
 ---
 
