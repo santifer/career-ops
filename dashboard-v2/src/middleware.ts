@@ -5,13 +5,14 @@ const { auth } = NextAuth(authConfig);
 
 export default auth((req) => {
   const isLoggedIn = !!req.auth
-  const isLoginPage = req.nextUrl.pathname === "/login"
+  const publicPages = ["/login", "/signup", "/verify"]
+  const isPublicPage = publicPages.includes(req.nextUrl.pathname)
 
-  if (isLoginPage) {
+  if (isPublicPage) {
     if (isLoggedIn) {
       return Response.redirect(new URL("/", req.nextUrl))
     }
-    return undefined; // Do nothing, let them access login
+    return undefined; // Do nothing, let them access public pages
   }
 
   if (!isLoggedIn) {
