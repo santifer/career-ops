@@ -1,5 +1,27 @@
 # Modo: pdf — Generación de PDF ATS-Optimizado
 
+## ⚠️ KOREAN DETECTION — CRITICAL STEP (Run FIRST)
+
+**BEFORE executing any steps below, check if:**
+- Job posting description is in Korean language
+- Company is Korean-based (South Korea location)
+- User explicitly requested Korean output or specified a Korean name
+
+**If user wants a MULTI-PAGE Korean 이력서 (Jumpit style, 2-4 pages):**
+- Use `modes/ko/pdf.md` workflow instead (Korean-market resume with tables)
+- Ask user: "Would you like a multi-page Korean 이력서 (Jumpit style) or a single-page ATS CV in Korean?"
+
+**If user wants a SINGLE-PAGE Korean ATS CV:**
+- Continue with steps 1-15 below, but:
+  - Generate in Korean language
+  - Use A4 format (not letter)
+  - Adjust section headers to Korean: "직무 요약", "경력 사항", "교육", "기술", "프로젝트"
+  - Use Korean date format: `YYYY. MM ~ YYYY. MM` (e.g., `2026. 03 — 현재`)
+
+**If NONE are true:** Continue with normal English pdf workflow below.
+
+---
+
 ## Pipeline completo
 
 1. Lee `cv.md` como fuentes de verdad

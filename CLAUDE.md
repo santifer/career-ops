@@ -211,6 +211,29 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 
 **When NOT to:** If the user applies to English-language roles, even at French, German, or Japanese companies, use the default English modes.
 
+### Korean Resume Modes
+
+**CRITICAL: When ANY of these conditions are true:**
+1. Job posting description is in Korean language
+2. Company is Korean-based (South Korea)
+3. User explicitly requests Korean output or a Korean name (전서준, etc.)
+
+**Two paths based on resume type:**
+
+#### Single-Page Korean ATS CV (Recommended for most applications)
+- **Use:** `modes/pdf.md` workflow with Korean language detection
+- **Output:** 1 page, A4 format, ATS-optimized
+- **Use case:** Korean companies applying via online portals, job boards (Jumpit, Rocketpunch, etc.)
+- **What we just generated:** BOS Semiconductors CV is a single-page Korean ATS CV
+
+#### Multi-Page Korean 이력서 (Jumpit Style, 2-4 pages)
+- **Use:** `modes/ko/pdf.md` workflow
+- **Output:** 2-4 pages, A4 format, table-driven Jumpit layout
+- **Use case:** Korean-style formal resume for recruiter direct outreach, company submissions, 전형 서류
+- **Features:** Skill tables, career summary tables, project sections, Korean date format
+
+**How to decide:** Ask user "Would you prefer a single-page ATS CV or a multi-page Korean 이력서?" or detect from context (job board = single-page, recruiter submission = multi-page).
+
 ### Skill Modes
 
 | If the user... | Mode |
@@ -221,7 +244,9 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 | Wants LinkedIn outreach | `contacto` |
 | Asks for company research | `deep` |
 | Preps for interview at specific company | `interview-prep` |
-| Wants to generate CV/PDF | `pdf` |
+| Wants to generate CV/PDF (English) | `pdf` |
+| Wants single-page Korean ATS CV | `pdf` (with Korean language detection) |
+| Wants multi-page Korean 이력서 (Jumpit style) | `modes/ko/pdf` |
 | Evaluates a course/cert | `training` |
 | Evaluates portfolio project | `project` |
 | Asks about application status | `tracker` |

@@ -54,7 +54,16 @@ language:
 | `apply.md` | `modes/apply.md` | 라이브 지원서 작성 보조 |
 | `pipeline.md` | `modes/pipeline.md` | `data/pipeline.md`에 쌓인 URL 일괄 처리 |
 
-다른 모드(`scan`, `batch`, `pdf`, `tracker`, `auto-pipeline`, `deep`, `outreach`, `project`, `training`)는 이번 변경에 포함하지 않았습니다. 이들은 여전히 기본 영어 모드로 잘 동작하며, 경로/스크립트/툴링 중심이라 언어 의존도가 낮습니다.
+### PDF 이력서 생성 (NEW)
+
+이제 `modes/ko/pdf.md`가 있어서 **다목적 한국 이력서 생성**을 지원합니다:
+
+| 이력서 형식 | 사용 모드 | 용도 |
+|-------------|---------|------|
+| **1페이지 한국어 ATS CV** | `modes/pdf.md` (Korean auto-detect) | 잡보드(점핏, 로켓펀치 등)에 지원 |
+| **2-4페이지 한국 이력서 (점핏 스타일)** | `modes/ko/pdf.md` | 리크루터 직접 연락, 정형화된 서류 제출 |
+
+다른 모드(`scan`, `batch`, `tracker`, `auto-pipeline`, `deep`, `outreach`, `project`, `training`)는 이번 변경에 포함하지 않았습니다. 이들은 여전히 기본 영어 모드로 잘 동작하며, 경로/스크립트/툴링 중심이라 언어 의존도가 낮습니다.
 
 ## 무엇은 영어로 남겨두나요?
 
