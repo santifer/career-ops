@@ -11,7 +11,7 @@ Scan configured job portals, filter by title relevance, and add new postings to 
 
 Run as a subagent to avoid consuming main context:
 
-```
+```text
 sessions_spawn({
   label: "🔍 Portal Scanner",
   task: "[content of this file + specific data]",
@@ -108,17 +108,17 @@ Levels are additive — all execute, results merge and deduplicate.
       - **company**: after " @ " in title, or extract from domain/path
    c. Accumulate in candidate list (dedup with Level 1+2)
 
-6. **Filter by title** using `title_filter` from `portals.yml`:
+7. **Filter by title** using `title_filter` from `portals.yml`:
    - At least 1 keyword from `positive` must appear in title (case-insensitive)
    - 0 keywords from `negative` must appear
    - `seniority_boost` keywords give priority but are not mandatory
 
-7. **Deduplicate** against 3 sources:
+8. **Deduplicate** against 3 sources:
    - `scan-history.tsv` → exact URL already seen
    - `applications.md` → company + normalized role already evaluated
    - `pipeline.md` → exact URL already in pending or processed
 
-7.5. **Verify liveness of web_search results (Level 3)** — BEFORE adding to pipeline:
+9. **Verify liveness of web_search results (Level 3)** — BEFORE adding to pipeline:
 
    web_search results can be outdated (Google caches results for weeks or months). To avoid evaluating expired postings, verify with the browser tool each new URL from Level 3. Levels 1 and 2 are inherently real-time and do not require this verification.
 
@@ -136,13 +136,13 @@ Levels are additive — all execute, results merge and deduplicate.
 
    **Do not interrupt the entire scan if one URL fails.** If `navigate` gives an error (timeout, 403, etc.), mark as `skipped_expired` and continue with the next.
 
-8. **For each new verified posting that passes filters**:
-   a. Add to `pipeline.md` "Pendientes" section: `- [ ] {url} | {company} | {title}`
+10. **For each new verified posting that passes filters**:
+   a. Add to `pipeline.md` pending section (match the existing header for pending/unprocessed items, or create a new one): `- [ ] {url} | {company} | {title}`
    b. Record in `scan-history.tsv`: `{url}\t{date}\t{query_name}\t{title}\t{company}\tadded`
 
-9. **Postings filtered by title**: record in `scan-history.tsv` with status `skipped_title`
-10. **Duplicate postings**: record with status `skipped_dup`
-11. **Expired postings (Level 3)**: record with status `skipped_expired`
+11. **Postings filtered by title**: record in `scan-history.tsv` with status `skipped_title`
+12. **Duplicate postings**: record with status `skipped_dup`
+13. **Expired postings (Level 3)**: record with status `skipped_expired`
 
 ## Extracting title and company from web_search results
 
@@ -165,7 +165,7 @@ If a URL is not publicly accessible:
 
 `data/scan-history.tsv` tracks ALL seen URLs:
 
-```
+```text
 url	first_seen	portal	title	company	status
 https://...	2026-02-10	Ashby — AI PM	PM AI	Acme	added
 https://...	2026-02-10	Greenhouse — SA	Junior Dev	BigCo	skipped_title
@@ -175,7 +175,7 @@ https://...	2026-02-10	WebSearch — AI PM	PM AI	ClosedCo	skipped_expired
 
 ## Output Summary
 
-```
+```text
 Portal Scan — {YYYY-MM-DD}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
 Queries executed: N

@@ -9,7 +9,7 @@ Two modes of use: **browser conductor** (navigates portals in real-time) or **st
 
 ## Architecture
 
-```
+```text
 Main Agent (browser conductor)
   │
   │  Browser: navigates portals (logged-in sessions)
@@ -28,7 +28,7 @@ Each worker is a `sessions_spawn` child with clean context. The conductor only o
 
 ## Files
 
-```
+```text
 batch/
   batch-input.tsv               # URLs (by conductor or manual)
   batch-state.tsv               # Progress (auto-generated, gitignored)
@@ -48,14 +48,14 @@ batch/
    b. Save JD to `/tmp/batch-jd-{id}.txt`
    c. Calculate next sequential REPORT_NUM
    d. Execute via sessions_spawn:
-      ```
+```text
       sessions_spawn({
         label: "📄 Process posting {id}",
         task: "[batch-prompt.md content] Process this posting. URL: {url}. JD: /tmp/batch-jd-{id}.txt. Report: {num}. ID: {id}",
         mode: "run",
         runTimeoutSeconds: 300
       })
-      ```
+```
    e. Update `batch-state.tsv` (completed/failed + score + report_num)
    f. Log to `logs/{report_num}-{id}.log`
    g. Browser: go back → next posting
@@ -77,7 +77,7 @@ Options:
 
 ## batch-state.tsv Format
 
-```
+```text
 id	url	status	started_at	completed_at	report_num	score	error	retries
 1	https://...	completed	2026-...	2026-...	002	4.2	-	0
 2	https://...	failed	2026-...	2026-...	-	-	Error msg	1

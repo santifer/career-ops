@@ -24,7 +24,7 @@ description: Generate ATS-optimized PDFs from cv.md, tailoring content to specif
 13. Read `name` from `config/profile.yml` → normalize to kebab-case lowercase (e.g. "John Doe" → "john-doe") → `{candidate}`
 14. Write HTML to `/tmp/cv-{candidate}-{company}.html`
 15. Execute: `exec` to run `node generate-pdf.mjs /tmp/cv-{candidate}-{company}.html output/cv-{candidate}-{company}-{YYYY-MM-DD}.pdf --format={letter|a4}`
-15. Report: PDF path, page count, keyword coverage %
+16. Report: PDF path, page count, keyword coverage %
 
 ## ATS Rules (clean parsing)
 
@@ -163,12 +163,12 @@ a. `export-design` the duplicate as PDF (format: a4 or letter based on JD locati
 b. **IMMEDIATELY** download the PDF using `exec`:
    ```bash
    curl -sL -o "output/cv-{candidate}-{company}-canva-{YYYY-MM-DD}.pdf" "{download_url}"
-   ```
+```
    The export URL is a pre-signed S3 link that expires in ~2 hours. Download it right away.
 c. Verify the download:
    ```bash
    file output/cv-{candidate}-{company}-canva-{YYYY-MM-DD}.pdf
-   ```
+```
    Must show "PDF document". If it shows XML or HTML, the URL expired — re-export and retry.
 d. Report: PDF path, file size, Canva design URL (for manual tweaking)
 

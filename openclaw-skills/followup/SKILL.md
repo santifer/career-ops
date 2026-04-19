@@ -25,7 +25,7 @@ Read `data/applications.md` and `data/follow-ups.md`. For each active applicatio
 
 ## Step 2 — Display Dashboard
 
-```
+```text
 Follow-up Dashboard — {date}
 {N} applications tracked, {N} actionable
 
@@ -80,7 +80,7 @@ Do NOT generate another draft. Suggest:
 
 ## Step 4 — Present Drafts
 
-```
+```markdown
 ## Follow-up: {Company} — {Role} (#{num})
 
 **To:** {email or "No contact found"}
@@ -97,15 +97,15 @@ Do NOT generate another draft. Suggest:
 Only record follow-ups the user confirms they sent.
 
 1. If `data/follow-ups.md` doesn't exist, create it with a header table:
-   ```
+```text
    | # | App# | Date | Company | Role | Channel | Contact | Notes |
-   ```
+```
 2. Append a row with all details.
 3. Update the Notes column in `data/applications.md` with "Follow-up {N} sent {YYYY-MM-DD}".
 
 ## Step 6 — Summary
 
-```
+```text
 - {N} applications tracked
 - {N} overdue — drafts generated above
 - {N} urgent — respond today
