@@ -838,6 +838,13 @@ function isDevJobUrl(url) {
     // Roles financiero-contables (no son TI)
     'analista-contable', 'analista-de-contabilidad', 'auxiliar-contable',
     'contador-', 'auxiliar-financiero',
+    // Stack .NET — candidato no tiene C#/.NET
+    'desarrollador-net-', '-net-medio', '-net-con-', '-net-junior', '-net-senior',
+    '-net-angular', // evita bloquear "internet" — solo combos net+algo
+    // Manufactura CNC — programador de máquinas, no software
+    '-cnc', 'operario-programador',
+    // Roles de arquitectura — requieren 5+ años de experiencia senior
+    'arquitecto-de-software', 'arquitecto-software-', 'arquitectoa-de-software',
   ];
   if (hardReject.some(kw => slug.includes(kw))) return false;
   // Aceptar roles de desarrollo
@@ -845,7 +852,7 @@ function isDevJobUrl(url) {
     'desarrollador', 'programador', 'developer', 'fullstack', 'full-stack',
     'frontend', 'front-end', 'backend', 'back-end', 'software', 'qa-engineer',
     'quality-assurance', 'analista-desarrollador', 'analista-programador',
-    'arquitecto-software', 'devops', 'data-engineer', 'ingeniero-desarrollo',
+    'devops', 'data-engineer', 'ingeniero-desarrollo',
     'tecnico-sistemas', 'analista-sistemas', 'ingeniero-sistemas',
     'automatizacion-rpa', 'machine-learning', 'inteligencia-artificial',
     'soporte-ti', 'infraestructura-ti', 'application-developer',
