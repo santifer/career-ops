@@ -321,7 +321,7 @@ function printSummary(results) {
     for (const l of results.listings) {
       console.log(`  • ${l.title} — ${l.company}`);
     }
-    console.log(`\nNext step: run /career-ops ${portalId} to process these into your pipeline.`);
+    console.log(`\nNext step: run /career-ops pipeline jobs saved to the pipeline.`);
   } else {
     console.log('\nNo new listings found this run.');
   }
