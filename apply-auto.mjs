@@ -1093,7 +1093,16 @@ async function fillForm(page, candidate, cvContent) {
       const skills = (candidate.skills||[]).join(', ') || 'JavaScript, TypeScript, Node.js, Angular, React, MySQL';
       const cvName = candidate.full_name || 'Cristian Camilo Montes Teheran';
       const cvLocation = candidate.location || 'Bogotá DC, Colombia';
-      if (/d[oó]nde vive|localidad|barrio|ubicaci[oó]n/.test(q))
+      // ── PRIORIDAD MÁXIMA: preguntas de acuerdo/aceptación — siempre "Sí" simple ──
+      if (/\bde acuerdo\b|est[aá].*acuerdo|acuerdo con (la |el |esta |este )|aceptas (la |el )|acepta (la |el )/.test(q)) {
+        if (/salario|salarial|remuner|asignaci[oó]n|pago|cop|mil|oferta.*econ/.test(q))
+          value = 'Sí, estoy de acuerdo con la oferta salarial.';
+        else if (/presencial|asistir|lugar|trabajo.*f[ií]sico|f[ií]sico.*trabajo/.test(q))
+          value = 'Sí, estoy de acuerdo con trabajar de forma presencial.';
+        else
+          value = 'Sí, estoy de acuerdo con las condiciones de la oferta.';
+      }
+      else if (/d[oó]nde vive|localidad|barrio|ubicaci[oó]n/.test(q))
         value = cvLocation;
       else if (/n[uú]mero de contacto|whatsapp|tel[eé]fono|celular/.test(q))
         value = candidate.phone || '';
