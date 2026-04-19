@@ -2,31 +2,45 @@
 
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
-import { Briefcase, Github, Mail, Lock, ArrowRight, ShieldCheck } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Briefcase, Key, Mail, ArrowRight, Github, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import Link from 'next/link';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get('callbackUrl') || '/';
+  const isVerified = searchParams.get('verified') === 'true';
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
-    
+
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
+
     try {
-      const result: any = await signIn('credentials', {
+      const result = await signIn('credentials', {
         email,
         password,
         redirect: false,
-        callbackUrl: '/'
+        callbackUrl,
       });
+
       if (result?.error) {
-        setError("Invalid credentials. Please try again.");
+        if (result.error.includes("verify your email")) {
+           router.push(`/verify?email=${encodeURIComponent(email)}`);
+           return;
+        }
+        setError("Invalid credentials or access denied.");
       } else {
-        window.location.href = '/';
+        router.push(callbackUrl);
+        router.refresh();
       }
     } catch (err) {
       setError("An unexpected error occurred.");
@@ -36,115 +50,113 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#09090b] text-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
-      {/* Dynamic Background Effects */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-amber-500/10 rounded-full blur-[120px]" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/10 rounded-full blur-[120px]" />
-
+    <div className="min-h-screen bg-[#faf9f6] text-[#1c1917] flex flex-col items-center justify-center p-6 relative overflow-hidden font-sans">
+      {/* Background Glows: Subtle warm tones */}
+      <div className="absolute top-[-20%] right-[-10%] w-[50%] h-[50%] bg-[#f59e0b]/5 rounded-full blur-[150px]" />
+      
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md z-10"
       >
         <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center h-16 w-16 bg-amber-500 rounded-2xl shadow-[0_0_30px_rgba(245,158,11,0.3)] mb-6">
-            <Briefcase className="h-8 w-8 text-black" />
+          <div className="inline-flex items-center justify-center h-14 w-14 bg-[#1c1917] rounded-2xl shadow-xl mb-6">
+            <Briefcase className="h-7 w-7 text-white" />
           </div>
-          <h1 className="text-4xl font-bold tracking-tight mb-2">Career-Ops</h1>
-          <p className="text-white/40 font-medium">Elevate your career with AI-driven intelligence.</p>
+          <h1 className="text-4xl font-bold tracking-tight mb-2">Welcome Back</h1>
+          <p className="text-[#a8a29e] font-medium">Access your AI career command center</p>
         </div>
 
-        <div className="bg-white/[0.03] border border-white/10 backdrop-blur-2xl rounded-3xl p-8 shadow-2xl">
-          <div className="space-y-6">
-            {/* Social Login */}
-            <button 
-              onClick={() => signIn('github', { callbackUrl: '/' })}
-              className="w-full bg-white text-black font-bold py-4 rounded-2xl flex items-center justify-center gap-3 hover:bg-white/90 transition-all shadow-lg active:scale-[0.98]"
-            >
-              <Github size={20} />
-              Continue with GitHub
-            </button>
+        {isVerified && (
+          <div className="mb-6 p-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center gap-3 text-emerald-700 text-sm font-bold">
+            <CheckCircle2 size={18} />
+            Email verified successfully. You can now log in.
+          </div>
+        )}
 
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-white/10"></span>
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-[#0e0e11] px-4 text-white/30 tracking-widest font-bold">Or secure access</span>
+        <div className="bg-white border border-[#e7e5e4] rounded-[2.5rem] p-10 shadow-2xl shadow-black/[0.02]">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold text-[#a8a29e] uppercase tracking-[0.2em] ml-1">Authentication ID</label>
+              <div className="relative group">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[#a8a29e] group-focus-within:text-[#1c1917] transition-colors" size={18} />
+                <input
+                  name="email"
+                  type="email"
+                  placeholder="name@company.com"
+                  required
+                  className="w-full bg-[#faf9f6]/50 border border-[#e7e5e4] rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-[#1c1917] transition-all font-bold placeholder:text-[#a8a29e]/50"
+                />
               </div>
             </div>
 
-            {/* Credentials Form */}
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-white/30 uppercase tracking-widest ml-1">Work Email</label>
-                <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" size={18} />
-                  <input 
-                    type="email" 
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="name@company.com"
-                    className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-amber-500/50 focus:ring-4 ring-amber-500/5 transition-all text-sm"
-                  />
-                </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold text-[#a8a29e] uppercase tracking-[0.2em] ml-1">Secure Token</label>
+              <div className="relative group">
+                <Key className="absolute left-4 top-1/2 -translate-y-1/2 text-[#a8a29e] group-focus-within:text-[#1c1917] transition-colors" size={18} />
+                <input
+                  name="password"
+                  type="password"
+                  placeholder="••••••••"
+                  required
+                  className="w-full bg-[#faf9f6]/50 border border-[#e7e5e4] rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-[#1c1917] transition-all font-bold placeholder:text-[#a8a29e]/50"
+                />
               </div>
+            </div>
 
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-white/30 uppercase tracking-widest ml-1">Password</label>
-                <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" size={18} />
-                  <input 
-                    type="password" 
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-amber-500/50 focus:ring-4 ring-amber-500/5 transition-all text-sm"
-                  />
-                </div>
-              </div>
-
-              <AnimatePresence>
-                {error && (
-                  <motion.div 
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="text-red-400 text-xs font-bold text-center bg-red-500/10 py-2 rounded-xl border border-red-500/20"
-                  >
-                    {error}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              <button 
-                type="submit"
-                disabled={isLoading}
-                className="w-full bg-amber-500 text-black font-bold py-4 rounded-2xl flex items-center justify-center gap-2 hover:bg-amber-400 transition-all shadow-lg shadow-amber-500/20 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none mt-4"
+            {error && (
+              <motion.div 
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="flex items-center gap-4 p-4 bg-rose-50 border border-rose-100 rounded-2xl text-rose-600 text-xs font-bold"
               >
-                {isLoading ? 'Authenticating...' : (
-                  <>
-                    Access Dashboard
-                    <ArrowRight size={18} />
-                  </>
-                )}
-              </button>
-            </form>
+                <AlertCircle size={14} />
+                {error}
+              </motion.div>
+            )}
+
+            <button 
+              type="submit"
+              disabled={isLoading}
+              className="w-full bg-[#1c1917] text-white font-bold py-5 rounded-2xl flex items-center justify-center gap-3 hover:bg-[#27272a] transition-all shadow-xl active:scale-[0.98] disabled:opacity-50"
+            >
+              {isLoading ? <Loader2 className="animate-spin" size={20} /> : (
+                <>
+                  Verify Credentials
+                  <ArrowRight size={20} className="text-white/40" />
+                </>
+              )}
+            </button>
+          </form>
+
+          <div className="mt-8 flex items-center gap-4 text-[#e7e5e4]">
+             <div className="h-px w-full bg-[#e7e5e4]" />
+             <span className="text-[10px] font-bold text-[#a8a29e] uppercase tracking-[0.2em] whitespace-nowrap">Third Party</span>
+             <div className="h-px w-full bg-[#e7e5e4]" />
           </div>
+
+          <button 
+            type="button"
+            onClick={() => signIn('github', { callbackUrl })}
+            className="w-full mt-6 bg-white border border-[#e7e5e4] text-[#1c1917] font-bold py-4 rounded-2xl flex items-center justify-center gap-3 hover:bg-[#faf9f6] transition-all"
+          >
+            <Github size={20} />
+            Continue with GitHub
+          </button>
         </div>
 
-        <div className="mt-8 flex items-center justify-center gap-2 text-white/30">
-          <ShieldCheck size={14} />
-          <span className="text-[10px] font-bold uppercase tracking-widest text-white/20">Secured with Enterprise Auth v5.0</span>
+        <p className="mt-10 text-center text-[#a8a29e] text-sm font-medium">
+          New to Career-Ops?{' '}
+          <Link href="/signup" className="text-[#1c1917] font-bold hover:underline underline-offset-4 decoration-[#e7e5e4]">
+            Register Identity
+          </Link>
+        </p>
+
+        <div className="mt-12 flex items-center justify-center gap-3 text-[#e7e5e4]">
+           <ShieldCheck size={16} />
+           <span className="text-[9px] font-bold uppercase tracking-[0.25em]">Secure Auth v2.0-modern</span>
         </div>
       </motion.div>
-
-      {/* Footer Branding */}
-      <div className="absolute bottom-8 text-center w-full opacity-20 hover:opacity-100 transition-opacity cursor-default">
-         <p className="text-[10px] font-bold tracking-[0.3em] uppercase">Built for high-performance careers</p>
-      </div>
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Briefcase, Mail, ArrowRight, ShieldCheck, CheckCircle2, Loader2, RefreshCw } from 'lucide-react';
+import { Mail, ArrowRight, CheckCircle2, Loader2, RefreshCw, ShieldCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 
@@ -31,7 +31,6 @@ function VerifyContent() {
     newToken[index] = value;
     setToken(newToken);
 
-    // Auto-focus next input
     if (value && index < 5) {
       const nextInput = document.getElementById(`otp-${index + 1}`);
       nextInput?.focus();
@@ -76,7 +75,6 @@ function VerifyContent() {
     }
   };
 
-  // Auto-submit when 6 digits are entered
   useEffect(() => {
     if (token.every(t => t !== '')) {
       handleSubmit();
@@ -84,23 +82,23 @@ function VerifyContent() {
   }, [token]);
 
   return (
-    <div className="min-h-screen bg-[#09090b] text-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
-      <div className="absolute top-[-20%] right-[-10%] w-[50%] h-[50%] bg-amber-500/5 rounded-full blur-[150px]" />
+    <div className="min-h-screen bg-[#faf9f6] text-[#1c1917] flex flex-col items-center justify-center p-6 relative overflow-hidden font-sans">
+      <div className="absolute top-[-20%] right-[-10%] w-[50%] h-[50%] bg-[#f59e0b]/5 rounded-full blur-[150px]" />
       
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md z-10"
       >
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center h-12 w-12 bg-amber-500 rounded-xl shadow-[0_0_20px_rgba(245,158,11,0.2)] mb-4">
-            <Mail className="h-6 w-6 text-black" />
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center justify-center h-14 w-14 bg-[#1c1917] rounded-2xl shadow-xl mb-6">
+            <Mail className="h-7 w-7 text-white" />
           </div>
           <h1 className="text-3xl font-bold tracking-tight mb-2">Check your email</h1>
-          <p className="text-white/40 text-sm">We've sent a 6-digit code to <span className="text-white font-medium">{email}</span></p>
+          <p className="text-[#a8a29e] font-medium text-sm">We&apos;ve sent a 6-digit code to <span className="text-[#1c1917] font-bold">{email}</span></p>
         </div>
 
-        <div className="bg-white/[0.02] border border-white/10 backdrop-blur-3xl rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+        <div className="bg-white border border-[#e7e5e4] rounded-[2.5rem] p-10 shadow-2xl shadow-black/[0.02] relative overflow-hidden">
           <AnimatePresence mode="wait">
             {isSuccess ? (
               <motion.div 
@@ -109,15 +107,15 @@ function VerifyContent() {
                 animate={{ opacity: 1, scale: 1 }}
                 className="text-center py-10"
               >
-                <div className="h-20 w-20 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <div className="h-20 w-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6">
                   <CheckCircle2 className="h-10 w-10 text-emerald-500" />
                 </div>
                 <h2 className="text-2xl font-bold mb-2">Email Verified</h2>
-                <p className="text-white/40 mb-8">Account activated successfully. Taking you to login...</p>
+                <p className="text-[#a8a29e] mb-4 font-medium">Account activated. Redirecting...</p>
               </motion.div>
             ) : (
               <motion.div key="form">
-                <div className="flex justify-between gap-2 mb-8">
+                <div className="flex justify-between gap-3 mb-10">
                   {token.map((digit, i) => (
                     <input
                       key={i}
@@ -128,13 +126,13 @@ function VerifyContent() {
                       onChange={(e) => handleInput(i, e.target.value)}
                       onKeyDown={(e) => handleKeyDown(i, e)}
                       autoFocus={i === 0}
-                      className="w-12 h-14 bg-black/40 border border-white/10 rounded-xl text-center text-xl font-bold focus:border-amber-500/50 outline-none transition-all"
+                      className="w-12 h-16 bg-[#faf9f6] border border-[#e7e5e4] rounded-2xl text-center text-2xl font-bold focus:border-[#1c1917] outline-none transition-all shadow-inner"
                     />
                   ))}
                 </div>
 
                 {error && (
-                  <div className="text-red-400 text-xs font-bold text-center bg-red-500/10 py-2 rounded-xl border border-red-500/20 mb-6">
+                  <div className="text-rose-600 text-xs font-bold text-center bg-rose-50 py-3 rounded-2xl border border-rose-100 mb-8">
                     {error}
                   </div>
                 )}
@@ -142,23 +140,23 @@ function VerifyContent() {
                 <button 
                   onClick={() => handleSubmit()}
                   disabled={isLoading || token.some(t => !t)}
-                  className="w-full bg-amber-500 text-black font-bold py-4 rounded-2xl flex items-center justify-center gap-2 hover:bg-amber-400 transition-all shadow-lg active:scale-[0.98] disabled:opacity-50"
+                  className="w-full bg-[#1c1917] text-white font-bold py-5 rounded-2xl flex items-center justify-center gap-3 hover:bg-[#27272a] transition-all shadow-xl active:scale-[0.98] disabled:opacity-50"
                 >
-                  {isLoading ? <Loader2 className="animate-spin" size={18} /> : (
+                  {isLoading ? <Loader2 className="animate-spin" size={20} /> : (
                     <>
-                      Verify Account
-                      <ArrowRight size={18} />
+                      Verify Identity
+                      <ArrowRight size={20} className="text-white/40" />
                     </>
                   )}
                 </button>
 
-                <div className="mt-6 text-center">
+                <div className="mt-8 text-center">
                   <button 
                     disabled={resendCooldown > 0}
-                    className="text-white/40 text-xs hover:text-white transition-colors disabled:opacity-50 inline-flex items-center gap-2"
+                    className="text-[#a8a29e] text-[10px] font-bold uppercase tracking-widest hover:text-[#1c1917] transition-colors disabled:opacity-50 inline-flex items-center gap-2"
                   >
                     <RefreshCw size={12} className={resendCooldown > 0 ? 'animate-spin' : ''} />
-                    {resendCooldown > 0 ? `Resend code in ${resendCooldown}s` : 'Resend verification code'}
+                    {resendCooldown > 0 ? `Retry in ${resendCooldown}s` : 'Resend Identity Code'}
                   </button>
                 </div>
               </motion.div>
@@ -166,16 +164,16 @@ function VerifyContent() {
           </AnimatePresence>
         </div>
 
-        <p className="mt-8 text-center text-white/40 text-sm">
-          Entered the wrong email?{' '}
-          <Link href="/signup" className="text-amber-500 font-bold hover:text-amber-400 transition-colors">
-            Back to signup
+        <p className="mt-10 text-center text-[#a8a29e] text-sm font-medium">
+          Wrong email address?{' '}
+          <Link href="/signup" className="text-[#1c1917] font-bold hover:underline underline-offset-4 decoration-[#e7e5e4]">
+            Back to Registry
           </Link>
         </p>
 
-        <div className="mt-8 flex items-center justify-center gap-2 text-white/10">
-          <ShieldCheck size={14} />
-          <span className="text-[10px] font-bold uppercase tracking-widest">Enterprise Security v2.0</span>
+        <div className="mt-12 flex items-center justify-center gap-3 text-[#e7e5e4]">
+           <ShieldCheck size={16} />
+           <span className="text-[9px] font-bold uppercase tracking-[0.25em]">SaaS Identity v2.0-modern</span>
         </div>
       </motion.div>
     </div>
@@ -184,7 +182,7 @@ function VerifyContent() {
 
 export default function VerifyPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#09090b] flex items-center justify-center"><Loader2 className="animate-spin text-amber-500" /></div>}>
+    <Suspense fallback={<div className="min-h-screen bg-[#faf9f6] flex items-center justify-center"><Loader2 className="animate-spin text-[#1c1917]" /></div>}>
       <VerifyContent />
     </Suspense>
   );
