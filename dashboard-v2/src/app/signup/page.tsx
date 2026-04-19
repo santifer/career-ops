@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Briefcase, User, Mail, Key, ArrowRight, Github, Loader2, AlertCircle, ShieldCheck } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Briefcase, User, Mail, Key, ArrowRight, Github, Loader2, AlertCircle, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 
 export default function SignupPage() {
@@ -18,8 +18,23 @@ export default function SignupPage() {
     password: ''
   });
 
+  const validateForm = () => {
+    if (formData.name.length < 2) return "Identity name must be at least 2 characters.";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) return "Invalid email terminal format.";
+    if (formData.password.length < 8) return "Master password must be at least 8 characters.";
+    return null;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // 1. Precise Frontend Validation
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
@@ -30,14 +45,19 @@ export default function SignupPage() {
         body: JSON.stringify(formData)
       });
 
+      // Lead Engineer: Safely check Content-Type before parsing JSON
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+         throw new Error("Critical Infrastructure Failure: Server returned non-JSON response. Please check your DATABASE_URL connectivity.");
+      }
+
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || 'Registration failed');
+        throw new Error(data.error || 'Registration sequence interrupted.');
       }
 
       setIsSuccess(true);
-      // Redirect to verification page
       setTimeout(() => {
         router.push(`/verify?email=${encodeURIComponent(formData.email)}`);
       }, 2000);
@@ -67,83 +87,93 @@ export default function SignupPage() {
         </div>
 
         <div className="bg-white border border-[#e7e5e4] rounded-[2.5rem] p-10 shadow-2xl shadow-black/[0.02] relative overflow-hidden">
-          {isSuccess ? (
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="text-center py-10"
-            >
-              <div className="h-20 w-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                 <ShieldCheck className="h-10 w-10 text-emerald-500" />
-              </div>
-              <h2 className="text-2xl font-bold mb-2">Identity Created</h2>
-              <p className="text-[#a8a29e] mb-4 font-medium">Redirecting you to verify your email...</p>
-            </motion.div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-6">
-               <div className="space-y-2">
-                 <label className="text-[10px] font-bold text-[#a8a29e] uppercase tracking-[0.2em] ml-1">Candidate Name</label>
-                 <div className="relative group">
-                   <User className="absolute left-4 top-1/2 -translate-y-1/2 text-[#a8a29e] group-focus-within:text-[#1c1917] transition-colors" size={18} />
-                   <input
-                     name="name"
-                     type="text"
-                     value={formData.name}
-                     onChange={(e) => setFormData({...formData, name: e.target.value})}
-                     placeholder="John Doe"
-                     required
-                     className="w-full bg-[#faf9f6]/50 border border-[#e7e5e4] rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-[#1c1917] transition-all font-bold placeholder:text-[#a8a29e]/50"
-                   />
+          <AnimatePresence mode="wait">
+            {isSuccess ? (
+              <motion.div 
+                key="success"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="text-center py-10"
+              >
+                <div className="h-20 w-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                   <ShieldCheck className="h-10 w-10 text-emerald-500" />
+                </div>
+                <h2 className="text-2xl font-bold mb-2">Identity Created</h2>
+                <p className="text-[#a8a29e] mb-4 font-medium italic">Handshaking with verification engine...</p>
+              </motion.div>
+            ) : (
+              <motion.form key="form" onSubmit={handleSubmit} className="space-y-6">
+                 <div className="space-y-2">
+                   <label className="text-[10px] font-bold text-[#a8a29e] uppercase tracking-[0.2em] ml-1">Candidate Name</label>
+                   <div className="relative group">
+                     <User className="absolute left-4 top-1/2 -translate-y-1/2 text-[#a8a29e] group-focus-within:text-[#1c1917] transition-colors" size={18} />
+                     <input
+                       name="name"
+                       type="text"
+                       value={formData.name}
+                       onChange={(e) => setFormData({...formData, name: e.target.value})}
+                       placeholder="John Doe"
+                       required
+                       className="w-full bg-[#faf9f6]/50 border border-[#e7e5e4] rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-[#1c1917] transition-all font-bold placeholder:text-[#a8a29e]/50"
+                     />
+                   </div>
                  </div>
-               </div>
 
-               <div className="space-y-2">
-                 <label className="text-[10px] font-bold text-[#a8a29e] uppercase tracking-[0.2em] ml-1">Email Terminal</label>
-                 <input
-                   name="email"
-                   type="email"
-                   value={formData.email}
-                   onChange={(e) => setFormData({...formData, email: e.target.value})}
-                   placeholder="name@company.com"
-                   required
-                   className="w-full bg-[#faf9f6]/50 border border-[#e7e5e4] rounded-2xl py-4 px-6 outline-none focus:border-[#1c1917] transition-all font-bold placeholder:text-[#a8a29e]/50"
-                 />
-               </div>
-
-               <div className="space-y-2">
-                 <label className="text-[10px] font-bold text-[#a8a29e] uppercase tracking-[0.2em] ml-1">Master Password</label>
-                 <input
-                   name="password"
-                   type="password"
-                   value={formData.password}
-                   onChange={(e) => setFormData({...formData, password: e.target.value})}
-                   placeholder="••••••••"
-                   required
-                   className="w-full bg-[#faf9f6]/50 border border-[#e7e5e4] rounded-2xl py-4 px-6 outline-none focus:border-[#1c1917] transition-all font-bold placeholder:text-[#a8a29e]/50"
-                 />
-               </div>
-
-               {error && (
-                 <div className="flex items-center gap-4 p-4 bg-rose-50 border border-rose-100 rounded-2xl text-rose-600 text-xs font-bold">
-                   <AlertCircle size={14} />
-                   {error}
+                 <div className="space-y-2">
+                   <label className="text-[10px] font-bold text-[#a8a29e] uppercase tracking-[0.2em] ml-1">Email Terminal</label>
+                   <div className="relative group">
+                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[#a8a29e] group-focus-within:text-[#1c1917] transition-colors" size={18} />
+                     <input
+                       name="email"
+                       type="email"
+                       value={formData.email}
+                       onChange={(e) => setFormData({...formData, email: e.target.value})}
+                       placeholder="name@company.com"
+                       required
+                       className="w-full bg-[#faf9f6]/50 border border-[#e7e5e4] rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-[#1c1917] transition-all font-bold placeholder:text-[#a8a29e]/50"
+                     />
+                   </div>
                  </div>
-               )}
 
-               <button 
-                 type="submit"
-                 disabled={isLoading}
-                 className="w-full bg-[#1c1917] text-white font-bold py-5 rounded-2xl flex items-center justify-center gap-3 hover:bg-[#27272a] transition-all shadow-xl disabled:opacity-50"
-               >
-                 {isLoading ? <Loader2 className="animate-spin" size={20} /> : (
-                   <>
-                     Create Account
-                     <ArrowRight size={20} className="text-white/40" />
-                   </>
+                 <div className="space-y-2">
+                   <label className="text-[10px] font-bold text-[#a8a29e] uppercase tracking-[0.2em] ml-1">Master Password</label>
+                   <div className="relative group">
+                     <Key className="absolute left-4 top-1/2 -translate-y-1/2 text-[#a8a29e] group-focus-within:text-[#1c1917] transition-colors" size={18} />
+                     <input
+                       name="password"
+                       type="password"
+                       value={formData.password}
+                       onChange={(e) => setFormData({...formData, password: e.target.value})}
+                       placeholder="••••••••"
+                       required
+                       className="w-full bg-[#faf9f6]/50 border border-[#e7e5e4] rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-[#1c1917] transition-all font-bold placeholder:text-[#a8a29e]/50"
+                     />
+                   </div>
+                   <p className="text-[9px] text-[#a8a29e] font-bold tracking-widest pl-1 mt-2">MINIMUM 8 CHARACTERS REQUIRED</p>
+                 </div>
+
+                 {error && (
+                   <div className="flex items-start gap-4 p-5 bg-rose-50 border border-rose-100 rounded-2xl text-rose-600 text-xs font-bold leading-relaxed">
+                     <AlertCircle size={18} className="shrink-0 mt-0.5" />
+                     <span>{error}</span>
+                   </div>
                  )}
-               </button>
-            </form>
-          )}
+
+                 <button 
+                   type="submit"
+                   disabled={isLoading}
+                   className="w-full bg-[#1c1917] text-white font-bold py-5 rounded-2xl flex items-center justify-center gap-3 hover:bg-[#27272a] transition-all shadow-xl active:scale-[0.98] disabled:opacity-50"
+                 >
+                   {isLoading ? <Loader2 className="animate-spin" size={20} /> : (
+                     <>
+                       Create Account
+                       <ArrowRight size={20} className="text-white/40" />
+                     </>
+                   )}
+                 </button>
+              </motion.form>
+            )}
+          </AnimatePresence>
         </div>
 
         <p className="mt-10 text-center text-[#a8a29e] text-sm font-medium">
@@ -152,6 +182,11 @@ export default function SignupPage() {
             Sign In
           </Link>
         </p>
+
+        <div className="mt-12 flex items-center justify-center gap-3 text-[#e7e5e4]">
+           <ShieldCheck size={16} />
+           <span className="text-[9px] font-bold uppercase tracking-[0.25em]">SaaS Identity v2.0-modern</span>
+        </div>
       </motion.div>
     </div>
   );
