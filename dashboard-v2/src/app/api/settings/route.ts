@@ -36,18 +36,23 @@ export async function POST(req: Request) {
 
     const resumeContext = data.resume_context || {};
     const targetingKeywords = data.targeting_keywords || { positive: [], negative: [] };
+    const openaiKey = data.openai_key || null;
+    const hfToken = data.hf_token || null;
 
     await sql`
-      INSERT INTO user_profiles (user_id, resume_context, targeting_keywords)
-      VALUES (${userId}, ${sql.json(resumeContext)}, ${sql.json(targetingKeywords)})
+      INSERT INTO user_profiles (user_id, resume_context, targeting_keywords, openai_key, hf_token)
+      VALUES (${userId}, ${sql.json(resumeContext)}, ${sql.json(targetingKeywords)}, ${openaiKey}, ${hfToken})
       ON CONFLICT (user_id) DO UPDATE SET 
         resume_context = EXCLUDED.resume_context,
         targeting_keywords = EXCLUDED.targeting_keywords,
+        openai_key = EXCLUDED.openai_key,
+        hf_token = EXCLUDED.hf_token,
         updated_at = CURRENT_TIMESTAMP
     `;
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
+    console.error('Settings API Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

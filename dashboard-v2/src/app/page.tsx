@@ -24,6 +24,15 @@ export default function Dashboard() {
   const [cmdInput, setCmdInput] = useState('');
   const [history, setHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
+  const [profileFormData, setProfileFormData] = useState<any>({
+    candidate: { full_name: '', location: '', email: '', linkedin: '', github: '' },
+    narrative: { headline: '', exit_story: '', superpowers: [] },
+    targeting_keywords: { positive: [], negative: [] },
+    openai_key: '',
+    hf_token: ''
+  });
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
 
   const runCommand = (query: string) => {
     // Add to logs visual feedback
@@ -94,6 +103,53 @@ export default function Dashboard() {
     const interval = setInterval(fetchData, 30000); // 30s refresh
     return () => clearInterval(interval);
   }, []);
+
+  // Fetch settings once on mount or when activeTab becomes 'settings'
+  useEffect(() => {
+    if (activeTab === 'settings') {
+      fetch('/api/settings')
+        .then(res => res.json())
+        .then(d => {
+          setProfileFormData({
+            candidate: d.resume_context?.candidate || { full_name: '', location: '', email: '', linkedin: '', github: '' },
+            narrative: d.resume_context?.narrative || { headline: '', exit_story: '', superpowers: [] },
+            targeting_keywords: d.targeting_keywords || { positive: [], negative: [] },
+            openai_key: d.openai_key || '',
+            hf_token: d.hf_token || ''
+          });
+        });
+    }
+  }, [activeTab]);
+
+  const handleSaveSettings = async () => {
+    setIsSaving(true);
+    setSaveStatus('saving');
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          resume_context: {
+            candidate: profileFormData.candidate,
+            narrative: profileFormData.narrative
+          },
+          targeting_keywords: profileFormData.targeting_keywords,
+          openai_key: profileFormData.openai_key,
+          hf_token: profileFormData.hf_token
+        })
+      });
+      if (res.ok) {
+        setSaveStatus('success');
+        setTimeout(() => setSaveStatus('idle'), 3000);
+      } else {
+        setSaveStatus('error');
+      }
+    } catch (e) {
+      setSaveStatus('error');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   // Auto-scroll terminal with better precision
   useEffect(() => {
@@ -408,21 +464,172 @@ export default function Dashboard() {
             </motion.div>
           )}
           {activeTab === 'settings' && (
-            <motion.div key="settings" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="flex-1 overflow-y-auto w-full max-w-4xl">
-               <div className="bg-[#050505] border border-white/10 rounded-2xl p-8 mb-8 shadow-2xl">
-                 <h2 className="text-2xl font-bold mb-2">SaaS Multi-User Settings</h2>
-                 <p className="text-white/40 mb-8">Update your profile for AI Tailoring and keyword targeting.</p>
-                 <div className="space-y-6">
-                    <div>
-                       <label className="block text-sm font-medium mb-2 opacity-60">Target Keywords (e.g., "Software Engineer")</label>
-                       <input type="text" className="w-full bg-black/50 border border-white/10 rounded-lg p-3 outline-none focus:border-amber-500 transition-colors text-white" placeholder="React, Node, AI..." />
-                    </div>
-                    <div>
-                       <label className="block text-sm font-medium mb-2 opacity-60">OpenAI API Key for Agentic Tailor</label>
-                       <input type="password" className="w-full bg-black/50 border border-white/10 rounded-lg p-3 outline-none focus:border-amber-500 transition-colors text-white" placeholder="sk-..." />
-                    </div>
+            <motion.div key="settings" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="flex-1 overflow-y-auto w-full max-w-5xl">
+               <div className="flex justify-between items-start mb-8">
+                 <div>
+                   <h2 className="text-3xl font-bold mb-2">Professional Profile</h2>
+                   <p className="text-white/40">Configure your global identity for AI job discovery and resume tailoring.</p>
                  </div>
-                 <button className="mt-8 px-6 py-3 bg-amber-500 text-black font-bold rounded-lg hover:bg-amber-400 transition-colors">Save Settings</button>
+                 <button 
+                   onClick={handleSaveSettings}
+                   disabled={isSaving}
+                   className={`px-8 py-3 rounded-xl font-bold transition-all shadow-lg flex items-center gap-2 ${saveStatus === 'success' ? 'bg-emerald-500 text-white' : 'bg-amber-500 text-black hover:bg-amber-400'}`}
+                 >
+                   {saveStatus === 'saving' ? 'Syncing...' : saveStatus === 'success' ? <><CheckCircle2 size={18} /> Profile Saved</> : 'Save Changes'}
+                 </button>
+               </div>
+
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-20">
+                 {/* Section 1: Identity */}
+                 <div className="bg-white/[0.03] border border-white/5 rounded-2xl p-6 backdrop-blur-md">
+                   <div className="flex items-center gap-2 mb-6">
+                      <div className="p-2 rounded-lg bg-blue-500/10 text-blue-500"><LayoutDashboard size={18} /></div>
+                      <h3 className="font-bold text-lg">Candidate Identity</h3>
+                   </div>
+                   <div className="space-y-4">
+                     <div>
+                       <label className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-1.5 block">Full Name</label>
+                       <input 
+                         type="text" 
+                         value={profileFormData.candidate.full_name}
+                         onChange={(e) => setProfileFormData({...profileFormData, candidate: {...profileFormData.candidate, full_name: e.target.value}})}
+                         className="w-full bg-black/40 border border-white/10 rounded-xl p-3 outline-none focus:border-blue-500/50 transition-all" 
+                         placeholder="e.g. John Doe"
+                       />
+                     </div>
+                     <div className="grid grid-cols-2 gap-4">
+                       <div>
+                         <label className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-1.5 block">Location</label>
+                         <input 
+                           type="text" 
+                           value={profileFormData.candidate.location}
+                           onChange={(e) => setProfileFormData({...profileFormData, candidate: {...profileFormData.candidate, location: e.target.value}})}
+                           className="w-full bg-black/40 border border-white/10 rounded-xl p-3 outline-none focus:border-blue-500/50 transition-all" 
+                           placeholder="Berlin, Germany"
+                         />
+                       </div>
+                       <div>
+                         <label className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-1.5 block">Email</label>
+                         <input 
+                           type="email" 
+                           value={profileFormData.candidate.email}
+                           onChange={(e) => setProfileFormData({...profileFormData, candidate: {...profileFormData.candidate, email: e.target.value}})}
+                           className="w-full bg-black/40 border border-white/10 rounded-xl p-3 outline-none focus:border-blue-500/50 transition-all" 
+                           placeholder="john@example.com"
+                         />
+                       </div>
+                     </div>
+                     <div>
+                       <label className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-1.5 block">LinkedIn / GitHub</label>
+                       <div className="flex gap-2">
+                         <input 
+                           type="text" 
+                           value={profileFormData.candidate.linkedin}
+                           onChange={(e) => setProfileFormData({...profileFormData, candidate: {...profileFormData.candidate, linkedin: e.target.value}})}
+                           className="w-1/2 bg-black/40 border border-white/10 rounded-xl p-3 outline-none focus:border-blue-500/50 transition-all" 
+                           placeholder="linkedin.com/in/..."
+                         />
+                         <input 
+                           type="text" 
+                           value={profileFormData.candidate.github}
+                           onChange={(e) => setProfileFormData({...profileFormData, candidate: {...profileFormData.candidate, github: e.target.value}})}
+                           className="w-1/2 bg-black/40 border border-white/10 rounded-xl p-3 outline-none focus:border-blue-500/50 transition-all" 
+                           placeholder="github.com/..."
+                         />
+                       </div>
+                     </div>
+                   </div>
+                 </div>
+
+                 {/* Section 2: Narrative */}
+                 <div className="bg-white/[0.03] border border-white/5 rounded-2xl p-6 backdrop-blur-md">
+                   <div className="flex items-center gap-2 mb-6">
+                      <div className="p-2 rounded-lg bg-amber-500/10 text-amber-500"><FileText size={18} /></div>
+                      <h3 className="font-bold text-lg">Career Narrative</h3>
+                   </div>
+                   <div className="space-y-4">
+                     <div>
+                       <label className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-1.5 block">Professional Headline</label>
+                       <input 
+                         type="text" 
+                         value={profileFormData.narrative.headline}
+                         onChange={(e) => setProfileFormData({...profileFormData, narrative: {...profileFormData.narrative, headline: e.target.value}})}
+                         className="w-full bg-black/40 border border-white/10 rounded-xl p-3 outline-none focus:border-amber-500/50 transition-all" 
+                         placeholder="Senior Software Engineer | Distrubuted Systems"
+                       />
+                     </div>
+                     <div>
+                       <label className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-1.5 block">Executive Summary</label>
+                       <textarea 
+                         rows={4}
+                         value={profileFormData.narrative.exit_story}
+                         onChange={(e) => setProfileFormData({...profileFormData, narrative: {...profileFormData.narrative, exit_story: e.target.value}})}
+                         className="w-full bg-black/40 border border-white/10 rounded-xl p-3 outline-none focus:border-amber-500/50 transition-all resize-none" 
+                         placeholder="Briefly explain your background and what excites you..."
+                       />
+                     </div>
+                   </div>
+                 </div>
+
+                 {/* Section 3: Job Targeting */}
+                 <div className="bg-white/[0.03] border border-white/5 rounded-2xl p-6 backdrop-blur-md">
+                   <div className="flex items-center gap-2 mb-6">
+                      <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-500"><Search size={18} /></div>
+                      <h3 className="font-bold text-lg">Discovery Filter</h3>
+                   </div>
+                   <div className="space-y-6">
+                     <div>
+                       <label className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-1.5 block">Positive Keywords (Include)</label>
+                       <input 
+                         type="text" 
+                         value={profileFormData.targeting_keywords.positive.join(', ')}
+                         onChange={(e) => setProfileFormData({...profileFormData, targeting_keywords: {...profileFormData.targeting_keywords, positive: e.target.value.split(',').map(s => s.trim())}})}
+                         className="w-full bg-black/40 border border-white/10 rounded-xl p-3 outline-none focus:border-emerald-500/50 transition-all" 
+                         placeholder="e.g. Remote, AI, Senior, Python"
+                       />
+                     </div>
+                     <div>
+                       <label className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-1.5 block">Negative Keywords (Ignore)</label>
+                       <input 
+                         type="text" 
+                         value={profileFormData.targeting_keywords.negative.join(', ')}
+                         onChange={(e) => setProfileFormData({...profileFormData, targeting_keywords: {...profileFormData.targeting_keywords, negative: e.target.value.split(',').map(s => s.trim())}})}
+                         className="w-full bg-black/40 border border-white/10 rounded-xl p-3 outline-none focus:border-red-500/50 transition-all" 
+                         placeholder="e.g. Intern, Manager, Sales, Office-based"
+                       />
+                     </div>
+                   </div>
+                 </div>
+
+                 {/* Section 4: Security */}
+                 <div className="bg-white/[0.03] border border-white/5 rounded-2xl p-6 backdrop-blur-md">
+                   <div className="flex items-center gap-2 mb-6">
+                      <div className="p-2 rounded-lg bg-purple-500/10 text-purple-500"><Briefcase size={18} /></div>
+                      <h3 className="font-bold text-lg">API Secrets</h3>
+                   </div>
+                   <div className="space-y-4">
+                     <div>
+                       <label className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-1.5 block">OpenAI API Key (Agentic Tailor)</label>
+                       <input 
+                         type="password" 
+                         value={profileFormData.openai_key}
+                         onChange={(e) => setProfileFormData({...profileFormData, openai_key: e.target.value})}
+                         className="w-full bg-black/40 border border-white/10 rounded-xl p-3 outline-none focus:border-purple-500/50 transition-all font-mono" 
+                         placeholder="sk-..."
+                       />
+                     </div>
+                     <div>
+                       <label className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-1.5 block">HuggingFace Token (Scoring Engine)</label>
+                       <input 
+                         type="password" 
+                         value={profileFormData.hf_token}
+                         onChange={(e) => setProfileFormData({...profileFormData, hf_token: e.target.value})}
+                         className="w-full bg-black/40 border border-white/10 rounded-xl p-3 outline-none focus:border-purple-500/50 transition-all font-mono" 
+                         placeholder="hf_..."
+                       />
+                     </div>
+                   </div>
+                 </div>
                </div>
             </motion.div>
           )}
