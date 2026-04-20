@@ -221,7 +221,11 @@ async function apply() {
     try {
       for (const entry of gitStatusEntries()) {
         const file = entry.path;
+        // Exact match OR a parent dir was already in the initial snapshot
+        // (git may aggregate untracked dirs on first pass, then expand them after checkout)
         if (initialStatusPaths.has(file)) continue;
+        const preExisting = [...initialStatusPaths].some(p => file.startsWith(p));
+        if (preExisting) continue;
         for (const userPath of USER_PATHS) {
           if (file.startsWith(userPath)) {
             console.error(`SAFETY VIOLATION: User file was modified: ${file}`);
