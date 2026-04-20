@@ -220,6 +220,7 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 - **German (DACH market):** `modes/de/` — native German translations with DACH-specific vocabulary (13. Monatsgehalt, Probezeit, Kündigungsfrist, AGG, Tarifvertrag, etc.). Includes `_shared.md`, `angebot.md` (evaluation), `bewerben.md` (apply), `pipeline.md`.
 - **French (Francophone market):** `modes/fr/` — native French translations with France/Belgium/Switzerland/Luxembourg-specific vocabulary (CDI/CDD, convention collective SYNTEC, RTT, mutuelle, prévoyance, 13e mois, intéressement/participation, titres-restaurant, CSE, portage salarial, etc.). Includes `_shared.md`, `offre.md` (evaluation), `postuler.md` (apply), `pipeline.md`.
 - **Japanese (Japan market):** `modes/ja/` — native Japanese translations with Japan-specific vocabulary (正社員, 業務委託, 賞与, 退職金, みなし残業, 年俸制, 36協定, 通勤手当, 住宅手当, etc.). Includes `_shared.md`, `kyujin.md` (evaluation), `oubo.md` (apply), `pipeline.md`.
+- **Spanish (Argentina market):** `modes/es/` — rioplatense Spanish translations with Argentina-specific vocabulary (relación de dependencia, monotributo, SAC/aguinaldo, ART, obra social, art. 245 LCT indemnización, período de prueba, preaviso, cláusula de ajuste IPC, etc.). Includes `_shared.md`, `oferta.md` (evaluation), `aplicar.md` (apply), `pipeline.md`.
 
 **When to use German modes:** If the user is targeting German-language job postings, lives in DACH, or asks for German output. Either:
 1. User says "use German modes" → read from `modes/de/` instead of `modes/`
@@ -236,7 +237,14 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 2. User sets `language.modes_dir: modes/ja` in `config/profile.yml` → always use Japanese modes
 3. You detect a Japanese JD → suggest switching to Japanese modes
 
-**When NOT to:** If the user applies to English-language roles, even at French, German, or Japanese companies, use the default English modes.
+**When to use Spanish (AR) modes:** If the user is targeting Argentine job postings, lives in Argentina, or asks for Spanish output. Either:
+1. User says "use Spanish modes" / "usá los modos en español" → read from `modes/es/` instead of `modes/`
+2. User sets `language.modes_dir: modes/es` in `config/profile.yml` → always use Spanish modes
+3. You detect a Spanish/rioplatense JD for an Argentine role → suggest switching to Spanish modes
+
+For Spanish-speaking users targeting other markets (MX/CL/CO/UY/PE), recommend forking `modes/es/` into a market-specific directory (`modes/es-mx/`, etc.) and replacing the "Mercado argentino" section.
+
+**When NOT to:** If the user applies to English-language roles, even at Argentine, French, German, or Japanese companies, use the default English modes.
 
 ### Skill Modes
 
