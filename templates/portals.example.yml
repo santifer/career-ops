@@ -574,6 +574,7 @@ tracked_companies:
   - name: Safari AI
     careers_url: https://job-boards.greenhouse.io/safariai
     api: https://boards-api.greenhouse.io/v1/boards/safariai/jobs
+    notes: "Miami HQ / Vancouver engineering. Computer vision AI for operations in the physical economy."
     enabled: true
 
   - name: Hootsuite
@@ -589,6 +590,7 @@ tracked_companies:
 
   - name: Glacis AI
     careers_url: https://jobs.ashbyhq.com/glacis-ai
+    notes: "Ho Chi Minh City. AI agents for supply chain and logistics workflows."
     enabled: true
 
   - name: Sanctuary AI
