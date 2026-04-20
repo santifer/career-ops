@@ -86,6 +86,8 @@ Clasificar cada oferta en uno de estos tipos (o híbrido de 2). Los arquetipos d
 
 Después de detectar el arquetipo, leé `modes/_profile.md` para el framing y los proof points específicos del candidato para ese arquetipo.
 
+Los arquetipos por defecto pueden reemplazarse en `modes/_profile.md` — si tus roles objetivo no encajan en esta tabla, editá ese archivo, no este.
+
 ---
 
 ## Reglas globales
@@ -112,7 +114,7 @@ Después de detectar el arquetipo, leé `modes/_profile.md` para el framing y lo
 5. Registrar en el tracker después de cada evaluación
 6. Generar el contenido en el idioma del JD (EN por defecto)
 7. Ser directo y accionable — sin relleno
-8. Inglés técnico nativo para textos generados. Frases cortas, verbos de acción, sin voz pasiva.
+8. Español rioplatense técnico para textos generados cuando el JD es en español. Si el JD está en inglés, generar en inglés nativo. Frases cortas, verbos de acción, sin voz pasiva.
 8b. URLs de case studies en el PDF Professional Summary (el recruiter puede leer solo eso).
 9. **Entradas al tracker como TSV** — NUNCA editar `applications.md` directamente. Escribir TSV en `batch/tracker-additions/`.
 10. **Incluir `**URL:**` en todo header de reporte.**
@@ -135,6 +137,11 @@ Después de detectar el arquetipo, leé `modes/_profile.md` para el framing y lo
 **Verificación de ofertas — OBLIGATORIO:** Usar Playwright (`browser_navigate` + `browser_snapshot`) para verificar si una oferta está activa. Footer/navbar sin JD = cerrada. Título + descripción + Apply = activa.
 
 **Excepción batch:** En workers headless (`claude -p`), Playwright no está disponible. Usar WebFetch como fallback y marcar el header del reporte con `**Verification:** unconfirmed (batch mode)`.
+
+### Prioridad de time-to-offer
+- Demo funcional con métricas > perfección
+- Aplicar antes > seguir investigando
+- Enfoque 80/20, todo tiene un timebox
 
 ---
 
