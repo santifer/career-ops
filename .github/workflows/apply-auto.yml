@@ -1,0 +1,96 @@
+name: Apply Computrabajo (scheduled)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Horario: 5 ejecuciones / día (hora Colombia COT = UTC-5)
+#   6am  COT = 11:00 UTC
+#   8am  COT = 13:00 UTC
+#  10am  COT = 15:00 UTC
+#  12pm  COT = 17:00 UTC
+#   7pm  COT = 00:00 UTC (día siguiente)
+# ─────────────────────────────────────────────────────────────────────────────
+on:
+  schedule:
+    - cron: '0 11 * * *'
+    - cron: '0 13 * * *'
+    - cron: '0 15 * * *'
+    - cron: '0 17 * * *'
+    - cron: '0 0  * * *'
+  workflow_dispatch:          # permite ejecutar manualmente desde GitHub UI
+
+# Permisos para poder hacer commit del historial de vuelta al repo
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      # ── 1. Checkout ────────────────────────────────────────────────────────
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # ── 2. Node.js ─────────────────────────────────────────────────────────
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      # ── 3. Dependencias ────────────────────────────────────────────────────
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium + system deps
+        run: npx playwright install chromium --with-deps
+
+      # ── 4. Reconstruir archivos gitignoreados desde secrets ────────────────
+      - name: Write credentials.yml
+        env:
+          CT_EMAIL:    ${{ secrets.CT_EMAIL }}
+          CT_PASSWORD: ${{ secrets.CT_PASSWORD }}
+        run: |
+          mkdir -p config
+          printf 'computrabajo:\n  email: "%s"\n  password: "%s"\nlinkedin:\n  email: ""\n  password: ""\n' \
+            "$CT_EMAIL" "$CT_PASSWORD" > config/credentials.yml
+
+      - name: Write profile.yml
+        run: |
+          echo "${{ secrets.PROFILE_YML }}" > config/profile.yml
+
+      - name: Write .env (API keys IA)
+        run: |
+          [ -n "${{ secrets.ANTHROPIC_API_KEY }}" ] && echo "ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}" >> .env || true
+          [ -n "${{ secrets.OPENAI_API_KEY }}"    ] && echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}"       >> .env || true
+          [ -n "${{ secrets.GEMINI_API_KEY }}"    ] && echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}"       >> .env || true
+
+      # ── 5. Preparar pipeline de búsqueda ───────────────────────────────────
+      - name: Copy pipeline-ci → pipeline.md
+        run: cp data/pipeline-ci.md data/pipeline.md
+
+      # ── 6. Ejecutar apply-auto ─────────────────────────────────────────────
+      - name: Run apply-auto.mjs
+        env:
+          CI: 'true'      # activa headless: true dentro del script
+        run: node apply-auto.mjs
+
+      # ── 7. Guardar log como artifact (siempre, incluso si falla) ───────────
+      - name: Upload applications log
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: applications-log-${{ github.run_id }}
+          path: data/applications-log.md
+          if-no-files-found: ignore
+
+      # ── 8. Commit del historial actualizado de vuelta al repo ──────────────
+      - name: Commit updated log
+        if: always()
+        run: |
+          git config user.name  "career-ops[bot]"
+          git config user.email "career-ops@github-actions"
+          git add data/applications-log.md data/li-applied.json 2>/dev/null || true
+          git diff --staged --quiet && echo "Sin cambios que commitear" && exit 0
+          git commit -m "ci: auto-apply $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          git push

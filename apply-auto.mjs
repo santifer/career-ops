@@ -24,7 +24,7 @@ const CV_PATH          = 'cv.md';
 const RESULTS_PATH     = 'data/applications-log.md';
 
 // Límite de nuevas aplicaciones por ejecución (ya-aplicado no cuenta)
-const MAX_NEW_APPS = 10;
+const MAX_NEW_APPS = 5;
 
 // ──────────────────────────────────────────────────────────────────────────────
 // IA
@@ -339,7 +339,7 @@ function guessValue(name = '', placeholder = '', label = '', candidate = {}) {
 // ──────────────────────────────────────────────────────────────────────────────
 async function createBrowser() {
   const browser = await chromium.launch({
-    headless: false,
+    headless: process.env.CI === 'true' || process.env.HEADLESS === 'true',
     args: ['--disable-blink-features=AutomationControlled', '--no-sandbox', '--start-maximized'],
   });
   const context = await browser.newContext({
@@ -1969,17 +1969,19 @@ function parsePipeline() {
 // ──────────────────────────────────────────────────────────────────────────────
 function saveReport(results, startTime) {
   const elapsed = Math.round((Date.now() - startTime) / 1000);
+  const runTs = new Date().toISOString();
+
   const lines = [
-    '# Reporte de Aplicaciones Automáticas',
     '',
-    `Generado: ${new Date().toISOString()}`,
-    `Duración: ${elapsed}s`,
+    '---',
+    '',
+    `## 🤖 Ejecución ${runTs} (${elapsed}s)`,
     '',
   ];
 
   for (const r of results) {
     const icon = { success: '✅', 'already-applied': '⏭️', 'submitted-unverified': '⚠️', error: '❌', 'no-apply-button': '🔍', 'form-not-submitted': '📋', 'login-failed': '🔐', skipped: '⏭️', 'too-old': '🗓️' }[r.status] || '❓';
-    lines.push(`## ${icon} ${r.company || ''} — ${r.title || r.url.split('/').pop()}`);
+    lines.push(`### ${icon} ${r.company || ''} — ${r.title || r.url.split('/').pop()}`);
     lines.push(`- **URL:** ${r.url}`);
     lines.push(`- **Estado:** ${r.status}`);
     lines.push(`- **Timestamp:** ${r.timestamp}`);
@@ -1999,17 +2001,19 @@ function saveReport(results, startTime) {
   const skipped  = (counts['already-applied'] || 0) + (counts.skipped || 0) + (counts['too-old'] || 0);
   const failed   = total - ok - unverif - skipped;
 
-  lines.push('## 📊 Resumen');
-  lines.push(`- **Total procesadas:** ${total}`);
-  lines.push(`- **Exitosas:** ${ok}`);
-  lines.push(`- **Enviadas (sin confirmación):** ${unverif}`);
-  lines.push(`- **Omitidas (ya aplicado):** ${skipped}`);
-  lines.push(`- **Fallidas:** ${failed}`);
+  lines.push('#### 📊 Resumen');
+  lines.push(`- **Total:** ${total} | **Exitosas:** ${ok} | **Sin confirmar:** ${unverif} | **Omitidas:** ${skipped} | **Fallidas:** ${failed}`);
   lines.push('');
   for (const [k, v] of Object.entries(counts)) lines.push(`- ${k}: ${v}`);
 
-  writeFileSync(RESULTS_PATH, lines.join('\n'));
-  console.log(`\nReporte guardado en ${RESULTS_PATH}`);
+  const runContent = lines.join('\n');
+  if (!existsSync(RESULTS_PATH)) {
+    writeFileSync(RESULTS_PATH, '# Historial de Aplicaciones Automáticas\n' + runContent);
+  } else {
+    const existing = readFileSync(RESULTS_PATH, 'utf8');
+    writeFileSync(RESULTS_PATH, existing + runContent);
+  }
+  console.log(`\nReporte agregado en ${RESULTS_PATH}`);
 
   // Imprimir resumen en consola
   console.log('\n' + '═'.repeat(50));
