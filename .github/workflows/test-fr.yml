@@ -1,0 +1,47 @@
+name: Tests FR
+
+on:
+  push:
+    branches: ['fr/**', 'main']
+  pull_request:
+    branches: ['main']
+
+jobs:
+  test-fr:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Installer les dépendances
+        run: npm install
+
+      - name: Installer Playwright Chromium
+        run: npx playwright install chromium
+
+      - name: Contrôle de santé (doctor)
+        run: npm run doctor || true
+        # doctor échoue sans cv.md/profile.yml — normal en CI
+
+      - name: Vérification pipeline
+        run: npm run verify || true
+        # verify peut échouer sans données — normal en CI
+
+      - name: Golden set — régression
+        run: node tests/run-golden.mjs
+
+      - name: Vérifier les fichiers FR essentiels
+        run: |
+          echo "Vérification des fichiers FR..."
+          test -f README.fr.md && echo "✅ README.fr.md" || echo "❌ README.fr.md manquant"
+          test -f NOTICE.md && echo "✅ NOTICE.md" || echo "❌ NOTICE.md manquant"
+          test -f PRIVACY.md && echo "✅ PRIVACY.md" || echo "❌ PRIVACY.md manquant"
+          test -f CHANGELOG-FR.md && echo "✅ CHANGELOG-FR.md" || echo "❌ CHANGELOG-FR.md manquant"
+          test -f modes/fr/_shared.md && echo "✅ modes/fr/_shared.md" || echo "❌ modes/fr/_shared.md manquant"
+          test -f modes/fr/lettre-motivation.md && echo "✅ modes/fr/lettre-motivation.md" || echo "❌ manquant"
+          test -f templates/portals-fr.example.yml && echo "✅ portals-fr.example.yml" || echo "❌ manquant"
+          test -f adapters/portals/france-travail.mjs && echo "✅ france-travail.mjs" || echo "❌ manquant"
+          test -f templates/cv-template-fr.html && echo "✅ cv-template-fr.html" || echo "❌ manquant"

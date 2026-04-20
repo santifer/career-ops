@@ -1,0 +1,47 @@
+[
+  {
+    "id": "golden-01",
+    "name": "Dev fullstack PME — offre standard CDI Paris",
+    "archetype": "Dev fullstack PME",
+    "input": "examples/offres-exemple/dev-fullstack-pme.md",
+    "inputType": "file",
+    "expectedScore": { "min": 3.5, "max": 4.5 },
+    "notes": "Offre classique pour un dev fullstack, match attendu moyen-fort avec cv-exemple-1"
+  },
+  {
+    "id": "golden-02",
+    "name": "Commercial B2B SaaS — offre Lyon",
+    "archetype": "Commercial B2B",
+    "input": "examples/offres-exemple/commercial-b2b-saas.md",
+    "inputType": "file",
+    "expectedScore": { "min": 3.5, "max": 4.5 },
+    "notes": "Offre commerciale, match attendu moyen-fort avec cv-exemple-2"
+  },
+  {
+    "id": "golden-03",
+    "name": "Tech Lead FinTech — management + tech",
+    "archetype": "Manager d'équipe",
+    "input": "examples/offres-exemple/manager-equipe-tech.md",
+    "inputType": "file",
+    "expectedScore": { "min": 3.0, "max": 4.5 },
+    "notes": "Offre management, nécessite expérience en gestion d'équipe"
+  },
+  {
+    "id": "golden-04",
+    "name": "Technicien chauffagiste — artisan",
+    "archetype": "Artisan-salarié / technicien",
+    "input": "examples/offres-exemple/technicien-chauffagiste.md",
+    "inputType": "file",
+    "expectedScore": { "min": 2.0, "max": 4.0 },
+    "notes": "Offre artisanale, score dépend fortement du profil du candidat"
+  },
+  {
+    "id": "golden-05",
+    "name": "Alternance dev web — junior",
+    "archetype": "Alternance / stage",
+    "input": "examples/offres-exemple/alternance-dev-web.md",
+    "inputType": "file",
+    "expectedScore": { "min": 3.0, "max": 4.5 },
+    "notes": "Offre alternance, pertinente pour étudiants en informatique"
+  }
+]
