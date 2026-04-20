@@ -52,6 +52,7 @@ Sección de **gaps** con estrategia de mitigación para cada uno. Para cada gap:
 4. Si alguno de los 3 quedó en "no declarada" → agregar a bloque F como pregunta obligatoria.
 5. Si la moneda es ARS y NO hay cláusula de ajuste → nota explícita en el rationale de comp: "penalización por ausencia de protección contra inflación".
 6. Si la moneda es USD o hay cláusula de ajuste clara → nota positiva en el rationale de comp: "comp protegida contra inflación".
+7. Verificar también en el JD: SAC/aguinaldo, ART, obra social/prepaga, vacaciones, período de prueba, preaviso. Los que no estén mencionados → agregarlos como preguntas en bloque F.
 
 ## Bloque D — Comp y Demanda
 
@@ -106,7 +107,7 @@ Incluir SOLO las preguntas que corresponden a ítems NO declarados en la JD (det
 
 Si TODAS las preguntas anteriores están cubiertas en la JD → omitir esta subsección del bloque F (no incluir un encabezado vacío).
 
-## Bloque G — Posting Legitimacy
+## Bloque G — Legitimidad del Posting
 
 Analizar el posting para detectar señales que indiquen si es una búsqueda real y activa. Esto ayuda al candidato a priorizar esfuerzo en las oportunidades con más chances de llevar a un proceso real.
 
@@ -142,9 +143,9 @@ Analizar el posting para detectar señales que indiquen si es una búsqueda real
 - ¿El rol tiene sentido para el negocio de esta empresa?
 - ¿El nivel de seniority es uno que legítimamente tarda más en cubrirse?
 
-### Formato de output:
+### Formato de salida:
 
-**Assessment:** Uno de tres niveles:
+**Evaluación:** Uno de tres niveles:
 - **High Confidence** — Múltiples señales sugieren una búsqueda real y activa
 - **Proceed with Caution** — Señales mixtas que vale la pena notar
 - **Suspicious** — Múltiples indicadores de ghost posting, investigar antes de invertir tiempo
