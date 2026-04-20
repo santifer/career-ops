@@ -818,8 +818,10 @@ function isDevJobUrl(url) {
     'desarrollador-comercial',
     'programador-torno',      // "programador torno CNC" = manufactura
     'programador-de-turnos',  // turnos de trabajo, no software
+    'programadora-de-turnos', // variante femenino
     'turnos-de-vigilancia',   // programador turnos vigilancia = RRHH
     'programador-turnos',     // programador de turnos (cualquier sector)
+    'programadora-turnos',    // variante femenino
     'de-cuenta-supermercado', // desarrollador de cuenta supermercado = ventas
     // Nivel — candidato es junior (8 meses), rechazar roles senior
     '-senior',               // desarrollador-senior, senior-developer, semi-senior…
