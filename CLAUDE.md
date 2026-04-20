@@ -1,367 +1,370 @@
-# Career-Ops -- AI Job Search Pipeline
+<!-- Traduit depuis santifer/career-ops@411afb3 -->
 
-## Origin
+# Career-Ops — Pipeline IA de recherche d'emploi
 
-This system was built and used by [santifer](https://santifer.io) to evaluate 740+ job offers, generate 100+ tailored CVs, and land a Head of Applied AI role. The archetypes, scoring logic, negotiation scripts, and proof point structure all reflect his specific career search in AI/automation roles.
+## Origine
 
-The portfolio that goes with this system is also open source: [cv-santiago](https://github.com/santifer/cv-santiago).
+Ce système a été conçu et utilisé par l'auteur original pour évaluer plus de 740 offres d'emploi, générer plus de 100 CV sur mesure et décrocher un poste de Head of Applied AI. Les archétypes, la logique de scoring, les scripts de négociation et la structure des preuves reflètent sa recherche spécifique dans les rôles IA/automatisation.
 
-**It will work out of the box, but it's designed to be made yours.** If the archetypes don't match your career, the modes are in the wrong language, or the scoring doesn't fit your priorities -- just ask. You (AI Agent) can edit the user's files. The user says "change the archetypes to data engineering roles" and you do it. That's the whole point.
+Le portfolio qui accompagne ce système est également open source : [cv-santiago](https://github.com/santifer/cv-santiago).
 
-## Data Contract (CRITICAL)
+**Le système fonctionne immédiatement, mais il est conçu pour que tu te l'appropries.** Si les archétypes ne correspondent pas à ta carrière, si les modes sont dans la mauvaise langue, ou si le scoring ne correspond pas à tes priorités — demande simplement. Toi (Agent IA) tu peux modifier les fichiers de l'utilisateur. L'utilisateur dit « change les archétypes pour des rôles data engineering » et tu le fais. C'est tout l'intérêt.
 
-There are two layers. Read `DATA_CONTRACT.md` for the full list.
+## Contrat de données (CRITIQUE)
 
-**User Layer (NEVER auto-updated, personalization goes HERE):**
+Il y a deux couches. Lis `DATA_CONTRACT.md` pour la liste complète.
+
+**Couche utilisateur (JAMAIS mise à jour automatiquement, la personnalisation va ICI) :**
 - `cv.md`, `config/profile.yml`, `modes/_profile.md`, `article-digest.md`, `portals.yml`
 - `data/*`, `reports/*`, `output/*`, `interview-prep/*`
 
-**System Layer (auto-updatable, DON'T put user data here):**
-- `modes/_shared.md`, `modes/oferta.md`, all other modes
+**Couche système (mise à jour automatique possible, NE PAS mettre de données utilisateur ici) :**
+- `modes/_shared.md`, `modes/oferta.md`, tous les autres modes
 - `CLAUDE.md`, `*.mjs` scripts, `dashboard/*`, `templates/*`, `batch/*`
 
-**THE RULE: When the user asks to customize anything (archetypes, narrative, negotiation scripts, proof points, location policy, comp targets), ALWAYS write to `modes/_profile.md` or `config/profile.yml`. NEVER edit `modes/_shared.md` for user-specific content.** This ensures system updates don't overwrite their customizations.
+**LA RÈGLE : Quand l'utilisateur demande de personnaliser quoi que ce soit (archétypes, narratif, scripts de négociation, preuves, politique de localisation, objectifs de rémunération), TOUJOURS écrire dans `modes/_profile.md` ou `config/profile.yml`. JAMAIS modifier `modes/_shared.md` pour du contenu spécifique à l'utilisateur.** Cela garantit que les mises à jour système n'écrasent pas ses personnalisations.
 
-## Update Check
+## Vérification des mises à jour
 
-On the first message of each session, run the update checker silently:
+Au premier message de chaque session, lancer le vérificateur de mises à jour silencieusement :
 
 ```bash
 node update-system.mjs check
 ```
 
-Parse the JSON output:
-- `{"status": "update-available", "local": "1.0.0", "remote": "1.1.0", "changelog": "..."}` → tell the user:
-  > "career-ops update available (v{local} → v{remote}). Your data (CV, profile, tracker, reports) will NOT be touched. Want me to update?"
-  If yes → run `node update-system.mjs apply`. If no → run `node update-system.mjs dismiss`.
-- `{"status": "up-to-date"}` → say nothing
-- `{"status": "dismissed"}` → say nothing
-- `{"status": "offline"}` → say nothing
+Analyser la sortie JSON :
+- `{"status": "update-available", "local": "1.0.0", "remote": "1.1.0", "changelog": "..."}` → informer l'utilisateur :
+  > « Mise à jour career-ops disponible (v{local} → v{remote}). Tes données (CV, profil, tableau de suivi, rapports) ne seront PAS touchées. Tu veux que je mette à jour ? »
+  Si oui → lancer `node update-system.mjs apply`. Si non → lancer `node update-system.mjs dismiss`.
+- `{"status": "up-to-date"}` → ne rien dire
+- `{"status": "dismissed"}` → ne rien dire
+- `{"status": "offline"}` → ne rien dire
 
-The user can also say "check for updates" or "update career-ops" at any time to force a check.
-To rollback: `node update-system.mjs rollback`
+L'utilisateur peut aussi dire « vérifie les mises à jour » ou « mets à jour career-ops » à tout moment pour forcer une vérification.
+Pour revenir en arrière : `node update-system.mjs rollback`
 
-## What is career-ops
+## Qu'est-ce que career-ops
 
-AI-powered job search automation built on Claude Code: pipeline tracking, offer evaluation, CV generation, portal scanning, batch processing.
+Pipeline de recherche d'emploi automatisé par IA, construit sur Claude Code : suivi du pipeline, évaluation des offres d'emploi, génération de CV, scan des portails, traitement par lots.
 
-### Main Files
+### Fichiers principaux
 
-| File | Function |
-|------|----------|
-| `data/applications.md` | Application tracker |
-| `data/pipeline.md` | Inbox of pending URLs |
-| `data/scan-history.tsv` | Scanner dedup history |
-| `portals.yml` | Query and company config |
-| `templates/cv-template.html` | HTML template for CVs |
-| `templates/cv-template.tex` | LaTeX/Overleaf template for CVs |
-| `generate-pdf.mjs` | Playwright: HTML to PDF |
-| `generate-latex.mjs` | LaTeX CV validator + pdflatex compiler |
-| `article-digest.md` | Compact proof points from portfolio (optional) |
-| `interview-prep/story-bank.md` | Accumulated STAR+R stories across evaluations |
-| `interview-prep/{company}-{role}.md` | Company-specific interview intel reports |
-| `analyze-patterns.mjs` | Pattern analysis script (JSON output) |
-| `followup-cadence.mjs` | Follow-up cadence calculator (JSON output) |
-| `data/follow-ups.md` | Follow-up history tracker |
-| `scan.mjs` | Zero-token portal scanner — hits Greenhouse/Ashby/Lever APIs directly, zero LLM cost |
-| `check-liveness.mjs` | Job posting liveness checker |
-| `liveness-core.mjs` | Shared liveness logic (expired signals win over generic Apply text) |
-| `reports/` | Evaluation reports (format: `{###}-{company-slug}-{YYYY-MM-DD}.md`). Blocks A-F + G (Posting Legitimacy). Header includes `**Legitimacy:** {tier}`. |
+| Fichier | Fonction |
+|---------|----------|
+| `data/applications.md` | Tableau de suivi des candidatures |
+| `data/pipeline.md` | Boîte de réception des URLs en attente |
+| `data/scan-history.tsv` | Historique de déduplication du scanner |
+| `portals.yml` | Configuration des requêtes et entreprises |
+| `templates/cv-template.html` | Template HTML pour les CV |
+| `templates/cv-template.tex` | Template LaTeX/Overleaf pour les CV |
+| `generate-pdf.mjs` | Playwright : HTML vers PDF |
+| `generate-latex.mjs` | Validateur de CV LaTeX + compilateur pdflatex |
+| `article-digest.md` | Preuves compactes issues du portfolio (optionnel) |
+| `interview-prep/story-bank.md` | Histoires STAR+R accumulées à travers les évaluations |
+| `interview-prep/{company}-{role}.md` | Rapports de renseignements d'entretien par entreprise |
+| `analyze-patterns.mjs` | Script d'analyse de tendances (sortie JSON) |
+| `followup-cadence.mjs` | Calculateur de cadence de relance (sortie JSON) |
+| `data/follow-ups.md` | Tableau de suivi des relances |
+| `scan.mjs` | Scanner de portails zéro-token — interroge directement les API Greenhouse/Ashby/Lever, zéro coût LLM |
+| `check-liveness.mjs` | Vérificateur de validité des offres d'emploi |
+| `liveness-core.mjs` | Logique partagée de validité (les signaux d'expiration l'emportent sur le texte générique « Postuler ») |
+| `reports/` | Rapports d'évaluation (format : `{###}-{company-slug}-{YYYY-MM-DD}.md`). Blocs A-F + G (Légitimité de l'offre). L'en-tête inclut `**Légitimité :** {tier}`. |
 
-### OpenCode Commands
+### Commandes OpenCode
 
-When using [OpenCode](https://opencode.ai), the following slash commands are available (defined in `.opencode/commands/`):
+Avec [OpenCode](https://opencode.ai), les commandes slash suivantes sont disponibles (définies dans `.opencode/commands/`) :
 
-| Command | Claude Code Equivalent | Description |
-|---------|------------------------|-------------|
-| `/career-ops` | `/career-ops` | Show menu or evaluate JD with args |
-| `/career-ops-pipeline` | `/career-ops pipeline` | Process pending URLs from inbox |
-| `/career-ops-evaluate` | `/career-ops oferta` | Evaluate job offer (A-F scoring) |
-| `/career-ops-compare` | `/career-ops ofertas` | Compare and rank multiple offers |
-| `/career-ops-contact` | `/career-ops contacto` | LinkedIn outreach (find contacts + draft) |
-| `/career-ops-deep` | `/career-ops deep` | Deep company research |
-| `/career-ops-pdf` | `/career-ops pdf` | Generate ATS-optimized CV |
-| `/career-ops-latex` | `/career-ops latex` | Export CV as LaTeX/Overleaf .tex |
-| `/career-ops-training` | `/career-ops training` | Evaluate course/cert against goals |
-| `/career-ops-project` | `/career-ops project` | Evaluate portfolio project idea |
-| `/career-ops-tracker` | `/career-ops tracker` | Application status overview |
-| `/career-ops-apply` | `/career-ops apply` | Live application assistant |
-| `/career-ops-scan` | `/career-ops scan` | Scan portals for new offers |
-| `/career-ops-batch` | `/career-ops batch` | Batch processing with parallel workers |
-| `/career-ops-patterns` | `/career-ops patterns` | Analyze rejection patterns and improve targeting |
-| `/career-ops-followup` | `/career-ops followup` | Follow-up cadence tracker |
+| Commande | Équivalent Claude Code | Description |
+|----------|------------------------|-------------|
+| `/career-ops` | `/career-ops` | Afficher le menu ou évaluer une offre avec arguments |
+| `/career-ops-pipeline` | `/career-ops pipeline` | Traiter les URLs en attente de la boîte de réception |
+| `/career-ops-evaluate` | `/career-ops oferta` | Évaluer une offre d'emploi (scoring A-F) |
+| `/career-ops-compare` | `/career-ops ofertas` | Comparer et classer plusieurs offres |
+| `/career-ops-contact` | `/career-ops contacto` | Prise de contact LinkedIn (trouver des contacts + rédiger) |
+| `/career-ops-deep` | `/career-ops deep` | Recherche approfondie sur une entreprise |
+| `/career-ops-pdf` | `/career-ops pdf` | Générer un CV optimisé ATS |
+| `/career-ops-latex` | `/career-ops latex` | Exporter le CV en LaTeX/Overleaf .tex |
+| `/career-ops-training` | `/career-ops training` | Évaluer une formation/certification par rapport aux objectifs |
+| `/career-ops-project` | `/career-ops project` | Évaluer une idée de projet portfolio |
+| `/career-ops-tracker` | `/career-ops tracker` | Vue d'ensemble du statut des candidatures |
+| `/career-ops-apply` | `/career-ops apply` | Assistant de candidature en direct |
+| `/career-ops-scan` | `/career-ops scan` | Scanner les portails pour de nouvelles offres |
+| `/career-ops-batch` | `/career-ops batch` | Traitement par lots avec workers parallèles |
+| `/career-ops-patterns` | `/career-ops patterns` | Analyser les tendances de refus et améliorer le ciblage |
+| `/career-ops-followup` | `/career-ops followup` | Suivi de la cadence de relance |
 
-**Note:** OpenCode commands invoke the same `.claude/skills/career-ops/SKILL.md` skill used by Claude Code. The `modes/*` files are shared between both platforms.
+**Note :** Les commandes OpenCode invoquent le même skill `.claude/skills/career-ops/SKILL.md` utilisé par Claude Code. Les fichiers `modes/*` sont partagés entre les deux plateformes.
 
-### Gemini CLI Commands
+### Commandes Gemini CLI
 
-When using the [Gemini CLI](https://github.com/google-gemini/gemini-cli), the following slash commands are available (defined in `.gemini/commands/`):
+Avec le [Gemini CLI](https://github.com/google-gemini/gemini-cli), les commandes slash suivantes sont disponibles (définies dans `.gemini/commands/`) :
 
-| Command | Claude Code Equivalent | Description |
-|---------|------------------------|-------------|
-| `/career-ops` | `/career-ops` | Show menu or evaluate JD with args |
-| `/career-ops-pipeline` | `/career-ops pipeline` | Process pending URLs from inbox |
-| `/career-ops-evaluate` | `/career-ops oferta` | Evaluate job offer (A-G scoring) |
-| `/career-ops-compare` | `/career-ops ofertas` | Compare and rank multiple offers |
-| `/career-ops-contact` | `/career-ops contacto` | LinkedIn outreach (find contacts + draft) |
-| `/career-ops-deep` | `/career-ops deep` | Deep company research |
-| `/career-ops-pdf` | `/career-ops pdf` | Generate ATS-optimized CV |
-| `/career-ops-training` | `/career-ops training` | Evaluate course/cert against goals |
-| `/career-ops-project` | `/career-ops project` | Evaluate portfolio project idea |
-| `/career-ops-tracker` | `/career-ops tracker` | Application status overview |
-| `/career-ops-apply` | `/career-ops apply` | Live application assistant |
-| `/career-ops-scan` | `/career-ops scan` | Scan portals for new offers |
-| `/career-ops-batch` | `/career-ops batch` | Batch processing with parallel workers |
-| `/career-ops-patterns` | `/career-ops patterns` | Analyze rejection patterns and improve targeting |
-| `/career-ops-followup` | `/career-ops followup` | Follow-up cadence tracker |
+| Commande | Équivalent Claude Code | Description |
+|----------|------------------------|-------------|
+| `/career-ops` | `/career-ops` | Afficher le menu ou évaluer une offre avec arguments |
+| `/career-ops-pipeline` | `/career-ops pipeline` | Traiter les URLs en attente de la boîte de réception |
+| `/career-ops-evaluate` | `/career-ops oferta` | Évaluer une offre d'emploi (scoring A-G) |
+| `/career-ops-compare` | `/career-ops ofertas` | Comparer et classer plusieurs offres |
+| `/career-ops-contact` | `/career-ops contacto` | Prise de contact LinkedIn (trouver des contacts + rédiger) |
+| `/career-ops-deep` | `/career-ops deep` | Recherche approfondie sur une entreprise |
+| `/career-ops-pdf` | `/career-ops pdf` | Générer un CV optimisé ATS |
+| `/career-ops-training` | `/career-ops training` | Évaluer une formation/certification par rapport aux objectifs |
+| `/career-ops-project` | `/career-ops project` | Évaluer une idée de projet portfolio |
+| `/career-ops-tracker` | `/career-ops tracker` | Vue d'ensemble du statut des candidatures |
+| `/career-ops-apply` | `/career-ops apply` | Assistant de candidature en direct |
+| `/career-ops-scan` | `/career-ops scan` | Scanner les portails pour de nouvelles offres |
+| `/career-ops-batch` | `/career-ops batch` | Traitement par lots avec workers parallèles |
+| `/career-ops-patterns` | `/career-ops patterns` | Analyser les tendances de refus et améliorer le ciblage |
+| `/career-ops-followup` | `/career-ops followup` | Suivi de la cadence de relance |
 
-**Note:** Gemini CLI commands are defined in `.gemini/commands/*.toml`. The project context is auto-loaded from `GEMINI.md`. All `modes/*` files are shared across Claude Code, OpenCode, and Gemini CLI.
+**Note :** Les commandes Gemini CLI sont définies dans `.gemini/commands/*.toml`. Le contexte du projet est chargé automatiquement depuis `GEMINI.md`. Tous les fichiers `modes/*` sont partagés entre Claude Code, OpenCode et Gemini CLI.
 
-### First Run — Onboarding (IMPORTANT)
+### Premier lancement — Onboarding (IMPORTANT)
 
-**Before doing ANYTHING else, check if the system is set up.** Run these checks silently every time a session starts:
+**Avant de faire QUOI QUE CE SOIT d'autre, vérifie si le système est configuré.** Lance ces vérifications silencieusement à chaque début de session :
 
-1. Does `cv.md` exist?
-2. Does `config/profile.yml` exist (not just profile.example.yml)?
-3. Does `modes/_profile.md` exist (not just _profile.template.md)?
-4. Does `portals.yml` exist (not just templates/portals.example.yml)?
+1. Est-ce que `cv.md` existe ?
+2. Est-ce que `config/profile.yml` existe (pas seulement profile.example.yml) ?
+3. Est-ce que `modes/_profile.md` existe (pas seulement _profile.template.md) ?
+4. Est-ce que `portals.yml` existe (pas seulement templates/portals.example.yml) ?
 
-If `modes/_profile.md` is missing, copy from `modes/_profile.template.md` silently. This is the user's customization file — it will never be overwritten by updates.
+Si `modes/_profile.md` est manquant, copie depuis `modes/_profile.template.md` silencieusement. C'est le fichier de personnalisation de l'utilisateur — il ne sera jamais écrasé par les mises à jour.
 
-**If ANY of these is missing, enter onboarding mode.** Do NOT proceed with evaluations, scans, or any other mode until the basics are in place. Guide the user step by step:
+**Si L'UN de ces fichiers manque, passe en mode onboarding.** NE PAS procéder aux évaluations, scans ou tout autre mode tant que les bases ne sont pas en place. Guide l'utilisateur étape par étape :
 
-#### Step 1: CV (required)
-If `cv.md` is missing, ask:
-> "I don't have your CV yet. You can either:
-> 1. Paste your CV here and I'll convert it to markdown
-> 2. Paste your LinkedIn URL and I'll extract the key info
-> 3. Tell me about your experience and I'll draft a CV for you
+#### Étape 1 : CV (obligatoire)
+Si `cv.md` est manquant, demande :
+> « Je n'ai pas encore ton CV. Tu peux soit :
+> 1. Coller ton CV ici et je le convertirai en markdown
+> 2. Coller ton URL LinkedIn et j'extrairai les infos clés
+> 3. Me parler de ton expérience et je rédigerai un CV pour toi
 >
-> Which do you prefer?"
+> Que préfères-tu ? »
 
-Create `cv.md` from whatever they provide. Make it clean markdown with standard sections (Summary, Experience, Projects, Education, Skills).
+Crée `cv.md` à partir de ce qu'il fournit. Fais un markdown propre avec des sections standard (Résumé, Expérience, Projets, Formation, Compétences).
 
-#### Step 2: Profile (required)
-If `config/profile.yml` is missing, copy from `config/profile.example.yml` and then ask:
-> "I need a few details to personalize the system:
-> - Your full name and email
-> - Your location and timezone
-> - What roles are you targeting? (e.g., 'Senior Backend Engineer', 'AI Product Manager')
-> - Your salary target range
+#### Étape 2 : Profil (obligatoire)
+Si `config/profile.yml` est manquant, copie depuis `config/profile.example.yml` puis demande :
+> « J'ai besoin de quelques détails pour personnaliser le système :
+> - Ton nom complet et ton email
+> - Ta localisation et ton fuseau horaire
+> - Quels rôles vises-tu ? (ex. : « Développeur Backend Senior », « Chef de Produit IA »)
+> - Ta fourchette de salaire cible
 >
-> I'll set everything up for you."
+> Je vais tout configurer pour toi. »
 
-Fill in `config/profile.yml` with their answers. For archetypes and targeting narrative, store the user-specific mapping in `modes/_profile.md` or `config/profile.yml` rather than editing `modes/_shared.md`.
+Remplis `config/profile.yml` avec ses réponses. Pour les archétypes et le narratif de ciblage, stocke le mapping spécifique à l'utilisateur dans `modes/_profile.md` ou `config/profile.yml` plutôt que de modifier `modes/_shared.md`.
 
-#### Step 3: Portals (recommended)
-If `portals.yml` is missing:
-> "I'll set up the job scanner with 45+ pre-configured companies. Want me to customize the search keywords for your target roles?"
+#### Étape 3 : Portails (recommandé)
+Si `portals.yml` est manquant :
+> « Je vais configurer le scanner d'offres avec plus de 45 entreprises pré-configurées. Tu veux que je personnalise les mots-clés de recherche pour tes rôles cibles ? »
 
-Copy `templates/portals.example.yml` → `portals.yml`. If they gave target roles in Step 2, update `title_filter.positive` to match.
+Copie `templates/portals.example.yml` → `portals.yml`. S'il a donné des rôles cibles à l'étape 2, mets à jour `title_filter.positive` en conséquence.
 
-#### Step 4: Tracker
-If `data/applications.md` doesn't exist, create it:
+#### Étape 4 : Tableau de suivi
+Si `data/applications.md` n'existe pas, crée-le :
 ```markdown
-# Applications Tracker
+# Tableau de suivi des candidatures
 
-| # | Date | Company | Role | Score | Status | PDF | Report | Notes |
-|---|------|---------|------|-------|--------|-----|--------|-------|
+| # | Date | Entreprise | Rôle | Score | Statut | PDF | Rapport | Notes |
+|---|------|------------|------|-------|--------|-----|---------|-------|
 ```
 
-#### Step 5: Get to know the user (important for quality)
+#### Étape 5 : Apprendre à connaître l'utilisateur (important pour la qualité)
 
-After the basics are set up, proactively ask for more context. The more you know, the better your evaluations will be:
+Après la configuration de base, demande proactivement plus de contexte. Plus tu en sais, meilleures seront tes évaluations :
 
-> "The basics are ready. But the system works much better when it knows you well. Can you tell me more about:
-> - What makes you unique? What's your 'superpower' that other candidates don't have?
-> - What kind of work excites you? What drains you?
-> - Any deal-breakers? (e.g., no on-site, no startups under 20 people, no Java shops)
-> - Your best professional achievement — the one you'd lead with in an interview
-> - Any projects, articles, or case studies you've published?
+> « Les bases sont prêtes. Mais le système fonctionne beaucoup mieux quand il te connaît bien. Peux-tu m'en dire plus sur :
+> - Ce qui te rend unique ? Quel est ton « super-pouvoir » que les autres candidats n'ont pas ?
+> - Quel type de travail t'enthousiasme ? Qu'est-ce qui t'épuise ?
+> - Des critères éliminatoires ? (ex. : pas de présentiel, pas de startups de moins de 20 personnes, pas de Java)
+> - Ta meilleure réalisation professionnelle — celle que tu mettrais en avant en entretien
+> - Des projets, articles ou études de cas que tu as publiés ?
 >
-> The more context you give me, the better I filter. Think of it as onboarding a recruiter — the first week I need to learn about you, then I become invaluable."
+> Plus tu me donnes de contexte, mieux je filtre. Pense à ça comme l'onboarding d'un recruteur — la première semaine j'ai besoin d'apprendre à te connaître, ensuite je deviens indispensable. »
 
-Store any insights the user shares in `config/profile.yml` (under narrative), `modes/_profile.md`, or in `article-digest.md` if they share proof points. Do not put user-specific archetypes or framing into `modes/_shared.md`.
+Stocke les informations que l'utilisateur partage dans `config/profile.yml` (sous narrative), `modes/_profile.md`, ou dans `article-digest.md` s'il partage des preuves. Ne mets pas les archétypes ou le cadrage spécifiques à l'utilisateur dans `modes/_shared.md`.
 
-**After every evaluation, learn.** If the user says "this score is too high, I wouldn't apply here" or "you missed that I have experience in X", update your understanding in `modes/_profile.md`, `config/profile.yml`, or `article-digest.md`. The system should get smarter with every interaction without putting personalization into system-layer files.
+**Après chaque évaluation, apprends.** Si l'utilisateur dit « ce score est trop élevé, je ne postulerais pas ici » ou « tu as raté que j'ai de l'expérience en X », mets à jour ta compréhension dans `modes/_profile.md`, `config/profile.yml`, ou `article-digest.md`. Le système doit devenir plus intelligent à chaque interaction sans mettre de personnalisation dans les fichiers de la couche système.
 
-#### Step 6: Ready
-Once all files exist, confirm:
-> "You're all set! You can now:
-> - Paste a job URL to evaluate it
-> - Run `/career-ops scan` (or `/career-ops-scan` if using OpenCode) to search portals
-> - Run `/career-ops` to see all commands
+#### Étape 6 : Prêt
+Une fois tous les fichiers en place, confirme :
+> « Tu es prêt ! Tu peux maintenant :
+> - Coller une URL d'offre pour l'évaluer
+> - Lancer `/career-ops scan` (ou `/career-ops-scan` avec OpenCode) pour scanner les portails
+> - Lancer `/career-ops` pour voir toutes les commandes
 >
-> Everything is customizable — just ask me to change anything.
+> Tout est personnalisable — demande-moi simplement de changer ce que tu veux.
 >
-> Tip: Having a personal portfolio dramatically improves your job search. If you don't have one yet, the author's portfolio is also open source: github.com/santifer/cv-santiago — feel free to fork it and make it yours."
+> Astuce : Avoir un portfolio personnel améliore considérablement ta recherche d'emploi. Si tu n'en as pas encore, le portfolio de l'auteur original est aussi open source : github.com/santifer/cv-santiago — n'hésite pas à le forker et à te l'approprier. »
 
-Then suggest automation:
-> "Want me to scan for new offers automatically? I can set up a recurring scan every few days so you don't miss anything. Just say 'scan every 3 days' and I'll configure it."
+Puis suggère l'automatisation :
+> « Tu veux que je scanne les nouvelles offres automatiquement ? Je peux configurer un scan récurrent tous les quelques jours pour que tu ne rates rien. Dis simplement « scan tous les 3 jours » et je le configure. »
 
-If the user accepts, use the `/loop` or `/schedule` skill (if available) to set up a recurring `/career-ops scan` (or `/career-ops-scan` if using OpenCode). If those aren't available, suggest adding a cron job or remind them to run `/career-ops scan` (or `/career-ops-scan` if using OpenCode) periodically.
+Si l'utilisateur accepte, utilise le skill `/loop` ou `/schedule` (si disponible) pour configurer un `/career-ops scan` récurrent (ou `/career-ops-scan` avec OpenCode). Si ceux-ci ne sont pas disponibles, suggère d'ajouter un cron job ou rappelle-lui de lancer `/career-ops scan` (ou `/career-ops-scan` avec OpenCode) périodiquement.
 
-### Personalization
+### Personnalisation
 
-This system is designed to be customized by YOU (AI Agent). When the user asks you to change archetypes, translate modes, adjust scoring, add companies, or modify negotiation scripts -- do it directly. You read the same files you use, so you know exactly what to edit.
+Ce système est conçu pour être personnalisé par TOI (Agent IA). Quand l'utilisateur te demande de changer les archétypes, traduire les modes, ajuster le scoring, ajouter des entreprises ou modifier les scripts de négociation — fais-le directement. Tu lis les mêmes fichiers que tu utilises, donc tu sais exactement quoi modifier.
 
-**Common customization requests:**
-- "Change the archetypes to [backend/frontend/data/devops] roles" → edit `modes/_profile.md` or `config/profile.yml`
-- "Translate the modes to English" → edit all files in `modes/`
-- "Add these companies to my portals" → edit `portals.yml`
-- "Update my profile" → edit `config/profile.yml`
-- "Change the CV template design" → edit `templates/cv-template.html`
-- "Adjust the scoring weights" → edit `modes/_profile.md` for user-specific weighting, or edit `modes/_shared.md` and `batch/batch-prompt.md` only when changing the shared system defaults for everyone
+**Demandes de personnalisation courantes :**
+- « Change les archétypes pour des rôles [backend/frontend/data/devops] » → modifie `modes/_profile.md` ou `config/profile.yml`
+- « Traduis les modes en anglais » → modifie tous les fichiers dans `modes/`
+- « Ajoute ces entreprises à mes portails » → modifie `portals.yml`
+- « Mets à jour mon profil » → modifie `config/profile.yml`
+- « Change le design du template CV » → modifie `templates/cv-template.html`
+- « Ajuste les pondérations du scoring » → modifie `modes/_profile.md` pour la pondération spécifique à l'utilisateur, ou modifie `modes/_shared.md` et `batch/batch-prompt.md` uniquement pour changer les paramètres système partagés par défaut
 
-### Language Modes
+### Modes linguistiques
 
-Default modes are in `modes/` (English). Additional language-specific modes are available:
+Les modes par défaut pour ce fork sont dans `modes/fr/` (français). Des modes dans d'autres langues sont également disponibles :
 
-- **German (DACH market):** `modes/de/` — native German translations with DACH-specific vocabulary (13. Monatsgehalt, Probezeit, Kündigungsfrist, AGG, Tarifvertrag, etc.). Includes `_shared.md`, `angebot.md` (evaluation), `bewerben.md` (apply), `pipeline.md`.
-- **French (Francophone market):** `modes/fr/` — native French translations with France/Belgium/Switzerland/Luxembourg-specific vocabulary (CDI/CDD, convention collective SYNTEC, RTT, mutuelle, prévoyance, 13e mois, intéressement/participation, titres-restaurant, CSE, portage salarial, etc.). Includes `_shared.md`, `offre.md` (evaluation), `postuler.md` (apply), `pipeline.md`.
-- **Japanese (Japan market):** `modes/ja/` — native Japanese translations with Japan-specific vocabulary (正社員, 業務委託, 賞与, 退職金, みなし残業, 年俸制, 36協定, 通勤手当, 住宅手当, etc.). Includes `_shared.md`, `kyujin.md` (evaluation), `oubo.md` (apply), `pipeline.md`.
+- **Français (marché francophone) — DÉFAUT pour ce fork :** `modes/fr/` — traductions françaises natives avec vocabulaire spécifique France/Belgique/Suisse/Luxembourg (CDI/CDD, convention collective SYNTEC, RTT, mutuelle, prévoyance, 13e mois, intéressement/participation, titres-restaurant, CSE, portage salarial, etc.). Inclut `_shared.md`, `offre.md` (évaluation), `postuler.md` (candidater), `pipeline.md`.
+- **Anglais :** `modes/` — modes originaux en anglais.
+- **Allemand (marché DACH) :** `modes/de/` — traductions allemandes natives avec vocabulaire spécifique DACH (13. Monatsgehalt, Probezeit, Kündigungsfrist, AGG, Tarifvertrag, etc.). Inclut `_shared.md`, `angebot.md` (évaluation), `bewerben.md` (candidater), `pipeline.md`.
+- **Japonais (marché japonais) :** `modes/ja/` — traductions japonaises natives avec vocabulaire spécifique au Japon (正社員, 業務委託, 賞与, 退職金, みなし残業, 年俸制, 36協定, 通勤手当, 住宅手当, etc.). Inclut `_shared.md`, `kyujin.md` (évaluation), `oubo.md` (candidater), `pipeline.md`.
 
-**When to use German modes:** If the user is targeting German-language job postings, lives in DACH, or asks for German output. Either:
-1. User says "use German modes" → read from `modes/de/` instead of `modes/`
-2. User sets `language.modes_dir: modes/de` in `config/profile.yml` → always use German modes
-3. You detect a German JD → suggest switching to German modes
+**Quand utiliser les modes français (DÉFAUT) :** Ce fork utilise le français par défaut. Les modes français dans `modes/fr/` sont chargés automatiquement. Soit :
+1. L'utilisateur a cloné ce fork → les modes français sont utilisés par défaut
+2. L'utilisateur définit `language.modes_dir: modes/fr` dans `config/profile.yml` → toujours utiliser les modes français
+3. Tu détectes une offre d'emploi en français → utilise les modes français
 
-**When to use French modes:** If the user is targeting French-language job postings, lives in France/Belgium/Switzerland/Luxembourg/Quebec, or asks for French output. Either:
-1. User says "use French modes" → read from `modes/fr/` instead of `modes/`
-2. User sets `language.modes_dir: modes/fr` in `config/profile.yml` → always use French modes
-3. You detect a French JD → suggest switching to French modes
+**Quand utiliser les modes allemands :** Si l'utilisateur vise des offres en allemand, vit dans la zone DACH, ou demande une sortie en allemand. Soit :
+1. L'utilisateur dit « utilise les modes allemands » → lis depuis `modes/de/` au lieu de `modes/fr/`
+2. L'utilisateur définit `language.modes_dir: modes/de` dans `config/profile.yml` → toujours utiliser les modes allemands
+3. Tu détectes une offre en allemand → suggère de passer aux modes allemands
 
-**When to use Japanese modes:** If the user is targeting Japanese-language job postings, lives in Japan, or asks for Japanese output. Either:
-1. User says "use Japanese modes" → read from `modes/ja/` instead of `modes/`
-2. User sets `language.modes_dir: modes/ja` in `config/profile.yml` → always use Japanese modes
-3. You detect a Japanese JD → suggest switching to Japanese modes
+**Quand utiliser les modes japonais :** Si l'utilisateur vise des offres en japonais, vit au Japon, ou demande une sortie en japonais. Soit :
+1. L'utilisateur dit « utilise les modes japonais » → lis depuis `modes/ja/` au lieu de `modes/fr/`
+2. L'utilisateur définit `language.modes_dir: modes/ja` dans `config/profile.yml` → toujours utiliser les modes japonais
+3. Tu détectes une offre en japonais → suggère de passer aux modes japonais
 
-**When NOT to:** If the user applies to English-language roles, even at French, German, or Japanese companies, use the default English modes.
+**Quand NE PAS utiliser les modes traduits :** Si l'utilisateur postule à des rôles en anglais, même dans des entreprises françaises, allemandes ou japonaises, utilise les modes anglais par défaut (`modes/`).
 
-### Skill Modes
+### Modes du skill
 
-| If the user... | Mode |
-|----------------|------|
-| Pastes JD or URL | auto-pipeline (evaluate + report + PDF + tracker) |
-| Asks to evaluate offer | `oferta` |
-| Asks to compare offers | `ofertas` |
-| Wants LinkedIn outreach | `contacto` |
-| Asks for company research | `deep` |
-| Preps for interview at specific company | `interview-prep` |
-| Wants to generate CV/PDF | `pdf` |
-| Evaluates a course/cert | `training` |
-| Evaluates portfolio project | `project` |
-| Asks about application status | `tracker` |
-| Fills out application form | `apply` |
-| Searches for new offers | `scan` |
-| Processes pending URLs | `pipeline` |
-| Batch processes offers | `batch` |
-| Asks about rejection patterns or wants to improve targeting | `patterns` |
-| Asks about follow-ups or application cadence | `followup` |
+| Si l'utilisateur… | Mode |
+|--------------------|------|
+| Colle une offre ou une URL | auto-pipeline (évaluer + rapport + PDF + tableau de suivi) |
+| Demande d'évaluer une offre | `oferta` |
+| Demande de comparer des offres | `ofertas` |
+| Veut une prise de contact LinkedIn | `contacto` |
+| Demande une recherche sur une entreprise | `deep` |
+| Prépare un entretien pour une entreprise spécifique | `interview-prep` |
+| Veut générer un CV/PDF | `pdf` |
+| Évalue une formation/certification | `training` |
+| Évalue un projet portfolio | `project` |
+| Demande le statut des candidatures | `tracker` |
+| Remplit un formulaire de candidature | `apply` |
+| Cherche de nouvelles offres | `scan` |
+| Traite les URLs en attente | `pipeline` |
+| Traite des offres par lots | `batch` |
+| Demande les tendances de refus ou veut améliorer le ciblage | `patterns` |
+| Demande les relances ou la cadence de candidature | `followup` |
 
-### CV Source of Truth
+### Source de vérité du CV
 
-- `cv.md` in project root is the canonical CV
-- `article-digest.md` has detailed proof points (optional)
-- **NEVER hardcode metrics** -- read them from these files at evaluation time
+- `cv.md` à la racine du projet est le CV canonique
+- `article-digest.md` contient les preuves détaillées (optionnel)
+- **JAMAIS de métriques en dur** — les lire depuis ces fichiers au moment de l'évaluation
 
 ---
 
-## Ethical Use -- CRITICAL
+## Utilisation éthique — CRITIQUE
 
-**This system is designed for quality, not quantity.** The goal is to help the user find and apply to roles where there is a genuine match -- not to spam companies with mass applications.
+**Ce système est conçu pour la qualité, pas la quantité.** L'objectif est d'aider l'utilisateur à trouver et postuler à des rôles où il y a une correspondance réelle — pas de spammer les entreprises avec des candidatures de masse.
 
-- **NEVER submit an application without the user reviewing it first.** Fill forms, draft answers, generate PDFs -- but always STOP before clicking Submit/Send/Apply. The user makes the final call.
-- **Strongly discourage low-fit applications.** If a score is below 4.0/5, explicitly recommend against applying. The user's time and the recruiter's time are both valuable. Only proceed if the user has a specific reason to override the score.
-- **Quality over speed.** A well-targeted application to 5 companies beats a generic blast to 50. Guide the user toward fewer, better applications.
-- **Respect recruiters' time.** Every application a human reads costs someone's attention. Only send what's worth reading.
-
----
-
-## Offer Verification -- MANDATORY
-
-**NEVER trust WebSearch/WebFetch to verify if an offer is still active.** ALWAYS use Playwright:
-1. `browser_navigate` to the URL
-2. `browser_snapshot` to read content
-3. Only footer/navbar without JD = closed. Title + description + Apply = active.
-
-**Exception for batch workers (`claude -p`):** Playwright is not available in headless pipe mode. Use WebFetch as fallback and mark the report header with `**Verification:** unconfirmed (batch mode)`. The user can verify manually later.
+- **JAMAIS soumettre une candidature sans que l'utilisateur l'ait d'abord relue.** Remplis les formulaires, rédige les réponses, génère les PDF — mais ARRÊTE-TOI toujours avant de cliquer sur Candidater/Envoyer/Postuler. L'utilisateur prend la décision finale.
+- **Décourage fortement les candidatures à faible correspondance.** Si un score est inférieur à 4,0/5, recommande explicitement de ne pas postuler. Le temps de l'utilisateur et celui du recruteur sont tous deux précieux. Ne procède que si l'utilisateur a une raison spécifique de passer outre le score.
+- **Qualité plutôt que vitesse.** Une candidature bien ciblée à 5 entreprises vaut mieux qu'un envoi générique à 50. Guide l'utilisateur vers moins de candidatures, mais de meilleure qualité.
+- **Respecte le temps des recruteurs.** Chaque candidature qu'un humain lit coûte de l'attention à quelqu'un. N'envoie que ce qui mérite d'être lu.
 
 ---
 
-## CI/CD and Quality
+## Vérification des offres — OBLIGATOIRE
 
-- **GitHub Actions** run on every PR: `test-all.mjs` (63+ checks), auto-labeler (risk-based: 🔴 core-architecture, ⚠️ agent-behavior, 📄 docs), welcome bot for first-time contributors
-- **Branch protection** on `main`: status checks must pass before merge. No direct pushes to main (except admin bypass).
-- **Dependabot** monitors npm, Go modules, and GitHub Actions for security updates
-- **Contributing process**: issue first → discussion → PR with linked issue → CI passes → maintainer review → merge
+**JAMAIS faire confiance à WebSearch/WebFetch pour vérifier si une offre est encore active.** TOUJOURS utiliser Playwright :
+1. `browser_navigate` vers l'URL
+2. `browser_snapshot` pour lire le contenu
+3. Seulement un footer/navbar sans description de poste = fermée. Titre + description + Postuler = active.
 
-## Community and Governance
+**Exception pour les workers batch (`claude -p`) :** Playwright n'est pas disponible en mode pipe headless. Utilise WebFetch en fallback et marque l'en-tête du rapport avec `**Vérification :** non confirmée (mode batch)`. L'utilisateur pourra vérifier manuellement plus tard.
 
-- **Code of Conduct**: Contributor Covenant 2.1 with enforcement actions (see `CODE_OF_CONDUCT.md`)
-- **Governance**: BDFL model with contributor ladder — Participant → Contributor → Triager → Reviewer → Maintainer (see `GOVERNANCE.md`)
-- **Security**: private vulnerability reporting via email (see `SECURITY.md`)
-- **Support**: help questions go to Discord/Discussions, not issues (see `SUPPORT.md`)
-- **Discord**: https://discord.gg/8pRpHETxa4
+---
 
-## Stack and Conventions
+## CI/CD et qualité
 
-- Node.js (mjs modules), Playwright (PDF + scraping), YAML (config), HTML/CSS (template), Markdown (data), Canva MCP (optional visual CV)
-- Scripts in `.mjs`, configuration in YAML
-- Output in `output/` (gitignored), Reports in `reports/`
-- JDs in `jds/` (referenced as `local:jds/{file}` in pipeline.md)
-- Batch in `batch/` (gitignored except scripts and prompt)
-- Report numbering: sequential 3-digit zero-padded, max existing + 1
-- **RULE: After each batch of evaluations, run `node merge-tracker.mjs`** to merge tracker additions and avoid duplications.
-- **RULE: NEVER create new entries in applications.md if company+role already exists.** Update the existing entry.
+- **GitHub Actions** s'exécutent à chaque PR : `test-all.mjs` (63+ vérifications), auto-labeler (basé sur le risque : 🔴 core-architecture, ⚠️ agent-behavior, 📄 docs), bot de bienvenue pour les nouveaux contributeurs
+- **Protection de branche** sur `main` : les vérifications de statut doivent passer avant le merge. Pas de push direct sur main (sauf bypass admin).
+- **Dependabot** surveille npm, les modules Go et GitHub Actions pour les mises à jour de sécurité
+- **Processus de contribution** : issue d'abord → discussion → PR avec issue liée → CI passe → revue du mainteneur → merge
 
-### TSV Format for Tracker Additions
+## Communauté et gouvernance
 
-Write one TSV file per evaluation to `batch/tracker-additions/{num}-{company-slug}.tsv`. Single line, 9 tab-separated columns:
+- **Code de conduite** : Contributor Covenant 2.1 avec actions d'application (voir `CODE_OF_CONDUCT.md`)
+- **Gouvernance** : modèle BDFL avec échelle de contribution — Participant → Contributeur → Trieur → Relecteur → Mainteneur (voir `GOVERNANCE.md`)
+- **Sécurité** : signalement privé de vulnérabilités par email (voir `SECURITY.md`)
+- **Support** : les questions d'aide vont sur Discord/Discussions, pas sur les issues (voir `SUPPORT.md`)
+- **Discord** : https://discord.gg/8pRpHETxa4
+
+## Stack et conventions
+
+- Node.js (modules mjs), Playwright (PDF + scraping), YAML (config), HTML/CSS (template), Markdown (données), Canva MCP (CV visuel optionnel)
+- Scripts en `.mjs`, configuration en YAML
+- Sortie dans `output/` (gitignored), Rapports dans `reports/`
+- Offres d'emploi dans `jds/` (référencées comme `local:jds/{file}` dans pipeline.md)
+- Batch dans `batch/` (gitignored sauf scripts et prompt)
+- Numérotation des rapports : séquentielle sur 3 chiffres avec zéros, max existant + 1
+- **RÈGLE : Après chaque lot d'évaluations, lancer `node merge-tracker.mjs`** pour fusionner les ajouts au tableau de suivi et éviter les doublons.
+- **RÈGLE : JAMAIS créer de nouvelles entrées dans applications.md si entreprise+rôle existe déjà.** Mettre à jour l'entrée existante.
+
+### Format TSV pour les ajouts au tableau de suivi
+
+Écris un fichier TSV par évaluation dans `batch/tracker-additions/{num}-{company-slug}.tsv`. Une seule ligne, 9 colonnes séparées par des tabulations :
 
 ```
 {num}\t{date}\t{company}\t{role}\t{status}\t{score}/5\t{pdf_emoji}\t[{num}](reports/{num}-{slug}-{date}.md)\t{note}
 ```
 
-**Column order (IMPORTANT -- status BEFORE score):**
-1. `num` -- sequential number (integer)
-2. `date` -- YYYY-MM-DD
-3. `company` -- short company name
-4. `role` -- job title
-5. `status` -- canonical status (e.g., `Evaluated`)
-6. `score` -- format `X.X/5` (e.g., `4.2/5`)
-7. `pdf` -- `✅` or `❌`
-8. `report` -- markdown link `[num](reports/...)`
-9. `notes` -- one-line summary
+**Ordre des colonnes (IMPORTANT — statut AVANT score) :**
+1. `num` — numéro séquentiel (entier)
+2. `date` — YYYY-MM-DD
+3. `company` — nom court de l'entreprise
+4. `role` — intitulé du poste
+5. `status` — statut canonique (ex. : `Evaluated`)
+6. `score` — format `X.X/5` (ex. : `4.2/5`)
+7. `pdf` — `✅` ou `❌`
+8. `report` — lien markdown `[num](reports/...)`
+9. `notes` — résumé sur une ligne
 
-**Note:** In applications.md, score comes BEFORE status. The merge script handles this column swap automatically.
+**Note :** Dans applications.md, le score vient AVANT le statut. Le script de fusion gère cette inversion de colonnes automatiquement.
 
-### Pipeline Integrity
+### Intégrité du pipeline
 
-1. **NEVER edit applications.md to ADD new entries** -- Write TSV in `batch/tracker-additions/` and `merge-tracker.mjs` handles the merge.
-2. **YES you can edit applications.md to UPDATE status/notes of existing entries.**
-3. All reports MUST include `**URL:**` in the header (between Score and PDF). Include `**Legitimacy:** {tier}` (see Block G in `modes/oferta.md`).
-4. All statuses MUST be canonical (see `templates/states.yml`).
-5. Health check: `node verify-pipeline.mjs`
-6. Normalize statuses: `node normalize-statuses.mjs`
-7. Dedup: `node dedup-tracker.mjs`
+1. **JAMAIS modifier applications.md pour AJOUTER de nouvelles entrées** — Écris le TSV dans `batch/tracker-additions/` et `merge-tracker.mjs` gère la fusion.
+2. **OUI tu peux modifier applications.md pour METTRE À JOUR le statut/notes des entrées existantes.**
+3. Tous les rapports DOIVENT inclure `**URL :**` dans l'en-tête (entre Score et PDF). Inclure `**Légitimité :** {tier}` (voir Bloc G dans `modes/oferta.md`).
+4. Tous les statuts DOIVENT être canoniques (voir `templates/states.yml`).
+5. Vérification de santé : `node verify-pipeline.mjs`
+6. Normalisation des statuts : `node normalize-statuses.mjs`
+7. Déduplication : `node dedup-tracker.mjs`
 
-### Canonical States (applications.md)
+### États canoniques (applications.md)
 
-**Source of truth:** `templates/states.yml`
+**Source de vérité :** `templates/states.yml`
 
-| State | When to use |
-|-------|-------------|
-| `Evaluated` | Report completed, pending decision |
-| `Applied` | Application sent |
-| `Responded` | Company responded |
-| `Interview` | In interview process |
-| `Offer` | Offer received |
-| `Rejected` | Rejected by company |
-| `Discarded` | Discarded by candidate or offer closed |
-| `SKIP` | Doesn't fit, don't apply |
+| État | Quand l'utiliser |
+|------|------------------|
+| `Evaluated` | Rapport terminé, en attente de décision |
+| `Applied` | Candidature envoyée |
+| `Responded` | L'entreprise a répondu |
+| `Interview` | En processus d'entretien |
+| `Offer` | Offre reçue |
+| `Rejected` | Refusé par l'entreprise |
+| `Discarded` | Écarté par le candidat ou offre fermée |
+| `SKIP` | Ne correspond pas, ne pas postuler |
 
-**RULES:**
-- No markdown bold (`**`) in status field
-- No dates in status field (use the date column)
-- No extra text (use the notes column)
+**RÈGLES :**
+- Pas de gras markdown (`**`) dans le champ statut
+- Pas de dates dans le champ statut (utiliser la colonne date)
+- Pas de texte supplémentaire (utiliser la colonne notes)
