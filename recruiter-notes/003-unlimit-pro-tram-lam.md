@@ -9,39 +9,44 @@
 | 類型 | 路徑 |
 |------|------|
 | JD PDF | `jds/003-unlimit-pro-senior-frontend.pdf` |
-| 評估報告 | `reports/003-unlimit-pro-2026-04-16.md` |
-| Fit-check | `reports/003-unlimit-pro-fit-check.md` |
+| JD MD | `jds/003-unlimit-pro-senior-frontend-engineer.md` |
+| 評估報告 | `reports/003-unlimit-pro-eval-2026-04-16.md` |
+| Fit-check | `reports/003-unlimit-pro-fitcheck.md` |
 | Tracker | `data/applications.md` — entry #003 |
 
 ---
 
 ## 2026-04-16 — First Contact (LinkedIn DM)
 
-> Hi Yi-Chen, I'm Tram from Unlimit.pro
-> Currently, we're hiring a Senior Frontend Engineer (Remote) to build AI-powered Solana intelligence systems - a high-impact role with competitive compensation. I wonder if you are interested in discussing more? Thanks in advance.
+```
+Hi Yi-Chen, I'm Tram from Unlimit.pro
+Currently, we're hiring a Senior Frontend Engineer (Remote) to build AI-powered Solana intelligence systems - a high-impact role with competitive compensation. I wonder if you are interested in discussing more? Thanks in advance.
+```
 
 ---
 
 ## 2026-04-16 — Follow-up (Company Overview)
 
-> Hi Yi-Chen, I'd like to share an overview of the company:
->
-> Unlimit.pro - AI-Powered Solana Intelligence Platform (https://unlimit.pro/)
->
-> We are building a cutting-edge AI-powered blockchain analytics platform focused on the Solana ecosystem.
-> So, our infrastructure powers low-latency streaming systems, large-scale analytics databases, and machine learning services operating continuously across distributed environments.
->
-> Currently we have 2 core products:
-> 1. Intelligent System
-> 2. Unlimit Wallet
->
-> Team size: 19
-> Working hour: Dubai timezone (can flexible on it)
-> Working model: Remote
->
-> JD: https://portal.unlimit.pro/careers/cmm1t2lp0000e1xtdrcty3xh9
->
-> We are open for a part-time/full-time role!
+```
+Hi Yi-Chen, I'd like to share an overview of the company:
+
+Unlimit.pro - AI-Powered Solana Intelligence Platform (https://unlimit.pro/)
+
+We are building a cutting-edge AI-powered blockchain analytics platform focused on the Solana ecosystem.
+So, our infrastructure powers low-latency streaming systems, large-scale analytics databases, and machine learning services operating continuously across distributed environments.
+
+Currently we have 2 core products:
+1. Intelligent System
+2. Unlimit Wallet
+
+Team size: 19
+Working hour: Dubai timezone (can flexible on it)
+Working model: Remote
+
+JD: https://portal.unlimit.pro/careers/cmm1t2lp0000e1xtdrcty3xh9
+
+We are open for a part-time/full-time role!
+```
 
 ---
 
@@ -66,13 +71,15 @@ Looking forward to hearing from you!
 
 ## 2026-04-17 — Tram 回覆
 
-> 1. We prefer full-time, but if the candidate expectation is part-time we still can work on it.
-> 2. New headcount, we already have 2 FE in the team, for the time zone we can adjust on it
->    but would be better if you can follow us since we also have a member from Hong Kong.
+```
+1. We prefer full-time, but if the candidate expectation is part-time we still can work on it.
+2. New headcount, we already have 2 FE in the team, for the time zone we can adjust on it
+   but would be better if you can follow us since we also have a member from Hong Kong.
+```
 
 ---
 
-## 2026-04-20 — 待發草稿（週一發）
+## 2026-04-20 — 發問（第二批）
 
 ```
 Hi Tram, hope you had a great weekend!
@@ -86,3 +93,53 @@ A few more questions before moving forward:
 
 Thanks!
 ```
+
+---
+
+## 2026-04-20 — Tram 回覆
+
+```
+Hi Yi-Chen, I'd like to answer:
+
+1. This will be shared during the meeting with the engineering team
+2. We expect you to work 5 days per week and 4 hours per day. We offer based on your hour rate and will discuss with you before go to the final
+3. Could be, it will be calculated OT
+4. This is an employment contract
+
+Hope this help!
+
+Best regards
+```
+
+**待發草稿（2026-04-21 早上）：**
+
+```
+Hi Tram,
+
+Thanks for the quick and detailed answers — really helpful!
+
+Before we move to the next step, could you share the hourly rate range you have in mind? Helps make sure we're aligned before going further.
+
+Thanks!
+Yi-Chen
+```
+
+**若 Tram 反問期望薪資：**
+
+先反推：
+```
+I'd rather understand your budget first — that way we both know if there's a fit before investing more time.
+```
+
+若對方堅持，給高錨點：
+```
+Based on my experience, I'm targeting around $70–85 USD/hr for senior frontend work.
+```
+
+---
+
+**分析：**
+- Q1 AI 工具：defer 到 engineering meeting，非紅旗，但需在 meeting 確認
+- Q2 工時：**20 hrs/week**（4h × 5d），按時薪計，薪資尚待議
+- Q3 On-call：可能有，但以 OT 計費，非無償待命
+- Q4 合約：**employment contract**（非承包），有勞工保障
