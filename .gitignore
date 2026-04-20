@@ -31,10 +31,14 @@ modes/_profile.md
 node_modules/
 bun.lock
 
+# Cache portails FR (tier 2 Playwright)
+cache/
+
 # OS
 .DS_Store
 *.mov
 *.mp4
+nul
 
 # Claude Code local
 .claude/settings.local.json
