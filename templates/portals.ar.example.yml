@@ -1,0 +1,586 @@
+# Portal Scanner Configuration — AR/LATAM Variant
+# Used by /career-ops scan to discover new offers automatically.
+# This file is tailored for candidates targeting the Argentine and
+# Latin American tech market (remote, hybrid, or on-site in AR/LATAM).
+#
+# Strategy (3 levels):
+#   1. Playwright → careers_url of each company (real-time, reliable)
+#   2. Greenhouse API → structured JSON (fast, Greenhouse-only)
+#   3. WebSearch with site: filters (broad discovery, may be stale)
+#
+# IMPORTANT: Each company in tracked_companies MUST have careers_url.
+#   Prefer the BRANDED company careers URL whenever available; use ATS-hosted URL only as fallback.
+#   ✅ https://careers.mercadolibre.com   ⚠️ https://job-boards.greenhouse.io/mercadolibre (fallback only)
+#   ✅ https://dlocal.com/careers/        ⚠️ https://job-boards.greenhouse.io/dlocal (fallback only)
+#   Exception: ATS-hosted careers_url is acceptable when no branded careers page exists.
+#   Using raw ATS URLs when a branded page exists can cause false 410 errors (job ID mismatch).
+#
+# HOW TO CUSTOMIZE:
+#   1. Copy this file to portals.yml in the project root
+#   2. Edit title_filter.positive with YOUR target role keywords
+#   3. Add/remove companies in tracked_companies
+#   4. Adjust search_queries for your preferred job boards
+#   5. Set enabled: false on companies you don't care about
+#
+# MARKET COVERAGE:
+#   ~30 AR-native companies (Buenos Aires tech ecosystem)
+#   ~10 LATAM regional companies (regional HQ or significant AR presence)
+#   ~10 global companies with active AR-remote hiring programs
+
+# -- Title filter --
+# The scanner uses these keywords to decide if a title is relevant.
+# At least 1 positive must match AND 0 negatives must match (case-insensitive).
+
+title_filter:
+  positive:
+    # [CUSTOMIZE] Add keywords matching YOUR target roles
+    # -- AI/ML roles (English) --
+    - "AI"
+    - "ML"
+    - "LLM"
+    - "Agent"
+    - "Agentic"
+    - "GenAI"
+    - "Generative AI"
+    - "NLP"
+    - "LLMOps"
+    - "MLOps"
+    - "Voice AI"
+    - "Conversational AI"
+    - "Speech"
+    # -- Engineering roles (English) --
+    - "Backend"
+    - "Full Stack"
+    - "Platform"
+    - "DevOps"
+    - "Data Engineer"
+    - "Data Scientist"
+    - "Solutions Architect"
+    - "Tech Lead"
+    - "Staff Engineer"
+    - "Principal Engineer"
+    # -- Product roles (English) --
+    - "Product Manager"
+    - "Technical PM"
+    # -- Automation roles (English) --
+    - "Automation"
+    - "Hyperautomation"
+    - "Low-Code"
+    - "No-Code"
+    # -- AR/LATAM Spanish equivalents --
+    - "Ingeniero de IA"
+    - "Ingeniero de Machine Learning"
+    - "Ingeniero de Datos"
+    - "Ingeniero de Software"
+    - "Desarrollador"
+    - "Desarrolladora"
+    - "Analista de Datos"
+    - "Científico de Datos"
+    - "Líder Técnico"
+    - "Arquitecto de Software"
+    - "Gerente de Producto"
+    - "Automatización"
+    - "Inteligencia Artificial"
+    - "Aprendizaje Automático"
+
+  negative:
+    # [CUSTOMIZE] Add keywords for roles you want to exclude
+    - "Junior"
+    - "Intern"
+    - ".NET"
+    - "Java "
+    - "iOS"
+    - "Android"
+    - "PHP"
+    - "Ruby"
+    - "Embedded"
+    - "Firmware"
+    - "FPGA"
+    - "ASIC"
+    - "Blockchain"
+    - "Web3"
+    - "Crypto"
+    - "Salesforce Admin"
+    - "SAP "
+    - "Oracle EBS"
+    - "Mainframe"
+    - "COBOL"
+    # -- AR-specific negatives (uncomment based on your seniority) --
+    # - "Pasantía"
+    # - "Practicante"
+    # - "Becario"
+    # - "Trainee"
+    - "Reemplazo por maternidad"
+    - "Reemplazo por licencia"
+
+  seniority_boost:
+    # These prefixes add relevance but are not required
+    - "Senior"
+    - "Semi Senior"
+    - "SSr"
+    - "Sr"
+    - "Staff"
+    - "Principal"
+    - "Lead"
+    - "Head"
+    - "Director"
+    - "Ssr."
+    - "Sr."
+
+# -- Search queries --
+# Each query triggers a WebSearch. Use site: to filter by portal.
+# The scanner extracts title, URL, and company from results.
+
+search_queries:
+  # -- AR job boards --
+  - name: Bumeran — Tech e IA
+    query: 'site:bumeran.com.ar "ingeniero" OR "developer" OR "AI" OR "datos" senior'
+    enabled: true
+
+  - name: Computrabajo AR — Tech senior
+    query: 'site:ar.computrabajo.com "tech" OR "tecnología" OR "software" OR "datos" senior'
+    enabled: true
+
+  - name: GetOnBoard — Argentina remote
+    query: 'site:getonbrd.com "Argentina" ("remote" OR "remoto") ("AI" OR "ML" OR "datos" OR "backend")'
+    enabled: true
+
+  - name: GetOnBoard — LATAM Tech
+    query: 'site:getonbrd.com "LATAM" OR "Latinoamérica" senior engineer OR developer OR data'
+    enabled: true
+
+  # -- LinkedIn AR targeting --
+  - name: LinkedIn — Argentina AI/ML remote
+    query: 'site:linkedin.com/jobs "Argentina" ("AI" OR "ML" OR "LLM" OR "datos") remote'
+    enabled: true
+
+  - name: LinkedIn — Argentina Tech Senior
+    query: 'site:linkedin.com/jobs "Argentina" ("ingeniero de software" OR "backend" OR "full stack") ("senior" OR "ssr")'
+    enabled: true
+
+  # -- Global ATS boards targeting AR/LATAM --
+  - name: Greenhouse — Argentina/LATAM remote
+    query: 'site:boards.greenhouse.io OR site:job-boards.greenhouse.io "remote" ("Argentina" OR "LATAM") engineer'
+    enabled: true
+
+  - name: Lever — LATAM remote
+    query: 'site:jobs.lever.co "remote" ("LATAM" OR "Argentina") ("engineer" OR "developer" OR "AI")'
+    enabled: true
+
+  - name: Ashby — LATAM remote
+    query: 'site:jobs.ashbyhq.com "remote" ("Argentina" OR "LATAM") ("engineer" OR "developer")'
+    enabled: true
+
+  # -- Remote-friendly boards (AR/LATAM candidates) --
+  - name: Remotive — AR-compatible remote
+    query: 'site:remotive.com ("Argentina" OR "LATAM" OR "Americas") ("AI Engineer" OR "Data Engineer" OR "Backend")'
+    enabled: true
+
+  - name: WeWorkRemotely — Tech/AI Americas
+    query: 'site:weworkremotely.com ("AI" OR "Data" OR "Backend" OR "Full Stack") ("Americas" OR "LATAM" OR "worldwide")'
+    enabled: true
+
+  - name: RemoteOK — AI/Data/Backend
+    query: 'site:remoteok.com ("AI Engineer" OR "Data Engineer" OR "Backend" OR "Full Stack") worldwide'
+    enabled: true
+
+  - name: Himalayas — Remote AI/Data Americas
+    query: 'site:himalayas.app ("AI Engineer" OR "Data Scientist" OR "Backend Engineer") ("Argentina" OR "LATAM" OR "Americas")'
+    enabled: true
+
+  # -- Specialized tech job boards --
+  - name: YC Jobs — AI/Founding/Remote
+    query: 'site:ycombinator.com/jobs OR site:workatastartup.com ("AI Engineer" OR "Data Engineer" OR "Backend") remote ("LATAM" OR "Americas" OR "worldwide")'
+    enabled: true
+
+  - name: HN Who is Hiring — Remote LATAM
+    query: 'site:news.ycombinator.com "who is hiring" ("Argentina" OR "LATAM" OR "Americas") remote engineer'
+    enabled: true
+
+# -- Tracked companies --
+# Companies whose career pages are checked directly.
+# scan_method: playwright (default), websearch, greenhouse_api
+# For Greenhouse companies, add api: field for faster structured JSON access.
+
+tracked_companies:
+
+  # =========================================================
+  # AR-NATIVE (~30) — Buenos Aires tech ecosystem
+  # =========================================================
+
+  # -- AR tech leaders --
+
+  - name: Mercado Libre
+    careers_url: https://careers.mercadolibre.com
+    scan_method: websearch
+    scan_query: 'site:careers.mercadolibre.com "engineer" OR "AI" OR "datos" OR "producto"'
+    notes: "AR tech giant, e-commerce + fintech + logistics. Large engineering and AI teams."
+    enabled: true
+
+  - name: Globant
+    careers_url: https://career.globant.com
+    scan_method: websearch
+    scan_query: 'site:career.globant.com "AI" OR "ML" OR "engineer" OR "architect" senior'
+    notes: "AR-founded IT/digital transformation consultancy. 30k+ employees in 35 countries."
+    enabled: true
+
+  - name: Despegar
+    careers_url: https://despegar.com/trabaja-con-nosotros
+    scan_method: websearch
+    scan_query: '"despegar" OR "despegar.com" careers "engineer" OR "data" OR "AI" site:linkedin.com/jobs OR site:bumeran.com.ar'
+    notes: "AR travel unicorn. Strong data and engineering teams in Buenos Aires."
+    enabled: false
+
+  # -- AR fintech --
+
+  - name: Ualá
+    careers_url: https://www.uala.com.ar/trabaja-con-nosotros
+    scan_method: websearch
+    scan_query: '"uala" OR "ualá" careers "engineer" OR "data" OR "AI" site:linkedin.com/jobs OR site:getonbrd.com'
+    notes: "AR neobank unicorn. Engineering and data teams in BA."
+    enabled: true
+
+  - name: Naranja X
+    careers_url: https://naranjax.com/trabaja-con-nosotros
+    scan_method: websearch
+    scan_query: '"naranja x" careers "engineer" OR "developer" OR "data" site:linkedin.com/jobs OR site:bumeran.com.ar'
+    notes: "AR fintech (Banco Naranja digital arm). Córdoba + remote."
+    enabled: false
+
+  - name: Brubank
+    careers_url: https://brubank.com/trabaja-con-nosotros
+    scan_method: websearch
+    scan_query: '"brubank" careers "engineer" OR "backend" OR "data" site:linkedin.com/jobs OR site:bumeran.com.ar'
+    notes: "AR digital bank. Buenos Aires based."
+    enabled: false
+
+  - name: Pomelo
+    careers_url: https://pomelo.la/careers
+    scan_method: websearch
+    scan_query: '"pomelo" OR "pomelo.la" careers "engineer" OR "data" OR "backend" site:linkedin.com/jobs OR site:getonbrd.com'
+    notes: "AR fintech infrastructure (card issuing, BaaS). Series B."
+    enabled: true
+
+  - name: Ripio
+    careers_url: https://ripio.com/ar/careers/
+    scan_method: websearch
+    scan_query: '"ripio" careers "engineer" OR "developer" OR "blockchain" site:linkedin.com/jobs OR site:getonbrd.com'
+    notes: "AR crypto exchange and fintech. Buenos Aires."
+    enabled: false
+
+  - name: Lemon Cash
+    careers_url: https://lemon.me/careers
+    scan_method: websearch
+    scan_query: '"lemon cash" OR "lemon.me" careers "engineer" OR "developer" OR "backend" site:linkedin.com/jobs'
+    notes: "AR crypto neobank. Buenos Aires."
+    enabled: false
+
+  - name: Buenbit
+    careers_url: https://buenbit.com/trabaja-con-nosotros
+    scan_method: websearch
+    scan_query: '"buenbit" careers "engineer" OR "developer" OR "data" site:linkedin.com/jobs OR site:bumeran.com.ar'
+    notes: "AR crypto exchange. Buenos Aires."
+    enabled: false
+
+  - name: Personal Pay
+    careers_url: https://personalpay.com.ar/trabaja-con-nosotros
+    scan_method: websearch
+    scan_query: '"personal pay" careers "engineer" OR "developer" OR "data" site:linkedin.com/jobs OR site:bumeran.com.ar'
+    notes: "AR digital wallet by Telecom Argentina. Buenos Aires."
+    enabled: false
+
+  - name: MODO
+    careers_url: https://modo.com.ar/trabaja-con-nosotros
+    scan_method: websearch
+    scan_query: '"MODO" "pagos" OR "fintech" careers "engineer" OR "developer" site:linkedin.com/jobs OR site:bumeran.com.ar'
+    notes: "AR interoperable digital wallet backed by major AR banks."
+    enabled: false
+
+  - name: Prisma Medios de Pago
+    careers_url: https://prisma.com.ar/trabaja-con-nosotros
+    scan_method: websearch
+    scan_query: '"prisma medios de pago" careers "engineer" OR "developer" OR "data" site:linkedin.com/jobs OR site:bumeran.com.ar'
+    notes: "AR payments infrastructure (Visa acquiring, Todo1). Buenos Aires."
+    enabled: false
+
+  # -- AR e-commerce & retail tech --
+
+  - name: TiendaNube
+    careers_url: https://www.tiendanube.com/trabaja-con-nosotros
+    scan_method: websearch
+    scan_query: '"tiendanube" OR "nuvemshop" careers "engineer" OR "developer" OR "data" OR "product" site:linkedin.com/jobs OR site:getonbrd.com'
+    notes: "AR/BR e-commerce platform unicorn. Buenos Aires + São Paulo. Strong product & engineering."
+    enabled: true
+
+  - name: OLX LATAM
+    careers_url: https://olx.com.ar/jobs
+    scan_method: websearch
+    scan_query: '"OLX LATAM" OR "OLX Argentina" careers "engineer" OR "data" OR "product" site:linkedin.com/jobs'
+    notes: "AR classifieds marketplace. Data and product engineering teams in BA."
+    enabled: false
+
+  - name: InvertirOnline
+    careers_url: https://www.invertironline.com/trabaja-con-nosotros
+    scan_method: websearch
+    scan_query: '"invertironline" OR "iol" careers "developer" OR "engineer" OR "data" site:linkedin.com/jobs OR site:bumeran.com.ar'
+    notes: "AR online brokerage (Grupo Supervielle). Buenos Aires."
+    enabled: false
+
+  # -- AR tech consultancies & dev shops --
+
+  - name: 10Pines
+    careers_url: https://www.10pines.com/jobs
+    scan_method: websearch
+    scan_query: '"10pines" careers "developer" OR "engineer" OR "agile" site:linkedin.com/jobs OR site:getonbrd.com'
+    notes: "AR software consultancy with XP/agile culture. Buenos Aires + remote."
+    enabled: false
+
+  - name: Wolox (Accenture AR)
+    careers_url: https://wolox.com.ar/careers
+    scan_method: websearch
+    scan_query: '"wolox" OR "wolox accenture" careers "engineer" OR "developer" OR "AI" site:linkedin.com/jobs OR site:bumeran.com.ar'
+    notes: "AR tech studio acquired by Accenture. Buenos Aires. Still operates own brand."
+    enabled: false
+
+  # -- AR gaming & entertainment tech --
+
+  - name: Etermax
+    careers_url: https://etermax.com/careers/
+    scan_method: websearch
+    scan_query: '"etermax" careers "engineer" OR "developer" OR "data" OR "AI" site:linkedin.com/jobs OR site:bumeran.com.ar'
+    notes: "AR mobile gaming company (Trivia Crack). Buenos Aires. Data & AI teams."
+    enabled: false
+
+  - name: Wildlife Studios AR
+    careers_url: https://wildlifestudios.com/careers
+    scan_method: websearch
+    scan_query: '"wildlife studios" careers "engineer" OR "developer" OR "data" site:linkedin.com/jobs'
+    notes: "BR mobile gaming studio with significant AR engineering presence."
+    enabled: false
+
+  # -- AR space tech & deep tech --
+
+  - name: Satellogic
+    careers_url: https://satellogic.com/careers/
+    scan_method: websearch
+    scan_query: 'site:satellogic.com/careers OR "satellogic" "engineer" OR "data" OR "ML" site:linkedin.com/jobs'
+    notes: "AR-founded satellite imagery company. Nanosatellite constellation. ML and data roles."
+    enabled: false
+
+  # -- AR proptech & marketplace --
+
+  - name: Mudafy
+    careers_url: https://mudafy.com/trabaja-con-nosotros
+    scan_method: websearch
+    scan_query: '"mudafy" careers "engineer" OR "developer" OR "product" site:linkedin.com/jobs OR site:getonbrd.com'
+    notes: "AR proptech (real estate marketplace). Buenos Aires."
+    enabled: false
+
+  - name: 123Seguro
+    careers_url: https://123seguro.com/trabaja-con-nosotros
+    scan_method: websearch
+    scan_query: '"123seguro" careers "engineer" OR "developer" OR "data" site:linkedin.com/jobs OR site:bumeran.com.ar'
+    notes: "AR insurtech. Buenos Aires."
+    enabled: false
+
+  # -- AR adtech & martech --
+
+  - name: Jampp
+    careers_url: https://job-boards.greenhouse.io/jampp
+    api: https://boards-api.greenhouse.io/v1/boards/jampp/jobs
+    notes: "AR adtech (mobile app marketing). Buenos Aires. Has ML Engineer roles."
+    enabled: false
+
+  # -- AR digital education --
+
+  - name: Digital House
+    careers_url: https://digitalhouse.com/ar/trabaja-con-nosotros
+    scan_method: websearch
+    scan_query: '"digital house" careers "engineer" OR "developer" OR "data" OR "instructor" site:linkedin.com/jobs OR site:bumeran.com.ar'
+    notes: "AR edtech (coding bootcamp + tech education). Buenos Aires."
+    enabled: false
+
+  - name: MercadoPago
+    careers_url: https://careers.mercadolibre.com/ml/jobs
+    scan_method: websearch
+    scan_query: '"mercado pago" careers "engineer" OR "data" OR "AI" OR "backend" site:linkedin.com/jobs'
+    notes: "Fintech arm of Mercado Libre. Massive engineering and data org in BA. Tracks under ML careers portal."
+    enabled: false
+
+  - name: Quipu
+    careers_url: https://quipu.com.ar/trabaja-con-nosotros
+    scan_method: websearch
+    scan_query: '"quipu" OR "quipu market" careers "engineer" OR "developer" OR "data" site:linkedin.com/jobs OR site:bumeran.com.ar'
+    notes: "AR fintech (B2B payments and credit for SMEs). Buenos Aires."
+    enabled: false
+
+  - name: Reba
+    careers_url: https://reba.com.ar/trabaja-con-nosotros
+    scan_method: websearch
+    scan_query: '"reba" OR "reba fintech" careers "engineer" OR "developer" OR "data" site:linkedin.com/jobs OR site:bumeran.com.ar'
+    notes: "AR corporate expense management fintech. Buenos Aires."
+    enabled: false
+
+  # -- AR/LATAM heritage / now global --
+
+  - name: Auth0 (Okta)
+    careers_url: https://www.okta.com/company/careers/
+    scan_method: websearch
+    scan_query: 'site:okta.com/company/careers "engineer" OR "developer" OR "AI" remote ("LATAM" OR "Americas")'
+    notes: "AR-founded identity platform (Auth0), now Okta. Remote-first, AR-heritage. Strong engineering culture."
+    enabled: false
+
+  - name: dLocal
+    careers_url: https://dlocal.com/careers/
+    scan_method: websearch
+    scan_query: 'site:dlocal.com/careers "engineer" OR "developer" OR "data" OR "product" remote'
+    notes: "UY-founded payments platform with major AR presence. Remote-friendly. Processes payments across 40+ markets."
+    enabled: true
+
+  # =========================================================
+  # LATAM REGIONAL (~10) — Significant AR presence or LATAM HQ
+  # =========================================================
+
+  - name: Belvo
+    careers_url: https://belvo.com/careers/
+    scan_method: websearch
+    scan_query: 'site:belvo.com/careers "engineer" OR "developer" OR "data" OR "product"'
+    notes: "Open banking API for LATAM. Remote across LATAM. Strong eng and data teams."
+    enabled: true
+
+  - name: Bitso
+    careers_url: https://bitso.com/jobs
+    scan_method: websearch
+    scan_query: 'site:bitso.com/jobs "engineer" OR "developer" OR "data" OR "product"'
+    notes: "MX-founded crypto exchange, major LATAM presence incl AR. Remote-friendly."
+    enabled: true
+
+  - name: Kushki
+    careers_url: https://kushki.com/careers
+    scan_method: websearch
+    scan_query: '"kushki" careers "engineer" OR "developer" OR "data" site:linkedin.com/jobs OR site:getonbrd.com'
+    notes: "LATAM payments infrastructure (Ecuador HQ). Remote across LATAM."
+    enabled: false
+
+  - name: NotCo
+    careers_url: https://notco.com/us/careers/
+    scan_method: websearch
+    scan_query: '"notco" careers "engineer" OR "developer" OR "data" OR "AI" site:linkedin.com/jobs'
+    notes: "CL-founded food-tech AI company (NotMilk, NotBurger). AI-driven product development."
+    enabled: false
+
+  - name: Kavak
+    careers_url: https://kavak.com/ar/trabaja-con-nosotros
+    scan_method: websearch
+    scan_query: '"kavak" careers "engineer" OR "developer" OR "data" OR "product" site:linkedin.com/jobs'
+    notes: "MX-founded used car marketplace unicorn. Growing AR operations. Data and tech teams."
+    enabled: false
+
+  - name: Rappi
+    careers_url: https://about.rappi.com/careers
+    scan_method: websearch
+    scan_query: '"rappi" careers "engineer" OR "developer" OR "data" OR "AI" site:linkedin.com/jobs OR site:getonbrd.com'
+    notes: "CO-founded super-app unicorn. Large AR market. Engineering and data teams across LATAM."
+    enabled: false
+
+  - name: Betterfly
+    careers_url: https://betterfly.com/careers
+    scan_method: websearch
+    scan_query: '"betterfly" careers "engineer" OR "developer" OR "product" site:linkedin.com/jobs OR site:getonbrd.com'
+    notes: "CL-founded benefits platform unicorn. Remote across LATAM."
+    enabled: false
+
+  - name: Nubank
+    careers_url: https://international.nubank.com.br/careers/
+    scan_method: websearch
+    scan_query: 'site:international.nubank.com.br/careers "engineer" OR "developer" OR "AI" OR "ML" remote'
+    notes: "BR-founded neobank with AR hiring. 8k+ employees. ML and data teams."
+    enabled: true
+
+  - name: Fintual
+    careers_url: https://fintual.com/trabaja-en-fintual
+    scan_method: websearch
+    scan_query: '"fintual" careers "engineer" OR "developer" OR "data" site:linkedin.com/jobs OR site:getonbrd.com'
+    notes: "CL-founded robo-advisor. Strong engineering culture. Chile + Mexico + Colombia."
+    enabled: false
+
+  - name: Clip
+    careers_url: https://clip.mx/empleos
+    scan_method: websearch
+    scan_query: '"clip" OR "clip.mx" careers "engineer" OR "developer" OR "data" site:linkedin.com/jobs'
+    notes: "MX payment terminal fintech. Engineering and data teams."
+    enabled: false
+
+  # =========================================================
+  # GLOBAL WITH AR-REMOTE TEAMS (~10)
+  # =========================================================
+
+  - name: Stripe
+    careers_url: https://stripe.com/jobs
+    scan_method: websearch
+    scan_query: 'site:stripe.com/jobs "engineer" OR "developer" OR "data" remote ("LATAM" OR "Americas" OR "worldwide")'
+    notes: "Global payments infrastructure. Remote-first. Has hired AR engineers. High engineering bar."
+    enabled: true
+
+  - name: Deel
+    careers_url: https://www.deel.com/careers
+    scan_method: websearch
+    scan_query: 'site:deel.com/careers "engineer" OR "developer" OR "AI" OR "data" remote'
+    notes: "Global HR/payroll platform. Remote-first. 265+ open roles. Hires across LATAM."
+    enabled: true
+
+  - name: Remote
+    careers_url: https://remote.com/careers
+    scan_method: websearch
+    scan_query: 'site:remote.com/careers "engineer" OR "developer" OR "product" OR "AI"'
+    notes: "Global employment platform. Fully remote, worldwide hiring. Hires in AR."
+    enabled: true
+
+  - name: GitLab
+    careers_url: https://about.gitlab.com/jobs/
+    scan_method: websearch
+    scan_query: 'site:about.gitlab.com/jobs "engineer" OR "developer" OR "AI" OR "data" remote'
+    notes: "DevOps platform. Fully remote, worldwide. Has hired AR engineers historically."
+    enabled: true
+
+  - name: Canonical
+    careers_url: https://canonical.com/careers
+    scan_method: websearch
+    scan_query: 'site:canonical.com/careers "engineer" OR "developer" OR "AI" OR "data" remote'
+    notes: "Ubuntu/Linux company. Fully remote, 162+ engineering roles. Hires in AR."
+    enabled: true
+
+  - name: DataDog
+    careers_url: https://careers.datadoghq.com/
+    scan_method: websearch
+    scan_query: 'site:careers.datadoghq.com "engineer" OR "developer" OR "AI" OR "ML" remote ("Americas" OR "LATAM")'
+    notes: "Observability/monitoring platform. Remote-friendly. Has LATAM engineering roles."
+    enabled: true
+
+  - name: Toptal
+    careers_url: https://www.toptal.com/careers
+    scan_method: websearch
+    scan_query: '"toptal" site:toptal.com/careers "engineer" OR "developer" OR "product" remote'
+    notes: "Remote talent network. Fully distributed. Has internal roles for engineers and product managers."
+    enabled: false
+
+  - name: Turing
+    careers_url: https://careers.turing.com
+    scan_method: websearch
+    scan_query: 'site:careers.turing.com "engineer" OR "developer" OR "product" remote'
+    notes: "Remote tech talent platform. Internal roles for engineers and product managers worldwide."
+    enabled: false
+
+  - name: Andela
+    careers_url: https://jobs.ashbyhq.com/andela
+    scan_method: websearch
+    scan_query: 'site:jobs.ashbyhq.com/andela "engineer" OR "developer" OR "product" remote'
+    notes: "African-founded remote talent network expanding to LATAM. Internal roles globally."
+    enabled: false
+
+  - name: Modak
+    careers_url: https://modak.com/careers/
+    scan_method: websearch
+    scan_query: '"modak" site:modak.com/careers OR site:linkedin.com/jobs "engineer" OR "developer" OR "data" remote'
+    notes: "Data engineering consultancy with strong LATAM team. Remote-friendly."
+    enabled: false
