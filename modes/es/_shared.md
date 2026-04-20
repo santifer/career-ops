@@ -26,7 +26,7 @@
 
 ## Sistema de scoring
 
-La evaluación usa 6 bloques (A-F) con un score global de 1-5:
+La evaluación usa 7 bloques (A-G) con un score global de 1-5:
 
 | Dimensión | Qué mide |
 |-----------|----------|
