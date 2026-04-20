@@ -16,6 +16,14 @@ candidate:
   # The ID starts with "D" and is 11 characters long.
   # canva_resume_design_id: "DAxxxxxxxxx"
 
+# Optional: localized modes.
+# When set, career-ops reads evaluation/apply/pipeline modes from this
+# directory instead of the default modes/. See CLAUDE.md § Language Modes.
+# Supported: modes/de, modes/es, modes/fr, modes/ja, modes/pt, modes/ru
+# Unset or omitted → uses modes/ (English / mixed).
+# language:
+#   modes_dir: modes/es   # example: Argentine Spanish
+
 target_roles:
   # Your North Star roles — what you're optimizing for
   primary:
