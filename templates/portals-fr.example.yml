@@ -1,0 +1,210 @@
+# Configuration du scanner de portails — Marché français
+# Utilisé par /career-ops scan pour découvrir automatiquement de nouvelles offres.
+#
+# Stratégie à 3 niveaux :
+#   Tier 1 — API officielle : France Travail (gratuit, OAuth2, ~900 000 offres)
+#   Tier 2 — Playwright respectueux : APEC, WTTJ, HelloWork, Jobijoba, RégionsJob
+#   Tier 3 — Collé manuellement : LinkedIn, Indeed, Glassdoor (anti-bot agressif)
+#
+# COMMENT PERSONNALISER :
+#   1. Copie ce fichier en portals.yml à la racine du projet
+#   2. Modifie title_filter.positive avec TES mots-clés de recherche
+#   3. Ajoute/supprime des portails selon tes besoins
+#   4. Ajuste les search_queries pour tes requêtes favorites
+#   5. Mets enabled: false sur les portails qui ne t'intéressent pas
+
+# -- Filtre de titres --
+# Le scanner utilise ces mots-clés pour décider si un titre est pertinent.
+# Au moins 1 positif doit matcher ET 0 négatif ne doit matcher (insensible à la casse).
+
+title_filter:
+  positive:
+    # [PERSONNALISER] Ajoute les mots-clés correspondant à TES rôles cibles
+    # -- Développement --
+    - "développeur"
+    - "développeuse"
+    - "dev"
+    - "fullstack"
+    - "frontend"
+    - "backend"
+    - "ingénieur logiciel"
+    - "software engineer"
+    # -- Commercial --
+    - "commercial"
+    - "business developer"
+    - "account manager"
+    - "chargé d'affaires"
+    # -- Management --
+    - "tech lead"
+    - "lead developer"
+    - "chef de projet"
+    - "manager"
+    - "directeur technique"
+    - "CTO"
+    # -- Support / Admin --
+    - "comptable"
+    - "RH"
+    - "ressources humaines"
+    - "assistant"
+    - "paie"
+    # -- Artisanat / Technique --
+    - "technicien"
+    - "plombier"
+    - "électricien"
+    - "chauffagiste"
+    - "conducteur de travaux"
+    # -- Alternance / Stage --
+    - "alternance"
+    - "apprentissage"
+    - "stage"
+    - "contrat pro"
+    # -- IA / Data --
+    - "IA"
+    - "intelligence artificielle"
+    - "data"
+    - "machine learning"
+    - "AI"
+    - "ML"
+    - "LLM"
+  negative:
+    # [PERSONNALISER] Exclure les rôles qui ne t'intéressent pas
+    - "stagiaire"  # Si tu ne cherches pas de stage
+    # - "senior"   # Décommenter si tu cibles des postes juniors
+    # - "director"
+
+# -- Portails français --
+
+portals:
+  # ═══════════════════════════════════════════════════════
+  # TIER 1 — API officielle (le jackpot)
+  # ═══════════════════════════════════════════════════════
+
+  - id: france-travail
+    name: "France Travail"
+    tier: 1
+    adapter: adapters/portals/france-travail.mjs
+    auth: oauth2
+    base_url: https://api.francetravail.io/partenaire/offresdemploi/v2
+    enabled: true
+    description: >
+      API officielle gratuite. ~900 000 offres. Agrège les offres de nombreux
+      partenaires (HelloWork, RégionsJob, etc.). Couverture massive du marché FR.
+    # Requiert FRANCE_TRAVAIL_CLIENT_ID et FRANCE_TRAVAIL_CLIENT_SECRET dans .env
+
+  # ═══════════════════════════════════════════════════════
+  # TIER 2 — Playwright respectueux
+  # ═══════════════════════════════════════════════════════
+
+  - id: apec
+    name: "APEC"
+    tier: 2
+    adapter: adapters/portals/apec.mjs
+    rate_limit_ms: 3000
+    robots_check: true
+    enabled: true
+    description: >
+      Association Pour l'Emploi des Cadres. Offres cadres et jeunes diplômés.
+      Données salariales fiables. Accès public sans login.
+
+  - id: welcometothejungle
+    name: "Welcome to the Jungle"
+    tier: 2
+    adapter: adapters/portals/welcometothejungle.mjs
+    rate_limit_ms: 3000
+    robots_check: true
+    enabled: true
+    description: >
+      Portail tech/startup très populaire en France. Photos d'équipe,
+      avis salariés, culture d'entreprise détaillée.
+
+  - id: hellowork
+    name: "HelloWork"
+    tier: 2
+    adapter: adapters/portals/hellowork.mjs
+    rate_limit_ms: 3000
+    robots_check: true
+    enabled: true
+    description: >
+      Groupe HelloWork (ex-RegionsJob). Portail généraliste très utilisé.
+      Forte couverture PME et régions.
+
+  - id: jobijoba
+    name: "Jobijoba"
+    tier: 2
+    adapter: adapters/portals/jobijoba.mjs
+    rate_limit_ms: 3000
+    robots_check: true
+    enabled: true
+    description: >
+      Méta-moteur d'emploi du groupe HelloWork. Agrège les offres
+      de multiples sources. Bonne couverture transversale.
+
+  - id: regionsjob
+    name: "RégionsJob"
+    tier: 2
+    adapter: adapters/portals/regionsjob.mjs
+    rate_limit_ms: 3000
+    robots_check: true
+    enabled: true
+    description: >
+      Portail historique du groupe HelloWork. Forte implantation régionale.
+      Offres PME/ETI hors Île-de-France.
+
+  # ═══════════════════════════════════════════════════════
+  # TIER 3 — Collé manuellement (pas de scraping serveur)
+  # ═══════════════════════════════════════════════════════
+
+  - id: linkedin-fr
+    name: "LinkedIn France"
+    tier: 3
+    adapter: adapters/portals/pasted-jd.mjs
+    enabled: true
+    description: >
+      Anti-bot + CGU interdisant le scraping. Utilise le mode « collé manuellement » :
+      copie-colle le texte de l'offre depuis ton navigateur.
+      Future extension navigateur (QW5) contournera cette limitation.
+
+  - id: indeed-fr
+    name: "Indeed France"
+    tier: 3
+    adapter: adapters/portals/pasted-jd.mjs
+    enabled: true
+    description: >
+      Cloudflare agressif. Même stratégie que LinkedIn :
+      copie-colle l'offre manuellement.
+
+  - id: glassdoor-fr
+    name: "Glassdoor France"
+    tier: 3
+    adapter: adapters/portals/pasted-jd.mjs
+    enabled: false
+    description: >
+      DataDome + Cloudflare + login wall. API dépréciée.
+      Utilise le mode collé si nécessaire. Désactivé par défaut.
+
+# -- Requêtes de recherche pour le scanner --
+
+search_queries:
+  # [PERSONNALISER] Adapte les requêtes à tes rôles cibles
+  - query: "développeur fullstack CDI"
+    source: france-travail
+  - query: "ingénieur logiciel Paris"
+    source: france-travail
+  - query: "commercial B2B SaaS"
+    source: france-travail
+  - query: "tech lead CDI"
+    source: apec
+  - query: "développeur senior"
+    source: welcometothejungle
+  - query: "alternance développeur"
+    source: france-travail
+
+# -- Hygiène de scraping --
+
+scraping_policy:
+  mode: strict  # strict | permissive | disabled
+  user_agent: "career-ops-fr/1.0 (+https://github.com/atoox-git/career-ops-fr)"
+  rate_limit_ms: 3000          # Minimum 3s entre requêtes au même domaine
+  max_requests_per_session: 60  # Maximum 60 requêtes par session de scan
+  cache_ttl_hours: 24           # Cache local des JD récupérées
+  respect_robots_txt: true      # TOUJOURS respecter robots.txt

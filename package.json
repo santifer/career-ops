@@ -15,20 +15,28 @@
     "rollback": "node update-system.mjs rollback",
     "liveness": "node check-liveness.mjs",
     "scan": "node scan.mjs",
-    "gemini:eval": "node gemini-eval.mjs"
+    "gemini:eval": "node gemini-eval.mjs",
+    "claude:eval": "echo 'Utilise Claude Code directement : claude /career-ops {offre}'",
+    "ollama:eval": "echo 'Stub — intégration Ollama prévue. Voir la roadmap.'"
   },
   "keywords": [
     "ai",
     "job-search",
     "claude-code",
     "career",
-    "automation"
+    "automation",
+    "france-travail",
+    "emploi",
+    "france"
   ],
-  "author": "Santiago Fernández de Valderrama <hi@santifer.io> (https://santifer.io)",
-  "homepage": "https://santifer.io",
+  "author": "Santiago Fern��ndez de Valderrama <hi@santifer.io> (https://santifer.io)",
+  "contributors": [
+    "Bertrand Bonnet (adaptation française)"
+  ],
+  "homepage": "https://github.com/atoox-git/career-ops-fr",
   "repository": {
     "type": "git",
-    "url": "https://github.com/santifer/career-ops"
+    "url": "https://github.com/atoox-git/career-ops-fr"
   },
   "license": "MIT",
   "dependencies": {
