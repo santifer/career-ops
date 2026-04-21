@@ -16,6 +16,8 @@
 
 import { chromium } from 'playwright';
 import { readFile } from 'fs/promises';
+import fs from 'fs';
+import path from 'path';
 
 const EXPIRED_PATTERNS = [
   /job (is )?no longer available/i,
@@ -32,11 +34,17 @@ const EXPIRED_PATTERNS = [
   /search for jobs page is loaded/i, // Workday SPA indicator for listing page
   /diese stelle (ist )?(nicht mehr|bereits) besetzt/i,
   /offre (expirée|n'est plus disponible)/i,
+  /该职位已关闭/i,                  // BOSS Zhipin / Liepin
+  /职位已失效/i,                    // BOSS Zhipin
+  /停止招聘/i,                      // BOSS Zhipin
+  /该职位已下架/i,                  // Liepin
+  /职位已关闭/i,                    // General CN
 ];
 
 // URL patterns that indicate an ATS has redirected away from the job (closed/expired)
 const EXPIRED_URL_PATTERNS = [
   /[?&]error=true/i,   // Greenhouse redirect on closed jobs
+  /zhipin\.com\/web\/geek\/job/i, // Redirected back to search usually means job inaccessible
 ];
 
 const APPLY_PATTERNS = [
@@ -48,36 +56,66 @@ const APPLY_PATTERNS = [
   /easy apply/i,
   /start application/i,  // Ashby
   /ich bewerbe mich/i,   // German Greenhouse
+  /立即沟通/i,           // BOSS Zhipin
+  /立即申请/i,           // Liepin / 51job
 ];
 
 // Below this length the page is probably just nav/footer (closed ATS page)
 const MIN_CONTENT_CHARS = 300;
 
-async function checkUrl(page, url) {
+/**
+ * Load cookies for a given URL if available
+ */
+async function loadCookiesForUrl(context, url) {
+  let siteName = '';
+  if (url.includes('zhipin.com')) siteName = 'boss';
+  else if (url.includes('liepin.com')) siteName = 'liepin';
+  else if (url.includes('51job.com')) siteName = '51job';
+  
+  if (!siteName) return;
+
+  const cookiePath = path.join(process.cwd(), 'data', 'cookies', `${siteName}.json`);
+  if (fs.existsSync(cookiePath)) {
+    const cookies = JSON.parse(fs.readFileSync(cookiePath, 'utf-8'));
+    const validCookies = cookies.map(c => ({
+      name: c.name,
+      value: c.value,
+      domain: c.domain,
+      path: c.path,
+      secure: c.secure,
+      httpOnly: c.httpOnly,
+      sameSite: c.sameSite === 'None' ? 'None' : (c.sameSite === 'Lax' ? 'Lax' : 'Strict')
+    }));
+    await context.addCookies(validCookies);
+  }
+}
+
+async function checkUrl(browser, url) {
+  const context = await browser.newContext({
+    userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
+  });
+  
   try {
-    const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 15000 });
+    await loadCookiesForUrl(context, url);
+    const page = await context.newPage();
+    const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
 
     const status = response?.status() ?? 0;
     if (status === 404 || status === 410) {
       return { result: 'expired', reason: `HTTP ${status}` };
     }
 
-    // Give SPAs (Ashby, Lever, Workday) time to hydrate
+    // Give SPAs time to hydrate
     await page.waitForTimeout(2000);
 
-    // Check if the ATS redirected to an error/listing page (e.g. Greenhouse ?error=true)
     const finalUrl = page.url();
-    for (const pattern of EXPIRED_URL_PATTERNS) {
-      if (pattern.test(finalUrl)) {
-        return { result: 'expired', reason: `redirect to ${finalUrl}` };
-      }
+    // Special case for BOSS: if we are redirected to the search page, the job is likely gone
+    if (url.includes('job_detail') && finalUrl.includes('/web/geek/job')) {
+       return { result: 'expired', reason: `redirected to search list` };
     }
 
     const bodyText = await page.evaluate(() => document.body?.innerText ?? '');
 
-    // Apply button is the strongest positive signal — check it first.
-    // This short-circuits before expired patterns that can appear on active pages
-    // (e.g. Workday's split-view layout shows "N JOBS FOUND" even on active job pages).
     if (APPLY_PATTERNS.some(p => p.test(bodyText))) {
       return { result: 'active', reason: 'apply button detected' };
     }
@@ -96,6 +134,8 @@ async function checkUrl(page, url) {
 
   } catch (err) {
     return { result: 'expired', reason: `navigation error: ${err.message.split('\n')[0]}` };
+  } finally {
+    await context.close();
   }
 }
 

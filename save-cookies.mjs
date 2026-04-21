@@ -20,30 +20,59 @@ async function saveCookies(siteName, url) {
   console.log('4. 在终端中按 [回车键/Enter] 保存 Cookie 并关闭浏览器。');
   console.log('--------------------------------------------------\n');
   
-  // 针对 BOSS 直聘：模拟更真实的浏览器环境
+  // 针对 BOSS 直聘：使用系统安装的真实 Chrome 浏览器，而不是默认的 Chromium
   const browser = await chromium.launch({ 
     headless: false,
-    // 移除明显的自动化特征
+    channel: 'chrome', // 尝试启动本地安装的 Google Chrome
     args: [
       '--disable-blink-features=AutomationControlled',
       '--no-sandbox',
       '--disable-setuid-sandbox',
-      '--ignore-certificate-errors'
+      '--ignore-certificate-errors',
+      '--use-fake-ui-for-media-stream',
+      '--use-fake-device-for-media-stream',
+      '--disable-infobars',
+      '--window-size=1440,900',
+      // 以下参数增加真实性
+      '--disable-web-security',
+      '--disable-features=IsolateOrigins,site-per-process',
     ]
   });
   
   const context = await browser.newContext({
-    userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+    userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
     viewport: { width: 1440, height: 900 },
-    deviceScaleFactor: 2, // 模拟视网膜屏幕
+    deviceScaleFactor: 2, 
     hasTouch: false,
     locale: 'zh-CN',
-    timezoneId: 'Asia/Shanghai'
+    timezoneId: 'Asia/Shanghai',
+    permissions: ['geolocation']
   });
 
-  // 注入脚本进一步隐藏自动化特征
+  // 注入更强大的隐身脚本：模拟真实插件、伪装硬件信息
   await context.addInitScript(() => {
+    // 1. 彻底移除 webdriver 标记
     Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+    
+    // 2. 伪装 Chrome 运行时环境
+    window.chrome = {
+      runtime: {},
+      loadTimes: function() {},
+      csi: function() {},
+      app: {}
+    };
+
+    // 3. 伪装硬件信息
+    Object.defineProperty(navigator, 'languages', { get: () => ['zh-CN', 'zh', 'en'] });
+    Object.defineProperty(navigator, 'platform', { get: () => 'MacIntel' });
+    
+    // 4. 模拟插件列表
+    Object.defineProperty(navigator, 'plugins', {
+      get: () => [
+        { name: 'PDF Viewer', filename: 'internal-pdf-viewer' },
+        { name: 'Chrome PDF Viewer', filename: 'mhjfbmdgcfjbbpaeojofohoefgiehjai' }
+      ]
+    });
   });
 
   const page = await context.newPage();
