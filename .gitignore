@@ -29,6 +29,8 @@ modes/_profile.md
 # Generated
 .resolved-prompt-*
 node_modules/
+dashboard-app/node_modules/
+dashboard-app/package-lock.json
 bun.lock
 
 # OS
