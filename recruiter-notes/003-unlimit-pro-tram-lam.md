@@ -134,7 +134,7 @@ Hi, actually I'm not pretty sure about the range because it's still based on you
 
 ---
 
-## 2026-04-21 — 待發草稿
+## 2026-04-21 — 已發
 
 ```
 Hi Tram,
@@ -145,6 +145,16 @@ I'm currently wrapping up some commitments and won't be available for interviews
 
 Yi-Chen
 ```
+
+---
+
+## 2026-04-21 — Tram 回覆（確認時程）
+
+```
+I think it's still work for us Yi-Chen, just ping me when you are available
+```
+
+**狀態：On Hold — 等用戶 mid-May 主動聯繫 Tram 安排面試。**
 
 **決策紀錄：**
 - $40–$75/hr 範圍用戶可接受；**$40/hr 為底線，低於此不接受**
