@@ -43,11 +43,13 @@ batch/
    b. Save JD to `/tmp/batch-jd-{id}.txt`
    c. Calculate next sequential REPORT_NUM
    d. Execute via Bash:
+
       ```bash
       claude -p --dangerously-skip-permissions \
         --append-system-prompt-file batch/batch-prompt.md \
         "Process this job. URL: {url}. JD: /tmp/batch-jd-{id}.txt. Report: {num}. ID: {id}"
       ```
+
    e. Update `batch-state.tsv` (completed/failed + score + report_num)
    f. Log to `logs/{report_num}-{id}.log`
    g. Chrome: go back → next job
