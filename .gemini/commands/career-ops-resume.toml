@@ -1,0 +1,24 @@
+description = "ATS-optimized resume editor and generator"
+
+[[questions]]
+header = "Action"
+question = "What would you like to do with your resume?"
+type = "choice"
+
+[[questions.options]]
+label = "Tailor"
+description = "Tailor resume to a specific JD"
+
+[[questions.options]]
+label = "Update"
+description = "Add new projects or experience"
+
+[[questions.options]]
+label = "Generate"
+description = "Generate fresh DOCX/PDF"
+
+[[questions]]
+header = "Context"
+question = "Please paste the JD or details of the update:"
+type = "text"
+placeholder = "Paste Job Description here..."

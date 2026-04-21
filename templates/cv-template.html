@@ -24,10 +24,10 @@
   }
 
   body {
-    font-family: 'Inter', 'Helvetica', 'Arial', sans-serif;
-    font-size: 8.8pt;
+    font-family: 'Calibri', 'Candara', 'Segoe', 'Segoe UI', 'Optima', 'Arial', sans-serif;
+    font-size: 10pt;
     line-height: 1.4;
-    color: #2D2D2D;
+    color: #000000;
     background: #ffffff;
     padding: 0;
     margin: 0;
@@ -37,31 +37,37 @@
     width: 100%;
     max-width: {{PAGE_WIDTH}};
     margin: 0 auto;
-    padding: 10mm 15mm;
+    padding: 0.4in;
   }
 
   /* === HEADER === */
   .header {
     margin-bottom: 4px;
+    text-align: center;
   }
 
   .header h1 {
-    font-size: 22pt;
+    font-size: 18pt;
     font-weight: 700;
-    color: #1A1A2E;
+    color: #1F3864;
     margin-bottom: 2pt;
-    letter-spacing: -0.5pt;
+    text-transform: none;
   }
 
   .contact-row {
-    font-size: 8.5pt;
-    color: #2D2D2D;
+    font-size: 9pt;
+    color: #595959;
     margin-bottom: 6px;
   }
 
   .contact-row a {
     color: #2D2D2D;
     text-decoration: none;
+    border-bottom: 0.5pt solid transparent;
+  }
+
+  .contact-row a:hover {
+    border-bottom: 0.5pt solid #2D2D2D;
   }
 
   .header-divider {
@@ -75,32 +81,34 @@
   }
 
   .section-title {
-    font-size: 10pt;
+    font-size: 11pt;
     font-weight: 700;
     text-transform: uppercase;
-    color: #1A1A2E;
-    letter-spacing: 0.5pt;
+    color: #1F3864;
+    letter-spacing: 1pt;
     margin-bottom: 2pt;
+    margin-top: 8pt;
   }
 
   .section-divider {
-    border-top: 0.8pt solid #2563EB; /* ACCENT line */
+    border-top: 1pt solid #1F3864; /* Navy line */
     margin-bottom: 6px;
   }
 
   /* === CONTENT BLOCKS === */
   .summary-text {
-    font-size: 8.8pt;
+    font-size: 10pt;
     text-align: justify;
     line-height: 1.4;
     margin-bottom: 8px;
+    color: #000000;
   }
 
   .competencies-box {
-    text-align: center;
-    font-weight: 600;
-    font-size: 8.5pt;
-    line-height: 1.6;
+    text-align: left;
+    font-weight: 400;
+    font-size: 10pt;
+    line-height: 1.4;
     margin-bottom: 10px;
   }
 
@@ -110,22 +118,28 @@
 
   .item-header {
     display: flex;
-    justify-content: flex-start;
+    justify-content: space-between;
     align-items: baseline;
     margin-bottom: 1pt;
   }
 
   .item-title {
-    font-size: 9.5pt;
+    font-size: 10pt;
     font-weight: 700;
-    color: #1A1A2E;
+    color: #000000;
   }
 
   .item-meta {
-    font-size: 8.5pt;
+    font-size: 9pt;
     font-style: italic;
-    color: #64748B;
+    color: #595959;
     margin-bottom: 2pt;
+  }
+
+  .item-date {
+    font-size: 10pt;
+    font-style: italic;
+    color: #595959;
   }
 
   /* Bullet points matching PDF style */
@@ -233,22 +247,6 @@
     {{EDUCATION}}
   </div>
 
-  <!-- TECHNICAL SKILLS -->
-  <div class="section">
-    <div class="section-title">{{SECTION_SKILLS}}</div>
-    <div class="section-divider"></div>
-    <div class="skills-grid">
-      {{SKILLS}}
-    </div>
-  </div>
-
-  <!-- EXPERIENCE -->
-  <div class="section">
-    <div class="section-title">{{SECTION_EXPERIENCE}}</div>
-    <div class="section-divider"></div>
-    {{EXPERIENCE}}
-  </div>
-
   <!-- CERTIFICATIONS -->
   {{#if CERTIFICATIONS}}
   <div class="section">
@@ -257,6 +255,22 @@
     {{CERTIFICATIONS}}
   </div>
   {{/if}}
+
+  <!-- EXPERIENCE -->
+  <div class="section">
+    <div class="section-title">{{SECTION_EXPERIENCE}}</div>
+    <div class="section-divider"></div>
+    {{EXPERIENCE}}
+  </div>
+
+  <!-- TECHNICAL SKILLS -->
+  <div class="section">
+    <div class="section-title">{{SECTION_SKILLS}}</div>
+    <div class="section-divider"></div>
+    <div class="skills-grid">
+      {{SKILLS}}
+    </div>
+  </div>
 
   <!-- PROJECTS -->
   {{#if PROJECTS}}
