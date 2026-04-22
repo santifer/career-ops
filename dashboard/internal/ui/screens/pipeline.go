@@ -444,24 +444,9 @@ func (m *PipelineModel) applyFilterAndSort() {
 	}
 
 	// Sort
-	switch m.sortMode {
-	case sortScore:
-		sort.SliceStable(filtered, func(i, j int) bool {
-			return filtered[i].Score > filtered[j].Score
-		})
-	case sortDate:
-		sort.SliceStable(filtered, func(i, j int) bool {
-			return filtered[i].Date > filtered[j].Date
-		})
-	case sortCompany:
-		sort.SliceStable(filtered, func(i, j int) bool {
-			return strings.ToLower(filtered[i].Company) < strings.ToLower(filtered[j].Company)
-		})
-	case sortStatus:
-		sort.SliceStable(filtered, func(i, j int) bool {
-			return data.StatusPriority(filtered[i].Status) < data.StatusPriority(filtered[j].Status)
-		})
-	}
+	sort.SliceStable(filtered, func(i, j int) bool {
+		return m.lessBySortMode(filtered[i], filtered[j])
+	})
 
 	// In grouped mode, always sort by status priority first, then by selected sort within groups
 	if m.viewMode == "grouped" {
@@ -471,21 +456,66 @@ func (m *PipelineModel) applyFilterAndSort() {
 			if pi != pj {
 				return pi < pj
 			}
-			// Within same group, use selected sort
-			switch m.sortMode {
-			case sortScore:
-				return filtered[i].Score > filtered[j].Score
-			case sortDate:
-				return filtered[i].Date > filtered[j].Date
-			case sortCompany:
-				return strings.ToLower(filtered[i].Company) < strings.ToLower(filtered[j].Company)
-			default:
-				return filtered[i].Score > filtered[j].Score
-			}
+			return m.lessWithinStatusGroup(filtered[i], filtered[j])
 		})
 	}
 
 	m.filtered = filtered
+}
+
+// lessBySortMode keeps score as the secondary key for every non-score sort so
+// the highest-value jobs stay at the top when the primary field ties.
+func (m PipelineModel) lessBySortMode(left, right model.CareerApplication) bool {
+	switch m.sortMode {
+	case sortDate:
+		if left.Date != right.Date {
+			return left.Date > right.Date
+		}
+	case sortCompany:
+		leftCompany := strings.ToLower(left.Company)
+		rightCompany := strings.ToLower(right.Company)
+		if leftCompany != rightCompany {
+			return leftCompany < rightCompany
+		}
+	case sortStatus:
+		leftPriority := data.StatusPriority(left.Status)
+		rightPriority := data.StatusPriority(right.Status)
+		if leftPriority != rightPriority {
+			return leftPriority < rightPriority
+		}
+	case sortScore:
+		fallthrough
+	default:
+		return left.Score > right.Score
+	}
+
+	return left.Score > right.Score
+}
+
+// lessWithinStatusGroup applies the selected secondary sort inside one grouped
+// status bucket while still falling back to score when the chosen field ties.
+func (m PipelineModel) lessWithinStatusGroup(left, right model.CareerApplication) bool {
+	switch m.sortMode {
+	case sortDate:
+		if left.Date != right.Date {
+			return left.Date > right.Date
+		}
+	case sortCompany:
+		leftCompany := strings.ToLower(left.Company)
+		rightCompany := strings.ToLower(right.Company)
+		if leftCompany != rightCompany {
+			return leftCompany < rightCompany
+		}
+	case sortStatus:
+		// Status is already fixed by the group header, so score becomes the
+		// next meaningful ordering signal within that bucket.
+	case sortScore:
+		fallthrough
+	default:
+		return left.Score > right.Score
+	}
+
+	return left.Score > right.Score
 }
 
 // adjustScroll updates scrollOffset so the cursor stays visible.
