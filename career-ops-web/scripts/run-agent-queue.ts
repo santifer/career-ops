@@ -1,15 +1,18 @@
 import "dotenv/config";
+import { getRunnerConfig } from "../lib/career-ops/runner/config";
 import { runFakeAgentAdapter } from "../lib/career-ops/runner/fake-adapter";
 import { runNextQueuedAgentRun } from "../lib/career-ops/runner/service";
 
-const pollMs = Number(process.env.CAREER_OPS_RUNNER_POLL_MS ?? 2000);
+const config = getRunnerConfig();
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 async function main() {
-  process.stdout.write("career-ops fake runner polling for queued runs\n");
+  process.stdout.write(
+    `career-ops ${config.mode} runner polling every ${config.pollMs}ms\n`,
+  );
 
   while (true) {
     const result = await runNextQueuedAgentRun({
@@ -17,7 +20,7 @@ async function main() {
     });
 
     if (result.kind === "idle") {
-      await sleep(pollMs);
+      await sleep(config.pollMs);
       continue;
     }
 
