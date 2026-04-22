@@ -186,11 +186,10 @@ export default function SignupPage() {
         </p>
 
         <div className="mt-12 flex items-center justify-center gap-3 text-[#e7e5e4]">
-           <ShieldCheck size={16} />
+           <Shield size={16} />
            <span className="text-[9px] font-bold uppercase tracking-[0.25em]">SaaS Identity v2.0-modern</span>
         </div>
       </motion.div>
     </div>
   );
 }
- Greenland

@@ -1,0 +1,6 @@
+{
+  "buildCommand": "cd dashboard-v2 && pnpm run build",
+  "installCommand": "cd dashboard-v2 && pnpm install",
+  "framework": "nextjs",
+  "rootDirectory": "dashboard-v2"
+}
