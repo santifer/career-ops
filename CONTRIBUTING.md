@@ -63,11 +63,11 @@ node cv-sync-check.mjs        # Config check
 
 # Dashboard
 cd dashboard && go build -o career-dashboard .
-./career-dashboard --path .
+./career-dashboard --path ..
 ```
 
 ## Need Help?
 
+- [Join the Discord](https://discord.gg/8pRpHETxa4) — fastest way to get answers and connect with other contributors
 - [Open an issue](https://github.com/santifer/career-ops/issues)
 - [Read the architecture docs](docs/ARCHITECTURE.md)
-- Built by [santifer](https://santifer.io)
