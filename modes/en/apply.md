@@ -9,7 +9,7 @@ Interactive mode for when the candidate is filling out an application form in Ch
 
 ## Workflow
 
-```
+```text
 1. DETECT    → Read active Chrome tab (screenshot/URL/title)
 2. IDENTIFY  → Extract company + role from the page
 3. SEARCH    → Match against existing reports in reports/
@@ -69,7 +69,7 @@ For each question, generate the answer following:
 
 **Output format:**
 
-```
+```text
 ## Answers for [Company] — [Role]
 
 Based on: Report #NNN | Score: X.X/5 | Archetype: [type]

@@ -137,6 +137,7 @@ Analyze the job posting for signals that indicate whether this is a real, active
 **Context Notes:** Any caveats (niche role, government job, evergreen position, etc.) that explain potentially concerning signals.
 
 ### Edge case handling:
+
 - **Government/academic postings:** Longer timelines are standard. Adjust thresholds (60-90 days is normal).
 - **Evergreen/continuous hire postings:** If the JD explicitly says "ongoing" or "rolling," note it as context -- this is not a ghost job, it is a pipeline role.
 - **Niche/executive roles:** Staff+, VP, Director, or highly specialized roles legitimately stay open for months. Adjust age thresholds accordingly.
@@ -208,7 +209,7 @@ Save the full evaluation to `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 
 1. Write one TSV file to `batch/tracker-additions/{num}-{company-slug}.tsv` — single line, 9 tab-separated columns:
 
-```
+```tsv
 {num}\t{date}\t{company}\t{role}\t{status}\t{score}/5\t{pdf_emoji}\t[{num}](reports/{num}-{slug}-{date}.md)\t{notes}
 ```
 
