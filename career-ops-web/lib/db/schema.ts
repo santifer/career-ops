@@ -34,6 +34,33 @@ export const followUpChannelEnum = pgEnum("follow_up_channel", [
   "linkedin",
 ]);
 export const messageRoleEnum = pgEnum("message_role", ["user", "assistant"]);
+export const agentRunStatusEnum = pgEnum("agent_run_status", [
+  "queued",
+  "provisioning",
+  "running",
+  "waiting_for_user",
+  "succeeded",
+  "failed",
+  "canceled",
+  "timed_out",
+]);
+export const agentRunEventTypeEnum = pgEnum("agent_run_event_type", [
+  "queued",
+  "claimed",
+  "status_changed",
+  "log",
+  "artifact",
+  "review_required",
+  "completed",
+  "failed",
+]);
+export const agentRunArtifactKindEnum = pgEnum("agent_run_artifact_kind", [
+  "log",
+  "report_markdown",
+  "screenshot",
+  "pdf",
+  "json",
+]);
 
 // ── Users & Auth ───────────────────────────────────────
 
@@ -339,6 +366,71 @@ export const aiUsageLogs = pgTable(
   (table) => [index("usage_user_created_idx").on(table.userId, table.createdAt)],
 );
 
+// ── Career-Ops Agent Runs ─────────────────────────────
+
+export const agentRuns = pgTable(
+  "agent_runs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    mode: varchar("mode", { length: 64 }).notNull(),
+    status: agentRunStatusEnum("status").default("queued").notNull(),
+    cliLine: varchar("cli_line", { length: 128 }).notNull(),
+    promptBundle: text("prompt_bundle").notNull(),
+    subagentInstruction: text("subagent_instruction"),
+    userNotes: text("user_notes"),
+    repoRevision: varchar("repo_revision", { length: 64 }).default("dev").notNull(),
+    workspaceBundleHash: varchar("workspace_bundle_hash", { length: 64 }).notNull(),
+    runnerKind: varchar("runner_kind", { length: 32 }).default("fake").notNull(),
+    sandboxId: varchar("sandbox_id", { length: 255 }),
+    browserSessionId: varchar("browser_session_id", { length: 255 }),
+    errorMessage: text("error_message"),
+    startedAt: timestamp("started_at"),
+    finishedAt: timestamp("finished_at"),
+    costUsd: decimal("cost_usd", { precision: 8, scale: 6 }).default("0").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("agent_runs_user_created_idx").on(table.userId, table.createdAt),
+    index("agent_runs_status_created_idx").on(table.status, table.createdAt),
+  ],
+);
+
+export const agentRunEvents = pgTable(
+  "agent_run_events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    runId: uuid("run_id")
+      .references(() => agentRuns.id, { onDelete: "cascade" })
+      .notNull(),
+    type: agentRunEventTypeEnum("type").notNull(),
+    message: text("message").notNull(),
+    metadata: jsonb("metadata"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [index("agent_run_events_run_created_idx").on(table.runId, table.createdAt)],
+);
+
+export const agentRunArtifacts = pgTable(
+  "agent_run_artifacts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    runId: uuid("run_id")
+      .references(() => agentRuns.id, { onDelete: "cascade" })
+      .notNull(),
+    kind: agentRunArtifactKindEnum("kind").notNull(),
+    label: varchar("label", { length: 255 }).notNull(),
+    storageKey: varchar("storage_key", { length: 500 }),
+    externalUrl: varchar("external_url", { length: 1000 }),
+    previewText: text("preview_text"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [index("agent_run_artifacts_run_created_idx").on(table.runId, table.createdAt)],
+);
+
 // ── Relations ──────────────────────────────────────────
 
 export const usersRelations = relations(users, ({ one, many }) => ({
@@ -352,6 +444,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   }),
   applications: many(applications),
   conversations: many(conversations),
+  agentRuns: many(agentRuns),
 }));
 
 export const applicationsRelations = relations(applications, ({ one, many }) => ({
@@ -427,5 +520,28 @@ export const compensationTargetsRelations = relations(compensationTargets, ({ on
   profile: one(profiles, {
     fields: [compensationTargets.profileId],
     references: [profiles.id],
+  }),
+}));
+
+export const agentRunsRelations = relations(agentRuns, ({ one, many }) => ({
+  user: one(users, {
+    fields: [agentRuns.userId],
+    references: [users.id],
+  }),
+  events: many(agentRunEvents),
+  artifacts: many(agentRunArtifacts),
+}));
+
+export const agentRunEventsRelations = relations(agentRunEvents, ({ one }) => ({
+  run: one(agentRuns, {
+    fields: [agentRunEvents.runId],
+    references: [agentRuns.id],
+  }),
+}));
+
+export const agentRunArtifactsRelations = relations(agentRunArtifacts, ({ one }) => ({
+  run: one(agentRuns, {
+    fields: [agentRunArtifacts.runId],
+    references: [agentRuns.id],
   }),
 }));
