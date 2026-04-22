@@ -18,6 +18,7 @@ const mainLinks = [
   { name: "Pipeline", path: "/pipeline" },
   { name: "Reports", path: "/reports" },
   { name: "Chat", path: "/chat" },
+  { name: "Agents", path: "/command-center" },
 ];
 
 const moreLinks = [
