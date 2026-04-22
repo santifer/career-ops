@@ -17,9 +17,11 @@
 11. Inject keywords naturally into existing achievements (NEVER invent)
 12. Generate full HTML from template + personalized content
 13. Read `candidate.full_name` from `config/profile.yml` → normalize to kebab-case lowercase (e.g. "John Doe" → "john-doe") → `{candidate}`
-14. Write HTML to `/tmp/cv-{candidate}-{company}.html`
-15. Run: `node generate-pdf.mjs /tmp/cv-{candidate}-{company}.html output/cv-{candidate}-{company}-{YYYY-MM-DD}.pdf --format={letter|a4}`
-16. Report: PDF path, page count, keyword coverage %
+14. Derive a safe slug from the company name: lowercase, replace whitespace and any character outside `[a-z0-9]` with a hyphen, collapse consecutive hyphens, strip leading/trailing hyphens, truncate to 40 characters → `{company-slug}` (e.g. "Acme Corp / EU" → "acme-corp-eu"). Never use the raw company name in paths or commands.
+15. Write HTML to `/tmp/cv-{candidate}-{company-slug}.html`
+16. Run via argument array (no raw shell string concat) to prevent shell injection:
+    `node generate-pdf.mjs /tmp/cv-{candidate}-{company-slug}.html output/cv-{candidate}-{company-slug}-{YYYY-MM-DD}.pdf --format={letter|a4}`
+17. Report: PDF path, page count, keyword coverage %
 
 ## ATS rules (clean parsing)
 
@@ -141,9 +143,11 @@ f. `commit-editing-transaction` to save (ONLY after user approval)
 
 a. `export-design` the duplicate as PDF
 b. **IMMEDIATELY** download the PDF using Bash:
+
    ```bash
    curl -sL -o "output/cv-{candidate}-{company}-canva-{YYYY-MM-DD}.pdf" "{download_url}"
    ```
+
 c. Verify the download and report path, file size, Canva design URL
 
 ## Post-generation

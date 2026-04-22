@@ -2,7 +2,11 @@
 
 When the candidate pastes an offer (text or URL), ALWAYS deliver all 7 blocks (A-F evaluation + G legitimacy):
 
-## Step 0 — Archetype Detection
+## Step 0 — Archetype Detection + Page Snapshot
+
+If the input is a URL, use Playwright to navigate to the page (`browser_navigate` + `browser_snapshot`) and capture the DOM state before proceeding. Note the posting date, "X days ago" text, apply button state, and any redirect. This snapshot is used in Block G (Posting Freshness) — capture it here so it is available later without a second fetch.
+
+If the input is pasted JD text (no URL), skip the Playwright step.
 
 Classify the offer into one of the 6 archetypes (see `_shared.md`). If hybrid, name the 2 closest. This determines:
 - Which proof points to prioritize in Block B
@@ -200,18 +204,27 @@ Save the full evaluation to `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 
 ### 2. Register in tracker
 
-**ALWAYS** register in `data/applications.md`:
-- Next sequential number
-- Current date
-- Company
-- Role
-- Status: `Evaluated`
-- Score: match average (1-5)
-- PDF: ❌ (or ✅ if auto-pipeline generated PDF)
-- Report: relative link to the report .md (e.g.: `[001](reports/001-company-2026-01-01.md)`)
+**NEVER edit `data/applications.md` directly to add new entries.** Always write a TSV file and run the merge script.
 
-**Tracker format:**
+1. Write one TSV file to `batch/tracker-additions/{num}-{company-slug}.tsv` — single line, 9 tab-separated columns:
 
-```markdown
-| # | Date | Company | Role | Status | Score | PDF | Report |
+```
+{num}\t{date}\t{company}\t{role}\t{status}\t{score}/5\t{pdf_emoji}\t[{num}](reports/{num}-{slug}-{date}.md)\t{notes}
+```
+
+Column order (status BEFORE score):
+1. `num` — sequential number matching the report
+2. `date` — YYYY-MM-DD
+3. `company` — short company name
+4. `role` — job title
+5. `status` — `Evaluated` (or `SKIP` if not worth applying)
+6. `score` — format `X.X/5`
+7. `pdf` — `✅` or `❌`
+8. `report` — markdown link, e.g. `[001](reports/001-company-2026-01-01.md)`
+9. `notes` — one-line summary
+
+2. Run the merge script to incorporate the entry:
+
+```bash
+node merge-tracker.mjs
 ```

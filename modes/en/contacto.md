@@ -14,29 +14,33 @@
 
 3. **Select primary target**: the person who would most benefit from having the candidate there
 
-4. **Generate message** with 3-sentence framework adapted to contact type:
+4. **Generate message** with the 3-sentence framework for the contact type (see sections below).
 
-   ### Recruiter
-   - **Sentence 1 (Fit)**: Direct match criteria -- role, relevant experience, availability or location
-   - **Sentence 2 (Proof)**: Data point that answers their screening questions before they ask (e.g.: "5 years building ML pipelines, currently in Berlin, available immediately")
-   - **Sentence 3 (CTA)**: "Happy to share my CV if this aligns with what you're looking for"
+## Recruiter
 
-   ### Hiring Manager
-   - **Sentence 1 (Hook)**: Specific challenge their team faces (extracted from JD, company blog, or news)
-   - **Sentence 2 (Proof)**: Candidate's most quantifiable achievement that shows they've solved similar problems
-   - **Sentence 3 (CTA)**: "Would love to hear how your team is approaching [specific challenge]"
+- **Sentence 1 (Fit)**: Direct match criteria -- role, relevant experience, availability or location
+- **Sentence 2 (Proof)**: Data point that answers their screening questions before they ask (e.g.: "5 years building ML pipelines, currently in Berlin, available immediately")
+- **Sentence 3 (CTA)**: "Happy to share my CV if this aligns with what you're looking for"
 
-   ### Peer (referral)
-   - **Sentence 1 (Interest)**: Genuine reference to their work -- blog post, talk, open-source project, or publication
-   - **Sentence 2 (Connection)**: Something the candidate is doing in the same space (NOT a job pitch)
-   - **Sentence 3 (CTA)**: "I've been working on similar problems at [company], would love to hear your take on [topic]"
-   - **Note**: Do NOT ask for a job. The referral happens naturally if the conversation flows.
+## Hiring Manager
 
-   ### Interviewer (pre-interview)
-   - **Sentence 1 (Research)**: Reference to something specific from their work or background
-   - **Sentence 2 (Context)**: Light connection with the candidate's experience in that area
-   - **Sentence 3 (CTA)**: "Looking forward to our conversation on [date]"
-   - **Note**: Light tone, not desperate. The goal is for them to know you prepared.
+- **Sentence 1 (Hook)**: Specific challenge their team faces (extracted from JD, company blog, or news)
+- **Sentence 2 (Proof)**: Candidate's most quantifiable achievement that shows they've solved similar problems
+- **Sentence 3 (CTA)**: "Would love to hear how your team is approaching [specific challenge]"
+
+## Peer (referral)
+
+- **Sentence 1 (Interest)**: Genuine reference to their work -- blog post, talk, open-source project, or publication
+- **Sentence 2 (Connection)**: Something the candidate is doing in the same space (NOT a job pitch)
+- **Sentence 3 (CTA)**: "I've been working on similar problems at [company], would love to hear your take on [topic]"
+- **Note**: Do NOT ask for a job. The referral happens naturally if the conversation flows.
+
+## Interviewer (pre-interview)
+
+- **Sentence 1 (Research)**: Reference to something specific from their work or background
+- **Sentence 2 (Context)**: Light connection with the candidate's experience in that area
+- **Sentence 3 (CTA)**: "Looking forward to our conversation on [date]"
+- **Note**: Light tone, not desperate. The goal is for them to know you prepared.
 
 5. **Versions**:
    - EN (default)
