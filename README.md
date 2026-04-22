@@ -256,7 +256,7 @@ Features: 6 filter tabs, 4 sort modes, grouped/flat view, lazy-loaded previews, 
 
 ### Source repo (career-ops)
 
-```
+```text
 career-ops/
 ├── .claude-plugin/
 │   ├── plugin.json              # Plugin manifest (name, version, permissions)
@@ -289,7 +289,7 @@ career-ops/
 
 When using the plugin install, your job search data lives in a separate directory:
 
-```
+```text
 ~/job-search/               # (or wherever you choose)
 ├── CLAUDE.md               # Critical rules — auto-created by onboarding
 ├── cv.md                   # Your CV (canonical source of truth)
