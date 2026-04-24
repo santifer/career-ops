@@ -98,6 +98,40 @@ Scripts maintain data consistency:
 | `dedup-tracker.mjs` | Removes duplicate entries by company+role |
 | `normalize-statuses.mjs` | Maps status aliases to canonical values |
 | `cv-sync-check.mjs` | Validates setup consistency |
+| `check-liveness.mjs` | Liveness + freshness check (see below) |
+
+## Freshness Filtering
+
+Both `scan` and `pipeline` modes call `check-liveness.mjs` to filter out stale or expired job postings before they consume evaluation tokens.
+
+**Two execution modes:**
+- **Playwright** (default): renders SPAs, follows redirects, sees `innerText`. Use when running scan interactively.
+- **`--fetch-mode`**: HTTP-only via `fetch()`. No JS execution, no browser. Use in batch workers (`claude -p`) where Playwright is unavailable. JSON-LD payloads are embedded server-side on Greenhouse, Ashby, and Lever, so fetch-mode catches dates on those platforms.
+
+**Detection signals (priority order):**
+1. **LinkedIn URL ID heuristic** — sequential job IDs leak posting year. Catches 2-year-old postings at zero network cost.
+2. **JSON-LD `datePosted`** — embedded by all major ATS platforms. Survives WebFetch summarization.
+3. **Inline `"datePosted":"..."` patterns** — for minified embeds outside JSON-LD blocks.
+4. **Visible text patterns** — `Posted on YYYY-MM-DD`, `Posted on Aug 15, 2025`, `Posted N days ago`, etc.
+5. **Greenhouse `?error=true` redirect** — definitive closed-job signal.
+6. **Body text patterns** — "no longer accepting applications", "position has been filled", etc.
+
+**Classification:**
+- `fresh`: age ≤ `warn_age_days` (default 30d)
+- `stale`: `warn_age_days` < age ≤ `max_age_days` (default 60d) — still evaluated but Red Flags penalty applies
+- `expired`: age > `max_age_days` — pipeline.md skips entirely with `SKIPPED_STALE` minimal report
+- `unverified`: no date found AND `require_date: true` — treated as expired in strict mode
+
+**Configuration:** `freshness:` block in `portals.yml`. See `docs/CUSTOMIZATION.md` for tuning guidance.
+
+**CLI:**
+```bash
+node check-liveness.mjs --fetch-mode --json <url>     # structured output
+node check-liveness.mjs --fetch-mode --classify <url> # just "fresh|stale|expired"
+node check-liveness.mjs <url>                          # interactive Playwright mode
+```
+
+**Tests:** `node test-freshness.mjs` (40 unit tests; runs as part of `node test-all.mjs`).
 
 ## Dashboard TUI
 

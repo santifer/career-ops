@@ -82,6 +82,16 @@ for (const { name, allowFail } of scripts) {
   }
 }
 
+// ── 2b. FRESHNESS UNIT TESTS ────────────────────────────────────
+
+console.log('\n2b. Freshness unit tests (liveness-core.mjs)');
+const freshnessResult = run('node test-freshness.mjs 2>&1');
+if (freshnessResult !== null && freshnessResult.includes('All freshness tests passed')) {
+  pass('test-freshness.mjs all-pass');
+} else {
+  fail('test-freshness.mjs has failing assertions — run `node test-freshness.mjs` for details');
+}
+
 // ── 3. LIVENESS CLASSIFICATION ──────────────────────────────────
 
 console.log('\n3. Liveness classification');
@@ -188,8 +198,9 @@ const allowedFiles = [
   // Community / governance files (added in v1.3.0, all legitimately reference the maintainer)
   'CODE_OF_CONDUCT.md', 'GOVERNANCE.md', 'SECURITY.md', 'SUPPORT.md',
   '.github/SECURITY.md',
-  // Dashboard credit string
+  // Dashboard credit strings
   'dashboard/internal/ui/screens/pipeline.go',
+  'dashboard/internal/ui/screens/progress.go',
 ];
 
 // Build pathspec for git grep — only scan tracked files matching these

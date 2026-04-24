@@ -36,6 +36,19 @@ The evaluation uses 6 blocks (A-F) with a global score of 1-5:
 | Red flags | Blockers, warnings (negative adjustments) |
 | **Global** | Weighted average of above |
 
+### Automatic Red Flags penalties (freshness pre-filter)
+
+These are **hard pipeline rules**, applied automatically by `check-liveness.mjs` / `liveness-core.mjs` before A-F evaluation begins. Block G below uses the same `datePosted` signal qualitatively; this section is the deterministic filter that runs first so the evaluator never sees postings that are clearly too old to bother with.
+
+| Condition | Penalty | Note in report |
+|-----------|---------|----------------|
+| Posting age > `freshness.warn_age_days` (default 30d) | -0.5 to Red Flags block | "stale posting (N days old)" |
+| Posting age > `freshness.max_age_days` (default 60d) | **Skip entirely** — pipeline.md filters before scoring | n/a (no report) |
+| Missing `datePosted` and `freshness.require_date: false` | none — flag header as `unverified` | "posting date unverified" |
+| Missing `datePosted` and `freshness.require_date: true` | **Skip entirely** — pipeline.md filters before scoring | n/a (no report) |
+
+The same `datePosted` value also feeds Block G's "Posting age" signal below — one extraction, two consumers. Configure thresholds in `portals.yml` `freshness:` block.
+
 **Score interpretation:**
 - 4.5+ → Strong match, recommend applying immediately
 - 4.0-4.4 → Good match, worth applying
@@ -113,6 +126,7 @@ After detecting archetype, read `modes/_profile.md` for the user's specific fram
 8b. Case study URLs in PDF Professional Summary (recruiter may only read this).
 9. **Tracker additions as TSV** -- NEVER edit applications.md directly. Write TSV in `batch/tracker-additions/`.
 10. **Include `**URL:**` in every report header.**
+11. **Check posting freshness.** Run `node check-liveness.mjs --fetch-mode --json <url>` BEFORE scoring. Include `**Posted:**` field in report header (date or `unverified`). If pipeline.md hasn't already filtered the URL, you must apply the automatic Red Flags penalty for `stale` postings.
 
 ### Tools
 
@@ -121,11 +135,12 @@ After detecting archetype, read `modes/_profile.md` for the user's specific fram
 | WebSearch | Comp research, trends, company culture, LinkedIn contacts, fallback for JDs |
 | WebFetch | Fallback for extracting JDs from static pages |
 | Playwright | Verify offers (browser_navigate + browser_snapshot). **NEVER 2+ agents with Playwright in parallel.** |
+| `check-liveness.mjs` | Liveness + freshness check. Use `--fetch-mode --json` in batch workers (no Playwright dep). Returns `{result, datePosted, ageInDays, freshness}`. Honors `freshness:` config in `portals.yml`. |
 | Read | cv.md, _profile.md, article-digest.md, cv-template.html |
 | Write | Temporary HTML for PDF, applications.md, reports .md |
 | Edit | Update tracker |
 | Canva MCP | Optional visual CV generation. Duplicate base design, edit text, export PDF. Requires `canva_resume_design_id` in profile.yml. |
-| Bash | `node generate-pdf.mjs` |
+| Bash | `node generate-pdf.mjs`, `node check-liveness.mjs` |
 
 ### Time-to-offer priority
 - Working demo + metrics > perfection

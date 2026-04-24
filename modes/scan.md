@@ -114,23 +114,41 @@ Los niveles son aditivos — se ejecutan todos, los resultados se mezclan y dedu
    - `applications.md` → empresa + rol normalizado ya evaluado
    - `pipeline.md` → URL exacta ya en pendientes o procesadas
 
-7.5. **Verificar liveness de resultados de WebSearch (Nivel 3)** — ANTES de añadir a pipeline:
+7.5. **Verificar liveness y freshness de resultados de WebSearch (Nivel 3)** — ANTES de añadir a pipeline:
 
-   Los resultados de WebSearch pueden estar desactualizados (Google cachea resultados durante semanas o meses). Para evitar evaluar ofertas expiradas, verificar con Playwright cada URL nueva que provenga del Nivel 3. Los Niveles 1 y 2 son inherentemente en tiempo real y no requieren esta verificación.
+   Los resultados de WebSearch pueden estar desactualizados (Google cachea resultados durante semanas o meses). Para evitar evaluar ofertas expiradas o stale, verificar cada URL nueva que provenga del Nivel 3. Los Niveles 1 y 2 son inherentemente en tiempo real y no requieren esta verificación.
 
-   Para cada URL nueva de Nivel 3 (secuencial — NUNCA Playwright en paralelo):
-   a. `browser_navigate` a la URL
-   b. `browser_snapshot` para leer el contenido
-   c. Clasificar:
-      - **Activa**: título del puesto visible + descripción del rol + control visible de Apply/Submit/Solicitar dentro del contenido principal. No contar texto genérico de header/navbar/footer.
-      - **Expirada** (cualquiera de estas señales):
-        - URL final contiene `?error=true` (Greenhouse redirige así cuando la oferta está cerrada)
-        - Página contiene: "job no longer available" / "no longer open" / "position has been filled" / "this job has expired" / "page not found"
-        - Solo navbar y footer visibles, sin contenido JD (contenido < ~300 chars)
-   d. Si expirada: registrar en `scan-history.tsv` con status `skipped_expired` y descartar
-   e. Si activa: continuar al paso 8
+   **LinkedIn URL pre-filter (sin red, ToS-safe):** Antes de cualquier fetch, si la URL es `linkedin.com/jobs/view/...-{id}`, comprobar el ID contra `linkedinIdToYear()` en `liveness-core.mjs`. Si el año mapeado es ≤ (año_actual − 2), descartar inmediatamente y registrar como `skipped_stale` sin gastar bandwidth. Para LinkedIn URLs recientes en batch mode, NO hacer fetch directo (per CONTRIBUTING.md "no LinkedIn scraping" rule) — marcar como `unverified` y dejar que el usuario verifique manualmente.
 
-   **No interrumpir el scan entero si una URL falla.** Si `browser_navigate` da error (timeout, 403, etc.), marcar como `skipped_expired` y continuar con la siguiente.
+   **Criterio de actividad** (santifer's spec): "Activa" requiere control visible de Apply/Submit/Solicitar **dentro del contenido principal**, NO en header/navbar/footer. La función `classifyLiveness` en `liveness-core.mjs` filtra automáticamente los apply controls que están dentro de `nav, header, footer` para evitar falsos positivos en layouts SPA tipo Workday.
+
+   **Verificación principal — usar `check-liveness.mjs`:**
+
+   Modo preferido (cuando Playwright está disponible):
+   ```bash
+   node check-liveness.mjs --json <url>
+   ```
+
+   Modo batch (subagent / `claude -p` — Playwright NO disponible):
+   ```bash
+   node check-liveness.mjs --fetch-mode --json <url>
+   ```
+
+   El script devuelve un JSON con:
+   ```json
+   {"url": "...", "result": "active|expired|uncertain", "datePosted": "YYYY-MM-DD|null", "ageInDays": N, "freshness": "fresh|stale|expired|unverified"}
+   ```
+
+   **Reglas de clasificación** (aplicadas al output del script):
+   - `result: "expired"` → descartar, registrar como `skipped_expired`
+   - `freshness: "expired"` → descartar, registrar como `skipped_stale` (posting demasiado antiguo)
+   - `freshness: "stale"` → AÑADIR al pipeline pero el evaluador aplicará penalización Red Flags (-0.5)
+   - `result: "uncertain"` y `freshness: "unverified"` (solo si `require_date: true`) → descartar, registrar `skipped_stale`
+   - `result: "active"` y `freshness: "fresh"` → continuar al paso 8
+
+   **No interrumpir el scan entero si una URL falla.** Si el script falla (timeout, 403, etc.), marcar como `skipped_expired` y continuar con la siguiente.
+
+   **Regla Playwright:** En modo Playwright, NUNCA ejecutar el script en paralelo (project rule). En modo `--fetch-mode`, sí se puede paralelizar (no hay browser compartido).
 
 8. **Para cada oferta nueva verificada que pase filtros**:
    a. Añadir a `pipeline.md` sección "Pendientes": `- [ ] {url} | {company} | {title}`
@@ -139,6 +157,7 @@ Los niveles son aditivos — se ejecutan todos, los resultados se mezclan y dedu
 9. **Ofertas filtradas por título**: registrar en `scan-history.tsv` con status `skipped_title`
 10. **Ofertas duplicadas**: registrar con status `skipped_dup`
 11. **Ofertas expiradas (Nivel 3)**: registrar con status `skipped_expired`
+12. **Ofertas stale (posting > max_age_days)**: registrar con status `skipped_stale`
 
 ## Extracción de título y empresa de WebSearch results
 
@@ -167,7 +186,10 @@ https://...	2026-02-10	Ashby — AI PM	PM AI	Acme	added
 https://...	2026-02-10	Greenhouse — SA	Junior Dev	BigCo	skipped_title
 https://...	2026-02-10	Ashby — AI PM	SA AI	OldCo	skipped_dup
 https://...	2026-02-10	WebSearch — AI PM	PM AI	ClosedCo	skipped_expired
+https://...	2026-02-10	WebSearch — AI PM	PM AI	StaleCo	skipped_stale
 ```
+
+**Status enum:** `added` | `skipped_title` | `skipped_dup` | `skipped_expired` | `skipped_stale`
 
 ## Resumen de salida
 
@@ -179,6 +201,7 @@ Ofertas encontradas: N total
 Filtradas por título: N relevantes
 Duplicadas: N (ya evaluadas o en pipeline)
 Expiradas descartadas: N (links muertos, Nivel 3)
+Stale descartadas: N (posting > max_age_days)
 Nuevas añadidas a pipeline.md: N
 
   + {company} | {title} | {query_name}
