@@ -173,8 +173,10 @@ for (const f of systemFiles) {
 }
 
 const gitLsOutput = run('git', ['ls-files']);
-if (gitLsOutput === null || gitLsOutput === '') {
+if (gitLsOutput === null) {
   fail('Could not run `git ls-files` to validate updater paths');
+} else if (gitLsOutput === '') {
+  fail('Repository has no tracked files; cannot validate updater paths');
 } else {
   const trackedFiles = gitLsOutput.split('\n').filter(Boolean);
   const rootScripts = trackedFiles
@@ -291,14 +293,11 @@ if (!absPathResult) {
 
 console.log('\n8. Mode file integrity');
 
-const expectedModes = CORE_MODE_FILES
-  .map(modePath => modePath.replace(/^modes\//, ''));
-
-for (const mode of expectedModes) {
-  if (fileExists(`modes/${mode}`)) {
-    pass(`Mode exists: ${mode}`);
+for (const modePath of CORE_MODE_FILES) {
+  if (fileExists(modePath)) {
+    pass(`Mode exists: ${modePath}`);
   } else {
-    fail(`Missing mode: ${mode}`);
+    fail(`Missing mode: ${modePath}`);
   }
 }
 
