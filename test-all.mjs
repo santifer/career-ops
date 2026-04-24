@@ -44,16 +44,20 @@ function readFile(path) { return readFileSync(join(ROOT, path), 'utf-8'); }
 function reportSetDifference(actual, expected, missingMsg, extraMsg) {
   const actualSet = new Set(actual);
   const expectedSet = new Set(expected);
+  let equal = true;
   for (const item of expected) {
-    if (!actualSet.has(item)) fail(missingMsg(item));
+    if (!actualSet.has(item)) {
+      fail(missingMsg(item));
+      equal = false;
+    }
   }
   for (const item of actual) {
-    if (!expectedSet.has(item)) fail(extraMsg(item));
+    if (!expectedSet.has(item)) {
+      fail(extraMsg(item));
+      equal = false;
+    }
   }
-  if (expected.every(item => actualSet.has(item)) && actual.every(item => expectedSet.has(item))) {
-    return true;
-  }
-  return false;
+  return equal;
 }
 
 console.log('\n🧪 career-ops test suite\n');
@@ -169,33 +173,38 @@ for (const f of systemFiles) {
 }
 
 const { SYSTEM_PATHS } = await import(pathToFileURL(join(ROOT, 'update-system.mjs')).href);
-const trackedFiles = (run('git', ['ls-files']) || '').split('\n').filter(Boolean);
-const rootScripts = trackedFiles
-  .filter(f => f.endsWith('.mjs') && !f.includes('/'))
-  .sort();
-const updaterRootScripts = SYSTEM_PATHS
-  .filter(f => f.endsWith('.mjs') && !f.includes('/'))
-  .sort();
-if (reportSetDifference(
-  updaterRootScripts,
-  rootScripts,
-  scriptName => `Updater missing script: ${scriptName}`,
-  scriptName => `Updater has untracked script: ${scriptName}`,
-)) pass('Updater root scripts match tracked scripts');
+const gitLsOutput = run('git', ['ls-files']);
+if (gitLsOutput === null || gitLsOutput === '') {
+  fail('Could not run `git ls-files` to validate updater paths');
+} else {
+  const trackedFiles = gitLsOutput.split('\n').filter(Boolean);
+  const rootScripts = trackedFiles
+    .filter(f => f.endsWith('.mjs') && !f.includes('/'))
+    .sort();
+  const updaterRootScripts = SYSTEM_PATHS
+    .filter(f => f.endsWith('.mjs') && !f.includes('/'))
+    .sort();
+  if (reportSetDifference(
+    updaterRootScripts,
+    rootScripts,
+    scriptName => `Updater missing script: ${scriptName}`,
+    scriptName => `Updater has untracked script: ${scriptName}`,
+  )) pass('Updater root scripts match tracked scripts');
 
-const localizedModeDirs = [...new Set(trackedFiles
-  .filter(f => f.startsWith('modes/') && f.split('/').length > 2)
-  .map(f => `${f.split('/').slice(0, 2).join('/')}/`))]
-  .sort();
-const updaterLocalizedModeDirs = SYSTEM_PATHS
-  .filter(f => /^modes\/[^/]+\/$/.test(f))
-  .sort();
-if (reportSetDifference(
-  updaterLocalizedModeDirs,
-  localizedModeDirs,
-  modeDir => `Updater missing localized modes: ${modeDir}`,
-  modeDir => `Updater has untracked localized modes: ${modeDir}`,
-)) pass('Updater localized mode directories match tracked directories');
+  const localizedModeDirs = [...new Set(trackedFiles
+    .filter(f => f.startsWith('modes/') && f.split('/').length > 2)
+    .map(f => `${f.split('/').slice(0, 2).join('/')}/`))]
+    .sort();
+  const updaterLocalizedModeDirs = SYSTEM_PATHS
+    .filter(f => /^modes\/[^/]+\/$/.test(f))
+    .sort();
+  if (reportSetDifference(
+    updaterLocalizedModeDirs,
+    localizedModeDirs,
+    modeDir => `Updater missing localized modes: ${modeDir}`,
+    modeDir => `Updater has untracked localized modes: ${modeDir}`,
+  )) pass('Updater localized mode directories match tracked directories');
+}
 
 // Check user files are NOT tracked (gitignored)
 const userFiles = [

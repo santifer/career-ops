@@ -40,8 +40,8 @@ export const CORE_MODE_FILES = [
   'modes/followup.md',
   'modes/interview-prep.md',
   'modes/latex.md',
-  'modes/ofertas.md',
   'modes/oferta.md',
+  'modes/ofertas.md',
   'modes/patterns.md',
   'modes/pdf.md',
   'modes/pipeline.md',
@@ -351,7 +351,9 @@ function dismiss() {
 
 // ── MAIN ────────────────────────────────────────────────────────
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+const isMainModule = import.meta.main ?? (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url));
+
+if (isMainModule) {
   const cmd = process.argv[2] || 'check';
 
   switch (cmd) {
