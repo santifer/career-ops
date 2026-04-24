@@ -155,11 +155,11 @@ if (!QUICK) {
 console.log('\n5. Data contract validation');
 
 // Check system files exist
+const { SYSTEM_PATHS, CORE_MODE_FILES } = await import(pathToFileURL(join(ROOT, 'update-system.mjs')).href);
+
 const systemFiles = [
   'CLAUDE.md', 'VERSION', 'DATA_CONTRACT.md',
-  'modes/_shared.md', 'modes/_profile.template.md',
-  'modes/oferta.md', 'modes/pdf.md', 'modes/scan.md',
-  'modes/followup.md', 'modes/interview-prep.md', 'modes/latex.md', 'modes/patterns.md',
+  ...CORE_MODE_FILES,
   'templates/states.yml', 'templates/cv-template.html',
   '.claude/skills/career-ops/SKILL.md',
 ];
@@ -172,7 +172,6 @@ for (const f of systemFiles) {
   }
 }
 
-const { SYSTEM_PATHS } = await import(pathToFileURL(join(ROOT, 'update-system.mjs')).href);
 const gitLsOutput = run('git', ['ls-files']);
 if (gitLsOutput === null || gitLsOutput === '') {
   fail('Could not run `git ls-files` to validate updater paths');
@@ -292,12 +291,8 @@ if (!absPathResult) {
 
 console.log('\n8. Mode file integrity');
 
-const expectedModes = [
-  '_shared.md', '_profile.template.md', 'oferta.md', 'pdf.md', 'scan.md',
-  'batch.md', 'apply.md', 'auto-pipeline.md', 'contacto.md', 'deep.md',
-  'followup.md', 'interview-prep.md', 'latex.md', 'ofertas.md', 'patterns.md',
-  'pipeline.md', 'project.md', 'tracker.md', 'training.md',
-];
+const expectedModes = CORE_MODE_FILES
+  .map(modePath => modePath.replace(/^modes\//, ''));
 
 for (const mode of expectedModes) {
   if (fileExists(`modes/${mode}`)) {
