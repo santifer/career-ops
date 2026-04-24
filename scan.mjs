@@ -30,7 +30,7 @@ const APPLICATIONS_PATH = 'data/applications.md';
 mkdirSync('data', { recursive: true });
 
 const CONCURRENCY = 10;
-const FETCH_TIMEOUT_MS = 10_000;
+const FETCH_TIMEOUT_MS = 15_000;
 
 // ── API detection ───────────────────────────────────────────────────
 
@@ -86,12 +86,17 @@ function parseGreenhouse(json, companyName) {
 
 function parseAshby(json, companyName) {
   const jobs = json.jobs || [];
-  return jobs.map(j => ({
-    title: j.title || '',
-    url: j.jobUrl || '',
-    company: companyName,
-    location: j.location || '',
-  }));
+  return jobs.map(j => {
+    const compensation = Array.isArray(j.compensation) ? j.compensation : [];
+    const comp = compensation.find(c => c.compensationType === 'Salary' && c.interval === '1 YEAR');
+    return {
+      title: j.title || '',
+      url: j.jobUrl || '',
+      company: companyName,
+      location: j.location || '',
+      salary: comp ? { value: comp.minValue || comp.maxValue, currency: comp.currencyCode } : null
+    };
+  });
 }
 
 function parseLever(json, companyName) {
@@ -101,6 +106,7 @@ function parseLever(json, companyName) {
     url: j.hostedUrl || '',
     company: companyName,
     location: j.categories?.location || '',
+    salary: null
   }));
 }
 
@@ -131,6 +137,46 @@ function buildTitleFilter(titleFilter) {
     const hasPositive = positive.length === 0 || positive.some(k => lower.includes(k));
     const hasNegative = negative.some(k => lower.includes(k));
     return hasPositive && !hasNegative;
+  };
+}
+
+// ── Location filter ─────────────────────────────────────────────────
+
+function buildLocationFilter(config) {
+  const remoteOnly = config?.remote_only === true;
+  const onsiteOnly = config?.onsite_only === true;
+  const positive = (config?.positive || []).map(k => k.toLowerCase());
+  const negative = (config?.negative || []).map(k => k.toLowerCase());
+
+  return (location) => {
+    const lower = (location || "").toLowerCase();
+    const isRemote = lower.includes("remote") || lower.includes("distributed");
+
+    if (remoteOnly && !isRemote) return false;
+    if (onsiteOnly && isRemote) return false;
+
+    const hasPositive = positive.length === 0 || positive.some(k => lower.includes(k));
+    const hasNegative = negative.some(k => lower.includes(k));
+
+    return hasPositive && !hasNegative;
+  };
+}
+
+// ── Salary filter ───────────────────────────────────────────────────
+
+function buildSalaryFilter(config) {
+  const min = Number(config?.min) || 0;
+  const max = Number(config?.max) || 0;
+
+  return (salary) => {
+    if (min === 0 && max === 0) return true; // Filter disabled
+    if (!salary) return false; // Salary expected but missing
+
+    const val = Number(salary.value) || 0;
+    if (min > 0 && val < min) return false;
+    if (max > 0 && val > max) return false;
+
+    return true;
   };
 }
 
@@ -263,7 +309,11 @@ async function main() {
 
   const config = parseYaml(readFileSync(PORTALS_PATH, 'utf-8'));
   const companies = config.tracked_companies || [];
+  
+  // Build Filters
   const titleFilter = buildTitleFilter(config.title_filter);
+  const locationFilter = buildLocationFilter(config.location_filter);
+  const salaryFilter = buildSalaryFilter(config.salary_filter);
 
   // 2. Filter to enabled companies with detectable APIs
   const targets = companies
@@ -277,30 +327,41 @@ async function main() {
   console.log(`Scanning ${targets.length} companies via API (${skippedCount} skipped — no API detected)`);
   if (dryRun) console.log('(dry run — no files will be written)\n');
 
-  // 3. Load dedup sets
+  // 3. Scan loop
+  const date = new Date().toISOString().slice(0, 10);
+  let totalFound = 0, totalFiltered = 0, totalLocationFiltered = 0, totalSalaryFiltered = 0, totalDupes = 0;
+  const newOffers = [];
+  const errors = [];
   const seenUrls = loadSeenUrls();
   const seenCompanyRoles = loadSeenCompanyRoles();
 
-  // 4. Fetch all APIs
-  const date = new Date().toISOString().slice(0, 10);
-  let totalFound = 0;
-  let totalFiltered = 0;
-  let totalDupes = 0;
-  const newOffers = [];
-  const errors = [];
-
   const tasks = targets.map(company => async () => {
-    const { type, url } = company._api;
     try {
+      const { type, url } = company._api;
       const json = await fetchJson(url);
       const jobs = PARSERS[type](json, company.name);
+
       totalFound += jobs.length;
 
       for (const job of jobs) {
+        // Filter 1: Title
         if (!titleFilter(job.title)) {
           totalFiltered++;
           continue;
         }
+
+        // Filter 2: Location
+        if (!locationFilter(job.location)) {
+          totalLocationFiltered++;
+          continue;
+        }
+
+        // Filter 3: Salary
+        if (!salaryFilter(job.salary)) {
+          totalSalaryFiltered++;
+          continue;
+        }
+
         if (seenUrls.has(job.url)) {
           totalDupes++;
           continue;
@@ -335,6 +396,8 @@ async function main() {
   console.log(`Companies scanned:     ${targets.length}`);
   console.log(`Total jobs found:      ${totalFound}`);
   console.log(`Filtered by title:     ${totalFiltered} removed`);
+  console.log(`Filtered by location:  ${totalLocationFiltered} removed`);
+  console.log(`Filtered by salary:    ${totalSalaryFiltered} removed`);
   console.log(`Duplicates:            ${totalDupes} skipped`);
   console.log(`New offers added:      ${newOffers.length}`);
 
