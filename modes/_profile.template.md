@@ -1,102 +1,100 @@
-# User Profile Context -- career-ops
+# Contexto do Perfil do Usuário -- career-ops
 
 <!-- ============================================================
-     THIS FILE IS YOURS. It will NEVER be auto-updated.
-     
-     Customize everything here: your archetypes, narrative,
-     proof points, negotiation scripts, location policy.
-     
-     The system reads _shared.md (updatable) first, then this
-     file (your overrides). Your customizations always win.
+     ESTE ARQUIVO É SEU. Ele NUNCA será atualizado automaticamente.
+
+     Personalize tudo aqui: seus arquétipos, narrativa,
+     proof points, scripts de negociação, política de localização.
+
+     O sistema lê _shared.md (atualizável) primeiro, depois este
+     arquivo (suas sobrescritas). Suas personalizações sempre vencem.
      ============================================================ -->
 
-## Your Target Roles
+## Seus Cargos Alvo
 
-<!-- Replace these with YOUR target roles. Examples:
-     - Senior Backend Engineer / Staff Platform Engineer
-     - AI Product Manager / Technical PM
-     - Data Engineer / ML Engineer
-     - DevOps / SRE / Platform
-     Whatever you're optimizing for. -->
+<!-- Substitua pelos SEUS cargos alvo. Exemplos:
+     - Engenheiro Backend Sênior / Engenheiro de Plataforma Staff
+     - Product Manager de AI / PM Técnico
+     - Engenheiro de Dados / ML Engineer
+     - DevOps / SRE / Plataforma
+     O que você está otimizando. -->
 
-| Archetype | Thematic axes | What they buy |
-|-----------|---------------|---------------|
-| **AI Platform / LLMOps Engineer** | Evaluation, observability, reliability, pipelines | Someone who puts AI in production with metrics |
-| **Agentic Workflows / Automation** | HITL, tooling, orchestration, multi-agent | Someone who builds reliable agent systems |
-| **Technical AI Product Manager** | GenAI/Agents, PRDs, discovery, delivery | Someone who translates business to AI product |
-| **AI Solutions Architect** | Hyperautomation, enterprise, integrations | Someone who designs end-to-end AI architectures |
-| **AI Forward Deployed Engineer** | Client-facing, fast delivery, prototyping | Someone who delivers AI solutions to clients fast |
-| **AI Transformation Lead** | Change management, adoption, org enablement | Someone who leads AI transformation in an org |
+| Arquétipo | Eixos Temáticos | O que eles compram |
+|-----------|-----------------|-------------------|
+| **Head de Contabilidade e Controladoria** | IFRS, US GAAP, FP&A, LATAM, M&A, Automação | Líder de controllership com transformação digital |
+| **Controller LATAM / Regional** | Consolidacão, reporting, compliance, SOX | Controller com escopo regional e multilingual |
+| **Finance Manager (multinacional)** | FP&A, budgeting, forecasting, stakeholder management | Gestor financeiro com visão estratégica |
+| **FP&A Manager** | Budgeting, forecasting, variance analysis, dashboards | Analista financeiro com foco em planejamento |
+| **M&A / Due Diligence Manager** | Valuation, due diligence, post-merger integration | Especialista em transações e integração |
 
-## Your Adaptive Framing
+## Sua Narrativa Adaptativa
 
-<!-- Map YOUR projects to each archetype. Example:
-     | Platform / LLMOps | My monitoring dashboard project | article-digest.md |
-     | Agentic | My chatbot with HITL escalation | cv.md section 3 | -->
+<!-- Mapeie SEUS projetos para cada arquétipo. Exemplo:
+     | Plataforma / LLMOps | Meu dashboard de monitoramento | article-digest.md |
+     | Agentes / Automação | Meu chatbot com escalação HITL | cv.md seção 3 | -->
 
-| If the role is... | Emphasize about you... | Proof point sources |
-|-------------------|------------------------|---------------------|
-| Platform / LLMOps | Production systems builder, observability, evals | article-digest.md + cv.md |
-| Agentic / Automation | Multi-agent orchestration, HITL, reliability | article-digest.md + cv.md |
-| Technical AI PM | Product discovery, PRDs, metrics | cv.md + article-digest.md |
-| Solutions Architect | System design, integrations, enterprise-ready | article-digest.md + cv.md |
-| Forward Deployed Engineer | Fast delivery, client-facing, prototype to prod | cv.md + article-digest.md |
-| AI Transformation Lead | Change management, team enablement, adoption | cv.md + article-digest.md |
+| Se o cargo é... | Enfatize sobre você... | Fontes de proof points |
+|-----------------|------------------------|----------------------|
+| Head de Accounting | Controllership estratégico, IFRS, FP&A | cv.md + article-digest.md |
+| Controller LATAM | Escopo regional, multilingual, compliance | cv.md + article-digest.md |
+| Finance Manager | FP&A, budgeting, stakeholder management | cv.md + article-digest.md |
+| FP&A Manager | Planejamento, forecasting, dashboards | cv.md + article-digest.md |
+| M&A Manager | Due diligence, valuation, integração | cv.md + article-digest.md |
 
-## Your Exit Narrative
+## Sua Narrativa de Saída
 
-<!-- Replace with YOUR story. This frames everything. -->
+<!-- Substitua com SUA história. Isto molda tudo. -->
 
-Use the candidate's exit story from `config/profile.yml` to frame ALL content:
-- **In PDF Summaries:** Bridge from past to future
-- **In STAR stories:** Reference proof points from article-digest.md
-- **In Draft Answers:** The transition narrative appears in the first response
+Use a história de saída do candidato de `config/profile.yml` para moldar TODO o conteúdo:
+- **Nos Resumos de PDF:** Ponte do passado para o futuro
+- **Nas histórias STAR:** Referencie proof points de article-digest.md
+- **Nas Respostas de Formulário:** A narrativa de transição aparece na primeira resposta
 
-## Your Cross-cutting Advantage
+## Sua Vantagem Transversal
 
-<!-- What's your "signature move"? What do you do that others can't? -->
+<!-- Qual é seu "movimento assinatura"? O que você faz que outros não podem? -->
 
-Frame profile as **"Technical builder with real-world proof"** that adapts framing to the role.
+Moldure o perfil como **"Líder de Controllership com prova concreta de resultados"** que adapta o framing para cada cargo.
 
-## Your Portfolio / Demo
+## Seu Portfólio / Demo
 
-<!-- If you have a live demo, dashboard, or public project:
-     url: https://yoursite.dev/demo
-     password: demo-2026
-     when_to_share: "LLMOps, AI Platform roles" -->
+<!-- Se você tem uma demo ao vivo, dashboard ou projeto público:
+     url: https://seusite.dev/demo
+     senha: demo-2026
+     quando_compartilhar: "Cargos de Controller/FP&A/LATAM" -->
 
-If you have a live demo/dashboard (check profile.yml), offer access in applications for relevant roles.
+Se você tem uma demo/dashboard (verifique profile.yml), ofereça acesso em aplicações para cargos relevantes.
 
-## Your Comp Targets
+## Suas Metas de Compensação
 
-<!-- Research comp ranges for YOUR target roles -->
+<!-- Pesquise ranges de compensação para SEUS cargos alvo -->
 
-**General guidance:**
-- Use WebSearch for current market data (Glassdoor, Levels.fyi, Blind)
-- Frame by role title, not by skills
-- Contractor rates are typically 30-50% higher than employee base
+**Orientação geral:**
+- Use WebSearch para dados de mercado atuais (Glassdoor, Levels.fyi, Blind)
+- Frame por título do cargo, não por habilidades
+- Taxas de contractor são tipicamente 30-50% maiores que base de empleado
 
-## Your Negotiation Scripts
+## Seus Scripts de Negociação
 
-<!-- Adapt to YOUR situation, currency, location -->
+<!-- Adapte para SUA situação, moeda, localização -->
 
-**Salary expectations:**
-> "Based on market data for this role, I'm targeting [RANGE from profile.yml]. I'm flexible on structure -- what matters is the total package and the opportunity."
+**Expectativas de salário:**
+> "Com base em dados de mercado para este cargo, estou mirando [RANGE do profile.yml]. Sou flexível em estrutura -- o que importa é o pacote total e a oportunidade."
 
-**Geographic discount pushback:**
-> "The roles I'm competitive for are output-based, not location-based. My track record doesn't change based on postal code."
+**Pushback de desconto geográfico:**
+> "Os cargos para os quais sou competitivo são baseados em output, não em localização. Meu histórico não muda baseado em CEP."
 
-**When offered below target:**
-> "I'm comparing with opportunities in the [higher range]. I'm drawn to [company] because of [reason]. Can we explore [target]?"
+**Quando oferecido abaixo do alvo:**
+> "Estou comparando com oportunidades no [range mais alto]. Sou atraído por [empresa] por [razão]. Podemos explorar [alvo]?"
 
-## Your Location Policy
+## Sua Política de Localização
 
-<!-- Adapt to YOUR situation -->
+<!-- Adapte para SUA situação -->
 
-**In forms:**
-- Follow your actual availability from profile.yml
-- Specify timezone overlap in free-text fields
+**Nos formulários:**
+- Siga sua disponibilidade real do profile.yml
+- Especifique sobreposição de fuso horário em campos de texto livre
 
-**In evaluations (scoring):**
-- Remote dimension for hybrid outside your country: score **3.0** (not 1.0)
-- Only score 1.0 if JD says "must be on-site 4-5 days/week, no exceptions"
+**Nas avaliações (pontuação):**
+- Dimensão remota para híbrido fora do seu país: pontuação **3.0** (não 1.0)
+- Apenas pontue 1.0 se JD diz "must be on-site 4-5 days/week, no exceptions"

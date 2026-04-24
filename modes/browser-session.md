@@ -1,79 +1,79 @@
-# Browser Session -- Autonomy Patterns
+# Browser Session -- Padrões de Autonomia
 
 <!-- ============================================================
-     Shared reference for ALL autonomous browser interaction.
-     Referenced by: scan.md, apply.md, pipeline.md, auto-pipeline.md
-     Governance: CLAUDE.md "Browser Autonomy" section
-     HITL rules: _shared.md "HITL Boundaries" section
+     Referência compartilhada para TODA interação autônoma de browser.
+     Referenciado por: scan.md, apply.md, pipeline.md, auto-pipeline.md
+     Governança: seção "Browser Autonomy" do CLAUDE.md
+     Regras HITL: seção "HITL Boundaries" do _shared.md
      ============================================================ -->
 
-This file defines the patterns every mode uses when interacting with a browser via Playwright MCP. It is the single source of truth for decision loops, session management, obstacle handling, CAPTCHA/2FA detection, the submission gate, retry logic, and action logging.
+Este arquivo define os padrões que todo modo usa ao interagir com um navegador via Playwright MCP. É a fonte única de verdade para loops de decisão, gestão de sessão, tratamento de obstáculos, detecção de CAPTCHA/2FA, o gate de submissão, lógica de retry e log de ações.
 
-**How to use this file**: When a mode workflow reaches a browser interaction point, follow the sections below in order. Start with the Decision Loop Protocol, layer in Session Management if the portal requires login, apply Obstacle Dismissal after every navigation, and enforce the Submission Gate before any irreversible action.
-
----
-
-## Decision Loop Protocol
-
-Every autonomous browser interaction follows a snapshot-decide-act-re-snapshot cycle:
-
-1. **Snapshot** -- Call `browser_snapshot` to read the current page state as an ARIA accessibility tree (YAML, ~2-5 KB). Parse roles, names, and element refs (e.g., `textbox "Full Name" [ref=e7]`).
-2. **Decide** -- Based on the snapshot content, determine the next action: navigate, click, fill, type, wait, or escalate to HITL.
-3. **Act** -- Execute the chosen action using the element ref from the snapshot.
-4. **Re-snapshot** -- Call `browser_snapshot` again to verify the action succeeded before proceeding.
-
-**Safety limits** (prevent infinite loops):
-- Max iterations: **50 cycles** per flow.
-- Max wall-clock: **5 minutes** per flow execution.
-- If the goal is not met within limits, stop and report progress to the user with a summary of completed steps.
-
-**Rules**:
-- Always take a fresh `browser_snapshot` at the start of each step. Never assume page state from a previous snapshot after any navigation or wait.
-- Element refs (`e5`, `e12`) are session-scoped. After any navigation that reloads the page, re-snapshot before using refs -- they may have changed.
-- Use ARIA roles and labels (`textbox "Email"`, `button "Submit"`) rather than CSS selectors. Resilient across ATS platforms and portal redesigns.
+**Como usar este arquivo**: Quando o workflow de um modo chega a um ponto de interação de browser, siga as seções abaixo em ordem. Comece pelo Protocolo do Loop de Decisão, aplique Gestão de Sessão se o portal requer login, use Desobstrução de Obstáculos após cada navegação, e aplique o Gate de Submissão antes de qualquer ação irreversível.
 
 ---
 
-## Session Management
+## Protocolo do Loop de Decisão
 
-For portals requiring authentication (`requires_login: true` in `portals.yml`).
+Toda interação autônoma de browser segue um ciclo snapshot-decide-act-resnapshot:
 
-### Session files
+1. **Snapshot** -- Chame `browser_snapshot` para ler o estado atual da página como uma árvore de acessibilidade ARIA (YAML, ~2-5 KB). Analise roles, nomes e refs de elementos (ex: `textbox "Full Name" [ref=e7]`).
+2. **Decida** -- Com base no conteúdo do snapshot, determine a próxima ação: navegar, clickar, preencher, digitar, esperar, ou escalar para HITL.
+3. **Aja** -- Execute a ação escolhida usando a ref do elemento do snapshot.
+4. **Resnapshot** -- Chame `browser_snapshot` novamente para verificar se a ação teve sucesso antes de prosseguir.
 
-- Path convention: `data/sessions/<portal-slug>.json` (gitignored -- contains auth tokens).
-- Format: Playwright `storageState` JSON with `cookies` and `origins` arrays.
-- Playwright MCP persistent profile stores cookies automatically between sessions via OS cache dir.
+**Limites de segurança** (previnem loops infinitos):
+- Máx iterações: **50 ciclos** por fluxo.
+- Máx tempo real: **5 minutos** por execução de fluxo.
+- Se a meta não for atingida dentro dos limites, pare e relate o progresso ao usuário com um resumo dos passos completados.
 
-### Load pattern
-
-Before navigating to an authenticated portal:
-1. Check `portals.yml` for `requires_login: true` and `cookie_file` path.
-2. If a session file exists, the Playwright MCP persistent profile should already have cookies from the user's prior manual login.
-3. Navigate to the portal URL.
-4. Snapshot immediately to check session validity.
-
-### Validity check
-
-After navigating, examine the snapshot:
-- **Valid session**: No login form present. Portal shows authenticated content (dashboard, profile menu, user name).
-- **Expired session**: Snapshot contains login form elements (e.g., `textbox "Email"` + `button "Sign in"`).
-
-### Expiry handling
-
-If the session is expired:
-1. Stop the flow immediately.
-2. Output HITL signal: `{ hitl: true, reason: "session_expired", message: "Session expired -- please log in to the portal and type 'resume'" }`.
-3. Do NOT attempt to enter credentials. The user must authenticate manually.
+**Regras**:
+- Sempre tire um novo `browser_snapshot` no início de cada passo. Nunca assuma estado da página de um snapshot anterior após qualquer navegação ou espera.
+- Refs de elementos (`e5`, `e12`) são escopo-da-sessão. Após qualquer navegação que recarregue a página, resnapshot antes de usar refs -- podem ter mudado.
+- Use roles e labels ARIA (`textbox "Email"`, `button "Submit"`) ao invés de seletores CSS. Resilientes entre plataformas ATS e redesigns de portais.
 
 ---
 
-## Obstacle Dismissal
+## Gestão de Sessão
 
-After every `browser_navigate` + first `browser_snapshot`, check for obstacles BEFORE reading page content. Dismiss in order:
+Para portais que requerem autenticação (`requires_login: true` em `portals.yml`).
 
-### Step 1: Cookie banners
+### Arquivos de sessão
 
-Search the snapshot for these button patterns (case-sensitive match on ARIA label):
+- Convenção de caminho: `data/sessions/<portal-slug>.json` (gitignored -- contém tokens de auth)
+- Formato: Playwright `storageState` JSON com arrays de `cookies` e `origins`
+- Perfil persistente do Playwright MCP armazena cookies automaticamente entre sessões via dir de cache do SO
+
+### Padrão de carregamento
+
+Antes de navegar a um portal autenticado:
+1. Verifique `portals.yml` para `requires_login: true` e caminho de `cookie_file`.
+2. Se um arquivo de sessão existe, o perfil persistente do Playwright MCP já deve ter cookies do login manual prévio do usuário.
+3. Navegue para a URL do portal.
+4. Snapshot imediatamente para verificar validade da sessão.
+
+### Verificação de validade
+
+Após navegar, examine o snapshot:
+- **Sessão válida**: Nenhum formulário de login presente. Portal mostra conteúdo autenticado (dashboard, menu de perfil, nome do usuário).
+- **Sessão expirada**: Snapshot contém elementos de formulário de login (ex: `textbox "Email"` + `button "Sign in"`).
+
+### Tratamento de expiração
+
+Se a sessão expirou:
+1. Pare o fluxo imediatamente.
+2. Output sinal HITL: `{ hitl: true, reason: "session_expired", message: "Session expired -- please log in to the portal and type 'resume'" }`.
+3. NÃO tente inserir credenciais. O usuário deve autenticar manualmente.
+
+---
+
+## Desobstrução de Obstáculos
+
+Após cada `browser_navigate` + primeiro `browser_snapshot`, verifique obstáculos ANTES de ler conteúdo da página. Desobstrua em ordem:
+
+### Passo 1: Banners de cookie
+
+Procure no snapshot por estes padrões de botão (match case-sensitive no label ARIA):
 - `button "Accept all"`
 - `button "Accept All"`
 - `button "Accept cookies"`
@@ -82,13 +82,13 @@ Search the snapshot for these button patterns (case-sensitive match on ARIA labe
 - `button "OK"`
 - `button "Got it"`
 
-If found, click the matching element ref. Re-snapshot to verify the banner is gone.
+Se encontrado, click no elemento com ref correspondente. Resnapshot para verificar que o banner desapareceu.
 
-### Step 2: Overlay dialogs
+### Passo 2: Dialogs de overlay
 
-Search the snapshot for `role="dialog"` or `role="alertdialog"`. If present, look for dismiss buttons:
+Procure no snapshot por `role="dialog"` ou `role="alertdialog"`. Se presente, procure botsões de dispensar:
 - `button "Close"`
-- `button "x"` (the multiplication sign, not letter x)
+- `button "x"` (o sinal de multiplicação, não a letra x)
 - `button "+"` (Unicode ballot X)
 - `button "No thanks"`
 - `button "Not now"`
@@ -96,35 +96,35 @@ Search the snapshot for `role="dialog"` or `role="alertdialog"`. If present, loo
 - `button "Dismiss"`
 - `button "Skip"`
 
-Dismiss the topmost dialog first. Re-snapshot after each dismissal.
+Dispensar o dialog mais alto primeiro. Resnapshot após cada dismiss.
 
-**Escalation**: If a dialog is present but no known dismiss button exists, stop and notify the user. Do not guess -- some dialogs may be legitimate (terms acceptance, required consent).
+**Escalação**: Se um dialog está presente mas não existe botão de dismiss conhecido, pare e notifique o usuário. Não adivinhe -- alguns dialogs podem ser legítimos (aceite de termos, consentimento requerido).
 
 ---
 
-## CAPTCHA Detection
+## Detecção de CAPTCHA
 
-Scan every snapshot for these signal phrases (case-insensitive):
+Verifique todo snapshot por estas frases de sinal (case-insensitive):
 
 - `I'm not a robot`
 - `verify you are human`
 - `hcaptcha`
 - `recaptcha`
 
-**Action**: IMMEDIATE STOP. No exceptions.
+**Ação**: PARADA IMEDIATA. Sem exceções.
 
-Output HITL signal:
+Output sinal HITL:
 ```
 { hitl: true, reason: "captcha", message: "CAPTCHA detected -- please resolve it in the browser and type 'resume'" }
 ```
 
-**NEVER attempt to solve a CAPTCHA.** Always defer to the human.
+**NUNCA tente resolver um CAPTCHA.** Sempre adie para o humano.
 
 ---
 
-## 2FA Detection
+## Detecção de 2FA
 
-Scan every snapshot for these signal phrases:
+Verifique todo snapshot por estas frases de sinal:
 
 - `Verification Code`
 - `One-time password`
@@ -133,25 +133,25 @@ Scan every snapshot for these signal phrases:
 - `Authenticator app`
 - `Check your email for a code`
 
-**Action**: IMMEDIATE STOP.
+**Ação**: PARADA IMEDIATA.
 
-Output HITL signal:
+Output sinal HITL:
 ```
 { hitl: true, reason: "2fa", message: "2FA required -- please complete authentication and type 'resume'" }
 ```
 
 ---
 
-## Submission Gate (CRITICAL)
+## Gate de Submissão (CRÍTICO)
 
-This gate enforces the ethical rule in CLAUDE.md: "NEVER submit an application without the user reviewing it first."
+Este gate enforce a regra ética em CLAUDE.md: "NUNCA submeta uma aplicação sem o usuário revisar primeiro."
 
-**Trigger**: Before clicking ANY button that could submit a form. Match these button labels:
-- Submit, Apply, Send, Bewerben, Absenden, Post, Continue (when "Continue" is the final step that submits)
+**Gatilho**: Antes de clicar EM QUALQUER botão que possa submeter um formulário. Match estes labels de botão:
+- Submit, Apply, Send, Bewerben, Absenden, Post, Continue (quando "Continue" é o passo final que submete)
 
-**Protocol**:
-1. STOP. Do not click the button.
-2. Present a summary of all filled fields and their values:
+**Protocolo**:
+1. PARE. Não click o botão.
+2. Apresente um resumo de todos os campos preenchidos e seus valores:
    ```
    Submission Gate -- Review before sending:
    - Name: "John Doe"
@@ -162,115 +162,115 @@ This gate enforces the ethical rule in CLAUDE.md: "NEVER submit an application w
 
    Type "go" to submit or "abort" to cancel.
    ```
-3. Wait for the user to respond.
-   - User says "go" -- proceed with the click.
-   - User says "abort" -- stop the flow, do not submit.
-4. Log the gate event in the action log with `outcome: "hitl_pause"` and `detail: "submit"`.
+3. Espere o usuário responder.
+   - Usuário diz "go" -- prossiga com o click.
+   - Usuário diz "abort" -- pare o fluxo, não submeta.
+4. Log o evento do gate no log de ações com `outcome: "hitl_pause"` e `detail: "submit"`.
 
-**NO EXCEPTIONS.** This applies to every portal, every form, every mode. The submission gate is non-negotiable.
-
----
-
-## Retry Policy
-
-For transient failures (network errors, element not found, unexpected page content):
-
-| Attempt | Wait before retry | Action |
-|---------|-------------------|--------|
-| 1st retry | 2 seconds | Re-navigate or re-snapshot, attempt action again |
-| 2nd retry | 5 seconds | Re-navigate or re-snapshot, attempt action again |
-| 3rd retry | 10 seconds | Re-navigate or re-snapshot, attempt action again |
-| After 3 failures | -- | Escalate to user or mark `[!]` and skip |
-
-**Escalation behavior** depends on `captcha_strategy` in `portals.yml`:
-- `"stop"` (default): Stop the flow and notify the user with error context.
-- `"skip"`: Mark the URL as `[!]` in `pipeline.md` with a note (e.g., "Failed after 3 retries -- element not found"), then continue to the next target.
-
-**Qualifying failures**: Navigation timeout, element not found in snapshot, unexpected page content (e.g., 404, error page), action did not produce expected state change.
+**SEM EXCEÇÕES.** Isto se aplica a todo portal, todo formulário, todo modo. O gate de submissão é inegociável.
 
 ---
 
-## Action Logging
+## Política de Retry
 
-Every autonomous browser flow MUST produce an action log.
+Para falhas transitórias (erros de rede, elemento não encontrado, conteúdo inesperado da página):
 
-### File convention
+| Tentativa | Espera antes de retry | Ação |
+|-----------|----------------------|------|
+| 1º retry | 2 segundos | Renavegar ou resnapshot, tentar ação novamente |
+| 2º retry | 5 segundos | Renavegar ou resnapshot, tentar ação novamente |
+| 3º retry | 10 segundos | Renavegar ou resnapshot, tentar ação novamente |
+| Após 3 falhas | -- | Escalar para usuário ou marcar `[!]` e pular |
 
-- Directory: `logs/` (gitignored -- may contain PII from form field values)
-- Filename: `logs/flow-run-<ISO-timestamp>.ndjson`
-- Example: `logs/flow-run-2026-04-07T14-30-00Z.ndjson`
-- One file per flow execution. Rotate by run, not by size.
+**Comportamento de escalação** depende de `captcha_strategy` em `portals.yml`:
+- `"stop"` (padrão): Pare o fluxo e notifique o usuário com contexto de erro.
+- `"skip"`: Marque a URL como `[!]` em `pipeline.md` com uma nota (ex: "Failed after 3 retries -- element not found"), depois continue para o próximo alvo.
 
-### Entry schema (NDJSON -- one JSON object per line)
+**Falhas qualificáveis**: Timeout de navegação, elemento não encontrado no snapshot, conteúdo inesperado da página (ex: 404, página de erro), ação não produziu mudança de estado esperada.
+
+---
+
+## Log de Ações
+
+Todo fluxo autônomo de browser DEVE produzir um log de ações.
+
+### Convenção de arquivo
+
+- Diretório: `logs/` (gitignored -- pode conter PII de valores de campos de formulário)
+- Nome: `logs/flow-run-<ISO-timestamp>.ndjson`
+- Exemplo: `logs/flow-run-2026-04-07T14-30-00Z.ndjson`
+- Um arquivo por execução de fluxo. Rotaciona por execução, não por tamanho.
+
+### Schema de entrada (NDJSON -- um objeto JSON por linha)
 
 ```
 {
   "timestamp": "ISO 8601",
-  "step_id": "string (e.g., 'dismiss_cookie_banner', 'fill_name')",
+  "step_id": "string (ex: 'dismiss_cookie_banner', 'fill_name')",
   "action": "navigate | click | fill | snapshot | hitl | wait",
-  "target_ref": "string | null (ARIA ref, e.g., 'e12')",
+  "target_ref": "string | null (ARIA ref, ex: 'e12')",
   "outcome": "success | failure | skipped | hitl_pause",
-  "detail": "string (optional -- error message or HITL reason)"
+  "detail": "string (opcional -- mensagem de erro ou razão HITL)"
 }
 ```
 
-### Rules
+### Regras
 
-- **Flush after each entry** -- not buffered. Use `appendFileSync` or equivalent. This ensures partial runs are recoverable.
-- Log every action: navigates, clicks, fills, snapshots, HITL pauses, waits.
-- Log failures with `detail` containing the error message.
-- Log HITL pauses with `detail` containing the reason (`"captcha"`, `"2fa"`, `"submit"`, `"session_expired"`).
-
----
-
-## Stale Flow Detection
-
-When the portal UI has changed and expected elements are no longer where they should be:
-
-1. If an expected element is not found in the snapshot within **10 seconds** (use `browser_wait_for` with a timeout), assume the flow definition is stale.
-2. Fall back to **page-state interpretation**: read what IS on the page from the current snapshot. Identify elements by their ARIA roles and labels, not by assumed positions.
-3. Notify the user: "Flow definition may need updating for this portal. Proceeding with best-effort interpretation."
-4. Continue using the decision loop protocol with the actual page state.
-5. Log the stale detection in the action log: `{ action: "snapshot", outcome: "failure", detail: "stale_flow - element not found: <expected_element>" }`.
+- **Flush após cada entrada** -- não em buffer. Use `appendFileSync` ou equivalente. Isso garante que execuções parciais são recuperáveis.
+- Logue cada ação: navegações, clicks, fills, snapshots, pausas HITL, esperas.
+- Logue falhas com `detail` contendo a mensagem de erro.
+- Logue pausas HITL com `detail` contendo a razão (`"captcha"`, `"2fa"`, `"submit"`, `"session_expired"`).
 
 ---
 
-## Session Expiry Mid-Flow
+## Detecção de Fluxo Obsoleto
 
-When a portal session expires during an active multi-step flow:
+Quando a UI do portal mudou e elementos esperados já não estão onde deveriam estar:
 
-1. **Detect**: The snapshot shows login form elements when they should not be there (e.g., `textbox "Email"` + `button "Sign in"` appearing mid-form-fill).
-2. **Stop** the flow immediately. Do not attempt to re-authenticate.
-3. Output HITL signal:
+1. Se um elemento esperado não é encontrado no snapshot dentro de **10 segundos** (use `browser_wait_for` com timeout), assuma que a definição do fluxo está obsoleta.
+2. Recorra à **interpretação de estado da página**: leia o que ESTÁ na página do snapshot atual. Identifique elementos por suas roles e labels ARIA, não por posições assumidas.
+3. Notifique o usuário: "Flow definition may need updating for this portal. Proceeding with best-effort interpretation."
+4. Continue usando o protocolo do loop de decisão com o estado real da página.
+5. Log a detecção de obsoleto no log de ações: `{ action: "snapshot", outcome: "failure", detail: "stale_flow - element not found: <expected_element>" }`.
+
+---
+
+## Expiração de Sessão Meio do Fluxo
+
+Quando uma sessão de portal expira durante um fluxo multi-passo ativo:
+
+1. **Detecte**: O snapshot mostra elementos de formulário de login quando não deveriam estar lá (ex: `textbox "Email"` + `button "Sign in"` aparecendo no meio do preenchimento).
+2. **Pare** o fluxo imediatamente. Não tente re-autenticar.
+3. Output sinal HITL:
    ```
    { hitl: true, reason: "session_expired", message: "Session expired during flow -- please re-login and type 'resume'" }
    ```
-4. The action log preserves a record of all completed steps. On resume, the agent reads the action log to determine where to continue.
+4. O log de ações preserva um registro de todos os passos completados. Ao resumir, o agente lê o log de ações para determinar onde continuar.
 
 ---
 
-## Partial Form Preservation
+## Preservação de Formulário Parcial
 
-When a flow is interrupted by a HITL gate (CAPTCHA, 2FA, submission review) or an error:
+Quando um fluxo é interrompido por um gate HITL (CAPTCHA, 2FA, revisão de submissão) ou um erro:
 
-1. The action log already contains every field filled with its value and ref. Each `fill` action has `step_id`, `target_ref`, and `outcome` recorded.
-2. The user can review the action log to see exactly what was completed before the interruption.
-3. On resume (after user types "resume" / "go" / "done"):
-   - Agent re-snapshots the current page to verify state.
-   - Agent reads the action log to identify which fields were already filled.
-   - Agent continues from the next unfilled field, skipping already-completed steps.
-4. If the page was reloaded (e.g., after CAPTCHA resolution), the agent must re-snapshot and re-identify all element refs -- they may have changed.
+1. O log de ações já contém cada campo preenchido com seu valor e ref. Cada ação de `fill` tem `step_id`, `target_ref`, e `outcome` registrados.
+2. O usuário pode revisar o log de ações para ver exatamente o que foi completado antes da interrupção.
+3. Ao resumir (após usuário digitar "resume" / "go" / "done"):
+   - Agente resnapshota a página atual para verificar estado.
+   - Agente lê o log de ações para identificar quais campos já foram preenchidos.
+   - Agente continua do próximo campo não preenchido, pulando passos já completados.
+4. Se a página foi recarregada (ex: após resolução de CAPTCHA), o agente deve resnapshot e reidentificar todas as refs de elementos -- podem ter mudado.
 
 ---
 
-## Quick Reference: HITL Resume Protocol
+## Referência Rápida: Protocolo de Retomada HITL
 
-When the agent outputs a HITL signal and pauses:
+Quando o agente outputa um sinal HITL e pausa:
 
-1. Agent stops and waits for user input.
-2. User performs the required action in the browser (solve CAPTCHA, enter 2FA code, re-login, review form).
-3. User types "resume" / "go" / "done" in Claude Code.
-4. Agent re-snapshots the current page to verify state.
-5. Agent continues from the next step.
+1. Agente para e espera input do usuário.
+2. Usuário executa a ação requerida no browser (resolver CAPTCHA, inserir código 2FA, re-login, revisar formulário).
+3. Usuário digita "resume" / "go" / "done" no Claude Code.
+4. Agente resnapshot a página atual para verificar estado.
+5. Agente continua do próximo passo.
 
-The action log records the HITL pause with `outcome: "hitl_pause"` and `detail` set to the reason, so the agent can resume correctly.
+O log de ações registra a pausa HITL com `outcome: "hitl_pause"` e `detail` setado com a razão, para o agente poder retomar corretamente.

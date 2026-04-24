@@ -1,6 +1,6 @@
 # Fernando Costa Xavier
 
-**Finance Director | Executive | Controller | Head of Accounting LATAM | Leader of Digital Transformation | AI & Automation | CRC | ACCA Certified (IFR) | FMVA | IFRS Expert | US GAAP**
+**Head of Accounting and Controlling | Executive | Controller | Head of Accounting LATAM | Leader of Digital Transformation | AI & Automation | CRC | ACCA Certified (IFR) | FMVA | IFRS Expert | US GAAP**
 
 Sao Paulo, Brazil | +55 11 96480-1913 | fernandocostaxavier@gmail.com | [linkedin.com/in/fernandoxavier02](https://linkedin.com/in/fernandoxavier02)
 
@@ -8,7 +8,7 @@ Sao Paulo, Brazil | +55 11 96480-1913 | fernandocostaxavier@gmail.com | [linkedi
 
 ## Executive Summary
 
-Finance & Controllership Director with 15+ years of leadership in Finance and Accounting across Latin America, combining deep technical expertise in IFRS (IAS), US GAAP, and Brazilian standards (CPC) with a pragmatic, execution-oriented approach to governance and operational excellence. Experience spans the full financial cycle including end-to-end close, consolidation, statutory and management reporting, intercompany operations, and full support for internal and external audits. A key differentiator is the ability to connect controllership with digital transformation — leading process automation initiatives, AI-powered analytics, and finance function modernisation, including the "Integrated Accounting Intelligence with Microsoft + GPT" programme. Strong background in FP&A (budgeting, forecasting, margin optimisation, cost control), tax strategy (including Transfer Pricing and regulatory readiness), and M&A support (due diligence, valuation modelling, and post-transaction integration). Recognised for driving automation that eliminated 70% of manual tasks and reduced reporting cycles by 40%. CRC-certified, ACCA (IFR), FMVA (CFI). Trilingual: Portuguese (native), English (C2), Spanish (C1). Graduate in Law and Accounting, with postgraduate studies in International Accounting (IFRS/US GAAP) and Corporate Finance (FGV).
+Head of Accounting and Controlling with 15+ years of leadership in Finance and Accounting across Latin America, combining deep technical expertise in IFRS (IAS), US GAAP, and Brazilian standards (CPC) with a pragmatic, execution-oriented approach to governance and operational excellence. Experience spans the full financial cycle including end-to-end close, consolidation, statutory and management reporting, intercompany operations, and full support for internal and external audits. A key differentiator is the ability to connect controllership with digital transformation — leading process automation initiatives, AI-powered analytics, and finance function modernisation, including the "Integrated Accounting Intelligence with Microsoft + GPT" programme. Strong background in FP&A (budgeting, forecasting, margin optimisation, cost control), tax strategy (including Transfer Pricing and regulatory readiness), and M&A support (due diligence, valuation modelling, and post-transaction integration). Recognised for driving automation that eliminated 70% of manual tasks and reduced reporting cycles by 40%. CRC-certified, ACCA (IFR), FMVA (CFI). Trilingual: Portuguese (native), English (C2), Spanish (C1). Graduate in Law and Accounting, with postgraduate studies in International Accounting (IFRS/US GAAP) and Corporate Finance (FGV).
 
 ---
 
@@ -106,7 +106,7 @@ Finance & Controllership Director with 15+ years of leadership in Finance and Ac
 - Featured posts: AI in accounting standard-setting (IASB using AI to analyse IFRS 16 lease disclosures), AI-powered financial modelling for budget & forecast, Management Performance Measures (MPMs) under IFRS 18, Financial Statements Consolidation Checklist
 - Top skills: People Management, IFRS, FP&A, Artificial Intelligence, Process Automation
 - Member of IBEF Sao Paulo (largest finance community in Brazil)
-- Actively seeking: Finance Director, Group Business Controller, Senior Business Controller, Head of Controllership roles
+- Actively seeking: Head of Accounting and Controlling, Group Business Controller, Senior Business Controller, Head of Controllership roles
 
 ---
 

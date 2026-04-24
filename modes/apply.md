@@ -1,107 +1,107 @@
-# Modo: apply — Asistente de Aplicación en Vivo
+# Modo: apply — Assistente de Aplicação em Vivo
 
-Modo interactivo para cuando el candidato está rellenando un formulario de aplicación en Chrome. Lee lo que hay en pantalla, carga el contexto previo de la oferta, y genera respuestas personalizadas para cada pregunta del formulario.
+Modo interativo para quando o candidato está preenchendo um formulário de candidatura no Chrome. Lê o que está na tela, carrega o contexto prévio da vaga, e gera respostas personalizadas para cada pergunta do formulário.
 
 ## Requisitos
 
-- **Mejor con Playwright visible**: En modo visible, el candidato ve el navegador y Claude puede interactuar con la página.
-- **Sin Playwright**: el candidato comparte un screenshot o pega las preguntas manualmente.
+- **Melhor com Playwright visível**: No modo visível, o candidato vê o navegador e o Claude pode interagir com a página.
+- **Sem Playwright**: o candidato compartilha um screenshot ou cola as perguntas manualmente.
 
 ## Workflow
 
 ```
-1. DETECTAR    → Leer Chrome tab activa (screenshot/URL/título)
-2. IDENTIFICAR → Extraer empresa + rol de la página
-3. BUSCAR      → Match contra reports existentes en reports/
-4. CARGAR      → Leer report completo + Section G (si existe)
-5. COMPARAR    → ¿El rol en pantalla coincide con el evaluado? Si cambió → avisar
-6. ANALIZAR    → Identificar TODAS las preguntas del formulario visibles
-7. GENERAR     → Para cada pregunta, generar respuesta personalizada
-8. PRESENTAR   → Mostrar respuestas formateadas para copy-paste
+1. DETECTAR    → Ler aba ativa do Chrome (screenshot/URL/título)
+2. IDENTIFICAR → Extrair empresa + cargo da página
+3. BUSCAR      → Match contra relatórios existentes em reports/
+4. CARREGAR    → Ler relatório completo + Seção G (se existir)
+5. COMPARAR    → O cargo na tela coincide com o avaliado? Se mudou → avisar
+6. ANALISAR    → Identificar TODAS as perguntas do formulário visíveis
+7. GERAR       → Para cada pergunta, gerar resposta personalizada
+8. APRESENTAR  → Mostrar respostas formatadas para copy-paste
 ```
 
-## Paso 1 — Detectar la oferta
+## Passo 1 — Detectar a vaga
 
-**Con Playwright:** Tomar snapshot de la página activa. Leer título, URL, y contenido visible.
+**Com Playwright:** Tirar snapshot da página ativa. Ler título, URL e conteúdo visível.
 
-**Sin Playwright:** Pedir al candidato que:
-- Comparta un screenshot del formulario (Read tool lee imágenes)
-- O pegue las preguntas del formulario como texto
-- O diga empresa + rol para que lo busquemos
+**Sem Playwright:** Pedir ao candidato que:
+- Compartilhe um screenshot do formulário (Read tool lê imagens)
+- Ou cole as perguntas do formulário como texto
+- Ou diga empresa + cargo para buscarmos
 
-## Paso 2 — Identificar y buscar contexto
+## Passo 2 — Identificar e buscar contexto
 
-1. Extraer nombre de empresa y título del rol de la página
-2. Buscar en `reports/` por nombre de empresa (Grep case-insensitive)
-3. Si hay match → cargar el report completo
-4. Si hay Section G → cargar los draft answers previos como base
-5. Si NO hay match → avisar y ofrecer ejecutar auto-pipeline rápido
+1. Extrair nome da empresa e título do cargo da página
+2. Buscar em `reports/` por nome da empresa (Grep case-insensitive)
+3. Se há match → carregar o relatório completo
+4. Se há Seção G → carregar os draft answers prévios como base
+5. Se NÃO há match → avisar e oferecer executar auto-pipeline rápido
 
-## Paso 3 — Detectar cambios en el rol
+## Passo 3 — Detectar mudanças no cargo
 
-Si el rol en pantalla difiere del evaluado:
-- **Avisar al candidato**: "El rol ha cambiado de [X] a [Y]. ¿Quieres que re-evalúe o adapto las respuestas al nuevo título?"
-- **Si adaptar**: Ajustar las respuestas al nuevo rol sin re-evaluar
-- **Si re-evaluar**: Ejecutar evaluación A-F completa, actualizar report, regenerar Section G
-- **Actualizar tracker**: Cambiar título del rol en applications.md si procede
+Se o cargo na tela diferir do avaliado:
+- **Avisar ao candidato**: "O cargo mudou de [X] para [Y]. Quer que eu reavalie ou adapto as respostas ao novo título?"
+- **Se adaptar**: Ajustar as respostas ao novo cargo sem reavaliar
+- **Se reavaliar**: Executar avaliação A-F completa, atualizar relatório, regenerar Seção G
+- **Atualizar tracker**: Mudar título do cargo em applications.md se proceder
 
-## Paso 4 — Analizar preguntas del formulario
+## Passo 4 — Analisar perguntas do formulário
 
-Identificar TODAS las preguntas visibles:
-- Campos de texto libre (cover letter, why this role, etc.)
-- Dropdowns (how did you hear, work authorization, etc.)
-- Yes/No (relocation, visa, etc.)
-- Campos de salario (range, expectation)
-- Upload fields (resume, cover letter PDF)
+Identificar TODAS as perguntas visíveis:
+- Campos de texto livre (carta de apresentação, por que este cargo, etc.)
+- Dropdowns (como soube, autorização de trabalho, etc.)
+- Yes/No (relocação, visto, etc.)
+- Campos de salário (range, expectativa)
+- Campos de upload (currículo, carta de apresentação PDF)
 
-Clasificar cada pregunta:
-- **Ya respondida en Section G** → adaptar la respuesta existente
-- **Nueva pregunta** → generar respuesta desde el report + cv.md
+Classificar cada pergunta:
+- **Já respondida na Seção G** → adaptar a resposta existente
+- **Nova pergunta** → gerar resposta desde o relatório + cv.md
 
-## Paso 5 — Generar respuestas
+## Passo 5 — Gerar respostas
 
-Para cada pregunta, generar la respuesta siguiendo:
+Para cada pergunta, gerar a resposta seguindo:
 
-1. **Contexto del report**: Usar proof points del bloque B, historias STAR del bloque F
-2. **Section G previa**: Si existe una respuesta draft, usarla como base y refinar
-3. **Tono "I'm choosing you"**: Mismo framework del auto-pipeline
-4. **Especificidad**: Referenciar algo concreto del JD visible en pantalla
-5. **career-ops proof point**: Incluir en "Additional info" si hay campo para ello
+1. **Contexto do relatório**: Usar proof points do bloco B, histórias STAR do bloco F
+2. **Seção G prévia**: Se existe uma resposta draft, usá-la como base e refinar
+3. **Tom "I'm choosing you"**: Mesmo framework do auto-pipeline
+4. **Especificidade**: Referenciar algo concreto da JD visível na tela
+5. **career-ops proof point**: Incluir em "Additional info" se houver campo para isso
 
 **Formato de output:**
 
 ```
-## Respuestas para [Empresa] — [Rol]
+## Respostas para [Empresa] — [Cargo]
 
-Basado en: Report #NNN | Score: X.X/5 | Arquetipo: [tipo]
+Baseado em: Relatório #NNN | Score: X.X/5 | Arquétipo: [tipo]
 
 ---
 
-### 1. [Pregunta exacta del formulario]
-> [Respuesta lista para copy-paste]
+### 1. [Pergunta exata do formulário]
+> [Resposta pronta para copy-paste]
 
-### 2. [Siguiente pregunta]
-> [Respuesta]
+### 2. [Próxima pergunta]
+> [Resposta]
 
 ...
 
 ---
 
 Notas:
-- [Cualquier observación sobre el rol, cambios, etc.]
-- [Sugerencias de personalización que el candidato debería revisar]
+- [Qualquer observação sobre o cargo, mudanças, etc.]
+- [Sugestões de personalização que o candidato deveria revisar]
 ```
 
-## Paso 6 — Post-apply (opcional)
+## Passo 6 — Post-apply (opcional)
 
-Si el candidato confirma que envió la aplicación:
-1. Actualizar estado en `applications.md` de "Evaluada" a "Aplicado"
-2. Actualizar Section G del report con las respuestas finales
-3. Sugerir siguiente paso: `/career-ops contacto` para LinkedIn outreach
+Se o candidato confirma que enviou a candidatura:
+1. Atualizar estado em `applications.md` de "Avaliada" para "Aplicada"
+2. Atualizar Seção G do relatório com as respostas finais
+3. Sugerir próximo passo: `/career-ops contacto` para LinkedIn outreach
 
-## Scroll handling
+## Tratamento de scroll
 
-Si el formulario tiene más preguntas que las visibles:
-- Pedir al candidato que haga scroll y comparta otro screenshot
-- O que pegue las preguntas restantes
-- Procesar en iteraciones hasta cubrir todo el formulario
+Se o formulário tem mais perguntas que as visíveis:
+- Pedir ao candidato que role e compartilhe outro screenshot
+- Ou que cole as perguntas restantes
+- Processar em iterações até cobrir todo o formulário

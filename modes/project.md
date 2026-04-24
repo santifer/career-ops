@@ -1,30 +1,30 @@
-# Modo: project — Evaluación de Proyecto Portfolio
+# Modo: project — Avaliação de Projeto Portfolio
 
-Scoring 6 dimensiones (1-5):
+Scoring 6 dimensões (1-5):
 
-| Dimensión | Peso | 5 = ... | 1 = ... |
+| Dimensão | Peso | 5 = ... | 1 = ... |
 |-----------|------|---------|---------|
-| Señal para roles target | 25% | Directamente demuestra skill del JD | No relacionado |
-| Unicidad | 20% | Nadie ha hecho esto | Todo el mundo lo tiene |
-| Demo-ability | 20% | Live demo en 2 min | Solo código, no visual |
-| Potencial de métricas | 15% | Métricas claras (latency, cost, accuracy) | Sin métricas posibles |
-| Tiempo a MVP | 10% | 1 semana | 3+ meses |
-| Potencial de historia STAR | 10% | Historia rica con trade-offs | Solo implementación |
+| Sinal para cargos target | 25% | Demonstra diretamente skill da JD | Não relacionado |
+| Unicidade | 20% | Ninguém fez isso | Todo mundo tem |
+| Demo-ability | 20% | Live demo em 2 min | Só código, sem visual |
+| Potencial de métricas | 15% | Métricas claras (latency, cost, accuracy) | Sem métricas possíveis |
+| Tempo até MVP | 10% | 1 semana | 3+ meses |
+| Potencial de história STAR | 10% | História rica com trade-offs | Só implementação |
 
 ## Requisitos de "Interview Pack"
 
-Para cada proyecto aprobado:
-1. **One-pager**: producto + arquitectura + métricas + plan de evaluación
-2. **Demo**: URL live o walkthrough grabado de 2 min
-3. **Postmortem**: qué funcionó, qué no, mitigaciones
+Para cada projeto aprovado:
+1. **One-pager**: produto + arquitetura + métricas + plano de avaliação
+2. **Demo**: URL live ou walkthrough gravado de 2 min
+3. **Postmortem**: o que funcionou, o que não, mitigações
 
-## Plan 80/20
+## Plano 80/20
 
-- Semana 1 → MVP con métrica core
+- Semana 1 → MVP com métrica core
 - Semana 2 → polish + interview pack
 
-## Veredictos
+## Vereditos
 
-- **CONSTRUIR** → plan con milestones semanales
-- **SKIP** → por qué y qué hacer en su lugar
-- **PIVOTAR A [alternativa]** → variante más impactante
+- **CONSTRUIR** → plano com milestones semanais
+- **PULAR** → por quê e o que fazer em seu lugar
+- **PIVOTAR PARA [alternativa]** → variante mais impactante

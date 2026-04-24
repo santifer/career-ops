@@ -29,6 +29,11 @@ node_modules/
 
 # Browser automation
 logs/
+.playwright-mcp/
+tmp/
+/*.yml
+/dropdown-check
+/*.png
 
 # OS
 .DS_Store
@@ -40,3 +45,8 @@ logs/
 .claude/memory/
 career-dashboard
 .specs/scratchpad/
+
+# Build artifacts and generated reports
+*.exe
+reports/*.html
+batch/tracker-additions/merged/

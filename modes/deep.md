@@ -1,47 +1,47 @@
-# Modo: deep — Deep Research Prompt
+# Modo: deep — Prompt de Pesquisa Profunda
 
-Genera un prompt estructurado para Perplexity/Claude/ChatGPT con 6 ejes:
+Gera um prompt estruturado para Perplexity/Claude/ChatGPT com 6 eixos:
 
 ```
-## Deep Research: [Empresa] — [Rol]
+## Pesquisa Profunda: [Empresa] — [Cargo]
 
-Contexto: Estoy evaluando una candidatura para [rol] en [empresa]. Necesito información accionable para la entrevista.
+Contexto: Estou avaliando uma candidatura para [cargo] em [empresa]. Preciso de informação acionável para a entrevista.
 
-### 1. Estrategia AI
-- ¿Qué productos/features usan AI/ML?
-- ¿Cuál es su stack de AI? (modelos, infra, tools)
-- ¿Tienen blog de engineering? ¿Qué publican?
-- ¿Qué papers o talks han dado sobre AI?
+### 1. Estratégia AI
+- Quais produtos/features usam AI/ML?
+- Qual é o stack de AI deles? (modelos, infra, tools)
+- Têm blog de engineering? O que publicam?
+- Que papers ou talks deram sobre AI?
 
-### 2. Movimientos recientes (últimos 6 meses)
-- ¿Contrataciones relevantes en AI/ML/product?
-- ¿Acquisitions o partnerships?
-- ¿Product launches o pivots?
-- ¿Rondas de funding o cambios de liderazgo?
+### 2. Movimentos recentes (últimos 6 meses)
+- Contratações relevantes em AI/ML/product?
+- Acquisitions ou partnerships?
+- Product launches ou pivots?
+- Rodadas de funding ou mudanças de liderança?
 
 ### 3. Cultura de engineering
-- ¿Cómo shipean? (cadencia de deploy, CI/CD)
-- ¿Mono-repo o multi-repo?
-- ¿Qué lenguajes/frameworks usan?
-- ¿Remote-first o office-first?
-- ¿Glassdoor/Blind reviews sobre eng culture?
+- Como eles shipam? (cadência de deploy, CI/CD)
+- Mono-repo ou multi-repo?
+- Que linguagens/frameworks usam?
+- Remote-first ou office-first?
+- Reviews do Glassdoor/Blind sobre eng culture?
 
-### 4. Retos probables
-- ¿Qué problemas de scaling tienen?
-- ¿Reliability, cost, latency challenges?
-- ¿Están migrando algo? (infra, models, platforms)
-- ¿Qué pain points menciona la gente en reviews?
+### 4. Desafios prováveis
+- Quais problemas de scaling têm?
+- Reliability, cost, latency challenges?
+- Estão migrando algo? (infra, models, platforms)
+- Quais pain points as pessoas mencionam em reviews?
 
-### 5. Competidores y diferenciación
-- ¿Quiénes son sus main competitors?
-- ¿Cuál es su moat/diferenciador?
-- ¿Cómo se posicionan vs competencia?
+### 5. Concorrentes e diferenciação
+- Quem são os main competitors deles?
+- Qual é o moat/diferenciador deles?
+- Como se posicionam vs concorrência?
 
-### 6. Ángulo del candidato
-Dado mi perfil (read from cv.md and profile.yml for specific experience):
-- ¿Qué valor único aporto a este equipo?
-- ¿Qué proyectos míos son más relevantes?
-- ¿Qué historia debería contar en la entrevista?
+### 6. Ângulo do candidato
+Dado meu perfil (ler de cv.md e profile.yml para experiência específica):
+- Qual valor único eu trago para este time?
+- Quais dos meus projetos são mais relevantes?
+- Qual história eu deveria contar na entrevista?
 ```
 
-Personalizar cada sección con el contexto específico de la oferta evaluada.
+Personalizar cada seção com o contexto específico da vaga avaliada.

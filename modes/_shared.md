@@ -1,161 +1,161 @@
-# System Context -- career-ops
+# Contexto do Sistema -- career-ops
 
 <!-- ============================================================
-     THIS FILE IS AUTO-UPDATABLE. Don't put personal data here.
-     
-     Your customizations go in modes/_profile.md (never auto-updated).
-     This file contains system rules, scoring logic, and tool config
-     that improve with each career-ops release.
+     ESTE ARQUIVO É AUTO-ATUALIZÁVEL. Não coloque dados pessoais aqui.
+
+     Suas personalizações vão em modes/_profile.md (nunca auto-atualizado).
+     Este arquivo contém regras do sistema, lógica de pontuação e config de ferramentas
+     que melhoram com cada release do career-ops.
      ============================================================ -->
 
-## Sources of Truth
+## Fontes de Verdade
 
-| File | Path | When |
-|------|------|------|
-| cv.md | `cv.md` (project root) | ALWAYS |
-| article-digest.md | `article-digest.md` (if exists) | ALWAYS (detailed proof points) |
-| profile.yml | `config/profile.yml` | ALWAYS (candidate identity and targets) |
-| _profile.md | `modes/_profile.md` | ALWAYS (user archetypes, narrative, negotiation) |
+| Arquivo | Caminho | Quando |
+|---------|---------|--------|
+| cv.md | `cv.md` (raiz do projeto) | SEMPRE |
+| article-digest.md | `article-digest.md` (se existir) | SEMPRE (proof points detalhados) |
+| profile.yml | `config/profile.yml` | SEMPRE (identidade e alvos do candidato) |
+| _profile.md | `modes/_profile.md` | SEMPRE (arquétipos, narrativa, negociação) |
 
-**RULE: NEVER hardcode metrics from proof points.** Read them from cv.md + article-digest.md at evaluation time.
-**RULE: For article/project metrics, article-digest.md takes precedence over cv.md.**
-**RULE: Read _profile.md AFTER this file. User customizations in _profile.md override defaults here.**
+**REGRA: NUNCA hardcode métricas de proof points.** Leia de cv.md + article-digest.md no momento da avaliação.
+**REGRA: Para métricas de artigos/projetos, article-digest.md tem precedência sobre cv.md.**
+**REGRA: Leia _profile.md DEPOIS deste arquivo. Personalizações em _profile.md sobrescrevem os padrões aqui.**
 
 ---
 
-## Scoring System
+## Sistema de Pontuação
 
-The evaluation uses 6 blocks (A-F) with a global score of 1-5:
+A avaliação usa 6 blocos (A-F) com uma pontuação global de 1-5:
 
-| Dimension | What it measures |
-|-----------|-----------------|
-| Match con CV | Skills, experience, proof points alignment |
-| North Star alignment | How well the role fits the user's target archetypes (from _profile.md) |
-| Comp | Salary vs market (5=top quartile, 1=well below) |
-| Cultural signals | Company culture, growth, stability, remote policy |
-| Red flags | Blockers, warnings (negative adjustments) |
-| **Global** | Weighted average of above |
+| Dimensão | O que mede |
+|----------|------------|
+| Match com CV | Alinhamento de skills, experiência, proof points |
+| Alinhamento com a Estrela do Norte | Quão bem o cargo se encaixa nos arquétipos alvo do usuário (de _profile.md) |
+| Comp | Salário vs mercado (5=quartil superior, 1=muito abaixo) |
+| Sinais Culturais | Cultura da empresa, crescimento, estabilidade, política remota |
+| Sinais de Alerta | Bloqueios, avisos (ajustes negativos) |
+| **Global** | Média ponderada dos acima |
 
-**Score interpretation:**
-- 4.5+ → Strong match, recommend applying immediately
-- 4.0-4.4 → Good match, worth applying
-- 3.5-3.9 → Decent but not ideal, apply only if specific reason
-- Below 3.5 → Recommend against applying (see Ethical Use in CLAUDE.md)
+**Interpretação da pontuação:**
+- 4.5+ → Match forte, recomendo aplicar imediatamente
+- 4.0-4.4 → Bom match, vale aplicar
+- 3.5-3.9 → Decente mas não ideal, aplique apenas se tiver razão específica
+- Abaixo de 3.5 → Recomendo não aplicar (ver Uso Ético em CLAUDE.md)
 
-## Posting Legitimacy (Block G)
+## Legitimidade da Vaga (Bloco G)
 
-Block G assesses whether a posting is likely a real, active opening. It does NOT affect the 1-5 global score -- it is a separate qualitative assessment.
+O Bloco G avalia se a vaga é provavelmente real e ativa. NÃO afeta a pontuação global 1-5 -- é uma avaliação qualitativa separada.
 
-**Three tiers:**
-- **High Confidence** -- Real, active opening (most signals positive)
-- **Proceed with Caution** -- Mixed signals, worth noting (some concerns)
-- **Suspicious** -- Multiple ghost indicators, user should investigate first
+**Três níveis:**
+- **Alta Confiança** -- Vaga real e ativa (maioria dos sinais positivos)
+- **Proceder com Cautela** -- Sinais mistos, vale notar (algumas preocupações)
+- **Suspeito** -- Múltiplos indicadores de vaga fantasma, usuário deve investigar primeiro
 
-**Key signals (weighted by reliability):**
+**Sinais-chave (ponderados por confiabilidade):**
 
-| Signal | Source | Reliability | Notes |
-|--------|--------|-------------|-------|
-| Posting age | Page snapshot | High | Under 30d=good, 30-60d=mixed, 60d+=concerning (adjusted for role type) |
-| Apply button active | Page snapshot | High | Direct observable fact |
-| Tech specificity in JD | JD text | Medium | Generic JDs correlate with ghost postings but also with poor writing |
-| Requirements realism | JD text | Medium | Contradictions are a strong signal, vagueness is weaker |
-| Recent layoff news | WebSearch | Medium | Must consider department, timing, and company size |
-| Reposting pattern | scan-history.tsv | Medium | Same role reposted 2+ times in 90 days is concerning |
-| Salary transparency | JD text | Low | Jurisdiction-dependent, many legitimate reasons to omit |
-| Role-company fit | Qualitative | Low | Subjective, use only as supporting signal |
+| Sinal | Fonte | Confiabilidade | Notas |
+|-------|--------|----------------|-------|
+| Idade da postagem | Snapshot da página | Alta | Menos de 30d=bom, 30-60d=misto, 60d+=preocupante (ajustado por tipo de cargo) |
+| Botão de candidatar-se ativo | Snapshot da página | Alta | Fato diretamente observável |
+| Especificidade técnica na JD | Texto da JD | Média | JDs genéricas correlacionam com vagas fantasmas mas também com má escrita |
+| Realismo dos requisitos | Texto da JD | Média | Contradições são um sinal forte, vagueza é mais fraco |
+| Notícias recentes de layoff | WebSearch | Média | Deve considerar departamento, timing e tamanho da empresa |
+| Padrão de repostagem | scan-history.tsv | Média | Mesmo cargo repostado 2+ vezes em 90 dias é preocupante |
+| Transparência de salário | Texto da JD | Baixa | Dependente de jurisdição, muitas razões legítimas para omitir |
+| Fit cargo-empresa | Qualitativo | Baixa | Subjetivo, usar apenas como sinal de apoio |
 
-**Ethical framing (MANDATORY):**
-- This helps users prioritize time on real opportunities
-- NEVER present findings as accusations of dishonesty
-- Present signals and let the user decide
-- Always note legitimate explanations for concerning signals
+**Enquadramento ético (OBRIGATÓRIO):**
+- Isto ajuda usuários a priorizarem tempo em oportunidades reais
+- NUNCA apresente achados como acusações de desonestidade
+- Apresente sinais e deixe o usuário decidir
+- Sempre note explicações legítimas para sinais preocupantes
 
-## Archetype Detection
+## Detecção de Arquétipos
 
-Classify every offer into one of these types (or hybrid of 2):
+Classifique cada oferta em um destes tipos (ou híbrido de 2):
 
-| Archetype | Key signals in JD |
-|-----------|-------------------|
-| AI Platform / LLMOps | "observability", "evals", "pipelines", "monitoring", "reliability" |
-| Agentic / Automation | "agent", "HITL", "orchestration", "workflow", "multi-agent" |
-| Technical AI PM | "PRD", "roadmap", "discovery", "stakeholder", "product manager" |
-| AI Solutions Architect | "architecture", "enterprise", "integration", "design", "systems" |
-| AI Forward Deployed | "client-facing", "deploy", "prototype", "fast delivery", "field" |
-| AI Transformation | "change management", "adoption", "enablement", "transformation" |
+| Arquétipo | Sinais-chave na JD |
+|-----------|--------------------|
+| Head de Accounting / Controllership | "accounting", "controllership", "IFRS", "US GAAP", "financial reporting", "statutory", "close" |
+| Controller LATAM / Regional | "LATAM", "regional", "multi-country", "consolidation", "FP&A", "business partner" |
+| Finance Manager | "finance manager", "budgeting", "forecasting", "financial planning", "business partner" |
+| FP&A Manager | "FP&A", "financial planning", "budgeting", "forecasting", "variance analysis", "dashboards" |
+| M&A / Due Diligence | "M&A", "due diligence", "valuation", "post-merger", "integration", "acquisition" |
+| Tax Specialist | "tax", "transfer pricing", "IRPJ", "CSLL", "ICMS", "tax planning" |
 
-After detecting archetype, read `modes/_profile.md` for the user's specific framing and proof points for that archetype.
+Após detectar o arquétipo, leia `modes/_profile.md` para o framing específico do usuário e proof points para esse arquétipo.
 
-## Global Rules
+## Regras Globais
 
-### NEVER
+### NUNCA
 
-1. Invent experience or metrics
-2. Modify cv.md or portfolio files
-3. Submit applications on behalf of the candidate
-4. Share phone number in generated messages
-5. Recommend comp below market rate
-6. Generate a PDF without reading the JD first
-7. Use corporate-speak
-8. Ignore the tracker (every evaluated offer gets registered)
+1. Inventar experiência ou métricas
+2. Modificar cv.md ou arquivos de portfólio
+3. Submeter aplicações em nome do candidato
+4. Compartilhar número de telefone em mensagens geradas
+5. Recomendar comp abaixo do mercado
+6. Gerar um PDF sem ler a JD primeiro
+7. Usar linguagem corporativa vazia
+8. Ignorar o tracker (cada oferta avaliada é registrada)
 
-### ALWAYS
+### SEMPRE
 
-0. **Cover letter:** If the form allows it, ALWAYS include one. Same visual design as CV. JD quotes mapped to proof points. 1 page max.
-1. Read cv.md, _profile.md, and article-digest.md (if exists) before evaluating
-1b. **First evaluation of each session:** Run `node cv-sync-check.mjs`. If warnings, notify user.
-2. Detect the role archetype and adapt framing per _profile.md
-3. Cite exact lines from CV when matching
-4. Use WebSearch for comp and company data
-5. Register in tracker after evaluating
-6. Generate content in the language of the JD (EN default)
-7. Be direct and actionable -- no fluff
-8. Native tech English for generated text. Short sentences, action verbs, no passive voice.
-8b. Case study URLs in PDF Professional Summary (recruiter may only read this).
-9. **Tracker additions as TSV** -- NEVER edit applications.md directly. Write TSV in `batch/tracker-additions/`.
-10. **Include `**URL:**` in every report header.**
+0. **Carta de apresentação:** Se o formulário permitir, SEMPRE inclua uma. Mesma identidade visual do CV. Citações da JD mapeadas para proof points. Máximo 1 página.
+1. Leia cv.md, _profile.md e article-digest.md (se existir) antes de avaliar
+1b. **Primeira avaliação de cada sessão:** Execute `node cv-sync-check.mjs`. Se houver avisos, notifique o usuário.
+2. Detecte o arquétipo do cargo e adapte o framing por _profile.md
+3. Cite linhas exatas do CV ao fazer matches
+4. Use WebSearch para dados de comp e empresa
+5. Registre no tracker após avaliar
+6. Gere conteúdo no idioma da JD (EN como padrão)
+7. Seja direto e acionável -- sem enrolação
+8. Inglês técnico nativo para texto gerado. Frases curtas, verbos de ação, sem voz passiva.
+8b. URLs de case studies no Resumo Profissional do PDF (recruiter pode ler só isso).
+9. **Adições ao tracker como TSV** -- NUNCA edite applications.md diretamente. Escreva TSV em `batch/tracker-additions/`.
+10. **Inclua `**URL:**` no cabeçalho de todo relatório.**
 
-### Tools
+### Ferramentas
 
-| Tool | Use |
-|------|-----|
-| WebSearch | Comp research, trends, company culture, LinkedIn contacts, fallback for JDs |
-| WebFetch | Fallback for extracting JDs from static pages |
-| Playwright | Verify offers (browser_navigate + browser_snapshot). **NEVER 2+ agents with Playwright in parallel.** |
+| Ferramenta | Uso |
+|------------|-----|
+| WebSearch | Pesquisa de comp, tendências, cultura da empresa, contatos LinkedIn, fallback para JDs |
+| WebFetch | Fallback para extrair JDs de páginas estáticas |
+| Playwright | Verificar vagas (browser_navigate + browser_snapshot). **NUNCA 2+ agentes com Playwright em paralelo.** |
 | Read | cv.md, _profile.md, article-digest.md, cv-template.html |
-| Write | Temporary HTML for PDF, applications.md, reports .md |
-| Edit | Update tracker |
-| Canva MCP | Optional visual CV generation. Duplicate base design, edit text, export PDF. Requires `canva_resume_design_id` in profile.yml. |
+| Write | HTML temporário para PDF, applications.md, relatórios .md |
+| Edit | Atualizar tracker |
+| Canva MCP | Geração opcional de CV visual. Duplicar design base, editar texto, exportar PDF. Requer `canva_resume_design_id` em profile.yml. |
 | Bash | `node generate-pdf.mjs` |
 
-### Time-to-offer priority
-- Working demo + metrics > perfection
-- Apply sooner > learn more
-- 80/20 approach, timebox everything
+### Prioridade tempo-para-oferta
+- Demo funcional + métricas > perfeição
+- Aplicar mais cedo > aprender mais
+- Abordagem 80/20, timebox em tudo
 
 ---
 
-## Professional Writing & ATS Compatibility
+## Escrita Profissional e Compatibilidade ATS
 
-These rules apply to ALL generated text that ends up in candidate-facing documents: PDF summaries, bullets, cover letters, form answers, LinkedIn messages. They do NOT apply to internal evaluation reports.
+Estas regras se aplicam a TODO texto gerado que termina em documentos para o candidato: resumos de PDF, bullets, cartas de apresentação, respostas de formulário, mensagens LinkedIn. NÃO se aplicam a relatórios internos de avaliação.
 
-### Avoid cliché phrases
-- "passionate about" / "results-oriented" / "proven track record"
-- "leveraged" (use "used" or name the tool)
-- "spearheaded" (use "led" or "ran")
-- "facilitated" (use "ran" or "set up")
-- "synergies" / "robust" / "seamless" / "cutting-edge" / "innovative"
-- "in today's fast-paced world"
-- "demonstrated ability to" / "best practices" (name the practice)
+### Evite frases clichê
+- "apaixonado por" / "orientado a resultados" / "histórico comprovado"
+- "aproveitou" (use "usou" ou nomeie a ferramenta)
+- "liderou" (use "ledou" ou "executou")
+- "facilitou" (use "organizou" ou "configurou")
+- "sinergias" / "robusto" / "perfeito" / "de ponta" / "inovador"
+- "no mundo dinâmico de hoje"
+- "capacidade demonstrada de" / "melhores práticas" (nomeie a prática)
 
-### Unicode normalization for ATS
-`generate-pdf.mjs` automatically normalizes em-dashes, smart quotes, and zero-width characters to ASCII equivalents for maximum ATS compatibility. But avoid generating them in the first place.
+### Normalização Unicode para ATS
+`generate-pdf.mjs` normaliza automaticamente em-dashes, aspas inteligentes e caracteres de largura zero para equivalentes ASCII para máxima compatibilidade ATS. Mas evite gerá-los em primeiro lugar.
 
-### Vary sentence structure
-- Don't start every bullet with the same verb
-- Mix sentence lengths (short. Then longer with context. Short again.)
-- Don't always use "X, Y, and Z" — sometimes two items, sometimes four
+### Varied estrutura de frases
+- Não comece cada bullet com o mesmo verbo
+- Misture tamanhos de frases (curta. Depois mais longa com contexto. Curta novamente.)
+- Nem sempre use "X, Y e Z" -- às vezes dois itens, às vezes quatro
 
-### Prefer specifics over abstractions
-- "Cut p95 latency from 2.1s to 380ms" beats "improved performance"
-- "Postgres + pgvector for retrieval over 12k docs" beats "designed scalable RAG architecture"
-- Name tools, projects, and customers when allowed
+### Prefira específicos sobre abstrações
+- "Reduziu p95 latency de 2.1s para 380ms" é melhor que "melhorou performance"
+- "Postgres + pgvector para retrieval sobre 12k docs" é melhor que "desenhou arquitetura RAG escalável"
+- Nomeie ferramentas, projetos e clientes quando permitido
