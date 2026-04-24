@@ -100,7 +100,13 @@ Passionate Frontend Engineer with 4+ years of experience building high-traffic B
 
 ## Projects
 
-<!-- 待填入個人專案 -->
+### K-Line Prediction — AI-agent-directed web app
+**Live:** [Website](https://k-line-prediction-app.web.app) | [App](https://k-line-prediction-app.web.app/app) | 2026
+
+- **Built and deployed a K-line pattern-matching mini-app predicting short-term ETH/USDT direction** via top-N nearest-neighbor matching on historical candles, delivered through a six-agent pipeline (PM, Architect, Engineer, Reviewer, QA, Designer) directed by one operator — 40+ scoped tickets shipped in 7 days.
+- **Published 10 harness rules, each citing the specific bug and ticket that triggered it** — e.g., Content-Alignment Gate (PM holds handoff for user-voice sign-off, K-044), Pre-Design Dry-Run Proof (Architect dry-runs `git show <base>:<file>` before any "API unchanged" claim, K-013), Cross-Page Shared-Component Consistency (QA asserts DOM equivalence across all consuming routes, K-035).
+- **Enforced design-as-source-of-truth across the pipeline** — only Designer edits `.pen` design files; Engineer implements against exported JSON + PNG specs; Reviewer runs line-by-line parity between spec and rendered JSX.
+- **Delivered end-to-end full-stack** with React + TypeScript + Vite on Firebase Hosting, FastAPI + Python on Cloud Run, Vitest + Playwright + pytest coverage, plus a pre-commit SSOT gate blocking role-table drift across `roles.json` → README → protocol doc.
 
 ---
 
