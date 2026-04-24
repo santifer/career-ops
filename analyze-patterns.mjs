@@ -15,6 +15,7 @@
 import { readFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { load as yamlLoad } from 'js-yaml';
 
 const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
 const APPS_FILE = existsSync(join(CAREER_OPS, 'data/applications.md'))
@@ -79,61 +80,10 @@ function classifyOutcome(status) {
   return 'pending'; // evaluated
 }
 
-function parseScalar(value) {
-  const trimmed = value.trim();
-  if (trimmed === '' || /^null$/i.test(trimmed)) return null;
-  if (trimmed === '[]') return [];
-  if (/^(true|false)$/i.test(trimmed)) return trimmed.toLowerCase() === 'true';
-  if (/^-?\d+(?:\.\d+)?$/.test(trimmed)) return Number(trimmed);
-  if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
-    return trimmed.slice(1, -1);
-  }
-  return trimmed;
-}
-
 function normalizeList(value) {
   if (Array.isArray(value)) return value.map(v => String(v).trim()).filter(Boolean);
   if (value === null || value === undefined || value === '') return [];
   return [String(value).trim()].filter(Boolean);
-}
-
-function parseYamlLikeSummary(raw) {
-  const summary = {};
-  let activeListKey = null;
-
-  for (const rawLine of raw.split('\n')) {
-    const line = rawLine.replace(/\s+#.*$/, '');
-    if (!line.trim()) continue;
-
-    const listMatch = line.match(/^\s*-\s*(.*)$/);
-    if (listMatch && activeListKey) {
-      summary[activeListKey].push(parseScalar(listMatch[1]));
-      continue;
-    }
-
-    const kvMatch = line.match(/^([a-zA-Z_][a-zA-Z0-9_]*)\s*:\s*(.*)$/);
-    if (!kvMatch) {
-      activeListKey = null;
-      continue;
-    }
-
-    const key = kvMatch[1];
-    const value = kvMatch[2];
-    if (!MACHINE_SUMMARY_FIELDS.has(key)) {
-      activeListKey = null;
-      continue;
-    }
-
-    if (value.trim() === '') {
-      summary[key] = [];
-      activeListKey = key;
-    } else {
-      summary[key] = parseScalar(value);
-      activeListKey = null;
-    }
-  }
-
-  return summary;
 }
 
 function parseMachineSummary(content) {
@@ -144,7 +94,8 @@ function parseMachineSummary(content) {
   if (!raw) return null;
 
   try {
-    const parsed = raw.startsWith('{') ? JSON.parse(raw) : parseYamlLikeSummary(raw);
+    const parsed = yamlLoad(raw);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
     return Object.fromEntries(
       Object.entries(parsed).filter(([key]) => MACHINE_SUMMARY_FIELDS.has(key))
     );
@@ -171,7 +122,7 @@ top_strengths:
   - "Production evaluation pipelines"
 risk_level: "Medium"
 confidence: "High"
-next_action: "Apply with tailored CV"
+next_action: "Follow up on ticket #42 with tailored CV"
 \`\`\`
 `);
 
@@ -180,7 +131,7 @@ next_action: "Apply with tailored CV"
   if (summary?.score !== 4.4) failures.push('numeric score was not parsed');
   if (!Array.isArray(summary?.hard_stops) || summary.hard_stops.length !== 0) failures.push('empty list was not parsed');
   if (summary?.soft_gaps?.[0] !== 'No direct healthcare domain experience') failures.push('list item was not parsed');
-  if (summary?.next_action !== 'Apply with tailored CV') failures.push('scalar field was not parsed');
+  if (summary?.next_action !== 'Follow up on ticket #42 with tailored CV') failures.push('hash-containing scalar field was not parsed');
 
   if (failures.length > 0) {
     console.error(`Machine Summary parser self-test failed: ${failures.join('; ')}`);

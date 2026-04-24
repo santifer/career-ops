@@ -204,7 +204,8 @@ score: {X.X}
 legitimacy_tier: "{High Confidence | Proceed with Caution | Suspicious}"
 archetype: "{detectado}"
 final_decision: "{Apply | Consider | Research first | Skip}"
-hard_stops: []
+hard_stops:
+  - "{bloqueo o riesgo crítico}"
 soft_gaps:
   - "{gap no bloqueante}"
 top_strengths:
