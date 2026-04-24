@@ -82,9 +82,9 @@ function classifyOutcome(status) {
 
 function normalizeList(value) {
   if (Array.isArray(value)) return value.map(v => String(v).trim()).filter(Boolean);
-+ if (value === null || value === undefined || value === '') return [];
-+ if (typeof value === 'object') return [];
-+ return [String(value).trim()].filter(Boolean);
+  if (value === null || value === undefined || value === '') return [];
+  if (typeof value === 'object') return [];
+  return [String(value).trim()].filter(Boolean);
 }
 
 function normalizeScalar(value) {
