@@ -10,6 +10,8 @@ Career Ops needs a browser-based localhost cockpit that replaces and extends the
 
 The implementation will live inside `dashboard/` and use Go to serve HTML/CSS/JavaScript directly. There is no frontend build step, no React/Vite dependency, and no new database. The existing markdown/YAML/PDF files remain the source of truth.
 
+The V1 cockpit should be a new Go entrypoint beside the existing TUI and web-terminal bridge, not a replacement for them. Recommended path: `dashboard/cockpit/`. It can reuse `dashboard/internal/data`, `dashboard/internal/model`, and new focused internal packages as needed.
+
 ## Goals
 
 - Show the same core information the TUI provides today: applications, statuses, scores, reports, URLs, PDFs, notes, and progress metrics.
@@ -204,6 +206,21 @@ Write/action endpoints:
 
 The exact route names can be refined during implementation, but V1 must keep the same separation: read endpoints, controlled writes, and long-running action runs.
 
+## Server Entrypoint
+
+Create a new command:
+
+`dashboard/cockpit`
+
+Expected launch shape:
+
+```bash
+cd dashboard
+go run ./cockpit -path .. -port 8080
+```
+
+The existing TUI (`dashboard/main.go`) remains intact. The existing `dashboard/web` PTY terminal bridge remains intact. Mission Control is a separate localhost web app that reuses shared parsing/model packages instead of embedding terminal output.
+
 ## Auto Mode
 
 Auto Mode is a visible, auditable run. It must not be a black-box button.
@@ -240,6 +257,16 @@ Auto Mode pauses for:
 - Sensitive personal fields not covered by profile or requiring user choice.
 - Upload failures.
 - Form changes after filling.
+
+## Auto Mode Execution Model
+
+V1 uses a hybrid execution model:
+
+- Go owns run records, run state, internal commands, file updates, and dashboard synchronization.
+- Codex/browser automation owns external browser steps: reading the live form, filling fields, uploading the CV, and stopping at the review gate.
+- The dashboard surfaces the run and gate state, but does not pretend it can bypass browser/session/login constraints.
+
+This avoids overbuilding a browser automation engine in Go while still making Auto Mode visible and auditable in the cockpit.
 
 ## Runs and Audit Trail
 
@@ -310,12 +337,12 @@ Manual browser checks:
 - Keep the frontend as progressive HTML/CSS/JS: fetch JSON, render panels, post actions, poll runs.
 - Preserve the current TUI unless explicitly replacing it later.
 
-## Open Questions for Implementation Planning
+## Planning Notes
 
-- Whether to keep the existing `dashboard/web` PTY terminal server or create a new web command beside it.
-- Exact command name for launching the cockpit, such as `go run ./web -path .. -port 8080`.
-- Whether `scan.mjs` should be hardened before the cockpit exposes it as a button, since the current checkout had the script missing and restored from upstream.
-- Whether Auto Mode will be implemented as a Codex-mediated external automation first, or as a Go-managed run queue that asks Codex/browser tooling to act.
+- Keep the existing `dashboard/web` PTY terminal bridge unchanged unless implementation discovers a direct conflict.
+- Use `dashboard/cockpit` as the new web command.
+- Harden `scan.mjs` before exposing it as a primary cockpit button if implementation finds it still returns zero results for the current `portals.yml`.
+- Implement Auto Mode as Go-owned run state plus Codex/browser-owned external form automation.
 
 ## Approval
 
