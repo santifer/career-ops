@@ -1,0 +1,267 @@
+- generic [active] [ref=e1]:
+  - generic:
+    - region "Mensagem toast":
+      - heading "0 notificações no total" [level=2] [ref=e3]
+      - alert
+  - generic [ref=e4]:
+    - generic [ref=e6]:
+      - button "Pular para pesquisa" [ref=e7] [cursor=pointer]:
+        - generic [ref=e8]: Pular para pesquisa
+      - button "Pular para conteúdo principal" [ref=e9] [cursor=pointer]:
+        - generic [ref=e10]: Pular para conteúdo principal
+      - button "Atalhos do teclado" [ref=e11] [cursor=pointer]:
+        - generic [ref=e12]: Atalhos do teclado
+      - button "Fechar menu pular" [ref=e13] [cursor=pointer]:
+        - img [ref=e14]
+        - generic [ref=e16]: Fechar menu pular
+    - banner "Navegação geral" [ref=e17]:
+      - generic [ref=e18]:
+        - link "LinkedIn" [ref=e19] [cursor=pointer]:
+          - /url: https://www.linkedin.com/feed/?nis=true
+          - img "LinkedIn" [ref=e22]:
+            - img [ref=e23]
+        - generic [ref=e27]:
+          - generic [ref=e30]:
+            - generic [ref=e31]:
+              - generic [ref=e32]: Pesquisar cargo, competência ou empresa
+              - img [ref=e33]
+            - combobox "Pesquisar cargo, competência ou empresa" [ref=e34]: Solventum Manufacturing Controller Sumare
+            - textbox [disabled]
+          - generic [ref=e37]:
+            - generic [ref=e38]:
+              - generic [ref=e39]: Cidade, estado ou código postal
+              - img [ref=e40]
+            - combobox "Cidade, estado ou código postal" [ref=e41]: Brasil
+            - textbox [disabled]
+          - button "Pesquisar" [ref=e42] [cursor=pointer]
+        - navigation "Navegação principal" [ref=e43]:
+          - list [ref=e44]:
+            - listitem [ref=e45]:
+              - link "atualizações do feed novas notificações Início" [ref=e46] [cursor=pointer]:
+                - /url: https://www.linkedin.com/feed/?nis=true&
+                - generic [ref=e47]:
+                  - generic [ref=e50]: atualizações do feed novas notificações
+                  - img [ref=e54]
+                - generic "Início" [ref=e56]
+            - listitem [ref=e57]:
+              - link "2 atualizações de rede novas notificações Minha rede" [ref=e58] [cursor=pointer]:
+                - /url: https://www.linkedin.com/mynetwork/?
+                - generic [ref=e59]:
+                  - generic [ref=e60]:
+                    - generic [ref=e61]: "2"
+                    - generic [ref=e62]: 2 atualizações de rede novas notificações
+                  - img [ref=e66]
+                - generic "Minha rede" [ref=e68]
+            - listitem [ref=e69]:
+              - link "Vagas" [ref=e70] [cursor=pointer]:
+                - /url: https://www.linkedin.com/jobs/?
+                - img [ref=e74]
+                - generic "Vagas" [ref=e76]
+            - listitem [ref=e77]:
+              - link "Mensagens" [ref=e78] [cursor=pointer]:
+                - /url: https://www.linkedin.com/messaging/?
+                - img [ref=e82]
+                - generic "Mensagens" [ref=e84]
+            - listitem [ref=e85]:
+              - link "10 novas notificações Notificações" [ref=e86] [cursor=pointer]:
+                - /url: https://www.linkedin.com/notifications/?
+                - generic [ref=e87]:
+                  - generic [ref=e88]:
+                    - generic [ref=e89]: "10"
+                    - generic [ref=e90]: 10 novas notificações
+                  - img [ref=e94]
+                - generic "Notificações" [ref=e96]
+            - listitem [ref=e97]:
+              - button "Fernando Xavier Eu" [ref=e99] [cursor=pointer]:
+                - img "Fernando Xavier" [ref=e100]
+                - generic [ref=e101]:
+                  - text: Eu
+                  - img [ref=e102]
+            - listitem [ref=e104]:
+              - button "Para negócios" [ref=e106] [cursor=pointer]:
+                - img [ref=e110]
+                - generic "Para negócios" [ref=e112]:
+                  - text: Para negócios
+                  - img [ref=e113]
+            - listitem [ref=e115]:
+              - link "Veicular anúncio" [ref=e116] [cursor=pointer]:
+                - /url: https://www.linkedin.com/campaignmanager/accounts?
+                - img [ref=e120]
+                - generic "Veicular anúncio" [ref=e123]
+    - generic [ref=e125]:
+      - region "filtros de pesquisa" [ref=e128]:
+        - heading "Pesquisa de vagas" [level=2] [ref=e129]
+      - main [ref=e140]:
+        - generic [ref=e142]:
+          - generic [ref=e143]:
+            - generic [ref=e144]:
+              - generic [ref=e145]:
+                - 'generic "Solventum Manufacturing Controller Sumare em: Brasil" [ref=e146]'
+                - generic [ref=e150]: 42 resultados
+              - generic [ref=e153] [cursor=pointer]:
+                - generic [ref=e154]: Configurar alerta
+                - generic [ref=e155]: "Configurar alerta de vaga para Solventum Manufacturing Controller Sumare em: Brasil"
+                - 'switch "Configurar alerta de vaga para Solventum Manufacturing Controller Sumare em: Brasil"'
+            - generic [ref=e156]:
+              - button "Pular para detalhes da vaga ativa":
+                - generic [ref=e157] [cursor=pointer]: Pular para detalhes da vaga ativa
+              - button "Pular para resultado de pesquisa ativa":
+                - generic [ref=e158] [cursor=pointer]: Pular para resultado de pesquisa ativa
+              - list [ref=e159]:
+                - listitem [ref=e160]:
+                  - generic [ref=e163] [cursor=pointer]:
+                    - generic [ref=e164]:
+                      - img "Logo da empresa IDEMIA" [ref=e168]
+                      - generic [ref=e169]:
+                        - link "Manufacturing Controller with verification" [ref=e171]:
+                          - /url: /jobs/view/4401341879/?trk=flagship3_search_srp_jobs
+                          - generic [ref=e172]:
+                            - strong [ref=e173]: Manufacturing Controller
+                            - img [ref=e175]
+                          - generic [ref=e177]: Manufacturing Controller with verification
+                        - generic [ref=e179]: IDEMIA
+                        - list [ref=e181]:
+                          - listitem [ref=e182]:
+                            - generic [ref=e183]: Cotia, São Paulo, Brasil (Presencial)
+                    - list [ref=e185]:
+                      - listitem [ref=e186]
+                - listitem [ref=e188]:
+                  - generic [ref=e191] [cursor=pointer]:
+                    - generic [ref=e192]:
+                      - img "Logo da empresa Konecranes" [ref=e196]
+                      - generic [ref=e197]:
+                        - link "Business Controller with verification" [ref=e199]:
+                          - /url: /jobs/view/4403407132/?trk=flagship3_search_srp_jobs
+                          - generic [ref=e200]:
+                            - strong [ref=e201]: Business Controller
+                            - img [ref=e203]
+                          - generic [ref=e205]: Business Controller with verification
+                        - generic [ref=e207]: Konecranes
+                        - list [ref=e209]:
+                          - listitem [ref=e210]:
+                            - generic [ref=e211]: Cotia, São Paulo, Brasil (Presencial)
+                    - list [ref=e213]:
+                      - listitem [ref=e214]
+                - listitem [ref=e216]:
+                  - generic [ref=e219] [cursor=pointer]:
+                    - generic [ref=e220]:
+                      - img "Logo da empresa Solventum" [ref=e224]
+                      - generic [ref=e225]:
+                        - link "Manufacturing Controller." [ref=e227]:
+                          - /url: /jobs/view/4369669245/?trk=flagship3_search_srp_jobs
+                          - strong [ref=e229]: Manufacturing Controller.
+                          - generic [ref=e230]: Manufacturing Controller.
+                        - generic [ref=e232]: Solventum
+                        - list [ref=e234]:
+                          - listitem [ref=e235]:
+                            - generic [ref=e236]: Sumaré, São Paulo, Brasil (Presencial)
+                    - list [ref=e238]:
+                      - listitem [ref=e239]
+                - listitem [ref=e241]:
+                  - generic [ref=e244] [cursor=pointer]:
+                    - generic [ref=e245]:
+                      - img "Logo da empresa Griffith Foods" [ref=e249]
+                      - generic [ref=e250]:
+                        - link "Regional Controller with verification" [ref=e252]:
+                          - /url: /jobs/view/4399909784/?trk=flagship3_search_srp_jobs
+                          - generic [ref=e253]:
+                            - strong [ref=e254]: Regional Controller
+                            - img [ref=e256]
+                          - generic [ref=e258]: Regional Controller with verification
+                        - generic [ref=e260]: Griffith Foods
+                        - list [ref=e262]:
+                          - listitem [ref=e263]:
+                            - generic [ref=e264]: Jundiaí, São Paulo, Brasil (Híbrido)
+                    - list [ref=e266]:
+                      - listitem [ref=e267]
+                - listitem [ref=e269]:
+                  - generic [ref=e272] [cursor=pointer]:
+                    - generic [ref=e273]:
+                      - img "Logo da empresa dsm-firmenich" [ref=e277]
+                      - generic [ref=e278]:
+                        - link "Business Controller Associate Director LATAM" [ref=e280]:
+                          - /url: /jobs/view/4399957508/?trk=flagship3_search_srp_jobs
+                          - strong [ref=e282]: Business Controller Associate Director LATAM
+                          - generic [ref=e283]: Business Controller Associate Director LATAM
+                        - generic [ref=e285]: dsm-firmenich
+                        - list [ref=e287]:
+                          - listitem [ref=e288]:
+                            - generic [ref=e289]: São Paulo e Região (Híbrido)
+                    - list [ref=e291]:
+                      - listitem [ref=e292]
+                - listitem [ref=e294]:
+                  - generic [ref=e297] [cursor=pointer]:
+                    - generic [ref=e298]:
+                      - img "Logo da empresa Waters Corporation" [ref=e302]
+                      - generic [ref=e303]:
+                        - link "Controller with verification" [ref=e305]:
+                          - /url: /jobs/view/4390686582/?trk=flagship3_search_srp_jobs
+                          - generic [ref=e306]:
+                            - strong [ref=e307]: Controller
+                            - img [ref=e309]
+                          - generic [ref=e311]: Controller with verification
+                        - generic [ref=e313]: Waters Corporation
+                        - list [ref=e315]:
+                          - listitem [ref=e316]:
+                            - generic [ref=e317]: Barueri, São Paulo, Brasil (Presencial)
+                    - list [ref=e319]:
+                      - listitem [ref=e320]
+                - listitem [ref=e322]:
+                  - generic [ref=e325] [cursor=pointer]:
+                    - generic [ref=e326]:
+                      - img "Logo da empresa Akad Seguros" [ref=e330]
+                      - generic [ref=e331]:
+                        - link "Controller" [ref=e333]:
+                          - /url: /jobs/view/4391136648/?trk=flagship3_search_srp_jobs
+                          - strong [ref=e335]: Controller
+                          - generic [ref=e336]: Controller
+                        - generic [ref=e338]: Akad Seguros
+                        - list [ref=e340]:
+                          - listitem [ref=e341]:
+                            - generic [ref=e342]: São Paulo, São Paulo, Brasil (Presencial)
+                    - list [ref=e344]:
+                      - listitem [ref=e345]
+              - generic [ref=e347]:
+                - list [ref=e350]:
+                  - listitem [ref=e351]:
+                    - button "Página 1" [ref=e352] [cursor=pointer]: "1"
+                - generic "Conteúdo do rodapé do LinkedIn" [ref=e354]
+          - generic "Manufacturing Controller" [ref=e358]:
+            - generic [ref=e362]:
+              - generic [ref=e366]:
+                - generic [ref=e369]:
+                  - button "Compartilhar" [ref=e372] [cursor=pointer]:
+                    - img [ref=e373]
+                    - generic [ref=e374]: Compartilhar
+                  - button "Exibir mais opções" [ref=e376] [cursor=pointer]:
+                    - img [ref=e377]
+                    - generic [ref=e379]: Exibir mais opções
+                - heading "Manufacturing Controller" [level=1] [ref=e382]:
+                  - link "Manufacturing Controller" [ref=e383] [cursor=pointer]:
+                    - /url: /jobs/view/4401341879/?alternateChannel=search&refId=NotAvailable&trackingId=NKekJVtBTzOKMHg0YeraVw%3D%3D&trk=d_flagship3_search_srp_jobs
+                - generic:
+                  - list
+              - article [ref=e396]:
+                - heading "Sobre a vaga" [level=2] [ref=e399]
+              - alert [ref=e434]: Carregando detalhes da vaga
+    - generic:
+      - generic:
+        - complementary:
+          - generic [ref=e448]:
+            - generic [ref=e450] [cursor=pointer]:
+              - img "Fernando Xavier" [ref=e452]
+              - button "Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas." [ref=e453]:
+                - generic [ref=e454]:
+                  - generic [ref=e455]: Mensagens
+                  - generic [ref=e456]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+            - generic [ref=e457]:
+              - button "Abrir o menu suspenso de mensagens" [ref=e459] [cursor=pointer]:
+                - img "Abrir o menu suspenso de mensagens" [ref=e460]
+              - button "Escrever mensagem" [ref=e462] [cursor=pointer]:
+                - img [ref=e463]
+                - generic [ref=e464]: Escrever mensagem
+              - button "Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas." [ref=e465] [cursor=pointer]:
+                - img [ref=e466]
+                - generic [ref=e467]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+        - complementary "Assistente de IA para obter ajuda com sua carreira, vagas, etc."
+  - region [ref=e468]

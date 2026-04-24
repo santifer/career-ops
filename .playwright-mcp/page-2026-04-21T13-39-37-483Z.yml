@@ -1,0 +1,823 @@
+- generic [active] [ref=e1]:
+  - generic:
+    - region "Mensagem toast":
+      - heading "0 notificações no total" [level=2] [ref=e3]
+      - alert
+  - region [ref=e4]
+  - generic [ref=e288]:
+    - img [ref=e290]
+    - paragraph [ref=e294]:
+      - text: Ocorreu um erro ao processar seu pagamento.
+      - link "Atualize sua(s) forma(s) de pagamento" [ref=e295] [cursor=pointer]:
+        - /url: https://www.linkedin.com/manage/purchases-payments/purchases/485025203/payments?trk=global_alert
+      - text: .
+    - button "Fechar" [ref=e296] [cursor=pointer]:
+      - img [ref=e297]
+      - generic [ref=e299]: Fechar
+  - generic [ref=e5]:
+    - generic [ref=e7]:
+      - button "Pular para pesquisa" [ref=e8] [cursor=pointer]:
+        - generic [ref=e9]: Pular para pesquisa
+      - button "Pular para conteúdo principal" [ref=e10] [cursor=pointer]:
+        - generic [ref=e11]: Pular para conteúdo principal
+      - button "Atalhos do teclado" [ref=e12] [cursor=pointer]:
+        - generic [ref=e13]: Atalhos do teclado
+      - button "Fechar menu pular" [ref=e14] [cursor=pointer]:
+        - img [ref=e15]
+        - generic [ref=e17]: Fechar menu pular
+    - banner "Navegação geral" [ref=e18]:
+      - generic [ref=e19]:
+        - link "LinkedIn" [ref=e20] [cursor=pointer]:
+          - /url: https://www.linkedin.com/feed/?nis=true
+          - img "LinkedIn" [ref=e23]:
+            - img [ref=e24]
+        - generic [ref=e28]:
+          - combobox "Pesquisar" [ref=e29]
+          - generic:
+            - img
+        - navigation "Navegação principal" [ref=e30]:
+          - list [ref=e31]:
+            - listitem [ref=e32]:
+              - link "atualizações do feed novas notificações Início" [ref=e33] [cursor=pointer]:
+                - /url: https://www.linkedin.com/feed/?nis=true&
+                - generic [ref=e34]:
+                  - generic [ref=e37]: atualizações do feed novas notificações
+                  - img [ref=e41]
+                - generic "Início" [ref=e43]
+            - listitem [ref=e44]:
+              - link "2 atualizações de rede novas notificações Minha rede" [ref=e45] [cursor=pointer]:
+                - /url: https://www.linkedin.com/mynetwork/?
+                - generic [ref=e46]:
+                  - generic [ref=e47]:
+                    - generic [ref=e48]: "2"
+                    - generic [ref=e49]: 2 atualizações de rede novas notificações
+                  - img [ref=e53]
+                - generic "Minha rede" [ref=e55]
+            - listitem [ref=e56]:
+              - link "Vagas" [ref=e57] [cursor=pointer]:
+                - /url: https://www.linkedin.com/jobs/?
+                - img [ref=e61]
+                - generic "Vagas" [ref=e63]
+            - listitem [ref=e64]:
+              - link "Mensagens" [ref=e65] [cursor=pointer]:
+                - /url: https://www.linkedin.com/messaging/?
+                - img [ref=e69]
+                - generic "Mensagens" [ref=e71]
+            - listitem [ref=e72]:
+              - link "15 novas notificações Notificações" [ref=e73] [cursor=pointer]:
+                - /url: https://www.linkedin.com/notifications/?
+                - generic [ref=e74]:
+                  - generic [ref=e75]:
+                    - generic [ref=e76]: "15"
+                    - generic [ref=e77]: 15 novas notificações
+                  - img [ref=e81]
+                - generic "Notificações" [ref=e83]
+            - listitem [ref=e84]:
+              - button "Fernando Xavier Eu" [ref=e86] [cursor=pointer]:
+                - img "Fernando Xavier" [ref=e87]
+                - generic [ref=e88]:
+                  - text: Eu
+                  - img [ref=e89]
+            - listitem [ref=e91]:
+              - button "Para negócios" [ref=e93] [cursor=pointer]:
+                - img [ref=e97]
+                - generic "Para negócios" [ref=e99]:
+                  - text: Para negócios
+                  - img [ref=e100]
+            - listitem [ref=e102]:
+              - link "Veicular anúncio" [ref=e103] [cursor=pointer]:
+                - /url: https://www.linkedin.com/campaignmanager/accounts?
+                - img [ref=e107]
+                - generic "Veicular anúncio" [ref=e110]
+    - generic [ref=e111]:
+      - generic [ref=e114]:
+        - main [ref=e115]:
+          - generic [ref=e118]:
+            - generic [ref=e122]:
+              - generic [ref=e123]:
+                - generic [ref=e124]:
+                  - link "Logo da empresa Pulsus" [ref=e125] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/company/pulsusmobi/life
+                    - img "Logo da empresa Pulsus" [ref=e128]
+                  - link "Pulsus" [ref=e300] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/company/pulsusmobi/life
+                - generic [ref=e131]:
+                  - button "Compartilhar" [ref=e134] [cursor=pointer]:
+                    - img [ref=e135]
+                    - generic [ref=e137]: Compartilhar
+                  - button "Exibir mais opções" [ref=e139] [cursor=pointer]:
+                    - img [ref=e140]
+                    - generic [ref=e142]: Exibir mais opções
+              - heading "Controller | Híbrido | São Paulo - SP" [level=1] [ref=e145]
+              - generic [ref=e148]:
+                - generic [ref=e301]: Brasil
+                - generic [ref=e302]: ·
+                - generic [ref=e304]: há 1 mês
+                - generic [ref=e305]: ·
+                - generic [ref=e306]: Mais de 100 pessoas clicaram em Candidatar-se
+                - paragraph [ref=e307]:
+                  - generic [ref=e308]: Respostas gerenciadas fora do LinkedIn
+              - generic [ref=e157]:
+                - button "Corresponde às suas preferências de vaga e o tipo de local de trabalho é Remoto." [ref=e309] [cursor=pointer]:
+                  - strong [ref=e312]:
+                    - img [ref=e314]
+                    - text: Remoto
+                  - generic [ref=e316]: Corresponde às suas preferências de vaga e o tipo de local de trabalho é Remoto.
+                - button "Corresponde às suas preferências de vaga e o tipo de vaga é Tempo integral." [ref=e317] [cursor=pointer]:
+                  - strong [ref=e320]:
+                    - img [ref=e322]
+                    - text: Tempo integral
+                  - generic [ref=e324]: Corresponde às suas preferências de vaga e o tipo de vaga é Tempo integral.
+              - generic [ref=e175]:
+                - link "Candidatar-se à vaga de Controller | Híbrido | São Paulo - SP no site da empresa" [ref=e178] [cursor=pointer]:
+                  - img [ref=e179]
+                  - generic [ref=e181]: Candidatar-se
+                - button "Salvar Controller | Híbrido | São Paulo - SP na Pulsus" [ref=e325] [cursor=pointer]:
+                  - generic [ref=e326]: Salvar
+                  - generic [ref=e327]: Salvar Controller | Híbrido | São Paulo - SP na Pulsus
+            - generic [ref=e185]:
+              - heading "Pessoas que você pode contatar" [level=2] [ref=e328]
+              - generic [ref=e331]:
+                - generic [ref=e332]:
+                  - generic [ref=e333]:
+                    - list [ref=e334]:
+                      - listitem [ref=e335]:
+                        - img "Logo de Fundação Getulio Vargas" [ref=e337]
+                    - generic [ref=e338]: Logo de Fundação Getulio Vargas
+                  - generic [ref=e339]: Ex-alunos da instituição de ensino Fundação Getulio Vargas
+                - button "Exibir todos" [ref=e340] [cursor=pointer]:
+                  - generic [ref=e341]: Exibir todos
+            - generic [ref=e194]:
+              - article [ref=e195]:
+                - generic [ref=e197]:
+                  - heading "Sobre a vaga" [level=2] [ref=e198]
+                  - paragraph [ref=e343]:
+                    - strong [ref=e345]: Vaga para Controller
+                    - strong [ref=e347]: na Pulsus
+                    - text: Somos apaixonados por tecnologia, inovação e transformação digital, sempre buscando otimizar processos por meio de soluções inteligentes e eficientes.
+                    - text: Buscamos pessoas com experiência em gestão financeira, análise de dados e controle orçamentário, que demonstrem forte perfil analítico, proatividade e habilidade para transformar desafios em oportunidades estratégicas, que compartilhem do mesmo propósito da Pulsus e queiram crescer conosco.
+                    - strong [ref=e349]: "O que esperamos de você:"
+                    - list [ref=e351]:
+                      - listitem [ref=e352]: Trabalhe com autonomia, sem medo de errar.
+                      - listitem [ref=e353]: Tenha sede por conhecimento e compartilhar isso com a equipe.
+                      - listitem [ref=e354]: Seja aberto pra mudanças.
+                      - listitem [ref=e355]: Tenha sentimento de dono e se engaje com o crescimento da Pulsus.
+                      - listitem [ref=e356]: Seja colaborativo e respeite o espaço do outro.
+                      - listitem [ref=e357]: Nos ajude a fascinar o cliente.
+                    - strong [ref=e359]: Responsabilidades e atribuições
+                    - list [ref=e361]:
+                      - listitem [ref=e362]: Gerenciar o fluxo de caixa, realizando projeções e análises de CAR, CAP e aplicações financeiras, garantindo a saúde financeira da organização;
+                      - listitem [ref=e363]: Planejar e garantir o uso adequado do sistema Omie, contribuindo para a eficiência e automação dos processos financeiros;
+                      - listitem [ref=e364]: Assegurar a conformidade com as regulações contábeis e fiscais, atuando em conjunto com o escritório contábil para validar fechamentos e manter a integridade dos dados.
+                      - listitem [ref=e365]: Desenvolver estratégias de otimização e planejamento tributário, identificando oportunidades para redução de custos e mitigação de riscos;
+                      - listitem [ref=e366]: Auxiliar na elaboração e controle do orçamento da Pulsus, assegurando alinhamento com as metas estratégicas da empresa;
+                      - listitem [ref=e367]: Definir, acompanhar e analisar KPIs financeiros e indicadores de Unit Economics (como Fluxo de Caixa, MRR, CAC, entre outros) para subsidiar decisões estratégicas;
+                      - listitem [ref=e368]: Elaborar análises financeiras ad hoc, proporcionando insights valiosos para a tomada de decisão;
+                      - listitem [ref=e369]: Manter uma comunicação efetiva com escritórios de contabilidade e instituições bancárias, fortalecendo parcerias estratégicas;
+                      - listitem [ref=e370]: Auditar as atividades de CAR e CAP;
+                      - listitem [ref=e371]: Elevar a eficiência operacional do departamento financeiro através de identificação de oportunidades de melhoria, desenvolvimento de automatizações dos processos financeiros e o uso da IA.
+                    - strong [ref=e373]: Requisitos e qualificações
+                    - strong [ref=e375]: "Para essa posição precisamos que você tenha as seguintes experiências/conhecimentos:"
+                    - list [ref=e377]:
+                      - listitem [ref=e378]: Formação superior em Administração, Economia, Finanças, Contabilidade ou áreas correlatas;
+                      - listitem [ref=e379]: Experiência comprovada em planejamento financeiro, controle orçamentário e análise de fluxo de caixa;
+                      - listitem [ref=e380]: Domínio avançado do Excel/Google Sheets e conhecimentos em ferramentas de BI (como Looker Studio), além de experiência com sistemas ERP, preferencialmente Omie;
+                      - listitem [ref=e381]: Conhecimento das regulamentações contábeis e fiscais;
+                      - listitem [ref=e382]: Disponibilidade de atuação no modelo híbrido em São Paulo-SP.
+                    - strong [ref=e384]: "Para esta vaga, será diferencial:"
+                    - list [ref=e386]:
+                      - listitem [ref=e387]: Pós-graduação ou MBA em Finanças/Controladoria;
+                      - listitem [ref=e388]: Experiência com IA para aumento de eficiência pessoal/empresarial;
+                      - listitem [ref=e389]: Experiência prévia em empresas SaaS B2B;
+                      - listitem [ref=e390]: Certificações e cursos na área financeira ou de controladoria (como CPA-10, CPA-20, CFP, entre outros).
+                    - strong [ref=e392]: Informações adicionais
+                    - strong [ref=e394]: "Nossos benefícios:"
+                    - list [ref=e396]:
+                      - listitem [ref=e397]: Vale refeição/alimentação em parceria com o Ifood;
+                      - listitem [ref=e398]: "Plano de saúde: Sul América - Clássico Apartamento ou Especial 100 R1 ou Unimed Unimax;"
+                      - listitem [ref=e399]: "Plano odontológico: Sul América ou Bradesco Odonto;"
+                      - listitem [ref=e400]: Seguro de vida;
+                      - listitem [ref=e401]: Participação nos resultados de acordo com o atingimento das metas da empresa;
+                      - listitem [ref=e402]: Day off de aniversário.
+                    - strong [ref=e404]: "Nossas parcerias e convênios:"
+                    - list [ref=e406]:
+                      - listitem [ref=e407]: Wellhub (Gympass)
+                      - listitem [ref=e408]: "Starbem: descontos e consultas de apoio à saúde mental."
+              - button "Clicar para ver mais detalhes" [ref=e200] [cursor=pointer]:
+                - img [ref=e201]
+                - generic [ref=e203]: Ver mais
+            - generic [ref=e205]:
+              - generic [ref=e206]:
+                - heading "Configurar alerta para vagas semelhantes" [level=2] [ref=e207]
+                - generic [ref=e209]: Controlador, Brasil
+              - generic [ref=e211] [cursor=pointer]:
+                - generic [ref=e212]: Desativada
+                - generic [ref=e213]: Configurar alerta
+                - switch "Configurar alerta"
+            - generic [ref=e409]:
+              - button "Fechar cartão promocional de serviços" [ref=e410] [cursor=pointer]:
+                - img [ref=e411]
+                - generic [ref=e413]: Fechar cartão promocional de serviços
+              - generic [ref=e415]:
+                - heading "Veja uma seleção de ferramentas de IA para sua pesquisa de vagas" [level=2] [ref=e416]
+                - paragraph [ref=e417]: Receba uma oferta de emprego mais rápido com a ajuda de ferramentas de IA criadas por empresas certificadas, como Kickresume, Exponent Interview Prep e muito mais.
+                - link "Começar" [ref=e418] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/ai-tools/?sectionType=career-coaching
+                  - generic [ref=e419]: Começar
+            - generic [ref=e420]:
+              - generic [ref=e421]:
+                - generic [ref=e422]:
+                  - img "Premium" [ref=e424]:
+                    - img [ref=e425]
+                  - button "Saiba mais sobre estatísticas sobre candidatos" [ref=e428] [cursor=pointer]:
+                    - img [ref=e429]
+                - heading "Veja como sua candidatura se compara à de outras pessoas" [level=2] [ref=e431]
+                - generic [ref=e433]:
+                  - heading "Pessoas que clicaram em Candidate-se" [level=3] [ref=e434]
+                  - list [ref=e435]:
+                    - listitem [ref=e436]:
+                      - generic [ref=e437]: "915"
+                      - generic [ref=e438]: no total
+                    - listitem [ref=e439]:
+                      - generic [ref=e440]: "26"
+                      - generic [ref=e441]: no último dia
+                - generic [ref=e442]:
+                  - generic [ref=e443]:
+                    - heading "Nível de experiência do candidato" [level=3] [ref=e444]
+                    - list [ref=e445]:
+                      - listitem [ref=e446]:
+                        - paragraph [ref=e447]: 40% de candidatos com nível Sênior
+                        - progressbar [ref=e448]
+                      - listitem [ref=e449]:
+                        - paragraph [ref=e450]: 29% de candidatos com nível Diretor
+                        - progressbar [ref=e451]
+                      - listitem [ref=e452]:
+                        - paragraph [ref=e453]: 11% de candidatos com nível Iniciante
+                        - progressbar [ref=e454]
+                      - listitem [ref=e455]:
+                        - paragraph [ref=e456]: 11% de candidatos com nível Gerente
+                        - progressbar [ref=e457]
+                  - generic [ref=e458]:
+                    - heading "Nível de formação acadêmica do candidato" [level=3] [ref=e459]
+                    - list [ref=e460]:
+                      - listitem [ref=e461]:
+                        - generic [ref=e462]: 57%
+                        - generic [ref=e463]: tem Pós-graduação Lato Sensu - MBA (semelhante ao seu)
+                      - listitem [ref=e464]:
+                        - generic [ref=e465]: 10%
+                        - generic [ref=e466]: tem Bacharelado
+                      - listitem [ref=e467]:
+                        - generic [ref=e468]: 9%
+                        - generic [ref=e469]: tem Pós-graduação
+                      - listitem [ref=e470]:
+                        - generic [ref=e471]: 24%
+                        - generic [ref=e472]: tem outros diplomas
+              - generic [ref=e473]:
+                - generic [ref=e474]:
+                  - img "Premium" [ref=e475]:
+                    - img [ref=e476]
+                  - button "Saiba mais sobre estatísticas sobre empresas" [ref=e479] [cursor=pointer]:
+                    - img "Saiba mais sobre estatísticas sobre empresas" [ref=e480]
+                - heading "Estatísticas exclusivas de pessoas à procura de emprego sobre a Pulsus" [level=2] [ref=e482]
+                - generic [ref=e483]:
+                  - heading "Última tendência de contratação" [level=3] [ref=e484]
+                  - generic [ref=e485]:
+                    - list [ref=e486]:
+                      - listitem [ref=e487]:
+                        - paragraph [ref=e488]: "130"
+                        - paragraph [ref=e489]: funcionários no total
+                      - listitem [ref=e490]:
+                        - paragraph [ref=e491]: 4%
+                        - paragraph [ref=e493]: toda a empresa
+                        - paragraph [ref=e494]: Crescimento em 2 anos
+                        - generic [ref=e495]: 4% de redução
+                    - region "Chart. Highcharts interactive chart." [ref=e498]:
+                      - region "Chart screen reader information.":
+                        - generic [ref=e499]:
+                          - heading "Chart" [level=4] [ref=e500]
+                          - generic [ref=e501]: Chart with 25 data points.
+                          - generic [ref=e502]: "The chart has 1 X axis displaying Time. Range: 2023-12-13 12:00:00 to 2026-05-07 12:00:00."
+                          - generic [ref=e503]: "The chart has 1 Y axis displaying values. Range: 0 to 150."
+                      - img "Interactive chart" [ref=e508]:
+                        - generic [ref=e520]:
+                          - img "1. April 2024, 136 funcionários" [ref=e521]
+                          - img "2. May 2024, 137 funcionários, increase 1% do mês passado" [ref=e522]
+                          - img "3. June 2024, 133 funcionários, decrease 3% do mês passado" [ref=e523]
+                          - img "4. July 2024, 130 funcionários, decrease 2% do mês passado" [ref=e524]
+                          - img "5. August 2024, 129 funcionários, decrease 1% do mês passado" [ref=e525]
+                          - img "6. September 2024, 129 funcionários, neutral 0% do mês passado" [ref=e526]
+                          - img "7. October 2024, 127 funcionários, decrease 2% do mês passado" [ref=e527]
+                          - img "8. November 2024, 127 funcionários, neutral 0% do mês passado" [ref=e528]
+                          - img "9. December 2024, 126 funcionários, decrease 1% do mês passado" [ref=e529]
+                          - img "10. January 2025, 126 funcionários, neutral 0% do mês passado" [ref=e530]
+                          - img "11. February 2025, 125 funcionários, decrease 1% do mês passado" [ref=e531]
+                          - img "12. March 2025, 125 funcionários, neutral 0% do mês passado" [ref=e532]
+                          - img "13. April 2025, 126 funcionários, increase 1% do mês passado" [ref=e533]
+                          - img "14. May 2025, 128 funcionários, increase 2% do mês passado" [ref=e534]
+                          - img "15. June 2025, 128 funcionários, neutral 0% do mês passado" [ref=e535]
+                          - img "16. July 2025, 126 funcionários, decrease 2% do mês passado" [ref=e536]
+                          - img "17. August 2025, 126 funcionários, neutral 0% do mês passado" [ref=e537]
+                          - img "18. September 2025, 125 funcionários, decrease 1% do mês passado" [ref=e538]
+                          - img "19. October 2025, 126 funcionários, increase 1% do mês passado" [ref=e539]
+                          - img "20. November 2025, 128 funcionários, increase 2% do mês passado" [ref=e540]
+                          - img "21. December 2025, 129 funcionários, increase 1% do mês passado" [ref=e541]
+                          - img "22. January 2026, 131 funcionários, increase 2% do mês passado" [ref=e542]
+                          - img "23. February 2026, 130 funcionários, decrease 1% do mês passado" [ref=e543]
+                          - img "24. March 2026, 130 funcionários, neutral 0% do mês passado" [ref=e544]
+                          - img "25. April 2026, 130 funcionários, neutral 0% do mês passado" [ref=e545]
+                        - generic [ref=e546]:
+                          - generic [ref=e547]: abr. de 2024
+                          - generic [ref=e548]: out. de 2024
+                          - generic [ref=e549]: abr. de 2025
+                          - generic [ref=e550]: out. de 2025
+                          - generic [ref=e551]: abr. de 2026
+                        - generic [ref=e552]:
+                          - generic [ref=e553]: "0"
+                          - generic [ref=e554]: "50"
+                          - generic [ref=e555]: "100"
+                          - generic [ref=e556]: "150"
+                      - generic [ref=e558]: End of interactive chart.
+                    - generic [ref=e559]:
+                      - img [ref=e560]
+                      - text: Tempo médio do funcionário na empresa ‧
+                      - strong [ref=e563]: 3,9 anos
+                - generic [ref=e564]:
+                  - heading "A empresa Pulsus contrata pessoas de algumas dessas empresas e instituições de ensino" [level=3] [ref=e565]
+                  - list [ref=e567]:
+                    - listitem [ref=e568]:
+                      - generic [ref=e569]:
+                        - figure [ref=e570]:
+                          - img "Fundação Getulio Vargas" [ref=e571]
+                        - paragraph [ref=e572]:
+                          - text: A Pulsus contratou 6 pessoas de Fundação Getulio Vargas.
+                          - link "Ver todas" [ref=e573] [cursor=pointer]:
+                            - /url: https://www.linkedin.com/search/results/people/?origin=JOB_PAGE_CANNED_SEARCH&currentCompany=16195516&schoolFilter=8175
+                            - strong [ref=e574]: Ver todas
+                - link "Exibir mais estatísticas Premium" [ref=e575] [cursor=pointer]:
+                  - /url: /company/pulsusmobi/insights/?insightType=HEADCOUNT
+            - generic [ref=e577]:
+              - generic [ref=e578]:
+                - heading "Sobre a empresa" [level=2] [ref=e579]
+                - generic [ref=e580]:
+                  - generic [ref=e581]:
+                    - link "Logo da empresa Pulsus" [ref=e583] [cursor=pointer]:
+                      - /url: /company/pulsusmobi/life/
+                      - img "Logo da empresa Pulsus" [ref=e584]
+                    - generic [ref=e585]:
+                      - link "Pulsus" [ref=e587] [cursor=pointer]:
+                        - /url: /company/pulsusmobi/life/
+                      - generic [ref=e588]: 10.021 seguidores
+                  - button "Seguir" [ref=e589] [cursor=pointer]:
+                    - img [ref=e590]
+                    - generic [ref=e592]: Seguir
+                - generic [ref=e593]:
+                  - text: Desenvolvimento de software
+                  - generic [ref=e594]: • 51-200 funcionários
+                  - generic [ref=e595]: • 130 no LinkedIn
+                - paragraph [ref=e596]:
+                  - generic [ref=e597]:
+                    - text: Leader in Latin America, Pulsus' technology enables companies to reach more productivity, efficiency, competitive intelligence and data safety through an agile, intuitive and built from the ground mobile device management solution.
+                    - text: Managing approximately 1 million devices all over the world, Pulsus solutions enables all types of teams to benefit from remote setup and administration of corporate devices in a quick, easy and safe way.
+                    - text: Pulsus empowers IT managers and teams to go beyond EMM/MDM solutions, improving technology professionals protagonism while helping other strategic and non tech-savvy areas and managers to also benefit from solutions without steep learning curve experience or hassles. Having a 360 degree vision of the managed devices, operations become much more precise, minimizing risks while boosting up productivity.
+                    - text: In 2022, was the 1st solution in Latin America to achieve Android Enterprise Recommended, being among the top 10 in the world that holds the maximum certification issued by Google.
+                    - text: The endorsement is intended for few companies in the world that exceed the most demanding quality standards to ensure greater security and efficiency of mobile devices in the corporate environment.
+                    - text: "Want to try for yourself? Pulsus offers a free, unlimited trial, so you can start right now managing devices: https://pulsus.mobi/testar-gratis"
+                    - generic [ref=e599]:
+                      - generic [ref=e600]: …
+                      - button "exibir mais" [ref=e601] [cursor=pointer]
+              - link "Exibir mais sobre a empresa" [ref=e603] [cursor=pointer]:
+                - /url: /company/pulsusmobi/life/
+                - text: Exibir mais
+            - heading "Mais vagas" [level=2] [ref=e605]
+            - list [ref=e607]:
+              - listitem [ref=e608]:
+                - link "Logo da empresa Revenue3 Country Manager (Brazil) Revenue3 São Paulo, Brasil (Remoto) Avaliando candidaturas Avaliando candidaturas Há 1 semana Candidatura simplificada" [ref=e610] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4398598073&referenceJobId=4385737082&originToLandingJobPostings=4398598073&trackingId=0eOIjYZ87FPKkQadFDNKmA%3D%3D&refId=8BA6v%2Fu2FJhnQA5dnnaDAQ%3D%3D&eBP=CwEAAAGdsERJSMDLK_DajKEgYvgKidHa-iZq7lW84-p0HFaTc_kmpCo2hvxgYQRDXTuwB5TZlfjhU_uFP-LQIIVn9mjAyn4zPY10b3WyjjKqm8ZgUUq87PvPvkciHXzlmZJWUn8Fx9PTVUNg8H2PaShksLf6ixg-rWTMqHQpJGkCSAek9DcIEVl94iSSbrFYQeoeIRJfXRV-DArU8JXjCYH2dXk3mAmhwP-WTSXR7HPArDsqMZyJ7VLjFP21CsA0dALEr8MMNY8j5NQZLoLCY3gpKA8OX6PB_YHAFn7Eh5E0S89-Ecd3l93AOPp_hNK25smRXPmx0MWUBBD5DlKG4THDzWnFEym6sSbz5TFhH3b0cHOt69qKU4mFd5J6iOpO-v7mqwfYX_1XbTcM-hC6D_HHApogYSKN_PYzuEjzIPh-DB5C2bPX8YkRDFIMjvg_po3r_149NWcRefLiQ-YTaRghJcB-pO9z8NfiT9OEJe1FRiUGJA
+                  - generic [ref=e612]:
+                    - img "Logo da empresa Revenue3" [ref=e617]
+                    - generic [ref=e618]:
+                      - generic [ref=e619]:
+                        - generic [ref=e620]:
+                          - strong [ref=e622]: Country Manager (Brazil)
+                          - generic [ref=e623]: Country Manager (Brazil)
+                        - generic [ref=e625]: Revenue3
+                        - generic [ref=e627]: São Paulo, Brasil (Remoto)
+                        - list [ref=e629]:
+                          - listitem [ref=e630]:
+                            - img "Avaliando candidaturas" [ref=e633]
+                            - generic [ref=e635]: Avaliando candidaturas
+                      - list [ref=e637]:
+                        - listitem [ref=e638]:
+                          - time [ref=e639]: Há 1 semana
+                        - listitem [ref=e640]:
+                          - img [ref=e641]:
+                            - img [ref=e642]
+                          - generic [ref=e644]: Candidatura simplificada
+              - listitem [ref=e645]:
+                - link "Logo da empresa Libbs Farmacêutica Gerente de Estratégia Econômico-Tributária e Viabilidade with verification Libbs Farmacêutica Brasil (Remoto) 199 ex-alunos da Fundação Getulio Vargas trabalham aqui Há 3 semanas" [ref=e647] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4390535200&referenceJobId=4385737082&originToLandingJobPostings=4390535200&trackingId=T3aW%2FqCPwMap%2BAu3PMoLAw%3D%3D&refId=8BA6v%2Fu2FJhnQA5dnnaDAQ%3D%3D&eBP=CwEAAAGdsERJSHLnS-dPCBWV-nD-cPztfxzN6-OdZKIoeGy2IQ2LCOjpi4aHO0j_Z11raXovM-IZAhCwHGpn3aWG2NpTYYgD2dMNQXQ3aHIu0oyb78LmN3Nlj3LmwF5sINe4Cy5VD8j2vc_AIug1uj3F3f80bnweGlfZoNyHCyo9euT6qlslMAfBLkAST7R-tiNtGUMGlz0wkuibxcKTX4QOsGA320vlX8byIDzvsW5ORXyJBJhH3azIqqvvd9aoP74KrnAOBOJmPSYhVL2q_g-idnuxg3v2Kq3IiNngmcdl-sZ_LLl0rRHebcFtMMgvrf_oEpfjvE9Lp7u1389WxBz7XvI8GnkgcUF6OqoyeqGKctICguI--88breOByXaFbkTR22NOxy6zhmkOxMK5_Nr_x3iIvfQuNS_1Q5EUxQTZTSdoGSQFCRA3STHhfw18AMUat850o8LCvjo0Mwwm2C-R6Nbgvs-FydOOMIBWumXSVpc2oP2crhjOC1a7z2l0Zp2TZXz8rII
+                  - generic [ref=e649]:
+                    - img "Logo da empresa Libbs Farmacêutica" [ref=e654]
+                    - generic [ref=e655]:
+                      - generic [ref=e656]:
+                        - generic [ref=e657]:
+                          - generic [ref=e658]:
+                            - strong [ref=e659]: Gerente de Estratégia Econômico-Tributária e Viabilidade
+                            - img [ref=e661]
+                          - generic [ref=e663]: Gerente de Estratégia Econômico-Tributária e Viabilidade with verification
+                        - generic [ref=e665]: Libbs Farmacêutica
+                        - generic [ref=e667]: Brasil (Remoto)
+                        - list [ref=e669]:
+                          - listitem [ref=e670]:
+                            - generic [ref=e673]:
+                              - generic [ref=e674]: 199 ex-alunos trabalham aqui
+                              - generic [ref=e675]: 199 ex-alunos da Fundação Getulio Vargas trabalham aqui
+                      - list [ref=e677]:
+                        - listitem [ref=e678]:
+                          - time [ref=e679]: Há 3 semanas
+              - listitem [ref=e680]:
+                - link "Logo da empresa Sophos Country Manager Brazil with verification Sophos Brasil (Remoto) 12 ex-alunos da Fundação Getulio Vargas trabalham aqui Há 1 semana" [ref=e682] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4401342750&referenceJobId=4385737082&originToLandingJobPostings=4401342750&trackingId=v9P9Iun7TQoyua4CiAeVMw%3D%3D&refId=8BA6v%2Fu2FJhnQA5dnnaDAQ%3D%3D&eBP=CwEAAAGdsERJSFhmqX0gASu5OTS2B18SFgYze6G6gTvWGXhlJyOBKTuFl3aeYXKsYE7rNPADAvTvbFXCvs9VU99rbBjH25ycCNOd6P24xMIBC5zHdoweIEwtWeaf-724UZBdNwdXOzIdLh2SvTJafljDdYD-MHmSD_Kf0ECNUqMgfnJtZKL5UNFg8UYkqDod4NA35XxyrC6EvtYxqMIzcouEmlO3bhlIBxN8qXrW5dvJGqrQF4oak3TXu8NH4Dh36trI2FJW5-I4dt1f47IHTqhFH0PuVIZ9ZrhYbBZJfX1EI4QNt2DvU1cqKdfC48rdSLSNCIP03ecIkS06EO2GmR55shxUwmfY5y8fnMCS2pCyCXQ8zEXsVKNj_bHWYA0fGoTwHn5yPBsL-9sn9IRn7jaKrWoiffWFe5-NwaSU234xC37pzOX1Eszm7xSbdyUdmXQbAHdW_xWF3Nu4fGp1XCoexseuFP185Q46_Eoj
+                  - generic [ref=e684]:
+                    - img "Logo da empresa Sophos" [ref=e689]
+                    - generic [ref=e690]:
+                      - generic [ref=e691]:
+                        - generic [ref=e692]:
+                          - generic [ref=e693]:
+                            - strong [ref=e694]: Country Manager Brazil
+                            - img [ref=e696]
+                          - generic [ref=e698]: Country Manager Brazil with verification
+                        - generic [ref=e700]: Sophos
+                        - generic [ref=e702]: Brasil (Remoto)
+                        - list [ref=e704]:
+                          - listitem [ref=e705]:
+                            - generic [ref=e708]:
+                              - generic [ref=e709]: 12 ex-alunos trabalham aqui
+                              - generic [ref=e710]: 12 ex-alunos da Fundação Getulio Vargas trabalham aqui
+                      - list [ref=e712]:
+                        - listitem [ref=e713]:
+                          - time [ref=e714]: Há 1 semana
+              - listitem [ref=e715]:
+                - link "Logo da empresa Revolut Finance Manager (Financial Control) with verification Revolut Brasil (Remoto) 36 ex-alunos da Fundação Getulio Vargas trabalham aqui Há 1 semana" [ref=e717] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4386868728&referenceJobId=4385737082&originToLandingJobPostings=4386868728&trackingId=D1345hZDqlq6dOb0xmM2qA%3D%3D&refId=8BA6v%2Fu2FJhnQA5dnnaDAQ%3D%3D&eBP=CwEAAAGdsERJSIMaTIDGqsTbj7K7GMd3G2Wre5BN_CWJ11okYGoEvhsBYl-KKZvpy_BxsK_W1sS6v-msQl0UB0RgF6BRdFk7LMXL4Epe5wPUKosXvemYxvmz3q__EUsw2gEAGX0sKPuF1P25J4IIAKgX6UYIeQ5CYsu5uZXNCTOHCfM4rbuq5f98_sQKLlhWcqQzRd1EV5TdAGZk7G7gMn2tBml1KEZ9nCogSfzV3lZiNjAx_0GaRQkhvjTGPV1jF_RPntkZi_fra1vrHPGWT7ftE-YHcIOYerqu9nZGN1fOrPTfhMWD9Xox8NcjvapKRqv6nnX3wCQsy0VvgVCBwE1qPBLISbIyPb9eBoAJL3VwLmOcIUnYZKHuDaehnYFXLQd-2ozzhw8SSrT0TbViOMtcK0l5_nBfRUKUPlOQVbIYGmdLTZTfCVRV6BIR-NYd83okhQENHbk4yQLbND8VT8SUiLnprQMW3j6qBpyLPjg0Kwv5wA
+                  - generic [ref=e719]:
+                    - img "Logo da empresa Revolut" [ref=e724]
+                    - generic [ref=e725]:
+                      - generic [ref=e726]:
+                        - generic [ref=e727]:
+                          - generic [ref=e728]:
+                            - strong [ref=e729]: Finance Manager (Financial Control)
+                            - img [ref=e731]
+                          - generic [ref=e733]: Finance Manager (Financial Control) with verification
+                        - generic [ref=e735]: Revolut
+                        - generic [ref=e737]: Brasil (Remoto)
+                        - list [ref=e739]:
+                          - listitem [ref=e740]:
+                            - generic [ref=e743]:
+                              - generic [ref=e744]: 36 ex-alunos trabalham aqui
+                              - generic [ref=e745]: 36 ex-alunos da Fundação Getulio Vargas trabalham aqui
+                      - list [ref=e747]:
+                        - listitem [ref=e748]:
+                          - time [ref=e749]: Há 1 semana
+              - listitem [ref=e750]:
+                - link "Logo da empresa Prolific Subject Matter Expert – Chartered & Certified Accountants (Remote) with verification Prolific Brasil (Remoto) Avaliando candidaturas Avaliando candidaturas Há 1 semana Candidatura simplificada" [ref=e752] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4398742757&referenceJobId=4385737082&originToLandingJobPostings=4398742757&trackingId=9U2U8yHoqTEGtn2%2BwpdFPw%3D%3D&refId=8BA6v%2Fu2FJhnQA5dnnaDAQ%3D%3D&eBP=CwEAAAGdsERJSG1qhmE6TW8VI671yni5Z9Gz-ulxL1Qw5jXOX3h73XiYfxcUhFINZbf7gnergeQb9El-dyh5Lr1Lqr64W4kGOeS6dPb8SHjH8bFUA0kgErs3vlhVBwupm20b_ie_upsxOOx6_ZO-rg0arqMhw9oQt2MxPll5zeCRfFYnszthyFfncCNT0Xa367rM4SzIXbTOdQQXK867lc_PnnR3AioVugZFCVir1_cba_de18ajDrfoHbttx2vCd3_yzvuYY_oU8NhSs3kEciqJGiAjpDmt8tMszFaYZbnPGT_1qU1Y3sLs5_NQRVjWl0GJfwMvFOXdxyHitooIj7Swm-ongOrMNuLAislg3Amf_odCl2UrQo_9rzUvBhCcsuai3aJOZklmGu8pSNdIi6w3a1x8ydeoZeJwwizWuQ0iyZQbXRV5-o0Vj6In-aUT1239E4zR6VDinijIRolHce2cffV3Pp_gBmdqzeiSoJ29J-mvhC5MgkY
+                  - generic [ref=e754]:
+                    - img "Logo da empresa Prolific" [ref=e759]
+                    - generic [ref=e760]:
+                      - generic [ref=e761]:
+                        - generic [ref=e762]:
+                          - generic [ref=e763]:
+                            - strong [ref=e764]: Subject Matter Expert – Chartered & Certified Accountants (Remote)
+                            - img [ref=e766]
+                          - generic [ref=e768]: Subject Matter Expert – Chartered & Certified Accountants (Remote) with verification
+                        - generic [ref=e770]: Prolific
+                        - generic [ref=e772]: Brasil (Remoto)
+                        - list [ref=e774]:
+                          - listitem [ref=e775]:
+                            - img "Avaliando candidaturas" [ref=e778]
+                            - generic [ref=e780]: Avaliando candidaturas
+                      - list [ref=e782]:
+                        - listitem [ref=e783]:
+                          - time [ref=e784]: Há 1 semana
+                        - listitem [ref=e785]:
+                          - img [ref=e786]:
+                            - img [ref=e787]
+                          - generic [ref=e789]: Candidatura simplificada
+              - listitem [ref=e790]:
+                - link "Logo da empresa Bitget Country Manager , Brazil Bitget Brasil (Remoto) Há 1 semana" [ref=e792] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4400383840&referenceJobId=4385737082&originToLandingJobPostings=4400383840&trackingId=2hLHsQDBTr6UymTmoM0alA%3D%3D&refId=8BA6v%2Fu2FJhnQA5dnnaDAQ%3D%3D&eBP=CwEAAAGdsERJSUYFZClAIho7rOwW2u_o0HSnYmfxa2EDf3VoZP5z-wYp8K1b_bc0sD40ocFRjAF_OauOdlALSvLsfzATHWNGT5pCEyBEgHniWG4zgb5wIoNGu4qsOCwbgu_qx5igVyPWKeGydLooRnzsb7FJMxKW3SgNPsXA2kGagUHpihqpoItrcPoiBABvEyPH_tvUVNL_tNT7RC0RL2fGbgtjpImmgu-ysRehNKecCi6B-l61Pls-KB6P82MJYiXqJfO4sZFGkq68LDbRfZk_uF1FP7a2Obi7bYZgWZbqD55_wuUmsuZdi-NCNmQ07snmSr3p62LH64571wjOHXlllvCHRnJ3BSwy3eFfOW0GlfdAVgxuw-ctURhTL1NrVVm4BOqHnWE3Q9PAdi1LzRP6Eec_FBom732L9rqhsLkUcE-X16X6mWZv0Vxa0UEXbH0cE2105QOngJdYEihebKh5U6HTV0kcMp5XknKg3jL5Y1a6xn8uYvg
+                  - generic [ref=e794]:
+                    - img "Logo da empresa Bitget" [ref=e799]
+                    - generic [ref=e800]:
+                      - generic [ref=e801]:
+                        - generic [ref=e802]:
+                          - strong [ref=e804]: Country Manager , Brazil
+                          - generic [ref=e805]: Country Manager , Brazil
+                        - generic [ref=e807]: Bitget
+                        - generic [ref=e809]: Brasil (Remoto)
+                      - list [ref=e811]:
+                        - listitem [ref=e812]:
+                          - time [ref=e813]: Há 1 semana
+              - listitem [ref=e814]:
+                - link "Logo da empresa Globalfy Bookkeeper (US GAAP) with verification Globalfy Brasil (Remoto) Você seria um dos melhores candidatos Você seria um dos melhores candidatos Há 19 horas" [ref=e816] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4404333978&referenceJobId=4385737082&originToLandingJobPostings=4404333978&trackingId=Am8nMDspG4LXVd0tpA7%2FKA%3D%3D&refId=8BA6v%2Fu2FJhnQA5dnnaDAQ%3D%3D&eBP=CwEAAAGdsERJSf0IW_Qzs57q-zG4v8iFN0sOleUpnyvkKCgFF4VY3jFYCiM4ubB7OF8jAPGrUYhdX06Exdgr2vvPaxs0gHmyobUgnQLYAcgF3Zy5Eetv7ZNRocXoc8l5PvaiZ6RFLI4L_RplO440OdhpBrQuZve7RgJsAoop-GEFzNJXonu_wL-_TFHy12X5QtNi7QD4jiVUnUDq3wry7KikJZZn4aGSFvYzOVL1Xd1IvYbuonY11kPmu3YD3J2vxDS46NqdNpSIGNnxL6oNhJl0f8l2QlrqoVbpO-70WdS6VN43Bo-1OkAkNqHk17yUKrhljXs2_XUM4VSS3w3x-B-sI4M1WFw9Nt0wUs-P1fHwtrgfPivJ6FPfveNpZA-e2_CqfJTQtjYMmlC-TImvfznzRLFcmpqZc9bn4saBorbPV9IEuTAXDCPuJR3L3ZPCzp4yVfkaMTc2pIRZqJWRQL5ExLhG
+                  - generic [ref=e818]:
+                    - img "Logo da empresa Globalfy" [ref=e823]
+                    - generic [ref=e824]:
+                      - generic [ref=e825]:
+                        - generic [ref=e826]:
+                          - generic [ref=e827]:
+                            - strong [ref=e828]: Bookkeeper (US GAAP)
+                            - img [ref=e830]
+                          - generic [ref=e832]: Bookkeeper (US GAAP) with verification
+                        - generic [ref=e834]: Globalfy
+                        - generic [ref=e836]: Brasil (Remoto)
+                        - list [ref=e838]:
+                          - listitem [ref=e839]:
+                            - img "Você seria um dos melhores candidatos" [ref=e842]:
+                              - img [ref=e843]
+                            - generic [ref=e846]: Você seria um dos melhores candidatos
+                      - list [ref=e848]:
+                        - listitem [ref=e849]:
+                          - time [ref=e850]: Há 19 horas
+              - listitem [ref=e851]:
+                - link "Logo da empresa CS Outsource Virtual Assistant CS Outsource Brasil (Remoto) Você seria um dos melhores candidatos Você seria um dos melhores candidatos Há 2 semanas" [ref=e853] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4393888523&referenceJobId=4385737082&originToLandingJobPostings=4393888523&trackingId=CMI%2BY90diADQP00drFryvw%3D%3D&refId=8BA6v%2Fu2FJhnQA5dnnaDAQ%3D%3D&eBP=CwEAAAGdsERJSZ3xkum_aoL0wBchctMFNV2HuIXhxnK7Tgz-Egn3NK_lSqNMeh3EqUxojAgkJ_YiLKPGQCaPg0puPnCEN6mJ79ChqLii1oW5shWa0wePvyxd1V4p55t2e0AZrfcuZjmwpsDtlcHaX4OvOQCIsbIYMLM9RyjQG63O6mkRsCVgDnqp54Q2Xqt7-tkoasFrEZteLjT7d1xs_DowXjrL22VbAteRULncUH7HU-ZV-wQxlUnBmYX5_3qmaUHh-aBdDeqQHV3_hPeDausnG_GbpB7-3nPvp4_UwKPr1yeU7sS-cIsefaLuy_AdF-1cXagYKIx0-zfvrVvnL9HzgSTTNjN-E009UbHKYk7gdxY6mBdSxGAUrceFUfTBs8J8PubYa4VMM3Pd5YlYx85zWYL5_S0sZFJ1CVsN0i99CDr3sqtQR4aGPAdBrK4cJyzWGlzsp8HNQ9gTsTPFqHkGYCbBRTM7Hf8jY8_2
+                  - generic [ref=e855]:
+                    - img "Logo da empresa CS Outsource" [ref=e860]
+                    - generic [ref=e861]:
+                      - generic [ref=e862]:
+                        - generic [ref=e863]:
+                          - strong [ref=e865]: Virtual Assistant
+                          - generic [ref=e866]: Virtual Assistant
+                        - generic [ref=e868]: CS Outsource
+                        - generic [ref=e870]: Brasil (Remoto)
+                        - list [ref=e872]:
+                          - listitem [ref=e873]:
+                            - img "Você seria um dos melhores candidatos" [ref=e876]:
+                              - img [ref=e877]
+                            - generic [ref=e880]: Você seria um dos melhores candidatos
+                      - list [ref=e882]:
+                        - listitem [ref=e883]:
+                          - time [ref=e884]: Há 2 semanas
+              - listitem [ref=e885]:
+                - link "Logo da empresa Flowmingo AI Part-time Sales (Remote) Flowmingo AI Brasil (Remoto) Você seria um dos melhores candidatos Você seria um dos melhores candidatos Há 1 dia" [ref=e887] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4403389460&referenceJobId=4385737082&originToLandingJobPostings=4403389460&trackingId=s2%2FJ6bnIdZRB9x1mIo67pw%3D%3D&refId=8BA6v%2Fu2FJhnQA5dnnaDAQ%3D%3D&eBP=CwEAAAGdsERJSStfdOxPV-mJdmg9EdjNpddI2i_Ctj1Q5CqzxjQEs3yX3-yCycmbDGdP1cf_zMhzaWzu5WIQBfGpuO01BJdgMHDfTHGhitA5UUzS6ckUwMO3t0Ian23IrHEH6A5RDqnqt9Pj9-k_9H4GEu3uJm9PGeO8q1tA2kxGSQD4t-ktjH7XjROqJ7s_OvbI13LzrD2wG1Ve1xsXHNX4oJybzcqgAWe4mXccYdQgoVQkB-_IW8XH1mqcgWF4Jm6FChNu7yaO-dPjuIDeLCO3EzPmcX4Vw3V6CwdHHM6aomhDkbEk5UvVkBApa0pzB6IJCWDJgzWeJ6KmB7oz0R5dLkNKrN8AXsbaIgeLMCLROT7MT99OUvY_T8mgGFk8yN-YZ3xM00umrSAilWN_ZjBNwEX8Di2yiuaLoCcowJwxI-eLRFtFNZgiyCaLt_W9c_uEbsxh152p1V67x3vM0s8NPGxEvwPJQGW-ZT-Z
+                  - generic [ref=e889]:
+                    - img "Logo da empresa Flowmingo AI" [ref=e894]
+                    - generic [ref=e895]:
+                      - generic [ref=e896]:
+                        - generic [ref=e897]:
+                          - strong [ref=e899]: Part-time Sales (Remote)
+                          - generic [ref=e900]: Part-time Sales (Remote)
+                        - generic [ref=e902]: Flowmingo AI
+                        - generic [ref=e904]: Brasil (Remoto)
+                        - list [ref=e906]:
+                          - listitem [ref=e907]:
+                            - img "Você seria um dos melhores candidatos" [ref=e910]:
+                              - img [ref=e911]
+                            - generic [ref=e914]: Você seria um dos melhores candidatos
+                      - list [ref=e916]:
+                        - listitem [ref=e917]:
+                          - time [ref=e918]: Há 1 dia
+              - listitem [ref=e919]:
+                - link "Logo da empresa Voxy Finance Analyst - Collection, Finance with verification Voxy Brasil (Remoto) 4 ex-alunos da Fundação Getulio Vargas trabalham aqui Há 4 dias Candidatura simplificada" [ref=e921] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4400440549&referenceJobId=4385737082&originToLandingJobPostings=4400440549&trackingId=NPg91vMsWhYfg9kFxozJAA%3D%3D&refId=8BA6v%2Fu2FJhnQA5dnnaDAQ%3D%3D&eBP=CwEAAAGdsERJSfm5hoynGcDmd6CmK0aagx7ZCDEtrVzHCl5TzhZEpt281pEnPAZdbnuFcEb2kIR-3UPI7O0NEXs-NFCM5cGb0_f0dcm4n7RtNXBZBwfZ_vlVz4_kmABzY_7YvEYGs-V0BNqFiYBCaMkMAQmQK1PgmhKZfAdI5yRv0jc4o66mG-9y-24pIrNmGGYM8-2fyuE-zbNv3qiNTx8VTLBmH0EGJjHTr5VksevsFLxIKTMLxJb8I7MmqPycbQ0G1wHXm0QgmADnRuNpxA4JXBTlK2SEKg3KbkBJQxjADjbkZsPWecsLN8EmfIy6G9BsRqkEFqfXf39ZThZutHCI24T1XeEsAdKFjJZyJRSknx4kpC0kzaLCvDUActz2HzYfaTggoYMBehFiz3hSKkPKVy8MQCiJYxqVOixBP18V2RzVmdPGokQWoo8rUHJIHfWPidWkOIbupiQaQvXE0KFKSi_mt5KGe4a5pDtK
+                  - generic [ref=e923]:
+                    - img "Logo da empresa Voxy" [ref=e928]
+                    - generic [ref=e929]:
+                      - generic [ref=e930]:
+                        - generic [ref=e931]:
+                          - generic [ref=e932]:
+                            - strong [ref=e933]: Finance Analyst - Collection, Finance
+                            - img [ref=e935]
+                          - generic [ref=e937]: Finance Analyst - Collection, Finance with verification
+                        - generic [ref=e939]: Voxy
+                        - generic [ref=e941]: Brasil (Remoto)
+                        - list [ref=e943]:
+                          - listitem [ref=e944]:
+                            - generic [ref=e947]:
+                              - generic [ref=e948]: 4 ex-alunos trabalham aqui
+                              - generic [ref=e949]: 4 ex-alunos da Fundação Getulio Vargas trabalham aqui
+                      - list [ref=e951]:
+                        - listitem [ref=e952]:
+                          - time [ref=e953]: Há 4 dias
+                        - listitem [ref=e954]:
+                          - img [ref=e955]:
+                            - img [ref=e956]
+                          - generic [ref=e958]: Candidatura simplificada
+              - listitem [ref=e959]:
+                - link "Logo da empresa Crossing Hurdles Voice Actor (Italian) | Remote Crossing Hurdles Brasil (Remoto) US$ 34/h - US$ 103/h Há 6 horas Candidatura simplificada" [ref=e961] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4403928129&referenceJobId=4385737082&originToLandingJobPostings=4403928129&trackingId=i5gk4XLZzZh2HBgM3ggymw%3D%3D&refId=8BA6v%2Fu2FJhnQA5dnnaDAQ%3D%3D&eBP=CwEAAAGdsERJSST3qOBnTBc70jng0n0sokmusvtMjuO-oOPmuMKTr_05etzTx5pI7x782ijP-rTg457pn6f6ltRc-ut4n82-V4a6lcB0O6Lu15MYi4-kFNk0boaNt4WjV0r0_ad0-FSdb5bS3YAEe19j-njEdP9doMUmaqbB_J1DIV_lYZ7yMbcGKLng9UfAHc67I-U81JBEhAVyYqzpx9szPtaq_tcP5yAgMVAkLY-vjYvdITh7T3KRsetyA91RFjZ08a1JZ_c_eB8OU4YKuaxWQ2mrYOHS7Ov5JULinzYuYuSOWvVishDUFSvGgsd76Wy7c9Su05WRoddlEf2iXR1dbZUveJ-NzNUfaV624aKrhoPDAwc23aqMKDepjWUuJSg_in_EaUkWbWy7WUijTzR8XRokfNB-YtCfGFCRjR06DLEPNdGZ9eH-8Q6gdCE6sWght5tijCvwjzoczcGcx6ZbvgBT7_jHyHrA9P5KIP_rRlhpvNqku_Y
+                  - generic [ref=e963]:
+                    - img "Logo da empresa Crossing Hurdles" [ref=e968]
+                    - generic [ref=e969]:
+                      - generic [ref=e970]:
+                        - generic [ref=e971]:
+                          - strong [ref=e973]: Voice Actor (Italian) | Remote
+                          - generic [ref=e974]: Voice Actor (Italian) | Remote
+                        - generic [ref=e976]: Crossing Hurdles
+                        - generic [ref=e978]: Brasil (Remoto)
+                        - generic [ref=e980]: US$ 34/h - US$ 103/h
+                      - list [ref=e982]:
+                        - listitem [ref=e983]:
+                          - time [ref=e984]: Há 6 horas
+                        - listitem [ref=e985]:
+                          - img [ref=e986]:
+                            - img [ref=e987]
+                          - generic [ref=e989]: Candidatura simplificada
+              - listitem [ref=e990]:
+                - link "Logo da empresa WorkBetterNow Assistant to Vice President with verification WorkBetterNow Brasil (Remoto) Há 16 horas" [ref=e992] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4403101441&referenceJobId=4385737082&originToLandingJobPostings=4403101441&trackingId=n1jtF2iX%2BZashWkUYCByUg%3D%3D&refId=8BA6v%2Fu2FJhnQA5dnnaDAQ%3D%3D&eBP=CwEAAAGdsERJSRJns1E3bzM8Ciqv7XAywTef34nqMlodiFQYWAr73GelOckMRPlKafzKMIhjzpEd4RTlmsnF0ANzgE6Om0_WekAxMNia8b6_v4R_m8rLunbb-mWKguIlzZg9y8q9HdRBPoPsW5dyMRATpBbwsN2w5QOo-XmIAkCrmLBqBPU4fNIVgAYlvdGfj4vwbA0a8ky0TDyI9-tq4QAhhBjCGVWHrUoraAXWPqbC_nlxwejvgQEAjE5TPnHjolTbeTDiBcIjRpS3Qc3E7JklcM4NrXnCwcMqs7dxC-oygxdiGCa_hhJrscILYfMe39cRfprM9w6ixKQ8Obsm3535auB5UtrXSaj5KJ9FyDiSayejINjBHaBxK2oDZc7sEMkvQRp4Qb4-_yXHtqKS6XGtnGRxXSZolLNPmRrJ99XL72r8ae5LOJvKkMMRhlxQe0PHgLl4K56JZUihp7VrP8s61JHeCP1pD7UkzpE62_Pi2S4ArkMTwc_baQ
+                  - generic [ref=e994]:
+                    - img "Logo da empresa WorkBetterNow" [ref=e999]
+                    - generic [ref=e1000]:
+                      - generic [ref=e1001]:
+                        - generic [ref=e1002]:
+                          - generic [ref=e1003]:
+                            - strong [ref=e1004]: Assistant to Vice President
+                            - img [ref=e1006]
+                          - generic [ref=e1008]: Assistant to Vice President with verification
+                        - generic [ref=e1010]: WorkBetterNow
+                        - generic [ref=e1012]: Brasil (Remoto)
+                      - list [ref=e1014]:
+                        - listitem [ref=e1015]:
+                          - time [ref=e1016]: Há 16 horas
+            - link "Ver mais vagas como esta" [ref=e1018] [cursor=pointer]:
+              - /url: https://www.linkedin.com/jobs/collections/similar-jobs?referenceJobId=4385737082
+        - complementary [ref=e229]:
+          - generic [ref=e230]:
+            - generic [ref=e1019]:
+              - img "Premium" [ref=e1021]:
+                - img [ref=e1022]
+              - heading "Adquira competências com esses cursos para conseguir um novo emprego" [level=2] [ref=e1024]
+              - listitem [ref=e1025]:
+                - 'link "Indústria 4.0: Desafios da Computação em Nuvem" [ref=e1026] [cursor=pointer]':
+                  - /url: https://www.linkedin.com/learning/industria-4-0-desafios-da-computacao-em-nuvem?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_2493464_learning
+                  - 'img "Indústria 4.0: Desafios da Computação em Nuvem" [ref=e1029]'
+                  - img [ref=e1031]
+                - 'link "Indústria 4.0: Desafios da Computação em Nuvem" [ref=e1034] [cursor=pointer]':
+                  - /url: https://www.linkedin.com/learning/industria-4-0-desafios-da-computacao-em-nuvem?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_2493464_learning
+                  - generic [ref=e1035]: "Indústria 4.0: Desafios da Computação em Nuvem"
+              - listitem [ref=e1036]:
+                - link "Inteligência Artificial Generativa para Finanças e Contabilidade" [ref=e1037] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/learning/inteligencia-artificial-generativa-para-financas-e-contabilidade?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_5242121_learning
+                  - img "Inteligência Artificial Generativa para Finanças e Contabilidade" [ref=e1040]
+                  - img [ref=e1042]
+                - generic [ref=e1044]:
+                  - link "Inteligência Artificial Generativa para Finanças e Contabilidade" [ref=e1045] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/learning/inteligencia-artificial-generativa-para-financas-e-contabilidade?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_5242121_learning
+                    - generic [ref=e1046]: Inteligência Artificial Generativa para Finanças e Contabilidade
+                  - generic [ref=e1048]: 4.027 visualizações
+              - listitem [ref=e1049]:
+                - link "Fundamentos de Contabilidade" [ref=e1050] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/learning/fundamentos-de-contabilidade?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_2930666_learning
+                  - img "Fundamentos de Contabilidade" [ref=e1053]
+                  - img [ref=e1055]
+                - generic [ref=e1057]:
+                  - link "Fundamentos de Contabilidade" [ref=e1058] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/learning/fundamentos-de-contabilidade?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_2930666_learning
+                    - generic [ref=e1059]: Fundamentos de Contabilidade
+                  - generic [ref=e1061]: 74.539 visualizações
+              - link "Exibir mais no LinkedIn Learning" [ref=e1063] [cursor=pointer]:
+                - /url: /learning?trk=jobdetails_learning_awareness
+            - generic [ref=e1064]:
+              - paragraph [ref=e1065]: Procurando um talento?
+              - link "Anunciar vaga" [ref=e1066] [cursor=pointer]:
+                - /url: https://www.linkedin.com/talent/job-posting-redirect?trk=flagship3_job_detail
+      - contentinfo [ref=e232]:
+        - generic [ref=e234]:
+          - generic [ref=e235]:
+            - navigation [ref=e236]:
+              - list [ref=e1067]:
+                - listitem [ref=e1068]:
+                  - link "Sobre" [ref=e1069] [cursor=pointer]:
+                    - /url: https://about.linkedin.com/pt-br
+                - listitem [ref=e1070]:
+                  - link "Acessibilidade" [ref=e1071] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/accessibility
+                - listitem [ref=e1072]:
+                  - link "Soluções de Talentos" [ref=e1073] [cursor=pointer]:
+                    - /url: https://business.linkedin.com/pt-br/talent-solutions?trk=flagship_nav&veh=li-footer-lts-control-pt-br&src=li-footer
+                - listitem [ref=e1074]:
+                  - link "Políticas para Comunidades Profissionais" [ref=e1075] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/legal/professional-community-policies
+                - listitem [ref=e1076]:
+                  - link "Carreiras" [ref=e1077] [cursor=pointer]:
+                    - /url: https://careers.linkedin.com/
+                - listitem [ref=e1078]:
+                  - link "Soluções de Marketing" [ref=e1079] [cursor=pointer]:
+                    - /url: https://business.linkedin.com/pt-br/marketing-solutions?trk=n_nav_lms_f&src=li-footer
+                - listitem [ref=e1080]:
+                  - button "Termos e Privacidade" [ref=e1082] [cursor=pointer]:
+                    - generic [ref=e1084]:
+                      - text: Termos e Privacidade
+                      - img [ref=e1085]
+                - listitem [ref=e1087]:
+                  - link "Preferências de anúncios" [ref=e1088] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/help/linkedin/answer/62931?lang=pt
+                - listitem [ref=e1089]:
+                  - link "Publicidade" [ref=e1090] [cursor=pointer]:
+                    - /url: https://business.linkedin.com/pt-br/marketing-solutions/ads?trk=n_nav_ads_f
+                - listitem [ref=e1091]:
+                  - link "Soluções de Vendas" [ref=e1092] [cursor=pointer]:
+                    - /url: https://business.linkedin.com/pt-br/sales-solutions?trk=flagship_nav&veh=li-footer-lss-control-pt-br&src=li-footer
+                - listitem [ref=e1093]:
+                  - link "Para celular" [ref=e1094] [cursor=pointer]:
+                    - /url: https://mobile.linkedin.com/pt-br
+                - listitem [ref=e1095]:
+                  - link "Pequenas empresas" [ref=e1096] [cursor=pointer]:
+                    - /url: https://smallbusiness.linkedin.com?&src=li-footer
+                - listitem [ref=e1097]:
+                  - link "Central de Segurança" [ref=e1098] [cursor=pointer]:
+                    - /url: https://safety.linkedin.com
+            - generic [ref=e238]:
+              - list [ref=e239]:
+                - listitem [ref=e240]:
+                  - img [ref=e241]
+                  - generic [ref=e243]:
+                    - link "Dúvidas? Acesse a nossa Central de Ajuda." [ref=e244] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/help/linkedin?trk=d_flagship3_job_details
+                      - text: Dúvidas?
+                    - paragraph [ref=e245]: Acesse a nossa Central de Ajuda.
+                - listitem [ref=e246]:
+                  - img [ref=e247]
+                  - generic [ref=e249]:
+                    - link "Gerencie sua conta e privacidade Acesse suas Configurações." [ref=e250] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/psettings/
+                      - text: Gerencie sua conta e privacidade
+                    - paragraph [ref=e251]: Acesse suas Configurações.
+                - listitem [ref=e252]:
+                  - img [ref=e253]
+                  - generic [ref=e255]:
+                    - link "Visibilidade da recomendação Saiba mais sobre os conteúdos recomendados." [ref=e256] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/help/linkedin/answer/a1339724
+                      - text: Visibilidade da recomendação
+                    - paragraph [ref=e257]: Saiba mais sobre os conteúdos recomendados.
+              - generic [ref=e258]:
+                - generic [ref=e259]: Selecionar idioma
+                - combobox "Selecionar idioma" [ref=e260]:
+                  - option "العربية (Árabe)"
+                  - option "বাংলা (Bengali)"
+                  - option "Čeština (Tcheco)"
+                  - option "Dansk (Dinamarquês)"
+                  - option "Deutsch (Alemão)"
+                  - option "Ελληνικά (Grego)"
+                  - option "English (Inglês)"
+                  - option "Español (Espanhol)"
+                  - option "فارسی (Persa)"
+                  - option "Suomi (Finlandês)"
+                  - option "Français (Francês)"
+                  - option "हिंदी (Hindi)"
+                  - option "Magyar (Húngaro)"
+                  - option "Bahasa Indonésia (Indonésio)"
+                  - option "Italiano (Italiano)"
+                  - option "עברית (Hebraico)"
+                  - option "日本語 (Japonês)"
+                  - option "한국어 (Coreano)"
+                  - option "मराठी (Marati)"
+                  - option "Bahasa Malaysia (Malaio)"
+                  - option "Nederlands (Holandês)"
+                  - option "Norsk (Norueguês)"
+                  - option "ਪੰਜਾਬੀ (Punjabi)"
+                  - option "Polski (Polonês)"
+                  - option "Português (Português)" [selected]
+                  - option "Română (Romeno)"
+                  - option "Русский (Russo)"
+                  - option "Svenska (Sueco)"
+                  - option "తెలుగు (Telugu)"
+                  - option "ภาษาไทย (Tailandês)"
+                  - option "Tagalog (Tagalog)"
+                  - option "Türkçe (Turco)"
+                  - option "Українська (Ucraniano)"
+                  - option "Tiếng Việt (Vietnamita)"
+                  - option "简体中文 (Chinês (Simplificado))"
+                  - option "正體中文 (Chinês (Tradicional))"
+          - paragraph [ref=e261]: LinkedIn Corporation © 2026
+    - generic:
+      - generic:
+        - complementary:
+          - generic [ref=e262]:
+            - generic [ref=e263]:
+              - generic [ref=e265] [cursor=pointer]:
+                - img "Fernando Xavier" [ref=e267]
+                - button "Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas." [ref=e268]:
+                  - generic [ref=e269]:
+                    - generic [ref=e270]: Mensagens
+                    - generic [ref=e271]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+              - generic [ref=e272]:
+                - button "Abrir o menu suspenso de mensagens" [ref=e274] [cursor=pointer]:
+                  - img "Abrir o menu suspenso de mensagens" [ref=e275]
+                - button "Escrever mensagem" [ref=e278] [cursor=pointer]:
+                  - img [ref=e279]
+                  - generic [ref=e281]: Escrever mensagem
+                - button "Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas." [ref=e282] [cursor=pointer]:
+                  - img [ref=e283]
+                  - generic [ref=e285]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+            - link "Foto da empresa Fernando Xavier Fernando Xavier" [ref=e1099] [cursor=pointer]:
+              - /url: https://www.linkedin.com/company/109375368/admin/inbox
+              - img "Foto da empresa Fernando Xavier" [ref=e1100]
+              - generic [ref=e1101]: Fernando Xavier
+              - img [ref=e1102]
+        - complementary "Assistente de IA para obter ajuda com sua carreira, vagas, etc."

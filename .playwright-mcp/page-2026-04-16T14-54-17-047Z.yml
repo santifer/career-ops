@@ -1,0 +1,135 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e5]:
+    - generic [ref=e7]:
+      - navigation "main navigation" [ref=e8]:
+        - link "Skip to main content" [ref=e9] [cursor=pointer]:
+          - /url: "#main-container"
+        - link "Company logo" [ref=e10] [cursor=pointer]:
+          - /url: https://astrazeneca.eightfold.ai/careers?domain=astrazeneca.com
+          - img "Company logo" [ref=e11]
+        - generic [ref=e12]:
+          - link "Join Talent Network" [ref=e13] [cursor=pointer]:
+            - /url: /careers/join?domain=astrazeneca.com&hl=en
+          - button "Candidate Login" [ref=e14] [cursor=pointer]
+      - banner [ref=e15]
+    - main [ref=e16]:
+      - generic [ref=e22]:
+        - generic [ref=e26]:
+          - generic [ref=e27]: Search
+          - generic [ref=e28]:
+            - combobox "Search" [ref=e30]
+            - generic [ref=e32]: 
+        - generic [ref=e36]:
+          - generic [ref=e37]: City, state, zip code or "remote"
+          - generic [ref=e38]:
+            - combobox "City, state, zip code or \"remote\"" [ref=e40]
+            - generic [ref=e42]: 
+        - generic [ref=e44]:
+          - button "Go" [ref=e46] [cursor=pointer]
+          - button " Job Cart" [ref=e50] [cursor=pointer]:
+            - generic [ref=e51]: 
+            - text: Job Cart
+          - button "Advanced Options " [ref=e54] [cursor=pointer]:
+            - text: Advanced Options
+            - generic [ref=e55]: 
+      - generic [ref=e56]:
+        - generic [ref=e62]:
+          - button [ref=e64] [cursor=pointer]:
+            - generic [ref=e65]:
+              - img [ref=e67]
+              - status [ref=e70]:
+                - generic [ref=e71]:
+                  - strong [ref=e72]: 1068 open jobs.
+                  - text: Use your resume to get matched with the right job.
+                - generic [ref=e73]: Upload your resume
+          - generic [ref=e74] [cursor=pointer]: 
+        - generic [ref=e78]:
+          - generic [ref=e80]:
+            - generic [ref=e81]: Selecting an option from the list below will update the main content
+            - list [ref=e83]:
+              - link "Consultor Técnico de Doenças Raras – Campinas ou Ribeirão Preto  Sao Paulo, São Paulo, Brazil SARD - Rare Diseases Sales" [ref=e84] [cursor=pointer]:
+                - heading "Consultor Técnico de Doenças Raras – Campinas ou Ribeirão Preto" [level=2] [ref=e85]
+                - paragraph [ref=e86]:
+                  - generic [ref=e87]: 
+                  - text: Sao Paulo, São Paulo, Brazil
+                - generic [ref=e89]: SARD - Rare Diseases Sales
+              - link "Consultor Técnico Hematologia - Recife/PE  Pernambuco, Pernambuco, Brazil SAOS - Oncology Sales" [ref=e90] [cursor=pointer]:
+                - heading "Consultor Técnico Hematologia - Recife/PE" [level=2] [ref=e91]
+                - paragraph [ref=e92]:
+                  - generic [ref=e93]: 
+                  - text: Pernambuco, Pernambuco, Brazil
+                - generic [ref=e95]: SAOS - Oncology Sales
+              - link "Consultor Técnico Doenças Raras (SHUA) - Recife  Pernambuco, Pernambuco, Brazil SARD - Rare Diseases Sales" [ref=e96] [cursor=pointer]:
+                - heading "Consultor Técnico Doenças Raras (SHUA) - Recife" [level=2] [ref=e97]
+                - paragraph [ref=e98]:
+                  - generic [ref=e99]: 
+                  - text: Pernambuco, Pernambuco, Brazil
+                - generic [ref=e101]: SARD - Rare Diseases Sales
+              - link "Study Contracts Manager  Cotia, São Paulo, Brazil CDSM - Study Management" [ref=e102] [cursor=pointer]:
+                - heading "Study Contracts Manager" [level=2] [ref=e103]
+                - paragraph [ref=e104]:
+                  - generic [ref=e105]: 
+                  - text: Cotia, São Paulo, Brazil
+                - generic [ref=e107]: CDSM - Study Management
+              - link "MSL Amiloidose (Cardiologia/Neurologia) - Rio de Janeiro/RJ  Cotia, São Paulo, Brazil MAML - Medical Liaison" [ref=e108] [cursor=pointer]:
+                - heading "MSL Amiloidose (Cardiologia/Neurologia) - Rio de Janeiro/RJ" [level=2] [ref=e109]
+                - paragraph [ref=e110]:
+                  - generic [ref=e111]: 
+                  - text: Cotia, São Paulo, Brazil
+                - generic [ref=e113]: MAML - Medical Liaison
+              - link "MSL Amiloidose (Cardiologia/Neurologia) - São Paulo/ Campinas  Cotia, São Paulo, Brazil MAML - Medical Liaison" [ref=e114] [cursor=pointer]:
+                - heading "MSL Amiloidose (Cardiologia/Neurologia) - São Paulo/ Campinas" [level=2] [ref=e115]
+                - paragraph [ref=e116]:
+                  - generic [ref=e117]: 
+                  - text: Cotia, São Paulo, Brazil
+                - generic [ref=e119]: MAML - Medical Liaison
+              - link "Gerente Médico Oncologia Ginecológica  Cotia, São Paulo, Brazil MABM - Therapy Area / Brand Medic (Qualified)" [ref=e120] [cursor=pointer]:
+                - heading "Gerente Médico Oncologia Ginecológica" [level=2] [ref=e121]
+                - paragraph [ref=e122]:
+                  - generic [ref=e123]: 
+                  - text: Cotia, São Paulo, Brazil
+                - generic [ref=e125]: MABM - Therapy Area / Brand Medic (Qualified)
+              - link "Sr. Product Manager - Rare Diseases  Cotia, São Paulo, Brazil CNBP - Brand Promotion" [ref=e126] [cursor=pointer]:
+                - heading "Sr. Product Manager - Rare Diseases" [level=2] [ref=e127]
+                - paragraph [ref=e128]:
+                  - generic [ref=e129]: 
+                  - text: Cotia, São Paulo, Brazil
+                - generic [ref=e131]: CNBP - Brand Promotion
+              - link "Compliance Assurance Partner  Cotia, São Paulo, Brazil CPSC - Specialist Compliance" [ref=e132] [cursor=pointer]:
+                - heading "Compliance Assurance Partner" [level=2] [ref=e133]
+                - paragraph [ref=e134]:
+                  - generic [ref=e135]: 
+                  - text: Cotia, São Paulo, Brazil
+                - generic [ref=e137]: CPSC - Specialist Compliance
+              - link "Travel & Expenses Associate Analyst (Mandarin Speaker)  Petaling Jaya, Selangor, Malaysia FIFO - Finance Operations" [ref=e138] [cursor=pointer]:
+                - heading "Travel & Expenses Associate Analyst (Mandarin Speaker)" [level=2] [ref=e139]
+                - paragraph [ref=e140]:
+                  - generic [ref=e141]: 
+                  - text: Petaling Jaya, Selangor, Malaysia
+                - generic [ref=e143]: FIFO - Finance Operations
+            - button "Show More Positions" [ref=e145] [cursor=pointer]
+          - generic [ref=e152]: The job you are looking for may have closed.
+  - generic:
+    - contentinfo:
+      - generic [ref=e154]:
+        - paragraph [ref=e156]: Follow us
+        - generic [ref=e157]:
+          - link "" [ref=e158] [cursor=pointer]:
+            - /url: https://www.linkedin.com/company/astrazeneca/posts/?feedView=all
+            - generic [ref=e159]: 
+          - link "" [ref=e160] [cursor=pointer]:
+            - /url: https://www.instagram.com/astrazeneca?igsh=djJjNDV3ZnR3dWIz
+            - generic [ref=e161]: 
+          - link "" [ref=e162] [cursor=pointer]:
+            - /url: https://www.facebook.com/AstraZeneca
+            - generic [ref=e163]: 
+  - region "Notifications"
+  - region "Notifications"
+  - region "Notifications"
+  - region "Notifications"
+  - region "Notifications"
+  - region "Notifications"
+  - iframe [ref=e166]:
+    - generic [ref=f98e6]:
+      - text: protegido por
+      - strong [ref=f98e7]: reCAPTCHA

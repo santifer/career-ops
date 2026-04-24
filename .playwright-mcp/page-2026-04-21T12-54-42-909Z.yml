@@ -1,0 +1,195 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - heading [level=1]
+      - generic:
+        - link "Skip to main content":
+          - /url: "#content"
+      - navigation "Header Menu" [ref=e7]:
+        - link [ref=e8] [cursor=pointer]:
+          - /url: https://careers.triviumpackaging.com
+          - img [ref=e9]
+        - list [ref=e10]:
+          - listitem [ref=e11]:
+            - link "Home" [ref=e12] [cursor=pointer]:
+              - /url: /
+          - listitem [ref=e13]:
+            - link "Our Community" [ref=e14] [cursor=pointer]:
+              - /url: /content/Our-Community/?locale=en_US
+          - listitem [ref=e15]:
+            - link "Vacancies" [ref=e16] [cursor=pointer]:
+              - /url: /go/Vacancies/9811757/
+      - generic [ref=e18]:
+        - button "Language" [ref=e20] [cursor=pointer]: Language
+        - link "My Profile" [ref=e24] [cursor=pointer]:
+          - /url: "#"
+        - link "Employee Login" [ref=e27] [cursor=pointer]:
+          - /url: javascript:;
+    - main [ref=e29]:
+      - generic [ref=e30]:
+        - img [ref=e31]
+        - search [ref=e35]:
+          - generic [ref=e36]:
+            - generic [ref=e38]:
+              - generic "Search by Keyword" [ref=e39]: 
+              - searchbox "Search by Keyword" [active] [ref=e40]
+            - button "Search Vacancies" [ref=e42] [cursor=pointer]
+        - heading "Reasons to work for Trivium" [level=2] [ref=e45]
+        - generic [ref=e46]:
+          - generic [ref=e47]:
+            - img [ref=e50]
+            - generic [ref=e51]:
+              - heading "Award winning products" [level=2] [ref=e52]:
+                - strong [ref=e53]: Award winning products
+              - paragraph [ref=e54]: We strive for excellence in everything we do. We won dozens of awards for our cutting-edge packaging. We’re always looking for star players to join our community.
+          - generic [ref=e55]:
+            - img [ref=e58]
+            - generic [ref=e59]:
+              - heading "Community" [level=2] [ref=e60]:
+                - strong [ref=e61]: Community
+              - paragraph [ref=e62]: Our global community spans over 19 countries and 61 locations, working together to create a better future through circular metal packaging. With regular gatherings and community initiatives, there is always an opportunity to connect.
+          - generic [ref=e63]:
+            - img [ref=e66]
+            - generic [ref=e67]:
+              - heading "Global brands" [level=2] [ref=e68]:
+                - strong [ref=e69]: Global brands
+              - paragraph [ref=e70]: We supply packaging to some of the world's biggest brands. In fact, you've probably got a few of our products somewhere in your home.
+        - generic [ref=e71]:
+          - generic [ref=e72]:
+            - img [ref=e75]
+            - generic [ref=e76]:
+              - heading "Innovation" [level=2] [ref=e77]:
+                - strong [ref=e78]: Innovation
+              - paragraph [ref=e79]:
+                - text: We are at the forefront of innovation. Always ahead of the curve with the latest hardware and design tools, we've got everything you need to create.
+                - text: With R&D centres around the world and our team of scientists, we work end-to-end to shape the future of packaging.
+          - generic [ref=e80]:
+            - img [ref=e83]
+            - generic [ref=e84]:
+              - heading "Sustainability" [level=2] [ref=e85]:
+                - strong [ref=e86]: Sustainability
+              - paragraph [ref=e87]:
+                - text: Sustainability is at the heart of what we do. Integral to our DNA.
+                - text: We're proud to be recognized as one of the industry leaders in sustainability and environmental transparency by EcoVadis and CDP certifications over the past four years.
+          - generic [ref=e88]:
+            - img [ref=e91]
+            - generic [ref=e92]:
+              - heading "Your voice matters" [level=2] [ref=e93]:
+                - strong [ref=e94]: Your voice matters
+              - paragraph [ref=e95]: People are an integral part of our DNA and the impact we make in the world. With our open-door culture, you are always invited to share your thoughts on how we can best support our community.
+        - heading "Our values" [level=2] [ref=e98]
+        - generic [ref=e99]:
+          - generic [ref=e100]:
+            - img [ref=e103]
+            - generic [ref=e104]:
+              - heading "Passion" [level=2] [ref=e105]:
+                - strong [ref=e106]: Passion
+              - paragraph [ref=e107]: Every day we strive to positively impact Trivium and society. We aim high and we are committed, enthusiastic and accountable.
+          - generic [ref=e108]:
+            - img [ref=e111]
+            - generic [ref=e112]:
+              - heading "Teamwork" [level=2] [ref=e113]:
+                - strong [ref=e114]: Teamwork
+              - paragraph [ref=e115]: With safety as our first priority, we harness the power of collaboration. We do this with humility, trust, integrity and openness.
+          - generic [ref=e116]:
+            - img [ref=e119]
+            - generic [ref=e120]:
+              - heading "Excellence" [level=2] [ref=e121]:
+                - strong [ref=e122]: Excellence
+              - paragraph [ref=e123]: We aspire to shape our industry through world-class performance and exceptional value creation for all our stakeholders.
+        - heading "Who We Are" [level=2] [ref=e126]
+        - generic [ref=e127]:
+          - paragraph [ref=e130]:
+            - text: At Trivium Packaging, we design innovative, infinitely recyclable metal packaging trusted by many of the world’s leading brands. With 7,200 colleagues across 60+ locations, we combine decades of expertise with a strong commitment to sustainability and innovation.
+            - text: Formed in 2019 through the merger of Exal Corporation and Ardagh’s Global Food & Specialty business, Trivium brings together more than 125 years of experience.
+            - text: What truly sets us apart is our people. A collaborative, high performance culture where every role makes a meaningful impact on our customers, communities, and the planet.
+            - text: If you want to help build a more sustainable world and make a real difference, you’re in the right place.
+          - iframe [ref=e133]:
+            - generic [active] [ref=f84e1]:
+              - generic "Player de vídeo do YouTube" [ref=f84e3]
+              - generic [ref=f84e5]:
+                - generic:
+                  - generic:
+                    - button "Assistir vídeo" [ref=f84e10] [cursor=pointer]
+                    - button "Ocultar controles do player" [ref=f84e12] [cursor=pointer]
+                    - generic [ref=f84e14]:
+                      - generic [ref=f84e19]:
+                        - generic [ref=f84e20]:
+                          - link "Meet our community | People of Trivium" [ref=f84e21] [cursor=pointer]:
+                            - /url: https://www.youtube.com/watch?v=W8p5dPogRUw
+                          - link "Trivium Packaging" [ref=f84e22] [cursor=pointer]:
+                            - /url: /channel/UCVHrHIUocXseN6_bD_mFKng
+                            - generic [ref=f84e23]: Trivium Packaging
+                        - generic [ref=f84e24]:
+                          - button [ref=f84e25] [cursor=pointer]
+                          - generic [ref=f84e27]:
+                            - generic: Trivium Packaging
+                            - generic: 129 inscritos
+                      - generic [ref=f84e28]:
+                        - button "Copiar link" [ref=f84e31] [cursor=pointer]:
+                          - generic [ref=f84e35]:
+                            - img
+                        - link "Assistir no YouTube" [ref=f84e42] [cursor=pointer]:
+                          - /url: https://www.youtube.com/watch?v=W8p5dPogRUw
+                          - generic [ref=f84e45]:
+                            - text: Assista no
+                            - img [ref=f84e47]:
+                              - generic [ref=f84e49]:
+                                - img
+        - generic [ref=e135]:
+          - generic [ref=e136]:
+            - paragraph [ref=e137]
+            - paragraph [ref=e138]
+            - heading "Explore with us" [level=3] [ref=e139]:
+              - strong [ref=e140]: Explore with us
+            - paragraph [ref=e141]: Discover our current openings and find a role that’s right for you.
+            - paragraph [ref=e142]
+            - paragraph [ref=e143]
+          - link "Discover more" [ref=e146] [cursor=pointer]:
+            - /url: /go/Vacancies/9811757/
+        - paragraph [ref=e150]:
+          - text: At Trivium Packaging, diversity, equity, inclusion, and belonging are embedded in who we are and essential to how we operate. We are building a workplace where every voice matters, every experience strengthens us, and every person has the opportunity to thrive. We foster a culture of respect, transparency, and accountability where our employees, clients, partners, and stakeholders feel represented and empowered. We believe every individual should have equitable access to opportunities in a fair and integral environment and feel safe bringing their authentic selves to work. We value and celebrate the unique perspectives that drive innovation and strengthen our global community.
+          - text: DEIB is foundational and integrated into our culture and business practices. We continuously embed equitable and inclusive principles throughout the employee lifecycle from recruitment and onboarding to development, advancement, and retention. Our commitment is ongoing and intentional.
+          - text: Innovation thrives when people feel seen, valued, and supported. That’s why we hold ourselves to high standards and maintain a zero tolerance for discrimination or harassment of any kinds. We proudly welcome applicants from all backgrounds and experiences. Employment decisions are made without regard to race, ethnicity, color, religion, sex, sexual orientation, gender identity or expression, age, national origin, disability, veteran status, or any other protected characteristic in accordance with applicable laws.
+          - text: Together, we are shaping a workplace and a future where everyone belongs.
+    - contentinfo [ref=e151]:
+      - generic [ref=e154]:
+        - list [ref=e155]:
+          - listitem [ref=e156]:
+            - link "Home" [ref=e157] [cursor=pointer]:
+              - /url: /
+          - listitem [ref=e158]:
+            - link "Vacancies" [ref=e159] [cursor=pointer]:
+              - /url: /go/Vacancies/9811757/
+          - listitem [ref=e160]:
+            - link "Privacy Policy" [ref=e161] [cursor=pointer]:
+              - /url: https://www.triviumpackaging.com/privacy-policy
+          - listitem [ref=e162]:
+            - button "Cookie Policy" [ref=e163] [cursor=pointer]
+          - listitem [ref=e164]:
+            - link "Trivium Packaging" [ref=e165] [cursor=pointer]:
+              - /url: https://www.triviumpackaging.com/
+        - list [ref=e167]:
+          - listitem [ref=e168]:
+            - link "Visit our Facebook page" [ref=e169] [cursor=pointer]:
+              - /url: https://www.facebook.com/triviumpackaging/
+              - img [ref=e170]
+          - listitem [ref=e172]:
+            - link "Follow us on LinkedIn" [ref=e173] [cursor=pointer]:
+              - /url: "https://www.linkedin.com/company/trivium-packaging/posts/?feedView=all "
+              - img [ref=e174]
+          - listitem [ref=e176]:
+            - link "Follow us on Instagram" [ref=e177] [cursor=pointer]:
+              - /url: https://www.instagram.com/triviumpackaging/
+              - img [ref=e178]
+          - listitem [ref=e181]:
+            - link "Follow us on X" [ref=e182] [cursor=pointer]:
+              - /url: https://x.com/TriviumInsights
+              - img [ref=e183]
+          - listitem [ref=e185]:
+            - link "Visit our YouTube channel" [ref=e186] [cursor=pointer]:
+              - /url: https://www.youtube.com/@TriviumPackaging
+              - img [ref=e187]
+      - paragraph [ref=e191]: © Trivium Packaging B.V. - WTC Schiphol, B Tower, 5th Floor - Schiphol Boulevard 149 - 1118 BG Schiphol - The Netherlands
+  - generic: Yes No   Yes No Yes No   Yes No Yes No   Yes No
+  - text: "\" \""

@@ -1,0 +1,194 @@
+- generic [active] [ref=e1]:
+  - generic:
+    - region "Mensagem toast":
+      - heading "0 notificações no total" [level=2] [ref=e3]
+      - alert
+  - region [ref=e4]
+  - generic [ref=e5]:
+    - generic [ref=e7]:
+      - button "Pular para pesquisa" [ref=e8] [cursor=pointer]:
+        - generic [ref=e9]: Pular para pesquisa
+      - button "Pular para conteúdo principal" [ref=e10] [cursor=pointer]:
+        - generic [ref=e11]: Pular para conteúdo principal
+      - button "Atalhos do teclado" [ref=e12] [cursor=pointer]:
+        - generic [ref=e13]: Atalhos do teclado
+      - button "Fechar menu pular" [ref=e14] [cursor=pointer]:
+        - img [ref=e15]
+        - generic [ref=e17]: Fechar menu pular
+    - banner "Navegação geral" [ref=e18]:
+      - generic [ref=e19]:
+        - link "LinkedIn" [ref=e20] [cursor=pointer]:
+          - /url: https://www.linkedin.com/feed/?nis=true
+          - img "LinkedIn" [ref=e23]:
+            - img [ref=e24]
+        - generic [ref=e28]:
+          - combobox "Pesquisar" [ref=e29]
+          - generic:
+            - img
+        - navigation "Navegação principal" [ref=e30]:
+          - list [ref=e31]:
+            - listitem [ref=e32]:
+              - link "atualizações do feed novas notificações Início" [ref=e33] [cursor=pointer]:
+                - /url: https://www.linkedin.com/feed/?nis=true&
+                - generic [ref=e34]:
+                  - generic [ref=e37]: atualizações do feed novas notificações
+                  - img [ref=e41]
+                - generic "Início" [ref=e43]
+            - listitem [ref=e44]:
+              - link "Minha rede" [ref=e45] [cursor=pointer]:
+                - /url: https://www.linkedin.com/mynetwork/?
+                - img [ref=e49]
+                - generic "Minha rede" [ref=e51]
+            - listitem [ref=e52]:
+              - link "Vagas" [ref=e53] [cursor=pointer]:
+                - /url: https://www.linkedin.com/jobs/?
+                - img [ref=e57]
+                - generic "Vagas" [ref=e59]
+            - listitem [ref=e60]:
+              - link "Mensagens" [ref=e61] [cursor=pointer]:
+                - /url: https://www.linkedin.com/messaging/?
+                - img [ref=e65]
+                - generic "Mensagens" [ref=e67]
+            - listitem [ref=e68]:
+              - link "Notificações" [ref=e69] [cursor=pointer]:
+                - /url: https://www.linkedin.com/notifications/?
+                - img [ref=e73]
+                - generic "Notificações" [ref=e75]
+            - listitem [ref=e76]:
+              - button "Fernando Xavier Eu" [ref=e78] [cursor=pointer]:
+                - img "Fernando Xavier" [ref=e79]
+                - generic [ref=e80]:
+                  - text: Eu
+                  - img [ref=e81]
+            - listitem [ref=e83]:
+              - button "Para negócios" [ref=e85] [cursor=pointer]:
+                - img [ref=e89]
+                - generic "Para negócios" [ref=e91]:
+                  - text: Para negócios
+                  - img [ref=e92]
+            - listitem [ref=e94]:
+              - link "Veicular anúncio" [ref=e95] [cursor=pointer]:
+                - /url: https://www.linkedin.com/campaignmanager/accounts?
+                - img [ref=e99]
+                - generic "Veicular anúncio" [ref=e102]
+    - generic [ref=e103]:
+      - generic [ref=e106]:
+        - main [ref=e107]:
+          - generic [ref=e110]:
+            - generic [ref=e114]:
+              - generic [ref=e115]:
+                - generic [ref=e116]:
+                  - link "Logo da empresa Assigna" [ref=e117] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/company/assigna/life
+                    - img "Logo da empresa Assigna" [ref=e120]
+                  - link "Assigna" [ref=e122] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/company/assigna/life
+                - generic [ref=e123]:
+                  - button "Compartilhar" [ref=e126] [cursor=pointer]:
+                    - img [ref=e127]
+                    - generic [ref=e129]: Compartilhar
+                  - button "Exibir mais opções" [ref=e131] [cursor=pointer]:
+                    - img [ref=e132]
+                    - generic [ref=e134]: Exibir mais opções
+              - heading "Gerente de Projetos - Controllership & Accounting" [level=1] [ref=e137]
+              - generic [ref=e140]:
+                - generic [ref=e141]: São Paulo, Brasil
+                - generic [ref=e142]: ·
+                - generic [ref=e144]: há 2 semanas
+                - generic [ref=e145]: ·
+                - generic [ref=e146]: Mais de 100 candidaturas
+                - paragraph [ref=e147]:
+                  - generic [ref=e148]: Promovida por recrutador
+                  - generic [ref=e149]: ·
+                  - strong [ref=e151]: Avaliando candidaturas
+              - generic [ref=e152]:
+                - button "Corresponde às suas preferências de vaga e o tipo de local de trabalho é Híbrido." [ref=e153] [cursor=pointer]:
+                  - strong [ref=e156]:
+                    - img [ref=e158]
+                    - text: Híbrido
+                  - generic [ref=e160]: Corresponde às suas preferências de vaga e o tipo de local de trabalho é Híbrido.
+                - button "Corresponde às suas preferências de vaga e o tipo de vaga é Tempo integral." [ref=e161] [cursor=pointer]:
+                  - strong [ref=e164]:
+                    - img [ref=e166]
+                    - text: Tempo integral
+                  - generic [ref=e168]: Corresponde às suas preferências de vaga e o tipo de vaga é Tempo integral.
+                - 'button "Corresponde às suas preferências de vaga e o tipo de vaga é {}." [ref=e169] [cursor=pointer]':
+                  - strong [ref=e172]:
+                    - img [ref=e173]
+                    - text: 3 de 10 correspondência(s) de competências
+                  - generic [ref=e175]: "Corresponde às suas preferências de vaga e o tipo de vaga é {}."
+              - generic [ref=e177]:
+                - button "Candidatura simplificada à vaga de Gerente de Projetos - Controllership &amp; Accounting na Assigna" [ref=e180] [cursor=pointer]:
+                  - img [ref=e181]
+                  - generic [ref=e183]: Candidatura simplificada
+                - button "Salvar Gerente de Projetos - Controllership & Accounting na Assigna" [ref=e184] [cursor=pointer]:
+                  - generic [ref=e185]: Salvar
+                  - generic [ref=e186]: Salvar Gerente de Projetos - Controllership & Accounting na Assigna
+            - generic [ref=e196]:
+              - article [ref=e197]:
+                - heading "Sobre a vaga" [level=2] [ref=e200]
+              - button "Clicar para ver mais detalhes" [ref=e202] [cursor=pointer]:
+                - img [ref=e203]
+                - generic [ref=e205]: Ver mais
+            - generic [ref=e207]:
+              - generic [ref=e208]:
+                - heading "Configurar alerta para vagas semelhantes" [level=2] [ref=e209]
+                - generic [ref=e211]: Gerente de contabilidade, São Paulo, Brasil
+              - generic [ref=e213] [cursor=pointer]:
+                - generic [ref=e214]: Desativada
+                - generic [ref=e215]: Configurar alerta
+                - switch "Configurar alerta"
+            - alert [ref=e218]: Carregando detalhes da vaga
+        - complementary [ref=e231]
+      - contentinfo [ref=e234]:
+        - generic [ref=e236]:
+          - generic [ref=e237]:
+            - navigation [ref=e238]:
+              - list
+            - generic [ref=e240]:
+              - list [ref=e241]:
+                - listitem [ref=e242]:
+                  - img [ref=e243]
+                  - generic [ref=e245]:
+                    - link "Dúvidas? Acesse a nossa Central de Ajuda." [ref=e246] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/help/linkedin?trk=d_flagship3_job_details
+                      - text: Dúvidas?
+                    - paragraph [ref=e247]: Acesse a nossa Central de Ajuda.
+                - listitem [ref=e248]:
+                  - img [ref=e249]
+                  - generic [ref=e251]:
+                    - link "Gerencie sua conta e privacidade Acesse suas Configurações." [ref=e252] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/psettings/
+                      - text: Gerencie sua conta e privacidade
+                    - paragraph [ref=e253]: Acesse suas Configurações.
+                - listitem [ref=e254]:
+                  - img [ref=e255]
+                  - generic [ref=e257]:
+                    - link "Visibilidade da recomendação Saiba mais sobre os conteúdos recomendados." [ref=e258] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/help/linkedin/answer/a1339724
+                      - text: Visibilidade da recomendação
+                    - paragraph [ref=e259]: Saiba mais sobre os conteúdos recomendados.
+              - generic [ref=e260]:
+                - generic [ref=e261]: Selecionar idioma
+                - combobox "Selecionar idioma" [ref=e262]
+          - paragraph [ref=e263]: LinkedIn Corporation © 2026
+    - generic:
+      - generic:
+        - complementary:
+          - generic [ref=e265]:
+            - generic [ref=e267] [cursor=pointer]:
+              - img "Fernando Xavier" [ref=e269]
+              - button "Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas." [ref=e270]:
+                - generic [ref=e271]:
+                  - generic [ref=e272]: Mensagens
+                  - generic [ref=e273]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+            - generic [ref=e274]:
+              - button "Abrir o menu suspenso de mensagens" [ref=e276] [cursor=pointer]:
+                - img "Abrir o menu suspenso de mensagens" [ref=e277]
+              - button "Escrever mensagem" [ref=e280] [cursor=pointer]:
+                - img [ref=e281]
+                - generic [ref=e283]: Escrever mensagem
+              - button "Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas." [ref=e284] [cursor=pointer]:
+                - img [ref=e285]
+                - generic [ref=e287]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+        - complementary "Assistente de IA para obter ajuda com sua carreira, vagas, etc."

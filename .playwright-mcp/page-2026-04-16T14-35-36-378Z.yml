@@ -1,0 +1,48 @@
+- generic [ref=e4]:
+  - link "Ir para o conteúdo principal" [ref=e5] [cursor=pointer]:
+    - /url: ""
+  - generic "Usamos cookies para oferecer a você uma melhor experiência de navegação, analisar o tráfego do site e personalizar o conteúdo. Leia sobre como usamos cookies e como você pode controlá-los visitando nossa página Configurações de cookies. Se continuar a usar este site, você concorda com o uso deles." [ref=e9]:
+    - paragraph [ref=e11]:
+      - text: Usamos cookies para oferecer a você uma melhor experiência de navegação, analisar o tráfego do site e personalizar o conteúdo. Leia sobre como usamos cookies e como você pode controlá-los visitando nossa página
+      - link "Configurações de cookies" [ref=e12] [cursor=pointer]:
+        - /url: http://www.unilevernotices.com/cookie-notice/notice.html
+      - text: . Se continuar a usar este site, você concorda com o uso deles.
+    - generic [ref=e13]:
+      - button "Recusar" [ref=e16] [cursor=pointer]
+      - button "Aceitar cookies" [ref=e20] [cursor=pointer]
+  - banner [ref=e23]:
+    - generic [ref=e25]:
+      - heading "Carreiras Unilever" [level=1] [ref=e28]
+      - generic [ref=e30]:
+        - generic [ref=e31]:
+          - button "Português (‏Brasil)" [ref=e33] [cursor=pointer]:
+            - generic [ref=e37]: Português (‏Brasil)
+          - button "Fazer login" [ref=e39] [cursor=pointer]:
+            - generic [ref=e44]: Fazer login
+        - navigation [ref=e45]:
+          - button "Pesquisar cargos" [ref=e46] [cursor=pointer]
+          - button "Junte-se à nossa comunidade de talentos" [ref=e47] [cursor=pointer]
+  - generic [ref=e54]: Loading
+  - generic [ref=e62]:
+    - generic [ref=e63]: Siga-nos
+    - list [ref=e64]:
+      - listitem [ref=e65] [cursor=pointer]:
+        - link "Glassdoor" [ref=e66]:
+          - /url: https://www.glassdoor.co.uk/Overview/Working-at-Unilever-EI_IE3513.11,19.htm
+      - listitem [ref=e71] [cursor=pointer]:
+        - link "LinkedIn" [ref=e72]:
+          - /url: https://www.linkedin.com/company/unilever
+      - listitem [ref=e76] [cursor=pointer]:
+        - link "YouTube" [ref=e77]:
+          - /url: https://www.youtube.com/user/Unilever
+      - listitem [ref=e83] [cursor=pointer]:
+        - link "X" [ref=e84]:
+          - /url: https://www.twitter.com/Unilever
+      - listitem [ref=e88] [cursor=pointer]:
+        - link "Facebook" [ref=e89]:
+          - /url: https://www.facebook.com/Unilever
+    - link "Aviso Legal Unilever" [ref=e94] [cursor=pointer]:
+      - /url: https://www.unilever.com/legal.html
+    - generic [ref=e95]:
+      - img [ref=e99]
+      - generic [ref=e119]: © 2026 Workday, Inc. Todos os direitos reservados.

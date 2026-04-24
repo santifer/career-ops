@@ -1,0 +1,3 @@
+[     275ms] [LOG] withRouteChange undefined @ https://oportunidades.mindsight.com.br/_next/static/chunks/675-75f13113a12bf0e0.js:0
+[    1415ms] [WARNING] [quick-fetch] quickFetchScript was not included or running in Node.js environment. Falling back to stubbed implementation. @ https://static.hsappstatic.net/conversations-visitor-ui/static-1.28580/bundles/visitor.js:0
+[   40943ms] [LOG] withRouteChange undefined @ https://oportunidades.mindsight.com.br/_next/static/chunks/675-75f13113a12bf0e0.js:0

@@ -1,0 +1,58 @@
+- generic [ref=e1988]:
+  - heading "Teste de raciocínio lógico e numérico completo" [level=1] [ref=e1989]
+  - generic [ref=e1990]:
+    - generic [ref=e1991]:
+      - generic [ref=e1992]:
+        - generic [ref=e1994]: "01"
+        - generic [ref=e1997]: "02"
+        - generic [ref=e2000]: "03"
+        - generic [ref=e2003]: "04"
+        - generic [ref=e2006]: "05"
+        - generic [ref=e2009]: "06"
+        - generic [ref=e2012]: "07"
+        - generic [ref=e2015]: "08"
+        - generic [ref=e2018]: "09"
+        - generic [ref=e2021]: "10"
+        - generic [ref=e2024]: "11"
+        - generic [ref=e2027]: "12"
+        - generic [ref=e2030]: "13"
+        - generic [ref=e2033]: "14"
+        - generic [ref=e2036]: "15"
+        - generic [ref=e2039]: "16"
+        - generic [ref=e2042]: "17"
+        - generic [ref=e2045]: "18"
+      - separator [ref=e2047]
+      - generic [ref=e2048]:
+        - paragraph [ref=e2051]:
+          - img [ref=e2052]
+          - text: 01:08
+        - separator [ref=e2055]
+    - generic [ref=e2056]:
+      - generic [ref=e2057]:
+        - generic [ref=e2058]: "Enunciado da questão:"
+        - text: "Para as questões a seguir, descubra qual o número que segue: 1, 2, 3, 4, 5, 4, 4, 8, 24, 96, 14, 18, 22, 30, 54, 12, 26, 44, 66, 96, ?"
+      - group [ref=e2059]:
+        - radiogroup "undefined" [ref=e2061]:
+          - generic [ref=e2062]:
+            - generic [ref=e2063] [cursor=pointer]:
+              - generic [ref=e2065]:
+                - img [ref=e2066]
+                - radio "148" [ref=e2068]
+              - generic [ref=e2069]: "148"
+            - generic [ref=e2070] [cursor=pointer]:
+              - generic [ref=e2072]:
+                - img [ref=e2073]
+                - radio "154" [ref=e2075]
+              - generic [ref=e2076]: "154"
+            - generic [ref=e2077] [cursor=pointer]:
+              - generic [ref=e2079]:
+                - img [ref=e2080]
+                - radio "150" [ref=e2082]
+              - generic [ref=e2083]: "150"
+            - generic [ref=e2084] [cursor=pointer]:
+              - generic [ref=e2086]:
+                - img [ref=e2096]
+                - radio "152" [checked] [active] [ref=e2089]
+              - generic [ref=e2090]: "152"
+      - button "ENVIAR RESPOSTA" [ref=e2098] [cursor=pointer]:
+        - generic [ref=e2101]: ENVIAR RESPOSTA

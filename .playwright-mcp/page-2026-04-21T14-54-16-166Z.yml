@@ -1,0 +1,851 @@
+- generic [active] [ref=e1]:
+  - generic:
+    - region "Mensagem toast":
+      - heading "0 notificações no total" [level=2] [ref=e3]
+      - alert
+  - region [ref=e4]
+  - generic [ref=e288]:
+    - img [ref=e290]
+    - paragraph [ref=e294]:
+      - text: Ocorreu um erro ao processar seu pagamento.
+      - link "Atualize sua(s) forma(s) de pagamento" [ref=e295] [cursor=pointer]:
+        - /url: https://www.linkedin.com/manage/purchases-payments/purchases/485025203/payments?trk=global_alert
+      - text: .
+    - button "Fechar" [ref=e296] [cursor=pointer]:
+      - img [ref=e297]
+      - generic [ref=e299]: Fechar
+  - generic [ref=e5]:
+    - generic [ref=e7]:
+      - button "Pular para pesquisa" [ref=e8] [cursor=pointer]:
+        - generic [ref=e9]: Pular para pesquisa
+      - button "Pular para conteúdo principal" [ref=e10] [cursor=pointer]:
+        - generic [ref=e11]: Pular para conteúdo principal
+      - button "Atalhos do teclado" [ref=e12] [cursor=pointer]:
+        - generic [ref=e13]: Atalhos do teclado
+      - button "Fechar menu pular" [ref=e14] [cursor=pointer]:
+        - img [ref=e15]
+        - generic [ref=e17]: Fechar menu pular
+    - banner "Navegação geral" [ref=e18]:
+      - generic [ref=e19]:
+        - link "LinkedIn" [ref=e20] [cursor=pointer]:
+          - /url: https://www.linkedin.com/feed/?nis=true
+          - img "LinkedIn" [ref=e23]:
+            - img [ref=e24]
+        - generic [ref=e28]:
+          - combobox "Pesquisar" [ref=e29]
+          - generic:
+            - img
+        - navigation "Navegação principal" [ref=e30]:
+          - list [ref=e31]:
+            - listitem [ref=e32]:
+              - link "atualizações do feed novas notificações Início" [ref=e33] [cursor=pointer]:
+                - /url: https://www.linkedin.com/feed/?nis=true&
+                - generic [ref=e34]:
+                  - generic [ref=e37]: atualizações do feed novas notificações
+                  - img [ref=e41]
+                - generic "Início" [ref=e43]
+            - listitem [ref=e44]:
+              - link "2 atualizações de rede novas notificações Minha rede" [ref=e45] [cursor=pointer]:
+                - /url: https://www.linkedin.com/mynetwork/?
+                - generic [ref=e46]:
+                  - generic [ref=e47]:
+                    - generic [ref=e48]: "2"
+                    - generic [ref=e49]: 2 atualizações de rede novas notificações
+                  - img [ref=e53]
+                - generic "Minha rede" [ref=e55]
+            - listitem [ref=e56]:
+              - link "Vagas" [ref=e57] [cursor=pointer]:
+                - /url: https://www.linkedin.com/jobs/?
+                - img [ref=e61]
+                - generic "Vagas" [ref=e63]
+            - listitem [ref=e64]:
+              - link "Mensagens" [ref=e65] [cursor=pointer]:
+                - /url: https://www.linkedin.com/messaging/?
+                - img [ref=e69]
+                - generic "Mensagens" [ref=e71]
+            - listitem [ref=e72]:
+              - link "17 novas notificações Notificações" [ref=e73] [cursor=pointer]:
+                - /url: https://www.linkedin.com/notifications/?
+                - generic [ref=e74]:
+                  - generic [ref=e75]:
+                    - generic [ref=e76]: "17"
+                    - generic [ref=e77]: 17 novas notificações
+                  - img [ref=e81]
+                - generic "Notificações" [ref=e83]
+            - listitem [ref=e84]:
+              - button "Fernando Xavier Eu" [ref=e86] [cursor=pointer]:
+                - img "Fernando Xavier" [ref=e87]
+                - generic [ref=e88]:
+                  - text: Eu
+                  - img [ref=e89]
+            - listitem [ref=e91]:
+              - button "Para negócios" [ref=e93] [cursor=pointer]:
+                - img [ref=e97]
+                - generic "Para negócios" [ref=e99]:
+                  - text: Para negócios
+                  - img [ref=e100]
+            - listitem [ref=e102]:
+              - link "Veicular anúncio" [ref=e103] [cursor=pointer]:
+                - /url: https://www.linkedin.com/campaignmanager/accounts?
+                - img [ref=e107]
+                - generic "Veicular anúncio" [ref=e110]
+    - generic [ref=e111]:
+      - generic [ref=e114]:
+        - main [ref=e115]:
+          - generic [ref=e118]:
+            - generic [ref=e122]:
+              - generic [ref=e123]:
+                - generic [ref=e124]:
+                  - link "Logo da empresa Grupo Renova" [ref=e125] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/company/gruporenovadobrasil/life
+                    - img "Logo da empresa Grupo Renova" [ref=e128]
+                  - link "Grupo Renova" [ref=e300] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/company/gruporenovadobrasil/life
+                - generic [ref=e131]:
+                  - button "Compartilhar" [ref=e134] [cursor=pointer]:
+                    - img [ref=e135]
+                    - generic [ref=e137]: Compartilhar
+                  - button "Exibir mais opções" [ref=e139] [cursor=pointer]:
+                    - img [ref=e140]
+                    - generic [ref=e142]: Exibir mais opções
+              - heading "Controller" [level=1] [ref=e145]
+              - generic [ref=e148]:
+                - generic [ref=e301]: São Paulo, São Paulo, Brasil
+                - generic [ref=e302]: ·
+                - generic [ref=e304]: há 1 semana
+                - generic [ref=e305]: ·
+                - generic [ref=e306]: Mais de 100 pessoas clicaram em Candidatar-se
+                - paragraph [ref=e307]:
+                  - generic [ref=e308]: Respostas gerenciadas fora do LinkedIn
+              - generic [ref=e157]:
+                - button "Corresponde às suas preferências de vaga e o tipo de local de trabalho é Presencial." [ref=e309] [cursor=pointer]:
+                  - strong [ref=e312]:
+                    - img [ref=e314]
+                    - text: Presencial
+                  - generic [ref=e316]: Corresponde às suas preferências de vaga e o tipo de local de trabalho é Presencial.
+                - button "Corresponde às suas preferências de vaga e o tipo de vaga é Tempo integral." [ref=e317] [cursor=pointer]:
+                  - strong [ref=e320]:
+                    - img [ref=e322]
+                    - text: Tempo integral
+                  - generic [ref=e324]: Corresponde às suas preferências de vaga e o tipo de vaga é Tempo integral.
+              - generic [ref=e175]:
+                - link "Candidatar-se à vaga de Controller no site da empresa" [ref=e178] [cursor=pointer]:
+                  - img [ref=e179]
+                  - generic [ref=e181]: Candidatar-se
+                - button "Salvar Controller na Grupo Renova" [ref=e325] [cursor=pointer]:
+                  - generic [ref=e326]: Salvar
+                  - generic [ref=e327]: Salvar Controller na Grupo Renova
+            - generic [ref=e185]:
+              - heading "Pessoas que você pode contatar" [level=2] [ref=e328]
+              - generic [ref=e331]:
+                - generic [ref=e332]:
+                  - generic [ref=e333]:
+                    - list [ref=e334]:
+                      - listitem [ref=e335]:
+                        - img "Logo de Fundação Getulio Vargas" [ref=e337]
+                    - generic [ref=e338]: Logo de Fundação Getulio Vargas
+                  - generic [ref=e339]: Ex-alunos da instituição de ensino Fundação Getulio Vargas
+                - button "Exibir todos" [ref=e340] [cursor=pointer]:
+                  - generic [ref=e341]: Exibir todos
+            - generic [ref=e194]:
+              - article [ref=e195]:
+                - generic [ref=e197]:
+                  - heading "Sobre a vaga" [level=2] [ref=e198]
+                  - paragraph [ref=e343]:
+                    - strong [ref=e345]: CONTROLLER
+                    - text: "📍 Local: Arujá - SP"
+                    - text: Cargo Financeiro Corporativo | Controladoria
+                    - strong [ref=e347]: Contexto Da Posição
+                    - text: Empresa brasileira de médio-grande porte especializada em soluções integradas de valorização e destinação sustentável de resíduos, com múltiplas unidades operacionais, presença em diversos estados e operações diversificadas (coprocessamento, gerenciamento total de resíduos, logística).
+                    - text: O Controller atua como business partner das áreas de negócio — fornecendo informação qualificada, análise e visão crítica para que os gestores tomem melhores decisões.
+                    - strong [ref=e349]: Responsabilidades
+                    - emphasis [ref=e351]:
+                      - strong [ref=e353]: Planejamento Orçamentário e Forecast
+                    - list [ref=e355]:
+                      - listitem [ref=e356]: Conduzir o ciclo orçamentário anual (budget), incluindo definição de premissas, consolidação e aprovação, com ênfase em controle de custos e alinhamento com a estratégia de negócios.
+                      - listitem [ref=e357]: Realizar forecast periódico (mensal ou trimestral), com análise de variações (real vs. orçado vs. forecast anterior).
+                      - listitem [ref=e358]: Garantir que cada gestor de área participe ativamente da construção e revisão do orçamento de sua responsabilidade.
+                    - emphasis [ref=e360]:
+                      - strong [ref=e362]: Gestão Gerencial e Análise de Resultados
+                    - list [ref=e364]:
+                      - listitem [ref=e365]: Elaborar e analisar DRE gerencial consolidado e por contrato/unidade, identificando variações, riscos e oportunidades.
+                      - listitem [ref=e366]: Acompanhar rentabilidade por contrato e por operação, sinalizando desvios aos gestores responsáveis.
+                      - listitem [ref=e367]: Monitorar indicadores de custos e identificar oportunidades de redução, subsidiando os gestores de área com dados para tomada de decisão.
+                      - listitem [ref=e368]: Preparar relatórios gerenciais, análises financeiras e apresentações de resultados para o CFO e liderança, com foco em ações corretivas.
+                    - emphasis [ref=e370]:
+                      - strong [ref=e372]: Controles Internos e Compliance
+                    - list [ref=e374]:
+                      - listitem [ref=e375]: Manter e aprimorar práticas de controles internos e compliance financeiro, compatíveis com o estágio atual da organização.
+                      - listitem [ref=e376]: Validar consistência entre informações do ERP, contabilidade terceirizada e relatórios gerenciais.
+                      - listitem [ref=e377]: Atuar como interlocutor técnico com o escritório contábil externo, assegurando qualidade e tempestividade das entregas.
+                    - emphasis [ref=e379]:
+                      - strong [ref=e381]: Interface com Áreas de Negócio (Business Partner)
+                    - list [ref=e383]:
+                      - listitem [ref=e384]: Atuar como parceiro analítico dos gerentes operacionais, comerciais e administrativos, fornecendo visão financeira para suporte à decisão.
+                      - listitem [ref=e385]: Participar de reuniões de resultado com gestores, provocando discussão sobre desempenho e planos de ação.
+                      - listitem [ref=e386]: Apoiar análises específicas sob demanda (viabilidade de novos contratos, simulações de preço, análise de investimentos).
+                    - emphasis [ref=e388]:
+                      - strong [ref=e390]: Melhoria Contínua
+                    - list [ref=e392]:
+                      - listitem [ref=e393]: Aperfeiçoar processos, rotinas e indicadores de desempenho da Controladoria e FP&A, promovendo maior eficiência e integração com as operações.
+                    - strong [ref=e395]: Requisitos
+                    - emphasis [ref=e397]:
+                      - strong [ref=e399]: "Formação e Experiência:"
+                    - list [ref=e401]:
+                      - listitem [ref=e402]: Formação superior completa em Contabilidade, Administração, Economia ou áreas afins.
+                      - listitem [ref=e403]: Experiência sólida (mínimo 5 anos) em Controladoria, Custos ou FP&A, preferencialmente em empresas de porte médio com múltiplas unidades.
+                      - listitem [ref=e404]: Vivência prática em planejamento orçamentário, análise de DRE por centro de custo/contrato e gestão gerencial.
+                      - listitem [ref=e405]: Conhecimento em controles internos e compliance financeiro.
+                    - strong [ref=e407]: Competências Técnicas
+                    - list [ref=e409]:
+                      - listitem [ref=e410]: Domínio avançado de Excel (modelagem, tabelas dinâmicas, Power Query).
+                      - listitem [ref=e411]: Capacidade de trabalhar com dados extraídos de ERP próprio e construir visões gerenciais a partir de bases de dados diversas.
+                      - listitem [ref=e412]: "Desejável: experiência com Power BI ou ferramentas equivalentes de BI."
+                      - listitem [ref=e413]: "Desejável: experiência em ambiente industrial ou empresas com múltiplas unidades operacionais."
+                      - listitem [ref=e414]: "Diferencial: experiência no setor de gestão de resíduos ou serviços ambientais."
+                    - strong [ref=e416]: Competências Comportamentais
+                    - list [ref=e418]:
+                      - listitem [ref=e419]: Capacidade analítica e visão estratégica — saber transformar dados em recomendações.
+                      - listitem [ref=e420]: Comunicação direta e objetiva — capacidade de interagir com todos os níveis, do operacional à Presidência, sem dependência de jargões.
+                      - listitem [ref=e421]: Postura de parceiro, não de fiscal — capacidade de gerar confiança e colaboração com os gestores de área, atuando como business partner.
+                      - listitem [ref=e422]: Organização e atenção a prazos — rigor no calendário de entregas gerenciais.
+                      - listitem [ref=e423]: Autonomia e proatividade — perfil construtor, capaz de liderar iniciativas e trabalhar de forma colaborativa.
+                      - listitem [ref=e424]: Postura ética, responsável e orientada a resultados, com foco em integridade e accountability.
+                    - strong [ref=e426]: Informações Adicionais
+                    - strong [ref=e428]: "Regime:"
+                    - text: 100% presencial — Segunda a Sexta, 08h00 às 17h30.
+                    - strong [ref=e430]: "Remuneração:"
+                    - text: Compatível com o mercado para o porte e complexidade da operação.
+                    - strong [ref=e432]: Benefícios
+                    - text: Refeição no local
+                    - text: Cesta básica ou Vale Alimentação (Cartão iFood)
+                    - text: Vale-transporte
+                    - text: Convênio médico e odontológico (titular e dependentes)
+                    - text: Wellhub (plataforma de bem-estar e academias)
+                    - text: PLR
+                    - text: Benefícios para dependentes de até 12 anos
+                    - text: Cesta de Natal
+                    - text: OnHappy (descontos em viagens e hotéis)
+                    - strong [ref=e434]: Acreditamos que diferentes perspectivas impulsionam a inovação e fortalecem nosso propósito. Venha construir esse futuro conosco!
+                    - text: ♻️💚
+              - button "Clicar para ver mais detalhes" [ref=e200] [cursor=pointer]:
+                - img [ref=e201]
+                - generic [ref=e203]: Ver mais
+            - generic [ref=e205]:
+              - generic [ref=e206]:
+                - heading "Configurar alerta para vagas semelhantes" [level=2] [ref=e207]
+                - generic [ref=e209]: Controlador, São Paulo, São Paulo, Brasil
+              - generic [ref=e211] [cursor=pointer]:
+                - generic [ref=e212]: Desativada
+                - generic [ref=e213]: Configurar alerta
+                - switch "Configurar alerta"
+            - generic [ref=e435]:
+              - button "Fechar cartão promocional de serviços" [ref=e436] [cursor=pointer]:
+                - img [ref=e437]
+                - generic [ref=e439]: Fechar cartão promocional de serviços
+              - generic [ref=e441]:
+                - heading "Veja uma seleção de ferramentas de IA para sua pesquisa de vagas" [level=2] [ref=e442]
+                - paragraph [ref=e443]: Receba uma oferta de emprego mais rápido com a ajuda de ferramentas de IA criadas por empresas certificadas, como Kickresume, Exponent Interview Prep e muito mais.
+                - link "Começar" [ref=e444] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/ai-tools/?sectionType=career-coaching
+                  - generic [ref=e445]: Começar
+            - generic [ref=e446]:
+              - generic [ref=e447]:
+                - generic [ref=e448]:
+                  - img "Premium" [ref=e450]:
+                    - img [ref=e451]
+                  - button "Saiba mais sobre estatísticas sobre candidatos" [ref=e454] [cursor=pointer]:
+                    - img [ref=e455]
+                - heading "Veja como sua candidatura se compara à de outras pessoas" [level=2] [ref=e457]
+                - generic [ref=e459]:
+                  - heading "Pessoas que clicaram em Candidate-se" [level=3] [ref=e460]
+                  - list [ref=e461]:
+                    - listitem [ref=e462]:
+                      - generic [ref=e463]: "190"
+                      - generic [ref=e464]: no total
+                    - listitem [ref=e465]:
+                      - generic [ref=e466]: "36"
+                      - generic [ref=e467]: no último dia
+                - generic [ref=e468]:
+                  - generic [ref=e469]:
+                    - heading "Nível de experiência do candidato" [level=3] [ref=e470]
+                    - list [ref=e471]:
+                      - listitem [ref=e472]:
+                        - paragraph [ref=e473]: 35% de candidatos com nível Sênior
+                        - progressbar [ref=e474]
+                      - listitem [ref=e475]:
+                        - paragraph [ref=e476]: 33% de candidatos com nível Diretor
+                        - progressbar [ref=e477]
+                      - listitem [ref=e478]:
+                        - paragraph [ref=e479]: 18% de candidatos com nível Gerente
+                        - progressbar [ref=e480]
+                      - listitem [ref=e481]:
+                        - paragraph [ref=e482]: 6% de candidatos com nível Iniciante
+                        - progressbar [ref=e483]
+                  - generic [ref=e484]:
+                    - heading "Nível de formação acadêmica do candidato" [level=3] [ref=e485]
+                    - list [ref=e486]:
+                      - listitem [ref=e487]:
+                        - generic [ref=e488]: 60%
+                        - generic [ref=e489]: tem Pós-graduação Lato Sensu - MBA (semelhante ao seu)
+                      - listitem [ref=e490]:
+                        - generic [ref=e491]: 11%
+                        - generic [ref=e492]: tem Pós-graduação
+                      - listitem [ref=e493]:
+                        - generic [ref=e494]: 8%
+                        - generic [ref=e495]: tem Pós-graduação Lato Sensu - MBA Executivo
+                      - listitem [ref=e496]:
+                        - generic [ref=e497]: 21%
+                        - generic [ref=e498]: tem outros diplomas
+              - generic [ref=e499]:
+                - generic [ref=e500]:
+                  - img "Premium" [ref=e501]:
+                    - img [ref=e502]
+                  - button "Saiba mais sobre estatísticas sobre empresas" [ref=e505] [cursor=pointer]:
+                    - img "Saiba mais sobre estatísticas sobre empresas" [ref=e506]
+                - heading "Estatísticas exclusivas de pessoas à procura de emprego sobre a Grupo Renova" [level=2] [ref=e508]
+                - generic [ref=e509]:
+                  - heading "Última tendência de contratação" [level=3] [ref=e510]
+                  - generic [ref=e511]:
+                    - list [ref=e512]:
+                      - listitem [ref=e513]:
+                        - paragraph [ref=e514]: "215"
+                        - paragraph [ref=e515]: funcionários no total
+                      - listitem [ref=e516]:
+                        - paragraph [ref=e517]: 45%
+                        - paragraph [ref=e519]: toda a empresa
+                        - paragraph [ref=e520]: Crescimento em 2 anos
+                        - generic [ref=e521]: 45% de aumento
+                      - listitem [ref=e522]:
+                        - paragraph [ref=e523]: 0%
+                        - paragraph [ref=e525]: Contabilidade/Auditoria
+                        - paragraph [ref=e526]: Crescimento em 2 anos
+                        - generic [ref=e527]: Nenhuma alteração
+                    - region "Chart. Highcharts interactive chart." [ref=e530]:
+                      - region "Chart screen reader information.":
+                        - generic [ref=e531]:
+                          - heading "Chart" [level=4] [ref=e532]
+                          - generic [ref=e533]: Chart with 25 data points.
+                          - generic [ref=e534]: "The chart has 1 X axis displaying Time. Range: 2023-12-13 12:00:00 to 2026-05-07 12:00:00."
+                          - generic [ref=e535]: "The chart has 1 Y axis displaying values. Range: 0 to 300."
+                      - img "Interactive chart" [ref=e540]:
+                        - generic [ref=e552]:
+                          - img "1. April 2024, 148 funcionários" [ref=e553]
+                          - img "2. May 2024, 151 funcionários, increase 2% do mês passado" [ref=e554]
+                          - img "3. June 2024, 156 funcionários, increase 3% do mês passado" [ref=e555]
+                          - img "4. July 2024, 159 funcionários, increase 2% do mês passado" [ref=e556]
+                          - img "5. August 2024, 160 funcionários, increase 1% do mês passado" [ref=e557]
+                          - img "6. September 2024, 163 funcionários, increase 2% do mês passado" [ref=e558]
+                          - img "7. October 2024, 168 funcionários, increase 3% do mês passado" [ref=e559]
+                          - img "8. November 2024, 171 funcionários, increase 2% do mês passado" [ref=e560]
+                          - img "9. December 2024, 174 funcionários, increase 2% do mês passado" [ref=e561]
+                          - img "10. January 2025, 179 funcionários, increase 3% do mês passado" [ref=e562]
+                          - img "11. February 2025, 185 funcionários, increase 3% do mês passado" [ref=e563]
+                          - img "12. March 2025, 188 funcionários, increase 2% do mês passado" [ref=e564]
+                          - img "13. April 2025, 186 funcionários, decrease 1% do mês passado" [ref=e565]
+                          - img "14. May 2025, 190 funcionários, increase 2% do mês passado" [ref=e566]
+                          - img "15. June 2025, 194 funcionários, increase 2% do mês passado" [ref=e567]
+                          - img "16. July 2025, 198 funcionários, increase 2% do mês passado" [ref=e568]
+                          - img "17. August 2025, 202 funcionários, increase 2% do mês passado" [ref=e569]
+                          - img "18. September 2025, 207 funcionários, increase 2% do mês passado" [ref=e570]
+                          - img "19. October 2025, 207 funcionários, neutral 0% do mês passado" [ref=e571]
+                          - img "20. November 2025, 206 funcionários, neutral 0% do mês passado" [ref=e572]
+                          - img "21. December 2025, 211 funcionários, increase 2% do mês passado" [ref=e573]
+                          - img "22. January 2026, 209 funcionários, decrease 1% do mês passado" [ref=e574]
+                          - img "23. February 2026, 210 funcionários, neutral 0% do mês passado" [ref=e575]
+                          - img "24. March 2026, 215 funcionários, increase 2% do mês passado" [ref=e576]
+                          - img "25. April 2026, 215 funcionários, neutral 0% do mês passado" [ref=e577]
+                        - generic [ref=e578]:
+                          - generic [ref=e579]: abr. de 2024
+                          - generic [ref=e580]: out. de 2024
+                          - generic [ref=e581]: abr. de 2025
+                          - generic [ref=e582]: out. de 2025
+                          - generic [ref=e583]: abr. de 2026
+                        - generic [ref=e584]:
+                          - generic [ref=e585]: "0"
+                          - generic [ref=e586]: "100"
+                          - generic [ref=e587]: "200"
+                          - generic [ref=e588]: "300"
+                      - generic [ref=e590]: End of interactive chart.
+                    - generic [ref=e591]:
+                      - img [ref=e592]
+                      - text: Tempo médio do funcionário na empresa ‧
+                      - strong [ref=e595]: 2 anos
+                - generic [ref=e596]:
+                  - heading "A empresa Grupo Renova contrata pessoas de algumas dessas empresas e instituições de ensino" [level=3] [ref=e597]
+                  - list [ref=e599]:
+                    - listitem [ref=e600]:
+                      - generic [ref=e601]:
+                        - figure [ref=e602]:
+                          - img "Fundação Getulio Vargas" [ref=e603]
+                        - paragraph [ref=e604]:
+                          - text: A Grupo Renova contratou 6 pessoas de Fundação Getulio Vargas.
+                          - link "Ver todas" [ref=e605] [cursor=pointer]:
+                            - /url: https://www.linkedin.com/search/results/people/?origin=JOB_PAGE_CANNED_SEARCH&currentCompany=72761285&schoolFilter=8175
+                            - strong [ref=e606]: Ver todas
+                - link "Exibir mais estatísticas Premium" [ref=e607] [cursor=pointer]:
+                  - /url: /company/gruporenovadobrasil/insights/?insightType=HEADCOUNT
+            - generic [ref=e609]:
+              - generic [ref=e610]:
+                - heading "Sobre a empresa" [level=2] [ref=e611]
+                - generic [ref=e612]:
+                  - generic [ref=e613]:
+                    - link "Logo da empresa Grupo Renova" [ref=e615] [cursor=pointer]:
+                      - /url: /company/gruporenovadobrasil/life/
+                      - img "Logo da empresa Grupo Renova" [ref=e616]
+                    - generic [ref=e617]:
+                      - link "Grupo Renova" [ref=e619] [cursor=pointer]:
+                        - /url: /company/gruporenovadobrasil/life/
+                      - generic [ref=e620]: 14.746 seguidores
+                  - button "Seguir" [ref=e621] [cursor=pointer]:
+                    - img [ref=e622]
+                    - generic [ref=e624]: Seguir
+                - generic [ref=e625]:
+                  - text: Serviços ambientais
+                  - generic [ref=e626]: • 501-1.000 funcionários
+                  - generic [ref=e627]: • 215 no LinkedIn
+                - paragraph [ref=e628]:
+                  - generic [ref=e629]:
+                    - text: Desde 1986, o Grupo Renova é referência nacional no gerenciamento e tratamento de resíduos industriais, unindo tecnologia, inovação e compromisso ambiental. Com quase quatro décadas de história, seguimos firmes em nosso propósito de transformar resíduos em valor, atuando com excelência, responsabilidade e foco em soluções sustentáveis para a indústria.
+                    - text: "🌱 Nossa missão é clara: Transformar resíduos em valor. Contribuindo para a descarbonização e para a construção de um futuro mais sustentável."
+                    - text: "🔭 Temos também uma visão de longo prazo: Ser a empresa mais eficiente e lucrativa do setor de resíduos através da constante busca pela excelência do nosso time e nossos processos."
+                    - text: "💡 E nos guiamos por valores sólidos, que fazem parte da nossa cultura e do nosso dia a dia:"
+                    - text: • Cuidamos das pessoas e valorizamos as relações
+                    - text: • Entregamos resultados duradouros
+                    - text: • Somos um time que faz acontecer
+                    - text: • Geramos impactos positivos e de qualidade
+                    - text: • Priorizamos segurança todos os dias
+                    - text: Ao longo dos anos, ampliamos nossa atuação e consolidamos nosso posicionamento como uma empresa de energia renovável. Atuamos diretamente na descarbonização da indústria e somos agentes ativos da economia circular, oferecendo soluções que reduzem impactos ambientais e promovem o uso inteligente de recursos.
+                    - text: 🚀 Com orgulho, somos o maior fabricante e expedidor de CDR (Combustível Derivado de Resíduos) do Brasil, liderando a transformação de resíduos em energia renovável e contribuindo para uma matriz energética mais sustentável.
+                    - text: No Grupo Renova, cada processo é pensado para gerar valor ambiental, econômico e social. Porque para nós, sustentabilidade não é um diferencial — é a base de tudo que fazemos. ♻️
+                    - generic [ref=e630]:
+                      - generic [ref=e631]: …
+                      - button "exibir mais" [ref=e632] [cursor=pointer]
+              - link "Exibir mais sobre a empresa" [ref=e634] [cursor=pointer]:
+                - /url: /company/gruporenovadobrasil/life/
+                - text: Exibir mais
+            - heading "Mais vagas" [level=2] [ref=e636]
+            - list [ref=e638]:
+              - listitem [ref=e639]:
+                - link "Logo da empresa padrão em branco Chief Operating Officer (COO) - Economia Sensata Olivia Sensata São Paulo, São Paulo, Brasil (Presencial) Você seria um dos melhores candidatos Você seria um dos melhores candidatos Há 2 semanas" [ref=e641] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4396144687&referenceJobId=4399707305&originToLandingJobPostings=4396144687&trackingId=QP8O2rlmQ3BRQP7w94QNzA%3D%3D&refId=l%2BeLcHLXbX6aPC1Pzhv%2F0w%3D%3D&eBP=BUDGET_EXHAUSTED_JOB
+                  - generic [ref=e643]:
+                    - img "Logo da empresa padrão em branco" [ref=e646]
+                    - generic [ref=e647]:
+                      - generic [ref=e648]:
+                        - generic [ref=e649]:
+                          - strong [ref=e651]: Chief Operating Officer (COO) - Economia Sensata
+                          - generic [ref=e652]: Chief Operating Officer (COO) - Economia Sensata
+                        - generic [ref=e654]: Olivia Sensata
+                        - generic [ref=e656]: São Paulo, São Paulo, Brasil (Presencial)
+                        - list [ref=e658]:
+                          - listitem [ref=e659]:
+                            - img "Você seria um dos melhores candidatos" [ref=e662]:
+                              - img [ref=e663]
+                            - generic [ref=e666]: Você seria um dos melhores candidatos
+                      - list [ref=e668]:
+                        - listitem [ref=e669]:
+                          - time [ref=e670]: Há 2 semanas
+              - listitem [ref=e671]:
+                - link "Logo da empresa Salvy Finance Lead with verification Salvy Curitiba, Paraná, Brasil (Híbrido) 2 ex-alunos da Fundação Getulio Vargas trabalham aqui Há 3 semanas" [ref=e673] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4340053853&referenceJobId=4399707305&originToLandingJobPostings=4340053853&trackingId=9Ap5j%2FCBIW9WKjfhh53e8Q%3D%3D&refId=l%2BeLcHLXbX6aPC1Pzhv%2F0w%3D%3D&eBP=BUDGET_EXHAUSTED_JOB
+                  - generic [ref=e675]:
+                    - img "Logo da empresa Salvy" [ref=e680]
+                    - generic [ref=e681]:
+                      - generic [ref=e682]:
+                        - generic [ref=e683]:
+                          - generic [ref=e684]:
+                            - strong [ref=e685]: Finance Lead
+                            - img [ref=e687]
+                          - generic [ref=e689]: Finance Lead with verification
+                        - generic [ref=e691]: Salvy
+                        - generic [ref=e693]: Curitiba, Paraná, Brasil (Híbrido)
+                        - list [ref=e695]:
+                          - listitem [ref=e696]:
+                            - generic [ref=e699]:
+                              - generic [ref=e700]: 2 ex-alunos trabalham aqui
+                              - generic [ref=e701]: 2 ex-alunos da Fundação Getulio Vargas trabalham aqui
+                      - list [ref=e703]:
+                        - listitem [ref=e704]:
+                          - time [ref=e705]: Há 3 semanas
+              - listitem [ref=e706]:
+                - link "Logo da empresa Nas Nuvens Music Group Revenue Operations Manager (Music & Catalog Business) Nas Nuvens Music Group São Paulo, São Paulo, Brasil (Presencial) Você seria um dos melhores candidatos Você seria um dos melhores candidatos Há 6 dias" [ref=e708] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4400775577&referenceJobId=4399707305&originToLandingJobPostings=4400775577&trackingId=3Q2VB9J5jLBzYjpMRbkn5A%3D%3D&refId=l%2BeLcHLXbX6aPC1Pzhv%2F0w%3D%3D&eBP=BUDGET_EXHAUSTED_JOB
+                  - generic [ref=e710]:
+                    - img "Logo da empresa Nas Nuvens Music Group" [ref=e715]
+                    - generic [ref=e716]:
+                      - generic [ref=e717]:
+                        - generic [ref=e718]:
+                          - strong [ref=e720]: Revenue Operations Manager (Music & Catalog Business)
+                          - generic [ref=e721]: Revenue Operations Manager (Music & Catalog Business)
+                        - generic [ref=e723]: Nas Nuvens Music Group
+                        - generic [ref=e725]: São Paulo, São Paulo, Brasil (Presencial)
+                        - list [ref=e727]:
+                          - listitem [ref=e728]:
+                            - img "Você seria um dos melhores candidatos" [ref=e731]:
+                              - img [ref=e732]
+                            - generic [ref=e735]: Você seria um dos melhores candidatos
+                      - list [ref=e737]:
+                        - listitem [ref=e738]:
+                          - time [ref=e739]: Há 6 dias
+              - listitem [ref=e740]:
+                - link "Logo da empresa tokens& Operations Lead — Remote tokens& São Paulo, Brasil (Remoto) Há 5 dias" [ref=e742] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4402966886&referenceJobId=4399707305&originToLandingJobPostings=4402966886&trackingId=%2FiRSSwJiZr6B4ckjppi%2BCQ%3D%3D&refId=l%2BeLcHLXbX6aPC1Pzhv%2F0w%3D%3D&eBP=BUDGET_EXHAUSTED_JOB
+                  - generic [ref=e744]:
+                    - img "Logo da empresa tokens&" [ref=e749]
+                    - generic [ref=e750]:
+                      - generic [ref=e751]:
+                        - generic [ref=e752]:
+                          - strong [ref=e754]: Operations Lead — Remote
+                          - generic [ref=e755]: Operations Lead — Remote
+                        - generic [ref=e757]: tokens&
+                        - generic [ref=e759]: São Paulo, Brasil (Remoto)
+                      - list [ref=e761]:
+                        - listitem [ref=e762]:
+                          - time [ref=e763]: Há 5 dias
+              - listitem [ref=e764]:
+                - link "Logo da empresa StautGROUP Kestria Brasil Soluções em Capital Humano CEO with verification StautGROUP Kestria Brasil Soluções em Capital Humano São Paulo e Região (Presencial) 3 ex-alunos da Fundação Getulio Vargas trabalham aqui Há 6 dias" [ref=e766] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4399907298&referenceJobId=4399707305&originToLandingJobPostings=4399907298&trackingId=OQ05FR97rntQC94xycKrWQ%3D%3D&refId=l%2BeLcHLXbX6aPC1Pzhv%2F0w%3D%3D&eBP=BUDGET_EXHAUSTED_JOB
+                  - generic [ref=e768]:
+                    - img "Logo da empresa StautGROUP Kestria Brasil Soluções em Capital Humano" [ref=e773]
+                    - generic [ref=e774]:
+                      - generic [ref=e775]:
+                        - generic [ref=e776]:
+                          - generic [ref=e777]:
+                            - strong [ref=e778]: CEO
+                            - img [ref=e780]
+                          - generic [ref=e782]: CEO with verification
+                        - generic [ref=e784]: StautGROUP Kestria Brasil Soluções em Capital Humano
+                        - generic [ref=e786]: São Paulo e Região (Presencial)
+                        - list [ref=e788]:
+                          - listitem [ref=e789]:
+                            - generic [ref=e792]:
+                              - generic [ref=e793]: 3 ex-alunos trabalham aqui
+                              - generic [ref=e794]: 3 ex-alunos da Fundação Getulio Vargas trabalham aqui
+                      - list [ref=e796]:
+                        - listitem [ref=e797]:
+                          - time [ref=e798]: Há 6 dias
+              - listitem [ref=e799]:
+                - link "Logo da empresa Chore Sales Account Executive Chore Brasil (Remoto) 1 ex-aluno da Fundação Getulio Vargas trabalha aqui Há 1 semana" [ref=e801] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4400287640&referenceJobId=4399707305&originToLandingJobPostings=4400287640&trackingId=4K3abRI2JOvqcUfMr%2BcBhQ%3D%3D&refId=l%2BeLcHLXbX6aPC1Pzhv%2F0w%3D%3D&eBP=BUDGET_EXHAUSTED_JOB
+                  - generic [ref=e803]:
+                    - img "Logo da empresa Chore" [ref=e808]
+                    - generic [ref=e809]:
+                      - generic [ref=e810]:
+                        - generic [ref=e811]:
+                          - strong [ref=e813]: Sales Account Executive
+                          - generic [ref=e814]: Sales Account Executive
+                        - generic [ref=e816]: Chore
+                        - generic [ref=e818]: Brasil (Remoto)
+                        - list [ref=e820]:
+                          - listitem [ref=e821]:
+                            - generic [ref=e824]:
+                              - generic [ref=e825]: 1 ex-aluno trabalha aqui
+                              - generic [ref=e826]: 1 ex-aluno da Fundação Getulio Vargas trabalha aqui
+                      - list [ref=e828]:
+                        - listitem [ref=e829]:
+                          - time [ref=e830]: Há 1 semana
+              - listitem [ref=e831]:
+                - 'link "Logo da empresa Structure Studios Remote: Senior Product Manager – Vertical SaaS Structure Studios Brasil (Remoto) Há 1 mês" [ref=e833] [cursor=pointer]':
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4376956741&referenceJobId=4399707305&originToLandingJobPostings=4376956741&trackingId=vOzWEfpVa9y0zSb%2BQEBK3A%3D%3D&refId=l%2BeLcHLXbX6aPC1Pzhv%2F0w%3D%3D&eBP=BUDGET_EXHAUSTED_JOB
+                  - generic [ref=e835]:
+                    - img "Logo da empresa Structure Studios" [ref=e840]
+                    - generic [ref=e841]:
+                      - generic [ref=e842]:
+                        - generic [ref=e843]:
+                          - strong [ref=e845]: "Remote: Senior Product Manager – Vertical SaaS"
+                          - generic [ref=e846]: "Remote: Senior Product Manager – Vertical SaaS"
+                        - generic [ref=e848]: Structure Studios
+                        - generic [ref=e850]: Brasil (Remoto)
+                      - list [ref=e852]:
+                        - listitem [ref=e853]:
+                          - time [ref=e854]: Há 1 mês
+              - listitem [ref=e855]:
+                - link "Logo da empresa Persona Assistente Virtual (Work From Home) Persona Brasil (Remoto) Há 2 horas" [ref=e857] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4403951576&referenceJobId=4399707305&originToLandingJobPostings=4403951576&trackingId=T3YTtvRJPYpHkknkFDUepg%3D%3D&refId=l%2BeLcHLXbX6aPC1Pzhv%2F0w%3D%3D&eBP=CwEAAAGdsIjPYaJQDHgKC7CsK5cFzvmZBu3nDKnBw_HlaDkc-4Mepi84gYe8MD9rcbNNqodOSQz4GRinwlvG-drGusGBOkjFeza4c9jNtmY38lCft2mCXheu8vBCjMhwEnzSckADdN6cWpVpWr6SeQxcmR0tvmil5S4BRDqTy3SB6iBpok8fj2eHA456CFyTwWzNv-wO5YfdJVYJinRDKEElVcouAnXQGwZ16yY9YIgjFqdD0n12NbHbDEQAtbxA2E72t41XORI1oPlISpTEvLptRttyq_YQhwEWTxGYzOob_PB_UlQjCmjNT_pMwmp8E9stsNcUZF_4OU68NXBfJMLP7ypij1IeVvAVK8MvE6I5KpTKY63SrAa4uMsDwDJdqdU9-mHDQHqoQeie65enuMAVN1o5-xEcM3oDSkkUiGAqgqSDexh_11J2ADz64kNKVV38Zo3GMET8rRnIY8lqCA2aOHtV5NskTy0lVI74EjU
+                  - generic [ref=e859]:
+                    - img "Logo da empresa Persona" [ref=e864]
+                    - generic [ref=e865]:
+                      - generic [ref=e866]:
+                        - generic [ref=e867]:
+                          - strong [ref=e869]: Assistente Virtual (Work From Home)
+                          - generic [ref=e870]: Assistente Virtual (Work From Home)
+                        - generic [ref=e872]: Persona
+                        - generic [ref=e874]: Brasil (Remoto)
+                      - list [ref=e876]:
+                        - listitem [ref=e877]:
+                          - time [ref=e878]: Há 2 horas
+              - listitem [ref=e879]:
+                - link "Logo da empresa Upstart AEC Chief Revenue Officer Upstart AEC Brasil (Remoto) A empresa leva geralmente 1 semana para avaliar A empresa leva geralmente 1 semana para avaliar Há 3 dias Candidatura simplificada" [ref=e881] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4403526185&referenceJobId=4399707305&originToLandingJobPostings=4403526185&trackingId=CoASsIAqnlphj3pNSHZRjw%3D%3D&refId=l%2BeLcHLXbX6aPC1Pzhv%2F0w%3D%3D&eBP=BUDGET_EXHAUSTED_JOB
+                  - generic [ref=e883]:
+                    - img "Logo da empresa Upstart AEC" [ref=e888]
+                    - generic [ref=e889]:
+                      - generic [ref=e890]:
+                        - generic [ref=e891]:
+                          - strong [ref=e893]: Chief Revenue Officer
+                          - generic [ref=e894]: Chief Revenue Officer
+                        - generic [ref=e896]: Upstart AEC
+                        - generic [ref=e898]: Brasil (Remoto)
+                        - list [ref=e900]:
+                          - listitem [ref=e901]:
+                            - img "A empresa leva geralmente 1 semana para avaliar" [ref=e904]
+                            - generic [ref=e906]: A empresa leva geralmente 1 semana para avaliar
+                      - list [ref=e908]:
+                        - listitem [ref=e909]:
+                          - time [ref=e910]: Há 3 dias
+                        - listitem [ref=e911]:
+                          - img [ref=e912]:
+                            - img [ref=e913]
+                          - generic [ref=e915]: Candidatura simplificada
+              - listitem [ref=e916]:
+                - link "Logo da empresa Velaro Network Finance Manager Velaro Network São Paulo, São Paulo, Brasil (Híbrido) Você seria um dos melhores candidatos Você seria um dos melhores candidatos Há 5 dias Candidatura simplificada" [ref=e918] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4401866529&referenceJobId=4399707305&originToLandingJobPostings=4401866529&trackingId=T75MIEUkNGVGq%2F89WOAn5A%3D%3D&refId=l%2BeLcHLXbX6aPC1Pzhv%2F0w%3D%3D&eBP=BUDGET_EXHAUSTED_JOB
+                  - generic [ref=e920]:
+                    - img "Logo da empresa Velaro Network" [ref=e925]
+                    - generic [ref=e926]:
+                      - generic [ref=e927]:
+                        - generic [ref=e928]:
+                          - strong [ref=e930]: Finance Manager
+                          - generic [ref=e931]: Finance Manager
+                        - generic [ref=e933]: Velaro Network
+                        - generic [ref=e935]: São Paulo, São Paulo, Brasil (Híbrido)
+                        - list [ref=e937]:
+                          - listitem [ref=e938]:
+                            - img "Você seria um dos melhores candidatos" [ref=e941]:
+                              - img [ref=e942]
+                            - generic [ref=e945]: Você seria um dos melhores candidatos
+                      - list [ref=e947]:
+                        - listitem [ref=e948]:
+                          - time [ref=e949]: Há 5 dias
+                        - listitem [ref=e950]:
+                          - img [ref=e951]:
+                            - img [ref=e952]
+                          - generic [ref=e954]: Candidatura simplificada
+              - listitem [ref=e955]:
+                - link "Logo da empresa Motiv8AI Regional Sales Director – Brazil & LATAM Motiv8AI São Paulo, Brasil (Híbrido) Avaliando candidaturas Avaliando candidaturas Há 1 mês Candidatura simplificada" [ref=e957] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4381262733&referenceJobId=4399707305&originToLandingJobPostings=4381262733&trackingId=Sr6Driu4J58PwbaOR0slrg%3D%3D&refId=l%2BeLcHLXbX6aPC1Pzhv%2F0w%3D%3D&eBP=BUDGET_EXHAUSTED_JOB
+                  - generic [ref=e959]:
+                    - img "Logo da empresa Motiv8AI" [ref=e964]
+                    - generic [ref=e965]:
+                      - generic [ref=e966]:
+                        - generic [ref=e967]:
+                          - strong [ref=e969]: Regional Sales Director – Brazil & LATAM
+                          - generic [ref=e970]: Regional Sales Director – Brazil & LATAM
+                        - generic [ref=e972]: Motiv8AI
+                        - generic [ref=e974]: São Paulo, Brasil (Híbrido)
+                        - list [ref=e976]:
+                          - listitem [ref=e977]:
+                            - img "Avaliando candidaturas" [ref=e980]
+                            - generic [ref=e982]: Avaliando candidaturas
+                      - list [ref=e984]:
+                        - listitem [ref=e985]:
+                          - time [ref=e986]: Há 1 mês
+                        - listitem [ref=e987]:
+                          - img [ref=e988]:
+                            - img [ref=e989]
+                          - generic [ref=e991]: Candidatura simplificada
+              - listitem [ref=e992]:
+                - link "Logo da empresa Pint Pharma Analista FP&A Sênior with verification Pint Pharma São Paulo, São Paulo, Brasil (Híbrido) Avaliando candidaturas Avaliando candidaturas Há 1 semana Candidatura simplificada" [ref=e994] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4390268336&referenceJobId=4399707305&originToLandingJobPostings=4390268336&trackingId=uUEHhI75vhcnqm5sF%2BPTBg%3D%3D&refId=l%2BeLcHLXbX6aPC1Pzhv%2F0w%3D%3D&eBP=BUDGET_EXHAUSTED_JOB
+                  - generic [ref=e996]:
+                    - img "Logo da empresa Pint Pharma" [ref=e1001]
+                    - generic [ref=e1002]:
+                      - generic [ref=e1003]:
+                        - generic [ref=e1004]:
+                          - generic [ref=e1005]:
+                            - strong [ref=e1006]: Analista FP&A Sênior
+                            - img [ref=e1008]
+                          - generic [ref=e1010]: Analista FP&A Sênior with verification
+                        - generic [ref=e1012]: Pint Pharma
+                        - generic [ref=e1014]: São Paulo, São Paulo, Brasil (Híbrido)
+                        - list [ref=e1016]:
+                          - listitem [ref=e1017]:
+                            - img "Avaliando candidaturas" [ref=e1020]
+                            - generic [ref=e1022]: Avaliando candidaturas
+                      - list [ref=e1024]:
+                        - listitem [ref=e1025]:
+                          - time [ref=e1026]: Há 1 semana
+                        - listitem [ref=e1027]:
+                          - img [ref=e1028]:
+                            - img [ref=e1029]
+                          - generic [ref=e1031]: Candidatura simplificada
+            - link "Ver mais vagas como esta" [ref=e1033] [cursor=pointer]:
+              - /url: https://www.linkedin.com/jobs/collections/similar-jobs?referenceJobId=4399707305
+        - complementary [ref=e229]:
+          - generic [ref=e230]:
+            - generic [ref=e1034]:
+              - img "Premium" [ref=e1036]:
+                - img [ref=e1037]
+              - heading "Adquira competências com esses cursos para conseguir um novo emprego" [level=2] [ref=e1039]
+              - listitem [ref=e1040]:
+                - link "Dicas de 1 Minuto sobre Como Tratar Dados no Power Query" [ref=e1041] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/learning/dicas-de-1-minuto-sobre-como-tratar-dados-no-power-query?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_2726309_learning
+                  - img "Dicas de 1 Minuto sobre Como Tratar Dados no Power Query" [ref=e1044]
+                  - img [ref=e1046]
+                - generic [ref=e1048]:
+                  - link "Dicas de 1 Minuto sobre Como Tratar Dados no Power Query" [ref=e1049] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/learning/dicas-de-1-minuto-sobre-como-tratar-dados-no-power-query?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_2726309_learning
+                    - generic [ref=e1050]: Dicas de 1 Minuto sobre Como Tratar Dados no Power Query
+                  - generic [ref=e1052]: 28.001 visualizações
+              - listitem [ref=e1053]:
+                - link "Fundamentos de Finanças" [ref=e1054] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/learning/fundamentos-de-financas?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_2928580_learning
+                  - img "Fundamentos de Finanças" [ref=e1057]
+                  - img [ref=e1059]
+                - generic [ref=e1061]:
+                  - link "Fundamentos de Finanças" [ref=e1062] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/learning/fundamentos-de-financas?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_2928580_learning
+                    - generic [ref=e1063]: Fundamentos de Finanças
+                  - generic [ref=e1065]: 44.076 visualizações
+              - listitem [ref=e1066]:
+                - link "Como Dominar a Arte da Negociação Onde Todos Ganham" [ref=e1067] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/learning/como-dominar-a-arte-da-negociacao-onde-todos-ganham?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_5202687_learning
+                  - img "Como Dominar a Arte da Negociação Onde Todos Ganham" [ref=e1070]
+                  - img [ref=e1072]
+                - generic [ref=e1074]:
+                  - link "Como Dominar a Arte da Negociação Onde Todos Ganham" [ref=e1075] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/learning/como-dominar-a-arte-da-negociacao-onde-todos-ganham?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_5202687_learning
+                    - generic [ref=e1076]: Como Dominar a Arte da Negociação Onde Todos Ganham
+                  - generic [ref=e1078]: 3.543 visualizações
+              - link "Exibir mais no LinkedIn Learning" [ref=e1080] [cursor=pointer]:
+                - /url: /learning?trk=jobdetails_learning_awareness
+            - generic [ref=e1081]:
+              - paragraph [ref=e1082]: Procurando um talento?
+              - link "Anunciar vaga" [ref=e1083] [cursor=pointer]:
+                - /url: https://www.linkedin.com/talent/job-posting-redirect?trk=flagship3_job_detail
+      - contentinfo [ref=e232]:
+        - generic [ref=e234]:
+          - generic [ref=e235]:
+            - navigation [ref=e236]:
+              - list [ref=e1084]:
+                - listitem [ref=e1085]:
+                  - link "Sobre" [ref=e1086] [cursor=pointer]:
+                    - /url: https://about.linkedin.com/pt-br
+                - listitem [ref=e1087]:
+                  - link "Acessibilidade" [ref=e1088] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/accessibility
+                - listitem [ref=e1089]:
+                  - link "Soluções de Talentos" [ref=e1090] [cursor=pointer]:
+                    - /url: https://business.linkedin.com/pt-br/talent-solutions?trk=flagship_nav&veh=li-footer-lts-control-pt-br&src=li-footer
+                - listitem [ref=e1091]:
+                  - link "Políticas para Comunidades Profissionais" [ref=e1092] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/legal/professional-community-policies
+                - listitem [ref=e1093]:
+                  - link "Carreiras" [ref=e1094] [cursor=pointer]:
+                    - /url: https://careers.linkedin.com/
+                - listitem [ref=e1095]:
+                  - link "Soluções de Marketing" [ref=e1096] [cursor=pointer]:
+                    - /url: https://business.linkedin.com/pt-br/marketing-solutions?trk=n_nav_lms_f&src=li-footer
+                - listitem [ref=e1097]:
+                  - button "Termos e Privacidade" [ref=e1099] [cursor=pointer]:
+                    - generic [ref=e1101]:
+                      - text: Termos e Privacidade
+                      - img [ref=e1102]
+                - listitem [ref=e1104]:
+                  - link "Preferências de anúncios" [ref=e1105] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/help/linkedin/answer/62931?lang=pt
+                - listitem [ref=e1106]:
+                  - link "Publicidade" [ref=e1107] [cursor=pointer]:
+                    - /url: https://business.linkedin.com/pt-br/marketing-solutions/ads?trk=n_nav_ads_f
+                - listitem [ref=e1108]:
+                  - link "Soluções de Vendas" [ref=e1109] [cursor=pointer]:
+                    - /url: https://business.linkedin.com/pt-br/sales-solutions?trk=flagship_nav&veh=li-footer-lss-control-pt-br&src=li-footer
+                - listitem [ref=e1110]:
+                  - link "Para celular" [ref=e1111] [cursor=pointer]:
+                    - /url: https://mobile.linkedin.com/pt-br
+                - listitem [ref=e1112]:
+                  - link "Pequenas empresas" [ref=e1113] [cursor=pointer]:
+                    - /url: https://smallbusiness.linkedin.com?&src=li-footer
+                - listitem [ref=e1114]:
+                  - link "Central de Segurança" [ref=e1115] [cursor=pointer]:
+                    - /url: https://safety.linkedin.com
+            - generic [ref=e238]:
+              - list [ref=e239]:
+                - listitem [ref=e240]:
+                  - img [ref=e241]
+                  - generic [ref=e243]:
+                    - link "Dúvidas? Acesse a nossa Central de Ajuda." [ref=e244] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/help/linkedin?trk=d_flagship3_job_details
+                      - text: Dúvidas?
+                    - paragraph [ref=e245]: Acesse a nossa Central de Ajuda.
+                - listitem [ref=e246]:
+                  - img [ref=e247]
+                  - generic [ref=e249]:
+                    - link "Gerencie sua conta e privacidade Acesse suas Configurações." [ref=e250] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/psettings/
+                      - text: Gerencie sua conta e privacidade
+                    - paragraph [ref=e251]: Acesse suas Configurações.
+                - listitem [ref=e252]:
+                  - img [ref=e253]
+                  - generic [ref=e255]:
+                    - link "Visibilidade da recomendação Saiba mais sobre os conteúdos recomendados." [ref=e256] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/help/linkedin/answer/a1339724
+                      - text: Visibilidade da recomendação
+                    - paragraph [ref=e257]: Saiba mais sobre os conteúdos recomendados.
+              - generic [ref=e258]:
+                - generic [ref=e259]: Selecionar idioma
+                - combobox "Selecionar idioma" [ref=e260]:
+                  - option "العربية (Árabe)"
+                  - option "বাংলা (Bengali)"
+                  - option "Čeština (Tcheco)"
+                  - option "Dansk (Dinamarquês)"
+                  - option "Deutsch (Alemão)"
+                  - option "Ελληνικά (Grego)"
+                  - option "English (Inglês)"
+                  - option "Español (Espanhol)"
+                  - option "فارسی (Persa)"
+                  - option "Suomi (Finlandês)"
+                  - option "Français (Francês)"
+                  - option "हिंदी (Hindi)"
+                  - option "Magyar (Húngaro)"
+                  - option "Bahasa Indonésia (Indonésio)"
+                  - option "Italiano (Italiano)"
+                  - option "עברית (Hebraico)"
+                  - option "日本語 (Japonês)"
+                  - option "한국어 (Coreano)"
+                  - option "मराठी (Marati)"
+                  - option "Bahasa Malaysia (Malaio)"
+                  - option "Nederlands (Holandês)"
+                  - option "Norsk (Norueguês)"
+                  - option "ਪੰਜਾਬੀ (Punjabi)"
+                  - option "Polski (Polonês)"
+                  - option "Português (Português)" [selected]
+                  - option "Română (Romeno)"
+                  - option "Русский (Russo)"
+                  - option "Svenska (Sueco)"
+                  - option "తెలుగు (Telugu)"
+                  - option "ภาษาไทย (Tailandês)"
+                  - option "Tagalog (Tagalog)"
+                  - option "Türkçe (Turco)"
+                  - option "Українська (Ucraniano)"
+                  - option "Tiếng Việt (Vietnamita)"
+                  - option "简体中文 (Chinês (Simplificado))"
+                  - option "正體中文 (Chinês (Tradicional))"
+          - paragraph [ref=e261]: LinkedIn Corporation © 2026
+    - generic:
+      - generic:
+        - complementary:
+          - generic [ref=e262]:
+            - generic [ref=e263]:
+              - generic [ref=e265] [cursor=pointer]:
+                - img "Fernando Xavier" [ref=e267]
+                - button "Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas." [ref=e268]:
+                  - generic [ref=e269]:
+                    - generic [ref=e270]: Mensagens
+                    - generic [ref=e271]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+              - generic [ref=e272]:
+                - button "Abrir o menu suspenso de mensagens" [ref=e274] [cursor=pointer]:
+                  - img "Abrir o menu suspenso de mensagens" [ref=e275]
+                - button "Escrever mensagem" [ref=e278] [cursor=pointer]:
+                  - img [ref=e279]
+                  - generic [ref=e281]: Escrever mensagem
+                - button "Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas." [ref=e282] [cursor=pointer]:
+                  - img [ref=e283]
+                  - generic [ref=e285]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+            - link "Foto da empresa Fernando Xavier Fernando Xavier" [ref=e1116] [cursor=pointer]:
+              - /url: https://www.linkedin.com/company/109375368/admin/inbox
+              - img "Foto da empresa Fernando Xavier" [ref=e1117]
+              - generic [ref=e1118]: Fernando Xavier
+              - img [ref=e1119]
+        - complementary "Assistente de IA para obter ajuda com sua carreira, vagas, etc."

@@ -1,0 +1,213 @@
+- generic [active] [ref=e1]:
+  - generic:
+    - region "Mensagem toast":
+      - heading "0 notificações no total" [level=2] [ref=e3]
+      - alert
+  - generic [ref=e4]:
+    - generic [ref=e6]:
+      - button "Pular para pesquisa" [ref=e7] [cursor=pointer]:
+        - generic [ref=e8]: Pular para pesquisa
+      - button "Pular para conteúdo principal" [ref=e9] [cursor=pointer]:
+        - generic [ref=e10]: Pular para conteúdo principal
+      - button "Atalhos do teclado" [ref=e11] [cursor=pointer]:
+        - generic [ref=e12]: Atalhos do teclado
+      - button "Fechar menu pular" [ref=e13] [cursor=pointer]:
+        - img [ref=e14]
+        - generic [ref=e16]: Fechar menu pular
+    - banner "Navegação geral" [ref=e17]:
+      - generic [ref=e18]:
+        - link "LinkedIn" [ref=e19] [cursor=pointer]:
+          - /url: https://www.linkedin.com/feed/?nis=true
+          - img "LinkedIn" [ref=e22]:
+            - img [ref=e23]
+        - navigation "Navegação principal" [ref=e25]:
+          - list [ref=e26]:
+            - listitem [ref=e27]:
+              - link "atualizações do feed novas notificações Início" [ref=e28] [cursor=pointer]:
+                - /url: https://www.linkedin.com/feed/?nis=true&
+                - generic [ref=e29]:
+                  - generic [ref=e32]: atualizações do feed novas notificações
+                  - img [ref=e36]
+                - generic "Início" [ref=e38]
+            - listitem [ref=e39]:
+              - link "1 atualização de rede nova notificação Minha rede" [ref=e40] [cursor=pointer]:
+                - /url: https://www.linkedin.com/mynetwork/?
+                - generic [ref=e41]:
+                  - generic [ref=e42]:
+                    - generic [ref=e43]: "1"
+                    - generic [ref=e44]: 1 atualização de rede nova notificação
+                  - img [ref=e48]
+                - generic "Minha rede" [ref=e50]
+            - listitem [ref=e51]:
+              - link "Vagas" [ref=e52] [cursor=pointer]:
+                - /url: https://www.linkedin.com/jobs/?
+                - img [ref=e56]
+                - generic "Vagas" [ref=e58]
+            - listitem [ref=e59]:
+              - link "Mensagens" [ref=e60] [cursor=pointer]:
+                - /url: https://www.linkedin.com/messaging/?
+                - img [ref=e64]
+                - generic "Mensagens" [ref=e66]
+            - listitem [ref=e67]:
+              - link "Notificações" [ref=e68] [cursor=pointer]:
+                - /url: https://www.linkedin.com/notifications/?
+                - img [ref=e73]
+                - generic "Notificações" [ref=e75]
+            - listitem [ref=e76]:
+              - button "Fernando Xavier Eu" [ref=e78] [cursor=pointer]:
+                - img "Fernando Xavier" [ref=e79]
+                - generic [ref=e80]:
+                  - text: Eu
+                  - img [ref=e81]
+            - listitem [ref=e83]:
+              - button "Para negócios" [ref=e85] [cursor=pointer]:
+                - img [ref=e89]
+                - generic "Para negócios" [ref=e91]:
+                  - text: Para negócios
+                  - img [ref=e92]
+            - listitem [ref=e94]:
+              - link "Veicular anúncio" [ref=e95] [cursor=pointer]:
+                - /url: https://www.linkedin.com/campaignmanager/accounts?
+                - img [ref=e99]
+                - generic "Veicular anúncio" [ref=e102]
+    - generic [ref=e104]:
+      - region "filtros de pesquisa" [ref=e107]:
+        - heading "Pesquisa de vagas" [level=2] [ref=e108]
+      - main [ref=e119]:
+        - generic [ref=e122]:
+          - generic [ref=e123]:
+            - generic [ref=e124]:
+              - 'generic "Accounting Manager em: Brasil" [ref=e125]'
+              - generic [ref=e129]: 56 resultados
+            - generic [ref=e132] [cursor=pointer]:
+              - generic [ref=e133]: Configurar alerta
+              - generic [ref=e134]: "Configurar alerta de vaga para Accounting Manager em: Brazil"
+              - 'switch "Configurar alerta de vaga para Accounting Manager em: Brazil"'
+          - generic [ref=e135]:
+            - button "Pular para detalhes da vaga ativa":
+              - generic [ref=e136] [cursor=pointer]: Pular para detalhes da vaga ativa
+            - button "Pular para resultado de pesquisa ativa":
+              - generic [ref=e137] [cursor=pointer]: Pular para resultado de pesquisa ativa
+            - list [ref=e138]:
+              - listitem [ref=e139]:
+                - generic [ref=e142] [cursor=pointer]:
+                  - generic [ref=e143]:
+                    - img "Logo da empresa VPM Solutions" [ref=e147]
+                    - generic [ref=e148]:
+                      - link "Accounting Manager / Controller" [ref=e150]:
+                        - /url: /jobs/view/4383802751/?trk=flagship3_search_srp_jobs
+                        - strong [ref=e152]: Accounting Manager / Controller
+                        - generic [ref=e153]: Accounting Manager / Controller
+                      - generic [ref=e155]: VPM Solutions
+                      - list [ref=e157]:
+                        - listitem [ref=e158]:
+                          - generic [ref=e159]: América Latina (Remoto)
+                  - list [ref=e161]:
+                    - listitem [ref=e162]
+              - listitem [ref=e164]:
+                - generic [ref=e167] [cursor=pointer]:
+                  - generic [ref=e168]:
+                    - img "Logo da empresa NBCUniversal" [ref=e172]
+                    - generic [ref=e173]:
+                      - link "Accounting & Finance Manager with verification" [ref=e175]:
+                        - /url: /jobs/view/4402973121/?trk=flagship3_search_srp_jobs
+                        - generic [ref=e176]:
+                          - strong [ref=e177]: Accounting & Finance Manager
+                          - img [ref=e179]
+                        - generic [ref=e181]: Accounting & Finance Manager with verification
+                      - generic [ref=e183]: NBCUniversal
+                      - list [ref=e185]:
+                        - listitem [ref=e186]:
+                          - generic [ref=e187]: São Paulo, São Paulo, Brasil (Híbrido)
+                  - list [ref=e189]:
+                    - listitem [ref=e190]
+              - listitem [ref=e192]:
+                - generic [ref=e195] [cursor=pointer]:
+                  - generic [ref=e196]:
+                    - img "Logo da empresa Assigna" [ref=e200]
+                    - generic [ref=e201]:
+                      - link "Gerente de Projetos - Controllership & Accounting" [ref=e203]:
+                        - /url: /jobs/view/4396662236/?trk=flagship3_search_srp_jobs
+                        - strong [ref=e205]: Gerente de Projetos - Controllership & Accounting
+                        - generic [ref=e206]: Gerente de Projetos - Controllership & Accounting
+                      - generic [ref=e208]: Assigna
+                      - list [ref=e210]:
+                        - listitem [ref=e211]:
+                          - generic [ref=e212]: São Paulo, Brasil (Híbrido)
+                  - list [ref=e214]:
+                    - listitem [ref=e215]
+              - listitem [ref=e217]:
+                - generic [ref=e220] [cursor=pointer]:
+                  - generic [ref=e221]:
+                    - img "Logo da empresa GitLab" [ref=e225]
+                    - generic [ref=e226]:
+                      - link "GTM FP&A Manager, Professional Services with verification" [ref=e228]:
+                        - /url: /jobs/view/4391150968/?trk=flagship3_search_srp_jobs
+                        - generic [ref=e229]:
+                          - strong [ref=e230]: GTM FP&A Manager, Professional Services
+                          - img [ref=e232]
+                        - generic [ref=e234]: GTM FP&A Manager, Professional Services with verification
+                      - generic [ref=e236]: GitLab
+                      - list [ref=e238]:
+                        - listitem [ref=e239]:
+                          - generic [ref=e240]: Brasil (Remoto)
+                  - list [ref=e242]:
+                    - listitem [ref=e243]
+              - listitem [ref=e245]:
+                - generic [ref=e248] [cursor=pointer]:
+                  - generic [ref=e249]:
+                    - img "Logo da empresa MAVI" [ref=e253]
+                    - generic [ref=e254]:
+                      - link "Accounting Manager - US GAAP with verification" [ref=e256]:
+                        - /url: /jobs/view/4400604082/?trk=flagship3_search_srp_jobs
+                        - generic [ref=e257]:
+                          - strong [ref=e258]: Accounting Manager - US GAAP
+                          - img [ref=e260]
+                        - generic [ref=e262]: Accounting Manager - US GAAP with verification
+                      - generic [ref=e264]: MAVI
+                      - list [ref=e266]:
+                        - listitem [ref=e267]:
+                          - generic [ref=e268]: Brasil (Remoto)
+                  - list [ref=e270]:
+                    - listitem [ref=e271]
+              - listitem [ref=e273]:
+                - generic [ref=e276] [cursor=pointer]:
+                  - generic [ref=e277]:
+                    - img "Logo da empresa Pavago" [ref=e281]
+                    - generic [ref=e282]:
+                      - link "Accounting Manager" [ref=e284]:
+                        - /url: /jobs/view/4401117956/?trk=flagship3_search_srp_jobs
+                        - strong [ref=e286]: Accounting Manager
+                        - generic [ref=e287]: Accounting Manager
+                      - generic [ref=e289]: Pavago
+                      - list [ref=e291]:
+                        - listitem [ref=e292]:
+                          - generic [ref=e293]: América Latina (Remoto)
+                  - list [ref=e295]:
+                    - listitem [ref=e296]
+              - listitem [ref=e298]:
+                - generic [ref=e301] [cursor=pointer]:
+                  - generic [ref=e302]:
+                    - img "Logo da empresa TGG" [ref=e306]
+                    - generic [ref=e307]:
+                      - link "Accounting Manager with verification" [ref=e309]:
+                        - /url: /jobs/view/4388565063/?trk=flagship3_search_srp_jobs
+                        - generic [ref=e310]:
+                          - strong [ref=e311]: Accounting Manager
+                          - img [ref=e313]
+                        - generic [ref=e315]: Accounting Manager with verification
+                      - generic [ref=e317]: TGG
+                      - list [ref=e319]:
+                        - listitem [ref=e320]:
+                          - generic [ref=e321]: América Latina (Remoto)
+                  - list [ref=e323]:
+                    - listitem [ref=e324]
+            - generic [ref=e326]:
+              - list [ref=e329]:
+                - listitem [ref=e330]:
+                  - button "Página 1" [ref=e331] [cursor=pointer]: "1"
+              - generic "Conteúdo do rodapé do LinkedIn" [ref=e333]
+    - generic:
+      - generic:
+        - complementary "Assistente de IA para obter ajuda com sua carreira, vagas, etc."
+  - region [ref=e351]

@@ -1,0 +1,377 @@
+- generic [active] [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e4]:
+    - banner:
+      - generic [ref=e7]:
+        - link "pfizer corporate logo" [ref=e8] [cursor=pointer]:
+          - /url: /
+          - img "Pfizer logo" [ref=e9]
+        - button "Search" [ref=e11] [cursor=pointer]:
+          - img [ref=e12]
+          - text: Search
+        - button "Hamburger" [ref=e14] [cursor=pointer]
+    - main [ref=e18]:
+      - generic [ref=e26]:
+        - heading "Use your power for purpose." [level=1] [ref=e27]
+        - generic [ref=e32]:
+          - textbox "Search by role or key word(s)" [ref=e35]
+          - button "Search Careers" [ref=e37] [cursor=pointer]
+      - article [ref=e38]:
+        - generic [ref=e39]:
+          - link "Careers Menu" [ref=e42] [cursor=pointer]:
+            - /url: /
+            - text: Careers Menu
+          - generic "Breadcrumb" [ref=e45]:
+            - list [ref=e46]:
+              - listitem [ref=e47]:
+                - link "Home" [ref=e48] [cursor=pointer]:
+                  - /url: /
+                - img [ref=e49]
+              - listitem [ref=e51]:
+                - link "About" [ref=e52] [cursor=pointer]:
+                  - /url: /about
+                - img [ref=e53]
+              - listitem [ref=e55]:
+                - generic [ref=e56]: Careers
+        - generic [ref=e62]:
+          - heading "This is where today’s pioneers, problem solvers, and pathfinders meet to create tomorrow’s breakthroughs. Together, we can transform patients’ lives." [level=1] [ref=e63]
+          - paragraph [ref=e64]:
+            - link "Play Video (Opens in a new window)" [ref=e65] [cursor=pointer]:
+              - /url: https://players.brightcove.net/1852113022001/7eDMrqTZyS_default/index.html?videoId=6342784863112
+        - generic [ref=e66]:
+          - heading "Discover How You Can Make An Impact" [level=2] [ref=e69]
+          - generic [ref=e71]:
+            - generic [ref=e73]:
+              - link "Research &amp; Development" [ref=e74] [cursor=pointer]:
+                - /url: /about/careers/research-and-development
+              - img "hover-image" [ref=e76]
+              - generic [ref=e77]: Research & Development
+            - generic [ref=e79]:
+              - link "Manufacturing" [ref=e80] [cursor=pointer]:
+                - /url: /about/careers/manufacturing
+              - img "hover-image" [ref=e82]
+              - generic [ref=e83]: Manufacturing
+            - generic [ref=e85]:
+              - link "Biopharma, Sales &amp; Marketing" [ref=e86] [cursor=pointer]:
+                - /url: /about/careers/biopharma-sales-marketing
+              - img "hover-image" [ref=e88]
+              - generic [ref=e89]: Biopharma, Sales & Marketing
+            - generic [ref=e91]:
+              - link "Early Careers" [ref=e92] [cursor=pointer]:
+                - /url: /en/early-careers
+              - img "hover-image" [ref=e94]
+              - generic [ref=e95]: Early Careers
+            - generic [ref=e97]:
+              - link "All Other Roles" [ref=e98] [cursor=pointer]:
+                - /url: /about/careers/all-other-roles
+              - img "hover-image" [ref=e100]
+              - generic [ref=e101]: All Other Roles
+            - generic [ref=e103]:
+              - link "Contractor Opportunities extlink label" [ref=e104] [cursor=pointer]:
+                - /url: https://pfizer.talentnet.community/
+                - text: Contractor Opportunities
+                - img "extlink label" [ref=e105]
+              - img "hover-image" [ref=e109]
+              - generic [ref=e110]: Contractor Opportunities
+        - generic [ref=e114]:
+          - paragraph [ref=e115]: Benefits
+          - generic [ref=e118]:
+            - generic [ref=e120]:
+              - link "Three people talking" [ref=e122] [cursor=pointer]:
+                - /url: /about/careers/life-pfizer
+                - img "Three people talking" [ref=e124]
+              - generic [ref=e125]:
+                - heading "Pay for Performance Philosophy and Practices" [level=5] [ref=e126]:
+                  - link "Pay for Performance Philosophy and Practices" [ref=e127] [cursor=pointer]:
+                    - /url: /about/careers/life-pfizer
+                - paragraph [ref=e129]: Pfizer structures its compensation policies and practices to recognize that colleagues should be rewarded based on the contributions they make to our business.
+            - generic [ref=e131]:
+              - link "Doctor and patient talking" [ref=e133] [cursor=pointer]:
+                - /url: /about/careers/life-pfizer
+                - img "Doctor and patient talking" [ref=e135]
+              - generic [ref=e136]:
+                - heading "Benefits to Maintain and Promote Health and Wellness" [level=5] [ref=e137]:
+                  - link "Benefits to Maintain and Promote Health and Wellness" [ref=e138] [cursor=pointer]:
+                    - /url: /about/careers/life-pfizer
+                - paragraph [ref=e140]: Depending on the customs and laws of a specific country, Pfizer offers colleagues health and wellness programs that help them maintain and promote optimum health and wellness. These programs can include health and disability insurance, preventative health programs, medical screening, free or reduced-cost vaccinations, discounts on Pfizer products, and nutrition and fitness counseling.
+            - generic [ref=e142]:
+              - link "Man reading papers" [ref=e144] [cursor=pointer]:
+                - /url: /about/careers/life-pfizer
+                - img "Man reading papers" [ref=e146]
+              - generic [ref=e147]:
+                - heading "Benefits to Help Colleagues Meet Financial Goals" [level=5] [ref=e148]:
+                  - link "Benefits to Help Colleagues Meet Financial Goals" [ref=e149] [cursor=pointer]:
+                    - /url: /about/careers/life-pfizer
+                - paragraph [ref=e151]: Depending on local custom and practice, Pfizer offers colleagues several benefits to help them meet their financial goals. These programs can include access to colleague-directed retirement funds, company contributions to retirement financial vehicles, life insurance, and financial planning education.
+        - generic [ref=e156]:
+          - heading "Diverse perspectives help solve impossible problems." [level=3] [ref=e157]
+          - paragraph [ref=e158]: Representation in healthcare is not just important — it’s vital.
+          - paragraph [ref=e159]: "Our core values are simple and interconnected: courage, excellence, equity, and joy. These values are only possible when we ensure that all of our colleagues feel welcome to bring their full selves to work and feel included at every step of their Pfizer journey."
+          - paragraph [ref=e160]:
+            - link "Learn More About our Values" [ref=e161] [cursor=pointer]:
+              - /url: /about/responsibility/diversity-and-inclusion
+        - generic [ref=e165]:
+          - paragraph [ref=e166]: Powered By Our People
+          - generic [ref=e169]:
+            - generic [ref=e171]:
+              - link "Image of Daniel Gilmer" [ref=e173] [cursor=pointer]:
+                - /url: ""
+                - img "Image of Daniel Gilmer" [ref=e175]
+              - generic [ref=e176]:
+                - heading "Daniel Gilmer, New York, NY, USA, Diagnostics Launch Lead, 5 years" [level=5] [ref=e177]:
+                  - link "Daniel Gilmer, New York, NY, USA, Diagnostics Launch Lead, 5 years" [ref=e178] [cursor=pointer]:
+                    - /url: ""
+                - generic [ref=e179]:
+                  - paragraph [ref=e180]:
+                    - strong [ref=e181]: What is something you would tell someone who is just starting their career with Pfizer?
+                  - paragraph [ref=e182]: "\"Given the many available opportunities, colleagues with an entrepreneurial spirit thrive at Pfizer as they build relationships that lead to their engagement on breakthrough projects with high visibility.\""
+            - generic [ref=e184]:
+              - link "Headshot of Anna Capaldi" [ref=e186] [cursor=pointer]:
+                - /url: ""
+                - img "Headshot of Anna Capaldi" [ref=e188]
+              - generic [ref=e189]:
+                - heading "Anna Capaldi, Pennsylvania, USA, Pfizer R&D Data Privacy Steward, 20 years" [level=5] [ref=e190]:
+                  - link "Anna Capaldi, Pennsylvania, USA, Pfizer R&D Data Privacy Steward, 20 years" [ref=e191] [cursor=pointer]:
+                    - /url: ""
+                - generic [ref=e192]:
+                  - paragraph [ref=e193]:
+                    - strong [ref=e194]: What is something you would tell someone who is just starting their career with Pfizer?
+                  - paragraph [ref=e195]: “Pfizer aces at taking care of its people. From educational assistance to health care subsidy in retirement, Pfizer knows that its best asset are the people who work here.”
+            - generic [ref=e197]:
+              - link "Headshot Esteban Lepiz" [ref=e199] [cursor=pointer]:
+                - /url: ""
+                - img "Headshot Esteban Lepiz" [ref=e201]
+              - generic [ref=e202]:
+                - heading "Esteban Lepiz , Specialist, 8 years" [level=5] [ref=e203]:
+                  - link "Esteban Lepiz , Specialist, 8 years" [ref=e204] [cursor=pointer]:
+                    - /url: ""
+                - generic [ref=e205]:
+                  - paragraph [ref=e206]:
+                    - strong [ref=e207]: What is something you would tell someone who is just starting their career with Pfizer?
+                  - paragraph [ref=e208]: “Enjoy the journey, it is a company where you will not get bored due to its high dynamism, and you will always have many opportunities to learn new things.”
+        - generic [ref=e213]:
+          - img "Two women looking at each other" [ref=e217]
+          - generic [ref=e221]:
+            - heading "Pioneer Your Future" [level=2] [ref=e222]
+            - paragraph [ref=e223]: Success isn’t always linear, so we’re creating new ways to grow. We’ve transformed growth and development at Pfizer to ensure that everyone can follow a path to their dream career, whether that’s climbing a traditional ladder or “zig-zagging” their way to a new role. At Pfizer, you’ll lead your journey.
+            - link "Learn How to Connect With Us Details" [ref=e224] [cursor=pointer]:
+              - /url: /about/careers/life-pfizer
+              - text: Learn How to Connect With Us
+              - generic [ref=e225]: Details
+        - generic [ref=e226]:
+          - generic [ref=e229]:
+            - paragraph [ref=e230]: Together, We Make Pfizer A Great Place To Work
+            - generic [ref=e231]:
+              - generic [ref=e233]:
+                - group "1 / 7" [ref=e234]:
+                  - generic [ref=e235]:
+                    - link "Newsweek Logo" [ref=e237] [cursor=pointer]:
+                      - /url: https://www.newsweek.com/rankings/americas-greatest-workplaces-2023
+                      - img "Newsweek Logo" [ref=e239]
+                    - heading "One of America's Greatest Workplaces 2023 extlink label" [level=5] [ref=e241]:
+                      - link "One of America's Greatest Workplaces 2023 extlink label" [ref=e242] [cursor=pointer]:
+                        - /url: https://www.newsweek.com/rankings/americas-greatest-workplaces-2023
+                        - text: One of America's Greatest Workplaces 2023
+                        - img "extlink label" [ref=e243]
+                - group "2 / 7" [ref=e246]:
+                  - generic [ref=e247]:
+                    - link "Fortune Logo" [ref=e249] [cursor=pointer]:
+                      - /url: https://fortune.com/ranking/worlds-most-admired-companies/2023/
+                      - img "Fortune Logo" [ref=e251]
+                    - heading "Fortune World’s Most Admired Companies All-Stars 2023 extlink label" [level=5] [ref=e253]:
+                      - link "Fortune World’s Most Admired Companies All-Stars 2023 extlink label" [ref=e254] [cursor=pointer]:
+                        - /url: https://fortune.com/ranking/worlds-most-admired-companies/2023/
+                        - text: Fortune World’s Most Admired Companies All-Stars 2023
+                        - img "extlink label" [ref=e255]
+                - group "3 / 7" [ref=e258]:
+                  - generic [ref=e259]:
+                    - link "Forbes Best Employers for New Grads Logo" [ref=e261] [cursor=pointer]:
+                      - /url: https://r.statista.com/en/employers/americas-best-employers-new-grads-2023/ranking/
+                      - img "Forbes Best Employers for New Grads Logo" [ref=e263]
+                    - heading "The Best Employers for New Grads 2023 extlink label" [level=5] [ref=e265]:
+                      - link "The Best Employers for New Grads 2023 extlink label" [ref=e266] [cursor=pointer]:
+                        - /url: https://r.statista.com/en/employers/americas-best-employers-new-grads-2023/ranking/
+                        - text: The Best Employers for New Grads 2023
+                        - img "extlink label" [ref=e267]
+                - group "4 / 7" [ref=e270]:
+                  - generic [ref=e271]:
+                    - link "Time World's Best Companies 2023 Logo" [ref=e273] [cursor=pointer]:
+                      - /url: https://time.com/collection/worlds-best-companies-2023/
+                      - img "Time World's Best Companies 2023 Logo" [ref=e275]
+                    - heading "World's Best Companies 2023 extlink label" [level=5] [ref=e277]:
+                      - link "World's Best Companies 2023 extlink label" [ref=e278] [cursor=pointer]:
+                        - /url: https://time.com/collection/worlds-best-companies-2023/
+                        - text: World's Best Companies 2023
+                        - img "extlink label" [ref=e279]
+                - group "5 / 7" [ref=e282]:
+                  - generic [ref=e283]:
+                    - link "Best Companies to Work for 2023-2024" [ref=e285] [cursor=pointer]:
+                      - /url: https://money.usnews.com/careers/companies/rankings/best-companies
+                      - img "Best Companies to Work for 2023-2024" [ref=e287]
+                    - heading "Best Companies to Work for 2023-2024 extlink label" [level=5] [ref=e289]:
+                      - link "Best Companies to Work for 2023-2024 extlink label" [ref=e290] [cursor=pointer]:
+                        - /url: https://money.usnews.com/careers/companies/rankings/best-companies
+                        - text: Best Companies to Work for 2023-2024
+                        - img "extlink label" [ref=e291]
+                - group "6 / 7" [ref=e294]:
+                  - generic [ref=e295]:
+                    - link "Newsweek Greatest Workplaces" [ref=e297] [cursor=pointer]:
+                      - /url: https://www.newsweek.com/rankings/americas-greatest-workplaces-2023
+                      - img "Newsweek Greatest Workplaces" [ref=e299]
+                    - heading "America's Greatest Workplaces 2023 extlink label" [level=5] [ref=e301]:
+                      - link "America's Greatest Workplaces 2023 extlink label" [ref=e302] [cursor=pointer]:
+                        - /url: https://www.newsweek.com/rankings/americas-greatest-workplaces-2023
+                        - text: America's Greatest Workplaces 2023
+                        - img "extlink label" [ref=e303]
+                - group "7 / 7" [ref=e306]:
+                  - generic [ref=e307]:
+                    - link "Equality 100 Award" [ref=e309] [cursor=pointer]:
+                      - /url: https://reports.hrc.org/corporate-equality-index-2023
+                      - img "Equality 100 Award" [ref=e311]
+                    - heading "Equality 100 Award extlink label" [level=5] [ref=e313]:
+                      - link "Equality 100 Award extlink label" [ref=e314] [cursor=pointer]:
+                        - /url: https://reports.hrc.org/corporate-equality-index-2023
+                        - text: Equality 100 Award
+                        - img "extlink label" [ref=e315]
+              - generic [ref=e320]:
+                - button "Previous slide" [disabled] [ref=e321]:
+                  - img [ref=e322]
+                  - generic: Button previous
+                - button "Next slide" [ref=e324] [cursor=pointer]:
+                  - img [ref=e325]
+                  - generic: Button next
+          - generic [ref=e329]:
+            - heading "Connect With Pfizer Careers" [level=3] [ref=e330]
+            - generic [ref=e331]:
+              - link "social media icon" [ref=e333] [cursor=pointer]:
+                - /url: "https://www.Facebook.com/PfizerCareers "
+                - img "social media icon" [ref=e334]
+              - link "social media icon" [ref=e336] [cursor=pointer]:
+                - /url: https://www.Instagram.com/PfizerCareers
+                - img "social media icon" [ref=e337]
+              - link "social media icon" [ref=e339] [cursor=pointer]:
+                - /url: https://www.linkedin.com/company/pfizer/jobs
+                - img "social media icon" [ref=e340]
+              - link "social media icon" [ref=e342] [cursor=pointer]:
+                - /url: https://www.youtube.com/pfizer
+                - img "social media icon" [ref=e343]
+              - link "social media icon" [ref=e345] [cursor=pointer]:
+                - /url: https://www.glassdoor.com/Overview/Working-at-Pfizer-EI_IE525.11,17.htm
+                - img "social media icon" [ref=e346]
+              - link "social media icon" [ref=e348] [cursor=pointer]:
+                - /url: https://www.indeed.com/cmp/Pfizer
+                - img "social media icon" [ref=e349]
+            - paragraph
+        - link "Join Our Talent Community extlink label" [ref=e354] [cursor=pointer]:
+          - /url: https://pfizer.recsolu.com/app/collect/form/i31sduux-ebUNsBcQoUBLg
+          - text: Join Our Talent Community
+          - img "extlink label" [ref=e355]
+        - generic [ref=e358]:
+          - generic [ref=e359]:
+            - paragraph [ref=e361]: US/PR Regulations
+            - paragraph [ref=e362]: U.S. and Puerto Rico – Information required by Federal/State/Local Regulations and Other Pfizer Resources
+            - list [ref=e365]:
+              - listitem [ref=e366]:
+                - button "Pfizer People Experience Policies" [ref=e367] [cursor=pointer]
+              - listitem [ref=e368]:
+                - button "Federal Government Posters" [ref=e369] [cursor=pointer]
+              - listitem [ref=e370]:
+                - button "Additional Information (By State)" [ref=e371] [cursor=pointer]
+          - paragraph [ref=e374]:
+            - text: Pfizer endeavors to make
+            - link "www.pfizer.com/careers" [ref=e375] [cursor=pointer]:
+              - /url: https://www.pfizer.com/careers
+            - text: accessible to all users. If you would like to contact us regarding the accessibility of our website or need assistance completing the application process and/or interviewing, please email
+            - link "disabilityrecruitment@pfizer.com(link sends email)" [ref=e376] [cursor=pointer]:
+              - /url: mailto:mailto:disabilityrecruitment@pfizer.com
+              - text: disabilityrecruitment@pfizer.com
+              - img "(link sends email)" [ref=e377]
+            - text: . This is to be used solely for accommodation requests with respect to the accessibility of our website, online application process and/or interviewing. Requests for any other reason will not be returned.
+    - contentinfo [ref=e379]:
+      - generic [ref=e382]:
+        - 'link "Pfizer: One of the world’s premier biopharmaceutical companies" [ref=e384] [cursor=pointer]':
+          - /url: /
+          - 'img "Pfizer: One of the world’s premier biopharmaceutical companies" [ref=e385]'
+        - navigation "first-column-footer-menu" [ref=e387]:
+          - list [ref=e388]:
+            - listitem [ref=e389]:
+              - heading "Investors" [level=6] [ref=e390]:
+                - link "Investors" [ref=e391] [cursor=pointer]:
+                  - /url: http://investors.pfizer.com
+            - listitem [ref=e392]:
+              - heading "Media" [level=6] [ref=e393]:
+                - link "Media" [ref=e394] [cursor=pointer]:
+                  - /url: /newsroom
+            - listitem [ref=e395]:
+              - heading "Careers" [level=6] [ref=e396]:
+                - link "Careers" [ref=e397] [cursor=pointer]:
+                  - /url: /about/careers
+            - listitem [ref=e398]:
+              - heading "Partners" [level=6] [ref=e399]:
+                - link "Partners" [ref=e400] [cursor=pointer]:
+                  - /url: /about/partners
+        - navigation "second-column-footer-menu" [ref=e402]:
+          - list [ref=e403]:
+            - listitem [ref=e404]:
+              - link "PfizerForAll" [ref=e405] [cursor=pointer]:
+                - /url: https://www.pfizerforall.com/
+            - listitem [ref=e406]:
+              - link "Healthcare Professionals" [ref=e407] [cursor=pointer]:
+                - /url: https://www.pfizerpro.com
+            - listitem [ref=e408]:
+              - link "Grant Seekers" [ref=e409] [cursor=pointer]:
+                - /url: /about/health-policies/grants
+            - listitem [ref=e410]:
+              - link "Business to Business" [ref=e411] [cursor=pointer]:
+                - /url: /about/partners/B2B-and-suppliers
+        - navigation "third-column-footer-menu" [ref=e413]:
+          - list [ref=e414]:
+            - listitem [ref=e415]:
+              - link "Privacy Statement" [ref=e416] [cursor=pointer]:
+                - /url: /privacy
+            - listitem [ref=e417]:
+              - link "Accessibility Statement" [ref=e418] [cursor=pointer]:
+                - /url: /accessibility
+            - listitem [ref=e419]:
+              - link "Terms of Use" [ref=e420] [cursor=pointer]:
+                - /url: /terms
+            - listitem [ref=e421]:
+              - link "Contact Us" [ref=e422] [cursor=pointer]:
+                - /url: /contact
+        - generic [ref=e425]:
+          - button "Close" [ref=e426] [cursor=pointer]
+          - heading "Glossary" [level=3] [ref=e427]
+      - generic [ref=e432]:
+        - button "Language selector" [ref=e435] [cursor=pointer]:
+          - generic [ref=e437]: United States
+        - list [ref=e438]:
+          - listitem [ref=e439]:
+            - paragraph [ref=e440]: © 2026 Pfizer Inc. All rights reserved
+        - generic [ref=e441]:
+          - paragraph [ref=e442]: This information—including product information—is intended only for residents of the United States.
+          - paragraph [ref=e443]: The products discussed herein may have different labeling in different countries.
+          - paragraph [ref=e444]
+        - list [ref=e447]:
+          - listitem [ref=e448]:
+            - link "Twitter" [ref=e449] [cursor=pointer]:
+              - /url: https://twitter.com/Pfizer
+              - img [ref=e450]
+          - listitem [ref=e452]:
+            - link "Facebook" [ref=e453] [cursor=pointer]:
+              - /url: https://www.facebook.com/Pfizer
+              - img [ref=e454]
+          - listitem [ref=e456]:
+            - link "Linked In" [ref=e457] [cursor=pointer]:
+              - /url: https://www.linkedin.com/company/pfizer
+              - img [ref=e458]
+          - listitem [ref=e460]:
+            - link "Instagram" [ref=e461] [cursor=pointer]:
+              - /url: https://www.instagram.com/pfizerinc/
+              - img [ref=e462]
+          - listitem [ref=e464]:
+            - link "Youtube" [ref=e465] [cursor=pointer]:
+              - /url: https://www.youtube.com/Pfizer
+              - img [ref=e466]
+  - status [ref=e468]
+  - button "Cookies Preference" [ref=e470] [cursor=pointer]

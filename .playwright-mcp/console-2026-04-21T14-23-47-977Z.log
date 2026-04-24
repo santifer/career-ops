@@ -1,0 +1,14 @@
+[    1164ms] [LOG] JQMIGRATE: Migrate is installed, version 3.3.0 @ https://career2.successfactors.eu/verp/vmod_v1/ui/extlib/jquery_3.5.1/jquery.js:4
+[    1461ms] [LOG] [AjaxService] Using native Proxy for lazyDataGridController @ https://career2.successfactors.eu/verp/vmod_v1/ui/ajaxservice/js/AjaxService_3a3496282a4d9dfe5021ade50ce210b0.js:0
+[    1490ms] [INFO] 2026-04-21 11:23:49 Device API logging initialized - DEVICE @ https://career2.successfactors.eu/verp/vmod_v1/ui/sapui5-bundles-main/resources_1.136.6-2/common-1.js:1336
+[    1503ms] [WARNING] The current jQuery version 3.5.1 is different than the version 3.6.0 that is used for testing jquery-compat.js. jquery-compat.js is applied but it may not work properly. @ https://career2.successfactors.eu/verp/vmod_v1/ui/sapui5-main/resources_1.136.6/resources/sap/ui/thirdparty/jquery-compat.js?eval:4
+[    1917ms] [LOG] Should load SAPUI5 @ https://career2.successfactors.eu/careers?company=triviumpac:1019
+[    2225ms] [LOG] Req in Event: /messagebundle/triviumpac/vmod_v1-2d22e2d1-33c40452/common!/verp/ui/sapui5-main/resources/resources/sap/ui/core/messagebundle_pt_BR.properties @ https://career2.successfactors.eu/verp/vmod_v1/ui/perflog-lib/resources_1.1.4/perflog-lib.min.js:0
+[    2535ms] [LOG] Req in Event: /messagebundle/triviumpac/vmod_v1-da143253-33c40452/sap.m!/verp/ui/sapui5-main/resources/resources/sap/m/messagebundle_pt_BR.properties @ https://career2.successfactors.eu/verp/vmod_v1/ui/perflog-lib/resources_1.1.4/perflog-lib.min.js:0
+[    2917ms] [LOG] Req in Event: /xi/ajax/remoting/call/plaincall/careerJobSearchControllerProxy.getInitialJobSearchData.dwr @ https://career2.successfactors.eu/verp/vmod_v1/ui/perflog-lib/resources_1.1.4/perflog-lib.min.js:0
+[    2929ms] [INFO] PerfLog Page Completed (ver:1.1.4 2025-07-11T03:34:42.994Z) @ https://career2.successfactors.eu/verp/vmod_v1/ui/perflog-lib/resources_1.1.4/perflog-lib.min.js:0
+[    3343ms] [LOG] Req in Event: /xi/ajax/remoting/call/plaincall/jobSearchCriteriaControllerProxy.isPicklistSortingKeyEnabled.dwr @ https://career2.successfactors.eu/verp/vmod_v1/ui/perflog-lib/resources_1.1.4/perflog-lib.min.js:0
+[    3640ms] [LOG] Req in Event: /xi/ajax/remoting/call/plaincall/picklistControllerProxy.getEventallyConsistentPickListsWithSortingBy.dwr @ https://career2.successfactors.eu/verp/vmod_v1/ui/perflog-lib/resources_1.1.4/perflog-lib.min.js:0
+[    4036ms] [LOG] --------- Event ended --------- @ https://career2.successfactors.eu/verp/vmod_v1/ui/perflog-lib/resources_1.1.4/perflog-lib.min.js:0
+[   15567ms] [LOG] Req in Event: /xi/ajax/remoting/call/plaincall/careerJobSearchControllerProxy.getPostingCount.dwr @ https://career2.successfactors.eu/verp/vmod_v1/ui/perflog-lib/resources_1.1.4/perflog-lib.min.js:0
+[   16219ms] [LOG] --------- Event ended --------- @ https://career2.successfactors.eu/verp/vmod_v1/ui/perflog-lib/resources_1.1.4/perflog-lib.min.js:0

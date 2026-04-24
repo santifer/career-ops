@@ -1,0 +1,37 @@
+- generic [active] [ref=e1]:
+  - navigation "Principal" [ref=e3]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - generic [ref=e7]:
+          - button "Ir para o conteúdo principal" [ref=e8] [cursor=pointer]:
+            - generic [ref=e9]: Ir para o conteúdo principal
+          - link "Página inicial do Indeed" [ref=e10] [cursor=pointer]:
+            - /url: /?from=gnav-homepage--homepage-frontend
+            - img [ref=e12]
+          - list [ref=e14]:
+            - listitem [ref=e15]:
+              - link "Página inicial" [ref=e17] [cursor=pointer]:
+                - /url: https://br.indeed.com/
+            - listitem [ref=e18]:
+              - link "Avaliações de Empresas" [ref=e20] [cursor=pointer]:
+                - /url: https://br.indeed.com/companies
+        - generic [ref=e21]:
+          - list [ref=e22]:
+            - listitem [ref=e23]:
+              - link "Acessar" [ref=e26] [cursor=pointer]:
+                - /url: https://secure.indeed.com/auth?hl=pt_BR&co=BR&continue=https%3A%2F%2Fbr.indeed.com%2Fvagas%3Fq%3Dcontroller%2BOR%2Bcontroladoria%2BOR%2Bcontabilidade%26l%3DBrasil%26fromage%3D14&tmpl=desktop&from=gnav-util-homepage--homepage-frontend&jsContinue=https%3A%2F%2Fonboarding.indeed.com%2Fonboarding%3Fhl%3Dpt_BR%26co%3DBR%26from%3Dgnav-homepage--homepage-frontend
+          - link "Empresas/Anunciar vagas" [ref=e31] [cursor=pointer]:
+            - /url: https://br.indeed.com/hire?co=BR&hl=pt
+      - generic [ref=e32]: Início do conteúdo principal
+  - main [ref=e33]:
+    - generic [ref=e34]:
+      - img "404" [ref=e35]
+      - heading "Não foi possível encontrar a página" [level=1] [ref=e36]
+      - paragraph [ref=e37]: Parece que a página não existe ou não está disponível no momento. Verifique se o URL está correto ou escolha uma opção abaixo.
+      - button "Voltar à página inicial arrow" [ref=e38] [cursor=pointer]:
+        - text: Voltar à página inicial
+        - img "arrow" [ref=e39]
+      - paragraph [ref=e40]:
+        - text: Precisa de mais ajuda?
+        - link "Entre em contato conosco" [ref=e41] [cursor=pointer]:
+          - /url: https://support.indeed.com/hc

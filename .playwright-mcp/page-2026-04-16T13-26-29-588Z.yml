@@ -1,0 +1,1036 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - link [ref=e3] [cursor=pointer]:
+      - /url: "#main-content"
+      - text: Pular para conteúdo principal
+    - banner [ref=e4]:
+      - navigation [ref=e5]:
+        - link [ref=e6] [cursor=pointer]:
+          - /url: /?trk=public_jobs_nav-header-logo
+          - generic [ref=e7]: LinkedIn
+        - generic [ref=e9]:
+          - button [ref=e11] [cursor=pointer]
+          - tabpanel [ref=e12]:
+            - search [ref=e13]:
+              - generic [ref=e14]:
+                - combobox [ref=e15]: Controller Financeiro OR Controlador OR Contabilidade Senior
+                - button [ref=e16]:
+                  - generic [ref=e17]: Limpar texto
+              - generic [ref=e18]:
+                - combobox [ref=e19]: Brasil
+                - button [ref=e20]:
+                  - generic [ref=e21]: Limpar texto
+              - button [ref=e22] [cursor=pointer]
+          - status [ref=e23]
+        - generic [ref=e24]:
+          - link [ref=e25] [cursor=pointer]:
+            - /url: https://www.linkedin.com/signup/cold-join?source=jobs_registration&session_redirect=https%3A%2F%2Fwww.linkedin.com%2Fjobs%2Fsearch%2F%3Fkeywords%3Dcontroller%2520financeiro%2520OR%2520controlador%2520OR%2520contabilidade%2520senior%26location%3DBrazil%26f_TPR%3Dr604800&trk=public_jobs_nav-header-join
+            - text: Cadastre-se agora
+          - link [ref=e26] [cursor=pointer]:
+            - /url: https://www.linkedin.com/login?emailAddress=&fromSignIn=&fromSignIn=true&session_redirect=https%3A%2F%2Fwww.linkedin.com%2Fjobs%2Fsearch%2F%3Fkeywords%3Dcontroller%2520financeiro%2520OR%2520controlador%2520OR%2520contabilidade%2520senior%26location%3DBrazil%26f_TPR%3Dr604800&trk=public_jobs_nav-header-signin
+            - text: Entrar
+    - list [ref=e32]:
+      - listitem [ref=e33]:
+        - button [ref=e36] [cursor=pointer]: Última semana
+      - listitem [ref=e38]:
+        - button [ref=e41] [cursor=pointer]: Empresa
+      - listitem [ref=e43]:
+        - button [ref=e46] [cursor=pointer]: Tipo de vaga
+      - listitem [ref=e48]:
+        - button [ref=e51] [cursor=pointer]: Nível de experiência
+      - listitem [ref=e53]:
+        - button [ref=e56] [cursor=pointer]: Localidade
+      - listitem [ref=e58]:
+        - button [ref=e61] [cursor=pointer]: Remoto
+    - main [ref=e64]:
+      - generic [ref=e68]:
+        - paragraph [ref=e69]:
+          - text: "Receba alertas de novas vagas de Controller Financeiro OR Controlador OR Contabilidade Senior em:"
+          - strong [ref=e70]: Brasil
+          - text: .
+        - link [ref=e71] [cursor=pointer]:
+          - /url: https://www.linkedin.com/login?emailAddress=&fromSignIn=&session_redirect=https%3A%2F%2Fwww.linkedin.com%2Fjobs%2Fsearch%2F%3Fkeywords%3Dcontroller%2520financeiro%2520OR%2520controlador%2520OR%2520contabilidade%2520senior%26location%3DBrazil%26f_TPR%3Dr604800&trk=public_jobs_job-alert-guest-redirect-cta
+          - text: Entre para criar um alerta de vaga
+      - heading [level=1] [ref=e73]: 12.000+ Controller Financeiro OR Controlador OR Contabilidade Senior vagas em Brasil
+      - generic [ref=e74]:
+        - list [ref=e75]:
+          - listitem [ref=e76]:
+            - generic [ref=e77]:
+              - link [ref=e78] [cursor=pointer]:
+                - /url: https://sa.linkedin.com/jobs/view/finance-director-tj-1840428-at-agay-barho%21-4402515823?position=1&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=C1zu1BklEAy9KIhuOySHbA%3D%3D
+                - generic [ref=e79]: Finance Director - TJ / 1840428
+              - img [ref=e81]
+              - generic [ref=e82]:
+                - heading [level=3] [ref=e83]: Finance Director - TJ / 1840428
+                - heading [level=4] [ref=e84]:
+                  - link [ref=e85] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/company/agay-barho?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: Agay Barho!
+                - generic [ref=e86]:
+                  - generic [ref=e87]: Riad, Riade, Arábia Saudita
+                  - time [ref=e88]: Há 2 horas
+          - listitem [ref=e89]:
+            - generic [ref=e90]:
+              - link [ref=e91] [cursor=pointer]:
+                - /url: https://ae.linkedin.com/jobs/view/financial-controller-at-big-ticket-4401874446?position=2&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=mEpmpNspMuap6t%2FaBhM7bg%3D%3D
+                - generic [ref=e92]: Financial Controller
+              - img [ref=e94]
+              - generic [ref=e95]:
+                - heading [level=3] [ref=e96]: Financial Controller
+                - heading [level=4] [ref=e97]:
+                  - link [ref=e98] [cursor=pointer]:
+                    - /url: https://ae.linkedin.com/company/bigticket?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: Big Ticket
+                - generic [ref=e99]:
+                  - generic [ref=e100]: Abu Dhabi, Emirado de Abu Dhabi, Emirados Árabes Unidos
+                  - time [ref=e101]: Há 3 horas
+          - listitem [ref=e102]:
+            - generic [ref=e103]:
+              - link [ref=e104] [cursor=pointer]:
+                - /url: https://ae.linkedin.com/jobs/view/financial-controller-at-continental-4399752554?position=3&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=OuYduZi1WM3RQRv%2Bd78i1A%3D%3D
+                - generic [ref=e105]: Financial Controller
+              - img [ref=e107]
+              - generic [ref=e108]:
+                - heading [level=3] [ref=e109]: Financial Controller
+                - heading [level=4] [ref=e110]:
+                  - link [ref=e111] [cursor=pointer]:
+                    - /url: https://de.linkedin.com/company/continental?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: Continental
+                - generic [ref=e112]:
+                  - generic [ref=e113]: Dubai, Emirados Árabes Unidos
+                  - generic [ref=e116]: Contratando agora
+                  - time [ref=e117]: Há 2 dias
+          - listitem [ref=e118]:
+            - generic [ref=e119]:
+              - link [ref=e120] [cursor=pointer]:
+                - /url: https://za.linkedin.com/jobs/view/controller-at-novamed-4402692319?position=4&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=jyEpcglxq%2BlR0aK22dPzlg%3D%3D
+                - generic [ref=e121]: Controller
+              - img [ref=e123]
+              - generic [ref=e124]:
+                - heading [level=3] [ref=e125]: Controller
+                - heading [level=4] [ref=e126]:
+                  - link [ref=e127] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/company/novamed?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: Novamed
+                - generic [ref=e128]:
+                  - generic [ref=e129]: Pretória, Gauteng, África do Sul
+                  - generic [ref=e132]: Seja um dos primeiros a se candidatar
+                  - time [ref=e133]: Há 8 horas
+          - listitem [ref=e134]:
+            - generic [ref=e135]:
+              - link [ref=e136] [cursor=pointer]:
+                - /url: https://ae.linkedin.com/jobs/view/finance-controller-%E2%80%93-real-estate-aed-30k-40k-at-antal-international-4399994087?position=5&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=ORPU7tYeyREogROlYaBHYA%3D%3D
+                - generic [ref=e137]: Finance Controller – Real Estate - AED 30K - 40K
+              - generic [ref=e139]:
+                - heading [level=3] [ref=e140]: Finance Controller – Real Estate - AED 30K - 40K
+                - heading [level=4] [ref=e141]:
+                  - link [ref=e142] [cursor=pointer]:
+                    - /url: https://uk.linkedin.com/company/antal-international?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: Antal International
+                - generic [ref=e143]:
+                  - generic [ref=e144]: Dubai, Emirados Árabes Unidos
+                  - generic [ref=e147]: Contratando agora
+                  - time [ref=e148]: Há 22 horas
+          - listitem [ref=e149]:
+            - generic [ref=e150]:
+              - link [ref=e151] [cursor=pointer]:
+                - /url: https://sa.linkedin.com/jobs/view/financial-controller-at-lvmh-perfumes-cosmetics-4399949461?position=6&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=QNlIK3WMuP%2Bzc3MQh5kFNg%3D%3D
+                - generic [ref=e152]: Financial Controller
+              - generic [ref=e154]:
+                - heading [level=3] [ref=e155]: Financial Controller
+                - heading [level=4] [ref=e156]:
+                  - link [ref=e157] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/company/lvmh-perfumes-&-cosmetics?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: LVMH Perfumes & Cosmetics
+                - generic [ref=e158]:
+                  - generic [ref=e159]: Jidá, Meca, Arábia Saudita
+                  - generic [ref=e162]: Contratando agora
+                  - time [ref=e163]: Há 1 dia
+          - listitem [ref=e164]:
+            - generic [ref=e165]:
+              - link [ref=e166] [cursor=pointer]:
+                - /url: https://in.linkedin.com/jobs/view/financial-controller-%E2%80%93-gujarat-mp-at-sodexo-4399326644?position=7&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=EBamjHp2d4g3zSvPExFzgw%3D%3D
+                - generic [ref=e167]: Financial Controller – Gujarat & MP
+              - generic [ref=e169]:
+                - heading [level=3] [ref=e170]: Financial Controller – Gujarat & MP
+                - heading [level=4] [ref=e171]:
+                  - link [ref=e172] [cursor=pointer]:
+                    - /url: https://fr.linkedin.com/company/sodexo?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: Sodexo
+                - generic [ref=e173]:
+                  - generic [ref=e174]: Ahmedabad, Guzarate, Índia
+                  - generic [ref=e177]: Contratando agora
+                  - time [ref=e178]: Há 5 dias
+          - listitem [ref=e179]:
+            - generic [ref=e180]:
+              - link [ref=e181] [cursor=pointer]:
+                - /url: https://tz.linkedin.com/jobs/view/financial-controller-at-brightermonday-uganda-4400769148?position=8&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=g44k%2FAbJqIYC6hEY4Epi2g%3D%3D
+                - generic [ref=e182]: Financial Controller
+              - generic [ref=e184]:
+                - heading [level=3] [ref=e185]: Financial Controller
+                - heading [level=4] [ref=e186]:
+                  - link [ref=e187] [cursor=pointer]:
+                    - /url: https://ug.linkedin.com/company/brightermonday-ug?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: BrighterMonday Uganda
+                - generic [ref=e188]:
+                  - generic [ref=e189]: Dar es Salaam, Dar es Salaam, Tanzânia
+                  - time [ref=e190]: Há 2 dias
+          - listitem [ref=e191]:
+            - generic [ref=e192]:
+              - link [ref=e193] [cursor=pointer]:
+                - /url: https://in.linkedin.com/jobs/view/lead-finance-controller-at-weekday-ai-yc-w21-4400233274?position=9&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=fspVTOdqMPQFSwUtUWJXmA%3D%3D
+                - generic [ref=e194]: Lead Finance Controller
+              - generic [ref=e196]:
+                - heading [level=3] [ref=e197]: Lead Finance Controller
+                - heading [level=4] [ref=e198]:
+                  - link [ref=e199] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/company/weekdayjobs?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: Weekday AI (YC W21)
+                - generic [ref=e200]:
+                  - generic [ref=e201]: Bangalore, Carnataca, Índia
+                  - generic [ref=e204]: Seja um dos primeiros a se candidatar
+                  - time [ref=e205]: Há 6 dias
+          - listitem [ref=e206]:
+            - generic [ref=e207]:
+              - link [ref=e208] [cursor=pointer]:
+                - /url: https://in.linkedin.com/jobs/view/financial-controller-at-itc-hotels-limited-4397694820?position=10&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=orDWrA0fUwWspyaCBZEr6w%3D%3D
+                - generic [ref=e209]: Financial Controller
+              - generic [ref=e211]:
+                - heading [level=3] [ref=e212]: Financial Controller
+                - heading [level=4] [ref=e213]:
+                  - link [ref=e214] [cursor=pointer]:
+                    - /url: https://in.linkedin.com/company/itc-hotels?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: ITC Hotels Limited
+                - generic [ref=e215]:
+                  - generic [ref=e216]: Dehradun, Utaracanda, Índia
+                  - generic [ref=e219]: Contratando agora
+                  - time [ref=e220]: Há 6 dias
+          - listitem [ref=e221]:
+            - generic [ref=e222]:
+              - link [ref=e223] [cursor=pointer]:
+                - /url: https://sa.linkedin.com/jobs/view/director-of-administration-at-al-enjaz-company-4402261193?position=11&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=juO4UquOJKXJLk%2Bs%2Bn0SFQ%3D%3D
+                - generic [ref=e224]: Director of Administration
+              - generic [ref=e226]:
+                - heading [level=3] [ref=e227]: Director of Administration
+                - heading [level=4] [ref=e228]:
+                  - link [ref=e229] [cursor=pointer]:
+                    - /url: https://sa.linkedin.com/company/alenjaz?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: Al-Enjaz Company
+                - generic [ref=e230]:
+                  - generic [ref=e231]: Riade, Arábia Saudita
+                  - time [ref=e232]: Há 1 dia
+          - listitem [ref=e233]:
+            - generic [ref=e234]:
+              - link [ref=e235] [cursor=pointer]:
+                - /url: https://fr.linkedin.com/jobs/view/financial-controller-cdi-at-hbs-4401772505?position=12&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=aplFefU3gvAS04U%2BTCpKlw%3D%3D
+                - generic [ref=e236]: Financial Controller (CDI)
+              - generic [ref=e238]:
+                - heading [level=3] [ref=e239]: Financial Controller (CDI)
+                - heading [level=4] [ref=e240]:
+                  - link [ref=e241] [cursor=pointer]:
+                    - /url: https://ch.linkedin.com/company/hbs?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: HBS
+                - generic [ref=e242]:
+                  - generic [ref=e243]: Boulogne-Billancourt, Ilha de França, França
+                  - generic [ref=e246]: Contratando agora
+                  - time [ref=e247]: Há 1 dia
+          - listitem [ref=e248]:
+            - generic [ref=e249]:
+              - link [ref=e250] [cursor=pointer]:
+                - /url: https://it.linkedin.com/jobs/view/corporate-financial-controller-at-mapei-4401441403?position=13&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=2PtObcOLStmmYQ41New2FA%3D%3D
+                - generic [ref=e251]: Corporate Financial Controller
+              - generic [ref=e253]:
+                - heading [level=3] [ref=e254]: Corporate Financial Controller
+                - heading [level=4] [ref=e255]:
+                  - link [ref=e256] [cursor=pointer]:
+                    - /url: https://it.linkedin.com/company/mapei_group?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: Mapei
+                - generic [ref=e257]:
+                  - generic [ref=e258]: Milão, Lombardia, Itália
+                  - generic [ref=e261]: Contratando agora
+                  - time [ref=e262]: Há 1 dia
+          - listitem [ref=e263]:
+            - generic [ref=e264]:
+              - link [ref=e265] [cursor=pointer]:
+                - /url: https://tr.linkedin.com/jobs/view/senior-regional-finance-controller-meta-at-hilti-t%C3%BCrkiye-4399756812?position=14&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=MKVWnrrfxLySmG6nFQ7ihQ%3D%3D
+                - generic [ref=e266]: Senior Regional Finance Controller / META
+              - generic [ref=e268]:
+                - heading [level=3] [ref=e269]: Senior Regional Finance Controller / META
+                - heading [level=4] [ref=e270]:
+                  - link [ref=e271] [cursor=pointer]:
+                    - /url: https://tr.linkedin.com/company/hilti-turkiye?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: Hilti Türkiye
+                - generic [ref=e272]:
+                  - generic [ref=e273]: Istambul, Turquia
+                  - time [ref=e274]: Há 5 horas
+          - listitem [ref=e275]:
+            - generic [ref=e276]:
+              - link [ref=e277] [cursor=pointer]:
+                - /url: https://in.linkedin.com/jobs/view/financial-controller-at-the-indian-hotels-company-limited-ihcl-4400750205?position=15&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=tPPnZS11FIfFSHLUOTlK8g%3D%3D
+                - generic [ref=e278]: Financial Controller
+              - generic [ref=e280]:
+                - heading [level=3] [ref=e281]: Financial Controller
+                - heading [level=4] [ref=e282]:
+                  - link [ref=e283] [cursor=pointer]:
+                    - /url: https://in.linkedin.com/company/the-indian-hotels-company-limited?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: The Indian Hotels Company Limited (IHCL)
+                - generic [ref=e284]:
+                  - generic [ref=e285]: Indore, Madia Pradexe, Índia
+                  - generic [ref=e288]: Contratando agora
+                  - time [ref=e289]: Há 2 dias
+          - listitem [ref=e290]:
+            - generic [ref=e291]:
+              - link [ref=e292] [cursor=pointer]:
+                - /url: https://www.linkedin.com/jobs/view/vp-controller-at-randstad-usa-4351777601?position=16&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=VgrsPVLdFC%2Bjh7%2BrmvHIaA%3D%3D
+                - generic [ref=e293]: VP, Controller
+              - generic [ref=e295]:
+                - heading [level=3] [ref=e296]: VP, Controller
+                - heading [level=4] [ref=e297]:
+                  - link [ref=e298] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/company/randstadusa?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: Randstad USA
+                - generic [ref=e299]:
+                  - generic [ref=e300]: Las Vegas e Região
+                  - generic [ref=e303]: Contratando agora + 9 benefícios
+                  - time [ref=e304]: Há 2 dias
+          - listitem [ref=e305]:
+            - generic [ref=e306]:
+              - link [ref=e307] [cursor=pointer]:
+                - /url: https://www.linkedin.com/jobs/view/vice-president-controller-at-grant-morgan-4394475179?position=17&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=aZVghVgSTzC4soYr7ftqHw%3D%3D
+                - generic [ref=e308]: Vice President, Controller
+              - generic [ref=e310]:
+                - heading [level=3] [ref=e311]: Vice President, Controller
+                - heading [level=4] [ref=e312]:
+                  - link [ref=e313] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/company/grantmorgan-associates?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: Grant Morgan
+                - generic [ref=e314]:
+                  - generic [ref=e315]: Washington DC-Baltimore e Região
+                  - generic [ref=e318]: Seja um dos primeiros a se candidatar
+                  - time [ref=e319]: Há 1 dia
+          - listitem [ref=e320]:
+            - generic [ref=e321]:
+              - link [ref=e322] [cursor=pointer]:
+                - /url: https://uk.linkedin.com/jobs/view/financial-controller-pe-backed-consumer-circa-%C2%A375k-%2B-bonus-package-at-nicollane-4399770683?position=18&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=RXc6jUb%2FiIEgdIhkLlym9Q%3D%3D
+                - generic [ref=e323]: Financial Controller - PE backed Consumer - Circa £75k + bonus / package
+              - generic [ref=e325]:
+                - heading [level=3] [ref=e326]: Financial Controller - PE backed Consumer - Circa £75k + bonus / package
+                - heading [level=4] [ref=e327]:
+                  - link [ref=e328] [cursor=pointer]:
+                    - /url: https://uk.linkedin.com/company/nicollane?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: NicolLane
+                - generic [ref=e329]:
+                  - generic [ref=e330]: Kingston upon Thames, Inglaterra, Reino Unido
+                  - generic [ref=e333]: Contratando agora
+                  - time [ref=e334]: Há 1 dia
+          - listitem [ref=e335]:
+            - generic [ref=e336]:
+              - link [ref=e337] [cursor=pointer]:
+                - /url: https://uz.linkedin.com/jobs/view/financial-controller-at-mercure-hotels-4401872506?position=19&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=TqsxtormHEDUEghniffOuQ%3D%3D
+                - generic [ref=e338]: Financial Controller
+              - generic [ref=e340]:
+                - heading [level=3] [ref=e341]: Financial Controller
+                - heading [level=4] [ref=e342]:
+                  - link [ref=e343] [cursor=pointer]:
+                    - /url: https://fr.linkedin.com/company/mercure-hotel?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: Mercure Hotels
+                - generic [ref=e344]:
+                  - generic [ref=e345]: Khiva, Corásmia (província), Uzbequistão
+                  - generic [ref=e348]: Seja um dos primeiros a se candidatar
+                  - time [ref=e349]: Há 3 horas
+          - listitem [ref=e350]:
+            - generic [ref=e351]:
+              - link [ref=e352] [cursor=pointer]:
+                - /url: https://mx.linkedin.com/jobs/view/finance-director-vfs-at-volvo-financial-services-4402221315?position=20&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=IC8CcbAN8oZNsQ8ip3kopA%3D%3D
+                - generic [ref=e353]: Finance Director VFS
+              - generic [ref=e355]:
+                - heading [level=3] [ref=e356]: Finance Director VFS
+                - heading [level=4] [ref=e357]:
+                  - link [ref=e358] [cursor=pointer]:
+                    - /url: https://se.linkedin.com/company/volvo-financial-services?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: Volvo Financial Services
+                - generic [ref=e359]:
+                  - generic [ref=e360]: Cuajimalpa de Morelos, Cidade do México, México
+                  - time [ref=e361]: Há 1 dia
+          - listitem [ref=e362]:
+            - generic [ref=e363]:
+              - link [ref=e364] [cursor=pointer]:
+                - /url: https://my.linkedin.com/jobs/view/senior-director-gbs-finance-apac-gcc-at-air-liquide-4390302999?position=21&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=naevya5L10j7BhHcH%2F7Yog%3D%3D
+                - generic [ref=e365]: Senior Director - GBS Finance (APAC & GCC)
+              - generic [ref=e367]:
+                - heading [level=3] [ref=e368]: Senior Director - GBS Finance (APAC & GCC)
+                - heading [level=4] [ref=e369]:
+                  - link [ref=e370] [cursor=pointer]:
+                    - /url: https://fr.linkedin.com/company/airliquide?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: Air Liquide
+                - generic [ref=e371]:
+                  - generic [ref=e372]: Petaling Jaya, Selangor, Malásia
+                  - generic [ref=e375]: Contratando agora
+                  - time [ref=e376]: Há 1 dia
+          - listitem [ref=e377]:
+            - generic [ref=e378]:
+              - link [ref=e379] [cursor=pointer]:
+                - /url: https://cd.linkedin.com/jobs/view/eq-controller-at-sandvik-4400196431?position=22&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=0Jsf4%2Bkp%2Bn8h3Pnxv%2BR%2F%2FQ%3D%3D
+                - generic [ref=e380]: EQ controller
+              - generic [ref=e382]:
+                - heading [level=3] [ref=e383]: EQ controller
+                - heading [level=4] [ref=e384]:
+                  - link [ref=e385] [cursor=pointer]:
+                    - /url: https://se.linkedin.com/company/sandvik?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: Sandvik
+                - generic [ref=e386]:
+                  - generic [ref=e387]: Lubumbashi, Alto Catanga, República Democrática do Congo
+                  - generic [ref=e390]: Seja um dos primeiros a se candidatar
+                  - time [ref=e391]: Há 2 horas
+          - listitem [ref=e392]:
+            - generic [ref=e393]:
+              - link [ref=e394] [cursor=pointer]:
+                - /url: https://in.linkedin.com/jobs/view/area-finance-controller-at-a-p-moller-maersk-4389703016?position=23&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=bbgTZkjRRD5wNZwrVcSiGQ%3D%3D
+                - generic [ref=e395]: Area Finance Controller
+              - generic [ref=e397]:
+                - heading [level=3] [ref=e398]: Area Finance Controller
+                - heading [level=4] [ref=e399]:
+                  - link [ref=e400] [cursor=pointer]:
+                    - /url: https://dk.linkedin.com/company/maersk-group?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: A.P. Moller - Maersk
+                - generic [ref=e401]:
+                  - generic [ref=e402]: Pune, Maharashtra, Índia
+                  - generic [ref=e405]: Contratando agora
+                  - time [ref=e406]: Há 1 dia
+          - listitem [ref=e407]:
+            - generic [ref=e408]:
+              - link [ref=e409] [cursor=pointer]:
+                - /url: https://www.linkedin.com/jobs/view/financial-controller-at-csg-talent-4401595925?position=24&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=DUYwmmSWRhSHs5w4A1ZA3A%3D%3D
+                - generic [ref=e410]: Financial Controller
+              - generic [ref=e412]:
+                - heading [level=3] [ref=e413]: Financial Controller
+                - heading [level=4] [ref=e414]:
+                  - link [ref=e415] [cursor=pointer]:
+                    - /url: https://uk.linkedin.com/company/csg-talent?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: CSG Talent
+                - generic [ref=e416]:
+                  - generic [ref=e417]: Estados Unidos
+                  - generic [ref=e420]: Contratando agora
+                  - time [ref=e421]: Há 2 dias
+          - listitem [ref=e422]:
+            - generic [ref=e423]:
+              - link [ref=e424] [cursor=pointer]:
+                - /url: https://ps.linkedin.com/jobs/view/financial-controller-at-rift-valley-farms-4400184885?position=25&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=FAbyNaMqtOOIGEdYrGsqEA%3D%3D
+                - generic [ref=e425]: Financial Controller
+              - generic [ref=e427]:
+                - heading [level=3] [ref=e428]: Financial Controller
+                - heading [level=4] [ref=e429]:
+                  - link [ref=e430] [cursor=pointer]:
+                    - /url: https://ps.linkedin.com/company/rift-valley-farms?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: Rift Valley Farms
+                - generic [ref=e431]:
+                  - generic [ref=e432]: Autoridade Palestina
+                  - generic [ref=e435]: Seja um dos primeiros a se candidatar
+                  - time [ref=e436]: Há 1 hora
+          - listitem [ref=e437]:
+            - generic [ref=e438]:
+              - link [ref=e439] [cursor=pointer]:
+                - /url: https://ae.linkedin.com/jobs/view/director-financial-resources-at-zayed-university-4340293848?position=26&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=FhMh3b24q%2BTlf8yQkh0a4w%3D%3D
+                - generic [ref=e440]: Director, Financial Resources
+              - generic [ref=e442]:
+                - heading [level=3] [ref=e443]: Director, Financial Resources
+                - heading [level=4] [ref=e444]:
+                  - link [ref=e445] [cursor=pointer]:
+                    - /url: https://ae.linkedin.com/school/zayed-university/?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: Zayed University
+                - generic [ref=e446]:
+                  - generic [ref=e447]: Dubai, Dubai, Emirados Árabes Unidos
+                  - time [ref=e448]: Há 4 horas
+          - listitem [ref=e449]:
+            - generic [ref=e450]:
+              - link [ref=e451] [cursor=pointer]:
+                - /url: https://br.linkedin.com/jobs/view/controller-to-at-alpha-qu%C3%ADmica-4400149429?position=27&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=iqPFWlBjehK3chvtybiEfQ%3D%3D
+                - generic [ref=e452]: Controller - TO
+              - generic [ref=e454]:
+                - heading [level=3] [ref=e455]: Controller - TO
+                - heading [level=4] [ref=e456]:
+                  - link [ref=e457] [cursor=pointer]:
+                    - /url: https://br.linkedin.com/company/alphaquimica?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: Alpha Química
+                - generic [ref=e458]:
+                  - generic [ref=e459]: Cachoeirinha, RS
+                  - generic [ref=e462]: Seja um dos primeiros a se candidatar
+                  - time [ref=e463]: Há 10 horas
+          - listitem [ref=e464]:
+            - generic [ref=e465]:
+              - link [ref=e466] [cursor=pointer]:
+                - /url: https://in.linkedin.com/jobs/view/deputy-general-manager-finance-controller-at-adani-ports-and-sez-4402529081?position=28&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=LEUu1FlhZLOmFh9JCtbcfA%3D%3D
+                - generic [ref=e467]: Deputy General Manager - Finance Controller
+              - generic [ref=e469]:
+                - heading [level=3] [ref=e470]: Deputy General Manager - Finance Controller
+                - heading [level=4] [ref=e471]:
+                  - link [ref=e472] [cursor=pointer]:
+                    - /url: https://in.linkedin.com/company/adani-ports-sez-ltd-?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: Adani Ports and SEZ
+                - generic [ref=e473]:
+                  - generic [ref=e474]: Chorasi, Guzarate, Índia
+                  - generic [ref=e477]: Contratando agora
+                  - time [ref=e478]: Há 21 horas
+          - listitem [ref=e479]:
+            - generic [ref=e480]:
+              - link [ref=e481] [cursor=pointer]:
+                - /url: https://mx.linkedin.com/jobs/view/dir-contraloria-at-scotiabank-4398707673?position=29&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=Skv%2B86PwAwhnt%2FleNyLL3w%3D%3D
+                - generic [ref=e482]: Dir Contraloria
+              - generic [ref=e484]:
+                - heading [level=3] [ref=e485]: Dir Contraloria
+                - heading [level=4] [ref=e486]:
+                  - link [ref=e487] [cursor=pointer]:
+                    - /url: https://ca.linkedin.com/company/scotiabank?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: Scotiabank
+                - generic [ref=e488]:
+                  - generic [ref=e489]: Cidade do México, México
+                  - generic [ref=e492]: Contratando agora
+                  - time [ref=e493]: Há 5 dias
+          - listitem [ref=e494]:
+            - generic [ref=e495]:
+              - link [ref=e496] [cursor=pointer]:
+                - /url: https://ro.linkedin.com/jobs/view/finance-controller-southern-central-europe-at-unilever-4401722467?position=30&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=xlMO8o%2Fl7CSgG%2FVJDImR3Q%3D%3D
+                - generic [ref=e497]: Finance Controller Southern Central Europe
+              - generic [ref=e499]:
+                - heading [level=3] [ref=e500]: Finance Controller Southern Central Europe
+                - heading [level=4] [ref=e501]:
+                  - link [ref=e502] [cursor=pointer]:
+                    - /url: https://uk.linkedin.com/company/unilever?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: Unilever
+                - generic [ref=e503]:
+                  - generic [ref=e504]: Bucarest, Romênia
+                  - generic [ref=e507]: Contratando agora
+                  - time [ref=e508]: Há 2 dias
+          - listitem [ref=e509]:
+            - generic [ref=e510]:
+              - link [ref=e511] [cursor=pointer]:
+                - /url: https://uk.linkedin.com/jobs/view/financial-controller-at-camino-partners-ltd-4399513474?position=31&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=EtNYcOuGDLvUtlK65vVWbA%3D%3D
+                - generic [ref=e512]: Financial Controller
+              - generic [ref=e514]:
+                - heading [level=3] [ref=e515]: Financial Controller
+                - heading [level=4] [ref=e516]:
+                  - link [ref=e517] [cursor=pointer]:
+                    - /url: https://uk.linkedin.com/company/camino-partners-ltd?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: Camino Partners Ltd
+                - generic [ref=e518]:
+                  - generic [ref=e519]: Londres e Região, Reino Unido
+                  - generic [ref=e522]: Contratando agora
+                  - time [ref=e523]: Há 3 dias
+          - listitem [ref=e524]:
+            - generic [ref=e525]:
+              - link [ref=e526] [cursor=pointer]:
+                - /url: https://sa.linkedin.com/jobs/view/financial-controller-at-bayut-ksa-%D8%A8%D9%8A%D9%88%D8%AA-%D8%A7%D9%84%D8%B3%D8%B9%D9%88%D8%AF%D9%8A%D8%A9-4399719755?position=32&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=cyc7eYUca9ke61R9fdeiBw%3D%3D
+                - generic [ref=e527]: Financial Controller
+              - generic [ref=e529]:
+                - heading [level=3] [ref=e530]: Financial Controller
+                - heading [level=4] [ref=e531]:
+                  - link [ref=e532] [cursor=pointer]:
+                    - /url: https://sa.linkedin.com/company/bayut-ksa?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: Bayut KSA - بيوت السعودية
+                - generic [ref=e533]:
+                  - generic [ref=e534]: Riad, Riade, Arábia Saudita
+                  - generic [ref=e537]: Contratando agora
+                  - time [ref=e538]: Há 2 dias
+          - listitem [ref=e539]:
+            - generic [ref=e540]:
+              - link [ref=e541] [cursor=pointer]:
+                - /url: https://in.linkedin.com/jobs/view/finance-controller-at-dr-reddy-s-laboratories-4402935509?position=33&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=dzsLJdEfqbknvTYEj%2FUT8w%3D%3D
+                - generic [ref=e542]: Finance Controller
+              - generic [ref=e544]:
+                - heading [level=3] [ref=e545]: Finance Controller
+                - heading [level=4] [ref=e546]:
+                  - link [ref=e547] [cursor=pointer]:
+                    - /url: https://in.linkedin.com/company/dr--reddys-laboratories?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: Dr. Reddy's Laboratories
+                - generic [ref=e548]:
+                  - generic [ref=e549]: Hyderabad, Telanganá, Índia
+                  - generic [ref=e552]: Contratando agora
+                  - time [ref=e553]: Há 2 horas
+          - listitem [ref=e554]:
+            - generic [ref=e555]:
+              - link [ref=e556] [cursor=pointer]:
+                - /url: https://in.linkedin.com/jobs/view/lead-finance-controller-at-weekday-ai-yc-w21-4400230437?position=34&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=e%2Fr0SfBhAag2sZB2Ewotfg%3D%3D
+                - generic [ref=e557]: Lead - Finance Controller
+              - generic [ref=e559]:
+                - heading [level=3] [ref=e560]: Lead - Finance Controller
+                - heading [level=4] [ref=e561]:
+                  - link [ref=e562] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/company/weekdayjobs?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: Weekday AI (YC W21)
+                - generic [ref=e563]:
+                  - generic [ref=e564]: Bangalore, Carnataca, Índia
+                  - generic [ref=e567]: Seja um dos primeiros a se candidatar
+                  - time [ref=e568]: Há 6 dias
+          - listitem [ref=e569]:
+            - generic [ref=e570]:
+              - link [ref=e571] [cursor=pointer]:
+                - /url: https://it.linkedin.com/jobs/view/country-finance-controller-at-affidea-4402928449?position=35&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=K9n%2FYE7w5JaMHnlQX5A%2FpQ%3D%3D
+                - generic [ref=e572]: Country Finance Controller
+              - generic [ref=e574]:
+                - heading [level=3] [ref=e575]: Country Finance Controller
+                - heading [level=4] [ref=e576]:
+                  - link [ref=e577] [cursor=pointer]:
+                    - /url: https://nl.linkedin.com/company/affidea?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: Affidea
+                - generic [ref=e578]:
+                  - generic [ref=e579]: Gessate, Lombardia, Itália
+                  - generic [ref=e582]: Seja um dos primeiros a se candidatar
+                  - time [ref=e583]: Há 2 horas
+          - listitem [ref=e584]:
+            - generic [ref=e585]:
+              - link [ref=e586] [cursor=pointer]:
+                - /url: https://in.linkedin.com/jobs/view/financial-controller-at-houseeazy-4399688914?position=36&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=%2BPvjFQNMNo3s9E3yzwx%2FZg%3D%3D
+                - generic [ref=e587]: Financial Controller
+              - generic [ref=e589]:
+                - heading [level=3] [ref=e590]: Financial Controller
+                - heading [level=4] [ref=e591]:
+                  - link [ref=e592] [cursor=pointer]:
+                    - /url: https://in.linkedin.com/company/house-eazy?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: HouseEazy
+                - generic [ref=e593]:
+                  - generic [ref=e594]: Noida, Utar Pradexe, Índia
+                  - time [ref=e595]: Há 2 dias
+          - listitem [ref=e596]:
+            - generic [ref=e597]:
+              - link [ref=e598] [cursor=pointer]:
+                - /url: https://sa.linkedin.com/jobs/view/financial-controller-retail-at-confidential-4399368601?position=37&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=IQci0OArE3mZ5Pfa%2FXQizg%3D%3D
+                - generic [ref=e599]: Financial Controller - Retail
+              - generic [ref=e601]:
+                - heading [level=3] [ref=e602]: Financial Controller - Retail
+                - heading [level=4] [ref=e603]:
+                  - link [ref=e604] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/company/confidential-career?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: Confidential
+                - generic [ref=e605]:
+                  - generic [ref=e606]: Riade, Arábia Saudita
+                  - generic [ref=e609]: Contratando agora
+                  - time [ref=e610]: Há 4 dias
+          - listitem [ref=e611]:
+            - generic [ref=e612]:
+              - link [ref=e613] [cursor=pointer]:
+                - /url: https://uk.linkedin.com/jobs/view/financial-controller-at-we-do-group-4401786121?position=38&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=K74G%2FGfGXEUsnoKXmAIFAw%3D%3D
+                - generic [ref=e614]: Financial Controller
+              - generic [ref=e616]:
+                - heading [level=3] [ref=e617]: Financial Controller
+                - heading [level=4] [ref=e618]:
+                  - link [ref=e619] [cursor=pointer]:
+                    - /url: https://uk.linkedin.com/company/we-do-group?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: We Do Group
+                - generic [ref=e620]:
+                  - generic [ref=e621]: Londres e Região, Reino Unido
+                  - generic [ref=e624]: Contratando agora
+                  - time [ref=e625]: Há 1 dia
+          - listitem [ref=e626]:
+            - generic [ref=e627]:
+              - link [ref=e628] [cursor=pointer]:
+                - /url: https://ec.linkedin.com/jobs/view/contralor-corporativo-guayaquil-at-durexporta-4400919426?position=39&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=J2TwiVtbCjtiEK2sR0UH0Q%3D%3D
+                - generic [ref=e629]: CONTRALOR CORPORATIVO (Guayaquil)
+              - generic [ref=e631]:
+                - heading [level=3] [ref=e632]: CONTRALOR CORPORATIVO (Guayaquil)
+                - heading [level=4] [ref=e633]:
+                  - link [ref=e634] [cursor=pointer]:
+                    - /url: https://ec.linkedin.com/company/durexporta?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: Durexporta
+                - generic [ref=e635]:
+                  - generic [ref=e636]: Guayaquil, Província Guayas, Equador
+                  - time [ref=e637]: Há 5 dias
+          - listitem [ref=e638]:
+            - generic [ref=e639]:
+              - link [ref=e640] [cursor=pointer]:
+                - /url: https://uk.linkedin.com/jobs/view/financial-controller-at-brewer-morris-4399781266?position=40&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=QUpGrZcSUKs736E%2BldysUw%3D%3D
+                - generic [ref=e641]: Financial Controller
+              - generic [ref=e643]:
+                - heading [level=3] [ref=e644]: Financial Controller
+                - heading [level=4] [ref=e645]:
+                  - link [ref=e646] [cursor=pointer]:
+                    - /url: https://uk.linkedin.com/company/brewer-morris?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: Brewer Morris
+                - generic [ref=e647]:
+                  - generic [ref=e648]: Londres e Região, Reino Unido
+                  - generic [ref=e651]: Contratando agora
+                  - time [ref=e652]: Há 1 dia
+          - listitem [ref=e653]:
+            - generic [ref=e654]:
+              - link [ref=e655] [cursor=pointer]:
+                - /url: https://in.linkedin.com/jobs/view/financial-controller-at-dinex-group-4399522475?position=41&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=BQL%2F%2FkNBI4VVQm%2Fs13My2w%3D%3D
+                - generic [ref=e656]: Financial Controller
+              - generic [ref=e658]:
+                - heading [level=3] [ref=e659]: Financial Controller
+                - heading [level=4] [ref=e660]:
+                  - link [ref=e661] [cursor=pointer]:
+                    - /url: https://dk.linkedin.com/company/dinex-as?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: Dinex Group
+                - generic [ref=e662]:
+                  - generic [ref=e663]: Madras, Tamil Nadu, Índia
+                  - generic [ref=e666]: Contratando agora
+                  - time [ref=e667]: Há 3 dias
+          - listitem [ref=e668]:
+            - generic [ref=e669]:
+              - link [ref=e670] [cursor=pointer]:
+                - /url: https://mx.linkedin.com/jobs/view/head-of-finance-m%C3%A9xico-at-taptap-digital-4400126409?position=42&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=Eh96cdeP62HB4q7WKu4YZQ%3D%3D
+                - generic [ref=e671]: Head of Finance. México
+              - generic [ref=e673]:
+                - heading [level=3] [ref=e674]: Head of Finance. México
+                - heading [level=4] [ref=e675]:
+                  - link [ref=e676] [cursor=pointer]:
+                    - /url: https://es.linkedin.com/company/taptapdigital?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: Taptap Digital
+                - generic [ref=e677]:
+                  - generic [ref=e678]: Cidade do México, México
+                  - time [ref=e679]: Há 14 horas
+          - listitem [ref=e680]:
+            - generic [ref=e681]:
+              - link [ref=e682] [cursor=pointer]:
+                - /url: https://uk.linkedin.com/jobs/view/group-financial-controller-at-unitas-talent-4401719647?position=43&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=L80uoyoHqySM8X3mVaaavw%3D%3D
+                - generic [ref=e683]: Group Financial Controller
+              - generic [ref=e685]:
+                - heading [level=3] [ref=e686]: Group Financial Controller
+                - heading [level=4] [ref=e687]:
+                  - link [ref=e688] [cursor=pointer]:
+                    - /url: https://uk.linkedin.com/company/unitastalent?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: Unitas Talent
+                - generic [ref=e689]:
+                  - generic [ref=e690]: Milton Keynes, Inglaterra, Reino Unido
+                  - generic [ref=e693]: Contratando agora
+                  - time [ref=e694]: Há 2 dias
+          - listitem [ref=e695]:
+            - generic [ref=e696]:
+              - link [ref=e697] [cursor=pointer]:
+                - /url: https://dk.linkedin.com/jobs/view/financial-controller-at-cip-fund-solutions-4402126241?position=44&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=nEaUX%2BH0FkYIqMhQeDIACA%3D%3D
+                - generic [ref=e698]: Financial Controller
+              - generic [ref=e700]:
+                - heading [level=3] [ref=e701]: Financial Controller
+                - heading [level=4] [ref=e702]:
+                  - link [ref=e703] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/company/cip-fund-solutions?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: CIP Fund Solutions
+                - generic [ref=e704]:
+                  - generic [ref=e705]: Copenhague, Região da Capital, Dinamarca
+                  - generic [ref=e708]: Seja um dos primeiros a se candidatar
+                  - time [ref=e709]: Há 2 minutos
+          - listitem [ref=e710]:
+            - generic [ref=e711]:
+              - link [ref=e712] [cursor=pointer]:
+                - /url: https://ph.linkedin.com/jobs/view/financial-controller-at-vestas-4401066883?position=45&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=jNMELgezROfzsCwUwFSbsQ%3D%3D
+                - generic [ref=e713]: Financial Controller
+              - generic [ref=e715]:
+                - heading [level=3] [ref=e716]: Financial Controller
+                - heading [level=4] [ref=e717]:
+                  - link [ref=e718] [cursor=pointer]:
+                    - /url: https://dk.linkedin.com/company/vestas?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: Vestas
+                - generic [ref=e719]:
+                  - generic [ref=e720]: Pasay, Grande Manila, Filipinas
+                  - generic [ref=e723]: Seja um dos primeiros a se candidatar
+                  - time [ref=e724]: Há 2 dias
+          - listitem [ref=e725]:
+            - generic [ref=e726]:
+              - link [ref=e727] [cursor=pointer]:
+                - /url: https://ph.linkedin.com/jobs/view/group-financial-controller-at-confidential-4400174495?position=46&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=4Xh4b%2FuCHnRMhk1S8HdvzA%3D%3D
+                - generic [ref=e728]: Group Financial Controller
+              - generic [ref=e730]:
+                - heading [level=3] [ref=e731]: Group Financial Controller
+                - heading [level=4] [ref=e732]:
+                  - link [ref=e733] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/company/confidential-company-page12?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: Confidential
+                - generic [ref=e734]:
+                  - generic [ref=e735]: Taguig, Grande Manila, Filipinas
+                  - generic [ref=e738]: Contratando agora
+                  - time [ref=e739]: Há 6 horas
+          - listitem [ref=e740]:
+            - generic [ref=e741]:
+              - link [ref=e742] [cursor=pointer]:
+                - /url: https://id.linkedin.com/jobs/view/head-of-finance-at-rukita-4401898947?position=47&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=cRH7QM3BCKxVqzM0NxzTuw%3D%3D
+                - generic [ref=e743]: Head of Finance
+              - generic [ref=e745]:
+                - heading [level=3] [ref=e746]: Head of Finance
+                - heading [level=4] [ref=e747]:
+                  - link [ref=e748] [cursor=pointer]:
+                    - /url: https://id.linkedin.com/company/rukita?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: Rukita
+                - generic [ref=e749]:
+                  - generic [ref=e750]: Jacarta, Indonésia
+                  - generic [ref=e753]: Contratando agora
+                  - time [ref=e754]: Há 1 hora
+          - listitem [ref=e755]:
+            - generic [ref=e756]:
+              - link [ref=e757] [cursor=pointer]:
+                - /url: https://in.linkedin.com/jobs/view/rtr-finance-controller-%E2%80%93-manager-senior-manager-%E2%80%93-delhi-go-jc-2191-2026-at-golden-opportunities-4383213134?position=48&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=PGn5yOiKeXbq3VYHug1MHQ%3D%3D
+                - generic [ref=e758]: RTR Finance controller – Manager/Senior Manager – Delhi - GO/JC/2191/2026
+              - generic [ref=e760]:
+                - heading [level=3] [ref=e761]: RTR Finance controller – Manager/Senior Manager – Delhi - GO/JC/2191/2026
+                - heading [level=4] [ref=e762]:
+                  - link [ref=e763] [cursor=pointer]:
+                    - /url: https://in.linkedin.com/company/golden-opportunities-pvt-ltd?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: Golden Opportunities
+                - generic [ref=e764]:
+                  - generic [ref=e765]: Madras, Tamil Nadu, Índia
+                  - generic [ref=e768]: Contratando agora
+                  - time [ref=e769]: Há 3 horas
+          - listitem [ref=e770]:
+            - generic [ref=e771]:
+              - link [ref=e772] [cursor=pointer]:
+                - /url: https://pt.linkedin.com/jobs/view/financial-controller-at-one-4399503537?position=49&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=Ep%2B1ZxRfMOZtzzazVCAaxw%3D%3D
+                - generic [ref=e773]: Financial Controller
+              - generic [ref=e775]:
+                - heading [level=3] [ref=e776]: Financial Controller
+                - heading [level=4] [ref=e777]:
+                  - link [ref=e778] [cursor=pointer]:
+                    - /url: https://pt.linkedin.com/company/onewatchcompany?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: ONE
+                - generic [ref=e779]:
+                  - generic [ref=e780]: Lisboa, Lisboa, Portugal
+                  - time [ref=e781]: Há 3 dias
+          - listitem [ref=e782]:
+            - generic [ref=e783]:
+              - link [ref=e784] [cursor=pointer]:
+                - /url: https://www.linkedin.com/jobs/view/vice-president-controller-at-p-f-chang-s-4388221215?position=50&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=RfVXvgonoVuGnqUtzIZvMg%3D%3D
+                - generic [ref=e785]: Vice President, Controller
+              - generic [ref=e787]:
+                - heading [level=3] [ref=e788]: Vice President, Controller
+                - heading [level=4] [ref=e789]:
+                  - link [ref=e790] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/company/pfchangs?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: P.F. Chang's
+                - generic [ref=e791]:
+                  - generic [ref=e792]: Scottsdale, Arizona, Estados Unidos
+                  - generic [ref=e795]: Contratando agora
+                  - time [ref=e796]: Há 5 dias
+          - listitem [ref=e797]:
+            - generic [ref=e798]:
+              - link [ref=e799] [cursor=pointer]:
+                - /url: https://de.linkedin.com/jobs/view/financial-controller-at-corecruitment-ltd-4401717407?position=51&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=%2FBNU0bpsDrffwlOqScfOJg%3D%3D
+                - generic [ref=e800]: Financial Controller
+              - generic [ref=e802]:
+                - heading [level=3] [ref=e803]: Financial Controller
+                - heading [level=4] [ref=e804]:
+                  - link [ref=e805] [cursor=pointer]:
+                    - /url: https://uk.linkedin.com/company/corecruitment-ltd?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: COREcruitment Ltd
+                - generic [ref=e806]:
+                  - generic [ref=e807]: Hamburgo, Alemanha
+                  - generic [ref=e810]: Seja um dos primeiros a se candidatar
+                  - time [ref=e811]: Há 2 dias
+          - listitem [ref=e812]:
+            - generic [ref=e813]:
+              - link [ref=e814] [cursor=pointer]:
+                - /url: https://co.linkedin.com/jobs/view/director-financiero-y-administrativo-at-empresa-confidencial-4402515213?position=52&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=uXs3IjGzajNjSZQ1%2Flxy4A%3D%3D
+                - generic [ref=e815]: Director financiero y administrativo
+              - generic [ref=e817]:
+                - heading [level=3] [ref=e818]: Director financiero y administrativo
+                - heading [level=4] [ref=e819]:
+                  - link [ref=e820] [cursor=pointer]:
+                    - /url: https://br.linkedin.com/company/empresa-confidencial?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: Empresa Confidencial
+                - generic [ref=e821]:
+                  - generic [ref=e822]: Bogota, D.C., Distrito Capital de Bogotá - Departamento, Colômbia
+                  - generic [ref=e825]: Contratando agora
+                  - time [ref=e826]: Há 22 horas
+          - listitem [ref=e827]:
+            - generic [ref=e828]:
+              - link [ref=e829] [cursor=pointer]:
+                - /url: https://lb.linkedin.com/jobs/view/financial-controller-at-fattal-group-4402943395?position=53&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=yV74fejqEMecBSjia51%2Fkw%3D%3D
+                - generic [ref=e830]: Financial Controller
+              - generic [ref=e832]:
+                - heading [level=3] [ref=e833]: Financial Controller
+                - heading [level=4] [ref=e834]:
+                  - link [ref=e835] [cursor=pointer]:
+                    - /url: https://lb.linkedin.com/company/fattal-group?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: FATTAL GROUP
+                - generic [ref=e836]:
+                  - generic [ref=e837]: Beirute, Líbano
+                  - generic [ref=e840]: Contratando agora
+                  - time [ref=e841]: Há 2 horas
+          - listitem [ref=e842]:
+            - generic [ref=e843]:
+              - link [ref=e844] [cursor=pointer]:
+                - /url: https://nl.linkedin.com/jobs/view/financial-controller-at-allison-red-4401050511?position=54&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=GFEz1k1ULoqg9q317q4bGg%3D%3D
+                - generic [ref=e845]: Financial Controller
+              - generic [ref=e847]:
+                - heading [level=3] [ref=e848]: Financial Controller
+                - heading [level=4] [ref=e849]:
+                  - link [ref=e850] [cursor=pointer]:
+                    - /url: https://nl.linkedin.com/company/allison-red?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: Allison Red
+                - generic [ref=e851]:
+                  - generic [ref=e852]: Amsterdam-Zuid, Holanda do Norte, Países Baixos
+                  - time [ref=e853]: Há 3 dias
+          - listitem [ref=e854]:
+            - generic [ref=e855]:
+              - link [ref=e856] [cursor=pointer]:
+                - /url: https://hk.linkedin.com/jobs/view/corporate-head-of-financial-reporting-at-johnson-electric-4401854077?position=55&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=qQ9mm1HKuE8XWBQ0TK%2BL9g%3D%3D
+                - generic [ref=e857]: Corporate Head of Financial Reporting
+              - generic [ref=e859]:
+                - heading [level=3] [ref=e860]: Corporate Head of Financial Reporting
+                - heading [level=4] [ref=e861]:
+                  - link [ref=e862] [cursor=pointer]:
+                    - /url: https://hk.linkedin.com/company/johnsonelectricgroup?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: Johnson Electric
+                - generic [ref=e863]:
+                  - generic [ref=e864]: Hong Kong, RAE Hong Kong
+                  - generic [ref=e867]: Seja um dos primeiros a se candidatar
+                  - time [ref=e868]: Há 5 horas
+          - listitem [ref=e869]:
+            - generic [ref=e870]:
+              - link [ref=e871] [cursor=pointer]:
+                - /url: https://uk.linkedin.com/jobs/view/financial-controller-at-jss-4399743050?position=56&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=E6y89P72Mbs0pNB27eCzIQ%3D%3D
+                - generic [ref=e872]: Financial Controller
+              - generic [ref=e874]:
+                - heading [level=3] [ref=e875]: Financial Controller
+                - heading [level=4] [ref=e876]:
+                  - link [ref=e877] [cursor=pointer]:
+                    - /url: https://uk.linkedin.com/company/thejssgroup?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: JSS
+                - generic [ref=e878]:
+                  - generic [ref=e879]: Londres e Região, Reino Unido
+                  - generic [ref=e882]: Contratando agora
+                  - time [ref=e883]: Há 2 dias
+          - listitem [ref=e884]:
+            - generic [ref=e885]:
+              - link [ref=e886] [cursor=pointer]:
+                - /url: https://ae.linkedin.com/jobs/view/financial-controller-at-haus-haus-4401720460?position=57&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=LBP1vCVYwRfiqwnd1FxcqQ%3D%3D
+                - generic [ref=e887]: Financial Controller
+              - generic [ref=e889]:
+                - heading [level=3] [ref=e890]: Financial Controller
+                - heading [level=4] [ref=e891]:
+                  - link [ref=e892] [cursor=pointer]:
+                    - /url: https://ae.linkedin.com/company/hausandhaus?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: haus & haus
+                - generic [ref=e893]:
+                  - generic [ref=e894]: Dubai, Dubai, Emirados Árabes Unidos
+                  - time [ref=e895]: Há 2 dias
+          - listitem [ref=e896]:
+            - generic [ref=e897]:
+              - link [ref=e898] [cursor=pointer]:
+                - /url: https://www.linkedin.com/jobs/view/director-finance-accounting-at-hansgrohe-north-america-4400019715?position=58&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=W1m7G3yu8Pi7N7a0CbBBEA%3D%3D
+                - generic [ref=e899]: Director, Finance & Accounting
+              - generic [ref=e901]:
+                - heading [level=3] [ref=e902]: Director, Finance & Accounting
+                - heading [level=4] [ref=e903]:
+                  - link [ref=e904] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/company/hansgrohe-north-america?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: Hansgrohe North America
+                - generic [ref=e905]:
+                  - generic [ref=e906]: Alpharetta, Geórgia, Estados Unidos
+                  - time [ref=e907]: Há 2 dias
+          - listitem [ref=e908]:
+            - generic [ref=e909]:
+              - link [ref=e910] [cursor=pointer]:
+                - /url: https://uk.linkedin.com/jobs/view/financial-controller-at-refreshing-finance-recruitment-4399547432?position=59&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=SL2DErKLAsRIvnwwi3u0xQ%3D%3D
+                - generic [ref=e911]: Financial Controller
+              - generic [ref=e913]:
+                - heading [level=3] [ref=e914]: Financial Controller
+                - heading [level=4] [ref=e915]:
+                  - link [ref=e916] [cursor=pointer]:
+                    - /url: https://uk.linkedin.com/company/refreshinggroup?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: Refreshing Finance Recruitment
+                - generic [ref=e917]:
+                  - generic [ref=e918]: Londres e Região, Reino Unido
+                  - generic [ref=e921]: Contratando agora
+                  - time [ref=e922]: Há 2 dias
+          - listitem [ref=e923]:
+            - generic [ref=e924]:
+              - link [ref=e925] [cursor=pointer]:
+                - /url: https://il.linkedin.com/jobs/view/financial-controller-at-tnuva-4399723132?position=60&pageNum=0&refId=bH9%2FsAEr4SiYatSLqz9nuQ%3D%3D&trackingId=l1Mxz5aS1rND5eggKDg8OQ%3D%3D
+                - generic [ref=e926]: Financial Controller
+              - generic [ref=e928]:
+                - heading [level=3] [ref=e929]: Financial Controller
+                - heading [level=4] [ref=e930]:
+                  - link [ref=e931] [cursor=pointer]:
+                    - /url: https://il.linkedin.com/company/tnuva?trk=public_jobs_jserp-result_job-search-card-subtitle
+                    - text: Tnuva
+                - generic [ref=e932]:
+                  - generic [ref=e933]: Petah Tikva, Distrito Central, Israel
+                  - generic [ref=e936]: Seja um dos primeiros a se candidatar
+                  - time [ref=e937]: Há 2 dias
+        - generic [ref=e938]:
+          - heading [level=3] [ref=e939]: Pesquisar cargos semelhantes
+          - list [ref=e940]:
+            - listitem [ref=e941]:
+              - link [ref=e942] [cursor=pointer]:
+                - /url: https://br.linkedin.com/jobs/diretor-financeiro-vagas?trk=public_jobs_similar-title
+                - text: Vagas de Diretor financeiro
+            - listitem [ref=e943]:
+              - link [ref=e944] [cursor=pointer]:
+                - /url: https://br.linkedin.com/jobs/gerente-financeiro-vagas?trk=public_jobs_similar-title
+                - text: Vagas de Gerente financeiro
+            - listitem [ref=e945]:
+              - link [ref=e946] [cursor=pointer]:
+                - /url: https://br.linkedin.com/jobs/financeiro-vagas?trk=public_jobs_similar-title
+                - text: Vagas de Financeiro
+    - button [ref=e951] [cursor=pointer]: Mais pesquisas
+    - contentinfo [ref=e953]:
+      - list [ref=e954]:
+        - listitem [ref=e955]:
+          - generic [ref=e956]: LinkedIn
+          - generic [ref=e958]: © 2026
+        - listitem [ref=e959]:
+          - link [ref=e960] [cursor=pointer]:
+            - /url: https://about.linkedin.com?trk=public_jobs_footer-about
+            - text: Sobre
+        - listitem [ref=e961]:
+          - link [ref=e962] [cursor=pointer]:
+            - /url: https://www.linkedin.com/accessibility?trk=public_jobs_footer-accessibility
+            - text: Acessibilidade
+        - listitem [ref=e963]:
+          - link [ref=e964] [cursor=pointer]:
+            - /url: https://www.linkedin.com/legal/user-agreement?trk=public_jobs_footer-user-agreement
+            - text: Contrato do Usuário
+        - listitem [ref=e965]:
+          - link [ref=e966] [cursor=pointer]:
+            - /url: https://www.linkedin.com/legal/privacy-policy?trk=public_jobs_footer-privacy-policy
+            - text: Política de Privacidade do LinkedIn
+        - listitem [ref=e967]:
+          - link [ref=e968] [cursor=pointer]:
+            - /url: https://www.linkedin.com/legal/cookie-policy?trk=public_jobs_footer-cookie-policy
+            - text: Política de Cookies
+        - listitem [ref=e969]:
+          - link [ref=e970] [cursor=pointer]:
+            - /url: https://www.linkedin.com/legal/copyright-policy?trk=public_jobs_footer-copyright-policy
+            - text: Política de Direitos Autorais
+        - listitem [ref=e971]:
+          - link [ref=e972] [cursor=pointer]:
+            - /url: https://brand.linkedin.com/policies?trk=public_jobs_footer-brand-policy
+            - text: Política da Marca
+        - listitem [ref=e973]:
+          - link [ref=e974] [cursor=pointer]:
+            - /url: https://www.linkedin.com/psettings/guest-controls?trk=public_jobs_footer-guest-controls
+            - text: Controles de visitantes
+        - listitem [ref=e975]:
+          - link [ref=e976] [cursor=pointer]:
+            - /url: https://www.linkedin.com/legal/professional-community-policies?trk=public_jobs_footer-community-guide
+            - text: Diretrizes da Comunidade
+        - listitem [ref=e977]:
+          - button [ref=e979]: Idioma
+  - dialog "Entre para ver mais vagas" [active] [ref=e982]:
+    - button "Fechar" [ref=e983] [cursor=pointer]
+    - generic [ref=e985]:
+      - generic [ref=e986]:
+        - img [ref=e987]
+        - heading "Entre para ver mais vagas" [level=2] [ref=e988]
+      - generic [ref=e989]:
+        - generic:
+          - generic:
+            - button "Prosseguir com o Google"
+        - button "Entrar com e-mail" [ref=e990] [cursor=pointer]:
+          - generic [ref=e992]: Entrar com e-mail
+        - paragraph [ref=e994]: ou
+        - generic:
+          - generic:
+            - button "Prosseguir com o Google"
+        - paragraph [ref=e995]:
+          - text: Nunca usou o LinkedIn?
+          - link "Cadastre-se agora" [ref=e996] [cursor=pointer]:
+            - /url: https://www.linkedin.com/signup/cold-join?source=jobs_registration&trk=public_jobs_contextual-sign-in-modal_join-link
+        - paragraph [ref=e997]:
+          - text: Ao clicar em Continuar para se cadastrar ou entrar, você aceita o
+          - link "Contrato do Usuário" [ref=e998] [cursor=pointer]:
+            - /url: /legal/user-agreement?trk=linkedin-tc_auth-button_user-agreement
+          - text: ", a"
+          - link "Política de Privacidade" [ref=e999] [cursor=pointer]:
+            - /url: /legal/privacy-policy?trk=linkedin-tc_auth-button_privacy-policy
+          - text: e a
+          - link "Política de Cookies" [ref=e1000] [cursor=pointer]:
+            - /url: /legal/cookie-policy?trk=linkedin-tc_auth-button_cookie-policy
+          - text: do LinkedIn.

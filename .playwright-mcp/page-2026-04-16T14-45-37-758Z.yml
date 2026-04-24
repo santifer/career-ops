@@ -1,0 +1,562 @@
+- generic [active] [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e5]:
+    - banner [ref=e8]:
+      - generic [ref=e12]:
+        - generic [ref=e15]:
+          - generic [ref=e16]: Dark mode
+          - button "i Dark mode info" [ref=e18] [cursor=pointer]:
+            - text: i
+            - generic [ref=e19]: Dark mode info
+          - switch "Toggle Dark Mode" [ref=e20] [cursor=pointer]
+        - link "You are in our Global Site" [ref=e26] [cursor=pointer]:
+          - /url: "#"
+          - generic [ref=e27]:
+            - img [ref=e28]
+            - generic [ref=e31]: You are in our Global Site
+            - img [ref=e32]
+        - navigation [ref=e33]:
+          - list [ref=e34]:
+            - listitem [ref=e35]:
+              - link "Contact us" [ref=e36] [cursor=pointer]:
+                - /url: /info/contactus/contactus
+      - generic [ref=e40]:
+        - link "Nestlé Good food, Good life | Home" [ref=e41] [cursor=pointer]:
+          - /url: /
+          - img "Nestlé Good food, Good life | Home" [ref=e42]
+        - generic [ref=e47]:
+          - generic [ref=e48]:
+            - generic [ref=e49]: Search
+            - generic:
+              - combobox "Search" [ref=e50]
+              - text: 
+          - button "Search" [ref=e52] [cursor=pointer]:  Search
+      - generic [ref=e56]:
+        - navigation "Main navigation" [ref=e57]:
+          - list [ref=e58]:
+            - listitem [ref=e59]:
+              - link "Home" [ref=e60] [cursor=pointer]:
+                - /url: /
+            - listitem [ref=e61]:
+              - button "About us" [ref=e62] [cursor=pointer]
+            - listitem [ref=e63]:
+              - link "Our stories" [ref=e64] [cursor=pointer]:
+                - /url: /stories#/category/featured-stories/1
+            - listitem [ref=e65]:
+              - button "Brands" [ref=e66] [cursor=pointer]
+            - listitem [ref=e67]:
+              - button "Sustainability" [ref=e68] [cursor=pointer]
+            - listitem [ref=e69]:
+              - button "Nutrition" [ref=e70] [cursor=pointer]
+            - listitem [ref=e71]:
+              - button "Ask Nestlé" [ref=e72] [cursor=pointer]
+        - navigation "Secondary menu" [ref=e73]:
+          - list [ref=e74]:
+            - listitem [ref=e75]:
+              - button "Careers" [ref=e76] [cursor=pointer]
+            - listitem [ref=e77]:
+              - button "Investors" [ref=e78] [cursor=pointer]
+            - listitem [ref=e79]:
+              - button "Media" [ref=e80] [cursor=pointer]
+        - text:  
+    - generic [ref=e81]:
+      - list [ref=e88]:
+        - listitem [ref=e89]:
+          - link "Home" [ref=e90] [cursor=pointer]:
+            - /url: /
+        - listitem [ref=e91]:
+          - link "Careers" [ref=e92] [cursor=pointer]:
+            - /url: /jobs
+        - listitem [ref=e93]:
+          - generic [ref=e94]: Search
+      - generic [ref=e105]:
+        - article
+        - generic [ref=e107]:
+          - img "employees working at Nestlé" [ref=e113]
+          - generic [ref=e116]:
+            - heading "Hundreds of jobs" [level=1] [ref=e118]
+            - generic [ref=e119]:
+              - heading "Find the one that is right for you" [level=3] [ref=e120]
+              - generic [ref=e124]:
+                - generic [ref=e125]:
+                  - generic [ref=e126]: Keyword
+                  - textbox "Type here..." [ref=e127]
+                - generic [ref=e128]:
+                  - generic [ref=e129]: Country or Region
+                  - combobox "Country or Region" [ref=e131]:
+                    - option "- Any -" [selected]
+                    - option "Algeria (1)"
+                    - option "Angola (1)"
+                    - option "Argentina (7)"
+                    - option "Australia (49)"
+                    - option "Austria (10)"
+                    - option "Belgium (24)"
+                    - option "Brazil (103)"
+                    - option "Bulgaria (11)"
+                    - option "Burkina Faso (1)"
+                    - option "Canada (52)"
+                    - option "Chile (11)"
+                    - option "China Mainland, Greater China (42)"
+                    - option "Colombia (10)"
+                    - option "Czechia (6)"
+                    - option "Côte d’Ivoire (4)"
+                    - option "Denmark (1)"
+                    - option "Dominican Republic (3)"
+                    - option "Ecuador (15)"
+                    - option "Egypt (14)"
+                    - option "El Salvador (1)"
+                    - option "Estonia (2)"
+                    - option "France (204)"
+                    - option "Germany (86)"
+                    - option "Ghana (1)"
+                    - option "Greece (12)"
+                    - option "Guatemala (3)"
+                    - option "Honduras (1)"
+                    - option "Hong Kong SAR, Greater China (2)"
+                    - option "Hungary (24)"
+                    - option "India (46)"
+                    - option "Indonesia (4)"
+                    - option "Ireland (3)"
+                    - option "Israel (54)"
+                    - option "Italy (32)"
+                    - option "Jamaica (1)"
+                    - option "Japan (7)"
+                    - option "Kuwait (1)"
+                    - option "Latvia (1)"
+                    - option "Lithuania (1)"
+                    - option "Malaysia (70)"
+                    - option "Mauritius (1)"
+                    - option "Mexico (55)"
+                    - option "Morocco (1)"
+                    - option "Netherlands (58)"
+                    - option "New Zealand (4)"
+                    - option "Pakistan (16)"
+                    - option "Panama (11)"
+                    - option "Paraguay (24)"
+                    - option "Peru (19)"
+                    - option "Philippines (70)"
+                    - option "Poland (92)"
+                    - option "Portugal (38)"
+                    - option "Romania (6)"
+                    - option "Saudi Arabia (10)"
+                    - option "Serbia (1)"
+                    - option "Singapore (19)"
+                    - option "Slovakia (2)"
+                    - option "South Africa (3)"
+                    - option "Spain (18)"
+                    - option "Sweden (1)"
+                    - option "Switzerland (81)"
+                    - option "Taiwan, Greater China (2)"
+                    - option "Thailand (30)"
+                    - option "Türkiye (7)"
+                    - option "Ukraine (68)"
+                    - option "United Arab Emirates (3)"
+                    - option "United Kingdom (33)"
+                    - option "United States (444)"
+                    - option "Uruguay (1)"
+                    - option "Vietnam (7)"
+                - generic [ref=e132]:
+                  - generic [ref=e133]: Location
+                  - combobox "Location" [ref=e135]:
+                    - option "- Any -" [selected]
+                - generic [ref=e136]:
+                  - generic [ref=e137]: Career Area
+                  - combobox "Career Area" [ref=e139]:
+                    - option "- Any -" [selected]
+                    - option "Administrative (43)"
+                    - option "Communications (28)"
+                    - option "Engineering (84)"
+                    - option "Finance (103)"
+                    - option "Human Resources (54)"
+                    - option "Information Technology (52)"
+                    - option "Internships & Apprenticeships (216)"
+                    - option "Legal (4)"
+                    - option "Marketing (162)"
+                    - option "Research & Development (57)"
+                    - option "Sales (530)"
+                    - option "Supply chain & Procurement (172)"
+                    - option "Technical & Production (498)"
+                - generic [ref=e140]:
+                  - button "Search jobs" [ref=e141] [cursor=pointer]: Search jobs
+                  - link "Clear" [ref=e143] [cursor=pointer]:
+                    - /url: /jobs/search-jobs
+    - main [ref=e145]:
+      - generic [ref=e151]:
+        - generic [ref=e152]:
+          - generic [ref=e153]: 1-10 of 2078 jobs
+          - group "Sort by" [ref=e157]:
+            - generic: Sort by
+            - generic [ref=e160]:
+              - generic [ref=e161]:
+                - generic [ref=e162] [cursor=pointer]:
+                  - radio "Most relevant" [checked] [ref=e163]
+                  - text: Most relevant
+                - text: "|"
+              - generic [ref=e165] [cursor=pointer]:
+                - radio "Most recent" [ref=e166]
+                - text: Most recent
+        - generic [ref=e167]:
+          - generic [ref=e169]:
+            - generic [ref=e170]: Location
+            - generic [ref=e172]:
+              - link "Banco de Talentos | Reposição Merchandising | RJ e ES" [ref=e175] [cursor=pointer]:
+                - /url: https://jobdetails.nestle.com/job/Rio-de-Janeiro-Banco-de-Talentos-Reposi%C3%A7%C3%A3o-Merchandising-RJ-e-ES-RJ-22775-055/857853701/?feedId=256801&utm_source=NestleCareers
+              - generic [ref=e176]: Nestlé
+              - generic [ref=e177]:
+                - generic [ref=e179]: In the field / Off-site
+                - generic [ref=e181]: Rio de Janeiro, Brazil
+                - generic [ref=e183]: Vendas
+          - generic [ref=e187]:
+            - link "Banco de Talentos | Reposição Merchandising | DF,GO e TO" [ref=e190] [cursor=pointer]:
+              - /url: https://jobdetails.nestle.com/job/Goiania-Banco-de-Talentos-Reposi%C3%A7%C3%A3o-Merchandising-DF%2CGO-e-TO-GO-74463-350/857996701/?feedId=256801&utm_source=NestleCareers
+            - generic [ref=e191]: Nestlé
+            - generic [ref=e192]:
+              - generic [ref=e194]: In the field / Off-site
+              - generic [ref=e196]: Goiania, Brazil
+              - generic [ref=e198]: Vendas
+          - generic [ref=e202]:
+            - link "Banco de Talentos | Reposição Merchandising | MG" [ref=e205] [cursor=pointer]:
+              - /url: https://jobdetails.nestle.com/job/Brasilia-Banco-de-Talentos-Reposi%C3%A7%C3%A3o-Merchandising-MG-DF-70390-078/857996801/?feedId=256801&utm_source=NestleCareers
+            - generic [ref=e206]: Nestlé
+            - generic [ref=e207]:
+              - generic [ref=e209]: In the field / Off-site
+              - generic [ref=e211]: Brasilia, Brazil
+              - generic [ref=e213]: Vendas
+          - generic [ref=e217]:
+            - link "Mechanic" [ref=e220] [cursor=pointer]:
+              - /url: https://jobdetails.nestle.com/job/Vonitsa-Mechanic/899593601/?feedId=256801&utm_source=NestleCareers
+            - generic [ref=e221]: Nestlé Waters
+            - generic [ref=e222]:
+              - generic [ref=e224]: Full time On-site
+              - generic [ref=e226]: Vonitsa, Greece
+              - generic [ref=e228]: Technical & Production
+          - generic [ref=e232]:
+            - link "Operator Produkcji (m/k)" [ref=e235] [cursor=pointer]:
+              - /url: https://jobdetails.nestle.com/job/Nowa-Wies-Wroclawska-Operator-Produkcji-%28mk%29/775381701/?feedId=256801&utm_source=NestleCareers
+            - generic [ref=e236]: Purina
+            - generic [ref=e237]:
+              - generic [ref=e239]: Full time On-site
+              - generic [ref=e241]: Nowa Wies Wroclawska, Poland
+              - generic [ref=e243]: Dział techniczno-produkcyjny
+          - generic [ref=e247]:
+            - link "Kierowca Wózka Widłowego (m/k)" [ref=e250] [cursor=pointer]:
+              - /url: https://jobdetails.nestle.com/job/Nowa-Wies-Wroclawska-Kierowca-W%C3%B3zka-Wid%C5%82owego-%28mk%29/618072501/?feedId=256801&utm_source=NestleCareers
+            - generic [ref=e251]: Purina
+            - generic [ref=e252]:
+              - generic [ref=e254]: Full time On-site
+              - generic [ref=e256]: Nowa Wies Wroclawska, Poland
+              - generic [ref=e258]: Dział łańcucha dostaw i zakupów
+          - generic [ref=e262]:
+            - link "Operator Produkcji K/M" [ref=e265] [cursor=pointer]:
+              - /url: https://jobdetails.nestle.com/job/Kargowa-Operator-Produkcji-KM/762531201/?feedId=256801&utm_source=NestleCareers
+            - generic [ref=e266]: Nestlé
+            - generic [ref=e267]:
+              - generic [ref=e269]: Full time On-site
+              - generic [ref=e271]: Kargowa, Poland
+              - generic [ref=e273]: Dział techniczno-produkcyjny
+          - generic [ref=e277]:
+            - link "Фахівець з розвитку продукції та процесів" [ref=e280] [cursor=pointer]:
+              - /url: https://jobdetails.nestle.com/job/Kharkiv-%D0%A4%D0%B0%D1%85%D1%96%D0%B2%D0%B5%D1%86%D1%8C-%D0%B7-%D1%80%D0%BE%D0%B7%D0%B2%D0%B8%D1%82%D0%BA%D1%83-%D0%BF%D1%80%D0%BE%D0%B4%D1%83%D0%BA%D1%86%D1%96%D1%97-%D1%82%D0%B0-%D0%BF%D1%80%D0%BE%D1%86%D0%B5%D1%81%D1%96%D0%B2-HAR-61001/950294001/?feedId=256801&utm_source=NestleCareers
+            - generic [ref=e281]: Nestlé
+            - generic [ref=e282]:
+              - generic [ref=e284]: Full time On-site
+              - generic [ref=e286]: Kharkiv, Ukraine +1
+              - generic [ref=e288]: Дослідження та Розробка Продуктів
+          - generic [ref=e292]:
+            - link "Jovem Aprendiz" [ref=e295] [cursor=pointer]:
+              - /url: https://jobdetails.nestle.com/job/Cordeiropolis-Jovem-Aprendiz-S%C3%A3o-13490-000/959417301/?feedId=256801&utm_source=NestleCareers
+            - generic [ref=e296]: Nestlé
+            - generic [ref=e297]:
+              - generic [ref=e299]: Full time On-site
+              - generic [ref=e301]: Cordeiropolis, Brazil
+              - generic [ref=e303]: Supply Chain & Compras
+          - generic [ref=e307]:
+            - link "Banco de Talentos para Nespresso - Belo Horizonte | Afirmativa para pessoas com deficiência" [ref=e310] [cursor=pointer]:
+              - /url: https://jobdetails.nestle.com/job/Belo-Horizonte-Banco-de-Talentos-para-Nespresso-Belo-Horizonte-Afirmativa-para-pessoas-com-defici%C3%AAncia-MG-30320-900/976412601/?feedId=256801&utm_source=NestleCareers
+            - generic [ref=e311]: Nespresso
+            - generic [ref=e312]:
+              - generic [ref=e314]: Full time On-site
+              - generic [ref=e316]: Belo Horizonte, Brazil
+              - generic [ref=e318]: Vendas
+        - navigation "Pagination" [ref=e322]:
+          - paragraph: Pagination
+          - list [ref=e324]:
+            - listitem [ref=e325]:
+              - link "Current page 1" [ref=e326] [cursor=pointer]:
+                - /url: "?page=%2C0"
+                - generic: Current page
+                - text: "1"
+            - listitem [ref=e327]:
+              - link "Page 2" [ref=e328] [cursor=pointer]:
+                - /url: "?page=%2C1"
+                - generic: Page
+                - text: "2"
+            - listitem [ref=e329]:
+              - link "Page 3" [ref=e330] [cursor=pointer]:
+                - /url: "?page=%2C2"
+                - generic: Page
+                - text: "3"
+            - listitem [ref=e331]:
+              - link "Page 4" [ref=e332] [cursor=pointer]:
+                - /url: "?page=%2C3"
+                - generic: Page
+                - text: "4"
+            - listitem [ref=e333]:
+              - link "Page 5" [ref=e334] [cursor=pointer]:
+                - /url: "?page=%2C4"
+                - generic: Page
+                - text: "5"
+            - listitem [ref=e335]:
+              - link "Page 6" [ref=e336] [cursor=pointer]:
+                - /url: "?page=%2C5"
+                - generic: Page
+                - text: "6"
+            - listitem [ref=e337]:
+              - link "Page 7" [ref=e338] [cursor=pointer]:
+                - /url: "?page=%2C6"
+                - generic: Page
+                - text: "7"
+            - listitem [ref=e339]:
+              - link "Page 8" [ref=e340] [cursor=pointer]:
+                - /url: "?page=%2C7"
+                - generic: Page
+                - text: "8"
+            - listitem [ref=e341]:
+              - link "Page 9" [ref=e342] [cursor=pointer]:
+                - /url: "?page=%2C8"
+                - generic: Page
+                - text: "9"
+            - listitem [ref=e343]: …
+            - listitem [ref=e344]:
+              - link "Last page" [ref=e345] [cursor=pointer]:
+                - /url: "?page=%2C207"
+                - generic: Last page
+                - text: "208"
+          - link "Next page" [ref=e347] [cursor=pointer]:
+            - /url: "?page=%2C1"
+            - generic: Next page
+            - text: Next
+    - link [ref=e353] [cursor=pointer]:
+      - /url: "#"
+      - img [ref=e354]
+      - img [ref=e355]
+    - contentinfo [ref=e360]:
+      - generic [ref=e367]:
+        - heading "Mini Footer" [level=2] [ref=e368]
+        - generic [ref=e372]:
+          - generic [ref=e377]:
+            - generic [ref=e378]:
+              - heading "Nestlé news" [level=3] [ref=e379]:
+                - link "Nestlé news" [ref=e380] [cursor=pointer]:
+                  - /url: /info/sign-me-up
+              - paragraph [ref=e381]:
+                - link "Subscribe to receive email alerts" [ref=e382] [cursor=pointer]:
+                  - /url: /info/sign-me-up
+            - link "Sign up" [ref=e387] [cursor=pointer]:
+              - /url: /info/sign-me-up
+          - generic [ref=e392]:
+            - generic [ref=e393]:
+              - heading "Compliance concerns" [level=3] [ref=e394]:
+                - link "Compliance concerns" [ref=e395] [cursor=pointer]:
+                  - /url: /about/how-we-do-business/report-compliance-concerns
+              - paragraph [ref=e396]:
+                - link "Speak up about your concerns" [ref=e397] [cursor=pointer]:
+                  - /url: /about/how-we-do-business/report-compliance-concerns
+            - link "Speak Up" [ref=e402] [cursor=pointer]:
+              - /url: /about/how-we-do-business/report-compliance-concerns
+          - generic "Contact us" [ref=e409]:
+            - img [ref=e410]
+          - generic [ref=e415]:
+            - generic [ref=e416]:
+              - heading "Contact us" [level=3] [ref=e417]:
+                - link "Contact us" [ref=e418] [cursor=pointer]:
+                  - /url: /info/contactus/contactus
+              - paragraph [ref=e419]:
+                - link "Across the globe, we are here to help answer your queries" [ref=e420] [cursor=pointer]:
+                  - /url: /info/contactus/contactus
+            - link "Contact us" [ref=e425] [cursor=pointer]:
+              - /url: /info/contactus/contactus
+      - generic [ref=e428]:
+        - generic [ref=e433]:
+          - heading "Nestlé" [level=2] [ref=e434]
+          - paragraph [ref=e436]: We unlock the power of food and beverages to enhance quality of life for everyone, today and for generations to come
+          - img "nest-logo" [ref=e437]
+        - generic [ref=e442]:
+          - navigation "Useful Links" [ref=e443]:
+            - heading "Useful Links" [level=2] [ref=e444]:
+              - button "Useful Links" [ref=e445]
+            - list [ref=e446]:
+              - listitem [ref=e447]:
+                - link "Ask Nestlé (FAQs)" [ref=e448] [cursor=pointer]:
+                  - /url: /ask-nestle
+              - listitem [ref=e449]:
+                - link "Contact us" [ref=e450] [cursor=pointer]:
+                  - /url: /info/contactus/contactus
+              - listitem [ref=e451]:
+                - link "Search for jobs" [ref=e452] [cursor=pointer]:
+                  - /url: /search-jobs/career-areas
+              - listitem [ref=e453]:
+                - link "Sign up for news" [ref=e454] [cursor=pointer]:
+                  - /url: /info/sign-me-up
+              - listitem [ref=e455]:
+                - link "Speak Up" [ref=e456] [cursor=pointer]:
+                  - /url: /about/how-we-do-business/report-compliance-concerns
+          - navigation "Company" [ref=e457]:
+            - heading "Company" [level=2] [ref=e458]:
+              - button "Company" [ref=e459]
+            - list [ref=e460]:
+              - listitem [ref=e461]:
+                - link "About us" [ref=e462] [cursor=pointer]:
+                  - /url: /about
+              - listitem [ref=e463]:
+                - link "Global addresses" [ref=e464] [cursor=pointer]:
+                  - /url: /about/overview/global-addresses
+              - listitem [ref=e465]:
+                - link "Strategy" [ref=e466] [cursor=pointer]:
+                  - /url: /about/strategy
+              - listitem [ref=e467]:
+                - link "Our leadership" [ref=e468] [cursor=pointer]:
+                  - /url: /about/management
+              - listitem [ref=e469]:
+                - link "Brands A - Z" [ref=e470] [cursor=pointer]:
+                  - /url: /brands/brandssearchlist
+              - listitem [ref=e471]:
+                - link "Our history" [ref=e472] [cursor=pointer]:
+                  - /url: /about/history
+              - listitem [ref=e473]:
+                - link "Sustainability" [ref=e474] [cursor=pointer]:
+                  - /url: /sustainability
+        - generic [ref=e477]:
+          - navigation "Downloads" [ref=e478]:
+            - heading "Downloads" [level=2] [ref=e479]:
+              - button "Downloads" [ref=e480]
+            - list [ref=e481]:
+              - listitem [ref=e482]:
+                - link "Annual Review (pdf, 9Mb)" [ref=e483] [cursor=pointer]:
+                  - /url: /sites/default/files/2026-02/annual-review-2025-en.pdf
+              - listitem [ref=e484]:
+                - link "Non-Financial Statement (pdf, 16MB)" [ref=e485] [cursor=pointer]:
+                  - /url: /sites/default/files/2026-02/non-financial-statement-2025.pdf
+              - listitem [ref=e486]:
+                - 'link "Creating Shared Value: Our impact (pdf, 17Mb)" [ref=e487] [cursor=pointer]':
+                  - /url: /sites/default/files/2026-02/creating-shared-value-nestle-2025.pdf
+              - listitem [ref=e488]:
+                - link "Responsible Sourcing Core Requirements (pdf, 2Mb)" [ref=e489] [cursor=pointer]:
+                  - /url: /sites/default/files/asset-library/documents/library/documents/suppliers/nestle-responsible-sourcing-standard-english.pdf
+          - navigation "Other Nestlé Businesses" [ref=e490]:
+            - heading "Other Nestlé Businesses" [level=2] [ref=e491]:
+              - button "Other Nestlé Businesses" [ref=e492]
+            - list [ref=e493]:
+              - listitem [ref=e494]:
+                - link "Nestlé Nespresso" [ref=e495] [cursor=pointer]:
+                  - /url: http://www.nestle-nespresso.com/
+              - listitem [ref=e496]:
+                - link "Nestlé Purina Petcare" [ref=e497] [cursor=pointer]:
+                  - /url: https://www.purina.com/
+        - generic [ref=e500]:
+          - navigation "Media" [ref=e501]:
+            - heading "Media" [level=2] [ref=e502]:
+              - button "Media" [ref=e503]
+            - list [ref=e504]:
+              - listitem [ref=e505]:
+                - link "News" [ref=e506] [cursor=pointer]:
+                  - /url: /media/news
+              - listitem [ref=e507]:
+                - link "Media contacts" [ref=e508] [cursor=pointer]:
+                  - /url: /media/media-contacts
+              - listitem [ref=e509]:
+                - link "Images" [ref=e510] [cursor=pointer]:
+                  - /url: /media/images-video
+          - navigation "Investors" [ref=e511]:
+            - heading "Investors" [level=2] [ref=e512]:
+              - button "Investors" [ref=e513]
+            - list [ref=e514]:
+              - listitem [ref=e515]:
+                - link "Corporate governance" [ref=e516] [cursor=pointer]:
+                  - /url: /investors/corporate-governance
+              - listitem [ref=e517]:
+                - link "Shares, ADRs, & Bonds" [ref=e518] [cursor=pointer]:
+                  - /url: /investors/sharesadrsbonds
+              - listitem [ref=e519]:
+                - link "Publications" [ref=e520] [cursor=pointer]:
+                  - /url: /investors/publications
+          - generic [ref=e522]:
+            - heading "SHARE INFORMATION" [level=2] [ref=e523]
+            - link "Share Price" [ref=e525] [cursor=pointer]:
+              - /url: /investors/sharesadrsbonds/stockquotes
+      - generic [ref=e531]:
+        - heading "Follow us on" [level=2] [ref=e532]
+        - generic [ref=e533]:
+          - link "Linkedin" [ref=e536] [cursor=pointer]:
+            - /url: https://www.linkedin.com/company/nestle-s-a-
+            - img "Linkedin" [ref=e537]
+          - link "Instagram" [ref=e541] [cursor=pointer]:
+            - /url: https://www.instagram.com/nestle/
+            - img "Instagram" [ref=e542]
+          - link "TikTok" [ref=e546] [cursor=pointer]:
+            - /url: https://www.tiktok.com/@nestle
+            - img "TikTok" [ref=e547]
+          - link "Facebook" [ref=e551] [cursor=pointer]:
+            - /url: https://www.facebook.com/Nestle?brandloc=DISABLE
+            - img "Facebook" [ref=e552]
+          - link "Youtube" [ref=e556] [cursor=pointer]:
+            - /url: https://www.youtube.com/user/NestleCorporate
+            - img "Youtube" [ref=e557]
+          - link "Flickr" [ref=e561] [cursor=pointer]:
+            - /url: https://www.flickr.com/photos/nestle/collections/
+            - img "Flickr" [ref=e562]
+          - link "Twitter" [ref=e566] [cursor=pointer]:
+            - /url: https://twitter.com/NestleCareers
+            - img "Twitter" [ref=e567]
+      - navigation "Sub Footer Menu" [ref=e574]:
+        - heading "Sub Footer Menu" [level=2] [ref=e575]
+        - list [ref=e576]:
+          - listitem [ref=e577]:
+            - link "© 2026 Nestlé|" [ref=e578] [cursor=pointer]:
+              - /url: /info/copyright
+          - listitem [ref=e579]:
+            - link "Site map|" [ref=e580] [cursor=pointer]:
+              - /url: /info/sitemap
+          - listitem [ref=e581]:
+            - link "Help|" [ref=e582] [cursor=pointer]:
+              - /url: /info/help
+          - listitem [ref=e583]:
+            - link "Privacy|" [ref=e584] [cursor=pointer]:
+              - /url: /info/privacy
+          - listitem [ref=e585]:
+            - link "Cookies|" [ref=e586] [cursor=pointer]:
+              - /url: /info/cookies
+          - listitem [ref=e587]:
+            - link "Terms of use|" [ref=e588] [cursor=pointer]:
+              - /url: /info/tc
+          - listitem [ref=e589]:
+            - link "Accessibility|" [ref=e590] [cursor=pointer]:
+              - /url: /info/accessibility
+          - listitem [ref=e591]:
+            - link "Carbon efficiency|" [ref=e592] [cursor=pointer]:
+              - /url: /info/website-carbon-footprint
+          - listitem [ref=e593]:
+            - link "Suppliers|" [ref=e594] [cursor=pointer]:
+              - /url: /info/suppliers
+          - listitem [ref=e595]:
+            - link "Social media|" [ref=e596] [cursor=pointer]:
+              - /url: /info/social-media-house-rules
+          - listitem [ref=e597]:
+            - link "RSS|" [ref=e598] [cursor=pointer]:
+              - /url: /info/rsslinkpage
+          - listitem [ref=e599]:
+            - link "Sign up|" [ref=e600] [cursor=pointer]:
+              - /url: /info/sign-me-up
+          - listitem [ref=e601]:
+            - link "Unsubscribe|" [ref=e602] [cursor=pointer]:
+              - /url: /info/sign-me-up/unsubscribesignupuser
+          - listitem [ref=e603]:
+            - link "Contact us" [ref=e604] [cursor=pointer]:
+              - /url: /info/contactus/contactus
+  - status [ref=e605]
+  - status [ref=e606]
+  - text: "\" \""
+  - generic "Cookie Settings" [ref=e608] [cursor=pointer]:
+    - button "Open Preferences" [ref=e610]
+    - text: Cookie Settings

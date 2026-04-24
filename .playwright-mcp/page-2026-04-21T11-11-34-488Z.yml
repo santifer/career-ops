@@ -1,0 +1,277 @@
+- generic [active] [ref=e1]:
+  - generic:
+    - region "Mensagem toast":
+      - heading "0 notificações no total" [level=2] [ref=e3]
+      - alert
+  - region [ref=e4]
+  - generic [ref=e5]:
+    - generic [ref=e7]:
+      - button "Pular para pesquisa" [ref=e8] [cursor=pointer]:
+        - generic [ref=e9]: Pular para pesquisa
+      - button "Pular para conteúdo principal" [ref=e10] [cursor=pointer]:
+        - generic [ref=e11]: Pular para conteúdo principal
+      - button "Atalhos do teclado" [ref=e12] [cursor=pointer]:
+        - generic [ref=e13]: Atalhos do teclado
+      - button "Fechar menu pular" [ref=e14] [cursor=pointer]:
+        - img [ref=e15]
+        - generic [ref=e17]: Fechar menu pular
+    - banner "Navegação geral" [ref=e18]:
+      - generic [ref=e19]:
+        - link "LinkedIn" [ref=e20] [cursor=pointer]:
+          - /url: https://www.linkedin.com/feed/?nis=true
+          - img "LinkedIn" [ref=e23]:
+            - img [ref=e24]
+        - generic [ref=e28]:
+          - combobox "Pesquisar" [ref=e29]
+          - generic:
+            - img
+        - navigation "Navegação principal" [ref=e30]:
+          - list [ref=e31]:
+            - listitem [ref=e32]:
+              - link "atualizações do feed novas notificações Início" [ref=e33] [cursor=pointer]:
+                - /url: https://www.linkedin.com/feed/?nis=true&
+                - generic [ref=e34]:
+                  - generic [ref=e37]: atualizações do feed novas notificações
+                  - img [ref=e41]
+                - generic "Início" [ref=e43]
+            - listitem [ref=e44]:
+              - link "2 atualizações de rede novas notificações Minha rede" [ref=e45] [cursor=pointer]:
+                - /url: https://www.linkedin.com/mynetwork/?
+                - generic [ref=e46]:
+                  - generic [ref=e47]:
+                    - generic [ref=e48]: "2"
+                    - generic [ref=e49]: 2 atualizações de rede novas notificações
+                  - img [ref=e53]
+                - generic "Minha rede" [ref=e55]
+            - listitem [ref=e56]:
+              - link "Vagas" [ref=e57] [cursor=pointer]:
+                - /url: https://www.linkedin.com/jobs/?
+                - img [ref=e61]
+                - generic "Vagas" [ref=e63]
+            - listitem [ref=e64]:
+              - link "Mensagens" [ref=e65] [cursor=pointer]:
+                - /url: https://www.linkedin.com/messaging/?
+                - img [ref=e69]
+                - generic "Mensagens" [ref=e71]
+            - listitem [ref=e72]:
+              - link "9 novas notificações Notificações" [ref=e73] [cursor=pointer]:
+                - /url: https://www.linkedin.com/notifications/?
+                - generic [ref=e74]:
+                  - generic [ref=e75]:
+                    - generic [ref=e76]: "9"
+                    - generic [ref=e77]: 9 novas notificações
+                  - img [ref=e81]
+                - generic "Notificações" [ref=e83]
+            - listitem [ref=e84]:
+              - button "Fernando Xavier Eu" [ref=e86] [cursor=pointer]:
+                - img "Fernando Xavier" [ref=e87]
+                - generic [ref=e88]:
+                  - text: Eu
+                  - img [ref=e89]
+            - listitem [ref=e91]:
+              - button "Para negócios" [ref=e93] [cursor=pointer]:
+                - img [ref=e97]
+                - generic "Para negócios" [ref=e99]:
+                  - text: Para negócios
+                  - img [ref=e100]
+            - listitem [ref=e102]:
+              - link "Veicular anúncio" [ref=e103] [cursor=pointer]:
+                - /url: https://www.linkedin.com/campaignmanager/accounts?
+                - img [ref=e107]
+                - generic "Veicular anúncio" [ref=e110]
+    - generic [ref=e111]:
+      - generic [ref=e114]:
+        - main [ref=e115]:
+          - generic [ref=e118]:
+            - generic [ref=e122]:
+              - generic [ref=e123]:
+                - generic [ref=e124]:
+                  - link "Logo da empresa Grupo Renova" [ref=e125] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/company/gruporenovadobrasil/life
+                    - img "Logo da empresa Grupo Renova" [ref=e128]
+                  - link "Grupo Renova" [ref=e130] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/company/gruporenovadobrasil/life
+                - generic [ref=e131]:
+                  - button "Compartilhar" [ref=e134] [cursor=pointer]:
+                    - img [ref=e135]
+                    - generic [ref=e137]: Compartilhar
+                  - button "Exibir mais opções" [ref=e139] [cursor=pointer]:
+                    - img [ref=e140]
+                    - generic [ref=e142]: Exibir mais opções
+              - heading "Controller" [level=1] [ref=e145]
+              - generic [ref=e148]:
+                - generic [ref=e149]: São Paulo, São Paulo, Brasil
+                - generic [ref=e150]: ·
+                - generic [ref=e152]: há 1 semana
+                - generic [ref=e153]: ·
+                - generic [ref=e154]: Mais de 100 pessoas clicaram em Candidatar-se
+                - paragraph [ref=e155]:
+                  - generic [ref=e156]: Respostas gerenciadas fora do LinkedIn
+              - generic [ref=e157]:
+                - button "Corresponde às suas preferências de vaga e o tipo de local de trabalho é Presencial." [ref=e158] [cursor=pointer]:
+                  - strong [ref=e161]:
+                    - img [ref=e163]
+                    - text: Presencial
+                  - generic [ref=e165]: Corresponde às suas preferências de vaga e o tipo de local de trabalho é Presencial.
+                - button "Corresponde às suas preferências de vaga e o tipo de vaga é Tempo integral." [ref=e166] [cursor=pointer]:
+                  - strong [ref=e169]:
+                    - img [ref=e171]
+                    - text: Tempo integral
+                  - generic [ref=e173]: Corresponde às suas preferências de vaga e o tipo de vaga é Tempo integral.
+              - generic [ref=e175]:
+                - link "Candidatar-se à vaga de Controller no site da empresa" [ref=e178] [cursor=pointer]:
+                  - img [ref=e179]
+                  - generic [ref=e181]: Candidatar-se
+                - button "Salvar Controller na Grupo Renova" [ref=e182] [cursor=pointer]:
+                  - generic [ref=e183]: Salvar
+                  - generic [ref=e184]: Salvar Controller na Grupo Renova
+            - generic [ref=e194]:
+              - article [ref=e195]:
+                - generic [ref=e197]:
+                  - heading "Sobre a vaga" [level=2] [ref=e198]
+                  - paragraph [ref=e200]:
+                    - strong [ref=e202]: CONTROLLER
+                    - text: "📍 Local: Arujá - SP"
+                    - text: Cargo Financeiro Corporativo | Controladoria
+                    - strong [ref=e204]: Contexto Da Posição
+                    - text: Empresa brasileira de médio-grande porte especializada em soluções integradas de valorização e destinação sustentável de resíduos, com múltiplas unidades operacionais, presença em diversos estados e operações diversificadas (coprocessamento, gerenciamento total de resíduos, logística).
+                    - text: O Controller atua como business partner das áreas de negócio — fornecendo informação qualificada, análise e visão crítica para que os gestores tomem melhores decisões.
+                    - strong [ref=e206]: Responsabilidades
+                    - emphasis [ref=e208]:
+                      - strong [ref=e210]: Planejamento Orçamentário e Forecast
+                    - list [ref=e212]:
+                      - listitem [ref=e213]: Conduzir o ciclo orçamentário anual (budget), incluindo definição de premissas, consolidação e aprovação, com ênfase em controle de custos e alinhamento com a estratégia de negócios.
+                      - listitem [ref=e214]: Realizar forecast periódico (mensal ou trimestral), com análise de variações (real vs. orçado vs. forecast anterior).
+                      - listitem [ref=e215]: Garantir que cada gestor de área participe ativamente da construção e revisão do orçamento de sua responsabilidade.
+                    - emphasis [ref=e217]:
+                      - strong [ref=e219]: Gestão Gerencial e Análise de Resultados
+                    - list [ref=e221]:
+                      - listitem [ref=e222]: Elaborar e analisar DRE gerencial consolidado e por contrato/unidade, identificando variações, riscos e oportunidades.
+                      - listitem [ref=e223]: Acompanhar rentabilidade por contrato e por operação, sinalizando desvios aos gestores responsáveis.
+                      - listitem [ref=e224]: Monitorar indicadores de custos e identificar oportunidades de redução, subsidiando os gestores de área com dados para tomada de decisão.
+                      - listitem [ref=e225]: Preparar relatórios gerenciais, análises financeiras e apresentações de resultados para o CFO e liderança, com foco em ações corretivas.
+                    - emphasis [ref=e227]:
+                      - strong [ref=e229]: Controles Internos e Compliance
+                    - list [ref=e231]:
+                      - listitem [ref=e232]: Manter e aprimorar práticas de controles internos e compliance financeiro, compatíveis com o estágio atual da organização.
+                      - listitem [ref=e233]: Validar consistência entre informações do ERP, contabilidade terceirizada e relatórios gerenciais.
+                      - listitem [ref=e234]: Atuar como interlocutor técnico com o escritório contábil externo, assegurando qualidade e tempestividade das entregas.
+                    - emphasis [ref=e236]:
+                      - strong [ref=e238]: Interface com Áreas de Negócio (Business Partner)
+                    - list [ref=e240]:
+                      - listitem [ref=e241]: Atuar como parceiro analítico dos gerentes operacionais, comerciais e administrativos, fornecendo visão financeira para suporte à decisão.
+                      - listitem [ref=e242]: Participar de reuniões de resultado com gestores, provocando discussão sobre desempenho e planos de ação.
+                      - listitem [ref=e243]: Apoiar análises específicas sob demanda (viabilidade de novos contratos, simulações de preço, análise de investimentos).
+                    - emphasis [ref=e245]:
+                      - strong [ref=e247]: Melhoria Contínua
+                    - list [ref=e249]:
+                      - listitem [ref=e250]: Aperfeiçoar processos, rotinas e indicadores de desempenho da Controladoria e FP&A, promovendo maior eficiência e integração com as operações.
+                    - strong [ref=e252]: Requisitos
+                    - emphasis [ref=e254]:
+                      - strong [ref=e256]: "Formação e Experiência:"
+                    - list [ref=e258]:
+                      - listitem [ref=e259]: Formação superior completa em Contabilidade, Administração, Economia ou áreas afins.
+                      - listitem [ref=e260]: Experiência sólida (mínimo 5 anos) em Controladoria, Custos ou FP&A, preferencialmente em empresas de porte médio com múltiplas unidades.
+                      - listitem [ref=e261]: Vivência prática em planejamento orçamentário, análise de DRE por centro de custo/contrato e gestão gerencial.
+                      - listitem [ref=e262]: Conhecimento em controles internos e compliance financeiro.
+                    - strong [ref=e264]: Competências Técnicas
+                    - list [ref=e266]:
+                      - listitem [ref=e267]: Domínio avançado de Excel (modelagem, tabelas dinâmicas, Power Query).
+                      - listitem [ref=e268]: Capacidade de trabalhar com dados extraídos de ERP próprio e construir visões gerenciais a partir de bases de dados diversas.
+                      - listitem [ref=e269]: "Desejável: experiência com Power BI ou ferramentas equivalentes de BI."
+                      - listitem [ref=e270]: "Desejável: experiência em ambiente industrial ou empresas com múltiplas unidades operacionais."
+                      - listitem [ref=e271]: "Diferencial: experiência no setor de gestão de resíduos ou serviços ambientais."
+                    - strong [ref=e273]: Competências Comportamentais
+                    - list [ref=e275]:
+                      - listitem [ref=e276]: Capacidade analítica e visão estratégica — saber transformar dados em recomendações.
+                      - listitem [ref=e277]: Comunicação direta e objetiva — capacidade de interagir com todos os níveis, do operacional à Presidência, sem dependência de jargões.
+                      - listitem [ref=e278]: Postura de parceiro, não de fiscal — capacidade de gerar confiança e colaboração com os gestores de área, atuando como business partner.
+                      - listitem [ref=e279]: Organização e atenção a prazos — rigor no calendário de entregas gerenciais.
+                      - listitem [ref=e280]: Autonomia e proatividade — perfil construtor, capaz de liderar iniciativas e trabalhar de forma colaborativa.
+                      - listitem [ref=e281]: Postura ética, responsável e orientada a resultados, com foco em integridade e accountability.
+                    - strong [ref=e283]: Informações Adicionais
+                    - strong [ref=e285]: "Regime:"
+                    - text: 100% presencial — Segunda a Sexta, 08h00 às 17h30.
+                    - strong [ref=e287]: "Remuneração:"
+                    - text: Compatível com o mercado para o porte e complexidade da operação.
+                    - strong [ref=e289]: Benefícios
+                    - text: Refeição no local
+                    - text: Cesta básica ou Vale Alimentação (Cartão iFood)
+                    - text: Vale-transporte
+                    - text: Convênio médico e odontológico (titular e dependentes)
+                    - text: Wellhub (plataforma de bem-estar e academias)
+                    - text: PLR
+                    - text: Benefícios para dependentes de até 12 anos
+                    - text: Cesta de Natal
+                    - text: OnHappy (descontos em viagens e hotéis)
+                    - strong [ref=e291]: Acreditamos que diferentes perspectivas impulsionam a inovação e fortalecem nosso propósito. Venha construir esse futuro conosco!
+                    - text: ♻️💚
+              - button "Clicar para ver mais detalhes" [ref=e293] [cursor=pointer]:
+                - img [ref=e294]
+                - generic [ref=e296]: Ver mais
+            - generic [ref=e298]:
+              - generic [ref=e299]:
+                - heading "Configurar alerta para vagas semelhantes" [level=2] [ref=e300]
+                - generic [ref=e302]: Controlador, São Paulo, São Paulo, Brasil
+              - generic [ref=e304] [cursor=pointer]:
+                - generic [ref=e305]: Desativada
+                - generic [ref=e306]: Configurar alerta
+                - switch "Configurar alerta"
+            - alert [ref=e309]: Carregando detalhes da vaga
+        - complementary [ref=e322]:
+          - generic [ref=e324]:
+            - paragraph [ref=e325]: Procurando um talento?
+            - link "Anunciar vaga" [ref=e326] [cursor=pointer]:
+              - /url: https://www.linkedin.com/talent/job-posting-redirect?trk=flagship3_job_detail
+      - contentinfo [ref=e328]:
+        - generic [ref=e330]:
+          - generic [ref=e331]:
+            - navigation [ref=e332]:
+              - list
+            - generic [ref=e334]:
+              - list [ref=e335]:
+                - listitem [ref=e336]:
+                  - img [ref=e337]
+                  - generic [ref=e339]:
+                    - link "Dúvidas? Acesse a nossa Central de Ajuda." [ref=e340] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/help/linkedin?trk=d_flagship3_job_details
+                      - text: Dúvidas?
+                    - paragraph [ref=e341]: Acesse a nossa Central de Ajuda.
+                - listitem [ref=e342]:
+                  - img [ref=e343]
+                  - generic [ref=e345]:
+                    - link "Gerencie sua conta e privacidade Acesse suas Configurações." [ref=e346] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/psettings/
+                      - text: Gerencie sua conta e privacidade
+                    - paragraph [ref=e347]: Acesse suas Configurações.
+                - listitem [ref=e348]:
+                  - img [ref=e349]
+                  - generic [ref=e351]:
+                    - link "Visibilidade da recomendação Saiba mais sobre os conteúdos recomendados." [ref=e352] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/help/linkedin/answer/a1339724
+                      - text: Visibilidade da recomendação
+                    - paragraph [ref=e353]: Saiba mais sobre os conteúdos recomendados.
+              - generic [ref=e354]:
+                - generic [ref=e355]: Selecionar idioma
+                - combobox "Selecionar idioma" [ref=e356]
+          - paragraph [ref=e357]: LinkedIn Corporation © 2026
+    - generic:
+      - generic:
+        - complementary:
+          - generic [ref=e359]:
+            - generic [ref=e361] [cursor=pointer]:
+              - img "Fernando Xavier" [ref=e363]
+              - button "Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas." [ref=e364]:
+                - generic [ref=e365]:
+                  - generic [ref=e366]: Mensagens
+                  - generic [ref=e367]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+            - generic [ref=e368]:
+              - button "Abrir o menu suspenso de mensagens" [ref=e370] [cursor=pointer]:
+                - img "Abrir o menu suspenso de mensagens" [ref=e371]
+              - button "Escrever mensagem" [ref=e374] [cursor=pointer]:
+                - img [ref=e375]
+                - generic [ref=e377]: Escrever mensagem
+              - button "Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas." [ref=e378] [cursor=pointer]:
+                - img [ref=e379]
+                - generic [ref=e381]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+        - complementary "Assistente de IA para obter ajuda com sua carreira, vagas, etc."

@@ -1,0 +1,21 @@
+[     158ms] [LOG] running accessiblity @ https://www.roberthalf.com/etc.clientlibs/roberthalf/clientlibs/clientlib-base.lc-9dc1360bb71e05d7d69958512fa97f25-lc.min.js:2
+[     158ms] [LOG] rendering label @ https://www.roberthalf.com/etc.clientlibs/roberthalf/clientlibs/clientlib-base.lc-9dc1360bb71e05d7d69958512fa97f25-lc.min.js:2
+[     160ms] [LOG] rh_job_search version: 1.92.0 @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:1
+[     171ms] [LOG] CA hashcode: 468ef58b6f6ab61de36d0cab53a09c65 | event: instantaneous @ https://js.clrt.ai/13995.js:9
+[     235ms] [ERROR] ReferenceError: rhcl_config is not defined
+    at l.setupNumberedLabel (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/1272.7db5ca1f.chunk.js:1:7543)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20239
+    at Array.map (<anonymous>)
+    at ke (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20223)
+    at l.set [as totalPages] (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:21309)
+    at l.setTotalPages (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/1272.7db5ca1f.chunk.js:1:7481)
+    at l.componentWillLoad (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/1272.7db5ca1f.chunk.js:1:6831)
+    at Se (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:19362)
+    at fe (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:18132)
+    at Array.<anonymous> (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:17594) JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:1
+[     237ms] [INFO] Using RHCL v42.0.2 @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/8876.b3024dc0.chunk.js:0
+[     278ms] [LOG] rhcl config loaded for pt-BR @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/8876.b3024dc0.chunk.js:0
+[     278ms] [LOG] rhcl config loaded for pt-BR @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/8876.b3024dc0.chunk.js:0
+[     375ms] [LOG] Tealium Publish Version: ut4.49.202604161340 @ https://tags.roberthalf.com/brazil2/prod/utag.js:79
+[     375ms] [LOG] Tealium Environment: prod @ https://tags.roberthalf.com/brazil2/prod/utag.js:79
+[     375ms] [LOG] Tealium Profile: brazil2 @ https://tags.roberthalf.com/brazil2/prod/utag.js:79

@@ -1,0 +1,48 @@
+- generic [ref=e1]:
+  - generic [ref=e3]:
+    - navigation [ref=e1930]:
+      - link [ref=e1931] [cursor=pointer]:
+        - /url: "#main-content"
+        - text: Skip to main content
+      - generic [ref=e6]:
+        - generic [ref=e7]:
+          - link [ref=e1932] [cursor=pointer]:
+            - /url: https://jobs.dsm-firmenich.com/careers
+            - img [ref=e1877]
+          - link [ref=e1933] [cursor=pointer]:
+            - /url: https://careers.dsm-firmenich.com/en/careers.html
+            - generic [ref=e13]: Home
+          - link [ref=e1934] [cursor=pointer]:
+            - /url: https://careers.dsm-firmenich.com/en/careers/why-dsm-firmenich.html
+            - generic [ref=e16]: Why dsm-firmenich
+          - link [ref=e1935] [cursor=pointer]:
+            - /url: https://careers.dsm-firmenich.com/en/careers.html#people
+            - generic [ref=e19]: Meet Us
+        - generic [ref=e20]:
+          - link [ref=e1936] [cursor=pointer]:
+            - /url: /careers/join?domain=dsm.com&hl=en_US
+            - generic [ref=e23]: Join Talent Network
+          - button [ref=e1937] [cursor=pointer]:
+            - generic [ref=e27]: English
+    - main [ref=e207]
+  - dialog "Verify your email address to review and update your profile." [ref=e1938]:
+    - generic [ref=e1939]:
+      - button "Close candidate authentication modal" [active] [ref=e1942] [cursor=pointer]
+      - generic [ref=e1948]:
+        - heading "Verify your email address to review and update your profile." [level=1] [ref=e1949]
+        - paragraph [ref=e1950]: We just sent an email to fernandocostaxavier@gmail.com.
+        - group "Enter the code below" [ref=e1951]:
+          - generic [ref=e1952]: Enter the code below
+          - generic [ref=e1954]:
+            - textbox "Please enter OTP character 1" [ref=e1955]
+            - textbox "Please enter OTP character 2" [ref=e1956]
+            - textbox "Please enter OTP character 3" [ref=e1957]
+            - textbox "Please enter OTP character 4" [ref=e1958]
+            - textbox "Please enter OTP character 5" [ref=e1959]
+            - textbox "Please enter OTP character 6" [ref=e1960]
+        - button "Submit" [ref=e1961] [cursor=pointer]:
+          - generic [ref=e1962]: Submit
+        - paragraph [ref=e1963]: Didn't receive it?
+        - generic [ref=e1964]:
+          - generic [ref=e1965]: Check your spam folder or
+          - button "resend email" [ref=e1966] [cursor=pointer]

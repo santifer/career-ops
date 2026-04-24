@@ -1,0 +1,124 @@
+- generic [active] [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#gnav-header-end"
+  - main [ref=e3]:
+    - generic [ref=e5]:
+      - navigation "Principal" [ref=e7]:
+        - generic [ref=e9]:
+          - generic [ref=e10]:
+            - generic [ref=e11]:
+              - button "Ir para o conteúdo principal" [ref=e12] [cursor=pointer]:
+                - generic [ref=e13]: Ir para o conteúdo principal
+              - link "Página inicial do Indeed" [ref=e14] [cursor=pointer]:
+                - /url: /?from=gnav-jobsearch--indeedmobile
+                - img [ref=e16]
+              - list [ref=e18]:
+                - listitem [ref=e19]:
+                  - link "Página inicial" [ref=e21] [cursor=pointer]:
+                    - /url: https://br.indeed.com/
+                - listitem [ref=e22]:
+                  - link "Avaliações de Empresas" [ref=e24] [cursor=pointer]:
+                    - /url: https://br.indeed.com/companies
+                - listitem [ref=e25]:
+                  - link "Cargos e salários" [ref=e27] [cursor=pointer]:
+                    - /url: https://br.indeed.com/career/salaries
+            - generic [ref=e28]:
+              - list [ref=e29]:
+                - listitem [ref=e30]:
+                  - link "Minhas vagas" [ref=e32] [cursor=pointer]:
+                    - /url: https://myjobs.indeed.com?from=gnav-util-jobsearch--indeedmobile&gnavTK=1jmbbc44f22ti001&tk=1jmbbc3qsgmnk83a&co=BR&hl=pt
+                    - img [ref=e33]
+                - listitem [ref=e35]:
+                  - link "Mensagens Número de mensagens não lidas 0" [ref=e37] [cursor=pointer]:
+                    - /url: https://messages.indeed.com?from=gnav-util-jobsearch--indeedmobile&gnavTK=1jmbbc44f22ti001&tk=1jmbbc3qsgmnk83a&co=BR&hl=pt
+                    - img [ref=e38]
+                    - generic [ref=e43]:
+                      - text: Mensagens Número de mensagens não lidas 0
+                      - generic [ref=e44]: .
+                - listitem [ref=e45]:
+                  - link "Notificações Número de mensagens não lidas 0" [ref=e47] [cursor=pointer]:
+                    - /url: https://br.indeed.com/notifications?from=gnav-util-jobsearch--indeedmobile&gnavTK=1jmbbc44f22ti001&tk=1jmbbc3qsgmnk83a&hl=pt
+                    - img [ref=e48]
+                - listitem [ref=e50]:
+                  - button "Conta" [ref=e54] [cursor=pointer]:
+                    - generic [ref=e55]:
+                      - img [ref=e56]
+                      - generic [ref=e58]:
+                        - text: "1"
+                        - generic [ref=e59]: new update
+              - link "Empresas/Anunciar vagas" [ref=e64] [cursor=pointer]:
+                - /url: https://br.indeed.com/hire?co=BR&hl=pt
+          - generic [ref=e65]: Início do conteúdo principal
+      - generic [ref=e67]:
+        - search [ref=e72]:
+          - generic [ref=e75]:
+            - generic [ref=e77]:
+              - generic [ref=e78]:
+                - generic [ref=e79]: "Keyword : all jobs"
+                - generic [ref=e82]:
+                  - img [ref=e84]
+                  - 'combobox "search: Job title, keywords, or company" [ref=e86]': "\"gerente de contabilidade\" \"head of accounting\""
+                  - button "Clear what input" [ref=e88] [cursor=pointer]:
+                    - img [ref=e89]
+              - separator [ref=e91]:
+                - generic [ref=e92]: "&nbsp;"
+              - generic [ref=e93]:
+                - generic [ref=e94]: Edit location input box label
+                - generic [ref=e97]:
+                  - img [ref=e99]
+                  - combobox "Editar local" [ref=e101]: São Paulo SP
+                  - button "Clear location input" [ref=e103] [cursor=pointer]:
+                    - img [ref=e104]
+            - button "Achar vagas" [ref=e107] [cursor=pointer]
+          - list [ref=e110]:
+            - button "filtro por Distância" [ref=e112] [cursor=pointer]:
+              - text: Distância
+              - generic [ref=e113]: "1"
+            - button "filtro por Data do anúncio" [ref=e115] [cursor=pointer]: Data do anúncio
+        - generic [ref=e122]:
+          - generic [ref=e124]:
+            - 'heading "A busca Vagas: \"gerente de contabilidade\" \"head of accounting\" - São Paulo SP não encontrou nenhum resultado." [level=1] [ref=e125]'
+            - heading "Sugestões de busca:" [level=2] [ref=e126]
+            - list [ref=e127]:
+              - listitem [ref=e128]: Tente palavras-chaves mais genéricas
+              - listitem [ref=e129]: Cheque a sua ortografia
+              - listitem [ref=e130]: Use palavras completas ao invés de abreviações
+          - navigation "pagination" [ref=e131]:
+            - list
+      - contentinfo [ref=e136]:
+        - generic [ref=e137]:
+          - list [ref=e138]:
+            - listitem [ref=e139]:
+              - link "Guia de carreira" [ref=e141] [cursor=pointer]:
+                - /url: https://br.indeed.com/conselho-de-carreira
+            - listitem [ref=e142]:
+              - link "Pesquisar vagas" [ref=e144] [cursor=pointer]:
+                - /url: https://br.indeed.com/browsejobs
+            - listitem [ref=e145]:
+              - link "Salários" [ref=e147] [cursor=pointer]:
+                - /url: https://br.indeed.com/career/salaries
+            - listitem [ref=e148]:
+              - link "Indeed Eventos" [ref=e150] [cursor=pointer]:
+                - /url: https://www.indeedevents.com/pt-br/
+            - listitem [ref=e151]:
+              - link "Países" [ref=e153] [cursor=pointer]:
+                - /url: https://br.indeed.com/worldwide
+            - listitem [ref=e154]:
+              - link "Sobre o Indeed" [ref=e156] [cursor=pointer]:
+                - /url: https://br.indeed.com/about
+            - listitem [ref=e157]:
+              - link "Ajuda" [ref=e159] [cursor=pointer]:
+                - /url: https://br.indeed.com/help
+          - list [ref=e160]:
+            - listitem [ref=e161]: © 2026 Indeed
+            - listitem [ref=e162]:
+              - link "Acessibilidade no Indeed" [ref=e164] [cursor=pointer]:
+                - /url: https://br.indeed.com/esg/accessibility?hl=pt
+            - listitem [ref=e165]:
+              - link "Centro de privacidade e preferências de anúncios" [ref=e167] [cursor=pointer]:
+                - /url: https://hrtechprivacy.com/pt/brands/indeed#privacypolicy
+            - listitem [ref=e168]:
+              - link "Termos" [ref=e170] [cursor=pointer]:
+                - /url: https://br.indeed.com/legal?hl=pt
+          - list:
+            - listitem

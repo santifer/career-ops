@@ -1,0 +1,167 @@
+- generic [ref=e4]:
+  - banner [ref=e5]:
+    - link "skip to content" [ref=e6] [cursor=pointer]:
+      - /url: "#main-content"
+    - generic [ref=e7]:
+      - link "home" [ref=e8] [cursor=pointer]:
+        - /url: /
+        - img [ref=e11]
+      - navigation "secondary navigation" [ref=e14]:
+        - list [ref=e15]:
+          - listitem [ref=e16]:
+            - link "Stories" [ref=e17] [cursor=pointer]:
+              - /url: /stories
+          - listitem [ref=e18]:
+            - link "Careers" [ref=e19] [cursor=pointer]:
+              - /url: https://careers.roche.com
+          - listitem [ref=e20]:
+            - link "Contact" [ref=e21] [cursor=pointer]:
+              - /url: /contact
+        - button "worldwide" [ref=e23] [cursor=pointer]:
+          - img [ref=e26]
+        - link "search" [ref=e28] [cursor=pointer]:
+          - /url: /search
+          - img [ref=e31]
+    - navigation "primary navigation" [ref=e34]:
+      - list [ref=e35]:
+        - listitem [ref=e36]:
+          - button "About Roche" [ref=e37] [cursor=pointer]
+        - listitem [ref=e38]:
+          - button "Solutions" [ref=e39] [cursor=pointer]
+        - listitem [ref=e40]:
+          - button "Innovation" [ref=e41] [cursor=pointer]
+        - listitem [ref=e42]
+        - listitem [ref=e43]:
+          - button "Investors" [ref=e44] [cursor=pointer]
+        - listitem [ref=e45]:
+          - button "Media" [ref=e46] [cursor=pointer]
+  - main [ref=e47]:
+    - generic [ref=e50]:
+      - generic [ref=e53]:
+        - heading "404 Error" [level=5] [ref=e54]
+        - heading "Page not found" [level=2] [ref=e55]
+        - heading "It may have been moved or replaced during an update of the website." [level=6] [ref=e56]
+      - generic [ref=e57]:
+        - link "Media" [ref=e59] [cursor=pointer]:
+          - /url: /media/
+          - heading "Media" [level=3] [ref=e60]:
+            - generic [ref=e61]:
+              - text: Media
+              - img [ref=e64]
+        - link "Investors" [ref=e68] [cursor=pointer]:
+          - /url: /investors/
+          - heading "Investors" [level=3] [ref=e69]:
+            - generic [ref=e70]:
+              - text: Investors
+              - img [ref=e73]
+        - link "Careers" [ref=e77] [cursor=pointer]:
+          - /url: https://careers.roche.com
+          - heading "Careers" [level=3] [ref=e78]:
+            - generic [ref=e79]:
+              - text: Careers
+              - img [ref=e82]
+  - contentinfo [ref=e85]:
+    - generic [ref=e89]:
+      - generic [ref=e93]:
+        - navigation "quick links" [ref=e95]:
+          - list [ref=e96]:
+            - listitem [ref=e97]:
+              - link "Contact" [ref=e99] [cursor=pointer]:
+                - /url: /contact
+                - generic [ref=e100]: Contact
+                - img [ref=e103]
+            - listitem [ref=e105]:
+              - link "Locations" [ref=e107] [cursor=pointer]:
+                - /url: /locations
+                - generic [ref=e108]: Locations
+                - img [ref=e111]
+        - generic [ref=e118]:
+          - navigation "Helpful links" [ref=e120]:
+            - heading "Helpful links" [level=3] [ref=e121]
+            - list [ref=e122]:
+              - listitem [ref=e123]:
+                - link "Pharma solutions" [ref=e125] [cursor=pointer]:
+                  - /url: /solutions/pharma
+                  - generic [ref=e126]: Pharma solutions
+              - listitem [ref=e127]:
+                - link "Upcoming events" [ref=e129] [cursor=pointer]:
+                  - /url: /investors/events
+                  - generic [ref=e130]: Upcoming events
+              - listitem [ref=e131]:
+                - link "Annual Report 2025" [ref=e133] [cursor=pointer]:
+                  - /url: /investors/annualreport25
+                  - generic [ref=e134]: Annual Report 2025
+              - listitem [ref=e135]:
+                - link "Report a potential side effect" [ref=e137] [cursor=pointer]:
+                  - /url: /contact
+                  - generic [ref=e138]: Report a potential side effect
+          - navigation "Roche websites" [ref=e140]:
+            - heading "Roche websites" [level=3] [ref=e141]
+            - list [ref=e142]:
+              - listitem [ref=e143]:
+                - link "Diagnostics portal" [ref=e145] [cursor=pointer]:
+                  - /url: https://diagnostics.roche.com
+                  - generic [ref=e146]: Diagnostics portal
+              - listitem [ref=e147]:
+                - link "Suppliers information" [ref=e149] [cursor=pointer]:
+                  - /url: https://suppliers.roche.com
+                  - generic [ref=e150]: Suppliers information
+              - listitem [ref=e151]:
+                - link "Roche around the world" [ref=e153] [cursor=pointer]:
+                  - /url: /our-websites
+                  - generic [ref=e154]: Roche around the world
+              - listitem [ref=e155]:
+                - link "Patients and clinical trials platform" [ref=e157] [cursor=pointer]:
+                  - /url: https://forpatients.roche.com/
+                  - generic [ref=e158]: Patients and clinical trials platform
+      - generic [ref=e163]:
+        - navigation "social links" [ref=e165]:
+          - list [ref=e166]:
+            - listitem [ref=e167]:
+              - link "linkedin" [ref=e169] [cursor=pointer]:
+                - /url: https://www.linkedin.com/company/roche?trk=hb_tab_compy_id_1602
+                - img [ref=e172]
+            - listitem [ref=e174]:
+              - link "facebook" [ref=e176] [cursor=pointer]:
+                - /url: https://www.facebook.com/roche
+                - img [ref=e179]
+            - listitem [ref=e181]:
+              - link "twitter" [ref=e183] [cursor=pointer]:
+                - /url: https://twitter.com/roche
+                - img [ref=e186]
+            - listitem [ref=e188]:
+              - link "instagram" [ref=e190] [cursor=pointer]:
+                - /url: https://www.instagram.com/roche/
+                - img [ref=e193]
+            - listitem [ref=e195]:
+              - link "youtube" [ref=e197] [cursor=pointer]:
+                - /url: https://www.youtube.com/roche
+                - img [ref=e200]
+        - navigation "service links" [ref=e203]:
+          - list [ref=e204]:
+            - listitem [ref=e205]:
+              - link "Privacy notice" [ref=e207] [cursor=pointer]:
+                - /url: /privacy-policy
+                - generic [ref=e208]: Privacy notice
+            - listitem [ref=e209]:
+              - link "Legal statement" [ref=e211] [cursor=pointer]:
+                - /url: /legal-statement
+                - generic [ref=e212]: Legal statement
+            - listitem [ref=e213]:
+              - link "Accessibility statement" [ref=e215] [cursor=pointer]:
+                - /url: /accessibility-statement
+                - generic [ref=e216]: Accessibility statement
+            - listitem [ref=e217]:
+              - link "Social Media guidelines" [ref=e219] [cursor=pointer]:
+                - /url: /some-guidelines
+                - generic [ref=e220]: Social Media guidelines
+            - listitem [ref=e221]:
+              - button "Cookies" [ref=e223] [cursor=pointer]:
+                - generic [ref=e224]: Cookies
+      - generic [ref=e228]:
+        - generic [ref=e230]:
+          - text: ©
+          - time
+          - text: F. Hoffmann-La Roche Ltd
+          - time
+        - paragraph [ref=e235]: This website contains information on products which is targeted to a wide range of audiences and could contain product details or information otherwise not accessible or valid in your country. Please be aware that we do not take any responsibility for accessing such information which may not comply with any legal process, regulation, registration or usage in the country of your origin.

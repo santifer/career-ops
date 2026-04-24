@@ -1,0 +1,190 @@
+- generic [ref=e4]:
+  - link "Ir para o conteúdo principal" [ref=e5] [cursor=pointer]:
+    - /url: ""
+  - banner [ref=e8]:
+    - generic [ref=e10]:
+      - link "Página inicial de carreiras da" [ref=e13] [cursor=pointer]:
+        - /url: https://www.solventum.com/en-us/home/our-company/careers/
+        - img "Página inicial de carreiras da" [ref=e14]
+      - generic [ref=e15]:
+        - heading [level=1]
+      - generic [ref=e17]:
+        - generic [ref=e18]:
+          - button "Português (‏Brasil)" [ref=e20] [cursor=pointer]:
+            - generic [ref=e24]: Português (‏Brasil)
+          - button "fernandocostaxavier@gmail.com" [ref=e27] [cursor=pointer]:
+            - generic [ref=e32]: fernandocostaxavier@gmail.com
+        - navigation [ref=e33]:
+          - button "Careers Page" [ref=e34] [cursor=pointer]
+          - button "Página inicial de candidatos" [ref=e35] [cursor=pointer]
+          - button "Alertas de vagas" [ref=e36] [cursor=pointer]
+  - main [ref=e39]:
+    - generic [ref=e40]:
+      - generic [ref=e41]:
+        - link "Voltar para publicação de vaga de emprego" [ref=e43] [cursor=pointer]:
+          - generic [ref=e47]: Voltar para publicação de vaga de emprego
+        - heading "Manufacturing Controller." [level=2] [ref=e48]
+      - generic "Application Progress" [ref=e49]:
+        - list [ref=e50]:
+          - listitem [ref=e51]:
+            - generic: completed step 1 of 6
+            - generic [ref=e57]: Minhas informações
+          - listitem [ref=e58]:
+            - generic: completed step 2 of 6
+            - generic [ref=e64]: Minha experiência
+          - listitem [ref=e65]:
+            - generic: completed step 3 of 6
+            - generic [ref=e71]: "Perguntas da candidatura: 1 de 2"
+          - listitem [ref=e72]:
+            - generic: completed step 4 of 6
+            - generic [ref=e78]: "Perguntas da candidatura: 2 de 2"
+          - listitem [ref=e79]:
+            - generic: completed step 5 of 6
+            - generic [ref=e85]: Informações voluntárias
+          - listitem [ref=e86]:
+            - generic: current step 6 of 6
+            - generic [ref=e92]: Revisar
+      - generic [ref=e93]:
+        - generic [ref=e94]:
+          - heading "Revisar" [active] [level=3] [ref=e1416]
+          - generic [ref=e1417]:
+            - heading "Minhas informações" [level=3] [ref=e1419]
+            - group [ref=e1420]:
+              - generic [ref=e1422]:
+                - generic [ref=e1423]: Como você ficou sabendo sobre nós?
+                - generic [ref=e1424]: LinkedIn
+            - generic [ref=e1425]:
+              - heading "Nome" [level=4] [ref=e1426]
+              - generic [ref=e1428]: Fernando Costa Xavier
+            - generic [ref=e1429]:
+              - heading "Endereço" [level=4] [ref=e1430]
+              - generic [ref=e1433]: R. Guaianazes, 1335 Campos Eliseos São Paulo- SP 01208-001 Brasil
+            - generic [ref=e1434]:
+              - heading "Endereço de e-mail" [level=4] [ref=e1435]
+              - generic [ref=e1437]: fernandocostaxavier@gmail.com
+            - generic [ref=e1438]:
+              - heading "Telefone" [level=4] [ref=e1439]
+              - generic [ref=e1441]: +55 (11) 964801913 (Mobile)
+            - heading "Minha experiência" [level=3] [ref=e1443]
+            - group "Experiência profissional" [ref=e1444]:
+              - heading "Experiência profissional" [level=4] [ref=e1445]
+              - text: Sem resposta
+            - group "Formação" [ref=e1447]:
+              - heading "Formação" [level=4] [ref=e1448]
+              - text: Sem resposta
+            - group "Idiomas" [ref=e1450]:
+              - heading "Idiomas" [level=4] [ref=e1451]
+              - text: Sem resposta
+            - group [ref=e1453]:
+              - heading "Habilidades" [level=4] [ref=e1454]
+            - group "Currículo/CV" [ref=e1456]:
+              - heading "Currículo/CV" [level=4] [ref=e1457]
+              - paragraph [ref=e1460]:
+                - generic [ref=e1477]:
+                  - alert [ref=e1478]: cv-029-solventum-manufacturing-controller.pdf successfully uploaded
+                  - generic [ref=e1479]: cv-029-solventum-manufacturing-controller.pdf
+                  - generic [ref=e1480]: 115,85 KB
+            - group "Sites" [ref=e1482]:
+              - heading "Sites" [level=4] [ref=e1483]
+              - generic [ref=e1484]: Adicione todos os sites relevantes.
+              - text: Sem resposta
+            - 'heading "Perguntas da candidatura: 1 de 2" [level=3] [ref=e1486]'
+            - group [ref=e1487]:
+              - generic [ref=e1488]:
+                - generic [ref=e1489]:
+                  - paragraph [ref=e1492]:
+                    - generic [ref=e1493]: Você é ou já foi empregado pela PricewaterhouseCoopers (PwC)?
+                    - text: "*"
+                  - generic [ref=e1494]: Não
+                - generic [ref=e1495]:
+                  - paragraph [ref=e1498]: Você é membro ou diretor de um Conselho de Administração ou faz parte do Conselho Executivo de uma organização com ou sem fins lucrativos da qual você recebe ou não remuneração? (Exemplos, ONGs e Associações Empresariais)*
+                  - generic [ref=e1499]: Não
+                - generic [ref=e1500]:
+                  - paragraph [ref=e1503]: Você tem um familiar ou amigo próximo que é empregado por um parceiro de negócios Solventum (clientes, distribuidores, fornecedores ou outros), ou por um concorrente?*
+                  - generic [ref=e1504]: Não
+                - generic [ref=e1505]:
+                  - paragraph [ref=e1508]: Você ou algum familiar* é, atual ou ex-funcionário público, empresa governamental ou organização comercial de propriedade ou controlada por qualquer entidade governamental que tenha ou possa ter uma relação de negócios ou interação com a Solventum?*
+                  - generic [ref=e1509]: Não
+                - generic [ref=e1510]:
+                  - paragraph [ref=e1513]: Você ou algum familiar é atual ou ex-funcionário público de uma entidade governamental com a qual você ou a Solventum Não terá interação ou qualquer tipo de relacionamento comercial?*
+                  - generic [ref=e1514]: Não
+                - generic [ref=e1515]:
+                  - paragraph [ref=e1518]: Você é ou já foi empregado por algum dos Parceiros Comerciais da Solventum (clientes, distribuidores, fornecedores ou outros), ou por concorrentes?*
+                  - generic [ref=e1519]: Não
+                - generic [ref=e1520]:
+                  - paragraph [ref=e1523]: Atualmente, ou no passado, você prestou alguma consultoria ou recebeu alguma remuneração de algum dos Parceiros Comerciais da Solventum (clientes, distribuidores, fornecedores ou outros), ou da concorrência?*
+                  - generic [ref=e1524]: Não
+                - generic [ref=e1525]:
+                  - paragraph [ref=e1528]: Você tem alguma outra atividade profissional ou comercial que exerça, simultaneamente, com o cargo para o qual você está se candidatando na Solventum?*
+                  - generic [ref=e1529]: Não
+                - generic [ref=e1530]:
+                  - paragraph [ref=e1533]: Você ou qualquer de seus familiares tem algum interesse financeiro (ações, empréstimos, investimentos) em qualquer parceiro de negócios ou concorrente da Solventum?*
+                  - generic [ref=e1534]: Não
+                - generic [ref=e1535]:
+                  - paragraph [ref=e1538]: Você tem algum familiar, amigo próximo ou relação amorosa com alguém que trabalhe na Solventum?*
+                  - generic [ref=e1539]: Não
+                - generic [ref=e1540]:
+                  - paragraph [ref=e1543]:
+                    - generic [ref=e1544]: Você já trabalhou na Solventum como funcionário direto ou como subcontratado de alguma agência e/ou fornecedor que presta serviços à Solventum?*
+                  - generic [ref=e1545]: Não
+                - generic [ref=e1546]:
+                  - paragraph [ref=e1549]: Você tem algum outro Conflito de Interesse potencial ou real a declarar?*
+                  - generic [ref=e1550]: Não
+            - 'heading "Perguntas da candidatura: 2 de 2" [level=3] [ref=e1552]'
+            - group [ref=e1553]:
+              - generic [ref=e1554]:
+                - generic [ref=e1555]:
+                  - paragraph [ref=e1558]: Please Indicate your current gross monthly salary:*
+                  - generic [ref=e1559]: "25000"
+                - generic [ref=e1560]:
+                  - paragraph [ref=e1563]: Please Indicate your current gross monthly salary expectation:*
+                  - generic [ref=e1564]: "30000"
+                - generic [ref=e1565]:
+                  - paragraph [ref=e1568]: Please indicate on the amount of your variable salary received last year (paid out). Here you can consider all types of bonuses.*
+                  - generic [ref=e1569]: "5000"
+                - generic [ref=e1570]:
+                  - paragraph [ref=e1573]: Please indicate your Level of English:*
+                  - generic [ref=e1574]: "Advanced: able to conduct meetings, trainings and business negotations, has broad vocabulary and very good grammar."
+            - heading "Informações voluntárias" [level=3] [ref=e1576]
+            - generic [ref=e1577]:
+              - group "Personal Information - Voluntary Disclosures" [ref=e1578]:
+                - heading "Personal Information - Voluntary Disclosures" [level=4] [ref=e1579]
+                - generic [ref=e1580]:
+                  - generic [ref=e1581]:
+                    - generic [ref=e1582]: Sexo
+                    - generic [ref=e1583]: Sem resposta
+                  - generic [ref=e1584]:
+                    - generic [ref=e1585]: País de nascimento
+                    - generic [ref=e1586]: Sem resposta
+                  - generic [ref=e1587]:
+                    - generic [ref=e1588]: Raça/Etnia
+                    - generic [ref=e1589]: Sem resposta
+                  - generic [ref=e1590]:
+                    - generic [ref=e1591]: Deficiência
+                    - generic [ref=e1592]: Sem resposta
+              - group "Termos e condições" [ref=e1594]:
+                - heading "Termos e condições" [level=4] [ref=e1595]
+                - generic [ref=e1597]:
+                  - generic [ref=e1598]: Yes, I have read and consent to the terms and conditions.
+                  - generic [ref=e1599]: Sim
+        - generic [ref=e224]:
+          - button "Voltar" [ref=e1026] [cursor=pointer]
+          - button "Enviar" [ref=e1600] [cursor=pointer]
+  - generic [ref=e228]:
+    - generic [ref=e229]: Siga-nos
+    - list [ref=e230]:
+      - listitem [ref=e231] [cursor=pointer]:
+        - link "Facebook" [ref=e232]:
+          - /url: https://www.facebook.com/solventumhealth
+      - listitem [ref=e236] [cursor=pointer]:
+        - link "YouTube" [ref=e237]:
+          - /url: https://www.youtube.com/@Solventum
+      - listitem [ref=e243] [cursor=pointer]:
+        - link "LinkedIn" [ref=e244]:
+          - /url: https://www.linkedin.com/company/solventumhealth/
+      - listitem [ref=e248] [cursor=pointer]:
+        - link "X" [ref=e249]:
+          - /url: https://x.com/i/flow/login?redirect_after_login=%2Fsolventum
+    - generic [ref=e253]:
+      - img [ref=e257]
+      - generic [ref=e277]: © 2026 Workday, Inc. Todos os direitos reservados.

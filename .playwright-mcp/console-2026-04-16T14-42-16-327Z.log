@@ -1,0 +1,84 @@
+[    1485ms] [LOG] Google Analytics Standard Events Library Loaded @ :2
+[    1495ms] ReferenceError: PGdataLayer is not defined
+    at <anonymous>:10:240
+    at https://www.googletagmanager.com/gtm.js?id=GTM-N94XXFB:976:429
+    at nR (https://www.googletagmanager.com/gtm.js?id=GTM-N94XXFB:978:31)
+    at Md.mR (https://www.googletagmanager.com/gtm.js?id=GTM-N94XXFB:975:92)
+    at Md.<anonymous> (https://www.googletagmanager.com/gtm.js?id=GTM-N94XXFB:384:187)
+    at k.apply (https://www.googletagmanager.com/gtm.js?id=GTM-N94XXFB:313:466)
+    at fb (https://www.googletagmanager.com/gtm.js?id=GTM-N94XXFB:276:719)
+    at eb (https://www.googletagmanager.com/gtm.js?id=GTM-N94XXFB:276:470)
+    at Md.<anonymous> (https://www.googletagmanager.com/gtm.js?id=GTM-N94XXFB:337:473)
+    at k.apply (https://www.googletagmanager.com/gtm.js?id=GTM-N94XXFB:313:466)
+[    1565ms] [INFO] All pre-requisites finished @ https://cdn.phenompeople.com/CareerConnectResources/common/js/vendor/ph-loader-4.35.js:202
+[    1631ms] [LOG] applying roles @ https://cdn.phenompeople.com/CareerConnectResources/common/js/common/ph-common-bundle-part1-4.115.js:32
+[    1736ms] [ERROR] SyntaxError: Failed to execute 'querySelector' on 'Document': '#!/faqs' is not a valid selector.
+    at gi.handleAnchorPoint (https://cdn.phenompeople.com/CareerConnectResources/common/js/caas-platform/common/pcs-common-v1.17_1720531206945.js:1:101047)
+    at inserted (https://cdn.phenompeople.com/CareerConnectResources/common/js/caas-platform/common/pcs-common-v1.17_1720531206945.js:1:101622)
+    at pr (https://cdn.phenompeople.com/CareerConnectResources/common/js/caas-platform/vendor/vue.min-1.0_1636721870521.js:6:43650)
+    at f (https://cdn.phenompeople.com/CareerConnectResources/common/js/caas-platform/vendor/vue.min-1.0_1636721870521.js:6:43103)
+    at c (https://cdn.phenompeople.com/CareerConnectResources/common/js/caas-platform/vendor/vue.min-1.0_1636721870521.js:6:13680)
+    at Be (https://cdn.phenompeople.com/CareerConnectResources/common/js/caas-platform/vendor/vue.min-1.0_1636721870521.js:6:11395)
+    at Object.n [as insert] (https://cdn.phenompeople.com/CareerConnectResources/common/js/caas-platform/vendor/vue.min-1.0_1636721870521.js:6:13256)
+    at k (https://cdn.phenompeople.com/CareerConnectResources/common/js/caas-platform/vendor/vue.min-1.0_1636721870521.js:6:60577)
+    at Cn.__patch__ (https://cdn.phenompeople.com/CareerConnectResources/common/js/caas-platform/vendor/vue.min-1.0_1636721870521.js:6:61935)
+    at e._update (https://cdn.phenompeople.com/CareerConnectResources/common/js/caas-platform/vendor/vue.min-1.0_1636721870521.js:6:34610) @ https://cdn.phenompeople.com/CareerConnectResources/common/js/caas-platform/vendor/vue.min-1.0_1636721870521.js:5
+[    1737ms] [WARNING] A11y autocomplete setup is improper.Check errors  [Missing clearFieldValue(fieldName) fn on widget elem] @ https://cdn.phenompeople.com/CareerConnectResources/common/js/caas-platform/common/pcs-common-v1.17_1720531206945.js:0
+[    1749ms] [ERROR] Failed to load resource: the server responded with a status of 403 () @ https://pp-cdn.phenompeople.com/CareerConnectResources/pp/PGBPGNGLOBAL/en_global/desktop/assets/fonts/Montserrat-ExtraBold.woff2:0
+[    1761ms] [ERROR] Failed to load resource: the server responded with a status of 403 () @ https://pp-cdn.phenompeople.com/CareerConnectResources/pp/PGBPGNGLOBAL/en_global/desktop/assets/fonts/Montserrat-SemiBold.woff2:0
+[    1792ms] [ERROR] SyntaxError: Failed to execute 'querySelector' on 'Document': '#!/faqs' is not a valid selector.
+    at gi.handleAnchorPoint (https://cdn.phenompeople.com/CareerConnectResources/common/js/caas-platform/common/pcs-common-v1.17_1720531206945.js:1:101047)
+    at inserted (https://cdn.phenompeople.com/CareerConnectResources/common/js/caas-platform/common/pcs-common-v1.17_1720531206945.js:1:101622)
+    at pr (https://cdn.phenompeople.com/CareerConnectResources/common/js/caas-platform/vendor/vue.min-1.0_1636721870521.js:6:43650)
+    at f (https://cdn.phenompeople.com/CareerConnectResources/common/js/caas-platform/vendor/vue.min-1.0_1636721870521.js:6:43103)
+    at c (https://cdn.phenompeople.com/CareerConnectResources/common/js/caas-platform/vendor/vue.min-1.0_1636721870521.js:6:13680)
+    at Be (https://cdn.phenompeople.com/CareerConnectResources/common/js/caas-platform/vendor/vue.min-1.0_1636721870521.js:6:11395)
+    at Object.n [as insert] (https://cdn.phenompeople.com/CareerConnectResources/common/js/caas-platform/vendor/vue.min-1.0_1636721870521.js:6:13256)
+    at k (https://cdn.phenompeople.com/CareerConnectResources/common/js/caas-platform/vendor/vue.min-1.0_1636721870521.js:6:60577)
+    at Cn.__patch__ (https://cdn.phenompeople.com/CareerConnectResources/common/js/caas-platform/vendor/vue.min-1.0_1636721870521.js:6:61935)
+    at e._update (https://cdn.phenompeople.com/CareerConnectResources/common/js/caas-platform/vendor/vue.min-1.0_1636721870521.js:6:34610) @ https://www.pgcareers.com/global/en/phenomtrack.min.js:1
+[    2157ms] [ERROR] Failed to load resource: the server responded with a status of 403 () @ https://pp-cdn.phenompeople.com/CareerConnectResources/pp/PGBPGNGLOBAL/en_global/desktop/assets/fonts/Montserrat-SemiBold.woff:0
+[    2157ms] [ERROR] Failed to load resource: the server responded with a status of 403 () @ https://pp-cdn.phenompeople.com/CareerConnectResources/pp/PGBPGNGLOBAL/en_global/desktop/assets/fonts/Montserrat-ExtraBold.woff:0
+[   27181ms] Uncaught TypeError: Cannot read properties of null (reading 'querySelector')
+    at <anonymous> (https://cdn.phenompeople.com/CareerConnectResources/PGBPGNGLOBAL/en_global/desktop/assets/scripts/1716539755308-custom.js:238:24)
+[   28533ms] [LOG] Google Analytics Standard Events Library Loaded @ :2
+[   28542ms] ReferenceError: PGdataLayer is not defined
+    at <anonymous>:10:240
+    at https://www.googletagmanager.com/gtm.js?id=GTM-N94XXFB:976:429
+    at nR (https://www.googletagmanager.com/gtm.js?id=GTM-N94XXFB:978:31)
+    at Md.mR (https://www.googletagmanager.com/gtm.js?id=GTM-N94XXFB:975:92)
+    at Md.<anonymous> (https://www.googletagmanager.com/gtm.js?id=GTM-N94XXFB:384:187)
+    at k.apply (https://www.googletagmanager.com/gtm.js?id=GTM-N94XXFB:313:466)
+    at fb (https://www.googletagmanager.com/gtm.js?id=GTM-N94XXFB:276:719)
+    at eb (https://www.googletagmanager.com/gtm.js?id=GTM-N94XXFB:276:470)
+    at Md.<anonymous> (https://www.googletagmanager.com/gtm.js?id=GTM-N94XXFB:337:473)
+    at k.apply (https://www.googletagmanager.com/gtm.js?id=GTM-N94XXFB:313:466)
+[   28614ms] [INFO] All pre-requisites finished @ https://cdn.phenompeople.com/CareerConnectResources/common/js/vendor/ph-loader-4.35.js:202
+[   28616ms] [LOG] applying roles @ https://cdn.phenompeople.com/CareerConnectResources/common/js/common/ph-common-bundle-part1-4.114.js:32
+[   28758ms] [ERROR] SyntaxError: Failed to execute 'querySelector' on 'Document': '#!/faqs' is not a valid selector.
+    at gi.handleAnchorPoint (https://cdn.phenompeople.com/CareerConnectResources/common/js/caas-platform/common/pcs-common-v1.17_1720531206945.js:1:101047)
+    at inserted (https://cdn.phenompeople.com/CareerConnectResources/common/js/caas-platform/common/pcs-common-v1.17_1720531206945.js:1:101622)
+    at pr (https://cdn.phenompeople.com/CareerConnectResources/common/js/caas-platform/vendor/vue.min-1.0_1636721870521.js:6:43650)
+    at f (https://cdn.phenompeople.com/CareerConnectResources/common/js/caas-platform/vendor/vue.min-1.0_1636721870521.js:6:43103)
+    at c (https://cdn.phenompeople.com/CareerConnectResources/common/js/caas-platform/vendor/vue.min-1.0_1636721870521.js:6:13680)
+    at Be (https://cdn.phenompeople.com/CareerConnectResources/common/js/caas-platform/vendor/vue.min-1.0_1636721870521.js:6:11395)
+    at Object.n [as insert] (https://cdn.phenompeople.com/CareerConnectResources/common/js/caas-platform/vendor/vue.min-1.0_1636721870521.js:6:13256)
+    at k (https://cdn.phenompeople.com/CareerConnectResources/common/js/caas-platform/vendor/vue.min-1.0_1636721870521.js:6:60577)
+    at Cn.__patch__ (https://cdn.phenompeople.com/CareerConnectResources/common/js/caas-platform/vendor/vue.min-1.0_1636721870521.js:6:61935)
+    at e._update (https://cdn.phenompeople.com/CareerConnectResources/common/js/caas-platform/vendor/vue.min-1.0_1636721870521.js:6:34610) @ https://cdn.phenompeople.com/CareerConnectResources/common/js/caas-platform/vendor/vue.min-1.0_1636721870521.js:5
+[   28759ms] [WARNING] A11y autocomplete setup is improper.Check errors  [Missing clearFieldValue(fieldName) fn on widget elem] @ https://cdn.phenompeople.com/CareerConnectResources/common/js/caas-platform/common/pcs-common-v1.17_1720531206945.js:0
+[   28778ms] [ERROR] SyntaxError: Failed to execute 'querySelector' on 'Document': '#!/faqs' is not a valid selector.
+    at gi.handleAnchorPoint (https://cdn.phenompeople.com/CareerConnectResources/common/js/caas-platform/common/pcs-common-v1.17_1720531206945.js:1:101047)
+    at inserted (https://cdn.phenompeople.com/CareerConnectResources/common/js/caas-platform/common/pcs-common-v1.17_1720531206945.js:1:101622)
+    at pr (https://cdn.phenompeople.com/CareerConnectResources/common/js/caas-platform/vendor/vue.min-1.0_1636721870521.js:6:43650)
+    at f (https://cdn.phenompeople.com/CareerConnectResources/common/js/caas-platform/vendor/vue.min-1.0_1636721870521.js:6:43103)
+    at c (https://cdn.phenompeople.com/CareerConnectResources/common/js/caas-platform/vendor/vue.min-1.0_1636721870521.js:6:13680)
+    at Be (https://cdn.phenompeople.com/CareerConnectResources/common/js/caas-platform/vendor/vue.min-1.0_1636721870521.js:6:11395)
+    at Object.n [as insert] (https://cdn.phenompeople.com/CareerConnectResources/common/js/caas-platform/vendor/vue.min-1.0_1636721870521.js:6:13256)
+    at k (https://cdn.phenompeople.com/CareerConnectResources/common/js/caas-platform/vendor/vue.min-1.0_1636721870521.js:6:60577)
+    at Cn.__patch__ (https://cdn.phenompeople.com/CareerConnectResources/common/js/caas-platform/vendor/vue.min-1.0_1636721870521.js:6:61935)
+    at e._update (https://cdn.phenompeople.com/CareerConnectResources/common/js/caas-platform/vendor/vue.min-1.0_1636721870521.js:6:34610) @ https://cdn.phenompeople.com/CareerConnectResources/common/js/caas-platform/vendor/vue.min-1.0_1636721870521.js:5
+[   28859ms] [ERROR] Failed to load resource: the server responded with a status of 403 () @ https://pp-cdn.phenompeople.com/CareerConnectResources/pp/PGBPGNGLOBAL/en_global/desktop/assets/fonts/Montserrat-SemiBold.woff2:0
+[   28868ms] [ERROR] Failed to load resource: the server responded with a status of 403 () @ https://pp-cdn.phenompeople.com/CareerConnectResources/pp/PGBPGNGLOBAL/en_global/desktop/assets/fonts/Montserrat-Medium.woff2:0
+[   29253ms] [ERROR] Failed to load resource: the server responded with a status of 403 () @ https://pp-cdn.phenompeople.com/CareerConnectResources/pp/PGBPGNGLOBAL/en_global/desktop/assets/fonts/Montserrat-SemiBold.woff:0
+[   29254ms] [ERROR] Failed to load resource: the server responded with a status of 403 () @ https://pp-cdn.phenompeople.com/CareerConnectResources/pp/PGBPGNGLOBAL/en_global/desktop/assets/fonts/Montserrat-Medium.woff:0

@@ -1,0 +1,248 @@
+- generic [active] [ref=e1]:
+  - generic:
+    - region "Mensagem toast":
+      - heading "0 notificações no total" [level=2] [ref=e3]
+      - alert
+  - region [ref=e4]
+  - generic [ref=e5]:
+    - generic [ref=e7]:
+      - button "Pular para pesquisa" [ref=e8] [cursor=pointer]:
+        - generic [ref=e9]: Pular para pesquisa
+      - button "Pular para conteúdo principal" [ref=e10] [cursor=pointer]:
+        - generic [ref=e11]: Pular para conteúdo principal
+      - button "Atalhos do teclado" [ref=e12] [cursor=pointer]:
+        - generic [ref=e13]: Atalhos do teclado
+      - button "Fechar menu pular" [ref=e14] [cursor=pointer]:
+        - img [ref=e15]
+        - generic [ref=e17]: Fechar menu pular
+    - banner "Navegação geral" [ref=e18]:
+      - generic [ref=e19]:
+        - link "LinkedIn" [ref=e20] [cursor=pointer]:
+          - /url: https://www.linkedin.com/feed/?nis=true
+          - img "LinkedIn" [ref=e23]:
+            - img [ref=e24]
+        - generic [ref=e28]:
+          - generic [ref=e31]:
+            - generic [ref=e32]:
+              - generic [ref=e33]: Pesquisar cargo, competência ou empresa
+              - img [ref=e34]
+            - combobox "Pesquisar cargo, competência ou empresa" [ref=e36]: head of accounting
+            - textbox [disabled]
+          - generic [ref=e39]:
+            - generic [ref=e40]:
+              - generic [ref=e41]: Cidade, estado ou código postal
+              - img [ref=e42]
+            - combobox "Cidade, estado ou código postal" [ref=e44]: Brasil
+            - textbox [disabled]
+          - button "Pesquisar" [ref=e45] [cursor=pointer]
+        - navigation "Navegação principal" [ref=e46]:
+          - list [ref=e47]:
+            - listitem [ref=e48]:
+              - link "atualizações do feed novas notificações Início" [ref=e49] [cursor=pointer]:
+                - /url: https://www.linkedin.com/feed/?nis=true&
+                - generic [ref=e50]:
+                  - generic [ref=e53]: atualizações do feed novas notificações
+                  - img [ref=e57]
+                - generic "Início" [ref=e59]
+            - listitem [ref=e60]:
+              - link "1 atualização de rede nova notificação Minha rede" [ref=e61] [cursor=pointer]:
+                - /url: https://www.linkedin.com/mynetwork/?
+                - generic [ref=e62]:
+                  - generic [ref=e63]:
+                    - generic [ref=e64]: "1"
+                    - generic [ref=e65]: 1 atualização de rede nova notificação
+                  - img [ref=e69]
+                - generic "Minha rede" [ref=e71]
+            - listitem [ref=e72]:
+              - link "Vagas" [ref=e73] [cursor=pointer]:
+                - /url: https://www.linkedin.com/jobs/?
+                - img [ref=e77]
+                - generic "Vagas" [ref=e79]
+            - listitem [ref=e80]:
+              - link "Mensagens" [ref=e81] [cursor=pointer]:
+                - /url: https://www.linkedin.com/messaging/?
+                - img [ref=e85]
+                - generic "Mensagens" [ref=e87]
+            - listitem [ref=e88]:
+              - link "15 novas notificações Notificações" [ref=e89] [cursor=pointer]:
+                - /url: https://www.linkedin.com/notifications/?
+                - generic [ref=e90]:
+                  - generic [ref=e91]:
+                    - generic [ref=e92]: "15"
+                    - generic [ref=e93]: 15 novas notificações
+                  - img [ref=e97]
+                - generic "Notificações" [ref=e99]
+            - listitem [ref=e100]:
+              - button "Fernando Xavier Eu" [ref=e102] [cursor=pointer]:
+                - img "Fernando Xavier" [ref=e103]
+                - generic [ref=e104]:
+                  - text: Eu
+                  - img [ref=e105]
+            - listitem [ref=e107]:
+              - button "Para negócios" [ref=e109] [cursor=pointer]:
+                - img [ref=e113]
+                - generic "Para negócios" [ref=e115]:
+                  - text: Para negócios
+                  - img [ref=e116]
+            - listitem [ref=e118]:
+              - link "Veicular anúncio" [ref=e119] [cursor=pointer]:
+                - /url: https://www.linkedin.com/campaignmanager/accounts?
+                - img [ref=e123]
+                - generic "Veicular anúncio" [ref=e126]
+    - generic [ref=e128]:
+      - region "filtros de pesquisa" [ref=e131]:
+        - heading "Pesquisa de vagas" [level=2] [ref=e132]
+      - main [ref=e143]:
+        - generic [ref=e146]:
+          - generic [ref=e147]:
+            - generic [ref=e148]:
+              - 'generic "head of accounting em: Brasil" [ref=e149]'
+              - generic [ref=e153]: 54 resultados
+            - generic [ref=e156] [cursor=pointer]:
+              - generic [ref=e157]: Configurar alerta
+              - generic [ref=e158]: "Configurar alerta de vaga para Head of accounting em: Brazil"
+              - 'switch "Configurar alerta de vaga para Head of accounting em: Brazil"'
+          - generic [ref=e159]:
+            - button "Pular para detalhes da vaga ativa":
+              - generic [ref=e160] [cursor=pointer]: Pular para detalhes da vaga ativa
+            - button "Pular para resultado de pesquisa ativa":
+              - generic [ref=e161] [cursor=pointer]: Pular para resultado de pesquisa ativa
+            - list [ref=e162]:
+              - listitem [ref=e163]:
+                - generic [ref=e166] [cursor=pointer]:
+                  - generic [ref=e167]:
+                    - img "Logo da empresa Confidential" [ref=e171]
+                    - generic [ref=e172]:
+                      - link "Head of Accounting & Treasury" [ref=e174]:
+                        - /url: /jobs/view/4400213834/?trk=flagship3_search_srp_jobs
+                        - strong [ref=e176]: Head of Accounting & Treasury
+                        - generic [ref=e177]: Head of Accounting & Treasury
+                      - generic [ref=e179]: Confidential
+                      - list [ref=e181]:
+                        - listitem [ref=e182]:
+                          - generic [ref=e183]: América Latina (Remoto)
+                  - list [ref=e185]:
+                    - listitem [ref=e186]
+              - listitem [ref=e188]:
+                - generic [ref=e191] [cursor=pointer]:
+                  - generic [ref=e192]:
+                    - img "Logo da empresa Zazu Digital Talent" [ref=e196]
+                    - generic [ref=e197]:
+                      - link "Vice President Finance" [ref=e199]:
+                        - /url: /jobs/view/4374541021/?trk=flagship3_search_srp_jobs
+                        - strong [ref=e201]: Vice President Finance
+                        - generic [ref=e202]: Vice President Finance
+                      - generic [ref=e204]: Zazu Digital Talent
+                      - list [ref=e206]:
+                        - listitem [ref=e207]:
+                          - generic [ref=e208]: América Latina (Remoto)
+                  - list [ref=e210]:
+                    - listitem [ref=e211]
+              - listitem [ref=e213]:
+                - generic [ref=e216] [cursor=pointer]:
+                  - generic [ref=e217]:
+                    - img "Logo da empresa Assigna" [ref=e221]
+                    - generic [ref=e222]:
+                      - link "Gerente de Projetos - Controllership & Accounting" [ref=e224]:
+                        - /url: /jobs/view/4396662236/?trk=flagship3_search_srp_jobs
+                        - strong [ref=e226]: Gerente de Projetos - Controllership & Accounting
+                        - generic [ref=e227]: Gerente de Projetos - Controllership & Accounting
+                      - generic [ref=e229]: Assigna
+                      - list [ref=e231]:
+                        - listitem [ref=e232]:
+                          - generic [ref=e233]: São Paulo, Brasil (Híbrido)
+                  - list [ref=e235]:
+                    - listitem [ref=e236]
+              - listitem [ref=e238]:
+                - generic [ref=e241] [cursor=pointer]:
+                  - generic [ref=e242]:
+                    - img "Logo da empresa NBCUniversal" [ref=e246]
+                    - generic [ref=e247]:
+                      - link "Accounting & Finance Manager with verification" [ref=e249]:
+                        - /url: /jobs/view/4402973121/?trk=flagship3_search_srp_jobs
+                        - generic [ref=e250]:
+                          - strong [ref=e251]: Accounting & Finance Manager
+                          - img [ref=e253]
+                        - generic [ref=e255]: Accounting & Finance Manager with verification
+                      - generic [ref=e257]: NBCUniversal
+                      - list [ref=e259]:
+                        - listitem [ref=e260]:
+                          - generic [ref=e261]: São Paulo, São Paulo, Brasil (Híbrido)
+                  - list [ref=e263]:
+                    - listitem [ref=e264]
+              - listitem [ref=e266]:
+                - generic [ref=e269] [cursor=pointer]:
+                  - generic [ref=e270]:
+                    - img "Logo da empresa MAVI" [ref=e274]
+                    - generic [ref=e275]:
+                      - link "Accounting Manager - US GAAP with verification" [ref=e277]:
+                        - /url: /jobs/view/4400604082/?trk=flagship3_search_srp_jobs
+                        - generic [ref=e278]:
+                          - strong [ref=e279]: Accounting Manager - US GAAP
+                          - img [ref=e281]
+                        - generic [ref=e283]: Accounting Manager - US GAAP with verification
+                      - generic [ref=e285]: MAVI
+                      - list [ref=e287]:
+                        - listitem [ref=e288]:
+                          - generic [ref=e289]: Brasil (Remoto)
+                  - list [ref=e291]:
+                    - listitem [ref=e292]
+              - listitem [ref=e294]:
+                - generic [ref=e297] [cursor=pointer]:
+                  - generic [ref=e298]:
+                    - img "Logo da empresa Scatec ASA" [ref=e302]
+                    - generic [ref=e303]:
+                      - link "Senior Accounting, Tax and Reporting Manager with verification" [ref=e305]:
+                        - /url: /jobs/view/4387437240/?trk=flagship3_search_srp_jobs
+                        - generic [ref=e306]:
+                          - strong [ref=e307]: Senior Accounting, Tax and Reporting Manager
+                          - img [ref=e309]
+                        - generic [ref=e311]: Senior Accounting, Tax and Reporting Manager with verification
+                      - generic [ref=e313]: Scatec ASA
+                      - list [ref=e315]:
+                        - listitem [ref=e316]:
+                          - generic [ref=e317]: São Paulo e Região (Presencial)
+                  - list [ref=e319]:
+                    - listitem [ref=e320]
+              - listitem [ref=e322]:
+                - generic [ref=e325] [cursor=pointer]:
+                  - generic [ref=e326]:
+                    - img "Logo da empresa Adobe" [ref=e330]
+                    - generic [ref=e331]:
+                      - link "Head of LATAM Payments with verification" [ref=e333]:
+                        - /url: /jobs/view/4381070072/?trk=flagship3_search_srp_jobs
+                        - generic [ref=e334]:
+                          - strong [ref=e335]: Head of LATAM Payments
+                          - img [ref=e337]
+                        - generic [ref=e339]: Head of LATAM Payments with verification
+                      - generic [ref=e341]: Adobe
+                      - list [ref=e343]:
+                        - listitem [ref=e344]:
+                          - generic [ref=e345]: São Paulo, São Paulo, Brasil (Presencial)
+                  - list [ref=e347]:
+                    - listitem [ref=e348]
+            - generic [ref=e350]:
+              - list [ref=e353]:
+                - listitem [ref=e354]:
+                  - button "Página 1" [ref=e355] [cursor=pointer]: "1"
+              - generic "Conteúdo do rodapé do LinkedIn" [ref=e357]
+    - generic:
+      - generic:
+        - complementary:
+          - generic [ref=e376]:
+            - generic [ref=e378] [cursor=pointer]:
+              - img "Fernando Xavier" [ref=e380]
+              - button "Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas." [ref=e381]:
+                - generic [ref=e382]:
+                  - generic [ref=e383]: Mensagens
+                  - generic [ref=e384]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+            - generic [ref=e385]:
+              - button "Abrir o menu suspenso de mensagens" [ref=e387] [cursor=pointer]:
+                - img "Abrir o menu suspenso de mensagens" [ref=e388]
+              - button "Escrever mensagem" [ref=e390] [cursor=pointer]:
+                - img [ref=e391]
+                - generic [ref=e392]: Escrever mensagem
+              - button "Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas." [ref=e393] [cursor=pointer]:
+                - img [ref=e394]
+                - generic [ref=e395]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+        - complementary "Assistente de IA para obter ajuda com sua carreira, vagas, etc."

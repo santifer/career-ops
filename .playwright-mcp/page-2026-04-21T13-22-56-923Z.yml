@@ -1,0 +1,112 @@
+- generic [ref=e4]:
+  - link "Ir para o conteúdo principal" [ref=e5] [cursor=pointer]:
+    - /url: ""
+  - banner [ref=e8]:
+    - generic [ref=e10]:
+      - link "Página inicial de carreiras da" [ref=e13] [cursor=pointer]:
+        - /url: https://www.solventum.com/en-us/home/our-company/careers/
+        - img "Página inicial de carreiras da" [ref=e14]
+      - generic [ref=e15]:
+        - heading [level=1]
+      - generic [ref=e17]:
+        - generic [ref=e18]:
+          - button "Português (‏Brasil)" [ref=e20] [cursor=pointer]:
+            - generic [ref=e24]: Português (‏Brasil)
+          - button "fernandocostaxavier@gmail.com" [ref=e27] [cursor=pointer]:
+            - generic [ref=e32]: fernandocostaxavier@gmail.com
+        - navigation [ref=e33]:
+          - button "Careers Page" [ref=e34] [cursor=pointer]
+          - button "Página inicial de candidatos" [ref=e35] [cursor=pointer]
+          - button "Alertas de vagas" [ref=e36] [cursor=pointer]
+  - main [ref=e39]:
+    - generic [ref=e40]:
+      - generic [ref=e41]:
+        - link "Voltar para publicação de vaga de emprego" [ref=e43] [cursor=pointer]:
+          - generic [ref=e47]: Voltar para publicação de vaga de emprego
+        - heading "Manufacturing Controller." [level=2] [ref=e48]
+      - generic "Application Progress" [ref=e49]:
+        - list [ref=e50]:
+          - listitem [ref=e51]:
+            - generic: completed step 1 of 6
+            - generic [ref=e57]: Minhas informações
+          - listitem [ref=e58]:
+            - generic: completed step 2 of 6
+            - generic [ref=e64]: Minha experiência
+          - listitem [ref=e65]:
+            - generic: current step 3 of 6
+            - generic [ref=e71]: "Perguntas da candidatura: 1 de 2"
+          - listitem [ref=e72]:
+            - generic: step 4 of 6
+            - generic [ref=e78]: "Perguntas da candidatura: 2 de 2"
+          - listitem [ref=e79]:
+            - generic: step 5 of 6
+            - generic [ref=e85]: Informações voluntárias
+          - listitem [ref=e86]:
+            - generic: step 6 of 6
+            - generic [ref=e92]: Revisar
+      - generic [ref=e93]:
+        - generic [ref=e94]:
+          - 'heading "Perguntas da candidatura: 1 de 2" [active] [level=3] [ref=e1073]'
+          - generic [ref=e96]: "* Indica um campo obrigatório"
+          - group [ref=e1075]:
+            - generic [ref=e1084]:
+              - group "Você é ou já foi empregado pela PricewaterhouseCoopers (PwC)?*" [ref=e1086]:
+                - paragraph [ref=e1090]:
+                  - generic [ref=e1091]: Você é ou já foi empregado pela PricewaterhouseCoopers (PwC)?
+                  - text: "*"
+                - button "Selecione uma opção Obrigatório" [ref=e1095]: Selecione uma opção
+              - group "Você é membro ou diretor de um Conselho de Administração ou faz parte do Conselho Executivo de uma organização com ou sem fins lucrativos da qual você recebe ou não remuneração? (Exemplos, ONGs e Associações Empresariais)*" [ref=e1097]:
+                - paragraph [ref=e1101]: Você é membro ou diretor de um Conselho de Administração ou faz parte do Conselho Executivo de uma organização com ou sem fins lucrativos da qual você recebe ou não remuneração? (Exemplos, ONGs e Associações Empresariais)*
+                - button "Selecione uma opção Obrigatório" [ref=e1105]: Selecione uma opção
+              - group "Você tem um familiar ou amigo próximo que é empregado por um parceiro de negócios Solventum (clientes, distribuidores, fornecedores ou outros), ou por um concorrente?*" [ref=e1107]:
+                - paragraph [ref=e1111]: Você tem um familiar ou amigo próximo que é empregado por um parceiro de negócios Solventum (clientes, distribuidores, fornecedores ou outros), ou por um concorrente?*
+                - button "Selecione uma opção Obrigatório" [ref=e1115]: Selecione uma opção
+              - group "Você ou algum familiar* é, atual ou ex-funcionário público, empresa governamental ou organização comercial de propriedade ou controlada por qualquer entidade governamental que tenha ou possa ter uma relação de negócios ou interação com a Solventum?*" [ref=e1117]:
+                - paragraph [ref=e1121]: Você ou algum familiar* é, atual ou ex-funcionário público, empresa governamental ou organização comercial de propriedade ou controlada por qualquer entidade governamental que tenha ou possa ter uma relação de negócios ou interação com a Solventum?*
+                - button "Selecione uma opção Obrigatório" [ref=e1125]: Selecione uma opção
+              - group "Você ou algum familiar é atual ou ex-funcionário público de uma entidade governamental com a qual você ou a Solventum Não terá interação ou qualquer tipo de relacionamento comercial?*" [ref=e1127]:
+                - paragraph [ref=e1131]: Você ou algum familiar é atual ou ex-funcionário público de uma entidade governamental com a qual você ou a Solventum Não terá interação ou qualquer tipo de relacionamento comercial?*
+                - button "Selecione uma opção Obrigatório" [ref=e1135]: Selecione uma opção
+              - group "Você é ou já foi empregado por algum dos Parceiros Comerciais da Solventum (clientes, distribuidores, fornecedores ou outros), ou por concorrentes?*" [ref=e1137]:
+                - paragraph [ref=e1141]: Você é ou já foi empregado por algum dos Parceiros Comerciais da Solventum (clientes, distribuidores, fornecedores ou outros), ou por concorrentes?*
+                - button "Selecione uma opção Obrigatório" [ref=e1145]: Selecione uma opção
+              - group "Atualmente, ou no passado, você prestou alguma consultoria ou recebeu alguma remuneração de algum dos Parceiros Comerciais da Solventum (clientes, distribuidores, fornecedores ou outros), ou da concorrência?*" [ref=e1147]:
+                - paragraph [ref=e1151]: Atualmente, ou no passado, você prestou alguma consultoria ou recebeu alguma remuneração de algum dos Parceiros Comerciais da Solventum (clientes, distribuidores, fornecedores ou outros), ou da concorrência?*
+                - button "Selecione uma opção Obrigatório" [ref=e1155]: Selecione uma opção
+              - group "Você tem alguma outra atividade profissional ou comercial que exerça, simultaneamente, com o cargo para o qual você está se candidatando na Solventum?*" [ref=e1157]:
+                - paragraph [ref=e1161]: Você tem alguma outra atividade profissional ou comercial que exerça, simultaneamente, com o cargo para o qual você está se candidatando na Solventum?*
+                - button "Selecione uma opção Obrigatório" [ref=e1165]: Selecione uma opção
+              - group "Você ou qualquer de seus familiares tem algum interesse financeiro (ações, empréstimos, investimentos) em qualquer parceiro de negócios ou concorrente da Solventum?*" [ref=e1167]:
+                - paragraph [ref=e1171]: Você ou qualquer de seus familiares tem algum interesse financeiro (ações, empréstimos, investimentos) em qualquer parceiro de negócios ou concorrente da Solventum?*
+                - button "Selecione uma opção Obrigatório" [ref=e1175]: Selecione uma opção
+              - group "Você tem algum familiar, amigo próximo ou relação amorosa com alguém que trabalhe na Solventum?*" [ref=e1177]:
+                - paragraph [ref=e1181]: Você tem algum familiar, amigo próximo ou relação amorosa com alguém que trabalhe na Solventum?*
+                - button "Selecione uma opção Obrigatório" [ref=e1185]: Selecione uma opção
+              - group "Você já trabalhou na Solventum como funcionário direto ou como subcontratado de alguma agência e/ou fornecedor que presta serviços à Solventum?*" [ref=e1187]:
+                - paragraph [ref=e1191]:
+                  - generic [ref=e1192]: Você já trabalhou na Solventum como funcionário direto ou como subcontratado de alguma agência e/ou fornecedor que presta serviços à Solventum?*
+                - button "Selecione uma opção Obrigatório" [ref=e1196]: Selecione uma opção
+              - group "Você tem algum outro Conflito de Interesse potencial ou real a declarar?*" [ref=e1198]:
+                - paragraph [ref=e1202]: Você tem algum outro Conflito de Interesse potencial ou real a declarar?*
+                - button "Selecione uma opção Obrigatório" [ref=e1206]: Selecione uma opção
+        - generic [ref=e224]:
+          - button "Voltar" [ref=e1026] [cursor=pointer]
+          - button "Salvar e continuar" [ref=e227] [cursor=pointer]
+  - generic [ref=e228]:
+    - generic [ref=e229]: Siga-nos
+    - list [ref=e230]:
+      - listitem [ref=e231] [cursor=pointer]:
+        - link "Facebook" [ref=e232]:
+          - /url: https://www.facebook.com/solventumhealth
+      - listitem [ref=e236] [cursor=pointer]:
+        - link "YouTube" [ref=e237]:
+          - /url: https://www.youtube.com/@Solventum
+      - listitem [ref=e243] [cursor=pointer]:
+        - link "LinkedIn" [ref=e244]:
+          - /url: https://www.linkedin.com/company/solventumhealth/
+      - listitem [ref=e248] [cursor=pointer]:
+        - link "X" [ref=e249]:
+          - /url: https://x.com/i/flow/login?redirect_after_login=%2Fsolventum
+    - generic [ref=e253]:
+      - img [ref=e257]
+      - generic [ref=e277]: © 2026 Workday, Inc. Todos os direitos reservados.

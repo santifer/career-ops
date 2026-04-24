@@ -1,0 +1,75 @@
+- generic [ref=e4]:
+  - link "Ir para o conteúdo principal" [ref=e5] [cursor=pointer]:
+    - /url: ""
+  - banner [ref=e8]:
+    - generic [ref=e10]:
+      - link "Página inicial de carreiras da" [ref=e13] [cursor=pointer]:
+        - /url: https://www.solventum.com/en-us/home/our-company/careers/
+        - img "Página inicial de carreiras da" [ref=e14]
+      - generic [ref=e15]:
+        - heading [level=1]
+      - generic [ref=e17]:
+        - generic [ref=e18]:
+          - button "Português (‏Brasil)" [ref=e20] [cursor=pointer]:
+            - generic [ref=e24]: Português (‏Brasil)
+          - button "Fazer login" [ref=e26] [cursor=pointer]:
+            - generic [ref=e31]: Fazer login
+        - navigation [ref=e32]:
+          - button "Careers Page" [ref=e33] [cursor=pointer]
+  - main [ref=e88]:
+    - generic [ref=e89]:
+      - generic [ref=e90]:
+        - link "Voltar para publicação de vaga de emprego" [ref=e92] [cursor=pointer]:
+          - generic [ref=e96]: Voltar para publicação de vaga de emprego
+        - heading "Manufacturing Controller." [level=2] [ref=e97]
+      - generic "Application Progress" [ref=e98]:
+        - list [ref=e99]:
+          - listitem [ref=e100]:
+            - generic: current step 1 of 7
+            - generic [ref=e106]: Criar conta/Fazer login
+          - listitem [ref=e107]:
+            - generic: step 2 of 7
+            - generic [ref=e113]: Minhas informações
+          - listitem [ref=e114]:
+            - generic: step 3 of 7
+            - generic [ref=e120]: Minha experiência
+          - listitem [ref=e121]:
+            - generic: step 4 of 7
+            - generic [ref=e127]: "Perguntas da candidatura: 1 de 2"
+          - listitem [ref=e128]:
+            - generic: step 5 of 7
+            - generic [ref=e134]: "Perguntas da candidatura: 2 de 2"
+          - listitem [ref=e135]:
+            - generic: step 6 of 7
+            - generic [ref=e141]: Informações voluntárias
+          - listitem [ref=e142]:
+            - generic: step 7 of 7
+            - generic [ref=e148]: Revisar
+      - generic [ref=e157]:
+        - heading "Fazer login" [level=2] [ref=e158]
+        - paragraph [ref=e161]: Use your Google ID to Sign-In
+        - button "Fazer login com Google" [ref=e166] [cursor=pointer]:
+          - generic [ref=e167]:
+            - img [ref=e169]
+            - text: Fazer login com Google
+        - generic [ref=e175]:
+          - generic [ref=e176]: OU
+          - button "Fazer login com e-mail" [ref=e180] [cursor=pointer]
+  - generic [ref=e38]:
+    - generic [ref=e39]: Siga-nos
+    - list [ref=e40]:
+      - listitem [ref=e41] [cursor=pointer]:
+        - link "Facebook" [ref=e42]:
+          - /url: https://www.facebook.com/solventumhealth
+      - listitem [ref=e46] [cursor=pointer]:
+        - link "YouTube" [ref=e47]:
+          - /url: https://www.youtube.com/@Solventum
+      - listitem [ref=e53] [cursor=pointer]:
+        - link "LinkedIn" [ref=e54]:
+          - /url: https://www.linkedin.com/company/solventumhealth/
+      - listitem [ref=e58] [cursor=pointer]:
+        - link "X" [ref=e59]:
+          - /url: https://x.com/i/flow/login?redirect_after_login=%2Fsolventum
+    - generic [ref=e63]:
+      - img [ref=e67]
+      - generic [ref=e87]: © 2026 Workday, Inc. Todos os direitos reservados.

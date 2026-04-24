@@ -1,0 +1,109 @@
+[     124ms] [LOG] running accessiblity @ https://www.roberthalf.com/etc.clientlibs/roberthalf/clientlibs/clientlib-base.lc-9dc1360bb71e05d7d69958512fa97f25-lc.min.js:2
+[     124ms] [LOG] rendering label @ https://www.roberthalf.com/etc.clientlibs/roberthalf/clientlibs/clientlib-base.lc-9dc1360bb71e05d7d69958512fa97f25-lc.min.js:2
+[     126ms] [LOG] rh_job_search version: 1.92.0 @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:1
+[     131ms] [LOG] CA hashcode: 9770840c434fbb27cd3421d1ad5aa4f8 | event: instantaneous @ https://js.clrt.ai/13995.js:9
+[     157ms] [INFO] Using RHCL v42.0.2 @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/8876.b3024dc0.chunk.js:0
+[     163ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'job_card')
+    at c.updateFormattedText (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:9890)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20239
+    at Array.map (<anonymous>)
+    at ke (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20223)
+    at c.set [as worksite] (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:21309)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4570
+    at NodeList.forEach (<anonymous>)
+    at c.addSlotAttributes (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4442)
+    at c.componentDidRender (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:2661)
+    at Se (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:19362) JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:1
+[     164ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'job_card')
+    at c.updateFormattedText (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:9890)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20239
+    at Array.map (<anonymous>)
+    at ke (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20223)
+    at c.set [as salaryMin] (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:21309)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4867
+    at NodeList.forEach (<anonymous>)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4785
+    at NodeList.forEach (<anonymous>)
+    at c.addSlotAttributes (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4442) JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:1
+[     164ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'job_card')
+    at c.updateFormattedText (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:9890)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20239
+    at Array.map (<anonymous>)
+    at ke (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20223)
+    at c.set [as salaryCurrency] (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:21309)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:5039
+    at NodeList.forEach (<anonymous>)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4785
+    at NodeList.forEach (<anonymous>)
+    at c.addSlotAttributes (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4442) JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:1
+[     165ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'job_card')
+    at c.updateFormattedText (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:9890)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20239
+    at Array.map (<anonymous>)
+    at ke (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20223)
+    at c.set [as salaryPeriod] (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:21309)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4977
+    at NodeList.forEach (<anonymous>)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4785
+    at NodeList.forEach (<anonymous>)
+    at c.addSlotAttributes (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4442) JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:1
+[     165ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'job_card')
+    at c.updateFormattedText (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:9890)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20239
+    at Array.map (<anonymous>)
+    at ke (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20223)
+    at c.set [as date] (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:21309)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4714
+    at NodeList.forEach (<anonymous>)
+    at c.addSlotAttributes (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4442)
+    at c.componentDidRender (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:2661)
+    at Se (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:19362) JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:1
+[     167ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'job_card')
+    at c.updateFormattedText (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:9890)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20239
+    at Array.map (<anonymous>)
+    at ke (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20223)
+    at c.set [as salaryMin] (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:21309)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4867
+    at NodeList.forEach (<anonymous>)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4785
+    at NodeList.forEach (<anonymous>)
+    at c.addSlotAttributes (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4442) JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:1
+[     168ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'job_card')
+    at c.updateFormattedText (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:9890)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20239
+    at Array.map (<anonymous>)
+    at ke (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20223)
+    at c.set [as salaryCurrency] (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:21309)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:5039
+    at NodeList.forEach (<anonymous>)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4785
+    at NodeList.forEach (<anonymous>)
+    at c.addSlotAttributes (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4442) JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:1
+[     168ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'job_card')
+    at c.updateFormattedText (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:9890)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20239
+    at Array.map (<anonymous>)
+    at ke (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20223)
+    at c.set [as salaryPeriod] (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:21309)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4977
+    at NodeList.forEach (<anonymous>)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4785
+    at NodeList.forEach (<anonymous>)
+    at c.addSlotAttributes (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4442) JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:1
+[     169ms] [ERROR] TypeError: Cannot read properties of undefined (reading 'job_card')
+    at c.updateFormattedText (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:9890)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20239
+    at Array.map (<anonymous>)
+    at ke (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20223)
+    at c.set [as date] (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:21309)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4714
+    at NodeList.forEach (<anonymous>)
+    at c.addSlotAttributes (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4442)
+    at c.componentDidRender (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:2661)
+    at Se (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:19362) JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:1
+[     228ms] [LOG] rhcl config loaded for pt-BR @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/8876.b3024dc0.chunk.js:0
+[     230ms] [LOG] rhcl config loaded for pt-BR @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/8876.b3024dc0.chunk.js:0
+[     404ms] [LOG] Tealium Publish Version: ut4.49.202604161340 @ https://tags.roberthalf.com/brazil2/prod/utag.js:79
+[     404ms] [LOG] Tealium Environment: prod @ https://tags.roberthalf.com/brazil2/prod/utag.js:79
+[     404ms] [LOG] Tealium Profile: brazil2 @ https://tags.roberthalf.com/brazil2/prod/utag.js:79

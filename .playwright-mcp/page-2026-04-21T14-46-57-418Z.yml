@@ -1,0 +1,78 @@
+- generic [ref=e4]:
+  - link "Ir para o conteúdo principal" [ref=e5] [cursor=pointer]:
+    - /url: ""
+  - banner [ref=e8]:
+    - generic [ref=e10]:
+      - link "Página inicial de carreiras da" [ref=e84] [cursor=pointer]:
+        - /url: https://griffithfoods.com/careers/
+        - img "Página inicial de carreiras da" [ref=e85]
+      - heading "Griffith Foods" [level=1] [ref=e13]
+      - generic [ref=e15]:
+        - generic [ref=e16]:
+          - button "Português (‏Brasil)" [ref=e18] [cursor=pointer]:
+            - generic [ref=e22]: Português (‏Brasil)
+          - button "Fazer login" [ref=e24] [cursor=pointer]:
+            - generic [ref=e29]: Fazer login
+        - navigation [ref=e30]:
+          - button "Página inicial" [ref=e31] [cursor=pointer]
+          - button "Pesquisar cargos" [ref=e32] [cursor=pointer]
+          - button "Introduce Yourself" [ref=e33] [cursor=pointer]
+  - main [ref=e87]:
+    - generic [ref=e88]:
+      - generic [ref=e89]:
+        - link "Voltar para publicação de vaga de emprego" [ref=e91] [cursor=pointer]:
+          - generic [ref=e95]: Voltar para publicação de vaga de emprego
+        - heading "Regional Controller" [level=2] [ref=e96]
+      - generic "Application Progress" [ref=e97]:
+        - list [ref=e98]:
+          - listitem [ref=e99]:
+            - generic: current step 1 of 6
+            - generic [ref=e105]: Criar conta/Fazer login
+          - listitem [ref=e106]:
+            - generic: step 2 of 6
+            - generic [ref=e112]: Minhas informações
+          - listitem [ref=e113]:
+            - generic: step 3 of 6
+            - generic [ref=e119]: Minha experiência
+          - listitem [ref=e120]:
+            - generic: step 4 of 6
+            - generic [ref=e126]: Perguntas da candidatura
+          - listitem [ref=e127]:
+            - generic: step 5 of 6
+            - generic [ref=e133]: Informações voluntárias
+          - listitem [ref=e134]:
+            - generic: step 6 of 6
+            - generic [ref=e140]: Revisar
+      - generic [ref=e147]:
+        - heading "Fazer login" [level=2] [ref=e148]
+        - paragraph [ref=e151]:
+          - text: Ao criar esta conta, você autoriza a coleta e o uso das informações fornecidas, a nosso exclusivo critério, com a finalidade de avaliar seu interesse em oportunidades de trabalho conosco.
+          - text: Caso tenha lido e concorde com os termos e condições, clique no botão de login abaixo para prosseguir.
+        - button "Fazer login com Apple" [ref=e156] [cursor=pointer]:
+          - generic [ref=e157]:
+            - img [ref=e158]
+            - text: Fazer login com Apple
+        - button "Fazer login com Google" [ref=e166] [cursor=pointer]:
+          - generic [ref=e167]:
+            - img [ref=e169]
+            - text: Fazer login com Google
+        - generic [ref=e175]:
+          - generic [ref=e176]: OU
+          - button "Fazer login com e-mail" [ref=e180] [cursor=pointer]
+  - generic [ref=e37]:
+    - generic [ref=e38]: Siga-nos
+    - list [ref=e39]:
+      - listitem [ref=e40] [cursor=pointer]:
+        - link "LinkedIn" [ref=e41]:
+          - /url: https://www.linkedin.com/company/griffith-foods
+      - listitem [ref=e45] [cursor=pointer]:
+        - link "Glassdoor" [ref=e46]:
+          - /url: https://www.glassdoor.com/Overview/Working-at-Griffith-Foods-EI_IE8953.11,25.htm
+      - listitem [ref=e51] [cursor=pointer]:
+        - link "Facebook" [ref=e52]:
+          - /url: https://www.facebook.com/GriffithFoods/
+    - link "Política de privacidade" [ref=e57] [cursor=pointer]:
+      - /url: https://griffithfoods.com/privacy-policy/
+    - generic [ref=e58]:
+      - img [ref=e62]
+      - generic [ref=e82]: © 2026 Workday, Inc. Todos os direitos reservados.

@@ -1,0 +1,6 @@
+- generic [ref=e5]:
+  - img "Como responder?" [ref=e38]
+  - heading "Como responder?" [level=1] [ref=e39]
+  - paragraph [ref=e9]: Escolha a alternativa correta para cada uma das questões dentro do tempo limite. Boa sorte! Vamos iniciar o teste?
+  - button "iniciar teste" [ref=e40] [cursor=pointer]:
+    - generic [ref=e43]: iniciar teste

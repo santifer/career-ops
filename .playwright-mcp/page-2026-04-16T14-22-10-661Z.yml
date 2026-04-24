@@ -1,0 +1,1333 @@
+- generic [active] [ref=e1]:
+  - link "Ir para o conteúdo principal" [ref=e2] [cursor=pointer]:
+    - /url: "#mainContent"
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - generic:
+        - generic:
+          - generic: 
+      - generic [ref=e7]:
+        - generic [ref=e8]:
+          - link "Robert Half" [ref=e10] [cursor=pointer]:
+            - /url: /br/pt
+            - img [ref=e11]
+          - list [ref=e13]:
+            - generic:
+              - generic [ref=e15]:
+                - link "Vagas" [ref=e16] [cursor=pointer]:
+                  - /url: /br/pt/procurando-oportunidade
+                  - generic [ref=e17]:
+                    - generic: Vagas
+                - button "Vagas chevron-down button" [ref=e19] [cursor=pointer]:
+                  - generic [ref=e21]:
+                    - generic [ref=e22]: 
+                    - generic [ref=e23]: Vagas chevron-down button
+              - generic [ref=e25]:
+                - link "Soluções em talentos" [ref=e26] [cursor=pointer]:
+                  - /url: /br/pt/solucao-talentos
+                  - generic [ref=e27]:
+                    - generic: Soluções em talentos
+                - button "Soluções em talentos chevron-down button" [ref=e29] [cursor=pointer]:
+                  - generic [ref=e31]:
+                    - generic [ref=e32]: 
+                    - generic [ref=e33]: Soluções em talentos chevron-down button
+              - generic [ref=e35]:
+                - link "Consultoria" [ref=e36] [cursor=pointer]:
+                  - /url: /br/pt/consultoria
+                  - generic [ref=e37]:
+                    - generic: Consultoria
+                - button "Consultoria chevron-down button" [ref=e39] [cursor=pointer]:
+                  - generic [ref=e41]:
+                    - generic [ref=e42]: 
+                    - generic [ref=e43]: Consultoria chevron-down button
+              - generic [ref=e45]:
+                - link "Central do Conhecimento" [ref=e46] [cursor=pointer]:
+                  - /url: /br/pt/insights
+                  - generic [ref=e47]:
+                    - generic: Central do Conhecimento
+                - button "Central do Conhecimento chevron-down button" [ref=e49] [cursor=pointer]:
+                  - generic [ref=e51]:
+                    - generic [ref=e52]: 
+                    - generic [ref=e53]: Central do Conhecimento chevron-down button
+        - generic [ref=e54]:
+          - button "search" [ref=e55] [cursor=pointer]:
+            - generic [ref=e57]:
+              - generic [ref=e58]: 
+              - generic [ref=e59]: search
+          - button "Minha Conta" [ref=e61] [cursor=pointer]:
+            - text: Minha Conta
+            - generic [ref=e64]: 
+          - generic:
+            - generic:
+              - generic: Candidato – Acessar Minha Conta
+              - generic: Colaborador – Registrar Ponto
+              - generic: Colaborador – Consultar Ponto
+              - generic: Colaborador – Consultar Holerite
+              - generic: Cliente – Aprovar Ponto
+    - generic [ref=e68]:
+      - generic [ref=e70]:
+        - generic [ref=e71]:
+          - generic [ref=e74]:
+            - generic [ref=e78]:
+              - textbox "Cargo, habilidades ou palavras-chave" [ref=e79]:
+                - generic [ref=e80]:
+                  - generic: Cargo, habilidades ou palavras-chave
+                  - textbox "Cargo, habilidades ou palavras-chave" [ref=e81]:
+                    - /placeholder: ""
+                    - text: Controller
+              - generic [ref=e84]:
+                - generic [ref=e85]: 
+                - generic [ref=e86]: search
+            - generic "Search Cidade, estado ou CEP" [ref=e91]:
+              - generic [ref=e93]:
+                - list "Search Cidade, estado ou CEP" [ref=e94]:
+                  - generic [ref=e95]:
+                    - generic: Cidade, estado ou CEP
+                    - textbox "Cidade, estado ou CEP" [ref=e96]:
+                      - /placeholder: ""
+                      - text: São Paulo, São Paulo
+                - generic [ref=e99]:
+                  - generic [ref=e100]: 
+                  - generic [ref=e101]: location-pin-outline
+            - button "Procurar" [ref=e106] [cursor=pointer]
+            - generic [ref=e108]:
+              - generic [ref=e113]:
+                - generic:
+                  - generic "filter-item" [ref=e114]:
+                    - generic [ref=e115]:
+                      - button "Remoto caret-down" [ref=e116] [cursor=pointer]:
+                        - generic [ref=e118]:
+                          - generic: Remoto
+                        - generic [ref=e120]:
+                          - generic [ref=e121]: 
+                          - generic [ref=e122]: caret-down
+                      - text: 
+                  - generic "filter-item" [ref=e123]:
+                    - generic [ref=e124]:
+                      - button "Localização caret-down" [ref=e125] [cursor=pointer]:
+                        - generic [ref=e127]:
+                          - generic: Localização
+                        - generic [ref=e129]:
+                          - generic [ref=e130]: 
+                          - generic [ref=e131]: caret-down
+                      - text: 
+                  - generic "filter-item" [ref=e132]:
+                    - generic [ref=e133]:
+                      - button "Distância caret-down" [ref=e134] [cursor=pointer]:
+                        - generic [ref=e136]:
+                          - generic: Distância
+                        - generic [ref=e138]:
+                          - generic [ref=e139]: 
+                          - generic [ref=e140]: caret-down
+                      - text: 
+                      - generic: "1"
+                      - generic: "100"
+                      - generic: 50 kms
+                      - text: "|||"
+                  - generic "filter-item" [ref=e141]:
+                    - generic [ref=e142]:
+                      - button "Especialização caret-down" [ref=e143] [cursor=pointer]:
+                        - generic [ref=e145]:
+                          - generic: Especialização
+                        - generic [ref=e147]:
+                          - generic [ref=e148]: 
+                          - generic [ref=e149]: caret-down
+                      - text: 
+                  - generic "filter-item" [ref=e150]:
+                    - generic [ref=e151]:
+                      - button "Tipo de emprego caret-down" [ref=e152] [cursor=pointer]:
+                        - generic [ref=e154]:
+                          - generic: Tipo de emprego
+                        - generic [ref=e156]:
+                          - generic [ref=e157]: 
+                          - generic [ref=e158]: caret-down
+                      - text: 
+                  - generic "filter-item" [ref=e159]:
+                    - generic [ref=e160]:
+                      - button "Data de publicação caret-down" [ref=e161] [cursor=pointer]:
+                        - generic [ref=e163]:
+                          - generic: Data de publicação
+                        - generic [ref=e165]:
+                          - generic [ref=e166]: 
+                          - generic [ref=e167]: caret-down
+                      - text: 
+                - button "Limpar filtros" [disabled] [ref=e169]
+              - button "Criar alerta de vaga" [ref=e172] [cursor=pointer]:
+                - generic [ref=e175]: 
+                - text: Criar alerta de vaga
+          - generic [ref=e176]:
+            - generic [ref=e177]: 34 resultados para Controller em São Paulo, São Paulo
+            - paragraph [ref=e179]:
+              - heading "34 resultados para Controller em São Paulo, São Paulo" [level=1] [ref=e181]:
+                - generic:
+                  - strong [ref=e182]: 34 resultados
+                  - text: para Controller em São Paulo, São Paulo
+            - generic [ref=e183]:
+              - generic [ref=e185]:
+                - link "Santo André Controller Tipo de emprego Permanente Conduzir o fechamento contábil mensal, garantindo... 2 meses atrás" [ref=e189] [cursor=pointer]:
+                  - /url: https://www.roberthalf.com/br/pt/vaga/santo-andré/controller/63640-0013372979-brpt
+                  - generic [ref=e190]:
+                    - generic [ref=e191]:
+                      - generic "Santo André" [ref=e193]:
+                        - paragraph [ref=e194]:
+                          - generic: Santo André
+                      - heading "Controller" [level=5] [ref=e196]:
+                        - generic: Controller
+                    - list [ref=e200]:
+                      - listitem [ref=e201]:
+                        - generic [ref=e202]:
+                          - generic [ref=e204]:
+                            - generic [ref=e205]: 
+                            - generic [ref=e206]: Tipo de emprego
+                          - generic "Permanente" [ref=e207]:
+                            - generic [ref=e208]:
+                              - generic: Permanente
+                    - generic [ref=e209]:
+                      - generic [ref=e211]:
+                        - generic: Conduzir o fechamento contábil mensal, garantindo...
+                      - generic "28 janeiro 2026" [ref=e213]:
+                        - generic [ref=e214]:
+                          - generic: 2 meses atrás
+                - generic [ref=e215]:
+                  - link "São Paulo Controller Tipo de emprego Permanente Coordenar rotinas de fechamento, conciliações... 2 meses atrás" [ref=e218] [cursor=pointer]:
+                    - /url: https://www.roberthalf.com/br/pt/vaga/são-paulo/controller/63610-0013373207-brpt
+                    - generic [ref=e219]:
+                      - generic [ref=e220]:
+                        - generic "São Paulo" [ref=e222]:
+                          - paragraph [ref=e223]:
+                            - generic: São Paulo
+                        - heading "Controller" [level=5] [ref=e225]:
+                          - generic: Controller
+                      - list [ref=e229]:
+                        - listitem [ref=e230]:
+                          - generic [ref=e231]:
+                            - generic [ref=e233]:
+                              - generic [ref=e234]: 
+                              - generic [ref=e235]: Tipo de emprego
+                            - generic "Permanente" [ref=e236]:
+                              - generic [ref=e237]:
+                                - generic: Permanente
+                      - generic [ref=e238]:
+                        - generic [ref=e240]:
+                          - generic: Coordenar rotinas de fechamento, conciliações...
+                        - generic "29 janeiro 2026" [ref=e242]:
+                          - generic [ref=e243]:
+                            - generic: 2 meses atrás
+                  - generic [ref=e245] [cursor=pointer]:
+                    - heading "Crie um alerta de emprego" [level=5] [ref=e248]:
+                      - generic: Crie um alerta de emprego
+                    - generic [ref=e251]:
+                      - generic: Envie-me um e-mail sobre novas oportunidades em Controller em São Paulo, São Paulo
+                    - button "Criar alerta de vaga" [ref=e254]
+                - link "São Paulo Controller Tipo de emprego Permanente Coordenar rotinas de fechamento, conciliações... 2 meses atrás" [ref=e258] [cursor=pointer]:
+                  - /url: https://www.roberthalf.com/br/pt/vaga/são-paulo/controller/63610-0013373208-brpt
+                  - generic [ref=e259]:
+                    - generic [ref=e260]:
+                      - generic "São Paulo" [ref=e262]:
+                        - paragraph [ref=e263]:
+                          - generic: São Paulo
+                      - heading "Controller" [level=5] [ref=e265]:
+                        - generic: Controller
+                    - list [ref=e269]:
+                      - listitem [ref=e270]:
+                        - generic [ref=e271]:
+                          - generic [ref=e273]:
+                            - generic [ref=e274]: 
+                            - generic [ref=e275]: Tipo de emprego
+                          - generic "Permanente" [ref=e276]:
+                            - generic [ref=e277]:
+                              - generic: Permanente
+                    - generic [ref=e278]:
+                      - generic [ref=e280]:
+                        - generic: Coordenar rotinas de fechamento, conciliações...
+                      - generic "29 janeiro 2026" [ref=e282]:
+                        - generic [ref=e283]:
+                          - generic: 2 meses atrás
+                - link "São Bernardo do Campo Controller Tipo de emprego Permanente Planejar e implementar controles financeiros estratégicos para suportar os planos de expansão... 2 meses atrás" [ref=e287] [cursor=pointer]:
+                  - /url: https://www.roberthalf.com/br/pt/vaga/são-bernardo-do-campo/controller/63640-0013290618-brpt
+                  - generic [ref=e288]:
+                    - generic [ref=e289]:
+                      - generic "São Bernardo do Campo" [ref=e291]:
+                        - paragraph [ref=e292]:
+                          - generic: São Bernardo do Campo
+                      - heading "Controller" [level=5] [ref=e294]:
+                        - generic: Controller
+                    - list [ref=e298]:
+                      - listitem [ref=e299]:
+                        - generic [ref=e300]:
+                          - generic [ref=e302]:
+                            - generic [ref=e303]: 
+                            - generic [ref=e304]: Tipo de emprego
+                          - generic "Permanente" [ref=e305]:
+                            - generic [ref=e306]:
+                              - generic: Permanente
+                    - generic [ref=e307]:
+                      - generic [ref=e309]:
+                        - generic: Planejar e implementar controles financeiros estratégicos para suportar os planos de expansão...
+                      - generic "26 janeiro 2026" [ref=e311]:
+                        - generic [ref=e312]:
+                          - generic: 2 meses atrás
+                - link "Barueri Principal Finance Controller LATAM Tipo de emprego Permanente Manage end-to-end statutory financial reporting for assigned LATAM entities... 3 semanas atrás" [ref=e316] [cursor=pointer]:
+                  - /url: https://www.roberthalf.com/br/pt/vaga/barueri/principal-finance-controller-latam/63610-0013406600-brpt
+                  - generic [ref=e317]:
+                    - generic [ref=e318]:
+                      - generic "Barueri" [ref=e320]:
+                        - paragraph [ref=e321]:
+                          - generic: Barueri
+                      - heading "Principal Finance Controller LATAM" [level=5] [ref=e323]:
+                        - generic: Principal Finance Controller LATAM
+                    - list [ref=e327]:
+                      - listitem [ref=e328]:
+                        - generic [ref=e329]:
+                          - generic [ref=e331]:
+                            - generic [ref=e332]: 
+                            - generic [ref=e333]: Tipo de emprego
+                          - generic "Permanente" [ref=e334]:
+                            - generic [ref=e335]:
+                              - generic: Permanente
+                    - generic [ref=e336]:
+                      - generic [ref=e338]:
+                        - generic: Manage end-to-end statutory financial reporting for assigned LATAM entities...
+                      - generic "23 março 2026" [ref=e340]:
+                        - generic [ref=e341]:
+                          - generic: 3 semanas atrás
+                - link "São Paulo Especialista de FP&A Tipo de emprego Projetos Atuar como consultor interno e ponto focal em processos... 2 meses atrás" [ref=e345] [cursor=pointer]:
+                  - /url: https://www.roberthalf.com/br/pt/vaga/são-paulo/especialista-de-fpa/63610-0013366961-brpt
+                  - generic [ref=e346]:
+                    - generic [ref=e347]:
+                      - generic "São Paulo" [ref=e349]:
+                        - paragraph [ref=e350]:
+                          - generic: São Paulo
+                      - heading "Especialista de FP&A" [level=5] [ref=e352]:
+                        - generic: Especialista de FP&A
+                    - list [ref=e356]:
+                      - listitem [ref=e357]:
+                        - generic [ref=e358]:
+                          - generic [ref=e360]:
+                            - generic [ref=e361]: 
+                            - generic [ref=e362]: Tipo de emprego
+                          - generic "Projetos" [ref=e363]:
+                            - generic [ref=e364]:
+                              - generic: Projetos
+                    - generic [ref=e365]:
+                      - generic [ref=e367]:
+                        - generic: Atuar como consultor interno e ponto focal em processos...
+                      - generic "26 janeiro 2026" [ref=e369]:
+                        - generic [ref=e370]:
+                          - generic: 2 meses atrás
+                - link "São Paulo Especialista de Controles Internos Tipo de emprego Projetos Conduzir as atividades de Controles Internos, atuando em consonância... 2 meses atrás" [ref=e374] [cursor=pointer]:
+                  - /url: https://www.roberthalf.com/br/pt/vaga/são-paulo/especialista-de-controles-internos/63610-0013361859-brpt
+                  - generic [ref=e375]:
+                    - generic [ref=e376]:
+                      - generic "São Paulo" [ref=e378]:
+                        - paragraph [ref=e379]:
+                          - generic: São Paulo
+                      - heading "Especialista de Controles Internos" [level=5] [ref=e381]:
+                        - generic: Especialista de Controles Internos
+                    - list [ref=e385]:
+                      - listitem [ref=e386]:
+                        - generic [ref=e387]:
+                          - generic [ref=e389]:
+                            - generic [ref=e390]: 
+                            - generic [ref=e391]: Tipo de emprego
+                          - generic "Projetos" [ref=e392]:
+                            - generic [ref=e393]:
+                              - generic: Projetos
+                    - generic [ref=e394]:
+                      - generic [ref=e396]:
+                        - generic: Conduzir as atividades de Controles Internos, atuando em consonância...
+                      - generic "16 janeiro 2026" [ref=e398]:
+                        - generic [ref=e399]:
+                          - generic: 2 meses atrás
+                - link "São Paulo Especialista de Controladoria Tipo de emprego Permanente Fazer a gestão de controladoria de unidades... 2 meses atrás" [ref=e403] [cursor=pointer]:
+                  - /url: https://www.roberthalf.com/br/pt/vaga/são-paulo/especialista-de-controladoria/63610-0013384406-brpt
+                  - generic [ref=e404]:
+                    - generic [ref=e405]:
+                      - generic "São Paulo" [ref=e407]:
+                        - paragraph [ref=e408]:
+                          - generic: São Paulo
+                      - heading "Especialista de Controladoria" [level=5] [ref=e410]:
+                        - generic: Especialista de Controladoria
+                    - list [ref=e414]:
+                      - listitem [ref=e415]:
+                        - generic [ref=e416]:
+                          - generic [ref=e418]:
+                            - generic [ref=e419]: 
+                            - generic [ref=e420]: Tipo de emprego
+                          - generic "Permanente" [ref=e421]:
+                            - generic [ref=e422]:
+                              - generic: Permanente
+                    - generic [ref=e423]:
+                      - generic [ref=e425]:
+                        - generic: Fazer a gestão de controladoria de unidades...
+                      - generic "13 fevereiro 2026" [ref=e427]:
+                        - generic [ref=e428]:
+                          - generic: 2 meses atrás
+                - link "São Paulo Especialista de Controladoria Tipo de emprego Projetos Executar as atividades de controladoria, envolvendo a elaboração de relatórios... 2 meses atrás" [ref=e432] [cursor=pointer]:
+                  - /url: https://www.roberthalf.com/br/pt/vaga/são-paulo/especialista-de-controladoria/63660-0013370735-brpt
+                  - generic [ref=e433]:
+                    - generic [ref=e434]:
+                      - generic "São Paulo" [ref=e436]:
+                        - paragraph [ref=e437]:
+                          - generic: São Paulo
+                      - heading "Especialista de Controladoria" [level=5] [ref=e439]:
+                        - generic: Especialista de Controladoria
+                    - list [ref=e443]:
+                      - listitem [ref=e444]:
+                        - generic [ref=e445]:
+                          - generic [ref=e447]:
+                            - generic [ref=e448]: 
+                            - generic [ref=e449]: Tipo de emprego
+                          - generic "Projetos" [ref=e450]:
+                            - generic [ref=e451]:
+                              - generic: Projetos
+                    - generic [ref=e452]:
+                      - generic [ref=e454]:
+                        - generic: Executar as atividades de controladoria, envolvendo a elaboração de relatórios...
+                      - generic "23 janeiro 2026" [ref=e456]:
+                        - generic [ref=e457]:
+                          - generic: 2 meses atrás
+                - link "São Paulo Analista de Custos e Controladoria Pleno Tipo de emprego Permanente Realizar análises detalhadas de custos fabris, utilizando métodos de Custo Médio... 1 mês atrás" [ref=e461] [cursor=pointer]:
+                  - /url: https://www.roberthalf.com/br/pt/vaga/são-paulo/analista-de-custos-e-controladoria-pleno/63610-0013388889-brpt
+                  - generic [ref=e462]:
+                    - generic [ref=e463]:
+                      - generic "São Paulo" [ref=e465]:
+                        - paragraph [ref=e466]:
+                          - generic: São Paulo
+                      - heading "Analista de Custos e Controladoria Pleno" [level=5] [ref=e468]:
+                        - generic: Analista de Custos e Controladoria Pleno
+                    - list [ref=e472]:
+                      - listitem [ref=e473]:
+                        - generic [ref=e474]:
+                          - generic [ref=e476]:
+                            - generic [ref=e477]: 
+                            - generic [ref=e478]: Tipo de emprego
+                          - generic "Permanente" [ref=e479]:
+                            - generic [ref=e480]:
+                              - generic: Permanente
+                    - generic [ref=e481]:
+                      - generic [ref=e483]:
+                        - generic: Realizar análises detalhadas de custos fabris, utilizando métodos de Custo Médio...
+                      - generic "23 fevereiro 2026" [ref=e485]:
+                        - generic [ref=e486]:
+                          - generic: 1 mês atrás
+                - link "Sorocaba Especialista de Controladoria Tipo de emprego Permanente Liderar o ciclo de Controladoria e planejamento... 1 mês atrás" [ref=e490] [cursor=pointer]:
+                  - /url: https://www.roberthalf.com/br/pt/vaga/sorocaba/especialista-de-controladoria/63610-0013404725-brpt
+                  - generic [ref=e491]:
+                    - generic [ref=e492]:
+                      - generic "Sorocaba" [ref=e494]:
+                        - paragraph [ref=e495]:
+                          - generic: Sorocaba
+                      - heading "Especialista de Controladoria" [level=5] [ref=e497]:
+                        - generic: Especialista de Controladoria
+                    - list [ref=e501]:
+                      - listitem [ref=e502]:
+                        - generic [ref=e503]:
+                          - generic [ref=e505]:
+                            - generic [ref=e506]: 
+                            - generic [ref=e507]: Tipo de emprego
+                          - generic "Permanente" [ref=e508]:
+                            - generic [ref=e509]:
+                              - generic: Permanente
+                    - generic [ref=e510]:
+                      - generic [ref=e512]:
+                        - generic: Liderar o ciclo de Controladoria e planejamento...
+                      - generic "18 março 2026" [ref=e514]:
+                        - generic [ref=e515]:
+                          - generic: 1 mês atrás
+                - link "São Paulo Head Comercial Tipo de emprego Permanente Conduzir o ciclo completo de vendas B2B em nível enterprise... 3 meses atrás" [ref=e519] [cursor=pointer]:
+                  - /url: https://www.roberthalf.com/br/pt/vaga/são-paulo/head-comercial/63610-0013366358-brpt
+                  - generic [ref=e520]:
+                    - generic [ref=e521]:
+                      - generic "São Paulo" [ref=e523]:
+                        - paragraph [ref=e524]:
+                          - generic: São Paulo
+                      - heading "Head Comercial" [level=5] [ref=e526]:
+                        - generic: Head Comercial
+                    - list [ref=e530]:
+                      - listitem [ref=e531]:
+                        - generic [ref=e532]:
+                          - generic [ref=e534]:
+                            - generic [ref=e535]: 
+                            - generic [ref=e536]: Tipo de emprego
+                          - generic "Permanente" [ref=e537]:
+                            - generic [ref=e538]:
+                              - generic: Permanente
+                    - generic [ref=e539]:
+                      - generic [ref=e541]:
+                        - generic: Conduzir o ciclo completo de vendas B2B em nível enterprise...
+                      - generic "16 janeiro 2026" [ref=e543]:
+                        - generic [ref=e544]:
+                          - generic: 3 meses atrás
+                - link "São Paulo Gerente Contábil e Fiscal Tipo de emprego Permanente Liderar o fechamento contábil mensal... 3 semanas atrás" [ref=e548] [cursor=pointer]:
+                  - /url: https://www.roberthalf.com/br/pt/vaga/são-paulo/gerente-contábil-e-fiscal/63610-0013407954-brpt
+                  - generic [ref=e549]:
+                    - generic [ref=e550]:
+                      - generic "São Paulo" [ref=e552]:
+                        - paragraph [ref=e553]:
+                          - generic: São Paulo
+                      - heading "Gerente Contábil e Fiscal" [level=5] [ref=e555]:
+                        - generic: Gerente Contábil e Fiscal
+                    - list [ref=e559]:
+                      - listitem [ref=e560]:
+                        - generic [ref=e561]:
+                          - generic [ref=e563]:
+                            - generic [ref=e564]: 
+                            - generic [ref=e565]: Tipo de emprego
+                          - generic "Permanente" [ref=e566]:
+                            - generic [ref=e567]:
+                              - generic: Permanente
+                    - generic [ref=e568]:
+                      - generic [ref=e570]:
+                        - generic: Liderar o fechamento contábil mensal...
+                      - generic "25 março 2026" [ref=e572]:
+                        - generic [ref=e573]:
+                          - generic: 3 semanas atrás
+                - link "São Paulo Especialista de FP&A Local de Trabalho Híbrido Tipo de emprego Projetos Atuar em projetos estratégicos de viabilidade financeira e novos investimentos... 2 semanas atrás" [ref=e577] [cursor=pointer]:
+                  - /url: https://www.roberthalf.com/br/pt/vaga/são-paulo/especialista-de-fpa/63610-0013405798-brpt
+                  - generic [ref=e578]:
+                    - generic [ref=e579]:
+                      - generic "São Paulo" [ref=e581]:
+                        - paragraph [ref=e582]:
+                          - generic: São Paulo
+                      - heading "Especialista de FP&A" [level=5] [ref=e584]:
+                        - generic: Especialista de FP&A
+                    - list [ref=e588]:
+                      - generic:
+                        - listitem [ref=e589]:
+                          - generic [ref=e590]:
+                            - generic [ref=e592]:
+                              - generic [ref=e593]: 
+                              - generic [ref=e594]: Local de Trabalho
+                            - generic "Híbrido" [ref=e595]:
+                              - generic [ref=e596]:
+                                - generic: Híbrido
+                        - listitem [ref=e597]:
+                          - generic [ref=e598]:
+                            - generic [ref=e600]:
+                              - generic [ref=e601]: 
+                              - generic [ref=e602]: Tipo de emprego
+                            - generic "Projetos" [ref=e603]:
+                              - generic [ref=e604]:
+                                - generic: Projetos
+                    - generic [ref=e605]:
+                      - generic [ref=e607]:
+                        - generic: Atuar em projetos estratégicos de viabilidade financeira e novos investimentos...
+                      - generic "27 março 2026" [ref=e609]:
+                        - generic [ref=e610]:
+                          - generic: 2 semanas atrás
+                - link "São Paulo Especialista de FP&A Local de Trabalho Remoto Tipo de emprego Permanente Atuar com consolidação de resultados... 1 mês atrás" [ref=e614] [cursor=pointer]:
+                  - /url: https://www.roberthalf.com/br/pt/vaga/são-paulo/especialista-de-fpa/63610-0013392544-brpt
+                  - generic [ref=e615]:
+                    - generic [ref=e616]:
+                      - generic "São Paulo" [ref=e618]:
+                        - paragraph [ref=e619]:
+                          - generic: São Paulo
+                      - heading "Especialista de FP&A" [level=5] [ref=e621]:
+                        - generic: Especialista de FP&A
+                    - list [ref=e625]:
+                      - generic:
+                        - listitem [ref=e626]:
+                          - generic [ref=e627]:
+                            - generic [ref=e629]:
+                              - generic [ref=e630]: 
+                              - generic [ref=e631]: Local de Trabalho
+                            - generic "Remoto" [ref=e632]:
+                              - generic [ref=e633]:
+                                - generic: Remoto
+                        - listitem [ref=e634]:
+                          - generic [ref=e635]:
+                            - generic [ref=e637]:
+                              - generic [ref=e638]: 
+                              - generic [ref=e639]: Tipo de emprego
+                            - generic "Permanente" [ref=e640]:
+                              - generic [ref=e641]:
+                                - generic: Permanente
+                    - generic [ref=e642]:
+                      - generic [ref=e644]:
+                        - generic: Atuar com consolidação de resultados...
+                      - generic "27 fevereiro 2026" [ref=e646]:
+                        - generic [ref=e647]:
+                          - generic: 1 mês atrás
+                - link "São Paulo Supervisor de Planejamento Financeiro Tipo de emprego Permanente Responsável pela consolidação financeira... 1 semana atrás" [ref=e651] [cursor=pointer]:
+                  - /url: https://www.roberthalf.com/br/pt/vaga/são-paulo/supervisor-de-planejamento-financeiro/63610-0013414877-brpt
+                  - generic [ref=e652]:
+                    - generic [ref=e653]:
+                      - generic "São Paulo" [ref=e655]:
+                        - paragraph [ref=e656]:
+                          - generic: São Paulo
+                      - heading "Supervisor de Planejamento Financeiro" [level=5] [ref=e658]:
+                        - generic: Supervisor de Planejamento Financeiro
+                    - list [ref=e662]:
+                      - listitem [ref=e663]:
+                        - generic [ref=e664]:
+                          - generic [ref=e666]:
+                            - generic [ref=e667]: 
+                            - generic [ref=e668]: Tipo de emprego
+                          - generic "Permanente" [ref=e669]:
+                            - generic [ref=e670]:
+                              - generic: Permanente
+                    - generic [ref=e671]:
+                      - generic [ref=e673]:
+                        - generic: Responsável pela consolidação financeira...
+                      - generic "7 abril 2026" [ref=e675]:
+                        - generic [ref=e676]:
+                          - generic: 1 semana atrás
+                - link "São Paulo Supervisor(a) Contábil Local de Trabalho Híbrido Tipo de emprego Permanente Desenvolver relatórios detalhados, analisando... 2 semanas atrás" [ref=e680] [cursor=pointer]:
+                  - /url: https://www.roberthalf.com/br/pt/vaga/são-paulo/supervisora-contábil/63640-0013410608-brpt
+                  - generic [ref=e681]:
+                    - generic [ref=e682]:
+                      - generic "São Paulo" [ref=e684]:
+                        - paragraph [ref=e685]:
+                          - generic: São Paulo
+                      - heading "Supervisor(a) Contábil" [level=5] [ref=e687]:
+                        - generic: Supervisor(a) Contábil
+                    - list [ref=e691]:
+                      - generic:
+                        - listitem [ref=e692]:
+                          - generic [ref=e693]:
+                            - generic [ref=e695]:
+                              - generic [ref=e696]: 
+                              - generic [ref=e697]: Local de Trabalho
+                            - generic "Híbrido" [ref=e698]:
+                              - generic [ref=e699]:
+                                - generic: Híbrido
+                        - listitem [ref=e700]:
+                          - generic [ref=e701]:
+                            - generic [ref=e703]:
+                              - generic [ref=e704]: 
+                              - generic [ref=e705]: Tipo de emprego
+                            - generic "Permanente" [ref=e706]:
+                              - generic [ref=e707]:
+                                - generic: Permanente
+                    - generic [ref=e708]:
+                      - generic [ref=e710]:
+                        - generic: Desenvolver relatórios detalhados, analisando...
+                      - generic "30 março 2026" [ref=e712]:
+                        - generic [ref=e713]:
+                          - generic: 2 semanas atrás
+                - link "São Paulo Supervisor de FP&A Tipo de emprego Permanente Consolidar e analisar P&L/DRE do Brasil e Argentina... 1 mês atrás" [ref=e717] [cursor=pointer]:
+                  - /url: https://www.roberthalf.com/br/pt/vaga/são-paulo/supervisor-de-fpa/63640-0013389088-brpt
+                  - generic [ref=e718]:
+                    - generic [ref=e719]:
+                      - generic "São Paulo" [ref=e721]:
+                        - paragraph [ref=e722]:
+                          - generic: São Paulo
+                      - heading "Supervisor de FP&A" [level=5] [ref=e724]:
+                        - generic: Supervisor de FP&A
+                    - list [ref=e728]:
+                      - listitem [ref=e729]:
+                        - generic [ref=e730]:
+                          - generic [ref=e732]:
+                            - generic [ref=e733]: 
+                            - generic [ref=e734]: Tipo de emprego
+                          - generic "Permanente" [ref=e735]:
+                            - generic [ref=e736]:
+                              - generic: Permanente
+                    - generic [ref=e737]:
+                      - generic [ref=e739]:
+                        - generic: Consolidar e analisar P&L/DRE do Brasil e Argentina...
+                      - generic "23 fevereiro 2026" [ref=e741]:
+                        - generic [ref=e742]:
+                          - generic: 1 mês atrás
+                - link "São Paulo Gerente Fiscal Tipo de emprego Permanente Gerenciar a apuração e o cumprimento de obrigações... 2 meses atrás" [ref=e746] [cursor=pointer]:
+                  - /url: https://www.roberthalf.com/br/pt/vaga/são-paulo/gerente-fiscal/63610-0013367685-brpt
+                  - generic [ref=e747]:
+                    - generic [ref=e748]:
+                      - generic "São Paulo" [ref=e750]:
+                        - paragraph [ref=e751]:
+                          - generic: São Paulo
+                      - heading "Gerente Fiscal" [level=5] [ref=e753]:
+                        - generic: Gerente Fiscal
+                    - list [ref=e757]:
+                      - listitem [ref=e758]:
+                        - generic [ref=e759]:
+                          - generic [ref=e761]:
+                            - generic [ref=e762]: 
+                            - generic [ref=e763]: Tipo de emprego
+                          - generic "Permanente" [ref=e764]:
+                            - generic [ref=e765]:
+                              - generic: Permanente
+                    - generic [ref=e766]:
+                      - generic [ref=e768]:
+                        - generic: Gerenciar a apuração e o cumprimento de obrigações...
+                      - generic "21 janeiro 2026" [ref=e770]:
+                        - generic [ref=e771]:
+                          - generic: 2 meses atrás
+                - link "São Paulo Gerente Contábil Fiscal Tipo de emprego Permanente Liderar o escopo contábil de ponta a ponta... 2 semanas atrás" [ref=e775] [cursor=pointer]:
+                  - /url: https://www.roberthalf.com/br/pt/vaga/são-paulo/gerente-contábil-fiscal/63610-0013410711-brpt
+                  - generic [ref=e776]:
+                    - generic [ref=e777]:
+                      - generic "São Paulo" [ref=e779]:
+                        - paragraph [ref=e780]:
+                          - generic: São Paulo
+                      - heading "Gerente Contábil Fiscal" [level=5] [ref=e782]:
+                        - generic: Gerente Contábil Fiscal
+                    - list [ref=e786]:
+                      - listitem [ref=e787]:
+                        - generic [ref=e788]:
+                          - generic [ref=e790]:
+                            - generic [ref=e791]: 
+                            - generic [ref=e792]: Tipo de emprego
+                          - generic "Permanente" [ref=e793]:
+                            - generic [ref=e794]:
+                              - generic: Permanente
+                    - generic [ref=e795]:
+                      - generic [ref=e797]:
+                        - generic: Liderar o escopo contábil de ponta a ponta...
+                      - generic "30 março 2026" [ref=e799]:
+                        - generic [ref=e800]:
+                          - generic: 2 semanas atrás
+                - link "São Paulo Gerente de Contabilidade Tipo de emprego Permanente Será responsável por participar ativamente da... 2 meses atrás" [ref=e804] [cursor=pointer]:
+                  - /url: https://www.roberthalf.com/br/pt/vaga/são-paulo/gerente-de-contabilidade/63610-0013380649-brpt
+                  - generic [ref=e805]:
+                    - generic [ref=e806]:
+                      - generic "São Paulo" [ref=e808]:
+                        - paragraph [ref=e809]:
+                          - generic: São Paulo
+                      - heading "Gerente de Contabilidade" [level=5] [ref=e811]:
+                        - generic: Gerente de Contabilidade
+                    - list [ref=e815]:
+                      - listitem [ref=e816]:
+                        - generic [ref=e817]:
+                          - generic [ref=e819]:
+                            - generic [ref=e820]: 
+                            - generic [ref=e821]: Tipo de emprego
+                          - generic "Permanente" [ref=e822]:
+                            - generic [ref=e823]:
+                              - generic: Permanente
+                    - generic [ref=e824]:
+                      - generic [ref=e826]:
+                        - generic: Será responsável por participar ativamente da...
+                      - generic "9 fevereiro 2026" [ref=e828]:
+                        - generic [ref=e829]:
+                          - generic: 2 meses atrás
+                - link "São Paulo Gerente Contábil Tipo de emprego Permanente Gerenciar e supervisionar as rotinas contábeis e... 2 semanas atrás" [ref=e833] [cursor=pointer]:
+                  - /url: https://www.roberthalf.com/br/pt/vaga/são-paulo/gerente-contábil/63610-0013411302-brpt
+                  - generic [ref=e834]:
+                    - generic [ref=e835]:
+                      - generic "São Paulo" [ref=e837]:
+                        - paragraph [ref=e838]:
+                          - generic: São Paulo
+                      - heading "Gerente Contábil" [level=5] [ref=e840]:
+                        - generic: Gerente Contábil
+                    - list [ref=e844]:
+                      - listitem [ref=e845]:
+                        - generic [ref=e846]:
+                          - generic [ref=e848]:
+                            - generic [ref=e849]: 
+                            - generic [ref=e850]: Tipo de emprego
+                          - generic "Permanente" [ref=e851]:
+                            - generic [ref=e852]:
+                              - generic: Permanente
+                    - generic [ref=e853]:
+                      - generic [ref=e855]:
+                        - generic: Gerenciar e supervisionar as rotinas contábeis e...
+                      - generic "31 março 2026" [ref=e857]:
+                        - generic [ref=e858]:
+                          - generic: 2 semanas atrás
+                - link "São Paulo Especialista de fp&a Tipo de emprego Projetos Consolidar e analisar relatórios gerenciais e financeiros (DRE, balanço, fluxo de caixa)... 2 semanas atrás" [ref=e862] [cursor=pointer]:
+                  - /url: https://www.roberthalf.com/br/pt/vaga/são-paulo/especialista-de-fpa/63610-0013398155-brpt
+                  - generic [ref=e863]:
+                    - generic [ref=e864]:
+                      - generic "São Paulo" [ref=e866]:
+                        - paragraph [ref=e867]:
+                          - generic: São Paulo
+                      - heading "Especialista de fp&a" [level=5] [ref=e869]:
+                        - generic: Especialista de fp&a
+                    - list [ref=e873]:
+                      - listitem [ref=e874]:
+                        - generic [ref=e875]:
+                          - generic [ref=e877]:
+                            - generic [ref=e878]: 
+                            - generic [ref=e879]: Tipo de emprego
+                          - generic "Projetos" [ref=e880]:
+                            - generic [ref=e881]:
+                              - generic: Projetos
+                    - generic [ref=e882]:
+                      - generic [ref=e884]:
+                        - generic: Consolidar e analisar relatórios gerenciais e financeiros (DRE, balanço, fluxo de caixa)...
+                      - generic "27 março 2026" [ref=e886]:
+                        - generic [ref=e887]:
+                          - generic: 2 semanas atrás
+                - link "São Paulo Finance Business Partner Local de Trabalho Híbrido Tipo de emprego Permanente Fornecer liderança financeira e suporte à tomada de decisão para as equipes... 1 mês atrás" [ref=e891] [cursor=pointer]:
+                  - /url: https://www.roberthalf.com/br/pt/vaga/são-paulo/finance-business-partner/63610-0013401228-brpt
+                  - generic [ref=e892]:
+                    - generic [ref=e893]:
+                      - generic "São Paulo" [ref=e895]:
+                        - paragraph [ref=e896]:
+                          - generic: São Paulo
+                      - heading "Finance Business Partner" [level=5] [ref=e898]:
+                        - generic: Finance Business Partner
+                    - list [ref=e902]:
+                      - generic:
+                        - listitem [ref=e903]:
+                          - generic [ref=e904]:
+                            - generic [ref=e906]:
+                              - generic [ref=e907]: 
+                              - generic [ref=e908]: Local de Trabalho
+                            - generic "Híbrido" [ref=e909]:
+                              - generic [ref=e910]:
+                                - generic: Híbrido
+                        - listitem [ref=e911]:
+                          - generic [ref=e912]:
+                            - generic [ref=e914]:
+                              - generic [ref=e915]: 
+                              - generic [ref=e916]: Tipo de emprego
+                            - generic "Permanente" [ref=e917]:
+                              - generic [ref=e918]:
+                                - generic: Permanente
+                    - generic [ref=e919]:
+                      - generic [ref=e921]:
+                        - generic: Fornecer liderança financeira e suporte à tomada de decisão para as equipes...
+                      - generic "13 março 2026" [ref=e923]:
+                        - generic [ref=e924]:
+                          - generic: 1 mês atrás
+                - link "São Paulo Head de Finanças Tipo de emprego Permanente Realizar gestão da equipe de FP&A, Tesouraria, Contabilidade e Fiscal... 1 mês atrás" [ref=e928] [cursor=pointer]:
+                  - /url: https://www.roberthalf.com/br/pt/vaga/são-paulo/head-de-finanças/63610-0013397643-brpt
+                  - generic [ref=e929]:
+                    - generic [ref=e930]:
+                      - generic "São Paulo" [ref=e932]:
+                        - paragraph [ref=e933]:
+                          - generic: São Paulo
+                      - heading "Head de Finanças" [level=5] [ref=e935]:
+                        - generic: Head de Finanças
+                    - list [ref=e939]:
+                      - listitem [ref=e940]:
+                        - generic [ref=e941]:
+                          - generic [ref=e943]:
+                            - generic [ref=e944]: 
+                            - generic [ref=e945]: Tipo de emprego
+                          - generic "Permanente" [ref=e946]:
+                            - generic [ref=e947]:
+                              - generic: Permanente
+                    - generic [ref=e948]:
+                      - generic [ref=e950]:
+                        - generic: Realizar gestão da equipe de FP&A, Tesouraria, Contabilidade e Fiscal...
+                      - generic "6 março 2026" [ref=e952]:
+                        - generic [ref=e953]:
+                          - generic: 1 mês atrás
+              - generic [ref=e956]:
+                - generic:
+                  - text: 
+                  - generic: Declinar este trabalho?
+                - generic [ref=e958]:
+                  - text: "0"
+                  - generic [ref=e960]:
+                    - generic [ref=e961]:
+                      - generic "Santo André" [ref=e963]:
+                        - paragraph [ref=e964]:
+                          - generic: Santo André
+                      - generic "Controller" [ref=e966]:
+                        - heading "Controller" [level=4] [ref=e967]:
+                          - link "Controller" [ref=e968] [cursor=pointer]:
+                            - /url: https://www.roberthalf.com/br/pt/vaga/santo-andré/controller/63640-0013372979-brpt
+                    - list [ref=e972]:
+                      - listitem [ref=e973]:
+                        - generic [ref=e974]:
+                          - generic [ref=e976]:
+                            - generic [ref=e977]: 
+                            - generic [ref=e978]: Tipo de emprego
+                          - generic "Permanente" [ref=e979]:
+                            - generic [ref=e980]:
+                              - generic: Permanente
+                    - generic [ref=e981]:
+                      - generic "28 janeiro 2026" [ref=e982]:
+                        - generic [ref=e983]:
+                          - generic: Publicado — 2 meses atrás
+                      - generic [ref=e984]:
+                        - separator [ref=e985]
+                        - button "Aplicar" [ref=e990] [cursor=pointer]
+                      - separator [ref=e991]
+                      - generic [ref=e992]:
+                        - generic "Descrição" [ref=e993]:
+                          - heading "Descrição" [level=5] [ref=e994]:
+                            - generic: Descrição
+                        - generic [ref=e997]:
+                          - paragraph [ref=e998]:
+                            - strong [ref=e999]: A Empresa
+                          - list [ref=e1000]:
+                            - listitem [ref=e1001]: Nosso cliente é uma empresa multinacional do segmento industrial, na região de Santo André-SP
+                          - paragraph [ref=e1002]:
+                            - strong [ref=e1003]: Descrição da vaga
+                          - list [ref=e1004]:
+                            - listitem [ref=e1005]: Reportando-se diretamente ao Controller local;
+                            - listitem [ref=e1006]: Conduzir o fechamento contábil mensal, garantindo acurácia dos resultados e cumprimento rigoroso dos prazos globais;
+                            - listitem [ref=e1007]: Elaborar, revisar e analisar DRE, margens, custos e indicadores financeiros estratégicos;
+                            - listitem [ref=e1008]: Estruturar análises de custos por produto, performance operacional e variações relevantes;
+                            - listitem [ref=e1009]: Atuar nas rotinas de forecast, budget e reports gerenciais conforme padrões internacionais (IFRS);
+                            - listitem [ref=e1010]: Liderar processos fiscais envolvendo ICMS, PIS, COFINS e IPI, garantindo compliance e consistência das apurações;
+                            - listitem [ref=e1011]: Acompanhar impactos da reforma tributária e apoiar ajustes sistêmicos e procedimentais;
+                            - listitem [ref=e1012]: Gerenciar o fluxo de informações entre contabilidade terceirizada e áreas internas, assegurando qualidade, prazos e governança;
+                            - listitem [ref=e1013]: Revisar e propor melhorias contínuas em processos, controles internos e operações financeiras;
+                            - listitem [ref=e1014]: Desenvolver, organizar e delegar atividades do time, elevando a maturidade operacional da área;
+                            - listitem [ref=e1015]: Atuar de forma estratégica, com postura hands-on para lidar com demandas operacionais quando necessário;
+                            - listitem [ref=e1016]: Manter relacionamento direto com stakeholders internacionais, garantindo previsibilidade e precisão das entregas.
+                          - paragraph [ref=e1017]:
+                            - strong [ref=e1018]: Perfil desejado
+                          - list [ref=e1019]:
+                            - listitem [ref=e1020]: Formação Superior completa em Contabilidade, Administração, Economia ou áreas correlatas;
+                            - listitem [ref=e1021]: Sólida experiência prévia em controladoria, contabilidade, fiscal e análise financeira;
+                            - listitem [ref=e1022]: Forte domínio de Excel e vivência com Power BI;
+                            - listitem [ref=e1023]: Experiência em ambientes industriais (peças, fabricação ou serviços);
+                            - listitem [ref=e1024]: Conhecimento em IFRS;
+                            - listitem [ref=e1025]: Perfil organizado, disciplinado e com excelente gestão de tempo;
+                            - listitem [ref=e1026]: Capacidade de estruturar processos, desenvolver equipe e garantir execução com qualidade;
+                            - listitem [ref=e1027]: Alta energia, engajamento e perfil orientado ao negócio;
+                            - listitem [ref=e1028]: Vivência em multinacionais de pequeno ou médio porte.
+                          - img [ref=e1029]
+                      - generic [ref=e1030]:
+                        - separator [ref=e1031]
+                        - generic [ref=e1032]:
+                          - generic [ref=e1034]:
+                            - generic: "Referência de emprego: 63640-0013372979-brpt"
+                          - generic [ref=e1036]:
+                            - generic: "Área de Pessoal: Finanças e contabilidade"
+                      - generic [ref=e1037]:
+                        - separator [ref=e1038]
+                        - button "Aplicar" [ref=e1043] [cursor=pointer]
+              - generic [ref=e1047]:
+                - generic [ref=e1048]:
+                  - generic [ref=e1053]: 
+                  - generic [ref=e1054]:
+                    - link "1" [ref=e1055]:
+                      - /url: /br/pt/vagas/sao-paulo/controller
+                      - generic [ref=e1057]:
+                        - generic: "1"
+                    - link "2" [ref=e1058] [cursor=pointer]:
+                      - /url: "?pagenumber=2"
+                      - generic [ref=e1060]:
+                        - generic: "2"
+                  - generic "Próxima página de resultados" [ref=e1061]:
+                    - generic [ref=e1064]:
+                      - generic [ref=e1065]: 
+                      - generic [ref=e1066]: Próxima página de resultados
+                - generic [ref=e1069]:
+                  - generic: 1-25 de 34 empregos
+        - generic:
+          - generic:
+            - generic:
+              - img
+      - generic: Santo André,
+      - generic:
+        - generic: Remoto
+        - generic: Permanente
+        - generic: DOE
+      - generic: A EmpresaNosso cliente é uma empresa multinacional do segmento industrial, na região de Santo André-SPDescrição da vagaReportando-se diretamente ao Controller local;Conduzir o fechamento contábil mensal, garantindo acurácia dos resultados e cumprimento rigoroso dos prazos globais;Elaborar, revisar e analisar DRE, margens, custos e indicadores financeiros estratégicos;Estruturar análises de custos por produto, performance operacional e variações relevantes;Atuar nas rotinas de forecast, budget e reports gerenciais conforme padrões internacionais (IFRS);Liderar processos fiscais envolvendo ICMS, PIS, COFINS e IPI, garantindo compliance e consistência das apurações;Acompanhar impactos da reforma tributária e apoiar ajustes sistêmicos e procedimentais;Gerenciar o fluxo de informações entre contabilidade terceirizada e áreas internas, assegurando qualidade, prazos e governança;Revisar e propor melhorias contínuas em processos, controles internos e operações financeiras;Desenvolver, organizar e delegar atividades do time, elevando a maturidade operacional da área;Atuar de forma estratégica, com postura hands-on para lidar com demandas operacionais quando necessário;Manter relacionamento direto com stakeholders internacionais, garantindo previsibilidade e precisão das entregas.Perfil desejadoFormação Superior completa em Contabilidade, Administração, Economia ou áreas correlatas;Sólida experiência prévia em controladoria, contabilidade, fiscal e análise financeira;Forte domínio de Excel e vivência com Power BI;Experiência em ambientes industriais (peças, fabricação ou serviços);Conhecimento em IFRS;Perfil organizado, disciplinado e com excelente gestão de tempo;Capacidade de estruturar processos, desenvolver equipe e garantir execução com qualidade;Alta energia, engajamento e perfil orientado ao negócio;Vivência em multinacionais de pequeno ou médio porte.
+      - generic: 28 janeiro 2026
+      - generic: São Paulo,
+      - generic:
+        - generic: Remoto
+        - generic: Permanente
+        - generic: DOE
+      - generic: "A EmpresaBoutique de Wealth & Asset Management, na região de São Paulo-SP.Descrição da vagaCoordenar rotinas de fechamento, conciliações e entrega de relatórios para a liderança (P&L, balançogerencial, fluxo de caixa, indicadores);Construir e manter processos de budgeting e forecasting, acompanhando desvios (realizado vs.previsto) e propondo ações;Estruturar controles de caixa, projeções e rotinas de acompanhamento de liquidez e pagamentosDesenhar, documentar e implementar processos end-to-end e controles internos;Organizar base de dados e padronizar cadastros/planos de contas/centros de custo, garantindo compatibilidade para análises e Power BI;Definir e acompanhar KPIs financeiros e operacionais, com dashboards e cadência de acompanhamento;Apoiar auditorias e demandas de governança, preparando documentação e evidências; Interagir com contabilidade externa, bancos e prestadores, garantindo consistência, prazos e qualidade;Modelo: Híbrido.Perfil desejadoFormação em Administração, Economia, Contabilidade, Engenharia ou áreas correlatas;Sólida experiência em Controladoria e Finanças;Inglês avançado ou superior;Passagem por empresas de serviços financeiras, gestoras, bancos, family offices ou consultorias;CRC, CPA, CFA ou equivalentes;Familiaridade com plataformas financeiras."
+      - generic: 29 janeiro 2026
+      - generic: São Paulo,
+      - generic:
+        - generic: Remoto
+        - generic: Permanente
+        - generic: DOE
+      - generic: A EmpresaMultinacional Europeia (Segmento Agro), na região de São Paulo-SP.Descrição da vagaCoordenar rotinas de fechamento, conciliações e entrega de relatórios para a liderança (P&L, balançogerencial, fluxo de caixa, indicadores);Construir e manter processos de budgeting e forecasting, acompanhando desvios (realizado vs.previsto) e propondo ações;Estruturar controles de caixa, projeções e rotinas de acompanhamento de liquidez e pagamentosDesenhar, documentar e implementar processos end-to-end e controles internos;Organizar base de dados e padronizar cadastros/planos de contas/centros de custo, garantindo compatibilidade para análises e Power BI;Definir e acompanhar KPIs financeiros e operacionais, com dashboards e cadência de acompanhamento;Apoiar auditorias e demandas de governança, preparando documentação e evidências; Interagir com contabilidade externa, bancos e prestadores, garantindo consistência, prazos e qualidade.Perfil desejadoFormação em Administração, Economia, Contabilidade, Engenharia ou áreas correlatas;Sólida experiência em Controladoria e Finanças em empresas multinacionais;Inglês fluente;Familiaridade com plataformas financeiras; CRC, CPA, CFA ou equivalentes.
+      - generic: 29 janeiro 2026
+      - generic: São Bernardo do Campo,
+      - generic:
+        - generic: Remoto
+        - generic: Permanente
+        - generic: DOE
+      - generic: A EmpresaNosso cliente é uma indústria multinacional com atuação no setor de transformação de matéria-prima e bens de consumo.Descrição da vagaReportando-se diretamente ao CEO;Planejar e implementar controles financeiros estratégicos para suportar os planos de expansão e mudanças no modelo de negócios, garantindo a sustentabilidade e o crescimentos consistentes da organização;Supervisionar e otimizar processos de estudo de viabilidade financeira, incluindo análises de cenários, retorno sobre investimentos (ROI), e proposta de investimentos para estudos como potencial movimentação de fábrica;Coordenar o fechamento mensal, assegurando precisão e consistência para atingir o padrão desejado de fechamento, e conduzindo relatórios financeiros usando sistemas como ERP;Gerenciar equipe composta por 9 pessoas, incluindo contadores internos e financeiro, suportando nos processos de contas a pagar, contas a receber, tesouraria, e análise de fluxo de caixa;Priorizar conformidade fiscal, coordenando ações para maximizar créditos fiscais e benefícios, além de minimizar riscos associados à tributação nacional e internacional, incluindo remessas de materiais para terceiros;Estabelecer processos de orçamentação e forecast, construindo ferramentas financeiras que consolidam dados e fornecem análises robustas para tomada de decisão estratégica;Implementar e monitorar KPIs financeiros e operacionais, promovendo maior transparência e eficiência dentro da operação;Liderar iniciativas de melhoria de processos e controle financeiro para integração e interligação das unidades a nível nacional e internacional (México, EUA, Canadá), garantindo alinhamento estratégico entre todas as regiões;Fomentar confiança e adaptabilidade cultural em um ambiente conservador e linear, lidando com comunicações de alto impacto com stakeholders suíços/alemães e promovendo segurança nas operações;Suportar diretamente a equipe em demandas técnicas e operacionais, atuando de forma "mão na massa" em atividades estratégicas fora do escopo tradicional, como viabilidade para abertura de conta em dólar, redução de custos operacionais, e análise de custos detalhados (horas/homem, horas/máquina).Perfil desejadoFormação superior completa em Ciências Contábeis;Desejável especialização, pós-graduação e/ou MBA;Inglês avançado;Excel avançado;Carreira desenvolvida e/ou passagem relevante por indústria.
+      - generic: 26 janeiro 2026
+      - generic: Barueri,
+      - generic:
+        - generic: Remoto
+        - generic: Permanente
+        - generic: DOE
+      - generic: The CompanyLife Sciences Multinational.Job descriptionManage end-to-end statutory financial reporting for assigned LATAM entities;Prepare and review statutory financial statements under US GAAP and LATAM GAAP and local country-specific requirements;Oversight of transactional processing performed by shared service organizations (SSO);Review and approve monthly reconciliations in Blackline for assigned G/L account;Prepare, review, and coordinate corporate income tax, GST/VAT, and withholding tax filing;Liaise with external tax consultants and internal tax teams;Perform internal control checks and ensure compliance with company policies and SOX frameworks;Partner with regional and global finance teams;Act as key finance contact for auditors, tax advisors, and service providers;Drive M&A and integration projects across LATAM;Collaborate with cross-functional teams to align processes and systems post-acquisition.Requirement Profile - Knowledge, Skills & ExperiencesRelevant experience in finance controllership, statutory reporting, or audit;Demonstrated experience supporting LATAM entities in a multinational organization;Strong knowledge of US GAAP and local statutory, tax, and VAT rules in LATAM;Experience with SAP, Blackline, Excel (advanced), and MS Office;Fluent in English; Spanish and Portuguese;Prepared to travel internationally as required;Prior experience with a Big 4 audit firm or internal audit function preferred.
+      - generic: 23 março 2026
+      - generic: São Paulo,
+      - generic:
+        - generic: Remoto
+        - generic: Projetos
+        - generic: DOE
+      - generic: "A EmpresaGrande porte do mercado de seguros.Descrição da vagaAtuar como consultor interno e ponto focal em processos de governança financeira, garantindo acompanhamento e condução das agendas de FP&A;Preparar e organizar materiais de acompanhamento de resultados, incluindo dashboards, trackers e apresentações executivas;Mapear processos junto às áreas, documentar procedimentos, briefer e estruturar informações para reuniões e comitês (ex.: comitê de custos);Conduzir a dinâmica das reuniões, garantindo clareza sobre ações concluídas, pendentes e próximos passos;Apoiar na padronização de modelos de pricing, análises de performance e relatórios de resultados;Garantir que insights financeiros sejam apresentados de forma clara, visual e objetiva para a liderança;Colaborar com stakeholders internos para otimizar processos e manter o cronograma de acompanhamento atualizado.Perfil desejadoNecessário: experiência em FP&A, governança ou consultoria interna, com habilidade de conduzir reuniões e organizar agendas de acompanhamento de resultados;Formação: Superior completo em Administração, Economia, Contabilidade, Engenharia ou áreas correlatas;Idiomas: Inglês básico a intermediário;Sistemas: Excel avançado, Power BI; experiência com trackers e dashboards financeiros;Perfil Comportamental: analítico, organizado, proativo e comunicativo; capaz de conduzir reuniões e comitês, consolidar informações complexas e transformar dados em insights claros; atenção a detalhes, orientação para execução e melhoria contínua."
+      - generic: 26 janeiro 2026
+      - generic: São Paulo,
+      - generic:
+        - generic: Remoto
+        - generic: Projetos
+        - generic: DOE
+      - generic: "A EmpresaMultinacional indústria farmacêutica. Na região de Vila Madalena - SP.Descrição da vagaConduzir as atividades de Controles Internos, atuando em consonância com a área contábil para mapear, revisar, padronizar e melhorar continuamente controles e processos contábeis;Atuar junto às áreas chave e stakeholders, garantindo alinhamento, integração e compreensão adequada dos controles internos e riscos associados;Colaborar com equipes locais, regionais (LATAM) e globais para assegurar a padronização e consistência dos processos e controles;Apoiar iniciativas de automação e robotização, atuando de forma integrada com diferentes áreas;Realizar apresentações e comunicações recorrentes, garantindo clareza, engajamento e disseminação dos padrões definidos;Atuar como ponto de contato para auditorias internas e externas, fornecendo informações e evidências de controles quando necessário;Monitorar indicadores de efetividade de controles e propor melhorias quando necessário.Perfil desejadoRequisitos Técnicos Obrigatórios: forte background contábil (base conceitual sólida), entendimento de conceitos contábeis e de controles internos;Experiência com atuação LATAM;Ferramentas e Sistemas: Excel Avançado, PowerPoint, SAP; conhecimento em ferramentas de BI e HFM são desejáveis;Graduação: Ciências Contábeis; aberto a formações correlatas se experiência for aderente aos demais requisitos técnicos;Segmento: aberto; passagem por empresas de auditoria ou Big Four;Idiomas: Inglês Avançado ou Fluente (interação diária com equipe internacional); Espanhol (desejável);Comportamental: perfil voltado à padronização e melhoria de processos, analítico, organizado, com forte comunicação e relacionamento com múltiplos stakeholders."
+      - generic: 16 janeiro 2026
+      - generic: São Paulo,
+      - generic:
+        - generic: Remoto
+        - generic: Permanente
+        - generic: DOE
+      - generic: A EmpresaNacional de Serviços, de grande porte, na região de São Paulo-SP.Descrição da vagaFazer a gestão de controladoria de unidades de negócio da empresa;Elaborar e analisar relatórios financeiros e gerenciais, garantindo a qualidade e precisão das informações;Realizar a análise de resultados financeiros e acompanhar os indicadores de performance (KPIs) da empresa;Controlar o orçamento e o planejamento financeiro, identificando variações e propondo ações corretivas;Contribuir com a construção e implementação de processos de controladoria, visando maior eficiência e controle;Apoiar nas auditorias internas e externas, fornecendo as informações necessárias;Desenvolver projeções financeiras e simulações de cenários, para suportar a tomada de decisão estratégica;Supervisionar e apoiar a equipe de controladoria, garantindo a correta execução das atividades do setor.Perfil desejadoFormação superior completa.
+      - generic: 13 fevereiro 2026
+      - generic: São Paulo,
+      - generic:
+        - generic: Remoto
+        - generic: Projetos
+        - generic: DOE
+      - generic: "A EmpresaEmpresa Multinacional de Grande Porte.Descrição da vagaExecutar as atividades de controladoria, envolvendo a elaboração de relatórios gerenciais, análise de custos, controle e acompanhamento do budget/forecast, e projeção de cenários financeiros para subsidiar a alta gestão na tomada de decisões estratégicas do negócio, atuando com autonomia, liderando projetos e pessoas (analistas e assistentes da área) e sendo uma referência técnica para otimizar resultados e garantir conformidade financeira e contábil;Apurar resultados mensais de vendas e lucratividade dentro do prazo esperado, analisando as principais variações versus o planejamento (budget) e ano anterior;Imputar os dados nos sistemas do grupo (HFM/Margin/XLCubed) e preparar o material para as revisões mensais de resultado;Gerir a execução do processo orçamentário anual, consolidando as informações de vendas, custos de manufatura, despesas departamentais e investimentos. Imputar os dados nos sistemas do grupo (HFM/Margin/XLCubed) e preparar o material para apresentação do budget para o CFO Brasil;Revisar a apuração dos custos mensais através do acompanhamento do fechamento de custos dentro do sistema operacional;Manter a equipe em constante evolução técnica e comportamental, por meio de experiências com especialistas de mercado, treinamentos, vivência com tecnologias disponíveis, considerando, valores e cultura da empresa, com objetivo de motivar e capacitar para o alcance das metas da empresa;Constantemente desenvolver projetos alinhados ao planejamento estratégico da empresa, assim como constantemente desafiar os processos da área visando um constante ganho de produtividade e a excelência operacional nos processos da área;Certificar-se de que no orçamento anual haja uma área dedicada à segurança, garantir que as questões de segurança sejam consideradas em todos os novos projetos de investimento, reportar os orçamentos de segurança realizados e registrados.Perfil desejado Experiência na área de controladoria;Experiência em controladoria de custos fabris;Ótimo conhecimento contábil;Experiência em empresas multinacionais atuando em área de finanças/controladoria;Experiência em gestão de equipes;Graduação em Administração de Empresas, Ciências Contábeis. Desejável - Pós-graduação (Gestão, finanças ou controladoria);Bom relacionamento interpessoal e experiência em gestão de pessoas;Conhecimento de IFRS;Conhecimento em implementação/ estruturação de sistemas ERP na área contábil e de custos (ex.: SAP, Protheus);Inglês avançado;Disponibilidade para início imediato e viagens para Campinas-SP nos primeiros 6 meses por conta da empresa;Visão estratégica, habilidade de comunicação clara, escrita e oral;Bom relacionamento interpessoal e experiência em gestão de pessoas;Capacidade de planejamento, organização e capacidade de análise crítica."
+      - generic: 23 janeiro 2026
+      - generic: São Paulo,
+      - generic:
+        - generic: Remoto
+        - generic: Permanente
+        - generic: DOE
+      - generic: A EmpresaEmpresa global do segmento de franquias de alimentação.Descrição da vagaRealizar análises detalhadas de custos fabris, utilizando métodos de Custo Médio, Standard e por Absorção;Analisar demonstrações contábeis e estruturar a Demonstração do Resultado do Exercício (DRE) por Unidade de Negócio (BU), garantindo a correta alocação de receitas e despesas;Elaborar e implementar relatórios de performance (KPIs) para a diretoria, identificando desvios e oportunidades reais de redução de custos e otimização de processos;Realizar a gestão de inventários e controle de estoque, garantindo o compliance entre o físico e o contábil;Atuar com visão de processos para implementar melhorias contínuas no fluxo de informações financeiras;Modelo de trabalho híbrido (3x por semana no escritório).Perfil desejadoFormação superior completa;Experiência prévia na área de custos;Conhecimento avançado em Excel;Habilidade em análise de dados e relatórios gerenciais;Inglês intermediário;Conhecimentos em ERPs, preferencialmente em SAP 4/Hanna.
+      - generic: 23 fevereiro 2026
+      - generic: Sorocaba,
+      - generic:
+        - generic: Remoto
+        - generic: Permanente
+        - generic: DOE
+      - generic: A EmpresaMultinacional do segmento de serviços, na região de Sorocaba-SP. Descrição da vagaLiderar o ciclo de Controladoria e planejamento financeiro (Budget, Forecast e Rolling Forecast) de múltiplas BUs, definindo parâmetros de controle e análise de KPI's para maximizar o lucro;Monitorar o fluxo de caixa e a rentabilidade de cada projeto/BU, garantindo que prazos, custos e margens estejam em conformidade com o plano estratégico;Revisar oportunidades de vendas e upselling junto ao time de suprimentos e comercial, validando custos reais, tabelas de preços e margens de contribuição;Consolidar e reportar informações financeiras mensais ao regional, assegurando o cumprimento das políticas globais e a integridade dos dados contábeis;Apoiar a Gerência de Operações na gestão de custos e implementar normas de controle orçamentário que visem o "zero overdue" e a redução de desvios.Perfil desejadoFormação superior completa;Inglês Avançado/Fluente para comunicação com a matriz;Pacote office (destaque para Excel Avançado);Power BI.
+      - generic: 18 março 2026
+      - generic: São Paulo,
+      - generic:
+        - generic: Remoto
+        - generic: Permanente
+        - generic: DOE
+      - generic: A EmpresaStartup de soluções para a área de RH (HRTECH), na região de São Paulo-SP.Descrição da vagaConduzir o ciclo completo de vendas B2B em nível enterprise, desde a geração da oportunidade até o fechamento do contrato;Atuar fortemente como hunter, com foco em prospecção ativa, criação de oportunidades e desenvolvimento de novos negócios;Gerenciar vendas complexas e consultivas, com ciclos longos de negociação, envolvendo múltiplos stakeholders e decisores C-level;Realizar diagnóstico aprofundado do contexto, maturidade e necessidades de cada cliente, propondo soluções alinhadas aos desafios do negócio;Conduzir negociações com autonomia, priorizando contratos de qualidade, crescimento recorrente e impacto positivo em MRR, ARR e LTV;Manter relacionamento contínuo com prospects e clientes após o fechamento, atuando em estratégias de retenção, upsell e cross sell;Trabalhar de forma integrada com as áreas internas (liderança, marketing, produto e vendas internas) para evolução da estratégia comercial;Organizar, estruturar e atualizar o pipeline comercial, garantindo previsibilidade, acompanhamento de metas e uso consistente de CRM;Contribuir ativamente para a construção e melhoria dos processos comerciais, incluindo funil de vendas, rituais de acompanhamento e aprendizados;Apoiar o momento de crescimento e estruturação da área comercial, preparando o negócio para escalar de forma sustentável;Representar a empresa em reuniões presenciais e remotas, eventos e interações estratégicas que gerem novas oportunidades de negócio.Perfil desejadoExperiência prévia com vendas B2B de serviços ou soluções consultivas, atuando com clientes enterprise;Vivência em vendas complexas, com ciclos de decisão longos e negociações estratégicas;Experiência em modelo de vendas relacionais e/ou Field Sales;Histórico de atuação em empresas ou negócios em fase de crescimento e expansão;Experiência comprovada com venda de SaaS (Software as a Service) ou soluções tecnológicas;Capacidade de atuar de forma autônoma na organização da rotina comercial e gestão de pipeline (CRM ou ferramentas similares);Inglês em nível avançado para comunicação profissional;Perfil empreendedor, orientado a resultados, com forte iniciativa, resiliência e foco em geração de novas oportunidades.
+      - generic: 16 janeiro 2026
+      - generic: São Paulo,
+      - generic:
+        - generic: Remoto
+        - generic: Permanente
+        - generic: DOE
+      - generic: A Empresa Empresa de serviços de médio porte em São Paulo- SP.Descrição da vagaLiderar o fechamento contábil mensal;Preparar as demonstrações financeiras;Apurar os impostos diretos e indiretos;Preparar as obrigações acessórias;Fornecer apoio ao CFO em temas estratégicos;Modelo de trabalho 100% presencial.Perfil desejado Formação superior completa em Contabilidade;CRC ativo (vai assinar);Aceitar modelo de contratação PJ.
+      - generic: 25 março 2026
+      - generic: São Paulo,
+      - generic:
+        - generic: Remoto
+        - generic: Projetos
+        - generic: DOE
+      - generic: A EmpresaSegmento do agronegócioDescição da vaga Atuar em projetos estratégicos de viabilidade financeira e novos investimentos;Desenvolver modelagens financeiras e business cases;Realizar análises utilizando VPL, TIR e outros indicadores de retorno;Interagir com áreas de negócio como business partner financeiro;Apoiar análises estratégicas em conjunto com a área de M&A;Contribuir na estruturação de uma nova frente de FP&A estratégico;Modelo te trabalho híbrido.Perfil DesejadoExperiência prévia em FP&A estratégico, planejamento financeiro ou M&A;Sólida vivência com análises de viabilidade e modelagem financeira;Conhecimento em VPL, TIR e avaliação de investimentos;Perfil analítico, com visão estratégica e capacidade de interação com áreas de negócio;Excel avançado.
+      - generic: 27 março 2026
+      - generic: São Paulo,
+      - generic:
+        - generic: Remoto
+        - generic: Permanente
+        - generic: DOE
+      - generic: A EmpresaMultinacional de Tecnologia.Descrição da vagaAtuar com consolidação de resultados;Consolidar orçamentos das unidades de negócios;Realizar análises de real x orçado, forecas, etc...;Preparar diversos relatórios para a diretoria;Modelo de trabalho 100% remoto. Perfil desejado Formação superior completa;Inglês fluente (repor para EUA).
+      - generic: 27 fevereiro 2026
+      - generic: São Paulo,
+      - generic:
+        - generic: Remoto
+        - generic: Permanente
+        - generic: DOE
+      - generic: "A Empresa Multinacional do Segmento de Life Sciences, na região de São Paulo-SP.Descrição da vagaResponsável pela consolidação financeira dos negócios da América Latina, garantindo a integridade e consistência dos resultados (Actuals) e liderando a consolidação de forecast das diferentes divisões. Atua na preparação de materiais executivos para a liderança regional, suportando a tomada de decisão estratégica;Atuação como parceiro de négocios das áreas suporte (RH, IT, Legal, Finanças, Operações, Corporate Strategy), acompanhando as variações de Opex e Headcount, avaliando investimentos e identificando oportunidades de otimização de custos. Responsável por desenvolver análises financeiras, modelagem de cenários e business cases para suportar iniciativas estratégicas;Coordenar o processo de planejamento financeiro anual (Budget), garantindo alinhamento entre as áreas e consistência das premissas;Realização da gestão direta e desenvolvimento de uma equipe de 3 profissionais (Analista Pleno, Júnior e Estagiário), promovendo crescimento técnico e evolução de carreira;Atuar diretamente na execução de análises complexas e liderar iniciativas de melhoria de processos, com foco em automação, ganho de eficiência e aumento da acurácia das projeções.Perfil desejadoFormação superior completa;Pacote office (Destaque para Excel Avançado);Experiência com gestão de pessoas;Conhecimento no sistema Hyperion, JDEdwards;Idiomas: Inglês fluente."
+      - generic: 7 abril 2026
+      - generic: São Paulo,
+      - generic:
+        - generic: Remoto
+        - generic: Permanente
+        - generic: DOE
+      - generic: A EmpresaIndústria de grande porte com atuação no setor de bens de consumo, na região de São Paulo-SP.Descrição da vagaReportando-se diretamente ao Gerente Contábi;Desenvolver relatórios detalhados, analisando indicadores financeiros e operacionais para suporte aos processos decisórios estratégicos da alta gestão;Realizar estudos tributários aprofundados, garantindo o correto recolhimento de impostos, identificação de créditos tributários e oportunidades de planejamento tributário alinhadas à legislação vigente;Criar e implementar estratégias robustas de planejamento tributário, com foco em redução da carga fiscal e compliance legal;Monitorar minuciosamente processos de controle financeiro, garantindo precisão na gestão de receitas, despesas e ativos, conforme melhores práticas de governança;Supervisionar o fechamento contábil, assegurando cumprimento de prazos, precisão em análises, e correção de passivos, despesas e demais registros contábeis;Desenvolver cenários e análises financeiras/tributárias preditivas, simulando impactos no curto, médio e longo prazo;Liderar análises de viabilidade econômica para projetos ou investimentos, incluindo incentivos fiscais e lucratividade por produto/item;Acompanhar auditorias contábeis e fiscais, liderando a preparação de documentos e ações corretivas, quando aplicável;Supervisionar a elaboração, consolidação e ajustes das demonstrações financeiras, tanto locais quanto globais (Argentina e EUA);Implementar melhorias em processos internos e coordenar mudanças relacionadas a projetos estratégicos, como reforma tributária, HFM (integração de finanças) e preparação para SAP (2026);Monitorar desempenho das equipes em métricas financeiras críticas, como liquidez, margem de lucro e análise de CAPEX, garantindo saúde financeira;Elaborar relatórios para captação de recursos financeiros, utilizando ferramentas como Power BI e Excel;Modelo Híbrido.Perfil desejadoFormação superior completa em ciências contábeis;Pós-graduação/Especialização/MBA em áreas correlatas a contabilidade e tributos;Inglês fluente/avançado para comunicação verbal;Excel avançado.
+      - generic: 30 março 2026
+      - generic: São Paulo,
+      - generic:
+        - generic: Remoto
+        - generic: Permanente
+        - generic: DOE
+      - generic: A EmpresaNosso cliente é uma indústria multinacional de grande porte. Na região do ABC Paulista.Descrição da vagaReportando-se diretamente ao Gerente de Controladoria;Consolidar e analisar P&L/DRE do Brasil e Argentina, da receita ao IR, garantindo consistência contábil e gerencial;Conduzir budget, revisões (middle year) e rolling forecast (3 meses), desafiando premissas de volume, preço, custos e SG&A;Controlar despesas administrativas e comerciais (SG&A), definir limites, coletar justificativas e monitorar aderência por centro de custo;Produzir reports mensais com análises de variação (price/volume/mix, custo, FX) e explicar resultados a executivos locais e internacionais;Montar demonstrativos gerenciais, padronizar templates e fortalecer controles internos;Integrar dados de SAP e apoiar a implementação/estruturação de HFM/Hyperion;Automatizar análises com Excel avançado (Power Query) e dashboards em Power BI;Atuar junto ao time de custos na validação do custo padrão, variações e impactos no CMV/CPV;Coordenar calendário de entregas (fechamento, budget, forecast), cobrando áreas e assegurando qualidade das informações;Executar rateios e alocações, explicando critérios a BU's e áreas de suporte;Operar sob prazos curtos, garantindo disciplina de processos e redução de retrabalho;Liderar e desenvolver estagiário, elevando a maturidade analítica e a padronização da área;Modelo de trabalho híbrido. Perfil desejadoInglês avançado;Superior completo em Administração de Empresas, Ciências Contábeis, Economia ou correlatas;MBA / Pós-graduação na área (desejável).
+      - generic: 23 fevereiro 2026
+      - generic: São Paulo,
+      - generic:
+        - generic: Remoto
+        - generic: Permanente
+        - generic: DOE
+      - generic: A EmpresaEscritório de contabilidade de grande porte, na região de São Paulo - Av. Paulista.Descrição da vagaGerenciar a apuração e o cumprimento de obrigações acessórias fiscais (SPED Fiscal, DCTF, EFD Contribuições);Gerenciar a apuração do ICMS nacional (foco em MG, SC, ES) e o correto cumprimento da legislação tributária;Apoiar a estratégia tributária da empresa, identificando riscos e oportunidades fiscais;Liderar a equipe fiscal, promovendo o desenvolvimento técnico e a eficiência das rotinas fiscais;Atender clientes de forma consultiva, garantindo conformidade e buscando melhorias fiscais contínuas.Perfil desejadoCRC ativo;Experiência sólida em escritório contábil e gestão fiscal;Inglês para comunicação (mínima para reuniões e reportes internacionais);Conhecimento obrigatório do sistema Domínio;Conhecimento em Siege e Arquivei.
+      - generic: 21 janeiro 2026
+      - generic: São Paulo,
+      - generic:
+        - generic: Remoto
+        - generic: Permanente
+        - generic: DOE
+      - generic: "A Empresa Nacional precursora no segmento de atuação, na região de Pinheiros, São Paulo-SP.Descrição da vagaLiderar o escopo contábil de ponta a ponta, garantindo que a contabilidade reflita fielmente a realidade econômica da operação;Estruturar e organizar as demonstrações contábeis da companhia em conformidade com as normas internacionais de contabilidade (IFRS);Coordenar o fechamento contábil mensal, garantindo precisão e cumprimento de prazos;Gerir as consultorias tributárias parceiras e manter-se à frente dos impactos e implementações da Reforma Tributária no negócio;Ser o ponto focal e responsável pela gestão dos trabalhos junto à auditoria externa;Atuar com autonomia para propor melhorias em controles internos;Conduzir a apresentação de relatórios gerenciais para o CFO da empresa (exemplo: fluxo de caixa (entradas e saídas).Perfil desejadoFormação superior completa (CRC ativo);Pacote office (destaque para Excel avançado);Inglês intermediário;Conhecimento no sistema SAP B1."
+      - generic: 30 março 2026
+      - generic: São Paulo,
+      - generic:
+        - generic: Remoto
+        - generic: Permanente
+        - generic: DOE
+      - generic: "A EmpresaMultinacional Europeu, na região do Itaim Bibi-SP.Descrição da vagaSerá responsável por participar ativamente da discussão de novos produtos no que tange as particularidades da área contábil, bem como pelo relacionamento direto com a auditoria externa, conduzindo posicionamentos técnicos e estratégicos;Entre as principais responsabilidades estão a gestão dos processos de fechamento contábil mensal e anual, o atendimento integral das obrigações regulatórias junto ao Banco Central, além do suporte aos auditores em temas estratégicos, com análises e dados sensíveis relacionados à auditoria, incluindo a parte societária;A posição será responsável pelo fechamento contábil do banco e das demais empresas do grupo, abrangendo gestora, corretora, holding e cinco empresas não financeiras, totalizando sete empresas sob sua governança contábil.Perfil desejadoConhecimento da Legislação 4.966;Ter o CRC ativo - assinará o balanço;Conhecer todas as obrigações regulatórias que o BANCE exige de uma instituição financeira e Vir do mercado financeiro, preferencialmente bancos;Inglês Intermediário;Perfil Comportamental: Excelente habilidade de comunicação e de Relacionamento Interpessoal;Organizado."
+      - generic: 9 fevereiro 2026
+      - generic: São Paulo,
+      - generic:
+        - generic: Remoto
+        - generic: Permanente
+        - generic: DOE
+      - generic: A EmpresaGrupo multinacional de grande porte, na região de São Paulo-SP.Descrição da vagaGerenciar e supervisionar as rotinas contábeis e fiscais diretas (IR/CS), assegurando conformidade com as normas brasileiras e internacionais (CPCs e IFRS);Coordenar fechamentos contábeis mensais, trimestrais e anuais, garantindo qualidade, assiduidade de prazos e padronização dos processos;Controlar e revisar conciliações contábeis detalhadas, incluindo estoque, custo médio, manufatura, processo de custeio, produto acabado e variação cambial;Garantir a correta contabilização e apuração de impostos diretos (IRPJ/CSLL);Acompanhar e revisar processos de importação, impactos cambiais e controle de estoques para empresas de distribuição e indústria;Acompanhar e suportar o processo de elaboração das Demonstrações Financeiras, incluindo reportes ao BACEN para empresas com capital estrangeiro;Apoiar auditorias internas e externas, fornecendo direcionamento técnico e organizacional ao time operacional;Estruturar e aprimorar controles internos, visando eficiência e mitigação de riscos contábeis e fiscais bem como atendimento assíduo dos prazos estabelecidos;Participar da otimização de processos contábeis, promovendo maior automação e eficiência no uso de ferramentas como Excel e ERP (Protheus preferencialmente);Liderar o projeto de harmonização de processos, garantindo alinhamento das práticas contábeis entre os diferentes negócios do grupo.Perfil desejadoGraduação em Ciências Contábeis com CRC ativo. Pós-graduação e/ou MBA em áreas correlatas;Vivência em Centros de Serviços Compartilhados (CSC), Ambientes multinegócios e/ou BPO;Vivência em empresas com histórico de aquisição e incorporação de empresas;Experiência em auditoria externa com posterior migração para ambiente de empresas liderando a área contábil.
+      - generic: 31 março 2026
+      - generic: São Paulo,
+      - generic:
+        - generic: Remoto
+        - generic: Projetos
+        - generic: DOE
+      - generic: "A EmpresaInfraestrutura.Descrição da vagaElaborar relatórios gerenciais de desempenho financeiro e operacional;Analisar dados, identificar distorções e propor oportunidades de melhoria de resultados;Conduzir o ciclo de planejamento anual (budget) e revisões periódicas de forecast;Preparar apresentações executivas para diretoria e acionistas;Realizar reportes financeiros e acompanhar indicadores estratégicos do negócio;Interagir com unidades operacionais para explicar variações de resultado e apoiar decisões;Implantar e aprimorar processos, controles e dashboards para gestão financeira;Consolidar análises dos negócios e realizar críticas de performance;Monitorar indicadores operacionais relacionados ao segmento de infraestrutura e concessões;Apoiar a estruturação financeira de novos projetos, incluindo concessões (ex.: projetos educacionais);Modelo de trabalho 100% presencial.Perfil DesejadoFormação superior em Contabilidade, Administração, Engenharia ou áreas correlatas;Sólidos conhecimentos em contabilidade, fluxo de caixa, orçamento e análise de investimentos;Forte capacidade analítica, raciocínio lógico e visão crítica de resultados;Experiência com planejamento financeiro, forecasts e análise de desempenho;Boa comunicação e habilidade para relacionamento com áreas de negócio;Capacidade de construir apresentações executivas claras e objetivas;Perfil colaborativo, organizado e com curiosidade para aprendizado contínuo;Conhecimento em sistemas financeiros e ferramentas de análise de dados;Experiência com SAP ECC (preferencialmente módulo PS);Power BI;Experiência prévia no segmento de concessões de infraestrutura;Pós-graduação em Finanças, Controladoria ou áreas afins."
+      - generic: 27 março 2026
+      - generic: São Paulo,
+      - generic:
+        - generic: Remoto
+        - generic: Permanente
+        - generic: DOE
+      - generic: A EmpresaIndústria Multinacional.Descrição da vagaFornecer liderança financeira e suporte à tomada de decisão para as equipes comerciais da área de Indústria;Realizar validações de pricing de forma precisa e dentro dos prazos (lançamentos, SKUs customizados e negociações de volume);Conduzir análises claras de rentabilidade por cliente, produto e canal de vendas;Desenvolver e manter modelos de custos confiáveis, alinhados com as áreas de Supply Chain e Operações;Avaliar riscos e oportunidades financeiras durante os ciclos de orçamento e forecast;Elaborar recomendações financeiras acionáveis para otimização de mix de produtos, margens e portfólio;Garantir a governança de pricing, mantendo documentação estruturada e preparada para auditorias;Modelo de trabalho híbrido. Perfil desejadoFormação superior completa;Inglês avançado.
+      - generic: 13 março 2026
+      - generic: São Paulo,
+      - generic:
+        - generic: Remoto
+        - generic: Permanente
+        - generic: DOE
+      - generic: A EmpresaLegal Tech.Descrição da vagaRealizar gestão da equipe de FP&A, Tesouraria, Contabilidade e Fiscal;Fazer a gestão do orçamento, forecast e demais rotinas de FP&A;Atuar com consolidação e projeção do fluxo de caixa, investimentos e captação;Validar fechamentos contábeis e fiscais;Preparar diversos relatórios para os investidores;Fazer o planejamento estratégico e de novos negócios;Modelo de trabalho híbrido.Perfil desejado Formação superior completa;Inglês fluente (report para fora do Brasil);Aceitar modelo de contratação PJ (Pessoa Jurídica).
+      - generic: 6 março 2026
+      - generic: "1"
+      - generic: "2"
+      - generic: "3"
+      - generic: "4"
+    - generic [ref=e1074]:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - text: 
+                  - generic: Você está saindo do site da Robert Half Brasil e será redirecionado para o site da Robert Half EUA.
+      - generic [ref=e1076]:
+        - generic [ref=e1077]:
+          - text:    
+          - generic [ref=e1079]:
+            - generic:
+              - generic [ref=e1081]:
+                - heading "Soluções em talentos" [level=2] [ref=e1083]:
+                  - generic: Soluções em talentos
+                - list [ref=e1084]:
+                  - generic:
+                    - listitem [ref=e1085]:
+                      - link "Vagas" [ref=e1089] [cursor=pointer]:
+                        - /url: /br/pt/vagas
+                    - listitem [ref=e1090]:
+                      - link "Projetos" [ref=e1094] [cursor=pointer]:
+                        - /url: /br/pt/solucao-talentos/projetos
+                    - listitem [ref=e1095]:
+                      - link "Permanente" [ref=e1099] [cursor=pointer]:
+                        - /url: /br/pt/solucao-talentos/permanente
+                    - listitem [ref=e1100]:
+                      - link "Gestão interina" [ref=e1104] [cursor=pointer]:
+                        - /url: /br/pt/solucao-talentos/interim-management
+                    - listitem [ref=e1105]:
+                      - link "Executive Search" [ref=e1109] [cursor=pointer]:
+                        - /url: /br/pt/solucao-talentos/executive-search
+                    - listitem [ref=e1110]:
+                      - link "Consultoria" [ref=e1114] [cursor=pointer]:
+                        - /url: /br/pt/consultoria
+              - generic [ref=e1116]:
+                - heading "Nossas práticas" [level=2] [ref=e1118]:
+                  - generic: Nossas práticas
+                - list [ref=e1119]:
+                  - generic:
+                    - listitem [ref=e1120]:
+                      - link "Finanças e contabilidade" [ref=e1124] [cursor=pointer]:
+                        - /url: /br/pt/financas-contabilidade
+                    - listitem [ref=e1125]:
+                      - link "Tecnologia da informação" [ref=e1129] [cursor=pointer]:
+                        - /url: /br/pt/tecnologia
+                    - listitem [ref=e1130]:
+                      - link "Vendas e marketing" [ref=e1134] [cursor=pointer]:
+                        - /url: /br/pt/vendas-marketing
+                    - listitem [ref=e1135]:
+                      - link "Jurídico" [ref=e1139] [cursor=pointer]:
+                        - /url: /br/pt/juridico
+                    - listitem [ref=e1140]:
+                      - link "Recursos humanos" [ref=e1144] [cursor=pointer]:
+                        - /url: /br/pt/recursos-humanos
+                    - listitem [ref=e1145]:
+                      - link "Engenharia" [ref=e1149] [cursor=pointer]:
+                        - /url: /br/pt/engenharia
+              - generic [ref=e1151]:
+                - heading "Recursos" [level=2] [ref=e1153]:
+                  - generic: Recursos
+                - list [ref=e1154]:
+                  - generic:
+                    - listitem [ref=e1155]:
+                      - link "Guia salarial" [ref=e1159] [cursor=pointer]:
+                        - /url: /br/pt/insights/guia-salarial
+                    - listitem [ref=e1160]:
+                      - link "Índice de confiança Robert Half" [ref=e1164] [cursor=pointer]:
+                        - /url: /br/pt/insights/indice-confianca
+                    - listitem [ref=e1165]:
+                      - link "Panorama Setorial" [ref=e1169] [cursor=pointer]:
+                        - /url: /br/pt/insights/panorama
+                    - listitem [ref=e1170]:
+                      - link "Funções mais demandadas" [ref=e1174] [cursor=pointer]:
+                        - /url: /br/pt/vagas-detalhes-all
+                    - listitem [ref=e1175]:
+                      - link "Central do Conhecimento" [ref=e1179] [cursor=pointer]:
+                        - /url: /br/pt/insights
+                    - listitem [ref=e1180]:
+                      - link "Receba nossa newsletter" [ref=e1184] [cursor=pointer]:
+                        - /url: /br/pt/insights/newsletter
+                    - listitem [ref=e1185]:
+                      - link "Criar alerta de vagas" [ref=e1189] [cursor=pointer]:
+                        - /url: /br/pt/procurando-oportunidade/alerta-de-vaga
+                    - listitem [ref=e1190]:
+                      - link "Ajuda" [ref=e1194] [cursor=pointer]:
+                        - /url: /br/pt/infocenter
+              - generic [ref=e1196]:
+                - heading "Sobre" [level=2] [ref=e1198]:
+                  - generic: Sobre
+                - list [ref=e1199]:
+                  - generic:
+                    - listitem [ref=e1200]:
+                      - link "Sobre Robert Half" [ref=e1204] [cursor=pointer]:
+                        - /url: /br/pt/sobre-robert-half
+                    - listitem [ref=e1205]:
+                      - link "Liderança" [ref=e1209] [cursor=pointer]:
+                        - /url: /br/pt/sobre-robert-half/lideranca
+                    - listitem [ref=e1210]:
+                      - link "Trabalhe conosco" [ref=e1214] [cursor=pointer]:
+                        - /url: /br/pt/join-robert-half
+                    - listitem [ref=e1215]:
+                      - link "Escritórios" [ref=e1219] [cursor=pointer]:
+                        - /url: /br/pt/localizacoes
+                    - listitem [ref=e1220]:
+                      - link "Relação com investidores" [ref=e1224] [cursor=pointer]:
+                        - /url: "#"
+                    - listitem [ref=e1225]:
+                      - link "Imprensa" [ref=e1229] [cursor=pointer]:
+                        - /url: /br/pt/sobre-robert-half/imprensa
+                    - listitem [ref=e1230]:
+                      - link "Nossas marcas" [ref=e1234] [cursor=pointer]:
+                        - /url: /br/pt/sobre-robert-half/nossa-historia/nossas-marcas
+        - generic [ref=e1237]:
+          - link [ref=e1238] [cursor=pointer]:
+            - /url: /br/pt
+            - img [ref=e1240]
+          - list [ref=e1244]:
+            - generic:
+              - listitem [ref=e1245]:
+                - link "linkedin" [ref=e1249] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/company/robert-half-international
+                  - generic [ref=e1251]:
+                    - generic [ref=e1252]: 
+                    - generic [ref=e1253]: linkedin
+              - listitem [ref=e1254]:
+                - link "instagram" [ref=e1258] [cursor=pointer]:
+                  - /url: https://www.instagram.com/roberthalfbr/
+                  - generic [ref=e1260]:
+                    - generic [ref=e1261]: 
+                    - generic [ref=e1262]: instagram
+              - listitem [ref=e1263]:
+                - link "youtube" [ref=e1267] [cursor=pointer]:
+                  - /url: http://www.youtube.com/RoberthalfBR
+                  - generic [ref=e1269]:
+                    - generic [ref=e1270]: 
+                    - generic [ref=e1271]: youtube
+              - listitem [ref=e1272]:
+                - link "twitter" [ref=e1276] [cursor=pointer]:
+                  - /url: http://twitter.com/Roberthalf_BR
+                  - generic [ref=e1278]:
+                    - generic [ref=e1279]: 
+                    - generic [ref=e1280]: twitter
+              - listitem [ref=e1281]:
+                - link "facebook" [ref=e1285] [cursor=pointer]:
+                  - /url: https://www.facebook.com/roberthalfbrasil/
+                  - generic [ref=e1287]:
+                    - generic [ref=e1288]: 
+                    - generic [ref=e1289]: facebook
+          - generic [ref=e1290]:
+            - generic [ref=e1293]:
+              - generic [ref=e1294]:
+                - generic [ref=e1296]:
+                  - generic: Brasil (Português)
+                - button "Selecione uma região e um idioma" [ref=e1298] [cursor=pointer]:
+                  - text: Selecione uma região e um idioma
+                  - generic [ref=e1301]: 
+              - generic:
+                - text: 
+                - generic: "Sua região e idioma atuais são:"
+                - generic: Brasil (Português)
+                - generic:
+                  - generic: Alemanha
+                  - text: 
+                  - text: 
+                  - generic: Austrália
+                  - text: 
+                  - text: 
+                  - generic: Bélgica
+                  - text: 
+                  - text:   
+                  - generic: Brasil
+                  - text: 
+                  - text: 
+                  - generic: Canadá
+                  - text: 
+                  - text:  
+                  - generic: Chile
+                  - text: 
+                  - text: 
+                  - generic: China
+                  - text: 
+                  - text:  
+                  - generic: Emirados Árabes Unidos
+                  - text: 
+                  - text: 
+                  - generic: Estados Unidos
+                  - text: 
+                  - text: 
+                  - generic: França
+                  - text: 
+                  - text: 
+                  - generic: Holanda
+                  - text: 
+                  - text:  
+                  - generic: Hong Kong, China
+                  - text: 
+                  - text: 
+                  - generic: Irlanda
+                  - text: 
+                  - text: 
+                  - generic: Itália
+                  - text: 
+                  - text: 
+                  - generic: Japão
+                  - text: 
+                  - text:  
+                  - generic: Luxemburgo
+                  - text: 
+                  - text:  
+                  - generic: Nova Zelândia
+                  - text: 
+                  - text: 
+                  - generic: Reino Unido
+                  - text: 
+                  - text: 
+                  - generic: Singapura
+                  - text: 
+                  - text: 
+                  - generic: Suíça
+                  - text: 
+                  - text:   
+            - generic [ref=e1302]:
+              - list [ref=e1305]:
+                - generic:
+                  - listitem [ref=e1306]:
+                    - link "Aviso de Privacidade" [ref=e1310] [cursor=pointer]:
+                      - /url: /br/pt/privacidade
+                  - listitem [ref=e1311]:
+                    - link "Termos de uso" [ref=e1315] [cursor=pointer]:
+                      - /url: /br/pt/termos-de-uso
+                  - listitem [ref=e1316]:
+                    - link "Alerta de fraude" [ref=e1320] [cursor=pointer]:
+                      - /url: /br/pt/alerta-fraude
+              - generic [ref=e1321]:
+                - generic [ref=e1322]:
+                  - generic: © 2026
+                - generic [ref=e1323]:
+                  - generic: Robert Half Inc.
+  - generic [ref=e1324] [cursor=pointer]:
+    - button "Definições de cookies" [ref=e1326]
+    - text: Definições de cookies

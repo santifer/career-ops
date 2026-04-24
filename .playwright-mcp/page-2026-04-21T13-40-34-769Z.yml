@@ -1,0 +1,25 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - progressbar [ref=e5]:
+      - img [ref=e6]
+    - link "Suporte para candidatos" [ref=e8] [cursor=pointer]:
+      - /url: https://suporte-candidatos.gupy.io/s/suporte?language=pt_BR
+      - text: "?"
+  - generic:
+    - generic "Privacy Tools - Cookie Management":
+      - dialog "cookieconsent" [ref=e9]:
+        - button "Fechar banner de cookies" [ref=e10] [cursor=pointer]: ×
+        - generic [ref=e11]:
+          - generic [ref=e13]:
+            - text: Ao clicar em “Aceitar todos os cookies”, você concorda com o armazenamento de cookies no seu dispositivo para melhorar a navegação no site, analisar o uso do site e ajudar em nossos esforços de marketing.
+            - link "Aviso de Cookies" [ref=e14] [cursor=pointer]:
+              - /url: https://www.gupy.io/aviso-de-cookies?_gl=1*1rylxvw*_gcl_au*NTk2NDkzOTQuMTcxNDQxMjg5Mw..
+            - link "Aviso de Privacidade" [ref=e15] [cursor=pointer]:
+              - /url: https://www.gupy.io/aviso-de-privacidade-site
+          - generic [ref=e16]:
+            - button "Rejeitar Todos" [ref=e18] [cursor=pointer]:
+              - generic "Rejeitar" [ref=e19]: Rejeitar Todos
+            - button "Aceitar Cookies" [ref=e20] [cursor=pointer]:
+              - generic "Aceitar" [ref=e21]: Aceitar Cookies
+            - button "Configurar Cookies" [ref=e23] [cursor=pointer]
+    - generic "Privacy Tools - Cookie Management - https://www.privacytools.com.br"

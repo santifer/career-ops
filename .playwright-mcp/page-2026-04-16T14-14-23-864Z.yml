@@ -1,0 +1,855 @@
+- generic [ref=e1]:
+  - link [ref=e2] [cursor=pointer]:
+    - /url: "#gnav-header-end"
+    - text: Skip to main content
+  - main [ref=e3]:
+    - generic [ref=e5]:
+      - navigation [ref=e7]:
+        - generic [ref=e9]:
+          - generic [ref=e10]:
+            - generic [ref=e11]:
+              - button [ref=e12] [cursor=pointer]:
+                - generic [ref=e13]: Skip to main content
+              - link [ref=e14] [cursor=pointer]:
+                - /url: /?from=gnav-jobsearch--indeedmobile
+                - img [ref=e16]
+              - list [ref=e18]:
+                - listitem [ref=e19]:
+                  - link [ref=e21] [cursor=pointer]:
+                    - /url: https://www.indeed.com/
+                    - text: Home
+                - listitem [ref=e22]:
+                  - link [ref=e24] [cursor=pointer]:
+                    - /url: https://www.indeed.com/companies
+                    - text: Company reviews
+                - listitem [ref=e25]:
+                  - link [ref=e27] [cursor=pointer]:
+                    - /url: https://www.indeed.com/career/salaries
+                    - text: Find salaries
+            - generic [ref=e28]:
+              - list [ref=e29]:
+                - listitem [ref=e30]:
+                  - link [ref=e32] [cursor=pointer]:
+                    - /url: https://myjobs.indeed.com?from=gnav-util-jobsearch--indeedmobile&gnavTK=1jmba93tqgil6801&tk=1jmba93ltgbr287d&co=US&hl=en
+                    - img [ref=e33]
+                - listitem [ref=e35]:
+                  - link [ref=e37] [cursor=pointer]:
+                    - /url: https://messages.indeed.com?from=gnav-util-jobsearch--indeedmobile&gnavTK=1jmba93tqgil6801&tk=1jmba93ltgbr287d&co=US&hl=en
+                    - img [ref=e38]
+                    - generic [ref=e43]: Messages Unread count 0
+                - listitem [ref=e44]:
+                  - link [ref=e46] [cursor=pointer]:
+                    - /url: https://www.indeed.com/notifications?from=gnav-util-jobsearch--indeedmobile&gnavTK=1jmba93tqgil6801&tk=1jmba93ltgbr287d&hl=en
+                    - img [ref=e47]
+                - listitem [ref=e49]:
+                  - button [ref=e53] [cursor=pointer]:
+                    - generic [ref=e54]:
+                      - img [ref=e55]
+                      - generic [ref=e57]:
+                        - text: "1"
+                        - generic [ref=e58]: new update
+              - link [ref=e63] [cursor=pointer]:
+                - /url: https://www.indeed.com/hire?co=US&hl=en
+                - text: Employers / Post Job
+          - generic [ref=e64]: Start of main content
+      - generic [ref=e66]:
+        - search [ref=e71]:
+          - generic [ref=e74]:
+            - generic [ref=e76]:
+              - generic [ref=e77]:
+                - generic [ref=e78]: "Keyword : all jobs"
+                - generic [ref=e81]:
+                  - img [ref=e83]
+                  - combobox [ref=e85]: controller financeiro
+                  - button [ref=e87] [cursor=pointer]:
+                    - img [ref=e88]
+              - separator [ref=e90]:
+                - generic [ref=e91]: "&nbsp;"
+              - generic [ref=e92]:
+                - generic [ref=e93]: Edit location input box label
+                - generic [ref=e96]:
+                  - img [ref=e98]
+                  - combobox [ref=e100]: Sao Paulo
+                  - button [ref=e102] [cursor=pointer]:
+                    - img [ref=e103]
+            - button [ref=e106] [cursor=pointer]: Search
+          - list [ref=e109]:
+            - button [ref=e111] [cursor=pointer]: Pay
+            - button [ref=e113] [cursor=pointer]: Remote
+            - button [ref=e115] [cursor=pointer]: Job Type
+            - button [ref=e117] [cursor=pointer]: Experience level
+            - button [ref=e119] [cursor=pointer]: Encouraged to apply
+            - button [ref=e121] [cursor=pointer]: Date posted
+        - generic [ref=e127]:
+          - generic [ref=e128]:
+            - generic [ref=e129]:
+              - heading [level=1] [ref=e130]: controller financeiro jobs
+              - generic [ref=e132]:
+                - generic [ref=e133]:
+                  - generic [ref=e134]: "Sort by:"
+                  - generic [ref=e135]:
+                    - text: relevance -
+                    - link [ref=e136] [cursor=pointer]:
+                      - /url: /jobs?q=controller%20financeiro&l=Sao%20Paulo&country=br&sort=date
+                      - text: date
+                - generic [ref=e137]:
+                  - generic [ref=e138]: 300+ jobs
+                  - button [ref=e140] [cursor=pointer]:
+                    - img [ref=e141]
+            - list [ref=e147]:
+              - listitem [ref=e148]:
+                - generic [ref=e153]:
+                  - heading [level=2] [ref=e155]:
+                    - button [pressed] [ref=e156] [cursor=pointer]: Controller
+                  - generic [ref=e157]:
+                    - generic [ref=e159]:
+                      - generic [ref=e161]: One Community Health
+                      - generic [ref=e162]: Hybrid work in Hood River, OR 97031
+                    - list [ref=e164]:
+                      - listitem [ref=e165]:
+                        - generic [ref=e168]: Health insurance
+                      - listitem [ref=e169]:
+                        - generic [ref=e172]: Paid time off
+                      - listitem [ref=e173]:
+                        - generic [ref=e176]: Employee discount
+                      - listitem [ref=e177]:
+                        - generic [ref=e180]: Vision insurance
+                      - listitem [ref=e181]:
+                        - generic [ref=e184]: Dental insurance
+                      - listitem [ref=e185]:
+                        - generic [ref=e188]: Gym membership
+                  - generic [ref=e189]:
+                    - button [ref=e190] [cursor=pointer]:
+                      - img [ref=e191]
+                    - button [ref=e193] [cursor=pointer]:
+                      - img [ref=e194]
+              - listitem [ref=e197]:
+                - generic [ref=e202]:
+                  - heading [level=2] [ref=e204]:
+                    - button [ref=e205] [cursor=pointer]: Controller / VP of Finance (CFO Track)
+                  - generic [ref=e206]:
+                    - generic [ref=e208]:
+                      - generic [ref=e210]: Pronoia Labs
+                      - generic [ref=e211]: Hybrid work in Orange County, CA
+                    - list [ref=e213]:
+                      - listitem [ref=e214]:
+                        - generic [ref=e217]: 401(k)
+                      - listitem [ref=e218]:
+                        - generic [ref=e221]: Health insurance
+                      - listitem [ref=e222]:
+                        - generic [ref=e225]: Paid time off
+                      - listitem [ref=e226]:
+                        - generic [ref=e229]: Employee discount
+                      - listitem [ref=e230]:
+                        - generic [ref=e233]: Vision insurance
+                      - listitem [ref=e234]:
+                        - generic [ref=e237]: Dental insurance
+                  - generic [ref=e238]:
+                    - button [ref=e239] [cursor=pointer]:
+                      - img [ref=e240]
+                    - button [ref=e242] [cursor=pointer]:
+                      - img [ref=e243]
+              - listitem [ref=e246]:
+                - generic [ref=e251]:
+                  - heading [level=2] [ref=e253]:
+                    - button [ref=e254] [cursor=pointer]: Corporate Controller-Sunda New Asian Group
+                  - generic [ref=e255]:
+                    - generic [ref=e257]:
+                      - generic [ref=e259]: Sunda Tampa
+                      - generic [ref=e260]: Tampa, FL 33606
+                    - list [ref=e262]:
+                      - listitem [ref=e263]:
+                        - generic [ref=e266]: Paid time off
+                  - generic [ref=e267]:
+                    - button [ref=e268] [cursor=pointer]:
+                      - img [ref=e269]
+                    - button [ref=e271] [cursor=pointer]:
+                      - img [ref=e272]
+              - listitem [ref=e275]:
+                - generic [ref=e280]:
+                  - heading [level=2] [ref=e282]:
+                    - button [ref=e283] [cursor=pointer]: Controller (< 100 Employees)
+                  - generic [ref=e284]:
+                    - generic [ref=e286]:
+                      - generic [ref=e288]: Fuji Foods USA
+                      - generic [ref=e289]: Browns Summit, NC 27214
+                    - list [ref=e291]:
+                      - listitem [ref=e292]:
+                        - generic [ref=e295]: 401(k)
+                      - listitem [ref=e296]:
+                        - generic [ref=e299]: Health insurance
+                      - listitem [ref=e300]:
+                        - generic [ref=e303]: 401(k) matching
+                      - listitem [ref=e304]:
+                        - generic [ref=e307]: Paid time off
+                      - listitem [ref=e308]:
+                        - generic [ref=e311]: Vision insurance
+                      - listitem [ref=e312]:
+                        - generic [ref=e315]: Dental insurance
+                  - generic [ref=e316]:
+                    - button [ref=e317] [cursor=pointer]:
+                      - img [ref=e318]
+                    - button [ref=e320] [cursor=pointer]:
+                      - img [ref=e321]
+              - listitem [ref=e324]:
+                - generic [ref=e329]:
+                  - heading [level=2] [ref=e331]:
+                    - button [ref=e332] [cursor=pointer]: CFO/Senior Controller/FP&A Manager
+                  - generic [ref=e335]:
+                    - generic [ref=e337]: ICI Alliance
+                    - generic [ref=e338]: Hybrid work in Salt Lake City, UT 84109
+                  - generic [ref=e339]:
+                    - button [ref=e340] [cursor=pointer]:
+                      - img [ref=e341]
+                    - button [ref=e343] [cursor=pointer]:
+                      - img [ref=e344]
+              - listitem [ref=e347]:
+                - generic [ref=e352]:
+                  - heading [level=2] [ref=e354]:
+                    - button [ref=e355] [cursor=pointer]: Group Financial Controller - HSG
+                  - generic [ref=e358]:
+                    - generic [ref=e360]: ASSA ABLOY
+                    - generic [ref=e361]: Salem, VA 24153
+                  - generic [ref=e362]:
+                    - button [ref=e363] [cursor=pointer]:
+                      - img [ref=e364]
+                    - button [ref=e366] [cursor=pointer]:
+                      - img [ref=e367]
+              - listitem [ref=e370]:
+                - generic [ref=e375]:
+                  - heading [level=2] [ref=e377]:
+                    - button [ref=e378] [cursor=pointer]: Plant Controller - Deerfield or Mexico, MO
+                  - generic [ref=e379]:
+                    - generic [ref=e381]:
+                      - generic [ref=e383]: ADM
+                      - generic [ref=e384]: Deerfield, MO
+                    - list [ref=e386]:
+                      - listitem [ref=e387]:
+                        - generic [ref=e390]: Tuition reimbursement
+                      - listitem [ref=e391]:
+                        - generic [ref=e394]: Paid parental leave
+                      - listitem [ref=e395]:
+                        - generic [ref=e398]: Parental leave
+                      - listitem [ref=e399]:
+                        - generic [ref=e402]: Health insurance
+                      - listitem [ref=e403]:
+                        - generic [ref=e406]: 401(k) matching
+                      - listitem [ref=e407]:
+                        - generic [ref=e410]: Paid time off
+                  - generic [ref=e411]:
+                    - button [ref=e412] [cursor=pointer]:
+                      - img [ref=e413]
+                    - button [ref=e415] [cursor=pointer]:
+                      - img [ref=e416]
+              - listitem [ref=e419]:
+                - generic [ref=e424]:
+                  - heading [level=2] [ref=e426]:
+                    - button [ref=e427] [cursor=pointer]: Regional Controller
+                  - generic [ref=e430]:
+                    - generic [ref=e432]: VALCOURT BUILDING SERVICES L C
+                    - generic [ref=e433]:
+                      - text: The Woodlands, TX 77381
+                      - generic [ref=e434]: (Research Forest area)
+                  - generic [ref=e435]:
+                    - button [ref=e436] [cursor=pointer]:
+                      - img [ref=e437]
+                    - button [ref=e439] [cursor=pointer]:
+                      - img [ref=e440]
+              - listitem [ref=e443]:
+                - generic [ref=e448]:
+                  - heading [level=2] [ref=e450]:
+                    - button [ref=e451] [cursor=pointer]: Controller
+                  - generic [ref=e454]:
+                    - generic [ref=e456]: Abacus Technology
+                    - generic [ref=e457]: Chevy Chase, MD 20815
+                  - generic [ref=e458]:
+                    - button [ref=e459] [cursor=pointer]:
+                      - img [ref=e460]
+                    - button [ref=e462] [cursor=pointer]:
+                      - img [ref=e463]
+              - listitem [ref=e466]:
+                - generic [ref=e471]:
+                  - heading [level=2] [ref=e473]:
+                    - button [ref=e474] [cursor=pointer]: Controller
+                  - generic [ref=e477]:
+                    - generic [ref=e479]: Raymer Oil- (Fast Phils, Run In, IGA, FairValue)
+                    - generic [ref=e480]: Statesville, NC
+                  - generic [ref=e481]:
+                    - button [ref=e482] [cursor=pointer]:
+                      - img [ref=e483]
+                    - button [ref=e485] [cursor=pointer]:
+                      - img [ref=e486]
+              - listitem [ref=e489]:
+                - generic [ref=e494]:
+                  - heading [level=2] [ref=e496]:
+                    - button [ref=e497] [cursor=pointer]: Americas Financial Controller
+                  - generic [ref=e498]:
+                    - generic [ref=e500]:
+                      - generic [ref=e502]: Element Solutions Inc
+                      - generic [ref=e503]: Waterbury, CT 06702
+                    - list [ref=e505]:
+                      - listitem [ref=e506]:
+                        - generic [ref=e509]: Health insurance
+                      - listitem [ref=e510]:
+                        - generic [ref=e513]: 401(k) matching
+                      - listitem [ref=e514]:
+                        - generic [ref=e517]: Life insurance
+                  - generic [ref=e518]:
+                    - button [ref=e519] [cursor=pointer]:
+                      - img [ref=e520]
+                    - button [ref=e522] [cursor=pointer]:
+                      - img [ref=e523]
+              - listitem [ref=e526]:
+                - generic [ref=e531]:
+                  - heading [level=2] [ref=e533]:
+                    - button [ref=e534] [cursor=pointer]: Financial Controller
+                  - generic [ref=e535]:
+                    - generic [ref=e537]:
+                      - generic [ref=e539]: Ultra Electronics
+                      - generic [ref=e540]: Columbia City, IN 46725
+                    - list [ref=e542]:
+                      - listitem [ref=e543]:
+                        - generic [ref=e546]: Loan repayment program
+                      - listitem [ref=e547]:
+                        - generic [ref=e550]: Tuition reimbursement
+                      - listitem [ref=e551]:
+                        - generic [ref=e554]: Pet insurance
+                      - listitem [ref=e555]:
+                        - generic [ref=e558]: Prescription drug insurance
+                      - listitem [ref=e559]:
+                        - generic [ref=e562]: AD&D insurance
+                      - listitem [ref=e563]:
+                        - generic [ref=e566]: Health insurance
+                  - generic [ref=e567]:
+                    - button [ref=e568] [cursor=pointer]:
+                      - img [ref=e569]
+                    - button [ref=e571] [cursor=pointer]:
+                      - img [ref=e572]
+              - listitem [ref=e575]:
+                - generic [ref=e580]:
+                  - heading [level=2] [ref=e582]:
+                    - button [ref=e583] [cursor=pointer]: Corporate Controller
+                  - generic [ref=e584]:
+                    - generic [ref=e586]:
+                      - generic [ref=e588]: Saildrone
+                      - generic [ref=e589]:
+                        - text: Alameda, CA 94501
+                        - generic [ref=e590]: (Alameda Point area)
+                    - list [ref=e592]:
+                      - listitem [ref=e593]:
+                        - generic [ref=e596]: Professional development assistance
+                      - listitem [ref=e597]:
+                        - generic [ref=e600]: Health insurance
+                      - listitem [ref=e601]:
+                        - generic [ref=e604]: Paid time off
+                      - listitem [ref=e605]:
+                        - generic [ref=e608]: Vision insurance
+                      - listitem [ref=e609]:
+                        - generic [ref=e612]: Dental insurance
+                      - listitem [ref=e613]:
+                        - generic [ref=e616]: Paid sick time
+                  - generic [ref=e617]:
+                    - button [ref=e618] [cursor=pointer]:
+                      - img [ref=e619]
+                    - button [ref=e621] [cursor=pointer]:
+                      - img [ref=e622]
+              - listitem [ref=e625]:
+                - generic [ref=e630]:
+                  - heading [level=2] [ref=e632]:
+                    - button [ref=e633] [cursor=pointer]: Controller
+                  - generic [ref=e636]:
+                    - generic [ref=e638]: The og Companies
+                    - generic [ref=e639]: Salinas, CA
+                  - generic [ref=e640]:
+                    - button [ref=e641] [cursor=pointer]:
+                      - img [ref=e642]
+                    - button [ref=e644] [cursor=pointer]:
+                      - img [ref=e645]
+              - listitem [ref=e648]:
+                - generic [ref=e655]:
+                  - heading [level=2] [ref=e657]:
+                    - button [ref=e658] [cursor=pointer]: 1.2. Controller
+                  - generic [ref=e659]:
+                    - generic [ref=e661]:
+                      - generic [ref=e663]: Phoenix Tailings
+                      - generic [ref=e664]: Burlington, MA
+                    - list [ref=e666]:
+                      - listitem [ref=e667]:
+                        - generic [ref=e670]: Health insurance
+                      - listitem [ref=e671]:
+                        - generic [ref=e674]: Vision insurance
+                      - listitem [ref=e675]:
+                        - generic [ref=e678]: Dental insurance
+                      - listitem [ref=e679]:
+                        - generic [ref=e682]: Stock options
+                      - listitem [ref=e683]:
+                        - generic [ref=e686]: Unlimited paid time off
+                  - link [ref=e688] [cursor=pointer]:
+                    - /url: /addlLoc/redirect?tk=1jmba93ltgbr287d&jk=73734fa061a0f66b&dest=%2Fjobs%3Fq%3Dcontroller%2Bfinanceiro%26nl%3D%26l%3DSao%2BPaulo%26radius%3D25%26grpKey%3DoAEB8gcFdG5mZWy4D57t9TSqEBcKCW5vcm10aXRsZRoKY29udHJvbGxlcg%253D%253D
+                    - text: View similar jobs with this employer
+                    - img [ref=e689]
+                  - generic [ref=e691]:
+                    - button [ref=e692] [cursor=pointer]:
+                      - img [ref=e693]
+                    - button [ref=e695] [cursor=pointer]:
+                      - img [ref=e696]
+            - group [ref=e707]:
+              - generic [ref=e708]: Overall, how relevant are these jobs?
+              - generic [ref=e709]:
+                - generic [ref=e711]:
+                  - radio [ref=e712] [cursor=pointer]
+                  - img [ref=e715]
+                  - generic [ref=e718]: Not at all
+                - generic [ref=e720]:
+                  - radio [ref=e721] [cursor=pointer]
+                  - img [ref=e724]
+                  - generic [ref=e727]: Slightly
+                - generic [ref=e729]:
+                  - radio [ref=e730] [cursor=pointer]
+                  - img [ref=e733]
+                  - generic [ref=e736]: Somewhat
+                - generic [ref=e738]:
+                  - radio [ref=e739] [cursor=pointer]
+                  - img [ref=e742]
+                  - generic [ref=e745]: Very
+                - generic [ref=e747]:
+                  - radio [ref=e748] [cursor=pointer]
+                  - img [ref=e751]
+                  - generic [ref=e754]: Extremely
+            - navigation [ref=e755]:
+              - list [ref=e756]:
+                - listitem [ref=e757]:
+                  - link [ref=e758] [cursor=pointer]:
+                    - /url: "#"
+                    - text: "1"
+                - listitem [ref=e759]:
+                  - link [ref=e760] [cursor=pointer]:
+                    - /url: /jobs?q=controller+financeiro&l=Sao+Paulo&radius=25&start=10
+                    - text: "2"
+                - listitem [ref=e761]:
+                  - link [ref=e762] [cursor=pointer]:
+                    - /url: /jobs?q=controller+financeiro&l=Sao+Paulo&radius=25&start=20
+                    - text: "3"
+                - listitem [ref=e763]:
+                  - link [ref=e764] [cursor=pointer]:
+                    - /url: /jobs?q=controller+financeiro&l=Sao+Paulo&radius=25&start=30
+                    - text: "4"
+                - listitem [ref=e765]:
+                  - link [ref=e766] [cursor=pointer]:
+                    - /url: /jobs?q=controller+financeiro&l=Sao+Paulo&radius=25&start=40
+                    - text: "5"
+                - listitem [ref=e767]:
+                  - link [ref=e768] [cursor=pointer]:
+                    - /url: /jobs?q=controller+financeiro&l=Sao+Paulo&radius=25&start=10
+                    - img [ref=e769]
+            - generic [ref=e771]:
+              - heading [level=2] [ref=e772]: "Resume Resources:"
+              - list [ref=e773]:
+                - listitem [ref=e774]:
+                  - link [ref=e775] [cursor=pointer]:
+                    - /url: https://www.indeed.com/career-advice/resume-samples?from=jobsearch_footer
+                    - text: Resume Samples
+                - text: "-"
+                - listitem [ref=e776]:
+                  - link [ref=e777] [cursor=pointer]:
+                    - /url: https://www.indeed.com/profile/resume-templates?from=jobsearch_footer
+                    - text: Resume Templates
+            - generic [ref=e778]:
+              - heading [level=2] [ref=e779]: "Career Resources:"
+              - list [ref=e780]:
+                - listitem [ref=e781]:
+                  - link [ref=e782] [cursor=pointer]:
+                    - /url: /career/salaries?from=jobsearch_footer
+                    - text: Career Explorer
+                - text: "-"
+                - listitem [ref=e783]:
+                  - link [ref=e784] [cursor=pointer]:
+                    - /url: /explorer/
+                    - text: Explore High Paying Jobs
+            - generic [ref=e785]:
+              - heading [level=2] [ref=e786]: "Employer Resources:"
+              - list [ref=e787]:
+                - listitem [ref=e788]:
+                  - link [ref=e789] [cursor=pointer]:
+                    - /url: /hire/how-to-write-a-job-description?from=jobsearch_footer
+                    - text: How to Write a Job Description
+                - text: "-"
+                - listitem [ref=e790]:
+                  - link [ref=e791] [cursor=pointer]:
+                    - /url: /hire/how-to-hire?from=jobsearch_footer
+                    - text: How to Hire Employees
+          - generic [ref=e793]:
+            - button [ref=e794]: Return to Search Result
+            - heading [level=2] [ref=e795]: Job Post Details
+            - generic [ref=e800]:
+              - generic [ref=e801]:
+                - generic [ref=e803]:
+                  - generic [ref=e804]:
+                    - heading [level=2] [ref=e806]:
+                      - generic [ref=e807]:
+                        - text: Controller
+                        - generic [ref=e808]: "- job post"
+                    - generic [ref=e812]:
+                      - generic [ref=e813]:
+                        - link [ref=e816] [cursor=pointer]:
+                          - /url: https://www.indeed.com/cmp/One-Community-Health-(oregon)?campaignid=mobvjcmp&from=mobviewjob&tk=1jmba93v0gbr2809&fromjk=56e3babfdf9d7cea
+                          - text: One Community Health
+                          - img [ref=e817]
+                        - generic [ref=e819]:
+                          - generic [ref=e820]: · 3.5
+                          - generic [ref=e821]: 3.5 out of 5 stars
+                          - img [ref=e822]
+                      - generic [ref=e825]: Hood River, OR 97031•Hybrid work
+                  - generic [ref=e828]:
+                    - generic [ref=e829]: From $125,000 a year
+                    - generic [ref=e830]: "- Full-time"
+                - generic [ref=e831]:
+                  - generic [ref=e837]:
+                    - generic [ref=e838]:
+                      - generic [ref=e839]:
+                        - heading [level=2] [ref=e840]: Job details
+                        - generic [ref=e841]:
+                          - text: Here’s how the job details align with your
+                          - link [ref=e842] [cursor=pointer]:
+                            - /url: https://profile.indeed.com/
+                            - text: profile
+                            - img [ref=e843]
+                          - text: .
+                      - generic [ref=e845]:
+                        - group [ref=e846]:
+                          - img [ref=e847]
+                          - generic [ref=e849]:
+                            - heading [level=3] [ref=e850]: Pay
+                            - list [ref=e852]:
+                              - listitem [ref=e853]:
+                                - button [ref=e854]:
+                                  - generic [ref=e857]:
+                                    - img [ref=e858]
+                                    - generic [ref=e860]: From $125,000 a year
+                                    - img [ref=e861]
+                        - group [ref=e863]:
+                          - img [ref=e864]
+                          - generic [ref=e867]:
+                            - heading [level=3] [ref=e868]: Job type
+                            - list [ref=e870]:
+                              - listitem [ref=e871]:
+                                - button [ref=e872]:
+                                  - generic [ref=e875]:
+                                    - img [ref=e876]
+                                    - generic [ref=e878]: Full-time
+                                    - img [ref=e879]
+                        - group [ref=e881]:
+                          - img [ref=e882]
+                          - generic [ref=e884]:
+                            - heading [level=3] [ref=e885]: Shift and schedule
+                            - list [ref=e887]:
+                              - listitem [ref=e888]:
+                                - button [ref=e889]:
+                                  - generic [ref=e892]:
+                                    - generic [ref=e893]: Extended hours
+                                    - img [ref=e894]
+                    - separator [ref=e896]:
+                      - generic [ref=e897]: "&nbsp;"
+                  - generic [ref=e898]:
+                    - heading [level=2] [ref=e899]: Location
+                    - generic [ref=e900]:
+                      - img [ref=e902]
+                      - generic [ref=e904]:
+                        - heading [level=2] [ref=e906]: Estimated commute
+                        - button [ref=e908] [cursor=pointer]:
+                          - generic [ref=e909]: Add commute preference
+                    - generic [ref=e910]:
+                      - img [ref=e911]
+                      - generic [ref=e913]:
+                        - heading [level=2] [ref=e914]: Job address
+                        - generic [ref=e916]: Hood River, OR 97031•Hybrid work
+                    - separator [ref=e917]:
+                      - generic [ref=e918]: "&nbsp;"
+                  - generic [ref=e919]:
+                    - heading [level=2] [ref=e920]:
+                      - text: Benefits
+                      - generic [ref=e921]: Pulled from the full job description
+                    - list [ref=e925]:
+                      - listitem [ref=e926]: Health insurance
+                      - listitem [ref=e927]: Paid time off
+                      - listitem [ref=e928]: Employee discount
+                      - listitem [ref=e929]: Vision insurance
+                      - listitem [ref=e930]: Dental insurance
+                      - listitem [ref=e931]: Gym membership
+                      - listitem [ref=e932]: Employee assistance program
+                    - button [ref=e934] [cursor=pointer]:
+                      - generic [ref=e935]: Show more
+                      - img [ref=e936]
+                    - separator [ref=e938]:
+                      - generic [ref=e939]: "&nbsp;"
+                  - heading [level=2] [ref=e941]: Full job description
+                  - generic [ref=e943]:
+                    - paragraph [ref=e944]: At One Community Health (OCH), we're redefining the way healthcare is delivered. As a forward-thinking Federally Qualified Health Center (FQHC) located in the picturesque Columbia River Gorge, OCH is at the forefront of innovation and evidence-based practices to provide comprehensive, patient-centered care through an integrated health care model. Our mission goes beyond treating illness; we're committed to empowering individuals to take control of their well-being through education, prevention, and early intervention. If you're looking to be part of a dynamic team that's shaping the future of healthcare, OCH offers a supportive environment where your ideas are valued, and your contributions make a real difference in the lives of others.
+                    - paragraph [ref=e945]: We are seeking a dedicated and experienced Controller to join our finance team. The successful candidate will perform a variety of intermediate accounting and fiscal record keeping activities. Complete tasks necessary to assure organizational compliance with generally accepted accounting principles for non-profit organizations including processing of accounts payable, accurate and timely processing of bi-weekly payroll, reconciliation of financial institution accounts, maintenance of financial records, and other projects as needed. This position is full-time and qualifies for hybrid-remote work after an in-office training period. Required onsite workdays will be at our clinic in Hood River, Oregon.
+                    - paragraph [ref=e946]: "Key Responsibilities:"
+                    - list [ref=e947]:
+                      - listitem [ref=e948]:
+                        - paragraph [ref=e949]: Embrace the philosophy, mission, and values of OCH.
+                      - listitem [ref=e950]:
+                        - paragraph [ref=e951]: Adhere to the guidelines and procedures of OCH.
+                      - listitem [ref=e952]:
+                        - paragraph [ref=e953]: Oversee all accounting operations including general ledger, accounts payable/receivable, payroll, and grants management.
+                      - listitem [ref=e954]:
+                        - paragraph [ref=e955]: Prepare accurate and timely monthly, quarterly, and annual financial statements in accordance with GAAP and nonprofit standards.
+                      - listitem [ref=e956]:
+                        - paragraph [ref=e957]: Monitor and analyze financial performance against the budget.
+                      - listitem [ref=e958]:
+                        - paragraph [ref=e959]: Lead the annual budget development process in coordination with department heads and the CFO/CEO.
+                      - listitem [ref=e960]:
+                        - paragraph [ref=e961]: Prepare cash flow forecasts and long-term financial planning reports.
+                      - listitem [ref=e962]:
+                        - paragraph [ref=e963]: Support scenario planning and projections based on funding and operational changes.
+                      - listitem [ref=e964]:
+                        - paragraph [ref=e965]: Ensure proper accounting and tracking of federal, state, and private grants, especially HRSA grants.
+                      - listitem [ref=e966]:
+                        - paragraph [ref=e967]: Monitor compliance with grant terms and conditions, including allowable costs and reporting requirements.
+                      - listitem [ref=e968]:
+                        - paragraph [ref=e969]: Coordinate with program teams to ensure timely and accurate grant reporting.
+                      - listitem [ref=e970]:
+                        - paragraph [ref=e971]: Coordinate the annual financial audit and Single Audit (OMB Uniform Guidance).
+                      - listitem [ref=e972]:
+                        - paragraph [ref=e973]: Maintain and improve internal controls to safeguard assets and ensure regulatory compliance.
+                      - listitem [ref=e974]:
+                        - paragraph [ref=e975]: Respond to audit inquiries and implement recommendations.
+                      - listitem [ref=e976]:
+                        - paragraph [ref=e977]: Develop, maintain, and enforce financial policies and procedures, ensuring alignment with best practices and FQHC requirements.
+                      - listitem [ref=e978]:
+                        - paragraph [ref=e979]: Provide training and guidance to staff on financial protocols.
+                      - listitem [ref=e980]:
+                        - paragraph [ref=e981]: Ensure compliance with IRS 990 filing, HRSA regulations, UDS reporting, and other federal/state/local financial reporting requirements.
+                      - listitem [ref=e982]:
+                        - paragraph [ref=e983]: Oversee Medicaid/Medicare cost reports,
+                      - listitem [ref=e984]:
+                        - paragraph [ref=e985]: Supervise accounting staff and ensure effective workflow and professional development.
+                      - listitem [ref=e986]:
+                        - paragraph [ref=e987]: Work closely with the CFO, executive team, and Board of Directors (especially the Finance Committee) to provide financial insights and support strategic planning.
+                      - listitem [ref=e988]:
+                        - paragraph [ref=e989]: Oversee the maintenance and optimization of accounting software (MIP)
+                      - listitem [ref=e990]:
+                        - paragraph [ref=e991]: Ensure data integrity and streamline financial reporting processes.
+                      - listitem [ref=e992]:
+                        - paragraph [ref=e993]: Perform other job-related duties as needed and/or assigned.
+                    - paragraph [ref=e994]: "Qualifications:"
+                    - list [ref=e995]:
+                      - listitem [ref=e996]:
+                        - paragraph [ref=e997]: "Knowledge of finance and accounting processes and practices, including: period end close, financial consolidations, budgeting, forecasting, management reporting and financial analysis."
+                      - listitem [ref=e998]:
+                        - paragraph [ref=e999]: Knowledge of Wage and Hour compliance and proactive approach to staying current with payroll and tax compliance and best practices.
+                      - listitem [ref=e1000]:
+                        - paragraph [ref=e1001]: Able to coordinate the work of others over whom one has no direct authority, gaining cooperation and consensus through team-based approach;
+                      - listitem [ref=e1002]:
+                        - paragraph [ref=e1003]: Able to prioritize and organize work according to multiple and, at times, competing projects and timelines
+                      - listitem [ref=e1004]:
+                        - paragraph [ref=e1005]: Able to meet timelines for team and organizational goals safely and with high level of quality.
+                      - listitem [ref=e1006]:
+                        - paragraph [ref=e1007]: Maintain a high degree of professionalism and confidentiality.
+                      - listitem [ref=e1008]:
+                        - paragraph [ref=e1009]: Strong written and oral communication skills
+                      - listitem [ref=e1010]:
+                        - paragraph [ref=e1011]: Successful relationship management skills involving multidisciplinary teams in a diverse, multicultural environment.
+                      - listitem [ref=e1012]:
+                        - paragraph [ref=e1013]: Able to use initiative and good judgment to resolve problems and challenges
+                      - listitem [ref=e1014]:
+                        - paragraph [ref=e1015]: Able to work effectively in an operation that expects and promotes teamwork and have demonstrated ability to work with ambiguity.
+                      - listitem [ref=e1016]:
+                        - paragraph [ref=e1017]: Able to inspire trust and confidence, and communicate effectively with internal and external audiences
+                      - listitem [ref=e1018]:
+                        - paragraph [ref=e1019]: "High level computer skills, including use of Microsoft Office applications: Word, Excel, Outlook, and other systems"
+                      - listitem [ref=e1020]:
+                        - paragraph [ref=e1021]: Ability to communicate effectively, verbally and in writing.
+                      - listitem [ref=e1022]:
+                        - paragraph [ref=e1023]: Ability to learn rapidly absorb and follow a wide range of business rules and workflows.
+                      - listitem [ref=e1024]:
+                        - paragraph [ref=e1025]: Demonstrate positive and effective interpersonal, analytical, and problem-solving skills.
+                      - listitem [ref=e1026]:
+                        - paragraph [ref=e1027]: Able to work effectively with a diverse workforce in a multicultural environment.
+                      - listitem [ref=e1028]:
+                        - paragraph [ref=e1029]: Strong computer skills, including experience with the use of Microsoft office applications. Word, Excel, Outlook, multi-phone live. And other systems and office machines.
+                      - listitem [ref=e1030]:
+                        - paragraph [ref=e1031]: Ability to organize, prioritize and coordinate multiple activities/tasks.
+                      - listitem [ref=e1032]:
+                        - paragraph [ref=e1033]: Ability to work in a team environment to work independently and be self-directed.
+                      - listitem [ref=e1034]:
+                        - paragraph [ref=e1035]: Able to use initiative, good research, good judgement, and resolution skills in completing tasks and responsibilities, resolving technical challenges.
+                      - listitem [ref=e1036]:
+                        - paragraph [ref=e1037]: Able to work with a high initiative, energy and effectiveness in a fast-paced environment reacting and remaining calm and effective in high pressure or urgent situations.
+                      - listitem [ref=e1038]:
+                        - paragraph [ref=e1039]: Able to produce work in high quantity and quality meeting timelines.
+                      - listitem [ref=e1040]:
+                        - paragraph [ref=e1041]: Understands HIPAA and privacy laws and other applicable regulations.
+                      - listitem [ref=e1042]:
+                        - paragraph [ref=e1043]: Occasionally working hours which may include Saturdays, evening, or extended hours.
+                      - listitem [ref=e1044]:
+                        - paragraph [ref=e1045]: Ability and willingness to work in a dynamic and changing community health care environment.
+                      - listitem [ref=e1046]:
+                        - paragraph [ref=e1047]: Able to travel to OCH multi health centers when requested, must have a valid driver’s license.
+                      - listitem [ref=e1048]:
+                        - paragraph [ref=e1049]: Identify learning needs and goals and design a plan to meet them.
+                      - listitem [ref=e1050]:
+                        - paragraph [ref=e1051]: Perform other job-related duties as needed and/or assigned.
+                    - paragraph [ref=e1052]: Education, License, and Certification
+                    - list [ref=e1053]:
+                      - listitem [ref=e1054]:
+                        - paragraph [ref=e1055]: Bachelor’s degree in Accounting, Finance, or a related field required
+                      - listitem [ref=e1056]:
+                        - paragraph [ref=e1057]: Certified Public Accountant (CPA) or Master’s degree in Accounting, Finance, or Business Administration preferred
+                      - listitem [ref=e1058]:
+                        - paragraph [ref=e1059]: Knowledge of nonprofit accounting standards (FASB, GAAP) and federal grant compliance (e.g., OMB Uniform Guidance) is strongly desired
+                    - paragraph [ref=e1060]: "Experience:"
+                    - list [ref=e1061]:
+                      - listitem [ref=e1062]:
+                        - paragraph [ref=e1063]: Minimum of 5–7 years of progressive accounting experience, preferably in a non-profit or healthcare setting At least 2–3 years in a supervisory or leadership role in finance or accounting
+                      - listitem [ref=e1064]:
+                        - paragraph [ref=e1065]: Strong experience with non-profit accounting standards, including fund accounting, restricted/unrestricted funds, and grant management
+                      - listitem [ref=e1066]:
+                        - paragraph [ref=e1067]: Hands-on experience with federal and state grant compliance (e.g., HRSA, OMB Uniform Guidance, Single Audit) Proficiency in accounting software (e.g., MIP Fund Accounting, QuickBooks, Sage Intacct, or similar) and Microsoft Excel Experience with bi-weekly payroll processing and payroll tax compliance
+                      - listitem [ref=e1068]:
+                        - paragraph [ref=e1069]: Demonstrated ability to prepare and interpret financial statements, manage budgets, and conduct bank reconciliations Experience supporting or leading annual audits, including the Single Audit
+                    - paragraph [ref=e1070]: "Preferred:"
+                    - list [ref=e1071]:
+                      - listitem [ref=e1072]: Bilingual (Spanish/English).
+                      - listitem [ref=e1073]: Understand and work with HRSA requirements and expectations.
+                      - listitem [ref=e1074]: Advance Excel skills.
+                      - listitem [ref=e1075]: MIP accounting software experience.
+                      - listitem [ref=e1076]: ADP Payroll Processing experience.
+                      - listitem [ref=e1077]: Knowledge of nonprofit accounting standards (FASB, GAAP) and federal grant compliance (e.g., OMB Uniform Guidance).
+                      - listitem [ref=e1078]: Certified Public Accountant (CPA) or Master’s degree in Accounting, Finance, or Business Administration.
+                    - paragraph [ref=e1079]: "Benefits:"
+                    - list [ref=e1080]:
+                      - listitem [ref=e1081]: Medical, Dental & Vision Insurance
+                      - listitem [ref=e1082]: Life, Long-Term Disability, Accident, & Critical Illness Insurance
+                      - listitem [ref=e1083]: Empower Retirement 401k
+                      - listitem [ref=e1084]:
+                        - text: 200 hours of Paid Time Off (PTO)
+                        - list [ref=e1085]:
+                          - listitem [ref=e1086]: Not including 6 paid holidays
+                      - listitem [ref=e1087]: Employee Assistance Program (EAP)
+                      - listitem [ref=e1088]: Life Mart- Employee Discounts
+                      - listitem [ref=e1089]: Employee Wellness Events & Team Challenges
+                      - listitem [ref=e1090]: Local Gym Membership Discounts
+                    - paragraph [ref=e1091]: "Compensation:"
+                    - list [ref=e1092]:
+                      - listitem [ref=e1093]: "Salaried/Exempt: Starting at $125,000 annually, increases depending on experience"
+                      - listitem [ref=e1094]: "Bilingual Differential: Additionally, we offer $0.75 per hour as compensation for bilingual proficiency in both English and Spanish."
+                    - paragraph [ref=e1095]: OCH is an equal opportunity employer, and we encourage candidates of all backgrounds to apply.
+                  - separator [ref=e1096]:
+                    - generic [ref=e1097]: "&nbsp;"
+                - generic [ref=e1098]:
+                  - generic [ref=e1099]:
+                    - heading [level=2] [ref=e1100]: Explore other jobs
+                    - heading [level=2] [ref=e1101]: Discover opportunities beyond One Community Health
+                  - generic [ref=e1102]: "&nbsp;"
+                - button [ref=e1108] [cursor=pointer]: Report job
+              - generic [ref=e1111]:
+                - generic [ref=e1112]:
+                  - button [ref=e1117] [cursor=pointer]:
+                    - img [ref=e1118]
+                  - button [ref=e1121] [cursor=pointer]:
+                    - img [ref=e1122]
+                  - button [ref=e1125] [cursor=pointer]
+                - button [ref=e1134] [cursor=pointer]:
+                  - generic [ref=e1135]: Apply on company site
+                  - img [ref=e1136]
+            - button [ref=e1138]: Return to Search Result
+      - contentinfo [ref=e1143]:
+        - generic [ref=e1144]:
+          - list [ref=e1145]:
+            - listitem [ref=e1146]:
+              - link [ref=e1148] [cursor=pointer]:
+                - /url: https://www.hiringlab.org
+                - text: Hiring Lab
+            - listitem [ref=e1149]:
+              - link [ref=e1151] [cursor=pointer]:
+                - /url: https://www.indeed.com/career-advice
+                - text: Career advice
+            - listitem [ref=e1152]:
+              - link [ref=e1154] [cursor=pointer]:
+                - /url: https://www.indeed.com/browsejobs
+                - text: Browse jobs
+            - listitem [ref=e1155]:
+              - link [ref=e1157] [cursor=pointer]:
+                - /url: https://www.indeed.com/companies/browse-companies
+                - text: Browse companies
+            - listitem [ref=e1158]:
+              - link [ref=e1160] [cursor=pointer]:
+                - /url: https://www.indeed.com/career/salaries
+                - text: Salaries
+            - listitem [ref=e1161]:
+              - link [ref=e1163] [cursor=pointer]:
+                - /url: https://www.indeedevents.com/
+                - text: Indeed Events
+            - listitem [ref=e1164]:
+              - link [ref=e1166] [cursor=pointer]:
+                - /url: https://www.indeed.com/cmp/Indeed/about
+                - text: Work at Indeed
+            - listitem [ref=e1167]:
+              - link [ref=e1169] [cursor=pointer]:
+                - /url: https://www.indeed.com/worldwide
+                - text: Countries
+            - listitem [ref=e1170]:
+              - link [ref=e1172] [cursor=pointer]:
+                - /url: https://www.indeed.com/about
+                - text: About
+            - listitem [ref=e1173]:
+              - link [ref=e1175] [cursor=pointer]:
+                - /url: https://www.indeed.com/help
+                - text: Help
+            - listitem [ref=e1176]:
+              - link [ref=e1178] [cursor=pointer]:
+                - /url: https://www.indeed.com/esg?from=gnav-jobsearch--indeedmobile
+                - text: ESG at Indeed
+          - list [ref=e1179]:
+            - listitem [ref=e1180]: © 2026 Indeed
+            - listitem [ref=e1181]:
+              - link [ref=e1183] [cursor=pointer]:
+                - /url: https://www.indeed.com/legal/ccpa-dns?hl=en
+                - text: Your Privacy Choices
+                - img [ref=e1185]
+            - listitem [ref=e1190]:
+              - link [ref=e1192] [cursor=pointer]:
+                - /url: https://www.indeed.com/esg/accessibility?hl=en
+                - text: Accessibility at Indeed
+            - listitem [ref=e1193]:
+              - link [ref=e1195] [cursor=pointer]:
+                - /url: https://hrtechprivacy.com/brands/indeed#privacypolicy
+                - text: Privacy Center and Ad Choices
+            - listitem [ref=e1196]:
+              - link [ref=e1198] [cursor=pointer]:
+                - /url: https://www.indeed.com/legal?hl=en
+                - text: Terms
+  - generic [ref=e1199]:
+    - text: This site is protected by reCAPTCHA and the Google
+    - link [ref=e1200] [cursor=pointer]:
+      - /url: https://policies.google.com/privacy
+      - text: Privacy Policy
+    - text: and
+    - link [ref=e1201] [cursor=pointer]:
+      - /url: https://policies.google.com/terms
+      - text: Terms of Service
+    - text: apply.
+  - alertdialog "Updates to our Terms of Service" [active] [ref=e1203]:
+    - heading "Updates to our Terms of Service" [level=2] [ref=e1206]:
+      - generic [ref=e1207]: Updates to our Terms of Service
+    - generic [ref=e1208]:
+      - img [ref=e1210]
+      - paragraph [ref=e1245]:
+        - text: Please be sure to review our updated
+        - link "Terms of Service" [ref=e1246] [cursor=pointer]:
+          - /url: https://indeed.com/legal
+        - text: (“Terms”).
+        - strong [ref=e1247]: The Terms contain an arbitration agreement that includes a class-action waiver.
+        - text: This means you agree to resolve any disputes related to your use of Indeed through binding arbitration rather than in court. The Terms also explain how to opt out of arbitration and the deadline for doing so.
+      - paragraph [ref=e1248]:
+        - text: By clicking
+        - strong [ref=e1249]: Accept Terms
+        - text: ", you agree to the updated"
+        - link "Terms of Service" [ref=e1250] [cursor=pointer]:
+          - /url: https://indeed.com/legal
+        - text: .
+    - button "Accept Terms" [ref=e1253] [cursor=pointer]:
+      - generic [ref=e1254]: Accept Terms

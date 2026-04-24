@@ -1,0 +1,1073 @@
+- generic [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e5]:
+    - banner [ref=e8]:
+      - generic [ref=e12]:
+        - generic [ref=e15]:
+          - generic [ref=e16]: Dark mode
+          - button "i Dark mode info" [ref=e18] [cursor=pointer]:
+            - text: i
+            - generic [ref=e19]: Dark mode info
+          - switch "Toggle Dark Mode" [ref=e20] [cursor=pointer]
+        - link "You are in our Global Site" [ref=e26] [cursor=pointer]:
+          - /url: "#"
+          - generic [ref=e27]:
+            - img [ref=e28]
+            - generic [ref=e31]: You are in our Global Site
+            - img [ref=e32]
+        - navigation [ref=e33]:
+          - list [ref=e34]:
+            - listitem [ref=e35]:
+              - link "Contact us" [ref=e36] [cursor=pointer]:
+                - /url: /info/contactus/contactus
+      - generic [ref=e40]:
+        - link "Nestlé Good food, Good life | Home" [ref=e41] [cursor=pointer]:
+          - /url: /
+          - img "Nestlé Good food, Good life | Home" [ref=e42]
+        - generic [ref=e47]:
+          - generic [ref=e48]:
+            - generic [ref=e49]: Search
+            - generic:
+              - combobox "Search Keyword" [ref=e50]
+              - text: 
+          - button "Search" [ref=e52] [cursor=pointer]:  Search
+      - generic [ref=e56]:
+        - navigation "Main navigation" [ref=e57]:
+          - list [ref=e58]:
+            - listitem [ref=e59]:
+              - link "Home" [ref=e60] [cursor=pointer]:
+                - /url: /
+            - listitem [ref=e61]:
+              - button "About us" [ref=e62] [cursor=pointer]
+            - listitem [ref=e63]:
+              - link "Our stories" [ref=e64] [cursor=pointer]:
+                - /url: /stories#/category/featured-stories/1
+            - listitem [ref=e65]:
+              - button "Brands" [ref=e66] [cursor=pointer]
+            - listitem [ref=e67]:
+              - button "Sustainability" [ref=e68] [cursor=pointer]
+            - listitem [ref=e69]:
+              - button "Nutrition" [ref=e70] [cursor=pointer]
+            - listitem [ref=e71]:
+              - button "Ask Nestlé" [ref=e72] [cursor=pointer]
+        - navigation "Secondary menu" [ref=e73]:
+          - list [ref=e74]:
+            - listitem [ref=e75]:
+              - button "Careers" [ref=e76] [cursor=pointer]
+            - listitem [ref=e77]:
+              - button "Investors" [ref=e78] [cursor=pointer]
+            - listitem [ref=e79]:
+              - button "Media" [ref=e80] [cursor=pointer]
+        - text:  
+    - list [ref=e88]:
+      - listitem [ref=e89]:
+        - link "Home" [ref=e90] [cursor=pointer]:
+          - /url: /
+      - listitem [ref=e91]:
+        - generic [ref=e92]: Careers
+    - main [ref=e94]:
+      - generic [ref=e95]:
+        - generic [ref=e97]:
+          - heading "Careers" [level=1] [ref=e99]
+          - img "Nestlé employees" [ref=e103]
+        - generic [ref=e106]:
+          - paragraph [ref=e107]: Share this page
+          - list [ref=e109]:
+            - listitem [ref=e110]:
+              - link "Linkedin" [ref=e111] [cursor=pointer]:
+                - /url: http://www.linkedin.com/shareArticle?mini=true&url=https://www.nestle.com/jobs&title=%3Cb%3ECareers%3C%2Fb%3E&source=https://www.nestle.com/jobs
+                - img "Linkedin" [ref=e112]
+            - listitem [ref=e114]:
+              - link "Facebook" [ref=e115] [cursor=pointer]:
+                - /url: https://www.facebook.com/share.php?u=https://www.nestle.com/jobs&title=%3Cb%3ECareers%3C%2Fb%3E
+                - img "Facebook" [ref=e116]
+            - listitem [ref=e118]:
+              - link "Twitter" [ref=e119] [cursor=pointer]:
+                - /url: https://twitter.com/intent/tweet?url=https://www.nestle.com/jobs&status=%3Cb%3ECareers%3C%2Fb%3E+https://www.nestle.com/jobs
+                - img "Twitter" [ref=e120]
+            - listitem [ref=e122]:
+              - link "Email" [ref=e123] [cursor=pointer]:
+                - /url: /info/SendPage?Ctx=https://www.nestle.com/jobs
+                - img "Email" [ref=e124]
+      - generic [ref=e129]:
+        - article
+        - generic [ref=e131]:
+          - generic [ref=e137]:
+            - heading "Explore career opportunities at Nestlé" [level=2] [ref=e138]
+            - generic [ref=e140]:
+              - generic [ref=e141]:
+                - generic [ref=e142]: Keyword
+                - textbox "Type here..." [ref=e144]
+              - generic [ref=e145]:
+                - generic [ref=e146]: Country or Region
+                - combobox "Country or Region" [ref=e148]:
+                  - option "- Any -" [selected]
+                  - option "Algeria (1)"
+                  - option "Angola (1)"
+                  - option "Argentina (7)"
+                  - option "Australia (49)"
+                  - option "Austria (10)"
+                  - option "Belgium (24)"
+                  - option "Brazil (103)"
+                  - option "Bulgaria (11)"
+                  - option "Burkina Faso (1)"
+                  - option "Canada (52)"
+                  - option "Chile (11)"
+                  - option "China Mainland, Greater China (42)"
+                  - option "Colombia (10)"
+                  - option "Czechia (6)"
+                  - option "Côte d’Ivoire (4)"
+                  - option "Denmark (1)"
+                  - option "Dominican Republic (3)"
+                  - option "Ecuador (15)"
+                  - option "Egypt (14)"
+                  - option "El Salvador (1)"
+                  - option "Estonia (2)"
+                  - option "France (204)"
+                  - option "Germany (86)"
+                  - option "Ghana (1)"
+                  - option "Greece (12)"
+                  - option "Guatemala (3)"
+                  - option "Honduras (1)"
+                  - option "Hong Kong SAR, Greater China (2)"
+                  - option "Hungary (24)"
+                  - option "India (46)"
+                  - option "Indonesia (4)"
+                  - option "Ireland (3)"
+                  - option "Israel (54)"
+                  - option "Italy (32)"
+                  - option "Jamaica (1)"
+                  - option "Japan (7)"
+                  - option "Kuwait (1)"
+                  - option "Latvia (1)"
+                  - option "Lithuania (1)"
+                  - option "Malaysia (70)"
+                  - option "Mauritius (1)"
+                  - option "Mexico (55)"
+                  - option "Morocco (1)"
+                  - option "Netherlands (58)"
+                  - option "New Zealand (4)"
+                  - option "Pakistan (16)"
+                  - option "Panama (11)"
+                  - option "Paraguay (24)"
+                  - option "Peru (19)"
+                  - option "Philippines (70)"
+                  - option "Poland (92)"
+                  - option "Portugal (38)"
+                  - option "Romania (6)"
+                  - option "Saudi Arabia (10)"
+                  - option "Serbia (1)"
+                  - option "Singapore (19)"
+                  - option "Slovakia (2)"
+                  - option "South Africa (3)"
+                  - option "Spain (18)"
+                  - option "Sweden (1)"
+                  - option "Switzerland (81)"
+                  - option "Taiwan, Greater China (2)"
+                  - option "Thailand (30)"
+                  - option "Türkiye (7)"
+                  - option "Ukraine (68)"
+                  - option "United Arab Emirates (3)"
+                  - option "United Kingdom (33)"
+                  - option "United States (444)"
+                  - option "Uruguay (1)"
+                  - option "Vietnam (7)"
+              - generic [ref=e149]:
+                - button "Search jobs" [ref=e150] [cursor=pointer]: Search jobs
+                - link "Clear" [ref=e152] [cursor=pointer]:
+                  - /url: /jobs
+          - generic [ref=e155]:
+            - generic [ref=e160]:
+              - heading "Be a part of Nestlé. Be a force for good" [level=2] [ref=e161]:
+                - text: Be a part of Nestlé.
+                - generic [ref=e162]: Be a force for good
+              - paragraph [ref=e163]: Help us make a real difference on a global scale. With a presence in almost 185 countries, we’re dedicated to our purpose of unlocking the power of food and beverages to enhance quality of life for everyone, today and for generations to come. Whether you're starting or continuing your career, explore how you can work with us.
+            - generic [ref=e168]:
+              - link "Log in Check the status of your application or update your profile Sign in (link is external)" [ref=e170] [cursor=pointer]:
+                - /url: https://career2.successfactors.eu/career?career_company=nestleHRprdBX&lang=en_US&company=nestleHRprdBX&site=&loginFlowRequired=true&_s.crb=128XaTChe%2bqwSenlLkmymZtGysV5vKPHSGLbrs%2bKtpQ%3d
+                - generic [ref=e172]:
+                  - generic [ref=e173]: Log in
+                  - generic [ref=e174]: Check the status of your application or update your profile
+                  - generic [ref=e175]:
+                    - text: Sign in
+                    - link "(link is external)" [ref=e177]
+              - link "Join talent community Stay up-to-date with our latest job vacancies Sign up (link is external)" [ref=e179] [cursor=pointer]:
+                - /url: https://jobdetails.nestle.com/lp/Nestle%20Join%20Talent%20Community%20page%20-%20en_US/09617fe21dbe3155/?locale=en_US
+                - generic [ref=e181]:
+                  - generic [ref=e182]: Join talent community
+                  - generic [ref=e183]: Stay up-to-date with our latest job vacancies
+                  - generic [ref=e184]:
+                    - text: Sign up
+                    - link "(link is external)" [ref=e186]
+          - generic [ref=e189]:
+            - heading "Discover more about the Good food, Good life company" [level=2] [ref=e191]:
+              - text: Discover more about the
+              - emphasis [ref=e192]: Good food, Good life
+              - text: company
+            - list [ref=e193]:
+              - listitem [ref=e194]:
+                - link "Working at Nestlé Join a community with a shared purpose. READ MORE Working at Nestlé" [ref=e195] [cursor=pointer]:
+                  - /url: /jobs/working-at-nestle
+                  - generic [ref=e196]:
+                    - generic [ref=e197]:
+                      - generic [ref=e198]: Working at Nestlé
+                      - generic [ref=e199]: Join a community with a shared purpose.
+                      - generic [ref=e200]:
+                        - text: READ MORE
+                        - img [ref=e201]
+                    - img "Working at Nestlé" [ref=e204]
+              - listitem [ref=e205]:
+                - link "Students & graduates Explore where life at Nestlé could take you. READ MORE students and graduates" [ref=e206] [cursor=pointer]:
+                  - /url: /jobs/students-graduates
+                  - generic [ref=e207]:
+                    - generic [ref=e208]:
+                      - generic [ref=e209]: Students & graduates
+                      - generic [ref=e210]: Explore where life at Nestlé could take you.
+                      - generic [ref=e211]:
+                        - text: READ MORE
+                        - img [ref=e212]
+                    - img "students and graduates" [ref=e215]
+              - listitem [ref=e216]:
+                - link "Diversity, equity & inclusion Find out how we aim to create workplaces where everyone feels included and able to bring their whole selves to work. READ MORE Diversity and inclusion" [ref=e217] [cursor=pointer]:
+                  - /url: /jobs/diversity-inclusion
+                  - generic [ref=e218]:
+                    - generic [ref=e219]:
+                      - generic [ref=e220]: Diversity, equity & inclusion
+                      - generic [ref=e221]: Find out how we aim to create workplaces where everyone feels included and able to bring their whole selves to work.
+                      - generic [ref=e222]:
+                        - text: READ MORE
+                        - img [ref=e223]
+                    - img "Diversity and inclusion" [ref=e226]
+              - listitem [ref=e227]:
+                - link "Recruitment journey Find out about the different stages of our recruitment process. READ MORE People are drinking coffee at work" [ref=e228] [cursor=pointer]:
+                  - /url: /jobs/recruitment-journey
+                  - generic [ref=e229]:
+                    - generic [ref=e230]:
+                      - generic [ref=e231]: Recruitment journey
+                      - generic [ref=e232]: Find out about the different stages of our recruitment process.
+                      - generic [ref=e233]:
+                        - text: READ MORE
+                        - img [ref=e234]
+                    - img "People are drinking coffee at work" [ref=e237]
+              - listitem [ref=e238]:
+                - link "Locations Nestlé has grown from its European roots to become a truly global company. Discover more about our different locations around the world. READ MORE People are drinking coffee at work" [ref=e239] [cursor=pointer]:
+                  - /url: /jobs/locations
+                  - generic [ref=e240]:
+                    - generic [ref=e241]:
+                      - generic [ref=e242]: Locations
+                      - generic [ref=e243]: Nestlé has grown from its European roots to become a truly global company. Discover more about our different locations around the world.
+                      - generic [ref=e244]:
+                        - text: READ MORE
+                        - img [ref=e245]
+                    - img "People are drinking coffee at work" [ref=e248]
+              - listitem [ref=e249]:
+                - link "Frequently asked questions Find answers to all our jobs-related frequently asked questions. READ MORE People are drinking coffee at work" [ref=e250] [cursor=pointer]:
+                  - /url: /jobs/faqs
+                  - generic [ref=e251]:
+                    - generic [ref=e252]:
+                      - generic [ref=e253]: Frequently asked questions
+                      - generic [ref=e254]: Find answers to all our jobs-related frequently asked questions.
+                      - generic [ref=e255]:
+                        - text: READ MORE
+                        - img [ref=e256]
+                    - img "People are drinking coffee at work" [ref=e259]
+          - list [ref=e263]:
+            - listitem [ref=e264]:
+              - link "NESTLEVEL Digital Podcasts In each episode, you'll learn how Nestlé paves the way where food and technology seamlessly intertwine through insightful discussions and best practices. Our esteemed guests include top leaders, industry experts and digital pioneers at Nestlé who share their expertise, experiences, and visions on how Nestlé is shaping the way we live and work in the digital age. Listen to the podcasts (link is external) Podcast" [ref=e265] [cursor=pointer]:
+                - /url: https://www.youtube.com/playlist?list=PLudEn3GoG_uFCVrWmLYF2TpKfvxZkZ-Ek
+                - generic [ref=e266]:
+                  - generic [ref=e267]:
+                    - generic [ref=e268]: NESTLEVEL Digital Podcasts
+                    - generic [ref=e269]: In each episode, you'll learn how Nestlé paves the way where food and technology seamlessly intertwine through insightful discussions and best practices. Our esteemed guests include top leaders, industry experts and digital pioneers at Nestlé who share their expertise, experiences, and visions on how Nestlé is shaping the way we live and work in the digital age.
+                    - generic [ref=e270]:
+                      - text: Listen to the podcasts
+                      - link "(link is external)" [ref=e272]
+                  - img "Podcast" [ref=e274]
+          - generic [ref=e278]:
+            - heading "Explore our career areas" [level=2] [ref=e279]
+            - generic [ref=e280]:
+              - generic [ref=e282]:
+                - tabpanel [ref=e283]:
+                  - link "Administrative" [ref=e287] [cursor=pointer]:
+                    - /url: /jobs/career-area/administrative
+                    - img [ref=e289]
+                    - heading "Administrative" [level=4] [ref=e292]
+                - tabpanel [ref=e293]:
+                  - link "Communications" [ref=e297] [cursor=pointer]:
+                    - /url: /jobs/career-area/communications
+                    - img [ref=e299]
+                    - heading "Communications" [level=4] [ref=e302]
+                - tabpanel [ref=e303]:
+                  - link "Engineering" [ref=e307] [cursor=pointer]:
+                    - /url: /jobs/career-area/engineering
+                    - img [ref=e309]
+                    - heading "Engineering" [level=4] [ref=e312]
+                - tabpanel [ref=e313]:
+                  - link [ref=e317] [cursor=pointer]:
+                    - /url: /jobs/career-area/finance
+                    - img [ref=e319]
+                    - heading [level=4] [ref=e322]: Finance
+                - tabpanel [ref=e323]:
+                  - link [ref=e327] [cursor=pointer]:
+                    - /url: /jobs/career-area/human-resources
+                    - img [ref=e329]
+                    - heading [level=4] [ref=e332]: Human Resources
+                - tabpanel [ref=e333]:
+                  - link [ref=e337] [cursor=pointer]:
+                    - /url: /jobs/career-area/it
+                    - img [ref=e339]
+                    - heading [level=4] [ref=e342]: Information Technology
+                - tabpanel [ref=e343]:
+                  - link [ref=e347] [cursor=pointer]:
+                    - /url: /jobs/career-area/legal
+                    - img [ref=e349]
+                    - heading [level=4] [ref=e352]: Legal
+                - tabpanel [ref=e353]:
+                  - link [ref=e357] [cursor=pointer]:
+                    - /url: /jobs/career-area/internships
+                    - img [ref=e359]
+                    - heading [level=4] [ref=e362]: Internships
+                - tabpanel [ref=e363]:
+                  - link [ref=e367] [cursor=pointer]:
+                    - /url: /jobs/career-area/marketing
+                    - img [ref=e369]
+                    - heading [level=4] [ref=e372]: Marketing
+                - tabpanel [ref=e373]:
+                  - link [ref=e377] [cursor=pointer]:
+                    - /url: /jobs/career-area/research-development
+                    - img [ref=e379]
+                    - heading [level=4] [ref=e382]: Research & Development
+                - tabpanel [ref=e383]:
+                  - link [ref=e387] [cursor=pointer]:
+                    - /url: /jobs/career-area/technical-production
+                    - img [ref=e389]
+                    - heading [level=4] [ref=e392]: Technical & Production
+                - tabpanel [ref=e393]:
+                  - link [ref=e397] [cursor=pointer]:
+                    - /url: /jobs/career-area/sales
+                    - img [ref=e399]
+                    - heading [level=4] [ref=e402]: Sales
+                - tabpanel [ref=e403]:
+                  - link [ref=e407] [cursor=pointer]:
+                    - /url: /jobs/career-area/supply-chain-procurement
+                    - img [ref=e409]
+                    - heading [level=4] [ref=e412]: Supply Chain & Procurement
+              - button "Next" [ref=e413] [cursor=pointer]:
+                - img "Next" [ref=e414]
+              - tablist [ref=e416]:
+                - tab "1 of 5" [ref=e417] [cursor=pointer]: "1"
+                - tab "2 of 5" [ref=e418] [cursor=pointer]: "2"
+                - tab "3 of 5" [ref=e419] [cursor=pointer]: "3"
+                - tab "4 of 5" [ref=e420] [cursor=pointer]: "4"
+                - tab "5 of 5" [ref=e421] [cursor=pointer]: "5"
+            - link "View our career areas" [ref=e423] [cursor=pointer]:
+              - /url: /jobs/career-area
+          - generic [ref=e427]:
+            - paragraph [ref=e428]
+            - 'heading "Follow us #WeAreNestlé" [level=2] [ref=e429]'
+          - iframe [ref=e440]:
+            - generic [ref=f21e2]:
+              - text:   
+              - main [ref=f21e3]:
+                - generic [ref=f21e4]:
+                  - generic [ref=f21e6]:
+                    - generic [ref=f21e9] [cursor=pointer]:
+                      - text:     
+                      - button "Share this post":
+                        - generic [ref=f21e10]: 
+                    - generic [ref=f21e12]:
+                      - generic [ref=f21e13]:
+                        - link "Profile picture of nestle" [ref=f21e15] [cursor=pointer]:
+                          - /url: https://www.instagram.com/nestle
+                          - img "Profile picture of nestle" [ref=f21e16]
+                        - link "nestle @nestle" [ref=f21e18] [cursor=pointer]:
+                          - /url: https://www.instagram.com/nestle
+                          - text: nestle
+                          - text: "@nestle"
+                      - paragraph [ref=f21e19]:
+                        - 'link "90 years. Same classic snap. New ways to enjoy it. 🍫 From our 4‑finger icon to bold new shapes and flavors, @KitKat is backing fewer, bigger ideas to make your break feel extra special. What should we break into next? 👀 #KitKat #KitKatF1 #KitKatTablets" [ref=f21e20] [cursor=pointer]':
+                          - /url: https://www.instagram.com/reel/DXJYLHzCWyv/
+                    - link "Opens a modal showing a larger version of this post" [ref=f21e22] [cursor=pointer]:
+                      - /url: https://www.instagram.com/reel/DXJYLHzCWyv/
+                      - generic [ref=f21e23]: 
+                      - img "Image may contain:" [ref=f21e25]
+                  - generic [ref=f21e28]:
+                    - generic [ref=f21e31] [cursor=pointer]:
+                      - text:     
+                      - button "Share this post":
+                        - generic [ref=f21e32]: 
+                    - generic [ref=f21e34]:
+                      - generic [ref=f21e35]:
+                        - link "Profile picture of nestle" [ref=f21e37] [cursor=pointer]:
+                          - /url: https://www.instagram.com/nestle
+                          - img "Profile picture of nestle" [ref=f21e38]
+                        - link "nestle @nestle" [ref=f21e40] [cursor=pointer]:
+                          - /url: https://www.instagram.com/nestle
+                          - text: nestle
+                          - text: "@nestle"
+                      - paragraph [ref=f21e41]:
+                        - link "Cold coffee is having a moment ☕️ Make it yours! Meet @Starbucks Coffee Craft concentrate, your easy & tasty at-home iced coffee. Whether you’re using water, milk, or plant based alternatives, you can personalize your coffee – from iced americanos to iced caramel macchiatos – with a simple pour, right at home." [ref=f21e42] [cursor=pointer]:
+                          - /url: https://www.instagram.com/reel/DXEcTtmDCXl/
+                    - link "Opens a modal showing a larger version of this post" [ref=f21e44] [cursor=pointer]:
+                      - /url: https://www.instagram.com/reel/DXEcTtmDCXl/
+                      - generic [ref=f21e45]: 
+                      - img "Image may contain:" [ref=f21e47]
+                  - generic [ref=f21e50]:
+                    - generic [ref=f21e53] [cursor=pointer]:
+                      - text:     
+                      - button "Share this post":
+                        - generic [ref=f21e54]: 
+                    - generic [ref=f21e56]:
+                      - generic [ref=f21e57]:
+                        - link "Profile picture of nestle" [ref=f21e59] [cursor=pointer]:
+                          - /url: https://www.instagram.com/nestle
+                          - img "Profile picture of nestle" [ref=f21e60]
+                        - link "nestle @nestle" [ref=f21e62] [cursor=pointer]:
+                          - /url: https://www.instagram.com/nestle
+                          - text: nestle
+                          - text: "@nestle"
+                      - paragraph [ref=f21e63]:
+                        - 'link "New day, more ways to break 🍫 From on‑the‑go snaps to cozy tablet nights in, @KitKat is stretching into more moments without losing that iconic break you love. Bars, tablets, sips, bites and more... Which one’s your break today? #KitKat #HaveABreak #KitKatTablets" [ref=f21e64] [cursor=pointer]':
+                          - /url: https://www.instagram.com/reel/DW9Erd7Ckbq/
+                    - link "Opens a modal showing a larger version of this post" [ref=f21e66] [cursor=pointer]:
+                      - /url: https://www.instagram.com/reel/DW9Erd7Ckbq/
+                      - generic [ref=f21e67]: 
+                      - img "Image may contain:" [ref=f21e69]
+                  - generic [ref=f21e72]:
+                    - generic [ref=f21e75] [cursor=pointer]:
+                      - text:     
+                      - button "Share this post":
+                        - generic [ref=f21e76]: 
+                    - generic [ref=f21e78]:
+                      - generic [ref=f21e79]:
+                        - link "Profile picture of nestle" [ref=f21e81] [cursor=pointer]:
+                          - /url: https://www.instagram.com/nestle
+                          - img "Profile picture of nestle" [ref=f21e82]
+                        - link "nestle @nestle" [ref=f21e84] [cursor=pointer]:
+                          - /url: https://www.instagram.com/nestle
+                          - text: nestle
+                          - text: "@nestle"
+                      - paragraph [ref=f21e85]:
+                        - link "Some things just belong at the table. From warm cups ☕ to basket staples 🍫 🍪, our brands are part of the moments that matter. Hope you’re enjoying every sip & bite ✨" [ref=f21e86] [cursor=pointer]:
+                          - /url: https://www.instagram.com/p/DWvrkoolAMQ/?img_index=1
+                    - link "Opens a modal showing a larger version of this post" [ref=f21e88] [cursor=pointer]:
+                      - /url: https://www.instagram.com/p/DWvrkoolAMQ/?img_index=1
+                      - generic [ref=f21e89]: 
+                      - img "Image may contain:" [ref=f21e91]
+                  - generic [ref=f21e94]:
+                    - generic [ref=f21e97] [cursor=pointer]:
+                      - text:     
+                      - button "Share this post":
+                        - generic [ref=f21e98]: 
+                    - generic [ref=f21e100]:
+                      - generic [ref=f21e101]:
+                        - link "Profile picture of nestle" [ref=f21e103] [cursor=pointer]:
+                          - /url: https://www.instagram.com/nestle
+                          - img "Profile picture of nestle" [ref=f21e104]
+                        - link "nestle @nestle" [ref=f21e106] [cursor=pointer]:
+                          - /url: https://www.instagram.com/nestle
+                          - text: nestle
+                          - text: "@nestle"
+                      - paragraph [ref=f21e107]:
+                        - link "Some things just belong at the table. From warm cups ☕ to basket staples 🍫 🍪, our brands are part of the moments that matter. Hope you’re enjoying every sip & bite ✨" [ref=f21e108] [cursor=pointer]:
+                          - /url: https://www.instagram.com/p/DWvrkoolAMQ/?img_index=2
+                    - link "Opens a modal showing a larger version of this post" [ref=f21e110] [cursor=pointer]:
+                      - /url: https://www.instagram.com/p/DWvrkoolAMQ/?img_index=2
+                      - generic [ref=f21e111]: 
+                      - img "Image may contain:" [ref=f21e113]
+                  - generic [ref=f21e116]:
+                    - generic [ref=f21e119] [cursor=pointer]:
+                      - text:     
+                      - button "Share this post":
+                        - generic [ref=f21e120]: 
+                    - generic [ref=f21e122]:
+                      - generic [ref=f21e123]:
+                        - link "Profile picture of nestle" [ref=f21e125] [cursor=pointer]:
+                          - /url: https://www.instagram.com/nestle
+                          - img "Profile picture of nestle" [ref=f21e126]
+                        - link "nestle @nestle" [ref=f21e128] [cursor=pointer]:
+                          - /url: https://www.instagram.com/nestle
+                          - text: nestle
+                          - text: "@nestle"
+                      - paragraph [ref=f21e129]:
+                        - link "Some things just belong at the table. From warm cups ☕ to basket staples 🍫 🍪, our brands are part of the moments that matter. Hope you’re enjoying every sip & bite ✨" [ref=f21e130] [cursor=pointer]:
+                          - /url: https://www.instagram.com/p/DWvrkoolAMQ/?img_index=3
+                    - link "Opens a modal showing a larger version of this post" [ref=f21e132] [cursor=pointer]:
+                      - /url: https://www.instagram.com/p/DWvrkoolAMQ/?img_index=3
+                      - generic [ref=f21e133]: 
+                      - img "Image may contain:" [ref=f21e135]
+                  - generic [ref=f21e138]:
+                    - generic [ref=f21e141] [cursor=pointer]:
+                      - text:     
+                      - button "Share this post":
+                        - generic [ref=f21e142]: 
+                    - generic [ref=f21e144]:
+                      - generic [ref=f21e145]:
+                        - link "Profile picture of nestle" [ref=f21e147] [cursor=pointer]:
+                          - /url: https://www.instagram.com/nestle
+                          - img "Profile picture of nestle" [ref=f21e148]
+                        - link "nestle @nestle" [ref=f21e150] [cursor=pointer]:
+                          - /url: https://www.instagram.com/nestle
+                          - text: nestle
+                          - text: "@nestle"
+                      - paragraph [ref=f21e151]:
+                        - link "Some things just belong at the table. From warm cups ☕ to basket staples 🍫 🍪, our brands are part of the moments that matter. Hope you’re enjoying every sip & bite ✨" [ref=f21e152] [cursor=pointer]:
+                          - /url: https://www.instagram.com/p/DWvrkoolAMQ/?img_index=4
+                    - link "Opens a modal showing a larger version of this post" [ref=f21e154] [cursor=pointer]:
+                      - /url: https://www.instagram.com/p/DWvrkoolAMQ/?img_index=4
+                      - generic [ref=f21e155]: 
+                      - img "Image may contain:" [ref=f21e157]
+                  - generic [ref=f21e160]:
+                    - generic [ref=f21e163] [cursor=pointer]:
+                      - text:     
+                      - button "Share this post":
+                        - generic [ref=f21e164]: 
+                    - generic [ref=f21e166]:
+                      - generic [ref=f21e167]:
+                        - link "Profile picture of nestle" [ref=f21e169] [cursor=pointer]:
+                          - /url: https://www.instagram.com/nestle
+                          - img "Profile picture of nestle" [ref=f21e170]
+                        - link "nestle @nestle" [ref=f21e172] [cursor=pointer]:
+                          - /url: https://www.instagram.com/nestle
+                          - text: nestle
+                          - text: "@nestle"
+                      - paragraph [ref=f21e173]:
+                        - 'link "Put the brakes on! 🏎️🍫 @KitKat teamed up with @F1 to bring race‑day energy straight into your snack time — with new F1‑inspired KitKat cars, made for sharing those edge‑of‑the‑seat moments with friends. From the pit lane to your sofa, there’s always time to have a break. Have a KitKat. #KitKat #HaveABreak #KitKatF1 #Formula1" [ref=f21e174] [cursor=pointer]':
+                          - /url: https://www.instagram.com/reel/DWoViBaggCJ/
+                    - link "Opens a modal showing a larger version of this post" [ref=f21e176] [cursor=pointer]:
+                      - /url: https://www.instagram.com/reel/DWoViBaggCJ/
+                      - generic [ref=f21e177]: 
+                      - img "Image may contain:" [ref=f21e179]
+                  - generic [ref=f21e182]:
+                    - generic [ref=f21e185] [cursor=pointer]:
+                      - text:     
+                      - button "Share this post":
+                        - generic [ref=f21e186]: 
+                    - generic [ref=f21e188]:
+                      - generic [ref=f21e189]:
+                        - link "Profile picture of nestle" [ref=f21e191] [cursor=pointer]:
+                          - /url: https://www.instagram.com/nestle
+                          - img "Profile picture of nestle" [ref=f21e192]
+                        - link "nestle @nestle" [ref=f21e194] [cursor=pointer]:
+                          - /url: https://www.instagram.com/nestle
+                          - text: nestle
+                          - text: "@nestle"
+                      - paragraph [ref=f21e195]:
+                        - link "A new two-year project with @ilo.org will support fair recruitment and labour rights in coffee supply chains across Brazil, Colombia, and Mexico. Coffee production supports the livelihoods of around 20–25 million families worldwide. Through this partnership, we aim to advance labour rights, promote decent work and contribute to more sustainable supply chains." [ref=f21e196] [cursor=pointer]:
+                          - /url: https://www.instagram.com/p/DWjR4dGlBd2/
+                    - link "Opens a modal showing a larger version of this post" [ref=f21e198] [cursor=pointer]:
+                      - /url: https://www.instagram.com/p/DWjR4dGlBd2/
+                      - generic [ref=f21e199]: 
+                      - img "Image may contain:" [ref=f21e201]
+                  - generic [ref=f21e204]:
+                    - generic [ref=f21e207] [cursor=pointer]:
+                      - text:     
+                      - button "Share this post":
+                        - generic [ref=f21e208]: 
+                    - generic [ref=f21e210]:
+                      - generic [ref=f21e211]:
+                        - link "Profile picture of nestle" [ref=f21e213] [cursor=pointer]:
+                          - /url: https://www.instagram.com/nestle
+                          - img "Profile picture of nestle" [ref=f21e214]
+                        - link "nestle @nestle" [ref=f21e216] [cursor=pointer]:
+                          - /url: https://www.instagram.com/nestle
+                          - text: nestle
+                          - text: "@nestle"
+                      - paragraph [ref=f21e217]:
+                        - link "Lucas is a dairy farmer from Brazil. He has seen more life return to his farm after adopting regenerative agriculture practices. On his land, small animals like earthworms, butterflies and birds are thriving. 🐛 🦋 🐦 Across our supply chains, we're supporting farmers to help conserve and enhance biodiversity, by protecting waterways, planting trees and crops – with better farm management." [ref=f21e218] [cursor=pointer]:
+                          - /url: https://www.instagram.com/reel/DWgxHEMjfnw/
+                    - link "Opens a modal showing a larger version of this post" [ref=f21e220] [cursor=pointer]:
+                      - /url: https://www.instagram.com/reel/DWgxHEMjfnw/
+                      - generic [ref=f21e221]: 
+                      - img "Image may contain:" [ref=f21e223]
+                  - generic [ref=f21e226]:
+                    - generic [ref=f21e229] [cursor=pointer]:
+                      - text:     
+                      - button "Share this post":
+                        - generic [ref=f21e230]: 
+                    - generic [ref=f21e232]:
+                      - generic [ref=f21e233]:
+                        - link "Profile picture of nestle" [ref=f21e235] [cursor=pointer]:
+                          - /url: https://www.instagram.com/nestle
+                          - img "Profile picture of nestle" [ref=f21e236]
+                        - link "nestle @nestle" [ref=f21e238] [cursor=pointer]:
+                          - /url: https://www.instagram.com/nestle
+                          - text: nestle
+                          - text: "@nestle"
+                      - paragraph [ref=f21e239]:
+                        - link "Meet Lucas, a dairy farmer in Brazil 🇧🇷 🐄 With global climate change and its impact on food systems, we developed the Nestlé Dairy Plan to support farmers in adopting regenerative agriculture practices that help protect and restore natural resources — primarily soil, but also water and biodiversity. Find out more at the link in bio." [ref=f21e240] [cursor=pointer]:
+                          - /url: https://www.instagram.com/reel/DWWhYnIiecq/
+                    - link "Opens a modal showing a larger version of this post" [ref=f21e242] [cursor=pointer]:
+                      - /url: https://www.instagram.com/reel/DWWhYnIiecq/
+                      - generic [ref=f21e243]: 
+                      - img "Image may contain:" [ref=f21e245]
+                  - generic [ref=f21e248]:
+                    - generic [ref=f21e251] [cursor=pointer]:
+                      - text:     
+                      - button "Share this post":
+                        - generic [ref=f21e252]: 
+                    - generic [ref=f21e254]:
+                      - generic [ref=f21e255]:
+                        - link "Profile picture of nestle" [ref=f21e257] [cursor=pointer]:
+                          - /url: https://www.instagram.com/nestle
+                          - img "Profile picture of nestle" [ref=f21e258]
+                        - link "nestle @nestle" [ref=f21e260] [cursor=pointer]:
+                          - /url: https://www.instagram.com/nestle
+                          - text: nestle
+                          - text: "@nestle"
+                      - paragraph [ref=f21e261]:
+                        - link "Global pop superstar @dualipa joins @nespresso as new Global Brand Ambassador. ☕ A new era rooted in culture, creativity, and bold coffee choices. Let the exploration begin." [ref=f21e262] [cursor=pointer]:
+                          - /url: https://www.instagram.com/p/DWHfapVFASv/
+                    - link "Opens a modal showing a larger version of this post" [ref=f21e264] [cursor=pointer]:
+                      - /url: https://www.instagram.com/p/DWHfapVFASv/
+                      - generic [ref=f21e265]: 
+                      - img "Image may contain:" [ref=f21e267]
+                  - generic [ref=f21e270]:
+                    - generic [ref=f21e273] [cursor=pointer]:
+                      - text:     
+                      - button "Share this post":
+                        - generic [ref=f21e274]: 
+                    - generic [ref=f21e276]:
+                      - generic [ref=f21e277]:
+                        - link "Profile picture of nestle" [ref=f21e279] [cursor=pointer]:
+                          - /url: https://www.instagram.com/nestle
+                          - img "Profile picture of nestle" [ref=f21e280]
+                        - link "nestle @nestle" [ref=f21e282] [cursor=pointer]:
+                          - /url: https://www.instagram.com/nestle
+                          - text: nestle
+                          - text: "@nestle"
+                      - paragraph [ref=f21e283]:
+                        - link "Our lifespans may be growing, but our healthspans are not necessarily keeping pace. Our teams are developing an entire program called 'Smart Aging' which aims to make aging well a choice accessible to everyone through expert advice and simple routines. Nestlé Vital, is our first global brand dedicated to healthy longevity, translating science into tangible daily benefits. Find out more at the link in bio!" [ref=f21e284] [cursor=pointer]:
+                          - /url: https://www.instagram.com/p/DWG8XDsFl-a/?img_index=1
+                    - link "Opens a modal showing a larger version of this post" [ref=f21e286] [cursor=pointer]:
+                      - /url: https://www.instagram.com/p/DWG8XDsFl-a/?img_index=1
+                      - generic [ref=f21e287]: 
+                      - img "Image may contain:" [ref=f21e289]
+                  - generic [ref=f21e292]:
+                    - generic [ref=f21e295] [cursor=pointer]:
+                      - text:     
+                      - button "Share this post":
+                        - generic [ref=f21e296]: 
+                    - generic [ref=f21e298]:
+                      - generic [ref=f21e299]:
+                        - link "Profile picture of nestle" [ref=f21e301] [cursor=pointer]:
+                          - /url: https://www.instagram.com/nestle
+                          - img "Profile picture of nestle" [ref=f21e302]
+                        - link "nestle @nestle" [ref=f21e304] [cursor=pointer]:
+                          - /url: https://www.instagram.com/nestle
+                          - text: nestle
+                          - text: "@nestle"
+                      - paragraph [ref=f21e305]:
+                        - link "Our lifespans may be growing, but our healthspans are not necessarily keeping pace. Our teams are developing an entire program called 'Smart Aging' which aims to make aging well a choice accessible to everyone through expert advice and simple routines. Nestlé Vital, is our first global brand dedicated to healthy longevity, translating science into tangible daily benefits. Find out more at the link in bio!" [ref=f21e306] [cursor=pointer]:
+                          - /url: https://www.instagram.com/p/DWG8XDsFl-a/?img_index=2
+                    - link "Opens a modal showing a larger version of this post" [ref=f21e308] [cursor=pointer]:
+                      - /url: https://www.instagram.com/p/DWG8XDsFl-a/?img_index=2
+                      - generic [ref=f21e309]: 
+                      - img "Image may contain:" [ref=f21e311]
+                  - generic [ref=f21e314]:
+                    - generic [ref=f21e317] [cursor=pointer]:
+                      - text:     
+                      - button "Share this post":
+                        - generic [ref=f21e318]: 
+                    - generic [ref=f21e320]:
+                      - generic [ref=f21e321]:
+                        - link "Profile picture of nestle" [ref=f21e323] [cursor=pointer]:
+                          - /url: https://www.instagram.com/nestle
+                          - img "Profile picture of nestle" [ref=f21e324]
+                        - link "nestle @nestle" [ref=f21e326] [cursor=pointer]:
+                          - /url: https://www.instagram.com/nestle
+                          - text: nestle
+                          - text: "@nestle"
+                      - paragraph [ref=f21e327]:
+                        - link "Our lifespans may be growing, but our healthspans are not necessarily keeping pace. Our teams are developing an entire program called 'Smart Aging' which aims to make aging well a choice accessible to everyone through expert advice and simple routines. Nestlé Vital, is our first global brand dedicated to healthy longevity, translating science into tangible daily benefits. Find out more at the link in bio!" [ref=f21e328] [cursor=pointer]:
+                          - /url: https://www.instagram.com/p/DWG8XDsFl-a/?img_index=3
+                    - link "Opens a modal showing a larger version of this post" [ref=f21e330] [cursor=pointer]:
+                      - /url: https://www.instagram.com/p/DWG8XDsFl-a/?img_index=3
+                      - generic [ref=f21e331]: 
+                      - img "Image may contain:" [ref=f21e333]
+                  - generic [ref=f21e336]:
+                    - generic [ref=f21e339] [cursor=pointer]:
+                      - text:     
+                      - button "Share this post":
+                        - generic [ref=f21e340]: 
+                    - generic [ref=f21e342]:
+                      - generic [ref=f21e343]:
+                        - link "Profile picture of nestle" [ref=f21e345] [cursor=pointer]:
+                          - /url: https://www.instagram.com/nestle
+                          - img "Profile picture of nestle" [ref=f21e346]
+                        - link "nestle @nestle" [ref=f21e348] [cursor=pointer]:
+                          - /url: https://www.instagram.com/nestle
+                          - text: nestle
+                          - text: "@nestle"
+                      - paragraph [ref=f21e349]:
+                        - link "Our lifespans may be growing, but our healthspans are not necessarily keeping pace. Our teams are developing an entire program called 'Smart Aging' which aims to make aging well a choice accessible to everyone through expert advice and simple routines. Nestlé Vital, is our first global brand dedicated to healthy longevity, translating science into tangible daily benefits. Find out more at the link in bio!" [ref=f21e350] [cursor=pointer]:
+                          - /url: https://www.instagram.com/p/DWG8XDsFl-a/?img_index=4
+                    - link "Opens a modal showing a larger version of this post" [ref=f21e352] [cursor=pointer]:
+                      - /url: https://www.instagram.com/p/DWG8XDsFl-a/?img_index=4
+                      - generic [ref=f21e353]: 
+                      - img "Image may contain:" [ref=f21e355]
+                  - generic [ref=f21e358]:
+                    - generic [ref=f21e361] [cursor=pointer]:
+                      - text:     
+                      - button "Share this post":
+                        - generic [ref=f21e362]: 
+                    - generic [ref=f21e364]:
+                      - generic [ref=f21e365]:
+                        - link "Profile picture of nestle" [ref=f21e367] [cursor=pointer]:
+                          - /url: https://www.instagram.com/nestle
+                          - img "Profile picture of nestle" [ref=f21e368]
+                        - link "nestle @nestle" [ref=f21e370] [cursor=pointer]:
+                          - /url: https://www.instagram.com/nestle
+                          - text: nestle
+                          - text: "@nestle"
+                      - paragraph [ref=f21e371]:
+                        - link "Our lifespans may be growing, but our healthspans are not necessarily keeping pace. Our teams are developing an entire program called 'Smart Aging' which aims to make aging well a choice accessible to everyone through expert advice and simple routines. Nestlé Vital, is our first global brand dedicated to healthy longevity, translating science into tangible daily benefits. Find out more at the link in bio!" [ref=f21e372] [cursor=pointer]:
+                          - /url: https://www.instagram.com/p/DWG8XDsFl-a/?img_index=5
+                    - link "Opens a modal showing a larger version of this post" [ref=f21e374] [cursor=pointer]:
+                      - /url: https://www.instagram.com/p/DWG8XDsFl-a/?img_index=5
+                      - generic [ref=f21e375]: 
+                      - img "Image may contain:" [ref=f21e377]
+                  - generic [ref=f21e380]:
+                    - generic [ref=f21e383] [cursor=pointer]:
+                      - text:     
+                      - button "Share this post":
+                        - generic [ref=f21e384]: 
+                    - generic [ref=f21e386]:
+                      - generic [ref=f21e387]:
+                        - link "Profile picture of nestle" [ref=f21e389] [cursor=pointer]:
+                          - /url: https://www.instagram.com/nestle
+                          - img "Profile picture of nestle" [ref=f21e390]
+                        - link "nestle @nestle" [ref=f21e392] [cursor=pointer]:
+                          - /url: https://www.instagram.com/nestle
+                          - text: nestle
+                          - text: "@nestle"
+                      - paragraph [ref=f21e393]:
+                        - link "Our lifespans may be growing, but our healthspans are not necessarily keeping pace. Our teams are developing an entire program called 'Smart Aging' which aims to make aging well a choice accessible to everyone through expert advice and simple routines. Nestlé Vital, is our first global brand dedicated to healthy longevity, translating science into tangible daily benefits. Find out more at the link in bio!" [ref=f21e394] [cursor=pointer]:
+                          - /url: https://www.instagram.com/p/DWG8XDsFl-a/?img_index=6
+                    - link "Opens a modal showing a larger version of this post" [ref=f21e396] [cursor=pointer]:
+                      - /url: https://www.instagram.com/p/DWG8XDsFl-a/?img_index=6
+                      - generic [ref=f21e397]: 
+                      - img "Image may contain:" [ref=f21e399]
+                  - generic [ref=f21e402]:
+                    - generic [ref=f21e405] [cursor=pointer]:
+                      - text:     
+                      - button "Share this post":
+                        - generic [ref=f21e406]: 
+                    - generic [ref=f21e408]:
+                      - generic [ref=f21e409]:
+                        - link "Profile picture of nestle" [ref=f21e411] [cursor=pointer]:
+                          - /url: https://www.instagram.com/nestle
+                          - img "Profile picture of nestle" [ref=f21e412]
+                        - link "nestle @nestle" [ref=f21e414] [cursor=pointer]:
+                          - /url: https://www.instagram.com/nestle
+                          - text: nestle
+                          - text: "@nestle"
+                      - paragraph [ref=f21e415]:
+                        - link "Our lifespans may be growing, but our healthspans are not necessarily keeping pace. Our teams are developing an entire program called 'Smart Aging' which aims to make aging well a choice accessible to everyone through expert advice and simple routines. Nestlé Vital, is our first global brand dedicated to healthy longevity, translating science into tangible daily benefits. Find out more at the link in bio!" [ref=f21e416] [cursor=pointer]:
+                          - /url: https://www.instagram.com/p/DWG8XDsFl-a/?img_index=7
+                    - link "Opens a modal showing a larger version of this post" [ref=f21e418] [cursor=pointer]:
+                      - /url: https://www.instagram.com/p/DWG8XDsFl-a/?img_index=7
+                      - generic [ref=f21e419]: 
+                      - img "Image may contain:" [ref=f21e421]
+                  - generic [ref=f21e424]:
+                    - generic [ref=f21e427] [cursor=pointer]:
+                      - text:     
+                      - button "Share this post":
+                        - generic [ref=f21e428]: 
+                    - generic [ref=f21e430]:
+                      - generic [ref=f21e431]:
+                        - link "Profile picture of nestle" [ref=f21e433] [cursor=pointer]:
+                          - /url: https://www.instagram.com/nestle
+                          - img "Profile picture of nestle" [ref=f21e434]
+                        - link "nestle @nestle" [ref=f21e436] [cursor=pointer]:
+                          - /url: https://www.instagram.com/nestle
+                          - text: nestle
+                          - text: "@nestle"
+                      - paragraph [ref=f21e437]:
+                        - 'link "We’ve opened a new Purina wet food factory in Vargeão, Brazil to help us make more of the meals pets love. The kind that get tails wagging and noses twitching. 🐈 🐾 More capacity means more bowls filled & more purrs. Crafted with care, powered by smart technology, and made using 100% renewable energy. #petfood #Purina" [ref=f21e438] [cursor=pointer]':
+                          - /url: https://www.instagram.com/p/DVtMEJOgK6u/?img_index=1
+                    - link "Opens a modal showing a larger version of this post" [ref=f21e440] [cursor=pointer]:
+                      - /url: https://www.instagram.com/p/DVtMEJOgK6u/?img_index=1
+                      - generic [ref=f21e441]: 
+                      - img "Image may contain:" [ref=f21e443]
+              - generic [ref=f21e445] [cursor=pointer]: More Posts
+    - link [ref=e446] [cursor=pointer]:
+      - /url: "#"
+      - img [ref=e447]
+      - img [ref=e448]
+    - contentinfo [ref=e453]:
+      - generic [ref=e460]:
+        - heading "Mini Footer" [level=2] [ref=e461]
+        - generic [ref=e465]:
+          - generic [ref=e470]:
+            - generic [ref=e471]:
+              - heading "Nestlé news" [level=3] [ref=e472]:
+                - link "Nestlé news" [ref=e473] [cursor=pointer]:
+                  - /url: /info/sign-me-up
+              - paragraph [ref=e474]:
+                - link "Subscribe to receive email alerts" [ref=e475] [cursor=pointer]:
+                  - /url: /info/sign-me-up
+            - link "Sign up" [ref=e480] [cursor=pointer]:
+              - /url: /info/sign-me-up
+          - generic [ref=e485]:
+            - generic [ref=e486]:
+              - heading "Compliance concerns" [level=3] [ref=e487]:
+                - link "Compliance concerns" [ref=e488] [cursor=pointer]:
+                  - /url: /about/how-we-do-business/report-compliance-concerns
+              - paragraph [ref=e489]:
+                - link "Speak up about your concerns" [ref=e490] [cursor=pointer]:
+                  - /url: /about/how-we-do-business/report-compliance-concerns
+            - link "Speak Up" [ref=e495] [cursor=pointer]:
+              - /url: /about/how-we-do-business/report-compliance-concerns
+          - generic "Contact us" [ref=e502]:
+            - img [ref=e503]
+          - generic [ref=e508]:
+            - generic [ref=e509]:
+              - heading "Contact us" [level=3] [ref=e510]:
+                - link "Contact us" [ref=e511] [cursor=pointer]:
+                  - /url: /info/contactus/contactus
+              - paragraph [ref=e512]:
+                - link "Across the globe, we are here to help answer your queries" [ref=e513] [cursor=pointer]:
+                  - /url: /info/contactus/contactus
+            - link "Contact us" [ref=e518] [cursor=pointer]:
+              - /url: /info/contactus/contactus
+      - generic [ref=e521]:
+        - generic [ref=e526]:
+          - heading "Nestlé" [level=2] [ref=e527]
+          - paragraph [ref=e529]: We unlock the power of food and beverages to enhance quality of life for everyone, today and for generations to come
+          - img "nest-logo" [ref=e530]
+        - generic [ref=e535]:
+          - navigation "Useful Links" [ref=e536]:
+            - heading "Useful Links" [level=2] [ref=e537]:
+              - button "Useful Links" [ref=e538]
+            - list [ref=e539]:
+              - listitem [ref=e540]:
+                - link "Ask Nestlé (FAQs)" [ref=e541] [cursor=pointer]:
+                  - /url: /ask-nestle
+              - listitem [ref=e542]:
+                - link "Contact us" [ref=e543] [cursor=pointer]:
+                  - /url: /info/contactus/contactus
+              - listitem [ref=e544]:
+                - link "Search for jobs" [ref=e545] [cursor=pointer]:
+                  - /url: /search-jobs/career-areas
+              - listitem [ref=e546]:
+                - link "Sign up for news" [ref=e547] [cursor=pointer]:
+                  - /url: /info/sign-me-up
+              - listitem [ref=e548]:
+                - link "Speak Up" [ref=e549] [cursor=pointer]:
+                  - /url: /about/how-we-do-business/report-compliance-concerns
+          - navigation "Company" [ref=e550]:
+            - heading "Company" [level=2] [ref=e551]:
+              - button "Company" [ref=e552]
+            - list [ref=e553]:
+              - listitem [ref=e554]:
+                - link "About us" [ref=e555] [cursor=pointer]:
+                  - /url: /about
+              - listitem [ref=e556]:
+                - link "Global addresses" [ref=e557] [cursor=pointer]:
+                  - /url: /about/overview/global-addresses
+              - listitem [ref=e558]:
+                - link "Strategy" [ref=e559] [cursor=pointer]:
+                  - /url: /about/strategy
+              - listitem [ref=e560]:
+                - link "Our leadership" [ref=e561] [cursor=pointer]:
+                  - /url: /about/management
+              - listitem [ref=e562]:
+                - link "Brands A - Z" [ref=e563] [cursor=pointer]:
+                  - /url: /brands/brandssearchlist
+              - listitem [ref=e564]:
+                - link "Our history" [ref=e565] [cursor=pointer]:
+                  - /url: /about/history
+              - listitem [ref=e566]:
+                - link "Sustainability" [ref=e567] [cursor=pointer]:
+                  - /url: /sustainability
+        - generic [ref=e570]:
+          - navigation "Downloads" [ref=e571]:
+            - heading "Downloads" [level=2] [ref=e572]:
+              - button "Downloads" [ref=e573]
+            - list [ref=e574]:
+              - listitem [ref=e575]:
+                - link "Annual Review (pdf, 9Mb)" [ref=e576] [cursor=pointer]:
+                  - /url: /sites/default/files/2026-02/annual-review-2025-en.pdf
+              - listitem [ref=e577]:
+                - link "Non-Financial Statement (pdf, 16MB)" [ref=e578] [cursor=pointer]:
+                  - /url: /sites/default/files/2026-02/non-financial-statement-2025.pdf
+              - listitem [ref=e579]:
+                - 'link "Creating Shared Value: Our impact (pdf, 17Mb)" [ref=e580] [cursor=pointer]':
+                  - /url: /sites/default/files/2026-02/creating-shared-value-nestle-2025.pdf
+              - listitem [ref=e581]:
+                - link "Responsible Sourcing Core Requirements (pdf, 2Mb)" [ref=e582] [cursor=pointer]:
+                  - /url: /sites/default/files/asset-library/documents/library/documents/suppliers/nestle-responsible-sourcing-standard-english.pdf
+          - navigation "Other Nestlé Businesses" [ref=e583]:
+            - heading "Other Nestlé Businesses" [level=2] [ref=e584]:
+              - button "Other Nestlé Businesses" [ref=e585]
+            - list [ref=e586]:
+              - listitem [ref=e587]:
+                - link "Nestlé Nespresso" [ref=e588] [cursor=pointer]:
+                  - /url: http://www.nestle-nespresso.com/
+              - listitem [ref=e589]:
+                - link "Nestlé Purina Petcare" [ref=e590] [cursor=pointer]:
+                  - /url: https://www.purina.com/
+        - generic [ref=e593]:
+          - navigation "Media" [ref=e594]:
+            - heading "Media" [level=2] [ref=e595]:
+              - button "Media" [ref=e596]
+            - list [ref=e597]:
+              - listitem [ref=e598]:
+                - link "News" [ref=e599] [cursor=pointer]:
+                  - /url: /media/news
+              - listitem [ref=e600]:
+                - link "Media contacts" [ref=e601] [cursor=pointer]:
+                  - /url: /media/media-contacts
+              - listitem [ref=e602]:
+                - link "Images" [ref=e603] [cursor=pointer]:
+                  - /url: /media/images-video
+          - navigation "Investors" [ref=e604]:
+            - heading "Investors" [level=2] [ref=e605]:
+              - button "Investors" [ref=e606]
+            - list [ref=e607]:
+              - listitem [ref=e608]:
+                - link "Corporate governance" [ref=e609] [cursor=pointer]:
+                  - /url: /investors/corporate-governance
+              - listitem [ref=e610]:
+                - link "Shares, ADRs, & Bonds" [ref=e611] [cursor=pointer]:
+                  - /url: /investors/sharesadrsbonds
+              - listitem [ref=e612]:
+                - link "Publications" [ref=e613] [cursor=pointer]:
+                  - /url: /investors/publications
+          - generic [ref=e615]:
+            - heading "SHARE INFORMATION" [level=2] [ref=e616]
+            - link "Share Price" [ref=e618] [cursor=pointer]:
+              - /url: /investors/sharesadrsbonds/stockquotes
+      - generic [ref=e624]:
+        - heading "Follow us on" [level=2] [ref=e625]
+        - generic [ref=e626]:
+          - link "Linkedin" [ref=e629] [cursor=pointer]:
+            - /url: https://www.linkedin.com/company/nestle-s-a-
+            - img "Linkedin" [ref=e630]
+          - link "Instagram" [ref=e634] [cursor=pointer]:
+            - /url: https://www.instagram.com/nestle/
+            - img "Instagram" [ref=e635]
+          - link "TikTok" [ref=e639] [cursor=pointer]:
+            - /url: https://www.tiktok.com/@nestle
+            - img "TikTok" [ref=e640]
+          - link "Facebook" [ref=e644] [cursor=pointer]:
+            - /url: https://www.facebook.com/Nestle?brandloc=DISABLE
+            - img "Facebook" [ref=e645]
+          - link "Youtube" [ref=e649] [cursor=pointer]:
+            - /url: https://www.youtube.com/user/NestleCorporate
+            - img "Youtube" [ref=e650]
+          - link "Flickr" [ref=e654] [cursor=pointer]:
+            - /url: https://www.flickr.com/photos/nestle/collections/
+            - img "Flickr" [ref=e655]
+          - link "Twitter" [ref=e659] [cursor=pointer]:
+            - /url: https://twitter.com/NestleCareers
+            - img "Twitter" [ref=e660]
+      - navigation "Sub Footer Menu" [ref=e667]:
+        - heading "Sub Footer Menu" [level=2] [ref=e668]
+        - list [ref=e669]:
+          - listitem [ref=e670]:
+            - link "© 2026 Nestlé|" [ref=e671] [cursor=pointer]:
+              - /url: /info/copyright
+          - listitem [ref=e672]:
+            - link "Site map|" [ref=e673] [cursor=pointer]:
+              - /url: /info/sitemap
+          - listitem [ref=e674]:
+            - link "Help|" [ref=e675] [cursor=pointer]:
+              - /url: /info/help
+          - listitem [ref=e676]:
+            - link "Privacy|" [ref=e677] [cursor=pointer]:
+              - /url: /info/privacy
+          - listitem [ref=e678]:
+            - link "Cookies|" [ref=e679] [cursor=pointer]:
+              - /url: /info/cookies
+          - listitem [ref=e680]:
+            - link "Terms of use|" [ref=e681] [cursor=pointer]:
+              - /url: /info/tc
+          - listitem [ref=e682]:
+            - link "Accessibility|" [ref=e683] [cursor=pointer]:
+              - /url: /info/accessibility
+          - listitem [ref=e684]:
+            - link "Carbon efficiency|" [ref=e685] [cursor=pointer]:
+              - /url: /info/website-carbon-footprint
+          - listitem [ref=e686]:
+            - link "Suppliers|" [ref=e687] [cursor=pointer]:
+              - /url: /info/suppliers
+          - listitem [ref=e688]:
+            - link "Social media|" [ref=e689] [cursor=pointer]:
+              - /url: /info/social-media-house-rules
+          - listitem [ref=e690]:
+            - link "RSS|" [ref=e691] [cursor=pointer]:
+              - /url: /info/rsslinkpage
+          - listitem [ref=e692]:
+            - link "Sign up|" [ref=e693] [cursor=pointer]:
+              - /url: /info/sign-me-up
+          - listitem [ref=e694]:
+            - link "Unsubscribe|" [ref=e695] [cursor=pointer]:
+              - /url: /info/sign-me-up/unsubscribesignupuser
+          - listitem [ref=e696]:
+            - link "Contact us" [ref=e697] [cursor=pointer]:
+              - /url: /info/contactus/contactus
+  - status [ref=e698]
+  - status [ref=e699]
+  - generic:
+    - region "Cookie banner" [active] [ref=e702]:
+      - alertdialog "Privacy" [ref=e703]:
+        - generic [ref=e704]:
+          - generic [ref=e706]:
+            - img "Company Logo" [ref=e708]
+            - generic [ref=e709]:
+              - text: By clicking on the "Accept all cookies" button you consent to the usage of 1st and 3rd party cookies (or similar technologies) in order to enhance your overall web browsing experience, measure our audience, collect useful information to allow us and our partners to provide you with ads tailored to your interests. Learn more on our privacy notice and set your preferences by clicking here or at any time by clicking on the “Cookie Settings” link on our website.
+              - link "More information about your privacy, opens in a new tab" [ref=e710] [cursor=pointer]:
+                - /url: https://www.nestle.com/aboutus/businessprinciples/privacy
+                - text: More information
+          - generic [ref=e712]:
+            - generic [ref=e713]:
+              - button "Reject All" [ref=e714] [cursor=pointer]
+              - button "Accept all cookies" [ref=e715] [cursor=pointer]
+            - button "Cookie Settings" [ref=e716] [cursor=pointer]
+    - text: Cookie Settings
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - button "Open Olivia's AI Recruiting Assistant" [ref=e719] [cursor=pointer]:
+            - img "Open Olivia's AI Recruiting Assistant" [ref=e720]
+          - log [ref=e721]: Olivia said, Hi! I’m Olivia, your AI personal job assistant at Nestlé! By continuing, you consent to data processing as per our Privacy Notice. You can ask me anything about our business, culture, teams and careers!
+      - tooltip "AI Recruiter Conversation Widget" [ref=e722]:
+        - generic [ref=e723]:
+          - banner [ref=e724]:
+            - 'heading "Assistant Name: Olivia" [level=1] [ref=e727]': Olivia
+            - img "Nestlé Group logo" [ref=e729]
+            - button "Close widget chat" [ref=e730] [cursor=pointer]:
+              - generic [ref=e731]: 
+          - generic [ref=e733]:
+            - group "chat window" [ref=e735]:
+              - list "conversation" [ref=e738]:
+                - listitem [ref=e739]:
+                  - generic [ref=e743]: Apr 16, 2026 at 11:43 AM
+                  - generic [ref=e748]:
+                    - generic [ref=e749]:
+                      - text: Hi! I’m Olivia, your AI personal job assistant at Nestlé! By continuing, you consent to data processing as per our
+                      - link [ref=e750] [cursor=pointer]:
+                        - /url: https://www.nestle.com/info/privacy
+                        - text: Privacy Notice
+                      - text: . You can ask me anything about our business, culture, teams and careers!
+                    - paragraph [ref=e751]:
+                      - generic [ref=e752]: Olivia said,
+                      - generic [ref=e753]:
+                        - text: Hi! I’m Olivia, your AI personal job assistant at Nestlé! By continuing, you consent to data processing as per our
+                        - link "Privacy Notice" [ref=e754] [cursor=pointer]:
+                          - /url: https://www.nestle.com/info/privacy
+                        - text: .
+                        - text: You can ask me anything about our business, culture, teams and careers!
+            - generic [ref=e761]:
+              - textbox "Write a reply..." [ref=e764]
+              - button "Send message" [disabled] [ref=e765]:
+                - generic [ref=e766]: 
+          - contentinfo [ref=e767]:
+            - generic [ref=e769]:
+              - text: Powered by
+              - link "Paradox" [ref=e771] [cursor=pointer]:
+                - /url: https://www.paradox.ai/powered-by-paradox

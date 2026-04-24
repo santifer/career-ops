@@ -1,0 +1,894 @@
+- generic [ref=e1]:
+  - generic:
+    - region "Mensagem toast":
+      - heading "0 notificações no total" [level=2] [ref=e3]
+      - alert
+  - region [ref=e4]
+  - generic [ref=e288]:
+    - img [ref=e290]
+    - paragraph [ref=e294]:
+      - text: Ocorreu um erro ao processar seu pagamento.
+      - link "Atualize sua(s) forma(s) de pagamento" [ref=e295] [cursor=pointer]:
+        - /url: https://www.linkedin.com/manage/purchases-payments/purchases/485025203/payments?trk=global_alert
+      - text: .
+    - button "Fechar" [ref=e296] [cursor=pointer]:
+      - img [ref=e297]
+      - generic [ref=e299]: Fechar
+  - generic [ref=e5]:
+    - generic [ref=e7]:
+      - button "Pular para pesquisa" [ref=e8] [cursor=pointer]:
+        - generic [ref=e9]: Pular para pesquisa
+      - button "Pular para conteúdo principal" [ref=e10] [cursor=pointer]:
+        - generic [ref=e11]: Pular para conteúdo principal
+      - button "Atalhos do teclado" [ref=e12] [cursor=pointer]:
+        - generic [ref=e13]: Atalhos do teclado
+      - button "Fechar menu pular" [ref=e14] [cursor=pointer]:
+        - img [ref=e15]
+        - generic [ref=e17]: Fechar menu pular
+    - banner "Navegação geral" [ref=e18]:
+      - generic [ref=e19]:
+        - link "LinkedIn" [ref=e20] [cursor=pointer]:
+          - /url: https://www.linkedin.com/feed/?nis=true
+          - img "LinkedIn" [ref=e23]:
+            - img [ref=e24]
+        - generic [ref=e28]:
+          - combobox "Pesquisar" [ref=e29]
+          - generic:
+            - img
+        - navigation "Navegação principal" [ref=e30]:
+          - list [ref=e31]:
+            - listitem [ref=e32]:
+              - link "atualizações do feed novas notificações Início" [ref=e33] [cursor=pointer]:
+                - /url: https://www.linkedin.com/feed/?nis=true&
+                - generic [ref=e34]:
+                  - generic [ref=e37]: atualizações do feed novas notificações
+                  - img [ref=e41]
+                - generic "Início" [ref=e43]
+            - listitem [ref=e44]:
+              - link "2 atualizações de rede novas notificações Minha rede" [ref=e45] [cursor=pointer]:
+                - /url: https://www.linkedin.com/mynetwork/?
+                - generic [ref=e46]:
+                  - generic [ref=e47]:
+                    - generic [ref=e48]: "2"
+                    - generic [ref=e49]: 2 atualizações de rede novas notificações
+                  - img [ref=e53]
+                - generic "Minha rede" [ref=e55]
+            - listitem [ref=e56]:
+              - link "Vagas" [ref=e57] [cursor=pointer]:
+                - /url: https://www.linkedin.com/jobs/?
+                - img [ref=e61]
+                - generic "Vagas" [ref=e63]
+            - listitem [ref=e64]:
+              - link "Mensagens" [ref=e65] [cursor=pointer]:
+                - /url: https://www.linkedin.com/messaging/?
+                - img [ref=e69]
+                - generic "Mensagens" [ref=e71]
+            - listitem [ref=e72]:
+              - link "15 novas notificações Notificações" [ref=e73] [cursor=pointer]:
+                - /url: https://www.linkedin.com/notifications/?
+                - generic [ref=e74]:
+                  - generic [ref=e75]:
+                    - generic [ref=e76]: "15"
+                    - generic [ref=e77]: 15 novas notificações
+                  - img [ref=e81]
+                - generic "Notificações" [ref=e83]
+            - listitem [ref=e84]:
+              - button "Fernando Xavier Eu" [ref=e86] [cursor=pointer]:
+                - img "Fernando Xavier" [ref=e87]
+                - generic [ref=e88]:
+                  - text: Eu
+                  - img [ref=e89]
+            - listitem [ref=e91]:
+              - button "Para negócios" [ref=e93] [cursor=pointer]:
+                - img [ref=e97]
+                - generic "Para negócios" [ref=e99]:
+                  - text: Para negócios
+                  - img [ref=e100]
+            - listitem [ref=e102]:
+              - link "Veicular anúncio" [ref=e103] [cursor=pointer]:
+                - /url: https://www.linkedin.com/campaignmanager/accounts?
+                - img [ref=e107]
+                - generic "Veicular anúncio" [ref=e110]
+    - generic [ref=e111]:
+      - generic [ref=e114]:
+        - main [ref=e115]:
+          - generic [ref=e118]:
+            - generic [ref=e122]:
+              - generic [ref=e123]:
+                - generic [ref=e124]:
+                  - link "Logo da empresa DUX Company" [ref=e125] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/company/duxcompany/life
+                    - img "Logo da empresa DUX Company" [ref=e128]
+                  - link "DUX Company" [ref=e300] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/company/duxcompany/life
+                - generic [ref=e131]:
+                  - button "Compartilhar" [ref=e134] [cursor=pointer]:
+                    - img [ref=e135]
+                    - generic [ref=e137]: Compartilhar
+                  - button "Exibir mais opções" [ref=e139] [cursor=pointer]:
+                    - img [ref=e140]
+                    - generic [ref=e142]: Exibir mais opções
+              - heading "Gerente Contábil (São Paulo/SP)" [level=1] [ref=e145]
+              - generic [ref=e148]:
+                - generic [ref=e301]: São Paulo, São Paulo, Brasil
+                - generic [ref=e302]: ·
+                - generic [ref=e304]: há 1 semana
+                - generic [ref=e305]: ·
+                - generic [ref=e306]: Mais de 100 pessoas clicaram em Candidatar-se
+                - paragraph [ref=e307]:
+                  - generic [ref=e308]: Respostas gerenciadas fora do LinkedIn
+              - generic [ref=e157]:
+                - button "Corresponde às suas preferências de vaga e o tipo de local de trabalho é Híbrido." [ref=e309] [cursor=pointer]:
+                  - strong [ref=e312]:
+                    - img [ref=e314]
+                    - text: Híbrido
+                  - generic [ref=e316]: Corresponde às suas preferências de vaga e o tipo de local de trabalho é Híbrido.
+                - button "Corresponde às suas preferências de vaga e o tipo de vaga é Tempo integral." [ref=e317] [cursor=pointer]:
+                  - strong [ref=e320]:
+                    - img [ref=e322]
+                    - text: Tempo integral
+                  - generic [ref=e324]: Corresponde às suas preferências de vaga e o tipo de vaga é Tempo integral.
+              - generic [ref=e175]:
+                - link "Candidatar-se à vaga de Gerente Contábil (São Paulo/SP) no site da empresa" [ref=e178] [cursor=pointer]:
+                  - img [ref=e179]
+                  - generic [ref=e181]: Candidatar-se
+                - button "Salvar Gerente Contábil (São Paulo/SP) na DUX Company" [ref=e325] [cursor=pointer]:
+                  - generic [ref=e326]: Salvar
+                  - generic [ref=e327]: Salvar Gerente Contábil (São Paulo/SP) na DUX Company
+            - generic [ref=e185]:
+              - heading "Pessoas que você pode contatar" [level=2] [ref=e328]
+              - generic [ref=e331]:
+                - generic [ref=e332]:
+                  - generic [ref=e333]:
+                    - list [ref=e334]:
+                      - listitem [ref=e335]:
+                        - img "Logo de Fundação Getulio Vargas" [ref=e337]
+                    - generic [ref=e338]: Logo de Fundação Getulio Vargas
+                  - generic [ref=e339]: Ex-alunos da instituição de ensino Fundação Getulio Vargas
+                - button "Exibir todos" [ref=e340] [cursor=pointer]:
+                  - generic [ref=e341]: Exibir todos
+            - generic [ref=e194]:
+              - article [ref=e195]:
+                - generic [ref=e197]:
+                  - heading "Sobre a vaga" [level=2] [ref=e198]
+                  - paragraph [ref=e343]:
+                    - text: Buscamos uma liderança estratégica para comandar nossa Contabilidade, integrando áreas e transformando números em inteligência de negócio. Sua missão será gerir o time, otimizar processos e validar sistemas para garantir fechamentos ágeis e registros impecáveis. Além de assegurar a conformidade e reduzir riscos, você será peça-chave no apoio às decisões da diretoria. Se você une precisão técnica com visão de futuro e foco em inovação, venha fazer a diferença na nossa gestão financeira!
+                    - strong [ref=e345]: "Atividades do cargo:"
+                    - list [ref=e347]:
+                      - listitem [ref=e348]: "Preparação de relatórios financeiros: elaborar e revisar as demonstrações financeiras (balanços, P&L, DFC e notas explicativas), garantindo a precisão das informações;"
+                      - listitem [ref=e349]: "Registros contábeis: garantir que todos os registros contábeis da empresa estejam em conformidade com os princípios contábeis e as normas aplicáveis;"
+                      - listitem [ref=e350]: "Conciliação de contas: garantir a reconciliação de contas contábeis para que não haja erros ou discrepâncias nos registros financeiros da empresa;"
+                      - listitem [ref=e351]: "Auditorias: preparar a documentação necessária e colaborar com auditores internos e externos durante auditorias financeiras;"
+                      - listitem [ref=e352]: "Declarações fiscais: garantir em conjunto com a Área Fiscal a apresentação das declarações fiscais obrigatórias (IRPJ, CSLL e outras acessórias), como a Escrituração Contábil Fiscal (ECF) e a Escrituração Contábil Digital (ECD);"
+                      - listitem [ref=e353]: "Compliance contábil: certificar-se de que a empresa esteja em conformidade com todas as obrigações contábeis, mantendo-se atualizado sobre as mudanças de legislação e garantindo que a empresa cumpra todas as exigências contábeis e fiscais;"
+                      - listitem [ref=e354]: "Planejamento financeiro: interagir e colaborar com o time de FP&A, fornecendo dados contábeis precisos para as análises e tomadas de decisão com base em cenários financeiros;"
+                      - listitem [ref=e355]: "Consultoria: Fornecer orientação contábil à alta administração da empresa, incluindo aconselhamento sobre decisões estratégicas que afetam a situação financeira da organização;"
+                      - listitem [ref=e356]: "Controle de custos: Monitorar e controlar em parceria com o FP&A e a Área de Custos os custos fabris e de produção, identificando áreas de melhoria e oportunidades de economia;"
+                      - listitem [ref=e357]: "Gestão de riscos: Identificar e avaliar os riscos contábeis e desenvolver estratégias para mitigá-los;"
+                      - listitem [ref=e358]: "Gerenciamento da equipe contábil: Supervisionar e liderar a equipe, treinando e garantindo que todas as atividades sejam realizadas dentro do cronograma e de forma eficiente e precisa."
+                    - strong [ref=e360]: "Requisitos necessários para inscrição:"
+                    - list [ref=e362]:
+                      - listitem [ref=e363]: Ter CRC ativo é essencial;
+                      - listitem [ref=e364]: Ensino Superior em Administração, Ciências Contábeis ou Economia;
+                      - listitem [ref=e365]: Desejável pós-graduação e/ou MBA em Finanças ou Contabilidade;
+                      - listitem [ref=e366]: Profundo conhecimento dos princípios contábeis e fiscais, além da importância de entender o ambiente regulatório aplicável ao setor;
+                      - listitem [ref=e367]: Forte vivência com análise de balanço, FC e P&L;
+                      - listitem [ref=e368]: Forte habilidade de liderança, para gerir, orientar e motivar a equipe;
+                      - listitem [ref=e369]: Conhecimento avançado em Excel e PPT;
+                      - listitem [ref=e370]: Habilidade para comunicar e discutir de forma clara e acessível os temas contábeis com demais stakeholders;
+                      - listitem [ref=e371]: Desejável já ter tido vivência com sistema Protheus;
+                      - listitem [ref=e372]: Inglês será considerado um diferencial.
+                    - strong [ref=e374]: "Informações da vaga:"
+                    - list [ref=e376]:
+                      - listitem [ref=e377]: "Local: Vila Madalena – São Paulo/SP;"
+                      - listitem [ref=e378]: "Regime: Híbrido – 2 dias de home-office;"
+                      - listitem [ref=e379]: "Escala: Segunda à sexta – 44h semanais."
+                    - strong [ref=e381]: "Benefícios:"
+                    - list [ref=e383]:
+                      - listitem [ref=e384]: Assistência médica e odontológica;
+                      - listitem [ref=e385]: Seguro de vida;
+                      - listitem [ref=e386]: Vale-transporte;
+                      - listitem [ref=e387]: Vale-alimentação e vale-refeição;
+                      - listitem [ref=e388]: Totalpass;
+                      - listitem [ref=e389]: Day-off de aniversário + vale-presente;
+                      - listitem [ref=e390]: Desconto em produtos DUX e Eat Clean;
+                      - listitem [ref=e391]: Psicoterapia, coaching e mais via App Zenklub;
+                      - listitem [ref=e392]: Licença parental estendida.
+                    - text: "Nossas vagas são preferências para pessoas com deficiência (PCD). Na DUX Company, a inclusão faz parte do nosso jeito de nutrir a vida humana: respeitamos as diferenças, encorajamos a diversidade de perspectivas e acreditamos que pessoas diversas constroem soluções melhores e mais sustentáveis. Valorizamos talentos pelo que são e pelo que entregam, em um ambiente que busca promover equidade, respeito e desenvolvimento contínuo."
+              - button "Clicar para ver mais detalhes" [ref=e200] [cursor=pointer]:
+                - img [ref=e201]
+                - generic [ref=e203]: Ver mais
+            - generic [ref=e205]:
+              - generic [ref=e206]:
+                - heading "Este alerta de vaga foi ativado" [level=2] [ref=e393]:
+                  - img [ref=e394]
+                  - text: Este alerta de vaga foi ativado
+                - generic [ref=e209]: Gerente de contabilidade, São Paulo, São Paulo, Brasil
+              - generic [ref=e211] [cursor=pointer]:
+                - generic [ref=e212]: Ativada
+                - generic [ref=e213]: Alerta ativado
+                - switch "Alerta ativado" [checked]
+            - generic [ref=e396]:
+              - button "Fechar cartão promocional de serviços" [ref=e397] [cursor=pointer]:
+                - img [ref=e398]
+                - generic [ref=e400]: Fechar cartão promocional de serviços
+              - generic [ref=e402]:
+                - heading "Veja uma seleção de ferramentas de IA para sua pesquisa de vagas" [level=2] [ref=e403]
+                - paragraph [ref=e404]: Receba uma oferta de emprego mais rápido com a ajuda de ferramentas de IA criadas por empresas certificadas, como Kickresume, Exponent Interview Prep e muito mais.
+                - link "Começar" [ref=e405] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/ai-tools/?sectionType=career-coaching
+                  - generic [ref=e406]: Começar
+            - generic [ref=e407]:
+              - generic [ref=e408]:
+                - generic [ref=e409]:
+                  - img "Premium" [ref=e411]:
+                    - img [ref=e412]
+                  - button "Saiba mais sobre estatísticas sobre candidatos" [ref=e415] [cursor=pointer]:
+                    - img [ref=e416]
+                - heading "Veja como sua candidatura se compara à de outras pessoas" [level=2] [ref=e418]
+                - generic [ref=e420]:
+                  - heading "Pessoas que clicaram em Candidate-se" [level=3] [ref=e421]
+                  - list [ref=e422]:
+                    - listitem [ref=e423]:
+                      - generic [ref=e424]: "310"
+                      - generic [ref=e425]: no total
+                    - listitem [ref=e426]:
+                      - generic [ref=e427]: "14"
+                      - generic [ref=e428]: no último dia
+                - generic [ref=e429]:
+                  - generic [ref=e430]:
+                    - heading "Nível de experiência do candidato" [level=3] [ref=e431]
+                    - list [ref=e432]:
+                      - listitem [ref=e433]:
+                        - paragraph [ref=e434]: 42% de candidatos com nível Sênior
+                        - progressbar [ref=e435]
+                      - listitem [ref=e436]:
+                        - paragraph [ref=e437]: 27% de candidatos com nível Gerente
+                        - progressbar [ref=e438]
+                      - listitem [ref=e439]:
+                        - paragraph [ref=e440]: 19% de candidatos com nível Iniciante
+                        - progressbar [ref=e441]
+                      - listitem [ref=e442]:
+                        - paragraph [ref=e443]: 10% de candidatos com nível Diretor
+                        - progressbar [ref=e444]
+                  - generic [ref=e445]:
+                    - heading "Nível de formação acadêmica do candidato" [level=3] [ref=e446]
+                    - list [ref=e447]:
+                      - listitem [ref=e448]:
+                        - generic [ref=e449]: 52%
+                        - generic [ref=e450]: tem Pós-graduação Lato Sensu - MBA (semelhante ao seu)
+                      - listitem [ref=e451]:
+                        - generic [ref=e452]: 12%
+                        - generic [ref=e453]: tem Pós-graduação
+                      - listitem [ref=e454]:
+                        - generic [ref=e455]: 10%
+                        - generic [ref=e456]: tem Bacharelado
+                      - listitem [ref=e457]:
+                        - generic [ref=e458]: 26%
+                        - generic [ref=e459]: tem outros diplomas
+              - generic [ref=e460]:
+                - generic [ref=e461]:
+                  - img "Premium" [ref=e462]:
+                    - img [ref=e463]
+                  - button "Saiba mais sobre estatísticas sobre empresas" [ref=e466] [cursor=pointer]:
+                    - img "Saiba mais sobre estatísticas sobre empresas" [ref=e467]
+                - heading "Estatísticas exclusivas de pessoas à procura de emprego sobre a DUX Company" [level=2] [ref=e469]
+                - heading "Com tecnologia do Bing" [level=3] [ref=e470]
+                - generic [ref=e471]:
+                  - generic [ref=e472]:
+                    - heading "Áreas de foco da empresa" [level=3] [ref=e473]
+                    - generic [ref=e475]:
+                      - list [ref=e476]:
+                        - listitem [ref=e477]:
+                          - strong [ref=e478]: "Growth and Revenue Expansion:"
+                          - text: DUX Company aims to grow its business to approximately R$ 1 billion in revenue while maintaining a focus on socio-environmental impact.
+                        - listitem [ref=e479]:
+                          - strong [ref=e480]: "Innovation in Sales Channels:"
+                          - text: The company is defining new sales strategies in unconventional channels to expand its market reach.
+                      - button "exibir mais revela visualmente conteúdos que já foram detectados por leitores de tela" [ref=e481] [cursor=pointer]:
+                        - generic [ref=e482]: exibir mais
+                  - generic [ref=e483]:
+                    - generic [ref=e485]: "Fontes: businessmoment.com.br mais 1"
+                    - generic [ref=e487]:
+                      - button "Marcar feedback como bom" [ref=e488] [cursor=pointer]:
+                        - img [ref=e489]
+                      - button "Marcar feedback como ruim" [ref=e492] [cursor=pointer]:
+                        - img [ref=e493]
+                - generic [ref=e496]:
+                  - generic [ref=e497]:
+                    - heading "Contratações e número de funcionários" [level=3] [ref=e498]
+                    - paragraph [ref=e499]:
+                      - generic [ref=e500]:
+                        - text: "Expanding media and communication: The 'Media and Communication' department has seen a 15% increase in employee count, indicating a significant focus on enhancing their media presence and communication strategies. Growth in quality assurance and engineering: The 'Quality Assurance' and 'Engineering' departments have experienced a 29% and 57% increase in headcount respectively, suggesting a strong emphasis on product quality and engineering capabilities. Investment in program and project management: The 'Program and Project Management' department has shown a 75% increase in employee count, highlighting a strategic initiative to improve project execution and management. Focus on purchasing and legal: The 'Purchasing' and 'Legal' departments have seen a 38% and 25% increase in headcount respectively, indicating a focus on strengthening procurement processes and legal support."
+                        - generic [ref=e501]:
+                          - generic [ref=e502]: …
+                          - button "Exibir mais sobre Contratações e número de funcionários" [ref=e503] [cursor=pointer]: exibir mais
+                  - generic [ref=e505]:
+                    - button "Marcar feedback como bom" [ref=e506] [cursor=pointer]:
+                      - img [ref=e507]
+                    - button "Marcar feedback como ruim" [ref=e510] [cursor=pointer]:
+                      - img [ref=e511]
+                - generic [ref=e514]:
+                  - heading "Última tendência de contratação" [level=3] [ref=e515]
+                  - generic [ref=e516]:
+                    - list [ref=e517]:
+                      - listitem [ref=e518]:
+                        - paragraph [ref=e519]: "635"
+                        - paragraph [ref=e520]: funcionários no total
+                      - listitem [ref=e521]:
+                        - paragraph [ref=e522]: 18%
+                        - paragraph [ref=e524]: toda a empresa
+                        - paragraph [ref=e525]: Crescimento em 2 anos
+                        - generic [ref=e526]: 18% de aumento
+                      - listitem [ref=e527]:
+                        - paragraph [ref=e528]: 200%
+                        - paragraph [ref=e530]: Contabilidade/Auditoria
+                        - paragraph [ref=e531]: Crescimento em 2 anos
+                        - generic [ref=e532]: 200% de aumento
+                    - region "Chart. Highcharts interactive chart." [ref=e535]:
+                      - region "Chart screen reader information.":
+                        - generic [ref=e536]:
+                          - heading "Chart" [level=4] [ref=e537]
+                          - generic [ref=e538]: Chart with 25 data points.
+                          - generic [ref=e539]: "The chart has 1 X axis displaying Time. Range: 2023-12-13 12:00:00 to 2026-05-07 12:00:00."
+                          - generic [ref=e540]: "The chart has 1 Y axis displaying values. Range: 0 to 750."
+                      - img "Interactive chart" [ref=e545]:
+                        - generic [ref=e557]:
+                          - img "1. April 2024, 537 funcionários" [ref=e558]
+                          - img "2. May 2024, 547 funcionários, increase 2% do mês passado" [ref=e559]
+                          - img "3. June 2024, 555 funcionários, increase 1% do mês passado" [ref=e560]
+                          - img "4. July 2024, 586 funcionários, increase 6% do mês passado" [ref=e561]
+                          - img "5. August 2024, 576 funcionários, decrease 2% do mês passado" [ref=e562]
+                          - img "6. September 2024, 589 funcionários, increase 2% do mês passado" [ref=e563]
+                          - img "7. October 2024, 598 funcionários, increase 2% do mês passado" [ref=e564]
+                          - img "8. November 2024, 606 funcionários, increase 1% do mês passado" [ref=e565]
+                          - img "9. December 2024, 610 funcionários, increase 1% do mês passado" [ref=e566]
+                          - img "10. January 2025, 618 funcionários, increase 1% do mês passado" [ref=e567]
+                          - img "11. February 2025, 620 funcionários, neutral 0% do mês passado" [ref=e568]
+                          - img "12. March 2025, 620 funcionários, neutral 0% do mês passado" [ref=e569]
+                          - img "13. April 2025, 623 funcionários, neutral 0% do mês passado" [ref=e570]
+                          - img "14. May 2025, 625 funcionários, neutral 0% do mês passado" [ref=e571]
+                          - img "15. June 2025, 630 funcionários, increase 1% do mês passado" [ref=e572]
+                          - img "16. July 2025, 644 funcionários, increase 2% do mês passado" [ref=e573]
+                          - img "17. August 2025, 658 funcionários, increase 2% do mês passado" [ref=e574]
+                          - img "18. September 2025, 657 funcionários, neutral 0% do mês passado" [ref=e575]
+                          - img "19. October 2025, 646 funcionários, decrease 2% do mês passado" [ref=e576]
+                          - img "20. November 2025, 638 funcionários, decrease 1% do mês passado" [ref=e577]
+                          - img "21. December 2025, 632 funcionários, decrease 1% do mês passado" [ref=e578]
+                          - img "22. January 2026, 631 funcionários, neutral 0% do mês passado" [ref=e579]
+                          - img "23. February 2026, 625 funcionários, decrease 1% do mês passado" [ref=e580]
+                          - img "24. March 2026, 629 funcionários, increase 1% do mês passado" [ref=e581]
+                          - img "25. April 2026, 635 funcionários, increase 1% do mês passado" [ref=e582]
+                        - generic [ref=e583]:
+                          - generic [ref=e584]: abr. de 2024
+                          - generic [ref=e585]: out. de 2024
+                          - generic [ref=e586]: abr. de 2025
+                          - generic [ref=e587]: out. de 2025
+                          - generic [ref=e588]: abr. de 2026
+                        - generic [ref=e589]:
+                          - generic [ref=e590]: "0"
+                          - generic [ref=e591]: "250"
+                          - generic [ref=e592]: "500"
+                          - generic [ref=e593]: "750"
+                      - generic [ref=e595]: End of interactive chart.
+                    - generic [ref=e596]:
+                      - img [ref=e597]
+                      - text: Tempo médio do funcionário na empresa ‧
+                      - strong [ref=e600]: 1,9 ano
+                - generic [ref=e601]:
+                  - heading "A empresa DUX Company contrata pessoas de algumas dessas empresas e instituições de ensino" [level=3] [ref=e602]
+                  - list [ref=e604]:
+                    - listitem [ref=e605]:
+                      - generic [ref=e606]:
+                        - figure [ref=e607]:
+                          - img "Fundação Getulio Vargas" [ref=e608]
+                        - paragraph [ref=e609]:
+                          - text: A DUX Company contratou 33 pessoas de Fundação Getulio Vargas.
+                          - link "Ver todas" [ref=e610] [cursor=pointer]:
+                            - /url: https://www.linkedin.com/search/results/people/?origin=JOB_PAGE_CANNED_SEARCH&currentCompany=10914622&schoolFilter=8175
+                            - strong [ref=e611]: Ver todas
+                - generic [ref=e612]:
+                  - generic [ref=e613]:
+                    - heading "Concorrência" [level=3] [ref=e614]
+                    - paragraph [ref=e615]:
+                      - generic [ref=e616]:
+                        - text: DUX Company is a prominent player in the Brazilian dietary supplements market, known for its rigorous quality standards and focus on nutritional perfection. The market is highly competitive, with significant players like Centrum, Nutren, and Max Titanium. The industry is driven by increasing consumer awareness of preventive healthcare and a growing demand for high-quality, transparent, and natural ingredient-based products. DUX Company must continue to innovate and maintain its high standards to stay competitive.
+                        - generic [ref=e617]:
+                          - generic [ref=e618]: …
+                          - button "Exibir mais sobre Concorrência" [ref=e619] [cursor=pointer]: exibir mais
+                    - generic [ref=e620]:
+                      - link "Nutren" [ref=e622] [cursor=pointer]:
+                        - /url: https://www.linkedin.com/company/nutren/
+                        - generic "Nutren" [ref=e625]
+                      - link "Centrum India" [ref=e628] [cursor=pointer]:
+                        - /url: https://www.linkedin.com/company/centrumindia/
+                        - generic "Centrum India" [ref=e631]
+                      - link "RE/MAX Titanium" [ref=e634] [cursor=pointer]:
+                        - /url: https://www.linkedin.com/company/titaniumremax/
+                        - generic "RE/MAX Titanium" [ref=e637]
+                  - generic [ref=e639]:
+                    - generic [ref=e641]: "Fontes: farmaciavita.com.br mais 2"
+                    - generic [ref=e643]:
+                      - button "Marcar feedback como bom" [ref=e644] [cursor=pointer]:
+                        - img [ref=e645]
+                      - button "Marcar feedback como ruim" [ref=e648] [cursor=pointer]:
+                        - img [ref=e649]
+                - link "Exibir mais estatísticas Premium" [ref=e652] [cursor=pointer]:
+                  - /url: /company/duxcompany/insights/?insightType=HEADCOUNT
+            - generic [ref=e654]:
+              - generic [ref=e655]:
+                - heading "Sobre a empresa" [level=2] [ref=e656]
+                - generic [ref=e657]:
+                  - generic [ref=e658]:
+                    - link "Logo da empresa DUX Company" [ref=e660] [cursor=pointer]:
+                      - /url: /company/duxcompany/life/
+                      - img "Logo da empresa DUX Company" [ref=e661]
+                    - generic [ref=e662]:
+                      - link "DUX Company" [ref=e664] [cursor=pointer]:
+                        - /url: /company/duxcompany/life/
+                      - generic [ref=e665]: 77.006 seguidores
+                  - button "Seguir" [ref=e666] [cursor=pointer]:
+                    - img [ref=e667]
+                    - generic [ref=e669]: Seguir
+                - generic [ref=e670]:
+                  - text: Atividades de bem-estar e condicionamento físico
+                  - generic [ref=e671]: • 501-1.000 funcionários
+                  - generic [ref=e672]: • 635 no LinkedIn
+                - paragraph [ref=e673]:
+                  - generic [ref=e674]:
+                    - text: A empresa foi fundada em 2015 e desde o início buscamos fazer o bem para as pessoas e para o mundo. Fazemos isso através de suplementos nutricionais e alimentares, com tecnologia que conecta ciência e natureza, com máxima qualidade e inovação, gerando impacto positivo.
+                    - text: Nosso objetivo final vai muito além do lucro. Queremos ser a melhor empresa de nutrição do mundo e para o mundo. Para nós, "melhor" significa criar os melhores produtos, com o melhor serviço e de maneira responsável.
+                    - generic [ref=e676]:
+                      - generic [ref=e677]: …
+                      - button "exibir mais" [ref=e678] [cursor=pointer]
+              - link "Exibir mais sobre a empresa" [ref=e680] [cursor=pointer]:
+                - /url: /company/duxcompany/life/
+                - text: Exibir mais
+            - heading "Mais vagas" [level=2] [ref=e682]
+            - list [ref=e684]:
+              - listitem [ref=e685]:
+                - link "Logo da empresa MOORE KSM Gerente de contabilidade MOORE KSM São Paulo, Brasil (Presencial) Avaliando candidaturas Avaliando candidaturas Há 1 semana Candidatura simplificada" [ref=e687] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4399074186&referenceJobId=4397286936&originToLandingJobPostings=4399074186&trackingId=dcy2RLRKBqMMOaE1mjuXog%3D%3D&refId=mmFIyf6F1LfxjSxaRCUGQw%3D%3D&eBP=CwEAAAGdsFIOsCkN5OQMoB2bJ4MVJ_R-157uG6gFPJVWT3rFva_BwQMAIAfxPF-hV-2Su-tT_x2cfqcBkI7Cc8OWhu-RP-HFUJeGyQqXscxwrY0wWOnmMQVERZoSgyd8d8quqNhwzjW5qIwGbxCDaOZuT9C5Z2b_CvoVzRJxQ-hwTJqpXTdZRNVrUki1jsIdlTaMsYm71et5IFOMcAXB-K4t7gcnfHu-9k5kkoBZRwmpESKxUNw_PD3Hvbww9LVIMy70IQP9PAoCHT-kC4frgkYgxGLxkuykO77y4mMsdjRYk3zFk0M2tKayew_sordXQ3QdDcBM2zpIKQCZ5hvb_xvmSdL_du2V0wAY3oTt-FerAqo1iHF97aRhRLA0kilpuT1oHgoMIOMHVCzq_ZoBi9YMlphdIoavgtMhyOc4h03P4-b_Q8zI8-xtu9w_rpJ4ZdHm1Ql8f3SnfeLE2SSWTQ6IkTdWziJig_ShoMA846M0dsg
+                  - generic [ref=e689]:
+                    - img "Logo da empresa MOORE KSM" [ref=e694]
+                    - generic [ref=e695]:
+                      - generic [ref=e696]:
+                        - generic [ref=e697]:
+                          - strong [ref=e699]: Gerente de contabilidade
+                          - generic [ref=e700]: Gerente de contabilidade
+                        - generic [ref=e702]: MOORE KSM
+                        - generic [ref=e704]: São Paulo, Brasil (Presencial)
+                        - list [ref=e706]:
+                          - listitem [ref=e707]:
+                            - img "Avaliando candidaturas" [ref=e710]
+                            - generic [ref=e712]: Avaliando candidaturas
+                      - list [ref=e714]:
+                        - listitem [ref=e715]:
+                          - time [ref=e716]: Há 1 semana
+                        - listitem [ref=e717]:
+                          - img [ref=e718]:
+                            - img [ref=e719]
+                          - generic [ref=e721]: Candidatura simplificada
+              - listitem [ref=e722]:
+                - link "Logo da empresa MAVI Accounting Manager - US GAAP with verification MAVI Brasil (Remoto) Sofía Gurría está contratando 1 conexão trabalha aqui Há 3 dias" [ref=e724] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4403519366&referenceJobId=4397286936&originToLandingJobPostings=4403519366&trackingId=JsVCYBHkDFfwAJSES54EFw%3D%3D&refId=mmFIyf6F1LfxjSxaRCUGQw%3D%3D&eBP=CwEAAAGdsFIOsGb5KLtMzFgMA7jsQn-3X70LPLYQosJbqx9X_kuPQhmgEc4nyPtwJqTdueycqt0oiLY4LEfmRjGHiXZigJQiZ3mAd8GwcLZduFqN5eqaFWW7tHShOKaGwUZX-ckYEPwpu8BDEvBUckIHC4okGMzxkBIRK8dJVgv9c8Lp1eoB9EIetyQJr4DLvsITcSSs9SLQ7u5Y9I7fBXFf-18PQWHVC6dlOXsJXwUvkC3YEt7PjqHtDIYOQRjQ7oWJtzwYV9LRRIPz62B6dnVcO2jcruUh1TDxcR-6YPQgqHvcusrGw7k4P1SZT1t29lzSx5raKpwpx3KhsNY3Go1ft0G54110srLqLXKWNwz7R_wkJU3pPTq88TxogNFg-_haJRoODqK__9WNUYBeg32V3tmnWxDZSu0jobquh4i0OY16XrMxH6M5Q1YldLBHpEEuewlRPSPq7PFnVMfDbyjSvg1hPERujqvW3NaXC_L86g8L4zpX
+                  - generic [ref=e726]:
+                    - img "Logo da empresa MAVI" [ref=e731]
+                    - generic [ref=e732]:
+                      - generic [ref=e733]:
+                        - generic [ref=e734]:
+                          - generic [ref=e735]:
+                            - strong [ref=e736]: Accounting Manager - US GAAP
+                            - img [ref=e738]
+                          - generic [ref=e740]: Accounting Manager - US GAAP with verification
+                        - generic [ref=e742]: MAVI
+                        - generic [ref=e744]: Brasil (Remoto)
+                        - list [ref=e746]:
+                          - listitem [ref=e747]:
+                            - img "Sofía Gurría está contratando" [ref=e750]
+                            - generic [ref=e751]: 1 conexão trabalha aqui
+                      - list [ref=e753]:
+                        - listitem [ref=e754]:
+                          - time [ref=e755]: Há 3 dias
+              - listitem [ref=e756]:
+                - link "Logo da empresa Hire Now Company ® Gerente de contabilidade Hire Now Company ® Guarulhos, São Paulo, Brasil (Presencial) Avaliando candidaturas Avaliando candidaturas Há 1 semana Candidatura simplificada" [ref=e758] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4401350444&referenceJobId=4397286936&originToLandingJobPostings=4401350444&trackingId=RSC1XDdeOL9DkZt28QTUQw%3D%3D&refId=mmFIyf6F1LfxjSxaRCUGQw%3D%3D&eBP=CwEAAAGdsFIOsP-pDWnJznkI1FPsqQ8sQdCjkwPW5VI0xtp_bc4aD7Yxj4YaQe6y5WWaZH6z_EgVwVBjN5SluFh2bMgWKXYHm9fZf-_4fPnazk2R_4slkZfj2lpagnpTt6bWq0XzwBo1HbWVmJ1pzl8Igd_hFc115lx6PGnH2LOI31Va5pwh0zbTt0L4TKVq3gnpHjkSxN70XUKR6Nke-SbY0Xwbu6Sy0XMoZHhwB1B5JoIWlrWrxPkrhpdGPsUJuUWmwO8N6vYq3FrF02mc3rQgMrC-10BNv8xXrCsy2huUWogkayceoLKqmyDTa63NYq4R2CE7Xw6qF_X3vMnadSROo6ZU0bWA2O_E5cFV9w2oZPqqHdhBl9BXwu0ywdjIoJMJuljzRDuinvjhajMJtKbCyfzP-3BQeAk22MlYO3ZdOntkzG2jiG9vpHlxTlr4h7yO7XpQ1W9OXKgYIO_zqvKO1wzeyMOYpbDEjx7SgnQsrgW37kCMZrUEtXhFR_7p_EEtqQ
+                  - generic [ref=e760]:
+                    - img "Logo da empresa Hire Now Company ®" [ref=e765]
+                    - generic [ref=e766]:
+                      - generic [ref=e767]:
+                        - generic [ref=e768]:
+                          - strong [ref=e770]: Gerente de contabilidade
+                          - generic [ref=e771]: Gerente de contabilidade
+                        - generic [ref=e773]: Hire Now Company ®
+                        - generic [ref=e775]: Guarulhos, São Paulo, Brasil (Presencial)
+                        - list [ref=e777]:
+                          - listitem [ref=e778]:
+                            - img "Avaliando candidaturas" [ref=e781]
+                            - generic [ref=e783]: Avaliando candidaturas
+                      - list [ref=e785]:
+                        - listitem [ref=e786]:
+                          - time [ref=e787]: Há 1 semana
+                        - listitem [ref=e788]:
+                          - img [ref=e789]:
+                            - img [ref=e790]
+                          - generic [ref=e792]: Candidatura simplificada
+              - listitem [ref=e793]:
+                - link "Logo da empresa ByteDance Senior Transfer Pricing Manager - AMS with verification ByteDance São Paulo, São Paulo, Brasil (Presencial) 20 ex-alunos da Fundação Getulio Vargas trabalham aqui Há 18 horas Candidatura simplificada" [ref=e795] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4403651277&referenceJobId=4397286936&originToLandingJobPostings=4403651277&trackingId=PmITJNNA3UwQUsNJP3VETw%3D%3D&refId=mmFIyf6F1LfxjSxaRCUGQw%3D%3D&eBP=CwEAAAGdsFIOsFROg41LJAM1fmgYqElemcUv-XNKnWJTFYtFbkGn_sXYmjKS3YV-0_iZEtgw0Iqz_Qps2z3EXs5EitDaYXYY6DAnumLOfarFAjCRZo2rmpGSIsOal1zc6iPbXdvn3lTBrp2GQPqHmkdgZVfStiY_klpT_XN6rGyuWVa6ohOTxxwzKvvaa7CWdkwXwKecZ1R2JCBkMqSuag7qfcsFdxmdzA1nXMq1JBOAMCnPRzerCJtN3WvU0vHT5OyPl8EATg8l6YBdNATirFzLLdsYJqs6jI6fiNP0FV14yk_SVQ1RmiGwpvaLKvsRtlBIiszOuUBnrYyp2yGJk_NGhk_WE8H_ctchkfhdejxwjfV6VANo18xdHqHx-g7cUSYEsDQCLmit1ploME78cnjzXAibd6BGyhkVBE-_Ii8R2-n5xzc4Sc2PL74LoPFTfRVgItcdStMCTrIWtvMlIP41yZrgdElozBS2mVCGsOHv6yEXtg
+                  - generic [ref=e797]:
+                    - img "Logo da empresa ByteDance" [ref=e802]
+                    - generic [ref=e803]:
+                      - generic [ref=e804]:
+                        - generic [ref=e805]:
+                          - generic [ref=e806]:
+                            - strong [ref=e807]: Senior Transfer Pricing Manager - AMS
+                            - img [ref=e809]
+                          - generic [ref=e811]: Senior Transfer Pricing Manager - AMS with verification
+                        - generic [ref=e813]: ByteDance
+                        - generic [ref=e815]: São Paulo, São Paulo, Brasil (Presencial)
+                        - list [ref=e817]:
+                          - listitem [ref=e818]:
+                            - generic [ref=e821]:
+                              - generic [ref=e822]: 20 ex-alunos trabalham aqui
+                              - generic [ref=e823]: 20 ex-alunos da Fundação Getulio Vargas trabalham aqui
+                      - list [ref=e825]:
+                        - listitem [ref=e826]:
+                          - time [ref=e827]: Há 18 horas
+                        - listitem [ref=e828]:
+                          - img [ref=e829]:
+                            - img [ref=e830]
+                          - generic [ref=e832]: Candidatura simplificada
+              - listitem [ref=e833]:
+                - link "Logo da empresa GitLab GTM FP&A Manager, Professional Services with verification GitLab Brasil (Remoto) 8 ex-alunos da Fundação Getulio Vargas trabalham aqui Há 4 dias" [ref=e835] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4391150968&referenceJobId=4397286936&originToLandingJobPostings=4391150968&trackingId=uytdtRHgUlh1Xy4wKJmOvQ%3D%3D&refId=mmFIyf6F1LfxjSxaRCUGQw%3D%3D&eBP=CwEAAAGdsFIOsNqp7kXsDCN3ZNYQijScRePZPSgcNS10btaX4Q1LgxNiYdXhUQayrpaUvlqgdGcDHYWF52M4n4iaNP9yr6HiW_T78sgZZcwAMSFPgCd-c5eSbE9s1Mr8iCywrds26r5NIEoBRVkTDSD6KGqRU-6EUw5IF_eVDqXdNY2n84YBClRpTeafESW5J_g7fVrbR4cEsg-oqRHXdZ05NZVqnJngsbvkymKhb_Fmyn1kjpdJlnrspgTqfYqKUaki8IsOIh9qJVJ1lC_SJmWGTJRyobOM5vhFgGn2nXYnP_uDnCXY5gB7g0QgkRzH4KoaipTIL44JCqhlb4odSLKMZN7P1w2FZvs6DgEs8IV0r41_h9puVtZdrj4SNV5vnTGkXPRkrQDMZajznFpp28cfVUsYQiiEE34scUnrTh5l6w0hawLmlInJdqNiGmpO2pd5Fc0t0YbaWmlIF5p__bknSeWnHIYFjrySE5pvK02VRZKclCbkzkY
+                  - generic [ref=e837]:
+                    - img "Logo da empresa GitLab" [ref=e842]
+                    - generic [ref=e843]:
+                      - generic [ref=e844]:
+                        - generic [ref=e845]:
+                          - generic [ref=e846]:
+                            - strong [ref=e847]: GTM FP&A Manager, Professional Services
+                            - img [ref=e849]
+                          - generic [ref=e851]: GTM FP&A Manager, Professional Services with verification
+                        - generic [ref=e853]: GitLab
+                        - generic [ref=e855]: Brasil (Remoto)
+                        - list [ref=e857]:
+                          - listitem [ref=e858]:
+                            - generic [ref=e861]:
+                              - generic [ref=e862]: 8 ex-alunos trabalham aqui
+                              - generic [ref=e863]: 8 ex-alunos da Fundação Getulio Vargas trabalham aqui
+                      - list [ref=e865]:
+                        - listitem [ref=e866]:
+                          - time [ref=e867]: Há 4 dias
+              - listitem [ref=e868]:
+                - link "Logo da empresa Confidential Financial Planning and Analysis Manager Confidential São Paulo, Brasil (Híbrido) Avaliando candidaturas Avaliando candidaturas Há 3 semanas Candidatura simplificada" [ref=e870] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4392106846&referenceJobId=4397286936&originToLandingJobPostings=4392106846&trackingId=Hy81GPi7ovmzYv1%2BUe4w4w%3D%3D&refId=mmFIyf6F1LfxjSxaRCUGQw%3D%3D&eBP=CwEAAAGdsFIOsIkkwBANbo6d9xnq7qMscb2peJfFczMIUXSpBiwAtNBFMHAZFt5xq92JNvEsTYY4TxlUVDAcqsOnvC4Ch95SzYo6zSPcNUQSx2xom3L_kMM9gFSS9JCvgGl2nH_TcwurPHAhE2tuTNlolGNyCCd4asccA-et1XMBeSUFBbf1sRWIpBUQxSdd5sRDFtdwvIKNfcV7zerGHYMOyU2gGRT3ymhY-C2KzAOAB8HC4qazoZ0uDpKl4_8kGCwR9bTPjA_WGAxxPgdrk-CuAsESPvZdOFUh9nCNMZkxWAsQ1H-fLMl6WJO1Br1NmwGlUFRaz31DnuuhcrR4uejPUyVgwGXLfecZTDGIkT98OJ2Z915h7wsKNK3Tx5kje0UQ8SNtiFqOX5tEegQ96Kha3Egy31xFuFTin8KIjRNLZDq69pwv6lY4C8A83pNzT6VO6hs2HTRur36PORKlyOjUuCZizZ2Hhb5ZINMOg_WC388BLQ
+                  - generic [ref=e872]:
+                    - img "Logo da empresa Confidential" [ref=e877]
+                    - generic [ref=e878]:
+                      - generic [ref=e879]:
+                        - generic [ref=e880]:
+                          - strong [ref=e882]: Financial Planning and Analysis Manager
+                          - generic [ref=e883]: Financial Planning and Analysis Manager
+                        - generic [ref=e885]: Confidential
+                        - generic [ref=e887]: São Paulo, Brasil (Híbrido)
+                        - list [ref=e889]:
+                          - listitem [ref=e890]:
+                            - img "Avaliando candidaturas" [ref=e893]
+                            - generic [ref=e895]: Avaliando candidaturas
+                      - list [ref=e897]:
+                        - listitem [ref=e898]:
+                          - time [ref=e899]: Há 3 semanas
+                        - listitem [ref=e900]:
+                          - img [ref=e901]:
+                            - img [ref=e902]
+                          - generic [ref=e904]: Candidatura simplificada
+              - listitem [ref=e905]:
+                - link "Logo da empresa Genial Investimentos Gerente de Revenue with verification Genial Investimentos São Paulo, São Paulo, Brasil (Presencial) 2 ex-funcionários da Forvis Mazars no Brasil trabalham aqui Há 1 semana" [ref=e907] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4399478132&referenceJobId=4397286936&originToLandingJobPostings=4399478132&trackingId=XOzW82ChC3iqOWdp3QxKGg%3D%3D&refId=mmFIyf6F1LfxjSxaRCUGQw%3D%3D&eBP=CwEAAAGdsFIOsGXld2ID_S5xXK41DEzCwwFVttxjh8q-lRKJ9PPrRtXcfSaEfyeey0FvMaslftu28WuSBwyZYke-nOkRvrupQTM-zdjQJgBFF_BxyFOXu9CuHBJ6_-6HUma9i_jZluF8Ow4gqkTEbZoGtOF9dBsshhfUWNif8bVs2bxKroKWw7CjcKfC8e_HxkuPnrLeViV1OzjIZ4AoKGZj0hsAkYi_pIPNXM1cumw6EUihi12puUABcSxzPpJR64dq1MWfhfbOqBZ4SA5cD0E7Nv8zs8wtuyjeYQcl41LnzG__Lhq4OveM0t-hviPk9al6XfDCr8G5iiFXXrY26WEmfPLL95dVksqkI6pKw2V0yj_PjjA8B0HC1a4fkGoXeuEIE2GyAwgaDRK3xld3j8mTko1lbbfDQQPBraHRLui_c2ZcM3I4OwzxZ-qP67L4uo0h4groRusVXUQZbRw_Y7ndtynjS60cS-9Ql6j0JeXsmdNR4Q
+                  - generic [ref=e909]:
+                    - img "Logo da empresa Genial Investimentos" [ref=e914]
+                    - generic [ref=e915]:
+                      - generic [ref=e916]:
+                        - generic [ref=e917]:
+                          - generic [ref=e918]:
+                            - strong [ref=e919]: Gerente de Revenue
+                            - img [ref=e921]
+                          - generic [ref=e923]: Gerente de Revenue with verification
+                        - generic [ref=e925]: Genial Investimentos
+                        - generic [ref=e927]: São Paulo, São Paulo, Brasil (Presencial)
+                        - list [ref=e929]:
+                          - listitem [ref=e930]:
+                            - generic [ref=e933]:
+                              - generic [ref=e934]: 2 ex-funcionários trabalham aqui
+                              - generic [ref=e935]: 2 ex-funcionários da Forvis Mazars no Brasil trabalham aqui
+                      - list [ref=e937]:
+                        - listitem [ref=e938]:
+                          - time [ref=e939]: Há 1 semana
+              - listitem [ref=e940]:
+                - link "Logo da empresa Devos Executive Search Head of Financial Accounting Devos Executive Search São Paulo, São Paulo, Brasil (Presencial) Você seria um dos melhores candidatos Você seria um dos melhores candidatos Há 3 semanas" [ref=e942] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4391614633&referenceJobId=4397286936&originToLandingJobPostings=4391614633&trackingId=%2BNsmZK2ganLCZf4pZGDKpg%3D%3D&refId=mmFIyf6F1LfxjSxaRCUGQw%3D%3D&eBP=CwEAAAGdsFIOsGrDnmMqWvhi2K8JblErmB-Foxm-pH5ZyIew_NPYHdZ3efSWZ06OeAoOBilSEw_6OO9ykpzegnxCReQH2Rh14q_fEGT7fmDn9Xt42Q2d-BiTWK06OKB403Ia6dGsE-ZZhPU03Bvj_bbugFmUU180eDtHau_yCM_rmNxTEgvRT_I_Nyv8oKuF2NT9GMZFBJiAfOcdgbqsfB1SrT0O5aCsknBfVKjd2u5tLHdMy2s_xCx03wz06BT8JhiiAKuonGwdySC9sea7Kd5sCihtl_Xq5CfP2gWpvQfASnJf48rCVS4RceKC-yDcuAapyL5Zl7jM8GxyFii4ArsbshcnmBKRCOHH2wUYhktERBvdOdrpc92NQHJRyctTk6esyBGQ-435fVRDyZUZ3xJJT-4VlPs7vu5DYnoWKYXSFPIUCCH56dX9yLubwpZYywDQaB44xDPU5Bba54i9Vv6a5nMpF_gl1GcJU51OmnblF1MNrA
+                  - generic [ref=e944]:
+                    - img "Logo da empresa Devos Executive Search" [ref=e949]
+                    - generic [ref=e950]:
+                      - generic [ref=e951]:
+                        - generic [ref=e952]:
+                          - strong [ref=e954]: Head of Financial Accounting
+                          - generic [ref=e955]: Head of Financial Accounting
+                        - generic [ref=e957]: Devos Executive Search
+                        - generic [ref=e959]: São Paulo, São Paulo, Brasil (Presencial)
+                        - list [ref=e961]:
+                          - listitem [ref=e962]:
+                            - img "Você seria um dos melhores candidatos" [ref=e965]:
+                              - img [ref=e966]
+                            - generic [ref=e969]: Você seria um dos melhores candidatos
+                      - list [ref=e971]:
+                        - listitem [ref=e972]:
+                          - time [ref=e973]: Há 3 semanas
+              - listitem [ref=e974]:
+                - link "Logo da empresa Adobe Account Director - Financial Services with verification Adobe São Paulo, São Paulo, Brasil (Presencial) 28 ex-alunos da Fundação Getulio Vargas trabalham aqui Há 3 dias" [ref=e976] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4381065201&referenceJobId=4397286936&originToLandingJobPostings=4381065201&trackingId=t8ggaHC7q%2Bq45v1nfyOk7A%3D%3D&refId=mmFIyf6F1LfxjSxaRCUGQw%3D%3D&eBP=CwEAAAGdsFIOsOByueIVzAUNPE8_bfL-QteSgUw3wZSYyYY58FBqDWYzUFRQ9VMQn-SDmCjmmEZdh_NLyZZbnddM3P5q9r6osZsctbbuHoN9k7FMnh8TVFFdcbObafMfmOtGwcqfs0s8utYMRzw1tOMlms58zc0ssKQX5SvfpbKM5iotSH4CRvacJgLMS5LAA-x6AT7-saVcTF-HL_gSJJBd9PN8susz4hf9ocOcaSOz1tH2f6NDBI2TZ0RmEeXtLKMV0UIXSHv8-b7zrmnTShwulxkN4tVSKtdeOd74SNZYYWpEsr3Z9ztCbCQYafcluSMUs12JFK_1l7JM8QI4qvBnPUvWNKvYwSiw6PqQj_cBpsDuT-Hwym5V8OhxgRBHPnKjQkt1q8y75AkUlzJS8UscYn7Pl6IoXXSJ0yZfW5GaczqFKafOpVeaSyvjUGct_6BA0rAJL_JNKCn-Bx0UiPKeb55hlKybfqqWgNz_kQsF2rc
+                  - generic [ref=e978]:
+                    - img "Logo da empresa Adobe" [ref=e983]
+                    - generic [ref=e984]:
+                      - generic [ref=e985]:
+                        - generic [ref=e986]:
+                          - generic [ref=e987]:
+                            - strong [ref=e988]: Account Director - Financial Services
+                            - img [ref=e990]
+                          - generic [ref=e992]: Account Director - Financial Services with verification
+                        - generic [ref=e994]: Adobe
+                        - generic [ref=e996]: São Paulo, São Paulo, Brasil (Presencial)
+                        - list [ref=e998]:
+                          - listitem [ref=e999]:
+                            - generic [ref=e1002]:
+                              - generic [ref=e1003]: 28 ex-alunos trabalham aqui
+                              - generic [ref=e1004]: 28 ex-alunos da Fundação Getulio Vargas trabalham aqui
+                      - list [ref=e1006]:
+                        - listitem [ref=e1007]:
+                          - time [ref=e1008]: Há 3 dias
+              - listitem [ref=e1009]:
+                - link "Logo da empresa American Tower Mgr Accounting with verification American Tower São Paulo, Brasil (Híbrido) 1 ex-funcionário da Forvis Mazars no Brasil trabalha aqui Há 2 semanas" [ref=e1011] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4398516070&referenceJobId=4397286936&originToLandingJobPostings=4398516070&trackingId=ocv0zCAw3lrx%2FctjN6czvw%3D%3D&refId=mmFIyf6F1LfxjSxaRCUGQw%3D%3D&eBP=CwEAAAGdsFIOsCWkIb6VAYT6Yu4mvLh4qtpnHDe_BIJETEH6C6K0p8fhGlLQjDGsPN49WUcLJ8ntcdK7tYCiVr61w3ttRn_C4VaIr-n3EpAEN_YWgBs-2mDZ1EUhFvBtLjz4QEKbwXm2u3Q2UqHGcT8AtYG18q1RF0GVgcmu27G6GmpO47_k8phPiTOMDnYBPoWirHni92nBVbNS_0q3UbBuAag2Kqq18cE2aYPGzJZjKiVAlYft1gwwaYHCaFKxLiMJ_meoX5k6bIzC6xnFP9s73wKibQbQrBPwM6hslIobnjvywDgBSgMk3vnpMetVgv-3GwgpKsdTAy8-BGjLAnP5EnNNImD0KeWUfAG2BBdHleoc7mBbudvW8JXOZQcjNtII5buZ7sLFzXdE7hEg8azPzqzj4qsugXER9yFnnlxeUSBeLnGLLUKfkaDKLigtFlN737IA2PXysGetFAKpajiAfj_DAtgnOoSXWu2cyQgi0wLOrw
+                  - generic [ref=e1013]:
+                    - img "Logo da empresa American Tower" [ref=e1018]
+                    - generic [ref=e1019]:
+                      - generic [ref=e1020]:
+                        - generic [ref=e1021]:
+                          - generic [ref=e1022]:
+                            - strong [ref=e1023]: Mgr Accounting
+                            - img [ref=e1025]
+                          - generic [ref=e1027]: Mgr Accounting with verification
+                        - generic [ref=e1029]: American Tower
+                        - generic [ref=e1031]: São Paulo, Brasil (Híbrido)
+                        - list [ref=e1033]:
+                          - listitem [ref=e1034]:
+                            - generic [ref=e1037]:
+                              - generic [ref=e1038]: 1 ex-funcionário trabalha aqui
+                              - generic [ref=e1039]: 1 ex-funcionário da Forvis Mazars no Brasil trabalha aqui
+                      - list [ref=e1041]:
+                        - listitem [ref=e1042]:
+                          - time [ref=e1043]: Há 2 semanas
+              - listitem [ref=e1044]:
+                - link "Logo da empresa Kraft Heinz FP&A Manager - Weem with verification Kraft Heinz São Paulo, São Paulo, Brasil (Presencial) 106 ex-alunos da Fundação Getulio Vargas trabalham aqui Há 1 semana" [ref=e1046] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4395904040&referenceJobId=4397286936&originToLandingJobPostings=4395904040&trackingId=MFFW6qnwLBruaAsHUDAsOw%3D%3D&refId=mmFIyf6F1LfxjSxaRCUGQw%3D%3D&eBP=CwEAAAGdsFIOsC_qj2O9zgArFf_hY2LH0Kng-N50x57OR5r0JjI9sKKULPmXWjuv2lChTZv_aei7hFP3z1lQVf8Hw1DCgZrPD81niPtbO3pce8xPPHHbS2Er33YlMs45iP_VGNFTx5VMTEjBK21uzCGfGAxkrtWOJW4D-hbRDcQi5_phmUlUFBzziGl1fh_8YFEQ5Z5V3CIzzMGSPNoIGs_xf3cycL1yF52uk2zQ7Os_wsUU9VxL1vjd6oBdls971rkzWO2DgBL0FX6oJZxlY_j8Hi7ktU2lvGkbg0taSIhNjDl2_O-7yTxm8Oj7M88XFFPxu1z5oAPaCMFAI68DffCt8mO96RZu33aCTgHKOEHaNl8u33W8B5Q5mhGIm7XLGZQaBCF5y02HQOM2qeFTtvaOR001fTehnpZIaUAyO93v66GnCX9sjcqTDx_4c5jlOmBfiZFFanNimZcfAp0R068qB5H1WU2DAbpM8Zgu9F6HDylgb18H
+                  - generic [ref=e1048]:
+                    - img "Logo da empresa Kraft Heinz" [ref=e1053]
+                    - generic [ref=e1054]:
+                      - generic [ref=e1055]:
+                        - generic [ref=e1056]:
+                          - generic [ref=e1057]:
+                            - strong [ref=e1058]: FP&A Manager - Weem
+                            - img [ref=e1060]
+                          - generic [ref=e1062]: FP&A Manager - Weem with verification
+                        - generic [ref=e1064]: Kraft Heinz
+                        - generic [ref=e1066]: São Paulo, São Paulo, Brasil (Presencial)
+                        - list [ref=e1068]:
+                          - listitem [ref=e1069]:
+                            - generic [ref=e1072]:
+                              - generic [ref=e1073]: 106 ex-alunos trabalham aqui
+                              - generic [ref=e1074]: 106 ex-alunos da Fundação Getulio Vargas trabalham aqui
+                      - list [ref=e1076]:
+                        - listitem [ref=e1077]:
+                          - time [ref=e1078]: Há 1 semana
+              - listitem [ref=e1079]:
+                - link "Logo da empresa Scatec ASA Senior Accounting, Tax and Reporting Manager with verification Scatec ASA São Paulo e Região (Presencial) Fernanda Storel 1 conexão trabalha aqui Há 1 semana" [ref=e1081] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4387437240&referenceJobId=4397286936&originToLandingJobPostings=4387437240&trackingId=AUGwL9xp4ev726RJ%2BnFSJA%3D%3D&refId=mmFIyf6F1LfxjSxaRCUGQw%3D%3D&eBP=CwEAAAGdsFIOsNve-4zOrthLdptrkgzzhjlZ29cypXk_SP7NZyK1OUFeropIRBttMKd_xZsPBSCyBy5n2kvMobMdr9BZiyUODlNA_na1302fb3LDlfcVHMvxsVjBbuNj5n_pbSIEr9Ecl3BozR_xI3iCdtEcawGCg5edUBpgiGnPG6TK3ka8QZOZU4EPZ5JPalrOqVYHgf9Jnqjw8sIo2rlgRF46WkeZuaVcpNDi7vNdWC9DBeo2ge1q4Bh5Xhk4MN73NWx1gkB_ylRv7lwYFzOD2yG8IgOEMh-QF70mZa86Q5B51vtistO5NjxFQyDN8pl8xbHsGznm6naRFLUZoqEWSj-GW6u0fdz9VrWOR9Ed_DfwnW3uHOvK_-oyk_iWYMIl8tYclSb6zxUQDSEEv9z4LqN-PKbf468zSdR4Ye3-A-Gx0zM7X-RqooQKb2_E2sccQngbQFYimnEymmHWgRZVfki_kCIoyjBBrqrlNk4Pux8
+                  - generic [ref=e1083]:
+                    - img "Logo da empresa Scatec ASA" [ref=e1088]
+                    - generic [ref=e1089]:
+                      - generic [ref=e1090]:
+                        - generic [ref=e1091]:
+                          - generic [ref=e1092]:
+                            - strong [ref=e1093]: Senior Accounting, Tax and Reporting Manager
+                            - img [ref=e1095]
+                          - generic [ref=e1097]: Senior Accounting, Tax and Reporting Manager with verification
+                        - generic [ref=e1099]: Scatec ASA
+                        - generic [ref=e1101]: São Paulo e Região (Presencial)
+                        - list [ref=e1103]:
+                          - listitem [ref=e1104]:
+                            - img "Fernanda Storel" [ref=e1107]
+                            - generic [ref=e1108]: 1 conexão trabalha aqui
+                      - list [ref=e1110]:
+                        - listitem [ref=e1111]:
+                          - time [ref=e1112]: Há 1 semana
+            - link "Ver mais vagas como esta" [ref=e1114] [cursor=pointer]:
+              - /url: https://www.linkedin.com/jobs/collections/similar-jobs?referenceJobId=4397286936
+        - complementary [ref=e229]:
+          - generic [ref=e230]:
+            - generic [ref=e1115]:
+              - img "Premium" [ref=e1117]:
+                - img [ref=e1118]
+              - heading "Adquira competências com esses cursos para conseguir um novo emprego" [level=2] [ref=e1120]
+              - listitem [ref=e1121]:
+                - 'link "Descubra o Microsoft Office 2024: Word, Excel, PowerPoint e Outlook" [ref=e1122] [cursor=pointer]':
+                  - /url: https://www.linkedin.com/learning/descubra-o-microsoft-office-2024-word-excel-powerpoint-e-outlook?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_4276073_learning
+                  - 'img "Descubra o Microsoft Office 2024: Word, Excel, PowerPoint e Outlook" [ref=e1125]'
+                  - img [ref=e1127]
+                - generic [ref=e1129]:
+                  - 'link "Descubra o Microsoft Office 2024: Word, Excel, PowerPoint e Outlook" [ref=e1130] [cursor=pointer]':
+                    - /url: https://www.linkedin.com/learning/descubra-o-microsoft-office-2024-word-excel-powerpoint-e-outlook?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_4276073_learning
+                    - generic [ref=e1131]: "Descubra o Microsoft Office 2024: Word, Excel, PowerPoint e Outlook"
+                  - generic [ref=e1133]: 2.227 visualizações
+              - listitem [ref=e1134]:
+                - link "Inteligência Artificial Generativa para Finanças e Contabilidade" [ref=e1135] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/learning/inteligencia-artificial-generativa-para-financas-e-contabilidade?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_5242121_learning
+                  - img "Inteligência Artificial Generativa para Finanças e Contabilidade" [ref=e1138]
+                  - img [ref=e1140]
+                - generic [ref=e1142]:
+                  - link "Inteligência Artificial Generativa para Finanças e Contabilidade" [ref=e1143] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/learning/inteligencia-artificial-generativa-para-financas-e-contabilidade?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_5242121_learning
+                    - generic [ref=e1144]: Inteligência Artificial Generativa para Finanças e Contabilidade
+                  - generic [ref=e1146]: 4.027 visualizações
+              - listitem [ref=e1147]:
+                - link "Fundamentos de Contabilidade" [ref=e1148] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/learning/fundamentos-de-contabilidade?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_2930666_learning
+                  - img "Fundamentos de Contabilidade" [ref=e1151]
+                  - img [ref=e1153]
+                - generic [ref=e1155]:
+                  - link "Fundamentos de Contabilidade" [ref=e1156] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/learning/fundamentos-de-contabilidade?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_2930666_learning
+                    - generic [ref=e1157]: Fundamentos de Contabilidade
+                  - generic [ref=e1159]: 74.539 visualizações
+              - link "Exibir mais no LinkedIn Learning" [ref=e1161] [cursor=pointer]:
+                - /url: /learning?trk=jobdetails_learning_awareness
+            - generic [ref=e1162]:
+              - paragraph [ref=e1163]: Procurando um talento?
+              - link "Anunciar vaga" [ref=e1164] [cursor=pointer]:
+                - /url: https://www.linkedin.com/talent/job-posting-redirect?trk=flagship3_job_detail
+      - contentinfo [ref=e232]:
+        - generic [ref=e234]:
+          - generic [ref=e235]:
+            - navigation [ref=e236]:
+              - list [ref=e1165]:
+                - listitem [ref=e1166]:
+                  - link "Sobre" [ref=e1167] [cursor=pointer]:
+                    - /url: https://about.linkedin.com/pt-br
+                - listitem [ref=e1168]:
+                  - link "Acessibilidade" [ref=e1169] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/accessibility
+                - listitem [ref=e1170]:
+                  - link "Soluções de Talentos" [ref=e1171] [cursor=pointer]:
+                    - /url: https://business.linkedin.com/pt-br/talent-solutions?trk=flagship_nav&veh=li-footer-lts-control-pt-br&src=li-footer
+                - listitem [ref=e1172]:
+                  - link "Políticas para Comunidades Profissionais" [ref=e1173] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/legal/professional-community-policies
+                - listitem [ref=e1174]:
+                  - link "Carreiras" [ref=e1175] [cursor=pointer]:
+                    - /url: https://careers.linkedin.com/
+                - listitem [ref=e1176]:
+                  - link "Soluções de Marketing" [ref=e1177] [cursor=pointer]:
+                    - /url: https://business.linkedin.com/pt-br/marketing-solutions?trk=n_nav_lms_f&src=li-footer
+                - listitem [ref=e1178]:
+                  - button "Termos e Privacidade" [ref=e1180] [cursor=pointer]:
+                    - generic [ref=e1182]:
+                      - text: Termos e Privacidade
+                      - img [ref=e1183]
+                - listitem [ref=e1185]:
+                  - link "Preferências de anúncios" [ref=e1186] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/help/linkedin/answer/62931?lang=pt
+                - listitem [ref=e1187]:
+                  - link "Publicidade" [ref=e1188] [cursor=pointer]:
+                    - /url: https://business.linkedin.com/pt-br/marketing-solutions/ads?trk=n_nav_ads_f
+                - listitem [ref=e1189]:
+                  - link "Soluções de Vendas" [ref=e1190] [cursor=pointer]:
+                    - /url: https://business.linkedin.com/pt-br/sales-solutions?trk=flagship_nav&veh=li-footer-lss-control-pt-br&src=li-footer
+                - listitem [ref=e1191]:
+                  - link "Para celular" [ref=e1192] [cursor=pointer]:
+                    - /url: https://mobile.linkedin.com/pt-br
+                - listitem [ref=e1193]:
+                  - link "Pequenas empresas" [ref=e1194] [cursor=pointer]:
+                    - /url: https://smallbusiness.linkedin.com?&src=li-footer
+                - listitem [ref=e1195]:
+                  - link "Central de Segurança" [ref=e1196] [cursor=pointer]:
+                    - /url: https://safety.linkedin.com
+            - generic [ref=e238]:
+              - list [ref=e239]:
+                - listitem [ref=e240]:
+                  - img [ref=e241]
+                  - generic [ref=e243]:
+                    - link "Dúvidas? Acesse a nossa Central de Ajuda." [ref=e244] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/help/linkedin?trk=d_flagship3_job_details
+                      - text: Dúvidas?
+                    - paragraph [ref=e245]: Acesse a nossa Central de Ajuda.
+                - listitem [ref=e246]:
+                  - img [ref=e247]
+                  - generic [ref=e249]:
+                    - link "Gerencie sua conta e privacidade Acesse suas Configurações." [ref=e250] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/psettings/
+                      - text: Gerencie sua conta e privacidade
+                    - paragraph [ref=e251]: Acesse suas Configurações.
+                - listitem [ref=e252]:
+                  - img [ref=e253]
+                  - generic [ref=e255]:
+                    - link "Visibilidade da recomendação Saiba mais sobre os conteúdos recomendados." [ref=e256] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/help/linkedin/answer/a1339724
+                      - text: Visibilidade da recomendação
+                    - paragraph [ref=e257]: Saiba mais sobre os conteúdos recomendados.
+              - generic [ref=e258]:
+                - generic [ref=e259]: Selecionar idioma
+                - combobox "Selecionar idioma" [ref=e260]:
+                  - option "العربية (Árabe)"
+                  - option "বাংলা (Bengali)"
+                  - option "Čeština (Tcheco)"
+                  - option "Dansk (Dinamarquês)"
+                  - option "Deutsch (Alemão)"
+                  - option "Ελληνικά (Grego)"
+                  - option "English (Inglês)"
+                  - option "Español (Espanhol)"
+                  - option "فارسی (Persa)"
+                  - option "Suomi (Finlandês)"
+                  - option "Français (Francês)"
+                  - option "हिंदी (Hindi)"
+                  - option "Magyar (Húngaro)"
+                  - option "Bahasa Indonésia (Indonésio)"
+                  - option "Italiano (Italiano)"
+                  - option "עברית (Hebraico)"
+                  - option "日本語 (Japonês)"
+                  - option "한국어 (Coreano)"
+                  - option "मराठी (Marati)"
+                  - option "Bahasa Malaysia (Malaio)"
+                  - option "Nederlands (Holandês)"
+                  - option "Norsk (Norueguês)"
+                  - option "ਪੰਜਾਬੀ (Punjabi)"
+                  - option "Polski (Polonês)"
+                  - option "Português (Português)" [selected]
+                  - option "Română (Romeno)"
+                  - option "Русский (Russo)"
+                  - option "Svenska (Sueco)"
+                  - option "తెలుగు (Telugu)"
+                  - option "ภาษาไทย (Tailandês)"
+                  - option "Tagalog (Tagalog)"
+                  - option "Türkçe (Turco)"
+                  - option "Українська (Ucraniano)"
+                  - option "Tiếng Việt (Vietnamita)"
+                  - option "简体中文 (Chinês (Simplificado))"
+                  - option "正體中文 (Chinês (Tradicional))"
+          - paragraph [ref=e261]: LinkedIn Corporation © 2026
+    - generic:
+      - generic:
+        - complementary:
+          - generic [ref=e262]:
+            - generic [ref=e263]:
+              - generic [ref=e265] [cursor=pointer]:
+                - img "Fernando Xavier" [ref=e267]
+                - button "Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas." [ref=e268]:
+                  - generic [ref=e269]:
+                    - generic [ref=e270]: Mensagens
+                    - generic [ref=e271]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+              - generic [ref=e272]:
+                - button "Abrir o menu suspenso de mensagens" [ref=e274] [cursor=pointer]:
+                  - img "Abrir o menu suspenso de mensagens" [ref=e275]
+                - button "Escrever mensagem" [ref=e278] [cursor=pointer]:
+                  - img [ref=e279]
+                  - generic [ref=e281]: Escrever mensagem
+                - button "Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas." [ref=e282] [cursor=pointer]:
+                  - img [ref=e283]
+                  - generic [ref=e285]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+            - link "Foto da empresa Fernando Xavier Fernando Xavier" [ref=e1197] [cursor=pointer]:
+              - /url: https://www.linkedin.com/company/109375368/admin/inbox
+              - img "Foto da empresa Fernando Xavier" [ref=e1198]
+              - generic [ref=e1199]: Fernando Xavier
+              - img [ref=e1200]
+        - complementary "Assistente de IA para obter ajuda com sua carreira, vagas, etc."

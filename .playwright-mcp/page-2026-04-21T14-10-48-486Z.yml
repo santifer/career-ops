@@ -1,0 +1,23 @@
+- generic [ref=e4]:
+  - banner [ref=e5]:
+    - generic:
+      - link "Skip to main content":
+        - /url: "#skipContent"
+    - navigation "Header Menu" [ref=e9]:
+      - link [ref=e10] [cursor=pointer]:
+        - /url: https://careers.triviumpackaging.com
+        - img [ref=e11]
+      - list [ref=e12]:
+        - listitem [ref=e13]:
+          - link "Home" [ref=e14] [cursor=pointer]:
+            - /url: https://careers.triviumpackaging.com/
+        - listitem [ref=e15]:
+          - link "Our Community" [ref=e16] [cursor=pointer]:
+            - /url: https://careers.triviumpackaging.com/content/Our-Community/?locale=en_US
+        - listitem [ref=e17]:
+          - link "Vacancies" [ref=e18] [cursor=pointer]:
+            - /url: https://careers.triviumpackaging.com/go/Vacancies/9811757/
+    - link "Employee Login" [ref=e23] [cursor=pointer]:
+      - /url: javascript:;
+  - generic [ref=e24]:
+    - main

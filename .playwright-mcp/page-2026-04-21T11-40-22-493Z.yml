@@ -1,0 +1,138 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - generic:
+      - link "Skip to main content":
+        - /url: "#content"
+    - navigation "Header Menu" [ref=e7]:
+      - link [ref=e8] [cursor=pointer]:
+        - /url: https://careers.dovercorporation.com/
+        - img [ref=e9]
+      - list [ref=e10]:
+        - listitem [ref=e11]:
+          - link "Home" [ref=e12] [cursor=pointer]:
+            - /url: /
+        - listitem [ref=e13]:
+          - link "Search by Location" [ref=e14] [cursor=pointer]:
+            - /url: /content/Location/?locale=en_US
+        - listitem [ref=e15]:
+          - button "View Jobs by Language" [ref=e16] [cursor=pointer]: View Jobs by Language
+        - listitem [ref=e18]:
+          - link "Recruitment Fraud Notice" [ref=e19] [cursor=pointer]:
+            - /url: /content/Recruitment-Fraud-Notice/?locale=en_US
+    - generic [ref=e21]:
+      - button "Site Language" [ref=e23] [cursor=pointer]: Site Language
+      - link "View Profile" [ref=e27] [cursor=pointer]:
+        - /url: "#"
+  - main [ref=e29]:
+    - generic [ref=e30]:
+      - generic [ref=e31]:
+        - search [ref=e33]:
+          - generic [ref=e35]:
+            - generic [ref=e36]:
+              - generic [ref=e37]:
+                - textbox "Search by Keyword" [ref=e39]
+                - textbox "Search by Location" [ref=e41]
+              - button "Show More Options" [ref=e44] [cursor=pointer]
+            - generic [ref=e46]:
+              - button "Search Jobs" [ref=e48] [cursor=pointer]
+              - button "Clear" [ref=e50] [cursor=pointer]
+        - generic [ref=e55]:
+          - text: 
+          - generic [ref=e56]:
+            - generic [ref=e57]: "Select how often (in days) to receive an alert:"
+            - spinbutton "Select how often (in days) to receive an alert:" [ref=e58]: "7"
+          - button "Create Alert" [ref=e60] [cursor=pointer]:
+            - generic [ref=e61]: ✉
+            - text: Create Alert
+      - generic [ref=e63]:
+        - generic [ref=e66]:
+          - button "Apply now" [expanded] [active] [ref=e67] [cursor=pointer]: Apply now
+          - list [ref=e161]:
+            - menuitem "Apply Now" [ref=e162] [cursor=pointer]
+            - link "Apply now Help" [ref=e163] [cursor=pointer]:
+              - /url: javascript:alert('Join our talent community, receive job alerts, and start the apply process.')
+              - img "Apply now Help" [ref=e164]
+            - menuitem "Start applying with LinkedIn" [ref=e165] [cursor=pointer]:
+              - img [ref=e166]
+              - text: Start applying with LinkedIn
+            - link "Apply with LinkedIn Help" [ref=e167] [cursor=pointer]:
+              - /url: "javascript:alert('Use your LinkedIn profile to join our talent community, receive job alerts, and start the application process.\n\n- Nothing is posted on your LinkedIn account.\n- We do not log in to your LinkedIn account.\n- We do not save login credentials to your LinkedIn account.\n- You will be joining our Talent Community using your social profile.\n- Please ensure that pop-up blockers are disabled in order to proceed.')"
+              - img "Apply with LinkedIn Help" [ref=e168]
+        - generic [ref=e69]:
+          - img [ref=e70]
+          - heading "Regional Controller" [level=1] [ref=e76]
+          - generic [ref=e80]:
+            - text: "Location:"
+            - paragraph [ref=e82]: Rio de Janeiro, RJ, BR
+          - generic [ref=e88]:
+            - paragraph [ref=e89]
+            - paragraph [ref=e90]:
+              - text: "Dover Fueling Solutions (\"DFS\"), uma empresa Dover (NYSE: DOV) composta pelos negócios ClearView, Fairbanks, ProGauge, Tokheim, Wayne Fueling Systems e OPW's Fuel Management Systems, oferece equipamentos avançados de abastecimento de combustíveis, sistemas eletrônicos e pagamento, medição automática de tanques e soluções de gerenciamento de estoque de líquidos para clientes em todo o mundo. Sediada em Austin, Texas, a DFS tem uma presença global significativa, incluindo instalações nos EUA, Reino Unido, Suécia, Itália França, Índia, China e Brasil. Para obter mais informações e conhecer nossa política de privacidade, visite"
+              - link "www.doverfuelingsolutions.com" [ref=e91] [cursor=pointer]:
+                - /url: http://www.doverfuelingsolutions.com/
+            - paragraph [ref=e92]
+            - paragraph [ref=e93]:
+              - strong [ref=e94]: "Sumário:"
+            - paragraph [ref=e95]: Liderar as atividades de Controladoria, incluindo Contabilidade, Fiscal/Tributário e Controles Internos, assegurando a integridade das informações financeiras, conformidade com IFRS, US GAAP, SOX e legislações aplicáveis. Atuar como parceiro do negócio, apoiando a tomada de decisão por meio de análises financeiras, gestão de riscos e melhoria contínua dos processos, contribuindo para a eficiência operacional e geração de valor da companhia. Reporte ao Diretor de Finanças LATAM .
+            - paragraph [ref=e96]
+            - list [ref=e97]:
+              - listitem [ref=e98]: Liderar Contabilidade, Fiscal/Tributário (com parceiros externos) e Controles Internos, garantindo conformidade e qualidade das informações;
+              - listitem [ref=e99]: Garantir a qualidade, acurácia e tempestividade dos fechamentos contábeis, declarações e reports gerenciais e corporativos;
+              - listitem [ref=e100]: Atuar como guardião da governança financeira, assegurando aderência às políticas corporativas e fortalecendo o ambiente de controles internos;
+              - listitem [ref=e101]: Responsável pelos processos de auditorias internas e externas;
+              - listitem [ref=e102]: Ser um parceiro das áreas de negócio, suportando decisões com análises e visão financeira;
+              - listitem [ref=e103]: Gerenciar a atuação de parceiros externos de compliance fiscal e consultoria tributária, garantindo qualidade técnica, alinhamento e captura de oportunidades fiscais;
+              - listitem [ref=e104]: Apoiar as áreas operacionais na melhoria de dados, eficiência e disciplina de processos;
+              - listitem [ref=e105]: Identificar e capturar oportunidades de planejamento tributário e eficiência fiscal, em conjunto com advisors externos;
+              - listitem [ref=e106]: Garantir o cumprimento de todas as obrigações fiscais e regulatórias (federais, estaduais e municipais);
+              - listitem [ref=e107]: Acompanhar as mudanças nas legislações e os impactos que podem causar para o negócio, principalmente no que tange as mudanças e aplicações relacionadas a Reforma Tributária;
+              - listitem [ref=e108]: Liderar iniciativas de melhoria contínua, automação e simplificação de processos, elevando o nível de eficiência da área;
+              - listitem [ref=e109]: Acompanhar temas-chave como inventário/E&O, custos, margens e receita;
+              - listitem [ref=e110]: Desenvolver a equipe com foco em performance, accountability e formação de talentos;
+              - listitem [ref=e111]: Manter interface com times globais, assegurando alinhamento e consistência;
+            - paragraph [ref=e112]
+            - paragraph [ref=e113]:
+              - strong [ref=e114]: "Formação:"
+            - list [ref=e115]:
+              - listitem [ref=e116]: Ensino superior em Contabilidade.
+            - paragraph [ref=e117]:
+              - strong [ref=e118]: "Conhecimentos Específicos/Habilidades:"
+            - list [ref=e119]:
+              - listitem [ref=e120]: Inglês avançado;
+              - listitem [ref=e121]: CRC ativo;
+              - listitem [ref=e122]: Sólido conhecimento em IFRS e US GAAP;
+              - listitem [ref=e123]: Experiência com SOX e controles internos;
+              - listitem [ref=e124]: Conhecimento de ERP e ferramentas de análise de dados.
+            - paragraph [ref=e125]
+            - paragraph [ref=e126]: Todos os candidatos qualificados receberão consideração pelo emprego sem discriminação com base na raça, cor, religião, sexo, orientação sexual, identidade de gênero, origem nacional, deficiência, idade, informação genética, ou quaisquer outros fatores proibidos por lei.
+            - paragraph [ref=e127]
+          - paragraph
+        - button "Apply now" [ref=e130] [cursor=pointer]: Apply now
+  - contentinfo [ref=e133]:
+    - generic [ref=e136]:
+      - list [ref=e137]:
+        - listitem [ref=e138]:
+          - link "Dover Home" [ref=e139] [cursor=pointer]:
+            - /url: /
+        - listitem [ref=e140]:
+          - link "View Page Index" [ref=e141] [cursor=pointer]:
+            - /url: /viewalljobs/
+        - listitem [ref=e142]:
+          - link "Top Job Searches" [ref=e143] [cursor=pointer]:
+            - /url: /topjobs/
+        - listitem [ref=e144]:
+          - link "Privacy Policy" [ref=e145] [cursor=pointer]:
+            - /url: http://www.dovercorporation.com/footerlinks/privacy
+      - list [ref=e147]:
+        - listitem [ref=e148]:
+          - link "Follow us on LinkedIn" [ref=e149] [cursor=pointer]:
+            - /url: https://www.linkedin.com/company/dovercorp/
+            - img [ref=e150]
+        - listitem [ref=e152]:
+          - link "Visit our YouTube channel" [ref=e153] [cursor=pointer]:
+            - /url: https://www.youtube.com/user/DoverCorporation
+            - img [ref=e154]
+        - listitem [ref=e156]:
+          - link "Follow us on X" [ref=e157] [cursor=pointer]:
+            - /url: https://twitter.com/DoverCorp
+            - img [ref=e158]

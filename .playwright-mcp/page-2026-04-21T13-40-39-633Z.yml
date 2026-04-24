@@ -1,0 +1,53 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - banner [ref=e26]:
+      - link "Pulsus logo" [ref=e27] [cursor=pointer]:
+        - /url: "#"
+        - img "Pulsus logo" [ref=e28]
+      - generic [ref=e29]:
+        - button "Email" [ref=e31] [cursor=pointer]:
+          - img [ref=e33]
+        - button "Menu" [ref=e36] [cursor=pointer]:
+          - img [ref=e39]
+    - generic [ref=e41]:
+      - img "Loading" [ref=e43]
+      - progressbar [ref=e46]
+      - generic [ref=e48]: Validando suas informações...
+    - contentinfo [ref=e49]: Gupy 2026. Todos os direitos reservados. v5.61.0
+    - link "Suporte para candidatos" [ref=e8] [cursor=pointer]:
+      - /url: https://suporte-candidatos.gupy.io/s/suporte?language=pt_BR
+      - text: "?"
+  - button [ref=e50]:
+    - generic [ref=e51]: 99+
+  - generic:
+    - generic "Privacy Tools - Cookie Management":
+      - dialog "cookieconsent" [ref=e9]:
+        - button "Fechar banner de cookies" [ref=e10] [cursor=pointer]: ×
+        - generic [ref=e11]:
+          - generic [ref=e13]:
+            - text: Ao clicar em “Aceitar todos os cookies”, você concorda com o armazenamento de cookies no seu dispositivo para melhorar a navegação no site, analisar o uso do site e ajudar em nossos esforços de marketing.
+            - link "Aviso de Cookies" [ref=e14] [cursor=pointer]:
+              - /url: https://www.gupy.io/aviso-de-cookies?_gl=1*1rylxvw*_gcl_au*NTk2NDkzOTQuMTcxNDQxMjg5Mw..
+            - link "Aviso de Privacidade" [ref=e15] [cursor=pointer]:
+              - /url: https://www.gupy.io/aviso-de-privacidade-site
+          - generic [ref=e16]:
+            - button "Rejeitar Todos" [ref=e18] [cursor=pointer]:
+              - generic "Rejeitar" [ref=e19]: Rejeitar Todos
+            - button "Aceitar Cookies" [ref=e20] [cursor=pointer]:
+              - generic "Aceitar" [ref=e21]: Aceitar Cookies
+            - button "Configurar Cookies" [ref=e23] [cursor=pointer]
+    - generic "Privacy Tools - Cookie Management - https://www.privacytools.com.br"
+  - generic "Plugin de acessibilidade da Hand Talk." [ref=e52]:
+    - heading "Plugin de acessibilidade da Hand Talk." [level=2] [ref=e53]
+    - button "Abrir recursos assistivos." [ref=e54] [cursor=pointer]:
+      - img [ref=e55]
+      - paragraph:
+        - generic [ref=e57]: Recursos Assistivos
+    - button "Abrir tradutor de língua de sinais." [ref=e58] [cursor=pointer]:
+      - img [ref=e59]
+      - paragraph:
+        - generic [ref=e66]: Acessível em Libras
+  - generic [ref=e72]:
+    - generic [ref=e73]: Pensando em mudar o rumo da sua carreira?
+    - generic [ref=e74]: Que tal fazer uma mentoria? Essa sensação de estar no lugar errado, fazendo o que não te realiza, é...
+    - generic [ref=e75]: +

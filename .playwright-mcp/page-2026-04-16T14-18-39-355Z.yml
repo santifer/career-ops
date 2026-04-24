@@ -1,0 +1,400 @@
+- generic [active] [ref=e1]:
+  - link "Ir para o conteúdo principal" [ref=e2] [cursor=pointer]:
+    - /url: "#mainContent"
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - generic:
+        - generic:
+          - generic: 
+      - generic [ref=e7]:
+        - generic [ref=e8]:
+          - link "Robert Half" [ref=e10] [cursor=pointer]:
+            - /url: /br/pt
+            - img [ref=e11]
+          - list [ref=e13]:
+            - generic:
+              - generic [ref=e15]:
+                - link "Vagas" [ref=e16] [cursor=pointer]:
+                  - /url: /br/pt/procurando-oportunidade
+                  - generic [ref=e17]:
+                    - generic: Vagas
+                - button "Vagas chevron-down button" [ref=e19] [cursor=pointer]:
+                  - generic [ref=e21]:
+                    - generic [ref=e22]: 
+                    - generic [ref=e23]: Vagas chevron-down button
+              - generic [ref=e25]:
+                - link "Soluções em talentos" [ref=e26] [cursor=pointer]:
+                  - /url: /br/pt/solucao-talentos
+                  - generic [ref=e27]:
+                    - generic: Soluções em talentos
+                - button "Soluções em talentos chevron-down button" [ref=e29] [cursor=pointer]:
+                  - generic [ref=e31]:
+                    - generic [ref=e32]: 
+                    - generic [ref=e33]: Soluções em talentos chevron-down button
+              - generic [ref=e35]:
+                - link "Consultoria" [ref=e36] [cursor=pointer]:
+                  - /url: /br/pt/consultoria
+                  - generic [ref=e37]:
+                    - generic: Consultoria
+                - button "Consultoria chevron-down button" [ref=e39] [cursor=pointer]:
+                  - generic [ref=e41]:
+                    - generic [ref=e42]: 
+                    - generic [ref=e43]: Consultoria chevron-down button
+              - generic [ref=e45]:
+                - link "Central do Conhecimento" [ref=e46] [cursor=pointer]:
+                  - /url: /br/pt/insights
+                  - generic [ref=e47]:
+                    - generic: Central do Conhecimento
+                - button "Central do Conhecimento chevron-down button" [ref=e49] [cursor=pointer]:
+                  - generic [ref=e51]:
+                    - generic [ref=e52]: 
+                    - generic [ref=e53]: Central do Conhecimento chevron-down button
+        - generic [ref=e54]:
+          - button "search" [ref=e55] [cursor=pointer]:
+            - generic [ref=e57]:
+              - generic [ref=e58]: 
+              - generic [ref=e59]: search
+          - button "Minha Conta" [ref=e61] [cursor=pointer]:
+            - text: Minha Conta
+            - generic [ref=e64]: 
+          - generic:
+            - generic:
+              - generic: Candidato – Acessar Minha Conta
+              - generic: Colaborador – Registrar Ponto
+              - generic: Colaborador – Consultar Ponto
+              - generic: Colaborador – Consultar Holerite
+              - generic: Cliente – Aprovar Ponto
+    - generic [ref=e68]:
+      - generic [ref=e70]:
+        - generic [ref=e71]:
+          - button "Pesquise mais vagas" [ref=e74] [cursor=pointer]:
+            - generic [ref=e77]: 
+            - text: Pesquise mais vagas
+          - generic [ref=e79]:
+            - generic [ref=e83]:
+              - generic:
+                - heading [level=3]
+              - generic [ref=e85]:
+                - generic [ref=e86]: 
+                - generic [ref=e87]: Por favor, aguarde
+              - generic [ref=e89]:
+                - generic: Por favor, aguarde
+            - generic [ref=e93] [cursor=pointer]:
+              - heading "Crie um alerta de emprego" [level=5] [ref=e96]:
+                - generic: Crie um alerta de emprego
+              - generic [ref=e99]:
+                - generic: Envie-me um e-mail sobre novas oportunidades em
+              - button "Criar alerta de vaga" [ref=e102]
+          - generic [ref=e103]:
+            - heading "Pesquise mais vagas" [level=2] [ref=e106]:
+              - generic: Pesquise mais vagas
+            - generic [ref=e109]:
+              - generic [ref=e113]:
+                - textbox "Cargo, habilidades ou palavras-chave" [ref=e114]:
+                  - generic [ref=e115]:
+                    - generic: Cargo, habilidades ou palavras-chave
+                    - textbox "Cargo, habilidades ou palavras-chave" [ref=e116]:
+                      - /placeholder: ""
+                - generic [ref=e119]:
+                  - generic [ref=e120]: 
+                  - generic [ref=e121]: search
+              - generic "Search Cidade, estado ou CEP" [ref=e126]:
+                - generic [ref=e128]:
+                  - list "Search Cidade, estado ou CEP" [ref=e129]:
+                    - generic [ref=e130]:
+                      - generic: Cidade, estado ou CEP
+                      - textbox "Cidade, estado ou CEP" [ref=e131]:
+                        - /placeholder: ""
+                  - generic [ref=e134]:
+                    - generic [ref=e135]: 
+                    - generic [ref=e136]: location-pin-outline
+              - button "Encontrar empregos" [ref=e141] [cursor=pointer]
+        - generic:
+          - generic:
+            - generic:
+              - img
+      - generic: Rio de Janeiro,
+      - generic:
+        - generic: Remoto
+        - generic: Permanente
+        - generic: DOE
+      - generic: Publicado — 3 março 2026
+      - generic: "A EmpresaMultinacional no segmento industrial.Descrição da vaga Liderar a função financeira da América do Sul, assegurando governança, controles, conformidade e alinhamento com Finanças Globais;Responsável pelo fechamento mensal sob US GAAP e normas locais, garantindo qualidade, acuracidade e cumprimento de prazos;Assegurar a integridade dos books e a confiabilidade das demonstrações financeiras;Supervisionar obrigações fiscais, regulatórias e estatutárias da região;Coordenar auditorias internas e externas e manter a estrutura de controles internos (incluindo SOX, se aplicável);Implementar novas normas contábeis e políticas globais, assegurando conformidade técnica;Atuar como referência técnica em temas contábeis complexos;Garantir gestão financeira de Operações, Comercial e Supply Chain, com foco em controle de custos, rentabilidade e eficiência;Apoiar a liderança por meio de análises financeiras, identificando riscos e oportunidades;Conduzir revisões mensais e trimestrais de resultados;Atuar em integração com FP&A, Tax, RH e Global Finance Business Services, apoiando iniciativas de transformação e modelo de serviços compartilhados;Liderar melhorias de processos financeiros e otimização do ciclo de fechamento;Apoiar iniciativas de M&A (due diligence e integração contábil), quando aplicável;Desenvolver e estruturar a equipe financeira regional, garantindo alta performance;Atuar como principal interface entre América do Sul e Finanças Globais e participar do time global de Controladoria;Modelo de trabalho: Híbrido.Perfil desejado Graduação em Ciências Contábeis (obrigatório);Experiência consolidada como Controller ou líder sênior de Finanças;Vivência com governança, controles internos e auditoria;Experiência relevante em liderança de equipes estruturadas;Inglês avançado/ fluente (mandatório);Experiência em ambientes industriais, manufatura ou processos;Experiência com ERP."
+      - generic: Have an account?
+      - generic: Descrição
+      - generic: Requisitos
+      - generic: Have an account?
+      - generic: Rio de Janeiro,
+      - generic:
+        - generic: Permanente
+        - generic: DOE
+      - generic: 3 março 2026
+      - generic: Rio de Janeiro,
+      - generic:
+        - generic: Projetos
+        - generic: DOE
+      - generic: 19 março 2026
+      - generic: Rio de Janeiro,
+      - generic:
+        - generic: Permanente
+        - generic: DOE
+      - generic: 20 fevereiro 2026
+      - generic: Rio de Janeiro,
+      - generic:
+        - generic: Permanente
+        - generic: DOE
+      - generic: 24 março 2026
+      - generic: Rio de Janeiro,
+      - generic:
+        - generic: Permanente
+        - generic: DOE
+      - generic: 18 março 2026
+      - generic: Rio de Janeiro,
+      - generic:
+        - generic: Permanente
+        - generic: DOE
+      - generic: 20 fevereiro 2026
+    - generic [ref=e146]:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - text: 
+                  - generic: Você está saindo do site da Robert Half Brasil e será redirecionado para o site da Robert Half EUA.
+      - generic [ref=e148]:
+        - generic [ref=e149]:
+          - text:    
+          - generic [ref=e151]:
+            - generic:
+              - generic [ref=e153]:
+                - heading "Soluções em talentos" [level=2] [ref=e155]:
+                  - generic: Soluções em talentos
+                - list [ref=e156]:
+                  - generic:
+                    - listitem [ref=e157]:
+                      - link "Vagas" [ref=e161] [cursor=pointer]:
+                        - /url: /br/pt/vagas
+                    - listitem [ref=e162]:
+                      - link "Projetos" [ref=e166] [cursor=pointer]:
+                        - /url: /br/pt/solucao-talentos/projetos
+                    - listitem [ref=e167]:
+                      - link "Permanente" [ref=e171] [cursor=pointer]:
+                        - /url: /br/pt/solucao-talentos/permanente
+                    - listitem [ref=e172]:
+                      - link "Gestão interina" [ref=e176] [cursor=pointer]:
+                        - /url: /br/pt/solucao-talentos/interim-management
+                    - listitem [ref=e177]:
+                      - link "Executive Search" [ref=e181] [cursor=pointer]:
+                        - /url: /br/pt/solucao-talentos/executive-search
+                    - listitem [ref=e182]:
+                      - link "Consultoria" [ref=e186] [cursor=pointer]:
+                        - /url: /br/pt/consultoria
+              - generic [ref=e188]:
+                - heading "Nossas práticas" [level=2] [ref=e190]:
+                  - generic: Nossas práticas
+                - list [ref=e191]:
+                  - generic:
+                    - listitem [ref=e192]:
+                      - link "Finanças e contabilidade" [ref=e196] [cursor=pointer]:
+                        - /url: /br/pt/financas-contabilidade
+                    - listitem [ref=e197]:
+                      - link "Tecnologia da informação" [ref=e201] [cursor=pointer]:
+                        - /url: /br/pt/tecnologia
+                    - listitem [ref=e202]:
+                      - link "Vendas e marketing" [ref=e206] [cursor=pointer]:
+                        - /url: /br/pt/vendas-marketing
+                    - listitem [ref=e207]:
+                      - link "Jurídico" [ref=e211] [cursor=pointer]:
+                        - /url: /br/pt/juridico
+                    - listitem [ref=e212]:
+                      - link "Recursos humanos" [ref=e216] [cursor=pointer]:
+                        - /url: /br/pt/recursos-humanos
+                    - listitem [ref=e217]:
+                      - link "Engenharia" [ref=e221] [cursor=pointer]:
+                        - /url: /br/pt/engenharia
+              - generic [ref=e223]:
+                - heading "Recursos" [level=2] [ref=e225]:
+                  - generic: Recursos
+                - list [ref=e226]:
+                  - generic:
+                    - listitem [ref=e227]:
+                      - link "Guia salarial" [ref=e231] [cursor=pointer]:
+                        - /url: /br/pt/insights/guia-salarial
+                    - listitem [ref=e232]:
+                      - link "Índice de confiança Robert Half" [ref=e236] [cursor=pointer]:
+                        - /url: /br/pt/insights/indice-confianca
+                    - listitem [ref=e237]:
+                      - link "Panorama Setorial" [ref=e241] [cursor=pointer]:
+                        - /url: /br/pt/insights/panorama
+                    - listitem [ref=e242]:
+                      - link "Funções mais demandadas" [ref=e246] [cursor=pointer]:
+                        - /url: /br/pt/vagas-detalhes-all
+                    - listitem [ref=e247]:
+                      - link "Central do Conhecimento" [ref=e251] [cursor=pointer]:
+                        - /url: /br/pt/insights
+                    - listitem [ref=e252]:
+                      - link "Receba nossa newsletter" [ref=e256] [cursor=pointer]:
+                        - /url: /br/pt/insights/newsletter
+                    - listitem [ref=e257]:
+                      - link "Criar alerta de vagas" [ref=e261] [cursor=pointer]:
+                        - /url: /br/pt/procurando-oportunidade/alerta-de-vaga
+                    - listitem [ref=e262]:
+                      - link "Ajuda" [ref=e266] [cursor=pointer]:
+                        - /url: /br/pt/infocenter
+              - generic [ref=e268]:
+                - heading "Sobre" [level=2] [ref=e270]:
+                  - generic: Sobre
+                - list [ref=e271]:
+                  - generic:
+                    - listitem [ref=e272]:
+                      - link "Sobre Robert Half" [ref=e276] [cursor=pointer]:
+                        - /url: /br/pt/sobre-robert-half
+                    - listitem [ref=e277]:
+                      - link "Liderança" [ref=e281] [cursor=pointer]:
+                        - /url: /br/pt/sobre-robert-half/lideranca
+                    - listitem [ref=e282]:
+                      - link "Trabalhe conosco" [ref=e286] [cursor=pointer]:
+                        - /url: /br/pt/join-robert-half
+                    - listitem [ref=e287]:
+                      - link "Escritórios" [ref=e291] [cursor=pointer]:
+                        - /url: /br/pt/localizacoes
+                    - listitem [ref=e292]:
+                      - link "Relação com investidores" [ref=e296] [cursor=pointer]:
+                        - /url: "#"
+                    - listitem [ref=e297]:
+                      - link "Imprensa" [ref=e301] [cursor=pointer]:
+                        - /url: /br/pt/sobre-robert-half/imprensa
+                    - listitem [ref=e302]:
+                      - link "Nossas marcas" [ref=e306] [cursor=pointer]:
+                        - /url: /br/pt/sobre-robert-half/nossa-historia/nossas-marcas
+        - generic [ref=e309]:
+          - link [ref=e310] [cursor=pointer]:
+            - /url: /br/pt
+            - img [ref=e312]
+          - list [ref=e316]:
+            - generic:
+              - listitem [ref=e317]:
+                - link "linkedin" [ref=e321] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/company/robert-half-international
+                  - generic [ref=e323]:
+                    - generic [ref=e324]: 
+                    - generic [ref=e325]: linkedin
+              - listitem [ref=e326]:
+                - link "instagram" [ref=e330] [cursor=pointer]:
+                  - /url: https://www.instagram.com/roberthalfbr/
+                  - generic [ref=e332]:
+                    - generic [ref=e333]: 
+                    - generic [ref=e334]: instagram
+              - listitem [ref=e335]:
+                - link "youtube" [ref=e339] [cursor=pointer]:
+                  - /url: http://www.youtube.com/RoberthalfBR
+                  - generic [ref=e341]:
+                    - generic [ref=e342]: 
+                    - generic [ref=e343]: youtube
+              - listitem [ref=e344]:
+                - link "twitter" [ref=e348] [cursor=pointer]:
+                  - /url: http://twitter.com/Roberthalf_BR
+                  - generic [ref=e350]:
+                    - generic [ref=e351]: 
+                    - generic [ref=e352]: twitter
+              - listitem [ref=e353]:
+                - link "facebook" [ref=e357] [cursor=pointer]:
+                  - /url: https://www.facebook.com/roberthalfbrasil/
+                  - generic [ref=e359]:
+                    - generic [ref=e360]: 
+                    - generic [ref=e361]: facebook
+          - generic [ref=e362]:
+            - generic [ref=e365]:
+              - generic [ref=e366]:
+                - generic [ref=e368]:
+                  - generic: Brasil (Português)
+                - button "Selecione uma região e um idioma" [ref=e370] [cursor=pointer]:
+                  - text: Selecione uma região e um idioma
+                  - generic [ref=e373]: 
+              - generic:
+                - text: 
+                - generic: "Sua região e idioma atuais são:"
+                - generic: Brasil (Português)
+                - generic:
+                  - generic: Alemanha
+                  - text: 
+                  - text: 
+                  - generic: Austrália
+                  - text: 
+                  - text: 
+                  - generic: Bélgica
+                  - text: 
+                  - text:   
+                  - generic: Brasil
+                  - text: 
+                  - text: 
+                  - generic: Canadá
+                  - text: 
+                  - text:  
+                  - generic: Chile
+                  - text: 
+                  - text: 
+                  - generic: China
+                  - text: 
+                  - text:  
+                  - generic: Emirados Árabes Unidos
+                  - text: 
+                  - text: 
+                  - generic: Estados Unidos
+                  - text: 
+                  - text: 
+                  - generic: França
+                  - text: 
+                  - text: 
+                  - generic: Holanda
+                  - text: 
+                  - text:  
+                  - generic: Hong Kong, China
+                  - text: 
+                  - text: 
+                  - generic: Irlanda
+                  - text: 
+                  - text: 
+                  - generic: Itália
+                  - text: 
+                  - text: 
+                  - generic: Japão
+                  - text: 
+                  - text:  
+                  - generic: Luxemburgo
+                  - text: 
+                  - text:  
+                  - generic: Nova Zelândia
+                  - text: 
+                  - text: 
+                  - generic: Reino Unido
+                  - text: 
+                  - text: 
+                  - generic: Singapura
+                  - text: 
+                  - text: 
+                  - generic: Suíça
+                  - text: 
+                  - text:   
+            - generic [ref=e374]:
+              - list [ref=e377]:
+                - generic:
+                  - listitem [ref=e378]:
+                    - link "Aviso de Privacidade" [ref=e382] [cursor=pointer]:
+                      - /url: /br/pt/privacidade
+                  - listitem [ref=e383]:
+                    - link "Termos de uso" [ref=e387] [cursor=pointer]:
+                      - /url: /br/pt/termos-de-uso
+                  - listitem [ref=e388]:
+                    - link "Alerta de fraude" [ref=e392] [cursor=pointer]:
+                      - /url: /br/pt/alerta-fraude
+              - generic [ref=e393]:
+                - generic [ref=e394]:
+                  - generic: © 2026
+                - generic [ref=e395]:
+                  - generic: Robert Half Inc.
+  - generic [ref=e396] [cursor=pointer]:
+    - button "Definições de cookies" [ref=e398]
+    - text: Definições de cookies

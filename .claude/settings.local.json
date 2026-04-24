@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm list *)",
+      "Bash(powershell.exe -NoProfile -Command '[Environment]::GetEnvironmentVariable\\(\"Path\", \"User\"\\)')",
+      "Bash(powershell.exe -NoProfile -Command '$env:Path')",
+      "Bash(powershell.exe -NoProfile -Command \"Get-Command claude -ErrorAction SilentlyContinue | Format-List *\")",
+      "Bash(powershell.exe -NoProfile -Command \"& 'C:\\\\Users\\\\win\\\\.local\\\\bin\\\\claude.exe' --version\")",
+      "Bash(powershell.exe -NoProfile -Command \"[Environment]::GetEnvironmentVariable\\('Path', 'User'\\)\")",
+      "Bash(powershell.exe -NoProfile -Command \"[Environment]::GetEnvironmentVariable\\('Path', 'Machine'\\)\")",
+      "Bash(powershell.exe -NoProfile -Command \"\\([Environment]::GetEnvironmentVariable\\('Path', 'User'\\)\\).Length\")",
+      "Bash(powershell.exe -NoProfile -Command \"\\([Environment]::GetEnvironmentVariable\\('Path', 'Machine'\\)\\).Length\")"
+    ]
+  }
+}

@@ -1,0 +1,334 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic:
+      - link "Skip to main content":
+        - /url: "#skipToMainContent"
+    - generic [ref=e9]:
+      - text: "7"
+      - link "P&G careers home page logo" [ref=e14] [cursor=pointer]:
+        - /url: https://www.pgcareers.com/global/en/home
+        - figure [ref=e15]:
+          - img "P&G careers home page logo" [ref=e17]
+      - navigation [ref=e22]:
+        - list [ref=e23]:
+          - listitem [ref=e24]:
+            - button "Working at P&G" [ref=e25] [cursor=pointer]:
+              - generic [ref=e26]: Working at P&G
+              - generic [ref=e28]: 
+              - text: 
+            - text:   
+          - listitem [ref=e29]:
+            - button "Experience Levels" [ref=e30] [cursor=pointer]:
+              - generic [ref=e31]: Experience Levels
+              - generic [ref=e33]: 
+              - text: 
+          - listitem [ref=e34]:
+            - button "Hiring Process" [ref=e35] [cursor=pointer]:
+              - generic [ref=e36]: Hiring Process
+              - generic [ref=e38]: 
+              - text: 
+          - listitem [ref=e39]:
+            - link "Events" [ref=e40] [cursor=pointer]:
+              - /url: https://www.pgcareers.com/global/en/events
+          - listitem [ref=e41]:
+            - link "Stay Informed" [ref=e42] [cursor=pointer]:
+              - /url: https://www.pgcareers.com/global/en/jointalentcommunity
+          - listitem [ref=e43]:
+            - link "Search Jobs" [ref=e44] [cursor=pointer]:
+              - /url: https://www.pgcareers.com/global/en/search-results
+          - listitem [ref=e45]:
+            - link "My Account" [ref=e46] [cursor=pointer]:
+              - /url: https://pg.wd5.myworkdayjobs.com/en-US/1000/login
+      - list [ref=e47]:
+        - listitem
+        - listitem [ref=e48]:
+          - generic [ref=e52]:
+            - button "Language selected English Global" [ref=e53] [cursor=pointer]:
+              - generic [ref=e55]: 
+              - generic [ref=e56]: Language selected
+              - generic [ref=e57]: English
+              - generic [ref=e58]: Global
+              - generic [ref=e60]: 
+            - text:  $
+        - listitem [ref=e61]:
+          - link "0 Saved jobs" [ref=e65] [cursor=pointer]:
+            - /url: https://www.pgcareers.com/global/en/jobcart
+            - generic [ref=e67]: Q
+            - text: P
+            - generic [ref=e68]: Saved jobs
+            - generic [ref=e69]: (0)
+  - main [ref=e71]:
+    - generic [ref=e73] [cursor=pointer]: "-"
+    - generic [ref=e74]:
+      - generic [ref=e80]:
+        - img "Four people standing together, smiling, against a white background." [ref=e83]
+        - generic [ref=e84]:
+          - heading "Discover open roles" [level=1] [ref=e86]:
+            - generic [ref=e88]: Discover open roles
+          - generic [ref=e93]: "MAKE AN IMPACT ON MORE THAN JUST YOUR CAREER #PGDAY1"
+          - form "Global search" [ref=e96]:
+            - generic [ref=e98]:
+              - generic [ref=e99]:
+                - generic:
+                  - text: 
+                  - generic [ref=e100]: Search for Job Title
+                  - textbox "Search for Job Title" [ref=e101]:
+                    - /placeholder: Search for job
+                  - generic [ref=e103]: 
+                  - text: $
+              - generic [ref=e104]:
+                - generic [ref=e105]: Enter Location
+                - generic:
+                  - text: 
+                  - textbox "Search by location" [ref=e106]:
+                    - /placeholder: Enter location
+                  - generic [ref=e108]: 
+                  - text: $
+              - button "Search" [ref=e110] [cursor=pointer]: ": Search"
+      - generic [ref=e115]:
+        - region "Refine your search" [ref=e120]:
+          - text: $
+          - heading "Refine your search" [level=2] [ref=e123]
+          - generic [ref=e124]:
+            - generic [ref=e125]:
+              - heading "Category" [level=3] [ref=e128]:
+                - button "Category" [expanded] [ref=e129] [cursor=pointer]:
+                  - text: Category
+                  - generic [ref=e130]: "8"
+              - generic [ref=e132]:
+                - generic [ref=e133]: No data found.
+                - text: ":"
+                - generic:
+                  - group "Category":
+                    - generic [ref=e134]: Category
+            - heading "Country/Region" [level=3] [ref=e138]:
+              - button "Country/Region" [ref=e139] [cursor=pointer]:
+                - text: Country/Region
+                - generic [ref=e140]: (
+            - heading "State / Province" [level=3] [ref=e145]:
+              - button "State / Province" [ref=e146] [cursor=pointer]:
+                - text: State / Province
+                - generic [ref=e147]: (
+            - heading "City" [level=3] [ref=e152]:
+              - button "City" [ref=e153] [cursor=pointer]:
+                - text: City
+                - generic [ref=e154]: (
+            - heading "Schedule" [level=3] [ref=e159]:
+              - button "Schedule" [ref=e160] [cursor=pointer]:
+                - text: Schedule
+                - generic [ref=e161]: (
+            - heading "Sub Category" [level=3] [ref=e166]:
+              - button "Sub Category" [ref=e167] [cursor=pointer]:
+                - text: Sub Category
+                - generic [ref=e168]: (
+            - heading "Experience Level" [level=3] [ref=e173]:
+              - button "Experience Level" [ref=e174] [cursor=pointer]:
+                - text: Experience Level
+                - generic [ref=e175]: (
+            - generic [ref=e177]:
+              - heading "Location" [level=3] [ref=e180]:
+                - button "Location" [expanded] [ref=e181] [cursor=pointer]:
+                  - text: Location
+                  - generic [ref=e182]: "8"
+              - text: ":"
+              - generic [ref=e185]:
+                - generic [ref=e186]:
+                  - generic [ref=e187]: Search in location
+                  - generic [ref=e188]: Search in Location
+                  - generic [ref=e189]:
+                    - combobox "Search in Location" [ref=e190]:
+                      - text: SAO PAULO, São Paulo, Brazil
+                      - listbox "location list"
+                    - text: $
+                - generic [ref=e191]: Location range slider
+                - slider "location range" [ref=e196]
+                - generic [ref=e197]: "Distance: 50+ miles"
+        - region "Facet Results block" [ref=e202]:
+          - generic [ref=e203]:
+            - heading "Showing 0 results for \"Finance Manager\"" [level=2] [ref=e205]:
+              - generic [ref=e207]: Showing 0 results for
+              - text: "\"Finance Manager\""
+            - list [ref=e208]:
+              - listitem [ref=e209]:
+                - text: SAO PAULO, São Paulo, Brazil
+                - button "Remove SAO PAULO, São Paulo, Brazil filter" [ref=e210] [cursor=pointer]:
+                  - generic [ref=e211]: $
+              - listitem [ref=e212]:
+                - button "Clear all filters" [ref=e213] [cursor=pointer]:
+                  - generic [ref=e214]: Clear all
+            - generic [ref=e217]: the results are updated
+          - generic [ref=e218]:
+            - generic [ref=e220]:
+              - generic [ref=e223]:
+                - generic [ref=e224]: Search from below list
+                - textbox "Search from below list" [ref=e225]
+                - text: $
+                - generic [ref=e226]:
+                  - button:
+                    - generic: 
+              - generic [ref=e228]:
+                - generic [ref=e229]:
+                  - generic [ref=e230]: "Sort by:"
+                  - generic [ref=e231]:
+                    - combobox "Sort by" [ref=e232]:
+                      - option "Most relevant" [selected]
+                      - option "Most recent"
+                    - generic: 
+                - text: F
+            - generic [ref=e234]:
+              - img "No jobs found" [ref=e236]
+              - heading "There are no jobs for your search criteria." [level=3] [ref=e237]
+              - paragraph [ref=e238]: Please search again.
+          - text: Z 
+  - contentinfo [ref=e243]:
+    - generic [ref=e244]:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - list
+      - generic [ref=e246]:
+        - generic [ref=e247]:
+          - generic [ref=e248]:
+            - link "P&G careers home page logo" [ref=e253] [cursor=pointer]:
+              - /url: https://www.pgcareers.com/global/en/home
+              - figure [ref=e254]:
+                - img "P&G careers home page logo" [ref=e256]
+            - paragraph [ref=e259]: Procter & Gamble Plz, Cincinnati, Ohio, 45202, United States
+          - list [ref=e265]:
+            - listitem [ref=e266]:
+              - heading "Working at P&G" [level=2] [ref=e267]
+              - list [ref=e268]:
+                - listitem [ref=e269]:
+                  - link "About Us" [ref=e270] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/about-us
+                - listitem [ref=e271]:
+                  - link "Benefits" [ref=e272] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/benefits
+                - listitem [ref=e273]:
+                  - link "Culture" [ref=e274] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/culture
+                - listitem [ref=e275]:
+                  - link "Leadership & Development" [ref=e276] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/leadership-development
+                - listitem [ref=e277]:
+                  - link "Hiring Process" [ref=e278] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/hiring-process
+                - listitem [ref=e279]:
+                  - link "Disability Accommodation" [ref=e280] [cursor=pointer]:
+                    - /url: https://faq.pgwebtools.com/disability-accommodation-request/
+                - listitem [ref=e281]:
+                  - link "Application Help" [ref=e282] [cursor=pointer]:
+                    - /url: https://faq.pgwebtools.com/#!/faqs
+                - listitem [ref=e283]:
+                  - link "P&G Locations" [ref=e284] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/locations
+                    - text: Our Locations
+            - listitem [ref=e285]:
+              - heading "Career Areas" [level=2] [ref=e286]
+              - list [ref=e287]:
+                - listitem [ref=e288]:
+                  - link "Design" [ref=e289] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/design
+                - listitem [ref=e290]:
+                  - link "Engineering" [ref=e291] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/engineering
+                - listitem [ref=e292]:
+                  - link "Finance and Accounting" [ref=e293] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/finance-and-accounting
+                - listitem [ref=e294]:
+                  - link "Human Resources" [ref=e295] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/human-resources
+                - listitem [ref=e296]:
+                  - link "Information Technology" [ref=e297] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/information-technology
+                - listitem [ref=e298]:
+                  - link "Legal and Patent" [ref=e299] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/legal-patent
+                - listitem [ref=e300]:
+                  - link "Manufacturing and Quality Assurance" [ref=e301] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/manufacturing-quality-assurance
+                - listitem [ref=e302]:
+                  - link "Marketing and Brand Management" [ref=e303] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/marketing-brand-management
+                - listitem [ref=e304]:
+                  - link "Research & Development" [ref=e305] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/research-and-development
+                - listitem [ref=e306]:
+                  - link "Sales" [ref=e307] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/sales
+                - listitem [ref=e308]:
+                  - link "Supply Chain & Logistics" [ref=e309] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/supply-chain-logistics
+                - listitem [ref=e310]:
+                  - link "Other Career" [ref=e311] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/other-careers
+                    - text: Other Careers
+            - listitem [ref=e312]:
+              - heading "Experience Levels" [level=2] [ref=e313]
+              - list [ref=e314]:
+                - listitem [ref=e315]:
+                  - link "Student Programs" [ref=e316] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/student-programs
+                - listitem [ref=e317]:
+                  - link "Internships" [ref=e318] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/internships
+                - listitem [ref=e319]:
+                  - link "Recent Grads / Entry Level" [ref=e320] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/recent-grads
+                - listitem [ref=e321]:
+                  - link "Experienced Professionals" [ref=e322] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/experienced
+                - listitem [ref=e323]:
+                  - link "Plant Technicians" [ref=e324] [cursor=pointer]:
+                    - /url: https://www.pgplantjobs.com/
+            - listitem [ref=e325]:
+              - heading [level=2]
+              - list [ref=e326]:
+                - listitem [ref=e327]:
+                  - link "Events" [ref=e328] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/events
+                - listitem [ref=e329]:
+                  - link "Search Jobs" [ref=e330] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/search-results
+                - listitem [ref=e331]:
+                  - link "Stay Informed" [ref=e332] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/jointalentcommunity
+                - listitem [ref=e333]:
+                  - link "My Account" [ref=e334] [cursor=pointer]:
+                    - /url: https://pg.wd5.myworkdayjobs.com/en-US/1000/userHome
+        - generic [ref=e338]:
+          - heading "follow us" [level=2] [ref=e340]
+          - list [ref=e341]:
+            - listitem [ref=e342]:
+              - link "facebook" [ref=e343] [cursor=pointer]:
+                - /url: https://www.facebook.com/pgcareers/
+                - generic [ref=e345]: C
+            - listitem [ref=e346]:
+              - link "LinkedIn" [ref=e347] [cursor=pointer]:
+                - /url: https://www.linkedin.com/company/procter-and-gamble/
+                - generic [ref=e349]: "1"
+            - listitem
+            - listitem [ref=e350]:
+              - link "Instagram" [ref=e351] [cursor=pointer]:
+                - /url: https://www.instagram.com/pgcareers/
+                - generic [ref=e353]: 
+      - generic [ref=e358]: Separator
+    - generic [ref=e361]:
+      - generic [ref=e363]: © 2025 Procter & Gamble. All rights reserved.
+      - navigation [ref=e368]:
+        - list [ref=e369]:
+          - listitem [ref=e370]:
+            - text: "|"
+            - link "Terms & Conditions" [ref=e371] [cursor=pointer]:
+              - /url: https://termsandconditions.pg.com/en-us/#use
+          - listitem [ref=e372]:
+            - link "Privacy" [ref=e373] [cursor=pointer]:
+              - /url: https://privacypolicy.pg.com/employee/candidate/
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - complementary "Static Text"
+  - button "Consentimento de Cookie" [ref=e374] [cursor=pointer]

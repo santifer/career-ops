@@ -1,0 +1,136 @@
+- generic [ref=e4]:
+  - link "Ir para o conteúdo principal" [ref=e5] [cursor=pointer]:
+    - /url: ""
+  - banner [ref=e8]:
+    - generic [ref=e10]:
+      - link "Página inicial de carreiras da" [ref=e13] [cursor=pointer]:
+        - /url: https://www.solventum.com/en-us/home/our-company/careers/
+        - img "Página inicial de carreiras da" [ref=e14]
+      - generic [ref=e15]:
+        - heading [level=1]
+      - generic [ref=e17]:
+        - generic [ref=e18]:
+          - button "Português (‏Brasil)" [ref=e20] [cursor=pointer]:
+            - generic [ref=e24]: Português (‏Brasil)
+          - button "fernandocostaxavier@gmail.com" [ref=e27] [cursor=pointer]:
+            - generic [ref=e32]: fernandocostaxavier@gmail.com
+        - navigation [ref=e33]:
+          - button "Careers Page" [ref=e34] [cursor=pointer]
+          - button "Página inicial de candidatos" [ref=e35] [cursor=pointer]
+          - button "Alertas de vagas" [ref=e36] [cursor=pointer]
+  - main [ref=e39]:
+    - generic [ref=e40]:
+      - generic [ref=e41]:
+        - link "Voltar para publicação de vaga de emprego" [ref=e43] [cursor=pointer]:
+          - generic [ref=e47]: Voltar para publicação de vaga de emprego
+        - heading "Manufacturing Controller." [level=2] [ref=e48]
+      - generic "Application Progress" [ref=e49]:
+        - list [ref=e50]:
+          - listitem [ref=e51]:
+            - generic: current step 1 of 6
+            - generic [ref=e57]: Minhas informações
+          - listitem [ref=e58]:
+            - generic: step 2 of 6
+            - generic [ref=e64]: Minha experiência
+          - listitem [ref=e65]:
+            - generic: step 3 of 6
+            - generic [ref=e71]: "Perguntas da candidatura: 1 de 2"
+          - listitem [ref=e72]:
+            - generic: step 4 of 6
+            - generic [ref=e78]: "Perguntas da candidatura: 2 de 2"
+          - listitem [ref=e79]:
+            - generic: step 5 of 6
+            - generic [ref=e85]: Informações voluntárias
+          - listitem [ref=e86]:
+            - generic: step 6 of 6
+            - generic [ref=e92]: Revisar
+      - generic [ref=e147]:
+        - generic [ref=e148]:
+          - heading "Minhas informações" [level=3] [ref=e149]
+          - generic [ref=e150]: "* Indica um campo obrigatório"
+          - generic [ref=e151]:
+            - group [ref=e152]:
+              - generic [ref=e154]:
+                - generic [ref=e156]: Como você ficou sabendo sobre nós?*
+                - generic [ref=e162] [cursor=pointer]:
+                  - textbox "Como você ficou sabendo sobre nós?" [ref=e163]:
+                    - /placeholder: Pesquisar
+                  - generic [ref=e164]: 0 items selected
+            - group [ref=e168]:
+              - generic [ref=e170]:
+                - generic [ref=e172]: País*
+                - button "País Brasil Obrigatório" [ref=e176]: Brasil
+            - group "Nome" [ref=e178]:
+              - heading "Nome" [level=4] [ref=e179]
+              - generic [ref=e180]:
+                - generic [ref=e181]:
+                  - generic [ref=e183]: Nome(s) - Alfabeto ocidental*
+                  - textbox "Nome(s) - Alfabeto ocidental" [ref=e282]: Fernando
+                - generic [ref=e187]:
+                  - generic [ref=e188]: Sobrenome da mãe
+                  - textbox "Sobrenome da mãe" [ref=e283]: Costa
+                - generic [ref=e192]:
+                  - generic [ref=e194]: Sobrenome - Alfabeto ocidental*
+                  - textbox "Sobrenome - Alfabeto ocidental" [ref=e284]: Xavier
+            - group "Endereço" [ref=e199]:
+              - heading "Endereço" [level=4] [ref=e200]
+              - generic [ref=e201]:
+                - generic [ref=e202]:
+                  - generic [ref=e203]: Logradouro
+                  - textbox "Logradouro" [ref=e285]: Rua Example
+                - generic [ref=e207]:
+                  - generic [ref=e208]: Cidade
+                  - textbox "Cidade" [ref=e286]: Sumare
+                - generic [ref=e212]:
+                  - generic [ref=e214]: Bairro*
+                  - textbox "Bairro" [ref=e287]: Centro
+                - generic [ref=e218]:
+                  - generic [ref=e219]: Estado
+                  - button "Estado São Paulo" [ref=e347]: São Paulo
+                - generic [ref=e224]:
+                  - generic [ref=e225]: CEP
+                  - textbox "CEP" [ref=e348]: 13170-000
+            - group "Endereço de e-mail" [ref=e230]:
+              - heading "Endereço de e-mail" [level=4] [ref=e231]
+              - generic [ref=e234]: fernandocostaxavier@gmail.com
+            - group "Telefone" [ref=e236]:
+              - heading "Telefone" [level=4] [ref=e237]
+              - generic [ref=e238]:
+                - generic [ref=e239]:
+                  - generic [ref=e241]: Tipo de dispositivo telefônico*
+                  - button "Tipo de dispositivo telefônico Mobile Obrigatório" [active] [ref=e360]: Mobile
+                - generic [ref=e246]:
+                  - generic [ref=e248]: Código telefônico do país*
+                  - generic [ref=e253] [cursor=pointer]:
+                    - generic:
+                      - textbox "Código telefônico do país" [ref=e254]:
+                        - /placeholder: Pesquisar
+                      - generic [ref=e255]: 1 item selected, Brasil (+55)
+                    - listbox "items selected" [ref=e257]:
+                      - option "Brasil (+55), press delete to clear value." [ref=e258]:
+                        - paragraph [ref=e263]: Brasil (+55)
+                - generic [ref=e267]:
+                  - generic [ref=e269]: Número de telefone*
+                  - textbox "Número de telefone" [ref=e272]
+                - generic [ref=e273]:
+                  - generic [ref=e274]: Ramal
+                  - textbox "Ramal" [ref=e277]
+        - button "Salvar e continuar" [ref=e281] [cursor=pointer]
+  - generic [ref=e97]:
+    - generic [ref=e98]: Siga-nos
+    - list [ref=e99]:
+      - listitem [ref=e100] [cursor=pointer]:
+        - link "Facebook" [ref=e101]:
+          - /url: https://www.facebook.com/solventumhealth
+      - listitem [ref=e105] [cursor=pointer]:
+        - link "YouTube" [ref=e106]:
+          - /url: https://www.youtube.com/@Solventum
+      - listitem [ref=e112] [cursor=pointer]:
+        - link "LinkedIn" [ref=e113]:
+          - /url: https://www.linkedin.com/company/solventumhealth/
+      - listitem [ref=e117] [cursor=pointer]:
+        - link "X" [ref=e118]:
+          - /url: https://x.com/i/flow/login?redirect_after_login=%2Fsolventum
+    - generic [ref=e122]:
+      - img [ref=e126]
+      - generic [ref=e146]: © 2026 Workday, Inc. Todos os direitos reservados.

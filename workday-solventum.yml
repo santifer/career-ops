@@ -1,0 +1,176 @@
+- generic [ref=e4]:
+  - link "Ir para o conteúdo principal" [ref=e5] [cursor=pointer]:
+    - /url: ""
+  - banner [ref=e8]:
+    - generic [ref=e10]:
+      - link "Página inicial de carreiras da" [ref=e13] [cursor=pointer]:
+        - /url: https://www.solventum.com/en-us/home/our-company/careers/
+        - img "Página inicial de carreiras da" [ref=e14]
+      - generic [ref=e15]:
+        - heading [level=1]
+      - generic [ref=e17]:
+        - generic [ref=e18]:
+          - button "Português (‏Brasil)" [ref=e20] [cursor=pointer]:
+            - generic [ref=e24]: Português (‏Brasil)
+          - button "Fazer login" [ref=e26] [cursor=pointer]:
+            - generic [ref=e31]: Fazer login
+        - navigation [ref=e32]:
+          - button "Careers Page" [ref=e33] [cursor=pointer]
+  - generic [ref=e36]:
+    - generic [ref=e37]:
+      - alert [ref=e38]: Manufacturing Controller. page is loaded
+      - generic [ref=e39]:
+        - generic [ref=e263]:
+          - heading "Manufacturing Controller." [level=2] [ref=e264]
+          - button "Candidatar-se" [ref=e45] [cursor=pointer]
+        - generic [ref=e46]:
+          - generic [ref=e47]:
+            - generic [ref=e48]:
+              - generic [ref=e55]:
+                - term [ref=e56]: remote type
+                - definition [ref=e57]: On-site
+              - generic [ref=e64]:
+                - term [ref=e65]: locations
+                - definition [ref=e66]: BR, São Paulo, Sumare
+            - generic [ref=e67]:
+              - generic [ref=e76]:
+                - term [ref=e77]: time type
+                - definition [ref=e78]: Full time
+              - generic [ref=e87]:
+                - term [ref=e88]: posted on
+                - definition [ref=e89]: Publicado há 30 dias ou mais
+              - generic [ref=e98]:
+                - term [ref=e99]: job requisition id
+                - definition [ref=e100]: R01126888
+          - generic [ref=e102]:
+            - text: "Obrigado pelo seu interesse em trabalhar para nossa Empresa. Recrutar o talento certo é crucial para os nossos objetivos. No dia 01 de Abril de 2024, a 3M Healthcare passou por uma cisão corporativa que levou à criação de uma nova empresa chamada Solventum. Ainda estamos no processo de atualização da nossa página de carreiras e documentos de candidatura, que atualmente possuem a marca 3M. Por favor, tenha paciência conosco. Enquanto isso, a nossa Política de Privacidade aqui: https://www.solventum.com/en-us/home/legal/website-privacy-statement/applicant-privacy/ continua a ser aplicada a qualquer informação pessoal que enviar, e os cargos da marca 3M listados na nossa Página de Carreiras são para cargos na Solventum. Tal como era na 3M, na Solventum todos os candidatos qualificados serão considerados para emprego, independentemente da sua raça, cor, religião, sexo, orientação sexual, identidade de género, origem nacional, deficiência ou estatuto militar."
+            - paragraph [ref=e103]
+            - paragraph [ref=e104]
+            - paragraph [ref=e105]: "Job Description:"
+            - paragraph [ref=e106]
+            - generic [ref=e108]: 3M Health Care is now Solventum
+            - generic [ref=e112]:
+              - paragraph [ref=e113]
+              - paragraph [ref=e114]: At Solventum, we enable better, smarter, safer healthcare to improve lives. As a new company with a long legacy of creating breakthrough solutions for our customers’ toughest challenges, we pioneer game-changing innovations at the intersection of health, material and data science that change patients' lives for the better while enabling healthcare professionals to perform at their best. Because people, and their wellbeing, are at the heart of every scientific advancement we pursue.
+              - paragraph [ref=e115]
+              - paragraph [ref=e116]: We partner closely with the brightest minds in healthcare to ensure that every solution we create melds the latest technology with compassion and empathy. Because at Solventum, we never stop solving for you.
+            - paragraph [ref=e117]
+            - paragraph [ref=e118]: "The impact you will have in this role:"
+            - paragraph [ref=e119]: "As the Senior Financial Analyst at the Jarinu, Brazil plant, you will have the opportunity to tap into your curiosity and collaborate with some of the most innovative and diverse people around the world. Here, you will make an impact by:"
+            - list [ref=e120]:
+              - listitem [ref=e121]: Having the opportunity to stand up the financial processes listed below at Sumare, which is a brand-new manufacturing site for Solventum
+              - listitem [ref=e122]: Providing strategic and operational financial leadership to the Sumare Plant team and direct support to the Plant Director
+              - listitem [ref=e123]: Being a strong business partner supporting the plant financial scorecard, continuous improvement initiatives, inventory/production analysis, and other short- to long term plant financial decisions
+              - listitem [ref=e124]: Leading weekly, monthly, quarterly, and annual processes to support plant rhythms, month end close activities, QORs/MREs, OP and Strat Plans
+              - listitem [ref=e125]: Collaborating with the business segments and Global Supply Chain organizations to support investment analysis at the site
+              - listitem [ref=e126]: Analyzing plant spend and work with the teams to identify, communicate and execute productivity improvement opportunities
+              - listitem [ref=e127]: Regularly measuring and assessing plant performance (weekly/monthly/quarterly) to predict results and drive corrective actions to meet targets
+              - listitem [ref=e128]: Developing understanding of impacts to the plant financials driven by sales volume, mix, demand planning and supply planning dynamics to drive productivity at the site
+              - listitem [ref=e129]: Monitoring external economic factors to support the plant management decision process
+              - listitem [ref=e130]: Developing and driving end-to-end processes, analyses, and tools to standardize reporting to support the site
+              - listitem [ref=e131]: Ensuring compliance to Global Financial Standards and Statutory requirements
+            - paragraph [ref=e132]
+            - paragraph [ref=e133]
+            - paragraph [ref=e134]: Your Skills and Expertise
+            - paragraph [ref=e135]: "To set you up for success in this role from day one, Solventum requires (at a minimum) the following qualifications:"
+            - paragraph [ref=e136]
+            - list [ref=e137]:
+              - listitem [ref=e138]: Bachelor’s Degree
+              - listitem [ref=e139]: Three to five (3-5) years of finance experience within Manufacturing
+              - listitem [ref=e140]: Proficient in English
+            - paragraph [ref=e141]
+            - paragraph [ref=e142]: "Additional qualifications that could help you succeed even further in this role include:"
+            - list [ref=e143]:
+              - listitem [ref=e144]: CPA, CMA or equivalent international certification
+              - listitem [ref=e145]: Masters Degree or diploma on Finances
+              - listitem [ref=e146]: Experience in the MedTech Industry
+              - listitem [ref=e147]: Responsible for Income Statements
+              - listitem [ref=e148]: Leadership and collaboration skills to engage with business stakeholders and drive alignment on financial assumptions
+              - listitem [ref=e149]: Ability to lead through others and influence
+              - listitem [ref=e150]: Previous experience in AS400/BPCS ERP
+              - listitem [ref=e151]: Pragmatic, results-oriented with a strong bias towards executing with speed, agility, and quality
+              - listitem [ref=e152]: Record of career progression with increasing levels of responsibility
+            - paragraph [ref=e153]
+            - paragraph [ref=e154]
+            - paragraph [ref=e155]: "Work location:"
+            - list [ref=e156]:
+              - listitem [ref=e157]: Hybrid (Jarinu, Brazil) 3x per week
+              - listitem [ref=e158]:
+                - generic [ref=e159]: "Travel: May include up to 5% domestic/international"
+            - paragraph [ref=e160]
+            - paragraph [ref=e161]
+            - paragraph [ref=e162]
+            - paragraph [ref=e163]
+            - paragraph [ref=e164]
+            - paragraph [ref=e165]
+            - paragraph [ref=e166]
+            - paragraph [ref=e167]
+            - paragraph [ref=e168]
+            - text: A Solventum é um empregador que oferece oportunidades iguais à todos. A 3M não discriminará nenhum candidato baseado em sua raça, cor, idade, religião, gênero, orientação sexual, identidade ou expressão de gênero, nacionalidade ou deficiência.
+            - paragraph [ref=e169]
+            - paragraph [ref=e170]
+            - paragraph [ref=e171]: Solventum is committed to maintaining the highest standards of integrity and professionalism in our recruitment process. Applicants must remain alert to fraudulent job postings and recruitment schemes that falsely claim to represent Solventum and seek to exploit job seekers.
+            - paragraph [ref=e172]
+            - paragraph [ref=e173]: Please note that all email communications from Solventum regarding job opportunities with the company will be from an email with a domain of @solventum.com. Be wary of unsolicited emails or messages regarding Solventum job opportunities from emails with other email domains.
+            - paragraph [ref=e174]
+            - paragraph [ref=e175]
+            - paragraph [ref=e176]
+            - paragraph [ref=e177]
+            - paragraph [ref=e178]
+            - paragraph [ref=e179]: "Please note: your application may not be considered if you do not provide your education and work history, either by: 1) uploading a resume, or 2) entering the information into the application fields directly."
+            - paragraph [ref=e180]
+            - paragraph [ref=e181]:
+              - generic [ref=e182]: Solventum Global Terms of Use and Privacy Statement
+            - paragraph [ref=e183]: Carefully read these Terms of Use before using this website. Your access to and use of this website and application for a job at Solventum are conditioned on your acceptance and compliance with these terms.
+            - paragraph [ref=e184]
+            - paragraph [ref=e185]:
+              - text: Please access the linked document by clicking
+              - link "here" [ref=e186] [cursor=pointer]:
+                - /url: https://www.solventum.com/en-us/home/legal/website-terms-conditions/
+                - generic [ref=e187]: here
+              - text: . Before submitting your application you will be asked to confirm your agreement with the
+              - text: terms.
+    - generic [ref=e265]:
+      - heading "Our Story" [level=3] [ref=e266]
+      - img "Logo" [ref=e267]
+      - generic [ref=e269]:
+        - generic [ref=e271]:
+          - paragraph [ref=e272]:
+            - generic [ref=e273]: Thank you for your interest in joining Solventum.
+          - paragraph [ref=e274]
+          - paragraph [ref=e275]:
+            - generic [ref=e276]: Solventum is a new healthcare company with a long legacy of solving big challenges that improve lives and help healthcare professionals perform at their best. At Solventum, people are at the heart of every innovation we pursue. Guided by empathy, insight, and clinical intelligence, we collaborate with the best minds in healthcare to address our customers’ toughest challenges.
+          - paragraph [ref=e277]
+          - paragraph [ref=e278]:
+            - generic [ref=e279]:
+              - text: While we continue updating the Solventum Careers Page and applicant materials, some documents may still reflect legacy branding. Please note that all listed roles are Solventum positions, and our Privacy Policy
+              - link [ref=e280] [cursor=pointer]:
+                - /url: https://www.solventum.com/en-us/home/legal/website-privacy-statement/applicant-privacy/
+                - text: here
+              - text: applies to any personal information you submit.
+          - paragraph [ref=e282]
+          - paragraph [ref=e283]:
+            - generic [ref=e284]: As it was with 3M, at Solventum all qualified applicants will receive consideration for employment without regard to their race, color, religion, sex, sexual orientation, gender identity, national origin, disability, or status as a protected veteran.
+          - paragraph [ref=e285]
+          - paragraph [ref=e286]:
+            - generic [ref=e287]: At Solventum, we create breakthrough solutions for our customers’ toughest challenges by pioneering game-changing innovations at the intersection of health, material and data science to change patients’ lives for the better — while enabling healthcare professionals to perform at their best.
+        - button "Ler mais" [ref=e290] [cursor=pointer]:
+          - generic [ref=e291]: Ler mais
+  - generic [ref=e212]:
+    - generic [ref=e213]: Siga-nos
+    - list [ref=e214]:
+      - listitem [ref=e215] [cursor=pointer]:
+        - link "Facebook" [ref=e216]:
+          - /url: https://www.facebook.com/solventumhealth
+      - listitem [ref=e220] [cursor=pointer]:
+        - link "YouTube" [ref=e221]:
+          - /url: https://www.youtube.com/@Solventum
+      - listitem [ref=e227] [cursor=pointer]:
+        - link "LinkedIn" [ref=e228]:
+          - /url: https://www.linkedin.com/company/solventumhealth/
+      - listitem [ref=e232] [cursor=pointer]:
+        - link "X" [ref=e233]:
+          - /url: https://x.com/i/flow/login?redirect_after_login=%2Fsolventum
+    - generic [ref=e237]:
+      - img [ref=e241]
+      - generic [ref=e261]: © 2026 Workday, Inc. Todos os direitos reservados.

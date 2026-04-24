@@ -1,0 +1,6 @@
+- generic [ref=e5]:
+  - img "Chegou a hora de se concentrar." [ref=e15]
+  - heading "Chegou a hora de se concentrar." [level=1] [ref=e16]
+  - paragraph [ref=e9]: Seu desempenho pode ser melhor se estiver em um lugar calmo e livre de distrações que possam tirar a sua atenção durante o teste. Isso também vale para as notificações do computador ou celular.
+  - button "próximo" [ref=e22] [cursor=pointer]:
+    - generic [ref=e25]: próximo

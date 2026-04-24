@@ -1,0 +1,34 @@
+[     105ms] [LOG] CA hashcode: 5ee8ad17aba42b58460cfa5215ca736d | event: instantaneous @ https://js.clrt.ai/13995.js:9
+[     349ms] [LOG] Tealium Publish Version: ut4.49.202604161340 @ https://tags.roberthalf.com/brazil2/prod/utag.js:79
+[     349ms] [LOG] Tealium Environment: prod @ https://tags.roberthalf.com/brazil2/prod/utag.js:79
+[     349ms] [LOG] Tealium Profile: brazil2 @ https://tags.roberthalf.com/brazil2/prod/utag.js:79
+[    1386ms] [LOG] running accessiblity @ https://www.roberthalf.com/etc.clientlibs/roberthalf/clientlibs/clientlib-base.lc-9dc1360bb71e05d7d69958512fa97f25-lc.min.js:2
+[    1386ms] [LOG] rendering label @ https://www.roberthalf.com/etc.clientlibs/roberthalf/clientlibs/clientlib-base.lc-9dc1360bb71e05d7d69958512fa97f25-lc.min.js:2
+[    1390ms] [LOG] rh_job_search version: 1.92.0 @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:1
+[    2180ms] [ERROR] ReferenceError: rhcl_config is not defined
+    at l.setupNumberedLabel (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/1272.7db5ca1f.chunk.js:1:7543)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20239
+    at Array.map (<anonymous>)
+    at ke (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20223)
+    at l.set [as totalPages] (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:21309)
+    at l.setTotalPages (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/1272.7db5ca1f.chunk.js:1:7481)
+    at l.componentWillLoad (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/1272.7db5ca1f.chunk.js:1:6831)
+    at Se (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:19362)
+    at fe (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:18132)
+    at Array.<anonymous> (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:17594) JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:1
+[    2187ms] [ERROR] ReferenceError: rhcl_config is not defined
+    at l.setupNumberedLabel (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/1272.7db5ca1f.chunk.js:1:7543)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20239
+    at Array.map (<anonymous>)
+    at ke (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20223)
+    at l.set [as totalPages] (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:21309)
+    at l.setTotalPages (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/1272.7db5ca1f.chunk.js:1:7481)
+    at l.componentWillLoad (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/1272.7db5ca1f.chunk.js:1:6831)
+    at Se (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:19362)
+    at fe (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:18132)
+    at Array.<anonymous> (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:17594) JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:1
+[    2415ms] [INFO] Using RHCL v42.0.2 @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/8876.b3024dc0.chunk.js:0
+[    2525ms] [LOG] rhcl config loaded for pt-BR @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/8876.b3024dc0.chunk.js:0
+[    2527ms] [LOG] rhcl config loaded for pt-BR @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/8876.b3024dc0.chunk.js:0
+[   29447ms] [LOG] eventobj {"tealium_event":"button_click","event_action":"rhcl-button-clicked","datalayer_version":"2","event_text":"Procurar","component_id_01":"rhcl-button","component_title_01":"Procurar","component_variant_01":"primary"} @ https://www.roberthalf.com/etc.clientlibs/roberthalf/clientlibs/clientlib-tealium.lc-752c50f7060ed0d3161636a75c3f83c6-lc.min.js:198
+[   29477ms] [LOG] CA hashcode: c3c5ba50b839d58850fe425aba669af1 | event: url-change @ https://js.clrt.ai/13995.js:9

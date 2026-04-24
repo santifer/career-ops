@@ -1,0 +1,457 @@
+- generic [active] [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main"
+  - generic [ref=e3]:
+    - banner "Site header" [ref=e5]:
+      - navigation [ref=e7]:
+        - link "Novartis" [ref=e8] [cursor=pointer]:
+          - /url: /
+          - img "Novartis" [ref=e10]
+        - generic [ref=e11]:
+          - list [ref=e13]:
+            - listitem [ref=e14]:
+              - button "Open Search" [ref=e15] [cursor=pointer]:
+                - img "Open" [ref=e16]
+                - text: Search
+          - generic [ref=e20] [cursor=pointer]:
+            - img "language-selector-globe" [ref=e21]
+            - button "Current site selection Global |en" [ref=e22]:
+              - text: Global |
+              - strong [ref=e23]: en
+          - list [ref=e25]:
+            - listitem [ref=e26]:
+              - button "Menu" [ref=e27] [cursor=pointer]: Q Menu
+    - generic [ref=e28]:
+      - generic [ref=e35]:
+        - img "Three business people in a modern and bright meeting room" [ref=e40]
+        - heading "Careers at Novartis" [level=1] [ref=e44]
+      - generic [ref=e49]:
+        - generic [ref=e53]:
+          - textbox "Search Jobs" [ref=e56]
+          - button "Function" [ref=e60] [cursor=pointer]:
+            - generic [ref=e61]: Function
+          - button "Location" [ref=e65] [cursor=pointer]:
+            - generic [ref=e66]: Location
+          - button "Submit" [ref=e69] [cursor=pointer]
+        - generic [ref=e78]:
+          - generic [ref=e81]:
+            - heading "Welcome to where we thrive together" [level=2] [ref=e82]
+            - paragraph [ref=e83]: Improving the lives of people living with disease takes more than innovative science. It takes a focus on the needs of people and a community committed to meeting them. It takes a team of people like you. Working together. Learning together. Thriving together. Discover how you can join us in changing people’s lives.
+          - generic [ref=e92]:
+            - region [ref=e93]
+            - status [ref=e108]: Loading
+          - generic [ref=e119]:
+            - heading "Our business functions" [level=2] [ref=e120]
+            - generic [ref=e121]: Learn more about our teams – what they do, how they work and where you could make a difference.
+            - generic [ref=e125]:
+              - link "A Novartis scientist holding a test-tube in a lab Research & Development Turning breakthrough science into life-changing treatments." [ref=e126] [cursor=pointer]:
+                - /url: /careers/our-business-functions/careers-research-and-development
+                - generic [ref=e127]:
+                  - img "A Novartis scientist holding a test-tube in a lab" [ref=e130]
+                  - generic [ref=e131]:
+                    - heading "Research & Development" [level=3] [ref=e132]
+                    - generic [ref=e133]: Turning breakthrough science into life-changing treatments.
+              - link "A scientist in operating a machine in a laboratory Operations Creating meaningful impact through best-in-class products, services, and solutions." [ref=e134] [cursor=pointer]:
+                - /url: /careers/our-business-functions/careers-operations
+                - generic [ref=e135]:
+                  - img "A scientist in operating a machine in a laboratory" [ref=e138]
+                  - generic [ref=e139]:
+                    - heading "Operations" [level=3] [ref=e140]
+                    - generic [ref=e141]: Creating meaningful impact through best-in-class products, services, and solutions.
+          - generic [ref=e148]:
+            - link "Three business people laughing in corridor Commercial & Sales Making our innovative products more widely accessible and bringing them to patients faster." [ref=e149] [cursor=pointer]:
+              - /url: /careers/our-business-functions/careers-commercial-and-sales
+              - generic [ref=e150]:
+                - img "Three business people laughing in corridor" [ref=e153]
+                - generic [ref=e154]:
+                  - heading "Commercial & Sales" [level=3] [ref=e155]
+                  - generic [ref=e156]: Making our innovative products more widely accessible and bringing them to patients faster.
+            - link "Two people looking at a laptop Global Functions Shaping our future as a focused innovative medicines company." [ref=e157] [cursor=pointer]:
+              - /url: /careers/our-business-functions/careers-global-functions
+              - generic [ref=e158]:
+                - img "Two people looking at a laptop" [ref=e161]
+                - generic [ref=e162]:
+                  - heading "Global Functions" [level=3] [ref=e163]
+                  - generic [ref=e164]: Shaping our future as a focused innovative medicines company.
+          - generic [ref=e167]:
+            - paragraph [ref=e168]:
+              - link "Explore all opportunities" [ref=e169] [cursor=pointer]:
+                - /url: /careers/career-search
+            - separator [ref=e170]
+          - generic [ref=e173]:
+            - generic [ref=e175]:
+              - generic "A man, seated in an office, pointing at a computer screen" [ref=e176]:
+                - img "A man, seated in an office, pointing at a computer screen" [ref=e179]
+              - generic [ref=e182]:
+                - heading "Work with purpose" [level=1] [ref=e183]
+                - generic [ref=e184]: Chasing breakthroughs, transforming processes, or building partnerships - what you do here makes a difference.
+                - link "Learn more" [ref=e186] [cursor=pointer]:
+                  - /url: /careers/why-novartis
+            - generic:
+              - list [ref=e187]:
+                - listitem [ref=e188] [cursor=pointer]
+                - listitem [ref=e189] [cursor=pointer]
+                - listitem [ref=e190] [cursor=pointer]
+              - generic [ref=e191]:
+                - button "Previous" [ref=e192] [cursor=pointer]:
+                  - generic [ref=e194]: Previous
+                - button "Next" [ref=e195] [cursor=pointer]:
+                  - generic [ref=e197]: Next
+          - generic [ref=e201]:
+            - generic [ref=e204]:
+              - link "A female Director standing in-front of stairs at the Novartis office in Basel Students and graduates Discover how you can build a brighter future with our early career opportunities." [ref=e205] [cursor=pointer]:
+                - /url: /careers/early-careers
+                - generic [ref=e206]:
+                  - img "A female Director standing in-front of stairs at the Novartis office in Basel" [ref=e209]
+                  - generic [ref=e210]:
+                    - heading "Students and graduates" [level=3] [ref=e211]
+                    - generic [ref=e212]: Discover how you can build a brighter future with our early career opportunities.
+              - link "A business professional taking notes Get set to apply Find out what to expect during your application process and beyond." [ref=e213] [cursor=pointer]:
+                - /url: /careers/career-hub
+                - generic [ref=e214]:
+                  - img "A business professional taking notes" [ref=e217]
+                  - generic [ref=e218]:
+                    - heading "Get set to apply" [level=3] [ref=e219]
+                    - generic [ref=e220]: Find out what to expect during your application process and beyond.
+            - generic [ref=e223]:
+              - link "A female manager talking with her co-worker in a corporate lobby Job search Explore our opportunities and see where you could make the biggest impact." [ref=e224] [cursor=pointer]:
+                - /url: https://www.novartis.com/careers/career-search
+                - generic [ref=e225]:
+                  - img "A female manager talking with her co-worker in a corporate lobby" [ref=e228]
+                  - generic [ref=e229]:
+                    - heading "Job search" [level=3] [ref=e230]
+                    - generic [ref=e231]: Explore our opportunities and see where you could make the biggest impact.
+              - link "Two persons sitting outside and smiling People and Organization Commitment Statement Learn about our public commitments related to our people and organization, demonstrating our dedication to our workforce and supporting Novartis’ mission and values." [ref=e232] [cursor=pointer]:
+                - /url: /sites/novartis_com/files/people-organization-commitment-statement.pdf
+                - generic [ref=e233]:
+                  - img "Two persons sitting outside and smiling" [ref=e236]
+                  - generic [ref=e237]:
+                    - heading "People and Organization Commitment Statement" [level=3] [ref=e238]
+                    - generic [ref=e239]: Learn about our public commitments related to our people and organization, demonstrating our dedication to our workforce and supporting Novartis’ mission and values.
+          - generic [ref=e243]:
+            - img "Dalia, Head Data Science, Analytics & AI" [ref=e246]
+            - generic [ref=e249]:
+              - heading "“How do I grow? By sharing knowledge, ideas, and inspiration everyday with my incredible colleagues around the globe.”" [level=2] [ref=e250]
+              - paragraph [ref=e251]
+              - paragraph [ref=e252]:
+                - strong [ref=e253]: Dalia
+                - text: ", Head Data Science, Analytics and AI"
+          - separator [ref=e257]
+          - generic [ref=e260]:
+            - heading "Benefits and rewards" [level=2] [ref=e261]
+            - paragraph [ref=e262]: Here is a glimpse of just some ways we’ll help you thrive personally and professionally.
+            - paragraph [ref=e263]:
+              - emphasis [ref=e264]: Specifics may vary by location
+          - generic [ref=e271]:
+            - link "Two women engaged in a conversation at the Novartis office in East Hanover Competitive pay Market-benchmarked salary ranges, with an offer reflecting your experience and skills." [ref=e272] [cursor=pointer]:
+              - /url: https://www.novartis.com/sites/novartis_com/files/novartis-life-handbook.pdf#page=6
+              - generic [ref=e273]:
+                - img "Two women engaged in a conversation at the Novartis office in East Hanover" [ref=e276]
+                - generic [ref=e277]:
+                  - heading "Competitive pay" [level=3] [ref=e278]
+                  - generic [ref=e279]: Market-benchmarked salary ranges, with an offer reflecting your experience and skills.
+            - link "Group of business people sitting and discussing in circle Recognition programs Celebrate your colleagues’ personal milestones and recognize each other’s contributions. Send engaging e-cards or award monetary points for personal use or charitable donations." [ref=e280] [cursor=pointer]:
+              - /url: https://www.novartis.com/sites/novartis_com/files/novartis-life-handbook.pdf#page=9
+              - generic [ref=e281]:
+                - img "Group of business people sitting and discussing in circle" [ref=e284]
+                - generic [ref=e285]:
+                  - heading "Recognition programs" [level=3] [ref=e286]
+                  - generic [ref=e287]: Celebrate your colleagues’ personal milestones and recognize each other’s contributions. Send engaging e-cards or award monetary points for personal use or charitable donations.
+            - link "A business woman, seated on a sofa, using a laptop and holding a cup Market competitive incentives Be rewarded for individual and company impact through our competitively benchmarked annual bonus and long-term equity share programs." [ref=e288] [cursor=pointer]:
+              - /url: https://www.novartis.com/sites/novartis_com/files/novartis-life-handbook.pdf#page=8
+              - generic [ref=e289]:
+                - img "A business woman, seated on a sofa, using a laptop and holding a cup" [ref=e292]
+                - generic [ref=e293]:
+                  - heading "Market competitive incentives" [level=3] [ref=e294]
+                  - generic [ref=e295]: Be rewarded for individual and company impact through our competitively benchmarked annual bonus and long-term equity share programs.
+          - generic [ref=e302]:
+            - link "Mum holding newborn's feet Generous parental leave Following the birth or adoption of a child, we offer at least 14 weeks paid parental leave to every new parent at Novartis." [ref=e303] [cursor=pointer]:
+              - /url: https://www.novartis.com/sites/novartis_com/files/novartis-life-handbook.pdf#page=9
+              - generic [ref=e304]:
+                - img "Mum holding newborn's feet" [ref=e307]
+                - generic [ref=e308]:
+                  - heading "Generous parental leave" [level=3] [ref=e309]
+                  - generic [ref=e310]: Following the birth or adoption of a child, we offer at least 14 weeks paid parental leave to every new parent at Novartis.
+            - link "Group of people stretching on the ground Health and wellbeing We offer medical and life insurance as well as benefits to support your overall wellbeing." [ref=e311] [cursor=pointer]:
+              - /url: https://www.novartis.com/sites/novartis_com/files/novartis-life-handbook.pdf#page=20
+              - generic [ref=e312]:
+                - img "Group of people stretching on the ground" [ref=e315]
+                - generic [ref=e316]:
+                  - heading "Health and wellbeing" [level=3] [ref=e317]
+                  - generic [ref=e318]: We offer medical and life insurance as well as benefits to support your overall wellbeing.
+            - link "Three business people discussing sitting in armchair Professional and leadership development Access thousands of courses, tools and resources, including coaching opportunities and internal talent and learning platforms." [ref=e319] [cursor=pointer]:
+              - /url: https://www.novartis.com/sites/novartis_com/files/novartis-life-handbook.pdf#page=13
+              - generic [ref=e320]:
+                - img "Three business people discussing sitting in armchair" [ref=e323]
+                - generic [ref=e324]:
+                  - heading "Professional and leadership development" [level=3] [ref=e325]
+                  - generic [ref=e326]: Access thousands of courses, tools and resources, including coaching opportunities and internal talent and learning platforms.
+          - generic [ref=e328]:
+            - generic [ref=e329]:
+              - generic [ref=e330]:
+                - heading "Latest stories" [level=2] [ref=e331]
+                - generic [ref=e332]: Unique insights and perspectives from people across Novartis.
+              - generic [ref=e333]:
+                - button "Previous" [disabled]:
+                  - generic: Previous
+                - button "Next" [ref=e334] [cursor=pointer]:
+                  - generic [ref=e336]: Next
+            - generic [ref=e339]:
+              - 'link "Modern technology learning center with interactive screens Building the Future: Novartis Innovation Lab - AI, Game Studio, XR & Emerging Tech The leaders behind the Novartis Innovation Lab share how they are leveraging emerging technologies to win for patients." [ref=e342] [cursor=pointer]':
+                - /url: /stories/building-future-novartis-innovation-lab-ai-game-studio-xr-emerging-tech
+                - img "Modern technology learning center with interactive screens" [ref=e347]
+                - generic [ref=e348]:
+                  - 'heading "Building the Future: Novartis Innovation Lab - AI, Game Studio, XR & Emerging Tech" [level=3] [ref=e349]'
+                  - generic [ref=e350]: The leaders behind the Novartis Innovation Lab share how they are leveraging emerging technologies to win for patients.
+              - 'link "Max and colleague at work in Basel Supercharging R&D: How AI helps us to bring medicines to patients faster Max leads AI innovation in pharmaceutical development at Novartis. His story reflects how cutting-edge technology is combined with human expertise for meaningful impact." [ref=e353] [cursor=pointer]':
+                - /url: /stories/supercharging-rd-how-ai-helps-us-bring-medicines-patients-faster
+                - img "Max and colleague at work in Basel" [ref=e358]
+                - generic [ref=e359]:
+                  - 'heading "Supercharging R&D: How AI helps us to bring medicines to patients faster" [level=3] [ref=e360]'
+                  - generic [ref=e361]: Max leads AI innovation in pharmaceutical development at Novartis. His story reflects how cutting-edge technology is combined with human expertise for meaningful impact.
+              - link "Arti’s love of science was born under the Zambian night sky Turning personal experience into purpose-driven careers What drives someone to dedicate their career to reimagining medicine? Three women at Novartis share their deeply personal and unique stories." [ref=e364] [cursor=pointer]:
+                - /url: /stories/turning-personal-experience-purpose-driven-careers
+                - img "Arti’s love of science was born under the Zambian night sky" [ref=e369]
+                - generic [ref=e370]:
+                  - heading "Turning personal experience into purpose-driven careers" [level=3] [ref=e371]
+                  - generic [ref=e372]: What drives someone to dedicate their career to reimagining medicine? Three women at Novartis share their deeply personal and unique stories.
+              - link [ref=e375] [cursor=pointer]:
+                - /url: /stories/science-motion-autumn-and-sabrinas-noteworthy-novartis-adventure
+                - img [ref=e380]
+                - generic [ref=e381]:
+                  - heading [level=3] [ref=e382]: "Science in Motion: Autumn and Sabrina's Noteworthy Novartis Adventure"
+                  - generic [ref=e383]: In the ever-evolving world of STEM, where innovation and discovery are to the forefront, the stories of women who have made their mark are both inspiring and essential. Today, we're shining a spotlight on two dedicated Novartis employees who have chosen to begin their careers in manufacturing operations, paving the way for others to follow.
+              - link [ref=e386] [cursor=pointer]:
+                - /url: /stories/parental-leave-leadership-opportunity
+                - img [ref=e391]
+                - generic [ref=e392]:
+                  - heading [level=3] [ref=e393]: Parental leave – A leadership opportunity
+                  - generic [ref=e394]: We believe in the importance of balancing professional and personal responsibilities. This belief is embodied through our inclusive parental leave policy, which supports all our people in taking the time they need to be with their families during significant life events. Sumeet shares his personal experience.
+              - link [ref=e397] [cursor=pointer]:
+                - /url: /stories/biologist-head-hunter
+                - img [ref=e402]
+                - generic [ref=e403]:
+                  - heading [level=3] [ref=e404]: Biologist to Head-hunter
+                  - generic [ref=e405]: Sharing my career journey and decision to relocate to Ireland was an opportunity to pause and reflect, strengthening my belief that change is not always easy, but it can be very rewarding.
+              - link [ref=e408] [cursor=pointer]:
+                - /url: /stories/every-number-has-story-my-journey-novartis-refugee
+                - img [ref=e413]
+                - generic [ref=e414]:
+                  - heading [level=3] [ref=e415]: Every number has a story – my journey to Novartis as a Refugee
+                  - generic [ref=e416]: The current refugee crisis is one of the world's greatest humanitarian challenges. Svitlana shares her story of her journey to Novartis and how her work as part of the Giving and Volunteering team is opening the doors to refugees and other marginalized groups and allowing our people to make a difference by helping those who are most vulnerable.
+              - link [ref=e419] [cursor=pointer]:
+                - /url: /stories/workplace-inclusion-really-important
+                - img [ref=e424]
+                - generic [ref=e425]:
+                  - heading [level=3] [ref=e426]: Is workplace inclusion really that important?
+                  - generic [ref=e427]: "We think so and here are just some of the reasons why: we believe our workplace should reflect today’s emerging workforce; every culture needs diversity to thrive; and it supports fair treatment and opportunities for all our people."
+              - link [ref=e430] [cursor=pointer]:
+                - /url: /stories/personal-journey-full-circle-from-curiosity-about-life-earth-transformative-therapies-novartis
+                - img [ref=e435]
+                - generic [ref=e436]:
+                  - heading [level=3] [ref=e437]: A personal journey full circle, from curiosity about life on Earth to transformative therapies at Novartis
+                  - generic [ref=e438]: When I was young, my interest in science initially started with the natural world and with animals. There's a BBC Nature presenter and biologist called David Attenborough who's very famous in the UK and he was a really big idol of mine.
+              - link [ref=e441] [cursor=pointer]:
+                - /url: /stories/balancing-family-life-legal-career
+                - img [ref=e446]
+                - generic [ref=e447]:
+                  - heading [level=3] [ref=e448]: Balancing family life with a legal career
+                  - generic [ref=e449]: How do you achieve a healthy work-life balance? It’s a question we often ask ourselves at Novartis. We take health and wellbeing very seriously and are committed to helping our people be at their best, at work and in life.
+              - link [ref=e452] [cursor=pointer]:
+                - /url: /stories/mentoring-matters-how-we-grow-together-novartis
+                - img [ref=e457]
+                - generic [ref=e458]:
+                  - heading [level=3] [ref=e459]: "Mentoring matters: how we grow together at Novartis"
+                  - generic [ref=e460]: You can be successful, as an individual or as a business, without having to do it all on your own.
+              - link [ref=e463] [cursor=pointer]:
+                - /url: /stories/belonging-here-how-novartis-helped-me-come-out-transgender-woman
+                - img [ref=e468]
+                - generic [ref=e469]:
+                  - heading [level=3] [ref=e470]: "Belonging here: How Novartis helped me come out as a transgender woman"
+                  - generic [ref=e471]: When I was in my late forties, I came to the realization that I was transgender. I signed up with a transgender clinic in Basel and went through a period of counselling.
+          - generic [ref=e476]:
+            - generic "Business man with laptop" [ref=e477]:
+              - img "Business man with laptop" [ref=e480]
+            - generic [ref=e483]:
+              - heading "Join our talent community" [level=1] [ref=e484]
+              - generic [ref=e485]: Be first to hear about our latest career opportunities, news and events.
+              - link "Join our community" [ref=e487] [cursor=pointer]:
+                - /url: https://novartis.wd3.myworkdayjobs.com/Internal_Careers_for_Acquired_Entities/job/Basel-City/Novartis-Talent-Community_REQ-10067767
+          - generic [ref=e491]:
+            - img "Collaborations with leading academic institutes and life sciences companies advance our research and development." [ref=e494]
+            - generic [ref=e495]:
+              - heading "Be aware of fake job advertisements and job offers" [level=2] [ref=e496]
+              - generic [ref=e498]:
+                - paragraph [ref=e499]: Novartis is aware of employment scams which make false use of our company name or leader’s names to defraud job seekers. Novartis does not make job offers without interview and never asks candidates for money.
+                - paragraph [ref=e500]: If you have encountered a job posting or been approached with a job offer that you suspect may be fraudulent, we strongly recommend you do not respond, send money or personal information.
+                - paragraph [ref=e501]: Novartis in not responsible for any claims, losses, damages, or expenses resulting from scams.
+              - link "Search jobs" [ref=e505] [cursor=pointer]:
+                - /url: /careers/career-search
+        - generic [ref=e508]:
+          - heading "Follow Novartis careers" [level=2] [ref=e509]:
+            - strong [ref=e510]: Follow Novartis careers
+          - paragraph [ref=e511]: Keep up with everything careers-related via our dedicated social media channels.
+          - generic [ref=e513]:
+            - paragraph [ref=e515]:
+              - link "LinkedIn" [ref=e516] [cursor=pointer]:
+                - /url: https://www.linkedin.com/company/novartis
+            - paragraph [ref=e518]:
+              - link "YouTube" [ref=e519] [cursor=pointer]:
+                - /url: https://www.youtube.com/channel/UCw671bjnadQQV0UnV0DdsMQ
+            - paragraph [ref=e521]:
+              - link "Facebook" [ref=e522] [cursor=pointer]:
+                - /url: https://www.facebook.com/novartiscareers
+            - paragraph [ref=e524]:
+              - link "Instagram" [ref=e525] [cursor=pointer]:
+                - /url: https://www.instagram.com/novartiscareers/
+    - contentinfo [ref=e526]:
+      - generic [ref=e527]:
+        - heading "Novartis" [level=2] [ref=e531]
+        - generic [ref=e534]:
+          - navigation "Working together" [ref=e537]:
+            - generic [ref=e538]:
+              - generic [ref=e539]: Working together
+              - list [ref=e542]:
+                - listitem [ref=e543]:
+                  - link "Patients and caregivers" [ref=e544] [cursor=pointer]:
+                    - /url: /patients-and-caregivers
+                - listitem [ref=e545]:
+                  - link "Healthcare professionals" [ref=e546] [cursor=pointer]:
+                    - /url: /healthcare-professionals
+                - listitem [ref=e547]:
+                  - link "Researchers" [ref=e548] [cursor=pointer]:
+                    - /url: /research-and-development
+                - listitem [ref=e549]:
+                  - link "Job seekers" [ref=e550] [cursor=pointer]:
+                    - /url: /careers
+                - listitem [ref=e551]:
+                  - link "Journalists" [ref=e552] [cursor=pointer]:
+                    - /url: /news
+                - listitem [ref=e553]:
+                  - link "Investors" [ref=e554] [cursor=pointer]:
+                    - /url: /investors
+          - navigation "Topics" [ref=e557]:
+            - generic [ref=e558]:
+              - generic [ref=e559]: Topics
+              - list [ref=e562]:
+                - listitem [ref=e563]:
+                  - link "Access" [ref=e564] [cursor=pointer]:
+                    - /url: /esg/access
+                - listitem [ref=e565]:
+                  - link "ESG" [ref=e566] [cursor=pointer]:
+                    - /url: /esg
+                - listitem [ref=e567]:
+                  - link "SpeakUp" [ref=e568] [cursor=pointer]:
+                    - /url: /esg/ethics-risk-and-compliance/ethical-behavior/speakup
+          - navigation "Explore" [ref=e571]:
+            - generic [ref=e572]:
+              - generic [ref=e573]: Explore
+              - list [ref=e576]:
+                - listitem [ref=e577]:
+                  - link "Pipeline" [ref=e578] [cursor=pointer]:
+                    - /url: /research-development/novartis-pipeline
+                - listitem [ref=e579]:
+                  - link "Products" [ref=e580] [cursor=pointer]:
+                    - /url: /about/products
+                - listitem [ref=e581]:
+                  - link "Clinical trials" [ref=e582] [cursor=pointer]:
+                    - /url: /clinicaltrials
+                - listitem [ref=e583]:
+                  - link "Partnering" [ref=e584] [cursor=pointer]:
+                    - /url: /partnering
+                - listitem [ref=e585]:
+                  - link "Events" [ref=e586] [cursor=pointer]:
+                    - /url: /events
+          - navigation "Therapeutic areas" [ref=e589]:
+            - generic [ref=e590]:
+              - generic [ref=e591]: Therapeutic areas
+              - list [ref=e594]:
+                - listitem [ref=e595]:
+                  - link "Cardiovascular, renal and metabolic" [ref=e596] [cursor=pointer]:
+                    - /url: /about/therapeutic-areas/cardiovascular-renal-and-metabolic
+                - listitem [ref=e597]:
+                  - link "Immunology" [ref=e598] [cursor=pointer]:
+                    - /url: /about/therapeutic-areas/immunology
+                - listitem [ref=e599]:
+                  - link "Neuroscience" [ref=e600] [cursor=pointer]:
+                    - /url: /about/therapeutic-areas/neuroscience
+                - listitem [ref=e601]:
+                  - link "Oncology" [ref=e602] [cursor=pointer]:
+                    - /url: /about/therapeutic-areas/oncology
+        - generic [ref=e605]:
+          - list [ref=e610]:
+            - listitem [ref=e611]:
+              - link "LinkedIn" [ref=e612] [cursor=pointer]:
+                - /url: https://www.linkedin.com/company/novartis
+                - generic [ref=e613]: M
+            - listitem [ref=e614]:
+              - link "Facebook" [ref=e615] [cursor=pointer]:
+                - /url: https://www.facebook.com/novartis
+                - generic [ref=e616]: K
+            - listitem [ref=e617]:
+              - link "X formerly known as Twitter" [ref=e618] [cursor=pointer]:
+                - /url: https://x.com/novartis
+                - generic [ref=e619]: "N"
+            - listitem [ref=e620]:
+              - link "Instagram" [ref=e621] [cursor=pointer]:
+                - /url: https://www.instagram.com/novartis
+                - generic [ref=e622]: J
+            - listitem [ref=e623]:
+              - link "Youtube" [ref=e624] [cursor=pointer]:
+                - /url: https://www.youtube.com/user/novartis
+                - generic [ref=e625]: L
+          - generic [ref=e631]:
+            - generic [ref=e632]:
+              - generic [ref=e633]: Footer Site Search
+              - textbox "Footer Site Search" [ref=e635]:
+                - /placeholder: Search
+            - generic [ref=e637]:
+              - button "Footer Search" [ref=e638] [cursor=pointer]
+              - text: w
+        - navigation "Footer Bottom" [ref=e642]:
+          - generic [ref=e643]:
+            - generic [ref=e644]: Footer Bottom
+            - generic [ref=e646]:
+              - generic [ref=e647]:
+                - generic [ref=e648]: © 2026 Novartis AG
+                - list [ref=e649]:
+                  - listitem [ref=e650]:
+                    - link "Terms of use" [ref=e651] [cursor=pointer]:
+                      - /url: /terms-use
+                  - listitem [ref=e652]:
+                    - link "Privacy" [ref=e653] [cursor=pointer]:
+                      - /url: /privacy
+                  - listitem [ref=e654]:
+                    - link "Cookie Settings" [ref=e655] [cursor=pointer]:
+                      - /url: "#cookie-settings-button"
+                  - listitem [ref=e656]:
+                    - link "Contacts" [ref=e657] [cursor=pointer]:
+                      - /url: /contacts
+                  - listitem [ref=e658]:
+                    - link "Locations" [ref=e659] [cursor=pointer]:
+                      - /url: /about/locations
+                  - listitem [ref=e660]:
+                    - link "Site map" [ref=e661] [cursor=pointer]:
+                      - /url: /sitemap.xml
+                  - listitem [ref=e662]:
+                    - link "Open source" [ref=e663] [cursor=pointer]:
+                      - /url: /open-source
+                  - listitem [ref=e664]:
+                    - link "Web accessibility" [ref=e665] [cursor=pointer]:
+                      - /url: /accessibility
+              - generic [ref=e666]:
+                - link "Novartis Site Directory" [ref=e668] [cursor=pointer]:
+                  - /url: /novartis-directory
+                  - text: S Novartis Site Directory
+                - generic [ref=e669]: This site is intended for a global audience
+  - status [ref=e670]
+  - status [ref=e671]
+  - dialog "Your privacy is important for us." [ref=e674]:
+    - generic [ref=e676]:
+      - generic [ref=e678]:
+        - heading "Your privacy is important for us." [level=2] [ref=e679]
+        - generic [ref=e680]: "We use cookies to enhance your experience when visiting our websites: performance cookies show us how you use this website, functional cookies remember your preferences and targeting cookies help us to share content relevant to you. Select “Accept all” for giving your consent to all cookies, select “Cookie settings” for managing the different cookies or select “Reject all” for using only strictly necessary cookies. You can change your cookie settings at any point of time by pressing the cookie settings link on the website."
+      - generic [ref=e682]:
+        - button "Cookie Settings, Opens the preference center dialog" [ref=e683] [cursor=pointer]: Cookie Settings
+        - button "Reject all" [ref=e684] [cursor=pointer]
+        - button "Accept all" [ref=e685] [cursor=pointer]

@@ -1,0 +1,74 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic:
+        - link "Skip to main content":
+          - /url: "#content"
+      - navigation "Header Menu" [ref=e7]:
+        - link [ref=e8] [cursor=pointer]:
+          - /url: https://careers.triviumpackaging.com
+          - img [ref=e9]
+        - list [ref=e10]:
+          - listitem [ref=e11]:
+            - link "Home" [ref=e12] [cursor=pointer]:
+              - /url: /
+          - listitem [ref=e13]:
+            - link "Our Community" [ref=e14] [cursor=pointer]:
+              - /url: /content/Our-Community/?locale=en_US
+          - listitem [ref=e15]:
+            - link "Vacancies" [ref=e16] [cursor=pointer]:
+              - /url: /go/Vacancies/9811757/
+      - generic [ref=e18]:
+        - button "Language" [ref=e20] [cursor=pointer]: Language
+        - link "My Profile" [ref=e24] [cursor=pointer]:
+          - /url: "#"
+        - link "Employee Login" [ref=e27] [cursor=pointer]:
+          - /url: javascript:;
+    - main [ref=e29]:
+      - search [ref=e32]:
+        - generic [ref=e33]:
+          - generic [ref=e35]:
+            - generic "Search by Keyword" [ref=e36]: 
+            - searchbox "Search by Keyword" [ref=e37]
+          - button "Search Vacancies" [ref=e39] [cursor=pointer]
+    - contentinfo [ref=e40]:
+      - generic [ref=e43]:
+        - list [ref=e44]:
+          - listitem [ref=e45]:
+            - link "Home" [ref=e46] [cursor=pointer]:
+              - /url: /
+          - listitem [ref=e47]:
+            - link "Vacancies" [ref=e48] [cursor=pointer]:
+              - /url: /go/Vacancies/9811757/
+          - listitem [ref=e49]:
+            - link "Privacy Policy" [ref=e50] [cursor=pointer]:
+              - /url: https://www.triviumpackaging.com/privacy-policy
+          - listitem [ref=e51]:
+            - button "Cookie Policy" [ref=e52] [cursor=pointer]
+          - listitem [ref=e53]:
+            - link "Trivium Packaging" [ref=e54] [cursor=pointer]:
+              - /url: https://www.triviumpackaging.com/
+        - list [ref=e56]:
+          - listitem [ref=e57]:
+            - link "Visit our Facebook page" [ref=e58] [cursor=pointer]:
+              - /url: https://www.facebook.com/triviumpackaging/
+              - img [ref=e59]
+          - listitem [ref=e61]:
+            - link "Follow us on LinkedIn" [ref=e62] [cursor=pointer]:
+              - /url: "https://www.linkedin.com/company/trivium-packaging/posts/?feedView=all "
+              - img [ref=e63]
+          - listitem [ref=e65]:
+            - link "Follow us on Instagram" [ref=e66] [cursor=pointer]:
+              - /url: https://www.instagram.com/triviumpackaging/
+              - img [ref=e67]
+          - listitem [ref=e70]:
+            - link "Follow us on X" [ref=e71] [cursor=pointer]:
+              - /url: https://x.com/TriviumInsights
+              - img [ref=e72]
+          - listitem [ref=e74]:
+            - link "Visit our YouTube channel" [ref=e75] [cursor=pointer]:
+              - /url: https://www.youtube.com/@TriviumPackaging
+              - img [ref=e76]
+      - paragraph [ref=e80]: © Trivium Packaging B.V. - WTC Schiphol, B Tower, 5th Floor - Schiphol Boulevard 149 - 1118 BG Schiphol - The Netherlands
+  - generic: Yes No   Yes No Yes No   Yes No Yes No   Yes No
+  - text: "\" \""

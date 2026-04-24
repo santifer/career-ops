@@ -1,0 +1,11 @@
+- generic [ref=e2]:
+  - img "Nestlé logo" [ref=e3]
+  - heading "Just a quick security check…" [level=1] [ref=e6]
+  - paragraph [ref=e7]: We’re verifying the security of your connection. This should only take a few seconds.
+  - main [ref=e8]:
+    - generic [ref=e9]:
+      - heading [level=2]
+      - paragraph
+  - paragraph [ref=e14]:
+    - strong [ref=e15]: "Ray ID:"
+    - text: 9ed3f63b5f3fe5a7

@@ -1,0 +1,49 @@
+[     931ms] [ERROR] Failed to load resource: the server responded with a status of 999 () @ https://br.linkedin.com/jobs/view/controller-at-grupo-renova-4399707305:0
+[    2807ms] [ERROR] Failed to load resource: net::ERR_FAILED @ chrome-extension://invalid/:0
+[    2869ms] [LOG] %c EvalError
+    at oK (https://client.protechts.net/PXdOjV695v/main.min.js:2:74549)
+    at qM (https://client.protechts.net/PXdOjV695v/main.min.js:2:81089)
+    at JT (https://client.protechts.net/PXdOjV695v/main.min.js:2:230405)
+    at JR (https://client.protechts.net/PXdOjV695v/main.min.js:2:230024)
+    at https://client.protechts.net/PXdOjV695v/main.min.js:2:231752
+    at https://client.protechts.net/PXdOjV695v/main.min.js:2:231758
+    at https://client.protechts.net/PXdOjV695v/main.min.js:2:232223 @ https://client.protechts.net/PXdOjV695v/main.min.js:1
+[    2890ms] [LOG] %c EvalError
+    at oK (https://client.protechts.net/PXdOjV695v/main.min.js:2:74549)
+    at qM (https://client.protechts.net/PXdOjV695v/main.min.js:2:81089)
+    at JT (https://client.protechts.net/PXdOjV695v/main.min.js:2:230405)
+    at JR (https://client.protechts.net/PXdOjV695v/main.min.js:2:230024)
+    at https://client.protechts.net/PXdOjV695v/main.min.js:2:231752
+    at https://client.protechts.net/PXdOjV695v/main.min.js:2:231758
+    at https://client.protechts.net/PXdOjV695v/main.min.js:2:232223 @ https://client.protechts.net/PXdOjV695v/main.min.js:1
+[    3284ms] [ERROR] Failed to load resource: net::ERR_FAILED @ chrome-extension://invalid/:0
+[    3843ms] [ERROR] Failed to load resource: net::ERR_FAILED @ chrome-extension://invalid/:0
+[    3954ms] [ERROR] Failed to load resource: net::ERR_FAILED @ chrome-extension://invalid/:0
+[    4077ms] [ERROR] Failed to load resource: net::ERR_FAILED @ chrome-extension://invalid/:0
+[    4279ms] [ERROR] Failed to load resource: net::ERR_FAILED @ chrome-extension://invalid/:0
+[    4382ms] [ERROR] Failed to load resource: net::ERR_FAILED @ chrome-extension://invalid/:0
+[    4545ms] [ERROR] Failed to load resource: net::ERR_FAILED @ chrome-extension://invalid/:0
+[    4634ms] [LOG] visitor.publishDestinations() result: The destination publishing iframe is already attached and loaded. @ https://platform.linkedin.com/litms/utag/voyager-web-jobs/utag.js?cb=1776770400000:7
+[    4725ms] [ERROR] Failed to load resource: net::ERR_FAILED @ chrome-extension://invalid/:0
+[    4923ms] [ERROR] Failed to load resource: net::ERR_FAILED @ chrome-extension://invalid/:0
+[    5028ms] [ERROR] Failed to load resource: net::ERR_FAILED @ chrome-extension://invalid/:0
+[    5137ms] [ERROR] Failed to load resource: net::ERR_FAILED @ chrome-extension://invalid/:0
+[    5245ms] [ERROR] Failed to load resource: net::ERR_FAILED @ chrome-extension://invalid/:0
+[    5354ms] [ERROR] Failed to load resource: net::ERR_FAILED @ chrome-extension://invalid/:0
+[    5461ms] [ERROR] Failed to load resource: net::ERR_FAILED @ chrome-extension://invalid/:0
+[    5573ms] [ERROR] Failed to load resource: net::ERR_FAILED @ chrome-extension://invalid/:0
+[    5682ms] [ERROR] Failed to load resource: net::ERR_FAILED @ chrome-extension://invalid/:0
+[    5791ms] [ERROR] Failed to load resource: net::ERR_FAILED @ chrome-extension://invalid/:0
+[    5902ms] [ERROR] Failed to load resource: net::ERR_FAILED @ chrome-extension://invalid/:0
+[    6085ms] [ERROR] Failed to load resource: net::ERR_FAILED @ chrome-extension://invalid/:0
+[    6195ms] [ERROR] Failed to load resource: net::ERR_FAILED @ chrome-extension://invalid/:0
+[    6297ms] [ERROR] Failed to load resource: net::ERR_FAILED @ chrome-extension://invalid/:0
+[    6398ms] [ERROR] Failed to load resource: net::ERR_FAILED @ chrome-extension://invalid/:0
+[    6509ms] [ERROR] Failed to load resource: net::ERR_FAILED @ chrome-extension://invalid/:0
+[    6619ms] [ERROR] Failed to load resource: net::ERR_FAILED @ chrome-extension://invalid/:0
+[    6727ms] [ERROR] Failed to load resource: net::ERR_FAILED @ chrome-extension://invalid/:0
+[    6836ms] [ERROR] Failed to load resource: net::ERR_FAILED @ chrome-extension://invalid/:0
+[    6944ms] [ERROR] Failed to load resource: net::ERR_FAILED @ chrome-extension://invalid/:0
+[    7050ms] [ERROR] Failed to load resource: net::ERR_FAILED @ chrome-extension://invalid/:0
+[    7158ms] [ERROR] Failed to load resource: net::ERR_FAILED @ chrome-extension://invalid/:0
+[    7268ms] [ERROR] Failed to load resource: net::ERR_FAILED @ chrome-extension://invalid/:0

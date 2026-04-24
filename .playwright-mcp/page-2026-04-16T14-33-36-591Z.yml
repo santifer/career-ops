@@ -1,0 +1,45 @@
+- generic [ref=e2]:
+  - navigation [ref=e3]:
+    - generic [ref=e4]:
+      - link "Indeed Home" [ref=e5] [cursor=pointer]:
+        - /url: https://www.indeed.com/
+        - img "Indeed logo" [ref=e6]
+      - list [ref=e7]:
+        - listitem [ref=e8]:
+          - link "Achar vagas" [ref=e9] [cursor=pointer]:
+            - /url: https://www.indeed.com/
+        - listitem [ref=e10]:
+          - link "Avaliações de Empresas" [ref=e11] [cursor=pointer]:
+            - /url: https://www.indeed.com/companies
+        - listitem [ref=e12]:
+          - link "Achar salários" [ref=e13] [cursor=pointer]:
+            - /url: https://www.indeed.com/career/salaries
+    - list [ref=e15]:
+      - listitem [ref=e16]:
+        - link "Carregar o currículo" [ref=e17] [cursor=pointer]:
+          - /url: https://www.indeed.com/promo/resume
+      - listitem [ref=e18]:
+        - link "Acessar" [ref=e19] [cursor=pointer]:
+          - /url: https://secure.indeed.com/account/login?hl=pt&continue=https%3A%2F%2Fwww.indeed.com
+      - listitem [ref=e20]:
+        - link "Empresas/Anunciar vagas" [ref=e21] [cursor=pointer]:
+          - /url: https://www.indeed.com/hire?hl=pt&ikw=gnav-header-hire&isid=employerlink
+  - main [ref=e22]:
+    - heading "Verificação adicional necessária" [level=1] [ref=e23]
+    - paragraph [ref=e24]: Seu Ray ID desta solicitação é 9ed3e7e6e92d9321
+    - generic:
+      - main:
+        - generic:
+          - heading [level=2]
+          - paragraph
+    - link "Voltar à página inicial →" [ref=e25] [cursor=pointer]:
+      - /url: https://www.indeed.com/
+      - text: Voltar à página inicial
+      - generic [ref=e26]: →
+    - paragraph [ref=e27]:
+      - link "Como resolver erros da Cloudflare" [ref=e28] [cursor=pointer]:
+        - /url: https://support.indeed.com/hc/pt/articles/33465379855501
+    - paragraph [ref=e29]:
+      - text: Precisa de mais ajuda?
+      - link "Entre em contato" [ref=e30] [cursor=pointer]:
+        - /url: https://www.indeed.com/support/contact

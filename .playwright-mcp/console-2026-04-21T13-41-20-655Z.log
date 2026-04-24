@@ -1,0 +1,27 @@
+[     171ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'ambient-light-sensor'. @ :0
+[     171ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'battery'. @ :0
+[     171ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'document-domain'. @ :0
+[     171ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'execution-while-not-rendered'. @ :0
+[     171ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'execution-while-out-of-viewport'. @ :0
+[     171ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'navigation-override'. @ :0
+[     171ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'speaker-selection'. @ :0
+[     171ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'conversion-measurement'. @ :0
+[     171ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'focus-without-user-activation'. @ :0
+[     171ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'sync-script'. @ :0
+[     171ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'trust-token-redemption'. @ :0
+[     171ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'vertical-scroll'. @ :0
+[     171ms] [ERROR] Unrecognized Content-Security-Policy directive 'prefetch-src'. @ https://pulsus.gupy.io/candidates/applications/706877269/steps/3922391072/curriculum:0
+[     511ms] [ERROR] Unrecognized Content-Security-Policy directive 'prefetch-src'. @ https://script.hotjar.com/modules.6a0f3932cb1341a35c18.js:3
+[     512ms] [ERROR] Unrecognized Content-Security-Policy directive 'prefetch-src'. @ https://script.hotjar.com/modules.6a0f3932cb1341a35c18.js:3
+[     553ms] [ERROR] Access to manifest at 'https://gupy.gupy.io/candidates/manifest.json' from origin 'https://pulsus.gupy.io' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://pulsus.gupy.io/candidates/applications/706877269/steps/3922391072/curriculum:0
+[     553ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://gupy.gupy.io/candidates/manifest.json:0
+[    1490ms] [WARNING] [react-ga] ReactGA.initialize must be called first or GoogleAnalytics should be loaded manually @ https://gupy.gupy.io/candidates/static/js/2.bda1bdee.chunk.js:4614
+[    1546ms] [LOG] Initializing Beamer. [Update and engage users effortlessly - https://getbeamer.com] @ https://app.getbeamer.com/js/beamer-embed.js:14
+[    1665ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://private-api.gupy.io/question-forms/candidates/applications/706877269/steps/3922391072/forms:0
+[    1754ms] [ERROR] Unrecognized Content-Security-Policy directive 'prefetch-src'. @ https://app.getbeamer.com/js/beamer-embed.js:60
+[    1756ms] [ERROR] Unrecognized Content-Security-Policy directive 'prefetch-src'. @ https://app.getbeamer.com/js/beamer-embed.js:60
+[    1816ms] [INFO] Connecting to 'https://push.getbeamer.com/userPushDetails?product=nJNsJSdR35967&user_id=62310886-35ad-4157-8c9a-e4f6129707c7&language=PT&l=1.776778838155E12' violates the following Content Security Policy directive: "connect-src 'none'". The policy is report-only, so the violation has been logged but no further action has been taken. @ https://push.getbeamer.com/embeddedPush?product=nJNsJSdR35967&language=PT:414
+[   49491ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://private-api.gupy.io/question-forms/candidates/applications/706877269/steps/3922391072/forms:0
+[  114146ms] [ERROR] Unrecognized Content-Security-Policy directive 'prefetch-src'. @ https://app.getbeamer.com/js/beamer-embed.js:60
+[  114217ms] [INFO] Connecting to 'https://push.getbeamer.com/userPushDetails?product=nJNsJSdR35967&user_id=62310886-35ad-4157-8c9a-e4f6129707c7&language=PT&l=1.776778838155E12' violates the following Content Security Policy directive: "connect-src 'none'". The policy is report-only, so the violation has been logged but no further action has been taken. @ https://push.getbeamer.com/embeddedPush?product=nJNsJSdR35967&language=PT:414
+[  114728ms] [INFO] Connecting to 'https://push.getbeamer.com/updateUserPushDetails' violates the following Content Security Policy directive: "connect-src 'none'". The policy is report-only, so the violation has been logged but no further action has been taken. @ https://push.getbeamer.com/embeddedPush?product=nJNsJSdR35967&language=PT:412

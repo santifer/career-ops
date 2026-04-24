@@ -1,0 +1,63 @@
+[     182ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'ambient-light-sensor'. @ :0
+[     182ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'battery'. @ :0
+[     182ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'document-domain'. @ :0
+[     182ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'execution-while-not-rendered'. @ :0
+[     182ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'execution-while-out-of-viewport'. @ :0
+[     182ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'navigation-override'. @ :0
+[     182ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'speaker-selection'. @ :0
+[     182ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'conversion-measurement'. @ :0
+[     182ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'focus-without-user-activation'. @ :0
+[     182ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'sync-script'. @ :0
+[     182ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'trust-token-redemption'. @ :0
+[     182ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'vertical-scroll'. @ :0
+[     183ms] [ERROR] Unrecognized Content-Security-Policy directive 'prefetch-src'. @ https://pulsus.gupy.io/candidates/applications/706877269:0
+[    1300ms] [ERROR] Access to manifest at 'https://gupy.gupy.io/candidates/manifest.json' from origin 'https://pulsus.gupy.io' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://pulsus.gupy.io/candidates/applications/706877269:0
+[    1300ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://gupy.gupy.io/candidates/manifest.json:0
+[    1495ms] [ERROR] Unrecognized Content-Security-Policy directive 'prefetch-src'. @ https://script.hotjar.com/modules.6a0f3932cb1341a35c18.js:3
+[    1496ms] [ERROR] Unrecognized Content-Security-Policy directive 'prefetch-src'. @ https://script.hotjar.com/modules.6a0f3932cb1341a35c18.js:3
+[    1588ms] [ERROR] Access to manifest at 'https://gupy.gupy.io/candidates/manifest.json' from origin 'https://pulsus.gupy.io' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://pulsus.gupy.io/candidates/applications/706877269:0
+[    1588ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://gupy.gupy.io/candidates/manifest.json:0
+[    3021ms] [WARNING] [react-ga] ReactGA.initialize must be called first or GoogleAnalytics should be loaded manually @ https://gupy.gupy.io/candidates/static/js/2.bda1bdee.chunk.js:4614
+[    3068ms] [LOG] Initializing Beamer. [Update and engage users effortlessly - https://getbeamer.com] @ https://app.getbeamer.com/js/beamer-embed.js:14
+[    3899ms] [ERROR] Unrecognized Content-Security-Policy directive 'prefetch-src'. @ https://app.getbeamer.com/js/beamer-embed.js:60
+[    3900ms] [ERROR] Unrecognized Content-Security-Policy directive 'prefetch-src'. @ https://app.getbeamer.com/js/beamer-embed.js:60
+[    3966ms] [INFO] Connecting to 'https://push.getbeamer.com/userPushDetails?product=nJNsJSdR35967&user_id=62310886-35ad-4157-8c9a-e4f6129707c7&language=PT&l=1.776778838155E12' violates the following Content Security Policy directive: "connect-src 'none'". The policy is report-only, so the violation has been logged but no further action has been taken. @ https://push.getbeamer.com/embeddedPush?product=nJNsJSdR35967&language=PT:414
+[   12019ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'ambient-light-sensor'. @ :0
+[   12019ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'battery'. @ :0
+[   12019ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'document-domain'. @ :0
+[   12019ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'execution-while-not-rendered'. @ :0
+[   12019ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'execution-while-out-of-viewport'. @ :0
+[   12019ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'navigation-override'. @ :0
+[   12019ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'speaker-selection'. @ :0
+[   12019ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'conversion-measurement'. @ :0
+[   12019ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'focus-without-user-activation'. @ :0
+[   12019ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'sync-script'. @ :0
+[   12019ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'trust-token-redemption'. @ :0
+[   12019ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'window-placement'. @ :0
+[   12019ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'vertical-scroll'. @ :0
+[   12020ms] [ERROR] Unrecognized Content-Security-Policy directive 'prefetch-src'. @ https://assessments.gupy.io/knowledge/e6ee0acaed414b059177ff952364b3cf?utm_source=candidate&utm_medium=portal&utm_campaign=knowledge-numerical_reasoning_complete_notebook_B&language=pt:0
+[   14173ms] [WARNING] You are currently using a prerelease version of the Ziggeo JS SDK. We suggest using the stable revision for production use, and prereleases for staging environments and tests only. @ https://assessments.gupy.io/static/js/main.1744db82.js:1
+[  554035ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'ambient-light-sensor'. @ :0
+[  554035ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'battery'. @ :0
+[  554035ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'document-domain'. @ :0
+[  554035ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'execution-while-not-rendered'. @ :0
+[  554035ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'execution-while-out-of-viewport'. @ :0
+[  554035ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'navigation-override'. @ :0
+[  554035ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'speaker-selection'. @ :0
+[  554035ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'conversion-measurement'. @ :0
+[  554035ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'focus-without-user-activation'. @ :0
+[  554036ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'sync-script'. @ :0
+[  554036ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'trust-token-redemption'. @ :0
+[  554036ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'vertical-scroll'. @ :0
+[  554036ms] [ERROR] Unrecognized Content-Security-Policy directive 'prefetch-src'. @ https://pulsus.gupy.io/candidates/applications/706877269/steps/3922391071/test/numerical_reasoning_complete/callback:0
+[  555219ms] [ERROR] Access to manifest at 'https://gupy.gupy.io/candidates/manifest.json' from origin 'https://pulsus.gupy.io' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://pulsus.gupy.io/candidates/applications/706877269/steps/3922391071/test/numerical_reasoning_complete/callback:0
+[  555220ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://gupy.gupy.io/candidates/manifest.json:0
+[  555711ms] [ERROR] Unrecognized Content-Security-Policy directive 'prefetch-src'. @ https://script.hotjar.com/modules.6a0f3932cb1341a35c18.js:3
+[  555712ms] [ERROR] Unrecognized Content-Security-Policy directive 'prefetch-src'. @ https://script.hotjar.com/modules.6a0f3932cb1341a35c18.js:3
+[  555723ms] [ERROR] Access to manifest at 'https://gupy.gupy.io/candidates/manifest.json' from origin 'https://pulsus.gupy.io' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://pulsus.gupy.io/candidates/auth:0
+[  555724ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://gupy.gupy.io/candidates/manifest.json:0
+[  557687ms] [WARNING] [react-ga] ReactGA.initialize must be called first or GoogleAnalytics should be loaded manually @ https://gupy.gupy.io/candidates/static/js/2.bda1bdee.chunk.js:4614
+[  557782ms] [LOG] Initializing Beamer. [Update and engage users effortlessly - https://getbeamer.com] @ https://app.getbeamer.com/js/beamer-embed.js:14
+[  558006ms] [ERROR] Unrecognized Content-Security-Policy directive 'prefetch-src'. @ https://app.getbeamer.com/js/beamer-embed.js:60
+[  558008ms] [ERROR] Unrecognized Content-Security-Policy directive 'prefetch-src'. @ https://app.getbeamer.com/js/beamer-embed.js:60
+[  558133ms] [INFO] Connecting to 'https://push.getbeamer.com/userPushDetails?product=nJNsJSdR35967&user_id=62310886-35ad-4157-8c9a-e4f6129707c7&language=PT&l=1.776778838155E12' violates the following Content Security Policy directive: "connect-src 'none'". The policy is report-only, so the violation has been logged but no further action has been taken. @ https://push.getbeamer.com/embeddedPush?product=nJNsJSdR35967&language=PT:414

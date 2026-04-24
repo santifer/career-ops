@@ -1,0 +1,263 @@
+- generic [active] [ref=e1]:
+  - generic:
+    - region "Mensagem toast":
+      - heading "0 notificações no total" [level=2] [ref=e3]
+      - alert
+  - region [ref=e4]
+  - generic [ref=e5]:
+    - generic [ref=e7]:
+      - button "Pular para pesquisa" [ref=e8] [cursor=pointer]:
+        - generic [ref=e9]: Pular para pesquisa
+      - button "Pular para conteúdo principal" [ref=e10] [cursor=pointer]:
+        - generic [ref=e11]: Pular para conteúdo principal
+      - button "Atalhos do teclado" [ref=e12] [cursor=pointer]:
+        - generic [ref=e13]: Atalhos do teclado
+      - button "Fechar menu pular" [ref=e14] [cursor=pointer]:
+        - img [ref=e15]
+        - generic [ref=e17]: Fechar menu pular
+    - banner "Navegação geral" [ref=e18]:
+      - generic [ref=e19]:
+        - link "LinkedIn" [ref=e20] [cursor=pointer]:
+          - /url: https://www.linkedin.com/feed/?nis=true
+          - img "LinkedIn" [ref=e23]:
+            - img [ref=e24]
+        - generic [ref=e28]:
+          - generic [ref=e31]:
+            - generic [ref=e32]:
+              - generic [ref=e33]: Pesquisar cargo, competência ou empresa
+              - img [ref=e34]
+            - combobox "Pesquisar cargo, competência ou empresa" [ref=e36]: controller OR controladoria OR contabilidade Brazil
+            - textbox [disabled]
+          - generic [ref=e39]:
+            - generic [ref=e40]:
+              - generic [ref=e41]: Cidade, estado ou código postal
+              - img [ref=e42]
+            - combobox "Cidade, estado ou código postal" [ref=e44]: Brasil
+            - textbox [disabled]
+          - button "Pesquisar" [ref=e45] [cursor=pointer]
+        - navigation "Navegação principal" [ref=e46]:
+          - list [ref=e47]:
+            - listitem [ref=e48]:
+              - link "atualizações do feed novas notificações Início" [ref=e49] [cursor=pointer]:
+                - /url: https://www.linkedin.com/feed/?nis=true&
+                - generic [ref=e50]:
+                  - generic [ref=e53]: atualizações do feed novas notificações
+                  - img [ref=e57]
+                - generic "Início" [ref=e59]
+            - listitem [ref=e60]:
+              - link "1 atualização de rede nova notificação Minha rede" [ref=e61] [cursor=pointer]:
+                - /url: https://www.linkedin.com/mynetwork/?
+                - generic [ref=e62]:
+                  - generic [ref=e63]:
+                    - generic [ref=e64]: "1"
+                    - generic [ref=e65]: 1 atualização de rede nova notificação
+                  - img [ref=e69]
+                - generic "Minha rede" [ref=e71]
+            - listitem [ref=e72]:
+              - link "Vagas" [ref=e73] [cursor=pointer]:
+                - /url: https://www.linkedin.com/jobs/?
+                - img [ref=e77]
+                - generic "Vagas" [ref=e79]
+            - listitem [ref=e80]:
+              - link "Mensagens" [ref=e81] [cursor=pointer]:
+                - /url: https://www.linkedin.com/messaging/?
+                - img [ref=e85]
+                - generic "Mensagens" [ref=e87]
+            - listitem [ref=e88]:
+              - link "14 novas notificações Notificações" [ref=e89] [cursor=pointer]:
+                - /url: https://www.linkedin.com/notifications/?
+                - generic [ref=e90]:
+                  - generic [ref=e91]:
+                    - generic [ref=e92]: "14"
+                    - generic [ref=e93]: 14 novas notificações
+                  - img [ref=e97]
+                - generic "Notificações" [ref=e99]
+            - listitem [ref=e100]:
+              - button "Fernando Xavier Eu" [ref=e102] [cursor=pointer]:
+                - img "Fernando Xavier" [ref=e103]
+                - generic [ref=e104]:
+                  - text: Eu
+                  - img [ref=e105]
+            - listitem [ref=e107]:
+              - button "Para negócios" [ref=e109] [cursor=pointer]:
+                - img [ref=e113]
+                - generic "Para negócios" [ref=e115]:
+                  - text: Para negócios
+                  - img [ref=e116]
+            - listitem [ref=e118]:
+              - link "Veicular anúncio" [ref=e119] [cursor=pointer]:
+                - /url: https://www.linkedin.com/campaignmanager/accounts?
+                - img [ref=e123]
+                - generic "Veicular anúncio" [ref=e126]
+    - generic [ref=e128]:
+      - region "filtros de pesquisa" [ref=e131]:
+        - heading "Pesquisa de vagas" [level=2] [ref=e132]
+      - main [ref=e143]:
+        - generic [ref=e145]:
+          - generic [ref=e146]:
+            - generic [ref=e147]:
+              - generic [ref=e148]:
+                - 'generic "controller OR controladoria OR contabilidade Brazil em: Brasil" [ref=e149]'
+                - generic [ref=e153]: 2.533 resultados
+              - generic [ref=e156] [cursor=pointer]:
+                - generic [ref=e157]: Configurar alerta
+                - generic [ref=e158]: "Configurar alerta de vaga para Controller OR controladoria OR contabilidade Brazil em: Brazil"
+                - 'switch "Configurar alerta de vaga para Controller OR controladoria OR contabilidade Brazil em: Brazil"'
+            - generic [ref=e159]:
+              - button "Pular para detalhes da vaga ativa":
+                - generic [ref=e160] [cursor=pointer]: Pular para detalhes da vaga ativa
+              - button "Pular para resultado de pesquisa ativa":
+                - generic [ref=e161] [cursor=pointer]: Pular para resultado de pesquisa ativa
+              - list [ref=e162]:
+                - listitem [ref=e163]:
+                  - generic [ref=e166] [cursor=pointer]:
+                    - generic [ref=e167]:
+                      - img "Logo da empresa Sagan Recruitment" [ref=e171]
+                      - generic [ref=e172]:
+                        - link "Financial Controller" [ref=e174]:
+                          - /url: /jobs/view/4401825092/?trk=flagship3_search_srp_jobs
+                          - strong [ref=e176]: Financial Controller
+                          - generic [ref=e177]: Financial Controller
+                        - generic [ref=e179]: Sagan Recruitment
+                        - list [ref=e181]:
+                          - listitem [ref=e182]:
+                            - generic [ref=e183]: América Latina (Remoto)
+                    - list [ref=e185]:
+                      - listitem [ref=e186]
+                - listitem [ref=e188]:
+                  - generic [ref=e191] [cursor=pointer]:
+                    - generic [ref=e192]:
+                      - img "Logo da empresa Topaz" [ref=e196]
+                      - generic [ref=e197]:
+                        - link "Regional Chief Financial Officer" [ref=e199]:
+                          - /url: /jobs/view/4398762349/?trk=flagship3_search_srp_jobs
+                          - strong [ref=e201]: Regional Chief Financial Officer
+                          - generic [ref=e202]: Regional Chief Financial Officer
+                        - generic [ref=e204]: Topaz
+                        - list [ref=e206]:
+                          - listitem [ref=e207]:
+                            - generic [ref=e208]: São Paulo, Brasil (Híbrido)
+                    - list [ref=e210]:
+                      - listitem [ref=e211]
+                - listitem [ref=e213]:
+                  - generic [ref=e216] [cursor=pointer]:
+                    - generic [ref=e217]:
+                      - img "Logo da empresa NBCUniversal" [ref=e221]
+                      - generic [ref=e222]:
+                        - link "Accounting & Finance Manager with verification" [ref=e224]:
+                          - /url: /jobs/view/4402973121/?trk=flagship3_search_srp_jobs
+                          - generic [ref=e225]:
+                            - strong [ref=e226]: Accounting & Finance Manager
+                            - img [ref=e228]
+                          - generic [ref=e230]: Accounting & Finance Manager with verification
+                        - generic [ref=e232]: NBCUniversal
+                        - list [ref=e234]:
+                          - listitem [ref=e235]:
+                            - generic [ref=e236]: São Paulo, São Paulo, Brasil (Híbrido)
+                    - list [ref=e238]:
+                      - listitem [ref=e239]
+                - listitem [ref=e241]:
+                  - generic [ref=e244] [cursor=pointer]:
+                    - generic [ref=e245]:
+                      - img "Logo da empresa dsm-firmenich" [ref=e249]
+                      - generic [ref=e250]:
+                        - link "Business Controller Associate Director LATAM" [ref=e252]:
+                          - /url: /jobs/view/4399957508/?trk=flagship3_search_srp_jobs
+                          - strong [ref=e254]: Business Controller Associate Director LATAM
+                          - generic [ref=e255]: Business Controller Associate Director LATAM
+                        - generic [ref=e257]: dsm-firmenich
+                        - list [ref=e259]:
+                          - listitem [ref=e260]:
+                            - generic [ref=e261]: São Paulo e Região (Híbrido)
+                    - list [ref=e263]:
+                      - listitem [ref=e264]
+                - listitem [ref=e266]:
+                  - generic [ref=e269] [cursor=pointer]:
+                    - generic [ref=e270]:
+                      - img "Logo da empresa Bybit" [ref=e274]
+                      - generic [ref=e275]:
+                        - link "Finance Manager with verification" [ref=e277]:
+                          - /url: /jobs/view/4394472162/?trk=flagship3_search_srp_jobs
+                          - generic [ref=e278]:
+                            - strong [ref=e279]: Finance Manager
+                            - img [ref=e281]
+                          - generic [ref=e283]: Finance Manager with verification
+                        - generic [ref=e285]: Bybit
+                        - list [ref=e287]:
+                          - listitem [ref=e288]:
+                            - generic [ref=e289]: Brasil (Remoto)
+                    - list [ref=e291]:
+                      - listitem [ref=e292]
+                - listitem [ref=e294]:
+                  - generic [ref=e297] [cursor=pointer]:
+                    - generic [ref=e298]:
+                      - img "Logo da empresa Climate and Land Use Alliance" [ref=e302]
+                      - generic [ref=e303]:
+                        - link "Finance Director" [ref=e305]:
+                          - /url: /jobs/view/4402663931/?trk=flagship3_search_srp_jobs
+                          - strong [ref=e307]: Finance Director
+                          - generic [ref=e308]: Finance Director
+                        - generic [ref=e310]: Climate and Land Use Alliance
+                        - list [ref=e312]:
+                          - listitem [ref=e313]:
+                            - generic [ref=e314]: América Latina (Remoto)
+                    - list [ref=e316]:
+                      - listitem [ref=e317]
+                - listitem [ref=e319]:
+                  - generic [ref=e322] [cursor=pointer]:
+                    - generic [ref=e323]:
+                      - img "Logo da empresa Kiss New York" [ref=e327]
+                      - generic [ref=e328]:
+                        - link "Gerente financeiro" [ref=e330]:
+                          - /url: /jobs/view/4400209684/?trk=flagship3_search_srp_jobs
+                          - strong [ref=e332]: Gerente financeiro
+                          - generic [ref=e333]: Gerente financeiro
+                        - generic [ref=e335]: Kiss New York
+                        - list [ref=e337]:
+                          - listitem [ref=e338]:
+                            - generic [ref=e339]: São Paulo, Brasil (Presencial)
+                    - list [ref=e341]:
+                      - listitem [ref=e342]
+              - generic [ref=e344]:
+                - list [ref=e347]:
+                  - listitem [ref=e348]:
+                    - button "Página 1" [ref=e349] [cursor=pointer]: "1"
+                - generic "Conteúdo do rodapé do LinkedIn" [ref=e351]
+          - generic "Financial Controller" [ref=e355]:
+            - generic [ref=e359]:
+              - generic [ref=e363]:
+                - generic [ref=e366]:
+                  - button "Compartilhar" [ref=e369] [cursor=pointer]:
+                    - img [ref=e370]
+                    - generic [ref=e372]: Compartilhar
+                  - button "Exibir mais opções" [ref=e374] [cursor=pointer]:
+                    - img [ref=e375]
+                    - generic [ref=e377]: Exibir mais opções
+                - heading "Financial Controller" [level=1] [ref=e380]:
+                  - link "Financial Controller" [ref=e381] [cursor=pointer]:
+                    - /url: /jobs/view/4401825092/?alternateChannel=search&refId=NotAvailable&trackingId=7gygldq0QtqO3N1NR45OSg%3D%3D&trk=d_flagship3_search_srp_jobs
+                - generic:
+                  - list
+              - article [ref=e394]:
+                - heading "Sobre a vaga" [level=2] [ref=e397]
+              - alert [ref=e432]: Carregando detalhes da vaga
+    - generic:
+      - generic:
+        - complementary:
+          - generic [ref=e446]:
+            - generic [ref=e448] [cursor=pointer]:
+              - img "Fernando Xavier" [ref=e450]
+              - button "Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas." [ref=e451]:
+                - generic [ref=e452]:
+                  - generic [ref=e453]: Mensagens
+                  - generic [ref=e454]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+            - generic [ref=e455]:
+              - button "Abrir o menu suspenso de mensagens" [ref=e457] [cursor=pointer]:
+                - img "Abrir o menu suspenso de mensagens" [ref=e458]
+              - button "Escrever mensagem" [ref=e461] [cursor=pointer]:
+                - img [ref=e462]
+                - generic [ref=e464]: Escrever mensagem
+              - button "Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas." [ref=e465] [cursor=pointer]:
+                - img [ref=e466]
+                - generic [ref=e468]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+        - complementary "Assistente de IA para obter ajuda com sua carreira, vagas, etc."

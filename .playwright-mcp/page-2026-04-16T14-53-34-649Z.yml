@@ -1,0 +1,181 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - link "Skip to main content" [ref=e3] [cursor=pointer]:
+      - /url: "#content"
+    - banner [ref=e4]:
+      - generic [ref=e5]:
+        - generic [ref=e7]:
+          - link "AstraZeneca Careers" [ref=e9] [cursor=pointer]:
+            - /url: /
+            - img "AstraZeneca Careers" [ref=e10]
+          - generic [ref=e13]:
+            - link "Saved Jobs" [ref=e16] [cursor=pointer]:
+              - /url: /saved-jobs
+              - img [ref=e19]
+            - button "Scroll to Job Alerts form" [ref=e24] [cursor=pointer]
+            - button "Navigate to other languages" [ref=e25] [cursor=pointer]:
+              - generic [ref=e26]: Language Navigation
+        - list [ref=e28]:
+          - listitem [ref=e29]:
+            - button "About Us" [ref=e30] [cursor=pointer]
+          - listitem [ref=e31]:
+            - button "Business Areas" [ref=e32] [cursor=pointer]
+          - listitem [ref=e33]:
+            - link "Early Talent" [ref=e34] [cursor=pointer]:
+              - /url: /early-talent
+          - listitem [ref=e35]:
+            - link "Our People" [ref=e36] [cursor=pointer]:
+              - /url: /our-people
+          - listitem [ref=e37]:
+            - button "Application Process" [ref=e38] [cursor=pointer]
+          - listitem [ref=e39]:
+            - link "Join Talent Network" [ref=e40] [cursor=pointer]:
+              - /url: https://astrazeneca.eightfold.ai/careers/join?domain=astrazeneca.com&hl=en
+      - img "hero image" [ref=e43]
+      - generic [ref=e46]:
+        - heading "Diverse Minds Bold Disruptors Meaningful Impact" [level=1] [ref=e47]:
+          - text: Diverse Minds
+          - text: Bold Disruptors
+          - text: Meaningful Impact
+        - search [ref=e49]:
+          - group "Search Jobs" [ref=e50]:
+            - paragraph [ref=e51]:
+              - generic [ref=e52]: Search jobs by keyword(s)
+              - searchbox "Search jobs by keyword(s)" [ref=e53]
+            - paragraph [ref=e54]:
+              - generic [ref=e55]: Search jobs by location
+              - combobox "Search jobs by location" [ref=e56]
+            - button "SEARCH ROLES" [ref=e57] [cursor=pointer]
+            - link "GET MATCHED TO A JOB UPLOAD YOUR RESUME" [ref=e58] [cursor=pointer]:
+              - /url: https://astrazeneca.eightfold.ai/careers
+              - generic [ref=e59]:
+                - text: GET MATCHED TO A JOB
+                - text: UPLOAD YOUR RESUME
+    - main [ref=e60]:
+      - generic [ref=e62]:
+        - heading "Explore our locations" [level=2] [ref=e63]
+        - generic [ref=e64]:
+          - link "Canada Canada Canada" [ref=e65] [cursor=pointer]:
+            - /url: /canada
+            - img "Canada" [ref=e66]
+            - generic [ref=e67]:
+              - text: Canada
+              - img "Canada" [ref=e68]
+          - link "India India India" [ref=e69] [cursor=pointer]:
+            - /url: /india
+            - img "India" [ref=e70]
+            - generic [ref=e71]:
+              - text: India
+              - img "India" [ref=e72]
+          - link "Mexico Mexico Mexico" [ref=e73] [cursor=pointer]:
+            - /url: /mexico
+            - img "Mexico" [ref=e74]
+            - generic [ref=e75]:
+              - text: Mexico
+              - img "Mexico" [ref=e76]
+          - link "Portugal Portugal Portugal" [ref=e77] [cursor=pointer]:
+            - /url: /lisbon
+            - img "Portugal" [ref=e78]
+            - generic [ref=e79]:
+              - text: Portugal
+              - img "Portugal" [ref=e80]
+          - link "Spain Spain Spain" [ref=e81] [cursor=pointer]:
+            - /url: /spain
+            - img "Spain" [ref=e82]
+            - generic [ref=e83]:
+              - text: Spain
+              - img "Spain" [ref=e84]
+          - link "sweden Sweden Sweden" [ref=e85] [cursor=pointer]:
+            - /url: /sweden
+            - img "sweden" [ref=e86]
+            - generic [ref=e87]:
+              - text: Sweden
+              - img "Sweden" [ref=e88]
+          - link "UK UK UK" [ref=e89] [cursor=pointer]:
+            - /url: /united-kingdom
+            - img "UK" [ref=e90]
+            - generic [ref=e91]:
+              - text: UK
+              - img "UK" [ref=e92]
+          - link "US US US" [ref=e93] [cursor=pointer]:
+            - /url: /united-states
+            - img "US" [ref=e94]
+            - generic [ref=e95]:
+              - text: US
+              - img "US" [ref=e96]
+      - generic [ref=e97]:
+        - heading "In the spotlight" [level=2] [ref=e98]: In the spotlight
+        - list [ref=e99]:
+          - listitem [ref=e100]:
+            - link "Alt Alexion We expanded our scientific footprint with the acquisition of Alexion's cutting-edge work in rare disease therapeutics.":
+              - /url: https://jobs.alexion.com/
+              - img "Alt" [ref=e102] [cursor=pointer]
+              - generic [ref=e103] [cursor=pointer]:
+                - heading "Alexion" [level=3] [ref=e104]
+                - paragraph [ref=e105]: We expanded our scientific footprint with the acquisition of Alexion's cutting-edge work in rare disease therapeutics.
+                - img [ref=e107]
+          - listitem [ref=e109]:
+            - link "alt Lifelong Learning Helping you to continuously learn, grow and evolve through your career with us, in our lifelong learning environment.":
+              - /url: /lifelonglearning
+              - img "alt" [ref=e111] [cursor=pointer]
+              - generic [ref=e112] [cursor=pointer]:
+                - heading "Lifelong Learning" [level=3] [ref=e113]
+                - paragraph [ref=e114]: Helping you to continuously learn, grow and evolve through your career with us, in our lifelong learning environment.
+                - img [ref=e116]
+          - listitem [ref=e118]:
+            - link "alt Our Values Explore how our values guide how we work together, shape our beliefs and behaviours.":
+              - /url: /our-people
+              - img "alt" [ref=e120] [cursor=pointer]
+              - generic [ref=e121] [cursor=pointer]:
+                - heading "Our Values" [level=3] [ref=e122]
+                - paragraph [ref=e123]: Explore how our values guide how we work together, shape our beliefs and behaviours.
+                - img [ref=e125]
+      - generic [ref=e127]:
+        - heading "Join our Talent Network" [level=2] [ref=e128]
+        - generic [ref=e129]:
+          - paragraph [ref=e130]: Be the first to receive job updates and news from AstraZeneca
+          - link "Sign up" [ref=e131] [cursor=pointer]:
+            - /url: https://astrazeneca.eightfold.ai/careers/join?domain=astrazeneca.com&hl=en
+    - contentinfo [ref=e132]:
+      - generic [ref=e133]:
+        - img "AstraZeneca Logo" [ref=e135]
+        - generic [ref=e136]:
+          - link "Site map" [ref=e137] [cursor=pointer]:
+            - /url: /sitemap
+          - link "Cookie Policy" [ref=e138] [cursor=pointer]:
+            - /url: //policy.cookiereports.com/f5985167-en-gb.html
+          - link "Privacy policy" [ref=e139] [cursor=pointer]:
+            - /url: https://www.azprivacy.astrazeneca.com/
+          - link "Job Application Privacy Notice" [ref=e140] [cursor=pointer]:
+            - /url: https://careers.astrazeneca.com/candidate-privacy-notice
+          - link "Legal notice" [ref=e141] [cursor=pointer]:
+            - /url: https://www.astrazeneca-us.com/legal-notice.html
+          - link "Astrazeneca.com" [ref=e142] [cursor=pointer]:
+            - /url: https://www.astrazeneca.com
+        - generic [ref=e143]:
+          - link "AstraZeneca on Instagram" [ref=e145] [cursor=pointer]:
+            - /url: https://www.instagram.com/astrazeneca
+          - link "AstraZeneca on Facebook" [ref=e147] [cursor=pointer]:
+            - /url: https://www.facebook.com/AstraZeneca
+          - link "AstraZeneca on LinkedIn" [ref=e149] [cursor=pointer]:
+            - /url: https://www.linkedin.com/company/astrazeneca
+          - link "Astrazenecajobs on Twitter" [ref=e151] [cursor=pointer]:
+            - /url: https://twitter.com/astrazenecajobs
+          - link "AstraZeneca on Glassdoor" [ref=e153] [cursor=pointer]:
+            - /url: https://www.glassdoor.co.uk/Reviews/AstraZeneca-Reviews-E9214.htm
+  - status
+  - status
+  - dialog "Cookies" [ref=e155]:
+    - generic [ref=e156]:
+      - heading "Cookies" [level=2] [ref=e157]
+      - paragraph [ref=e159]:
+        - text: We use cookies to provide website functionality, to analyze site usage, the content you visit and how you use it, to enable social media features and assist in our marketing efforts, including showing you personalized content. Only Necessary Cookies will be stored by default, and by clicking “Accept All”, you agree to the storage of all cookies on your device. You may personalize your preferences, obtain more information, and withdraw or change your consent at any time by clicking on “Set Preferences” or by visiting our Cookie Notice link available on the site. For more information about the use of cookies please see the
+        - link "cookie notice web page (External link, opens in a new window)" [ref=e160] [cursor=pointer]:
+          - /url: https://cookienotice.astrazeneca.com/
+          - text: cookie notice web page
+        - text: .
+      - generic [ref=e161]:
+        - button "Accept All" [active] [ref=e162] [cursor=pointer]
+        - button "Decline All Optional" [ref=e163] [cursor=pointer]
+      - button "Set Preferences +" [ref=e164] [cursor=pointer]
+    - text: + + ✔ ✖ + ✔ ✖ + ✔ ✖ +

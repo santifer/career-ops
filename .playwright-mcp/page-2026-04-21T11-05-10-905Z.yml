@@ -1,0 +1,659 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - link "Skip to main content" [ref=e3] [cursor=pointer]:
+      - /url: "#content"
+    - banner:
+      - navigation "Main" [ref=e4]:
+        - generic [ref=e7]:
+          - link "Unilever logo" [ref=e8] [cursor=pointer]:
+            - /url: /
+            - img "Unilever logo" [ref=e10]
+          - list [ref=e12]:
+            - listitem [ref=e13]:
+              - link "Life at Unilever" [ref=e14] [cursor=pointer]:
+                - /url: /life-at-unilever
+            - listitem [ref=e15]:
+              - link "Experienced Professionals" [ref=e16] [cursor=pointer]:
+                - /url: /experienced-professionals
+            - listitem [ref=e17]:
+              - link "Early Careers" [ref=e18] [cursor=pointer]:
+                - /url: /early-careers
+            - listitem [ref=e19]:
+              - link "Events" [ref=e20] [cursor=pointer]:
+                - /url: /events
+            - listitem [ref=e21]:
+              - link "Locations" [ref=e22] [cursor=pointer]:
+                - /url: /locations
+          - generic [ref=e23]:
+            - link "Saved Jobs" [ref=e25] [cursor=pointer]:
+              - /url: /saved-jobs
+              - generic [ref=e26]: Saved Jobs
+            - link "Icon portrait of a person Talent Community" [ref=e29] [cursor=pointer]:
+              - /url: https://unilever.wd3.myworkdayjobs.com/Unilever_Experienced_Professionals/userHome
+              - img "Icon portrait of a person" [ref=e30]
+              - generic [ref=e31]: Talent Community
+            - button "English" [ref=e33] [cursor=pointer]:
+              - generic [ref=e34]: EN
+    - main [ref=e35]:
+      - generic [ref=e36]:
+        - img "Female professional in an open office settings looking out of the window smiling. There is an overlay of a white letter in the shape o of a capital U" [ref=e40]
+        - generic [ref=e42]:
+          - heading "A bright, new future" [level=1] [ref=e44]
+          - search [ref=e45]:
+            - group "Search Jobs" [ref=e46]:
+              - paragraph [ref=e47]:
+                - generic [ref=e48]: Keyword search
+                - searchbox "Keyword search" [ref=e49]
+              - paragraph [ref=e50]:
+                - generic [ref=e51]: City, State, or ZIP
+                - combobox "City, State, or ZIP" [ref=e52]
+              - button "Search" [ref=e53] [cursor=pointer]
+          - link "Join Our Talent Community" [ref=e54] [cursor=pointer]:
+            - /url: "#join-our-talent-community"
+      - generic [ref=e56]:
+        - generic [ref=e57]:
+          - img "three professionals discussing walking side by side in a modern office" [ref=e59]
+          - generic [ref=e60]:
+            - heading "Your Unilever" [level=2] [ref=e61]
+            - paragraph [ref=e62]: Every day, 3.4 billion people around the world enjoy our products - from groundbreaking brands like Hellmann's, Domestos, Dove and Rexona (to name just a few). Our brands lead the way – innovating in their fields, delighting their consumers and powering our business forward. A role with us means endless opportunities with global brands that make markets. Extraordinary opportunities that will shape you, your career and the future of Unilever.
+            - paragraph [ref=e63]: Be part of creating the future for a truly international company - be one of our people. Apply today and start your journey.
+        - generic [ref=e64]:
+          - img "two individuals holding unilever products, discussing and laughing in a modern office" [ref=e66]
+          - generic [ref=e67]:
+            - heading "Market-makers and big brands" [level=2] [ref=e68]
+            - generic [ref=e69]: It's our people who make everything happen. Our bright and curious people who imagine and create the future - diverse, passionate and ambitious people.
+            - paragraph [ref=e70]: We make markets and create cultures through some of the biggest brands and best-known products in the world. Talented teams in 190 countries redefine the way we do business and set new standards for our brands. Always learning, always innovating, always playing to win. Is this your moment?
+      - generic [ref=e71]:
+        - generic [ref=e72]:
+          - heading "Expert teams" [level=2] [ref=e73]
+          - paragraph [ref=e74]: Find your amazing. You could start in global finance and end up running a brand team (this happens). Expect the unexpected and map out your own journey, while really making a difference. You’ll be given the space to shine, grow your skills and enjoy your adventure.
+        - region "carousel" [ref=e75]:
+          - button "Previous" [ref=e76] [cursor=pointer]:
+            - generic [ref=e78]: Previous
+          - generic [ref=e80]:
+            - group [ref=e81]:
+              - link [ref=e84] [cursor=pointer]:
+                - /url: /en/finance
+                - generic [ref=e85]:
+                  - img [ref=e86]
+                  - generic [ref=e87]: Finance
+                - generic [ref=e88]:
+                  - heading [level=3] [ref=e89]: Finance
+                  - generic [ref=e90]: Learn more
+            - group [ref=e91]:
+              - link [ref=e94] [cursor=pointer]:
+                - /url: /en/human-resources
+                - generic [ref=e95]:
+                  - img [ref=e96]
+                  - generic [ref=e97]: Human Resources
+                - generic [ref=e98]:
+                  - heading [level=3] [ref=e99]: Human Resources
+                  - generic [ref=e100]: Learn more
+            - group [ref=e101]:
+              - link [ref=e104] [cursor=pointer]:
+                - /url: /en/legal
+                - generic [ref=e105]:
+                  - img [ref=e106]
+                  - generic [ref=e107]: Legal
+                - generic [ref=e108]:
+                  - heading [level=3] [ref=e109]: Legal
+                  - generic [ref=e110]: Learn more
+            - group "slide 9" [ref=e111]:
+              - link "Global Business Services Global Business Services Global Business Services Learn more" [ref=e114] [cursor=pointer]:
+                - /url: /en/gbs
+                - generic [ref=e115]:
+                  - img "Global Business Services" [ref=e116]
+                  - generic [ref=e117]: Global Business Services
+                - generic [ref=e118]:
+                  - heading "Global Business Services" [level=3] [ref=e119]
+                  - generic [ref=e120]: Learn more
+            - group "slide 1 (centered)" [ref=e121]:
+              - link "Research & Development Research & Development Learn more" [ref=e124] [cursor=pointer]:
+                - /url: /en/research-and-development
+                - img "Research & Development" [ref=e126]
+                - generic [ref=e127]:
+                  - heading "Research & Development" [level=3] [ref=e128]
+                  - generic [ref=e129]: Learn more
+            - group "slide 2" [ref=e130]:
+              - link "Supply Chain Supply Chain Supply Chain Learn more" [ref=e133] [cursor=pointer]:
+                - /url: /en/supply-chain
+                - generic [ref=e134]:
+                  - img "Supply Chain" [ref=e135]
+                  - generic [ref=e136]: Supply Chain
+                - generic [ref=e137]:
+                  - heading "Supply Chain" [level=3] [ref=e138]
+                  - generic [ref=e139]: Learn more
+            - group [ref=e140]:
+              - link [ref=e143] [cursor=pointer]:
+                - /url: /en/marketing
+                - generic [ref=e144]:
+                  - img [ref=e145]
+                  - generic [ref=e146]: Marketing
+                - generic [ref=e147]:
+                  - heading [level=3] [ref=e148]: Marketing
+                  - generic [ref=e149]: Learn more
+            - group [ref=e150]:
+              - link [ref=e153] [cursor=pointer]:
+                - /url: /en/communications-corporate-affairs-and-sustainability
+                - generic [ref=e154]:
+                  - img [ref=e155]
+                  - generic [ref=e156]: Communications, Corporate Affairs & Sustainability
+                - generic [ref=e157]:
+                  - heading [level=3] [ref=e158]: Communications, Corporate Affairs & Sustainability
+                  - generic [ref=e159]: Learn more
+            - group [ref=e160]:
+              - link [ref=e163] [cursor=pointer]:
+                - /url: /en/global-digital-and-technology
+                - generic [ref=e164]:
+                  - img [ref=e165]
+                  - generic [ref=e166]: Global Digital & Technology (GDT)
+                - generic [ref=e167]:
+                  - heading [level=3] [ref=e168]: Global Digital & Technology (GDT)
+                  - generic [ref=e169]: Learn more
+            - group [ref=e170]:
+              - link [ref=e173] [cursor=pointer]:
+                - /url: /en/finance
+                - generic [ref=e174]:
+                  - img [ref=e175]
+                  - generic [ref=e176]: Finance
+                - generic [ref=e177]:
+                  - heading [level=3] [ref=e178]: Finance
+                  - generic [ref=e179]: Learn more
+            - group [ref=e180]:
+              - link [ref=e183] [cursor=pointer]:
+                - /url: /en/human-resources
+                - generic [ref=e184]:
+                  - img [ref=e185]
+                  - generic [ref=e186]: Human Resources
+                - generic [ref=e187]:
+                  - heading [level=3] [ref=e188]: Human Resources
+                  - generic [ref=e189]: Learn more
+            - group [ref=e190]:
+              - link [ref=e193] [cursor=pointer]:
+                - /url: /en/legal
+                - generic [ref=e194]:
+                  - img [ref=e195]
+                  - generic [ref=e196]: Legal
+                - generic [ref=e197]:
+                  - heading [level=3] [ref=e198]: Legal
+                  - generic [ref=e199]: Learn more
+            - group [ref=e200]:
+              - link [ref=e203] [cursor=pointer]:
+                - /url: /en/gbs
+                - generic [ref=e204]:
+                  - img [ref=e205]
+                  - generic [ref=e206]: Global Business Services
+                - generic [ref=e207]:
+                  - heading [level=3] [ref=e208]: Global Business Services
+                  - generic [ref=e209]: Learn more
+            - group [ref=e210]:
+              - link [ref=e213] [cursor=pointer]:
+                - /url: /en/research-and-development
+                - img [ref=e215]
+                - generic [ref=e216]:
+                  - heading [level=3] [ref=e217]: Research & Development
+                  - generic [ref=e218]: Learn more
+            - group [ref=e219]:
+              - link [ref=e222] [cursor=pointer]:
+                - /url: /en/supply-chain
+                - generic [ref=e223]:
+                  - img [ref=e224]
+                  - generic [ref=e225]: Supply Chain
+                - generic [ref=e226]:
+                  - heading [level=3] [ref=e227]: Supply Chain
+                  - generic [ref=e228]: Learn more
+            - group [ref=e229]:
+              - link [ref=e232] [cursor=pointer]:
+                - /url: /en/marketing
+                - generic [ref=e233]:
+                  - img [ref=e234]
+                  - generic [ref=e235]: Marketing
+                - generic [ref=e236]:
+                  - heading [level=3] [ref=e237]: Marketing
+                  - generic [ref=e238]: Learn more
+            - group [ref=e239]:
+              - link [ref=e242] [cursor=pointer]:
+                - /url: /en/communications-corporate-affairs-and-sustainability
+                - generic [ref=e243]:
+                  - img [ref=e244]
+                  - generic [ref=e245]: Communications, Corporate Affairs & Sustainability
+                - generic [ref=e246]:
+                  - heading [level=3] [ref=e247]: Communications, Corporate Affairs & Sustainability
+                  - generic [ref=e248]: Learn more
+            - group [ref=e249]:
+              - link [ref=e252] [cursor=pointer]:
+                - /url: /en/global-digital-and-technology
+                - generic [ref=e253]:
+                  - img [ref=e254]
+                  - generic [ref=e255]: Global Digital & Technology (GDT)
+                - generic [ref=e256]:
+                  - heading [level=3] [ref=e257]: Global Digital & Technology (GDT)
+                  - generic [ref=e258]: Learn more
+            - group [ref=e259]:
+              - link [ref=e262] [cursor=pointer]:
+                - /url: /en/finance
+                - generic [ref=e263]:
+                  - img [ref=e264]
+                  - generic [ref=e265]: Finance
+                - generic [ref=e266]:
+                  - heading [level=3] [ref=e267]: Finance
+                  - generic [ref=e268]: Learn more
+            - group [ref=e269]:
+              - link [ref=e272] [cursor=pointer]:
+                - /url: /en/human-resources
+                - generic [ref=e273]:
+                  - img [ref=e274]
+                  - generic [ref=e275]: Human Resources
+                - generic [ref=e276]:
+                  - heading [level=3] [ref=e277]: Human Resources
+                  - generic [ref=e278]: Learn more
+            - group [ref=e279]:
+              - link [ref=e282] [cursor=pointer]:
+                - /url: /en/legal
+                - generic [ref=e283]:
+                  - img [ref=e284]
+                  - generic [ref=e285]: Legal
+                - generic [ref=e286]:
+                  - heading [level=3] [ref=e287]: Legal
+                  - generic [ref=e288]: Learn more
+            - group [ref=e289]:
+              - link [ref=e292] [cursor=pointer]:
+                - /url: /en/gbs
+                - generic [ref=e293]:
+                  - img [ref=e294]
+                  - generic [ref=e295]: Global Business Services
+                - generic [ref=e296]:
+                  - heading [level=3] [ref=e297]: Global Business Services
+                  - generic [ref=e298]: Learn more
+          - button "Next" [ref=e299] [cursor=pointer]:
+            - generic [ref=e301]: Next
+      - generic [ref=e303]:
+        - heading "Jobs for you" [level=2] [ref=e304]
+        - generic [ref=e305]:
+          - tablist [ref=e306]:
+            - tab "Suggested Jobs" [selected] [ref=e307] [cursor=pointer]
+            - tab "Recently Viewed Jobs" [ref=e308] [cursor=pointer]
+            - tab "Saved Jobs" [ref=e309] [cursor=pointer]
+          - tabpanel "Suggested Jobs" [ref=e310]:
+            - list [ref=e313]:
+              - listitem [ref=e314]:
+                - link "CM Procurement Manager – PC & BW PTAB Karachi, Pakistan" [ref=e315] [cursor=pointer]:
+                  - /url: /en/job/karachi/cm-procurement-manager-pc-and-bw-ptab/34155/94207832992
+                  - generic [ref=e316]: CM Procurement Manager – PC & BW PTAB
+                  - generic [ref=e317]: Karachi, Pakistan
+                - button "Save Job" [ref=e318] [cursor=pointer]:
+                  - generic [ref=e319]: Save Job
+              - listitem [ref=e320]:
+                - link "Technical Operator Cavite, Philippines" [ref=e321] [cursor=pointer]:
+                  - /url: /en/job/cavite/technical-operator/34155/94207832976
+                  - generic [ref=e322]: Technical Operator
+                  - generic [ref=e323]: Cavite, Philippines
+                - button "Save Job" [ref=e324] [cursor=pointer]:
+                  - generic [ref=e325]: Save Job
+              - listitem [ref=e326]:
+                - link "Assistant Distributive Trade Manager - Great Plus Kuala Lumpur, Malaysia" [ref=e327] [cursor=pointer]:
+                  - /url: /en/job/kuala-lumpur/assistant-distributive-trade-manager-great-plus/34155/94207832960
+                  - generic [ref=e328]: Assistant Distributive Trade Manager - Great Plus
+                  - generic [ref=e329]: Kuala Lumpur, Malaysia
+                - button "Save Job" [ref=e330] [cursor=pointer]:
+                  - generic [ref=e331]: Save Job
+              - listitem [ref=e332]:
+                - link "Technical Operator Cavite, Philippines" [ref=e333] [cursor=pointer]:
+                  - /url: /en/job/cavite/technical-operator/34155/94207832944
+                  - generic [ref=e334]: Technical Operator
+                  - generic [ref=e335]: Cavite, Philippines
+                - button "Save Job" [ref=e336] [cursor=pointer]:
+                  - generic [ref=e337]: Save Job
+      - generic [ref=e341]:
+        - generic [ref=e342]:
+          - heading "Join our talent network" [level=3] [ref=e343]
+          - paragraph [ref=e344]: Make sure you see job opportunities when they become available. Just leave details here to stay up to date with jobs that suit you and your skills.
+          - paragraph [ref=e345]: "* Indicates required field"
+        - generic [ref=e346]:
+          - generic [ref=e347]:
+            - paragraph [ref=e348]:
+              - generic [ref=e349]:
+                - text: First Name
+                - generic [ref=e350]: "*"
+              - textbox "First Name" [ref=e351]
+            - paragraph [ref=e352]:
+              - generic [ref=e353]:
+                - text: Last Name
+                - generic [ref=e354]: "*"
+              - textbox "Last Name" [ref=e355]
+            - paragraph [ref=e356]:
+              - generic [ref=e357]:
+                - text: Email Address
+                - generic [ref=e358]: "*"
+              - textbox "Email Address" [ref=e359]
+            - paragraph [ref=e360]:
+              - generic [ref=e361]:
+                - generic [ref=e362]: Country Code
+                - combobox "Country Code" [ref=e363]:
+                  - option "+1" [selected]
+                  - option "+1242"
+                  - option "+1246"
+                  - option "+1264"
+                  - option "+1268"
+                  - option "+1284"
+                  - option "+1340"
+                  - option "+1441"
+                  - option "+1473"
+                  - option "+1649"
+                  - option "+1664"
+                  - option "+1670"
+                  - option "+1671"
+                  - option "+1684"
+                  - option "+1758"
+                  - option "+1767"
+                  - option "+1784"
+                  - option "+1849"
+                  - option "+1868"
+                  - option "+1869"
+                  - option "+1876"
+                  - option "+1939"
+                  - option "+20"
+                  - option "+211"
+                  - option "+212"
+                  - option "+213"
+                  - option "+216"
+                  - option "+218"
+                  - option "+220"
+                  - option "+221"
+                  - option "+222"
+                  - option "+223"
+                  - option "+224"
+                  - option "+225"
+                  - option "+226"
+                  - option "+227"
+                  - option "+228"
+                  - option "+229"
+                  - option "+230"
+                  - option "+231"
+                  - option "+232"
+                  - option "+233"
+                  - option "+234"
+                  - option "+235"
+                  - option "+236"
+                  - option "+237"
+                  - option "+238"
+                  - option "+239"
+                  - option "+240"
+                  - option "+241"
+                  - option "+242"
+                  - option "+243"
+                  - option "+244"
+                  - option "+245"
+                  - option "+248"
+                  - option "+249"
+                  - option "+250"
+                  - option "+251"
+                  - option "+252"
+                  - option "+253"
+                  - option "+254"
+                  - option "+255"
+                  - option "+256"
+                  - option "+257"
+                  - option "+258"
+                  - option "+261"
+                  - option "+262"
+                  - option "+264"
+                  - option "+265"
+                  - option "+266"
+                  - option "+267"
+                  - option "+268"
+                  - option "+269"
+                  - option "+27"
+                  - option "+290"
+                  - option "+291"
+                  - option "+297"
+                  - option "+298"
+                  - option "+299"
+                  - option "+30"
+                  - option "+31"
+                  - option "+32"
+                  - option "+33"
+                  - option "+34"
+                  - option "+345"
+                  - option "+350"
+                  - option "+351"
+                  - option "+352"
+                  - option "+353"
+                  - option "+354"
+                  - option "+355"
+                  - option "+356"
+                  - option "+357"
+                  - option "+358"
+                  - option "+359"
+                  - option "+36"
+                  - option "+370"
+                  - option "+371"
+                  - option "+372"
+                  - option "+373"
+                  - option "+374"
+                  - option "+375"
+                  - option "+376"
+                  - option "+377"
+                  - option "+378"
+                  - option "+379"
+                  - option "+380"
+                  - option "+381"
+                  - option "+382"
+                  - option "+385"
+                  - option "+386"
+                  - option "+387"
+                  - option "+389"
+                  - option "+39"
+                  - option "+40"
+                  - option "+41"
+                  - option "+420"
+                  - option "+421"
+                  - option "+423"
+                  - option "+43"
+                  - option "+44"
+                  - option "+45"
+                  - option "+46"
+                  - option "+47"
+                  - option "+48"
+                  - option "+49"
+                  - option "+500"
+                  - option "+501"
+                  - option "+502"
+                  - option "+503"
+                  - option "+504"
+                  - option "+505"
+                  - option "+506"
+                  - option "+507"
+                  - option "+508"
+                  - option "+509"
+                  - option "+51"
+                  - option "+52"
+                  - option "+53"
+                  - option "+54"
+                  - option "+55"
+                  - option "+56"
+                  - option "+57"
+                  - option "+58"
+                  - option "+590"
+                  - option "+591"
+                  - option "+593"
+                  - option "+594"
+                  - option "+595"
+                  - option "+596"
+                  - option "+597"
+                  - option "+598"
+                  - option "+599"
+                  - option "+60"
+                  - option "+61"
+                  - option "+62"
+                  - option "+63"
+                  - option "+64"
+                  - option "+65"
+                  - option "+66"
+                  - option "+670"
+                  - option "+672"
+                  - option "+673"
+                  - option "+674"
+                  - option "+675"
+                  - option "+676"
+                  - option "+677"
+                  - option "+678"
+                  - option "+679"
+                  - option "+680"
+                  - option "+681"
+                  - option "+682"
+                  - option "+683"
+                  - option "+685"
+                  - option "+686"
+                  - option "+687"
+                  - option "+688"
+                  - option "+689"
+                  - option "+690"
+                  - option "+692"
+                  - option "+7"
+                  - option "+77"
+                  - option "+81"
+                  - option "+82"
+                  - option "+84"
+                  - option "+850"
+                  - option "+852"
+                  - option "+853"
+                  - option "+855"
+                  - option "+856"
+                  - option "+86"
+                  - option "+872"
+                  - option "+880"
+                  - option "+886"
+                  - option "+90"
+                  - option "+91"
+                  - option "+92"
+                  - option "+93"
+                  - option "+94"
+                  - option "+95"
+                  - option "+960"
+                  - option "+961"
+                  - option "+962"
+                  - option "+963"
+                  - option "+964"
+                  - option "+965"
+                  - option "+966"
+                  - option "+967"
+                  - option "+968"
+                  - option "+970"
+                  - option "+971"
+                  - option "+972"
+                  - option "+973"
+                  - option "+974"
+                  - option "+975"
+                  - option "+976"
+                  - option "+977"
+                  - option "+98"
+                  - option "+992"
+                  - option "+993"
+                  - option "+994"
+                  - option "+995"
+                  - option "+996"
+                  - option "+998"
+              - generic [ref=e364]:
+                - generic [ref=e365]: Phone Number
+                - textbox "Phone Number" [ref=e366]:
+                  - /placeholder: "1234445567"
+            - paragraph [ref=e368]:
+              - generic [ref=e369]: Upload Resume
+              - button "Upload Resume" [ref=e370]
+            - group "Interested In" [ref=e371]:
+              - generic [ref=e372]: Interested In
+              - generic [ref=e373]: Select a job category from the list of options. Search for a location and select one from the list of suggestions. Finally, click “Add” to create your job alert.
+              - paragraph [ref=e374]:
+                - generic [ref=e375]: Job Category
+                - combobox "Job Category" [ref=e376]:
+                  - option "Select a Job Category" [selected]
+                  - option "Customer Development"
+                  - option "Early Careers"
+                  - option "Finance"
+                  - option "General Management"
+                  - option "Global Digital & Technology"
+                  - option "Human Resources"
+                  - option "Legal"
+                  - option "Marketing"
+                  - option "Research & Development"
+                  - option "Supply Chain"
+                  - option "Workplace Services"
+              - paragraph [ref=e377]:
+                - generic [ref=e378]: Location
+                - combobox "Location Type to Search for a Location" [ref=e379]
+              - button "Add Job Alert" [disabled]: Add
+              - region "Selected Job Alerts":
+                - list
+          - paragraph [ref=e380]: By signing up, I acknowledge that I have read Unilever's privacy notice, and that I wish to receive email and SMS communications. I understand that I can opt out of receiving email and SMS communications at any time.
+          - generic [ref=e381]:
+            - paragraph [ref=e382]:
+              - button "Sign Up for Job Alerts" [ref=e383] [cursor=pointer]: Sign up
+            - link "Already a Member? Sign in" [ref=e384] [cursor=pointer]:
+              - /url: https://careers.unilever.com/sys/tc/sign-in?status=greeting&id=9c84466f-add2-453f-8792-4fe0c0d8a136&lang=en
+      - generic [ref=e387]:
+        - generic [ref=e388]:
+          - generic [ref=e389]:
+            - heading "Connect with us" [level=3] [ref=e390]
+            - paragraph [ref=e391]: We're always looking to connect, find out more on our social channels.
+          - list [ref=e393]:
+            - listitem [ref=e394]:
+              - link "LinkedIn" [ref=e395] [cursor=pointer]:
+                - /url: //www.linkedin.com/company/unilever/
+            - listitem [ref=e396]:
+              - link "Facebook" [ref=e397] [cursor=pointer]:
+                - /url: //www.facebook.com/UnileverCareers
+            - listitem [ref=e398]:
+              - link "YouTube" [ref=e399] [cursor=pointer]:
+                - /url: //www.youtube.com/user/unilever
+            - listitem [ref=e400]:
+              - link "Instagram" [ref=e401] [cursor=pointer]:
+                - /url: //www.instagram.com/unileverglobalcareers/
+            - listitem [ref=e402]:
+              - link "X" [ref=e403] [cursor=pointer]:
+                - /url: //x.com/Unilever?ref_src=twsrc%5Egoogle%7Ctwcamp%5Eserp%7Ctwgr%5Eauthor
+        - generic [ref=e405]:
+          - heading "Contact us" [level=3] [ref=e406]
+          - paragraph [ref=e407]: Get in touch with Unilever PLC and specialist teams in our headquarters, or find contacts around the world.
+          - link "Contact us" [ref=e408] [cursor=pointer]:
+            - /url: https://www.unilever.com/contact/
+    - contentinfo [ref=e409]:
+      - generic [ref=e412]:
+        - link "Unilever logo" [ref=e414] [cursor=pointer]:
+          - /url: "#"
+          - img "Unilever logo" [ref=e415]
+        - generic [ref=e416]:
+          - paragraph [ref=e417]: RECRUITMENT SCAMS & FRAUD WARNING. We will never ask for the exchange of money or credit card details in the Recruitment process. Please be aware of any suspicious email activity from people who could be pretending to be recruiters or senior individuals at Unilever. If in doubt, please ignore the message.
+          - list [ref=e418]:
+            - listitem [ref=e419]:
+              - link "Privacy Notice" [ref=e420] [cursor=pointer]:
+                - /url: https://www.unilevernotices.com/brazil/portuguese/privacy-notice/notice.html
+            - listitem [ref=e421]:
+              - link "Contact Us" [ref=e422] [cursor=pointer]:
+                - /url: https://www.unilever.com/contact/
+            - listitem [ref=e423]:
+              - link "Legal" [ref=e424] [cursor=pointer]:
+                - /url: hhttps://www.unilever.com/legal-notice/
+            - listitem [ref=e425]:
+              - link "Cookie Notice" [ref=e426] [cursor=pointer]:
+                - /url: https://www.unilevernotices.com/cookie-notices/brazil-portuguese.html
+            - listitem [ref=e427]:
+              - link "Sitemap" [ref=e428] [cursor=pointer]:
+                - /url: /en/sitemap
+            - listitem [ref=e429]:
+              - link "Accessibility" [ref=e430] [cursor=pointer]:
+                - /url: https://notices.unilever.com/corporate/pt-br/accessibility/
+            - listitem [ref=e431]:
+              - link "Digital Sustainability" [ref=e432] [cursor=pointer]:
+                - /url: https://notices.unilever.com/corporate/pt-br/sustainability/
+        - generic [ref=e433]:
+          - text: © Unilever 2025
+          - button "Preferências de cookies" [ref=e434] [cursor=pointer]
+  - status
+  - status
+  - status
+  - button "Candidate FEEDBACK Feedback button" [ref=e436] [cursor=pointer]:
+    - generic [ref=e437]:
+      - generic [ref=e438]: Candidate
+      - generic [ref=e439]: FEEDBACK
+    - img "Feedback button" [ref=e440]

@@ -1,0 +1,201 @@
+- generic [active] [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-1776348243"
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - navigation [ref=e8]:
+        - generic [ref=e9]:
+          - button "menu" [ref=e10] [cursor=pointer]
+          - link "Amazon Jobs home page" [ref=e12] [cursor=pointer]:
+            - /url: /en
+            - generic [ref=e14]: Amazon Jobs home page
+        - generic [ref=e16]:
+          - generic [ref=e17]:
+            - combobox "Search for jobs by title or keyword" [ref=e21]
+            - generic [ref=e23]:
+              - text: h
+              - combobox "search job by location" [ref=e25]
+          - button "Search jobs" [ref=e26] [cursor=pointer]
+        - menu [ref=e30] [cursor=pointer]: My career
+      - generic: h
+      - generic [ref=e31]:
+        - generic [ref=e35]:
+          - generic [ref=e37]:
+            - heading "Sr. Tax Analyst, Tax Engine Operations" [level=1] [ref=e38]
+            - paragraph [ref=e40]: "Job ID: 10384322 | Amazon Servicos de Varejo do Brasil Ltda."
+          - link "Apply now for Sr. Tax Analyst, Tax Engine Operations" [ref=e43] [cursor=pointer]:
+            - /url: https://www.amazon.jobs/applicant/jobs/10384322/apply
+            - text: Apply now
+        - generic [ref=e45]:
+          - generic [ref=e47]:
+            - generic [ref=e48]:
+              - heading "Description" [level=2] [ref=e49]
+              - paragraph [ref=e50]:
+                - text: The Tax Engine team is hiring a Sr. Indirect Tax expert with deep Brazil expertise to join our Global Tax Calculation Services team based in São Paulo. The Global Tax Calculation Services Program is comprised of tax professionals and software engineers that are responsible for providing end-to-end global transaction tax calculation solutions (sales and use taxes, value-added taxes, good and services taxes, and other consumption taxes) to Amazon and thousands of other merchants selling on Amazon marketplaces and other e-commerce platforms.
+                - text: The individual in this role will contribute critical indirect tax research and product classification work for Brazil’s complex indirect tax landscape. This position will primarily support Brazil marketplace operations, focusing on Indirect Tax ICMS research, conducting comprehensive taxability research across all 27 states, analyzing intrastate and interstate scenarios and Brazil Tax Reform implementation (CBS/IBS/IS) during reform period. This position will require configuration and ongoing maintenance of Amazon’s transaction tax calculation software. It will also require work closely with local business partners, Tax Planning and rest of members of the tax department providing guidance and support to Global Product Classification.
+                - text: This position is office-based. Amazon encourages open communication about unique needs for flexible arrangements.
+                - text: Key job responsibilities
+                - text: "* Conducting comprehensive ICMS tax research across all 27 Brazilian states, including intrastate and interstate rate scenarios"
+                - text: "* Determining CST (Tax Situation Code) and cClassTrib (Tax Classification Code) combinations as mandatory inputs for government Tax Calculator API"
+                - text: "* Supporting dual tax regime operations during the 2026-2032 transition period"
+                - text: "* Supporting and providing ongoing maintenance and enhancements to tax calculation software;"
+                - text: "* Translating complex Brazilian tax legislation into technical requirements for Engineering, Applied Science, and Product teams"
+                - text: "* Providing support to the end-to-end Global transaction tax calculation solutions for a broad array of products and services"
+                - text: "* Supporting internal and external Audits"
+                - text: "* Providing technical advice on indirect tax rates applicable to Amazon’s catalogue based on the research of tax laws, regulations and jurisdiction changes"
+                - text: "* Supporting local business partners and tax department members with decisions on product taxability matters"
+                - text: "* Participating in team operational excellence programs and process improvements"
+                - text: "* Actively participate in selected projects throughout their life-cycle"
+            - generic [ref=e51]:
+              - heading "Basic Qualifications" [level=2] [ref=e52]
+              - paragraph [ref=e53]:
+                - text: "- Bachelor's degree in finance, accounting, business, economics, or a related analytical field (e.g., engineering, math, computer science), or a Bachelor's degree and experience in tax, finance or a related analytical field"
+                - text: "- Experience in communication and presentation skills, both written and verbal in Portuguese & English"
+                - text: "- Knowledge of Microsoft Office products and applications at an advanced level"
+                - text: "- Experience with Brazilian Indirect Tax, experience working in Big 4 advisory firm, law firm, or multi-national tax department"
+                - text: "- Deep Indirect Tax knowledge (ICMS, IPI, PIS and COFINS);"
+            - generic [ref=e54]:
+              - heading "Preferred Qualifications" [level=2] [ref=e55]
+              - paragraph [ref=e56]:
+                - text: "- Experience maintaining and operating transaction tax calculation software (e.g. Vertex)"
+                - text: "- Experience with Brazilian Tax Reform (Complementary Law 214/2025) - CBS, IBS, IS implementation"
+                - text: "- Experience in tax content development, rule creation, or tax research management for technology platforms"
+                - text: "- Proficiency in other languages would be an advantage"
+                - text: Our inclusive culture empowers Amazonians to deliver the best results for our customers. If you have a disability and need a workplace accommodation or adjustment during the application and hiring process, including support for the interview or onboarding process, please visit
+                - link "https://amazon.jobs/content/en/how-we-hire/accommodations" [ref=e57] [cursor=pointer]:
+                  - /url: https://amazon.jobs/content/en/how-we-hire/accommodations
+                - text: for more information. If the country/region you’re applying in isn’t listed, please contact your Recruiting Partner.
+          - generic [ref=e59]:
+            - generic [ref=e60]:
+              - heading "Job details" [level=2] [ref=e62]
+              - list [ref=e63]:
+                - listitem [ref=e64]:
+                  - generic [ref=e65]:
+                    - img "location"
+                    - list [ref=e66]:
+                      - listitem [ref=e67]: BRA, SP, Sao Paulo
+                - listitem [ref=e68]:
+                  - generic [ref=e69]:
+                    - img "category"
+                    - list [ref=e70]:
+                      - link "Job category Finance and Global Business Services" [ref=e71] [cursor=pointer]:
+                        - /url: /en/job_categories/finance-accounting
+                        - text: Finance and Global Business Services
+            - generic [ref=e76]:
+              - heading "Share this job" [level=2] [ref=e79]
+              - list [ref=e81]:
+                - listitem [ref=e82]:
+                  - link "Share with facebook" [ref=e83] [cursor=pointer]:
+                    - /url: https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fwww.amazon.jobs%2Fen%2Fjobs%2F10384322%2Fsr-tax-analyst-tax-engine-operations
+                    - text: b
+                - listitem [ref=e84]:
+                  - link "Share with linkedin" [ref=e85] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/shareArticle?mini=true&url=https%3A%2F%2Fwww.amazon.jobs%2Fen%2Fjobs%2F10384322%2Fsr-tax-analyst-tax-engine-operations&title=Sr.%20Tax%20Analyst%2C%20Tax%20Engine%20Operations%20&summary=The%20Tax%20Engine%20team%20is%20hiring%20a%20Sr.%20Indirect%20Tax%20expert%20with%20deep%20Brazil%20expertise%20to%20join%20our%20Global%20Tax%20Calculation%20Services%20team%20based%20in%20S%C3%A3o%20Paulo.%20The%20Global%20Tax%20Calculation%20Services%20Program%20is%20comprised%20of%20tax%20professionals%20and%20software...
+                    - text: d
+                - listitem [ref=e86]:
+                  - link "Share with twitter" [ref=e87] [cursor=pointer]:
+                    - /url: https://twitter.com/intent/tweet?text=https%3A%2F%2Fwww.amazon.jobs%2Fen%2Fjobs%2F10384322
+                    - text: j
+                - listitem [ref=e88]:
+                  - link "Share with email" [ref=e89] [cursor=pointer]:
+                    - /url: mailto:?body=https%3A%2F%2Fwww.amazon.jobs%2Fen%2Fjobs%2F10384322&subject=Take%20a%20look%20at%20this%20job
+                    - text: l
+                - listitem [ref=e90]:
+                  - link "Print this job" [ref=e91] [cursor=pointer]:
+                    - /url: "#"
+                    - text: m
+    - generic [ref=e92]:
+      - generic [ref=e95]:
+        - generic [ref=e96]: JOIN US ON
+        - list [ref=e97]:
+          - listitem [ref=e98]:
+            - link "Join us on facebook" [ref=e99] [cursor=pointer]:
+              - /url: https://www.facebook.com/InsideAmazon/?Amazon.jobs=footer
+              - text: b
+          - listitem [ref=e100]:
+            - link "Join us on linkedin" [ref=e101] [cursor=pointer]:
+              - /url: https://www.linkedin.com/company/amazon?Amazon.jobs=footer
+              - text: d
+          - listitem [ref=e102]:
+            - link "Join us on instagram" [ref=e103] [cursor=pointer]:
+              - /url: https://www.instagram.com/insideamazon/?Amazon.jobs=footer
+              - text: c
+          - listitem [ref=e104]:
+            - link "Join us on twitter" [ref=e105] [cursor=pointer]:
+              - /url: https://twitter.com/amazonnews?Amazon.jobs=footer
+              - text: j
+        - generic [ref=e106]:
+          - generic [ref=e107]: DOWNLOAD OUR APP
+          - list [ref=e108]:
+            - listitem [ref=e109]:
+              - link "Download Amazon A to Z from App Store" [ref=e110] [cursor=pointer]:
+                - /url: https://apple.co/4mW6qxK
+                - img [ref=e111]
+            - listitem [ref=e112]:
+              - link "Download Amazon A to Z from Google Play" [ref=e113] [cursor=pointer]:
+                - /url: https://bit.ly/46JGIYu
+                - img [ref=e114]
+      - generic [ref=e118]:
+        - generic [ref=e119]:
+          - text: Find Careers
+          - list [ref=e120]:
+            - listitem [ref=e121]:
+              - link "Job Categories" [ref=e122] [cursor=pointer]:
+                - /url: /content/en/job-categories
+            - listitem [ref=e123]:
+              - link "Teams" [ref=e124] [cursor=pointer]:
+                - /url: /content/en/teams
+            - listitem [ref=e125]:
+              - link "Locations" [ref=e126] [cursor=pointer]:
+                - /url: /content/en/locations
+            - listitem [ref=e127]:
+              - link "Military careers" [ref=e128] [cursor=pointer]:
+                - /url: /content/en/career-programs/military
+            - listitem [ref=e129]:
+              - link "Hourly" [ref=e130] [cursor=pointer]:
+                - /url: /content/en/hourly
+        - generic [ref=e131]:
+          - text: Working At Amazon
+          - list [ref=e132]:
+            - listitem [ref=e133]:
+              - link "Culture" [ref=e134] [cursor=pointer]:
+                - /url: /content/en/our-workplace
+            - listitem [ref=e135]:
+              - link "Benefits" [ref=e136] [cursor=pointer]:
+                - /url: /en/benefits
+            - listitem [ref=e137]:
+              - link "Amazon Newsletter" [ref=e138] [cursor=pointer]:
+                - /url: https://email.aboutamazon.com/l/637851/2020-10-29/pd87g?utm_campaign=newslettersubscribers&utm_content=amazonnewssignup&utm_medium=amazonjobs&utm_source=footer
+            - listitem [ref=e139]:
+              - link "Inclusive experiences" [ref=e140] [cursor=pointer]:
+                - /url: /content/en/our-workplace/inclusive-experiences
+            - listitem [ref=e141]:
+              - link "Leadership Principles" [ref=e142] [cursor=pointer]:
+                - /url: /content/en/our-workplace/leadership-principles
+        - generic [ref=e143]:
+          - text: Help
+          - list [ref=e144]:
+            - listitem [ref=e145]:
+              - link "FAQ" [ref=e146] [cursor=pointer]:
+                - /url: /content/en/faq
+            - listitem [ref=e147]:
+              - link "How We Hire" [ref=e148] [cursor=pointer]:
+                - /url: /content/en/how-we-hire#onlineapp
+            - listitem [ref=e149]:
+              - link "Application status" [ref=e150] [cursor=pointer]:
+                - /url: https://www.amazon.jobs/applicant/check_application_status
+            - listitem [ref=e151]:
+              - link "Accommodations" [ref=e152] [cursor=pointer]:
+                - /url: /content/en/how-we-hire/accommodations
+            - listitem [ref=e153]:
+              - link "Legal disclosures and notices" [ref=e154] [cursor=pointer]:
+                - /url: /content/en/legal-disclosures-and-notices
+        - combobox "English" [ref=e160] [cursor=pointer]: English
+      - generic [ref=e164]:
+        - generic [ref=e165]: Amazon is an equal opportunity employer and does not discriminate on the basis of protected veteran status, disability, or other legally protected status.
+        - generic [ref=e166]:
+          - link "Privacy and Data" [ref=e167] [cursor=pointer]:
+            - /url: /en/privacy_page
+          - link "Impressum" [ref=e168] [cursor=pointer]:
+            - /url: /en/impressum
+        - generic [ref=e169]: © 1996-2026, Amazon.com, Inc. or its affiliates

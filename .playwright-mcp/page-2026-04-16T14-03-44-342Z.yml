@@ -1,0 +1,202 @@
+- generic [active] [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-1776348221"
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - navigation [ref=e8]:
+        - generic [ref=e9]:
+          - button "menu" [ref=e10] [cursor=pointer]
+          - link "Amazon Jobs home page" [ref=e12] [cursor=pointer]:
+            - /url: /en
+            - generic [ref=e14]: Amazon Jobs home page
+        - generic [ref=e16]:
+          - generic [ref=e17]:
+            - combobox "Search for jobs by title or keyword" [ref=e21]
+            - generic [ref=e23]:
+              - text: h
+              - combobox "search job by location" [ref=e25]
+          - button "Search jobs" [ref=e26] [cursor=pointer]
+        - menu [ref=e30] [cursor=pointer]: My career
+      - generic: h
+      - generic [ref=e31]:
+        - generic [ref=e35]:
+          - generic [ref=e37]:
+            - heading "Senior Accountant, LATAM Stores Accounting Team" [level=1] [ref=e38]
+            - paragraph [ref=e40]: "Job ID: 3192963 | Amazon Servicos de Varejo do Brasil Ltda."
+          - link "Apply now for Senior Accountant, LATAM Stores Accounting Team" [ref=e43] [cursor=pointer]:
+            - /url: https://www.amazon.jobs/applicant/jobs/3192963/apply
+            - text: Apply now
+        - generic [ref=e45]:
+          - generic [ref=e47]:
+            - generic [ref=e48]:
+              - heading "Description" [level=2] [ref=e49]
+              - paragraph [ref=e50]:
+                - text: At Amazon Brazil we value Diversity, Equity and Inclusion (DEI) in all our job positions, therefore, we act intentionally so that our internal environment reflects the plurality of the businesses we play and the customers we serve.
+                - text: In Brazil, we have a Diversity, Equity and Inclusion squad, which is formed by representatives from different roles and areas, as we understand that this agenda must have different perspectives and multiple experiences. Our leadership is committed and understands more and more their role in sharing and acting on our leadership principles, with the purpose of ‘Strive to Be Earth's Best Employer’. Understanding our responsibility and our need for change, we are conscientious that ‘Success and Scale Bring Broad Responsibility’
+                - text: "Our affinity groups are built from and by volunteers from different businesses and they are an active part of our DE&I strategies definition. Besides that, they act as ambassadors of this agenda, and they will support you from Day1. Remember, at Amazon ‘It’s always Day1’. Our groups are organized in the following fronts: BEN - Black Employee Network, Women@Amazon, Glamazon (LGBTQIA+) and People With Disabilities."
+                - text: __________________________________________
+                - text: Amazon is a fast paced, dynamic, high-tech company. The LATAM Stores Accounting organization supports our financial reporting, internal control, and also supports new business launches for Amazon in the consumer products, initiatives, merchant, operations, logistics and payments.
+                - text: We are currently looking for a senior level candidate to help support the business growth in Amazon’s Sao Paulo, Brazil office. Successful candidates may have held senior analyst, accounting coordination or finance positions in public or private companies and demonstrated experience in solving complex accounting matters.
+                - text: Key job responsibilities
+                - text: • Oversee financial accounting and reporting functions for the areas under your ownership, ensuring accuracy and compliance with accounting standards and internal policies
+                - text: • Understand and implement internal control design principles, assessing the effectiveness of controls within your area of influence to maintain financial integrity
+                - text: • Provide technical accounting knowledge and support to stakeholders, conducting accounting research and preparing technical memos as required
+                - text: • Identify incomplete or inaccurate data, determine root causes, and execute fixes while partnering on resolutions that maintain the highest standards
+                - text: • Drive process improvements by proposing changes and implementing enhancements to remediate gaps and scale controllership with measurable results
+                - text: A day in the life
+                - text: You'll collaborate with your manager to address priorities and provide technical accounting guidance to stakeholders, as well as performing the month-end-closing activities for the area under your scope. You'll apply your understanding of internal control design to assess effectiveness within your area. You may research accounting treatments for new business launches, prepare technical memos, and support leadership in Brazil with financial insights and reporting.
+                - text: About the team
+                - text: Our team is responsible for all accounting processes related to the Retail business in LATAM. We work collaboratively to ensure accurate financial reporting, effective controls, and technical accounting support for business operations. As the organization expands across Latin America, we play a crucial role in supporting new business launches and initiatives. We value team members who can provide technical expertise while maintaining high standards in our accounting practices.
+            - generic [ref=e51]:
+              - heading "Basic Qualifications" [level=2] [ref=e52]
+              - paragraph [ref=e53]:
+                - text: "- Bachelor's degree in accounting or related field"
+                - text: "- Knowledge of GAAP research tools and the FASB codification"
+                - text: "- Experience with documenting accounting conclusions, or experience researching and documenting support for accounting conclusions"
+                - text: "- Experience with accounting closing process, including preparing and reviewing reconciliations"
+                - text: "- Advanced level understanding of an internal control framework (specifically COSO) and a solid understanding of the concepts of control design and operational efficiency"
+                - text: "- Written and spoken fluency in English and Portuguese required"
+            - generic [ref=e54]:
+              - heading "Preferred Qualifications" [level=2] [ref=e55]
+              - paragraph [ref=e56]:
+                - text: "- Experience in any Bigdata architecture, or experience in SQL Server/MySQL and experience that includes strong analytical skills, attention to detail, and effective communication abilities"
+                - text: "- Speak, write, and read fluently in Spanish"
+                - text: "- Operational accounting experience with international companies"
+                - text: Our inclusive culture empowers Amazonians to deliver the best results for our customers. If you have a disability and need a workplace accommodation or adjustment during the application and hiring process, including support for the interview or onboarding process, please visit
+                - link "https://amazon.jobs/content/en/how-we-hire/accommodations" [ref=e57] [cursor=pointer]:
+                  - /url: https://amazon.jobs/content/en/how-we-hire/accommodations
+                - text: for more information. If the country/region you’re applying in isn’t listed, please contact your Recruiting Partner.
+          - generic [ref=e59]:
+            - generic [ref=e60]:
+              - heading "Job details" [level=2] [ref=e62]
+              - list [ref=e63]:
+                - listitem [ref=e64]:
+                  - generic [ref=e65]:
+                    - img "location"
+                    - list [ref=e66]:
+                      - listitem [ref=e67]: BRA, SP, Sao Paulo
+                - listitem [ref=e68]:
+                  - generic [ref=e69]:
+                    - img "category"
+                    - list [ref=e70]:
+                      - link "Job category Finance and Global Business Services" [ref=e71] [cursor=pointer]:
+                        - /url: /en/job_categories/finance-accounting
+                        - text: Finance and Global Business Services
+            - generic [ref=e76]:
+              - heading "Share this job" [level=2] [ref=e79]
+              - list [ref=e81]:
+                - listitem [ref=e82]:
+                  - link "Share with facebook" [ref=e83] [cursor=pointer]:
+                    - /url: https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fwww.amazon.jobs%2Fen%2Fjobs%2F3192963%2Fsenior-accountant-latam-stores-accounting-team
+                    - text: b
+                - listitem [ref=e84]:
+                  - link "Share with linkedin" [ref=e85] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/shareArticle?mini=true&url=https%3A%2F%2Fwww.amazon.jobs%2Fen%2Fjobs%2F3192963%2Fsenior-accountant-latam-stores-accounting-team&title=Senior%20Accountant%2C%20LATAM%20Stores%20Accounting%20Team&summary=At%20Amazon%20Brazil%20we%20value%20Diversity%2C%20Equity%20and%20Inclusion%20%28DEI%29%20in%20all%20our%20job%20positions%2C%20therefore%2C%20we%20act%20intentionally%20so%20that%20our%20internal%20environment%20reflects%20the%20plurality%20of%20the%20businesses%20we%20play%20and%20the%20customers%20we%20serve.%3Cbr%2F%3EIn%20Brazil%2C...
+                    - text: d
+                - listitem [ref=e86]:
+                  - link "Share with twitter" [ref=e87] [cursor=pointer]:
+                    - /url: https://twitter.com/intent/tweet?text=https%3A%2F%2Fwww.amazon.jobs%2Fen%2Fjobs%2F3192963
+                    - text: j
+                - listitem [ref=e88]:
+                  - link "Share with email" [ref=e89] [cursor=pointer]:
+                    - /url: mailto:?body=https%3A%2F%2Fwww.amazon.jobs%2Fen%2Fjobs%2F3192963&subject=Take%20a%20look%20at%20this%20job
+                    - text: l
+                - listitem [ref=e90]:
+                  - link "Print this job" [ref=e91] [cursor=pointer]:
+                    - /url: "#"
+                    - text: m
+    - generic [ref=e92]:
+      - generic [ref=e95]:
+        - generic [ref=e96]: JOIN US ON
+        - list [ref=e97]:
+          - listitem [ref=e98]:
+            - link "Join us on facebook" [ref=e99] [cursor=pointer]:
+              - /url: https://www.facebook.com/InsideAmazon/?Amazon.jobs=footer
+              - text: b
+          - listitem [ref=e100]:
+            - link "Join us on linkedin" [ref=e101] [cursor=pointer]:
+              - /url: https://www.linkedin.com/company/amazon?Amazon.jobs=footer
+              - text: d
+          - listitem [ref=e102]:
+            - link "Join us on instagram" [ref=e103] [cursor=pointer]:
+              - /url: https://www.instagram.com/insideamazon/?Amazon.jobs=footer
+              - text: c
+          - listitem [ref=e104]:
+            - link "Join us on twitter" [ref=e105] [cursor=pointer]:
+              - /url: https://twitter.com/amazonnews?Amazon.jobs=footer
+              - text: j
+        - generic [ref=e106]:
+          - generic [ref=e107]: DOWNLOAD OUR APP
+          - list [ref=e108]:
+            - listitem [ref=e109]:
+              - link "Download Amazon A to Z from App Store" [ref=e110] [cursor=pointer]:
+                - /url: https://apple.co/4mW6qxK
+                - img [ref=e111]
+            - listitem [ref=e112]:
+              - link "Download Amazon A to Z from Google Play" [ref=e113] [cursor=pointer]:
+                - /url: https://bit.ly/46JGIYu
+                - img [ref=e114]
+      - generic [ref=e118]:
+        - generic [ref=e119]:
+          - text: Find Careers
+          - list [ref=e120]:
+            - listitem [ref=e121]:
+              - link "Job Categories" [ref=e122] [cursor=pointer]:
+                - /url: /content/en/job-categories
+            - listitem [ref=e123]:
+              - link "Teams" [ref=e124] [cursor=pointer]:
+                - /url: /content/en/teams
+            - listitem [ref=e125]:
+              - link "Locations" [ref=e126] [cursor=pointer]:
+                - /url: /content/en/locations
+            - listitem [ref=e127]:
+              - link "Military careers" [ref=e128] [cursor=pointer]:
+                - /url: /content/en/career-programs/military
+            - listitem [ref=e129]:
+              - link "Hourly" [ref=e130] [cursor=pointer]:
+                - /url: /content/en/hourly
+        - generic [ref=e131]:
+          - text: Working At Amazon
+          - list [ref=e132]:
+            - listitem [ref=e133]:
+              - link "Culture" [ref=e134] [cursor=pointer]:
+                - /url: /content/en/our-workplace
+            - listitem [ref=e135]:
+              - link "Benefits" [ref=e136] [cursor=pointer]:
+                - /url: /en/benefits
+            - listitem [ref=e137]:
+              - link "Amazon Newsletter" [ref=e138] [cursor=pointer]:
+                - /url: https://email.aboutamazon.com/l/637851/2020-10-29/pd87g?utm_campaign=newslettersubscribers&utm_content=amazonnewssignup&utm_medium=amazonjobs&utm_source=footer
+            - listitem [ref=e139]:
+              - link "Inclusive experiences" [ref=e140] [cursor=pointer]:
+                - /url: /content/en/our-workplace/inclusive-experiences
+            - listitem [ref=e141]:
+              - link "Leadership Principles" [ref=e142] [cursor=pointer]:
+                - /url: /content/en/our-workplace/leadership-principles
+        - generic [ref=e143]:
+          - text: Help
+          - list [ref=e144]:
+            - listitem [ref=e145]:
+              - link "FAQ" [ref=e146] [cursor=pointer]:
+                - /url: /content/en/faq
+            - listitem [ref=e147]:
+              - link "How We Hire" [ref=e148] [cursor=pointer]:
+                - /url: /content/en/how-we-hire#onlineapp
+            - listitem [ref=e149]:
+              - link "Application status" [ref=e150] [cursor=pointer]:
+                - /url: https://www.amazon.jobs/applicant/check_application_status
+            - listitem [ref=e151]:
+              - link "Accommodations" [ref=e152] [cursor=pointer]:
+                - /url: /content/en/how-we-hire/accommodations
+            - listitem [ref=e153]:
+              - link "Legal disclosures and notices" [ref=e154] [cursor=pointer]:
+                - /url: /content/en/legal-disclosures-and-notices
+        - combobox "English" [ref=e160] [cursor=pointer]: English
+      - generic [ref=e164]:
+        - generic [ref=e165]: Amazon is an equal opportunity employer and does not discriminate on the basis of protected veteran status, disability, or other legally protected status.
+        - generic [ref=e166]:
+          - link "Privacy and Data" [ref=e167] [cursor=pointer]:
+            - /url: /en/privacy_page
+          - link "Impressum" [ref=e168] [cursor=pointer]:
+            - /url: /en/impressum
+        - generic [ref=e169]: © 1996-2026, Amazon.com, Inc. or its affiliates

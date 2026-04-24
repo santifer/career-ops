@@ -1,0 +1,349 @@
+- generic [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#content"
+  - banner [ref=e3]:
+    - generic [ref=e4]:
+      - navigation "Global site navigation (external links)" [ref=e7]:
+        - list [ref=e8]:
+          - listitem [ref=e9]:
+            - list [ref=e10]:
+              - listitem [ref=e11]:
+                - link "Discover J&J" [ref=e14] [cursor=pointer]:
+                  - /url: https://www.jnj.com/
+                  - generic [ref=e15]: Discover J&J
+              - listitem [ref=e16]:
+                - link "Medicines & therapies" [ref=e19] [cursor=pointer]:
+                  - /url: https://innovativemedicine.jnj.com/
+                  - generic [ref=e20]: Medicines & therapies
+              - listitem [ref=e21]:
+                - link "Medical devices & technology" [ref=e24] [cursor=pointer]:
+                  - /url: https://thenext.jnjmedtech.com/
+                  - generic [ref=e25]: Medical devices & technology
+          - listitem [ref=e26]:
+            - list [ref=e27]:
+              - listitem [ref=e28]:
+                - link "Media (Opens in new window)" [ref=e31] [cursor=pointer]:
+                  - /url: https://www.jnj.com/media-center
+                  - generic [ref=e32]: Media
+              - listitem [ref=e33]:
+                - link "Contact (Opens in new window)" [ref=e36] [cursor=pointer]:
+                  - /url: https://www.careers.jnj.com/en/contact-us/
+                  - generic [ref=e37]: Contact
+              - listitem [ref=e38]:
+                - list [ref=e41]:
+                  - listitem [ref=e42]:
+                    - link "View saved jobs" [ref=e43] [cursor=pointer]:
+                      - /url: /en/jobs/saved-jobs/
+                      - img [ref=e44]
+                      - generic [ref=e46]: View saved jobs
+                      - generic [ref=e47]: "0"
+              - listitem [ref=e48]:
+                - navigation "Region selector" [ref=e51]:
+                  - list [ref=e52]:
+                    - listitem [ref=e53]:
+                      - button "English - Open modal to change region" [ref=e56] [cursor=pointer]:
+                        - text: English
+                        - img [ref=e57]
+              - listitem [ref=e59]:
+                - list [ref=e62]:
+                  - listitem [ref=e63]:
+                    - link "Login" [ref=e64] [cursor=pointer]:
+                      - /url: https://jj.wd5.myworkdayjobs.com/JJ/login/
+                      - img [ref=e65]
+                      - generic [ref=e67]: Login
+      - generic [ref=e68]:
+        - link "Johnson & Johnson Services, Inc." [ref=e70] [cursor=pointer]:
+          - /url: /en/
+          - img "Johnson & Johnson Services, Inc." [ref=e71]
+        - navigation [ref=e73]:
+          - list [ref=e74]:
+            - listitem [ref=e75]:
+              - generic [ref=e76]:
+                - generic [ref=e77] [cursor=pointer]:
+                  - generic [ref=e78]: Healthcare areas
+                  - generic:
+                    - button "Open Sub Navigation for Healthcare areas":
+                      - img
+                - list [ref=e79]:
+                  - listitem
+                  - listitem
+            - listitem [ref=e80]:
+              - generic [ref=e81]:
+                - generic [ref=e82] [cursor=pointer]:
+                  - generic [ref=e83]: News
+                  - generic:
+                    - button "Open Sub Navigation for News":
+                      - img
+                - list [ref=e84]:
+                  - listitem
+                  - listitem
+            - listitem [ref=e85]:
+              - generic [ref=e87] [cursor=pointer]:
+                - generic [ref=e88]: Investors
+                - generic:
+                  - button "Open Sub Navigation for Investors":
+                    - img
+            - listitem [ref=e89]:
+              - generic [ref=e91] [cursor=pointer]:
+                - generic [ref=e92]: Careers
+                - generic:
+                  - button "Open Sub Navigation for Careers":
+                    - img
+            - listitem [ref=e93]:
+              - generic [ref=e95] [cursor=pointer]:
+                - generic [ref=e96]: Our company
+                - generic:
+                  - button "Open Sub Navigation for Our company":
+                    - img
+        - button "Search J&J.com" [ref=e99] [cursor=pointer]:
+          - img [ref=e100]
+          - generic [ref=e102]: Search J&J.com
+  - main [ref=e103]:
+    - navigation "breadcrumbs" [ref=e105]:
+      - list [ref=e106]:
+        - listitem [ref=e107]:
+          - link "Home" [ref=e108] [cursor=pointer]:
+            - /url: https://www.jnj.com/
+            - generic [ref=e109]: Home
+        - listitem [ref=e110]:
+          - text: /
+          - link "Careers" [ref=e111] [cursor=pointer]:
+            - /url: /en/
+            - generic [ref=e112]: Careers
+        - listitem: / Page Not Found
+    - heading "Page Not Found" [level=1] [ref=e115]
+    - article [ref=e117]:
+      - heading "Sorry, the page you requested could not be found" [level=2] [ref=e118]
+      - paragraph [ref=e119]: "This might be because:"
+      - list [ref=e120]:
+        - listitem [ref=e121]: • You have typed the web address incorrectly, or
+        - listitem [ref=e122]: • the page you were looking for may have been moved, updated or deleted.
+      - heading "Did you mean...?" [level=2] [ref=e123]
+      - paragraph [ref=e124]: "We also found the following content pages that may be similar to what you were looking for:"
+      - list [ref=e125]:
+        - listitem [ref=e126]:
+          - text: •
+          - link "Jobs" [ref=e127] [cursor=pointer]:
+            - /url: /en/jobs/
+        - listitem [ref=e128]:
+          - text: •
+          - link "Full-time student jobs" [ref=e129] [cursor=pointer]:
+            - /url: /en/student-opportunities/full-time-student-jobs/
+        - listitem [ref=e130]:
+          - text: •
+          - link "North Carolina" [ref=e131] [cursor=pointer]:
+            - /url: /en/locations/north-america/north-carolina/
+        - listitem [ref=e132]:
+          - text: •
+          - link "Student opportunities" [ref=e133] [cursor=pointer]:
+            - /url: /en/student-opportunities/
+        - listitem [ref=e134]:
+          - text: •
+          - link "Why Johnson & Johnson is all-in for the Veteran Jobs Mission" [ref=e135] [cursor=pointer]:
+            - /url: /en/employee-stories/military/why-johnson-johnson-is-all-in-for-the-veteran-jobs-mission/
+      - heading "You may also try..." [level=2] [ref=e136]
+      - paragraph [ref=e137]: "If you still can't find what you want please try:"
+      - list [ref=e138]:
+        - listitem [ref=e139]:
+          - text: •
+          - link "Search jobs" [ref=e140] [cursor=pointer]:
+            - /url: /en/jobs/
+        - listitem [ref=e141]:
+          - text: •
+          - link "Sitemap" [ref=e142] [cursor=pointer]:
+            - /url: /en/sitemap/
+        - listitem [ref=e143]:
+          - text: •
+          - link "Global site search" [ref=e144] [cursor=pointer]:
+            - /url: /en/search/
+        - listitem [ref=e145]:
+          - text: •
+          - link "Careers" [ref=e146] [cursor=pointer]:
+            - /url: /en/
+  - contentinfo [ref=e147]:
+    - generic [ref=e148]:
+      - link "Johnson & Johnson Services, Inc." [ref=e150] [cursor=pointer]:
+        - /url: /en/
+        - img "Johnson & Johnson Services, Inc." [ref=e151]
+      - navigation "Footer navigation" [ref=e155]:
+        - list [ref=e156]:
+          - listitem [ref=e157]:
+            - generic [ref=e158]:
+              - heading "Locations" [level=2] [ref=e159]
+              - list [ref=e160]:
+                - listitem [ref=e161]:
+                  - link "North America" [ref=e162] [cursor=pointer]:
+                    - /url: /en/locations/north-america/
+                - listitem [ref=e163]:
+                  - link "Europe, Middle East & Africa" [ref=e164] [cursor=pointer]:
+                    - /url: /en/locations/emea/
+                - listitem [ref=e165]:
+                  - link "Asia Pacific" [ref=e166] [cursor=pointer]:
+                    - /url: /en/locations/asia-pacific/
+                - listitem [ref=e167]:
+                  - link "Latin America" [ref=e168] [cursor=pointer]:
+                    - /url: /en/locations/latin-america/
+          - listitem [ref=e169]:
+            - generic [ref=e170]:
+              - heading "Medicines & therapies" [level=2] [ref=e171]
+              - list [ref=e172]:
+                - listitem [ref=e173]:
+                  - link "Products (Opens in new window)" [ref=e174] [cursor=pointer]:
+                    - /url: https://innovativemedicine.jnj.com/our-innovation/our-products
+                    - text: Products
+                - listitem [ref=e175]:
+                  - link "Oncology (Opens in new window)" [ref=e176] [cursor=pointer]:
+                    - /url: https://innovativemedicine.jnj.com/our-innovation/focus-areas/oncology
+                    - text: Oncology
+                - listitem [ref=e177]:
+                  - link "Neuroscience (Opens in new window)" [ref=e178] [cursor=pointer]:
+                    - /url: https://innovativemedicine.jnj.com/our-innovation/focus-areas/neuroscience
+                    - text: Neuroscience
+                - listitem [ref=e179]:
+                  - link "Immunology (Opens in new window)" [ref=e180] [cursor=pointer]:
+                    - /url: https://innovativemedicine.jnj.com/our-innovation/focus-areas/immunology
+                    - text: Immunology
+                - listitem [ref=e181]:
+                  - link "Cardiopulmonary (Opens in new window)" [ref=e182] [cursor=pointer]:
+                    - /url: https://innovativemedicine.jnj.com/our-innovation/focus-areas/cardiopulmonary
+                    - text: Cardiopulmonary
+          - listitem [ref=e183]:
+            - generic [ref=e184]:
+              - heading "Medical devices & technology" [level=2] [ref=e185]
+              - list [ref=e186]:
+                - listitem [ref=e187]:
+                  - link "Products (Opens in new window)" [ref=e188] [cursor=pointer]:
+                    - /url: https://www.jnjmedtech.com/en-US/products
+                    - text: Products
+                - listitem [ref=e189]:
+                  - link "Cardiovascular (Opens in new window)" [ref=e190] [cursor=pointer]:
+                    - /url: https://thenext.jnjmedtech.com/healthcare-area/cardiovascular
+                    - text: Cardiovascular
+                - listitem [ref=e191]:
+                  - link "Orthopaedics (Opens in new window)" [ref=e192] [cursor=pointer]:
+                    - /url: https://thenext.jnjmedtech.com/healthcare-area/orthopaedics
+                    - text: Orthopaedics
+                - listitem [ref=e193]:
+                  - link "Surgery (Opens in new window)" [ref=e194] [cursor=pointer]:
+                    - /url: https://thenext.jnjmedtech.com/healthcare-area/surgery
+                    - text: Surgery
+                - listitem [ref=e195]:
+                  - link "Vision (Opens in new window)" [ref=e196] [cursor=pointer]:
+                    - /url: https://thenext.jnjmedtech.com/healthcare-area/vision
+                    - text: Vision
+          - listitem [ref=e197]:
+            - generic [ref=e198]:
+              - heading "About us" [level=2] [ref=e199]
+              - list [ref=e200]:
+                - listitem [ref=e201]:
+                  - link "Our company (Opens in new window)" [ref=e202] [cursor=pointer]:
+                    - /url: https://www.jnj.com/our-company
+                    - text: Our company
+                - listitem [ref=e203]:
+                  - link "Medicines & therapies (Opens in new window)" [ref=e204] [cursor=pointer]:
+                    - /url: https://innovativemedicine.jnj.com/
+                    - text: Medicines & therapies
+                - listitem [ref=e205]:
+                  - link "Medical devices & technology (Opens in new window)" [ref=e206] [cursor=pointer]:
+                    - /url: https://thenext.jnjmedtech.com/
+                    - text: Medical devices & technology
+                - listitem [ref=e207]:
+                  - link "Careers" [ref=e208] [cursor=pointer]:
+                    - /url: /en/
+                - listitem [ref=e209]:
+                  - link "Investors (Opens in new window)" [ref=e210] [cursor=pointer]:
+                    - /url: https://www.investor.jnj.com/overview/default.aspx
+                    - text: Investors
+                - listitem [ref=e211]:
+                  - link "Media (Opens in new window)" [ref=e212] [cursor=pointer]:
+                    - /url: https://www.jnj.com/media-center
+                    - text: Media
+          - listitem [ref=e213]:
+            - generic [ref=e214]:
+              - heading "Key links" [level=2] [ref=e215]
+              - list [ref=e216]:
+                - listitem [ref=e217]:
+                  - link "Terms of use (Opens in new window)" [ref=e218] [cursor=pointer]:
+                    - /url: https://www.jnj.com/legal-notice
+                    - text: Terms of use
+                - listitem [ref=e219]:
+                  - link "Privacy statement" [ref=e220] [cursor=pointer]:
+                    - /url: /en/careers-privacy-policy-english/
+                - listitem [ref=e221]:
+                  - link "Cookie policy" [ref=e222] [cursor=pointer]:
+                    - /url: /en/careers-cookie-policy-english/
+                - listitem [ref=e223]:
+                  - link "Cookies Settings" [ref=e224] [cursor=pointer]:
+                    - /url: "#onetrust-pc-sdk"
+                - listitem [ref=e225]:
+                  - link "Request disability accommodation (Opens in new window)" [ref=e226] [cursor=pointer]:
+                    - /url: https://www.careers.jnj.com/assistance
+                    - text: Request disability accommodation
+                - listitem [ref=e227]:
+                  - link "Hiring FAQs" [ref=e228] [cursor=pointer]:
+                    - /url: /en/how-we-hire/hiring-faqs/
+                - listitem [ref=e229]:
+                  - link "Employment policies (Opens in new window)" [ref=e230] [cursor=pointer]:
+                    - /url: https://www.jnj.com/about-jnj/policies-and-positions/our-position-on-employment-and-labor-rights
+                    - text: Employment policies
+                - listitem [ref=e231]:
+                  - link "E-Verify (Opens in new window)" [ref=e232] [cursor=pointer]:
+                    - /url: https://www.careers.jnj.com/media/npylwfhy/e-verify.pdf
+                    - text: E-Verify
+                - listitem [ref=e233]:
+                  - link "Recruitment fraud notice (Opens in new window)" [ref=e234] [cursor=pointer]:
+                    - /url: https://www.careers.jnj.com/en/recruitment-fraud-notice/
+                    - text: Recruitment fraud notice
+          - listitem [ref=e235]:
+            - generic [ref=e236]:
+              - heading "Get in touch" [level=2] [ref=e237]
+              - list [ref=e238]:
+                - listitem [ref=e239]:
+                  - link "Contact us" [ref=e240] [cursor=pointer]:
+                    - /url: /en/contact-us/
+                - listitem [ref=e241]:
+                  - list [ref=e243]:
+                    - listitem [ref=e244]:
+                      - link "(Follow us on) YouTube (Opens in new window)" [ref=e245] [cursor=pointer]:
+                        - /url: https://www.youtube.com/user/CareersAtJNJ
+                        - img [ref=e246]
+                    - listitem [ref=e248]:
+                      - link "(Follow us on) Facebook (Opens in new window)" [ref=e249] [cursor=pointer]:
+                        - /url: https://www.facebook.com/jnj/
+                        - img [ref=e250]
+                    - listitem [ref=e252]:
+                      - link "(Follow us on) Twitter X (Opens in new window)" [ref=e253] [cursor=pointer]:
+                        - /url: https://x.com/JNJNews
+                        - img [ref=e254]
+                    - listitem [ref=e256]:
+                      - link "(Follow us on) LinkedIn (Opens in new window)" [ref=e257] [cursor=pointer]:
+                        - /url: https://www.linkedin.com/company/johnson-&-johnson/
+                        - img [ref=e258]
+      - generic [ref=e260]:
+        - generic [ref=e261]:
+          - paragraph [ref=e262]:
+            - link "Equal Employment Opportunity Posters" [ref=e263] [cursor=pointer]:
+              - /url: https://www.eeoc.gov/poster#:~:text=The%20law%20requires%20an%20employer,pay%2C%20disability%20or%20genetic%20information%20
+            - text: "|"
+            - link "GINA Supplement" [ref=e264] [cursor=pointer]:
+              - /url: https://www.eeoc.gov/gina-genetic-information-nondiscrimination
+          - paragraph [ref=e265]:
+            - link "Do not sell or share my personal information" [ref=e266] [cursor=pointer]:
+              - /url: https://privacyportal.onetrust.com/webform/96f23ee1-34e3-41d6-8d5a-07f0d554152b/2fa51ddd-d62d-4d27-afc5-b20dea437786.html?WebsiteName=careers.jnj.com
+            - link "Limit the use of my sensitive personal information" [ref=e267] [cursor=pointer]:
+              - /url: https://privacyportal.onetrust.com/webform/96f23ee1-34e3-41d6-8d5a-07f0d554152b/2fa51ddd-d62d-4d27-afc5-b20dea437786.html?WebsiteName=careers.jnj.com
+        - paragraph [ref=e269]: © Johnson & Johnson and its affiliates 2026
+    - generic:
+      - link "Back to top":
+        - /url: "#"
+        - img
+  - dialog "We Value Your Privacy" [ref=e272]:
+    - generic [ref=e273]:
+      - generic [ref=e274]:
+        - generic:
+          - heading "We Value Your Privacy" [level=2] [ref=e275]
+          - generic [ref=e276]: We want to give you the best experience, so we’d like to use cookies to tell us how to improve our site, keep things relevant for you and enable social media functions and ads. You can adjust your preferences here or in “Cookie Settings”. Click “Accept” if you agree to all cookies, or “Reject” to continue with only necessary cookies. For more information (including data sharing with partners and international data transfers), see “Cookie Settings” and our Privacy Policy.
+      - generic [ref=e278]:
+        - button "Cookies Settings, Opens the preference center dialog" [active] [ref=e279] [cursor=pointer]: Cookies Settings
+        - button "Reject" [ref=e280] [cursor=pointer]
+        - button "Accept" [ref=e281] [cursor=pointer]

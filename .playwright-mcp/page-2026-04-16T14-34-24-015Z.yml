@@ -1,0 +1,25 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic:
+        - link "Skip to main content":
+          - /url: "#content"
+    - main [ref=e5]
+    - generic [ref=e7]:
+      - heading "How is your experience with this page?" [level=4] [ref=e8]
+      - link "Let us know" [ref=e9] [cursor=pointer]:
+        - /url: mailto:careers@sap.com?subject=SAP%20Careers%20page%20feedback&body=Page%20URL%3A%20https%3A%2F%2Fjobs.sap.com%2Ferrorpage%2F%3Ferrortype%3DException%0A%0AWhat%20were%20you%20trying%20to%20do%3F%0A%0AWhat%20worked%20or%20didn%E2%80%99t%20work%3F%0A%0AAnything%20else%20you%E2%80%99d%20like%20us%20to%20know%3F%0A
+  - dialog "consent banner":
+    - generic [ref=e13]:
+      - generic [ref=e14]:
+        - generic [ref=e16]: Este site usa cookies e tecnologias relacionadas, conforme descrito em nossa Declaração sobre Cookies, para finalidades que podem incluir operação do site, análises, experiência aprimorada do usuário ou publicidade. Você pode consentir com o uso dessas tecnologias ou definir as próprias preferências.
+        - generic [ref=e17]:
+          - button "Aceitar tudo" [active] [ref=e18] [cursor=pointer]
+          - button "Rejeitar tudo" [ref=e19] [cursor=pointer]
+          - button "Gerenciar configurações" [ref=e20] [cursor=pointer]
+      - generic [ref=e21]:
+        - link "Declaração de Privacidade" [ref=e22] [cursor=pointer]:
+          - /url: https://jobs.sap.com/content/SAP-Privacy-Statement-Careers/
+        - text: "|"
+        - link "Declaração sobre Cookies" [ref=e23] [cursor=pointer]:
+          - /url: https://www.sap.com/about/legal/privacy/cookies.html

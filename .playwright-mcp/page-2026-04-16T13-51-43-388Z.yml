@@ -1,0 +1,720 @@
+- generic [ref=e1]:
+  - generic:
+    - region "Mensagem toast":
+      - heading "0 notificações no total" [level=2] [ref=e3]
+      - alert
+  - region [ref=e4]
+  - generic [ref=e5]:
+    - generic [ref=e7]:
+      - button "Pular para pesquisa" [ref=e8] [cursor=pointer]:
+        - generic [ref=e9]: Pular para pesquisa
+      - button "Pular para conteúdo principal" [ref=e10] [cursor=pointer]:
+        - generic [ref=e11]: Pular para conteúdo principal
+      - button "Atalhos do teclado" [ref=e12] [cursor=pointer]:
+        - generic [ref=e13]: Atalhos do teclado
+      - button "Fechar menu pular" [ref=e14] [cursor=pointer]:
+        - img [ref=e15]
+        - generic [ref=e17]: Fechar menu pular
+    - banner "Navegação geral" [ref=e18]:
+      - generic [ref=e19]:
+        - link "LinkedIn" [ref=e20] [cursor=pointer]:
+          - /url: https://www.linkedin.com/feed/?nis=true
+          - img "LinkedIn" [ref=e23]:
+            - img [ref=e24]
+        - generic [ref=e28]:
+          - generic [ref=e31]:
+            - generic [ref=e32]:
+              - generic [ref=e33]: Pesquisar cargo, competência ou empresa
+              - img [ref=e34]
+            - combobox "Pesquisar cargo, competência ou empresa" [ref=e36]: controller OR controladoria OR contabilidade Brazil
+            - textbox [disabled]
+          - generic [ref=e39]:
+            - generic [ref=e40]:
+              - generic [ref=e41]: Cidade, estado ou código postal
+              - img [ref=e42]
+            - combobox "Cidade, estado ou código postal" [ref=e44]: Brasil
+            - textbox [disabled]
+          - button "Pesquisar" [ref=e45] [cursor=pointer]
+        - navigation "Navegação principal" [ref=e46]:
+          - list [ref=e47]:
+            - listitem [ref=e48]:
+              - link "atualizações do feed novas notificações Início" [ref=e49] [cursor=pointer]:
+                - /url: https://www.linkedin.com/feed/?nis=true&
+                - generic [ref=e50]:
+                  - generic [ref=e53]: atualizações do feed novas notificações
+                  - img [ref=e1233]
+                - generic "Início" [ref=e59]
+            - listitem [ref=e60]:
+              - link "1 atualização de rede nova notificação Minha rede" [ref=e61] [cursor=pointer]:
+                - /url: https://www.linkedin.com/mynetwork/?
+                - generic [ref=e62]:
+                  - generic [ref=e63]:
+                    - generic [ref=e64]: "1"
+                    - generic [ref=e65]: 1 atualização de rede nova notificação
+                  - img [ref=e1236]
+                - generic "Minha rede" [ref=e71]
+            - listitem [ref=e72]:
+              - link "Vagas" [ref=e73] [cursor=pointer]:
+                - /url: https://www.linkedin.com/jobs/?
+                - img [ref=e1239]
+                - generic "Vagas" [ref=e79]
+            - listitem [ref=e80]:
+              - link "Mensagens" [ref=e81] [cursor=pointer]:
+                - /url: https://www.linkedin.com/messaging/?
+                - img [ref=e1242]
+                - generic "Mensagens" [ref=e87]
+            - listitem [ref=e88]:
+              - link "14 novas notificações Notificações" [ref=e89] [cursor=pointer]:
+                - /url: https://www.linkedin.com/notifications/?
+                - generic [ref=e90]:
+                  - generic [ref=e91]:
+                    - generic [ref=e92]: "14"
+                    - generic [ref=e93]: 14 novas notificações
+                  - img [ref=e1245]
+                - generic "Notificações" [ref=e99]
+            - listitem [ref=e100]:
+              - button "Fernando Xavier Eu" [ref=e102] [cursor=pointer]:
+                - img "Fernando Xavier" [ref=e103]
+                - generic [ref=e104]:
+                  - text: Eu
+                  - img [ref=e105]
+            - listitem [ref=e107]:
+              - button "Para negócios" [ref=e109] [cursor=pointer]:
+                - img [ref=e113]
+                - generic "Para negócios" [ref=e115]:
+                  - text: Para negócios
+                  - img [ref=e116]
+            - listitem [ref=e118]:
+              - link "Veicular anúncio" [ref=e119] [cursor=pointer]:
+                - /url: https://www.linkedin.com/campaignmanager/accounts?
+                - img [ref=e1248]
+                - generic "Veicular anúncio" [ref=e126]
+    - generic [ref=e128]:
+      - region "filtros de pesquisa" [ref=e131]:
+        - heading "Pesquisa de vagas" [level=2] [ref=e132]
+        - generic [ref=e134]:
+          - generic [ref=e488]:
+            - list [ref=e489]:
+              - listitem [ref=e490]:
+                - 'button "Filtrar por: Vagas" [ref=e492] [cursor=pointer]':
+                  - text: Vagas
+                  - img [ref=e493]
+              - listitem [ref=e495]
+              - listitem [ref=e496]:
+                - button "Filtro Data do anúncio. O filtro Última semana está aplicado no momento. Clicar neste botão exibe todas as opções de filtro de Data do anúncio." [ref=e499] [cursor=pointer]:
+                  - text: Última semana
+                  - img [ref=e500]
+              - listitem [ref=e502]:
+                - button "Filtro Nível de experiência. Clicar neste botão exibe todas as opções de filtro de Nível de experiência." [ref=e505] [cursor=pointer]:
+                  - text: Nível de experiência
+                  - img [ref=e506]
+              - listitem [ref=e508]:
+                - button "Filtro Empresa. Clicar neste botão exibe todas as opções de filtro de Empresa." [ref=e511] [cursor=pointer]:
+                  - text: Empresa
+                  - img [ref=e512]
+            - generic [ref=e514]:
+              - button "Exibir todos os filtros. Ao clicar neste botão, todas as opções de filtro serão exibidas." [ref=e517] [cursor=pointer]: Todos os filtros
+              - button "Redefinir filtros aplicados" [ref=e518] [cursor=pointer]:
+                - generic [ref=e519]: Redefinir
+          - button "Experimente a nova pesquisa de vagas" [ref=e520] [cursor=pointer]:
+            - img [ref=e521]
+            - generic [ref=e523]: Experimente a nova pesquisa de vagas
+      - main [ref=e143]:
+        - generic [ref=e145]:
+          - generic [ref=e146]:
+            - generic [ref=e147]:
+              - generic [ref=e148]:
+                - 'generic "controller OR controladoria OR contabilidade Brazil em: Brasil" [ref=e149]'
+                - generic [ref=e153]: 2.533 resultados
+              - generic [ref=e156] [cursor=pointer]:
+                - generic [ref=e157]: Configurar alerta
+                - generic [ref=e158]: "Configurar alerta de vaga para Controller OR controladoria OR contabilidade Brazil em: Brazil"
+                - 'switch "Configurar alerta de vaga para Controller OR controladoria OR contabilidade Brazil em: Brazil"'
+            - generic [ref=e159]:
+              - button "Pular para detalhes da vaga ativa":
+                - generic [ref=e160] [cursor=pointer]: Pular para detalhes da vaga ativa
+              - button "Pular para resultado de pesquisa ativa":
+                - generic [ref=e161] [cursor=pointer]: Pular para resultado de pesquisa ativa
+              - list [ref=e162]:
+                - listitem [ref=e1251]:
+                  - generic [ref=e1253] [cursor=pointer]:
+                    - generic [ref=e1254]:
+                      - generic [ref=e1255]:
+                        - img "Logo da empresa Umicore" [ref=e1259]
+                        - generic [ref=e1260]:
+                          - link "Finance Sr. Director with verification" [active] [ref=e1262]:
+                            - /url: /jobs/view/4399728004/?eBP=BUDGET_EXHAUSTED_JOB&refId=hxtzTe%2FgH8SgShUFfgiKjg%3D%3D&trackingId=%2BXKE2eyoMnga1KTu0zr4GA%3D%3D&trk=flagship3_search_srp_jobs
+                            - generic [ref=e1263]:
+                              - strong [ref=e1264]: Finance Sr. Director
+                              - img [ref=e1266]
+                            - generic [ref=e1268]: Finance Sr. Director with verification
+                          - generic [ref=e1270]: Umicore
+                          - list [ref=e1272]:
+                            - listitem [ref=e1273]:
+                              - generic [ref=e1274]: Guarulhos, São Paulo, Brasil (Presencial)
+                      - generic [ref=e1280]:
+                        - generic [ref=e1281]: 28 ex-alunos trabalham aqui
+                        - generic [ref=e1282]: 28 ex-alunos da Fundação Getulio Vargas trabalham aqui
+                      - list [ref=e1283]:
+                        - listitem [ref=e1284]: Visualizado
+                        - listitem [ref=e1285]:
+                          - generic [ref=e1286]: Promovida
+                    - button "Fechar vaga Finance Sr. Director" [ref=e1290]:
+                      - img [ref=e1292]
+                - listitem [ref=e1295]:
+                  - generic [ref=e1297] [cursor=pointer]:
+                    - generic [ref=e1298]:
+                      - generic [ref=e1299]:
+                        - img "Logo da empresa Google" [ref=e1303]
+                        - generic [ref=e1304]:
+                          - link "Head of Ads Finance (English, Portuguese) with verification" [ref=e1306]:
+                            - /url: /jobs/view/4390114331/?eBP=BUDGET_EXHAUSTED_JOB&refId=hxtzTe%2FgH8SgShUFfgiKjg%3D%3D&trackingId=2FJZshH%2BpsT9qRw8Hjh1vA%3D%3D&trk=flagship3_search_srp_jobs
+                            - generic [ref=e1307]:
+                              - strong [ref=e1308]: Head of Ads Finance (English, Portuguese)
+                              - img [ref=e1310]
+                            - generic [ref=e1312]: Head of Ads Finance (English, Portuguese) with verification
+                          - generic [ref=e1314]: Google
+                          - list [ref=e1316]:
+                            - listitem [ref=e1317]:
+                              - generic [ref=e1318]: São Paulo e Região (Presencial)
+                      - generic [ref=e1324]:
+                        - generic [ref=e1325]: 445 ex-alunos trabalham aqui
+                        - generic [ref=e1326]: 445 ex-alunos da Fundação Getulio Vargas trabalham aqui
+                      - list [ref=e1327]:
+                        - listitem [ref=e1328]: Visualizado
+                        - listitem [ref=e1329]:
+                          - generic [ref=e1330]: Promovida
+                    - button "Fechar vaga Head of Ads Finance (English, Portuguese)" [ref=e1334]:
+                      - img [ref=e1336]
+                - listitem [ref=e1339]:
+                  - generic [ref=e1341] [cursor=pointer]:
+                    - generic [ref=e1342]:
+                      - generic [ref=e1343]:
+                        - img "Logo da empresa ROMACO GROUP" [ref=e1347]
+                        - generic [ref=e1348]:
+                          - link "Finanzfachkraft with verification" [ref=e1350]:
+                            - /url: /jobs/view/4402113791/?eBP=CwEAAAGdlo-MZh3unM0yQDbHH-8M86feygO7zoyCrea9rqu3gJjN5Pb3hHTxYJkFQ0xKazkCBfZKcpHdVkQgepEjXgEGjVOMa349R5TQEdIsEOnXUXUgwjogFedtPgSz2ZJALCH9CxCrjWQHo7gpRs9Kxltjxxl6BleMho1WDU9HfzWIwogMoY5ukyr2w_toMGLc1cun5RXHAMtMfFhqBkzdeP5B1wkDfJR4ZXqpbKCcXw8Vc271xfV_Z3dWqgyg4K54VJhHDY5VmH8cyENFstdFSK5CQ-Z6X_119_rT5XL4q6opEpHQhlamny8fQQyyeCNnYQs4Zp8f8V449Sii6spXxAD7xrzSYNRNKq3abp4JUTvydHIgrM2BN6xZ1yrZ7exFZJTlKs0-PUNjzHJiWGWOSFboIDL5tRJxdYcmeLn7uee-Pu1lIBNETF-UDKdZYZdpKBk-Z1lSif9orYXgk7c3EiWX_kcEk0Cqy5sHFZHkww&refId=hxtzTe%2FgH8SgShUFfgiKjg%3D%3D&trackingId=iAiLDp2TaXNgMmD%2FgzIlwg%3D%3D&trk=flagship3_search_srp_jobs
+                            - generic [ref=e1351]:
+                              - strong [ref=e1352]: Finanzfachkraft
+                              - img [ref=e1354]
+                            - generic [ref=e1356]: Finanzfachkraft with verification
+                          - generic [ref=e1358]: ROMACO GROUP
+                          - list [ref=e1360]:
+                            - listitem [ref=e1361]:
+                              - generic [ref=e1362]: São Paulo, Brasil (Híbrido)
+                      - generic [ref=e1364]:
+                        - img "Você seria um dos melhores candidatos" [ref=e1368]:
+                          - img [ref=e1369]
+                        - generic [ref=e1372]: Você seria um dos melhores candidatos
+                      - list [ref=e1373]:
+                        - listitem [ref=e1374]:
+                          - generic [ref=e1375]: Promovida
+                    - button "Fechar vaga Finanzfachkraft" [ref=e1379]:
+                      - img [ref=e1381]
+                - listitem [ref=e1384]:
+                  - generic [ref=e1386] [cursor=pointer]:
+                    - generic [ref=e1387]:
+                      - generic [ref=e1388]:
+                        - img "Logo da empresa TAG Software Group" [ref=e1392]
+                        - generic [ref=e1393]:
+                          - link "Finance Business Partner" [ref=e1395]:
+                            - /url: /jobs/view/4358784781/?eBP=CwEAAAGdlo-MZjN9DkhrGrrww8k97uqIEEKW9EXFe5g1ARTHgIAMlu0q_vk5taD8STqrFlq-aIbZeLPlcRSPCTTwXlNIav37cvVsz1oVHLA_acsjFuDJNZkgA4B-q3cnMBfdJpIUWgOGkk5DtzjsPZ3_X-gTW3c4aMoYitZaYG-wmGzw2wxcPV0Hoq9aFKy35qqYDM-DHXYT_D8zvGMQ3ZnkdbjIEsmnjtXp_3iiWth9yUda0sfMDYKrdcUCV8hayEHtfdAd6iKDTgBWEyT9fRb9AV6YFjPf2s039nY1DLU4JmtLyrK9K938E_QppF6bp7d5gqUr0UIX23Yrkzby2n1wQ3KApxNpVN3q92Nw6dqBLhkVrxaNuF0iXB7FkrUm82dNRWyRjcHniderdVox07rXpqZ7mAlCVzab6Z0J34rxVN_1-NjFJVOWEssYrecx2tHfEx2vgSdeC4SNlFURf-aP82bxsCK4UiEvfamLmxGg8Xenp8snoy2u&refId=hxtzTe%2FgH8SgShUFfgiKjg%3D%3D&trackingId=jmdqpRf9acWFjtvHEHEYQw%3D%3D&trk=flagship3_search_srp_jobs
+                            - strong [ref=e1397]: Finance Business Partner
+                            - generic [ref=e1398]: Finance Business Partner
+                          - generic [ref=e1400]: TAG Software Group
+                          - list [ref=e1402]:
+                            - listitem [ref=e1403]:
+                              - generic [ref=e1404]: Brasil (Remoto)
+                      - list [ref=e1405]:
+                        - listitem [ref=e1406]:
+                          - generic [ref=e1407]: Promovida
+                    - button "Fechar vaga Finance Business Partner" [ref=e1411]:
+                      - img [ref=e1413]
+                - listitem [ref=e1416]:
+                  - generic [ref=e1418] [cursor=pointer]:
+                    - generic [ref=e1419]:
+                      - generic [ref=e1420]:
+                        - img "Logo da empresa Natura" [ref=e1424]
+                        - generic [ref=e1425]:
+                          - link "Gerente de Revenue Growth Management (RGM) & Pricing with verification" [ref=e1427]:
+                            - /url: /jobs/view/4377773418/?eBP=CwEAAAGdlo-MZioyRsYiLmkyytzobriIcbgoL5xY-bYBDOM6Lf65YqE2RshAMP-RpK_2I_8tpNPxDXxmjulN4MrRz6Pi-iANVjMyWDQHsfiMGnudVJrpV9Y0Q98e88iX9rNB-MTuJ879AbZa6wBKFT6iX6KB_4ipmabHAnj07X1WiBRUUwWIjEFBpcpmYBcarw5QP9IEQDP1iIfkscxb4f_UGq2LNPUeIgz2Nnt5qIfSlA_9k1DcmphH80tw4ZU_oZvsMM0GUPjNiEmSRjCcL1eX7oNVNfDOPXSL4Jo49MpuzRatRGDaeKZOrRviph8kPJcUlsIylPtaxwj2sj6nyyz-kNnSt8IZLXQ9KP7CaAyGemLU8CQymJ-X5QoilrQaMMhyRtaUZMSgHurJP9xCR68yeAoTxb6Fjj6ZseswlQR1yz1UBkwkUavlytGsSbyreCHfUDMYd_ztM9UBjR8Y_2f71adEFU22chAohVs&refId=hxtzTe%2FgH8SgShUFfgiKjg%3D%3D&trackingId=DYyu7IHs4WFmaA6QfCYxyA%3D%3D&trk=flagship3_search_srp_jobs
+                            - generic [ref=e1428]:
+                              - strong [ref=e1429]: Gerente de Revenue Growth Management (RGM) & Pricing
+                              - img [ref=e1431]
+                            - generic [ref=e1433]: Gerente de Revenue Growth Management (RGM) & Pricing with verification
+                          - generic [ref=e1435]: Natura
+                          - list [ref=e1437]:
+                            - listitem [ref=e1438]:
+                              - generic [ref=e1439]: São Paulo, São Paulo, Brasil (Híbrido)
+                      - generic [ref=e1441]:
+                        - list [ref=e1444]:
+                          - listitem [ref=e1445]
+                          - listitem [ref=e1447]
+                        - generic [ref=e1449]: 2 conexões trabalham aqui
+                      - list [ref=e1450]:
+                        - listitem [ref=e1451]:
+                          - generic [ref=e1452]: Promovida
+                    - button "Fechar vaga Gerente de Revenue Growth Management (RGM) & Pricing" [ref=e1456]:
+                      - img [ref=e1458]
+                - listitem [ref=e1461]:
+                  - generic [ref=e1463] [cursor=pointer]:
+                    - generic [ref=e1464]:
+                      - generic [ref=e1465]:
+                        - img "Logo da empresa MAVI" [ref=e1469]
+                        - generic [ref=e1470]:
+                          - link "Senior US Accountant (Remote) with verification" [ref=e1472]:
+                            - /url: /jobs/view/4400585470/?eBP=CwEAAAGdlo-MZgckdUJmvCqYuEAYWXlhHWXo8OQELMjGFInemxUg64O4UnCw9fA8AWbaIKrdOUeMlJwKJgLB5ZEUfePW7sKN57aoDEt6B9roeD8I2xpoT8qdr8wAggWok4V0-lYL_sPN43hHJIKQPoDD0U45VQM53aWMUc2OidU7V93K85M7tyobIIp37eWN6gnwrRz1UbTd3LMsPJkyNqUWjgaI8I_ee1C6l-yiKBLXPbQwrA6f0drPowv50lreLCDcadMNXZB-uE1jdy5OGaFh0pKSvTYBNEs_ZlgU84Mk1uRjE-Sq31QdDtPABnHQlgmntMGAsoSks_YEWlaXQlefVR5-M19TOf7COcCFHpOnE08JRH5ImLI4GBeMW2BTR2iT5BbY9HZNegY0EXyKmEED5vpUL7CHt3_Z9I9z1fWo4jOmlEAPHKensg0jMBt5zllQ60bG_J0F40mvNLKBjqIo6stptp1J1U1CJaNtisR-3tfnQClyQcCd&refId=hxtzTe%2FgH8SgShUFfgiKjg%3D%3D&trackingId=%2BRM9rhDb%2B4WsL9vauZ7g2A%3D%3D&trk=flagship3_search_srp_jobs
+                            - generic [ref=e1473]:
+                              - strong [ref=e1474]: Senior US Accountant (Remote)
+                              - img [ref=e1476]
+                            - generic [ref=e1478]: Senior US Accountant (Remote) with verification
+                          - generic [ref=e1480]: MAVI
+                          - list [ref=e1482]:
+                            - listitem [ref=e1483]:
+                              - generic [ref=e1484]: Brasil (Remoto)
+                      - generic [ref=e1486]:
+                        - img "Sofía Gurría" [ref=e1490]
+                        - generic [ref=e1491]: 1 conexão trabalha aqui
+                      - list [ref=e1492]:
+                        - listitem [ref=e1493]:
+                          - generic [ref=e1494]: Promovida
+                    - button "Fechar vaga Senior US Accountant (Remote)" [ref=e1498]:
+                      - img [ref=e1500]
+                - listitem [ref=e1503]:
+                  - generic [ref=e1505] [cursor=pointer]:
+                    - generic [ref=e1506]:
+                      - generic [ref=e1507]:
+                        - img "Logo da empresa Vivara" [ref=e1511]
+                        - generic [ref=e1512]:
+                          - link "Especialista de FP&A" [ref=e1514]:
+                            - /url: /jobs/view/4400584182/?eBP=CwEAAAGdlo-MZtdq9vR-lBmHOweUhiQAORKqy5sNT9-HeosR3Kv1BRdg8ZelRGTWDimM2mzuEn1owq8Zh_xOs8MIzTIs6Fwo7NYwzkoItwXOSJtwZdDXMiXKxAxHr_CmPoK2X0GhW7EJiFsbvwMZBmQ-5xTyjMK39mk_vzoeZSM2nZZVIgFFnGHNCJav_5q5ansMaHAkJtW00dCKwDAVY7XXxUmsMFd71ElZRFn0ElwzApGJ6fdpLrXoZKIfr9f-gdlLnnplODhpB92j8lSvafFr5gL5y1RIugWD78zit9xfusMiejNpidvGT7QElN_rsYd7VB-9owMuVQn3RbkAwiXPYd4Q9d_ciyP1HFLhoy9r9hCOA9pqL2PPjWs4RSh9lGT8RSmb3c_gS2Hy4YN93odP23QAb9iEqZNWfIYZbze6q1LYqUJePn00ZJ39DyXs0FPIjV2pf3obqqdliod3yIPWc614pWVlmqMGhFSUTipGebbrSSrlU0alssQrhcKyszCe7XUCpw&refId=hxtzTe%2FgH8SgShUFfgiKjg%3D%3D&trackingId=0CJ9wFvV8pQuz1vlbhiWyg%3D%3D&trk=flagship3_search_srp_jobs
+                            - strong [ref=e1516]: Especialista de FP&A
+                            - generic [ref=e1517]: Especialista de FP&A
+                          - generic [ref=e1519]: Vivara
+                          - list [ref=e1521]:
+                            - listitem [ref=e1522]:
+                              - generic [ref=e1523]: São Paulo, São Paulo, Brasil (Presencial)
+                      - generic [ref=e1525]:
+                        - img "João Tadeu da Purificação Alcides" [ref=e1529]
+                        - generic [ref=e1530]: 1 conexão trabalha aqui
+                      - list [ref=e1531]:
+                        - listitem [ref=e1532]:
+                          - generic [ref=e1533]: Promovida
+                        - listitem [ref=e1534]:
+                          - img [ref=e1535]:
+                            - img [ref=e1536]
+                          - generic [ref=e1538]: Candidatura simplificada
+                    - button "Fechar vaga Especialista de FP&A" [ref=e1542]:
+                      - img [ref=e1544]
+                - listitem [ref=e1547]
+                - listitem [ref=e1548]
+                - listitem [ref=e1549]
+                - listitem [ref=e1550]
+                - listitem [ref=e1551]
+                - listitem [ref=e1552]
+                - listitem [ref=e1553]
+                - listitem [ref=e1554]
+                - listitem [ref=e1555]
+                - listitem [ref=e1556]
+                - listitem [ref=e1557]
+                - listitem [ref=e1558]
+                - listitem [ref=e1559]
+                - listitem [ref=e1560]
+                - listitem [ref=e1561]
+                - listitem [ref=e1562]
+                - listitem [ref=e1563]
+                - listitem [ref=e1564]
+              - generic [ref=e344]:
+                - generic [ref=e345]:
+                  - button "Ver página anterior" [ref=e1565] [cursor=pointer]:
+                    - img [ref=e1566]
+                    - generic [ref=e1568]: Anterior
+                  - list [ref=e347]:
+                    - listitem [ref=e865]:
+                      - button "Página 1" [ref=e866] [cursor=pointer]: "1"
+                    - listitem [ref=e867]:
+                      - button "Página 2" [ref=e868] [cursor=pointer]: "2"
+                    - listitem [ref=e869]:
+                      - button "Página 3" [ref=e870] [cursor=pointer]: "3"
+                    - listitem [ref=e871]:
+                      - button "Página 4" [ref=e872] [cursor=pointer]: …
+                  - button "Ver próxima página" [ref=e873] [cursor=pointer]:
+                    - img [ref=e874]
+                    - generic [ref=e876]: Avançar
+                - generic "Conteúdo do rodapé do LinkedIn" [ref=e351]
+          - generic "Finance Sr. Director" [ref=e1569]:
+            - generic [ref=e359]:
+              - generic [ref=e363]:
+                - generic [ref=e364]:
+                  - generic [ref=e365]:
+                    - link "Logo da empresa Umicore" [ref=e1570] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/company/umicore/life
+                      - img "Logo da empresa Umicore" [ref=e1573]
+                    - link "Umicore" [ref=e1575] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/company/umicore/life
+                  - generic [ref=e366]:
+                    - button "Compartilhar" [ref=e369] [cursor=pointer]:
+                      - img [ref=e370]
+                      - generic [ref=e372]: Compartilhar
+                    - button "Exibir mais opções" [ref=e374] [cursor=pointer]:
+                      - img [ref=e375]
+                      - generic [ref=e377]: Exibir mais opções
+                - generic [ref=e379]:
+                  - heading "Finance Sr. Director" [level=1] [ref=e1576]:
+                    - link "Finance Sr. Director" [ref=e1577] [cursor=pointer]:
+                      - /url: /jobs/view/4399728004/?alternateChannel=search&eBP=BUDGET_EXHAUSTED_JOB&refId=hxtzTe%2FgH8SgShUFfgiKjg%3D%3D&trackingId=%2BXKE2eyoMnga1KTu0zr4GA%3D%3D&trk=d_flagship3_search_srp_jobs
+                  - button "Ver módulo de contratação verificada" [ref=e1579] [cursor=pointer]:
+                    - img [ref=e1582]
+                - generic [ref=e1585]:
+                  - generic [ref=e1586]: Guarulhos, São Paulo, Brasil
+                  - generic [ref=e1587]: ·
+                  - generic [ref=e1589]: há 2 dias
+                  - generic [ref=e1590]: ·
+                  - generic [ref=e1591]: Mais de 100 pessoas clicaram em Candidatar-se
+                  - paragraph [ref=e1592]:
+                    - generic [ref=e1593]: Promovida por recrutador
+                    - generic [ref=e1594]: ·
+                    - generic [ref=e1595]: Respostas gerenciadas fora do LinkedIn
+                - generic [ref=e1596]:
+                  - button "Corresponde às suas preferências de vaga e o tipo de local de trabalho é Presencial." [ref=e1597] [cursor=pointer]:
+                    - strong [ref=e1600]:
+                      - img [ref=e1602]
+                      - text: Presencial
+                    - generic [ref=e1604]: Corresponde às suas preferências de vaga e o tipo de local de trabalho é Presencial.
+                  - button "Corresponde às suas preferências de vaga e o tipo de vaga é Tempo integral." [ref=e1605] [cursor=pointer]:
+                    - strong [ref=e1608]:
+                      - img [ref=e1610]
+                      - text: Tempo integral
+                    - generic [ref=e1612]: Corresponde às suas preferências de vaga e o tipo de vaga é Tempo integral.
+                - generic [ref=e1613]:
+                  - link "Candidatar-se à vaga de Finance Sr. Director no site da empresa" [ref=e1616] [cursor=pointer]:
+                    - img [ref=e1617]
+                    - generic [ref=e1619]: Candidatar-se
+                  - button "Salvar Finance Sr. Director na Umicore" [ref=e1620] [cursor=pointer]:
+                    - generic [ref=e1621]: Salvar
+                    - generic [ref=e1622]: Salvar Finance Sr. Director na Umicore
+              - generic [ref=e384]:
+                - heading "Pessoas que você pode contatar" [level=2] [ref=e1623]
+                - generic [ref=e1626]:
+                  - generic [ref=e1627]:
+                    - generic [ref=e1628]:
+                      - list [ref=e1629]:
+                        - listitem [ref=e1630]:
+                          - img "Logo de Fundação Getulio Vargas" [ref=e1632]
+                      - generic [ref=e1633]: Logo de Fundação Getulio Vargas
+                    - generic [ref=e1634]: Ex-alunos da instituição de ensino Fundação Getulio Vargas
+                  - button "Exibir todos" [ref=e1635] [cursor=pointer]:
+                    - generic [ref=e1636]: Exibir todos
+              - article [ref=e394]:
+                - generic [ref=e396]:
+                  - heading "Sobre a vaga" [level=2] [ref=e397]
+                  - paragraph [ref=e1637]:
+                    - strong [ref=e1639]: About Umicore
+                    - text: Reducing harmful vehicle emissions. Giving new life to used metals. Powering the cars of the future. As a global materials and technology group, we pioneer approaches to sustainability that continue to offer customers materials and solutions that are essential to everyday life. We aim to be a clear world leader in materials for clean mobility and recycling and have turned our sustainability approach into an even greater competitive advantage. To achieve this, however, we know we can’t stand still. We know we need to find new ways to do things, discover new solutions and develop new ideas. It’s why we invest so much in research & development. It’s why we push ourselves to tackle increasingly complex challenges. It’s why we strive to create a collaborative environment in which we can all succeed. It’s why we are looking for talented individuals to shape tomorrow by leading the way today. In an environment like this, imagine what you could do?
+                    - strong [ref=e1641]: About Finance
+                    - text: A global organization. It’s not just those in our industrial sites and technical center that are vital to Umicore’s growth. Across our support functions we ensure that we continue to grow and evolve – whether it’s by making sure our decisions are commercially viable, enhancing our reputation, building new customer relationships or finding the right people who can build on what we’ve already achieved. The variety of our work means we cannot stand still. We need to find new ways to do things, discover new solutions and develop new ideas. Which is where you come in.
+                    - strong [ref=e1643]: What You Will Be Doing
+                    - text: Executes and/or manages work in a range of Finance topics. Responsible for financial planning, analysis, and/or general accounting and controlling. Support the business as business partner and ensures the financial health and financial stability of the organization, aligning risk-taking decisions with long-term organizational goals.
+                    - strong [ref=e1645]: Key Accountabilities
+                    - listitem [ref=e1646]
+                    - text: Leads and develops the local Finance team, ensuring clear objectives, performance feedback, and capability building across FP&A, Accounting, Tax, and Compliance.
+                    - text: Translates corporate and functional priorities into actionable local plans, aligning resources and removing delivery obstacles to meet business objectives.
+                    - text: Delivers accurate and timely financial planning, budgeting, and forecasting, providing insights to support local decision-making and performance management.
+                    - text: Ensures robust accounting, tax compliance, and statutory reporting, maintaining adherence to local regulations and corporate standards.
+                    - text: Implements and monitors governance and internal controls, proactively identifying risks and ensuring corrective actions are taken promptly.
+                    - text: Drives process standardization and digital enablement at local level, leveraging available tools to improve efficiency and data accuracy.
+                    - text: Partners with business leaders and cross-functional teams, acting as a trusted advisor to influence decisions and resolve escalations.
+                    - text: Promotes continuous improvement and best practices, fostering a culture of accountability and operational excellence within the finance function.
+                    - strong [ref=e1648]: Who We Are Looking For
+                    - text: Manages several related or unrelated departments of a small sub-function.
+                    - text: Focuses on tactical and operational plans with short-to mid-term timeframe.
+                    - text: Lead negotiations on divergent issues that have an impact on the function or on business results.
+                    - text: Projects faced hold greater complexity in terms of issues or problems encountered or organizational complexity.
+                    - list [ref=e1650]:
+                      - listitem [ref=e1651]: Academic formation in Accounting/Tax/Law.
+                      - listitem [ref=e1652]: "Expert level in the following skills:"
+                      - listitem [ref=e1653]: Finance Modeling
+                      - listitem [ref=e1654]: Financial Analysis
+                      - listitem [ref=e1655]: Program Management
+                      - listitem [ref=e1656]: Budgeting
+                      - listitem [ref=e1657]: Forecasting
+                      - listitem [ref=e1658]: VarianceAnalysis
+                      - listitem [ref=e1659]: Cost Accounting
+                      - listitem [ref=e1660]: Accountability
+                    - strong [ref=e1662]: What We Offer
+                    - text: We aim to lead the way. Not just for our customers, but for our employees too. That is why we strive to create a collaborative environment in which we can all succeed, and a culture through which we can all share ideas, develop our expertise and advance our careers. We engage in building an inclusive work culture that offers equal opportunities for all employees irrespective of their diverse backgrounds. As you would expect from a world-leading organization, we will also reward your contribution with a competitive salary and benefits. With all this and more, imagine what you could do?
+                    - text: We are committed to bringing diversity to our teams, if you are part of a minority group, please know that we are specifically looking for you. Our aim is to ensure that all voices are heard and fairly represented and we need input from people from all different backgrounds. We count on your participation to build an inclusive and diverse environment.
+                    - strong [ref=e1664]: IF WE CAN BECOME A WORLD LEADER IN RECYCLING AND CLEAN MOBILITY, IMAGINE WHAT YOU COULD DO ?
+              - generic [ref=e1665]:
+                - generic [ref=e1666]:
+                  - generic [ref=e1667]:
+                    - img "Premium" [ref=e1669]:
+                      - img [ref=e1670]
+                    - button "Saiba mais sobre estatísticas sobre candidatos" [ref=e1673] [cursor=pointer]:
+                      - img [ref=e1674]
+                  - heading "Veja como sua candidatura se compara à de outras pessoas" [level=2] [ref=e1676]
+                  - generic [ref=e1678]:
+                    - heading "Pessoas que clicaram em Candidate-se" [level=3] [ref=e1679]
+                    - list [ref=e1680]:
+                      - listitem [ref=e1681]:
+                        - generic [ref=e1682]: "480"
+                        - generic [ref=e1683]: no total
+                      - listitem [ref=e1684]:
+                        - generic [ref=e1685]: "366"
+                        - generic [ref=e1686]: no último dia
+                  - generic [ref=e1687]:
+                    - generic [ref=e1688]:
+                      - heading "Nível de experiência do candidato" [level=3] [ref=e1689]
+                      - list [ref=e1690]:
+                        - listitem [ref=e1691]:
+                          - paragraph [ref=e1692]: 38% de candidatos com nível Diretor
+                          - progressbar [ref=e1693]
+                        - listitem [ref=e1694]:
+                          - paragraph [ref=e1695]: 21% de candidatos com nível Sênior
+                          - progressbar [ref=e1696]
+                        - listitem [ref=e1697]:
+                          - paragraph [ref=e1698]: 20% de candidatos com nível Dirigente (CEO, COO, CFO, CMO)
+                          - progressbar [ref=e1699]
+                        - listitem [ref=e1700]:
+                          - paragraph [ref=e1701]: 5% de candidatos com nível Vice-Presidente
+                          - progressbar [ref=e1702]
+                    - generic [ref=e1703]:
+                      - heading "Nível de formação acadêmica do candidato" [level=3] [ref=e1704]
+                      - list [ref=e1705]:
+                        - listitem [ref=e1706]:
+                          - generic [ref=e1707]: 67%
+                          - generic [ref=e1708]: tem Pós-graduação Lato Sensu - MBA (semelhante ao seu)
+                        - listitem [ref=e1709]:
+                          - generic [ref=e1710]: 17%
+                          - generic [ref=e1711]: tem Pós-graduação Stricto Sensu - Mestrado
+                        - listitem [ref=e1712]:
+                          - generic [ref=e1713]: 10%
+                          - generic [ref=e1714]: tem Bacharelado
+                        - listitem [ref=e1715]:
+                          - generic [ref=e1716]: 6%
+                          - generic [ref=e1717]: tem outros diplomas
+                - generic [ref=e1718]:
+                  - generic [ref=e1719]:
+                    - img "Premium" [ref=e1720]:
+                      - img [ref=e1721]
+                    - button "Saiba mais sobre estatísticas sobre empresas" [ref=e1724] [cursor=pointer]:
+                      - img "Saiba mais sobre estatísticas sobre empresas" [ref=e1725]
+                  - heading "Estatísticas exclusivas de pessoas à procura de emprego sobre a Umicore" [level=2] [ref=e1727]
+                  - heading "Com tecnologia do Bing" [level=3] [ref=e1728]
+                  - generic [ref=e1729]:
+                    - generic [ref=e1730]:
+                      - heading "Áreas de foco da empresa" [level=3] [ref=e1731]
+                      - generic [ref=e1733]:
+                        - list [ref=e1734]:
+                          - listitem [ref=e1735]:
+                            - strong [ref=e1736]: "Expansion of recycling capabilities:"
+                            - text: Umicore is focusing on expanding its recycling capabilities, especially for precious metals and battery materials, to further close the loop in the circular economy.
+                          - listitem [ref=e1737]:
+                            - strong [ref=e1738]: "Battery cathode materials:"
+                            - text: Umicore's 2028 roadmap prioritizes battery cathode materials to enable clean mobility transitions while reducing primary resource dependence.
+                        - button "exibir mais revela visualmente conteúdos que já foram detectados por leitores de tela" [ref=e1739] [cursor=pointer]:
+                          - generic [ref=e1740]: exibir mais
+                    - generic [ref=e1741]:
+                      - generic [ref=e1743]: "Fontes: swottemplate.com mais 1"
+                      - generic [ref=e1745]:
+                        - button "Marcar feedback como bom" [ref=e1746] [cursor=pointer]:
+                          - img [ref=e1747]
+                        - button "Marcar feedback como ruim" [ref=e1750] [cursor=pointer]:
+                          - img [ref=e1751]
+                  - generic [ref=e1754]:
+                    - generic [ref=e1755]:
+                      - heading "Contratações e número de funcionários" [level=3] [ref=e1756]
+                      - paragraph [ref=e1757]:
+                        - generic [ref=e1758]:
+                          - text: "Expanding operations and engineering: The 'Operations' and 'Engineering' departments have shown a 2% increase in employee count, indicating a focus on scaling up these critical areas, which could suggest opportunities for investment in operational efficiency and engineering innovation. Growing sales and administrative functions: The 'Sales' and 'Administrative' departments have experienced a 4% increase in headcount, highlighting a strategic push towards enhancing sales capabilities and administrative support, potentially leading to increased revenue and streamlined operations. Focus on quality assurance and purchasing: The 'Quality Assurance' and 'Purchasing' departments have both seen a 5% increase in employee count, suggesting an emphasis on improving product quality and procurement processes, which could drive better product offerings and cost efficiencies. Decline in research and customer support: The 'Research' and 'Customer Success and Support' departments have experienced a 5% decrease in headcount, indicating potential shifts in focus away from these areas, which might affect innovation and customer satisfaction in the short term."
+                          - generic [ref=e1759]:
+                            - generic [ref=e1760]: …
+                            - button "Exibir mais sobre Contratações e número de funcionários" [ref=e1761] [cursor=pointer]: exibir mais
+                    - generic [ref=e1763]:
+                      - button "Marcar feedback como bom" [ref=e1764] [cursor=pointer]:
+                        - img [ref=e1765]
+                      - button "Marcar feedback como ruim" [ref=e1768] [cursor=pointer]:
+                        - img [ref=e1769]
+                  - generic [ref=e1772]:
+                    - heading "Última tendência de contratação" [level=3] [ref=e1773]
+                    - generic [ref=e1774]:
+                      - list [ref=e1775]:
+                        - listitem [ref=e1776]:
+                          - paragraph [ref=e1777]: "6.655"
+                          - paragraph [ref=e1778]: funcionários no total
+                        - listitem [ref=e1779]:
+                          - paragraph [ref=e1780]: 1%
+                          - paragraph [ref=e1782]: toda a empresa
+                          - paragraph [ref=e1783]: Crescimento em 2 anos
+                          - generic [ref=e1784]: 1% de aumento
+                        - listitem [ref=e1785]:
+                          - paragraph [ref=e1786]: 0%
+                          - paragraph [ref=e1788]: Financeiro
+                          - paragraph [ref=e1789]: Crescimento em 2 anos
+                          - generic [ref=e1790]: Nenhuma alteração
+                      - region "Chart. Highcharts interactive chart." [ref=e1793]:
+                        - region "Chart screen reader information.":
+                          - generic [ref=e1794]:
+                            - heading "Chart" [level=4] [ref=e1795]
+                            - generic [ref=e1796]: Chart with 25 data points.
+                            - generic [ref=e1797]: "The chart has 1 X axis displaying Time. Range: 2023-12-13 09:00:00 to 2026-05-07 09:00:00."
+                            - generic [ref=e1798]: "The chart has 1 Y axis displaying values. Range: 0 to 7500."
+                        - img "Interactive chart" [ref=e1803]:
+                          - generic [ref=e1815]:
+                            - img "1. Sunday, Mar 31, 21:00, 6.594 funcionários" [ref=e1816]
+                            - img "2. Tuesday, Apr 30, 21:00, 6.646 funcionários, increase 1% do mês passado" [ref=e1817]
+                            - img "3. Friday, May 31, 21:00, 6.642 funcionários, neutral 0% do mês passado" [ref=e1818]
+                            - img "4. Sunday, Jun 30, 21:00, 6.645 funcionários, neutral 0% do mês passado" [ref=e1819]
+                            - img "5. Wednesday, Jul 31, 21:00, 6.616 funcionários, neutral 0% do mês passado" [ref=e1820]
+                            - img "6. Saturday, Aug 31, 21:00, 6.623 funcionários, neutral 0% do mês passado" [ref=e1821]
+                            - img "7. Monday, Sep 30, 21:00, 6.617 funcionários, neutral 0% do mês passado" [ref=e1822]
+                            - img "8. Thursday, Oct 31, 21:00, 6.594 funcionários, neutral 0% do mês passado" [ref=e1823]
+                            - img "9. Saturday, Nov 30, 21:00, 6.544 funcionários, decrease 1% do mês passado" [ref=e1824]
+                            - img "10. Tuesday, Dec 31, 21:00, 6.567 funcionários, neutral 0% do mês passado" [ref=e1825]
+                            - img "11. Friday, Jan 31, 21:00, 6.570 funcionários, neutral 0% do mês passado" [ref=e1826]
+                            - img "12. Friday, Feb 28, 21:00, 6.542 funcionários, neutral 0% do mês passado" [ref=e1827]
+                            - img "13. Monday, Mar 31, 21:00, 6.550 funcionários, neutral 0% do mês passado" [ref=e1828]
+                            - img "14. Wednesday, Apr 30, 21:00, 6.552 funcionários, neutral 0% do mês passado" [ref=e1829]
+                            - img "15. Saturday, May 31, 21:00, 6.549 funcionários, neutral 0% do mês passado" [ref=e1830]
+                            - img "16. Monday, Jun 30, 21:00, 6.558 funcionários, neutral 0% do mês passado" [ref=e1831]
+                            - img "17. Thursday, Jul 31, 21:00, 6.537 funcionários, neutral 0% do mês passado" [ref=e1832]
+                            - img "18. Sunday, Aug 31, 21:00, 6.536 funcionários, neutral 0% do mês passado" [ref=e1833]
+                            - img "19. Tuesday, Sep 30, 21:00, 6.544 funcionários, neutral 0% do mês passado" [ref=e1834]
+                            - img "20. Friday, Oct 31, 21:00, 6.556 funcionários, neutral 0% do mês passado" [ref=e1835]
+                            - img "21. Sunday, Nov 30, 21:00, 6.572 funcionários, neutral 0% do mês passado" [ref=e1836]
+                            - img "22. Wednesday, Dec 31, 21:00, 6.618 funcionários, increase 1% do mês passado" [ref=e1837]
+                            - img "23. Saturday, Jan 31, 21:00, 6.635 funcionários, neutral 0% do mês passado" [ref=e1838]
+                            - img "24. Saturday, Feb 28, 21:00, 6.657 funcionários, neutral 0% do mês passado" [ref=e1839]
+                            - img "25. Tuesday, Mar 31, 21:00, 6.655 funcionários, neutral 0% do mês passado" [ref=e1840]
+                          - generic [ref=e1841]:
+                            - generic [ref=e1842]: abr. de 2024
+                            - generic [ref=e1843]: out. de 2024
+                            - generic [ref=e1844]: abr. de 2025
+                            - generic [ref=e1845]: out. de 2025
+                            - generic [ref=e1846]: abr. de 2026
+                          - generic [ref=e1847]:
+                            - generic [ref=e1848]: "0"
+                            - generic [ref=e1849]: "2.500"
+                            - generic [ref=e1850]: "5.000"
+                            - generic [ref=e1851]: "7.500"
+                        - generic [ref=e1853]: End of interactive chart.
+                      - generic [ref=e1854]:
+                        - img [ref=e1855]
+                        - text: Tempo médio do funcionário na empresa ‧
+                        - strong [ref=e1858]: 7,3 anos
+                  - generic [ref=e1859]:
+                    - heading "A empresa Umicore contrata pessoas de algumas dessas empresas e instituições de ensino" [level=3] [ref=e1860]
+                    - list [ref=e1862]:
+                      - listitem [ref=e1863]:
+                        - generic [ref=e1864]:
+                          - figure [ref=e1865]:
+                            - img "Fundação Getulio Vargas" [ref=e1866]
+                          - paragraph [ref=e1867]:
+                            - text: A Umicore contratou 28 pessoas de Fundação Getulio Vargas.
+                            - link "Ver todas" [ref=e1868] [cursor=pointer]:
+                              - /url: https://www.linkedin.com/search/results/people/?origin=JOB_PAGE_CANNED_SEARCH&currentCompany=166583&schoolFilter=8175
+                              - strong [ref=e1869]: Ver todas
+                  - generic [ref=e1870]:
+                    - generic [ref=e1871]:
+                      - heading "Concorrência" [level=3] [ref=e1872]
+                      - paragraph [ref=e1873]:
+                        - generic [ref=e1874]:
+                          - text: Umicore N.V. is a leading player in the circular materials technology sector, focusing on sustainable value creation through the development, production, and recycling of advanced materials. The company is strategically positioned in the EV battery materials market, clean mobility, and recycling, facing competition from companies like Veolia Environnement S.A., Aurubis AG, and Li-Cycle. Umicore's competitive edge lies in its extensive expertise in material science, chemistry, and metallurgy, as well as its commitment to the circular economy and sustainable innovation.
+                          - generic [ref=e1875]:
+                            - generic [ref=e1876]: …
+                            - button "Exibir mais sobre Concorrência" [ref=e1877] [cursor=pointer]: exibir mais
+                      - generic [ref=e1878]:
+                        - link "Li-Cycle" [ref=e1880] [cursor=pointer]:
+                          - /url: https://www.linkedin.com/company/li-cycle/
+                          - generic "Li-Cycle" [ref=e1883]
+                        - link "Aurubis" [ref=e1886] [cursor=pointer]:
+                          - /url: https://www.linkedin.com/company/aurubis/
+                          - generic "Aurubis" [ref=e1889]
+                    - generic [ref=e1891]:
+                      - generic [ref=e1893]: "Fontes: menafn.com mais 2"
+                      - generic [ref=e1895]:
+                        - button "Marcar feedback como bom" [ref=e1896] [cursor=pointer]:
+                          - img [ref=e1897]
+                        - button "Marcar feedback como ruim" [ref=e1900] [cursor=pointer]:
+                          - img [ref=e1901]
+                  - link "Exibir mais estatísticas Premium" [ref=e1904] [cursor=pointer]:
+                    - /url: /company/umicore/insights/?insightType=HEADCOUNT
+              - generic [ref=e1906]:
+                - generic [ref=e1907]:
+                  - heading "Sobre a empresa" [level=2] [ref=e1908]
+                  - generic [ref=e1909]:
+                    - generic [ref=e1910]:
+                      - link "Logo da empresa Umicore" [ref=e1912] [cursor=pointer]:
+                        - /url: /company/umicore/life/
+                        - img "Logo da empresa Umicore" [ref=e1913]
+                      - generic [ref=e1914]:
+                        - link "Umicore" [ref=e1916] [cursor=pointer]:
+                          - /url: /company/umicore/life/
+                        - generic [ref=e1917]: 131.207 seguidores
+                    - button "Seguir" [ref=e1918] [cursor=pointer]:
+                      - img [ref=e1919]
+                      - generic [ref=e1921]: Seguir
+                  - generic [ref=e1922]:
+                    - text: Fabricação de produtos químicos
+                    - generic [ref=e1923]: • + de 10.001 funcionários
+                    - generic [ref=e1924]: • 6.656 no LinkedIn
+                  - paragraph [ref=e1925]:
+                    - generic [ref=e1926]:
+                      - text: We innovate from within and drive the science of change. You cannot see us, yet we are part of your everyday lives. We reduce harmful vehicle emissions, give new life to used metals, power the cars of the future...
+                      - text: We believe in the power of materials technology to create sustainable value for people and planet., tackling the global trends of today and tomorrow.
+                      - text: Our products and services accelerate the transformation to carbon free mobility, deliver the next-generation of advanced materials and drive the world towards a circular economy.
+                      - text: We are the circular materials technology company fulfilling our mission to create materials for a better life.
+                      - text: In an environment like this, imagine what you could do?
+                      - generic [ref=e1928]:
+                        - generic [ref=e1929]: …
+                        - button "exibir mais" [ref=e1930] [cursor=pointer]
+                  - generic [ref=e1934]:
+                    - heading "Tem interesse em trabalhar conosco no futuro?" [level=3] [ref=e1935]
+                    - paragraph [ref=e1936]:
+                      - generic [ref=e1937]:
+                        - text: Os usuários que compartilham ter interesse em uma empresa podem ter o dobro de chances de receber mensagem de um recrutador.
+                        - link [ref=e1938] [cursor=pointer]:
+                          - /url: https://www.linkedin.com/help/linkedin/answer/a1380509
+                          - text: Saiba mais
+                      - generic [ref=e1939]: Saiba mais sobre Interesse em trabalhar para nossa empresa
+                    - button "Tenho interesse" [ref=e1940] [cursor=pointer]:
+                      - generic [ref=e1941]: Tenho interesse
+                  - generic [ref=e1945]:
+                    - heading "Conteúdos de funcionários em alta" [level=2] [ref=e1947]
+                    - generic [ref=e1949]:
+                      - generic [ref=e1950]: Página 1 de 2
+                      - button "Voltar" [disabled] [ref=e1951]:
+                        - img
+                        - generic: Voltar
+                      - button "Avançar" [ref=e1952] [cursor=pointer]:
+                        - img [ref=e1953]
+                        - generic [ref=e1955]: Avançar
+                - link "Exibir mais sobre a empresa" [ref=e1967] [cursor=pointer]:
+                  - /url: /company/umicore/life/
+                  - text: Exibir mais
+    - generic:
+      - generic:
+        - complementary:
+          - generic [ref=e445]:
+            - generic [ref=e446]:
+              - generic [ref=e448] [cursor=pointer]:
+                - img "Fernando Xavier" [ref=e450]
+                - button "Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas." [ref=e451]:
+                  - generic [ref=e452]:
+                    - generic [ref=e453]: Mensagens
+                    - generic [ref=e454]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+              - generic [ref=e455]:
+                - button "Abrir o menu suspenso de mensagens" [ref=e457] [cursor=pointer]:
+                  - img "Abrir o menu suspenso de mensagens" [ref=e458]
+                - button "Escrever mensagem" [ref=e461] [cursor=pointer]:
+                  - img [ref=e462]
+                  - generic [ref=e464]: Escrever mensagem
+                - button "Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas." [ref=e465] [cursor=pointer]:
+                  - img [ref=e466]
+                  - generic [ref=e468]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+            - link "Foto da empresa Fernando Xavier Fernando Xavier" [ref=e1968] [cursor=pointer]:
+              - /url: https://www.linkedin.com/company/109375368/admin/inbox
+              - img "Foto da empresa Fernando Xavier" [ref=e1969]
+              - generic [ref=e1970]: Fernando Xavier
+              - img [ref=e1971]
+        - complementary "Assistente de IA para obter ajuda com sua carreira, vagas, etc."

@@ -1,0 +1,13 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - img "Workday" [ref=e7]
+  - main [ref=e8]:
+    - generic [ref=e10]:
+      - generic [ref=e12] [cursor=pointer]: English
+      - generic [ref=e14]:
+        - heading "Page not found." [level=2] [ref=e15]
+        - paragraph [ref=e16]
+        - paragraph [ref=e17]: The URL you have provided is invalid.
+        - paragraph [ref=e18]: Please contact the Workday Administrator at your company if you require assistance.
+  - contentinfo [ref=e19]:
+    - generic [ref=e20]: © 2026 Workday, Inc. All rights reserved.

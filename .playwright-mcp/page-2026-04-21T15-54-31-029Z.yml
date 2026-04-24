@@ -1,0 +1,189 @@
+- generic [active] [ref=e1]:
+  - generic:
+    - region "Mensagem toast":
+      - heading "0 notificações no total" [level=2] [ref=e3]
+      - alert
+  - region [ref=e4]
+  - generic [ref=e5]:
+    - generic [ref=e7]:
+      - button "Pular para pesquisa" [ref=e8] [cursor=pointer]:
+        - generic [ref=e9]: Pular para pesquisa
+      - button "Pular para conteúdo principal" [ref=e10] [cursor=pointer]:
+        - generic [ref=e11]: Pular para conteúdo principal
+      - button "Atalhos do teclado" [ref=e12] [cursor=pointer]:
+        - generic [ref=e13]: Atalhos do teclado
+      - button "Fechar menu pular" [ref=e14] [cursor=pointer]:
+        - img [ref=e15]
+        - generic [ref=e17]: Fechar menu pular
+    - banner "Navegação geral" [ref=e18]:
+      - generic [ref=e19]:
+        - link "LinkedIn" [ref=e20] [cursor=pointer]:
+          - /url: https://www.linkedin.com/feed/?nis=true
+          - img "LinkedIn" [ref=e23]:
+            - img [ref=e24]
+        - generic [ref=e28]:
+          - combobox "Pesquisar" [ref=e29]
+          - generic:
+            - img
+        - navigation "Navegação principal" [ref=e30]:
+          - list [ref=e31]:
+            - listitem [ref=e32]:
+              - link "atualizações do feed novas notificações Início" [ref=e33] [cursor=pointer]:
+                - /url: https://www.linkedin.com/feed/?nis=true&
+                - generic [ref=e34]:
+                  - generic [ref=e37]: atualizações do feed novas notificações
+                  - img [ref=e41]
+                - generic "Início" [ref=e43]
+            - listitem [ref=e44]:
+              - link "Minha rede" [ref=e45] [cursor=pointer]:
+                - /url: https://www.linkedin.com/mynetwork/?
+                - img [ref=e49]
+                - generic "Minha rede" [ref=e51]
+            - listitem [ref=e52]:
+              - link "Vagas" [ref=e53] [cursor=pointer]:
+                - /url: https://www.linkedin.com/jobs/?
+                - img [ref=e57]
+                - generic "Vagas" [ref=e59]
+            - listitem [ref=e60]:
+              - link "Mensagens" [ref=e61] [cursor=pointer]:
+                - /url: https://www.linkedin.com/messaging/?
+                - img [ref=e65]
+                - generic "Mensagens" [ref=e67]
+            - listitem [ref=e68]:
+              - link "Notificações" [ref=e69] [cursor=pointer]:
+                - /url: https://www.linkedin.com/notifications/?
+                - img [ref=e73]
+                - generic "Notificações" [ref=e75]
+            - listitem [ref=e76]:
+              - button "Fernando Xavier Eu" [ref=e78] [cursor=pointer]:
+                - img "Fernando Xavier" [ref=e79]
+                - generic [ref=e80]:
+                  - text: Eu
+                  - img [ref=e81]
+            - listitem [ref=e83]:
+              - button "Para negócios" [ref=e85] [cursor=pointer]:
+                - img [ref=e89]
+                - generic "Para negócios" [ref=e91]:
+                  - text: Para negócios
+                  - img [ref=e92]
+            - listitem [ref=e94]:
+              - link "Veicular anúncio" [ref=e95] [cursor=pointer]:
+                - /url: https://www.linkedin.com/campaignmanager/accounts?
+                - img [ref=e99]
+                - generic "Veicular anúncio" [ref=e102]
+    - generic [ref=e103]:
+      - generic [ref=e106]:
+        - main [ref=e107]:
+          - generic [ref=e110]:
+            - generic [ref=e114]:
+              - generic [ref=e115]:
+                - generic [ref=e116]:
+                  - link "Logo da empresa dsm-firmenich" [ref=e117] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/company/dsm-firmenich/life
+                    - img "Logo da empresa dsm-firmenich" [ref=e120]
+                  - link "dsm-firmenich" [ref=e122] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/company/dsm-firmenich/life
+                - generic [ref=e123]:
+                  - button "Compartilhar" [ref=e126] [cursor=pointer]:
+                    - img [ref=e127]
+                    - generic [ref=e129]: Compartilhar
+                  - button "Exibir mais opções" [ref=e131] [cursor=pointer]:
+                    - img [ref=e132]
+                    - generic [ref=e134]: Exibir mais opções
+              - heading "Business Controller Associate Director LATAM" [level=1] [ref=e137]
+              - generic [ref=e140]:
+                - generic [ref=e141]: São Paulo e Região
+                - generic [ref=e142]: ·
+                - generic [ref=e144]: há 6 dias
+                - generic [ref=e145]: ·
+                - generic [ref=e146]: Mais de 100 pessoas clicaram em Candidatar-se
+                - paragraph [ref=e147]:
+                  - generic [ref=e148]: Promovida por recrutador
+                  - generic [ref=e149]: ·
+                  - generic [ref=e150]: Respostas gerenciadas fora do LinkedIn
+              - generic [ref=e151]:
+                - button "Corresponde às suas preferências de vaga e o tipo de local de trabalho é Híbrido." [ref=e152] [cursor=pointer]:
+                  - strong [ref=e155]:
+                    - img [ref=e157]
+                    - text: Híbrido
+                  - generic [ref=e159]: Corresponde às suas preferências de vaga e o tipo de local de trabalho é Híbrido.
+                - button "Corresponde às suas preferências de vaga e o tipo de vaga é Tempo integral." [ref=e160] [cursor=pointer]:
+                  - strong [ref=e163]:
+                    - img [ref=e165]
+                    - text: Tempo integral
+                  - generic [ref=e167]: Corresponde às suas preferências de vaga e o tipo de vaga é Tempo integral.
+              - generic [ref=e169]:
+                - link "Candidatar-se à vaga de Business Controller Associate Director LATAM no site da empresa" [ref=e172] [cursor=pointer]:
+                  - img [ref=e173]
+                  - generic [ref=e175]: Candidatar-se
+                - button "Salvar Business Controller Associate Director LATAM na dsm-firmenich" [ref=e176] [cursor=pointer]:
+                  - generic [ref=e177]: Salvar
+                  - generic [ref=e178]: Salvar Business Controller Associate Director LATAM na dsm-firmenich
+            - generic [ref=e188]:
+              - article [ref=e189]:
+                - heading "Sobre a vaga" [level=2] [ref=e192]
+              - button "Clicar para ver mais detalhes" [ref=e194] [cursor=pointer]:
+                - img [ref=e195]
+                - generic [ref=e197]: Ver mais
+            - generic [ref=e199]:
+              - generic [ref=e200]:
+                - heading "Configurar alerta para vagas semelhantes" [level=2] [ref=e201]
+                - generic [ref=e203]: Controlador de negócios, São Paulo e Região
+              - generic [ref=e205] [cursor=pointer]:
+                - generic [ref=e206]: Desativada
+                - generic [ref=e207]: Configurar alerta
+                - switch "Configurar alerta"
+            - alert [ref=e210]: Carregando detalhes da vaga
+        - complementary [ref=e223]
+      - contentinfo [ref=e226]:
+        - generic [ref=e228]:
+          - generic [ref=e229]:
+            - navigation [ref=e230]:
+              - list
+            - generic [ref=e232]:
+              - list [ref=e233]:
+                - listitem [ref=e234]:
+                  - img [ref=e235]
+                  - generic [ref=e237]:
+                    - link "Dúvidas? Acesse a nossa Central de Ajuda." [ref=e238] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/help/linkedin?trk=d_flagship3_job_details
+                      - text: Dúvidas?
+                    - paragraph [ref=e239]: Acesse a nossa Central de Ajuda.
+                - listitem [ref=e240]:
+                  - img [ref=e241]
+                  - generic [ref=e243]:
+                    - link "Gerencie sua conta e privacidade Acesse suas Configurações." [ref=e244] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/psettings/
+                      - text: Gerencie sua conta e privacidade
+                    - paragraph [ref=e245]: Acesse suas Configurações.
+                - listitem [ref=e246]:
+                  - img [ref=e247]
+                  - generic [ref=e249]:
+                    - link "Visibilidade da recomendação Saiba mais sobre os conteúdos recomendados." [ref=e250] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/help/linkedin/answer/a1339724
+                      - text: Visibilidade da recomendação
+                    - paragraph [ref=e251]: Saiba mais sobre os conteúdos recomendados.
+              - generic [ref=e252]:
+                - generic [ref=e253]: Selecionar idioma
+                - combobox "Selecionar idioma" [ref=e254]
+          - paragraph [ref=e255]: LinkedIn Corporation © 2026
+    - generic:
+      - generic:
+        - complementary:
+          - generic [ref=e257]:
+            - generic [ref=e259] [cursor=pointer]:
+              - img "Fernando Xavier" [ref=e261]
+              - button "Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas." [ref=e262]:
+                - generic [ref=e263]:
+                  - generic [ref=e264]: Mensagens
+                  - generic [ref=e265]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+            - generic [ref=e266]:
+              - button "Abrir o menu suspenso de mensagens" [ref=e268] [cursor=pointer]:
+                - img "Abrir o menu suspenso de mensagens" [ref=e269]
+              - button "Escrever mensagem" [ref=e272] [cursor=pointer]:
+                - img [ref=e273]
+                - generic [ref=e275]: Escrever mensagem
+              - button "Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas." [ref=e276] [cursor=pointer]:
+                - img [ref=e277]
+                - generic [ref=e279]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+        - complementary "Assistente de IA para obter ajuda com sua carreira, vagas, etc."

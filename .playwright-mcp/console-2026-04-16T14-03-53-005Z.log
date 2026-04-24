@@ -1,0 +1,40 @@
+[    1056ms] [LOG] Page authentication status: false @ https://www.amazon.jobs/en/jobs/3041866/finance-business-partner-latam:63
+[    1056ms] [LOG] Internal user status: false @ https://www.amazon.jobs/en/jobs/3041866/finance-business-partner-latam:64
+[    1091ms] [LOG] {
+	"eventData": {},
+	"job": {
+		"category": "Finance &amp; Accounting",
+		"countryCode": "BRA",
+		"division": "no-business-category",
+		"id": "3041866",
+		"jobLocation": "single",
+		"jobFindingMethod": " ",
+		"title": "Finance Business Partner LATAM",
+		"relatedJobId": []
+	},
+	"page": {
+		"pageInfo": {
+			"countryLanguage": "en",
+			"pageName": "Amazon.jobs | Job Details Page",
+			"pageType": "",
+			"advertisingCookieID": "",
+			"analyticsCookieID": "ccac02fd-8718-421d-aaa9-8c7c289b9f47",
+			"siteSection": "amazon jobs",
+			"tabName": "",
+			"userID": "",
+			"userActionStoreId": "ccac02fd-8718-421d-aaa9-8c7c289b9f47",
+			"peopleSoftId": "",
+			"userType": "guest",
+			"userAuthMode": ""
+		},
+		"experiment": {
+			"experimentDetails": null
+		}
+	}
+} @ https://d1o95ve0lr2m33.cloudfront.net/launch-ENb97d7f9d2d4b4720ac9782a711994995.min.js:7
+[    1572ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ https://www.amazon.jobs/api/v1/logging/obtained_related_jobs:0
+[    1573ms] Uncaught (in promise) Error: Request failed with status code 400
+    at e.exports (https://static.amazon.jobs/assets/application-98d4a1694aae9d7edfa93218419514991e682aa41d8e42483bd277ec3c3145b5.js:410:4535)
+    at <anonymous> (https://static.amazon.jobs/assets/application-98d4a1694aae9d7edfa93218419514991e682aa41d8e42483bd277ec3c3145b5.js:410:4377)
+    at <anonymous> (https://static.amazon.jobs/assets/application-98d4a1694aae9d7edfa93218419514991e682aa41d8e42483bd277ec3c3145b5.js:410:3339)
+[    4579ms] [WARNING] The resource https://static.amazon.jobs/assets/bootstrap-alpha5-1af4aa065b2c6a512b7e6cec4359c03f7c6870ad089cf5e06a9bcd67facf059c.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://www.amazon.jobs/en/jobs/3041866/finance-business-partner-latam:0

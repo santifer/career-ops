@@ -1,0 +1,620 @@
+- generic [ref=e1]:
+  - link [ref=e2] [cursor=pointer]:
+    - /url: "#gnav-header-end"
+    - text: Skip to main content
+  - main [ref=e3]:
+    - generic [ref=e5]:
+      - navigation [ref=e7]:
+        - generic [ref=e9]:
+          - generic [ref=e10]:
+            - generic [ref=e11]:
+              - button [ref=e12] [cursor=pointer]:
+                - generic [ref=e13]: Skip to main content
+              - link [ref=e14] [cursor=pointer]:
+                - /url: /?from=gnav-jobsearch--indeedmobile
+                - img [ref=e16]
+              - list [ref=e18]:
+                - listitem [ref=e19]:
+                  - link [ref=e21] [cursor=pointer]:
+                    - /url: https://www.indeed.com/
+                    - text: Home
+                - listitem [ref=e22]:
+                  - link [ref=e24] [cursor=pointer]:
+                    - /url: https://www.indeed.com/companies
+                    - text: Company reviews
+                - listitem [ref=e25]:
+                  - link [ref=e27] [cursor=pointer]:
+                    - /url: https://www.indeed.com/career/salaries
+                    - text: Find salaries
+            - generic [ref=e28]:
+              - list [ref=e29]:
+                - listitem [ref=e30]:
+                  - link [ref=e32] [cursor=pointer]:
+                    - /url: https://myjobs.indeed.com?from=gnav-util-jobsearch--indeedmobile&gnavTK=1jmba8t1fgojj801&tk=1jmba8sn8gkv182p&co=US&hl=en
+                    - img [ref=e33]
+                - listitem [ref=e35]:
+                  - link [ref=e37] [cursor=pointer]:
+                    - /url: https://messages.indeed.com?from=gnav-util-jobsearch--indeedmobile&gnavTK=1jmba8t1fgojj801&tk=1jmba8sn8gkv182p&co=US&hl=en
+                    - img [ref=e38]
+                    - generic [ref=e43]:
+                      - text: Messages Unread count 0
+                      - generic [ref=e44]: .
+                - listitem [ref=e45]:
+                  - link [ref=e47] [cursor=pointer]:
+                    - /url: https://www.indeed.com/notifications?from=gnav-util-jobsearch--indeedmobile&gnavTK=1jmba8t1fgojj801&tk=1jmba8sn8gkv182p&hl=en
+                    - img [ref=e48]
+                - listitem [ref=e50]:
+                  - button [ref=e54] [cursor=pointer]:
+                    - generic [ref=e55]:
+                      - img [ref=e56]
+                      - generic [ref=e58]:
+                        - text: "1"
+                        - generic [ref=e59]: new update
+              - link [ref=e64] [cursor=pointer]:
+                - /url: https://www.indeed.com/hire?co=US&hl=en
+                - text: Employers / Post Job
+          - generic [ref=e65]: Start of main content
+      - generic [ref=e67]:
+        - search [ref=e72]:
+          - generic [ref=e75]:
+            - generic [ref=e77]:
+              - generic [ref=e78]:
+                - generic [ref=e79]: "Keyword : all jobs"
+                - generic [ref=e82]:
+                  - img [ref=e84]
+                  - combobox [ref=e86]: controller OR controladoria
+                  - button [ref=e88] [cursor=pointer]:
+                    - img [ref=e89]
+              - separator [ref=e91]:
+                - generic [ref=e92]: "&nbsp;"
+              - generic [ref=e93]:
+                - generic [ref=e94]: Edit location input box label
+                - generic [ref=e97]:
+                  - img [ref=e99]
+                  - combobox [ref=e101]: São Paulo, Brazil
+                  - button [ref=e103] [cursor=pointer]:
+                    - img [ref=e104]
+            - button [ref=e107] [cursor=pointer]: Search
+          - list [ref=e110]:
+            - button [ref=e112] [cursor=pointer]: Pay
+            - button [ref=e114] [cursor=pointer]: Remote
+            - button [ref=e116] [cursor=pointer]: Job Type
+            - button [ref=e118] [cursor=pointer]: Experience level
+            - button [ref=e120] [cursor=pointer]: Encouraged to apply
+            - button [ref=e122] [cursor=pointer]:
+              - text: Date posted
+              - generic [ref=e123]: "1"
+        - generic [ref=e129]:
+          - generic [ref=e130]:
+            - generic [ref=e131]:
+              - heading [level=1] [ref=e132]: controller controladoria jobs
+              - generic [ref=e134]:
+                - generic [ref=e135]:
+                  - generic [ref=e136]: "Sort by:"
+                  - generic [ref=e137]: relevance - date
+                - generic [ref=e138]:
+                  - generic [ref=e139]: 600+ jobs
+                  - button [ref=e141] [cursor=pointer]:
+                    - img [ref=e142]
+            - list [ref=e148]:
+              - listitem [ref=e149]:
+                - generic [ref=e154]:
+                  - heading [level=2] [ref=e156]:
+                    - button [ref=e157] [cursor=pointer]: Factory Controller
+                  - generic [ref=e158]:
+                    - generic [ref=e160]:
+                      - generic [ref=e162]: Nestlé Purina
+                      - generic [ref=e163]: Allentown, PA 18104
+                    - list [ref=e165]:
+                      - listitem [ref=e166]:
+                        - generic [ref=e169]: Health insurance
+                      - listitem [ref=e170]:
+                        - generic [ref=e173]: 401(k) matching
+                  - generic [ref=e174]:
+                    - button [ref=e175] [cursor=pointer]:
+                      - img [ref=e176]
+                    - button [ref=e178] [cursor=pointer]:
+                      - img [ref=e179]
+              - listitem [ref=e182]:
+                - generic [ref=e187]:
+                  - generic [ref=e188]:
+                    - heading [level=2] [ref=e189]:
+                      - button [ref=e190] [cursor=pointer]: Controller
+                    - generic [ref=e195]: Often replies in 4 days
+                  - generic [ref=e196]:
+                    - generic [ref=e198]:
+                      - generic [ref=e200]: Rogue Valley Door, Inc.
+                      - generic [ref=e201]: Grants Pass, OR 97526
+                    - list [ref=e203]:
+                      - listitem [ref=e204]:
+                        - generic [ref=e207]: 401(k)
+                      - listitem [ref=e208]:
+                        - generic [ref=e211]: Health insurance
+                      - listitem [ref=e212]:
+                        - generic [ref=e215]: Paid time off
+                  - generic [ref=e216]:
+                    - button [ref=e217] [cursor=pointer]:
+                      - img [ref=e218]
+                    - button [ref=e220] [cursor=pointer]:
+                      - img [ref=e221]
+              - listitem [ref=e224]:
+                - generic [ref=e229]:
+                  - heading [level=2] [ref=e231]:
+                    - button [ref=e232] [cursor=pointer]: Controller
+                  - generic [ref=e235]:
+                    - generic [ref=e237]: Cogent Talent Solutions
+                    - generic [ref=e238]: Mustang, OK
+                  - generic [ref=e239]:
+                    - button [ref=e240] [cursor=pointer]:
+                      - img [ref=e241]
+                    - button [ref=e243] [cursor=pointer]:
+                      - img [ref=e244]
+              - listitem [ref=e247]:
+                - generic [ref=e252]:
+                  - heading [level=2] [ref=e254]:
+                    - button [ref=e255] [cursor=pointer]: Plant Controller
+                  - generic [ref=e256]:
+                    - generic [ref=e258]:
+                      - generic [ref=e260]: Flagstone Foods
+                      - generic [ref=e261]: Robersonville, NC 27871
+                    - list [ref=e263]:
+                      - listitem [ref=e264]:
+                        - generic [ref=e267]: Health insurance
+                      - listitem [ref=e268]:
+                        - generic [ref=e271]: 401(k) matching
+                      - listitem [ref=e272]:
+                        - generic [ref=e275]: Health savings account
+                      - listitem [ref=e276]:
+                        - generic [ref=e279]: Dental insurance
+                      - listitem [ref=e280]:
+                        - generic [ref=e283]: Disability insurance
+                  - generic [ref=e284]:
+                    - button [ref=e285] [cursor=pointer]:
+                      - img [ref=e286]
+                    - button [ref=e288] [cursor=pointer]:
+                      - img [ref=e289]
+              - listitem [ref=e292]:
+                - generic [ref=e297]:
+                  - generic [ref=e298]:
+                    - heading [level=2] [ref=e299]:
+                      - button [ref=e300] [cursor=pointer]: CONTROLLER
+                    - generic [ref=e305]: Often replies in 1 day
+                  - generic [ref=e308]:
+                    - generic [ref=e310]: Ponte Winery
+                    - generic [ref=e311]: Temecula, CA 92592
+                  - generic [ref=e312]:
+                    - button [ref=e313] [cursor=pointer]:
+                      - img [ref=e314]
+                    - button [ref=e316] [cursor=pointer]:
+                      - img [ref=e317]
+              - listitem [ref=e320]:
+                - generic [ref=e325]:
+                  - generic [ref=e326]:
+                    - heading [level=2] [ref=e327]:
+                      - button [ref=e328] [cursor=pointer]: Director Accounting
+                    - generic [ref=e333]: Often replies in 1 day
+                  - generic [ref=e334]:
+                    - generic [ref=e336]:
+                      - generic [ref=e338]: Luxottica (LoA Corporate)
+                      - generic [ref=e339]: Mason, OH 45040
+                    - list [ref=e341]:
+                      - listitem [ref=e342]:
+                        - generic [ref=e345]: Health insurance
+                      - listitem [ref=e346]:
+                        - generic [ref=e349]: Paid time off
+                      - listitem [ref=e350]:
+                        - generic [ref=e353]: Employee discount
+                  - generic [ref=e354]:
+                    - button [ref=e355] [cursor=pointer]:
+                      - img [ref=e356]
+                    - button [ref=e358] [cursor=pointer]:
+                      - img [ref=e359]
+              - listitem [ref=e362]:
+                - generic [ref=e367]:
+                  - heading [level=2] [ref=e369]:
+                    - button [ref=e370] [cursor=pointer]: Insomniac - Controller
+                  - generic [ref=e373]:
+                    - generic [ref=e375]: Live Nation
+                    - generic [ref=e376]: Calabasas, CA
+                  - generic [ref=e377]:
+                    - button [ref=e378] [cursor=pointer]:
+                      - img [ref=e379]
+                    - button [ref=e381] [cursor=pointer]:
+                      - img [ref=e382]
+              - listitem [ref=e385]:
+                - generic [ref=e390]:
+                  - heading [level=2] [ref=e392]:
+                    - button [ref=e393] [cursor=pointer]: Inventory Controller
+                  - generic [ref=e396]:
+                    - generic [ref=e398]: DSV
+                    - generic [ref=e399]: Pass Christian, MS 39571
+                  - generic [ref=e400]:
+                    - button [ref=e401] [cursor=pointer]:
+                      - img [ref=e402]
+                    - button [ref=e404] [cursor=pointer]:
+                      - img [ref=e405]
+              - listitem [ref=e408]:
+                - generic [ref=e413]:
+                  - heading [level=2] [ref=e415]:
+                    - button [ref=e416] [cursor=pointer]: ASSISTANT CONTROLLER
+                  - generic [ref=e419]:
+                    - generic [ref=e421]: State of Arkansas
+                    - generic [ref=e422]:
+                      - text: Little Rock, AR 72202
+                      - generic [ref=e423]: (Downtown area)
+                  - generic [ref=e424]:
+                    - button [ref=e425] [cursor=pointer]:
+                      - img [ref=e426]
+                    - button [ref=e428] [cursor=pointer]:
+                      - img [ref=e429]
+              - listitem [ref=e432]:
+                - generic [ref=e437]:
+                  - heading [level=2] [ref=e439]:
+                    - button [ref=e440] [cursor=pointer]: Assistant Controller
+                  - generic [ref=e443]:
+                    - generic [ref=e445]: Netchain Technology LLC
+                    - generic [ref=e446]: Lancaster, OH
+                  - generic [ref=e447]:
+                    - button [ref=e448] [cursor=pointer]:
+                      - img [ref=e449]
+                    - button [ref=e451] [cursor=pointer]:
+                      - img [ref=e452]
+              - listitem [ref=e455]:
+                - generic [ref=e460]:
+                  - heading [level=2] [ref=e462]:
+                    - button [ref=e463] [cursor=pointer]: Accounts Receivable Controller
+                  - generic [ref=e464]:
+                    - generic [ref=e466]:
+                      - generic [ref=e468]: Croell Inc.
+                      - generic [ref=e469]: New Hampton, IA 50659
+                    - list [ref=e471]:
+                      - listitem [ref=e472]:
+                        - generic [ref=e475]: Uniform allowance
+                      - listitem [ref=e476]:
+                        - generic [ref=e479]: Health insurance
+                      - listitem [ref=e480]:
+                        - generic [ref=e483]: 401(k) matching
+                      - listitem [ref=e484]:
+                        - generic [ref=e487]: Paid time off
+                      - listitem [ref=e488]:
+                        - generic [ref=e491]: Vision insurance
+                      - listitem [ref=e492]:
+                        - generic [ref=e495]: Dental insurance
+                  - generic [ref=e496]:
+                    - button [ref=e497] [cursor=pointer]:
+                      - img [ref=e498]
+                    - button [ref=e500] [cursor=pointer]:
+                      - img [ref=e501]
+              - listitem [ref=e504]:
+                - generic [ref=e509]:
+                  - heading [level=2] [ref=e511]:
+                    - button [ref=e512] [cursor=pointer]: Director of Accounting
+                  - generic [ref=e515]:
+                    - generic [ref=e517]: HR MGMT 10 LLC
+                    - generic [ref=e518]: Costa Mesa, CA 92626
+                  - generic [ref=e519]:
+                    - button [ref=e520] [cursor=pointer]:
+                      - img [ref=e521]
+                    - button [ref=e523] [cursor=pointer]:
+                      - img [ref=e524]
+              - listitem [ref=e527]:
+                - generic [ref=e532]:
+                  - generic [ref=e533]:
+                    - heading [level=2] [ref=e534]:
+                      - button [ref=e535] [cursor=pointer]: Controller
+                    - generic [ref=e540]: Often replies in 1 day
+                  - generic [ref=e543]:
+                    - generic [ref=e545]: Survival Flight
+                    - generic [ref=e546]: Batesville, AR 72501
+                  - generic [ref=e547]:
+                    - button [ref=e548] [cursor=pointer]:
+                      - img [ref=e549]
+                    - button [ref=e551] [cursor=pointer]:
+                      - img [ref=e552]
+              - listitem [ref=e555]:
+                - generic [ref=e560]:
+                  - heading [level=2] [ref=e562]:
+                    - button [ref=e563] [cursor=pointer]: Director of Accounting
+                  - generic [ref=e565]:
+                    - img [ref=e567]
+                    - generic [ref=e568]:
+                      - generic [ref=e570]: Bonduelle Americas
+                      - generic [ref=e571]: Philadelphia, PA 19103
+                  - generic [ref=e572]:
+                    - button [ref=e573] [cursor=pointer]:
+                      - img [ref=e574]
+                    - button [ref=e576] [cursor=pointer]:
+                      - img [ref=e577]
+              - listitem [ref=e580]:
+                - generic [ref=e585]:
+                  - heading [level=2] [ref=e587]:
+                    - button [ref=e588] [cursor=pointer]: Controller
+                  - generic [ref=e591]:
+                    - generic [ref=e593]: JTS
+                    - generic [ref=e594]: Caldwell, ID 83605
+                  - generic [ref=e595]:
+                    - button [ref=e596] [cursor=pointer]:
+                      - img [ref=e597]
+                    - button [ref=e599] [cursor=pointer]:
+                      - img [ref=e600]
+            - group [ref=e611]:
+              - generic [ref=e612]: Overall, how relevant are these jobs?
+              - generic [ref=e613]:
+                - generic [ref=e615]:
+                  - radio [ref=e616] [cursor=pointer]
+                  - img [ref=e619]
+                  - generic [ref=e622]: Not at all
+                - generic [ref=e624]:
+                  - radio [ref=e625] [cursor=pointer]
+                  - img [ref=e628]
+                  - generic [ref=e631]: Slightly
+                - generic [ref=e633]:
+                  - radio [ref=e634] [cursor=pointer]
+                  - img [ref=e637]
+                  - generic [ref=e640]: Somewhat
+                - generic [ref=e642]:
+                  - radio [ref=e643] [cursor=pointer]
+                  - img [ref=e646]
+                  - generic [ref=e649]: Very
+                - generic [ref=e651]:
+                  - radio [ref=e652] [cursor=pointer]
+                  - img [ref=e655]
+                  - generic [ref=e658]: Extremely
+            - navigation [ref=e659]:
+              - list [ref=e660]:
+                - listitem [ref=e661]:
+                  - link [ref=e662] [cursor=pointer]:
+                    - /url: "#"
+                    - text: "1"
+                - listitem [ref=e663]:
+                  - link [ref=e664] [cursor=pointer]:
+                    - /url: /jobs?q=controller+OR+controladoria&l=S%C3%A3o+Paulo%2C+Brazil&radius=25&fromage=14&start=10
+                    - text: "2"
+                - listitem [ref=e665]:
+                  - link [ref=e666] [cursor=pointer]:
+                    - /url: /jobs?q=controller+OR+controladoria&l=S%C3%A3o+Paulo%2C+Brazil&radius=25&fromage=14&start=20
+                    - text: "3"
+                - listitem [ref=e667]:
+                  - link [ref=e668] [cursor=pointer]:
+                    - /url: /jobs?q=controller+OR+controladoria&l=S%C3%A3o+Paulo%2C+Brazil&radius=25&fromage=14&start=30
+                    - text: "4"
+                - listitem [ref=e669]:
+                  - link [ref=e670] [cursor=pointer]:
+                    - /url: /jobs?q=controller+OR+controladoria&l=S%C3%A3o+Paulo%2C+Brazil&radius=25&fromage=14&start=40
+                    - text: "5"
+                - listitem [ref=e671]:
+                  - link [ref=e672] [cursor=pointer]:
+                    - /url: /jobs?q=controller+OR+controladoria&l=S%C3%A3o+Paulo%2C+Brazil&radius=25&fromage=14&start=10
+                    - img [ref=e673]
+            - generic [ref=e675]:
+              - heading [level=2] [ref=e676]: "Resume Resources:"
+              - list [ref=e677]:
+                - listitem [ref=e678]:
+                  - link [ref=e679] [cursor=pointer]:
+                    - /url: https://www.indeed.com/career-advice/resume-samples?from=jobsearch_footer
+                    - text: Resume Samples
+                - text: "-"
+                - listitem [ref=e680]:
+                  - link [ref=e681] [cursor=pointer]:
+                    - /url: https://www.indeed.com/profile/resume-templates?from=jobsearch_footer
+                    - text: Resume Templates
+            - generic [ref=e682]:
+              - heading [level=2] [ref=e683]: "Career Resources:"
+              - list [ref=e684]:
+                - listitem [ref=e685]:
+                  - link [ref=e686] [cursor=pointer]:
+                    - /url: /career/salaries?from=jobsearch_footer
+                    - text: Career Explorer
+                - text: "-"
+                - listitem [ref=e687]:
+                  - link [ref=e688] [cursor=pointer]:
+                    - /url: /explorer/
+                    - text: Explore High Paying Jobs
+            - generic [ref=e689]:
+              - heading [level=2] [ref=e690]: "Employer Resources:"
+              - list [ref=e691]:
+                - listitem [ref=e692]:
+                  - link [ref=e693] [cursor=pointer]:
+                    - /url: /hire/how-to-write-a-job-description?from=jobsearch_footer
+                    - text: How to Write a Job Description
+                - text: "-"
+                - listitem [ref=e694]:
+                  - link [ref=e695] [cursor=pointer]:
+                    - /url: /hire/how-to-hire?from=jobsearch_footer
+                    - text: How to Hire Employees
+          - generic [ref=e698]:
+            - button [ref=e699]: Return to Search Result
+            - heading [level=2] [ref=e700]: Job Post Details
+            - generic [ref=e704]:
+              - generic [ref=e705]:
+                - generic [ref=e707]:
+                  - generic [ref=e708]:
+                    - heading [level=2] [ref=e710]:
+                      - generic [ref=e711]:
+                        - text: Factory Controller
+                        - generic [ref=e712]: "- job post"
+                    - generic [ref=e716]:
+                      - generic [ref=e717]:
+                        - link [ref=e720] [cursor=pointer]:
+                          - /url: https://www.indeed.com/cmp/Nestl%C3%A9-Purina-01e9ed62?campaignid=mobvjcmp&from=mobviewjob&tk=1jmba8t2hgkv1800&fromjk=beacddc13290324c
+                          - text: Nestlé Purina
+                          - img [ref=e721]
+                        - generic [ref=e723]: (part of Nestlé)
+                        - generic [ref=e724]:
+                          - generic [ref=e725]: · 3.3
+                          - generic [ref=e726]: 3.3 out of 5 stars
+                          - img [ref=e727]
+                      - generic [ref=e730]: Allentown, PA 18104
+                  - generic [ref=e734]: $120,000 - $154,000 a year
+                - generic [ref=e735]:
+                  - generic [ref=e741]:
+                    - generic [ref=e742]:
+                      - generic [ref=e743]:
+                        - heading [level=2] [ref=e744]: Job details
+                        - generic [ref=e745]:
+                          - text: Here’s how the job details align with your
+                          - link [ref=e746] [cursor=pointer]:
+                            - /url: https://profile.indeed.com/
+                            - text: profile
+                            - img [ref=e747]
+                          - text: .
+                      - group [ref=e750]:
+                        - img [ref=e751]
+                        - generic [ref=e753]:
+                          - heading [level=3] [ref=e754]: Pay
+                          - list [ref=e756]:
+                            - listitem [ref=e757]:
+                              - button [ref=e758]:
+                                - generic [ref=e761]:
+                                  - img [ref=e762]
+                                  - generic [ref=e764]: $120,000 - $154,000 a year
+                                  - img [ref=e765]
+                    - separator [ref=e767]:
+                      - generic [ref=e768]: "&nbsp;"
+                  - generic [ref=e769]:
+                    - heading [level=2] [ref=e770]:
+                      - text: Benefits
+                      - generic [ref=e771]: Pulled from the full job description
+                    - list [ref=e775]:
+                      - listitem [ref=e776]: Health insurance
+                      - listitem [ref=e777]: 401(k) matching
+                    - separator [ref=e778]:
+                      - generic [ref=e779]: "&nbsp;"
+                  - heading [level=2] [ref=e781]: Full job description
+                  - generic [ref=e783]:
+                    - paragraph [ref=e784]: Driven by integrity and united by the people-and-pet bond, we find strong purpose in the work we do and an even greater joy in those we get to work alongside. Together, we harness the expertise of our long-standing tradition of excellence to embrace possibility and continuously push to do what's never been done before in pet care. Discover your purpose and fuel your passions when you bring your love of pets to a team that prides itself on the power of togetherness—We are Proudly Connected. Purely Driven.
+                    - paragraph [ref=e785]:
+                      - generic [ref=e786]: Position Summary
+                    - paragraph [ref=e787]: As the Factory Controller for our Allentown (PA) site, you will serve as a strategic financial partner to the factory leadership team, ensuring robust internal controls and cost performance. You will lead all aspects of financial governance, including period-end close, compliance audits, and safeguarding of assets. This role drives performance management through cost analysis, variance reporting, and continuous improvement initiatives. You will oversee budgeting and forecasting processes, collaborate across departments to identify savings opportunities, and maintain accurate inventory and material data. As a leader, you will coach and develop the accounting team, champion digitalization of financial processes, and promote a culture of accountability and operational excellence.
+                    - list [ref=e788]:
+                      - listitem [ref=e789]: Coordinate with factory departments to complete all period-end close activities in a timely fashion based on factory and corporate deadlines
+                      - listitem [ref=e790]: Ensure adherence to all required internal controls including policies, procedures, reporting and safeguarding of assets in accordance with Nestlé Continuous Excellence and accounting standards
+                    - list [ref=e791]:
+                      - listitem [ref=e792]: Lead timely, accurate and strategic development and oversight of the annual budget
+                      - listitem [ref=e793]: Collaborate with department managers and corporate partners to manage budgets, track and analyze costs, and identify savings initiatives
+                      - listitem [ref=e794]: Support factory leadership in driving operational efficiency and optimizing resource allocation
+                      - listitem [ref=e795]: Deliver direction to the factory accounting team to achieve department objectives and provide ongoing coaching and training opportunities for professional growth and development
+                    - paragraph [ref=e796]:
+                      - generic [ref=e797]: REQUIREMENTS
+                    - list [ref=e798]:
+                      - listitem [ref=e799]: Bachelor’s degree in Accounting, Finance, Business or related field
+                      - listitem [ref=e800]: 4+ years of experience working with general accounting, cost accounting, internal controls, compliance management, budgeting and variance analysis in a manufacturing, industrial, warehouse, military or related environment
+                      - listitem [ref=e801]: 2+ years of people leadership experience
+                    - paragraph [ref=e802]: The approximate pay range for this position is $120,000 - $154,000 per year. Please note that the pay range provided is a good faith estimate for the position at the time of posting. Final compensation may vary based on factors including but not limited to background, knowledge, skills, and abilities as well as geographic location of the position.
+                    - paragraph [ref=e803]: Nestlé offers performance-based incentives and a competitive total rewards package, which includes a 401k with Company match, healthcare coverage and a broad range of other benefits. Incentives and/or benefit packages may vary depending on the position. Learn more at About Us | Nestlé Careers (nestlejobs.com).
+                    - paragraph [ref=e804]: It is our business imperative to remain a very inclusive workplace. To our veterans and separated service members, you're at the forefront of our minds as we recruit top talent to join Nestlé. The skills you've gained while serving our country, such as flexibility, agility, and leadership, are much like the skills that will make you successful in this role. In addition, with our commitment to an inclusive work environment, we recognize the exceptional engagement and innovation displayed by individuals with disabilities. Nestlé seeks such skilled and qualified individuals to share our mission where you’ll join a cohort of others who have chosen to call Nestlé home.
+                    - paragraph [ref=e805]: "The Nestlé Companies are equal employment opportunity employers. All applicants will receive consideration for employment without regard to race, color, religion, sex, sexual orientation, gender identity, national origin, disability, or veteran status or any other characteristic protected by applicable law. Prior to the next step in the recruiting process, we welcome you to inform us confidentially if you may require any special accommodations in order to participate fully in our recruitment experience. Contact us at accommodations@nestle.com or please dial 711 and provide this number to the operator: 1-800-321-6467."
+                    - paragraph [ref=e806]: This position is not eligible for Visa Sponsorship.
+                    - paragraph [ref=e807]: Review our applicant privacy notice before applying at https://www.nestlejobs.com/privacy.
+                    - paragraph [ref=e808]: "Job Requisition: 383151"
+                  - separator [ref=e809]:
+                    - generic [ref=e810]: "&nbsp;"
+                - button [ref=e816] [cursor=pointer]: Report job
+              - generic [ref=e819]:
+                - generic [ref=e820]:
+                  - button [ref=e825] [cursor=pointer]:
+                    - img [ref=e826]
+                  - button [ref=e829] [cursor=pointer]:
+                    - img [ref=e830]
+                  - button [ref=e833] [cursor=pointer]
+                - button [ref=e842] [cursor=pointer]:
+                  - generic [ref=e843]: Apply on company site
+                  - img [ref=e844]
+            - button [ref=e846]: Return to Search Result
+      - contentinfo [ref=e851]:
+        - generic [ref=e852]:
+          - list [ref=e853]:
+            - listitem [ref=e854]:
+              - link [ref=e856] [cursor=pointer]:
+                - /url: https://www.hiringlab.org
+                - text: Hiring Lab
+            - listitem [ref=e857]:
+              - link [ref=e859] [cursor=pointer]:
+                - /url: https://www.indeed.com/career-advice
+                - text: Career advice
+            - listitem [ref=e860]:
+              - link [ref=e862] [cursor=pointer]:
+                - /url: https://www.indeed.com/browsejobs
+                - text: Browse jobs
+            - listitem [ref=e863]:
+              - link [ref=e865] [cursor=pointer]:
+                - /url: https://www.indeed.com/companies/browse-companies
+                - text: Browse companies
+            - listitem [ref=e866]:
+              - link [ref=e868] [cursor=pointer]:
+                - /url: https://www.indeed.com/career/salaries
+                - text: Salaries
+            - listitem [ref=e869]:
+              - link [ref=e871] [cursor=pointer]:
+                - /url: https://www.indeedevents.com/
+                - text: Indeed Events
+            - listitem [ref=e872]:
+              - link [ref=e874] [cursor=pointer]:
+                - /url: https://www.indeed.com/cmp/Indeed/about
+                - text: Work at Indeed
+            - listitem [ref=e875]:
+              - link [ref=e877] [cursor=pointer]:
+                - /url: https://www.indeed.com/worldwide
+                - text: Countries
+            - listitem [ref=e878]:
+              - link [ref=e880] [cursor=pointer]:
+                - /url: https://www.indeed.com/about
+                - text: About
+            - listitem [ref=e881]:
+              - link [ref=e883] [cursor=pointer]:
+                - /url: https://www.indeed.com/help
+                - text: Help
+            - listitem [ref=e884]:
+              - link [ref=e886] [cursor=pointer]:
+                - /url: https://www.indeed.com/esg?from=gnav-jobsearch--indeedmobile
+                - text: ESG at Indeed
+          - list [ref=e887]:
+            - listitem [ref=e888]: © 2026 Indeed
+            - listitem [ref=e889]:
+              - link [ref=e891] [cursor=pointer]:
+                - /url: https://www.indeed.com/legal/ccpa-dns?hl=en
+                - text: Your Privacy Choices
+                - img [ref=e893]
+            - listitem [ref=e898]:
+              - link [ref=e900] [cursor=pointer]:
+                - /url: https://www.indeed.com/esg/accessibility?hl=en
+                - text: Accessibility at Indeed
+            - listitem [ref=e901]:
+              - link [ref=e903] [cursor=pointer]:
+                - /url: https://hrtechprivacy.com/brands/indeed#privacypolicy
+                - text: Privacy Center and Ad Choices
+            - listitem [ref=e904]:
+              - link [ref=e906] [cursor=pointer]:
+                - /url: https://www.indeed.com/legal?hl=en
+                - text: Terms
+  - generic [ref=e907]:
+    - text: This site is protected by reCAPTCHA and the Google
+    - link [ref=e908] [cursor=pointer]:
+      - /url: https://policies.google.com/privacy
+      - text: Privacy Policy
+    - text: and
+    - link [ref=e909] [cursor=pointer]:
+      - /url: https://policies.google.com/terms
+      - text: Terms of Service
+    - text: apply.
+  - alertdialog "Updates to our Terms of Service" [active] [ref=e911]:
+    - heading "Updates to our Terms of Service" [level=2] [ref=e914]:
+      - generic [ref=e915]: Updates to our Terms of Service
+    - generic [ref=e916]:
+      - img [ref=e918]
+      - paragraph [ref=e953]:
+        - text: Please be sure to review our updated
+        - link "Terms of Service" [ref=e954] [cursor=pointer]:
+          - /url: https://indeed.com/legal
+        - text: (“Terms”).
+        - strong [ref=e955]: The Terms contain an arbitration agreement that includes a class-action waiver.
+        - text: This means you agree to resolve any disputes related to your use of Indeed through binding arbitration rather than in court. The Terms also explain how to opt out of arbitration and the deadline for doing so.
+      - paragraph [ref=e956]:
+        - text: By clicking
+        - strong [ref=e957]: Accept Terms
+        - text: ", you agree to the updated"
+        - link "Terms of Service" [ref=e958] [cursor=pointer]:
+          - /url: https://indeed.com/legal
+        - text: .
+    - button "Accept Terms" [ref=e961] [cursor=pointer]:
+      - generic [ref=e962]: Accept Terms

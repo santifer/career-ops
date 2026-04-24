@@ -1,0 +1,14 @@
+[    1565ms] [LOG] JQMIGRATE: Migrate is installed, version 3.3.0 @ https://performancemanager.successfactors.eu/verp/vmod_v1/ui/extlib/jquery_3.5.1/jquery.js:4
+[    1571ms] [LOG] JQMIGRATE: Migrate plugin loaded multiple times @ https://performancemanager.successfactors.eu/verp/vmod_v1/ui/extlib/jquery_3.5.1/jquery-migrate.js:1
+[    1571ms] [LOG] JQMIGRATE: Migrate is installed, version 3.3.0 @ https://performancemanager.successfactors.eu/verp/vmod_v1/ui/extlib/jquery_3.5.1/jquery-migrate.js:1
+[    1573ms] [LOG] JQMIGRATE: Migrate is installed, version 1.4.1 @ https://careers.dovercorporation.com/platform/js/jquery/jquery-migrate-1.4.1.js:22
+[    2501ms] Uncaught TypeError: Cannot read properties of undefined (reading 'on')
+    at <anonymous> (https://careers.dovercorporation.com/platform/js/j2w/j2w.bootstrap.collapse.js:43:42)
+    at e (https://performancemanager.successfactors.eu/verp/vmod_v1/ui/extlib/jquery_3.5.1/jquery.js:1:30004)
+    at <anonymous> (https://performancemanager.successfactors.eu/verp/vmod_v1/ui/extlib/jquery_3.5.1/jquery.js:1:30306)
+[    2502ms] Uncaught TypeError: Cannot read properties of undefined (reading 'on')
+    at <anonymous> (https://careers.dovercorporation.com/platform/js/j2w/j2w.bootstrap.dropdown.js:49:67)
+    at e (https://performancemanager.successfactors.eu/verp/vmod_v1/ui/extlib/jquery_3.5.1/jquery.js:1:30004)
+    at <anonymous> (https://performancemanager.successfactors.eu/verp/vmod_v1/ui/extlib/jquery_3.5.1/jquery.js:1:30306)
+[    4298ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://www.linkedin.com/li/track:0
+[    4361ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://www.linkedin.com/li/track:0

@@ -1,0 +1,950 @@
+- generic [ref=e1]:
+  - generic:
+    - region "Mensagem toast":
+      - heading "0 notificações no total" [level=2] [ref=e3]
+      - alert
+  - region [ref=e4]
+  - generic [ref=e268]:
+    - img [ref=e270]
+    - paragraph [ref=e274]:
+      - text: Ocorreu um erro ao processar seu pagamento.
+      - link "Atualize sua(s) forma(s) de pagamento" [ref=e275] [cursor=pointer]:
+        - /url: https://www.linkedin.com/manage/purchases-payments/purchases/485025203/payments?trk=global_alert
+      - text: .
+    - button "Fechar" [ref=e276] [cursor=pointer]:
+      - img [ref=e277]
+      - generic [ref=e279]: Fechar
+  - generic [ref=e5]:
+    - generic [ref=e7]:
+      - button "Pular para pesquisa" [ref=e8] [cursor=pointer]:
+        - generic [ref=e9]: Pular para pesquisa
+      - button "Pular para conteúdo principal" [ref=e10] [cursor=pointer]:
+        - generic [ref=e11]: Pular para conteúdo principal
+      - button "Atalhos do teclado" [ref=e12] [cursor=pointer]:
+        - generic [ref=e13]: Atalhos do teclado
+      - button "Fechar menu pular" [ref=e14] [cursor=pointer]:
+        - img [ref=e15]
+        - generic [ref=e17]: Fechar menu pular
+    - banner "Navegação geral" [ref=e18]:
+      - generic [ref=e19]:
+        - link "LinkedIn" [ref=e20] [cursor=pointer]:
+          - /url: https://www.linkedin.com/feed/?nis=true
+          - img "LinkedIn" [ref=e23]:
+            - img [ref=e24]
+        - generic [ref=e28]:
+          - combobox "Pesquisar" [ref=e29]
+          - generic:
+            - img
+        - navigation "Navegação principal" [ref=e30]:
+          - list [ref=e31]:
+            - listitem [ref=e32]:
+              - link "atualizações do feed novas notificações Início" [ref=e33] [cursor=pointer]:
+                - /url: https://www.linkedin.com/feed/?nis=true&
+                - generic [ref=e34]:
+                  - generic [ref=e37]: atualizações do feed novas notificações
+                  - img [ref=e41]
+                - generic "Início" [ref=e43]
+            - listitem [ref=e44]:
+              - link "2 atualizações de rede novas notificações Minha rede" [ref=e45] [cursor=pointer]:
+                - /url: https://www.linkedin.com/mynetwork/?
+                - generic [ref=e46]:
+                  - generic [ref=e47]:
+                    - generic [ref=e48]: "2"
+                    - generic [ref=e49]: 2 atualizações de rede novas notificações
+                  - img [ref=e53]
+                - generic "Minha rede" [ref=e55]
+            - listitem [ref=e56]:
+              - link "Vagas" [ref=e57] [cursor=pointer]:
+                - /url: https://www.linkedin.com/jobs/?
+                - img [ref=e61]
+                - generic "Vagas" [ref=e63]
+            - listitem [ref=e64]:
+              - link "Mensagens" [ref=e65] [cursor=pointer]:
+                - /url: https://www.linkedin.com/messaging/?
+                - img [ref=e69]
+                - generic "Mensagens" [ref=e71]
+            - listitem [ref=e72]:
+              - link "10 novas notificações Notificações" [ref=e73] [cursor=pointer]:
+                - /url: https://www.linkedin.com/notifications/?
+                - generic [ref=e74]:
+                  - generic [ref=e75]:
+                    - generic [ref=e76]: "10"
+                    - generic [ref=e77]: 10 novas notificações
+                  - img [ref=e81]
+                - generic "Notificações" [ref=e83]
+            - listitem [ref=e84]:
+              - button "Fernando Xavier Eu" [ref=e86] [cursor=pointer]:
+                - img "Fernando Xavier" [ref=e87]
+                - generic [ref=e88]:
+                  - text: Eu
+                  - img [ref=e89]
+            - listitem [ref=e91]:
+              - button "Para negócios" [ref=e93] [cursor=pointer]:
+                - img [ref=e97]
+                - generic "Para negócios" [ref=e99]:
+                  - text: Para negócios
+                  - img [ref=e100]
+            - listitem [ref=e102]:
+              - link "Veicular anúncio" [ref=e103] [cursor=pointer]:
+                - /url: https://www.linkedin.com/campaignmanager/accounts?
+                - img [ref=e107]
+                - generic "Veicular anúncio" [ref=e110]
+    - generic [ref=e111]:
+      - generic [ref=e114]:
+        - main [ref=e115]:
+          - generic [ref=e118]:
+            - generic [ref=e121]:
+              - generic [ref=e122]:
+                - generic [ref=e123]:
+                  - generic [ref=e124]:
+                    - link "Logo da empresa Dover Fueling Solutions" [ref=e125] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/company/dover-fueling-solutions/life
+                      - img "Logo da empresa Dover Fueling Solutions" [ref=e128]
+                    - link "Dover Fueling Solutions" [ref=e280] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/company/dover-fueling-solutions/life
+                  - generic [ref=e131]:
+                    - button "Compartilhar" [ref=e134] [cursor=pointer]:
+                      - img [ref=e135]
+                      - generic [ref=e137]: Compartilhar
+                    - button "Exibir mais opções" [ref=e139] [cursor=pointer]:
+                      - img [ref=e140]
+                      - generic [ref=e142]: Exibir mais opções
+                - generic [ref=e144]:
+                  - heading "Regional Controller" [level=1] [ref=e145]
+                  - button "Ver módulo de contratação verificada" [ref=e147] [cursor=pointer]:
+                    - img [ref=e150]
+                - generic [ref=e154]:
+                  - generic [ref=e281]: Rio de Janeiro e Região
+                  - generic [ref=e282]: ·
+                  - generic [ref=e284]: há 1 semana
+                  - generic [ref=e285]: ·
+                  - generic [ref=e286]: Mais de 100 pessoas clicaram em Candidatar-se
+                  - paragraph [ref=e287]:
+                    - generic [ref=e288]: Promovida por recrutador
+                    - generic [ref=e289]: ·
+                    - generic [ref=e290]: Respostas gerenciadas fora do LinkedIn
+                - generic [ref=e165]:
+                  - button "Corresponde às suas preferências de vaga e o tipo de local de trabalho é Presencial." [ref=e291] [cursor=pointer]:
+                    - strong [ref=e294]:
+                      - img [ref=e296]
+                      - text: Presencial
+                    - generic [ref=e298]: Corresponde às suas preferências de vaga e o tipo de local de trabalho é Presencial.
+                  - button "Corresponde às suas preferências de vaga e o tipo de vaga é Tempo integral." [ref=e299] [cursor=pointer]:
+                    - strong [ref=e302]:
+                      - img [ref=e304]
+                      - text: Tempo integral
+                    - generic [ref=e306]: Corresponde às suas preferências de vaga e o tipo de vaga é Tempo integral.
+                - generic [ref=e182]:
+                  - generic [ref=e183]:
+                    - link "Candidatar-se à vaga de Regional Controller no site da empresa" [active] [ref=e186] [cursor=pointer]:
+                      - img [ref=e187]
+                      - generic [ref=e189]: Candidatar-se
+                    - button "Salvar Regional Controller na Dover Fueling Solutions" [ref=e307] [cursor=pointer]:
+                      - generic [ref=e308]: Salvar
+                      - generic [ref=e309]: Salvar Regional Controller na Dover Fueling Solutions
+                  - paragraph [ref=e1253]: Seu perfil foi compartilhado com o anunciante da vaga.
+                  - button "Parar de compartilhar perfil com o anunciante da vaga Desfazer" [ref=e1254] [cursor=pointer]:
+                    - generic [ref=e1255]: Parar de compartilhar perfil com o anunciante da vaga
+                    - text: Desfazer
+              - separator [ref=e1256]
+              - generic [ref=e1257]:
+                - generic [ref=e1258]:
+                  - paragraph [ref=e1259]: Você se candidatou?
+                  - paragraph [ref=e1260]: Se sim, ajudaremos você a acompanhar sua candidatura.
+                - generic [ref=e1261]:
+                  - button "Você se candidatau?, Sim" [ref=e1262] [cursor=pointer]:
+                    - generic [ref=e1263]: Sim
+                  - button "Você se candidatou?, Não" [ref=e1264] [cursor=pointer]:
+                    - generic [ref=e1265]: Não
+            - generic [ref=e193]:
+              - heading "Pessoas que você pode contatar" [level=2] [ref=e310]
+              - generic [ref=e313]:
+                - generic [ref=e314]:
+                  - generic [ref=e315]:
+                    - list [ref=e316]:
+                      - listitem [ref=e317]:
+                        - img "Logo de Fundação Getulio Vargas" [ref=e319]
+                    - generic [ref=e320]: Logo de Fundação Getulio Vargas
+                  - generic [ref=e321]: Ex-alunos da instituição de ensino Fundação Getulio Vargas
+                - button "Exibir todos" [ref=e322] [cursor=pointer]:
+                  - generic [ref=e323]: Exibir todos
+              - generic [ref=e324]:
+                - heading "Conheça a equipe de contratação" [level=2] [ref=e325]
+                - generic [ref=e327]:
+                  - link "Gráfico de Ver perfil verificado de Marcos Queiroz" [ref=e328] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/in/marcos-queiroz-1b5a9013
+                    - img "Marcos Queiroz está contratando" [ref=e331]
+                  - generic [ref=e332]:
+                    - link "Ver perfil verificado de Marcos Queiroz" [ref=e333] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/in/marcos-queiroz-1b5a9013
+                      - generic [ref=e334]:
+                        - strong [ref=e335]: Marcos Queiroz
+                        - img [ref=e337]
+                    - generic [ref=e341]: 2º
+                    - generic [ref=e342]:
+                      - generic [ref=e343]: Finance Director Latam | FP&A & Corporate Finance Leader | Strategic Business Partner
+                      - generic [ref=e344]: 3 conexões em comum
+                  - button "Enviar mensagem" [ref=e346] [cursor=pointer]:
+                    - generic [ref=e347]: Enviar mensagem
+            - generic [ref=e202]:
+              - article [ref=e203]:
+                - generic [ref=e205]:
+                  - heading "Sobre a vaga" [level=2] [ref=e206]
+                  - paragraph [ref=e349]:
+                    - text: "Dover Fueling Solutions (\"DFS\"), uma empresa Dover (NYSE: DOV) composta pelos negócios ClearView, Fairbanks, ProGauge, Tokheim, Wayne Fueling Systems e OPW's Fuel Management Systems, oferece equipamentos avançados de abastecimento de combustíveis, sistemas eletrônicos e pagamento, medição automática de tanques e soluções de gerenciamento de estoque de líquidos para clientes em todo o mundo. Sediada em Austin, Texas, a DFS tem uma presença global significativa, incluindo instalações nos EUA, Reino Unido, Suécia, Itália França, Índia, China e Brasil. Para obter mais informações e conhecer nossa política de privacidade, visite"
+                    - link "www.doverfuelingsolutions.com" [ref=e350] [cursor=pointer]:
+                      - /url: http://www.doverfuelingsolutions.com/
+                      - text: www.doverfuelingsolutions.com
+                    - strong [ref=e352]: Sumário
+                    - text: Liderar as atividades de Controladoria, incluindo Contabilidade, Fiscal/Tributário e Controles Internos, assegurando a integridade das informações financeiras, conformidade com IFRS, US GAAP, SOX e legislações aplicáveis. Atuar como parceiro do negócio, apoiando a tomada de decisão por meio de análises financeiras, gestão de riscos e melhoria contínua dos processos, contribuindo para a eficiência operacional e geração de valor da companhia. Reporte ao Diretor de Finanças LATAM .
+                    - list [ref=e354]:
+                      - listitem [ref=e355]: Liderar Contabilidade, Fiscal/Tributário (com parceiros externos) e Controles Internos, garantindo conformidade e qualidade das informações;
+                      - listitem [ref=e356]: Garantir a qualidade, acurácia e tempestividade dos fechamentos contábeis, declarações e reports gerenciais e corporativos;
+                      - listitem [ref=e357]: Atuar como guardião da governança financeira, assegurando aderência às políticas corporativas e fortalecendo o ambiente de controles internos;
+                      - listitem [ref=e358]: Responsável pelos processos de auditorias internas e externas;
+                      - listitem [ref=e359]: Ser um parceiro das áreas de negócio, suportando decisões com análises e visão financeira;
+                      - listitem [ref=e360]: Gerenciar a atuação de parceiros externos de compliance fiscal e consultoria tributária, garantindo qualidade técnica, alinhamento e captura de oportunidades fiscais;
+                      - listitem [ref=e361]: Apoiar as áreas operacionais na melhoria de dados, eficiência e disciplina de processos;
+                      - listitem [ref=e362]: Identificar e capturar oportunidades de planejamento tributário e eficiência fiscal, em conjunto com advisors externos;
+                      - listitem [ref=e363]: Garantir o cumprimento de todas as obrigações fiscais e regulatórias (federais, estaduais e municipais);
+                      - listitem [ref=e364]: Acompanhar as mudanças nas legislações e os impactos que podem causar para o negócio, principalmente no que tange as mudanças e aplicações relacionadas a Reforma Tributária;
+                      - listitem [ref=e365]: Liderar iniciativas de melhoria contínua, automação e simplificação de processos, elevando o nível de eficiência da área;
+                      - listitem [ref=e366]: Acompanhar temas-chave como inventário/E&O, custos, margens e receita;
+                      - listitem [ref=e367]: Desenvolver a equipe com foco em performance, accountability e formação de talentos;
+                      - listitem [ref=e368]: Manter interface com times globais, assegurando alinhamento e consistência;
+                    - strong [ref=e370]: Formação
+                    - list [ref=e372]:
+                      - listitem [ref=e373]: Ensino superior em Contabilidade.
+                    - strong [ref=e375]: Conhecimentos Específicos/Habilidades
+                    - list [ref=e377]:
+                      - listitem [ref=e378]: Inglês avançado;
+                      - listitem [ref=e379]: CRC ativo;
+                      - listitem [ref=e380]: Sólido conhecimento em IFRS e US GAAP;
+                      - listitem [ref=e381]: Experiência com SOX e controles internos;
+                      - listitem [ref=e382]: Conhecimento de ERP e ferramentas de análise de dados.
+                    - text: Todos os candidatos qualificados receberão consideração pelo emprego sem discriminação com base na raça, cor, religião, sexo, orientação sexual, identidade de gênero, origem nacional, deficiência, idade, informação genética, ou quaisquer outros fatores proibidos por lei.
+              - button "Clicar para ver mais detalhes" [ref=e208] [cursor=pointer]:
+                - img [ref=e209]
+                - generic [ref=e211]: Ver mais
+            - generic [ref=e213]:
+              - generic [ref=e214]:
+                - heading "Configurar alerta para vagas semelhantes" [level=2] [ref=e215]
+                - generic [ref=e217]: Controlador regional, Rio de Janeiro e Região
+              - generic [ref=e219] [cursor=pointer]:
+                - generic [ref=e220]: Desativada
+                - generic [ref=e221]: Configurar alerta
+                - switch "Configurar alerta"
+            - generic [ref=e383]:
+              - button "Fechar cartão promocional de serviços" [ref=e384] [cursor=pointer]:
+                - img [ref=e385]
+                - generic [ref=e387]: Fechar cartão promocional de serviços
+              - generic [ref=e389]:
+                - heading "Veja uma seleção de ferramentas de IA para sua pesquisa de vagas" [level=2] [ref=e390]
+                - paragraph [ref=e391]: Receba uma oferta de emprego mais rápido com a ajuda de ferramentas de IA criadas por empresas certificadas, como Kickresume, Exponent Interview Prep e muito mais.
+                - link "Começar" [ref=e392] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/ai-tools/?sectionType=career-coaching
+                  - generic [ref=e393]: Começar
+            - generic [ref=e394]:
+              - generic [ref=e395]:
+                - generic [ref=e396]:
+                  - img "Premium" [ref=e398]:
+                    - img [ref=e399]
+                  - button "Saiba mais sobre estatísticas sobre candidatos" [ref=e402] [cursor=pointer]:
+                    - img [ref=e403]
+                - heading "Veja como sua candidatura se compara à de outras pessoas" [level=2] [ref=e405]
+                - generic [ref=e407]:
+                  - heading "Pessoas que clicaram em Candidate-se" [level=3] [ref=e408]
+                  - list [ref=e409]:
+                    - listitem [ref=e410]:
+                      - generic [ref=e411]: "249"
+                      - generic [ref=e412]: no total
+                    - listitem [ref=e413]:
+                      - generic [ref=e414]: "9"
+                      - generic [ref=e415]: no último dia
+                - generic [ref=e416]:
+                  - generic [ref=e417]:
+                    - heading "Nível de experiência do candidato" [level=3] [ref=e418]
+                    - list [ref=e419]:
+                      - listitem [ref=e420]:
+                        - paragraph [ref=e421]: 38% de candidatos com nível Sênior
+                        - progressbar [ref=e422]
+                      - listitem [ref=e423]:
+                        - paragraph [ref=e424]: 30% de candidatos com nível Diretor
+                        - progressbar [ref=e425]
+                      - listitem [ref=e426]:
+                        - paragraph [ref=e427]: 14% de candidatos com nível Gerente
+                        - progressbar [ref=e428]
+                      - listitem [ref=e429]:
+                        - paragraph [ref=e430]: 8% de candidatos com nível Iniciante
+                        - progressbar [ref=e431]
+                  - generic [ref=e432]:
+                    - heading "Nível de formação acadêmica do candidato" [level=3] [ref=e433]
+                    - list [ref=e434]:
+                      - listitem [ref=e435]:
+                        - generic [ref=e436]: 64%
+                        - generic [ref=e437]: tem Pós-graduação Lato Sensu - MBA (semelhante ao seu)
+                      - listitem [ref=e438]:
+                        - generic [ref=e439]: 8%
+                        - generic [ref=e440]: tem Pós-graduação
+                      - listitem [ref=e441]:
+                        - generic [ref=e442]: 7%
+                        - generic [ref=e443]: tem Bacharelado
+                      - listitem [ref=e444]:
+                        - generic [ref=e445]: 21%
+                        - generic [ref=e446]: tem outros diplomas
+              - generic [ref=e447]:
+                - generic [ref=e448]:
+                  - img "Premium" [ref=e449]:
+                    - img [ref=e450]
+                  - button "Saiba mais sobre estatísticas sobre empresas" [ref=e453] [cursor=pointer]:
+                    - img "Saiba mais sobre estatísticas sobre empresas" [ref=e454]
+                - heading "Estatísticas exclusivas de pessoas à procura de emprego sobre a Dover Fueling Solutions" [level=2] [ref=e456]
+                - heading "Com tecnologia do Bing" [level=3] [ref=e457]
+                - generic [ref=e458]:
+                  - generic [ref=e459]:
+                    - heading "Áreas de foco da empresa" [level=3] [ref=e460]
+                    - generic [ref=e462]:
+                      - list [ref=e463]:
+                        - listitem [ref=e464]:
+                          - strong [ref=e465]: "Innovation in Fueling Technology:"
+                          - text: Dover Fueling Solutions focuses on developing advanced energy dispensing equipment and electronic automation to enhance fueling operations. This includes the launch of ProGauge DMP MagRF to transform wired probes into wireless connectivity.
+                        - listitem [ref=e466]:
+                          - strong [ref=e467]: "Customer Engagement and Experience:"
+                          - text: The company aims to improve customer engagement and experience through innovative solutions like 4Court Media, a retail media network designed to connect brands with consumers at the fuel dispenser.
+                      - button "exibir mais revela visualmente conteúdos que já foram detectados por leitores de tela" [ref=e468] [cursor=pointer]:
+                        - generic [ref=e469]: exibir mais
+                  - generic [ref=e470]:
+                    - generic [ref=e472]: "Fontes: prnewswire.com"
+                    - generic [ref=e474]:
+                      - button "Marcar feedback como bom" [ref=e475] [cursor=pointer]:
+                        - img [ref=e476]
+                      - button "Marcar feedback como ruim" [ref=e479] [cursor=pointer]:
+                        - img [ref=e480]
+                - generic [ref=e483]:
+                  - generic [ref=e484]:
+                    - heading "Contratações e número de funcionários" [level=3] [ref=e485]
+                    - paragraph [ref=e486]:
+                      - generic [ref=e487]:
+                        - text: "Focus on operations and engineering: The 'Operations' and 'Engineering' departments have seen a 7% and 3% increase in employee percentage difference, respectively, indicating a strong focus on operational efficiency and engineering capabilities. Growth in customer success and quality assurance: The 'Customer Success and Support' and 'Quality Assurance' departments have experienced a 9% and 15% increase in employee percentage difference, respectively, suggesting an emphasis on improving customer satisfaction and product quality. Expansion in sales and business development: The 'Sales' and 'Business Development' departments have shown a 350% and 8% increase in job openings, respectively, highlighting a strategic push towards market expansion and revenue growth. Investment in marketing and human resources: The 'Marketing' and 'Human Resources' departments have seen significant increases in job openings by 400% and 133%, respectively, indicating a focus on brand development and talent acquisition."
+                        - generic [ref=e488]:
+                          - generic [ref=e489]: …
+                          - button "Exibir mais sobre Contratações e número de funcionários" [ref=e490] [cursor=pointer]: exibir mais
+                  - generic [ref=e492]:
+                    - button "Marcar feedback como bom" [ref=e493] [cursor=pointer]:
+                      - img [ref=e494]
+                    - button "Marcar feedback como ruim" [ref=e497] [cursor=pointer]:
+                      - img [ref=e498]
+                - generic [ref=e501]:
+                  - heading "Última tendência de contratação" [level=3] [ref=e502]
+                  - generic [ref=e503]:
+                    - list [ref=e504]:
+                      - listitem [ref=e505]:
+                        - paragraph [ref=e506]: "3.153"
+                        - paragraph [ref=e507]: funcionários no total
+                      - listitem [ref=e508]:
+                        - paragraph [ref=e509]: 4%
+                        - paragraph [ref=e511]: toda a empresa
+                        - paragraph [ref=e512]: Crescimento em 2 anos
+                        - generic [ref=e513]: 4% de aumento
+                      - listitem [ref=e514]:
+                        - paragraph [ref=e515]: 30%
+                        - paragraph [ref=e517]: Contabilidade/Auditoria
+                        - paragraph [ref=e518]: Crescimento em 2 anos
+                        - generic [ref=e519]: 30% de aumento
+                    - region "Chart. Highcharts interactive chart." [ref=e522]:
+                      - region "Chart screen reader information.":
+                        - generic [ref=e523]:
+                          - heading "Chart" [level=4] [ref=e524]
+                          - generic [ref=e525]: Chart with 25 data points.
+                          - generic [ref=e526]: "The chart has 1 X axis displaying Time. Range: 2023-12-13 12:00:00 to 2026-05-07 12:00:00."
+                          - generic [ref=e527]: "The chart has 1 Y axis displaying values. Range: 0 to 4000."
+                      - img "Interactive chart" [ref=e532]:
+                        - generic [ref=e544]:
+                          - img "1. April 2024, 3.040 funcionários" [ref=e545]
+                          - img "2. May 2024, 3.056 funcionários, increase 1% do mês passado" [ref=e546]
+                          - img "3. June 2024, 3.106 funcionários, increase 2% do mês passado" [ref=e547]
+                          - img "4. July 2024, 3.109 funcionários, neutral 0% do mês passado" [ref=e548]
+                          - img "5. August 2024, 3.087 funcionários, decrease 1% do mês passado" [ref=e549]
+                          - img "6. September 2024, 3.083 funcionários, neutral 0% do mês passado" [ref=e550]
+                          - img "7. October 2024, 3.082 funcionários, neutral 0% do mês passado" [ref=e551]
+                          - img "8. November 2024, 3.089 funcionários, neutral 0% do mês passado" [ref=e552]
+                          - img "9. December 2024, 3.076 funcionários, neutral 0% do mês passado" [ref=e553]
+                          - img "10. January 2025, 3.081 funcionários, neutral 0% do mês passado" [ref=e554]
+                          - img "11. February 2025, 3.081 funcionários, neutral 0% do mês passado" [ref=e555]
+                          - img "12. March 2025, 3.086 funcionários, neutral 0% do mês passado" [ref=e556]
+                          - img "13. April 2025, 3.089 funcionários, neutral 0% do mês passado" [ref=e557]
+                          - img "14. May 2025, 3.096 funcionários, neutral 0% do mês passado" [ref=e558]
+                          - img "15. June 2025, 3.125 funcionários, increase 1% do mês passado" [ref=e559]
+                          - img "16. July 2025, 3.131 funcionários, neutral 0% do mês passado" [ref=e560]
+                          - img "17. August 2025, 3.103 funcionários, decrease 1% do mês passado" [ref=e561]
+                          - img "18. September 2025, 3.115 funcionários, neutral 0% do mês passado" [ref=e562]
+                          - img "19. October 2025, 3.132 funcionários, increase 1% do mês passado" [ref=e563]
+                          - img "20. November 2025, 3.141 funcionários, neutral 0% do mês passado" [ref=e564]
+                          - img "21. December 2025, 3.131 funcionários, neutral 0% do mês passado" [ref=e565]
+                          - img "22. January 2026, 3.141 funcionários, neutral 0% do mês passado" [ref=e566]
+                          - img "23. February 2026, 3.141 funcionários, neutral 0% do mês passado" [ref=e567]
+                          - img "24. March 2026, 3.149 funcionários, neutral 0% do mês passado" [ref=e568]
+                          - img "25. April 2026, 3.153 funcionários, neutral 0% do mês passado" [ref=e569]
+                        - generic [ref=e570]:
+                          - generic [ref=e571]: abr. de 2024
+                          - generic [ref=e572]: out. de 2024
+                          - generic [ref=e573]: abr. de 2025
+                          - generic [ref=e574]: out. de 2025
+                          - generic [ref=e575]: abr. de 2026
+                        - generic [ref=e576]:
+                          - generic [ref=e577]: "0"
+                          - generic [ref=e578]: "1.000"
+                          - generic [ref=e579]: "2.000"
+                          - generic [ref=e580]: "3.000"
+                          - generic [ref=e581]: "4.000"
+                      - generic [ref=e583]: End of interactive chart.
+                    - generic [ref=e584]:
+                      - img [ref=e585]
+                      - text: Tempo médio do funcionário na empresa ‧
+                      - strong [ref=e588]: 4,9 anos
+                - generic [ref=e589]:
+                  - heading "A empresa Dover Fueling Solutions contrata pessoas de algumas dessas empresas e instituições de ensino" [level=3] [ref=e590]
+                  - list [ref=e592]:
+                    - listitem [ref=e593]:
+                      - generic [ref=e594]:
+                        - figure [ref=e595]:
+                          - img "Fundação Getulio Vargas" [ref=e596]
+                        - paragraph [ref=e597]:
+                          - text: A Dover Fueling Solutions contratou 11 pessoas de Fundação Getulio Vargas.
+                          - link "Ver todas" [ref=e598] [cursor=pointer]:
+                            - /url: https://www.linkedin.com/search/results/people/?origin=JOB_PAGE_CANNED_SEARCH&currentCompany=15263662&schoolFilter=8175
+                            - strong [ref=e599]: Ver todas
+                - generic [ref=e600]:
+                  - generic [ref=e601]:
+                    - heading "Concorrência" [level=3] [ref=e602]
+                    - paragraph [ref=e603]:
+                      - generic [ref=e604]:
+                        - text: Dover Fueling Solutions operates in a highly competitive landscape, focusing on innovation and sustainability in fuel dispensing and forecourt management. Key competitors include Gilbarco Veeder-Root, Tokheim S.A.S., and OPW, each offering advanced technologies and comprehensive solutions. The market is characterized by a push towards eco-friendly and technologically advanced products, with companies leveraging data and automation to enhance operational efficiency and customer experience.
+                        - generic [ref=e605]:
+                          - generic [ref=e606]: …
+                          - button "Exibir mais sobre Concorrência" [ref=e607] [cursor=pointer]: exibir mais
+                    - generic [ref=e608]:
+                      - link "Gilbarco Veeder-Root" [ref=e610] [cursor=pointer]:
+                        - /url: https://www.linkedin.com/company/gilbarco-veeder-root/
+                        - generic "Gilbarco Veeder-Root" [ref=e613]
+                      - link "OPW Global" [ref=e616] [cursor=pointer]:
+                        - /url: https://www.linkedin.com/company/opw-global/
+                        - generic "OPW Global" [ref=e619]
+                      - link "Tokheim Sofitam S.A." [ref=e622] [cursor=pointer]:
+                        - /url: https://www.linkedin.com/company/tokheim-sofitam-s-a-/
+                        - generic "Tokheim Sofitam S.A." [ref=e625]
+                  - generic [ref=e628]:
+                    - generic [ref=e630]: "Fontes: datainsightsmarket.com mais 2"
+                    - generic [ref=e632]:
+                      - button "Marcar feedback como bom" [ref=e633] [cursor=pointer]:
+                        - img [ref=e634]
+                      - button "Marcar feedback como ruim" [ref=e637] [cursor=pointer]:
+                        - img [ref=e638]
+                - link "Exibir mais estatísticas Premium" [ref=e641] [cursor=pointer]:
+                  - /url: /company/dover-fueling-solutions/insights/?insightType=HEADCOUNT
+            - generic [ref=e643]:
+              - generic [ref=e644]:
+                - heading "Sobre a empresa" [level=2] [ref=e645]
+                - generic [ref=e646]:
+                  - generic [ref=e647]:
+                    - link "Logo da empresa Dover Fueling Solutions" [ref=e649] [cursor=pointer]:
+                      - /url: /company/dover-fueling-solutions/life/
+                      - img "Logo da empresa Dover Fueling Solutions" [ref=e650]
+                    - generic [ref=e651]:
+                      - link "Dover Fueling Solutions" [ref=e653] [cursor=pointer]:
+                        - /url: /company/dover-fueling-solutions/life/
+                      - generic [ref=e654]: 53.529 seguidores
+                  - button "Seguir" [ref=e655] [cursor=pointer]:
+                    - img [ref=e656]
+                    - generic [ref=e658]: Seguir
+                - generic [ref=e659]:
+                  - text: Fabricação de máquinas de automação
+                  - generic [ref=e660]: • 1.001-5.000 funcionários
+                  - generic [ref=e661]: • 3.153 no LinkedIn
+                - paragraph [ref=e662]:
+                  - generic [ref=e663]:
+                    - text: Dover Fueling Solutions® (DFS) is part of Dover Corporation and a leading provider of advanced energy dispensing equipment, electronic automation, point of sale (POS) and payment systems, automatic tank gauging and subscription solutions to fueling and convenience retail customers worldwide. Comprised of brands Wayne Fueling Systems, Tokheim®, OPW®, ClearView™, PetroVend®, ProGauge™, Fairbanks®, AvaLAN Networks™, LIQAL and Bulloch Technologies™, DFS is dedicated to offering a broad range of solutions that power vehicles, including conventional fuel and clean energy products that support gasoline, diesel, bio-diesel and ethanol as well as LNG, H2, LPG, CNG and EV chargers.
+                    - text: Headquartered in Austin, TX, DFS has a strong global manufacturing and technology development presence, including facilities in Brazil, China, India, Italy, Poland, Belgium, the Netherlands, the United Kingdom and the United States.
+                    - generic [ref=e664]:
+                      - generic [ref=e665]: …
+                      - button "exibir mais" [ref=e666] [cursor=pointer]
+                - generic [ref=e670]:
+                  - heading "Tem interesse em trabalhar conosco no futuro?" [level=3] [ref=e671]
+                  - paragraph [ref=e672]:
+                    - generic [ref=e673]:
+                      - text: Os usuários que compartilham ter interesse em uma empresa podem ter o dobro de chances de receber mensagem de um recrutador.
+                      - link [ref=e674] [cursor=pointer]:
+                        - /url: https://www.linkedin.com/help/linkedin/answer/a1380509
+                        - text: Saiba mais
+                    - generic [ref=e675]: Saiba mais sobre Interesse em trabalhar para nossa empresa
+                  - button "Tenho interesse" [ref=e676] [cursor=pointer]:
+                    - generic [ref=e677]: Tenho interesse
+                - generic [ref=e680]:
+                  - generic [ref=e681]:
+                    - heading "Fotos da empresa" [level=3] [ref=e683]
+                    - generic [ref=e685]:
+                      - generic [ref=e686]: Página 1 de 5
+                      - button "Fotos da empresa anteriores" [disabled] [ref=e687]:
+                        - img
+                        - generic: Voltar
+                      - button "Próximas fotos da empresa" [ref=e688] [cursor=pointer]:
+                        - img [ref=e689]
+                        - generic [ref=e691]: Avançar
+                  - generic [ref=e692]:
+                    - button "Foto de empresa da Dover Fueling Solutions (1) publicada às 15 de abril de 2024" [ref=e694] [cursor=pointer]:
+                      - generic [ref=e695]:
+                        - img "Foto de empresa da Dover Fueling Solutions (1)" [ref=e698]
+                        - generic [ref=e700]:
+                          - paragraph
+                          - paragraph [ref=e701]: 15 de abril de 2024
+                    - button "Foto de empresa da Dover Fueling Solutions (2) publicada às 15 de abril de 2024" [ref=e703] [cursor=pointer]:
+                      - generic [ref=e704]:
+                        - img "Foto de empresa da Dover Fueling Solutions (2)" [ref=e707]
+                        - generic [ref=e709]:
+                          - paragraph
+                          - paragraph [ref=e710]: 15 de abril de 2024
+                    - button "Foto de empresa da Dover Fueling Solutions (3) publicada às 15 de abril de 2024" [ref=e712] [cursor=pointer]:
+                      - generic [ref=e713]:
+                        - img "Foto de empresa da Dover Fueling Solutions (3)" [ref=e716]
+                        - generic [ref=e718]:
+                          - paragraph
+                          - paragraph [ref=e719]: 15 de abril de 2024
+                    - button "Foto de empresa da Dover Fueling Solutions (4) publicada às 15 de abril de 2024" [ref=e721] [cursor=pointer]:
+                      - generic [ref=e722]:
+                        - img "Foto de empresa da Dover Fueling Solutions (4)" [ref=e725]
+                        - generic [ref=e727]:
+                          - paragraph
+                          - paragraph [ref=e728]: 15 de abril de 2024
+              - link "Exibir mais sobre a empresa" [ref=e731] [cursor=pointer]:
+                - /url: /company/dover-fueling-solutions/life/
+                - text: Exibir mais
+            - heading "Mais vagas" [level=2] [ref=e733]
+            - list [ref=e735]:
+              - listitem [ref=e736]:
+                - link "Logo da empresa Sophos Country Manager Brazil with verification Sophos Brasil (Remoto) 12 ex-alunos da Fundação Getulio Vargas trabalham aqui Há 1 semana" [ref=e738] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4401342750&referenceJobId=4398411428&originToLandingJobPostings=4401342750&trackingId=5DaFYumIpGJYyA6KDphkGg%3D%3D&refId=xw5%2FcG5oGsbyse7vgwR3JQ%3D%3D&eBP=CwEAAAGdr9bK5zkaij268dC3YY5wZPoqVzoU22rnlSUX9giUeNtSHRkesK3VD50eGcETHWZVA90SogVIuXiarDX7AxbgqHLSdI9VCQVt-5w_woGeENM9lsNxMMfPd_C0wASwLPfb1QgZ_DsTI7RcmOi67C-22tn5oE2LIGMrBatxrXXxbcwjRJT159X41zB-7FFDnnRsSTZHTxBgaYkEXOf1xa0TjBQd4Ndsb6pB_rnLnjnLjWIJ9lq1HvrN-4AdESUw7Nrw6ZNZOkNlomAXS_rBV1qUK9Z6gOP63kY8j7CO1KKL_Rnf82TPCuxBtvcHa4TKRrSwNF3O1mFX1-xeWTAFLpBHRxAz3mZH500E8D7JxztRL6XcCEykYP6946_L1d-GPIdB5KCpyfwc2-1GDyrihWIQI90zyQDcual1QAnv2ysP7BoPkE2-UdUeOgpePeLkCwPZce6egcWMCRyLvmUAjU27-HghVd0JCw
+                  - generic [ref=e740]:
+                    - img "Logo da empresa Sophos" [ref=e745]
+                    - generic [ref=e746]:
+                      - generic [ref=e747]:
+                        - generic [ref=e748]:
+                          - generic [ref=e749]:
+                            - strong [ref=e750]: Country Manager Brazil
+                            - img [ref=e752]
+                          - generic [ref=e754]: Country Manager Brazil with verification
+                        - generic [ref=e756]: Sophos
+                        - generic [ref=e758]: Brasil (Remoto)
+                        - list [ref=e760]:
+                          - listitem [ref=e761]:
+                            - generic [ref=e764]:
+                              - generic [ref=e765]: 12 ex-alunos trabalham aqui
+                              - generic [ref=e766]: 12 ex-alunos da Fundação Getulio Vargas trabalham aqui
+                      - list [ref=e768]:
+                        - listitem [ref=e769]:
+                          - time [ref=e770]: Há 1 semana
+              - listitem [ref=e771]:
+                - link "Logo da empresa padrão em branco Chief Operating Officer (COO) - Economia Sensata Olivia Sensata São Paulo, São Paulo, Brasil (Presencial) Você seria um dos melhores candidatos Você seria um dos melhores candidatos Há 2 semanas" [ref=e773] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4396144687&referenceJobId=4398411428&originToLandingJobPostings=4396144687&trackingId=2JRrE5j3D0FsBpmqUZl6QA%3D%3D&refId=xw5%2FcG5oGsbyse7vgwR3JQ%3D%3D&eBP=BUDGET_EXHAUSTED_JOB
+                  - generic [ref=e775]:
+                    - img "Logo da empresa padrão em branco" [ref=e778]
+                    - generic [ref=e779]:
+                      - generic [ref=e780]:
+                        - generic [ref=e781]:
+                          - strong [ref=e783]: Chief Operating Officer (COO) - Economia Sensata
+                          - generic [ref=e784]: Chief Operating Officer (COO) - Economia Sensata
+                        - generic [ref=e786]: Olivia Sensata
+                        - generic [ref=e788]: São Paulo, São Paulo, Brasil (Presencial)
+                        - list [ref=e790]:
+                          - listitem [ref=e791]:
+                            - img "Você seria um dos melhores candidatos" [ref=e794]:
+                              - img [ref=e795]
+                            - generic [ref=e798]: Você seria um dos melhores candidatos
+                      - list [ref=e800]:
+                        - listitem [ref=e801]:
+                          - time [ref=e802]: Há 2 semanas
+              - listitem [ref=e803]:
+                - link "Logo da empresa Revenue3 Country Manager (Brazil) Revenue3 São Paulo, Brasil (Remoto) Avaliando candidaturas Avaliando candidaturas Há 1 semana Candidatura simplificada" [ref=e805] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4398598073&referenceJobId=4398411428&originToLandingJobPostings=4398598073&trackingId=HKBaQ2oJIFF6welY5WflOg%3D%3D&refId=xw5%2FcG5oGsbyse7vgwR3JQ%3D%3D&eBP=CwEAAAGdr9bK56jkBwCGgGGvQScAW9RQ6Ibw3IGbPm7NZTKlv4NLWlndMBpumfGeH3ZoG6mrHwveYv5lE3SyR8UurCoh7omAquNcjXlFE5luBcf85aoFWBI8Ay0gm8qgS44wsXe9RzfU1tEsRHbTOFs2o0cFKngEqSYckvpiLNv6MSWxylf-x7WBJ_IAXUqgZSd7IZx88szWV0rUY6pfM_viDswkG9egd4aUmc6M7PRNC6C9AnJTtGE2S8Hinyt4FTtTxCehzr-5h8cQuB3HQtfCvBFQXipvyjYTB4gtRNHu_Eh6c0t0SowwSmDRFXhchusjVXBmkMc7KAHtHtwCK7vwUTCHs-hVaoMFWNR7iynmqQgjoXk8nHPSbKRrkGwT6J85oaQI_NLruM1V0MD6V-R52uM5C5RX9Qf4_qiH1G_1UJ-OcliRyVtmP1q29b_YzahMoxQrKFw1UoAjp6KsbKc-1H_MZj-uGzfixmsOsqLsKQUYa8nwWGY
+                  - generic [ref=e807]:
+                    - img "Logo da empresa Revenue3" [ref=e812]
+                    - generic [ref=e813]:
+                      - generic [ref=e814]:
+                        - generic [ref=e815]:
+                          - strong [ref=e817]: Country Manager (Brazil)
+                          - generic [ref=e818]: Country Manager (Brazil)
+                        - generic [ref=e820]: Revenue3
+                        - generic [ref=e822]: São Paulo, Brasil (Remoto)
+                        - list [ref=e824]:
+                          - listitem [ref=e825]:
+                            - img "Avaliando candidaturas" [ref=e828]
+                            - generic [ref=e830]: Avaliando candidaturas
+                      - list [ref=e832]:
+                        - listitem [ref=e833]:
+                          - time [ref=e834]: Há 1 semana
+                        - listitem [ref=e835]:
+                          - img [ref=e836]:
+                            - img [ref=e837]
+                          - generic [ref=e839]: Candidatura simplificada
+              - listitem [ref=e840]:
+                - link "Logo da empresa Libbs Farmacêutica Gerente de Estratégia Econômico-Tributária e Viabilidade with verification Libbs Farmacêutica Brasil (Remoto) 199 ex-alunos da Fundação Getulio Vargas trabalham aqui Há 3 semanas" [ref=e842] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4390535200&referenceJobId=4398411428&originToLandingJobPostings=4390535200&trackingId=zE1s75V7Xwq%2BMnU4p4mTEQ%3D%3D&refId=xw5%2FcG5oGsbyse7vgwR3JQ%3D%3D&eBP=CwEAAAGdr9bK55OXyIHJanRjsp1BexIlYjTyERIAPWSy2Y6-CtKMjGMquF-XV_lr_MQXVPXyQnkOJWzbzVYqws1440KPFhO2_bDsTjOjLUmfYLym8eVYjSJ0cC0mDOCEGKbjnpzzwsRVokXGmvShI5GsijOxHTczSi5EwziMwNe3YZzur0xvbKHxsFRknSZUGDs10rPa9g3iiVyhY8t38GtSZnXUgpVVIue3sUHdoHvCy0xPUn6UVYYxzs-Sk49aIXHOcPF3pBLICUuX615mx_2c3o6JBbMqyO50p0GiAegyRgyWqU5_wRyQsEUMGGeDvbYmmIHP6idsOhmAVOTtq9i1qPXDWqXZZ4CIhKHDC5Swxov4VKSsGF9zk0mYArkNrNJZiQgaB3FwWqV4a-ITS1QilPq0Gzq-D2dwqp5yf5UA1huvSJRRxp7oNcCIeATLavIpwmSXZh4xpFbi0H-Q_baddV-4hp9FcT_FoA_udILidr8qW3KsU8dscN4ZoOBkLAYjH-SKBzqY1A
+                  - generic [ref=e844]:
+                    - img "Logo da empresa Libbs Farmacêutica" [ref=e849]
+                    - generic [ref=e850]:
+                      - generic [ref=e851]:
+                        - generic [ref=e852]:
+                          - generic [ref=e853]:
+                            - strong [ref=e854]: Gerente de Estratégia Econômico-Tributária e Viabilidade
+                            - img [ref=e856]
+                          - generic [ref=e858]: Gerente de Estratégia Econômico-Tributária e Viabilidade with verification
+                        - generic [ref=e860]: Libbs Farmacêutica
+                        - generic [ref=e862]: Brasil (Remoto)
+                        - list [ref=e864]:
+                          - listitem [ref=e865]:
+                            - generic [ref=e868]:
+                              - generic [ref=e869]: 199 ex-alunos trabalham aqui
+                              - generic [ref=e870]: 199 ex-alunos da Fundação Getulio Vargas trabalham aqui
+                      - list [ref=e872]:
+                        - listitem [ref=e873]:
+                          - time [ref=e874]: Há 3 semanas
+              - listitem [ref=e875]:
+                - link "Logo da empresa Ovation Law Firm PPC Specialist (LATAM) Ovation Law Firm Brasil (Remoto) Há 1 hora" [ref=e877] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4403942576&referenceJobId=4398411428&originToLandingJobPostings=4403942576&trackingId=Ps7a2g8gCPgUCG%2Ft%2BQgWYQ%3D%3D&refId=xw5%2FcG5oGsbyse7vgwR3JQ%3D%3D&eBP=CwEAAAGdr9bK58RVylONtdZ3Kg4N8in3oyKJpszA_eRGUItrOFKZRCR55TwGKCT_4xnDQL_DfzUybY2zh6m23acxvgrMFLyA9ucdISkyn9Gibo_YQDVG5ndA79e_9KHOG_gqfPpDb1YjdQ1aYm8Xtdx0qk_NywxFZ9_pJSCTLoVNBY3H4WTlTKHgkF10PIpUbNKGWiB8YNzi0ZB1jPaSe-hmjzCzn6YFT0MJsSpicXJgoYPDcrfScawNRygLqJpjZi1sHwmgEKJuK3mU2wi5xrqXScANGkNtLBzcEGY_TqXG5Kz073Bvxke_th8DRcB4HcDGqo8AciieuJou25PB43vRy9vA1dBLHwQxcpWHQ0bmbo-CRt_nKnb-FoWKDnQ9ctASC4ip-3t739JZkk_PeAlXihciEexOY80Kz9ynerjDR9rxpzLEiDMB8OT6c-XzajxMgaY1-R_htP4
+                  - generic [ref=e879]:
+                    - img "Logo da empresa Ovation Law Firm" [ref=e884]
+                    - generic [ref=e885]:
+                      - generic [ref=e886]:
+                        - generic [ref=e887]:
+                          - strong [ref=e889]: PPC Specialist (LATAM)
+                          - generic [ref=e890]: PPC Specialist (LATAM)
+                        - generic [ref=e892]: Ovation Law Firm
+                        - generic [ref=e894]: Brasil (Remoto)
+                      - list [ref=e896]:
+                        - listitem [ref=e897]:
+                          - time [ref=e898]: Há 1 hora
+              - listitem [ref=e899]:
+                - link "Logo da empresa Keeta Finance Business Partner (Senior Manager) with verification Keeta São Paulo, Brasil (Presencial) Você seria um dos melhores candidatos Você seria um dos melhores candidatos Há 8 horas Candidatura simplificada" [ref=e901] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4403912037&referenceJobId=4398411428&originToLandingJobPostings=4403912037&trackingId=%2FshAyHieQADPC2agXgN0gg%3D%3D&refId=xw5%2FcG5oGsbyse7vgwR3JQ%3D%3D&eBP=CwEAAAGdr9bK55Q7nwVFJ5lIJtsqBQsaesroVWG-B3x5RnENKF3Z00eDn2tpN_n5UFvBv4n-72yM3yUB2TQhpirNYtCxm2kXVb3kab6Jh4XcRPIQuuQyZcn9A3t1W4mOVuWWRTjSJ8u_-1k0UXZFg2fiy5D0z_NbrF4gndL1wBXvbgdLU-HrTm_q5wrYT0-F_G8oHGNZo6M3H9dZD-EdFzDkKrKviNzfOWXkJS13MAi-QeqR2usm4Pdfzb0BTi3_RThGY8Ip5KXQbCsQpsBJU0ARr6brJDbyENirsQadvGW_zwZ8IcRBRbk9NlOL7_aLPCsJN78Te-5JHiZWxHM-qsXdTe_PGkiHWzQt3A3jMIna1Z9WkzOgaCGHRLWMkTvv8gG5NZCoADQQKHUf4IdH4W9JlUJ5Y0rbERmV0m4lC2vu6VTfrqPqJM2fcAnpkv4P5ICBokW6CpERmzbcJfwNypY2LgDLNpxhAkEMk3PBnznnR1P9RyVVX0Q
+                  - generic [ref=e903]:
+                    - img "Logo da empresa Keeta" [ref=e908]
+                    - generic [ref=e909]:
+                      - generic [ref=e910]:
+                        - generic [ref=e911]:
+                          - generic [ref=e912]:
+                            - strong [ref=e913]: Finance Business Partner (Senior Manager)
+                            - img [ref=e915]
+                          - generic [ref=e917]: Finance Business Partner (Senior Manager) with verification
+                        - generic [ref=e919]: Keeta
+                        - generic [ref=e921]: São Paulo, Brasil (Presencial)
+                        - list [ref=e923]:
+                          - listitem [ref=e924]:
+                            - img "Você seria um dos melhores candidatos" [ref=e927]:
+                              - img [ref=e928]
+                            - generic [ref=e931]: Você seria um dos melhores candidatos
+                      - list [ref=e933]:
+                        - listitem [ref=e934]:
+                          - time [ref=e935]: Há 8 horas
+                        - listitem [ref=e936]:
+                          - img [ref=e937]:
+                            - img [ref=e938]
+                          - generic [ref=e940]: Candidatura simplificada
+              - listitem [ref=e941]:
+                - link "Logo da empresa Illumina Associate Director Sales, Country Management Brazil with verification Illumina São Paulo, São Paulo, Brasil (Remoto) 20 ex-alunos da Fundação Getulio Vargas trabalham aqui Há 18 horas" [ref=e943] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4343377452&referenceJobId=4398411428&originToLandingJobPostings=4343377452&trackingId=7tsM%2FsNFOLcyTZsoz1rtSA%3D%3D&refId=xw5%2FcG5oGsbyse7vgwR3JQ%3D%3D&eBP=CwEAAAGdr9bK50Q9IuhkPNgWsY_k9lKpcFlfSq12TKf0eL02jN5qIdR0iLFdy9k_9uFBdSa10rpB2Be5YmIu5ElYxg3uzK4LYYzyQCepKkxAYcOv3ePBBU4hm57XKllF0SVdIV5FBK8NWcVZUDEKYhoYOiVn8FLSItUG3ZZ6Mlb59ZBtDyohkGroO2CRxshxG0n5h-kpoMzpxUvosWIub4EQJl7GLRT0fqScMa8fJshmp7B_GVrKT8p9VF-1Ze2ZZtE7dYsmQSkIfnRhSipjwIqdFo1gxkh0CEe_N6titNB-14f69X_YfMyvQERpozQlBXob7DgAt2wb3TmPokhIpYcMxeeiAlBUCgXOnERQrNzRAuva0lGYGRmYjdJ6HZSO1wTeI5mH1qYwEEGzWE0Jlp7MsZxyFicVv0l6r-PLdSE1Dz_urQAxa3hCsA_ZTCsP9xnZjfPLwfR0Jyr0f3Tg67Gy5dotoIJjiPBI60z8DXj7CNRFQumxy6A
+                  - generic [ref=e945]:
+                    - img "Logo da empresa Illumina" [ref=e950]
+                    - generic [ref=e951]:
+                      - generic [ref=e952]:
+                        - generic [ref=e953]:
+                          - generic [ref=e954]:
+                            - strong [ref=e955]: Associate Director Sales, Country Management Brazil
+                            - img [ref=e957]
+                          - generic [ref=e959]: Associate Director Sales, Country Management Brazil with verification
+                        - generic [ref=e961]: Illumina
+                        - generic [ref=e963]: São Paulo, São Paulo, Brasil (Remoto)
+                        - list [ref=e965]:
+                          - listitem [ref=e966]:
+                            - generic [ref=e969]:
+                              - generic [ref=e970]: 20 ex-alunos trabalham aqui
+                              - generic [ref=e971]: 20 ex-alunos da Fundação Getulio Vargas trabalham aqui
+                      - list [ref=e973]:
+                        - listitem [ref=e974]:
+                          - time [ref=e975]: Há 18 horas
+              - listitem [ref=e976]:
+                - link "Logo da empresa Nas Nuvens Music Group Revenue Operations Manager (Music & Catalog Business) Nas Nuvens Music Group São Paulo, São Paulo, Brasil (Presencial) Você seria um dos melhores candidatos Você seria um dos melhores candidatos Há 6 dias" [ref=e978] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4400775577&referenceJobId=4398411428&originToLandingJobPostings=4400775577&trackingId=nTFF8rM%2BKiTSBTOUp%2FjBPw%3D%3D&refId=xw5%2FcG5oGsbyse7vgwR3JQ%3D%3D&eBP=BUDGET_EXHAUSTED_JOB
+                  - generic [ref=e980]:
+                    - img "Logo da empresa Nas Nuvens Music Group" [ref=e985]
+                    - generic [ref=e986]:
+                      - generic [ref=e987]:
+                        - generic [ref=e988]:
+                          - strong [ref=e990]: Revenue Operations Manager (Music & Catalog Business)
+                          - generic [ref=e991]: Revenue Operations Manager (Music & Catalog Business)
+                        - generic [ref=e993]: Nas Nuvens Music Group
+                        - generic [ref=e995]: São Paulo, São Paulo, Brasil (Presencial)
+                        - list [ref=e997]:
+                          - listitem [ref=e998]:
+                            - img "Você seria um dos melhores candidatos" [ref=e1001]:
+                              - img [ref=e1002]
+                            - generic [ref=e1005]: Você seria um dos melhores candidatos
+                      - list [ref=e1007]:
+                        - listitem [ref=e1008]:
+                          - time [ref=e1009]: Há 6 dias
+              - listitem [ref=e1010]:
+                - link "Logo da empresa ADERE Fitas Adesivas Coordenador de Controladoria with verification ADERE Fitas Adesivas Sumaré, São Paulo, Brasil (Presencial) Avaliando candidaturas Avaliando candidaturas Há 5 dias Candidatura simplificada" [ref=e1012] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4399986937&referenceJobId=4398411428&originToLandingJobPostings=4399986937&trackingId=F4GasJxFNNkF9rjr%2FniwSA%3D%3D&refId=xw5%2FcG5oGsbyse7vgwR3JQ%3D%3D&eBP=CwEAAAGdr9bK5y6r4pxgPeAr2EFuFkYVIL0JElqMwWcwEia1xKNkWgiSqtZ7mr-e1UQn3VjjwEVDuFLI-5KBluFw5fnYQ6A-v-bD2HqofDcQ-9OYK-olo7adtCUVylSPP_i9jjhzMGN-HHjEdVOqd5Q5655iXUTCSoCtuz-JvQHV2egRAGv9y3d3QXINT4oA5BPpaXo19iUjAEi4ZvksdnwIInSA3GADhlLp5m449ouzaDmej23SbC6f8yX50uS7QhDw7tiXZOvOIea5PeH_OqCTnAroryTvsyxHGRUxbLWLfEgr-FCwEIhx2Qq3xJtIhyPokARGIMfMAnRVL_UX-vT0oq2A-RlNzNx5ZqQ06yxkPPqreapD6PzmubLvG9Mtm21H86lVv29HI9WbCAOSZ_cz3NzpHfpcH-zrKEKwK8TpBeirp3luJcWUS1A6HzEb3hxgzasQvYIJo0dZ5_nPDknvKJ1Bp_PvQaIWe-3LOSrAxc50bhRviyI
+                  - generic [ref=e1014]:
+                    - img "Logo da empresa ADERE Fitas Adesivas" [ref=e1019]
+                    - generic [ref=e1020]:
+                      - generic [ref=e1021]:
+                        - generic [ref=e1022]:
+                          - generic [ref=e1023]:
+                            - strong [ref=e1024]: Coordenador de Controladoria
+                            - img [ref=e1026]
+                          - generic [ref=e1028]: Coordenador de Controladoria with verification
+                        - generic [ref=e1030]: ADERE Fitas Adesivas
+                        - generic [ref=e1032]: Sumaré, São Paulo, Brasil (Presencial)
+                        - list [ref=e1034]:
+                          - listitem [ref=e1035]:
+                            - img "Avaliando candidaturas" [ref=e1038]
+                            - generic [ref=e1040]: Avaliando candidaturas
+                      - list [ref=e1042]:
+                        - listitem [ref=e1043]:
+                          - time [ref=e1044]: Há 5 dias
+                        - listitem [ref=e1045]:
+                          - img [ref=e1046]:
+                            - img [ref=e1047]
+                          - generic [ref=e1049]: Candidatura simplificada
+              - listitem [ref=e1050]:
+                - link "Logo da empresa tokens& Operations Lead — Remote tokens& São Paulo, Brasil (Remoto) Há 4 dias" [ref=e1052] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4402966886&referenceJobId=4398411428&originToLandingJobPostings=4402966886&trackingId=QFkES1zcz8nTN3awUkPdIw%3D%3D&refId=xw5%2FcG5oGsbyse7vgwR3JQ%3D%3D&eBP=BUDGET_EXHAUSTED_JOB
+                  - generic [ref=e1054]:
+                    - img "Logo da empresa tokens&" [ref=e1059]
+                    - generic [ref=e1060]:
+                      - generic [ref=e1061]:
+                        - generic [ref=e1062]:
+                          - strong [ref=e1064]: Operations Lead — Remote
+                          - generic [ref=e1065]: Operations Lead — Remote
+                        - generic [ref=e1067]: tokens&
+                        - generic [ref=e1069]: São Paulo, Brasil (Remoto)
+                      - list [ref=e1071]:
+                        - listitem [ref=e1072]:
+                          - time [ref=e1073]: Há 4 dias
+              - listitem [ref=e1074]:
+                - link "Logo da empresa StautGROUP Kestria Brasil Soluções em Capital Humano CEO with verification StautGROUP Kestria Brasil Soluções em Capital Humano São Paulo e Região (Presencial) 3 ex-alunos da Fundação Getulio Vargas trabalham aqui Há 6 dias" [ref=e1076] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4399907298&referenceJobId=4398411428&originToLandingJobPostings=4399907298&trackingId=zbPglTm8DVdh1CfEiIxWtA%3D%3D&refId=xw5%2FcG5oGsbyse7vgwR3JQ%3D%3D&eBP=BUDGET_EXHAUSTED_JOB
+                  - generic [ref=e1078]:
+                    - img "Logo da empresa StautGROUP Kestria Brasil Soluções em Capital Humano" [ref=e1083]
+                    - generic [ref=e1084]:
+                      - generic [ref=e1085]:
+                        - generic [ref=e1086]:
+                          - generic [ref=e1087]:
+                            - strong [ref=e1088]: CEO
+                            - img [ref=e1090]
+                          - generic [ref=e1092]: CEO with verification
+                        - generic [ref=e1094]: StautGROUP Kestria Brasil Soluções em Capital Humano
+                        - generic [ref=e1096]: São Paulo e Região (Presencial)
+                        - list [ref=e1098]:
+                          - listitem [ref=e1099]:
+                            - generic [ref=e1102]:
+                              - generic [ref=e1103]: 3 ex-alunos trabalham aqui
+                              - generic [ref=e1104]: 3 ex-alunos da Fundação Getulio Vargas trabalham aqui
+                      - list [ref=e1106]:
+                        - listitem [ref=e1107]:
+                          - time [ref=e1108]: Há 6 dias
+              - listitem [ref=e1109]:
+                - link "Logo da empresa WorkBetterNow Assistant to Vice President with verification WorkBetterNow Brasil (Remoto) Há 14 horas" [ref=e1111] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4403101441&referenceJobId=4398411428&originToLandingJobPostings=4403101441&trackingId=WeISKVtVd24ezRTWCezzhQ%3D%3D&refId=xw5%2FcG5oGsbyse7vgwR3JQ%3D%3D&eBP=CwEAAAGdr9bK53GoysvoHucJN4P6APcnpDq2SnOXEVFZS8Ve69g_l8b8cgkB5RnHvnqKNpde6nH2mfGQ6BCLbdRzWy17SsqRrGku6FXOFtfRle3mhrg9mJ1xdt7Huevl_cYoRcpxTlG3741PS95RtsgsiZe6u4g_tM02XpnNhJsc60_rCwsyGvN3Nec1lqkqyHxxZfqp1qdEXM6-KgiifK4vo1AJKJ7Rs654tWsCprPs3GezlCEowpvTO-_xALYsIDgopxpxgWPDd8cHDmBJj-IE1c3HsHuwh-K5auT1zOy_NuwjUBGP6i_8MBotZucaTmBgq3aiqvhU4_v_-ZBdxDi5UBLkMahazdV-hC6cKV2t8gkwbiqq2ZQKmGRDWrwqLsj-kjyZVhiK41eGyQ4sn5kHPyQsiD4Rm9bdiT0rPsdreo2A_jVq5nmG2KhWBVS2zaDeFRKl4OFQiGUVCwBsXpOgIC9PPcHyIy667Q
+                  - generic [ref=e1113]:
+                    - img "Logo da empresa WorkBetterNow" [ref=e1118]
+                    - generic [ref=e1119]:
+                      - generic [ref=e1120]:
+                        - generic [ref=e1121]:
+                          - generic [ref=e1122]:
+                            - strong [ref=e1123]: Assistant to Vice President
+                            - img [ref=e1125]
+                          - generic [ref=e1127]: Assistant to Vice President with verification
+                        - generic [ref=e1129]: WorkBetterNow
+                        - generic [ref=e1131]: Brasil (Remoto)
+                      - list [ref=e1133]:
+                        - listitem [ref=e1134]:
+                          - time [ref=e1135]: Há 14 horas
+            - link "Ver mais vagas como esta" [ref=e1137] [cursor=pointer]:
+              - /url: https://www.linkedin.com/jobs/collections/similar-jobs?referenceJobId=4398411428
+        - complementary [ref=e237]:
+          - generic [ref=e238]:
+            - generic [ref=e1138]:
+              - img "Premium" [ref=e1140]:
+                - img [ref=e1141]
+              - heading "Adquira competências com esses cursos para conseguir um novo emprego" [level=2] [ref=e1143]
+              - listitem [ref=e1144]:
+                - link "Competências Indispensáveis para seus Primeiros 90 Dias na Gerência" [ref=e1145] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/learning/competencias-indispensaveis-para-seus-primeiros-90-dias-na-gerencia?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_2688016_learning
+                  - img "Competências Indispensáveis para seus Primeiros 90 Dias na Gerência" [ref=e1148]
+                  - img [ref=e1150]
+                - generic [ref=e1152]:
+                  - link "Competências Indispensáveis para seus Primeiros 90 Dias na Gerência" [ref=e1153] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/learning/competencias-indispensaveis-para-seus-primeiros-90-dias-na-gerencia?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_2688016_learning
+                    - generic [ref=e1154]: Competências Indispensáveis para seus Primeiros 90 Dias na Gerência
+                  - generic [ref=e1156]: 5.680 visualizações
+              - listitem [ref=e1157]:
+                - 'link "Power BI: Como Criar um Dashboard de Fluxo de Caixa" [ref=e1158] [cursor=pointer]':
+                  - /url: https://www.linkedin.com/learning/power-bi-como-criar-um-dashboard-de-fluxo-de-caixa?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_2127078_learning
+                  - 'img "Power BI: Como Criar um Dashboard de Fluxo de Caixa" [ref=e1161]'
+                  - img [ref=e1163]
+                - generic [ref=e1165]:
+                  - 'link "Power BI: Como Criar um Dashboard de Fluxo de Caixa" [ref=e1166] [cursor=pointer]':
+                    - /url: https://www.linkedin.com/learning/power-bi-como-criar-um-dashboard-de-fluxo-de-caixa?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_2127078_learning
+                    - generic [ref=e1167]: "Power BI: Como Criar um Dashboard de Fluxo de Caixa"
+                  - generic [ref=e1169]: 45.524 visualizações
+              - listitem [ref=e1170]:
+                - link "Melhores Práticas de Prototipação Rápida para Desenvolvimento de Software" [ref=e1171] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/learning/melhores-praticas-de-prototipacao-rapida-para-desenvolvimento-de-software?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_5208478_learning
+                  - img "Melhores Práticas de Prototipação Rápida para Desenvolvimento de Software" [ref=e1174]
+                  - img [ref=e1176]
+                - generic [ref=e1178]:
+                  - link "Melhores Práticas de Prototipação Rápida para Desenvolvimento de Software" [ref=e1179] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/learning/melhores-praticas-de-prototipacao-rapida-para-desenvolvimento-de-software?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_5208478_learning
+                    - generic [ref=e1180]: Melhores Práticas de Prototipação Rápida para Desenvolvimento de Software
+                  - generic [ref=e1182]: 1.662 visualizações
+              - link "Exibir mais no LinkedIn Learning" [ref=e1184] [cursor=pointer]:
+                - /url: /learning?trk=jobdetails_learning_awareness
+            - generic [ref=e1185]:
+              - paragraph [ref=e1186]: Procurando um talento?
+              - link "Anunciar vaga" [ref=e1187] [cursor=pointer]:
+                - /url: https://www.linkedin.com/talent/job-posting-redirect?trk=flagship3_job_detail
+      - contentinfo [ref=e240]:
+        - generic [ref=e1188]:
+          - generic [ref=e1189]:
+            - navigation [ref=e1190]:
+              - list [ref=e1191]:
+                - listitem [ref=e1192]:
+                  - link "Sobre" [ref=e1193] [cursor=pointer]:
+                    - /url: https://about.linkedin.com/pt-br
+                - listitem [ref=e1194]:
+                  - link "Acessibilidade" [ref=e1195] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/accessibility
+                - listitem [ref=e1196]:
+                  - link "Soluções de Talentos" [ref=e1197] [cursor=pointer]:
+                    - /url: https://business.linkedin.com/pt-br/talent-solutions?trk=flagship_nav&veh=li-footer-lts-control-pt-br&src=li-footer
+                - listitem [ref=e1198]:
+                  - link "Políticas para Comunidades Profissionais" [ref=e1199] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/legal/professional-community-policies
+                - listitem [ref=e1200]:
+                  - link "Carreiras" [ref=e1201] [cursor=pointer]:
+                    - /url: https://careers.linkedin.com/
+                - listitem [ref=e1202]:
+                  - link "Soluções de Marketing" [ref=e1203] [cursor=pointer]:
+                    - /url: https://business.linkedin.com/pt-br/marketing-solutions?trk=n_nav_lms_f&src=li-footer
+                - listitem [ref=e1204]:
+                  - button "Termos e Privacidade" [ref=e1206] [cursor=pointer]:
+                    - generic [ref=e1208]:
+                      - text: Termos e Privacidade
+                      - img [ref=e1209]
+                - listitem [ref=e1211]:
+                  - link "Preferências de anúncios" [ref=e1212] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/help/linkedin/answer/62931?lang=pt
+                - listitem [ref=e1213]:
+                  - link "Publicidade" [ref=e1214] [cursor=pointer]:
+                    - /url: https://business.linkedin.com/pt-br/marketing-solutions/ads?trk=n_nav_ads_f
+                - listitem [ref=e1215]:
+                  - link "Soluções de Vendas" [ref=e1216] [cursor=pointer]:
+                    - /url: https://business.linkedin.com/pt-br/sales-solutions?trk=flagship_nav&veh=li-footer-lss-control-pt-br&src=li-footer
+                - listitem [ref=e1217]:
+                  - link "Para celular" [ref=e1218] [cursor=pointer]:
+                    - /url: https://mobile.linkedin.com/pt-br
+                - listitem [ref=e1219]:
+                  - link "Pequenas empresas" [ref=e1220] [cursor=pointer]:
+                    - /url: https://smallbusiness.linkedin.com?&src=li-footer
+                - listitem [ref=e1221]:
+                  - link "Central de Segurança" [ref=e1222] [cursor=pointer]:
+                    - /url: https://safety.linkedin.com
+            - generic [ref=e1224]:
+              - list [ref=e1225]:
+                - listitem [ref=e1226]:
+                  - img [ref=e1227]
+                  - generic [ref=e1229]:
+                    - link "Dúvidas? Acesse a nossa Central de Ajuda." [ref=e1230] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/help/linkedin?trk=d_flagship3_job_details
+                      - text: Dúvidas?
+                    - paragraph [ref=e1231]: Acesse a nossa Central de Ajuda.
+                - listitem [ref=e1232]:
+                  - img [ref=e1233]
+                  - generic [ref=e1235]:
+                    - link "Gerencie sua conta e privacidade Acesse suas Configurações." [ref=e1236] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/psettings/
+                      - text: Gerencie sua conta e privacidade
+                    - paragraph [ref=e1237]: Acesse suas Configurações.
+                - listitem [ref=e1238]:
+                  - img [ref=e1239]
+                  - generic [ref=e1241]:
+                    - link "Visibilidade da recomendação Saiba mais sobre os conteúdos recomendados." [ref=e1242] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/help/linkedin/answer/a1339724
+                      - text: Visibilidade da recomendação
+                    - paragraph [ref=e1243]: Saiba mais sobre os conteúdos recomendados.
+              - generic [ref=e1244]:
+                - generic [ref=e1245]: Selecionar idioma
+                - combobox "Selecionar idioma" [ref=e1246]:
+                  - option "العربية (Árabe)"
+                  - option "বাংলা (Bengali)"
+                  - option "Čeština (Tcheco)"
+                  - option "Dansk (Dinamarquês)"
+                  - option "Deutsch (Alemão)"
+                  - option "Ελληνικά (Grego)"
+                  - option "English (Inglês)"
+                  - option "Español (Espanhol)"
+                  - option "فارسی (Persa)"
+                  - option "Suomi (Finlandês)"
+                  - option "Français (Francês)"
+                  - option "हिंदी (Hindi)"
+                  - option "Magyar (Húngaro)"
+                  - option "Bahasa Indonésia (Indonésio)"
+                  - option "Italiano (Italiano)"
+                  - option "עברית (Hebraico)"
+                  - option "日本語 (Japonês)"
+                  - option "한국어 (Coreano)"
+                  - option "मराठी (Marati)"
+                  - option "Bahasa Malaysia (Malaio)"
+                  - option "Nederlands (Holandês)"
+                  - option "Norsk (Norueguês)"
+                  - option "ਪੰਜਾਬੀ (Punjabi)"
+                  - option "Polski (Polonês)"
+                  - option "Português (Português)" [selected]
+                  - option "Română (Romeno)"
+                  - option "Русский (Russo)"
+                  - option "Svenska (Sueco)"
+                  - option "తెలుగు (Telugu)"
+                  - option "ภาษาไทย (Tailandês)"
+                  - option "Tagalog (Tagalog)"
+                  - option "Türkçe (Turco)"
+                  - option "Українська (Ucraniano)"
+                  - option "Tiếng Việt (Vietnamita)"
+                  - option "简体中文 (Chinês (Simplificado))"
+                  - option "正體中文 (Chinês (Tradicional))"
+          - paragraph [ref=e1247]: LinkedIn Corporation © 2026
+    - generic:
+      - generic:
+        - complementary:
+          - generic [ref=e242]:
+            - generic [ref=e243]:
+              - generic [ref=e245] [cursor=pointer]:
+                - img "Fernando Xavier" [ref=e247]
+                - button "Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas." [ref=e248]:
+                  - generic [ref=e249]:
+                    - generic [ref=e250]: Mensagens
+                    - generic [ref=e251]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+              - generic [ref=e252]:
+                - button "Abrir o menu suspenso de mensagens" [ref=e254] [cursor=pointer]:
+                  - img "Abrir o menu suspenso de mensagens" [ref=e255]
+                - button "Escrever mensagem" [ref=e258] [cursor=pointer]:
+                  - img [ref=e259]
+                  - generic [ref=e261]: Escrever mensagem
+                - button "Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas." [ref=e262] [cursor=pointer]:
+                  - img [ref=e263]
+                  - generic [ref=e265]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+            - link "Foto da empresa Fernando Xavier Fernando Xavier" [ref=e1248] [cursor=pointer]:
+              - /url: https://www.linkedin.com/company/109375368/admin/inbox
+              - img "Foto da empresa Fernando Xavier" [ref=e1249]
+              - generic [ref=e1250]: Fernando Xavier
+              - img [ref=e1251]
+        - complementary "Assistente de IA para obter ajuda com sua carreira, vagas, etc."

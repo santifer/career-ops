@@ -1,0 +1,33 @@
+- generic [ref=e4]:
+  - link "Ir para o conteúdo principal" [ref=e5] [cursor=pointer]:
+    - /url: ""
+  - banner [ref=e8]:
+    - generic [ref=e10]:
+      - heading "Griffith Foods" [level=1] [ref=e13]
+      - generic [ref=e15]:
+        - generic [ref=e16]:
+          - button "Português (‏Brasil)" [ref=e18] [cursor=pointer]:
+            - generic [ref=e22]: Português (‏Brasil)
+          - button "Fazer login" [ref=e24] [cursor=pointer]:
+            - generic [ref=e29]: Fazer login
+        - navigation [ref=e30]:
+          - button "Página inicial" [ref=e31] [cursor=pointer]
+          - button "Pesquisar cargos" [ref=e32] [cursor=pointer]
+          - button "Introduce Yourself" [ref=e33] [cursor=pointer]
+  - generic [ref=e37]:
+    - generic [ref=e38]: Siga-nos
+    - list [ref=e39]:
+      - listitem [ref=e40] [cursor=pointer]:
+        - link "LinkedIn" [ref=e41]:
+          - /url: https://www.linkedin.com/company/griffith-foods
+      - listitem [ref=e45] [cursor=pointer]:
+        - link "Glassdoor" [ref=e46]:
+          - /url: https://www.glassdoor.com/Overview/Working-at-Griffith-Foods-EI_IE8953.11,25.htm
+      - listitem [ref=e51] [cursor=pointer]:
+        - link "Facebook" [ref=e52]:
+          - /url: https://www.facebook.com/GriffithFoods/
+    - link "Política de privacidade" [ref=e57] [cursor=pointer]:
+      - /url: https://griffithfoods.com/privacy-policy/
+    - generic [ref=e58]:
+      - img [ref=e62]
+      - generic [ref=e82]: © 2026 Workday, Inc. Todos os direitos reservados.

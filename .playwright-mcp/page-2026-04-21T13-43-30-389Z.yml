@@ -1,0 +1,152 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e112]:
+    - log
+    - log
+  - generic [ref=e3]:
+    - banner [ref=e11]:
+      - link "Pulsus logo" [ref=e166] [cursor=pointer]:
+        - /url: "#"
+        - img "Pulsus logo" [ref=e167]
+      - generic [ref=e14]:
+        - button "Email" [ref=e168] [cursor=pointer]:
+          - img [ref=e18]
+        - button "Menu" [ref=e169] [cursor=pointer]:
+          - img [ref=e24]
+    - generic [ref=e390]:
+      - generic [ref=e391]:
+        - heading "Controller | Híbrido | São Paulo - SP" [level=1] [ref=e392]
+        - paragraph [ref=e393]:
+          - generic [ref=e394]:
+            - text: Acompanhe abaixo o andamento de cada etapa do seu processo seletivo. Caso queira consultar a descrição da vaga,
+            - link "clique aqui" [ref=e395] [cursor=pointer]:
+              - /url: /jobs/11015815?jobBoardSource=gupy_opportunities
+            - text: .
+      - generic [ref=e397]:
+        - heading "Sobre nós" [level=2] [ref=e399]
+        - button "Esta empresa apresentou tempo médio de 74 dias para fechar suas vagas nos últimos três meses." [ref=e402]:
+          - img [ref=e403]
+          - generic [ref=e406]: Tempo médio de fechamento de vagas de 74 dias
+      - heading "Sobre o processo" [level=2] [ref=e409]
+      - generic [ref=e410]:
+        - generic [ref=e411]:
+          - generic [ref=e412]: Seu progresso
+          - generic [ref=e413]: 2/6
+        - progressbar [ref=e414]
+      - alert [ref=e417]:
+        - img [ref=e419]
+        - paragraph [ref=e422]:
+          - generic [ref=e423]: A última movimentação de pessoas candidatas nesta vaga aconteceu há 5 dias. A vaga está aberta há 1 mês.
+      - generic [ref=e424]:
+        - generic [ref=e425]:
+          - generic [ref=e426]: "1"
+          - generic [ref=e430]:
+            - button "Currículo" [ref=e431] [cursor=pointer]:
+              - generic [ref=e432]:
+                - img [ref=e433]
+                - generic [ref=e437]: Currículo
+              - button [ref=e438]:
+                - img [ref=e440]
+            - generic [ref=e444]:
+              - generic [ref=e445]:
+                - generic [ref=e446]:
+                  - img [ref=e447]
+                  - generic [ref=e449]:
+                    - strong [ref=e450]: Mais de 100 pessoas candidatas
+                    - text: nesta etapa.
+                - generic [ref=e451]:
+                  - img [ref=e452]
+                  - generic [ref=e454]: "Termina em: 18/05/2026"
+              - button [ref=e456] [cursor=pointer]:
+                - generic [ref=e459]: Ver
+        - generic [ref=e461]:
+          - generic [ref=e462]: "2"
+          - generic [ref=e466]:
+            - button "Teste de Raciocínio Lógico" [expanded] [ref=e467] [cursor=pointer]:
+              - generic [ref=e469]: Teste de Raciocínio Lógico
+              - button [ref=e470]:
+                - img [ref=e472]
+            - generic [ref=e477]:
+              - generic [ref=e478]:
+                - generic [ref=e479]: O teste de raciocínio lógico é uma parte importante do nosso processo seletivo porque nos ajuda a entender como você resolve problemas e encara desafios, habilidades super valiosas para o dia a dia aqui. Mas não se preocupe, ele é só uma das formas de conhecermos mais sobre você. E, claro, estamos por aqui caso precise de ajuda! Boa sorte!
+                - generic [ref=e480]:
+                  - img [ref=e481]
+                  - generic [ref=e483]:
+                    - strong [ref=e484]: Mais de 100 pessoas candidatas
+                    - text: nesta etapa.
+              - button "Iniciar teste" [ref=e486] [cursor=pointer]:
+                - generic [ref=e489]: Iniciar teste
+        - generic [ref=e491]:
+          - generic [ref=e492]: "3"
+          - generic [ref=e496]:
+            - button "Entrevista com o time de Pessoas!" [ref=e497] [cursor=pointer]:
+              - generic [ref=e498]:
+                - img [ref=e499]
+                - generic [ref=e501]: Entrevista com o time de Pessoas!
+              - button [ref=e502]:
+                - img [ref=e504]
+            - generic [ref=e510]:
+              - img [ref=e511]
+              - generic [ref=e513]:
+                - strong [ref=e514]: Entre 11-50 pessoas candidatas
+                - text: nesta etapa.
+        - generic [ref=e516]:
+          - generic [ref=e517]: "4"
+          - generic [ref=e521]:
+            - button "Entrevista com o Head da área" [ref=e522] [cursor=pointer]:
+              - generic [ref=e523]:
+                - img [ref=e524]
+                - generic [ref=e526]: Entrevista com o Head da área
+              - button [ref=e527]:
+                - img [ref=e529]
+            - generic [ref=e535]:
+              - img [ref=e536]
+              - generic [ref=e538]:
+                - strong [ref=e539]: Nenhuma pessoa candidata
+                - text: nesta etapa.
+        - generic [ref=e541]:
+          - generic [ref=e542]: "5"
+          - generic [ref=e546]:
+            - button "Entrevista com a diretoria" [ref=e547] [cursor=pointer]:
+              - generic [ref=e548]:
+                - img [ref=e549]
+                - generic [ref=e551]: Entrevista com a diretoria
+              - button [ref=e552]:
+                - img [ref=e554]
+            - generic [ref=e560]:
+              - img [ref=e561]
+              - generic [ref=e563]:
+                - strong [ref=e564]: Nenhuma pessoa candidata
+                - text: nesta etapa.
+        - generic [ref=e566]:
+          - generic [ref=e567]: "6"
+          - generic [ref=e571]:
+            - button "Final" [ref=e572] [cursor=pointer]:
+              - generic [ref=e573]:
+                - img [ref=e574]
+                - generic [ref=e576]: Final
+              - button [ref=e577]:
+                - img [ref=e579]
+            - generic [ref=e585]:
+              - img [ref=e586]
+              - generic [ref=e588]:
+                - strong [ref=e589]: Nenhuma pessoa candidata
+                - text: nesta etapa.
+    - contentinfo [ref=e40]: Gupy 2026. Todos os direitos reservados. v5.61.0
+    - link "Suporte para candidatos" [ref=e182] [cursor=pointer]:
+      - /url: https://suporte-candidatos.gupy.io/s/suporte?language=pt_BR
+      - text: "?"
+  - button [ref=e41]:
+    - generic [ref=e42]: 99+
+  - generic:
+    - generic "Privacy Tools - Cookie Management"
+    - generic "Privacy Tools - Cookie Management - https://www.privacytools.com.br"
+  - generic "Plugin de acessibilidade da Hand Talk." [ref=e375]:
+    - heading "Plugin de acessibilidade da Hand Talk." [level=2] [ref=e376]
+    - button "Abrir recursos assistivos." [ref=e377] [cursor=pointer]:
+      - img [ref=e46]
+      - paragraph:
+        - generic [ref=e48]: Recursos Assistivos
+    - button "Abrir tradutor de língua de sinais." [ref=e378] [cursor=pointer]:
+      - img [ref=e50]
+      - paragraph:
+        - generic [ref=e57]: Acessível em Libras

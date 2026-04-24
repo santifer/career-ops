@@ -1,0 +1,58 @@
+- generic [ref=e2]:
+  - banner
+  - main [ref=e3]:
+    - generic [ref=e4]:
+      - img [ref=e7]
+      - generic [ref=e16]:
+        - heading "Olá novamente" [level=1] [ref=e17]
+        - paragraph [ref=e18]: Não perca sua próxima oportunidade. Entre para ficar por dentro das novidades na sua profissão.
+      - generic [ref=e19]:
+        - generic [ref=e20]:
+          - textbox "E-mail ou telefone" [active] [ref=e21]:
+            - /placeholder: " "
+            - text: fernandocostaxavier@gmail.com
+          - generic [ref=e22]: E-mail ou telefone
+        - generic [ref=e23]:
+          - textbox "Senha" [ref=e24]: Fcxv020781@
+          - generic [ref=e25]: Senha
+          - button "Exibir" [ref=e26] [cursor=pointer]
+        - generic [ref=e27]:
+          - button "Cancelar" [ref=e28] [cursor=pointer]
+          - button "Entrar" [ref=e29] [cursor=pointer]
+      - generic [ref=e30]:
+        - link "Esqueceu a senha?" [ref=e32] [cursor=pointer]:
+          - /url: /checkpoint/rp/request-password-reset?session_redirect=%2Foauth%2Fv2%2Flogin-success%3Fapp_id%3D4226463%26auth_type%3DAC%26flow%3D%257B%2522state%2522%253A%25223da8c7c1-b906-499a-8bcf-86f0a526e219%2522%252C%2522creationTime%2522%253A1776778811273%252C%2522scope%2522%253A%2522r_liteprofile%2Br_emailaddress%2522%252C%2522appId%2522%253A4226463%252C%2522authorizationType%2522%253A%2522OAUTH2_AUTHORIZATION_CODE%2522%252C%2522redirectUri%2522%253A%2522https%253A%252F%252Fsecure-v2%2Egupy%2Eio%252Fcandidates%252Flinkedin%252Fcallback%2522%252C%2522currentStage%2522%253A%2522LOGIN_SUCCESS%2522%252C%2522currentSubStage%2522%253A0%252C%2522authFlowName%2522%253A%2522generic-permission-list%2522%257D&trk=oauth
+        - paragraph [ref=e33]:
+          - text: Ainda não faz parte do LinkedIn?
+          - link "Cadastre-se agora" [ref=e34] [cursor=pointer]:
+            - /url: /signup/cold-join?session_redirect=%2Foauth%2Fv2%2Flogin-success%3Fapp_id%3D4226463%26auth_type%3DAC%26flow%3D%257B%2522state%2522%253A%25223da8c7c1-b906-499a-8bcf-86f0a526e219%2522%252C%2522creationTime%2522%253A1776778811273%252C%2522scope%2522%253A%2522r_liteprofile%2Br_emailaddress%2522%252C%2522appId%2522%253A4226463%252C%2522authorizationType%2522%253A%2522OAUTH2_AUTHORIZATION_CODE%2522%252C%2522redirectUri%2522%253A%2522https%253A%252F%252Fsecure-v2.gupy.io%252Fcandidates%252Flinkedin%252Fcallback%2522%252C%2522currentStage%2522%253A%2522LOGIN_SUCCESS%2522%252C%2522currentSubStage%2522%253A0%252C%2522authFlowName%2522%253A%2522generic-permission-list%2522%257D&source=oauth
+  - contentinfo [ref=e35]:
+    - generic [ref=e36]:
+      - paragraph [ref=e37]:
+        - img [ref=e39]
+        - emphasis [ref=e51]:
+          - generic: LinkedIn
+          - text: © 2026
+      - list "Footer Legal Menu" [ref=e53]:
+        - listitem [ref=e54]:
+          - link "Contrato do Usuário" [ref=e55] [cursor=pointer]:
+            - /url: /legal/user-agreement?trk=d_checkpoint_lg_consumer_login_oauth_ft_user_agreement
+        - listitem [ref=e56]:
+          - link "Política de Privacidade do LinkedIn" [ref=e57] [cursor=pointer]:
+            - /url: /legal/privacy-policy?trk=d_checkpoint_lg_consumer_login_oauth_ft_privacy_policy
+        - listitem [ref=e58]:
+          - link "Diretrizes da Comunidade" [ref=e59] [cursor=pointer]:
+            - /url: /help/linkedin/answer/34593?lang=en&trk=d_checkpoint_lg_consumer_login_oauth_ft_community_guidelines
+        - listitem [ref=e60]:
+          - link "Política de Cookies" [ref=e61] [cursor=pointer]:
+            - /url: /legal/cookie-policy?trk=d_checkpoint_lg_consumer_login_oauth_ft_cookie_policy
+        - listitem [ref=e62]:
+          - link "Política de Direitos Autorais" [ref=e63] [cursor=pointer]:
+            - /url: /legal/copyright-policy?trk=d_checkpoint_lg_consumer_login_oauth_ft_copyright_policy
+        - listitem [ref=e64]:
+          - link "Enviar feedback" [ref=e65] [cursor=pointer]:
+            - /url: /help/linkedin?trk=d_checkpoint_lg_consumer_login_oauth_ft_send_feedback&lang=en
+        - listitem [ref=e66]:
+          - button "Idioma" [ref=e68] [cursor=pointer]:
+            - text: Idioma
+            - img [ref=e70]

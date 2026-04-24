@@ -1,0 +1,1220 @@
+- generic [ref=e1]:
+  - generic:
+    - region "Mensagem toast":
+      - heading "0 notificações no total" [level=2] [ref=e3]
+      - alert
+  - dialog "Candidate-se na IDEMIA" [active] [ref=e1310]:
+    - generic [ref=e1311]: Início do conteúdo do diálogo.
+    - button "Fechar" [ref=e1312] [cursor=pointer]:
+      - img [ref=e1313]
+    - heading "Candidate-se na IDEMIA" [level=2] [ref=e1317]
+    - region "O andamento da sua candidatura está em 0 porcento." [ref=e1319]:
+      - generic [ref=e1320]:
+        - progressbar [ref=e1323]: "Valor atual: 0"
+        - note "O andamento da sua candidatura está em 0 porcento." [ref=e1324]: 0%
+      - generic [ref=e1326]:
+        - generic [ref=e1328]:
+          - heading "Información de contacto" [level=3] [ref=e1329]
+          - generic [ref=e1332]:
+            - generic [ref=e1333]:
+              - generic [ref=e1334]: Email
+              - generic [ref=e1335]: Email
+              - text: "*"
+            - generic [ref=e1336]: Obrigatório
+            - combobox "Email *" [ref=e1337]:
+              - option "Selecciona una opción"
+              - option "fernandocostaxavier@gmail.com" [selected]
+          - generic [ref=e1340]:
+            - generic [ref=e1341]:
+              - generic [ref=e1342]: Código del país
+              - generic [ref=e1343]: Código del país
+              - text: "*"
+            - generic [ref=e1344]: Obrigatório
+            - combobox "Código del país *" [ref=e1345]:
+              - option "Selecciona una opción"
+              - option "Brasil (+55)" [selected]
+              - option "Afganistán (+93)"
+              - option "Albania (+355)"
+              - option "Alemania (+49)"
+              - option "Andorra (+376)"
+              - option "Angola (+244)"
+              - option "Anguila (+1)"
+              - option "Antigua y Barbuda (+1)"
+              - option "Antártida (+0)"
+              - option "Arabia Saudí (+966)"
+              - option "Argelia (+213)"
+              - option "Argentina (+54)"
+              - option "Armenia (+374)"
+              - option "Aruba (+297)"
+              - option "Australia (+61)"
+              - option "Austria (+43)"
+              - option "Azerbaiyán (+994)"
+              - option "Bahamas (+1)"
+              - option "Bangladés (+880)"
+              - option "Barbados (+1)"
+              - option "Baréin (+973)"
+              - option "Belice (+501)"
+              - option "Benín (+229)"
+              - option "Bermudas (+1)"
+              - option "Bielorrusia (+375)"
+              - option "Bolivia (+591)"
+              - option "Bosnia y Herzegovina (+387)"
+              - option "Botsuana (+267)"
+              - option "Brunéi (+673)"
+              - option "Bulgaria (+359)"
+              - option "Burkina Faso (+226)"
+              - option "Burundi (+257)"
+              - option "Bután (+975)"
+              - option "Bélgica (+32)"
+              - option "Cabo Verde (+238)"
+              - option "Camboya (+855)"
+              - option "Camerún (+237)"
+              - option "Canadá (+1)"
+              - option "Caribe neerlandés (+599)"
+              - option "Catar (+974)"
+              - option "Chad (+235)"
+              - option "Chequia (+420)"
+              - option "Chile (+56)"
+              - option "China (+86)"
+              - option "Chipre (+357)"
+              - option "Ciudad del Vaticano (+39)"
+              - option "Colombia (+57)"
+              - option "Comoras (+269)"
+              - option "Congo (+242)"
+              - option "Corea del Norte (+850)"
+              - option "Corea del Sur (+82)"
+              - option "Costa Rica (+506)"
+              - option "Croacia (+385)"
+              - option "Cuba (+53)"
+              - option "Curazao (+599)"
+              - option "Côte d’Ivoire (+225)"
+              - option "Dinamarca (+45)"
+              - option "Dominica (+1)"
+              - option "Ecuador (+593)"
+              - option "Egipto (+20)"
+              - option "El Salvador (+503)"
+              - option "Emiratos Árabes Unidos (+971)"
+              - option "Eritrea (+291)"
+              - option "Eslovaquia (+421)"
+              - option "Eslovenia (+386)"
+              - option "España (+34)"
+              - option "Estados Unidos (+1)"
+              - option "Estonia (+372)"
+              - option "Esuatini (+268)"
+              - option "Etiopía (+251)"
+              - option "Filipinas (+63)"
+              - option "Finlandia (+358)"
+              - option "Fiyi (+679)"
+              - option "Francia (+33)"
+              - option "Gabón (+241)"
+              - option "Gambia (+220)"
+              - option "Georgia (+995)"
+              - option "Ghana (+233)"
+              - option "Gibraltar (+350)"
+              - option "Granada (+1)"
+              - option "Grecia (+30)"
+              - option "Groenlandia (+299)"
+              - option "Guadalupe (+590)"
+              - option "Guam (+1)"
+              - option "Guatemala (+502)"
+              - option "Guayana Francesa (+594)"
+              - option "Guernesey (+44)"
+              - option "Guinea (+224)"
+              - option "Guinea Ecuatorial (+240)"
+              - option "Guinea-Bisáu (+245)"
+              - option "Guyana (+592)"
+              - option "Haití (+509)"
+              - option "Honduras (+504)"
+              - option "Hungría (+36)"
+              - option "India (+91)"
+              - option "Indonesia (+62)"
+              - option "Irak (+964)"
+              - option "Irlanda (+353)"
+              - option "Irán (+98)"
+              - option "Isla Bouvet (+0)"
+              - option "Isla Norfolk (+672)"
+              - option "Isla de Man (+44)"
+              - option "Isla de Navidad (+61)"
+              - option "Islandia (+354)"
+              - option "Islas Aland (+358)"
+              - option "Islas Caimán (+1)"
+              - option "Islas Cocos (+61)"
+              - option "Islas Cook (+682)"
+              - option "Islas Feroe (+298)"
+              - option "Islas Georgia del Sur y Sandwich del Sur (+0)"
+              - option "Islas Heard y McDonald (+0)"
+              - option "Islas Malvinas (+500)"
+              - option "Islas Marianas del Norte (+1)"
+              - option "Islas Marshall (+692)"
+              - option "Islas Pitcairn (+0)"
+              - option "Islas Salomón (+677)"
+              - option "Islas Turcas y Caicos (+1)"
+              - option "Islas Vírgenes Británicas (+1)"
+              - option "Islas Vírgenes de EE. UU. (+1)"
+              - option "Islas menores alejadas de EE. UU. (+0)"
+              - option "Israel (+972)"
+              - option "Italia (+39)"
+              - option "Jamaica (+1)"
+              - option "Japón (+81)"
+              - option "Jersey (+44)"
+              - option "Jordania (+962)"
+              - option "Kazajistán (+7)"
+              - option "Kenia (+254)"
+              - option "Kirguistán (+996)"
+              - option "Kiribati (+686)"
+              - option "Kuwait (+965)"
+              - option "Laos (+856)"
+              - option "Lesoto (+266)"
+              - option "Letonia (+371)"
+              - option "Liberia (+231)"
+              - option "Libia (+218)"
+              - option "Liechtenstein (+423)"
+              - option "Lituania (+370)"
+              - option "Luxemburgo (+352)"
+              - option "Líbano (+961)"
+              - option "Macedonia del Norte (+389)"
+              - option "Madagascar (+261)"
+              - option "Malasia (+60)"
+              - option "Malaui (+265)"
+              - option "Maldivas (+960)"
+              - option "Mali (+223)"
+              - option "Malta (+356)"
+              - option "Marruecos (+212)"
+              - option "Martinica (+596)"
+              - option "Mauricio (+230)"
+              - option "Mauritania (+222)"
+              - option "Mayotte (+262)"
+              - option "Micronesia (+691)"
+              - option "Moldavia (+373)"
+              - option "Mongolia (+976)"
+              - option "Montenegro (+382)"
+              - option "Montserrat (+1)"
+              - option "Mozambique (+258)"
+              - option "Myanmar (Birmania) (+95)"
+              - option "México (+52)"
+              - option "Mónaco (+377)"
+              - option "Namibia (+264)"
+              - option "Nauru (+674)"
+              - option "Nepal (+977)"
+              - option "Nicaragua (+505)"
+              - option "Nigeria (+234)"
+              - option "Niue (+683)"
+              - option "Noruega (+47)"
+              - option "Nueva Caledonia (+687)"
+              - option "Nueva Zelanda (+64)"
+              - option "Níger (+227)"
+              - option "Omán (+968)"
+              - option "Pakistán (+92)"
+              - option "Palaos (+680)"
+              - option "Panamá (+507)"
+              - option "Papúa Nueva Guinea (+675)"
+              - option "Paraguay (+595)"
+              - option "Países Bajos (+31)"
+              - option "Perú (+51)"
+              - option "Polinesia Francesa (+689)"
+              - option "Polonia (+48)"
+              - option "Portugal (+351)"
+              - option "Puerto Rico (+1)"
+              - option "RAE de Hong Kong (China) (+852)"
+              - option "RAE de Macao (China) (+853)"
+              - option "Reino Unido (+44)"
+              - option "República Centroafricana (+236)"
+              - option "República Democrática del Congo (+243)"
+              - option "República Dominicana (+1)"
+              - option "Reunión (+262)"
+              - option "Ruanda (+250)"
+              - option "Rumanía (+40)"
+              - option "Rusia (+7)"
+              - option "Samoa (+685)"
+              - option "Samoa Americana (+1)"
+              - option "San Bartolomé (+590)"
+              - option "San Cristóbal y Nieves (+1)"
+              - option "San Marino (+378)"
+              - option "San Martín (+590)"
+              - option "San Pedro y Miquelón (+508)"
+              - option "San Vicente y las Granadinas (+1)"
+              - option "Santa Elena (+290)"
+              - option "Santa Lucía (+1)"
+              - option "Santo Tomé y Príncipe (+239)"
+              - option "Senegal (+221)"
+              - option "Serbia (+381)"
+              - option "Seychelles (+248)"
+              - option "Sierra Leona (+232)"
+              - option "Singapur (+65)"
+              - option "Sint Maarten (+1)"
+              - option "Siria (+963)"
+              - option "Somalia (+252)"
+              - option "Sri Lanka (+94)"
+              - option "Sudáfrica (+27)"
+              - option "Sudán (+249)"
+              - option "Sudán del Sur (+211)"
+              - option "Suecia (+46)"
+              - option "Suiza (+41)"
+              - option "Surinam (+597)"
+              - option "Svalbard y Jan Mayen (+47)"
+              - option "Sáhara Occidental (+212)"
+              - option "Tailandia (+66)"
+              - option "Taiwán (+886)"
+              - option "Tanzania (+255)"
+              - option "Tayikistán (+992)"
+              - option "Territorio Británico del Océano Índico (+246)"
+              - option "Territorios Australes Franceses (+0)"
+              - option "Territorios Palestinos (+970)"
+              - option "Timor-Leste (+670)"
+              - option "Togo (+228)"
+              - option "Tokelau (+690)"
+              - option "Tonga (+676)"
+              - option "Trinidad y Tobago (+1)"
+              - option "Turkmenistán (+993)"
+              - option "Turquía (+90)"
+              - option "Tuvalu (+688)"
+              - option "Túnez (+216)"
+              - option "Ucrania (+380)"
+              - option "Uganda (+256)"
+              - option "Uruguay (+598)"
+              - option "Uzbekistán (+998)"
+              - option "Vanuatu (+678)"
+              - option "Venezuela (+58)"
+              - option "Vietnam (+84)"
+              - option "Wallis y Futuna (+681)"
+              - option "Yemen (+967)"
+              - option "Yibuti (+253)"
+              - option "Zambia (+260)"
+              - option "Zimbabue (+263)"
+          - generic [ref=e1350]:
+            - generic [ref=e1351]: Teléfono móvil*
+            - textbox "Teléfono móvil*" [ref=e1352]: "11964801913"
+        - generic [ref=e1353]:
+          - paragraph [ref=e1354]: O envio desta candidatura não alterará seu perfil no LinkedIn.
+          - paragraph [ref=e1355]:
+            - text: Candidatura via LinkedIn.
+            - link "Visite a Central de Ajuda para saber mais" [ref=e1356] [cursor=pointer]:
+              - /url: /help/linkedin/answer/71792?lang=pt_BR
+              - text: Central de Ajuda
+        - button "Avançar para próxima etapa" [ref=e1358] [cursor=pointer]:
+          - generic [ref=e1359]: Avançar
+    - generic [ref=e1360]: Término do conteúdo do diálogo.
+  - region [ref=e4]
+  - generic [ref=e289]:
+    - img [ref=e291]
+    - paragraph [ref=e295]:
+      - text: Ocorreu um erro ao processar seu pagamento.
+      - link "Atualize sua(s) forma(s) de pagamento" [ref=e296] [cursor=pointer]:
+        - /url: https://www.linkedin.com/manage/purchases-payments/purchases/485025203/payments?trk=global_alert
+      - text: .
+    - button "Fechar" [ref=e297] [cursor=pointer]:
+      - img [ref=e298]
+      - generic [ref=e300]: Fechar
+  - generic [ref=e5]:
+    - generic [ref=e7]:
+      - button [ref=e1361] [cursor=pointer]:
+        - generic [ref=e9]: Pular para pesquisa
+      - button [ref=e1362] [cursor=pointer]:
+        - generic [ref=e11]: Pular para conteúdo principal
+      - button [ref=e1363] [cursor=pointer]:
+        - generic [ref=e13]: Atalhos do teclado
+      - button [ref=e1364] [cursor=pointer]:
+        - img [ref=e15]
+        - generic [ref=e17]: Fechar menu pular
+    - banner [ref=e1365]:
+      - generic [ref=e19]:
+        - link [ref=e1366] [cursor=pointer]:
+          - /url: https://www.linkedin.com/feed/?nis=true
+          - img [ref=e1367]:
+            - img [ref=e24]
+        - generic [ref=e28]:
+          - combobox [ref=e1368]
+          - generic:
+            - img
+        - navigation [ref=e1369]:
+          - list [ref=e31]:
+            - listitem [ref=e32]:
+              - link [ref=e1370] [cursor=pointer]:
+                - /url: https://www.linkedin.com/feed/?nis=true&
+                - generic [ref=e34]:
+                  - generic [ref=e37]: atualizações do feed novas notificações
+                  - img [ref=e41]
+                - generic [ref=e1371]: Início
+            - listitem [ref=e44]:
+              - link [ref=e1372] [cursor=pointer]:
+                - /url: https://www.linkedin.com/mynetwork/?
+                - generic [ref=e302]:
+                  - generic [ref=e303]:
+                    - generic [ref=e304]: "2"
+                    - generic [ref=e305]: 2 atualizações de rede novas notificações
+                  - img [ref=e309]
+                - generic [ref=e1373]: Minha rede
+            - listitem [ref=e52]:
+              - link [ref=e1374] [cursor=pointer]:
+                - /url: https://www.linkedin.com/jobs/?
+                - img [ref=e57]
+                - generic [ref=e1375]: Vagas
+            - listitem [ref=e60]:
+              - link [ref=e1376] [cursor=pointer]:
+                - /url: https://www.linkedin.com/messaging/?
+                - img [ref=e65]
+                - generic [ref=e1377]: Mensagens
+            - listitem [ref=e68]:
+              - link [ref=e1378] [cursor=pointer]:
+                - /url: https://www.linkedin.com/notifications/?
+                - generic [ref=e312]:
+                  - generic [ref=e313]:
+                    - generic [ref=e314]: "16"
+                    - generic [ref=e315]: 16 novas notificações
+                  - img [ref=e319]
+                - generic [ref=e1379]: Notificações
+            - listitem [ref=e76]:
+              - button [ref=e1380] [cursor=pointer]:
+                - img [ref=e1381]
+                - generic [ref=e80]:
+                  - text: Eu
+                  - img [ref=e81]
+            - listitem [ref=e83]:
+              - button [ref=e1382] [cursor=pointer]:
+                - img [ref=e89]
+                - generic [ref=e1383]:
+                  - text: Para negócios
+                  - img [ref=e92]
+            - listitem [ref=e94]:
+              - link [ref=e1384] [cursor=pointer]:
+                - /url: https://www.linkedin.com/campaignmanager/accounts?
+                - img [ref=e99]
+                - generic [ref=e1385]: Veicular anúncio
+    - generic [ref=e103]:
+      - generic [ref=e106]:
+        - main [ref=e107]:
+          - generic [ref=e110]:
+            - generic [ref=e114]:
+              - generic [ref=e115]:
+                - generic [ref=e116]:
+                  - link [ref=e1386] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/company/idemiagroup/life
+                    - img [ref=e1387]
+                  - link [ref=e1388] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/company/idemiagroup/life
+                    - text: IDEMIA
+                - generic [ref=e123]:
+                  - button [ref=e1389] [cursor=pointer]:
+                    - img [ref=e127]
+                    - generic [ref=e129]: Compartilhar
+                  - button [ref=e1390] [cursor=pointer]:
+                    - img [ref=e132]
+                    - generic [ref=e134]: Exibir mais opções
+              - generic [ref=e136]:
+                - heading [level=1] [ref=e1391]: Manufacturing Controller
+                - button [ref=e1392] [cursor=pointer]:
+                  - img [ref=e142]
+              - generic [ref=e146]:
+                - generic [ref=e322]: Cotia, São Paulo, Brasil
+                - generic [ref=e323]: ·
+                - generic [ref=e325]: há 1 semana
+                - generic [ref=e326]: ·
+                - generic [ref=e327]: Mais de 100 candidaturas
+                - paragraph [ref=e328]:
+                  - generic [ref=e329]: Promovida por recrutador
+                  - generic [ref=e330]: ·
+                  - strong [ref=e332]: Avaliando candidaturas
+              - generic [ref=e158]:
+                - button [ref=e1393] [cursor=pointer]:
+                  - strong [ref=e336]:
+                    - img [ref=e338]
+                    - text: Presencial
+                  - generic [ref=e340]: Corresponde às suas preferências de vaga e o tipo de local de trabalho é Presencial.
+                - button [ref=e1394] [cursor=pointer]:
+                  - strong [ref=e344]:
+                    - img [ref=e346]
+                    - text: Tempo integral
+                  - generic [ref=e348]: Corresponde às suas preferências de vaga e o tipo de vaga é Tempo integral.
+              - generic [ref=e176]:
+                - button [ref=e1395] [cursor=pointer]:
+                  - img [ref=e180]
+                  - generic [ref=e182]: Candidatura simplificada
+                - button [ref=e1396] [cursor=pointer]:
+                  - generic [ref=e350]: Salvar
+                  - generic [ref=e351]: Salvar Manufacturing Controller na IDEMIA
+            - generic [ref=e186]:
+              - heading [level=2] [ref=e1397]: Pessoas que você pode contatar
+              - generic [ref=e355]:
+                - generic [ref=e356]:
+                  - generic [ref=e357]:
+                    - list [ref=e358]:
+                      - listitem [ref=e359]:
+                        - img [ref=e1398]
+                    - generic [ref=e362]: Logo de Fundação Getulio Vargas
+                  - generic [ref=e363]: Ex-alunos da instituição de ensino Fundação Getulio Vargas
+                - button [ref=e1399] [cursor=pointer]:
+                  - generic [ref=e365]: Exibir todos
+              - generic [ref=e366]:
+                - heading [level=2] [ref=e1400]: Conheça a equipe de contratação
+                - generic [ref=e369]:
+                  - link [ref=e1401] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/in/samantha-aguirre-idemia
+                    - img [ref=e1402]
+                  - generic [ref=e374]:
+                    - link [ref=e1403] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/in/samantha-aguirre-idemia
+                      - generic [ref=e376]:
+                        - strong [ref=e377]: Samantha Aguirre
+                        - img [ref=e379]
+                    - generic [ref=e383]: 3º
+                    - generic [ref=e384]:
+                      - generic [ref=e385]: Talent Acquisition Specialist LATAM✨
+                      - generic [ref=e386]: Anunciante da vaga
+                  - button [ref=e1404] [cursor=pointer]:
+                    - generic [ref=e389]: Enviar mensagem
+            - generic [ref=e195]:
+              - article [ref=e196]:
+                - generic [ref=e198]:
+                  - heading [level=2] [ref=e1405]: Sobre a vaga
+                  - paragraph [ref=e391]:
+                    - paragraph [ref=e393]: You may not know our name, but you have surely used our innovations and solutions.
+                    - paragraph [ref=e395]
+                    - paragraph [ref=e397]: Our mission is to unlock the world and make it safer through cutting-edge identity technologies. Every day, around the globe, we are enabling citizens and consumers alike to perform their daily critical activities (such as pay, connect and travel), in the physical as well as digital space. We are transforming their lives by making the world more secure and yet also more streamlined.
+                    - paragraph [ref=e399]
+                    - paragraph [ref=e401]: We serve our clients in 180 countries thanks to our 15,000 employees worldwide.
+                    - paragraph [ref=e403]
+                    - paragraph [ref=e405]:
+                      - text: At
+                      - strong [ref=e407]: IDEMIA Secure Transactions
+                      - text: you will help build technologies that secure billions of essential
+                    - paragraph [ref=e409]: transactions every day and experience the great responsibilities that come with it.
+                    - paragraph [ref=e411]
+                    - paragraph [ref=e413]:
+                      - strong [ref=e415]: "Title: Manufacturing Controller"
+                      - text: (4 days at site, 1-day home office)
+                    - paragraph [ref=e417]
+                    - paragraph [ref=e419]:
+                      - strong [ref=e421]: Location
+                      - text: ": Rua Soluções do Lar, 407 - Rio Cotia, Cotia - SP, 06716-020, Brasil"
+                    - paragraph [ref=e423]
+                    - paragraph [ref=e425]:
+                      - text: We are looking for a
+                      - strong [ref=e427]: hands-on Manufacturing Controller
+                      - text: to drive financial performance and support strategic decision-making at our industrial site in Cotia.
+                    - paragraph [ref=e429]:
+                      - text: This role is ideal for someone who thrives in
+                      - strong [ref=e431]: fast-paced manufacturing environments
+                      - text: ", combines strong financial expertise with operational understanding, and enjoys partnering closely with business leaders."
+                    - paragraph [ref=e433]
+                    - paragraph [ref=e435]:
+                      - strong [ref=e437]: What you’ll do
+                    - paragraph [ref=e439]
+                    - list [ref=e441]:
+                      - listitem [ref=e442]: Own and validate monthly closings, ensuring accurate reflection of business performance
+                      - listitem [ref=e443]: Analyze and challenge profitability and cash performance, identifying improvement opportunities
+                      - listitem [ref=e444]: Partner with Operations, Manufacturing, R&D, and Business leaders to drive financial results
+                      - listitem [ref=e445]: Lead budgeting, forecasting, and financial planning cycles
+                      - listitem [ref=e446]: Identify financial risks and support mitigation strategies
+                      - listitem [ref=e447]: Support negotiations with key customers and suppliers when needed
+                      - listitem [ref=e448]: Prepare and present financial insights to leadership
+                      - listitem [ref=e449]: Lead and develop a team of 3 senior analysts
+                    - paragraph [ref=e451]
+                    - paragraph [ref=e453]:
+                      - strong [ref=e455]: What we’re looking for
+                    - paragraph [ref=e457]
+                    - list [ref=e459]:
+                      - listitem [ref=e460]:
+                        - text: 5–10 years of experience in
+                        - strong [ref=e462]: manufacturing / industrial finance roles
+                      - listitem [ref=e463]:
+                        - text: Strong background in
+                        - strong [ref=e465]: financial controlling, costing, and performance analysis
+                      - listitem [ref=e466]:
+                        - text: Experience working with
+                        - strong [ref=e468]: ERP systems
+                        - text: (implementation or migration is a plus)
+                      - listitem [ref=e469]:
+                        - text: Proven ability to work in a
+                        - strong [ref=e471]: hands-on, operational role (not purely strategic)
+                      - listitem [ref=e472]: Strong stakeholder management and business partnering skills
+                      - listitem [ref=e473]:
+                        - strong [ref=e475]: Fluent English required | Spanish is a plus
+                    - paragraph [ref=e477]
+                    - paragraph [ref=e479]:
+                      - strong [ref=e481]: "Benefits:"
+                    - paragraph [ref=e483]
+                    - list [ref=e485]:
+                      - listitem [ref=e486]: CLT Contract
+                      - listitem [ref=e487]: Assistência Médica
+                      - listitem [ref=e488]: Assistência Odontológica
+                      - listitem [ref=e489]: Seguro de Vida
+                      - listitem [ref=e490]: Tíquete Refeição (R$ 42,50 por dia) - Faria Lima or 32 for Cotia
+                      - listitem [ref=e491]: Tíquete Alimentação (R$ 320,00 por mês)
+                      - listitem [ref=e492]: Performance Bonus
+                      - listitem [ref=e493]: Previdência Privada
+                      - listitem [ref=e494]: Vale Transporte (com desconto de 6% em folha)
+              - button [ref=e1406] [cursor=pointer]:
+                - img [ref=e202]
+                - generic [ref=e204]: Ver mais
+            - generic [ref=e206]:
+              - generic [ref=e207]:
+                - heading [level=2] [ref=e1407]: Configurar alerta para vagas semelhantes
+                - generic [ref=e210]: Controlador de manufatura, Cotia, São Paulo, Brasil
+              - generic [ref=e212] [cursor=pointer]:
+                - generic [ref=e213]: Desativada
+                - generic [ref=e214]: Configurar alerta
+                - switch
+            - generic [ref=e495]:
+              - button [ref=e1408] [cursor=pointer]:
+                - img [ref=e497]
+                - generic [ref=e499]: Fechar cartão promocional de serviços
+              - generic [ref=e501]:
+                - heading [level=2] [ref=e1409]: Veja uma seleção de ferramentas de IA para sua pesquisa de vagas
+                - paragraph [ref=e503]: Receba uma oferta de emprego mais rápido com a ajuda de ferramentas de IA criadas por empresas certificadas, como Kickresume, Exponent Interview Prep e muito mais.
+                - link [ref=e1410] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/ai-tools/?sectionType=career-coaching
+                  - generic [ref=e505]: Começar
+            - generic [ref=e506]:
+              - generic [ref=e507]:
+                - generic [ref=e508]:
+                  - img [ref=e1411]:
+                    - img [ref=e511]
+                  - button [ref=e1412] [cursor=pointer]:
+                    - img [ref=e515]
+                - heading [level=2] [ref=e1413]: Veja como seu perfil se compara ao de outras candidaturas
+                - generic [ref=e519]:
+                  - heading [level=3] [ref=e1414]: Candidaturas a esta vaga
+                  - list [ref=e521]:
+                    - listitem [ref=e522]:
+                      - generic [ref=e523]: "261"
+                      - generic [ref=e524]: candidaturas
+                    - listitem [ref=e525]:
+                      - generic [ref=e526]: "24"
+                      - generic [ref=e527]: candidaturas no último dia
+                - generic [ref=e528]:
+                  - generic [ref=e529]:
+                    - heading [level=3] [ref=e1415]: Nível de experiência do candidato
+                    - list [ref=e531]:
+                      - listitem [ref=e532]:
+                        - paragraph [ref=e533]: 41% de candidatos com nível Sênior
+                        - progressbar [ref=e534]
+                      - listitem [ref=e535]:
+                        - paragraph [ref=e536]: 27% de candidatos com nível Diretor
+                        - progressbar [ref=e537]
+                      - listitem [ref=e538]:
+                        - paragraph [ref=e539]: 13% de candidatos com nível Gerente
+                        - progressbar [ref=e540]
+                      - listitem [ref=e541]:
+                        - paragraph [ref=e542]: 11% de candidatos com nível Iniciante
+                        - progressbar [ref=e543]
+                  - generic [ref=e544]:
+                    - heading [level=3] [ref=e1416]: Formação acadêmica do candidato
+                    - list [ref=e546]:
+                      - listitem [ref=e547]:
+                        - generic [ref=e548]: 55%
+                        - generic [ref=e549]: tem Pós-graduação Lato Sensu - MBA (semelhante ao seu)
+                      - listitem [ref=e550]:
+                        - generic [ref=e551]: 11%
+                        - generic [ref=e552]: tem Bacharelado
+                      - listitem [ref=e553]:
+                        - generic [ref=e554]: 10%
+                        - generic [ref=e555]: tem Pós-graduação
+                      - listitem [ref=e556]:
+                        - generic [ref=e557]: 24%
+                        - generic [ref=e558]: tem outros diplomas
+              - generic [ref=e559]:
+                - generic [ref=e560]:
+                  - img [ref=e1417]:
+                    - img [ref=e562]
+                  - button [ref=e1418] [cursor=pointer]:
+                    - img [ref=e1419]
+                - heading [level=2] [ref=e1420]: Estatísticas exclusivas de pessoas à procura de emprego sobre a IDEMIA
+                - heading [level=3] [ref=e1421]: Com tecnologia do Bing
+                - generic [ref=e570]:
+                  - generic [ref=e571]:
+                    - heading [level=3] [ref=e1422]: Áreas de foco da empresa
+                    - generic [ref=e574]:
+                      - list [ref=e575]:
+                        - listitem [ref=e576]:
+                          - strong [ref=e577]: "Expansion into Hardware Security Module Market:"
+                          - text: IDEMIA Secure Transactions (IST) has entered the $1.2 billion Hardware Security Module market with the launch of its Sphere HSM solution, aiming to enhance security for digital transactions across sectors.
+                        - listitem [ref=e578]:
+                          - strong [ref=e579]: "Digital Factory and Operational Excellence:"
+                          - text: IDEMIA's Industrial Operations & Services team, supported by its Digital Factory team, ensures excellence across its global manufacturing sites, transforming factory data into unified operational insights.
+                      - button [ref=e1423] [cursor=pointer]:
+                        - generic [ref=e581]: exibir mais
+                  - generic [ref=e582]:
+                    - generic [ref=e584]: "Fontes: smartsolutionsworld.com mais 1"
+                    - generic [ref=e586]:
+                      - button [ref=e1424] [cursor=pointer]:
+                        - img [ref=e588]
+                      - button [ref=e1425] [cursor=pointer]:
+                        - img [ref=e592]
+                - generic [ref=e595]:
+                  - generic [ref=e596]:
+                    - heading [level=3] [ref=e1426]: Contratações e número de funcionários
+                    - paragraph [ref=e598]:
+                      - generic [ref=e599]:
+                        - text: "Focus on legal and finance: The 'Legal' and 'Finance' departments have seen significant increases in job openings by 300% and 400% respectively over the last three months, indicating a strategic focus on strengthening these areas. Growth in operations and IT: The 'Operations' and 'Information Technology' departments have experienced substantial growth in job openings by 450% and 100% respectively over the last three months, suggesting a major push towards operational efficiency and technological advancements. Engineering and program management stability: Despite a 6% decrease in headcount in 'Engineering' and a 7% decrease in 'Program and Project Management' over the past year, these departments still maintain a significant number of employees, indicating ongoing but cautious investment in these areas. Sales and customer support opportunities: The 'Sales' and 'Customer Success and Support' departments have shown a 100% and 33% increase in job openings respectively over the past year, highlighting potential growth opportunities in customer-facing roles."
+                        - generic [ref=e600]:
+                          - generic [ref=e601]: …
+                          - button [ref=e1427] [cursor=pointer]: exibir mais
+                  - generic [ref=e604]:
+                    - button [ref=e1428] [cursor=pointer]:
+                      - img [ref=e606]
+                    - button [ref=e1429] [cursor=pointer]:
+                      - img [ref=e610]
+                - generic [ref=e613]:
+                  - heading [level=3] [ref=e1430]: Última tendência de contratação
+                  - generic [ref=e615]:
+                    - list [ref=e616]:
+                      - listitem [ref=e617]:
+                        - paragraph [ref=e618]: "12.316"
+                        - paragraph [ref=e619]: funcionários no total
+                      - listitem [ref=e620]:
+                        - paragraph [ref=e621]: 2%
+                        - paragraph [ref=e623]: toda a empresa
+                        - paragraph [ref=e624]: Crescimento em 2 anos
+                        - generic [ref=e625]: 2% de redução
+                      - listitem [ref=e626]:
+                        - paragraph [ref=e627]: 0%
+                        - paragraph [ref=e629]: Financeiro
+                        - paragraph [ref=e630]: Crescimento em 2 anos
+                        - generic [ref=e631]: Nenhuma alteração
+                    - region [ref=e1431]:
+                      - generic [ref=e635]:
+                        - heading [level=4] [ref=e1432]: Chart
+                        - generic [ref=e637]: Chart with 25 data points.
+                        - generic [ref=e638]: "The chart has 1 X axis displaying Time. Range: 2023-12-13 12:00:00 to 2026-05-07 12:00:00."
+                        - generic [ref=e639]: "The chart has 1 Y axis displaying values. Range: 0 to 15000."
+                      - img [ref=e1433]:
+                        - generic [ref=e656]:
+                          - img [ref=e1434]
+                          - img [ref=e1435]
+                          - img [ref=e1436]
+                          - img [ref=e1437]
+                          - img [ref=e1438]
+                          - img [ref=e1439]
+                          - img [ref=e1440]
+                          - img [ref=e1441]
+                          - img [ref=e1442]
+                          - img [ref=e1443]
+                          - img [ref=e1444]
+                          - img [ref=e1445]
+                          - img [ref=e1446]
+                          - img [ref=e1447]
+                          - img [ref=e1448]
+                          - img [ref=e1449]
+                          - img [ref=e1450]
+                          - img [ref=e1451]
+                          - img [ref=e1452]
+                          - img [ref=e1453]
+                          - img [ref=e1454]
+                          - img [ref=e1455]
+                          - img [ref=e1456]
+                          - img [ref=e1457]
+                          - img [ref=e1458]
+                        - generic [ref=e682]:
+                          - generic [ref=e683]: abr. de 2024
+                          - generic [ref=e684]: out. de 2024
+                          - generic [ref=e685]: abr. de 2025
+                          - generic [ref=e686]: out. de 2025
+                          - generic [ref=e687]: abr. de 2026
+                        - generic [ref=e688]:
+                          - generic [ref=e689]: "0"
+                          - generic [ref=e690]: "5.000"
+                          - generic [ref=e691]: "10.000"
+                          - generic [ref=e692]: "15.000"
+                      - generic [ref=e694]: End of interactive chart.
+                    - generic [ref=e695]:
+                      - img [ref=e696]
+                      - text: Tempo médio do funcionário na empresa ‧
+                      - strong [ref=e699]: 7,3 anos
+                - generic [ref=e700]:
+                  - heading [level=3] [ref=e1459]: A empresa IDEMIA contrata pessoas de algumas dessas empresas e instituições de ensino
+                  - list [ref=e703]:
+                    - listitem [ref=e704]:
+                      - generic [ref=e705]:
+                        - figure [ref=e706]:
+                          - img [ref=e1460]
+                        - paragraph [ref=e708]:
+                          - text: A IDEMIA contratou 31 pessoas de Fundação Getulio Vargas.
+                          - link [ref=e1461] [cursor=pointer]:
+                            - /url: https://www.linkedin.com/search/results/people/?origin=JOB_PAGE_CANNED_SEARCH&currentCompany=3488&schoolFilter=8175
+                            - strong [ref=e710]: Ver todas
+                - generic [ref=e711]:
+                  - generic [ref=e712]:
+                    - heading [level=3] [ref=e1462]: Concorrência
+                    - paragraph [ref=e714]:
+                      - generic [ref=e715]:
+                        - text: IDEMIA Group is a global leader in biometric and cryptographic solutions, providing secure transactions and identity verification services. The company operates in a highly competitive landscape with a focus on innovation in biometric security, digital identity, and secure payment solutions. IDEMIA's strategic imperatives include maintaining technological leadership, expanding its market presence, and forming strategic partnerships to enhance its service offerings.
+                        - generic [ref=e716]:
+                          - generic [ref=e717]: …
+                          - button [ref=e1463] [cursor=pointer]: exibir mais
+                    - generic [ref=e719]:
+                      - link [ref=e1464] [cursor=pointer]:
+                        - /url: https://www.linkedin.com/company/particle-measuring-systems/
+                      - link [ref=e1466] [cursor=pointer]:
+                        - /url: https://www.linkedin.com/company/scandit/
+                      - link [ref=e1468] [cursor=pointer]:
+                        - /url: https://www.linkedin.com/company/software-ag/
+                  - generic [ref=e738]:
+                    - generic [ref=e740]: "Fontes: businessmodelcanvastemplate.com mais 1"
+                    - generic [ref=e742]:
+                      - button [ref=e1470] [cursor=pointer]:
+                        - img [ref=e744]
+                      - button [ref=e1471] [cursor=pointer]:
+                        - img [ref=e748]
+                - link [ref=e1472] [cursor=pointer]:
+                  - /url: /company/idemiagroup/insights/?insightType=HEADCOUNT
+                  - text: Exibir mais estatísticas Premium
+            - generic [ref=e753]:
+              - generic [ref=e754]:
+                - heading [level=2] [ref=e1473]: Sobre a empresa
+                - generic [ref=e756]:
+                  - generic [ref=e757]:
+                    - link [ref=e1474] [cursor=pointer]:
+                      - /url: /company/idemiagroup/life/
+                      - img [ref=e1475]
+                    - generic [ref=e761]:
+                      - link [ref=e1476] [cursor=pointer]:
+                        - /url: /company/idemiagroup/life/
+                        - text: IDEMIA
+                      - generic [ref=e764]: 604.158 seguidores
+                  - button [ref=e1477] [cursor=pointer]:
+                    - img [ref=e766]
+                    - generic [ref=e768]: Seguir
+                - generic [ref=e769]:
+                  - text: Desenvolvimento de software
+                  - generic [ref=e770]: • + de 10.001 funcionários
+                  - generic [ref=e771]: • 12.316 no LinkedIn
+                - paragraph [ref=e772]:
+                  - generic [ref=e773]:
+                    - text: OT-Morpho é agora IDEMIA, líder mundial em Identidade Aumentada, com a ambição de capacitar os cidadãos e consumidores a interagir, pagar, conectar, comutar, viajar e até mesmo votar de maneiras que agora são possíveis em um mundo conectado.
+                    - text: Proteger nossa identidade se tornou uma missão essencial no mundo em que vivemos atualmente. Ao defender a Identidade Aumentada, reinventamos a forma como pensamos, produzimos, usamos e protegemos esse ativo, seja para pessoas ou para objetos. Garantimos a privacidade e confiança, além de transações seguras, autenticadas e verificáveis para clientes internacionais dos setores financeiros, de telecomunicações, de identidade, de segurança pública e de IOT. A OT (Oberthur Technologies) e a Safran Identity & Security (Morpho) uniram forças para formar a IDEMIA. Com cerca de US$ 3 bilhões em receitas e 13 mil funcionários no mundo inteiro, a IDEMIA serve a clientes em 180 países. Para mais informações, acesse www.idemia.com / Siga @IdemiaGroup no Twitter
+                    - generic [ref=e775]:
+                      - generic [ref=e776]: …
+                      - button [ref=e1478] [cursor=pointer]: exibir mais
+              - link [ref=e1479] [cursor=pointer]:
+                - /url: /company/idemiagroup/life/
+                - text: Exibir mais
+            - heading [level=2] [ref=e1480]: Mais vagas
+            - list [ref=e783]:
+              - listitem [ref=e784]:
+                - link [ref=e1481] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4399957508&referenceJobId=4401341879&originToLandingJobPostings=4399957508&trackingId=ZzGKd%2F9ngeL6%2F0IXy0G60w%3D%3D&refId=FenCwZSIJpc4rnyjIyrFHQ%3D%3D&eBP=CwEAAAGdsILOzWqn9FhehQUd7GYg7GBKlvZw8mzahqzA4Qm12IRH2hFNGFbs_XDz5L-l0mH8S8J8ySHCIiGij3WlO6oNU0Evzi6aAt-86BPGNV-bqBECUoGTHT1qBcAfls4oHo4cETTgueeVx8oC1mHjsZ3bqzTpi7phJtzafiZrM7p-3L56zwRM4jMwS9PmmpRfRzLyJLcDluzz85TiuxdVEa0iaU3aPVm1bePTs_Ag9PMk5ZdqSff6p5mgozX_uUXr27cKk1OZq_1asbK7lLcmutdsWeG2EbSdUuRllLMRUmbjh_utZDKBhYjh4yh8hP2vWAN6tFvbd_H4eWYqoQu1RhytR9JT8xSsbevy-29ya-qAM0awqb1k7FMb_6ryz_XZPZ11Noh6LlLqqEbtdQs7X1Pk04e-D1ElVjKrQuDD9fd_0C0qb7BEK5RUTGfO0FqP5uTugkPBbDXZw8_wUhmhoa5Z3bzK471RdBdPlJpmjnGQ7w
+                  - generic [ref=e788]:
+                    - img [ref=e1482]
+                    - generic [ref=e794]:
+                      - generic [ref=e795]:
+                        - generic [ref=e796]:
+                          - strong [ref=e798]: Business Controller Associate Director LATAM
+                          - generic [ref=e799]: Business Controller Associate Director LATAM
+                        - generic [ref=e801]: dsm-firmenich
+                        - generic [ref=e803]: São Paulo e Região (Híbrido)
+                        - list [ref=e805]:
+                          - listitem [ref=e806]:
+                            - generic [ref=e809]:
+                              - generic [ref=e810]: 161 ex-alunos trabalham aqui
+                              - generic [ref=e811]: 161 ex-alunos da Fundação Getulio Vargas trabalham aqui
+                      - list [ref=e813]:
+                        - listitem [ref=e814]:
+                          - time [ref=e815]: Há 6 dias
+              - listitem [ref=e816]:
+                - link [ref=e1483] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4402727981&referenceJobId=4401341879&originToLandingJobPostings=4402727981&trackingId=YDLLWuWu2adQFQrS5j%2Bdzw%3D%3D&refId=FenCwZSIJpc4rnyjIyrFHQ%3D%3D&eBP=CwEAAAGdsILOzacBKTnVXuAZ9I9OZGW-WQsBMlIXRFCCs9b17b0Dfnr9O9N7XaB8BL4C_aBqs6prml7inz-LHHyozwBe5q7504hflAVhhOveDGXKBlpJQR6SpzIyMGPYLj7vT5EAazJe-YvLhJJlzcYeuG9jRRdrThnBWCpD8SfO7rFzU1QabWfK_PFttedVjRYluhq72W9yRCGEFanqXbsmk1Iw0iZFssHtxKH9V63uOebNckNtcjN9yhcZFr9xmmWSsMM0bp2z0uVSY_fa7us7dGlNFvYpnuOy9fDvju2xXgh_znYOyL4pzEmIDXITedcWCfaW7ppeUKToS-9rpw77Z_rKDuTR_Sodc7c6Gy7RLZjacxUZR0t24YlwZ3k9RF5H7Pm9ohFLDuKyEExKOjhAHZMaM9rlayDcuu4GkcJ-ZiZdZUlLSMK7Pn6mWL3e-5sSD3yWeUNw4obxSMDJmN1rml2gfQ6eZSiWv_bTi3BQe1WTGFcsEK2xJrMNe1dNjLI4ko5V
+                  - generic [ref=e820]:
+                    - img [ref=e1484]
+                    - generic [ref=e826]:
+                      - generic [ref=e827]:
+                        - generic [ref=e828]:
+                          - strong [ref=e830]: Controller
+                          - generic [ref=e831]: Controller
+                        - generic [ref=e833]: RHOPEN Consultoria
+                        - generic [ref=e835]: São Paulo, São Paulo, Brasil (Presencial)
+                        - list [ref=e837]:
+                          - listitem [ref=e838]:
+                            - img [ref=e1485]
+                            - generic [ref=e843]: Avaliando candidaturas
+                      - list [ref=e845]:
+                        - listitem [ref=e846]:
+                          - time [ref=e847]: Há 3 dias
+                        - listitem [ref=e848]:
+                          - img [ref=e849]:
+                            - img [ref=e850]
+                          - generic [ref=e852]: Candidatura simplificada
+              - listitem [ref=e853]:
+                - link [ref=e1486] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4399909784&referenceJobId=4401341879&originToLandingJobPostings=4399909784&trackingId=p8FJ0r7aSGJwXmnkE3Te9Q%3D%3D&refId=FenCwZSIJpc4rnyjIyrFHQ%3D%3D&eBP=CwEAAAGdsILOzTS8jfv9-wLeZTMZmYWtqKEPhquABQgwC6CmSQSm06SqSduq9ZIFERaSmOSBwB-AZkRhpZqBUpcee1_nDZ6iqUARNuqsnzcZ2M3jrVDCWLBKv86hfk5hFiR6EwzS-kZrV9NV4bOvirExf0THG-4mNwpVXmRsjNd4LeMYJvMM2Uik2aFraPG-TnXbDyEckb9AKKuTI0K2GzxybmVvMq3fp6UN7lMwQDEDzRV07VEpGCvi_YXA4_A4zzaGfH3bz73N3iuBichyHle02VkihnykIEjIbu1POsg5Q3JumKT5y7zm34DXta6GU6vNq2QRXekZNsbJ_Vd9VqSit-PeARG7vq9K9vlG4ARNT5yfh1U5xS0soD7glZmAfNEVl5es-Hto1XAO23m3Ga6TBMuCy9f-gi4L6rploWUWjwSJb3j6gzeZQ_bnp1CMsB-tkm5aUvqhkaCmaoq7FcODlYZb-0Egzkk
+                  - generic [ref=e857]:
+                    - img [ref=e1487]
+                    - generic [ref=e863]:
+                      - generic [ref=e864]:
+                        - generic [ref=e865]:
+                          - generic [ref=e866]:
+                            - strong [ref=e867]: Regional Controller
+                            - img [ref=e869]
+                          - generic [ref=e871]: Regional Controller with verification
+                        - generic [ref=e873]: Griffith Foods
+                        - generic [ref=e875]: Jundiaí, São Paulo, Brasil (Híbrido)
+                        - list [ref=e877]:
+                          - listitem [ref=e878]:
+                            - generic [ref=e881]:
+                              - generic [ref=e882]: 7 ex-alunos trabalham aqui
+                              - generic [ref=e883]: 7 ex-alunos da Fundação Getulio Vargas trabalham aqui
+                      - list [ref=e885]:
+                        - listitem [ref=e886]:
+                          - time [ref=e887]: Há 6 dias
+              - listitem [ref=e888]:
+                - link [ref=e1488] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4395376014&referenceJobId=4401341879&originToLandingJobPostings=4395376014&trackingId=d6jUT0qeyi80Atd5Us%2Fhww%3D%3D&refId=FenCwZSIJpc4rnyjIyrFHQ%3D%3D&eBP=CwEAAAGdsILOzTJobgREch_iBnIS9xWWJgaf82X8NQDyDMx8jKDw236JYDZviIW1BUO72aVtwvjYubE10cUxFqU_LA_ICFc91dN0ZZq_pbNBcbAOhhBH6zj9euqAXs1JVmIplu04qASdatih1uIGKIu76WZqwyhRlu7DP0ZZ9xPuxQsfXUV8_k9o-tJAC1cOwV0a272fj5Iw8MoFIdUww9LkhIhQ1RhnhACIl0CHszC9WC0sht6vehkN3LDjg8jMUrPdN0OlRrT_TEZHgETr5a871-n486f04EoMY5wEfXSfyNHXIxoTVqWPPWxenIQ0L87vpO6oFDrx1GOkErGQBSn5b4iS1pzioKgrlIbs3D_tMVfMAZs0Jyi_5Y0Le-KAvmMapQbZvx11iKsGf6M5kZp5YMoAuFDCe4sTiFB_3k1vEy2d9mdwPeBfii6y_NUfTVYWlWGRqdEOOYErwKkR39Q8XX88QoSwUwRqE3JLqqr4hACP2Haef0GQbNwWGVP4ME6SYw
+                  - generic [ref=e892]:
+                    - img [ref=e1489]
+                    - generic [ref=e898]:
+                      - generic [ref=e899]:
+                        - generic [ref=e900]:
+                          - generic [ref=e901]:
+                            - strong [ref=e902]: Especialista de controladoria
+                            - img [ref=e904]
+                          - generic [ref=e906]: Especialista de controladoria with verification
+                        - generic [ref=e908]: Hays
+                        - generic [ref=e910]: Jundiaí, São Paulo, Brasil (Presencial)
+                        - list [ref=e912]:
+                          - listitem [ref=e913]:
+                            - img [ref=e1490]
+                            - generic [ref=e918]: Avaliando candidaturas
+                      - list [ref=e920]:
+                        - listitem [ref=e921]:
+                          - time [ref=e922]: Há 2 semanas
+                        - listitem [ref=e923]:
+                          - img [ref=e924]:
+                            - img [ref=e925]
+                          - generic [ref=e927]: Candidatura simplificada
+              - listitem [ref=e928]:
+                - link [ref=e1491] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4391136648&referenceJobId=4401341879&originToLandingJobPostings=4391136648&trackingId=BstGjREYAaGbJQ28YtbeHQ%3D%3D&refId=FenCwZSIJpc4rnyjIyrFHQ%3D%3D&eBP=CwEAAAGdsILOzbyXSaWmI5A6SfoGVl45UUWDBsvxxNH0DNZw7_QtxWkl7DzBZqi9cjOR9jXPHP4vUNpYRHLoA_pWFyXX8FpaxMNl1YO9ejZEmIDRJQhNuen_oUCWkeICIejOoPqtQZog90yuNDtnLTL9xnezRGhexacsb4GvbgIApAY3_joWgDxdF_3IVnHLyViChxJ5W2X05XywdGLUsf23nLAgQT8P1beh1nD0dtl4WLucVNIq8TZyWpPgrRS5XKPwanlneGkDJVpUH7wca4qgEuhyo4i8ApVR5J1q8r4modNfjqF4Q3lZaUPxgY3eZeoNsCQqckzkBWnKwaACY20sSd6Bu8RH6iIGx1Jq0PS7AGfJ6CLVBCHg6M9mTrJajK8G-C2iqmKr9rf-Tgi7I8U2y_R8WZNvkxykXF5CA62RmwtUrIuLz-N1FVjSRMu2frB2pniMUCse7KUv_WXBMpt486r5jY5Yg6zd0wKc46jN9165Emcow_HeYw
+                  - generic [ref=e932]:
+                    - img [ref=e1492]
+                    - generic [ref=e938]:
+                      - generic [ref=e939]:
+                        - generic [ref=e940]:
+                          - strong [ref=e942]: Controller
+                          - generic [ref=e943]: Controller
+                        - generic [ref=e945]: Akad Seguros
+                        - generic [ref=e947]: São Paulo, São Paulo, Brasil (Presencial)
+                        - list [ref=e949]:
+                          - listitem [ref=e950]:
+                            - generic [ref=e953]:
+                              - generic [ref=e954]: 16 ex-alunos trabalham aqui
+                              - generic [ref=e955]: 16 ex-alunos da Fundação Getulio Vargas trabalham aqui
+                      - list [ref=e957]:
+                        - listitem [ref=e958]:
+                          - time [ref=e959]: Há 3 semanas
+              - listitem [ref=e960]:
+                - link [ref=e1493] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4397052549&referenceJobId=4401341879&originToLandingJobPostings=4397052549&trackingId=9SxGBjqMlWpSy2Lez0UQbw%3D%3D&refId=FenCwZSIJpc4rnyjIyrFHQ%3D%3D&eBP=CwEAAAGdsILOzZ-SVt9Nj9alHKYNIoZmVQ2xVDkWh5RNaIGlFJMfXKOb6Ic1GRAOOKs3LYHr8ObidPn10VFhCK1PZc8LER1G4jqHFVdLhmC4y1PQnzNmB5l1YhLLUYqfXSSWTUMy0vt6TyG4QqOPecgbzn0TU1c9xF3WQ16emqQ7p6gF2z9hmOUfYxQNk-vMvdyyH9EzyNN72Pr9vc6IX5ZppRaIxIQyeSH6TNgWv7IQqRAu8diYJm3cl8IiHNWS-nVL6A0sLuj4pIrL1-jLEenLXixmY5g6umfz36TyIKBJSKQbNww5Q1Isb0RFXzwtB9w4eM1Guu7CCbrmHhbNVtir_eLiksnzpaY7A62jyhub--Mr4X4mI_FFQvftCscU71GA97P01e-c_LKUvKkgmdWwuUJeQDZJY38cLzH9RdiCr5lPKZ2qX4c9TZGshIIgZi0AlC6LZSr7KkFAUnfhwjkDUuQfunnCSX_gTE3XbY7y5aDnpRlg
+                  - generic [ref=e964]:
+                    - img [ref=e1494]
+                    - generic [ref=e970]:
+                      - generic [ref=e971]:
+                        - generic [ref=e972]:
+                          - generic [ref=e973]:
+                            - strong [ref=e974]: Coordenador de Controladoria
+                            - img [ref=e976]
+                          - generic [ref=e978]: Coordenador de Controladoria with verification
+                        - generic [ref=e980]: Klabin
+                        - generic [ref=e982]: Jundiaí, São Paulo, Brasil (Presencial)
+                        - list [ref=e984]:
+                          - listitem [ref=e985]:
+                            - generic [ref=e988]:
+                              - generic [ref=e989]: 331 ex-alunos trabalham aqui
+                              - generic [ref=e990]: 331 ex-alunos da Fundação Getulio Vargas trabalham aqui
+                      - list [ref=e992]:
+                        - listitem [ref=e993]:
+                          - time [ref=e994]: Há 2 semanas
+              - listitem [ref=e995]:
+                - link [ref=e1495] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4403407132&referenceJobId=4401341879&originToLandingJobPostings=4403407132&trackingId=29Hsw0tolVoaVANY4A034g%3D%3D&refId=FenCwZSIJpc4rnyjIyrFHQ%3D%3D&eBP=CwEAAAGdsILOzaHskoF7d1bV_AS3C6TKZUBb3E5e7YWPqsTItp2_KNwu2qpxMRfu6JfdJfL4LKlaPKj11conOXFQPtaxDAFWS3pkN1w4nSJvEi__1kjNcX5_v41LV0mqvlor3lQ0PvZVvmht59Ieno_AoS-chrIk0iKNkp4FR8oJBqA7XOpPysOwcEToqR5iYP6Q62Qjmc0Fc5qdp5QiEBhMdfZvMH23CI9NVArgJW9ZuIlZuqcuf8JOJ3EMIZAgWbKXxAdQcp4aASlyfro-A77uMx8dDJQnnN1CwMZ-cRJBYvSwz64OKDgUM7__VmcvKa4asLbKbN6gn_QN01eXjrWPRhA_VdgOdGr1uHN5yLH1uwWIbJ-vixrt9c59K_9vCF45DH2lPtJMzO1BkCaHE2YEdSTH8xryEFjER88tReps-VjXgHsl9r_k7Ye_aL_zMLd6LnR9EQGL8DYUPiZ_3lciFiPW_nMlNEq9PQlJgw0Lgo-IkzxrePw
+                  - generic [ref=e999]:
+                    - img [ref=e1496]
+                    - generic [ref=e1005]:
+                      - generic [ref=e1006]:
+                        - generic [ref=e1007]:
+                          - generic [ref=e1008]:
+                            - strong [ref=e1009]: Business Controller
+                            - img [ref=e1011]
+                          - generic [ref=e1013]: Business Controller with verification
+                        - generic [ref=e1015]: Konecranes
+                        - generic [ref=e1017]: Cotia, São Paulo, Brasil (Presencial)
+                        - list [ref=e1019]:
+                          - listitem [ref=e1020]:
+                            - generic [ref=e1023]:
+                              - generic [ref=e1024]: 9 ex-alunos trabalham aqui
+                              - generic [ref=e1025]: 9 ex-alunos da Fundação Getulio Vargas trabalham aqui
+                      - list [ref=e1027]:
+                        - listitem [ref=e1028]:
+                          - time [ref=e1029]: Há 4 dias
+                        - listitem [ref=e1030]:
+                          - img [ref=e1031]:
+                            - img [ref=e1032]
+                          - generic [ref=e1034]: Candidatura simplificada
+              - listitem [ref=e1035]:
+                - link [ref=e1497] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4380700053&referenceJobId=4401341879&originToLandingJobPostings=4380700053&trackingId=rPFVpVcmr%2Fc8E8MTHbgMoQ%3D%3D&refId=FenCwZSIJpc4rnyjIyrFHQ%3D%3D&eBP=CwEAAAGdsILOzfBHD2rFxOw0P8OKiNmREtrSGQDJNy-4VIrBfXt6u8VQGXZtu4A4n3Y8XykMlvf0mSAi1y1e-d2kMFCeD91bHo1k4KXH8w7_VEnHrVnXgdIKFYezCScq_cxPtIk1aVaWuIcsj49aILpiNTrl_i9bzQw1cNlJB4bsyPI-UG5k8Gr0xXMqQeoqSDzFgUgmvKSuangosh0xFf_2PuyqHWk9xh53-d2vMf5BGmozZiUmVwXNr-w58oPgqRf7N_oJ_tJub8v_81ukccOTIgqzgb54m3us9Gmc0NQUpHwDik9BFBvmQB6B2ir_fv_ASKwjQdSSWEBNFxIgmTAotQtxw_jbQBCy9LM_heaibO9DM2JvJkIo1dHD6h6xfy_VD-ztTaqj8gXNe407Fiws966koouMUEj6B8iWEm9fiDie23909ODIYfEg9yt4nzp6uDmgHPCg-s1Au7lkcN71U-PmNx3Aai6obZzHx8TPdT0L7NZXtPY
+                  - generic [ref=e1039]:
+                    - img [ref=e1498]
+                    - generic [ref=e1045]:
+                      - generic [ref=e1046]:
+                        - generic [ref=e1047]:
+                          - generic [ref=e1048]:
+                            - strong [ref=e1049]: Gerente Business Controller - Marketing (Vaga Afirmativa Exclusiva Para Mulheres)
+                            - img [ref=e1051]
+                          - generic [ref=e1053]: Gerente Business Controller - Marketing (Vaga Afirmativa Exclusiva Para Mulheres) with verification
+                        - generic [ref=e1055]: The HEINEKEN Company
+                        - generic [ref=e1057]: São Paulo, São Paulo, Brasil (Híbrido)
+                        - list [ref=e1059]:
+                          - listitem [ref=e1060]:
+                            - generic [ref=e1063]:
+                              - generic [ref=e1064]: 1 ex-funcionário trabalha aqui
+                              - generic [ref=e1065]: 1 ex-funcionário da Forvis Mazars no Brasil trabalha aqui
+                      - list [ref=e1067]:
+                        - listitem [ref=e1068]:
+                          - time [ref=e1069]: Há 5 dias
+              - listitem [ref=e1070]:
+                - link [ref=e1499] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4389097913&referenceJobId=4401341879&originToLandingJobPostings=4389097913&trackingId=K0wyv9ugJctt6pizIFolMA%3D%3D&refId=FenCwZSIJpc4rnyjIyrFHQ%3D%3D&eBP=CwEAAAGdsILOzQgNAf7jR2jGJ8qmYfe7nHSFVf_wk-F2dmNXLp8XehGUMd02HeaYqNmzlXOtPdQiPHikdXhBP_W4lUpLqCGMNWbHMizruraM16cno65iVrNux0p_TEqVce56ADAljQ-4aBGEUKQAQmTWADjM5MsU2QT0iuBFL6tOrchLtZOg_RXIWnWq6G9bGT29iGwbvu60fZbBOxhcKPpu2nEQKZRE7OiRQA6dhwlYGNQdaCqaduVUYx8NrqQLlcKQ62Q4PXuDCJKDqUCllasBzI0tX3HqXQkcpg7OmkpDoWOqgDk3H4xh_6LHaJITnb6GYnwEHG3tdOSpivsPjPuRIA5XZCxjybizNnwiSgcxskZqEQjok6kci9Ur-6nWn_3ZEfUybzjZMDHP8v0BOrlC663NgirEGWgqJHnQrhg3xT6mArXx6ZMzGMsRfdvAqLFXsd_ONigsxUdR4IIKTuXbxBQfYrJ7__LDgZykHr3uGtMQAw
+                  - generic [ref=e1074]:
+                    - img [ref=e1500]
+                    - generic [ref=e1080]:
+                      - generic [ref=e1081]:
+                        - generic [ref=e1082]:
+                          - generic [ref=e1083]:
+                            - strong [ref=e1084]: Accounting Controller Cochlear Brasil
+                            - img [ref=e1086]
+                          - generic [ref=e1088]: Accounting Controller Cochlear Brasil with verification
+                        - generic [ref=e1090]: Cochlear
+                        - generic [ref=e1092]: São Paulo, São Paulo, Brasil (Híbrido)
+                        - list [ref=e1094]:
+                          - listitem [ref=e1095]:
+                            - generic [ref=e1098]:
+                              - generic [ref=e1099]: 5 ex-alunos trabalham aqui
+                              - generic [ref=e1100]: 5 ex-alunos da Fundação Getulio Vargas trabalham aqui
+                      - list [ref=e1102]:
+                        - listitem [ref=e1103]:
+                          - time [ref=e1104]: Há 4 semanas
+              - listitem [ref=e1105]:
+                - link [ref=e1501] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4402737649&referenceJobId=4401341879&originToLandingJobPostings=4402737649&trackingId=g1LfSemmqcEi2SgxhVP9ow%3D%3D&refId=FenCwZSIJpc4rnyjIyrFHQ%3D%3D&eBP=CwEAAAGdsILOzZkV_FSEi9QE7zURa5Qzm1F_nEzCcFYj-sTntzYrlDp2vv65k6PHwBWCvPO9UYtfFKVAz7tFqr0eRTRm6qqNsxiuhAxcxmZzQWyq2F0uVAkawQcjHZcjWpHveBmYRhbAT9j9AXoaxmHHkBxBjoYWlp8IHPbddLoIg7ho2DQoQ4O2zLCrEHVDwQ9-sqjXxhhyh98hmw61ky-d0GMWk_UqdaMsBbm0rBm-8JbJcUwDlSwRAIz4Ds3pXs55aX9-rLBh8Fo8EFgWwBQhmgq0hprfryfyQ_I60hg5C58kwE32zKOw6sRl6b012WZstxDJwagHy6gh2dZY-za_vS7R-tOFmY67kDigmu0yjzQB_DPvDGnxOXo5IW5xrC1H6EtV-5ovHnCmnQH-S19N-hJLtfUMYVHLros5FgykH4mPau_gA-7DEDeGzaUEhsDeqpk0hdPilAT-KbS8KfETLAQcwLxix_Cj77nnoHQiQ2IYhg
+                  - generic [ref=e1109]:
+                    - img [ref=e1502]
+                    - generic [ref=e1115]:
+                      - generic [ref=e1116]:
+                        - generic [ref=e1117]:
+                          - generic [ref=e1118]:
+                            - strong [ref=e1119]: Analista de Controladoria Sênior
+                            - img [ref=e1121]
+                          - generic [ref=e1123]: Analista de Controladoria Sênior with verification
+                        - generic [ref=e1125]: Oswaldo Cruz Química
+                        - generic [ref=e1127]: São Paulo, São Paulo, Brasil (Híbrido)
+                        - list [ref=e1129]:
+                          - listitem [ref=e1130]:
+                            - generic [ref=e1133]:
+                              - generic [ref=e1134]: 8 ex-alunos trabalham aqui
+                              - generic [ref=e1135]: 8 ex-alunos da Fundação Getulio Vargas trabalham aqui
+                      - list [ref=e1137]:
+                        - listitem [ref=e1138]:
+                          - time [ref=e1139]: Há 3 dias
+                        - listitem [ref=e1140]:
+                          - img [ref=e1141]:
+                            - img [ref=e1142]
+                          - generic [ref=e1144]: Candidatura simplificada
+              - listitem [ref=e1145]:
+                - link [ref=e1503] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4395845509&referenceJobId=4401341879&originToLandingJobPostings=4395845509&trackingId=k8VjdK4SVwCOmvdcfWRwZQ%3D%3D&refId=FenCwZSIJpc4rnyjIyrFHQ%3D%3D&eBP=CwEAAAGdsILOzRm2XT9WwSbNkCYyzgMxReUWh9jci-v_26GsUjIFfK6CoKKX_eDNQIYDteaIbXVf70FpX6GcuYocGJ0_41UiUhLQR1VhGqZ5R7s-yqg-TRd3u-382StqP55q1qziCZhwYMYrq4ZA8SiB5kE-tgW-LJZd4Z-GjqeBZtrUAhwZ3Bv25WDmX0lhPwbJ-KhDwe4kwiNsUAqMb9hrHMb3EVQ6DO-X185rKQAk1DvmXeCT7JfkcLaPwxAPT1_8jUykEE0uBRbp19YTvkdHz9ChWBmeclDtrV0mJgQRwqXO4KCPCEJxbCQI-B_LeWbXY68hTCI_RpI7HTGEFom2j0VD13n-kjVZAyNkqxab5XYl8bM020ylwW3g4M4YnLnEd0S3vPSsJoCGU_0oZ8VrVh0Hj7wteaweH74KcMOs9u4h1Cu1wVKwvhAmezZdHXykU8K9JZxEBtP-IE5_521eFiJGydgR9w_DBoawvojH38Y
+                  - generic [ref=e1149]:
+                    - img [ref=e1504]
+                    - generic [ref=e1155]:
+                      - generic [ref=e1156]:
+                        - generic [ref=e1157]:
+                          - strong [ref=e1159]: Controller | Hotel Transamerica Lagoa Santa
+                          - generic [ref=e1160]: Controller | Hotel Transamerica Lagoa Santa
+                        - generic [ref=e1162]: Atlantica Hospitality International
+                        - generic [ref=e1164]: Lagoa Santa, Minas Gerais, Brasil (Presencial)
+                        - list [ref=e1166]:
+                          - listitem [ref=e1167]:
+                            - img [ref=e1505]
+                            - generic [ref=e1172]: Avaliando candidaturas
+                      - list [ref=e1174]:
+                        - listitem [ref=e1175]:
+                          - time [ref=e1176]: Há 3 semanas
+                        - listitem [ref=e1177]:
+                          - img [ref=e1178]:
+                            - img [ref=e1179]
+                          - generic [ref=e1181]: Candidatura simplificada
+              - listitem [ref=e1182]:
+                - link [ref=e1506] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4401863777&referenceJobId=4401341879&originToLandingJobPostings=4401863777&trackingId=YF5O%2BKVlwic9IM321mG%2F1A%3D%3D&refId=FenCwZSIJpc4rnyjIyrFHQ%3D%3D&eBP=CwEAAAGdsILOzVlGky_Jcr50SCkTInrXGe49fAlAO-OJZvjy5TcWaZ7mAqu0x7f2yL6bwPMcQYXl7I9kZRbBShehMs-l7cOEscinuAWgXKyNOJsaiSyfs98_V-SAMzBqUYReZ41nE2tCVQoi-R3h7CxSi54T-SfBX6qA3xF3b1S8JWIB2Cbax15-iP3F-PYikXcexNyPOnVwwwr388g2Yc79VBpgMevFrMHnI_KaiYeoEwzOuwo2F3CIyOLhsoYyEzQNp-XI9R-915wBGANgHZrFzTnz5iwGvDU5pmU1H7Q45XNMoa8Oy1A3gBz1GnGKaT-7JIXvbZrXz86SHbupiAeLZQjMyiIkI3gbYEOm2pDxhurFRKB4hEh9RDTfxliZQ9Dbu_RKTBsyyC9ndhm-JBfC9xjaajUOC9owDwtdiD3pGgSudQNPUzl2Kq0IRrwVwUVLiG2BI1immM6kat9Qd87xcO7jY7wrFa3Hwi3DDIv_
+                  - generic [ref=e1186]:
+                    - img [ref=e1507]
+                    - generic [ref=e1192]:
+                      - generic [ref=e1193]:
+                        - generic [ref=e1194]:
+                          - generic [ref=e1195]:
+                            - strong [ref=e1196]: Business Controller
+                            - img [ref=e1198]
+                          - generic [ref=e1200]: Business Controller with verification
+                        - generic [ref=e1202]: Flender
+                        - generic [ref=e1204]: Recife, Pernambuco, Brasil (Presencial)
+                        - list [ref=e1206]:
+                          - listitem [ref=e1207]:
+                            - img [ref=e1508]
+                            - generic [ref=e1212]: A empresa leva geralmente 1 semana para avaliar
+                      - list [ref=e1214]:
+                        - listitem [ref=e1215]:
+                          - time [ref=e1216]: Há 5 dias
+                        - listitem [ref=e1217]:
+                          - img [ref=e1218]:
+                            - img [ref=e1219]
+                          - generic [ref=e1221]: Candidatura simplificada
+            - link [ref=e1509] [cursor=pointer]:
+              - /url: https://www.linkedin.com/jobs/collections/similar-jobs?referenceJobId=4401341879
+              - text: Ver mais vagas como esta
+        - complementary [ref=e230]:
+          - generic [ref=e231]:
+            - generic [ref=e1224]:
+              - img [ref=e1510]:
+                - img [ref=e1227]
+              - heading [level=2] [ref=e1511]: Adquira competências com esses cursos para conseguir um novo emprego
+              - listitem [ref=e1230]:
+                - link [ref=e1512] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/learning/como-tomar-decisoes-dificeis-e-liderar-com-coragem-em-tempos-incertos?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_4197040_learning
+                  - img [ref=e1513]
+                  - img [ref=e1236]
+                - link [ref=e1514] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/learning/como-tomar-decisoes-dificeis-e-liderar-com-coragem-em-tempos-incertos?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_4197040_learning
+                  - generic [ref=e1240]: Como Tomar Decisões Difíceis e Liderar com Coragem em Tempos Incertos
+              - listitem [ref=e1241]:
+                - link [ref=e1515] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/learning/inteligencia-artificial-generativa-para-financas-e-contabilidade?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_5242121_learning
+                  - img [ref=e1516]
+                  - img [ref=e1247]
+                - generic [ref=e1249]:
+                  - link [ref=e1517] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/learning/inteligencia-artificial-generativa-para-financas-e-contabilidade?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_5242121_learning
+                    - generic [ref=e1251]: Inteligência Artificial Generativa para Finanças e Contabilidade
+                  - generic [ref=e1253]: 4.027 visualizações
+              - listitem [ref=e1254]:
+                - link [ref=e1518] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/learning/transforme-se-em-um-novo-gerente-com-o-impulso-da-inteligencia-artificial?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_4261235_learning
+                  - img [ref=e1519]
+                  - img [ref=e1260]
+                - generic [ref=e1262]:
+                  - link [ref=e1520] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/learning/transforme-se-em-um-novo-gerente-com-o-impulso-da-inteligencia-artificial?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_4261235_learning
+                    - generic [ref=e1264]: Transforme-se em um Novo Gerente com o Impulso da Inteligência Artificial
+                  - generic [ref=e1266]: 1.993 visualizações
+              - link [ref=e1521] [cursor=pointer]:
+                - /url: /learning?trk=jobdetails_learning_awareness
+                - text: Exibir mais no LinkedIn Learning
+            - generic [ref=e1269]:
+              - paragraph [ref=e1270]: Procurando um talento?
+              - link [ref=e1522] [cursor=pointer]:
+                - /url: https://www.linkedin.com/talent/job-posting-redirect?trk=flagship3_job_detail
+                - text: Anunciar vaga
+      - contentinfo [ref=e233]:
+        - generic [ref=e235]:
+          - generic [ref=e236]:
+            - navigation [ref=e237]:
+              - list [ref=e1272]:
+                - listitem [ref=e1273]:
+                  - link [ref=e1523] [cursor=pointer]:
+                    - /url: https://about.linkedin.com/pt-br
+                    - text: Sobre
+                - listitem [ref=e1275]:
+                  - link [ref=e1524] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/accessibility
+                    - text: Acessibilidade
+                - listitem [ref=e1277]:
+                  - link [ref=e1525] [cursor=pointer]:
+                    - /url: https://business.linkedin.com/pt-br/talent-solutions?trk=flagship_nav&veh=li-footer-lts-control-pt-br&src=li-footer
+                    - text: Soluções de Talentos
+                - listitem [ref=e1279]:
+                  - link [ref=e1526] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/legal/professional-community-policies
+                    - text: Políticas para Comunidades Profissionais
+                - listitem [ref=e1281]:
+                  - link [ref=e1527] [cursor=pointer]:
+                    - /url: https://careers.linkedin.com/
+                    - text: Carreiras
+                - listitem [ref=e1283]:
+                  - link [ref=e1528] [cursor=pointer]:
+                    - /url: https://business.linkedin.com/pt-br/marketing-solutions?trk=n_nav_lms_f&src=li-footer
+                    - text: Soluções de Marketing
+                - listitem [ref=e1285]:
+                  - button [ref=e1529] [cursor=pointer]:
+                    - generic [ref=e1289]:
+                      - text: Termos e Privacidade
+                      - img [ref=e1290]
+                - listitem [ref=e1292]:
+                  - link [ref=e1530] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/help/linkedin/answer/62931?lang=pt
+                    - text: Preferências de anúncios
+                - listitem [ref=e1294]:
+                  - link [ref=e1531] [cursor=pointer]:
+                    - /url: https://business.linkedin.com/pt-br/marketing-solutions/ads?trk=n_nav_ads_f
+                    - text: Publicidade
+                - listitem [ref=e1296]:
+                  - link [ref=e1532] [cursor=pointer]:
+                    - /url: https://business.linkedin.com/pt-br/sales-solutions?trk=flagship_nav&veh=li-footer-lss-control-pt-br&src=li-footer
+                    - text: Soluções de Vendas
+                - listitem [ref=e1298]:
+                  - link [ref=e1533] [cursor=pointer]:
+                    - /url: https://mobile.linkedin.com/pt-br
+                    - text: Para celular
+                - listitem [ref=e1300]:
+                  - link [ref=e1534] [cursor=pointer]:
+                    - /url: https://smallbusiness.linkedin.com?&src=li-footer
+                    - text: Pequenas empresas
+                - listitem [ref=e1302]:
+                  - link [ref=e1535] [cursor=pointer]:
+                    - /url: https://safety.linkedin.com
+                    - text: Central de Segurança
+            - generic [ref=e239]:
+              - list [ref=e240]:
+                - listitem [ref=e241]:
+                  - img [ref=e242]
+                  - generic [ref=e244]:
+                    - link [ref=e1536] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/help/linkedin?trk=d_flagship3_job_details
+                      - text: Dúvidas?
+                    - paragraph [ref=e246]: Acesse a nossa Central de Ajuda.
+                - listitem [ref=e247]:
+                  - img [ref=e248]
+                  - generic [ref=e250]:
+                    - link [ref=e1537] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/psettings/
+                      - text: Gerencie sua conta e privacidade
+                    - paragraph [ref=e252]: Acesse suas Configurações.
+                - listitem [ref=e253]:
+                  - img [ref=e254]
+                  - generic [ref=e256]:
+                    - link [ref=e1538] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/help/linkedin/answer/a1339724
+                      - text: Visibilidade da recomendação
+                    - paragraph [ref=e258]: Saiba mais sobre os conteúdos recomendados.
+              - generic [ref=e259]:
+                - generic [ref=e260]: Selecionar idioma
+                - combobox [ref=e1539]
+          - paragraph [ref=e262]: LinkedIn Corporation © 2026
+    - generic [ref=e263]:
+      - generic [ref=e264]:
+        - generic [ref=e266] [cursor=pointer]:
+          - img [ref=e1540]
+          - button [ref=e1541]:
+            - generic [ref=e270]:
+              - generic [ref=e271]: Mensagens
+              - generic [ref=e272]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+        - generic [ref=e273]:
+          - button [ref=e1542] [cursor=pointer]:
+            - img [ref=e1543]
+          - button [ref=e1544] [cursor=pointer]:
+            - img [ref=e280]
+            - generic [ref=e282]: Escrever mensagem
+          - button [ref=e1545] [cursor=pointer]:
+            - img [ref=e284]
+            - generic [ref=e286]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+      - link [ref=e1546] [cursor=pointer]:
+        - /url: https://www.linkedin.com/company/109375368/admin/inbox
+        - img [ref=e1547]
+        - generic [ref=e1306]: Fernando Xavier
+        - img [ref=e1307]

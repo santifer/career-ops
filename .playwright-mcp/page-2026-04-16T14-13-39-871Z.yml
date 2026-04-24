@@ -1,0 +1,480 @@
+- generic [ref=e1]:
+  - link [ref=e2] [cursor=pointer]:
+    - /url: "#gnav-header-end"
+    - text: Skip to main content
+  - main [ref=e3]:
+    - generic [ref=e5]:
+      - navigation [ref=e7]:
+        - generic [ref=e9]:
+          - generic [ref=e10]:
+            - generic [ref=e11]:
+              - button [ref=e12] [cursor=pointer]:
+                - generic [ref=e13]: Skip to main content
+              - link [ref=e14] [cursor=pointer]:
+                - /url: /?from=gnav-jobsearch--indeedmobile
+                - img [ref=e16]
+              - list [ref=e18]:
+                - listitem [ref=e19]:
+                  - link [ref=e21] [cursor=pointer]:
+                    - /url: https://www.indeed.com/
+                    - text: Home
+                - listitem [ref=e22]:
+                  - link [ref=e24] [cursor=pointer]:
+                    - /url: https://www.indeed.com/companies
+                    - text: Company reviews
+                - listitem [ref=e25]:
+                  - link [ref=e27] [cursor=pointer]:
+                    - /url: https://www.indeed.com/career/salaries
+                    - text: Find salaries
+            - generic [ref=e28]:
+              - list [ref=e29]:
+                - listitem [ref=e30]:
+                  - link [ref=e32] [cursor=pointer]:
+                    - /url: https://myjobs.indeed.com?from=gnav-util-jobsearch--indeedmobile&gnavTK=1jmba7o2sgojl801&tk=1jmba7n63gljv889&co=US&hl=en
+                    - img [ref=e33]
+                - listitem [ref=e35]:
+                  - link [ref=e37] [cursor=pointer]:
+                    - /url: https://messages.indeed.com?from=gnav-util-jobsearch--indeedmobile&gnavTK=1jmba7o2sgojl801&tk=1jmba7n63gljv889&co=US&hl=en
+                    - img [ref=e38]
+                    - generic [ref=e43]: Messages Unread count 0
+                - listitem [ref=e44]:
+                  - link [ref=e46] [cursor=pointer]:
+                    - /url: https://www.indeed.com/notifications?from=gnav-util-jobsearch--indeedmobile&gnavTK=1jmba7o2sgojl801&tk=1jmba7n63gljv889&hl=en
+                    - img [ref=e47]
+                - listitem [ref=e49]:
+                  - button [ref=e53] [cursor=pointer]:
+                    - generic [ref=e54]:
+                      - img [ref=e55]
+                      - generic [ref=e57]:
+                        - text: "1"
+                        - generic [ref=e58]: new update
+              - link [ref=e63] [cursor=pointer]:
+                - /url: https://www.indeed.com/hire?co=US&hl=en
+                - text: Employers / Post Job
+          - generic [ref=e64]: Start of main content
+      - generic [ref=e66]:
+        - search [ref=e71]:
+          - generic [ref=e74]:
+            - generic [ref=e76]:
+              - generic [ref=e77]:
+                - generic [ref=e78]: "Keyword : all jobs"
+                - generic [ref=e81]:
+                  - img [ref=e83]
+                  - combobox [ref=e85]: controller OR controllership OR contabilidade
+                  - button [ref=e87] [cursor=pointer]:
+                    - img [ref=e88]
+              - separator [ref=e90]:
+                - generic [ref=e91]: "&nbsp;"
+              - generic [ref=e92]:
+                - generic [ref=e93]: Edit location input box label
+                - generic [ref=e96]:
+                  - img [ref=e98]
+                  - combobox [ref=e100]: Brazil
+                  - button [ref=e102] [cursor=pointer]:
+                    - img [ref=e103]
+            - button [ref=e106] [cursor=pointer]: Search
+          - list [ref=e109]:
+            - button [ref=e111] [cursor=pointer]: Remote
+            - button [ref=e113] [cursor=pointer]:
+              - text: Distance
+              - generic [ref=e114]: "1"
+            - button [ref=e116] [cursor=pointer]: Job Type
+            - button [ref=e118] [cursor=pointer]: Experience level
+            - button [ref=e120] [cursor=pointer]:
+              - text: Date posted
+              - generic [ref=e121]: "1"
+        - generic [ref=e127]:
+          - generic [ref=e128]:
+            - generic [ref=e129]:
+              - heading [level=1] [ref=e130]: controller controllership contabilidade jobs in Brazil, IN
+              - generic [ref=e132]:
+                - generic [ref=e133]:
+                  - generic [ref=e134]: "Sort by:"
+                  - generic [ref=e135]:
+                    - text: relevance -
+                    - link [ref=e136] [cursor=pointer]:
+                      - /url: /jobs?q=controller%20OR%20controllership%20OR%20contabilidade&l=Brazil&fromage=14&sort=date
+                      - text: date
+                - generic [ref=e137]:
+                  - generic [ref=e138]: 2 jobs
+                  - button [ref=e140] [cursor=pointer]:
+                    - img [ref=e141]
+            - list [ref=e147]:
+              - listitem [ref=e148]:
+                - generic [ref=e153]:
+                  - generic [ref=e154]:
+                    - heading [level=2] [ref=e155]:
+                      - button [pressed] [ref=e156] [cursor=pointer]: Financial Controller
+                    - generic [ref=e161]: Often replies in 1 day
+                  - generic [ref=e162]:
+                    - generic [ref=e164]:
+                      - generic [ref=e166]: Curry Auto Center
+                      - generic [ref=e167]: Bloomington, IN 47401
+                    - list [ref=e169]:
+                      - listitem [ref=e170]:
+                        - generic [ref=e173]: 401(k)
+                      - listitem [ref=e174]:
+                        - generic [ref=e177]: Health insurance
+                      - listitem [ref=e178]:
+                        - generic [ref=e181]: 401(k) matching
+                      - listitem [ref=e182]:
+                        - generic [ref=e185]: Paid time off
+                      - listitem [ref=e186]:
+                        - generic [ref=e189]: Vision insurance
+                      - listitem [ref=e190]:
+                        - generic [ref=e193]: Dental insurance
+                  - generic [ref=e194]:
+                    - button [ref=e195] [cursor=pointer]:
+                      - img [ref=e196]
+                    - button [ref=e198] [cursor=pointer]:
+                      - img [ref=e199]
+              - listitem [ref=e202]:
+                - generic [ref=e207]:
+                  - generic [ref=e208]:
+                    - heading [level=2] [ref=e209]:
+                      - button [ref=e210] [cursor=pointer]: Assistant Controller
+                    - generic [ref=e215]: Often replies in 2 days
+                  - generic [ref=e218]:
+                    - generic [ref=e220]: Polycor Indiana Limestone
+                    - generic [ref=e221]: Hybrid work in Bloomington, IN 47404
+                  - generic [ref=e222]:
+                    - button [ref=e223] [cursor=pointer]:
+                      - img [ref=e224]
+                    - button [ref=e226] [cursor=pointer]:
+                      - img [ref=e227]
+            - group [ref=e238]:
+              - generic [ref=e239]: Overall, how relevant are these jobs?
+              - generic [ref=e240]:
+                - generic [ref=e242]:
+                  - radio [ref=e243] [cursor=pointer]
+                  - img [ref=e246]
+                  - generic [ref=e249]: Not at all
+                - generic [ref=e251]:
+                  - radio [ref=e252] [cursor=pointer]
+                  - img [ref=e255]
+                  - generic [ref=e258]: Slightly
+                - generic [ref=e260]:
+                  - radio [ref=e261] [cursor=pointer]
+                  - img [ref=e264]
+                  - generic [ref=e267]: Somewhat
+                - generic [ref=e269]:
+                  - radio [ref=e270] [cursor=pointer]
+                  - img [ref=e273]
+                  - generic [ref=e276]: Very
+                - generic [ref=e278]:
+                  - radio [ref=e279] [cursor=pointer]
+                  - img [ref=e282]
+                  - generic [ref=e285]: Extremely
+            - navigation [ref=e286]
+            - generic [ref=e287]:
+              - heading [level=2] [ref=e288]: "Resume Resources:"
+              - list [ref=e289]:
+                - listitem [ref=e290]:
+                  - link [ref=e291] [cursor=pointer]:
+                    - /url: https://www.indeed.com/career-advice/resume-samples?from=jobsearch_footer
+                    - text: Resume Samples
+                - text: "-"
+                - listitem [ref=e292]:
+                  - link [ref=e293] [cursor=pointer]:
+                    - /url: https://www.indeed.com/profile/resume-templates?from=jobsearch_footer
+                    - text: Resume Templates
+            - generic [ref=e294]:
+              - heading [level=2] [ref=e295]: "Career Resources:"
+              - list [ref=e296]:
+                - listitem [ref=e297]:
+                  - link [ref=e298] [cursor=pointer]:
+                    - /url: /career/salaries?from=jobsearch_footer
+                    - text: Career Explorer
+                - text: "-"
+                - listitem [ref=e299]:
+                  - link [ref=e300] [cursor=pointer]:
+                    - /url: /explorer/
+                    - text: Explore High Paying Jobs
+            - generic [ref=e301]:
+              - heading [level=2] [ref=e302]: "Employer Resources:"
+              - list [ref=e303]:
+                - listitem [ref=e304]:
+                  - link [ref=e305] [cursor=pointer]:
+                    - /url: /hire/how-to-write-a-job-description?from=jobsearch_footer
+                    - text: How to Write a Job Description
+                - text: "-"
+                - listitem [ref=e306]:
+                  - link [ref=e307] [cursor=pointer]:
+                    - /url: /hire/how-to-hire?from=jobsearch_footer
+                    - text: How to Hire Employees
+          - generic [ref=e309]:
+            - button [ref=e310]: Return to Search Result
+            - heading [level=2] [ref=e311]: Job Post Details
+            - generic [ref=e316]:
+              - generic [ref=e317]:
+                - generic [ref=e319]:
+                  - generic [ref=e320]:
+                    - heading [level=2] [ref=e322]:
+                      - generic [ref=e323]:
+                        - text: Financial Controller
+                        - generic [ref=e324]: "- job post"
+                    - generic [ref=e328]:
+                      - generic [ref=e329]:
+                        - link [ref=e332] [cursor=pointer]:
+                          - /url: https://www.indeed.com/cmp/Curry-Auto-Center?campaignid=mobvjcmp&from=mobviewjob&tk=1jmba7o41gljv800&fromjk=990cf490a2546acc
+                          - text: Curry Auto Center
+                          - img [ref=e333]
+                        - generic [ref=e335]:
+                          - generic [ref=e336]: · 3.2
+                          - generic [ref=e337]: 3.2 out of 5 stars
+                          - img [ref=e338]
+                      - generic [ref=e341]: 2906 East Buick Cadillac Boulevard, Bloomington, IN 47401
+                  - generic [ref=e344]:
+                    - generic [ref=e345]: From $80,000 a year
+                    - generic [ref=e346]: "- Full-time"
+                - generic [ref=e347]:
+                  - generic [ref=e353]:
+                    - generic [ref=e354]:
+                      - generic [ref=e355]:
+                        - heading [level=2] [ref=e356]: Job details
+                        - generic [ref=e357]:
+                          - text: Here’s how the job details align with your
+                          - link [ref=e358] [cursor=pointer]:
+                            - /url: https://profile.indeed.com/
+                            - text: profile
+                            - img [ref=e359]
+                          - text: .
+                      - generic [ref=e361]:
+                        - group [ref=e362]:
+                          - img [ref=e363]
+                          - generic [ref=e365]:
+                            - heading [level=3] [ref=e366]: Pay
+                            - list [ref=e368]:
+                              - listitem [ref=e369]:
+                                - button [ref=e370]:
+                                  - generic [ref=e373]:
+                                    - img [ref=e374]
+                                    - generic [ref=e376]: From $80,000 a year
+                                    - img [ref=e377]
+                        - group [ref=e379]:
+                          - img [ref=e380]
+                          - generic [ref=e383]:
+                            - heading [level=3] [ref=e384]: Job type
+                            - list [ref=e386]:
+                              - listitem [ref=e387]:
+                                - button [ref=e388]:
+                                  - generic [ref=e391]:
+                                    - img [ref=e392]
+                                    - generic [ref=e394]: Full-time
+                                    - img [ref=e395]
+                    - separator [ref=e397]:
+                      - generic [ref=e398]: "&nbsp;"
+                  - generic [ref=e399]:
+                    - heading [level=2] [ref=e400]: Location
+                    - generic [ref=e401]:
+                      - img [ref=e403]
+                      - generic [ref=e405]:
+                        - heading [level=2] [ref=e407]: Estimated commute
+                        - button [ref=e409] [cursor=pointer]:
+                          - generic [ref=e410]: Add commute preference
+                    - generic [ref=e411]:
+                      - img [ref=e412]
+                      - generic [ref=e414]:
+                        - heading [level=2] [ref=e415]: Job address
+                        - generic [ref=e416]: 2906 East Buick Cadillac Boulevard, Bloomington, IN 47401
+                    - separator [ref=e417]:
+                      - generic [ref=e418]: "&nbsp;"
+                  - generic [ref=e419]:
+                    - heading [level=2] [ref=e420]:
+                      - text: Benefits
+                      - generic [ref=e421]: Pulled from the full job description
+                    - list [ref=e425]:
+                      - listitem [ref=e426]: 401(k)
+                      - listitem [ref=e427]: Health insurance
+                      - listitem [ref=e428]: 401(k) matching
+                      - listitem [ref=e429]: Paid time off
+                      - listitem [ref=e430]: Vision insurance
+                      - listitem [ref=e431]: Dental insurance
+                      - listitem [ref=e432]: Life insurance
+                    - button [ref=e434] [cursor=pointer]:
+                      - generic [ref=e435]: Show more
+                      - img [ref=e436]
+                    - separator [ref=e438]:
+                      - generic [ref=e439]: "&nbsp;"
+                  - heading [level=2] [ref=e441]: Full job description
+                  - generic [ref=e442]:
+                    - paragraph [ref=e443]: Company Description
+                    - paragraph [ref=e444]: Established in 1915, Curry Auto Center is a locally owned and operated automotive dealership based in Bloomington, Indiana. As the oldest Buick dealership in the United States, Curry Auto Center has proudly served the community for over a century. Specializing in Chevrolet, Buick, and GMC vehicles, the company is recognized for its commitment to exceptional customer service and automotive excellence. Curry Auto Center remains a 5th-generation family-owned business, fostering a strong community presence and dedication to its customers.
+                    - paragraph [ref=e445]: Role Description
+                    - paragraph [ref=e446]: The Controller role at Curry Auto Center is a full-time, on-site position located in Bloomington, IN. The Controller assists in the fair representation of the financial condition of the company through the oversight of financial activities, ensuring accuracy of financial records, and preparing reports on financial performance. This role will also include analyzing financial trends, overseeing accounting operations, and implementing controls to ensure compliance with regulatory requirements. The Controller position will provide sales and expense analyses for all departments and will collaborate with leadership to develop financial strategies and provide guidance to the accounting team to drive the organization's financial success.
+                    - paragraph [ref=e447]: Duties and Responsibilities
+                    - list [ref=e448]:
+                      - listitem [ref=e449]: Attend key employee meetings as requested.
+                      - listitem [ref=e450]: Post manual journal entries and any other posting as required.
+                      - listitem [ref=e451]: Maintain control of posted documents.
+                      - listitem [ref=e452]: Set up fixed assets and prepaid asset accounts.
+                      - listitem [ref=e453]: Manage office staff to ensure timely completion of assigned tasks.
+                      - listitem [ref=e454]: Prepare W2's, year-end tax reports and tax returns in a timely fashion.
+                      - listitem [ref=e455]: Approve adjustments to inventory accounts.
+                      - listitem [ref=e456]: Post additions and modifications to inventory accounts.
+                      - listitem [ref=e457]: Reconcile select accounts monthly, prior to month end.
+                      - listitem [ref=e458]: Assist in completion of annual review/audit.
+                      - listitem [ref=e459]: Complete end-of-month accounting reports.
+                      - listitem [ref=e460]: Reconcile flooring interest statement.
+                      - listitem [ref=e461]: Prepare a complete financial statement and submit it to the manufacturer by the 10th day of each month. Interpret and analyze the financial statement continually.
+                      - listitem [ref=e462]: Keep the General Manager and dealer informed about the trends and the cash needs of the business.
+                      - listitem [ref=e463]: Maintain loss reserves for contingent liabilities and trade receivables.
+                      - listitem [ref=e464]: Automate all possible systems and establish controls.
+                      - listitem [ref=e465]: Coordinate with outside computer companies on computer performance and utilization.
+                      - listitem [ref=e466]: Administer Empower 401K employee benefit program, including quarterly and annual reports.
+                      - listitem [ref=e467]: Additional tasks and responsibilities as needed.
+                    - paragraph [ref=e468]: Required Qualifications
+                    - list [ref=e469]:
+                      - listitem [ref=e470]: Degree in Accounting or equivalent
+                      - listitem [ref=e471]: One year of experience in a dealership position
+                      - listitem [ref=e472]: Ability to read and comprehend instructions and information
+                      - listitem [ref=e473]: Working knowledge of dealership documents and dealership financial statements
+                      - listitem [ref=e474]: Ability to explain technical financial information in an understandable manner
+                      - listitem [ref=e475]: Demonstrated ability in problem-solving, data interpretation, and decision-making
+                      - listitem [ref=e476]: Excellent verbal and written communication skills
+                      - listitem [ref=e477]: High attention to detail, organizational skills, and ability to meet deadlines.
+                      - listitem [ref=e478]: Professional Personal Appearance
+                      - listitem [ref=e479]: Trainable on dealership computer system
+                      - listitem [ref=e480]: Ability to work well with customers and co-workers
+                    - paragraph [ref=e481]: Working Conditions
+                    - list [ref=e482]:
+                      - listitem [ref=e483]: Working at a desk on a computer and in an office setting for most the day
+                      - listitem [ref=e484]: Most of the day will be spent analyzing dealership records, posting accounts and performing other types of paperwork.
+                      - listitem [ref=e485]: Some walking between departments will be necessary to connect with staff on office related items
+                    - paragraph [ref=e486]: Statement of Understanding
+                    - paragraph [ref=e487]: The dealership reserves the right to revise the functions and duties of the job or to require that additional or different tasks be performed when circumstances change (i.e., emergencies, changes in personnel, workload, rush jobs, or technological developments).
+                    - paragraph [ref=e488]: "Pay: From $80,000.00 per year"
+                    - paragraph [ref=e489]: "Benefits:"
+                    - list [ref=e490]:
+                      - listitem [ref=e491]: 401(k)
+                      - listitem [ref=e492]: 401(k) matching
+                      - listitem [ref=e493]: Dental insurance
+                      - listitem [ref=e494]: Disability insurance
+                      - listitem [ref=e495]: Health insurance
+                      - listitem [ref=e496]: Life insurance
+                      - listitem [ref=e497]: Paid time off
+                      - listitem [ref=e498]: Vision insurance
+                    - paragraph [ref=e499]: "Experience:"
+                    - list [ref=e500]:
+                      - listitem [ref=e501]: "Accounting: 1 year (Preferred)"
+                      - listitem [ref=e502]: "Bookkeeping: 1 year (Preferred)"
+                      - listitem [ref=e503]: "Personnel Management: 1 year (Preferred)"
+                      - listitem [ref=e504]: "Financial Reporting: 1 year (Preferred)"
+                      - listitem [ref=e505]: "Dealership: 1 year (Preferred)"
+                    - paragraph [ref=e506]: "License/Certification:"
+                    - list [ref=e507]:
+                      - listitem [ref=e508]: Driver's License (Required)
+                    - paragraph [ref=e509]: "Ability to Commute:"
+                    - list [ref=e510]:
+                      - listitem [ref=e511]: Bloomington, IN 47401 (Required)
+                    - paragraph [ref=e512]: "Work Location: In person"
+                  - separator [ref=e513]:
+                    - generic [ref=e514]: "&nbsp;"
+                - button [ref=e520] [cursor=pointer]: Report job
+              - generic [ref=e523]:
+                - generic [ref=e524]:
+                  - button [ref=e529] [cursor=pointer]:
+                    - img [ref=e530]
+                  - button [ref=e533] [cursor=pointer]:
+                    - img [ref=e534]
+                  - button [ref=e537] [cursor=pointer]
+                - button [ref=e548] [cursor=pointer]:
+                  - generic [ref=e550]: Apply with Indeed
+            - button [ref=e551]: Return to Search Result
+      - contentinfo [ref=e556]:
+        - generic [ref=e557]:
+          - list [ref=e558]:
+            - listitem [ref=e559]:
+              - link [ref=e561] [cursor=pointer]:
+                - /url: https://www.hiringlab.org
+                - text: Hiring Lab
+            - listitem [ref=e562]:
+              - link [ref=e564] [cursor=pointer]:
+                - /url: https://www.indeed.com/career-advice
+                - text: Career advice
+            - listitem [ref=e565]:
+              - link [ref=e567] [cursor=pointer]:
+                - /url: https://www.indeed.com/browsejobs
+                - text: Browse jobs
+            - listitem [ref=e568]:
+              - link [ref=e570] [cursor=pointer]:
+                - /url: https://www.indeed.com/companies/browse-companies
+                - text: Browse companies
+            - listitem [ref=e571]:
+              - link [ref=e573] [cursor=pointer]:
+                - /url: https://www.indeed.com/career/salaries
+                - text: Salaries
+            - listitem [ref=e574]:
+              - link [ref=e576] [cursor=pointer]:
+                - /url: https://www.indeedevents.com/
+                - text: Indeed Events
+            - listitem [ref=e577]:
+              - link [ref=e579] [cursor=pointer]:
+                - /url: https://www.indeed.com/cmp/Indeed/about
+                - text: Work at Indeed
+            - listitem [ref=e580]:
+              - link [ref=e582] [cursor=pointer]:
+                - /url: https://www.indeed.com/worldwide
+                - text: Countries
+            - listitem [ref=e583]:
+              - link [ref=e585] [cursor=pointer]:
+                - /url: https://www.indeed.com/about
+                - text: About
+            - listitem [ref=e586]:
+              - link [ref=e588] [cursor=pointer]:
+                - /url: https://www.indeed.com/help
+                - text: Help
+            - listitem [ref=e589]:
+              - link [ref=e591] [cursor=pointer]:
+                - /url: https://www.indeed.com/esg?from=gnav-jobsearch--indeedmobile
+                - text: ESG at Indeed
+          - list [ref=e592]:
+            - listitem [ref=e593]: © 2026 Indeed
+            - listitem [ref=e594]:
+              - link [ref=e596] [cursor=pointer]:
+                - /url: https://www.indeed.com/legal/ccpa-dns?hl=en
+                - text: Your Privacy Choices
+                - img [ref=e598]
+            - listitem [ref=e603]:
+              - link [ref=e605] [cursor=pointer]:
+                - /url: https://www.indeed.com/esg/accessibility?hl=en
+                - text: Accessibility at Indeed
+            - listitem [ref=e606]:
+              - link [ref=e608] [cursor=pointer]:
+                - /url: https://hrtechprivacy.com/brands/indeed#privacypolicy
+                - text: Privacy Center and Ad Choices
+            - listitem [ref=e609]:
+              - link [ref=e611] [cursor=pointer]:
+                - /url: https://www.indeed.com/legal?hl=en
+                - text: Terms
+  - generic [ref=e612]:
+    - text: This site is protected by reCAPTCHA and the Google
+    - link [ref=e613] [cursor=pointer]:
+      - /url: https://policies.google.com/privacy
+      - text: Privacy Policy
+    - text: and
+    - link [ref=e614] [cursor=pointer]:
+      - /url: https://policies.google.com/terms
+      - text: Terms of Service
+    - text: apply.
+  - alertdialog "Updates to our Terms of Service" [active] [ref=e616]:
+    - heading "Updates to our Terms of Service" [level=2] [ref=e619]:
+      - generic [ref=e620]: Updates to our Terms of Service
+    - generic [ref=e621]:
+      - img [ref=e623]
+      - paragraph [ref=e658]:
+        - text: Please be sure to review our updated
+        - link "Terms of Service" [ref=e659] [cursor=pointer]:
+          - /url: https://indeed.com/legal
+        - text: (“Terms”).
+        - strong [ref=e660]: The Terms contain an arbitration agreement that includes a class-action waiver.
+        - text: This means you agree to resolve any disputes related to your use of Indeed through binding arbitration rather than in court. The Terms also explain how to opt out of arbitration and the deadline for doing so.
+      - paragraph [ref=e661]:
+        - text: By clicking
+        - strong [ref=e662]: Accept Terms
+        - text: ", you agree to the updated"
+        - link "Terms of Service" [ref=e663] [cursor=pointer]:
+          - /url: https://indeed.com/legal
+        - text: .
+    - button "Accept Terms" [ref=e666] [cursor=pointer]:
+      - generic [ref=e667]: Accept Terms

@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fernando Costa Xavier — CV</title>
+<style>
+  @font-face {
+    font-family: 'Space Grotesk';
+    src: url('./fonts/space-grotesk-latin.woff2') format('woff2');
+    font-weight: 300 700;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  }
+  @font-face {
+    font-family: 'Space Grotesk';
+    src: url('./fonts/space-grotesk-latin-ext.woff2') format('woff2');
+    font-weight: 300 700;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0100-02AF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  }
+  @font-face {
+    font-family: 'DM Sans';
+    src: url('./fonts/dm-sans-latin.woff2') format('woff2');
+    font-weight: 100 1000;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  }
+  @font-face {
+    font-family: 'DM Sans';
+    src: url('./fonts/dm-sans-latin-ext.woff2') format('woff2');
+    font-weight: 100 1000;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0100-02AF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { font-family: 'DM Sans', sans-serif; font-size: 10.5px; line-height: 1.5; color: #1a1a2e; background: #ffffff; padding: 0; margin: 0; }
+  .page { width: 100%; max-width: 210mm; margin: 0 auto; padding: 2px 0; }
+
+  .header { margin-bottom: 20px; }
+  .header h1 { font-family: 'Space Grotesk', sans-serif; font-size: 26px; font-weight: 700; color: #1a1a2e; letter-spacing: -0.02em; margin-bottom: 6px; line-height: 1.1; }
+  .header-gradient { height: 2px; background: linear-gradient(to right, hsl(187, 74%, 32%), hsl(270, 70%, 45%)); border-radius: 1px; margin-bottom: 10px; }
+  .contact-row { display: flex; flex-wrap: wrap; gap: 6px 14px; font-family: 'DM Sans', sans-serif; font-size: 10px; line-height: 1.4; color: #555; }
+  .contact-row a { color: #555; text-decoration: none; }
+  .contact-row .separator { color: #ccc; }
+
+  .section { margin-bottom: 16px; }
+  .section-title { font-family: 'Space Grotesk', sans-serif; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: hsl(187, 74%, 32%); border-bottom: 1.5px solid #e2e2e2; padding-bottom: 4px; margin-bottom: 10px; line-height: 1.2; }
+
+  .summary-text { font-size: 10.5px; line-height: 1.7; color: #2f2f2f; }
+  a { white-space: nowrap; }
+
+  .competencies-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+  .competency-tag { font-family: 'DM Sans', sans-serif; font-size: 9.5px; font-weight: 500; color: hsl(187, 74%, 28%); background: hsl(187, 40%, 95%); padding: 3px 9px; border-radius: 3px; border: 1px solid hsl(187, 40%, 88%); }
+
+  .job { margin-bottom: 13px; }
+  .job-header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 3px; }
+  .job-company { font-family: 'Space Grotesk', sans-serif; font-size: 12px; font-weight: 600; color: hsl(270, 70%, 45%); }
+  .job-period { font-size: 10px; color: #777; white-space: nowrap; }
+  .job-role { font-size: 10.5px; font-weight: 600; color: #333; margin-bottom: 3px; }
+  .job-location { font-size: 9.5px; color: #888; margin-bottom: 4px; }
+  .job ul { padding-left: 16px; margin-top: 5px; }
+  .job li { font-size: 10px; line-height: 1.6; color: #333; margin-bottom: 3px; }
+  .job li strong { font-weight: 600; }
+
+  .project { margin-bottom: 10px; }
+  .project-title { font-family: 'Space Grotesk', sans-serif; font-size: 11px; font-weight: 600; color: hsl(270, 70%, 45%); }
+  .project-badge { font-size: 8.5px; font-weight: 500; color: hsl(187, 74%, 32%); background: hsl(187, 40%, 95%); padding: 1px 6px; border-radius: 2px; margin-left: 6px; }
+  .project-desc { font-size: 10px; color: #444; margin-top: 3px; line-height: 1.55; }
+  .project-tech { font-size: 9px; color: #888; margin-top: 2px; }
+
+  .edu-item { margin-bottom: 7px; }
+  .edu-header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .edu-title { font-weight: 600; font-size: 10.5px; color: #333; }
+  .edu-org { color: hsl(270, 70%, 45%); font-weight: 500; font-size: 10px; }
+  .edu-year { font-size: 9.5px; color: #777; white-space: nowrap; }
+  .edu-desc { font-size: 9.5px; color: #666; margin-top: 2px; line-height: 1.5; }
+
+  .cert-item { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 5px; }
+  .cert-title { font-size: 10px; font-weight: 500; color: #333; }
+  .cert-org { color: hsl(270, 70%, 45%); }
+  .cert-year { font-size: 9.5px; color: #777; white-space: nowrap; }
+
+  .skills-grid { display: flex; flex-wrap: wrap; gap: 5px 14px; }
+  .skill-item { font-size: 10px; color: #444; }
+  .skill-category { font-weight: 600; color: #333; font-size: 10px; }
+
+  .training-item { margin-bottom: 4px; }
+  .training-title { font-size: 10px; color: #333; }
+  .training-org { color: hsl(270, 70%, 45%); font-size: 9.5px; }
+
+  .pub-item { margin-bottom: 8px; }
+  .pub-title { font-size: 10px; font-weight: 600; color: #333; }
+  .pub-desc { font-size: 9.5px; color: #555; margin-top: 2px; line-height: 1.5; }
+
+  @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } .page { padding: 0; } }
+  .avoid-break, .job, .project, .edu-item, .cert-item { break-inside: avoid; page-break-inside: avoid; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header avoid-break">
+    <h1>Fernando Costa Xavier</h1>
+    <div class="header-gradient"></div>
+    <div class="contact-row">
+      <span>+55 11 96480-1913</span>
+      <span class="separator">|</span>
+      <span>fernandocostaxavier@gmail.com</span>
+      <span class="separator">|</span>
+      <a href="https://linkedin.com/in/fernandoxavier02">linkedin.com/in/fernandoxavier02</a>
+      <span class="separator">|</span>
+      <span>Sao Paulo, Brazil</span>
+    </div>
+  </div>
+
+  <!-- PROFESSIONAL SUMMARY -->
+  <div class="section avoid-break">
+    <div class="section-title">Professional Summary</div>
+    <div class="summary-text">
+      Head of Accounting and Controlling with 15+ years of leadership in Finance and Accounting across Latin America, combining deep technical expertise in IFRS (IAS), US GAAP, and Brazilian standards (CPC) with a pragmatic, execution-oriented approach to governance and operational excellence. Experience spans the full financial cycle including end-to-end close, consolidation, statutory and management reporting, intercompany operations, and full support for internal and external audits. A key differentiator is the ability to connect controllership with digital transformation — leading process automation initiatives, AI-powered analytics, and finance function modernisation, including the "Integrated Accounting Intelligence with Microsoft + GPT" programme. Strong background in FP&A (budgeting, forecasting, margin optimisation, cost control), tax strategy (including Transfer Pricing and regulatory readiness), and M&A support (due diligence, valuation modelling, and post-transaction integration). Recognised for driving automation that eliminated 70% of manual tasks and reduced reporting cycles by 40%. CRC-certified accountant (Brazil), ACCA (IFR), FMVA (CFI). Trilingual: Portuguese (native), English (C2), Spanish (C1). Graduate in Law and Accounting, with postgraduate studies in International Accounting (IFRS/US GAAP) and Corporate Finance (FGV).
+    </div>
+  </div>
+
+  <!-- CORE COMPETENCIES (ATS keywords matching Trivium JD) -->
+  <div class="section">
+    <div class="section-title">Core Competencies</div>
+    <div class="competencies-grid">
+      <span class="competency-tag">Month-End Close</span>
+      <span class="competency-tag">Financial Reporting</span>
+      <span class="competency-tag">IFRS / US GAAP / BR GAAP</span>
+      <span class="competency-tag">Internal Controls / SOX</span>
+      <span class="competency-tag">SAP ERP (FI/CO/MM)</span>
+      <span class="competency-tag">FP&A / Budgeting / Forecasting</span>
+      <span class="competency-tag">Cost Accounting / Variance Analysis</span>
+      <span class="competency-tag">P&L Management</span>
+      <span class="competency-tag">Tax Compliance (IRPJ/CSLL/PIS/COFINS)</span>
+      <span class="competency-tag">Transfer Pricing</span>
+      <span class="competency-tag">Financial Consolidation</span>
+      <span class="competency-tag">M&A Due Diligence</span>
+      <span class="competency-tag">Post-Merger Integration</span>
+      <span class="competency-tag">Process Automation / AI</span>
+      <span class="competency-tag">Power BI / Power Automate</span>
+      <span class="competency-tag">CRC Certified (Brazil)</span>
+      <span class="competency-tag">ACCA IFR Certified</span>
+      <span class="competency-tag">English C2 / Spanish C1</span>
+      <span class="competency-tag">Audit Management</span>
+      <span class="competency-tag">Statutory Reporting</span>
+      <span class="competency-tag">CAPEX / IRR / Payback Analysis</span>
+      <span class="competency-tag">Cash Flow Management</span>
+      <span class="competency-tag">Financial Modelling</span>
+      <span class="competency-tag">LATAM Multi-Country Operations</span>
+    </div>
+  </div>
+
+  <!-- WORK EXPERIENCE -->
+  <div class="section">
+    <div class="section-title">Work Experience</div>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-company">Forvis Mazars</span>
+        <span class="job-period">May 2025 — Present</span>
+      </div>
+      <div class="job-role">Chief Accounting & Finance Director</div>
+      <div class="job-location">Sao Paulo, Brazil</div>
+      <ul>
+        <li>Set strategic vision for accounting and finance functions, partnering with CFOs, auditors, and boards to align operations with corporate strategy across multiple business units</li>
+        <li>Drive digital transformation and AI adoption using SAP, Power BI, ClickUp, and Microsoft GPT, enabling continuous improvement and data-driven decision-making across all finance processes</li>
+        <li>Lead FP&A, budgeting, forecasting, and cost optimisation initiatives; support M&A due diligence, valuation, and post-merger integration for new acquisitions</li>
+        <li>Ensure compliance with IFRS, US GAAP, BR GAAP, and regulatory bodies including CVM, CFC, and CRC; design and implement robust internal controls framework and manage audit readiness for external audits</li>
+        <li>Manage relationships with external auditors, tax advisors, and regulatory bodies; oversee preparation of statutory financial statements, consolidated reports, and regulatory filings</li>
+        <li>Champion process automation and efficiency improvement programmes, applying AI tools to reduce manual workload and improve reporting accuracy and timeliness</li>
+        <li>Develop and coach high-performance finance teams, establishing accountability frameworks and career development pathways</li>
+        <li>Lead financial risk management, including foreign exchange exposure, credit risk, and compliance with corporate treasury policies</li>
+      </ul>
+    </div>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-company">AgroFresh (NYSE-listed)</span>
+        <span class="job-period">Sep 2018 — May 2025 (6 years, 9 months)</span>
+      </div>
+      <div class="job-role">Regional Controller LATAM & Head of Statutory Accounting</div>
+      <div class="job-location">Sao Paulo, Brazil | LATAM Region (Mexico, Chile, Argentina, Peru, Brazil)</div>
+      <ul>
+        <li>Oversaw accounting, tax, and financial reporting operations for subsidiaries in Mexico, Chile, Argentina, Peru, and Brazil, adhering to IFRS, US GAAP, and local regulations for all 5 LATAM entities</li>
+        <li><strong>Month-end close:</strong> Reduced close cycle from 15 to 5 days through process automation, SAP workflow redesign, and implementation of integrated accounting intelligence tools; ensured timely and accurate financial closes for all LATAM entities</li>
+        <li><strong>P&L ownership:</strong> Full responsibility for plant-level financial figures including cost accounting, variance analysis, standard cost reconciliation, and margin optimisation across all manufacturing plants in the region</li>
+        <li><strong>Internal controls / SOX:</strong> Designed and implemented robust internal controls framework across all 5 LATAM entities; coordinated internal and external audits; ensured SOX compliance readiness across all accounting processes</li>
+        <li><strong>FP&A:</strong> Built and managed annual budgeting process, long-term forecasting, and financial modelling for all LATAM subsidiaries; developed management reporting packages, KPIs, and dashboards for executive review</li>
+        <li><strong>Tax compliance:</strong> Managed tax planning and transfer pricing strategy for the region; oversaw IRPJ, CSLL, PIS, COFINS, and withholding tax compliance; coordinated with external tax advisors on tax reform impacts including Brazil's Reforma Tributária</li>
+        <li><strong>Transfer pricing:</strong> Designed and implemented transfer pricing policies across 5 countries; managed intercompany transactions, cost-sharing agreements, and arm's length studies for goods, services, and royalties</li>
+        <li><strong>M&A:</strong> Led 3 M&A due diligence processes and post-acquisition integration of new LATAM subsidiaries (Brazil, Mexico, Chile); established accounting, internal controls, and statutory reporting frameworks from scratch; performed valuation modelling, financial due diligence, and SPA review</li>
+        <li><strong>Cash flow management:</strong> Managed regional cash flows, working capital optimisation, and treasury operations across all LATAM entities; implemented cash pooling strategies and optimised group cash positioning</li>
+        <li><strong>Team leadership:</strong> Built and developed high-performance finance team across the region; established finance academy and capability development programmes; recognised by global HQ for leadership during hyperinflation (Argentina) and tax reform challenges (Brazil)</li>
+        <li><strong>Automation:</strong> Automated 70%+ of manual accounting tasks through "Integrated Accounting Intelligence" programme using Microsoft GPT, Power BI, and SAP automation tools; improved data quality and reduced reporting cycle by 40%</li>
+        <li>Managed external audit relationships with Big 4 auditors; prepared audited financial statements under IFRS and US GAAP; coordinated with legal, compliance, and investor relations teams for quarterly and annual reporting</li>
+      </ul>
+    </div>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-company">Capgemini Brazil</span>
+        <span class="job-period">Apr 2017 — Sep 2018 (1 year, 6 months)</span>
+      </div>
+      <div class="job-role">Accounting Manager & Head of IFRS Reporting LATAM</div>
+      <div class="job-location">Sao Paulo, Brazil</div>
+      <ul>
+        <li>Managed Brazilian monthly close (BR GAAP) and consolidated financial statements for a multinational professional services group; produced IFRS reporting packages and FP&A analyses for headquarters in France</li>
+        <li>SAP-based accounting and financial reporting; supervised team of 11 analysts across accounting, tax, and reporting functions</li>
+        <li>Led M&A initiatives including due diligence, transfer pricing studies, and impairment reviews; developed financial models and internal accounting policies aligned with group standards across Latin America</li>
+        <li>Reviewed taxes including IRPJ, CSLL, PIS, and COFINS (cumulative and non-cumulative regimes); managed internal and external audits; prepared financial statements and explanatory notes for regulatory filing</li>
+        <li>Implemented SAP FI/CO modules for newLATAM entities; configured chart of accounts, tax codes, and intercompany transaction processing</li>
+        <li>Developed financial models for investment decisions, including IRR, NPV, and payback analysis for capex projects and business expansion initiatives</li>
+        <li>Deployed automation via SAP, Power BI, and automated reporting systems to enhance accuracy, timeliness, and efficiency of management reporting</li>
+        <li>Coordinated with international finance teams on consolidation, currency translation, and elimination of intercompany balances</li>
+      </ul>
+    </div>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-company">Assessor Bordin Business Consultants</span>
+        <span class="job-period">2017 — 2018</span>
+      </div>
+      <div class="job-role">Accounting Coordinator</div>
+      <div class="job-location">Sao Paulo, Brazil</div>
+      <ul>
+        <li>Coordinated accounting services for portfolio of SME clients; supervised month-end close processes and financial statement preparation</li>
+        <li>Managed tax compliance for IRPJ, CSLL, PIS, COFINS, and ISS; prepared tax returns and handled tax authority inquiries</li>
+        <li>Implemented accounting policies and internal controls for clients transitioning to IFRS; provided technical accounting guidance on complex transactions</li>
+      </ul>
+    </div>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-company">Watanabe Assessoria Contabil</span>
+        <span class="job-period">2015 — 2017</span>
+      </div>
+      <div class="job-role">Accounting Analyst</div>
+      <div class="job-location">Sao Paulo, Brazil</div>
+      <ul>
+        <li>Executed month-end close and financial statement preparation for multiple clients across diverse industries</li>
+        <li>Performed reconciliation of balance sheet accounts, including intercompany accounts, fixed assets, and tax positions</li>
+        <li>Assisted in preparation of tax returns and responses to tax audits; applied knowledge of Brazilian tax legislation (IRPJ, CSLL, PIS, COFINS, IPI, ICMS, ISS)</li>
+      </ul>
+    </div>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-company">Lune Business Advisory / Bookeepers Tax Consulting</span>
+        <span class="job-period">2014 — 2015</span>
+      </div>
+      <div class="job-role">Tax & Accounting Analyst</div>
+      <div class="job-location">Sao Paulo, Brazil</div>
+      <ul>
+        <li>Conducted tax research and provided advisory services on Brazilian federal, state, and municipal tax matters</li>
+        <li>Prepared transfer pricing documentation and economic substance analysis for intercompany transactions</li>
+        <li>Assisted clients with tax planning strategies and optimisation of tax positions within legal framework</li>
+      </ul>
+    </div>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-company">Carvalho Advogados</span>
+        <span class="job-period">2011 — 2014</span>
+      </div>
+      <div class="job-role">Law Analyst</div>
+      <div class="job-location">Sao Paulo, Brazil</div>
+      <ul>
+        <li>Analysed legal and regulatory matters related to corporate law, contracts, and financial transactions</li>
+        <li>Provided legal support for M&A transactions, including due diligence and contract review</li>
+        <li>Researched tax law and regulatory developments impacting clients' business operations</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- KEY ACHIEVEMENTS (ATS-impact keywords) -->
+  <div class="section">
+    <div class="section-title">Key Achievements</div>
+    <div class="job">
+      <ul>
+        <li><strong>Automated 70%+ of manual accounting tasks</strong> through AI-powered "Integrated Accounting Intelligence" programme, reducing month-end close cycle by 40% and improving data quality across 5 LATAM entities</li>
+        <li><strong>Reduced month-end close from 15 to 5 days</strong> through SAP workflow redesign, process automation, and implementation of integrated accounting tools at AgroFresh LATAM</li>
+        <li><strong>End-to-end financial operations</strong> for subsidiaries in 5 countries (Brazil, Mexico, Chile, Argentina, Peru), ensuring audit readiness and compliant reporting under IFRS, US GAAP, and local standards</li>
+        <li><strong>3 M&A due diligence and post-merger integration</strong> projects, standing up new-entity accounting, internal controls, and statutory reporting frameworks from scratch across LATAM</li>
+        <li><strong>Transfer pricing policy design</strong> covering goods, services, and royalties across 5 LATAM countries, ensuring arm's length compliance and tax efficiency</li>
+        <li><strong>Finance academy development</strong> — built capability development programme recognised by global HQ for leadership during hyperinflation (Argentina) and tax reform challenges (Brazil)</li>
+        <li><strong>Management reporting transformation</strong> — designed and deployed KPI dashboards and automated management reporting package replacing 15+ manual Excel models across LATAM entities</li>
+        <li><strong>Internal controls framework</strong> — designed and implemented SOX-compliant internal controls across 5 LATAM entities, achieving clean external audit opinions</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- PROJECTS -->
+  <div class="section">
+    <div class="section-title">Projects</div>
+
+    <div class="project">
+      <div class="project-title">Integrated Accounting Intelligence with Microsoft + GPT <span class="project-badge">AI / Automation</span></div>
+      <div class="project-desc">Led end-to-end automation initiative using Microsoft GPT and Power BI to process, reconcile, and validate accounting data across 5 LATAM entities. Automated 70%+ of manual tasks, reduced month-end close from 15 to 5 days, and improved data quality and audit trail. Included development of custom GPT agents for variance analysis, flux analysis, and financial commentary generation.</div>
+      <div class="project-tech">Microsoft GPT / Copilot | Power BI | SAP FI/CO | Python | Power Automate</div>
+    </div>
+
+    <div class="project">
+      <div class="project-title">M&A Due Diligence & Post-Merger Integration — 3 LATAM Acquisitions <span class="project-badge">M&A</span></div>
+      <div class="project-desc">Led financial due diligence and post-merger integration for 3 acquisitions in Brazil, Mexico, and Chile. Scope included: financial statement analysis, valuation (DCF, multiples), SPA review, day-1 readiness assessment, and stand-up of accounting, tax, and reporting functions. Established Chart of Accounts, internal controls, and SAP configuration for new entities. Performed purchase price allocation and goodwill analysis.</div>
+      <div class="project-tech">Financial Modelling (DCF, LBO) | SAP FI/CO | IFRS 3 | Valuation | Due Diligence</div>
+    </div>
+
+    <div class="project">
+      <div class="project-title">LATAM Transfer Pricing Policy Redesign <span class="project-badge">Tax</span></div>
+      <div class="project-desc">Designed and implemented comprehensive transfer pricing policy for LATAM region covering 5 countries and 20+ intercompany agreements (goods, services, royalties, financing). Included: arm's length analysis using CUP, CUP-cost, and profit split methods; preparation of country-by-country documentation; implementation of SAP intercompany pricing engine; and quarterly monitoring of compliance.</div>
+      <div class="project-tech">Transfer Pricing | OECD Guidelines | SAP MM/FI | Arm's Length | BEPS</div>
+    </div>
+
+    <div class="project">
+      <div class="project-title">SAP FI/CO Implementation — LATAM Rollout <span class="project-badge">ERP</span></div>
+      <div class="project-desc">Led SAP FI/CO implementation for LATAM entities including chart of accounts design, tax configuration (IRPJ, CSLL, PIS, COFINS, ICMS, IPI, ISS), intercompany transaction setup, and closing programme design. Configured automated posting, payment run, and consolidation interfaces. Trained finance teams across 5 countries.</div>
+      <div class="project-tech">SAP FI/CO | SAP MM | ASAP Methodology | Scripting (ABAP)</div>
+    </div>
+
+    <div class="project">
+      <div class="project-title">Finance Academy — LATAM Capability Building Programme <span class="project-badge">Leadership</span></div>
+      <div class="project-desc">Developed and delivered finance academy programme for LATAM finance team covering technical accounting (IFRS, US GAAP), SAP proficiency, FP&A skills, and leadership development. Programme recognised by global HQ as benchmark for other regions. Reduced time-to-productivity for new hires by 40%.</div>
+      <div class="project-tech">Learning & Development | IFRS | SAP | FP&A | Coaching</div>
+    </div>
+  </div>
+
+  <!-- EDUCATION -->
+  <div class="section avoid-break">
+    <div class="section-title">Education</div>
+    <div class="edu-item">
+      <div class="edu-header">
+        <span class="edu-title">MBA in Corporate Finance</span>
+        <span class="edu-year">Fundacao Getulio Vargas (FGV) — Expected June 2027</span>
+      </div>
+      <div class="edu-desc">Corporate finance, investment analysis, capital markets, and strategic financial management</div>
+    </div>
+    <div class="edu-item">
+      <div class="edu-header">
+        <span class="edu-title">Bachelor in Accounting</span>
+        <span class="edu-year">Anhembi Morumbi University — 2018</span>
+      </div>
+      <div class="edu-desc">Accounting, audit, tax, and financial reporting. Additional coursework in advanced accounting, management control, and information systems</div>
+    </div>
+    <div class="edu-item">
+      <div class="edu-header">
+        <span class="edu-title">Bachelor in Law</span>
+        <span class="edu-year">Unifieo University Center — 2006</span>
+      </div>
+      <div class="edu-desc">Corporate law, contract law, tax law, labour law, and regulatory compliance</div>
+    </div>
+  </div>
+
+  <!-- CERTIFICATIONS -->
+  <div class="section avoid-break">
+    <div class="section-title">Certifications & Professional Memberships</div>
+    <div class="cert-item">
+      <span class="cert-title">Certified Public Accountant — <span class="cert-org">CRC/SP</span> (Active, Reg. 1SP-346248/O)</span>
+      <span class="cert-year">Expires Mar 2034</span>
+    </div>
+    <div class="cert-item">
+      <span class="cert-title">ACCA Certificate in International Financial Reporting — <span class="cert-org">IFR / IFRS Advanced</span></span>
+      <span class="cert-year">2024</span>
+    </div>
+    <div class="cert-item">
+      <span class="cert-title">Financial Modelling & Valuation Analyst (FMVA) — <span class="cert-org">CFI</span></span>
+      <span class="cert-year">2024</span>
+    </div>
+    <div class="cert-item">
+      <span class="cert-title">Financial Analysis — <span class="cert-org">Corporate Finance Institute (CFI)</span></span>
+      <span class="cert-year">Jul 2024</span>
+    </div>
+    <div class="cert-item">
+      <span class="cert-title">Intellectual Skill Assessment and Analysis — <span class="cert-org">International Intelligence Federation</span></span>
+      <span class="cert-year">Aug 2024</span>
+    </div>
+    <div class="cert-item">
+      <span class="cert-title">IFRS Advanced Level (ACCA SBR / DipIFR / Cert IFRS) — <span class="cert-org">Udemy</span></span>
+      <span class="cert-year">Apr 2024</span>
+    </div>
+    <div class="cert-item">
+      <span class="cert-title">Connected Manager / Managing People — <span class="cert-org">Harvard Business School Online</span></span>
+      <span class="cert-year">May 2021</span>
+    </div>
+    <div class="cert-item">
+      <span class="cert-title">Leading People — <span class="cert-org">Harvard Business School Online</span></span>
+      <span class="cert-year">2021</span>
+    </div>
+    <div class="cert-item">
+      <span class="cert-title">Organisational Leadership Certificate — <span class="cert-org">Harvard Business School Online</span></span>
+      <span class="cert-year">2021</span>
+    </div>
+    <div class="cert-item">
+      <span class="cert-title">Modeling Data in Power BI — <span class="cert-org">Microsoft</span></span>
+      <span class="cert-year">Mar 2024</span>
+    </div>
+    <div class="cert-item">
+      <span class="cert-title">EF SET English C2 Certificate</span>
+      <span class="cert-year">2024</span>
+    </div>
+    <div class="cert-item">
+      <span class="cert-title">Member — <span class="cert-org">IBEF (Instituto Brasileiro de Executivos de Financas)</span></span>
+      <span class="cert-year">Current</span>
+    </div>
+    <div class="cert-item">
+      <span class="cert-title">Member — <span class="cert-org">Power Tax Brasil</span></span>
+      <span class="cert-year">Current</span>
+    </div>
+  </div>
+
+  <!-- TECHNICAL SKILLS -->
+  <div class="section avoid-break">
+    <div class="section-title">Technical Skills</div>
+    <div class="skills-grid">
+      <span class="skill-item"><span class="skill-category">Accounting Standards:</span> IFRS, US GAAP, BR GAAP (CPC), IAS, SOX, Internal Controls, Financial Close, Consolidation, Statutory Reporting</span>
+      <span class="skill-item"><span class="skill-category">Tax:</span> IRPJ, CSLL, PIS, COFINS, ICMS, IPI, ISS, Transfer Pricing, Tax Planning, Tax Compliance, Reforma Tributaria Brazil</span>
+      <span class="skill-item"><span class="skill-category">FP&A:</span> Budgeting, Forecasting, Cost Accounting, Variance Analysis, Margin Optimisation, CAPEX Analysis, IRR/NPV, Financial Modelling, Dashboard Design</span>
+      <span class="skill-item"><span class="skill-category">ERP:</span> SAP FI/CO (primary), SAP MM, Oracle (working knowledge), Power BI, Power Automate, BFC, ClickUp, Microsoft 365</span>
+      <span class="skill-item"><span class="skill-category">AI / Automation:</span> Microsoft GPT / Copilot, Power BI (DAX), Python, RPA, Process Automation, AI-Driven Reporting</span>
+      <span class="skill-item"><span class="skill-category">M&A:</span> Due Diligence, Valuation (DCF, LBO, Multiplos), SPA Review, Purchase Price Allocation, Post-Merger Integration</span>
+      <span class="skill-item"><span class="skill-category">Audit:</span> External Audit (Big 4), Internal Audit, SOX Compliance, Audit Management, Financial Statement Preparation</span>
+      <span class="skill-item"><span class="skill-category">Languages:</span> Portuguese (Native), English (C2 — Fluent), Spanish (C1 — Advanced)</span>
+    </div>
+  </div>
+
+  <!-- ADDITIONAL TRAINING -->
+  <div class="section">
+    <div class="section-title">Additional Training</div>
+    <div class="training-item"><span class="training-title">Apuracao de PIS/COFINS Cumulativo e Nao Cumulativo</span> <span class="training-org">— Universidade Bordin</span></div>
+    <div class="training-item"><span class="training-title">Contabilidade Avancada</span> <span class="training-org">— Universidade Bordin</span></div>
+    <div class="training-item"><span class="training-title">Curso pratico de ECF (Escrituracao Contabil Fiscal)</span> <span class="training-org">— Universidade Bordin, 2017</span></div>
+    <div class="training-item"><span class="training-title">Departamento Pessoal — Gestao de Folha de Pagamento</span> <span class="training-org">— Universidade Bordin</span></div>
+    <div class="training-item"><span class="training-title">Faturamento e Emissao de Notas Fiscais</span> <span class="training-org">— Universidade Bordin</span></div>
+    <div class="training-item"><span class="training-title">Formacao de Assistente Fiscal</span> <span class="training-org">— Universidade Bordin</span></div>
+    <div class="training-item"><span class="training-title">Substituicao Tributaria</span> <span class="training-org">— Universidade Bordin</span></div>
+    <div class="training-item"><span class="training-title">Lucro Real — Apuracao de IRPJ e CSLL</span> <span class="training-org">— Universidade Bordin</span></div>
+  </div>
+
+  <!-- PUBLICATIONS -->
+  <div class="section">
+    <div class="section-title">Publications</div>
+    <div class="pub-item">
+      <div class="pub-title">"O Uso Estrategico do Fluxo de Caixa Descontado na Afericao de Viabilidade de Registros de Tributos Diferidos"</div>
+      <div class="pub-desc">Published on LinkedIn (Dec 2023). Analysis of discounted cash flow methodology applied to deferred tax asset viability assessment, with practical applications under IFRS (IAS 12) and Brazilian tax law (Lei 12.973/14).</div>
+    </div>
+    <div class="pub-item">
+      <div class="pub-title">AI in Accounting Standard-Setting</div>
+      <div class="pub-desc">Featured post on IASB using AI to analyse IFRS 16 lease disclosures — exploring implications of artificial intelligence on accounting standard application and audit quality.</div>
+    </div>
+    <div class="pub-item">
+      <div class="pub-title">AI-Powered Financial Modelling for Budget & Forecast</div>
+      <div class="pub-desc">Technical article on leveraging AI tools (Microsoft GPT, Power BI) to automate financial modelling workflows in FP&A processes, reducing model build time by 60%.</div>
+    </div>
+    <div class="pub-item">
+      <div class="pub-title">Management Performance Measures (MPMs) under IFRS 18</div>
+      <div class="pub-desc">Analysis of new IFRS 18 requirements for management performance measures and their implications for financial reporting and investor communication.</div>
+    </div>
+    <div class="pub-item">
+      <div class="pub-title">Financial Statements Consolidation Checklist</div>
+      <div class="pub-desc">Comprehensive technical guide covering step-by-step financial statement consolidation under IFRS 10, including elimination of intercompany transactions, currency translation, and non-controlling interests.</div>
+    </div>
+  </div>
+
+  <!-- THOUGHT LEADERSHIP -->
+  <div class="section">
+    <div class="section-title">Thought Leadership & LinkedIn Profile</div>
+    <div class="job">
+      <ul>
+        <li>1,544+ LinkedIn followers; 500+ connections; LinkedIn Premium member</li>
+        <li>Active content creator on AI adoption in finance, IFRS compliance, FP&A best practices, and transfer pricing</li>
+        <li>Featured posts on AI in accounting standard-setting, AI-powered financial modelling, IFRS 18, and financial consolidation methodology</li>
+        <li>Top LinkedIn skills: People Management, IFRS, FP&A, Artificial Intelligence, Process Automation</li>
+        <li>Member of IBEF Sao Paulo — largest finance community in Brazil</li>
+        <li>Actively seeking: Head of Accounting, Head of Controllership, Regional Controller, Finance Manager roles in multinational companies in Brazil</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

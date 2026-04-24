@@ -1,0 +1,43 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - progressbar [ref=e6]
+      - main [ref=e14]:
+        - generic [ref=e15]:
+          - generic [ref=e18]:
+            - img [ref=e20]
+            - generic [ref=e25]: Fazer Login com o Google
+          - generic [ref=e26]:
+            - heading "Escolha uma conta" [level=1] [ref=e27]
+            - generic [ref=e29]:
+              - text: Prosseguir para
+              - button "myworkday.com" [ref=e30] [cursor=pointer]
+        - list [ref=e41]:
+          - listitem [ref=e42]:
+            - link "Fernando Xavier fernandocostaxavier@gmail.com" [ref=e43] [cursor=pointer]:
+              - generic [ref=e47]:
+                - generic [ref=e48]: Fernando Xavier
+                - generic [ref=e49]: fernandocostaxavier@gmail.com
+          - listitem [ref=e50]:
+            - link "Usar outra conta" [ref=e51] [cursor=pointer]:
+              - generic [ref=e52]:
+                - img [ref=e54]
+                - generic [ref=e57]: Usar outra conta
+    - contentinfo [ref=e62]:
+      - combobox "Alterar idioma Português (Brasil)" [ref=e66] [cursor=pointer]:
+        - generic:
+          - generic: Português (Brasil)
+        - generic:
+          - img
+      - list [ref=e68]:
+        - listitem [ref=e69]:
+          - link "Ajuda" [ref=e70] [cursor=pointer]:
+            - /url: https://support.google.com/accounts?hl=pt-BR&p=account_iph
+        - listitem [ref=e71]:
+          - link "Privacidade" [ref=e72] [cursor=pointer]:
+            - /url: https://accounts.google.com/TOS?loc=BR&hl=pt-BR&privacy=true
+        - listitem [ref=e73]:
+          - link "Termos" [ref=e74] [cursor=pointer]:
+            - /url: https://accounts.google.com/TOS?loc=BR&hl=pt-BR
+  - iframe [ref=e75]:
+    

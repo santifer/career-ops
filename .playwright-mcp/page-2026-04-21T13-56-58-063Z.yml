@@ -1,0 +1,241 @@
+- generic [ref=e1]:
+  - generic [ref=e4]:
+    - generic [ref=e6]:
+      - img "DUX Company" [ref=e9]
+      - list [ref=e10]:
+        - listitem [ref=e11]:
+          - button "Sobre a empresa" [ref=e12] [cursor=pointer]:
+            - generic [ref=e13]: Sobre a empresa
+        - listitem [ref=e14]:
+          - link "Vagas" [ref=e15] [cursor=pointer]:
+            - /url: /vagas
+            - button "Vagas" [ref=e16]:
+              - generic [ref=e17]: Vagas
+        - combobox [ref=e18] [cursor=pointer]:
+          - option "English"
+          - option "Português [PT]"
+          - option "Português [BR]" [selected]
+          - option "Español"
+    - generic [ref=e19]:
+      - generic [ref=e20]:
+        - generic [ref=e21]:
+          - text: "Compartilhar vaga:"
+          - link "Compartilhe no Facebook" [ref=e22] [cursor=pointer]:
+            - /url: https://www.facebook.com/sharer/sharer.php?u=https://duxcompany.inhire.app/vagas/ac22f74c-f26e-48a4-ba72-cc3878ec8976/gerente-contabil-sao-paulosp?source=linkedin
+            - img "Compartilhe no Facebook" [ref=e23]
+          - link "Compartilhe no Linkedin" [ref=e24] [cursor=pointer]:
+            - /url: https://www.linkedin.com/shareArticle?mini=true&url=https://duxcompany.inhire.app/vagas/ac22f74c-f26e-48a4-ba72-cc3878ec8976/gerente-contabil-sao-paulosp?source=linkedin
+            - img "Compartilhe no Linkedin" [ref=e25]
+          - link "Compartilhe no Whatsapp" [ref=e26] [cursor=pointer]:
+            - /url: https://api.whatsapp.com/send?text=https://duxcompany.inhire.app/vagas/ac22f74c-f26e-48a4-ba72-cc3878ec8976/gerente-contabil-sao-paulosp?source=linkedin
+            - img "Compartilhe no Whatsapp" [ref=e27]
+        - heading "Gerente Contábil (São Paulo/SP)" [level=1] [ref=e28]
+        - generic [ref=e29]:
+          - generic [ref=e30]:
+            - img [ref=e32]
+            - generic [ref=e35]: Híbrido
+          - generic [ref=e37]: São Paulo, SP, BR
+        - generic [ref=e40]:
+          - paragraph [ref=e41]: Buscamos uma liderança estratégica para comandar nossa Contabilidade, integrando áreas e transformando números em inteligência de negócio. Sua missão será gerir o time, otimizar processos e validar sistemas para garantir fechamentos ágeis e registros impecáveis. Além de assegurar a conformidade e reduzir riscos, você será peça-chave no apoio às decisões da diretoria. Se você une precisão técnica com visão de futuro e foco em inovação, venha fazer a diferença na nossa gestão financeira!
+          - paragraph [ref=e42]:
+            - strong [ref=e43]: "Atividades do cargo:"
+          - list [ref=e44]:
+            - listitem [ref=e45]: "Preparação de relatórios financeiros: elaborar e revisar as demonstrações financeiras (balanços, P&L, DFC e notas explicativas), garantindo a precisão das informações;"
+            - listitem [ref=e46]: "Registros contábeis: garantir que todos os registros contábeis da empresa estejam em conformidade com os princípios contábeis e as normas aplicáveis;"
+            - listitem [ref=e47]: "Conciliação de contas: garantir a reconciliação de contas contábeis para que não haja erros ou discrepâncias nos registros financeiros da empresa;"
+            - listitem [ref=e48]: "Auditorias: preparar a documentação necessária e colaborar com auditores internos e externos durante auditorias financeiras;"
+            - listitem [ref=e49]: "Declarações fiscais: garantir em conjunto com a Área Fiscal a apresentação das declarações fiscais obrigatórias (IRPJ, CSLL e outras acessórias), como a Escrituração Contábil Fiscal (ECF) e a Escrituração Contábil Digital (ECD);"
+            - listitem [ref=e50]: "Compliance contábil: certificar-se de que a empresa esteja em conformidade com todas as obrigações contábeis, mantendo-se atualizado sobre as mudanças de legislação e garantindo que a empresa cumpra todas as exigências contábeis e fiscais;"
+            - listitem [ref=e51]: "Planejamento financeiro: interagir e colaborar com o time de FP&A, fornecendo dados contábeis precisos para as análises e tomadas de decisão com base em cenários financeiros;"
+            - listitem [ref=e52]: "Consultoria: Fornecer orientação contábil à alta administração da empresa, incluindo aconselhamento sobre decisões estratégicas que afetam a situação financeira da organização;"
+            - listitem [ref=e53]: "Controle de custos: Monitorar e controlar em parceria com o FP&A e a Área de Custos os custos fabris e de produção, identificando áreas de melhoria e oportunidades de economia;"
+            - listitem [ref=e54]: "Gestão de riscos: Identificar e avaliar os riscos contábeis e desenvolver estratégias para mitigá-los;"
+            - listitem [ref=e55]: "Gerenciamento da equipe contábil: Supervisionar e liderar a equipe, treinando e garantindo que todas as atividades sejam realizadas dentro do cronograma e de forma eficiente e precisa."
+          - paragraph [ref=e56]:
+            - strong [ref=e57]: "Requisitos necessários para inscrição:"
+          - list [ref=e58]:
+            - listitem [ref=e59]: Ter CRC ativo é essencial;
+            - listitem [ref=e60]: Ensino Superior em Administração, Ciências Contábeis ou Economia;
+            - listitem [ref=e61]: Desejável pós-graduação e/ou MBA em Finanças ou Contabilidade;
+            - listitem [ref=e62]: Profundo conhecimento dos princípios contábeis e fiscais, além da importância de entender o ambiente regulatório aplicável ao setor;
+            - listitem [ref=e63]: Forte vivência com análise de balanço, FC e P&L;
+            - listitem [ref=e64]: Forte habilidade de liderança, para gerir, orientar e motivar a equipe;
+            - listitem [ref=e65]: Conhecimento avançado em Excel e PPT;
+            - listitem [ref=e66]: Habilidade para comunicar e discutir de forma clara e acessível os temas contábeis com demais stakeholders;
+            - listitem [ref=e67]: Desejável já ter tido vivência com sistema Protheus;
+            - listitem [ref=e68]: Inglês será considerado um diferencial.
+          - paragraph [ref=e69]:
+            - strong [ref=e70]: "Informações da vaga:"
+          - list [ref=e71]:
+            - listitem [ref=e72]: "Local: Vila Madalena – São Paulo/SP;"
+            - listitem [ref=e73]: "Regime: Híbrido – 2 dias de home-office;"
+            - listitem [ref=e74]: "Escala: Segunda à sexta – 44h semanais."
+          - paragraph [ref=e75]:
+            - strong [ref=e76]: "Benefícios:"
+          - list [ref=e77]:
+            - listitem [ref=e78]: Assistência médica e odontológica;
+            - listitem [ref=e79]: Seguro de vida;
+            - listitem [ref=e80]: Vale-transporte;
+            - listitem [ref=e81]: Vale-alimentação e vale-refeição;
+            - listitem [ref=e82]: Totalpass;
+            - listitem [ref=e83]: Day-off de aniversário + vale-presente;
+            - listitem [ref=e84]: Desconto em produtos DUX e Eat Clean;
+            - listitem [ref=e85]: Psicoterapia, coaching e mais via App Zenklub;
+            - listitem [ref=e86]: Licença parental estendida.
+          - paragraph [ref=e87]
+          - paragraph [ref=e88]: "Nossas vagas são preferências para pessoas com deficiência (PCD). Na DUX Company, a inclusão faz parte do nosso jeito de nutrir a vida humana: respeitamos as diferenças, encorajamos a diversidade de perspectivas e acreditamos que pessoas diversas constroem soluções melhores e mais sustentáveis. Valorizamos talentos pelo que são e pelo que entregam, em um ambiente que busca promover equidade, respeito e desenvolvimento contínuo."
+        - generic [ref=e89]:
+          - heading "Sobre a empresa" [level=3] [ref=e90]
+          - generic [ref=e93]:
+            - heading "Nutrir a vida humana." [level=3] [ref=e94]:
+              - strong [ref=e95]: Nutrir a vida humana.
+            - paragraph [ref=e96]: Desde 2015, somos uma empresa de nutrição humana, que atualmente é detentora das marcas DUX Human Health e Eat Clean. Com o compromisso de impactar positivamente a vida das pessoas e do planeta, atuando com integridade, excelência e responsabilidade ambiental.
+            - paragraph [ref=e97]: Sob a marca DUX Human Health, combinamos precisão científica, fórmulas limpas e ingredientes naturais em um portfólio de mais de 300 produtos, focados em garantir uma saúde poderosa e uma vida melhor. Com a marca Eat Clean, oferecemos um portfólio de produtos naturais e veganos, desenvolvidos com atenção a cada detalhe, oferecendo muito sabor e alta qualidade.
+        - generic [ref=e98]: Todos os direitos reservados | © InHire 2026
+      - generic [ref=e103]:
+        - generic [ref=e105]: Candidatar-se para a vaga
+        - generic [ref=e106]:
+          - generic [ref=e107]:
+            - button "1. Informações" [ref=e108] [cursor=pointer]:
+              - generic [ref=e110]: 1. Informações
+            - button "2. Diversidade" [ref=e111]:
+              - generic [ref=e113]: 2. Diversidade
+          - generic [ref=e116]:
+            - generic [ref=e117]:
+              - generic [ref=e118]:
+                - generic [ref=e119] [cursor=pointer]:
+                  - text: Nome completo
+                  - generic [ref=e120]: "*"
+                - generic [ref=e121]:
+                  - textbox "Nome completo *" [ref=e123]:
+                    - /placeholder: Seu nome completo
+                    - text: Fernando Costa Xavier
+                  - img "Valid" [ref=e229]
+              - generic [ref=e125]:
+                - generic [ref=e126] [cursor=pointer]:
+                  - text: Seu melhor email
+                  - generic [ref=e127]: "*"
+                - generic [ref=e128]:
+                  - textbox "Seu melhor email *" [ref=e130]:
+                    - /placeholder: Seu melhor email
+                    - text: fernandocostaxavier@gmail.com
+                  - img "Valid" [ref=e233]
+              - generic [ref=e132]:
+                - generic [ref=e133] [cursor=pointer]:
+                  - text: Celular com DDD
+                  - generic [ref=e134]: "*"
+                - generic [ref=e135]:
+                  - generic "País" [ref=e1316]:
+                    - generic "Dropdown select" [ref=e1318] [cursor=pointer]:
+                      - img [ref=e1324]
+                      - textbox [ref=e1329]: Brasil +55
+                      - generic:
+                        - img
+                  - textbox "Celular com DDD" [ref=e150]: +55 11 96480 1913
+              - generic [ref=e152]:
+                - generic [ref=e153]:
+                  - generic [ref=e154] [cursor=pointer]:
+                    - text: Linkedin
+                    - generic [ref=e155]: "*"
+                  - generic [ref=e156]:
+                    - textbox "Linkedin *" [ref=e158]:
+                      - /placeholder: https://linkedin.com/in/seu-perfil
+                      - text: linkedin.com/in/fernandoxavier02
+                    - img "Valid" [ref=e251]
+                - link "Obtenha o link do seu perfil do linkedin" [ref=e159] [cursor=pointer]:
+                  - /url: https://linkedin.com/in/
+                - generic [ref=e160]: (Copie o link do seu perfil do Linkedin e cole no campo acima)
+              - generic [ref=e161]:
+                - generic [ref=e162]:
+                  - generic [ref=e163] [cursor=pointer]:
+                    - text: País de origem
+                    - generic [ref=e164]: "*"
+                  - generic "Dropdown select" [ref=e1299] [cursor=pointer]:
+                    - generic [ref=e1303]: Brasil (BR)
+                    - textbox [ref=e1304]: Brasil (BR)
+                    - generic:
+                      - img
+                - generic [ref=e1305]:
+                  - generic [ref=e1306] [cursor=pointer]:
+                    - text: Cidade
+                    - generic [ref=e1307]: "*"
+                  - generic "Dropdown select" [ref=e1311] [cursor=pointer]:
+                    - generic [ref=e1313]: Informe sua cidade
+                    - textbox [ref=e1314]
+                    - img [ref=e1341]
+                    - list [ref=e1343]:
+                      - list [ref=e1344]:
+                        - textbox "Pesquisar" [active] [ref=e1346]
+                        - generic [ref=e1347]:
+                          - option "Acrelândia - AC" [ref=e1348]:
+                            - img [ref=e1351]
+                            - generic "Acrelândia - AC" [ref=e1356]
+                          - option "Assis Brasil - AC" [ref=e1357]:
+                            - img [ref=e1360]
+                            - generic "Assis Brasil - AC" [ref=e1365]
+                          - option "Brasiléia - AC" [ref=e1366]:
+                            - img [ref=e1369]
+                            - generic "Brasiléia - AC" [ref=e1374]
+                          - option "Bujari - AC" [ref=e1375]:
+                            - img [ref=e1378]
+                            - generic "Bujari - AC" [ref=e1383]
+                          - option "Capixaba - AC" [ref=e1384]:
+                            - img [ref=e1387]
+                            - generic "Capixaba - AC" [ref=e1392]
+                          - option "Cruzeiro do Sul - AC" [ref=e1393]:
+                            - img [ref=e1396]
+                            - generic "Cruzeiro do Sul - AC" [ref=e1401]
+                          - option "Epitaciolândia - AC" [ref=e1402]:
+                            - img [ref=e1405]
+                            - generic "Epitaciolândia - AC" [ref=e1410]
+                          - option "Feijó - AC" [ref=e1411]:
+                            - img [ref=e1414]
+                            - generic "Feijó - AC" [ref=e1419]
+                          - option "Jordão - AC" [ref=e1420]:
+                            - img [ref=e1423]
+                            - generic "Jordão - AC" [ref=e1428]
+                          - option "Mâncio Lima - AC" [ref=e1429]:
+                            - img [ref=e1432]
+                            - generic "Mâncio Lima - AC" [ref=e1437]
+                          - text: ‍
+              - generic [ref=e180] [cursor=pointer]:
+                - text: Currículo
+                - generic [ref=e181]: "*"
+              - generic [ref=e1330]:
+                - img [ref=e1332]
+                - text: cv-fernando-xavi....pdf
+                - button [ref=e1335] [cursor=pointer]:
+                  - img [ref=e1338]
+              - generic [ref=e188]:
+                - generic [ref=e189] [cursor=pointer]:
+                  - text: Pretensão salarial como CLT
+                  - generic [ref=e190]: "*"
+                - generic [ref=e191]:
+                  - textbox "Pretensão salarial como CLT *" [ref=e193]:
+                    - /placeholder: R$ 0.000,00
+                    - text: R$ 30.000,00
+                  - img "Valid" [ref=e259]
+              - generic [ref=e196]:
+                - generic [ref=e197]: Você foi indicado por alguém da empresa?
+                - radiogroup [ref=e198]:
+                  - generic [ref=e199] [cursor=pointer]:
+                    - radio "Não" [checked] [ref=e200]
+                    - generic [ref=e202]: Não
+                  - generic [ref=e203] [cursor=pointer]:
+                    - radio "Sim" [ref=e204]
+                    - generic [ref=e206]: Sim
+            - generic [ref=e207]:
+              - button "Avançar" [disabled]:
+                - generic: Avançar
+  - iframe [ref=e208]:
+    
+  - generic "Plugin de acessibilidade da Hand Talk." [ref=e209]:
+    - heading "Plugin de acessibilidade da Hand Talk." [level=2] [ref=e210]
+    - button "Abrir recursos assistivos." [ref=e211] [cursor=pointer]:
+      - img [ref=e212]
+      - paragraph:
+        - generic [ref=e214]: Recursos Assistivos
+    - button "Abrir tradutor de língua de sinais." [ref=e215] [cursor=pointer]:
+      - img [ref=e216]
+      - paragraph:
+        - generic [ref=e223]: Acessível em Libras

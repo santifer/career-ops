@@ -1,0 +1,58 @@
+- generic [ref=e1412]:
+  - heading "Teste de raciocínio lógico e numérico completo" [level=1] [ref=e1413]
+  - generic [ref=e1414]:
+    - generic [ref=e1415]:
+      - generic [ref=e1416]:
+        - generic [ref=e1418]: "01"
+        - generic [ref=e1421]: "02"
+        - generic [ref=e1424]: "03"
+        - generic [ref=e1427]: "04"
+        - generic [ref=e1430]: "05"
+        - generic [ref=e1433]: "06"
+        - generic [ref=e1436]: "07"
+        - generic [ref=e1439]: "08"
+        - generic [ref=e1442]: "09"
+        - generic [ref=e1445]: "10"
+        - generic [ref=e1448]: "11"
+        - generic [ref=e1451]: "12"
+        - generic [ref=e1454]: "13"
+        - generic [ref=e1457]: "14"
+        - generic [ref=e1460]: "15"
+        - generic [ref=e1463]: "16"
+        - generic [ref=e1466]: "17"
+        - generic [ref=e1469]: "18"
+      - separator [ref=e1471]
+      - generic [ref=e1472]:
+        - paragraph [ref=e1475]:
+          - img [ref=e1476]
+          - text: 01:43
+        - separator [ref=e1479]
+    - generic [ref=e1480]:
+      - generic [ref=e1481]:
+        - generic [ref=e1482]: "Enunciado da questão:"
+        - text: "Para as questões a seguir, descubra qual o número que segue: 9, 12, 18, 30, 54, ?"
+      - group [ref=e1483]:
+        - radiogroup "undefined" [ref=e1485]:
+          - generic [ref=e1486]:
+            - generic [ref=e1487] [cursor=pointer]:
+              - generic [ref=e1489]:
+                - img [ref=e1490]
+                - radio "98" [ref=e1492]
+              - generic [ref=e1493]: "98"
+            - generic [ref=e1494] [cursor=pointer]:
+              - generic [ref=e1496]:
+                - img [ref=e1520]
+                - radio "102" [checked] [active] [ref=e1499]
+              - generic [ref=e1500]: "102"
+            - generic [ref=e1501] [cursor=pointer]:
+              - generic [ref=e1503]:
+                - img [ref=e1504]
+                - radio "104" [ref=e1506]
+              - generic [ref=e1507]: "104"
+            - generic [ref=e1508] [cursor=pointer]:
+              - generic [ref=e1510]:
+                - img [ref=e1511]
+                - radio "110" [ref=e1513]
+              - generic [ref=e1514]: "110"
+      - button "ENVIAR RESPOSTA" [ref=e1522] [cursor=pointer]:
+        - generic [ref=e1525]: ENVIAR RESPOSTA

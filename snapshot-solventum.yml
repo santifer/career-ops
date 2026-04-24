@@ -1,0 +1,922 @@
+- generic [active] [ref=e1]:
+  - generic:
+    - region "Mensagem toast":
+      - heading "0 notificações no total" [level=2] [ref=e3]
+      - alert
+  - region [ref=e4]
+  - generic [ref=e282]:
+    - img [ref=e284]
+    - paragraph [ref=e288]:
+      - text: Ocorreu um erro ao processar seu pagamento.
+      - link "Atualize sua(s) forma(s) de pagamento" [ref=e289] [cursor=pointer]:
+        - /url: https://www.linkedin.com/manage/purchases-payments/purchases/485025203/payments?trk=global_alert
+      - text: .
+    - button "Fechar" [ref=e290] [cursor=pointer]:
+      - img [ref=e291]
+      - generic [ref=e293]: Fechar
+  - generic [ref=e5]:
+    - generic [ref=e7]:
+      - button "Pular para pesquisa" [ref=e8] [cursor=pointer]:
+        - generic [ref=e9]: Pular para pesquisa
+      - button "Pular para conteúdo principal" [ref=e10] [cursor=pointer]:
+        - generic [ref=e11]: Pular para conteúdo principal
+      - button "Atalhos do teclado" [ref=e12] [cursor=pointer]:
+        - generic [ref=e13]: Atalhos do teclado
+      - button "Fechar menu pular" [ref=e14] [cursor=pointer]:
+        - img [ref=e15]
+        - generic [ref=e17]: Fechar menu pular
+    - banner "Navegação geral" [ref=e18]:
+      - generic [ref=e19]:
+        - link "LinkedIn" [ref=e20] [cursor=pointer]:
+          - /url: https://www.linkedin.com/feed/?nis=true
+          - img "LinkedIn" [ref=e23]:
+            - img [ref=e24]
+        - generic [ref=e28]:
+          - combobox "Pesquisar" [ref=e29]
+          - generic:
+            - img
+        - navigation "Navegação principal" [ref=e30]:
+          - list [ref=e31]:
+            - listitem [ref=e32]:
+              - link "atualizações do feed novas notificações Início" [ref=e33] [cursor=pointer]:
+                - /url: https://www.linkedin.com/feed/?nis=true&
+                - generic [ref=e34]:
+                  - generic [ref=e37]: atualizações do feed novas notificações
+                  - img [ref=e41]
+                - generic "Início" [ref=e43]
+            - listitem [ref=e44]:
+              - link "2 atualizações de rede novas notificações Minha rede" [ref=e294] [cursor=pointer]:
+                - /url: https://www.linkedin.com/mynetwork/?
+                - generic [ref=e295]:
+                  - generic [ref=e296]:
+                    - generic [ref=e297]: "2"
+                    - generic [ref=e298]: 2 atualizações de rede novas notificações
+                  - img [ref=e302]
+                - generic "Minha rede" [ref=e51]
+            - listitem [ref=e52]:
+              - link "Vagas" [ref=e53] [cursor=pointer]:
+                - /url: https://www.linkedin.com/jobs/?
+                - img [ref=e57]
+                - generic "Vagas" [ref=e59]
+            - listitem [ref=e60]:
+              - link "Mensagens" [ref=e61] [cursor=pointer]:
+                - /url: https://www.linkedin.com/messaging/?
+                - img [ref=e65]
+                - generic "Mensagens" [ref=e67]
+            - listitem [ref=e68]:
+              - link "14 novas notificações Notificações" [ref=e304] [cursor=pointer]:
+                - /url: https://www.linkedin.com/notifications/?
+                - generic [ref=e305]:
+                  - generic [ref=e306]:
+                    - generic [ref=e307]: "14"
+                    - generic [ref=e308]: 14 novas notificações
+                  - img [ref=e312]
+                - generic "Notificações" [ref=e75]
+            - listitem [ref=e76]:
+              - button "Fernando Xavier Eu" [ref=e78] [cursor=pointer]:
+                - img "Fernando Xavier" [ref=e79]
+                - generic [ref=e80]:
+                  - text: Eu
+                  - img [ref=e81]
+            - listitem [ref=e83]:
+              - button "Para negócios" [ref=e85] [cursor=pointer]:
+                - img [ref=e89]
+                - generic "Para negócios" [ref=e91]:
+                  - text: Para negócios
+                  - img [ref=e92]
+            - listitem [ref=e94]:
+              - link "Veicular anúncio" [ref=e95] [cursor=pointer]:
+                - /url: https://www.linkedin.com/campaignmanager/accounts?
+                - img [ref=e99]
+                - generic "Veicular anúncio" [ref=e102]
+    - generic [ref=e103]:
+      - generic [ref=e106]:
+        - main [ref=e107]:
+          - generic [ref=e110]:
+            - generic [ref=e114]:
+              - generic [ref=e115]:
+                - generic [ref=e116]:
+                  - link "Logo da empresa Solventum" [ref=e117] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/company/solventumhealth/life
+                    - img "Logo da empresa Solventum" [ref=e120]
+                  - link "Solventum" [ref=e314] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/company/solventumhealth/life
+                - generic [ref=e123]:
+                  - button "Compartilhar" [ref=e126] [cursor=pointer]:
+                    - img [ref=e127]
+                    - generic [ref=e129]: Compartilhar
+                  - button "Exibir mais opções" [ref=e131] [cursor=pointer]:
+                    - img [ref=e132]
+                    - generic [ref=e134]: Exibir mais opções
+              - heading "Manufacturing Controller." [level=1] [ref=e137]
+              - generic [ref=e140]:
+                - generic [ref=e315]: Sumaré, São Paulo, Brasil
+                - generic [ref=e316]: ·
+                - generic [ref=e317]:
+                  - text: Anunciada novamente
+                  - generic [ref=e318]: há 1 semana
+                - generic [ref=e319]: ·
+                - generic [ref=e320]: Mais de 100 pessoas clicaram em Candidatar-se
+                - paragraph [ref=e321]:
+                  - generic [ref=e322]: Promovida por recrutador
+                  - generic [ref=e323]: ·
+                  - generic [ref=e324]: Respostas gerenciadas fora do LinkedIn
+              - generic [ref=e151]:
+                - button "Corresponde às suas preferências de vaga e o tipo de local de trabalho é Presencial." [ref=e325] [cursor=pointer]:
+                  - strong [ref=e328]:
+                    - img [ref=e330]
+                    - text: Presencial
+                  - generic [ref=e332]: Corresponde às suas preferências de vaga e o tipo de local de trabalho é Presencial.
+                - button "Corresponde às suas preferências de vaga e o tipo de vaga é Tempo integral." [ref=e333] [cursor=pointer]:
+                  - strong [ref=e336]:
+                    - img [ref=e338]
+                    - text: Tempo integral
+                  - generic [ref=e340]: Corresponde às suas preferências de vaga e o tipo de vaga é Tempo integral.
+              - generic [ref=e169]:
+                - link "Candidatar-se à vaga de Manufacturing Controller. no site da empresa" [ref=e172] [cursor=pointer]:
+                  - img [ref=e173]
+                  - generic [ref=e175]: Candidatar-se
+                - button "Salvar Manufacturing Controller. na Solventum" [ref=e341] [cursor=pointer]:
+                  - generic [ref=e342]: Salvar
+                  - generic [ref=e343]: Salvar Manufacturing Controller. na Solventum
+            - generic [ref=e179]:
+              - heading "Pessoas que você pode contatar" [level=2] [ref=e344]
+              - generic [ref=e347]:
+                - generic [ref=e348]:
+                  - generic [ref=e349]:
+                    - list [ref=e350]:
+                      - listitem [ref=e351]:
+                        - img "Logo de Fundação Getulio Vargas" [ref=e353]
+                    - generic [ref=e354]: Logo de Fundação Getulio Vargas
+                  - generic [ref=e355]: Ex-alunos da instituição de ensino Fundação Getulio Vargas
+                - button "Exibir todos" [ref=e356] [cursor=pointer]:
+                  - generic [ref=e357]: Exibir todos
+            - generic [ref=e188]:
+              - article [ref=e189]:
+                - generic [ref=e191]:
+                  - heading "Sobre a vaga" [level=2] [ref=e192]
+                  - paragraph [ref=e359]:
+                    - text: "Obrigado pelo seu interesse em trabalhar para nossa Empresa. Recrutar o talento certo é crucial para os nossos objetivos. No dia 01 de Abril de 2024, a 3M Healthcare passou por uma cisão corporativa que levou à criação de uma nova empresa chamada Solventum. Ainda estamos no processo de atualização da nossa página de carreiras e documentos de candidatura, que atualmente possuem a marca 3M. Por favor, tenha paciência conosco. Enquanto isso, a nossa Política de Privacidade aqui: https://www.solventum.com/en-us/home/legal/website-privacy-statement/applicant-privacy/ continua a ser aplicada a qualquer informação pessoal que enviar, e os cargos da marca 3M listados na nossa Página de Carreiras são para cargos na Solventum. Tal como era na 3M, na Solventum todos os candidatos qualificados serão considerados para emprego, independentemente da sua raça, cor, religião, sexo, orientação sexual, identidade de género, origem nacional, deficiência ou estatuto militar."
+                    - strong [ref=e361]: Job Description
+                    - strong [ref=e363]: 3M Health Care is now Solventum
+                    - strong [ref=e365]: At Solventum, we enable better, smarter, safer healthcare to improve lives. As a new company with a long legacy of creating breakthrough solutions for our customers’ toughest challenges, we pioneer game-changing innovations at the intersection of health, material and data science that change patients' lives for the better while enabling healthcare professionals to perform at their best. Because people, and their wellbeing, are at the heart of every scientific advancement we pursue.
+                    - strong [ref=e367]: We partner closely with the brightest minds in healthcare to ensure that every solution we create melds the latest technology with compassion and empathy. Because at Solventum, we never stop solving for you.
+                    - strong [ref=e369]: The Impact You Will Have In This Role
+                    - text: As the
+                    - strong [ref=e371]: Senior Financial Analyst
+                    - text: "at the Jarinu, Brazil plant, you will have the opportunity to tap into your curiosity and collaborate with some of the most innovative and diverse people around the world. Here, you will make an impact by:"
+                    - list [ref=e373]:
+                      - listitem [ref=e374]: Having the opportunity to stand up the financial processes listed below at Sumare, which is a brand-new manufacturing site for Solventum
+                      - listitem [ref=e375]: Providing strategic and operational financial leadership to the Sumare Plant team and direct support to the Plant Director
+                      - listitem [ref=e376]: Being a strong business partner supporting the plant financial scorecard, continuous improvement initiatives, inventory/production analysis, and other short- to long term plant financial decisions
+                      - listitem [ref=e377]: Leading weekly, monthly, quarterly, and annual processes to support plant rhythms, month end close activities, QORs/MREs, OP and Strat Plans
+                      - listitem [ref=e378]: Collaborating with the business segments and Global Supply Chain organizations to support investment analysis at the site
+                      - listitem [ref=e379]: Analyzing plant spend and work with the teams to identify, communicate and execute productivity improvement opportunities
+                      - listitem [ref=e380]: Regularly measuring and assessing plant performance (weekly/monthly/quarterly) to predict results and drive corrective actions to meet targets
+                      - listitem [ref=e381]: Developing understanding of impacts to the plant financials driven by sales volume, mix, demand planning and supply planning dynamics to drive productivity at the site
+                      - listitem [ref=e382]: Monitoring external economic factors to support the plant management decision process
+                      - listitem [ref=e383]: Developing and driving end-to-end processes, analyses, and tools to standardize reporting to support the site
+                      - listitem [ref=e384]: Ensuring compliance to Global Financial Standards and Statutory requirements
+                    - strong [ref=e386]: Your Skills And Expertise
+                    - text: "To set you up for success in this role from day one, Solventum requires (at a minimum) the following qualifications:"
+                    - list [ref=e388]:
+                      - listitem [ref=e389]: Bachelor’s Degree
+                      - listitem [ref=e390]: Three to five (3-5) years of finance experience within Manufacturing
+                      - listitem [ref=e391]: Proficient in English
+                    - text: "Additional qualifications that could help you succeed even further in this role include:"
+                    - list [ref=e393]:
+                      - listitem [ref=e394]: CPA, CMA or equivalent international certification
+                      - listitem [ref=e395]: Masters Degree or diploma on Finances
+                      - listitem [ref=e396]: Experience in the MedTech Industry
+                      - listitem [ref=e397]: Responsible for Income Statements
+                      - listitem [ref=e398]: Leadership and collaboration skills to engage with business stakeholders and drive alignment on financial assumptions
+                      - listitem [ref=e399]: Ability to lead through others and influence
+                      - listitem [ref=e400]: Previous experience in AS400/BPCS ERP
+                      - listitem [ref=e401]: Pragmatic, results-oriented with a strong bias towards executing with speed, agility, and quality
+                      - listitem [ref=e402]: Record of career progression with increasing levels of responsibility
+                    - strong [ref=e404]: "Work location:"
+                    - list [ref=e406]:
+                      - listitem [ref=e407]: Hybrid (Jarinu, Brazil) 3x per week
+                      - listitem [ref=e408]: "Travel: May include up to 5% domestic/international"
+                    - text: A Solventum é um empregador que oferece oportunidades iguais à todos. A 3M não discriminará nenhum candidato baseado em sua raça, cor, idade, religião, gênero, orientação sexual, identidade ou expressão de gênero, nacionalidade ou deficiência.
+                    - text: Solventum is committed to maintaining the highest standards of integrity and professionalism in our recruitment process. Applicants must remain alert to fraudulent job postings and recruitment schemes that falsely claim to represent Solventum and seek to exploit job seekers.
+                    - text: Please note that all email communications from Solventum regarding job opportunities with the company will be from an email with a domain of
+                    - strong [ref=e410]: "@solventum.com"
+                    - text: . Be wary of unsolicited emails or messages regarding Solventum job opportunities from emails with other email domains.
+                    - strong [ref=e412]: "Please note: your application may not be considered if you do not provide your education and work history, either by: 1) uploading a resume, or 2) entering the information into the application fields directly."
+                    - strong [ref=e414]: Solventum Global Terms of Use and Privacy Statement
+                    - text: Carefully read these Terms of Use before using this website. Your access to and use of this website and application for a job at Solventum are conditioned on your acceptance and compliance with these terms.
+                    - text: Please access the linked document by clicking
+                    - link "here" [ref=e415] [cursor=pointer]:
+                      - /url: https://www.solventum.com/en-us/home/legal/website-terms-conditions/
+                    - text: . Before submitting your application you will be asked to confirm your agreement with the
+                    - text: terms.
+              - button "Clicar para ver mais detalhes" [ref=e194] [cursor=pointer]:
+                - img [ref=e195]
+                - generic [ref=e197]: Ver mais
+            - generic [ref=e199]:
+              - generic [ref=e200]:
+                - heading "Configurar alerta para vagas semelhantes" [level=2] [ref=e201]
+                - generic [ref=e203]: Controlador de manufatura, Sumaré, São Paulo, Brasil
+              - generic [ref=e205] [cursor=pointer]:
+                - generic [ref=e206]: Desativada
+                - generic [ref=e207]: Configurar alerta
+                - switch "Configurar alerta"
+            - generic [ref=e416]:
+              - button "Fechar cartão promocional de serviços" [ref=e417] [cursor=pointer]:
+                - img [ref=e418]
+                - generic [ref=e420]: Fechar cartão promocional de serviços
+              - generic [ref=e422]:
+                - heading "Veja uma seleção de ferramentas de IA para sua pesquisa de vagas" [level=2] [ref=e423]
+                - paragraph [ref=e424]: Receba uma oferta de emprego mais rápido com a ajuda de ferramentas de IA criadas por empresas certificadas, como Kickresume, Exponent Interview Prep e muito mais.
+                - link "Começar" [ref=e425] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/ai-tools/?sectionType=career-coaching
+                  - generic [ref=e426]: Começar
+            - generic [ref=e427]:
+              - generic [ref=e428]:
+                - generic [ref=e429]:
+                  - img "Premium" [ref=e431]:
+                    - img [ref=e432]
+                  - button "Saiba mais sobre estatísticas sobre candidatos" [ref=e435] [cursor=pointer]:
+                    - img [ref=e436]
+                - heading "Veja como sua candidatura se compara à de outras pessoas" [level=2] [ref=e438]
+                - generic [ref=e440]:
+                  - heading "Pessoas que clicaram em Candidate-se" [level=3] [ref=e441]
+                  - list [ref=e442]:
+                    - listitem [ref=e443]:
+                      - generic [ref=e444]: "317"
+                      - generic [ref=e445]: no total
+                    - listitem [ref=e446]:
+                      - generic [ref=e447]: "3"
+                      - generic [ref=e448]: no último dia
+                - generic [ref=e449]:
+                  - generic [ref=e450]:
+                    - heading "Nível de experiência do candidato" [level=3] [ref=e451]
+                    - list [ref=e452]:
+                      - listitem [ref=e453]:
+                        - paragraph [ref=e454]: 40% de candidatos com nível Sênior
+                        - progressbar [ref=e455]
+                      - listitem [ref=e456]:
+                        - paragraph [ref=e457]: 23% de candidatos com nível Diretor
+                        - progressbar [ref=e458]
+                      - listitem [ref=e459]:
+                        - paragraph [ref=e460]: 20% de candidatos com nível Gerente
+                        - progressbar [ref=e461]
+                      - listitem [ref=e462]:
+                        - paragraph [ref=e463]: 12% de candidatos com nível Iniciante
+                        - progressbar [ref=e464]
+                  - generic [ref=e465]:
+                    - heading "Nível de formação acadêmica do candidato" [level=3] [ref=e466]
+                    - list [ref=e467]:
+                      - listitem [ref=e468]:
+                        - generic [ref=e469]: 62%
+                        - generic [ref=e470]: tem Pós-graduação Lato Sensu - MBA (semelhante ao seu)
+                      - listitem [ref=e471]:
+                        - generic [ref=e472]: 10%
+                        - generic [ref=e473]: tem Bacharelado
+                      - listitem [ref=e474]:
+                        - generic [ref=e475]: 8%
+                        - generic [ref=e476]: tem Pós-graduação
+                      - listitem [ref=e477]:
+                        - generic [ref=e478]: 20%
+                        - generic [ref=e479]: tem outros diplomas
+              - generic [ref=e480]:
+                - generic [ref=e481]:
+                  - img "Premium" [ref=e482]:
+                    - img [ref=e483]
+                  - button "Saiba mais sobre estatísticas sobre empresas" [ref=e486] [cursor=pointer]:
+                    - img "Saiba mais sobre estatísticas sobre empresas" [ref=e487]
+                - heading "Estatísticas exclusivas de pessoas à procura de emprego sobre a Solventum" [level=2] [ref=e489]
+                - heading "Com tecnologia do Bing" [level=3] [ref=e490]
+                - generic [ref=e491]:
+                  - generic [ref=e492]:
+                    - heading "Áreas de foco da empresa" [level=3] [ref=e493]
+                    - generic [ref=e495]:
+                      - list [ref=e496]:
+                        - listitem [ref=e497]:
+                          - strong [ref=e498]: "Transition to Standalone Company:"
+                          - text: Solventum is focused on successfully transitioning from 3M's Health Care Business to an independent entity. This includes managing the impact of losing 3M's brand recognition and handling new debt obligations.
+                        - listitem [ref=e499]:
+                          - strong [ref=e500]: "Innovation and Advanced Technologies:"
+                          - text: Solventum's growth strategy is fundamentally driven by a strong commitment to innovation and the strategic application of advanced technologies. The company focuses on developing groundbreaking solutions at the nexus of health, material science, and data analytics.
+                      - button "exibir mais revela visualmente conteúdos que já foram detectados por leitores de tela" [ref=e501] [cursor=pointer]:
+                        - generic [ref=e502]: exibir mais
+                  - generic [ref=e503]:
+                    - generic [ref=e505]: "Fontes: sec.gov mais 1"
+                    - generic [ref=e507]:
+                      - button "Marcar feedback como bom" [ref=e508] [cursor=pointer]:
+                        - img [ref=e509]
+                      - button "Marcar feedback como ruim" [ref=e512] [cursor=pointer]:
+                        - img [ref=e513]
+                - generic [ref=e516]:
+                  - generic [ref=e517]:
+                    - heading "Contratações e número de funcionários" [level=3] [ref=e518]
+                    - paragraph [ref=e519]:
+                      - generic [ref=e520]:
+                        - text: "Expanding their workforce: The company has shown a consistent increase in overall headcount from April 2024 to April 2026, with a 20% increase in employee count, indicating a strong focus on growth and expansion. Significant growth in Finance and Legal departments: The 'Finance' and 'Legal' departments have experienced an 8% increase in headcount, suggesting new initiatives or increased activity in these areas. Increased job openings in Marketing and Sales: The 'Marketing' and 'Sales' departments have seen a 225% and 91% increase in job openings respectively, indicating a strategic push towards enhancing market presence and sales capabilities. Focus on Administrative and Arts and Design: The 'Administrative' and 'Arts and Design' departments have seen a 10% increase in headcount, reflecting potential new initiatives or projects requiring administrative support and creative input."
+                        - generic [ref=e521]:
+                          - generic [ref=e522]: …
+                          - button "Exibir mais sobre Contratações e número de funcionários" [ref=e523] [cursor=pointer]: exibir mais
+                  - generic [ref=e525]:
+                    - button "Marcar feedback como bom" [ref=e526] [cursor=pointer]:
+                      - img [ref=e527]
+                    - button "Marcar feedback como ruim" [ref=e530] [cursor=pointer]:
+                      - img [ref=e531]
+                - generic [ref=e534]:
+                  - heading "Última tendência de contratação" [level=3] [ref=e535]
+                  - generic [ref=e536]:
+                    - list [ref=e537]:
+                      - listitem [ref=e538]:
+                        - paragraph [ref=e539]: "10.474"
+                        - paragraph [ref=e540]: funcionários no total
+                      - listitem [ref=e541]:
+                        - paragraph [ref=e542]: 20%
+                        - paragraph [ref=e544]: toda a empresa
+                        - paragraph [ref=e545]: Crescimento em 2 anos
+                        - generic [ref=e546]: 20% de aumento
+                      - listitem [ref=e547]:
+                        - paragraph [ref=e548]: 250%
+                        - paragraph [ref=e550]: Gerenciamento
+                        - paragraph [ref=e551]: Crescimento em 2 anos
+                        - generic [ref=e552]: 250% de aumento
+                    - region "Chart. Highcharts interactive chart." [ref=e555]:
+                      - region "Chart screen reader information.":
+                        - generic [ref=e556]:
+                          - heading "Chart" [level=4] [ref=e557]
+                          - generic [ref=e558]: Chart with 25 data points.
+                          - generic [ref=e559]: "The chart has 1 X axis displaying Time. Range: 2023-12-13 12:00:00 to 2026-05-07 12:00:00."
+                          - generic [ref=e560]: "The chart has 1 Y axis displaying values. Range: 0 to 15000."
+                      - img "Interactive chart" [ref=e565]:
+                        - generic [ref=e577]:
+                          - img "1. April 2024, 8.715 funcionários" [ref=e578]
+                          - img "2. May 2024, 8.930 funcionários, increase 2% do mês passado" [ref=e579]
+                          - img "3. June 2024, 9.137 funcionários, increase 2% do mês passado" [ref=e580]
+                          - img "4. July 2024, 9.326 funcionários, increase 2% do mês passado" [ref=e581]
+                          - img "5. August 2024, 9.525 funcionários, increase 2% do mês passado" [ref=e582]
+                          - img "6. September 2024, 9.706 funcionários, increase 2% do mês passado" [ref=e583]
+                          - img "7. October 2024, 9.856 funcionários, increase 2% do mês passado" [ref=e584]
+                          - img "8. November 2024, 9.980 funcionários, increase 1% do mês passado" [ref=e585]
+                          - img "9. December 2024, 10.011 funcionários, neutral 0% do mês passado" [ref=e586]
+                          - img "10. January 2025, 9.982 funcionários, neutral 0% do mês passado" [ref=e587]
+                          - img "11. February 2025, 10.070 funcionários, increase 1% do mês passado" [ref=e588]
+                          - img "12. March 2025, 10.165 funcionários, increase 1% do mês passado" [ref=e589]
+                          - img "13. April 2025, 10.279 funcionários, increase 1% do mês passado" [ref=e590]
+                          - img "14. May 2025, 10.387 funcionários, increase 1% do mês passado" [ref=e591]
+                          - img "15. June 2025, 10.456 funcionários, increase 1% do mês passado" [ref=e592]
+                          - img "16. July 2025, 10.547 funcionários, increase 1% do mês passado" [ref=e593]
+                          - img "17. August 2025, 10.501 funcionários, neutral 0% do mês passado" [ref=e594]
+                          - img "18. September 2025, 10.354 funcionários, decrease 1% do mês passado" [ref=e595]
+                          - img "19. October 2025, 10.367 funcionários, neutral 0% do mês passado" [ref=e596]
+                          - img "20. November 2025, 10.361 funcionários, neutral 0% do mês passado" [ref=e597]
+                          - img "21. December 2025, 10.340 funcionários, neutral 0% do mês passado" [ref=e598]
+                          - img "22. January 2026, 10.367 funcionários, neutral 0% do mês passado" [ref=e599]
+                          - img "23. February 2026, 10.413 funcionários, neutral 0% do mês passado" [ref=e600]
+                          - img "24. March 2026, 10.421 funcionários, neutral 0% do mês passado" [ref=e601]
+                          - img "25. April 2026, 10.474 funcionários, increase 1% do mês passado" [ref=e602]
+                        - generic [ref=e603]:
+                          - generic [ref=e604]: abr. de 2024
+                          - generic [ref=e605]: out. de 2024
+                          - generic [ref=e606]: abr. de 2025
+                          - generic [ref=e607]: out. de 2025
+                          - generic [ref=e608]: abr. de 2026
+                        - generic [ref=e609]:
+                          - generic [ref=e610]: "0"
+                          - generic [ref=e611]: "5.000"
+                          - generic [ref=e612]: "10.000"
+                          - generic [ref=e613]: "15.000"
+                      - generic [ref=e615]: End of interactive chart.
+                    - generic [ref=e616]:
+                      - img [ref=e617]
+                      - text: Tempo médio do funcionário na empresa ‧
+                      - strong [ref=e620]: 2,1 anos
+                - generic [ref=e621]:
+                  - heading "A empresa Solventum contrata pessoas de algumas dessas empresas e instituições de ensino" [level=3] [ref=e622]
+                  - list [ref=e624]:
+                    - listitem [ref=e625]:
+                      - generic [ref=e626]:
+                        - figure [ref=e627]:
+                          - img "Fundação Getulio Vargas" [ref=e628]
+                        - paragraph [ref=e629]:
+                          - text: A Solventum contratou 56 pessoas de Fundação Getulio Vargas.
+                          - link "Ver todas" [ref=e630] [cursor=pointer]:
+                            - /url: https://www.linkedin.com/search/results/people/?origin=JOB_PAGE_CANNED_SEARCH&currentCompany=98860822&schoolFilter=8175
+                            - strong [ref=e631]: Ver todas
+                - generic [ref=e632]:
+                  - generic [ref=e633]:
+                    - heading "Concorrência" [level=3] [ref=e634]
+                    - paragraph [ref=e635]:
+                      - generic [ref=e636]:
+                        - text: Solventum operates in a highly competitive healthcare market, leveraging its strong heritage of innovation and customer relationships. The company focuses on delivering advanced clinical solutions and intelligent software to improve patient outcomes and provider efficiency. Solventum faces competition from major players like Medtronic and Smith & Nephew in the MedSurgical segment, and HCA Healthcare in the broader healthcare services market. The company's strategic initiatives include expanding its global presence and enhancing its product suite to maintain its competitive edge.
+                        - generic [ref=e637]:
+                          - generic [ref=e638]: …
+                          - button "Exibir mais sobre Concorrência" [ref=e639] [cursor=pointer]: exibir mais
+                    - generic [ref=e640]:
+                      - link "Medtronic" [ref=e642] [cursor=pointer]:
+                        - /url: https://www.linkedin.com/company/medtronic/
+                        - generic "Medtronic" [ref=e645]
+                      - link "Smith+Nephew" [ref=e648] [cursor=pointer]:
+                        - /url: https://www.linkedin.com/company/smith-nephew/
+                        - generic "Smith+Nephew" [ref=e651]
+                      - link "HCA Healthcare" [ref=e654] [cursor=pointer]:
+                        - /url: https://www.linkedin.com/company/hca/
+                        - generic "HCA Healthcare" [ref=e657]
+                  - generic [ref=e659]:
+                    - generic [ref=e661]: "Fontes: artificall.com mais 2"
+                    - generic [ref=e663]:
+                      - button "Marcar feedback como bom" [ref=e664] [cursor=pointer]:
+                        - img [ref=e665]
+                      - button "Marcar feedback como ruim" [ref=e668] [cursor=pointer]:
+                        - img [ref=e669]
+                - link "Exibir mais estatísticas Premium" [ref=e672] [cursor=pointer]:
+                  - /url: /company/solventumhealth/insights/?insightType=HEADCOUNT
+            - generic [ref=e674]:
+              - generic [ref=e675]:
+                - heading "Sobre a empresa" [level=2] [ref=e676]
+                - generic [ref=e677]:
+                  - generic [ref=e678]:
+                    - link "Logo da empresa Solventum" [ref=e680] [cursor=pointer]:
+                      - /url: /company/solventumhealth/life/
+                      - img "Logo da empresa Solventum" [ref=e681]
+                    - generic [ref=e682]:
+                      - link "Solventum" [ref=e684] [cursor=pointer]:
+                        - /url: /company/solventumhealth/life/
+                      - generic [ref=e685]: 139.669 seguidores
+                  - button "Seguir" [ref=e686] [cursor=pointer]:
+                    - img [ref=e687]
+                    - generic [ref=e689]: Seguir
+                - generic [ref=e690]:
+                  - text: Fabricação de instrumentos e materiais para uso médico e odontológico e de artigos ópticos
+                  - generic [ref=e691]: • + de 10.001 funcionários
+                  - generic [ref=e692]: • 10.474 no LinkedIn
+                - paragraph [ref=e693]:
+                  - generic [ref=e694]: At Solventum, we enable better, smarter, safer healthcare to improve lives. We never stop solving for you.
+                - generic [ref=e698]:
+                  - heading "Tem interesse em trabalhar conosco no futuro?" [level=3] [ref=e699]
+                  - paragraph [ref=e700]:
+                    - generic [ref=e701]:
+                      - text: Os usuários que compartilham ter interesse em uma empresa podem ter o dobro de chances de receber mensagem de um recrutador.
+                      - link [ref=e702] [cursor=pointer]:
+                        - /url: https://www.linkedin.com/help/linkedin/answer/a1380509
+                        - text: Saiba mais
+                    - generic [ref=e703]: Saiba mais sobre Interesse em trabalhar para nossa empresa
+                  - button "Tenho interesse" [ref=e704] [cursor=pointer]:
+                    - generic [ref=e705]: Tenho interesse
+              - link "Exibir mais sobre a empresa" [ref=e707] [cursor=pointer]:
+                - /url: /company/solventumhealth/life/
+                - text: Exibir mais
+            - heading "Mais vagas" [level=2] [ref=e709]
+            - list [ref=e711]:
+              - listitem [ref=e712]:
+                - link "Logo da empresa dsm-firmenich Business Controller Associate Director LATAM dsm-firmenich São Paulo e Região (Híbrido) 161 ex-alunos da Fundação Getulio Vargas trabalham aqui Há 6 dias" [ref=e714] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4399957508&referenceJobId=4369669245&originToLandingJobPostings=4399957508&trackingId=kU8j05VHE0QM0QA57RleyA%3D%3D&refId=NcT8G9t1KEwYZOg5EldpEw%3D%3D&eBP=CwEAAAGdsCEUTCRSz9Egxc8dEkvVe0c5LpqbpWDb5F_Bjiz0j7D6t_sphna_baJFFsJuazHe9a2jUZpaAWspkONVjkDKNn--r1JnlB1WPQu25gLvJmBmTSYCUC2ew5-gnOc3NlEhKCa_pWouDaLQWrLYVWRTiQXlOqPqRNL7VA9sME68Q--iKhQHYHRqEVk6uCjuztzfEDvnQDvNsITjTAj-CJnMD_0Wv2SA0zhDhBvTL1fZFTTTZuA0l1fgxAVXXOlFskeDPPyhnJuye2bBRzAZ-KaitEkIZi7jigBjQW16uWk9hocM2k8eiPdANvMXTHX9h5k6J311KheNJUe1IeUUy_QVCUo4G4_iiE5-dvXVyn57jQ-0uQu5GU9ZfvYOpx6YPG78IY0gSCCNuIhNkIjkhqpZUMXsAH84X8tqSJex_h7svO3ql2zqSyhOJSn2wH9zJ7GbSaJK3GA-m74bIIWWX3pgIbK5MgkeiLXkuVyxBOP7aOjt
+                  - generic [ref=e716]:
+                    - img "Logo da empresa dsm-firmenich" [ref=e721]
+                    - generic [ref=e722]:
+                      - generic [ref=e723]:
+                        - generic [ref=e724]:
+                          - strong [ref=e726]: Business Controller Associate Director LATAM
+                          - generic [ref=e727]: Business Controller Associate Director LATAM
+                        - generic [ref=e729]: dsm-firmenich
+                        - generic [ref=e731]: São Paulo e Região (Híbrido)
+                        - list [ref=e733]:
+                          - listitem [ref=e734]:
+                            - generic [ref=e737]:
+                              - generic [ref=e738]: 161 ex-alunos trabalham aqui
+                              - generic [ref=e739]: 161 ex-alunos da Fundação Getulio Vargas trabalham aqui
+                      - list [ref=e741]:
+                        - listitem [ref=e742]:
+                          - time [ref=e743]: Há 6 dias
+              - listitem [ref=e744]:
+                - link "Logo da empresa IDEMIA Manufacturing Controller with verification IDEMIA Cotia, São Paulo, Brasil (Presencial) Avaliando candidaturas Avaliando candidaturas Há 1 semana Candidatura simplificada" [ref=e746] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4401341879&referenceJobId=4369669245&originToLandingJobPostings=4401341879&trackingId=9Kezy%2BFwQqtCzPk3rqJ3tg%3D%3D&refId=NcT8G9t1KEwYZOg5EldpEw%3D%3D&eBP=CwEAAAGdsCEUTEVNAcqJn-85K4FaY2cl5n3SMVWlCScFsavPAL3mgdTP9L1T6YB_PsrcJWz3YjwYbhJVP7zS2F4weCOnFh1FwFVYQ-rneBGYWkss_GUeM961C1XGUAvHgcHcQ0fgDKVXmW_c0r_nPNwk4FAJJsBNHk3VJrdSXVIXG-geyrqcK1dAL1VF-DJ7Deth-anMEVqccY3sNyenPBTmjUrYxcvLP9n6PB1LswUoh2S6ofc3jrKuBgUomjivxVQnUu1iZNw9k1B3oOeoBPi5hIjrcoMl4saru91f-mwedVQDMDRdveI_y2zXuWZw8EcO8rJC1OA0q811FatdaX04JxlgdOKE03qOboIIWSFFudl7LYviMXT6Cmp5qclp1BKuKpPH8y3apTpeVbw59mOZxNMYY1wAmwu3yJ0YQXVMMkknDFkuTo2cGa2Szp7sxtEQilsuvidvttUPb3Y1iB_Rm73n_u-EdDAMj-gCg-k1Doxpdg
+                  - generic [ref=e748]:
+                    - img "Logo da empresa IDEMIA" [ref=e753]
+                    - generic [ref=e754]:
+                      - generic [ref=e755]:
+                        - generic [ref=e756]:
+                          - generic [ref=e757]:
+                            - strong [ref=e758]: Manufacturing Controller
+                            - img [ref=e760]
+                          - generic [ref=e762]: Manufacturing Controller with verification
+                        - generic [ref=e764]: IDEMIA
+                        - generic [ref=e766]: Cotia, São Paulo, Brasil (Presencial)
+                        - list [ref=e768]:
+                          - listitem [ref=e769]:
+                            - img "Avaliando candidaturas" [ref=e772]
+                            - generic [ref=e774]: Avaliando candidaturas
+                      - list [ref=e776]:
+                        - listitem [ref=e777]:
+                          - time [ref=e778]: Há 1 semana
+                        - listitem [ref=e779]:
+                          - img [ref=e780]:
+                            - img [ref=e781]
+                          - generic [ref=e783]: Candidatura simplificada
+              - listitem [ref=e784]:
+                - link "Logo da empresa Konecranes Business Controller with verification Konecranes Cotia, São Paulo, Brasil (Presencial) 9 ex-alunos da Fundação Getulio Vargas trabalham aqui Há 4 dias Candidatura simplificada" [ref=e786] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4403407132&referenceJobId=4369669245&originToLandingJobPostings=4403407132&trackingId=AZUBSJXXciQrsbAVL3L2Hw%3D%3D&refId=NcT8G9t1KEwYZOg5EldpEw%3D%3D&eBP=CwEAAAGdsCEUTAndrdhu6W88_uWEBw2SIM-D6cR8PyfCE3_9aw1D0eHQEWCYyEwZowefxtYMWee-5h4XsiAqwXMV3_8h3WQYDPlxbxgMr9U2uKmN91--L64mT5-QcHq15vTU9SFe_3YBkvtMea7tXbZHEPhgIrXaS-jiYV9MBeB3GQtLswmUtkcsOAJ9f1Q7U2UeIGTTcELbQZqzm2hisrEWmilD0ChHoajLuatcGxCeuljsRYwv6Mq6FdrWMkkjctnHEaDzzlsyPhF0XfruDACwk_HMUkjJ6EZLObuExJQqCjlRHDlKEezjR9fR4eTt5y6ytysKqbj3BaouBHHc7POrchzOZqcdyTro0WECuo_oFmHGEaS6XG5ne-ZfNrUeZrSZt3HF78PiCNnyIKvmKlRZSL9UQR5QByABjrg5rArVkkvAF0pklrwLiHFcU0HlNP3-LkcH97e12UxfPuEtS7K-5uYYFupkvTo
+                  - generic [ref=e788]:
+                    - img "Logo da empresa Konecranes" [ref=e793]
+                    - generic [ref=e794]:
+                      - generic [ref=e795]:
+                        - generic [ref=e796]:
+                          - generic [ref=e797]:
+                            - strong [ref=e798]: Business Controller
+                            - img [ref=e800]
+                          - generic [ref=e802]: Business Controller with verification
+                        - generic [ref=e804]: Konecranes
+                        - generic [ref=e806]: Cotia, São Paulo, Brasil (Presencial)
+                        - list [ref=e808]:
+                          - listitem [ref=e809]:
+                            - generic [ref=e812]:
+                              - generic [ref=e813]: 9 ex-alunos trabalham aqui
+                              - generic [ref=e814]: 9 ex-alunos da Fundação Getulio Vargas trabalham aqui
+                      - list [ref=e816]:
+                        - listitem [ref=e817]:
+                          - time [ref=e818]: Há 4 dias
+                        - listitem [ref=e819]:
+                          - img [ref=e820]:
+                            - img [ref=e821]
+                          - generic [ref=e823]: Candidatura simplificada
+              - listitem [ref=e824]:
+                - link "Logo da empresa Griffith Foods Regional Controller with verification Griffith Foods Jundiaí, São Paulo, Brasil (Híbrido) 7 ex-alunos da Fundação Getulio Vargas trabalham aqui Há 6 dias" [ref=e826] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4399909784&referenceJobId=4369669245&originToLandingJobPostings=4399909784&trackingId=rCVmnPGGI3FcysnrCjc2Kw%3D%3D&refId=NcT8G9t1KEwYZOg5EldpEw%3D%3D&eBP=CwEAAAGdsCEUTMEOjUstsBVJ4ibqeIp8IeXcruMAY8YQpX8pIeeoofj_T5iLxZUPgMz4E3hD8l28tPtmafZYtM6F2wK7_mHefQ2u-npnvvxVNAd-nxJLrp-hUvok3vmuPebBlPVQypFRMYm4zrqqmzkmRTJS5-9bOYM4msKRIUD0mnLggkzzgQQk-jaCbOYA1bdfZlA0uRg9-eGr307dfcvmRWjLcEX5h6dr30_vsBbpFN9CQYsuviY6vxnDXqhasaOP36C96D1gOStDnrBSw_6Y2IElr8n4XQ0ZDoXe6pXQdcdrsl5fDsbv6eKSmxB7WUkqGhfnibmLW-mLTEhR3sWNgD5eIiWX_Dx3xl2-DgNgTYmrAYbzwybyqhaMCuegdAOffTIG_s6O5kdj0XaCE1nxyidSIdmK3iIhzGrRnQWQ00pSlpgWjtmFmJd0Zqqo478Pd9wnOHUN9uj1ifqAdMEhztXUZTy3H5mp73AV1k-QcQX7cg
+                  - generic [ref=e828]:
+                    - img "Logo da empresa Griffith Foods" [ref=e833]
+                    - generic [ref=e834]:
+                      - generic [ref=e835]:
+                        - generic [ref=e836]:
+                          - generic [ref=e837]:
+                            - strong [ref=e838]: Regional Controller
+                            - img [ref=e840]
+                          - generic [ref=e842]: Regional Controller with verification
+                        - generic [ref=e844]: Griffith Foods
+                        - generic [ref=e846]: Jundiaí, São Paulo, Brasil (Híbrido)
+                        - list [ref=e848]:
+                          - listitem [ref=e849]:
+                            - generic [ref=e852]:
+                              - generic [ref=e853]: 7 ex-alunos trabalham aqui
+                              - generic [ref=e854]: 7 ex-alunos da Fundação Getulio Vargas trabalham aqui
+                      - list [ref=e856]:
+                        - listitem [ref=e857]:
+                          - time [ref=e858]: Há 6 dias
+              - listitem [ref=e859]:
+                - link "Logo da empresa Hays Especialista de controladoria with verification Hays Jundiaí, São Paulo, Brasil (Presencial) Avaliando candidaturas Avaliando candidaturas Há 2 semanas Candidatura simplificada" [ref=e861] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4395376014&referenceJobId=4369669245&originToLandingJobPostings=4395376014&trackingId=FvXXInfKWvkhWGjj89xT9A%3D%3D&refId=NcT8G9t1KEwYZOg5EldpEw%3D%3D&eBP=CwEAAAGdsCEUTHdD15Bsn_zAmIwUG8MDucymaFfgAZg8PyfaCwFlv7zkIsHnIaNja11Ktd3_gmx1SjziVsC9UjaZvVoxo8wUtwRAj1_TVP7CsXpyVpjsd19r59W9X5erHoMTNrgHGfIXRJh4G98CcrQ8AUAT-3BPf7eoNkpZdNtWbODAPVlOCk3Z1dmTduxSiHjb6_K-KuSmaBVasn2o42r06LsTWLSutWWMaGYHV9xmjfkfxwe1WBm7Pu-wCY1k5ClUOYDD-TRugryoSyBFQq168Nwi4Q5gFf5HH-J8boN2g1HDeotg66rzI-9jWVzLtNg7JOIwHlvv-S-MEPZJS0oMd_UEGC1smhyYDE6FjN5vun-4j7GCDDmQyIYnBRWDNu3HnvO4OCdA8O9t9_ZEkWomSeUv7l6Dt4YqVXjOa-gNMzIr3FWId-0dtK05-PsLC3M0XcWiLouHxodtgk3JFkFbeqLA34xBlroCJgFRBtjT0Q7F5A
+                  - generic [ref=e863]:
+                    - img "Logo da empresa Hays" [ref=e868]
+                    - generic [ref=e869]:
+                      - generic [ref=e870]:
+                        - generic [ref=e871]:
+                          - generic [ref=e872]:
+                            - strong [ref=e873]: Especialista de controladoria
+                            - img [ref=e875]
+                          - generic [ref=e877]: Especialista de controladoria with verification
+                        - generic [ref=e879]: Hays
+                        - generic [ref=e881]: Jundiaí, São Paulo, Brasil (Presencial)
+                        - list [ref=e883]:
+                          - listitem [ref=e884]:
+                            - img "Avaliando candidaturas" [ref=e887]
+                            - generic [ref=e889]: Avaliando candidaturas
+                      - list [ref=e891]:
+                        - listitem [ref=e892]:
+                          - time [ref=e893]: Há 2 semanas
+                        - listitem [ref=e894]:
+                          - img [ref=e895]:
+                            - img [ref=e896]
+                          - generic [ref=e898]: Candidatura simplificada
+              - listitem [ref=e899]:
+                - link "Logo da empresa RHOPEN Consultoria Controller RHOPEN Consultoria São Paulo, São Paulo, Brasil (Presencial) Avaliando candidaturas Avaliando candidaturas Há 3 dias Candidatura simplificada" [ref=e901] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4402727981&referenceJobId=4369669245&originToLandingJobPostings=4402727981&trackingId=0XAkZTmb3k1jCHT9GivEnQ%3D%3D&refId=NcT8G9t1KEwYZOg5EldpEw%3D%3D&eBP=CwEAAAGdsCEUTEPWXoG8Wfo4fd4pToS9AzVg1IP3a9tg1qzTPbZs-2DeFdaEfk0v9gv9vyZkSdcy4fe3Lh951nF9C7q-zPl3giMzsgmr3NXgTMANm2K-r5L_ahaWwbOb3dna7O9o2EPdoIqpv2iP35ySfkIH3kbh4ohgzFOt_W7UAPKnXkIgte4hMeaY07xt5Ru-v9ftChRYsOUN7UN0Ry7QuZf9GgPMGVomVmFhFE8h8CZjqjJ4v2pV2p1PxHOIlWFtxdQ0qC96MQ3U9XF-ge240Ne5wLeuTbdyuGOLwV2glxvbkMGZwoXUabSI0WHpH_zP7JtnKcIaiVdWtVJz6izzX17szjwncJsjWHyfDNIzrhH6u-P99JceWh--GtNH1U5K55uH94dmXYlmBUHUor63lFiLwTKpgqGNiLnRuu5gi9M9_nArS9_EBrUW4PhBByBSOHjhkmbeum5NRSBQsDz5lW-CS-Yj2f9s_JakhiyeriQOZApOixcFw8ldj3MZ11Y1NViH
+                  - generic [ref=e903]:
+                    - img "Logo da empresa RHOPEN Consultoria" [ref=e908]
+                    - generic [ref=e909]:
+                      - generic [ref=e910]:
+                        - generic [ref=e911]:
+                          - strong [ref=e913]: Controller
+                          - generic [ref=e914]: Controller
+                        - generic [ref=e916]: RHOPEN Consultoria
+                        - generic [ref=e918]: São Paulo, São Paulo, Brasil (Presencial)
+                        - list [ref=e920]:
+                          - listitem [ref=e921]:
+                            - img "Avaliando candidaturas" [ref=e924]
+                            - generic [ref=e926]: Avaliando candidaturas
+                      - list [ref=e928]:
+                        - listitem [ref=e929]:
+                          - time [ref=e930]: Há 3 dias
+                        - listitem [ref=e931]:
+                          - img [ref=e932]:
+                            - img [ref=e933]
+                          - generic [ref=e935]: Candidatura simplificada
+              - listitem [ref=e936]:
+                - link "Logo da empresa Flender Business Controller with verification Flender Recife, Pernambuco, Brasil (Presencial) A empresa leva geralmente 1 semana para avaliar A empresa leva geralmente 1 semana para avaliar Há 5 dias Candidatura simplificada" [ref=e938] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4401863777&referenceJobId=4369669245&originToLandingJobPostings=4401863777&trackingId=2Hd4utbnYqzohZVvyeFyNw%3D%3D&refId=NcT8G9t1KEwYZOg5EldpEw%3D%3D&eBP=CwEAAAGdsCEUTPuYXEKI7NcQAsX52WO6bBS0_ngC4C4mDkPWOWezhzMlMMXqCbPq7-7thqw3BtodcicUwcR7D9Iu7dgib6bZ6dRGZ46FR24VRZ2iBElBUqRY-4_rbH-bbOmkhYaYEtivKLx2nTdFaCNdWRFrD_jZol1uFkb0P4mjy7wiJBPBV50P-4STXk7KWOA3xlEtD6YudnlWnQtM_sma1CFZmVpN0FZEIo9BBRHHofzStdF7soeOHQ1t_JEdv46LomociEsHbrEEpxcaa69tb8dRe0gMCX9adNDiQVD-naXjBjFOIGkuS6wF7qjjqRQS_20QDLuKXb8G19UakWQOnNxm43qRL7EgNutxud5rroEjQ8IVgrXLLMcCSK46ny0hqO-yMPSyQ4wKUxRa247LhfwXPf0ecYG6jyCgcqslP-lQWbGFiFIEvyFcfNOEsICrPHLO8Jzy3zyJja8JxIywQfYDNhfT6qnwecXKSO5VKIuosA
+                  - generic [ref=e940]:
+                    - img "Logo da empresa Flender" [ref=e945]
+                    - generic [ref=e946]:
+                      - generic [ref=e947]:
+                        - generic [ref=e948]:
+                          - generic [ref=e949]:
+                            - strong [ref=e950]: Business Controller
+                            - img [ref=e952]
+                          - generic [ref=e954]: Business Controller with verification
+                        - generic [ref=e956]: Flender
+                        - generic [ref=e958]: Recife, Pernambuco, Brasil (Presencial)
+                        - list [ref=e960]:
+                          - listitem [ref=e961]:
+                            - img "A empresa leva geralmente 1 semana para avaliar" [ref=e964]
+                            - generic [ref=e966]: A empresa leva geralmente 1 semana para avaliar
+                      - list [ref=e968]:
+                        - listitem [ref=e969]:
+                          - time [ref=e970]: Há 5 dias
+                        - listitem [ref=e971]:
+                          - img [ref=e972]:
+                            - img [ref=e973]
+                          - generic [ref=e975]: Candidatura simplificada
+              - listitem [ref=e976]:
+                - link "Logo da empresa Akad Seguros Controller Akad Seguros São Paulo, São Paulo, Brasil (Presencial) 16 ex-alunos da Fundação Getulio Vargas trabalham aqui Há 3 semanas" [ref=e978] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4391136648&referenceJobId=4369669245&originToLandingJobPostings=4391136648&trackingId=oFfRdwNOzNHKZ4Wmm9Lz6w%3D%3D&refId=NcT8G9t1KEwYZOg5EldpEw%3D%3D&eBP=CwEAAAGdsCEUTGwxu6jQL6COdpKpJpd3ry6e1_FnnXLu5sLGLyqwmw_BWhJXAJ89VVUWgqC0Fad6wO_CQrPCUtg8PUU0NXm2AV3T1kGitMJYzoc7cpmy_X7-AKdcasNvfOwq9U67mImxctncESRjvoP6oU1fAWPwOYHCGa5EhSxZc6XxExZbKRiuHv3DdvSQ42ROZcd2rCGvqVCCBFxJIXH0hOuh-GFO1koKhB34yk86nvQAFwSzo-0K2OPQDva3Pc0aEgkhpvQp4tZu6q6amQ2V5cxNUjsTJreGCGAufTSPW9nHx8uLvfYAA-3BIl_mhVWZ8lj7Bj1Xpwv33W2zqRyHIVk44WyCBzXDC6g4-8cc4e6joR4bGvIPZAvT1G0-g3-OHHZByf9mF4uurzMyjUQqQpCvOSFaTfeCaWQgSDy-AZ8xq_BZbwopGQh-Wr5MWFEb3O8XnB2_yuIq2iNjEqeieERbwXc8ewbiZ00QukkPygHIpxcg
+                  - generic [ref=e980]:
+                    - img "Logo da empresa Akad Seguros" [ref=e985]
+                    - generic [ref=e986]:
+                      - generic [ref=e987]:
+                        - generic [ref=e988]:
+                          - strong [ref=e990]: Controller
+                          - generic [ref=e991]: Controller
+                        - generic [ref=e993]: Akad Seguros
+                        - generic [ref=e995]: São Paulo, São Paulo, Brasil (Presencial)
+                        - list [ref=e997]:
+                          - listitem [ref=e998]:
+                            - generic [ref=e1001]:
+                              - generic [ref=e1002]: 16 ex-alunos trabalham aqui
+                              - generic [ref=e1003]: 16 ex-alunos da Fundação Getulio Vargas trabalham aqui
+                      - list [ref=e1005]:
+                        - listitem [ref=e1006]:
+                          - time [ref=e1007]: Há 3 semanas
+              - listitem [ref=e1008]:
+                - link "Logo da empresa Atlas Copco Group Coordenador(a) Contábil | CC Vacuo Technique with verification Atlas Copco Group Barueri, São Paulo, Brasil (Híbrido) Carolina Fafian 1 conexão trabalha aqui Há 6 dias" [ref=e1010] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4399904737&referenceJobId=4369669245&originToLandingJobPostings=4399904737&trackingId=kgG6yW5AfSN6EUZbjNnqFw%3D%3D&refId=NcT8G9t1KEwYZOg5EldpEw%3D%3D&eBP=CwEAAAGdsCEUTMeSHW4eDa0i5UEGItv3Ynb_9xEWxOt4u54Kijb43D6tMn2a5-_nGfUU-HxIynp0-jhCseRAC3G5mJfwbRcZMDCgoqss0sUBe5zTp2slqYFp2Rsd6VjcPg5cQfNUGnrx4n5ylkO08q_UIR7RctalonzCVBe5eL_Uhzg0KrPixg3T7Yu74RbdIGykhRYS9FrqCfOAw1wXaWLgSgOvyyaiKITWbK8xV5sslTIstF-vpG3I1NdZ6CLD5CcJ0OD1H2WUIqz8GR8zPOe767jg9BaQQN7DyEqWmqyDprDZus0fpvw6AvbNsr1rrtFw7VZav18ZWdQGJJp1BpSAuq-HejJUehUaFr07oHrk0IyR5RlT6Pwbbhl_JD90L3d7LDG2_8qWWLZgq0eCoCV1HDo4HlKMD3MeFQng9e3nkxTgMa9rIOLo5KrpDNH5riaU2ObSK6XwH9tTYxDInw0mu2oDLLW0Un-tpw
+                  - generic [ref=e1012]:
+                    - img "Logo da empresa Atlas Copco Group" [ref=e1017]
+                    - generic [ref=e1018]:
+                      - generic [ref=e1019]:
+                        - generic [ref=e1020]:
+                          - generic [ref=e1021]:
+                            - strong [ref=e1022]: Coordenador(a) Contábil | CC Vacuo Technique
+                            - img [ref=e1024]
+                          - generic [ref=e1026]: Coordenador(a) Contábil | CC Vacuo Technique with verification
+                        - generic [ref=e1028]: Atlas Copco Group
+                        - generic [ref=e1030]: Barueri, São Paulo, Brasil (Híbrido)
+                        - list [ref=e1032]:
+                          - listitem [ref=e1033]:
+                            - img "Carolina Fafian" [ref=e1036]
+                            - generic [ref=e1037]: 1 conexão trabalha aqui
+                      - list [ref=e1039]:
+                        - listitem [ref=e1040]:
+                          - time [ref=e1041]: Há 6 dias
+              - listitem [ref=e1042]:
+                - link "Logo da empresa Sol Agora Especialista em Controladoria Sol Agora São Paulo, São Paulo, Brasil (Híbrido) Avaliando candidaturas Avaliando candidaturas Há 4 dias Candidatura simplificada" [ref=e1044] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4402318189&referenceJobId=4369669245&originToLandingJobPostings=4402318189&trackingId=C0WUnFvTOGX4PG8I4Gu1UQ%3D%3D&refId=NcT8G9t1KEwYZOg5EldpEw%3D%3D&eBP=CwEAAAGdsCEUTEaqnZc0U1SVBwYi-c-yxPd34wvLkknEUXyrCnFSc5tJdXReadnLB_injP93zqzmBabBSH3BU9q99qnUOYl8oEm3eWzlOK9TPLhrzyA-lmLVmWBm3WXYhA4TrHejfkjS03KdarHrnocMIvaMxCJfDrEZj704sOac7GVyV6QxoHVPZd3HBUeN4Te8OvV1KmsngzSz7ACc4DlO8sAGzKcFU0WoGZV65zQXWBpoyqZHsm8bBGZ_vS9qCAW-8KZaOqwNzQPmexoIw8I8tAspKFzZzlExoWj6-26EZg-QtTIFRk60OygjK32zYHk3xcL0o2THcgY1M4MH9S71HI9jfmZKbe0h4Ar3OBxH_CMUmHnt6sx-8DD_TtiL1mRySmtxk7M4p9DPVponvdSlwKGPqEFMGxAuu-sqyGG7sL2W1dBBK0NCzERaNu-SI9FMaWYrewutHXtJ-9xDDOImrA3gNMG62zYHc0ImXEM8ucBkdIRoExkkz9jXeSywfyY5jeN3
+                  - generic [ref=e1046]:
+                    - img "Logo da empresa Sol Agora" [ref=e1051]
+                    - generic [ref=e1052]:
+                      - generic [ref=e1053]:
+                        - generic [ref=e1054]:
+                          - strong [ref=e1056]: Especialista em Controladoria
+                          - generic [ref=e1057]: Especialista em Controladoria
+                        - generic [ref=e1059]: Sol Agora
+                        - generic [ref=e1061]: São Paulo, São Paulo, Brasil (Híbrido)
+                        - list [ref=e1063]:
+                          - listitem [ref=e1064]:
+                            - img "Avaliando candidaturas" [ref=e1067]
+                            - generic [ref=e1069]: Avaliando candidaturas
+                      - list [ref=e1071]:
+                        - listitem [ref=e1072]:
+                          - time [ref=e1073]: Há 4 dias
+                        - listitem [ref=e1074]:
+                          - img [ref=e1075]:
+                            - img [ref=e1076]
+                          - generic [ref=e1078]: Candidatura simplificada
+              - listitem [ref=e1079]:
+                - link "Logo da empresa COFCO International Assistant Controller - Cotton with verification COFCO International Santos, São Paulo, Brasil (Híbrido) Avaliando candidaturas Avaliando candidaturas Há 6 dias Candidatura simplificada" [ref=e1081] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4400798095&referenceJobId=4369669245&originToLandingJobPostings=4400798095&trackingId=mcrWU1sEmzYXp%2Fx9%2F4up9Q%3D%3D&refId=NcT8G9t1KEwYZOg5EldpEw%3D%3D&eBP=CwEAAAGdsCEUTaC9aX58GIUM02ZYBAQR4yvC-frac74iWbwBPRPtssyyBXI1qkep8kQIF-dXBhyZp9dv-ZpId1ETD4Toy567jfu4-WoA75i5ikZPiNI5s7AlY7wgL1bD1O6VJwjOkygjqESElDxDOd5kX7bfQ_8zWYRsMe-s3WojaGrwtMtmmlEvqpl4iS1sRdkrS17ldp_iUlvjSevJyfSnkT9A2H6_zNvZA4Q2ab2MvnEKFUj7hKs4IEAFItWldtQpnGXGW8qrytzlepEdX04uOuTaFAXc-OwumyqjtgOmKO22B2kHxjxNOczUTk10ioXBuuLLoYe-Qd9c9Tvj4xkqszmLd7q3lOPdNr2gXaOXf8n3jZYTIPBYQenzwlp_ktDsE94NScHY5ekN5TbKK2_OuYhF7i7H0h_auVvb7Cm-fVA4wHpn-3a6ib7ejPZrhBbxHqXYXxnKvZBBTj-lIJyexzBwDKR3Q6EJyovar2OvUOfeIQ
+                  - generic [ref=e1083]:
+                    - img "Logo da empresa COFCO International" [ref=e1088]
+                    - generic [ref=e1089]:
+                      - generic [ref=e1090]:
+                        - generic [ref=e1091]:
+                          - generic [ref=e1092]:
+                            - strong [ref=e1093]: Assistant Controller - Cotton
+                            - img [ref=e1095]
+                          - generic [ref=e1097]: Assistant Controller - Cotton with verification
+                        - generic [ref=e1099]: COFCO International
+                        - generic [ref=e1101]: Santos, São Paulo, Brasil (Híbrido)
+                        - list [ref=e1103]:
+                          - listitem [ref=e1104]:
+                            - img "Avaliando candidaturas" [ref=e1107]
+                            - generic [ref=e1109]: Avaliando candidaturas
+                      - list [ref=e1111]:
+                        - listitem [ref=e1112]:
+                          - time [ref=e1113]: Há 6 dias
+                        - listitem [ref=e1114]:
+                          - img [ref=e1115]:
+                            - img [ref=e1116]
+                          - generic [ref=e1118]: Candidatura simplificada
+              - listitem [ref=e1119]:
+                - link "Logo da empresa Klabin Coordenador de Controladoria with verification Klabin Jundiaí, São Paulo, Brasil (Presencial) 331 ex-alunos da Fundação Getulio Vargas trabalham aqui Há 2 semanas" [ref=e1121] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4397052549&referenceJobId=4369669245&originToLandingJobPostings=4397052549&trackingId=RkgxqN4qsXLO%2FG0RUartTg%3D%3D&refId=NcT8G9t1KEwYZOg5EldpEw%3D%3D&eBP=CwEAAAGdsCEUTRY6UrZHcTaPTky36Bh7LkcpG5qJimLSoG_Nc3JajNwKXhqEL7Np11_5n_WmDHbuW8FBcipKBMnNQS6mf_mZ0GVweUvs8Vy4vCZtvTCc08p_y8eU6Rq4o-QHbY7Fq96JulFrEBgUhJiU_8fPNrXWDsNt5D10orJuVOz0R0mEfIYm7vk-oH2sbVtaUnHgwZBUgf6FaG4NbJmg6rCBI63EqSUAUBXQwpADQRFCYbw16JXixr_YEbzffy-DZKR8solJAonzwmNdkfwLsNPW1uJarZOZQqOO2LQCL5AzqNnp8xaCmBWTy8vNraTF32mHHdWmjXDEHjlWwMKRjEAnhEp0jEAHWknC9ZTm3b47hToBbVrCs29KqDFhey0ZnnWCM5BdFAlEi_szmobVPaR8NAKHHJ7JhmlZhE0FLB7FZyGK3avlUjSeAqSRNVhMCvHagA5TS4iahfd_WeDTr5hYQccIUL0eZB2k6UO5C8oWfkow-BsM7QFVGOREbdxjmFHRIgA
+                  - generic [ref=e1123]:
+                    - img "Logo da empresa Klabin" [ref=e1128]
+                    - generic [ref=e1129]:
+                      - generic [ref=e1130]:
+                        - generic [ref=e1131]:
+                          - generic [ref=e1132]:
+                            - strong [ref=e1133]: Coordenador de Controladoria
+                            - img [ref=e1135]
+                          - generic [ref=e1137]: Coordenador de Controladoria with verification
+                        - generic [ref=e1139]: Klabin
+                        - generic [ref=e1141]: Jundiaí, São Paulo, Brasil (Presencial)
+                        - list [ref=e1143]:
+                          - listitem [ref=e1144]:
+                            - generic [ref=e1147]:
+                              - generic [ref=e1148]: 331 ex-alunos trabalham aqui
+                              - generic [ref=e1149]: 331 ex-alunos da Fundação Getulio Vargas trabalham aqui
+                      - list [ref=e1151]:
+                        - listitem [ref=e1152]:
+                          - time [ref=e1153]: Há 2 semanas
+            - link "Ver mais vagas como esta" [ref=e1155] [cursor=pointer]:
+              - /url: https://www.linkedin.com/jobs/collections/similar-jobs?referenceJobId=4369669245
+        - complementary [ref=e223]:
+          - generic [ref=e224]:
+            - generic [ref=e1156]:
+              - img "Premium" [ref=e1158]:
+                - img [ref=e1159]
+              - heading "Adquira competências com esses cursos para conseguir um novo emprego" [level=2] [ref=e1161]
+              - listitem [ref=e1162]:
+                - 'link "Inteligência Artificial para Líderes: Como Melhorar a Produtividade da sua Organização" [ref=e1163] [cursor=pointer]':
+                  - /url: https://www.linkedin.com/learning/inteligencia-artificial-para-lideres-como-melhorar-a-produtividade-da-sua-organizacao?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_5289071_learning
+                  - 'img "Inteligência Artificial para Líderes: Como Melhorar a Produtividade da sua Organização" [ref=e1166]'
+                  - img [ref=e1168]
+                - generic [ref=e1170]:
+                  - 'link "Inteligência Artificial para Líderes: Como Melhorar a Produtividade da sua Organização" [ref=e1171] [cursor=pointer]':
+                    - /url: https://www.linkedin.com/learning/inteligencia-artificial-para-lideres-como-melhorar-a-produtividade-da-sua-organizacao?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_5289071_learning
+                    - generic [ref=e1172]: "Inteligência Artificial para Líderes: Como Melhorar a Produtividade da sua Organização"
+                  - generic [ref=e1174]: 3.652 visualizações
+              - listitem [ref=e1175]:
+                - link "Fundamentos de Vendas" [ref=e1176] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/learning/fundamentos-de-vendas-27404136?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_7118000_learning
+                  - img "Fundamentos de Vendas" [ref=e1179]
+                  - img [ref=e1181]
+                - link "Fundamentos de Vendas" [ref=e1184] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/learning/fundamentos-de-vendas-27404136?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_7118000_learning
+                  - generic [ref=e1185]: Fundamentos de Vendas
+              - listitem [ref=e1186]:
+                - 'link "Power BI: Como Criar um Dashboard de Fluxo de Caixa" [ref=e1187] [cursor=pointer]':
+                  - /url: https://www.linkedin.com/learning/power-bi-como-criar-um-dashboard-de-fluxo-de-caixa?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_2127078_learning
+                  - 'img "Power BI: Como Criar um Dashboard de Fluxo de Caixa" [ref=e1190]'
+                  - img [ref=e1192]
+                - generic [ref=e1194]:
+                  - 'link "Power BI: Como Criar um Dashboard de Fluxo de Caixa" [ref=e1195] [cursor=pointer]':
+                    - /url: https://www.linkedin.com/learning/power-bi-como-criar-um-dashboard-de-fluxo-de-caixa?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_2127078_learning
+                    - generic [ref=e1196]: "Power BI: Como Criar um Dashboard de Fluxo de Caixa"
+                  - generic [ref=e1198]: 45.524 visualizações
+              - link "Exibir mais no LinkedIn Learning" [ref=e1200] [cursor=pointer]:
+                - /url: /learning?trk=jobdetails_learning_awareness
+            - generic [ref=e1201]:
+              - paragraph [ref=e1202]: Procurando um talento?
+              - link "Anunciar vaga" [ref=e1203] [cursor=pointer]:
+                - /url: https://www.linkedin.com/talent/job-posting-redirect?trk=flagship3_job_detail
+      - contentinfo [ref=e226]:
+        - generic [ref=e228]:
+          - generic [ref=e229]:
+            - navigation [ref=e230]:
+              - list [ref=e1204]:
+                - listitem [ref=e1205]:
+                  - link "Sobre" [ref=e1206] [cursor=pointer]:
+                    - /url: https://about.linkedin.com/pt-br
+                - listitem [ref=e1207]:
+                  - link "Acessibilidade" [ref=e1208] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/accessibility
+                - listitem [ref=e1209]:
+                  - link "Soluções de Talentos" [ref=e1210] [cursor=pointer]:
+                    - /url: https://business.linkedin.com/pt-br/talent-solutions?trk=flagship_nav&veh=li-footer-lts-control-pt-br&src=li-footer
+                - listitem [ref=e1211]:
+                  - link "Políticas para Comunidades Profissionais" [ref=e1212] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/legal/professional-community-policies
+                - listitem [ref=e1213]:
+                  - link "Carreiras" [ref=e1214] [cursor=pointer]:
+                    - /url: https://careers.linkedin.com/
+                - listitem [ref=e1215]:
+                  - link "Soluções de Marketing" [ref=e1216] [cursor=pointer]:
+                    - /url: https://business.linkedin.com/pt-br/marketing-solutions?trk=n_nav_lms_f&src=li-footer
+                - listitem [ref=e1217]:
+                  - button "Termos e Privacidade" [ref=e1219] [cursor=pointer]:
+                    - generic [ref=e1221]:
+                      - text: Termos e Privacidade
+                      - img [ref=e1222]
+                - listitem [ref=e1224]:
+                  - link "Preferências de anúncios" [ref=e1225] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/help/linkedin/answer/62931?lang=pt
+                - listitem [ref=e1226]:
+                  - link "Publicidade" [ref=e1227] [cursor=pointer]:
+                    - /url: https://business.linkedin.com/pt-br/marketing-solutions/ads?trk=n_nav_ads_f
+                - listitem [ref=e1228]:
+                  - link "Soluções de Vendas" [ref=e1229] [cursor=pointer]:
+                    - /url: https://business.linkedin.com/pt-br/sales-solutions?trk=flagship_nav&veh=li-footer-lss-control-pt-br&src=li-footer
+                - listitem [ref=e1230]:
+                  - link "Para celular" [ref=e1231] [cursor=pointer]:
+                    - /url: https://mobile.linkedin.com/pt-br
+                - listitem [ref=e1232]:
+                  - link "Pequenas empresas" [ref=e1233] [cursor=pointer]:
+                    - /url: https://smallbusiness.linkedin.com?&src=li-footer
+                - listitem [ref=e1234]:
+                  - link "Central de Segurança" [ref=e1235] [cursor=pointer]:
+                    - /url: https://safety.linkedin.com
+            - generic [ref=e232]:
+              - list [ref=e233]:
+                - listitem [ref=e234]:
+                  - img [ref=e235]
+                  - generic [ref=e237]:
+                    - link "Dúvidas? Acesse a nossa Central de Ajuda." [ref=e238] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/help/linkedin?trk=d_flagship3_job_details
+                      - text: Dúvidas?
+                    - paragraph [ref=e239]: Acesse a nossa Central de Ajuda.
+                - listitem [ref=e240]:
+                  - img [ref=e241]
+                  - generic [ref=e243]:
+                    - link "Gerencie sua conta e privacidade Acesse suas Configurações." [ref=e244] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/psettings/
+                      - text: Gerencie sua conta e privacidade
+                    - paragraph [ref=e245]: Acesse suas Configurações.
+                - listitem [ref=e246]:
+                  - img [ref=e247]
+                  - generic [ref=e249]:
+                    - link "Visibilidade da recomendação Saiba mais sobre os conteúdos recomendados." [ref=e250] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/help/linkedin/answer/a1339724
+                      - text: Visibilidade da recomendação
+                    - paragraph [ref=e251]: Saiba mais sobre os conteúdos recomendados.
+              - generic [ref=e252]:
+                - generic [ref=e253]: Selecionar idioma
+                - combobox "Selecionar idioma" [ref=e254]:
+                  - option "العربية (Árabe)"
+                  - option "বাংলা (Bengali)"
+                  - option "Čeština (Tcheco)"
+                  - option "Dansk (Dinamarquês)"
+                  - option "Deutsch (Alemão)"
+                  - option "Ελληνικά (Grego)"
+                  - option "English (Inglês)"
+                  - option "Español (Espanhol)"
+                  - option "فارسی (Persa)"
+                  - option "Suomi (Finlandês)"
+                  - option "Français (Francês)"
+                  - option "हिंदी (Hindi)"
+                  - option "Magyar (Húngaro)"
+                  - option "Bahasa Indonésia (Indonésio)"
+                  - option "Italiano (Italiano)"
+                  - option "עברית (Hebraico)"
+                  - option "日本語 (Japonês)"
+                  - option "한국어 (Coreano)"
+                  - option "मराठी (Marati)"
+                  - option "Bahasa Malaysia (Malaio)"
+                  - option "Nederlands (Holandês)"
+                  - option "Norsk (Norueguês)"
+                  - option "ਪੰਜਾਬੀ (Punjabi)"
+                  - option "Polski (Polonês)"
+                  - option "Português (Português)" [selected]
+                  - option "Română (Romeno)"
+                  - option "Русский (Russo)"
+                  - option "Svenska (Sueco)"
+                  - option "తెలుగు (Telugu)"
+                  - option "ภาษาไทย (Tailandês)"
+                  - option "Tagalog (Tagalog)"
+                  - option "Türkçe (Turco)"
+                  - option "Українська (Ucraniano)"
+                  - option "Tiếng Việt (Vietnamita)"
+                  - option "简体中文 (Chinês (Simplificado))"
+                  - option "正體中文 (Chinês (Tradicional))"
+          - paragraph [ref=e255]: LinkedIn Corporation © 2026
+    - generic:
+      - generic:
+        - complementary:
+          - generic [ref=e256]:
+            - generic [ref=e257]:
+              - generic [ref=e259] [cursor=pointer]:
+                - img "Fernando Xavier" [ref=e261]
+                - button "Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas." [ref=e262]:
+                  - generic [ref=e263]:
+                    - generic [ref=e264]: Mensagens
+                    - generic [ref=e265]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+              - generic [ref=e266]:
+                - button "Abrir o menu suspenso de mensagens" [ref=e268] [cursor=pointer]:
+                  - img "Abrir o menu suspenso de mensagens" [ref=e269]
+                - button "Escrever mensagem" [ref=e272] [cursor=pointer]:
+                  - img [ref=e273]
+                  - generic [ref=e275]: Escrever mensagem
+                - button "Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas." [ref=e276] [cursor=pointer]:
+                  - img [ref=e277]
+                  - generic [ref=e279]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+            - link "Foto da empresa Fernando Xavier Fernando Xavier" [ref=e1236] [cursor=pointer]:
+              - /url: https://www.linkedin.com/company/109375368/admin/inbox
+              - img "Foto da empresa Fernando Xavier" [ref=e1237]
+              - generic [ref=e1238]: Fernando Xavier
+              - img [ref=e1239]
+        - complementary "Assistente de IA para obter ajuda com sua carreira, vagas, etc."

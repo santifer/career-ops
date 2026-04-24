@@ -1,0 +1,71 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - banner [ref=e11]:
+      - link "Pulsus logo" [ref=e12] [cursor=pointer]:
+        - /url: "#"
+        - img "Pulsus logo" [ref=e13]
+      - generic [ref=e14]:
+        - button "Email" [ref=e16] [cursor=pointer]:
+          - img [ref=e18]
+        - button "Menu" [ref=e21] [cursor=pointer]:
+          - img [ref=e24]
+    - main [ref=e26]:
+      - generic [ref=e27]:
+        - img "Logo da empresa" [ref=e28]
+        - generic [ref=e62]:
+          - heading "Dados adicionais" [level=1] [ref=e63]
+          - generic [ref=e64]:
+            - group "Alguém que trabalha nesta empresa indicou você para esta vaga?" [ref=e66]:
+              - generic [ref=e67]: Alguém que trabalha nesta empresa indicou você para esta vaga?
+              - generic [ref=e68]:
+                - generic [ref=e69] [cursor=pointer]:
+                  - radio "Sim" [ref=e70]
+                  - generic [ref=e72]: Sim
+                - generic [ref=e73] [cursor=pointer]:
+                  - radio "Não" [checked] [ref=e74]
+                  - generic [ref=e76]: Não
+            - group "Você trabalha na empresa Pulsus?" [ref=e78]:
+              - generic [ref=e79]: Você trabalha na empresa Pulsus?
+              - generic [ref=e80]:
+                - generic [ref=e81] [cursor=pointer]:
+                  - radio "Sim" [ref=e82]
+                  - generic [ref=e84]: Sim
+                - generic [ref=e85] [cursor=pointer]:
+                  - radio "Não" [checked] [ref=e86]
+                  - generic [ref=e88]: Não
+            - generic [ref=e90]:
+              - generic [ref=e92]: Onde você encontrou essa vaga? (Opcional)
+              - generic [ref=e93]:
+                - combobox "Onde você encontrou essa vaga? (Opcional)" [ref=e94]
+                - button "Mais opções" [ref=e95] [cursor=pointer]:
+                  - img [ref=e97]
+          - button "Salvar e continuar" [ref=e99] [cursor=pointer]
+        - generic [ref=e39]: Powered by Gupy
+    - contentinfo [ref=e40]: Gupy 2026. Todos os direitos reservados. v5.61.0
+    - link "Suporte para candidatos" [ref=e8] [cursor=pointer]:
+      - /url: https://suporte-candidatos.gupy.io/s/suporte?language=pt_BR
+      - text: "?"
+  - button [ref=e41]:
+    - generic [ref=e42]: 99+
+  - generic:
+    - generic "Privacy Tools - Cookie Management"
+    - generic "Privacy Tools - Cookie Management - https://www.privacytools.com.br"
+  - generic "Plugin de acessibilidade da Hand Talk." [ref=e43]:
+    - heading "Plugin de acessibilidade da Hand Talk." [level=2] [ref=e44]
+    - button "Abrir recursos assistivos." [ref=e45] [cursor=pointer]:
+      - img [ref=e46]
+      - paragraph:
+        - generic [ref=e48]: Recursos Assistivos
+    - button "Abrir tradutor de língua de sinais." [ref=e49] [cursor=pointer]:
+      - img [ref=e50]
+      - paragraph:
+        - generic [ref=e57]: Acessível em Libras
+  - generic [ref=e101]:
+    - generic [ref=e102]: Pensando em mudar o rumo da sua carreira?
+    - generic [ref=e103]: Que tal fazer uma mentoria? Essa sensação de estar no lugar errado, fazendo o que não te realiza, é...
+    - generic [ref=e104]: +
+  - dialog [ref=e105]:
+    - generic [ref=e108]: Gostaríamos de te mostrar as últimas atualizações e novidades da Gupy
+    - generic [ref=e109]:
+      - button "Não, obrigado" [ref=e110] [cursor=pointer]
+      - button "Aceitar" [ref=e111] [cursor=pointer]

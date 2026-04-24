@@ -1,0 +1,80 @@
+# Career-Ops Profile Configuration
+# Copy this file to config/profile.yml and fill in your details.
+# This is the single source of truth for your personal data across all modes.
+
+candidate:
+  full_name: "Fernando Costa Xavier"
+  email: "fernandocostaxavier@gmail.com"
+  phone: "+55 11 96480-1913"
+  location: "Sao Paulo, Brazil"
+  linkedin: "linkedin.com/in/fernandoxavier02"
+  github: "github.com/fernandoxavier02"
+  # (Optional) Canva resume design ID for visual CV generation via /career-ops pdf.
+  # Find it in your Canva design URL: https://www.canva.com/design/DAxxxxxxx/...
+  # The ID starts with "D" and is 11 characters long.
+  # canva_resume_design_id: "DAxxxxxxxxx"
+
+target_roles:
+  # Your North Star roles — what you're optimizing for
+  primary:
+    - "Head de Contabilidade e Controladoria"
+    - "Head of Accounting"
+    - "Controller"
+    - "Gerente de Controladoria"
+  # Archetypes help the evaluation system score fit
+  archetypes:
+    - name: "Head de Contabilidade e Controladoria"
+      level: "Director"
+      fit: "primary"
+    - name: "Head of Accounting / Controllership"
+      level: "Director"
+      fit: "primary"
+    - name: "Controller LATAM / Regional"
+      level: "Senior/Director"
+      fit: "primary"
+    - name: "Finance Manager (multinational)"
+      level: "Senior"
+      fit: "secondary"
+    - name: "FP&A Manager"
+      level: "Senior"
+      fit: "secondary"
+    - name: "M&A / Due Diligence Manager"
+      level: "Senior"
+      fit: "adjacent"
+
+narrative:
+  # Your professional headline (1 line)
+  headline: "Head de Contabilidade e Controladoria | IFRS/US GAAP | AI-Powered Finance Transformation"
+  # Your exit story — what makes you unique
+  exit_story: "15+ years leading Finance & Accounting across LATAM. Differentiator: bridging controllership with digital transformation — automated 70% of manual tasks, cut reporting cycles 40%. CRC, ACCA, FMVA certified. Trilingual (PT/EN/ES)."
+  # Your top 3-5 superpowers
+  superpowers:
+    - "End-to-end controllership across multi-country operations (5 LATAM entities)"
+    - "Finance automation & AI-powered analytics (70% manual task reduction)"
+    - "IFRS/US GAAP/CPC multi-standard expertise"
+    - "M&A due diligence and post-merger integration"
+    - "Trilingual leadership (Portuguese, English C2, Spanish C1)"
+  # Proof points — projects, articles, case studies with measurable impact
+  proof_points:
+    - name: "Integrated Accounting Intelligence with Microsoft + GPT"
+      hero_metric: "Automated 70%+ of manual accounting tasks, reduced close cycle by 40%"
+    - name: "Multi-Country Financial Operations"
+      hero_metric: "Managed end-to-end finance for 5 LATAM subsidiaries (BR, MX, CL, AR, PE)"
+    - name: "M&A Integration"
+      hero_metric: "Led 3 due diligence + post-merger integration projects from scratch"
+
+compensation:
+  target_range: "R$30.000-R$35.000/month"
+  currency: "BRL"
+  minimum: "R$30.000/month"
+  location_flexibility: "Hybrid or on-site (Sao Paulo / Grande Sao Paulo), remote anywhere"
+
+location:
+  country: "Brazil"
+  city: "Sao Paulo"
+  timezone: "BRT (UTC-3)"
+  visa_status: "Brazilian citizen"
+  work_modes:
+    - "Hybrid (Sao Paulo / Grande Sao Paulo)"
+    - "On-site (Sao Paulo / Grande Sao Paulo)"
+    - "Remote (anywhere)"

@@ -1,0 +1,148 @@
+- generic [ref=e1]:
+  - generic [ref=e4]:
+    - generic [ref=e6]:
+      - img "DUX Company" [ref=e9]
+      - list [ref=e10]:
+        - listitem [ref=e11]:
+          - button "Sobre a empresa" [ref=e12] [cursor=pointer]:
+            - generic [ref=e13]: Sobre a empresa
+        - listitem [ref=e14]:
+          - link "Vagas" [ref=e15] [cursor=pointer]:
+            - /url: /vagas
+            - button "Vagas" [ref=e16]:
+              - generic [ref=e17]: Vagas
+        - combobox [ref=e18] [cursor=pointer]:
+          - option "English"
+          - option "Português [PT]"
+          - option "Português [BR]" [selected]
+          - option "Español"
+    - generic [ref=e19]:
+      - generic [ref=e20]:
+        - generic [ref=e21]:
+          - text: "Compartilhar vaga:"
+          - link "Compartilhe no Facebook" [ref=e22] [cursor=pointer]:
+            - /url: https://www.facebook.com/sharer/sharer.php?u=https://duxcompany.inhire.app/vagas/ac22f74c-f26e-48a4-ba72-cc3878ec8976/gerente-contabil-sao-paulosp?source=linkedin
+            - img "Compartilhe no Facebook" [ref=e23]
+          - link "Compartilhe no Linkedin" [ref=e24] [cursor=pointer]:
+            - /url: https://www.linkedin.com/shareArticle?mini=true&url=https://duxcompany.inhire.app/vagas/ac22f74c-f26e-48a4-ba72-cc3878ec8976/gerente-contabil-sao-paulosp?source=linkedin
+            - img "Compartilhe no Linkedin" [ref=e25]
+          - link "Compartilhe no Whatsapp" [ref=e26] [cursor=pointer]:
+            - /url: https://api.whatsapp.com/send?text=https://duxcompany.inhire.app/vagas/ac22f74c-f26e-48a4-ba72-cc3878ec8976/gerente-contabil-sao-paulosp?source=linkedin
+            - img "Compartilhe no Whatsapp" [ref=e27]
+        - heading "Gerente Contábil (São Paulo/SP)" [level=1] [ref=e28]
+        - generic [ref=e29]:
+          - generic [ref=e30]:
+            - img [ref=e32]
+            - generic [ref=e35]: Híbrido
+          - generic [ref=e37]: São Paulo, SP, BR
+        - generic [ref=e40]:
+          - paragraph [ref=e41]: Buscamos uma liderança estratégica para comandar nossa Contabilidade, integrando áreas e transformando números em inteligência de negócio. Sua missão será gerir o time, otimizar processos e validar sistemas para garantir fechamentos ágeis e registros impecáveis. Além de assegurar a conformidade e reduzir riscos, você será peça-chave no apoio às decisões da diretoria. Se você une precisão técnica com visão de futuro e foco em inovação, venha fazer a diferença na nossa gestão financeira!
+          - paragraph [ref=e42]:
+            - strong [ref=e43]: "Atividades do cargo:"
+          - list [ref=e44]:
+            - listitem [ref=e45]: "Preparação de relatórios financeiros: elaborar e revisar as demonstrações financeiras (balanços, P&L, DFC e notas explicativas), garantindo a precisão das informações;"
+            - listitem [ref=e46]: "Registros contábeis: garantir que todos os registros contábeis da empresa estejam em conformidade com os princípios contábeis e as normas aplicáveis;"
+            - listitem [ref=e47]: "Conciliação de contas: garantir a reconciliação de contas contábeis para que não haja erros ou discrepâncias nos registros financeiros da empresa;"
+            - listitem [ref=e48]: "Auditorias: preparar a documentação necessária e colaborar com auditores internos e externos durante auditorias financeiras;"
+            - listitem [ref=e49]: "Declarações fiscais: garantir em conjunto com a Área Fiscal a apresentação das declarações fiscais obrigatórias (IRPJ, CSLL e outras acessórias), como a Escrituração Contábil Fiscal (ECF) e a Escrituração Contábil Digital (ECD);"
+            - listitem [ref=e50]: "Compliance contábil: certificar-se de que a empresa esteja em conformidade com todas as obrigações contábeis, mantendo-se atualizado sobre as mudanças de legislação e garantindo que a empresa cumpra todas as exigências contábeis e fiscais;"
+            - listitem [ref=e51]: "Planejamento financeiro: interagir e colaborar com o time de FP&A, fornecendo dados contábeis precisos para as análises e tomadas de decisão com base em cenários financeiros;"
+            - listitem [ref=e52]: "Consultoria: Fornecer orientação contábil à alta administração da empresa, incluindo aconselhamento sobre decisões estratégicas que afetam a situação financeira da organização;"
+            - listitem [ref=e53]: "Controle de custos: Monitorar e controlar em parceria com o FP&A e a Área de Custos os custos fabris e de produção, identificando áreas de melhoria e oportunidades de economia;"
+            - listitem [ref=e54]: "Gestão de riscos: Identificar e avaliar os riscos contábeis e desenvolver estratégias para mitigá-los;"
+            - listitem [ref=e55]: "Gerenciamento da equipe contábil: Supervisionar e liderar a equipe, treinando e garantindo que todas as atividades sejam realizadas dentro do cronograma e de forma eficiente e precisa."
+          - paragraph [ref=e56]:
+            - strong [ref=e57]: "Requisitos necessários para inscrição:"
+          - list [ref=e58]:
+            - listitem [ref=e59]: Ter CRC ativo é essencial;
+            - listitem [ref=e60]: Ensino Superior em Administração, Ciências Contábeis ou Economia;
+            - listitem [ref=e61]: Desejável pós-graduação e/ou MBA em Finanças ou Contabilidade;
+            - listitem [ref=e62]: Profundo conhecimento dos princípios contábeis e fiscais, além da importância de entender o ambiente regulatório aplicável ao setor;
+            - listitem [ref=e63]: Forte vivência com análise de balanço, FC e P&L;
+            - listitem [ref=e64]: Forte habilidade de liderança, para gerir, orientar e motivar a equipe;
+            - listitem [ref=e65]: Conhecimento avançado em Excel e PPT;
+            - listitem [ref=e66]: Habilidade para comunicar e discutir de forma clara e acessível os temas contábeis com demais stakeholders;
+            - listitem [ref=e67]: Desejável já ter tido vivência com sistema Protheus;
+            - listitem [ref=e68]: Inglês será considerado um diferencial.
+          - paragraph [ref=e69]:
+            - strong [ref=e70]: "Informações da vaga:"
+          - list [ref=e71]:
+            - listitem [ref=e72]: "Local: Vila Madalena – São Paulo/SP;"
+            - listitem [ref=e73]: "Regime: Híbrido – 2 dias de home-office;"
+            - listitem [ref=e74]: "Escala: Segunda à sexta – 44h semanais."
+          - paragraph [ref=e75]:
+            - strong [ref=e76]: "Benefícios:"
+          - list [ref=e77]:
+            - listitem [ref=e78]: Assistência médica e odontológica;
+            - listitem [ref=e79]: Seguro de vida;
+            - listitem [ref=e80]: Vale-transporte;
+            - listitem [ref=e81]: Vale-alimentação e vale-refeição;
+            - listitem [ref=e82]: Totalpass;
+            - listitem [ref=e83]: Day-off de aniversário + vale-presente;
+            - listitem [ref=e84]: Desconto em produtos DUX e Eat Clean;
+            - listitem [ref=e85]: Psicoterapia, coaching e mais via App Zenklub;
+            - listitem [ref=e86]: Licença parental estendida.
+          - paragraph [ref=e87]
+          - paragraph [ref=e88]: "Nossas vagas são preferências para pessoas com deficiência (PCD). Na DUX Company, a inclusão faz parte do nosso jeito de nutrir a vida humana: respeitamos as diferenças, encorajamos a diversidade de perspectivas e acreditamos que pessoas diversas constroem soluções melhores e mais sustentáveis. Valorizamos talentos pelo que são e pelo que entregam, em um ambiente que busca promover equidade, respeito e desenvolvimento contínuo."
+        - generic [ref=e89]:
+          - heading "Sobre a empresa" [level=3] [ref=e90]
+          - generic [ref=e93]:
+            - heading "Nutrir a vida humana." [level=3] [ref=e94]:
+              - strong [ref=e95]: Nutrir a vida humana.
+            - paragraph [ref=e96]: Desde 2015, somos uma empresa de nutrição humana, que atualmente é detentora das marcas DUX Human Health e Eat Clean. Com o compromisso de impactar positivamente a vida das pessoas e do planeta, atuando com integridade, excelência e responsabilidade ambiental.
+            - paragraph [ref=e97]: Sob a marca DUX Human Health, combinamos precisão científica, fórmulas limpas e ingredientes naturais em um portfólio de mais de 300 produtos, focados em garantir uma saúde poderosa e uma vida melhor. Com a marca Eat Clean, oferecemos um portfólio de produtos naturais e veganos, desenvolvidos com atenção a cada detalhe, oferecendo muito sabor e alta qualidade.
+        - generic [ref=e98]: Todos os direitos reservados | © InHire 2026
+      - generic [ref=e103]:
+        - generic [ref=e104]:
+          - img [ref=e1504] [cursor=pointer]
+          - generic [ref=e105]: Candidatar-se para a vaga
+        - generic [ref=e106]:
+          - generic [ref=e107]:
+            - button "1. Informações" [ref=e108] [cursor=pointer]:
+              - generic [ref=e110]: 1. Informações
+            - button "2. Diversidade" [ref=e111] [cursor=pointer]:
+              - generic [ref=e113]: 2. Diversidade
+          - generic [ref=e1507]:
+            - generic [ref=e1508]:
+              - paragraph [ref=e1512]: Aqui na DUX Company valorizamos muito a diversidade e acreditamos fortemente no seu poder de impulsionar ambientes mais criativos, colaborativos e acolhedores. Por isso, gostaríamos de saber um pouco mais sobre você! Mas, não precisa ter receio, pois essas informações são confidenciais! O objetivo é que possamos ter mais intencionalidade ao longo de todo o processo seletivo, proporcionando uma jornada cuidadosa e positiva para todas as pessoas candidatas. Vamos nessa?
+              - generic [ref=e1514]: Garantimos que seus dados nunca serão tratados de maneira discriminatória. O compromisso da Empresa Recrutadora é promover a diversidade em todas as ações.
+              - generic [ref=e1515]:
+                - generic [ref=e1516]:
+                  - generic [ref=e1517] [cursor=pointer]:
+                    - text: Deseja se candidatar para a vaga como pessoa com deficiência?
+                    - generic [ref=e1518]: "*"
+                  - img [ref=e1522] [cursor=pointer]
+                - generic "Dropdown select" [active] [ref=e1529] [cursor=pointer]:
+                  - generic [ref=e1531]: Selecione uma das opções
+                  - textbox [ref=e1532]
+                  - img [ref=e1545]
+                  - list [ref=e1547]:
+                    - list [ref=e1548]:
+                      - generic [ref=e1549]:
+                        - option "Sim" [ref=e1550]:
+                          - generic "Sim" [ref=e1553]
+                        - option "Não" [ref=e1554]:
+                          - generic "Não" [ref=e1557]
+              - generic [ref=e1535] [cursor=pointer]:
+                - checkbox "Ao fornecer seus dados pessoais, você concorda com o que está descrito nesta Política de Privacidade, inclusive, para que possam desempenhar soluções voltadas à diversidade." [ref=e1536]
+                - generic [ref=e1539]:
+                  - text: Ao fornecer seus dados pessoais, você concorda com o que está descrito nesta
+                  - link "Política de Privacidade" [ref=e1540]:
+                    - /url: https://www.duxhumanhealth.com/privacidade
+                  - text: ", inclusive, para que possam desempenhar soluções voltadas à diversidade."
+            - button "Continuar inscrição" [ref=e1542]:
+              - generic [ref=e1543]:
+                - button "Continuar inscrição" [disabled]:
+                  - generic: Continuar inscrição
+  - iframe [ref=e208]:
+    
+  - generic "Plugin de acessibilidade da Hand Talk." [ref=e209]:
+    - heading "Plugin de acessibilidade da Hand Talk." [level=2] [ref=e210]
+    - button "Abrir recursos assistivos." [ref=e211] [cursor=pointer]:
+      - img [ref=e212]
+      - paragraph:
+        - generic [ref=e214]: Recursos Assistivos
+    - button "Abrir tradutor de língua de sinais." [ref=e215] [cursor=pointer]:
+      - img [ref=e216]
+      - paragraph:
+        - generic [ref=e223]: Acessível em Libras

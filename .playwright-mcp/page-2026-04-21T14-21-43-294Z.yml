@@ -1,0 +1,382 @@
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - banner [ref=e5]:
+      - generic:
+        - link "Skip to main content":
+          - /url: "#skipContent"
+      - navigation "Header Menu" [ref=e797]:
+        - link [ref=e10] [cursor=pointer]:
+          - /url: https://careers.triviumpackaging.com
+          - img [ref=e11]
+        - list [ref=e12]:
+          - listitem [ref=e13]:
+            - link "Home" [ref=e798] [cursor=pointer]:
+              - /url: https://careers.triviumpackaging.com/
+          - listitem [ref=e15]:
+            - link "Our Community" [ref=e799] [cursor=pointer]:
+              - /url: https://careers.triviumpackaging.com/content/Our-Community/?locale=en_US
+          - listitem [ref=e17]:
+            - link "Vacancies" [ref=e800] [cursor=pointer]:
+              - /url: https://careers.triviumpackaging.com/go/Vacancies/9811757/
+      - link "Employee Login" [ref=e801] [cursor=pointer]:
+        - /url: "#"
+    - main [ref=e25]:
+      - generic [ref=e26]:
+        - region
+        - generic [ref=e28]:
+          - list [ref=e30]:
+            - listitem [ref=e31] [cursor=pointer]:
+              - combobox "English US ‎(English US)‎" [ref=e802]:
+                - text: English US ‎(English US)‎
+                - button ""
+          - 'region "Career Opportunities: Finance Manager (39551)" [ref=e803]':
+            - generic [ref=e38]:
+              - 'heading "Career Opportunities: Finance Manager (39551)" [level=1] [ref=e804]'
+              - generic [ref=e41]:
+                - text: Already a registered user?
+                - link "Please sign in" [ref=e805] [cursor=pointer]:
+                  - /url: javascript:void(0);
+              - separator [ref=e44]
+              - alert [ref=e46]
+              - generic [ref=e48]: "Accepted file types: DOCX, PDF, Image and Text (MSG, PPT and XLS file types are not accepted for resume or cover letters)"
+              - group [ref=e51]:
+                - generic [ref=e58]:
+                  - generic [ref=e59]:
+                    - generic [ref=e60]: "*"
+                    - text: Resume/CV
+                  - generic [ref=e64] [cursor=pointer]:
+                    - text: 
+                    - 'tooltip "Download document cv-026-trivium-finance-manager-2026-04-21.pdf. Last Modified: 04/21/2026 Required" [ref=e806]'
+                    - 'button "Resume/CV Download document cv-026-trivium-finance-manager-2026-04-21.pdf. Last Modified: 04/21/2026 Required" [ref=e807]':
+                      - link "cv-026-trivium-finance-manager-2026-04-21.pdf" [ref=e808]:
+                        - /url: javascript:void(0)
+                      - generic [ref=e205]: (04/21/2026)
+                    - generic [ref=e67]:
+                      - button "Resume/CV Edit document cv-026-trivium-finance-manager-2026-04-21.pdf" [ref=e809]: ✏
+                      - tooltip "Edit document cv-026-trivium-finance-manager-2026-04-21.pdf" [ref=e810]
+              - separator [ref=e74]
+              - generic "Required" [ref=e811]: "Email Address: *"
+              - textbox "Email Address:" [ref=e812]: fernandocostaxavier@gmail.com
+              - generic "Required" [ref=e813]: "Retype Email Address: *"
+              - textbox "Retype Email Address:" [ref=e814]: fernandocostaxavier@gmail.com
+              - generic "Required" [ref=e815]: "Choose Password: *"
+              - generic [ref=e80]:
+                - textbox "Choose Password:" [ref=e816]: Fcx@2026Bxl
+                - button "Show" [ref=e817] [cursor=pointer]
+              - generic [ref=e162]:
+                - text: 
+                - generic [ref=e163]: Password accepted
+              - list [ref=e85]:
+                - listitem [ref=e86]: Password must be at least 8 characters long.
+                - listitem [ref=e87]: Password must not be longer than 18 characters.
+                - listitem [ref=e88]: Password must contain at least one upper case and one lower case letter.
+                - listitem [ref=e89]: Password must contain at least one number or punctuation character.
+                - listitem [ref=e90]: Password must not contain space or unicode characters.
+              - generic "Required" [ref=e818]: "Retype Password: *"
+              - generic [ref=e92]:
+                - textbox "Retype Password:" [ref=e819]: Fcx@2026Bxl
+                - button "Show" [ref=e820] [cursor=pointer]
+              - generic [ref=e164]:
+                - generic [ref=e165]: 
+                - generic [ref=e166]: Password matches
+              - generic "Required" [ref=e821]: "First Name: *"
+              - textbox "First Name:" [ref=e822]: Fernando
+              - generic "Required" [ref=e823]: "Last Name: *"
+              - textbox "Last Name:" [ref=e824]: Costa Xavier
+              - generic "Required" [ref=e825]: Mobile*
+              - textbox "Mobile" [ref=e826]: +55 11 96480 1913
+              - generic "Required" [ref=e827]: Country/Region of Residence:*
+              - combobox "Country/Region of Residence" [ref=e828]:
+                - menuitem "- Select -"
+                - menuitem "Afghanistan"
+                - menuitem "Albania"
+                - menuitem "Algeria"
+                - menuitem "American Samoa"
+                - menuitem "Andorra"
+                - menuitem "Angola"
+                - menuitem "Anguilla"
+                - menuitem "Antarctica"
+                - menuitem "Antigua and Barbuda"
+                - menuitem "Argentina"
+                - menuitem "Armenia"
+                - menuitem "Aruba"
+                - menuitem "Australia"
+                - menuitem "Austria"
+                - menuitem "Azerbaijan"
+                - menuitem "Bahamas"
+                - menuitem "Bahrain"
+                - menuitem "Bangladesh"
+                - menuitem "Barbados"
+                - menuitem "Belarus"
+                - menuitem "Belgium"
+                - menuitem "Belize"
+                - menuitem "Benin"
+                - menuitem "Bermuda"
+                - menuitem "Bhutan"
+                - menuitem "Bosnia and Herzegovina"
+                - menuitem "Botswana"
+                - menuitem "Bouvet Island"
+                - menuitem "Brazil"
+                - menuitem "British Indian Ocean Territory"
+                - menuitem "Brunei Darussalam"
+                - menuitem "Bulgaria"
+                - menuitem "Burkina Faso"
+                - menuitem "Burundi"
+                - menuitem "Cabo Verde"
+                - menuitem "Cambodia"
+                - menuitem "Cameroon"
+                - menuitem "Canada"
+                - menuitem "Cayman Islands"
+                - menuitem "Central African Republic"
+                - menuitem "Chad"
+                - menuitem "Chile"
+                - menuitem "China"
+                - menuitem "Christmas Island"
+                - menuitem "Cocos (Keeling) Islands"
+                - menuitem "Colombia"
+                - menuitem "Comoros"
+                - menuitem "Congo"
+                - menuitem "Congo, the Democratic Republic of the"
+                - menuitem "Cook Islands"
+                - menuitem "Costa Rica"
+                - menuitem "Croatia"
+                - menuitem "Cuba"
+                - menuitem "Cyprus"
+                - menuitem "Czech Republic"
+                - menuitem "Denmark"
+                - menuitem "Djibouti"
+                - menuitem "Dominica"
+                - menuitem "Dominican Republic"
+                - menuitem "Ecuador"
+                - menuitem "Egypt"
+                - menuitem "El Salvador"
+                - menuitem "Equatorial Guinea"
+                - menuitem "Eritrea"
+                - menuitem "Estonia"
+                - menuitem "Eswatini"
+                - menuitem "Ethiopia"
+                - menuitem "Falkland Islands (Malvinas)"
+                - menuitem "Faroe Islands"
+                - menuitem "Fiji"
+                - menuitem "Finland"
+                - menuitem "France"
+                - menuitem "French Guiana"
+                - menuitem "French Polynesia"
+                - menuitem "French Southern Territories"
+                - menuitem "Gabon"
+                - menuitem "Gambia"
+                - menuitem "Georgia"
+                - menuitem "Germany"
+                - menuitem "Ghana"
+                - menuitem "Gibraltar"
+                - menuitem "Greece"
+                - menuitem "Greenland"
+                - menuitem "Grenada"
+                - menuitem "Guadeloupe"
+                - menuitem "Guam"
+                - menuitem "Guatemala"
+                - menuitem "Guernsey"
+                - menuitem "Guinea"
+                - menuitem "Guinea-Bissau"
+                - menuitem "Guyana"
+                - menuitem "Haiti"
+                - menuitem "Heard Island and McDonald Islands"
+                - menuitem "Holy See (Vatican City State)"
+                - menuitem "Honduras"
+                - menuitem "Hong Kong"
+                - menuitem "Hungary"
+                - menuitem "Iceland"
+                - menuitem "India"
+                - menuitem "Indonesia"
+                - menuitem "Iran, Islamic Republic of"
+                - menuitem "Iraq"
+                - menuitem "Ireland"
+                - menuitem "Isle of Man"
+                - menuitem "Israel"
+                - menuitem "Italy"
+                - menuitem "Jamaica"
+                - menuitem "Japan"
+                - menuitem "Jersey"
+                - menuitem "Jordan"
+                - menuitem "Kazakhstan"
+                - menuitem "Kenya"
+                - menuitem "Kiribati"
+                - menuitem "Korea, Democratic People's Republic of"
+                - menuitem "Korea, Republic of"
+                - menuitem "Kosovo"
+                - menuitem "Kuwait"
+                - menuitem "Kyrgyzstan"
+                - menuitem "Lao People's Democratic Republic"
+                - menuitem "Latvia"
+                - menuitem "Lebanon"
+                - menuitem "Lesotho"
+                - menuitem "Liberia"
+                - menuitem "Libya"
+                - menuitem "Liechtenstein"
+                - menuitem "Lithuania"
+                - menuitem "Luxembourg"
+                - menuitem "Macao"
+                - menuitem "Madagascar"
+                - menuitem "Malawi"
+                - menuitem "Malaysia"
+                - menuitem "Maldives"
+                - menuitem "Mali"
+                - menuitem "Malta"
+                - menuitem "Marshall Islands"
+                - menuitem "Martinique"
+                - menuitem "Mauritania"
+                - menuitem "Mauritius"
+                - menuitem "Mayotte"
+                - menuitem "Mexico"
+                - menuitem "Micronesia, Federated States of"
+                - menuitem "Moldova, Republic of"
+                - menuitem "Monaco"
+                - menuitem "Mongolia"
+                - menuitem "Montenegro"
+                - menuitem "Montserrat"
+                - menuitem "Morocco"
+                - menuitem "Mozambique"
+                - menuitem "Myanmar"
+                - menuitem "Namibia"
+                - menuitem "Nauru"
+                - menuitem "Nepal"
+                - menuitem "Netherlands"
+                - menuitem "Netherlands Antilles"
+                - menuitem "New Caledonia"
+                - menuitem "New Zealand"
+                - menuitem "Nicaragua"
+                - menuitem "Niger"
+                - menuitem "Nigeria"
+                - menuitem "Niue"
+                - menuitem "Norfolk Island"
+                - menuitem "Northern Mariana Islands"
+                - menuitem "Norway"
+                - menuitem "Oman"
+                - menuitem "Pakistan"
+                - menuitem "Palau"
+                - menuitem "Palestine, State of"
+                - menuitem "Panama"
+                - menuitem "Papua New Guinea"
+                - menuitem "Paraguay"
+                - menuitem "Peru"
+                - menuitem "Philippines"
+                - menuitem "Pitcairn"
+                - menuitem "Poland"
+                - menuitem "Portugal"
+                - menuitem "Puerto Rico"
+                - menuitem "Qatar"
+                - menuitem "Republic of North Macedonia"
+                - menuitem "Réunion"
+                - menuitem "Romania"
+                - menuitem "Russian Federation"
+                - menuitem "Rwanda"
+                - menuitem "Saint Barthélemy"
+                - menuitem "Saint Kitts and Nevis"
+                - menuitem "Saint Lucia"
+                - menuitem "Saint Pierre and Miquelon"
+                - menuitem "Saint Vincent and the Grenadines"
+                - menuitem "Samoa"
+                - menuitem "San Marino"
+                - menuitem "Sao Tome and Principe"
+                - menuitem "Saudi Arabia"
+                - menuitem "Senegal"
+                - menuitem "Serbia"
+                - menuitem "Seychelles"
+                - menuitem "Sierra Leone"
+                - menuitem "Singapore"
+                - menuitem "Slovakia"
+                - menuitem "Slovenia"
+                - menuitem "Solomon Islands"
+                - menuitem "Somalia"
+                - menuitem "South Africa"
+                - menuitem "South Georgia and the South Sandwich Islands"
+                - menuitem "South Sudan"
+                - menuitem "Spain"
+                - menuitem "Sri Lanka"
+                - menuitem "Sudan"
+                - menuitem "Suriname"
+                - menuitem "Svalbard and Jan Mayen"
+                - menuitem "Sweden"
+                - menuitem "Switzerland"
+                - menuitem "Syrian Arab Republic"
+                - menuitem "Taiwan"
+                - menuitem "Tajikistan"
+                - menuitem "Tanzania, United Republic of"
+                - menuitem "Thailand"
+                - menuitem "Timor-Leste"
+                - menuitem "Togo"
+                - menuitem "Tokelau"
+                - menuitem "Tonga"
+                - menuitem "Trinidad and Tobago"
+                - menuitem "Tunisia"
+                - menuitem "Turkmenistan"
+                - menuitem "Turks and Caicos Islands"
+                - menuitem "Tuvalu"
+                - menuitem "Uganda"
+                - menuitem "Ukraine"
+                - menuitem "United Arab Emirates"
+                - menuitem "United Kingdom"
+                - menuitem "United States"
+                - menuitem "United States Minor Outlying Islands"
+                - menuitem "Uruguay"
+                - menuitem "Uzbekistan"
+                - menuitem "Vanuatu"
+                - menuitem "Viet Nam"
+                - menuitem "Virgin Islands, British"
+                - menuitem "Virgin Islands, U.S."
+                - menuitem "Wallis and Futuna"
+                - menuitem "Western Sahara"
+                - menuitem "Yemen"
+                - menuitem "Zambia"
+                - menuitem "Zimbabwe"
+              - text: "Notification:"
+              - generic [ref=e107]:
+                - checkbox "Notification:" [checked] [ref=e829]
+                - generic [ref=e109]: Receive new job posting notifications
+              - generic [ref=e110]:
+                - checkbox "Hear more about career opportunities" [ref=e830]
+                - generic [ref=e112]: Hear more about career opportunities
+              - generic [ref=e113]: Terms of Use:*
+              - button "Terms of Use Read and accept the data privacy statement. Required" [active] [ref=e831] [cursor=pointer]: Read and accept the data privacy statement.
+              - button "Apply" [ref=e832] [cursor=pointer]
+    - contentinfo [ref=e121]:
+      - generic [ref=e124]:
+        - list [ref=e125]:
+          - listitem [ref=e126]:
+            - link "Home" [ref=e833] [cursor=pointer]:
+              - /url: https://careers.triviumpackaging.com/
+          - listitem [ref=e128]:
+            - link "Vacancies" [ref=e834] [cursor=pointer]:
+              - /url: https://careers.triviumpackaging.com/go/Vacancies/9811757/
+          - listitem [ref=e130]:
+            - link "Privacy Policy" [ref=e835] [cursor=pointer]:
+              - /url: https://www.triviumpackaging.com/privacy-policy
+          - listitem [ref=e132]:
+            - button "Cookie Policy" [ref=e836] [cursor=pointer]
+          - listitem [ref=e134]:
+            - link "Trivium Packaging" [ref=e837] [cursor=pointer]:
+              - /url: https://www.triviumpackaging.com/
+        - list [ref=e137]:
+          - listitem [ref=e138]:
+            - link "Visit our Facebook page" [ref=e838] [cursor=pointer]:
+              - /url: https://www.facebook.com/triviumpackaging/
+              - img [ref=e140]
+          - listitem [ref=e142]:
+            - link "Follow us on LinkedIn" [ref=e839] [cursor=pointer]:
+              - /url: "https://www.linkedin.com/company/trivium-packaging/posts/?feedView=all "
+              - img [ref=e144]
+          - listitem [ref=e146]:
+            - link "Follow us on Instagram" [ref=e840] [cursor=pointer]:
+              - /url: https://www.instagram.com/triviumpackaging/
+              - img [ref=e148]
+          - listitem [ref=e151]:
+            - link "Follow us on X" [ref=e841] [cursor=pointer]:
+              - /url: https://x.com/TriviumInsights
+              - img [ref=e153]
+          - listitem [ref=e155]:
+            - link "Visit our YouTube channel" [ref=e842] [cursor=pointer]:
+              - /url: https://www.youtube.com/@TriviumPackaging
+              - img [ref=e157]
+      - paragraph [ref=e161]: © Trivium Packaging B.V. - WTC Schiphol, B Tower, 5th Floor - Schiphol Boulevard 149 - 1118 BG Schiphol - The Netherlands
+  - generic: Yes No   Yes No Yes No   Yes No Yes No   Yes No
+  - text: "\" \""

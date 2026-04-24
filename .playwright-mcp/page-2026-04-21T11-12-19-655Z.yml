@@ -1,0 +1,161 @@
+- generic [active] [ref=e1]:
+  - generic:
+    - region "Mensagem toast":
+      - heading "0 notificações no total" [level=2] [ref=e3]
+      - alert
+  - region [ref=e4]
+  - generic [ref=e5]:
+    - generic [ref=e7]:
+      - button "Pular para pesquisa" [ref=e8] [cursor=pointer]:
+        - generic [ref=e9]: Pular para pesquisa
+      - button "Pular para conteúdo principal" [ref=e10] [cursor=pointer]:
+        - generic [ref=e11]: Pular para conteúdo principal
+      - button "Atalhos do teclado" [ref=e12] [cursor=pointer]:
+        - generic [ref=e13]: Atalhos do teclado
+      - button "Fechar menu pular" [ref=e14] [cursor=pointer]:
+        - img [ref=e15]
+        - generic [ref=e17]: Fechar menu pular
+    - banner "Navegação geral" [ref=e18]:
+      - generic [ref=e19]:
+        - link "LinkedIn" [ref=e20] [cursor=pointer]:
+          - /url: https://www.linkedin.com/feed/?nis=true
+          - img "LinkedIn" [ref=e23]:
+            - img [ref=e24]
+        - generic [ref=e28]:
+          - combobox "Pesquisar" [ref=e29]
+          - generic:
+            - img
+        - navigation "Navegação principal" [ref=e30]:
+          - list [ref=e31]:
+            - listitem [ref=e32]:
+              - link "atualizações do feed novas notificações Início" [ref=e33] [cursor=pointer]:
+                - /url: https://www.linkedin.com/feed/?nis=true&
+                - generic [ref=e34]:
+                  - generic [ref=e37]: atualizações do feed novas notificações
+                  - img [ref=e41]
+                - generic "Início" [ref=e43]
+            - listitem [ref=e44]:
+              - link "Minha rede" [ref=e45] [cursor=pointer]:
+                - /url: https://www.linkedin.com/mynetwork/?
+                - img [ref=e49]
+                - generic "Minha rede" [ref=e51]
+            - listitem [ref=e52]:
+              - link "Vagas" [ref=e53] [cursor=pointer]:
+                - /url: https://www.linkedin.com/jobs/?
+                - img [ref=e57]
+                - generic "Vagas" [ref=e59]
+            - listitem [ref=e60]:
+              - link "Mensagens" [ref=e61] [cursor=pointer]:
+                - /url: https://www.linkedin.com/messaging/?
+                - img [ref=e65]
+                - generic "Mensagens" [ref=e67]
+            - listitem [ref=e68]:
+              - link "Notificações" [ref=e69] [cursor=pointer]:
+                - /url: https://www.linkedin.com/notifications/?
+                - img [ref=e73]
+                - generic "Notificações" [ref=e75]
+            - listitem [ref=e76]:
+              - button "Fernando Xavier Eu" [ref=e78] [cursor=pointer]:
+                - img "Fernando Xavier" [ref=e79]
+                - generic [ref=e80]:
+                  - text: Eu
+                  - img [ref=e81]
+            - listitem [ref=e83]:
+              - button "Para negócios" [ref=e85] [cursor=pointer]:
+                - img [ref=e89]
+                - generic "Para negócios" [ref=e91]:
+                  - text: Para negócios
+                  - img [ref=e92]
+            - listitem [ref=e94]:
+              - link "Veicular anúncio" [ref=e95] [cursor=pointer]:
+                - /url: https://www.linkedin.com/campaignmanager/accounts?
+                - img [ref=e99]
+                - generic "Veicular anúncio" [ref=e102]
+    - generic [ref=e103]:
+      - generic [ref=e106]:
+        - main [ref=e107]:
+          - generic [ref=e110]:
+            - generic [ref=e114]:
+              - generic [ref=e115]:
+                - generic [ref=e116]:
+                  - link "Logo da empresa Dover Fueling Solutions" [ref=e117] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/company/dover-fueling-solutions/life
+                    - img "Logo da empresa Dover Fueling Solutions" [ref=e120]
+                  - link "Dover Fueling Solutions" [ref=e122] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/company/dover-fueling-solutions/life
+                - generic [ref=e123]:
+                  - button "Compartilhar" [ref=e126] [cursor=pointer]:
+                    - img [ref=e127]
+                    - generic [ref=e129]: Compartilhar
+                  - button "Exibir mais opções" [ref=e131] [cursor=pointer]:
+                    - img [ref=e132]
+                    - generic [ref=e134]: Exibir mais opções
+              - generic [ref=e136]:
+                - heading "Regional Controller" [level=1] [ref=e137]
+                - button "Ver módulo de contratação verificada" [ref=e139] [cursor=pointer]:
+                  - img [ref=e142]
+              - generic [ref=e146]:
+                - generic [ref=e147]: Rio de Janeiro e Região
+                - generic [ref=e148]: ·
+                - generic [ref=e150]: há 1 semana
+                - generic [ref=e151]: ·
+                - generic [ref=e152]: Mais de 100 pessoas clicaram em Candidatar-se
+                - paragraph [ref=e153]:
+                  - generic [ref=e154]: Promovida por recrutador
+                  - generic [ref=e155]: ·
+                  - generic [ref=e156]: Respostas gerenciadas fora do LinkedIn
+              - generic [ref=e157]:
+                - button "Corresponde às suas preferências de vaga e o tipo de local de trabalho é Presencial." [ref=e158] [cursor=pointer]:
+                  - strong [ref=e161]:
+                    - img [ref=e163]
+                    - text: Presencial
+                  - generic [ref=e165]: Corresponde às suas preferências de vaga e o tipo de local de trabalho é Presencial.
+                - button "Corresponde às suas preferências de vaga e o tipo de vaga é Tempo integral." [ref=e166] [cursor=pointer]:
+                  - strong [ref=e169]:
+                    - img [ref=e171]
+                    - text: Tempo integral
+                  - generic [ref=e173]: Corresponde às suas preferências de vaga e o tipo de vaga é Tempo integral.
+              - generic [ref=e175]:
+                - link "Candidatar-se à vaga de Regional Controller no site da empresa" [ref=e178] [cursor=pointer]:
+                  - img [ref=e179]
+                  - generic [ref=e181]: Candidatar-se
+                - button "Salvar Regional Controller na Dover Fueling Solutions" [ref=e182] [cursor=pointer]:
+                  - generic [ref=e183]: Salvar
+                  - generic [ref=e184]: Salvar Regional Controller na Dover Fueling Solutions
+            - generic [ref=e194]:
+              - article [ref=e195]:
+                - heading "Sobre a vaga" [level=2] [ref=e198]
+              - button "Clicar para ver mais detalhes" [ref=e200] [cursor=pointer]:
+                - img [ref=e201]
+                - generic [ref=e203]: Ver mais
+            - generic [ref=e205]:
+              - generic [ref=e206]:
+                - heading "Configurar alerta para vagas semelhantes" [level=2] [ref=e207]
+                - generic [ref=e209]: Controlador regional, Rio de Janeiro e Região
+              - generic [ref=e211] [cursor=pointer]:
+                - generic [ref=e212]: Desativada
+                - generic [ref=e213]: Configurar alerta
+                - switch "Configurar alerta"
+            - alert [ref=e216]: Carregando detalhes da vaga
+        - complementary [ref=e229]
+      - contentinfo [ref=e232]
+    - generic:
+      - generic:
+        - complementary:
+          - generic [ref=e235]:
+            - generic [ref=e237] [cursor=pointer]:
+              - img "Fernando Xavier" [ref=e239]
+              - button "Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas." [ref=e240]:
+                - generic [ref=e241]:
+                  - generic [ref=e242]: Mensagens
+                  - generic [ref=e243]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+            - generic [ref=e244]:
+              - button "Abrir o menu suspenso de mensagens" [ref=e246] [cursor=pointer]:
+                - img "Abrir o menu suspenso de mensagens" [ref=e247]
+              - button "Escrever mensagem" [ref=e249] [cursor=pointer]:
+                - img [ref=e250]
+                - generic [ref=e251]: Escrever mensagem
+              - button "Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas." [ref=e252] [cursor=pointer]:
+                - img [ref=e253]
+                - generic [ref=e254]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+        - complementary "Assistente de IA para obter ajuda com sua carreira, vagas, etc."

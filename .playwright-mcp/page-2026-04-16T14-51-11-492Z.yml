@@ -1,0 +1,881 @@
+- generic [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main"
+  - generic [ref=e3]:
+    - banner "Site header" [ref=e5]:
+      - navigation [ref=e7]:
+        - link "Novartis" [ref=e8] [cursor=pointer]:
+          - /url: /
+          - img "Novartis" [ref=e10]
+        - generic [ref=e11]:
+          - list [ref=e13]:
+            - listitem [ref=e14]:
+              - button "Open Search" [ref=e15] [cursor=pointer]:
+                - img "Open" [ref=e16]
+                - text: Search
+          - generic [ref=e20] [cursor=pointer]:
+            - img "language-selector-globe" [ref=e21]
+            - button "Current site selection Global |en" [ref=e22]:
+              - text: Global |
+              - strong [ref=e23]: en
+          - list [ref=e25]:
+            - listitem [ref=e26]:
+              - button "Menu" [ref=e27] [cursor=pointer]: Q Menu
+    - generic [ref=e28]:
+      - navigation "breadcrumb" [ref=e32]:
+        - list [ref=e33]:
+          - listitem [ref=e34]:
+            - link "Home" [ref=e35] [cursor=pointer]:
+              - /url: /
+          - listitem [ref=e36]:
+            - text: z
+            - link "Careers" [ref=e37] [cursor=pointer]:
+              - /url: https://www.novartis.com/careers
+          - listitem [ref=e38]: z Career Search
+      - generic [ref=e43]:
+        - generic [ref=e46]:
+          - heading "Career Search" [level=1] [ref=e47]
+          - paragraph [ref=e48]: Explore opportunities with Novartis below.
+          - paragraph [ref=e49]:
+            - text: Notice to applicants for US job openings.
+            - link "Learn More" [ref=e50] [cursor=pointer]:
+              - /url: /careers/career-search/notice-all-applicants-us-job-openings
+          - paragraph [ref=e51]:
+            - strong [ref=e52]: Be aware of fake job advertisements and job offers.
+          - paragraph [ref=e53]: Novartis is aware of employment scams which make false use of our company name or leader’s names to defraud job seekers. Novartis does not make job offers without interview and never asks candidates for money.
+          - paragraph [ref=e54]: All our current job openings are displayed here. If you have encountered a job posting or been approached with a job offer that you suspect may be fraudulent, we strongly recommend you do not respond, send money or personal information.
+          - paragraph [ref=e55]: Novartis in not responsible for any claims, losses, damages, or expenses resulting from scams.
+        - generic [ref=e57]:
+          - generic [ref=e60]:
+            - textbox "Search Jobs" [ref=e63]: Finance
+            - button "Function" [ref=e67] [cursor=pointer]:
+              - generic [ref=e68]: Function
+            - generic [ref=e71]:
+              - button "Location" [active] [ref=e72] [cursor=pointer]:
+                - generic [ref=e73]: Location
+              - generic [ref=e343]:
+                - textbox "Location" [ref=e345]:
+                  - /placeholder: Search
+                - list [ref=e346]:
+                  - listitem [ref=e347]:
+                    - generic [ref=e348]:
+                      - checkbox "Albania" [ref=e349] [cursor=pointer]
+                      - text: Albania
+                  - listitem [ref=e350]:
+                    - generic [ref=e351]:
+                      - checkbox "Algeria" [ref=e352] [cursor=pointer]
+                      - text: Algeria
+                  - listitem [ref=e353]:
+                    - generic [ref=e354]:
+                      - checkbox "Angola" [ref=e355] [cursor=pointer]
+                      - text: Angola
+                  - listitem [ref=e356]:
+                    - generic [ref=e357]:
+                      - checkbox "Argentina" [ref=e358] [cursor=pointer]
+                      - text: Argentina
+                  - listitem [ref=e359]:
+                    - generic [ref=e360]:
+                      - checkbox "Armenia" [ref=e361] [cursor=pointer]
+                      - text: Armenia
+                  - listitem [ref=e362]:
+                    - generic [ref=e363]:
+                      - checkbox "Australia" [ref=e364] [cursor=pointer]
+                      - text: Australia
+                  - listitem [ref=e365]:
+                    - generic [ref=e366]:
+                      - checkbox "Austria" [ref=e367] [cursor=pointer]
+                      - text: Austria
+                  - listitem [ref=e368]:
+                    - generic [ref=e369]:
+                      - checkbox "Azerbaijan" [ref=e370] [cursor=pointer]
+                      - text: Azerbaijan
+                  - listitem [ref=e371]:
+                    - generic [ref=e372]:
+                      - checkbox "Bahamas" [ref=e373] [cursor=pointer]
+                      - text: Bahamas
+                  - listitem [ref=e374]:
+                    - generic [ref=e375]:
+                      - checkbox "Bahrain" [ref=e376] [cursor=pointer]
+                      - text: Bahrain
+                  - listitem [ref=e377]:
+                    - generic [ref=e378]:
+                      - checkbox "Bangladesh" [ref=e379] [cursor=pointer]
+                      - text: Bangladesh
+                  - listitem [ref=e380]:
+                    - generic [ref=e381]:
+                      - checkbox "Barbados" [ref=e382] [cursor=pointer]
+                      - text: Barbados
+                  - listitem [ref=e383]:
+                    - generic [ref=e384]:
+                      - checkbox "Belarus" [ref=e385] [cursor=pointer]
+                      - text: Belarus
+                  - listitem [ref=e386]:
+                    - generic [ref=e387]:
+                      - checkbox "Belgium" [ref=e388] [cursor=pointer]
+                      - text: Belgium
+                  - listitem [ref=e389]:
+                    - generic [ref=e390]:
+                      - checkbox "Benin" [ref=e391] [cursor=pointer]
+                      - text: Benin
+                  - listitem [ref=e392]:
+                    - generic [ref=e393]:
+                      - checkbox "Bermuda" [ref=e394] [cursor=pointer]
+                      - text: Bermuda
+                  - listitem [ref=e395]:
+                    - generic [ref=e396]:
+                      - checkbox "Bolivia" [ref=e397] [cursor=pointer]
+                      - text: Bolivia
+                  - listitem [ref=e398]:
+                    - generic [ref=e399]:
+                      - checkbox "Bosnia and Herzegovina" [ref=e400] [cursor=pointer]
+                      - text: Bosnia and Herzegovina
+                  - listitem [ref=e401]:
+                    - generic [ref=e402]:
+                      - checkbox "Brazil" [ref=e403] [cursor=pointer]
+                      - text: Brazil
+                  - listitem [ref=e404]:
+                    - generic [ref=e405]:
+                      - checkbox "Bulgaria" [ref=e406] [cursor=pointer]
+                      - text: Bulgaria
+                  - listitem [ref=e407]:
+                    - generic [ref=e408]:
+                      - checkbox "Burkina Faso" [ref=e409] [cursor=pointer]
+                      - text: Burkina Faso
+                  - listitem [ref=e410]:
+                    - generic [ref=e411]:
+                      - checkbox "Cameroon" [ref=e412] [cursor=pointer]
+                      - text: Cameroon
+                  - listitem [ref=e413]:
+                    - generic [ref=e414]:
+                      - checkbox "Canada" [ref=e415] [cursor=pointer]
+                      - text: Canada
+                  - listitem [ref=e416]:
+                    - generic [ref=e417]:
+                      - checkbox "Chile" [ref=e418] [cursor=pointer]
+                      - text: Chile
+                  - listitem [ref=e419]:
+                    - generic [ref=e420]:
+                      - checkbox "China" [ref=e421] [cursor=pointer]
+                      - text: China
+                  - listitem [ref=e422]:
+                    - generic [ref=e423]:
+                      - checkbox "Colombia" [ref=e424] [cursor=pointer]
+                      - text: Colombia
+                  - listitem [ref=e425]:
+                    - generic [ref=e426]:
+                      - checkbox "Costa Rica" [ref=e427] [cursor=pointer]
+                      - text: Costa Rica
+                  - listitem [ref=e428]:
+                    - generic [ref=e429]:
+                      - checkbox "Croatia" [ref=e430] [cursor=pointer]
+                      - text: Croatia
+                  - listitem [ref=e431]:
+                    - generic [ref=e432]:
+                      - checkbox "Curacao" [ref=e433] [cursor=pointer]
+                      - text: Curacao
+                  - listitem [ref=e434]:
+                    - generic [ref=e435]:
+                      - checkbox "Cyprus" [ref=e436] [cursor=pointer]
+                      - text: Cyprus
+                  - listitem [ref=e437]:
+                    - generic [ref=e438]:
+                      - checkbox "Czech Republic" [ref=e439] [cursor=pointer]
+                      - text: Czech Republic
+                  - listitem [ref=e440]:
+                    - generic [ref=e441]:
+                      - checkbox "Democratic Republic of the Congo" [ref=e442] [cursor=pointer]
+                      - text: Democratic Republic of the Congo
+                  - listitem [ref=e443]:
+                    - generic [ref=e444]:
+                      - checkbox "Denmark" [ref=e445] [cursor=pointer]
+                      - text: Denmark
+                  - listitem [ref=e446]:
+                    - generic [ref=e447]:
+                      - checkbox "Dominican Republic" [ref=e448] [cursor=pointer]
+                      - text: Dominican Republic
+                  - listitem [ref=e449]:
+                    - generic [ref=e450]:
+                      - checkbox "Ecuador" [ref=e451] [cursor=pointer]
+                      - text: Ecuador
+                  - listitem [ref=e452]:
+                    - generic [ref=e453]:
+                      - checkbox "Egypt" [ref=e454] [cursor=pointer]
+                      - text: Egypt
+                  - listitem [ref=e455]:
+                    - generic [ref=e456]:
+                      - checkbox "El Salvador" [ref=e457] [cursor=pointer]
+                      - text: El Salvador
+                  - listitem [ref=e458]:
+                    - generic [ref=e459]:
+                      - checkbox "Estonia" [ref=e460] [cursor=pointer]
+                      - text: Estonia
+                  - listitem [ref=e461]:
+                    - generic [ref=e462]:
+                      - checkbox "Ethiopia" [ref=e463] [cursor=pointer]
+                      - text: Ethiopia
+                  - listitem [ref=e464]:
+                    - generic [ref=e465]:
+                      - checkbox "Finland" [ref=e466] [cursor=pointer]
+                      - text: Finland
+                  - listitem [ref=e467]:
+                    - generic [ref=e468]:
+                      - checkbox "France" [ref=e469] [cursor=pointer]
+                      - text: France
+                  - listitem [ref=e470]:
+                    - generic [ref=e471]:
+                      - checkbox "Gabon" [ref=e472] [cursor=pointer]
+                      - text: Gabon
+                  - listitem [ref=e473]:
+                    - generic [ref=e474]:
+                      - checkbox "Georgia" [ref=e475] [cursor=pointer]
+                      - text: Georgia
+                  - listitem [ref=e476]:
+                    - generic [ref=e477]:
+                      - checkbox "Germany" [ref=e478] [cursor=pointer]
+                      - text: Germany
+                  - listitem [ref=e479]:
+                    - generic [ref=e480]:
+                      - checkbox "Ghana" [ref=e481] [cursor=pointer]
+                      - text: Ghana
+                  - listitem [ref=e482]:
+                    - generic [ref=e483]:
+                      - checkbox "Greece" [ref=e484] [cursor=pointer]
+                      - text: Greece
+                  - listitem [ref=e485]:
+                    - generic [ref=e486]:
+                      - checkbox "Guatemala" [ref=e487] [cursor=pointer]
+                      - text: Guatemala
+                  - listitem [ref=e488]:
+                    - generic [ref=e489]:
+                      - checkbox "Guinea" [ref=e490] [cursor=pointer]
+                      - text: Guinea
+                  - listitem [ref=e491]:
+                    - generic [ref=e492]:
+                      - checkbox "Honduras" [ref=e493] [cursor=pointer]
+                      - text: Honduras
+                  - listitem [ref=e494]:
+                    - generic [ref=e495]:
+                      - checkbox "Hong Kong Special Administrative Region, China" [ref=e496] [cursor=pointer]
+                      - text: Hong Kong Special Administrative Region, China
+                  - listitem [ref=e497]:
+                    - generic [ref=e498]:
+                      - checkbox "Hungary" [ref=e499] [cursor=pointer]
+                      - text: Hungary
+                  - listitem [ref=e500]:
+                    - generic [ref=e501]:
+                      - checkbox "India" [ref=e502] [cursor=pointer]
+                      - text: India
+                  - listitem [ref=e503]:
+                    - generic [ref=e504]:
+                      - checkbox "Indonesia" [ref=e505] [cursor=pointer]
+                      - text: Indonesia
+                  - listitem [ref=e506]:
+                    - generic [ref=e507]:
+                      - checkbox "Iran" [ref=e508] [cursor=pointer]
+                      - text: Iran
+                  - listitem [ref=e509]:
+                    - generic [ref=e510]:
+                      - checkbox "Iraq" [ref=e511] [cursor=pointer]
+                      - text: Iraq
+                  - listitem [ref=e512]:
+                    - generic [ref=e513]:
+                      - checkbox "Ireland" [ref=e514] [cursor=pointer]
+                      - text: Ireland
+                  - listitem [ref=e515]:
+                    - generic [ref=e516]:
+                      - checkbox "Israel" [ref=e517] [cursor=pointer]
+                      - text: Israel
+                  - listitem [ref=e518]:
+                    - generic [ref=e519]:
+                      - checkbox "Italy" [ref=e520] [cursor=pointer]
+                      - text: Italy
+                  - listitem [ref=e521]:
+                    - generic [ref=e522]:
+                      - checkbox "Ivory Coast" [ref=e523] [cursor=pointer]
+                      - text: Ivory Coast
+                  - listitem [ref=e524]:
+                    - generic [ref=e525]:
+                      - checkbox "Jamaica" [ref=e526] [cursor=pointer]
+                      - text: Jamaica
+                  - listitem [ref=e527]:
+                    - generic [ref=e528]:
+                      - checkbox "Japan" [ref=e529] [cursor=pointer]
+                      - text: Japan
+                  - listitem [ref=e530]:
+                    - generic [ref=e531]:
+                      - checkbox "Jordan" [ref=e532] [cursor=pointer]
+                      - text: Jordan
+                  - listitem [ref=e533]:
+                    - generic [ref=e534]:
+                      - checkbox "Kazakhstan" [ref=e535] [cursor=pointer]
+                      - text: Kazakhstan
+                  - listitem [ref=e536]:
+                    - generic [ref=e537]:
+                      - checkbox "Kenya" [ref=e538] [cursor=pointer]
+                      - text: Kenya
+                  - listitem [ref=e539]:
+                    - generic [ref=e540]:
+                      - checkbox "Kuwait" [ref=e541] [cursor=pointer]
+                      - text: Kuwait
+                  - listitem [ref=e542]:
+                    - generic [ref=e543]:
+                      - checkbox "Kyrgyzstan" [ref=e544] [cursor=pointer]
+                      - text: Kyrgyzstan
+                  - listitem [ref=e545]:
+                    - generic [ref=e546]:
+                      - checkbox "Latvia" [ref=e547] [cursor=pointer]
+                      - text: Latvia
+                  - listitem [ref=e548]:
+                    - generic [ref=e549]:
+                      - checkbox "Lebanon" [ref=e550] [cursor=pointer]
+                      - text: Lebanon
+                  - listitem [ref=e551]:
+                    - generic [ref=e552]:
+                      - checkbox "Lithuania" [ref=e553] [cursor=pointer]
+                      - text: Lithuania
+                  - listitem [ref=e554]:
+                    - generic [ref=e555]:
+                      - checkbox "Luxembourg" [ref=e556] [cursor=pointer]
+                      - text: Luxembourg
+                  - listitem [ref=e557]:
+                    - generic [ref=e558]:
+                      - checkbox "Macao Special Administrative Region, China" [ref=e559] [cursor=pointer]
+                      - text: Macao Special Administrative Region, China
+                  - listitem [ref=e560]:
+                    - generic [ref=e561]:
+                      - checkbox "Macedonia" [ref=e562] [cursor=pointer]
+                      - text: Macedonia
+                  - listitem [ref=e563]:
+                    - generic [ref=e564]:
+                      - checkbox "Malaysia" [ref=e565] [cursor=pointer]
+                      - text: Malaysia
+                  - listitem [ref=e566]:
+                    - generic [ref=e567]:
+                      - checkbox "Mali" [ref=e568] [cursor=pointer]
+                      - text: Mali
+                  - listitem [ref=e569]:
+                    - generic [ref=e570]:
+                      - checkbox "Malta" [ref=e571] [cursor=pointer]
+                      - text: Malta
+                  - listitem [ref=e572]:
+                    - generic [ref=e573]:
+                      - checkbox "Mauretania" [ref=e574] [cursor=pointer]
+                      - text: Mauretania
+                  - listitem [ref=e575]:
+                    - generic [ref=e576]:
+                      - checkbox "Mexico" [ref=e577] [cursor=pointer]
+                      - text: Mexico
+                  - listitem [ref=e578]:
+                    - generic [ref=e579]:
+                      - checkbox "Moldova" [ref=e580] [cursor=pointer]
+                      - text: Moldova
+                  - listitem [ref=e581]:
+                    - generic [ref=e582]:
+                      - checkbox "Morocco" [ref=e583] [cursor=pointer]
+                      - text: Morocco
+                  - listitem [ref=e584]:
+                    - generic [ref=e585]:
+                      - checkbox "Myanmar" [ref=e586] [cursor=pointer]
+                      - text: Myanmar
+                  - listitem [ref=e587]:
+                    - generic [ref=e588]:
+                      - checkbox "Netherlands" [ref=e589] [cursor=pointer]
+                      - text: Netherlands
+                  - listitem [ref=e590]:
+                    - generic [ref=e591]:
+                      - checkbox "New Zealand" [ref=e592] [cursor=pointer]
+                      - text: New Zealand
+                  - listitem [ref=e593]:
+                    - generic [ref=e594]:
+                      - checkbox "Nicaragua" [ref=e595] [cursor=pointer]
+                      - text: Nicaragua
+                  - listitem [ref=e596]:
+                    - generic [ref=e597]:
+                      - checkbox "Niger" [ref=e598] [cursor=pointer]
+                      - text: Niger
+                  - listitem [ref=e599]:
+                    - generic [ref=e600]:
+                      - checkbox "Nigeria" [ref=e601] [cursor=pointer]
+                      - text: Nigeria
+                  - listitem [ref=e602]:
+                    - generic [ref=e603]:
+                      - checkbox "Norway" [ref=e604] [cursor=pointer]
+                      - text: Norway
+                  - listitem [ref=e605]:
+                    - generic [ref=e606]:
+                      - checkbox "Oman" [ref=e607] [cursor=pointer]
+                      - text: Oman
+                  - listitem [ref=e608]:
+                    - generic [ref=e609]:
+                      - checkbox "Pakistan" [ref=e610] [cursor=pointer]
+                      - text: Pakistan
+                  - listitem [ref=e611]:
+                    - generic [ref=e612]:
+                      - checkbox "Palestine" [ref=e613] [cursor=pointer]
+                      - text: Palestine
+                  - listitem [ref=e614]:
+                    - generic [ref=e615]:
+                      - checkbox "Panama" [ref=e616] [cursor=pointer]
+                      - text: Panama
+                  - listitem [ref=e617]:
+                    - generic [ref=e618]:
+                      - checkbox "Paraguay" [ref=e619] [cursor=pointer]
+                      - text: Paraguay
+                  - listitem [ref=e620]:
+                    - generic [ref=e621]:
+                      - checkbox "Peru" [ref=e622] [cursor=pointer]
+                      - text: Peru
+                  - listitem [ref=e623]:
+                    - generic [ref=e624]:
+                      - checkbox "Philippines" [ref=e625] [cursor=pointer]
+                      - text: Philippines
+                  - listitem [ref=e626]:
+                    - generic [ref=e627]:
+                      - checkbox "Poland" [ref=e628] [cursor=pointer]
+                      - text: Poland
+                  - listitem [ref=e629]:
+                    - generic [ref=e630]:
+                      - checkbox "Portugal" [ref=e631] [cursor=pointer]
+                      - text: Portugal
+                  - listitem [ref=e632]:
+                    - generic [ref=e633]:
+                      - checkbox "Qatar" [ref=e634] [cursor=pointer]
+                      - text: Qatar
+                  - listitem [ref=e635]:
+                    - generic [ref=e636]:
+                      - checkbox "Republic of the Congo" [ref=e637] [cursor=pointer]
+                      - text: Republic of the Congo
+                  - listitem [ref=e638]:
+                    - generic [ref=e639]:
+                      - checkbox "Romania" [ref=e640] [cursor=pointer]
+                      - text: Romania
+                  - listitem [ref=e641]:
+                    - generic [ref=e642]:
+                      - checkbox "Russian Fed." [ref=e643] [cursor=pointer]
+                      - text: Russian Fed.
+                  - listitem [ref=e644]:
+                    - generic [ref=e645]:
+                      - checkbox "Saudi Arabia" [ref=e646] [cursor=pointer]
+                      - text: Saudi Arabia
+                  - listitem [ref=e647]:
+                    - generic [ref=e648]:
+                      - checkbox "Senegal" [ref=e649] [cursor=pointer]
+                      - text: Senegal
+                  - listitem [ref=e650]:
+                    - generic [ref=e651]:
+                      - checkbox "Serbia/Monten." [ref=e652] [cursor=pointer]
+                      - text: Serbia/Monten.
+                  - listitem [ref=e653]:
+                    - generic [ref=e654]:
+                      - checkbox "Singapore" [ref=e655] [cursor=pointer]
+                      - text: Singapore
+                  - listitem [ref=e656]:
+                    - generic [ref=e657]:
+                      - checkbox "Slovakia" [ref=e658] [cursor=pointer]
+                      - text: Slovakia
+                  - listitem [ref=e659]:
+                    - generic [ref=e660]:
+                      - checkbox "Slovenia" [ref=e661] [cursor=pointer]
+                      - text: Slovenia
+                  - listitem [ref=e662]:
+                    - generic [ref=e663]:
+                      - checkbox "South Africa" [ref=e664] [cursor=pointer]
+                      - text: South Africa
+                  - listitem [ref=e665]:
+                    - generic [ref=e666]:
+                      - checkbox "South Korea" [ref=e667] [cursor=pointer]
+                      - text: South Korea
+                  - listitem [ref=e668]:
+                    - generic [ref=e669]:
+                      - checkbox "Spain" [ref=e670] [cursor=pointer]
+                      - text: Spain
+                  - listitem [ref=e671]:
+                    - generic [ref=e672]:
+                      - checkbox "Sweden" [ref=e673] [cursor=pointer]
+                      - text: Sweden
+                  - listitem [ref=e674]:
+                    - generic [ref=e675]:
+                      - checkbox "Switzerland" [ref=e676] [cursor=pointer]
+                      - text: Switzerland
+                  - listitem [ref=e677]:
+                    - generic [ref=e678]:
+                      - checkbox "Syria" [ref=e679] [cursor=pointer]
+                      - text: Syria
+                  - listitem [ref=e680]:
+                    - generic [ref=e681]:
+                      - checkbox "Taiwan" [ref=e682] [cursor=pointer]
+                      - text: Taiwan
+                  - listitem [ref=e683]:
+                    - generic [ref=e684]:
+                      - checkbox "Tajikistan" [ref=e685] [cursor=pointer]
+                      - text: Tajikistan
+                  - listitem [ref=e686]:
+                    - generic [ref=e687]:
+                      - checkbox "Thailand" [ref=e688] [cursor=pointer]
+                      - text: Thailand
+                  - listitem [ref=e689]:
+                    - generic [ref=e690]:
+                      - checkbox "Togo" [ref=e691] [cursor=pointer]
+                      - text: Togo
+                  - listitem [ref=e692]:
+                    - generic [ref=e693]:
+                      - checkbox "Trinidad and Tobago" [ref=e694] [cursor=pointer]
+                      - text: Trinidad and Tobago
+                  - listitem [ref=e695]:
+                    - generic [ref=e696]:
+                      - checkbox "Tunisia" [ref=e697] [cursor=pointer]
+                      - text: Tunisia
+                  - listitem [ref=e698]:
+                    - generic [ref=e699]:
+                      - checkbox "Türkiye" [ref=e700] [cursor=pointer]
+                      - text: Türkiye
+                  - listitem [ref=e701]:
+                    - generic [ref=e702]:
+                      - checkbox "Turkmenistan" [ref=e703] [cursor=pointer]
+                      - text: Turkmenistan
+                  - listitem [ref=e704]:
+                    - generic [ref=e705]:
+                      - checkbox "Ukraine" [ref=e706] [cursor=pointer]
+                      - text: Ukraine
+                  - listitem [ref=e707]:
+                    - generic [ref=e708]:
+                      - checkbox "United Kingdom" [ref=e709] [cursor=pointer]
+                      - text: United Kingdom
+                  - listitem [ref=e710]:
+                    - generic [ref=e711]:
+                      - checkbox "Uruguay" [ref=e712] [cursor=pointer]
+                      - text: Uruguay
+                  - listitem [ref=e713]:
+                    - generic [ref=e714]:
+                      - checkbox "USA" [ref=e715] [cursor=pointer]
+                      - text: USA
+                  - listitem [ref=e716]:
+                    - generic [ref=e717]:
+                      - checkbox "Utd.Arab Emir." [ref=e718] [cursor=pointer]
+                      - text: Utd.Arab Emir.
+                  - listitem [ref=e719]:
+                    - generic [ref=e720]:
+                      - checkbox "Uzbekistan" [ref=e721] [cursor=pointer]
+                      - text: Uzbekistan
+                  - listitem [ref=e722]:
+                    - generic [ref=e723]:
+                      - checkbox "Vanuatu" [ref=e724] [cursor=pointer]
+                      - text: Vanuatu
+                  - listitem [ref=e725]:
+                    - generic [ref=e726]:
+                      - checkbox "Venezuela" [ref=e727] [cursor=pointer]
+                      - text: Venezuela
+                  - listitem [ref=e728]:
+                    - generic [ref=e729]:
+                      - checkbox "Vietnam" [ref=e730] [cursor=pointer]
+                      - text: Vietnam
+                  - listitem [ref=e731]:
+                    - generic [ref=e732]:
+                      - checkbox "Yemen" [ref=e733] [cursor=pointer]
+                      - text: Yemen
+                  - listitem [ref=e734]:
+                    - generic [ref=e735]:
+                      - checkbox "Zambia" [ref=e736] [cursor=pointer]
+                      - text: Zambia
+                  - listitem [ref=e737]:
+                    - generic [ref=e738]:
+                      - checkbox "Zimbabwe" [ref=e739] [cursor=pointer]
+                      - text: Zimbabwe
+                  - listitem [ref=e740]:
+                    - button "Clear All" [ref=e741] [cursor=pointer]
+            - button "Submit" [ref=e76] [cursor=pointer]
+            - generic [ref=e78]:
+              - button "Division" [ref=e82] [cursor=pointer]:
+                - generic [ref=e83]: Division
+              - generic [ref=e84] [cursor=pointer]: Date Posted
+          - generic [ref=e85]: Showing 64 results
+          - table [ref=e88]:
+            - rowgroup [ref=e89]:
+              - row "Job Title 6 Sort ascending Business Location Site Date Posted" [ref=e90]:
+                - columnheader "Job Title 6 Sort ascending" [ref=e91]:
+                  - link "Job Title 6 Sort ascending" [ref=e92] [cursor=pointer]:
+                    - /url: /careers/career-search?search_api_fulltext=Finance&field_job_posted_date=All&op=Submit&sort=asc&order=Job%20Title
+                    - text: Job Title
+                    - generic [ref=e93]:
+                      - text: "6"
+                      - generic [ref=e94]: Sort ascending
+                - columnheader "Business" [ref=e95]:
+                  - link "Business" [ref=e96] [cursor=pointer]:
+                    - /url: /careers/career-search?search_api_fulltext=Finance&field_job_posted_date=All&op=Submit&sort=asc&order=Business
+                - columnheader "Location" [ref=e97]
+                - columnheader "Site" [ref=e98]:
+                  - link "Site" [ref=e99] [cursor=pointer]:
+                    - /url: /careers/career-search?search_api_fulltext=Finance&field_job_posted_date=All&op=Submit&sort=asc&order=Site
+                - columnheader "Date Posted" [ref=e100]:
+                  - link "Date Posted" [ref=e101] [cursor=pointer]:
+                    - /url: /careers/career-search?search_api_fulltext=Finance&field_job_posted_date=All&op=Submit&sort=asc&order=Date%20Posted
+            - rowgroup [ref=e102]:
+              - row "Senior Analyst, Brand Medical Finance Enablement Regular, Full time Marketing India Hyderabad (Office) Apr 16, 2026" [ref=e103]:
+                - cell "Senior Analyst, Brand Medical Finance Enablement Regular, Full time" [ref=e104]:
+                  - link "Senior Analyst, Brand Medical Finance Enablement" [ref=e105] [cursor=pointer]:
+                    - /url: /careers/career-search/job/details/req-10075891-senior-analyst-brand-medical-finance-enablement
+                  - text: Regular, Full time
+                - cell "Marketing" [ref=e106]
+                - cell "India" [ref=e107]: India
+                - cell "Hyderabad (Office)" [ref=e108]
+                - cell "Apr 16, 2026" [ref=e109]
+              - row "Business Planning & Analysis Manager Regular, Full time Finance USA East Hanover Apr 15, 2026" [ref=e110]:
+                - cell "Business Planning & Analysis Manager Regular, Full time" [ref=e111]:
+                  - link "Business Planning & Analysis Manager" [ref=e112] [cursor=pointer]:
+                    - /url: /careers/career-search/job/details/req-10072553-business-planning-analysis-manager
+                  - text: Regular, Full time
+                - cell "Finance" [ref=e113]
+                - cell "USA" [ref=e114]: USA
+                - cell "East Hanover" [ref=e115]
+                - cell "Apr 15, 2026" [ref=e116]
+              - row "Digital Finance – Senior Financial Analyst (Analytics Operations) Regular, Full time Finance India Hyderabad (Office) Apr 15, 2026" [ref=e117]:
+                - cell "Digital Finance – Senior Financial Analyst (Analytics Operations) Regular, Full time" [ref=e118]:
+                  - link "Digital Finance – Senior Financial Analyst (Analytics Operations)" [ref=e119] [cursor=pointer]:
+                    - /url: /careers/career-search/job/details/req-10071638-digital-finance-senior-financial-analyst-analytics-operations
+                  - text: Regular, Full time
+                - cell "Finance" [ref=e120]
+                - cell "India" [ref=e121]: India
+                - cell "Hyderabad (Office)" [ref=e122]
+                - cell "Apr 15, 2026" [ref=e123]
+              - row "Finance Control and Compliance Manager Regular, Full time Other Mexico INSURGENTES Apr 14, 2026" [ref=e124]:
+                - cell "Finance Control and Compliance Manager Regular, Full time" [ref=e125]:
+                  - link "Finance Control and Compliance Manager" [ref=e126] [cursor=pointer]:
+                    - /url: /careers/career-search/job/details/req-10074779-finance-control-and-compliance-manager-es-es
+                  - text: Regular, Full time
+                - cell "Other" [ref=e127]
+                - cell "Mexico" [ref=e128]: Mexico
+                - cell "INSURGENTES" [ref=e129]
+                - cell "Apr 14, 2026" [ref=e130]
+              - row "Customer Excellence Process Manager Regular, Full time Marketing Mexico INSURGENTES Apr 14, 2026" [ref=e131]:
+                - cell "Customer Excellence Process Manager Regular, Full time" [ref=e132]:
+                  - link "Customer Excellence Process Manager" [ref=e133] [cursor=pointer]:
+                    - /url: /careers/career-search/job/details/req-10075806-customer-excellence-process-manager-es-es
+                  - text: Regular, Full time
+                - cell "Marketing" [ref=e134]
+                - cell "Mexico" [ref=e135]: Mexico
+                - cell "INSURGENTES" [ref=e136]
+                - cell "Apr 14, 2026" [ref=e137]
+              - row "Clinical Sciences Trial Leader Regular, Full time Research India Hyderabad (Office) Apr 14, 2026" [ref=e138]:
+                - cell "Clinical Sciences Trial Leader Regular, Full time" [ref=e139]:
+                  - link "Clinical Sciences Trial Leader" [ref=e140] [cursor=pointer]:
+                    - /url: /careers/career-search/job/details/req-10075370-clinical-sciences-trial-leader
+                  - text: Regular, Full time
+                - cell "Research" [ref=e141]
+                - cell "India" [ref=e142]: India
+                - cell "Hyderabad (Office)" [ref=e143]
+                - cell "Apr 14, 2026" [ref=e144]
+              - row "Senior Procurement Manager Regular, Full time Purchasing & Sourcing Mexico INSURGENTES Apr 14, 2026" [ref=e145]:
+                - cell "Senior Procurement Manager Regular, Full time" [ref=e146]:
+                  - link "Senior Procurement Manager" [ref=e147] [cursor=pointer]:
+                    - /url: /careers/career-search/job/details/req-10075478-senior-procurement-manager
+                  - text: Regular, Full time
+                - cell "Purchasing & Sourcing" [ref=e148]
+                - cell "Mexico" [ref=e149]: Mexico
+                - cell "INSURGENTES" [ref=e150]
+                - cell "Apr 14, 2026" [ref=e151]
+              - row "Senior Regional Project Manager Regular, Full time Administration & Facility Malaysia Selangor Apr 14, 2026" [ref=e152]:
+                - cell "Senior Regional Project Manager Regular, Full time" [ref=e153]:
+                  - link "Senior Regional Project Manager" [ref=e154] [cursor=pointer]:
+                    - /url: /careers/career-search/job/details/req-10075689-senior-regional-project-manager
+                  - text: Regular, Full time
+                - cell "Administration & Facility" [ref=e155]
+                - cell "Malaysia" [ref=e156]: Malaysia
+                - cell "Selangor" [ref=e157]
+                - cell "Apr 14, 2026" [ref=e158]
+              - row "Global Service & Process Lead (S2P, T&E) Regular, Full time Finance India +Alternative Locations Hyderabad (Office) Apr 14, 2026" [ref=e159]:
+                - cell "Global Service & Process Lead (S2P, T&E) Regular, Full time" [ref=e160]:
+                  - link "Global Service & Process Lead (S2P, T&E)" [ref=e161] [cursor=pointer]:
+                    - /url: /careers/career-search/job/details/req-10067166-global-service-process-lead-s2p-te
+                  - text: Regular, Full time
+                - cell "Finance" [ref=e162]
+                - cell "India +Alternative Locations" [ref=e163]:
+                  - text: India
+                  - generic [ref=e164]: +Alternative Locations
+                - cell "Hyderabad (Office)" [ref=e165]
+                - cell "Apr 14, 2026" [ref=e166]
+              - row "Medical Grants and Sponsorships Specialist Regular, Full time Marketing India Hyderabad (Office) Apr 14, 2026" [ref=e167]:
+                - cell "Medical Grants and Sponsorships Specialist Regular, Full time" [ref=e168]:
+                  - link "Medical Grants and Sponsorships Specialist" [ref=e169] [cursor=pointer]:
+                    - /url: /careers/career-search/job/details/req-10068282-medical-grants-and-sponsorships-specialist
+                  - text: Regular, Full time
+                - cell "Marketing" [ref=e170]
+                - cell "India" [ref=e171]: India
+                - cell "Hyderabad (Office)" [ref=e172]
+                - cell "Apr 14, 2026" [ref=e173]
+          - navigation "pagination-heading" [ref=e174]:
+            - heading "Pagination" [level=4] [ref=e175]
+            - list [ref=e176]:
+              - listitem [ref=e177]:
+                - link "‹ Previous page":
+                  - /url: ""
+                  - generic: ‹
+                  - generic: Previous page
+              - listitem [ref=e178]:
+                - link "1" [ref=e179] [cursor=pointer]:
+                  - /url: ""
+              - listitem [ref=e180]:
+                - link "2" [ref=e181] [cursor=pointer]:
+                  - /url: "?search_api_fulltext=Finance&field_job_posted_date=All&op=Submit&page=1"
+              - listitem [ref=e182]:
+                - link "3" [ref=e183] [cursor=pointer]:
+                  - /url: "?search_api_fulltext=Finance&field_job_posted_date=All&op=Submit&page=2"
+              - listitem [ref=e184]:
+                - link "4" [ref=e185] [cursor=pointer]:
+                  - /url: "?search_api_fulltext=Finance&field_job_posted_date=All&op=Submit&page=3"
+              - listitem [ref=e186]:
+                - link "5" [ref=e187] [cursor=pointer]:
+                  - /url: "?search_api_fulltext=Finance&field_job_posted_date=All&op=Submit&page=4"
+              - listitem [ref=e188]:
+                - link "6" [ref=e189] [cursor=pointer]:
+                  - /url: "?search_api_fulltext=Finance&field_job_posted_date=All&op=Submit&page=5"
+              - listitem [ref=e190]:
+                - link "7" [ref=e191] [cursor=pointer]:
+                  - /url: "?search_api_fulltext=Finance&field_job_posted_date=All&op=Submit&page=6"
+              - listitem [ref=e192]:
+                - link "› Next page" [ref=e193] [cursor=pointer]:
+                  - /url: "?search_api_fulltext=Finance&field_job_posted_date=All&op=Submit&page=1"
+                  - generic [ref=e194]: ›
+                  - generic [ref=e195]: Next page
+              - listitem
+    - contentinfo [ref=e196]:
+      - generic [ref=e197]:
+        - heading "Novartis" [level=2] [ref=e201]
+        - generic [ref=e204]:
+          - navigation "Working together" [ref=e207]:
+            - generic [ref=e208]:
+              - generic [ref=e209]: Working together
+              - list [ref=e212]:
+                - listitem [ref=e213]:
+                  - link "Patients and caregivers" [ref=e214] [cursor=pointer]:
+                    - /url: /patients-and-caregivers
+                - listitem [ref=e215]:
+                  - link "Healthcare professionals" [ref=e216] [cursor=pointer]:
+                    - /url: /healthcare-professionals
+                - listitem [ref=e217]:
+                  - link "Researchers" [ref=e218] [cursor=pointer]:
+                    - /url: /research-and-development
+                - listitem [ref=e219]:
+                  - link "Job seekers" [ref=e220] [cursor=pointer]:
+                    - /url: /careers
+                - listitem [ref=e221]:
+                  - link "Journalists" [ref=e222] [cursor=pointer]:
+                    - /url: /news
+                - listitem [ref=e223]:
+                  - link "Investors" [ref=e224] [cursor=pointer]:
+                    - /url: /investors
+          - navigation "Topics" [ref=e227]:
+            - generic [ref=e228]:
+              - generic [ref=e229]: Topics
+              - list [ref=e232]:
+                - listitem [ref=e233]:
+                  - link "Access" [ref=e234] [cursor=pointer]:
+                    - /url: /esg/access
+                - listitem [ref=e235]:
+                  - link "ESG" [ref=e236] [cursor=pointer]:
+                    - /url: /esg
+                - listitem [ref=e237]:
+                  - link "SpeakUp" [ref=e238] [cursor=pointer]:
+                    - /url: /esg/ethics-risk-and-compliance/ethical-behavior/speakup
+          - navigation "Explore" [ref=e241]:
+            - generic [ref=e242]:
+              - generic [ref=e243]: Explore
+              - list [ref=e246]:
+                - listitem [ref=e247]:
+                  - link "Pipeline" [ref=e248] [cursor=pointer]:
+                    - /url: /research-development/novartis-pipeline
+                - listitem [ref=e249]:
+                  - link "Products" [ref=e250] [cursor=pointer]:
+                    - /url: /about/products
+                - listitem [ref=e251]:
+                  - link "Clinical trials" [ref=e252] [cursor=pointer]:
+                    - /url: /clinicaltrials
+                - listitem [ref=e253]:
+                  - link "Partnering" [ref=e254] [cursor=pointer]:
+                    - /url: /partnering
+                - listitem [ref=e255]:
+                  - link "Events" [ref=e256] [cursor=pointer]:
+                    - /url: /events
+          - navigation "Therapeutic areas" [ref=e259]:
+            - generic [ref=e260]:
+              - generic [ref=e261]: Therapeutic areas
+              - list [ref=e264]:
+                - listitem [ref=e265]:
+                  - link "Cardiovascular, renal and metabolic" [ref=e266] [cursor=pointer]:
+                    - /url: /about/therapeutic-areas/cardiovascular-renal-and-metabolic
+                - listitem [ref=e267]:
+                  - link "Immunology" [ref=e268] [cursor=pointer]:
+                    - /url: /about/therapeutic-areas/immunology
+                - listitem [ref=e269]:
+                  - link "Neuroscience" [ref=e270] [cursor=pointer]:
+                    - /url: /about/therapeutic-areas/neuroscience
+                - listitem [ref=e271]:
+                  - link "Oncology" [ref=e272] [cursor=pointer]:
+                    - /url: /about/therapeutic-areas/oncology
+        - generic [ref=e275]:
+          - list [ref=e280]:
+            - listitem [ref=e281]:
+              - link "LinkedIn" [ref=e282] [cursor=pointer]:
+                - /url: https://www.linkedin.com/company/novartis
+                - generic [ref=e283]: M
+            - listitem [ref=e284]:
+              - link "Facebook" [ref=e285] [cursor=pointer]:
+                - /url: https://www.facebook.com/novartis
+                - generic [ref=e286]: K
+            - listitem [ref=e287]:
+              - link "X formerly known as Twitter" [ref=e288] [cursor=pointer]:
+                - /url: https://x.com/novartis
+                - generic [ref=e289]: "N"
+            - listitem [ref=e290]:
+              - link "Instagram" [ref=e291] [cursor=pointer]:
+                - /url: https://www.instagram.com/novartis
+                - generic [ref=e292]: J
+            - listitem [ref=e293]:
+              - link "Youtube" [ref=e294] [cursor=pointer]:
+                - /url: https://www.youtube.com/user/novartis
+                - generic [ref=e295]: L
+          - generic [ref=e301]:
+            - generic [ref=e302]:
+              - generic [ref=e303]: Footer Site Search
+              - textbox "Footer Site Search" [ref=e305]:
+                - /placeholder: Search
+            - generic [ref=e307]:
+              - button "Footer Search" [ref=e308] [cursor=pointer]
+              - text: w
+        - navigation "Footer Bottom" [ref=e312]:
+          - generic [ref=e313]:
+            - generic [ref=e314]: Footer Bottom
+            - generic [ref=e316]:
+              - generic [ref=e317]:
+                - generic [ref=e318]: © 2026 Novartis AG
+                - list [ref=e319]:
+                  - listitem [ref=e320]:
+                    - link "Terms of use" [ref=e321] [cursor=pointer]:
+                      - /url: /terms-use
+                  - listitem [ref=e322]:
+                    - link "Privacy" [ref=e323] [cursor=pointer]:
+                      - /url: /privacy
+                  - listitem [ref=e324]:
+                    - link "Cookie Settings" [ref=e325] [cursor=pointer]:
+                      - /url: "#cookie-settings-button"
+                  - listitem [ref=e326]:
+                    - link "Contacts" [ref=e327] [cursor=pointer]:
+                      - /url: /contacts
+                  - listitem [ref=e328]:
+                    - link "Locations" [ref=e329] [cursor=pointer]:
+                      - /url: /about/locations
+                  - listitem [ref=e330]:
+                    - link "Site map" [ref=e331] [cursor=pointer]:
+                      - /url: /sitemap.xml
+                  - listitem [ref=e332]:
+                    - link "Open source" [ref=e333] [cursor=pointer]:
+                      - /url: /open-source
+                  - listitem [ref=e334]:
+                    - link "Web accessibility" [ref=e335] [cursor=pointer]:
+                      - /url: /accessibility
+              - generic [ref=e336]:
+                - link "Novartis Site Directory" [ref=e338] [cursor=pointer]:
+                  - /url: /novartis-directory
+                  - text: S Novartis Site Directory
+                - generic [ref=e339]: This site is intended for a global audience
+  - status [ref=e340]
+  - status [ref=e341]

@@ -1,0 +1,192 @@
+- generic [active] [ref=e1]:
+  - generic:
+    - region "Mensagem toast":
+      - heading "0 notificações no total" [level=2] [ref=e3]
+      - alert
+  - region [ref=e4]
+  - generic [ref=e5]:
+    - generic [ref=e7]:
+      - button "Pular para pesquisa" [ref=e8] [cursor=pointer]:
+        - generic [ref=e9]: Pular para pesquisa
+      - button "Pular para conteúdo principal" [ref=e10] [cursor=pointer]:
+        - generic [ref=e11]: Pular para conteúdo principal
+      - button "Atalhos do teclado" [ref=e12] [cursor=pointer]:
+        - generic [ref=e13]: Atalhos do teclado
+      - button "Fechar menu pular" [ref=e14] [cursor=pointer]:
+        - img [ref=e15]
+        - generic [ref=e17]: Fechar menu pular
+    - banner "Navegação geral" [ref=e18]:
+      - generic [ref=e19]:
+        - link "LinkedIn" [ref=e20] [cursor=pointer]:
+          - /url: https://www.linkedin.com/feed/?nis=true
+          - img "LinkedIn" [ref=e23]:
+            - img [ref=e24]
+        - generic [ref=e28]:
+          - combobox "Pesquisar" [ref=e29]
+          - generic:
+            - img
+        - navigation "Navegação principal" [ref=e30]:
+          - list [ref=e31]:
+            - listitem [ref=e32]:
+              - link "atualizações do feed novas notificações Início" [ref=e33] [cursor=pointer]:
+                - /url: https://www.linkedin.com/feed/?nis=true&
+                - generic [ref=e34]:
+                  - generic [ref=e37]: atualizações do feed novas notificações
+                  - img [ref=e41]
+                - generic "Início" [ref=e43]
+            - listitem [ref=e44]:
+              - link "Minha rede" [ref=e45] [cursor=pointer]:
+                - /url: https://www.linkedin.com/mynetwork/?
+                - img [ref=e49]
+                - generic "Minha rede" [ref=e51]
+            - listitem [ref=e52]:
+              - link "Vagas" [ref=e53] [cursor=pointer]:
+                - /url: https://www.linkedin.com/jobs/?
+                - img [ref=e57]
+                - generic "Vagas" [ref=e59]
+            - listitem [ref=e60]:
+              - link "Mensagens" [ref=e61] [cursor=pointer]:
+                - /url: https://www.linkedin.com/messaging/?
+                - img [ref=e65]
+                - generic "Mensagens" [ref=e67]
+            - listitem [ref=e68]:
+              - link "Notificações" [ref=e69] [cursor=pointer]:
+                - /url: https://www.linkedin.com/notifications/?
+                - img [ref=e73]
+                - generic "Notificações" [ref=e75]
+            - listitem [ref=e76]:
+              - button "Fernando Xavier Eu" [ref=e78] [cursor=pointer]:
+                - img "Fernando Xavier" [ref=e79]
+                - generic [ref=e80]:
+                  - text: Eu
+                  - img [ref=e81]
+            - listitem [ref=e83]:
+              - button "Para negócios" [ref=e85] [cursor=pointer]:
+                - img [ref=e89]
+                - generic "Para negócios" [ref=e91]:
+                  - text: Para negócios
+                  - img [ref=e92]
+            - listitem [ref=e94]:
+              - link "Veicular anúncio" [ref=e95] [cursor=pointer]:
+                - /url: https://www.linkedin.com/campaignmanager/accounts?
+                - img [ref=e99]
+                - generic "Veicular anúncio" [ref=e102]
+    - generic [ref=e103]:
+      - generic [ref=e106]:
+        - main [ref=e107]:
+          - generic [ref=e110]:
+            - generic [ref=e114]:
+              - generic [ref=e115]:
+                - generic [ref=e116]:
+                  - link "Logo da empresa IDEMIA" [ref=e117] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/company/idemiagroup/life
+                    - img "Logo da empresa IDEMIA" [ref=e120]
+                  - link "IDEMIA" [ref=e122] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/company/idemiagroup/life
+                - generic [ref=e123]:
+                  - button "Compartilhar" [ref=e126] [cursor=pointer]:
+                    - img [ref=e127]
+                    - generic [ref=e129]: Compartilhar
+                  - button "Exibir mais opções" [ref=e131] [cursor=pointer]:
+                    - img [ref=e132]
+                    - generic [ref=e134]: Exibir mais opções
+              - generic [ref=e136]:
+                - heading "Manufacturing Controller" [level=1] [ref=e137]
+                - button "Ver módulo de contratação verificada" [ref=e139] [cursor=pointer]:
+                  - img [ref=e142]
+              - generic [ref=e146]:
+                - generic [ref=e147]: Cotia, São Paulo, Brasil
+                - generic [ref=e148]: ·
+                - generic [ref=e150]: há 1 semana
+                - generic [ref=e151]: ·
+                - generic [ref=e152]: Mais de 100 candidaturas
+                - paragraph [ref=e153]:
+                  - generic [ref=e154]: Promovida por recrutador
+                  - generic [ref=e155]: ·
+                  - strong [ref=e157]: Avaliando candidaturas
+              - generic [ref=e158]:
+                - button "Corresponde às suas preferências de vaga e o tipo de local de trabalho é Presencial." [ref=e159] [cursor=pointer]:
+                  - strong [ref=e162]:
+                    - img [ref=e164]
+                    - text: Presencial
+                  - generic [ref=e166]: Corresponde às suas preferências de vaga e o tipo de local de trabalho é Presencial.
+                - button "Corresponde às suas preferências de vaga e o tipo de vaga é Tempo integral." [ref=e167] [cursor=pointer]:
+                  - strong [ref=e170]:
+                    - img [ref=e172]
+                    - text: Tempo integral
+                  - generic [ref=e174]: Corresponde às suas preferências de vaga e o tipo de vaga é Tempo integral.
+              - generic [ref=e176]:
+                - button "Candidatura simplificada à vaga de Manufacturing Controller na IDEMIA" [ref=e179] [cursor=pointer]:
+                  - img [ref=e180]
+                  - generic [ref=e182]: Candidatura simplificada
+                - button "Salvar Manufacturing Controller na IDEMIA" [ref=e183] [cursor=pointer]:
+                  - generic [ref=e184]: Salvar
+                  - generic [ref=e185]: Salvar Manufacturing Controller na IDEMIA
+            - generic [ref=e195]:
+              - article [ref=e196]:
+                - heading "Sobre a vaga" [level=2] [ref=e199]
+              - button "Clicar para ver mais detalhes" [ref=e201] [cursor=pointer]:
+                - img [ref=e202]
+                - generic [ref=e204]: Ver mais
+            - generic [ref=e206]:
+              - generic [ref=e207]:
+                - heading "Configurar alerta para vagas semelhantes" [level=2] [ref=e208]
+                - generic [ref=e210]: Controlador de manufatura, Cotia, São Paulo, Brasil
+              - generic [ref=e212] [cursor=pointer]:
+                - generic [ref=e213]: Desativada
+                - generic [ref=e214]: Configurar alerta
+                - switch "Configurar alerta"
+            - alert [ref=e217]: Carregando detalhes da vaga
+        - complementary [ref=e230]
+      - contentinfo [ref=e233]:
+        - generic [ref=e235]:
+          - generic [ref=e236]:
+            - navigation [ref=e237]:
+              - list
+            - generic [ref=e239]:
+              - list [ref=e240]:
+                - listitem [ref=e241]:
+                  - img [ref=e242]
+                  - generic [ref=e244]:
+                    - link "Dúvidas? Acesse a nossa Central de Ajuda." [ref=e245] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/help/linkedin?trk=d_flagship3_job_details
+                      - text: Dúvidas?
+                    - paragraph [ref=e246]: Acesse a nossa Central de Ajuda.
+                - listitem [ref=e247]:
+                  - img [ref=e248]
+                  - generic [ref=e250]:
+                    - link "Gerencie sua conta e privacidade Acesse suas Configurações." [ref=e251] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/psettings/
+                      - text: Gerencie sua conta e privacidade
+                    - paragraph [ref=e252]: Acesse suas Configurações.
+                - listitem [ref=e253]:
+                  - img [ref=e254]
+                  - generic [ref=e256]:
+                    - link "Visibilidade da recomendação Saiba mais sobre os conteúdos recomendados." [ref=e257] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/help/linkedin/answer/a1339724
+                      - text: Visibilidade da recomendação
+                    - paragraph [ref=e258]: Saiba mais sobre os conteúdos recomendados.
+              - generic [ref=e259]:
+                - generic [ref=e260]: Selecionar idioma
+                - combobox "Selecionar idioma" [ref=e261]
+          - paragraph [ref=e262]: LinkedIn Corporation © 2026
+    - generic:
+      - generic:
+        - complementary:
+          - generic [ref=e264]:
+            - generic [ref=e266] [cursor=pointer]:
+              - img "Fernando Xavier" [ref=e268]
+              - button "Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas." [ref=e269]:
+                - generic [ref=e270]:
+                  - generic [ref=e271]: Mensagens
+                  - generic [ref=e272]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+            - generic [ref=e273]:
+              - button "Abrir o menu suspenso de mensagens" [ref=e275] [cursor=pointer]:
+                - img "Abrir o menu suspenso de mensagens" [ref=e276]
+              - button "Escrever mensagem" [ref=e279] [cursor=pointer]:
+                - img [ref=e280]
+                - generic [ref=e282]: Escrever mensagem
+              - button "Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas." [ref=e283] [cursor=pointer]:
+                - img [ref=e284]
+                - generic [ref=e286]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+        - complementary "Assistente de IA para obter ajuda com sua carreira, vagas, etc."

@@ -1,0 +1,703 @@
+- generic [ref=e1]:
+  - generic [ref=e5]:
+    - generic [ref=e7]:
+      - navigation "main navigation" [ref=e8]:
+        - link "Skip to main content" [ref=e9] [cursor=pointer]:
+          - /url: "#main-container"
+        - link "Company logo" [ref=e10] [cursor=pointer]:
+          - /url: https://astrazeneca.eightfold.ai/careers?domain=astrazeneca.com
+          - img "Company logo" [ref=e11]
+        - generic [ref=e12]:
+          - link "Join Talent Network" [ref=e13] [cursor=pointer]:
+            - /url: /careers/join?domain=astrazeneca.com&hl=en
+          - button "Candidate Login" [ref=e14] [cursor=pointer]
+      - banner [ref=e15]
+    - main [ref=e16]:
+      - generic [ref=e18]:
+        - generic [ref=e22]:
+          - generic [ref=e26]:
+            - generic [ref=e27]: Search
+            - generic [ref=e28]:
+              - combobox "Search" [ref=e30]
+              - generic [ref=e32]: 
+          - generic [ref=e36]:
+            - generic [ref=e37]: City, state, zip code or "remote"
+            - generic [ref=e38]:
+              - combobox "City, state, zip code or \"remote\"" [ref=e40]
+              - generic [ref=e42]: 
+          - generic [ref=e44]:
+            - button "Go" [ref=e46] [cursor=pointer]
+            - button " Job Cart" [ref=e50] [cursor=pointer]:
+              - generic [ref=e51]: 
+              - text: Job Cart
+            - generic [ref=e53] [cursor=pointer]:
+              - button "Advanced Options (1) " [expanded] [ref=e632]:
+                - text: Advanced Options (1)
+                - generic [ref=e55]: 
+              - text: "|"
+              - button "Reset Filters" [ref=e633]
+        - generic [ref=e169]:
+          - generic [ref=e172]:
+            - heading "Skills" [level=3] [ref=e173]
+            - group "Skills" [ref=e175]:
+              - listitem [ref=e634]:
+                - checkbox "Teamwork" [ref=e635]:
+                  - generic [ref=e637] [cursor=pointer]: Teamwork
+              - listitem [ref=e638]:
+                - checkbox "Oncology" [ref=e639]:
+                  - generic [ref=e641] [cursor=pointer]: Oncology
+              - listitem [ref=e642]:
+                - checkbox "Communication" [ref=e643]:
+                  - generic [ref=e645] [cursor=pointer]: Communication
+              - listitem [ref=e646]:
+                - checkbox "Cross Functional Skills" [ref=e647]:
+                  - generic [ref=e649] [cursor=pointer]: Cross Functional Skills
+              - listitem [ref=e650]:
+                - checkbox "Healthcare" [ref=e651]:
+                  - generic [ref=e653] [cursor=pointer]: Healthcare
+              - listitem [ref=e654]:
+                - checkbox "Collaboration" [ref=e655]:
+                  - generic [ref=e657] [cursor=pointer]: Collaboration
+              - listitem [ref=e658]:
+                - checkbox "Immunology" [ref=e659]:
+                  - generic [ref=e661] [cursor=pointer]: Immunology
+              - listitem [ref=e662]:
+                - checkbox "Clinical Trials" [ref=e663]:
+                  - generic [ref=e665] [cursor=pointer]: Clinical Trials
+              - listitem [ref=e666]:
+                - checkbox "Budgeting" [ref=e667]:
+                  - generic [ref=e669] [cursor=pointer]: Budgeting
+              - listitem [ref=e670]:
+                - checkbox "Project Management" [ref=e671]:
+                  - generic [ref=e673] [cursor=pointer]: Project Management
+              - listitem [ref=e674]:
+                - checkbox "Pharmacy" [ref=e675]:
+                  - generic [ref=e677] [cursor=pointer]: Pharmacy
+              - listitem [ref=e678]:
+                - checkbox "Leadership" [ref=e679]:
+                  - generic [ref=e681] [cursor=pointer]: Leadership
+              - listitem [ref=e682]:
+                - checkbox "Clinical Skills" [ref=e683]:
+                  - generic [ref=e685] [cursor=pointer]: Clinical Skills
+              - listitem [ref=e686]:
+                - checkbox "Presentation Skills" [ref=e687]:
+                  - generic [ref=e689] [cursor=pointer]: Presentation Skills
+              - listitem [ref=e690]:
+                - checkbox "Medical Affairs" [ref=e691]:
+                  - generic [ref=e693] [cursor=pointer]: Medical Affairs
+              - listitem [ref=e694]:
+                - checkbox "Hematology" [ref=e695]:
+                  - generic [ref=e697] [cursor=pointer]: Hematology
+              - listitem [ref=e698]:
+                - checkbox "Marketing" [ref=e699]:
+                  - generic [ref=e701] [cursor=pointer]: Marketing
+              - listitem [ref=e702]:
+                - checkbox "Alignment" [ref=e703]:
+                  - generic [ref=e705] [cursor=pointer]: Alignment
+              - listitem [ref=e706]:
+                - checkbox "Therapy" [ref=e707]:
+                  - generic [ref=e709] [cursor=pointer]: Therapy
+              - listitem [ref=e710]:
+                - checkbox "Innovation" [ref=e711]:
+                  - generic [ref=e713] [cursor=pointer]: Innovation
+              - listitem [ref=e714]:
+                - checkbox "Therapeutics" [ref=e715]:
+                  - generic [ref=e717] [cursor=pointer]: Therapeutics
+              - listitem [ref=e718]:
+                - checkbox "English" [ref=e719]:
+                  - generic [ref=e721] [cursor=pointer]: English
+              - listitem [ref=e722]:
+                - checkbox "Training" [ref=e723]:
+                  - generic [ref=e725] [cursor=pointer]: Training
+              - listitem [ref=e726]:
+                - checkbox "Pharmacovigilance" [ref=e727]:
+                  - generic [ref=e729] [cursor=pointer]: Pharmacovigilance
+              - listitem [ref=e730]:
+                - checkbox "Pharmaceutics" [ref=e731]:
+                  - generic [ref=e733] [cursor=pointer]: Pharmaceutics
+              - listitem [ref=e734]:
+                - checkbox "Market Access" [ref=e735]:
+                  - generic [ref=e737] [cursor=pointer]: Market Access
+              - listitem [ref=e738]:
+                - checkbox "Reporting" [ref=e739]:
+                  - generic [ref=e741] [cursor=pointer]: Reporting
+              - listitem [ref=e742]:
+                - checkbox "Sales" [ref=e743]:
+                  - generic [ref=e745] [cursor=pointer]: Sales
+              - listitem [ref=e746]:
+                - checkbox "Compliance" [ref=e747]:
+                  - generic [ref=e749] [cursor=pointer]: Compliance
+              - listitem [ref=e750]:
+                - checkbox "Pharmaceutical Sales" [ref=e751]:
+                  - generic [ref=e753] [cursor=pointer]: Pharmaceutical Sales
+              - listitem [ref=e754]:
+                - checkbox "Clinical Research" [ref=e755]:
+                  - generic [ref=e757] [cursor=pointer]: Clinical Research
+              - listitem [ref=e758]:
+                - checkbox "Microsoft Access" [ref=e759]:
+                  - generic [ref=e761] [cursor=pointer]: Microsoft Access
+              - listitem [ref=e762]:
+                - checkbox "Standardization" [ref=e763]:
+                  - generic [ref=e765] [cursor=pointer]: Standardization
+              - listitem [ref=e766]:
+                - checkbox "Clinical Development" [ref=e767]:
+                  - generic [ref=e769] [cursor=pointer]: Clinical Development
+              - listitem [ref=e770]:
+                - checkbox "Product Launch" [ref=e771]:
+                  - generic [ref=e773] [cursor=pointer]: Product Launch
+              - listitem [ref=e774]:
+                - checkbox "Strategic Planning" [ref=e775]:
+                  - generic [ref=e777] [cursor=pointer]: Strategic Planning
+              - listitem [ref=e778]:
+                - checkbox "Implementation" [ref=e779]:
+                  - generic [ref=e781] [cursor=pointer]: Implementation
+              - listitem [ref=e782]:
+                - checkbox "Regulatory Compliance" [ref=e783]:
+                  - generic [ref=e785] [cursor=pointer]: Regulatory Compliance
+              - listitem [ref=e786]:
+                - checkbox "Support" [ref=e787]:
+                  - generic [ref=e789] [cursor=pointer]: Support
+              - listitem [ref=e790]:
+                - checkbox "Microsoft Excel" [ref=e791]:
+                  - generic [ref=e793] [cursor=pointer]: Microsoft Excel
+              - listitem [ref=e794]:
+                - checkbox "Biology" [ref=e795]:
+                  - generic [ref=e797] [cursor=pointer]: Biology
+              - listitem [ref=e798]:
+                - checkbox "Strategy" [ref=e799]:
+                  - generic [ref=e801] [cursor=pointer]: Strategy
+              - listitem [ref=e802]:
+                - checkbox "Adaptability" [ref=e803]:
+                  - generic [ref=e805] [cursor=pointer]: Adaptability
+              - listitem [ref=e806]:
+                - checkbox "Neurology" [ref=e807]:
+                  - generic [ref=e809] [cursor=pointer]: Neurology
+              - listitem [ref=e810]:
+                - checkbox "Cardiology" [ref=e811]:
+                  - generic [ref=e813] [cursor=pointer]: Cardiology
+              - listitem [ref=e814]:
+                - checkbox "Data Analysis" [ref=e815]:
+                  - generic [ref=e817] [cursor=pointer]: Data Analysis
+              - listitem [ref=e818]:
+                - checkbox "Immunotherapy" [ref=e819]:
+                  - generic [ref=e821] [cursor=pointer]: Immunotherapy
+              - listitem [ref=e822]:
+                - checkbox "Standard Operating Procedure (Sop)" [ref=e823]:
+                  - generic [ref=e825] [cursor=pointer]: Standard Operating Procedure (Sop)
+              - listitem [ref=e826]:
+                - checkbox "Medical Science" [ref=e827]:
+                  - generic [ref=e829] [cursor=pointer]: Medical Science
+              - listitem [ref=e830]:
+                - checkbox "Coaching" [ref=e831]:
+                  - generic [ref=e833] [cursor=pointer]: Coaching
+              - listitem [ref=e834]:
+                - checkbox "Biopharmaceuticals" [ref=e835]:
+                  - generic [ref=e837] [cursor=pointer]: Biopharmaceuticals
+              - listitem [ref=e838]:
+                - checkbox "Primary Care" [ref=e839]:
+                  - generic [ref=e841] [cursor=pointer]: Primary Care
+              - listitem [ref=e842]:
+                - checkbox "Veeva" [ref=e843]:
+                  - generic [ref=e845] [cursor=pointer]: Veeva
+              - listitem [ref=e846]:
+                - checkbox "Auditing" [ref=e847]:
+                  - generic [ref=e849] [cursor=pointer]: Auditing
+              - listitem [ref=e850]:
+                - checkbox "Change Management" [ref=e851]:
+                  - generic [ref=e853] [cursor=pointer]: Change Management
+              - listitem [ref=e854]:
+                - checkbox "Chemotherapy" [ref=e855]:
+                  - generic [ref=e857] [cursor=pointer]: Chemotherapy
+              - listitem [ref=e858]:
+                - checkbox "Continuous Improvement" [ref=e859]:
+                  - generic [ref=e861] [cursor=pointer]: Continuous Improvement
+              - listitem [ref=e862]:
+                - checkbox "Medical Strategy" [ref=e863]:
+                  - generic [ref=e865] [cursor=pointer]: Medical Strategy
+              - listitem [ref=e866]:
+                - checkbox "Microsoft Office" [ref=e867]:
+                  - generic [ref=e869] [cursor=pointer]: Microsoft Office
+              - listitem [ref=e870]:
+                - checkbox "Problem Solving" [ref=e871]:
+                  - generic [ref=e873] [cursor=pointer]: Problem Solving
+              - listitem [ref=e874]:
+                - checkbox "Analytics" [ref=e875]:
+                  - generic [ref=e877] [cursor=pointer]: Analytics
+              - listitem [ref=e878]:
+                - checkbox "Artificial Intelligence" [ref=e879]:
+                  - generic [ref=e881] [cursor=pointer]: Artificial Intelligence
+              - listitem [ref=e882]:
+                - checkbox "Documentation" [ref=e883]:
+                  - generic [ref=e885] [cursor=pointer]: Documentation
+              - listitem [ref=e886]:
+                - checkbox "Negotiation" [ref=e887]:
+                  - generic [ref=e889] [cursor=pointer]: Negotiation
+              - listitem [ref=e890]:
+                - checkbox "Analysis" [ref=e891]:
+                  - generic [ref=e893] [cursor=pointer]: Analysis
+              - listitem [ref=e894]:
+                - checkbox "Language Skills" [ref=e895]:
+                  - generic [ref=e897] [cursor=pointer]: Language Skills
+              - listitem [ref=e898]:
+                - checkbox "Research" [ref=e899]:
+                  - generic [ref=e901] [cursor=pointer]: Research
+              - listitem [ref=e902]:
+                - checkbox "Operations" [ref=e903]:
+                  - generic [ref=e905] [cursor=pointer]: Operations
+              - listitem [ref=e906]:
+                - checkbox "Market Research" [ref=e907]:
+                  - generic [ref=e909] [cursor=pointer]: Market Research
+              - listitem [ref=e910]:
+                - checkbox "Sales Performance" [ref=e911]:
+                  - generic [ref=e913] [cursor=pointer]: Sales Performance
+              - listitem [ref=e914]:
+                - checkbox "Pharmacology" [ref=e915]:
+                  - generic [ref=e917] [cursor=pointer]: Pharmacology
+              - listitem [ref=e918]:
+                - checkbox "Process Improvement" [ref=e919]:
+                  - generic [ref=e921] [cursor=pointer]: Process Improvement
+              - listitem [ref=e922]:
+                - checkbox "Financial Analysis" [ref=e923]:
+                  - generic [ref=e925] [cursor=pointer]: Financial Analysis
+              - listitem [ref=e926]:
+                - checkbox "Closing" [ref=e927]:
+                  - generic [ref=e929] [cursor=pointer]: Closing
+              - listitem [ref=e930]:
+                - checkbox "Marketing Strategy" [ref=e931]:
+                  - generic [ref=e933] [cursor=pointer]: Marketing Strategy
+              - listitem [ref=e934]:
+                - checkbox "Biotechnology" [ref=e935]:
+                  - generic [ref=e937] [cursor=pointer]: Biotechnology
+              - listitem [ref=e938]:
+                - checkbox "Capa" [ref=e939]:
+                  - generic [ref=e941] [cursor=pointer]: Capa
+              - listitem [ref=e942]:
+                - checkbox "Biostatistics" [ref=e943]:
+                  - generic [ref=e945] [cursor=pointer]: Biostatistics
+              - listitem [ref=e946]:
+                - checkbox "Digital Marketing" [ref=e947]:
+                  - generic [ref=e949] [cursor=pointer]: Digital Marketing
+              - listitem [ref=e950]:
+                - checkbox "Good Manufacturing Practice" [ref=e951]:
+                  - generic [ref=e953] [cursor=pointer]: Good Manufacturing Practice
+              - listitem [ref=e954]:
+                - checkbox "Risk Management" [ref=e955]:
+                  - generic [ref=e957] [cursor=pointer]: Risk Management
+              - listitem [ref=e958]:
+                - checkbox "Account Management" [ref=e959]:
+                  - generic [ref=e961] [cursor=pointer]: Account Management
+              - listitem [ref=e962]:
+                - checkbox "German" [ref=e963]:
+                  - generic [ref=e965] [cursor=pointer]: German
+              - listitem [ref=e966]:
+                - checkbox "Business Planning" [ref=e967]:
+                  - generic [ref=e969] [cursor=pointer]: Business Planning
+              - listitem [ref=e970]:
+                - checkbox "Drug Development" [ref=e971]:
+                  - generic [ref=e973] [cursor=pointer]: Drug Development
+              - listitem [ref=e974]:
+                - checkbox "+Finance" [checked] [active] [ref=e975]:
+                  - generic [ref=e977] [cursor=pointer]: Finance
+              - listitem [ref=e978]:
+                - checkbox "Clinical Operations" [ref=e979]:
+                  - generic [ref=e981] [cursor=pointer]: Clinical Operations
+              - listitem [ref=e982]:
+                - checkbox "Relationship Building" [ref=e983]:
+                  - generic [ref=e985] [cursor=pointer]: Relationship Building
+              - listitem [ref=e986]:
+                - checkbox "Brand Strategy" [ref=e987]:
+                  - generic [ref=e989] [cursor=pointer]: Brand Strategy
+              - listitem [ref=e990]:
+                - checkbox "Business Development" [ref=e991]:
+                  - generic [ref=e993] [cursor=pointer]: Business Development
+              - listitem [ref=e994]:
+                - checkbox "Stakeholder Management" [ref=e995]:
+                  - generic [ref=e997] [cursor=pointer]: Stakeholder Management
+              - listitem [ref=e998]:
+                - checkbox "Transformation" [ref=e999]:
+                  - generic [ref=e1001] [cursor=pointer]: Transformation
+              - listitem [ref=e1002]:
+                - checkbox "Business Acumen" [ref=e1003]:
+                  - generic [ref=e1005] [cursor=pointer]: Business Acumen
+              - listitem [ref=e1006]:
+                - checkbox "Customer Relationship Management" [ref=e1007]:
+                  - generic [ref=e1009] [cursor=pointer]: Customer Relationship Management
+              - listitem [ref=e1010]:
+                - checkbox "Validation Framework" [ref=e1011]:
+                  - generic [ref=e1013] [cursor=pointer]: Validation Framework
+              - listitem [ref=e1014]:
+                - checkbox "Biochemistry" [ref=e1015]:
+                  - generic [ref=e1017] [cursor=pointer]: Biochemistry
+              - listitem [ref=e1018]:
+                - checkbox "R Programming" [ref=e1019]:
+                  - generic [ref=e1021] [cursor=pointer]: R Programming
+              - listitem [ref=e1022]:
+                - checkbox "Time Management" [ref=e1023]:
+                  - generic [ref=e1025] [cursor=pointer]: Time Management
+              - listitem [ref=e1026]:
+                - checkbox "Pharmacotherapy" [ref=e1027]:
+                  - generic [ref=e1029] [cursor=pointer]: Pharmacotherapy
+              - listitem [ref=e1030]:
+                - checkbox "Cell Therapy" [ref=e1031]:
+                  - generic [ref=e1033] [cursor=pointer]: Cell Therapy
+          - generic [ref=e578]:
+            - heading "Seniority" [level=3] [ref=e579]
+            - group "Seniority" [ref=e581]:
+              - listitem [ref=e1034]:
+                - checkbox "Mid-level" [ref=e1035]:
+                  - generic [ref=e1037] [cursor=pointer]: Mid-level
+              - listitem [ref=e1038]:
+                - checkbox "Manager" [ref=e1039]:
+                  - generic [ref=e1041] [cursor=pointer]: Manager
+              - listitem [ref=e1042]:
+                - checkbox "Senior" [ref=e1043]:
+                  - generic [ref=e1045] [cursor=pointer]: Senior
+              - listitem [ref=e1046]:
+                - checkbox "Entry" [ref=e1047]:
+                  - generic [ref=e1049] [cursor=pointer]: Entry
+              - listitem [ref=e1050]:
+                - checkbox "Director" [ref=e1051]:
+                  - generic [ref=e1053] [cursor=pointer]: Director
+              - listitem [ref=e1054]:
+                - checkbox "Intern" [ref=e1055]:
+                  - generic [ref=e1057] [cursor=pointer]: Intern
+              - listitem [ref=e1058]:
+                - checkbox "Vice President" [ref=e1059]:
+                  - generic [ref=e1061] [cursor=pointer]: Vice President
+              - listitem [ref=e1062]:
+                - checkbox "Cxo" [ref=e1063]:
+                  - generic [ref=e1065] [cursor=pointer]: Cxo
+          - generic [ref=e616]:
+            - heading "Workplace Type" [level=3] [ref=e617]
+            - group "Workplace Type" [ref=e619]:
+              - listitem [ref=e1066]:
+                - checkbox "Onsite" [ref=e1067]:
+                  - generic [ref=e1069] [cursor=pointer]: Onsite
+              - listitem [ref=e1070]:
+                - checkbox "Hybrid" [ref=e1071]:
+                  - generic [ref=e1073] [cursor=pointer]: Hybrid
+              - listitem [ref=e1074]:
+                - checkbox "Remote" [ref=e1075]:
+                  - generic [ref=e1077] [cursor=pointer]: Remote
+      - generic [ref=e56]:
+        - generic [ref=e62]:
+          - button [ref=e64] [cursor=pointer]:
+            - generic [ref=e65]:
+              - img [ref=e67]
+              - status [ref=e70]:
+                - generic [ref=e71]:
+                  - strong [ref=e72]: 47 open jobs.
+                  - text: Use your resume to get matched with the right job.
+                - generic [ref=e73]: Upload your resume
+          - generic [ref=e74] [cursor=pointer]: 
+        - generic [ref=e78]:
+          - generic [ref=e80]:
+            - generic [ref=e81]: Selecting an option from the list below will update the main content
+            - list [ref=e83]:
+              - link "Lead Finance Business Partner OBU (m/w/d)  Hamburg, , Germany FIBP - Business Partnering" [ref=e1078] [cursor=pointer]:
+                - heading "Lead Finance Business Partner OBU (m/w/d)" [level=2] [ref=e1079]
+                - paragraph [ref=e1080]:
+                  - generic [ref=e1081]: 
+                  - text: Hamburg, , Germany
+                - generic [ref=e1083]: FIBP - Business Partnering
+              - link "Manager – Commercial Finance  Mumbai, , India FIAC - Accountancy" [ref=e1084] [cursor=pointer]:
+                - heading "Manager – Commercial Finance" [level=2] [ref=e1085]
+                - paragraph [ref=e1086]:
+                  - generic [ref=e1087]: 
+                  - text: Mumbai, , India
+                - generic [ref=e1089]: FIAC - Accountancy
+              - link "Associate Director of Management Reporting, Enterprise FP&A  Boston, Massachusetts, United States of America FIGE - Finance - Generic" [ref=e1090] [cursor=pointer]:
+                - heading "Associate Director of Management Reporting, Enterprise FP&A" [level=2] [ref=e1091]
+                - paragraph [ref=e1092]:
+                  - generic [ref=e1093]: 
+                  - text: Boston, Massachusetts, United States of America
+                - generic [ref=e1095]: FIGE - Finance - Generic
+              - link "Business Analyst - FP&A NAM (GFS Americas)  San Jose, , Costa Rica FIPR - Planning & Reporting" [ref=e1096] [cursor=pointer]:
+                - heading "Business Analyst - FP&A NAM (GFS Americas)" [level=2] [ref=e1097]
+                - paragraph [ref=e1098]:
+                  - generic [ref=e1099]: 
+                  - text: San Jose, , Costa Rica
+                - generic [ref=e1101]: FIPR - Planning & Reporting
+              - link "R2R Capital and Fixed Assets Team Lead/Senior Team Lead  Petaling Jaya, Selangor, Malaysia FIGE - Finance - Generic" [ref=e1102] [cursor=pointer]:
+                - heading "R2R Capital and Fixed Assets Team Lead/Senior Team Lead" [level=2] [ref=e1103]
+                - paragraph [ref=e1104]:
+                  - generic [ref=e1105]: 
+                  - text: Petaling Jaya, Selangor, Malaysia
+                - generic [ref=e1107]: FIGE - Finance - Generic
+              - link "Business Analyst, Finance Controlling  Petaling Jaya, Selangor, Malaysia FIAC - Accountancy" [ref=e1108] [cursor=pointer]:
+                - heading "Business Analyst, Finance Controlling" [level=2] [ref=e1109]
+                - paragraph [ref=e1110]:
+                  - generic [ref=e1111]: 
+                  - text: Petaling Jaya, Selangor, Malaysia
+                - generic [ref=e1113]: FIAC - Accountancy
+              - link "Record-to-Report (R2R) Associate Analyst - Reporting & Controls (Mandarin Speaking)  Petaling Jaya, Selangor, Malaysia FIGE - Finance - Generic" [ref=e1114] [cursor=pointer]:
+                - heading "Record-to-Report (R2R) Associate Analyst - Reporting & Controls (Mandarin Speaking)" [level=2] [ref=e1115]
+                - paragraph [ref=e1116]:
+                  - generic [ref=e1117]: 
+                  - text: Petaling Jaya, Selangor, Malaysia
+                - generic [ref=e1119]: FIGE - Finance - Generic
+              - link "Team Assistant / Project Coordinator, Finance (EUCAN & International) 80%  Baar, Zug, Switzerland FIGE - Finance - Generic" [ref=e1120] [cursor=pointer]:
+                - heading "Team Assistant / Project Coordinator, Finance (EUCAN & International) 80%" [level=2] [ref=e1121]
+                - paragraph [ref=e1122]:
+                  - generic [ref=e1123]: 
+                  - text: Baar, Zug, Switzerland
+                - generic [ref=e1125]: FIGE - Finance - Generic
+              - link "R2R Lease Senior Team Lead  Petaling Jaya, Selangor, Malaysia FIGE - Finance - Generic" [ref=e1126] [cursor=pointer]:
+                - heading "R2R Lease Senior Team Lead" [level=2] [ref=e1127]
+                - paragraph [ref=e1128]:
+                  - generic [ref=e1129]: 
+                  - text: Petaling Jaya, Selangor, Malaysia
+                - generic [ref=e1131]: FIGE - Finance - Generic
+              - link "FP&A Business Analyst - Commercial  Warsaw, , Poland FIPR - Planning & Reporting" [ref=e1132] [cursor=pointer]:
+                - heading "FP&A Business Analyst - Commercial" [level=2] [ref=e1133]
+                - paragraph [ref=e1134]:
+                  - generic [ref=e1135]: 
+                  - text: Warsaw, , Poland
+                - generic [ref=e1137]: FIPR - Planning & Reporting
+            - button "Show More Positions" [ref=e145] [cursor=pointer]
+          - generic [ref=e1138]:
+            - 'button "Share position: Lead Finance Business Partner OBU (m/w/d)" [ref=e1143] [cursor=pointer]':
+              - paragraph [ref=e1145]:
+                - generic [ref=e1146]: 
+            - heading "Lead Finance Business Partner OBU (m/w/d)" [level=1] [ref=e1149]
+            - paragraph [ref=e1152]: Hamburg, , Germany
+            - generic [ref=e1155]:
+              - link "Apply Now" [ref=e1156] [cursor=pointer]:
+                - generic [ref=e1157]: Apply Now
+              - button "Add to Job Cart" [ref=e1158] [cursor=pointer]
+            - generic [ref=e1161]:
+              - generic [ref=e1162]:
+                - generic [ref=e1164]:
+                  - heading "Job Description" [level=2] [ref=e1167]
+                  - generic [ref=e1171]:
+                    - paragraph [ref=e1172]: "Innovativ, dynamisch und nachhaltig: Als eines der weltweit führenden Unternehmen der forschenden Arzneimittelindustrie bieten wir bei AstraZeneca die besten Möglichkeiten für Ihre persönliche und berufliche Entwicklung. Denn für uns steht fest: wir glauben an das Potenzial unserer Mitarbeitenden und haben das Ziel, Sie über Ihre Grenzen hinaus zu entwickeln. Wir maximieren Ihr Potenzial und Ihre Passion, indem wir Sie aktiv dabei unterstützen, damit Sie bei uns alles erreichen können – egal wo Sie anfangen. Denn wir limitieren Ihre Kompetenzen nicht auf das, was Sie jetzt können, sondern erweitern, wozu Sie zukünftig in der Lage sein werden."
+                    - paragraph [ref=e1173]:
+                      - text: Die Abteilung Oncology Finance treibt AstraZenecas Ambitionen voran, indem sie als true value add Finance Business Partner strategischen Prioritäten richtig setzen und und die Weiterenticklung zusammen mit dem Business aktiv mitgestaltet. Durch die Bereitstellung wertvoller Daten, Analysen und Erkenntnisse werden nicht nur das Wachstum unterstützen, sondern es der Wissenschaft ermöglichen, wirksame Entscheidungen zu treffen und Marktchancen zu erkennen. Unsere Vision ‘to redefine cancer care and eliminate cancer as a cause of death’ ist ehrgeizig und es bedarf der Fähigkeiten eines Teams, um wirklich das zu erreichen, was die Wissenschaft leisten kann und PatientInnen immer an erster Stelle zu setzen.
+                      - text: Ab sofort suchen wir einen Lead Finance Business Partner (m/w/d) mit direkter Berichtslinie an OBU Finance Director.
+                    - paragraph
+                    - paragraph [ref=e1174]: "Einfluss nehmen:"
+                    - list [ref=e1175]:
+                      - listitem [ref=e1176]: Unterstützung bei strategischen Entscheidungen und Trusted Advisor für den Franchise Head und sein Leitungsteam Breast Cancer/GYN OR Lung Cancer sowie weitere Franchises mit einem gesamt Jahresumsatz von über $700m
+                      - listitem [ref=e1177]: "Verantwortung für die P&L: Sicherstellung der Priorisierung (Long-term und short-term), Verantwortung für die Planung, Ressourcen Allokation und das Monitoring der P&L der Franchises"
+                      - listitem [ref=e1178]: Erstellung des Long-Term Plan sowie des Short-term Forecast für die Franchises sowie die jeweiligen Brands in Abstimmung mit dem crossfunktionalen Team
+                      - listitem [ref=e1179]: Mitverantwortung für die Business Strategie und den Performance Zyklus der jeweiligen Brands im crossfunktionalen Team
+                      - listitem [ref=e1180]: Präsentation des Forecasts und des Performance Update an die Leadership Teams sowie regionalen und globalen Stakeholder
+                      - listitem [ref=e1181]: Identifizierung von Wachstumschancen und Effizienzverbesserungen, Erarbeitung von handlungsorientierten Vorschlägen zur Erreichung der Ziele
+                      - listitem [ref=e1182]: Bewertung der Marketingstrategien des crossfunktionalen Teams im Hinblick auf den größtmöglichen wirtschaftlichen Erfolg
+                      - listitem [ref=e1183]: Entscheidung über / und Bereitstellung von Marktanalysen und ad-hoc Analysen mit Hilfe von Marktforschung und Marktdaten
+                      - listitem [ref=e1184]: Übernahme von Verantwortung für komplexe fachliche und systemorientierte (Finanz-) Projekte jeglicher Art (global, regional und/oder lokal), auch über die Business Unit hinaus
+                      - listitem [ref=e1185]: Verantwortung für den Wissenstransfer von Best Practice Beispielen innerhalb des deutschen und der regionalen/globalen Teams
+                      - listitem [ref=e1186]: Aktive Teilnahme bei S&OP Sitzungen mit Fokus auf die Sicherstellung des Wachstums und Prognosegenauigkeit
+                      - listitem [ref=e1187]: Indirekte Führung von Integrated Finance Solutions (IFS) Kolleg:innen im Service Center in Warschau
+                    - paragraph
+                    - paragraph [ref=e1188]: "Stärken beweisen:"
+                    - list [ref=e1189]:
+                      - listitem [ref=e1190]: Abschluss eines relevanten Hochschulstudiums
+                      - listitem [ref=e1191]: Mehrjährige einschlägige Erfahrung im Bereich Finanzen / Controlling - bevorzugt in einer Marketing /Sales Organisation und einem weiteren Bereich (z.B. regionale / globale Rolle, Corporate Finance)
+                      - listitem [ref=e1192]: Nachgewiesene Erfahrung in einem global agierenden Unternehmen
+                      - listitem [ref=e1193]: "Wünschenswert: Verständnis des (deutschen) Pharmamarktes"
+                      - listitem [ref=e1194]: Nachgewiesene (direkte/indirekte) Führungserfahrung im Bereich Finance
+                      - listitem [ref=e1195]: Ausgeprägte analytische und strategische Fähigkeiten sowie ein sehr gutes Zahlenverständnis
+                      - listitem [ref=e1196]: Spaß am Umgang mit komplexen Aufgaben und eine hohe Lösungs- und Zielorientierung
+                      - listitem [ref=e1197]: Sehr gute Kommunikations- und Präsentationsfähigkeiten sowie die Fähigkeit komplexe Zusammenhänge einfach darzustellen und dem Senior Management zu präsentieren
+                      - listitem [ref=e1198]: Selbstständige und eigenverantwortliche Arbeitsweise sowie die Fähigkeit Entscheidungen zu treffen
+                      - listitem [ref=e1199]: Entrepreneurship und damit verbunden die Bereitschaft Risiken einzugehen und sich sowie den Status Quo in einem dynamischen Arbeitsumfeld weiterzuentwickeln
+                      - listitem [ref=e1200]: Nachgewiesene, exzellente Fähigkeiten im Umgang mit Teams
+                      - listitem [ref=e1201]: Verhandlungssichere Deutsch- und Englisch-Kenntnisse
+                      - listitem [ref=e1202]: Guter Umgang mit SAP, Excel, Business Intelligence Software und andere analytischen Tools
+                      - listitem [ref=e1203]: Internationale Mobilität für die Weiterentwicklung ist gewünscht
+                    - paragraph
+                    - paragraph [ref=e1204]: Freuen Sie sich auf
+                    - list [ref=e1205]:
+                      - listitem [ref=e1206]: Eine attraktive Pipeline und innovative Produkte.
+                      - listitem [ref=e1207]: Individuelle Entwicklungsmöglichkeiten und den Fokus auf lebenslanges Lernen.
+                      - listitem [ref=e1208]: Viel Vertrauen, Wertschätzung und Raum für Mitgestaltung in einem fokussierten und leidenschaftlichen Team.
+                      - listitem [ref=e1209]: Büroflächen im Herzen Hamburgs, welche kollaborative, flexible und agile Zusammenarbeit ermöglichen.
+                      - listitem [ref=e1210]: Ein diverses, inklusives und vorurteilsfreies Arbeitsumfeld, das der Charta der Vielfalt verpflichtet ist, Unterschiede nicht nur zulässt, sondern aktiv fördert und Bewerbungen aller qualifizierten Bewerbenden, unabhängig von ihren Merkmalen begrüßt und berücksichtigt.
+                      - listitem [ref=e1211]: ein nachhaltiges Unternehmen, welches bis 2030 entlang der gesamten Wertschöpfungskette CO2-negativ wird
+                      - listitem [ref=e1212]: Ein attraktives Benefitpaket wie z.B. EGYM Wellpass, Corporate Benefits und vieles mehr
+                    - paragraph
+                    - paragraph [ref=e1213]: Date Posted
+                    - text: 26-März-2026
+                    - paragraph
+                    - paragraph [ref=e1214]: Closing Date
+                    - text: 29-Juni-2026
+                    - paragraph
+                    - paragraph
+                    - paragraph [ref=e1215]: AstraZeneca embraces diversity and equality of opportunity. We are committed to building an inclusive and diverse team representing all backgrounds, with as wide a range of perspectives as possible, and harnessing industry-leading skills. We believe that the more inclusive we are, the better our work will be. We welcome and consider applications to join our team from all qualified candidates, regardless of their characteristics. We comply with all applicable laws and regulations on non-discrimination in employment (and recruitment), as well as work authorization and employment eligibility verification requirements.
+                - generic [ref=e1216]:
+                  - generic [ref=e1218]:
+                    - generic [ref=e1221]:
+                      - heading "Get Matched" [level=2] [ref=e1222]
+                      - generic [ref=e1223]: Upload your resume and see jobs that match your skills and experience
+                      - button "Upload Your Resume" [ref=e1224] [cursor=pointer]
+                    - generic [ref=e1226]: Match Unknown
+                  - generic [ref=e1228]:
+                    - heading "Job Insights" [level=2] [ref=e1229]
+                    - paragraph [ref=e1230]: Based on previously hired candidates
+                    - generic [ref=e1231]:
+                      - generic [ref=e1232]:
+                        - heading "Popular Skills of Previous Hires" [level=3] [ref=e1233]
+                        - list [ref=e1234]:
+                          - listitem [ref=e1235]:
+                            - generic [ref=e1238]: Finance
+                          - listitem [ref=e1239]:
+                            - generic [ref=e1242]: Analysis
+                          - listitem [ref=e1243]:
+                            - generic [ref=e1246]: Accounting
+                          - listitem [ref=e1247]:
+                            - generic [ref=e1250]: Budgeting
+                          - listitem [ref=e1251]:
+                            - generic [ref=e1254]: Financial Analysis
+                          - listitem [ref=e1255]:
+                            - generic [ref=e1258]: Management
+                          - listitem [ref=e1259]:
+                            - generic [ref=e1262]: Investor Relationship Management
+                      - generic [ref=e1265]:
+                        - heading "Job titles of previous hires" [level=3] [ref=e1266]
+                        - paragraph [ref=e1267]: Finance Business Partner
+                        - paragraph [ref=e1268]: Finance Manager
+                        - paragraph [ref=e1269]: FP a Manager
+                        - paragraph [ref=e1270]: Senior Finance Manager
+                        - paragraph [ref=e1271]: Senior Finance Analyst
+              - region "Other Similar Jobs carousel" [ref=e1272]:
+                - heading "Other Similar Jobs" [level=2] [ref=e1275]
+                - generic "Other Similar Jobs carousel" [ref=e1277]:
+                  - generic [ref=e1280]:
+                    - generic [ref=e1281]:
+                      - link "Manager – Commercial Finance  Mumbai, , India FIAC - Accountancy" [ref=e1283] [cursor=pointer]:
+                        - heading "Manager – Commercial Finance" [level=4] [ref=e1284]
+                        - paragraph [ref=e1285]:
+                          - generic [ref=e1286]: 
+                          - text: Mumbai, , India
+                        - generic [ref=e1288]: FIAC - Accountancy
+                      - link "FP&A Business Analyst - Commercial  Warsaw, , Poland FIPR - Planning & Reporting" [ref=e1290] [cursor=pointer]:
+                        - heading "FP&A Business Analyst - Commercial" [level=4] [ref=e1291]
+                        - paragraph [ref=e1292]:
+                          - generic [ref=e1293]: 
+                          - text: Warsaw, , Poland
+                        - generic [ref=e1295]: FIPR - Planning & Reporting
+                      - link "R2R Capital and Fixed Assets Team Lead/Senior Team Lead  Petaling Jaya, Selangor, Malaysia FIGE - Finance - Generic" [ref=e1297] [cursor=pointer]:
+                        - heading "R2R Capital and Fixed Assets Team Lead/Senior Team Lead" [level=4] [ref=e1298]
+                        - paragraph [ref=e1299]:
+                          - generic [ref=e1300]: 
+                          - text: Petaling Jaya, Selangor, Malaysia
+                        - generic [ref=e1302]: FIGE - Finance - Generic
+                    - generic [ref=e1303]:
+                      - link [ref=e1305] [cursor=pointer]:
+                        - heading [level=4] [ref=e1306]: Business Analyst, Finance Controlling
+                        - paragraph [ref=e1307]:
+                          - generic [ref=e1308]: 
+                          - text: Petaling Jaya, Selangor, Malaysia
+                        - generic [ref=e1310]: FIAC - Accountancy
+                      - link [ref=e1312] [cursor=pointer]:
+                        - heading [level=4] [ref=e1313]: Business Analyst - FP&A NAM (GFS Americas)
+                        - paragraph [ref=e1314]:
+                          - generic [ref=e1315]: 
+                          - text: San Jose, , Costa Rica
+                        - generic [ref=e1317]: FIPR - Planning & Reporting
+                      - link [ref=e1319] [cursor=pointer]:
+                        - heading [level=4] [ref=e1320]: 【AstraZeneca】【Finance】FP&A Manager
+                        - paragraph [ref=e1321]:
+                          - generic [ref=e1322]: 
+                          - text: Minato-ku, Tokyo, Japan
+                        - generic [ref=e1324]: FIBP - Business Partnering
+                    - generic [ref=e1325]:
+                      - link [ref=e1327] [cursor=pointer]:
+                        - heading [level=4] [ref=e1328]: Associate Director of Management Reporting, Enterprise FP&A
+                        - paragraph [ref=e1329]:
+                          - generic [ref=e1330]: 
+                          - text: Boston, Massachusetts, United States of America
+                        - generic [ref=e1332]: FIGE - Finance - Generic
+                      - link [ref=e1334] [cursor=pointer]:
+                        - heading [level=4] [ref=e1335]: Senior Director, Commercial Business Partner – Alexion, GBS
+                        - paragraph [ref=e1336]:
+                          - generic [ref=e1337]: 
+                          - text: Boston, Massachusetts, United States of America
+                        - generic [ref=e1339]: PRBI - Business Improvement
+                      - link [ref=e1341] [cursor=pointer]:
+                        - heading [level=4] [ref=e1342]: Associate Director, Market Access Insights
+                        - paragraph [ref=e1343]:
+                          - generic [ref=e1344]: 
+                          - text: Wilmington, Delaware, United States of America
+                        - generic [ref=e1346]: CNMA - Market Access
+                  - generic [ref=e1347]:
+                    - generic [ref=e1348]:
+                      - button "Slide 1" [ref=e1349] [cursor=pointer]:
+                        - generic [ref=e1350]: 
+                      - button "Slide 2" [ref=e1351] [cursor=pointer]:
+                        - generic [ref=e1352]: 
+                      - button "Slide 3" [ref=e1353] [cursor=pointer]:
+                        - generic [ref=e1354]: 
+                    - generic [ref=e1355]: Slide 1 of 3
+              - region "Recommended Videos for you carousel" [ref=e1356]:
+                - heading "Recommended Videos for you" [level=2] [ref=e1359]
+                - generic "Recommended Videos for you carousel" [ref=e1361]:
+                  - generic [ref=e1364]:
+                    - generic [ref=e1366]:
+                      - iframe [ref=e1368]:
+                        
+                      - 'heading "A life-changing day: Meet Ada" [level=3] [ref=e1369]'
+                      - paragraph [ref=e1370]: A place to be valued and visible. Hear Ada’s story of relocating to the UK, building her ‘second’ family and how she plans to move around within Astra...
+                    - generic [ref=e1372]:
+                      - iframe [ref=e1374]:
+                        
+                      - heading [level=3] [ref=e1375]: Our inclusion and diversity journey
+                      - paragraph [ref=e1376]: Our diverse experiences and different strengths are what we need to create an inclusive and equitable environment where people belong. Join us as we p...
+                    - generic [ref=e1378]:
+                      - iframe [ref=e1380]:
+                        
+                      - heading [level=3] [ref=e1381]: Which value resonates with you?
+                      - paragraph [ref=e1382]: "------------------------------------------------------------ Global site: https://www.astrazeneca.com/ Careers site: https://careers.astrazeneca.com/ ..."
+                  - generic [ref=e1383]:
+                    - generic [ref=e1384]:
+                      - button "Slide 1" [ref=e1385] [cursor=pointer]:
+                        - generic [ref=e1386]: 
+                      - button "Slide 2" [ref=e1387] [cursor=pointer]:
+                        - generic [ref=e1388]: 
+                      - button "Slide 3" [ref=e1389] [cursor=pointer]:
+                        - generic [ref=e1390]: 
+                    - generic [ref=e1391]: Slide 1 of 3
+              - generic [ref=e1392]:
+                - heading "Career benefits" [level=2] [ref=e1395]
+                - generic [ref=e1397]:
+                  - generic [ref=e1398]:
+                    - heading "Aligned to performance" [level=3] [ref=e1400]
+                    - paragraph [ref=e1401]: Our approach is designed to stimulate our commercial growth, scientific advancement, collaboration and personal development.
+                  - generic [ref=e1402]:
+                    - heading "Balanced" [level=3] [ref=e1404]
+                    - paragraph [ref=e1405]: Our benefits offering is flexible where possible, empowering you to choose the benefits that work for you.
+                  - generic [ref=e1406]:
+                    - heading "Holistic" [level=3] [ref=e1408]
+                    - paragraph [ref=e1409]: We aim to reward everything you do here and value you for the contributions and unique insights you'll bring.
+                  - generic [ref=e1410]:
+                    - heading "Sustainable" [level=3] [ref=e1412]
+                    - paragraph [ref=e1413]: We build reward practices to be sustainable and affordable for the business, now and into the future.
+              - generic [ref=e1414]:
+                - heading "Our Philosophy" [level=1] [ref=e1417]
+                - generic [ref=e1419]: "AstraZeneca is a global, science-led, patient-focused pharmaceutical company committed to excellence in the research, development and commercialisation of prescription medicines. With approximately 90,000 people in 85 countries, our aim is simple: to unlock the power of what science can do, for people, society and the planet. From Clinical Development, Regulatory and Medical Affairs to Finance, IT, Digital, Manufacturing and Supply, the opportunities to make an impact are limitless. Our workforce reflects the diversity of the patients we serve – it is embedded in everything we do. We're at our best and most creative when we seek out different perspectives, experiences and strengths. At AstraZeneca, you'll have the chance to grow your abilities, skills and knowledge constantly in a place that never stands still. Discover why we're a great place to work and see what science — and you — can do."
+            - status [ref=e1420]
+  - generic:
+    - contentinfo:
+      - generic [ref=e154]:
+        - paragraph [ref=e156]: Follow us
+        - generic [ref=e157]:
+          - link "" [ref=e158] [cursor=pointer]:
+            - /url: https://www.linkedin.com/company/astrazeneca/posts/?feedView=all
+            - generic [ref=e159]: 
+          - link "" [ref=e160] [cursor=pointer]:
+            - /url: https://www.instagram.com/astrazeneca?igsh=djJjNDV3ZnR3dWIz
+            - generic [ref=e161]: 
+          - link "" [ref=e162] [cursor=pointer]:
+            - /url: https://www.facebook.com/AstraZeneca
+            - generic [ref=e163]: 
+  - region "Notifications"
+  - region "Notifications"
+  - region "Notifications"
+  - region "Notifications"
+  - region "Notifications"
+  - region "Notifications"
+  - iframe [ref=e166]:
+    - generic [ref=f98e6]:
+      - text: protegido por
+      - strong [ref=f98e7]: reCAPTCHA

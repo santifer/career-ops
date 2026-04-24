@@ -1,0 +1,424 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e3]:
+    - generic:
+      - link "Skip to main content":
+        - /url: "#skipToMainContent"
+    - generic:
+      - link "Skip to main content":
+        - /url: "#skipToMainContent"
+    - generic [ref=e7]:
+      - link "Company Logo" [ref=e9] [cursor=pointer]:
+        - /url: /
+        - img "Roche" [ref=e10]
+      - generic:
+        - list:
+          - listitem
+          - listitem
+          - listitem
+  - main [ref=e11]:
+    - generic [ref=e13] [cursor=pointer]: "-"
+    - generic [ref=e16]: "-"
+    - heading "Explore your opportunities" [level=1] [ref=e31]:
+      - generic [ref=e33]: Explore your opportunities
+    - figure [ref=e40]:
+      - img "img1" [ref=e43]
+    - generic [ref=e47]:
+      - generic [ref=e48]:
+        - region "Refine your search" [ref=e52]:
+          - text: $
+          - heading "Refine your search" [level=2] [ref=e55]
+          - generic [ref=e56]:
+            - generic [ref=e57]:
+              - heading "Category" [level=3] [ref=e60]:
+                - button "Category" [expanded] [ref=e61] [cursor=pointer]:
+                  - text: Category
+                  - generic [ref=e62]: "8"
+              - generic [ref=e64]:
+                - generic [ref=e66]:
+                  - searchbox "Search in Category" [ref=e67]
+                  - text: ":"
+                - group "Category" [ref=e69]:
+                  - generic [ref=e70]: Category
+                  - list [ref=e71]:
+                    - listitem [ref=e72]:
+                      - generic [ref=e73] [cursor=pointer]:
+                        - checkbox "Business Services & Support 4 jobs" [ref=e74]
+                        - generic [ref=e76]:
+                          - text: Business Services & Support
+                          - generic [ref=e77]:
+                            - text: (4)
+                            - generic [ref=e78]: jobs
+                    - listitem [ref=e79]:
+                      - generic [ref=e80] [cursor=pointer]:
+                        - checkbox "Finance 29 jobs" [ref=e81]
+                        - generic [ref=e83]:
+                          - text: Finance
+                          - generic [ref=e84]:
+                            - text: (29)
+                            - generic [ref=e85]: jobs
+                    - listitem [ref=e86]:
+                      - generic [ref=e87] [cursor=pointer]:
+                        - checkbox "Information Technology 1 job" [ref=e88]
+                        - generic [ref=e90]:
+                          - text: Information Technology
+                          - generic [ref=e91]:
+                            - text: (1)
+                            - generic [ref=e92]: job
+                    - listitem [ref=e93]:
+                      - generic [ref=e94] [cursor=pointer]:
+                        - checkbox "Procurement 1 job" [ref=e95]
+                        - generic [ref=e97]:
+                          - text: Procurement
+                          - generic [ref=e98]:
+                            - text: (1)
+                            - generic [ref=e99]: job
+                    - listitem [ref=e100]:
+                      - generic [ref=e101] [cursor=pointer]:
+                        - checkbox "Regulatory Affairs 1 job" [ref=e102]
+                        - generic [ref=e104]:
+                          - text: Regulatory Affairs
+                          - generic [ref=e105]:
+                            - text: (1)
+                            - generic [ref=e106]: job
+                    - listitem [ref=e107]:
+                      - generic [ref=e108] [cursor=pointer]:
+                        - checkbox "Research & Development 1 job" [ref=e109]
+                        - generic [ref=e111]:
+                          - text: Research & Development
+                          - generic [ref=e112]:
+                            - text: (1)
+                            - generic [ref=e113]: job
+                    - listitem [ref=e114]:
+                      - generic [ref=e115] [cursor=pointer]:
+                        - checkbox "Sales & Marketing 1 job" [ref=e116]
+                        - generic [ref=e118]:
+                          - text: Sales & Marketing
+                          - generic [ref=e119]:
+                            - text: (1)
+                            - generic [ref=e120]: job
+                    - listitem [ref=e121]:
+                      - generic [ref=e122] [cursor=pointer]:
+                        - checkbox "Vocational & Development Programs 7 jobs" [ref=e123]
+                        - generic [ref=e125]:
+                          - text: Vocational & Development Programs
+                          - generic [ref=e126]:
+                            - text: (7)
+                            - generic [ref=e127]: jobs
+            - heading "Sub Category" [level=3] [ref=e131]:
+              - button "Sub Category" [ref=e132] [cursor=pointer]:
+                - text: Sub Category
+                - generic [ref=e133]: (
+            - heading "Location" [level=3] [ref=e138]:
+              - button "Location" [ref=e139] [cursor=pointer]:
+                - text: Location
+                - generic [ref=e140]: (
+            - heading "State / Province" [level=3] [ref=e145]:
+              - button "State / Province" [ref=e146] [cursor=pointer]:
+                - text: State / Province
+                - generic [ref=e147]: (
+            - heading "City" [level=3] [ref=e152]:
+              - button "City" [ref=e153] [cursor=pointer]:
+                - text: City
+                - generic [ref=e154]: (
+            - heading "Hiring Type" [level=3] [ref=e159]:
+              - button "Hiring Type" [ref=e160] [cursor=pointer]:
+                - text: Hiring Type
+                - generic [ref=e161]: (
+            - heading "Job Level" [level=3] [ref=e166]:
+              - button "Job Level" [ref=e167] [cursor=pointer]:
+                - text: Job Level
+                - generic [ref=e168]: (
+            - heading "Job Type" [level=3] [ref=e173]:
+              - button "Job Type" [ref=e174] [cursor=pointer]:
+                - text: Job Type
+                - generic [ref=e175]: (
+            - heading "Campaign" [level=3] [ref=e180]:
+              - button "Campaign" [ref=e181] [cursor=pointer]:
+                - text: Campaign
+                - generic [ref=e182]: (
+          - generic [ref=e185]: Search results updated 45 jobs found
+        - generic [ref=e196]:
+          - heading "Not Ready to apply?" [level=2] [ref=e200]:
+            - generic [ref=e201]: Not Ready to apply?
+          - generic [ref=e205]: Join our talent community to stay connected!
+          - link "Join Talent Community" [ref=e208] [cursor=pointer]:
+            - /url: jointalentcommunity
+            - generic [ref=e210]: Join Talent Community
+            - text: 
+      - generic [ref=e211]:
+        - heading "Results based on your search" [level=2] [ref=e226]:
+          - generic [ref=e227]: Results based on your search
+        - region "Facet Results block" [ref=e231]:
+          - generic [ref=e232]:
+            - heading "Showing 45 results for \"Finance Brazil\"" [level=2] [ref=e234]:
+              - generic [ref=e236]: Showing 45 results for
+              - text: "\"Finance Brazil\""
+            - generic [ref=e239]: the results are updated
+          - generic [ref=e240]:
+            - generic [ref=e242]:
+              - generic [ref=e245]:
+                - generic [ref=e246]: Search from below list
+                - textbox "Search from below list" [ref=e247]
+                - text: $
+                - generic [ref=e248]:
+                  - button:
+                    - generic: 
+              - generic [ref=e250]:
+                - generic [ref=e251]:
+                  - generic [ref=e252]: "Sort by:"
+                  - generic [ref=e253]:
+                    - combobox "Sort by" [ref=e254]:
+                      - option "Most relevant" [selected]
+                      - option "Most recent"
+                    - generic: 
+                - text: F
+            - list [ref=e256]:
+              - listitem [ref=e257]:
+                - generic [ref=e258]:
+                  - generic [ref=e259]:
+                    - heading "Finance Partnering - Finance Advisor Job ID is 202604-108632" [level=3] [ref=e260]:
+                      - link "Finance Partnering - Finance Advisor Job ID is 202604-108632" [ref=e261] [cursor=pointer]:
+                        - /url: https://careers.roche.com/global/en/job/202604-108632/Finance-Partnering-Finance-Advisor
+                        - generic [ref=e262]: Finance Partnering - Finance Advisor
+                    - paragraph [ref=e263]:
+                      - generic [ref=e265]:
+                        - generic [ref=e266]: Location
+                        - generic [ref=e267]: 
+                        - text: Laval, Quebec, Canada
+                      - generic [ref=e269]:
+                        - generic [ref=e270]: Category
+                        - generic [ref=e271]: 
+                        - text: Sales & Marketing
+                    - text: 
+                    - paragraph [ref=e272]: Nous recherchons un Partenaire financier - Conseiller financier pour rejoindre notre équipe à Roche. Ce rôle clé implique de fournir un soutien financier, d'analyser les performances et de gérer les dépenses d'exploitation. Si vous avez une expérience dans le secteur de la santé et des compétences analytiques solides, postulez dès maintenant !
+                  - checkbox "Save Finance Partnering - Finance Advisor 202604-108632 to job cart" [ref=e277] [cursor=pointer]
+              - listitem [ref=e278]:
+                - generic [ref=e279]:
+                  - generic [ref=e280]:
+                    - heading "Finance Enterprise Partner Job ID is 202604-109457" [level=3] [ref=e281]:
+                      - link "Finance Enterprise Partner Job ID is 202604-109457" [ref=e282] [cursor=pointer]:
+                        - /url: https://careers.roche.com/global/en/job/202604-109457/Finance-Enterprise-Partner
+                        - generic [ref=e283]: Finance Enterprise Partner
+                    - paragraph [ref=e284]:
+                      - generic [ref=e286]:
+                        - generic [ref=e287]: Location
+                        - generic [ref=e288]: 
+                        - text: Tokyo, Tokyo, Japan
+                      - generic [ref=e290]:
+                        - generic [ref=e291]: Category
+                        - generic [ref=e292]: 
+                        - text: Finance
+                    - text: 
+                    - paragraph [ref=e293]: We are looking for a Finance Enterprise Partner to maximize revenue and profitability at Roche. This role involves financial planning, analysis, and strategic decision support, ensuring alignment with commercial strategies. Join us to drive impactful financial insights and foster a profit-driven culture in the healthcare industry.
+                  - checkbox "Save Finance Enterprise Partner 202604-109457 to job cart" [ref=e298] [cursor=pointer]
+              - listitem [ref=e299]:
+                - generic [ref=e300]:
+                  - generic [ref=e301]:
+                    - heading "Finance Enterprise Partner Job ID is 202604-109748" [level=3] [ref=e302]:
+                      - link "Finance Enterprise Partner Job ID is 202604-109748" [ref=e303] [cursor=pointer]:
+                        - /url: https://careers.roche.com/global/en/job/202604-109748/Finance-Enterprise-Partner
+                        - generic [ref=e304]: Finance Enterprise Partner
+                    - paragraph [ref=e305]:
+                      - generic [ref=e307]:
+                        - generic [ref=e308]: Location
+                        - generic [ref=e309]: 
+                        - text: Bangkok, Bangkok, Thailand
+                      - generic [ref=e311]:
+                        - generic [ref=e312]: Category
+                        - generic [ref=e313]: 
+                        - text: Finance
+                    - text: 
+                    - paragraph [ref=e314]: In this business partnering role, you will act as a sparring partner, challenger, and decision supporter to ensure efficient resource allocation and optimize our return on investment. 7+ years of prog...
+                  - checkbox "Save Finance Enterprise Partner 202604-109748 to job cart" [ref=e319] [cursor=pointer]
+              - listitem [ref=e320]:
+                - generic [ref=e321]:
+                  - generic [ref=e322]:
+                    - heading "Finance Enterprise Partner Job ID is 202510-126860" [level=3] [ref=e323]:
+                      - link "Finance Enterprise Partner Job ID is 202510-126860" [ref=e324] [cursor=pointer]:
+                        - /url: https://careers.roche.com/global/en/job/202510-126860/Finance-Enterprise-Partner
+                        - generic [ref=e325]: Finance Enterprise Partner
+                    - paragraph [ref=e326]:
+                      - generic [ref=e328]:
+                        - generic [ref=e329]: Location
+                        - generic [ref=e330]: 
+                        - text: Lima, Lima, Peru
+                      - generic [ref=e332]:
+                        - generic [ref=e333]: Category
+                        - generic [ref=e334]: 
+                        - text: Finance
+                    - text: 
+                    - paragraph [ref=e335]: Join our team as a Finance Enterprise Partner, where you will leverage your financial acumen and strategic insights to drive business success. Collaborate with key stakeholders to create customer-centric solutions and enhance financial performance. If you're passionate about making an impact, we want to hear from you!
+                  - checkbox "Save Finance Enterprise Partner 202510-126860 to job cart" [ref=e340] [cursor=pointer]
+              - listitem [ref=e341]:
+                - generic [ref=e342]:
+                  - generic [ref=e343]:
+                    - heading "Finance Enterprise Partner Job ID is 202603-108184" [level=3] [ref=e344]:
+                      - link "Finance Enterprise Partner Job ID is 202603-108184" [ref=e345] [cursor=pointer]:
+                        - /url: https://careers.roche.com/global/en/job/202603-108184/Finance-Enterprise-Partner
+                        - generic [ref=e346]: Finance Enterprise Partner
+                    - paragraph [ref=e347]:
+                      - generic [ref=e349]:
+                        - generic [ref=e350]: Location
+                        - generic [ref=e351]: 
+                        - text: Singapore, Central Singapore, Singapore
+                      - generic [ref=e353]:
+                        - generic [ref=e354]: Category
+                        - generic [ref=e355]: 
+                        - text: Finance
+                    - text: 
+                    - paragraph [ref=e356]: We are looking for a Finance Enterprise Partner to drive value creation through financial analysis and business insights. Join Roche to collaborate with stakeholders and support decision-making processes while ensuring compliance with internal controls. Bring your entrepreneurial mindset and financial expertise to make a significant impact in our organization.
+                  - checkbox "Save Finance Enterprise Partner 202603-108184 to job cart" [ref=e361] [cursor=pointer]
+              - listitem [ref=e362]:
+                - generic [ref=e363]:
+                  - generic [ref=e364]:
+                    - heading "Commercial Finance Partner Job ID is 202604-108575" [level=3] [ref=e365]:
+                      - link "Commercial Finance Partner Job ID is 202604-108575" [ref=e366] [cursor=pointer]:
+                        - /url: https://careers.roche.com/global/en/job/202604-108575/Commercial-Finance-Partner
+                        - generic [ref=e367]: Commercial Finance Partner
+                    - paragraph [ref=e368]:
+                      - generic [ref=e370]:
+                        - generic [ref=e371]: Location
+                        - generic [ref=e372]: 
+                        - text: Taipei, Taipei City, Taiwan
+                      - generic [ref=e374]:
+                        - generic [ref=e375]: Category
+                        - generic [ref=e376]: 
+                        - text: Procurement
+                    - text: 
+                    - paragraph [ref=e377]: Crucially, this role ensures that the savings and cash flow optimizations generated from procurement activities are directly reflected in the affiliate's financial planning and budgeting (P&L), thereb...
+                  - checkbox "Save Commercial Finance Partner 202604-108575 to job cart" [ref=e382] [cursor=pointer]
+              - listitem [ref=e383]:
+                - generic [ref=e384]:
+                  - generic [ref=e385]:
+                    - heading "Finance Excellence Partner Job ID is 202603-105601" [level=3] [ref=e386]:
+                      - link "Finance Excellence Partner Job ID is 202603-105601" [ref=e387] [cursor=pointer]:
+                        - /url: https://careers.roche.com/global/en/job/202603-105601/Finance-Excellence-Partner
+                        - generic [ref=e388]: Finance Excellence Partner
+                    - paragraph [ref=e389]:
+                      - generic [ref=e391]:
+                        - generic [ref=e392]: Location
+                        - generic [ref=e393]: 
+                        - text: Sant Cugat del Vallès, Barcelona, Spain
+                      - generic [ref=e395]:
+                        - generic [ref=e396]: Category
+                        - generic [ref=e397]: 
+                        - text: Finance
+                    - text: 
+                    - paragraph [ref=e398]: Join our team as a Finance Excellence Partner and transform finance into a high-impact organization. Leverage your expertise in SAP and financial analysis to streamline operations and drive digitalization. Collaborate with global teams to enhance decision-making and deliver tangible value.
+                  - checkbox "Save Finance Excellence Partner 202603-105601 to job cart" [ref=e403] [cursor=pointer]
+              - listitem [ref=e404]:
+                - generic [ref=e405]:
+                  - generic [ref=e406]:
+                    - heading "Finance Business Partner Intern Job ID is 202603-108172" [level=3] [ref=e407]:
+                      - link "Finance Business Partner Intern Job ID is 202603-108172" [ref=e408] [cursor=pointer]:
+                        - /url: https://careers.roche.com/global/en/job/202603-108172/Finance-Business-Partner-Intern
+                        - generic [ref=e409]: Finance Business Partner Intern
+                    - paragraph [ref=e410]:
+                      - generic [ref=e412]:
+                        - generic [ref=e413]: Location
+                        - generic [ref=e414]: 
+                        - text: Buenos Aires, Buenos Aires, Argentina
+                      - generic [ref=e416]:
+                        - generic [ref=e417]: Category
+                        - generic [ref=e418]: 
+                        - text: Finance
+                    - text: 
+                    - paragraph [ref=e419]: Estamos buscando un pasante entusiasta para unirse a nuestro equipo de Finanzas Comerciales. Esta posición ofrece una inmersión total en los procesos financieros y comerciales de una compañía líder en salud, brindando la posibilidad de participar en procesos reales.
+                  - checkbox "Save Finance Business Partner Intern 202603-108172 to job cart" [ref=e424] [cursor=pointer]
+              - listitem [ref=e425]:
+                - generic [ref=e426]:
+                  - generic [ref=e427]:
+                    - heading "IKAM Finance Enterprise Partner Job ID is 202603-105579" [level=3] [ref=e428]:
+                      - link "IKAM Finance Enterprise Partner Job ID is 202603-105579" [ref=e429] [cursor=pointer]:
+                        - /url: https://careers.roche.com/global/en/job/202603-105579/IKAM-Finance-Enterprise-Partner
+                        - generic [ref=e430]: IKAM Finance Enterprise Partner
+                    - paragraph [ref=e431]:
+                      - generic [ref=e433]:
+                        - generic [ref=e434]: Location
+                        - generic [ref=e435]: 
+                        - text: Rotkreuz, Zug, Switzerland
+                      - generic [ref=e437]:
+                        - generic [ref=e438]: Category
+                        - generic [ref=e439]: 
+                        - text: Finance
+                    - text: 
+                    - paragraph [ref=e440]: As an FEP you leverage your in-depth business and customer understanding combined with financial expertise in driving commercial success as well as initiatives that are critical to delivering our comm...
+                  - checkbox "Save IKAM Finance Enterprise Partner 202603-105579 to job cart" [ref=e445] [cursor=pointer]
+              - listitem [ref=e446]:
+                - generic [ref=e447]:
+                  - generic [ref=e448]:
+                    - heading "Praktikum Finance Business Partner (w/m/d) Job ID is 202604-109781" [level=3] [ref=e449]:
+                      - link "Praktikum Finance Business Partner (w/m/d) Job ID is 202604-109781" [ref=e450] [cursor=pointer]:
+                        - /url: https://careers.roche.com/global/en/job/202604-109781/Praktikum-Finance-Business-Partner-w-m-d
+                        - generic [ref=e451]: Praktikum Finance Business Partner (w/m/d)
+                    - paragraph [ref=e452]:
+                      - generic [ref=e454]:
+                        - generic [ref=e455]: Location
+                        - generic [ref=e456]: 
+                        - text: Vienna, Vienna, Austria
+                      - generic [ref=e458]:
+                        - generic [ref=e459]: Category
+                        - generic [ref=e460]: 
+                        - text: Vocational & Development Programs
+                    - text: 
+                    - paragraph [ref=e461]: "Technologiegestützte Prozessgestaltung: Du bringst Affinität für AI und moderne IT-Lösungen mit, um Finanzprozesse in einem digitalen Umfeld zu evaluieren und zukunftsgerichtet zu begleiten. Together,..."
+                  - checkbox "Save Praktikum Finance Business Partner (w/m/d) 202604-109781 to job cart" [ref=e466] [cursor=pointer]
+              - listitem
+          - navigation "pagination" [ref=e467]:
+            - list [ref=e468]:
+              - listitem: Z
+              - listitem:
+                - button "Page 1": "1"
+              - listitem:
+                - button "Page 2" [ref=e469] [cursor=pointer]: "2"
+              - listitem:
+                - button "Page 3" [ref=e470] [cursor=pointer]: "3"
+              - listitem:
+                - button "Page 4" [ref=e471] [cursor=pointer]: "4"
+              - listitem:
+                - button "Page 5" [ref=e472] [cursor=pointer]: "5"
+              - listitem:
+                - button "View next page" [ref=e473] [cursor=pointer]:
+                  - generic [ref=e474]: Next
+                  - generic [ref=e475]: 
+  - contentinfo [ref=e476]:
+    - generic [ref=e478]:
+      - list [ref=e481]:
+        - listitem [ref=e482]:
+          - link "Cookie Preferences" [ref=e483] [cursor=pointer]:
+            - /url: javascript:void(0)
+        - listitem [ref=e484]:
+          - link "Personal Information" [ref=e485] [cursor=pointer]:
+            - /url: https://careers.roche.com/global/en/emailpersonalinfo
+      - generic [ref=e488]:
+        - link "Roche" [ref=e490] [cursor=pointer]:
+          - /url: /
+          - img "Roche" [ref=e491]
+        - generic [ref=e493]:
+          - heading "follow us" [level=2] [ref=e494]
+          - list [ref=e495]:
+            - listitem [ref=e496]:
+              - link "facebook" [ref=e497] [cursor=pointer]:
+                - /url: https://www.facebook.com/roche
+                - img [ref=e499]
+            - listitem [ref=e501]:
+              - link "linkedIn" [ref=e502] [cursor=pointer]:
+                - /url: https://www.linkedin.com/company/roche
+                - img [ref=e504]
+            - listitem [ref=e506]:
+              - link "twitter" [ref=e507] [cursor=pointer]:
+                - /url: https://twitter.com/roche
+                - img [ref=e509]
+            - listitem [ref=e511]:
+              - link "instagram" [ref=e512] [cursor=pointer]:
+                - /url: https://www.instagram.com/roche/
+                - img [ref=e514]
+            - listitem [ref=e516]:
+              - link "youtube" [ref=e517] [cursor=pointer]:
+                - /url: https://www.youtube.com/user/roche
+                - img [ref=e519]
+            - listitem [ref=e521]:
+              - link "WeChat" [ref=e522] [cursor=pointer]:
+                - /url: https://careers.roche.com/global/en/step-by-step-guide-to-follow-roche-on-wechat
+                - img [ref=e524]
+      - generic [ref=e528]: This website contains information on products which is targeted to a wide range of audiences and could contain product details or information otherwise not accessible or valid in your country. Please be aware that we do not take any responsibility for accessing such information which may not comply with any legal processes, registration or usage in the country of origin.

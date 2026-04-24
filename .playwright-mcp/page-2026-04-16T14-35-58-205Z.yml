@@ -1,0 +1,437 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic:
+      - link "Skip to main content":
+        - /url: "#skipToMainContent"
+    - generic [ref=e9]:
+      - text: "7"
+      - link "P&G careers home page logo" [ref=e14] [cursor=pointer]:
+        - /url: https://www.pgcareers.com/global/en/home
+        - figure [ref=e15]:
+          - img "P&G careers home page logo" [ref=e17]
+      - navigation [ref=e22]:
+        - list [ref=e23]:
+          - listitem [ref=e24]:
+            - button "Working at P&G" [ref=e25] [cursor=pointer]:
+              - generic [ref=e26]: Working at P&G
+              - generic [ref=e28]: 
+              - text: 
+            - text:   
+          - listitem [ref=e29]:
+            - button "Experience Levels" [ref=e30] [cursor=pointer]:
+              - generic [ref=e31]: Experience Levels
+              - generic [ref=e33]: 
+              - text: 
+          - listitem [ref=e34]:
+            - button "Hiring Process" [ref=e35] [cursor=pointer]:
+              - generic [ref=e36]: Hiring Process
+              - generic [ref=e38]: 
+              - text: 
+          - listitem [ref=e39]:
+            - link "Events" [ref=e40] [cursor=pointer]:
+              - /url: https://www.pgcareers.com/global/en/events
+          - listitem [ref=e41]:
+            - link "Stay Informed" [ref=e42] [cursor=pointer]:
+              - /url: https://www.pgcareers.com/global/en/jointalentcommunity
+          - listitem [ref=e43]:
+            - link "Search Jobs" [ref=e44] [cursor=pointer]:
+              - /url: https://www.pgcareers.com/global/en/search-results
+          - listitem [ref=e45]:
+            - link "My Account" [ref=e46] [cursor=pointer]:
+              - /url: https://pg.wd5.myworkdayjobs.com/en-US/1000/login
+      - list [ref=e47]:
+        - listitem
+        - listitem [ref=e48]:
+          - generic [ref=e52]:
+            - button "Language selected English Global" [ref=e53] [cursor=pointer]:
+              - generic [ref=e55]: 
+              - generic [ref=e56]: Language selected
+              - generic [ref=e57]: English
+              - generic [ref=e58]: Global
+              - generic [ref=e60]: 
+            - text:  $
+        - listitem [ref=e61]:
+          - link "0 Saved jobs" [ref=e65] [cursor=pointer]:
+            - /url: https://www.pgcareers.com/global/en/jobcart
+            - generic [ref=e67]: Q
+            - text: P
+            - generic [ref=e68]: Saved jobs
+            - generic [ref=e69]: (0)
+  - main [ref=e71]:
+    - generic [ref=e73] [cursor=pointer]: "-"
+    - generic [ref=e74]:
+      - generic [ref=e83]:
+        - generic [ref=e89]: Careers at P&G
+        - strong [ref=e94]: "Make an impact on more than just your career #PGDAY1"
+        - form "Global search" [ref=e97]:
+          - generic [ref=e99]:
+            - generic [ref=e100]:
+              - generic:
+                - text: 
+                - generic [ref=e101]: Search for Job Title
+                - textbox "Search for job" [ref=e102]
+                - text: ": $"
+            - generic [ref=e103]:
+              - generic [ref=e104]: Enter Location
+              - generic:
+                - text: 
+                - textbox "Search for Location" [ref=e105]:
+                  - /placeholder: Enter location
+                - text:  $
+            - button "Search" [ref=e107] [cursor=pointer]: ": Search"
+      - generic [ref=e112]:
+        - generic [ref=e113]:
+          - generic [ref=e117]:
+            - heading "Get tailored job recommendations based on your interests." [level=2] [ref=e119]
+            - button "Get started for profile recommendations" [ref=e121] [cursor=pointer]: Get Started
+          - text: 
+        - text: $
+      - generic [ref=e137]:
+        - generic [ref=e142]:
+          - strong [ref=e143]: "MAKE AN IMPACT ON MORE THAN JUST YOUR CAREER #PGDAY1"
+          - text: Day 1. It’s something everyone experiences when they join a new company, whether they’re a student, a recent graduate, or a seasoned professional. P&G’s Day 1 starts with you doing something that matters – making an impact on the world, P&G brands, and your career.
+          - text: We hire based on the potential we see in people, so here, you’ll be trusted to dive right in, take the lead, use your initiative, and build billion-dollar brands that help make everyday activities easier and make the world a better place. You’ll be doing meaningful work that takes your career places you never imagined. Join us, and you’ll be part of this effort from Day 1.
+          - text: "From early on, you’ll be at the core of breakthrough innovations, be given exciting assignments, lead initiatives, and take ownership and responsibility. And you’ll do this in creative work spaces where new ideas flourish. All the while, you’ll receive world-class training to help you become a leader in your field. And it’s not just about what you’ll do, but how you’ll feel: welcomed, valued, purposeful, challenged, heard, and inspired."
+        - generic [ref=e147]: P&G is dedicated to ensuring that we have a consistent process to meet the needs of applicants requesting an accommodation due to a disability in order to complete the online application process.
+        - generic [ref=e152]:
+          - text: If you have a disability that affects your ability to complete our online application process, please
+          - strong [ref=e154]:
+            - link "Link click here" [ref=e155] [cursor=pointer]:
+              - /url: https://faq.pgwebtools.com/disability-accommodation-request/?fl_builder
+              - text: click here
+          - text: to request an accommodation.
+      - generic [ref=e159]:
+        - heading "A glimpse into life at Procter & Gamble" [level=2] [ref=e164]:
+          - generic [ref=e166]: A glimpse into life at Procter & Gamble
+        - list [ref=e168]:
+          - listitem [ref=e169]:
+            - generic "Follow us on LinkedIn" [ref=e171] [cursor=pointer]:
+              - img "follow us in linkedin" [ref=e178]
+          - listitem [ref=e181]:
+            - generic "Follow us on Instagram" [ref=e183] [cursor=pointer]:
+              - img "follow us on instagram" [ref=e190]
+          - listitem [ref=e193]:
+            - generic "Follow us on Facebook" [ref=e195] [cursor=pointer]:
+              - img "follow us in linkedin" [ref=e202]
+          - listitem [ref=e205]:
+            - generic "Follow us on Youtube" [ref=e207] [cursor=pointer]:
+              - img "follow us in linkedin" [ref=e214]
+      - generic [ref=e220]:
+        - heading "Choose your Experience Level" [level=2] [ref=e225]:
+          - generic [ref=e228]: Choose your Experience Level
+        - list [ref=e230]:
+          - listitem [ref=e231]:
+            - generic [ref=e233]:
+              - img "img1" [ref=e238]
+              - generic [ref=e240]:
+                - heading "Student Programs" [level=3] [ref=e242]:
+                  - generic [ref=e244]: Student Programs
+                - generic "Student Programs" [ref=e247] [cursor=pointer]:
+                  - generic [ref=e248]: Explore
+                  - generic [ref=e249]: 
+          - listitem [ref=e250]:
+            - generic [ref=e252]:
+              - img "img1" [ref=e257]
+              - generic [ref=e259]:
+                - heading "Internships" [level=3] [ref=e261]:
+                  - generic [ref=e263]: Internships
+                - generic "Internships" [ref=e266] [cursor=pointer]:
+                  - generic [ref=e267]: Explore
+                  - generic [ref=e268]: 
+          - listitem [ref=e269]:
+            - generic [ref=e271]:
+              - img "img1" [ref=e276]
+              - generic [ref=e278]:
+                - heading "Entry Level / Recent Grads" [level=3] [ref=e280]:
+                  - generic [ref=e282]: Entry Level / Recent Grads
+                - generic "Entry Level / Recent Grads" [ref=e285] [cursor=pointer]:
+                  - generic [ref=e286]: Explore
+                  - generic [ref=e287]: 
+          - listitem [ref=e288]:
+            - generic [ref=e290]:
+              - img "img1" [ref=e295]
+              - generic [ref=e297]:
+                - heading "Experienced Professionals" [level=3] [ref=e299]:
+                  - generic [ref=e301]: Experienced Professionals
+                - generic "Experienced Professionals" [ref=e304] [cursor=pointer]:
+                  - generic [ref=e305]: Explore
+                  - generic [ref=e306]: 
+      - region "Gallery" [ref=e309]:
+        - generic [ref=e310]:
+          - heading "Career Areas at P&G" [level=2] [ref=e315]:
+            - strong [ref=e319]: Career Areas at P&G
+          - list [ref=e321]:
+            - generic [ref=e324]:
+              - img "PG_GBL_Icons-for-PG-Careers_Design_fy2425" [ref=e329]
+              - generic [ref=e331]:
+                - heading "Design" [level=3] [ref=e333]:
+                  - generic [ref=e336]: Design
+                - generic [ref=e340]:
+                  - text: Delight consumers with creative solutions,
+                  - text: from Day 1.
+                - generic "View Opportunities in Design Area" [ref=e343] [cursor=pointer]:
+                  - generic [ref=e344]: View Opportunities
+                  - generic [ref=e345]: 
+            - generic [ref=e354]:
+              - heading "Engineering" [level=3] [ref=e356]:
+                - generic [ref=e359]: Engineering
+              - generic [ref=e362]: Drive highly efficient solutions, from Day 1
+              - generic "View Opportunities in Engineering Area" [ref=e365] [cursor=pointer]:
+                - generic [ref=e366]: View Opportunities
+                - generic [ref=e367]: 
+            - generic [ref=e376]:
+              - heading "Finance and Accounting" [level=3] [ref=e378]:
+                - generic [ref=e381]: Finance and Accounting
+              - generic [ref=e384]: Make decisions to drive business results, from Day 1
+              - generic "View Opportunities in Finance and Accounting Area" [ref=e387] [cursor=pointer]:
+                - generic [ref=e388]: View Opportunities
+                - generic [ref=e389]: 
+            - generic [ref=e398]:
+              - heading "Human Resources" [level=3] [ref=e400]:
+                - generic [ref=e403]: Human Resources
+              - generic [ref=e407]:
+                - text: Champion our people around the globe, from
+                - text: Day 1
+              - generic "View Opportunities in Human Resources Area" [ref=e410] [cursor=pointer]:
+                - generic [ref=e411]: View Opportunities
+                - generic [ref=e412]: 
+            - generic [ref=e421]:
+              - heading "Information Technology" [level=3] [ref=e423]:
+                - generic [ref=e426]: Information Technology
+              - generic [ref=e430]:
+                - text: Create digital capabilities
+                - text: to drive growth, from Day 1
+              - generic "View Opportunities in Information Technology Area" [ref=e433] [cursor=pointer]:
+                - generic [ref=e434]: View Opportunities
+                - generic [ref=e435]: 
+            - generic [ref=e444]:
+              - heading "Legal and Patent" [level=3] [ref=e446]:
+                - generic [ref=e449]: Legal and Patent
+              - generic [ref=e453]:
+                - text: "\"Do The Right Thing.\""
+                - text: That’s our motto in P&G Legal, from Day 1
+              - generic "View Opportunities in Legal and Patent Area" [ref=e456] [cursor=pointer]:
+                - generic [ref=e457]: View Opportunities
+                - generic [ref=e458]: 
+            - generic [ref=e467]:
+              - heading "Manufacturing and Quality Assurance" [level=3] [ref=e469]:
+                - generic [ref=e472]: Manufacturing and Quality Assurance
+              - generic [ref=e476]: Ensuring irresistible superiority, from Day 1
+              - generic "View Opportunities in Manufacturing and Quality Assurance Area" [ref=e479] [cursor=pointer]:
+                - generic [ref=e480]: View Opportunities
+                - generic [ref=e481]: 
+            - generic [ref=e490]:
+              - heading "Marketing and Brand Management" [level=3] [ref=e492]:
+                - generic [ref=e495]: Marketing and Brand Management
+              - generic [ref=e498]: Build brands that make life better, from Day 1
+              - generic "View Opportunities in Marketing and Brand Management Area" [ref=e501] [cursor=pointer]:
+                - generic [ref=e502]: View Opportunities
+                - generic [ref=e503]: 
+            - generic [ref=e512]:
+              - heading "Research & Development" [level=3] [ref=e514]:
+                - generic [ref=e517]: Research & Development
+              - generic [ref=e520]: Deliver end-to-end product innovation, from Day 1
+              - generic "View Opportunities in Research & Development Area" [ref=e523] [cursor=pointer]:
+                - generic [ref=e524]: View Opportunities
+                - generic [ref=e525]: 
+            - generic [ref=e534]:
+              - heading "Sales" [level=3] [ref=e536]:
+                - generic [ref=e539]: Sales
+              - generic [ref=e543]:
+                - text: Connect our brands to 5 billion consumers, from
+                - text: Day 1
+              - generic "View Opportunities in Sales Area" [ref=e546] [cursor=pointer]:
+                - generic [ref=e547]: View Opportunities
+                - generic [ref=e548]: 
+            - generic [ref=e557]:
+              - heading "Supply Chain and Logistics" [level=3] [ref=e559]:
+                - generic [ref=e562]: Supply Chain and Logistics
+              - generic [ref=e565]: Move world-renowned brands, from Day 1
+              - generic "View Opportunities in Supply Chain and Logistics Area" [ref=e568] [cursor=pointer]:
+                - generic [ref=e569]: View Opportunities
+                - generic [ref=e570]: 
+            - generic [ref=e579]:
+              - heading "Others" [level=3] [ref=e581]:
+                - generic [ref=e584]: Others
+              - generic "View Opportunities in Supply Other Areas" [ref=e587] [cursor=pointer]:
+                - generic [ref=e588]: View Opportunities
+                - generic [ref=e589]: 
+            - generic [ref=e598]:
+              - heading "Plant Technicians" [level=3] [ref=e600]:
+                - generic [ref=e603]: Plant Technicians
+              - generic "Visit pgplantjobs.com to view plant technician opportunities." [ref=e606] [cursor=pointer]:
+                - generic [ref=e607]: Visit pgplantjobs.com
+                - generic [ref=e608]: 
+      - generic [ref=e619]:
+        - img "img1" [ref=e624]
+        - generic [ref=e626]:
+          - heading "Join Our Talent Community!" [level=2] [ref=e630]:
+            - generic [ref=e631]: Join Our Talent Community!
+          - generic [ref=e637]: Stay informed about the latest events, news, and career opportunities at P&G.
+          - link "Sign Up Now" [ref=e640] [cursor=pointer]:
+            - /url: jointalentcommunity
+            - generic [ref=e641]: Sign Up Now
+            - generic [ref=e642]: 
+      - generic [ref=e646]:
+        - heading "A glimpse into life at Procter & Gamble" [level=2] [ref=e651]:
+          - generic [ref=e653]: A glimpse into life at Procter & Gamble
+        - list [ref=e655]:
+          - listitem [ref=e656]:
+            - generic "Follow us on LinkedIn" [ref=e658] [cursor=pointer]:
+              - img "follow us in linkedin" [ref=e665]
+          - listitem [ref=e667]:
+            - generic "Follow us on Instagram" [ref=e669] [cursor=pointer]:
+              - img "follow us on instagram" [ref=e676]
+          - listitem [ref=e678]:
+            - generic "Follow us on Facebook" [ref=e680] [cursor=pointer]:
+              - img "follow us in linkedin" [ref=e687]
+          - listitem [ref=e689]:
+            - generic "Follow us on Youtube" [ref=e691] [cursor=pointer]:
+              - img "follow us in linkedin" [ref=e698]
+  - contentinfo [ref=e704]:
+    - generic [ref=e705]:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - list
+      - generic [ref=e707]:
+        - generic [ref=e708]:
+          - generic [ref=e709]:
+            - link "P&G careers home page logo" [ref=e714] [cursor=pointer]:
+              - /url: https://www.pgcareers.com/global/en/home
+              - figure [ref=e715]:
+                - img "P&G careers home page logo" [ref=e717]
+            - paragraph [ref=e720]: Procter & Gamble Plz, Cincinnati, Ohio, 45202, United States
+          - list [ref=e726]:
+            - listitem [ref=e727]:
+              - heading "Working at P&G" [level=2] [ref=e728]
+              - list [ref=e729]:
+                - listitem [ref=e730]:
+                  - link "About Us" [ref=e731] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/about-us
+                - listitem [ref=e732]:
+                  - link "Benefits" [ref=e733] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/benefits
+                - listitem [ref=e734]:
+                  - link "Culture" [ref=e735] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/culture
+                - listitem [ref=e736]:
+                  - link "Leadership & Development" [ref=e737] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/leadership-development
+                - listitem [ref=e738]:
+                  - link "Hiring Process" [ref=e739] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/hiring-process
+                - listitem [ref=e740]:
+                  - link "Disability Accommodation" [ref=e741] [cursor=pointer]:
+                    - /url: https://faq.pgwebtools.com/disability-accommodation-request/
+                - listitem [ref=e742]:
+                  - link "Application Help" [ref=e743] [cursor=pointer]:
+                    - /url: https://faq.pgwebtools.com/#!/faqs
+                - listitem [ref=e744]:
+                  - link "P&G Locations" [ref=e745] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/locations
+                    - text: Our Locations
+            - listitem [ref=e746]:
+              - heading "Career Areas" [level=2] [ref=e747]
+              - list [ref=e748]:
+                - listitem [ref=e749]:
+                  - link "Design" [ref=e750] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/design
+                - listitem [ref=e751]:
+                  - link "Engineering" [ref=e752] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/engineering
+                - listitem [ref=e753]:
+                  - link "Finance and Accounting" [ref=e754] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/finance-and-accounting
+                - listitem [ref=e755]:
+                  - link "Human Resources" [ref=e756] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/human-resources
+                - listitem [ref=e757]:
+                  - link "Information Technology" [ref=e758] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/information-technology
+                - listitem [ref=e759]:
+                  - link "Legal and Patent" [ref=e760] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/legal-patent
+                - listitem [ref=e761]:
+                  - link "Manufacturing and Quality Assurance" [ref=e762] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/manufacturing-quality-assurance
+                - listitem [ref=e763]:
+                  - link "Marketing and Brand Management" [ref=e764] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/marketing-brand-management
+                - listitem [ref=e765]:
+                  - link "Research & Development" [ref=e766] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/research-and-development
+                - listitem [ref=e767]:
+                  - link "Sales" [ref=e768] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/sales
+                - listitem [ref=e769]:
+                  - link "Supply Chain & Logistics" [ref=e770] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/supply-chain-logistics
+                - listitem [ref=e771]:
+                  - link "Other Career" [ref=e772] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/other-careers
+                    - text: Other Careers
+            - listitem [ref=e773]:
+              - heading "Experience Levels" [level=2] [ref=e774]
+              - list [ref=e775]:
+                - listitem [ref=e776]:
+                  - link "Student Programs" [ref=e777] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/student-programs
+                - listitem [ref=e778]:
+                  - link "Internships" [ref=e779] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/internships
+                - listitem [ref=e780]:
+                  - link "Recent Grads / Entry Level" [ref=e781] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/recent-grads
+                - listitem [ref=e782]:
+                  - link "Experienced Professionals" [ref=e783] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/experienced
+                - listitem [ref=e784]:
+                  - link "Plant Technicians" [ref=e785] [cursor=pointer]:
+                    - /url: https://www.pgplantjobs.com/
+            - listitem [ref=e786]:
+              - heading [level=2]
+              - list [ref=e787]:
+                - listitem [ref=e788]:
+                  - link "Events" [ref=e789] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/events
+                - listitem [ref=e790]:
+                  - link "Search Jobs" [ref=e791] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/search-results
+                - listitem [ref=e792]:
+                  - link "Stay Informed" [ref=e793] [cursor=pointer]:
+                    - /url: https://www.pgcareers.com/global/en/jointalentcommunity
+                - listitem [ref=e794]:
+                  - link "My Account" [ref=e795] [cursor=pointer]:
+                    - /url: https://pg.wd5.myworkdayjobs.com/en-US/1000/userHome
+        - generic [ref=e799]:
+          - heading "follow us" [level=2] [ref=e801]
+          - list [ref=e802]:
+            - listitem [ref=e803]:
+              - link "facebook" [ref=e804] [cursor=pointer]:
+                - /url: https://www.facebook.com/pgcareers/
+                - generic [ref=e806]: C
+            - listitem [ref=e807]:
+              - link "LinkedIn" [ref=e808] [cursor=pointer]:
+                - /url: https://www.linkedin.com/company/procter-and-gamble/
+                - generic [ref=e810]: "1"
+            - listitem
+            - listitem [ref=e811]:
+              - link "Instagram" [ref=e812] [cursor=pointer]:
+                - /url: https://www.instagram.com/pgcareers/
+                - generic [ref=e814]: 
+      - generic [ref=e819]: Separator
+    - generic [ref=e822]:
+      - generic [ref=e824]: © 2025 Procter & Gamble. All rights reserved.
+      - navigation [ref=e829]:
+        - list [ref=e830]:
+          - listitem [ref=e831]:
+            - text: "|"
+            - link "Terms & Conditions" [ref=e832] [cursor=pointer]:
+              - /url: https://termsandconditions.pg.com/en-us/#use
+          - listitem [ref=e833]:
+            - link "Privacy" [ref=e834] [cursor=pointer]:
+              - /url: https://privacypolicy.pg.com/employee/candidate/
+  - button "Consentimento de Cookie" [ref=e835] [cursor=pointer]

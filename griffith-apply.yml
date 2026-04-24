@@ -1,0 +1,25 @@
+- generic [ref=e1]:
+  - generic [ref=e4]:
+    - link [ref=e284] [cursor=pointer]:
+      - /url: ""
+      - text: Ir para o conteúdo principal
+    - banner [ref=e22]:
+      - generic [ref=e24]
+    - generic [ref=e54]:
+      - generic [ref=e55]
+      - generic [ref=e205]
+    - generic [ref=e238]:
+      - generic [ref=e239]: Siga-nos
+      - list [ref=e240]
+      - link [ref=e305] [cursor=pointer]:
+        - /url: https://griffithfoods.com/privacy-policy/
+      - generic [ref=e259]
+  - dialog "Start Your Application" [ref=e309]:
+    - button "Close" [active] [ref=e311] [cursor=pointer]
+    - generic [ref=e317]:
+      - heading "Comece sua candidatura" [level=2] [ref=e318]
+      - heading "Regional Controller" [level=3] [ref=e319]
+      - paragraph [ref=e320]: "Escolha sua jornada de aplicação:"
+      - button "Preencher automaticamente com base no currículo" [ref=e324] [cursor=pointer]
+      - button "Candidatar-se manualmente" [ref=e328] [cursor=pointer]
+      - button "Usar minha última candidatura" [ref=e333] [cursor=pointer]

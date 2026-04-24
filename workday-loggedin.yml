@@ -1,0 +1,65 @@
+- generic [ref=e4]:
+  - link "Ir para o conteúdo principal" [ref=e5] [cursor=pointer]:
+    - /url: ""
+  - banner [ref=e8]:
+    - generic [ref=e10]:
+      - link "Página inicial de carreiras da" [ref=e13] [cursor=pointer]:
+        - /url: https://www.solventum.com/en-us/home/our-company/careers/
+        - img "Página inicial de carreiras da" [ref=e14]
+      - generic [ref=e15]:
+        - heading [level=1]
+      - generic [ref=e17]:
+        - generic [ref=e18]:
+          - button "Português (‏Brasil)" [ref=e20] [cursor=pointer]:
+            - generic [ref=e24]: Português (‏Brasil)
+          - button "fernandocostaxavier@gmail.com" [ref=e27] [cursor=pointer]:
+            - generic [ref=e32]: fernandocostaxavier@gmail.com
+        - navigation [ref=e33]:
+          - button "Careers Page" [ref=e34] [cursor=pointer]
+          - button "Página inicial de candidatos" [ref=e35] [cursor=pointer]
+          - button "Alertas de vagas" [ref=e36] [cursor=pointer]
+  - main [ref=e39]:
+    - generic [ref=e40]:
+      - generic [ref=e41]:
+        - link "Voltar para publicação de vaga de emprego" [ref=e43] [cursor=pointer]:
+          - generic [ref=e47]: Voltar para publicação de vaga de emprego
+        - heading "Manufacturing Controller." [level=2] [ref=e48]
+      - generic "Application Progress" [ref=e49]:
+        - list [ref=e50]:
+          - listitem [ref=e51]:
+            - generic: current step 1 of 6
+            - generic [ref=e57]: Minhas informações
+          - listitem [ref=e58]:
+            - generic: step 2 of 6
+            - generic [ref=e64]: Minha experiência
+          - listitem [ref=e65]:
+            - generic: step 3 of 6
+            - generic [ref=e71]: "Perguntas da candidatura: 1 de 2"
+          - listitem [ref=e72]:
+            - generic: step 4 of 6
+            - generic [ref=e78]: "Perguntas da candidatura: 2 de 2"
+          - listitem [ref=e79]:
+            - generic: step 5 of 6
+            - generic [ref=e85]: Informações voluntárias
+          - listitem [ref=e86]:
+            - generic: step 6 of 6
+            - generic [ref=e92]: Revisar
+      - generic [ref=e94]: Loading
+  - generic [ref=e97]:
+    - generic [ref=e98]: Siga-nos
+    - list [ref=e99]:
+      - listitem [ref=e100] [cursor=pointer]:
+        - link "Facebook" [ref=e101]:
+          - /url: https://www.facebook.com/solventumhealth
+      - listitem [ref=e105] [cursor=pointer]:
+        - link "YouTube" [ref=e106]:
+          - /url: https://www.youtube.com/@Solventum
+      - listitem [ref=e112] [cursor=pointer]:
+        - link "LinkedIn" [ref=e113]:
+          - /url: https://www.linkedin.com/company/solventumhealth/
+      - listitem [ref=e117] [cursor=pointer]:
+        - link "X" [ref=e118]:
+          - /url: https://x.com/i/flow/login?redirect_after_login=%2Fsolventum
+    - generic [ref=e122]:
+      - img [ref=e126]
+      - generic [ref=e146]: © 2026 Workday, Inc. Todos os direitos reservados.

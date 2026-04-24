@@ -1,0 +1,103 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - heading "Dover Careers" [level=1]
+    - generic:
+      - link "Skip to main content":
+        - /url: "#content"
+    - navigation "Header Menu" [ref=e7]:
+      - link [ref=e8] [cursor=pointer]:
+        - /url: https://careers.dovercorporation.com/
+        - img [ref=e9]
+      - list [ref=e10]:
+        - listitem [ref=e11]:
+          - link "Home" [ref=e12] [cursor=pointer]:
+            - /url: /
+        - listitem [ref=e13]:
+          - link "Search by Location" [ref=e14] [cursor=pointer]:
+            - /url: /content/Location/?locale=en_US
+        - listitem [ref=e15]:
+          - button "View Jobs by Language" [ref=e16] [cursor=pointer]: View Jobs by Language
+        - listitem [ref=e18]:
+          - link "Recruitment Fraud Notice" [ref=e19] [cursor=pointer]:
+            - /url: /content/Recruitment-Fraud-Notice/?locale=en_US
+    - generic [ref=e21]:
+      - button "Site Language" [ref=e23] [cursor=pointer]: Site Language
+      - link "View Profile" [ref=e27] [cursor=pointer]:
+        - /url: "#"
+  - main [ref=e29]:
+    - generic [ref=e30]:
+      - img [ref=e31]
+      - search [ref=e36]:
+        - generic [ref=e38]:
+          - generic [ref=e39]:
+            - generic [ref=e40]:
+              - textbox "Search by Keyword" [ref=e42]
+              - textbox "Search by Location" [ref=e44]
+            - button "Show More Options" [ref=e47] [cursor=pointer]
+          - generic [ref=e49]:
+            - button "Search Jobs" [ref=e51] [cursor=pointer]
+            - button "Clear" [ref=e53] [cursor=pointer]
+      - generic [ref=e58]:
+        - heading "JOIN OUR TALENT NETWORK" [level=2] [ref=e59]
+        - paragraph [ref=e60]: Enter your email address to tell us about yourself. We will keep you informed about job opportunities and events that match your interests.
+        - generic:
+          - textbox "Email Address" [ref=e61]
+          - button "Sign up now" [ref=e62] [cursor=pointer]
+        - generic [ref=e63]:
+          - paragraph [ref=e64]: Already a member?
+          - link "View Profile" [ref=e66] [cursor=pointer]:
+            - /url: "#"
+      - region "Interested in joining our team? Check out all available career opportunities now." [ref=e67]:
+        - generic [ref=e68]:
+          - heading "Interested in joining our team? Check out all available career opportunities now." [level=2] [ref=e69]
+          - generic:
+            - list
+          - link "View All Global Jobs" [ref=e72] [cursor=pointer]:
+            - /url: /go/View-All-Jobs/2830601/
+      - generic [ref=e75]:
+        - paragraph [ref=e76]:
+          - strong [ref=e77]: Recruitment Fraud Notice
+        - paragraph [ref=e78]: Please be aware of internet job posting fraud as you apply for jobs. Fraudulent parties posing as Dover employees, recruiters, or other agents, may seek to engage with job seekers to steal personal information. These unauthorized parties may use Dover and our affiliated companies’ name and logo to post jobs, engage with job seekers via email, instant messaging, or text, and may even extend job offers electronically.
+        - paragraph [ref=e79]: At Dover, we do not ask for personal financial information during phone, in-person, or video interviews, nor do we make offers of employment without first undergoing a thorough recruiting process. We will not ask candidates or new hires to purchase computer equipment for their work requirements. We also will not request a fee to be considered for a job, including any immigration fees.
+        - paragraph [ref=e80]: "The Federal Trade Commission and the United States consumer protection agency have published resources for detecting job scams. If you have concerns related to these issues, please consider the following actions: 1) file a report with your local police department; 2) File a complaint with the Internet Crime Complaint Center; and/or 3) file a complaint with the U.S. Federal Trade Commission."
+      - generic [ref=e81]:
+        - generic:
+          - heading "Screen readers cannot read the following searchable map." [level=2] [ref=e82]
+          - link "Follow this link to reach our Job Search page to search for available jobs in a more accessible format." [ref=e83] [cursor=pointer]:
+            - /url: /search/
+        - iframe [ref=e85]:
+          - generic [ref=f5e4]:
+            - textbox "Search jobs and display them on a world map" [ref=f5e5]:
+              - /placeholder: Search jobs
+            - button "" [ref=f5e6] [cursor=pointer]:
+              - text: 
+              - generic [ref=f5e7]: 
+      - text:  
+  - contentinfo [ref=e86]:
+    - generic [ref=e89]:
+      - list [ref=e90]:
+        - listitem [ref=e91]:
+          - link "Dover Home" [ref=e92] [cursor=pointer]:
+            - /url: /
+        - listitem [ref=e93]:
+          - link "View Page Index" [ref=e94] [cursor=pointer]:
+            - /url: /viewalljobs/
+        - listitem [ref=e95]:
+          - link "Top Job Searches" [ref=e96] [cursor=pointer]:
+            - /url: /topjobs/
+        - listitem [ref=e97]:
+          - link "Privacy Policy" [ref=e98] [cursor=pointer]:
+            - /url: http://www.dovercorporation.com/footerlinks/privacy
+      - list [ref=e100]:
+        - listitem [ref=e101]:
+          - link "Follow us on LinkedIn" [ref=e102] [cursor=pointer]:
+            - /url: https://www.linkedin.com/company/dovercorp/
+            - img [ref=e103]
+        - listitem [ref=e105]:
+          - link "Visit our YouTube channel" [ref=e106] [cursor=pointer]:
+            - /url: https://www.youtube.com/user/DoverCorporation
+            - img [ref=e107]
+        - listitem [ref=e109]:
+          - link "Follow us on X" [ref=e110] [cursor=pointer]:
+            - /url: https://twitter.com/DoverCorp
+            - img [ref=e111]

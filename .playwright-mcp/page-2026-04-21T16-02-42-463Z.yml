@@ -1,0 +1,231 @@
+- generic [ref=e1]:
+  - generic [ref=e3]:
+    - banner:
+      - navigation "site" [ref=e4]:
+        - link "Skip to main content" [ref=e5] [cursor=pointer]:
+          - /url: "#main-content"
+        - generic [ref=e6]:
+          - generic [ref=e7]:
+            - link "dsm-firmenich logo, link to Positions Home" [ref=e205] [cursor=pointer]:
+              - /url: https://jobs.dsm-firmenich.com/careers
+              - img [ref=e206]
+            - link "Home" [ref=e11] [cursor=pointer]:
+              - /url: https://careers.dsm-firmenich.com/en/careers.html
+              - generic [ref=e13]: Home
+            - link "Why dsm-firmenich" [ref=e14] [cursor=pointer]:
+              - /url: https://careers.dsm-firmenich.com/en/careers/why-dsm-firmenich.html
+              - generic [ref=e16]: Why dsm-firmenich
+            - link "Meet Us" [ref=e17] [cursor=pointer]:
+              - /url: https://careers.dsm-firmenich.com/en/careers.html#people
+              - generic [ref=e19]: Meet Us
+          - generic [ref=e20]:
+            - link "Join Talent Network" [ref=e21] [cursor=pointer]:
+              - /url: /careers/join?domain=dsm.com&hl=en_US
+              - generic [ref=e23]: Join Talent Network
+            - button "Language switcher" [ref=e25] [cursor=pointer]:
+              - generic [ref=e27]: English
+    - main [ref=e207]:
+      - generic [ref=e211]:
+        - generic [ref=e212]:
+          - navigation "Application sections" [ref=e215]:
+            - list [ref=e218]:
+              - listitem [ref=e219]:
+                - button "Resume" [ref=e223] [cursor=pointer]:
+                  - generic [ref=e227]: Resume
+              - listitem [ref=e228]:
+                - button "Contact Information" [ref=e232] [cursor=pointer]:
+                  - generic [ref=e236]: Contact Information
+              - listitem [ref=e237]:
+                - button "Application questions" [ref=e241] [cursor=pointer]:
+                  - generic [ref=e245]: Application questions
+              - listitem [ref=e246]:
+                - button "Other Questions, Data Privacy Acknowledgement and Artificial Intelligence" [ref=e250] [cursor=pointer]:
+                  - generic [ref=e254]: Other Questions, Data Privacy Acknowledgement and Artificial Intelligence
+          - generic [ref=e255]:
+            - generic [ref=e256]: Required fields are marked with *
+            - generic [ref=e258]:
+              - heading "Application Form" [level=1] [ref=e259]
+              - heading [level=1] [ref=e260]: Application for
+              - generic [ref=e266]:
+                - generic [ref=e267]: Business Controller Associate Director LATAM
+                - generic [ref=e269]: Sao Paulo Pinheiros One, Brazil
+              - note [ref=e270]:
+                - generic [ref=e271]:
+                  - strong [ref=e272]: Required fields are indicated with
+                  - generic [ref=e273]: "*"
+            - 'region "Form section: Resume" [ref=e274]':
+              - 'heading "Form section: Resume" [level=2] [ref=e278]': Resume
+              - group [ref=e281]:
+                - generic [ref=e284]:
+                  - generic [ref=e287]: Upload your resume
+                  - generic [ref=e289]:
+                    - generic [ref=e290]: "Accepted file format: doc, docx or pdf"
+                    - status [ref=e291]: File upload completed successfully
+                    - list [ref=e653] [cursor=pointer]:
+                      - listitem [ref=e654]:
+                        - generic [ref=e657]:
+                          - generic "010-dsm-firmenich-business-controller-associate-director-latam.pdf" [ref=e661]
+                          - generic [ref=e662]:
+                            - button "Replace" [ref=e663]:
+                              - generic [ref=e667]: Replace
+                            - button "Delete file 010-dsm-firmenich-business-controller-associate-director-latam.pdf" [ref=e668]
+            - 'region "Form section: Contact Information" [ref=e309]':
+              - 'heading "Form section: Contact Information" [level=2] [ref=e313]': Contact Information
+              - group [ref=e316]:
+                - generic [ref=e317]:
+                  - generic [ref=e319]:
+                    - generic [ref=e322]: First Name
+                    - generic [ref=e326]:
+                      - textbox "First Name" [ref=e327]:
+                        - /placeholder: ""
+                        - text: Fernando
+                      - button "Clear First Name" [ref=e671] [cursor=pointer]
+                  - generic [ref=e330]:
+                    - generic [ref=e333]: Last Name
+                    - generic [ref=e337]:
+                      - textbox "Last Name" [ref=e338]:
+                        - /placeholder: ""
+                        - text: Xavier
+                      - button "Clear Last Name" [ref=e674] [cursor=pointer]
+                  - generic [ref=e341]:
+                    - generic [ref=e344]: Email
+                    - generic [ref=e348]:
+                      - textbox "Email" [ref=e349]:
+                        - /placeholder: ""
+                        - text: fernandocostaxavier@gmail.com
+                      - button "Clear Email" [ref=e677] [cursor=pointer]
+                  - group [ref=e353]:
+                    - generic [ref=e356]: Phone
+                    - generic [ref=e358]:
+                      - generic [ref=e364] [cursor=pointer]:
+                        - combobox "Select country code" [ref=e365]: 🇧🇷 (+55) Brazil
+                        - button [ref=e366]
+                      - generic [ref=e371]:
+                        - textbox "Phone Number" [ref=e372]: "11964801913"
+                        - button "Clear Phone Number" [ref=e680] [cursor=pointer]
+            - 'region "Form section: Application questions" [ref=e375]':
+              - 'heading "Form section: Application questions" [level=2] [ref=e379]': Application questions
+              - group [ref=e382]:
+                - generic [ref=e385]:
+                  - generic [ref=e388]: Today’s Date
+                  - generic [ref=e390]:
+                    - generic:
+                      - generic: Select date
+                    - combobox "Select date" [ref=e392]: 21 Apr 2026
+            - 'region "Form section: Other Questions, Data Privacy Acknowledgement and Artificial Intelligence" [ref=e395]':
+              - 'heading "Form section: Other Questions, Data Privacy Acknowledgement and Artificial Intelligence" [level=2] [ref=e399]': Other Questions, Data Privacy Acknowledgement and Artificial Intelligence
+              - group [ref=e402]:
+                - generic [ref=e403]:
+                  - generic [ref=e405]:
+                    - generic [ref=e408]: What is your level of English?
+                    - radiogroup [ref=e410]:
+                      - generic [ref=e411]:
+                        - radio "I can communicate easily, What is your level of English?" [checked] [ref=e412] [cursor=pointer]
+                        - generic [ref=e415]: I can communicate easily
+                      - generic [ref=e416]:
+                        - radio "I communicate with difficulty, What is your level of English?" [ref=e417] [cursor=pointer]
+                        - generic [ref=e420]: I communicate with difficulty
+                      - generic [ref=e421]:
+                        - radio "I cannot communicate, What is your level of English?" [ref=e422] [cursor=pointer]
+                        - generic [ref=e425]: I cannot communicate
+                  - generic [ref=e428]:
+                    - generic [ref=e431]: What is your level of Spanish?
+                    - radiogroup [ref=e433]:
+                      - generic [ref=e434]:
+                        - radio "I can communicate easily, What is your level of Spanish?" [checked] [ref=e435] [cursor=pointer]
+                        - generic [ref=e438]: I can communicate easily
+                      - generic [ref=e439]:
+                        - radio "I communicate with difficulty, What is your level of Spanish?" [ref=e440] [cursor=pointer]
+                        - generic [ref=e443]: I communicate with difficulty
+                      - generic [ref=e444]:
+                        - radio "I cannot communicate, What is your level of Spanish?" [ref=e445] [cursor=pointer]
+                        - generic [ref=e448]: I cannot communicate
+                  - generic [ref=e451]:
+                    - generic [ref=e454]: Do you have experience as a Business Controller?
+                    - radiogroup [ref=e456]:
+                      - generic [ref=e457]:
+                        - radio "yes, Do you have experience as a Business Controller?" [checked] [ref=e458] [cursor=pointer]
+                        - generic [ref=e461]: "yes"
+                      - generic [ref=e462]:
+                        - radio "no, Do you have experience as a Business Controller?" [ref=e463] [cursor=pointer]
+                        - generic [ref=e466]: "no"
+                  - generic [ref=e469]:
+                    - generic [ref=e472]: Have you ever worked as a Plant Controller?
+                    - radiogroup [ref=e474]:
+                      - generic [ref=e475]:
+                        - radio "yes, Have you ever worked as a Plant Controller?" [ref=e476] [cursor=pointer]
+                        - generic [ref=e479]: "yes"
+                      - generic [ref=e480]:
+                        - radio "no, Have you ever worked as a Plant Controller?" [checked] [active] [ref=e481] [cursor=pointer]
+                        - generic [ref=e484]: "no"
+                  - generic [ref=e487]:
+                    - generic [ref=e490]: Address
+                    - generic [ref=e494]:
+                      - textbox "Address" [ref=e495]:
+                        - /placeholder: ""
+                        - text: Av Franz Voegeli, 924 - ap 2209B- Parque Continental
+                      - button "Clear Address" [ref=e690] [cursor=pointer]
+                  - generic [ref=e498]:
+                    - generic [ref=e501]: Postal Code
+                    - generic [ref=e505]:
+                      - textbox "Postal Code" [ref=e506]:
+                        - /placeholder: ""
+                        - text: 06020-190
+                      - button "Clear Postal Code" [ref=e700] [cursor=pointer]
+                  - generic [ref=e509]:
+                    - generic [ref=e512]: City
+                    - generic [ref=e516]:
+                      - textbox "City" [ref=e517]:
+                        - /placeholder: ""
+                        - text: Osasco
+                      - button "Clear City" [ref=e710] [cursor=pointer]
+                  - generic [ref=e520]:
+                    - generic [ref=e523]: State/Province
+                    - generic [ref=e527]:
+                      - textbox "State/Province" [ref=e528]:
+                        - /placeholder: ""
+                        - text: SP
+                      - button "Clear State/Province" [ref=e720] [cursor=pointer]
+                  - generic [ref=e531]:
+                    - generic [ref=e534]: Country of Residence
+                    - generic [ref=e541] [cursor=pointer]:
+                      - combobox "Country of Residence" [ref=e542]
+                      - button [ref=e543]
+                  - generic [ref=e548]:
+                    - generic [ref=e551]: "Today or at any time in the past 2 years, have you or a person who is closely related to you:"
+                    - generic [ref=e558] [cursor=pointer]:
+                      - combobox "Today or at any time in the past 2 years, have you or a person who is closely related to you:" [ref=e559]
+                      - button [ref=e560]
+                  - generic [ref=e565]:
+                    - generic [ref=e568]: Gender Identity
+                    - generic [ref=e575] [cursor=pointer]:
+                      - combobox "Gender Identity" [ref=e576]
+                      - button [ref=e577]
+                  - generic [ref=e587]: We are committed to promoting diversity and inclusivity in our organization. Providing your gender information is optional and will be used solely for statistical analysis and to ensure equitable opportunities within our organization. Your response will not impact your candidacy in any way.
+                  - generic [ref=e594]: Data Privacy Acknowledgement
+                  - generic [ref=e596]:
+                    - paragraph [ref=e601]:
+                      - text: Please confirm that you have read and understood the
+                      - link "dsm-firmenich privacy notice for recruitment" [ref=e602] [cursor=pointer]:
+                        - /url: https://www.dsm-firmenich.com/content/dam/dsm-firmenich/corporate/documents/our-company/responsible-business/policies/dsm-firmenich-recruitment-data-privacy-notice.pdf
+                    - radiogroup [ref=e604]:
+                      - generic [ref=e605]:
+                        - 'radio "Yes, I have understood, <p>Please confirm that you have read and understood the <a href=''https://www.dsm-firmenich.com/content/dam/dsm-firmenich/corporate/documents/our-company/responsible-business/policies/dsm-firmenich-recruitment-data-privacy-notice.pdf'' target=''_blank'' style = \"color: blue; text-decoration:underline;\">dsm-firmenich privacy notice for recruitment</a> </p>" [ref=e606] [cursor=pointer]'
+                        - generic [ref=e609]: Yes, I have understood
+            - generic [ref=e744]:
+              - checkbox "Save my answers for future applications" [checked] [ref=e745] [cursor=pointer]
+              - generic [ref=e748]: Save my answers for future applications
+        - generic [ref=e625]:
+          - generic [ref=e626]:
+            - button "Cancel" [ref=e628] [cursor=pointer]:
+              - generic [ref=e629]: Cancel
+            - button "Clear form" [ref=e749] [cursor=pointer]:
+              - generic [ref=e750]: Clear form
+          - button "Submit application" [ref=e633] [cursor=pointer]:
+            - generic [ref=e634]: Submit application
+  - region "Notifications"
+  - region "Notifications"
+  - region "Notifications"
+  - region "Notifications"
+  - region "Notifications"
+  - region "Notifications"

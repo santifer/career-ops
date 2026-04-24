@@ -1,0 +1,537 @@
+- generic [active] [ref=e1]:
+  - dialog "This website uses cookies" [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e5]:
+        - img "logo" [ref=e7]
+        - link "Cookiebot by Usercentrics - opens in a new window" [ref=e8] [cursor=pointer]:
+          - /url: https://www.cookiebot.com/en/what-is-behind-powered-by-cookiebot/?utm_source=banner_cb&utm_medium=referral&utm_content=v2
+          - img [ref=e9]
+      - tabpanel "Consent" [ref=e36]:
+        - generic [ref=e38]:
+          - heading "This website uses cookies" [level=2] [ref=e39]
+          - generic [ref=e40]:
+            - paragraph [ref=e41]: We use cookies to process personal data about you and to analyse the use of our website, allowing us to create and customise content to bring our visitors accurate and useful information about our company, products, and services. Cookies also allow us to provide social media and video features. This data may be shared with our social media, advertising, and analytics partners to personalise our advertising.
+            - paragraph [ref=e42]: Some cookies are strictly necessary for the website to function and do not require your consent. We also use other cookies, such as tracking cookies, to improve performance and personalise content. You can choose to accept all cookies, decline all cookies, or allow a selection of the cookies. You can always change or withdraw your consent.
+            - paragraph [ref=e43]
+        - generic [ref=e44]:
+          - group "Consent Selection" [ref=e50]:
+            - generic [ref=e51]: Consent Selection
+            - generic [ref=e52]:
+              - generic [ref=e53]:
+                - strong [ref=e55]: Necessary
+                - generic [ref=e56]:
+                  - checkbox "Necessary" [checked] [disabled]
+              - generic [ref=e57]:
+                - strong [ref=e59] [cursor=pointer]: Preferences
+                - switch "Preferences" [checked] [ref=e61] [cursor=pointer]
+              - generic [ref=e62]:
+                - strong [ref=e64] [cursor=pointer]: Statistics
+                - switch "Statistics" [checked] [ref=e66] [cursor=pointer]
+              - generic [ref=e67]:
+                - strong [ref=e69] [cursor=pointer]: Marketing
+                - switch "Marketing" [checked] [ref=e71] [cursor=pointer]
+          - link "Show details" [ref=e73] [cursor=pointer]:
+            - /url: "#"
+      - generic [ref=e77]:
+        - button "Decline all cookies" [ref=e78] [cursor=pointer]
+        - button "Allow selection" [ref=e79] [cursor=pointer]
+        - button "Allow all cookies" [ref=e80] [cursor=pointer]
+  - generic [ref=e81]:
+    - generic:
+      - generic [ref=e82]:
+        - generic [ref=e85]:
+          - generic [ref=e87]:
+            - generic [ref=e88]: chevron_left
+            - text: Select Language
+          - generic [ref=e93]: close
+        - generic [ref=e97]:
+          - generic [ref=e98]:
+            - text: The official text of this website is English.
+            - text: Content on this website may not be accurately translated due to the limitations of the translation software from Google Translate. The official text is the English language version of the website. Any discrepancies or differences created in the translation are not binding and have no legal effect. If questions arise in relation to the accuracy of the information mentioned on the translated website, please refer to the English version of the website.
+          - generic [ref=e100] [cursor=pointer]: Global (English)
+          - generic [ref=e102] [cursor=pointer]: Spanish
+          - generic [ref=e104] [cursor=pointer]: French
+          - generic [ref=e106] [cursor=pointer]: Portuguese
+          - generic [ref=e108] [cursor=pointer]: Italian
+          - generic [ref=e110] [cursor=pointer]: German
+          - generic [ref=e112] [cursor=pointer]: Dutch
+          - generic [ref=e114] [cursor=pointer]: Polish
+      - generic [ref=e115]:
+        - generic [ref=e118]:
+          - generic [ref=e120]:
+            - generic [ref=e121]: chevron_left
+            - text: Products
+          - generic [ref=e126]: close
+        - generic [ref=e130]:
+          - link "Explore our products" [ref=e131] [cursor=pointer]:
+            - /url: /products
+          - generic [ref=e132]:
+            - generic [ref=e133]:
+              - generic [ref=e135]: Industries we serve
+              - link "Food Seafood, vegetables and other wet and dry food products" [ref=e137] [cursor=pointer]:
+                - /url: /products/industry/food
+                - text: Food
+                - generic [ref=e138]: Seafood, vegetables and other wet and dry food products
+              - link "Beverages Water, soft drinks, beers, wines and spirits" [ref=e140] [cursor=pointer]:
+                - /url: /products/industry/beverages
+                - text: Beverages
+                - generic [ref=e141]: Water, soft drinks, beers, wines and spirits
+              - link "Coffee Ready-to-drink coffee, as well as instant, ground and coffee beans" [ref=e143] [cursor=pointer]:
+                - /url: /products/industry/coffee
+                - text: Coffee
+                - generic [ref=e144]: Ready-to-drink coffee, as well as instant, ground and coffee beans
+              - link "Beauty and Personal Care Body sprays, body washes, lotions, and hair products" [ref=e146] [cursor=pointer]:
+                - /url: /products/industry/beauty-and-personal-care
+                - text: Beauty and Personal Care
+                - generic [ref=e147]: Body sprays, body washes, lotions, and hair products
+            - generic [ref=e148]:
+              - link "Health and Nutrition Vitamins and supplements, OTC, prescription drugs and infant formula" [ref=e150] [cursor=pointer]:
+                - /url: /products/industry/health-and-nutrition
+                - text: Health and Nutrition
+                - generic [ref=e151]: Vitamins and supplements, OTC, prescription drugs and infant formula
+              - link "Pet Pet food, and pet care and health" [ref=e153] [cursor=pointer]:
+                - /url: /products/industry/pet
+                - text: Pet
+                - generic [ref=e154]: Pet food, and pet care and health
+              - link "Paints and Coatings Liquid and aerosol spray paints and coatings" [ref=e156] [cursor=pointer]:
+                - /url: /products/industry/paints-and-coatings
+                - text: Paints and Coatings
+                - generic [ref=e157]: Liquid and aerosol spray paints and coatings
+              - link "Home Care and Industrial Household cleaners, industrial disinfectants and automotive care" [ref=e159] [cursor=pointer]:
+                - /url: /products/industry/home-care-and-industrial
+                - text: Home Care and Industrial
+                - generic [ref=e160]: Household cleaners, industrial disinfectants and automotive care
+            - generic [ref=e161]:
+              - generic [ref=e163]: Product types
+              - link "Aerosols" [ref=e165] [cursor=pointer]:
+                - /url: /products/product/aerosols
+              - link "Beverage bottles" [ref=e167] [cursor=pointer]:
+                - /url: /products/product/beverage-bottles
+              - link "Threaded bottles" [ref=e169] [cursor=pointer]:
+                - /url: /products/product/threaded-bottles
+              - link "Two piece cans" [ref=e171] [cursor=pointer]:
+                - /url: /products/product/two-piece-cans
+              - link "Three piece cans" [ref=e173] [cursor=pointer]:
+                - /url: /products/product/three-piece-cans
+              - link "Slugs, ends and components" [ref=e175] [cursor=pointer]:
+                - /url: /products/product/slugs-ends-components
+          - link "Document Library Find all brochures and technical specifications" [ref=e178] [cursor=pointer]:
+            - /url: /resources/documents
+            - text: Document Library
+            - generic [ref=e179]: Find all brochures and technical specifications
+      - generic [ref=e180]:
+        - generic [ref=e183]:
+          - generic [ref=e185]:
+            - generic [ref=e186]: chevron_left
+            - text: Services
+          - generic [ref=e191]: close
+        - generic [ref=e195]:
+          - link "Explore our services" [ref=e196] [cursor=pointer]:
+            - /url: /services
+          - generic [ref=e197]:
+            - generic [ref=e198]:
+              - link "Getting to market We provide end-to-end support for your metal packaging journey." [ref=e200] [cursor=pointer]:
+                - /url: /services/getting-to-market
+                - text: Getting to market
+                - generic [ref=e201]: We provide end-to-end support for your metal packaging journey.
+              - link "Graphics and design With more than 25 years of experience and innovation, we deliver creative solutions that drive sales to your brand." [ref=e203] [cursor=pointer]:
+                - /url: /services/graphics-and-design
+                - text: Graphics and design
+                - generic [ref=e204]: With more than 25 years of experience and innovation, we deliver creative solutions that drive sales to your brand.
+              - link "Certification and Compliance Giving you confidence through our certifications and compliance." [ref=e206] [cursor=pointer]:
+                - /url: /services/certification-and-compliance
+                - text: Certification and Compliance
+                - generic [ref=e207]: Giving you confidence through our certifications and compliance.
+            - generic [ref=e208]:
+              - link "Technical consultancy When it comes to your packaging, every detail matters. We work together with you to meet your product’s requirements – and exceed your customer’s expectations." [ref=e210] [cursor=pointer]:
+                - /url: /services/technical-consultancy
+                - text: Technical consultancy
+                - generic [ref=e211]: When it comes to your packaging, every detail matters. We work together with you to meet your product’s requirements – and exceed your customer’s expectations.
+              - link "Training How we can help grow your knowledge – and your business." [ref=e213] [cursor=pointer]:
+                - /url: /services/training
+                - text: Training
+                - generic [ref=e214]: How we can help grow your knowledge – and your business.
+      - generic [ref=e215]:
+        - generic [ref=e218]:
+          - generic [ref=e220]:
+            - generic [ref=e221]: chevron_left
+            - text: Sustainability
+          - generic [ref=e226]: close
+        - generic [ref=e230]:
+          - link "Find out more" [ref=e231] [cursor=pointer]:
+            - /url: /sustainability
+          - generic [ref=e232]:
+            - generic [ref=e233]:
+              - link "Our purpose How we are embracing the opportunity to make a positive change to our planet." [ref=e235] [cursor=pointer]:
+                - /url: /sustainability/our-purpose
+                - text: Our purpose
+                - generic [ref=e236]: How we are embracing the opportunity to make a positive change to our planet.
+              - link "Our sustainability strategy Committing to circularity – across our business and with our partners." [ref=e238] [cursor=pointer]:
+                - /url: /sustainability/our-sustainability-strategy
+                - text: Our sustainability strategy
+                - generic [ref=e239]: Committing to circularity – across our business and with our partners.
+              - link "Our environmental profile The steps we are taking to make our global operations as ecological and efficient as possible." [ref=e241] [cursor=pointer]:
+                - /url: /sustainability/our-environmental-profile
+                - text: Our environmental profile
+                - generic [ref=e242]: The steps we are taking to make our global operations as ecological and efficient as possible.
+            - generic [ref=e243]:
+              - link "Our people and communities Empowering our people and communities to give the best of themselves to our organisation – and society at large." [ref=e245] [cursor=pointer]:
+                - /url: /sustainability/our-people-and-communities
+                - text: Our people and communities
+                - generic [ref=e246]: Empowering our people and communities to give the best of themselves to our organisation – and society at large.
+              - link "Resources and governance Information, insights and reports on our environmental, social and governance (ESG) performance." [ref=e248] [cursor=pointer]:
+                - /url: /sustainability/resources-and-governance
+                - text: Resources and governance
+                - generic [ref=e249]: Information, insights and reports on our environmental, social and governance (ESG) performance.
+              - link "Policies and statements Our reports, policies and statements are all available to download." [ref=e251] [cursor=pointer]:
+                - /url: /sustainability/policies-and-statements
+                - text: Policies and statements
+                - generic [ref=e252]: Our reports, policies and statements are all available to download.
+      - generic [ref=e253]:
+        - generic [ref=e256]:
+          - generic [ref=e258]:
+            - generic [ref=e259]: chevron_left
+            - text: About Us
+          - generic [ref=e264]: close
+        - generic [ref=e268]:
+          - link "About Us" [ref=e269] [cursor=pointer]:
+            - /url: /about-us
+          - generic [ref=e270]:
+            - generic [ref=e271]:
+              - link "History and timeline Travel through Trivium’s past and discover the innovations, designs, and sustainability milestones that are shaping our future." [ref=e273] [cursor=pointer]:
+                - /url: /about-us/history-timeline
+                - text: History and timeline
+                - generic [ref=e274]: Travel through Trivium’s past and discover the innovations, designs, and sustainability milestones that are shaping our future.
+              - link "Our locations Connect with Trivium – wherever you are in the world." [ref=e276] [cursor=pointer]:
+                - /url: /about-us/our-locations
+                - text: Our locations
+                - generic [ref=e277]: Connect with Trivium – wherever you are in the world.
+            - generic [ref=e278]:
+              - link "Leadership team Meet the leadership team and find out how Trivium is governed." [ref=e280] [cursor=pointer]:
+                - /url: /about-us/leadership
+                - text: Leadership team
+                - generic [ref=e281]: Meet the leadership team and find out how Trivium is governed.
+              - link "Innovation The world is changing. And so is our packaging. Together we can create pioneering products that make a real difference." [ref=e283] [cursor=pointer]:
+                - /url: /about-us/innovation
+                - text: Innovation
+                - generic [ref=e284]: The world is changing. And so is our packaging. Together we can create pioneering products that make a real difference.
+      - generic [ref=e285]:
+        - generic [ref=e288]:
+          - generic [ref=e290]:
+            - generic [ref=e291]: chevron_left
+            - text: News & Media
+          - generic [ref=e296]: close
+        - generic [ref=e300]:
+          - link "Read Our Latest News & Insights" [ref=e301] [cursor=pointer]:
+            - /url: /news-media
+          - generic [ref=e303]:
+            - link "News & Insights News, case studies, white papers, events and awards." [ref=e305] [cursor=pointer]:
+              - /url: /news-media
+              - text: News & Insights
+              - generic [ref=e306]: News, case studies, white papers, events and awards.
+            - link "Media Download images and videos in high resolution." [ref=e308] [cursor=pointer]:
+              - /url: /news-media/media
+              - text: Media
+              - generic [ref=e309]: Download images and videos in high resolution.
+    - generic [ref=e314]:
+      - textbox "Search" [ref=e315]
+      - button "Search" [ref=e316] [cursor=pointer]
+    - generic [ref=e320]:
+      - generic [ref=e322] [cursor=pointer]:
+        - generic [ref=e323]: Products
+        - generic [ref=e324]: chevron_right
+      - generic [ref=e326] [cursor=pointer]:
+        - generic [ref=e327]: Services
+        - generic [ref=e328]: chevron_right
+      - generic [ref=e330] [cursor=pointer]:
+        - generic [ref=e331]: Sustainability
+        - generic [ref=e332]: chevron_right
+      - generic [ref=e334] [cursor=pointer]:
+        - generic [ref=e335]: About Us
+        - generic [ref=e336]: chevron_right
+      - link "Why Metal?" [ref=e338] [cursor=pointer]:
+        - /url: /why-metal
+        - generic [ref=e339]: Why Metal?
+      - generic [ref=e341] [cursor=pointer]:
+        - generic [ref=e342]: News & Media
+        - generic [ref=e343]: chevron_right
+      - link "Careers" [ref=e345] [cursor=pointer]:
+        - /url: https://careers.triviumpackaging.com
+        - generic [ref=e346]: Careers
+      - link "Investors" [ref=e348] [cursor=pointer]:
+        - /url: /investors
+        - generic [ref=e349]: Investors
+      - link "Resources" [ref=e351] [cursor=pointer]:
+        - /url: /resources
+        - generic [ref=e352]: Resources
+      - generic [ref=e355] [cursor=pointer]: Language(EN)
+      - link "Contact Us" [ref=e356] [cursor=pointer]:
+        - /url: /contact-us
+    - banner [ref=e357]:
+      - generic [ref=e360]:
+        - link "Trivium" [ref=e363] [cursor=pointer]:
+          - /url: /
+          - img "Trivium" [ref=e364]
+        - generic [ref=e366]:
+          - generic [ref=e368]:
+            - link "Careers" [ref=e370] [cursor=pointer]:
+              - /url: https://careers.triviumpackaging.com
+              - generic [ref=e371]: Careers
+            - link "Investors" [ref=e373] [cursor=pointer]:
+              - /url: /investors
+              - generic [ref=e374]: Investors
+            - link "Resources" [ref=e376] [cursor=pointer]:
+              - /url: /resources
+              - generic [ref=e377]: Resources
+            - generic [ref=e380] [cursor=pointer]: Language(EN)
+            - link "Contact Us" [ref=e382] [cursor=pointer]:
+              - /url: /contact-us
+              - generic [ref=e383]: Contact Us
+            - generic [ref=e385]:
+              - textbox "Search" [ref=e386]
+              - button "" [ref=e387] [cursor=pointer]
+          - generic [ref=e389]:
+            - link "Products expand_more" [ref=e391] [cursor=pointer]:
+              - /url: /products
+              - generic [ref=e392]: Products
+              - generic [ref=e393]: expand_more
+            - link "Services expand_more" [ref=e395] [cursor=pointer]:
+              - /url: /services
+              - generic [ref=e396]: Services
+              - generic [ref=e397]: expand_more
+            - link "Sustainability expand_more" [ref=e399] [cursor=pointer]:
+              - /url: /sustainability
+              - generic [ref=e400]: Sustainability
+              - generic [ref=e401]: expand_more
+            - link "About Us expand_more" [ref=e403] [cursor=pointer]:
+              - /url: /about-us
+              - generic [ref=e404]: About Us
+              - generic [ref=e405]: expand_more
+            - link "Why Metal?" [ref=e407] [cursor=pointer]:
+              - /url: /why-metal
+              - generic [ref=e408]: Why Metal?
+            - link "News & Media expand_more" [ref=e410] [cursor=pointer]:
+              - /url: /news-media
+              - generic [ref=e411]: News & Media
+              - generic [ref=e412]: expand_more
+    - generic [ref=e418]:
+      - img "Investors Ss 1751369213 C" [ref=e420]
+      - generic [ref=e424]:
+        - heading "Financial updates and investor resources" [level=1] [ref=e425]
+        - generic [ref=e426]: Connect with our investor relations team or sign up to receive email alerts.
+    - generic [ref=e428]:
+      - generic [ref=e433]:
+        - img "Shot 1 Product Pack 012 Rt Crop" [ref=e436]
+        - generic [ref=e437]:
+          - generic [ref=e438]: About us
+          - paragraph [ref=e440]: Trivium Packaging is a global supplier of infinitely recyclable metal packaging for the world’s leading brands. We employ approximately 7,200 people and have annual sales of approximately $3 billion.
+          - link "Learn more" [ref=e442] [cursor=pointer]:
+            - /url: /about-us
+      - generic [ref=e447]:
+        - img "Administrative" [ref=e450]
+        - generic [ref=e451]:
+          - generic [ref=e452]: Investor reports
+          - paragraph [ref=e454]:
+            - text: To access the latest investor reports, please login.
+            - text: If you do not yet have access, you can submit a request, which will be subject to approval. Please click the 'Register' button to proceed.
+          - generic [ref=e455]:
+            - link "Login" [ref=e456] [cursor=pointer]:
+              - /url: /login
+            - link "Register" [ref=e457] [cursor=pointer]:
+              - /url: /register
+      - generic [ref=e465]:
+        - generic [ref=e466]: Next quarterly result webcast
+        - generic [ref=e467]: Registration for our next investor webcast will open in due time. You can sign up to be notified of upcoming webcasts and other events using the form below.
+      - generic [ref=e471]:
+        - generic [ref=e474]: Sign up for announcements and future webcasts
+        - generic [ref=e475]:
+          - generic [ref=e476]:
+            - generic [ref=e477]: Stay in the know - Want to stay updated on investor announcements and receive notifications of upcoming result webcasts? Fill out the form below. For any other queries please contact our VP of Investor Relations, Rogier Kloek.
+            - generic [ref=e480]:
+              - generic [ref=e481]:
+                - generic [ref=e482]:
+                  - generic [ref=e483]: Name*
+                  - generic [ref=e484]:
+                    - textbox "Name*" [ref=e485]:
+                      - /placeholder: Name
+                    - generic [ref=e486]: Please enter a valid name
+                - generic [ref=e487]:
+                  - generic [ref=e488]: Company*
+                  - generic [ref=e489]:
+                    - textbox "Company*" [ref=e490]:
+                      - /placeholder: Company
+                    - generic [ref=e491]: Please enter a valid company name
+                - generic [ref=e492]:
+                  - generic [ref=e493]: Phone number*
+                  - generic [ref=e494]:
+                    - textbox "Phone number*" [ref=e495]:
+                      - /placeholder: Phone number
+                    - generic [ref=e496]: Please enter a valid phone number
+                - generic [ref=e497]:
+                  - generic [ref=e498]: Email*
+                  - generic [ref=e499]:
+                    - textbox "Email*" [ref=e500]:
+                      - /placeholder: Email
+                    - generic [ref=e501]: Please enter a valid email
+                - generic [ref=e502]:
+                  - generic [ref=e503]: Region (optional)
+                  - generic [ref=e504]:
+                    - generic [ref=e505]:
+                      - combobox "Region (optional)" [ref=e506]:
+                        - option "Select one" [disabled] [selected]
+                        - option "North America"
+                        - option "South America"
+                        - option "Europe"
+                        - option "Asia"
+                        - option "Australia & New Zealand"
+                        - option "Africa & Middle East"
+                      - generic [ref=e508]: Select one
+                      - text: 
+                    - generic [ref=e509]: Please select a valid option
+                - generic [ref=e512] [cursor=pointer]:
+                  - checkbox "Yes, I agree to the Privacy Policy Consent is required"
+                  - text: Yes, I agree to the
+                  - link "Privacy Policy" [ref=e514]:
+                    - /url: /privacy-policy
+                  - generic [ref=e515]: Consent is required
+              - button "Submit" [disabled] [ref=e517]
+          - generic [ref=e519]:
+            - generic [ref=e520]: Investor contact
+            - generic [ref=e523]:
+              - generic [ref=e524]: Rogier Kloek
+              - generic [ref=e525]: VP Treasury and Investor Relations
+              - link "mail_outline investors@triviumpackaging.com" [ref=e526] [cursor=pointer]:
+                - /url: mailto:investors@triviumpackaging.com
+                - generic [ref=e527]: mail_outline
+                - generic [ref=e528]: investors@triviumpackaging.com
+      - generic [ref=e532]:
+        - generic [ref=e535]: Latest news and insights
+        - generic [ref=e536]:
+          - link "Blogs | 08 March 2026 International Women's Day 2026" [ref=e538] [cursor=pointer]:
+            - /url: /news-media/blogs/international-womens-day-2026-a-journey-of-reflection-with-meaningful-stories-and-collective-action
+            - generic [ref=e540]:
+              - generic [ref=e541]:
+                - generic [ref=e542]: Blogs
+                - generic [ref=e543]: "|"
+                - generic [ref=e544]: 08 March 2026
+              - generic [ref=e545]: International Women's Day 2026
+          - link "Awards | 04 March 2026 World Aluminium Aerosol Can Award for Trivium" [ref=e547] [cursor=pointer]:
+            - /url: /news-media/awards/world-aluminium-aerosol-can-award-for-trivium
+            - generic [ref=e549]:
+              - generic [ref=e550]:
+                - generic [ref=e551]: Awards
+                - generic [ref=e552]: "|"
+                - generic [ref=e553]: 04 March 2026
+              - generic [ref=e554]: World Aluminium Aerosol Can Award for Trivium
+          - link "Awards | 18 February 2026 Trivium wins a 2026 WorldStar Packaging Award" [ref=e556] [cursor=pointer]:
+            - /url: /news-media/awards/trivium-wins-a-2026-worldstar-packaging-award
+            - generic [ref=e558]:
+              - generic [ref=e559]:
+                - generic [ref=e560]: Awards
+                - generic [ref=e561]: "|"
+                - generic [ref=e562]: 18 February 2026
+              - generic [ref=e563]: Trivium wins a 2026 WorldStar Packaging Award
+        - link "See all news" [ref=e566] [cursor=pointer]:
+          - /url: /news-media
+          - generic [ref=e567]: See all news
+    - contentinfo [ref=e568]:
+      - generic [ref=e569]:
+        - link "Trivium" [ref=e573] [cursor=pointer]:
+          - /url: /
+          - img "Trivium" [ref=e574]
+        - generic [ref=e575]:
+          - generic [ref=e576]:
+            - generic [ref=e577]: Our products
+            - generic [ref=e578]:
+              - generic [ref=e579]:
+                - generic [ref=e580]: Industries we serve
+                - generic [ref=e581]:
+                  - link "Food" [ref=e582] [cursor=pointer]:
+                    - /url: /products/industry/food
+                  - link "Beverages" [ref=e583] [cursor=pointer]:
+                    - /url: /products/industry/beverages
+                  - link "Coffee" [ref=e584] [cursor=pointer]:
+                    - /url: /products/industry/coffee
+                  - link "Beauty and personal care" [ref=e585] [cursor=pointer]:
+                    - /url: /products/industry/beauty-and-personal-care
+                  - link "Health and Nutrition" [ref=e586] [cursor=pointer]:
+                    - /url: /products/industry/health-and-nutrition
+                  - link "Pet" [ref=e587] [cursor=pointer]:
+                    - /url: /products/industry/pet
+                  - link "Paints and coatings" [ref=e588] [cursor=pointer]:
+                    - /url: /products/industry/paints-and-coatings
+                  - link "Home care and industrial" [ref=e589] [cursor=pointer]:
+                    - /url: /products/industry/home-care-and-industrial
+              - generic [ref=e590]:
+                - generic [ref=e591]: All product types
+                - generic [ref=e592]:
+                  - link "Aerosols" [ref=e593] [cursor=pointer]:
+                    - /url: /products/product/aerosols
+                  - link "Threaded Bottles" [ref=e594] [cursor=pointer]:
+                    - /url: /products/product/threaded-bottles
+                  - link "Two Piece Cans" [ref=e595] [cursor=pointer]:
+                    - /url: /products/product/two-piece-cans
+                  - link "Three Piece Cans" [ref=e596] [cursor=pointer]:
+                    - /url: /products/product/three-piece-cans
+                  - link "DRD Cans" [ref=e597] [cursor=pointer]:
+                    - /url: /products/product/drd-cans
+                  - link "DWI Cans" [ref=e598] [cursor=pointer]:
+                    - /url: /products/product/dwi-cans
+                  - link "Slugs, Ends & Components" [ref=e599] [cursor=pointer]:
+                    - /url: /products/product/slugs-ends-components
+          - generic [ref=e601]:
+            - generic [ref=e602]:
+              - link "Our services" [ref=e603] [cursor=pointer]:
+                - /url: /services
+              - link "Sustainability" [ref=e604] [cursor=pointer]:
+                - /url: /sustainability
+              - link "About us" [ref=e605] [cursor=pointer]:
+                - /url: /about-us
+              - link "Why Metal?" [ref=e606] [cursor=pointer]:
+                - /url: /why-metal
+              - link "News and insights" [ref=e607] [cursor=pointer]:
+                - /url: /news-media
+              - link "Careers" [ref=e608] [cursor=pointer]:
+                - /url: https://careers.triviumpackaging.com/
+              - link "Investors" [ref=e609] [cursor=pointer]:
+                - /url: /investors
+              - link "Contact us" [ref=e610] [cursor=pointer]:
+                - /url: /contact-us
+              - link "Document Library" [ref=e611] [cursor=pointer]:
+                - /url: /resources/documents
+              - link "Media Library" [ref=e612] [cursor=pointer]:
+                - /url: /news-media/media
+            - generic [ref=e613]:
+              - link "Terms and Conditions" [ref=e614] [cursor=pointer]:
+                - /url: /terms-and-conditions
+              - link "Privacy Policy" [ref=e615] [cursor=pointer]:
+                - /url: /privacy-policy
+              - link "Cookie Policy" [ref=e616] [cursor=pointer]:
+                - /url: /cookie-policy
+              - link "Code of Conduct & Speak up!" [ref=e617] [cursor=pointer]:
+                - /url: /resources/knowledge-articles-and-faqs/knowledge-articles/code-of-conduct-speak-up
+              - link "Corporate Governance & Policy Documents" [ref=e618] [cursor=pointer]:
+                - /url: /corporate-governance-policy-documents
+              - link "Information Security" [ref=e619] [cursor=pointer]:
+                - /url: https://trust.triviumpackaging.com/
+              - generic [ref=e620]:
+                - generic [ref=e621]:
+                  - link:
+                    - /url: https://twitter.com/TriviumInsights
+                  - link:
+                    - /url: https://www.linkedin.com/company/trivium-packaging/
+                  - link:
+                    - /url: https://www.facebook.com/triviumpackaging/
+                  - link:
+                    - /url: https://www.instagram.com/triviumpackaging/
+                - generic [ref=e622]:
+                  - text: © 2026 - Trivium Packaging.
+                  - text: All rights reserved.
+  - text: ;
+  - iframe [ref=e625]:
+    - generic [ref=f25e6]:
+      - text: protegido por
+      - strong [ref=f25e7]: reCAPTCHA
+  - iframe [ref=e626]:
+    
+  - img [ref=e629]

@@ -1,0 +1,18 @@
+[   18143ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://www.linkedin.com/li/track:0
+[   66403ms] [LOG] %c%s color: red; background: yellow; font-size: 24px; AVISO @ https://www.gstatic.com/_/mss/boq-identity/_/js/k=boq-identity.AccountsSignInUi.pt_BR._9isWIv7Y4g.es5.O/am=Kf8GAABCEUgGwP___zcAIACCaOB6FoAmEBkAAAAAAAAAALBAAAAaAQ/d=1/excm=_b,_tp,accountchooserview/ed=1/dg=0/wt=2/ujg=1/rs=AOaEmlHNtAYy_fsMi1kETRwYdJTxT4UmBQ/dti=1/m=_b,_tp:468
+[   66403ms] [LOG] %c%s font-size: 18px; O uso deste console pode permitir que invasores falsifiquem sua identidade para roubar informações por meio de um ataque chamado Self-XSS.
+Não insira nem cole códigos que você não conheça. @ https://www.gstatic.com/_/mss/boq-identity/_/js/k=boq-identity.AccountsSignInUi.pt_BR._9isWIv7Y4g.es5.O/am=Kf8GAABCEUgGwP___zcAIACCaOB6FoAmEBkAAAAAAAAAALBAAAAaAQ/d=1/excm=_b,_tp,accountchooserview/ed=1/dg=0/wt=2/ujg=1/rs=AOaEmlHNtAYy_fsMi1kETRwYdJTxT4UmBQ/dti=1/m=_b,_tp:468
+[   82667ms] [LOG] %c%s color: red; background: yellow; font-size: 24px; AVISO @ https://www.gstatic.com/_/mss/boq-identity/_/js/k=boq-identity.OAuthUi.pt_BR.UnnnYAbWcoM.es5.O/am=nh8AAAAQgAHwj___NyAIDdYzAAUCAAAAAAAAAMAQACAC/d=1/excm=_b,_tp,attributesview/ed=1/dg=0/wt=2/ujg=1/rs=AOaEmlEBEfKjczD8ctgv2E6T4YSg5iuKmw/dti=1/m=_b,_tp:480
+[   82667ms] [LOG] %c%s font-size: 18px; O uso deste console pode permitir que invasores falsifiquem sua identidade para roubar informações por meio de um ataque chamado Self-XSS.
+Não insira nem cole códigos que você não conheça. @ https://www.gstatic.com/_/mss/boq-identity/_/js/k=boq-identity.OAuthUi.pt_BR.UnnnYAbWcoM.es5.O/am=nh8AAAAQgAHwj___NyAIDdYzAAUCAAAAAAAAAMAQACAC/d=1/excm=_b,_tp,attributesview/ed=1/dg=0/wt=2/ujg=1/rs=AOaEmlEBEfKjczD8ctgv2E6T4YSg5iuKmw/dti=1/m=_b,_tp:480
+[  102648ms] URIError: Pathname "/pt-BR/Search/job/BR,-S%E3o-Paulo,-Sumare/Manufacturing-Controller_R01126888/apply/applyManually" could not be decoded. This is likely caused by an invalid percent-encoding.
+    at h (https://www.myworkdaycdn.com/wday/asset/candidate-experience-jobs/cx-jobs.min.js:501:233681)
+    at T (https://www.myworkdaycdn.com/wday/asset/candidate-experience-jobs/cx-jobs.min.js:501:235472)
+    at k (https://www.myworkdaycdn.com/wday/asset/candidate-experience-jobs/cx-jobs.min.js:501:236025)
+    at 26863 (https://www.myworkdaycdn.com/wday/asset/candidate-experience-jobs/cx-jobs.min.js:59:4769)
+    at o (https://www.myworkdaycdn.com/wday/asset/candidate-experience-jobs/cx-jobs.min.js:501:406556)
+    at 50868 (https://www.myworkdaycdn.com/wday/asset/candidate-experience-jobs/cx-jobs.min.js:315:60059)
+    at o (https://www.myworkdaycdn.com/wday/asset/candidate-experience-jobs/cx-jobs.min.js:501:406556)
+    at 28113 (https://www.myworkdaycdn.com/wday/asset/candidate-experience-jobs/cx-jobs.min.js:59:6399)
+    at o (https://www.myworkdaycdn.com/wday/asset/candidate-experience-jobs/cx-jobs.min.js:501:406556)
+    at 65791 (https://www.myworkdaycdn.com/wday/asset/candidate-experience-jobs/cx-jobs.min.js:395:5666)

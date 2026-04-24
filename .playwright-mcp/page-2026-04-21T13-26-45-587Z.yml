@@ -1,0 +1,128 @@
+- generic [ref=e4]:
+  - link "Ir para o conteúdo principal" [ref=e5] [cursor=pointer]:
+    - /url: ""
+  - banner [ref=e8]:
+    - generic [ref=e10]:
+      - link "Página inicial de carreiras da" [ref=e13] [cursor=pointer]:
+        - /url: https://www.solventum.com/en-us/home/our-company/careers/
+        - img "Página inicial de carreiras da" [ref=e14]
+      - generic [ref=e15]:
+        - heading [level=1]
+      - generic [ref=e17]:
+        - generic [ref=e18]:
+          - button "Português (‏Brasil)" [ref=e20] [cursor=pointer]:
+            - generic [ref=e24]: Português (‏Brasil)
+          - button "fernandocostaxavier@gmail.com" [ref=e27] [cursor=pointer]:
+            - generic [ref=e32]: fernandocostaxavier@gmail.com
+        - navigation [ref=e33]:
+          - button "Careers Page" [ref=e34] [cursor=pointer]
+          - button "Página inicial de candidatos" [ref=e35] [cursor=pointer]
+          - button "Alertas de vagas" [ref=e36] [cursor=pointer]
+  - main [ref=e39]:
+    - generic [ref=e40]:
+      - generic [ref=e41]:
+        - link "Voltar para publicação de vaga de emprego" [ref=e43] [cursor=pointer]:
+          - generic [ref=e47]: Voltar para publicação de vaga de emprego
+        - heading "Manufacturing Controller." [level=2] [ref=e48]
+      - generic "Application Progress" [ref=e49]:
+        - list [ref=e50]:
+          - listitem [ref=e51]:
+            - generic: completed step 1 of 6
+            - generic [ref=e57]: Minhas informações
+          - listitem [ref=e58]:
+            - generic: completed step 2 of 6
+            - generic [ref=e64]: Minha experiência
+          - listitem [ref=e65]:
+            - generic: completed step 3 of 6
+            - generic [ref=e71]: "Perguntas da candidatura: 1 de 2"
+          - listitem [ref=e72]:
+            - generic: completed step 4 of 6
+            - generic [ref=e78]: "Perguntas da candidatura: 2 de 2"
+          - listitem [ref=e79]:
+            - generic: current step 5 of 6
+            - generic [ref=e85]: Informações voluntárias
+          - listitem [ref=e86]:
+            - generic: step 6 of 6
+            - generic [ref=e92]: Revisar
+      - generic [ref=e93]:
+        - generic [ref=e94]:
+          - heading "Informações voluntárias" [active] [level=3] [ref=e1329]
+          - generic [ref=e96]: "* Indica um campo obrigatório"
+          - generic [ref=e1335]:
+            - group "Personal Information - Voluntary Disclosures" [ref=e1336]:
+              - heading "Personal Information - Voluntary Disclosures" [level=4] [ref=e1337]
+              - generic [ref=e1339]:
+                - paragraph [ref=e1340]:
+                  - generic [ref=e1342]: AVISO DE CONSENTIMENTO EXPRESSO
+                - paragraph [ref=e1343]: A Solventum está comprometida em construir uma força de trabalho diversificada e cultura inclusiva que capacita seu pessoal a ser o verdadeiro eu no trabalho. Para construir continuamente novos programas que atendam às necessidades de seus funcionários, a Solventum busca ter uma visão precisa e atualizada da diversidade de sua força de trabalho global. É por isso que a Solventum convida seus candidatos a fornecerem informações no Workday.
+                - paragraph [ref=e1344]
+                - paragraph [ref=e1345]:
+                  - generic [ref=e1346]: O fornecimento dessas informações é totalmente voluntário. Se você optar por fornecer essas informações, você concorda que a Solventum as use para os fins limitados descritos neste parágrafo. Você pode revogar seu consentimento a qualquer momento, solicitando a remoção de informações através do
+                  - link "hrhelpamericas@hrhub.solventum.com" [ref=e1347] [cursor=pointer]:
+                    - /url: mailto:hrhelpamericas@hrhub.solventum.com
+                    - generic [ref=e1350]: hrhelpamericas@hrhub.solventum.com
+                  - text: . As informações que você fornecer permanecerão confidenciais e a Solventum só usará essas informações em um nível macro para apoiar e melhorar seus programas de Diversidade e Inclusão, atingir seus objetivos de sustentabilidade de longo prazo e construir uma cultura mais forte de inclusão. As informações que você fornecer serão transferidas, armazenadas e/ou processadas em outros países, incluindo Costa Rica e os EUA, que podem ter regras de proteção de dados diferentes do seu país. Para obter mais informações sobre como a Solventum processa informações pessoais e seus direitos como titular de dados individual, acesse a Política Global de Privacidade da Solventum (
+                  - link "Applicant Privacy Notice" [ref=e1351] [cursor=pointer]:
+                    - /url: https://www.solventum.com/en-us/home/legal/website-privacy-statement/applicant-privacy/
+                    - generic [ref=e1353]: Applicant Privacy Notice
+                  - text: )
+              - generic [ref=e1354]:
+                - generic [ref=e1355]:
+                  - generic [ref=e1356]: Sexo
+                  - button "Sexo Selecione uma opção" [ref=e1360]: Selecione uma opção
+                - generic [ref=e1361]:
+                  - generic [ref=e1362]: País de nascimento
+                  - button "País de nascimento Selecione uma opção" [ref=e1366]: Selecione uma opção
+                - generic [ref=e1367]:
+                  - generic [ref=e1368]: Raça/Etnia
+                  - button "Raça/Etnia Selecione uma opção" [ref=e1372]: Selecione uma opção
+                - generic [ref=e1373]:
+                  - generic [ref=e1374]: Deficiência
+                  - generic [ref=e1380] [cursor=pointer]:
+                    - textbox "Deficiência" [ref=e1381]:
+                      - /placeholder: Pesquisar
+                    - generic [ref=e1382]: 0 items selected
+            - group "Termos e condições" [ref=e1387]:
+              - heading "Termos e condições" [level=4] [ref=e1388]
+              - generic [ref=e1389]:
+                - generic [ref=e1392]:
+                  - paragraph [ref=e1393]:
+                    - generic [ref=e1394]: Application Acknowledgement
+                  - paragraph [ref=e1395]:
+                    - text: Please review the Application Acknowledgement by clicking
+                    - link "here" [ref=e1396] [cursor=pointer]:
+                      - /url: https://multimedia.3m.com/mws/media/1262310O/global-application-agreement-and-esignature.pdf
+                    - text: ", select the country where you are applying for employment"
+                  - paragraph [ref=e1397]
+                  - paragraph [ref=e1398]:
+                    - generic [ref=e1399]: Solventum Global Terms of Use and Privacy Statement
+                    - text: Click
+                    - link "here" [ref=e1400] [cursor=pointer]:
+                      - /url: https://www.solventum.com/en-us/home/legal/website-privacy-statement/applicant-privacy/
+                    - text: and select the country where you are applying for employment to read the Terms of Use before using this website.
+                  - paragraph [ref=e1401]
+                  - paragraph [ref=e1402]: Your access to and use of this website and application for a job at solventum are conditioned on your acceptance and compliance with these terms. Once you have read the terms outlined above, please acknowledge that you have read and agree to the terms by checking the box below.
+                - generic [ref=e1403]:
+                  - generic [ref=e1405]: Yes, I have read and consent to the terms and conditions.*
+                  - checkbox "Yes, I have read and consent to the terms and conditions." [ref=e1410] [cursor=pointer]
+        - generic [ref=e224]:
+          - button "Voltar" [ref=e1026] [cursor=pointer]
+          - button "Salvar e continuar" [ref=e227] [cursor=pointer]
+  - generic [ref=e228]:
+    - generic [ref=e229]: Siga-nos
+    - list [ref=e230]:
+      - listitem [ref=e231] [cursor=pointer]:
+        - link "Facebook" [ref=e232]:
+          - /url: https://www.facebook.com/solventumhealth
+      - listitem [ref=e236] [cursor=pointer]:
+        - link "YouTube" [ref=e237]:
+          - /url: https://www.youtube.com/@Solventum
+      - listitem [ref=e243] [cursor=pointer]:
+        - link "LinkedIn" [ref=e244]:
+          - /url: https://www.linkedin.com/company/solventumhealth/
+      - listitem [ref=e248] [cursor=pointer]:
+        - link "X" [ref=e249]:
+          - /url: https://x.com/i/flow/login?redirect_after_login=%2Fsolventum
+    - generic [ref=e253]:
+      - img [ref=e257]
+      - generic [ref=e277]: © 2026 Workday, Inc. Todos os direitos reservados.

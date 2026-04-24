@@ -1,0 +1,212 @@
+- generic [active] [ref=e1]:
+  - generic:
+    - alert
+    - alert
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic:
+        - link "Skip to main content":
+          - /url: "#content"
+      - navigation "Header Menu" [ref=e7]:
+        - link [ref=e8] [cursor=pointer]:
+          - /url: https://careers.triviumpackaging.com
+          - img [ref=e9]
+        - list [ref=e10]:
+          - listitem [ref=e11]:
+            - link "Home" [ref=e12] [cursor=pointer]:
+              - /url: /
+          - listitem [ref=e13]:
+            - link "Our Community" [ref=e14] [cursor=pointer]:
+              - /url: /content/Our-Community/?locale=en_US
+          - listitem [ref=e15]:
+            - link "Vacancies" [ref=e16] [cursor=pointer]:
+              - /url: /go/Vacancies/9811757/
+      - generic [ref=e18]:
+        - button "Language" [ref=e20] [cursor=pointer]: Language
+        - link "My Profile" [ref=e24] [cursor=pointer]:
+          - /url: "#"
+        - link "Employee Login" [ref=e27] [cursor=pointer]:
+          - /url: javascript:;
+    - main [ref=e29]:
+      - generic [ref=e30]:
+        - search [ref=e32]:
+          - generic [ref=e33]:
+            - generic [ref=e35]:
+              - generic "Search by Keyword" [ref=e36]: 
+              - searchbox "Search by Keyword" [ref=e37]
+            - button "Search Vacancies" [ref=e39] [cursor=pointer]
+        - application [ref=e82]:
+          - generic [ref=e83]:
+            - region "Refine your search" [ref=e85]:
+              - generic [ref=e86]:
+                - heading "Refine your search" [level=2] [ref=e87]
+                - generic [ref=e88]:
+                  - button "Country/Region" [ref=e90] [cursor=pointer]:
+                    - heading "Country/Region" [level=3] [ref=e91]
+                    - img [ref=e92]
+                  - button "Job Location" [ref=e95] [cursor=pointer]:
+                    - heading "Job Location" [level=3] [ref=e96]
+                    - img [ref=e97]
+                  - button "Talent Area" [ref=e100] [cursor=pointer]:
+                    - heading "Talent Area" [level=3] [ref=e101]
+                    - img [ref=e102]
+                  - button "Remote/Hybrid/Onsite" [ref=e105] [cursor=pointer]:
+                    - heading "Remote/Hybrid/Onsite" [level=3] [ref=e106]
+                    - img [ref=e107]
+            - generic [ref=e109]:
+              - region [ref=e110]:
+                - generic [ref=e112]:
+                  - heading "1 to 10 of 64 results" [level=2] [ref=e113]
+                  - generic [ref=e114]:
+                    - generic [ref=e115]:
+                      - generic [ref=e116]: Sort by
+                      - generic [ref=e117] [cursor=pointer]:
+                        - generic [ref=e118]:
+                          - combobox "Sort by" [ref=e119]: Most Relevant
+                          - img [ref=e121]
+                        - generic: Most Relevant
+                        - generic: Most Recent
+                    - listbox "Switch between list and map view" [ref=e124]:
+                      - generic:
+                        - option "List View" [selected] [ref=e126] [cursor=pointer]:
+                          - img [ref=e128]
+                        - option "Map View" [ref=e131] [cursor=pointer]:
+                          - img [ref=e133]
+                      - generic: Pressionar a barra de espaços ou ENTER para selecionar um item
+                - list [ref=e135]:
+                  - listitem [ref=e136]:
+                    - link "Hledáme technicky zdatného parťáka na výrobní linku!, job posting 1 of 64" [ref=e138] [cursor=pointer]:
+                      - /url: /job/Hled%C3%A1me-technicky-zdatn%C3%A9ho-par%C5%A5%C3%A1ka-na-v%C3%BDrobn%C3%AD-linku%21/39506-en_US
+                      - text: Hledáme technicky zdatného parťáka na výrobní linku!
+                    - generic [ref=e139]: CZE, Znojmo
+                    - generic [ref=e140]:
+                      - generic [ref=e141]: Permanent•
+                      - generic [ref=e142]: On-site
+                  - listitem [ref=e143]:
+                    - link "Operator (skilled) - M, job posting 2 of 64" [ref=e145] [cursor=pointer]:
+                      - /url: /job/Operator-%28skilled%29-M/39517-en_US
+                      - text: Operator (skilled) - M
+                    - generic [ref=e146]: DEU, Wedel
+                    - generic [ref=e147]:
+                      - generic [ref=e148]: Permanent•
+                      - generic [ref=e149]: On-site
+                  - listitem [ref=e150]:
+                    - link "Addetta/o alla manutenzione meccanica, job posting 3 of 64" [ref=e152] [cursor=pointer]:
+                      - /url: /job/Addettao-alla-manutenzione-meccanica/36400-en_US
+                      - text: Addetta/o alla manutenzione meccanica
+                    - generic [ref=e153]: ITA, Fiorenzuola d'Arda
+                    - generic [ref=e155]: On-site
+                  - listitem [ref=e156]:
+                    - link "Ausbildung Elektroniker für Betriebstechnik, job posting 4 of 64" [ref=e158] [cursor=pointer]:
+                      - /url: /job/Ausbildung-Elektroniker-f%C3%BCr-Betriebstechnik/38718-en_US
+                      - text: Ausbildung Elektroniker für Betriebstechnik
+                    - generic [ref=e159]: DEU, Wedel
+                    - generic [ref=e160]:
+                      - generic [ref=e161]: Apprentice•
+                      - generic [ref=e162]: On-site
+                  - listitem [ref=e163]:
+                    - link "Azubi Maschinen-/Anlagenführer, job posting 5 of 64" [ref=e165] [cursor=pointer]:
+                      - /url: /job/Azubi-Maschinen-Anlagenf%C3%BChrer/39365-en_US
+                      - text: Azubi Maschinen-/Anlagenführer
+                    - generic [ref=e166]: DEU, Wedel
+                    - generic [ref=e167]:
+                      - generic [ref=e168]: Apprentice•
+                      - generic [ref=e169]: On-site
+                  - listitem [ref=e170]:
+                    - link "IT Network Connectivity Intern, job posting 6 of 64" [ref=e172] [cursor=pointer]:
+                      - /url: /job/IT-Network-Connectivity-Intern/39562-en_US
+                      - text: IT Network Connectivity Intern
+                    - generic [ref=e173]: HUN, Budapest
+                    - generic [ref=e174]:
+                      - generic [ref=e175]: Trainee•
+                      - generic [ref=e176]: Hybrid
+                  - listitem [ref=e177]:
+                    - link "Customer Service Team Lead (Beaurepaire) & Customer service Lead Coordinator, job posting 7 of 64" [ref=e179] [cursor=pointer]:
+                      - /url: /job/Customer-Service-Team-Lead-%28Beaurepaire%29-&amp;-Customer-service-Lead-Coordinator/39450-en_US
+                      - text: Customer Service Team Lead (Beaurepaire) & Customer service Lead Coordinator
+                    - generic [ref=e180]: FRA, Beaurepaire
+                    - generic [ref=e181]:
+                      - generic [ref=e182]: Permanent•
+                      - generic [ref=e183]: On-site
+                  - listitem [ref=e184]:
+                    - link "RESPONSABLE LOGISTIQUE, job posting 8 of 64" [ref=e186] [cursor=pointer]:
+                      - /url: /job/RESPONSABLE-LOGISTIQUE/39571-en_US
+                      - text: RESPONSABLE LOGISTIQUE
+                    - generic [ref=e187]: FRA, Ludres
+                    - generic [ref=e188]:
+                      - generic [ref=e189]: Permanent•
+                      - generic [ref=e190]: On-site
+                  - listitem [ref=e191]:
+                    - link "HR Manager - Beaurepaire, Veauche & Villeneuve-sur-Lot, job posting 9 of 64" [ref=e193] [cursor=pointer]:
+                      - /url: /job/HR-Manager-Beaurepaire%2C-Veauche-&amp;-Villeneuve-sur-Lot/39536-en_US
+                      - text: HR Manager - Beaurepaire, Veauche & Villeneuve-sur-Lot
+                    - generic [ref=e194]: FRA, Paris
+                    - generic [ref=e195]:
+                      - generic [ref=e196]: Permanent•
+                      - generic [ref=e197]: On-site
+                  - listitem [ref=e198]:
+                    - link "Operator Technician (Mechanic), job posting 10 of 64" [ref=e200] [cursor=pointer]:
+                      - /url: /job/Operator-Technician-%28Mechanic%29/39572-en_US
+                      - text: Operator Technician (Mechanic)
+                    - generic [ref=e201]: USA, Reno
+                    - generic [ref=e202]:
+                      - generic [ref=e203]: Permanent•
+                      - generic [ref=e204]: On-site
+              - navigation "Pagination" [ref=e205]:
+                - list [ref=e206]:
+                  - listitem [ref=e207]:
+                    - button "Go to page 1" [disabled] [ref=e208]: "1"
+                  - listitem [ref=e209]:
+                    - button "Go to page 2" [ref=e210] [cursor=pointer]: "2"
+                  - listitem [ref=e211]:
+                    - button "Go to page 3" [ref=e212] [cursor=pointer]: "3"
+                  - listitem [ref=e213]:
+                    - button "Go to page 4" [ref=e214] [cursor=pointer]: "4"
+                  - listitem [ref=e215]:
+                    - button "Go to page 5" [ref=e216] [cursor=pointer]: "5"
+                  - listitem [ref=e217]:
+                    - button "Go to page 6" [ref=e218] [cursor=pointer]: "6"
+                  - listitem [ref=e219]:
+                    - button "Go to page 7" [ref=e220] [cursor=pointer]: "7"
+                  - listitem [ref=e221]:
+                    - button "Go to next page" [ref=e222] [cursor=pointer]: Next
+    - contentinfo [ref=e40]:
+      - generic [ref=e43]:
+        - list [ref=e44]:
+          - listitem [ref=e45]:
+            - link "Home" [ref=e46] [cursor=pointer]:
+              - /url: /
+          - listitem [ref=e47]:
+            - link "Vacancies" [ref=e48] [cursor=pointer]:
+              - /url: /go/Vacancies/9811757/
+          - listitem [ref=e49]:
+            - link "Privacy Policy" [ref=e50] [cursor=pointer]:
+              - /url: https://www.triviumpackaging.com/privacy-policy
+          - listitem [ref=e51]:
+            - button "Cookie Policy" [ref=e52] [cursor=pointer]
+          - listitem [ref=e53]:
+            - link "Trivium Packaging" [ref=e54] [cursor=pointer]:
+              - /url: https://www.triviumpackaging.com/
+        - list [ref=e56]:
+          - listitem [ref=e57]:
+            - link "Visit our Facebook page" [ref=e58] [cursor=pointer]:
+              - /url: https://www.facebook.com/triviumpackaging/
+              - img [ref=e59]
+          - listitem [ref=e61]:
+            - link "Follow us on LinkedIn" [ref=e62] [cursor=pointer]:
+              - /url: "https://www.linkedin.com/company/trivium-packaging/posts/?feedView=all "
+              - img [ref=e63]
+          - listitem [ref=e65]:
+            - link "Follow us on Instagram" [ref=e66] [cursor=pointer]:
+              - /url: https://www.instagram.com/triviumpackaging/
+              - img [ref=e67]
+          - listitem [ref=e70]:
+            - link "Follow us on X" [ref=e71] [cursor=pointer]:
+              - /url: https://x.com/TriviumInsights
+              - img [ref=e72]
+          - listitem [ref=e74]:
+            - link "Visit our YouTube channel" [ref=e75] [cursor=pointer]:
+              - /url: https://www.youtube.com/@TriviumPackaging
+              - img [ref=e76]
+      - paragraph [ref=e80]: © Trivium Packaging B.V. - WTC Schiphol, B Tower, 5th Floor - Schiphol Boulevard 149 - 1118 BG Schiphol - The Netherlands
+  - text: "\" \""

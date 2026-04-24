@@ -1,0 +1,55 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e112]:
+    - log
+    - log
+  - generic [ref=e3]:
+    - banner [ref=e11]:
+      - link "Pulsus logo" [ref=e166] [cursor=pointer]:
+        - /url: "#"
+        - img "Pulsus logo" [ref=e167]
+      - generic [ref=e14]:
+        - button "Email" [ref=e168] [cursor=pointer]:
+          - img [ref=e18]
+        - button "Menu" [ref=e169] [cursor=pointer]:
+          - img [ref=e24]
+    - main [ref=e26]:
+      - generic [ref=e27]:
+        - img "Logo da empresa" [ref=e170]
+        - generic [ref=e189]:
+          - heading "Perguntas criadas pela empresa" [level=1] [ref=e191]
+          - paragraph [ref=e192]:
+            - generic [ref=e193]: Fernando, essa vaga tem pergunta(s) criada(s) pela Pulsus. Para continuar com o processo responda as perguntas a seguir.
+          - generic [ref=e194]:
+            - img [ref=e196]
+            - paragraph [ref=e198]:
+              - generic [ref=e199]: "Atenção: as respostas não poderão ser editadas depois."
+          - button "Responder agora" [ref=e200] [cursor=pointer]
+        - generic [ref=e39]: Powered by Gupy
+    - contentinfo [ref=e40]: Gupy 2026. Todos os direitos reservados. v5.61.0
+    - link "Suporte para candidatos" [ref=e182] [cursor=pointer]:
+      - /url: https://suporte-candidatos.gupy.io/s/suporte?language=pt_BR
+      - text: "?"
+  - button [ref=e41]:
+    - generic [ref=e42]: 99+
+  - generic:
+    - generic "Privacy Tools - Cookie Management"
+    - generic "Privacy Tools - Cookie Management - https://www.privacytools.com.br"
+  - generic "Plugin de acessibilidade da Hand Talk." [ref=e183]:
+    - heading "Plugin de acessibilidade da Hand Talk." [level=2] [ref=e184]
+    - button "Abrir recursos assistivos." [ref=e185] [cursor=pointer]:
+      - img [ref=e46]
+      - paragraph:
+        - generic [ref=e48]: Recursos Assistivos
+    - button "Abrir tradutor de língua de sinais." [ref=e186] [cursor=pointer]:
+      - img [ref=e50]
+      - paragraph:
+        - generic [ref=e57]: Acessível em Libras
+  - generic [ref=e101]:
+    - generic [ref=e102]: Pensando em mudar o rumo da sua carreira?
+    - generic [ref=e103]: Que tal fazer uma mentoria? Essa sensação de estar no lugar errado, fazendo o que não te realiza, é...
+    - generic [ref=e104]: +
+  - dialog [ref=e105]:
+    - generic [ref=e108]: Gostaríamos de te mostrar as últimas atualizações e novidades da Gupy
+    - generic [ref=e109]:
+      - button "Não, obrigado" [ref=e187] [cursor=pointer]
+      - button "Aceitar" [ref=e188] [cursor=pointer]

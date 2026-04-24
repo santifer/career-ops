@@ -1,0 +1,102 @@
+[      75ms] [ERROR] Mixed Content: The page at 'https://jobs.dsm-firmenich.com/careers/job/562949976677451?hl=en_US&domain=dsm.com' was loaded over HTTPS, but requested an insecure stylesheet 'http://fonts.googleapis.com/css?family=Nunito:400,700,300'. This request has been blocked; the content must be served over HTTPS. @ https://jobs.dsm-firmenich.com/careers/job/562949976677451?hl=en_US&domain=dsm.com:0
+[      75ms] [ERROR] Mixed Content: The page at 'https://jobs.dsm-firmenich.com/careers/job/562949976677451?hl=en_US&domain=dsm.com' was loaded over HTTPS, but requested an insecure stylesheet 'http://fonts.googleapis.com/css?family=Oxygen:400,300,700'. This request has been blocked; the content must be served over HTTPS. @ https://jobs.dsm-firmenich.com/careers/job/562949976677451?hl=en_US&domain=dsm.com:0
+[     726ms] [LOG] ipGeolocation Osasco, São Paulo, BR @ https://static.vscdn.net/sentry/5.29.2/bundle.tracing.min.js:1
+[     726ms] [LOG] ipGeolocationLatLong -23.5215,-46.7873 @ https://static.vscdn.net/sentry/5.29.2/bundle.tracing.min.js:1
+[    1009ms] [INFO] [PAGE CONTEXT]: usePage should be used inside PageContext @ https://static.vscdn.net/sentry/5.29.2/bundle.tracing.min.js:1
+[    1012ms] [INFO] [PAGE CONTEXT]: usePage should be used inside PageContext @ https://static.vscdn.net/sentry/5.29.2/bundle.tracing.min.js:1
+[    1017ms] [INFO] [PAGE CONTEXT]: usePage should be used inside PageContext @ https://static.vscdn.net/sentry/5.29.2/bundle.tracing.min.js:1
+[    2529ms] [LOG] doing run once @ https://static.vscdn.net/sentry/5.29.2/bundle.tracing.min.js:1
+[    2668ms] [ERROR] Access to XMLHttpRequest at 'https://login.microsoftonline.com/49618402-6ea3-441d-957d-7df8773fee54/saml2?SAMLRequest=hVLLbtswELz7KwTd9ZYli7BcuHHaGnBtIXZ76CWgyKVNQCJVLpWmf19JaZr6kIQ3Lmdmd2a5RNo2HVn39qLu4GcPaGeO89g2Csn0VLq9UURTlEgUbQGJZeS4%2FrojsR%2BSzmirmW7cK9LbHIoIxkqtRtJ2U7qH%2Fe3u8Hm7vxdhJPIsZXUSAsyLOM6KHIqk5nVYF0KE%2BSIJac3ESPwOBgeN0h0kx7vjVEY%2FSA5mP3Qs3Vt5vlihGz51Qexhq9BSZQdGGGdemHpxdIrmZJ6SdPFjRG0G81JRO8lerO2QBEGjz1L5rWRGoxZWq0Yq8Jlug7TIokUaxl4GNPHSNOJeMc%2B5l3OxyPNEDBbSYIwjHsWrv0l9lIpLdX47ovoJhOTL6VR51eF4GiXWz8HdaIV9C%2BYI5kEy%2BHa3e5mXY%2BsJaVpQkl18eE7BpzJA1Pd0WPQHyrC8xg1%2B3NWU4nKcmEyBmdX7osvgf%2FyLQkfGNWw3lW4k%2Bz3Vx%2FNJm5ba181HfjRVJPfEBCW9wg6YFBK4%2B09m3TT6140BaodNW9OD6wSr2expmOvfvPoD&RelayState=http%3A%2F%2Fjobs.dsm-firmenich.com%2Fapi%2Fpcsx%2Fnotifications_boot_data' (redirected from 'https://jobs.dsm-firmenich.com/api/pcsx/notifications_boot_data') from origin 'https://jobs.dsm-firmenich.com' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://jobs.dsm-firmenich.com/careers/job/562949976677451?hl=en_US&domain=dsm.com:0
+[    2669ms] [LOG] Error fetching notifications boot data: tt @ https://static.vscdn.net/sentry/5.29.2/bundle.tracing.min.js:1
+[    2670ms] [LOG] Failed to fetch notifications boot data: Failed to fetch notifications boot data @ https://static.vscdn.net/sentry/5.29.2/bundle.tracing.min.js:1
+[    2670ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://login.microsoftonline.com/49618402-6ea3-441d-957d-7df8773fee54/saml2?SAMLRequest=hVLLbtswELz7KwTd9ZYli7BcuHHaGnBtIXZ76CWgyKVNQCJVLpWmf19JaZr6kIQ3Lmdmd2a5RNo2HVn39qLu4GcPaGeO89g2Csn0VLq9UURTlEgUbQGJZeS4%2FrojsR%2BSzmirmW7cK9LbHIoIxkqtRtJ2U7qH%2Fe3u8Hm7vxdhJPIsZXUSAsyLOM6KHIqk5nVYF0KE%2BSIJac3ESPwOBgeN0h0kx7vjVEY%2FSA5mP3Qs3Vt5vlihGz51Qexhq9BSZQdGGGdemHpxdIrmZJ6SdPFjRG0G81JRO8lerO2QBEGjz1L5rWRGoxZWq0Yq8Jlug7TIokUaxl4GNPHSNOJeMc%2B5l3OxyPNEDBbSYIwjHsWrv0l9lIpLdX47ovoJhOTL6VR51eF4GiXWz8HdaIV9C%2BYI5kEy%2BHa3e5mXY%2BsJaVpQkl18eE7BpzJA1Pd0WPQHyrC8xg1%2B3NWU4nKcmEyBmdX7osvgf%2FyLQkfGNWw3lW4k%2Bz3Vx%2FNJm5ba181HfjRVJPfEBCW9wg6YFBK4%2B09m3TT6140BaodNW9OD6wSr2expmOvfvPoD&RelayState=http%3A%2F%2Fjobs.dsm-firmenich.com%2Fapi%2Fpcsx%2Fnotifications_boot_data:0
+[    2754ms] [ERROR] Attestation check for Attribution Reporting on https://www.facebook.com failed. @ https://jobs.dsm-firmenich.com/careers/job/562949976677451?hl=en_US&domain=dsm.com:0
+[    2880ms] [ERROR] Attestation check for Attribution Reporting on https://www.facebook.com failed. @ https://jobs.dsm-firmenich.com/careers/job/562949976677451?hl=en_US&domain=dsm.com:0
+[    2880ms] [ERROR] Attestation check for Attribution Reporting on https://www.facebook.com failed. @ https://jobs.dsm-firmenich.com/careers/job/562949976677451?hl=en_US&domain=dsm.com:0
+[    3078ms] [LOG] setting focus to firstTabElement @ defaultpreferencemanager-29.js:2028
+[    3078ms] [LOG] JSHandle@node @ defaultpreferencemanager-29.js:2028
+[    3106ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://consent.trustarc.com/get?name=DMSans-Bold.ttf:0
+[    3107ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://consent.trustarc.com/get?name=DMSans-Medium.ttf:0
+[   17058ms] [ERROR] Mixed Content: The page at 'https://jobs.dsm-firmenich.com/careers/job/562949976677451?hl=en_US&domain=dsm.com' was loaded over HTTPS, but requested an insecure stylesheet 'http://fonts.googleapis.com/css?family=Nunito:400,700,300'. This request has been blocked; the content must be served over HTTPS. @ https://jobs.dsm-firmenich.com/careers/job/562949976677451?hl=en_US&domain=dsm.com:15
+[   17058ms] [ERROR] Mixed Content: The page at 'https://jobs.dsm-firmenich.com/careers/job/562949976677451?hl=en_US&domain=dsm.com' was loaded over HTTPS, but requested an insecure stylesheet 'http://fonts.googleapis.com/css?family=Oxygen:400,300,700'. This request has been blocked; the content must be served over HTTPS. @ https://jobs.dsm-firmenich.com/careers/job/562949976677451?hl=en_US&domain=dsm.com:15
+[   17265ms] [LOG] ipGeolocation Osasco, São Paulo, BR @ https://static.vscdn.net/sentry/5.29.2/bundle.tracing.min.js:1
+[   17265ms] [LOG] ipGeolocationLatLong -23.5215,-46.7873 @ https://static.vscdn.net/sentry/5.29.2/bundle.tracing.min.js:1
+[   17462ms] [INFO] [PAGE CONTEXT]: usePage should be used inside PageContext @ https://static.vscdn.net/sentry/5.29.2/bundle.tracing.min.js:1
+[   17463ms] [INFO] [PAGE CONTEXT]: usePage should be used inside PageContext @ https://static.vscdn.net/sentry/5.29.2/bundle.tracing.min.js:1
+[   17465ms] [INFO] [PAGE CONTEXT]: usePage should be used inside PageContext @ https://static.vscdn.net/sentry/5.29.2/bundle.tracing.min.js:1
+[   18268ms] [ERROR] Attestation check for Attribution Reporting on https://www.facebook.com failed. @ https://jobs.dsm-firmenich.com/careers/job/562949976677451?hl=en_US&domain=dsm.com:0
+[   18268ms] [ERROR] Attestation check for Attribution Reporting on https://www.facebook.com failed. @ https://jobs.dsm-firmenich.com/careers/job/562949976677451?hl=en_US&domain=dsm.com:0
+[   18268ms] [ERROR] Attestation check for Attribution Reporting on https://www.facebook.com failed. @ https://jobs.dsm-firmenich.com/careers/job/562949976677451?hl=en_US&domain=dsm.com:0
+[   18316ms] [LOG] doing run once @ https://static.vscdn.net/sentry/5.29.2/bundle.tracing.min.js:1
+[   18787ms] [ERROR] Access to XMLHttpRequest at 'https://login.microsoftonline.com/49618402-6ea3-441d-957d-7df8773fee54/saml2?SAMLRequest=hZJPc9owEMXvfAqP7%2F4jWzagwXRoSFtmKHgC7aGXjJDXoBlbcrVymn77Wk7TlEMS3SS999PuWy2Qt03HVr29qDv42QPaiec9to1CNl4Vfm8U0xwlMsVbQGYFO6y%2BblkSxqwz2mqhG%2F%2FK9LaHI4KxUitn2qwLf7%2B73e4%2Fb3b3Ip%2BdII8pTeYZ5UAgJ%2BSUppyTUzwlCY0JiDSJqTN%2BB4MDo%2FAHpNt7Xmn0g6zA7IYXC%2F9Wni%2B21k01voLYw0ah5coOjjjJg5gGCTmSjGUZi%2BkPp1oPzUvF7Yi9WNshi6JGn6UKWymMRl1brRqpIBS6jeg8JzMaJ0EOPA0oJVUwz6ZVMK3q2XSa1gAZjVwciYOXf5P6KFUl1fntiE5PImRfjscyKPeHo0OsnoO70Qr7FswBzIMU8O1u%2B1JvhW1QS9OCkuISwnMKIZcRor7nw6A%2FcIHFtW7ox1%2BOKS5cxWwMzCzfhy6i%2F%2FUvhI65MWzWpW6k%2BD2eu%2FVJm5bb15snIRlPZBXUo5T1CjsQspZQ%2Bf8wq6bRv24McDtM2poefC9aTiZPxVz%2F5uUf&RelayState=http%3A%2F%2Fjobs.dsm-firmenich.com%2Fapi%2Fpcsx%2Fnotifications_boot_data' (redirected from 'https://jobs.dsm-firmenich.com/api/pcsx/notifications_boot_data') from origin 'https://jobs.dsm-firmenich.com' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://jobs.dsm-firmenich.com/careers/job/562949976677451?hl=en_US&domain=dsm.com:0
+[   18788ms] [LOG] Error fetching notifications boot data: tt @ https://static.vscdn.net/sentry/5.29.2/bundle.tracing.min.js:1
+[   18788ms] [LOG] Failed to fetch notifications boot data: Failed to fetch notifications boot data @ https://static.vscdn.net/sentry/5.29.2/bundle.tracing.min.js:1
+[   18788ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://login.microsoftonline.com/49618402-6ea3-441d-957d-7df8773fee54/saml2?SAMLRequest=hZJPc9owEMXvfAqP7%2F4jWzagwXRoSFtmKHgC7aGXjJDXoBlbcrVymn77Wk7TlEMS3SS999PuWy2Qt03HVr29qDv42QPaiec9to1CNl4Vfm8U0xwlMsVbQGYFO6y%2BblkSxqwz2mqhG%2F%2FK9LaHI4KxUitn2qwLf7%2B73e4%2Fb3b3Ip%2BdII8pTeYZ5UAgJ%2BSUppyTUzwlCY0JiDSJqTN%2BB4MDo%2FAHpNt7Xmn0g6zA7IYXC%2F9Wni%2B21k01voLYw0ah5coOjjjJg5gGCTmSjGUZi%2BkPp1oPzUvF7Yi9WNshi6JGn6UKWymMRl1brRqpIBS6jeg8JzMaJ0EOPA0oJVUwz6ZVMK3q2XSa1gAZjVwciYOXf5P6KFUl1fntiE5PImRfjscyKPeHo0OsnoO70Qr7FswBzIMU8O1u%2B1JvhW1QS9OCkuISwnMKIZcRor7nw6A%2FcIHFtW7ox1%2BOKS5cxWwMzCzfhy6i%2F%2FUvhI65MWzWpW6k%2BD2eu%2FVJm5bb15snIRlPZBXUo5T1CjsQspZQ%2Bf8wq6bRv24McDtM2poefC9aTiZPxVz%2F5uUf&RelayState=http%3A%2F%2Fjobs.dsm-firmenich.com%2Fapi%2Fpcsx%2Fnotifications_boot_data:0
+[   22940ms] [INFO] [PAGE CONTEXT]: usePage should be used inside PageContext @ https://static.vscdn.net/sentry/5.29.2/bundle.tracing.min.js:1
+[   23118ms] [ERROR] Attestation check for Attribution Reporting on https://www.facebook.com failed. @ https://jobs.dsm-firmenich.com/careers/apply?pid=562949976677451&hl=en_US&domain=dsm.com:0
+[  792083ms] [WARNING] Deprecation warning: value provided is not in a recognized RFC2822 or ISO format. moment construction falls back to js Date(), which is not reliable across all browsers and versions. Non RFC2822/ISO date formats are discouraged. Please refer to http://momentjs.com/guides/#/warnings/js-date/ for more info.
+Arguments: 
+[0] _isAMomentObject: true, _isUTC: false, _useUTC: false, _l: undefined, _i: 04/21/2026, _f: undefined, _strict: undefined, _locale: [object Object]
+Error
+    at r.createFromInputFallback (https://jobs.dsm-firmenich.com/gen/js/ef-0bc0478e.41a172e12daad5bf4502.js:20:3)
+    at pa (https://jobs.dsm-firmenich.com/gen/js/ef-0bc0478e.41a172e12daad5bf4502.js:20:24512)
+    at hs (https://jobs.dsm-firmenich.com/gen/js/ef-0bc0478e.41a172e12daad5bf4502.js:20:28266)
+    at ya (https://jobs.dsm-firmenich.com/gen/js/ef-0bc0478e.41a172e12daad5bf4502.js:20:28133)
+    at ms (https://jobs.dsm-firmenich.com/gen/js/ef-0bc0478e.41a172e12daad5bf4502.js:20:27850)
+    at Wr (https://jobs.dsm-firmenich.com/gen/js/ef-0bc0478e.41a172e12daad5bf4502.js:20:28626)
+    at Fe (https://jobs.dsm-firmenich.com/gen/js/ef-0bc0478e.41a172e12daad5bf4502.js:20:28660)
+    at r (https://jobs.dsm-firmenich.com/gen/js/ef-0bc0478e.41a172e12daad5bf4502.js:17:351058)
+    at date-today (https://jobs.dsm-firmenich.com/gen/js/9855.e9ae7271c2b2785dbc8b.js:1:1849)
+    at O (https://jobs.dsm-firmenich.com/gen/js/9855.e9ae7271c2b2785dbc8b.js:1:2497)
+    at https://jobs.dsm-firmenich.com/gen/js/apply-page.acf9646d34386e2d0120.js:2:9382
+    at Array.forEach (<anonymous>)
+    at https://jobs.dsm-firmenich.com/gen/js/apply-page.acf9646d34386e2d0120.js:2:8739
+    at Array.forEach (<anonymous>)
+    at https://jobs.dsm-firmenich.com/gen/js/apply-page.acf9646d34386e2d0120.js:2:8720
+    at Generator.next (<anonymous>)
+    at a (https://jobs.dsm-firmenich.com/gen/js/apply-page.acf9646d34386e2d0120.js:2:8234)
+    at f (https://jobs.dsm-firmenich.com/gen/js/apply-page.acf9646d34386e2d0120.js:2:8431)
+    at https://jobs.dsm-firmenich.com/gen/js/apply-page.acf9646d34386e2d0120.js:2:8490
+    at new Promise (<anonymous>)
+    at https://jobs.dsm-firmenich.com/gen/js/apply-page.acf9646d34386e2d0120.js:2:8372
+    at https://jobs.dsm-firmenich.com/gen/js/apply-page.acf9646d34386e2d0120.js:2:10940
+    at Object.<anonymous> (https://jobs.dsm-firmenich.com/gen/js/apply-page.acf9646d34386e2d0120.js:8:35869)
+    at Generator.next (<anonymous>)
+    at m (https://jobs.dsm-firmenich.com/gen/js/apply-page.acf9646d34386e2d0120.js:8:34422)
+    at R (https://jobs.dsm-firmenich.com/gen/js/apply-page.acf9646d34386e2d0120.js:8:34619)
+    at https://jobs.dsm-firmenich.com/gen/js/apply-page.acf9646d34386e2d0120.js:8:34678
+    at new Promise (<anonymous>)
+    at Object.<anonymous> (https://jobs.dsm-firmenich.com/gen/js/apply-page.acf9646d34386e2d0120.js:8:34560)
+    at Object.mutationFn (https://jobs.dsm-firmenich.com/gen/js/apply-page.acf9646d34386e2d0120.js:8:36340)
+    at Object.fn (https://jobs.dsm-firmenich.com/gen/js/ef-2a46b080.03b072850d2e3ebdc55e.js:22:21151)
+    at R (https://jobs.dsm-firmenich.com/gen/js/ef-2a46b080.03b072850d2e3ebdc55e.js:22:53868)
+    at new y (https://jobs.dsm-firmenich.com/gen/js/ef-2a46b080.03b072850d2e3ebdc55e.js:22:54488)
+    at d.executeMutation (https://jobs.dsm-firmenich.com/gen/js/ef-2a46b080.03b072850d2e3ebdc55e.js:22:21089)
+    at https://jobs.dsm-firmenich.com/gen/js/ef-2a46b080.03b072850d2e3ebdc55e.js:22:20107 @ https://static.vscdn.net/sentry/5.29.2/bundle.tracing.min.js:1
+[  797741ms] [INFO] [PAGE CONTEXT]: usePage should be used inside PageContext @ https://static.vscdn.net/sentry/5.29.2/bundle.tracing.min.js:1
+[  797786ms] TypeError: Cannot read properties of null (reading 'textContent')
+    at https://jobs.dsm-firmenich.com/gen/js/apply-page.acf9646d34386e2d0120.js:8:70516
+    at Generator.next (<anonymous>)
+    at p (https://jobs.dsm-firmenich.com/gen/js/apply-page.acf9646d34386e2d0120.js:8:70118)
+    at te (https://jobs.dsm-firmenich.com/gen/js/apply-page.acf9646d34386e2d0120.js:8:70317)
+    at https://jobs.dsm-firmenich.com/gen/js/apply-page.acf9646d34386e2d0120.js:8:70378
+    at new Promise (<anonymous>)
+    at https://jobs.dsm-firmenich.com/gen/js/apply-page.acf9646d34386e2d0120.js:8:70257
+    at https://jobs.dsm-firmenich.com/gen/js/apply-page.acf9646d34386e2d0120.js:8:70640
+    at I (https://jobs.dsm-firmenich.com/gen/js/apply-page.acf9646d34386e2d0120.js:8:73158)
+    at ul (https://jobs.dsm-firmenich.com/gen/js/vendor_react.4d5c470a6f540720d778.js:4:49954)
+    at Ou (https://jobs.dsm-firmenich.com/gen/js/vendor_react.4d5c470a6f540720d778.js:6:8289)
+    at _u (https://jobs.dsm-firmenich.com/gen/js/vendor_react.4d5c470a6f540720d778.js:6:882)
+    at js (https://jobs.dsm-firmenich.com/gen/js/vendor_react.4d5c470a6f540720d778.js:6:807)
+    at Ol (https://jobs.dsm-firmenich.com/gen/js/vendor_react.4d5c470a6f540720d778.js:4:85925)
+    at https://jobs.dsm-firmenich.com/gen/js/vendor_react.4d5c470a6f540720d778.js:4:37000
+    at h.unstable_runWithPriority (https://jobs.dsm-firmenich.com/gen/js/ef-27545368.9eeffcca84b27eb52e2f.js:1:4587)
+    at Lr (https://jobs.dsm-firmenich.com/gen/js/vendor_react.4d5c470a6f540720d778.js:4:36710)
+    at La (https://jobs.dsm-firmenich.com/gen/js/vendor_react.4d5c470a6f540720d778.js:4:36946)
+    at lr (https://jobs.dsm-firmenich.com/gen/js/vendor_react.4d5c470a6f540720d778.js:4:36881)
+    at Ar (https://jobs.dsm-firmenich.com/gen/js/vendor_react.4d5c470a6f540720d778.js:4:82687)
+    at Qa (https://jobs.dsm-firmenich.com/gen/js/vendor_react.4d5c470a6f540720d778.js:4:54312)
+    at Object.next (https://jobs.dsm-firmenich.com/gen/js/ef-f80d2ba7.fd3ca4947cbabe51cfd8.js:3:23346)
+    at Object.next (https://jobs.dsm-firmenich.com/gen/js/ef-f80d2ba7.fd3ca4947cbabe51cfd8.js:3:30689)
+    at https://jobs.dsm-firmenich.com/gen/js/ef-f80d2ba7.fd3ca4947cbabe51cfd8.js:3:40056
+[  797968ms] [ERROR] Attestation check for Attribution Reporting on https://www.facebook.com failed. @ https://jobs.dsm-firmenich.com/careers/apply/success?domain=dsm.com&pid=562949976677451&hl=en_US:0

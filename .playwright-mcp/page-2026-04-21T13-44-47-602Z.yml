@@ -1,0 +1,6 @@
+- generic [ref=e5]:
+  - img "A internet está ok?" [ref=e26]
+  - heading "A internet está ok?" [level=1] [ref=e27]
+  - paragraph [ref=e9]: Às vezes o sinal acaba oscilando e isso é perfeitamente normal, mas para nos assegurarmos, confira se a sua conexão com a internet está estável antes de iniciar.
+  - button "próximo" [ref=e28] [cursor=pointer]:
+    - generic [ref=e31]: próximo

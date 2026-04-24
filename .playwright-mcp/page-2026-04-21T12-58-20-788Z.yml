@@ -1,0 +1,192 @@
+- generic [active] [ref=e1]:
+  - generic:
+    - region "Mensagem toast":
+      - heading "0 notificações no total" [level=2] [ref=e3]
+      - alert
+  - generic [ref=e4]:
+    - generic [ref=e6]:
+      - button "Pular para pesquisa" [ref=e7] [cursor=pointer]:
+        - generic [ref=e8]: Pular para pesquisa
+      - button "Pular para conteúdo principal" [ref=e9] [cursor=pointer]:
+        - generic [ref=e10]: Pular para conteúdo principal
+      - button "Atalhos do teclado" [ref=e11] [cursor=pointer]:
+        - generic [ref=e12]: Atalhos do teclado
+      - button "Fechar menu pular" [ref=e13] [cursor=pointer]:
+        - img [ref=e14]
+        - generic [ref=e16]: Fechar menu pular
+    - banner "Navegação geral" [ref=e17]:
+      - generic [ref=e18]:
+        - link "LinkedIn" [ref=e19] [cursor=pointer]:
+          - /url: https://www.linkedin.com/feed/?nis=true
+          - img "LinkedIn" [ref=e22]:
+            - img [ref=e23]
+        - generic [ref=e27]:
+          - combobox "Pesquisar" [ref=e28]
+          - generic:
+            - img
+        - navigation "Navegação principal" [ref=e29]:
+          - list [ref=e30]:
+            - listitem [ref=e31]:
+              - link "atualizações do feed novas notificações Início" [ref=e32] [cursor=pointer]:
+                - /url: https://www.linkedin.com/feed/?nis=true&
+                - generic [ref=e33]:
+                  - generic [ref=e36]: atualizações do feed novas notificações
+                  - img [ref=e40]
+                - generic "Início" [ref=e42]
+            - listitem [ref=e43]:
+              - link "Minha rede" [ref=e44] [cursor=pointer]:
+                - /url: https://www.linkedin.com/mynetwork/?
+                - img [ref=e48]
+                - generic "Minha rede" [ref=e50]
+            - listitem [ref=e51]:
+              - link "Vagas" [ref=e52] [cursor=pointer]:
+                - /url: https://www.linkedin.com/jobs/?
+                - img [ref=e56]
+                - generic "Vagas" [ref=e58]
+            - listitem [ref=e59]:
+              - link "Mensagens" [ref=e60] [cursor=pointer]:
+                - /url: https://www.linkedin.com/messaging/?
+                - img [ref=e64]
+                - generic "Mensagens" [ref=e66]
+            - listitem [ref=e67]:
+              - link "Notificações" [ref=e68] [cursor=pointer]:
+                - /url: https://www.linkedin.com/notifications/?
+                - img [ref=e72]
+                - generic "Notificações" [ref=e74]
+            - listitem [ref=e75]:
+              - button "Fernando Xavier Eu" [ref=e77] [cursor=pointer]:
+                - img "Fernando Xavier" [ref=e78]
+                - generic [ref=e79]:
+                  - text: Eu
+                  - img [ref=e80]
+            - listitem [ref=e82]:
+              - button "Para negócios" [ref=e84] [cursor=pointer]:
+                - img [ref=e88]
+                - generic "Para negócios" [ref=e90]:
+                  - text: Para negócios
+                  - img [ref=e91]
+            - listitem [ref=e93]:
+              - link "Veicular anúncio" [ref=e94] [cursor=pointer]:
+                - /url: https://www.linkedin.com/campaignmanager/accounts?
+                - img [ref=e98]
+                - generic "Veicular anúncio" [ref=e101]
+    - generic [ref=e102]:
+      - generic [ref=e105]:
+        - main [ref=e106]:
+          - generic [ref=e109]:
+            - generic [ref=e113]:
+              - generic [ref=e114]:
+                - generic [ref=e115]:
+                  - link "Logo da empresa Trivium Packaging" [ref=e116] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/company/trivium-packaging/life
+                    - img "Logo da empresa Trivium Packaging" [ref=e119]
+                  - link "Trivium Packaging" [ref=e121] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/company/trivium-packaging/life
+                - generic [ref=e122]:
+                  - button "Compartilhar" [ref=e125] [cursor=pointer]:
+                    - img [ref=e126]
+                    - generic [ref=e128]: Compartilhar
+                  - button "Exibir mais opções" [ref=e130] [cursor=pointer]:
+                    - img [ref=e131]
+                    - generic [ref=e133]: Exibir mais opções
+              - generic [ref=e135]:
+                - heading "Finance Manager" [level=1] [ref=e136]
+                - button "Ver módulo de contratação verificada" [ref=e138] [cursor=pointer]:
+                  - img [ref=e141]
+              - generic [ref=e145]:
+                - generic [ref=e146]: Itupeva, São Paulo, Brasil
+                - generic [ref=e147]: ·
+                - generic [ref=e149]: há 1 semana
+                - generic [ref=e150]: ·
+                - generic [ref=e151]: Mais de 100 pessoas clicaram em Candidatar-se
+                - paragraph [ref=e152]:
+                  - generic [ref=e153]: Promovida por recrutador
+                  - generic [ref=e154]: ·
+                  - generic [ref=e155]: Respostas gerenciadas fora do LinkedIn
+              - generic [ref=e156]:
+                - button "Corresponde às suas preferências de vaga e o tipo de local de trabalho é Presencial." [ref=e157] [cursor=pointer]:
+                  - strong [ref=e160]:
+                    - img [ref=e162]
+                    - text: Presencial
+                  - generic [ref=e164]: Corresponde às suas preferências de vaga e o tipo de local de trabalho é Presencial.
+                - button "Corresponde às suas preferências de vaga e o tipo de vaga é Tempo integral." [ref=e165] [cursor=pointer]:
+                  - strong [ref=e168]:
+                    - img [ref=e170]
+                    - text: Tempo integral
+                  - generic [ref=e172]: Corresponde às suas preferências de vaga e o tipo de vaga é Tempo integral.
+              - generic [ref=e174]:
+                - link "Candidatar-se à vaga de Finance Manager no site da empresa" [ref=e177] [cursor=pointer]:
+                  - img [ref=e178]
+                  - generic [ref=e180]: Candidatar-se
+                - button "Salvar Finance Manager na Trivium Packaging" [ref=e181] [cursor=pointer]:
+                  - generic [ref=e182]: Salvar
+                  - generic [ref=e183]: Salvar Finance Manager na Trivium Packaging
+            - generic [ref=e193]:
+              - article [ref=e194]:
+                - heading "Sobre a vaga" [level=2] [ref=e197]
+              - button "Clicar para ver mais detalhes" [ref=e199] [cursor=pointer]:
+                - img [ref=e200]
+                - generic [ref=e202]: Ver mais
+            - generic [ref=e204]:
+              - generic [ref=e205]:
+                - heading "Configurar alerta para vagas semelhantes" [level=2] [ref=e206]
+                - generic [ref=e208]: Gerente de finanças, Itupeva, São Paulo, Brasil
+              - generic [ref=e210] [cursor=pointer]:
+                - generic [ref=e211]: Desativada
+                - generic [ref=e212]: Configurar alerta
+                - switch "Configurar alerta"
+            - alert [ref=e215]: Carregando detalhes da vaga
+        - complementary [ref=e228]
+      - contentinfo [ref=e231]:
+        - generic [ref=e233]:
+          - generic [ref=e234]:
+            - navigation [ref=e235]:
+              - list
+            - generic [ref=e237]:
+              - list [ref=e238]:
+                - listitem [ref=e239]:
+                  - img [ref=e240]
+                  - generic [ref=e242]:
+                    - link "Dúvidas? Acesse a nossa Central de Ajuda." [ref=e243] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/help/linkedin?trk=d_flagship3_job_details
+                      - text: Dúvidas?
+                    - paragraph [ref=e244]: Acesse a nossa Central de Ajuda.
+                - listitem [ref=e245]:
+                  - img [ref=e246]
+                  - generic [ref=e248]:
+                    - link "Gerencie sua conta e privacidade Acesse suas Configurações." [ref=e249] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/psettings/
+                      - text: Gerencie sua conta e privacidade
+                    - paragraph [ref=e250]: Acesse suas Configurações.
+                - listitem [ref=e251]:
+                  - img [ref=e252]
+                  - generic [ref=e254]:
+                    - link "Visibilidade da recomendação Saiba mais sobre os conteúdos recomendados." [ref=e255] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/help/linkedin/answer/a1339724
+                      - text: Visibilidade da recomendação
+                    - paragraph [ref=e256]: Saiba mais sobre os conteúdos recomendados.
+              - generic [ref=e257]:
+                - generic [ref=e258]: Selecionar idioma
+                - combobox "Selecionar idioma" [ref=e259]
+          - paragraph [ref=e260]: LinkedIn Corporation © 2026
+    - generic:
+      - generic:
+        - complementary:
+          - generic [ref=e262]:
+            - generic [ref=e264] [cursor=pointer]:
+              - img "Fernando Xavier" [ref=e266]
+              - button "Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas." [ref=e267]:
+                - generic [ref=e268]:
+                  - generic [ref=e269]: Mensagens
+                  - generic [ref=e270]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+            - generic [ref=e271]:
+              - button "Abrir o menu suspenso de mensagens" [ref=e273] [cursor=pointer]:
+                - img "Abrir o menu suspenso de mensagens" [ref=e274]
+              - button "Escrever mensagem" [ref=e277] [cursor=pointer]:
+                - img [ref=e278]
+                - generic [ref=e280]: Escrever mensagem
+              - button "Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas." [ref=e281] [cursor=pointer]:
+                - img [ref=e282]
+                - generic [ref=e284]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+        - complementary "Assistente de IA para obter ajuda com sua carreira, vagas, etc."
+  - region [ref=e285]

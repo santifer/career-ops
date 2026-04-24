@@ -1,0 +1,7 @@
+[    3526ms] [LOG] [UC] Loading V2 bundle @ https://app.usercentrics.eu/browser-ui/latest/loader.js:0
+[   28415ms] [WARNING] [Meta Pixel] - Duplicate Pixel ID: 887429288456475. @ https://connect.facebook.net/en_US/fbevents.js:181
+[   28738ms] [ERROR] Attestation check for Attribution Reporting on https://www.facebook.com failed. @ https://jobs.siemens.com/pt_PT/externaljobs:0
+[   65339ms] [LOG] Using UC bridge data @ https://data.cdn.siemens.com/?settingsId=GXj83XOdm:0
+[   65344ms] [LOG] [UC] Loading V2 bundle @ https://app.usercentrics.eu/browser-ui/latest/loader.js:0
+[   66370ms] [WARNING] [Meta Pixel] - Duplicate Pixel ID: 887429288456475. @ https://connect.facebook.net/en_US/fbevents.js:181
+[   66560ms] [ERROR] Attestation check for Attribution Reporting on https://www.facebook.com failed. @ https://jobs.siemens.com/pt_PT/externaljobs/SearchJobs/Finance?listFilterMode=1&folderRecordsPerPage=6&:0

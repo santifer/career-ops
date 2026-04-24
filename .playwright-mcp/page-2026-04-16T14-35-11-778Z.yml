@@ -1,0 +1,340 @@
+- generic [ref=e4]:
+  - link "Ir para o conteúdo principal" [ref=e5] [cursor=pointer]:
+    - /url: ""
+  - generic "Usamos cookies para oferecer a você uma melhor experiência de navegação, analisar o tráfego do site e personalizar o conteúdo. Leia sobre como usamos cookies e como você pode controlá-los visitando nossa página Configurações de cookies. Se continuar a usar este site, você concorda com o uso deles." [ref=e9]:
+    - paragraph [ref=e11]:
+      - text: Usamos cookies para oferecer a você uma melhor experiência de navegação, analisar o tráfego do site e personalizar o conteúdo. Leia sobre como usamos cookies e como você pode controlá-los visitando nossa página
+      - link "Configurações de cookies" [ref=e12] [cursor=pointer]:
+        - /url: http://www.unilevernotices.com/cookie-notice/notice.html
+      - text: . Se continuar a usar este site, você concorda com o uso deles.
+    - generic [ref=e13]:
+      - button "Recusar" [ref=e16] [cursor=pointer]
+      - button "Aceitar cookies" [ref=e20] [cursor=pointer]
+  - banner [ref=e23]:
+    - generic [ref=e25]:
+      - link "Pesquisa de cargos da" [ref=e28] [cursor=pointer]:
+        - /url: /pt-BR/Unilever_Experienced_Professionals
+        - img "Pesquisa de cargos da" [ref=e29]
+      - heading "Carreiras Unilever" [level=1] [ref=e31]
+      - generic [ref=e33]:
+        - generic [ref=e34]:
+          - button "Português (‏Brasil)" [ref=e36] [cursor=pointer]:
+            - generic [ref=e40]: Português (‏Brasil)
+          - button "Fazer login" [ref=e42] [cursor=pointer]:
+            - generic [ref=e47]: Fazer login
+        - navigation [ref=e48]:
+          - button "Pesquisar cargos" [ref=e49] [cursor=pointer]
+          - button "Junte-se à nossa comunidade de talentos" [ref=e50] [cursor=pointer]
+  - generic [ref=e55]:
+    - generic [ref=e56]:
+      - search [ref=e156]:
+        - generic [ref=e157]:
+          - textbox "Pesquisar" [active] [ref=e163]:
+            - /placeholder: Pesquisar cargos ou palavras-chave
+          - status [ref=e164]
+        - button "Pesquisar" [ref=e167] [cursor=pointer]
+      - group "Filters" [ref=e168]:
+        - generic [ref=e169]: Filters
+        - button "Distância ou local" [ref=e171] [cursor=pointer]: Distância ou local
+        - button "Tipo de período" [ref=e176] [cursor=pointer]: Tipo de período
+        - button "Área de atuação" [ref=e181] [cursor=pointer]: Área de atuação
+        - button "Mais" [ref=e186] [cursor=pointer]: Mais
+    - generic [ref=e57]:
+      - alert [ref=e58]: Pesquisar cargos page is loaded
+      - region "Search Results" [ref=e59]:
+        - paragraph [ref=e60]: 241 CARGOS ENCONTRADOS
+        - list "Page 1 of 13" [ref=e190]:
+          - listitem [ref=e191]:
+            - heading "Revenue Growth Manager" [level=3] [ref=e195]:
+              - link "Revenue Growth Manager" [ref=e196] [cursor=pointer]:
+                - /url: /pt-BR/Unilever_Experienced_Professionals/job/Dublin-Citywest-Head-Office/Revenue-Growth-Manager_R-1178121
+            - generic [ref=e205]:
+              - term [ref=e206]: locations
+              - definition [ref=e207]: Dublin Citywest Head Office
+            - generic [ref=e217]:
+              - term [ref=e218]: posted on
+              - definition [ref=e219]: Publicado hoje
+            - list [ref=e220]:
+              - listitem [ref=e221]: R-1178121
+          - listitem [ref=e222]:
+            - heading "Promotor De Merchandising" [level=3] [ref=e226]:
+              - link "Promotor De Merchandising" [ref=e227] [cursor=pointer]:
+                - /url: /pt-BR/Unilever_Experienced_Professionals/job/So-Paulo-Brazil/Promotor-De-Merchandising_R-1177017
+            - generic [ref=e236]:
+              - term [ref=e237]: locations
+              - definition [ref=e238]: São Paulo, Brazil
+            - generic [ref=e248]:
+              - term [ref=e249]: posted on
+              - definition [ref=e250]: Publicado hoje
+            - list [ref=e251]:
+              - listitem [ref=e252]: R-1177017
+          - listitem [ref=e253]:
+            - heading "Doradca/Doradczyni Kulinarny/a ds. Sprzedaży (woj. Zachodnipomorskie)" [level=3] [ref=e257]:
+              - link "Doradca/Doradczyni Kulinarny/a ds. Sprzedaży (woj. Zachodnipomorskie)" [ref=e258] [cursor=pointer]:
+                - /url: /pt-BR/Unilever_Experienced_Professionals/job/Remote---Warsaw-Poland/Doradca-Doradczyni-Kulinarny-a-ds-Sprzeday--woj-Zachodnipomorskie-_R-1179959
+            - generic [ref=e267]:
+              - term [ref=e268]: locations
+              - definition [ref=e269]: Remote - Warsaw, Poland
+            - generic [ref=e279]:
+              - term [ref=e280]: posted on
+              - definition [ref=e281]: Publicado hoje
+            - list [ref=e282]:
+              - listitem [ref=e283]: R-1179959
+          - listitem [ref=e284]:
+            - heading "HR‑Spezialist:in Zeitwirtschaft & Payroll (d/w/m)" [level=3] [ref=e288]:
+              - link "HR‑Spezialist:in Zeitwirtschaft & Payroll (d/w/m)" [ref=e289] [cursor=pointer]:
+                - /url: /pt-BR/Unilever_Experienced_Professionals/job/Mannheim-Germany/HR-Spezialist-in-Zeitwirtschaft---Payroll--d-w-m-_R-1178032-1
+            - generic [ref=e298]:
+              - term [ref=e299]: locations
+              - definition [ref=e300]: Mannheim, Germany
+            - generic [ref=e310]:
+              - term [ref=e311]: posted on
+              - definition [ref=e312]: Publicado hoje
+            - list [ref=e313]:
+              - listitem [ref=e314]: R-1178032
+          - listitem [ref=e315]:
+            - heading "Líder De Negocios Senior - Triângulo Mineiro" [level=3] [ref=e319]:
+              - link "Líder De Negocios Senior - Triângulo Mineiro" [ref=e320] [cursor=pointer]:
+                - /url: /pt-BR/Unilever_Experienced_Professionals/job/Rio-de-Janeiro-Brazil/Lder-De-Negocios-Senior---Tringulo-Mineiro_R-1178719
+            - generic [ref=e329]:
+              - term [ref=e330]: locations
+              - definition [ref=e331]: Rio de Janeiro, Brazil
+            - generic [ref=e341]:
+              - term [ref=e342]: posted on
+              - definition [ref=e343]: Publicado hoje
+            - list [ref=e344]:
+              - listitem [ref=e345]: R-1178719
+          - listitem [ref=e346]:
+            - heading "Customer Development Director Chile" [level=3] [ref=e350]:
+              - link "Customer Development Director Chile" [ref=e351] [cursor=pointer]:
+                - /url: /pt-BR/Unilever_Experienced_Professionals/job/Santiago-Chile/Customer-Development-Director-Chile_R-1178585
+            - generic [ref=e360]:
+              - term [ref=e361]: locations
+              - definition [ref=e362]: Santiago, Chile
+            - generic [ref=e372]:
+              - term [ref=e373]: posted on
+              - definition [ref=e374]: Publicado hoje
+            - list [ref=e375]:
+              - listitem [ref=e376]: R-1178585
+          - listitem [ref=e377]:
+            - heading "Stage -Assistant Marketing & Category Manager" [level=3] [ref=e381]:
+              - link "Stage -Assistant Marketing & Category Manager" [ref=e382] [cursor=pointer]:
+                - /url: /pt-BR/Unilever_Experienced_Professionals/job/Rueil-Malmaison-France/Stage--Assistant-Marketing---Category-Manager_R-1176577
+            - generic [ref=e391]:
+              - term [ref=e392]: locations
+              - definition [ref=e393]: Rueil Malmaison, France
+            - generic [ref=e403]:
+              - term [ref=e404]: posted on
+              - definition [ref=e405]: Publicado hoje
+            - list [ref=e406]:
+              - listitem [ref=e407]: R-1176577
+          - listitem [ref=e408]:
+            - heading "Senior Artwork Production Specialist" [level=3] [ref=e412]:
+              - link "Senior Artwork Production Specialist" [ref=e413] [cursor=pointer]:
+                - /url: /pt-BR/Unilever_Experienced_Professionals/job/Warsaw-Poland/Senior-Artwork-Production-Specialist_R-1179312
+            - generic [ref=e422]:
+              - term [ref=e423]: locations
+              - definition [ref=e424]: Warsaw, Poland
+            - generic [ref=e434]:
+              - term [ref=e435]: posted on
+              - definition [ref=e436]: Publicado hoje
+            - list [ref=e437]:
+              - listitem [ref=e438]: R-1179312
+          - listitem [ref=e439]:
+            - heading "Stage-Assistant Category Manager Home Care" [level=3] [ref=e443]:
+              - link "Stage-Assistant Category Manager Home Care" [ref=e444] [cursor=pointer]:
+                - /url: /pt-BR/Unilever_Experienced_Professionals/job/Rueil-Malmaison-France/Stage-Assistant-Category-Manager-Home-Care_R-1176701
+            - generic [ref=e453]:
+              - term [ref=e454]: locations
+              - definition [ref=e455]: Rueil Malmaison, France
+            - generic [ref=e465]:
+              - term [ref=e466]: posted on
+              - definition [ref=e467]: Publicado hoje
+            - list [ref=e468]:
+              - listitem [ref=e469]: R-1176701
+          - listitem [ref=e470]:
+            - heading "Stage-Assistant(e) Category Manager Amazon" [level=3] [ref=e474]:
+              - link "Stage-Assistant(e) Category Manager Amazon" [ref=e475] [cursor=pointer]:
+                - /url: /pt-BR/Unilever_Experienced_Professionals/job/Rueil-Malmaison-France/Stage-Assistant-e--Category-Manager-Amazon_R-1176707
+            - generic [ref=e484]:
+              - term [ref=e485]: locations
+              - definition [ref=e486]: Rueil Malmaison, France
+            - generic [ref=e496]:
+              - term [ref=e497]: posted on
+              - definition [ref=e498]: Publicado hoje
+            - list [ref=e499]:
+              - listitem [ref=e500]: R-1176707
+          - listitem [ref=e501]:
+            - heading "Artwork Production Specialist" [level=3] [ref=e505]:
+              - link "Artwork Production Specialist" [ref=e506] [cursor=pointer]:
+                - /url: /pt-BR/Unilever_Experienced_Professionals/job/Warsaw-Poland/Artwork-Production-Specialist_R-1179313
+            - generic [ref=e515]:
+              - term [ref=e516]: locations
+              - definition [ref=e517]: Warsaw, Poland
+            - generic [ref=e527]:
+              - term [ref=e528]: posted on
+              - definition [ref=e529]: Publicado hoje
+            - list [ref=e530]:
+              - listitem [ref=e531]: R-1179313
+          - listitem [ref=e532]:
+            - heading "Conseiller(ère) de vente Boutique Maille - Dijon (H/F)" [level=3] [ref=e536]:
+              - link "Conseiller(ère) de vente Boutique Maille - Dijon (H/F)" [ref=e537] [cursor=pointer]:
+                - /url: /pt-BR/Unilever_Experienced_Professionals/job/Dijon-France/Conseiller-re--de-vente-Boutique-Maille---Dijon--H-F-_R-1177605
+            - generic [ref=e546]:
+              - term [ref=e547]: locations
+              - definition [ref=e548]: Dijon, France
+            - generic [ref=e558]:
+              - term [ref=e559]: posted on
+              - definition [ref=e560]: Publicado hoje
+            - list [ref=e561]:
+              - listitem [ref=e562]: R-1177605
+          - listitem [ref=e563]:
+            - heading "Senior Area Sales Executive - General Trade (Laos)" [level=3] [ref=e567]:
+              - link "Senior Area Sales Executive - General Trade (Laos)" [ref=e568] [cursor=pointer]:
+                - /url: /pt-BR/Unilever_Experienced_Professionals/job/Vientiane-Laos/Senior-Area-Sales-Executive---General-Trade--Laos-_R-1176019-1
+            - generic [ref=e577]:
+              - term [ref=e578]: locations
+              - definition [ref=e579]: Vientiane, Laos
+            - generic [ref=e589]:
+              - term [ref=e590]: posted on
+              - definition [ref=e591]: Publicado hoje
+            - list [ref=e592]:
+              - listitem [ref=e593]: R-1176019
+          - listitem [ref=e594]:
+            - heading "Effluent Treatment Plant (ETP) Operator" [level=3] [ref=e598]:
+              - link "Effluent Treatment Plant (ETP) Operator" [ref=e599] [cursor=pointer]:
+                - /url: /pt-BR/Unilever_Experienced_Professionals/job/Cavite-Philippines/Effluent-Treatment-Plant--ETP--Operator_R-1176817
+            - generic [ref=e608]:
+              - term [ref=e609]: locations
+              - definition [ref=e610]: Cavite, Philippines
+            - generic [ref=e620]:
+              - term [ref=e621]: posted on
+              - definition [ref=e622]: Publicado hoje
+            - list [ref=e623]:
+              - listitem [ref=e624]: R-1176817
+          - listitem [ref=e625]:
+            - heading "Senior Production Executive" [level=3] [ref=e629]:
+              - link "Senior Production Executive" [ref=e630] [cursor=pointer]:
+                - /url: /pt-BR/Unilever_Experienced_Professionals/job/Chhindwara-Detergents-Factory/Senior-Production-Executive_R-1169808-1
+            - generic [ref=e639]:
+              - term [ref=e640]: locations
+              - definition [ref=e641]: Chhindwara Detergents Factory
+            - generic [ref=e651]:
+              - term [ref=e652]: posted on
+              - definition [ref=e653]: Publicado hoje
+            - list [ref=e654]:
+              - listitem [ref=e655]: R-1169808
+          - listitem [ref=e656]:
+            - heading "Ausbildung zum Elektroniker für Betriebstechnik (d/w/m)" [level=3] [ref=e660]:
+              - link "Ausbildung zum Elektroniker für Betriebstechnik (d/w/m)" [ref=e661] [cursor=pointer]:
+                - /url: /pt-BR/Unilever_Experienced_Professionals/job/Heilbronn-Germany/Ausbildung-zum-Elektroniker-fr-Betriebstechnik--d-w-m-_R-1176711
+            - generic [ref=e670]:
+              - term [ref=e671]: locations
+              - definition [ref=e672]: Heilbronn, Germany
+            - generic [ref=e682]:
+              - term [ref=e683]: posted on
+              - definition [ref=e684]: Publicado hoje
+            - list [ref=e685]:
+              - listitem [ref=e686]: R-1176711
+          - listitem [ref=e687]:
+            - heading "Ausbildung Industriemechaniker (d/w/m) – 2026" [level=3] [ref=e691]:
+              - link "Ausbildung Industriemechaniker (d/w/m) – 2026" [ref=e692] [cursor=pointer]:
+                - /url: /pt-BR/Unilever_Experienced_Professionals/job/Heilbronn-Germany/Ausbildung-Industriemechaniker--d-w-m----2026_R-1168302
+            - generic [ref=e701]:
+              - term [ref=e702]: locations
+              - definition [ref=e703]: Heilbronn, Germany
+            - generic [ref=e713]:
+              - term [ref=e714]: posted on
+              - definition [ref=e715]: Publicado hoje
+            - list [ref=e716]:
+              - listitem [ref=e717]: R-1168302
+          - listitem [ref=e718]:
+            - heading "Ausbildung Mechatroniker (d/w/m) – 2026" [level=3] [ref=e722]:
+              - link "Ausbildung Mechatroniker (d/w/m) – 2026" [ref=e723] [cursor=pointer]:
+                - /url: /pt-BR/Unilever_Experienced_Professionals/job/Heilbronn-Germany/Ausbildung-Mechatroniker--d-w-m----2026_R-1168062
+            - generic [ref=e732]:
+              - term [ref=e733]: locations
+              - definition [ref=e734]: Heilbronn, Germany
+            - generic [ref=e744]:
+              - term [ref=e745]: posted on
+              - definition [ref=e746]: Publicado hoje
+            - list [ref=e747]:
+              - listitem [ref=e748]: R-1168062
+          - listitem [ref=e749]:
+            - heading "Ausbildung Fachkraft für Lebensmitteltechnik (d/w/m) – 2026" [level=3] [ref=e753]:
+              - link "Ausbildung Fachkraft für Lebensmitteltechnik (d/w/m) – 2026" [ref=e754] [cursor=pointer]:
+                - /url: /pt-BR/Unilever_Experienced_Professionals/job/Heilbronn-Germany/Ausbildung-Fachkraft-fr-Lebensmitteltechnik--d-w-m----2026_R-1168217
+            - generic [ref=e763]:
+              - term [ref=e764]: locations
+              - definition [ref=e765]: Heilbronn, Germany
+            - generic [ref=e775]:
+              - term [ref=e776]: posted on
+              - definition [ref=e777]: Publicado hoje
+            - list [ref=e778]:
+              - listitem [ref=e779]: R-1168217
+          - listitem [ref=e780]:
+            - heading "B&W PH CSP - Category Operations (Hair)" [level=3] [ref=e784]:
+              - link "B&W PH CSP - Category Operations (Hair)" [ref=e785] [cursor=pointer]:
+                - /url: /pt-BR/Unilever_Experienced_Professionals/job/Taguig-Philippines/B-W-PH-CSP---Category-Operations---Hair-_R-1178211
+            - generic [ref=e794]:
+              - term [ref=e795]: locations
+              - definition [ref=e796]: Taguig, Philippines
+            - generic [ref=e806]:
+              - term [ref=e807]: posted on
+              - definition [ref=e808]: Publicado hoje
+            - list [ref=e809]:
+              - listitem [ref=e810]: R-1178211
+        - generic [ref=e811]:
+          - navigation "pagination" [ref=e812]:
+            - generic [ref=e813]:
+              - list [ref=e815]:
+                - listitem [ref=e816]:
+                  - button "page 1" [ref=e817] [cursor=pointer]: "1"
+                - listitem [ref=e818]:
+                  - button "page 2" [ref=e819] [cursor=pointer]: "2"
+                - listitem [ref=e820]:
+                  - button "page 3" [ref=e821] [cursor=pointer]: "3"
+                - listitem [ref=e822]:
+                  - button "page 4" [ref=e823] [cursor=pointer]: "4"
+                - listitem [ref=e824]:
+                  - button "page 5" [ref=e825] [cursor=pointer]: "5"
+              - button "next" [ref=e826] [cursor=pointer]
+          - paragraph [ref=e830]: 1 - 20 de 241 cargos
+      - generic [ref=e79]:
+        - heading "About Us" [level=3] [ref=e80]
+        - img "Logo" [ref=e81]
+        - generic [ref=e83]:
+          - generic [ref=e85]:
+            - heading [level=1] [ref=e86]: Better Business. Better World. Better You.
+            - paragraph [ref=e87]
+            - paragraph [ref=e88]:
+              - text: Somos pioneiros, inovadores e criadores do futuro por mais de 120 anos.
+              - link [ref=e89] [cursor=pointer]:
+                - /url: https://www.unilever.com/about/who-we-are/about-Unilever/
+                - text: Saber mais
+            - paragraph [ref=e90]
+          - button "Ler mais" [ref=e93] [cursor=pointer]:
+            - generic [ref=e94]: Ler mais
+  - generic [ref=e98]:
+    - generic [ref=e99]: Siga-nos
+    - list [ref=e100]:
+      - listitem [ref=e101] [cursor=pointer]:
+        - link "Glassdoor" [ref=e102]:
+          - /url: https://www.glassdoor.co.uk/Overview/Working-at-Unilever-EI_IE3513.11,19.htm
+      - listitem [ref=e107] [cursor=pointer]:
+        - link "LinkedIn" [ref=e108]:
+          - /url: https://www.linkedin.com/company/unilever
+      - listitem [ref=e112] [cursor=pointer]:
+        - link "YouTube" [ref=e113]:
+          - /url: https://www.youtube.com/user/Unilever
+      - listitem [ref=e119] [cursor=pointer]:
+        - link "X" [ref=e120]:
+          - /url: https://www.twitter.com/Unilever
+      - listitem [ref=e124] [cursor=pointer]:
+        - link "Facebook" [ref=e125]:
+          - /url: https://www.facebook.com/Unilever
+    - link "Aviso Legal Unilever" [ref=e130] [cursor=pointer]:
+      - /url: https://www.unilever.com/legal.html
+    - generic [ref=e131]:
+      - img [ref=e135]
+      - generic [ref=e155]: © 2026 Workday, Inc. Todos os direitos reservados.

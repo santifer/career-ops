@@ -1,0 +1,347 @@
+- generic [ref=e4]:
+  - link "Ir para o conteúdo principal" [ref=e5] [cursor=pointer]:
+    - /url: ""
+  - generic "Usamos cookies para oferecer a você uma melhor experiência de navegação, analisar o tráfego do site e personalizar o conteúdo. Leia sobre como usamos cookies e como você pode controlá-los visitando nossa página Configurações de cookies. Se continuar a usar este site, você concorda com o uso deles." [ref=e9]:
+    - paragraph [ref=e11]:
+      - text: Usamos cookies para oferecer a você uma melhor experiência de navegação, analisar o tráfego do site e personalizar o conteúdo. Leia sobre como usamos cookies e como você pode controlá-los visitando nossa página
+      - link "Configurações de cookies" [ref=e12] [cursor=pointer]:
+        - /url: http://www.unilevernotices.com/cookie-notice/notice.html
+      - text: . Se continuar a usar este site, você concorda com o uso deles.
+    - generic [ref=e13]:
+      - button "Recusar" [ref=e16] [cursor=pointer]
+      - button "Aceitar cookies" [ref=e20] [cursor=pointer]
+  - banner [ref=e23]:
+    - generic [ref=e25]:
+      - link "Pesquisa de cargos da" [ref=e28] [cursor=pointer]:
+        - /url: /pt-BR/Unilever_Experienced_Professionals
+        - img "Pesquisa de cargos da" [ref=e29]
+      - heading "Carreiras Unilever" [level=1] [ref=e31]
+      - generic [ref=e33]:
+        - generic [ref=e34]:
+          - button "Português (‏Brasil)" [ref=e36] [cursor=pointer]:
+            - generic [ref=e40]: Português (‏Brasil)
+          - button "Fazer login" [ref=e42] [cursor=pointer]:
+            - generic [ref=e47]: Fazer login
+        - navigation [ref=e48]:
+          - button "Pesquisar cargos" [ref=e49] [cursor=pointer]
+          - button "Junte-se à nossa comunidade de talentos" [ref=e50] [cursor=pointer]
+  - generic [ref=e55]:
+    - generic [ref=e56]:
+      - search [ref=e156]:
+        - generic [ref=e157]:
+          - generic [ref=e158]:
+            - textbox "Pesquisar" [ref=e163]:
+              - /placeholder: Pesquisar cargos ou palavras-chave
+              - text: Finance
+            - button "Reset Search Input" [ref=e831] [cursor=pointer]
+          - status [ref=e164]
+        - button "Pesquisar" [active] [ref=e167] [cursor=pointer]
+      - group "Filters" [ref=e168]:
+        - generic [ref=e169]: Filters
+        - button "Distância ou local" [ref=e171] [cursor=pointer]: Distância ou local
+        - button "Tipo de período" [ref=e176] [cursor=pointer]: Tipo de período
+        - button "Área de atuação" [ref=e181] [cursor=pointer]: Área de atuação
+        - button "Mais" [ref=e186] [cursor=pointer]: Mais
+      - group "Filters Applied" [ref=e836]:
+        - generic [ref=e837]: Filters Applied
+        - list [ref=e838]:
+          - listitem [ref=e839]:
+            - 'button "Pesquisar: \"Finance\" clear filter" [ref=e840]': "Pesquisar: \"Finance\""
+          - listitem [ref=e844]:
+            - button "Apagar tudo (1)" [ref=e846] [cursor=pointer]:
+              - generic [ref=e847]: Apagar tudo (1)
+    - generic [ref=e57]:
+      - alert [ref=e58]: Pesquisar cargos page is loaded
+      - region "Search Results" [ref=e59]:
+        - paragraph [ref=e60]: 58 CARGOS ENCONTRADOS
+        - list "Page 1 of 3" [ref=e848]:
+          - listitem [ref=e849]:
+            - heading "Finance Manager – Finance Business Partner, Condiments Supply Chain Vertical" [level=3] [ref=e853]:
+              - link "Finance Manager – Finance Business Partner, Condiments Supply Chain Vertical" [ref=e854] [cursor=pointer]:
+                - /url: /pt-BR/Unilever_Experienced_Professionals/job/Chicago-IL/Finance-Manager---Finance-Business-Partner--Condiments-Supply-Chain-Vertical_R-29038-1?q=Finance
+            - generic [ref=e863]:
+              - term [ref=e864]: locations
+              - definition [ref=e865]: Chicago, IL
+            - generic [ref=e875]:
+              - term [ref=e876]: posted on
+              - definition [ref=e877]: Publicado há 3 dias
+            - list [ref=e878]:
+              - listitem [ref=e879]: R-29038
+          - listitem [ref=e880]:
+            - heading "UI Finance Business Partner" [level=3] [ref=e884]:
+              - link "UI Finance Business Partner" [ref=e885] [cursor=pointer]:
+                - /url: /pt-BR/Unilever_Experienced_Professionals/job/Bogota-Office-Paralelo-108/UI-Finance-Business-Partner_R-1178308?q=Finance
+            - generic [ref=e894]:
+              - term [ref=e895]: locations
+              - definition [ref=e896]: Bogota Office (Paralelo 108)
+            - generic [ref=e906]:
+              - term [ref=e907]: posted on
+              - definition [ref=e908]: Publicado há 4 dias
+            - list [ref=e909]:
+              - listitem [ref=e910]: R-1178308
+          - listitem [ref=e911]:
+            - heading "Finance Business Partner - Tatura" [level=3] [ref=e915]:
+              - link "Finance Business Partner - Tatura" [ref=e916] [cursor=pointer]:
+                - /url: /pt-BR/Unilever_Experienced_Professionals/job/North-Rocks-Sydney-Australia/Finance-Business-Partner---Tatura_R-1178226?q=Finance
+            - generic [ref=e925]:
+              - term [ref=e926]: locations
+              - definition [ref=e927]: North Rocks, Sydney, Australia
+            - generic [ref=e937]:
+              - term [ref=e938]: posted on
+              - definition [ref=e939]: Publicado há 9 dias
+            - list [ref=e940]:
+              - listitem [ref=e941]: R-1178226
+          - listitem [ref=e942]:
+            - heading "Finance Controller Southern Central Europe" [level=3] [ref=e946]:
+              - link "Finance Controller Southern Central Europe" [ref=e947] [cursor=pointer]:
+                - /url: /pt-BR/Unilever_Experienced_Professionals/job/Bucharest-Head-Office/Finance-Controller-Southern-Central-Europe_R-1173470?q=Finance
+            - generic [ref=e956]:
+              - term [ref=e957]: locations
+              - definition [ref=e958]: Bucharest Head Office
+            - generic [ref=e968]:
+              - term [ref=e969]: posted on
+              - definition [ref=e970]: Publicado há 9 dias
+            - list [ref=e971]:
+              - listitem [ref=e972]: R-1173470
+          - listitem [ref=e973]:
+            - heading "Finance LATAM Transformational Projects Coordinator" [level=3] [ref=e977]:
+              - link "Finance LATAM Transformational Projects Coordinator" [ref=e978] [cursor=pointer]:
+                - /url: /pt-BR/Unilever_Experienced_Professionals/job/So-Paulo-Brazil/XMLNAME----Finance-LATAM-Transformational-Projects-Coordinator--_R-1178851?q=Finance
+            - generic [ref=e987]:
+              - term [ref=e988]: locations
+              - definition [ref=e989]: São Paulo, Brazil
+            - generic [ref=e999]:
+              - term [ref=e1000]: posted on
+              - definition [ref=e1001]: Publicado há 7 dias
+            - list [ref=e1002]:
+              - listitem [ref=e1003]: R-1178851
+          - listitem [ref=e1004]:
+            - heading "Associate Director, Finance - Skin Cleansing US" [level=3] [ref=e1008]:
+              - link "Associate Director, Finance - Skin Cleansing US" [ref=e1009] [cursor=pointer]:
+                - /url: /pt-BR/Unilever_Experienced_Professionals/job/Hoboken-US-HQ/Associate-Director-US-SCL-Finance_R-1173150?q=Finance
+            - generic [ref=e1018]:
+              - term [ref=e1019]: locations
+              - definition [ref=e1020]: Hoboken US HQ
+            - generic [ref=e1030]:
+              - term [ref=e1031]: posted on
+              - definition [ref=e1032]: Publicado há 3 dias
+            - list [ref=e1033]:
+              - listitem [ref=e1034]: R-1173150
+          - listitem [ref=e1035]:
+            - heading "Finance Senior Coordinator– Production Cost - GFCF (FET)" [level=3] [ref=e1039]:
+              - link "Finance Senior Coordinator– Production Cost - GFCF (FET)" [ref=e1040] [cursor=pointer]:
+                - /url: /pt-BR/Unilever_Experienced_Professionals/job/Munro-Argentina/Finance-Lead---Production-Cost---GFCF--FET-_R-1178698-1?q=Finance
+            - generic [ref=e1049]:
+              - term [ref=e1050]: locations
+              - definition [ref=e1051]: Munro, Argentina
+            - generic [ref=e1061]:
+              - term [ref=e1062]: posted on
+              - definition [ref=e1063]: Publicado há 2 dias
+            - list [ref=e1064]:
+              - listitem [ref=e1065]: R-1178698
+          - listitem [ref=e1066]:
+            - heading "Mirai Prograö -Data Object Lead ERP Finance" [level=3] [ref=e1070]:
+              - link "Mirai Prograö -Data Object Lead ERP Finance" [ref=e1071] [cursor=pointer]:
+                - /url: /pt-BR/Unilever_Experienced_Professionals/job/UniOps-Bangalore-Centre/Mirai-Progra--Data-Object-Lead-ERP-Finance_R-1179412?q=Finance
+            - generic [ref=e1080]:
+              - term [ref=e1081]: locations
+              - definition [ref=e1082]: UniOps Bangalore Centre
+            - generic [ref=e1092]:
+              - term [ref=e1093]: posted on
+              - definition [ref=e1094]: Publicado há 2 dias
+            - list [ref=e1095]:
+              - listitem [ref=e1096]: R-1179412
+          - listitem [ref=e1097]:
+            - heading "Supply Chain Finance Manager – Home Care and Capex" [level=3] [ref=e1101]:
+              - link "Supply Chain Finance Manager – Home Care and Capex" [ref=e1102] [cursor=pointer]:
+                - /url: /pt-BR/Unilever_Experienced_Professionals/job/Bangkok-Thailand/Supply-Chain-Finance-Manager---Home-Care-and-Capex_R-1178613?q=Finance
+            - generic [ref=e1111]:
+              - term [ref=e1112]: locations
+              - definition [ref=e1113]: Bangkok, Thailand
+            - generic [ref=e1123]:
+              - term [ref=e1124]: posted on
+              - definition [ref=e1125]: Publicado há 2 dias
+            - list [ref=e1126]:
+              - listitem [ref=e1127]: R-1178613
+          - listitem [ref=e1128]:
+            - heading "Production Accountant" [level=3] [ref=e1132]:
+              - link "Production Accountant" [ref=e1133] [cursor=pointer]:
+                - /url: /pt-BR/Unilever_Experienced_Professionals/job/Boksburg-South-Africa/Production-Accountant_R-1179686?q=Finance
+            - generic [ref=e1142]:
+              - term [ref=e1143]: locations
+              - definition [ref=e1144]: Boksburg, South Africa
+            - generic [ref=e1154]:
+              - term [ref=e1155]: posted on
+              - definition [ref=e1156]: Publicado ontem
+            - list [ref=e1157]:
+              - listitem [ref=e1158]: R-1179686
+          - listitem [ref=e1159]:
+            - heading "Channel and Strategy Planning Manager - Beauty & Wellbeing" [level=3] [ref=e1163]:
+              - link "Channel and Strategy Planning Manager - Beauty & Wellbeing" [ref=e1164] [cursor=pointer]:
+                - /url: /pt-BR/Unilever_Experienced_Professionals/job/Seoul-South-Korea/Channel-and-Strategy-Planning-Manager---Beauty---Wellbeing_R-1179418?q=Finance
+            - generic [ref=e1173]:
+              - term [ref=e1174]: locations
+              - definition [ref=e1175]: Seoul, South Korea
+            - generic [ref=e1185]:
+              - term [ref=e1186]: posted on
+              - definition [ref=e1187]: Publicado há 3 dias
+            - list [ref=e1188]:
+              - listitem [ref=e1189]: R-1179418
+          - listitem [ref=e1190]:
+            - heading "Customer Service Manager" [level=3] [ref=e1194]:
+              - link "Customer Service Manager" [ref=e1195] [cursor=pointer]:
+                - /url: /pt-BR/Unilever_Experienced_Professionals/job/Colombo-Sri-Lanka/Customer-Service-Manager_R-1177959?q=Finance
+            - generic [ref=e1204]:
+              - term [ref=e1205]: locations
+              - definition [ref=e1206]: Colombo, Sri Lanka
+            - generic [ref=e1216]:
+              - term [ref=e1217]: posted on
+              - definition [ref=e1218]: Publicado hoje
+            - list [ref=e1219]:
+              - listitem [ref=e1220]: R-1177959
+          - listitem [ref=e1221]:
+            - heading "Revenue Growth Manager" [level=3] [ref=e1225]:
+              - link "Revenue Growth Manager" [ref=e1226] [cursor=pointer]:
+                - /url: /pt-BR/Unilever_Experienced_Professionals/job/Dublin-Citywest-Head-Office/Revenue-Growth-Manager_R-1178121?q=Finance
+            - generic [ref=e1235]:
+              - term [ref=e1236]: locations
+              - definition [ref=e1237]: Dublin Citywest Head Office
+            - generic [ref=e1247]:
+              - term [ref=e1248]: posted on
+              - definition [ref=e1249]: Publicado hoje
+            - list [ref=e1250]:
+              - listitem [ref=e1251]: R-1178121
+          - listitem [ref=e1252]:
+            - heading "Cluster Supply Planning and Customer Service Assistant Manager – Unilever International" [level=3] [ref=e1256]:
+              - link "Cluster Supply Planning and Customer Service Assistant Manager – Unilever International" [ref=e1257] [cursor=pointer]:
+                - /url: /pt-BR/Unilever_Experienced_Professionals/job/Taguig-Philippines/Cluster-Supply-Planning-and-Customer-Service-Assistant-Manager---Unilever-International_R-1177663?q=Finance
+            - generic [ref=e1266]:
+              - term [ref=e1267]: locations
+              - definition [ref=e1268]: Taguig, Philippines
+            - generic [ref=e1278]:
+              - term [ref=e1279]: posted on
+              - definition [ref=e1280]: Publicado há 9 dias
+            - list [ref=e1281]:
+              - listitem [ref=e1282]: R-1177663
+          - listitem [ref=e1283]:
+            - heading "Revenue Growth Manager, Foods" [level=3] [ref=e1287]:
+              - link "Revenue Growth Manager, Foods" [ref=e1288] [cursor=pointer]:
+                - /url: /pt-BR/Unilever_Experienced_Professionals/job/Hoboken-US-HQ/Revenue-Growth-Manager--Foods_R-1175429-1?q=Finance
+            - generic [ref=e1297]:
+              - term [ref=e1298]: locations
+              - definition [ref=e1299]: Hoboken US HQ
+            - generic [ref=e1309]:
+              - term [ref=e1310]: posted on
+              - definition [ref=e1311]: Publicado há 3 dias
+            - list [ref=e1312]:
+              - listitem [ref=e1313]: R-1175429
+          - listitem [ref=e1314]:
+            - heading "Global Real Estate Strategy Manager" [level=3] [ref=e1318]:
+              - link "Global Real Estate Strategy Manager" [ref=e1319] [cursor=pointer]:
+                - /url: /pt-BR/Unilever_Experienced_Professionals/job/Mumbai-HO/Global-Real-Estate-Strategy-Manager_R-1176818?q=Finance
+            - generic [ref=e1328]:
+              - term [ref=e1329]: locations
+              - definition [ref=e1330]: Mumbai HO
+            - generic [ref=e1340]:
+              - term [ref=e1341]: posted on
+              - definition [ref=e1342]: Publicado há 3 dias
+            - list [ref=e1343]:
+              - listitem [ref=e1344]: R-1176818
+          - listitem [ref=e1345]:
+            - heading "Global Marketing Services North America Lead" [level=3] [ref=e1349]:
+              - link "Global Marketing Services North America Lead" [ref=e1350] [cursor=pointer]:
+                - /url: /pt-BR/Unilever_Experienced_Professionals/job/Hoboken-US-HQ/GMS-North-America-Lead_R-1174731?q=Finance
+            - generic [ref=e1359]:
+              - term [ref=e1360]: locations
+              - definition [ref=e1361]: Hoboken US HQ
+            - generic [ref=e1371]:
+              - term [ref=e1372]: posted on
+              - definition [ref=e1373]: Publicado há 3 dias
+            - list [ref=e1374]:
+              - listitem [ref=e1375]: R-1174731
+          - listitem [ref=e1376]:
+            - heading "Channel Distributor Manager - Region 2" [level=3] [ref=e1380]:
+              - link "Channel Distributor Manager - Region 2" [ref=e1381] [cursor=pointer]:
+                - /url: /pt-BR/Unilever_Experienced_Professionals/job/Isabela-Philippines/Channel-Distributor-Manager---Region-2_R-1172531?q=Finance
+            - generic [ref=e1390]:
+              - term [ref=e1391]: locations
+              - definition [ref=e1392]: Isabela, Philippines
+            - generic [ref=e1402]:
+              - term [ref=e1403]: posted on
+              - definition [ref=e1404]: Publicado há 2 dias
+            - list [ref=e1405]:
+              - listitem [ref=e1406]: R-1172531
+          - listitem [ref=e1407]:
+            - heading "Key Account Manager - Costco/Maxx, Mega & No Brand" [level=3] [ref=e1411]:
+              - link "Key Account Manager - Costco/Maxx, Mega & No Brand" [ref=e1412] [cursor=pointer]:
+                - /url: /pt-BR/Unilever_Experienced_Professionals/job/Seoul-South-Korea/Key-Account-Manager---Costco-Maxx--Mega---No-Brand_R-1177874?q=Finance
+            - generic [ref=e1421]:
+              - term [ref=e1422]: locations
+              - definition [ref=e1423]: Seoul, South Korea
+            - generic [ref=e1433]:
+              - term [ref=e1434]: posted on
+              - definition [ref=e1435]: Publicado ontem
+            - list [ref=e1436]:
+              - listitem [ref=e1437]: R-1177874
+          - listitem [ref=e1438]:
+            - heading "Production Supervisor - Wet Savory" [level=3] [ref=e1442]:
+              - link "Production Supervisor - Wet Savory" [ref=e1443] [cursor=pointer]:
+                - /url: /pt-BR/Unilever_Experienced_Professionals/job/Chachoengsao-Province-Thailand/Production-Supervisor---Wet-Savory_R-1179350-1?q=Finance
+            - generic [ref=e1452]:
+              - term [ref=e1453]: locations
+              - definition [ref=e1454]: Chachoengsao Province, Thailand
+            - generic [ref=e1464]:
+              - term [ref=e1465]: posted on
+              - definition [ref=e1466]: Publicado há 9 dias
+            - list [ref=e1467]:
+              - listitem [ref=e1468]: R-1179350
+        - generic [ref=e811]:
+          - navigation "pagination" [ref=e1469]:
+            - generic [ref=e1470]:
+              - list [ref=e1472]:
+                - listitem [ref=e1473]:
+                  - button "page 1" [ref=e1474] [cursor=pointer]: "1"
+                - listitem [ref=e1475]:
+                  - button "page 2" [ref=e1476] [cursor=pointer]: "2"
+                - listitem [ref=e1477]:
+                  - button "page 3" [ref=e1478] [cursor=pointer]: "3"
+              - button "next" [ref=e1479] [cursor=pointer]
+          - paragraph [ref=e830]: 1 - 20 de 58 cargos
+      - generic [ref=e79]:
+        - heading "About Us" [level=3] [ref=e80]
+        - img "Logo" [ref=e81]
+        - generic [ref=e83]:
+          - generic [ref=e85]:
+            - heading [level=1] [ref=e86]: Better Business. Better World. Better You.
+            - paragraph [ref=e87]
+            - paragraph [ref=e88]:
+              - text: Somos pioneiros, inovadores e criadores do futuro por mais de 120 anos.
+              - link [ref=e89] [cursor=pointer]:
+                - /url: https://www.unilever.com/about/who-we-are/about-Unilever/
+                - text: Saber mais
+            - paragraph [ref=e90]
+          - button "Ler mais" [ref=e93] [cursor=pointer]:
+            - generic [ref=e94]: Ler mais
+  - generic [ref=e98]:
+    - generic [ref=e99]: Siga-nos
+    - list [ref=e100]:
+      - listitem [ref=e101] [cursor=pointer]:
+        - link "Glassdoor" [ref=e102]:
+          - /url: https://www.glassdoor.co.uk/Overview/Working-at-Unilever-EI_IE3513.11,19.htm
+      - listitem [ref=e107] [cursor=pointer]:
+        - link "LinkedIn" [ref=e108]:
+          - /url: https://www.linkedin.com/company/unilever
+      - listitem [ref=e112] [cursor=pointer]:
+        - link "YouTube" [ref=e113]:
+          - /url: https://www.youtube.com/user/Unilever
+      - listitem [ref=e119] [cursor=pointer]:
+        - link "X" [ref=e120]:
+          - /url: https://www.twitter.com/Unilever
+      - listitem [ref=e124] [cursor=pointer]:
+        - link "Facebook" [ref=e125]:
+          - /url: https://www.facebook.com/Unilever
+    - link "Aviso Legal Unilever" [ref=e130] [cursor=pointer]:
+      - /url: https://www.unilever.com/legal.html
+    - generic [ref=e131]:
+      - img [ref=e135]
+      - generic [ref=e155]: © 2026 Workday, Inc. Todos os direitos reservados.

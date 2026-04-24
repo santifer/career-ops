@@ -1,0 +1,336 @@
+- generic [active] [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e5]:
+    - banner [ref=e8]:
+      - generic [ref=e12]:
+        - generic [ref=e15]:
+          - generic [ref=e16]: Dark mode
+          - button "i Dark mode info" [ref=e18] [cursor=pointer]:
+            - text: i
+            - generic [ref=e19]: Dark mode info
+          - switch "Toggle Dark Mode" [ref=e20] [cursor=pointer]
+        - link "You are in our Global Site" [ref=e26] [cursor=pointer]:
+          - /url: "#"
+          - generic [ref=e27]:
+            - img [ref=e28]
+            - generic [ref=e31]: You are in our Global Site
+            - img [ref=e32]
+        - navigation [ref=e33]:
+          - list [ref=e34]:
+            - listitem [ref=e35]:
+              - link "Contact us" [ref=e36] [cursor=pointer]:
+                - /url: /info/contactus/contactus
+      - generic [ref=e40]:
+        - link "Nestlé Good food, Good life | Home" [ref=e41] [cursor=pointer]:
+          - /url: /
+          - img "Nestlé Good food, Good life | Home" [ref=e42]
+        - generic [ref=e47]:
+          - generic [ref=e48]:
+            - generic [ref=e49]: Search
+            - generic:
+              - combobox "Search" [ref=e50]
+              - text: 
+          - button "Search" [ref=e52] [cursor=pointer]:  Search
+      - generic [ref=e56]:
+        - navigation "Main navigation" [ref=e57]:
+          - list [ref=e58]:
+            - listitem [ref=e59]:
+              - link "Home" [ref=e60] [cursor=pointer]:
+                - /url: /
+            - listitem [ref=e61]:
+              - button "About us" [ref=e62] [cursor=pointer]
+            - listitem [ref=e63]:
+              - link "Our stories" [ref=e64] [cursor=pointer]:
+                - /url: /stories#/category/featured-stories/1
+            - listitem [ref=e65]:
+              - button "Brands" [ref=e66] [cursor=pointer]
+            - listitem [ref=e67]:
+              - button "Sustainability" [ref=e68] [cursor=pointer]
+            - listitem [ref=e69]:
+              - button "Nutrition" [ref=e70] [cursor=pointer]
+            - listitem [ref=e71]:
+              - button "Ask Nestlé" [ref=e72] [cursor=pointer]
+        - navigation "Secondary menu" [ref=e73]:
+          - list [ref=e74]:
+            - listitem [ref=e75]:
+              - button "Careers" [ref=e76] [cursor=pointer]
+            - listitem [ref=e77]:
+              - button "Investors" [ref=e78] [cursor=pointer]
+            - listitem [ref=e79]:
+              - button "Media" [ref=e80] [cursor=pointer]
+        - text:  
+    - generic [ref=e81]:
+      - list [ref=e88]:
+        - listitem [ref=e89]:
+          - link "Home" [ref=e90] [cursor=pointer]:
+            - /url: /
+        - listitem [ref=e91]:
+          - link "Careers" [ref=e92] [cursor=pointer]:
+            - /url: /jobs
+        - listitem [ref=e93]:
+          - generic [ref=e94]: Search
+      - generic [ref=e105]:
+        - article
+        - generic [ref=e107]:
+          - img "employees working at Nestlé" [ref=e113]
+          - generic [ref=e116]:
+            - heading "Hundreds of jobs" [level=1] [ref=e118]
+            - generic [ref=e119]:
+              - heading "Find the one that is right for you" [level=3] [ref=e120]
+              - generic [ref=e124]:
+                - generic [ref=e125]:
+                  - generic [ref=e126]: Keyword
+                  - textbox "Keyword" [ref=e127]:
+                    - /placeholder: Type here...
+                    - text: Finance Manager
+                - generic [ref=e128]:
+                  - generic [ref=e129]: Country or Region
+                  - button "Clear" [ref=e132] [cursor=pointer]
+                - generic [ref=e133]:
+                  - generic [ref=e134]: Location
+                  - combobox "Location" [ref=e136]:
+                    - option "- Any -" [selected]
+                - generic [ref=e137]:
+                  - generic [ref=e138]: Career Area
+                  - combobox "Career Area" [ref=e140]:
+                    - option "- Any -" [selected]
+                - generic [ref=e141]:
+                  - button "Search jobs" [ref=e142] [cursor=pointer]: Search jobs
+                  - link "Clear" [ref=e144] [cursor=pointer]:
+                    - /url: /jobs/search-jobs
+    - main [ref=e146]:
+      - generic [ref=e152]:
+        - generic [ref=e153]: "|"
+        - generic [ref=e154]:
+          - text: Unfortunately, no results were found for
+          - strong [ref=e155]: Finance Manager.
+          - generic [ref=e156]:
+            - paragraph [ref=e157]: "Search suggestions:"
+            - paragraph [ref=e158]: "- Check your spelling"
+            - paragraph [ref=e159]: "- Try more general keywords"
+            - paragraph [ref=e160]: "- Replace abbreviations with the entire word"
+            - paragraph [ref=e161]: Alternatively, Olivia, our Virtual Recruiting Assistant, can help you with your job search 24x7. The chat window is located at the bottom left of your screen.
+    - link "Back to top" [ref=e167] [cursor=pointer]:
+      - /url: "#"
+      - img "Back to top" [ref=e168]
+      - img [ref=e169]
+    - contentinfo [ref=e174]:
+      - generic [ref=e181]:
+        - heading "Mini Footer" [level=2] [ref=e182]
+        - generic [ref=e186]:
+          - generic [ref=e191]:
+            - generic [ref=e192]:
+              - heading "Nestlé news" [level=3] [ref=e193]:
+                - link "Nestlé news" [ref=e194] [cursor=pointer]:
+                  - /url: /info/sign-me-up
+              - paragraph [ref=e195]:
+                - link "Subscribe to receive email alerts" [ref=e196] [cursor=pointer]:
+                  - /url: /info/sign-me-up
+            - link "Sign up" [ref=e201] [cursor=pointer]:
+              - /url: /info/sign-me-up
+          - generic [ref=e206]:
+            - generic [ref=e207]:
+              - heading "Compliance concerns" [level=3] [ref=e208]:
+                - link "Compliance concerns" [ref=e209] [cursor=pointer]:
+                  - /url: /about/how-we-do-business/report-compliance-concerns
+              - paragraph [ref=e210]:
+                - link "Speak up about your concerns" [ref=e211] [cursor=pointer]:
+                  - /url: /about/how-we-do-business/report-compliance-concerns
+            - link "Speak Up" [ref=e216] [cursor=pointer]:
+              - /url: /about/how-we-do-business/report-compliance-concerns
+          - generic "Contact us" [ref=e223]:
+            - img [ref=e224]
+          - generic [ref=e229]:
+            - generic [ref=e230]:
+              - heading "Contact us" [level=3] [ref=e231]:
+                - link "Contact us" [ref=e232] [cursor=pointer]:
+                  - /url: /info/contactus/contactus
+              - paragraph [ref=e233]:
+                - link "Across the globe, we are here to help answer your queries" [ref=e234] [cursor=pointer]:
+                  - /url: /info/contactus/contactus
+            - link "Contact us" [ref=e239] [cursor=pointer]:
+              - /url: /info/contactus/contactus
+      - generic [ref=e242]:
+        - generic [ref=e247]:
+          - heading "Nestlé" [level=2] [ref=e248]
+          - paragraph [ref=e250]: We unlock the power of food and beverages to enhance quality of life for everyone, today and for generations to come
+          - img "nest-logo" [ref=e251]
+        - generic [ref=e256]:
+          - navigation "Useful Links" [ref=e257]:
+            - heading "Useful Links" [level=2] [ref=e258]:
+              - button "Useful Links" [ref=e259]
+            - list [ref=e260]:
+              - listitem [ref=e261]:
+                - link "Ask Nestlé (FAQs)" [ref=e262] [cursor=pointer]:
+                  - /url: /ask-nestle
+              - listitem [ref=e263]:
+                - link "Contact us" [ref=e264] [cursor=pointer]:
+                  - /url: /info/contactus/contactus
+              - listitem [ref=e265]:
+                - link "Search for jobs" [ref=e266] [cursor=pointer]:
+                  - /url: /search-jobs/career-areas
+              - listitem [ref=e267]:
+                - link "Sign up for news" [ref=e268] [cursor=pointer]:
+                  - /url: /info/sign-me-up
+              - listitem [ref=e269]:
+                - link "Speak Up" [ref=e270] [cursor=pointer]:
+                  - /url: /about/how-we-do-business/report-compliance-concerns
+          - navigation "Company" [ref=e271]:
+            - heading "Company" [level=2] [ref=e272]:
+              - button "Company" [ref=e273]
+            - list [ref=e274]:
+              - listitem [ref=e275]:
+                - link "About us" [ref=e276] [cursor=pointer]:
+                  - /url: /about
+              - listitem [ref=e277]:
+                - link "Global addresses" [ref=e278] [cursor=pointer]:
+                  - /url: /about/overview/global-addresses
+              - listitem [ref=e279]:
+                - link "Strategy" [ref=e280] [cursor=pointer]:
+                  - /url: /about/strategy
+              - listitem [ref=e281]:
+                - link "Our leadership" [ref=e282] [cursor=pointer]:
+                  - /url: /about/management
+              - listitem [ref=e283]:
+                - link "Brands A - Z" [ref=e284] [cursor=pointer]:
+                  - /url: /brands/brandssearchlist
+              - listitem [ref=e285]:
+                - link "Our history" [ref=e286] [cursor=pointer]:
+                  - /url: /about/history
+              - listitem [ref=e287]:
+                - link "Sustainability" [ref=e288] [cursor=pointer]:
+                  - /url: /sustainability
+        - generic [ref=e291]:
+          - navigation "Downloads" [ref=e292]:
+            - heading "Downloads" [level=2] [ref=e293]:
+              - button "Downloads" [ref=e294]
+            - list [ref=e295]:
+              - listitem [ref=e296]:
+                - link "Annual Review (pdf, 9Mb)" [ref=e297] [cursor=pointer]:
+                  - /url: /sites/default/files/2026-02/annual-review-2025-en.pdf
+              - listitem [ref=e298]:
+                - link "Non-Financial Statement (pdf, 16MB)" [ref=e299] [cursor=pointer]:
+                  - /url: /sites/default/files/2026-02/non-financial-statement-2025.pdf
+              - listitem [ref=e300]:
+                - 'link "Creating Shared Value: Our impact (pdf, 17Mb)" [ref=e301] [cursor=pointer]':
+                  - /url: /sites/default/files/2026-02/creating-shared-value-nestle-2025.pdf
+              - listitem [ref=e302]:
+                - link "Responsible Sourcing Core Requirements (pdf, 2Mb)" [ref=e303] [cursor=pointer]:
+                  - /url: /sites/default/files/asset-library/documents/library/documents/suppliers/nestle-responsible-sourcing-standard-english.pdf
+          - navigation "Other Nestlé Businesses" [ref=e304]:
+            - heading "Other Nestlé Businesses" [level=2] [ref=e305]:
+              - button "Other Nestlé Businesses" [ref=e306]
+            - list [ref=e307]:
+              - listitem [ref=e308]:
+                - link "Nestlé Nespresso" [ref=e309] [cursor=pointer]:
+                  - /url: http://www.nestle-nespresso.com/
+              - listitem [ref=e310]:
+                - link "Nestlé Purina Petcare" [ref=e311] [cursor=pointer]:
+                  - /url: https://www.purina.com/
+        - generic [ref=e314]:
+          - navigation "Media" [ref=e315]:
+            - heading "Media" [level=2] [ref=e316]:
+              - button "Media" [ref=e317]
+            - list [ref=e318]:
+              - listitem [ref=e319]:
+                - link "News" [ref=e320] [cursor=pointer]:
+                  - /url: /media/news
+              - listitem [ref=e321]:
+                - link "Media contacts" [ref=e322] [cursor=pointer]:
+                  - /url: /media/media-contacts
+              - listitem [ref=e323]:
+                - link "Images" [ref=e324] [cursor=pointer]:
+                  - /url: /media/images-video
+          - navigation "Investors" [ref=e325]:
+            - heading "Investors" [level=2] [ref=e326]:
+              - button "Investors" [ref=e327]
+            - list [ref=e328]:
+              - listitem [ref=e329]:
+                - link "Corporate governance" [ref=e330] [cursor=pointer]:
+                  - /url: /investors/corporate-governance
+              - listitem [ref=e331]:
+                - link "Shares, ADRs, & Bonds" [ref=e332] [cursor=pointer]:
+                  - /url: /investors/sharesadrsbonds
+              - listitem [ref=e333]:
+                - link "Publications" [ref=e334] [cursor=pointer]:
+                  - /url: /investors/publications
+          - generic [ref=e336]:
+            - heading "SHARE INFORMATION" [level=2] [ref=e337]
+            - link "Share Price" [ref=e339] [cursor=pointer]:
+              - /url: /investors/sharesadrsbonds/stockquotes
+      - generic [ref=e345]:
+        - heading "Follow us on" [level=2] [ref=e346]
+        - generic [ref=e347]:
+          - link "Linkedin" [ref=e350] [cursor=pointer]:
+            - /url: https://www.linkedin.com/company/nestle-s-a-
+            - img "Linkedin" [ref=e351]
+          - link "Instagram" [ref=e355] [cursor=pointer]:
+            - /url: https://www.instagram.com/nestle/
+            - img "Instagram" [ref=e356]
+          - link "TikTok" [ref=e360] [cursor=pointer]:
+            - /url: https://www.tiktok.com/@nestle
+            - img "TikTok" [ref=e361]
+          - link "Facebook" [ref=e365] [cursor=pointer]:
+            - /url: https://www.facebook.com/Nestle?brandloc=DISABLE
+            - img "Facebook" [ref=e366]
+          - link "Youtube" [ref=e370] [cursor=pointer]:
+            - /url: https://www.youtube.com/user/NestleCorporate
+            - img "Youtube" [ref=e371]
+          - link "Flickr" [ref=e375] [cursor=pointer]:
+            - /url: https://www.flickr.com/photos/nestle/collections/
+            - img "Flickr" [ref=e376]
+          - link "Twitter" [ref=e380] [cursor=pointer]:
+            - /url: https://twitter.com/NestleCareers
+            - img "Twitter" [ref=e381]
+      - navigation "Sub Footer Menu" [ref=e388]:
+        - heading "Sub Footer Menu" [level=2] [ref=e389]
+        - list [ref=e390]:
+          - listitem [ref=e391]:
+            - link "© 2026 Nestlé|" [ref=e392] [cursor=pointer]:
+              - /url: /info/copyright
+          - listitem [ref=e393]:
+            - link "Site map|" [ref=e394] [cursor=pointer]:
+              - /url: /info/sitemap
+          - listitem [ref=e395]:
+            - link "Help|" [ref=e396] [cursor=pointer]:
+              - /url: /info/help
+          - listitem [ref=e397]:
+            - link "Privacy|" [ref=e398] [cursor=pointer]:
+              - /url: /info/privacy
+          - listitem [ref=e399]:
+            - link "Cookies|" [ref=e400] [cursor=pointer]:
+              - /url: /info/cookies
+          - listitem [ref=e401]:
+            - link "Terms of use|" [ref=e402] [cursor=pointer]:
+              - /url: /info/tc
+          - listitem [ref=e403]:
+            - link "Accessibility|" [ref=e404] [cursor=pointer]:
+              - /url: /info/accessibility
+          - listitem [ref=e405]:
+            - link "Carbon efficiency|" [ref=e406] [cursor=pointer]:
+              - /url: /info/website-carbon-footprint
+          - listitem [ref=e407]:
+            - link "Suppliers|" [ref=e408] [cursor=pointer]:
+              - /url: /info/suppliers
+          - listitem [ref=e409]:
+            - link "Social media|" [ref=e410] [cursor=pointer]:
+              - /url: /info/social-media-house-rules
+          - listitem [ref=e411]:
+            - link "RSS|" [ref=e412] [cursor=pointer]:
+              - /url: /info/rsslinkpage
+          - listitem [ref=e413]:
+            - link "Sign up|" [ref=e414] [cursor=pointer]:
+              - /url: /info/sign-me-up
+          - listitem [ref=e415]:
+            - link "Unsubscribe|" [ref=e416] [cursor=pointer]:
+              - /url: /info/sign-me-up/unsubscribesignupuser
+          - listitem [ref=e417]:
+            - link "Contact us" [ref=e418] [cursor=pointer]:
+              - /url: /info/contactus/contactus
+  - status [ref=e419]
+  - status [ref=e420]
+  - text: "\" \""
+  - generic "Cookie Settings" [ref=e422] [cursor=pointer]:
+    - button "Open Preferences" [ref=e424]
+    - text: Cookie Settings

@@ -1,0 +1,195 @@
+- generic [active] [ref=e1]:
+  - generic:
+    - region "Mensagem toast":
+      - heading "0 notificações no total" [level=2] [ref=e3]
+      - alert
+  - generic [ref=e4]:
+    - generic [ref=e6]:
+      - button "Pular para pesquisa" [ref=e7] [cursor=pointer]:
+        - generic [ref=e8]: Pular para pesquisa
+      - button "Pular para conteúdo principal" [ref=e9] [cursor=pointer]:
+        - generic [ref=e10]: Pular para conteúdo principal
+      - button "Atalhos do teclado" [ref=e11] [cursor=pointer]:
+        - generic [ref=e12]: Atalhos do teclado
+      - button "Fechar menu pular" [ref=e13] [cursor=pointer]:
+        - img [ref=e14]
+        - generic [ref=e16]: Fechar menu pular
+    - banner "Navegação geral" [ref=e17]:
+      - generic [ref=e18]:
+        - link "LinkedIn" [ref=e19] [cursor=pointer]:
+          - /url: https://www.linkedin.com/feed/?nis=true
+          - img "LinkedIn" [ref=e22]:
+            - img [ref=e23]
+        - generic [ref=e27]:
+          - combobox "Pesquisar" [ref=e28]
+          - generic:
+            - img
+        - navigation "Navegação principal" [ref=e29]:
+          - list [ref=e30]:
+            - listitem [ref=e31]:
+              - link "atualizações do feed novas notificações Início" [ref=e32] [cursor=pointer]:
+                - /url: https://www.linkedin.com/feed/?nis=true&
+                - generic [ref=e33]:
+                  - generic [ref=e36]: atualizações do feed novas notificações
+                  - img [ref=e40]
+                - generic "Início" [ref=e42]
+            - listitem [ref=e43]:
+              - link "2 atualizações de rede novas notificações Minha rede" [ref=e44] [cursor=pointer]:
+                - /url: https://www.linkedin.com/mynetwork/?
+                - generic [ref=e45]:
+                  - generic [ref=e46]:
+                    - generic [ref=e47]: "2"
+                    - generic [ref=e48]: 2 atualizações de rede novas notificações
+                  - img [ref=e52]
+                - generic "Minha rede" [ref=e54]
+            - listitem [ref=e55]:
+              - link "Vagas" [ref=e56] [cursor=pointer]:
+                - /url: https://www.linkedin.com/jobs/?
+                - img [ref=e60]
+                - generic "Vagas" [ref=e62]
+            - listitem [ref=e63]:
+              - link "Mensagens" [ref=e64] [cursor=pointer]:
+                - /url: https://www.linkedin.com/messaging/?
+                - img [ref=e68]
+                - generic "Mensagens" [ref=e70]
+            - listitem [ref=e71]:
+              - link "10 novas notificações Notificações" [ref=e72] [cursor=pointer]:
+                - /url: https://www.linkedin.com/notifications/?
+                - generic [ref=e73]:
+                  - generic [ref=e74]:
+                    - generic [ref=e75]: "10"
+                    - generic [ref=e76]: 10 novas notificações
+                  - img [ref=e80]
+                - generic "Notificações" [ref=e82]
+            - listitem [ref=e83]:
+              - button "Fernando Xavier Eu" [ref=e85] [cursor=pointer]:
+                - img "Fernando Xavier" [ref=e86]
+                - generic [ref=e87]:
+                  - text: Eu
+                  - img [ref=e88]
+            - listitem [ref=e90]:
+              - button "Para negócios" [ref=e92] [cursor=pointer]:
+                - img [ref=e96]
+                - generic "Para negócios" [ref=e98]:
+                  - text: Para negócios
+                  - img [ref=e99]
+            - listitem [ref=e101]:
+              - link "Veicular anúncio" [ref=e102] [cursor=pointer]:
+                - /url: https://www.linkedin.com/campaignmanager/accounts?
+                - img [ref=e106]
+                - generic "Veicular anúncio" [ref=e109]
+    - generic [ref=e110]:
+      - generic [ref=e113]:
+        - main [ref=e114]:
+          - generic [ref=e117]:
+            - generic [ref=e121]:
+              - generic [ref=e122]:
+                - generic [ref=e123]:
+                  - link "Logo da empresa LSG Sky Chefs" [ref=e124] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/company/lsg-sky-chefs/life
+                    - img "Logo da empresa LSG Sky Chefs" [ref=e127]
+                  - link "LSG Sky Chefs" [ref=e129] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/company/lsg-sky-chefs/life
+                - generic [ref=e130]:
+                  - button "Compartilhar" [ref=e133] [cursor=pointer]:
+                    - img [ref=e134]
+                    - generic [ref=e136]: Compartilhar
+                  - button "Exibir mais opções" [ref=e138] [cursor=pointer]:
+                    - img [ref=e139]
+                    - generic [ref=e141]: Exibir mais opções
+              - heading "Gerente Controller Sr." [level=1] [ref=e144]
+              - generic [ref=e147]:
+                - generic [ref=e148]: Guarulhos, São Paulo, Brasil
+                - generic [ref=e149]: ·
+                - generic [ref=e151]: há 1 mês
+                - generic [ref=e152]: ·
+                - generic [ref=e153]: Mais de 100 pessoas clicaram em Candidatar-se
+                - paragraph [ref=e154]:
+                  - generic [ref=e155]: Respostas gerenciadas fora do LinkedIn
+              - generic [ref=e156]:
+                - button "Corresponde às suas preferências de vaga e o tipo de local de trabalho é Presencial." [ref=e157] [cursor=pointer]:
+                  - strong [ref=e160]:
+                    - img [ref=e162]
+                    - text: Presencial
+                  - generic [ref=e164]: Corresponde às suas preferências de vaga e o tipo de local de trabalho é Presencial.
+                - button "Corresponde às suas preferências de vaga e o tipo de vaga é Tempo integral." [ref=e165] [cursor=pointer]:
+                  - strong [ref=e168]:
+                    - img [ref=e170]
+                    - text: Tempo integral
+                  - generic [ref=e172]: Corresponde às suas preferências de vaga e o tipo de vaga é Tempo integral.
+              - generic [ref=e174]:
+                - link "Candidatar-se à vaga de Gerente Controller Sr. no site da empresa" [ref=e177] [cursor=pointer]:
+                  - img [ref=e178]
+                  - generic [ref=e180]: Candidatar-se
+                - button "Salvar Gerente Controller Sr. na LSG Sky Chefs" [ref=e181] [cursor=pointer]:
+                  - generic [ref=e182]: Salvar
+                  - generic [ref=e183]: Salvar Gerente Controller Sr. na LSG Sky Chefs
+            - generic [ref=e193]:
+              - article [ref=e194]:
+                - heading "Sobre a vaga" [level=2] [ref=e197]
+              - button "Clicar para ver mais detalhes" [ref=e199] [cursor=pointer]:
+                - img [ref=e200]
+                - generic [ref=e202]: Ver mais
+            - generic [ref=e204]:
+              - generic [ref=e205]:
+                - heading "Configurar alerta para vagas semelhantes" [level=2] [ref=e206]
+                - generic [ref=e208]: Controlador sênior, Guarulhos, São Paulo, Brasil
+              - generic [ref=e210] [cursor=pointer]:
+                - generic [ref=e211]: Desativada
+                - generic [ref=e212]: Configurar alerta
+                - switch "Configurar alerta"
+            - alert [ref=e215]: Carregando detalhes da vaga
+        - complementary [ref=e228]
+      - contentinfo [ref=e231]:
+        - generic [ref=e233]:
+          - generic [ref=e234]:
+            - navigation [ref=e235]:
+              - list
+            - generic [ref=e237]:
+              - list [ref=e238]:
+                - listitem [ref=e239]:
+                  - img [ref=e240]
+                  - generic [ref=e241]:
+                    - link "Dúvidas? Acesse a nossa Central de Ajuda." [ref=e242] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/help/linkedin?trk=d_flagship3_job_details
+                      - text: Dúvidas?
+                    - paragraph [ref=e243]: Acesse a nossa Central de Ajuda.
+                - listitem [ref=e244]:
+                  - img [ref=e245]
+                  - generic [ref=e246]:
+                    - link "Gerencie sua conta e privacidade Acesse suas Configurações." [ref=e247] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/psettings/
+                      - text: Gerencie sua conta e privacidade
+                    - paragraph [ref=e248]: Acesse suas Configurações.
+                - listitem [ref=e249]:
+                  - img [ref=e250]
+                  - generic [ref=e251]:
+                    - link "Visibilidade da recomendação Saiba mais sobre os conteúdos recomendados." [ref=e252] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/help/linkedin/answer/a1339724
+                      - text: Visibilidade da recomendação
+                    - paragraph [ref=e253]: Saiba mais sobre os conteúdos recomendados.
+              - generic [ref=e254]:
+                - generic [ref=e255]: Selecionar idioma
+                - combobox "Selecionar idioma" [ref=e256]
+          - paragraph [ref=e257]: LinkedIn Corporation © 2026
+    - generic:
+      - generic:
+        - complementary:
+          - generic [ref=e259]:
+            - generic [ref=e261] [cursor=pointer]:
+              - img "Fernando Xavier" [ref=e263]
+              - button "Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas." [ref=e264]:
+                - generic [ref=e265]:
+                  - generic [ref=e266]: Mensagens
+                  - generic [ref=e267]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+            - generic [ref=e268]:
+              - button "Abrir o menu suspenso de mensagens" [ref=e270] [cursor=pointer]:
+                - img "Abrir o menu suspenso de mensagens" [ref=e271]
+              - button "Escrever mensagem" [ref=e274] [cursor=pointer]:
+                - img [ref=e275]
+                - generic [ref=e277]: Escrever mensagem
+              - button "Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas." [ref=e278] [cursor=pointer]:
+                - img [ref=e279]
+                - generic [ref=e281]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+        - complementary "Assistente de IA para obter ajuda com sua carreira, vagas, etc."
+  - region [ref=e282]

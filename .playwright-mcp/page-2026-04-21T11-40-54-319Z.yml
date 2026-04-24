@@ -1,0 +1,350 @@
+- generic [ref=e4]:
+  - banner [ref=e5]:
+    - generic:
+      - link "Skip to main content":
+        - /url: "#skipContent"
+    - navigation "Header Menu" [ref=e9]:
+      - link [ref=e10] [cursor=pointer]:
+        - /url: https://careers.dovercorporation.com/
+        - img [ref=e11]
+      - list [ref=e12]:
+        - listitem [ref=e13]:
+          - link "Home" [ref=e14] [cursor=pointer]:
+            - /url: https://careers.dovercorporation.com/
+        - listitem [ref=e15]:
+          - link "Search by Location" [ref=e16] [cursor=pointer]:
+            - /url: https://careers.dovercorporation.com/content/Location/?locale=en_US
+        - listitem [ref=e17]:
+          - button "View Jobs by Language" [ref=e18] [cursor=pointer]: View Jobs by Language
+        - listitem [ref=e20]:
+          - link "Recruitment Fraud Notice" [ref=e21] [cursor=pointer]:
+            - /url: https://careers.dovercorporation.com/content/Recruitment-Fraud-Notice/?locale=en_US
+  - main [ref=e24]:
+    - generic [ref=e25]:
+      - region
+      - region "Career Opportunities:Create an Account" [ref=e28]:
+        - generic [ref=e30]:
+          - 'heading "Career Opportunities: Create an Account" [level=1] [ref=e32]'
+          - generic [ref=e35]:
+            - paragraph
+            - generic [ref=e36]:
+              - text: Already a registered user?
+              - link "Please sign in" [ref=e37] [cursor=pointer]:
+                - /url: /career?company=DOVER&site=&lang=en_US&requestParams=3ZL9C50PC52lIakfl1kssR0g1Gt42m1R0UpCQRCdNFFTSgl66xckxVLpoaSyBKNI8qWH27h30rVt%0a73V3TCPoi%2bojoi%2box34geugfWi1QqYXdgTlnZs6ZffyCmDWQ7eEt5gYsVe4IbfcYw1j8%2ffll7fI1%0aCpEaLKkA%2fRoKDkwdktw1ZLuB8kfhzi6MT3qYcG%2fG3RTDopVMAwOrF41JV4W6k2uykbqz%2ffTW%2bvhc%0avz%2bMAIxCR19gAIaEUJI01%2f1BHx4g%2bpNP9IK2LQypzZAVaIiM5zKeob4n54ixrc1ysciQsoGQqKph%0aqO7m8CtUlhzuyk9lSEpqmsUzrkKgZa8h9TX5UjMsi8AYUsgy0N68rHS%2bUCqWK6VKvrSRd0xp65rJ%0aaFTnlsx%2fc%2bMiuAlRTzVFHLZ%2f0jo4m8bkr0NtZzusjA2j8yPFRIrb7XiZc0NIe%2bdNZ8J9yLCqyPCe%0aIWTy%2fyoZfQPAnos7&career_ns=job%5fapplication&career_job_req_id=65844&jobPipeline=Appcast%5fLinkedin&clientId=jobs2web&_s.crb=lXLLO8Yx3VtthYj7RPjc3zYMES2diVEyZjWF2C6UGFk%3d
+              - text: Login credentials are case sensitive
+              - generic [ref=e38]: "*indicates a required field."
+            - paragraph
+            - generic "Required" [ref=e40]: "Email Address: *"
+            - textbox "Email Address:" [ref=e41]
+            - generic "Required" [ref=e42]: "Retype Email Address: *"
+            - textbox "Retype Email Address:" [ref=e43]
+            - generic "Required" [ref=e44]: "Choose Password: *"
+            - generic [ref=e45]:
+              - textbox "Choose Password:" [ref=e46]
+              - button "Show" [ref=e47] [cursor=pointer]
+            - list [ref=e50]:
+              - listitem [ref=e51]: Password must be at least 8 characters long.
+              - listitem [ref=e52]: Password must not be longer than 20 characters.
+              - listitem [ref=e53]: Password must contain at least one upper case and one lower case letter.
+              - listitem [ref=e54]: Password must contain at least one number or punctuation character.
+              - listitem [ref=e55]: Password must not contain space or unicode characters.
+            - generic "Required" [ref=e56]: "Retype Password: *"
+            - generic [ref=e57]:
+              - textbox "Retype Password:" [ref=e58]
+              - button "Show" [ref=e59] [cursor=pointer]
+            - generic "Required" [ref=e60]: "First Name: *"
+            - textbox "First Name:" [ref=e61]
+            - generic "Required" [ref=e62]: "Last Name: *"
+            - textbox "Last Name:" [ref=e63]
+            - generic "Required" [ref=e65]: Country/Region of Residence:*
+            - combobox "Country/Region of Residence" [ref=e68]:
+              - menuitem "- Select -"
+              - menuitem "Afghanistan"
+              - menuitem "Albania"
+              - menuitem "Algeria"
+              - menuitem "American Samoa"
+              - menuitem "Andorra"
+              - menuitem "Angola"
+              - menuitem "Anguilla"
+              - menuitem "Antarctica"
+              - menuitem "Antigua and Barbuda"
+              - menuitem "Argentina"
+              - menuitem "Armenia"
+              - menuitem "Aruba"
+              - menuitem "Australia"
+              - menuitem "Austria"
+              - menuitem "Azerbaijan"
+              - menuitem "Bahamas"
+              - menuitem "Bahrain"
+              - menuitem "Bangladesh"
+              - menuitem "Barbados"
+              - menuitem "Belarus"
+              - menuitem "Belgium"
+              - menuitem "Belize"
+              - menuitem "Benin"
+              - menuitem "Bermuda"
+              - menuitem "Bhutan"
+              - menuitem "Bosnia and Herzegovina"
+              - menuitem "Botswana"
+              - menuitem "Bouvet Island"
+              - menuitem "Brazil"
+              - menuitem "British Indian Ocean Territory"
+              - menuitem "Brunei Darussalam"
+              - menuitem "Bulgaria"
+              - menuitem "Burkina Faso"
+              - menuitem "Burundi"
+              - menuitem "Cabo Verde"
+              - menuitem "Cambodia"
+              - menuitem "Cameroon"
+              - menuitem "Canada"
+              - menuitem "Cayman Islands"
+              - menuitem "Central African Republic"
+              - menuitem "Chad"
+              - menuitem "Chile"
+              - menuitem "China"
+              - menuitem "Christmas Island"
+              - menuitem "Cocos (Keeling) Islands"
+              - menuitem "Colombia"
+              - menuitem "Comoros"
+              - menuitem "Congo"
+              - menuitem "Congo, the Democratic Republic of the"
+              - menuitem "Cook Islands"
+              - menuitem "Costa Rica"
+              - menuitem "Côte d'Ivoire"
+              - menuitem "Croatia"
+              - menuitem "Cuba"
+              - menuitem "Cyprus"
+              - menuitem "Czech Republic"
+              - menuitem "Denmark"
+              - menuitem "Djibouti"
+              - menuitem "Dominica"
+              - menuitem "Dominican Republic"
+              - menuitem "Ecuador"
+              - menuitem "Egypt"
+              - menuitem "El Salvador"
+              - menuitem "Equatorial Guinea"
+              - menuitem "Eritrea"
+              - menuitem "Estonia"
+              - menuitem "Eswatini"
+              - menuitem "Ethiopia"
+              - menuitem "Falkland Islands (Malvinas)"
+              - menuitem "Faroe Islands"
+              - menuitem "Fiji"
+              - menuitem "Finland"
+              - menuitem "France"
+              - menuitem "French Guiana"
+              - menuitem "French Polynesia"
+              - menuitem "French Southern Territories"
+              - menuitem "Gabon"
+              - menuitem "Gambia"
+              - menuitem "Georgia"
+              - menuitem "Germany"
+              - menuitem "Ghana"
+              - menuitem "Gibraltar"
+              - menuitem "Greece"
+              - menuitem "Greenland"
+              - menuitem "Grenada"
+              - menuitem "Guadeloupe"
+              - menuitem "Guam"
+              - menuitem "Guatemala"
+              - menuitem "Guernsey"
+              - menuitem "Guinea"
+              - menuitem "Guinea-Bissau"
+              - menuitem "Guyana"
+              - menuitem "Haiti"
+              - menuitem "Heard Island and McDonald Islands"
+              - menuitem "Holy See (Vatican City State)"
+              - menuitem "Honduras"
+              - menuitem "Hong Kong"
+              - menuitem "Hungary"
+              - menuitem "Iceland"
+              - menuitem "India"
+              - menuitem "Indonesia"
+              - menuitem "Iran, Islamic Republic of"
+              - menuitem "Iraq"
+              - menuitem "Ireland"
+              - menuitem "Isle of Man"
+              - menuitem "Israel"
+              - menuitem "Italy"
+              - menuitem "Jamaica"
+              - menuitem "Japan"
+              - menuitem "Jersey"
+              - menuitem "Jordan"
+              - menuitem "Kazakhstan"
+              - menuitem "Kenya"
+              - menuitem "Kiribati"
+              - menuitem "Korea, Democratic People's Republic of"
+              - menuitem "Korea, Republic of"
+              - menuitem "Kuwait"
+              - menuitem "Kyrgyzstan"
+              - menuitem "Lao People's Democratic Republic"
+              - menuitem "Latvia"
+              - menuitem "Lebanon"
+              - menuitem "Lesotho"
+              - menuitem "Liberia"
+              - menuitem "Libya"
+              - menuitem "Liechtenstein"
+              - menuitem "Lithuania"
+              - menuitem "Luxembourg"
+              - menuitem "Macao"
+              - menuitem "Madagascar"
+              - menuitem "Malawi"
+              - menuitem "Malaysia"
+              - menuitem "Maldives"
+              - menuitem "Mali"
+              - menuitem "Malta"
+              - menuitem "Marshall Islands"
+              - menuitem "Martinique"
+              - menuitem "Mauritania"
+              - menuitem "Mauritius"
+              - menuitem "Mayotte"
+              - menuitem "Mexico"
+              - menuitem "Micronesia, Federated States of"
+              - menuitem "Moldova, Republic of"
+              - menuitem "Monaco"
+              - menuitem "Mongolia"
+              - menuitem "Montenegro"
+              - menuitem "Montserrat"
+              - menuitem "Morocco"
+              - menuitem "Mozambique"
+              - menuitem "Myanmar"
+              - menuitem "Namibia"
+              - menuitem "Nauru"
+              - menuitem "Nepal"
+              - menuitem "Netherlands"
+              - menuitem "Netherlands Antilles"
+              - menuitem "New Caledonia"
+              - menuitem "New Zealand"
+              - menuitem "Nicaragua"
+              - menuitem "Niger"
+              - menuitem "Nigeria"
+              - menuitem "Niue"
+              - menuitem "Norfolk Island"
+              - menuitem "Northern Mariana Islands"
+              - menuitem "Norway"
+              - menuitem "Oman"
+              - menuitem "Pakistan"
+              - menuitem "Palau"
+              - menuitem "Panama"
+              - menuitem "Papua New Guinea"
+              - menuitem "Paraguay"
+              - menuitem "Peru"
+              - menuitem "Philippines"
+              - menuitem "Pitcairn"
+              - menuitem "Poland"
+              - menuitem "Portugal"
+              - menuitem "Puerto Rico"
+              - menuitem "Qatar"
+              - menuitem "Republic of North Macedonia"
+              - menuitem "Réunion"
+              - menuitem "Romania"
+              - menuitem "Russian Federation"
+              - menuitem "Rwanda"
+              - menuitem "Saint Barthélemy"
+              - menuitem "Saint Kitts and Nevis"
+              - menuitem "Saint Lucia"
+              - menuitem "Saint Pierre and Miquelon"
+              - menuitem "Saint Vincent and the Grenadines"
+              - menuitem "Samoa"
+              - menuitem "San Marino"
+              - menuitem "Sao Tome and Principe"
+              - menuitem "Saudi Arabia"
+              - menuitem "Senegal"
+              - menuitem "Serbia"
+              - menuitem "Seychelles"
+              - menuitem "Sierra Leone"
+              - menuitem "Singapore"
+              - menuitem "Slovakia"
+              - menuitem "Slovenia"
+              - menuitem "Solomon Islands"
+              - menuitem "Somalia"
+              - menuitem "South Africa"
+              - menuitem "South Georgia and the South Sandwich Islands"
+              - menuitem "Spain"
+              - menuitem "Sri Lanka"
+              - menuitem "Sudan"
+              - menuitem "Suriname"
+              - menuitem "Svalbard and Jan Mayen"
+              - menuitem "Sweden"
+              - menuitem "Switzerland"
+              - menuitem "Syrian Arab Republic"
+              - menuitem "Taiwan"
+              - menuitem "Tajikistan"
+              - menuitem "Tanzania, United Republic of"
+              - menuitem "Thailand"
+              - menuitem "Timor-Leste"
+              - menuitem "Togo"
+              - menuitem "Tokelau"
+              - menuitem "Tonga"
+              - menuitem "Trinidad and Tobago"
+              - menuitem "Tunisia"
+              - menuitem "Türkiye"
+              - menuitem "Turkmenistan"
+              - menuitem "Turks and Caicos Islands"
+              - menuitem "Tuvalu"
+              - menuitem "Uganda"
+              - menuitem "Ukraine"
+              - menuitem "United Arab Emirates"
+              - menuitem "United Kingdom"
+              - menuitem "United States"
+              - menuitem "United States Minor Outlying Islands"
+              - menuitem "Uruguay"
+              - menuitem "Uzbekistan"
+              - menuitem "Vanuatu"
+              - menuitem "Viet Nam"
+              - menuitem "Virgin Islands, British"
+              - menuitem "Virgin Islands, U.S."
+              - menuitem "Wallis and Futuna"
+              - menuitem "Western Sahara"
+              - menuitem "Yemen"
+              - menuitem "Zambia"
+              - menuitem "Zimbabwe"
+            - generic [ref=e69]: Make My Profile Visible to:*
+            - group "Make My Profile Visible to:" [ref=e70]:
+              - generic [ref=e71]:
+                - radio "Any company recruiter worldwide (Recommended)" [ref=e73]
+                - generic [ref=e74]: Any company recruiter worldwide (Recommended)
+              - generic [ref=e75]:
+                - radio "Any company recruiter in my country/region of residence" [ref=e77]
+                - generic [ref=e78]: Any company recruiter in my country/region of residence
+              - generic [ref=e79]:
+                - radio "Only recruiters managing jobs I apply to" [ref=e81]
+                - generic [ref=e82]: Only recruiters managing jobs I apply to
+            - text: "Notification:"
+            - generic [ref=e84]:
+              - checkbox "Notification:" [checked] [ref=e85]
+              - generic [ref=e86]: Receive new job posting notifications
+            - generic [ref=e87]:
+              - checkbox "Hear more about career opportunities" [ref=e88]
+              - generic [ref=e89]: Hear more about career opportunities
+            - generic [ref=e90]: Terms of Use:*
+            - button "Terms of Use Read and accept the data privacy statement. Required" [ref=e92] [cursor=pointer]: Read and accept the data privacy statement.
+            - button "Create Account" [ref=e97] [cursor=pointer]
+  - contentinfo [ref=e98]:
+    - generic [ref=e101]:
+      - list [ref=e102]:
+        - listitem [ref=e103]:
+          - link "Dover Home" [ref=e104] [cursor=pointer]:
+            - /url: https://careers.dovercorporation.com/
+        - listitem [ref=e105]:
+          - link "View Page Index" [ref=e106] [cursor=pointer]:
+            - /url: https://careers.dovercorporation.com/viewalljobs/
+        - listitem [ref=e107]:
+          - link "Top Job Searches" [ref=e108] [cursor=pointer]:
+            - /url: https://careers.dovercorporation.com/topjobs/
+        - listitem [ref=e109]:
+          - link "Privacy Policy" [ref=e110] [cursor=pointer]:
+            - /url: http://www.dovercorporation.com/footerlinks/privacy
+      - list [ref=e112]:
+        - listitem [ref=e113]:
+          - link "Follow us on LinkedIn" [ref=e114] [cursor=pointer]:
+            - /url: https://www.linkedin.com/company/dovercorp/
+            - img [ref=e115]
+        - listitem [ref=e117]:
+          - link "Visit our YouTube channel" [ref=e118] [cursor=pointer]:
+            - /url: https://www.youtube.com/user/DoverCorporation
+            - img [ref=e119]
+        - listitem [ref=e121]:
+          - link "Follow us on X" [ref=e122] [cursor=pointer]:
+            - /url: https://twitter.com/DoverCorp
+            - img [ref=e123]

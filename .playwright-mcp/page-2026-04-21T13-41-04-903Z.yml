@@ -1,0 +1,89 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e76]:
+    - log
+    - log
+  - generic [ref=e3]:
+    - banner [ref=e26]:
+      - link "Pulsus logo" [ref=e27] [cursor=pointer]:
+        - /url: "#"
+        - img "Pulsus logo" [ref=e28]
+      - generic [ref=e29]:
+        - button "Email" [ref=e31] [cursor=pointer]:
+          - img [ref=e33]
+        - button "Menu" [ref=e36] [cursor=pointer]:
+          - img [ref=e39]
+    - main [ref=e79]:
+      - generic [ref=e80]:
+        - img "Logo da empresa" [ref=e81]
+        - generic [ref=e107]:
+          - heading "Dados adicionais" [level=1] [ref=e108]
+          - generic [ref=e109]:
+            - group "Alguém que trabalha nesta empresa indicou você para esta vaga?" [ref=e111]:
+              - generic [ref=e112]: Alguém que trabalha nesta empresa indicou você para esta vaga?
+              - generic [ref=e113]:
+                - generic [ref=e114] [cursor=pointer]:
+                  - radio "Sim" [ref=e115]
+                  - generic [ref=e117]: Sim
+                - generic [ref=e118] [cursor=pointer]:
+                  - radio "Não" [checked] [ref=e119]
+                  - generic [ref=e121]: Não
+            - group "Você trabalha na empresa Pulsus?" [ref=e123]:
+              - generic [ref=e124]: Você trabalha na empresa Pulsus?
+              - generic [ref=e125]:
+                - generic [ref=e126] [cursor=pointer]:
+                  - radio "Sim" [ref=e127]
+                  - generic [ref=e129]: Sim
+                - generic [ref=e130] [cursor=pointer]:
+                  - radio "Não" [checked] [ref=e131]
+                  - generic [ref=e133]: Não
+            - generic [ref=e135]:
+              - generic [ref=e137]: Onde você encontrou essa vaga? (Opcional)
+              - generic [ref=e138]:
+                - combobox "Onde você encontrou essa vaga? (Opcional)" [ref=e139]
+                - button "Mais opções" [ref=e140] [cursor=pointer]:
+                  - img [ref=e142]
+          - button "Salvar e continuar" [ref=e144] [cursor=pointer]
+        - generic [ref=e92]: Powered by Gupy
+    - contentinfo [ref=e49]: Gupy 2026. Todos os direitos reservados. v5.61.0
+    - link "Suporte para candidatos" [ref=e8] [cursor=pointer]:
+      - /url: https://suporte-candidatos.gupy.io/s/suporte?language=pt_BR
+      - text: "?"
+  - button [ref=e50]:
+    - generic [ref=e51]: 99+
+  - generic:
+    - generic "Privacy Tools - Cookie Management":
+      - dialog "cookieconsent" [ref=e9]:
+        - button "Fechar banner de cookies" [ref=e10] [cursor=pointer]: ×
+        - generic [ref=e11]:
+          - generic [ref=e13]:
+            - text: Ao clicar em “Aceitar todos os cookies”, você concorda com o armazenamento de cookies no seu dispositivo para melhorar a navegação no site, analisar o uso do site e ajudar em nossos esforços de marketing.
+            - link "Aviso de Cookies" [ref=e14] [cursor=pointer]:
+              - /url: https://www.gupy.io/aviso-de-cookies?_gl=1*1rylxvw*_gcl_au*NTk2NDkzOTQuMTcxNDQxMjg5Mw..
+            - link "Aviso de Privacidade" [ref=e15] [cursor=pointer]:
+              - /url: https://www.gupy.io/aviso-de-privacidade-site
+          - generic [ref=e16]:
+            - button "Rejeitar Todos" [ref=e18] [cursor=pointer]:
+              - generic "Rejeitar" [ref=e19]: Rejeitar Todos
+            - button "Aceitar Cookies" [ref=e20] [cursor=pointer]:
+              - generic "Aceitar" [ref=e21]: Aceitar Cookies
+            - button "Configurar Cookies" [ref=e23] [cursor=pointer]
+    - generic "Privacy Tools - Cookie Management - https://www.privacytools.com.br"
+  - generic "Plugin de acessibilidade da Hand Talk." [ref=e52]:
+    - heading "Plugin de acessibilidade da Hand Talk." [level=2] [ref=e53]
+    - button "Abrir recursos assistivos." [ref=e54] [cursor=pointer]:
+      - img [ref=e55]
+      - paragraph:
+        - generic [ref=e57]: Recursos Assistivos
+    - button "Abrir tradutor de língua de sinais." [ref=e58] [cursor=pointer]:
+      - img [ref=e59]
+      - paragraph:
+        - generic [ref=e66]: Acessível em Libras
+  - generic [ref=e72]:
+    - generic [ref=e73]: Pensando em mudar o rumo da sua carreira?
+    - generic [ref=e74]: Que tal fazer uma mentoria? Essa sensação de estar no lugar errado, fazendo o que não te realiza, é...
+    - generic [ref=e75]: +
+  - dialog [ref=e93]:
+    - generic [ref=e96]: Gostaríamos de te mostrar as últimas atualizações e novidades da Gupy
+    - generic [ref=e97]:
+      - button "Não, obrigado" [ref=e98] [cursor=pointer]
+      - button "Aceitar" [ref=e99] [cursor=pointer]

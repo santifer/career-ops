@@ -1,0 +1,466 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - navigation "Navegação principal" [ref=e3]:
+      - button "Acessar plataforma" [ref=e7] [cursor=pointer]:
+        - text: Acessar plataforma
+        - img [ref=e8]
+      - generic [ref=e10]:
+        - link "Gupy - Página Inicial" [ref=e11] [cursor=pointer]:
+          - /url: https://www.gupy.io/
+          - img [ref=e12]
+        - link "Fazer orçamento" [ref=e15] [cursor=pointer]:
+          - /url: https://info.gupy.io/lm/orcamento
+        - button "Abrir menu" [ref=e16] [cursor=pointer]:
+          - img [ref=e17]
+  - main [ref=e22]:
+    - generic [ref=e24]:
+      - img "Erro" [ref=e25]
+      - generic [ref=e26]:
+        - heading "Página não encontrada (erro 404)" [level=1] [ref=e27]
+        - paragraph [ref=e28]: Desculpe-nos, a página que você estava tentando achar neste endereço não foi encontrada.
+        - paragraph [ref=e29]:
+          - text: Que tal dar uma olhada na nossa
+          - link "página inicial" [ref=e30] [cursor=pointer]:
+            - /url: https://www.gupy.io/
+          - text: em busca do que procura?
+  - contentinfo [ref=e31]:
+    - generic [ref=e32]:
+      - list [ref=e33]:
+        - listitem [ref=e34]:
+          - img "Selo Reclame Aqui" [ref=e35]
+        - listitem [ref=e36]:
+          - link "Selo de Privacidade" [ref=e37] [cursor=pointer]:
+            - /url: https://www.gupy.io/portal-de-privacidade
+            - img "Selo de Privacidade" [ref=e38]
+        - listitem [ref=e39]:
+          - img "Selo Handtalk" [ref=e40]
+        - listitem [ref=e41]:
+          - img "Selo Prêmio Reclame Aqui 2025" [ref=e42]
+      - generic [ref=e43]:
+        - heading "Conheça as soluções da Gupy" [level=2] [ref=e44]
+        - paragraph [ref=e45]: Descubra os benefícios dos nossos produtos em uma sessão exclusiva guiada por um de nossos especialistas!
+        - link "Fazer um orçamento" [ref=e46] [cursor=pointer]:
+          - /url: https://info.gupy.io/agendar-demonstracao-menu
+          - text: Fazer um orçamento
+          - img [ref=e47]
+      - generic [ref=e49]:
+        - img [ref=e50]
+        - generic [ref=e57]:
+          - link "Suporte para Empresas" [ref=e58] [cursor=pointer]:
+            - /url: https://suporte.gupy.io/s/
+            - text: Suporte para Empresas
+            - img [ref=e59]
+          - link "Suporte para Candidatos" [ref=e61] [cursor=pointer]:
+            - /url: https://suporte-candidatos.gupy.io/s/
+            - text: Suporte para Candidatos
+            - img [ref=e62]
+        - button "Fazer Login" [ref=e65] [cursor=pointer]:
+          - generic: Fazer Login
+      - separator [ref=e66]
+      - list [ref=e67]:
+        - listitem [ref=e68]:
+          - button "Recrutamento e Seleção" [ref=e69]:
+            - heading "Recrutamento e Seleção" [level=2] [ref=e70]
+          - list [ref=e71]:
+            - listitem [ref=e72]:
+              - link "Hunting no Banco de Talentos" [ref=e73] [cursor=pointer]:
+                - /url: https://www.gupy.io/hunting-no-banco-de-talentos
+                - text: Hunting no Banco de Talentos
+                - img [ref=e74]
+            - listitem [ref=e76]:
+              - link "Triagem com Agentes de IA" [ref=e77] [cursor=pointer]:
+                - /url: https://www.gupy.io/nova-ordenacao-com-agentes-de-ia
+                - text: Triagem com Agentes de IA
+                - img [ref=e78]
+            - listitem [ref=e80]:
+              - link "Candidatura via WhatsApp" [ref=e81] [cursor=pointer]:
+                - /url: https://www.gupy.io/candidatura-rapida-recrutamento-selecao
+                - text: Candidatura via WhatsApp
+                - img [ref=e82]
+            - listitem [ref=e84]:
+              - link "Dados e relatórios" [ref=e85] [cursor=pointer]:
+                - /url: https://www.gupy.io/dados-e-analytics
+                - text: Dados e relatórios
+                - img [ref=e86]
+            - listitem [ref=e88]:
+              - link "Módulo de Atração" [ref=e89] [cursor=pointer]:
+                - /url: https://gupy.io/modulo-de-atracao
+                - text: Módulo de Atração
+                - img [ref=e90]
+            - listitem [ref=e92]:
+              - link "Módulo de Diversidade & Inclusão" [ref=e93] [cursor=pointer]:
+                - /url: https://www.gupy.io/diversidade
+                - text: Módulo de Diversidade & Inclusão
+                - img [ref=e94]
+            - listitem [ref=e96]:
+              - link "Recrutamento Interno" [ref=e97] [cursor=pointer]:
+                - /url: https://www.gupy.io/recrutamento-interno
+                - text: Recrutamento Interno
+                - img [ref=e98]
+            - listitem [ref=e100]:
+              - link "Mapeamento Comportamental" [ref=e101] [cursor=pointer]:
+                - /url: https://www.gupy.io/teste-comportamental
+                - text: Mapeamento Comportamental
+                - img [ref=e102]
+        - listitem [ref=e104]:
+          - button "Admissão" [ref=e105]:
+            - heading "Admissão" [level=3] [ref=e106]
+          - list [ref=e107]:
+            - listitem [ref=e108]:
+              - link "Módulo de Benefícios" [ref=e109] [cursor=pointer]:
+                - /url: https://info.gupy.io/lm/adm/modulo-de-beneficios
+                - text: Módulo de Benefícios
+                - img [ref=e110]
+            - listitem [ref=e112]:
+              - link "Admissão + automatizada" [ref=e113] [cursor=pointer]:
+                - /url: https://www.gupy.io/admissao-automatizada
+                - text: Admissão + automatizada
+                - img [ref=e114]
+            - listitem [ref=e116]:
+              - link "Processos centralizados" [ref=e117] [cursor=pointer]:
+                - /url: https://www.gupy.io/software-de-admissao-digital#processos
+                - text: Processos centralizados
+                - img [ref=e118]
+            - listitem [ref=e120]:
+              - link "Integração com folha" [ref=e121] [cursor=pointer]:
+                - /url: https://info.gupy.io/lm/integracao-com-folha
+                - text: Integração com folha
+                - img [ref=e122]
+        - listitem [ref=e124]:
+          - button "Treinamento" [ref=e125]:
+            - heading "Treinamento" [level=3] [ref=e126]
+          - list [ref=e127]:
+            - listitem [ref=e128]:
+              - link "Criação e uso inteligente de cursos" [ref=e129] [cursor=pointer]:
+                - /url: https://www.gupy.io/criacao-de-cursos-com-ia
+                - text: Criação e uso inteligente de cursos
+                - img [ref=e130]
+            - listitem [ref=e132]:
+              - link "Aprendizagem fácil e intuitiva" [ref=e133] [cursor=pointer]:
+                - /url: https://www.gupy.io/plataforma-de-educacao-corporativa#aprendizagem
+                - text: Aprendizagem fácil e intuitiva
+                - img [ref=e134]
+            - listitem [ref=e136]:
+              - link "Autonomia e acompanhamento" [ref=e137] [cursor=pointer]:
+                - /url: https://www.gupy.io/plataforma-de-educacao-corporativa#autonomia
+                - text: Autonomia e acompanhamento
+                - img [ref=e138]
+            - listitem [ref=e140]:
+              - link "Faça uma demonstração interativa" [ref=e141] [cursor=pointer]:
+                - /url: https://www.gupy.io/plataforma-de-educacao-corporativa#demonstracao-produto
+                - text: Faça uma demonstração interativa
+                - img [ref=e142]
+        - listitem [ref=e144]:
+          - button "Engajamento" [ref=e145]:
+            - heading "Engajamento" [level=3] [ref=e146]
+          - list [ref=e147]:
+            - listitem [ref=e148]:
+              - link "Predição de saída voluntária" [ref=e149] [cursor=pointer]:
+                - /url: https://www.gupy.io/plataforma-de-clima-e-engajamento/addon/multiplos-instrumentos
+                - text: Predição de saída voluntária
+                - img [ref=e150]
+            - listitem [ref=e152]:
+              - link "Jornada da Pessoa Colaboradora" [ref=e153] [cursor=pointer]:
+                - /url: https://www.gupy.io/plataforma-de-clima-e-engajamento/modulo/exjourney
+                - text: Jornada da Pessoa Colaboradora
+                - img [ref=e154]
+            - listitem [ref=e156]:
+              - link "Comunicação Interna" [ref=e157] [cursor=pointer]:
+                - /url: https://www.gupy.io/plataforma-de-clima-e-engajamento/addon/comunicados
+                - text: Comunicação Interna
+                - img [ref=e158]
+        - listitem [ref=e160]:
+          - button "Performance" [ref=e161]:
+            - heading "Performance" [level=3] [ref=e162]
+          - list [ref=e163]:
+            - listitem [ref=e164]:
+              - link "Avaliações customizáveis e simples" [ref=e165] [cursor=pointer]:
+                - /url: https://www.gupy.io/plataforma-de-performance-e-desenvolvimento#avaliacoes
+                - text: Avaliações customizáveis e simples
+                - img [ref=e166]
+            - listitem [ref=e168]:
+              - link "Tomada de decisão com agilidade" [ref=e169] [cursor=pointer]:
+                - /url: https://www.gupy.io/plataforma-de-performance-e-desenvolvimento#decisao
+                - text: Tomada de decisão com agilidade
+                - img [ref=e170]
+            - listitem [ref=e172]:
+              - link "Desenvolvimento contínuo" [ref=e173] [cursor=pointer]:
+                - /url: https://www.gupy.io/plataforma-de-performance-e-desenvolvimento#desenvolvimento
+                - text: Desenvolvimento contínuo
+                - img [ref=e174]
+            - listitem [ref=e176]:
+              - link "Faça uma demonstração interativa" [ref=e177] [cursor=pointer]:
+                - /url: https://www.gupy.io/plataforma-de-performance-e-desenvolvimento#demonstracao-produto
+                - text: Faça uma demonstração interativa
+                - img [ref=e178]
+      - separator [ref=e180]
+      - list [ref=e181]:
+        - listitem [ref=e182]:
+          - button "Soluções" [ref=e183]:
+            - heading "Soluções" [level=3] [ref=e184]
+          - list [ref=e185]:
+            - listitem [ref=e186]:
+              - link "Conheça os agentes de IA da Gupy" [ref=e187] [cursor=pointer]:
+                - /url: https://info.gupy.io/agentes-de-ia-gupy
+                - text: Conheça os agentes de IA da Gupy
+                - img [ref=e188]
+            - listitem [ref=e190]:
+              - link "Central de Carreiras" [ref=e191] [cursor=pointer]:
+                - /url: https://www.gupy.io/central-de-carreiras
+                - text: Central de Carreiras
+                - img [ref=e192]
+            - listitem [ref=e194]:
+              - link "Impulsione o desempenho do time desde a contratação" [ref=e195] [cursor=pointer]:
+                - /url: https://www.gupy.io/processo-de-contratacao-onboarding-fluido-sem-friccao
+                - text: Impulsione o desempenho do time desde a contratação
+                - img [ref=e196]
+            - listitem [ref=e198]:
+              - link "Atraia os candidatos certos, no tempo certo" [ref=e199] [cursor=pointer]:
+                - /url: https://www.gupy.io/aumentar-atratividade-novos-talentos
+                - text: Atraia os candidatos certos, no tempo certo
+                - img [ref=e200]
+            - listitem [ref=e202]:
+              - link "Tenha mais eficiência no seu RH" [ref=e203] [cursor=pointer]:
+                - /url: https://www.gupy.io/eficiencia-de-custo-no-seu-rh
+                - text: Tenha mais eficiência no seu RH
+                - img [ref=e204]
+            - listitem [ref=e206]:
+              - link "Crie experiências únicas para candidatos" [ref=e207] [cursor=pointer]:
+                - /url: https://www.gupy.io/experiencias-encantadoras-para-pessoas-candidatas
+                - text: Crie experiências únicas para candidatos
+                - img [ref=e208]
+            - listitem [ref=e210]:
+              - link "Alto volume de contratação com a melhor atratividade" [ref=e211] [cursor=pointer]:
+                - /url: https://www.gupy.io/alto-volume-de-contratacao
+                - text: Alto volume de contratação com a melhor atratividade
+                - img [ref=e212]
+            - listitem [ref=e214]:
+              - link "Retenha os melhores talentos" [ref=e215] [cursor=pointer]:
+                - /url: https://www.gupy.io/retencao-de-talentos
+                - text: Retenha os melhores talentos
+                - img [ref=e216]
+            - listitem [ref=e218]:
+              - link "Hub de integrações" [ref=e219] [cursor=pointer]:
+                - /url: https://www.gupy.io/hub-de-integracoes
+                - text: Hub de integrações
+                - img [ref=e220]
+            - listitem [ref=e222]:
+              - link "Enterprise" [ref=e223] [cursor=pointer]:
+                - /url: https://www.gupy.io/enterprise
+                - text: Enterprise
+                - img [ref=e224]
+        - listitem [ref=e226]:
+          - button "Soluções por Setor" [ref=e227]:
+            - heading "Soluções por Setor" [level=3] [ref=e228]
+          - list [ref=e229]:
+            - listitem [ref=e230]:
+              - link "Varejo" [ref=e231] [cursor=pointer]:
+                - /url: https://www.gupy.io/setores-varejo
+                - text: Varejo
+                - img [ref=e232]
+            - listitem [ref=e234]:
+              - link "Industria" [ref=e235] [cursor=pointer]:
+                - /url: https://www.gupy.io/setores-industria
+                - text: Industria
+                - img [ref=e236]
+            - listitem [ref=e238]:
+              - link "Saúde" [ref=e239] [cursor=pointer]:
+                - /url: https://www.gupy.io/setores-saude
+                - text: Saúde
+                - img [ref=e240]
+            - listitem [ref=e242]:
+              - link "Tecnologia" [ref=e243] [cursor=pointer]:
+                - /url: https://www.gupy.io/setores-tecnologia
+                - text: Tecnologia
+                - img [ref=e244]
+        - listitem [ref=e246]:
+          - button "Recursos" [ref=e247]:
+            - heading "Recursos" [level=3] [ref=e248]
+          - list [ref=e249]:
+            - listitem [ref=e250]:
+              - link "Calendário para o RH" [ref=e251] [cursor=pointer]:
+                - /url: https://info.gupy.io/materiais/calendario/calendario-do-rh
+                - text: Calendário para o RH
+                - img [ref=e252]
+            - listitem [ref=e254]:
+              - link "Agenda de Eventos" [ref=e255] [cursor=pointer]:
+                - /url: https://www.gupy.io/agenda-de-eventos
+                - text: Agenda de Eventos
+                - img [ref=e256]
+            - listitem [ref=e258]:
+              - link "Gupy Academy" [ref=e259] [cursor=pointer]:
+                - /url: https://academy.gupy.io/pt-br
+                - text: Gupy Academy
+                - img [ref=e260]
+            - listitem [ref=e262]:
+              - link "Blog do RH" [ref=e263] [cursor=pointer]:
+                - /url: https://gupy.io/blog
+                - text: Blog do RH
+                - img [ref=e264]
+            - listitem [ref=e266]:
+              - link "Materiais Gratuitos" [ref=e267] [cursor=pointer]:
+                - /url: https://www.gupy.io/materiais-rh
+                - text: Materiais Gratuitos
+                - img [ref=e268]
+            - listitem [ref=e270]:
+              - link "Histórias de Sucesso" [ref=e271] [cursor=pointer]:
+                - /url: https://www.gupy.io/historias-de-sucesso
+                - text: Histórias de Sucesso
+                - img [ref=e272]
+            - listitem [ref=e274]:
+              - link "Gupy Comunidade" [ref=e275] [cursor=pointer]:
+                - /url: https://www.gupy.io/comunidade
+                - text: Gupy Comunidade
+                - img [ref=e276]
+            - listitem [ref=e278]:
+              - link "Conheça a NR-1" [ref=e279] [cursor=pointer]:
+                - /url: https://www.gupy.io/adequacao-nr1
+                - text: Conheça a NR-1
+                - img [ref=e280]
+        - listitem [ref=e282]:
+          - button "Para pessoas candidatas" [ref=e283]:
+            - heading "Para pessoas candidatas" [level=3] [ref=e284]
+          - list [ref=e285]:
+            - listitem [ref=e286]:
+              - link "Portal de Vagas" [ref=e287] [cursor=pointer]:
+                - /url: https://portal.gupy.io/
+                - text: Portal de Vagas
+                - img [ref=e288]
+            - listitem [ref=e290]:
+              - link "Login para Candidatos" [ref=e291] [cursor=pointer]:
+                - /url: https://login.gupy.io/candidates/signin
+                - text: Login para Candidatos
+                - img [ref=e292]
+            - listitem [ref=e294]:
+              - link "Trabalhe na Gupy" [ref=e295] [cursor=pointer]:
+                - /url: https://vempra.gupy.io/
+                - text: Trabalhe na Gupy
+                - img [ref=e296]
+            - listitem [ref=e298]:
+              - link "Blog do Emprego" [ref=e299] [cursor=pointer]:
+                - /url: https://www.gupy.io/blog-do-emprego
+                - text: Blog do Emprego
+                - img [ref=e300]
+            - listitem [ref=e302]:
+              - link "Guia de Empregabilidade" [ref=e303] [cursor=pointer]:
+                - /url: https://www.gupy.io/manifesto-experiencia-pessoa-candidata
+                - text: Guia de Empregabilidade
+                - img [ref=e304]
+            - listitem [ref=e306]:
+              - link "Manifesto de Diversidade" [ref=e307] [cursor=pointer]:
+                - /url: https://www.gupy.io/manifesto-de-diversidade
+                - text: Manifesto de Diversidade
+                - img [ref=e308]
+            - listitem [ref=e310]:
+              - link "Suporte para Candidatos" [ref=e311] [cursor=pointer]:
+                - /url: https://suporte-candidatos.gupy.io/s/
+                - text: Suporte para Candidatos
+                - img [ref=e312]
+            - listitem [ref=e314]:
+              - link "Novidades da Gupy para pessoas candidatas" [ref=e315] [cursor=pointer]:
+                - /url: https://pravoce.gupy.io/pt
+                - text: Novidades da Gupy para pessoas candidatas
+                - img [ref=e316]
+            - listitem [ref=e318]:
+              - link "Curso para Candidatos" [ref=e319] [cursor=pointer]:
+                - /url: https://www.youtube.com/watch?v=MoE7Tr33BUY&list=PLgLXOZ_NVJpHNBeWe9Bd1vEBRfRK4M3Ms
+                - text: Curso para Candidatos
+                - img [ref=e320]
+            - listitem [ref=e322]:
+              - link "Aviso de Privacidade da Plataforma Gupy para Pessoas Candidatas" [ref=e323] [cursor=pointer]:
+                - /url: https://www.gupy.io/aviso-de-privacidade-candidatos
+                - text: Aviso de Privacidade da Plataforma Gupy para Pessoas Candidatas
+                - img [ref=e324]
+        - listitem [ref=e326]:
+          - button "Sobre a Gupy" [ref=e327]:
+            - heading "Sobre a Gupy" [level=3] [ref=e328]
+          - list [ref=e329]:
+            - listitem [ref=e330]:
+              - link "Saiba mais sobre a gupy" [ref=e331] [cursor=pointer]:
+                - /url: https://www.gupy.io/sobre-a-gupy
+                - text: Saiba mais sobre a gupy
+                - img [ref=e332]
+            - listitem [ref=e334]:
+              - link "Trabalhe na Gupy" [ref=e335] [cursor=pointer]:
+                - /url: https://vempra.gupy.io/
+                - text: Trabalhe na Gupy
+                - img [ref=e336]
+            - listitem [ref=e338]:
+              - link "Aviso de Privacidade da Plataforma Gupy para Empresas" [ref=e339] [cursor=pointer]:
+                - /url: https://www.gupy.io/aviso-de-privacidade-para-empresas
+                - text: Aviso de Privacidade da Plataforma Gupy para Empresas
+                - img [ref=e340]
+            - listitem [ref=e342]:
+              - link "Relatório Lei nº 14.611/2023" [ref=e343] [cursor=pointer]:
+                - /url: https://www.gupy.io/relatorio-transparencia-salarial
+                - text: Relatório Lei nº 14.611/2023
+                - img [ref=e344]
+        - listitem [ref=e346]:
+          - button "Contato e Ajuda" [ref=e347]:
+            - heading "Contato e Ajuda" [level=3] [ref=e348]
+          - list [ref=e349]:
+            - listitem [ref=e350]:
+              - link "Imprensa" [ref=e351] [cursor=pointer]:
+                - /url: https://www.gupy.io/imprensa
+                - text: Imprensa
+                - img [ref=e352]
+            - listitem [ref=e354]:
+              - link "Parcerias" [ref=e355] [cursor=pointer]:
+                - /url: https://info.gupy.io/programa-de-parcerias
+                - text: Parcerias
+                - img [ref=e356]
+            - listitem [ref=e358]:
+              - link "Contato" [ref=e359] [cursor=pointer]:
+                - /url: https://www.gupy.io/contato/
+                - text: Contato
+                - img [ref=e360]
+            - listitem [ref=e362]:
+              - link "Suporte para Empresas" [ref=e363] [cursor=pointer]:
+                - /url: https://suporte.gupy.io/s/
+                - text: Suporte para Empresas
+                - img [ref=e364]
+            - listitem [ref=e366]:
+              - link "Suporte Financeiro" [ref=e367] [cursor=pointer]:
+                - /url: https://suporte.gupy.io/s/suporte/financeiro
+                - text: Suporte Financeiro
+                - img [ref=e368]
+      - separator [ref=e370]
+      - generic [ref=e371]:
+        - paragraph [ref=e372]: ©2015-2026 Gupy. Todos os direitos reservados.
+        - generic [ref=e373]:
+          - link "Aviso de Privacidade Institucional da Gupy" [ref=e374] [cursor=pointer]:
+            - /url: https://www.gupy.io/aviso-de-privacidade-site
+          - separator [ref=e375]
+          - link "Portal de Privacidade da Gupy" [ref=e376] [cursor=pointer]:
+            - /url: https://www.gupy.io/portal-de-privacidade
+        - generic [ref=e377]:
+          - link "Youtube da Gupy" [ref=e378] [cursor=pointer]:
+            - /url: https://www.youtube.com/@canaldagupy
+            - generic [ref=e379]: Youtube da Gupy
+            - img [ref=e380]
+          - link "Linkedin da Gupy" [ref=e382] [cursor=pointer]:
+            - /url: https://www.linkedin.com/company/gupy/
+            - generic [ref=e383]: Linkedin da Gupy
+            - img [ref=e384]
+          - link "Instagram da Gupy" [ref=e388] [cursor=pointer]:
+            - /url: https://www.instagram.com/gupy_/
+            - generic [ref=e389]: Instagram da Gupy
+            - img [ref=e390]
+  - generic:
+    - generic "Privacy Tools - Cookie Management":
+      - dialog "cookieconsent" [ref=e394]:
+        - button "Fechar banner de cookies" [ref=e395] [cursor=pointer]: ×
+        - generic [ref=e396]:
+          - generic [ref=e398]:
+            - text: Ao clicar em “Aceitar todos os cookies”, você concorda com o armazenamento de cookies no seu dispositivo para melhorar a navegação no site, analisar o uso do site e ajudar em nossos esforços de marketing.
+            - link "Aviso de Cookies" [ref=e399] [cursor=pointer]:
+              - /url: https://www.gupy.io/aviso-de-cookies?_gl=1*1rylxvw*_gcl_au*NTk2NDkzOTQuMTcxNDQxMjg5Mw..
+            - link "Aviso de Privacidade" [ref=e400] [cursor=pointer]:
+              - /url: https://www.gupy.io/aviso-de-privacidade-site
+          - generic [ref=e401]:
+            - button "Rejeitar Todos" [ref=e403] [cursor=pointer]:
+              - generic "Rejeitar" [ref=e404]: Rejeitar Todos
+            - button "Aceitar Cookies" [ref=e405] [cursor=pointer]:
+              - generic "Aceitar" [ref=e406]: Aceitar Cookies
+            - button "Configurar Cookies" [ref=e408] [cursor=pointer]
+    - generic "Privacy Tools - Cookie Management - https://www.privacytools.com.br"

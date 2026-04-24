@@ -1,0 +1,723 @@
+- generic [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-1776346042"
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - navigation [ref=e8]:
+        - generic [ref=e9]:
+          - button "menu" [ref=e10] [cursor=pointer]
+          - link "Amazon Jobs home page" [ref=e12] [cursor=pointer]:
+            - /url: /en
+            - generic [ref=e14]: Amazon Jobs home page
+        - generic [ref=e16]:
+          - generic [ref=e17]:
+            - combobox "Search for jobs by title or keyword" [ref=e21]
+            - generic [ref=e23]:
+              - text: h
+              - combobox "search job by location" [ref=e25]
+          - button "Search jobs" [ref=e26] [cursor=pointer]
+        - menu [ref=e30] [cursor=pointer]: My career
+      - generic: h
+      - generic [ref=e33]:
+        - status [active] [ref=e34]:
+          - generic [ref=e36]:
+            - generic [ref=e38]:
+              - generic [ref=e40]: 
+              - paragraph [ref=e41]:
+                - text: Set job alerts for your search and never miss an opportunity!
+                - link "Login or create an account" [ref=e42] [cursor=pointer]:
+                  - /url: https://passport.amazon.jobs/accountInfo
+            - button "close" [ref=e44] [cursor=pointer]: ×
+        - generic [ref=e47]:
+          - heading "Search results" [level=1] [ref=e48]
+          - generic [ref=e49]:
+            - generic [ref=e51]:
+              - generic [ref=e52]:
+                - heading "Filter by" [level=2] [ref=e53]
+                - button "Reset filters" [ref=e54] [cursor=pointer]: Reset
+              - generic [ref=e55]:
+                - link "Skip to job results" [ref=e56] [cursor=pointer]:
+                  - /url: "#job-listings"
+                - generic [ref=e57]:
+                  - button "INDUSTRY EXPERIENCE (4 shown) filters" [expanded] [ref=e58] [cursor=pointer]:
+                    - generic [ref=e59]:
+                      - text: INDUSTRY EXPERIENCE
+                      - generic [ref=e60]: (4 shown)
+                  - group "INDUSTRY EXPERIENCE (4 shown) filters" [ref=e63]:
+                    - generic [ref=e64]: INDUSTRY EXPERIENCE (4 shown) filters
+                    - status [ref=e65]
+                    - generic [ref=e66]:
+                      - button "Less than 1 year" [ref=e67] [cursor=pointer]:
+                        - paragraph [ref=e68]: Less than 1 year
+                      - button "1-3 years" [ref=e69] [cursor=pointer]:
+                        - paragraph [ref=e70]: 1-3 years
+                      - button "4-6 years" [ref=e71] [cursor=pointer]:
+                        - paragraph [ref=e72]: 4-6 years
+                      - button "7+ years" [ref=e73] [cursor=pointer]:
+                        - paragraph [ref=e74]: 7+ years
+              - generic [ref=e75]:
+                - link "Skip to job results" [ref=e76] [cursor=pointer]:
+                  - /url: "#job-listings"
+                - generic [ref=e77]:
+                  - button "JOB TYPE (1 shown) filters" [expanded] [ref=e78] [cursor=pointer]:
+                    - generic [ref=e79]:
+                      - text: JOB TYPE
+                      - generic [ref=e80]: (1 shown)
+                  - group "JOB TYPE (1 shown) filters" [ref=e83]:
+                    - generic [ref=e84]: JOB TYPE (1 shown) filters
+                    - status [ref=e85]
+                    - checkbox "Full Time 239 jobs" [ref=e87] [cursor=pointer]:
+                      - paragraph [ref=e88]:
+                        - text: Full Time
+                        - generic [ref=e89]:
+                          - generic [ref=e90]: (239)
+                          - generic [ref=e91]: 239 jobs
+              - generic [ref=e93]:
+                - link "Skip to job results" [ref=e94] [cursor=pointer]:
+                  - /url: "#job-listings"
+                - generic [ref=e95]:
+                  - button "JOB CATEGORY (24 shown) filters" [expanded] [ref=e96] [cursor=pointer]:
+                    - generic [ref=e97]:
+                      - text: JOB CATEGORY
+                      - generic [ref=e98]: (24 shown)
+                  - group "JOB CATEGORY (24 shown) filters" [ref=e101]:
+                    - generic [ref=e102]: JOB CATEGORY (24 shown) filters
+                    - status [ref=e103]
+                    - generic [ref=e104]:
+                      - checkbox "Project/Program/Product Management--Non-Tech 44 jobs" [ref=e105] [cursor=pointer]:
+                        - paragraph [ref=e106]:
+                          - text: Project/Program/Product Management--Non-Tech
+                          - generic [ref=e107]:
+                            - generic [ref=e108]: (44)
+                            - generic [ref=e109]: 44 jobs
+                      - checkbox "Software Development 35 jobs" [ref=e111] [cursor=pointer]:
+                        - paragraph [ref=e112]:
+                          - text: Software Development
+                          - generic [ref=e113]:
+                            - generic [ref=e114]: (35)
+                            - generic [ref=e115]: 35 jobs
+                      - checkbox "Administrative Support 18 jobs" [ref=e117] [cursor=pointer]:
+                        - paragraph [ref=e118]:
+                          - text: Administrative Support
+                          - generic [ref=e119]:
+                            - generic [ref=e120]: (18)
+                            - generic [ref=e121]: 18 jobs
+                      - checkbox "Finance and Global Business Services 18 jobs" [ref=e123] [cursor=pointer]:
+                        - paragraph [ref=e124]:
+                          - text: Finance and Global Business Services
+                          - generic [ref=e125]:
+                            - generic [ref=e126]: (18)
+                            - generic [ref=e127]: 18 jobs
+                      - checkbox "Supply Chain/Transportation Management 18 jobs" [ref=e129] [cursor=pointer]:
+                        - paragraph [ref=e130]:
+                          - text: Supply Chain/Transportation Management
+                          - generic [ref=e131]:
+                            - generic [ref=e132]: (18)
+                            - generic [ref=e133]: 18 jobs
+                    - button "Show more filters for JOB CATEGORY" [ref=e135] [cursor=pointer]: more
+              - generic [ref=e137]:
+                - link "Skip to job results" [ref=e138] [cursor=pointer]:
+                  - /url: "#job-listings"
+                - generic [ref=e139]:
+                  - button "Country/Region (1 shown) filters" [expanded] [ref=e140] [cursor=pointer]:
+                    - generic [ref=e141]:
+                      - text: Country/Region
+                      - generic [ref=e142]: (1 shown)
+                  - generic [ref=e145]:
+                    - generic [ref=e146]:
+                      - generic [ref=e147]: 
+                      - textbox "Refine list of Country/Region (1 shown) filter options" [ref=e148]:
+                        - /placeholder: Country/Region
+                    - status [ref=e149]
+                    - group "Country/Region (1 shown) filters" [ref=e151]:
+                      - generic [ref=e152]: Country/Region (1 shown) filters
+                      - checkbox "Brazil 239 jobs" [ref=e154] [cursor=pointer]:
+                        - paragraph [ref=e155]:
+                          - text: Brazil
+                          - generic [ref=e156]:
+                            - generic [ref=e157]: (239)
+                            - generic [ref=e158]: 239 jobs
+              - generic [ref=e160]:
+                - link "Skip to job results" [ref=e161] [cursor=pointer]:
+                  - /url: "#job-listings"
+                - generic [ref=e162]:
+                  - button "State/Province (5 shown) filters" [expanded] [ref=e163] [cursor=pointer]:
+                    - generic [ref=e164]:
+                      - text: State/Province
+                      - generic [ref=e165]: (5 shown)
+                  - generic [ref=e168]:
+                    - generic [ref=e169]:
+                      - generic [ref=e170]: 
+                      - textbox "Refine list of State/Province (5 shown) filter options" [ref=e171]:
+                        - /placeholder: State/Province
+                    - status [ref=e172]
+                    - group "State/Province (5 shown) filters" [ref=e174]:
+                      - generic [ref=e175]: State/Province (5 shown) filters
+                      - generic [ref=e176]:
+                        - checkbox "Sao Paulo 239 jobs" [ref=e177] [cursor=pointer]:
+                          - paragraph [ref=e178]:
+                            - text: Sao Paulo
+                            - generic [ref=e179]:
+                              - generic [ref=e180]: (239)
+                              - generic [ref=e181]: 239 jobs
+                        - checkbox "Minas Gerais 13 jobs" [ref=e183] [cursor=pointer]:
+                          - paragraph [ref=e184]:
+                            - text: Minas Gerais
+                            - generic [ref=e185]:
+                              - generic [ref=e186]: (13)
+                              - generic [ref=e187]: 13 jobs
+                        - checkbox "Ceara 1 job" [ref=e189] [cursor=pointer]:
+                          - paragraph [ref=e190]:
+                            - text: Ceara
+                            - generic [ref=e191]:
+                              - generic [ref=e192]: (1)
+                              - generic [ref=e193]: 1 job
+                        - checkbox "Pernambuco 1 job" [ref=e195] [cursor=pointer]:
+                          - paragraph [ref=e196]:
+                            - text: Pernambuco
+                            - generic [ref=e197]:
+                              - generic [ref=e198]: (1)
+                              - generic [ref=e199]: 1 job
+                        - checkbox "Rio de Janeiro 1 job" [ref=e201] [cursor=pointer]:
+                          - paragraph [ref=e202]:
+                            - text: Rio de Janeiro
+                            - generic [ref=e203]:
+                              - generic [ref=e204]: (1)
+                              - generic [ref=e205]: 1 job
+              - generic [ref=e207]:
+                - link "Skip to job results" [ref=e208] [cursor=pointer]:
+                  - /url: "#job-listings"
+                - generic [ref=e209]:
+                  - button "City (7 shown) filters" [expanded] [ref=e210] [cursor=pointer]:
+                    - generic [ref=e211]:
+                      - text: City
+                      - generic [ref=e212]: (7 shown)
+                  - generic [ref=e215]:
+                    - generic [ref=e216]:
+                      - generic [ref=e217]: 
+                      - textbox "Refine list of City (7 shown) filter options" [ref=e218]:
+                        - /placeholder: City
+                    - status [ref=e219]
+                    - group "City (7 shown) filters" [ref=e221]:
+                      - generic [ref=e222]: City (7 shown) filters
+                      - generic [ref=e223]:
+                        - checkbox "Sao Paulo 239 jobs" [ref=e224] [cursor=pointer]:
+                          - paragraph [ref=e225]:
+                            - text: Sao Paulo
+                            - generic [ref=e226]:
+                              - generic [ref=e227]: (239)
+                              - generic [ref=e228]: 239 jobs
+                        - checkbox "Belo Horizonte 13 jobs" [ref=e230] [cursor=pointer]:
+                          - paragraph [ref=e231]:
+                            - text: Belo Horizonte
+                            - generic [ref=e232]:
+                              - generic [ref=e233]: (13)
+                              - generic [ref=e234]: 13 jobs
+                        - checkbox "Cajamar 3 jobs" [ref=e236] [cursor=pointer]:
+                          - paragraph [ref=e237]:
+                            - text: Cajamar
+                            - generic [ref=e238]:
+                              - generic [ref=e239]: (3)
+                              - generic [ref=e240]: 3 jobs
+                        - checkbox "Cabo de Santo Agostinho 1 job" [ref=e242] [cursor=pointer]:
+                          - paragraph [ref=e243]:
+                            - text: Cabo de Santo Agostinho
+                            - generic [ref=e244]:
+                              - generic [ref=e245]: (1)
+                              - generic [ref=e246]: 1 job
+                        - checkbox "Fortaleza 1 job" [ref=e248] [cursor=pointer]:
+                          - paragraph [ref=e249]:
+                            - text: Fortaleza
+                            - generic [ref=e250]:
+                              - generic [ref=e251]: (1)
+                              - generic [ref=e252]: 1 job
+                        - checkbox "Osasco 1 job" [ref=e254] [cursor=pointer]:
+                          - paragraph [ref=e255]:
+                            - text: Osasco
+                            - generic [ref=e256]:
+                              - generic [ref=e257]: (1)
+                              - generic [ref=e258]: 1 job
+                        - checkbox "Rio de Janeiro 1 job" [ref=e260] [cursor=pointer]:
+                          - paragraph [ref=e261]:
+                            - text: Rio de Janeiro
+                            - generic [ref=e262]:
+                              - generic [ref=e263]: (1)
+                              - generic [ref=e264]: 1 job
+              - generic [ref=e266]:
+                - link "Skip to job results" [ref=e267] [cursor=pointer]:
+                  - /url: "#job-listings"
+                - generic [ref=e268]:
+                  - generic [ref=e269] [cursor=pointer]:
+                    - generic [ref=e270]:
+                      - text: TEAM
+                      - generic [ref=e271]: (12 shown)
+                      - button "More information about teams" [ref=e273]: 
+                    - button "TEAM (12 shown) filters" [expanded] [ref=e274]
+                  - group "TEAM (12 shown) filters" [ref=e276]:
+                    - generic [ref=e277]: TEAM (12 shown) filters
+                    - status [ref=e278]
+                    - generic [ref=e279]:
+                      - checkbox "Amazon Web Services 37 jobs" [ref=e280] [cursor=pointer]:
+                        - paragraph [ref=e281]:
+                          - text: Amazon Web Services
+                          - generic [ref=e282]:
+                            - generic [ref=e283]: (37)
+                            - generic [ref=e284]: 37 jobs
+                      - checkbox "North America Stores 29 jobs" [ref=e286] [cursor=pointer]:
+                        - paragraph [ref=e287]:
+                          - text: North America Stores
+                          - generic [ref=e288]:
+                            - generic [ref=e289]: (29)
+                            - generic [ref=e290]: 29 jobs
+                      - checkbox "Amazon Operations 23 jobs" [ref=e292] [cursor=pointer]:
+                        - paragraph [ref=e293]:
+                          - text: Amazon Operations
+                          - generic [ref=e294]:
+                            - generic [ref=e295]: (23)
+                            - generic [ref=e296]: 23 jobs
+                      - checkbox "Business & Corporate Development 13 jobs" [ref=e298] [cursor=pointer]:
+                        - paragraph [ref=e299]:
+                          - text: Business & Corporate Development
+                          - generic [ref=e300]:
+                            - generic [ref=e301]: (13)
+                            - generic [ref=e302]: 13 jobs
+                      - checkbox "Transportation, Shipping & Logistics 13 jobs" [ref=e304] [cursor=pointer]:
+                        - paragraph [ref=e305]:
+                          - text: Transportation, Shipping & Logistics
+                          - generic [ref=e306]:
+                            - generic [ref=e307]: (13)
+                            - generic [ref=e308]: 13 jobs
+                    - button "Show more filters for TEAM" [ref=e310] [cursor=pointer]: more
+              - generic [ref=e312]:
+                - link "Skip to job results" [ref=e313] [cursor=pointer]:
+                  - /url: "#job-listings"
+                - generic [ref=e314]:
+                  - button "ROLE TYPE (2 shown) filters" [expanded] [ref=e315] [cursor=pointer]:
+                    - generic [ref=e316]:
+                      - text: ROLE TYPE
+                      - generic [ref=e317]: (2 shown)
+                  - group "ROLE TYPE (2 shown) filters" [ref=e320]:
+                    - generic [ref=e321]: ROLE TYPE (2 shown) filters
+                    - status [ref=e322]
+                    - generic [ref=e323]:
+                      - checkbox "Individual Contributor 221 jobs" [ref=e324] [cursor=pointer]:
+                        - paragraph [ref=e325]:
+                          - text: Individual Contributor
+                          - generic [ref=e326]:
+                            - generic [ref=e327]: (221)
+                            - generic [ref=e328]: 221 jobs
+                      - checkbox "People Manager 18 jobs" [ref=e330] [cursor=pointer]:
+                        - paragraph [ref=e331]:
+                          - text: People Manager
+                          - generic [ref=e332]:
+                            - generic [ref=e333]: (18)
+                            - generic [ref=e334]: 18 jobs
+              - generic [ref=e336]:
+                - link "Skip to job results" [ref=e337] [cursor=pointer]:
+                  - /url: "#job-listings"
+                - generic [ref=e338]:
+                  - button "CATEGORY (4 shown) filters" [expanded] [ref=e339] [cursor=pointer]:
+                    - generic [ref=e340]:
+                      - text: CATEGORY
+                      - generic [ref=e341]: (4 shown)
+                  - group "CATEGORY (4 shown) filters" [ref=e344]:
+                    - generic [ref=e345]: CATEGORY (4 shown) filters
+                    - status [ref=e346]
+                    - generic [ref=e347]:
+                      - button "Corporate 202 jobs" [ref=e348] [cursor=pointer]:
+                        - paragraph [ref=e349]:
+                          - text: Corporate
+                          - generic [ref=e350]:
+                            - generic [ref=e351]: (202)
+                            - generic [ref=e352]: 202 jobs
+                      - button "Fulfillment Center 36 jobs" [ref=e353] [cursor=pointer]:
+                        - paragraph [ref=e354]:
+                          - text: Fulfillment Center
+                          - generic [ref=e355]:
+                            - generic [ref=e356]: (36)
+                            - generic [ref=e357]: 36 jobs
+                      - button "Student Programs 4 jobs" [ref=e358] [cursor=pointer]:
+                        - paragraph [ref=e359]:
+                          - text: Student Programs
+                          - generic [ref=e360]:
+                            - generic [ref=e361]: (4)
+                            - generic [ref=e362]: 4 jobs
+                      - button "Customer Service 1 job" [ref=e363] [cursor=pointer]:
+                        - paragraph [ref=e364]:
+                          - text: Customer Service
+                          - generic [ref=e365]:
+                            - generic [ref=e366]: (1)
+                            - generic [ref=e367]: 1 job
+            - generic [ref=e368]:
+              - generic [ref=e369]:
+                - heading "Results listed" [level=2] [ref=e370]
+                - generic [ref=e371]:
+                  - generic:
+                    - paragraph [ref=e372]: "Sort by:"
+                    - listbox "Sort by:" [ref=e373]:
+                      - button [ref=e374] [cursor=pointer]: "Sort by: Most relevant"
+              - generic [ref=e376]:
+                - generic [ref=e378]:
+                  - generic [ref=e379]:
+                    - generic [ref=e380]:
+                      - heading "Instock Manager Asst I , BR Stores" [level=3] [ref=e381]:
+                        - link "Instock Manager Asst I , BR Stores" [ref=e382] [cursor=pointer]:
+                          - /url: /en/jobs/10393314/instock-manager-asst-i-br-stores
+                      - list [ref=e385]:
+                        - listitem [ref=e386]: Sao Paulo, SP, BRA
+                        - listitem [ref=e387]: "|"
+                        - listitem [ref=e388]: "Job ID: 10393314"
+                    - generic [ref=e389]:
+                      - generic [ref=e390]: Posted April 15, 2026
+                      - paragraph [ref=e391]: (Updated about 16 hours ago)
+                  - generic [ref=e393]:
+                    - generic [ref=e394]:
+                      - text: "Basic qualifications:"
+                      - list [ref=e395]:
+                        - listitem [ref=e396]: Experience in data analytics or automation
+                        - listitem [ref=e397]: Experience in capacity planning, operations planning, business analysis or similar
+                        - listitem [ref=e398]: Bachelor's degree
+                        - listitem [ref=e399]: Knowledge of data pipelining and extraction using SQL
+                        - listitem [ref=e400]: Knowledge of SQL and Excel at a moderate or advanced level
+                        - listitem [ref=e401]: Experience with data mining tools like SQL, SAS, SPSS, or similar
+                    - link "Read more about the job Instock Manager Asst I , BR Stores, job Id 10393314" [ref=e402] [cursor=pointer]:
+                      - /url: /en/jobs/10393314/instock-manager-asst-i-br-stores
+                      - text: ...Read more
+                - generic [ref=e404]:
+                  - generic [ref=e405]:
+                    - generic [ref=e406]:
+                      - heading "Transportation Program Manager, Amazon Transportation Services" [level=3] [ref=e407]:
+                        - link "Transportation Program Manager, Amazon Transportation Services" [ref=e408] [cursor=pointer]:
+                          - /url: /en/jobs/10393268/transportation-program-manager-amazon-transportation-services
+                      - list [ref=e411]:
+                        - listitem [ref=e412]: Sao Paulo, SP, BRA
+                        - listitem [ref=e413]: "|"
+                        - listitem [ref=e414]: "Job ID: 10393268"
+                    - generic [ref=e415]:
+                      - generic [ref=e416]: Posted April 15, 2026
+                      - paragraph [ref=e417]: (Updated about 17 hours ago)
+                  - generic [ref=e419]:
+                    - generic [ref=e420]:
+                      - text: "Basic qualifications:"
+                      - list [ref=e421]:
+                        - listitem [ref=e422]: Bachelor's degree
+                        - listitem [ref=e423]: Knowledge of Excel (Pivot Tables, VLookUps) at an advanced level and SQL
+                        - listitem [ref=e424]: Experience defining program requirements and using data and metrics to determine improvements
+                        - listitem [ref=e425]: Experience in program or project management
+                        - listitem [ref=e426]: Experience working cross functionally with tech and non-tech teams
+                        - listitem [ref=e427]: Experience in process improvement
+                        - listitem [ref=e428]: Experience in English-language communication skills, both written and verbal
+                    - link "Read more about the job Transportation Program Manager, Amazon Transportation Services, job Id 10393268" [ref=e429] [cursor=pointer]:
+                      - /url: /en/jobs/10393268/transportation-program-manager-amazon-transportation-services
+                      - text: ...Read more
+                - generic [ref=e431]:
+                  - generic [ref=e432]:
+                    - generic [ref=e433]:
+                      - heading "Transportation Excellence Manager, BR Transportation" [level=3] [ref=e434]:
+                        - link "Transportation Excellence Manager, BR Transportation" [ref=e435] [cursor=pointer]:
+                          - /url: /en/jobs/10393267/transportation-excellence-manager-br-transportation
+                      - list [ref=e438]:
+                        - listitem [ref=e439]: Sao Paulo, SP, BRA
+                        - listitem [ref=e440]: "|"
+                        - listitem [ref=e441]: "Job ID: 10393267"
+                    - generic [ref=e442]:
+                      - generic [ref=e443]: Posted April 15, 2026
+                      - paragraph [ref=e444]: (Updated about 17 hours ago)
+                  - generic [ref=e446]:
+                    - generic [ref=e447]:
+                      - text: "Basic qualifications:"
+                      - list [ref=e448]:
+                        - listitem [ref=e449]: Knowledge of Excel at an intermediate level (e.g., pivot tables & charts, multiple criteria lookups, nested logical/IF formulas, data cleansing, array formulas, etc.)
+                        - listitem [ref=e450]: Experience defining program requirements and using data and metrics to determine improvements
+                        - listitem [ref=e451]: Intermediate English proficiency
+                        - listitem [ref=e452]: Bachelor's degree
+                    - link "Read more about the job Transportation Excellence Manager, BR Transportation , job Id 10393267" [ref=e453] [cursor=pointer]:
+                      - /url: /en/jobs/10393267/transportation-excellence-manager-br-transportation
+                      - text: ...Read more
+                - generic [ref=e455]:
+                  - generic [ref=e456]:
+                    - generic [ref=e457]:
+                      - heading "Principal DevAx Solutions Architect, AGS Tech Field LATAM PACE" [level=3] [ref=e458]:
+                        - link "Principal DevAx Solutions Architect, AGS Tech Field LATAM PACE" [ref=e459] [cursor=pointer]:
+                          - /url: /en/jobs/10377601/principal-devax-solutions-architect-ags-tech-field-latam-pace
+                      - list [ref=e462]:
+                        - listitem [ref=e463]: Sao Paulo, SP, BRA
+                        - listitem [ref=e464]: "|"
+                        - listitem [ref=e465]: "Job ID: 10377601"
+                    - generic [ref=e466]:
+                      - generic [ref=e467]: Posted March 26, 2026
+                      - paragraph [ref=e468]: (Updated about 19 hours ago)
+                  - generic [ref=e470]:
+                    - generic [ref=e471]:
+                      - text: "Basic qualifications:"
+                      - list [ref=e472]:
+                        - listitem [ref=e473]: 10+ years of specific technology domain areas (e.g. software development, cloud computing, systems engineering, infrastructure, security, networking, data & analytics) experience
+                        - listitem [ref=e474]: Bachelor's degree in computer science, engineering, mathematics or equivalent
+                        - listitem [ref=e475]: Experience developing technology solutions and evangelising end-to-end technology roadmaps that guide IT transformations toward cloud computing
+                        - listitem [ref=e476]: Experience communicating across technical and non-technical audiences and at C-level, including training, workshops, publications
+                        - listitem [ref=e477]: Experience with AI/ML technologies
+                    - link "Read more about the job Principal DevAx Solutions Architect, AGS Tech Field LATAM PACE, job Id 10377601" [ref=e478] [cursor=pointer]:
+                      - /url: /en/jobs/10377601/principal-devax-solutions-architect-ags-tech-field-latam-pace
+                      - text: ...Read more
+                - generic [ref=e480]:
+                  - generic [ref=e481]:
+                    - generic [ref=e482]:
+                      - heading "Sr. Product Manager, Seller Experience, Latam Marketplace" [level=3] [ref=e483]:
+                        - link "Sr. Product Manager, Seller Experience, Latam Marketplace" [ref=e484] [cursor=pointer]:
+                          - /url: /en/jobs/3167675/sr-product-manager-seller-experience-latam-marketplace
+                      - list [ref=e487]:
+                        - listitem [ref=e488]: Sao Paulo, SP, BRA
+                        - listitem [ref=e489]: "|"
+                        - listitem [ref=e490]: "Job ID: 3167675"
+                    - generic [ref=e491]:
+                      - generic [ref=e492]: Posted January 27, 2026
+                      - paragraph [ref=e493]: (Updated about 23 hours ago)
+                  - generic [ref=e495]:
+                    - generic [ref=e496]:
+                      - text: "Basic qualifications:"
+                      - list [ref=e497]:
+                        - listitem [ref=e498]: Experience as a product manager or owner
+                        - listitem [ref=e499]: Bachelor's degree or equivalent
+                        - listitem [ref=e500]: Experience owning/driving roadmap strategy and definition
+                        - listitem [ref=e501]: Experience with end to end product delivery
+                        - listitem [ref=e502]: Experience with feature delivery and tradeoffs of a product
+                        - listitem [ref=e503]: Experience in Business English skills, both verbal and written
+                        - listitem [ref=e504]: Fluent in Business-level English, both written and oral.
+                    - link "Read more about the job Sr. Product Manager, Seller Experience, Latam Marketplace, job Id 3167675" [ref=e505] [cursor=pointer]:
+                      - /url: /en/jobs/3167675/sr-product-manager-seller-experience-latam-marketplace
+                      - text: ...Read more
+                - generic [ref=e507]:
+                  - generic [ref=e508]:
+                    - generic [ref=e509]:
+                      - heading "Financial Services - Account Manager , Sales Brazil" [level=3] [ref=e510]:
+                        - link "Financial Services - Account Manager , Sales Brazil" [ref=e511] [cursor=pointer]:
+                          - /url: /en/jobs/10388964/financial-services-account-manager-sales-brazil
+                      - list [ref=e514]:
+                        - listitem [ref=e515]: Sao Paulo, SP, BRA
+                        - listitem [ref=e516]: "|"
+                        - listitem [ref=e517]: "Job ID: 10388964"
+                    - generic [ref=e518]:
+                      - generic [ref=e519]: Posted April 10, 2026
+                      - paragraph [ref=e520]: (Updated 1 day ago)
+                  - generic [ref=e522]:
+                    - generic [ref=e523]:
+                      - text: "Basic qualifications:"
+                      - list [ref=e524]:
+                        - listitem [ref=e525]: 7+ years of direct sales or business development in software, cloud or SaaS markets selling to C-level executives experience
+                        - listitem [ref=e526]: 7+ years of business development, partner development, sales or alliances management experience
+                    - link "Read more about the job Financial Services - Account Manager , Sales Brazil, job Id 10388964" [ref=e527] [cursor=pointer]:
+                      - /url: /en/jobs/10388964/financial-services-account-manager-sales-brazil
+                      - text: ...Read more
+                - generic [ref=e529]:
+                  - generic [ref=e530]:
+                    - generic [ref=e531]:
+                      - heading "Senior Executive Assistant, AWS Global Sales Latam" [level=3] [ref=e532]:
+                        - link "Senior Executive Assistant, AWS Global Sales Latam" [ref=e533] [cursor=pointer]:
+                          - /url: /en/jobs/10392616/senior-executive-assistant-aws-global-sales-latam
+                      - list [ref=e536]:
+                        - listitem [ref=e537]: Sao Paulo, SP, BRA
+                        - listitem [ref=e538]: "|"
+                        - listitem [ref=e539]: "Job ID: 10392616"
+                    - generic [ref=e540]:
+                      - generic [ref=e541]: Posted April 15, 2026
+                      - paragraph [ref=e542]: (Updated 1 day ago)
+                  - generic [ref=e544]:
+                    - generic [ref=e545]:
+                      - text: "Basic qualifications:"
+                      - list [ref=e546]:
+                        - listitem [ref=e547]: 7+ years of senior level leadership support experience
+                        - listitem [ref=e548]: Experience with C-level executive calendar management
+                        - listitem [ref=e549]: Experience with domestic or international travel coordination
+                        - listitem [ref=e550]: Ability to communicate in a business setting in English and Portuguese
+                    - link "Read more about the job Senior Executive Assistant, AWS Global Sales Latam, job Id 10392616" [ref=e551] [cursor=pointer]:
+                      - /url: /en/jobs/10392616/senior-executive-assistant-aws-global-sales-latam
+                      - text: ...Read more
+                - generic [ref=e553]:
+                  - generic [ref=e554]:
+                    - generic [ref=e555]:
+                      - heading "ITS Support Engineer I (ONS)" [level=3] [ref=e556]:
+                        - link "ITS Support Engineer I (ONS)" [ref=e557] [cursor=pointer]:
+                          - /url: /en/jobs/10385567/its-support-engineer-i-ons
+                      - list [ref=e560]:
+                        - listitem [ref=e561]: Sao Paulo, SP, BRA
+                        - listitem [ref=e562]: "|"
+                        - listitem [ref=e563]: "Job ID: 10385567"
+                    - generic [ref=e564]:
+                      - generic [ref=e565]: Posted April 7, 2026
+                      - paragraph [ref=e566]: (Updated 1 day ago)
+                  - generic [ref=e568]:
+                    - generic [ref=e569]:
+                      - text: "Basic qualifications:"
+                      - list [ref=e570]:
+                        - listitem [ref=e571]: 2+ years of corporate setting Windows, Mac or Linux Operating systems support experience
+                        - listitem [ref=e572]: High school or equivalent diploma
+                        - listitem [ref=e573]: Experience in written and verbal communication with the ability to present complex technical information in a clear and concise manner to executives and non-technical leaders
+                    - link "Read more about the job ITS Support Engineer I (ONS), job Id 10385567" [ref=e574] [cursor=pointer]:
+                      - /url: /en/jobs/10385567/its-support-engineer-i-ons
+                      - text: ...Read more
+                - generic [ref=e576]:
+                  - generic [ref=e577]:
+                    - generic [ref=e578]:
+                      - heading "Sr. Product Marketing Manager - Vaga prioritária para mulheres e pessoas negras, Alexa Brazil" [level=3] [ref=e579]:
+                        - link "Sr. Product Marketing Manager - Vaga prioritária para mulheres e pessoas negras, Alexa Brazil" [ref=e580] [cursor=pointer]:
+                          - /url: /en/jobs/3191802/sr-product-marketing-manager-vaga-prioritaria-para-mulheres-e-pessoas-negras-alexa-brazil
+                      - list [ref=e583]:
+                        - listitem [ref=e584]: Sao Paulo, SP, BRA
+                        - listitem [ref=e585]: "|"
+                        - listitem [ref=e586]: "Job ID: 3191802"
+                    - generic [ref=e587]:
+                      - generic [ref=e588]: Posted February 27, 2026
+                      - paragraph [ref=e589]: (Updated 1 day ago)
+                  - generic [ref=e591]:
+                    - generic [ref=e592]:
+                      - text: "Basic qualifications:"
+                      - list [ref=e593]:
+                        - listitem [ref=e594]: 6+ years of professional non-internship marketing experience
+                        - listitem [ref=e595]: Experience using data and metrics to drive improvements
+                        - listitem [ref=e596]: Experience with Excel or Tableau (data manipulation, macros, charts and pivot tables)
+                        - listitem [ref=e597]: Experience building, executing and scaling cross-functional marketing programs
+                        - listitem [ref=e598]: Experience leading go-to-market for consumer software or hardware product launches
+                        - listitem [ref=e599]: Experience as a strong leader who can prioritize well, communicate clearly and effectively influence across cross-functional teams
+                        - listitem [ref=e600]: Experience communicating results to senior leadership
+                        - listitem [ref=e601]: Experience with customer segmentation, profiling, and targeting
+                        - listitem [ref=e602]: Experience with A/B testing
+                        - listitem [ref=e603]: Excellent oral and written communication skills in both English and Portuguese
+                        - listitem [ref=e604]: Willingness to roll up one's sleeves to get the job done
+                        - listitem [ref=e605]: High interest in Generative Artificial Intelligence
+                    - link "Read more about the job Sr. Product Marketing Manager - Vaga prioritária para mulheres e pessoas negras, Alexa Brazil, job Id 3191802" [ref=e606] [cursor=pointer]:
+                      - /url: /en/jobs/3191802/sr-product-marketing-manager-vaga-prioritaria-para-mulheres-e-pessoas-negras-alexa-brazil
+                      - text: ...Read more
+                - generic [ref=e608]:
+                  - generic [ref=e609]:
+                    - generic [ref=e610]:
+                      - heading "Network Loss Manager RoW, Central Functions - Rest of the World (RoW)" [level=3] [ref=e611]:
+                        - link "Network Loss Manager RoW, Central Functions - Rest of the World (RoW)" [ref=e612] [cursor=pointer]:
+                          - /url: /en/jobs/10388017/network-loss-manager-row-central-functions-rest-of-the-world-row
+                      - list [ref=e615]:
+                        - listitem [ref=e616]: Sao Paulo, SP, BRA
+                        - listitem [ref=e617]:
+                          - button "+1 other locations" [ref=e619] [cursor=pointer]:
+                            - generic [ref=e620]:
+                              - text: +1 other locations
+                              - generic [ref=e621]: 
+                        - listitem [ref=e622]: "|"
+                        - listitem [ref=e623]: "Job ID: 10388017"
+                    - generic [ref=e624]:
+                      - generic [ref=e625]: Posted April 10, 2026
+                      - paragraph [ref=e626]: (Updated 1 day ago)
+                  - generic [ref=e628]:
+                    - generic [ref=e629]:
+                      - text: "Basic qualifications:"
+                      - list [ref=e630]:
+                        - listitem [ref=e631]: Bachelor's degree or equivalent
+                        - listitem [ref=e632]: Experience implementing process improvements
+                        - listitem [ref=e633]: Experience experience using data and metrics to measure impact and determine improvements
+                        - listitem [ref=e634]: Experience in Excel (including VBA, pivot tables, array functions, power pivots, etc.) and data visualization tools such as Tableau
+                        - listitem [ref=e635]: Speak, write, and read fluently in Spanish
+                    - link "Read more about the job Network Loss Manager RoW, Central Functions - Rest of the World (RoW), job Id 10388017" [ref=e636] [cursor=pointer]:
+                      - /url: /en/jobs/10388017/network-loss-manager-row-central-functions-rest-of-the-world-row
+                      - text: ...Read more
+              - generic [ref=e640]:
+                - button "Previous page" [disabled] [ref=e641]
+                - button "Page 1" [disabled]: "1"
+                - button "Page 2" [ref=e642] [cursor=pointer]: "2"
+                - button "Page 3" [ref=e643] [cursor=pointer]: "3"
+                - button "Page ..." [disabled]: ...
+                - button "Page 24" [ref=e644] [cursor=pointer]: "24"
+                - button "Next page" [ref=e645] [cursor=pointer]
+      - generic:    
+    - generic [ref=e646]:
+      - generic [ref=e649]:
+        - generic [ref=e650]: JOIN US ON
+        - list [ref=e651]:
+          - listitem [ref=e652]:
+            - link "Join us on facebook" [ref=e653] [cursor=pointer]:
+              - /url: https://www.facebook.com/InsideAmazon/?Amazon.jobs=footer
+              - text: b
+          - listitem [ref=e654]:
+            - link "Join us on linkedin" [ref=e655] [cursor=pointer]:
+              - /url: https://www.linkedin.com/company/amazon?Amazon.jobs=footer
+              - text: d
+          - listitem [ref=e656]:
+            - link "Join us on instagram" [ref=e657] [cursor=pointer]:
+              - /url: https://www.instagram.com/insideamazon/?Amazon.jobs=footer
+              - text: c
+          - listitem [ref=e658]:
+            - link "Join us on twitter" [ref=e659] [cursor=pointer]:
+              - /url: https://twitter.com/amazonnews?Amazon.jobs=footer
+              - text: j
+        - generic [ref=e660]:
+          - generic [ref=e661]: DOWNLOAD OUR APP
+          - list [ref=e662]:
+            - listitem [ref=e663]:
+              - link "Download Amazon A to Z from App Store" [ref=e664] [cursor=pointer]:
+                - /url: https://apple.co/4mW6qxK
+                - img [ref=e665]
+            - listitem [ref=e666]:
+              - link "Download Amazon A to Z from Google Play" [ref=e667] [cursor=pointer]:
+                - /url: https://bit.ly/46JGIYu
+                - img [ref=e668]
+      - generic [ref=e672]:
+        - generic [ref=e673]:
+          - text: Find Careers
+          - list [ref=e674]:
+            - listitem [ref=e675]:
+              - link "Job Categories" [ref=e676] [cursor=pointer]:
+                - /url: /content/en/job-categories
+            - listitem [ref=e677]:
+              - link "Teams" [ref=e678] [cursor=pointer]:
+                - /url: /content/en/teams
+            - listitem [ref=e679]:
+              - link "Locations" [ref=e680] [cursor=pointer]:
+                - /url: /content/en/locations
+            - listitem [ref=e681]:
+              - link "Military careers" [ref=e682] [cursor=pointer]:
+                - /url: /content/en/career-programs/military
+            - listitem [ref=e683]:
+              - link "Hourly" [ref=e684] [cursor=pointer]:
+                - /url: /content/en/hourly
+        - generic [ref=e685]:
+          - text: Working At Amazon
+          - list [ref=e686]:
+            - listitem [ref=e687]:
+              - link "Culture" [ref=e688] [cursor=pointer]:
+                - /url: /content/en/our-workplace
+            - listitem [ref=e689]:
+              - link "Benefits" [ref=e690] [cursor=pointer]:
+                - /url: /en/benefits
+            - listitem [ref=e691]:
+              - link "Amazon Newsletter" [ref=e692] [cursor=pointer]:
+                - /url: https://email.aboutamazon.com/l/637851/2020-10-29/pd87g?utm_campaign=newslettersubscribers&utm_content=amazonnewssignup&utm_medium=amazonjobs&utm_source=footer
+            - listitem [ref=e693]:
+              - link "Inclusive experiences" [ref=e694] [cursor=pointer]:
+                - /url: /content/en/our-workplace/inclusive-experiences
+            - listitem [ref=e695]:
+              - link "Leadership Principles" [ref=e696] [cursor=pointer]:
+                - /url: /content/en/our-workplace/leadership-principles
+        - generic [ref=e697]:
+          - text: Help
+          - list [ref=e698]:
+            - listitem [ref=e699]:
+              - link "FAQ" [ref=e700] [cursor=pointer]:
+                - /url: /content/en/faq
+            - listitem [ref=e701]:
+              - link "How We Hire" [ref=e702] [cursor=pointer]:
+                - /url: /content/en/how-we-hire#onlineapp
+            - listitem [ref=e703]:
+              - link "Application status" [ref=e704] [cursor=pointer]:
+                - /url: https://www.amazon.jobs/applicant/check_application_status
+            - listitem [ref=e705]:
+              - link "Accommodations" [ref=e706] [cursor=pointer]:
+                - /url: /content/en/how-we-hire/accommodations
+            - listitem [ref=e707]:
+              - link "Legal disclosures and notices" [ref=e708] [cursor=pointer]:
+                - /url: /content/en/legal-disclosures-and-notices
+        - combobox "English" [ref=e714] [cursor=pointer]: English
+      - generic [ref=e718]:
+        - generic [ref=e719]: Amazon is an equal opportunity employer and does not discriminate on the basis of protected veteran status, disability, or other legally protected status.
+        - generic [ref=e720]:
+          - link "Privacy and Data" [ref=e721] [cursor=pointer]:
+            - /url: /en/privacy_page
+          - link "Impressum" [ref=e722] [cursor=pointer]:
+            - /url: /en/impressum
+        - generic [ref=e723]: © 1996-2026, Amazon.com, Inc. or its affiliates

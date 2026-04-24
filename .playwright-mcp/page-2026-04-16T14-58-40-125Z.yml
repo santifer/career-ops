@@ -1,0 +1,256 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - link "Ir para conteúdo" [ref=e4] [cursor=pointer]:
+        - /url: "#main"
+      - link "Ir para o rodapé" [ref=e5] [cursor=pointer]:
+        - /url: "#footer"
+      - generic [ref=e6]:
+        - generic [ref=e7]:
+          - link "Ir para a página inicial" [ref=e9] [cursor=pointer]:
+            - /url: https://jobs.siemens.com/pt_PT/externaljobs
+            - img "Logótipo Siemens" [ref=e10]
+          - navigation "Menu principal" [ref=e12]:
+            - generic [ref=e13]:
+              - list [ref=e14]:
+                - listitem [ref=e15]:
+                  - button "Seletor de idioma" [ref=e16] [cursor=pointer]:
+                    - generic [ref=e17]: Portuguese
+              - list [ref=e18]:
+                - menuitem "Iniciar Sessão" [ref=e19] [cursor=pointer]:
+                  - generic [ref=e20]: Iniciar Sessão
+        - list [ref=e24]:
+          - menuitem "Pesquisa de vagas" [ref=e25] [cursor=pointer]:
+            - generic [ref=e26]: Pesquisa de vagas
+          - menuitem "Todas as vagas" [ref=e27] [cursor=pointer]:
+            - generic [ref=e28]: Todas as vagas
+          - menuitem "Recomendações IA" [ref=e29] [cursor=pointer]:
+            - generic [ref=e30]: Recomendações IA
+          - menuitem "Ligação externa (abre num novo separador)" [ref=e31] [cursor=pointer]:
+            - generic [ref=e32]: Perguntas Frequentes & Suporte
+    - complementary "Banner principal" [ref=e33]:
+      - heading "Vagas disponíveis" [level=2] [ref=e36]
+    - main [ref=e37]:
+      - generic [ref=e41]:
+        - generic [ref=e43]:
+          - heading "Filtrar resultados por" [level=3] [ref=e45]
+          - generic "Formulário de pesquisa" [ref=e47]:
+            - search [ref=e49]:
+              - group "Filtrar resultados por" [ref=e50]:
+                - generic [ref=e51]: Filtrar resultados por
+                - generic [ref=e52]:
+                  - alert [ref=e53]
+                  - group [ref=e54]:
+                    - generic [ref=e55]:
+                      - generic [ref=e56]: Palavras-chave ou competências
+                      - combobox "Palavras-chave ou competências" [ref=e57]: Finance
+                    - generic [ref=e58]:
+                      - generic [ref=e59]: País / região
+                      - generic [ref=e60]:
+                        - generic [ref=e61]:
+                          - paragraph [ref=e242]: 10 options available. Use the up and down keys to navigate. Press Enter to select an option, or press Escape to exit the list. Afeganistão, not selected, 1 of 10.
+                          - paragraph [ref=e243]: 10 total results. Press the up and down arrow keys to navigate the list.
+                        - listbox [ref=e62]
+                        - combobox "País / região" [expanded] [ref=e65] [cursor=pointer]:
+                          - group [ref=e66]:
+                            - searchbox "País / região" [active] [ref=e67]
+                          - listbox [expanded] [ref=e244]:
+                            - option "Afeganistão" [ref=e245]
+                            - option "África do Sul" [ref=e246]
+                            - option "Albânia" [ref=e247]
+                            - option "Alemanha" [ref=e248]
+                            - option "Andorra" [ref=e249]
+                            - option "Angola" [ref=e250]
+                            - option "Antígua e Barbuda" [ref=e251]
+                            - option "Arábia Saudita" [ref=e252]
+                            - option "Argélia" [ref=e253]
+                            - option "Argentina" [ref=e254]
+                            - option [disabled] [ref=e255]: A carregar mais resultados…
+                    - generic [ref=e68]:
+                      - generic [ref=e69]: Área de trabalho
+                      - generic [ref=e70]:
+                        - listbox [ref=e72]
+                        - combobox "Área de trabalho" [ref=e75] [cursor=pointer]:
+                          - group [ref=e76]:
+                            - searchbox "Área de trabalho" [ref=e77]
+                    - generic [ref=e78]:
+                      - generic [ref=e79]: Nível de experiência
+                      - generic [ref=e80]:
+                        - listbox [ref=e82]
+                        - combobox "Nível de experiência" [ref=e85] [cursor=pointer]:
+                          - group [ref=e86]:
+                            - searchbox "Nível de experiência" [ref=e87]
+                  - group [ref=e88]:
+                    - generic [ref=e89]:
+                      - generic [ref=e90]: Filtros adicionais
+                      - button [ref=e93] [cursor=pointer]
+                    - group [ref=e96]:
+                      - button "Pesquisar" [ref=e98] [cursor=pointer]
+        - generic [ref=e100]:
+          - generic [ref=e101]:
+            - generic [ref=e102]:
+              - generic "686 resultados" [ref=e103]: 1 - 6 de 686 resultados
+              - generic [ref=e104]:
+                - text: Filtros aplicados (
+                - link "Repor filtros de pesquisa" [ref=e105] [cursor=pointer]:
+                  - /url: https://jobs.siemens.com/pt_PT/externaljobs/SearchJobs
+                  - text: Repor
+                - text: )
+            - generic "Ordenar por" [ref=e107]:
+              - button "Ordenar por" [ref=e108] [cursor=pointer]
+          - generic [ref=e110]:
+            - article [ref=e111]:
+              - generic [ref=e113]:
+                - heading "Head of Finance and Performance Management (FPM) Canada" [level=3] [ref=e114]:
+                  - link "Head of Finance and Performance Management (FPM) Canada" [ref=e115] [cursor=pointer]:
+                    - /url: https://jobs.siemens.com/pt_PT/externaljobs/JobDetail/501948
+                - generic [ref=e116]:
+                  - generic [ref=e117]: Toronto, Ontario, Canada
+                  - text: "• ID da vaga: 501948 • Finance"
+              - generic [ref=e118]:
+                - button "Partilhar Head of Finance and Performance Management (FPM) Canada nas redes sociais" [ref=e120] [cursor=pointer]: Partilhar
+                - link "Saber mais" [ref=e122] [cursor=pointer]:
+                  - /url: https://jobs.siemens.com/pt_PT/externaljobs/JobDetail/501948
+            - article [ref=e123]:
+              - generic [ref=e125]:
+                - heading "Finance Working Student- Abu Dhabi, UAE" [level=3] [ref=e126]:
+                  - link "Finance Working Student- Abu Dhabi, UAE" [ref=e127] [cursor=pointer]:
+                    - /url: https://jobs.siemens.com/pt_PT/externaljobs/JobDetail/496369
+                - generic [ref=e128]:
+                  - generic [ref=e129]: Dubai, Dubai, United Arab Emirates
+                  - text: "• ID da vaga: 496369 • Internal Services"
+              - generic [ref=e130]:
+                - button "Partilhar Finance Working Student- Abu Dhabi, UAE nas redes sociais" [ref=e132] [cursor=pointer]: Partilhar
+                - link "Saber mais" [ref=e134] [cursor=pointer]:
+                  - /url: https://jobs.siemens.com/pt_PT/externaljobs/JobDetail/496369
+            - article [ref=e135]:
+              - generic [ref=e137]:
+                - heading "Country Finance Head (Slovakia)" [level=3] [ref=e138]:
+                  - link "Country Finance Head (Slovakia)" [ref=e139] [cursor=pointer]:
+                    - /url: https://jobs.siemens.com/pt_PT/externaljobs/JobDetail/503085
+                - generic [ref=e140]:
+                  - generic [ref=e141]: Bratislava, Bratislavsky kraj, Slovakia
+                  - text: "• ID da vaga: 503085 • Finance"
+              - generic [ref=e142]:
+                - button "Partilhar Country Finance Head (Slovakia) nas redes sociais" [ref=e144] [cursor=pointer]: Partilhar
+                - link "Saber mais" [ref=e146] [cursor=pointer]:
+                  - /url: https://jobs.siemens.com/pt_PT/externaljobs/JobDetail/503085
+            - article [ref=e147]:
+              - generic [ref=e149]:
+                - heading "Commercial Sales & Project Manager (Finance)- Great Opportunity to Join Siemens Advanta in The Middle East" [level=3] [ref=e150]:
+                  - link "Commercial Sales & Project Manager (Finance)- Great Opportunity to Join Siemens Advanta in The Middle East" [ref=e151] [cursor=pointer]:
+                    - /url: https://jobs.siemens.com/pt_PT/externaljobs/JobDetail/492124
+                - generic [ref=e152]:
+                  - generic [ref=e153]: Dubai, Dubai, United Arab Emirates
+                  - text: "• ID da vaga: 492124 • Finance"
+              - generic [ref=e154]:
+                - button "Partilhar Commercial Sales & Project Manager (Finance)- Great Opportunity to Join Siemens Advanta in The Middle East nas redes sociais" [ref=e156] [cursor=pointer]: Partilhar
+                - link "Saber mais" [ref=e158] [cursor=pointer]:
+                  - /url: https://jobs.siemens.com/pt_PT/externaljobs/JobDetail/492124
+            - article [ref=e159]:
+              - generic [ref=e161]:
+                - heading "Finance Data Analyst" [level=3] [ref=e162]:
+                  - link "Finance Data Analyst" [ref=e163] [cursor=pointer]:
+                    - /url: https://jobs.siemens.com/pt_PT/externaljobs/JobDetail/501613
+                - generic [ref=e164]:
+                  - generic [ref=e165]: Sacramento, California, United States of America
+                  - text: "• ID da vaga: 501613 • Finance"
+              - generic [ref=e166]:
+                - button "Partilhar Finance Data Analyst nas redes sociais" [ref=e168] [cursor=pointer]: Partilhar
+                - link "Saber mais" [ref=e170] [cursor=pointer]:
+                  - /url: https://jobs.siemens.com/pt_PT/externaljobs/JobDetail/501613
+            - article [ref=e171]:
+              - generic [ref=e173]:
+                - heading "Financial Cost Controlling Analyst - Finance & Performance Management Central Team" [level=3] [ref=e174]:
+                  - link "Financial Cost Controlling Analyst - Finance & Performance Management Central Team" [ref=e175] [cursor=pointer]:
+                    - /url: https://jobs.siemens.com/pt_PT/externaljobs/JobDetail/498549
+                - generic [ref=e176]: "Vários locais • ID da vaga: 498549 • Finance"
+              - generic [ref=e177]:
+                - button "Partilhar Financial Cost Controlling Analyst - Finance & Performance Management Central Team nas redes sociais" [ref=e179] [cursor=pointer]: Partilhar
+                - link "Saber mais" [ref=e181] [cursor=pointer]:
+                  - /url: https://jobs.siemens.com/pt_PT/externaljobs/JobDetail/498549
+          - generic [ref=e182]:
+            - generic "686 resultados" [ref=e184]: 1 - 6 de 686 resultados
+            - navigation "Navegação por páginas" [ref=e186]:
+              - list [ref=e187]:
+                - listitem [ref=e188]:
+                  - generic [ref=e189]: Página
+                  - text: "1"
+                - listitem [ref=e190]:
+                  - link "Ir para página número 2" [ref=e191] [cursor=pointer]:
+                    - /url: https://jobs.siemens.com/pt_PT/externaljobs/SearchJobs/Finance/?folderRecordsPerPage=6&folderOffset=6
+                    - text: "2"
+                - listitem [ref=e192]:
+                  - link "Ir para página número 3" [ref=e193] [cursor=pointer]:
+                    - /url: https://jobs.siemens.com/pt_PT/externaljobs/SearchJobs/Finance/?folderRecordsPerPage=6&folderOffset=12
+                    - text: "3"
+                - listitem [ref=e194]:
+                  - link "Ir para página número 4" [ref=e195] [cursor=pointer]:
+                    - /url: https://jobs.siemens.com/pt_PT/externaljobs/SearchJobs/Finance/?folderRecordsPerPage=6&folderOffset=18
+                    - text: "4"
+                - listitem [ref=e196]:
+                  - link "Ir para página número 5" [ref=e197] [cursor=pointer]:
+                    - /url: https://jobs.siemens.com/pt_PT/externaljobs/SearchJobs/Finance/?folderRecordsPerPage=6&folderOffset=24
+                    - text: "5"
+                - listitem [ref=e198]:
+                  - link "Ir para página número 6" [ref=e199] [cursor=pointer]:
+                    - /url: https://jobs.siemens.com/pt_PT/externaljobs/SearchJobs/Finance/?folderRecordsPerPage=6&folderOffset=30
+                    - text: "6"
+                - listitem [ref=e200]:
+                  - link "Ir para página número Próx >>" [ref=e201] [cursor=pointer]:
+                    - /url: https://jobs.siemens.com/pt_PT/externaljobs/SearchJobs/Finance/?folderRecordsPerPage=6&folderOffset=6
+                    - text: Próx >>
+      - complementary "Imagem de banner complementar com botões de ação." [ref=e202]:
+        - generic [ref=e204]:
+          - heading "Novas oportunidades surgem todos os dias" [level=2] [ref=e205]:
+            - generic [ref=e206]:
+              - text: Novas oportunidades surgem
+              - strong [ref=e207]: todos os dias
+          - generic [ref=e209]:
+            - link "Ver recomendações de IA" [ref=e210] [cursor=pointer]:
+              - /url: https://jobs.siemens.com/pt_PT/externaljobs/RecommendationMethods
+            - text: ou
+            - link "Criar um alerta" [ref=e211] [cursor=pointer]:
+              - /url: https://jobs.siemens.com/pt_PT/externaljobs/Login
+    - contentinfo "Rodapé" [ref=e212]:
+      - generic [ref=e213]:
+        - img [ref=e218]
+        - generic [ref=e220]:
+          - link "Siemens LinkedIn (ligação externa, abre num novo separador)" [ref=e221] [cursor=pointer]:
+            - /url: https://www.linkedin.com/company/siemens
+          - link "Siemens Instagram (ligação externa, abre num novo separador)" [ref=e222] [cursor=pointer]:
+            - /url: https://www.instagram.com/siemens/
+          - link "Siemens Facebook (ligação externa, abre num novo separador)" [ref=e223] [cursor=pointer]:
+            - /url: https://www.facebook.com/Siemens
+          - link "Siemens X (ligação externa, abre num novo separador)" [ref=e224] [cursor=pointer]:
+            - /url: https://twitter.com/siemens
+          - link "Siemens YouTube (ligação externa, abre num novo separador)" [ref=e225] [cursor=pointer]:
+            - /url: https://www.youtube.com/@siemens
+        - generic [ref=e226]:
+          - generic [ref=e228]: © Siemens 1996 - 2026
+          - generic [ref=e229]:
+            - link "Perguntas Frequentes (ligação externa, abre num novo separador)" [ref=e230] [cursor=pointer]:
+              - /url: https://www.siemens.com/global/en/company/jobs/faq.html
+              - text: FAQs
+            - link "Informação corporativa (abre num novo separador)" [ref=e231] [cursor=pointer]:
+              - /url: https://www.siemens.com/corporate-information
+              - text: Informação empresarial
+            - link "Aviso de Privacidade (ligação externa, abre num novo separador)" [ref=e232] [cursor=pointer]:
+              - /url: https://www.siemens.com/global/en/general/talent-management/privacy-notice.html
+              - text: Aviso de privacidade
+            - link "Ligação do aviso de cookies" [ref=e233] [cursor=pointer]:
+              - /url: https://www.siemens.com/global/en/general/cookie-notice.html#openCookieManagement
+              - text: Aviso de cookies
+            - link "Termos de utilização (ligação externa, abre num novo separador)" [ref=e234] [cursor=pointer]:
+              - /url: https://www.siemens.com/terms-of-use
+              - text: Termos de uso
+            - link "Identidade Digital (abre num novo separador)" [ref=e235] [cursor=pointer]:
+              - /url: https://www.siemens.com/digital-id
+              - text: ID digital
+            - link "Denúncia (ligação externa, abre num novo separador)" [ref=e236] [cursor=pointer]:
+              - /url: https://www.siemens.com/whistleblowing
+              - text: Denúncia (whistleblowing)
+        - paragraph [ref=e239]:
+          - strong [ref=e240]: "Nota importante:"
+          - text: A todos os candidatos a emprego que desejem integrar a nossa equipa, informamos que a Siemens não solicita o pagamento de quaisquer taxas antes, durante ou após o processo de candidatura. Não pedimos dados bancários ou informações financeiras pessoais em troca de uma promessa de emprego. Da mesma forma, por favor, não abra documentos em e-mails que pareçam ter sido enviados por um recrutador da Siemens, a menos que tenha a certeza de que está a ser contactado por um dos nossos profissionais no âmbito de um processo de candidatura ativo.
+  - status [ref=e241]

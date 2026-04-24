@@ -1,0 +1,193 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - banner:
+      - navigation "site" [ref=e4]:
+        - link "Skip to main content" [ref=e5] [cursor=pointer]:
+          - /url: "#main-content"
+        - generic [ref=e6]:
+          - generic [ref=e7]:
+            - link "dsm-firmenich logo, link to Positions Home" [ref=e9] [cursor=pointer]:
+              - /url: https://jobs.dsm-firmenich.com/careers
+              - img [ref=e10]
+            - link "Home" [ref=e11] [cursor=pointer]:
+              - /url: https://careers.dsm-firmenich.com/en/careers.html
+              - generic [ref=e13]: Home
+            - link "Why dsm-firmenich" [ref=e14] [cursor=pointer]:
+              - /url: https://careers.dsm-firmenich.com/en/careers/why-dsm-firmenich.html
+              - generic [ref=e16]: Why dsm-firmenich
+            - link "Meet Us" [ref=e17] [cursor=pointer]:
+              - /url: https://careers.dsm-firmenich.com/en/careers.html#people
+              - generic [ref=e19]: Meet Us
+          - generic [ref=e20]:
+            - link "Join Talent Network" [ref=e21] [cursor=pointer]:
+              - /url: /careers/join?domain=dsm.com&hl=en_US
+              - generic [ref=e23]: Join Talent Network
+            - button "Language switcher" [ref=e25] [cursor=pointer]:
+              - generic [ref=e27]: English
+    - main [ref=e30]:
+      - heading "Single Position" [level=1] [ref=e31]
+      - generic [ref=e34]:
+        - link "View All Jobs" [ref=e35] [cursor=pointer]:
+          - /url: /careers?hl=en_US&domain=dsm.com
+          - generic [ref=e39]: View All Jobs
+        - generic [ref=e41]:
+          - generic [ref=e42]:
+            - generic [ref=e43]:
+              - heading "Business Controller Associate Director LATAM" [level=2] [ref=e44]
+              - generic [ref=e48]: Sao Paulo Pinheiros One, Brazil
+              - link "Apply Now" [ref=e50] [cursor=pointer]:
+                - /url: /careers/apply?pid=562949976677451&hl=en_US&domain=dsm.com
+                - generic [ref=e51]: Apply Now
+            - button "Share position, Business Controller Associate Director LATAM" [ref=e54] [cursor=pointer]
+          - generic [ref=e58]:
+            - generic [ref=e59]: Find out how well you match with this job
+            - button "Upload your resume" [ref=e60] [cursor=pointer]:
+              - generic [ref=e62]: Upload your resume
+          - generic [ref=e65]:
+            - tablist [ref=e68]:
+              - tab "Job description" [selected] [ref=e69] [cursor=pointer]:
+                - generic [ref=e70]: Job description
+              - tab "Company and benefits" [ref=e72] [cursor=pointer]:
+                - generic [ref=e73]: Company and benefits
+            - generic [ref=e74]:
+              - generic [ref=e75]:
+                - generic [ref=e77]:
+                  - generic [ref=e78]: Job ID
+                  - generic [ref=e79]: "80603"
+                - generic [ref=e81]:
+                  - paragraph [ref=e82]:
+                    - text: "Job Title: Business Controller Associate Director LATAM"
+                    - text: "Location: São Paulo - Brazil"
+                  - paragraph [ref=e83]: The Business Controller Associate Director LATAM, is a key finance leader and trusted business partner to the regional leadership team. This role is responsible for driving financial performance, supporting strategic decision-making, and ensuring strong financial discipline across the region.
+                  - paragraph [ref=e84]:
+                    - strong [ref=e85]: "Key Responsibilities:"
+                  - list [ref=e86]:
+                    - listitem [ref=e87]: Act as a strategic partner to LATAM leadership, driving financial performance and supporting business decision-making.
+                    - listitem [ref=e88]: Lead financial planning (budget, forecast, and long-term planning) and provide insights for decision-making.
+                    - listitem [ref=e89]: Monitor KPIs and business performance, identifying risks and opportunities and ensuring corrective actions.
+                    - listitem [ref=e90]: Support strategic projects and investments (CAPEX), including financial modeling and return evaluation.
+                    - listitem [ref=e91]: Ensure compliance, governance, and continuous improvement of financial processes and reporting.
+                    - listitem [ref=e92]: Manage costs and lead a high-performing finance team, developing talent and driving efficiency.
+                  - paragraph [ref=e93]:
+                    - strong [ref=e94]: "We Offer:"
+                  - list [ref=e95]:
+                    - listitem [ref=e96]: A rich history and a promising future of bold scientific innovation and passionate creation with our customers;
+                    - listitem [ref=e97]: A place to grow, encouraging and supporting curiosity and an open mindset;
+                    - listitem [ref=e98]: A culture that prioritizes safety and well-being, both physical and mental;
+                    - listitem [ref=e99]: The opportunity to work for a company where sustainability is much more than a statement and is at the core of our strategy and purpose;
+                    - listitem [ref=e100]: A flexible work environment that empowers people to take ownership of their work and results;
+                    - listitem [ref=e101]: Barrier-free communities within our organization, where every employee is equally valued and respected—regardless of background, beliefs, or identity."
+                  - paragraph [ref=e102]:
+                    - strong [ref=e103]: "You Bring:"
+                  - list [ref=e104]:
+                    - listitem [ref=e105]: Bachelor’s degree in Finance, or a related field, with professional certifications preferred (CMA, CPA, ACCA).
+                    - listitem [ref=e106]: Experience in controlling within multinational or complex environments.
+                    - listitem [ref=e107]: Strong background in commercial finance, partnering closely with business leaders.
+                    - listitem [ref=e108]: Solid expertise in financial planning, budgeting, forecasting, and performance analysis.
+                    - listitem [ref=e109]: Hands-on profile with strong business acumen, analytical skills, and execution focus.
+                    - listitem [ref=e110]: Fluent in English and Spanish
+                  - paragraph [ref=e111]:
+                    - strong [ref=e112]: Commitment to Equal Opportunity
+                  - paragraph [ref=e113]: "dsm-firmenich is fully dedicated to inclusion, because when people feel engaged and empowered, their creativity and innovation drive unprecedented progress. Our goal is to build a workplace where opportunities are truly equal, so that everyone can thrive. We do not discriminate: there is a place for everyone at dsm-firmenich."
+                  - paragraph [ref=e114]: dsm-firmenich is an equal opportunity and affirmative action employer. Our workforce is as diverse as our customers. For us, this includes a commitment to ensuring equal employment opportunities for all candidates and employees. Employment decisions are based on job-related factors, regardless of race, color, religion, sex, sexual orientation, gender identity, age, nationality, disability, marital status, genetic information, protected veteran status, or any other status protected by law.
+                  - paragraph [ref=e115]: We are committed to providing reasonable support for individuals with disabilities throughout our recruitment process. If you need assistance and feel comfortable sharing this, please let us know."
+                  - paragraph [ref=e116]:
+                    - strong [ref=e117]: About dsm-firmenich
+                  - paragraph [ref=e118]: As innovators in nutrition, health, and beauty, dsm-firmenich reinvents, manufactures, and combines essential nutrients, flavors, and fragrances to support the growth of the world’s population. With our broad portfolio of solutions, based on natural and renewable ingredients and backed by strong scientific and technological expertise, we work to create what is essential for life, desirable for consumers, and more sustainable for the planet.
+                  - paragraph [ref=e119]: dsm-firmenich is a Swiss-Dutch company listed on Euronext Amsterdam, with operations in nearly 60 countries and revenues exceeding €12 billion. With a diverse global team of nearly 30,000 employees, we bring progress to life™ every day, everywhere, for billions of people."
+              - generic [ref=e120]:
+                - heading "Insights from previous hires" [level=3] [ref=e121]
+                - generic [ref=e122]:
+                  - generic [ref=e123]:
+                    - heading "Years of experience" [level=4] [ref=e124]
+                    - 'img "Pie chart showing the distribution of years of experience for previous hires. Less than 2 years: 0 (0%), 2 - 4 years: 0 (0%), 4 - 8 years: 0 (0%), 8+ years: 3 (100%)" [ref=e125]':
+                      - generic [ref=e127]:
+                        - img [ref=e128]
+                        - list [ref=e130]:
+                          - listitem [ref=e131]:
+                            - img [ref=e132]
+                            - text: Less than 2 years
+                          - listitem [ref=e134]:
+                            - img [ref=e135]
+                            - text: 2 - 4 years
+                          - listitem [ref=e137]:
+                            - img [ref=e138]
+                            - text: 4 - 8 years
+                          - listitem [ref=e140]:
+                            - img [ref=e141]
+                            - text: 8+ years
+                  - generic [ref=e143]:
+                    - heading "Top skills" [level=4] [ref=e144]
+                    - list [ref=e145]:
+                      - listitem [ref=e146]:
+                        - generic [ref=e147]: Accounting
+                      - listitem [ref=e148]:
+                        - generic [ref=e149]: Budgeting
+                      - listitem [ref=e150]:
+                        - generic [ref=e151]: Analysis
+                  - generic [ref=e152]:
+                    - heading "Previously worked at" [level=4] [ref=e153]
+                    - list [ref=e154]:
+                      - listitem [ref=e155]:
+                        - img "Leaseplan Australia" [ref=e156]
+                  - generic [ref=e157]:
+                    - heading "Previously worked as" [level=4] [ref=e158]
+                    - list [ref=e159]:
+                      - listitem [ref=e160]: 1. Business Controller
+                      - listitem [ref=e161]: 2. Business Director
+                      - listitem [ref=e162]: 3. Financial Planning Manager
+                      - listitem [ref=e163]: 4. Finance Director
+                      - listitem [ref=e164]: 5. Functional Analyst
+    - contentinfo [ref=e165]:
+      - generic [ref=e166]:
+        - generic [ref=e167]:
+          - generic [ref=e169]:
+            - link "DSM" [ref=e171] [cursor=pointer]:
+              - /url: https://www.dsm-firmenich.com/corporate/careers.html
+              - img "DSM" [ref=e172]
+            - list [ref=e174]:
+              - listitem [ref=e175]:
+                - link "Home" [ref=e176] [cursor=pointer]:
+                  - /url: https://careers.dsm-firmenich.com/en/careers.html
+              - listitem [ref=e177]:
+                - link "Why dsm-firmenich" [ref=e178] [cursor=pointer]:
+                  - /url: https://careers.dsm-firmenich.com/en/careers/why-dsm-firmenich.html
+              - listitem [ref=e179]:
+                - link "Meet us" [ref=e180] [cursor=pointer]:
+                  - /url: https://careers.dsm-firmenich.com/en/careers.html#people
+            - list [ref=e182]:
+              - listitem [ref=e183]:
+                - link "Corporate site" [ref=e184] [cursor=pointer]:
+                  - /url: https://www.dsm-firmenich.com/en/home.html
+              - listitem [ref=e185]:
+                - link "Privacy" [ref=e186] [cursor=pointer]:
+                  - /url: https://our-company.dsm-firmenich.com/en/our-company/legal-privacy/privacy-policy.html
+            - generic [ref=e187]:
+              - generic [ref=e189]:
+                - link "Facebook" [ref=e190] [cursor=pointer]:
+                  - /url: https://www.facebook.com/dsmcompany
+                  - img "Facebook" [ref=e191]
+                - link "Instagram" [ref=e192] [cursor=pointer]:
+                  - /url: https://www.instagram.com/dsmcompany/
+                  - img "Instagram" [ref=e193]
+                - link "YouTube" [ref=e194] [cursor=pointer]:
+                  - /url: https://www.youtube.com/channel/UCQxQSm4Sz9MM_0_ww4nrwUQ
+                  - img "YouTube" [ref=e195]
+                - link "Glassdoor" [ref=e196] [cursor=pointer]:
+                  - /url: https://www.glassdoor.co.uk/Overview/Working-at-DSM-EI_IE10498.11,14.htm
+                  - img "Glassdoor" [ref=e197]
+                - link "Linkedin" [ref=e198] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/company/dsm-firmenich/
+                  - img "Linkedin" [ref=e199]
+              - link "Join our talent community" [ref=e200] [cursor=pointer]:
+                - /url: https://jobs.dsm-firmenich.com/careers/join?domain=dsm.com&hl=en
+          - paragraph [ref=e202]: ©2023 dsm-firmenich – All rights reserved
+        - paragraph [ref=e203]:
+          - 'link "Powered by eightfold.ai #WhatsNextForYou" [ref=e204] [cursor=pointer]':
+            - /url: https://eightfold.ai
+  - region "Notifications"
+  - region "Notifications"
+  - region "Notifications"
+  - region "Notifications"
+  - region "Notifications"
+  - region "Notifications"

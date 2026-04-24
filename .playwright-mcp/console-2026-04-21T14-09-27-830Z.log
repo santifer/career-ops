@@ -1,0 +1,38 @@
+[      24ms] [LOG] JQMIGRATE: Migrate is installed, version 3.3.0 @ https://performancemanager.successfactors.eu/verp/vmod_v1/ui/extlib/jquery_3.5.1/jquery.js:4
+[      25ms] [LOG] JQMIGRATE: Migrate plugin loaded multiple times @ https://performancemanager.successfactors.eu/verp/vmod_v1/ui/extlib/jquery_3.5.1/jquery-migrate.js:1
+[      25ms] [LOG] JQMIGRATE: Migrate is installed, version 3.3.0 @ https://performancemanager.successfactors.eu/verp/vmod_v1/ui/extlib/jquery_3.5.1/jquery-migrate.js:1
+[      25ms] [LOG] JQMIGRATE: Migrate is installed, version 1.4.1 @ https://careers.triviumpackaging.com/platform/js/jquery/jquery-migrate-1.4.1.js:22
+[    2774ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://www.linkedin.com/li/track:0
+[    2784ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://www.linkedin.com/li/track:0
+[   79768ms] [LOG] JQMIGRATE: Migrate is installed, version 3.3.0 @ https://career2.successfactors.eu/verp/vmod_v1/ui/extlib/jquery_3.5.1/jquery.js:4
+[   80071ms] [LOG] [AjaxService] Using native Proxy for lazyDataGridController @ https://career2.successfactors.eu/verp/vmod_v1/ui/ajaxservice/js/AjaxService_3a3496282a4d9dfe5021ade50ce210b0.js:0
+[   80101ms] [INFO] 2026-04-21 11:10:47 Device API logging initialized - DEVICE @ https://career2.successfactors.eu/verp/vmod_v1/ui/sapui5-bundles-main/resources_1.136.6-2/common-1.js:1336
+[   80117ms] [WARNING] The current jQuery version 3.5.1 is different than the version 3.6.0 that is used for testing jquery-compat.js. jquery-compat.js is applied but it may not work properly. @ https://career2.successfactors.eu/verp/vmod_v1/ui/sapui5-main/resources_1.136.6/resources/sap/ui/thirdparty/jquery-compat.js?eval:4
+[   80720ms] [LOG] Should load SAPUI5 @ https://career2.successfactors.eu/careers?company=triviumpac:1327
+[   80755ms] [LOG] Req in Event: /xi/ajax/remoting/call/plaincall/pwdPolicyControllerProxy.getPasswordPolicy.dwr @ https://career2.successfactors.eu/verp/vmod_v1/ui/perflog-lib/resources_1.1.4/perflog-lib.min.js:0
+[   80811ms] [LOG] [AjaxService] Using native Proxy for multiAttachmentWidgetController @ https://career2.successfactors.eu/verp/vmod_v1/ui/ajaxservice/js/AjaxService_3a3496282a4d9dfe5021ade50ce210b0.js:0
+[   80811ms] [LOG] [AjaxService] Using native Proxy for rcmCloudStorageController @ https://career2.successfactors.eu/verp/vmod_v1/ui/ajaxservice/js/AjaxService_3a3496282a4d9dfe5021ade50ce210b0.js:0
+[   81004ms] [LOG] Req in Event: /messagebundle/triviumpac/vmod_v1-2d22e2d1-33c40452/common!/verp/ui/sapui5-main/resources/resources/sap/ui/core/messagebundle_en_US.properties @ https://career2.successfactors.eu/verp/vmod_v1/ui/perflog-lib/resources_1.1.4/perflog-lib.min.js:0
+[   81016ms] [LOG] Req in Event: /messagebundle/triviumpac/vmod_v1-da143253-33c40452/sap.m!/verp/ui/sapui5-main/resources/resources/sap/m/messagebundle_en_US.properties @ https://career2.successfactors.eu/verp/vmod_v1/ui/perflog-lib/resources_1.1.4/perflog-lib.min.js:0
+[   81083ms] [LOG] Req in Event: /xi/ajax/remoting/call/plaincall/pwdPolicyControllerProxy.getPasswordPolicy.dwr @ https://career2.successfactors.eu/verp/vmod_v1/ui/perflog-lib/resources_1.1.4/perflog-lib.min.js:0
+[   81110ms] [INFO] PerfLog Page Completed (ver:1.1.4 2025-07-11T03:34:42.994Z) @ https://career2.successfactors.eu/verp/vmod_v1/ui/perflog-lib/resources_1.1.4/perflog-lib.min.js:0
+[   81479ms] [LOG] --------- Event ended --------- @ https://career2.successfactors.eu/verp/vmod_v1/ui/perflog-lib/resources_1.1.4/perflog-lib.min.js:0
+[  311748ms] [WARNING] An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing. @ https://apis.google.com/_/scs/abc-static/_/js/k=gapi.lb.pt_BR.jjpwTLA5wes.O/m=client/rt=j/sv=1/d=1/ed=1/rs=AHpOoo8meQhFu_ed37LCAEjma6YuOgCjQA/cb=gapi.loaded_0?le=scs:429
+[  312177ms] [ERROR] Framing 'https://accounts.google.com/' violates the following report-only Content Security Policy directive: "frame-ancestors 'self'". The violation has been logged, but no further action has been taken.
+ @ :0
+[  312273ms] [INFO] Loading the script 'https://www.gstatic.com/_/mss/boq-identity/_/js/k=boq-identity.IdpIFrameHttp.pt_BR.IzRRzg8x7_U.2018.O/am=AAA4/d=1/rs=AOaEmlEwRf8ygA8hZVfB_kqWihzO695-DA/m=base' violates the following Content Security Policy directive: "script-src 'unsafe-inline' 'unsafe-eval' blob: data:". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The policy is report-only, so the violation has been logged but no further action has been taken. @ https://accounts.google.com/o/oauth2/iframe#origin=https%3A%2F%2Fcareer2.successfactors.eu&rpcToken=913548709.7529988&clearCache=1&supportBlocked3PCookies=1:0
+[  312538ms] [WARNING] Your client application uses libraries for user authentication or authorization that are deprecated. See the [Migration Guide](https://developers.google.com/identity/gsi/web/guides/gis-migration) for more information. @ https://apis.google.com/_/scs/abc-static/_/js/k=gapi.lb.pt_BR.jjpwTLA5wes.O/m=client/rt=j/sv=1/d=1/ed=1/rs=AHpOoo8meQhFu_ed37LCAEjma6YuOgCjQA/cb=gapi.loaded_0?le=scs:409
+[  312715ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://accounts.google.com/_/IdpIFrameHttp/cspreport/fine-allowlist:0
+[  312942ms] Uncaught [object Object]
+    at <anonymous> (https://apis.google.com/_/scs/abc-static/_/js/k=gapi.lb.pt_BR.jjpwTLA5wes.O/m=client/rt=j/sv=1/d=1/ed=1/rs=AHpOoo8meQhFu_ed37LCAEjma6YuOgCjQA/cb=gapi.loaded_0?le=scs:160:51)
+[  377997ms] [LOG] Req in Event: /xi/ajax/remoting/call/plaincall/rcmDpcsControllerProxy.getDpscStatementByTypeAndCountry.dwr @ https://career2.successfactors.eu/verp/vmod_v1/ui/perflog-lib/resources_1.1.4/perflog-lib.min.js:0
+[  378574ms] [LOG] --------- Event ended --------- @ https://career2.successfactors.eu/verp/vmod_v1/ui/perflog-lib/resources_1.1.4/perflog-lib.min.js:0
+[  416175ms] [LOG] Req in Event: /xi/ajax/remoting/call/plaincall/rcmDpcsControllerProxy.getDpscStatementByTypeAndCountry.dwr @ https://career2.successfactors.eu/verp/vmod_v1/ui/perflog-lib/resources_1.1.4/perflog-lib.min.js:0
+[  416811ms] [LOG] --------- Event ended --------- @ https://career2.successfactors.eu/verp/vmod_v1/ui/perflog-lib/resources_1.1.4/perflog-lib.min.js:0
+[  455262ms] [LOG] Found selects: 1 [fbclc_country fbclc_country] @ :0
+[  722018ms] [LOG] Req in Event: /xi/ajax/remoting/call/plaincall/rcmDpcsControllerProxy.getDpscStatementByTypeAndCountry.dwr @ https://career2.successfactors.eu/verp/vmod_v1/ui/perflog-lib/resources_1.1.4/perflog-lib.min.js:0
+[  723080ms] [LOG] --------- Event ended --------- @ https://career2.successfactors.eu/verp/vmod_v1/ui/perflog-lib/resources_1.1.4/perflog-lib.min.js:0
+[  789125ms] [LOG] SAPUI5 detected @ :3
+[  789125ms] [LOG] SAPUI5 Core available @ :8
+[  798925ms] [LOG] Form found, attempting submit... @ :4
+[  798925ms] [LOG] Submit buttons: 1 @ :8

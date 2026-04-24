@@ -1,0 +1,17 @@
+[    1639ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'battery'. @ :0
+[    1639ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'document-domain'. @ :0
+[    1639ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'execution-while-not-rendered'. @ :0
+[    1639ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'execution-while-out-of-viewport'. @ :0
+[    1639ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'navigation-override'. @ :0
+[    1639ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'speaker-selection'. @ :0
+[    1639ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'conversion-measurement'. @ :0
+[    1639ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'focus-without-user-activation'. @ :0
+[    1639ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'sync-script'. @ :0
+[    1639ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'trust-token-redemption'. @ :0
+[    1639ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'window-placement'. @ :0
+[    1639ms] [WARNING] Error with Permissions-Policy header: Unrecognized feature: 'vertical-scroll'. @ :0
+[    1639ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://www.gupy.io/vagas?q=controller+OR+controladoria+OR+contabilidade&location=brazil:0
+[    2909ms] [ERROR] Attestation check for Attribution Reporting on https://www.facebook.com failed. @ https://www.gupy.io/vagas?q=controller+OR+controladoria+OR+contabilidade&location=brazil:0
+[    3616ms] [WARNING] [Meta Pixel] - Duplicate Pixel ID: 139085250159210. @ https://connect.facebook.net/en_US/fbevents.js:181
+[    3658ms] [WARNING] [Meta pixel] 138408160237283 is unavailable on this website due to it's traffic permission settings. Go to https://www.facebook.com/business/help/572690630080597 to learn more. @ https://connect.facebook.net/en_US/fbevents.js:181
+[    3858ms] [ERROR] Attestation check for Attribution Reporting on https://www.facebook.com failed. @ https://www.gupy.io/vagas?q=controller+OR+controladoria+OR+contabilidade&location=brazil:0

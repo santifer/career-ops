@@ -1,0 +1,12 @@
+[    2265ms] [LOG] InHire version 2026.184.2 @ https://duxcompany.inhire.app/static/js/main.eb238110.js:122
+[    2646ms] [WARNING] <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes"> @ https://duxcompany.inhire.app/vagas/ac22f74c-f26e-48a4-ba72-cc3878ec8976/gerente-contabil-sao-paulosp?source=linkedin:0
+[    2723ms] [LOG] Content is cached for offline use. @ https://duxcompany.inhire.app/static/js/main.eb238110.js:122
+[    3218ms] [WARNING] [Intercom] The App ID in your code snippet has not been set. Set it to your App ID found in settings to complete installation: https://app.intercom.com/a/apps/_/settings/web @ https://js.intercomcdn.com/frame-modern.bd8e62d5.js:0
+[    3489ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://plugin.handtalk.me/remote-config/f6a212a8fbf09d14cd483d016b22608d.json:0
+[    3489ms] [WARNING] Falha ao obter configuração remota @ https://duxcompany.inhire.app/static/js/main.eb238110.js:122
+[    3718ms] [ERROR] Framing 'https://www.google.com/' violates the following report-only Content Security Policy directive: "frame-ancestors 'self'". The violation has been logged, but no further action has been taken.
+ @ :0
+[    3829ms] [ERROR] Failed to load resource: the server responded with a status of 503 (Service Unavailable) @ https://csp.withgoogle.com/csp/frame-ancestors/38fac9d5b82543fc4729580d18ff2d3d:0
+[    6588ms] [ERROR] Failed to load resource: the server responded with a status of 429 () @ https://o1200341.ingest.sentry.io/api/6324294/envelope/?sentry_key=65662afc67d246cd90f84203d725616b&sentry_version=7&sentry_client=sentry.javascript.react%2F7.120.4:0
+[  286440ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://plugin.handtalk.me/remote-config/f6a212a8fbf09d14cd483d016b22608d.json:0
+[  286441ms] [WARNING] Falha ao obter configuração remota @ https://plugin.handtalk.me/web/latest/handtalk.min.js:527

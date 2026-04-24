@@ -1,0 +1,160 @@
+- generic [ref=e4]:
+  - link "Ir para o conteúdo principal" [ref=e5] [cursor=pointer]:
+    - /url: ""
+  - banner [ref=e22]:
+    - generic [ref=e24]:
+      - link "Página inicial de carreiras da" [ref=e27] [cursor=pointer]:
+        - /url: https://griffithfoods.com/careers/
+        - img "Página inicial de carreiras da" [ref=e28]
+      - heading "Griffith Foods" [level=1] [ref=e30]
+      - generic [ref=e32]:
+        - generic [ref=e33]:
+          - button "Português (‏Brasil)" [ref=e35] [cursor=pointer]:
+            - generic [ref=e39]: Português (‏Brasil)
+          - button "Fazer login" [ref=e41] [cursor=pointer]:
+            - generic [ref=e46]: Fazer login
+        - navigation [ref=e47]:
+          - button "Página inicial" [ref=e48] [cursor=pointer]
+          - button "Pesquisar cargos" [ref=e49] [cursor=pointer]
+          - button "Introduce Yourself" [ref=e50] [cursor=pointer]
+  - generic [ref=e54]:
+    - generic [ref=e55]:
+      - alert [ref=e56]: Regional Controller page is loaded
+      - generic [ref=e57]:
+        - generic [ref=e58]:
+          - generic [ref=e59]:
+            - heading "Regional Controller" [level=2] [ref=e60]
+            - button "Candidatar-se" [ref=e65] [cursor=pointer]
+          - img "logo" [ref=e66]
+        - generic [ref=e67]:
+          - generic [ref=e68]:
+            - generic [ref=e69]:
+              - generic [ref=e76]:
+                - term [ref=e77]: remote type
+                - definition [ref=e78]: Híbrido
+              - generic [ref=e85]:
+                - term [ref=e86]: locations
+                - definition [ref=e87]: San Jose
+                - definition [ref=e88]: Marinilla
+                - definition [ref=e89]: Jundiai
+            - generic [ref=e90]:
+              - generic [ref=e99]:
+                - term [ref=e100]: time type
+                - definition [ref=e101]: Período integral
+              - generic [ref=e110]:
+                - term [ref=e111]: posted on
+                - definition [ref=e112]: Publicado há 7 dias
+              - generic [ref=e120]:
+                - term [ref=e121]: time left to apply
+                - definition [ref=e122]: "Data de término: 24 de abril de 2026 (2 dias restantes para se candidatar)"
+              - generic [ref=e131]:
+                - term [ref=e132]: job requisition id
+                - definition [ref=e133]: JR101735
+          - generic [ref=e135]:
+            - paragraph [ref=e136]:
+              - text: A Griffith Foods é a parceira cuidadosa e criativa de desenvolvimento de produtos, ajudando as empresas do setor alimentício a atender às necessidades dos consumidores em constante evolução, ao mesmo tempo em que preserva o planeta. Como uma empresa familiar fundada em 1919 e sediada em Alsip, Illinois, EUA, a Griffith Foods é conhecida pela verdadeira inovação colaborativa guiada pelo propósito de “Misturamos cuidado e criatividade para nutrir o mundo”. As capacidades de produtos da empresa variam desde temperos e marinadas até sistemas de empanamento e molhos, todos desenvolvidos para serem melhores para as pessoas e para o planeta. Para obter mais informações, acesse
+              - link "www.griffithfoods.com" [ref=e137] [cursor=pointer]:
+                - /url: https://www.griffithfoods.com
+                - generic [ref=e140]: www.griffithfoods.com
+              - text: .
+            - paragraph [ref=e141]
+            - paragraph [ref=e142]:
+              - generic [ref=e143]: OBJETIVO GENERAL DEL PUESTO
+            - paragraph [ref=e144]
+            - paragraph [ref=e145]: Salvaguardar los activos y la liquidez del negocio, garantizando la correcta ejecución de las actividades contables en estricto cumplimiento de los requisitos legales y las políticas del grupo. Esto implica la gestión integral del ciclo de caja para asegurar la disponibilidad oportuna de fondos, el fortalecimiento continuo del entorno de control interno y el cumplimiento riguroso de todas las obligaciones legales, fiscales y de auditoría, así como de los plazos establecidos, en todas las entidades de la región.
+            - paragraph [ref=e146]
+            - paragraph [ref=e147]: Asimismo, el rol lidera y coordina los procesos contables regionales, la presentación de impuestos y estados financieros estatutarios, la supervisión de reportes financieros y la gestión de la auditoría externa. La posición interactúa estrechamente con Finanzas Corporativas y el Equipo de Liderazgo Regional, actuando como socio estratégico de las áreas de Recursos Humanos y Tecnología de la Información para apoyar la toma de decisiones, la gobernanza y la sostenibilidad financiera del negocio.
+            - paragraph [ref=e148]
+            - paragraph [ref=e149]:
+              - generic [ref=e150]: RESPONSABILIDADES Y DEBERES
+            - paragraph [ref=e151]
+            - list [ref=e152]:
+              - listitem [ref=e153]: Actuar como principal punto de contacto con el equipo de contraloría global.
+              - listitem [ref=e154]: Asumir la responsabilidad total de los cierres mensuales y de fin de año, incluyendo la preparación y mantenimiento de la documentación de soporte correspondiente.
+              - listitem [ref=e155]: Supervisar los estados financieros consolidados y estatutarios, así como los cálculos de impuestos corporativos de todas las entidades de la región.
+              - listitem [ref=e156]: Ser dueño del balance general de todas las entidades regionales, asegurando su integridad y razonabilidad.
+              - listitem [ref=e157]: Garantizar el cumplimiento de todos los requisitos legales, fiscales, regulatorios y estatutarios aplicables.
+              - listitem [ref=e158]: Asegurar que las políticas de precios de transferencia estén correctamente implementadas y revisadas de forma periódica.
+              - listitem [ref=e159]: Liderar y coordinar las auditorías externas a nivel regional.
+              - listitem [ref=e160]: Asesorar a la compañía en temas legales y fiscales, en coordinación con asesoría externa cuando sea necesario.
+              - listitem [ref=e161]: Mantener un entorno sólido y eficiente de control interno, soportado por constantes revisiones, segregación de funciones y principios de trazabilidad (audit trail). Garantizar el cumplimiento de GAAP, IFRS, políticas corporativas, así como la implementación, seguimiento y mejora continua de los controles internos.
+              - listitem [ref=e162]: Supervisar y asegurar la correcta carga y reporte mensual de información financiera en la herramienta global de consolidación financiera (BPC).
+              - listitem [ref=e163]: Proveer asesoría técnica contable y acompañamiento al equipo de Finanzas y Contabilidad, así como al negocio en general.
+              - listitem [ref=e164]: "Establecer, gestionar y supervisar las operaciones financieras de los siguientes equipos:"
+              - listitem [ref=e165]: Contabilidad General (GL), asegurando que los registros contables se mantengan de manera precisa, oportuna y eficiente, y que todas las cuentas de control estén correctamente conciliadas.
+              - listitem [ref=e166]: Cuentas por Pagar, garantizando la aplicación de las políticas operativas acordadas y el cumplimiento de los plazos de pago.
+              - listitem [ref=e167]: Cuentas por Cobrar, asegurando un control de crédito riguroso (procesos de cobranza, límites de crédito y condiciones de pago).
+              - listitem [ref=e168]: Nómina, garantizando que todos los empleados reciban su pago de forma oportuna y precisa.
+              - listitem [ref=e169]: Motivar, desarrollar y acompañar a los reportes directos, fomentando un alto desempeño y desarrollo profesional.
+              - listitem [ref=e170]: Actuar como asesor financiero del equipo de liderazgo regional, proporcionando guía y recomendaciones para impulsar el desempeño financiero del negocio.
+              - listitem [ref=e171]: Apoyar iniciativas estratégicas, tales como fusiones y adquisiciones, inversiones de capital y expansiones del negocio, aportando análisis financiero y asegurando una adecuada gobernanza.
+            - paragraph [ref=e172]
+            - paragraph [ref=e173]:
+              - generic [ref=e174]: ALCANCE
+            - paragraph [ref=e175]
+            - list [ref=e176]:
+              - listitem [ref=e177]: Responsable de la contabilidad, cuentas por cobrar, cuentas por pagar, impuestos, nómina de Centro y Sur America.
+            - paragraph [ref=e178]
+            - paragraph [ref=e179]:
+              - generic [ref=e180]: CONOCIMIENTO Y EXPERIENCIA
+            - paragraph [ref=e181]
+            - paragraph [ref=e182]: EDUCACIÓN
+            - paragraph [ref=e183]
+            - list [ref=e184]:
+              - listitem [ref=e185]: Licenciatura universitaria en Finanzas, Economía, Contabilidad, Administración de empresas, Ingeniería Industrial con énfasis en Finanzas, deseable Maestría
+              - listitem [ref=e186]: Inglés avanzado, deseable portugués
+            - paragraph [ref=e187]
+            - paragraph [ref=e188]: EXPERIENCIA
+            - paragraph [ref=e189]
+            - list [ref=e190]:
+              - listitem [ref=e191]: +5 años de experiencia como contralor en empresas de tamaño mediano a grande, con responsabilidad integral sobre procesos contables, financieros y de control.
+              - listitem [ref=e192]: En principios contables y reporte financiero bajo US GAAP, IFRS e IAS, con capacidad para cumplir simultáneamente con requerimientos de reportes corporativos y normativas estatutarias locales en múltiples jurisdicciones.
+              - listitem [ref=e193]: En controles internos, incluyendo su diseño, implementación y mejora continua, así como en entornos de manufactura y empresas comerciales.
+              - listitem [ref=e194]: En costeo estándar, costeo promedio, materia fiscal y precios de transferencia, y gestión de transacciones intercompañía (materiales, servicios, regalías, honorarios de gestión), asegurando correcta contabilización y cumplimiento normativo.
+              - listitem [ref=e195]: Asimismo, demuestra un buen entendimiento de los procesos de importación y exportación y su impacto financiero, contable y fiscal.
+              - listitem [ref=e196]: Experiencia previa en gestión y liderazgo de equipos.
+            - paragraph [ref=e197]
+            - paragraph [ref=e198]: Conocimientos Adicionales
+            - paragraph [ref=e199]
+            - list [ref=e200]:
+              - listitem [ref=e201]: Dominio de herramientas financieras y del paquete Microsoft Office, especialmente Excel y PowerPoint, aplicadas al análisis, presentación y toma de decisiones financieras.
+              - listitem [ref=e202]: Experiencia en sistemas ERP, preferentemente Microsoft Dynamics D365, así como en herramientas de análisis financiero.
+            - paragraph [ref=e203]: Contamos con paquete de compensación competitivo con el mercado.
+    - generic [ref=e205]:
+      - generic [ref=e206]:
+        - heading "About Us" [level=3] [ref=e207]
+        - img "Logo" [ref=e208]
+        - generic [ref=e210]:
+          - generic [ref=e212]:
+            - paragraph [ref=e213]:
+              - text: Griffith Foods is the caring, creative product development partner helping food companies meet the evolving needs of consumers while sustaining the planet. As a family business founded in 1919 and headquartered in Alsip, Illinois USA, Griffith Foods is known for true, collaborative innovation guided by their Purpose of “We Blend Care and Creativity to Nourish the World”. The company’s product capabilities range from seasonings and marinades to coating systems and sauces that are better for people and better for the planet. For more information, visit
+              - link [ref=e214] [cursor=pointer]:
+                - /url: https://www.griffithfoods.com
+                - text: www.griffithfoods.com
+              - text: .
+            - paragraph [ref=e215]
+          - button "Ler mais" [ref=e218] [cursor=pointer]:
+            - generic [ref=e219]: Ler mais
+      - generic [ref=e224]:
+        - heading "Introduce Yourself" [level=3] [ref=e225]
+        - generic [ref=e227]:
+          - paragraph [ref=e230]: Not finding the right fit? Let us know you're interested in a future opportunity by clicking Get Started below or create an account by clicking 'Sign In' at the top of the page to set up email alerts as new job postings become available that meet your interest!
+          - button "Ler mais" [ref=e233] [cursor=pointer]:
+            - generic [ref=e234]: Ler mais
+  - generic [ref=e238]:
+    - generic [ref=e239]: Siga-nos
+    - list [ref=e240]:
+      - listitem [ref=e241] [cursor=pointer]:
+        - link "LinkedIn" [ref=e242]:
+          - /url: https://www.linkedin.com/company/griffith-foods
+      - listitem [ref=e246] [cursor=pointer]:
+        - link "Glassdoor" [ref=e247]:
+          - /url: https://www.glassdoor.com/Overview/Working-at-Griffith-Foods-EI_IE8953.11,25.htm
+      - listitem [ref=e252] [cursor=pointer]:
+        - link "Facebook" [ref=e253]:
+          - /url: https://www.facebook.com/GriffithFoods/
+    - link "Política de privacidade" [ref=e258] [cursor=pointer]:
+      - /url: https://griffithfoods.com/privacy-policy/
+    - generic [ref=e259]:
+      - img [ref=e263]
+      - generic [ref=e283]: © 2026 Workday, Inc. Todos os direitos reservados.

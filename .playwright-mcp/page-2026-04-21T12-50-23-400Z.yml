@@ -1,0 +1,915 @@
+- generic [active] [ref=e1]:
+  - generic:
+    - region "Mensagem toast":
+      - heading "0 notificações no total" [level=2] [ref=e3]
+      - alert
+  - region [ref=e4]
+  - generic [ref=e296]:
+    - img [ref=e298]
+    - paragraph [ref=e302]:
+      - text: Ocorreu um erro ao processar seu pagamento.
+      - link "Atualize sua(s) forma(s) de pagamento" [ref=e303] [cursor=pointer]:
+        - /url: https://www.linkedin.com/manage/purchases-payments/purchases/485025203/payments?trk=global_alert
+      - text: .
+    - button "Fechar" [ref=e304] [cursor=pointer]:
+      - img [ref=e305]
+      - generic [ref=e307]: Fechar
+  - generic [ref=e5]:
+    - generic [ref=e7]:
+      - button "Pular para pesquisa" [ref=e8] [cursor=pointer]:
+        - generic [ref=e9]: Pular para pesquisa
+      - button "Pular para conteúdo principal" [ref=e10] [cursor=pointer]:
+        - generic [ref=e11]: Pular para conteúdo principal
+      - button "Atalhos do teclado" [ref=e12] [cursor=pointer]:
+        - generic [ref=e13]: Atalhos do teclado
+      - button "Fechar menu pular" [ref=e14] [cursor=pointer]:
+        - img [ref=e15]
+        - generic [ref=e17]: Fechar menu pular
+    - banner "Navegação geral" [ref=e18]:
+      - generic [ref=e19]:
+        - link "LinkedIn" [ref=e20] [cursor=pointer]:
+          - /url: https://www.linkedin.com/feed/?nis=true
+          - img "LinkedIn" [ref=e23]:
+            - img [ref=e24]
+        - generic [ref=e28]:
+          - combobox "Pesquisar" [ref=e29]
+          - generic:
+            - img
+        - navigation "Navegação principal" [ref=e30]:
+          - list [ref=e31]:
+            - listitem [ref=e32]:
+              - link "atualizações do feed novas notificações Início" [ref=e33] [cursor=pointer]:
+                - /url: https://www.linkedin.com/feed/?nis=true&
+                - generic [ref=e34]:
+                  - generic [ref=e37]: atualizações do feed novas notificações
+                  - img [ref=e41]
+                - generic "Início" [ref=e43]
+            - listitem [ref=e44]:
+              - link "2 atualizações de rede novas notificações Minha rede" [ref=e45] [cursor=pointer]:
+                - /url: https://www.linkedin.com/mynetwork/?
+                - generic [ref=e46]:
+                  - generic [ref=e47]:
+                    - generic [ref=e48]: "2"
+                    - generic [ref=e49]: 2 atualizações de rede novas notificações
+                  - img [ref=e53]
+                - generic "Minha rede" [ref=e55]
+            - listitem [ref=e56]:
+              - link "Vagas" [ref=e57] [cursor=pointer]:
+                - /url: https://www.linkedin.com/jobs/?
+                - img [ref=e61]
+                - generic "Vagas" [ref=e63]
+            - listitem [ref=e64]:
+              - link "Mensagens" [ref=e65] [cursor=pointer]:
+                - /url: https://www.linkedin.com/messaging/?
+                - img [ref=e69]
+                - generic "Mensagens" [ref=e71]
+            - listitem [ref=e72]:
+              - link "13 novas notificações Notificações" [ref=e73] [cursor=pointer]:
+                - /url: https://www.linkedin.com/notifications/?
+                - generic [ref=e74]:
+                  - generic [ref=e75]:
+                    - generic [ref=e76]: "13"
+                    - generic [ref=e77]: 13 novas notificações
+                  - img [ref=e81]
+                - generic "Notificações" [ref=e83]
+            - listitem [ref=e84]:
+              - button "Fernando Xavier Eu" [ref=e86] [cursor=pointer]:
+                - img "Fernando Xavier" [ref=e87]
+                - generic [ref=e88]:
+                  - text: Eu
+                  - img [ref=e89]
+            - listitem [ref=e91]:
+              - button "Para negócios" [ref=e93] [cursor=pointer]:
+                - img [ref=e97]
+                - generic "Para negócios" [ref=e99]:
+                  - text: Para negócios
+                  - img [ref=e100]
+            - listitem [ref=e102]:
+              - link "Veicular anúncio" [ref=e103] [cursor=pointer]:
+                - /url: https://www.linkedin.com/campaignmanager/accounts?
+                - img [ref=e107]
+                - generic "Veicular anúncio" [ref=e110]
+    - generic [ref=e111]:
+      - generic [ref=e114]:
+        - main [ref=e115]:
+          - generic [ref=e118]:
+            - generic [ref=e122]:
+              - generic [ref=e123]:
+                - generic [ref=e124]:
+                  - link "Logo da empresa Trivium Packaging" [ref=e125] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/company/trivium-packaging/life
+                    - img "Logo da empresa Trivium Packaging" [ref=e128]
+                  - link "Trivium Packaging" [ref=e308] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/company/trivium-packaging/life
+                - generic [ref=e131]:
+                  - button "Compartilhar" [ref=e134] [cursor=pointer]:
+                    - img [ref=e135]
+                    - generic [ref=e137]: Compartilhar
+                  - button "Exibir mais opções" [ref=e139] [cursor=pointer]:
+                    - img [ref=e140]
+                    - generic [ref=e142]: Exibir mais opções
+              - generic [ref=e144]:
+                - heading "Finance Manager" [level=1] [ref=e145]
+                - button "Ver módulo de contratação verificada" [ref=e147] [cursor=pointer]:
+                  - img [ref=e150]
+              - generic [ref=e154]:
+                - generic [ref=e309]: Itupeva, São Paulo, Brasil
+                - generic [ref=e310]: ·
+                - generic [ref=e312]: há 1 semana
+                - generic [ref=e313]: ·
+                - generic [ref=e314]: Mais de 100 pessoas clicaram em Candidatar-se
+                - paragraph [ref=e315]:
+                  - generic [ref=e316]: Promovida por recrutador
+                  - generic [ref=e317]: ·
+                  - generic [ref=e318]: Respostas gerenciadas fora do LinkedIn
+              - generic [ref=e165]:
+                - button "Corresponde às suas preferências de vaga e o tipo de local de trabalho é Presencial." [ref=e319] [cursor=pointer]:
+                  - strong [ref=e322]:
+                    - img [ref=e324]
+                    - text: Presencial
+                  - generic [ref=e326]: Corresponde às suas preferências de vaga e o tipo de local de trabalho é Presencial.
+                - button "Corresponde às suas preferências de vaga e o tipo de vaga é Tempo integral." [ref=e327] [cursor=pointer]:
+                  - strong [ref=e330]:
+                    - img [ref=e332]
+                    - text: Tempo integral
+                  - generic [ref=e334]: Corresponde às suas preferências de vaga e o tipo de vaga é Tempo integral.
+              - generic [ref=e183]:
+                - link "Candidatar-se à vaga de Finance Manager no site da empresa" [ref=e186] [cursor=pointer]:
+                  - img [ref=e187]
+                  - generic [ref=e189]: Candidatar-se
+                - button "Salvar Finance Manager na Trivium Packaging" [ref=e335] [cursor=pointer]:
+                  - generic [ref=e336]: Salvar
+                  - generic [ref=e337]: Salvar Finance Manager na Trivium Packaging
+            - generic [ref=e193]:
+              - heading "Pessoas que você pode contatar" [level=2] [ref=e338]
+              - generic [ref=e341]:
+                - generic [ref=e342]:
+                  - generic [ref=e343]:
+                    - list [ref=e344]:
+                      - listitem [ref=e345]:
+                        - img "Logo de Fundação Getulio Vargas" [ref=e347]
+                    - generic [ref=e348]: Logo de Fundação Getulio Vargas
+                  - generic [ref=e349]: Ex-alunos da instituição de ensino Fundação Getulio Vargas
+                - button "Exibir todos" [ref=e350] [cursor=pointer]:
+                  - generic [ref=e351]: Exibir todos
+            - generic [ref=e202]:
+              - article [ref=e203]:
+                - generic [ref=e205]:
+                  - heading "Sobre a vaga" [level=2] [ref=e206]
+                  - paragraph [ref=e353]:
+                    - text: Trivium Packaging is a global sustainability leader in metal packaging with more than 60 locations worldwide, nearly 8,000 employees, and an annual revenue of approximately €3.0 billion. Trivium serves a diverse range of customers in a variety of end markets such as food, seafood, pet food, nutrition, beauty and personal care, household care, and premium beverages.
+                    - text: Trivium wants to shape the industry and has embarked on an ambitious transformation journey. In the near term, focus is on building & upskilling the team, deciding where to play & how to win, and increasing financial performance by executing the Trivium Business System (commercial, operational, and supply chain excellence). Sustainability is embedded in our materials and in our actions. Trivium has ambitious sustainability targets and focuses exclusively on products that are infinitely recyclable. Our company Sustainability Journey has been awarded a Platinum medal by EcoVadis, the world’s leading rating agent who allocated this award only to the top 1% of the >75000 companies reviewed. Sustainability is embedded in each and every function at Trivium, it‘s in our DNA. The global head office is at Amsterdam Airport; however, many people work in virtual teams from different countries. Our culture is results-driven, entrepreneurial, informal, and highly multicultural. Our people have a high degree of responsibility.
+                    - strong [ref=e355]: Job Summary
+                    - list [ref=e357]:
+                      - listitem [ref=e358]: Deliver reliable, timely and accurate month end reporting.
+                      - listitem [ref=e359]: Ensure accurate and up to date costing is applied in the plant. Develop plan to implement standard costing.
+                      - listitem [ref=e360]: Timely deliver, review and comment reporting on a monthly basis to senior management (OCF, EBITDA, Conversion Costs, etc.).
+                      - listitem [ref=e361]: Assist in making and challenging Capex Projects in terms of comments, quotations, IRR and payback calculations. Follow up on approved Capex Projects.
+                      - listitem [ref=e362]: Actively support continuous business improvement request at plant level and BU level.
+                      - listitem [ref=e363]: Have full ownership on plant figures, both P&L and relevant Balance Sheet items.
+                      - listitem [ref=e364]: Lead Internal Controls process.
+                      - listitem [ref=e365]: Ensure full local tax compliance.
+                    - strong [ref=e367]: Qualifications
+                    - list [ref=e369]:
+                      - listitem [ref=e370]: Bachelor’s degree in Business/Finance or related field;
+                      - listitem [ref=e371]: Proficiency in Microsoft Office and ERP system;
+                      - listitem [ref=e372]: Advanced English language skills;
+                      - listitem [ref=e373]: Desirable basic Spanish language skills;
+                      - listitem [ref=e374]: Understanding of local tax legislation.
+                      - listitem [ref=e375]: Project management experience;
+                      - listitem [ref=e376]: Experience with SOX requirements.
+                    - strong [ref=e378]: Skills
+                    - list [ref=e380]:
+                      - listitem [ref=e381]: Demonstrate strong analytical skills, with a keen eye for detail and the ability to derive actionable insights from complex data.
+                      - listitem [ref=e382]: Take initiative in driving change and managing challenges, maintaining composure under pressure.
+                      - listitem [ref=e383]: Communicate effectively across all levels of the organization, influencing stakeholders and fostering collaboration.
+                      - listitem [ref=e384]: Exhibit a drive to continuously improve and achieve results, challenging the status quo and working collaboratively to drive success.
+                      - listitem [ref=e385]: Collaborate effectively within work groups and cross-functional teams, fostering a culture of teamwork and mutual support.
+                      - listitem [ref=e386]: Maintain a strong awareness of safety and responsibility, prioritizing the well-being of our team members and the community.
+                    - strong [ref=e388]: BRINGING YOUR TRUE SELF TO WORK
+                    - text: At Trivium, we believe that people perform at their best when they can bring their true selves to work. That’s why we hire diverse talent at every level and are proud to be an equal opportunity employer. We welcome colleagues of every background, identity and perspective, because our people like our customers come from all over the world. Creating an environment where everyone feels respected, supported and able to thrive isn’t just the right thing to do; it’s business critical. When our people belong, they deliver their best work, and together we achieve more.
+              - button "Clicar para ver mais detalhes" [ref=e208] [cursor=pointer]:
+                - img [ref=e209]
+                - generic [ref=e211]: Ver mais
+            - generic [ref=e213]:
+              - generic [ref=e214]:
+                - heading "Configurar alerta para vagas semelhantes" [level=2] [ref=e215]
+                - generic [ref=e217]: Gerente de finanças, Itupeva, São Paulo, Brasil
+              - generic [ref=e219] [cursor=pointer]:
+                - generic [ref=e220]: Desativada
+                - generic [ref=e221]: Configurar alerta
+                - switch "Configurar alerta"
+            - generic [ref=e389]:
+              - button "Fechar cartão promocional de serviços" [ref=e390] [cursor=pointer]:
+                - img [ref=e391]
+                - generic [ref=e393]: Fechar cartão promocional de serviços
+              - generic [ref=e395]:
+                - heading "Veja uma seleção de ferramentas de IA para sua pesquisa de vagas" [level=2] [ref=e396]
+                - paragraph [ref=e397]: Receba uma oferta de emprego mais rápido com a ajuda de ferramentas de IA criadas por empresas certificadas, como Kickresume, Exponent Interview Prep e muito mais.
+                - link "Começar" [ref=e398] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/ai-tools/?sectionType=career-coaching
+                  - generic [ref=e399]: Começar
+            - generic [ref=e400]:
+              - generic [ref=e401]:
+                - generic [ref=e402]:
+                  - img "Premium" [ref=e404]:
+                    - img [ref=e405]
+                  - button "Saiba mais sobre estatísticas sobre candidatos" [ref=e408] [cursor=pointer]:
+                    - img [ref=e409]
+                - heading "Veja como sua candidatura se compara à de outras pessoas" [level=2] [ref=e411]
+                - generic [ref=e413]:
+                  - heading "Pessoas que clicaram em Candidate-se" [level=3] [ref=e414]
+                  - list [ref=e415]:
+                    - listitem [ref=e416]:
+                      - generic [ref=e417]: "139"
+                      - generic [ref=e418]: no total
+                    - listitem [ref=e419]:
+                      - generic [ref=e420]: "12"
+                      - generic [ref=e421]: no último dia
+                - generic [ref=e422]:
+                  - generic [ref=e423]:
+                    - heading "Nível de experiência do candidato" [level=3] [ref=e424]
+                    - list [ref=e425]:
+                      - listitem [ref=e426]:
+                        - paragraph [ref=e427]: 45% de candidatos com nível Sênior
+                        - progressbar [ref=e428]
+                      - listitem [ref=e429]:
+                        - paragraph [ref=e430]: 24% de candidatos com nível Diretor
+                        - progressbar [ref=e431]
+                      - listitem [ref=e432]:
+                        - paragraph [ref=e433]: 19% de candidatos com nível Gerente
+                        - progressbar [ref=e434]
+                      - listitem [ref=e435]:
+                        - paragraph [ref=e436]: 7% de candidatos com nível Iniciante
+                        - progressbar [ref=e437]
+                  - generic [ref=e438]:
+                    - heading "Nível de formação acadêmica do candidato" [level=3] [ref=e439]
+                    - list [ref=e440]:
+                      - listitem [ref=e441]:
+                        - generic [ref=e442]: 72%
+                        - generic [ref=e443]: tem Pós-graduação Lato Sensu - MBA (semelhante ao seu)
+                      - listitem [ref=e444]:
+                        - generic [ref=e445]: 9%
+                        - generic [ref=e446]: tem Pós-graduação
+                      - listitem [ref=e447]:
+                        - generic [ref=e448]: 6%
+                        - generic [ref=e449]: tem Bacharelado
+                      - listitem [ref=e450]:
+                        - generic [ref=e451]: 13%
+                        - generic [ref=e452]: tem outros diplomas
+              - generic [ref=e453]:
+                - generic [ref=e454]:
+                  - img "Premium" [ref=e455]:
+                    - img [ref=e456]
+                  - button "Saiba mais sobre estatísticas sobre empresas" [ref=e459] [cursor=pointer]:
+                    - img "Saiba mais sobre estatísticas sobre empresas" [ref=e460]
+                - heading "Estatísticas exclusivas de pessoas à procura de emprego sobre a Trivium Packaging" [level=2] [ref=e462]
+                - heading "Com tecnologia do Bing" [level=3] [ref=e463]
+                - generic [ref=e464]:
+                  - generic [ref=e465]:
+                    - heading "Áreas de foco da empresa" [level=3] [ref=e466]
+                    - generic [ref=e468]:
+                      - list [ref=e469]:
+                        - listitem [ref=e470]:
+                          - strong [ref=e471]: "Decarbonisation and Sustainability:"
+                          - text: Trivium Packaging is focused on reducing its carbon footprint, achieving significant CO2 emission reductions at its Sutton-in-Ashfield plant and setting long-term greenhouse gas reduction goals consistent with a 1.5°C pathway.
+                        - listitem [ref=e472]:
+                          - strong [ref=e473]: "Net-Zero Emissions Target:"
+                          - text: The company has set a net-zero emissions target approved by the Science Based Targets initiative, aiming to reach net-zero emissions by 2050 at the latest.
+                      - button "exibir mais revela visualmente conteúdos que já foram detectados por leitores de tela" [ref=e474] [cursor=pointer]:
+                        - generic [ref=e475]: exibir mais
+                  - generic [ref=e476]:
+                    - generic [ref=e478]: "Fontes: packworld.com mais 1"
+                    - generic [ref=e480]:
+                      - button "Marcar feedback como bom" [ref=e481] [cursor=pointer]:
+                        - img [ref=e482]
+                      - button "Marcar feedback como ruim" [ref=e485] [cursor=pointer]:
+                        - img [ref=e486]
+                - generic [ref=e489]:
+                  - generic [ref=e490]:
+                    - heading "Contratações e número de funcionários" [level=3] [ref=e491]
+                    - paragraph [ref=e492]:
+                      - generic [ref=e493]:
+                        - text: "Focus on Operations: The 'Operations' department has seen a 1% increase in headcount, indicating a steady investment in operational efficiency and capacity, which could suggest opportunities for growth in operational tools and services. Growth in Quality Assurance and Customer Support: The 'Quality Assurance' and 'Customer Success and Support' departments have increased by 9%, highlighting a focus on product quality and customer satisfaction, which may require enhanced quality control systems and customer support solutions. Decline in Finance and Marketing: The 'Finance' and 'Marketing' departments have decreased by 9% and 18% respectively, suggesting a potential shift in strategic priorities away from these areas, which could impact financial and marketing service needs. Stable Engineering and IT: The 'Engineering' and 'Information Technology' departments have seen slight decreases of 1% and 3%, respectively, indicating a relatively stable but cautious approach to technological and engineering investments, which might still present opportunities for incremental improvements in these areas."
+                        - generic [ref=e494]:
+                          - generic [ref=e495]: …
+                          - button "Exibir mais sobre Contratações e número de funcionários" [ref=e496] [cursor=pointer]: exibir mais
+                  - generic [ref=e498]:
+                    - button "Marcar feedback como bom" [ref=e499] [cursor=pointer]:
+                      - img [ref=e500]
+                    - button "Marcar feedback como ruim" [ref=e503] [cursor=pointer]:
+                      - img [ref=e504]
+                - generic [ref=e507]:
+                  - heading "Última tendência de contratação" [level=3] [ref=e508]
+                  - generic [ref=e509]:
+                    - list [ref=e510]:
+                      - listitem [ref=e511]:
+                        - paragraph [ref=e512]: "2.817"
+                        - paragraph [ref=e513]: funcionários no total
+                      - listitem [ref=e514]:
+                        - paragraph [ref=e515]: 7%
+                        - paragraph [ref=e517]: toda a empresa
+                        - paragraph [ref=e518]: Crescimento em 2 anos
+                        - generic [ref=e519]: 7% de aumento
+                      - listitem [ref=e520]:
+                        - paragraph [ref=e521]: 0%
+                        - paragraph [ref=e523]: Financeiro
+                        - paragraph [ref=e524]: Crescimento em 2 anos
+                        - generic [ref=e525]: Nenhuma alteração
+                    - region "Chart. Highcharts interactive chart." [ref=e528]:
+                      - region "Chart screen reader information.":
+                        - generic [ref=e529]:
+                          - heading "Chart" [level=4] [ref=e530]
+                          - generic [ref=e531]: Chart with 25 data points.
+                          - generic [ref=e532]: "The chart has 1 X axis displaying Time. Range: 2023-12-13 12:00:00 to 2026-05-07 12:00:00."
+                          - generic [ref=e533]: "The chart has 1 Y axis displaying values. Range: 0 to 3000."
+                      - img "Interactive chart" [ref=e538]:
+                        - generic [ref=e550]:
+                          - img "1. April 2024, 2.624 funcionários" [ref=e551]
+                          - img "2. May 2024, 2.647 funcionários, increase 1% do mês passado" [ref=e552]
+                          - img "3. June 2024, 2.689 funcionários, increase 2% do mês passado" [ref=e553]
+                          - img "4. July 2024, 2.697 funcionários, neutral 0% do mês passado" [ref=e554]
+                          - img "5. August 2024, 2.713 funcionários, increase 1% do mês passado" [ref=e555]
+                          - img "6. September 2024, 2.745 funcionários, increase 1% do mês passado" [ref=e556]
+                          - img "7. October 2024, 2.748 funcionários, neutral 0% do mês passado" [ref=e557]
+                          - img "8. November 2024, 2.756 funcionários, neutral 0% do mês passado" [ref=e558]
+                          - img "9. December 2024, 2.738 funcionários, decrease 1% do mês passado" [ref=e559]
+                          - img "10. January 2025, 2.749 funcionários, neutral 0% do mês passado" [ref=e560]
+                          - img "11. February 2025, 2.770 funcionários, increase 1% do mês passado" [ref=e561]
+                          - img "12. March 2025, 2.789 funcionários, increase 1% do mês passado" [ref=e562]
+                          - img "13. April 2025, 2.787 funcionários, neutral 0% do mês passado" [ref=e563]
+                          - img "14. May 2025, 2.792 funcionários, neutral 0% do mês passado" [ref=e564]
+                          - img "15. June 2025, 2.791 funcionários, neutral 0% do mês passado" [ref=e565]
+                          - img "16. July 2025, 2.796 funcionários, neutral 0% do mês passado" [ref=e566]
+                          - img "17. August 2025, 2.805 funcionários, neutral 0% do mês passado" [ref=e567]
+                          - img "18. September 2025, 2.787 funcionários, decrease 1% do mês passado" [ref=e568]
+                          - img "19. October 2025, 2.800 funcionários, neutral 0% do mês passado" [ref=e569]
+                          - img "20. November 2025, 2.806 funcionários, neutral 0% do mês passado" [ref=e570]
+                          - img "21. December 2025, 2.793 funcionários, neutral 0% do mês passado" [ref=e571]
+                          - img "22. January 2026, 2.803 funcionários, neutral 0% do mês passado" [ref=e572]
+                          - img "23. February 2026, 2.805 funcionários, neutral 0% do mês passado" [ref=e573]
+                          - img "24. March 2026, 2.807 funcionários, neutral 0% do mês passado" [ref=e574]
+                          - img "25. April 2026, 2.817 funcionários, neutral 0% do mês passado" [ref=e575]
+                        - generic [ref=e576]:
+                          - generic [ref=e577]: abr. de 2024
+                          - generic [ref=e578]: out. de 2024
+                          - generic [ref=e579]: abr. de 2025
+                          - generic [ref=e580]: out. de 2025
+                          - generic [ref=e581]: abr. de 2026
+                        - generic [ref=e582]:
+                          - generic [ref=e583]: "0"
+                          - generic [ref=e584]: "1.000"
+                          - generic [ref=e585]: "2.000"
+                          - generic [ref=e586]: "3.000"
+                      - generic [ref=e588]: End of interactive chart.
+                    - generic [ref=e589]:
+                      - img [ref=e590]
+                      - text: Tempo médio do funcionário na empresa ‧
+                      - strong [ref=e593]: 4 anos
+                - generic [ref=e594]:
+                  - heading "A empresa Trivium Packaging contrata pessoas de algumas dessas empresas e instituições de ensino" [level=3] [ref=e595]
+                  - list [ref=e597]:
+                    - listitem [ref=e598]:
+                      - generic [ref=e599]:
+                        - figure [ref=e600]:
+                          - img "Fundação Getulio Vargas" [ref=e601]
+                        - paragraph [ref=e602]:
+                          - text: A Trivium Packaging contratou 16 pessoas de Fundação Getulio Vargas.
+                          - link "Ver todas" [ref=e603] [cursor=pointer]:
+                            - /url: https://www.linkedin.com/search/results/people/?origin=JOB_PAGE_CANNED_SEARCH&currentCompany=20078437&schoolFilter=8175
+                            - strong [ref=e604]: Ver todas
+                - generic [ref=e605]:
+                  - generic [ref=e606]:
+                    - heading "Concorrência" [level=3] [ref=e607]
+                    - paragraph [ref=e608]:
+                      - generic [ref=e609]:
+                        - text: Trivium Packaging B.V operates in a highly competitive metal packaging industry, focusing on sustainability and innovation. The company is recognized for its commitment to environmental goals, having been placed on the CDP Climate 'A' List for three consecutive years. Trivium faces significant competition from major players like Ball Corporation, Crown Holdings Inc., and Ardagh Metal Packaging, all of which are investing in advanced technologies and sustainable practices to meet evolving market demands.
+                        - generic [ref=e610]:
+                          - generic [ref=e611]: …
+                          - button "Exibir mais sobre Concorrência" [ref=e612] [cursor=pointer]: exibir mais
+                    - generic [ref=e613]:
+                      - link "Ardagh Metal Packaging" [ref=e615] [cursor=pointer]:
+                        - /url: https://www.linkedin.com/company/ardagh-metal-packaging/
+                        - generic "Ardagh Metal Packaging" [ref=e618]
+                      - link "Crown Holdings, Inc." [ref=e621] [cursor=pointer]:
+                        - /url: https://www.linkedin.com/company/crown-holdings-inc-/
+                        - generic "Crown Holdings, Inc." [ref=e624]
+                      - link "Ball Corporation" [ref=e627] [cursor=pointer]:
+                        - /url: https://www.linkedin.com/company/ballcorporation/
+                        - generic "Ball Corporation" [ref=e630]
+                  - generic [ref=e632]:
+                    - generic [ref=e634]: "Fontes: clodura.ai mais 3"
+                    - generic [ref=e636]:
+                      - button "Marcar feedback como bom" [ref=e637] [cursor=pointer]:
+                        - img [ref=e638]
+                      - button "Marcar feedback como ruim" [ref=e641] [cursor=pointer]:
+                        - img [ref=e642]
+                - link "Exibir mais estatísticas Premium" [ref=e645] [cursor=pointer]:
+                  - /url: /company/trivium-packaging/insights/?insightType=HEADCOUNT
+            - generic [ref=e647]:
+              - generic [ref=e648]:
+                - heading "Sobre a empresa" [level=2] [ref=e649]
+                - generic [ref=e650]:
+                  - generic [ref=e651]:
+                    - link "Logo da empresa Trivium Packaging" [ref=e653] [cursor=pointer]:
+                      - /url: /company/trivium-packaging/life/
+                      - img "Logo da empresa Trivium Packaging" [ref=e654]
+                    - generic [ref=e655]:
+                      - link "Trivium Packaging" [ref=e657] [cursor=pointer]:
+                        - /url: /company/trivium-packaging/life/
+                      - generic [ref=e658]: 47.624 seguidores
+                  - button "Seguir" [ref=e659] [cursor=pointer]:
+                    - img [ref=e660]
+                    - generic [ref=e662]: Seguir
+                - generic [ref=e663]:
+                  - text: Fabricação de Embalagens e Recipientes
+                  - generic [ref=e664]: • 5.001-10.000 funcionários
+                  - generic [ref=e665]: • 2.817 no LinkedIn
+                - paragraph [ref=e666]:
+                  - generic [ref=e667]: Trivium Packaging is a leading global company providing high quality and infinitely recyclable metal packaging.
+                - generic [ref=e668]:
+                  - generic [ref=e669]:
+                    - heading "Compromissos" [level=3] [ref=e670]
+                    - button "Saiba mais sobre compromissos da empresa" [ref=e672] [cursor=pointer]:
+                      - img [ref=e673]
+                  - generic [ref=e676]:
+                    - heading "Sustentabilidade ambiental" [level=4] [ref=e678]
+                    - generic [ref=e679]:
+                      - text: "'Circularity Champion' is our overarching strategy to transform Trivium into the partner of choice for quality and sustainable packaging. Launched in 2020, our strategy consists of three pillars that reflect our organisational priorities: customer, planet and people. Within each of our three pillars, we have identified priority areas based on a materiality assessment. These areas are aligned with the UN SDGs that we feel are most relevant to our business and are further associated with concrete key performance indicators (KPIs) and targets that we aim to achieve by or before 2030."
+                      - generic [ref=e680]:
+                        - generic [ref=e681]: …
+                        - button "Exibir mais Sustentabilidade ambiental" [ref=e682] [cursor=pointer]: Exibir mais
+                  - link "Saiba mais sobre compromissos da empresa" [ref=e683] [cursor=pointer]:
+                    - /url: /company/trivium-packaging/about/?scrollTo=commitments
+                    - text: Saiba mais
+              - link "Exibir mais sobre a empresa" [ref=e685] [cursor=pointer]:
+                - /url: /company/trivium-packaging/life/
+                - text: Exibir mais
+            - heading "Mais vagas" [level=2] [ref=e687]
+            - list [ref=e689]:
+              - listitem [ref=e690]:
+                - link "Logo da empresa Binance Finance Manager - LATAM with verification Binance São Paulo, São Paulo, Brasil (Remoto) 20 ex-alunos da Fundação Getulio Vargas trabalham aqui Há 5 dias Candidatura simplificada" [ref=e692] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4401496544&referenceJobId=4397260487&originToLandingJobPostings=4401496544&trackingId=OOlsD5%2BytdQNcorOAMrAQw%3D%3D&refId=noAFdVzwRxfjhihPKlhv%2BA%3D%3D&eBP=CwEAAAGdsBcdYqHE85DcZRV6XWp40OM-yYEm1nSueojKMjxDA3RiCpux3YnIkDdpcHm6tu3ezrdoVg_5ZgeaAtPCIDvGgSGA_dGnTUfCrgrINRbUx8CeFYQXs3WDtTKzC1xxMQJXW5mkXU-GzE0ppvqGwZnR0J5F6YFi1nH7PUjVW1INDuVjlht371QEV7-dXIV8Dlv59g_c0AtwFyxMrZLhaS6L1kR8vLNrQvvQDqLaAAEKfF2BbRK6QWPhWnZ6HANMZF2SOZigpCzJFxOdl-DZ3abkJ9Rz0e_eG27-lI5j8pIO80nGEsRE43PbLK5xZHagxfppgUXlCFzekkCJ6j13Gwn1uCliIq5je39mHVTlV2kBeCL62cyPQsBo77u_k4QBIcgQL9atszeI4O_3Gkf_0mrjf2o9nMlrqn2MWJKh0zzkOkxu8CC6shTWRHYsDm81lMZ3OQSOYLLDOSzjR61DGmgP39-3o3XlWLpKJoyW4G5GeIp6IRU
+                  - generic [ref=e694]:
+                    - img "Logo da empresa Binance" [ref=e699]
+                    - generic [ref=e700]:
+                      - generic [ref=e701]:
+                        - generic [ref=e702]:
+                          - generic [ref=e703]:
+                            - strong [ref=e704]: Finance Manager - LATAM
+                            - img [ref=e706]
+                          - generic [ref=e708]: Finance Manager - LATAM with verification
+                        - generic [ref=e710]: Binance
+                        - generic [ref=e712]: São Paulo, São Paulo, Brasil (Remoto)
+                        - list [ref=e714]:
+                          - listitem [ref=e715]:
+                            - generic [ref=e718]:
+                              - generic [ref=e719]: 20 ex-alunos trabalham aqui
+                              - generic [ref=e720]: 20 ex-alunos da Fundação Getulio Vargas trabalham aqui
+                      - list [ref=e722]:
+                        - listitem [ref=e723]:
+                          - time [ref=e724]: Há 5 dias
+                        - listitem [ref=e725]:
+                          - img [ref=e726]:
+                            - img [ref=e727]
+                          - generic [ref=e729]: Candidatura simplificada
+              - listitem [ref=e730]:
+                - link "Logo da empresa Unlimitail Finance Manager Unlimitail São Paulo, São Paulo, Brasil (Híbrido) Avaliando candidaturas Avaliando candidaturas Há 3 dias Candidatura simplificada" [ref=e732] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4402704487&referenceJobId=4397260487&originToLandingJobPostings=4402704487&trackingId=ba9qa1A7sMWX4%2Btne8btjg%3D%3D&refId=noAFdVzwRxfjhihPKlhv%2BA%3D%3D&eBP=CwEAAAGdsBcdYjtv3Tn7YhLHCccC7uDCrJHF9PbVkwqCHGmWROnyh4TDo2Y-hBMqDj5HCAgPWP20eByc3XwSFWem5619fM1LRSeMQfFigah5rw1kfRtYoBI_XnA5Ix79D7WWH8Hpn96PJZpA1l1w279viqSFO-hNYdFBI7jIZ_uU01esKKGquSBKhV6UkmzvKU4sP8xlWhaL5QWtELktncOjd5P0Aps_Y5PtHoznXYOOJG68jM6k50MIjdHFeTWMCVIBcQyQWFOnAbS2JaD0w675uSdCNV5ZLfk6c0tNKy9zJCLD2aEcEDI2aITqAYZFPiHl71K4-NcUlHxhRJpfRVhfPnygOb_BqAWnvukvRg9RWPPjVV-_hOAS46TQ_bAJppC7HQdu8i0xjeUjFIJhUinRr6HTmh6EE3wiU2DJaWHbvNxCW6gPqmkUNQp0Ar1RlgDPd4BGvM_1VFWwLw8cQoRlVqnQAwCydjPl5D48fa5COSqs9Z_tIzxusPJ8LB7Dd8eEq6no
+                  - generic [ref=e734]:
+                    - img "Logo da empresa Unlimitail" [ref=e739]
+                    - generic [ref=e740]:
+                      - generic [ref=e741]:
+                        - generic [ref=e742]:
+                          - strong [ref=e744]: Finance Manager
+                          - generic [ref=e745]: Finance Manager
+                        - generic [ref=e747]: Unlimitail
+                        - generic [ref=e749]: São Paulo, São Paulo, Brasil (Híbrido)
+                        - list [ref=e751]:
+                          - listitem [ref=e752]:
+                            - img "Avaliando candidaturas" [ref=e755]
+                            - generic [ref=e757]: Avaliando candidaturas
+                      - list [ref=e759]:
+                        - listitem [ref=e760]:
+                          - time [ref=e761]: Há 3 dias
+                        - listitem [ref=e762]:
+                          - img [ref=e763]:
+                            - img [ref=e764]
+                          - generic [ref=e766]: Candidatura simplificada
+              - listitem [ref=e767]:
+                - link "Logo da empresa Empresa Confidencial Gerente de finanças Empresa Confidencial São Paulo, São Paulo, Brasil (Presencial) Avaliando candidaturas Avaliando candidaturas Há 2 semanas Candidatura simplificada" [ref=e769] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4398065607&referenceJobId=4397260487&originToLandingJobPostings=4398065607&trackingId=QAw2kSkk9%2FTQ%2B9XMgJVoUg%3D%3D&refId=noAFdVzwRxfjhihPKlhv%2BA%3D%3D&eBP=BUDGET_EXHAUSTED_JOB
+                  - generic [ref=e771]:
+                    - img "Logo da empresa Empresa Confidencial" [ref=e776]
+                    - generic [ref=e777]:
+                      - generic [ref=e778]:
+                        - generic [ref=e779]:
+                          - strong [ref=e781]: Gerente de finanças
+                          - generic [ref=e782]: Gerente de finanças
+                        - generic [ref=e784]: Empresa Confidencial
+                        - generic [ref=e786]: São Paulo, São Paulo, Brasil (Presencial)
+                        - list [ref=e788]:
+                          - listitem [ref=e789]:
+                            - img "Avaliando candidaturas" [ref=e792]
+                            - generic [ref=e794]: Avaliando candidaturas
+                      - list [ref=e796]:
+                        - listitem [ref=e797]:
+                          - time [ref=e798]: Há 2 semanas
+                        - listitem [ref=e799]:
+                          - img [ref=e800]:
+                            - img [ref=e801]
+                          - generic [ref=e803]: Candidatura simplificada
+              - listitem [ref=e804]:
+                - link "Logo da empresa Edelman Gerente Financeiro Sênior with verification Edelman São Paulo, São Paulo, Brasil (Híbrido) 6 ex-alunos da Fundação Getulio Vargas trabalham aqui Há 2 semanas" [ref=e806] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4394931882&referenceJobId=4397260487&originToLandingJobPostings=4394931882&trackingId=HHlXrZejHCODIMMLytHCLg%3D%3D&refId=noAFdVzwRxfjhihPKlhv%2BA%3D%3D&eBP=CwEAAAGdsBcdYtgY-xgZDPfB67OnpJ2oeIhtGkxE-uWVMRe3er9swLit5QPo4WuTJEiINmcHnkBchzBY2bxdYGJZZUM9_mS4Zv1-7lGgMuzOanufVw1yZg8vvrZlAg_PqNAmfTWK2v49oJFFDg3TxpCvUf-ze_MQYR_pbHbWEE7jPwZ24yOqfz_eVeZ39GlaoPBxbSDcK0Qu4SysNPZXOGJl9_7xB05cpws6I1ffxwj9RoIdSj63YoxuNrpHngSd6YCB-C8ERrBXKWv25z9J8ftpBrycywLwaq_qKfXGqZ-SvBmk6j1sJAta7gGY67kl9gLrRn0aMafY2fugPxr9ExWwLyDofVIAE73RnhWqP--_RRbbTTIXXOKKi9nlQRsEzgNtd5iAD9UPzyfY3ZNy2RjeG5Zy2wg34ed-8nmeCAQnx3PDLd49j7G6S7SCZJr5182Dge_9fZSjbBsQOGIKY-XrnBe6HE0gXGo7UA
+                  - generic [ref=e808]:
+                    - img "Logo da empresa Edelman" [ref=e813]
+                    - generic [ref=e814]:
+                      - generic [ref=e815]:
+                        - generic [ref=e816]:
+                          - generic [ref=e817]:
+                            - strong [ref=e818]: Gerente Financeiro Sênior
+                            - img [ref=e820]
+                          - generic [ref=e822]: Gerente Financeiro Sênior with verification
+                        - generic [ref=e824]: Edelman
+                        - generic [ref=e826]: São Paulo, São Paulo, Brasil (Híbrido)
+                        - list [ref=e828]:
+                          - listitem [ref=e829]:
+                            - generic [ref=e832]:
+                              - generic [ref=e833]: 6 ex-alunos trabalham aqui
+                              - generic [ref=e834]: 6 ex-alunos da Fundação Getulio Vargas trabalham aqui
+                      - list [ref=e836]:
+                        - listitem [ref=e837]:
+                          - time [ref=e838]: Há 2 semanas
+              - listitem [ref=e839]:
+                - link "Logo da empresa Bybit Finance Manager with verification Bybit Brasil (Remoto) Avaliando candidaturas Avaliando candidaturas Há 6 dias Candidatura simplificada" [ref=e841] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4394472162&referenceJobId=4397260487&originToLandingJobPostings=4394472162&trackingId=cZDo3hjCQ7PvXmqUPxSt3w%3D%3D&refId=noAFdVzwRxfjhihPKlhv%2BA%3D%3D&eBP=CwEAAAGdsBcdYonS71s4HF1GZ3xufWw8LwyID7Pe0hxQdygxFfDqjBAUO6nv4X_1s48PoRvr1JcYY9kM8OVVUzHqeIZKB2VKRCHfpTPA1hqOAeX6kSH-EjbGzEphKoG9Knb_U0biEPdVtctJQlqViqCDqQERsvog-_xJynEXy_22K5E0ZJ6i3IOXb7W2xFoaEI4seLfG5R_CIv1V6FkHd5MtraY_haIFW2f-GhkstoHeS4TJr_CRTZT9GFZt5Jh1Zo-N0xH0GLrcbWMzlFnPel7q5J2SsSzIoitwwwSgUiua0UqxZcT7U_OLzXVgDLeH1kuMRAGFQhKaYgjSQx_2c2pxcPRO_fyAo_j5mJT3brqa1Vba9TDQnCra5YCuARUCxAKxWrWPFLFHpQhEpOnTencmesc9xGcFoUp84vFF1boHtY8Zz3POpQu47pLuBsCP5kmgdmJlbO5myM2e9xAIePrTHABxaeNv6q9vg4CtiEJlT9gPjIC1APf-wg
+                  - generic [ref=e843]:
+                    - img "Logo da empresa Bybit" [ref=e848]
+                    - generic [ref=e849]:
+                      - generic [ref=e850]:
+                        - generic [ref=e851]:
+                          - generic [ref=e852]:
+                            - strong [ref=e853]: Finance Manager
+                            - img [ref=e855]
+                          - generic [ref=e857]: Finance Manager with verification
+                        - generic [ref=e859]: Bybit
+                        - generic [ref=e861]: Brasil (Remoto)
+                        - list [ref=e863]:
+                          - listitem [ref=e864]:
+                            - img "Avaliando candidaturas" [ref=e867]
+                            - generic [ref=e869]: Avaliando candidaturas
+                      - list [ref=e871]:
+                        - listitem [ref=e872]:
+                          - time [ref=e873]: Há 6 dias
+                        - listitem [ref=e874]:
+                          - img [ref=e875]:
+                            - img [ref=e876]
+                          - generic [ref=e878]: Candidatura simplificada
+              - listitem [ref=e879]:
+                - link "Logo da empresa Revolut Finance Manager (Financial Control) with verification Revolut Brasil (Remoto) 36 ex-alunos da Fundação Getulio Vargas trabalham aqui Há 1 semana" [ref=e881] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4386868728&referenceJobId=4397260487&originToLandingJobPostings=4386868728&trackingId=JgM13M0Soro%2BsfIvtjdviA%3D%3D&refId=noAFdVzwRxfjhihPKlhv%2BA%3D%3D&eBP=CwEAAAGdsBcdYljrb5134bR90QMPt2wUKMX2VVOUJ7yeNU33bmV85d6DKW11HHy13UjpLJkendtk1LbESB3ePYrfIz1y0uyIFzqEP2LhuWIcr3oNUK62h_TUAf0QpNDiP5a4ahq55-zXYyXAmKGzK3aLWVjthenmZU6jjOe1H--Z3H_WkzeRHxN9gD5p8R-PzFgxUftbCQ-qW57c7BgoQfQdNJt4puTqLS3nsfNfL_o-HXJINj4v_eHgeSqloCnoVWWF6961dM3AokvWPd9SA8ilDjjnZ0qmuANR60QQc6oH64iLdanBKlPEbhWUOY9ijgFgEmDKu_NealEJq9wpFz6xNB5bcxF0NaabENRyQgAuRVivLlZKZllbcSX8rzv3owYe29HUSzNz00BCXj9_ICWZsvVvi25ZjjFF8K2D_TYFGd3o0ReMXVEqNMPaB8ba9hsW3_vHw7P44-Z0ixfv_Ik5TX3tTSySm1PQrQJiykUKkG9sIO_b8fY
+                  - generic [ref=e883]:
+                    - img "Logo da empresa Revolut" [ref=e888]
+                    - generic [ref=e889]:
+                      - generic [ref=e890]:
+                        - generic [ref=e891]:
+                          - generic [ref=e892]:
+                            - strong [ref=e893]: Finance Manager (Financial Control)
+                            - img [ref=e895]
+                          - generic [ref=e897]: Finance Manager (Financial Control) with verification
+                        - generic [ref=e899]: Revolut
+                        - generic [ref=e901]: Brasil (Remoto)
+                        - list [ref=e903]:
+                          - listitem [ref=e904]:
+                            - generic [ref=e907]:
+                              - generic [ref=e908]: 36 ex-alunos trabalham aqui
+                              - generic [ref=e909]: 36 ex-alunos da Fundação Getulio Vargas trabalham aqui
+                      - list [ref=e911]:
+                        - listitem [ref=e912]:
+                          - time [ref=e913]: Há 1 semana
+              - listitem [ref=e914]:
+                - link "Logo da empresa Ourofino Agrociência Gerente Executivo de Controladoria e Planejamento with verification Ourofino Agrociência Ribeirão Preto, São Paulo, Brasil (Presencial) 1 ex-funcionário da Forvis Mazars no Brasil trabalha aqui Há 2 semanas" [ref=e916] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4397787673&referenceJobId=4397260487&originToLandingJobPostings=4397787673&trackingId=fY1GmehaHzCYPyhFa6eN9g%3D%3D&refId=noAFdVzwRxfjhihPKlhv%2BA%3D%3D&eBP=CwEAAAGdsBcdYqGr5aCIYewbrBRPInM4WTaS7-JLLdqAY7fZUwMtwvK5jyfKpmzKcG0xSgrPaE4PBEuTPDlp6Fx298gG3qovpX9E028s4xBAVsX8XuBT5R36qmKWKv0q802QDTkbP3Xu0Wr79EISUrHwG5V4_pYCPxcq7H-VML0-jhRjgbEls1UnE9pdMN2Ctu2InEDvjW6RDgQtxw75JlWraqgSyDCagZ4BAzbRSiNaTvSniw-1J1AKffLwx1-LbRshLUP7iKOgi5PQqCySU_zFGflEfv0rmjfYZfnAQ3flTyCDqTXuiL_d5NzklBjlTke37wLyNb1hV8QFVAZ9o9nQYb1MBJ49g07zNF-8AqYfQ2X7UHmvpiUaLKaw4HashzwdcrmGTqsO0FC8KCxq-EqXkyc8E4aHP6jI17FGca_LDaUHLXC885pq04Uxi8_YDUNXP2gLv89fC8QncL89TngwHGpjECPPSKcMbN3i5BO739PYs_-8ABDFoH1qYZyMmR4SKJNUGKqpGA
+                  - generic [ref=e918]:
+                    - img "Logo da empresa Ourofino Agrociência" [ref=e923]
+                    - generic [ref=e924]:
+                      - generic [ref=e925]:
+                        - generic [ref=e926]:
+                          - generic [ref=e927]:
+                            - strong [ref=e928]: Gerente Executivo de Controladoria e Planejamento
+                            - img [ref=e930]
+                          - generic [ref=e932]: Gerente Executivo de Controladoria e Planejamento with verification
+                        - generic [ref=e934]: Ourofino Agrociência
+                        - generic [ref=e936]: Ribeirão Preto, São Paulo, Brasil (Presencial)
+                        - list [ref=e938]:
+                          - listitem [ref=e939]:
+                            - generic [ref=e942]:
+                              - generic [ref=e943]: 1 ex-funcionário trabalha aqui
+                              - generic [ref=e944]: 1 ex-funcionário da Forvis Mazars no Brasil trabalha aqui
+                      - list [ref=e946]:
+                        - listitem [ref=e947]:
+                          - time [ref=e948]: Há 2 semanas
+              - listitem [ref=e949]:
+                - link "Logo da empresa Haitian Group Finance Manager with verification Haitian Group Indaiatuba, São Paulo, Brasil (Presencial) Avaliando candidaturas Avaliando candidaturas Há 2 semanas Candidatura simplificada" [ref=e951] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4398363003&referenceJobId=4397260487&originToLandingJobPostings=4398363003&trackingId=ZR3TL0YPe4kbK8seOerZGw%3D%3D&refId=noAFdVzwRxfjhihPKlhv%2BA%3D%3D&eBP=CwEAAAGdsBcdYxG4H2-7uraog0tid9O_HhfAa-9ux3DvMmqcyrqYkhTuHGepBCcYjcpn5NF6SIaMOujtYPz7Z4wGJ-kKn7CMqICn6jXBx1PllKPHRsRvggX-Hc_BCQJ1imSlVWPgalvNlyrchAbrvsGpXMK0YcHdfn9j37KhvFCSY2sm5JHTQSchBoEReO3qh4OGPNFIAirAJ0udZCpGZdzdCg2GQ-ff3UeVkM-eA2F4wfry8kLG1k_T8YIzBs3W5bpeMG1YeYcDwV7ko0rHF9pHD82MBuqWLzpmbtSlnCMrYdVDrPb2pi3uc3_H8x2upXaOnxJTwCtr4n-VUsRY5SW9gfLglN-ao3HJJ3sV5ozizk-sabq-IhiRpxgGFTnJ_rm47TdKnClqys492GR1Sl8NJ36w8psS6Y_8uS5HlMDXvUattXCneduRqCzvaN_baq4vOB-BeAVLxpxgReas14um_oCYuPAZ6J20SkQtF5yevvZUFQf1Z1s
+                  - generic [ref=e953]:
+                    - img "Logo da empresa Haitian Group" [ref=e958]
+                    - generic [ref=e959]:
+                      - generic [ref=e960]:
+                        - generic [ref=e961]:
+                          - generic [ref=e962]:
+                            - strong [ref=e963]: Finance Manager
+                            - img [ref=e965]
+                          - generic [ref=e967]: Finance Manager with verification
+                        - generic [ref=e969]: Haitian Group
+                        - generic [ref=e971]: Indaiatuba, São Paulo, Brasil (Presencial)
+                        - list [ref=e973]:
+                          - listitem [ref=e974]:
+                            - img "Avaliando candidaturas" [ref=e977]
+                            - generic [ref=e979]: Avaliando candidaturas
+                      - list [ref=e981]:
+                        - listitem [ref=e982]:
+                          - time [ref=e983]: Há 2 semanas
+                        - listitem [ref=e984]:
+                          - img [ref=e985]:
+                            - img [ref=e986]
+                          - generic [ref=e988]: Candidatura simplificada
+              - listitem [ref=e989]:
+                - link "Logo da empresa Dartz Ideal Recruitment Coordenador de FP&A Dartz Ideal Recruitment São Paulo, Brasil (Híbrido) Avaliando candidaturas Avaliando candidaturas Há 1 semana Candidatura simplificada" [ref=e991] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4400591220&referenceJobId=4397260487&originToLandingJobPostings=4400591220&trackingId=2tXCPTYRBpD8SquTXJ7UvQ%3D%3D&refId=noAFdVzwRxfjhihPKlhv%2BA%3D%3D&eBP=CwEAAAGdsBcdY_bAnO0rOdnDXhXuZeiHFtXI3wTsutqax_KaZ0jb30qhdUvgumFsSaGxruN7k2Wlrizh3B45lAwaFM8t1qhylYzBCIMWBDwmsLldTWwxinb7IT-ztaq0z0t1qqPHLteUkzPgluLOsHg1HnMikdH5cTvy63R-YCBgyilZMghETHw_EYIgG04GE3z6nakbfzktr3TrDr-uWsH_aQCkmbw6SwLVy04ScqHXaHsVDo978gN_iSBE-dQ6CGkiBfvEoCHlTdbgfdTW6VEVjhA_3_PqVohVsXTLawET3CRA19Gb2c3okF7lxXI8Bs2-9xwJtxdDZQzBJKCNvEVePmMCaHypyPyHPskn1ONnUcwwsq83aKjslyD5b2IFyXeNoF-GWjw9JXT_B91mv1bIMbAbPcxX_Gb2CJNjZrXDJZM6p-QFlPPEQSL5MncawAff-OrrpkAkLj_tdYfKOo4syOngrKz2Qbwv20Gn6a-yw6vAsQ
+                  - generic [ref=e993]:
+                    - img "Logo da empresa Dartz Ideal Recruitment" [ref=e998]
+                    - generic [ref=e999]:
+                      - generic [ref=e1000]:
+                        - generic [ref=e1001]:
+                          - strong [ref=e1003]: Coordenador de FP&A
+                          - generic [ref=e1004]: Coordenador de FP&A
+                        - generic [ref=e1006]: Dartz Ideal Recruitment
+                        - generic [ref=e1008]: São Paulo, Brasil (Híbrido)
+                        - list [ref=e1010]:
+                          - listitem [ref=e1011]:
+                            - img "Avaliando candidaturas" [ref=e1014]
+                            - generic [ref=e1016]: Avaliando candidaturas
+                      - list [ref=e1018]:
+                        - listitem [ref=e1019]:
+                          - time [ref=e1020]: Há 1 semana
+                        - listitem [ref=e1021]:
+                          - img [ref=e1022]:
+                            - img [ref=e1023]
+                          - generic [ref=e1025]: Candidatura simplificada
+              - listitem [ref=e1026]:
+                - link "Logo da empresa Michael Page Gerente de Finanças with verification Michael Page Rio de Janeiro, Rio de Janeiro, Brasil (Presencial) R$ 1/a Você seria um dos melhores candidatos Você seria um dos melhores candidatos Há 4 dias" [ref=e1028] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4403182828&referenceJobId=4397260487&originToLandingJobPostings=4403182828&trackingId=3y8IqCmpz%2FxGlUNp4hXaBg%3D%3D&refId=noAFdVzwRxfjhihPKlhv%2BA%3D%3D&eBP=CwEAAAGdsBcdY-Z6119hCJ-CAEMHm1nmXW1v9q6pu-HMDjtgbEN9R4KeKuTMbpg7CR_MGuCNT0j1HOkhuQ5yj8uZ7ddvNKN9_rBlK0n6LKIqOXXg7nrwxzC9X5NZi4vY-kkYPYavoMOGJnecDPWAYTI7TXRzjdnHDGJTd-RJqelaA5qO4O8ZzdJHL-9zGKbfQdr6VCKL-Vzdq3hjjXX_o1YMB3OxozhXlD5Ex-jGXmIl816rvOmwWSF-m__0MNY9lZiUzFxqX2sdxSOZf9uNFBrqvnTJGs5jHLiqKZxKl6oXI6jU0VifYR0c9O7vWO0aKxFCp52Co6EeEmzOMxfZJ9h69tEoguL740YSmkEnVXsMl9dO8jRbWnKeBj0FYPBrUsRzWcWxdk1m3mPRkwM57tOlAi8tryMEFOvITBToIMEwKJ2eryJ4RRsqbShpYva6GlYlkHnHDDMeWPcYF8R_frE
+                  - generic [ref=e1030]:
+                    - img "Logo da empresa Michael Page" [ref=e1035]
+                    - generic [ref=e1036]:
+                      - generic [ref=e1037]:
+                        - generic [ref=e1038]:
+                          - generic [ref=e1039]:
+                            - strong [ref=e1040]: Gerente de Finanças
+                            - img [ref=e1042]
+                          - generic [ref=e1044]: Gerente de Finanças with verification
+                        - generic [ref=e1046]: Michael Page
+                        - generic [ref=e1048]: Rio de Janeiro, Rio de Janeiro, Brasil (Presencial)
+                        - generic [ref=e1049]:
+                          - generic [ref=e1050]: R$ 1/a
+                          - list [ref=e1051]:
+                            - listitem [ref=e1052]:
+                              - img "Você seria um dos melhores candidatos" [ref=e1055]:
+                                - img [ref=e1056]
+                              - generic [ref=e1059]: Você seria um dos melhores candidatos
+                      - list [ref=e1061]:
+                        - listitem [ref=e1062]:
+                          - time [ref=e1063]: Há 4 dias
+              - listitem [ref=e1064]:
+                - link "Logo da empresa Keeta Finance Business Partner (Senior Manager) with verification Keeta São Paulo, Brasil (Presencial) Você seria um dos melhores candidatos Você seria um dos melhores candidatos Há 10 horas Candidatura simplificada" [ref=e1066] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4403912037&referenceJobId=4397260487&originToLandingJobPostings=4403912037&trackingId=84J3HJuOqz6KFht7JOA8jQ%3D%3D&refId=noAFdVzwRxfjhihPKlhv%2BA%3D%3D&eBP=CwEAAAGdsBcdYwKceGo79GLWF4pS0k2WmAnGgjimxWCIiLtVK8vNTTFDM_HNWxkAgoNBBo604NnSAsi91D5OzHZJVrrDg9rNDyoodscvbTna_9GwR_SvL7id3DHGIh6dWPJ8VKibaG5AxfzzoKBYK3zjSsvYuKYDkm4Zpe0tJM4NIVTlRDaXsKkUyKzrfaeYnPWBpnxtiuFHhOWAkPaVp8eUIoUW9ErMCp3u7HADd_AUUPiMiMhymwCJoH8s8MqGSPAe1Fzcc5-mZ_xsArgxBbjquxzsptNRZCi5oas4UH2ODt7N70Adb6yLE_NCYL5E0vXTIH5MImMwgiFFC9rvHLH02fKkT-MPrKA2_Sio5CSvacLCFFV5zdhMIbrA7-gE5M66349qoWGzXz_ypesVh3Zo_MThlu2Qwo9LN3YM61NJFTBTb6AW0QWuJ6g79OSBFeS7kT7UH1Ryzx_6SVMCd2Uef1pIesLphFflD9eZkLVpa-QklRFG
+                  - generic [ref=e1068]:
+                    - img "Logo da empresa Keeta" [ref=e1073]
+                    - generic [ref=e1074]:
+                      - generic [ref=e1075]:
+                        - generic [ref=e1076]:
+                          - generic [ref=e1077]:
+                            - strong [ref=e1078]: Finance Business Partner (Senior Manager)
+                            - img [ref=e1080]
+                          - generic [ref=e1082]: Finance Business Partner (Senior Manager) with verification
+                        - generic [ref=e1084]: Keeta
+                        - generic [ref=e1086]: São Paulo, Brasil (Presencial)
+                        - list [ref=e1088]:
+                          - listitem [ref=e1089]:
+                            - img "Você seria um dos melhores candidatos" [ref=e1092]:
+                              - img [ref=e1093]
+                            - generic [ref=e1096]: Você seria um dos melhores candidatos
+                      - list [ref=e1098]:
+                        - listitem [ref=e1099]:
+                          - time [ref=e1100]: Há 10 horas
+                        - listitem [ref=e1101]:
+                          - img [ref=e1102]:
+                            - img [ref=e1103]
+                          - generic [ref=e1105]: Candidatura simplificada
+              - listitem [ref=e1106]:
+                - link "Logo da empresa Keeta Finance Business Partner (Manager) with verification Keeta São Paulo, Brasil (Presencial) Você seria um dos melhores candidatos Você seria um dos melhores candidatos Há 10 horas Candidatura simplificada" [ref=e1108] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4403910052&referenceJobId=4397260487&originToLandingJobPostings=4403910052&trackingId=FK5XVSIq4BmVtUd7jypjGA%3D%3D&refId=noAFdVzwRxfjhihPKlhv%2BA%3D%3D&eBP=CwEAAAGdsBcdY36wGYInjZG_vUiOa1CdAy9LKZQezXRSIUPHIo3j9Ke_zc5CDvw2koTWtixbG4aXnG1rXOswYIcs0LeciMnZIMupxzdowCsqzeA36-nsmVyg0nLV8M8atftIgCnp4svEH7uYwY4Z7OzwgD1Iy3h2r2_F4B2NqlXO0p-eK0ucSi8KH3jogDafgncP6oj-MZI68IGrLcxJ1F7_yHhOaUB051qBxoRxNSfHmgW_f82yxBGVh5OwzRsQV-niGqPzIuuDF-2QhFsdAeahUUqDHreDuAD0Dq2YYKpIIQXCkslW1-szjsPW98L2fiFkuxLHknoMtbTaL3rLpfVTVtMbNH1pqS9djIeBxNYKZ11r9xfPQ9fFnSKlXdUAzRsCTRHiEoHh0YduYnUouqpmDNI_d-KQqH3DJdLLBhvEHn-F1hNKxJBcbuXyr6qrwwLA_WSWCk0MlAqRxoBK0U8FXNH2JbHXNXinvTMur1sHu8odLL9uJmI
+                  - generic [ref=e1110]:
+                    - img "Logo da empresa Keeta" [ref=e1115]
+                    - generic [ref=e1116]:
+                      - generic [ref=e1117]:
+                        - generic [ref=e1118]:
+                          - generic [ref=e1119]:
+                            - strong [ref=e1120]: Finance Business Partner (Manager)
+                            - img [ref=e1122]
+                          - generic [ref=e1124]: Finance Business Partner (Manager) with verification
+                        - generic [ref=e1126]: Keeta
+                        - generic [ref=e1128]: São Paulo, Brasil (Presencial)
+                        - list [ref=e1130]:
+                          - listitem [ref=e1131]:
+                            - img "Você seria um dos melhores candidatos" [ref=e1134]:
+                              - img [ref=e1135]
+                            - generic [ref=e1138]: Você seria um dos melhores candidatos
+                      - list [ref=e1140]:
+                        - listitem [ref=e1141]:
+                          - time [ref=e1142]: Há 10 horas
+                        - listitem [ref=e1143]:
+                          - img [ref=e1144]:
+                            - img [ref=e1145]
+                          - generic [ref=e1147]: Candidatura simplificada
+            - link "Ver mais vagas como esta" [ref=e1149] [cursor=pointer]:
+              - /url: https://www.linkedin.com/jobs/collections/similar-jobs?referenceJobId=4397260487
+        - complementary [ref=e237]:
+          - generic [ref=e238]:
+            - generic [ref=e1150]:
+              - img "Premium" [ref=e1152]:
+                - img [ref=e1153]
+              - heading "Adquira competências com esses cursos para conseguir um novo emprego" [level=2] [ref=e1155]
+              - listitem [ref=e1156]:
+                - link "Como Construir Confiança" [ref=e1157] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/learning/como-construir-confianca?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_2053400_learning
+                  - img "Como Construir Confiança" [ref=e1160]
+                  - img [ref=e1162]
+                - generic [ref=e1164]:
+                  - link "Como Construir Confiança" [ref=e1165] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/learning/como-construir-confianca?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_2053400_learning
+                    - generic [ref=e1166]: Como Construir Confiança
+                  - generic [ref=e1168]: 3.394 visualizações
+              - listitem [ref=e1169]:
+                - link "Transforme-se em um Novo Gerente com o Impulso da Inteligência Artificial" [ref=e1170] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/learning/transforme-se-em-um-novo-gerente-com-o-impulso-da-inteligencia-artificial?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_4261235_learning
+                  - img "Transforme-se em um Novo Gerente com o Impulso da Inteligência Artificial" [ref=e1173]
+                  - img [ref=e1175]
+                - generic [ref=e1177]:
+                  - link "Transforme-se em um Novo Gerente com o Impulso da Inteligência Artificial" [ref=e1178] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/learning/transforme-se-em-um-novo-gerente-com-o-impulso-da-inteligencia-artificial?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_4261235_learning
+                    - generic [ref=e1179]: Transforme-se em um Novo Gerente com o Impulso da Inteligência Artificial
+                  - generic [ref=e1181]: 1.993 visualizações
+              - listitem [ref=e1182]:
+                - 'link "Excel: Como Gerir suas Finanças Pessoais" [ref=e1183] [cursor=pointer]':
+                  - /url: https://www.linkedin.com/learning/excel-como-gerir-suas-financas-pessoais?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_2127077_learning
+                  - 'img "Excel: Como Gerir suas Finanças Pessoais" [ref=e1186]'
+                  - img [ref=e1188]
+                - generic [ref=e1190]:
+                  - 'link "Excel: Como Gerir suas Finanças Pessoais" [ref=e1191] [cursor=pointer]':
+                    - /url: https://www.linkedin.com/learning/excel-como-gerir-suas-financas-pessoais?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_2127077_learning
+                    - generic [ref=e1192]: "Excel: Como Gerir suas Finanças Pessoais"
+                  - generic [ref=e1194]: 26.315 visualizações
+              - link "Exibir mais no LinkedIn Learning" [ref=e1196] [cursor=pointer]:
+                - /url: /learning?trk=jobdetails_learning_awareness
+            - generic [ref=e1197]:
+              - paragraph [ref=e1198]: Procurando um talento?
+              - link "Anunciar vaga" [ref=e1199] [cursor=pointer]:
+                - /url: https://www.linkedin.com/talent/job-posting-redirect?trk=flagship3_job_detail
+      - contentinfo [ref=e240]:
+        - generic [ref=e242]:
+          - generic [ref=e243]:
+            - navigation [ref=e244]:
+              - list [ref=e1200]:
+                - listitem [ref=e1201]:
+                  - link "Sobre" [ref=e1202] [cursor=pointer]:
+                    - /url: https://about.linkedin.com/pt-br
+                - listitem [ref=e1203]:
+                  - link "Acessibilidade" [ref=e1204] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/accessibility
+                - listitem [ref=e1205]:
+                  - link "Soluções de Talentos" [ref=e1206] [cursor=pointer]:
+                    - /url: https://business.linkedin.com/pt-br/talent-solutions?trk=flagship_nav&veh=li-footer-lts-control-pt-br&src=li-footer
+                - listitem [ref=e1207]:
+                  - link "Políticas para Comunidades Profissionais" [ref=e1208] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/legal/professional-community-policies
+                - listitem [ref=e1209]:
+                  - link "Carreiras" [ref=e1210] [cursor=pointer]:
+                    - /url: https://careers.linkedin.com/
+                - listitem [ref=e1211]:
+                  - link "Soluções de Marketing" [ref=e1212] [cursor=pointer]:
+                    - /url: https://business.linkedin.com/pt-br/marketing-solutions?trk=n_nav_lms_f&src=li-footer
+                - listitem [ref=e1213]:
+                  - button "Termos e Privacidade" [ref=e1215] [cursor=pointer]:
+                    - generic [ref=e1217]:
+                      - text: Termos e Privacidade
+                      - img [ref=e1218]
+                - listitem [ref=e1220]:
+                  - link "Preferências de anúncios" [ref=e1221] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/help/linkedin/answer/62931?lang=pt
+                - listitem [ref=e1222]:
+                  - link "Publicidade" [ref=e1223] [cursor=pointer]:
+                    - /url: https://business.linkedin.com/pt-br/marketing-solutions/ads?trk=n_nav_ads_f
+                - listitem [ref=e1224]:
+                  - link "Soluções de Vendas" [ref=e1225] [cursor=pointer]:
+                    - /url: https://business.linkedin.com/pt-br/sales-solutions?trk=flagship_nav&veh=li-footer-lss-control-pt-br&src=li-footer
+                - listitem [ref=e1226]:
+                  - link "Para celular" [ref=e1227] [cursor=pointer]:
+                    - /url: https://mobile.linkedin.com/pt-br
+                - listitem [ref=e1228]:
+                  - link "Pequenas empresas" [ref=e1229] [cursor=pointer]:
+                    - /url: https://smallbusiness.linkedin.com?&src=li-footer
+                - listitem [ref=e1230]:
+                  - link "Central de Segurança" [ref=e1231] [cursor=pointer]:
+                    - /url: https://safety.linkedin.com
+            - generic [ref=e246]:
+              - list [ref=e247]:
+                - listitem [ref=e248]:
+                  - img [ref=e249]
+                  - generic [ref=e251]:
+                    - link "Dúvidas? Acesse a nossa Central de Ajuda." [ref=e252] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/help/linkedin?trk=d_flagship3_job_details
+                      - text: Dúvidas?
+                    - paragraph [ref=e253]: Acesse a nossa Central de Ajuda.
+                - listitem [ref=e254]:
+                  - img [ref=e255]
+                  - generic [ref=e257]:
+                    - link "Gerencie sua conta e privacidade Acesse suas Configurações." [ref=e258] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/psettings/
+                      - text: Gerencie sua conta e privacidade
+                    - paragraph [ref=e259]: Acesse suas Configurações.
+                - listitem [ref=e260]:
+                  - img [ref=e261]
+                  - generic [ref=e263]:
+                    - link "Visibilidade da recomendação Saiba mais sobre os conteúdos recomendados." [ref=e264] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/help/linkedin/answer/a1339724
+                      - text: Visibilidade da recomendação
+                    - paragraph [ref=e265]: Saiba mais sobre os conteúdos recomendados.
+              - generic [ref=e266]:
+                - generic [ref=e267]: Selecionar idioma
+                - combobox "Selecionar idioma" [ref=e268]:
+                  - option "العربية (Árabe)"
+                  - option "বাংলা (Bengali)"
+                  - option "Čeština (Tcheco)"
+                  - option "Dansk (Dinamarquês)"
+                  - option "Deutsch (Alemão)"
+                  - option "Ελληνικά (Grego)"
+                  - option "English (Inglês)"
+                  - option "Español (Espanhol)"
+                  - option "فارسی (Persa)"
+                  - option "Suomi (Finlandês)"
+                  - option "Français (Francês)"
+                  - option "हिंदी (Hindi)"
+                  - option "Magyar (Húngaro)"
+                  - option "Bahasa Indonésia (Indonésio)"
+                  - option "Italiano (Italiano)"
+                  - option "עברית (Hebraico)"
+                  - option "日本語 (Japonês)"
+                  - option "한국어 (Coreano)"
+                  - option "मराठी (Marati)"
+                  - option "Bahasa Malaysia (Malaio)"
+                  - option "Nederlands (Holandês)"
+                  - option "Norsk (Norueguês)"
+                  - option "ਪੰਜਾਬੀ (Punjabi)"
+                  - option "Polski (Polonês)"
+                  - option "Português (Português)" [selected]
+                  - option "Română (Romeno)"
+                  - option "Русский (Russo)"
+                  - option "Svenska (Sueco)"
+                  - option "తెలుగు (Telugu)"
+                  - option "ภาษาไทย (Tailandês)"
+                  - option "Tagalog (Tagalog)"
+                  - option "Türkçe (Turco)"
+                  - option "Українська (Ucraniano)"
+                  - option "Tiếng Việt (Vietnamita)"
+                  - option "简体中文 (Chinês (Simplificado))"
+                  - option "正體中文 (Chinês (Tradicional))"
+          - paragraph [ref=e269]: LinkedIn Corporation © 2026
+    - generic:
+      - generic:
+        - complementary:
+          - generic [ref=e270]:
+            - generic [ref=e271]:
+              - generic [ref=e273] [cursor=pointer]:
+                - img "Fernando Xavier" [ref=e275]
+                - button "Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas." [ref=e276]:
+                  - generic [ref=e277]:
+                    - generic [ref=e278]: Mensagens
+                    - generic [ref=e279]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+              - generic [ref=e280]:
+                - button "Abrir o menu suspenso de mensagens" [ref=e282] [cursor=pointer]:
+                  - img "Abrir o menu suspenso de mensagens" [ref=e283]
+                - button "Escrever mensagem" [ref=e286] [cursor=pointer]:
+                  - img [ref=e287]
+                  - generic [ref=e289]: Escrever mensagem
+                - button "Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas." [ref=e290] [cursor=pointer]:
+                  - img [ref=e291]
+                  - generic [ref=e293]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+            - link "Foto da empresa Fernando Xavier Fernando Xavier" [ref=e1232] [cursor=pointer]:
+              - /url: https://www.linkedin.com/company/109375368/admin/inbox
+              - img "Foto da empresa Fernando Xavier" [ref=e1233]
+              - generic [ref=e1234]: Fernando Xavier
+              - img [ref=e1235]
+        - complementary "Assistente de IA para obter ajuda com sua carreira, vagas, etc."

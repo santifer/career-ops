@@ -1,0 +1,485 @@
+- generic [ref=e1]:
+  - link [ref=e2] [cursor=pointer]:
+    - /url: "#gnav-header-end"
+    - text: Skip to main content
+  - main [ref=e3]:
+    - generic [ref=e5]:
+      - navigation [ref=e7]:
+        - generic [ref=e9]:
+          - generic [ref=e10]:
+            - generic [ref=e11]:
+              - button [ref=e12] [cursor=pointer]:
+                - generic [ref=e13]: Skip to main content
+              - link [ref=e14] [cursor=pointer]:
+                - /url: /?from=gnav-jobsearch--indeedmobile
+                - img [ref=e16]
+              - list [ref=e18]:
+                - listitem [ref=e19]:
+                  - link [ref=e21] [cursor=pointer]:
+                    - /url: https://www.indeed.com/
+                    - text: Home
+                - listitem [ref=e22]:
+                  - link [ref=e24] [cursor=pointer]:
+                    - /url: https://www.indeed.com/companies
+                    - text: Company reviews
+                - listitem [ref=e25]:
+                  - link [ref=e27] [cursor=pointer]:
+                    - /url: https://www.indeed.com/career/salaries
+                    - text: Find salaries
+            - generic [ref=e28]:
+              - list [ref=e29]:
+                - listitem [ref=e30]:
+                  - link [ref=e32] [cursor=pointer]:
+                    - /url: https://myjobs.indeed.com?from=gnav-util-jobsearch--indeedmobile&gnavTK=1jmba8m35gd1i801&tk=1jmba8lobgn24885&co=US&hl=en
+                    - img [ref=e33]
+                - listitem [ref=e35]:
+                  - link [ref=e37] [cursor=pointer]:
+                    - /url: https://messages.indeed.com?from=gnav-util-jobsearch--indeedmobile&gnavTK=1jmba8m35gd1i801&tk=1jmba8lobgn24885&co=US&hl=en
+                    - img [ref=e38]
+                    - generic [ref=e43]: Messages Unread count 0
+                - listitem [ref=e44]:
+                  - link [ref=e46] [cursor=pointer]:
+                    - /url: https://www.indeed.com/notifications?from=gnav-util-jobsearch--indeedmobile&gnavTK=1jmba8m35gd1i801&tk=1jmba8lobgn24885&hl=en
+                    - img [ref=e47]
+                - listitem [ref=e49]:
+                  - button [ref=e53] [cursor=pointer]:
+                    - generic [ref=e54]:
+                      - img [ref=e55]
+                      - generic [ref=e57]:
+                        - text: "1"
+                        - generic [ref=e58]: new update
+              - link [ref=e63] [cursor=pointer]:
+                - /url: https://www.indeed.com/hire?co=US&hl=en
+                - text: Employers / Post Job
+          - generic [ref=e64]: Start of main content
+      - generic [ref=e66]:
+        - search [ref=e71]:
+          - generic [ref=e74]:
+            - generic [ref=e76]:
+              - generic [ref=e77]:
+                - generic [ref=e78]: "Keyword : all jobs"
+                - generic [ref=e81]:
+                  - img [ref=e83]
+                  - combobox [ref=e85]: controller OR controladoria OR contabilidade
+                  - button [ref=e87] [cursor=pointer]:
+                    - img [ref=e88]
+              - separator [ref=e90]:
+                - generic [ref=e91]: "&nbsp;"
+              - generic [ref=e92]:
+                - generic [ref=e93]: Edit location input box label
+                - generic [ref=e96]:
+                  - img [ref=e98]
+                  - combobox [ref=e100]: Brazil
+                  - button [ref=e102] [cursor=pointer]:
+                    - img [ref=e103]
+            - button [ref=e106] [cursor=pointer]: Search
+          - list [ref=e109]:
+            - button [ref=e111] [cursor=pointer]:
+              - text: Distance
+              - generic [ref=e112]: "1"
+            - button [ref=e114] [cursor=pointer]: Job Type
+            - button [ref=e116] [cursor=pointer]: Experience level
+            - button [ref=e118] [cursor=pointer]: Date posted
+        - generic [ref=e124]:
+          - generic [ref=e125]:
+            - generic [ref=e126]:
+              - heading [level=1] [ref=e127]: controller controladoria contabilidade jobs in Brazil, IN
+              - generic [ref=e129]:
+                - generic [ref=e130]:
+                  - generic [ref=e131]: "Sort by:"
+                  - generic [ref=e132]: relevance - date
+                - generic [ref=e133]:
+                  - generic [ref=e134]: 2 jobs
+                  - button [ref=e136] [cursor=pointer]:
+                    - img [ref=e137]
+            - list [ref=e143]:
+              - listitem [ref=e144]:
+                - generic [ref=e149]:
+                  - heading [level=2] [ref=e151]:
+                    - button [ref=e152] [cursor=pointer]: SYSTEM DIR-FINANCE/CONTROLLER-FINANCE
+                  - generic [ref=e153]:
+                    - generic [ref=e155]:
+                      - generic [ref=e157]: Union Health
+                      - generic [ref=e158]: Terre Haute, IN 47807
+                    - list [ref=e160]:
+                      - listitem [ref=e161]:
+                        - generic [ref=e164]: 403(b) matching
+                      - listitem [ref=e165]:
+                        - generic [ref=e168]: Tuition reimbursement
+                      - listitem [ref=e169]:
+                        - generic [ref=e172]: 403(b)
+                      - listitem [ref=e173]:
+                        - generic [ref=e176]: Paid time off
+                  - generic [ref=e177]:
+                    - button [ref=e178] [cursor=pointer]:
+                      - img [ref=e179]
+                    - button [ref=e181] [cursor=pointer]:
+                      - img [ref=e182]
+              - listitem [ref=e185]:
+                - heading [level=2] [ref=e187]: Slightly farther from Brazil
+              - listitem [ref=e188]:
+                - generic [ref=e193]:
+                  - heading [level=2] [ref=e196]:
+                    - button [ref=e197] [cursor=pointer]: Finance Manager/Operations Controller
+                  - generic [ref=e198]:
+                    - generic [ref=e200]:
+                      - generic [ref=e202]: Trouw Nutrition
+                      - generic [ref=e203]: Indianapolis, IN 46231
+                    - list [ref=e205]:
+                      - listitem [ref=e206]:
+                        - generic [ref=e209]: Tuition reimbursement
+                      - listitem [ref=e210]:
+                        - generic [ref=e213]: Paid parental leave
+                      - listitem [ref=e214]:
+                        - generic [ref=e217]: Parental leave
+                      - listitem [ref=e218]:
+                        - generic [ref=e221]: Health insurance
+                      - listitem [ref=e222]:
+                        - generic [ref=e225]: 401(k) matching
+                      - listitem [ref=e226]:
+                        - generic [ref=e229]: Paid time off
+                  - generic [ref=e230]:
+                    - button [ref=e231] [cursor=pointer]:
+                      - img [ref=e232]
+                    - button [ref=e234] [cursor=pointer]:
+                      - img [ref=e235]
+              - listitem [ref=e238]:
+                - generic [ref=e243]:
+                  - heading [level=2] [ref=e245]:
+                    - button [ref=e246] [cursor=pointer]: Deputy Fiscal Controller
+                  - generic [ref=e247]:
+                    - generic [ref=e249]:
+                      - generic [ref=e251]: South Central Community Action Program, Inc.
+                      - generic [ref=e252]:
+                        - text: Bloomington, IN 47404
+                        - generic [ref=e253]: (Cresent Bend area)
+                    - list [ref=e255]:
+                      - listitem [ref=e256]:
+                        - generic [ref=e259]: Professional development assistance
+                      - listitem [ref=e260]:
+                        - generic [ref=e263]: 403(b)
+                      - listitem [ref=e264]:
+                        - generic [ref=e267]: Parental leave
+                      - listitem [ref=e268]:
+                        - generic [ref=e271]: Health insurance
+                      - listitem [ref=e272]:
+                        - generic [ref=e275]: Paid time off
+                      - listitem [ref=e276]:
+                        - generic [ref=e279]: Vision insurance
+                  - generic [ref=e280]:
+                    - button [ref=e281] [cursor=pointer]:
+                      - img [ref=e282]
+                    - button [ref=e284] [cursor=pointer]:
+                      - img [ref=e285]
+              - listitem [ref=e288]
+              - listitem [ref=e290]:
+                - generic [ref=e295]:
+                  - heading [level=2] [ref=e297]:
+                    - button [ref=e298] [cursor=pointer]: Manager of Finance
+                  - generic [ref=e299]:
+                    - generic [ref=e301]:
+                      - generic [ref=e303]: Valley Professionals Community Health Center
+                      - generic [ref=e304]: Clinton, IN 47842
+                    - list [ref=e306]:
+                      - listitem [ref=e307]:
+                        - generic [ref=e310]: Loan forgiveness
+                      - listitem [ref=e311]:
+                        - generic [ref=e314]: 403(b) matching
+                      - listitem [ref=e315]:
+                        - generic [ref=e318]: Tuition reimbursement
+                      - listitem [ref=e319]:
+                        - generic [ref=e322]: 403(b)
+                      - listitem [ref=e323]:
+                        - generic [ref=e326]: Paid time off
+                      - listitem [ref=e327]:
+                        - generic [ref=e330]: Vision insurance
+                  - generic [ref=e331]:
+                    - button [ref=e332] [cursor=pointer]:
+                      - img [ref=e333]
+                    - button [ref=e335] [cursor=pointer]:
+                      - img [ref=e336]
+            - group [ref=e347]:
+              - generic [ref=e348]: Overall, how relevant are these jobs?
+              - generic [ref=e349]:
+                - generic [ref=e351]:
+                  - radio [ref=e352] [cursor=pointer]
+                  - img [ref=e355]
+                  - generic [ref=e358]: Not at all
+                - generic [ref=e360]:
+                  - radio [ref=e361] [cursor=pointer]
+                  - img [ref=e364]
+                  - generic [ref=e367]: Slightly
+                - generic [ref=e369]:
+                  - radio [ref=e370] [cursor=pointer]
+                  - img [ref=e373]
+                  - generic [ref=e376]: Somewhat
+                - generic [ref=e378]:
+                  - radio [ref=e379] [cursor=pointer]
+                  - img [ref=e382]
+                  - generic [ref=e385]: Very
+                - generic [ref=e387]:
+                  - radio [ref=e388] [cursor=pointer]
+                  - img [ref=e391]
+                  - generic [ref=e394]: Extremely
+            - navigation [ref=e395]
+            - generic [ref=e396]:
+              - heading [level=2] [ref=e397]: "Resume Resources:"
+              - list [ref=e398]:
+                - listitem [ref=e399]:
+                  - link [ref=e400] [cursor=pointer]:
+                    - /url: https://www.indeed.com/career-advice/resume-samples?from=jobsearch_footer
+                    - text: Resume Samples
+                - text: "-"
+                - listitem [ref=e401]:
+                  - link [ref=e402] [cursor=pointer]:
+                    - /url: https://www.indeed.com/profile/resume-templates?from=jobsearch_footer
+                    - text: Resume Templates
+            - generic [ref=e403]:
+              - heading [level=2] [ref=e404]: "Career Resources:"
+              - list [ref=e405]:
+                - listitem [ref=e406]:
+                  - link [ref=e407] [cursor=pointer]:
+                    - /url: /career/salaries?from=jobsearch_footer
+                    - text: Career Explorer
+                - text: "-"
+                - listitem [ref=e408]:
+                  - link [ref=e409] [cursor=pointer]:
+                    - /url: /explorer/
+                    - text: Explore High Paying Jobs
+            - generic [ref=e410]:
+              - heading [level=2] [ref=e411]: "Employer Resources:"
+              - list [ref=e412]:
+                - listitem [ref=e413]:
+                  - link [ref=e414] [cursor=pointer]:
+                    - /url: /hire/how-to-write-a-job-description?from=jobsearch_footer
+                    - text: How to Write a Job Description
+                - text: "-"
+                - listitem [ref=e415]:
+                  - link [ref=e416] [cursor=pointer]:
+                    - /url: /hire/how-to-hire?from=jobsearch_footer
+                    - text: How to Hire Employees
+          - generic [ref=e419]:
+            - button [ref=e420]: Return to Search Result
+            - heading [level=2] [ref=e421]: Job Post Details
+            - generic [ref=e425]:
+              - generic [ref=e426]:
+                - generic [ref=e428]:
+                  - generic [ref=e429]:
+                    - heading [level=2] [ref=e431]:
+                      - generic [ref=e432]:
+                        - text: SYSTEM DIR-FINANCE/CONTROLLER-FINANCE
+                        - generic [ref=e433]: "- job post"
+                    - generic [ref=e437]:
+                      - generic [ref=e438]:
+                        - link [ref=e441] [cursor=pointer]:
+                          - /url: https://www.indeed.com/cmp/Union-Health-3?campaignid=mobvjcmp&from=mobviewjob&tk=1jmba8m4lgn24800&fromjk=a6e7376fec23ca3b
+                          - text: Union Health
+                          - img [ref=e442]
+                        - generic [ref=e444]:
+                          - generic [ref=e445]: · 3.6
+                          - generic [ref=e446]: 3.6 out of 5 stars
+                          - img [ref=e447]
+                      - generic [ref=e450]: 1530 North 7th Street, Terre Haute, IN 47807
+                  - generic [ref=e453]: Full-time
+                - generic [ref=e454]:
+                  - generic [ref=e460]:
+                    - generic [ref=e461]:
+                      - generic [ref=e462]:
+                        - heading [level=2] [ref=e463]: Job details
+                        - generic [ref=e464]:
+                          - text: Here’s how the job details align with your
+                          - link [ref=e465] [cursor=pointer]:
+                            - /url: https://profile.indeed.com/
+                            - text: profile
+                            - img [ref=e466]
+                          - text: .
+                      - group [ref=e469]:
+                        - img [ref=e470]
+                        - generic [ref=e473]:
+                          - heading [level=3] [ref=e474]: Job type
+                          - list [ref=e476]:
+                            - listitem [ref=e477]:
+                              - button [ref=e478]:
+                                - generic [ref=e481]:
+                                  - img [ref=e482]
+                                  - generic [ref=e484]: Full-time
+                                  - img [ref=e485]
+                    - separator [ref=e487]:
+                      - generic [ref=e488]: "&nbsp;"
+                  - generic [ref=e489]:
+                    - heading [level=2] [ref=e490]:
+                      - text: Benefits
+                      - generic [ref=e491]: Pulled from the full job description
+                    - list [ref=e495]:
+                      - listitem [ref=e496]: 403(b) matching
+                      - listitem [ref=e497]: Tuition reimbursement
+                      - listitem [ref=e498]: 403(b)
+                      - listitem [ref=e499]: Paid time off
+                    - separator [ref=e500]:
+                      - generic [ref=e501]: "&nbsp;"
+                  - heading [level=2] [ref=e503]: Full job description
+                  - generic [ref=e505]:
+                    - paragraph [ref=e506]: You belong at Union!
+                    - paragraph [ref=e507]: Why Union?
+                    - paragraph [ref=e508]:
+                      - text: Union Health is an award-winning integrated health system and the Wabash Valley's largest employer. Union Health is an independent and not-for-profit health system. Union Health consists of Union Hospital, Union Hospital Regional, Union Hospital Clinton, and Union Medical Group. Union Health offers a full spectrum of healthcare career opportunities across the continuum of care. The organizations that make up Union Health have a long tradition of serving the health care needs of West Central Indiana and East Central Illinois residents, stretching back more than 125 years. The System Director of Finance / Controller
+                      - text: "serves as the organization’s senior accounting officer and is directly accountable to the Chief Financial Officer (CFO) for the integrity, accuracy, and timeliness of all financial records and reporting. This role owns enterprise accounting, financial reporting, reimbursement and cost reporting, audits, and internal controls, ensuring compliance with GAAP, Medicare regulations, and all applicable federal and state requirements. The Controller ensures the financial statements are accurate, auditable, and reliable for executive leadership and external stakeholders. This role reports to the Chief Financial Officer (CFO). Core Responsibilities: Accounting and Financial Reporting"
+                    - list [ref=e510]:
+                      - listitem [ref=e511]: Serve as the enterprise Controller with full accountability for the general ledger, monthly close, and financial statements.
+                      - listitem [ref=e512]: Direct all accounting operations including general accounting, accounts payable, reimbursement accounting, cost reporting, and accounting-related charge master governance.
+                      - listitem [ref=e513]: Ensure timely and accurate preparation of internal and external financial statements.
+                      - listitem [ref=e514]: Establish and maintain accounting policies, procedures, and internal controls in accordance with GAAP and healthcare regulatory standards.
+                    - paragraph [ref=e515]: Audit, Compliance & Regulatory Oversight
+                    - list [ref=e516]:
+                      - listitem [ref=e517]: Lead preparation and coordination of annual financial audits, tax filings, Medicare and Medicaid cost reports, and regulatory submissions.
+                      - listitem [ref=e518]: Ensure compliance with all federal and state regulations impacting financial reporting and reimbursement.
+                      - listitem [ref=e519]: Monitor changes in accounting standards and reimbursement rules and advise the CFO on accounting and reporting implications.
+                      - text: Ensure adherence to corporate compliance, confidentiality, and internal control requirements.
+                    - paragraph [ref=e520]: Systems, Controls & Process Improvement
+                    - list [ref=e521]:
+                      - listitem [ref=e522]: Own the design, implementation, and continuous improvement of accounting systems and close processes.
+                      - listitem [ref=e523]: Strengthen reconciliations, documentation standards, and audit trails across the organization.
+                      - listitem [ref=e524]: Develop scalable accounting processes to support growth, acquisitions, and system integrations.
+                    - paragraph [ref=e525]: Team Leadership
+                    - list [ref=e526]:
+                      - listitem [ref=e527]: Lead, develop, and retain a high-performing accounting team with clear roles, accountability, and succession planning.
+                      - listitem [ref=e528]: Promote a culture of accuracy, discipline, and continuous improvement within the accounting function.
+                    - paragraph [ref=e529]: "Scope of Oversight:"
+                    - list [ref=e530]:
+                      - listitem [ref=e531]: Accounting
+                      - listitem [ref=e532]: Accounts Payable
+                      - listitem [ref=e533]: Financial Reporting & Internal Controls
+                      - listitem [ref=e534]: Reimbursement & Cost Reporting
+                      - listitem [ref=e535]: Accounting-related Charge Master governance
+                    - paragraph [ref=e536]: "Qualifications:"
+                    - list [ref=e537]:
+                      - listitem [ref=e538]: Bachelor’s degree in Accounting required; CPA strongly preferred.
+                      - listitem [ref=e539]: 5+ years of progressive healthcare accounting leadership experience.
+                      - listitem [ref=e540]: Strong knowledge of GAAP, audits, internal controls, and healthcare reimbursement reporting.
+                      - listitem [ref=e541]: Demonstrated ability to build disciplined close processes and produce accurate, auditable financial statements.
+                    - paragraph [ref=e542]: "In addition to competitive pay, Union co-workers enjoy:"
+                    - list [ref=e543]:
+                      - listitem [ref=e544]: Part-time and Full-time schedules
+                      - listitem [ref=e545]: Comprehensive Benefits
+                      - listitem [ref=e546]: Paid Time Off starting day one.
+                      - listitem [ref=e547]: Tuition reimbursement up to $5,250 each year.
+                      - listitem [ref=e548]: Career Paths
+                      - listitem [ref=e549]: Success Sharing
+                      - listitem [ref=e550]: 403b Retirement Employer Match.
+                      - text: Much More!
+                    - paragraph [ref=e551]: Be part of an organization that is dedicated to your work-life balance, career, growth, and development. Union Health, U Matter and U Belong.
+                    - paragraph [ref=e552]: How can we help? Call us at 812-238-7827 or email us at recruiting@union.health
+                    - paragraph [ref=e553]: Please note that the salary information provided on the career site for this position opening may not necessarily reflect the accurate compensation associated with the role. We encourage candidates to inquire further and engage in direct communication with Union Health for comprehensive salary details.
+                    - paragraph [ref=e554]: As an EOE/AA employer, Union Hospital, Inc. will not discriminate in its employment practices due to an applicant's age, race, color, religion, sex, sexual orientation, gender identity, national origin, protected veteran or disability status.
+                    - text: "Location: Union Hospital · FINANCE(85005) Schedule: 07 - FULLTIME, DAY, 8-5"
+                  - separator [ref=e555]:
+                    - generic [ref=e556]: "&nbsp;"
+                - button [ref=e562] [cursor=pointer]: Report job
+              - generic [ref=e565]:
+                - generic [ref=e566]:
+                  - button [ref=e571] [cursor=pointer]:
+                    - img [ref=e572]
+                  - button [ref=e575] [cursor=pointer]:
+                    - img [ref=e576]
+                  - button [ref=e579] [cursor=pointer]
+                - button [ref=e588] [cursor=pointer]:
+                  - generic [ref=e589]: Apply on company site
+                  - img [ref=e590]
+            - button [ref=e592]: Return to Search Result
+      - contentinfo [ref=e597]:
+        - generic [ref=e598]:
+          - list [ref=e599]:
+            - listitem [ref=e600]:
+              - link [ref=e602] [cursor=pointer]:
+                - /url: https://www.hiringlab.org
+                - text: Hiring Lab
+            - listitem [ref=e603]:
+              - link [ref=e605] [cursor=pointer]:
+                - /url: https://www.indeed.com/career-advice
+                - text: Career advice
+            - listitem [ref=e606]:
+              - link [ref=e608] [cursor=pointer]:
+                - /url: https://www.indeed.com/browsejobs
+                - text: Browse jobs
+            - listitem [ref=e609]:
+              - link [ref=e611] [cursor=pointer]:
+                - /url: https://www.indeed.com/companies/browse-companies
+                - text: Browse companies
+            - listitem [ref=e612]:
+              - link [ref=e614] [cursor=pointer]:
+                - /url: https://www.indeed.com/career/salaries
+                - text: Salaries
+            - listitem [ref=e615]:
+              - link [ref=e617] [cursor=pointer]:
+                - /url: https://www.indeedevents.com/
+                - text: Indeed Events
+            - listitem [ref=e618]:
+              - link [ref=e620] [cursor=pointer]:
+                - /url: https://www.indeed.com/cmp/Indeed/about
+                - text: Work at Indeed
+            - listitem [ref=e621]:
+              - link [ref=e623] [cursor=pointer]:
+                - /url: https://www.indeed.com/worldwide
+                - text: Countries
+            - listitem [ref=e624]:
+              - link [ref=e626] [cursor=pointer]:
+                - /url: https://www.indeed.com/about
+                - text: About
+            - listitem [ref=e627]:
+              - link [ref=e629] [cursor=pointer]:
+                - /url: https://www.indeed.com/help
+                - text: Help
+            - listitem [ref=e630]:
+              - link [ref=e632] [cursor=pointer]:
+                - /url: https://www.indeed.com/esg?from=gnav-jobsearch--indeedmobile
+                - text: ESG at Indeed
+          - list [ref=e633]:
+            - listitem [ref=e634]: © 2026 Indeed
+            - listitem [ref=e635]:
+              - link [ref=e637] [cursor=pointer]:
+                - /url: https://www.indeed.com/legal/ccpa-dns?hl=en
+                - text: Your Privacy Choices
+                - img [ref=e639]
+            - listitem [ref=e644]:
+              - link [ref=e646] [cursor=pointer]:
+                - /url: https://www.indeed.com/esg/accessibility?hl=en
+                - text: Accessibility at Indeed
+            - listitem [ref=e647]:
+              - link [ref=e649] [cursor=pointer]:
+                - /url: https://hrtechprivacy.com/brands/indeed#privacypolicy
+                - text: Privacy Center and Ad Choices
+            - listitem [ref=e650]:
+              - link [ref=e652] [cursor=pointer]:
+                - /url: https://www.indeed.com/legal?hl=en
+                - text: Terms
+  - generic [ref=e653]:
+    - text: This site is protected by reCAPTCHA and the Google
+    - link [ref=e654] [cursor=pointer]:
+      - /url: https://policies.google.com/privacy
+      - text: Privacy Policy
+    - text: and
+    - link [ref=e655] [cursor=pointer]:
+      - /url: https://policies.google.com/terms
+      - text: Terms of Service
+    - text: apply.
+  - alertdialog "Updates to our Terms of Service" [active] [ref=e657]:
+    - heading "Updates to our Terms of Service" [level=2] [ref=e660]:
+      - generic [ref=e661]: Updates to our Terms of Service
+    - generic [ref=e662]:
+      - img [ref=e664]
+      - paragraph [ref=e699]:
+        - text: Please be sure to review our updated
+        - link "Terms of Service" [ref=e700] [cursor=pointer]:
+          - /url: https://indeed.com/legal
+        - text: (“Terms”).
+        - strong [ref=e701]: The Terms contain an arbitration agreement that includes a class-action waiver.
+        - text: This means you agree to resolve any disputes related to your use of Indeed through binding arbitration rather than in court. The Terms also explain how to opt out of arbitration and the deadline for doing so.
+      - paragraph [ref=e702]:
+        - text: By clicking
+        - strong [ref=e703]: Accept Terms
+        - text: ", you agree to the updated"
+        - link "Terms of Service" [ref=e704] [cursor=pointer]:
+          - /url: https://indeed.com/legal
+        - text: .
+    - button "Accept Terms" [ref=e707] [cursor=pointer]:
+      - generic [ref=e708]: Accept Terms

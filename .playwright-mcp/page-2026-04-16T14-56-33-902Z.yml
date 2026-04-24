@@ -1,0 +1,165 @@
+- generic [ref=e3]:
+  - list [ref=e4]:
+    - listitem [ref=e5]:
+      - link "Skip to content" [ref=e6] [cursor=pointer]:
+        - /url: "#main-content"
+    - listitem [ref=e7]:
+      - link "Skip to search" [ref=e8] [cursor=pointer]:
+        - /url: "#header-search"
+  - banner:
+    - generic [ref=e9]:
+      - generic [ref=e11]:
+        - img [ref=e12]
+        - searchbox "Search" [ref=e19]
+        - button "Submit form" [ref=e20] [cursor=pointer]
+        - link "Close search" [ref=e21] [cursor=pointer]:
+          - /url: ""
+          - img [ref=e22]
+      - generic [ref=e25]:
+        - link "GSK Homepage" [ref=e27] [cursor=pointer]:
+          - /url: /en-gb/
+        - generic [ref=e28]:
+          - link [ref=e29] [cursor=pointer]:
+            - /url: /en-gb/locations/
+            - img [ref=e30]:
+              - generic [ref=e32]: Change location
+          - button "Search" [ref=e33] [cursor=pointer]:
+            - img [ref=e34]
+            - generic [ref=e36]: Search
+          - link "Menu" [ref=e37] [cursor=pointer]:
+            - /url: "#"
+            - generic [ref=e40]: Menu
+  - generic [ref=e41]:
+    - main [ref=e42]:
+      - generic [ref=e45]:
+        - heading "404" [level=1] [ref=e46]
+        - generic [ref=e47]:
+          - heading "Sorry, we can’t find the page you are looking for" [level=2] [ref=e48]
+          - paragraph [ref=e49]: Try our search or go to our homepage.
+          - paragraph [ref=e50]:
+            - link "GSK home" [ref=e51] [cursor=pointer]:
+              - /url: /en-gb/home/
+    - contentinfo [ref=e53]:
+      - generic [ref=e55]:
+        - generic [ref=e57]:
+          - link "Gsk Logo" [ref=e58] [cursor=pointer]:
+            - /url: /en-gb/
+          - generic [ref=e59]:
+            - paragraph [ref=e60]:
+              - text: This is our global website, intended for visitors seeking information on GSK's worldwide business. Our market sites can be reached by visiting our
+              - link "location selector." [ref=e61] [cursor=pointer]:
+                - /url: /en-gb/locations/
+            - paragraph [ref=e62]
+            - paragraph [ref=e63]: © 2001-2026 GSK plc. All rights reserved. Trade marks are owned by or licensed to the GSK group of companies.
+            - paragraph [ref=e64]: GSK plc. Registered in England and Wales No. 3888792.
+            - paragraph [ref=e65]: "Registered office: 79 New Oxford Street, London. United Kingdom. WC1A 1DG"
+          - paragraph [ref=e66]:
+            - link "> Modern Slavery Act Statement 2025 (PDF - 187.7KB)" [ref=e67] [cursor=pointer]:
+              - /url: /media/5ladhmeu/modern-slavery-act-statement-2025.pdf
+        - generic [ref=e68]:
+          - generic [ref=e69]:
+            - generic [ref=e70]: GSK websites
+            - list [ref=e71]:
+              - listitem [ref=e72]:
+                - link "Locations selector" [ref=e73] [cursor=pointer]:
+                  - /url: /en-gb/locations/
+              - listitem [ref=e74]:
+                - link "Social media directory" [ref=e75] [cursor=pointer]:
+                  - /url: /en-gb/media/social-media/
+              - listitem [ref=e76]:
+                - link "GSKPro for healthcare professionals" [ref=e77] [cursor=pointer]:
+                  - /url: https://www.gskpro.com
+              - listitem [ref=e78]:
+                - link "GSK study register" [ref=e79] [cursor=pointer]:
+                  - /url: https://www.gsk-studyregister.com/en/
+              - listitem [ref=e80]:
+                - link "Supplier website" [ref=e81] [cursor=pointer]:
+                  - /url: https://supplier.gsk.com
+              - listitem [ref=e82]:
+                - link "ViiV Healthcare" [ref=e83] [cursor=pointer]:
+                  - /url: https://viivhealthcare.com/
+          - generic [ref=e84]:
+            - generic [ref=e85]: Quick links
+            - list [ref=e86]:
+              - listitem [ref=e87]:
+                - link "Behind the Science magazine" [ref=e88] [cursor=pointer]:
+                  - /url: /en-gb/behind-the-science-magazine/
+              - listitem [ref=e89]:
+                - link "Company" [ref=e90] [cursor=pointer]:
+                  - /url: /en-gb/company/
+              - listitem [ref=e91]:
+                - link "Innovation" [ref=e92] [cursor=pointer]:
+                  - /url: /en-gb/innovation/
+              - listitem [ref=e93]:
+                - link "Products" [ref=e94] [cursor=pointer]:
+                  - /url: /en-gb/products/
+              - listitem [ref=e95]:
+                - link "Responsibility" [ref=e96] [cursor=pointer]:
+                  - /url: /en-gb/responsibility/
+              - listitem [ref=e97]:
+                - link "Investors" [ref=e98] [cursor=pointer]:
+                  - /url: /en-gb/investors/
+              - listitem [ref=e99]:
+                - link "Media" [ref=e100] [cursor=pointer]:
+                  - /url: /en-gb/media/
+              - listitem [ref=e101]:
+                - link "Careers" [ref=e102] [cursor=pointer]:
+                  - /url: /en-gb/careers/
+          - generic [ref=e103]:
+            - generic [ref=e104]: Get in touch
+            - list [ref=e105]:
+              - listitem [ref=e106]:
+                - link "Contact us" [ref=e107] [cursor=pointer]:
+                  - /url: /en-gb/contact-us/
+              - listitem [ref=e108]:
+                - link "Partnerships" [ref=e109] [cursor=pointer]:
+                  - /url: /en-gb/innovation/partnerships/
+              - listitem [ref=e110]:
+                - link "Report a possible side effect" [ref=e111] [cursor=pointer]:
+                  - /url: /en-gb/contact-us/report-a-possible-side-effect/
+              - listitem [ref=e112]:
+                - link "GSK Speak up" [ref=e113] [cursor=pointer]:
+                  - /url: https://www.gsk.com/speakup
+            - generic [ref=e114]:
+              - generic [ref=e115]: "Follow us on:"
+              - list [ref=e116]:
+                - listitem [ref=e117]:
+                  - link "Visit GSK on Linkedin" [ref=e118] [cursor=pointer]:
+                    - /url: http://www.linkedin.com/company/glaxosmithkline
+                - listitem [ref=e120]:
+                  - link "Visit GSK X page" [ref=e121] [cursor=pointer]:
+                    - /url: http://twitter.com/GSK
+                - listitem [ref=e123]:
+                  - link "Opens in a new window" [ref=e124] [cursor=pointer]:
+                    - /url: https://bsky.app/profile/gsk.bsky.social/
+                - listitem [ref=e126]:
+                  - link "Visit GSK Instagram" [ref=e127] [cursor=pointer]:
+                    - /url: https://www.instagram.com/gsk/
+                - listitem [ref=e129]:
+                  - link "Visit GSK Facebook page" [ref=e130] [cursor=pointer]:
+                    - /url: https://www.facebook.com/GSK
+                - listitem [ref=e132]:
+                  - link "Visit GSK YouTube Channel" [ref=e133] [cursor=pointer]:
+                    - /url: http://www.youtube.com/GSK
+                - listitem [ref=e135]:
+                  - link "Visit GSK RSS feeds" [ref=e136] [cursor=pointer]:
+                    - /url: /en-gb/media/rss-feeds/
+      - list [ref=e140]:
+        - listitem [ref=e141]:
+          - link "Accessibility" [ref=e142] [cursor=pointer]:
+            - /url: /en-gb/accessibility/
+        - listitem [ref=e143]:
+          - link "Digital sustainability" [ref=e144] [cursor=pointer]:
+            - /url: /en-gb/digital-sustainability/
+        - listitem [ref=e145]:
+          - link "Terms of use" [ref=e146] [cursor=pointer]:
+            - /url: /en-gb/terms-of-use/
+        - listitem [ref=e147]:
+          - link "Cookie policy" [ref=e148] [cursor=pointer]:
+            - /url: /en-gb/cookie-policy/
+        - listitem [ref=e149]:
+          - link "Privacy notice" [ref=e150] [cursor=pointer]:
+            - /url: https://privacy.gsk.com/en-gb/privacy-notice/general
+        - listitem [ref=e151]:
+          - link "Sitemap" [ref=e152] [cursor=pointer]:
+            - /url: /en-gb/sitemap/

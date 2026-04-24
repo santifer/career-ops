@@ -1,0 +1,625 @@
+- generic [active] [ref=e1]:
+  - generic:
+    - region "Mensagem toast":
+      - heading "0 notificações no total" [level=2] [ref=e3]
+      - alert
+  - generic [ref=e4]:
+    - generic [ref=e6]:
+      - button "Pular para pesquisa" [ref=e7] [cursor=pointer]:
+        - generic [ref=e8]: Pular para pesquisa
+      - button "Pular para conteúdo principal" [ref=e9] [cursor=pointer]:
+        - generic [ref=e10]: Pular para conteúdo principal
+      - button "Atalhos do teclado" [ref=e11] [cursor=pointer]:
+        - generic [ref=e12]: Atalhos do teclado
+      - button "Fechar menu pular" [ref=e13] [cursor=pointer]:
+        - img [ref=e14]
+        - generic [ref=e16]: Fechar menu pular
+    - banner "Navegação geral" [ref=e17]:
+      - generic [ref=e18]:
+        - link "LinkedIn" [ref=e19] [cursor=pointer]:
+          - /url: https://www.linkedin.com/feed/?nis=true
+          - img "LinkedIn" [ref=e22]:
+            - img [ref=e23]
+        - generic [ref=e27]:
+          - combobox "Pesquisar" [ref=e28]
+          - generic:
+            - img
+        - navigation "Navegação principal" [ref=e29]:
+          - list [ref=e30]:
+            - listitem [ref=e31]:
+              - link "atualizações do feed novas notificações Início" [ref=e32] [cursor=pointer]:
+                - /url: https://www.linkedin.com/feed/?nis=true&
+                - generic [ref=e33]:
+                  - generic [ref=e36]: atualizações do feed novas notificações
+                  - img [ref=e40]
+                - generic "Início" [ref=e42]
+            - listitem [ref=e43]:
+              - link "2 atualizações de rede novas notificações Minha rede" [ref=e44] [cursor=pointer]:
+                - /url: https://www.linkedin.com/mynetwork/?
+                - generic [ref=e45]:
+                  - generic [ref=e46]:
+                    - generic [ref=e47]: "2"
+                    - generic [ref=e48]: 2 atualizações de rede novas notificações
+                  - img [ref=e52]
+                - generic "Minha rede" [ref=e54]
+            - listitem [ref=e55]:
+              - link "Vagas" [ref=e56] [cursor=pointer]:
+                - /url: https://www.linkedin.com/jobs/?
+                - img [ref=e60]
+                - generic "Vagas" [ref=e62]
+            - listitem [ref=e63]:
+              - link "Mensagens" [ref=e64] [cursor=pointer]:
+                - /url: https://www.linkedin.com/messaging/?
+                - img [ref=e68]
+                - generic "Mensagens" [ref=e70]
+            - listitem [ref=e71]:
+              - link "13 novas notificações Notificações" [ref=e72] [cursor=pointer]:
+                - /url: https://www.linkedin.com/notifications/?
+                - generic [ref=e73]:
+                  - generic [ref=e74]:
+                    - generic [ref=e75]: "13"
+                    - generic [ref=e76]: 13 novas notificações
+                  - img [ref=e80]
+                - generic "Notificações" [ref=e82]
+            - listitem [ref=e83]:
+              - button "Fernando Xavier Eu" [ref=e85] [cursor=pointer]:
+                - img "Fernando Xavier" [ref=e86]
+                - generic [ref=e87]:
+                  - text: Eu
+                  - img [ref=e88]
+            - listitem [ref=e90]:
+              - button "Para negócios" [ref=e92] [cursor=pointer]:
+                - img [ref=e96]
+                - generic "Para negócios" [ref=e98]:
+                  - text: Para negócios
+                  - img [ref=e99]
+            - listitem [ref=e101]:
+              - link "Veicular anúncio" [ref=e102] [cursor=pointer]:
+                - /url: https://www.linkedin.com/campaignmanager/accounts?
+                - img [ref=e106]
+                - generic "Veicular anúncio" [ref=e109]
+    - generic [ref=e114]:
+      - main "Página da Trivium Packaging" [ref=e115]:
+        - generic [ref=e118]:
+          - button [ref=e121]
+          - generic [ref=e124]:
+            - generic [ref=e126]:
+              - generic [ref=e127]:
+                - img "Logo da organização Trivium Packaging" [ref=e128]
+                - generic [ref=e130]:
+                  - heading "Trivium Packaging" [level=1] [ref=e131]
+                  - link "Verificada" [ref=e132] [cursor=pointer]:
+                    - /url: /company/trivium-packaging/about/
+                    - img [ref=e133]
+                  - paragraph [ref=e135]: We are a leading global provider of high quality and infinitely recyclable metal packaging. We contain what matters.
+                  - generic [ref=e136]:
+                    - generic [ref=e137]: · Fabricação de Embalagens e Recipientes
+                    - generic [ref=e138]:
+                      - generic [ref=e139]: · Amsterdam
+                      - generic [ref=e140]: · 48 mil seguidores
+                      - link "· 5 mil-10 mil funcionários" [ref=e141] [cursor=pointer]:
+                        - /url: /search/results/people/?currentCompany=%5B%2220078437%22%5D&origin=COMPANY_PAGE_CANNED_SEARCH
+                        - text: ·
+                        - generic [ref=e142]: 5 mil-10 mil funcionários
+              - link "Eduardo Viana Eduardo e mais 7 conexões seguem esta página" [ref=e146] [cursor=pointer]:
+                - /url: http://www.linkedin.com/company/trivium-packaging/?showInNetworkFollowers=true
+                - img "Eduardo Viana" [ref=e149]
+                - heading "Eduardo e mais 7 conexões seguem esta página" [level=2] [ref=e150]
+              - generic [ref=e152]:
+                - region [ref=e154]:
+                  - button "Seguir" [ref=e155] [cursor=pointer]:
+                    - img [ref=e156]
+                    - generic [ref=e158]: Seguir
+                  - link "Visite o site" [ref=e159] [cursor=pointer]:
+                    - /url: https://triviumpackaging.com/
+                    - generic [ref=e160]:
+                      - text: Visite o site
+                      - img [ref=e161]
+                - button "Ações de estouro" [ref=e166] [cursor=pointer]:
+                  - img "Ações de estouro" [ref=e167]
+            - navigation "Navegação na página da organização" [ref=e170]:
+              - list [ref=e171]:
+                - listitem [ref=e172]:
+                  - link "Início" [ref=e173] [cursor=pointer]:
+                    - /url: /company/trivium-packaging/
+                - listitem [ref=e174]:
+                  - link "Sobre" [ref=e175] [cursor=pointer]:
+                    - /url: /company/trivium-packaging/about/
+                - listitem [ref=e176]:
+                  - link "Publicações" [ref=e177] [cursor=pointer]:
+                    - /url: /company/trivium-packaging/posts/
+                - listitem [ref=e178]:
+                  - link "Vagas" [ref=e179] [cursor=pointer]:
+                    - /url: /company/trivium-packaging/jobs/
+                - listitem [ref=e180]:
+                  - link "Pessoas" [ref=e181] [cursor=pointer]:
+                    - /url: /company/trivium-packaging/people/
+                - listitem [ref=e182]:
+                  - link "Insights" [ref=e183] [cursor=pointer]:
+                    - /url: /company/trivium-packaging/insights/
+        - generic [ref=e186]:
+          - generic [ref=e188]:
+            - heading "Trivium Packaging tem 70 vagas em aberto; encontre a certa para você." [level=4] [ref=e189]
+            - generic [ref=e190]:
+              - generic [ref=e191]:
+                - combobox "Pesquisar" [ref=e193]
+                - img [ref=e194]
+              - link "Pesquisar" [ref=e196] [cursor=pointer]:
+                - /url: https://www.linkedin.com/jobs/search?geoId=92000000&f_C=20078437&keywords=&origin=COMPANY_PAGE_JOBS_KEYWORD
+          - generic [ref=e197]:
+            - generic [ref=e198]:
+              - generic [ref=e199]:
+                - heading "Vagas anunciadas recentemente" [level=2] [ref=e201]
+                - generic [ref=e203]:
+                  - generic [ref=e204]: Página 1 de 3
+                  - button "Vagas anunciadas recentemente anteriores" [disabled] [ref=e205]:
+                    - img
+                    - generic: Voltar
+                  - button "Próximas vagas anunciadas recentemente" [ref=e206] [cursor=pointer]:
+                    - img [ref=e207]
+                    - generic [ref=e209]: Avançar
+              - list [ref=e211]:
+                - listitem [ref=e212]:
+                  - generic [ref=e217] [cursor=pointer]:
+                    - link "Trivium Packaging Cargo Commercial Director - South America with verification Nome da empresa Trivium Packaging Itupeva, SP 16 ex-alunos da Fundação Getulio Vargas trabalham aqui Publicado Há 1 semana" [ref=e218]:
+                      - /url: /jobs/search/?currentJobId=4397252890&f_C=20078437&geoId=92000000&origin=COMPANY_PAGE_JOBS_CLUSTER_EXPANSION&originToLandingJobPostings=4397252890%2C4397260487%2C4397255779%2C4394758647%2C4397264079%2C4394764554%2C4397258783%2C4394765498%2C4394759624&refId=6Q1tu0lHZc2%2FQ8OzgW6qng%3D%3D&trackingId=O13NF1gqyZvNGIQZUyPGow%3D%3D&trk=d_flagship3_company
+                      - generic [ref=e219]:
+                        - img "Trivium Packaging" [ref=e221]
+                        - generic [ref=e222]:
+                          - generic [ref=e224]:
+                            - generic [ref=e225]: Cargo
+                            - generic [ref=e226]:
+                              - generic [ref=e227]:
+                                - strong [ref=e228]: Commercial Director - South America
+                                - img [ref=e230]
+                              - generic [ref=e232]: Commercial Director - South America with verification
+                          - generic [ref=e233]:
+                            - generic [ref=e234]: Nome da empresa
+                            - generic [ref=e235]: Trivium Packaging
+                          - generic [ref=e238]: Itupeva, SP
+                      - generic [ref=e244]:
+                        - link [ref=e246]:
+                          - /url: https://www.linkedin.com/search/results/people/?origin=JOB_PAGE_CANNED_SEARCH&currentCompany=%5B20078437%5D&schoolFilter=%5B8175%5D
+                          - text: 16 ex-alunos trabalham aqui
+                        - generic [ref=e247]: 16 ex-alunos da Fundação Getulio Vargas trabalham aqui
+                      - list [ref=e248]:
+                        - listitem [ref=e249]:
+                          - generic [ref=e250]: Publicado
+                          - time [ref=e251]: Há 1 semana
+                    - button "Salvar esta vaga de Commercial Director - South America da Trivium Packaging" [ref=e254]:
+                      - generic [ref=e255]:
+                        - img [ref=e256]
+                        - generic [ref=e258]: Salvar
+                - listitem [ref=e259]:
+                  - generic [ref=e264] [cursor=pointer]:
+                    - link "Trivium Packaging Cargo Finance Manager with verification Nome da empresa Trivium Packaging Itupeva, SP 16 ex-alunos da Fundação Getulio Vargas trabalham aqui Publicado Há 1 semana" [ref=e265]:
+                      - /url: /jobs/search/?currentJobId=4397260487&f_C=20078437&geoId=92000000&origin=COMPANY_PAGE_JOBS_CLUSTER_EXPANSION&originToLandingJobPostings=4397252890%2C4397260487%2C4397255779%2C4394758647%2C4397264079%2C4394764554%2C4397258783%2C4394765498%2C4394759624&refId=6Q1tu0lHZc2%2FQ8OzgW6qng%3D%3D&trackingId=bOqLW05ci0q7rf0ABB0knQ%3D%3D&trk=d_flagship3_company
+                      - generic [ref=e266]:
+                        - img "Trivium Packaging" [ref=e268]
+                        - generic [ref=e269]:
+                          - generic [ref=e271]:
+                            - generic [ref=e272]: Cargo
+                            - generic [ref=e273]:
+                              - generic [ref=e274]:
+                                - strong [ref=e275]: Finance Manager
+                                - img [ref=e277]
+                              - generic [ref=e279]: Finance Manager with verification
+                          - generic [ref=e280]:
+                            - generic [ref=e281]: Nome da empresa
+                            - generic [ref=e282]: Trivium Packaging
+                          - generic [ref=e285]: Itupeva, SP
+                      - generic [ref=e291]:
+                        - link [ref=e293]:
+                          - /url: https://www.linkedin.com/search/results/people/?origin=JOB_PAGE_CANNED_SEARCH&currentCompany=%5B20078437%5D&schoolFilter=%5B8175%5D
+                          - text: 16 ex-alunos trabalham aqui
+                        - generic [ref=e294]: 16 ex-alunos da Fundação Getulio Vargas trabalham aqui
+                      - list [ref=e295]:
+                        - listitem [ref=e296]:
+                          - generic [ref=e297]: Publicado
+                          - time [ref=e298]: Há 1 semana
+                    - button "Salvar esta vaga de Finance Manager da Trivium Packaging" [ref=e301]:
+                      - generic [ref=e302]:
+                        - img [ref=e303]
+                        - generic [ref=e305]: Salvar
+                - listitem [ref=e306]:
+                  - generic [ref=e311] [cursor=pointer]:
+                    - link "Trivium Packaging Cargo Human Resources Manager with verification Nome da empresa Trivium Packaging Conklin, NY 16 ex-alunos da Fundação Getulio Vargas trabalham aqui Publicado Há 1 semana" [ref=e312]:
+                      - /url: /jobs/search/?currentJobId=4397255779&f_C=20078437&geoId=92000000&origin=COMPANY_PAGE_JOBS_CLUSTER_EXPANSION&originToLandingJobPostings=4397252890%2C4397260487%2C4397255779%2C4394758647%2C4397264079%2C4394764554%2C4397258783%2C4394765498%2C4394759624&refId=6Q1tu0lHZc2%2FQ8OzgW6qng%3D%3D&trackingId=y3IDItN2S6UsYqfgRQTRFA%3D%3D&trk=d_flagship3_company
+                      - generic [ref=e313]:
+                        - img "Trivium Packaging" [ref=e315]
+                        - generic [ref=e316]:
+                          - generic [ref=e318]:
+                            - generic [ref=e319]: Cargo
+                            - generic [ref=e320]:
+                              - generic [ref=e321]:
+                                - strong [ref=e322]: Human Resources Manager
+                                - img [ref=e324]
+                              - generic [ref=e326]: Human Resources Manager with verification
+                          - generic [ref=e327]:
+                            - generic [ref=e328]: Nome da empresa
+                            - generic [ref=e329]: Trivium Packaging
+                          - generic [ref=e332]: Conklin, NY
+                      - generic [ref=e338]:
+                        - link [ref=e340]:
+                          - /url: https://www.linkedin.com/search/results/people/?origin=JOB_PAGE_CANNED_SEARCH&currentCompany=%5B20078437%5D&schoolFilter=%5B8175%5D
+                          - text: 16 ex-alunos trabalham aqui
+                        - generic [ref=e341]: 16 ex-alunos da Fundação Getulio Vargas trabalham aqui
+                      - list [ref=e342]:
+                        - listitem [ref=e343]:
+                          - generic [ref=e344]: Publicado
+                          - time [ref=e345]: Há 1 semana
+                    - button "Salvar esta vaga de Human Resources Manager da Trivium Packaging" [ref=e348]:
+                      - generic [ref=e349]:
+                        - img [ref=e350]
+                        - generic [ref=e352]: Salvar
+                - listitem [ref=e353]:
+                  - generic [ref=e358] [cursor=pointer]:
+                    - link "Trivium Packaging Cargo Technical Training Specialist with verification Nome da empresa Trivium Packaging Reno, OH 16 ex-alunos da Fundação Getulio Vargas trabalham aqui Publicado Há 2 semanas" [ref=e359]:
+                      - /url: /jobs/search/?currentJobId=4394758647&f_C=20078437&geoId=92000000&origin=COMPANY_PAGE_JOBS_CLUSTER_EXPANSION&originToLandingJobPostings=4397252890%2C4397260487%2C4397255779%2C4394758647%2C4397264079%2C4394764554%2C4397258783%2C4394765498%2C4394759624&refId=6Q1tu0lHZc2%2FQ8OzgW6qng%3D%3D&trackingId=eu3xQRWj25PSfjwT86wT5g%3D%3D&trk=d_flagship3_company
+                      - generic [ref=e360]:
+                        - img "Trivium Packaging" [ref=e362]
+                        - generic [ref=e363]:
+                          - generic [ref=e365]:
+                            - generic [ref=e366]: Cargo
+                            - generic [ref=e367]:
+                              - generic [ref=e368]:
+                                - strong [ref=e369]: Technical Training Specialist
+                                - img [ref=e371]
+                              - generic [ref=e373]: Technical Training Specialist with verification
+                          - generic [ref=e374]:
+                            - generic [ref=e375]: Nome da empresa
+                            - generic [ref=e376]: Trivium Packaging
+                          - generic [ref=e379]: Reno, OH
+                      - generic [ref=e385]:
+                        - link [ref=e387]:
+                          - /url: https://www.linkedin.com/search/results/people/?origin=JOB_PAGE_CANNED_SEARCH&currentCompany=%5B20078437%5D&schoolFilter=%5B8175%5D
+                          - text: 16 ex-alunos trabalham aqui
+                        - generic [ref=e388]: 16 ex-alunos da Fundação Getulio Vargas trabalham aqui
+                      - list [ref=e389]:
+                        - listitem [ref=e390]:
+                          - generic [ref=e391]: Publicado
+                          - time [ref=e392]: Há 2 semanas
+                    - button "Salvar esta vaga de Technical Training Specialist da Trivium Packaging" [disabled] [ref=e395]:
+                      - generic:
+                        - img
+                        - generic: Salvar
+                - listitem [ref=e396]
+                - listitem [ref=e398]
+                - listitem [ref=e400]
+                - listitem [ref=e402]
+                - listitem [ref=e404]
+              - list [ref=e408]:
+                - listitem [ref=e409]:
+                  - button "Página 1" [ref=e410] [cursor=pointer]:
+                    - generic [ref=e411]: "1"
+                - listitem [ref=e412]:
+                  - button "Página 2" [ref=e413] [cursor=pointer]:
+                    - generic [ref=e414]: "2"
+                - listitem [ref=e415]:
+                  - button "Página 3" [ref=e416] [cursor=pointer]:
+                    - generic [ref=e417]: "3"
+            - link "Clique para ver todas as vagas na Trivium Packaging" [ref=e420] [cursor=pointer]:
+              - /url: /jobs/search/?f_C=20078437&geoId=92000000&origin=COMPANY_PAGE_JOBS_CLUSTER_EXPANSION&originToLandingJobPostings=4397252890%2C4397260487%2C4397255779%2C4394758647%2C4397264079%2C4394764554%2C4397258783%2C4394765498%2C4394759624
+              - generic [ref=e421]: Exibir todas as vagas
+              - generic [ref=e422]: Clique para ver todas as vagas na Trivium Packaging
+              - img [ref=e423]
+          - generic [ref=e427]:
+            - generic [ref=e428]:
+              - navigation [ref=e429]:
+                - list
+              - generic [ref=e431]:
+                - list [ref=e432]:
+                  - listitem [ref=e433]:
+                    - img [ref=e434]
+                    - generic [ref=e436]:
+                      - link "Dúvidas? Acesse a nossa Central de Ajuda." [ref=e437] [cursor=pointer]:
+                        - /url: https://www.linkedin.com/help/linkedin?trk=d_flagship3_company
+                        - text: Dúvidas?
+                      - paragraph [ref=e438]: Acesse a nossa Central de Ajuda.
+                  - listitem [ref=e439]:
+                    - img [ref=e440]
+                    - generic [ref=e442]:
+                      - link "Gerencie sua conta e privacidade Acesse suas Configurações." [ref=e443] [cursor=pointer]:
+                        - /url: https://www.linkedin.com/psettings/
+                        - text: Gerencie sua conta e privacidade
+                      - paragraph [ref=e444]: Acesse suas Configurações.
+                  - listitem [ref=e445]:
+                    - img [ref=e446]
+                    - generic [ref=e448]:
+                      - link "Visibilidade da recomendação Saiba mais sobre os conteúdos recomendados." [ref=e449] [cursor=pointer]:
+                        - /url: https://www.linkedin.com/help/linkedin/answer/a1339724
+                        - text: Visibilidade da recomendação
+                      - paragraph [ref=e450]: Saiba mais sobre os conteúdos recomendados.
+                - generic [ref=e451]:
+                  - generic [ref=e452]: Selecionar idioma
+                  - combobox "Selecionar idioma" [ref=e453]:
+                    - option "العربية (Árabe)"
+                    - option "বাংলা (Bengali)"
+                    - option "Čeština (Tcheco)"
+                    - option "Dansk (Dinamarquês)"
+                    - option "Deutsch (Alemão)"
+                    - option "Ελληνικά (Grego)"
+                    - option "English (Inglês)"
+                    - option "Español (Espanhol)"
+                    - option "فارسی (Persa)"
+                    - option "Suomi (Finlandês)"
+                    - option "Français (Francês)"
+                    - option "हिंदी (Hindi)"
+                    - option "Magyar (Húngaro)"
+                    - option "Bahasa Indonésia (Indonésio)"
+                    - option "Italiano (Italiano)"
+                    - option "עברית (Hebraico)"
+                    - option "日本語 (Japonês)"
+                    - option "한국어 (Coreano)"
+                    - option "मराठी (Marati)"
+                    - option "Bahasa Malaysia (Malaio)"
+                    - option "Nederlands (Holandês)"
+                    - option "Norsk (Norueguês)"
+                    - option "ਪੰਜਾਬੀ (Punjabi)"
+                    - option "Polski (Polonês)"
+                    - option "Português (Português)" [selected]
+                    - option "Română (Romeno)"
+                    - option "Русский (Russo)"
+                    - option "Svenska (Sueco)"
+                    - option "తెలుగు (Telugu)"
+                    - option "ภาษาไทย (Tailandês)"
+                    - option "Tagalog (Tagalog)"
+                    - option "Türkçe (Turco)"
+                    - option "Українська (Ucraniano)"
+                    - option "Tiếng Việt (Vietnamita)"
+                    - option "简体中文 (Chinês (Simplificado))"
+                    - option "正體中文 (Chinês (Tradicional))"
+            - paragraph [ref=e454]: LinkedIn Corporation © 2026
+      - complementary "Publicidade" [ref=e455]:
+        - iframe [ref=e457]:
+          
+        - generic [ref=e459]:
+          - generic [ref=e464]:
+            - heading "Páginas afiliadas" [level=3] [ref=e466]
+            - list [ref=e468]:
+              - listitem [ref=e469]:
+                - generic [ref=e470]:
+                  - generic [ref=e471]:
+                    - link "Logo da página Ardagh Group" [ref=e473] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/company/ardagh-group/
+                      - generic "Logo da página Ardagh Group" [ref=e475]:
+                        - img "Logo da página Ardagh Group" [ref=e477]
+                    - generic [ref=e478]:
+                      - link "Ardagh Group Fabricação de Embalagens e Recipientes Matriz" [ref=e480] [cursor=pointer]:
+                        - /url: https://www.linkedin.com/company/ardagh-group/
+                        - generic [ref=e481]:
+                          - generic [ref=e483]: Ardagh Group
+                          - generic [ref=e485]: Fabricação de Embalagens e Recipientes
+                          - generic [ref=e487]: Matriz
+                      - link "Rogério Antonio oliveira Rogério Antonio e mais 64 conexões seguem esta página" [ref=e489] [cursor=pointer]:
+                        - /url: http://www.linkedin.com/company/ardagh-group/?showInNetworkFollowers=true
+                        - img "Rogério Antonio oliveira" [ref=e492]
+                        - generic [ref=e493]: Rogério Antonio e mais 64 conexões seguem esta página
+                  - button "Seguir Ardagh Group" [ref=e495] [cursor=pointer]:
+                    - img [ref=e496]
+                    - generic [ref=e498]: Seguir
+          - generic [ref=e502]:
+            - generic [ref=e503]:
+              - heading "Pages que as pessoas também viram" [level=3] [ref=e505]
+              - list [ref=e507]:
+                - listitem [ref=e508]:
+                  - generic [ref=e509]:
+                    - generic [ref=e510]:
+                      - link "Logo da página Ardagh Group" [ref=e512] [cursor=pointer]:
+                        - /url: https://www.linkedin.com/company/ardagh-group/
+                        - generic "Logo da página Ardagh Group" [ref=e514]:
+                          - img "Logo da página Ardagh Group" [ref=e516]
+                      - generic [ref=e517]:
+                        - link "Ardagh Group Fabricação de Embalagens e Recipientes 166.330 seguidores" [ref=e519] [cursor=pointer]:
+                          - /url: https://www.linkedin.com/company/ardagh-group/
+                          - generic [ref=e520]:
+                            - generic [ref=e522]: Ardagh Group
+                            - generic [ref=e524]: Fabricação de Embalagens e Recipientes
+                            - generic [ref=e526]: 166.330 seguidores
+                        - link "Rogério Antonio oliveira Rogério Antonio e mais 64 conexões seguem esta página" [ref=e528] [cursor=pointer]:
+                          - /url: http://www.linkedin.com/company/ardagh-group/?showInNetworkFollowers=true
+                          - img "Rogério Antonio oliveira" [ref=e531]
+                          - generic [ref=e532]: Rogério Antonio e mais 64 conexões seguem esta página
+                    - button "Seguir Ardagh Group" [ref=e534] [cursor=pointer]:
+                      - img [ref=e535]
+                      - generic [ref=e537]: Seguir
+                - listitem [ref=e538]:
+                  - generic [ref=e539]:
+                    - generic [ref=e540]:
+                      - link "Logo da página Ball Corporation" [ref=e542] [cursor=pointer]:
+                        - /url: https://www.linkedin.com/company/ballcorporation/
+                        - generic "Logo da página Ball Corporation" [ref=e544]:
+                          - img "Logo da página Ball Corporation" [ref=e546]
+                      - generic [ref=e547]:
+                        - link "Ball Corporation Embalagens e recipientes 371.967 seguidores" [ref=e549] [cursor=pointer]:
+                          - /url: https://www.linkedin.com/company/ballcorporation/
+                          - generic [ref=e550]:
+                            - generic [ref=e552]: Ball Corporation
+                            - generic [ref=e554]: Embalagens e recipientes
+                            - generic [ref=e556]: 371.967 seguidores
+                        - link "Rogério Antonio oliveira Rogério Antonio e mais 67 conexões seguem esta página" [ref=e558] [cursor=pointer]:
+                          - /url: http://www.linkedin.com/company/ballcorporation/?showInNetworkFollowers=true
+                          - img "Rogério Antonio oliveira" [ref=e561]
+                          - generic [ref=e562]: Rogério Antonio e mais 67 conexões seguem esta página
+                    - button "Seguir Ball Corporation" [ref=e564] [cursor=pointer]:
+                      - img [ref=e565]
+                      - generic [ref=e567]: Seguir
+                - listitem [ref=e568]:
+                  - generic [ref=e569]:
+                    - generic [ref=e570]:
+                      - link "Logo da página Crown Holdings, Inc." [ref=e572] [cursor=pointer]:
+                        - /url: https://www.linkedin.com/company/crown-holdings-inc-/
+                        - generic "Logo da página Crown Holdings, Inc." [ref=e574]:
+                          - img "Logo da página Crown Holdings, Inc." [ref=e576]
+                      - generic [ref=e577]:
+                        - link "Crown Holdings, Inc. Embalagens e recipientes 138.133 seguidores" [ref=e579] [cursor=pointer]:
+                          - /url: https://www.linkedin.com/company/crown-holdings-inc-/
+                          - generic [ref=e580]:
+                            - generic [ref=e582]: Crown Holdings, Inc.
+                            - generic [ref=e584]: Embalagens e recipientes
+                            - generic [ref=e586]: 138.133 seguidores
+                        - link "Leandro Cumpian Leandro e mais 13 conexões seguem esta página" [ref=e588] [cursor=pointer]:
+                          - /url: http://www.linkedin.com/company/crown-holdings-inc-/?showInNetworkFollowers=true
+                          - img "Leandro Cumpian" [ref=e591]
+                          - generic [ref=e592]: Leandro e mais 13 conexões seguem esta página
+                    - button "Seguir Crown Holdings, Inc." [ref=e594] [cursor=pointer]:
+                      - img [ref=e595]
+                      - generic [ref=e597]: Seguir
+            - button "Exibir todas as páginas semelhantes" [ref=e599] [cursor=pointer]:
+              - img [ref=e600]
+              - generic [ref=e602]: Exibir todos
+          - generic [ref=e606]:
+            - generic [ref=e607]:
+              - heading "As pessoas também seguem" [level=3] [ref=e609]
+              - list [ref=e611]:
+                - listitem [ref=e612]:
+                  - generic [ref=e613]:
+                    - generic [ref=e614]:
+                      - link "Logo da página Bayer" [ref=e616] [cursor=pointer]:
+                        - /url: https://www.linkedin.com/company/bayer/
+                        - generic "Logo da página Bayer" [ref=e618]:
+                          - img "Logo da página Bayer" [ref=e620]
+                      - generic [ref=e621]:
+                        - link "Bayer Fabricação de produtos químicos 6.908.904 seguidores" [ref=e623] [cursor=pointer]:
+                          - /url: https://www.linkedin.com/company/bayer/
+                          - generic [ref=e624]:
+                            - generic [ref=e626]: Bayer
+                            - generic [ref=e628]: Fabricação de produtos químicos
+                            - generic [ref=e630]: 6.908.904 seguidores
+                        - link "Samegui Carvalho Samegui e mais 333 conexões seguem esta página" [ref=e632] [cursor=pointer]:
+                          - /url: http://www.linkedin.com/company/bayer/?showInNetworkFollowers=true
+                          - img "Samegui Carvalho" [ref=e635]
+                          - generic [ref=e636]: Samegui e mais 333 conexões seguem esta página
+                    - button "Seguir Bayer" [ref=e638] [cursor=pointer]:
+                      - img [ref=e639]
+                      - generic [ref=e641]: Seguir
+                - listitem [ref=e642]:
+                  - generic [ref=e643]:
+                    - generic [ref=e644]:
+                      - link "Logo da página Bunge" [ref=e646] [cursor=pointer]:
+                        - /url: https://www.linkedin.com/company/bunge/
+                        - generic "Logo da página Bunge" [ref=e648]:
+                          - img "Logo da página Bunge" [ref=e650]
+                      - generic [ref=e651]:
+                        - link "Bunge Fabricação de produtos alimentícios e bebidas 1.638.375 seguidores" [ref=e653] [cursor=pointer]:
+                          - /url: https://www.linkedin.com/company/bunge/
+                          - generic [ref=e654]:
+                            - generic [ref=e656]: Bunge
+                            - generic [ref=e658]: Fabricação de produtos alimentícios e bebidas
+                            - generic [ref=e660]: 1.638.375 seguidores
+                        - link "Rachel Scholte Carneiro Rachel trabalha aqui" [ref=e662] [cursor=pointer]:
+                          - /url: http://www.linkedin.com/in/rachelscarneiro
+                          - img "Rachel Scholte Carneiro" [ref=e665]
+                          - generic [ref=e666]: Rachel trabalha aqui
+                    - button "Seguir Bunge" [ref=e668] [cursor=pointer]:
+                      - img [ref=e669]
+                      - generic [ref=e671]: Seguir
+                - listitem [ref=e672]:
+                  - generic [ref=e673]:
+                    - generic [ref=e674]:
+                      - link "Logo da página Siemens" [ref=e676] [cursor=pointer]:
+                        - /url: https://www.linkedin.com/company/siemens/
+                        - generic "Logo da página Siemens" [ref=e678]:
+                          - img "Logo da página Siemens" [ref=e680]
+                      - generic [ref=e681]:
+                        - link "Siemens Fabricação de máquinas de automação 8.805.642 seguidores" [ref=e683] [cursor=pointer]:
+                          - /url: https://www.linkedin.com/company/siemens/
+                          - generic [ref=e684]:
+                            - generic [ref=e686]: Siemens
+                            - generic [ref=e688]: Fabricação de máquinas de automação
+                            - generic [ref=e690]: 8.805.642 seguidores
+                        - link "Kenzo Otsuka, CFA, CAIA Kenzo e mais 254 conexões seguem esta página" [ref=e692] [cursor=pointer]:
+                          - /url: http://www.linkedin.com/company/siemens/?showInNetworkFollowers=true
+                          - img "Kenzo Otsuka, CFA, CAIA" [ref=e695]
+                          - generic [ref=e696]: Kenzo e mais 254 conexões seguem esta página
+                    - button "Seguir Siemens" [ref=e698] [cursor=pointer]:
+                      - img [ref=e699]
+                      - generic [ref=e701]: Seguir
+            - button "Exibir todas as páginas recomendadas" [ref=e703] [cursor=pointer]:
+              - img [ref=e704]
+              - generic [ref=e706]: Exibir todos
+          - generic [ref=e712]:
+            - generic [ref=e713]:
+              - heading "Ex-alunos que trabalham aqui" [level=3] [ref=e715]
+              - list [ref=e717]:
+                - listitem [ref=e718]:
+                  - generic [ref=e719]:
+                    - generic [ref=e720]:
+                      - link "Foto do perfil de Kelly Cristina Pinardi Bigaton" [ref=e722] [cursor=pointer]:
+                        - /url: https://www.linkedin.com/in/kelly-cristina-pinardi-bigaton-2b02554a
+                        - generic "Foto do perfil de Kelly Cristina Pinardi Bigaton" [ref=e724]:
+                          - img "Kelly Cristina Pinardi Bigaton" [ref=e726]
+                      - link "Kelly Cristina Pinardi Bigaton 2º Customer Service Supervisor na Trivium Packaging" [ref=e729] [cursor=pointer]:
+                        - /url: https://www.linkedin.com/in/kelly-cristina-pinardi-bigaton-2b02554a
+                        - generic [ref=e730]:
+                          - generic [ref=e731]:
+                            - generic [ref=e732]: Kelly Cristina Pinardi Bigaton
+                            - generic [ref=e733]:
+                              - generic [ref=e734]: 2º
+                              - generic [ref=e735]: · 2º
+                          - generic [ref=e737]: Customer Service Supervisor na Trivium Packaging
+                    - button "Convidar Kelly Cristina Pinardi Bigaton para se conectar" [ref=e739] [cursor=pointer]:
+                      - generic [ref=e740]: Conectar
+                - listitem [ref=e741]:
+                  - generic [ref=e742]:
+                    - generic [ref=e743]:
+                      - link "Foto do perfil de André Estrada" [ref=e745] [cursor=pointer]:
+                        - /url: https://www.linkedin.com/in/andr%C3%A9-estrada-5780ba25
+                        - generic "Foto do perfil de André Estrada" [ref=e747]:
+                          - img "André Estrada" [ref=e749]
+                      - link "André Estrada 2º Engenharia | Manutenção e Produção | Gestão de Equipes, Projetos, Custos | TPM, LSS Green Belt | SAP, Excel, Power BI" [ref=e752] [cursor=pointer]:
+                        - /url: https://www.linkedin.com/in/andr%C3%A9-estrada-5780ba25
+                        - generic [ref=e753]:
+                          - generic [ref=e754]:
+                            - generic [ref=e755]: André Estrada
+                            - generic [ref=e756]:
+                              - generic [ref=e757]: 2º
+                              - generic [ref=e758]: · 2º
+                          - generic [ref=e760]: Engenharia | Manutenção e Produção | Gestão de Equipes, Projetos, Custos | TPM, LSS Green Belt | SAP, Excel, Power BI
+                    - button "Convidar André Estrada para se conectar" [ref=e762] [cursor=pointer]:
+                      - generic [ref=e763]: Conectar
+                - listitem [ref=e764]:
+                  - generic [ref=e765]:
+                    - generic [ref=e766]:
+                      - link "Foto do perfil de Sheila Regina Ferreira" [ref=e768] [cursor=pointer]:
+                        - /url: https://www.linkedin.com/in/sheilaferreira-supplychain
+                        - generic "Foto do perfil de Sheila Regina Ferreira" [ref=e770]:
+                          - img "Sheila Regina Ferreira" [ref=e772]
+                      - link "Sheila Regina Ferreira 2º Supply Chain Management | Compras | Comércio Exterior" [ref=e775] [cursor=pointer]:
+                        - /url: https://www.linkedin.com/in/sheilaferreira-supplychain
+                        - generic [ref=e776]:
+                          - generic [ref=e777]:
+                            - generic [ref=e778]: Sheila Regina Ferreira
+                            - generic [ref=e779]:
+                              - generic [ref=e780]: 2º
+                              - generic [ref=e781]: · 2º
+                          - generic [ref=e783]: Supply Chain Management | Compras | Comércio Exterior
+                    - button "Convidar Sheila Regina Ferreira para se conectar" [ref=e785] [cursor=pointer]:
+                      - generic [ref=e786]: Conectar
+            - link "Exibir todos" [ref=e788] [cursor=pointer]:
+              - /url: https://www.linkedin.com/search/results/people/?origin=COMPANY_HIRES_IN_COMPANY_CANNED_SEARCH&currentCompany=%5B20078437%5D&schoolFilter=8175
+              - generic [ref=e789]: Exibir todos
+              - img [ref=e790]
+        - iframe [ref=e794]:
+          
+    - generic:
+      - generic:
+        - complementary:
+          - generic [ref=e796]:
+            - generic [ref=e798] [cursor=pointer]:
+              - img "Fernando Xavier" [ref=e800]
+              - button "Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas." [ref=e801]:
+                - generic [ref=e802]:
+                  - generic [ref=e803]: Mensagens
+                  - generic [ref=e804]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+            - generic [ref=e805]:
+              - button "Abrir o menu suspenso de mensagens" [ref=e807] [cursor=pointer]:
+                - img "Abrir o menu suspenso de mensagens" [ref=e808]
+              - button "Escrever mensagem" [ref=e811] [cursor=pointer]:
+                - img [ref=e812]
+                - generic [ref=e814]: Escrever mensagem
+              - button "Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas." [ref=e815] [cursor=pointer]:
+                - img [ref=e816]
+                - generic [ref=e818]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+        - complementary "Assistente de IA para obter ajuda com sua carreira, vagas, etc."
+  - region [ref=e819]

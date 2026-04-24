@@ -1,0 +1,191 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e167]:
+      - generic [ref=e174] [cursor=pointer]:
+        - generic [ref=e175]: PT
+        - img "caret-down" [ref=e177]:
+          - img [ref=e178]
+    - generic [ref=e180]:
+      - generic [ref=e181]:
+        - generic [ref=e183]:
+          - button "Retornar" [ref=e185] [cursor=pointer]:
+            - img "arrow-left" [ref=e186]:
+              - img [ref=e187]
+          - heading "Controller" [level=3] [ref=e190]
+        - separator [ref=e192]
+      - main [ref=e193]:
+        - generic [ref=e194]:
+          - generic [ref=e196]:
+            - generic "Nome Completo" [ref=e198]: "* Nome Completo"
+            - textbox "* Nome Completo" [ref=e202]: Fernando Xavier
+          - generic [ref=e203]:
+            - generic [ref=e206]:
+              - generic "E-mail" [ref=e208]: "* E-mail"
+              - textbox "* E-mail" [ref=e212]:
+                - /placeholder: exemplo@email.com
+                - text: fernandocostaxavier@gmail.com
+            - generic [ref=e215]:
+              - generic "Telefone" [ref=e217]: "* Telefone"
+              - generic [ref=e220]:
+                - generic [ref=e221]:
+                  - generic [ref=e229]:
+                    - generic [ref=e232] [cursor=pointer]:
+                      - generic [ref=e233]:
+                        - combobox [ref=e235]
+                        - generic [ref=e236]: 🇧🇷 +55
+                      - generic:
+                        - img:
+                          - img
+                    - generic [ref=e237]:
+                      - textbox "(xx) xxxxx-xxxx" [ref=e238]: (11) 96480-1913
+                      - generic [ref=e453]:
+                        - generic:
+                          - img "check-circle":
+                            - img
+                  - generic [ref=e245] [cursor=pointer]:
+                    - generic [ref=e246]:
+                      - combobox [ref=e248]
+                      - generic [ref=e249]: Pessoal
+                    - generic:
+                      - img:
+                        - img
+                  - img "delete" [ref=e256] [cursor=pointer]:
+                    - img [ref=e257]
+                - button "plus Adicionar telefone" [ref=e259] [cursor=pointer]:
+                  - img "plus" [ref=e260]:
+                    - img [ref=e261]
+                  - text: Adicionar telefone
+          - generic [ref=e264]:
+            - generic [ref=e271]:
+              - generic [ref=e274]:
+                - generic [ref=e276]: LinkedIn
+                - textbox "LinkedIn" [ref=e280]:
+                  - /placeholder: https://www.linkedin.com/in/exemplo
+                  - text: https://www.linkedin.com/in/fernando-xavier-controller
+              - generic [ref=e283]:
+                - generic [ref=e285]: "* Currículo"
+                - generic [ref=e289]:
+                  - button "upload Anexar arquivo" [ref=e291]:
+                    - button "upload Anexar arquivo" [ref=e292] [cursor=pointer]:
+                      - img "upload" [ref=e293]:
+                        - img [ref=e294]
+                      - text: Anexar arquivo
+                  - generic [ref=e679]:
+                    - img "paper-clip" [ref=e681]:
+                      - img [ref=e682]
+                    - generic "cv-021-grupo-renova-controller-2026-04-21.pdf" [ref=e684]
+                    - button "delete" [ref=e686] [cursor=pointer]:
+                      - img "delete" [ref=e687]:
+                        - img [ref=e688]
+            - generic [ref=e298]:
+              - generic "Portfolio / Github / Site" [ref=e300]
+              - textbox "Portfolio / Github / Site" [ref=e304]:
+                - /placeholder: https://www.exemplo.com
+          - generic [ref=e305]:
+            - generic [ref=e308]:
+              - generic "Você é uma Pessoa com Deficiência?" [ref=e310]
+              - generic [ref=e314] [cursor=pointer]:
+                - generic [ref=e315]:
+                  - combobox "Você é uma Pessoa com Deficiência?" [ref=e317]
+                  - generic [ref=e904]: Não
+                - generic:
+                  - img:
+                    - img
+                - img [ref=e906]:
+                  - img [ref=e907]
+            - text: "*"
+          - generic [ref=e318]:
+            - generic [ref=e321]:
+              - generic "País" [ref=e323]: "* País"
+              - generic [ref=e327] [cursor=pointer]:
+                - generic [ref=e328]:
+                  - combobox "* País" [ref=e330]
+                  - generic "Brasil" [ref=e331]
+                - generic:
+                  - img:
+                    - img
+                - img [ref=e333]:
+                  - img [ref=e334]
+            - generic [ref=e338]:
+              - generic "Estado" [ref=e340]: "* Estado"
+              - generic [ref=e344] [cursor=pointer]:
+                - generic [ref=e345]:
+                  - combobox "* Estado" [ref=e347]
+                  - generic "São Paulo" [ref=e486]
+                - generic:
+                  - img:
+                    - img
+                - img [ref=e483]:
+                  - img [ref=e484]
+            - generic [ref=e350]:
+              - generic "Cidade" [ref=e352]: "* Cidade"
+              - generic [ref=e356] [cursor=pointer]:
+                - generic [ref=e357]:
+                  - combobox "* Cidade" [ref=e359]
+                  - generic "Arujá" [ref=e523]
+                - generic:
+                  - img:
+                    - img
+                - img [ref=e516]:
+                  - img [ref=e517]
+            - generic [ref=e362]:
+              - generic "Possibilidade de mudança?" [ref=e364]
+              - generic [ref=e368]:
+                - generic [ref=e369] [cursor=pointer]:
+                  - radio "Sim" [ref=e371]
+                  - generic [ref=e373]: Sim
+                - generic [ref=e374] [cursor=pointer]:
+                  - radio "Não" [ref=e376]
+                  - generic [ref=e378]: Não
+            - generic [ref=e381]:
+              - generic "Aceita viajar pela empresa?" [ref=e383]
+              - generic [ref=e387]:
+                - generic [ref=e388] [cursor=pointer]:
+                  - radio "Sim" [ref=e390]
+                  - generic [ref=e392]: Sim
+                - generic [ref=e393] [cursor=pointer]:
+                  - radio "Não" [ref=e395]
+                  - generic [ref=e397]: Não
+          - generic [ref=e398]:
+            - generic [ref=e401]:
+              - generic "Data de Nascimento" [ref=e403]: "* Data de Nascimento"
+              - generic [ref=e408]:
+                - textbox "* Data de Nascimento" [ref=e409]:
+                  - /placeholder: Selecionar data
+                  - text: 02/07/1981
+                - generic:
+                  - img "calendar":
+                    - img
+                - button "close-circle" [ref=e900] [cursor=pointer]:
+                  - img "close-circle" [ref=e901]:
+                    - img [ref=e902]
+            - generic [ref=e412]:
+              - generic "Pretensão Salarial" [ref=e414]: "* Pretensão Salarial"
+              - generic [ref=e419]:
+                - generic [ref=e420]: R$
+                - spinbutton "* Pretensão Salarial" [ref=e423]: "30.000"
+            - generic [ref=e426]:
+              - generic "CPF" [ref=e428]
+              - textbox "CPF" [ref=e432]: 221.298.418-99
+            - generic [ref=e435]:
+              - generic "Como ficou sabendo da vaga?" [ref=e437]: "* Como ficou sabendo da vaga?"
+              - generic [ref=e441] [cursor=pointer]:
+                - generic [ref=e442]:
+                  - combobox "* Como ficou sabendo da vaga?" [ref=e444]
+                  - generic "LinkedIn" [ref=e445]
+                - generic:
+                  - img:
+                    - img
+                - img [ref=e447]:
+                  - img [ref=e448]
+            - generic [ref=e450]: "*"
+          - button "loading Enviar candidatura" [active] [ref=e909]:
+            - img "loading" [ref=e911]:
+              - img [ref=e912]
+            - text: Enviar candidatura
+  - alert [ref=e162]: Portal do Candidato
+  - region "Widget de chat" [ref=e165]:
+    - iframe [ref=e166]:
+      - button "Abrir chat ao vivo" [ref=f5e24]:
+        - img [ref=f5e27]
+        - img [ref=f5e34]

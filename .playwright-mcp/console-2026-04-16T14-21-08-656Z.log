@@ -1,0 +1,14 @@
+[    3437ms] [LOG] running accessiblity @ https://www.roberthalf.com/etc.clientlibs/roberthalf/clientlibs/clientlib-base.lc-9dc1360bb71e05d7d69958512fa97f25-lc.min.js:2
+[    3437ms] [LOG] rendering label @ https://www.roberthalf.com/etc.clientlibs/roberthalf/clientlibs/clientlib-base.lc-9dc1360bb71e05d7d69958512fa97f25-lc.min.js:2
+[    3440ms] [LOG] rh_job_search version: 1.92.0 @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:1
+[    3456ms] [LOG] CA hashcode: c5a10377c04e6ceb1df34af55b93bf51 | event: instantaneous @ https://js.clrt.ai/13995.js:9
+[    3463ms] [INFO] Using RHCL v42.0.2 @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/8876.b3024dc0.chunk.js:0
+[    3472ms] [LOG] rhcl config loaded for pt-BR @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/8876.b3024dc0.chunk.js:0
+[    3472ms] [LOG] rhcl config loaded for pt-BR @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/8876.b3024dc0.chunk.js:0
+[    3776ms] [LOG] Tealium Publish Version: ut4.49.202604161340 @ https://tags.roberthalf.com/brazil2/prod/utag.js:79
+[    3776ms] [LOG] Tealium Environment: prod @ https://tags.roberthalf.com/brazil2/prod/utag.js:79
+[    3776ms] [LOG] Tealium Profile: brazil2 @ https://tags.roberthalf.com/brazil2/prod/utag.js:79
+[    4887ms] [ERROR] rhcl-job-card's "dateStyle" attribute is missing or blank.
+ JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/6082.d88b7966.chunk.js:0
+[    4899ms] [ERROR] rhcl-job-card's "dateStyle" attribute is missing or blank.
+ JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/6082.d88b7966.chunk.js:0

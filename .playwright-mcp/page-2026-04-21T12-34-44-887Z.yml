@@ -1,0 +1,147 @@
+- generic [ref=e1]:
+  - heading "Finance Manager" [level=1] [ref=e2]
+  - generic [ref=e3]:
+    - region "Cookie Consent Manager" [ref=e4]:
+      - generic [ref=e5]:
+        - paragraph [ref=e6]: We use cookies to offer you the best possible website experience. Your cookie preferences will be stored in your browser’s local storage. This includes cookies necessary for the website's operation. Additionally, you can freely decide and change any time whether you accept cookies or choose to opt out of cookies to improve website's performance, as well as cookies used to display content tailored to your interests. Your experience of the site and the services we are able to offer may be impacted if you do not accept all cookies.
+        - button "Modify Cookie Preferences" [ref=e7] [cursor=pointer]
+        - button "Accept All Cookies" [ref=e9] [cursor=pointer]
+    - banner [ref=e10]:
+      - generic:
+        - link "Skip to main content":
+          - /url: "#content"
+      - navigation "Header Menu" [ref=e14]:
+        - link [ref=e15] [cursor=pointer]:
+          - /url: https://careers.triviumpackaging.com
+          - img [ref=e16]
+        - list [ref=e17]:
+          - listitem [ref=e18]:
+            - link "Home" [ref=e19] [cursor=pointer]:
+              - /url: /
+          - listitem [ref=e20]:
+            - link "Our Community" [ref=e21] [cursor=pointer]:
+              - /url: /content/Our-Community/?locale=en_US
+          - listitem [ref=e22]:
+            - link "Vacancies" [ref=e23] [cursor=pointer]:
+              - /url: /go/Vacancies/9811757/
+      - generic [ref=e25]:
+        - button "Language" [ref=e27] [cursor=pointer]: Language
+        - link "My Profile" [ref=e31] [cursor=pointer]:
+          - /url: "#"
+        - link "Employee Login" [ref=e34] [cursor=pointer]:
+          - /url: javascript:;
+    - main [ref=e36]:
+      - generic [ref=e37]:
+        - generic [ref=e38]:
+          - img [ref=e39]
+          - search [ref=e43]:
+            - generic [ref=e44]:
+              - generic [ref=e46]:
+                - generic "Search by Keyword" [ref=e47]: 
+                - searchbox "Search by Keyword" [ref=e48]
+              - button "Search Vacancies" [ref=e50] [cursor=pointer]
+        - region "Job Description" [ref=e54]:
+          - generic [ref=e55]: Job Description
+          - button "Job Alerts Link" [ref=e57] [cursor=pointer]:
+            - generic [ref=e58]:
+              - img [ref=e59]
+              - generic [ref=e61]: Job Alerts Link
+          - generic [ref=e63]:
+            - button "APPLY NOW" [expanded] [ref=e64] [cursor=pointer]: APPLY NOW
+            - menu "APPLY NOW" [ref=e177]:
+              - menuitem "Apply Now" [active] [ref=e178] [cursor=pointer]
+              - link "Apply now Help" [ref=e179] [cursor=pointer]:
+                - /url: javascript:alert('Join our talent community, receive job alerts, and start the apply process.')
+                - img "Apply now Help" [ref=e180]
+          - generic [ref=e69]: Finance Manager
+          - generic [ref=e73]:
+            - heading "Job Location:" [level=2] [ref=e74]
+            - text: Itupeva
+          - generic [ref=e78]:
+            - heading "Contract Type:" [level=2] [ref=e79]
+            - text: Permanent
+          - generic [ref=e83]:
+            - heading "Remote/Hybrid/Onsite:" [level=2] [ref=e84]
+            - text: On-site
+          - generic [ref=e89]:
+            - paragraph [ref=e90]: Trivium Packaging is a global sustainability leader in metal packaging with more than 60 locations worldwide, nearly 8,000 employees, and an annual revenue of approximately €3.0 billion. Trivium serves a diverse range of customers in a variety of end markets such as food, seafood, pet food, nutrition, beauty and personal care, household care, and premium beverages.
+            - paragraph [ref=e91]: Trivium wants to shape the industry and has embarked on an ambitious transformation journey. In the near term, focus is on building & upskilling the team, deciding where to play & how to win, and increasing financial performance by executing the Trivium Business System (commercial, operational, and supply chain excellence). Sustainability is embedded in our materials and in our actions. Trivium has ambitious sustainability targets and focuses exclusively on products that are infinitely recyclable. Our company Sustainability Journey has been awarded a Platinum medal by EcoVadis, the world’s leading rating agent who allocated this award only to the top 1% of the >75000 companies reviewed. Sustainability is embedded in each and every function at Trivium, it‘s in our DNA. The global head office is at Amsterdam Airport; however, many people work in virtual teams from different countries. Our culture is results-driven, entrepreneurial, informal, and highly multicultural. Our people have a high degree of responsibility.
+            - paragraph [ref=e92]:
+              - strong [ref=e93]: Job Summary
+            - list [ref=e94]:
+              - listitem [ref=e95]: Deliver reliable, timely and accurate month end reporting.
+              - listitem [ref=e96]: Ensure accurate and up to date costing is applied in the plant. Develop plan to implement standard costing.
+              - listitem [ref=e97]: Timely deliver, review and comment reporting on a monthly basis to senior management (OCF, EBITDA, Conversion Costs, etc.).
+              - listitem [ref=e98]: Assist in making and challenging Capex Projects in terms of comments, quotations, IRR and payback calculations. Follow up on approved Capex Projects.
+              - listitem [ref=e99]: Actively support continuous business improvement request at plant level and BU level.
+              - listitem [ref=e100]: Have full ownership on plant figures, both P&L and relevant Balance Sheet items.
+              - listitem [ref=e101]: Lead Internal Controls process.
+              - listitem [ref=e102]: Ensure full local tax compliance.
+            - paragraph [ref=e103]
+            - paragraph [ref=e104]:
+              - strong [ref=e105]: Qualifications
+            - list [ref=e106]:
+              - listitem [ref=e107]: Bachelor’s degree in Business/Finance or related field;
+              - listitem [ref=e108]: Proficiency in Microsoft Office and ERP system;
+              - listitem [ref=e109]: Advanced English language skills;
+              - listitem [ref=e110]: Desirable basic Spanish language skills;
+              - listitem [ref=e111]: Understanding of local tax legislation.
+              - listitem [ref=e112]: Project management experience;
+              - listitem [ref=e113]: Experience with SOX requirements.
+            - paragraph [ref=e114]
+            - paragraph [ref=e115]:
+              - strong [ref=e116]: Skills
+            - list [ref=e117]:
+              - listitem [ref=e118]: Demonstrate strong analytical skills, with a keen eye for detail and the ability to derive actionable insights from complex data.
+              - listitem [ref=e119]: Take initiative in driving change and managing challenges, maintaining composure under pressure.
+              - listitem [ref=e120]: Communicate effectively across all levels of the organization, influencing stakeholders and fostering collaboration.
+              - listitem [ref=e121]: Exhibit a drive to continuously improve and achieve results, challenging the status quo and working collaboratively to drive success.
+              - listitem [ref=e122]: Collaborate effectively within work groups and cross-functional teams, fostering a culture of teamwork and mutual support.
+              - listitem [ref=e123]: Maintain a strong awareness of safety and responsibility, prioritizing the well-being of our team members and the community.
+            - paragraph [ref=e124]
+            - paragraph [ref=e125]:
+              - generic [ref=e126]:
+                - strong [ref=e127]: BRINGING YOUR TRUE SELF TO WORK
+                - text: At Trivium, we believe that people perform at their best when they can bring their true selves to work. That’s why we hire diverse talent at every level and are proud to be an equal opportunity employer. We welcome colleagues of every background, identity and perspective, because our people like our customers come from all over the world. Creating an environment where everyone feels respected, supported and able to thrive isn’t just the right thing to do; it’s business critical. When our people belong, they deliver their best work, and together we achieve more.
+          - button "APPLY NOW" [ref=e134] [cursor=pointer]: APPLY NOW
+    - contentinfo [ref=e136]:
+      - generic [ref=e139]:
+        - list [ref=e140]:
+          - listitem [ref=e141]:
+            - link "Home" [ref=e142] [cursor=pointer]:
+              - /url: /
+          - listitem [ref=e143]:
+            - link "Vacancies" [ref=e144] [cursor=pointer]:
+              - /url: /go/Vacancies/9811757/
+          - listitem [ref=e145]:
+            - link "Privacy Policy" [ref=e146] [cursor=pointer]:
+              - /url: https://www.triviumpackaging.com/privacy-policy
+          - listitem [ref=e147]:
+            - button "Cookie Policy" [ref=e148] [cursor=pointer]
+          - listitem [ref=e149]:
+            - link "Trivium Packaging" [ref=e150] [cursor=pointer]:
+              - /url: https://www.triviumpackaging.com/
+        - list [ref=e152]:
+          - listitem [ref=e153]:
+            - link "Visit our Facebook page" [ref=e154] [cursor=pointer]:
+              - /url: https://www.facebook.com/triviumpackaging/
+              - img [ref=e155]
+          - listitem [ref=e157]:
+            - link "Follow us on LinkedIn" [ref=e158] [cursor=pointer]:
+              - /url: "https://www.linkedin.com/company/trivium-packaging/posts/?feedView=all "
+              - img [ref=e159]
+          - listitem [ref=e161]:
+            - link "Follow us on Instagram" [ref=e162] [cursor=pointer]:
+              - /url: https://www.instagram.com/triviumpackaging/
+              - img [ref=e163]
+          - listitem [ref=e166]:
+            - link "Follow us on X" [ref=e167] [cursor=pointer]:
+              - /url: https://x.com/TriviumInsights
+              - img [ref=e168]
+          - listitem [ref=e170]:
+            - link "Visit our YouTube channel" [ref=e171] [cursor=pointer]:
+              - /url: https://www.youtube.com/@TriviumPackaging
+              - img [ref=e172]
+      - paragraph [ref=e176]: © Trivium Packaging B.V. - WTC Schiphol, B Tower, 5th Floor - Schiphol Boulevard 149 - 1118 BG Schiphol - The Netherlands
+  - generic: Yes No   Yes No Yes No   Yes No Yes No   Yes No
+  - text: "\" \""

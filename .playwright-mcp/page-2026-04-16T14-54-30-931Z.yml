@@ -1,0 +1,479 @@
+- generic [ref=e1]:
+  - generic [ref=e5]:
+    - generic [ref=e7]:
+      - navigation "main navigation" [ref=e8]:
+        - link "Skip to main content" [ref=e9] [cursor=pointer]:
+          - /url: "#main-container"
+        - link "Company logo" [ref=e10] [cursor=pointer]:
+          - /url: https://astrazeneca.eightfold.ai/careers?domain=astrazeneca.com
+          - img "Company logo" [ref=e11]
+        - generic [ref=e12]:
+          - link "Join Talent Network" [ref=e13] [cursor=pointer]:
+            - /url: /careers/join?domain=astrazeneca.com&hl=en
+          - button "Candidate Login" [ref=e14] [cursor=pointer]
+      - banner [ref=e15]
+    - main [ref=e16]:
+      - generic [ref=e18]:
+        - generic [ref=e22]:
+          - generic [ref=e26]:
+            - generic [ref=e27]: Search
+            - generic [ref=e28]:
+              - combobox "Search" [ref=e30]
+              - generic [ref=e32]: 
+          - generic [ref=e36]:
+            - generic [ref=e37]: City, state, zip code or "remote"
+            - generic [ref=e38]:
+              - combobox "City, state, zip code or \"remote\"" [ref=e40]
+              - generic [ref=e42]: 
+          - generic [ref=e44]:
+            - button "Go" [ref=e46] [cursor=pointer]
+            - button " Job Cart" [ref=e50] [cursor=pointer]:
+              - generic [ref=e51]: 
+              - text: Job Cart
+            - button "Advanced Options " [expanded] [active] [ref=e167] [cursor=pointer]:
+              - text: Advanced Options
+              - generic [ref=e55]: 
+        - generic [ref=e169]:
+          - generic [ref=e172]:
+            - heading "Skills" [level=3] [ref=e173]
+            - group "Skills" [ref=e175]:
+              - listitem [ref=e176]:
+                - checkbox "Teamwork" [ref=e177]:
+                  - generic [ref=e179] [cursor=pointer]: Teamwork
+              - listitem [ref=e180]:
+                - checkbox "Oncology" [ref=e181]:
+                  - generic [ref=e183] [cursor=pointer]: Oncology
+              - listitem [ref=e184]:
+                - checkbox "Communication" [ref=e185]:
+                  - generic [ref=e187] [cursor=pointer]: Communication
+              - listitem [ref=e188]:
+                - checkbox "Cross Functional Skills" [ref=e189]:
+                  - generic [ref=e191] [cursor=pointer]: Cross Functional Skills
+              - listitem [ref=e192]:
+                - checkbox "Healthcare" [ref=e193]:
+                  - generic [ref=e195] [cursor=pointer]: Healthcare
+              - listitem [ref=e196]:
+                - checkbox "Collaboration" [ref=e197]:
+                  - generic [ref=e199] [cursor=pointer]: Collaboration
+              - listitem [ref=e200]:
+                - checkbox "Immunology" [ref=e201]:
+                  - generic [ref=e203] [cursor=pointer]: Immunology
+              - listitem [ref=e204]:
+                - checkbox "Clinical Trials" [ref=e205]:
+                  - generic [ref=e207] [cursor=pointer]: Clinical Trials
+              - listitem [ref=e208]:
+                - checkbox "Budgeting" [ref=e209]:
+                  - generic [ref=e211] [cursor=pointer]: Budgeting
+              - listitem [ref=e212]:
+                - checkbox "Project Management" [ref=e213]:
+                  - generic [ref=e215] [cursor=pointer]: Project Management
+              - listitem [ref=e216]:
+                - checkbox "Pharmacy" [ref=e217]:
+                  - generic [ref=e219] [cursor=pointer]: Pharmacy
+              - listitem [ref=e220]:
+                - checkbox "Leadership" [ref=e221]:
+                  - generic [ref=e223] [cursor=pointer]: Leadership
+              - listitem [ref=e224]:
+                - checkbox "Clinical Skills" [ref=e225]:
+                  - generic [ref=e227] [cursor=pointer]: Clinical Skills
+              - listitem [ref=e228]:
+                - checkbox "Presentation Skills" [ref=e229]:
+                  - generic [ref=e231] [cursor=pointer]: Presentation Skills
+              - listitem [ref=e232]:
+                - checkbox "Medical Affairs" [ref=e233]:
+                  - generic [ref=e235] [cursor=pointer]: Medical Affairs
+              - listitem [ref=e236]:
+                - checkbox "Hematology" [ref=e237]:
+                  - generic [ref=e239] [cursor=pointer]: Hematology
+              - listitem [ref=e240]:
+                - checkbox "Marketing" [ref=e241]:
+                  - generic [ref=e243] [cursor=pointer]: Marketing
+              - listitem [ref=e244]:
+                - checkbox "Alignment" [ref=e245]:
+                  - generic [ref=e247] [cursor=pointer]: Alignment
+              - listitem [ref=e248]:
+                - checkbox "Therapy" [ref=e249]:
+                  - generic [ref=e251] [cursor=pointer]: Therapy
+              - listitem [ref=e252]:
+                - checkbox "Innovation" [ref=e253]:
+                  - generic [ref=e255] [cursor=pointer]: Innovation
+              - listitem [ref=e256]:
+                - checkbox "Therapeutics" [ref=e257]:
+                  - generic [ref=e259] [cursor=pointer]: Therapeutics
+              - listitem [ref=e260]:
+                - checkbox "English" [ref=e261]:
+                  - generic [ref=e263] [cursor=pointer]: English
+              - listitem [ref=e264]:
+                - checkbox "Training" [ref=e265]:
+                  - generic [ref=e267] [cursor=pointer]: Training
+              - listitem [ref=e268]:
+                - checkbox "Pharmacovigilance" [ref=e269]:
+                  - generic [ref=e271] [cursor=pointer]: Pharmacovigilance
+              - listitem [ref=e272]:
+                - checkbox "Pharmaceutics" [ref=e273]:
+                  - generic [ref=e275] [cursor=pointer]: Pharmaceutics
+              - listitem [ref=e276]:
+                - checkbox "Market Access" [ref=e277]:
+                  - generic [ref=e279] [cursor=pointer]: Market Access
+              - listitem [ref=e280]:
+                - checkbox "Reporting" [ref=e281]:
+                  - generic [ref=e283] [cursor=pointer]: Reporting
+              - listitem [ref=e284]:
+                - checkbox "Sales" [ref=e285]:
+                  - generic [ref=e287] [cursor=pointer]: Sales
+              - listitem [ref=e288]:
+                - checkbox "Compliance" [ref=e289]:
+                  - generic [ref=e291] [cursor=pointer]: Compliance
+              - listitem [ref=e292]:
+                - checkbox "Pharmaceutical Sales" [ref=e293]:
+                  - generic [ref=e295] [cursor=pointer]: Pharmaceutical Sales
+              - listitem [ref=e296]:
+                - checkbox "Clinical Research" [ref=e297]:
+                  - generic [ref=e299] [cursor=pointer]: Clinical Research
+              - listitem [ref=e300]:
+                - checkbox "Microsoft Access" [ref=e301]:
+                  - generic [ref=e303] [cursor=pointer]: Microsoft Access
+              - listitem [ref=e304]:
+                - checkbox "Standardization" [ref=e305]:
+                  - generic [ref=e307] [cursor=pointer]: Standardization
+              - listitem [ref=e308]:
+                - checkbox "Clinical Development" [ref=e309]:
+                  - generic [ref=e311] [cursor=pointer]: Clinical Development
+              - listitem [ref=e312]:
+                - checkbox "Product Launch" [ref=e313]:
+                  - generic [ref=e315] [cursor=pointer]: Product Launch
+              - listitem [ref=e316]:
+                - checkbox "Strategic Planning" [ref=e317]:
+                  - generic [ref=e319] [cursor=pointer]: Strategic Planning
+              - listitem [ref=e320]:
+                - checkbox "Implementation" [ref=e321]:
+                  - generic [ref=e323] [cursor=pointer]: Implementation
+              - listitem [ref=e324]:
+                - checkbox "Regulatory Compliance" [ref=e325]:
+                  - generic [ref=e327] [cursor=pointer]: Regulatory Compliance
+              - listitem [ref=e328]:
+                - checkbox "Support" [ref=e329]:
+                  - generic [ref=e331] [cursor=pointer]: Support
+              - listitem [ref=e332]:
+                - checkbox "Microsoft Excel" [ref=e333]:
+                  - generic [ref=e335] [cursor=pointer]: Microsoft Excel
+              - listitem [ref=e336]:
+                - checkbox "Biology" [ref=e337]:
+                  - generic [ref=e339] [cursor=pointer]: Biology
+              - listitem [ref=e340]:
+                - checkbox "Strategy" [ref=e341]:
+                  - generic [ref=e343] [cursor=pointer]: Strategy
+              - listitem [ref=e344]:
+                - checkbox "Adaptability" [ref=e345]:
+                  - generic [ref=e347] [cursor=pointer]: Adaptability
+              - listitem [ref=e348]:
+                - checkbox "Neurology" [ref=e349]:
+                  - generic [ref=e351] [cursor=pointer]: Neurology
+              - listitem [ref=e352]:
+                - checkbox "Cardiology" [ref=e353]:
+                  - generic [ref=e355] [cursor=pointer]: Cardiology
+              - listitem [ref=e356]:
+                - checkbox "Data Analysis" [ref=e357]:
+                  - generic [ref=e359] [cursor=pointer]: Data Analysis
+              - listitem [ref=e360]:
+                - checkbox "Immunotherapy" [ref=e361]:
+                  - generic [ref=e363] [cursor=pointer]: Immunotherapy
+              - listitem [ref=e364]:
+                - checkbox "Standard Operating Procedure (Sop)" [ref=e365]:
+                  - generic [ref=e367] [cursor=pointer]: Standard Operating Procedure (Sop)
+              - listitem [ref=e368]:
+                - checkbox "Medical Science" [ref=e369]:
+                  - generic [ref=e371] [cursor=pointer]: Medical Science
+              - listitem [ref=e372]:
+                - checkbox "Coaching" [ref=e373]:
+                  - generic [ref=e375] [cursor=pointer]: Coaching
+              - listitem [ref=e376]:
+                - checkbox "Biopharmaceuticals" [ref=e377]:
+                  - generic [ref=e379] [cursor=pointer]: Biopharmaceuticals
+              - listitem [ref=e380]:
+                - checkbox "Primary Care" [ref=e381]:
+                  - generic [ref=e383] [cursor=pointer]: Primary Care
+              - listitem [ref=e384]:
+                - checkbox "Veeva" [ref=e385]:
+                  - generic [ref=e387] [cursor=pointer]: Veeva
+              - listitem [ref=e388]:
+                - checkbox "Auditing" [ref=e389]:
+                  - generic [ref=e391] [cursor=pointer]: Auditing
+              - listitem [ref=e392]:
+                - checkbox "Change Management" [ref=e393]:
+                  - generic [ref=e395] [cursor=pointer]: Change Management
+              - listitem [ref=e396]:
+                - checkbox "Chemotherapy" [ref=e397]:
+                  - generic [ref=e399] [cursor=pointer]: Chemotherapy
+              - listitem [ref=e400]:
+                - checkbox "Continuous Improvement" [ref=e401]:
+                  - generic [ref=e403] [cursor=pointer]: Continuous Improvement
+              - listitem [ref=e404]:
+                - checkbox "Medical Strategy" [ref=e405]:
+                  - generic [ref=e407] [cursor=pointer]: Medical Strategy
+              - listitem [ref=e408]:
+                - checkbox "Microsoft Office" [ref=e409]:
+                  - generic [ref=e411] [cursor=pointer]: Microsoft Office
+              - listitem [ref=e412]:
+                - checkbox "Problem Solving" [ref=e413]:
+                  - generic [ref=e415] [cursor=pointer]: Problem Solving
+              - listitem [ref=e416]:
+                - checkbox "Analytics" [ref=e417]:
+                  - generic [ref=e419] [cursor=pointer]: Analytics
+              - listitem [ref=e420]:
+                - checkbox "Artificial Intelligence" [ref=e421]:
+                  - generic [ref=e423] [cursor=pointer]: Artificial Intelligence
+              - listitem [ref=e424]:
+                - checkbox "Documentation" [ref=e425]:
+                  - generic [ref=e427] [cursor=pointer]: Documentation
+              - listitem [ref=e428]:
+                - checkbox "Negotiation" [ref=e429]:
+                  - generic [ref=e431] [cursor=pointer]: Negotiation
+              - listitem [ref=e432]:
+                - checkbox "Analysis" [ref=e433]:
+                  - generic [ref=e435] [cursor=pointer]: Analysis
+              - listitem [ref=e436]:
+                - checkbox "Language Skills" [ref=e437]:
+                  - generic [ref=e439] [cursor=pointer]: Language Skills
+              - listitem [ref=e440]:
+                - checkbox "Research" [ref=e441]:
+                  - generic [ref=e443] [cursor=pointer]: Research
+              - listitem [ref=e444]:
+                - checkbox "Operations" [ref=e445]:
+                  - generic [ref=e447] [cursor=pointer]: Operations
+              - listitem [ref=e448]:
+                - checkbox "Market Research" [ref=e449]:
+                  - generic [ref=e451] [cursor=pointer]: Market Research
+              - listitem [ref=e452]:
+                - checkbox "Sales Performance" [ref=e453]:
+                  - generic [ref=e455] [cursor=pointer]: Sales Performance
+              - listitem [ref=e456]:
+                - checkbox "Pharmacology" [ref=e457]:
+                  - generic [ref=e459] [cursor=pointer]: Pharmacology
+              - listitem [ref=e460]:
+                - checkbox "Process Improvement" [ref=e461]:
+                  - generic [ref=e463] [cursor=pointer]: Process Improvement
+              - listitem [ref=e464]:
+                - checkbox "Financial Analysis" [ref=e465]:
+                  - generic [ref=e467] [cursor=pointer]: Financial Analysis
+              - listitem [ref=e468]:
+                - checkbox "Closing" [ref=e469]:
+                  - generic [ref=e471] [cursor=pointer]: Closing
+              - listitem [ref=e472]:
+                - checkbox "Marketing Strategy" [ref=e473]:
+                  - generic [ref=e475] [cursor=pointer]: Marketing Strategy
+              - listitem [ref=e476]:
+                - checkbox "Biotechnology" [ref=e477]:
+                  - generic [ref=e479] [cursor=pointer]: Biotechnology
+              - listitem [ref=e480]:
+                - checkbox "Capa" [ref=e481]:
+                  - generic [ref=e483] [cursor=pointer]: Capa
+              - listitem [ref=e484]:
+                - checkbox "Biostatistics" [ref=e485]:
+                  - generic [ref=e487] [cursor=pointer]: Biostatistics
+              - listitem [ref=e488]:
+                - checkbox "Digital Marketing" [ref=e489]:
+                  - generic [ref=e491] [cursor=pointer]: Digital Marketing
+              - listitem [ref=e492]:
+                - checkbox "Good Manufacturing Practice" [ref=e493]:
+                  - generic [ref=e495] [cursor=pointer]: Good Manufacturing Practice
+              - listitem [ref=e496]:
+                - checkbox "Risk Management" [ref=e497]:
+                  - generic [ref=e499] [cursor=pointer]: Risk Management
+              - listitem [ref=e500]:
+                - checkbox "Account Management" [ref=e501]:
+                  - generic [ref=e503] [cursor=pointer]: Account Management
+              - listitem [ref=e504]:
+                - checkbox "German" [ref=e505]:
+                  - generic [ref=e507] [cursor=pointer]: German
+              - listitem [ref=e508]:
+                - checkbox "Business Planning" [ref=e509]:
+                  - generic [ref=e511] [cursor=pointer]: Business Planning
+              - listitem [ref=e512]:
+                - checkbox "Drug Development" [ref=e513]:
+                  - generic [ref=e515] [cursor=pointer]: Drug Development
+              - listitem [ref=e516]:
+                - checkbox "Finance" [ref=e517]:
+                  - generic [ref=e519] [cursor=pointer]: Finance
+              - listitem [ref=e520]:
+                - checkbox "Clinical Operations" [ref=e521]:
+                  - generic [ref=e523] [cursor=pointer]: Clinical Operations
+              - listitem [ref=e524]:
+                - checkbox "Relationship Building" [ref=e525]:
+                  - generic [ref=e527] [cursor=pointer]: Relationship Building
+              - listitem [ref=e528]:
+                - checkbox "Brand Strategy" [ref=e529]:
+                  - generic [ref=e531] [cursor=pointer]: Brand Strategy
+              - listitem [ref=e532]:
+                - checkbox "Business Development" [ref=e533]:
+                  - generic [ref=e535] [cursor=pointer]: Business Development
+              - listitem [ref=e536]:
+                - checkbox "Stakeholder Management" [ref=e537]:
+                  - generic [ref=e539] [cursor=pointer]: Stakeholder Management
+              - listitem [ref=e540]:
+                - checkbox "Transformation" [ref=e541]:
+                  - generic [ref=e543] [cursor=pointer]: Transformation
+              - listitem [ref=e544]:
+                - checkbox "Business Acumen" [ref=e545]:
+                  - generic [ref=e547] [cursor=pointer]: Business Acumen
+              - listitem [ref=e548]:
+                - checkbox "Customer Relationship Management" [ref=e549]:
+                  - generic [ref=e551] [cursor=pointer]: Customer Relationship Management
+              - listitem [ref=e552]:
+                - checkbox "Validation Framework" [ref=e553]:
+                  - generic [ref=e555] [cursor=pointer]: Validation Framework
+              - listitem [ref=e556]:
+                - checkbox "Biochemistry" [ref=e557]:
+                  - generic [ref=e559] [cursor=pointer]: Biochemistry
+              - listitem [ref=e560]:
+                - checkbox "R Programming" [ref=e561]:
+                  - generic [ref=e563] [cursor=pointer]: R Programming
+              - listitem [ref=e564]:
+                - checkbox "Time Management" [ref=e565]:
+                  - generic [ref=e567] [cursor=pointer]: Time Management
+              - listitem [ref=e568]:
+                - checkbox "Pharmacotherapy" [ref=e569]:
+                  - generic [ref=e571] [cursor=pointer]: Pharmacotherapy
+              - listitem [ref=e572]:
+                - checkbox "Cell Therapy" [ref=e573]:
+                  - generic [ref=e575] [cursor=pointer]: Cell Therapy
+          - generic [ref=e578]:
+            - heading "Seniority" [level=3] [ref=e579]
+            - group "Seniority" [ref=e581]:
+              - listitem [ref=e582]:
+                - checkbox "Mid-level" [ref=e583]:
+                  - generic [ref=e585] [cursor=pointer]: Mid-level
+              - listitem [ref=e586]:
+                - checkbox "Manager" [ref=e587]:
+                  - generic [ref=e589] [cursor=pointer]: Manager
+              - listitem [ref=e590]:
+                - checkbox "Senior" [ref=e591]:
+                  - generic [ref=e593] [cursor=pointer]: Senior
+              - listitem [ref=e594]:
+                - checkbox "Entry" [ref=e595]:
+                  - generic [ref=e597] [cursor=pointer]: Entry
+              - listitem [ref=e598]:
+                - checkbox "Director" [ref=e599]:
+                  - generic [ref=e601] [cursor=pointer]: Director
+              - listitem [ref=e602]:
+                - checkbox "Intern" [ref=e603]:
+                  - generic [ref=e605] [cursor=pointer]: Intern
+              - listitem [ref=e606]:
+                - checkbox "Vice President" [ref=e607]:
+                  - generic [ref=e609] [cursor=pointer]: Vice President
+              - listitem [ref=e610]:
+                - checkbox "Cxo" [ref=e611]:
+                  - generic [ref=e613] [cursor=pointer]: Cxo
+          - generic [ref=e616]:
+            - heading "Workplace Type" [level=3] [ref=e617]
+            - group "Workplace Type" [ref=e619]:
+              - listitem [ref=e620]:
+                - checkbox "Onsite" [ref=e621]:
+                  - generic [ref=e623] [cursor=pointer]: Onsite
+              - listitem [ref=e624]:
+                - checkbox "Hybrid" [ref=e625]:
+                  - generic [ref=e627] [cursor=pointer]: Hybrid
+              - listitem [ref=e628]:
+                - checkbox "Remote" [ref=e629]:
+                  - generic [ref=e631] [cursor=pointer]: Remote
+      - generic [ref=e56]:
+        - generic [ref=e62]:
+          - button [ref=e64] [cursor=pointer]:
+            - generic [ref=e65]:
+              - img [ref=e67]
+              - status [ref=e70]:
+                - generic [ref=e71]:
+                  - strong [ref=e72]: 1068 open jobs.
+                  - text: Use your resume to get matched with the right job.
+                - generic [ref=e73]: Upload your resume
+          - generic [ref=e74] [cursor=pointer]: 
+        - generic [ref=e78]:
+          - generic [ref=e80]:
+            - generic [ref=e81]: Selecting an option from the list below will update the main content
+            - list [ref=e83]:
+              - link "Consultor Técnico de Doenças Raras – Campinas ou Ribeirão Preto  Sao Paulo, São Paulo, Brazil SARD - Rare Diseases Sales" [ref=e84] [cursor=pointer]:
+                - heading "Consultor Técnico de Doenças Raras – Campinas ou Ribeirão Preto" [level=2] [ref=e85]
+                - paragraph [ref=e86]:
+                  - generic [ref=e87]: 
+                  - text: Sao Paulo, São Paulo, Brazil
+                - generic [ref=e89]: SARD - Rare Diseases Sales
+              - link "Consultor Técnico Hematologia - Recife/PE  Pernambuco, Pernambuco, Brazil SAOS - Oncology Sales" [ref=e90] [cursor=pointer]:
+                - heading "Consultor Técnico Hematologia - Recife/PE" [level=2] [ref=e91]
+                - paragraph [ref=e92]:
+                  - generic [ref=e93]: 
+                  - text: Pernambuco, Pernambuco, Brazil
+                - generic [ref=e95]: SAOS - Oncology Sales
+              - link "Consultor Técnico Doenças Raras (SHUA) - Recife  Pernambuco, Pernambuco, Brazil SARD - Rare Diseases Sales" [ref=e96] [cursor=pointer]:
+                - heading "Consultor Técnico Doenças Raras (SHUA) - Recife" [level=2] [ref=e97]
+                - paragraph [ref=e98]:
+                  - generic [ref=e99]: 
+                  - text: Pernambuco, Pernambuco, Brazil
+                - generic [ref=e101]: SARD - Rare Diseases Sales
+              - link "Study Contracts Manager  Cotia, São Paulo, Brazil CDSM - Study Management" [ref=e102] [cursor=pointer]:
+                - heading "Study Contracts Manager" [level=2] [ref=e103]
+                - paragraph [ref=e104]:
+                  - generic [ref=e105]: 
+                  - text: Cotia, São Paulo, Brazil
+                - generic [ref=e107]: CDSM - Study Management
+              - link "MSL Amiloidose (Cardiologia/Neurologia) - Rio de Janeiro/RJ  Cotia, São Paulo, Brazil MAML - Medical Liaison" [ref=e108] [cursor=pointer]:
+                - heading "MSL Amiloidose (Cardiologia/Neurologia) - Rio de Janeiro/RJ" [level=2] [ref=e109]
+                - paragraph [ref=e110]:
+                  - generic [ref=e111]: 
+                  - text: Cotia, São Paulo, Brazil
+                - generic [ref=e113]: MAML - Medical Liaison
+              - link "MSL Amiloidose (Cardiologia/Neurologia) - São Paulo/ Campinas  Cotia, São Paulo, Brazil MAML - Medical Liaison" [ref=e114] [cursor=pointer]:
+                - heading "MSL Amiloidose (Cardiologia/Neurologia) - São Paulo/ Campinas" [level=2] [ref=e115]
+                - paragraph [ref=e116]:
+                  - generic [ref=e117]: 
+                  - text: Cotia, São Paulo, Brazil
+                - generic [ref=e119]: MAML - Medical Liaison
+              - link "Gerente Médico Oncologia Ginecológica  Cotia, São Paulo, Brazil MABM - Therapy Area / Brand Medic (Qualified)" [ref=e120] [cursor=pointer]:
+                - heading "Gerente Médico Oncologia Ginecológica" [level=2] [ref=e121]
+                - paragraph [ref=e122]:
+                  - generic [ref=e123]: 
+                  - text: Cotia, São Paulo, Brazil
+                - generic [ref=e125]: MABM - Therapy Area / Brand Medic (Qualified)
+              - link "Sr. Product Manager - Rare Diseases  Cotia, São Paulo, Brazil CNBP - Brand Promotion" [ref=e126] [cursor=pointer]:
+                - heading "Sr. Product Manager - Rare Diseases" [level=2] [ref=e127]
+                - paragraph [ref=e128]:
+                  - generic [ref=e129]: 
+                  - text: Cotia, São Paulo, Brazil
+                - generic [ref=e131]: CNBP - Brand Promotion
+              - link "Compliance Assurance Partner  Cotia, São Paulo, Brazil CPSC - Specialist Compliance" [ref=e132] [cursor=pointer]:
+                - heading "Compliance Assurance Partner" [level=2] [ref=e133]
+                - paragraph [ref=e134]:
+                  - generic [ref=e135]: 
+                  - text: Cotia, São Paulo, Brazil
+                - generic [ref=e137]: CPSC - Specialist Compliance
+              - link "Travel & Expenses Associate Analyst (Mandarin Speaker)  Petaling Jaya, Selangor, Malaysia FIFO - Finance Operations" [ref=e138] [cursor=pointer]:
+                - heading "Travel & Expenses Associate Analyst (Mandarin Speaker)" [level=2] [ref=e139]
+                - paragraph [ref=e140]:
+                  - generic [ref=e141]: 
+                  - text: Petaling Jaya, Selangor, Malaysia
+                - generic [ref=e143]: FIFO - Finance Operations
+            - button "Show More Positions" [ref=e145] [cursor=pointer]
+          - generic [ref=e152]: The job you are looking for may have closed.
+  - generic:
+    - contentinfo:
+      - generic [ref=e154]:
+        - paragraph [ref=e156]: Follow us
+        - generic [ref=e157]:
+          - link "" [ref=e158] [cursor=pointer]:
+            - /url: https://www.linkedin.com/company/astrazeneca/posts/?feedView=all
+            - generic [ref=e159]: 
+          - link "" [ref=e160] [cursor=pointer]:
+            - /url: https://www.instagram.com/astrazeneca?igsh=djJjNDV3ZnR3dWIz
+            - generic [ref=e161]: 
+          - link "" [ref=e162] [cursor=pointer]:
+            - /url: https://www.facebook.com/AstraZeneca
+            - generic [ref=e163]: 
+  - region "Notifications"
+  - region "Notifications"
+  - region "Notifications"
+  - region "Notifications"
+  - region "Notifications"
+  - region "Notifications"
+  - iframe [ref=e166]:
+    - generic [ref=f98e6]:
+      - text: protegido por
+      - strong [ref=f98e7]: reCAPTCHA

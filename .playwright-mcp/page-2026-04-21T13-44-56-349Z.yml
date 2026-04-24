@@ -1,0 +1,6 @@
+- generic [ref=e5]:
+  - img "Seu tempo é de 2 minutos por questão." [ref=e32]
+  - heading "Seu tempo é de 2 minutos por questão." [level=1] [ref=e33]
+  - paragraph [ref=e9]: O teste tem o tempo de 2 minutos por questão, com o total de 36 minutos, que estará localizado no cronômetro no topo da página. Ao final do tempo, se nenhuma alternativa for selecionada você perde a questão.
+  - button "próximo" [ref=e34] [cursor=pointer]:
+    - generic [ref=e37]: próximo

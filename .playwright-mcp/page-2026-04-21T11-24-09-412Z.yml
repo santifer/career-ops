@@ -1,0 +1,171 @@
+- generic [active] [ref=e1]:
+  - generic:
+    - region "Mensagem toast":
+      - heading "0 notificações no total" [level=2] [ref=e3]
+      - alert
+  - region [ref=e4]
+  - generic [ref=e5]:
+    - generic [ref=e7]:
+      - button "Pular para pesquisa" [ref=e8] [cursor=pointer]:
+        - generic [ref=e9]: Pular para pesquisa
+      - button "Pular para conteúdo principal" [ref=e10] [cursor=pointer]:
+        - generic [ref=e11]: Pular para conteúdo principal
+      - button "Atalhos do teclado" [ref=e12] [cursor=pointer]:
+        - generic [ref=e13]: Atalhos do teclado
+      - button "Fechar menu pular" [ref=e14] [cursor=pointer]:
+        - img [ref=e15]
+        - generic [ref=e16]: Fechar menu pular
+    - banner "Navegação geral" [ref=e17]:
+      - generic [ref=e18]:
+        - link "LinkedIn" [ref=e19] [cursor=pointer]:
+          - /url: https://www.linkedin.com/feed/?nis=true
+          - img "LinkedIn" [ref=e22]:
+            - img [ref=e23]
+        - generic [ref=e27]:
+          - combobox "Pesquisar" [ref=e28]
+          - generic:
+            - img
+        - navigation "Navegação principal" [ref=e29]:
+          - list [ref=e30]:
+            - listitem [ref=e31]:
+              - link "atualizações do feed novas notificações Início" [ref=e32] [cursor=pointer]:
+                - /url: https://www.linkedin.com/feed/?nis=true&
+                - generic [ref=e33]:
+                  - generic [ref=e36]: atualizações do feed novas notificações
+                  - img [ref=e40]
+                - generic "Início" [ref=e42]
+            - listitem [ref=e43]:
+              - link "2 atualizações de rede novas notificações Minha rede" [ref=e44] [cursor=pointer]:
+                - /url: https://www.linkedin.com/mynetwork/?
+                - generic [ref=e45]:
+                  - generic [ref=e46]:
+                    - generic [ref=e47]: "2"
+                    - generic [ref=e48]: 2 atualizações de rede novas notificações
+                  - img [ref=e52]
+                - generic "Minha rede" [ref=e54]
+            - listitem [ref=e55]:
+              - link "Vagas" [ref=e56] [cursor=pointer]:
+                - /url: https://www.linkedin.com/jobs/?
+                - img [ref=e60]
+                - generic "Vagas" [ref=e62]
+            - listitem [ref=e63]:
+              - link "Mensagens" [ref=e64] [cursor=pointer]:
+                - /url: https://www.linkedin.com/messaging/?
+                - img [ref=e68]
+                - generic "Mensagens" [ref=e70]
+            - listitem [ref=e71]:
+              - link "10 novas notificações Notificações" [ref=e72] [cursor=pointer]:
+                - /url: https://www.linkedin.com/notifications/?
+                - generic [ref=e73]:
+                  - generic [ref=e74]:
+                    - generic [ref=e75]: "10"
+                    - generic [ref=e76]: 10 novas notificações
+                  - img [ref=e80]
+                - generic "Notificações" [ref=e82]
+            - listitem [ref=e83]:
+              - button "Fernando Xavier Eu" [ref=e85] [cursor=pointer]:
+                - img "Fernando Xavier" [ref=e86]
+                - generic [ref=e87]:
+                  - text: Eu
+                  - img [ref=e88]
+            - listitem [ref=e89]:
+              - button "Para negócios" [ref=e91] [cursor=pointer]:
+                - img [ref=e95]
+                - generic "Para negócios" [ref=e97]:
+                  - text: Para negócios
+                  - img [ref=e98]
+            - listitem [ref=e99]:
+              - link "Veicular anúncio" [ref=e100] [cursor=pointer]:
+                - /url: https://www.linkedin.com/campaignmanager/accounts?
+                - img [ref=e104]
+                - generic "Veicular anúncio" [ref=e107]
+    - generic [ref=e108]:
+      - generic [ref=e111]:
+        - main [ref=e112]:
+          - generic [ref=e115]:
+            - generic [ref=e119]:
+              - generic [ref=e120]:
+                - generic [ref=e121]:
+                  - link "Logo da empresa UpCounting" [ref=e122] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/company/up-counting/life
+                    - img "Logo da empresa UpCounting" [ref=e125]
+                  - link "UpCounting" [ref=e127] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/company/up-counting/life
+                - generic [ref=e128]:
+                  - button "Compartilhar" [ref=e131] [cursor=pointer]:
+                    - img [ref=e132]
+                    - generic [ref=e133]: Compartilhar
+                  - button "Exibir mais opções" [ref=e135] [cursor=pointer]:
+                    - img [ref=e136]
+                    - generic [ref=e137]: Exibir mais opções
+              - generic [ref=e138]:
+                - heading "🛍️ Accounting Manager" [level=1] [ref=e140]
+                - generic [ref=e141]:
+                  - paragraph [ref=e143]: Você se candidatou no site da empresa em 21/04/2026
+                  - link "Baixe seu currículo enviado" [ref=e144] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/ambry/?x-li-ambry-ep=AQI0L8-TsMvoggAAAZ2vyI8GsGfFFe-BTnTNIGQ43sE0-U5dyShN2bvkLn90vZu3McbZmQYsQtLp706QHJ90_mdWoFjWOZP7JJQSmi-xPWb6aPQ7bxrqo1t_mEmkRKZOSPKi6l41eNg1VTd1tiTbKIzoBopNng7bXuU9zBpv5uniadtJaMQsc3sQes8t8_6nfpDX1H4uqALmgKgSKzGUYji1R2JQfq2s1xhTT6MRq8Qn3sOOEBTQ2VsfFRDlLqBCwU68ioQ3y2itDTdXEzWkrz3HGsqxuHum20ASORZaxrlcjWGoI21ASjrTrw0lgDVS_rW6BYX3gBuo0BbnyNWrEMskaiaD_KLb_f-VWsm9zvpxrjo0l0pWQ5pa0hJmFUmzhSeFaA9j06YfCRSi8WUdlhTL5Z5AtjNjHPgN_jjEzA3AwQrrEaFVhMEVZ1k5-DqK2YhMc8DC-_GiaCosE90pgj6l5hYCnXmPVvui_-MWCkJQHZIXIDTuzt_hg3HhzXh6TKc8_ijJe02HC1j5CHOJfAu5wfii7O93uPCEX1tnHa994nOdwWGOAcgOsc3Fjmvuug4sCw8
+                    - img [ref=e145]
+                    - text: Currículo enviado
+              - generic [ref=e148]:
+                - generic [ref=e149]: Brasil
+                - generic [ref=e150]: ·
+                - generic [ref=e152]: há 3 dias
+                - generic [ref=e153]: ·
+                - generic [ref=e154]: 93 candidaturas
+                - paragraph [ref=e155]:
+                  - generic [ref=e156]: Promovida por recrutador
+                  - generic [ref=e157]: ·
+                  - generic [ref=e158]: Ainda não há estatísticas de resposta disponíveis
+              - generic [ref=e159]:
+                - button "Corresponde às suas preferências de vaga e o tipo de local de trabalho é Remoto." [ref=e160] [cursor=pointer]:
+                  - strong [ref=e163]:
+                    - img [ref=e165]
+                    - text: Remoto
+                  - generic [ref=e167]: Corresponde às suas preferências de vaga e o tipo de local de trabalho é Remoto.
+                - button "Corresponde às suas preferências de vaga e o tipo de vaga é Tempo integral." [ref=e168] [cursor=pointer]:
+                  - strong [ref=e171]:
+                    - img [ref=e173]
+                    - text: Tempo integral
+                  - generic [ref=e175]: Corresponde às suas preferências de vaga e o tipo de vaga é Tempo integral.
+                - 'button "Corresponde às suas preferências de vaga e o tipo de vaga é {}." [ref=e176] [cursor=pointer]':
+                  - strong [ref=e179]:
+                    - img [ref=e180]
+                    - text: 6 de 10 correspondência(s) de competências
+                  - generic [ref=e181]: "Corresponde às suas preferências de vaga e o tipo de vaga é {}."
+            - generic [ref=e191]:
+              - article [ref=e192]:
+                - heading "Sobre a vaga" [level=2] [ref=e195]
+              - button "Clicar para ver mais detalhes" [ref=e197] [cursor=pointer]:
+                - img [ref=e198]
+                - generic [ref=e199]: Ver mais
+            - generic [ref=e201]:
+              - generic [ref=e202]:
+                - heading "Configurar alerta para vagas semelhantes" [level=2] [ref=e203]
+                - generic [ref=e205]: Gerente de contabilidade, Brasil
+              - generic [ref=e207] [cursor=pointer]:
+                - generic [ref=e208]: Desativada
+                - generic [ref=e209]: Configurar alerta
+                - switch "Configurar alerta"
+            - alert [ref=e212]: Carregando detalhes da vaga
+        - complementary [ref=e225]
+      - contentinfo [ref=e228]
+    - generic:
+      - generic:
+        - complementary:
+          - generic [ref=e231]:
+            - generic [ref=e233] [cursor=pointer]:
+              - img "Fernando Xavier" [ref=e235]
+              - button "Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas." [ref=e236]:
+                - generic [ref=e237]:
+                  - generic [ref=e238]: Mensagens
+                  - generic [ref=e239]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+            - generic [ref=e240]:
+              - button "Abrir o menu suspenso de mensagens" [ref=e242] [cursor=pointer]:
+                - img "Abrir o menu suspenso de mensagens" [ref=e243]
+              - button "Escrever mensagem" [ref=e245] [cursor=pointer]:
+                - img [ref=e246]
+                - generic [ref=e247]: Escrever mensagem
+              - button "Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas." [ref=e248] [cursor=pointer]:
+                - img [ref=e249]
+                - generic [ref=e250]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+        - complementary "Assistente de IA para obter ajuda com sua carreira, vagas, etc."

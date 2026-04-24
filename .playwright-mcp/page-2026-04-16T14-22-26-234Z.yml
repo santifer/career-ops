@@ -1,0 +1,67 @@
+- generic [active] [ref=e1]:
+  - link "Ir para o conteúdo principal" [ref=e2] [cursor=pointer]:
+    - /url: "#mainContent"
+  - generic:
+    - generic: Vagas
+    - generic: Soluções em talentos
+    - generic: Consultoria
+    - generic: Central do Conhecimento
+  - generic:
+    - generic: Candidato – Acessar Minha Conta
+    - generic: Colaborador – Registrar Ponto
+    - generic: Colaborador – Consultar Ponto
+    - generic: Colaborador – Consultar Holerite
+    - generic: Cliente – Aprovar Ponto
+  - generic: Barueri,
+  - generic:
+    - generic: Remoto
+    - generic: Permanente
+    - generic: DOE
+  - generic: Publicado — 23 março 2026
+  - generic: The CompanyLife Sciences Multinational.Job descriptionManage end-to-end statutory financial reporting for assigned LATAM entities;Prepare and review statutory financial statements under US GAAP and LATAM GAAP and local country-specific requirements;Oversight of transactional processing performed by shared service organizations (SSO);Review and approve monthly reconciliations in Blackline for assigned G/L account;Prepare, review, and coordinate corporate income tax, GST/VAT, and withholding tax filing;Liaise with external tax consultants and internal tax teams;Perform internal control checks and ensure compliance with company policies and SOX frameworks;Partner with regional and global finance teams;Act as key finance contact for auditors, tax advisors, and service providers;Drive M&A and integration projects across LATAM;Collaborate with cross-functional teams to align processes and systems post-acquisition.Requirement Profile - Knowledge, Skills & ExperiencesRelevant experience in finance controllership, statutory reporting, or audit;Demonstrated experience supporting LATAM entities in a multinational organization;Strong knowledge of US GAAP and local statutory, tax, and VAT rules in LATAM;Experience with SAP, Blackline, Excel (advanced), and MS Office;Fluent in English; Spanish and Portuguese;Prepared to travel internationally as required;Prior experience with a Big 4 audit firm or internal audit function preferred.
+  - generic: Have an account?
+  - generic: Descrição
+  - generic: Requisitos
+  - generic: Have an account?
+  - generic: Barueri,
+  - generic:
+    - generic: Permanente
+    - generic: DOE
+  - generic: 23 março 2026
+  - generic: Você está saindo do site da Robert Half Brasil e será redirecionado para o site da Robert Half EUA.
+  - generic:
+    - generic: Soluções em talentos
+    - generic: Nossas práticas
+    - generic: Recursos
+    - generic: Sobre
+  - generic:
+    - generic: Brasil (Português)
+    - generic: "Sua região e idioma atuais são:"
+    - generic: Brasil (Português)
+    - generic:
+      - generic: Alemanha
+      - generic: Austrália
+      - generic: Bélgica
+      - generic: Brasil
+      - generic: Canadá
+      - generic: Chile
+      - generic: China
+      - generic: Emirados Árabes Unidos
+      - generic: Estados Unidos
+      - generic: França
+      - generic: Holanda
+      - generic: Hong Kong, China
+      - generic: Irlanda
+      - generic: Itália
+      - generic: Japão
+      - generic: Luxemburgo
+      - generic: Nova Zelândia
+      - generic: Reino Unido
+      - generic: Singapura
+      - generic: Suíça
+  - generic: © 2026
+  - generic:
+    - generic: Robert Half Inc.
+  - generic [ref=e3] [cursor=pointer]:
+    - button "Definições de cookies" [ref=e5]
+    - text: Definições de cookies

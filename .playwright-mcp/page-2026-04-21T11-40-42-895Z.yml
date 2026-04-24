@@ -1,0 +1,78 @@
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - banner [ref=e5]:
+      - generic:
+        - link "Skip to main content":
+          - /url: "#skipContent"
+      - navigation "Header Menu" [ref=e9]:
+        - link [ref=e10] [cursor=pointer]:
+          - /url: https://careers.dovercorporation.com/
+          - img [ref=e11]
+        - list [ref=e12]:
+          - listitem [ref=e13]:
+            - link "Home" [ref=e14] [cursor=pointer]:
+              - /url: https://careers.dovercorporation.com/
+          - listitem [ref=e15]:
+            - link "Search by Location" [ref=e16] [cursor=pointer]:
+              - /url: https://careers.dovercorporation.com/content/Location/?locale=en_US
+          - listitem [ref=e17]:
+            - button "View Jobs by Language" [ref=e18] [cursor=pointer]: View Jobs by Language
+          - listitem [ref=e20]:
+            - link "Recruitment Fraud Notice" [ref=e21] [cursor=pointer]:
+              - /url: https://careers.dovercorporation.com/content/Recruitment-Fraud-Notice/?locale=en_US
+    - main [ref=e24]:
+      - generic [ref=e25]:
+        - strong [ref=e28]: Loading...
+        - region
+        - region "Career Opportunities:Sign In" [ref=e31]:
+          - generic [ref=e33]:
+            - 'heading "Career Opportunities: Sign In" [level=1] [ref=e35]'
+            - generic [ref=e38]:
+              - generic [ref=e39]:
+                - heading "Already have an account?" [level=2] [ref=e40]
+                - paragraph [ref=e41]: Enter your email address and password (Credentials are case sensitive).
+                - generic [ref=e42]: "*indicates a required field."
+              - generic "Required" [ref=e43]: Email Address:*
+              - textbox "Email Address:" [ref=e44]
+              - generic "Required" [ref=e45]: Password:*
+              - generic [ref=e46]:
+                - textbox "Password:" [ref=e47]
+                - button "Show" [ref=e48] [cursor=pointer]
+              - button "Sign In" [ref=e51] [cursor=pointer]
+              - link "Forgot your password?" [ref=e53] [cursor=pointer]:
+                - /url: /career?company=DOVER&site=&lang=en_US&requestParams=3ZL9C50PC52lIakfl1kssR0g1Gt42m1R0UpCQRCdNFFTSgl66xckxVLpoaSyBKNI8qWH27h30rVt%0a73V3TCPoi%2bojoi%2box34geugfWi1QqYXdgTlnZs6ZffyCmDWQ7eEt5gYsVe4IbfcYw1j8%2ffll7fI1%0aCpEaLKkA%2fRoKDkwdktw1ZLuB8kfhzi6MT3qYcG%2fG3RTDopVMAwOrF41JV4W6k2uykbqz%2ffTW%2bvhc%0avz%2bMAIxCR19gAIaEUJI01%2f1BHx4g%2bpNP9IK2LQypzZAVaIiM5zKeob4n54ixrc1ysciQsoGQqKph%0aqO7m8CtUlhzuyk9lSEpqmsUzrkKgZa8h9TX5UjMsi8AYUsgy0N68rHS%2bUCqWK6VKvrSRd0xp65rJ%0aaFTnlsx%2fc%2bMiuAlRTzVFHLZ%2f0jo4m8bkr0NtZzusjA2j8yPFRIrb7XiZc0NIe%2bdNZ8J9yLCqyPCe%0aIWTy%2fyoZfQPAnos7&login_ns=forgot_pwd&career_ns=job%5fapplication&career_job_req_id=65844&jobPipeline=Appcast%5fLinkedin&clientId=jobs2web&_s.crb=lXLLO8Yx3VtthYj7RPjc3zYMES2diVEyZjWF2C6UGFk%3d
+              - paragraph
+              - heading "Not a registered user yet?" [level=2] [ref=e54]
+              - generic [ref=e55]:
+                - link "Create an account" [ref=e56] [cursor=pointer]:
+                  - /url: /career?company=DOVER&site=&lang=en_US&requestParams=3ZL9C50PC52lIakfl1kssR0g1Gt42m1R0UpCQRCdNFFTSgl66xckxVLpoaSyBKNI8qWH27h30rVt%0a73V3TCPoi%2bojoi%2box34geugfWi1QqYXdgTlnZs6ZffyCmDWQ7eEt5gYsVe4IbfcYw1j8%2ffll7fI1%0aCpEaLKkA%2fRoKDkwdktw1ZLuB8kfhzi6MT3qYcG%2fG3RTDopVMAwOrF41JV4W6k2uykbqz%2ffTW%2bvhc%0avz%2bMAIxCR19gAIaEUJI01%2f1BHx4g%2bpNP9IK2LQypzZAVaIiM5zKeob4n54ixrc1ysciQsoGQqKph%0aqO7m8CtUlhzuyk9lSEpqmsUzrkKgZa8h9TX5UjMsi8AYUsgy0N68rHS%2bUCqWK6VKvrSRd0xp65rJ%0aaFTnlsx%2fc%2bMiuAlRTzVFHLZ%2f0jo4m8bkr0NtZzusjA2j8yPFRIrb7XiZc0NIe%2bdNZ8J9yLCqyPCe%0aIWTy%2fyoZfQPAnos7&login_ns=register&career_ns=job%5fapplication&career_job_req_id=65844&jobPipeline=Appcast%5fLinkedin&clientId=jobs2web&_s.crb=lXLLO8Yx3VtthYj7RPjc3zYMES2diVEyZjWF2C6UGFk%3d
+                - text: to apply for our career opportunities.
+                - paragraph
+  - contentinfo [ref=e59]:
+    - generic [ref=e62]:
+      - list [ref=e63]:
+        - listitem [ref=e64]:
+          - link "Dover Home" [ref=e65] [cursor=pointer]:
+            - /url: https://careers.dovercorporation.com/
+        - listitem [ref=e66]:
+          - link "View Page Index" [ref=e67] [cursor=pointer]:
+            - /url: https://careers.dovercorporation.com/viewalljobs/
+        - listitem [ref=e68]:
+          - link "Top Job Searches" [ref=e69] [cursor=pointer]:
+            - /url: https://careers.dovercorporation.com/topjobs/
+        - listitem [ref=e70]:
+          - link "Privacy Policy" [ref=e71] [cursor=pointer]:
+            - /url: http://www.dovercorporation.com/footerlinks/privacy
+      - list [ref=e73]:
+        - listitem [ref=e74]:
+          - link "Follow us on LinkedIn" [ref=e75] [cursor=pointer]:
+            - /url: https://www.linkedin.com/company/dovercorp/
+            - img [ref=e76]
+        - listitem [ref=e78]:
+          - link "Visit our YouTube channel" [ref=e79] [cursor=pointer]:
+            - /url: https://www.youtube.com/user/DoverCorporation
+            - img [ref=e80]
+        - listitem [ref=e82]:
+          - link "Follow us on X" [ref=e83] [cursor=pointer]:
+            - /url: https://twitter.com/DoverCorp
+            - img [ref=e84]

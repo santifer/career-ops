@@ -1,0 +1,156 @@
+- generic [active] [ref=e12]:
+  - generic:
+    - region "Mensagem toast":
+      - heading "0 notificações no total" [level=2] [ref=e14]
+      - alert
+  - region [ref=e15]
+  - generic [ref=e16]:
+    - generic [ref=e18]:
+      - button "Pular para pesquisa" [ref=e19] [cursor=pointer]:
+        - generic [ref=e20]: Pular para pesquisa
+      - button "Pular para conteúdo principal" [ref=e21] [cursor=pointer]:
+        - generic [ref=e22]: Pular para conteúdo principal
+      - button "Atalhos do teclado" [ref=e23] [cursor=pointer]:
+        - generic [ref=e24]: Atalhos do teclado
+      - button "Fechar menu pular" [ref=e25] [cursor=pointer]:
+        - img [ref=e26]
+        - generic [ref=e28]: Fechar menu pular
+    - banner "Navegação geral" [ref=e29]:
+      - generic [ref=e30]:
+        - link "LinkedIn" [ref=e31] [cursor=pointer]:
+          - /url: https://www.linkedin.com/feed/?nis=true
+          - img "LinkedIn" [ref=e34]:
+            - img [ref=e35]
+        - generic [ref=e39]:
+          - combobox "Pesquisar" [ref=e40]
+          - generic:
+            - img
+        - navigation "Navegação principal" [ref=e41]:
+          - list [ref=e42]:
+            - listitem [ref=e43]:
+              - link "atualizações do feed novas notificações Início" [ref=e44] [cursor=pointer]:
+                - /url: https://www.linkedin.com/feed/?nis=true&
+                - generic [ref=e45]:
+                  - generic [ref=e48]: atualizações do feed novas notificações
+                  - img [ref=e52]
+                - generic "Início" [ref=e54]
+            - listitem [ref=e55]:
+              - link "Minha rede" [ref=e56] [cursor=pointer]:
+                - /url: https://www.linkedin.com/mynetwork/?
+                - img [ref=e60]
+                - generic "Minha rede" [ref=e62]
+            - listitem [ref=e63]:
+              - link "Vagas" [ref=e64] [cursor=pointer]:
+                - /url: https://www.linkedin.com/jobs/?
+                - img [ref=e68]
+                - generic "Vagas" [ref=e70]
+            - listitem [ref=e71]:
+              - link "Mensagens" [ref=e72] [cursor=pointer]:
+                - /url: https://www.linkedin.com/messaging/?
+                - img [ref=e76]
+                - generic "Mensagens" [ref=e78]
+            - listitem [ref=e79]:
+              - link "Notificações" [ref=e80] [cursor=pointer]:
+                - /url: https://www.linkedin.com/notifications/?
+                - img [ref=e84]
+                - generic "Notificações" [ref=e86]
+            - listitem [ref=e87]:
+              - button "Fernando Xavier Eu" [ref=e89] [cursor=pointer]:
+                - img "Fernando Xavier" [ref=e90]
+                - generic [ref=e91]:
+                  - text: Eu
+                  - img [ref=e92]
+            - listitem [ref=e94]:
+              - button "Para negócios" [ref=e96] [cursor=pointer]:
+                - img [ref=e100]
+                - generic "Para negócios" [ref=e102]:
+                  - text: Para negócios
+                  - img [ref=e103]
+            - listitem [ref=e105]:
+              - link "Veicular anúncio" [ref=e106] [cursor=pointer]:
+                - /url: https://www.linkedin.com/campaignmanager/accounts?
+                - img [ref=e110]
+                - generic "Veicular anúncio" [ref=e113]
+    - generic [ref=e114]:
+      - generic [ref=e117]:
+        - main [ref=e118]:
+          - generic [ref=e121]:
+            - generic [ref=e125]:
+              - generic [ref=e126]:
+                - generic [ref=e127]:
+                  - link "Logo da empresa Grupo Renova" [ref=e128] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/company/gruporenovadobrasil/life
+                    - img "Logo da empresa Grupo Renova" [ref=e131]
+                  - link "Grupo Renova" [ref=e133] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/company/gruporenovadobrasil/life
+                - generic [ref=e134]:
+                  - button "Compartilhar" [ref=e137] [cursor=pointer]:
+                    - img [ref=e138]
+                    - generic [ref=e140]: Compartilhar
+                  - button "Exibir mais opções" [ref=e142] [cursor=pointer]:
+                    - img [ref=e143]
+                    - generic [ref=e145]: Exibir mais opções
+              - heading "Controller" [level=1] [ref=e148]
+              - generic [ref=e151]:
+                - generic [ref=e152]: São Paulo, São Paulo, Brasil
+                - generic [ref=e153]: ·
+                - generic [ref=e155]: há 1 semana
+                - generic [ref=e156]: ·
+                - generic [ref=e157]: Mais de 100 pessoas clicaram em Candidatar-se
+                - paragraph [ref=e158]:
+                  - generic [ref=e159]: Respostas gerenciadas fora do LinkedIn
+              - generic [ref=e160]:
+                - button "Corresponde às suas preferências de vaga e o tipo de local de trabalho é Presencial." [ref=e161] [cursor=pointer]:
+                  - strong [ref=e164]:
+                    - img [ref=e166]
+                    - text: Presencial
+                  - generic [ref=e168]: Corresponde às suas preferências de vaga e o tipo de local de trabalho é Presencial.
+                - button "Corresponde às suas preferências de vaga e o tipo de vaga é Tempo integral." [ref=e169] [cursor=pointer]:
+                  - strong [ref=e172]:
+                    - img [ref=e174]
+                    - text: Tempo integral
+                  - generic [ref=e176]: Corresponde às suas preferências de vaga e o tipo de vaga é Tempo integral.
+              - generic [ref=e178]:
+                - link "Candidatar-se à vaga de Controller no site da empresa" [ref=e181] [cursor=pointer]:
+                  - img [ref=e182]
+                  - generic [ref=e184]: Candidatar-se
+                - button "Salvar Controller na Grupo Renova" [ref=e185] [cursor=pointer]:
+                  - generic [ref=e186]: Salvar
+                  - generic [ref=e187]: Salvar Controller na Grupo Renova
+            - generic [ref=e197]:
+              - article [ref=e198]:
+                - heading "Sobre a vaga" [level=2] [ref=e201]
+              - button "Clicar para ver mais detalhes" [ref=e203] [cursor=pointer]:
+                - img [ref=e204]
+                - generic [ref=e206]: Ver mais
+            - generic [ref=e208]:
+              - generic [ref=e209]:
+                - heading "Configurar alerta para vagas semelhantes" [level=2] [ref=e210]
+                - generic [ref=e212]: Controlador, São Paulo, São Paulo, Brasil
+              - generic [ref=e214] [cursor=pointer]:
+                - generic [ref=e215]: Desativada
+                - generic [ref=e216]: Configurar alerta
+                - switch "Configurar alerta"
+            - alert [ref=e219]: Carregando detalhes da vaga
+        - complementary [ref=e232]
+      - contentinfo [ref=e235]
+    - generic:
+      - generic:
+        - complementary:
+          - generic [ref=e238]:
+            - generic [ref=e240] [cursor=pointer]:
+              - img "Fernando Xavier" [ref=e242]
+              - button "Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas." [ref=e243]:
+                - generic [ref=e244]:
+                  - generic [ref=e245]: Mensagens
+                  - generic [ref=e246]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+            - generic [ref=e247]:
+              - button "Abrir o menu suspenso de mensagens" [ref=e249] [cursor=pointer]:
+                - img "Abrir o menu suspenso de mensagens" [ref=e250]
+              - button "Escrever mensagem" [ref=e252] [cursor=pointer]:
+                - img [ref=e253]
+                - generic [ref=e254]: Escrever mensagem
+              - button "Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas." [ref=e255] [cursor=pointer]:
+                - img [ref=e256]
+                - generic [ref=e257]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+        - complementary "Assistente de IA para obter ajuda com sua carreira, vagas, etc."

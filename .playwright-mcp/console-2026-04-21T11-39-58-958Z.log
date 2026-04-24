@@ -1,0 +1,36 @@
+[    2910ms] [LOG] JQMIGRATE: Migrate is installed, version 3.3.0 @ https://performancemanager.successfactors.eu/verp/vmod_v1/ui/extlib/jquery_3.5.1/jquery.js:4
+[    2911ms] [LOG] JQMIGRATE: Migrate plugin loaded multiple times @ https://performancemanager.successfactors.eu/verp/vmod_v1/ui/extlib/jquery_3.5.1/jquery-migrate.js:1
+[    2911ms] [LOG] JQMIGRATE: Migrate is installed, version 3.3.0 @ https://performancemanager.successfactors.eu/verp/vmod_v1/ui/extlib/jquery_3.5.1/jquery-migrate.js:1
+[    3408ms] [LOG] JQMIGRATE: Migrate is installed, version 1.4.1 @ https://careers.dovercorporation.com/platform/js/jquery/jquery-migrate-1.4.1.js:22
+[    6881ms] Uncaught TypeError: Cannot read properties of undefined (reading 'on')
+    at <anonymous> (https://careers.dovercorporation.com/platform/js/j2w/j2w.bootstrap.collapse.js:43:42)
+    at e (https://performancemanager.successfactors.eu/verp/vmod_v1/ui/extlib/jquery_3.5.1/jquery.js:1:30004)
+    at t (https://performancemanager.successfactors.eu/verp/vmod_v1/ui/extlib/jquery_3.5.1/jquery.js:1:30306)
+[    6881ms] Uncaught TypeError: Cannot read properties of undefined (reading 'on')
+    at <anonymous> (https://careers.dovercorporation.com/platform/js/j2w/j2w.bootstrap.dropdown.js:49:67)
+    at e (https://performancemanager.successfactors.eu/verp/vmod_v1/ui/extlib/jquery_3.5.1/jquery.js:1:30004)
+    at t (https://performancemanager.successfactors.eu/verp/vmod_v1/ui/extlib/jquery_3.5.1/jquery.js:1:30306)
+[    8979ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://www.linkedin.com/li/track:0
+[    8989ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://www.linkedin.com/li/track:0
+[   39548ms] [LOG] JQMIGRATE: Migrate is installed, version 3.3.0 @ https://career2.successfactors.eu/verp/vmod_v1/ui/extlib/jquery_3.5.1/jquery.js:4
+[   39751ms] [LOG] [AjaxService] Using native Proxy for lazyDataGridController @ https://career2.successfactors.eu/verp/vmod_v1/ui/ajaxservice/js/AjaxService_3a3496282a4d9dfe5021ade50ce210b0.js:0
+[   39954ms] [INFO] 2026-04-21 08:40:38 Device API logging initialized - DEVICE @ https://career2.successfactors.eu/verp/vmod_v1/ui/sapui5-bundles-main/resources_1.136.6-2/common-1.js:1336
+[   40159ms] [WARNING] The current jQuery version 3.5.1 is different than the version 3.6.0 that is used for testing jquery-compat.js. jquery-compat.js is applied but it may not work properly. @ https://career2.successfactors.eu/verp/vmod_v1/ui/sapui5-main/resources_1.136.6/resources/sap/ui/thirdparty/jquery-compat.js?eval:4
+[   41450ms] [LOG] Should load SAPUI5 @ https://career2.successfactors.eu/careers?company=DOVER:1186
+[   43015ms] [LOG] Req in Event: /messagebundle/DOVER/vmod_v1-2d22e2d1-56971d4/common!/verp/ui/sapui5-main/resources/resources/sap/ui/core/messagebundle_en_US.properties @ https://career2.successfactors.eu/verp/vmod_v1/ui/perflog-lib/resources_1.1.4/perflog-lib.min.js:0
+[   43337ms] [LOG] Req in Event: /messagebundle/DOVER/vmod_v1-da143253-56971d4/sap.m!/verp/ui/sapui5-main/resources/resources/sap/m/messagebundle_en_US.properties @ https://career2.successfactors.eu/verp/vmod_v1/ui/perflog-lib/resources_1.1.4/perflog-lib.min.js:0
+[   43887ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ https://career2.successfactors.eu/careers?company=DOVER:0
+[   43891ms] [INFO] PerfLog Page Completed (ver:1.1.4 2025-07-11T03:34:42.994Z) @ https://career2.successfactors.eu/verp/vmod_v1/ui/perflog-lib/resources_1.1.4/perflog-lib.min.js:0
+[   44003ms] [LOG] --------- Event ended --------- @ https://career2.successfactors.eu/verp/vmod_v1/ui/perflog-lib/resources_1.1.4/perflog-lib.min.js:0
+[   44108ms] [ERROR] API Key not found @ https://www.linkedin.com/mjobs/awli/awliWidget:0
+[   54167ms] [LOG] JQMIGRATE: Migrate is installed, version 3.3.0 @ https://career2.successfactors.eu/verp/vmod_v1/ui/extlib/jquery_3.5.1/jquery.js:4
+[   54208ms] [LOG] [AjaxService] Using native Proxy for lazyDataGridController @ https://career2.successfactors.eu/verp/vmod_v1/ui/ajaxservice/js/AjaxService_3a3496282a4d9dfe5021ade50ce210b0.js:0
+[   54243ms] [INFO] 2026-04-21 08:40:53 Device API logging initialized - DEVICE @ https://career2.successfactors.eu/verp/vmod_v1/ui/sapui5-bundles-main/resources_1.136.6-2/common-1.js:1336
+[   54249ms] [WARNING] The current jQuery version 3.5.1 is different than the version 3.6.0 that is used for testing jquery-compat.js. jquery-compat.js is applied but it may not work properly. @ https://career2.successfactors.eu/verp/vmod_v1/ui/sapui5-main/resources_1.136.6/resources/sap/ui/thirdparty/jquery-compat.js?eval:4
+[   54573ms] [LOG] Should load SAPUI5 @ https://career2.successfactors.eu/career?company=DOVER&site=&lang=en_US&requestParams=3ZL9C50PC52lIakfl1kssR0g1Gt42m1R0UpCQRCdNFFTSgl66xckxVLpoaSyBKNI8qWH27h30rVt%0a73V3TCPoi%2bojoi%2box34geugfWi1QqYXdgTlnZs6ZffyCmDWQ7eEt5gYsVe4IbfcYw1j8%2ffll7fI1%0aCpEaLKkA%2fRoKDkwdktw1ZLuB8kfhzi6MT3qYcG%2fG3RTDopVMAwOrF41JV4W6k2uykbqz%2ffTW%2bvhc%0avz%2bMAIxCR19gAIaEUJI01%2f1BHx4g%2bpNP9IK2LQypzZAVaIiM5zKeob4n54ixrc1ysciQsoGQqKph%0aqO7m8CtUlhzuyk9lSEpqmsUzrkKgZa8h9TX5UjMsi8AYUsgy0N68rHS%2bUCqWK6VKvrSRd0xp65rJ%0aaFTnlsx%2fc%2bMiuAlRTzVFHLZ%2f0jo4m8bkr0NtZzusjA2j8yPFRIrb7XiZc0NIe%2bdNZ8J9yLCqyPCe%0aIWTy%2fyoZfQPAnos7&login_ns=register&career_ns=job%5fapplication&career_job_req_id=65844&jobPipeline=Appcast%5fLinkedin&clientId=jobs2web&_s.crb=lXLLO8Yx3VtthYj7RPjc3zYMES2diVEyZjWF2C6UGFk%3d:1186
+[   54590ms] [LOG] Req in Event: /xi/ajax/remoting/call/plaincall/pwdPolicyControllerProxy.getPasswordPolicy.dwr @ https://career2.successfactors.eu/verp/vmod_v1/ui/perflog-lib/resources_1.1.4/perflog-lib.min.js:0
+[   54638ms] [LOG] Req in Event: /messagebundle/DOVER/vmod_v1-2d22e2d1-56971d4/common!/verp/ui/sapui5-main/resources/resources/sap/ui/core/messagebundle_en_US.properties @ https://career2.successfactors.eu/verp/vmod_v1/ui/perflog-lib/resources_1.1.4/perflog-lib.min.js:0
+[   54643ms] [LOG] Req in Event: /messagebundle/DOVER/vmod_v1-da143253-56971d4/sap.m!/verp/ui/sapui5-main/resources/resources/sap/m/messagebundle_en_US.properties @ https://career2.successfactors.eu/verp/vmod_v1/ui/perflog-lib/resources_1.1.4/perflog-lib.min.js:0
+[   54680ms] [LOG] Req in Event: /xi/ajax/remoting/call/plaincall/pwdPolicyControllerProxy.getPasswordPolicy.dwr @ https://career2.successfactors.eu/verp/vmod_v1/ui/perflog-lib/resources_1.1.4/perflog-lib.min.js:0
+[   54681ms] [INFO] PerfLog Page Completed (ver:1.1.4 2025-07-11T03:34:42.994Z) @ https://career2.successfactors.eu/verp/vmod_v1/ui/perflog-lib/resources_1.1.4/perflog-lib.min.js:0
+[   55092ms] [LOG] --------- Event ended --------- @ https://career2.successfactors.eu/verp/vmod_v1/ui/perflog-lib/resources_1.1.4/perflog-lib.min.js:0

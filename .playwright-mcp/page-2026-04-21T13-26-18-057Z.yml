@@ -1,0 +1,101 @@
+- generic [ref=e4]:
+  - link "Ir para o conteúdo principal" [ref=e5] [cursor=pointer]:
+    - /url: ""
+  - banner [ref=e8]:
+    - generic [ref=e10]:
+      - link "Página inicial de carreiras da" [ref=e13] [cursor=pointer]:
+        - /url: https://www.solventum.com/en-us/home/our-company/careers/
+        - img "Página inicial de carreiras da" [ref=e14]
+      - generic [ref=e15]:
+        - heading [level=1]
+      - generic [ref=e17]:
+        - generic [ref=e18]:
+          - button "Português (‏Brasil)" [ref=e20] [cursor=pointer]:
+            - generic [ref=e24]: Português (‏Brasil)
+          - button "fernandocostaxavier@gmail.com" [ref=e27] [cursor=pointer]:
+            - generic [ref=e32]: fernandocostaxavier@gmail.com
+        - navigation [ref=e33]:
+          - button "Careers Page" [ref=e34] [cursor=pointer]
+          - button "Página inicial de candidatos" [ref=e35] [cursor=pointer]
+          - button "Alertas de vagas" [ref=e36] [cursor=pointer]
+  - main [ref=e39]:
+    - generic [ref=e40]:
+      - generic [ref=e41]:
+        - link "Voltar para publicação de vaga de emprego" [ref=e43] [cursor=pointer]:
+          - generic [ref=e47]: Voltar para publicação de vaga de emprego
+        - heading "Manufacturing Controller." [level=2] [ref=e48]
+      - generic "Application Progress" [ref=e49]:
+        - list [ref=e50]:
+          - listitem [ref=e51]:
+            - generic: completed step 1 of 6
+            - generic [ref=e57]: Minhas informações
+          - listitem [ref=e58]:
+            - generic: completed step 2 of 6
+            - generic [ref=e64]: Minha experiência
+          - listitem [ref=e65]:
+            - generic: completed step 3 of 6
+            - generic [ref=e71]: "Perguntas da candidatura: 1 de 2"
+          - listitem [ref=e72]:
+            - generic: current step 4 of 6
+            - generic [ref=e78]: "Perguntas da candidatura: 2 de 2"
+          - listitem [ref=e79]:
+            - generic: step 5 of 6
+            - generic [ref=e85]: Informações voluntárias
+          - listitem [ref=e86]:
+            - generic: step 6 of 6
+            - generic [ref=e92]: Revisar
+      - generic [ref=e93]:
+        - generic [ref=e94]:
+          - 'heading "Perguntas da candidatura: 2 de 2" [level=3] [ref=e1233]'
+          - generic [ref=e96]: "* Indica um campo obrigatório"
+          - generic [ref=e1291]:
+            - heading "Erros encontrados" [level=3] [ref=e1292]:
+              - button "Erros encontrados" [expanded] [active] [ref=e1293] [cursor=pointer]:
+                - generic [ref=e1294]: Erros encontrados
+            - list [ref=e1315]:
+              - listitem [ref=e1316]:
+                - generic [ref=e1317]:
+                  - button "Erro Please indicate on the amount of your variable salary received last year (paid out). Here you can consider all types of bonuses." [ref=e1318] [cursor=pointer]:
+                    - text: Erro
+                    - generic [ref=e1319]: "-"
+                    - text: Please indicate on the amount of your variable salary received last year (paid out). Here you can consider all types of bonuses.
+                  - generic [ref=e1320]: O campo Please indicate on the amount of your variable salary received last year (paid out). Here you can consider all types of bonuses. é obrigatório.
+          - group [ref=e1239]:
+            - generic [ref=e1240]:
+              - group "Please Indicate your current gross monthly salary:*" [ref=e1242]:
+                - paragraph [ref=e1246]: Please Indicate your current gross monthly salary:*
+                - textbox [ref=e1249]: "25000"
+              - group "Please Indicate your current gross monthly salary expectation:*" [ref=e1251]:
+                - paragraph [ref=e1255]: Please Indicate your current gross monthly salary expectation:*
+                - textbox [ref=e1258]: "30000"
+              - group "Please indicate on the amount of your variable salary received last year (paid out). Here you can consider all types of bonuses.*" [ref=e1260]:
+                - paragraph [ref=e1264]: Please indicate on the amount of your variable salary received last year (paid out). Here you can consider all types of bonuses.*
+                - generic [ref=e1265]:
+                  - textbox [ref=e1267]: "5000"
+                  - paragraph [ref=e1322]:
+                    - generic [ref=e1323]: "Erro:"
+                    - text: O campo Please indicate on the amount of your variable salary received last year (paid out). Here you can consider all types of bonuses. é obrigatório.
+              - group "Please indicate your Level of English:*" [ref=e1269]:
+                - paragraph [ref=e1273]: Please indicate your Level of English:*
+                - 'button "Advanced: able to conduct meetings, trainings and business negotations, has broad vocabulary and very good grammar. Obrigatório" [ref=e1289]': "Advanced: able to conduct meetings, trainings and business negotations, has broad vocabulary and very good grammar."
+        - generic [ref=e224]:
+          - button "Voltar" [ref=e1026] [cursor=pointer]
+          - button "Salvar e continuar" [ref=e227] [cursor=pointer]
+  - generic [ref=e228]:
+    - generic [ref=e229]: Siga-nos
+    - list [ref=e230]:
+      - listitem [ref=e231] [cursor=pointer]:
+        - link "Facebook" [ref=e232]:
+          - /url: https://www.facebook.com/solventumhealth
+      - listitem [ref=e236] [cursor=pointer]:
+        - link "YouTube" [ref=e237]:
+          - /url: https://www.youtube.com/@Solventum
+      - listitem [ref=e243] [cursor=pointer]:
+        - link "LinkedIn" [ref=e244]:
+          - /url: https://www.linkedin.com/company/solventumhealth/
+      - listitem [ref=e248] [cursor=pointer]:
+        - link "X" [ref=e249]:
+          - /url: https://x.com/i/flow/login?redirect_after_login=%2Fsolventum
+    - generic [ref=e253]:
+      - img [ref=e257]
+      - generic [ref=e277]: © 2026 Workday, Inc. Todos os direitos reservados.

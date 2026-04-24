@@ -1,0 +1,20 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - progressbar [ref=e5]:
+      - img [ref=e6]
+    - link "Suporte para candidatos" [ref=e8] [cursor=pointer]:
+      - /url: https://suporte-candidatos.gupy.io/s/suporte?language=pt_BR
+      - text: "?"
+  - generic:
+    - generic "Privacy Tools - Cookie Management"
+    - generic "Privacy Tools - Cookie Management - https://www.privacytools.com.br"
+  - generic "Plugin de acessibilidade da Hand Talk." [ref=e9]:
+    - heading "Plugin de acessibilidade da Hand Talk." [level=2] [ref=e10]
+    - button "Abrir recursos assistivos." [ref=e11] [cursor=pointer]:
+      - img [ref=e12]
+      - paragraph:
+        - generic [ref=e14]: Recursos Assistivos
+    - button "Abrir tradutor de língua de sinais." [ref=e15] [cursor=pointer]:
+      - img [ref=e16]
+      - paragraph:
+        - generic [ref=e23]: Acessível em Libras

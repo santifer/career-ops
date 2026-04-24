@@ -1,0 +1,453 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e3]:
+    - generic:
+      - link "Skip to main content":
+        - /url: "#skipToMainContent"
+    - generic:
+      - link "Skip to main content":
+        - /url: "#skipToMainContent"
+    - generic [ref=e7]:
+      - link "Company Logo" [ref=e9] [cursor=pointer]:
+        - /url: /
+        - img "Roche" [ref=e10]
+      - navigation "primary" [ref=e17]:
+        - list [ref=e18]:
+          - listitem [ref=e19]:
+            - button "Discover Roche" [ref=e20] [cursor=pointer]:
+              - generic [ref=e21]: Discover Roche
+              - img [ref=e23]
+          - listitem [ref=e25]:
+            - button "Areas of Expertise" [ref=e26] [cursor=pointer]:
+              - generic [ref=e27]: Areas of Expertise
+              - img [ref=e29]
+          - listitem [ref=e31]:
+            - link "Student & Graduate Programmes" [ref=e33] [cursor=pointer]:
+              - /url: https://careers.roche.com/global/en/student-and-graduate-programs
+          - listitem [ref=e34]:
+            - button "Candidate Hub" [ref=e35] [cursor=pointer]:
+              - generic [ref=e36]: Candidate Hub
+              - img [ref=e38]
+      - list [ref=e41]:
+        - listitem [ref=e42]:
+          - button "Language selected English Global" [ref=e46] [cursor=pointer]:
+            - img [ref=e48]
+            - generic [ref=e50]: Global
+            - generic:
+              - img
+        - listitem [ref=e51]:
+          - link "0 saved jobs" [ref=e54] [cursor=pointer]:
+            - /url: https://careers.roche.com/global/en/jobcart
+            - img [ref=e56]
+            - generic [ref=e58]: Saved jobs
+            - generic [ref=e59]: (0)
+  - main [ref=e60]:
+    - generic [ref=e62] [cursor=pointer]: "-"
+    - generic [ref=e65]: "-"
+    - heading "Explore your opportunities" [level=1] [ref=e80]:
+      - generic [ref=e82]: Explore your opportunities
+    - generic [ref=e88]:
+      - figure [ref=e89]:
+        - img "img1" [ref=e92]
+      - generic "Job search" [ref=e96]:
+        - generic [ref=e97]:
+          - text: 
+          - generic [ref=e98]:
+            - generic [ref=e99]:
+              - generic:
+                - text: 
+                - generic [ref=e100]: Search job title or location
+                - textbox "Search job title or location" [ref=e101]: Brazil
+                - text: 
+                - button "Clear text" [ref=e102] [cursor=pointer]:
+                  - generic [ref=e104]: $
+                  - generic [ref=e105]: Clear text
+            - button "Search" [ref=e106] [cursor=pointer]:
+              - generic [ref=e108]: 
+    - generic [ref=e113]:
+      - generic [ref=e114]:
+        - region "Refine your search" [ref=e118]:
+          - text: $
+          - heading "Refine your search" [level=2] [ref=e121]
+          - generic [ref=e122]:
+            - generic [ref=e123]:
+              - heading "Category" [level=3] [ref=e126]:
+                - button "Category" [expanded] [ref=e127] [cursor=pointer]:
+                  - text: Category
+                  - generic [ref=e128]: "8"
+              - generic [ref=e130]:
+                - generic [ref=e132]:
+                  - searchbox "Search in Category" [ref=e133]
+                  - text: ":"
+                - group "Category" [ref=e135]:
+                  - generic [ref=e136]: Category
+                  - list [ref=e137]:
+                    - listitem [ref=e138]:
+                      - generic [ref=e139] [cursor=pointer]:
+                        - checkbox "Information Technology 1 job" [ref=e140]
+                        - generic [ref=e142]:
+                          - text: Information Technology
+                          - generic [ref=e143]:
+                            - text: (1)
+                            - generic [ref=e144]: job
+                    - listitem [ref=e145]:
+                      - generic [ref=e146] [cursor=pointer]:
+                        - checkbox "Regulatory Affairs 1 job" [ref=e147]
+                        - generic [ref=e149]:
+                          - text: Regulatory Affairs
+                          - generic [ref=e150]:
+                            - text: (1)
+                            - generic [ref=e151]: job
+                    - listitem [ref=e152]:
+                      - generic [ref=e153] [cursor=pointer]:
+                        - checkbox "Research & Development 1 job" [ref=e154]
+                        - generic [ref=e156]:
+                          - text: Research & Development
+                          - generic [ref=e157]:
+                            - text: (1)
+                            - generic [ref=e158]: job
+                    - listitem [ref=e159]:
+                      - generic [ref=e160] [cursor=pointer]:
+                        - checkbox "Vocational & Development Programs 4 jobs" [ref=e161]
+                        - generic [ref=e163]:
+                          - text: Vocational & Development Programs
+                          - generic [ref=e164]:
+                            - text: (4)
+                            - generic [ref=e165]: jobs
+            - heading "Sub Category" [level=3] [ref=e169]:
+              - button "Sub Category" [ref=e170] [cursor=pointer]:
+                - text: Sub Category
+                - generic [ref=e171]: (
+            - heading "Location" [level=3] [ref=e176]:
+              - button "Location" [ref=e177] [cursor=pointer]:
+                - text: Location
+                - generic [ref=e178]: (
+            - heading "State / Province" [level=3] [ref=e183]:
+              - button "State / Province" [ref=e184] [cursor=pointer]:
+                - text: State / Province
+                - generic [ref=e185]: (
+            - heading "City" [level=3] [ref=e190]:
+              - button "City" [ref=e191] [cursor=pointer]:
+                - text: City
+                - generic [ref=e192]: (
+            - heading "Hiring Type" [level=3] [ref=e197]:
+              - button "Hiring Type" [ref=e198] [cursor=pointer]:
+                - text: Hiring Type
+                - generic [ref=e199]: (
+            - heading "Job Level" [level=3] [ref=e204]:
+              - button "Job Level" [ref=e205] [cursor=pointer]:
+                - text: Job Level
+                - generic [ref=e206]: (
+            - heading "Job Type" [level=3] [ref=e211]:
+              - button "Job Type" [ref=e212] [cursor=pointer]:
+                - text: Job Type
+                - generic [ref=e213]: (
+            - heading "Campaign" [level=3] [ref=e218]:
+              - button "Campaign" [ref=e219] [cursor=pointer]:
+                - text: Campaign
+                - generic [ref=e220]: (
+          - generic [ref=e223]: Search results updated 7 jobs found
+        - generic [ref=e234]:
+          - heading "Not Ready to apply?" [level=2] [ref=e238]:
+            - generic [ref=e239]: Not Ready to apply?
+          - generic [ref=e243]: Join our talent community to stay connected!
+          - link "Join Talent Community" [ref=e246] [cursor=pointer]:
+            - /url: jointalentcommunity
+            - generic [ref=e248]: Join Talent Community
+            - text: 
+      - generic [ref=e249]:
+        - heading "Results based on your search" [level=2] [ref=e264]:
+          - generic [ref=e265]: Results based on your search
+        - region "Facet Results block" [ref=e269]:
+          - generic [ref=e270]:
+            - heading "Showing 7 results for \"Brazil\"" [level=2] [ref=e272]:
+              - generic [ref=e274]: Showing 7 results for
+              - text: "\"Brazil\""
+            - generic [ref=e277]: the results are updated
+          - generic [ref=e278]:
+            - generic [ref=e280]:
+              - generic [ref=e283]:
+                - generic [ref=e284]: Search from below list
+                - textbox "Search from below list" [ref=e285]
+                - text: $
+                - generic [ref=e286]:
+                  - button:
+                    - generic: 
+              - generic [ref=e288]:
+                - generic [ref=e289]:
+                  - generic [ref=e290]: "Sort by:"
+                  - generic [ref=e291]:
+                    - combobox "Sort by" [ref=e292]:
+                      - option "Most relevant" [selected]
+                      - option "Most recent"
+                    - generic: 
+                - text: F
+            - list [ref=e294]:
+              - listitem [ref=e295]:
+                - generic [ref=e296]:
+                  - generic [ref=e297]:
+                    - heading "Gerente de Pricing Regulatório Job ID is 202603-107439" [level=3] [ref=e298]:
+                      - link "Gerente de Pricing Regulatório Job ID is 202603-107439" [ref=e299] [cursor=pointer]:
+                        - /url: https://careers.roche.com/global/en/job/202603-107439/Gerente-de-Pricing-Regulatório
+                        - generic [ref=e300]: Gerente de Pricing Regulatório
+                    - paragraph [ref=e301]:
+                      - button "Available in 2 locations" [ref=e304] [cursor=pointer]:
+                        - generic [ref=e305]: 
+                        - generic [ref=e306]: Available in 2 locations
+                      - generic [ref=e308]:
+                        - generic [ref=e309]: Category
+                        - generic [ref=e310]: 
+                        - text: Regulatory Affairs
+                    - text: 
+                    - paragraph [ref=e311]: Estamos à procura de um Gerente de Pricing Regulatório para liderar a conformidade e a execução da legislação local na Roche. Se você tem experiência em Pricing, Compliance e Assuntos Regulatórios no setor farmacêutico, venha fazer parte da nossa equipe!
+                  - checkbox "Save Gerente de Pricing Regulatório 202603-107439 to job cart" [ref=e316] [cursor=pointer]
+              - listitem [ref=e317]:
+                - generic [ref=e318]:
+                  - generic [ref=e319]:
+                    - heading "Estagiario de Logistica ⎻ Transformacao Digital e Excelencia Job ID is 202604-109281" [level=3] [ref=e320]:
+                      - link "Estagiario de Logistica ⎻ Transformacao Digital e Excelencia Job ID is 202604-109281" [ref=e321] [cursor=pointer]:
+                        - /url: https://careers.roche.com/global/en/job/202604-109281/Estagiario-de-Logistica-⎻-Transformacao-Digital-e-Excelencia
+                        - generic [ref=e322]: Estagiario de Logistica ⎻ Transformacao Digital e Excelencia
+                    - paragraph [ref=e323]:
+                      - generic [ref=e325]:
+                        - generic [ref=e326]: Location
+                        - generic [ref=e327]: 
+                        - text: Sao Paulo, São Paulo, Brazil
+                      - generic [ref=e329]:
+                        - generic [ref=e330]: Category
+                        - generic [ref=e331]: 
+                        - text: Vocational & Development Programs
+                    - text: 
+                    - paragraph [ref=e332]: Estamos à procura de um Estagiário de Logística com foco em Data Analytics e Gestão de Projetos. Junte-se à Roche e ajude a otimizar a Cadeia Logística através da análise de dados e transformação digital, contribuindo para a melhoria contínua e governança de projetos estratégicos.
+                  - checkbox "Save Estagiario de Logistica ⎻ Transformacao Digital e Excelencia 202604-109281 to job cart" [ref=e337] [cursor=pointer]
+              - listitem [ref=e338]:
+                - generic [ref=e339]:
+                  - generic [ref=e340]:
+                    - heading "Analista de Inteligência de Mercado e Produtividade de Vendas Sr Job ID is 202604-108538" [level=3] [ref=e341]:
+                      - link "Analista de Inteligência de Mercado e Produtividade de Vendas Sr Job ID is 202604-108538" [ref=e342] [cursor=pointer]:
+                        - /url: https://careers.roche.com/global/en/job/202604-108538/Analista-de-Inteligência-de-Mercado-e-Produtividade-de-Vendas-Sr
+                        - generic [ref=e343]: Analista de Inteligência de Mercado e Produtividade de Vendas Sr
+                    - paragraph [ref=e344]:
+                      - generic [ref=e346]:
+                        - generic [ref=e347]: Location
+                        - generic [ref=e348]: 
+                        - text: Sao Paulo, São Paulo, Brazil
+                      - generic [ref=e350]:
+                        - generic [ref=e351]: Category
+                        - generic [ref=e352]: 
+                        - text: Information Technology
+                    - text: 
+                    - paragraph [ref=e353]: Estamos em busca de um Analista de Inteligência de Mercado e Produtividade de Vendas Sênior para transformar dados em insights acionáveis, liderar projetos multifuncionais e impulsionar a eficiência organizacional. Se você possui forte capacidade de influência e comunicação, essa é a sua oportunidade!
+                  - checkbox "Save Analista de Inteligência de Mercado e Produtividade de Vendas Sr 202604-108538 to job cart" [ref=e358] [cursor=pointer]
+              - listitem [ref=e359]:
+                - generic [ref=e360]:
+                  - generic [ref=e361]:
+                    - heading "Country Analytics and Portfolio Optimization Lead (Clinical Operations) Job ID is 202511-130742" [level=3] [ref=e362]:
+                      - link "Country Analytics and Portfolio Optimization Lead (Clinical Operations) Job ID is 202511-130742" [ref=e363] [cursor=pointer]:
+                        - /url: https://careers.roche.com/global/en/job/202511-130742/Country-Analytics-and-Portfolio-Optimization-Lead-Clinical-Operations
+                        - generic [ref=e364]: Country Analytics and Portfolio Optimization Lead (Clinical Operations)
+                    - paragraph [ref=e365]:
+                      - generic [ref=e367]:
+                        - generic [ref=e368]: Location
+                        - generic [ref=e369]: 
+                        - text: Sao Paulo, São Paulo, Brazil
+                      - generic [ref=e371]:
+                        - generic [ref=e372]: Category
+                        - generic [ref=e373]: 
+                        - text: Research & Development
+                    - text: 
+                    - paragraph [ref=e374]: We are looking for a Country Analytics and Portfolio Optimization Lead to drive data-centricity in our Clinical Operations team. This role involves translating business requirements into actionable insights, optimizing portfolio delivery, and fostering a culture of data literacy and patient-centricity.
+                  - checkbox "Save Country Analytics and Portfolio Optimization Lead (Clinical Operations) 202511-130742 to job cart" [ref=e379] [cursor=pointer]
+              - listitem [ref=e380]:
+                - generic [ref=e381]:
+                  - generic [ref=e382]:
+                    - heading "Estágio em Finanças (FEP - Finance Enterprise Partnering) Job ID is 202603-108242" [level=3] [ref=e383]:
+                      - link "Estágio em Finanças (FEP - Finance Enterprise Partnering) Job ID is 202603-108242" [ref=e384] [cursor=pointer]:
+                        - /url: https://careers.roche.com/global/en/job/202603-108242/Estágio-em-Finanças-FEP-Finance-Enterprise-Partnering
+                        - generic [ref=e385]: Estágio em Finanças (FEP - Finance Enterprise Partnering)
+                    - paragraph [ref=e386]:
+                      - generic [ref=e388]:
+                        - generic [ref=e389]: Location
+                        - generic [ref=e390]: 
+                        - text: Sao Paulo, São Paulo, Brazil
+                      - generic [ref=e392]:
+                        - generic [ref=e393]: Category
+                        - generic [ref=e394]: 
+                        - text: Vocational & Development Programs
+                    - text: 
+                    - paragraph [ref=e395]: Estamos à procura de um Estagiário em Finanças para se juntar à nossa equipe de FEP. O candidato ideal terá habilidades em modelagem financeira, análise de precificação e gestão de capital de giro, além de um bom domínio de Excel e inglês. Venha fazer parte da nossa jornada!
+                  - checkbox "Save Estágio em Finanças (FEP - Finance Enterprise Partnering) 202603-108242 to job cart" [ref=e400] [cursor=pointer]
+              - listitem [ref=e401]:
+                - generic [ref=e402]:
+                  - generic [ref=e403]:
+                    - heading "Internship in Innovation & Sustainability - Quantifying the Value of Life Job ID is 202604-109096" [level=3] [ref=e404]:
+                      - link "Internship in Innovation & Sustainability - Quantifying the Value of Life Job ID is 202604-109096" [ref=e405] [cursor=pointer]:
+                        - /url: https://careers.roche.com/global/en/job/202604-109096/Internship-in-Innovation-Sustainability-Quantifying-the-Value-of-Life
+                        - generic [ref=e406]: Internship in Innovation & Sustainability - Quantifying the Value of Life
+                    - paragraph [ref=e407]:
+                      - generic [ref=e409]:
+                        - generic [ref=e410]: Location
+                        - generic [ref=e411]: 
+                        - text: Sao Paulo, São Paulo, Brazil
+                      - generic [ref=e413]:
+                        - generic [ref=e414]: Category
+                        - generic [ref=e415]: 
+                        - text: Vocational & Development Programs
+                    - text: 
+                    - paragraph [ref=e416]: We are looking for passionate individuals to join Roche's Global Internship Programme in Innovation & Sustainability. This unique opportunity allows you to gain hands-on experience in the pharmaceutical industry while contributing to impactful projects that drive change and improve health outcomes.
+                  - checkbox "Save Internship in Innovation & Sustainability - Quantifying the Value of Life 202604-109096 to job cart" [ref=e421] [cursor=pointer]
+              - listitem [ref=e422]:
+                - generic [ref=e423]:
+                  - generic [ref=e424]:
+                    - heading "Internship in Innovation & Sustainability - A Digital-First Blueprint for Ophthalmology Job ID is 202604-109095" [level=3] [ref=e425]:
+                      - link "Internship in Innovation & Sustainability - A Digital-First Blueprint for Ophthalmology Job ID is 202604-109095" [ref=e426] [cursor=pointer]:
+                        - /url: https://careers.roche.com/global/en/job/202604-109095/Internship-in-Innovation-Sustainability-A-Digital-First-Blueprint-for-Ophthalmology
+                        - generic [ref=e427]: Internship in Innovation & Sustainability - A Digital-First Blueprint for Ophthalmology
+                    - paragraph [ref=e428]:
+                      - generic [ref=e430]:
+                        - generic [ref=e431]: Location
+                        - generic [ref=e432]: 
+                        - text: Sao Paulo, São Paulo, Brazil
+                      - generic [ref=e434]:
+                        - generic [ref=e435]: Category
+                        - generic [ref=e436]: 
+                        - text: Vocational & Development Programs
+                    - text: 
+                    - paragraph [ref=e437]: We are looking for passionate individuals to join our Global Internship Programme in Innovation & Sustainability. This unique opportunity allows you to gain hands-on experience in the pharmaceutical industry while contributing to impactful projects that drive change and promote sustainability.
+                  - checkbox "Save Internship in Innovation & Sustainability - A Digital-First Blueprint for Ophthalmology 202604-109095 to job cart" [ref=e442] [cursor=pointer]
+              - listitem
+          - navigation "pagination": Z 
+  - contentinfo [ref=e443]:
+    - generic [ref=e445]:
+      - list [ref=e448]:
+        - listitem [ref=e449]:
+          - link "Cookie Preferences" [ref=e450] [cursor=pointer]:
+            - /url: javascript:void(0)
+        - listitem [ref=e451]:
+          - link "Personal Information" [ref=e452] [cursor=pointer]:
+            - /url: https://careers.roche.com/global/en/emailpersonalinfo
+      - generic [ref=e455]:
+        - link "Roche" [ref=e457] [cursor=pointer]:
+          - /url: /
+          - img "Roche" [ref=e458]
+        - navigation [ref=e464]:
+          - list [ref=e465]:
+            - listitem [ref=e466]:
+              - heading "Discover Roche" [level=2] [ref=e467]
+              - list [ref=e469]:
+                - listitem [ref=e470]:
+                  - link "Why join us?" [ref=e472] [cursor=pointer]:
+                    - /url: https://careers.roche.com/global/en/why-join-us
+                    - text: Why join us
+                - listitem [ref=e473]:
+                  - link "Inclusion & Belonging" [ref=e475] [cursor=pointer]:
+                    - /url: https://careers.roche.com/global/en/inclusion-belonging
+                - listitem [ref=e476]:
+                  - link "Our Locations" [ref=e478] [cursor=pointer]:
+                    - /url: https://careers.roche.com/global/en/our-locations
+                - listitem [ref=e479]:
+                  - link "job listing page" [ref=e481] [cursor=pointer]:
+                    - /url: https://careers.roche.com/global/en/search-results
+                    - text: Job Search
+                - listitem [ref=e482]:
+                  - link "Tech4life" [ref=e484] [cursor=pointer]:
+                    - /url: https://careers.roche.com/global/en/tech4life
+                - listitem [ref=e485]:
+                  - link "Blog Stories" [ref=e487] [cursor=pointer]:
+                    - /url: https://careers.roche.com/global/en/we-are-roche
+                    - text: Our Blogs
+                - listitem [ref=e488]:
+                  - link "Events" [ref=e490] [cursor=pointer]:
+                    - /url: https://careers.roche.com/global/en/events
+                - listitem [ref=e491]:
+                  - link "www.roche.com/" [ref=e493] [cursor=pointer]:
+                    - /url: https://www.roche.com/
+                    - text: Roche.com
+            - listitem [ref=e494]:
+              - heading "Areas of Expertise" [level=2] [ref=e495]
+              - list [ref=e497]:
+                - listitem [ref=e498]:
+                  - link "Research and Development" [ref=e500] [cursor=pointer]:
+                    - /url: https://careers.roche.com/global/en/research-development
+                    - text: Research & Development
+                - listitem [ref=e501]:
+                  - link "People and Culture" [ref=e503] [cursor=pointer]:
+                    - /url: https://careers.roche.com/global/en/people-and-culture
+                    - text: People & Culture
+                - listitem [ref=e504]:
+                  - link "Manufacturing & Supply" [ref=e506] [cursor=pointer]:
+                    - /url: https://careers.roche.com/global/en/manufacturing-supply
+                - listitem [ref=e507]:
+                  - link "Engineering" [ref=e509] [cursor=pointer]:
+                    - /url: https://careers.roche.com/global/en/engineering
+                - listitem [ref=e510]:
+                  - link "Digital & Technology" [ref=e512] [cursor=pointer]:
+                    - /url: https://careers.roche.com/global/en/digital-technology
+                - listitem [ref=e513]:
+                  - link "Commercial, Marketing and Communications" [ref=e515] [cursor=pointer]:
+                    - /url: https://careers.roche.com/global/en/commercial-marketing-communications
+                    - text: Commercial, Marketing & Communications
+                - listitem [ref=e516]:
+                  - link "Business Strategy and Finance" [ref=e518] [cursor=pointer]:
+                    - /url: https://careers.roche.com/global/en/business-strategy-finance
+                    - text: Business Strategy & Finance
+            - listitem [ref=e519]:
+              - heading "Students & Graduates" [level=2] [ref=e520]
+              - link "Student and Graduate Page" [ref=e523] [cursor=pointer]:
+                - /url: https://careers.roche.com/global/en/student-and-graduate-programs
+            - listitem [ref=e524]:
+              - heading "Helpful Links" [level=2] [ref=e525]
+              - list [ref=e527]:
+                - listitem [ref=e528]:
+                  - link "Join our Talent Community" [ref=e530] [cursor=pointer]:
+                    - /url: https://careers.roche.com/global/en/jointalentcommunity
+                - listitem [ref=e531]:
+                  - link "Privacy Notice" [ref=e533] [cursor=pointer]:
+                    - /url: https://careers.roche.com/global/en/privacy-notice
+                - listitem [ref=e534]:
+                  - link "Candidate login" [ref=e536] [cursor=pointer]:
+                    - /url: https://roche.wd3.myworkdayjobs.com/en-US/roche-ext/login
+                - listitem [ref=e537]:
+                  - link "Resume parsing" [ref=e539] [cursor=pointer]:
+                    - /url: https://careers.roche.com/global/en/resume-parsing-faq
+                - listitem [ref=e540]:
+                  - link "Awards" [ref=e542] [cursor=pointer]:
+                    - /url: https://careers.roche.com/global/en/awards-and-rankings
+                - listitem [ref=e543]:
+                  - link "Genentech Careers" [ref=e545] [cursor=pointer]:
+                    - /url: https://careers.gene.com/us/en
+        - generic [ref=e546]:
+          - heading "follow us" [level=2] [ref=e547]
+          - list [ref=e548]:
+            - listitem [ref=e549]:
+              - link "facebook" [ref=e550] [cursor=pointer]:
+                - /url: https://www.facebook.com/roche
+                - img [ref=e552]
+            - listitem [ref=e554]:
+              - link "linkedIn" [ref=e555] [cursor=pointer]:
+                - /url: https://www.linkedin.com/company/roche
+                - img [ref=e557]
+            - listitem [ref=e559]:
+              - link "twitter" [ref=e560] [cursor=pointer]:
+                - /url: https://twitter.com/roche
+                - img [ref=e562]
+            - listitem [ref=e564]:
+              - link "instagram" [ref=e565] [cursor=pointer]:
+                - /url: https://www.instagram.com/roche/
+                - img [ref=e567]
+            - listitem [ref=e569]:
+              - link "youtube" [ref=e570] [cursor=pointer]:
+                - /url: https://www.youtube.com/user/roche
+                - img [ref=e572]
+            - listitem [ref=e574]:
+              - link "WeChat" [ref=e575] [cursor=pointer]:
+                - /url: https://careers.roche.com/global/en/step-by-step-guide-to-follow-roche-on-wechat
+                - img [ref=e577]
+      - generic [ref=e581]:
+        - generic [ref=e582]: This website contains information on products which is targeted to a wide range of audiences and could contain product details or information otherwise not accessible or valid in your country. Please be aware that we do not take any responsibility for accessing such information which may not comply with any legal processes, registration or usage in the country of origin.
+        - list [ref=e586]:
+          - listitem [ref=e587]:
+            - link "Legal Statement" [ref=e589] [cursor=pointer]:
+              - /url: https://www.roche.com/legal-statement
+          - listitem [ref=e590]:
+            - link "Privacy Notice" [ref=e592] [cursor=pointer]:
+              - /url: https://careers.roche.com/global/en/privacy-notice

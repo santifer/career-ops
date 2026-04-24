@@ -1,0 +1,762 @@
+- generic [ref=e1]:
+  - link "Ir para o conteúdo principal" [ref=e2] [cursor=pointer]:
+    - /url: "#mainContent"
+  - generic:
+    - generic:
+      - generic:
+        - img
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - generic:
+          - generic:
+            - generic: 
+        - generic [ref=e7]:
+          - generic [ref=e8]:
+            - link "Robert Half" [ref=e10] [cursor=pointer]:
+              - /url: /br/pt
+              - img [ref=e11]
+            - list [ref=e13]:
+              - generic:
+                - generic [ref=e15]:
+                  - link "Vagas" [ref=e16] [cursor=pointer]:
+                    - /url: /br/pt/procurando-oportunidade
+                    - generic [ref=e17]:
+                      - generic: Vagas
+                  - button "Vagas chevron-down button" [ref=e19] [cursor=pointer]:
+                    - generic [ref=e21]:
+                      - generic [ref=e22]: 
+                      - generic [ref=e23]: Vagas chevron-down button
+                - generic [ref=e25]:
+                  - link "Soluções em talentos" [ref=e26] [cursor=pointer]:
+                    - /url: /br/pt/solucao-talentos
+                    - generic [ref=e27]:
+                      - generic: Soluções em talentos
+                  - button "Soluções em talentos chevron-down button" [ref=e29] [cursor=pointer]:
+                    - generic [ref=e31]:
+                      - generic [ref=e32]: 
+                      - generic [ref=e33]: Soluções em talentos chevron-down button
+                - generic [ref=e35]:
+                  - link "Consultoria" [ref=e36] [cursor=pointer]:
+                    - /url: /br/pt/consultoria
+                    - generic [ref=e37]:
+                      - generic: Consultoria
+                  - button "Consultoria chevron-down button" [ref=e39] [cursor=pointer]:
+                    - generic [ref=e41]:
+                      - generic [ref=e42]: 
+                      - generic [ref=e43]: Consultoria chevron-down button
+                - generic [ref=e45]:
+                  - link "Central do Conhecimento" [ref=e46] [cursor=pointer]:
+                    - /url: /br/pt/insights
+                    - generic [ref=e47]:
+                      - generic: Central do Conhecimento
+                  - button "Central do Conhecimento chevron-down button" [ref=e49] [cursor=pointer]:
+                    - generic [ref=e51]:
+                      - generic [ref=e52]: 
+                      - generic [ref=e53]: Central do Conhecimento chevron-down button
+          - generic [ref=e54]:
+            - button "search" [ref=e55] [cursor=pointer]:
+              - generic [ref=e57]:
+                - generic [ref=e58]: 
+                - generic [ref=e59]: search
+            - link "Minha Conta" [ref=e61] [cursor=pointer]:
+              - /url: "#"
+              - text: Minha Conta
+              - generic [ref=e64]: 
+            - generic:
+              - generic:
+                - generic: Candidato – Acessar Minha Conta
+                - generic: Colaborador – Registrar Ponto
+                - generic: Colaborador – Consultar Ponto
+                - generic: Colaborador – Consultar Holerite
+                - generic: Cliente – Aprovar Ponto
+      - generic [ref=e66]:
+        - generic [ref=e67]:
+          - generic [ref=e77]:
+            - generic:
+              - text: "Alerta de segurança: A Robert Half nunca pedirá qualquer tipo de pagamento ou taxas aos candidatos a uma vaga. Saiba como se proteger de golpes de"
+              - link "recrutamento aqui" [ref=e78] [cursor=pointer]:
+                - /url: /br/pt/alerta-fraude
+              - text: .
+          - generic [ref=e81]:
+            - img [ref=e84]
+            - generic [ref=e85]:
+              - generic [ref=e87]:
+                - heading "Tudo é possível quando você tem o talento certo" [level=1] [ref=e89]:
+                  - heading "Tudo é possível quando você tem o talento certo" [level=1] [ref=e90]
+                - generic [ref=e91]:
+                  - generic: Encontre candidatos qualificados, posições mais procuradas e as melhores soluções em talentos para apoiar você e sua empresa.
+              - generic [ref=e92]:
+                - generic [ref=e93]:
+                  - heading "Para candidatos" [level=2] [ref=e95]:
+                    - generic: Para candidatos
+                  - link "Buscar oportunidades" [ref=e98] [cursor=pointer]:
+                    - /url: /br/pt/procurando-oportunidade
+                - generic [ref=e99]:
+                  - heading "Para empresas" [level=2] [ref=e102]:
+                    - generic: Para empresas
+                  - generic [ref=e103]:
+                    - link "Soluções em talentos" [ref=e106] [cursor=pointer]:
+                      - /url: /br/pt/solucao-talentos/formulario
+                    - link "Conheça as soluções em consultoria" [ref=e109] [cursor=pointer]:
+                      - /url: /br/pt/consultoria
+              - generic [ref=e112]:
+                - generic [ref=e116]:
+                  - textbox "Título da vaga, habilidades ou palavras-chave" [ref=e117]:
+                    - generic [ref=e118]:
+                      - generic: Título da vaga, habilidades ou palavras-chave
+                      - textbox "Título da vaga, habilidades ou palavras-chave" [ref=e119]:
+                        - /placeholder: ""
+                  - generic [ref=e122]:
+                    - generic [ref=e123]: 
+                    - generic [ref=e124]: search
+                - generic "Search Cidade, Estado ou CEP" [ref=e128]:
+                  - generic [ref=e130]:
+                    - list "Search Cidade, Estado ou CEP" [ref=e131]:
+                      - generic [ref=e132]:
+                        - generic: Cidade, Estado ou CEP
+                        - textbox "Cidade, Estado ou CEP" [ref=e133]:
+                          - /placeholder: ""
+                    - generic [ref=e136]:
+                      - generic [ref=e137]: 
+                      - generic [ref=e138]: location-pin-outline
+                - button "Buscar" [ref=e142] [cursor=pointer]
+        - generic [ref=e146]:
+          - generic [ref=e147]:
+            - img
+          - generic [ref=e149]:
+            - heading "Tendências e novidades" [level=2] [ref=e154]
+            - generic [ref=e156]:
+              - list [ref=e158]:
+                - generic:
+                  - listitem [ref=e159]:
+                    - link "Guia Salarial 2026 Explore nosso Guia Salarial para conferir as informações mais recentes sobre salários e tendências de contratação." [ref=e161] [cursor=pointer]:
+                      - /url: /br/pt/insights/guia-salarial
+                      - generic [ref=e162]:
+                        - img [ref=e163]
+                        - generic [ref=e164]:
+                          - link "Guia Salarial 2026" [ref=e166]:
+                            - /url: /br/pt/insights/guia-salarial
+                          - generic [ref=e168]: Explore nosso Guia Salarial para conferir as informações mais recentes sobre salários e tendências de contratação.
+                  - listitem [ref=e169]:
+                    - link "Trabalhe conosco Junte-se à nossa equipe e descubra oportunidades internas para desenvolver sua carreira, fazer parte de um ambiente colaborativo e com propósito." [ref=e171] [cursor=pointer]:
+                      - /url: /br/pt/join-robert-half
+                      - generic [ref=e172]:
+                        - img [ref=e173]
+                        - generic [ref=e174]:
+                          - link "Trabalhe conosco" [ref=e176]:
+                            - /url: /br/pt/join-robert-half
+                          - generic [ref=e178]: Junte-se à nossa equipe e descubra oportunidades internas para desenvolver sua carreira, fazer parte de um ambiente colaborativo e com propósito.
+                  - listitem [ref=e179]:
+                    - link "Índice de Confiança Robert Half O ICRH é um estudo exclusivo da Robert Half revela as perspectivas de contratação e expectativas do mercado de trabalho." [ref=e181] [cursor=pointer]:
+                      - /url: /br/pt/insights/indice-confianca
+                      - generic [ref=e182]:
+                        - img [ref=e183]
+                        - generic [ref=e184]:
+                          - link "Índice de Confiança Robert Half" [ref=e186]:
+                            - /url: /br/pt/insights/indice-confianca
+                          - generic [ref=e188]: O ICRH é um estudo exclusivo da Robert Half revela as perspectivas de contratação e expectativas do mercado de trabalho.
+                  - listitem [ref=e189]:
+                    - link "Saúde Mental Estudo da The School of Life e Robert Half mapeia impactos da Inteligência Emocional no trabalho e nas organizações." [ref=e191] [cursor=pointer]:
+                      - /url: /br/pt/insights/saude-mental
+                      - generic [ref=e192]:
+                        - img [ref=e193]
+                        - generic [ref=e194]:
+                          - link "Saúde Mental" [ref=e196]:
+                            - /url: /br/pt/insights/saude-mental
+                          - generic [ref=e198]: Estudo da The School of Life e Robert Half mapeia impactos da Inteligência Emocional no trabalho e nas organizações.
+                  - listitem [ref=e199]:
+                    - link "Benefícios Em cenário competitivo, benefícios são cruciais para atrair e manter talentos. Exploramos sua importância e os mais buscados por colaboradores." [ref=e201] [cursor=pointer]:
+                      - /url: /br/pt/insights/beneficios
+                      - generic [ref=e202]:
+                        - img [ref=e203]
+                        - generic [ref=e204]:
+                          - link "Benefícios" [ref=e206]:
+                            - /url: /br/pt/insights/beneficios
+                          - generic [ref=e208]: Em cenário competitivo, benefícios são cruciais para atrair e manter talentos. Exploramos sua importância e os mais buscados por colaboradores.
+                  - listitem [ref=e209]:
+                    - 'link "Podcast: Robert Half Talks Participe de discussões relevantes para se preparar para o futuro do trabalho e se adaptar a um mundo em transformação." [ref=e211] [cursor=pointer]':
+                      - /url: /br/pt/insights/podcast
+                      - generic [ref=e212]:
+                        - img [ref=e213]
+                        - generic [ref=e214]:
+                          - 'link "Podcast: Robert Half Talks" [ref=e216]':
+                            - /url: /br/pt/insights/podcast
+                          - generic [ref=e218]: Participe de discussões relevantes para se preparar para o futuro do trabalho e se adaptar a um mundo em transformação.
+              - generic [ref=e222]:
+                - generic [ref=e227]: 
+                - button [ref=e229] [cursor=pointer]:
+                  - generic [ref=e231]:
+                    - generic [ref=e232]: 
+                    - generic [ref=e233]: Próxima
+        - generic [ref=e236]:
+          - generic [ref=e237]:
+            - img
+          - generic [ref=e240]:
+            - generic [ref=e243]:
+              - generic [ref=e246]:
+                - generic:
+                  - img
+              - img [ref=e907]
+              - generic [ref=e253]:
+                - generic:
+                  - img
+              - generic [ref=e255]:
+                - generic:
+                  - img [ref=e257]
+                  - generic:
+                    - img
+            - generic [ref=e258]:
+              - heading "A ajuda que você precisa para produzir mais" [level=2] [ref=e259]
+              - generic [ref=e261]:
+                - generic: Tenha acesso a nossa rede de candidatos para funções permanentes ou projetos
+                - generic: Encontre profissionais com as habilidades necessárias e experiência no setor
+                - generic: A Robert Half oferece as melhores soluções em talentos, em todos os níveis, desde suporte até cargos executivos.
+                - list [ref=e264]:
+                  - generic:
+                    - listitem [ref=e265]:
+                      - generic [ref=e267]:
+                        - generic [ref=e268]:
+                          - generic [ref=e271]:
+                            - generic [ref=e272]: 
+                            - generic [ref=e273]: check
+                          - generic:
+                            - img
+                        - generic [ref=e275]:
+                          - generic: Tenha acesso a nossa rede de candidatos para funções permanentes ou projetos
+                    - listitem [ref=e276]:
+                      - generic [ref=e278]:
+                        - generic [ref=e279]:
+                          - generic [ref=e282]:
+                            - generic [ref=e283]: 
+                            - generic [ref=e284]: check
+                          - generic:
+                            - img
+                        - generic [ref=e286]:
+                          - generic: Encontre profissionais com as habilidades necessárias e experiência no setor
+                    - listitem [ref=e287]:
+                      - generic [ref=e289]:
+                        - generic [ref=e290]:
+                          - generic [ref=e293]:
+                            - generic [ref=e294]: 
+                            - generic [ref=e295]: check
+                          - generic:
+                            - img
+                        - generic [ref=e297]:
+                          - generic: A Robert Half oferece as melhores soluções em talentos, em todos os níveis, desde suporte até cargos executivos.
+              - generic [ref=e299]:
+                - generic:
+                  - link "Entre em contato" [ref=e302] [cursor=pointer]:
+                    - /url: /br/pt/solucao-talentos/formulario
+                  - link "Saiba mais" [ref=e305] [cursor=pointer]:
+                    - /url: /br/pt/solucao-talentos
+        - generic [ref=e308]:
+          - generic [ref=e309]:
+            - img
+          - generic [ref=e312]:
+            - generic [ref=e315]:
+              - generic [ref=e318]:
+                - generic:
+                  - img
+              - generic [ref=e321]:
+                - generic:
+                  - img
+              - generic [ref=e324]:
+                - generic:
+                  - img
+              - generic [ref=e327]:
+                - generic:
+                  - img
+            - generic [ref=e329]:
+              - heading "Soluções que impactam diretamente o seu negócio" [level=2] [ref=e330]
+              - generic [ref=e332]:
+                - generic: Desenvolva uma visão e estratégias bem claras
+                - generic: Aprimore a eficiência dos processos com tecnologia
+                - generic: Implemente um projeto ou gerencie operações
+                - list [ref=e335]:
+                  - generic:
+                    - listitem [ref=e336]:
+                      - generic [ref=e338]:
+                        - generic [ref=e339]:
+                          - generic [ref=e342]:
+                            - generic [ref=e343]: 
+                            - generic [ref=e344]: check
+                          - generic:
+                            - img
+                        - generic [ref=e346]:
+                          - generic: Desenvolva uma visão e estratégias bem claras
+                    - listitem [ref=e347]:
+                      - generic [ref=e349]:
+                        - generic [ref=e350]:
+                          - generic [ref=e353]:
+                            - generic [ref=e354]: 
+                            - generic [ref=e355]: check
+                          - generic:
+                            - img
+                        - generic [ref=e357]:
+                          - generic: Aprimore a eficiência dos processos com tecnologia
+                    - listitem [ref=e358]:
+                      - generic [ref=e360]:
+                        - generic [ref=e361]:
+                          - generic [ref=e364]:
+                            - generic [ref=e365]: 
+                            - generic [ref=e366]: check
+                          - generic:
+                            - img
+                        - generic [ref=e368]:
+                          - generic: Implemente um projeto ou gerencie operações
+              - generic [ref=e370]:
+                - generic:
+                  - link "Conheça as soluções em consultoria" [ref=e373] [cursor=pointer]:
+                    - /url: /br/pt/solucao-talentos/formulario
+                  - link "Saiba mais" [ref=e376] [cursor=pointer]:
+                    - /url: /br/pt/consultoria
+        - generic [ref=e379]:
+          - generic [ref=e380]:
+            - img
+          - generic [ref=e383]:
+            - generic [ref=e386]:
+              - img [ref=e909]
+              - generic [ref=e393]:
+                - generic:
+                  - img
+              - generic [ref=e396]:
+                - generic:
+                  - img
+              - generic [ref=e398]:
+                - generic:
+                  - generic:
+                    - img
+            - generic [ref=e400]:
+              - heading "Faça a mudança de carreira que você deseja" [level=2] [ref=e401]
+              - generic [ref=e403]:
+                - generic: Receba alertas de vagas que correspondam às suas habilidades e objetivos
+                - generic: "Tenha acesso a uma variedade de empresas e modalidades de trabalho: remoto, híbrido ou presencial, seja por projeto ou permanente"
+                - generic: Salários competitivos, benefícios, treinamento e desenvolvimento
+                - list [ref=e406]:
+                  - generic:
+                    - listitem [ref=e407]:
+                      - generic [ref=e409]:
+                        - generic [ref=e410]:
+                          - generic [ref=e413]:
+                            - generic [ref=e414]: 
+                            - generic [ref=e415]: check
+                          - generic:
+                            - img
+                        - generic [ref=e417]:
+                          - generic: Receba alertas de vagas que correspondam às suas habilidades e objetivos
+                    - listitem [ref=e418]:
+                      - generic [ref=e420]:
+                        - generic [ref=e421]:
+                          - generic [ref=e424]:
+                            - generic [ref=e425]: 
+                            - generic [ref=e426]: check
+                          - generic:
+                            - img
+                        - generic [ref=e428]:
+                          - generic: "Tenha acesso a uma variedade de empresas e modalidades de trabalho: remoto, híbrido ou presencial, seja por projeto ou permanente"
+                    - listitem [ref=e429]:
+                      - generic [ref=e431]:
+                        - generic [ref=e432]:
+                          - generic [ref=e435]:
+                            - generic [ref=e436]: 
+                            - generic [ref=e437]: check
+                          - generic:
+                            - img
+                        - generic [ref=e439]:
+                          - generic: Salários competitivos, benefícios, treinamento e desenvolvimento
+              - generic [ref=e441]:
+                - generic:
+                  - link "Procurar vagas" [ref=e444] [cursor=pointer]:
+                    - /url: /br/pt/procurando-oportunidade/envie-seu-curriculo
+                  - link "Saiba mais" [ref=e447] [cursor=pointer]:
+                    - /url: /br/pt/procurando-oportunidade
+        - generic [ref=e455]:
+          - heading "Solução permanente ou por projeto, de acordo com a sua necessidade" [level=2] [ref=e458]
+          - generic [ref=e459]:
+            - tablist [ref=e462]:
+              - generic [ref=e464]:
+                - tab "Finanças e Contabilidade" [ref=e465] [cursor=pointer]:
+                  - generic [ref=e467]:
+                    - generic: Finanças e Contabilidade
+                - tab "Tecnologia da Informação" [ref=e468] [cursor=pointer]:
+                  - generic [ref=e470]:
+                    - generic: Tecnologia da Informação
+                - tab "Recursos Humanos" [ref=e471] [cursor=pointer]:
+                  - generic [ref=e473]:
+                    - generic: Recursos Humanos
+                - tab "Vendas e Marketing" [ref=e474] [cursor=pointer]:
+                  - generic [ref=e476]:
+                    - generic: Vendas e Marketing
+                - tab "Jurídico" [ref=e477] [cursor=pointer]:
+                  - generic [ref=e479]:
+                    - generic: Jurídico
+                - tab "Engenharia" [ref=e480] [cursor=pointer]:
+                  - generic [ref=e482]:
+                    - generic: Engenharia
+              - generic [ref=e486]:
+                - generic [ref=e491]: 
+                - generic "Próxima" [ref=e492]:
+                  - button "Próxima" [ref=e493] [cursor=pointer]:
+                    - generic [ref=e495]:
+                      - generic [ref=e496]: 
+                      - generic [ref=e497]: Próxima
+            - generic [ref=e498]:
+              - generic:
+                - tabpanel [ref=e501]:
+                  - generic [ref=e502]:
+                    - generic [ref=e503]:
+                      - paragraph [ref=e505]:
+                        - generic [ref=e508]:
+                          - generic: De contadores a CFOs, apresentaremos os melhores candidatos com habilidades e experiência sob demanda e ajudaremos a gerenciar o processo de contratação para você.
+                      - generic [ref=e511]:
+                        - heading "Profissões em alta" [level=5] [ref=e513]:
+                          - generic: Profissões em alta
+                        - list [ref=e514]:
+                          - generic:
+                            - listitem [ref=e515]:
+                              - link "Controladoria" [ref=e519] [cursor=pointer]:
+                                - /url: /br/pt/vagas-detalhes/controller-g
+                            - listitem [ref=e520]:
+                              - link "Planejamento Financeiro" [ref=e524] [cursor=pointer]:
+                                - /url: /br/pt/vagas-detalhes/gerente-de-planejamento-financeiro-controladoria-g
+                            - listitem [ref=e525]:
+                              - link "Planejamento Tributário" [ref=e529] [cursor=pointer]:
+                                - /url: /br/pt/vagas-detalhes/gerentes-de-planejamento-tributario
+                            - listitem [ref=e530]:
+                              - link "Gerentes Contábeis" [ref=e534] [cursor=pointer]:
+                                - /url: /br/pt/vagas-detalhes/gerente-contabilfiscal-g
+                            - listitem [ref=e535]:
+                              - link "Gerentes de Crédito" [ref=e539] [cursor=pointer]:
+                                - /url: /br/pt/vagas-detalhes/gerentes-de-credito
+                            - listitem [ref=e540]:
+                              - link "Fusões e Aquisições" [ref=e544] [cursor=pointer]:
+                                - /url: /br/pt/vagas-detalhes/analistas-de-fusoes-e-aquisicoes
+                      - generic [ref=e547]:
+                        - link "Descubra soluções em talentos para Finanças e Contabilidade" [ref=e548] [cursor=pointer]:
+                          - /url: /br/pt/financas-contabilidade
+                        - generic [ref=e551]: 
+                    - generic [ref=e554]:
+                      - generic [ref=e557]:
+                        - generic:
+                          - img
+                      - generic [ref=e560]:
+                        - generic:
+                          - img
+                      - generic [ref=e563]:
+                        - generic:
+                          - img
+                      - generic [ref=e566]:
+                        - img [ref=e568]
+                        - generic:
+                          - img
+                      - generic [ref=e571]:
+                        - img [ref=e573]
+                        - generic:
+                          - img
+                      - generic [ref=e576]:
+                        - img [ref=e578]
+                        - generic:
+                          - img
+                - generic:
+                  - generic:
+                    - generic: De professionais de segurança a desenvolvedores, apresentaremos os melhores candidatos com habilidades e experiência sob demanda e ajudaremos a gerenciar o processo de contratação para você.
+                    - generic: Profissões em alta
+                    - text: 
+                - generic:
+                  - generic:
+                    - generic: De analistas a diretores de RH, apresentaremos os melhores candidatos com habilidades e experiência sob demanda e ajudaremos a gerenciar o processo de contratação para você.
+                    - generic: Profissões em alta
+                    - text: 
+                - generic:
+                  - generic:
+                    - generic: De profissionais de marketing e digital a gerentes comerciais, apresentaremos os melhores candidatos com habilidades e experiência sob demanda e ajudaremos a gerenciar o processo de contratação para você.
+                    - generic: Profissões em alta
+                    - text: 
+                - generic:
+                  - generic:
+                    - generic: De advogados juniores a diretores jurídicos, apresentaremos os melhores candidatos com habilidades e experiência sob demanda e ajudaremos a gerenciar o processo de contratação para você.
+                    - generic: Profissões em alta
+                    - text: 
+                - generic:
+                  - generic:
+                    - generic: De analistas a gerentes de planta e diretores de operações, apresentaremos os melhores candidatos com habilidades e experiência sob demanda e ajudaremos a gerenciar o processo de contratação para você.
+                    - generic: Profissões em alta
+                    - text: 
+        - generic [ref=e587]:
+          - generic [ref=e588]:
+            - img
+          - generic [ref=e590]:
+            - heading "Conquistas da Robert Half" [level=2] [ref=e592]
+            - generic [ref=e595]:
+              - generic:
+                - generic:
+                  - generic [ref=e602]:
+                    - heading "Forbes World's Best Employers" [level=5] [ref=e604]:
+                      - generic:
+                        - generic: Forbes World's Best Employers
+                    - heading "2025" [level=6] [ref=e607]:
+                      - generic: "2025"
+                  - generic [ref=e615]:
+                    - heading "Fortune® World's Most Admired Companies™" [level=5] [ref=e617]:
+                      - generic [ref=e618]:
+                        - generic [ref=e619]: Fortune®
+                        - text: World's Most Admired Companies™
+                    - heading "2026" [level=6] [ref=e622]:
+                      - generic: "2026"
+                    - tooltip "Isenção de responsabilidade" [ref=e625] [cursor=pointer]:
+                      - generic [ref=e629]:
+                        - generic [ref=e630]: "*"
+                        - generic [ref=e631]: Isenção de responsabilidade
+                  - generic [ref=e639]:
+                    - heading "Forbes’ America’s Best Professional Recruiting Firms" [level=5] [ref=e641]:
+                      - generic:
+                        - generic: Forbes’ America’s Best Professional Recruiting Firms
+                    - heading "2025" [level=6] [ref=e644]:
+                      - generic: "2025"
+            - link "Saiba mais sobre a Robert Half" [ref=e651] [cursor=pointer]:
+              - /url: /br/pt/sobre-robert-half
+    - generic [ref=e656]:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - text: 
+                  - generic: Você está saindo do site da Robert Half Brasil e será redirecionado para o site da Robert Half EUA.
+      - generic [ref=e658]:
+        - generic [ref=e659]:
+          - text:    
+          - generic [ref=e661]:
+            - generic:
+              - generic [ref=e663]:
+                - heading "Soluções em talentos" [level=2] [ref=e665]:
+                  - generic: Soluções em talentos
+                - list [ref=e666]:
+                  - generic:
+                    - listitem [ref=e667]:
+                      - link "Vagas" [ref=e671] [cursor=pointer]:
+                        - /url: /br/pt/vagas
+                    - listitem [ref=e672]:
+                      - link "Projetos" [ref=e676] [cursor=pointer]:
+                        - /url: /br/pt/solucao-talentos/projetos
+                    - listitem [ref=e677]:
+                      - link "Permanente" [ref=e681] [cursor=pointer]:
+                        - /url: /br/pt/solucao-talentos/permanente
+                    - listitem [ref=e682]:
+                      - link "Gestão interina" [ref=e686] [cursor=pointer]:
+                        - /url: /br/pt/solucao-talentos/interim-management
+                    - listitem [ref=e687]:
+                      - link "Executive Search" [ref=e691] [cursor=pointer]:
+                        - /url: /br/pt/solucao-talentos/executive-search
+                    - listitem [ref=e692]:
+                      - link "Consultoria" [ref=e696] [cursor=pointer]:
+                        - /url: /br/pt/consultoria
+              - generic [ref=e698]:
+                - heading "Nossas práticas" [level=2] [ref=e700]:
+                  - generic: Nossas práticas
+                - list [ref=e701]:
+                  - generic:
+                    - listitem [ref=e702]:
+                      - link "Finanças e contabilidade" [ref=e706] [cursor=pointer]:
+                        - /url: /br/pt/financas-contabilidade
+                    - listitem [ref=e707]:
+                      - link "Tecnologia da informação" [ref=e711] [cursor=pointer]:
+                        - /url: /br/pt/tecnologia
+                    - listitem [ref=e712]:
+                      - link "Vendas e marketing" [ref=e716] [cursor=pointer]:
+                        - /url: /br/pt/vendas-marketing
+                    - listitem [ref=e717]:
+                      - link "Jurídico" [ref=e721] [cursor=pointer]:
+                        - /url: /br/pt/juridico
+                    - listitem [ref=e722]:
+                      - link "Recursos humanos" [ref=e726] [cursor=pointer]:
+                        - /url: /br/pt/recursos-humanos
+                    - listitem [ref=e727]:
+                      - link "Engenharia" [ref=e731] [cursor=pointer]:
+                        - /url: /br/pt/engenharia
+              - generic [ref=e733]:
+                - heading "Recursos" [level=2] [ref=e735]:
+                  - generic: Recursos
+                - list [ref=e736]:
+                  - generic:
+                    - listitem [ref=e737]:
+                      - link "Guia salarial" [ref=e741] [cursor=pointer]:
+                        - /url: /br/pt/insights/guia-salarial
+                    - listitem [ref=e742]:
+                      - link "Índice de confiança Robert Half" [ref=e746] [cursor=pointer]:
+                        - /url: /br/pt/insights/indice-confianca
+                    - listitem [ref=e747]:
+                      - link "Panorama Setorial" [ref=e751] [cursor=pointer]:
+                        - /url: /br/pt/insights/panorama
+                    - listitem [ref=e752]:
+                      - link "Funções mais demandadas" [ref=e756] [cursor=pointer]:
+                        - /url: /br/pt/vagas-detalhes-all
+                    - listitem [ref=e757]:
+                      - link "Central do Conhecimento" [ref=e761] [cursor=pointer]:
+                        - /url: /br/pt/insights
+                    - listitem [ref=e762]:
+                      - link "Receba nossa newsletter" [ref=e766] [cursor=pointer]:
+                        - /url: /br/pt/insights/newsletter
+                    - listitem [ref=e767]:
+                      - link "Criar alerta de vagas" [ref=e771] [cursor=pointer]:
+                        - /url: /br/pt/procurando-oportunidade/alerta-de-vaga
+                    - listitem [ref=e772]:
+                      - link "Ajuda" [ref=e776] [cursor=pointer]:
+                        - /url: /br/pt/infocenter
+              - generic [ref=e778]:
+                - heading "Sobre" [level=2] [ref=e780]:
+                  - generic: Sobre
+                - list [ref=e781]:
+                  - generic:
+                    - listitem [ref=e782]:
+                      - link "Sobre Robert Half" [ref=e786] [cursor=pointer]:
+                        - /url: /br/pt/sobre-robert-half
+                    - listitem [ref=e787]:
+                      - link "Liderança" [ref=e791] [cursor=pointer]:
+                        - /url: /br/pt/sobre-robert-half/lideranca
+                    - listitem [ref=e792]:
+                      - link "Trabalhe conosco" [ref=e796] [cursor=pointer]:
+                        - /url: /br/pt/join-robert-half
+                    - listitem [ref=e797]:
+                      - link "Escritórios" [ref=e801] [cursor=pointer]:
+                        - /url: /br/pt/localizacoes
+                    - listitem [ref=e802]:
+                      - link "Relação com investidores" [ref=e806] [cursor=pointer]:
+                        - /url: "#"
+                    - listitem [ref=e807]:
+                      - link "Imprensa" [ref=e811] [cursor=pointer]:
+                        - /url: /br/pt/sobre-robert-half/imprensa
+                    - listitem [ref=e812]:
+                      - link "Nossas marcas" [ref=e816] [cursor=pointer]:
+                        - /url: /br/pt/sobre-robert-half/nossa-historia/nossas-marcas
+        - generic [ref=e819]:
+          - link [ref=e820] [cursor=pointer]:
+            - /url: /br/pt
+            - img [ref=e822]
+          - list [ref=e826]:
+            - generic:
+              - listitem [ref=e827]:
+                - link "linkedin" [ref=e831] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/company/robert-half-international
+                  - generic [ref=e833]:
+                    - generic [ref=e834]: 
+                    - generic [ref=e835]: linkedin
+              - listitem [ref=e836]:
+                - link "instagram" [ref=e840] [cursor=pointer]:
+                  - /url: https://www.instagram.com/roberthalfbr/
+                  - generic [ref=e842]:
+                    - generic [ref=e843]: 
+                    - generic [ref=e844]: instagram
+              - listitem [ref=e845]:
+                - link "youtube" [ref=e849] [cursor=pointer]:
+                  - /url: http://www.youtube.com/RoberthalfBR
+                  - generic [ref=e851]:
+                    - generic [ref=e852]: 
+                    - generic [ref=e853]: youtube
+              - listitem [ref=e854]:
+                - link "twitter" [ref=e858] [cursor=pointer]:
+                  - /url: http://twitter.com/Roberthalf_BR
+                  - generic [ref=e860]:
+                    - generic [ref=e861]: 
+                    - generic [ref=e862]: twitter
+              - listitem [ref=e863]:
+                - link "facebook" [ref=e867] [cursor=pointer]:
+                  - /url: https://www.facebook.com/roberthalfbrasil/
+                  - generic [ref=e869]:
+                    - generic [ref=e870]: 
+                    - generic [ref=e871]: facebook
+          - generic [ref=e872]:
+            - generic [ref=e875]:
+              - generic [ref=e876]:
+                - generic [ref=e878]:
+                  - generic: Brasil (Português)
+                - button "Selecione uma região e um idioma" [ref=e880] [cursor=pointer]:
+                  - text: Selecione uma região e um idioma
+                  - generic [ref=e883]: 
+              - generic:
+                - text: 
+                - generic: "Sua região e idioma atuais são:"
+                - generic: Brasil (Português)
+                - generic:
+                  - generic: Alemanha
+                  - text: 
+                  - text: 
+                  - generic: Austrália
+                  - text: 
+                  - text: 
+                  - generic: Bélgica
+                  - text: 
+                  - text:   
+                  - generic: Brasil
+                  - text: 
+                  - text: 
+                  - generic: Canadá
+                  - text: 
+                  - text:  
+                  - generic: Chile
+                  - text: 
+                  - text: 
+                  - generic: China
+                  - text: 
+                  - text:  
+                  - generic: Emirados Árabes Unidos
+                  - text: 
+                  - text: 
+                  - generic: Estados Unidos
+                  - text: 
+                  - text: 
+                  - generic: França
+                  - text: 
+                  - text: 
+                  - generic: Holanda
+                  - text: 
+                  - text:  
+                  - generic: Hong Kong, China
+                  - text: 
+                  - text: 
+                  - generic: Irlanda
+                  - text: 
+                  - text: 
+                  - generic: Itália
+                  - text: 
+                  - text: 
+                  - generic: Japão
+                  - text: 
+                  - text:  
+                  - generic: Luxemburgo
+                  - text: 
+                  - text:  
+                  - generic: Nova Zelândia
+                  - text: 
+                  - text: 
+                  - generic: Reino Unido
+                  - text: 
+                  - text: 
+                  - generic: Singapura
+                  - text: 
+                  - text: 
+                  - generic: Suíça
+                  - text: 
+                  - text:   
+            - generic [ref=e884]:
+              - list [ref=e887]:
+                - generic:
+                  - listitem [ref=e888]:
+                    - link "Aviso de Privacidade" [ref=e892] [cursor=pointer]:
+                      - /url: /br/pt/privacidade
+                  - listitem [ref=e893]:
+                    - link "Termos de uso" [ref=e897] [cursor=pointer]:
+                      - /url: /br/pt/termos-de-uso
+                  - listitem [ref=e898]:
+                    - link "Alerta de fraude" [ref=e902] [cursor=pointer]:
+                      - /url: /br/pt/alerta-fraude
+              - generic [ref=e903]:
+                - generic [ref=e904]:
+                  - generic: © 2026
+                - generic [ref=e905]:
+                  - generic: Robert Half Inc.
+  - generic [ref=e925] [cursor=pointer]:
+    - button "Definições de cookies" [ref=e927]
+    - text: Definições de cookies

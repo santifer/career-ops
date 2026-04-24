@@ -1,0 +1,32 @@
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - img "Fernando Xavier" [ref=e6]
+    - img "application.name" [ref=e7]
+  - generic [ref=e8]:
+    - heading "A Gupy gostaria de:" [level=2] [ref=e9]:
+      - text: A
+      - strong [ref=e10]: "Gupy gostaria de:"
+    - generic [ref=e11]:
+      - list [ref=e12]:
+        - listitem [ref=e13]: Utilizar o endereço de e-mail principal associado à sua conta do LinkedIn
+        - listitem [ref=e14]: Utilizar seu nome e foto
+      - paragraph [ref=e15]:
+        - text: Você pode parar esta sincronização com este terceiro nas suas
+        - link "configurações" [ref=e16] [cursor=pointer]:
+          - /url: /psettings/permitted-services
+        - text: do LinkedIn. Os termos da Gupy se aplicam.
+        - link "Saiba mais" [ref=e17] [cursor=pointer]:
+          - /url: /help/linkedin/answer/1207
+        - text: .
+    - button "Não é você?" [ref=e20] [cursor=pointer]
+  - generic [ref=e21]:
+    - button "Cancelar" [ref=e22] [cursor=pointer]
+    - button "Permitir" [disabled] [ref=e23]
+  - generic [ref=e24]:
+    - text: Redirecionaremos você ao
+    - strong [ref=e25]: https://secure-v2.gupy.io
+  - contentinfo [ref=e26]:
+    - link "Política de Privacidade" [ref=e27] [cursor=pointer]:
+      - /url: /legal/privacy-policy
+    - link "Contrato do Usuário" [ref=e28] [cursor=pointer]:
+      - /url: /legal/user-agreement

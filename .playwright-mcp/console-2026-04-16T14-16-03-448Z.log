@@ -1,0 +1,10 @@
+[     759ms] [LOG] running accessiblity @ https://www.roberthalf.com/etc.clientlibs/roberthalf/clientlibs/clientlib-base.lc-9dc1360bb71e05d7d69958512fa97f25-lc.min.js:2
+[     759ms] [LOG] rendering label @ https://www.roberthalf.com/etc.clientlibs/roberthalf/clientlibs/clientlib-base.lc-9dc1360bb71e05d7d69958512fa97f25-lc.min.js:2
+[    1038ms] [INFO] Using RHCL v43.0.0 @ https://resources.roberthalfonline.com/rhcl/v43.0.0/lib/p-31e157f9.entry.js:0
+[    1105ms] [LOG] rhcl config loaded for pt-BR @ https://resources.roberthalfonline.com/rhcl/v43.0.0/lib/p-31e157f9.entry.js:0
+[    1115ms] [LOG] rhcl config loaded for pt-BR @ https://resources.roberthalfonline.com/rhcl/v43.0.0/lib/p-31e157f9.entry.js:0
+[    1557ms] [LOG] CA hashcode: d45839e6cada5278e219227d36e64a25 | event: instantaneous @ https://js.clrt.ai/13995.js:9
+[    1882ms] [LOG] Tealium Publish Version: ut4.49.202604161340 @ https://tags.roberthalf.com/brazil2/prod/utag.js:79
+[    1882ms] [LOG] Tealium Environment: prod @ https://tags.roberthalf.com/brazil2/prod/utag.js:79
+[    1882ms] [LOG] Tealium Profile: brazil2 @ https://tags.roberthalf.com/brazil2/prod/utag.js:79
+[   14409ms] [LOG] eventobj {"tealium_event":"focus_click","event_action":"rhcl-text-field-focus","datalayer_version":"2","event_text":"Título da vaga, habilidades ou palavras-chave","component_id_01":"rhcl-text-field","component_title_01":"keywords","component_variant_01":"text","component_id_02":"rhcl-search-bar","component_title_02":"search-bar","component_variant_02":"job-search","component_id_03":"aem-hero-banner","component_title_03":"Tudo é possível quando você tem o talento certo","component_variant_03":"Home Page Hero Banner (AEM)"} @ https://www.roberthalf.com/etc.clientlibs/roberthalf/clientlibs/clientlib-tealium.lc-752c50f7060ed0d3161636a75c3f83c6-lc.min.js:198

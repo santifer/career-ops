@@ -1,0 +1,184 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - link "Ir para conteúdo" [ref=e4] [cursor=pointer]:
+        - /url: "#main"
+      - link "Ir para o rodapé" [ref=e5] [cursor=pointer]:
+        - /url: "#footer"
+      - generic [ref=e6]:
+        - generic [ref=e7]:
+          - link "Ir para a página inicial" [ref=e9] [cursor=pointer]:
+            - /url: https://jobs.siemens.com/pt_PT/externaljobs
+            - img "Logótipo Siemens" [ref=e10]
+          - navigation "Menu principal" [ref=e12]:
+            - generic [ref=e13]:
+              - list [ref=e14]:
+                - listitem [ref=e15]:
+                  - button "Seletor de idioma" [ref=e16] [cursor=pointer]:
+                    - generic [ref=e17]: Portuguese
+              - list [ref=e18]:
+                - menuitem "Iniciar Sessão" [ref=e19] [cursor=pointer]:
+                  - generic [ref=e20]: Iniciar Sessão
+        - list [ref=e24]:
+          - menuitem "Pesquisa de vagas" [ref=e25] [cursor=pointer]:
+            - generic [ref=e26]: Pesquisa de vagas
+          - menuitem "Todas as vagas" [ref=e27] [cursor=pointer]:
+            - generic [ref=e28]: Todas as vagas
+          - menuitem "Recomendações IA" [ref=e29] [cursor=pointer]:
+            - generic [ref=e30]: Recomendações IA
+          - menuitem "Ligação externa (abre num novo separador)" [ref=e31] [cursor=pointer]:
+            - generic [ref=e32]: Perguntas Frequentes & Suporte
+    - complementary "Banner principal" [ref=e33]:
+      - generic [ref=e34]:
+        - heading "Vagas na Siemens" [level=1] [ref=e36]
+        - search [ref=e38]:
+          - group "Pesquisar vagas disponíveis" [ref=e39]:
+            - generic [ref=e40]: Pesquisar vagas disponíveis
+            - generic [ref=e41]:
+              - alert [ref=e42]
+              - group [ref=e43]:
+                - combobox "Título da vaga, palavra-chave ou competência" [ref=e45]: Finance
+              - group [ref=e46]:
+                - generic [ref=e48]:
+                  - generic [ref=e49]:
+                    - paragraph [ref=e192]: 10 options available. Use the up and down keys to navigate. Press Enter to select an option, or press Escape to exit the list. Afeganistão, not selected, 1 of 10.
+                    - paragraph [ref=e193]: 10 total results. Press the up and down arrow keys to navigate the list.
+                  - listbox [ref=e50]
+                  - combobox "País / região" [expanded] [ref=e53] [cursor=pointer]:
+                    - group [ref=e54]:
+                      - searchbox "País / região" [active] [ref=e55]
+                    - listbox [expanded] [ref=e194]:
+                      - option "Afeganistão" [ref=e195]
+                      - option "África do Sul" [ref=e196]
+                      - option "Albânia" [ref=e197]
+                      - option "Alemanha" [ref=e198]
+                      - option "Andorra" [ref=e199]
+                      - option "Angola" [ref=e200]
+                      - option "Antígua e Barbuda" [ref=e201]
+                      - option "Arábia Saudita" [ref=e202]
+                      - option "Argélia" [ref=e203]
+                      - option "Argentina" [ref=e204]
+                      - option [disabled] [ref=e205]: A carregar mais resultados…
+              - group [ref=e56]:
+                - group [ref=e58]:
+                  - button "Pesquisar" [ref=e60] [cursor=pointer]
+    - complementary "Imagem de banner complementar com um botão que leva a Obter Recomendações de IA." [ref=e61]:
+      - generic [ref=e63]:
+        - heading "Não sabe por onde começar?" [level=2] [ref=e64]:
+          - generic [ref=e65]: Não sabe por onde começar?
+        - link "Ver recomendações de IA" [ref=e66] [cursor=pointer]:
+          - /url: https://jobs.siemens.com/pt_PT/externaljobs/RecommendationMethods
+    - main [ref=e67]:
+      - generic [ref=e69]:
+        - generic [ref=e71]:
+          - generic [ref=e74]:
+            - heading "Trabalhar na Siemens" [level=2] [ref=e75]
+            - paragraph [ref=e77]: Sinta a energia e o impacto. Saiba como pode construir a sua própria carreira, impactar a vida de outras pessoas, trabalhar com tecnologia de ponta e progredir na sua carreira, criando um impacto real para o nosso mundo.
+            - link "Cultura Siemens (ligação externa, abre num novo separador)" [ref=e79] [cursor=pointer]:
+              - /url: https://www.siemens.com/global/en/company/jobs/life-at-siemens.html
+              - text: Descobrir mais
+          - iframe [ref=e83]:
+            - generic [active] [ref=f108e1]:
+              - generic "Player de vídeo do YouTube" [ref=f108e3]
+              - generic [ref=f108e5]:
+                - generic:
+                  - generic:
+                    - button "Assistir vídeo" [ref=f108e10] [cursor=pointer]:
+                      - generic [ref=f108e54]:
+                        - img
+                    - button "Ocultar controles do player" [ref=f108e12] [cursor=pointer]
+                    - generic [ref=f108e14]:
+                      - generic [ref=f108e19]:
+                        - generic [ref=f108e20]:
+                          - 'link "Siemens: Transform the everyday with us" [ref=f108e21] [cursor=pointer]':
+                            - /url: https://www.youtube.com/watch?v=knhkQyecmKI
+                          - link "Siemens" [ref=f108e22] [cursor=pointer]:
+                            - /url: /channel/UCmyYOpZrHRh7v934X9cjBOw
+                            - generic [ref=f108e23]: Siemens
+                        - generic [ref=f108e24]:
+                          - button "thumbnail-image" [ref=f108e55] [cursor=pointer]:
+                            - img "thumbnail-image" [ref=f108e56]
+                          - generic [ref=f108e27]:
+                            - generic: Siemens
+                            - generic: 31,4 mil inscritos
+                      - generic [ref=f108e28]:
+                        - button "Compartilhar" [ref=f108e31] [cursor=pointer]:
+                          - generic [ref=f108e35]:
+                            - img
+                        - link "Assistir no YouTube" [ref=f108e42] [cursor=pointer]:
+                          - /url: https://www.youtube.com/watch?v=knhkQyecmKI
+                          - generic [ref=f108e45]:
+                            - text: Assista no
+                            - img [ref=f108e47]:
+                              - generic [ref=f108e49]:
+                                - img
+        - generic [ref=e84]:
+          - heading "Explorar mais" [level=2] [ref=e87]
+          - generic [ref=e89]:
+            - article [ref=e91]:
+              - link "About Siemens external link, opens in a new tab" [ref=e92] [cursor=pointer]:
+                - /url: https://www.siemens.com/global/en/company/jobs/life-at-siemens.html
+                - img [ref=e95]
+                - generic [ref=e96]:
+                  - heading "Acerca da Siemens" [level=3] [ref=e97]
+                  - paragraph [ref=e98]: A nossa tecnologia acelera a transformação dos clientes através da IA aplicada à indústria, aumentando a sua eficiência, melhorando a qualidade de vida nas cidades e promovendo soluções de transporte sustentáveis.
+                - generic "Ícone - seta para a direita verde" [ref=e102]
+            - article [ref=e104]:
+              - link "How to apply external link, opens in a new tab" [ref=e105] [cursor=pointer]:
+                - /url: https://www.siemens.com/global/en/company/jobs/how-we-hire.html
+                - img [ref=e108]
+                - generic [ref=e109]:
+                  - heading "Como candidatar-se" [level=3] [ref=e110]
+                  - paragraph [ref=e111]: Aprenda mais acerca do nosso processo de candidaturas e explore dicas úteis para o guiar a cada passo.
+                - generic "Ícone - seta para a direita verde" [ref=e115]
+            - article [ref=e117]:
+              - link "Perguntas Frequentes & Suporte (ligação externa, abre num novo separador)" [ref=e118] [cursor=pointer]:
+                - /url: https://www.siemens.com/global/en/company/jobs/faq.html
+                - img [ref=e121]
+                - generic [ref=e122]:
+                  - heading "Perguntas Frequentes & Suporte" [level=3] [ref=e123]
+                  - paragraph [ref=e124]: Respondemos às perguntas mais frequentes, desde como se candidatar até como progredir na sua carreira depois de integrar a equipa.
+                - generic "Ícone - seta para a direita verde" [ref=e128]
+    - contentinfo "Rodapé" [ref=e129]:
+      - generic [ref=e130]:
+        - img [ref=e135]
+        - generic [ref=e137]:
+          - link "Siemens LinkedIn (ligação externa, abre num novo separador)" [ref=e138] [cursor=pointer]:
+            - /url: https://www.linkedin.com/company/siemens
+          - link "Siemens Instagram (ligação externa, abre num novo separador)" [ref=e139] [cursor=pointer]:
+            - /url: https://www.instagram.com/siemens/
+          - link "Siemens Facebook (ligação externa, abre num novo separador)" [ref=e140] [cursor=pointer]:
+            - /url: https://www.facebook.com/Siemens
+          - link "Siemens X (ligação externa, abre num novo separador)" [ref=e141] [cursor=pointer]:
+            - /url: https://twitter.com/siemens
+          - link "Siemens YouTube (ligação externa, abre num novo separador)" [ref=e142] [cursor=pointer]:
+            - /url: https://www.youtube.com/@siemens
+        - generic [ref=e143]:
+          - generic [ref=e145]: © Siemens 1996 - 2026
+          - generic [ref=e146]:
+            - link "Perguntas Frequentes (ligação externa, abre num novo separador)" [ref=e147] [cursor=pointer]:
+              - /url: https://www.siemens.com/global/en/company/jobs/faq.html
+              - text: FAQs
+            - link "Informação corporativa (abre num novo separador)" [ref=e148] [cursor=pointer]:
+              - /url: https://www.siemens.com/corporate-information
+              - text: Informação empresarial
+            - link "Aviso de Privacidade (ligação externa, abre num novo separador)" [ref=e149] [cursor=pointer]:
+              - /url: https://www.siemens.com/global/en/general/talent-management/privacy-notice.html
+              - text: Aviso de privacidade
+            - link "Ligação do aviso de cookies" [ref=e150] [cursor=pointer]:
+              - /url: https://www.siemens.com/global/en/general/cookie-notice.html#openCookieManagement
+              - text: Aviso de cookies
+            - link "Termos de utilização (ligação externa, abre num novo separador)" [ref=e151] [cursor=pointer]:
+              - /url: https://www.siemens.com/terms-of-use
+              - text: Termos de uso
+            - link "Identidade Digital (abre num novo separador)" [ref=e152] [cursor=pointer]:
+              - /url: https://www.siemens.com/digital-id
+              - text: ID digital
+            - link "Denúncia (ligação externa, abre num novo separador)" [ref=e153] [cursor=pointer]:
+              - /url: https://www.siemens.com/whistleblowing
+              - text: Denúncia (whistleblowing)
+        - paragraph [ref=e156]:
+          - strong [ref=e157]: "Nota importante:"
+          - text: A todos os candidatos a emprego que desejem integrar a nossa equipa, informamos que a Siemens não solicita o pagamento de quaisquer taxas antes, durante ou após o processo de candidatura. Não pedimos dados bancários ou informações financeiras pessoais em troca de uma promessa de emprego. Da mesma forma, por favor, não abra documentos em e-mails que pareçam ter sido enviados por um recrutador da Siemens, a menos que tenha a certeza de que está a ser contactado por um dos nossos profissionais no âmbito de um processo de candidatura ativo.
+  - status [ref=e158]:
+    - generic [ref=e191]: No search results.

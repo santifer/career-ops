@@ -1,0 +1,268 @@
+- generic [active] [ref=e1]:
+  - generic:
+    - region "Mensagem toast":
+      - heading "0 notificações no total" [level=2] [ref=e3]
+      - alert
+  - generic [ref=e4]:
+    - generic [ref=e6]:
+      - button "Pular para pesquisa" [ref=e7] [cursor=pointer]:
+        - generic [ref=e8]: Pular para pesquisa
+      - button "Pular para conteúdo principal" [ref=e9] [cursor=pointer]:
+        - generic [ref=e10]: Pular para conteúdo principal
+      - button "Atalhos do teclado" [ref=e11] [cursor=pointer]:
+        - generic [ref=e12]: Atalhos do teclado
+      - button "Fechar menu pular" [ref=e13] [cursor=pointer]:
+        - img [ref=e14]
+        - generic [ref=e16]: Fechar menu pular
+    - banner "Navegação geral" [ref=e17]:
+      - generic [ref=e18]:
+        - link "LinkedIn" [ref=e19] [cursor=pointer]:
+          - /url: https://www.linkedin.com/feed/?nis=true
+          - img "LinkedIn" [ref=e22]:
+            - img [ref=e23]
+        - generic [ref=e27]:
+          - generic [ref=e30]:
+            - generic [ref=e31]:
+              - generic [ref=e32]: Pesquisar cargo, competência ou empresa
+              - img [ref=e33]
+            - combobox "Pesquisar cargo, competência ou empresa" [ref=e35]
+            - textbox [disabled]:
+              - /placeholder: Cargo, competência ou empresa
+          - generic [ref=e38]:
+            - generic [ref=e39]:
+              - generic [ref=e40]: Cidade, estado ou código postal
+              - img [ref=e41]
+            - combobox "Cidade, estado ou código postal" [ref=e43]: Brasil
+            - textbox [disabled]
+          - button "Pesquisar" [ref=e44] [cursor=pointer]
+        - navigation "Navegação principal" [ref=e45]:
+          - list [ref=e46]:
+            - listitem [ref=e47]:
+              - link "atualizações do feed novas notificações Início" [ref=e48] [cursor=pointer]:
+                - /url: https://www.linkedin.com/feed/?nis=true&
+                - generic [ref=e49]:
+                  - generic [ref=e52]: atualizações do feed novas notificações
+                  - img [ref=e56]
+                - generic "Início" [ref=e58]
+            - listitem [ref=e59]:
+              - link "2 atualizações de rede novas notificações Minha rede" [ref=e60] [cursor=pointer]:
+                - /url: https://www.linkedin.com/mynetwork/?
+                - generic [ref=e61]:
+                  - generic [ref=e62]:
+                    - generic [ref=e63]: "2"
+                    - generic [ref=e64]: 2 atualizações de rede novas notificações
+                  - img [ref=e68]
+                - generic "Minha rede" [ref=e70]
+            - listitem [ref=e71]:
+              - link "Vagas" [ref=e72] [cursor=pointer]:
+                - /url: https://www.linkedin.com/jobs/?
+                - img [ref=e76]
+                - generic "Vagas" [ref=e78]
+            - listitem [ref=e79]:
+              - link "Mensagens" [ref=e80] [cursor=pointer]:
+                - /url: https://www.linkedin.com/messaging/?
+                - img [ref=e84]
+                - generic "Mensagens" [ref=e86]
+            - listitem [ref=e87]:
+              - link "14 novas notificações Notificações" [ref=e88] [cursor=pointer]:
+                - /url: https://www.linkedin.com/notifications/?
+                - generic [ref=e89]:
+                  - generic [ref=e90]:
+                    - generic [ref=e91]: "14"
+                    - generic [ref=e92]: 14 novas notificações
+                  - img [ref=e96]
+                - generic "Notificações" [ref=e98]
+            - listitem [ref=e99]:
+              - button "Fernando Xavier Eu" [ref=e101] [cursor=pointer]:
+                - img "Fernando Xavier" [ref=e102]
+                - generic [ref=e103]:
+                  - text: Eu
+                  - img [ref=e104]
+            - listitem [ref=e106]:
+              - button "Para negócios" [ref=e108] [cursor=pointer]:
+                - img [ref=e112]
+                - generic "Para negócios" [ref=e114]:
+                  - text: Para negócios
+                  - img [ref=e115]
+            - listitem [ref=e117]:
+              - link "Veicular anúncio" [ref=e118] [cursor=pointer]:
+                - /url: https://www.linkedin.com/campaignmanager/accounts?
+                - img [ref=e122]
+                - generic "Veicular anúncio" [ref=e125]
+    - generic [ref=e127]:
+      - region "filtros de pesquisa" [ref=e130]:
+        - heading "Pesquisa de vagas" [level=2] [ref=e131]
+      - main [ref=e142]:
+        - generic [ref=e144]:
+          - generic [ref=e145]:
+            - generic [ref=e146]:
+              - generic [ref=e147]:
+                - 'generic "Vagas em: Brasil" [ref=e148]'
+                - generic [ref=e152]: 267.916 resultados
+              - generic [ref=e155] [cursor=pointer]:
+                - generic [ref=e156]: Alerta ativado
+                - generic [ref=e157]: "Configurar alerta de vaga para Vagas em: Brasil"
+                - 'switch "Configurar alerta de vaga para Vagas em: Brasil" [checked]'
+            - generic [ref=e158]:
+              - button "Pular para detalhes da vaga ativa":
+                - generic [ref=e159] [cursor=pointer]: Pular para detalhes da vaga ativa
+              - button "Pular para resultado de pesquisa ativa":
+                - generic [ref=e160] [cursor=pointer]: Pular para resultado de pesquisa ativa
+              - list [ref=e161]:
+                - listitem [ref=e162]:
+                  - generic [ref=e165] [cursor=pointer]:
+                    - generic [ref=e166]:
+                      - img "Logo da empresa Docplanner" [ref=e170]
+                      - generic [ref=e171]:
+                        - link "Finance Director with verification" [ref=e173]:
+                          - /url: /jobs/view/4402399456/?trk=flagship3_search_srp_jobs
+                          - generic [ref=e174]:
+                            - strong [ref=e175]: Finance Director
+                            - img [ref=e177]
+                          - generic [ref=e179]: Finance Director with verification
+                        - generic [ref=e181]: Docplanner
+                        - list [ref=e183]:
+                          - listitem [ref=e184]:
+                            - generic [ref=e185]: Curitiba, Paraná, Brasil (Híbrido)
+                    - list [ref=e187]:
+                      - listitem [ref=e188]
+                - listitem [ref=e190]:
+                  - generic [ref=e193] [cursor=pointer]:
+                    - generic [ref=e194]:
+                      - img "Logo da empresa LaTeam Partners" [ref=e198]
+                      - generic [ref=e199]:
+                        - link "Finance & Operations Manager -1530 with verification" [ref=e201]:
+                          - /url: /jobs/view/4404363031/?trk=flagship3_search_srp_jobs
+                          - generic [ref=e202]:
+                            - strong [ref=e203]: Finance & Operations Manager -1530
+                            - img [ref=e205]
+                          - generic [ref=e207]: Finance & Operations Manager -1530 with verification
+                        - generic [ref=e209]: LaTeam Partners
+                        - list [ref=e211]:
+                          - listitem [ref=e212]:
+                            - generic [ref=e213]: América Latina (Remoto)
+                    - list [ref=e215]:
+                      - listitem [ref=e216]
+                - listitem [ref=e218]:
+                  - generic [ref=e221] [cursor=pointer]:
+                    - generic [ref=e222]:
+                      - img "Logo da empresa Cloud Accountant Staffing - Careers" [ref=e226]
+                      - generic [ref=e227]:
+                        - link "US Controller (Remote – Latin America)" [ref=e229]:
+                          - /url: /jobs/view/4401647212/?trk=flagship3_search_srp_jobs
+                          - strong [ref=e231]: US Controller (Remote – Latin America)
+                          - generic [ref=e232]: US Controller (Remote – Latin America)
+                        - generic [ref=e234]: Cloud Accountant Staffing - Careers
+                        - list [ref=e236]:
+                          - listitem [ref=e237]:
+                            - generic [ref=e238]: América Latina (Remoto)
+                    - list [ref=e240]:
+                      - listitem [ref=e241]
+                - listitem [ref=e243]:
+                  - generic [ref=e246] [cursor=pointer]:
+                    - generic [ref=e247]:
+                      - img "Logo da empresa MAVI" [ref=e251]
+                      - generic [ref=e252]:
+                        - link "Accounting Manager - US GAAP with verification" [ref=e254]:
+                          - /url: /jobs/view/4403519366/?trk=flagship3_search_srp_jobs
+                          - generic [ref=e255]:
+                            - strong [ref=e256]: Accounting Manager - US GAAP
+                            - img [ref=e258]
+                          - generic [ref=e260]: Accounting Manager - US GAAP with verification
+                        - generic [ref=e262]: MAVI
+                        - list [ref=e264]:
+                          - listitem [ref=e265]:
+                            - generic [ref=e266]: Brasil (Remoto)
+                    - list [ref=e268]:
+                      - listitem [ref=e269]
+                - listitem [ref=e271]:
+                  - generic [ref=e274] [cursor=pointer]:
+                    - generic [ref=e275]:
+                      - img "Logo da empresa Keeta" [ref=e279]
+                      - generic [ref=e280]:
+                        - link "Finance Business Partner (Senior Manager) with verification" [ref=e282]:
+                          - /url: /jobs/view/4403912037/?trk=flagship3_search_srp_jobs
+                          - generic [ref=e283]:
+                            - strong [ref=e284]: Finance Business Partner (Senior Manager)
+                            - img [ref=e286]
+                          - generic [ref=e288]: Finance Business Partner (Senior Manager) with verification
+                        - generic [ref=e290]: Keeta
+                        - list [ref=e292]:
+                          - listitem [ref=e293]:
+                            - generic [ref=e294]: São Paulo, Brasil (Presencial)
+                    - list [ref=e296]:
+                      - listitem [ref=e297]
+                - listitem [ref=e299]:
+                  - generic [ref=e302] [cursor=pointer]:
+                    - generic [ref=e303]:
+                      - img "Logo da empresa ALTIOS International" [ref=e307]
+                      - generic [ref=e308]:
+                        - link "Corporate Services Manager - Brazil" [ref=e310]:
+                          - /url: /jobs/view/4403636141/?trk=flagship3_search_srp_jobs
+                          - strong [ref=e312]: Corporate Services Manager - Brazil
+                          - generic [ref=e313]: Corporate Services Manager - Brazil
+                        - generic [ref=e315]: ALTIOS International
+                        - list [ref=e317]:
+                          - listitem [ref=e318]:
+                            - generic [ref=e319]: São Paulo, São Paulo, Brasil (Híbrido)
+                    - list [ref=e321]:
+                      - listitem [ref=e322]
+                - listitem [ref=e324]:
+                  - generic [ref=e327] [cursor=pointer]:
+                    - generic [ref=e328]:
+                      - img "Logo da empresa Unlimitail" [ref=e332]
+                      - generic [ref=e333]:
+                        - link "Finance Manager" [ref=e335]:
+                          - /url: /jobs/view/4402704487/?trk=flagship3_search_srp_jobs
+                          - strong [ref=e337]: Finance Manager
+                          - generic [ref=e338]: Finance Manager
+                        - generic [ref=e340]: Unlimitail
+                        - list [ref=e342]:
+                          - listitem [ref=e343]:
+                            - generic [ref=e344]: São Paulo, São Paulo, Brasil (Híbrido)
+                    - list [ref=e346]:
+                      - listitem [ref=e347]
+              - generic [ref=e349]:
+                - list [ref=e352]:
+                  - listitem [ref=e353]:
+                    - button "Página 1" [ref=e354] [cursor=pointer]: "1"
+                - generic "Conteúdo do rodapé do LinkedIn" [ref=e356]
+          - generic "Finance Director" [ref=e360]:
+            - generic [ref=e364]:
+              - generic [ref=e368]:
+                - generic [ref=e371]:
+                  - button "Compartilhar" [ref=e374] [cursor=pointer]:
+                    - img [ref=e375]
+                    - generic [ref=e377]: Compartilhar
+                  - button "Exibir mais opções" [ref=e379] [cursor=pointer]:
+                    - img [ref=e380]
+                    - generic [ref=e382]: Exibir mais opções
+                - heading "Finance Director" [level=1] [ref=e385]:
+                  - link "Finance Director" [ref=e386] [cursor=pointer]:
+                    - /url: /jobs/view/4402399456/?alternateChannel=search&refId=NotAvailable&trackingId=wSlGE0CMStqKMQ1nWGhAOg%3D%3D&trk=d_flagship3_search_srp_jobs
+                - generic:
+                  - list
+              - article [ref=e399]:
+                - heading "Sobre a vaga" [level=2] [ref=e402]
+              - alert [ref=e437]: Carregando detalhes da vaga
+    - generic:
+      - generic:
+        - complementary:
+          - generic [ref=e451]:
+            - generic [ref=e453] [cursor=pointer]:
+              - img "Fernando Xavier" [ref=e455]
+              - button "Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas." [ref=e456]:
+                - generic [ref=e457]:
+                  - generic [ref=e458]: Mensagens
+                  - generic [ref=e459]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+            - generic [ref=e460]:
+              - button "Abrir o menu suspenso de mensagens" [ref=e462] [cursor=pointer]:
+                - img "Abrir o menu suspenso de mensagens" [ref=e463]
+              - button "Escrever mensagem" [ref=e466] [cursor=pointer]:
+                - img [ref=e467]
+                - generic [ref=e469]: Escrever mensagem
+              - button "Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas." [ref=e470] [cursor=pointer]:
+                - img [ref=e471]
+                - generic [ref=e473]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+        - complementary "Assistente de IA para obter ajuda com sua carreira, vagas, etc."
+  - region [ref=e474]

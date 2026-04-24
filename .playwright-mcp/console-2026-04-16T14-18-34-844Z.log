@@ -1,0 +1,349 @@
+[    3582ms] [LOG] running accessiblity @ https://www.roberthalf.com/etc.clientlibs/roberthalf/clientlibs/clientlib-base.lc-9dc1360bb71e05d7d69958512fa97f25-lc.min.js:2
+[    3582ms] [LOG] rendering label @ https://www.roberthalf.com/etc.clientlibs/roberthalf/clientlibs/clientlib-base.lc-9dc1360bb71e05d7d69958512fa97f25-lc.min.js:2
+[    3588ms] [LOG] rh_job_search version: 1.92.0 @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:1
+[    3596ms] [LOG] CA hashcode: 6c9e330e716d859e9146a87873484d4b | event: instantaneous @ https://js.clrt.ai/13995.js:9
+[    3630ms] [ERROR] ReferenceError: rhcl_config is not defined
+    at c.updateFormattedText (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:9865)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20239
+    at Array.map (<anonymous>)
+    at ke (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20223)
+    at c.set [as worksite] (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:21309)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4570
+    at NodeList.forEach (<anonymous>)
+    at c.addSlotAttributes (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4442)
+    at c.componentDidRender (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:2661)
+    at Se (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:19362) JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:1
+[    3631ms] [ERROR] ReferenceError: rhcl_config is not defined
+    at c.updateFormattedText (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:9865)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20239
+    at Array.map (<anonymous>)
+    at ke (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20223)
+    at c.set [as salaryMin] (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:21309)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4867
+    at NodeList.forEach (<anonymous>)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4785
+    at NodeList.forEach (<anonymous>)
+    at c.addSlotAttributes (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4442) JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:1
+[    3631ms] [ERROR] ReferenceError: rhcl_config is not defined
+    at c.updateFormattedText (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:9865)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20239
+    at Array.map (<anonymous>)
+    at ke (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20223)
+    at c.set [as salaryCurrency] (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:21309)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:5039
+    at NodeList.forEach (<anonymous>)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4785
+    at NodeList.forEach (<anonymous>)
+    at c.addSlotAttributes (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4442) JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:1
+[    3632ms] [ERROR] ReferenceError: rhcl_config is not defined
+    at c.updateFormattedText (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:9865)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20239
+    at Array.map (<anonymous>)
+    at ke (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20223)
+    at c.set [as salaryPeriod] (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:21309)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4977
+    at NodeList.forEach (<anonymous>)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4785
+    at NodeList.forEach (<anonymous>)
+    at c.addSlotAttributes (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4442) JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:1
+[    3632ms] [ERROR] ReferenceError: rhcl_config is not defined
+    at c.updateFormattedText (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:9865)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20239
+    at Array.map (<anonymous>)
+    at ke (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20223)
+    at c.set [as date] (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:21309)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4714
+    at NodeList.forEach (<anonymous>)
+    at c.addSlotAttributes (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4442)
+    at c.componentDidRender (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:2661)
+    at Se (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:19362) JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:1
+[    3633ms] [ERROR] ReferenceError: rhcl_config is not defined
+    at c.updateFormattedText (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:9865)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20239
+    at Array.map (<anonymous>)
+    at ke (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20223)
+    at c.set [as salaryMin] (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:21309)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4867
+    at NodeList.forEach (<anonymous>)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4785
+    at NodeList.forEach (<anonymous>)
+    at c.addSlotAttributes (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4442) JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:1
+[    3633ms] [ERROR] ReferenceError: rhcl_config is not defined
+    at c.updateFormattedText (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:9865)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20239
+    at Array.map (<anonymous>)
+    at ke (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20223)
+    at c.set [as salaryCurrency] (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:21309)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:5039
+    at NodeList.forEach (<anonymous>)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4785
+    at NodeList.forEach (<anonymous>)
+    at c.addSlotAttributes (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4442) JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:1
+[    3634ms] [ERROR] ReferenceError: rhcl_config is not defined
+    at c.updateFormattedText (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:9865)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20239
+    at Array.map (<anonymous>)
+    at ke (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20223)
+    at c.set [as salaryPeriod] (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:21309)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4977
+    at NodeList.forEach (<anonymous>)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4785
+    at NodeList.forEach (<anonymous>)
+    at c.addSlotAttributes (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4442) JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:1
+[    3634ms] [ERROR] ReferenceError: rhcl_config is not defined
+    at c.updateFormattedText (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:9865)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20239
+    at Array.map (<anonymous>)
+    at ke (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20223)
+    at c.set [as date] (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:21309)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4714
+    at NodeList.forEach (<anonymous>)
+    at c.addSlotAttributes (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4442)
+    at c.componentDidRender (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:2661)
+    at Se (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:19362) JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:1
+[    3634ms] [ERROR] ReferenceError: rhcl_config is not defined
+    at c.updateFormattedText (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:9865)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20239
+    at Array.map (<anonymous>)
+    at ke (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20223)
+    at c.set [as salaryMin] (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:21309)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4867
+    at NodeList.forEach (<anonymous>)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4785
+    at NodeList.forEach (<anonymous>)
+    at c.addSlotAttributes (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4442) JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:1
+[    3635ms] [ERROR] ReferenceError: rhcl_config is not defined
+    at c.updateFormattedText (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:9865)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20239
+    at Array.map (<anonymous>)
+    at ke (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20223)
+    at c.set [as salaryCurrency] (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:21309)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:5039
+    at NodeList.forEach (<anonymous>)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4785
+    at NodeList.forEach (<anonymous>)
+    at c.addSlotAttributes (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4442) JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:1
+[    3635ms] [ERROR] ReferenceError: rhcl_config is not defined
+    at c.updateFormattedText (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:9865)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20239
+    at Array.map (<anonymous>)
+    at ke (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20223)
+    at c.set [as salaryPeriod] (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:21309)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4977
+    at NodeList.forEach (<anonymous>)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4785
+    at NodeList.forEach (<anonymous>)
+    at c.addSlotAttributes (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4442) JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:1
+[    3636ms] [ERROR] ReferenceError: rhcl_config is not defined
+    at c.updateFormattedText (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:9865)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20239
+    at Array.map (<anonymous>)
+    at ke (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20223)
+    at c.set [as date] (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:21309)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4714
+    at NodeList.forEach (<anonymous>)
+    at c.addSlotAttributes (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4442)
+    at c.componentDidRender (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:2661)
+    at Se (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:19362) JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:1
+[    3641ms] [ERROR] ReferenceError: rhcl_config is not defined
+    at c.updateFormattedText (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:9865)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20239
+    at Array.map (<anonymous>)
+    at ke (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20223)
+    at c.set [as salaryMin] (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:21309)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4867
+    at NodeList.forEach (<anonymous>)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4785
+    at NodeList.forEach (<anonymous>)
+    at c.addSlotAttributes (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4442) JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:1
+[    3642ms] [ERROR] ReferenceError: rhcl_config is not defined
+    at c.updateFormattedText (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:9865)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20239
+    at Array.map (<anonymous>)
+    at ke (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20223)
+    at c.set [as salaryCurrency] (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:21309)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:5039
+    at NodeList.forEach (<anonymous>)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4785
+    at NodeList.forEach (<anonymous>)
+    at c.addSlotAttributes (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4442) JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:1
+[    3643ms] [ERROR] ReferenceError: rhcl_config is not defined
+    at c.updateFormattedText (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:9865)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20239
+    at Array.map (<anonymous>)
+    at ke (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20223)
+    at c.set [as salaryPeriod] (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:21309)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4977
+    at NodeList.forEach (<anonymous>)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4785
+    at NodeList.forEach (<anonymous>)
+    at c.addSlotAttributes (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4442) JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:1
+[    3643ms] [ERROR] ReferenceError: rhcl_config is not defined
+    at c.updateFormattedText (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:9865)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20239
+    at Array.map (<anonymous>)
+    at ke (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20223)
+    at c.set [as date] (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:21309)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4714
+    at NodeList.forEach (<anonymous>)
+    at c.addSlotAttributes (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4442)
+    at c.componentDidRender (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:2661)
+    at Se (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:19362) JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:1
+[    3644ms] [ERROR] ReferenceError: rhcl_config is not defined
+    at c.updateFormattedText (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:9865)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20239
+    at Array.map (<anonymous>)
+    at ke (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20223)
+    at c.set [as salaryMin] (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:21309)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4867
+    at NodeList.forEach (<anonymous>)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4785
+    at NodeList.forEach (<anonymous>)
+    at c.addSlotAttributes (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4442) JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:1
+[    3645ms] [ERROR] ReferenceError: rhcl_config is not defined
+    at c.updateFormattedText (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:9865)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20239
+    at Array.map (<anonymous>)
+    at ke (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20223)
+    at c.set [as salaryCurrency] (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:21309)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:5039
+    at NodeList.forEach (<anonymous>)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4785
+    at NodeList.forEach (<anonymous>)
+    at c.addSlotAttributes (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4442) JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:1
+[    3645ms] [ERROR] ReferenceError: rhcl_config is not defined
+    at c.updateFormattedText (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:9865)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20239
+    at Array.map (<anonymous>)
+    at ke (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20223)
+    at c.set [as salaryPeriod] (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:21309)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4977
+    at NodeList.forEach (<anonymous>)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4785
+    at NodeList.forEach (<anonymous>)
+    at c.addSlotAttributes (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4442) JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:1
+[    3646ms] [ERROR] ReferenceError: rhcl_config is not defined
+    at c.updateFormattedText (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:9865)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20239
+    at Array.map (<anonymous>)
+    at ke (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20223)
+    at c.set [as date] (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:21309)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4714
+    at NodeList.forEach (<anonymous>)
+    at c.addSlotAttributes (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4442)
+    at c.componentDidRender (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:2661)
+    at Se (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:19362) JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:1
+[    3647ms] [ERROR] ReferenceError: rhcl_config is not defined
+    at c.updateFormattedText (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:9865)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20239
+    at Array.map (<anonymous>)
+    at ke (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20223)
+    at c.set [as salaryMin] (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:21309)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4867
+    at NodeList.forEach (<anonymous>)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4785
+    at NodeList.forEach (<anonymous>)
+    at c.addSlotAttributes (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4442) JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:1
+[    3647ms] [ERROR] ReferenceError: rhcl_config is not defined
+    at c.updateFormattedText (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:9865)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20239
+    at Array.map (<anonymous>)
+    at ke (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20223)
+    at c.set [as salaryCurrency] (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:21309)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:5039
+    at NodeList.forEach (<anonymous>)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4785
+    at NodeList.forEach (<anonymous>)
+    at c.addSlotAttributes (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4442) JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:1
+[    3648ms] [ERROR] ReferenceError: rhcl_config is not defined
+    at c.updateFormattedText (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:9865)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20239
+    at Array.map (<anonymous>)
+    at ke (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20223)
+    at c.set [as salaryPeriod] (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:21309)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4977
+    at NodeList.forEach (<anonymous>)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4785
+    at NodeList.forEach (<anonymous>)
+    at c.addSlotAttributes (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4442) JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:1
+[    3648ms] [ERROR] ReferenceError: rhcl_config is not defined
+    at c.updateFormattedText (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:9865)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20239
+    at Array.map (<anonymous>)
+    at ke (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20223)
+    at c.set [as date] (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:21309)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4714
+    at NodeList.forEach (<anonymous>)
+    at c.addSlotAttributes (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4442)
+    at c.componentDidRender (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:2661)
+    at Se (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:19362) JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:1
+[    3649ms] [ERROR] ReferenceError: rhcl_config is not defined
+    at c.updateFormattedText (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:9865)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20239
+    at Array.map (<anonymous>)
+    at ke (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20223)
+    at c.set [as salaryMin] (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:21309)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4867
+    at NodeList.forEach (<anonymous>)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4785
+    at NodeList.forEach (<anonymous>)
+    at c.addSlotAttributes (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4442) JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:1
+[    3649ms] [ERROR] ReferenceError: rhcl_config is not defined
+    at c.updateFormattedText (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:9865)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20239
+    at Array.map (<anonymous>)
+    at ke (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20223)
+    at c.set [as salaryCurrency] (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:21309)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:5039
+    at NodeList.forEach (<anonymous>)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4785
+    at NodeList.forEach (<anonymous>)
+    at c.addSlotAttributes (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4442) JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:1
+[    3650ms] [ERROR] ReferenceError: rhcl_config is not defined
+    at c.updateFormattedText (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:9865)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20239
+    at Array.map (<anonymous>)
+    at ke (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20223)
+    at c.set [as salaryPeriod] (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:21309)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4977
+    at NodeList.forEach (<anonymous>)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4785
+    at NodeList.forEach (<anonymous>)
+    at c.addSlotAttributes (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4442) JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:1
+[    3650ms] [ERROR] ReferenceError: rhcl_config is not defined
+    at c.updateFormattedText (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:9865)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20239
+    at Array.map (<anonymous>)
+    at ke (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:20223)
+    at c.set [as date] (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:21309)
+    at https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4714
+    at NodeList.forEach (<anonymous>)
+    at c.addSlotAttributes (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:4442)
+    at c.componentDidRender (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/4485.e531b268.chunk.js:1:2661)
+    at Se (https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:2:19362) JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/main.js:1
+[    3691ms] [INFO] Using RHCL v42.0.2 @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/8876.b3024dc0.chunk.js:0
+[    3749ms] [LOG] rhcl config loaded for pt-BR @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/8876.b3024dc0.chunk.js:0
+[    3753ms] [LOG] rhcl config loaded for pt-BR @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/8876.b3024dc0.chunk.js:0
+[    3876ms] [LOG] Tealium Publish Version: ut4.49.202604161340 @ https://tags.roberthalf.com/brazil2/prod/utag.js:79
+[    3876ms] [LOG] Tealium Environment: prod @ https://tags.roberthalf.com/brazil2/prod/utag.js:79
+[    3876ms] [LOG] Tealium Profile: brazil2 @ https://tags.roberthalf.com/brazil2/prod/utag.js:79
+[    4975ms] [ERROR] rhcl-job-card's "dateStyle" attribute is missing or blank.
+ JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/6082.d88b7966.chunk.js:0
+[    4975ms] [ERROR] rhcl-job-card's "dateStyle" attribute is missing or blank.
+ JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/6082.d88b7966.chunk.js:0
+[    4976ms] [ERROR] rhcl-job-card's "dateStyle" attribute is missing or blank.
+ JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/6082.d88b7966.chunk.js:0
+[    4976ms] [ERROR] rhcl-job-card's "dateStyle" attribute is missing or blank.
+ JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/6082.d88b7966.chunk.js:0
+[    4977ms] [ERROR] rhcl-job-card's "dateStyle" attribute is missing or blank.
+ JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/6082.d88b7966.chunk.js:0
+[    4978ms] [ERROR] rhcl-job-card's "dateStyle" attribute is missing or blank.
+ JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/6082.d88b7966.chunk.js:0
+[    4979ms] [ERROR] rhcl-job-card's "dateStyle" attribute is missing or blank.
+ JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/6082.d88b7966.chunk.js:0
+[    4980ms] [ERROR] rhcl-job-card's "dateStyle" attribute is missing or blank.
+ JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/6082.d88b7966.chunk.js:0
+[    4981ms] [ERROR] rhcl-job-card's "dateStyle" attribute is missing or blank.
+ JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/6082.d88b7966.chunk.js:0
+[    4981ms] [ERROR] rhcl-job-card's "dateStyle" attribute is missing or blank.
+ JSHandle@node @ https://resources.roberthalfonline.com/rhjs/v1.92.0/static/js/6082.d88b7966.chunk.js:0

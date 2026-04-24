@@ -1,0 +1,377 @@
+- generic [active] [ref=e1]:
+  - link "Ir para o conteúdo principal" [ref=e2] [cursor=pointer]:
+    - /url: "#mainContent"
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - generic:
+        - generic:
+          - generic: 
+      - generic [ref=e7]:
+        - generic [ref=e8]:
+          - link "Robert Half" [ref=e10] [cursor=pointer]:
+            - /url: /br/pt
+            - img [ref=e11]
+          - list [ref=e13]:
+            - generic:
+              - generic [ref=e15]:
+                - link "Vagas" [ref=e16] [cursor=pointer]:
+                  - /url: /br/pt/procurando-oportunidade
+                  - generic [ref=e17]:
+                    - generic: Vagas
+                - button "Vagas chevron-down button" [ref=e19] [cursor=pointer]:
+                  - generic [ref=e21]:
+                    - generic [ref=e22]: 
+                    - generic [ref=e23]: Vagas chevron-down button
+              - generic [ref=e25]:
+                - link "Soluções em talentos" [ref=e26] [cursor=pointer]:
+                  - /url: /br/pt/solucao-talentos
+                  - generic [ref=e27]:
+                    - generic: Soluções em talentos
+                - button "Soluções em talentos chevron-down button" [ref=e29] [cursor=pointer]:
+                  - generic [ref=e31]:
+                    - generic [ref=e32]: 
+                    - generic [ref=e33]: Soluções em talentos chevron-down button
+              - generic [ref=e35]:
+                - link "Consultoria" [ref=e36] [cursor=pointer]:
+                  - /url: /br/pt/consultoria
+                  - generic [ref=e37]:
+                    - generic: Consultoria
+                - button "Consultoria chevron-down button" [ref=e39] [cursor=pointer]:
+                  - generic [ref=e41]:
+                    - generic [ref=e42]: 
+                    - generic [ref=e43]: Consultoria chevron-down button
+              - generic [ref=e45]:
+                - link "Central do Conhecimento" [ref=e46] [cursor=pointer]:
+                  - /url: /br/pt/insights
+                  - generic [ref=e47]:
+                    - generic: Central do Conhecimento
+                - button "Central do Conhecimento chevron-down button" [ref=e49] [cursor=pointer]:
+                  - generic [ref=e51]:
+                    - generic [ref=e52]: 
+                    - generic [ref=e53]: Central do Conhecimento chevron-down button
+        - generic [ref=e54]:
+          - button "search" [ref=e55] [cursor=pointer]:
+            - generic [ref=e57]:
+              - generic [ref=e58]: 
+              - generic [ref=e59]: search
+          - button "Minha Conta" [ref=e61] [cursor=pointer]:
+            - text: Minha Conta
+            - generic [ref=e64]: 
+          - generic:
+            - generic:
+              - generic: Candidato – Acessar Minha Conta
+              - generic: Colaborador – Registrar Ponto
+              - generic: Colaborador – Consultar Ponto
+              - generic: Colaborador – Consultar Holerite
+              - generic: Cliente – Aprovar Ponto
+    - generic [ref=e68]:
+      - generic [ref=e70]:
+        - generic [ref=e71]:
+          - link "Pesquise mais vagas" [ref=e74] [cursor=pointer]:
+            - /url: /br/pt/vagas/barueri/principal-finance-controller-latam
+            - generic [ref=e77]: 
+            - text: Pesquise mais vagas
+          - generic [ref=e79]:
+            - generic [ref=e81]:
+              - generic:
+                - text: 
+                - generic: Declinar este trabalho?
+              - generic [ref=e85]:
+                - generic [ref=e86]:
+                  - generic "Barueri" [ref=e88]:
+                    - paragraph [ref=e89]:
+                      - generic: Barueri
+                  - heading "Principal Finance Controller LATAM" [level=4] [ref=e91]:
+                    - generic: Principal Finance Controller LATAM
+                - generic:
+                  - generic:
+                    - generic:
+                      - list
+                - generic [ref=e92]:
+                  - generic "23 março 2026" [ref=e93]:
+                    - generic [ref=e94]:
+                      - generic: Publicado — 1 mês atrás
+                  - generic [ref=e95]:
+                    - separator [ref=e96]
+                    - button "Aplicar" [ref=e101] [cursor=pointer]
+                  - separator [ref=e102]
+                  - generic "Essential Skills" [ref=e104]:
+                    - heading "Essential Skills" [level=5] [ref=e105]:
+                      - generic: Essential Skills
+                  - generic [ref=e106]:
+                    - generic "Descrição" [ref=e107]:
+                      - heading "Descrição" [level=5] [ref=e108]:
+                        - generic: Descrição
+                    - generic [ref=e111]:
+                      - paragraph [ref=e112]:
+                        - strong [ref=e113]: The Company
+                      - generic [ref=e114]:
+                        - list [ref=e115]:
+                          - listitem [ref=e116]: Life Sciences Multinational.
+                        - paragraph [ref=e117]:
+                          - strong [ref=e118]: Job description
+                        - list [ref=e119]:
+                          - listitem [ref=e120]: Manage end-to-end statutory financial reporting for assigned LATAM entities;
+                          - listitem [ref=e121]: Prepare and review statutory financial statements under US GAAP and LATAM GAAP and local country-specific requirements;
+                          - listitem [ref=e122]: Oversight of transactional processing performed by shared service organizations (SSO);
+                          - listitem [ref=e123]: Review and approve monthly reconciliations in Blackline for assigned G/L account;
+                          - listitem [ref=e124]: Prepare, review, and coordinate corporate income tax, GST/VAT, and withholding tax filing;
+                          - listitem [ref=e125]: Liaise with external tax consultants and internal tax teams;
+                          - listitem [ref=e126]: Perform internal control checks and ensure compliance with company policies and SOX frameworks;
+                          - listitem [ref=e127]: Partner with regional and global finance teams;
+                          - listitem [ref=e128]: Act as key finance contact for auditors, tax advisors, and service providers;
+                          - listitem [ref=e129]: Drive M&A and integration projects across LATAM;
+                          - listitem [ref=e130]: Collaborate with cross-functional teams to align processes and systems post-acquisition.
+                        - strong [ref=e131]: Requirement Profile - Knowledge, Skills & Experiences
+                        - list [ref=e132]:
+                          - listitem [ref=e133]: Relevant experience in finance controllership, statutory reporting, or audit;
+                          - listitem [ref=e134]: Demonstrated experience supporting LATAM entities in a multinational organization;
+                          - listitem [ref=e135]: Strong knowledge of US GAAP and local statutory, tax, and VAT rules in LATAM;
+                          - listitem [ref=e136]: Experience with SAP, Blackline, Excel (advanced), and MS Office;
+                          - listitem [ref=e137]: Fluent in English; Spanish and Portuguese;
+                          - listitem [ref=e138]: Prepared to travel internationally as required;
+                          - listitem [ref=e139]: Prior experience with a Big 4 audit firm or internal audit function preferred.
+                      - img [ref=e140]
+                  - generic "Requisitos" [ref=e142]:
+                    - heading "Requisitos" [level=5] [ref=e143]:
+                      - generic: Requisitos
+                  - generic [ref=e144]:
+                    - separator [ref=e145]
+                    - generic [ref=e146]:
+                      - generic [ref=e148]:
+                        - generic: "Referência de emprego: 63610-0013406600-brpt"
+                      - generic [ref=e150]:
+                        - generic: "Área de Pessoal: Finanças e contabilidade"
+                  - generic [ref=e151]:
+                    - separator [ref=e152]
+                    - button "Aplicar" [ref=e157] [cursor=pointer]
+            - generic [ref=e161] [cursor=pointer]:
+              - heading "Crie um alerta de emprego" [level=5] [ref=e164]:
+                - generic: Crie um alerta de emprego
+              - generic [ref=e167]:
+                - generic: Envie-me um e-mail sobre novas oportunidades em Principal Finance Controller LATAM em Barueri
+              - button "Criar alerta de vaga" [ref=e170]
+          - generic [ref=e171]:
+            - heading "Pesquise mais vagas" [level=2] [ref=e174]:
+              - generic: Pesquise mais vagas
+            - generic [ref=e177]:
+              - generic [ref=e181]:
+                - textbox "Cargo, habilidades ou palavras-chave" [ref=e182]:
+                  - generic [ref=e183]:
+                    - generic: Cargo, habilidades ou palavras-chave
+                    - textbox "Cargo, habilidades ou palavras-chave" [ref=e184]:
+                      - /placeholder: ""
+                      - text: Principal Finance Controller LATAM
+                - generic [ref=e187]:
+                  - generic [ref=e188]: 
+                  - generic [ref=e189]: search
+              - generic "Search Cidade, estado ou CEP" [ref=e194]:
+                - generic [ref=e196]:
+                  - list "Search Cidade, estado ou CEP" [ref=e197]:
+                    - generic [ref=e198]:
+                      - generic: Cidade, estado ou CEP
+                      - textbox "Cidade, estado ou CEP" [ref=e199]:
+                        - /placeholder: ""
+                        - text: Barueri
+                  - generic [ref=e202]:
+                    - generic [ref=e203]: 
+                    - generic [ref=e204]: location-pin-outline
+              - button "Encontrar empregos" [ref=e209] [cursor=pointer]
+        - generic:
+          - generic:
+            - generic:
+              - img
+      - generic: Barueri,
+      - generic:
+        - generic: Remoto
+        - generic: Permanente
+        - generic: DOE
+      - generic: Publicado — 23 março 2026
+      - generic: The CompanyLife Sciences Multinational.Job descriptionManage end-to-end statutory financial reporting for assigned LATAM entities;Prepare and review statutory financial statements under US GAAP and LATAM GAAP and local country-specific requirements;Oversight of transactional processing performed by shared service organizations (SSO);Review and approve monthly reconciliations in Blackline for assigned G/L account;Prepare, review, and coordinate corporate income tax, GST/VAT, and withholding tax filing;Liaise with external tax consultants and internal tax teams;Perform internal control checks and ensure compliance with company policies and SOX frameworks;Partner with regional and global finance teams;Act as key finance contact for auditors, tax advisors, and service providers;Drive M&A and integration projects across LATAM;Collaborate with cross-functional teams to align processes and systems post-acquisition.Requirement Profile - Knowledge, Skills & ExperiencesRelevant experience in finance controllership, statutory reporting, or audit;Demonstrated experience supporting LATAM entities in a multinational organization;Strong knowledge of US GAAP and local statutory, tax, and VAT rules in LATAM;Experience with SAP, Blackline, Excel (advanced), and MS Office;Fluent in English; Spanish and Portuguese;Prepared to travel internationally as required;Prior experience with a Big 4 audit firm or internal audit function preferred.
+      - generic: Have an account?
+      - generic: Descrição
+      - generic: Requisitos
+      - generic: Have an account?
+      - generic: Barueri,
+      - generic:
+        - generic: Permanente
+        - generic: DOE
+      - generic: 23 março 2026
+    - generic [ref=e214]:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - text: 
+                  - generic: Você está saindo do site da Robert Half Brasil e será redirecionado para o site da Robert Half EUA.
+      - generic [ref=e216]:
+        - generic [ref=e219]:
+          - generic:
+            - generic [ref=e221]:
+              - heading "Soluções em talentos" [level=2] [ref=e223]:
+                - generic: Soluções em talentos
+              - list [ref=e224]:
+                - generic:
+                  - listitem [ref=e225]:
+                    - link "Vagas" [ref=e229] [cursor=pointer]:
+                      - /url: /br/pt/vagas
+                  - listitem [ref=e230]:
+                    - link "Projetos" [ref=e234] [cursor=pointer]:
+                      - /url: /br/pt/solucao-talentos/projetos
+                  - listitem [ref=e235]:
+                    - link "Permanente" [ref=e239] [cursor=pointer]:
+                      - /url: /br/pt/solucao-talentos/permanente
+                  - listitem [ref=e240]:
+                    - link "Gestão interina" [ref=e244] [cursor=pointer]:
+                      - /url: /br/pt/solucao-talentos/interim-management
+                  - listitem [ref=e245]:
+                    - link "Executive Search" [ref=e249] [cursor=pointer]:
+                      - /url: /br/pt/solucao-talentos/executive-search
+                  - listitem [ref=e250]:
+                    - link "Consultoria" [ref=e254] [cursor=pointer]:
+                      - /url: /br/pt/consultoria
+            - generic [ref=e256]:
+              - heading "Nossas práticas" [level=2] [ref=e258]:
+                - generic: Nossas práticas
+              - list [ref=e259]:
+                - generic:
+                  - listitem [ref=e260]:
+                    - link "Finanças e contabilidade" [ref=e264] [cursor=pointer]:
+                      - /url: /br/pt/financas-contabilidade
+                  - listitem [ref=e265]:
+                    - link "Tecnologia da informação" [ref=e269] [cursor=pointer]:
+                      - /url: /br/pt/tecnologia
+                  - listitem [ref=e270]:
+                    - link "Vendas e marketing" [ref=e274] [cursor=pointer]:
+                      - /url: /br/pt/vendas-marketing
+                  - listitem [ref=e275]:
+                    - link "Jurídico" [ref=e279] [cursor=pointer]:
+                      - /url: /br/pt/juridico
+                  - listitem [ref=e280]:
+                    - link "Recursos humanos" [ref=e284] [cursor=pointer]:
+                      - /url: /br/pt/recursos-humanos
+                  - listitem [ref=e285]:
+                    - link "Engenharia" [ref=e289] [cursor=pointer]:
+                      - /url: /br/pt/engenharia
+            - generic [ref=e291]:
+              - heading "Recursos" [level=2] [ref=e293]:
+                - generic: Recursos
+              - list [ref=e294]:
+                - generic:
+                  - listitem [ref=e295]:
+                    - link "Guia salarial" [ref=e299] [cursor=pointer]:
+                      - /url: /br/pt/insights/guia-salarial
+                  - listitem [ref=e300]:
+                    - link "Índice de confiança Robert Half" [ref=e304] [cursor=pointer]:
+                      - /url: /br/pt/insights/indice-confianca
+                  - listitem [ref=e305]:
+                    - link "Panorama Setorial" [ref=e309] [cursor=pointer]:
+                      - /url: /br/pt/insights/panorama
+                  - listitem [ref=e310]:
+                    - link "Funções mais demandadas" [ref=e314] [cursor=pointer]:
+                      - /url: /br/pt/vagas-detalhes-all
+                  - listitem [ref=e315]:
+                    - link "Central do Conhecimento" [ref=e319] [cursor=pointer]:
+                      - /url: /br/pt/insights
+                  - listitem [ref=e320]:
+                    - link "Receba nossa newsletter" [ref=e324] [cursor=pointer]:
+                      - /url: /br/pt/insights/newsletter
+                  - listitem [ref=e325]:
+                    - link "Criar alerta de vagas" [ref=e329] [cursor=pointer]:
+                      - /url: /br/pt/procurando-oportunidade/alerta-de-vaga
+                  - listitem [ref=e330]:
+                    - link "Ajuda" [ref=e334] [cursor=pointer]:
+                      - /url: /br/pt/infocenter
+            - generic [ref=e336]:
+              - heading "Sobre" [level=2] [ref=e338]:
+                - generic: Sobre
+              - list [ref=e339]:
+                - generic:
+                  - listitem [ref=e340]:
+                    - link "Sobre Robert Half" [ref=e344] [cursor=pointer]:
+                      - /url: /br/pt/sobre-robert-half
+                  - listitem [ref=e345]:
+                    - link "Liderança" [ref=e349] [cursor=pointer]:
+                      - /url: /br/pt/sobre-robert-half/lideranca
+                  - listitem [ref=e350]:
+                    - link "Trabalhe conosco" [ref=e354] [cursor=pointer]:
+                      - /url: /br/pt/join-robert-half
+                  - listitem [ref=e355]:
+                    - link "Escritórios" [ref=e359] [cursor=pointer]:
+                      - /url: /br/pt/localizacoes
+                  - listitem [ref=e360]:
+                    - link "Relação com investidores" [ref=e364] [cursor=pointer]:
+                      - /url: "#"
+                  - listitem [ref=e365]:
+                    - link "Imprensa" [ref=e369] [cursor=pointer]:
+                      - /url: /br/pt/sobre-robert-half/imprensa
+                  - listitem [ref=e370]:
+                    - link "Nossas marcas" [ref=e374] [cursor=pointer]:
+                      - /url: /br/pt/sobre-robert-half/nossa-historia/nossas-marcas
+        - generic [ref=e377]:
+          - link [ref=e378] [cursor=pointer]:
+            - /url: /br/pt
+            - img [ref=e380]
+          - list [ref=e384]:
+            - generic:
+              - listitem [ref=e385]:
+                - link "null" [ref=e389] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/company/robert-half-international
+                  - generic [ref=e391]:
+                    - generic [ref=e392]: 
+                    - generic [ref=e393]: linkedin
+              - listitem [ref=e394]:
+                - link "null" [ref=e398] [cursor=pointer]:
+                  - /url: https://www.instagram.com/roberthalfbr/
+                  - generic [ref=e400]:
+                    - generic [ref=e401]: 
+                    - generic [ref=e402]: instagram
+              - listitem [ref=e403]:
+                - link "null" [ref=e407] [cursor=pointer]:
+                  - /url: http://www.youtube.com/RoberthalfBR
+                  - generic [ref=e409]:
+                    - generic [ref=e410]: 
+                    - generic [ref=e411]: youtube
+              - listitem [ref=e412]:
+                - link "null" [ref=e416] [cursor=pointer]:
+                  - /url: http://twitter.com/Roberthalf_BR
+                  - generic [ref=e418]:
+                    - generic [ref=e419]: 
+                    - generic [ref=e420]: twitter
+              - listitem [ref=e421]:
+                - link "null" [ref=e425] [cursor=pointer]:
+                  - /url: https://www.facebook.com/roberthalfbrasil/
+                  - generic [ref=e427]:
+                    - generic [ref=e428]: 
+                    - generic [ref=e429]: facebook
+          - generic [ref=e430]:
+            - generic [ref=e433]:
+              - generic [ref=e434]:
+                - generic [ref=e436]:
+                  - generic: undefined (undefined)
+                - generic [ref=e441]: 
+              - generic:
+                - text: 
+                - generic: undefined (undefined)
+            - generic [ref=e442]:
+              - list [ref=e445]:
+                - generic:
+                  - listitem [ref=e446]:
+                    - link "Aviso de Privacidade" [ref=e450] [cursor=pointer]:
+                      - /url: /br/pt/privacidade
+                  - listitem [ref=e451]:
+                    - link "Termos de uso" [ref=e455] [cursor=pointer]:
+                      - /url: /br/pt/termos-de-uso
+                  - listitem [ref=e456]:
+                    - link "Alerta de fraude" [ref=e460] [cursor=pointer]:
+                      - /url: /br/pt/alerta-fraude
+              - generic [ref=e461]:
+                - generic [ref=e462]:
+                  - generic: © 2026
+                - generic [ref=e463]:
+                  - generic: Robert Half Inc.
+  - generic [ref=e464] [cursor=pointer]:
+    - button "Definições de cookies" [ref=e466]
+    - text: Definições de cookies

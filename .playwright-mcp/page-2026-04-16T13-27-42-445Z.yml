@@ -1,0 +1,624 @@
+- generic [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-1776346042"
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - navigation [ref=e8]:
+        - generic [ref=e9]:
+          - button "menu" [ref=e10] [cursor=pointer]
+          - link "Amazon Jobs home page" [ref=e12] [cursor=pointer]:
+            - /url: /en
+            - generic [ref=e14]: Amazon Jobs home page
+        - generic [ref=e16]:
+          - generic [ref=e17]:
+            - combobox "Search for jobs by title or keyword" [ref=e21]
+            - generic [ref=e23]:
+              - text: h
+              - combobox "search job by location" [ref=e25]
+          - button "Search jobs" [ref=e26] [cursor=pointer]
+        - menu [ref=e30] [cursor=pointer]: My career
+      - generic: h
+      - generic [ref=e33]:
+        - status [ref=e34]:
+          - generic [ref=e36]:
+            - generic [ref=e38]:
+              - generic [ref=e40]: 
+              - paragraph [ref=e41]:
+                - text: Set job alerts for your search and never miss an opportunity!
+                - link "Login or create an account" [ref=e42] [cursor=pointer]:
+                  - /url: https://passport.amazon.jobs/accountInfo
+            - button "close" [ref=e44] [cursor=pointer]: ×
+        - generic [ref=e47]:
+          - heading "Search results" [level=1] [ref=e48]
+          - generic [ref=e49]:
+            - generic [ref=e51]:
+              - generic [ref=e52]:
+                - heading "Filter by" [level=2] [ref=e53]
+                - button "Reset filters" [ref=e54] [cursor=pointer]: Reset
+              - generic [ref=e55]:
+                - link "Skip to job results" [ref=e56] [cursor=pointer]:
+                  - /url: "#job-listings"
+                - generic [ref=e57]:
+                  - button "INDUSTRY EXPERIENCE (4 shown) filters" [expanded] [ref=e58] [cursor=pointer]:
+                    - generic [ref=e59]:
+                      - text: INDUSTRY EXPERIENCE
+                      - generic [ref=e60]: (4 shown)
+                  - group "INDUSTRY EXPERIENCE (4 shown) filters" [ref=e63]:
+                    - generic [ref=e64]: INDUSTRY EXPERIENCE (4 shown) filters
+                    - status [ref=e65]
+                    - generic [ref=e66]:
+                      - button "Less than 1 year" [ref=e67] [cursor=pointer]:
+                        - paragraph [ref=e68]: Less than 1 year
+                      - button "1-3 years" [ref=e69] [cursor=pointer]:
+                        - paragraph [ref=e70]: 1-3 years
+                      - button "4-6 years" [ref=e71] [cursor=pointer]:
+                        - paragraph [ref=e72]: 4-6 years
+                      - button "7+ years" [ref=e73] [cursor=pointer]:
+                        - paragraph [ref=e74]: 7+ years
+              - generic [ref=e75]:
+                - link "Skip to job results" [ref=e76] [cursor=pointer]:
+                  - /url: "#job-listings"
+                - generic [ref=e77]:
+                  - button "JOB TYPE (1 shown) filters" [expanded] [ref=e78] [cursor=pointer]:
+                    - generic [ref=e79]:
+                      - text: JOB TYPE
+                      - generic [ref=e80]: (1 shown)
+                  - group "JOB TYPE (1 shown) filters" [ref=e83]:
+                    - generic [ref=e84]: JOB TYPE (1 shown) filters
+                    - status [ref=e85]
+                    - checkbox "Full Time 18 jobs" [ref=e724] [cursor=pointer]:
+                      - paragraph [ref=e88]:
+                        - text: Full Time
+                        - generic [ref=e89]:
+                          - generic [ref=e90]: (18)
+                          - generic [ref=e91]: 18 jobs
+              - generic [ref=e93]:
+                - link "Skip to job results" [ref=e94] [cursor=pointer]:
+                  - /url: "#job-listings"
+                - generic [ref=e95]:
+                  - button "JOB CATEGORY (24 shown) filters" [expanded] [ref=e96] [cursor=pointer]:
+                    - generic [ref=e97]:
+                      - text: JOB CATEGORY
+                      - generic [ref=e98]: (24 shown)
+                  - group "JOB CATEGORY (24 shown) filters" [ref=e101]:
+                    - generic [ref=e102]: JOB CATEGORY (24 shown) filters
+                    - status [ref=e103]
+                    - generic [ref=e104]:
+                      - checkbox "Project/Program/Product Management--Non-Tech 44 jobs" [ref=e105] [cursor=pointer]:
+                        - paragraph [ref=e106]:
+                          - text: Project/Program/Product Management--Non-Tech
+                          - generic [ref=e107]:
+                            - generic [ref=e108]: (44)
+                            - generic [ref=e109]: 44 jobs
+                      - checkbox "Software Development 35 jobs" [ref=e111] [cursor=pointer]:
+                        - paragraph [ref=e112]:
+                          - text: Software Development
+                          - generic [ref=e113]:
+                            - generic [ref=e114]: (35)
+                            - generic [ref=e115]: 35 jobs
+                      - checkbox "Administrative Support 18 jobs" [ref=e117] [cursor=pointer]:
+                        - paragraph [ref=e118]:
+                          - text: Administrative Support
+                          - generic [ref=e119]:
+                            - generic [ref=e120]: (18)
+                            - generic [ref=e121]: 18 jobs
+                      - checkbox "Finance and Global Business Services 18 jobs" [checked] [active] [ref=e123] [cursor=pointer]:
+                        - paragraph [ref=e124]:
+                          - text: Finance and Global Business Services
+                          - generic [ref=e125]:
+                            - generic [ref=e126]: (18)
+                            - generic [ref=e127]: 18 jobs
+                        - generic [ref=e725]: ✓
+                      - checkbox "Supply Chain/Transportation Management 18 jobs" [ref=e129] [cursor=pointer]:
+                        - paragraph [ref=e130]:
+                          - text: Supply Chain/Transportation Management
+                          - generic [ref=e131]:
+                            - generic [ref=e132]: (18)
+                            - generic [ref=e133]: 18 jobs
+                    - button "Show more filters for JOB CATEGORY" [ref=e135] [cursor=pointer]: more
+              - generic [ref=e137]:
+                - link "Skip to job results" [ref=e138] [cursor=pointer]:
+                  - /url: "#job-listings"
+                - generic [ref=e139]:
+                  - button "Country/Region (1 shown) filters" [expanded] [ref=e140] [cursor=pointer]:
+                    - generic [ref=e141]:
+                      - text: Country/Region
+                      - generic [ref=e142]: (1 shown)
+                  - generic [ref=e145]:
+                    - generic [ref=e146]:
+                      - generic [ref=e147]: 
+                      - textbox "Refine list of Country/Region (1 shown) filter options" [ref=e148]:
+                        - /placeholder: Country/Region
+                    - status [ref=e149]
+                    - group "Country/Region (1 shown) filters" [ref=e151]:
+                      - generic [ref=e152]: Country/Region (1 shown) filters
+                      - checkbox "Brazil 18 jobs" [ref=e726] [cursor=pointer]:
+                        - paragraph [ref=e155]:
+                          - text: Brazil
+                          - generic [ref=e156]:
+                            - generic [ref=e157]: (18)
+                            - generic [ref=e158]: 18 jobs
+              - generic [ref=e160]:
+                - link "Skip to job results" [ref=e161] [cursor=pointer]:
+                  - /url: "#job-listings"
+                - generic [ref=e162]:
+                  - button "State/Province (1 shown) filters" [expanded] [ref=e727] [cursor=pointer]:
+                    - generic [ref=e164]:
+                      - text: State/Province
+                      - generic [ref=e165]: (1 shown)
+                  - generic [ref=e168]:
+                    - generic [ref=e169]:
+                      - generic [ref=e170]: 
+                      - textbox "Refine list of State/Province (1 shown) filter options" [ref=e728]:
+                        - /placeholder: State/Province
+                    - status [ref=e172]
+                    - group "State/Province (1 shown) filters" [ref=e729]:
+                      - generic [ref=e175]: State/Province (1 shown) filters
+                      - checkbox "Sao Paulo 18 jobs" [ref=e730] [cursor=pointer]:
+                        - paragraph [ref=e178]:
+                          - text: Sao Paulo
+                          - generic [ref=e179]:
+                            - generic [ref=e180]: (18)
+                            - generic [ref=e181]: 18 jobs
+              - generic [ref=e207]:
+                - link "Skip to job results" [ref=e208] [cursor=pointer]:
+                  - /url: "#job-listings"
+                - generic [ref=e209]:
+                  - button "City (1 shown) filters" [expanded] [ref=e731] [cursor=pointer]:
+                    - generic [ref=e211]:
+                      - text: City
+                      - generic [ref=e212]: (1 shown)
+                  - generic [ref=e215]:
+                    - generic [ref=e216]:
+                      - generic [ref=e217]: 
+                      - textbox "Refine list of City (1 shown) filter options" [ref=e732]:
+                        - /placeholder: City
+                    - status [ref=e219]
+                    - group "City (1 shown) filters" [ref=e733]:
+                      - generic [ref=e222]: City (1 shown) filters
+                      - checkbox "Sao Paulo 18 jobs" [ref=e734] [cursor=pointer]:
+                        - paragraph [ref=e225]:
+                          - text: Sao Paulo
+                          - generic [ref=e226]:
+                            - generic [ref=e227]: (18)
+                            - generic [ref=e228]: 18 jobs
+              - generic [ref=e266]:
+                - link "Skip to job results" [ref=e267] [cursor=pointer]:
+                  - /url: "#job-listings"
+                - generic [ref=e268]:
+                  - generic [ref=e269] [cursor=pointer]:
+                    - generic [ref=e270]:
+                      - text: TEAM
+                      - generic [ref=e271]: (2 shown)
+                      - button "More information about teams" [ref=e273]: 
+                    - button "TEAM (2 shown) filters" [expanded] [ref=e735]
+                  - group "TEAM (2 shown) filters" [ref=e736]:
+                    - generic [ref=e277]: TEAM (2 shown) filters
+                    - status [ref=e278]
+                    - generic [ref=e279]:
+                      - checkbox "Finance and Global Business Services 2 jobs" [ref=e737] [cursor=pointer]:
+                        - paragraph [ref=e281]:
+                          - text: Finance and Global Business Services
+                          - generic [ref=e282]:
+                            - generic [ref=e283]: (2)
+                            - generic [ref=e284]: 2 jobs
+                      - checkbox "Business & Corporate Development 1 job" [ref=e738] [cursor=pointer]:
+                        - paragraph [ref=e287]:
+                          - text: Business & Corporate Development
+                          - generic [ref=e288]:
+                            - generic [ref=e289]: (1)
+                            - generic [ref=e290]: 1 job
+              - generic [ref=e312]:
+                - link "Skip to job results" [ref=e313] [cursor=pointer]:
+                  - /url: "#job-listings"
+                - generic [ref=e314]:
+                  - button "ROLE TYPE (2 shown) filters" [expanded] [ref=e315] [cursor=pointer]:
+                    - generic [ref=e316]:
+                      - text: ROLE TYPE
+                      - generic [ref=e317]: (2 shown)
+                  - group "ROLE TYPE (2 shown) filters" [ref=e320]:
+                    - generic [ref=e321]: ROLE TYPE (2 shown) filters
+                    - status [ref=e322]
+                    - generic [ref=e323]:
+                      - checkbox "Individual Contributor 17 jobs" [ref=e739] [cursor=pointer]:
+                        - paragraph [ref=e325]:
+                          - text: Individual Contributor
+                          - generic [ref=e326]:
+                            - generic [ref=e327]: (17)
+                            - generic [ref=e328]: 17 jobs
+                      - checkbox "People Manager 1 job" [ref=e740] [cursor=pointer]:
+                        - paragraph [ref=e331]:
+                          - text: People Manager
+                          - generic [ref=e332]:
+                            - generic [ref=e333]: (1)
+                            - generic [ref=e334]: 1 job
+              - generic [ref=e336]:
+                - link "Skip to job results" [ref=e337] [cursor=pointer]:
+                  - /url: "#job-listings"
+                - generic [ref=e338]:
+                  - button "CATEGORY (1 shown) filters" [expanded] [ref=e741] [cursor=pointer]:
+                    - generic [ref=e340]:
+                      - text: CATEGORY
+                      - generic [ref=e341]: (1 shown)
+                  - group "CATEGORY (1 shown) filters" [ref=e742]:
+                    - generic [ref=e345]: CATEGORY (1 shown) filters
+                    - status [ref=e346]
+                    - button "Corporate 18 jobs" [ref=e743] [cursor=pointer]:
+                      - paragraph [ref=e349]:
+                        - text: Corporate
+                        - generic [ref=e350]:
+                          - generic [ref=e351]: (18)
+                          - generic [ref=e352]: 18 jobs
+            - generic [ref=e368]:
+              - generic [ref=e369]:
+                - heading "Results listed" [level=2] [ref=e370]
+                - generic [ref=e371]:
+                  - generic:
+                    - paragraph [ref=e372]: "Sort by:"
+                    - listbox "Sort by:" [ref=e373]:
+                      - button [ref=e374] [cursor=pointer]: "Sort by: Most relevant"
+              - generic [ref=e376]:
+                - generic [ref=e378]:
+                  - generic [ref=e379]:
+                    - generic [ref=e380]:
+                      - heading "Sr. Tax Analyst, Tax Engine Operations" [level=3] [ref=e744]:
+                        - link "Sr. Tax Analyst, Tax Engine Operations" [ref=e745] [cursor=pointer]:
+                          - /url: /en/jobs/10384322/sr-tax-analyst-tax-engine-operations
+                      - list [ref=e385]:
+                        - listitem [ref=e386]: Sao Paulo, SP, BRA
+                        - listitem [ref=e387]: "|"
+                        - listitem [ref=e388]: "Job ID: 10384322"
+                    - generic [ref=e389]:
+                      - generic [ref=e390]: Posted April 6, 2026
+                      - paragraph [ref=e391]: (Updated 10 days ago)
+                  - generic [ref=e393]:
+                    - generic [ref=e394]:
+                      - text: "Basic qualifications:"
+                      - list [ref=e395]:
+                        - listitem [ref=e396]: Bachelor's degree in finance, accounting, business, economics, or a related analytical field (e.g., engineering, math, computer science), or a Bachelor's degree and experience in tax, finance or a related analytical field
+                        - listitem [ref=e397]: Experience in communication and presentation skills, both written and verbal in Portuguese & English
+                        - listitem [ref=e398]: Knowledge of Microsoft Office products and applications at an advanced level
+                        - listitem [ref=e399]: Experience with Brazilian Indirect Tax, experience working in Big 4 advisory firm, law firm, or multi-national tax department
+                        - listitem [ref=e400]: Deep Indirect Tax knowledge (ICMS, IPI, PIS and COFINS);
+                    - link "Read more about the job Sr. Tax Analyst, Tax Engine Operations , job Id 10384322" [ref=e746] [cursor=pointer]:
+                      - /url: /en/jobs/10384322/sr-tax-analyst-tax-engine-operations
+                      - text: ...Read more
+                - generic [ref=e404]:
+                  - generic [ref=e405]:
+                    - generic [ref=e406]:
+                      - heading "Manager, Tax Management, Tax Engine Operations" [level=3] [ref=e747]:
+                        - link "Manager, Tax Management, Tax Engine Operations" [ref=e748] [cursor=pointer]:
+                          - /url: /en/jobs/10384135/manager-tax-management-tax-engine-operations
+                      - list [ref=e411]:
+                        - listitem [ref=e412]: Sao Paulo, SP, BRA
+                        - listitem [ref=e413]: "|"
+                        - listitem [ref=e414]: "Job ID: 10384135"
+                    - generic [ref=e415]:
+                      - generic [ref=e416]: Posted April 6, 2026
+                      - paragraph [ref=e417]: (Updated 10 days ago)
+                  - generic [ref=e419]:
+                    - generic [ref=e420]:
+                      - text: "Basic qualifications:"
+                      - list [ref=e421]:
+                        - listitem [ref=e422]: Experience working in a large public accounting firm or multi-national corporate tax department
+                        - listitem [ref=e423]: Bachelor's degree in finance, accounting, business, economics, or a related analytical field (e.g., engineering, math, computer science), or a Bachelor's degree and experience in tax, finance or a related analytical field
+                        - listitem [ref=e424]: Experience researching indirect tax issues including taxability of products and services
+                        - listitem [ref=e425]: Experience that includes strong analytical skills, attention to detail, and effective communication abilities, or experience in SQL Server/MySQL
+                        - listitem [ref=e426]: Experience completing complex tasks quickly with little to no guidance and react with appropriate urgency to situations that require a quick turnaround, or experience with executive level calendar management
+                        - listitem [ref=e427]: Experience in communication and presentation skills, both written and verbal in Portuguese & English
+                        - listitem [ref=e428]: Knowledge of Microsoft Office products and applications (esp. MS Excel, Word) at an advanced level
+                    - link "Read more about the job Manager, Tax Management, Tax Engine Operations , job Id 10384135" [ref=e749] [cursor=pointer]:
+                      - /url: /en/jobs/10384135/manager-tax-management-tax-engine-operations
+                      - text: ...Read more
+                - generic [ref=e431]:
+                  - generic [ref=e432]:
+                    - generic [ref=e433]:
+                      - heading "Sr Financial Specialist, Operations Finance" [level=3] [ref=e750]:
+                        - link "Sr Financial Specialist, Operations Finance" [ref=e751] [cursor=pointer]:
+                          - /url: /en/jobs/10371473/sr-financial-specialist-operations-finance
+                      - list [ref=e438]:
+                        - listitem [ref=e439]: Sao Paulo, SP, BRA
+                        - listitem [ref=e440]: "|"
+                        - listitem [ref=e441]: "Job ID: 10371473"
+                    - generic [ref=e442]:
+                      - generic [ref=e443]: Posted March 19, 2026
+                      - paragraph [ref=e444]: (Updated 28 days ago)
+                  - generic [ref=e446]:
+                    - generic [ref=e447]:
+                      - text: "Basic qualifications:"
+                      - list [ref=e448]:
+                        - listitem [ref=e449]: Bachelor's degree
+                        - listitem [ref=e450]: Experience in tax, finance or a related analytical field
+                        - listitem [ref=e451]: Knowledge of Excel at an advanced level
+                        - listitem [ref=e452]: Experience interpreting and applying financial KPIs;
+                        - listitem [ref=e752]: Experience identifying, leading, and executing fixed and/or variable cost improvements;
+                        - listitem [ref=e753]: Experience with automation, standardization, or simplification of financial tools and processes;
+                        - listitem [ref=e754]: Experience creating process improvements through automation and analysis;
+                        - listitem [ref=e755]: Fluent English;
+                    - link "Read more about the job Sr Financial Specialist, Operations Finance, job Id 10371473" [ref=e756] [cursor=pointer]:
+                      - /url: /en/jobs/10371473/sr-financial-specialist-operations-finance
+                      - text: ...Read more
+                - generic [ref=e455]:
+                  - generic [ref=e456]:
+                    - generic [ref=e457]:
+                      - heading "Accounting Manager, LATAM Stores Accounting Team" [level=3] [ref=e757]:
+                        - link "Accounting Manager, LATAM Stores Accounting Team" [ref=e758] [cursor=pointer]:
+                          - /url: /en/jobs/3207863/accounting-manager-latam-stores-accounting-team
+                      - list [ref=e462]:
+                        - listitem [ref=e463]: Sao Paulo, SP, BRA
+                        - listitem [ref=e464]: "|"
+                        - listitem [ref=e465]: "Job ID: 3207863"
+                    - generic [ref=e466]:
+                      - generic [ref=e467]: Posted March 18, 2026
+                      - paragraph [ref=e468]: (Updated 29 days ago)
+                  - generic [ref=e470]:
+                    - generic [ref=e471]:
+                      - text: "Basic qualifications:"
+                      - list [ref=e472]:
+                        - listitem [ref=e473]: Bachelor's degree in accounting or related field
+                        - listitem [ref=e474]: Thorough knowledge of International, Brazilian and U.S. GAAP (including the FASB Codification) and related research tools
+                        - listitem [ref=e475]: Experience with accounting closing process, including preparing and reviewing reconciliations
+                        - listitem [ref=e476]: Advanced level understanding of an internal control framework (specifically COSO) and a solid understanding of the concepts of control design and operational efficiency
+                        - listitem [ref=e477]: Experience with documenting accounting conclusions and related support
+                        - listitem [ref=e759]: Written and spoken fluency in English and Portuguese required
+                    - link "Read more about the job Accounting Manager, LATAM Stores Accounting Team, job Id 3207863" [ref=e760] [cursor=pointer]:
+                      - /url: /en/jobs/3207863/accounting-manager-latam-stores-accounting-team
+                      - text: ...Read more
+                - generic [ref=e480]:
+                  - generic [ref=e481]:
+                    - generic [ref=e482]:
+                      - heading "Business Specialist, Global Tax Services - Data" [level=3] [ref=e761]:
+                        - link "Business Specialist, Global Tax Services - Data" [ref=e762] [cursor=pointer]:
+                          - /url: /en/jobs/3207790/business-specialist-global-tax-services-data
+                      - list [ref=e487]:
+                        - listitem [ref=e488]: Sao Paulo, SP, BRA
+                        - listitem [ref=e489]: "|"
+                        - listitem [ref=e490]: "Job ID: 3207790"
+                    - generic [ref=e491]:
+                      - generic [ref=e492]: Posted March 18, 2026
+                      - paragraph [ref=e493]: (Updated 29 days ago)
+                  - generic [ref=e495]:
+                    - generic [ref=e496]:
+                      - text: "Basic qualifications:"
+                      - list [ref=e497]:
+                        - listitem [ref=e498]: Experience in tax, finance or a related analytical field
+                        - listitem [ref=e499]: Experience with SQL
+                        - listitem [ref=e500]: Experience with Excel
+                        - listitem [ref=e501]: Experience making business recommendations and influencing stakeholders
+                        - listitem [ref=e502]: Experience defining requirements and using data and metrics to draw business insights
+                        - listitem [ref=e503]: Bachelor's degree in computer science, engineering, mathematics or equivalent
+                        - listitem [ref=e504]: Bachelor's degree in finance, accounting, business, economics, engineering , analytics, mathematics, statistics or a related technical or quantitative field
+                        - listitem [ref=e763]: Speak, write, and read fluently in English
+                    - link "Read more about the job Business Specialist, Global Tax Services - Data, job Id 3207790" [ref=e764] [cursor=pointer]:
+                      - /url: /en/jobs/3207790/business-specialist-global-tax-services-data
+                      - text: ...Read more
+                - generic [ref=e507]:
+                  - generic [ref=e508]:
+                    - generic [ref=e509]:
+                      - heading "Sr. Tax Analyst, Foreign Reporting Compliance - 3P WHT" [level=3] [ref=e765]:
+                        - link "Sr. Tax Analyst, Foreign Reporting Compliance - 3P WHT" [ref=e766] [cursor=pointer]:
+                          - /url: /en/jobs/3206243/sr-tax-analyst-foreign-reporting-compliance-3p-wht
+                      - list [ref=e514]:
+                        - listitem [ref=e515]: Sao Paulo, SP, BRA
+                        - listitem [ref=e516]: "|"
+                        - listitem [ref=e517]: "Job ID: 3206243"
+                    - generic [ref=e518]:
+                      - generic [ref=e519]: Posted March 17, 2026
+                      - paragraph [ref=e520]: (Updated about 1 month ago)
+                  - generic [ref=e522]:
+                    - generic [ref=e523]:
+                      - text: "Basic qualifications:"
+                      - list [ref=e524]:
+                        - listitem [ref=e525]: Bachelor’s degree in Accounting, Business Administration or Law school; or equivalent experience;
+                        - listitem [ref=e526]: Experience, specially working in a large public accounting firm or multi-national tax department;
+                        - listitem [ref=e767]: Previously experience with withholding tax calculation and process for Brazil;
+                        - listitem [ref=e768]: Demonstrate strong verbal and written communication skills in English;
+                        - listitem [ref=e769]: Knowledge of Microsoft Office products and applications at an advanced level, including experience with AI solutions to automate processes.
+                    - link "Read more about the job Sr. Tax Analyst, Foreign Reporting Compliance - 3P WHT, job Id 3206243" [ref=e770] [cursor=pointer]:
+                      - /url: /en/jobs/3206243/sr-tax-analyst-foreign-reporting-compliance-3p-wht
+                      - text: ...Read more
+                - generic [ref=e529]:
+                  - generic [ref=e530]:
+                    - generic [ref=e531]:
+                      - heading "Senior Business Specialist, Global Tax Services - Data" [level=3] [ref=e771]:
+                        - link "Senior Business Specialist, Global Tax Services - Data" [ref=e772] [cursor=pointer]:
+                          - /url: /en/jobs/3206144/senior-business-specialist-global-tax-services-data
+                      - list [ref=e536]:
+                        - listitem [ref=e537]: Sao Paulo, SP, BRA
+                        - listitem [ref=e538]: "|"
+                        - listitem [ref=e539]: "Job ID: 3206144"
+                    - generic [ref=e540]:
+                      - generic [ref=e541]: Posted March 17, 2026
+                      - paragraph [ref=e542]: (Updated about 1 month ago)
+                  - generic [ref=e544]:
+                    - generic [ref=e545]:
+                      - text: "Basic qualifications:"
+                      - list [ref=e546]:
+                        - listitem [ref=e547]: Experience in tax, finance or a related analytical field
+                        - listitem [ref=e548]: Experience in writing SQL queries and creating business intelligence reports using Tableau, Power BI
+                        - listitem [ref=e549]: Experience defining requirements and using data and metrics to draw business insights
+                        - listitem [ref=e550]: Experience making business recommendations and influencing stakeholders
+                        - listitem [ref=e773]: Experience with Excel
+                        - listitem [ref=e774]: Bachelor's degree in finance, accounting, business, economics, engineering , analytics, mathematics, statistics or a related technical or quantitative field
+                        - listitem [ref=e775]: Speak, write, and read fluently in English
+                    - link "Read more about the job Senior Business Specialist, Global Tax Services - Data, job Id 3206144" [ref=e776] [cursor=pointer]:
+                      - /url: /en/jobs/3206144/senior-business-specialist-global-tax-services-data
+                      - text: ...Read more
+                - generic [ref=e553]:
+                  - generic [ref=e554]:
+                    - generic [ref=e555]:
+                      - heading "Finance Business Partner LATAM" [level=3] [ref=e777]:
+                        - link "Finance Business Partner LATAM" [ref=e778] [cursor=pointer]:
+                          - /url: /en/jobs/3041866/finance-business-partner-latam
+                      - list [ref=e560]:
+                        - listitem [ref=e561]: Sao Paulo, SP, BRA
+                        - listitem [ref=e562]: "|"
+                        - listitem [ref=e563]: "Job ID: 3041866"
+                    - generic [ref=e564]:
+                      - generic [ref=e565]: Posted July 23, 2025
+                      - paragraph [ref=e566]: (Updated about 1 month ago)
+                  - generic [ref=e568]:
+                    - generic [ref=e569]:
+                      - text: "Basic qualifications:"
+                      - list [ref=e570]:
+                        - listitem [ref=e571]: Bachelor's degree in engineering, statistics or business, or Bachelor's degree
+                        - listitem [ref=e572]: Quantitative role (engineering, process re-engineering, quality assurance) experience
+                        - listitem [ref=e573]: Experience with advanced use of SQL for data mining and business intelligence
+                        - listitem [ref=e779]: Experience in tax, finance or a related analytical field
+                        - listitem [ref=e780]: Experience applying key financial performance indicators (KPIs) to analyse Experience in creating process improvements with automation and analysis
+                        - listitem [ref=e781]: Experience in identifying, leading, and executing opportunities to improve, automate, standardize or simplify finance or business tools and processes
+                    - link "Read more about the job Finance Business Partner LATAM, job Id 3041866" [ref=e782] [cursor=pointer]:
+                      - /url: /en/jobs/3041866/finance-business-partner-latam
+                      - text: ...Read more
+                - generic [ref=e576]:
+                  - generic [ref=e577]:
+                    - generic [ref=e578]:
+                      - heading "Senior Accountant, LATAM Stores Accounting Team" [level=3] [ref=e783]:
+                        - link "Senior Accountant, LATAM Stores Accounting Team" [ref=e784] [cursor=pointer]:
+                          - /url: /en/jobs/3192963/senior-accountant-latam-stores-accounting-team
+                      - list [ref=e583]:
+                        - listitem [ref=e584]: Sao Paulo, SP, BRA
+                        - listitem [ref=e585]: "|"
+                        - listitem [ref=e586]: "Job ID: 3192963"
+                    - generic [ref=e587]:
+                      - generic [ref=e588]: Posted March 2, 2026
+                      - paragraph [ref=e589]: (Updated about 1 month ago)
+                  - generic [ref=e591]:
+                    - generic [ref=e592]:
+                      - text: "Basic qualifications:"
+                      - list [ref=e593]:
+                        - listitem [ref=e594]: Bachelor's degree in accounting or related field
+                        - listitem [ref=e595]: Knowledge of GAAP research tools and the FASB codification
+                        - listitem [ref=e596]: Experience with documenting accounting conclusions, or experience researching and documenting support for accounting conclusions
+                        - listitem [ref=e597]: Experience with accounting closing process, including preparing and reviewing reconciliations
+                        - listitem [ref=e598]: Advanced level understanding of an internal control framework (specifically COSO) and a solid understanding of the concepts of control design and operational efficiency
+                        - listitem [ref=e599]: Written and spoken fluency in English and Portuguese required
+                    - link "Read more about the job Senior Accountant, LATAM Stores Accounting Team, job Id 3192963" [ref=e785] [cursor=pointer]:
+                      - /url: /en/jobs/3192963/senior-accountant-latam-stores-accounting-team
+                      - text: ...Read more
+                - generic [ref=e608]:
+                  - generic [ref=e609]:
+                    - generic [ref=e610]:
+                      - heading "Assurance Manager, Risk & Compliance Solutions" [level=3] [ref=e786]:
+                        - link "Assurance Manager, Risk & Compliance Solutions" [ref=e787] [cursor=pointer]:
+                          - /url: /en/jobs/3184010/assurance-manager-risk-compliance-solutions
+                      - list [ref=e615]:
+                        - listitem [ref=e616]: Sao Paulo, SP, BRA
+                        - listitem [ref=e622]: "|"
+                        - listitem [ref=e623]: "Job ID: 3184010"
+                    - generic [ref=e624]:
+                      - generic [ref=e625]: Posted February 18, 2026
+                      - paragraph [ref=e626]: (Updated about 2 months ago)
+                  - generic [ref=e628]:
+                    - generic [ref=e629]:
+                      - text: "Basic qualifications:"
+                      - list [ref=e630]:
+                        - listitem [ref=e631]: Knowledge of Microsoft Office products and applications at an advanced level
+                        - listitem [ref=e632]: Experience communicating complex business concepts in verbal and written form
+                        - listitem [ref=e633]: Experience in compliance, audit or risk management
+                        - listitem [ref=e634]: Bachelor's degree or equivalent
+                        - listitem [ref=e635]: Demonstrate knowledge of EU and UK regulations
+                    - link "Read more about the job Assurance Manager, Risk & Compliance Solutions, job Id 3184010" [ref=e788] [cursor=pointer]:
+                      - /url: /en/jobs/3184010/assurance-manager-risk-compliance-solutions
+                      - text: ...Read more
+              - generic [ref=e640]:
+                - button "Previous page" [disabled] [ref=e641]
+                - button "Page 1" [disabled]: "1"
+                - button "Page 2" [ref=e642] [cursor=pointer]: "2"
+                - button "Next page" [ref=e645] [cursor=pointer]
+      - generic: ✓    
+    - generic [ref=e646]:
+      - generic [ref=e649]:
+        - generic [ref=e650]: JOIN US ON
+        - list [ref=e651]:
+          - listitem [ref=e652]:
+            - link "Join us on facebook" [ref=e653] [cursor=pointer]:
+              - /url: https://www.facebook.com/InsideAmazon/?Amazon.jobs=footer
+              - text: b
+          - listitem [ref=e654]:
+            - link "Join us on linkedin" [ref=e655] [cursor=pointer]:
+              - /url: https://www.linkedin.com/company/amazon?Amazon.jobs=footer
+              - text: d
+          - listitem [ref=e656]:
+            - link "Join us on instagram" [ref=e657] [cursor=pointer]:
+              - /url: https://www.instagram.com/insideamazon/?Amazon.jobs=footer
+              - text: c
+          - listitem [ref=e658]:
+            - link "Join us on twitter" [ref=e659] [cursor=pointer]:
+              - /url: https://twitter.com/amazonnews?Amazon.jobs=footer
+              - text: j
+        - generic [ref=e660]:
+          - generic [ref=e661]: DOWNLOAD OUR APP
+          - list [ref=e662]:
+            - listitem [ref=e663]:
+              - link "Download Amazon A to Z from App Store" [ref=e664] [cursor=pointer]:
+                - /url: https://apple.co/4mW6qxK
+                - img [ref=e665]
+            - listitem [ref=e666]:
+              - link "Download Amazon A to Z from Google Play" [ref=e667] [cursor=pointer]:
+                - /url: https://bit.ly/46JGIYu
+                - img [ref=e668]
+      - generic [ref=e672]:
+        - generic [ref=e673]:
+          - text: Find Careers
+          - list [ref=e674]:
+            - listitem [ref=e675]:
+              - link "Job Categories" [ref=e676] [cursor=pointer]:
+                - /url: /content/en/job-categories
+            - listitem [ref=e677]:
+              - link "Teams" [ref=e678] [cursor=pointer]:
+                - /url: /content/en/teams
+            - listitem [ref=e679]:
+              - link "Locations" [ref=e680] [cursor=pointer]:
+                - /url: /content/en/locations
+            - listitem [ref=e681]:
+              - link "Military careers" [ref=e682] [cursor=pointer]:
+                - /url: /content/en/career-programs/military
+            - listitem [ref=e683]:
+              - link "Hourly" [ref=e684] [cursor=pointer]:
+                - /url: /content/en/hourly
+        - generic [ref=e685]:
+          - text: Working At Amazon
+          - list [ref=e686]:
+            - listitem [ref=e687]:
+              - link "Culture" [ref=e688] [cursor=pointer]:
+                - /url: /content/en/our-workplace
+            - listitem [ref=e689]:
+              - link "Benefits" [ref=e690] [cursor=pointer]:
+                - /url: /en/benefits
+            - listitem [ref=e691]:
+              - link "Amazon Newsletter" [ref=e692] [cursor=pointer]:
+                - /url: https://email.aboutamazon.com/l/637851/2020-10-29/pd87g?utm_campaign=newslettersubscribers&utm_content=amazonnewssignup&utm_medium=amazonjobs&utm_source=footer
+            - listitem [ref=e693]:
+              - link "Inclusive experiences" [ref=e694] [cursor=pointer]:
+                - /url: /content/en/our-workplace/inclusive-experiences
+            - listitem [ref=e695]:
+              - link "Leadership Principles" [ref=e696] [cursor=pointer]:
+                - /url: /content/en/our-workplace/leadership-principles
+        - generic [ref=e697]:
+          - text: Help
+          - list [ref=e698]:
+            - listitem [ref=e699]:
+              - link "FAQ" [ref=e700] [cursor=pointer]:
+                - /url: /content/en/faq
+            - listitem [ref=e701]:
+              - link "How We Hire" [ref=e702] [cursor=pointer]:
+                - /url: /content/en/how-we-hire#onlineapp
+            - listitem [ref=e703]:
+              - link "Application status" [ref=e704] [cursor=pointer]:
+                - /url: https://www.amazon.jobs/applicant/check_application_status
+            - listitem [ref=e705]:
+              - link "Accommodations" [ref=e706] [cursor=pointer]:
+                - /url: /content/en/how-we-hire/accommodations
+            - listitem [ref=e707]:
+              - link "Legal disclosures and notices" [ref=e708] [cursor=pointer]:
+                - /url: /content/en/legal-disclosures-and-notices
+        - combobox "English" [ref=e714] [cursor=pointer]: English
+      - generic [ref=e718]:
+        - generic [ref=e719]: Amazon is an equal opportunity employer and does not discriminate on the basis of protected veteran status, disability, or other legally protected status.
+        - generic [ref=e720]:
+          - link "Privacy and Data" [ref=e721] [cursor=pointer]:
+            - /url: /en/privacy_page
+          - link "Impressum" [ref=e722] [cursor=pointer]:
+            - /url: /en/impressum
+        - generic [ref=e723]: © 1996-2026, Amazon.com, Inc. or its affiliates

@@ -1,0 +1,232 @@
+- generic [active] [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main"
+  - generic [ref=e3]:
+    - banner "Site header" [ref=e5]:
+      - navigation [ref=e7]:
+        - link "Novartis" [ref=e8] [cursor=pointer]:
+          - /url: /
+          - img "Novartis" [ref=e10]
+        - generic [ref=e11]:
+          - list [ref=e13]:
+            - listitem [ref=e14]:
+              - button "Open Search" [ref=e15] [cursor=pointer]:
+                - img "Open" [ref=e16]
+                - text: Search
+          - generic [ref=e20] [cursor=pointer]:
+            - img "language-selector-globe" [ref=e21]
+            - button "Current site selection Global |en" [ref=e22]:
+              - text: Global |
+              - strong [ref=e23]: en
+          - list [ref=e25]:
+            - listitem [ref=e26]:
+              - button "Menu" [ref=e27] [cursor=pointer]: Q Menu
+    - generic [ref=e28]:
+      - navigation "breadcrumb" [ref=e32]:
+        - list [ref=e33]:
+          - listitem [ref=e34]:
+            - link "Home" [ref=e35] [cursor=pointer]:
+              - /url: /
+          - listitem [ref=e36]:
+            - text: z
+            - link "Careers" [ref=e37] [cursor=pointer]:
+              - /url: https://www.novartis.com/careers
+          - listitem [ref=e38]: z Career Search
+      - generic [ref=e43]:
+        - generic [ref=e46]:
+          - heading "Career Search" [level=1] [ref=e47]
+          - paragraph [ref=e48]: Explore opportunities with Novartis below.
+          - paragraph [ref=e49]:
+            - text: Notice to applicants for US job openings.
+            - link "Learn More" [ref=e50] [cursor=pointer]:
+              - /url: /careers/career-search/notice-all-applicants-us-job-openings
+          - paragraph [ref=e51]:
+            - strong [ref=e52]: Be aware of fake job advertisements and job offers.
+          - paragraph [ref=e53]: Novartis is aware of employment scams which make false use of our company name or leader’s names to defraud job seekers. Novartis does not make job offers without interview and never asks candidates for money.
+          - paragraph [ref=e54]: All our current job openings are displayed here. If you have encountered a job posting or been approached with a job offer that you suspect may be fraudulent, we strongly recommend you do not respond, send money or personal information.
+          - paragraph [ref=e55]: Novartis in not responsible for any claims, losses, damages, or expenses resulting from scams.
+        - generic [ref=e57]:
+          - generic [ref=e60]:
+            - textbox "Search Jobs" [ref=e63]: Finance
+            - button "Function" [ref=e67] [cursor=pointer]:
+              - generic [ref=e68]: Function
+            - button "Location (1)" [ref=e72] [cursor=pointer]:
+              - generic [ref=e73]: Location (1)
+            - button "Submit" [ref=e76] [cursor=pointer]
+            - generic [ref=e78]:
+              - button "Division" [ref=e82] [cursor=pointer]:
+                - generic [ref=e83]: Division
+              - generic [ref=e84] [cursor=pointer]: Date Posted
+          - generic [ref=e86]:
+            - generic [ref=e87]:
+              - text: Brazil
+              - link "X" [ref=e88] [cursor=pointer]:
+                - /url: /careers/career-search?search_api_fulltext=Finance&&field_job_posted_date=All&op=Submit
+            - link "Clear All" [ref=e89] [cursor=pointer]:
+              - /url: /careers/career-search
+          - generic [ref=e90]: Showing 0 results
+          - table [ref=e93]:
+            - rowgroup [ref=e94]:
+              - row "Job Title 6 Sort ascending Business Location Site Date Posted" [ref=e95]:
+                - columnheader "Job Title 6 Sort ascending" [ref=e96]:
+                  - link "Job Title 6 Sort ascending" [ref=e97] [cursor=pointer]:
+                    - /url: /careers/career-search?search_api_fulltext=Finance&country%5B0%5D=LOC_BR&field_job_posted_date=All&op=Submit&sort=asc&order=Job%20Title
+                    - text: Job Title
+                    - generic [ref=e98]:
+                      - text: "6"
+                      - generic [ref=e99]: Sort ascending
+                - columnheader "Business" [ref=e100]:
+                  - link "Business" [ref=e101] [cursor=pointer]:
+                    - /url: /careers/career-search?search_api_fulltext=Finance&country%5B0%5D=LOC_BR&field_job_posted_date=All&op=Submit&sort=asc&order=Business
+                - columnheader "Location" [ref=e102]
+                - columnheader "Site" [ref=e103]:
+                  - link "Site" [ref=e104] [cursor=pointer]:
+                    - /url: /careers/career-search?search_api_fulltext=Finance&country%5B0%5D=LOC_BR&field_job_posted_date=All&op=Submit&sort=asc&order=Site
+                - columnheader "Date Posted" [ref=e105]:
+                  - link "Date Posted" [ref=e106] [cursor=pointer]:
+                    - /url: /careers/career-search?search_api_fulltext=Finance&country%5B0%5D=LOC_BR&field_job_posted_date=All&op=Submit&sort=asc&order=Date%20Posted
+            - rowgroup [ref=e107]:
+              - row "No content has been found." [ref=e108]:
+                - cell "No content has been found." [ref=e109]
+    - contentinfo [ref=e110]:
+      - generic [ref=e111]:
+        - heading "Novartis" [level=2] [ref=e115]
+        - generic [ref=e118]:
+          - navigation "Working together" [ref=e121]:
+            - generic [ref=e122]:
+              - generic [ref=e123]: Working together
+              - list [ref=e126]:
+                - listitem [ref=e127]:
+                  - link "Patients and caregivers" [ref=e128] [cursor=pointer]:
+                    - /url: /patients-and-caregivers
+                - listitem [ref=e129]:
+                  - link "Healthcare professionals" [ref=e130] [cursor=pointer]:
+                    - /url: /healthcare-professionals
+                - listitem [ref=e131]:
+                  - link "Researchers" [ref=e132] [cursor=pointer]:
+                    - /url: /research-and-development
+                - listitem [ref=e133]:
+                  - link "Job seekers" [ref=e134] [cursor=pointer]:
+                    - /url: /careers
+                - listitem [ref=e135]:
+                  - link "Journalists" [ref=e136] [cursor=pointer]:
+                    - /url: /news
+                - listitem [ref=e137]:
+                  - link "Investors" [ref=e138] [cursor=pointer]:
+                    - /url: /investors
+          - navigation "Topics" [ref=e141]:
+            - generic [ref=e142]:
+              - generic [ref=e143]: Topics
+              - list [ref=e146]:
+                - listitem [ref=e147]:
+                  - link "Access" [ref=e148] [cursor=pointer]:
+                    - /url: /esg/access
+                - listitem [ref=e149]:
+                  - link "ESG" [ref=e150] [cursor=pointer]:
+                    - /url: /esg
+                - listitem [ref=e151]:
+                  - link "SpeakUp" [ref=e152] [cursor=pointer]:
+                    - /url: /esg/ethics-risk-and-compliance/ethical-behavior/speakup
+          - navigation "Explore" [ref=e155]:
+            - generic [ref=e156]:
+              - generic [ref=e157]: Explore
+              - list [ref=e160]:
+                - listitem [ref=e161]:
+                  - link "Pipeline" [ref=e162] [cursor=pointer]:
+                    - /url: /research-development/novartis-pipeline
+                - listitem [ref=e163]:
+                  - link "Products" [ref=e164] [cursor=pointer]:
+                    - /url: /about/products
+                - listitem [ref=e165]:
+                  - link "Clinical trials" [ref=e166] [cursor=pointer]:
+                    - /url: /clinicaltrials
+                - listitem [ref=e167]:
+                  - link "Partnering" [ref=e168] [cursor=pointer]:
+                    - /url: /partnering
+                - listitem [ref=e169]:
+                  - link "Events" [ref=e170] [cursor=pointer]:
+                    - /url: /events
+          - navigation "Therapeutic areas" [ref=e173]:
+            - generic [ref=e174]:
+              - generic [ref=e175]: Therapeutic areas
+              - list [ref=e178]:
+                - listitem [ref=e179]:
+                  - link "Cardiovascular, renal and metabolic" [ref=e180] [cursor=pointer]:
+                    - /url: /about/therapeutic-areas/cardiovascular-renal-and-metabolic
+                - listitem [ref=e181]:
+                  - link "Immunology" [ref=e182] [cursor=pointer]:
+                    - /url: /about/therapeutic-areas/immunology
+                - listitem [ref=e183]:
+                  - link "Neuroscience" [ref=e184] [cursor=pointer]:
+                    - /url: /about/therapeutic-areas/neuroscience
+                - listitem [ref=e185]:
+                  - link "Oncology" [ref=e186] [cursor=pointer]:
+                    - /url: /about/therapeutic-areas/oncology
+        - generic [ref=e189]:
+          - list [ref=e194]:
+            - listitem [ref=e195]:
+              - link "LinkedIn" [ref=e196] [cursor=pointer]:
+                - /url: https://www.linkedin.com/company/novartis
+                - generic [ref=e197]: M
+            - listitem [ref=e198]:
+              - link "Facebook" [ref=e199] [cursor=pointer]:
+                - /url: https://www.facebook.com/novartis
+                - generic [ref=e200]: K
+            - listitem [ref=e201]:
+              - link "X formerly known as Twitter" [ref=e202] [cursor=pointer]:
+                - /url: https://x.com/novartis
+                - generic [ref=e203]: "N"
+            - listitem [ref=e204]:
+              - link "Instagram" [ref=e205] [cursor=pointer]:
+                - /url: https://www.instagram.com/novartis
+                - generic [ref=e206]: J
+            - listitem [ref=e207]:
+              - link "Youtube" [ref=e208] [cursor=pointer]:
+                - /url: https://www.youtube.com/user/novartis
+                - generic [ref=e209]: L
+          - generic [ref=e215]:
+            - generic [ref=e216]:
+              - generic [ref=e217]: Footer Site Search
+              - textbox "Footer Site Search" [ref=e219]:
+                - /placeholder: Search
+            - generic [ref=e221]:
+              - button "Footer Search" [ref=e222] [cursor=pointer]
+              - text: w
+        - navigation "Footer Bottom" [ref=e226]:
+          - generic [ref=e227]:
+            - generic [ref=e228]: Footer Bottom
+            - generic [ref=e230]:
+              - generic [ref=e231]:
+                - generic [ref=e232]: © 2026 Novartis AG
+                - list [ref=e233]:
+                  - listitem [ref=e234]:
+                    - link "Terms of use" [ref=e235] [cursor=pointer]:
+                      - /url: /terms-use
+                  - listitem [ref=e236]:
+                    - link "Privacy" [ref=e237] [cursor=pointer]:
+                      - /url: /privacy
+                  - listitem [ref=e238]:
+                    - link "Cookie Settings" [ref=e239] [cursor=pointer]:
+                      - /url: "#cookie-settings-button"
+                  - listitem [ref=e240]:
+                    - link "Contacts" [ref=e241] [cursor=pointer]:
+                      - /url: /contacts
+                  - listitem [ref=e242]:
+                    - link "Locations" [ref=e243] [cursor=pointer]:
+                      - /url: /about/locations
+                  - listitem [ref=e244]:
+                    - link "Site map" [ref=e245] [cursor=pointer]:
+                      - /url: /sitemap.xml
+                  - listitem [ref=e246]:
+                    - link "Open source" [ref=e247] [cursor=pointer]:
+                      - /url: /open-source
+                  - listitem [ref=e248]:
+                    - link "Web accessibility" [ref=e249] [cursor=pointer]:
+                      - /url: /accessibility
+              - generic [ref=e250]:
+                - link "Novartis Site Directory" [ref=e252] [cursor=pointer]:
+                  - /url: /novartis-directory
+                  - text: S Novartis Site Directory
+                - generic [ref=e253]: This site is intended for a global audience
+  - status [ref=e254]
+  - status [ref=e255]

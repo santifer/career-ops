@@ -1,0 +1,51 @@
+- generic [active] [ref=e1]:
+  - link "Ir para o conteúdo principal" [ref=e2] [cursor=pointer]:
+    - /url: "#mainContent"
+  - generic:
+    - generic: Vagas
+    - generic: Soluções em talentos
+    - generic: Consultoria
+    - generic: Central do Conhecimento
+  - generic:
+    - generic: Candidato – Acessar Minha Conta
+    - generic: Colaborador – Registrar Ponto
+    - generic: Colaborador – Consultar Ponto
+    - generic: Colaborador – Consultar Holerite
+    - generic: Cliente – Aprovar Ponto
+  - generic: Recife,
+  - generic:
+    - generic: Remoto
+    - generic: Permanente
+    - generic: DOE
+  - generic: Publicado — 2 março 2026
+  - generic: A EmpresaEmpresa do Setor de Energia.Descrição da vagaLiderar toda a equipe financeira, atuando como referência técnica e comportamental;Coordenar as áreas de contabilidade, fiscal, orçamento, contas a pagar e receber, controle de dívida, relacionamento bancário e tesouraria;Realizar controle de custos, análises de variação, indicadores e relatórios de gestão;Garantir a execução de controles internos, conformidade e aderência às políticas internas e exigências regulatórias;Supervisionar o fechamento contábil e reportes gerenciais, assegurando precisão, prazos e governança;Atuar na gestão de impostos e contabilidade, com entendimento sólido dessas áreas - sendo este o foco técnico prioritário da posição;Utilizar o SAP e demais ferramentas de gestão para gerar visibilidade financeira ao negócio;Interagir com auditorias, instituições financeiras e demais stakeholders internos e externos.Perfil desejado Experiência consolidada em liderança de equipes;Inglês avançado para reporte internacional (será testado);Vivência generalista no setor financeiro, com domínio de custos, contabilidade e impostos;Conhecimento prático em gestão orçamentária e relatórios de performance;Familiaridade com SAP, controles internos e rotinas de fechamento;O profissional deve ter um perfil de liderança excepcional, capaz de engajar a equipe, circular bem internamente e influenciar decisões;Forte habilidade de liderança e gestão de pessoas;Comunicação clara, postura acessível, capacidade de articulação e influência;Proatividade, senso de dono e orientação para melhoria contínua;Capacidade de transitar entre o operacional e o estratégico.
+  - generic: Have an account?
+  - generic: Descrição
+  - generic: Requisitos
+  - generic: Have an account?
+  - generic: Recife,
+  - generic:
+    - generic: Permanente
+    - generic: DOE
+  - generic: 2 março 2026
+  - generic: Recife,
+  - generic:
+    - generic: Permanente
+    - generic: DOE
+  - generic: 18 março 2026
+  - generic: Você está saindo do site da Robert Half Brasil e será redirecionado para o site da Robert Half EUA.
+  - generic:
+    - generic: Soluções em talentos
+    - generic: Nossas práticas
+    - generic: Recursos
+    - generic: Sobre
+  - generic:
+    - generic: Brasil (Português)
+    - generic: "Sua região e idioma atuais são:"
+    - generic: Brasil (Português)
+  - generic: © 2026
+  - generic:
+    - generic: Robert Half Inc.
+  - generic [ref=e3] [cursor=pointer]:
+    - button "Definições de cookies" [ref=e5]
+    - text: Definições de cookies

@@ -1,0 +1,316 @@
+- generic [active] [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e4]:
+    - banner [ref=e5]:
+      - generic [ref=e8]:
+        - link "pfizer corporate logo" [ref=e9] [cursor=pointer]:
+          - /url: /
+          - img "Pfizer logo" [ref=e10]
+        - button "Search" [ref=e12] [cursor=pointer]:
+          - img [ref=e13]
+          - text: Search
+        - button "Hamburger" [ref=e15] [cursor=pointer]
+    - main [ref=e19]:
+      - generic [ref=e21]:
+        - img "Find Your Career" [ref=e24]
+        - heading "Find Your Career" [level=1] [ref=e29]
+      - article [ref=e30]:
+        - generic [ref=e34]:
+          - generic [ref=e35]:
+            - generic [ref=e37]: Search Results for "Finance"
+            - generic [ref=e39]:
+              - navigation [ref=e41]:
+                - generic [ref=e43] [cursor=pointer]: English
+              - generic [ref=e44]:
+                - textbox "Search by role or key word(s)" [ref=e45]: Finance
+                - button "Search" [ref=e46] [cursor=pointer]
+              - generic [ref=e47]:
+                - generic [ref=e48]: Sort by
+                - generic [ref=e49]:
+                  - option "Recent postings first" [selected]
+                  - option "Older postings first"
+                  - generic [ref=e50] [cursor=pointer]: Recent postings first
+              - generic [ref=e51]:
+                - generic [ref=e52]: Count per page
+                - generic [ref=e53]:
+                  - option "10" [selected]
+                  - option "20"
+                  - option "30"
+                  - option "40"
+                  - option "50"
+                  - generic [ref=e54] [cursor=pointer]: "10"
+          - generic [ref=e56]:
+            - generic [ref=e57]:
+              - generic [ref=e58]:
+                - generic [ref=e59]: Filters
+                - generic [ref=e60]:
+                  - link "Select all" [ref=e62] [cursor=pointer]:
+                    - /url: "#"
+                  - generic [ref=e63]: "|"
+                  - link "Reset" [ref=e65] [cursor=pointer]:
+                    - /url: "#"
+              - generic [ref=e66]:
+                - generic [ref=e67]:
+                  - text: Region
+                  - textbox "0" [ref=e70]:
+                    - /placeholder: Region
+                - generic [ref=e72]:
+                  - text: Location Region/State/Province
+                  - textbox "0" [ref=e75]:
+                    - /placeholder: Location Region/State/Province
+                - generic [ref=e77]:
+                  - text: Site Location
+                  - textbox "0" [ref=e80]:
+                    - /placeholder: Site Location
+                - generic [ref=e82]:
+                  - text: Job Category
+                  - textbox "0" [ref=e85]:
+                    - /placeholder: Job Category
+                - generic [ref=e87]:
+                  - text: Special Job Types
+                  - list [ref=e90]:
+                    - listitem [ref=e91]:
+                      - generic [ref=e93] [cursor=pointer]: Fixed Term/Temporary (3)
+            - generic [ref=e94]:
+              - table [ref=e96]:
+                - rowgroup [ref=e97]:
+                  - row "Job Title Job Category Job Type Site Location" [ref=e98]:
+                    - columnheader "Job Title" [ref=e99]
+                    - columnheader "Job Category" [ref=e100]
+                    - columnheader "Job Type" [ref=e101]
+                    - columnheader "Site Location" [ref=e102]
+                - rowgroup [ref=e103]:
+                  - row "零售电商负责人Retail E-commerce Lead Mkt & Sales/Commercial Bus Regular Full time China - Beijing - Beijing China - Shanghai - Shanghai" [ref=e104]:
+                    - cell "零售电商负责人Retail E-commerce Lead" [ref=e105]:
+                      - link "零售电商负责人Retail E-commerce Lead" [ref=e106] [cursor=pointer]:
+                        - /url: /about/careers/job/4950614?langcode=en
+                    - cell "Mkt & Sales/Commercial Bus" [ref=e107]
+                    - cell "Regular Full time" [ref=e108]:
+                      - generic [ref=e109]:
+                        - text: Regular
+                        - text: Full time
+                    - cell "China - Beijing - Beijing China - Shanghai - Shanghai" [ref=e110]:
+                      - list [ref=e112]:
+                        - listitem [ref=e113]: China - Beijing - Beijing
+                        - listitem [ref=e114]: China - Shanghai - Shanghai
+                  - row "Master Data Analyst I Marketing and Market Research Regular Full time United States - Pennsylvania - Collegeville" [ref=e115]:
+                    - cell "Master Data Analyst I" [ref=e116]:
+                      - link "Master Data Analyst I" [ref=e117] [cursor=pointer]:
+                        - /url: /about/careers/job/4954843?langcode=en
+                    - cell "Marketing and Market Research" [ref=e118]
+                    - cell "Regular Full time" [ref=e119]:
+                      - generic [ref=e120]:
+                        - text: Regular
+                        - text: Full time
+                    - cell "United States - Pennsylvania - Collegeville" [ref=e121]:
+                      - list [ref=e123]:
+                        - listitem [ref=e124]: United States - Pennsylvania - Collegeville
+                  - row "Recruiting and Onboarding Delivery Associate, LATAM (Portuguese Speaker) People Experience Regular Full time Costa Rica - Escazu" [ref=e125]:
+                    - cell "Recruiting and Onboarding Delivery Associate, LATAM (Portuguese Speaker)" [ref=e126]:
+                      - link "Recruiting and Onboarding Delivery Associate, LATAM (Portuguese Speaker)" [ref=e127] [cursor=pointer]:
+                        - /url: /about/careers/job/4955213?langcode=en
+                    - cell "People Experience" [ref=e128]
+                    - cell "Regular Full time" [ref=e129]:
+                      - generic [ref=e130]:
+                        - text: Regular
+                        - text: Full time
+                    - cell "Costa Rica - Escazu" [ref=e131]:
+                      - list [ref=e133]:
+                        - listitem [ref=e134]: Costa Rica - Escazu
+                  - row "Marketing Coordinator Marketing and Market Research Regular Full time Peru - Lima" [ref=e135]:
+                    - cell "Marketing Coordinator" [ref=e136]:
+                      - link "Marketing Coordinator" [ref=e137] [cursor=pointer]:
+                        - /url: /about/careers/job/4955132?langcode=en
+                    - cell "Marketing and Market Research" [ref=e138]
+                    - cell "Regular Full time" [ref=e139]:
+                      - generic [ref=e140]:
+                        - text: Regular
+                        - text: Full time
+                    - cell "Peru - Lima" [ref=e141]:
+                      - list [ref=e143]:
+                        - listitem [ref=e144]: Peru - Lima
+                  - row "Professional Health Representative - Neuroscience Sales Regular Full time United Arab Emirates - Dubai" [ref=e145]:
+                    - cell "Professional Health Representative - Neuroscience" [ref=e146]:
+                      - link "Professional Health Representative - Neuroscience" [ref=e147] [cursor=pointer]:
+                        - /url: /about/careers/job/4953102?langcode=en
+                    - cell "Sales" [ref=e148]
+                    - cell "Regular Full time" [ref=e149]:
+                      - generic [ref=e150]:
+                        - text: Regular
+                        - text: Full time
+                    - cell "United Arab Emirates - Dubai" [ref=e151]:
+                      - list [ref=e153]:
+                        - listitem [ref=e154]: United Arab Emirates - Dubai
+                  - row "[A&V] Launch Excellence, Director Marketing and Market Research Regular Full time Japan - Tokyo" [ref=e155]:
+                    - cell "[A&V] Launch Excellence, Director" [ref=e156]:
+                      - link "[A&V] Launch Excellence, Director" [ref=e157] [cursor=pointer]:
+                        - /url: /about/careers/job/4955094?langcode=en
+                    - cell "Marketing and Market Research" [ref=e158]
+                    - cell "Regular Full time" [ref=e159]:
+                      - generic [ref=e160]:
+                        - text: Regular
+                        - text: Full time
+                    - cell "Japan - Tokyo" [ref=e161]:
+                      - list [ref=e163]:
+                        - listitem [ref=e164]: Japan - Tokyo
+                  - row "Senior Product Lead Bus Dev & Strategic Planning Regular Full time United States - Kansas - McPherson" [ref=e165]:
+                    - cell "Senior Product Lead" [ref=e166]:
+                      - link "Senior Product Lead" [ref=e167] [cursor=pointer]:
+                        - /url: /about/careers/job/4954415?langcode=en
+                    - cell "Bus Dev & Strategic Planning" [ref=e168]
+                    - cell "Regular Full time" [ref=e169]:
+                      - generic [ref=e170]:
+                        - text: Regular
+                        - text: Full time
+                    - cell "United States - Kansas - McPherson" [ref=e171]:
+                      - list [ref=e173]:
+                        - listitem [ref=e174]: United States - Kansas - McPherson
+                  - row "[SC] Specialty Care Inline Portfolio & LCM Strategy Lead Marketing and Market Research Regular Full time Japan - Tokyo" [ref=e175]:
+                    - cell "[SC] Specialty Care Inline Portfolio & LCM Strategy Lead" [ref=e176]:
+                      - link "[SC] Specialty Care Inline Portfolio & LCM Strategy Lead" [ref=e177] [cursor=pointer]:
+                        - /url: /about/careers/job/4955028?langcode=en
+                    - cell "Marketing and Market Research" [ref=e178]
+                    - cell "Regular Full time" [ref=e179]:
+                      - generic [ref=e180]:
+                        - text: Regular
+                        - text: Full time
+                    - cell "Japan - Tokyo" [ref=e181]:
+                      - list [ref=e183]:
+                        - listitem [ref=e184]: Japan - Tokyo
+                  - row "Country Brand Manager - Oncology Marketing and Market Research Regular Full time Malaysia - Kuala Lumpur" [ref=e185]:
+                    - cell "Country Brand Manager - Oncology" [ref=e186]:
+                      - link "Country Brand Manager - Oncology" [ref=e187] [cursor=pointer]:
+                        - /url: /about/careers/job/4955018?langcode=en
+                    - cell "Marketing and Market Research" [ref=e188]
+                    - cell "Regular Full time" [ref=e189]:
+                      - generic [ref=e190]:
+                        - text: Regular
+                        - text: Full time
+                    - cell "Malaysia - Kuala Lumpur" [ref=e191]:
+                      - list [ref=e193]:
+                        - listitem [ref=e194]: Malaysia - Kuala Lumpur
+                  - row "Manager, Market Access Market Access Regular Full time India - Mumbai" [ref=e195]:
+                    - cell "Manager, Market Access" [ref=e196]:
+                      - link "Manager, Market Access" [ref=e197] [cursor=pointer]:
+                        - /url: /about/careers/job/4954391?langcode=en
+                    - cell "Market Access" [ref=e198]
+                    - cell "Regular Full time" [ref=e199]:
+                      - generic [ref=e200]:
+                        - text: Regular
+                        - text: Full time
+                    - cell "India - Mumbai" [ref=e201]:
+                      - list [ref=e203]:
+                        - listitem [ref=e204]: India - Mumbai
+              - list [ref=e206]:
+                - listitem:
+                  - link:
+                    - /url: javascript:void(0)
+                    - generic:
+                      - img
+                - listitem [ref=e207]:
+                  - link "1" [ref=e208] [cursor=pointer]:
+                    - /url: javascript:void(0)
+                - listitem [ref=e209]:
+                  - link "2" [ref=e210] [cursor=pointer]:
+                    - /url: javascript:void(0)
+                - listitem [ref=e211]:
+                  - link "3" [ref=e212] [cursor=pointer]:
+                    - /url: javascript:void(0)
+                - listitem [ref=e213]:
+                  - link "4" [ref=e214] [cursor=pointer]:
+                    - /url: javascript:void(0)
+                - listitem [ref=e215]:
+                  - link "5" [ref=e216] [cursor=pointer]:
+                    - /url: javascript:void(0)
+                - listitem [ref=e217]:
+                  - link [ref=e218] [cursor=pointer]:
+                    - /url: javascript:void(0)
+                    - img [ref=e220]
+    - contentinfo [ref=e222]:
+      - generic [ref=e225]:
+        - 'link "Pfizer: One of the world’s premier biopharmaceutical companies" [ref=e227] [cursor=pointer]':
+          - /url: /
+          - 'img "Pfizer: One of the world’s premier biopharmaceutical companies" [ref=e228]'
+        - navigation "first-column-footer-menu" [ref=e230]:
+          - list [ref=e231]:
+            - listitem [ref=e232]:
+              - heading "Investors" [level=6] [ref=e233]:
+                - link "Investors" [ref=e234] [cursor=pointer]:
+                  - /url: http://investors.pfizer.com
+            - listitem [ref=e235]:
+              - heading "Media" [level=6] [ref=e236]:
+                - link "Media" [ref=e237] [cursor=pointer]:
+                  - /url: /newsroom
+            - listitem [ref=e238]:
+              - heading "Careers" [level=6] [ref=e239]:
+                - link "Careers" [ref=e240] [cursor=pointer]:
+                  - /url: /about/careers
+            - listitem [ref=e241]:
+              - heading "Partners" [level=6] [ref=e242]:
+                - link "Partners" [ref=e243] [cursor=pointer]:
+                  - /url: /about/partners
+        - navigation "second-column-footer-menu" [ref=e245]:
+          - list [ref=e246]:
+            - listitem [ref=e247]:
+              - link "PfizerForAll" [ref=e248] [cursor=pointer]:
+                - /url: https://www.pfizerforall.com/
+            - listitem [ref=e249]:
+              - link "Healthcare Professionals" [ref=e250] [cursor=pointer]:
+                - /url: https://www.pfizerpro.com
+            - listitem [ref=e251]:
+              - link "Grant Seekers" [ref=e252] [cursor=pointer]:
+                - /url: /about/health-policies/grants
+            - listitem [ref=e253]:
+              - link "Business to Business" [ref=e254] [cursor=pointer]:
+                - /url: /about/partners/B2B-and-suppliers
+        - navigation "third-column-footer-menu" [ref=e256]:
+          - list [ref=e257]:
+            - listitem [ref=e258]:
+              - link "Privacy Statement" [ref=e259] [cursor=pointer]:
+                - /url: /privacy
+            - listitem [ref=e260]:
+              - link "Accessibility Statement" [ref=e261] [cursor=pointer]:
+                - /url: /accessibility
+            - listitem [ref=e262]:
+              - link "Terms of Use" [ref=e263] [cursor=pointer]:
+                - /url: /terms
+            - listitem [ref=e264]:
+              - link "Contact Us" [ref=e265] [cursor=pointer]:
+                - /url: /contact
+        - generic [ref=e268]:
+          - button "Close" [ref=e269] [cursor=pointer]
+          - heading "Glossary" [level=3] [ref=e270]
+      - generic [ref=e275]:
+        - button "Language selector" [ref=e278] [cursor=pointer]:
+          - generic [ref=e280]: United States
+        - list [ref=e281]:
+          - listitem [ref=e282]:
+            - paragraph [ref=e283]: © 2026 Pfizer Inc. All rights reserved
+        - generic [ref=e284]:
+          - paragraph [ref=e285]: This information—including product information—is intended only for residents of the United States.
+          - paragraph [ref=e286]: The products discussed herein may have different labeling in different countries.
+          - paragraph [ref=e287]
+        - list [ref=e290]:
+          - listitem [ref=e291]:
+            - link "Twitter" [ref=e292] [cursor=pointer]:
+              - /url: https://twitter.com/Pfizer
+              - img [ref=e293]
+          - listitem [ref=e295]:
+            - link "Facebook" [ref=e296] [cursor=pointer]:
+              - /url: https://www.facebook.com/Pfizer
+              - img [ref=e297]
+          - listitem [ref=e299]:
+            - link "Linked In" [ref=e300] [cursor=pointer]:
+              - /url: https://www.linkedin.com/company/pfizer
+              - img [ref=e301]
+          - listitem [ref=e303]:
+            - link "Instagram" [ref=e304] [cursor=pointer]:
+              - /url: https://www.instagram.com/pfizerinc/
+              - img [ref=e305]
+          - listitem [ref=e307]:
+            - link "Youtube" [ref=e308] [cursor=pointer]:
+              - /url: https://www.youtube.com/Pfizer
+              - img [ref=e309]
+  - status [ref=e311]
+  - button "Cookie Preferences" [ref=e313] [cursor=pointer]

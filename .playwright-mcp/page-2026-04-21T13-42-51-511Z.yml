@@ -1,0 +1,118 @@
+- generic [ref=e1]:
+  - generic [ref=e112]:
+    - log
+    - log
+  - generic [ref=e3]:
+    - banner [ref=e11]:
+      - link "Pulsus logo" [ref=e166] [cursor=pointer]:
+        - /url: "#"
+        - img "Pulsus logo" [ref=e167]
+      - generic [ref=e14]:
+        - button "Email" [ref=e168] [cursor=pointer]:
+          - img [ref=e18]
+        - button "Menu" [ref=e169] [cursor=pointer]:
+          - img [ref=e24]
+    - main [ref=e26]:
+      - generic [ref=e27]:
+        - img "Logo da empresa" [ref=e170]
+        - generic [ref=e201]:
+          - heading "Perguntas criadas pela empresa Pulsus" [level=1] [ref=e203]
+          - generic [ref=e204]:
+            - group [ref=e206]:
+              - generic [ref=e207]: 1. Para assumir este desafio, qual sua pretensão salarial (CLT)? *
+              - radiogroup "1. Para assumir este desafio, qual sua pretensão salarial (CLT)? *" [ref=e208]:
+                - generic [ref=e209] [cursor=pointer]:
+                  - generic [ref=e211]:
+                    - img [ref=e212]
+                    - radio "R$ 9K - 10K" [ref=e214]
+                  - generic [ref=e215]: R$ 9K - 10K
+                - generic [ref=e216] [cursor=pointer]:
+                  - generic [ref=e218]:
+                    - img [ref=e219]
+                    - radio "R$ 11K - 12K" [ref=e221]
+                  - generic [ref=e222]: R$ 11K - 12K
+                - generic [ref=e223] [cursor=pointer]:
+                  - generic [ref=e225]:
+                    - img [ref=e226]
+                    - radio "R$ 12K - 13K" [ref=e228]
+                  - generic [ref=e229]: R$ 12K - 13K
+                - generic [ref=e230] [cursor=pointer]:
+                  - generic [ref=e232]:
+                    - img [ref=e303]
+                    - radio "Acima de R$ 13K" [checked] [ref=e235]
+                  - generic [ref=e236]: Acima de R$ 13K
+            - generic [ref=e237]:
+              - generic [ref=e239]: 2. Se o seu CAC subiu 20% no último trimestre, mas o LTV permaneceu estável, quais seriam as suas três primeiras ações ou análises para mitigar o impacto no fluxo de caixa? *
+              - textbox "2. Se o seu CAC subiu 20% no último trimestre, mas o LTV permaneceu estável, quais seriam as suas três primeiras ações ou análises para mitigar o impacto no fluxo de caixa? *" [ref=e241]: 1) Diagnóstico de raiz:Análise de drill-down por canal, campanha e cohort para identificar exatamente quais atividades geraram o aumento do CAC, distinguindo crescimento proporcional de marketing (escala) de ineficiência real.2) Análise de impacto no fluxo de caixa:Modelagem do efeito no conversion rate e payback period, simulando cenários de corte budgetário vs. otimização de mix para preservar LTV enquanto reduz CAC.3) Plano de ação imediato:Reposicionamento de investimentos para canais com melhor ROI, implementação de automações de nurturing para melhorar conversão, e revisão de ofertas/segmentação para aumentar LTV via upsell e expansão.
+            - generic [ref=e242]:
+              - generic [ref=e244]: 3. Em sua experiência com o ERP Omie (ou sistemas similares), qual foi a automação mais complexa que você implementou para reduzir o trabalho manual no CAP/CAR? *
+              - textbox "3. Em sua experiência com o ERP Omie (ou sistemas similares), qual foi a automação mais complexa que você implementou para reduzir o trabalho manual no CAP/CAR? *" [ref=e246]: Implementei integrações entre Omie e sistemas de BI (Looker Studio) via API REST/GraphQL para automatizar a extração de dados financeiros e contábeis, eliminando a necessidade de exportas manuais deplanilhas. Desenvolvi também robôs de conciliação automática de CAP/CAR que comparam lançamentos contábeis com extratos bancários, identificando divergências em tempo real. Em projetos anteriores com SAP B1, criei workflows automatizados de aprovação de despesas e reconciliação automática de cartão corporativo, reduzindo o tempo de fechamento mensal em 60%.
+            - group [ref=e248]:
+              - generic [ref=e249]: 4. Você concorda que as entrevistas sejam transcritas para uso interno no processo seletivo? *
+              - radiogroup "4. Você concorda que as entrevistas sejam transcritas para uso interno no processo seletivo? *" [ref=e250]:
+                - generic [ref=e251] [cursor=pointer]:
+                  - generic [ref=e253]:
+                    - img [ref=e317]
+                    - radio "Sim" [checked] [ref=e256]
+                  - generic [ref=e257]: Sim
+                - generic [ref=e258] [cursor=pointer]:
+                  - generic [ref=e260]:
+                    - img [ref=e261]
+                    - radio "Não" [ref=e263]
+                  - generic [ref=e264]: Não
+            - group [ref=e266]:
+              - generic [ref=e267]: 5. Essa posição pode demandar presença eventual no nosso escritório em São Paulo. Você atualmente reside em São Paulo ou teria disponibilidade para se deslocar quando necessário? *
+              - radiogroup "5. Essa posição pode demandar presença eventual no nosso escritório em São Paulo. Você atualmente reside em São Paulo ou teria disponibilidade para se deslocar quando necessário? *" [ref=e268]:
+                - generic [ref=e269] [cursor=pointer]:
+                  - generic [ref=e271]:
+                    - img [ref=e323]
+                    - radio "Resido em São Paulo-SP e tenho disponibilidade." [checked] [active] [ref=e274]
+                  - generic [ref=e275]: Resido em São Paulo-SP e tenho disponibilidade.
+                - generic [ref=e276] [cursor=pointer]:
+                  - generic [ref=e278]:
+                    - img [ref=e279]
+                    - radio "Resido na região metropolitana de São Paulo e tenho disponibilidade." [ref=e281]
+                  - generic [ref=e282]: Resido na região metropolitana de São Paulo e tenho disponibilidade.
+                - generic [ref=e283] [cursor=pointer]:
+                  - generic [ref=e285]:
+                    - img [ref=e286]
+                    - radio "Tenho planos de mudança para São Paulo-SP ou região." [ref=e288]
+                  - generic [ref=e289]: Tenho planos de mudança para São Paulo-SP ou região.
+                - generic [ref=e290] [cursor=pointer]:
+                  - generic [ref=e292]:
+                    - img [ref=e293]
+                    - radio "Não resido em São Paulo-SP." [ref=e295]
+                  - generic [ref=e296]: Não resido em São Paulo-SP.
+          - generic [ref=e325]:
+            - img [ref=e327]
+            - text: As respostas não poderão ser editadas depois.
+          - button "Salvar e continuar" [ref=e302] [cursor=pointer]
+        - generic [ref=e39]: Powered by Gupy
+    - contentinfo [ref=e40]: Gupy 2026. Todos os direitos reservados. v5.61.0
+    - link "Suporte para candidatos" [ref=e182] [cursor=pointer]:
+      - /url: https://suporte-candidatos.gupy.io/s/suporte?language=pt_BR
+      - text: "?"
+  - button [ref=e41]:
+    - generic [ref=e42]: 99+
+  - generic:
+    - generic "Privacy Tools - Cookie Management"
+    - generic "Privacy Tools - Cookie Management - https://www.privacytools.com.br"
+  - generic "Plugin de acessibilidade da Hand Talk." [ref=e183]:
+    - heading "Plugin de acessibilidade da Hand Talk." [level=2] [ref=e184]
+    - button "Abrir recursos assistivos." [ref=e185] [cursor=pointer]:
+      - img [ref=e46]
+      - paragraph:
+        - generic [ref=e48]: Recursos Assistivos
+    - button "Abrir tradutor de língua de sinais." [ref=e186] [cursor=pointer]:
+      - img [ref=e50]
+      - paragraph:
+        - generic [ref=e57]: Acessível em Libras
+  - generic [ref=e101]:
+    - generic [ref=e102]: Pensando em mudar o rumo da sua carreira?
+    - generic [ref=e103]: Que tal fazer uma mentoria? Essa sensação de estar no lugar errado, fazendo o que não te realiza, é...
+    - generic [ref=e104]: +
+  - dialog [ref=e105]:
+    - generic [ref=e108]: Gostaríamos de te mostrar as últimas atualizações e novidades da Gupy
+    - generic [ref=e109]:
+      - button "Não, obrigado" [ref=e187] [cursor=pointer]
+      - button "Aceitar" [ref=e188] [cursor=pointer]

@@ -1,0 +1,533 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - region "talent banner" [ref=e7]:
+      - generic [ref=e8]:
+        - generic [ref=e11]:
+          - strong [ref=e12]: "Important Notice:"
+          - text: Beware of Recruitment Scams!
+          - text: We are aware of fraudulent activities where individuals pose as Roche representatives. To protect yourself, please note that
+          - strong [ref=e13]: Official Communication Channels
+          - text: are only via email addresses ending in
+          - link "@roche.com" [ref=e15] [cursor=pointer]:
+            - /url: mailto:@roche.com
+          - text: or
+          - link "@gene.com" [ref=e17] [cursor=pointer]:
+            - /url: mailto:@gene.com
+          - text: . Emails from similar but non-official domains are scams. Be wary of poorly written emails or those that ask for personal information and verify that they come from
+          - link "@roche.com" [ref=e19] [cursor=pointer]:
+            - /url: mailto:@roche.com
+          - text: or
+          - link "@gene.com" [ref=e21] [cursor=pointer]:
+            - /url: mailto:@gene.com
+          - text: . Roche does not make job offers without prior interviews, nor do we ask for payments of any kind. Unsolicited job offers or requests for payment are fraudulent.
+          - text: For genuine opportunities, visit our careers page at
+          - link "careers.roche.com" [ref=e23] [cursor=pointer]:
+            - /url: https://careers.roche.com/global/en
+          - text: .
+        - button "close banner" [ref=e24] [cursor=pointer]:
+          - img [ref=e26]
+    - banner [ref=e28]:
+      - generic:
+        - link "Skip to main content":
+          - /url: "#skipToMainContent"
+      - generic:
+        - link "Skip to main content":
+          - /url: "#skipToMainContent"
+      - generic [ref=e32]:
+        - link "Company Logo" [ref=e34] [cursor=pointer]:
+          - /url: /
+          - img "Roche" [ref=e35]
+        - navigation "primary" [ref=e42]:
+          - list [ref=e43]:
+            - listitem [ref=e44]:
+              - button "Discover Roche" [ref=e45] [cursor=pointer]:
+                - generic [ref=e46]: Discover Roche
+                - img [ref=e48]
+            - listitem [ref=e50]:
+              - button "Areas of Expertise" [ref=e51] [cursor=pointer]:
+                - generic [ref=e52]: Areas of Expertise
+                - img [ref=e54]
+            - listitem [ref=e56]:
+              - link "Student & Graduate Programmes" [ref=e58] [cursor=pointer]:
+                - /url: https://careers.roche.com/global/en/student-and-graduate-programs
+            - listitem [ref=e59]:
+              - button "Candidate Hub" [ref=e60] [cursor=pointer]:
+                - generic [ref=e61]: Candidate Hub
+                - img [ref=e63]
+        - list [ref=e66]:
+          - listitem [ref=e67]:
+            - button "Language selected English Global" [ref=e71] [cursor=pointer]:
+              - img [ref=e73]
+              - generic [ref=e75]: Global
+              - generic:
+                - img
+          - listitem [ref=e76]:
+            - link "0 saved jobs" [ref=e79] [cursor=pointer]:
+              - /url: https://careers.roche.com/global/en/jobcart
+              - img [ref=e81]
+              - generic [ref=e83]: Saved jobs
+              - generic [ref=e84]: (0)
+  - main [ref=e85]:
+    - generic [ref=e708] [cursor=pointer]: "-"
+    - generic [ref=e88]: "-"
+    - generic [ref=e89]:
+      - button "pause the silenced decorative video" [ref=e102] [cursor=pointer]:
+        - img [ref=e104]
+      - heading "Redefine healthcare. Join us." [level=2] [ref=e122]:
+        - generic [ref=e126]: Redefine healthcare. Join us.
+      - generic [ref=e132]:
+        - figure
+        - generic "Job search" [ref=e712]:
+          - generic [ref=e713]:
+            - text: 
+            - generic [ref=e714]:
+              - generic [ref=e715]:
+                - generic:
+                  - text: 
+                  - generic [ref=e716]: Search job title or location
+                  - textbox "Search job title or location" [ref=e717]: Finance Brazil
+                  - text: 
+                  - button "Clear text" [ref=e747] [cursor=pointer]:
+                    - generic [ref=e749]: $
+                    - generic [ref=e750]: Clear text
+              - button "Search" [ref=e718] [cursor=pointer]:
+                - generic [ref=e720]: 
+      - generic [ref=e751]:
+        - button "Previous slide" [ref=e752] [cursor=pointer]:  Previous
+        - list [ref=e754]:
+          - generic [ref=e758]:
+            - figure [ref=e760]:
+              - img [ref=e763]
+            - generic [ref=e764]:
+              - heading [level=6] [ref=e768]: Students and Graduates
+              - heading [level=6] [ref=e772]:
+                - generic [ref=e774]: We're focused on nurturing and developing our talented people with the skills, mindsets and capabilities to thrive both now and in the years to come, whether it is with apprenticeships, internships or programs - we believe in our future generations!
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - heading [level=6]:
+                        - link [ref=e775] [cursor=pointer]:
+                          - /url: https://careers.roche.com/global/en/student-and-graduate-programs
+                          - generic [ref=e778]: Learn more
+          - generic [ref=e782]:
+            - figure [ref=e784]:
+              - img [ref=e787]
+            - generic [ref=e788]:
+              - heading [level=6] [ref=e792]: Benefits
+              - heading [level=6] [ref=e796]:
+                - generic [ref=e797]: Our comprehensive benefits package includes competitive compensation, performance-based rewards, peer-to-peer recognition, flexible working arrangements, robust insurance options, parental benefits, and extensive well-being and mental health resources.
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - heading [level=6]:
+                        - link [ref=e798] [cursor=pointer]:
+                          - /url: https://careers.roche.com/global/en/your-wellbeing-matters
+                          - generic [ref=e801]: Learn more
+          - generic [ref=e805]:
+            - figure [ref=e807]:
+              - img [ref=e810]
+            - generic [ref=e811]:
+              - heading [level=6] [ref=e815]: Career Blog
+              - heading [level=6] [ref=e819]:
+                - generic [ref=e820]: Roche's origins have deeply influenced our working environment. So why don't you get some real-world insights from our people and find our more about our shared values and common purpose?
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - heading [level=6]:
+                        - link [ref=e821] [cursor=pointer]:
+                          - /url: https://careers.roche.com/global/en/we-are-roche
+                          - generic [ref=e824]: Learn more
+          - listitem [ref=e825]:
+            - generic [ref=e143]:
+              - figure [ref=e145]:
+                - img "img1" [ref=e148]
+              - generic [ref=e149]:
+                - heading "Areas of Expertise" [level=2] [ref=e151]:
+                  - generic [ref=e154]: Areas of Expertise
+                - heading "Since more than 125 years we work on diseases with the biggest social burden. That's why we foster a environment for everyone to drive innovations, share the skills and resources needed to make the vital breakthroughs that benefit us all. Explore your opportunity." [level=5] [ref=e158]:
+                  - generic [ref=e159]: Since more than 125 years we work on diseases with the biggest social burden. That's why we foster a environment for everyone to drive innovations, share the skills and resources needed to make the vital breakthroughs that benefit us all. Explore your opportunity.
+                - link "Learn more" [ref=e165] [cursor=pointer]:
+                  - /url: https://careers.roche.com/global/en/area-of-expertise
+                  - generic [ref=e168]: Learn more
+          - listitem [ref=e826]:
+            - generic [ref=e172]:
+              - figure [ref=e174]:
+                - img "img1" [ref=e177]
+              - generic [ref=e178]:
+                - heading "Working at Roche" [level=2] [ref=e180]:
+                  - generic [ref=e183]: Working at Roche
+                - heading "Discover how different perspectives empower personal growth, accountability, discovery, innovation, and breakthrough treatments and healthcare solutions for patients everywhere." [level=6] [ref=e188]:
+                  - generic [ref=e189]: Discover how different perspectives empower personal growth, accountability, discovery, innovation, and breakthrough treatments and healthcare solutions for patients everywhere.
+                - heading "Learn more" [level=6] [ref=e194]:
+                  - link "Learn more" [ref=e195] [cursor=pointer]:
+                    - /url: https://careers.roche.com/global/en/why-join-us
+                    - generic [ref=e198]: Learn more
+          - listitem [ref=e827]:
+            - generic [ref=e202]:
+              - figure [ref=e204]:
+                - img "img1" [ref=e207]
+              - generic [ref=e208]:
+                - heading "Students and Graduates" [level=6] [ref=e212]
+                - heading "We're focused on nurturing and developing our talented people with the skills, mindsets and capabilities to thrive both now and in the years to come, whether it is with apprenticeships, internships or programs - we believe in our future generations!" [level=6] [ref=e216]:
+                  - generic [ref=e218]: We're focused on nurturing and developing our talented people with the skills, mindsets and capabilities to thrive both now and in the years to come, whether it is with apprenticeships, internships or programs - we believe in our future generations!
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - heading "Learn more" [level=6]:
+                          - link "Learn more" [ref=e219] [cursor=pointer]:
+                            - /url: https://careers.roche.com/global/en/student-and-graduate-programs
+                            - generic [ref=e222]: Learn more
+          - generic [ref=e226]:
+            - figure [ref=e228]:
+              - img [ref=e828]
+            - generic [ref=e232]:
+              - heading [level=6] [ref=e829]: Benefits
+              - heading [level=6] [ref=e830]:
+                - generic [ref=e241]: Our comprehensive benefits package includes competitive compensation, performance-based rewards, peer-to-peer recognition, flexible working arrangements, robust insurance options, parental benefits, and extensive well-being and mental health resources.
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - heading [level=6]:
+                        - link [ref=e831] [cursor=pointer]:
+                          - /url: https://careers.roche.com/global/en/your-wellbeing-matters
+                          - generic [ref=e245]: Learn more
+          - generic [ref=e249]:
+            - figure [ref=e251]:
+              - img [ref=e832]
+            - generic [ref=e255]:
+              - heading [level=6] [ref=e833]: Career Blog
+              - heading [level=6] [ref=e834]:
+                - generic [ref=e264]: Roche's origins have deeply influenced our working environment. So why don't you get some real-world insights from our people and find our more about our shared values and common purpose?
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - heading [level=6]:
+                        - link [ref=e835] [cursor=pointer]:
+                          - /url: https://careers.roche.com/global/en/we-are-roche
+                          - generic [ref=e268]: Learn more
+          - generic [ref=e839]:
+            - figure [ref=e841]:
+              - img [ref=e844]
+            - generic [ref=e845]:
+              - heading [level=2] [ref=e847]:
+                - generic [ref=e850]: Areas of Expertise
+              - heading [level=5] [ref=e854]:
+                - generic [ref=e855]: Since more than 125 years we work on diseases with the biggest social burden. That's why we foster a environment for everyone to drive innovations, share the skills and resources needed to make the vital breakthroughs that benefit us all. Explore your opportunity.
+              - link [ref=e861] [cursor=pointer]:
+                - /url: https://careers.roche.com/global/en/area-of-expertise
+                - generic [ref=e864]: Learn more
+          - generic [ref=e868]:
+            - figure [ref=e870]:
+              - img [ref=e873]
+            - generic [ref=e874]:
+              - heading [level=2] [ref=e876]:
+                - generic [ref=e879]: Working at Roche
+              - heading [level=6] [ref=e884]:
+                - generic [ref=e885]: Discover how different perspectives empower personal growth, accountability, discovery, innovation, and breakthrough treatments and healthcare solutions for patients everywhere.
+              - heading [level=6] [ref=e890]:
+                - link [ref=e891] [cursor=pointer]:
+                  - /url: https://careers.roche.com/global/en/why-join-us
+                  - generic [ref=e894]: Learn more
+          - generic [ref=e898]:
+            - figure [ref=e900]:
+              - img [ref=e903]
+            - generic [ref=e904]:
+              - heading [level=6] [ref=e908]: Students and Graduates
+              - heading [level=6] [ref=e912]:
+                - generic [ref=e914]: We're focused on nurturing and developing our talented people with the skills, mindsets and capabilities to thrive both now and in the years to come, whether it is with apprenticeships, internships or programs - we believe in our future generations!
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - heading [level=6]:
+                        - link [ref=e915] [cursor=pointer]:
+                          - /url: https://careers.roche.com/global/en/student-and-graduate-programs
+                          - generic [ref=e918]: Learn more
+        - button "Next slide" [ref=e919] [cursor=pointer]:  Next
+        - generic [ref=e920]:
+          - button "slide 1 of 5" [ref=e921] [cursor=pointer]: "1"
+          - button "slide 2 of 5" [ref=e922] [cursor=pointer]: "2"
+          - button "slide 3 of 5" [ref=e923] [cursor=pointer]: "3"
+          - button "slide 4 of 5" [ref=e924] [cursor=pointer]: "4"
+          - button "slide 5 of 5" [ref=e925] [cursor=pointer]: "5"
+      - region "Carousel" [ref=e271]:
+        - generic [ref=e272]:
+          - 'heading "Spotlight: latest news" [level=3] [ref=e278]':
+            - generic [ref=e280]: "Spotlight: latest news"
+          - generic [ref=e281]:
+            - list [ref=e282]:
+              - generic [ref=e285]:
+                - figure [ref=e288]:
+                  - img [ref=e291]
+                - generic [ref=e293]:
+                  - figure
+                  - heading "Explore our tech opportunities today!" [level=5] [ref=e297]:
+                    - generic [ref=e299]: Explore our tech opportunities today!
+                  - link "IT" [ref=e302] [cursor=pointer]:
+                    - /url: https://careers.roche.com/global/en/c/information-technology-jobs
+                    - heading "Roche is at the forefront of technological advancements in healthcare. Elevate your career with us by joining our tech team. Whether you're a software developer, data analyst, or IT expert, Roche provides a platform for you to innovate and make a lasting impact on global healthcare. Click here to see how" [level=6] [ref=e304]:
+                      - generic [ref=e305]:
+                        - text: Roche is at the forefront of technological advancements in healthcare. Elevate your career with us by joining our tech team.
+                        - text: Whether you're a software developer, data analyst, or IT expert, Roche provides a platform for you to innovate and make a lasting impact on global healthcare.
+                      - generic [ref=e308]: Click here to see how
+                    - text: 
+              - generic [ref=e311]:
+                - figure [ref=e314]:
+                  - img [ref=e317]
+                - generic [ref=e319]:
+                  - figure
+                  - heading "Innovate in the Heart of Europe" [level=5] [ref=e323]:
+                    - generic [ref=e325]: Innovate in the Heart of Europe
+                  - link "DACH Region Jobs" [ref=e328] [cursor=pointer]:
+                    - /url: https://careers.roche.com/global/en/dach-region-jobs
+                    - heading "At Roche, we embrace the unique power of each person to transform the lives of patients and society, regardless of age, beliefs, ability, identity, background, or language. Explore a wide range of roles in Germany, Austria, and Switzerland, contributing to our mission of creating a healthier future for people worldwide. Click here to see the opportunities" [level=6] [ref=e330]:
+                      - text: At Roche, we embrace the unique power of each person to transform the lives of patients and society, regardless of age, beliefs, ability, identity, background, or language. Explore a wide range of roles in Germany, Austria, and Switzerland, contributing to our mission of creating a healthier future for people worldwide.
+                      - generic [ref=e333]: Click here to see the opportunities
+                    - text: 
+              - generic [ref=e336]:
+                - figure [ref=e339]:
+                  - img [ref=e342]
+                - generic [ref=e344]:
+                  - figure
+                  - heading "Unleash Your Potential!" [level=5] [ref=e348]:
+                    - generic [ref=e350]: Unleash Your Potential!
+                  - link "RSS Business Process Management" [ref=e353] [cursor=pointer]:
+                    - /url: https://careers.roche.com/global/en/roche-business-process-management
+                    - heading "Our global team of more than 3,000 employees at Roche Services & Solutions (RSS) plays a crucial role in enabling Roche to thrive in a competitive and ever-changing business environment. Join our cutting-edge RSS Business Process Management (BPM) team and be at the forefront of revolutionizing healthcare. Click here to see how" [level=6] [ref=e355]:
+                      - generic [ref=e356]:
+                        - text: Our global team of more than 3,000 employees at Roche Services & Solutions (RSS) plays a crucial role in enabling Roche to thrive in a competitive and ever-changing business environment.
+                        - text: Join our cutting-edge RSS Business Process Management (BPM) team and be at the forefront of revolutionizing healthcare.
+                      - generic [ref=e359]: Click here to see how
+                    - text: 
+              - generic [ref=e362]:
+                - figure [ref=e365]:
+                  - img [ref=e368]
+                - generic [ref=e370]:
+                  - figure
+                  - heading "Rewards & Benefits" [level=5] [ref=e374]:
+                    - generic [ref=e376]: Rewards & Benefits
+                  - link "Rewards & Recognition" [ref=e379] [cursor=pointer]:
+                    - /url: https://careers.roche.com/global/en/rewards-recognition
+                    - 'heading "We encourage strong performance, and we recognise our employees for their contribution to our success. We offer competitive pay and benefits in every country in which we operate, and reward performance through our annual performance management process, which uses a \"management-by-objectives\" approach. Rewards: we''ve got you covered" [level=6] [ref=e381]':
+                      - text: We encourage strong performance, and we recognise our employees for their contribution to our success. We offer competitive pay and benefits in every country in which we operate, and reward performance through our annual performance management process, which uses a "management-by-objectives" approach.
+                      - generic [ref=e384]: "Rewards: we've got you covered"
+                    - text: 
+              - generic [ref=e387]:
+                - figure [ref=e390]:
+                  - img [ref=e393]
+                - generic [ref=e395]:
+                  - figure
+                  - heading "Perspectives Programmes" [level=5] [ref=e399]:
+                    - generic [ref=e401]: Perspectives Programmes
+                  - link "Perspectives Programs" [ref=e404] [cursor=pointer]:
+                    - /url: https://careers.roche.com/global/en/perspectives-programs
+                    - heading "If you are a talented early in career professional aiming to become a leader and reach your full potential through international professional experience then the Perspectives Programme is the perfect next step in your career. Click here to learn more" [level=6] [ref=e406]:
+                      - text: If you are a talented early in career professional aiming to become a leader and reach your full potential through international professional experience then the Perspectives Programme is the perfect next step in your career.
+                      - generic [ref=e409]: Click here to learn more
+                    - text: 
+            - generic [ref=e411]: slide 5 of 5 From being an apprentice to becoming a Procurement Manager "10 years at Roche - and I'm still loving it :)" Learn more about Alexandra. 10 years Roche - and this is why...
+      - heading "Discover life at Roche" [level=2] [ref=e426]:
+        - generic [ref=e430]: Discover life at Roche
+      - list [ref=e436]:
+        - listitem [ref=e437]:
+          - generic [ref=e444]:
+            - heading "Behind the breakthroughs" [level=5] [ref=e445]:
+              - generic [ref=e447]: Behind the breakthroughs
+            - heading "Let’s innovate for lasting success ensuring a healthier planet for future generations, together. We are focused on delivering life-changing healthcare solutions and addressing diseases with the highest societal burden to increase outcomes and reduce costs for patients and healthcare systems worldwide. Become part to push the boundaries of science and deliver real, impactful benefits to patients and communities in need." [level=5] [ref=e448]:
+              - generic [ref=e450]: Let’s innovate for lasting success ensuring a healthier planet for future generations, together. We are focused on delivering life-changing healthcare solutions and addressing diseases with the highest societal burden to increase outcomes and reduce costs for patients and healthcare systems worldwide.
+              - generic [ref=e453]:
+                - text: Become part to push the boundaries of science and deliver real,
+                - text: impactful benefits to patients and communities in need.
+            - heading "Search Results" [level=6] [ref=e454]:
+              - link "Search Results" [ref=e455] [cursor=pointer]:
+                - /url: https://careers.roche.com/global/en/search-results
+                - generic [ref=e458]: Experience working at Roche
+        - listitem [ref=e459]:
+          - generic [ref=e466]:
+            - heading "Inclusion at Roche" [level=5] [ref=e467]:
+              - generic [ref=e469]: Inclusion at Roche
+            - heading "We empower everyone to show up as their best selves, embracing the unique qualities each person brings to our community because we know that innovation thrives on fresh perspectives and ideas. This helps us to nurture a more vibrant, creative, and welcoming workplace for everyone. Our culture encourages personal expression, open dialogue, and genuine connections, allowing you to thrive both personally and professionally. Roche is not just a place to work; it's a place where you can actively contribute to making global healthcare fairer for all." [level=5] [ref=e470]:
+              - generic [ref=e473]:
+                - text: We empower everyone to show up as their best selves, embracing the unique qualities each person brings to our community because we know that innovation thrives on fresh perspectives and ideas. This helps us to nurture a more vibrant, creative, and welcoming workplace for everyone. Our culture encourages personal expression, open dialogue, and genuine connections, allowing you to thrive both personally and professionally.
+                - text: Roche is not just a place to work; it's a place where you can actively contribute to making global healthcare fairer for all.
+            - heading "Inclusion & Belonging" [level=6] [ref=e474]:
+              - link "Inclusion & Belonging" [ref=e475] [cursor=pointer]:
+                - /url: https://careers.roche.com/global/en/inclusion-belonging
+                - generic [ref=e478]: Find out
+                - generic [ref=e481]: more
+      - generic [ref=e485]:
+        - heading "Facts & Figures" [level=2] [ref=e490]
+        - list [ref=e492]:
+          - listitem [ref=e493]:
+            - generic [ref=e495]:
+              - generic [ref=e496]:
+                - generic:
+                  - figure
+              - generic [ref=e498]:
+                - heading "+103,000" [level=3] [ref=e500]:
+                  - generic [ref=e503]: +103,000
+                - generic [ref=e510]: Roche employees worldwide
+          - listitem [ref=e511]:
+            - generic [ref=e513]:
+              - generic [ref=e514]:
+                - generic:
+                  - figure
+              - generic [ref=e516]:
+                - heading "81%" [level=3] [ref=e518]:
+                  - generic [ref=e521]: 81%
+                - generic [ref=e527]: of our are employees are happy to work at Roche (GEOS results 2025)
+          - listitem [ref=e528]:
+            - generic [ref=e530]:
+              - generic [ref=e531]:
+                - generic:
+                  - figure
+              - generic [ref=e533]:
+                - heading "87%" [level=3] [ref=e535]:
+                  - generic [ref=e538]: 87%
+                - generic [ref=e545]: Roche employees believe that their work has a positive impact on society (GEOS results 2025)
+    - generic [ref=e551]:
+      - link [ref=e552] [cursor=pointer]:
+        - /url: https://www.rnib.org.uk/living-with-sight-loss/equality-and-employment/employers/visibly-better-employer-quality-standard/
+      - figure [ref=e553]:
+        - img "1" [ref=e556]
+  - contentinfo [ref=e557]:
+    - generic [ref=e559]:
+      - list [ref=e562]:
+        - listitem [ref=e563]:
+          - link "Cookie Preferences" [ref=e564] [cursor=pointer]:
+            - /url: javascript:void(0)
+        - listitem [ref=e565]:
+          - link "Personal Information" [ref=e566] [cursor=pointer]:
+            - /url: https://careers.roche.com/global/en/emailpersonalinfo
+      - generic [ref=e569]:
+        - link "Roche" [ref=e571] [cursor=pointer]:
+          - /url: /
+          - img "Roche" [ref=e572]
+        - navigation [ref=e578]:
+          - list [ref=e579]:
+            - listitem [ref=e580]:
+              - heading "Discover Roche" [level=2] [ref=e581]
+              - list [ref=e583]:
+                - listitem [ref=e584]:
+                  - link "Why join us?" [ref=e586] [cursor=pointer]:
+                    - /url: https://careers.roche.com/global/en/why-join-us
+                    - text: Why join us
+                - listitem [ref=e587]:
+                  - link "Inclusion & Belonging" [ref=e589] [cursor=pointer]:
+                    - /url: https://careers.roche.com/global/en/inclusion-belonging
+                - listitem [ref=e590]:
+                  - link "Our Locations" [ref=e592] [cursor=pointer]:
+                    - /url: https://careers.roche.com/global/en/our-locations
+                - listitem [ref=e593]:
+                  - link "job listing page" [ref=e595] [cursor=pointer]:
+                    - /url: https://careers.roche.com/global/en/search-results
+                    - text: Job Search
+                - listitem [ref=e596]:
+                  - link "Tech4life" [ref=e598] [cursor=pointer]:
+                    - /url: https://careers.roche.com/global/en/tech4life
+                - listitem [ref=e599]:
+                  - link "Blog Stories" [ref=e601] [cursor=pointer]:
+                    - /url: https://careers.roche.com/global/en/we-are-roche
+                    - text: Our Blogs
+                - listitem [ref=e602]:
+                  - link "Events" [ref=e604] [cursor=pointer]:
+                    - /url: https://careers.roche.com/global/en/events
+                - listitem [ref=e605]:
+                  - link "www.roche.com/" [ref=e607] [cursor=pointer]:
+                    - /url: https://www.roche.com/
+                    - text: Roche.com
+            - listitem [ref=e608]:
+              - heading "Areas of Expertise" [level=2] [ref=e609]
+              - list [ref=e611]:
+                - listitem [ref=e612]:
+                  - link "Research and Development" [ref=e614] [cursor=pointer]:
+                    - /url: https://careers.roche.com/global/en/research-development
+                    - text: Research & Development
+                - listitem [ref=e615]:
+                  - link "People and Culture" [ref=e617] [cursor=pointer]:
+                    - /url: https://careers.roche.com/global/en/people-and-culture
+                    - text: People & Culture
+                - listitem [ref=e618]:
+                  - link "Manufacturing & Supply" [ref=e620] [cursor=pointer]:
+                    - /url: https://careers.roche.com/global/en/manufacturing-supply
+                - listitem [ref=e621]:
+                  - link "Engineering" [ref=e623] [cursor=pointer]:
+                    - /url: https://careers.roche.com/global/en/engineering
+                - listitem [ref=e624]:
+                  - link "Digital & Technology" [ref=e626] [cursor=pointer]:
+                    - /url: https://careers.roche.com/global/en/digital-technology
+                - listitem [ref=e627]:
+                  - link "Commercial, Marketing and Communications" [ref=e629] [cursor=pointer]:
+                    - /url: https://careers.roche.com/global/en/commercial-marketing-communications
+                    - text: Commercial, Marketing & Communications
+                - listitem [ref=e630]:
+                  - link "Business Strategy and Finance" [ref=e632] [cursor=pointer]:
+                    - /url: https://careers.roche.com/global/en/business-strategy-finance
+                    - text: Business Strategy & Finance
+            - listitem [ref=e633]:
+              - heading "Students & Graduates" [level=2] [ref=e634]
+              - link "Student and Graduate Page" [ref=e637] [cursor=pointer]:
+                - /url: https://careers.roche.com/global/en/student-and-graduate-programs
+            - listitem [ref=e638]:
+              - heading "Helpful Links" [level=2] [ref=e639]
+              - list [ref=e641]:
+                - listitem [ref=e642]:
+                  - link "Join our Talent Community" [ref=e644] [cursor=pointer]:
+                    - /url: https://careers.roche.com/global/en/jointalentcommunity
+                - listitem [ref=e645]:
+                  - link "Privacy Notice" [ref=e647] [cursor=pointer]:
+                    - /url: https://careers.roche.com/global/en/privacy-notice
+                - listitem [ref=e648]:
+                  - link "Candidate login" [ref=e650] [cursor=pointer]:
+                    - /url: https://roche.wd3.myworkdayjobs.com/en-US/roche-ext/login
+                - listitem [ref=e651]:
+                  - link "Resume parsing" [ref=e653] [cursor=pointer]:
+                    - /url: https://careers.roche.com/global/en/resume-parsing-faq
+                - listitem [ref=e654]:
+                  - link "Awards" [ref=e656] [cursor=pointer]:
+                    - /url: https://careers.roche.com/global/en/awards-and-rankings
+                - listitem [ref=e657]:
+                  - link "Genentech Careers" [ref=e659] [cursor=pointer]:
+                    - /url: https://careers.gene.com/us/en
+        - generic [ref=e660]:
+          - heading "follow us" [level=2] [ref=e661]
+          - list [ref=e662]:
+            - listitem [ref=e663]:
+              - link "facebook" [ref=e664] [cursor=pointer]:
+                - /url: https://www.facebook.com/roche
+                - img [ref=e666]
+            - listitem [ref=e668]:
+              - link "linkedIn" [ref=e669] [cursor=pointer]:
+                - /url: https://www.linkedin.com/company/roche
+                - img [ref=e671]
+            - listitem [ref=e673]:
+              - link "twitter" [ref=e674] [cursor=pointer]:
+                - /url: https://twitter.com/roche
+                - img [ref=e676]
+            - listitem [ref=e678]:
+              - link "instagram" [ref=e679] [cursor=pointer]:
+                - /url: https://www.instagram.com/roche/
+                - img [ref=e681]
+            - listitem [ref=e683]:
+              - link "youtube" [ref=e684] [cursor=pointer]:
+                - /url: https://www.youtube.com/user/roche
+                - img [ref=e686]
+            - listitem [ref=e688]:
+              - link "WeChat" [ref=e689] [cursor=pointer]:
+                - /url: https://careers.roche.com/global/en/step-by-step-guide-to-follow-roche-on-wechat
+                - img [ref=e691]
+      - generic [ref=e695]:
+        - generic [ref=e696]: This website contains information on products which is targeted to a wide range of audiences and could contain product details or information otherwise not accessible or valid in your country. Please be aware that we do not take any responsibility for accessing such information which may not comply with any legal processes, registration or usage in the country of origin.
+        - list [ref=e700]:
+          - listitem [ref=e701]:
+            - link "Legal Statement" [ref=e703] [cursor=pointer]:
+              - /url: https://www.roche.com/legal-statement
+          - listitem [ref=e704]:
+            - link "Privacy Notice" [ref=e706] [cursor=pointer]:
+              - /url: https://careers.roche.com/global/en/privacy-notice

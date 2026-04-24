@@ -1,0 +1,692 @@
+- generic [active] [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#content"
+  - banner [ref=e3]:
+    - generic [ref=e4]:
+      - navigation "Global site navigation (external links)" [ref=e7]:
+        - list [ref=e8]:
+          - listitem [ref=e9]:
+            - list [ref=e10]:
+              - listitem [ref=e11]:
+                - link "Discover J&J" [ref=e14] [cursor=pointer]:
+                  - /url: https://www.jnj.com/
+                  - generic [ref=e15]: Discover J&J
+              - listitem [ref=e16]:
+                - link "Medicines & therapies" [ref=e19] [cursor=pointer]:
+                  - /url: https://innovativemedicine.jnj.com/
+                  - generic [ref=e20]: Medicines & therapies
+              - listitem [ref=e21]:
+                - link "Medical devices & technology" [ref=e24] [cursor=pointer]:
+                  - /url: https://thenext.jnjmedtech.com/
+                  - generic [ref=e25]: Medical devices & technology
+          - listitem [ref=e26]:
+            - list [ref=e27]:
+              - listitem [ref=e28]:
+                - link "Media (Opens in new window)" [ref=e31] [cursor=pointer]:
+                  - /url: https://www.jnj.com/media-center
+                  - generic [ref=e32]: Media
+              - listitem [ref=e33]:
+                - link "Contact (Opens in new window)" [ref=e36] [cursor=pointer]:
+                  - /url: https://www.careers.jnj.com/en/contact-us/
+                  - generic [ref=e37]: Contact
+              - listitem [ref=e38]:
+                - list [ref=e41]:
+                  - listitem [ref=e42]:
+                    - link "View saved jobs" [ref=e43] [cursor=pointer]:
+                      - /url: /en/jobs/saved-jobs/
+                      - img [ref=e44]
+                      - generic [ref=e46]: View saved jobs
+                      - generic [ref=e47]: "0"
+              - listitem [ref=e48]:
+                - navigation "Region selector" [ref=e51]:
+                  - list [ref=e52]:
+                    - listitem [ref=e53]:
+                      - button "English - Open modal to change region" [ref=e56] [cursor=pointer]:
+                        - text: English
+                        - img [ref=e57]
+              - listitem [ref=e59]:
+                - list [ref=e62]:
+                  - listitem [ref=e63]:
+                    - link "Login" [ref=e64] [cursor=pointer]:
+                      - /url: https://jj.wd5.myworkdayjobs.com/JJ/login/
+                      - img [ref=e65]
+                      - generic [ref=e67]: Login
+      - generic [ref=e68]:
+        - link "Johnson & Johnson Services, Inc." [ref=e70] [cursor=pointer]:
+          - /url: /en/
+          - img "Johnson & Johnson Services, Inc." [ref=e71]
+        - navigation [ref=e73]:
+          - list [ref=e74]:
+            - listitem [ref=e75]:
+              - generic [ref=e76]:
+                - generic [ref=e77] [cursor=pointer]:
+                  - generic [ref=e78]: Healthcare areas
+                  - generic:
+                    - button "Open Sub Navigation for Healthcare areas":
+                      - img
+                - list [ref=e79]:
+                  - listitem
+                  - listitem
+            - listitem [ref=e80]:
+              - generic [ref=e81]:
+                - generic [ref=e82] [cursor=pointer]:
+                  - generic [ref=e83]: News
+                  - generic:
+                    - button "Open Sub Navigation for News":
+                      - img
+                - list [ref=e84]:
+                  - listitem
+                  - listitem
+            - listitem [ref=e85]:
+              - generic [ref=e87] [cursor=pointer]:
+                - generic [ref=e88]: Investors
+                - generic:
+                  - button "Open Sub Navigation for Investors":
+                    - img
+            - listitem [ref=e89]:
+              - generic [ref=e91] [cursor=pointer]:
+                - generic [ref=e92]: Careers
+                - generic:
+                  - button "Open Sub Navigation for Careers":
+                    - img
+            - listitem [ref=e93]:
+              - generic [ref=e95] [cursor=pointer]:
+                - generic [ref=e96]: Our company
+                - generic:
+                  - button "Open Sub Navigation for Our company":
+                    - img
+        - button "Search J&J.com" [ref=e99] [cursor=pointer]:
+          - img [ref=e100]
+          - generic [ref=e102]: Search J&J.com
+  - main [ref=e103]:
+    - navigation "breadcrumbs" [ref=e105]:
+      - list [ref=e106]:
+        - listitem [ref=e107]:
+          - link "Home" [ref=e108] [cursor=pointer]:
+            - /url: https://www.jnj.com/
+            - generic [ref=e109]: Home
+        - listitem [ref=e110]:
+          - text: /
+          - link "Careers" [ref=e111] [cursor=pointer]:
+            - /url: /en/
+            - generic [ref=e112]: Careers
+        - listitem: / Jobs
+    - heading "Search jobs" [level=1] [ref=e115]
+    - generic [ref=e117]:
+      - complementary "Filter Jobs" [ref=e118]:
+        - group "Filter Jobs" [ref=e121]:
+          - generic [ref=e122]: Filter Jobs
+          - generic [ref=e124]:
+            - generic [ref=e125]: Keywords
+            - searchbox "Keywords" [ref=e126]
+            - img [ref=e128]
+          - generic [ref=e130]:
+            - generic [ref=e131]:
+              - generic [ref=e132]: Function
+              - generic [ref=e133]:
+                - listbox "Function" [ref=e134]:
+                  - option "Function" [ref=e135]
+                  - option "Business Support" [ref=e136]
+                  - option "Career Programs" [ref=e137]
+                  - option "Communications & Corporate/External Affairs" [ref=e138]
+                  - option "Customer Management" [ref=e139]
+                  - option "Data Analytics & Computational Sciences" [ref=e140]
+                  - option "Digital Marketing" [ref=e141]
+                  - option "Discovery & Pre-Clinical/Clinical Development" [ref=e142]
+                  - option "Enterprise Management" [ref=e143]
+                  - option "Environmental Health, Safety (EH&S) and Facilities Services (FS)" [ref=e144]
+                  - option "Finance" [ref=e145]
+                  - option "Human Resources" [ref=e146]
+                  - option "Legal & Compliance" [ref=e147]
+                  - option "Market Access" [ref=e148]
+                  - option "Marketing" [ref=e149]
+                  - option "Medical Affairs Group" [ref=e150]
+                  - option "MedTech Sales" [ref=e151]
+                  - option "Non-Standard" [ref=e152]
+                  - option "Pharmaceutical Sales" [ref=e153]
+                  - option "Procurement" [ref=e154]
+                  - option "Product Safety" [ref=e155]
+                  - option "Project/Program Management Group" [ref=e156]
+                  - option "Quality" [ref=e157]
+                  - option "R&D Operations" [ref=e158]
+                  - option "R&D Product Development" [ref=e159]
+                  - option "Regulatory Affairs Group" [ref=e160]
+                  - option "Sales Enablement" [ref=e161]
+                  - option "Strategy & Corporate Development" [ref=e162]
+                  - option "Supply Chain Deliver" [ref=e163]
+                  - option "Supply Chain Engineering" [ref=e164]
+                  - option "Supply Chain Manufacturing" [ref=e165]
+                  - option "Supply Chain Planning" [ref=e166]
+                  - option "Technology Enterprise Strategy & Security" [ref=e167]
+                  - option "Technology Product & Platform Management" [ref=e168]
+                - combobox "Function" [ref=e171] [cursor=pointer]
+            - generic [ref=e172]:
+              - generic [ref=e173]: Sub function
+              - generic [ref=e174]:
+                - listbox "Sub Function" [ref=e175]:
+                  - option "Sub function" [ref=e176]
+                  - option "Accounting" [ref=e177]
+                  - option "Administration & Secretarial" [ref=e178]
+                  - option "Advertising & Promotions" [ref=e179]
+                  - option "AP/AR" [ref=e180]
+                  - option "Apprentice, Operations (Generalist)" [ref=e181]
+                  - option "Automation Engineering" [ref=e182]
+                  - option "Biological Research" [ref=e183]
+                  - option "Biomedical Engineering" [ref=e184]
+                  - option "Biostatistics" [ref=e185]
+                  - option "Biotherapeutics R&D" [ref=e186]
+                  - option "Business Development" [ref=e187]
+                  - option "Business Intelligence" [ref=e188]
+                  - option "Business Process Quality" [ref=e189]
+                  - option "Business Systems Analysis" [ref=e190]
+                  - option "Capital Sales -- MedTech (Commission)" [ref=e191]
+                  - option "Category" [ref=e192]
+                  - option "Change Management" [ref=e193]
+                  - option "Channel & Partner Marketing" [ref=e194]
+                  - option "Channel Sales – MedTech (Commission)" [ref=e195]
+                  - option "Chemical Research" [ref=e196]
+                  - option "Clinical Data Management" [ref=e197]
+                  - option "Clinical Development & Research – MD" [ref=e198]
+                  - option "Clinical Development & Research – Non-MD" [ref=e199]
+                  - option "Clinical Sales – Hospital/Hospital Systems (Commission)" [ref=e200]
+                  - option "Clinical Sales – Primary Care Physicians (Commission)" [ref=e201]
+                  - option "Clinical Sales – Specialty Physicians (Commission)" [ref=e202]
+                  - option "Clinical Sales – Surgeons (Commission)" [ref=e203]
+                  - option "Clinical Supply Operations" [ref=e204]
+                  - option "Clinical Trial Project Management" [ref=e205]
+                  - option "Clinical Trial Support" [ref=e206]
+                  - option "Clinical/Medical Operations" [ref=e207]
+                  - option "Commercial Management" [ref=e208]
+                  - option "Contract & Processing Services" [ref=e209]
+                  - option "Contract Administration and Management" [ref=e210]
+                  - option "Cross-Functional LDP" [ref=e211]
+                  - option "Customer Service Operations" [ref=e212]
+                  - option "Customer/Commercial Quality" [ref=e213]
+                  - option "Data Engineering" [ref=e214]
+                  - option "Data Science" [ref=e215]
+                  - option "Data Science Portfolio Management" [ref=e216]
+                  - option "Deliver Excellence" [ref=e217]
+                  - option "Demand Planning" [ref=e218]
+                  - option "Digital Engagement" [ref=e219]
+                  - option "Digital Marketing Strategy" [ref=e220]
+                  - option "Digital Platform Operations" [ref=e221]
+                  - option "Digital Product Management" [ref=e222]
+                  - option "Digital Quality" [ref=e223]
+                  - option "Digital Sales Strategy" [ref=e224]
+                  - option "Digital Strategy & Deployment" [ref=e225]
+                  - option "Drug & Product Safety Operations" [ref=e226]
+                  - option "Electrical Engineering" [ref=e227]
+                  - option "Employee & Labor Relations" [ref=e228]
+                  - option "End-to-End Planning" [ref=e229]
+                  - option "Enterprise Architecture" [ref=e230]
+                  - option "Enterprise Compliance" [ref=e231]
+                  - option "Environmental Health & Safety" [ref=e232]
+                  - option "Epidemiology" [ref=e233]
+                  - option "Events" [ref=e234]
+                  - option "Experience Design" [ref=e235]
+                  - option "External Customer/Product Training" [ref=e236]
+                  - option "Fabrication Operations" [ref=e237]
+                  - option "Facilities Engineering" [ref=e238]
+                  - option "Facilities Management & Planning" [ref=e239]
+                  - option "Facilities Repair & Maintenance" [ref=e240]
+                  - option "Field Service Engineering" [ref=e241]
+                  - option "Finance Business Partners" [ref=e242]
+                  - option "Finance LDP" [ref=e243]
+                  - option "Financial Planning & Analysis" [ref=e244]
+                  - option "Fixed Term Employee" [ref=e245]
+                  - option "Functional Engineering" [ref=e246]
+                  - option "General Management" [ref=e247]
+                  - option "Government Affairs & Policy" [ref=e248]
+                  - option "Health Care Compliance" [ref=e249]
+                  - option "Health Economics Market Access" [ref=e250]
+                  - option "Health Economics Outcomes Research" [ref=e251]
+                  - option "Health Services" [ref=e252]
+                  - option "HR Business Partners" [ref=e253]
+                  - option "HR Operations" [ref=e254]
+                  - option "Inside Sales -- MedTech (No Commission)" [ref=e255]
+                  - option "Integrated Business Planning" [ref=e256]
+                  - option "Internal Audit" [ref=e257]
+                  - option "Internal Communications" [ref=e258]
+                  - option "Inventory Management" [ref=e259]
+                  - option "Key Account Management – MedTech (No Commission)" [ref=e260]
+                  - option "Laboratory Operations" [ref=e261]
+                  - option "Law Business Partners" [ref=e262]
+                  - option "Learning & Instructional Design" [ref=e263]
+                  - option "Manufacturing Assembly" [ref=e264]
+                  - option "Manufacturing Deployment" [ref=e265]
+                  - option "Manufacturing Engineering" [ref=e266]
+                  - option "Manufacturing Pharmaceutical Process Operations" [ref=e267]
+                  - option "Manufacturing Process Improvement" [ref=e268]
+                  - option "Manufacturing Product & Packaging Operations" [ref=e269]
+                  - option "Marketing Insights & Analytics" [ref=e270]
+                  - option "Medical Affairs" [ref=e271]
+                  - option "Medical Affairs – Marketed Products" [ref=e272]
+                  - option "Medical Affairs – MD" [ref=e273]
+                  - option "Medical Science Liaison" [ref=e274]
+                  - option "Medical Writing" [ref=e275]
+                  - option "Multi-Family Data Analytics & Computational Sciences" [ref=e276]
+                  - option "Multi-Family Marketing" [ref=e277]
+                  - option "Multi-Family Medical Affairs" [ref=e278]
+                  - option "Multi-Family Procurement" [ref=e279]
+                  - option "Multi-Family Quality" [ref=e280]
+                  - option "Multi-Family R&D Operations" [ref=e281]
+                  - option "Multi-Family R&D Product Development" [ref=e282]
+                  - option "Multi-Family Sales Enablement" [ref=e283]
+                  - option "Multi-Family Supply Chain Deliver" [ref=e284]
+                  - option "Multi-Family Supply Chain Manufacturing" [ref=e285]
+                  - option "Multi-Family Technology Product & Platform Management" [ref=e286]
+                  - option "Non-Employee" [ref=e287]
+                  - option "Non-LDP Intern/Co-Op" [ref=e288]
+                  - option "Non-Technical Customer Service" [ref=e289]
+                  - option "Nonclinical Safety" [ref=e290]
+                  - option "Packaging Design Engineering" [ref=e291]
+                  - option "Patient Advocacy" [ref=e292]
+                  - option "Patient Education" [ref=e293]
+                  - option "Payroll" [ref=e294]
+                  - option "Pharmaceutical Product R&D" [ref=e295]
+                  - option "Pharmacokinetics & Pharmacometrics" [ref=e296]
+                  - option "Pharmacology" [ref=e297]
+                  - option "Pharmacovigilance" [ref=e298]
+                  - option "Physical Security" [ref=e299]
+                  - option "Planning Strategy & Capabilities" [ref=e300]
+                  - option "Plant Management" [ref=e301]
+                  - option "Platform/Cloud Engineering" [ref=e302]
+                  - option "Post Doc – Data Analytics & Computational Sciences" [ref=e303]
+                  - option "Post Doc – Drug Discovery & Pre-Clinical/Clinical Development" [ref=e304]
+                  - option "Post Doc – R&D Product Development" [ref=e305]
+                  - option "Pricing" [ref=e306]
+                  - option "Process Engineering" [ref=e307]
+                  - option "Procurement Business Engagement Leads" [ref=e308]
+                  - option "Product Communications" [ref=e309]
+                  - option "Product Development Testing" [ref=e310]
+                  - option "Product Management" [ref=e311]
+                  - option "Product Safety Risk Management" [ref=e312]
+                  - option "Product Strategy" [ref=e313]
+                  - option "Production Equipment Repair & Maintenance" [ref=e314]
+                  - option "Production Planning & Scheduling" [ref=e315]
+                  - option "Professional Medical Education" [ref=e316]
+                  - option "Project Engineering" [ref=e317]
+                  - option "Project/Program Management" [ref=e318]
+                  - option "Public Affairs" [ref=e319]
+                  - option "QA/Test Engineering" [ref=e320]
+                  - option "Quality Assurance" [ref=e321]
+                  - option "Quality Control" [ref=e322]
+                  - option "Quality Engineering" [ref=e323]
+                  - option "Quality Training" [ref=e324]
+                  - option "R&D Chemical/Biochemical Engineering" [ref=e325]
+                  - option "R&D Digital" [ref=e326]
+                  - option "R&D Electrical/Mechatronic Engineering" [ref=e327]
+                  - option "R&D LDP" [ref=e328]
+                  - option "R&D Machine Learning" [ref=e329]
+                  - option "R&D Management" [ref=e330]
+                  - option "R&D Mechanical Engineering" [ref=e331]
+                  - option "R&D Process Engineering" [ref=e332]
+                  - option "R&D Project Management" [ref=e333]
+                  - option "R&D Software/Systems Engineering" [ref=e334]
+                  - option "R&D/Scientific Quality" [ref=e335]
+                  - option "Regulatory Affairs" [ref=e336]
+                  - option "Regulatory Product Submissions and Registration" [ref=e337]
+                  - option "Regulatory Science" [ref=e338]
+                  - option "Reimbursement" [ref=e339]
+                  - option "Reliability Engineering" [ref=e340]
+                  - option "Repair & Maintenance Engineering" [ref=e341]
+                  - option "Risk Management" [ref=e342]
+                  - option "Robotics" [ref=e343]
+                  - option "Robotics Service & Repair" [ref=e344]
+                  - option "Sales – Cardiovascular & Metabolism (Commission)" [ref=e345]
+                  - option "Sales – Immunology (Commission)" [ref=e346]
+                  - option "Sales – Neuroscience (Commission)" [ref=e347]
+                  - option "Sales – Oncology/Hematology (Commission)" [ref=e348]
+                  - option "Sales – Pharm (No Commission)" [ref=e349]
+                  - option "Sales – Rare Diseases (Commission)" [ref=e350]
+                  - option "Sales Effectiveness" [ref=e351]
+                  - option "Sales Operations & Administration" [ref=e352]
+                  - option "Sales Training" [ref=e353]
+                  - option "Security & Controls" [ref=e354]
+                  - option "Software Engineering – DevOps" [ref=e355]
+                  - option "Software Engineering – Full Stack" [ref=e356]
+                  - option "Software Engineering – Integration" [ref=e357]
+                  - option "Solution Architecture" [ref=e358]
+                  - option "Strategic Marketing" [ref=e359]
+                  - option "Strategic Partnerships & Alliances" [ref=e360]
+                  - option "Strategic Planning" [ref=e361]
+                  - option "Strategic Sourcing" [ref=e362]
+                  - option "Supplier Quality" [ref=e363]
+                  - option "Supply Chain LDP" [ref=e364]
+                  - option "Supply Chain Management" [ref=e365]
+                  - option "Supply Network Planning" [ref=e366]
+                  - option "Talent Acquisition" [ref=e367]
+                  - option "Tax" [ref=e368]
+                  - option "Technical Customer Service" [ref=e369]
+                  - option "Technical Field Service" [ref=e370]
+                  - option "Technical Product Management" [ref=e371]
+                  - option "Technical Sales - MedTech (Commission)" [ref=e372]
+                  - option "Technology Operations Support" [ref=e373]
+                  - option "Technology Program/Portfolio Management" [ref=e374]
+                  - option "Technology Project Management" [ref=e375]
+                  - option "Total Rewards" [ref=e376]
+                  - option "Translational Discovery & Development Biomarkers" [ref=e377]
+                  - option "Transportation Services" [ref=e378]
+                  - option "Treasury" [ref=e379]
+                  - option "Warehouse & Distribution" [ref=e380]
+                  - option "Web Content Management" [ref=e381]
+                  - option "Workday Associate A" [ref=e382]
+                  - option "Workday Associate B" [ref=e383]
+                  - option "Workday Associate C" [ref=e384]
+                - combobox "Sub function" [ref=e387] [cursor=pointer]
+            - generic [ref=e388]:
+              - generic [ref=e389]: Country / Territory
+              - generic [ref=e390]:
+                - listbox "Country" [ref=e391]:
+                  - option "Country / Territory" [ref=e392]
+                  - option "Argentina" [ref=e393]
+                  - option "Australia" [ref=e394]
+                  - option "Austria" [ref=e395]
+                  - option "Belgium" [ref=e396]
+                  - option "Canada" [ref=e397]
+                  - option "Chile" [ref=e398]
+                  - option "China" [ref=e399]
+                  - option "Colombia" [ref=e400]
+                  - option "Costa Rica" [ref=e401]
+                  - option "Croatia" [ref=e402]
+                  - option "Czechia" [ref=e403]
+                  - option "Denmark" [ref=e404]
+                  - option "Egypt" [ref=e405]
+                  - option "Estonia" [ref=e406]
+                  - option "Finland" [ref=e407]
+                  - option "France" [ref=e408]
+                  - option "Germany" [ref=e409]
+                  - option "Greece" [ref=e410]
+                  - option "Guatemala" [ref=e411]
+                  - option "Hong Kong" [ref=e412]
+                  - option "Hungary" [ref=e413]
+                  - option "India" [ref=e414]
+                  - option "Indonesia" [ref=e415]
+                  - option "Ireland" [ref=e416]
+                  - option "Israel" [ref=e417]
+                  - option "Italy" [ref=e418]
+                  - option "Japan" [ref=e419]
+                  - option "Korea, Republic of" [ref=e420]
+                  - option "Latvia" [ref=e421]
+                  - option "Lithuania" [ref=e422]
+                  - option "Malaysia" [ref=e423]
+                  - option "Mexico" [ref=e424]
+                  - option "Netherlands" [ref=e425]
+                  - option "New Zealand" [ref=e426]
+                  - option "Norway" [ref=e427]
+                  - option "Panama" [ref=e428]
+                  - option "Philippines" [ref=e429]
+                  - option "Poland" [ref=e430]
+                  - option "Portugal" [ref=e431]
+                  - option "Romania" [ref=e432]
+                  - option "Saudi Arabia" [ref=e433]
+                  - option "Singapore" [ref=e434]
+                  - option "Slovakia" [ref=e435]
+                  - option "Slovenia" [ref=e436]
+                  - option "South Africa" [ref=e437]
+                  - option "Spain" [ref=e438]
+                  - option "Sweden" [ref=e439]
+                  - option "Switzerland" [ref=e440]
+                  - option "Taiwan" [ref=e441]
+                  - option "Thailand" [ref=e442]
+                  - option "Turkey" [ref=e443]
+                  - option "United Arab Emirates" [ref=e444]
+                  - option "United Kingdom" [ref=e445]
+                  - option "United States of America" [ref=e446]
+                  - option "Vietnam" [ref=e447]
+                  - option "Brazil" [selected] [ref=e448]
+                - generic [ref=e450]:
+                  - generic [ref=e451] [cursor=pointer]:
+                    - text: Brazil
+                    - link "Delete Brazil" [ref=e452]:
+                      - /url: javascript:void(0)
+                      - generic [ref=e453]:
+                        - generic [ref=e454]: Remove
+                        - text: ×
+                  - combobox "Country / Territory" [ref=e455] [cursor=pointer]
+            - generic [ref=e456]:
+              - generic [ref=e457]: State / Province
+              - generic [ref=e458]:
+                - listbox "State" [ref=e459]:
+                  - option "State / Province" [ref=e460]
+                  - option "Distrito Federal" [ref=e461]
+                  - option "Goiás" [ref=e462]
+                  - option "Rio de Janeiro" [ref=e463]
+                  - option "Rio Grande do Sul" [ref=e464]
+                  - option "Santa Catarina" [ref=e465]
+                  - option "São Paulo" [ref=e466]
+                - combobox "State / Province" [ref=e469] [cursor=pointer]
+            - generic [ref=e470]:
+              - generic [ref=e471]: City
+              - generic [ref=e472]:
+                - listbox "City" [ref=e473]:
+                  - option "City" [ref=e474]
+                  - option "Brasília" [ref=e475]
+                  - option "Campinas" [ref=e476]
+                  - option "Florianópolis" [ref=e477]
+                  - option "Goiânia" [ref=e478]
+                  - option "Porto Alegre" [ref=e479]
+                  - option "Ribeirão Preto" [ref=e480]
+                  - option "Rio Claro" [ref=e481]
+                  - option "Rio De Janeiro" [ref=e482]
+                  - option "São José Do Rio Preto" [ref=e483]
+                  - option "São José Dos Campos" [ref=e484]
+                  - option "São Paulo" [ref=e485]
+                  - option "Sorocaba" [ref=e486]
+                - combobox "City" [ref=e489] [cursor=pointer]
+            - generic [ref=e490]:
+              - generic [ref=e491]: Time type
+              - generic [ref=e492]:
+                - listbox "Contract" [ref=e493]:
+                  - option "Time type" [ref=e494]
+                  - option "Full time" [ref=e495]
+                  - option "Part time" [ref=e496]
+                - combobox "Time type" [ref=e499] [cursor=pointer]
+            - generic [ref=e500]:
+              - generic [ref=e501]: Job type
+              - generic [ref=e502]:
+                - listbox "Job Type" [ref=e503]:
+                  - option "Job type" [ref=e504]
+                  - option "Field-based" [ref=e505]
+                  - option "Fully Onsite" [ref=e506]
+                  - option "Fully Remote" [ref=e507]
+                  - option "Hybrid Work" [ref=e508]
+                - combobox "Job type" [ref=e511] [cursor=pointer]
+          - button "Apply filters" [ref=e513] [cursor=pointer]
+      - complementary "Recently viewed"
+      - generic [ref=e514]:
+        - generic [ref=e518]:
+          - generic [ref=e519]: Set up job alerts for this search. Click "Create alert" to get started.
+          - button "Create alert" [ref=e521] [cursor=pointer]:
+            - generic [ref=e522]: Create alert
+        - generic [ref=e523]:
+          - paragraph [ref=e524]: Sorry, there are no results that match your criteria.
+          - paragraph [ref=e525]:
+            - text: You can
+            - link "browse all of our openings here" [ref=e526] [cursor=pointer]:
+              - /url: /it-it/jobs/
+            - text: .
+    - generic [ref=e529]:
+      - generic [ref=e531]:
+        - heading "Still looking for your next opportunity?" [level=2] [ref=e532]
+        - paragraph [ref=e534]: Join our Global Talent Hub and get notified first.
+        - link "Sign up in 2 minutes (Opens in new window)" [ref=e536] [cursor=pointer]:
+          - /url: https://jj.wd5.myworkdayjobs.com/en-US/JJ/introduceYourself
+          - img [ref=e537]
+      - img "A man looking down at his mobile device" [ref=e541]
+  - contentinfo [ref=e542]:
+    - generic [ref=e543]:
+      - link "Johnson & Johnson Services, Inc." [ref=e545] [cursor=pointer]:
+        - /url: /en/
+        - img "Johnson & Johnson Services, Inc." [ref=e546]
+      - navigation "Footer navigation" [ref=e550]:
+        - list [ref=e551]:
+          - listitem [ref=e552]:
+            - generic [ref=e553]:
+              - heading "Locations" [level=2] [ref=e554]
+              - list [ref=e555]:
+                - listitem [ref=e556]:
+                  - link "North America" [ref=e557] [cursor=pointer]:
+                    - /url: /en/locations/north-america/
+                - listitem [ref=e558]:
+                  - link "Europe, Middle East & Africa" [ref=e559] [cursor=pointer]:
+                    - /url: /en/locations/emea/
+                - listitem [ref=e560]:
+                  - link "Asia Pacific" [ref=e561] [cursor=pointer]:
+                    - /url: /en/locations/asia-pacific/
+                - listitem [ref=e562]:
+                  - link "Latin America" [ref=e563] [cursor=pointer]:
+                    - /url: /en/locations/latin-america/
+          - listitem [ref=e564]:
+            - generic [ref=e565]:
+              - heading "Medicines & therapies" [level=2] [ref=e566]
+              - list [ref=e567]:
+                - listitem [ref=e568]:
+                  - link "Products (Opens in new window)" [ref=e569] [cursor=pointer]:
+                    - /url: https://innovativemedicine.jnj.com/our-innovation/our-products
+                    - text: Products
+                - listitem [ref=e570]:
+                  - link "Oncology (Opens in new window)" [ref=e571] [cursor=pointer]:
+                    - /url: https://innovativemedicine.jnj.com/our-innovation/focus-areas/oncology
+                    - text: Oncology
+                - listitem [ref=e572]:
+                  - link "Neuroscience (Opens in new window)" [ref=e573] [cursor=pointer]:
+                    - /url: https://innovativemedicine.jnj.com/our-innovation/focus-areas/neuroscience
+                    - text: Neuroscience
+                - listitem [ref=e574]:
+                  - link "Immunology (Opens in new window)" [ref=e575] [cursor=pointer]:
+                    - /url: https://innovativemedicine.jnj.com/our-innovation/focus-areas/immunology
+                    - text: Immunology
+                - listitem [ref=e576]:
+                  - link "Cardiopulmonary (Opens in new window)" [ref=e577] [cursor=pointer]:
+                    - /url: https://innovativemedicine.jnj.com/our-innovation/focus-areas/cardiopulmonary
+                    - text: Cardiopulmonary
+          - listitem [ref=e578]:
+            - generic [ref=e579]:
+              - heading "Medical devices & technology" [level=2] [ref=e580]
+              - list [ref=e581]:
+                - listitem [ref=e582]:
+                  - link "Products (Opens in new window)" [ref=e583] [cursor=pointer]:
+                    - /url: https://www.jnjmedtech.com/en-US/products
+                    - text: Products
+                - listitem [ref=e584]:
+                  - link "Cardiovascular (Opens in new window)" [ref=e585] [cursor=pointer]:
+                    - /url: https://thenext.jnjmedtech.com/healthcare-area/cardiovascular
+                    - text: Cardiovascular
+                - listitem [ref=e586]:
+                  - link "Orthopaedics (Opens in new window)" [ref=e587] [cursor=pointer]:
+                    - /url: https://thenext.jnjmedtech.com/healthcare-area/orthopaedics
+                    - text: Orthopaedics
+                - listitem [ref=e588]:
+                  - link "Surgery (Opens in new window)" [ref=e589] [cursor=pointer]:
+                    - /url: https://thenext.jnjmedtech.com/healthcare-area/surgery
+                    - text: Surgery
+                - listitem [ref=e590]:
+                  - link "Vision (Opens in new window)" [ref=e591] [cursor=pointer]:
+                    - /url: https://thenext.jnjmedtech.com/healthcare-area/vision
+                    - text: Vision
+          - listitem [ref=e592]:
+            - generic [ref=e593]:
+              - heading "About us" [level=2] [ref=e594]
+              - list [ref=e595]:
+                - listitem [ref=e596]:
+                  - link "Our company (Opens in new window)" [ref=e597] [cursor=pointer]:
+                    - /url: https://www.jnj.com/our-company
+                    - text: Our company
+                - listitem [ref=e598]:
+                  - link "Medicines & therapies (Opens in new window)" [ref=e599] [cursor=pointer]:
+                    - /url: https://innovativemedicine.jnj.com/
+                    - text: Medicines & therapies
+                - listitem [ref=e600]:
+                  - link "Medical devices & technology (Opens in new window)" [ref=e601] [cursor=pointer]:
+                    - /url: https://thenext.jnjmedtech.com/
+                    - text: Medical devices & technology
+                - listitem [ref=e602]:
+                  - link "Careers" [ref=e603] [cursor=pointer]:
+                    - /url: /en/
+                - listitem [ref=e604]:
+                  - link "Investors (Opens in new window)" [ref=e605] [cursor=pointer]:
+                    - /url: https://www.investor.jnj.com/overview/default.aspx
+                    - text: Investors
+                - listitem [ref=e606]:
+                  - link "Media (Opens in new window)" [ref=e607] [cursor=pointer]:
+                    - /url: https://www.jnj.com/media-center
+                    - text: Media
+          - listitem [ref=e608]:
+            - generic [ref=e609]:
+              - heading "Key links" [level=2] [ref=e610]
+              - list [ref=e611]:
+                - listitem [ref=e612]:
+                  - link "Terms of use (Opens in new window)" [ref=e613] [cursor=pointer]:
+                    - /url: https://www.jnj.com/legal-notice
+                    - text: Terms of use
+                - listitem [ref=e614]:
+                  - link "Privacy statement" [ref=e615] [cursor=pointer]:
+                    - /url: /en/careers-privacy-policy-english/
+                - listitem [ref=e616]:
+                  - link "Cookie policy" [ref=e617] [cursor=pointer]:
+                    - /url: /en/careers-cookie-policy-english/
+                - listitem [ref=e618]:
+                  - link "Cookies Settings" [ref=e619] [cursor=pointer]:
+                    - /url: "#onetrust-pc-sdk"
+                - listitem [ref=e620]:
+                  - link "Request disability accommodation (Opens in new window)" [ref=e621] [cursor=pointer]:
+                    - /url: https://www.careers.jnj.com/assistance
+                    - text: Request disability accommodation
+                - listitem [ref=e622]:
+                  - link "Hiring FAQs" [ref=e623] [cursor=pointer]:
+                    - /url: /en/how-we-hire/hiring-faqs/
+                - listitem [ref=e624]:
+                  - link "Employment policies (Opens in new window)" [ref=e625] [cursor=pointer]:
+                    - /url: https://www.jnj.com/about-jnj/policies-and-positions/our-position-on-employment-and-labor-rights
+                    - text: Employment policies
+                - listitem [ref=e626]:
+                  - link "E-Verify (Opens in new window)" [ref=e627] [cursor=pointer]:
+                    - /url: https://www.careers.jnj.com/media/npylwfhy/e-verify.pdf
+                    - text: E-Verify
+                - listitem [ref=e628]:
+                  - link "Recruitment fraud notice (Opens in new window)" [ref=e629] [cursor=pointer]:
+                    - /url: https://www.careers.jnj.com/en/recruitment-fraud-notice/
+                    - text: Recruitment fraud notice
+          - listitem [ref=e630]:
+            - generic [ref=e631]:
+              - heading "Get in touch" [level=2] [ref=e632]
+              - list [ref=e633]:
+                - listitem [ref=e634]:
+                  - link "Contact us" [ref=e635] [cursor=pointer]:
+                    - /url: /en/contact-us/
+                - listitem [ref=e636]:
+                  - list [ref=e638]:
+                    - listitem [ref=e639]:
+                      - link "(Follow us on) YouTube (Opens in new window)" [ref=e640] [cursor=pointer]:
+                        - /url: https://www.youtube.com/user/CareersAtJNJ
+                        - img [ref=e641]
+                    - listitem [ref=e643]:
+                      - link "(Follow us on) Facebook (Opens in new window)" [ref=e644] [cursor=pointer]:
+                        - /url: https://www.facebook.com/jnj/
+                        - img [ref=e645]
+                    - listitem [ref=e647]:
+                      - link "(Follow us on) Twitter X (Opens in new window)" [ref=e648] [cursor=pointer]:
+                        - /url: https://x.com/JNJNews
+                        - img [ref=e649]
+                    - listitem [ref=e651]:
+                      - link "(Follow us on) LinkedIn (Opens in new window)" [ref=e652] [cursor=pointer]:
+                        - /url: https://www.linkedin.com/company/johnson-&-johnson/
+                        - img [ref=e653]
+      - generic [ref=e655]:
+        - generic [ref=e656]:
+          - paragraph [ref=e657]:
+            - link "Equal Employment Opportunity Posters" [ref=e658] [cursor=pointer]:
+              - /url: https://www.eeoc.gov/poster#:~:text=The%20law%20requires%20an%20employer,pay%2C%20disability%20or%20genetic%20information%20
+            - text: "|"
+            - link "GINA Supplement" [ref=e659] [cursor=pointer]:
+              - /url: https://www.eeoc.gov/gina-genetic-information-nondiscrimination
+          - paragraph [ref=e660]:
+            - link "Do not sell or share my personal information" [ref=e661] [cursor=pointer]:
+              - /url: https://privacyportal.onetrust.com/webform/96f23ee1-34e3-41d6-8d5a-07f0d554152b/2fa51ddd-d62d-4d27-afc5-b20dea437786.html?WebsiteName=careers.jnj.com
+            - link "Limit the use of my sensitive personal information" [ref=e662] [cursor=pointer]:
+              - /url: https://privacyportal.onetrust.com/webform/96f23ee1-34e3-41d6-8d5a-07f0d554152b/2fa51ddd-d62d-4d27-afc5-b20dea437786.html?WebsiteName=careers.jnj.com
+        - paragraph [ref=e664]: © Johnson & Johnson and its affiliates 2026
+    - link "Back to top" [ref=e678] [cursor=pointer]:
+      - /url: "#"
+      - img [ref=e679]

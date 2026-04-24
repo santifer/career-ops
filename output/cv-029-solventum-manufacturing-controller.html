@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fernando Costa Xavier — CV</title>
+<style>
+  @font-face {
+    font-family: 'Space Grotoesque';
+    src: url('./fonts/space-grotesk-latin.woff2') format('woff2');
+    font-weight: 300 700;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  }
+  @font-face {
+    font-family: 'Space Grotesk';
+    src: url('./fonts/space-grotesk-latin.woff2') format('woff2');
+    font-weight: 300 700;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  }
+  @font-face {
+    font-family: 'DM Sans';
+    src: url('./fonts/dm-sans-latin.woff2') format('woff2');
+    font-weight: 100 1000;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { font-family: 'DM Sans', sans-serif; font-size: 11px; line-height: 1.5; color: #1a1a2e; background: #ffffff; padding: 0; margin: 0; }
+  .page { width: 100%; max-width: 210mm; margin: 0 auto; padding: 2px 0; }
+  .header { margin-bottom: 20px; }
+  .header h1 { font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 700; color: #1a1a2e; letter-spacing: -0.02em; margin-bottom: 6px; line-height: 1.1; }
+  .header-gradient { height: 2px; background: linear-gradient(to right, hsl(187, 74%, 32%), hsl(270, 70%, 45%)); border-radius: 1px; margin-bottom: 10px; }
+  .contact-row { display: flex; flex-wrap: wrap; gap: 8px 14px; font-family: 'DM Sans', sans-serif; font-size: 10.5px; line-height: 1.4; color: #555; }
+  .contact-row a { color: #555; text-decoration: none; }
+  .contact-row .separator { color: #ccc; }
+  .section { margin-bottom: 18px; }
+  .section-title { font-family: 'Space Grotesk', sans-serif; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: hsl(187, 74%, 32%); border-bottom: 1.5px solid #e2e2e2; padding-bottom: 4px; margin-bottom: 10px; line-height: 1.2; }
+  .summary-text { font-size: 11px; line-height: 1.7; color: #2f2f2f; }
+  a { white-space: nowrap; }
+  .competencies-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+  .competency-tag { font-family: 'DM Sans', sans-serif; font-size: 10px; font-weight: 500; color: hsl(187, 74%, 28%); background: hsl(187, 40%, 95%); padding: 4px 10px; border-radius: 3px; border: 1px solid hsl(187, 40%, 88%); }
+  .job { margin-bottom: 14px; }
+  .job-header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 4px; }
+  .job-company { font-family: 'Space Grotesk', sans-serif; font-size: 12.5px; font-weight: 600; color: hsl(270, 70%, 45%); }
+  .job-period { font-size: 10.5px; color: #777; white-space: nowrap; }
+  .job-role { font-size: 11px; font-weight: 600; color: #333; margin-bottom: 6px; }
+  .job-location { font-size: 10px; color: #888; }
+  .job ul { padding-left: 18px; margin-top: 6px; }
+  .job li { font-size: 10.5px; line-height: 1.6; color: #333; margin-bottom: 4px; }
+  .job li strong { font-weight: 600; }
+  .project { margin-bottom: 12px; }
+  .project-title { font-family: 'Space Grotesk', sans-serif; font-size: 11.5px; font-weight: 600; color: hsl(270, 70%, 45%); }
+  .project-badge { font-size: 9px; font-weight: 500; color: hsl(187, 74%, 32%); background: hsl(187, 40%, 95%); padding: 1px 6px; border-radius: 2px; margin-left: 6px; }
+  .project-desc { font-size: 10.5px; color: #444; margin-top: 3px; line-height: 1.55; }
+  .project-tech { font-size: 9.5px; color: #888; margin-top: 3px; }
+  .edu-item { margin-bottom: 8px; }
+  .edu-header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .edu-title { font-weight: 600; font-size: 11px; color: #333; }
+  .edu-org { color: hsl(270, 70%, 45%); font-weight: 500; }
+  .edu-year { font-size: 10px; color: #777; white-space: nowrap; }
+  .edu-desc { font-size: 10px; color: #666; margin-top: 2px; line-height: 1.5; }
+  .cert-item { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 6px; }
+  .cert-title { font-size: 10.5px; font-weight: 500; color: #333; }
+  .cert-org { color: hsl(270, 70%, 45%); }
+  .cert-year { font-size: 10px; color: #777; white-space: nowrap; }
+  .skills-grid { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+  .skill-item { font-size: 10.5px; color: #444; }
+  .skill-category { font-weight: 600; color: #333; font-size: 10.5px; }
+  @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } .page { padding: 0; } }
+  .avoid-break, .job, .project, .edu-item, .cert-item { break-inside: avoid; page-break-inside: avoid; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header avoid-break">
+    <h1>Fernando Costa Xavier</h1>
+    <div class="header-gradient"></div>
+    <div class="contact-row">
+      <span>+55 11 96480-1913</span>
+      <span class="separator">|</span>
+      <span>fernandocostaxavier@gmail.com</span>
+      <span class="separator">|</span>
+      <a href="https://linkedin.com/in/fernandoxavier02">linkedin.com/in/fernandoxavier02</a>
+      <span class="separator">|</span>
+      <span>Sao Paulo, Brazil</span>
+    </div>
+  </div>
+
+  <!-- PROFESSIONAL SUMMARY -->
+  <div class="section avoid-break">
+    <div class="section-title">Resumo Profissional</div>
+    <div class="summary-text">
+      Finance & Controllership Director com 15+ anos de lideranca em Financas e Contabilidade na America Latina, combinando expertise tecnica em IFRS, US GAAP e normas brasileiras (CPC) com abordagem pratica de excelencia operacional e governance. Experiencia completa no ciclo financeiro: close mensal end-to-end, consolidacao, reporting estatutario e gerencial, operações intercompany e suporte a auditorias internas e externas. Diferenciador chave: conexao entre controllership e transformacao digital — lideranca de iniciativas de automacao de processos, analytics com IA e modernizacao da funcao financeira. Experiencia sólida em FP&A, estratégia tributária e suporte a M&A. CRC-certified, ACCA (IFR), FMVA. Fluente em Portugues (nativo), Ingles (C2) e Espanhol (C1).
+    </div>
+  </div>
+
+  <!-- CORE COMPETENCIES -->
+  <div class="section">
+    <div class="section-title">Competências</div>
+    <div class="competencies-grid">
+      <span class="competency-tag">IFRS / US GAAP / BR GAAP</span>
+      <span class="competency-tag">Financial Close & Consolidation</span>
+      <span class="competency-tag">FP&A / Budgeting / Forecasting</span>
+      <span class="competency-tag">Cost Accounting / Variance Analysis</span>
+      <span class="competency-tag">Transfer Pricing</span>
+      <span class="competency-tag">M&A Due Diligence & Integration</span>
+      <span class="competency-tag">SAP / Oracle / Power BI</span>
+      <span class="competency-tag">Process Automation / AI</span>
+      <span class="competency-tag">Audit Management</span>
+      <span class="competency-tag">Internal Controls (SOX-like)</span>
+      <span class="competency-tag">Plant Controller</span>
+      <span class="competency-tag">LATAM Regional Scope</span>
+    </div>
+  </div>
+
+  <!-- WORK EXPERIENCE -->
+  <div class="section">
+    <div class="section-title">Experiência Profissional</div>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-company">Forvis Mazars</span>
+        <span class="job-period">Mai 2025 - Presente</span>
+      </div>
+      <div class="job-role">Chief Accounting & Finance Director — Sao Paulo, Brazil</div>
+      <ul>
+        <li>Definir visão estratégica da área contábil e financeira, alinhando operações com estratégia corporativa em múltiplas unidades de negócio</li>
+        <li>Liderar transformação digital e adoção de IA usando SAP, Power BI e Microsoft GPT, habilitando melhoria contínua e decisões data-driven</li>
+        <li>Dirigir FP&A, orçamentação, forecasting e otimização de custos; suportar M&A due diligence e integração pós-fusão</li>
+        <li>Garantir conformidade com IFRS, US GAAP, BR GAAP e órgãos reguladores; desenhar framework de controles internos</li>
+      </ul>
+    </div>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-company">AgroFresh (NYSE-listed)</span>
+        <span class="job-period">Set 2018 - Mai 2025</span>
+      </div>
+      <div class="job-role">Regional Controller LATAM & Head of Statutory Accounting — Sao Paulo, Brazil | LATAM Region</div>
+      <ul>
+        <li>Supervisionar operações contábeis, fiscais e de reporting financeiro para subsidiárias no Mexico, Chile, Argentina, Peru e Brasil, aderindo a IFRS, US GAAP e regulações locais</li>
+        <li>Implementar controles internos robustos, coordenar auditorias internas e externas, liderar planejamento tributário e estratégia de Transfer Pricing para a região</li>
+        <li>Conduzir 3 processos de due diligence e integração pós-aquisição de novas subsidiárias LATAM, estabelecendo frameworks de reporting estatutário e compliance do zero</li>
+        <li>Desenvolver management reporting, KPIs e dashboards; gerenciar fluxos de caixa regionais e implementar políticas de Transfer Pricing em 5 países</li>
+        <li>Spearhead initiatives de otimização de processos resultando em redução significativa de tarefas manuais e melhora em timelines de close</li>
+      </ul>
+    </div>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-company">Capgemini Brazil</span>
+        <span class="job-period">Abr 2017 - Set 2018</span>
+      </div>
+      <div class="job-role">Accounting Manager & Head of IFRS Reporting LATAM — Sao Paulo, Brazil</div>
+      <ul>
+        <li>Gerenciar close mensal brasileiro (BR GAAP) e demonstrações consolidadas para grupo multinacional; produzir pacotes de reporting IFRS e análises FP&A para headquarters</li>
+        <li>Liderar iniciativas de M&A, estudos de Transfer Pricing e reviews de impairment; desenvolver modelos financeiros e políticas contábeis internas na América Latina</li>
+        <li>Supervisionar equipe de 11 analistas e implementar automação via SAP, Power BI e sistemas de reporting automatizados para aumentar precisão e eficiência</li>
+        <li>Revisar impostos (IRPJ/CSLL, PIS, COFINS); gerenciar auditorias internas e externas e preparar demonstrações financeiras e notas explicativas</li>
+      </ul>
+    </div>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-company">Assessor Bordin Business Consultants</span>
+        <span class="job-period">2017 - 2018</span>
+      </div>
+      <div class="job-role">Accounting Coordinator</div>
+    </div>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-company">Watanabe Assessoria Contabil</span>
+        <span class="job-period">2015 - 2017</span>
+      </div>
+      <div class="job-role">Accounting Analyst</div>
+    </div>
+  </div>
+
+  <!-- EDUCATION -->
+  <div class="section avoid-break">
+    <div class="section-title">Educação</div>
+    <div class="edu-item">
+      <div class="edu-header">
+        <span class="edu-title">MBA em Corporate Finance</span>
+        <span class="edu-year">FGV — Previsto Jun 2027</span>
+      </div>
+    </div>
+    <div class="edu-item">
+      <div class="edu-header">
+        <span class="edu-title">Bacharelado em Ciências Contábeis</span>
+        <span class="edu-year">Anhembi Morumbi University — 2018</span>
+      </div>
+    </div>
+    <div class="edu-item">
+      <div class="edu-header">
+        <span class="edu-title">Bacharelado em Direito</span>
+        <span class="edu-year">Unifieo University Center — 2006</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- CERTIFICATIONS -->
+  <div class="section avoid-break">
+    <div class="section-title">Certificações</div>
+    <div class="cert-item">
+      <span class="cert-title">ACCA Certificate in International Financial Reporting (Cert IFR) — IFRS Advanced</span>
+      <span class="cert-year">2024</span>
+    </div>
+    <div class="cert-item">
+      <span class="cert-title">Financial Modelling & Valuation Analyst (FMVA) — CFI</span>
+      <span class="cert-year">2024</span>
+    </div>
+    <div class="cert-item">
+      <span class="cert-title">Certified Data Modelling in Power BI — Microsoft</span>
+      <span class="cert-year">Mar 2024</span>
+    </div>
+    <div class="cert-item">
+      <span class="cert-title">IFRS Advance Level (ACCA SBR / DipIFRS / Cert IFRS)</span>
+      <span class="cert-year">Abr 2024</span>
+    </div>
+    <div class="cert-item">
+      <span class="cert-title">Certified Accountant — CRC/SP (Reg. 1SP-346248/O, expires Mar 2034)</span>
+      <span class="cert-year">2024</span>
+    </div>
+  </div>
+
+  <!-- SKILLS -->
+  <div class="section avoid-break">
+    <div class="section-title">Skills e Ferramentas</div>
+    <div class="skills-grid">
+      <span class="skill-item"><span class="skill-category">Accounting:</span> IFRS, US GAAP, BR GAAP, Financial Close, Statutory Reporting, Internal Controls, Audit, Tax Planning, Transfer Pricing</span>
+      <span class="skill-item"><span class="skill-category">Planning:</span> FP&A, Budgeting, Forecasting, Cost Accounting, Variance Analysis, Financial Modelling, M&A, Process Improvement</span>
+      <span class="skill-item"><span class="skill-category">Systems:</span> SAP (primary ERP), Oracle, Power BI, Power Automate, BFC, ClickUp, Microsoft 365, AI Tools (Microsoft GPT)</span>
+      <span class="skill-item"><span class="skill-category">Languages:</span> Portuguese (Native), English (C2), Spanish (C1)</span>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

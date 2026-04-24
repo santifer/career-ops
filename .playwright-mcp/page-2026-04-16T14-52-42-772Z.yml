@@ -1,0 +1,698 @@
+- generic [active] [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e4]:
+    - banner [ref=e5]:
+      - generic [ref=e8]:
+        - link "pfizer corporate logo" [ref=e9] [cursor=pointer]:
+          - /url: /
+          - img "Pfizer logo" [ref=e10]
+        - button "Search" [ref=e12] [cursor=pointer]:
+          - img [ref=e13]
+          - text: Search
+        - button "Hamburger" [ref=e15] [cursor=pointer]
+    - main [ref=e19]:
+      - generic [ref=e21]:
+        - img "Find Your Career" [ref=e24]
+        - heading "Find Your Career" [level=1] [ref=e29]
+      - article [ref=e30]:
+        - generic [ref=e34]:
+          - generic [ref=e35]:
+            - generic [ref=e37]: Search Results for "Finance"
+            - generic [ref=e39]:
+              - navigation [ref=e41]:
+                - generic [ref=e43] [cursor=pointer]: English
+              - generic [ref=e44]:
+                - textbox "Search by role or key word(s)" [ref=e45]: Finance
+                - button "Search" [ref=e46] [cursor=pointer]
+              - generic [ref=e47]:
+                - generic [ref=e48]: Sort by
+                - generic [ref=e49]:
+                  - option "Recent postings first" [selected]
+                  - option "Older postings first"
+                  - generic [ref=e50] [cursor=pointer]: Recent postings first
+              - generic [ref=e51]:
+                - generic [ref=e52]: Count per page
+                - generic [ref=e53]:
+                  - option "10" [selected]
+                  - option "20"
+                  - option "30"
+                  - option "40"
+                  - option "50"
+                  - generic [ref=e54] [cursor=pointer]: "10"
+          - generic [ref=e56]:
+            - generic [ref=e57]:
+              - generic [ref=e58]:
+                - generic [ref=e59]: Filters
+                - generic [ref=e60]:
+                  - link "Select all" [ref=e62] [cursor=pointer]:
+                    - /url: "#"
+                  - generic [ref=e63]: "|"
+                  - link "Reset" [ref=e65] [cursor=pointer]:
+                    - /url: "#"
+              - generic [ref=e66]:
+                - generic [ref=e67]:
+                  - text: Region
+                  - textbox "1" [ref=e70]:
+                    - /placeholder: Region
+                    - text: Brazil (1)
+                - generic [ref=e72]:
+                  - text: Location Region/State/Province
+                  - textbox "0" [ref=e75]:
+                    - /placeholder: Location Region/State/Province
+                - generic [ref=e77]:
+                  - text: Site Location
+                  - textbox "0" [ref=e80]:
+                    - /placeholder: Site Location
+                - generic [ref=e82]:
+                  - text: Job Category
+                  - textbox "0" [ref=e85]:
+                    - /placeholder: Job Category
+                - generic [ref=e87]:
+                  - text: Special Job Types
+                  - list [ref=e90]:
+                    - listitem [ref=e91]:
+                      - generic [ref=e93] [cursor=pointer]: Fixed Term/Temporary (3)
+            - generic [ref=e94]:
+              - table [ref=e96]:
+                - rowgroup [ref=e97]:
+                  - row "Job Title Job Category Job Type Site Location" [ref=e98]:
+                    - columnheader "Job Title" [ref=e99]
+                    - columnheader "Job Category" [ref=e100]
+                    - columnheader "Job Type" [ref=e101]
+                    - columnheader "Site Location" [ref=e102]
+                - rowgroup [ref=e103]:
+                  - row "Customer Service Manager (Global Supply Chain) Logistics & Supply Chain Mgmt Regular Full time Slovakia - Remote" [ref=e104]:
+                    - cell "Customer Service Manager (Global Supply Chain)" [ref=e105]:
+                      - link "Customer Service Manager (Global Supply Chain)" [ref=e106] [cursor=pointer]:
+                        - /url: /about/careers/job/4954700?langcode=en
+                    - cell "Logistics & Supply Chain Mgmt" [ref=e107]
+                    - cell "Regular Full time" [ref=e108]:
+                      - generic [ref=e109]:
+                        - text: Regular
+                        - text: Full time
+                    - cell "Slovakia - Remote" [ref=e110]:
+                      - list [ref=e112]:
+                        - listitem [ref=e113]: Slovakia - Remote
+                  - row "零售电商负责人Retail E-commerce Lead Mkt & Sales/Commercial Bus Regular Full time China - Beijing - Beijing China - Shanghai - Shanghai" [ref=e114]:
+                    - cell "零售电商负责人Retail E-commerce Lead" [ref=e115]:
+                      - link "零售电商负责人Retail E-commerce Lead" [ref=e116] [cursor=pointer]:
+                        - /url: /about/careers/job/4950614?langcode=en
+                    - cell "Mkt & Sales/Commercial Bus" [ref=e117]
+                    - cell "Regular Full time" [ref=e118]:
+                      - generic [ref=e119]:
+                        - text: Regular
+                        - text: Full time
+                    - cell "China - Beijing - Beijing China - Shanghai - Shanghai" [ref=e120]:
+                      - list [ref=e122]:
+                        - listitem [ref=e123]: China - Beijing - Beijing
+                        - listitem [ref=e124]: China - Shanghai - Shanghai
+                  - row "Master Data Analyst I Marketing and Market Research Regular Full time United States - Pennsylvania - Collegeville" [ref=e125]:
+                    - cell "Master Data Analyst I" [ref=e126]:
+                      - link "Master Data Analyst I" [ref=e127] [cursor=pointer]:
+                        - /url: /about/careers/job/4954843?langcode=en
+                    - cell "Marketing and Market Research" [ref=e128]
+                    - cell "Regular Full time" [ref=e129]:
+                      - generic [ref=e130]:
+                        - text: Regular
+                        - text: Full time
+                    - cell "United States - Pennsylvania - Collegeville" [ref=e131]:
+                      - list [ref=e133]:
+                        - listitem [ref=e134]: United States - Pennsylvania - Collegeville
+                  - row "Recruiting and Onboarding Delivery Associate, LATAM (Portuguese Speaker) People Experience Regular Full time Costa Rica - Escazu" [ref=e135]:
+                    - cell "Recruiting and Onboarding Delivery Associate, LATAM (Portuguese Speaker)" [ref=e136]:
+                      - link "Recruiting and Onboarding Delivery Associate, LATAM (Portuguese Speaker)" [ref=e137] [cursor=pointer]:
+                        - /url: /about/careers/job/4955213?langcode=en
+                    - cell "People Experience" [ref=e138]
+                    - cell "Regular Full time" [ref=e139]:
+                      - generic [ref=e140]:
+                        - text: Regular
+                        - text: Full time
+                    - cell "Costa Rica - Escazu" [ref=e141]:
+                      - list [ref=e143]:
+                        - listitem [ref=e144]: Costa Rica - Escazu
+                  - row "Marketing Coordinator Marketing and Market Research Regular Full time Peru - Lima" [ref=e145]:
+                    - cell "Marketing Coordinator" [ref=e146]:
+                      - link "Marketing Coordinator" [ref=e147] [cursor=pointer]:
+                        - /url: /about/careers/job/4955132?langcode=en
+                    - cell "Marketing and Market Research" [ref=e148]
+                    - cell "Regular Full time" [ref=e149]:
+                      - generic [ref=e150]:
+                        - text: Regular
+                        - text: Full time
+                    - cell "Peru - Lima" [ref=e151]:
+                      - list [ref=e153]:
+                        - listitem [ref=e154]: Peru - Lima
+                  - row "Professional Health Representative - Neuroscience Sales Regular Full time United Arab Emirates - Dubai" [ref=e155]:
+                    - cell "Professional Health Representative - Neuroscience" [ref=e156]:
+                      - link "Professional Health Representative - Neuroscience" [ref=e157] [cursor=pointer]:
+                        - /url: /about/careers/job/4953102?langcode=en
+                    - cell "Sales" [ref=e158]
+                    - cell "Regular Full time" [ref=e159]:
+                      - generic [ref=e160]:
+                        - text: Regular
+                        - text: Full time
+                    - cell "United Arab Emirates - Dubai" [ref=e161]:
+                      - list [ref=e163]:
+                        - listitem [ref=e164]: United Arab Emirates - Dubai
+                  - row "[A&V] Launch Excellence, Director Marketing and Market Research Regular Full time Japan - Tokyo" [ref=e165]:
+                    - cell "[A&V] Launch Excellence, Director" [ref=e166]:
+                      - link "[A&V] Launch Excellence, Director" [ref=e167] [cursor=pointer]:
+                        - /url: /about/careers/job/4955094?langcode=en
+                    - cell "Marketing and Market Research" [ref=e168]
+                    - cell "Regular Full time" [ref=e169]:
+                      - generic [ref=e170]:
+                        - text: Regular
+                        - text: Full time
+                    - cell "Japan - Tokyo" [ref=e171]:
+                      - list [ref=e173]:
+                        - listitem [ref=e174]: Japan - Tokyo
+                  - row "Senior Product Lead Bus Dev & Strategic Planning Regular Full time United States - Kansas - McPherson" [ref=e175]:
+                    - cell "Senior Product Lead" [ref=e176]:
+                      - link "Senior Product Lead" [ref=e177] [cursor=pointer]:
+                        - /url: /about/careers/job/4954415?langcode=en
+                    - cell "Bus Dev & Strategic Planning" [ref=e178]
+                    - cell "Regular Full time" [ref=e179]:
+                      - generic [ref=e180]:
+                        - text: Regular
+                        - text: Full time
+                    - cell "United States - Kansas - McPherson" [ref=e181]:
+                      - list [ref=e183]:
+                        - listitem [ref=e184]: United States - Kansas - McPherson
+                  - row "[SC] Specialty Care Inline Portfolio & LCM Strategy Lead Marketing and Market Research Regular Full time Japan - Tokyo" [ref=e185]:
+                    - cell "[SC] Specialty Care Inline Portfolio & LCM Strategy Lead" [ref=e186]:
+                      - link "[SC] Specialty Care Inline Portfolio & LCM Strategy Lead" [ref=e187] [cursor=pointer]:
+                        - /url: /about/careers/job/4955028?langcode=en
+                    - cell "Marketing and Market Research" [ref=e188]
+                    - cell "Regular Full time" [ref=e189]:
+                      - generic [ref=e190]:
+                        - text: Regular
+                        - text: Full time
+                    - cell "Japan - Tokyo" [ref=e191]:
+                      - list [ref=e193]:
+                        - listitem [ref=e194]: Japan - Tokyo
+                  - row "Country Brand Manager - Oncology Marketing and Market Research Regular Full time Malaysia - Kuala Lumpur" [ref=e195]:
+                    - cell "Country Brand Manager - Oncology" [ref=e196]:
+                      - link "Country Brand Manager - Oncology" [ref=e197] [cursor=pointer]:
+                        - /url: /about/careers/job/4955018?langcode=en
+                    - cell "Marketing and Market Research" [ref=e198]
+                    - cell "Regular Full time" [ref=e199]:
+                      - generic [ref=e200]:
+                        - text: Regular
+                        - text: Full time
+                    - cell "Malaysia - Kuala Lumpur" [ref=e201]:
+                      - list [ref=e203]:
+                        - listitem [ref=e204]: Malaysia - Kuala Lumpur
+                  - row "Manager, Market Access Market Access Regular Full time India - Mumbai" [ref=e205]:
+                    - cell "Manager, Market Access" [ref=e206]:
+                      - link "Manager, Market Access" [ref=e207] [cursor=pointer]:
+                        - /url: /about/careers/job/4954391?langcode=en
+                    - cell "Market Access" [ref=e208]
+                    - cell "Regular Full time" [ref=e209]:
+                      - generic [ref=e210]:
+                        - text: Regular
+                        - text: Full time
+                    - cell "India - Mumbai" [ref=e211]:
+                      - list [ref=e213]:
+                        - listitem [ref=e214]: India - Mumbai
+                  - row "Vice President, SAP and Enterprise Solutions Information & Business Tech Regular Full time United States - Pennsylvania - Collegeville United States - New York - New York City" [ref=e215]:
+                    - cell "Vice President, SAP and Enterprise Solutions" [ref=e216]:
+                      - link "Vice President, SAP and Enterprise Solutions" [ref=e217] [cursor=pointer]:
+                        - /url: /about/careers/job/4954994?langcode=en
+                    - cell "Information & Business Tech" [ref=e218]
+                    - cell "Regular Full time" [ref=e219]:
+                      - generic [ref=e220]:
+                        - text: Regular
+                        - text: Full time
+                    - cell "United States - Pennsylvania - Collegeville United States - New York - New York City" [ref=e221]:
+                      - list [ref=e223]:
+                        - listitem [ref=e224]: United States - Pennsylvania - Collegeville
+                        - listitem [ref=e225]: United States - New York - New York City
+                  - row "Senior Account Manager - Puerto Rico Sales Regular Full time Puerto Rico - San Juan" [ref=e226]:
+                    - cell "Senior Account Manager - Puerto Rico" [ref=e227]:
+                      - link "Senior Account Manager - Puerto Rico" [ref=e228] [cursor=pointer]:
+                        - /url: /about/careers/job/4954927?langcode=en
+                    - cell "Sales" [ref=e229]
+                    - cell "Regular Full time" [ref=e230]:
+                      - generic [ref=e231]:
+                        - text: Regular
+                        - text: Full time
+                    - cell "Puerto Rico - San Juan" [ref=e232]:
+                      - list [ref=e234]:
+                        - listitem [ref=e235]: Puerto Rico - San Juan
+                  - row "Director of AI Engineering – Vaccine R&D Operations Enablement Information & Business Tech Regular Full time United States - New York - Pearl River" [ref=e236]:
+                    - cell "Director of AI Engineering – Vaccine R&D Operations Enablement" [ref=e237]:
+                      - link "Director of AI Engineering – Vaccine R&D Operations Enablement" [ref=e238] [cursor=pointer]:
+                        - /url: /about/careers/job/4953692?langcode=en
+                    - cell "Information & Business Tech" [ref=e239]
+                    - cell "Regular Full time" [ref=e240]:
+                      - generic [ref=e241]:
+                        - text: Regular
+                        - text: Full time
+                    - cell "United States - New York - Pearl River" [ref=e242]:
+                      - list [ref=e244]:
+                        - listitem [ref=e245]: United States - New York - Pearl River
+                  - row "Director, Data Governance & Insights Enablement Marketing and Market Research Regular Full time United States - Pennsylvania - Collegeville United States - New York - New York City" [ref=e246]:
+                    - cell "Director, Data Governance & Insights Enablement" [ref=e247]:
+                      - link "Director, Data Governance & Insights Enablement" [ref=e248] [cursor=pointer]:
+                        - /url: /about/careers/job/4954849?langcode=en
+                    - cell "Marketing and Market Research" [ref=e249]
+                    - cell "Regular Full time" [ref=e250]:
+                      - generic [ref=e251]:
+                        - text: Regular
+                        - text: Full time
+                    - cell "United States - Pennsylvania - Collegeville United States - New York - New York City" [ref=e252]:
+                      - list [ref=e254]:
+                        - listitem [ref=e255]: United States - Pennsylvania - Collegeville
+                        - listitem [ref=e256]: United States - New York - New York City
+                  - row "France Country Compliance Lead Legal Affairs Regular Full time France - Rives de Paris" [ref=e257]:
+                    - cell "France Country Compliance Lead" [ref=e258]:
+                      - link "France Country Compliance Lead" [ref=e259] [cursor=pointer]:
+                        - /url: /about/careers/job/4954624?langcode=en
+                    - cell "Legal Affairs" [ref=e260]
+                    - cell "Regular Full time" [ref=e261]:
+                      - generic [ref=e262]:
+                        - text: Regular
+                        - text: Full time
+                    - cell "France - Rives de Paris" [ref=e263]:
+                      - list [ref=e265]:
+                        - listitem [ref=e266]: France - Rives de Paris
+                  - row "Senior Manager, Pfizer Patient Services (PPS), Affordability Analytics Marketing and Market Research Regular Full time United States - Pennsylvania - Collegeville United States - New York - New York City" [ref=e267]:
+                    - cell "Senior Manager, Pfizer Patient Services (PPS), Affordability Analytics" [ref=e268]:
+                      - link "Senior Manager, Pfizer Patient Services (PPS), Affordability Analytics" [ref=e269] [cursor=pointer]:
+                        - /url: /about/careers/job/4954589?langcode=en
+                    - cell "Marketing and Market Research" [ref=e270]
+                    - cell "Regular Full time" [ref=e271]:
+                      - generic [ref=e272]:
+                        - text: Regular
+                        - text: Full time
+                    - cell "United States - Pennsylvania - Collegeville United States - New York - New York City" [ref=e273]:
+                      - list [ref=e275]:
+                        - listitem [ref=e276]: United States - Pennsylvania - Collegeville
+                        - listitem [ref=e277]: United States - New York - New York City
+                  - 'row "Coordenador Planejamento Financeiro | Financial Planning Coordinator (Sede: São Paulo/SP) Finance & Accounting Regular Full time Brazil - São Paulo" [ref=e278]':
+                    - 'cell "Coordenador Planejamento Financeiro | Financial Planning Coordinator (Sede: São Paulo/SP)" [ref=e279]':
+                      - 'link "Coordenador Planejamento Financeiro | Financial Planning Coordinator (Sede: São Paulo/SP)" [ref=e280] [cursor=pointer]':
+                        - /url: /about/careers/job/4954799?langcode=en
+                    - cell "Finance & Accounting" [ref=e281]
+                    - cell "Regular Full time" [ref=e282]:
+                      - generic [ref=e283]:
+                        - text: Regular
+                        - text: Full time
+                    - cell "Brazil - São Paulo" [ref=e284]:
+                      - list [ref=e286]:
+                        - listitem [ref=e287]: Brazil - São Paulo
+                  - row "Country Portfolio Lead Vaccines Marketing and Market Research Regular Full time Poland - Warsaw" [ref=e288]:
+                    - cell "Country Portfolio Lead Vaccines" [ref=e289]:
+                      - link "Country Portfolio Lead Vaccines" [ref=e290] [cursor=pointer]:
+                        - /url: /about/careers/job/4954850?langcode=en
+                    - cell "Marketing and Market Research" [ref=e291]
+                    - cell "Regular Full time" [ref=e292]:
+                      - generic [ref=e293]:
+                        - text: Regular
+                        - text: Full time
+                    - cell "Poland - Warsaw" [ref=e294]:
+                      - list [ref=e296]:
+                        - listitem [ref=e297]: Poland - Warsaw
+                  - row "Development Head, RSV, RSV Combination, and Early Vaccine Programs Medical Regular Full time United States - New York - Pearl River United States - Pennsylvania - Collegeville" [ref=e298]:
+                    - cell "Development Head, RSV, RSV Combination, and Early Vaccine Programs" [ref=e299]:
+                      - link "Development Head, RSV, RSV Combination, and Early Vaccine Programs" [ref=e300] [cursor=pointer]:
+                        - /url: /about/careers/job/4954848?langcode=en
+                    - cell "Medical" [ref=e301]
+                    - cell "Regular Full time" [ref=e302]:
+                      - generic [ref=e303]:
+                        - text: Regular
+                        - text: Full time
+                    - cell "United States - New York - Pearl River United States - Pennsylvania - Collegeville" [ref=e304]:
+                      - list [ref=e306]:
+                        - listitem [ref=e307]: United States - New York - Pearl River
+                        - listitem [ref=e308]: United States - Pennsylvania - Collegeville
+                  - row "Sr. Manager, LITFULO Consumer Marketing Marketing and Market Research Regular Full time United States - Pennsylvania - Collegeville United States - New York - New York City" [ref=e309]:
+                    - cell "Sr. Manager, LITFULO Consumer Marketing" [ref=e310]:
+                      - link "Sr. Manager, LITFULO Consumer Marketing" [ref=e311] [cursor=pointer]:
+                        - /url: /about/careers/job/4954841?langcode=en
+                    - cell "Marketing and Market Research" [ref=e312]
+                    - cell "Regular Full time" [ref=e313]:
+                      - generic [ref=e314]:
+                        - text: Regular
+                        - text: Full time
+                    - cell "United States - Pennsylvania - Collegeville United States - New York - New York City" [ref=e315]:
+                      - list [ref=e317]:
+                        - listitem [ref=e318]: United States - Pennsylvania - Collegeville
+                        - listitem [ref=e319]: United States - New York - New York City
+                  - row "Finance Manager Information & Business Tech Regular Full time Greece-Thessaloniki Chortiatis" [ref=e320]:
+                    - cell "Finance Manager" [ref=e321]:
+                      - link "Finance Manager" [ref=e322] [cursor=pointer]:
+                        - /url: /about/careers/job/4954719?langcode=en
+                    - cell "Information & Business Tech" [ref=e323]
+                    - cell "Regular Full time" [ref=e324]:
+                      - generic [ref=e325]:
+                        - text: Regular
+                        - text: Full time
+                    - cell "Greece-Thessaloniki Chortiatis" [ref=e326]:
+                      - list [ref=e328]:
+                        - listitem [ref=e329]: Greece-Thessaloniki Chortiatis
+                  - row "Sr. Associate Payroll EMEA (German speaker) People Experience Regular Full time Greece-Thessaloniki Chortiatis" [ref=e330]:
+                    - cell "Sr. Associate Payroll EMEA (German speaker)" [ref=e331]:
+                      - link "Sr. Associate Payroll EMEA (German speaker)" [ref=e332] [cursor=pointer]:
+                        - /url: /about/careers/job/4954686?langcode=en
+                    - cell "People Experience" [ref=e333]
+                    - cell "Regular Full time" [ref=e334]:
+                      - generic [ref=e335]:
+                        - text: Regular
+                        - text: Full time
+                    - cell "Greece-Thessaloniki Chortiatis" [ref=e336]:
+                      - list [ref=e338]:
+                        - listitem [ref=e339]: Greece-Thessaloniki Chortiatis
+                  - row "Director, Commercial Performance Analytics & Insights Marketing and Market Research Regular Full time United States - Illinois - Lake Forest United States - Pennsylvania - Collegeville United States - New York - New York City" [ref=e340]:
+                    - cell "Director, Commercial Performance Analytics & Insights" [ref=e341]:
+                      - link "Director, Commercial Performance Analytics & Insights" [ref=e342] [cursor=pointer]:
+                        - /url: /about/careers/job/4952995?langcode=en
+                    - cell "Marketing and Market Research" [ref=e343]
+                    - cell "Regular Full time" [ref=e344]:
+                      - generic [ref=e345]:
+                        - text: Regular
+                        - text: Full time
+                    - cell "United States - Illinois - Lake Forest United States - Pennsylvania - Collegeville United States - New York - New York City" [ref=e346]:
+                      - list [ref=e348]:
+                        - listitem [ref=e349]: United States - Illinois - Lake Forest
+                        - listitem [ref=e350]: United States - Pennsylvania - Collegeville
+                        - listitem [ref=e351]: United States - New York - New York City
+                  - row "Market Access & Policy Lead – MISP Cluster Market Access Regular Full time Malaysia - Kuala Lumpur" [ref=e352]:
+                    - cell "Market Access & Policy Lead – MISP Cluster" [ref=e353]:
+                      - link "Market Access & Policy Lead – MISP Cluster" [ref=e354] [cursor=pointer]:
+                        - /url: /about/careers/job/4949752?langcode=en
+                    - cell "Market Access" [ref=e355]
+                    - cell "Regular Full time" [ref=e356]:
+                      - generic [ref=e357]:
+                        - text: Regular
+                        - text: Full time
+                    - cell "Malaysia - Kuala Lumpur" [ref=e358]:
+                      - list [ref=e360]:
+                        - listitem [ref=e361]: Malaysia - Kuala Lumpur
+                  - row "Manager, Japan Compliance Legal Affairs Regular Full time Japan - Tokyo" [ref=e362]:
+                    - cell "Manager, Japan Compliance" [ref=e363]:
+                      - link "Manager, Japan Compliance" [ref=e364] [cursor=pointer]:
+                        - /url: /about/careers/job/4953932?langcode=en
+                    - cell "Legal Affairs" [ref=e365]
+                    - cell "Regular Full time" [ref=e366]:
+                      - generic [ref=e367]:
+                        - text: Regular
+                        - text: Full time
+                    - cell "Japan - Tokyo" [ref=e368]:
+                      - list [ref=e370]:
+                        - listitem [ref=e371]: Japan - Tokyo
+                  - row "Global O2C Collections Analyst & Dispute Mgt - Dutch Language (12 months fixed term) Finance & Accounting Fixed Term Full time Greece-Thessaloniki Chortiatis" [ref=e372]:
+                    - cell "Global O2C Collections Analyst & Dispute Mgt - Dutch Language (12 months fixed term)" [ref=e373]:
+                      - link "Global O2C Collections Analyst & Dispute Mgt - Dutch Language (12 months fixed term)" [ref=e374] [cursor=pointer]:
+                        - /url: /about/careers/job/4953067?langcode=en
+                    - cell "Finance & Accounting" [ref=e375]
+                    - cell "Fixed Term Full time" [ref=e376]:
+                      - generic [ref=e377]:
+                        - text: Fixed Term
+                        - text: Full time
+                    - cell "Greece-Thessaloniki Chortiatis" [ref=e378]:
+                      - list [ref=e380]:
+                        - listitem [ref=e381]: Greece-Thessaloniki Chortiatis
+                  - row "Director, Kendall Square Site Affairs / Scientific Portfolio Operations Support Bus Dev & Strategic Planning Regular Full time United States - Massachusetts - Cambridge" [ref=e382]:
+                    - cell "Director, Kendall Square Site Affairs / Scientific Portfolio Operations Support" [ref=e383]:
+                      - link "Director, Kendall Square Site Affairs / Scientific Portfolio Operations Support" [ref=e384] [cursor=pointer]:
+                        - /url: /about/careers/job/4953900?langcode=en
+                    - cell "Bus Dev & Strategic Planning" [ref=e385]
+                    - cell "Regular Full time" [ref=e386]:
+                      - generic [ref=e387]:
+                        - text: Regular
+                        - text: Full time
+                    - cell "United States - Massachusetts - Cambridge" [ref=e388]:
+                      - list [ref=e390]:
+                        - listitem [ref=e391]: United States - Massachusetts - Cambridge
+                  - row "Associate Payroll People Experience Regular Full time Costa Rica - Escazu" [ref=e392]:
+                    - cell "Associate Payroll" [ref=e393]:
+                      - link "Associate Payroll" [ref=e394] [cursor=pointer]:
+                        - /url: /about/careers/job/4951056?langcode=en
+                    - cell "People Experience" [ref=e395]
+                    - cell "Regular Full time" [ref=e396]:
+                      - generic [ref=e397]:
+                        - text: Regular
+                        - text: Full time
+                    - cell "Costa Rica - Escazu" [ref=e398]:
+                      - list [ref=e400]:
+                        - listitem [ref=e401]: Costa Rica - Escazu
+                  - row "PGS Dalian Site Senior Cost Analyst Finance & Accounting Regular Full time China - Liaoning - Dalian" [ref=e402]:
+                    - cell "PGS Dalian Site Senior Cost Analyst" [ref=e403]:
+                      - link "PGS Dalian Site Senior Cost Analyst" [ref=e404] [cursor=pointer]:
+                        - /url: /about/careers/job/4954458?langcode=en
+                    - cell "Finance & Accounting" [ref=e405]
+                    - cell "Regular Full time" [ref=e406]:
+                      - generic [ref=e407]:
+                        - text: Regular
+                        - text: Full time
+                    - cell "China - Liaoning - Dalian" [ref=e408]:
+                      - list [ref=e410]:
+                        - listitem [ref=e411]: China - Liaoning - Dalian
+                  - row "Health & Value Specialist Market Access Regular Full time Indonesia - Jakarta" [ref=e412]:
+                    - cell "Health & Value Specialist" [ref=e413]:
+                      - link "Health & Value Specialist" [ref=e414] [cursor=pointer]:
+                        - /url: /about/careers/job/4953915?langcode=en
+                    - cell "Market Access" [ref=e415]
+                    - cell "Regular Full time" [ref=e416]:
+                      - generic [ref=e417]:
+                        - text: Regular
+                        - text: Full time
+                    - cell "Indonesia - Jakarta" [ref=e418]:
+                      - list [ref=e420]:
+                        - listitem [ref=e421]: Indonesia - Jakarta
+                  - row "Pflichtpraktikant (m/w/d) im Bereich Finance Support Services Fixed Term Full time Germany - Freiburg" [ref=e422]:
+                    - cell "Pflichtpraktikant (m/w/d) im Bereich Finance" [ref=e423]:
+                      - link "Pflichtpraktikant (m/w/d) im Bereich Finance" [ref=e424] [cursor=pointer]:
+                        - /url: /about/careers/job/4920391?langcode=en
+                    - cell "Support Services" [ref=e425]
+                    - cell "Fixed Term Full time" [ref=e426]:
+                      - generic [ref=e427]:
+                        - text: Fixed Term
+                        - text: Full time
+                    - cell "Germany - Freiburg" [ref=e428]:
+                      - list [ref=e430]:
+                        - listitem [ref=e431]: Germany - Freiburg
+                  - row "[ONC] Hematology Oncology Commerical Lead Marketing and Market Research Regular Full time Japan - Tokyo" [ref=e432]:
+                    - cell "[ONC] Hematology Oncology Commerical Lead" [ref=e433]:
+                      - link "[ONC] Hematology Oncology Commerical Lead" [ref=e434] [cursor=pointer]:
+                        - /url: /about/careers/job/4942266?langcode=en
+                    - cell "Marketing and Market Research" [ref=e435]
+                    - cell "Regular Full time" [ref=e436]:
+                      - generic [ref=e437]:
+                        - text: Regular
+                        - text: Full time
+                    - cell "Japan - Tokyo" [ref=e438]:
+                      - list [ref=e440]:
+                        - listitem [ref=e441]: Japan - Tokyo
+                  - row "Pfizer-Strategy & Innovation Director-SH Bus Dev & Strategic Planning Regular Full time China - Shanghai - Shanghai" [ref=e442]:
+                    - cell "Pfizer-Strategy & Innovation Director-SH" [ref=e443]:
+                      - link "Pfizer-Strategy & Innovation Director-SH" [ref=e444] [cursor=pointer]:
+                        - /url: /about/careers/job/4953034?langcode=en
+                    - cell "Bus Dev & Strategic Planning" [ref=e445]
+                    - cell "Regular Full time" [ref=e446]:
+                      - generic [ref=e447]:
+                        - text: Regular
+                        - text: Full time
+                    - cell "China - Shanghai - Shanghai" [ref=e448]:
+                      - list [ref=e450]:
+                        - listitem [ref=e451]: China - Shanghai - Shanghai
+                  - row "Accounting and Data Specialist - fixed term period of 1,5 years Finance & Accounting Fixed Term Full time Romania - Bucharest" [ref=e452]:
+                    - cell "Accounting and Data Specialist - fixed term period of 1,5 years" [ref=e453]:
+                      - link "Accounting and Data Specialist - fixed term period of 1,5 years" [ref=e454] [cursor=pointer]:
+                        - /url: /about/careers/job/4950573?langcode=en
+                    - cell "Finance & Accounting" [ref=e455]
+                    - cell "Fixed Term Full time" [ref=e456]:
+                      - generic [ref=e457]:
+                        - text: Fixed Term
+                        - text: Full time
+                    - cell "Romania - Bucharest" [ref=e458]:
+                      - list [ref=e460]:
+                        - listitem [ref=e461]: Romania - Bucharest
+                  - row "GWE Manager for HK, Macau , Taiwan and South China Commercial Sites Global Operations Regular Full time Hong Kong - Quarry Bay" [ref=e462]:
+                    - cell "GWE Manager for HK, Macau , Taiwan and South China Commercial Sites" [ref=e463]:
+                      - link "GWE Manager for HK, Macau , Taiwan and South China Commercial Sites" [ref=e464] [cursor=pointer]:
+                        - /url: /about/careers/job/4952151?langcode=en
+                    - cell "Global Operations" [ref=e465]
+                    - cell "Regular Full time" [ref=e466]:
+                      - generic [ref=e467]:
+                        - text: Regular
+                        - text: Full time
+                    - cell "Hong Kong - Quarry Bay" [ref=e468]:
+                      - list [ref=e470]:
+                        - listitem [ref=e471]: Hong Kong - Quarry Bay
+                  - row "Associate Payroll and Time & Attendance EMEA, Dutch People Experience Regular Full time Greece-Thessaloniki Chortiatis" [ref=e472]:
+                    - cell "Associate Payroll and Time & Attendance EMEA, Dutch" [ref=e473]:
+                      - link "Associate Payroll and Time & Attendance EMEA, Dutch" [ref=e474] [cursor=pointer]:
+                        - /url: /about/careers/job/4952082?langcode=en
+                    - cell "People Experience" [ref=e475]
+                    - cell "Regular Full time" [ref=e476]:
+                      - generic [ref=e477]:
+                        - text: Regular
+                        - text: Full time
+                    - cell "Greece-Thessaloniki Chortiatis" [ref=e478]:
+                      - list [ref=e480]:
+                        - listitem [ref=e481]: Greece-Thessaloniki Chortiatis
+                  - row "全球商业分析中国代谢领域负责人-北京或上海 Marketing and Market Research Regular Full time China - Beijing - Beijing China - Shanghai - Shanghai" [ref=e482]:
+                    - cell "全球商业分析中国代谢领域负责人-北京或上海" [ref=e483]:
+                      - link "全球商业分析中国代谢领域负责人-北京或上海" [ref=e484] [cursor=pointer]:
+                        - /url: /about/careers/job/4951096?langcode=en
+                    - cell "Marketing and Market Research" [ref=e485]
+                    - cell "Regular Full time" [ref=e486]:
+                      - generic [ref=e487]:
+                        - text: Regular
+                        - text: Full time
+                    - cell "China - Beijing - Beijing China - Shanghai - Shanghai" [ref=e488]:
+                      - list [ref=e490]:
+                        - listitem [ref=e491]: China - Beijing - Beijing
+                        - listitem [ref=e492]: China - Shanghai - Shanghai
+                  - row "PMO-Metabolism BU Marketing and Market Research Regular Full time China - Shanghai - Shanghai" [ref=e493]:
+                    - cell "PMO-Metabolism BU" [ref=e494]:
+                      - link "PMO-Metabolism BU" [ref=e495] [cursor=pointer]:
+                        - /url: /about/careers/job/4949687?langcode=en
+                    - cell "Marketing and Market Research" [ref=e496]
+                    - cell "Regular Full time" [ref=e497]:
+                      - generic [ref=e498]:
+                        - text: Regular
+                        - text: Full time
+                    - cell "China - Shanghai - Shanghai" [ref=e499]:
+                      - list [ref=e501]:
+                        - listitem [ref=e502]: China - Shanghai - Shanghai
+                  - row "General Manager, Metabolism BU Mkt & Sales/Commercial Bus Regular Full time China - Shanghai - Shanghai" [ref=e503]:
+                    - cell "General Manager, Metabolism BU" [ref=e504]:
+                      - link "General Manager, Metabolism BU" [ref=e505] [cursor=pointer]:
+                        - /url: /about/careers/job/4949339?langcode=en
+                    - cell "Mkt & Sales/Commercial Bus" [ref=e506]
+                    - cell "Regular Full time" [ref=e507]:
+                      - generic [ref=e508]:
+                        - text: Regular
+                        - text: Full time
+                    - cell "China - Shanghai - Shanghai" [ref=e509]:
+                      - list [ref=e511]:
+                        - listitem [ref=e512]: China - Shanghai - Shanghai
+                  - row "辉瑞制药-(高级）市场策略经理-北京 Marketing and Market Research Regular Full time China - Beijing - Beijing" [ref=e513]:
+                    - cell "辉瑞制药-(高级）市场策略经理-北京" [ref=e514]:
+                      - link "辉瑞制药-(高级）市场策略经理-北京" [ref=e515] [cursor=pointer]:
+                        - /url: /about/careers/job/4949540?langcode=en
+                    - cell "Marketing and Market Research" [ref=e516]
+                    - cell "Regular Full time" [ref=e517]:
+                      - generic [ref=e518]:
+                        - text: Regular
+                        - text: Full time
+                    - cell "China - Beijing - Beijing" [ref=e519]:
+                      - list [ref=e521]:
+                        - listitem [ref=e522]: China - Beijing - Beijing
+                  - row "E-Commerce Operation Lead Mkt & Sales/Commercial Bus Regular Full time China - Beijing - Beijing China - Shanghai - Shanghai" [ref=e523]:
+                    - cell "E-Commerce Operation Lead" [ref=e524]:
+                      - link "E-Commerce Operation Lead" [ref=e525] [cursor=pointer]:
+                        - /url: /about/careers/job/4949323?langcode=en
+                    - cell "Mkt & Sales/Commercial Bus" [ref=e526]
+                    - cell "Regular Full time" [ref=e527]:
+                      - generic [ref=e528]:
+                        - text: Regular
+                        - text: Full time
+                    - cell "China - Beijing - Beijing China - Shanghai - Shanghai" [ref=e529]:
+                      - list [ref=e531]:
+                        - listitem [ref=e532]: China - Beijing - Beijing
+                        - listitem [ref=e533]: China - Shanghai - Shanghai
+              - list [ref=e535]:
+                - listitem:
+                  - link:
+                    - /url: javascript:void(0)
+                    - generic:
+                      - img
+                - listitem [ref=e536]:
+                  - link "1" [ref=e537] [cursor=pointer]:
+                    - /url: javascript:void(0)
+                - listitem:
+                  - link:
+                    - /url: javascript:void(0)
+                    - generic:
+                      - img
+    - contentinfo [ref=e538]:
+      - generic [ref=e541]:
+        - 'link "Pfizer: One of the world’s premier biopharmaceutical companies" [ref=e543] [cursor=pointer]':
+          - /url: /
+          - 'img "Pfizer: One of the world’s premier biopharmaceutical companies" [ref=e544]'
+        - navigation "first-column-footer-menu" [ref=e546]:
+          - list [ref=e547]:
+            - listitem [ref=e548]:
+              - heading "Investors" [level=6] [ref=e549]:
+                - link "Investors" [ref=e550] [cursor=pointer]:
+                  - /url: http://investors.pfizer.com
+            - listitem [ref=e551]:
+              - heading "Media" [level=6] [ref=e552]:
+                - link "Media" [ref=e553] [cursor=pointer]:
+                  - /url: /newsroom
+            - listitem [ref=e554]:
+              - heading "Careers" [level=6] [ref=e555]:
+                - link "Careers" [ref=e556] [cursor=pointer]:
+                  - /url: /about/careers
+            - listitem [ref=e557]:
+              - heading "Partners" [level=6] [ref=e558]:
+                - link "Partners" [ref=e559] [cursor=pointer]:
+                  - /url: /about/partners
+        - navigation "second-column-footer-menu" [ref=e561]:
+          - list [ref=e562]:
+            - listitem [ref=e563]:
+              - link "PfizerForAll" [ref=e564] [cursor=pointer]:
+                - /url: https://www.pfizerforall.com/
+            - listitem [ref=e565]:
+              - link "Healthcare Professionals" [ref=e566] [cursor=pointer]:
+                - /url: https://www.pfizerpro.com
+            - listitem [ref=e567]:
+              - link "Grant Seekers" [ref=e568] [cursor=pointer]:
+                - /url: /about/health-policies/grants
+            - listitem [ref=e569]:
+              - link "Business to Business" [ref=e570] [cursor=pointer]:
+                - /url: /about/partners/B2B-and-suppliers
+        - navigation "third-column-footer-menu" [ref=e572]:
+          - list [ref=e573]:
+            - listitem [ref=e574]:
+              - link "Privacy Statement" [ref=e575] [cursor=pointer]:
+                - /url: /privacy
+            - listitem [ref=e576]:
+              - link "Accessibility Statement" [ref=e577] [cursor=pointer]:
+                - /url: /accessibility
+            - listitem [ref=e578]:
+              - link "Terms of Use" [ref=e579] [cursor=pointer]:
+                - /url: /terms
+            - listitem [ref=e580]:
+              - link "Contact Us" [ref=e581] [cursor=pointer]:
+                - /url: /contact
+        - generic [ref=e584]:
+          - button "Close" [ref=e585] [cursor=pointer]
+          - heading "Glossary" [level=3] [ref=e586]
+      - generic [ref=e591]:
+        - generic [ref=e596] [cursor=pointer]: United States
+        - list [ref=e597]:
+          - listitem [ref=e598]:
+            - paragraph [ref=e599]: © 2026 Pfizer Inc. All rights reserved
+        - generic [ref=e600]:
+          - paragraph [ref=e601]: This information—including product information—is intended only for residents of the United States.
+          - paragraph [ref=e602]: The products discussed herein may have different labeling in different countries.
+          - paragraph [ref=e603]
+        - list [ref=e606]:
+          - listitem [ref=e607]:
+            - link "Twitter" [ref=e608] [cursor=pointer]:
+              - /url: https://twitter.com/Pfizer
+              - img [ref=e609]
+          - listitem [ref=e611]:
+            - link "Facebook" [ref=e612] [cursor=pointer]:
+              - /url: https://www.facebook.com/Pfizer
+              - img [ref=e613]
+          - listitem [ref=e615]:
+            - link "Linked In" [ref=e616] [cursor=pointer]:
+              - /url: https://www.linkedin.com/company/pfizer
+              - img [ref=e617]
+          - listitem [ref=e619]:
+            - link "Instagram" [ref=e620] [cursor=pointer]:
+              - /url: https://www.instagram.com/pfizerinc/
+              - img [ref=e621]
+          - listitem [ref=e623]:
+            - link "Youtube" [ref=e624] [cursor=pointer]:
+              - /url: https://www.youtube.com/Pfizer
+              - img [ref=e625]
+  - status [ref=e627]
+  - button "Cookie Preferences" [ref=e629] [cursor=pointer]

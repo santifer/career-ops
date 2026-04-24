@@ -1,0 +1,576 @@
+- generic [active] [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e5]:
+    - banner [ref=e8]:
+      - generic [ref=e12]:
+        - generic [ref=e15]:
+          - generic [ref=e16]: Dark mode
+          - button "i Dark mode info" [ref=e18] [cursor=pointer]:
+            - text: i
+            - generic [ref=e19]: Dark mode info
+          - switch "Toggle Dark Mode" [ref=e20] [cursor=pointer]
+        - link "You are in our Global Site" [ref=e26] [cursor=pointer]:
+          - /url: "#"
+          - generic [ref=e27]:
+            - img [ref=e28]
+            - generic [ref=e31]: You are in our Global Site
+            - img [ref=e32]
+        - navigation [ref=e33]:
+          - list [ref=e34]:
+            - listitem [ref=e35]:
+              - link "Contact us" [ref=e36] [cursor=pointer]:
+                - /url: /info/contactus/contactus
+      - generic [ref=e40]:
+        - link "Nestlé Good food, Good life | Home" [ref=e41] [cursor=pointer]:
+          - /url: /
+          - img "Nestlé Good food, Good life | Home" [ref=e42]
+        - generic [ref=e47]:
+          - generic [ref=e48]:
+            - generic [ref=e49]: Search
+            - generic:
+              - combobox "Search" [ref=e50]
+              - text: 
+          - button "Search" [ref=e52] [cursor=pointer]:  Search
+      - generic [ref=e56]:
+        - navigation "Main navigation" [ref=e57]:
+          - list [ref=e58]:
+            - listitem [ref=e59]:
+              - link "Home" [ref=e60] [cursor=pointer]:
+                - /url: /
+            - listitem [ref=e61]:
+              - button "About us" [ref=e62] [cursor=pointer]
+            - listitem [ref=e63]:
+              - link "Our stories" [ref=e64] [cursor=pointer]:
+                - /url: /stories#/category/featured-stories/1
+            - listitem [ref=e65]:
+              - button "Brands" [ref=e66] [cursor=pointer]
+            - listitem [ref=e67]:
+              - button "Sustainability" [ref=e68] [cursor=pointer]
+            - listitem [ref=e69]:
+              - button "Nutrition" [ref=e70] [cursor=pointer]
+            - listitem [ref=e71]:
+              - button "Ask Nestlé" [ref=e72] [cursor=pointer]
+        - navigation "Secondary menu" [ref=e73]:
+          - list [ref=e74]:
+            - listitem [ref=e75]:
+              - button "Careers" [ref=e76] [cursor=pointer]
+            - listitem [ref=e77]:
+              - button "Investors" [ref=e78] [cursor=pointer]
+            - listitem [ref=e79]:
+              - button "Media" [ref=e80] [cursor=pointer]
+        - text:  
+    - list [ref=e88]:
+      - listitem [ref=e89]:
+        - link "Home" [ref=e90] [cursor=pointer]:
+          - /url: /
+      - listitem [ref=e91]:
+        - link "Careers" [ref=e92] [cursor=pointer]:
+          - /url: /jobs
+      - listitem [ref=e93]:
+        - generic [ref=e94]: Career areas
+    - main [ref=e96]:
+      - generic [ref=e97]:
+        - generic [ref=e99]:
+          - generic [ref=e100]:
+            - heading "Career areas" [level=1] [ref=e101]
+            - generic [ref=e102]: Find your role at Nestlé
+          - img "Employees discussing" [ref=e106]
+        - generic [ref=e109]:
+          - paragraph [ref=e110]: Share this page
+          - list [ref=e112]:
+            - listitem [ref=e113]:
+              - link "Linkedin" [ref=e114] [cursor=pointer]:
+                - /url: http://www.linkedin.com/shareArticle?mini=true&url=https://www.nestle.com/jobs/career-area&title=%3Cb%3ECareer%20areas%3C%2Fb%3E&source=https://www.nestle.com/jobs/career-area
+                - img "Linkedin" [ref=e115]
+            - listitem [ref=e117]:
+              - link "Facebook" [ref=e118] [cursor=pointer]:
+                - /url: https://www.facebook.com/share.php?u=https://www.nestle.com/jobs/career-area&title=%3Cb%3ECareer%20areas%3C%2Fb%3E
+                - img "Facebook" [ref=e119]
+            - listitem [ref=e121]:
+              - link "Twitter" [ref=e122] [cursor=pointer]:
+                - /url: https://twitter.com/intent/tweet?url=https://www.nestle.com/jobs/career-area&status=%3Cb%3ECareer%20areas%3C%2Fb%3E+https://www.nestle.com/jobs/career-area
+                - img "Twitter" [ref=e123]
+            - listitem [ref=e125]:
+              - link "Email" [ref=e126] [cursor=pointer]:
+                - /url: /info/SendPage?Ctx=https://www.nestle.com/jobs/career-area
+                - img "Email" [ref=e127]
+      - generic [ref=e132]:
+        - article
+        - generic [ref=e134]:
+          - paragraph [ref=e139]: From admin to supply chain, we work the same way. Nestlé people are collaborative, innovative and always looking to challenge and drive change. Find your next opportunity in the career area that fits your future.
+          - generic [ref=e142]:
+            - heading "Explore our career areas" [level=2] [ref=e144]
+            - list [ref=e145]:
+              - listitem [ref=e146]:
+                - link "Administrative Read more" [ref=e147] [cursor=pointer]:
+                  - /url: /jobs/career-area/administrative
+                  - generic [ref=e149]:
+                    - generic [ref=e150]: Administrative
+                    - generic [ref=e151]:
+                      - text: Read more
+                      - img [ref=e152]
+              - listitem [ref=e154]:
+                - link "Communications Read more" [ref=e155] [cursor=pointer]:
+                  - /url: /jobs/career-area/communications
+                  - generic [ref=e157]:
+                    - generic [ref=e158]: Communications
+                    - generic [ref=e159]:
+                      - text: Read more
+                      - img [ref=e160]
+              - listitem [ref=e162]:
+                - link "Engineering Read more" [ref=e163] [cursor=pointer]:
+                  - /url: /jobs/career-area/engineering
+                  - generic [ref=e165]:
+                    - generic [ref=e166]: Engineering
+                    - generic [ref=e167]:
+                      - text: Read more
+                      - img [ref=e168]
+              - listitem [ref=e170]:
+                - link "Finance Read more" [ref=e171] [cursor=pointer]:
+                  - /url: /jobs/career-area/finance
+                  - generic [ref=e173]:
+                    - generic [ref=e174]: Finance
+                    - generic [ref=e175]:
+                      - text: Read more
+                      - img [ref=e176]
+              - listitem [ref=e178]:
+                - link "Human Resources Read more" [ref=e179] [cursor=pointer]:
+                  - /url: /jobs/career-area/human-resources
+                  - generic [ref=e181]:
+                    - generic [ref=e182]: Human Resources
+                    - generic [ref=e183]:
+                      - text: Read more
+                      - img [ref=e184]
+              - listitem [ref=e186]:
+                - link "Information Technology Read more" [ref=e187] [cursor=pointer]:
+                  - /url: /jobs/career-area/it
+                  - generic [ref=e189]:
+                    - generic [ref=e190]: Information Technology
+                    - generic [ref=e191]:
+                      - text: Read more
+                      - img [ref=e192]
+              - listitem [ref=e194]:
+                - link "Internships & Apprenticeships Read more" [ref=e195] [cursor=pointer]:
+                  - /url: /jobs/career-area/internships
+                  - generic [ref=e197]:
+                    - generic [ref=e198]: Internships & Apprenticeships
+                    - generic [ref=e199]:
+                      - text: Read more
+                      - img [ref=e200]
+              - listitem [ref=e202]:
+                - link "Legal Read more" [ref=e203] [cursor=pointer]:
+                  - /url: /jobs/career-area/legal
+                  - generic [ref=e205]:
+                    - generic [ref=e206]: Legal
+                    - generic [ref=e207]:
+                      - text: Read more
+                      - img [ref=e208]
+              - listitem [ref=e210]:
+                - link "Marketing Read more" [ref=e211] [cursor=pointer]:
+                  - /url: /jobs/career-area/marketing
+                  - generic [ref=e213]:
+                    - generic [ref=e214]: Marketing
+                    - generic [ref=e215]:
+                      - text: Read more
+                      - img [ref=e216]
+              - listitem [ref=e218]:
+                - link "Research & Development Read more" [ref=e219] [cursor=pointer]:
+                  - /url: /jobs/career-area/research-development
+                  - generic [ref=e221]:
+                    - generic [ref=e222]: Research & Development
+                    - generic [ref=e223]:
+                      - text: Read more
+                      - img [ref=e224]
+              - listitem [ref=e226]:
+                - link "Sales Read more" [ref=e227] [cursor=pointer]:
+                  - /url: /jobs/career-area/sales
+                  - generic [ref=e229]:
+                    - generic [ref=e230]: Sales
+                    - generic [ref=e231]:
+                      - text: Read more
+                      - img [ref=e232]
+              - listitem [ref=e234]:
+                - link "Supply Chain & Procurement Read more" [ref=e235] [cursor=pointer]:
+                  - /url: /jobs/career-area/supply-chain-procurement
+                  - generic [ref=e237]:
+                    - generic [ref=e238]: Supply Chain & Procurement
+                    - generic [ref=e239]:
+                      - text: Read more
+                      - img [ref=e240]
+              - listitem [ref=e242]:
+                - link "Technical & Production Read more" [ref=e243] [cursor=pointer]:
+                  - /url: /jobs/career-area/technical-production
+                  - generic [ref=e245]:
+                    - generic [ref=e246]: Technical & Production
+                    - generic [ref=e247]:
+                      - text: Read more
+                      - img [ref=e248]
+          - generic [ref=e258]:
+            - heading "Find an opportunity in a career area that fits you" [level=2] [ref=e260]
+            - link "Search jobs" [ref=e265] [cursor=pointer]:
+              - /url: /jobs/search-jobs
+          - generic [ref=e268]:
+            - heading "What our teams are doing" [level=2] [ref=e270]
+            - list [ref=e271]:
+              - listitem [ref=e272]:
+                - link "Generation Regeneration We are on a journey toward regeneration. Some of this critical work is already under way. Read more in Sustainability regeneration" [ref=e273] [cursor=pointer]:
+                  - /url: /sustainability/regeneration
+                  - generic [ref=e274]:
+                    - generic [ref=e275]:
+                      - generic [ref=e276]: Generation Regeneration
+                      - generic [ref=e277]: We are on a journey toward regeneration. Some of this critical work is already under way.
+                      - generic [ref=e278]:
+                        - text: Read more in Sustainability
+                        - img [ref=e279]
+                    - img "regeneration" [ref=e282]
+              - listitem [ref=e283]:
+                - link "Nestlé Waters pledge We are a guardian of unique water resources, helping to protect natural aquifers and working in close partnership with others to make safe, clean water available to all. Read more in Sustainability Nestlé Waters pledge" [ref=e284] [cursor=pointer]:
+                  - /url: /sustainability/water/pledge-positive-water-impact
+                  - generic [ref=e285]:
+                    - generic [ref=e286]:
+                      - generic [ref=e287]: Nestlé Waters pledge
+                      - generic [ref=e288]: We are a guardian of unique water resources, helping to protect natural aquifers and working in close partnership with others to make safe, clean water available to all.
+                      - generic [ref=e289]:
+                        - text: Read more in Sustainability
+                        - img [ref=e290]
+                    - img "Nestlé Waters pledge" [ref=e293]
+              - listitem [ref=e294]:
+                - link "Our road to net zero We are using our size, scale and reach to tackle climate change and make a big difference. We are transforming our business and using our resources to inspire change. Read more in Sustainability climate change action" [ref=e295] [cursor=pointer]:
+                  - /url: /sustainability/climate-change/zero-environmental-impact
+                  - generic [ref=e296]:
+                    - generic [ref=e297]:
+                      - generic [ref=e298]: Our road to net zero
+                      - generic [ref=e299]: We are using our size, scale and reach to tackle climate change and make a big difference. We are transforming our business and using our resources to inspire change.
+                      - generic [ref=e300]:
+                        - text: Read more in Sustainability
+                        - img [ref=e301]
+                    - img "climate change action" [ref=e304]
+              - listitem [ref=e305]:
+                - link "Working toward a waste-free future We are accelerating our actions to tackle the plastic waste problem and are committed to making a significant difference everywhere we operate. Read more in Sustainability waste-free future" [ref=e306] [cursor=pointer]:
+                  - /url: /sustainability/waste-reduction/actions-plastic-pollution
+                  - generic [ref=e307]:
+                    - generic [ref=e308]:
+                      - generic [ref=e309]: Working toward a waste-free future
+                      - generic [ref=e310]: We are accelerating our actions to tackle the plastic waste problem and are committed to making a significant difference everywhere we operate.
+                      - generic [ref=e311]:
+                        - text: Read more in Sustainability
+                        - img [ref=e312]
+                    - img "waste-free future" [ref=e315]
+              - listitem [ref=e316]:
+                - link "Nestlé needs YOUth We are determined to help young people develop their skills so that they can find fulfilling jobs, or create their own businesses. Read more in Sustainability Nestlé needs YOUth" [ref=e317] [cursor=pointer]:
+                  - /url: /sustainability/people-communities/nestle-needs-youth-initiative
+                  - generic [ref=e318]:
+                    - generic [ref=e319]:
+                      - generic [ref=e320]: Nestlé needs YOUth
+                      - generic [ref=e321]: We are determined to help young people develop their skills so that they can find fulfilling jobs, or create their own businesses.
+                      - generic [ref=e322]:
+                        - text: Read more in Sustainability
+                        - img [ref=e323]
+                    - img "Nestlé needs YOUth" [ref=e326]
+              - listitem [ref=e327]:
+                - link "Our stories Every day we touch billions of lives. Our stories take a deeper look at how Nestlé is making a difference. Read more in Our stories our stories" [ref=e328] [cursor=pointer]:
+                  - /url: /stories
+                  - generic [ref=e329]:
+                    - generic [ref=e330]:
+                      - generic [ref=e331]: Our stories
+                      - generic [ref=e332]: Every day we touch billions of lives. Our stories take a deeper look at how Nestlé is making a difference.
+                      - generic [ref=e333]:
+                        - text: Read more in Our stories
+                        - img [ref=e334]
+                    - img "our stories" [ref=e337]
+          - generic [ref=e341]:
+            - heading "More in Careers" [level=2] [ref=e342]:
+              - generic [ref=e343]: More in Careers
+            - generic [ref=e344]:
+              - generic [ref=e346]:
+                - tabpanel [ref=e347]:
+                  - generic [ref=e351]:
+                    - link "Two young women smiling" [ref=e352] [cursor=pointer]:
+                      - /url: /jobs/students-graduates
+                      - img "Two young women smiling" [ref=e353]
+                    - link "Students & graduates" [ref=e355] [cursor=pointer]:
+                      - /url: /jobs/students-graduates
+                - tabpanel [ref=e356]:
+                  - generic [ref=e360]:
+                    - link "Woman holding a card with word 'respect'" [ref=e361] [cursor=pointer]:
+                      - /url: /jobs/diversity-inclusion
+                      - img "Woman holding a card with word 'respect'" [ref=e362]
+                    - link "Diversity, equity & inclusion" [ref=e364] [cursor=pointer]:
+                      - /url: /jobs/diversity-inclusion
+                - tabpanel [ref=e365]:
+                  - generic [ref=e369]:
+                    - link [ref=e370] [cursor=pointer]:
+                      - /url: /jobs/recruitment-journey
+                      - img [ref=e371]
+                    - link [ref=e373] [cursor=pointer]:
+                      - /url: /jobs/recruitment-journey
+                      - text: Recruitment journey
+                - tabpanel [ref=e374]:
+                  - generic [ref=e378]:
+                    - link [ref=e379] [cursor=pointer]:
+                      - /url: /jobs/locations
+                      - img [ref=e380]
+                    - link [ref=e382] [cursor=pointer]:
+                      - /url: /jobs/locations
+                      - text: Locations
+                - tabpanel [ref=e383]:
+                  - generic [ref=e387]:
+                    - link [ref=e388] [cursor=pointer]:
+                      - /url: /jobs/search-jobs
+                      - img [ref=e389]
+                    - link [ref=e391] [cursor=pointer]:
+                      - /url: /jobs/search-jobs
+                      - text: Search jobs
+                - tabpanel [ref=e392]:
+                  - generic [ref=e396]:
+                    - link [ref=e397] [cursor=pointer]:
+                      - /url: /jobs/working-at-nestle
+                      - img [ref=e398]
+                    - link [ref=e400] [cursor=pointer]:
+                      - /url: /jobs/working-at-nestle
+                      - text: Working at Nestlé
+                - tabpanel [ref=e401]:
+                  - generic [ref=e405]:
+                    - link [ref=e406] [cursor=pointer]:
+                      - /url: /jobs/faqs
+                      - img [ref=e407]
+                    - link [ref=e409] [cursor=pointer]:
+                      - /url: /jobs/faqs
+                      - text: Frequently asked questions
+              - button "Next" [ref=e410] [cursor=pointer]:
+                - img "Next" [ref=e411]
+              - tablist [ref=e413]:
+                - tab "1 of 4" [ref=e414] [cursor=pointer]: "1"
+                - tab "2 of 4" [ref=e415] [cursor=pointer]: "2"
+                - tab "3 of 4" [ref=e416] [cursor=pointer]: "3"
+                - tab "4 of 4" [ref=e417] [cursor=pointer]: "4"
+          - generic [ref=e422]:
+            - heading "Stay up-to-date with our LATEST job vacancies" [level=2] [ref=e424]
+            - link "Join talent community (link is external)" [ref=e426] [cursor=pointer]:
+              - /url: https://jobdetails.nestle.com/lp/Nestle%20Join%20Talent%20Community%20page%20-%20en_US/09617fe21dbe3155/?locale=en_US
+              - text: Join talent community
+              - link "(link is external)" [ref=e427]
+    - link [ref=e433] [cursor=pointer]:
+      - /url: "#"
+      - img [ref=e434]
+      - img [ref=e435]
+    - contentinfo [ref=e440]:
+      - generic [ref=e447]:
+        - heading "Mini Footer" [level=2] [ref=e448]
+        - generic [ref=e452]:
+          - generic [ref=e457]:
+            - generic [ref=e458]:
+              - heading "Nestlé news" [level=3] [ref=e459]:
+                - link "Nestlé news" [ref=e460] [cursor=pointer]:
+                  - /url: /info/sign-me-up
+              - paragraph [ref=e461]:
+                - link "Subscribe to receive email alerts" [ref=e462] [cursor=pointer]:
+                  - /url: /info/sign-me-up
+            - link "Sign up" [ref=e467] [cursor=pointer]:
+              - /url: /info/sign-me-up
+          - generic [ref=e472]:
+            - generic [ref=e473]:
+              - heading "Compliance concerns" [level=3] [ref=e474]:
+                - link "Compliance concerns" [ref=e475] [cursor=pointer]:
+                  - /url: /about/how-we-do-business/report-compliance-concerns
+              - paragraph [ref=e476]:
+                - link "Speak up about your concerns" [ref=e477] [cursor=pointer]:
+                  - /url: /about/how-we-do-business/report-compliance-concerns
+            - link "Speak Up" [ref=e482] [cursor=pointer]:
+              - /url: /about/how-we-do-business/report-compliance-concerns
+          - generic "Contact us" [ref=e489]:
+            - img [ref=e490]
+          - generic [ref=e495]:
+            - generic [ref=e496]:
+              - heading "Contact us" [level=3] [ref=e497]:
+                - link "Contact us" [ref=e498] [cursor=pointer]:
+                  - /url: /info/contactus/contactus
+              - paragraph [ref=e499]:
+                - link "Across the globe, we are here to help answer your queries" [ref=e500] [cursor=pointer]:
+                  - /url: /info/contactus/contactus
+            - link "Contact us" [ref=e505] [cursor=pointer]:
+              - /url: /info/contactus/contactus
+      - generic [ref=e508]:
+        - generic [ref=e513]:
+          - heading "Nestlé" [level=2] [ref=e514]
+          - paragraph [ref=e516]: We unlock the power of food and beverages to enhance quality of life for everyone, today and for generations to come
+          - img "nest-logo" [ref=e517]
+        - generic [ref=e522]:
+          - navigation "Useful Links" [ref=e523]:
+            - heading "Useful Links" [level=2] [ref=e524]:
+              - button "Useful Links" [ref=e525]
+            - list [ref=e526]:
+              - listitem [ref=e527]:
+                - link "Ask Nestlé (FAQs)" [ref=e528] [cursor=pointer]:
+                  - /url: /ask-nestle
+              - listitem [ref=e529]:
+                - link "Contact us" [ref=e530] [cursor=pointer]:
+                  - /url: /info/contactus/contactus
+              - listitem [ref=e531]:
+                - link "Search for jobs" [ref=e532] [cursor=pointer]:
+                  - /url: /search-jobs/career-areas
+              - listitem [ref=e533]:
+                - link "Sign up for news" [ref=e534] [cursor=pointer]:
+                  - /url: /info/sign-me-up
+              - listitem [ref=e535]:
+                - link "Speak Up" [ref=e536] [cursor=pointer]:
+                  - /url: /about/how-we-do-business/report-compliance-concerns
+          - navigation "Company" [ref=e537]:
+            - heading "Company" [level=2] [ref=e538]:
+              - button "Company" [ref=e539]
+            - list [ref=e540]:
+              - listitem [ref=e541]:
+                - link "About us" [ref=e542] [cursor=pointer]:
+                  - /url: /about
+              - listitem [ref=e543]:
+                - link "Global addresses" [ref=e544] [cursor=pointer]:
+                  - /url: /about/overview/global-addresses
+              - listitem [ref=e545]:
+                - link "Strategy" [ref=e546] [cursor=pointer]:
+                  - /url: /about/strategy
+              - listitem [ref=e547]:
+                - link "Our leadership" [ref=e548] [cursor=pointer]:
+                  - /url: /about/management
+              - listitem [ref=e549]:
+                - link "Brands A - Z" [ref=e550] [cursor=pointer]:
+                  - /url: /brands/brandssearchlist
+              - listitem [ref=e551]:
+                - link "Our history" [ref=e552] [cursor=pointer]:
+                  - /url: /about/history
+              - listitem [ref=e553]:
+                - link "Sustainability" [ref=e554] [cursor=pointer]:
+                  - /url: /sustainability
+        - generic [ref=e557]:
+          - navigation "Downloads" [ref=e558]:
+            - heading "Downloads" [level=2] [ref=e559]:
+              - button "Downloads" [ref=e560]
+            - list [ref=e561]:
+              - listitem [ref=e562]:
+                - link "Annual Review (pdf, 9Mb)" [ref=e563] [cursor=pointer]:
+                  - /url: /sites/default/files/2026-02/annual-review-2025-en.pdf
+              - listitem [ref=e564]:
+                - link "Non-Financial Statement (pdf, 16MB)" [ref=e565] [cursor=pointer]:
+                  - /url: /sites/default/files/2026-02/non-financial-statement-2025.pdf
+              - listitem [ref=e566]:
+                - 'link "Creating Shared Value: Our impact (pdf, 17Mb)" [ref=e567] [cursor=pointer]':
+                  - /url: /sites/default/files/2026-02/creating-shared-value-nestle-2025.pdf
+              - listitem [ref=e568]:
+                - link "Responsible Sourcing Core Requirements (pdf, 2Mb)" [ref=e569] [cursor=pointer]:
+                  - /url: /sites/default/files/asset-library/documents/library/documents/suppliers/nestle-responsible-sourcing-standard-english.pdf
+          - navigation "Other Nestlé Businesses" [ref=e570]:
+            - heading "Other Nestlé Businesses" [level=2] [ref=e571]:
+              - button "Other Nestlé Businesses" [ref=e572]
+            - list [ref=e573]:
+              - listitem [ref=e574]:
+                - link "Nestlé Nespresso" [ref=e575] [cursor=pointer]:
+                  - /url: http://www.nestle-nespresso.com/
+              - listitem [ref=e576]:
+                - link "Nestlé Purina Petcare" [ref=e577] [cursor=pointer]:
+                  - /url: https://www.purina.com/
+        - generic [ref=e580]:
+          - navigation "Media" [ref=e581]:
+            - heading "Media" [level=2] [ref=e582]:
+              - button "Media" [ref=e583]
+            - list [ref=e584]:
+              - listitem [ref=e585]:
+                - link "News" [ref=e586] [cursor=pointer]:
+                  - /url: /media/news
+              - listitem [ref=e587]:
+                - link "Media contacts" [ref=e588] [cursor=pointer]:
+                  - /url: /media/media-contacts
+              - listitem [ref=e589]:
+                - link "Images" [ref=e590] [cursor=pointer]:
+                  - /url: /media/images-video
+          - navigation "Investors" [ref=e591]:
+            - heading "Investors" [level=2] [ref=e592]:
+              - button "Investors" [ref=e593]
+            - list [ref=e594]:
+              - listitem [ref=e595]:
+                - link "Corporate governance" [ref=e596] [cursor=pointer]:
+                  - /url: /investors/corporate-governance
+              - listitem [ref=e597]:
+                - link "Shares, ADRs, & Bonds" [ref=e598] [cursor=pointer]:
+                  - /url: /investors/sharesadrsbonds
+              - listitem [ref=e599]:
+                - link "Publications" [ref=e600] [cursor=pointer]:
+                  - /url: /investors/publications
+          - generic [ref=e602]:
+            - heading "SHARE INFORMATION" [level=2] [ref=e603]
+            - link "Share Price" [ref=e605] [cursor=pointer]:
+              - /url: /investors/sharesadrsbonds/stockquotes
+      - generic [ref=e611]:
+        - heading "Follow us on" [level=2] [ref=e612]
+        - generic [ref=e613]:
+          - link "Linkedin" [ref=e616] [cursor=pointer]:
+            - /url: https://www.linkedin.com/company/nestle-s-a-
+            - img "Linkedin" [ref=e617]
+          - link "Instagram" [ref=e621] [cursor=pointer]:
+            - /url: https://www.instagram.com/nestle/
+            - img "Instagram" [ref=e622]
+          - link "TikTok" [ref=e626] [cursor=pointer]:
+            - /url: https://www.tiktok.com/@nestle
+            - img "TikTok" [ref=e627]
+          - link "Facebook" [ref=e631] [cursor=pointer]:
+            - /url: https://www.facebook.com/Nestle?brandloc=DISABLE
+            - img "Facebook" [ref=e632]
+          - link "Youtube" [ref=e636] [cursor=pointer]:
+            - /url: https://www.youtube.com/user/NestleCorporate
+            - img "Youtube" [ref=e637]
+          - link "Flickr" [ref=e641] [cursor=pointer]:
+            - /url: https://www.flickr.com/photos/nestle/collections/
+            - img "Flickr" [ref=e642]
+          - link "Twitter" [ref=e646] [cursor=pointer]:
+            - /url: https://twitter.com/NestleCareers
+            - img "Twitter" [ref=e647]
+      - navigation "Sub Footer Menu" [ref=e654]:
+        - heading "Sub Footer Menu" [level=2] [ref=e655]
+        - list [ref=e656]:
+          - listitem [ref=e657]:
+            - link "© 2026 Nestlé|" [ref=e658] [cursor=pointer]:
+              - /url: /info/copyright
+          - listitem [ref=e659]:
+            - link "Site map|" [ref=e660] [cursor=pointer]:
+              - /url: /info/sitemap
+          - listitem [ref=e661]:
+            - link "Help|" [ref=e662] [cursor=pointer]:
+              - /url: /info/help
+          - listitem [ref=e663]:
+            - link "Privacy|" [ref=e664] [cursor=pointer]:
+              - /url: /info/privacy
+          - listitem [ref=e665]:
+            - link "Cookies|" [ref=e666] [cursor=pointer]:
+              - /url: /info/cookies
+          - listitem [ref=e667]:
+            - link "Terms of use|" [ref=e668] [cursor=pointer]:
+              - /url: /info/tc
+          - listitem [ref=e669]:
+            - link "Accessibility|" [ref=e670] [cursor=pointer]:
+              - /url: /info/accessibility
+          - listitem [ref=e671]:
+            - link "Carbon efficiency|" [ref=e672] [cursor=pointer]:
+              - /url: /info/website-carbon-footprint
+          - listitem [ref=e673]:
+            - link "Suppliers|" [ref=e674] [cursor=pointer]:
+              - /url: /info/suppliers
+          - listitem [ref=e675]:
+            - link "Social media|" [ref=e676] [cursor=pointer]:
+              - /url: /info/social-media-house-rules
+          - listitem [ref=e677]:
+            - link "RSS|" [ref=e678] [cursor=pointer]:
+              - /url: /info/rsslinkpage
+          - listitem [ref=e679]:
+            - link "Sign up|" [ref=e680] [cursor=pointer]:
+              - /url: /info/sign-me-up
+          - listitem [ref=e681]:
+            - link "Unsubscribe|" [ref=e682] [cursor=pointer]:
+              - /url: /info/sign-me-up/unsubscribesignupuser
+          - listitem [ref=e683]:
+            - link "Contact us" [ref=e684] [cursor=pointer]:
+              - /url: /info/contactus/contactus
+  - status [ref=e685]
+  - status [ref=e686]
+  - text: "\" \""
+  - generic "Cookie Settings" [ref=e688] [cursor=pointer]:
+    - button "Open Preferences" [ref=e690]
+    - text: Cookie Settings

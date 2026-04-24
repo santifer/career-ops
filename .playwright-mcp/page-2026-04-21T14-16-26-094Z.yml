@@ -1,0 +1,221 @@
+- generic [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - banner [ref=e5]:
+        - navigation [ref=e418]:
+          - link [ref=e10] [cursor=pointer]:
+            - /url: https://careers.triviumpackaging.com
+            - img [ref=e11]
+          - list [ref=e12]:
+            - listitem [ref=e13]:
+              - link [ref=e419] [cursor=pointer]:
+                - /url: https://careers.triviumpackaging.com/
+                - text: Home
+            - listitem [ref=e15]:
+              - link [ref=e420] [cursor=pointer]:
+                - /url: https://careers.triviumpackaging.com/content/Our-Community/?locale=en_US
+                - text: Our Community
+            - listitem [ref=e17]:
+              - link [ref=e421] [cursor=pointer]:
+                - /url: https://careers.triviumpackaging.com/go/Vacancies/9811757/
+                - text: Vacancies
+        - link [ref=e422] [cursor=pointer]:
+          - /url: "#"
+          - text: Employee Login
+      - main [ref=e25]:
+        - generic [ref=e28]:
+          - list [ref=e30]:
+            - listitem [ref=e31] [cursor=pointer]:
+              - combobox [ref=e423]: English US ‎(English US)‎ 
+          - region [ref=e424]:
+            - generic [ref=e38]:
+              - heading [level=1] [ref=e425]: "Career Opportunities: Finance Manager (39551)"
+              - generic [ref=e41]:
+                - text: Already a registered user?
+                - link [ref=e426] [cursor=pointer]:
+                  - /url: javascript:void(0);
+                  - text: Please sign in
+              - separator [ref=e44]
+              - alert [ref=e46]
+              - generic [ref=e48]: "Accepted file types: DOCX, PDF, Image and Text (MSG, PPT and XLS file types are not accepted for resume or cover letters)"
+              - group [ref=e51]:
+                - generic [ref=e58]:
+                  - generic [ref=e59]:
+                    - generic [ref=e60]: "*"
+                    - text: Resume/CV
+                  - generic [ref=e64] [cursor=pointer]:
+                    - text: 
+                    - tooltip [ref=e427]: "Download document cv-026-trivium-finance-manager-2026-04-21.pdf. Last Modified: 04/21/2026 Required"
+                    - button [ref=e428]:
+                      - link [ref=e429]:
+                        - /url: javascript:void(0)
+                        - text: cv-026-trivium-finance-manager-2026-04-21.pdf
+                      - generic [ref=e205]: (04/21/2026)
+                    - generic [ref=e67]:
+                      - button [ref=e430]: ✏
+                      - tooltip [ref=e431]: Edit document cv-026-trivium-finance-manager-2026-04-21.pdf
+              - separator [ref=e74]
+              - generic [ref=e432]: "Email Address: *"
+              - textbox [ref=e433]: fernandocostaxavier@gmail.com
+              - generic [ref=e434]: "Retype Email Address: *"
+              - textbox [ref=e435]: fernandocostaxavier@gmail.com
+              - generic [ref=e436]: "Choose Password: *"
+              - generic [ref=e80]:
+                - textbox [ref=e437]: Fcx@2026Bxl
+                - button [ref=e438] [cursor=pointer]: Show
+              - generic [ref=e162]:
+                - text: 
+                - generic [ref=e163]: Password accepted
+              - list [ref=e85]:
+                - listitem [ref=e86]: Password must be at least 8 characters long.
+                - listitem [ref=e87]: Password must not be longer than 18 characters.
+                - listitem [ref=e88]: Password must contain at least one upper case and one lower case letter.
+                - listitem [ref=e89]: Password must contain at least one number or punctuation character.
+                - listitem [ref=e90]: Password must not contain space or unicode characters.
+              - generic [ref=e439]: "Retype Password: *"
+              - generic [ref=e92]:
+                - textbox [ref=e440]: Fcx@2026Bxl
+                - button [ref=e441] [cursor=pointer]: Show
+              - generic [ref=e164]:
+                - generic [ref=e165]: 
+                - generic [ref=e166]: Password matches
+              - generic [ref=e442]: "First Name: *"
+              - textbox [ref=e443]: Fernando
+              - generic [ref=e444]: "Last Name: *"
+              - textbox [ref=e445]: Costa Xavier
+              - generic [ref=e446]: Mobile*
+              - textbox [ref=e447]: +55 11 96480 1913
+              - generic [ref=e448]: Country/Region of Residence:*
+              - combobox [ref=e449]
+              - text: "Notification:"
+              - generic [ref=e107]:
+                - checkbox [checked] [ref=e450]
+                - generic [ref=e109]: Receive new job posting notifications
+              - generic [ref=e110]:
+                - checkbox [ref=e451]
+                - generic [ref=e112]: Hear more about career opportunities
+              - generic [ref=e113]: Terms of Use:*
+              - button [ref=e452] [cursor=pointer]: Read and accept the data privacy statement.
+              - generic [ref=e453]: Terms of Use is required
+              - button [ref=e454] [cursor=pointer]: Apply
+      - contentinfo [ref=e121]:
+        - generic [ref=e124]:
+          - list [ref=e125]:
+            - listitem [ref=e126]:
+              - link [ref=e455] [cursor=pointer]:
+                - /url: https://careers.triviumpackaging.com/
+                - text: Home
+            - listitem [ref=e128]:
+              - link [ref=e456] [cursor=pointer]:
+                - /url: https://careers.triviumpackaging.com/go/Vacancies/9811757/
+                - text: Vacancies
+            - listitem [ref=e130]:
+              - link [ref=e457] [cursor=pointer]:
+                - /url: https://www.triviumpackaging.com/privacy-policy
+                - text: Privacy Policy
+            - listitem [ref=e132]:
+              - button [ref=e458] [cursor=pointer]: Cookie Policy
+            - listitem [ref=e134]:
+              - link [ref=e459] [cursor=pointer]:
+                - /url: https://www.triviumpackaging.com/
+                - text: Trivium Packaging
+          - list [ref=e137]:
+            - listitem [ref=e138]:
+              - link [ref=e460] [cursor=pointer]:
+                - /url: https://www.facebook.com/triviumpackaging/
+                - img [ref=e140]
+            - listitem [ref=e142]:
+              - link [ref=e461] [cursor=pointer]:
+                - /url: "https://www.linkedin.com/company/trivium-packaging/posts/?feedView=all "
+                - img [ref=e144]
+            - listitem [ref=e146]:
+              - link [ref=e462] [cursor=pointer]:
+                - /url: https://www.instagram.com/triviumpackaging/
+                - img [ref=e148]
+            - listitem [ref=e151]:
+              - link [ref=e463] [cursor=pointer]:
+                - /url: https://x.com/TriviumInsights
+                - img [ref=e153]
+            - listitem [ref=e155]:
+              - link [ref=e464] [cursor=pointer]:
+                - /url: https://www.youtube.com/@TriviumPackaging
+                - img [ref=e157]
+        - paragraph [ref=e161]: © Trivium Packaging B.V. - WTC Schiphol, B Tower, 5th Floor - Schiphol Boulevard 149 - 1118 BG Schiphol - The Netherlands
+    - text: Yes No   Yes No Yes No   Yes No Yes No   Yes No " "
+  - generic [ref=e466]:
+    - tab [ref=e467] [cursor=pointer]
+    - dialog "Data Privacy Consent Statement" [ref=e470]:
+      - generic [ref=e471]:
+        - generic [ref=e473]:
+          - generic [ref=e474]: Press the ESC key to close the dialog.
+          - heading "Data Privacy Consent Statement" [level=2] [ref=e475]
+        - generic [ref=e476]:
+          - heading "DECLARAÇÃO DE CONSENTIMENTO DE PRIVACIDADE DE DADOS" [level=3] [ref=e477]
+          - generic [ref=e478]:
+            - paragraph [ref=e479]: Você deve ler atentamente nosso Aviso de Privacidade de Dados de Recrutamento ("Aviso") abaixo. Ao clicar em "concordo", você confirma que leu, entendeu e concorda explicitamente com o Aviso, que descreve como usamos seus dados. Você concorda expressamente com o armazenamento de seus Dados de Recrutamento (conforme definido no Aviso) por um período de 12 meses (36 meses se você residir nos Estados Unidos da América, de acordo com as leis de proteção de dados aplicáveis) após o final do processo de recrutamento para avaliar sua adequação para outras vagas de emprego e consentir que nossas equipes de recrutamento em todo o mundo tenham acesso e processamento de seus Dados de Recrutamento de acordo com o Aviso. Você pode retirar seu consentimento a qualquer momento no futuro através da exclusão do seu perfil on-line. Você está ciente de que a retirada de seu consentimento pode afetar quaisquer candidaturas em andamento em que você esteja envolvido.
+            - paragraph [ref=e482]: AVISO DE PRIVACIDADE DE DADOS DE RECRUTAMENTO
+            - paragraph [ref=e484]: 1 Introdução
+            - paragraph [ref=e486]: No presente Aviso, descrevemos como a Trivium Packaging B.V. e suas afiliadas (“Trivium” ou “nós”) tratamos os dados pessoais de pessoas que se candidatam a vagas na nossa empresa por intermédio dos canais que postam o presente Aviso (“Candidatos” ou “ você”).
+            - paragraph [ref=e488]: O Aviso descreve as informações que coletamos, o que fazemos com elas, com quem as compartilhamos, como garantimos sua segurança, por quanto tempo as armazenamos e quais direitos e obrigações você tem como candidato.
+            - paragraph [ref=e490]: Após a conclusão de seu perfil de candidato, as informações que você carregou em seu perfil serão disponibilizadas para nossas equipes de recrutamento em todo o mundo, conforme o caso, para os fins descritos abaixo.
+            - paragraph [ref=e492]: 2 Dados de Recrutamento que coletamos e utilizamos
+            - paragraph [ref=e494]: "Poderemos coletar e utilizar os seguintes dados pessoais, conforme fornecidos por você: informações de contato (como, por exemplo, nome, nome de usuário, endereço, e-mail e telefone); certificados de escolaridade; informações sobre experiência (como escolaridade, habilidades, experiência profissional e/ou CVs), informações demográficas (como, por exemplo, idade, data de nascimento, gênero); resultados de testes psicotécnicos e de habilidades; outras informações de identificação (como, por exemplo, número da seguridade social dos Estados Unidos da América) e quaisquer outras informações necessárias para tomar uma decisão de recrutamento (todos esses dados são doravante denominados em conjunto “Dados de Recrutamento”)."
+            - paragraph [ref=e496]: 3 Finalidade da coleta e uso dos Dados de Recrutamento
+            - paragraph [ref=e498]: "A Trivium coleta e utiliza os Dados de Recrutamento para os seguintes fins:"
+            - paragraph [ref=e499]:
+              - generic [ref=e500]: i.
+              - text: determinar suas qualificações de emprego e tomar uma decisão sobre o recrutamento;
+            - paragraph [ref=e502]:
+              - generic [ref=e503]: ii.
+              - text: avaliar sua adequação a outras vagas de emprego;
+            - paragraph [ref=e505]:
+              - generic [ref=e506]: iii.
+              - text: informar por e-mail, telefone ou carta sobre o andamento do seu recrutamento conosco;
+            - paragraph [ref=e508]:
+              - generic [ref=e509]: iv.
+              - text: proteger nossos direitos e cumprir nossas obrigações legais; e
+            - paragraph [ref=e511]:
+              - generic [ref=e512]: v.
+              - text: informar por e-mail sobre outras vagas locais ou mundiais na Trivium que possamos considerar apropriadas para você se candidatar.
+            - paragraph [ref=e514]: Se sua candidatura para a vaga for bem-sucedida, seus Dados de Recrutamento podem ser processados para os fins de emprego necessários e incluídos em seu arquivo laboral. Se você precisar de mais informações sobre o processamento de seus Dados de Recrutamento para os fins de emprego, entre em contato com legalandcompliance@triviumpackaging.com
+            - paragraph [ref=e516]: Não coletamos ou utilizamos os Dados de Recrutamento que você nos enviar para fins que não sejam os indicados acima.
+            - paragraph [ref=e518]: 4 Divulgação e transferência de Dados de Recrutamento
+            - paragraph [ref=e520]: "Podemos compartilhar os Dados de Recrutamento:"
+            - paragraph [ref=e521]: • Somente com funcionários da Trivium que precisem conhecê-las para os fins descritos na seção 3 acima.
+            - paragraph [ref=e523]: • Com nossos prestadores de serviço terceirizados contratados para os fins descritos na seção 3 acima.
+            - paragraph [ref=e525]: • Para fins de proteger nossos direitos e cumprir nossas obrigações legais.
+            - paragraph [ref=e527]: Nossas entidades e prestadores de serviço terceirizados que utilizam os Dados de Recrutamento podem ser nomeados em territórios onde as leis não ofereçam proteção para Dados de Recrutamento equivalentes às leis aplicáveis em sua jurisdição. A Trivium garantirá que essas transferências internacionais de dados cumpram as leis aplicáveis sobre proteção de dados.
+            - paragraph [ref=e529]: 5 Período de retenção
+            - paragraph [ref=e531]: Durante o período em que seu perfil de candidato estiver ativo, você será informado por nós sobre as vagas de emprego que consideremos apropriadas a você, e seus Dados de Recrutamento permanecerão armazenados em nossos bancos de dados até que você apague seu perfil de candidato ou por 12 (seis) meses após o final do processo de recrutamento para os fins descritos na seção 3 acima (36 meses se residir nos Estados Unidos da América), a menos que sejamos obrigados por lei a armazenar esses dados por um período maior.
+            - paragraph [ref=e533]: Caso sua candidatura à vaga seja aprovada, seus Dados de Recrutamento poderão, no entanto, ser processados e incluídos em seu arquivo de emprego.
+            - generic [ref=e535]: 6 Segurança
+            - paragraph [ref=e537]: A Trivium toma medidas técnicas, físicas e organizacionais para proteger os Dados de Recrutamento de sua posse ou controle de perda, roubo, uso indevido, acesso não autorizado, divulgação, alteração, cópia, destruição acidental ou ilegal e qualquer outra forma ilegal de uso.
+            - paragraph [ref=e539]: 7 Seus direitos
+            - paragraph [ref=e541]: Você terá o direito, segundo as leis aplicáveis de proteção de dados, de acessar, corrigir ou alterar e, em alguns casos, apagar ou contestar o processamento dos seus Dados de Recrutamento.
+            - paragraph [ref=e543]: Você poderá exercer seus direitos, enviando um e-mail para legalandcompliance@triviumpackaging.com
+            - paragraph [ref=e545]: 8 Outras informações
+            - paragraph [ref=e547]: Os controladores de dados com relação aos seus Dados de Recrutamento são a Trivium Packaging B.V, Schipol Boulevard 127, WTC Schipol, Torre G, 1118 BG Schipol, Holanda e a entidade Trivium local onde você efetuou a candidatura. Os detalhes completos dessa entidade local e de outras entidades relevantes que podem processar seus Dados de Recrutamento de acordo com este Aviso são disponibilizados mediante solicitação.
+            - paragraph [ref=e551]:
+              - generic [ref=e552]:
+                - text: Para residentes da Califórnia, clique
+                - link "aqui" [ref=e553] [cursor=pointer]:
+                  - /url: https://www.oag.ca.gov/privacy/ccpa
+                - text: para ler a California Consumer Privacy Act (CCPA). Você será redirecionado para uma nova página. Para aceitar o aviso de privacidade, retorne a esta página de recrutamento.
+            - paragraph [ref=e557]:
+              - generic [ref=e558]:
+                - text: "Para obter mais informações sobre nosso processo de recrutamento, entre em contato com:"
+                - link "talentacquisition@triviumpackaging.com" [ref=e559] [cursor=pointer]:
+                  - /url: mailto:talentacquisition@triviumpackaging.com
+            - paragraph [ref=e561]:
+              - generic [ref=e562]:
+                - text: "Para qualquer dúvida relacionada à privacidade, entre em contato com:"
+                - link "legalandcompliance@triviumpackaging.com" [ref=e563] [cursor=pointer]:
+                  - /url: mailto:legalandcompliance@triviumpackaging.com
+        - generic [ref=e565]:
+          - generic [ref=e566]:
+            - generic [ref=e567]: Emphasized
+            - button "Accept" [active] [ref=e570] [cursor=pointer]
+          - button "Decline" [ref=e574] [cursor=pointer]
+          - button "Print" [ref=e578] [cursor=pointer]
+        - button "Close" [ref=e579] [cursor=pointer]: 
+        - tab [ref=e580] [cursor=pointer]

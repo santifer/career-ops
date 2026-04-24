@@ -1,0 +1,35 @@
+[    1441ms] Uncaught TypeError: Cannot read properties of null (reading 'removeAttribute')
+    at initPage (https://cdn.phenompeople.com/CareerConnectResources/pp/ROCHGLOBAL/en_global/desktop/assets/scripts/1746787706454-custom.js:111:44)
+    at <anonymous> (https://cdn.phenompeople.com/CareerConnectResources/pp/ROCHGLOBAL/en_global/desktop/assets/scripts/1746787706454-custom.js:105:16)
+[    3013ms] [ERROR] Invalid widget id: ph-import-resume-v1-upload-new @ https://careers.roche.com/global/en/phenomtrack.min.js:1
+[    3065ms] [ERROR] Invalid widget id: ph-social-connect-v1-view5-new @ https://careers.roche.com/global/en/phenomtrack.min.js:1
+[    3543ms] [WARNING] A11y autocomplete setup is improper.Check errors  [Missing aria-haspopup attribute on parent div, Missing  aria-owns attribute on parent div, Missing  aria-owns attribute on parent div, Missing widget elem] @ https://careers.roche.com/global/en/phenomtrack.min.js:1
+[    3743ms] [LOG] applying roles @ https://cdn.phenompeople.com/CareerConnectResources/common/js/globalplatform/1774943342573_ph-common-bundle-part1-5.0.js:32
+[    6900ms] [ERROR] Attestation check for Attribution Reporting on https://www.facebook.com failed. @ https://careers.roche.com/global/en:0
+[    9125ms] [INFO] Chatbot is disabled!! @ https://d7pkvxpsevxsc.cloudfront.net/txm-bot/prod-ir/prod-ir.js?v=1776350914929:30
+[   12133ms] [WARNING] The resource https://cdn.phenompeople.com/CareerConnectResources/pp/ROCHGLOBAL/images/Argentina-1687268036769.png was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://careers.roche.com/global/en:0
+[   17105ms] [WARNING] The resource https://cdn.phenompeople.com/CareerConnectResources/pp/ROCHGLOBAL/images/Argentina-1687268036769.png was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://careers.roche.com/global/en:0
+[   20691ms] [WARNING] The resource https://cdn.phenompeople.com/CareerConnectResources/pp/ROCHGLOBAL/images/Argentina-1687268036769.png was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://careers.roche.com/global/en:0
+[   25476ms] Uncaught TypeError: Cannot read properties of null (reading 'querySelector')
+    at <anonymous> (https://cdn.phenompeople.com/CareerConnectResources/pp/ROCHGLOBAL/en_global/desktop/assets/scripts/1746787706454-custom.js:142:44)
+[   29251ms] [WARNING] The resource https://cdn.phenompeople.com/CareerConnectResources/pp/ROCHGLOBAL/images/Argentina-1687268036769.png was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://careers.roche.com/global/en:0
+[   35946ms] Uncaught TypeError: Cannot read properties of null (reading 'querySelector')
+    at <anonymous> (https://cdn.phenompeople.com/CareerConnectResources/pp/ROCHGLOBAL/en_global/desktop/assets/scripts/1746787706454-custom.js:142:44)
+[   36563ms] Uncaught TypeError: Cannot read properties of null (reading 'removeAttribute')
+    at initPage (https://cdn.phenompeople.com/CareerConnectResources/pp/ROCHGLOBAL/en_global/desktop/assets/scripts/1746787706454-custom.js:111:44)
+    at <anonymous> (https://cdn.phenompeople.com/CareerConnectResources/pp/ROCHGLOBAL/en_global/desktop/assets/scripts/1746787706454-custom.js:105:16)
+[   36591ms] [ERROR] Invalid widget id: ph-page-state-data-v1-no-results-ROCHGLOBAL-en_global-page11 @ https://cdn.phenompeople.com/CareerConnectResources/common/js/globalplatform/1766477744200_ph-loader-5.0.js:1402
+[   37193ms] [LOG] applying roles @ https://cdn.phenompeople.com/CareerConnectResources/common/js/globalplatform/1774943342573_ph-common-bundle-part1-5.0.js:32
+[   39466ms] [WARNING] A11y autocomplete setup is improper.Check errors  [Missing aria-haspopup attribute on parent div, Missing  aria-owns attribute on parent div, Missing  aria-owns attribute on parent div, Missing widget elem] @ https://careers.roche.com/global/en/phenomtrack.min.js:1
+[   41831ms] [ERROR] Attestation check for Attribution Reporting on https://www.facebook.com failed. @ https://careers.roche.com/global/en/search-results?keywords=Finance%20Brazil:0
+[   45939ms] [INFO] Chatbot is disabled!! @ https://d7pkvxpsevxsc.cloudfront.net/txm-bot/prod-ir/prod-ir.js?v=1776350948715:30
+[   56410ms] Uncaught TypeError: Cannot read properties of null (reading 'querySelector')
+    at <anonymous> (https://cdn.phenompeople.com/CareerConnectResources/pp/ROCHGLOBAL/en_global/desktop/assets/scripts/1746787706454-custom.js:142:44)
+[   57013ms] Uncaught TypeError: Cannot read properties of null (reading 'removeAttribute')
+    at initPage (https://cdn.phenompeople.com/CareerConnectResources/pp/ROCHGLOBAL/en_global/desktop/assets/scripts/1746787706454-custom.js:111:44)
+    at <anonymous> (https://cdn.phenompeople.com/CareerConnectResources/pp/ROCHGLOBAL/en_global/desktop/assets/scripts/1746787706454-custom.js:105:16)
+[   57032ms] [ERROR] Invalid widget id: ph-page-state-data-v1-no-results-ROCHGLOBAL-en_global-page11 @ https://cdn.phenompeople.com/CareerConnectResources/common/js/globalplatform/1766477744200_ph-loader-5.0.js:1402
+[   57318ms] [LOG] applying roles @ https://cdn.phenompeople.com/CareerConnectResources/common/js/globalplatform/1774943342573_ph-common-bundle-part1-5.0.js:32
+[   58986ms] [WARNING] A11y autocomplete setup is improper.Check errors  [Missing aria-haspopup attribute on parent div, Missing  aria-owns attribute on parent div, Missing  aria-owns attribute on parent div, Missing widget elem] @ https://careers.roche.com/global/en/phenomtrack.min.js:1
+[   62282ms] [ERROR] Attestation check for Attribution Reporting on https://www.facebook.com failed. @ https://careers.roche.com/global/en/search-results?keywords=Brazil:0
+[   63750ms] [INFO] Chatbot is disabled!! @ https://d7pkvxpsevxsc.cloudfront.net/txm-bot/prod-ir/prod-ir.js?v=1776350969694:30

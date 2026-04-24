@@ -1,0 +1,58 @@
+- generic [ref=e614]:
+  - heading "Teste de raciocínio lógico e numérico completo" [level=1] [ref=e615]
+  - generic [ref=e616]:
+    - generic [ref=e617]:
+      - generic [ref=e618]:
+        - generic [ref=e620]: "01"
+        - generic [ref=e623]: "02"
+        - generic [ref=e626]: "03"
+        - generic [ref=e629]: "04"
+        - generic [ref=e632]: "05"
+        - generic [ref=e635]: "06"
+        - generic [ref=e638]: "07"
+        - generic [ref=e641]: "08"
+        - generic [ref=e644]: "09"
+        - generic [ref=e647]: "10"
+        - generic [ref=e650]: "11"
+        - generic [ref=e653]: "12"
+        - generic [ref=e656]: "13"
+        - generic [ref=e659]: "14"
+        - generic [ref=e662]: "15"
+        - generic [ref=e665]: "16"
+        - generic [ref=e668]: "17"
+        - generic [ref=e671]: "18"
+      - separator [ref=e673]
+      - generic [ref=e674]:
+        - paragraph [ref=e677]:
+          - img [ref=e678]
+          - text: 01:49
+        - separator [ref=e681]
+    - generic [ref=e682]:
+      - generic [ref=e683]:
+        - generic [ref=e684]: "Enunciado da questão:"
+        - text: "Para as questões a seguir, descubra qual o número que segue: 9, 27, 30, 90, 93, ?"
+      - group [ref=e685]:
+        - radiogroup "undefined" [ref=e687]:
+          - generic [ref=e688]:
+            - generic [ref=e689] [cursor=pointer]:
+              - generic [ref=e691]:
+                - img [ref=e692]
+                - radio "290" [ref=e694]
+              - generic [ref=e695]: "290"
+            - generic [ref=e696] [cursor=pointer]:
+              - generic [ref=e698]:
+                - img [ref=e699]
+                - radio "280" [ref=e701]
+              - generic [ref=e702]: "280"
+            - generic [ref=e703] [cursor=pointer]:
+              - generic [ref=e705]:
+                - img [ref=e722]
+                - radio "279" [checked] [active] [ref=e708]
+              - generic [ref=e709]: "279"
+            - generic [ref=e710] [cursor=pointer]:
+              - generic [ref=e712]:
+                - img [ref=e713]
+                - radio "270" [ref=e715]
+              - generic [ref=e716]: "270"
+      - button "ENVIAR RESPOSTA" [ref=e724] [cursor=pointer]:
+        - generic [ref=e727]: ENVIAR RESPOSTA

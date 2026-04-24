@@ -1,0 +1,100 @@
+- generic [active] [ref=e1]:
+  - banner:
+    - link "Pule para o conteúdo principal" [ref=e2] [cursor=pointer]:
+      - /url: "#main"
+      - generic [ref=e3]: Pule para o conteúdo principal
+  - main [ref=e5]:
+    - group [ref=e6]:
+      - generic [ref=e7]:
+        - img [ref=e8]
+        - link "Excelente 4.6 de 5 Trustpilot" [ref=e12] [cursor=pointer]:
+          - /url: https://www.trustpilot.com/review/godaddy.com
+          - generic [ref=e13]:
+            - generic [ref=e14]:
+              - generic [ref=e15]: Excelente
+              - generic [ref=e16]: 4.6 de 5
+            - img "Trustpilot" [ref=e18]
+    - generic [ref=e22]:
+      - generic [ref=e25]:
+        - generic [ref=e26]:
+          - heading "O domínio" [level=6] [ref=e27]
+          - heading "smf.io" [level=2] [ref=e28]
+          - heading "está à venda." [level=6] [ref=e29]
+        - generic [ref=e30]:
+          - generic [ref=e32]:
+            - heading "Obter esse domínio" [level=4] [ref=e33]
+            - paragraph [ref=e34]: Adquira-o hoje por $ 9.988 ou selecione “Parcelamento”.
+            - separator [ref=e35]
+            - generic [ref=e36]:
+              - generic [ref=e37]:
+                - generic [ref=e38] [cursor=pointer]:
+                  - radio "Comprar agora" [checked] [ref=e39]
+                  - text: I
+                - paragraph [ref=e41] [cursor=pointer]: Comprar agora
+              - paragraph [ref=e42]: USD$ 9.988
+            - separator [ref=e43]
+            - generic [ref=e46]:
+              - generic [ref=e47]:
+                - generic [ref=e48] [cursor=pointer]:
+                  - radio "Quitar leasing" [ref=e49]
+                  - text: I
+                - generic [ref=e51] [cursor=pointer]:
+                  - paragraph [ref=e52]: Quitar leasing
+                  - button [ref=e53]
+              - generic [ref=e54]:
+                - paragraph [ref=e55]: USD$ 217
+                - generic [ref=e56]: /mês
+            - separator [ref=e57]
+            - button "Avançar" [ref=e58] [cursor=pointer]:
+              - generic: Avançar
+            - separator [ref=e59]
+            - paragraph [ref=e62]: Suporte de transação gratuito
+            - paragraph [ref=e65]: Pagamentos seguros
+            - paragraph [ref=e68]:
+              - text: Moeda local disponível no carrinho ao finalizar a compra
+              - button "Clique aqui para mais informações" [ref=e69] [cursor=pointer]
+            - generic [ref=e70]:
+              - img "Visa" [ref=e71]
+              - img "MasterCard" [ref=e72]
+              - img "American Express" [ref=e73]
+              - img "PayPal" [ref=e74]
+              - img "Alipay" [ref=e75]
+          - generic [ref=e76]:
+            - generic [ref=e77]: Precisa de ajuda? Ligue para nós.
+            - link "480-651-9741" [ref=e79] [cursor=pointer]:
+              - /url: "true"
+      - generic [ref=e80]:
+        - generic [ref=e83]:
+          - generic [ref=e84]:
+            - img "Transações seguras" [ref=e85]
+            - paragraph [ref=e86]: Transações seguras
+          - generic [ref=e87]:
+            - img "Transferências simples e rápidas" [ref=e88]
+            - paragraph [ref=e89]: Transferências simples e rápidas
+          - generic [ref=e90]:
+            - img "Pagamentos simplificados" [ref=e91]
+            - paragraph [ref=e92]: Pagamentos simplificados
+        - generic [ref=e95]:
+          - separator [ref=e96]
+          - heading "A forma simples e segura de comprar domínios" [level=6] [ref=e97]
+          - paragraph [ref=e98]: Independentemente do tipo de domínio que você quer comprar ou alugar, tornamos a transferência dele simples e segura.
+          - button "Veja como funciona" [ref=e99] [cursor=pointer]:
+            - generic: Veja como funciona
+      - button "Perguntar à IA" [ref=e100] [cursor=pointer]:
+        - generic: Perguntar à IA
+    - separator [ref=e101]
+    - generic [ref=e102]:
+      - generic [ref=e104]:
+        - img [ref=e105]
+        - link "English" [ref=e110] [cursor=pointer]:
+          - /url: https://forsale.godaddy.com/forsale/smf.io?locale=en-US&switchFrom=pt-BR&traffic_id=binns2&traffic_type=TDFS_BINNS2&utm_campaign=x_corp_tdfs-binns2_base&utm_medium=parkedpages&utm_source=TDFS_BINNS2
+      - generic [ref=e111]:
+        - generic [ref=e112]: Copyright © 2026 GoDaddy Operating Company, LLC. Todos os direitos reservados.
+        - generic [ref=e113]:
+          - button "Não compartilhar minhas informações pessoais" [ref=e114] [cursor=pointer]:
+            - generic: Não compartilhar minhas informações pessoais
+          - text: •
+          - button "Configurações de privacidade" [ref=e115] [cursor=pointer]:
+            - generic: Configurações de privacidade
+  - contentinfo
+  - alert [ref=e116]

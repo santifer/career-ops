@@ -1,0 +1,150 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e10] [cursor=pointer]:
+        - generic [ref=e12]: PT
+        - img "caret-down" [ref=e14]:
+          - img [ref=e15]
+    - generic [ref=e17]:
+      - generic [ref=e18]:
+        - generic [ref=e20]:
+          - button "Retornar" [ref=e22] [cursor=pointer]:
+            - img "arrow-left" [ref=e23]:
+              - img [ref=e24]
+          - heading "Informações da vaga" [level=3] [ref=e27]
+        - separator [ref=e29]
+      - main [ref=e30]:
+        - heading "Controller" [level=4] [ref=e32]
+        - button "Candidatar-se" [ref=e34] [cursor=pointer]
+        - separator [ref=e35]
+        - strong [ref=e37]: "Descrição da vaga:"
+        - generic [ref=e38]:
+          - heading "CONTROLLER" [level=1] [ref=e39]:
+            - img [ref=e40]
+            - strong [ref=e41]: CONTROLLER
+          - 'heading "📍 Local: Arujá - SP" [level=3] [ref=e42]'
+          - heading "Cargo Financeiro Corporativo | Controladoria" [level=3] [ref=e43]
+          - paragraph [ref=e44]
+          - heading "CONTEXTO DA POSIÇÃO:" [level=2] [ref=e45]:
+            - strong [ref=e46]: "CONTEXTO DA POSIÇÃO:"
+          - heading "Empresa brasileira de médio-grande porte especializada em soluções integradas de valorização e destinação sustentável de resíduos, com múltiplas unidades operacionais, presença em diversos estados e operações diversificadas (coprocessamento, gerenciamento total de resíduos, logística)." [level=3] [ref=e47]
+          - heading "O Controller atua como business partner das áreas de negócio — fornecendo informação qualificada, análise e visão crítica para que os gestores tomem melhores decisões." [level=3] [ref=e48]
+          - heading "RESPONSABILIDADES:" [level=2] [ref=e49]:
+            - strong [ref=e50]: "RESPONSABILIDADES:"
+          - heading "Planejamento Orçamentário e Forecast" [level=3] [ref=e51]:
+            - strong [ref=e52]:
+              - emphasis [ref=e53]: Planejamento Orçamentário e Forecast
+          - heading "• Conduzir o ciclo orçamentário anual (budget), incluindo definição de premissas, consolidação e aprovação, com ênfase em controle de custos e alinhamento com a estratégia de negócios." [level=3] [ref=e54]
+          - heading "• Realizar forecast periódico (mensal ou trimestral), com análise de variações (real vs. orçado vs. forecast anterior)." [level=3] [ref=e55]
+          - heading "• Garantir que cada gestor de área participe ativamente da construção e revisão do orçamento de sua responsabilidade." [level=3] [ref=e56]
+          - heading "Gestão Gerencial e Análise de Resultados" [level=3] [ref=e57]:
+            - strong [ref=e58]:
+              - emphasis [ref=e59]: Gestão Gerencial e Análise de Resultados
+          - heading "• Elaborar e analisar DRE gerencial consolidado e por contrato/unidade, identificando variações, riscos e oportunidades." [level=3] [ref=e60]
+          - heading "• Acompanhar rentabilidade por contrato e por operação, sinalizando desvios aos gestores responsáveis." [level=3] [ref=e61]
+          - heading "• Monitorar indicadores de custos e identificar oportunidades de redução, subsidiando os gestores de área com dados para tomada de decisão." [level=3] [ref=e62]
+          - heading "• Preparar relatórios gerenciais, análises financeiras e apresentações de resultados para o CFO e liderança, com foco em ações corretivas." [level=3] [ref=e63]
+          - heading "Controles Internos e Compliance" [level=3] [ref=e64]:
+            - strong [ref=e65]:
+              - emphasis [ref=e66]: Controles Internos e Compliance
+          - heading "• Manter e aprimorar práticas de controles internos e compliance financeiro, compatíveis com o estágio atual da organização." [level=3] [ref=e67]
+          - heading "• Validar consistência entre informações do ERP, contabilidade terceirizada e relatórios gerenciais." [level=3] [ref=e68]
+          - heading "• Atuar como interlocutor técnico com o escritório contábil externo, assegurando qualidade e tempestividade das entregas." [level=3] [ref=e69]
+          - heading "Interface com Áreas de Negócio (Business Partner)" [level=3] [ref=e70]:
+            - strong [ref=e71]:
+              - emphasis [ref=e72]: Interface com Áreas de Negócio (Business Partner)
+          - heading "• Atuar como parceiro analítico dos gerentes operacionais, comerciais e administrativos, fornecendo visão financeira para suporte à decisão." [level=3] [ref=e73]
+          - heading "• Participar de reuniões de resultado com gestores, provocando discussão sobre desempenho e planos de ação." [level=3] [ref=e74]
+          - heading "• Apoiar análises específicas sob demanda (viabilidade de novos contratos, simulações de preço, análise de investimentos)." [level=3] [ref=e75]
+          - heading "Melhoria Contínua" [level=3] [ref=e76]:
+            - strong [ref=e77]:
+              - emphasis [ref=e78]: Melhoria Contínua
+          - heading "• Aperfeiçoar processos, rotinas e indicadores de desempenho da Controladoria e FP&A, promovendo maior eficiência e integração com as operações." [level=3] [ref=e79]
+          - heading "REQUISITOS:" [level=2] [ref=e80]:
+            - strong [ref=e81]: "REQUISITOS:"
+          - heading "Formação e Experiência:" [level=3] [ref=e82]:
+            - strong [ref=e83]:
+              - emphasis [ref=e84]: "Formação e Experiência:"
+          - heading "• Formação superior completa em Contabilidade, Administração, Economia ou áreas afins." [level=3] [ref=e85]
+          - heading "• Experiência sólida (mínimo 5 anos) em Controladoria, Custos ou FP&A, preferencialmente em empresas de porte médio com múltiplas unidades." [level=3] [ref=e86]
+          - heading "• Vivência prática em planejamento orçamentário, análise de DRE por centro de custo/contrato e gestão gerencial." [level=3] [ref=e87]
+          - heading "• Conhecimento em controles internos e compliance financeiro." [level=3] [ref=e88]
+          - heading "Competências Técnicas:" [level=3] [ref=e89]:
+            - strong [ref=e90]:
+              - emphasis [ref=e91]: "Competências Técnicas:"
+          - heading "• Domínio avançado de Excel (modelagem, tabelas dinâmicas, Power Query)." [level=3] [ref=e92]
+          - heading "• Capacidade de trabalhar com dados extraídos de ERP próprio e construir visões gerenciais a partir de bases de dados diversas." [level=3] [ref=e93]
+          - 'heading "• Desejável: experiência com Power BI ou ferramentas equivalentes de BI." [level=3] [ref=e94]'
+          - 'heading "• Desejável: experiência em ambiente industrial ou empresas com múltiplas unidades operacionais." [level=3] [ref=e95]'
+          - 'heading "• Diferencial: experiência no setor de gestão de resíduos ou serviços ambientais." [level=3] [ref=e96]'
+          - heading "Competências Comportamentais:" [level=3] [ref=e97]:
+            - strong [ref=e98]: "Competências Comportamentais:"
+          - heading "• Capacidade analítica e visão estratégica — saber transformar dados em recomendações." [level=3] [ref=e99]
+          - heading "• Comunicação direta e objetiva — capacidade de interagir com todos os níveis, do operacional à Presidência, sem dependência de jargões." [level=3] [ref=e100]
+          - heading "• Postura de parceiro, não de fiscal — capacidade de gerar confiança e colaboração com os gestores de área, atuando como business partner." [level=3] [ref=e101]
+          - heading "• Organização e atenção a prazos — rigor no calendário de entregas gerenciais." [level=3] [ref=e102]
+          - heading "• Autonomia e proatividade — perfil construtor, capaz de liderar iniciativas e trabalhar de forma colaborativa." [level=3] [ref=e103]
+          - heading "• Postura ética, responsável e orientada a resultados, com foco em integridade e accountability." [level=3] [ref=e104]:
+            - text: • Postura ética, responsável e orientada a resultados, com foco em integridade e
+            - emphasis [ref=e105]: accountability
+            - text: .
+          - heading "INFORMAÇÕES ADICIONAIS:" [level=2] [ref=e106]:
+            - strong [ref=e107]: "INFORMAÇÕES ADICIONAIS:"
+          - 'heading "Regime: 100% presencial — Segunda a Sexta, 08h00 às 17h30." [level=3] [ref=e108]':
+            - strong [ref=e109]: "Regime:"
+            - text: 100% presencial — Segunda a Sexta, 08h00 às 17h30.
+          - 'heading "Remuneração: Compatível com o mercado para o porte e complexidade da operação." [level=3] [ref=e110]':
+            - strong [ref=e111]: "Remuneração:"
+            - text: Compatível com o mercado para o porte e complexidade da operação.
+          - heading "Benefícios:" [level=3] [ref=e112]:
+            - strong [ref=e113]: "Benefícios:"
+          - heading "Refeição no local" [level=3] [ref=e114]
+          - heading "Cesta básica ou Vale Alimentação (Cartão iFood)" [level=3] [ref=e115]
+          - heading "Vale-transporte" [level=3] [ref=e116]
+          - heading "Convênio médico e odontológico (titular e dependentes)" [level=3] [ref=e117]
+          - heading "Wellhub (plataforma de bem-estar e academias)" [level=3] [ref=e118]
+          - heading "PLR" [level=3] [ref=e119]
+          - heading "Benefícios para dependentes de até 12 anos" [level=3] [ref=e120]
+          - heading "Cesta de Natal" [level=3] [ref=e121]
+          - heading "OnHappy (descontos em viagens e hotéis)" [level=3] [ref=e122]
+          - heading "Acreditamos que diferentes perspectivas impulsionam a inovação e fortalecem nosso propósito. Venha construir esse futuro conosco! ♻️💚" [level=3] [ref=e123]:
+            - strong [ref=e124]: Acreditamos que diferentes perspectivas impulsionam a inovação e fortalecem nosso propósito. Venha construir esse futuro conosco!
+            - text: ♻️💚
+        - separator [ref=e125]
+        - table [ref=e128]:
+          - rowgroup [ref=e129]:
+            - 'row "Localização : Modelo de contratação : Modelo de trabalho :" [ref=e130]':
+              - columnheader "Localização :" [ref=e131]:
+                - generic [ref=e133]:
+                  - strong [ref=e135]: Localização
+                  - text: ":"
+              - columnheader "Modelo de contratação :" [ref=e136]:
+                - generic [ref=e138]:
+                  - strong [ref=e140]: Modelo de contratação
+                  - text: ":"
+              - columnheader "Modelo de trabalho :" [ref=e141]:
+                - generic [ref=e143]:
+                  - strong [ref=e145]: Modelo de trabalho
+                  - text: ":"
+            - row "Arujá, SP, BR Efetivo CLT Presencial" [ref=e146]:
+              - cell "Arujá, SP, BR" [ref=e147]:
+                - generic [ref=e150]: Arujá, SP, BR
+              - cell "Efetivo CLT" [ref=e151]:
+                - generic [ref=e154]: Efetivo CLT
+              - cell "Presencial" [ref=e155]:
+                - generic [ref=e158]: Presencial
+        - separator [ref=e159]
+        - button "Candidatar-se" [ref=e161] [cursor=pointer]
+  - alert [ref=e162]
+  - region "Widget de chat" [ref=e165]:
+    - iframe [ref=e166]:
+      - generic [ref=f5e2]:
+        - generic [ref=f5e6]:
+          - button "Abrir chat ao vivo" [ref=f5e7]:
+            - img "Avatar de Mindbot" [ref=f5e13]
+            - paragraph [ref=f5e14]: "Olá! 👋 Seja bem-vindo(a) à Mindsight 💜️ Nosso atendimento acontece de segunda a sexta-feira, das 9h às 12h e das 13h às 17h (exceto feriados). ⏱️ Prazos de atendimento: Suporte: até 48 horas corridas para o primeiro retorno. Parametrizações: até 5 dias úteis para conclusão. Obrigada pelo contato! 😊"
+          - button "Fechar página de boas-vindas" [ref=f5e15]:
+            - img [ref=f5e17]
+        - button "Abrir chat ao vivo" [ref=f5e24]:
+          - img [ref=f5e27]
+          - img [ref=f5e34]

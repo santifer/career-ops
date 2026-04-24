@@ -1,0 +1,58 @@
+- generic [ref=e158]:
+  - heading "Teste de raciocínio lógico e numérico completo" [level=1] [ref=e159]
+  - generic [ref=e160]:
+    - generic [ref=e161]:
+      - generic [ref=e162]:
+        - generic [ref=e164]: "01"
+        - generic [ref=e167]: "02"
+        - generic [ref=e170]: "03"
+        - generic [ref=e173]: "04"
+        - generic [ref=e176]: "05"
+        - generic [ref=e179]: "06"
+        - generic [ref=e182]: "07"
+        - generic [ref=e185]: "08"
+        - generic [ref=e188]: "09"
+        - generic [ref=e191]: "10"
+        - generic [ref=e194]: "11"
+        - generic [ref=e197]: "12"
+        - generic [ref=e200]: "13"
+        - generic [ref=e203]: "14"
+        - generic [ref=e206]: "15"
+        - generic [ref=e209]: "16"
+        - generic [ref=e212]: "17"
+        - generic [ref=e215]: "18"
+      - separator [ref=e217]
+      - generic [ref=e218]:
+        - paragraph [ref=e221]:
+          - img [ref=e222]
+          - text: 01:49
+        - separator [ref=e225]
+    - generic [ref=e226]:
+      - generic [ref=e227]:
+        - generic [ref=e228]: "Enunciado da questão:"
+        - text: "Para as questões a seguir, descubra qual o número que segue: 320, 160, 80, 40, 20, ?"
+      - group [ref=e229]:
+        - radiogroup "undefined" [ref=e231]:
+          - generic [ref=e232]:
+            - generic [ref=e233] [cursor=pointer]:
+              - generic [ref=e235]:
+                - img [ref=e236]
+                - radio "8" [ref=e238]
+              - generic [ref=e239]: "8"
+            - generic [ref=e240] [cursor=pointer]:
+              - generic [ref=e242]:
+                - img [ref=e243]
+                - radio "14" [ref=e245]
+              - generic [ref=e246]: "14"
+            - generic [ref=e247] [cursor=pointer]:
+              - generic [ref=e249]:
+                - img [ref=e250]
+                - radio "12" [ref=e252]
+              - generic [ref=e253]: "12"
+            - generic [ref=e254] [cursor=pointer]:
+              - generic [ref=e256]:
+                - img [ref=e266]
+                - radio "10" [checked] [active] [ref=e259]
+              - generic [ref=e260]: "10"
+      - button "ENVIAR RESPOSTA" [ref=e268] [cursor=pointer]:
+        - generic [ref=e271]: ENVIAR RESPOSTA

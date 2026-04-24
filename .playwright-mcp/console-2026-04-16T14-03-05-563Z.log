@@ -1,0 +1,34 @@
+[    1759ms] [LOG] Page authentication status: false @ https://www.amazon.jobs/en/jobs/3207863/accounting-manager-latam-stores-accounting-team:63
+[    1759ms] [LOG] Internal user status: false @ https://www.amazon.jobs/en/jobs/3207863/accounting-manager-latam-stores-accounting-team:64
+[    1890ms] [LOG] {
+	"eventData": {},
+	"job": {
+		"category": "Finance &amp; Accounting",
+		"countryCode": "BRA",
+		"division": "finance",
+		"id": "3207863",
+		"jobLocation": "single",
+		"jobFindingMethod": " ",
+		"title": "Accounting Manager, LATAM Stores Accounting Team",
+		"relatedJobId": []
+	},
+	"page": {
+		"pageInfo": {
+			"countryLanguage": "en",
+			"pageName": "Amazon.jobs | Job Details Page",
+			"pageType": "",
+			"advertisingCookieID": "",
+			"analyticsCookieID": "ccac02fd-8718-421d-aaa9-8c7c289b9f47",
+			"siteSection": "amazon jobs",
+			"tabName": "",
+			"userID": "",
+			"userActionStoreId": "ccac02fd-8718-421d-aaa9-8c7c289b9f47",
+			"peopleSoftId": "",
+			"userType": "guest",
+			"userAuthMode": ""
+		},
+		"experiment": {
+			"experimentDetails": null
+		}
+	}
+} @ https://d1o95ve0lr2m33.cloudfront.net/launch-ENb97d7f9d2d4b4720ac9782a711994995.min.js:7

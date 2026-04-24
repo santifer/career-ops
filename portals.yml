@@ -1,0 +1,612 @@
+# Portal Scanner Configuration — Tier 1: Accounting/Controller Leadership
+# Customized for: Fernando Costa Xavier
+# Target: Multinational companies in Brazil requiring English
+# Focus: Head/Gerente de Contabilidade, Controller, Gerente de Controladoria e correlatas
+# Excluded: Big Four (Deloitte, PwC, EY, KPMG) and Mazars
+#
+# Strategy (3 levels):
+#   1. Playwright -> careers_url of each company (real-time, reliable)
+#   2. Greenhouse API -> structured JSON (fast, Greenhouse-only)
+#   3. WebSearch with site: filters (broad discovery, may be stale)
+
+# -- Title filter --
+# At least 1 positive must match AND 0 negatives must match (case-insensitive).
+
+title_filter:
+  positive:
+    # -- Controllership / Accounting Leadership --
+    - "Head of Accounting"
+    - "Head of Controllership"
+    - "Accounting Director"
+    - "Accounting Manager"
+    - "Controller"
+    - "Controllership"
+    - "Financial Controller"
+    - "Regional Controller"
+    - "LATAM Controller"
+    - "Country Controller"
+    - "Plant Controller"
+    - "Site Controller"
+    - "Corporate Controller"
+    - "Group Controller"
+    # -- Finance Manager (multinational context) --
+    - "Finance Manager"
+    - "Finance Controller"
+    - "GERENTE"
+    # -- Treasury & Tax (same level) --
+    - "Treasury Manager"
+    - "Tax Manager"
+    - "Tax Director"
+    - "Transfer Pricing"
+    # -- Consolidation / Reporting (same level) --
+    - "Consolidation Manager"
+    - "Financial Reporting Manager"
+    - "Reporting Manager"
+    - "IFRS Manager"
+    # -- FP&A (same level) --
+    - "FP&A Manager"
+    - "FP&A Controller"
+    - "Planning Manager"
+  negative:
+    # Exclude junior/entry level
+    - "Junior"
+    - "Intern"
+    - "Estagio"
+    - "Trainee"
+    - "Analyst"
+    - "Analista"
+    - "Assistente"
+    - "Auxiliar"
+    # Exclude C-level / exec above Tier 1
+    - "CFO"
+    - "Chief Financial Officer"
+    - "VP Finance"
+    - "Vice President Finance"
+    - "Finance Director"
+    - "Director of Finance"
+    - "Finance Lead"
+    # Exclude unrelated
+    - "Sales"
+    - "Marketing"
+    - "Developer"
+    - "Engineer"
+    - "Designer"
+    - "Nurse"
+    - "Physician"
+    - "HR"
+    - "Human Resources"
+    - "Recruiter"
+  seniority_boost:
+    - "Senior"
+    - "Lead"
+    - "Head"
+    - "Director"
+    - "Manager"
+    - "GERENTE"
+    - "Regional"
+    - "LATAM"
+    - "Country"
+    - "Plant"
+    - "Site"
+    - "Corporate"
+    - "Group"
+
+# -- Search queries --
+# Focused on Tier 1: Accounting/Controller leadership roles in multinational companies in Brazil
+
+search_queries:
+  # -- LinkedIn --
+  - name: LinkedIn — Accounting Controller Brazil
+    query: '"Accounting Manager" OR "Accounting Director" OR "Controller" OR "Head of Accounting" OR "Controllership" Brazil "Sao Paulo" site:linkedin.com/jobs'
+    enabled: true
+
+  - name: LinkedIn — Regional/LATAM Controller
+    query: '"Regional Controller" OR "LATAM Controller" OR "Country Controller" Brazil English site:linkedin.com/jobs'
+    enabled: true
+
+  - name: LinkedIn — Finance Manager Multinacional
+    query: '"Finance Manager" OR "Finance Controller" Brazil "Sao Paulo" site:linkedin.com/jobs'
+    enabled: true
+
+  - name: LinkedIn — Treasury/Tax Manager
+    query: '"Treasury Manager" OR "Tax Manager" OR "Transfer Pricing" Brazil "Sao Paulo" site:linkedin.com/jobs'
+    enabled: true
+
+  # -- Greenhouse --
+  - name: Greenhouse — Accounting Leadership Brazil
+    query: 'site:boards.greenhouse.io OR site:job-boards.greenhouse.io "Accounting Manager" OR "Controller" OR "Head of Accounting" OR "Controllership" Brazil'
+    enabled: true
+
+  - name: Greenhouse — Finance Manager Brazil
+    query: 'site:boards.greenhouse.io OR site:job-boards.greenhouse.io "Finance Manager" OR "Finance Controller" Brazil "Sao Paulo"'
+    enabled: true
+
+  # -- Lever --
+  - name: Lever — Accounting/Controller Brazil
+    query: 'site:jobs.lever.co "Accounting Manager" OR "Controller" OR "Head of Accounting" Brazil "Sao Paulo"'
+    enabled: true
+
+  # -- Ashby --
+  - name: Ashby — Accounting Leadership
+    query: 'site:jobs.ashbyhq.com "Accounting" OR "Controller" OR "Controllership" Brazil OR "Sao Paulo" OR LATAM'
+    enabled: true
+
+  # -- Workable --
+  - name: Workable — Accounting Controller Brazil
+    query: 'site:apply.workable.com "Accounting Manager" OR "Controller" OR "Head of Accounting" Brazil'
+    enabled: true
+
+  # -- Indeed Brazil --
+  - name: Indeed — Controller/Gerente Contabilidade SP
+    query: 'site:br.indeed.com "Controller" OR "Controllership" OR "Gerente de Controladoria" OR "Head of Accounting" "Sao Paulo" English'
+    enabled: true
+
+  # -- Vagas.com.br --
+  - name: Vagas — Controller Multinacional
+    query: 'site:vagas.com.br "Controller" OR "Head of Accounting" OR "Gerente de Controladoria" OR "Controllership" "Sao Paulo" English OR ingles'
+    enabled: true
+
+  # -- Michael Page / Robert Half (aggregators) --
+  - name: Michael Page — Accounting Controller
+    query: 'site:michaelpage.com.br "Accounting Manager" OR "Accounting Director" OR "Controller" OR "Head of Accounting" "Sao Paulo"'
+    enabled: true
+
+  - name: Robert Half — Controller/Gerente
+    query: 'site:roberthalf.com.br "Controller" OR "Finance Manager" OR "Accounting Manager" "Sao Paulo" OR remoto'
+    enabled: true
+
+  # -- Glassdoor --
+  - name: Glassdoor — Controller Brazil
+    query: 'site:glassdoor.com.br "Controller" OR "Head of Accounting" OR "Accounting Manager" "Sao Paulo" Brazil'
+    enabled: true
+
+  # -- Specific searches for Tier 1 --
+  - name: IFRS/Consolidation Manager Brazil
+    query: '"IFRS" OR "US GAAP" "Controller" OR "Manager" OR "Consolidation" Brazil "Sao Paulo" English multinational'
+    enabled: true
+
+  - name: FP&A Manager Brazil
+    query: '"FP&A Manager" OR "FP&A Controller" OR "Financial Planning" Brazil "Sao Paulo" site:linkedin.com/jobs'
+    enabled: true
+
+  - name: Plant/Site Controller Brazil
+    query: '"Plant Controller" OR "Site Controller" OR "Manufacturing Controller" Brazil'
+    enabled: true
+
+# -- Tracked companies --
+# Multinational companies with significant presence in Brazil
+# Focus: Accounting/Controller/Finance Manager roles
+
+tracked_companies:
+
+  # ═══════════════════════════════════════════════════════
+  # CONSUMER GOODS & FMCG (large Finance teams in SP)
+  # ═══════════════════════════════════════════════════════
+
+  - name: Unilever
+    careers_url: https://careers.unilever.com
+    scan_method: websearch
+    scan_query: '"Unilever" "Accounting" OR "Controller" OR "FP&A" OR "Finance Manager" Brazil OR "Sao Paulo" site:careers.unilever.com'
+    notes: "SP HQ. Large finance org, IFRS, shared services. English required."
+    enabled: true
+
+  - name: Procter & Gamble
+    careers_url: https://www.pgcareers.com
+    scan_method: websearch
+    scan_query: '"P&G" OR "Procter" "Accounting" OR "Controller" OR "Finance Manager" Brazil site:pgcareers.com'
+    notes: "SP. Strong finance leadership pipeline. US GAAP."
+    enabled: true
+
+  - name: Nestle
+    careers_url: https://www.nestle.com.br/carreiras
+    scan_method: websearch
+    scan_query: '"Nestle" "Accounting Manager" OR "Controller" OR "Finance Manager" OR "FP&A" Brazil OR "Sao Paulo"'
+    notes: "SP. Massive LATAM operations. IFRS + Swiss standards."
+    enabled: true
+
+  - name: AB InBev / Ambev
+    careers_url: https://www.abinbev.com/careers
+    scan_method: websearch
+    scan_query: '"AB InBev" OR "Ambev" "Accounting" OR "Controller" OR "Finance Manager" OR "FP&A" Brazil OR "Sao Paulo"'
+    notes: "SP HQ LATAM. Global finance team, strong English culture."
+    enabled: true
+
+  - name: Johnson & Johnson
+    careers_url: https://jobs.jnj.com
+    scan_method: websearch
+    scan_query: '"Johnson & Johnson" OR "J&J" "Accounting" OR "Controller" OR "Finance Manager" Brazil OR "Sao Paulo" site:jobs.jnj.com'
+    notes: "SP. Pharma + consumer. US GAAP, English mandatory."
+    enabled: true
+
+  - name: Colgate-Palmolive
+    careers_url: https://jobs.colgate.com
+    scan_method: websearch
+    scan_query: '"Colgate" "Accounting" OR "Controller" OR "Finance Manager" OR "FP&A" Brazil OR "Sao Paulo"'
+    notes: "SP. US GAAP, strong global finance structure."
+    enabled: true
+
+  - name: Reckitt
+    careers_url: https://careers.reckitt.com
+    scan_method: websearch
+    scan_query: '"Reckitt" "Accounting" OR "Controller" OR "Finance Manager" Brazil OR "Sao Paulo"'
+    notes: "SP. Consumer health. IFRS, English corporate language."
+    enabled: true
+
+  - name: 3M
+    careers_url: https://www.3m.com.br/3M/pt_BR/carreiras
+    scan_method: websearch
+    scan_query: '"3M" "Accounting" OR "Controller" OR "Finance Manager" Brazil OR "Sao Paulo" OR "Sumare"'
+    notes: "SP/Sumare. Diversified industrial. US GAAP."
+    enabled: true
+
+  # ═══════════════════════════════════════════════════════
+  # TECH & SOFTWARE (Finance in Brazil offices)
+  # ═══════════════════════════════════════════════════════
+
+  - name: Google
+    careers_url: https://careers.google.com
+    scan_method: websearch
+    scan_query: '"Google" "Accounting" OR "Controller" OR "Finance Manager" OR "FP&A" Brazil OR "Sao Paulo" site:careers.google.com'
+    notes: "SP. US GAAP, English mandatory."
+    enabled: true
+
+  - name: Microsoft
+    careers_url: https://careers.microsoft.com
+    scan_method: websearch
+    scan_query: '"Microsoft" "Accounting" OR "Controller" OR "Finance Manager" OR "FP&A" Brazil OR "Sao Paulo" site:careers.microsoft.com'
+    notes: "SP. US GAAP, large LATAM finance org."
+    enabled: true
+
+  - name: Amazon / AWS
+    careers_url: https://www.amazon.jobs
+    scan_method: websearch
+    scan_query: '"Amazon" OR "AWS" "Accounting" OR "Controller" OR "Finance Manager" Brazil OR "Sao Paulo" site:amazon.jobs'
+    notes: "SP. Massive operations. US GAAP, English required."
+    enabled: true
+
+  - name: Meta
+    careers_url: https://www.metacareers.com
+    scan_method: websearch
+    scan_query: '"Meta" "Accounting" OR "Controller" OR "Finance Manager" Brazil OR "Sao Paulo" site:metacareers.com'
+    notes: "SP. US GAAP, English corporate language."
+    enabled: true
+
+  - name: Salesforce
+    careers_url: https://careers.salesforce.com
+    scan_method: websearch
+    scan_query: '"Salesforce" "Accounting" OR "Controller" OR "Finance Manager" Brazil OR "Sao Paulo" site:careers.salesforce.com'
+    notes: "SP. US GAAP, fast-growth enterprise."
+    enabled: true
+
+  - name: SAP
+    careers_url: https://jobs.sap.com
+    scan_method: websearch
+    scan_query: '"SAP" "Accounting" OR "Controller" OR "Finance Manager" Brazil OR "Sao Paulo" site:jobs.sap.com'
+    notes: "SP. German MNC, IFRS + HGB, English + German optional."
+    enabled: true
+
+  - name: Oracle
+    careers_url: https://www.oracle.com/careers
+    scan_method: websearch
+    scan_query: '"Oracle" "Accounting" OR "Controller" OR "Finance Manager" Brazil OR "Sao Paulo" site:oracle.com/careers'
+    notes: "SP. US GAAP, large LATAM operation."
+    enabled: true
+
+  - name: IBM
+    careers_url: https://www.ibm.com/careers
+    scan_method: websearch
+    scan_query: '"IBM" "Accounting" OR "Controller" OR "Finance Manager" Brazil OR "Sao Paulo" site:ibm.com/careers'
+    notes: "SP. US GAAP, shared services model."
+    enabled: true
+
+  # ═══════════════════════════════════════════════════════
+  # PHARMA & HEALTHCARE
+  # ═══════════════════════════════════════════════════════
+
+  - name: Roche
+    careers_url: https://careers.roche.com
+    scan_method: websearch
+    scan_query: '"Roche" "Accounting" OR "Controller" OR "Finance Manager" Brazil OR "Sao Paulo" site:careers.roche.com'
+    notes: "SP. Swiss pharma. IFRS, English + Spanish valued."
+    enabled: true
+
+  - name: Novartis
+    careers_url: https://www.novartis.com/careers
+    scan_method: websearch
+    scan_query: '"Novartis" "Accounting" OR "Controller" OR "Finance Manager" Brazil OR "Sao Paulo"'
+    notes: "SP. Swiss pharma. IFRS, large LATAM finance org."
+    enabled: true
+
+  - name: Pfizer
+    careers_url: https://www.pfizer.com/careers
+    scan_method: websearch
+    scan_query: '"Pfizer" "Accounting" OR "Controller" OR "Finance Manager" Brazil OR "Sao Paulo"'
+    notes: "SP. US GAAP, English mandatory."
+    enabled: true
+
+  - name: AstraZeneca
+    careers_url: https://careers.astrazeneca.com
+    scan_method: websearch
+    scan_query: '"AstraZeneca" "Accounting" OR "Controller" OR "Finance Manager" Brazil OR "Sao Paulo" OR Cotia'
+    notes: "SP/Cotia. UK pharma. IFRS, English required."
+    enabled: true
+
+  - name: Bayer
+    careers_url: https://career.bayer.com
+    scan_method: websearch
+    scan_query: '"Bayer" "Accounting" OR "Controller" OR "Finance Manager" Brazil OR "Sao Paulo" site:career.bayer.com'
+    notes: "SP. German pharma+agro. IFRS, English + German valued."
+    enabled: true
+
+  - name: Sanofi
+    careers_url: https://www.sanofi.com/en/careers
+    scan_method: websearch
+    scan_query: '"Sanofi" "Accounting" OR "Controller" OR "Finance Manager" Brazil OR "Sao Paulo"'
+    notes: "SP. French pharma. IFRS, English + French valued."
+    enabled: true
+
+  - name: GSK
+    careers_url: https://www.gsk.com/en-gb/careers
+    scan_method: websearch
+    scan_query: '"GSK" OR "GlaxoSmithKline" "Accounting" OR "Controller" OR "Finance Manager" Brazil OR "Sao Paulo"'
+    notes: "RJ/SP. UK pharma. IFRS, English required."
+    enabled: true
+
+  - name: Abbott
+    careers_url: https://www.abbott.com/careers.html
+    scan_method: websearch
+    scan_query: '"Abbott" "Accounting" OR "Controller" OR "Finance Manager" Brazil OR "Sao Paulo"'
+    notes: "SP. US healthcare. US GAAP, English required."
+    enabled: true
+
+  # ═══════════════════════════════════════════════════════
+  # INDUSTRIAL & MANUFACTURING
+  # ═══════════════════════════════════════════════════════
+
+  - name: Siemens
+    careers_url: https://jobs.siemens.com
+    scan_method: websearch
+    scan_query: '"Siemens" "Accounting" OR "Controller" OR "Finance Manager" Brazil OR "Sao Paulo" OR Jundiai site:jobs.siemens.com'
+    notes: "SP/Jundiai. German industrial. IFRS, English + German valued."
+    enabled: true
+
+  - name: ABB
+    careers_url: https://careers.abb.com
+    scan_method: websearch
+    scan_query: '"ABB" "Accounting" OR "Controller" OR "Finance Manager" Brazil OR "Sao Paulo" OR Guarulhos'
+    notes: "SP/Guarulhos. Swiss industrial. IFRS, English required."
+    enabled: true
+
+  - name: Schneider Electric
+    careers_url: https://www.se.com/br/pt/about-us/careers
+    scan_method: websearch
+    scan_query: '"Schneider Electric" "Accounting" OR "Controller" OR "Finance Manager" Brazil OR "Sao Paulo"'
+    notes: "SP. French industrial. IFRS, English + French valued."
+    enabled: true
+
+  - name: Bosch
+    careers_url: https://www.bosch.com.br/carreiras
+    scan_method: websearch
+    scan_query: '"Bosch" "Accounting" OR "Controller" OR "Finance Manager" Brazil OR "Sao Paulo" OR Campinas'
+    notes: "Campinas/SP. German automotive+industrial. IFRS, English + German."
+    enabled: true
+
+  - name: GE (General Electric)
+    careers_url: https://jobs.gecareers.com
+    scan_method: websearch
+    scan_query: '"GE" OR "General Electric" "Accounting" OR "Controller" OR "Finance Manager" OR "FP&A" Brazil OR "Sao Paulo"'
+    notes: "SP. US industrial. US GAAP, strong FMP/FLP programs."
+    enabled: true
+
+  - name: Caterpillar
+    careers_url: https://www.caterpillar.com/en/careers.html
+    scan_method: websearch
+    scan_query: '"Caterpillar" "Accounting" OR "Controller" OR "Finance Manager" Brazil'
+    notes: "Piracicaba/SP. US industrial. US GAAP, English required."
+    enabled: true
+
+  - name: John Deere
+    careers_url: https://www.deere.com/en/our-company/john-deere-careers
+    scan_method: websearch
+    scan_query: '"John Deere" OR "Deere" "Accounting" OR "Controller" OR "Finance Manager" Brazil'
+    notes: "Campinas/Hortolandia. US agro-industrial. US GAAP, English."
+    enabled: true
+
+  # ═══════════════════════════════════════════════════════
+  # AUTOMOTIVE
+  # ═══════════════════════════════════════════════════════
+
+  - name: Mercedes-Benz
+    careers_url: https://www.mercedes-benz.com.br/institucional/carreiras
+    scan_method: websearch
+    scan_query: '"Mercedes-Benz" OR "Mercedes" "Accounting" OR "Controller" OR "Finance Manager" Brazil OR "Sao Paulo"'
+    notes: "SBC/SP. German auto. IFRS, English + German valued."
+    enabled: true
+
+  - name: BMW
+    careers_url: https://www.bmwgroup.jobs
+    scan_method: websearch
+    scan_query: '"BMW" "Accounting" OR "Controller" OR "Finance Manager" Brazil OR "Sao Paulo"'
+    notes: "SP/Araquari. German auto. IFRS, English + German valued."
+    enabled: true
+
+  - name: Volkswagen
+    careers_url: https://www.vw.com.br/pt/volkswagen/carreiras.html
+    scan_method: websearch
+    scan_query: '"Volkswagen" OR "VW" "Accounting" OR "Controller" OR "Finance Manager" Brazil OR "Sao Paulo" OR "SBC"'
+    notes: "SBC. German auto. IFRS, large Brazil operations."
+    enabled: true
+
+  - name: Toyota
+    careers_url: https://www.toyota.com.br/carreiras
+    scan_method: websearch
+    scan_query: '"Toyota" "Accounting" OR "Controller" OR "Finance Manager" Brazil OR "Sao Paulo" OR Sorocaba'
+    notes: "SP/Sorocaba. Japanese auto. IFRS + JGAAP."
+    enabled: true
+
+  # ═══════════════════════════════════════════════════════
+  # FINANCIAL SERVICES (non-Big4)
+  # ═══════════════════════════════════════════════════════
+
+  - name: JPMorgan
+    careers_url: https://careers.jpmorgan.com
+    scan_method: websearch
+    scan_query: '"JPMorgan" OR "JP Morgan" "Accounting" OR "Controller" OR "Finance Manager" Brazil OR "Sao Paulo" site:careers.jpmorgan.com'
+    notes: "SP. US bank. US GAAP, English mandatory."
+    enabled: true
+
+  - name: Goldman Sachs
+    careers_url: https://www.goldmansachs.com/careers
+    scan_method: websearch
+    scan_query: '"Goldman Sachs" "Accounting" OR "Controller" OR "Finance Manager" Brazil OR "Sao Paulo"'
+    notes: "SP. US bank. US GAAP, English mandatory."
+    enabled: true
+
+  - name: Citi
+    careers_url: https://jobs.citi.com
+    scan_method: websearch
+    scan_query: '"Citi" OR "Citibank" "Accounting" OR "Controller" OR "Finance Manager" Brazil OR "Sao Paulo" site:jobs.citi.com'
+    notes: "SP. US bank. US GAAP, large LATAM operations."
+    enabled: true
+
+  - name: HSBC
+    careers_url: https://www.hsbc.com/careers
+    scan_method: websearch
+    scan_query: '"HSBC" "Accounting" OR "Controller" OR "Finance Manager" Brazil OR "Sao Paulo" OR Curitiba'
+    notes: "SP/Curitiba. UK bank. IFRS, English mandatory."
+    enabled: true
+
+  - name: BNP Paribas
+    careers_url: https://group.bnpparibas/en/careers
+    scan_method: websearch
+    scan_query: '"BNP Paribas" "Accounting" OR "Controller" OR "Finance Manager" Brazil OR "Sao Paulo"'
+    notes: "SP. French bank. IFRS, English + French valued."
+    enabled: true
+
+  - name: Credit Suisse / UBS
+    careers_url: https://www.ubs.com/global/en/careers.html
+    scan_method: websearch
+    scan_query: '"UBS" OR "Credit Suisse" "Accounting" OR "Controller" OR "Finance Manager" Brazil OR "Sao Paulo"'
+    notes: "SP. Swiss bank. IFRS, English mandatory."
+    enabled: true
+
+  # ═══════════════════════════════════════════════════════
+  # ENERGY & MINING
+  # ═══════════════════════════════════════════════════════
+
+  - name: Shell
+    careers_url: https://www.shell.com/careers
+    scan_method: websearch
+    scan_query: '"Shell" "Accounting" OR "Controller" OR "Finance Manager" Brazil OR "Sao Paulo" OR Rio'
+    notes: "SP/RJ. UK-Dutch energy. IFRS, English mandatory."
+    enabled: true
+
+  - name: TotalEnergies
+    careers_url: https://careers.totalenergies.com
+    scan_method: websearch
+    scan_query: '"TotalEnergies" OR "Total" "Accounting" OR "Controller" OR "Finance Manager" Brazil OR "Sao Paulo"'
+    notes: "RJ/SP. French energy. IFRS, English + French valued."
+    enabled: true
+
+  - name: Vale
+    careers_url: https://vale.com/carreiras
+    scan_method: websearch
+    scan_query: '"Vale" "Accounting Manager" OR "Controller" OR "Finance Manager" OR "Head of Accounting" English'
+    notes: "RJ. Brazilian mining MNC. IFRS, English required for senior roles."
+    enabled: true
+
+  - name: BHP
+    careers_url: https://www.bhp.com/careers
+    scan_method: websearch
+    scan_query: '"BHP" "Accounting" OR "Controller" OR "Finance Manager" Brazil'
+    notes: "SP. Australian mining. IFRS, English mandatory."
+    enabled: true
+
+  # ═══════════════════════════════════════════════════════
+  # LOGISTICS & SUPPLY CHAIN
+  # ═══════════════════════════════════════════════════════
+
+  - name: DHL
+    careers_url: https://careers.dhl.com
+    scan_method: websearch
+    scan_query: '"DHL" "Accounting" OR "Controller" OR "Finance Manager" Brazil OR "Sao Paulo" OR Barueri'
+    notes: "SP/Barueri. German logistics. IFRS, English required."
+    enabled: true
+
+  - name: Maersk
+    careers_url: https://www.maersk.com/careers
+    scan_method: websearch
+    scan_query: '"Maersk" "Accounting" OR "Controller" OR "Finance Manager" Brazil OR "Sao Paulo"'
+    notes: "SP. Danish logistics. IFRS, English mandatory."
+    enabled: true
+
+  - name: FedEx
+    careers_url: https://careers.fedex.com
+    scan_method: websearch
+    scan_query: '"FedEx" "Accounting" OR "Controller" OR "Finance Manager" Brazil OR "Sao Paulo" OR Barueri'
+    notes: "SP/Barueri. US logistics. US GAAP, English required."
+    enabled: true
+
+  # ═══════════════════════════════════════════════════════
+  # FOOD & AGRIBUSINESS
+  # ═══════════════════════════════════════════════════════
+
+  - name: Cargill
+    careers_url: https://careers.cargill.com
+    scan_method: websearch
+    scan_query: '"Cargill" "Accounting" OR "Controller" OR "Finance Manager" Brazil OR "Sao Paulo"'
+    notes: "SP. US agribusiness. US GAAP, large Brazil operations."
+    enabled: true
+
+  - name: Louis Dreyfus
+    careers_url: https://www.ldc.com/careers
+    scan_method: websearch
+    scan_query: '"Louis Dreyfus" OR "LDC" "Accounting" OR "Controller" OR "Finance Manager" Brazil OR "Sao Paulo"'
+    notes: "SP. French commodity trader. IFRS, English + French valued."
+    enabled: true
+
+  - name: ADM
+    careers_url: https://www.adm.com/en-us/careers
+    scan_method: websearch
+    scan_query: '"ADM" OR "Archer Daniels" "Accounting" OR "Controller" OR "Finance Manager" Brazil OR "Sao Paulo"'
+    notes: "SP. US agribusiness. US GAAP, English required."
+    enabled: true
+
+  - name: Bunge
+    careers_url: https://www.bunge.com/careers
+    scan_method: websearch
+    scan_query: '"Bunge" "Accounting" OR "Controller" OR "Finance Manager" Brazil OR "Sao Paulo"'
+    notes: "SP. US agro. US GAAP, large Brazil presence."
+    enabled: true
+
+  # ═══════════════════════════════════════════════════════
+  # CONSULTING & ADVISORY (non-Big4, non-Mazars)
+  # ═══════════════════════════════════════════════════════
+
+  - name: McKinsey
+    careers_url: https://www.mckinsey.com/careers
+    scan_method: websearch
+    scan_query: '"McKinsey" "Finance Manager" OR "Controller" OR "Accounting Manager" Brazil OR "Sao Paulo" site:mckinsey.com/careers'
+    notes: "SP. Strategy consulting. English mandatory."
+    enabled: true
+
+  - name: Accenture
+    careers_url: https://www.accenture.com/br-pt/careers
+    scan_method: websearch
+    scan_query: '"Accenture" "Finance Manager" OR "Controller" OR "Accounting Manager" Brazil OR "Sao Paulo"'
+    notes: "SP. Large finance transformation practice. English required."
+    enabled: true
+
+  - name: BDO
+    careers_url: https://www.bdo.com.br/pt-br/carreiras
+    scan_method: websearch
+    scan_query: '"BDO" "Finance Manager" OR "Controller" OR "Accounting Manager" Brazil OR "Sao Paulo" English'
+    notes: "SP. Mid-tier global firm. IFRS, English required."
+    enabled: true
+
+  - name: Grant Thornton
+    careers_url: https://www.grantthornton.com.br/carreiras
+    scan_method: websearch
+    scan_query: '"Grant Thornton" "Finance Manager" OR "Controller" OR "Accounting Manager" Brazil OR "Sao Paulo"'
+    notes: "SP. Mid-tier global firm. IFRS, English required."
+    enabled: true

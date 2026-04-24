@@ -1,0 +1,117 @@
+- generic [ref=e4]:
+  - link "Pular para conteúdo principal":
+    - /url: "#skipContent"
+  - region "Navegação de vagas" [ref=e7]:
+    - generic [ref=e8]:
+      - generic:
+        - link "Login" [ref=e10] [cursor=pointer]:
+          - /url: /career?career_company=triviumpac&lang=pt_BR&company=triviumpac&site=&loginFlowRequired=true&_s.crb=S3RGjSVb%2bQwaW0vH88MJFWJRNvpUvNXk7vB8Nl9Qrlo%3d
+        - generic [ref=e11]: Idioma
+        - generic [ref=e12]:
+          - combobox "Idioma" [ref=e13] [cursor=pointer]:
+            - text: Português do Brasil ‎(Brazilian Portuguese)‎
+            - button ""
+          - generic [ref=e14]: Recolhida. Para expandir, pressione Enter
+          - generic [ref=e15]: Expandida. Para recolher, pressione Enter
+  - generic "Região"
+  - table [ref=e18]:
+    - rowgroup [ref=e19]:
+      - row "Pesquisar por Oportunidades Região do texto de boas-vindas. Use as teclas de seta para cima e para baixo no modo Virtual PC para ler o texto nesta região." [ref=e20]:
+        - cell "Pesquisar por Oportunidades" [ref=e21]:
+          - region "Pesquisar por Oportunidades" [ref=e22]:
+            - heading " Pesquisar por Oportunidades" [level=2] [ref=e23]
+            - table [ref=e44]:
+              - rowgroup [ref=e45]:
+                - 'row "Palavras-chave: Finance Manager Mostrar texto de ajuda. Mudar para o modo de cursor de PC virtual para ler o texto inteiro. Opções de pesquisa por palavra-chave Idioma da vaga: Localização: Region: Posting Country: Posting Country State / District: State / District Location: Location Talent Area: Division: Day or Shift Worker: Estimated Travel: 12 Vagas coincidem com as seleções Destacado Pesquisar vagas Apagar" [ref=e136]':
+                  - 'cell "Palavras-chave: Finance Manager Mostrar texto de ajuda. Mudar para o modo de cursor de PC virtual para ler o texto inteiro. Opções de pesquisa por palavra-chave Idioma da vaga: Localização: Region: Posting Country: Posting Country State / District: State / District Location: Location Talent Area: Division: Day or Shift Worker: Estimated Travel: 12 Vagas coincidem com as seleções Destacado Pesquisar vagas Apagar" [ref=e137]':
+                    - generic [ref=e49]:
+                      - text: "Palavras-chave:"
+                      - generic [ref=e50]:
+                        - textbox "Palavras-chave" [ref=e51]: Finance Manager
+                        - button "Mostrar texto de ajuda. Mudar para o modo de cursor de PC virtual para ler o texto inteiro." [ref=e52] [cursor=pointer]:
+                          - text: 
+                          - generic [ref=e53]: "Exibir ajuda, Como funciona a busca por palavras-chave? Insira uma lista de palavras e nós buscaremos por elas no cargo, ou você pode escolher buscar por elas também através da descrição do cargo. Dicas: Encontraremos resultados para qualquer palavra listada na pesquisa Os resultados que começarem com as palavras pesquisadas também serão retornados. Ex: uma pesquisa por \"Gerenciar\" retornaria \"gerenciar, gerente, gerenciamento\" etc. Para localizar uma frase exata, coloque a frase da pesquisa entre aspas duplas (\" \"). Ex: \"gerente sênior\", ou selecione \"Correspondência exata\". Pesquisa avançada: Use AND (E), OR (OU), NOT (NÃO) e () para combinar os termos de pesquisa. Ex: Vendas AND engenheiro localiza somente vagas que tenham ambos os termos. Vendas OR engenheiro localiza todas as vagas que tenham um ou outro. (Vendas AND Engenheiro) NOT Gerente localiza vagas que contêm \"Vendas\" e \"Engenheiro\", mas não \"Gerente\". Use ponto de interrogação (?) para letras desconhecidas. Ex: Thomps?n localiza Thompson, Thompsen, Thompsan etc. Use til (~) para localizar ortografias similares. Ex: roam~ localiza roam, roams, room, road, roads etc. Não use as opções de pesquisa avançada se você tiver selecionado \"Correspondência exata\"."
+                        - group "Opções de pesquisa por palavra-chave" [ref=e54]:
+                          - generic [ref=e55]: Opções de pesquisa por palavra-chave
+                          - generic [ref=e56]:
+                            - checkbox "Frase Exata" [ref=e57]
+                            - generic [ref=e58]: Frase Exata
+                          - generic [ref=e62]:
+                            - radio "no cargo" [checked] [ref=e63]
+                            - generic [ref=e65] [cursor=pointer]: no cargo
+                          - generic [ref=e69]:
+                            - radio "no cargo ou na descrição" [ref=e70]
+                            - generic [ref=e72] [cursor=pointer]: no cargo ou na descrição
+                      - text: "Idioma da vaga:"
+                      - combobox "Idioma da vaga" [ref=e73]:
+                        - textbox "Selecione uma ou mais opções" [ref=e74]: Qualquer
+                        - button "Idioma da vaga" [ref=e75]: 
+                        - generic [ref=e76]: Selecione uma ou mais opções para a caixa de combinação de seleção múltipla Idioma da vaga com as opções da caixa de seleção.Nenhum valor selecionado
+                      - text: "Localização:"
+                      - combobox "Localização" [ref=e77]:
+                        - textbox "Selecione uma ou mais opções" [ref=e78]: Qualquer
+                        - button "Localização" [ref=e79]: 
+                        - generic [ref=e80]: Selecione uma ou mais opções para a caixa de combinação de seleção múltipla Localização com as opções da caixa de seleção.Nenhum valor selecionado
+                      - text: "Region:"
+                      - combobox "Region" [ref=e82]:
+                        - textbox "Selecione uma ou mais opções" [ref=e83]: Qualquer
+                        - button "Region" [ref=e84]: 
+                        - generic [ref=e85]: Selecione uma ou mais opções para a caixa de combinação de seleção múltipla Region com as opções da caixa de seleção.Nenhum valor selecionado
+                      - text: "Posting Country:"
+                      - generic "Posting Country" [ref=e87]:
+                        - textbox "Selecione uma ou mais opções" [disabled] [ref=e88]: Qualquer
+                        - button "Posting Country" [disabled] [ref=e89]: 
+                        - generic [ref=e90]: Selecione uma ou mais opções para a caixa de combinação de seleção múltipla Posting Country com as opções da caixa de seleção.Nenhum valor selecionado
+                      - text: "State / District:"
+                      - generic "State / District" [ref=e92]:
+                        - textbox "Selecione uma ou mais opções" [disabled] [ref=e93]: Qualquer
+                        - button "State / District" [disabled] [ref=e94]: 
+                        - generic [ref=e95]: Selecione uma ou mais opções para a caixa de combinação de seleção múltipla State / District com as opções da caixa de seleção.Nenhum valor selecionado
+                      - text: "Location:"
+                      - generic "Location" [ref=e97]:
+                        - textbox "Selecione uma ou mais opções" [disabled] [ref=e98]: Qualquer
+                        - button "Location" [disabled] [ref=e99]: 
+                        - generic [ref=e100]: Selecione uma ou mais opções para a caixa de combinação de seleção múltipla Location com as opções da caixa de seleção.Nenhum valor selecionado
+                      - text: "Talent Area:"
+                      - combobox "Talent Area" [ref=e102]:
+                        - textbox "Selecione uma ou mais opções" [ref=e103]: Qualquer
+                        - button "Talent Area" [ref=e104]: 
+                        - generic [ref=e105]: Selecione uma ou mais opções para a caixa de combinação de seleção múltipla Talent Area com as opções da caixa de seleção. Nenhum valor selecionado
+                      - text: "Division:"
+                      - combobox "Division" [ref=e108]:
+                        - textbox "Selecione uma ou mais opções" [ref=e109]: Qualquer
+                        - button "Division" [ref=e110]: 
+                        - generic [ref=e111]: Selecione uma ou mais opções para a caixa de combinação de seleção múltipla Division com as opções da caixa de seleção. Nenhum valor selecionado
+                      - text: "Day or Shift Worker:"
+                      - combobox "Day or Shift Worker" [ref=e114]:
+                        - textbox "Selecione uma ou mais opções" [ref=e115]: Qualquer
+                        - button "Day or Shift Worker" [ref=e116]: 
+                        - generic [ref=e117]: Selecione uma ou mais opções para a caixa de combinação de seleção múltipla Day or Shift Worker com as opções da caixa de seleção. Nenhum valor selecionado
+                      - text: "Estimated Travel:"
+                      - combobox "Estimated Travel" [ref=e120]:
+                        - textbox "Selecione uma ou mais opções" [ref=e121]: Qualquer
+                        - button "Estimated Travel" [ref=e122]: 
+                        - generic [ref=e123]: Selecione uma ou mais opções para a caixa de combinação de seleção múltipla Estimated Travel com as opções da caixa de seleção. Nenhum valor selecionado
+                      - generic [ref=e126]:
+                        - generic [ref=e127]: 12 Vagas
+                        - generic [ref=e128]: coincidem com as seleções
+                      - generic [ref=e129]: Destacado
+                      - button "Pesquisar vagas" [ref=e132] [cursor=pointer]
+                      - button "Apagar" [ref=e135] [cursor=pointer]
+            - text: 
+        - cell "Região do texto de boas-vindas. Use as teclas de seta para cima e para baixo no modo Virtual PC para ler o texto nesta região." [ref=e30]:
+          - region "Região do texto de boas-vindas. Use as teclas de seta para cima e para baixo no modo Virtual PC para ler o texto nesta região." [ref=e31]:
+            - paragraph [ref=e32]:
+              - text: Welcome to the Trivium Packaging employment section. Its exciting times at Trivium and we are currently introducing a new on line recruitment system. You will be able to access some vacancies by clicking ‘View Jobs’, and apply for the positions online.
+              - text: More vacancies that may better match your interests can be found on local Job Boards, advertisements or by contacting a plant/facility in your Country.
+            - paragraph [ref=e33]: At Trivium Packaging, we strongly believe that the success of our business depends on the success of our people so we strive to create working environments where our employees feel valued, can work to their full potential and where their achievements are celebrated.
+            - paragraph [ref=e34]: To apply for a position, please ensure you demonstrate the minimum requirements for the role in terms of required skills, competencies and educational requirements as outlined in the job description.
+            - paragraph [ref=e35]: "For first time users in our new online recruitment system, please select your preferred language above as this will enable you to receive communication in the relevant format:"
+            - paragraph [ref=e36]: • Users from Europe, please select English UK as your preferred language
+            - paragraph [ref=e37]: • Users from the USA, please select English US as your preferred language
+            - paragraph [ref=e38]
+            - paragraph [ref=e39]: Next, simply sign in at the top of the page to create an account and in the “My Profile” tab upload your CV or resume.
+            - paragraph [ref=e40]: You can also use the Job Search feature on the left. During the process you will receive emails to your registered email address. If you do not receive any emails, please check your Spam or Junk email folder. Please also make sure that your browser allows ‘pop ups’ for the Trivium career page to be able to use the full range of functionalities
+            - paragraph [ref=e41]: Thank you.
+      - row:
+        - cell

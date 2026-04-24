@@ -1,0 +1,40 @@
+- generic [ref=e4]:
+  - link "Pular para conteúdo principal":
+    - /url: "#skipContent"
+  - region "Navegação de vagas" [ref=e7]:
+    - generic [ref=e8]:
+      - generic:
+        - link "Login" [ref=e10] [cursor=pointer]:
+          - /url: /career?career_company=triviumpac&lang=pt_BR&company=triviumpac&site=&loginFlowRequired=true&_s.crb=S3RGjSVb%2bQwaW0vH88MJFWJRNvpUvNXk7vB8Nl9Qrlo%3d
+        - generic [ref=e11]: Idioma
+        - generic [ref=e12]:
+          - combobox "Idioma" [ref=e13] [cursor=pointer]:
+            - text: Português do Brasil ‎(Brazilian Portuguese)‎
+            - button ""
+          - generic [ref=e14]: Recolhida. Para expandir, pressione Enter
+          - generic [ref=e15]: Expandida. Para recolher, pressione Enter
+  - generic "Região"
+  - table [ref=e18]:
+    - rowgroup [ref=e19]:
+      - row "Pesquisar por Oportunidades Região do texto de boas-vindas. Use as teclas de seta para cima e para baixo no modo Virtual PC para ler o texto nesta região." [ref=e20]:
+        - cell "Pesquisar por Oportunidades" [ref=e21]:
+          - region "Pesquisar por Oportunidades" [ref=e22]:
+            - heading " Pesquisar por Oportunidades" [level=2] [ref=e23]
+            - alert [ref=e29]: Carregando filtros de pesquisa
+            - text: 
+        - cell "Região do texto de boas-vindas. Use as teclas de seta para cima e para baixo no modo Virtual PC para ler o texto nesta região." [ref=e30]:
+          - region "Região do texto de boas-vindas. Use as teclas de seta para cima e para baixo no modo Virtual PC para ler o texto nesta região." [ref=e31]:
+            - paragraph [ref=e32]:
+              - text: Welcome to the Trivium Packaging employment section. Its exciting times at Trivium and we are currently introducing a new on line recruitment system. You will be able to access some vacancies by clicking ‘View Jobs’, and apply for the positions online.
+              - text: More vacancies that may better match your interests can be found on local Job Boards, advertisements or by contacting a plant/facility in your Country.
+            - paragraph [ref=e33]: At Trivium Packaging, we strongly believe that the success of our business depends on the success of our people so we strive to create working environments where our employees feel valued, can work to their full potential and where their achievements are celebrated.
+            - paragraph [ref=e34]: To apply for a position, please ensure you demonstrate the minimum requirements for the role in terms of required skills, competencies and educational requirements as outlined in the job description.
+            - paragraph [ref=e35]: "For first time users in our new online recruitment system, please select your preferred language above as this will enable you to receive communication in the relevant format:"
+            - paragraph [ref=e36]: • Users from Europe, please select English UK as your preferred language
+            - paragraph [ref=e37]: • Users from the USA, please select English US as your preferred language
+            - paragraph [ref=e38]
+            - paragraph [ref=e39]: Next, simply sign in at the top of the page to create an account and in the “My Profile” tab upload your CV or resume.
+            - paragraph [ref=e40]: You can also use the Job Search feature on the left. During the process you will receive emails to your registered email address. If you do not receive any emails, please check your Spam or Junk email folder. Please also make sure that your browser allows ‘pop ups’ for the Trivium career page to be able to use the full range of functionalities
+            - paragraph [ref=e41]: Thank you.
+      - row:
+        - cell

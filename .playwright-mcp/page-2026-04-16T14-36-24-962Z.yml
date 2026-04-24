@@ -1,0 +1,199 @@
+- generic [active] [ref=e1]:
+  - generic:
+    - region "Mensagem toast":
+      - heading "0 notificações no total" [level=2] [ref=e3]
+      - alert
+  - region [ref=e4]
+  - generic [ref=e5]:
+    - generic [ref=e7]:
+      - button "Pular para pesquisa" [ref=e8] [cursor=pointer]:
+        - generic [ref=e9]: Pular para pesquisa
+      - button "Pular para conteúdo principal" [ref=e10] [cursor=pointer]:
+        - generic [ref=e11]: Pular para conteúdo principal
+      - button "Atalhos do teclado" [ref=e12] [cursor=pointer]:
+        - generic [ref=e13]: Atalhos do teclado
+      - button "Fechar menu pular" [ref=e14] [cursor=pointer]:
+        - img [ref=e15]
+        - generic [ref=e17]: Fechar menu pular
+    - banner "Navegação geral" [ref=e18]:
+      - generic [ref=e19]:
+        - link "LinkedIn" [ref=e20] [cursor=pointer]:
+          - /url: https://www.linkedin.com/feed/?nis=true
+          - img "LinkedIn" [ref=e23]:
+            - img [ref=e24]
+        - generic [ref=e28]:
+          - combobox "Pesquisar" [ref=e29]
+          - generic:
+            - img
+        - navigation "Navegação principal" [ref=e30]:
+          - list [ref=e31]:
+            - listitem [ref=e32]:
+              - link "atualizações do feed novas notificações Início" [ref=e33] [cursor=pointer]:
+                - /url: https://www.linkedin.com/feed/?nis=true&
+                - generic [ref=e34]:
+                  - generic [ref=e37]: atualizações do feed novas notificações
+                  - img [ref=e41]
+                - generic "Início" [ref=e43]
+            - listitem [ref=e44]:
+              - link "Minha rede" [ref=e45] [cursor=pointer]:
+                - /url: https://www.linkedin.com/mynetwork/?
+                - img [ref=e49]
+                - generic "Minha rede" [ref=e51]
+            - listitem [ref=e52]:
+              - link "Vagas" [ref=e53] [cursor=pointer]:
+                - /url: https://www.linkedin.com/jobs/?
+                - img [ref=e57]
+                - generic "Vagas" [ref=e59]
+            - listitem [ref=e60]:
+              - link "Mensagens" [ref=e61] [cursor=pointer]:
+                - /url: https://www.linkedin.com/messaging/?
+                - img [ref=e65]
+                - generic "Mensagens" [ref=e67]
+            - listitem [ref=e68]:
+              - link "Notificações" [ref=e69] [cursor=pointer]:
+                - /url: https://www.linkedin.com/notifications/?
+                - img [ref=e73]
+                - generic "Notificações" [ref=e75]
+            - listitem [ref=e76]:
+              - button "Fernando Xavier Eu" [ref=e78] [cursor=pointer]:
+                - img "Fernando Xavier" [ref=e79]
+                - generic [ref=e80]:
+                  - text: Eu
+                  - img [ref=e81]
+            - listitem [ref=e83]:
+              - button "Para negócios" [ref=e85] [cursor=pointer]:
+                - img [ref=e89]
+                - generic "Para negócios" [ref=e91]:
+                  - text: Para negócios
+                  - img [ref=e92]
+            - listitem [ref=e94]:
+              - link "Veicular anúncio" [ref=e95] [cursor=pointer]:
+                - /url: https://www.linkedin.com/campaignmanager/accounts?
+                - img [ref=e99]
+                - generic "Veicular anúncio" [ref=e102]
+    - generic [ref=e103]:
+      - generic [ref=e106]:
+        - main [ref=e107]:
+          - generic [ref=e110]:
+            - generic [ref=e114]:
+              - generic [ref=e115]:
+                - generic [ref=e116]:
+                  - link "Logo da empresa MAVI" [ref=e117] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/company/maviwork/life
+                    - img "Logo da empresa MAVI" [ref=e120]
+                  - link "MAVI" [ref=e122] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/company/maviwork/life
+                - generic [ref=e123]:
+                  - button "Compartilhar" [ref=e126] [cursor=pointer]:
+                    - img [ref=e127]
+                    - generic [ref=e129]: Compartilhar
+                  - button "Exibir mais opções" [ref=e131] [cursor=pointer]:
+                    - img [ref=e132]
+                    - generic [ref=e134]: Exibir mais opções
+              - generic [ref=e136]:
+                - heading "Accounting Manager - US GAAP" [level=1] [ref=e137]
+                - button "Ver módulo de contratação verificada" [ref=e139] [cursor=pointer]:
+                  - img [ref=e142]
+              - generic [ref=e146]:
+                - generic [ref=e147]: Brasil
+                - generic [ref=e148]: ·
+                - strong [ref=e150]:
+                  - text: Anunciada novamente
+                  - generic [ref=e151]: há 21 horas
+                - generic [ref=e152]: ·
+                - generic [ref=e153]: Mais de 100 pessoas clicaram em Candidatar-se
+                - paragraph [ref=e154]:
+                  - generic [ref=e155]: Promovida por recrutador
+                  - generic [ref=e156]: ·
+                  - generic [ref=e157]: Respostas gerenciadas fora do LinkedIn
+              - generic [ref=e158]:
+                - button "Corresponde às suas preferências de vaga e o tipo de local de trabalho é Remoto." [ref=e159] [cursor=pointer]:
+                  - strong [ref=e162]:
+                    - img [ref=e164]
+                    - text: Remoto
+                  - generic [ref=e166]: Corresponde às suas preferências de vaga e o tipo de local de trabalho é Remoto.
+                - button "Corresponde às suas preferências de vaga e o tipo de vaga é Tempo integral." [ref=e167] [cursor=pointer]:
+                  - strong [ref=e170]:
+                    - img [ref=e172]
+                    - text: Tempo integral
+                  - generic [ref=e174]: Corresponde às suas preferências de vaga e o tipo de vaga é Tempo integral.
+                - 'button "Corresponde às suas preferências de vaga e o tipo de vaga é {}." [ref=e175] [cursor=pointer]':
+                  - strong [ref=e178]:
+                    - img [ref=e179]
+                    - text: 4 de 6 correspondência(s) de competências
+                  - generic [ref=e181]: "Corresponde às suas preferências de vaga e o tipo de vaga é {}."
+              - generic [ref=e183]:
+                - link "Candidatar-se à vaga de Accounting Manager - US GAAP no site da empresa" [ref=e186] [cursor=pointer]:
+                  - img [ref=e187]
+                  - generic [ref=e189]: Candidatar-se
+                - button "Salvar Accounting Manager - US GAAP na MAVI" [ref=e190] [cursor=pointer]:
+                  - generic [ref=e191]: Salvar
+                  - generic [ref=e192]: Salvar Accounting Manager - US GAAP na MAVI
+            - generic [ref=e202]:
+              - article [ref=e203]:
+                - heading "Sobre a vaga" [level=2] [ref=e206]
+              - button "Clicar para ver mais detalhes" [ref=e208] [cursor=pointer]:
+                - img [ref=e209]
+                - generic [ref=e211]: Ver mais
+            - generic [ref=e213]:
+              - generic [ref=e214]:
+                - heading "Configurar alerta para vagas semelhantes" [level=2] [ref=e215]
+                - generic [ref=e217]: Gerente de contabilidade, Brasil
+              - generic [ref=e219] [cursor=pointer]:
+                - generic [ref=e220]: Desativada
+                - generic [ref=e221]: Configurar alerta
+                - switch "Configurar alerta"
+            - alert [ref=e224]: Carregando detalhes da vaga
+        - complementary [ref=e237]
+      - contentinfo [ref=e240]:
+        - generic [ref=e242]:
+          - generic [ref=e243]:
+            - navigation [ref=e244]:
+              - list
+            - generic [ref=e246]:
+              - list [ref=e247]:
+                - listitem [ref=e248]:
+                  - img [ref=e249]
+                  - generic [ref=e251]:
+                    - link "Dúvidas? Acesse a nossa Central de Ajuda." [ref=e252] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/help/linkedin?trk=d_flagship3_job_details
+                      - text: Dúvidas?
+                    - paragraph [ref=e253]: Acesse a nossa Central de Ajuda.
+                - listitem [ref=e254]:
+                  - img [ref=e255]
+                  - generic [ref=e257]:
+                    - link "Gerencie sua conta e privacidade Acesse suas Configurações." [ref=e258] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/psettings/
+                      - text: Gerencie sua conta e privacidade
+                    - paragraph [ref=e259]: Acesse suas Configurações.
+                - listitem [ref=e260]:
+                  - img [ref=e261]
+                  - generic [ref=e263]:
+                    - link "Visibilidade da recomendação Saiba mais sobre os conteúdos recomendados." [ref=e264] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/help/linkedin/answer/a1339724
+                      - text: Visibilidade da recomendação
+                    - paragraph [ref=e265]: Saiba mais sobre os conteúdos recomendados.
+              - generic [ref=e266]:
+                - generic [ref=e267]: Selecionar idioma
+                - combobox "Selecionar idioma" [ref=e268]
+          - paragraph [ref=e269]: LinkedIn Corporation © 2026
+    - generic:
+      - generic:
+        - complementary:
+          - generic [ref=e271]:
+            - generic [ref=e273] [cursor=pointer]:
+              - img "Fernando Xavier" [ref=e275]
+              - button "Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas." [ref=e276]:
+                - generic [ref=e277]:
+                  - generic [ref=e278]: Mensagens
+                  - generic [ref=e279]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+            - generic [ref=e280]:
+              - button "Abrir o menu suspenso de mensagens" [ref=e282] [cursor=pointer]:
+                - img "Abrir o menu suspenso de mensagens" [ref=e283]
+              - button "Escrever mensagem" [ref=e286] [cursor=pointer]:
+                - img [ref=e287]
+                - generic [ref=e289]: Escrever mensagem
+              - button "Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas." [ref=e290] [cursor=pointer]:
+                - img [ref=e291]
+                - generic [ref=e293]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+        - complementary "Assistente de IA para obter ajuda com sua carreira, vagas, etc."

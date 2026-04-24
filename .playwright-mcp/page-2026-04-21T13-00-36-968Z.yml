@@ -1,0 +1,30 @@
+- generic [ref=e1]:
+  - generic:
+    - status
+    - status
+  - generic [ref=e2]: Pular para conteúdo principal
+  - generic [ref=e4]:
+    - generic [ref=e7]:
+      - banner [ref=e8]:
+        - heading "Login – SAP SuccessFactors" [level=1] [ref=e11]
+      - generic [ref=e13]:
+        - img [ref=e15]
+        - form [ref=e17]:
+          - generic [ref=e19]:
+            - generic [ref=e22]:
+              - generic [ref=e23]: ID da Empresa
+              - generic [ref=e24]: ":"
+            - generic [ref=e27]:
+              - textbox "ID da Empresa" [active] [ref=e28]:
+                - /placeholder: Inserir ID da empresa
+              - button "Visualizar entradas possíveis" [ref=e30] [cursor=pointer]: 
+        - button "Continuar" [ref=e34] [cursor=pointer]:
+          - generic [ref=e36]: Continuar
+    - generic [ref=e37]:
+      - generic [ref=e38]:
+        - text: Copyright ©
+        - link "2025 SAP SuccessFactors, Inc." [ref=e39] [cursor=pointer]:
+          - /url: https://www.sap.com/products/human-resources-hcm.html?source=productlink-sfpm
+        - text: Todos os direitos reservados. Estes serviços on-line são confidenciais e de propriedade da SuccessFactors e para uso apenas de clientes autorizados da SuccessFactors.
+      - link "Exibir informações de versão." [ref=e40] [cursor=pointer]:
+        - /url: javascript:void(0);

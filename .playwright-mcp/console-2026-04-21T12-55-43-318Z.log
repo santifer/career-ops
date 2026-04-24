@@ -1,0 +1,8 @@
+[     725ms] [LOG] JQMIGRATE: Migrate is installed, version 3.3.0 @ https://performancemanager.successfactors.eu/verp/vmod_v1/ui/extlib/jquery_3.5.1/jquery.js:4
+[     725ms] [LOG] JQMIGRATE: Migrate plugin loaded multiple times @ https://performancemanager.successfactors.eu/verp/vmod_v1/ui/extlib/jquery_3.5.1/jquery-migrate.js:1
+[     726ms] [LOG] JQMIGRATE: Migrate is installed, version 3.3.0 @ https://performancemanager.successfactors.eu/verp/vmod_v1/ui/extlib/jquery_3.5.1/jquery-migrate.js:1
+[     726ms] [LOG] JQMIGRATE: Migrate is installed, version 1.4.1 @ https://careers.triviumpackaging.com/platform/js/jquery/jquery-migrate-1.4.1.js:22
+[    1368ms] Uncaught TypeError: Cannot read properties of undefined (reading 'on')
+    at <anonymous> (https://careers.triviumpackaging.com/platform/js/j2w/j2w.bootstrap.dropdown.js:49:67)
+    at e (https://performancemanager.successfactors.eu/verp/vmod_v1/ui/extlib/jquery_3.5.1/jquery.js:1:30004)
+    at <anonymous> (https://performancemanager.successfactors.eu/verp/vmod_v1/ui/extlib/jquery_3.5.1/jquery.js:1:30306)

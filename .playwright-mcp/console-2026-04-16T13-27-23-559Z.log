@@ -1,0 +1,44 @@
+[     583ms] [ERROR] [GSI_LOGGER]: FedCM get() rejects with NetworkError: Error retrieving a token. @ https://www.datadoghq-browser-agent.com/datadog-rum-slim-v4.js:0
+[     598ms] [ERROR] One Tap error {type: , errorAction: isSkipped, errorLabel: unknown} @ https://www.datadoghq-browser-agent.com/datadog-rum-slim-v4.js:0
+[    1074ms] [LOG] Page authentication status: false @ https://www.amazon.jobs/en/search?radius=75km&city=Sao+Paulo&state=Sao+Paulo&country=BRA&keywords=finance%20OR%20controller%20OR%20accounting:64
+[    1074ms] [LOG] Internal user status: false @ https://www.amazon.jobs/en/search?radius=75km&city=Sao+Paulo&state=Sao+Paulo&country=BRA&keywords=finance%20OR%20controller%20OR%20accounting:65
+[    1183ms] [LOG] {
+	"eventData": {},
+	"job": {},
+	"page": {
+		"search": {
+			"keywordQuery": "null | null",
+			"noOfResults": "zero"
+		}
+	},
+	"pageInfo": {}
+} @ https://d1o95ve0lr2m33.cloudfront.net/launch-ENb97d7f9d2d4b4720ac9782a711994995.min.js:8
+[    1243ms] [LOG] {
+	"eventData": {},
+	"job": {},
+	"page": {
+		"search": {
+			"keywordQuery": "null | null",
+			"noOfResults": "zero"
+		}
+	},
+	"pageInfo": {}
+} @ https://d1o95ve0lr2m33.cloudfront.net/launch-ENb97d7f9d2d4b4720ac9782a711994995.min.js:7
+[    1760ms] [LOG] {
+	"eventData": {},
+	"job": {},
+	"page": {
+		"search": {
+			"keywordQuery": "null | null",
+			"noOfResults": "239"
+		}
+	},
+	"pageInfo": {}
+} @ https://d1o95ve0lr2m33.cloudfront.net/launch-ENb97d7f9d2d4b4720ac9782a711994995.min.js:8
+[    5502ms] [WARNING] The resource https://static.amazon.jobs/assets/bootstrap-alpha5-1af4aa065b2c6a512b7e6cec4359c03f7c6870ad089cf5e06a9bcd67facf059c.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://www.amazon.jobs/en/search?radius=75km&city=Sao+Paulo&state=Sao+Paulo&country=BRA&keywords=finance%20OR%20controller%20OR%20accounting:0
+[    9910ms] [WARNING] The resource https://static.amazon.jobs/assets/bootstrap-alpha5-1af4aa065b2c6a512b7e6cec4359c03f7c6870ad089cf5e06a9bcd67facf059c.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://www.amazon.jobs/en/search?radius=75km&city=Sao+Paulo&state=Sao+Paulo&country=BRA&keywords=finance%20OR%20controller%20OR%20accounting:0
+[   14459ms] [WARNING] The resource https://static.amazon.jobs/assets/bootstrap-alpha5-1af4aa065b2c6a512b7e6cec4359c03f7c6870ad089cf5e06a9bcd67facf059c.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://www.amazon.jobs/en/search?radius=75km&city=Sao+Paulo&state=Sao+Paulo&country=BRA&keywords=finance%20OR%20controller%20OR%20accounting:0
+[   20365ms] [WARNING] The resource https://static.amazon.jobs/assets/bootstrap-alpha5-1af4aa065b2c6a512b7e6cec4359c03f7c6870ad089cf5e06a9bcd67facf059c.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://www.amazon.jobs/en/search?offset=0&result_limit=10&sort=relevant&category%5B%5D=finance-accounting&distanceType=Mi&radius=75km&latitude=&longitude=&loc_group_id=&loc_query=&base_query=&city=Sao%20Paulo&country=BRA&region=&county=&query_options=&:0
+[   24288ms] [WARNING] The resource https://static.amazon.jobs/assets/bootstrap-alpha5-1af4aa065b2c6a512b7e6cec4359c03f7c6870ad089cf5e06a9bcd67facf059c.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://www.amazon.jobs/en/search?offset=0&result_limit=10&sort=relevant&category%5B%5D=finance-accounting&distanceType=Mi&radius=75km&latitude=&longitude=&loc_group_id=&loc_query=&base_query=&city=Sao%20Paulo&country=BRA&region=&county=&query_options=&:0
+[   31000ms] [WARNING] The resource https://static.amazon.jobs/assets/bootstrap-alpha5-1af4aa065b2c6a512b7e6cec4359c03f7c6870ad089cf5e06a9bcd67facf059c.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://www.amazon.jobs/en/search?offset=0&result_limit=10&sort=relevant&category%5B%5D=finance-accounting&distanceType=Mi&radius=75km&latitude=&longitude=&loc_group_id=&loc_query=&base_query=&city=Sao%20Paulo&country=BRA&region=&county=&query_options=&:0
+[   34596ms] [WARNING] The resource https://static.amazon.jobs/assets/bootstrap-alpha5-1af4aa065b2c6a512b7e6cec4359c03f7c6870ad089cf5e06a9bcd67facf059c.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://www.amazon.jobs/en/search?offset=0&result_limit=10&sort=relevant&category%5B%5D=finance-accounting&distanceType=Mi&radius=75km&latitude=&longitude=&loc_group_id=&loc_query=&base_query=&city=Sao%20Paulo&country=BRA&region=&county=&query_options=&:0

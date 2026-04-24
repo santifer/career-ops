@@ -1,0 +1,906 @@
+- generic [ref=e1]:
+  - generic:
+    - region "Mensagem toast":
+      - heading "0 notificações no total" [level=2] [ref=e3]
+      - alert
+  - region [ref=e4]
+  - generic [ref=e257]:
+    - img [ref=e259]
+    - paragraph [ref=e263]:
+      - text: Ocorreu um erro ao processar seu pagamento.
+      - link "Atualize sua(s) forma(s) de pagamento" [ref=e264] [cursor=pointer]:
+        - /url: https://www.linkedin.com/manage/purchases-payments/purchases/485025203/payments?trk=global_alert
+      - text: .
+    - button "Fechar" [ref=e265] [cursor=pointer]:
+      - img [ref=e266]
+      - generic [ref=e268]: Fechar
+  - generic [ref=e5]:
+    - generic [ref=e7]:
+      - button "Pular para pesquisa" [ref=e8] [cursor=pointer]:
+        - generic [ref=e9]: Pular para pesquisa
+      - button "Pular para conteúdo principal" [ref=e10] [cursor=pointer]:
+        - generic [ref=e11]: Pular para conteúdo principal
+      - button "Atalhos do teclado" [ref=e12] [cursor=pointer]:
+        - generic [ref=e13]: Atalhos do teclado
+      - button "Fechar menu pular" [ref=e14] [cursor=pointer]:
+        - img [ref=e15]
+        - generic [ref=e17]: Fechar menu pular
+    - banner "Navegação geral" [ref=e18]:
+      - generic [ref=e19]:
+        - link "LinkedIn" [ref=e20] [cursor=pointer]:
+          - /url: https://www.linkedin.com/feed/?nis=true
+          - img "LinkedIn" [ref=e23]:
+            - img [ref=e24]
+        - generic [ref=e28]:
+          - combobox "Pesquisar" [ref=e29]
+          - generic:
+            - img
+        - navigation "Navegação principal" [ref=e30]:
+          - list [ref=e31]:
+            - listitem [ref=e32]:
+              - link "atualizações do feed novas notificações Início" [ref=e33] [cursor=pointer]:
+                - /url: https://www.linkedin.com/feed/?nis=true&
+                - generic [ref=e34]:
+                  - generic [ref=e37]: atualizações do feed novas notificações
+                  - img [ref=e41]
+                - generic "Início" [ref=e43]
+            - listitem [ref=e44]:
+              - link "2 atualizações de rede novas notificações Minha rede" [ref=e45] [cursor=pointer]:
+                - /url: https://www.linkedin.com/mynetwork/?
+                - generic [ref=e46]:
+                  - generic [ref=e47]:
+                    - generic [ref=e48]: "2"
+                    - generic [ref=e49]: 2 atualizações de rede novas notificações
+                  - img [ref=e53]
+                - generic "Minha rede" [ref=e55]
+            - listitem [ref=e56]:
+              - link "Vagas" [ref=e57] [cursor=pointer]:
+                - /url: https://www.linkedin.com/jobs/?
+                - img [ref=e61]
+                - generic "Vagas" [ref=e63]
+            - listitem [ref=e64]:
+              - link "Mensagens" [ref=e65] [cursor=pointer]:
+                - /url: https://www.linkedin.com/messaging/?
+                - img [ref=e69]
+                - generic "Mensagens" [ref=e71]
+            - listitem [ref=e72]:
+              - link "10 novas notificações Notificações" [ref=e73] [cursor=pointer]:
+                - /url: https://www.linkedin.com/notifications/?
+                - generic [ref=e74]:
+                  - generic [ref=e75]:
+                    - generic [ref=e76]: "10"
+                    - generic [ref=e77]: 10 novas notificações
+                  - img [ref=e81]
+                - generic "Notificações" [ref=e83]
+            - listitem [ref=e84]:
+              - button "Fernando Xavier Eu" [ref=e86] [cursor=pointer]:
+                - img "Fernando Xavier" [ref=e87]
+                - generic [ref=e88]:
+                  - text: Eu
+                  - img [ref=e89]
+            - listitem [ref=e91]:
+              - button "Para negócios" [ref=e93] [cursor=pointer]:
+                - img [ref=e97]
+                - generic "Para negócios" [ref=e99]:
+                  - text: Para negócios
+                  - img [ref=e100]
+            - listitem [ref=e102]:
+              - link "Veicular anúncio" [ref=e103] [cursor=pointer]:
+                - /url: https://www.linkedin.com/campaignmanager/accounts?
+                - img [ref=e107]
+                - generic "Veicular anúncio" [ref=e110]
+    - generic [ref=e111]:
+      - generic [ref=e114]:
+        - main [ref=e115]:
+          - generic [ref=e118]:
+            - generic [ref=e122]:
+              - generic [ref=e123]:
+                - generic [ref=e124]:
+                  - link "Logo da empresa Cimento Nacional" [ref=e125] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/company/cimentonacional/life
+                    - img "Logo da empresa Cimento Nacional" [ref=e128]
+                  - link "Cimento Nacional" [ref=e269] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/company/cimentonacional/life
+                - generic [ref=e131]:
+                  - button "Compartilhar" [ref=e134] [cursor=pointer]:
+                    - img [ref=e135]
+                    - generic [ref=e137]: Compartilhar
+                  - button "Exibir mais opções" [ref=e139] [cursor=pointer]:
+                    - img [ref=e140]
+                    - generic [ref=e142]: Exibir mais opções
+              - heading "Plant Controller" [level=1] [ref=e145]
+              - generic [ref=e148]:
+                - generic [ref=e270]: Matozinhos, Minas Gerais, Brasil
+                - generic [ref=e271]: ·
+                - generic [ref=e273]: há 1 mês
+                - generic [ref=e274]: ·
+                - generic [ref=e275]: Mais de 100 pessoas clicaram em Candidatar-se
+                - paragraph [ref=e276]:
+                  - generic [ref=e277]: Respostas gerenciadas fora do LinkedIn
+              - generic [ref=e157]:
+                - button "Corresponde às suas preferências de vaga e o tipo de local de trabalho é Presencial." [ref=e278] [cursor=pointer]:
+                  - strong [ref=e281]:
+                    - img [ref=e283]
+                    - text: Presencial
+                  - generic [ref=e285]: Corresponde às suas preferências de vaga e o tipo de local de trabalho é Presencial.
+                - button "Corresponde às suas preferências de vaga e o tipo de vaga é Tempo integral." [ref=e286] [cursor=pointer]:
+                  - strong [ref=e289]:
+                    - img [ref=e291]
+                    - text: Tempo integral
+                  - generic [ref=e293]: Corresponde às suas preferências de vaga e o tipo de vaga é Tempo integral.
+              - generic [ref=e175]:
+                - link "Candidatar-se à vaga de Plant Controller no site da empresa" [ref=e178] [cursor=pointer]:
+                  - img [ref=e179]
+                  - generic [ref=e181]: Candidatar-se
+                - button "Salvar Plant Controller na Cimento Nacional" [ref=e294] [cursor=pointer]:
+                  - generic [ref=e295]: Salvar
+                  - generic [ref=e296]: Salvar Plant Controller na Cimento Nacional
+            - generic [ref=e185]:
+              - heading "Pessoas que você pode contatar" [level=2] [ref=e297]
+              - generic [ref=e300]:
+                - generic [ref=e301]:
+                  - generic [ref=e302]:
+                    - list [ref=e303]:
+                      - listitem [ref=e304]:
+                        - img "Logo de Fundação Getulio Vargas" [ref=e306]
+                    - generic [ref=e307]: Logo de Fundação Getulio Vargas
+                  - generic [ref=e308]: Ex-alunos da instituição de ensino Fundação Getulio Vargas
+                - button "Exibir todos" [ref=e309] [cursor=pointer]:
+                  - generic [ref=e310]: Exibir todos
+            - generic [ref=e194]:
+              - article [ref=e195]:
+                - generic [ref=e197]:
+                  - heading "Sobre a vaga" [level=2] [ref=e198]
+                  - paragraph [ref=e312]:
+                    - text: Na Cimento Nacional, temos o propósito de sustentar o desenvolvimento da sociedade. Nosso cimento é símbolo de solidez e compromisso com o futuro. Aqui, além de se desenvolver profissionalmente, você terá a chance de contribuir para a construção de um futuro próspero para a empresa e para a sociedade. Na Cimento Nacional
+                    - strong [ref=e314]: cuidamos das pessoas
+                    - text: ", promovemos"
+                    - strong [ref=e316]: respeito
+                    - text: e
+                    - strong [ref=e318]: abertura
+                    - text: ", e incentivamos a"
+                    - strong [ref=e320]: evolução contínua
+                    - text: ". Seja um dos #TalentosCN!"
+                    - strong [ref=e322]: Responsabilidades e atribuições
+                    - list [ref=e324]:
+                      - listitem [ref=e325]: Coordenar as atividades dos Analistas de Controle e Performance e Analista de Planejamento e Controle de Produção, realizando as avaliações anuais e realizando os feedbacks quando necessário;
+                      - listitem [ref=e326]: Coordenar o orçamento anual e o forecast da Fábrica, interagindo com as áreas, consolidando dados e analisando informações, a fim de equilibrar as necessidades da Unidade e as diretrizes e estratégias estabelecidas pela Empresa, garantindo a entrega final.
+                      - listitem [ref=e327]: Analisar o fechamento e análise mensal dos custos (fixos e variáveis) e dos indicadores chave de produção da Fábrica, revisando as variações entre orçado x realizado, a fim de identificar as causas e justificativas dos desvios, bem como, sugerir intervenções para a otimização dos custos e desempenho operacionais.
+                      - listitem [ref=e328]: Garantir que as informações do apontamento e do boletim de produção da Fábrica estejam de acordo com os dados lançados no sistema e com o quê foi produzido, a fim de atuar em suas interfaces com o sistema e custeio e gestão dos KPI´s da Fábrica.
+                      - listitem [ref=e329]: Avaliar e validar juntamente com o Gerente/Coordenador de Produção, o planejamento de produção, mensalmente, disponibilizando para a área área comercial o volume de produção, bem, como realizar alterações na programação, se necessário para atender as mudanças na demanda ou a disponibilidade de recursos
+                      - listitem [ref=e330]: "Elaborar análises para a equipe de gestão da Fábrica, fornecendo insights sobre o desempenho financeiro e a performance técnica, recomendando ações para otimizar a utilização de recursos e melhorar a eficiência operacional:"
+                      - listitem [ref=e331]: Realizar projeções e simulações de cenários, indicando aos gestores o impacto financeiro e de performance consequentes das alterações nos processos de fabricação e sugerindo alternativas mais viáveis e rentáveis para a Fábrica.
+                      - listitem [ref=e332]: "Participar diretamente das ações que possibilitem a efetiva gestão e controle dos custos da Unidade, avaliando variações e identificando oportunidades que permitam o desenvolvimento de ações e/ou projetos, visando a redução e viabilização dos recursos da Fábrica:"
+                      - listitem [ref=e333]: "Custo variável: simulações com base nas composições da farinha, matriz energética, cimentos, buscando redução de custos;"
+                      - listitem [ref=e334]: "Custo fixo: acompanhamento matricial dos pacotes de gastos junto aos líderes das áreas. Provocar e garantir integração com as áreas chave da planta (PCM, Manutenção, Meio Ambiente, Produção, Segurança, etc) garantindo o controle dos custos fixos e correta gestão para evitar gastos desnecessários."
+                      - listitem [ref=e335]: Identificar oportunidades de redução de custos e melhoria no desempenho operacional, propondo ações e boas práticas, a fim de otimizar a eficiência da Fábrica.
+                      - listitem [ref=e336]: Consolidar as informações financeiras e de produção, por meio da apresentação de demonstrativos e análises críticas dos resultados da Fábrica, visando subsidiar os gestores de informações relevantes para suportar à tomada de decisão.
+                      - listitem [ref=e337]: Participar das reuniões diárias da operação com o objetivo de interação com os principais acontecimentos e desafios da unidade, visto que os indicadores de performance e os custos são consequência do que acontece na unidade.
+                      - listitem [ref=e338]: Acompanhar o planejamento das paradas de fornos e moinhos, provocando fóruns de acompanhamento dos custos com as lideranças de manutenção e produção, visando o correto controle do orçado vs realizado.
+                      - listitem [ref=e339]: Acompanhar os principais investimentos (CAPEX) da planta junto ao ponto focal de Projetos/Engenharia da unidade, e junto ao corporativo na avaliação do spending.
+                      - listitem [ref=e340]: Garantir a acuracidade da informação dos níveis de itens de almoxarifado, estoques de matérias-primas/combustíveis e produtos acabados, identificando as causas de desvio e elaborando planos de ação de correção, visando assegurar a correta apuração das diferenças do inventário cíclico e a confiabilidade contábil dos estoques.
+                      - listitem [ref=e341]: Acompanhar o volume de estoques da unidade e buscar sinergias e reduções, visando o fluxo de caixa, além de acompanhar as entradas de insumos na unidade e alinhar com a equipe de Planejamento Integrado em caso de divergências de quantidade, valor ou qualidade dos insumos.
+                      - listitem [ref=e342]: Acompanhar e apontar diferenças que existirem entre peso nota e peso balança de entrada dos insumos e combustíveis.
+                      - listitem [ref=e343]: Identificar riscos que possam afetar o desempenho financeiro e operacional da Fábrica, desenvolvendo estratégias para mitigar esses riscos e garantir a sustentabilidade do negócio.
+                      - listitem [ref=e344]: Liderar as reuniões de resultados do GPD - Gerenciamento pelas Diretrizes com a equipe da Fábrica, apresentando os resultados financeiros e de produção, bem como acompanhando a execução dos planos de ação.
+                      - listitem [ref=e345]: Desenvolver conteúdos e realizar apresentações corporativas com informações referentes à performance técnica e financeira da Fábrica.
+                      - listitem [ref=e346]: Assegurar a conformidade da Fábrica com as regulamentações financeiras, contábeis e fiscais aplicáveis.
+                    - strong [ref=e348]: Requisitos e qualificações
+                    - strong [ref=e350]: "Buscamos uma pessoa com:"
+                    - list [ref=e352]:
+                      - listitem [ref=e353]: Ensino Superior Completo em Engenharia, Administração, Ciências Contábeis, Economia ou áreas afins;
+                      - listitem [ref=e354]: Atuação com indicadores de performance;
+                      - listitem [ref=e355]: Conhecimento em custos e orçamento.
+                      - listitem [ref=e356]: Excel e Power Point - Avançado
+                    - strong [ref=e358]: "Local e Jornada de Trabalho:"
+                    - list [ref=e360]:
+                      - listitem [ref=e361]: Fábrica de Matozinhos/MG (Presencial)
+                    - strong [ref=e363]: Informações adicionais
+                    - strong [ref=e365]: FAÇA PARTE DO NOSSO TIME
+                    - text: Convidamos você a fazer parte do time de talentos CN e se juntar a nós na jornada contínua pela excelência operacional, responsabilidade socioambiental e desenvolvimento sustentável.
+                    - text: Aqui, além de ter a oportunidade de crescer profissionalmente, você também poderá contribuir para a construção de um futuro mais próspero para nossa empresa e para toda a sociedade.
+                    - text: "E para os nossos colaboradores oferecemos:"
+                    - list [ref=e367]:
+                      - listitem [ref=e368]: Plano de Saúde e Odontológico, extensivo aos dependentes legais;
+                      - listitem [ref=e369]: Vale Alimentação/Refeição ou Refeitório no local;
+                      - listitem [ref=e370]: Seguro de vida em grupo;
+                      - listitem [ref=e371]: Previdência Privada;
+                      - listitem [ref=e372]: Vale Transporte e/ou Fretado (unidades fabris);
+                      - listitem [ref=e373]: Plano de Participação nos Resultados (PPR), mediante atingimento de metas anuais;
+                      - listitem [ref=e374]: Wellhub - Plano de academias e estúdios para atividade física;
+                      - listitem [ref=e375]: Auxílio Farmácia (para medicamentos com receituário médico dentro do roll);
+                      - listitem [ref=e376]: Galena - Benefício educacional com descontos exclusivos em diversas instituições parceiras;
+                      - listitem [ref=e377]: Programa de Apoio ao Empregado (PAE) – Serviço de consultoria com Psicólogos, Advogados e Assistentes Sociais, auxiliar os colaboradores a encontrarem soluções para questões de âmbito pessoais e/ou profissionais;
+                      - listitem [ref=e378]: Assistência Funeral.
+              - button "Clicar para ver menos detalhes" [expanded] [active] [ref=e583] [cursor=pointer]:
+                - img [ref=e201]
+                - generic [ref=e203]: Ver menos
+            - generic [ref=e205]:
+              - generic [ref=e206]:
+                - heading "Configurar alerta para vagas semelhantes" [level=2] [ref=e207]
+                - generic [ref=e209]: Controlador de fábrica, Matozinhos, Minas Gerais, Brasil
+              - generic [ref=e211] [cursor=pointer]:
+                - generic [ref=e212]: Desativada
+                - generic [ref=e213]: Configurar alerta
+                - switch "Configurar alerta"
+            - generic [ref=e379]:
+              - button "Fechar cartão promocional de serviços" [ref=e380] [cursor=pointer]:
+                - img [ref=e381]
+                - generic [ref=e383]: Fechar cartão promocional de serviços
+              - generic [ref=e385]:
+                - heading "Veja uma seleção de ferramentas de IA para sua pesquisa de vagas" [level=2] [ref=e386]
+                - paragraph [ref=e387]: Receba uma oferta de emprego mais rápido com a ajuda de ferramentas de IA criadas por empresas certificadas, como Kickresume, Exponent Interview Prep e muito mais.
+                - link "Começar" [ref=e388] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/ai-tools/?sectionType=career-coaching
+                  - generic [ref=e389]: Começar
+            - generic [ref=e390]:
+              - generic [ref=e391]:
+                - generic [ref=e392]:
+                  - img "Premium" [ref=e394]:
+                    - img [ref=e395]
+                  - button "Saiba mais sobre estatísticas sobre candidatos" [ref=e398] [cursor=pointer]:
+                    - img [ref=e399]
+                - heading "Veja como sua candidatura se compara à de outras pessoas" [level=2] [ref=e401]
+                - generic [ref=e403]:
+                  - heading "Pessoas que clicaram em Candidate-se" [level=3] [ref=e404]
+                  - list [ref=e405]:
+                    - listitem [ref=e406]:
+                      - generic [ref=e407]: "239"
+                      - generic [ref=e408]: no total
+                    - listitem [ref=e409]:
+                      - generic [ref=e410]: "3"
+                      - generic [ref=e411]: no último dia
+                - generic [ref=e412]:
+                  - generic [ref=e413]:
+                    - heading "Nível de experiência do candidato" [level=3] [ref=e414]
+                    - list [ref=e415]:
+                      - listitem [ref=e416]:
+                        - paragraph [ref=e417]: 49% de candidatos com nível Sênior
+                        - progressbar [ref=e418]
+                      - listitem [ref=e419]:
+                        - paragraph [ref=e420]: 28% de candidatos com nível Iniciante
+                        - progressbar [ref=e421]
+                      - listitem [ref=e422]:
+                        - paragraph [ref=e423]: 11% de candidatos com nível Gerente
+                        - progressbar [ref=e424]
+                      - listitem [ref=e425]:
+                        - paragraph [ref=e426]: 8% de candidatos com nível Diretor
+                        - progressbar [ref=e427]
+                  - generic [ref=e428]:
+                    - heading "Nível de formação acadêmica do candidato" [level=3] [ref=e429]
+                    - list [ref=e430]:
+                      - listitem [ref=e431]:
+                        - generic [ref=e432]: 53%
+                        - generic [ref=e433]: tem Pós-graduação Lato Sensu - MBA (semelhante ao seu)
+                      - listitem [ref=e434]:
+                        - generic [ref=e435]: 16%
+                        - generic [ref=e436]: tem Pós-graduação
+                      - listitem [ref=e437]:
+                        - generic [ref=e438]: 9%
+                        - generic [ref=e439]: tem Bacharelado
+                      - listitem [ref=e440]:
+                        - generic [ref=e441]: 22%
+                        - generic [ref=e442]: tem outros diplomas
+              - generic [ref=e584]:
+                - generic [ref=e585]:
+                  - img "Premium" [ref=e586]:
+                    - img [ref=e587]
+                  - button "Saiba mais sobre estatísticas sobre empresas" [ref=e590] [cursor=pointer]:
+                    - img "Saiba mais sobre estatísticas sobre empresas" [ref=e591]
+                - heading "Estatísticas exclusivas de pessoas à procura de emprego sobre a Cimento Nacional" [level=2] [ref=e593]
+                - heading "Com tecnologia do Bing" [level=3] [ref=e594]
+                - generic [ref=e595]:
+                  - generic [ref=e596]:
+                    - heading "Áreas de foco da empresa" [level=3] [ref=e597]
+                    - generic [ref=e599]:
+                      - list [ref=e600]:
+                        - listitem [ref=e601]:
+                          - strong [ref=e602]: "Sustainability and Environmental Responsibility:"
+                          - text: Cimento Nacional focuses on sustainability and reducing pollution through investments and procedural changes. The company is committed to sustainable growth and responsible strategic decisions.
+                        - listitem [ref=e603]:
+                          - strong [ref=e604]: "Community Development and Social Responsibility:"
+                          - text: Cimento Nacional is dedicated to social responsibility, promoting development and opportunities in local communities, such as through its partnership with IBEEC to support youth in Pitimbu.
+                      - button "exibir mais revela visualmente conteúdos que já foram detectados por leitores de tela" [ref=e605] [cursor=pointer]:
+                        - generic [ref=e606]: exibir mais
+                  - generic [ref=e607]:
+                    - generic [ref=e609]: "Fontes: engenharia360.com mais 1"
+                    - generic [ref=e611]:
+                      - button "Marcar feedback como bom" [ref=e612] [cursor=pointer]:
+                        - img [ref=e613]
+                      - button "Marcar feedback como ruim" [ref=e616] [cursor=pointer]:
+                        - img [ref=e617]
+                - generic [ref=e620]:
+                  - generic [ref=e621]:
+                    - heading "Contratações e número de funcionários" [level=3] [ref=e622]
+                    - paragraph [ref=e623]:
+                      - generic [ref=e624]:
+                        - text: "Significant growth in operations: The 'Operations' department has seen a 9% increase in employee count over the past year, indicating a major focus on expanding operational capabilities, which could suggest investments in infrastructure and efficiency improvements. Engineering expansion: The 'Engineering' department has experienced a 12% increase in headcount, reflecting a strong emphasis on innovation and product development, potentially leading to new product launches or technological advancements. Rising focus on education: The 'Education' department has shown a 75% increase in employee count, suggesting a substantial investment in training and development programs, which could enhance workforce skills and productivity. Increased hiring in quality assurance: The 'Quality Assurance' department has grown by 30%, indicating a heightened focus on maintaining high standards and improving product quality, which could be crucial for customer satisfaction and market competitiveness."
+                        - generic [ref=e625]:
+                          - generic [ref=e626]: …
+                          - button "Exibir mais sobre Contratações e número de funcionários" [ref=e627] [cursor=pointer]: exibir mais
+                  - generic [ref=e629]:
+                    - button "Marcar feedback como bom" [ref=e630] [cursor=pointer]:
+                      - img [ref=e631]
+                    - button "Marcar feedback como ruim" [ref=e634] [cursor=pointer]:
+                      - img [ref=e635]
+                - generic [ref=e638]:
+                  - heading "Última tendência de contratação" [level=3] [ref=e639]
+                  - generic [ref=e640]:
+                    - list [ref=e641]:
+                      - listitem [ref=e642]:
+                        - paragraph [ref=e643]: "1.125"
+                        - paragraph [ref=e644]: funcionários no total
+                      - listitem [ref=e645]:
+                        - paragraph [ref=e646]: 16%
+                        - paragraph [ref=e648]: toda a empresa
+                        - paragraph [ref=e649]: Crescimento em 2 anos
+                        - generic [ref=e650]: 16% de aumento
+                    - region "Chart. Highcharts interactive chart." [ref=e653]:
+                      - region "Chart screen reader information.":
+                        - generic [ref=e654]:
+                          - heading "Chart" [level=4] [ref=e655]
+                          - generic [ref=e656]: Chart with 25 data points.
+                          - generic [ref=e657]: "The chart has 1 X axis displaying Time. Range: 2023-12-13 12:00:00 to 2026-05-07 12:00:00."
+                          - generic [ref=e658]: "The chart has 1 Y axis displaying values. Range: 0 to 1500."
+                      - img "Interactive chart" [ref=e663]:
+                        - generic [ref=e675]:
+                          - img "1. April 2024, 974 funcionários" [ref=e676]
+                          - img "2. May 2024, 990 funcionários, increase 2% do mês passado" [ref=e677]
+                          - img "3. June 2024, 998 funcionários, increase 1% do mês passado" [ref=e678]
+                          - img "4. July 2024, 1.010 funcionários, increase 1% do mês passado" [ref=e679]
+                          - img "5. August 2024, 1.021 funcionários, increase 1% do mês passado" [ref=e680]
+                          - img "6. September 2024, 1.030 funcionários, increase 1% do mês passado" [ref=e681]
+                          - img "7. October 2024, 1.027 funcionários, neutral 0% do mês passado" [ref=e682]
+                          - img "8. November 2024, 1.038 funcionários, increase 1% do mês passado" [ref=e683]
+                          - img "9. December 2024, 1.027 funcionários, decrease 1% do mês passado" [ref=e684]
+                          - img "10. January 2025, 1.024 funcionários, neutral 0% do mês passado" [ref=e685]
+                          - img "11. February 2025, 1.030 funcionários, increase 1% do mês passado" [ref=e686]
+                          - img "12. March 2025, 1.031 funcionários, neutral 0% do mês passado" [ref=e687]
+                          - img "13. April 2025, 1.029 funcionários, neutral 0% do mês passado" [ref=e688]
+                          - img "14. May 2025, 1.020 funcionários, decrease 1% do mês passado" [ref=e689]
+                          - img "15. June 2025, 1.030 funcionários, increase 1% do mês passado" [ref=e690]
+                          - img "16. July 2025, 1.042 funcionários, increase 1% do mês passado" [ref=e691]
+                          - img "17. August 2025, 1.055 funcionários, increase 1% do mês passado" [ref=e692]
+                          - img "18. September 2025, 1.065 funcionários, increase 1% do mês passado" [ref=e693]
+                          - img "19. October 2025, 1.070 funcionários, neutral 0% do mês passado" [ref=e694]
+                          - img "20. November 2025, 1.076 funcionários, increase 1% do mês passado" [ref=e695]
+                          - img "21. December 2025, 1.093 funcionários, increase 2% do mês passado" [ref=e696]
+                          - img "22. January 2026, 1.106 funcionários, increase 1% do mês passado" [ref=e697]
+                          - img "23. February 2026, 1.112 funcionários, increase 1% do mês passado" [ref=e698]
+                          - img "24. March 2026, 1.126 funcionários, increase 1% do mês passado" [ref=e699]
+                          - img "25. April 2026, 1.125 funcionários, neutral 0% do mês passado" [ref=e700]
+                        - generic [ref=e701]:
+                          - generic [ref=e702]: abr. de 2024
+                          - generic [ref=e703]: out. de 2024
+                          - generic [ref=e704]: abr. de 2025
+                          - generic [ref=e705]: out. de 2025
+                          - generic [ref=e706]: abr. de 2026
+                        - generic [ref=e707]:
+                          - generic [ref=e708]: "0"
+                          - generic [ref=e709]: "500"
+                          - generic [ref=e710]: "1.000"
+                          - generic [ref=e711]: "1.500"
+                      - generic [ref=e713]: End of interactive chart.
+                    - generic [ref=e714]:
+                      - img [ref=e715]
+                      - text: Tempo médio do funcionário na empresa ‧
+                      - strong [ref=e718]: 3,2 anos
+                - generic [ref=e719]:
+                  - heading "A empresa Cimento Nacional contrata pessoas de algumas dessas empresas e instituições de ensino" [level=3] [ref=e720]
+                  - list [ref=e722]:
+                    - listitem [ref=e723]:
+                      - generic [ref=e724]:
+                        - figure [ref=e725]:
+                          - img "Fundação Getulio Vargas" [ref=e726]
+                        - paragraph [ref=e727]:
+                          - text: A Cimento Nacional contratou 38 pessoas de Fundação Getulio Vargas.
+                          - link "Ver todas" [ref=e728] [cursor=pointer]:
+                            - /url: https://www.linkedin.com/search/results/people/?origin=JOB_PAGE_CANNED_SEARCH&currentCompany=37901326&schoolFilter=8175
+                            - strong [ref=e729]: Ver todas
+                - generic [ref=e730]:
+                  - generic [ref=e731]:
+                    - heading "Concorrência" [level=3] [ref=e732]
+                    - paragraph [ref=e733]:
+                      - generic [ref=e734]:
+                        - text: Cimento Nacional operates in a competitive landscape with several key players in the Brazilian cement industry. The market is characterized by a focus on sustainability and innovation, with companies investing in reducing their environmental impact. The industry is also experiencing growth in sales, driven by regional developments and infrastructure projects.
+                        - generic [ref=e735]:
+                          - generic [ref=e736]: …
+                          - button "Exibir mais sobre Concorrência" [ref=e737] [cursor=pointer]: exibir mais
+                    - generic [ref=e738]:
+                      - link "InterCement" [ref=e740] [cursor=pointer]:
+                        - /url: https://www.linkedin.com/company/intercement/
+                        - generic "InterCement" [ref=e743]
+                      - link "Votorantim Cimentos" [ref=e746] [cursor=pointer]:
+                        - /url: https://www.linkedin.com/company/vcimentosoficial/
+                        - generic "Votorantim Cimentos" [ref=e749]
+                      - link "LafargeHolcim Maroc" [ref=e752] [cursor=pointer]:
+                        - /url: https://www.linkedin.com/company/lafargeholcim-maroc/
+                        - generic "LafargeHolcim Maroc" [ref=e755]
+                  - generic [ref=e757]:
+                    - generic [ref=e759]: "Fontes: accio.com mais 2"
+                    - generic [ref=e761]:
+                      - button "Marcar feedback como bom" [ref=e762] [cursor=pointer]:
+                        - img [ref=e763]
+                      - button "Marcar feedback como ruim" [ref=e766] [cursor=pointer]:
+                        - img [ref=e767]
+                - link "Exibir mais estatísticas Premium" [ref=e770] [cursor=pointer]:
+                  - /url: /company/cimentonacional/insights/?insightType=HEADCOUNT
+            - generic [ref=e444]:
+              - generic [ref=e445]:
+                - heading "Sobre a empresa" [level=2] [ref=e446]
+                - generic [ref=e447]:
+                  - generic [ref=e448]:
+                    - link "Logo da empresa Cimento Nacional" [ref=e450] [cursor=pointer]:
+                      - /url: /company/cimentonacional/life/
+                      - img "Logo da empresa Cimento Nacional" [ref=e451]
+                    - generic [ref=e452]:
+                      - link "Cimento Nacional" [ref=e454] [cursor=pointer]:
+                        - /url: /company/cimentonacional/life/
+                      - generic [ref=e455]: 75.012 seguidores
+                  - button "Seguir" [ref=e456] [cursor=pointer]:
+                    - img [ref=e457]
+                    - generic [ref=e459]: Seguir
+                - generic [ref=e460]:
+                  - text: Construção
+                  - generic [ref=e461]: • 1.001-5.000 funcionários
+                  - generic [ref=e462]: • 1.125 no LinkedIn
+                - paragraph [ref=e463]:
+                  - generic [ref=e464]:
+                    - text: A Cimento Nacional é a quarta maior cimenteira do Brasil e tem um propósito muito maior que produzir o cimento, queremos sustentar o desenvolvimento da sociedade.
+                    - text: Transformamos matéria-prima em cimento e trabalho em progresso, levamos ao mercado um produto de qualidade superior a partir de nossas unidades localizadas em Arcos/MG, Cantagalo/RJ, Matozinhos/MG, Santa Luzia/MG, Sete Lagoas/MG e Pitimbu/PB.
+                    - text: A nossa visão é ser uma empresa sólida e relevante no mercado de cimento do Brasil e acreditamos que o nosso desenvolvimento depende das relações de confiança que construímos.
+                    - text: Praticamos o respeito e investimos nas pessoas, pois acreditamos que elas são a mola propulsora do nosso desenvolvimento.
+                    - text: Venha fazer parte do time da Cimento Nacional. Aqui, todos são bem-vindos!
+                    - generic [ref=e465]:
+                      - generic [ref=e466]: …
+                      - button "exibir mais" [ref=e467] [cursor=pointer]
+              - link "Exibir mais sobre a empresa" [ref=e469] [cursor=pointer]:
+                - /url: /company/cimentonacional/life/
+                - text: Exibir mais
+            - heading "Mais vagas" [level=2] [ref=e772]
+            - list [ref=e774]:
+              - listitem [ref=e775]:
+                - link "Logo da empresa Keeta Finance Business Partner (Senior Manager) with verification Keeta São Paulo, Brasil (Presencial) Você seria um dos melhores candidatos Você seria um dos melhores candidatos Há 8 horas Candidatura simplificada" [ref=e777] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4403912037&referenceJobId=4381298692&originToLandingJobPostings=4403912037&trackingId=3hdX0MBPeZJ4iYsXP5F6Gg%3D%3D&refId=SHEuJmsaRGpNis5ZJ9OaZA%3D%3D&eBP=CwEAAAGdr8yPGPAFPyV9oLfk1PsXzAg-N4dA48Rfhri5D9UqDQKGqQu49S8zJT-9qN7pbk2PHV0hMItqHE___W-HybXgnqb7OpMyjut3K5Co76X1mj41UUtrEVvblGKbnOlfWVYP0C9PKKfDyVHx-HQNTQtezOV7FOpKVxX_xed7qPLLTceQbcj-D7RLnFib0IdeZkY80TcCvsaXKQmxACxX7uAy5Kqn73MfQIF5lqQRFg6nNo7Dz-EZobhp5eesotftd8ajvaxfoWK8oglnCXKSDrBtk65p9hAk4St15LbjRKFgWJOsU8djaXAQKZrjvA6NT51oEyBQxxlm_uSL7VMBAxAhdroBf8cMLMuoEPWLQ30WjCNv0_1gvv4mZZ0MZwYoLnrR-yAvnajtWeiPYHrjLUgLNzbgO0kFLZLXtT7PHQmcIHuR2tlRqyi9yrvTukKWcffvo4xV2odj5OT3GrZvWFkpxtimoJW-eZqlcO5cf_pzqJZa
+                  - generic [ref=e779]:
+                    - img "Logo da empresa Keeta" [ref=e784]
+                    - generic [ref=e785]:
+                      - generic [ref=e786]:
+                        - generic [ref=e787]:
+                          - generic [ref=e788]:
+                            - strong [ref=e789]: Finance Business Partner (Senior Manager)
+                            - img [ref=e791]
+                          - generic [ref=e793]: Finance Business Partner (Senior Manager) with verification
+                        - generic [ref=e795]: Keeta
+                        - generic [ref=e797]: São Paulo, Brasil (Presencial)
+                        - list [ref=e799]:
+                          - listitem [ref=e800]:
+                            - img "Você seria um dos melhores candidatos" [ref=e803]:
+                              - img [ref=e804]
+                            - generic [ref=e807]: Você seria um dos melhores candidatos
+                      - list [ref=e809]:
+                        - listitem [ref=e810]:
+                          - time [ref=e811]: Há 8 horas
+                        - listitem [ref=e812]:
+                          - img [ref=e813]:
+                            - img [ref=e814]
+                          - generic [ref=e816]: Candidatura simplificada
+              - listitem [ref=e817]:
+                - link "Logo da empresa padrão em branco Chief Operating Officer (COO) - Economia Sensata Olivia Sensata São Paulo, São Paulo, Brasil (Presencial) Você seria um dos melhores candidatos Você seria um dos melhores candidatos Há 2 semanas" [ref=e819] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4396144687&referenceJobId=4381298692&originToLandingJobPostings=4396144687&trackingId=SfYwxaYHlUPlNjdqJQr7IA%3D%3D&refId=SHEuJmsaRGpNis5ZJ9OaZA%3D%3D&eBP=BUDGET_EXHAUSTED_JOB
+                  - generic [ref=e821]:
+                    - img "Logo da empresa padrão em branco" [ref=e824]
+                    - generic [ref=e825]:
+                      - generic [ref=e826]:
+                        - generic [ref=e827]:
+                          - strong [ref=e829]: Chief Operating Officer (COO) - Economia Sensata
+                          - generic [ref=e830]: Chief Operating Officer (COO) - Economia Sensata
+                        - generic [ref=e832]: Olivia Sensata
+                        - generic [ref=e834]: São Paulo, São Paulo, Brasil (Presencial)
+                        - list [ref=e836]:
+                          - listitem [ref=e837]:
+                            - img "Você seria um dos melhores candidatos" [ref=e840]:
+                              - img [ref=e841]
+                            - generic [ref=e844]: Você seria um dos melhores candidatos
+                      - list [ref=e846]:
+                        - listitem [ref=e847]:
+                          - time [ref=e848]: Há 2 semanas
+              - listitem [ref=e849]:
+                - link "Logo da empresa Ovation Law Firm PPC Specialist (LATAM) Ovation Law Firm Brasil (Remoto) Você seria um dos melhores candidatos Você seria um dos melhores candidatos Há 1 hora" [ref=e851] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4403942576&referenceJobId=4381298692&originToLandingJobPostings=4403942576&trackingId=DtYlsETARK74X8G2bdSHXA%3D%3D&refId=SHEuJmsaRGpNis5ZJ9OaZA%3D%3D&eBP=CwEAAAGdr8yPGGSPv6NEMacSxtgDEUdzf9v_IFLXRZmGkKl856L1Mh9xIx0zNZxlQWcwZDcgWIEkzDkfCdej1BED91B-h-0URj9L4wGDZR39BIWIF2YLuabQJUjKLx2uPYWSwP1HqTCamN19lzg0EoWvRQjehhjB5Pty1TqSIVD2MgvzZGfzIbB30cl6gBm4GciNdxwUKtqFloYOcFDnSJyn_NdPxSI-vufmONJwvQREzyutsXTiHCfg6MOs0mRGBjlfScUoMSJfchGK-MW6lzJoL-6lMjjjCjW-ZSEIJ1vWeSByRkGiDk7oSd3qh_GkksSvyn4prnAYKwnWWbbJMFWaO0QIJXDtLEXm9vrFdpN0BIIZvITzyG9FIEWB6vlwSva0wApuEQv0uJ8nxH9qEkqBc0mJv7GyrB2NBZ3tXj2gIMHq9v9qyd3foSYRrN6KJjiQucrh0JEGCda7VYDMnl_A0YMDQrT9y4v7o7MiqQ
+                  - generic [ref=e853]:
+                    - img "Logo da empresa Ovation Law Firm" [ref=e858]
+                    - generic [ref=e859]:
+                      - generic [ref=e860]:
+                        - generic [ref=e861]:
+                          - strong [ref=e863]: PPC Specialist (LATAM)
+                          - generic [ref=e864]: PPC Specialist (LATAM)
+                        - generic [ref=e866]: Ovation Law Firm
+                        - generic [ref=e868]: Brasil (Remoto)
+                        - list [ref=e870]:
+                          - listitem [ref=e871]:
+                            - img "Você seria um dos melhores candidatos" [ref=e874]:
+                              - img [ref=e875]
+                            - generic [ref=e878]: Você seria um dos melhores candidatos
+                      - list [ref=e880]:
+                        - listitem [ref=e881]:
+                          - time [ref=e882]: Há 1 hora
+              - listitem [ref=e883]:
+                - link "Logo da empresa Nas Nuvens Music Group Revenue Operations Manager (Music & Catalog Business) Nas Nuvens Music Group São Paulo, São Paulo, Brasil (Presencial) Você seria um dos melhores candidatos Você seria um dos melhores candidatos Há 6 dias" [ref=e885] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4400775577&referenceJobId=4381298692&originToLandingJobPostings=4400775577&trackingId=VjknTEMp8%2FFhdZDwNxYePg%3D%3D&refId=SHEuJmsaRGpNis5ZJ9OaZA%3D%3D&eBP=BUDGET_EXHAUSTED_JOB
+                  - generic [ref=e887]:
+                    - img "Logo da empresa Nas Nuvens Music Group" [ref=e892]
+                    - generic [ref=e893]:
+                      - generic [ref=e894]:
+                        - generic [ref=e895]:
+                          - strong [ref=e897]: Revenue Operations Manager (Music & Catalog Business)
+                          - generic [ref=e898]: Revenue Operations Manager (Music & Catalog Business)
+                        - generic [ref=e900]: Nas Nuvens Music Group
+                        - generic [ref=e902]: São Paulo, São Paulo, Brasil (Presencial)
+                        - list [ref=e904]:
+                          - listitem [ref=e905]:
+                            - img "Você seria um dos melhores candidatos" [ref=e908]:
+                              - img [ref=e909]
+                            - generic [ref=e912]: Você seria um dos melhores candidatos
+                      - list [ref=e914]:
+                        - listitem [ref=e915]:
+                          - time [ref=e916]: Há 6 dias
+              - listitem [ref=e917]:
+                - link "Logo da empresa COFCO International Assistant Controller - Cotton with verification COFCO International Santos, São Paulo, Brasil (Híbrido) Avaliando candidaturas Avaliando candidaturas Há 6 dias Candidatura simplificada" [ref=e919] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4400798095&referenceJobId=4381298692&originToLandingJobPostings=4400798095&trackingId=qQj2Ex2zPRHeucUfeMJHLw%3D%3D&refId=SHEuJmsaRGpNis5ZJ9OaZA%3D%3D&eBP=CwEAAAGdr8yPGE6Dtpe0VZ5W0Fxvupn40DEFGnd9dpwHYk7mGeM5JuT0oEDVT9WoCBZQanHg4jf57rt3mpv_AoAosYe6Q__e0nglQWyo4OwcVxzQrMOpSZVTGv9F_PRO1hMmiMw1u4gWUfvHpl4-nz6F1IGThFEqBwaP6Q0KAamWdLqjkRnRSk4SFq7ylXxo5QDBdKxe056mDWRAXIR1M7ZPubhV7MAG1HXeWg71LcAfm9QtqyAavm7BkZPvBL7tiy8gK8QCz5papEn81Ay2RjYq4Gzosk1o5NyfAgJyMXjzkBGxn6q7oraJoWNbonJJU9U0fTvoGDm8R02E5Tcank-fLdmAu3tTvVDnlhs_K94AfwW5PvzkBL7bijeTqbm6FuU7VHVOlWKyQz-glBU4w5AU9bp1vSWE6YbxM2XbLOZHOmDQ3dHYiQUeOiS3I6x08NQOvIylksGlgSElhlJ1BQdNvSljJPryrg4dtOHCo4ip01UuBqMlsvO7AF3ebGlzf7BuDZ-6r-U
+                  - generic [ref=e921]:
+                    - img "Logo da empresa COFCO International" [ref=e926]
+                    - generic [ref=e927]:
+                      - generic [ref=e928]:
+                        - generic [ref=e929]:
+                          - generic [ref=e930]:
+                            - strong [ref=e931]: Assistant Controller - Cotton
+                            - img [ref=e933]
+                          - generic [ref=e935]: Assistant Controller - Cotton with verification
+                        - generic [ref=e937]: COFCO International
+                        - generic [ref=e939]: Santos, São Paulo, Brasil (Híbrido)
+                        - list [ref=e941]:
+                          - listitem [ref=e942]:
+                            - img "Avaliando candidaturas" [ref=e945]
+                            - generic [ref=e947]: Avaliando candidaturas
+                      - list [ref=e949]:
+                        - listitem [ref=e950]:
+                          - time [ref=e951]: Há 6 dias
+                        - listitem [ref=e952]:
+                          - img [ref=e953]:
+                            - img [ref=e954]
+                          - generic [ref=e956]: Candidatura simplificada
+              - listitem [ref=e957]:
+                - link "Logo da empresa Multitrato - Nutrição Animal Consultor Técnico de Vendas Multitrato - Nutrição Animal Colíder, Mato Grosso, Brasil (Presencial) A empresa leva geralmente 1 semana para avaliar A empresa leva geralmente 1 semana para avaliar Há 21 horas Candidatura simplificada" [ref=e959] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4401635247&referenceJobId=4381298692&originToLandingJobPostings=4401635247&trackingId=l3H3geFbFb2VDyx1vshFfQ%3D%3D&refId=SHEuJmsaRGpNis5ZJ9OaZA%3D%3D&eBP=CwEAAAGdr8yPGL0jp90u7rA7fIoteyVifCQhHKkKbSSVh_aOYDhMnIDlph0SlSgLpuGkc4PtA7GEih9M3t2P_rBPsWOPSvveSHv-CPlbDbQOV5HWggv1-_uM7byPirpKl8EouPj-vswiMgkrnj5RjuRLZodOMzFeG91zXLNTHo5CZYSvvw0lf6BiumFVVPs9nbEWfLDl_1E2cjHNEDWXUkmGk1-3mHsz2jZcGrYffXQiaIXSrzFXB1hdEeeoyTtdzSYZL0yJGWmUrKN-sbyXXQvatXwvGKqcm4eElgbGjYgcbLJDkjRtKRAcjdkFcaB2naVfh5He3ZwCcka_6_VL5qR9DqCB7FbTMWPyf0MxxazEXkIywDi2ilCWfFgszFgts3JuAMqS1i537XC1bivBZM8GELVJG8XPlZAXJ0Pw4bq8v9aIOGCxp2JDXUwtFHP6U0yQV85GOmC-sT86eLSlBIijV5I1rez6VWNHlYY74uo6lV-GOp2zEIsXJfbMXNhkG_reVw
+                  - generic [ref=e961]:
+                    - img "Logo da empresa Multitrato - Nutrição Animal" [ref=e966]
+                    - generic [ref=e967]:
+                      - generic [ref=e968]:
+                        - generic [ref=e969]:
+                          - strong [ref=e971]: Consultor Técnico de Vendas
+                          - generic [ref=e972]: Consultor Técnico de Vendas
+                        - generic [ref=e974]: Multitrato - Nutrição Animal
+                        - generic [ref=e976]: Colíder, Mato Grosso, Brasil (Presencial)
+                        - list [ref=e978]:
+                          - listitem [ref=e979]:
+                            - img "A empresa leva geralmente 1 semana para avaliar" [ref=e982]
+                            - generic [ref=e984]: A empresa leva geralmente 1 semana para avaliar
+                      - list [ref=e986]:
+                        - listitem [ref=e987]:
+                          - time [ref=e988]: Há 21 horas
+                        - listitem [ref=e989]:
+                          - img [ref=e990]:
+                            - img [ref=e991]
+                          - generic [ref=e993]: Candidatura simplificada
+              - listitem [ref=e994]:
+                - link "Logo da empresa tokens& Operations Lead — Remote tokens& São Paulo, Brasil (Remoto) Há 4 dias" [ref=e996] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4402966886&referenceJobId=4381298692&originToLandingJobPostings=4402966886&trackingId=gYlcKGaI0VJ7qc0QGsaTyg%3D%3D&refId=SHEuJmsaRGpNis5ZJ9OaZA%3D%3D&eBP=BUDGET_EXHAUSTED_JOB
+                  - generic [ref=e998]:
+                    - img "Logo da empresa tokens&" [ref=e1003]
+                    - generic [ref=e1004]:
+                      - generic [ref=e1005]:
+                        - generic [ref=e1006]:
+                          - strong [ref=e1008]: Operations Lead — Remote
+                          - generic [ref=e1009]: Operations Lead — Remote
+                        - generic [ref=e1011]: tokens&
+                        - generic [ref=e1013]: São Paulo, Brasil (Remoto)
+                      - list [ref=e1015]:
+                        - listitem [ref=e1016]:
+                          - time [ref=e1017]: Há 4 dias
+              - listitem [ref=e1018]:
+                - link "Logo da empresa Crossing Hurdles Farm Manager – Operations & Production | $50/hr Remote Crossing Hurdles Brasil (Remoto) US$ 20/h - US$ 50/h Avaliando candidaturas Avaliando candidaturas Há 2 semanas Candidatura simplificada" [ref=e1020] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4393412196&referenceJobId=4381298692&originToLandingJobPostings=4393412196&trackingId=xTZHsI89gTp%2Fb1%2B%2FltSjpA%3D%3D&refId=SHEuJmsaRGpNis5ZJ9OaZA%3D%3D&eBP=CwEAAAGdr8yPGC0aKGW-PZhgj9Ry7xVOSB9HygRg1R88CJCQnfir2JgxxOcNVFrhBPoGJ2dJFY807fcqbPwzj-255jg-mQZiwBb3NMtTEb37KurgJac5ydDCkLPknsIRxzrdwJKMlWG6NJ8_EH7JlWJERCUhkYNBC--n1Mc9hV4yqcmQWRSimwF5Wh2PrzIgny28mf2hSjNAjdCTE1_U6SftIVKAoC2IJnL2v97da-gtMyG1iWjMpfpPli086jopayRIBN89lEAi9W4Zp2oG1Oc8iSiHPKO2Lo6XfVZX7pB3YEVD_C-hP--eU8n-jUSYAbmoZvcWirAgTdonUhU7mu7WXZoMZwBFpanTu4Y_c6m2QqbQIXdVswYbnzFt6wuwbOLioSbbAteHt-4uhirOblaGhC1mom8q_Rk-u1GFYa8noNoZX9qay8evrRV849_0YhvQ1jGOJbpkbotTdb2NrkQqyFa8XKGaBPhxHhRo0166BKcIyq8k
+                  - generic [ref=e1022]:
+                    - img "Logo da empresa Crossing Hurdles" [ref=e1027]
+                    - generic [ref=e1028]:
+                      - generic [ref=e1029]:
+                        - generic [ref=e1030]:
+                          - strong [ref=e1032]: Farm Manager – Operations & Production | $50/hr Remote
+                          - generic [ref=e1033]: Farm Manager – Operations & Production | $50/hr Remote
+                        - generic [ref=e1035]: Crossing Hurdles
+                        - generic [ref=e1037]: Brasil (Remoto)
+                        - generic [ref=e1038]:
+                          - generic [ref=e1039]: US$ 20/h - US$ 50/h
+                          - list [ref=e1040]:
+                            - listitem [ref=e1041]:
+                              - img "Avaliando candidaturas" [ref=e1044]
+                              - generic [ref=e1046]: Avaliando candidaturas
+                      - list [ref=e1048]:
+                        - listitem [ref=e1049]:
+                          - time [ref=e1050]: Há 2 semanas
+                        - listitem [ref=e1051]:
+                          - img [ref=e1052]:
+                            - img [ref=e1053]
+                          - generic [ref=e1055]: Candidatura simplificada
+              - listitem [ref=e1056]:
+                - link "Logo da empresa Laricas Fitness Confeiteiro(a) – Produção Artesanal de Doces Fitness Laricas Fitness São Paulo, São Paulo, Brasil (Presencial) Há 21 horas Candidatura simplificada" [ref=e1058] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4401645140&referenceJobId=4381298692&originToLandingJobPostings=4401645140&trackingId=ZFF2JWIoT9H8FhDJMRLKGw%3D%3D&refId=SHEuJmsaRGpNis5ZJ9OaZA%3D%3D&eBP=CwEAAAGdr8yPGFSiggi3ugDJqJ5pT2b9t_ptniR45SMVjzy1e1ZW6q_0coarl6QfIcNBExyxIBzO2MxwcADPPO-iAFcI8QH4OR-UEdbTL2elqO6-LMKVppjsDXcdmtj-Z56JPcLlW8MNHu3lzLXgOLJP2X_Z6RvSjmSK7PwHLUfbefByJB0RSqlY4ruVbos4YG58oWkrfuU0izNJq8o0hSUsYwyZRgUpid1q4_ZogL3e0sLSPMWX9ze3WH6MDe6d0mIeEh75ax4cTgLK3_R39BoKodX5c3Us2WwbuHEpjoCMD9CcQi4H-xKJjAklOCzRxIpaD_AIzFebbRR8abXxrc2nG5kJ3iFoNdGR4BY5Xul-DVtxizsebI6Dgg51SzWOAQODr8-IuyVmPyoJ9LFnoxbY6ehioAg0F_tOiBeJCWvUuyECVkuYui1SX13F3tI6HuuBit9FccO62bXTvIjbnkDaGuJOqYkOBiKzS50GN5DoKmm0ijI9TJSLI78gOsuObsh242sD
+                  - generic [ref=e1060]:
+                    - img "Logo da empresa Laricas Fitness" [ref=e1065]
+                    - generic [ref=e1066]:
+                      - generic [ref=e1067]:
+                        - generic [ref=e1068]:
+                          - strong [ref=e1070]: Confeiteiro(a) – Produção Artesanal de Doces Fitness
+                          - generic [ref=e1071]: Confeiteiro(a) – Produção Artesanal de Doces Fitness
+                        - generic [ref=e1073]: Laricas Fitness
+                        - generic [ref=e1075]: São Paulo, São Paulo, Brasil (Presencial)
+                      - list [ref=e1077]:
+                        - listitem [ref=e1078]:
+                          - time [ref=e1079]: Há 21 horas
+                        - listitem [ref=e1080]:
+                          - img [ref=e1081]:
+                            - img [ref=e1082]
+                          - generic [ref=e1084]: Candidatura simplificada
+              - listitem [ref=e1085]:
+                - link "Logo da empresa Petz Assistente de Diretoria with verification Petz São Paulo, São Paulo, Brasil (Presencial) Avaliando candidaturas Avaliando candidaturas Há 1 semana Candidatura simplificada" [ref=e1087] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4399881589&referenceJobId=4381298692&originToLandingJobPostings=4399881589&trackingId=Dzc0aHjAwXm7NaifHtM79w%3D%3D&refId=SHEuJmsaRGpNis5ZJ9OaZA%3D%3D&eBP=CwEAAAGdr8yPGOLJRomyTClCxhqBGocyXELBHU9Syfk3zbNeu9eyBRumJCM7KebORiXWfL3qnJ12wW5j3tMXLiysyEm-R8-d9cQaHIxeuSSYx_KGB8issdiPqVzet9fOPAdaT3E5kGxEMqkXMcSA92hENqS2ERD4a1ALDjP_sRzcJEin5e81Q0ZAFXqQmY_rwo7TeNo7vxYJ_yfyvQwFgIixeop1j1k0OzATDd6M-LWRSRuqpgJIoy8T9-PukctegGmEyorY0cJtgFWtOiTQ1-rnZpxHtcSScQ-LuIYq9_-Ct2Rn3VR-CECZtJ-61OAvbwZJtoH_aHBvqE547MYTxpk96YfW8fsO4Sjbt65r8ZjiOdy3IKSSAuOgnku-f8l_kuCk8BwF0Nl85vvy7HJzlaKL1eJmt7rxTUg77NVyZel1KZY4KRGVx42O9X99y0D11424X6RovsIWhYxWF3h50roaE-OSs_2FJryyIocUvPv9wZcet4bQgp5nzoNDVwp5mr7MJ6H7rVM
+                  - generic [ref=e1089]:
+                    - img "Logo da empresa Petz" [ref=e1094]
+                    - generic [ref=e1095]:
+                      - generic [ref=e1096]:
+                        - generic [ref=e1097]:
+                          - generic [ref=e1098]:
+                            - strong [ref=e1099]: Assistente de Diretoria
+                            - img [ref=e1101]
+                          - generic [ref=e1103]: Assistente de Diretoria with verification
+                        - generic [ref=e1105]: Petz
+                        - generic [ref=e1107]: São Paulo, São Paulo, Brasil (Presencial)
+                        - list [ref=e1109]:
+                          - listitem [ref=e1110]:
+                            - img "Avaliando candidaturas" [ref=e1113]
+                            - generic [ref=e1115]: Avaliando candidaturas
+                      - list [ref=e1117]:
+                        - listitem [ref=e1118]:
+                          - time [ref=e1119]: Há 1 semana
+                        - listitem [ref=e1120]:
+                          - img [ref=e1121]:
+                            - img [ref=e1122]
+                          - generic [ref=e1124]: Candidatura simplificada
+              - listitem [ref=e1125]:
+                - link "Logo da empresa De Natale Advogados Associados Consultor(a) Tributário(a) - Pleno/Sênior - Tributos Indiretos (PIS/COFINS, IPI e ICMS) De Natale Advogados Associados São Paulo, São Paulo, Brasil (Híbrido) Você seria um dos melhores candidatos Você seria um dos melhores candidatos Há 4 dias Candidatura simplificada" [ref=e1127] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4400401775&referenceJobId=4381298692&originToLandingJobPostings=4400401775&trackingId=KHZRDrzLxCbT1zHbnrLkHQ%3D%3D&refId=SHEuJmsaRGpNis5ZJ9OaZA%3D%3D&eBP=BUDGET_EXHAUSTED_JOB
+                  - generic [ref=e1129]:
+                    - img "Logo da empresa De Natale Advogados Associados" [ref=e1134]
+                    - generic [ref=e1135]:
+                      - generic [ref=e1136]:
+                        - generic [ref=e1137]:
+                          - strong [ref=e1139]: Consultor(a) Tributário(a) - Pleno/Sênior - Tributos Indiretos (PIS/COFINS, IPI e ICMS)
+                          - generic [ref=e1140]: Consultor(a) Tributário(a) - Pleno/Sênior - Tributos Indiretos (PIS/COFINS, IPI e ICMS)
+                        - generic [ref=e1142]: De Natale Advogados Associados
+                        - generic [ref=e1144]: São Paulo, São Paulo, Brasil (Híbrido)
+                        - list [ref=e1146]:
+                          - listitem [ref=e1147]:
+                            - img "Você seria um dos melhores candidatos" [ref=e1150]:
+                              - img [ref=e1151]
+                            - generic [ref=e1154]: Você seria um dos melhores candidatos
+                      - list [ref=e1156]:
+                        - listitem [ref=e1157]:
+                          - time [ref=e1158]: Há 4 dias
+                        - listitem [ref=e1159]:
+                          - img [ref=e1160]:
+                            - img [ref=e1161]
+                          - generic [ref=e1163]: Candidatura simplificada
+              - listitem [ref=e1164]:
+                - link "Logo da empresa Velaro Network Finance Manager Velaro Network São Paulo, São Paulo, Brasil (Híbrido) Você seria um dos melhores candidatos Você seria um dos melhores candidatos Há 5 dias Candidatura simplificada" [ref=e1166] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/jobs/collections/similar-jobs?currentJobId=4401866529&referenceJobId=4381298692&originToLandingJobPostings=4401866529&trackingId=aNoDxpwyFR1epu8Eo34Bog%3D%3D&refId=SHEuJmsaRGpNis5ZJ9OaZA%3D%3D&eBP=BUDGET_EXHAUSTED_JOB
+                  - generic [ref=e1168]:
+                    - img "Logo da empresa Velaro Network" [ref=e1173]
+                    - generic [ref=e1174]:
+                      - generic [ref=e1175]:
+                        - generic [ref=e1176]:
+                          - strong [ref=e1178]: Finance Manager
+                          - generic [ref=e1179]: Finance Manager
+                        - generic [ref=e1181]: Velaro Network
+                        - generic [ref=e1183]: São Paulo, São Paulo, Brasil (Híbrido)
+                        - list [ref=e1185]:
+                          - listitem [ref=e1186]:
+                            - img "Você seria um dos melhores candidatos" [ref=e1189]:
+                              - img [ref=e1190]
+                            - generic [ref=e1193]: Você seria um dos melhores candidatos
+                      - list [ref=e1195]:
+                        - listitem [ref=e1196]:
+                          - time [ref=e1197]: Há 5 dias
+                        - listitem [ref=e1198]:
+                          - img [ref=e1199]:
+                            - img [ref=e1200]
+                          - generic [ref=e1202]: Candidatura simplificada
+            - link "Ver mais vagas como esta" [ref=e1204] [cursor=pointer]:
+              - /url: https://www.linkedin.com/jobs/collections/similar-jobs?referenceJobId=4381298692
+        - complementary [ref=e229]:
+          - generic [ref=e230]:
+            - generic [ref=e470]:
+              - img "Premium" [ref=e472]:
+                - img [ref=e473]
+              - heading "Adquira competências com esses cursos para conseguir um novo emprego" [level=2] [ref=e475]
+              - listitem [ref=e476]:
+                - 'link "Java: Formação Básica" [ref=e477] [cursor=pointer]':
+                  - /url: https://www.linkedin.com/learning/java-formacao-basica-23718889?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_5904100_learning
+                  - 'img "Java: Formação Básica" [ref=e480]'
+                  - img [ref=e482]
+                - generic [ref=e484]:
+                  - 'link "Java: Formação Básica" [ref=e485] [cursor=pointer]':
+                    - /url: https://www.linkedin.com/learning/java-formacao-basica-23718889?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_5904100_learning
+                    - generic [ref=e486]: "Java: Formação Básica"
+                  - generic [ref=e488]: 5.336 visualizações
+              - listitem [ref=e489]:
+                - 'link "Excel: Como Gerir suas Finanças Pessoais" [ref=e490] [cursor=pointer]':
+                  - /url: https://www.linkedin.com/learning/excel-como-gerir-suas-financas-pessoais?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_2127077_learning
+                  - 'img "Excel: Como Gerir suas Finanças Pessoais" [ref=e493]'
+                  - img [ref=e495]
+                - generic [ref=e497]:
+                  - 'link "Excel: Como Gerir suas Finanças Pessoais" [ref=e498] [cursor=pointer]':
+                    - /url: https://www.linkedin.com/learning/excel-como-gerir-suas-financas-pessoais?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_2127077_learning
+                    - generic [ref=e499]: "Excel: Como Gerir suas Finanças Pessoais"
+                  - generic [ref=e501]: 26.315 visualizações
+              - listitem [ref=e502]:
+                - link "Fundamentos de Finanças" [ref=e503] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/learning/fundamentos-de-financas?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_2928580_learning
+                  - img "Fundamentos de Finanças" [ref=e506]
+                  - img [ref=e508]
+                - generic [ref=e510]:
+                  - link "Fundamentos de Finanças" [ref=e511] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/learning/fundamentos-de-financas?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_2928580_learning
+                    - generic [ref=e512]: Fundamentos de Finanças
+                  - generic [ref=e514]: 44.076 visualizações
+              - link "Exibir mais no LinkedIn Learning" [ref=e516] [cursor=pointer]:
+                - /url: /learning?trk=jobdetails_learning_awareness
+            - generic [ref=e517]:
+              - paragraph [ref=e518]: Procurando um talento?
+              - link "Anunciar vaga" [ref=e519] [cursor=pointer]:
+                - /url: https://www.linkedin.com/talent/job-posting-redirect?trk=flagship3_job_detail
+      - contentinfo [ref=e232]:
+        - generic [ref=e520]:
+          - generic [ref=e521]:
+            - navigation [ref=e522]:
+              - list [ref=e523]:
+                - listitem [ref=e524]:
+                  - link "Sobre" [ref=e525] [cursor=pointer]:
+                    - /url: https://about.linkedin.com/pt-br
+                - listitem [ref=e526]:
+                  - link "Acessibilidade" [ref=e527] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/accessibility
+                - listitem [ref=e528]:
+                  - link "Soluções de Talentos" [ref=e529] [cursor=pointer]:
+                    - /url: https://business.linkedin.com/pt-br/talent-solutions?trk=flagship_nav&veh=li-footer-lts-control-pt-br&src=li-footer
+                - listitem [ref=e530]:
+                  - link "Políticas para Comunidades Profissionais" [ref=e531] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/legal/professional-community-policies
+                - listitem [ref=e532]:
+                  - link "Carreiras" [ref=e533] [cursor=pointer]:
+                    - /url: https://careers.linkedin.com/
+                - listitem [ref=e534]:
+                  - link "Soluções de Marketing" [ref=e535] [cursor=pointer]:
+                    - /url: https://business.linkedin.com/pt-br/marketing-solutions?trk=n_nav_lms_f&src=li-footer
+                - listitem [ref=e536]:
+                  - button "Termos e Privacidade" [ref=e538] [cursor=pointer]:
+                    - generic [ref=e540]:
+                      - text: Termos e Privacidade
+                      - img [ref=e541]
+                - listitem [ref=e543]:
+                  - link "Preferências de anúncios" [ref=e544] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/help/linkedin/answer/62931?lang=pt
+                - listitem [ref=e545]:
+                  - link "Publicidade" [ref=e546] [cursor=pointer]:
+                    - /url: https://business.linkedin.com/pt-br/marketing-solutions/ads?trk=n_nav_ads_f
+                - listitem [ref=e547]:
+                  - link "Soluções de Vendas" [ref=e548] [cursor=pointer]:
+                    - /url: https://business.linkedin.com/pt-br/sales-solutions?trk=flagship_nav&veh=li-footer-lss-control-pt-br&src=li-footer
+                - listitem [ref=e549]:
+                  - link "Para celular" [ref=e550] [cursor=pointer]:
+                    - /url: https://mobile.linkedin.com/pt-br
+                - listitem [ref=e551]:
+                  - link "Pequenas empresas" [ref=e552] [cursor=pointer]:
+                    - /url: https://smallbusiness.linkedin.com?&src=li-footer
+                - listitem [ref=e553]:
+                  - link "Central de Segurança" [ref=e554] [cursor=pointer]:
+                    - /url: https://safety.linkedin.com
+            - generic [ref=e556]:
+              - list [ref=e557]:
+                - listitem [ref=e558]:
+                  - img [ref=e559]
+                  - generic [ref=e561]:
+                    - link "Dúvidas? Acesse a nossa Central de Ajuda." [ref=e562] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/help/linkedin?trk=d_flagship3_job_details
+                      - text: Dúvidas?
+                    - paragraph [ref=e563]: Acesse a nossa Central de Ajuda.
+                - listitem [ref=e564]:
+                  - img [ref=e565]
+                  - generic [ref=e567]:
+                    - link "Gerencie sua conta e privacidade Acesse suas Configurações." [ref=e568] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/psettings/
+                      - text: Gerencie sua conta e privacidade
+                    - paragraph [ref=e569]: Acesse suas Configurações.
+                - listitem [ref=e570]:
+                  - img [ref=e571]
+                  - generic [ref=e573]:
+                    - link "Visibilidade da recomendação Saiba mais sobre os conteúdos recomendados." [ref=e574] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/help/linkedin/answer/a1339724
+                      - text: Visibilidade da recomendação
+                    - paragraph [ref=e575]: Saiba mais sobre os conteúdos recomendados.
+              - generic [ref=e576]:
+                - generic [ref=e577]: Selecionar idioma
+                - combobox "Selecionar idioma" [ref=e578]:
+                  - option "العربية (Árabe)"
+                  - option "বাংলা (Bengali)"
+                  - option "Čeština (Tcheco)"
+                  - option "Dansk (Dinamarquês)"
+                  - option "Deutsch (Alemão)"
+                  - option "Ελληνικά (Grego)"
+                  - option "English (Inglês)"
+                  - option "Español (Espanhol)"
+                  - option "فارسی (Persa)"
+                  - option "Suomi (Finlandês)"
+                  - option "Français (Francês)"
+                  - option "हिंदी (Hindi)"
+                  - option "Magyar (Húngaro)"
+                  - option "Bahasa Indonésia (Indonésio)"
+                  - option "Italiano (Italiano)"
+                  - option "עברית (Hebraico)"
+                  - option "日本語 (Japonês)"
+                  - option "한국어 (Coreano)"
+                  - option "मराठी (Marati)"
+                  - option "Bahasa Malaysia (Malaio)"
+                  - option "Nederlands (Holandês)"
+                  - option "Norsk (Norueguês)"
+                  - option "ਪੰਜਾਬੀ (Punjabi)"
+                  - option "Polski (Polonês)"
+                  - option "Português (Português)" [selected]
+                  - option "Română (Romeno)"
+                  - option "Русский (Russo)"
+                  - option "Svenska (Sueco)"
+                  - option "తెలుగు (Telugu)"
+                  - option "ภาษาไทย (Tailandês)"
+                  - option "Tagalog (Tagalog)"
+                  - option "Türkçe (Turco)"
+                  - option "Українська (Ucraniano)"
+                  - option "Tiếng Việt (Vietnamita)"
+                  - option "简体中文 (Chinês (Simplificado))"
+                  - option "正體中文 (Chinês (Tradicional))"
+          - paragraph [ref=e579]: LinkedIn Corporation © 2026
+    - generic:
+      - generic:
+        - complementary:
+          - generic [ref=e234]:
+            - generic [ref=e235]:
+              - generic [ref=e237] [cursor=pointer]:
+                - img "Fernando Xavier" [ref=e239]
+                - button "Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas." [ref=e240]:
+                  - generic [ref=e241]:
+                    - generic [ref=e242]: Mensagens
+                    - generic [ref=e243]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+              - generic [ref=e244]:
+                - button "Abrir o menu suspenso de mensagens" [ref=e246] [cursor=pointer]:
+                  - img "Abrir o menu suspenso de mensagens" [ref=e247]
+                - button "Escrever mensagem" [ref=e249] [cursor=pointer]:
+                  - img [ref=e250]
+                  - generic [ref=e251]: Escrever mensagem
+                - button "Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas." [ref=e252] [cursor=pointer]:
+                  - img [ref=e253]
+                  - generic [ref=e254]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+            - link "Foto da empresa Fernando Xavier Fernando Xavier" [ref=e1205] [cursor=pointer]:
+              - /url: https://www.linkedin.com/company/109375368/admin/inbox
+              - img "Foto da empresa Fernando Xavier" [ref=e1206]
+              - generic [ref=e1207]: Fernando Xavier
+              - img [ref=e1208]
+        - complementary "Assistente de IA para obter ajuda com sua carreira, vagas, etc."

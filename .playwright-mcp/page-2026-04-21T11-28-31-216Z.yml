@@ -1,0 +1,485 @@
+- generic [active] [ref=e1]:
+  - generic:
+    - region "Mensagem toast":
+      - heading "0 notificações no total" [level=2] [ref=e3]
+      - alert
+  - region [ref=e4]
+  - generic [ref=e257]:
+    - img [ref=e259]
+    - paragraph [ref=e263]:
+      - text: Ocorreu um erro ao processar seu pagamento.
+      - link "Atualize sua(s) forma(s) de pagamento" [ref=e264] [cursor=pointer]:
+        - /url: https://www.linkedin.com/manage/purchases-payments/purchases/485025203/payments?trk=global_alert
+      - text: .
+    - button "Fechar" [ref=e265] [cursor=pointer]:
+      - img [ref=e266]
+      - generic [ref=e268]: Fechar
+  - generic [ref=e5]:
+    - generic [ref=e7]:
+      - button "Pular para pesquisa" [ref=e8] [cursor=pointer]:
+        - generic [ref=e9]: Pular para pesquisa
+      - button "Pular para conteúdo principal" [ref=e10] [cursor=pointer]:
+        - generic [ref=e11]: Pular para conteúdo principal
+      - button "Atalhos do teclado" [ref=e12] [cursor=pointer]:
+        - generic [ref=e13]: Atalhos do teclado
+      - button "Fechar menu pular" [ref=e14] [cursor=pointer]:
+        - img [ref=e15]
+        - generic [ref=e17]: Fechar menu pular
+    - banner "Navegação geral" [ref=e18]:
+      - generic [ref=e19]:
+        - link "LinkedIn" [ref=e20] [cursor=pointer]:
+          - /url: https://www.linkedin.com/feed/?nis=true
+          - img "LinkedIn" [ref=e23]:
+            - img [ref=e24]
+        - generic [ref=e28]:
+          - combobox "Pesquisar" [ref=e29]
+          - generic:
+            - img
+        - navigation "Navegação principal" [ref=e30]:
+          - list [ref=e31]:
+            - listitem [ref=e32]:
+              - link "atualizações do feed novas notificações Início" [ref=e33] [cursor=pointer]:
+                - /url: https://www.linkedin.com/feed/?nis=true&
+                - generic [ref=e34]:
+                  - generic [ref=e37]: atualizações do feed novas notificações
+                  - img [ref=e41]
+                - generic "Início" [ref=e43]
+            - listitem [ref=e44]:
+              - link "2 atualizações de rede novas notificações Minha rede" [ref=e45] [cursor=pointer]:
+                - /url: https://www.linkedin.com/mynetwork/?
+                - generic [ref=e46]:
+                  - generic [ref=e47]:
+                    - generic [ref=e48]: "2"
+                    - generic [ref=e49]: 2 atualizações de rede novas notificações
+                  - img [ref=e53]
+                - generic "Minha rede" [ref=e55]
+            - listitem [ref=e56]:
+              - link "Vagas" [ref=e57] [cursor=pointer]:
+                - /url: https://www.linkedin.com/jobs/?
+                - img [ref=e61]
+                - generic "Vagas" [ref=e63]
+            - listitem [ref=e64]:
+              - link "Mensagens" [ref=e65] [cursor=pointer]:
+                - /url: https://www.linkedin.com/messaging/?
+                - img [ref=e69]
+                - generic "Mensagens" [ref=e71]
+            - listitem [ref=e72]:
+              - link "10 novas notificações Notificações" [ref=e73] [cursor=pointer]:
+                - /url: https://www.linkedin.com/notifications/?
+                - generic [ref=e74]:
+                  - generic [ref=e75]:
+                    - generic [ref=e76]: "10"
+                    - generic [ref=e77]: 10 novas notificações
+                  - img [ref=e81]
+                - generic "Notificações" [ref=e83]
+            - listitem [ref=e84]:
+              - button "Fernando Xavier Eu" [ref=e86] [cursor=pointer]:
+                - img "Fernando Xavier" [ref=e87]
+                - generic [ref=e88]:
+                  - text: Eu
+                  - img [ref=e89]
+            - listitem [ref=e91]:
+              - button "Para negócios" [ref=e93] [cursor=pointer]:
+                - img [ref=e97]
+                - generic "Para negócios" [ref=e99]:
+                  - text: Para negócios
+                  - img [ref=e100]
+            - listitem [ref=e102]:
+              - link "Veicular anúncio" [ref=e103] [cursor=pointer]:
+                - /url: https://www.linkedin.com/campaignmanager/accounts?
+                - img [ref=e107]
+                - generic "Veicular anúncio" [ref=e110]
+    - generic [ref=e111]:
+      - generic [ref=e114]:
+        - main [ref=e115]:
+          - generic [ref=e118]:
+            - generic [ref=e122]:
+              - generic [ref=e123]:
+                - generic [ref=e124]:
+                  - link "Logo da empresa Cimento Nacional" [ref=e125] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/company/cimentonacional/life
+                    - img "Logo da empresa Cimento Nacional" [ref=e128]
+                  - link "Cimento Nacional" [ref=e269] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/company/cimentonacional/life
+                - generic [ref=e131]:
+                  - button "Compartilhar" [ref=e134] [cursor=pointer]:
+                    - img [ref=e135]
+                    - generic [ref=e137]: Compartilhar
+                  - button "Exibir mais opções" [ref=e139] [cursor=pointer]:
+                    - img [ref=e140]
+                    - generic [ref=e142]: Exibir mais opções
+              - heading "Plant Controller" [level=1] [ref=e145]
+              - generic [ref=e148]:
+                - generic [ref=e270]: Matozinhos, Minas Gerais, Brasil
+                - generic [ref=e271]: ·
+                - generic [ref=e273]: há 1 mês
+                - generic [ref=e274]: ·
+                - generic [ref=e275]: Mais de 100 pessoas clicaram em Candidatar-se
+                - paragraph [ref=e276]:
+                  - generic [ref=e277]: Respostas gerenciadas fora do LinkedIn
+              - generic [ref=e157]:
+                - button "Corresponde às suas preferências de vaga e o tipo de local de trabalho é Presencial." [ref=e278] [cursor=pointer]:
+                  - strong [ref=e281]:
+                    - img [ref=e283]
+                    - text: Presencial
+                  - generic [ref=e285]: Corresponde às suas preferências de vaga e o tipo de local de trabalho é Presencial.
+                - button "Corresponde às suas preferências de vaga e o tipo de vaga é Tempo integral." [ref=e286] [cursor=pointer]:
+                  - strong [ref=e289]:
+                    - img [ref=e291]
+                    - text: Tempo integral
+                  - generic [ref=e293]: Corresponde às suas preferências de vaga e o tipo de vaga é Tempo integral.
+              - generic [ref=e175]:
+                - link "Candidatar-se à vaga de Plant Controller no site da empresa" [ref=e178] [cursor=pointer]:
+                  - img [ref=e179]
+                  - generic [ref=e181]: Candidatar-se
+                - button "Salvar Plant Controller na Cimento Nacional" [ref=e294] [cursor=pointer]:
+                  - generic [ref=e295]: Salvar
+                  - generic [ref=e296]: Salvar Plant Controller na Cimento Nacional
+            - generic [ref=e185]:
+              - heading "Pessoas que você pode contatar" [level=2] [ref=e297]
+              - generic [ref=e300]:
+                - generic [ref=e301]:
+                  - generic [ref=e302]:
+                    - list [ref=e303]:
+                      - listitem [ref=e304]:
+                        - img "Logo de Fundação Getulio Vargas" [ref=e306]
+                    - generic [ref=e307]: Logo de Fundação Getulio Vargas
+                  - generic [ref=e308]: Ex-alunos da instituição de ensino Fundação Getulio Vargas
+                - button "Exibir todos" [ref=e309] [cursor=pointer]:
+                  - generic [ref=e310]: Exibir todos
+            - generic [ref=e194]:
+              - article [ref=e195]:
+                - generic [ref=e197]:
+                  - heading "Sobre a vaga" [level=2] [ref=e198]
+                  - paragraph [ref=e312]:
+                    - text: Na Cimento Nacional, temos o propósito de sustentar o desenvolvimento da sociedade. Nosso cimento é símbolo de solidez e compromisso com o futuro. Aqui, além de se desenvolver profissionalmente, você terá a chance de contribuir para a construção de um futuro próspero para a empresa e para a sociedade. Na Cimento Nacional
+                    - strong [ref=e314]: cuidamos das pessoas
+                    - text: ", promovemos"
+                    - strong [ref=e316]: respeito
+                    - text: e
+                    - strong [ref=e318]: abertura
+                    - text: ", e incentivamos a"
+                    - strong [ref=e320]: evolução contínua
+                    - text: ". Seja um dos #TalentosCN!"
+                    - strong [ref=e322]: Responsabilidades e atribuições
+                    - list [ref=e324]:
+                      - listitem [ref=e325]: Coordenar as atividades dos Analistas de Controle e Performance e Analista de Planejamento e Controle de Produção, realizando as avaliações anuais e realizando os feedbacks quando necessário;
+                      - listitem [ref=e326]: Coordenar o orçamento anual e o forecast da Fábrica, interagindo com as áreas, consolidando dados e analisando informações, a fim de equilibrar as necessidades da Unidade e as diretrizes e estratégias estabelecidas pela Empresa, garantindo a entrega final.
+                      - listitem [ref=e327]: Analisar o fechamento e análise mensal dos custos (fixos e variáveis) e dos indicadores chave de produção da Fábrica, revisando as variações entre orçado x realizado, a fim de identificar as causas e justificativas dos desvios, bem como, sugerir intervenções para a otimização dos custos e desempenho operacionais.
+                      - listitem [ref=e328]: Garantir que as informações do apontamento e do boletim de produção da Fábrica estejam de acordo com os dados lançados no sistema e com o quê foi produzido, a fim de atuar em suas interfaces com o sistema e custeio e gestão dos KPI´s da Fábrica.
+                      - listitem [ref=e329]: Avaliar e validar juntamente com o Gerente/Coordenador de Produção, o planejamento de produção, mensalmente, disponibilizando para a área área comercial o volume de produção, bem, como realizar alterações na programação, se necessário para atender as mudanças na demanda ou a disponibilidade de recursos
+                      - listitem [ref=e330]: "Elaborar análises para a equipe de gestão da Fábrica, fornecendo insights sobre o desempenho financeiro e a performance técnica, recomendando ações para otimizar a utilização de recursos e melhorar a eficiência operacional:"
+                      - listitem [ref=e331]: Realizar projeções e simulações de cenários, indicando aos gestores o impacto financeiro e de performance consequentes das alterações nos processos de fabricação e sugerindo alternativas mais viáveis e rentáveis para a Fábrica.
+                      - listitem [ref=e332]: "Participar diretamente das ações que possibilitem a efetiva gestão e controle dos custos da Unidade, avaliando variações e identificando oportunidades que permitam o desenvolvimento de ações e/ou projetos, visando a redução e viabilização dos recursos da Fábrica:"
+                      - listitem [ref=e333]: "Custo variável: simulações com base nas composições da farinha, matriz energética, cimentos, buscando redução de custos;"
+                      - listitem [ref=e334]: "Custo fixo: acompanhamento matricial dos pacotes de gastos junto aos líderes das áreas. Provocar e garantir integração com as áreas chave da planta (PCM, Manutenção, Meio Ambiente, Produção, Segurança, etc) garantindo o controle dos custos fixos e correta gestão para evitar gastos desnecessários."
+                      - listitem [ref=e335]: Identificar oportunidades de redução de custos e melhoria no desempenho operacional, propondo ações e boas práticas, a fim de otimizar a eficiência da Fábrica.
+                      - listitem [ref=e336]: Consolidar as informações financeiras e de produção, por meio da apresentação de demonstrativos e análises críticas dos resultados da Fábrica, visando subsidiar os gestores de informações relevantes para suportar à tomada de decisão.
+                      - listitem [ref=e337]: Participar das reuniões diárias da operação com o objetivo de interação com os principais acontecimentos e desafios da unidade, visto que os indicadores de performance e os custos são consequência do que acontece na unidade.
+                      - listitem [ref=e338]: Acompanhar o planejamento das paradas de fornos e moinhos, provocando fóruns de acompanhamento dos custos com as lideranças de manutenção e produção, visando o correto controle do orçado vs realizado.
+                      - listitem [ref=e339]: Acompanhar os principais investimentos (CAPEX) da planta junto ao ponto focal de Projetos/Engenharia da unidade, e junto ao corporativo na avaliação do spending.
+                      - listitem [ref=e340]: Garantir a acuracidade da informação dos níveis de itens de almoxarifado, estoques de matérias-primas/combustíveis e produtos acabados, identificando as causas de desvio e elaborando planos de ação de correção, visando assegurar a correta apuração das diferenças do inventário cíclico e a confiabilidade contábil dos estoques.
+                      - listitem [ref=e341]: Acompanhar o volume de estoques da unidade e buscar sinergias e reduções, visando o fluxo de caixa, além de acompanhar as entradas de insumos na unidade e alinhar com a equipe de Planejamento Integrado em caso de divergências de quantidade, valor ou qualidade dos insumos.
+                      - listitem [ref=e342]: Acompanhar e apontar diferenças que existirem entre peso nota e peso balança de entrada dos insumos e combustíveis.
+                      - listitem [ref=e343]: Identificar riscos que possam afetar o desempenho financeiro e operacional da Fábrica, desenvolvendo estratégias para mitigar esses riscos e garantir a sustentabilidade do negócio.
+                      - listitem [ref=e344]: Liderar as reuniões de resultados do GPD - Gerenciamento pelas Diretrizes com a equipe da Fábrica, apresentando os resultados financeiros e de produção, bem como acompanhando a execução dos planos de ação.
+                      - listitem [ref=e345]: Desenvolver conteúdos e realizar apresentações corporativas com informações referentes à performance técnica e financeira da Fábrica.
+                      - listitem [ref=e346]: Assegurar a conformidade da Fábrica com as regulamentações financeiras, contábeis e fiscais aplicáveis.
+                    - strong [ref=e348]: Requisitos e qualificações
+                    - strong [ref=e350]: "Buscamos uma pessoa com:"
+                    - list [ref=e352]:
+                      - listitem [ref=e353]: Ensino Superior Completo em Engenharia, Administração, Ciências Contábeis, Economia ou áreas afins;
+                      - listitem [ref=e354]: Atuação com indicadores de performance;
+                      - listitem [ref=e355]: Conhecimento em custos e orçamento.
+                      - listitem [ref=e356]: Excel e Power Point - Avançado
+                    - strong [ref=e358]: "Local e Jornada de Trabalho:"
+                    - list [ref=e360]:
+                      - listitem [ref=e361]: Fábrica de Matozinhos/MG (Presencial)
+                    - strong [ref=e363]: Informações adicionais
+                    - strong [ref=e365]: FAÇA PARTE DO NOSSO TIME
+                    - text: Convidamos você a fazer parte do time de talentos CN e se juntar a nós na jornada contínua pela excelência operacional, responsabilidade socioambiental e desenvolvimento sustentável.
+                    - text: Aqui, além de ter a oportunidade de crescer profissionalmente, você também poderá contribuir para a construção de um futuro mais próspero para nossa empresa e para toda a sociedade.
+                    - text: "E para os nossos colaboradores oferecemos:"
+                    - list [ref=e367]:
+                      - listitem [ref=e368]: Plano de Saúde e Odontológico, extensivo aos dependentes legais;
+                      - listitem [ref=e369]: Vale Alimentação/Refeição ou Refeitório no local;
+                      - listitem [ref=e370]: Seguro de vida em grupo;
+                      - listitem [ref=e371]: Previdência Privada;
+                      - listitem [ref=e372]: Vale Transporte e/ou Fretado (unidades fabris);
+                      - listitem [ref=e373]: Plano de Participação nos Resultados (PPR), mediante atingimento de metas anuais;
+                      - listitem [ref=e374]: Wellhub - Plano de academias e estúdios para atividade física;
+                      - listitem [ref=e375]: Auxílio Farmácia (para medicamentos com receituário médico dentro do roll);
+                      - listitem [ref=e376]: Galena - Benefício educacional com descontos exclusivos em diversas instituições parceiras;
+                      - listitem [ref=e377]: Programa de Apoio ao Empregado (PAE) – Serviço de consultoria com Psicólogos, Advogados e Assistentes Sociais, auxiliar os colaboradores a encontrarem soluções para questões de âmbito pessoais e/ou profissionais;
+                      - listitem [ref=e378]: Assistência Funeral.
+              - button "Clicar para ver mais detalhes" [ref=e200] [cursor=pointer]:
+                - img [ref=e201]
+                - generic [ref=e203]: Ver mais
+            - generic [ref=e205]:
+              - generic [ref=e206]:
+                - heading "Configurar alerta para vagas semelhantes" [level=2] [ref=e207]
+                - generic [ref=e209]: Controlador de fábrica, Matozinhos, Minas Gerais, Brasil
+              - generic [ref=e211] [cursor=pointer]:
+                - generic [ref=e212]: Desativada
+                - generic [ref=e213]: Configurar alerta
+                - switch "Configurar alerta"
+            - generic [ref=e379]:
+              - button "Fechar cartão promocional de serviços" [ref=e380] [cursor=pointer]:
+                - img [ref=e381]
+                - generic [ref=e383]: Fechar cartão promocional de serviços
+              - generic [ref=e385]:
+                - heading "Veja uma seleção de ferramentas de IA para sua pesquisa de vagas" [level=2] [ref=e386]
+                - paragraph [ref=e387]: Receba uma oferta de emprego mais rápido com a ajuda de ferramentas de IA criadas por empresas certificadas, como Kickresume, Exponent Interview Prep e muito mais.
+                - link "Começar" [ref=e388] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/ai-tools/?sectionType=career-coaching
+                  - generic [ref=e389]: Começar
+            - generic [ref=e391]:
+              - generic [ref=e392]:
+                - img "Premium" [ref=e394]:
+                  - img [ref=e395]
+                - button "Saiba mais sobre estatísticas sobre candidatos" [ref=e398] [cursor=pointer]:
+                  - img [ref=e399]
+              - heading "Veja como sua candidatura se compara à de outras pessoas" [level=2] [ref=e401]
+              - generic [ref=e403]:
+                - heading "Pessoas que clicaram em Candidate-se" [level=3] [ref=e404]
+                - list [ref=e405]:
+                  - listitem [ref=e406]:
+                    - generic [ref=e407]: "239"
+                    - generic [ref=e408]: no total
+                  - listitem [ref=e409]:
+                    - generic [ref=e410]: "3"
+                    - generic [ref=e411]: no último dia
+              - generic [ref=e412]:
+                - generic [ref=e413]:
+                  - heading "Nível de experiência do candidato" [level=3] [ref=e414]
+                  - list [ref=e415]:
+                    - listitem [ref=e416]:
+                      - paragraph [ref=e417]: 49% de candidatos com nível Sênior
+                      - progressbar [ref=e418]
+                    - listitem [ref=e419]:
+                      - paragraph [ref=e420]: 28% de candidatos com nível Iniciante
+                      - progressbar [ref=e421]
+                    - listitem [ref=e422]:
+                      - paragraph [ref=e423]: 11% de candidatos com nível Gerente
+                      - progressbar [ref=e424]
+                    - listitem [ref=e425]:
+                      - paragraph [ref=e426]: 8% de candidatos com nível Diretor
+                      - progressbar [ref=e427]
+                - generic [ref=e428]:
+                  - heading "Nível de formação acadêmica do candidato" [level=3] [ref=e429]
+                  - list [ref=e430]:
+                    - listitem [ref=e431]:
+                      - generic [ref=e432]: 53%
+                      - generic [ref=e433]: tem Pós-graduação Lato Sensu - MBA (semelhante ao seu)
+                    - listitem [ref=e434]:
+                      - generic [ref=e435]: 16%
+                      - generic [ref=e436]: tem Pós-graduação
+                    - listitem [ref=e437]:
+                      - generic [ref=e438]: 9%
+                      - generic [ref=e439]: tem Bacharelado
+                    - listitem [ref=e440]:
+                      - generic [ref=e441]: 22%
+                      - generic [ref=e442]: tem outros diplomas
+            - generic [ref=e444]:
+              - generic [ref=e445]:
+                - heading "Sobre a empresa" [level=2] [ref=e446]
+                - generic [ref=e447]:
+                  - generic [ref=e448]:
+                    - link "Logo da empresa Cimento Nacional" [ref=e450] [cursor=pointer]:
+                      - /url: /company/cimentonacional/life/
+                      - img "Logo da empresa Cimento Nacional" [ref=e451]
+                    - generic [ref=e452]:
+                      - link "Cimento Nacional" [ref=e454] [cursor=pointer]:
+                        - /url: /company/cimentonacional/life/
+                      - generic [ref=e455]: 75.012 seguidores
+                  - button "Seguir" [ref=e456] [cursor=pointer]:
+                    - img [ref=e457]
+                    - generic [ref=e459]: Seguir
+                - generic [ref=e460]:
+                  - text: Construção
+                  - generic [ref=e461]: • 1.001-5.000 funcionários
+                  - generic [ref=e462]: • 1.125 no LinkedIn
+                - paragraph [ref=e463]:
+                  - generic [ref=e464]:
+                    - text: A Cimento Nacional é a quarta maior cimenteira do Brasil e tem um propósito muito maior que produzir o cimento, queremos sustentar o desenvolvimento da sociedade.
+                    - text: Transformamos matéria-prima em cimento e trabalho em progresso, levamos ao mercado um produto de qualidade superior a partir de nossas unidades localizadas em Arcos/MG, Cantagalo/RJ, Matozinhos/MG, Santa Luzia/MG, Sete Lagoas/MG e Pitimbu/PB.
+                    - text: A nossa visão é ser uma empresa sólida e relevante no mercado de cimento do Brasil e acreditamos que o nosso desenvolvimento depende das relações de confiança que construímos.
+                    - text: Praticamos o respeito e investimos nas pessoas, pois acreditamos que elas são a mola propulsora do nosso desenvolvimento.
+                    - text: Venha fazer parte do time da Cimento Nacional. Aqui, todos são bem-vindos!
+                    - generic [ref=e465]:
+                      - generic [ref=e466]: …
+                      - button "exibir mais" [ref=e467] [cursor=pointer]
+              - link "Exibir mais sobre a empresa" [ref=e469] [cursor=pointer]:
+                - /url: /company/cimentonacional/life/
+                - text: Exibir mais
+        - complementary [ref=e229]:
+          - generic [ref=e230]:
+            - generic [ref=e470]:
+              - img "Premium" [ref=e472]:
+                - img [ref=e473]
+              - heading "Adquira competências com esses cursos para conseguir um novo emprego" [level=2] [ref=e475]
+              - listitem [ref=e476]:
+                - 'link "Java: Formação Básica" [ref=e477] [cursor=pointer]':
+                  - /url: https://www.linkedin.com/learning/java-formacao-basica-23718889?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_5904100_learning
+                  - 'img "Java: Formação Básica" [ref=e480]'
+                  - img [ref=e482]
+                - generic [ref=e484]:
+                  - 'link "Java: Formação Básica" [ref=e485] [cursor=pointer]':
+                    - /url: https://www.linkedin.com/learning/java-formacao-basica-23718889?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_5904100_learning
+                    - generic [ref=e486]: "Java: Formação Básica"
+                  - generic [ref=e488]: 5.336 visualizações
+              - listitem [ref=e489]:
+                - 'link "Excel: Como Gerir suas Finanças Pessoais" [ref=e490] [cursor=pointer]':
+                  - /url: https://www.linkedin.com/learning/excel-como-gerir-suas-financas-pessoais?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_2127077_learning
+                  - 'img "Excel: Como Gerir suas Finanças Pessoais" [ref=e493]'
+                  - img [ref=e495]
+                - generic [ref=e497]:
+                  - 'link "Excel: Como Gerir suas Finanças Pessoais" [ref=e498] [cursor=pointer]':
+                    - /url: https://www.linkedin.com/learning/excel-como-gerir-suas-financas-pessoais?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_2127077_learning
+                    - generic [ref=e499]: "Excel: Como Gerir suas Finanças Pessoais"
+                  - generic [ref=e501]: 26.315 visualizações
+              - listitem [ref=e502]:
+                - link "Fundamentos de Finanças" [ref=e503] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/learning/fundamentos-de-financas?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_2928580_learning
+                  - img "Fundamentos de Finanças" [ref=e506]
+                  - img [ref=e508]
+                - generic [ref=e510]:
+                  - link "Fundamentos de Finanças" [ref=e511] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/learning/fundamentos-de-financas?isLearningSubscriber=true&trk=jobs_d_flagship3_job_details_j020%3Aa001_2928580_learning
+                    - generic [ref=e512]: Fundamentos de Finanças
+                  - generic [ref=e514]: 44.076 visualizações
+              - link "Exibir mais no LinkedIn Learning" [ref=e516] [cursor=pointer]:
+                - /url: /learning?trk=jobdetails_learning_awareness
+            - generic [ref=e517]:
+              - paragraph [ref=e518]: Procurando um talento?
+              - link "Anunciar vaga" [ref=e519] [cursor=pointer]:
+                - /url: https://www.linkedin.com/talent/job-posting-redirect?trk=flagship3_job_detail
+      - contentinfo [ref=e232]:
+        - generic [ref=e520]:
+          - generic [ref=e521]:
+            - navigation [ref=e522]:
+              - list [ref=e523]:
+                - listitem [ref=e524]:
+                  - link "Sobre" [ref=e525] [cursor=pointer]:
+                    - /url: https://about.linkedin.com/pt-br
+                - listitem [ref=e526]:
+                  - link "Acessibilidade" [ref=e527] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/accessibility
+                - listitem [ref=e528]:
+                  - link "Soluções de Talentos" [ref=e529] [cursor=pointer]:
+                    - /url: https://business.linkedin.com/pt-br/talent-solutions?trk=flagship_nav&veh=li-footer-lts-control-pt-br&src=li-footer
+                - listitem [ref=e530]:
+                  - link "Políticas para Comunidades Profissionais" [ref=e531] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/legal/professional-community-policies
+                - listitem [ref=e532]:
+                  - link "Carreiras" [ref=e533] [cursor=pointer]:
+                    - /url: https://careers.linkedin.com/
+                - listitem [ref=e534]:
+                  - link "Soluções de Marketing" [ref=e535] [cursor=pointer]:
+                    - /url: https://business.linkedin.com/pt-br/marketing-solutions?trk=n_nav_lms_f&src=li-footer
+                - listitem [ref=e536]:
+                  - button "Termos e Privacidade" [ref=e538] [cursor=pointer]:
+                    - generic [ref=e540]:
+                      - text: Termos e Privacidade
+                      - img [ref=e541]
+                - listitem [ref=e543]:
+                  - link "Preferências de anúncios" [ref=e544] [cursor=pointer]:
+                    - /url: https://www.linkedin.com/help/linkedin/answer/62931?lang=pt
+                - listitem [ref=e545]:
+                  - link "Publicidade" [ref=e546] [cursor=pointer]:
+                    - /url: https://business.linkedin.com/pt-br/marketing-solutions/ads?trk=n_nav_ads_f
+                - listitem [ref=e547]:
+                  - link "Soluções de Vendas" [ref=e548] [cursor=pointer]:
+                    - /url: https://business.linkedin.com/pt-br/sales-solutions?trk=flagship_nav&veh=li-footer-lss-control-pt-br&src=li-footer
+                - listitem [ref=e549]:
+                  - link "Para celular" [ref=e550] [cursor=pointer]:
+                    - /url: https://mobile.linkedin.com/pt-br
+                - listitem [ref=e551]:
+                  - link "Pequenas empresas" [ref=e552] [cursor=pointer]:
+                    - /url: https://smallbusiness.linkedin.com?&src=li-footer
+                - listitem [ref=e553]:
+                  - link "Central de Segurança" [ref=e554] [cursor=pointer]:
+                    - /url: https://safety.linkedin.com
+            - generic [ref=e556]:
+              - list [ref=e557]:
+                - listitem [ref=e558]:
+                  - img [ref=e559]
+                  - generic [ref=e561]:
+                    - link "Dúvidas? Acesse a nossa Central de Ajuda." [ref=e562] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/help/linkedin?trk=d_flagship3_job_details
+                      - text: Dúvidas?
+                    - paragraph [ref=e563]: Acesse a nossa Central de Ajuda.
+                - listitem [ref=e564]:
+                  - img [ref=e565]
+                  - generic [ref=e567]:
+                    - link "Gerencie sua conta e privacidade Acesse suas Configurações." [ref=e568] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/psettings/
+                      - text: Gerencie sua conta e privacidade
+                    - paragraph [ref=e569]: Acesse suas Configurações.
+                - listitem [ref=e570]:
+                  - img [ref=e571]
+                  - generic [ref=e573]:
+                    - link "Visibilidade da recomendação Saiba mais sobre os conteúdos recomendados." [ref=e574] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/help/linkedin/answer/a1339724
+                      - text: Visibilidade da recomendação
+                    - paragraph [ref=e575]: Saiba mais sobre os conteúdos recomendados.
+              - generic [ref=e576]:
+                - generic [ref=e577]: Selecionar idioma
+                - combobox "Selecionar idioma" [ref=e578]:
+                  - option "العربية (Árabe)"
+                  - option "বাংলা (Bengali)"
+                  - option "Čeština (Tcheco)"
+                  - option "Dansk (Dinamarquês)"
+                  - option "Deutsch (Alemão)"
+                  - option "Ελληνικά (Grego)"
+                  - option "English (Inglês)"
+                  - option "Español (Espanhol)"
+                  - option "فارسی (Persa)"
+                  - option "Suomi (Finlandês)"
+                  - option "Français (Francês)"
+                  - option "हिंदी (Hindi)"
+                  - option "Magyar (Húngaro)"
+                  - option "Bahasa Indonésia (Indonésio)"
+                  - option "Italiano (Italiano)"
+                  - option "עברית (Hebraico)"
+                  - option "日本語 (Japonês)"
+                  - option "한국어 (Coreano)"
+                  - option "मराठी (Marati)"
+                  - option "Bahasa Malaysia (Malaio)"
+                  - option "Nederlands (Holandês)"
+                  - option "Norsk (Norueguês)"
+                  - option "ਪੰਜਾਬੀ (Punjabi)"
+                  - option "Polski (Polonês)"
+                  - option "Português (Português)" [selected]
+                  - option "Română (Romeno)"
+                  - option "Русский (Russo)"
+                  - option "Svenska (Sueco)"
+                  - option "తెలుగు (Telugu)"
+                  - option "ภาษาไทย (Tailandês)"
+                  - option "Tagalog (Tagalog)"
+                  - option "Türkçe (Turco)"
+                  - option "Українська (Ucraniano)"
+                  - option "Tiếng Việt (Vietnamita)"
+                  - option "简体中文 (Chinês (Simplificado))"
+                  - option "正體中文 (Chinês (Tradicional))"
+          - paragraph [ref=e579]: LinkedIn Corporation © 2026
+    - generic:
+      - generic:
+        - complementary:
+          - generic [ref=e235]:
+            - generic [ref=e237] [cursor=pointer]:
+              - img "Fernando Xavier" [ref=e239]
+              - button "Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas." [ref=e240]:
+                - generic [ref=e241]:
+                  - generic [ref=e242]: Mensagens
+                  - generic [ref=e243]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+            - generic [ref=e244]:
+              - button "Abrir o menu suspenso de mensagens" [ref=e246] [cursor=pointer]:
+                - img "Abrir o menu suspenso de mensagens" [ref=e247]
+              - button "Escrever mensagem" [ref=e249] [cursor=pointer]:
+                - img [ref=e250]
+                - generic [ref=e251]: Escrever mensagem
+              - button "Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas." [ref=e252] [cursor=pointer]:
+                - img [ref=e253]
+                - generic [ref=e254]: Você está no módulo de mensagens. Pressione Enter para abrir a lista de conversas.
+        - complementary "Assistente de IA para obter ajuda com sua carreira, vagas, etc."
