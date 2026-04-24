@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Career Ops</title>
+  <style>
+    :root {
+      --cyan:         hsl(187, 74%, 32%);
+      --cyan-bg:      hsl(187, 40%, 95%);
+      --cyan-border:  hsl(187, 40%, 85%);
+      --purple:       hsl(270, 70%, 45%);
+      --purple-bg:    hsl(270, 40%, 96%);
+      --bg:           #f5f7fa;
+      --surface:      #ffffff;
+      --border:       #e5e7eb;
+      --text:         #111827;
+      --muted:        #6b7280;
+      --radius:       8px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+
+    .logo {
+      font-size: 18px;
+      font-weight: 800;
+      background: linear-gradient(to right, var(--cyan), var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.02em;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .header-divider { width: 1px; height: 24px; background: var(--border); }
+
+    .header-stats {
+      display: flex;
+      gap: 20px;
+      font-size: 12px;
+      color: var(--muted);
+      flex-wrap: wrap;
+    }
+
+    .header-stat strong { color: var(--text); font-weight: 600; }
+
+    .header-actions { margin-left: auto; display: flex; gap: 8px; }
+
+    /* ── BUTTONS ── */
+    .btn {
+      padding: 6px 14px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .btn:hover { background: var(--bg); border-color: #d1d5db; }
+    .btn-primary { background: var(--cyan); border-color: var(--cyan); color: #fff; }
+    .btn-primary:hover { opacity: 0.88; background: var(--cyan); }
+
+    /* ── MAIN ── */
+    .main { max-width: 1400px; margin: 0 auto; padding: 24px; }
+
+    /* ── STATS CARDS ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      transition: box-shadow 0.15s;
+    }
+    .stat-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
+
+    .stat-value { font-size: 30px; font-weight: 800; line-height: 1; margin-bottom: 4px; }
+    .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 500; }
+
+    .stat-card.c-cyan   .stat-value { color: var(--cyan); }
+    .stat-card.c-purple .stat-value { color: var(--purple); }
+    .stat-card.c-green  .stat-value { color: #10b981; }
+    .stat-card.c-amber  .stat-value { color: #d97706; }
+    .stat-card.c-red    .stat-value { color: #ef4444; }
+
+    /* ── TOOLBAR ── */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .filter-pill {
+      padding: 5px 13px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .filter-pill:hover { border-color: var(--cyan); color: var(--cyan); }
+    .filter-pill.active { background: var(--cyan); border-color: var(--cyan); color: #fff; }
+
+    .count-badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.25);
+      border-radius: 10px;
+      padding: 0 5px;
+      font-size: 10px;
+      margin-left: 4px;
+      font-weight: 600;
+    }
+    .filter-pill:not(.active) .count-badge { background: var(--bg); color: var(--muted); }
+
+    .search-box {
+      margin-left: auto;
+      padding: 7px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 13px;
+      width: 220px;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .search-box:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 0 3px hsl(187,74%,32%,0.12);
+    }
+
+    /* ── TABLE ── */
+    .table-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    table { width: 100%; border-collapse: collapse; }
+
+    thead th {
+      padding: 10px 14px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+      background: #fafafa;
+      white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+    }
+    thead th:hover { color: var(--cyan); }
+    thead th.sorted { color: var(--cyan); }
+    thead th .sort-icon { opacity: 0.5; margin-left: 3px; }
+    thead th.sorted .sort-icon { opacity: 1; }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.1s;
+      cursor: pointer;
+    }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: #f8fafc; }
+
+    td { padding: 12px 14px; vertical-align: middle; }
+
+    .td-num { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+    .td-company { font-weight: 600; color: var(--purple); font-size: 13.5px; }
+    .td-role { font-size: 12px; color: var(--muted); margin-top: 1px; }
+    .td-date { color: var(--muted); font-size: 12px; white-space: nowrap; }
+    .td-notes {
+      color: var(--muted); font-size: 12px;
+      max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+
+    /* ── SCORE ── */
+    .score-wrap { display: flex; align-items: center; gap: 8px; }
+    .score-num { font-size: 13px; font-weight: 700; min-width: 28px; }
+    .score-bar { width: 44px; height: 5px; background: #e5e7eb; border-radius: 3px; overflow: hidden; }
+    .score-fill { height: 100%; border-radius: 3px; transition: width 0.4s; }
+
+    /* ── STATUS BADGE ── */
+    .badge {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+      border: 1px solid transparent;
+    }
+
+    /* ── PDF ── */
+    .pdf-yes { font-size: 15px; }
+    .pdf-no  { color: #d1d5db; font-size: 13px; }
+
+    /* ── EMPTY / LOADING ── */
+    .state-box {
+      text-align: center;
+      padding: 64px 24px;
+      color: var(--muted);
+    }
+    .state-box .state-icon { font-size: 40px; margin-bottom: 12px; }
+    .state-box h3 { font-size: 16px; color: var(--text); margin-bottom: 6px; }
+    .state-box p { font-size: 13px; }
+
+    /* ── DRAWER ── */
+    .overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.25);
+      z-index: 200;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .overlay.open { opacity: 1; pointer-events: all; }
+
+    .drawer {
+      position: fixed;
+      top: 0; right: 0;
+      width: min(760px, 92vw);
+      height: 100vh;
+      background: var(--surface);
+      z-index: 201;
+      transform: translateX(100%);
+      transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
+      display: flex; flex-direction: column;
+      box-shadow: -4px 0 24px rgba(0,0,0,0.1);
+    }
+    .drawer.open { transform: translateX(0); }
+
+    .drawer-header {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+      flex-shrink: 0;
+      background: #fafafa;
+    }
+    .drawer-meta { flex: 1; overflow: hidden; }
+    .drawer-title {
+      font-size: 15px; font-weight: 700;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      color: var(--text);
+    }
+    .drawer-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+    .drawer-body { flex: 1; overflow-y: auto; padding: 28px 28px; }
+
+    /* ── MARKDOWN ── */
+    .md h1 { font-size: 20px; font-weight: 700; margin-bottom: 6px; color: var(--text); }
+    .md h2 {
+      font-size: 12px; font-weight: 700; color: var(--cyan);
+      text-transform: uppercase; letter-spacing: 0.06em;
+      border-bottom: 1.5px solid var(--border);
+      padding-bottom: 5px; margin: 22px 0 10px;
+    }
+    .md h3 { font-size: 13px; font-weight: 600; color: var(--purple); margin: 14px 0 6px; }
+    .md p  { font-size: 13px; line-height: 1.7; color: #374151; margin-bottom: 10px; }
+    .md strong { font-weight: 600; color: var(--text); }
+    .md ul, .md ol { padding-left: 20px; margin-bottom: 10px; }
+    .md li { font-size: 13px; line-height: 1.65; color: #374151; margin-bottom: 4px; }
+    .md table { width: 100%; border-collapse: collapse; margin-bottom: 14px; font-size: 12px; }
+    .md th { background: #f9fafb; padding: 7px 10px; font-weight: 600; font-size: 11px; border: 1px solid var(--border); text-align: left; }
+    .md td { padding: 7px 10px; border: 1px solid var(--border); color: #374151; vertical-align: top; }
+    .md code {
+      background: var(--cyan-bg); color: hsl(187,74%,24%);
+      padding: 1px 5px; border-radius: 3px; font-size: 11.5px;
+      font-family: 'Cascadia Code', 'Fira Mono', monospace;
+    }
+    .md pre { background: #f3f4f6; padding: 14px; border-radius: 6px; overflow-x: auto; margin-bottom: 12px; }
+    .md pre code { background: none; padding: 0; color: inherit; }
+    .md hr { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
+    .md blockquote { border-left: 3px solid var(--cyan); padding-left: 14px; color: var(--muted); margin-bottom: 10px; font-style: italic; }
+    .md a { color: var(--cyan); text-decoration: none; }
+    .md a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="logo">Career Ops</div>
+  <div class="header-divider"></div>
+  <div class="header-stats" id="header-stats">
+    <span class="header-stat" style="color:var(--muted)">Loading...</span>
+  </div>
+  <div class="header-actions">
+    <button class="btn" onclick="loadData()">&#8635; Refresh</button>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- STATS -->
+  <div class="stats-grid" id="stats-grid"></div>
+
+  <!-- TOOLBAR -->
+  <div class="toolbar" id="toolbar">
+    <button class="filter-pill active" data-status="all" onclick="setFilter('all',this)">
+      All <span class="count-badge" id="cnt-all">0</span>
+    </button>
+    <button class="filter-pill" data-status="Evaluated" onclick="setFilter('Evaluated',this)">
+      Evaluated <span class="count-badge" id="cnt-Evaluated">0</span>
+    </button>
+    <button class="filter-pill" data-status="Applied" onclick="setFilter('Applied',this)">
+      Applied <span class="count-badge" id="cnt-Applied">0</span>
+    </button>
+    <button class="filter-pill" data-status="Interview" onclick="setFilter('Interview',this)">
+      Interview <span class="count-badge" id="cnt-Interview">0</span>
+    </button>
+    <button class="filter-pill" data-status="Offer" onclick="setFilter('Offer',this)">
+      Offer <span class="count-badge" id="cnt-Offer">0</span>
+    </button>
+    <button class="filter-pill" data-status="Rejected" onclick="setFilter('Rejected',this)">
+      Rejected <span class="count-badge" id="cnt-Rejected">0</span>
+    </button>
+    <button class="filter-pill" data-status="Discarded" onclick="setFilter('Discarded',this)">
+      Discarded <span class="count-badge" id="cnt-Discarded">0</span>
+    </button>
+    <input class="search-box" type="search" placeholder="&#128269; Search company or role..."
+           oninput="onSearch(this.value)" id="search-box">
+  </div>
+
+  <!-- TABLE -->
+  <div class="table-wrap">
+    <div id="table-area">
+      <div class="state-box"><div class="state-icon">&#8987;</div><h3>Loading...</h3></div>
+    </div>
+  </div>
+
+</main>
+
+<!-- OVERLAY + DRAWER -->
+<div class="overlay" id="overlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-header">
+    <div class="drawer-meta">
+      <div class="drawer-title" id="drawer-title">Report</div>
+      <div class="drawer-sub" id="drawer-sub"></div>
+    </div>
+    <button class="btn btn-primary" id="pdf-btn" style="display:none" onclick="openPdf()">&#128196; PDF</button>
+    <button class="btn" onclick="closeDrawer()">&#10005;</button>
+  </div>
+  <div class="drawer-body">
+    <div class="md" id="drawer-md"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
+<script>
+  // ── State ──────────────────────────────────────────────────────────────────
+  let allApps = [];
+  let activeFilter = 'all';
+  let searchQuery  = '';
+  let sortKey = 'date';
+  let sortAsc = false;
+  let currentPdf  = null;
+
+  // ── Colors ─────────────────────────────────────────────────────────────────
+  const STATUS_STYLE = {
+    Evaluated: { bg:'#eff6ff', color:'#1d4ed8', border:'#bfdbfe' },
+    Applied:   { bg:'#f5f3ff', color:'#6d28d9', border:'#ddd6fe' },
+    Responded: { bg:'#ecfeff', color:'#0e7490', border:'#a5f3fc' },
+    Interview: { bg:'#fffbeb', color:'#92400e', border:'#fde68a' },
+    Offer:     { bg:'#ecfdf5', color:'#065f46', border:'#a7f3d0' },
+    Rejected:  { bg:'#fef2f2', color:'#991b1b', border:'#fecaca' },
+    Discarded: { bg:'#f9fafb', color:'#6b7280', border:'#e5e7eb' },
+    SKIP:      { bg:'#f9fafb', color:'#6b7280', border:'#e5e7eb' },
+  };
+
+  function scoreColor(n) {
+    if (n >= 4.5) return '#10b981';
+    if (n >= 4.0) return '#14b8a6';
+    if (n >= 3.5) return '#d97706';
+    return '#ef4444';
+  }
+
+  // ── Load ───────────────────────────────────────────────────────────────────
+  async function loadData() {
+    try {
+      const r = await fetch('/api/applications');
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      allApps = await r.json();
+      renderStats();
+      renderCounts();
+      renderTable();
+    } catch (e) {
+      document.getElementById('table-area').innerHTML = `
+        <div class="state-box">
+          <div class="state-icon">&#9888;</div>
+          <h3>Could not load data</h3>
+          <p>${e.message}</p>
+        </div>`;
+    }
+  }
+
+  // ── Stats ──────────────────────────────────────────────────────────────────
+  function renderStats() {
+    const counts = {};
+    let scoreSum = 0, scoreCnt = 0;
+    for (const a of allApps) {
+      const s = a.status || 'Unknown';
+      counts[s] = (counts[s] || 0) + 1;
+      if (a.scoreNum > 0) { scoreSum += a.scoreNum; scoreCnt++; }
+    }
+    const avg = scoreCnt ? (scoreSum / scoreCnt).toFixed(1) : '—';
+
+    document.getElementById('header-stats').innerHTML = `
+      <span class="header-stat"><strong>${allApps.length}</strong> total</span>
+      <span class="header-stat"><strong>${counts.Applied||0}</strong> applied</span>
+      <span class="header-stat"><strong>${counts.Interview||0}</strong> interviews</span>
+      <span class="header-stat"><strong>${counts.Offer||0}</strong> offers</span>
+      <span class="header-stat"><strong>${avg}</strong> avg score</span>
+    `;
+
+    document.getElementById('stats-grid').innerHTML = [
+      { label:'Total',     value: allApps.length,        cls:'c-cyan' },
+      { label:'Evaluated', value: counts.Evaluated||0,   cls:'' },
+      { label:'Applied',   value: counts.Applied||0,     cls:'c-purple' },
+      { label:'Interview', value: counts.Interview||0,   cls:'c-amber' },
+      { label:'Offer',     value: counts.Offer||0,       cls:'c-green' },
+      { label:'Rejected',  value: counts.Rejected||0,    cls:'c-red' },
+      { label:'Avg Score', value: avg,                   cls:'c-cyan' },
+    ].map(c => `
+      <div class="stat-card ${c.cls}">
+        <div class="stat-value">${c.value}</div>
+        <div class="stat-label">${c.label}</div>
+      </div>`).join('');
+  }
+
+  function renderCounts() {
+    const counts = { all: allApps.length };
+    for (const a of allApps) {
+      const s = a.status || 'Unknown';
+      counts[s] = (counts[s] || 0) + 1;
+    }
+    for (const [k, v] of Object.entries(counts)) {
+      const el = document.getElementById(`cnt-${k}`);
+      if (el) el.textContent = v;
+    }
+  }
+
+  // ── Table ──────────────────────────────────────────────────────────────────
+  function getFiltered() {
+    let list = [...allApps];
+    if (activeFilter !== 'all') list = list.filter(a => a.status === activeFilter);
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter(a =>
+        (a.company||'').toLowerCase().includes(q) ||
+        (a.role||'').toLowerCase().includes(q) ||
+        (a.notes||'').toLowerCase().includes(q)
+      );
+    }
+    list.sort((a, b) => {
+      let va, vb;
+      if (sortKey === 'score')   { va = a.scoreNum; vb = b.scoreNum; }
+      else if (sortKey === 'date') { va = a.date||''; vb = b.date||''; }
+      else if (sortKey === 'company') { va = a.company||''; vb = b.company||''; }
+      else { va = a['#']||''; vb = b['#']||''; }
+      if (va < vb) return sortAsc ? -1 : 1;
+      if (va > vb) return sortAsc ?  1 : -1;
+      return 0;
+    });
+    return list;
+  }
+
+  function renderTable() {
+    const list = getFiltered();
+    const area = document.getElementById('table-area');
+
+    if (list.length === 0) {
+      area.innerHTML = `
+        <div class="state-box">
+          <div class="state-icon">&#128269;</div>
+          <h3>No applications found</h3>
+          <p>Try a different filter or paste a job URL in Claude Code.</p>
+        </div>`;
+      return;
+    }
+
+    function thSort(key, label) {
+      const icon = sortKey === key ? (sortAsc ? '&#9650;' : '&#9660;') : '&#8661;';
+      return `<th class="${sortKey===key?'sorted':''}" onclick="sortBy('${key}')">
+        ${label} <span class="sort-icon">${icon}</span>
+      </th>`;
+    }
+
+    const rows = list.map(a => {
+      const sc  = scoreColor(a.scoreNum);
+      const pct = Math.min((a.scoreNum / 5) * 100, 100);
+      const st  = STATUS_STYLE[a.status] || STATUS_STYLE.Discarded;
+      const idx = encodeURIComponent(a.reportPath);
+
+      return `<tr onclick="openReport(${JSON.stringify(a)})">
+        <td class="td-num">${h(a['#']||'')}</td>
+        <td>
+          <div class="td-company">${h(a.company||'')}</div>
+          <div class="td-role">${h(a.role||'')}</div>
+        </td>
+        <td>
+          <div class="score-wrap">
+            <span class="score-num" style="color:${sc}">${a.scoreNum>0?a.scoreNum.toFixed(1):'—'}</span>
+            <div class="score-bar">
+              <div class="score-fill" style="width:${pct}%;background:${sc}"></div>
+            </div>
+          </div>
+        </td>
+        <td>
+          <span class="badge" style="background:${st.bg};color:${st.color};border-color:${st.border}">
+            ${h(a.status||'')}
+          </span>
+        </td>
+        <td class="td-date">${h(a.date||'')}</td>
+        <td>${a.hasPdf
+          ? '<span class="pdf-yes" title="PDF ready">📄</span>'
+          : '<span class="pdf-no">—</span>'}</td>
+        <td class="td-notes" title="${h(a.notes||'')}">${h(a.notes||'')}</td>
+      </tr>`;
+    }).join('');
+
+    area.innerHTML = `<table>
+      <thead><tr>
+        ${thSort('#','#')}
+        ${thSort('company','Company / Role')}
+        ${thSort('score','Score')}
+        <th>Status</th>
+        ${thSort('date','Date')}
+        <th>PDF</th>
+        <th>Notes</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+  }
+
+  function sortBy(key) {
+    if (sortKey === key) sortAsc = !sortAsc;
+    else { sortKey = key; sortAsc = false; }
+    renderTable();
+  }
+
+  function setFilter(status, btn) {
+    activeFilter = status;
+    document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderTable();
+  }
+
+  function onSearch(q) { searchQuery = q; renderTable(); }
+
+  // ── Drawer ─────────────────────────────────────────────────────────────────
+  async function openReport(app) {
+    if (!app.reportPath) return;
+
+    const overlay = document.getElementById('overlay');
+    const drawer  = document.getElementById('drawer');
+    const titleEl = document.getElementById('drawer-title');
+    const subEl   = document.getElementById('drawer-sub');
+    const mdEl    = document.getElementById('drawer-md');
+    const pdfBtn  = document.getElementById('pdf-btn');
+
+    titleEl.textContent = `${app.company} — ${app.role}`;
+    const st = STATUS_STYLE[app.status] || STATUS_STYLE.Discarded;
+    subEl.innerHTML = `
+      <span class="badge" style="background:${st.bg};color:${st.color};border:1px solid ${st.border};font-size:10px">${h(app.status)}</span>
+      &nbsp; Score: <strong>${app.scoreNum>0?app.scoreNum.toFixed(1):'—'}</strong>
+      &nbsp; Date: ${h(app.date||'')}
+    `;
+
+    mdEl.innerHTML = '<div class="state-box" style="padding:32px"><div class="state-icon">&#8987;</div><p>Loading report...</p></div>';
+    pdfBtn.style.display = 'none';
+    currentPdf = null;
+
+    overlay.classList.add('open');
+    drawer.classList.add('open');
+
+    try {
+      const r = await fetch(`/api/report?path=${encodeURIComponent(app.reportPath)}`);
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const md = await r.text();
+
+      // Extract PDF path from report header
+      const pdfMatch = md.match(/\*\*PDF:\*\*\s*✅\s*`([^`]+)`/);
+      if (pdfMatch) {
+        currentPdf = '/' + pdfMatch[1].replace(/\\/g, '/');
+        pdfBtn.style.display = '';
+      }
+
+      mdEl.innerHTML = marked.parse(md);
+    } catch (e) {
+      mdEl.innerHTML = `<div class="state-box"><div class="state-icon">&#9888;</div><h3>Could not load report</h3><p>${e.message}</p></div>`;
+    }
+  }
+
+  function closeDrawer() {
+    document.getElementById('overlay').classList.remove('open');
+    document.getElementById('drawer').classList.remove('open');
+  }
+
+  function openPdf() {
+    if (currentPdf) window.open(currentPdf, '_blank');
+  }
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  function h(str) {
+    return String(str)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── Keyboard ───────────────────────────────────────────────────────────────
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeDrawer();
+    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      e.preventDefault();
+      document.getElementById('search-box').focus();
+    }
+  });
+
+  // ── Boot ───────────────────────────────────────────────────────────────────
+  marked.setOptions({ breaks: true, gfm: true });
+  loadData();
+</script>
+</body>
+</html>
