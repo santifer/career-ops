@@ -27,33 +27,68 @@ const CANONICAL_REPO = 'https://github.com/santifer/career-ops.git';
 const RAW_VERSION_URL = 'https://raw.githubusercontent.com/santifer/career-ops/main/VERSION';
 const RELEASES_API = 'https://api.github.com/repos/santifer/career-ops/releases/latest';
 
-// System layer paths — ONLY these files get updated
-const SYSTEM_PATHS = [
+// System layer paths — ONLY these files get updated.
+// Keep these grouped so the updater mirrors DATA_CONTRACT.md and stays easy to audit.
+const CORE_MODE_FILES = [
   'modes/_shared.md',
   'modes/_profile.template.md',
-  'modes/oferta.md',
-  'modes/pdf.md',
-  'modes/scan.md',
-  'modes/batch.md',
   'modes/apply.md',
   'modes/auto-pipeline.md',
+  'modes/batch.md',
   'modes/contacto.md',
   'modes/deep.md',
+  'modes/followup.md',
+  'modes/interview-prep.md',
+  'modes/latex.md',
   'modes/ofertas.md',
+  'modes/oferta.md',
+  'modes/patterns.md',
+  'modes/pdf.md',
   'modes/pipeline.md',
   'modes/project.md',
+  'modes/scan.md',
   'modes/tracker.md',
   'modes/training.md',
+];
+
+const LOCALIZED_MODE_DIRECTORIES = [
   'modes/de/',
+  'modes/fr/',
+  'modes/ja/',
+  'modes/pt/',
+  'modes/ru/',
+];
+
+const ROOT_SCRIPT_FILES = [
+  'analyze-patterns.mjs',
+  'check-liveness.mjs',
+  'cv-sync-check.mjs',
+  'dedup-tracker.mjs',
+  'doctor.mjs',
+  'followup-cadence.mjs',
+  'gemini-eval.mjs',
+  'generate-latex.mjs',
+  'generate-pdf.mjs',
+  'liveness-core.mjs',
+  'merge-tracker.mjs',
+  'normalize-statuses.mjs',
+  'scan.mjs',
+  'test-all.mjs',
+  'update-system.mjs',
+  'verify-pipeline.mjs',
+];
+
+const PROJECT_INSTRUCTION_FILES = [
   'CLAUDE.md',
   'AGENTS.md',
-  'generate-pdf.mjs',
-  'merge-tracker.mjs',
-  'verify-pipeline.mjs',
-  'dedup-tracker.mjs',
-  'normalize-statuses.mjs',
-  'cv-sync-check.mjs',
-  'update-system.mjs',
+  'GEMINI.md',
+];
+
+const SYSTEM_PATHS = [
+  ...CORE_MODE_FILES,
+  ...LOCALIZED_MODE_DIRECTORIES,
+  ...ROOT_SCRIPT_FILES,
+  ...PROJECT_INSTRUCTION_FILES,
   'batch/batch-prompt.md',
   'batch/batch-runner.sh',
   'dashboard/',

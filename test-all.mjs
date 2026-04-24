@@ -141,6 +141,7 @@ const systemFiles = [
   'CLAUDE.md', 'VERSION', 'DATA_CONTRACT.md',
   'modes/_shared.md', 'modes/_profile.template.md',
   'modes/oferta.md', 'modes/pdf.md', 'modes/scan.md',
+  'modes/followup.md', 'modes/interview-prep.md', 'modes/latex.md', 'modes/patterns.md',
   'templates/states.yml', 'templates/cv-template.html',
   '.claude/skills/career-ops/SKILL.md',
 ];
@@ -150,6 +151,28 @@ for (const f of systemFiles) {
     pass(`System file exists: ${f}`);
   } else {
     fail(`Missing system file: ${f}`);
+  }
+}
+
+const updaterSource = readFile('update-system.mjs');
+const rootScripts = readdirSync(ROOT).filter(f => f.endsWith('.mjs')).sort();
+for (const scriptName of rootScripts) {
+  if (updaterSource.includes(`'${scriptName}'`)) {
+    pass(`Updater includes script: ${scriptName}`);
+  } else {
+    fail(`Updater missing script: ${scriptName}`);
+  }
+}
+
+const localizedModeDirs = readdirSync(join(ROOT, 'modes'), { withFileTypes: true })
+  .filter(entry => entry.isDirectory())
+  .map(entry => `modes/${entry.name}/`)
+  .sort();
+for (const modeDir of localizedModeDirs) {
+  if (updaterSource.includes(`'${modeDir}'`)) {
+    pass(`Updater includes localized modes: ${modeDir}`);
+  } else {
+    fail(`Updater missing localized modes: ${modeDir}`);
   }
 }
 
@@ -242,7 +265,8 @@ console.log('\n8. Mode file integrity');
 const expectedModes = [
   '_shared.md', '_profile.template.md', 'oferta.md', 'pdf.md', 'scan.md',
   'batch.md', 'apply.md', 'auto-pipeline.md', 'contacto.md', 'deep.md',
-  'ofertas.md', 'pipeline.md', 'project.md', 'tracker.md', 'training.md',
+  'followup.md', 'interview-prep.md', 'latex.md', 'ofertas.md', 'patterns.md',
+  'pipeline.md', 'project.md', 'tracker.md', 'training.md',
 ];
 
 for (const mode of expectedModes) {
