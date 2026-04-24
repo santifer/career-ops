@@ -155,7 +155,12 @@ function buildLocationFilter(config) {
 
   return (location) => {
     const lower = (location || "").toLowerCase();
-    const isRemote = lower.includes("remote") || lower.includes("distributed");
+    const remoteSynonyms = [
+      "remote", "distributed", "anywhere", "worldwide", "wfh", "work from home",
+      "wfa", "work from anywhere", "virtual", "telecommute", "location independent",
+      "flexible location"
+    ];
+    const isRemote = remoteSynonyms.some(s => lower.includes(s));
 
     if (remoteOnly && !isRemote) return false;
     if (onsiteOnly && isRemote) return false;
