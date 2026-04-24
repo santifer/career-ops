@@ -8,6 +8,7 @@ require (
 	github.com/creack/pty v1.1.24
 	github.com/gorilla/websocket v1.5.1
 	github.com/muesli/termenv v0.16.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (

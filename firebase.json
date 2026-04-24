@@ -1,0 +1,21 @@
+{
+  "hosting": {
+    "site": "carrer-path-45bef",
+    "public": "dashboard/cockpit/static",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "run": {
+          "serviceId": "career-ops-cockpit",
+          "region": "southamerica-east1",
+          "pinTag": true
+        }
+      }
+    ]
+  }
+}

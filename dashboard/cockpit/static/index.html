@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Career Ops Mission Control</title>
+    <link rel="stylesheet" href="/static/styles.css">
+  </head>
+  <body>
+    <section id="auth-screen" class="auth-screen" aria-labelledby="auth-title">
+      <form id="auth-form" class="auth-card">
+        <p class="eyebrow">Private cockpit</p>
+        <h1 id="auth-title">Career Ops Access</h1>
+        <p class="muted-copy">Enter the approved credentials to open Mission Control.</p>
+        <label>
+          <span>Email</span>
+          <input id="auth-email" type="email" autocomplete="username" required>
+        </label>
+        <label>
+          <span>Password</span>
+          <input id="auth-password" type="password" autocomplete="current-password" required>
+        </label>
+        <button class="primary-action full" type="submit">Sign in</button>
+        <p id="auth-error" class="auth-error" role="alert" hidden>Invalid credentials.</p>
+      </form>
+    </section>
+
+    <div class="backdrop" aria-hidden="true">
+      <span class="orb orb-one"></span>
+      <span class="orb orb-two"></span>
+      <span class="grid-glow"></span>
+    </div>
+
+    <div class="mission-shell" hidden>
+      <aside class="sidebar" aria-label="Mission navigation">
+        <div class="brand-lockup">
+          <span class="brand-mark">CO</span>
+          <div>
+            <p class="eyebrow">Career Ops</p>
+            <h1>Mission Control</h1>
+          </div>
+        </div>
+
+        <nav class="nav-stack" aria-label="Dashboard sections">
+          <a href="#overview" class="nav-item active">Overview</a>
+          <a href="#applications" class="nav-item">Applications</a>
+          <a href="#profile" class="nav-item">Profile</a>
+          <a href="#runs" class="nav-item">Runs</a>
+          <a href="#auto-mode" class="nav-item">Auto Mode</a>
+        </nav>
+
+        <section class="health-card" aria-live="polite">
+          <div class="health-head">
+            <span id="health-dot" class="pulse-dot"></span>
+            <strong>System Health</strong>
+          </div>
+          <p id="health-status">Checking cockpit health...</p>
+          <small id="health-root">Root path pending.</small>
+        </section>
+
+        <section class="mission-note">
+          <span>Safety rail</span>
+          <p>Auto Mode prepares and reviews. External submit stays gated until explicit user approval.</p>
+        </section>
+        <button id="auth-logout" class="mini-button logout-button">Sign out</button>
+      </aside>
+
+      <main class="control-main">
+        <header class="hero-panel" id="overview">
+          <div>
+            <p class="eyebrow">Warm command center</p>
+            <h2>Career Ops Mission Control</h2>
+            <p class="lede">A dense cockpit for tracking offers, launching safe internal actions, editing the application profile, and reviewing Auto Mode gates without creating a second source of truth.</p>
+          </div>
+          <div class="hero-actions" aria-label="Global actions">
+            <button class="primary-action" data-action="verify">Run Verify</button>
+            <button class="secondary-action" data-action="scan">Scan Portals</button>
+            <button class="ghost-action" data-action="pdf">Prepare PDF</button>
+          </div>
+        </header>
+
+        <section class="overview-grid" aria-label="Pipeline overview cards">
+          <article class="metric-card hot">
+            <span>Total tracked</span>
+            <strong id="metric-total">--</strong>
+            <small id="metric-generated">Waiting for overview.</small>
+          </article>
+          <article class="metric-card">
+            <span>Actionable</span>
+            <strong id="metric-actionable">--</strong>
+            <small>Open decisions and follow-through.</small>
+          </article>
+          <article class="metric-card">
+            <span>Average score</span>
+            <strong id="metric-average">--</strong>
+            <small id="metric-top">Top score pending.</small>
+          </article>
+          <article class="metric-card">
+            <span>PDF coverage</span>
+            <strong id="metric-pdf">--</strong>
+            <small>Tailored documents detected.</small>
+          </article>
+        </section>
+
+        <section class="workspace-grid">
+          <section class="table-panel" id="applications">
+            <div class="panel-heading split-heading">
+              <div>
+                <p class="eyebrow">Applications radar</p>
+                <h3>Tracker</h3>
+              </div>
+              <div class="filters" role="search">
+                <label>
+                  <span>Search</span>
+                  <input id="search-input" type="search" placeholder="Company, role, note...">
+                </label>
+                <label>
+                  <span>Status</span>
+                  <select id="status-filter">
+                    <option value="">All statuses</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+
+            <div class="status-strip" id="status-strip" aria-label="Status summary"></div>
+
+            <div class="table-wrap">
+              <table class="applications-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Company</th>
+                    <th>Role</th>
+                    <th>Score</th>
+                    <th>Status</th>
+                    <th>PDF</th>
+                  </tr>
+                </thead>
+                <tbody id="applications-body">
+                  <tr><td colspan="6" class="empty-cell">Loading applications...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <aside class="action-rail" aria-label="Selected application action rail">
+            <section class="drawer-card selected-card">
+              <div class="panel-heading">
+                <p class="eyebrow">Selected target</p>
+                <h3 id="selected-title">No application selected</h3>
+              </div>
+              <p id="selected-summary" class="muted-copy">Select a row to load detail from the canonical application API.</p>
+              <dl class="detail-list" id="selected-details"></dl>
+              <div class="link-row" id="selected-links"></div>
+              <label class="status-editor">
+                <span>Status intent</span>
+                <select id="status-select" disabled></select>
+              </label>
+              <button id="status-save" class="primary-action full" disabled>Send status change</button>
+              <button id="auto-selected" class="secondary-action full" disabled>Start Auto Mode for selected</button>
+            </section>
+
+            <section class="drawer-card compact" id="runs">
+              <div class="panel-heading split-heading">
+                <div>
+                  <p class="eyebrow">Run drawer</p>
+                  <h3 id="run-title">No active run</h3>
+                </div>
+                <button id="cancel-run" class="mini-button" disabled>Cancel</button>
+              </div>
+              <p id="run-state" class="muted-copy">Launch verify, scan, PDF, or Auto Mode to see run state here.</p>
+              <div id="run-timeline" class="timeline"></div>
+              <pre id="run-log" class="run-log" hidden></pre>
+            </section>
+          </aside>
+        </section>
+
+        <section class="lower-grid">
+          <section class="profile-panel" id="profile">
+            <div class="panel-heading split-heading">
+              <div>
+                <p class="eyebrow">Application profile</p>
+                <h3>Profile editor summary</h3>
+              </div>
+              <button id="profile-save" class="secondary-action">Save summary</button>
+            </div>
+            <p class="muted-copy">Only approved profile fields are sent to the Go profile API. Secret-like custom keys are rejected server-side.</p>
+            <form id="profile-form" class="profile-form">
+              <label><span>Full name</span><input name="identity.full_name" autocomplete="name"></label>
+              <label><span>Email</span><input name="identity.email" autocomplete="email"></label>
+              <label><span>Phone country code</span><input name="identity.phone.country_code" autocomplete="tel-country-code"></label>
+              <label><span>Phone number</span><input name="identity.phone.number" autocomplete="tel"></label>
+              <label><span>LinkedIn</span><input name="identity.linkedin" autocomplete="url"></label>
+              <label><span>Portfolio URL</span><input name="documents.portfolio_url" autocomplete="url"></label>
+              <label class="wide"><span>Default CV</span><input name="documents.default_cv"></label>
+              <label class="wide"><span>Salary expectation answer</span><textarea name="form_answers.salary_expectation" rows="3"></textarea></label>
+            </form>
+            <div class="missing-box">
+              <strong>Missing and review-required fields</strong>
+              <ul id="missing-fields"><li>Loading profile gaps...</li></ul>
+            </div>
+          </section>
+
+          <section class="auto-panel" id="auto-mode">
+            <div class="panel-heading split-heading">
+              <div>
+                <p class="eyebrow">Auto Mode review gate</p>
+                <h3>Safe browser-assisted envelope</h3>
+              </div>
+              <span id="auto-state" class="state-pill">Idle</span>
+            </div>
+            <p class="muted-copy">Start Auto Mode with the selected tracker row or a direct URL. The cockpit shows missing profile fields and run review state before any final submit can be approved.</p>
+            <div class="auto-launch">
+              <input id="auto-url" type="url" placeholder="Optional application URL">
+              <button id="auto-start" class="primary-action">Start Auto Mode</button>
+            </div>
+            <section class="browser-session" aria-label="Visible browser session">
+              <div class="session-head">
+                <div>
+                  <strong>Visible browser session</strong>
+                  <p id="browser-session-status">No browser session started.</p>
+                </div>
+                <button id="browser-open" class="mini-button" disabled>Open window</button>
+              </div>
+              <a id="browser-target" href="#" target="_blank" rel="noreferrer" hidden>No target URL yet.</a>
+              <small id="browser-safety">Every browser action is logged here; final submit stays gated.</small>
+            </section>
+            <div class="auto-grid">
+              <div>
+                <strong>Profile gates</strong>
+                <ul id="auto-missing" class="gate-list"><li>Loading profile gates...</li></ul>
+              </div>
+              <div>
+                <strong>Review payload</strong>
+                <div id="review-gate" class="review-gate">No run has reached review yet.</div>
+              </div>
+            </div>
+            <div class="observability-panel">
+              <strong>Agent observability log</strong>
+              <div id="action-log" class="action-log">No Auto Mode actions recorded yet.</div>
+            </div>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+    <script src="/static/app.js?v=front-auth-1"></script>
+  </body>
+</html>
