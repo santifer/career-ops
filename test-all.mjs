@@ -155,7 +155,10 @@ for (const f of systemFiles) {
 }
 
 const updaterSource = readFile('update-system.mjs');
-const rootScripts = readdirSync(ROOT).filter(f => f.endsWith('.mjs')).sort();
+const trackedFiles = (run('git', ['ls-files']) || '').split('\n').filter(Boolean);
+const rootScripts = trackedFiles
+  .filter(f => f.endsWith('.mjs') && !f.includes('/'))
+  .sort();
 for (const scriptName of rootScripts) {
   if (updaterSource.includes(`'${scriptName}'`)) {
     pass(`Updater includes script: ${scriptName}`);
@@ -164,9 +167,9 @@ for (const scriptName of rootScripts) {
   }
 }
 
-const localizedModeDirs = readdirSync(join(ROOT, 'modes'), { withFileTypes: true })
-  .filter(entry => entry.isDirectory())
-  .map(entry => `modes/${entry.name}/`)
+const localizedModeDirs = [...new Set(trackedFiles
+  .filter(f => f.startsWith('modes/') && f.split('/').length > 2)
+  .map(f => `${f.split('/').slice(0, 2).join('/')}/`))]
   .sort();
 for (const modeDir of localizedModeDirs) {
   if (updaterSource.includes(`'${modeDir}'`)) {

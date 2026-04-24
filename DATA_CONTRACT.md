@@ -42,6 +42,8 @@ These files contain system logic, scripts, templates, and instructions that impr
 | `modes/project.md` | Project evaluation instructions |
 | `modes/tracker.md` | Tracker instructions |
 | `modes/training.md` | Training evaluation instructions |
+| `modes/interview-prep.md` | Interview preparation instructions |
+| `modes/latex.md` | LaTeX CV generation instructions |
 | `modes/patterns.md` | Pattern analysis instructions |
 | `modes/followup.md` | Follow-up cadence instructions |
 | `modes/de/*` | German language modes |
