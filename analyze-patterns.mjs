@@ -86,6 +86,12 @@ function normalizeList(value) {
   return [String(value).trim()].filter(Boolean);
 }
 
+function normalizeScalar(value) {
+  if (typeof value === 'string') return value.trim() || null;
+  if (typeof value === 'number' && Number.isFinite(value)) return String(value);
+  return null;
+}
+
 function parseMachineSummary(content) {
   const fenceMatch = content.match(/##\s*Machine Summary\s*\n+```(?:yaml|yml|json)?\s*\n([\s\S]*?)\n```/i);
   if (!fenceMatch) return null;
@@ -188,18 +194,18 @@ function parseReport(reportPath) {
   const machineSummary = parseMachineSummary(content);
   if (machineSummary) {
     report.machineSummary = machineSummary;
-    report.company = machineSummary.company || report.company;
-    report.role = machineSummary.role || report.role;
-    report.archetype = machineSummary.archetype || report.archetype;
-    report.legitimacyTier = machineSummary.legitimacy_tier || report.legitimacyTier;
-    report.finalDecision = machineSummary.final_decision || report.finalDecision;
-    report.domain = machineSummary.domain || report.domain;
-    report.seniority = machineSummary.seniority || report.seniority;
-    report.remote = machineSummary.remote || report.remote;
-    report.teamSize = machineSummary.team_size || report.teamSize;
-    report.riskLevel = machineSummary.risk_level || report.riskLevel;
-    report.confidence = machineSummary.confidence || report.confidence;
-    report.nextAction = machineSummary.next_action || report.nextAction;
+    report.company = normalizeScalar(machineSummary.company) || report.company;
+    report.role = normalizeScalar(machineSummary.role) || report.role;
+    report.archetype = normalizeScalar(machineSummary.archetype) || report.archetype;
+    report.legitimacyTier = normalizeScalar(machineSummary.legitimacy_tier) || report.legitimacyTier;
+    report.finalDecision = normalizeScalar(machineSummary.final_decision) || report.finalDecision;
+    report.domain = normalizeScalar(machineSummary.domain) || report.domain;
+    report.seniority = normalizeScalar(machineSummary.seniority) || report.seniority;
+    report.remote = normalizeScalar(machineSummary.remote) || report.remote;
+    report.teamSize = normalizeScalar(machineSummary.team_size) || report.teamSize;
+    report.riskLevel = normalizeScalar(machineSummary.risk_level) || report.riskLevel;
+    report.confidence = normalizeScalar(machineSummary.confidence) || report.confidence;
+    report.nextAction = normalizeScalar(machineSummary.next_action) || report.nextAction;
     report.topStrengths = normalizeList(machineSummary.top_strengths);
 
     if (typeof machineSummary.score === 'number') {
@@ -348,7 +354,10 @@ function analyze() {
     const reportPath = reportMatch ? join(CAREER_OPS, reportMatch[1]) : null;
     const reportData = reportPath ? parseReport(reportPath) : null;
     const outcome = classifyOutcome(e.status);
-    const score = parseFloat(e.score) || reportData?.scores?.global || 0;
+    const trackerScore = parseFloat(e.score);
+    const score = Number.isFinite(trackerScore)
+      ? trackerScore
+      : (Number.isFinite(reportData?.scores?.global) ? reportData.scores.global : 0);
 
     // Fallback: if report didn't have Remote field, try the notes column
     const remoteSource = reportData?.remote || e.notes || '';
