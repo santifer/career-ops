@@ -17,7 +17,7 @@
 
 import { execFileSync, execSync } from 'child_process';
 import { readFileSync, writeFileSync, existsSync, unlinkSync } from 'fs';
-import { join, dirname } from 'path';
+import { join, dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -29,7 +29,7 @@ const RELEASES_API = 'https://api.github.com/repos/santifer/career-ops/releases/
 
 // System layer paths — ONLY these files get updated.
 // Keep these grouped so the updater mirrors DATA_CONTRACT.md and stays easy to audit.
-const CORE_MODE_FILES = [
+export const CORE_MODE_FILES = [
   'modes/_shared.md',
   'modes/_profile.template.md',
   'modes/apply.md',
@@ -51,7 +51,7 @@ const CORE_MODE_FILES = [
   'modes/training.md',
 ];
 
-const LOCALIZED_MODE_DIRECTORIES = [
+export const LOCALIZED_MODE_DIRECTORIES = [
   'modes/de/',
   'modes/fr/',
   'modes/ja/',
@@ -59,7 +59,7 @@ const LOCALIZED_MODE_DIRECTORIES = [
   'modes/ru/',
 ];
 
-const ROOT_SCRIPT_FILES = [
+export const ROOT_SCRIPT_FILES = [
   'analyze-patterns.mjs',
   'check-liveness.mjs',
   'cv-sync-check.mjs',
@@ -78,13 +78,13 @@ const ROOT_SCRIPT_FILES = [
   'verify-pipeline.mjs',
 ];
 
-const PROJECT_INSTRUCTION_FILES = [
+export const PROJECT_INSTRUCTION_FILES = [
   'CLAUDE.md',
   'AGENTS.md',
   'GEMINI.md',
 ];
 
-const SYSTEM_PATHS = [
+export const SYSTEM_PATHS = [
   ...CORE_MODE_FILES,
   ...LOCALIZED_MODE_DIRECTORIES,
   ...ROOT_SCRIPT_FILES,
@@ -351,14 +351,16 @@ function dismiss() {
 
 // ── MAIN ────────────────────────────────────────────────────────
 
-const cmd = process.argv[2] || 'check';
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  const cmd = process.argv[2] || 'check';
 
-switch (cmd) {
-  case 'check': await check(); break;
-  case 'apply': await apply(); break;
-  case 'rollback': rollback(); break;
-  case 'dismiss': dismiss(); break;
-  default:
-    console.log('Usage: node update-system.mjs [check|apply|rollback|dismiss]');
-    process.exit(1);
+  switch (cmd) {
+    case 'check': await check(); break;
+    case 'apply': await apply(); break;
+    case 'rollback': rollback(); break;
+    case 'dismiss': dismiss(); break;
+    default:
+      console.log('Usage: node update-system.mjs [check|apply|rollback|dismiss]');
+      process.exit(1);
+  }
 }

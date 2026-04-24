@@ -41,6 +41,20 @@ function run(cmd, args = [], opts = {}) {
 
 function fileExists(path) { return existsSync(join(ROOT, path)); }
 function readFile(path) { return readFileSync(join(ROOT, path), 'utf-8'); }
+function reportSetDifference(actual, expected, missingMsg, extraMsg) {
+  const actualSet = new Set(actual);
+  const expectedSet = new Set(expected);
+  for (const item of expected) {
+    if (!actualSet.has(item)) fail(missingMsg(item));
+  }
+  for (const item of actual) {
+    if (!expectedSet.has(item)) fail(extraMsg(item));
+  }
+  if (expected.every(item => actualSet.has(item)) && actual.every(item => expectedSet.has(item))) {
+    return true;
+  }
+  return false;
+}
 
 console.log('\n🧪 career-ops test suite\n');
 
@@ -154,30 +168,34 @@ for (const f of systemFiles) {
   }
 }
 
-const updaterSource = readFile('update-system.mjs');
+const { SYSTEM_PATHS } = await import(pathToFileURL(join(ROOT, 'update-system.mjs')).href);
 const trackedFiles = (run('git', ['ls-files']) || '').split('\n').filter(Boolean);
 const rootScripts = trackedFiles
   .filter(f => f.endsWith('.mjs') && !f.includes('/'))
   .sort();
-for (const scriptName of rootScripts) {
-  if (updaterSource.includes(`'${scriptName}'`)) {
-    pass(`Updater includes script: ${scriptName}`);
-  } else {
-    fail(`Updater missing script: ${scriptName}`);
-  }
-}
+const updaterRootScripts = SYSTEM_PATHS
+  .filter(f => f.endsWith('.mjs') && !f.includes('/'))
+  .sort();
+if (reportSetDifference(
+  updaterRootScripts,
+  rootScripts,
+  scriptName => `Updater missing script: ${scriptName}`,
+  scriptName => `Updater has untracked script: ${scriptName}`,
+)) pass('Updater root scripts match tracked scripts');
 
 const localizedModeDirs = [...new Set(trackedFiles
   .filter(f => f.startsWith('modes/') && f.split('/').length > 2)
   .map(f => `${f.split('/').slice(0, 2).join('/')}/`))]
   .sort();
-for (const modeDir of localizedModeDirs) {
-  if (updaterSource.includes(`'${modeDir}'`)) {
-    pass(`Updater includes localized modes: ${modeDir}`);
-  } else {
-    fail(`Updater missing localized modes: ${modeDir}`);
-  }
-}
+const updaterLocalizedModeDirs = SYSTEM_PATHS
+  .filter(f => /^modes\/[^/]+\/$/.test(f))
+  .sort();
+if (reportSetDifference(
+  updaterLocalizedModeDirs,
+  localizedModeDirs,
+  modeDir => `Updater missing localized modes: ${modeDir}`,
+  modeDir => `Updater has untracked localized modes: ${modeDir}`,
+)) pass('Updater localized mode directories match tracked directories');
 
 // Check user files are NOT tracked (gitignored)
 const userFiles = [
