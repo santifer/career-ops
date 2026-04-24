@@ -13,6 +13,7 @@ All scripts live in the project root as `.mjs` modules and are exposed via `npm 
 | `npm run merge` | `merge-tracker.mjs` | Merge batch TSVs into applications.md |
 | `npm run pdf` | `generate-pdf.mjs` | Convert HTML to ATS-optimized PDF |
 | `npm run sync-check` | `cv-sync-check.mjs` | Validate CV/profile consistency |
+| `npm run patterns` | `analyze-patterns.mjs` | Analyze tracker outcomes and report patterns |
 | `npm run update:check` | `update-system.mjs check` | Check for upstream updates |
 | `npm run update` | `update-system.mjs apply` | Apply upstream update |
 | `npm run rollback` | `update-system.mjs rollback` | Rollback last update |
@@ -114,6 +115,21 @@ npm run sync-check
 ```
 
 **Exit codes:** `0` no errors (warnings allowed), `1` errors found.
+
+---
+
+## patterns
+
+Analyzes application outcomes, scores, archetypes, blockers, remote policy, and company size from `data/applications.md` and linked reports. New reports should include `## Machine Summary` YAML; `analyze-patterns.mjs` uses it first and falls back to legacy markdown parsing for older reports.
+
+```bash
+npm run patterns
+npm run patterns -- --summary
+npm run patterns -- --min-threshold 3
+node analyze-patterns.mjs --self-test
+```
+
+**Exit codes:** `0` analysis succeeded, `1` insufficient data or parser self-test failure.
 
 ---
 

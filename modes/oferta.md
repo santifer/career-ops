@@ -142,6 +142,34 @@ Analyze the job posting for signals that indicate whether this is a real, active
 
 ---
 
+## Machine Summary
+
+After completing blocks A-G and the global score, include a machine-readable summary in every saved report. This block is for scripts; keep field names exact, use YAML, and do not add prose inside the fence.
+
+```yaml
+company: "{Empresa}"
+role: "{Rol}"
+score: {X.X}
+legitimacy_tier: "{High Confidence | Proceed with Caution | Suspicious}"
+archetype: "{detectado}"
+final_decision: "{Apply | Consider | Research first | Skip}"
+hard_stops:
+  - "{blocking gap or risk}"
+soft_gaps:
+  - "{non-blocking gap}"
+top_strengths:
+  - "{strength most relevant to this role}"
+risk_level: "{Low | Medium | High}"
+confidence: "{Low | Medium | High}"
+next_action: "{one concrete next step}"
+```
+
+Rules:
+- Use `[]` for `hard_stops`, `soft_gaps`, or `top_strengths` when empty.
+- `score` is numeric only, without `/5`.
+- `final_decision` must reflect the full evaluation, not only the CV match.
+- Do not invent missing data. If confidence is limited, set `confidence: "Low"` and explain the limitation in the human-readable sections.
+
 ## Post-evaluación
 
 **SIEMPRE** después de generar los bloques A-G:
@@ -166,6 +194,25 @@ Guardar evaluación completa en `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 **PDF:** {ruta o pendiente}
 
 ---
+
+## Machine Summary
+
+```yaml
+company: "{Empresa}"
+role: "{Rol}"
+score: {X.X}
+legitimacy_tier: "{High Confidence | Proceed with Caution | Suspicious}"
+archetype: "{detectado}"
+final_decision: "{Apply | Consider | Research first | Skip}"
+hard_stops: []
+soft_gaps:
+  - "{gap no bloqueante}"
+top_strengths:
+  - "{fortaleza principal}"
+risk_level: "{Low | Medium | High}"
+confidence: "{Low | Medium | High}"
+next_action: "{siguiente acción concreta}"
+```
 
 ## A) Resumen del Rol
 (contenido completo del bloque A)

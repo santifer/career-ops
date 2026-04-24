@@ -88,6 +88,7 @@ Cada worker recibe `batch-prompt.md` como system prompt. Es self-contained.
 
 El worker produce:
 1. Report `.md` en `reports/`
+   - Incluye `## Machine Summary` con YAML estructurado para pattern analysis
 2. PDF en `output/`
 3. Línea de tracker en `batch/tracker-additions/{id}.tsv`
 4. JSON de resultado por stdout
