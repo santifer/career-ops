@@ -1,0 +1,287 @@
+# Portal Scanner Configuration — Engineering Manager roles (London / UK / Remote)
+
+title_filter:
+  positive:
+    - "Engineering Manager"
+    - "Engineering Lead"
+    - "Head of Engineering"
+    - "Director of Engineering"
+    - "VP Engineering"
+    - "VP of Engineering"
+    - "Software Engineering Manager"
+    - "Platform Engineering Manager"
+    - "EM,"
+    - "EM -"
+    - "Technical Lead Manager"
+    - "Group Engineering Manager"
+    - "Senior Engineering Manager"
+  negative:
+    - "Intern"
+    - "Graduate"
+    - "Junior"
+    - "Staff Engineer"
+    - "Principal Engineer"
+    - "Product Manager"
+    - "Sales"
+    - "Account Manager"
+    - "Customer Success"
+    - "Marketing"
+    - "Finance"
+    - "Legal"
+    - "Recruiting"
+    - "Data Engineer"
+    - "ML Engineer"
+    - "Site Reliability"
+    - "DevOps"
+  seniority_boost:
+    - "Senior"
+    - "Staff"
+    - "Head"
+    - "Director"
+    - "Group"
+
+search_queries:
+  - name: LinkedIn — EM London
+    query: '"Engineering Manager" London site:linkedin.com/jobs'
+    enabled: true
+
+  - name: Greenhouse — EM UK/Remote
+    query: 'site:job-boards.greenhouse.io "Engineering Manager" London OR remote UK'
+    enabled: true
+
+  - name: Ashby — EM UK/Remote
+    query: 'site:jobs.ashbyhq.com "Engineering Manager" OR "Head of Engineering" London OR remote UK'
+    enabled: true
+
+  - name: Lever — EM UK/Remote
+    query: 'site:jobs.lever.co "Engineering Manager" London OR remote UK'
+    enabled: true
+
+  - name: Greenhouse — Director Engineering
+    query: 'site:job-boards.greenhouse.io "Director of Engineering" OR "VP Engineering" London OR remote UK'
+    enabled: true
+
+  - name: Ashby — Director/Head Engineering
+    query: 'site:jobs.ashbyhq.com "Director of Engineering" OR "Head of Engineering" London OR remote UK'
+    enabled: true
+
+  - name: TechLondon Jobs — EM
+    query: '"Engineering Manager" OR "Head of Engineering" London site:jobs.techcrunch.com OR site:workatastartup.com'
+    enabled: true
+
+  - name: Himalayas — Remote EM
+    query: 'site:himalayas.app "Engineering Manager" OR "Head of Engineering" remote UK OR Europe'
+    enabled: true
+
+  - name: WeWorkRemotely — EM
+    query: 'site:weworkremotely.com "Engineering Manager" OR "Director of Engineering"'
+    enabled: true
+
+  - name: Remote.co — EM
+    query: 'site:remote.co "Engineering Manager" OR "Head of Engineering"'
+    enabled: true
+
+tracked_companies:
+
+  # -- UK Tech / Scale-ups --
+
+  - name: Monzo
+    careers_url: https://monzo.com/careers
+    scan_method: websearch
+    scan_query: 'site:monzo.com/careers "Engineering Manager"'
+    notes: "London. Digital bank. Large engineering org, good EM culture."
+    enabled: true
+
+  - name: Revolut
+    careers_url: https://www.revolut.com/careers
+    scan_method: websearch
+    scan_query: '"revolut" "Engineering Manager" site:job-boards.greenhouse.io OR site:jobs.lever.co'
+    notes: "London. Fintech unicorn. Fast-growing eng teams."
+    enabled: true
+
+  - name: Deliveroo
+    careers_url: https://careers.deliveroo.co.uk
+    scan_method: websearch
+    scan_query: 'site:careers.deliveroo.co.uk "Engineering Manager"'
+    notes: "London. Food delivery. Strong distributed systems teams."
+    enabled: true
+
+  - name: GoCardless
+    careers_url: https://gocardless.com/about/careers
+    scan_method: websearch
+    scan_query: '"gocardless" "Engineering Manager" site:job-boards.greenhouse.io'
+    notes: "London. Payments infrastructure. Greenhouse-based."
+    enabled: true
+
+  - name: Checkout.com
+    careers_url: https://www.checkout.com/careers
+    scan_method: websearch
+    scan_query: 'site:checkout.com/careers "Engineering Manager" OR "Head of Engineering"'
+    notes: "London. Payments unicorn."
+    enabled: true
+
+  - name: Wise
+    careers_url: https://wise.com/gb/careers
+    scan_method: websearch
+    scan_query: '"wise" "Engineering Manager" site:job-boards.greenhouse.io OR site:jobs.lever.co'
+    notes: "London. Global money transfer. Strong eng culture."
+    enabled: true
+
+  - name: Babylon Health
+    careers_url: https://jobs.lever.co/babylonhealth
+    notes: "London. Digital health, distributed systems."
+    enabled: true
+
+  - name: Bereal / Voodoo
+    careers_url: https://jobs.lever.co/voodoo
+    notes: "London/Paris. Mobile-first. Lever-based."
+    enabled: true
+
+  - name: Farfetch
+    careers_url: https://job-boards.greenhouse.io/farfetch
+    api: https://boards-api.greenhouse.io/v1/boards/farfetch/jobs
+    notes: "London. Luxury e-commerce. Large platform eng org."
+    enabled: true
+
+  - name: Onfido
+    careers_url: https://job-boards.greenhouse.io/onfido
+    api: https://boards-api.greenhouse.io/v1/boards/onfido/jobs
+    notes: "London. Identity verification AI."
+    enabled: true
+
+  - name: Tractable
+    careers_url: https://jobs.ashbyhq.com/tractable
+    scan_method: websearch
+    scan_query: 'site:jobs.ashbyhq.com/tractable "Engineering Manager"'
+    notes: "London. AI for insurance claims."
+    enabled: true
+
+  - name: Thought Machine
+    careers_url: https://job-boards.greenhouse.io/thoughtmachine
+    api: https://boards-api.greenhouse.io/v1/boards/thoughtmachine/jobs
+    notes: "London. Cloud-native core banking. Java-heavy."
+    enabled: true
+
+  - name: Appearances (Cleo)
+    careers_url: https://jobs.ashbyhq.com/cleo
+    scan_method: websearch
+    scan_query: 'site:jobs.ashbyhq.com/cleo "Engineering Manager"'
+    notes: "London. AI-powered personal finance app."
+    enabled: true
+
+  - name: Featurespace
+    careers_url: https://job-boards.greenhouse.io/featurespace
+    api: https://boards-api.greenhouse.io/v1/boards/featurespace/jobs
+    notes: "Cambridge/London. Real-time fraud detection AI."
+    enabled: true
+
+  - name: Improbable
+    careers_url: https://job-boards.greenhouse.io/improbable
+    api: https://boards-api.greenhouse.io/v1/boards/improbable/jobs
+    notes: "London. Simulation / metaverse / defence tech."
+    enabled: true
+
+  # -- Large Tech (London offices) --
+
+  - name: Google UK
+    careers_url: https://careers.google.com
+    scan_method: websearch
+    scan_query: '"Engineering Manager" London site:careers.google.com'
+    notes: "London. Google engineering. Large EM hiring."
+    enabled: true
+
+  - name: Amazon / AWS UK
+    careers_url: https://www.amazon.jobs
+    scan_method: websearch
+    scan_query: '"Engineering Manager" London site:amazon.jobs'
+    notes: "London. AWS and consumer. Heavy EM hiring."
+    enabled: true
+
+  - name: Meta UK
+    careers_url: https://www.metacareers.com
+    scan_method: websearch
+    scan_query: '"Engineering Manager" London site:metacareers.com'
+    notes: "London. Meta engineering."
+    enabled: true
+
+  - name: Apple UK
+    careers_url: https://jobs.apple.com
+    scan_method: websearch
+    scan_query: '"Engineering Manager" London site:jobs.apple.com'
+    notes: "London. Apple engineering."
+    enabled: true
+
+  # -- Grocery / Retail Tech --
+
+  - name: Ocado Technology
+    careers_url: https://jobs.ocadogroup.com
+    scan_method: websearch
+    scan_query: 'site:jobs.ocadogroup.com "Engineering Manager" OR "Head of Engineering"'
+    notes: "London/Hatfield. Fergus's current employer — useful for bench-marking."
+    enabled: true
+
+  - name: Sainsbury's Tech
+    careers_url: https://jobs.sainsburys.co.uk
+    scan_method: websearch
+    scan_query: '"Engineering Manager" site:jobs.sainsburys.co.uk'
+    notes: "London. Retail tech. Large distributed eng org."
+    enabled: true
+
+  - name: ASOS
+    careers_url: https://careers.asos.com
+    scan_method: websearch
+    scan_query: 'site:careers.asos.com "Engineering Manager"'
+    notes: "London. Fashion e-commerce. Platform engineering roles."
+    enabled: true
+
+  # -- Series B/C UK Startups --
+
+  - name: Darktrace
+    careers_url: https://job-boards.greenhouse.io/darktrace
+    api: https://boards-api.greenhouse.io/v1/boards/darktrace/jobs
+    notes: "Cambridge/London. AI cybersecurity. Listed company."
+    enabled: true
+
+  - name: Faculty
+    careers_url: https://jobs.ashbyhq.com/faculty
+    scan_method: websearch
+    scan_query: 'site:jobs.ashbyhq.com/faculty "Engineering Manager"'
+    notes: "London. Applied AI consultancy."
+    enabled: true
+
+  - name: Eigen Technologies
+    careers_url: https://job-boards.greenhouse.io/eigentech
+    api: https://boards-api.greenhouse.io/v1/boards/eigentech/jobs
+    notes: "London. AI for financial documents."
+    enabled: true
+
+  - name: Quantexa
+    careers_url: https://job-boards.greenhouse.io/quantexa
+    api: https://boards-api.greenhouse.io/v1/boards/quantexa/jobs
+    notes: "London. Decision intelligence AI."
+    enabled: true
+
+  - name: Unmind
+    careers_url: https://jobs.ashbyhq.com/unmind
+    scan_method: websearch
+    scan_query: 'site:jobs.ashbyhq.com/unmind "Engineering Manager"'
+    notes: "London. Mental health tech for enterprise."
+    enabled: true
+
+  - name: Paddle
+    careers_url: https://jobs.lever.co/paddle
+    notes: "London/Remote. Payments infrastructure for SaaS."
+    enabled: true
+
+  - name: Phorest
+    careers_url: https://job-boards.greenhouse.io/phorest
+    api: https://boards-api.greenhouse.io/v1/boards/phorest/jobs
+    notes: "Dublin/London. Salon software. Expanding."
+    enabled: true
+
+  - name: Legl
+    careers_url: https://jobs.ashbyhq.com/legl
+    scan_method: websearch
+    scan_query: 'site:jobs.ashbyhq.com/legl "Engineering Manager"'
+    notes: "London. Legal tech SaaS."
+    enabled: true

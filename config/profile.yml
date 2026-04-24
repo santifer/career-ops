@@ -1,0 +1,71 @@
+# Career-Ops Profile Configuration
+# Copy this file to config/profile.yml and fill in your details.
+# This is the single source of truth for your personal data across all modes.
+
+candidate:
+  full_name: "Fergus Mitchell-Dwelly"
+  email: "fmmdwelly@gmail.com"
+  phone: "+447903080007"
+  location: "London, UK"
+  linkedin: "linkedin.com/in/fmmdwelly"
+  portfolio_url: ""
+  github: ""
+  twitter: ""
+  # canva_resume_design_id: "DAxxxxxxxxx"
+
+target_roles:
+  primary:
+    - "Engineering Manager"
+    - "Senior Engineering Manager"
+  archetypes:
+    - name: "Engineering Manager"
+      level: "Mid-Senior"
+      fit: "primary"
+    - name: "Senior Engineering Manager"
+      level: "Senior"
+      fit: "primary"
+    - name: "Director of Engineering"
+      level: "Director"
+      fit: "secondary"
+    - name: "EM — Platform / Infrastructure"
+      level: "Mid-Senior"
+      fit: "secondary"
+    - name: "EM — Product Engineering"
+      level: "Mid-Senior"
+      fit: "secondary"
+    - name: "EM — AI / ML Teams"
+      level: "Mid-Senior"
+      fit: "adjacent"
+
+narrative:
+  headline: "Engineering Manager with 3+ years leading distributed-systems teams at Ocado Technology"
+  exit_story: "Joined Ocado as a placement engineer, progressed to Software Engineer, then moved into EM — now looking for the next leadership challenge at a company where technical rigour and team growth are equally valued."
+  superpowers:
+    - "Growing engineers — structured coaching with a strong internal promotion track record"
+    - "Technical depth alongside leadership — hands-on architect who can challenge and validate decisions"
+    - "Automation-first mindset — systematically eliminates management toil and team blockers"
+    - "Cross-functional delivery — proven at coordinating 14-person cross-team projects"
+    - "Cost and performance optimisation — 85% hosting cost reduction, 5× throughput improvement via AWS Lambda"
+  proof_points:
+    - name: "AWS Lambda forecasting migration"
+      hero_metric: "Eliminated production incidents, 85% cost reduction, 5× faster"
+    - name: "Timesheet automation"
+      hero_metric: "Reduced average submission lag from 28 days to 10 days company-wide"
+    - name: "Cycle time improvement"
+      hero_metric: "30% faster cycle time via WIP limits and just-in-time discovery"
+    - name: "MVP scope reduction"
+      hero_metric: "Proposed architecture change cut delivery time by 6 months"
+    - name: "Team promotions"
+      hero_metric: "100% promotion rate within team — Senior, Staff, and Senior Staff Engineers"
+
+compensation:
+  target_range: "£95,000 - £120,000"
+  currency: "GBP"
+  minimum: "£95,000"
+  location_flexibility: "London-based, open to hybrid"
+
+location:
+  country: "United Kingdom"
+  city: "London"
+  timezone: "GMT/BST"
+  visa_status: "No sponsorship needed"
