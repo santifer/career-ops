@@ -192,7 +192,7 @@ After detecting archetype, read `modes/_profile.md` for the user's specific fram
 
 ### Persisting the extracted style
 
-After scanning, append to `modes/_profile.md`:
+After scanning, write to `modes/_profile.md`: find the existing `## Writing Style` section and replace the entire block up to the next `## ` heading (or EOF) with the new content. If no `## Writing Style` section exists, append it. This ensures there is always exactly one canonical section.
 
 ```markdown
 ## Writing Style

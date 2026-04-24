@@ -83,6 +83,7 @@ const USER_PATHS = [
   'reports/',
   'output/',
   'jds/',
+  'writing-samples/',
 ];
 
 function localVersion() {
