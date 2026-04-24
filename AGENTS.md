@@ -1,5 +1,11 @@
 # Career-Ops -- AI Job Search Pipeline
 
+## Codex Context Bootstrap
+
+Before non-trivial work in this repository, read `PROJECT_CONTEXT.md` first, then read only the local `AGENTS.md` files that apply to the directories you will touch. `DATA_CONTRACT.md` remains the source of truth for the user-layer/system-layer boundary; if any context file conflicts with it, `DATA_CONTRACT.md` wins.
+
+Local context files exist in key subdirectories so agents can work with less guesswork and less broad file reading. Prefer the closest local `AGENTS.md` over repeating root-level assumptions.
+
 ## Origin
 
 This system was built and used by [santifer](https://santifer.io) to evaluate 740+ job offers, generate 100+ tailored CVs, and land a Head of Applied AI role. The archetypes, scoring logic, negotiation scripts, and proof point structure all reflect his specific career search in AI/automation roles.
