@@ -928,7 +928,7 @@ tracked_companies:
     input:
       startUrls:
         - url: "https://nvidia.wd5.myworkdayjobs.com/NVIDIAExternalCareerSite"
-      proxyUrls:
+      proxyConfiguration:
         useApifyProxy: true
       pagination: 5          # 0 = unlimited
       details: false         # skip per-job detail pages — faster, lower usage
