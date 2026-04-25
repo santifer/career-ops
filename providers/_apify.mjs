@@ -1,5 +1,5 @@
 // Apify transport helper — runs pre-built actors and returns dataset items.
-// Used by Apify-backed providers (e.g. providers/scan-apify.mjs).
+// Used by Apify-backed providers (e.g. providers/apify.mjs).
 //
 // Uses the async pattern (start → poll → fetch dataset) rather than the
 // long-polling /run-sync-get-dataset-items endpoint, which holds one HTTP
