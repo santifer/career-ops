@@ -26,6 +26,13 @@ function normalizeActorId(actorId) {
   return actorId.replace('/', '~');
 }
 
+// Apify supports auth via ?token= or Authorization: Bearer. The query-string
+// form leaks the token into HTTP access logs and any error/log line that
+// includes the URL, so always use the header.
+function authHeaders(token) {
+  return { authorization: `Bearer ${token}` };
+}
+
 function sleep(ms) {
   return new Promise(r => setTimeout(r, ms));
 }
@@ -64,10 +71,10 @@ async function fetchJson(url, init = {}, timeoutMs = PER_REQUEST_TIMEOUT_MS, att
 }
 
 async function startRun(actorId, input, token) {
-  const url = `${APIFY_API_BASE}/acts/${normalizeActorId(actorId)}/runs?token=${token}`;
+  const url = `${APIFY_API_BASE}/acts/${normalizeActorId(actorId)}/runs`;
   const body = await fetchJson(url, {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers: { 'content-type': 'application/json', ...authHeaders(token) },
     body: JSON.stringify(input || {}),
   });
   const runId = body?.data?.id;
@@ -79,18 +86,18 @@ async function startRun(actorId, input, token) {
 
 // Best-effort — if we give up on a run, stop the actor so credits aren't wasted.
 async function abortRun(runId, token) {
-  const url = `${APIFY_API_BASE}/actor-runs/${runId}/abort?token=${token}`;
+  const url = `${APIFY_API_BASE}/actor-runs/${runId}/abort`;
   try {
-    await fetch(url, { method: 'POST' });
+    await fetch(url, { method: 'POST', headers: authHeaders(token) });
   } catch {}
 }
 
 async function waitForRun(runId, token, deadline) {
-  const url = `${APIFY_API_BASE}/actor-runs/${runId}?token=${token}`;
+  const url = `${APIFY_API_BASE}/actor-runs/${runId}`;
   let lastError;
   while (Date.now() < deadline) {
     try {
-      const body = await fetchJsonOnce(url);
+      const body = await fetchJsonOnce(url, { headers: authHeaders(token) });
       const run = body?.data;
       if (run && TERMINAL_STATUSES.has(run.status)) return run;
       lastError = undefined;
@@ -105,8 +112,8 @@ async function waitForRun(runId, token, deadline) {
 }
 
 async function fetchDatasetItems(runId, token) {
-  const url = `${APIFY_API_BASE}/actor-runs/${runId}/dataset/items?token=${token}`;
-  const items = await fetchJson(url, {}, PER_REQUEST_TIMEOUT_MS * 2);
+  const url = `${APIFY_API_BASE}/actor-runs/${runId}/dataset/items`;
+  const items = await fetchJson(url, { headers: authHeaders(token) }, PER_REQUEST_TIMEOUT_MS * 2);
   if (!Array.isArray(items)) {
     throw new Error(`Apify run ${runId} returned non-array dataset payload`);
   }
