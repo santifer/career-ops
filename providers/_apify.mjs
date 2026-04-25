@@ -85,14 +85,20 @@ async function startRun(actorId, input, token) {
 }
 
 // Best-effort — if we give up on a run, stop the actor so credits aren't wasted.
+// A short timeout keeps a flaky network from leaving this request pending and
+// blocking scan task completion.
 async function abortRun(runId, token) {
   const url = `${APIFY_API_BASE}/actor-runs/${runId}/abort`;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 5_000);
   try {
-    await fetch(url, { method: 'POST', headers: authHeaders(token) });
-  } catch {}
+    await fetch(url, { method: 'POST', headers: authHeaders(token), signal: controller.signal });
+  } catch {} finally {
+    clearTimeout(timer);
+  }
 }
 
-async function waitForRun(runId, token, deadline) {
+async function waitForRun(runId, token, deadline, timeoutMs) {
   const url = `${APIFY_API_BASE}/actor-runs/${runId}`;
   let lastError;
   while (Date.now() < deadline) {
@@ -108,7 +114,7 @@ async function waitForRun(runId, token, deadline) {
   }
   await abortRun(runId, token);
   const suffix = lastError ? ` (last error: ${lastError.message})` : '';
-  throw new Error(`Apify run ${runId} did not finish within ${Math.round(DEFAULT_RUN_TIMEOUT_MS / 1000)}s${suffix}`);
+  throw new Error(`Apify run ${runId} did not finish within ${Math.round(timeoutMs / 1000)}s${suffix}`);
 }
 
 async function fetchDatasetItems(runId, token) {
@@ -126,7 +132,7 @@ export async function runActor(actorId, input, { timeoutMs = DEFAULT_RUN_TIMEOUT
 
   const deadline = Date.now() + timeoutMs;
   const runId = await startRun(actorId, input, token);
-  const run = await waitForRun(runId, token, deadline);
+  const run = await waitForRun(runId, token, deadline, timeoutMs);
 
   if (run.status !== 'SUCCEEDED') {
     const reason = run.statusMessage ? `: ${run.statusMessage}` : '';
