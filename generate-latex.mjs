@@ -16,29 +16,11 @@
 import { readFile, writeFile, stat, copyFile, rm } from 'fs/promises';
 import { resolve, basename, dirname, join } from 'path';
 import { execFileSync } from 'child_process';
-import { existsSync, mkdirSync, readFileSync } from 'fs';
+import { existsSync, mkdirSync } from 'fs';
 import { fileURLToPath } from 'url';
+import { substitutePII } from './lib/pii.mjs';
 
 const __scriptDir = dirname(fileURLToPath(import.meta.url));
-
-/**
- * PII substitution — replaces {{TOKEN}} placeholders with values from
- * config/pii.local.json. This file is gitignored and never read by Claude;
- * it exists only on the local filesystem. Keeps PII out of model context.
- * Any unsubstituted token is caught by the existing placeholder check below.
- */
-function substitutePII(content) {
-  const piiPath = resolve(__scriptDir, 'config/pii.local.json');
-  if (!existsSync(piiPath)) return { content, substituted: 0 };
-  const pii = JSON.parse(readFileSync(piiPath, 'utf-8'));
-  let substituted = 0;
-  for (const [key, value] of Object.entries(pii)) {
-    if (key.startsWith('_') || typeof value !== 'string' || value === '') continue;
-    const pattern = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
-    content = content.replace(pattern, () => { substituted++; return value; });
-  }
-  return { content, substituted };
-}
 
 const REQUIRED_SECTIONS = [
   '\\\\section{Education}',
@@ -70,13 +52,9 @@ async function main() {
     process.exit(1);
   }
 
-  // Substitute PII tokens from config/pii.local.json (kept out of model context).
-  // Write the substituted content back to disk so pdflatex compiles the real values.
-  const piiResult = substitutePII(content);
-  if (piiResult.substituted > 0) {
-    content = piiResult.content;
-    await writeFile(absPath, content, 'utf-8');
-  }
+  // Substitute PII tokens from config/pii.local.json without mutating the source .tex.
+  const piiResult = substitutePII(content, { projectRoot: __scriptDir, target: 'latex' });
+  content = piiResult.content;
 
   const issues = [];
 
@@ -151,6 +129,9 @@ async function main() {
   // --- Compile .tex → .pdf via pdflatex ---
   const texDir = dirname(absPath);
   const texBase = basename(absPath, '.tex');
+  const compilePath = piiResult.substituted > 0 ? join(texDir, `${texBase}.resolved.tex`) : absPath;
+  const compileBase = basename(compilePath, '.tex');
+  const compiledPdf = join(texDir, `${compileBase}.pdf`);
   const defaultPdf = join(texDir, `${texBase}.pdf`);
   const targetPdf = outputPath ? resolve(outputPath) : defaultPdf;
 
@@ -161,13 +142,17 @@ async function main() {
   }
 
   try {
+    if (compilePath !== absPath) {
+      await writeFile(compilePath, content, 'utf-8');
+    }
+
     // Run pdflatex twice for cross-references (standard practice)
     const pdflatexArgs = [
       '-no-shell-escape',
       '-interaction=nonstopmode',
       '-halt-on-error',
       `-output-directory=${texDir}`,
-      absPath,
+      compilePath,
     ];
 
     // First pass
@@ -187,7 +172,7 @@ async function main() {
     report.compiled = true;
   } catch (err) {
     // Try to extract useful error from pdflatex log
-    const logPath = join(texDir, `${texBase}.log`);
+    const logPath = join(texDir, `${compileBase}.log`);
     let latexError = err.message;
     try {
       const log = await readFile(logPath, 'utf-8');
@@ -205,9 +190,9 @@ async function main() {
   if (report.compiled) {
     try {
       // Move PDF to target location if different
-      if (resolve(defaultPdf) !== resolve(targetPdf)) {
-        await copyFile(defaultPdf, targetPdf);
-        await rm(defaultPdf).catch(() => {});
+      if (resolve(compiledPdf) !== resolve(targetPdf)) {
+        await copyFile(compiledPdf, targetPdf);
+        await rm(compiledPdf).catch(() => {});
       }
 
       const pdfStat = await stat(targetPdf);
@@ -222,8 +207,12 @@ async function main() {
     // Clean up auxiliary files (best-effort)
     const auxExts = ['.aux', '.log', '.out', '.fls', '.fdb_latexmk', '.synctex.gz'];
     for (const ext of auxExts) {
-      await rm(join(texDir, `${texBase}${ext}`)).catch(() => {});
+      await rm(join(texDir, `${compileBase}${ext}`)).catch(() => {});
     }
+  }
+
+  if (compilePath !== absPath) {
+    await rm(compilePath).catch(() => {});
   }
 
   console.log(JSON.stringify(report, null, 2));

@@ -13,33 +13,14 @@
 import { chromium } from 'playwright';
 import { resolve, dirname } from 'path';
 import { readFile } from 'fs/promises';
-import { mkdirSync, existsSync, readFileSync } from 'fs';
+import { mkdirSync } from 'fs';
 import { fileURLToPath } from 'url';
+import { substitutePII } from './lib/pii.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // Ensure output directory exists (fresh setup)
 mkdirSync(resolve(__dirname, 'output'), { recursive: true });
-
-/**
- * PII substitution — replaces {{TOKEN}} placeholders with values from
- * config/pii.local.json. This file is gitignored and never read by Claude;
- * it exists only on the local filesystem. Keeps PII out of model context.
- */
-function substitutePII(content) {
-  const piiPath = resolve(__dirname, 'config/pii.local.json');
-  if (!existsSync(piiPath)) return { content, substituted: 0, missing: [] };
-  const pii = JSON.parse(readFileSync(piiPath, 'utf-8'));
-  let substituted = 0;
-  for (const [key, value] of Object.entries(pii)) {
-    if (key.startsWith('_') || typeof value !== 'string' || value === '') continue;
-    const pattern = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
-    content = content.replace(pattern, () => { substituted++; return value; });
-  }
-  const missing = [...new Set((content.match(/\{\{[A-Z_]+\}\}/g) || []))]
-    .filter(tok => ['NAME','EMAIL','PHONE','LOCATION','LINKEDIN_URL','LINKEDIN_DISPLAY','PORTFOLIO_URL','PORTFOLIO_DISPLAY','GITHUB_URL','GITHUB_DISPLAY','EMAIL_URL','EMAIL_DISPLAY','CONTACT_LINE'].includes(tok.slice(2,-2)));
-  return { content, substituted, missing };
-}
 
 /**
  * Normalize text for ATS compatibility by converting problematic Unicode.
@@ -133,7 +114,7 @@ async function generatePDF() {
   let html = await readFile(inputPath, 'utf-8');
 
   // Substitute PII tokens from config/pii.local.json (kept out of model context)
-  const piiResult = substitutePII(html);
+  const piiResult = substitutePII(html, { projectRoot: __dirname, target: 'html' });
   html = piiResult.content;
   if (piiResult.substituted > 0) {
     console.log(`🔒 PII substitution: ${piiResult.substituted} token replacements from config/pii.local.json`);

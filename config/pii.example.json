@@ -1,5 +1,6 @@
 {
   "_comment": "Copy this file to config/pii.local.json and fill in your real values. pii.local.json is gitignored AND never read by Claude — only local scripts (generate-pdf.mjs, generate-latex.mjs) read it to substitute tokens at compile time. Every key here matches a {{TOKEN}} used in the HTML/TeX CV templates. Keys you don't set are left as tokens; the generator will fail with a clear error so you know what's missing.",
+  "_latex_raw_tokens": ["CONTACT_LINE", "EMAIL_URL", "LINKEDIN_URL", "PORTFOLIO_URL", "GITHUB_URL"],
 
   "NAME": "Jane Smith",
   "EMAIL": "jane@example.com",
