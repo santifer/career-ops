@@ -47,9 +47,9 @@ async function withPage(fn) {
   }
 }
 
-export async function fetchText(url, { timeoutMs = DEFAULT_NAVIGATE_TIMEOUT_MS } = {}) {
+export async function fetchText(url, { timeoutMs = DEFAULT_NAVIGATE_TIMEOUT_MS, waitUntil = 'domcontentloaded' } = {}) {
   return await withPage(async page => {
-    await page.goto(url, { timeout: timeoutMs, waitUntil: 'domcontentloaded' });
+    await page.goto(url, { timeout: timeoutMs, waitUntil });
     return await page.content();
   });
 }
