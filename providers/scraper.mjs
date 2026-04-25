@@ -1,6 +1,7 @@
 // HTML scraper provider — extracts postings from a search-results page that
 // embeds a JSON-LD ItemList (schema.org) or any other repeating markup with
-// title + url. Paginates with `&page=N` until the list is empty.
+// title + url. Paginates with `&page=N` until the list is empty (or override
+// the query key with `page_param:` — e.g. `start`, `offset`, `p`).
 //
 // Each portals.yml entry must provide its own `list_item_pattern` and
 // `url_must_include` — no built-in defaults. Entries look like:
@@ -106,10 +107,10 @@ function extractIdFromUrl(url) {
   return segments[segments.length - 1] || url;
 }
 
-function buildPageUrl(baseUrl, page) {
+function buildPageUrl(baseUrl, page, pageParam) {
   if (page <= 1) return baseUrl;
   const sep = baseUrl.includes('?') ? '&' : '?';
-  return `${baseUrl}${sep}page=${page}`;
+  return `${baseUrl}${sep}${pageParam}=${page}`;
 }
 
 export default {
@@ -130,12 +131,13 @@ export default {
     }
     const pattern = compilePattern(entry.list_item_pattern, entry.name);
     const urlMustInclude = entry.url_must_include;
+    const pageParam = entry.page_param || 'page';
 
     const all = [];
     const seenUrls = new Set();
 
     for (let page = 1; page <= MAX_PAGES; page++) {
-      const pageUrl = buildPageUrl(baseUrl, page);
+      const pageUrl = buildPageUrl(baseUrl, page, pageParam);
       let html;
       try {
         html = await ctx.fetchText(pageUrl);
