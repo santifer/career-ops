@@ -895,7 +895,7 @@ tracked_companies:
     notes: "AI evaluation and observability platform. Bangalore-based, mostly on-site."
     enabled: true
 
- # -- Apify-backed sources --
+# -- Apify-backed sources --
   # Generic provider — works with any Apify actor. Each entry declares which
   # actor to run, what input to send, and how to map the actor's output items
   # to {title, url, company, location}. Requires APIFY_TOKEN in .env.
