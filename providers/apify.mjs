@@ -50,6 +50,8 @@ function pickField(item, spec) {
   return '';
 }
 
+const ALLOWED_DEFAULT_KEYS = new Set(['title', 'url', 'company', 'location']);
+
 function normalizeItem(item, fieldMap, defaults) {
   const out = {
     title: String(pickField(item, fieldMap.title) || ''),
@@ -58,6 +60,7 @@ function normalizeItem(item, fieldMap, defaults) {
     location: fieldMap.location ? String(pickField(item, fieldMap.location) || '') : '',
   };
   for (const [k, v] of Object.entries(defaults || {})) {
+    if (!ALLOWED_DEFAULT_KEYS.has(k)) continue;
     if (!out[k]) out[k] = String(v);
   }
   return out;
