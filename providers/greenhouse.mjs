@@ -21,7 +21,7 @@ export default {
     const apiUrl = resolveApiUrl(entry);
     if (!apiUrl) throw new Error(`greenhouse: cannot derive API URL for ${entry.name}`);
     const json = await ctx.fetchJson(apiUrl);
-    const jobs = json.jobs || [];
+    const jobs = Array.isArray(json?.jobs) ? json.jobs : [];
     return jobs.map(j => ({
       title: j.title || '',
       url: j.absolute_url || '',
