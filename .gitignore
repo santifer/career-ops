@@ -18,6 +18,7 @@ jds/*
 
 # User config and customization (never auto-updated)
 config/profile.yml
+config/pii.local.json
 portals.yml
 modes/_profile.md
 .update-dismissed

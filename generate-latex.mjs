@@ -13,10 +13,32 @@
  * Requires: pdflatex (MiKTeX or TeX Live) on PATH.
  */
 
-import { readFile, stat, copyFile, rm } from 'fs/promises';
+import { readFile, writeFile, stat, copyFile, rm } from 'fs/promises';
 import { resolve, basename, dirname, join } from 'path';
 import { execFileSync } from 'child_process';
-import { existsSync, mkdirSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+
+const __scriptDir = dirname(fileURLToPath(import.meta.url));
+
+/**
+ * PII substitution — replaces {{TOKEN}} placeholders with values from
+ * config/pii.local.json. This file is gitignored and never read by Claude;
+ * it exists only on the local filesystem. Keeps PII out of model context.
+ * Any unsubstituted token is caught by the existing placeholder check below.
+ */
+function substitutePII(content) {
+  const piiPath = resolve(__scriptDir, 'config/pii.local.json');
+  if (!existsSync(piiPath)) return { content, substituted: 0 };
+  const pii = JSON.parse(readFileSync(piiPath, 'utf-8'));
+  let substituted = 0;
+  for (const [key, value] of Object.entries(pii)) {
+    if (key.startsWith('_') || typeof value !== 'string' || value === '') continue;
+    const pattern = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
+    content = content.replace(pattern, () => { substituted++; return value; });
+  }
+  return { content, substituted };
+}
 
 const REQUIRED_SECTIONS = [
   '\\\\section{Education}',
@@ -46,6 +68,14 @@ async function main() {
   } catch (err) {
     console.error(`Error reading ${absPath}: ${err.message}`);
     process.exit(1);
+  }
+
+  // Substitute PII tokens from config/pii.local.json (kept out of model context).
+  // Write the substituted content back to disk so pdflatex compiles the real values.
+  const piiResult = substitutePII(content);
+  if (piiResult.substituted > 0) {
+    content = piiResult.content;
+    await writeFile(absPath, content, 'utf-8');
   }
 
   const issues = [];
