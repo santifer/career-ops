@@ -23,6 +23,10 @@
 // filled in by the pipeline mode when extracting the full JD.
 
 const MAX_PAGES = 20;
+// Defensive cap for `list_item_pattern` execution. Patterns are compiled from
+// portals.yml — a runaway regex on a large page can spin for a long time. Stop
+// well above any realistic single-page result count.
+const MAX_MATCHES_PER_PAGE = 500;
 
 function unescapeJsonString(s) {
   return s
@@ -65,12 +69,17 @@ function compilePattern(pattern, entryName) {
   }
 }
 
-function extractJobsFromHtml(html, pattern, urlMustInclude) {
+function extractJobsFromHtml(html, pattern, urlMustInclude, entryName) {
   const jobs = [];
   const seen = new Set();
   pattern.lastIndex = 0;
   let m;
+  let matchCount = 0;
   while ((m = pattern.exec(html)) !== null) {
+    if (++matchCount > MAX_MATCHES_PER_PAGE) {
+      console.error(`⚠️  scraper: ${entryName} hit MAX_MATCHES_PER_PAGE (${MAX_MATCHES_PER_PAGE}) — truncating; check list_item_pattern for runaway matching`);
+      break;
+    }
     const title = decodeText(m[1]);
     const url = decodeText(m[2]);
     if (urlMustInclude && !url.includes(urlMustInclude)) continue;
@@ -134,7 +143,7 @@ export default {
         if (page === 1) throw err;
         break;
       }
-      const pageJobs = extractJobsFromHtml(html, pattern, urlMustInclude);
+      const pageJobs = extractJobsFromHtml(html, pattern, urlMustInclude, entry.name);
       if (pageJobs.length === 0) break;
 
       let novel = 0;
