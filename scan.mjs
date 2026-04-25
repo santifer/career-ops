@@ -53,6 +53,10 @@ const INTERVAL_MULTIPLIERS = {
   '1 YEAR': 1
 };
 
+function normalize(str) {
+  return (str || "").toLowerCase().trim();
+}
+
 // ── API detection ───────────────────────────────────────────────────
 
 function detectApi(company) {
@@ -176,23 +180,41 @@ function buildTitleFilter(titleFilter) {
 function buildLocationFilter(config) {
   const remoteOnly = config?.remote_only === true;
   const onsiteOnly = config?.onsite_only === true;
-  const positive = (config?.positive || []).map(k => k.toLowerCase());
-  const negative = (config?.negative || []).map(k => k.toLowerCase());
+
+  const positive = (config?.positive || []).map(normalize).filter(Boolean);
+  const negative = (config?.negative || []).map(normalize).filter(Boolean);
 
   return (location) => {
-    const lower = (location || "").toLowerCase();
+    const lower = normalize(location);
+
+    // Empty location handling
+    if (!lower) {
+      // If strict filtering requested, reject
+      if (remoteOnly || onsiteOnly || positive.length > 0) return false;
+      return true;
+    }
+
     const isRemote = REMOTE_SYNONYMS.some(s => lower.includes(s));
 
+    // ── Step 1: Remote/Onsite constraints ──
     if (remoteOnly && !isRemote) return false;
     if (onsiteOnly && isRemote) return false;
 
-    // Short-circuit: if it's remote and user wants remote, keep it regardless of city keywords
+    // ── Step 2: Negative filter (ALWAYS applied) ──
+    if (negative.length > 0 && negative.some(k => lower.includes(k))) {
+      return false;
+    }
+
+    // Short-circuit: if it's remote and user wants remote, keep it
     if (remoteOnly && isRemote) return true;
 
-    const hasPositive = positive.length === 0 || positive.some(k => lower.includes(k));
-    const hasNegative = negative.some(k => lower.includes(k));
+    // ── Step 3: Positive filter ──
+    if (positive.length > 0) {
+      return positive.some(k => lower.includes(k));
+    }
 
-    return hasPositive && !hasNegative;
+    // ── Step 4: Default accept ──
+    return true;
   };
 }
 
@@ -204,7 +226,7 @@ function buildSalaryFilter(config) {
   const currency = config?.currency || "";
 
   return (salary) => {
-    if (min === 0 && max === 0) return true; // Filter disabled
+    if (min === 0 && max === 0) return true; 
     if (!salary) return true; // Keep the job if salary data is missing (e.g. Greenhouse/Lever)
 
     // Currency check (if both have currency, they must match)
