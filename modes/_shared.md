@@ -141,7 +141,7 @@ After detecting archetype, read `modes/_profile.md` for the user's specific fram
 
 **When to apply:** Before generating any text the user will send or publish — cover letters, LinkedIn outreach, application form answers, follow-up emails, executive summaries, profile blurbs. Does NOT apply to internal evaluation reports (A–F blocks, scores, analysis).
 
-**If no cached style in `_profile.md`:** Read all files in `writing-samples/` and extract the markers below, then write the result to `_profile.md` under `## Writing Style` so future sessions skip this step.
+**If no cached style in `_profile.md`:** Read all files in `writing-samples/`, **skipping any file named `README.md`**. If no user-provided samples are found, skip style calibration and gently note — once, without pressure — that adding a writing sample (e.g. a past cover letter, a LinkedIn About section, any professional writing) would help tailor outputs to their voice. If samples exist, extract the markers below and write the result to `_profile.md` under `## Writing Style` so future sessions skip this step.
 
 ### What to extract
 
@@ -193,7 +193,7 @@ After detecting archetype, read `modes/_profile.md` for the user's specific fram
 
 ### Persisting the extracted style
 
-After scanning, write to `modes/_profile.md`: find the existing `## Writing Style` section and replace the entire block up to the next `##` heading (or EOF) with the new content. If no `## Writing Style` section exists, append it. This ensures there is always exactly one canonical section.
+After scanning (excluding any `README.md` files), write to `modes/_profile.md` only if at least one user-provided sample was found: find the existing `## Writing Style` section and replace the entire block up to the next `##` heading (or EOF) with the new content. If no `## Writing Style` section exists, append it. This ensures there is always exactly one canonical section. If no samples were found after filtering, do not write or modify the section.
 
 ```markdown
 ## Writing Style
