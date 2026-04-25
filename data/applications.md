@@ -10,7 +10,7 @@
 | 30 | 2026-04-21 | Cimento Nacional | Plant Controller | 2.6/5 | Evaluated | ❌ | [030](reports/030-cimento-nacional-plant-controller-2026-04-21.md) | Planta única Matozinhos/MG -- escopo abaixo do atual; presencial obrigatório; score 2.6 |
 | 31 | 2026-04-21 | Pulsus | Controller | 3.3/5 | Applied | ✅ | [031](reports/031-pulsus-controller-2026-04-21.md) | Healthcare SaaS B2B, strong AI fit but level mismatch — 3.3/5 |
 | 18 | 2026-04-18 | Konecranes | Business Controller LATAM | 3.9/5 | Applied | ❌ | [018](reports/018-konecranes-business-controller-latam-2026-04-21.md) | Strong match: LATAM controller, 5+ years exp, trilingual, SAP, FP&A |
-| 19 | 2026-04-21 | Griffith Foods | Regional Controller | 3.8/5 | Form Ready | ✅ | [#019](reports/019-griffith-foods-regional-controller-2026-04-21.md) | Form ready — Workday login required at griffithfoods.wd12.myworkdayjobs.com |
+| 19 | 2026-04-21 | Griffith Foods | Regional Controller | 3.8/5 | Evaluated | ✅ | [#019](reports/019-griffith-foods-regional-controller-2026-04-21.md) | Form ready — Workday login required at griffithfoods.wd12.myworkdayjobs.com |
 | 20 | 2026-04-21 | IDEMIA | Manufacturing Controller | 3.3/5 | Applied | ✅ | [020](reports/020-idemia-manufacturing-controller-2026-04-21.md) | Applied via LinkedIn Easy Apply — Cotia-SP, 4+1 hybrid |
 | 21 | 2026-04-21 | Grupo Renova | Controller | 3.2/5 | Applied | ✅ | [021](reports/021-grupo-renova-controller-2026-04-21.md) | 3.2/5 - applied via Mindsight portal; data de nascimento corrigir manualmente |
 | 22 | 2026-04-21 | DUX Company | Gerente Contábil | 3.5/5 | Applied | ✅ | [022](reports/022-dux-company-gerente-contabil-2026-04-21.md) | 3.5/5 — solid CRC+IFRS+FP&A alignment but seniority step-back risk (LATAM Director scope → single entity) |

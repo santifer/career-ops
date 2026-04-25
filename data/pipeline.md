@@ -2,6 +2,13 @@
 
 URLs to process (one per line):
 
+## Pendentes — Scan 2026-04-24
+
+- [ ] https://br.linkedin.com/jobs/view/accounting-director-brazil-controller-at-access-gest%C3%A3o-de-informa%C3%A7%C3%A3o-4364195821 | Access | Accounting Director / Brazil Controller
+- [ ] https://br.linkedin.com/jobs/view/controller-at-lhh-4379884146 | LHH | Controller
+- [ ] https://br.linkedin.com/jobs/view/latam-business-controller-at-axon-4309356153 | Axon | LATAM Business Controller
+- [ ] https://br.linkedin.com/jobs/view/controller-brasil-at-bridgestone-latin-america-south-4380629757 | Bridgestone Latin America South | Controller Brasil
+
 ## Processadas
 
 - [x] #001 | https://www.amazon.jobs/en/jobs/3207863 | Amazon | Accounting Manager, LATAM Stores | 3.5/5 | PDF ✅

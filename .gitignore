@@ -31,6 +31,8 @@ node_modules/
 logs/
 .playwright-mcp/
 tmp/
+dashboard/e2e-artifacts/
+dashboard/cockpit-e2e*.log
 /*.yml
 /dropdown-check
 /*.png
@@ -50,3 +52,9 @@ career-dashboard
 *.exe
 reports/*.html
 batch/tracker-additions/merged/
+
+# Local deploy/runtime caches
+.firebase/
+.superpowers/
+context/
+data/runs/
