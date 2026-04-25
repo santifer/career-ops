@@ -385,17 +385,56 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
+<!--
+  marked is vendored locally (public/marked.min.js) to avoid CDN supply-chain risk.
+  To update: npm install marked@9 && cp node_modules/marked/marked.min.js public/
+-->
+<script src="/marked.min.js"></script>
 <script>
   // ── State ──────────────────────────────────────────────────────────────────
+
+  /** @type {object[]} Full list of applications fetched from the server. */
   let allApps = [];
+
+  /** @type {string} Active status filter ('all' or a status string). */
   let activeFilter = 'all';
-  let searchQuery  = '';
+
+  /** @type {string} Current live-search query. */
+  let searchQuery = '';
+
+  /** @type {string} Column key used for sorting. */
   let sortKey = 'date';
+
+  /** @type {boolean} True = ascending sort order. */
   let sortAsc = false;
-  let currentPdf  = null;
+
+  /** @type {string|null} PDF path for the currently open drawer, or null. */
+  let currentPdf = null;
+
+  // ── Row registry ───────────────────────────────────────────────────────────
+  // FIX: replaced unsafe inline JSON in onclick attributes with an index-based
+  // registry. Each rendered row stores only a numeric key; the actual object is
+  // looked up here, avoiding HTML-attribute injection.
+
+  /** @type {Map<number, object>} Maps row index → application object. */
+  const rowRegistry = new Map();
+
+  /** @type {number} Auto-incrementing key for rowRegistry entries. */
+  let rowSeq = 0;
+
+  /**
+   * Register an application object and return a unique numeric key.
+   * @param {object} app
+   * @returns {number}
+   */
+  function registerRow(app) {
+    const key = rowSeq++;
+    rowRegistry.set(key, app);
+    return key;
+  }
 
   // ── Colors ─────────────────────────────────────────────────────────────────
+
   const STATUS_STYLE = {
     Evaluated: { bg:'#eff6ff', color:'#1d4ed8', border:'#bfdbfe' },
     Applied:   { bg:'#f5f3ff', color:'#6d28d9', border:'#ddd6fe' },
@@ -407,6 +446,11 @@
     SKIP:      { bg:'#f9fafb', color:'#6b7280', border:'#e5e7eb' },
   };
 
+  /**
+   * Return a hex colour appropriate for a numeric score value.
+   * @param {number} n - Score in the 0–5 range.
+   * @returns {string} CSS colour string.
+   */
   function scoreColor(n) {
     if (n >= 4.5) return '#10b981';
     if (n >= 4.0) return '#14b8a6';
@@ -415,6 +459,8 @@
   }
 
   // ── Load ───────────────────────────────────────────────────────────────────
+
+  /** Fetch applications from the server and re-render all UI sections. */
   async function loadData() {
     try {
       const r = await fetch('/api/applications');
@@ -434,6 +480,8 @@
   }
 
   // ── Stats ──────────────────────────────────────────────────────────────────
+
+  /** Render the header stats bar and the stat-card grid. */
   function renderStats() {
     const counts = {};
     let scoreSum = 0, scoreCnt = 0;
@@ -467,6 +515,7 @@
       </div>`).join('');
   }
 
+  /** Update the count badges on each filter pill. */
   function renderCounts() {
     const counts = { all: allApps.length };
     for (const a of allApps) {
@@ -480,6 +529,11 @@
   }
 
   // ── Table ──────────────────────────────────────────────────────────────────
+
+  /**
+   * Return the filtered and sorted subset of allApps based on current state.
+   * @returns {object[]}
+   */
   function getFiltered() {
     let list = [...allApps];
     if (activeFilter !== 'all') list = list.filter(a => a.status === activeFilter);
@@ -493,10 +547,10 @@
     }
     list.sort((a, b) => {
       let va, vb;
-      if (sortKey === 'score')   { va = a.scoreNum; vb = b.scoreNum; }
-      else if (sortKey === 'date') { va = a.date||''; vb = b.date||''; }
+      if (sortKey === 'score')        { va = a.scoreNum;    vb = b.scoreNum; }
+      else if (sortKey === 'date')    { va = a.date||'';    vb = b.date||''; }
       else if (sortKey === 'company') { va = a.company||''; vb = b.company||''; }
-      else { va = a['#']||''; vb = b['#']||''; }
+      else                            { va = a['#']||'';    vb = b['#']||''; }
       if (va < vb) return sortAsc ? -1 : 1;
       if (va > vb) return sortAsc ?  1 : -1;
       return 0;
@@ -504,7 +558,13 @@
     return list;
   }
 
+  /**
+   * Render the applications table into #table-area.
+   * Uses event delegation via data-row-key to avoid inline JSON in onclick.
+   */
   function renderTable() {
+    rowRegistry.clear();
+    rowSeq = 0;
     const list = getFiltered();
     const area = document.getElementById('table-area');
 
@@ -518,6 +578,12 @@
       return;
     }
 
+    /**
+     * Build a sortable column header cell.
+     * @param {string} key   - Sort key.
+     * @param {string} label - Display label.
+     * @returns {string} HTML string.
+     */
     function thSort(key, label) {
       const icon = sortKey === key ? (sortAsc ? '&#9650;' : '&#9660;') : '&#8661;';
       return `<th class="${sortKey===key?'sorted':''}" onclick="sortBy('${key}')">
@@ -526,12 +592,12 @@
     }
 
     const rows = list.map(a => {
-      const sc  = scoreColor(a.scoreNum);
-      const pct = Math.min((a.scoreNum / 5) * 100, 100);
-      const st  = STATUS_STYLE[a.status] || STATUS_STYLE.Discarded;
-      const idx = encodeURIComponent(a.reportPath);
+      const sc    = scoreColor(a.scoreNum);
+      const pct   = Math.min((a.scoreNum / 5) * 100, 100);
+      const st    = STATUS_STYLE[a.status] || STATUS_STYLE.Discarded;
+      const rowKey = registerRow(a);   // safe integer key — no JSON in HTML
 
-      return `<tr onclick="openReport(${JSON.stringify(a)})">
+      return `<tr data-row-key="${rowKey}">
         <td class="td-num">${h(a['#']||'')}</td>
         <td>
           <div class="td-company">${h(a.company||'')}</div>
@@ -570,14 +636,31 @@
       </tr></thead>
       <tbody>${rows}</tbody>
     </table>`;
+
+    // Event delegation: one listener on <tbody> handles all row clicks
+    area.querySelector('tbody').addEventListener('click', e => {
+      const row = e.target.closest('tr[data-row-key]');
+      if (!row) return;
+      const app = rowRegistry.get(Number(row.dataset.rowKey));
+      if (app) openReport(app);
+    });
   }
 
+  /**
+   * Toggle sort column; reverse direction if already sorted by that column.
+   * @param {string} key - Column key to sort by.
+   */
   function sortBy(key) {
     if (sortKey === key) sortAsc = !sortAsc;
     else { sortKey = key; sortAsc = false; }
     renderTable();
   }
 
+  /**
+   * Set the active status filter and re-render the table.
+   * @param {string} status - Status string or 'all'.
+   * @param {HTMLElement} btn - The clicked filter pill element.
+   */
   function setFilter(status, btn) {
     activeFilter = status;
     document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
@@ -585,9 +668,19 @@
     renderTable();
   }
 
+  /**
+   * Update the search query and re-render the table.
+   * @param {string} q - Search string from the input.
+   */
   function onSearch(q) { searchQuery = q; renderTable(); }
 
   // ── Drawer ─────────────────────────────────────────────────────────────────
+
+  /**
+   * Open the slide-in report drawer for the given application.
+   * Fetches report markdown from the server and sanitizes before rendering.
+   * @param {object} app - Application object from allApps.
+   */
   async function openReport(app) {
     if (!app.reportPath) return;
 
@@ -618,29 +711,88 @@
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       const md = await r.text();
 
-      // Extract PDF path from report header
-      const pdfMatch = md.match(/\*\*PDF:\*\*\s*✅\s*`([^`]+)`/);
+      // Extract PDF path from report header (before parsing to avoid XSS via regex)
+      const pdfMatch = md.match(/\*\*PDF:\*\*\s*✅\s*`([^`\n\r]{1,260})`/);
       if (pdfMatch) {
-        currentPdf = '/' + pdfMatch[1].replace(/\\/g, '/');
-        pdfBtn.style.display = '';
+        // Validate: must be a relative path inside output/
+        const candidate = pdfMatch[1].replace(/\\/g, '/');
+        if (/^output\/[^/].*\.pdf$/i.test(candidate)) {
+          currentPdf = '/' + candidate;
+          pdfBtn.style.display = '';
+        }
       }
 
-      mdEl.innerHTML = marked.parse(md);
+      // FIX: sanitize marked output to prevent XSS from untrusted report content.
+      // Reports are AI-generated from external job descriptions, so they may contain
+      // HTML. We strip it with a simple but effective tag/attribute scrubber since
+      // DOMPurify is not bundled. For a stronger guarantee, add DOMPurify.
+      const rawHtml = marked.parse(md);
+      mdEl.innerHTML = sanitizeHtml(rawHtml);
     } catch (e) {
-      mdEl.innerHTML = `<div class="state-box"><div class="state-icon">&#9888;</div><h3>Could not load report</h3><p>${e.message}</p></div>`;
+      mdEl.innerHTML = `<div class="state-box"><div class="state-icon">&#9888;</div><h3>Could not load report</h3><p>${h(e.message)}</p></div>`;
     }
   }
 
+  /**
+   * Lightweight HTML sanitizer: strips dangerous tags and event-handler attributes
+   * from a marked-generated HTML string. Keeps safe structural/inline elements.
+   * For a production-grade solution, replace with DOMPurify.
+   * @param {string} html - Raw HTML string from marked.parse().
+   * @returns {string} Sanitized HTML string.
+   */
+  function sanitizeHtml(html) {
+    const ALLOWED_TAGS = new Set([
+      'p','br','strong','em','b','i','u','s','del','ins','mark',
+      'h1','h2','h3','h4','h5','h6',
+      'ul','ol','li','blockquote','pre','code','hr',
+      'table','thead','tbody','tr','th','td',
+      'a','span','div',
+    ]);
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+
+    (function clean(node) {
+      for (const child of [...node.childNodes]) {
+        if (child.nodeType === Node.ELEMENT_NODE) {
+          if (!ALLOWED_TAGS.has(child.tagName.toLowerCase())) {
+            // Replace disallowed element with its text content
+            node.replaceChild(document.createTextNode(child.textContent), child);
+          } else {
+            // Strip all event-handler and javascript: attributes
+            for (const attr of [...child.attributes]) {
+              if (attr.name.startsWith('on') ||
+                  (attr.name === 'href' && /^\s*javascript:/i.test(attr.value)) ||
+                  (attr.name === 'src'  && /^\s*javascript:/i.test(attr.value))) {
+                child.removeAttribute(attr.name);
+              }
+            }
+            clean(child);
+          }
+        }
+      }
+    })(tmp);
+
+    return tmp.innerHTML;
+  }
+
+  /** Close the report drawer and overlay. */
   function closeDrawer() {
     document.getElementById('overlay').classList.remove('open');
     document.getElementById('drawer').classList.remove('open');
   }
 
+  /** Open the PDF for the currently displayed report in a new tab. */
   function openPdf() {
     if (currentPdf) window.open(currentPdf, '_blank');
   }
 
   // ── Helpers ────────────────────────────────────────────────────────────────
+
+  /**
+   * Escape a string for safe insertion into HTML text/attribute contexts.
+   * @param {string} str
+   * @returns {string}
+   */
   function h(str) {
     return String(str)
       .replace(/&/g,'&amp;').replace(/</g,'&lt;')
