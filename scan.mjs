@@ -262,7 +262,7 @@ async function main() {
     targets.push({ ...company, _provider: resolved.provider });
   }
 
-  console.log(`Scanning ${targets.length} companies via API (${skippedCount} skipped — no API detected)`);
+  console.log(`Scanning ${targets.length} companies via providers (${skippedCount} skipped — no provider matched)`);
   if (dryRun) console.log('(dry run — no files will be written)\n');
 
   // 4. Load dedup sets
