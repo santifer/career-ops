@@ -19,6 +19,9 @@ async function getBrowser() {
     const { chromium } = await import('playwright');
     return await chromium.launch({ headless: true });
   })();
+  // Clear the cache if the launch fails so a transient error doesn't poison
+  // every later browser-transport entry sharing this module-level promise.
+  browserPromise.catch(() => { browserPromise = null; });
   return browserPromise;
 }
 
