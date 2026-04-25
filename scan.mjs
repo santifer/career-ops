@@ -60,7 +60,13 @@ async function loadProviders(dir) {
   const entries = readdirSync(dir).filter(f => f.endsWith('.mjs') && !f.startsWith('_'));
   for (const file of entries) {
     const full = path.join(dir, file);
-    const mod = await import(pathToFileURL(full).href);
+    let mod;
+    try {
+      mod = await import(pathToFileURL(full).href);
+    } catch (err) {
+      console.error(`⚠️  ${file}: failed to load — ${err.message}`);
+      continue;
+    }
     const p = mod.default;
     if (!p || typeof p.fetch !== 'function' || !p.id) {
       console.error(`⚠️  ${file}: skipping — default export must be { id, fetch }`);
