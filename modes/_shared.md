@@ -189,10 +189,11 @@ After detecting archetype, read `modes/_profile.md` for the user's specific fram
 - **If samples conflict**, weight the most recent or most similar-context file.
 - **If samples are sparse**, apply what can be reliably extracted and fall back to defaults for the rest.
 - **Style calibration applies to tone and structure only.** Do not import content, claims, or metrics from samples into CVs, reports, or evaluations.
+- **No verbatim copying or personal identifiers.** Store only abstract style descriptors (tone, structure, vocabulary preferences). Do not quote user sentences verbatim and do not retain personal identifiers (names, emails, phone numbers) from writing samples. "Preserve idiosyncratic choices" applies to stylistic traits only.
 
 ### Persisting the extracted style
 
-After scanning, write to `modes/_profile.md`: find the existing `## Writing Style` section and replace the entire block up to the next `## ` heading (or EOF) with the new content. If no `## Writing Style` section exists, append it. This ensures there is always exactly one canonical section.
+After scanning, write to `modes/_profile.md`: find the existing `## Writing Style` section and replace the entire block up to the next `##` heading (or EOF) with the new content. If no `## Writing Style` section exists, append it. This ensures there is always exactly one canonical section.
 
 ```markdown
 ## Writing Style
