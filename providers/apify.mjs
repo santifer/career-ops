@@ -32,6 +32,9 @@
 //     defaults:
 //       company: "Mondelez International"
 //
+// Optional `timeout_ms` overrides the 180s default actor-run timeout. Useful
+// for slow scrapers that need a few minutes to walk a large board.
+//
 // Requires APIFY_TOKEN in the environment. When unset, this entry errors
 // cleanly and the rest of the scan continues.
 
@@ -83,7 +86,9 @@ export default {
       throw new Error(`apify: entry ${entry.name} missing field_map.title and/or field_map.url`);
     }
 
-    const items = await runActor(entry.actor, entry.input || {});
+    const opts = {};
+    if (entry.timeout_ms != null) opts.timeoutMs = entry.timeout_ms;
+    const items = await runActor(entry.actor, entry.input || {}, opts);
     return items
       .map(item => normalizeItem(item, entry.field_map, entry.defaults))
       .filter(j => j.title && j.url);
