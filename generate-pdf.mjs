@@ -15,6 +15,7 @@ import { resolve, dirname } from 'path';
 import { readFile } from 'fs/promises';
 import { mkdirSync } from 'fs';
 import { fileURLToPath } from 'url';
+import { substitutePII } from './lib/pii.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -111,6 +112,18 @@ async function generatePDF() {
 
   // Read HTML to inject font paths as absolute file:// URLs
   let html = await readFile(inputPath, 'utf-8');
+
+  // Substitute PII tokens from config/pii.local.json (kept out of model context)
+  const piiResult = substitutePII(html, { projectRoot: __dirname, target: 'html' });
+  html = piiResult.content;
+  if (piiResult.substituted > 0) {
+    console.log(`🔒 PII substitution: ${piiResult.substituted} token replacements from config/pii.local.json`);
+  }
+  if (piiResult.missing.length > 0) {
+    console.error(`❌ Unresolved PII tokens: ${piiResult.missing.join(', ')}`);
+    console.error(`   Fill these in config/pii.local.json and retry.`);
+    process.exit(1);
+  }
 
   // Resolve font paths relative to career-ops/fonts/
   const fontsDir = resolve(__dirname, 'fonts');

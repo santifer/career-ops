@@ -1,0 +1,23 @@
+{
+  "_comment": "Copy this file to config/pii.local.json and fill in your real values. pii.local.json is gitignored AND never read by Claude — only local scripts (generate-pdf.mjs, generate-latex.mjs) read it to substitute tokens at compile time. Every key here matches a {{TOKEN}} used in the HTML/TeX CV templates. Keys you don't set are left as tokens; the generator will fail with a clear error so you know what's missing.",
+  "_latex_raw_tokens": ["CONTACT_LINE", "EMAIL_URL", "LINKEDIN_URL", "PORTFOLIO_URL", "GITHUB_URL"],
+
+  "NAME": "Jane Smith",
+  "EMAIL": "jane@example.com",
+  "PHONE": "+1-555-0123",
+  "LOCATION": "San Francisco, CA",
+
+  "LINKEDIN_URL": "https://www.linkedin.com/in/janesmith",
+  "LINKEDIN_DISPLAY": "linkedin.com/in/janesmith",
+
+  "PORTFOLIO_URL": "https://janesmith.dev",
+  "PORTFOLIO_DISPLAY": "janesmith.dev",
+
+  "GITHUB_URL": "https://github.com/janesmith",
+  "GITHUB_DISPLAY": "github.com/janesmith",
+
+  "EMAIL_URL": "mailto:jane@example.com",
+  "EMAIL_DISPLAY": "jane@example.com",
+
+  "CONTACT_LINE": "+1-555-0123 $\\cdot$ jane@example.com $\\cdot$ \\href{https://www.linkedin.com/in/janesmith}{linkedin.com/in/janesmith}"
+}
