@@ -1,27 +1,27 @@
-# Modo: training — Evaluación de Formación
+# Mode: training — Training Evaluation
 
-Para cada curso/cert que el candidato pregunte, evaluar 6 dimensiones:
+For each course/cert the candidate asks about, evaluate 6 dimensions:
 
-| Dimensión | Qué evalúa |
-|-----------|------------|
-| Alineación North Star | ¿Acerca o aleja del objetivo? |
-| Señal recruiter | ¿Qué piensan HMs al ver esto en un CV? |
-| Tiempo y esfuerzo | Semanas × horas/semana |
-| Coste de oportunidad | ¿Qué no puede hacer durante ese tiempo? |
-| Riesgos | ¿Contenido outdated? ¿Brand débil? ¿Demasiado básico? |
-| Entregable portfolio | ¿Produce un artefacto demostrable? |
+| Dimension | What it evaluates |
+|-----------|-------------------|
+| North Star alignment | Does it move toward or away from the target roles? |
+| Recruiter signal | What do hiring managers think when they see this on a CV? |
+| Time and effort | Weeks × hours/week |
+| Opportunity cost | What can't the candidate do during that time? |
+| Risks | Outdated content? Weak brand? Too basic? |
+| Portfolio deliverable | Does it produce a demonstrable artifact? |
 
-## Veredictos
+## Verdicts
 
-- **HACER** → plan de 4-12 semanas con entregables semanales y scoreboard
-- **NO HACER** → alternativa mejor con justificación
-- **HACER CON TIMEBOX** (máx X semanas) → plan condensado, solo lo esencial
+- **DO IT** → 4-12 week plan with weekly deliverables and scoreboard
+- **DON'T DO IT** → better alternative with justification
+- **DO IT WITH TIMEBOX** (max X weeks) → condensed plan, essentials only
 
-## Prioridad
+## Priority
 
-Formación que mejore credibilidad en "production-grade AI":
-1. Evals y testing de LLMs
-2. Observability y monitoring
-3. Cost/reliability trade-offs
-4. AI governance y safety
-5. Enterprise AI architecture
+Training that improves credibility for the target archetypes:
+1. Microsoft certifications (PL-300 Power BI, DP-203 Data Engineering, MB-210/600 Dynamics 365 CRM)
+2. Azure data platform (DP-900, DP-100, AZ-900)
+3. SQL and data modeling (advanced SQL, dimensional modeling)
+4. SharePoint & M365 (MS-100/101, SharePoint administration)
+5. Python for data (Pandas, PySpark, data pipelines)
