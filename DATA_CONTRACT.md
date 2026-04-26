@@ -20,6 +20,10 @@ These files contain your personal data, customizations, and work product. Update
 | `data/follow-ups.md` | Your follow-up history |
 | `reports/*` | Your evaluation reports |
 | `output/*` | Your generated PDFs |
+| `output/tailor-runs/*` | Per-run artifacts from `/headhunter` (recruiter framing, briefing, blueprint, review) |
+| `output/cv-analyses/*` | Per-run briefings from `/cv-analyze` (granular agent output) |
+| `output/cv-strategies/*` | Per-run blueprints from `/cv-strategy` (granular agent output) |
+| `output/cv-checks/*` | Per-run audits from `/cv-recruiter-check` (granular agent output) |
 | `jds/*` | Your saved job descriptions |
 
 ## System Layer (safe to auto-update)
@@ -53,7 +57,12 @@ These files contain system logic, scripts, templates, and instructions that impr
 | `dashboard/*` | Go TUI dashboard |
 | `templates/*` | Base templates |
 | `fonts/*` | Self-hosted fonts |
-| `.claude/skills/*` | Skill definitions |
+| `.claude/skills/*` | Skill definitions (career-ops, headhunter) |
+| `.claude/agents/*` | Subagent definitions (vaga-analyst, cv-strategist, recruiter-reviewer) |
+| `.claude/commands/*` | Slash command definitions (cv-analyze, cv-strategy, cv-recruiter-check, tailor-cv) |
+| `.claude/references/*` | Shared knowledge base (cv-playbook-2026.md, recruiter-lens.md) |
+| `.claude/rules/*` | Project-scoped rules with globs (10-scan-priority, 20-project-governance) |
+| `.claude/designs/*` | Design docs for new features (e.g., headhunter-design-2026-04-26.md) |
 | `docs/*` | Documentation |
 | `VERSION` | Current version number |
 | `DATA_CONTRACT.md` | This file |

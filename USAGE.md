@@ -23,8 +23,9 @@ Guia detalhado de todos os comandos do Career-Ops com exemplos praticos de uso.
 13. [/career-ops project](#13-career-ops-project)
 14. [/career-ops tracker](#14-career-ops-tracker)
 15. [/career-ops batch](#15-career-ops-batch)
-16. [Fluxo Recomendado](#16-fluxo-recomendado)
-17. [Referencia Rapida](#17-referencia-rapida)
+16. [/headhunter — CV pela ótica do recrutador](#16-headhunter--cv-pela-otica-do-recrutador)
+17. [Fluxo Recomendado](#17-fluxo-recomendado)
+18. [Referencia Rapida](#18-referencia-rapida)
 
 ---
 
@@ -791,7 +792,80 @@ Em modo batch (`claude -p`), Playwright nao esta disponivel. O sistema usa WebFe
 
 ---
 
-## 16. Fluxo Recomendado
+## 16. /headhunter — CV pela ótica do recrutador
+
+Skill auto-invocável que orquestra um time de 3 subagents para gerar **CV hiper-personalizado** com perspectiva de **recrutador**, não só de keywords da JD. Construída sobre o pipeline `modes/pdf.md` mas adicionando uma camada de modelagem do recrutador antes da geração.
+
+```
+/headhunter https://boards.greenhouse.io/empresa/vaga
+```
+
+Ou, alternativamente, **auto-invocação**: cole URL de portal conhecido (Greenhouse/Lever/Ashby/Workday/LinkedIn jobs), texto de JD com sinais explícitos (Responsibilities/Requirements), ou diga "personaliza meu CV para esta vaga". A skill é ativada automaticamente.
+
+### O que é diferente vs `/career-ops pdf`
+
+| Aspecto | `/career-ops pdf` | `/headhunter` |
+|---------|-------------------|---------------|
+| Pergunta-guia | "O CV cobre as keywords da JD?" | "O recrutador desta vaga compraria isto em 6 segundos?" |
+| Camadas | 1 (geração direta) | 3 (analyze → strategy → recruiter audit → PDF) |
+| Auditoria de fidelidade | Implícita | **Explícita** (recruiter-reviewer marca CRITICAL se detecta invenção) |
+| Filtro segmentado por família funcional | Não | Sim (Controller, Consolidation, FP&A, etc — via `recruiter-lens.md`) |
+| Veredicto GO/REVISE/STOP | Não | Sim |
+| Artefatos persistidos | Só PDF | PDF + recruiter-framing + briefing + blueprint + review + summary |
+
+### Pipeline interno (6 fases)
+
+1. **Pré-flight** — verifica `cv.md`, `modes/pdf.md`, `recruiter-lens.md`, `cv-playbook-2026.md`, `output/` gravável.
+2. **Modelagem do recrutador** — identifica nível, família funcional, indústria, e sintetiza o filtro mental específico desta vaga.
+3. **Análise da vaga** (subagent `vaga-analyst`) — briefing estruturado com keywords P0/P1/P2, requisitos must/nice, perfil arquetípico, gaps potenciais.
+4. **Estratégia** (subagent `cv-strategist`) — blueprint de personalização: Summary reescrito, Core Competencies, reordenação de bullets, seleção de projetos, mapa de match. **Nunca inventa.**
+5. **Crítica do recrutador** (subagent `recruiter-reviewer`) — simula scan de 6s, audita fidelidade contra `cv.md`, retorna **GO / REVISE / STOP** com score 0-10.
+6. **Geração do PDF** — usa o pipeline já existente em `modes/pdf.md` com os outputs do blueprint.
+
+### Comandos granulares (uso cirúrgico)
+
+Quando você não quer rodar o pipeline completo:
+
+| Comando | Despacha | Quando usar |
+|---------|----------|-------------|
+| `/cv-analyze <URL ou JD>` | `vaga-analyst` | Quer só decodificar a vaga antes de decidir aplicar. |
+| `/cv-strategy <briefing existente>` | `cv-strategist` | Já tem briefing e quer iterar a estratégia. |
+| `/cv-recruiter-check <CV> <vaga>` | `recruiter-reviewer` | Quer auditar um CV manual contra uma vaga antes de submeter. |
+| `/tailor-cv <URL ou JD>` | (alias) | Equivalente a `/headhunter`, mantido por compatibilidade. |
+
+### Saída
+
+```
+output/tailor-runs/2026-04-26-anthropic/
+  ├── 00-recruiter-framing.md       # filtro mental do recrutador
+  ├── 00-summary.md                 # relatório consolidado
+  ├── 01-vaga-briefing.md          # output do vaga-analyst
+  ├── 02-blueprint.md               # output do cv-strategist
+  └── 03-recruiter-review.md        # output do recruiter-reviewer
+output/cv-fernando-anthropic-2026-04-26.pdf
+```
+
+### Gates éticos
+
+- Match rate < 65% → recomenda **não aplicar**.
+- Veredicto STOP do recruiter-reviewer → bloqueia geração até resolver.
+- Score < 5/10 → comunica honestamente que a candidatura é fraca.
+- Conteúdo inventado em qualquer ponto → **CRITICAL**, exige correção.
+
+### Bases de conhecimento consultadas
+
+- `.claude/references/cv-playbook-2026.md` — melhores práticas Harvard MCS, Jobscan, ZipRecruiter, Columbia.
+- `.claude/references/recruiter-lens.md` — filtro mental segmentado por nível e família funcional. **Atualize este arquivo** quando receber feedback real de recrutador (ex: "o head-hunter da empresa X reclamou de Y") — o sistema fica mais afiado a cada ciclo.
+
+### Quando NÃO usar
+
+- Para avaliação inicial sem geração de CV → use `/career-ops oferta`.
+- Para batch de várias vagas → use `/career-ops batch`.
+- Para conversa genérica sobre carreira → não invocar.
+
+---
+
+## 17. Fluxo Recomendado
 
 O fluxo tipico de uso do Career-Ops segue esta sequencia:
 
@@ -823,9 +897,19 @@ Se voce encontrou uma vaga interessante, o caminho mais rapido e colar direto:
 
 Isso executa o auto-pipeline completo (avaliar + PDF + tracker) em um unico comando.
 
+### Atalho premium — CV pela ótica do recrutador
+
+Quando voce quer mais que keyword matching e busca um CV que passa no scan de 6 segundos do recrutador:
+
+```
+/headhunter https://url-da-vaga.com
+```
+
+Equivalente ao auto-pipeline + camada de recruiter-lens + auditoria de fidelidade explicita. Mais lento, mais robusto. Recomendado para vagas-alvo prioritarias.
+
 ---
 
-## 17. Referencia Rapida
+## 18. Referencia Rapida
 
 ### Claude Code
 
@@ -837,7 +921,7 @@ Isso executa o auto-pipeline completo (avaliar + PDF + tracker) em um unico coma
 | `/career-ops pipeline` | Processar URLs pendentes |
 | `/career-ops oferta` | Avaliar uma oferta |
 | `/career-ops ofertas` | Comparar ofertas |
-| `/career-ops pdf` | Gerar CV em PDF |
+| `/career-ops pdf` | Gerar CV em PDF (caminho rapido) |
 | `/career-ops apply` | Assistente de candidatura |
 | `/career-ops contacto` | Outreach LinkedIn |
 | `/career-ops deep` | Pesquisa profunda |
@@ -845,6 +929,11 @@ Isso executa o auto-pipeline completo (avaliar + PDF + tracker) em um unico coma
 | `/career-ops project` | Avaliar projeto portfolio |
 | `/career-ops tracker` | Status das candidaturas |
 | `/career-ops batch` | Processamento em lote |
+| `/headhunter {JD ou URL}` | **CV hiper-personalizado pela otica do recrutador** (3 subagents + recruiter-lens + auditoria de fidelidade) |
+| `/cv-analyze {JD}` | Decodificar vaga sem gerar CV (so vaga-analyst) |
+| `/cv-strategy {briefing}` | Iterar blueprint de personalizacao (so cv-strategist) |
+| `/cv-recruiter-check {CV} {vaga}` | Auditar CV existente (so recruiter-reviewer) |
+| `/tailor-cv {JD ou URL}` | Alias legado de `/headhunter` |
 
 ### OpenCode
 

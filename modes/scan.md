@@ -21,131 +21,164 @@ Ler `portals.yml` que contém:
 - `tracked_companies`: Empresas específicas com `careers_url` para navegação direta
 - `title_filter`: Keywords positive/negative/seniority_boost para filtrado de títulos
 
-## Estratégia de descoberta (3 níveis)
+## REGRA OBRIGATÓRIA: Auth Gate (Portais com Login)
 
-### Nível 1 — Playwright direto (PRINCIPAL)
+**Antes de escanear QUALQUER portal que requeira autenticação, o sistema DEVE verificar se o usuário está logado.** Isso se aplica a:
 
-**Para cada empresa em `tracked_companies`:** Navegar a sua `careers_url` com Playwright (`browser_navigate` + `browser_snapshot`), ler TODOS os job listings visíveis, e extrair título + URL de cada um. Este é o método mais confiável porque:
-- Vê a página em tempo real (não resultados cacheados do Google)
-- Funciona com SPAs (Ashby, Lever, Workday)
-- Detecta vagas novas instantaneamente
-- Não depende da indexação do Google
+| Portal | URL de verificação | Indicador de "não logado" |
+|--------|-------------------|--------------------------|
+| LinkedIn | `https://www.linkedin.com/jobs/search/?keywords=Controller&location=Brazil` | Página de login/auth wall, botão "Sign in" proeminente |
+| Indeed Brazil | `https://br.indeed.com/jobs?q=Controller&l=Sao+Paulo` | Pode funcionar sem login, mas preferencial logado |
+| Vagas.com.br | `https://www.vagas.com.br/vagas-de-controller-em-sao-paulo` | Banner de login, conteúdo limitado |
+| Robert Half | `https://www.roberthalf.com.br/vagas` | Formulário de login visível |
 
-**Cada empresa DEVE ter `careers_url` em portals.yml.** Se não tiver, buscá-la uma vez, guardar, e usar em futuros scans.
+### Workflow de Auth Gate
 
-### Nível 2 — ATS APIs / Feeds (COMPLEMENTAR)
+1. **Para cada portal autenticado (na ordem: LinkedIn → Indeed → Vagas.com.br → Robert Half):**
+   a. `browser_navigate` à URL de verificação
+   b. `browser_snapshot` para checar estado de autenticação
+   c. **Se logado:** prosseguir com o scan normalmente
+   d. **Se NÃO logado:**
+      - PAUSAR o scan
+      - Informar ao usuário: `"Portal [NOME] requer autenticação. Por favor, faça login no browser que abriu e me avise quando estiver pronto."`
+      - Esperar o usuário confirmar
+      - `browser_snapshot` novamente para confirmar login
+      - Prosseguir com o scan
+   e. **Se o usuário não quiser autenticar naquele momento:** pular o portal e continuar para o próximo
 
-Para empresas com API pública ou feed estruturado, usar a resposta JSON/XML como complemento rápido do Nível 1. É mais rápido que Playwright e reduz erros de scraping visual.
+2. **Cache de sessão:** Se o browser já está aberto com uma sessão autenticada de um scan anterior (mesma sessão Claude Code), reutilizar sem pedir login novamente.
 
-**Suporte atual (variáveis entre `{}`):**
+3. **Ordem de verificação:** Sempre verificar na mesma ordem (LinkedIn primeiro, depois Indeed, Vagas.com.br, Robert Half) para minimizar interrupções.
+
+## Estratégia de descoberta (4 níveis, em ORDEM DE PRIORIDADE)
+
+### Nível 0 — Portais brasileiros com autenticação (PRINCIPAL)
+
+**Portais:** LinkedIn, Indeed Brazil, Vagas.com.br, Robert Half
+
+**Para cada portal (após Auth Gate):**
+1. `browser_navigate` à página de busca de vagas
+2. Usar os termos de busca do `title_filter.positive` adaptados ao portal:
+   - Buscas recomendadas (executar TODAS por portal):
+     - `"Controller"` + Brazil/Sao Paulo
+     - `"Head of Accounting"` OR `"Accounting Director"` + Brazil/Sao Paulo
+     - `"Consolidation"` OR `"Consolidação"` + Brazil/Sao Paulo
+     - `"FP&A Manager"` OR `"Finance Manager"` + Brazil/Sao Paulo
+3. `browser_snapshot` para ler resultados
+4. Se houver paginação, navegar até 3 páginas por busca
+5. Para cada vaga: extrair `{title, url, company, location, source_portal}`
+6. Acumular em lista de candidatos
+
+**Por que primeiro:** Estes 4 portais concentram a maior parte das vagas brasileiras. Um scan de 4 portais cobre mais vagas do que bater em 45 sites individuais.
+
+### Nível 1 — Google WebSearch nos sites das empresas (DESCOBERTA AMPLA)
+
+Os `search_queries` com filtros `site:` em `portals.yml`. Cobrem Greenhouse, Ashby, Lever, Indeed, Glassdoor etc. por meio de busca web.
+
+**Para cada query em `search_queries` com `enabled: true`:**
+1. Executar WebSearch com a `query` definida
+2. De cada resultado extrair: `{title, url, company}`
+   - **title**: do título do resultado (antes do " @ " ou " | ")
+   - **url**: URL do resultado
+   - **company**: depois do " @ " no título, ou extrair do domínio/path
+3. Acumular em lista de candidatos (dedup com Nível 0)
+
+### Nível 2 — ATS APIs / Feeds (COMPLEMENTAR RÁPIDO)
+
+Para empresas com API pública ou feed estruturado, usar a resposta JSON/XML. Mais rápido que Playwright.
+
+**Suporte atual:**
 - **Greenhouse**: `https://boards-api.greenhouse.io/v1/boards/{company}/jobs`
 - **Ashby**: `https://jobs.ashbyhq.com/api/non-user-graphql?op=ApiJobBoardWithTeams`
-- **BambooHR**: lista `https://{company}.bamboohr.com/careers/list`; detalhe de uma vaga `https://{company}.bamboohr.com/careers/{id}/detail`
+- **BambooHR**: lista `https://{company}.bamboohr.com/careers/list`; detalhe `https://{company}.bamboohr.com/careers/{id}/detail`
 - **Lever**: `https://api.lever.co/v0/postings/{company}?mode=json`
 - **Teamtailor**: `https://{company}.teamtailor.com/jobs.rss`
 - **Workday**: `https://{company}.{shard}.myworkdayjobs.com/wday/cxs/{company}/{site}/jobs`
 
-**Convenção de parsing por provider:**
-- `greenhouse`: `jobs[]` → `title`, `absolute_url`
-- `ashby`: GraphQL `ApiJobBoardWithTeams` com `organizationHostedJobsPageName={company}` → `jobBoard.jobPostings[]` (`title`, `id`; construir URL pública se não vier no payload)
-- `bamboohr`: lista `result[]` → `jobOpeningName`, `id`; construir URL de detalhe `https://{company}.bamboohr.com/careers/{id}/detail`; para ler a JD completa, fazer GET do detalhe e usar `result.jobOpening` (`jobOpeningName`, `description`, `datePosted`, `minimumExperience`, `compensation`, `jobOpeningShareUrl`)
-- `lever`: array raiz `[]` → `text`, `hostedUrl` (fallback: `applyUrl`)
-- `teamtailor`: RSS items → `title`, `link`
-- `workday`: `jobPostings[]`/`jobPostings` (segundo tenant) → `title`, `externalPath` ou URL construída desde o host
+### Nível 3 — Sites individuais das empresas (COMPLEMENTO DIRECIONADO)
 
-### Nível 3 — WebSearch queries (DESCOBERTA AMPLA)
+**Para cada empresa em `tracked_companies`:** Navegar à `careers_url` com Playwright (`browser_navigate` + `browser_snapshot`), ler os job listings visíveis, extrair título + URL de cada um.
 
-Os `search_queries` com filtros `site:` cobrem portais de forma transversal (todos os Ashby, todos os Greenhouse, etc.). Útil para descobrir empresas NOVAS que ainda não estão em `tracked_companies`, mas os resultados podem estar defasados.
+- Vê a página em tempo real
+- Funciona com SPAs (Ashby, Lever, Workday)
+- Não depende de indexação do Google
 
-**Prioridade de execução:**
-1. Nível 1: Playwright → todas as `tracked_companies` com `careers_url`
-2. Nível 2: API → todas as `tracked_companies` com `api:`
-3. Nível 3: WebSearch → todos os `search_queries` com `enabled: true`
+**Cada empresa DEVE ter `careers_url` em portals.yml.** Se não tiver, buscá-la uma vez, guardar, e usar em futuros scans.
 
-Os níveis são aditivos — executam todos, os resultados se misturam e deduplicam.
+## Workflow completo
 
-## Workflow
+### Pré-scan (obrigatório)
 
 1. **Ler configuração**: `portals.yml`
 2. **Ler histórico**: `data/scan-history.tsv` → URLs já vistas
 3. **Ler fontes dedup**: `data/applications.md` + `data/pipeline.md`
+4. **Auth Gate**: Verificar autenticação nos 4 portais (ver seção "REGRA OBRIGATÓRIA" acima)
 
-4. **Nível 1 — Playwright scan** (paralelo em batches de 3-5):
-   Para cada empresa em `tracked_companies` com `enabled: true` e `careers_url` definida:
-   a. `browser_navigate` à `careers_url`
-   b. `browser_snapshot` para ler todos os job listings
-   c. Se a página tem filtros/departamentos, navegar as seções relevantes
-   d. Para cada job listing extrair: `{title, url, company}`
-   e. Se a página pagina resultados, navegar páginas adicionais
-   f. Acumular em lista de candidatos
-   g. Se `careers_url` falhar (404, redirect), tentar `scan_query` como fallback e anotar para atualizar a URL
+### Scan — Nível 0: Portais brasileiros
 
-5. **Nível 2 — ATS APIs / feeds** (paralelo):
-   Para cada empresa em `tracked_companies` com `api:` definida e `enabled: true`:
-   a. WebFetch da URL de API/feed
-   b. Se `api_provider` estiver definido, usar seu parser; se não estiver definido, inferir por domínio (`boards-api.greenhouse.io`, `jobs.ashbyhq.com`, `api.lever.co`, `*.bamboohr.com`, `*.teamtailor.com`, `*.myworkdayjobs.com`)
-   c. Para **Ashby**, enviar POST com:
-      - `operationName: ApiJobBoardWithTeams`
-      - `variables.organizationHostedJobsPageName: {company}`
-      - query GraphQL de `jobBoardWithTeams` + `jobPostings { id title locationName employmentType compensationTierSummary }`
-   d. Para **BambooHR**, a lista só traz metadados básicos. Para cada item relevante, ler `id`, fazer GET a `https://{company}.bamboohr.com/careers/{id}/detail`, e extrair a JD completa desde `result.jobOpening`. Usar `jobOpeningShareUrl` como URL pública se vier; se não, usar a URL de detalhe.
-   e. Para **Workday**, enviar POST JSON com pelo menos `{"appliedFacets":{},"limit":20,"offset":0,"searchText":""}` e paginar por `offset` até agotar resultados
-   f. Para cada job extrair e normalizar: `{title, url, company}`
-   g. Acumular em lista de candidatos (dedup com Nível 1)
+Para cada portal autenticado (LinkedIn → Indeed → Vagas.com.br → Robert Half):
+a. `browser_navigate` à página de busca
+b. `browser_snapshot` para ler resultados
+c. Para cada vaga: extrair `{title, url, company, location, source_portal}`
+d. Se houver paginação, navegar até 3 páginas
+e. Acumular em lista de candidatos
 
-6. **Nível 3 — WebSearch queries** (paralelo se possível):
-   Para cada query em `search_queries` com `enabled: true`:
-   a. Executar WebSearch com a `query` definida
-   b. De cada resultado extrair: `{title, url, company}`
-      - **title**: do título do resultado (antes do " @ " ou " | ")
-      - **url**: URL do resultado
-      - **company**: depois do " @ " no título, ou extrair do domínio/path
-   c. Acumular em lista de candidatos (dedup com Nível 1+2)
+### Scan — Nível 1: WebSearch queries (paralelo se possível)
+
+Para cada query em `search_queries` com `enabled: true`:
+a. Executar WebSearch com a `query` definida
+b. Extrair `{title, url, company}` dos resultados
+c. Acumular (dedup com Nível 0)
+
+### Scan — Nível 2: ATS APIs (paralelo)
+
+Para cada empresa em `tracked_companies` com `api:` definida e `enabled: true`:
+a. WebFetch da URL de API/feed
+b. Parser por provider (greenhouse, ashby, lever, bamboohr, teamtailor, workday)
+c. Extrair `{title, url, company}` (dedup com Níveis 0-1)
+
+### Scan — Nível 3: Sites individuais (batches de 3-5)
+
+Para cada empresa em `tracked_companies` com `enabled: true` e `careers_url`:
+a. `browser_navigate` à `careers_url`
+b. `browser_snapshot` para ler job listings
+c. Se a página tem filtros/departamentos, navegar seções relevantes
+d. Extrair `{title, url, company}` (dedup com Níveis 0-2)
+e. Se `careers_url` falhar, tentar `scan_query` como fallback
+
+### Pós-scan
 
 6. **Filtrar por título** usando `title_filter` de `portals.yml`:
-   - Pelo menos 1 keyword de `positive` deve aparecer no título (case-insensitive)
+   - Pelo menos 1 keyword de `positive` deve aparecer (case-insensitive)
    - 0 keywords de `negative` devem aparecer
-   - Keywords de `seniority_boost` dão prioridade mas não são obrigatórios
+   - `seniority_boost` dá prioridade mas não é obrigatório
 
 7. **Deduplicar** contra 3 fontes:
    - `scan-history.tsv` → URL exata já vista
    - `applications.md` → empresa + cargo normalizado já avaliado
    - `pipeline.md` → URL exata já em pendentes ou processadas
 
-7.5. **Verificar liveness de resultados de WebSearch (Nível 3)** — ANTES de adicionar ao pipeline:
-
-   Os resultados de WebSearch podem estar desatualizados (Google faz cache de resultados durante semanas ou meses). Para evitar avaliar vagas expiradas, verificar com Playwright cada URL nova que provenha do Nível 3. Os Níveis 1 e 2 são inerentemente em tempo real e não requerem esta verificação.
-
-   Para cada URL nova do Nível 3 (sequencial — NUNCA Playwright em paralelo):
+8. **Verificar liveness de resultados do Nível 1** (WebSearch pode ter cache):
+   Para cada URL nova do Nível 1 (sequencial — NUNCA Playwright em paralelo):
    a. `browser_navigate` à URL
    b. `browser_snapshot` para ler o conteúdo
-   c. Classificar:
-      - **Ativa**: título do posto visível + descrição do cargo + controle visível de Apply/Submit/Solicitar dentro do conteúdo principal. Não contar texto genérico de header/navbar/footer.
-      - **Expirada** (qualquer um destes sinais):
-        - URL final contém `?error=true` (Greenhouse redireciona assim quando a vaga está fechada)
-        - Página contém: "job no longer available" / "no longer open" / "position has been filled" / "this job has expired" / "page not found"
-        - Só navbar e footer visíveis, sem conteúdo JD (conteúdo < ~300 chars)
-   d. Se expirada: registrar em `scan-history.tsv` com status `skipped_expired` e descartar
-   e. Se ativa: continuar ao passo 8
+   c. **Ativa**: título + descrição + Apply visíveis
+   d. **Expirada**: "job no longer available" / só navbar/footer / URL `?error=true`
+   e. Se expirada: registrar `skipped_expired` e descartar
 
-   **Não interromper o scan inteiro se uma URL falhar.** Se `browser_navigate` der erro (timeout, 403, etc.), marcar como `skipped_expired` e continuar com a seguinte.
-
-8. **Para cada vaga nova verificada que passe filtros**:
+9. **Para cada vaga nova verificada**:
    a. Adicionar a `pipeline.md` seção "Pendentes": `- [ ] {url} | {company} | {title}`
    b. Registrar em `scan-history.tsv`: `{url}\t{date}\t{query_name}\t{title}\t{company}\tadded`
 
-9. **Vagas filtradas por título**: registrar em `scan-history.tsv` com status `skipped_title`
-10. **Vagas duplicadas**: registrar com status `skipped_dup`
-11. **Vagas expiradas (Nível 3)**: registrar com status `skipped_expired`
+10. **Status tracking em scan-history.tsv**:
+    - `added` — vaga nova adicionada ao pipeline
+    - `skipped_title` — não passou no filtro de título
+    - `skipped_dup` — duplicada (já existe)
+    - `skipped_expired` — link morto/expirada
 
 ## Extração de título e empresa de resultados WebSearch
 
 Os resultados de WebSearch vêm em formato: `"Job Title @ Company"` ou `"Job Title | Company"` ou `"Job Title — Company"`.
-
-Padrões de extração por portal:
-- **Ashby**: `"Senior AI PM (Remote) @ EverAI"` → title: `Senior AI PM`, company: `EverAI`
-- **Greenhouse**: `"AI Engineer at Anthropic"` → title: `AI Engineer`, company: `Anthropic`
-- **Lever**: `"Product Manager - AI @ Temporal"` → title: `Product Manager - AI`, company: `Temporal`
 
 Regex genérico: `(.+?)(?:\s*[@|—–-]\s*|\s+at\s+)(.+?)$`
 
@@ -161,10 +194,10 @@ Se encontrar uma URL não acessível publicamente:
 
 ```
 url	first_seen	portal	title	company	status
-https://...	2026-02-10	Ashby — AI PM	PM AI	Acme	added
-https://...	2026-02-10	Greenhouse — SA	Junior Dev	BigCo	skipped_title
-https://...	2026-02-10	Ashby — AI PM	SA AI	OldCo	skipped_dup
-https://...	2026-02-10	WebSearch — AI PM	PM AI	ClosedCo	skipped_expired
+https://...	2026-02-10	LinkedIn	Controller	SP	Acme	added
+https://...	2026-02-10	Indeed	BigCo	Junior Dev	BigCo	skipped_title
+https://...	2026-02-10	LinkedIn	SP	OldCo	skipped_dup
+https://...	2026-02-10	WebSearch	PM AI	ClosedCo	skipped_expired
 ```
 
 ## Resumo de saída
@@ -172,14 +205,30 @@ https://...	2026-02-10	WebSearch — AI PM	PM AI	ClosedCo	skipped_expired
 ```
 Portal Scan — {YYYY-MM-DD}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
-Queries executadas: N
-Vagas encontradas: N total
-Filtradas por título: N relevantes
-Duplicadas: N (já avaliadas ou em pipeline)
-Expiradas descartadas: N (links mortos, Nível 3)
-Novas adicionadas a pipeline.md: N
 
-  + {company} | {title} | {query_name}
+AUTH STATUS:
+  LinkedIn:      ✅ logado / ⏳ aguardando login
+  Indeed:        ✅ logado / ⏳ aguardando login
+  Vagas.com.br:  ✅ logado / ⏳ aguardando login
+  Robert Half:   ✅ logado / ⏳ aguardando login
+
+Nível 0 — Portais brasileiros:
+  LinkedIn:       N vagas | N relevantes
+  Indeed:         N vagas | N relevantes
+  Vagas.com.br:   N vagas | N relevantes
+  Robert Half:    N vagas | N relevantes
+
+Nível 1 — WebSearch: N resultados | N relevantes
+Nível 2 — ATS APIs:   N resultados | N relevantes
+Nível 3 — Sites individuais: N resultados | N relevantes
+
+Total encontrado:  N
+Filtradas (título): N removidas
+Duplicadas:        N (já avaliadas ou em pipeline)
+Expiradas:         N (links mortos, Nível 1)
+Novas adicionadas: N
+
+  + {company} | {title} | {portal}
   ...
 
 → Executa /career-ops pipeline para avaliar as novas vagas.
@@ -187,7 +236,7 @@ Novas adicionadas a pipeline.md: N
 
 ## Gestão de careers_url
 
-Cada empresa em `tracked_companies` deve ter `careers_url` — a URL direta à página de vagas. Isso evita buscá-la cada vez.
+Cada empresa em `tracked_companies` deve ter `careers_url` — a URL direta à página de vagas.
 
 **Padrões conhecidos por plataforma:**
 - **Ashby:** `https://jobs.ashbyhq.com/{slug}`
@@ -198,29 +247,16 @@ Cada empresa em `tracked_companies` deve ter `careers_url` — a URL direta à p
 - **Workday:** `https://{company}.{shard}.myworkdayjobs.com/{site}`
 - **Custom:** A URL própria da empresa (ex: `https://openai.com/careers`)
 
-**Padrões de API/feed por plataforma:**
-- **Ashby API:** `https://jobs.ashbyhq.com/api/non-user-graphql?op=ApiJobBoardWithTeams`
-- **BambooHR API:** lista `https://{company}.bamboohr.com/careers/list`; detalhe `https://{company}.bamboohr.com/careers/{id}/detail` (`result.jobOpening`)
-- **Lever API:** `https://api.lever.co/v0/postings/{company}?mode=json`
-- **Teamtailor RSS:** `https://{company}.teamtailor.com/jobs.rss`
-- **Workday API:** `https://{company}.{shard}.myworkdayjobs.com/wday/cxs/{company}/{site}/jobs`
-
 **Se `careers_url` não existir** para uma empresa:
-1. Tentar o padrão da plataforma conhecida dela
-2. Se falhar, fazer um WebSearch rápido: `"{company}" careers jobs`
-3. Navegar com Playwright para confirmar que funciona
-4. **Guardar a URL encontrada em portals.yml** para futuros scans
-
-**Se `careers_url` devolver 404 ou redirect:**
-1. Anotar no resumo de saída
-2. Tentar scan_query como fallback
-3. Marcar para atualização manual
+1. Tentar o padrão da plataforma conhecida
+2. Se falhar, WebSearch rápido: `"{company}" careers jobs`
+3. Navegar com Playwright para confirmar
+4. **Guardar a URL em portals.yml** para futuros scans
 
 ## Manutenção do portals.yml
 
-- **SEMPRE guardar `careers_url`** quando se adiciona uma empresa nova
-- Adicionar novos queries conforme se descubram portais ou cargos interessantes
-- Desativar queries com `enabled: false` se gerarem muito ruído
-- Ajustar keywords de filtrado conforme evoluam os cargos target
-- Adicionar empresas a `tracked_companies` quando interessar segui-las de perto
+- **SEMPRE guardar `careers_url`** quando se adiciona empresa nova
+- Adicionar queries conforme se descubram portais interessantes
+- Desativar queries com `enabled: false` se gerarem ruído
+- Ajustar keywords conforme evoluam os cargos target
 - Verificar `careers_url` periodicamente — empresas mudam de plataforma ATS

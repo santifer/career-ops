@@ -1,9 +1,17 @@
 ---
 name: career-ops
-description: AI job search command center -- evaluate offers, generate CVs, scan portals, track applications
+description: Roteador central do sistema Career-Ops para busca de emprego com IA. Avalia ofertas, gera CVs ATS-otimizados, escaneia portais (LinkedIn, Greenhouse, Lever, Ashby), rastreia aplicações e processa em batch. Aciona quando o usuário invoca um sub-modo (scan/deep/pdf/oferta/ofertas/apply/batch/tracker/pipeline/contacto/training/project/interview-prep/update) ou cola URL/JD para o pipeline automático. Para CV hiper-personalizado de uma vaga específica com 3 agents assessores, use a skill /headhunter (que reaproveita modes/pdf.md desta skill).
 user_invocable: true
 args: mode
 argument-hint: "[scan | deep | pdf | oferta | ofertas | apply | batch | tracker | pipeline | contacto | training | project | interview-prep | update]"
+version: 2.0.0
+last_updated: 2026-04-26
+related:
+  - .claude/skills/headhunter/SKILL.md
+  - modes/_shared.md
+  - modes/oferta.md
+  - modes/pdf.md
+  - DATA_CONTRACT.md
 ---
 
 # career-ops -- Router

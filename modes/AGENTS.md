@@ -15,3 +15,9 @@ Language folders:
 - `ja/` may be referenced by project instructions when present.
 
 Use the default English modes for English job postings unless the user or `config/profile.yml` requests a language-specific mode.
+
+## Integração com `/headhunter`
+
+A skill `/headhunter` (em `.claude/skills/headhunter/SKILL.md`) reaproveita `modes/pdf.md` para a fase final de geração do PDF. Não substitua `pdf.md` por uma versão divergente: alterações em `pdf.md` afetam tanto `/career-ops pdf` quanto `/headhunter`. O fluxo `/headhunter` adiciona uma camada de **modelagem do recrutador** antes da geração (consultando `.claude/references/recruiter-lens.md`) e ortogona 3 agents subordinados (`vaga-analyst`, `cv-strategist`, `recruiter-reviewer`) — mas a parte de PDF continua sendo `pdf.md` como SSOT.
+
+Quando trabalhar em `pdf.md`, considere o impacto em ambos os caminhos.

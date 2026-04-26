@@ -14,7 +14,7 @@
 
 title_filter:
   positive:
-    # -- Controllership / Accounting Leadership --
+    # -- PRIMARY: Accounting / Controllership Leadership --
     - "Head of Accounting"
     - "Head of Controllership"
     - "Accounting Director"
@@ -29,24 +29,40 @@ title_filter:
     - "Site Controller"
     - "Corporate Controller"
     - "Group Controller"
-    # -- Finance Manager (multinational context) --
+    # -- PRIMARY: Portuguese equivalents --
+    - "Diretor de Contabilidade"
+    - "Head de Contabilidade"
+    - "Gerente de Contabilidade"
+    - "Gerente de Controladoria"
+    - "Head de Controladoria"
+    - "Diretor Financeiro"
+    # -- PRIMARY: Consolidation --
+    - "Consolidation Manager"
+    - "Consolidation Director"
+    - "Head of Consolidation"
+    - "Head de Consolidacao"
+    - "Gerente de Consolidacao"
+    - "Financial Reporting Manager"
+    - "Reporting Manager"
+    - "IFRS Manager"
+    # -- SECONDARY: FP&A --
+    - "FP&A Manager"
+    - "FP&A Controller"
+    - "Head of FP&A"
+    - "Head de FP&A"
+    - "Gerente de FP&A"
+    - "Planning Manager"
+    # -- SECONDARY: Financeiro / Finance Manager --
     - "Finance Manager"
     - "Finance Controller"
+    - "Head Financeiro"
+    - "Gerente Financeiro"
     - "GERENTE"
-    # -- Treasury & Tax (same level) --
+    # -- Related (same level) --
     - "Treasury Manager"
     - "Tax Manager"
     - "Tax Director"
     - "Transfer Pricing"
-    # -- Consolidation / Reporting (same level) --
-    - "Consolidation Manager"
-    - "Financial Reporting Manager"
-    - "Reporting Manager"
-    - "IFRS Manager"
-    # -- FP&A (same level) --
-    - "FP&A Manager"
-    - "FP&A Controller"
-    - "Planning Manager"
   negative:
     # Exclude junior/entry level
     - "Junior"
@@ -92,26 +108,78 @@ title_filter:
     - "Group"
 
 # -- Search queries --
-# Focused on Tier 1: Accounting/Controller leadership roles in multinational companies in Brazil
+# PRIORITY ORDER:
+#   Tier 0 (Nível 0): Brazilian portals with auth — scanned via Playwright, NOT WebSearch
+#     LinkedIn, Indeed Brazil, Vagas.com.br, Robert Half
+#     These are handled directly by the scan mode with browser_navigate + browser_snapshot
+#   Tier 1 (Nível 1): WebSearch queries below — discover jobs across company career pages
+#   Tier 2 (Nível 2): ATS APIs — handled by scan.mjs or scan mode API detection
+#   Tier 3 (Nível 3): Individual company career pages — tracked_companies below
+
+# ═══════════════════════════════════════════════════════
+# TIER 0: Playwright-authenticated portals (NOT WebSearch)
+# These are scanned with browser_navigate after Auth Gate
+# Terms used for search within each portal:
+# ═══════════════════════════════════════════════════════
+
+auth_portals:
+  - name: LinkedIn
+    url: "https://www.linkedin.com/jobs/"
+    search_terms:
+      - "Controller Sao Paulo"
+      - "Head of Accounting Brazil"
+      - "Accounting Director Sao Paulo"
+      - "Consolidation Manager Brazil"
+      - "FP&A Manager Sao Paulo"
+      - "Gerente de Controladoria"
+      - "Diretor de Contabilidade"
+      - "Gerente Financeiro Sao Paulo"
+    requires_auth: true
+    max_pages: 3
+
+  - name: Indeed Brazil
+    url: "https://br.indeed.com/"
+    search_terms:
+      - "Controller Sao Paulo"
+      - "Head of Accounting Brazil"
+      - "Accounting Director"
+      - "Consolidation Manager"
+      - "FP&A Manager"
+      - "Gerente de Controladoria"
+      - "Gerente Financeiro"
+    requires_auth: true
+    max_pages: 3
+
+  - name: Vagas.com.br
+    url: "https://www.vagas.com.br/"
+    search_terms:
+      - "Controller Sao Paulo"
+      - "Gerente de Contabilidade"
+      - "Head of Accounting"
+      - "Gerente de Controladoria"
+      - "Gerente de Consolidacao"
+      - "Gerente Financeiro"
+      - "FP&A"
+    requires_auth: true
+    max_pages: 3
+
+  - name: Robert Half
+    url: "https://www.roberthalf.com.br/vagas"
+    search_terms:
+      - "Controller"
+      - "Accounting Manager"
+      - "Finance Manager"
+      - "Head of Accounting"
+      - "FP&A"
+      - "Consolidation"
+    requires_auth: true
+    max_pages: 3
+
+# ═══════════════════════════════════════════════════════
+# TIER 1: WebSearch queries (Google discovery)
+# ═══════════════════════════════════════════════════════
 
 search_queries:
-  # -- LinkedIn --
-  - name: LinkedIn — Accounting Controller Brazil
-    query: '"Accounting Manager" OR "Accounting Director" OR "Controller" OR "Head of Accounting" OR "Controllership" Brazil "Sao Paulo" site:linkedin.com/jobs'
-    enabled: true
-
-  - name: LinkedIn — Regional/LATAM Controller
-    query: '"Regional Controller" OR "LATAM Controller" OR "Country Controller" Brazil English site:linkedin.com/jobs'
-    enabled: true
-
-  - name: LinkedIn — Finance Manager Multinacional
-    query: '"Finance Manager" OR "Finance Controller" Brazil "Sao Paulo" site:linkedin.com/jobs'
-    enabled: true
-
-  - name: LinkedIn — Treasury/Tax Manager
-    query: '"Treasury Manager" OR "Tax Manager" OR "Transfer Pricing" Brazil "Sao Paulo" site:linkedin.com/jobs'
-    enabled: true
-
   # -- Greenhouse --
   - name: Greenhouse — Accounting Leadership Brazil
     query: 'site:boards.greenhouse.io OR site:job-boards.greenhouse.io "Accounting Manager" OR "Controller" OR "Head of Accounting" OR "Controllership" Brazil'
@@ -136,31 +204,12 @@ search_queries:
     query: 'site:apply.workable.com "Accounting Manager" OR "Controller" OR "Head of Accounting" Brazil'
     enabled: true
 
-  # -- Indeed Brazil --
-  - name: Indeed — Controller/Gerente Contabilidade SP
-    query: 'site:br.indeed.com "Controller" OR "Controllership" OR "Gerente de Controladoria" OR "Head of Accounting" "Sao Paulo" English'
-    enabled: true
-
-  # -- Vagas.com.br --
-  - name: Vagas — Controller Multinacional
-    query: 'site:vagas.com.br "Controller" OR "Head of Accounting" OR "Gerente de Controladoria" OR "Controllership" "Sao Paulo" English OR ingles'
-    enabled: true
-
-  # -- Michael Page / Robert Half (aggregators) --
-  - name: Michael Page — Accounting Controller
-    query: 'site:michaelpage.com.br "Accounting Manager" OR "Accounting Director" OR "Controller" OR "Head of Accounting" "Sao Paulo"'
-    enabled: true
-
-  - name: Robert Half — Controller/Gerente
-    query: 'site:roberthalf.com.br "Controller" OR "Finance Manager" OR "Accounting Manager" "Sao Paulo" OR remoto'
-    enabled: true
-
   # -- Glassdoor --
   - name: Glassdoor — Controller Brazil
     query: 'site:glassdoor.com.br "Controller" OR "Head of Accounting" OR "Accounting Manager" "Sao Paulo" Brazil'
     enabled: true
 
-  # -- Specific searches for Tier 1 --
+  # -- Specific searches --
   - name: IFRS/Consolidation Manager Brazil
     query: '"IFRS" OR "US GAAP" "Controller" OR "Manager" OR "Consolidation" Brazil "Sao Paulo" English multinational'
     enabled: true
@@ -173,7 +222,16 @@ search_queries:
     query: '"Plant Controller" OR "Site Controller" OR "Manufacturing Controller" Brazil'
     enabled: true
 
-# -- Tracked companies --
+  # -- Google broad search across company career pages --
+  - name: Google — Controller multinational Brazil
+    query: '"Controller" OR "Head of Accounting" OR "Accounting Director" Brazil "Sao Paulo" "careers" OR "jobs" English multinational -site:linkedin.com -site:indeed.com -site:vagas.com.br'
+    enabled: true
+
+  - name: Google — Consolidation Head Brazil
+    query: '"Consolidation Manager" OR "Consolidation Director" OR "Head of Consolidation" Brazil "Sao Paulo" -site:linkedin.com -site:indeed.com -site:vagas.com.br'
+    enabled: true
+
+# -- Tracked companies (Tier 3) --
 # Multinational companies with significant presence in Brazil
 # Focus: Accounting/Controller/Finance Manager roles
 

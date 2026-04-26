@@ -74,6 +74,18 @@ Evaluation flow:
 5. Generate a CV/PDF under `output/` only when the workflow calls for it.
 6. Add tracker rows through TSV files in `batch/tracker-additions/`, then run `node merge-tracker.mjs`.
 
+Hyper-personalized CV flow (`/headhunter`):
+
+The skill `/headhunter` orquestra um time de 3 subagents (`vaga-analyst`, `cv-strategist`, `recruiter-reviewer`) com perspectiva de recrutador para gerar CV ATS-otimizado a partir de uma vaga específica. Vive em `.claude/skills/headhunter/SKILL.md`. Reaproveita `modes/pdf.md` na Fase 5 para a geração final do PDF. Princípio operacional: realçar conteúdo real do `cv.md` sem inventar — se a vaga pede skill que o candidato não tem, o sistema admite o gap.
+
+Fluxo: pré-flight (verifica `cv.md`, `modes/pdf.md`, `.claude/references/recruiter-lens.md`) → modelagem do recrutador → análise da vaga → blueprint de personalização → crítica do recrutador (GO/REVISE/STOP) → geração do PDF via `modes/pdf.md` → relatório consolidado.
+
+Comandos granulares para uso cirúrgico de cada agent isolado: `/cv-analyze` (só decodifica vaga), `/cv-strategy` (só blueprint), `/cv-recruiter-check` (só auditoria de CV existente). O comando legado `/tailor-cv` é alias da skill `/headhunter`.
+
+Artefatos persistidos em `output/tailor-runs/{YYYY-MM-DD}-{slug-empresa}/` para auditoria local.
+
+Bases de conhecimento consultadas pelos 3 agents: `.claude/references/cv-playbook-2026.md` (melhores práticas Harvard MCS / Jobscan / etc) e `.claude/references/recruiter-lens.md` (filtro mental do recrutador segmentado por nível e família funcional — Controller, Consolidation, FP&A, Financeiro).
+
 Tracker integrity:
 
 - Do not add new rows directly to `data/applications.md`.

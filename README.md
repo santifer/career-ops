@@ -65,6 +65,7 @@ Built by someone who used it to evaluate 740+ job offers, generate 100+ tailored
 | Feature | Description |
 |---------|-------------|
 | **Auto-Pipeline** | Paste a URL, get a full evaluation + PDF + tracker entry |
+| **`/headhunter` Recruiter-Lens CV** | Hyper-personalized CV via 3 specialist subagents (vaga-analyst, cv-strategist, recruiter-reviewer) with explicit fidelity audit — answers "would the recruiter buy this in 6s?" instead of just keyword-matching the JD. Segmented by functional family (Controller, FP&A, Consolidation, etc.) |
 | **6-Block Evaluation** | Role summary, CV match, level strategy, comp research, personalization, interview prep (STAR+R) |
 | **Interview Story Bank** | Accumulates STAR+Reflection stories across evaluations -- 5-10 master stories that answer any behavioral question |
 | **Negotiation Scripts** | Salary negotiation frameworks, geographic discount pushback, competing offer leverage |
@@ -115,18 +116,25 @@ See [docs/SETUP.md](docs/SETUP.md) for the full setup guide.
 Career-ops is a single slash command with multiple modes:
 
 ```
-/career-ops                → Show all available commands
-/career-ops {paste a JD}   → Full auto-pipeline (evaluate + PDF + tracker)
-/career-ops scan           → Scan portals for new offers
-/career-ops pdf            → Generate ATS-optimized CV
-/career-ops batch          → Batch evaluate multiple offers
-/career-ops tracker        → View application status
-/career-ops apply          → Fill application forms with AI
-/career-ops pipeline       → Process pending URLs
-/career-ops contacto       → LinkedIn outreach message
-/career-ops deep           → Deep company research
-/career-ops training       → Evaluate a course/cert
-/career-ops project        → Evaluate a portfolio project
+/career-ops                  → Show all available commands
+/career-ops {paste a JD}     → Full auto-pipeline (evaluate + PDF + tracker)
+/career-ops scan             → Scan portals for new offers
+/career-ops pdf              → Generate ATS-optimized CV (fast path)
+/career-ops batch            → Batch evaluate multiple offers
+/career-ops tracker          → View application status
+/career-ops apply            → Fill application forms with AI
+/career-ops pipeline         → Process pending URLs
+/career-ops contacto         → LinkedIn outreach message
+/career-ops deep             → Deep company research
+/career-ops training         → Evaluate a course/cert
+/career-ops project          → Evaluate a portfolio project
+
+# Recruiter-lens layer (premium path)
+/headhunter {paste JD/URL}   → Hyper-personalized CV via 3 subagents + fidelity audit
+/cv-analyze {JD}             → Decode the job (vaga-analyst only)
+/cv-strategy {briefing}      → Iterate the personalization blueprint (cv-strategist only)
+/cv-recruiter-check {CV/JD}  → Audit an existing CV against a job (recruiter-reviewer only)
+/tailor-cv {JD or URL}       → Legacy alias for /headhunter
 ```
 
 Or just paste a job URL or description directly -- career-ops auto-detects it and runs the full pipeline.
@@ -185,6 +193,9 @@ Features: 6 filter tabs, 4 sort modes, grouped/flat view, lazy-loaded previews, 
 ```
 career-ops/
 ├── CLAUDE.md                    # Agent instructions
+├── AGENTS.md                    # Codex/cross-platform instructions
+├── PROJECT_CONTEXT.md           # Fast-context entrypoint
+├── DATA_CONTRACT.md             # User layer vs system layer SSOT
 ├── cv.md                        # Your CV (create this)
 ├── article-digest.md            # Your proof points (optional)
 ├── config/
@@ -192,10 +203,19 @@ career-ops/
 ├── modes/                       # 14 skill modes
 │   ├── _shared.md               # Shared context (customize this)
 │   ├── oferta.md                # Single evaluation
-│   ├── pdf.md                   # PDF generation
+│   ├── pdf.md                   # PDF generation (used by /career-ops pdf and /headhunter)
 │   ├── scan.md                  # Portal scanner
 │   ├── batch.md                 # Batch processing
 │   └── ...
+├── .claude/                     # Claude Code native artifacts
+│   ├── skills/
+│   │   ├── career-ops/SKILL.md  # Main router skill
+│   │   └── headhunter/SKILL.md  # Recruiter-lens CV pipeline (3 subagents)
+│   ├── agents/                  # Subagents (vaga-analyst, cv-strategist, recruiter-reviewer)
+│   ├── commands/                # Granular slash commands (cv-analyze, cv-strategy, cv-recruiter-check, tailor-cv)
+│   ├── references/              # Shared knowledge: cv-playbook-2026.md, recruiter-lens.md
+│   ├── rules/                   # Project rules with globs (10-scan-priority, 20-project-governance)
+│   └── designs/                 # Design docs (e.g. headhunter-design-2026-04-26.md)
 ├── templates/
 │   ├── cv-template.html         # ATS-optimized CV template
 │   ├── portals.example.yml      # Scanner config template

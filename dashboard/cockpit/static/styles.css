@@ -513,7 +513,8 @@ textarea:focus {
 }
 
 .table-wrap {
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
   max-height: min(62vh, 720px);
   border: 1px solid var(--line);
   border-radius: 22px;
@@ -522,16 +523,49 @@ textarea:focus {
 
 .applications-table {
   width: 100%;
+  min-width: 0;
   border-collapse: collapse;
-  min-width: 760px;
+  table-layout: fixed;
 }
 
 .applications-table th,
 .applications-table td {
-  padding: 13px 14px;
+  padding: 12px clamp(8px, 1vw, 14px);
   border-bottom: 1px solid rgba(96, 63, 38, 0.12);
   text-align: left;
   vertical-align: top;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+.applications-table th:nth-child(1),
+.applications-table td:nth-child(1) {
+  width: 56px;
+}
+
+.applications-table th:nth-child(2),
+.applications-table td:nth-child(2) {
+  width: 38%;
+}
+
+.applications-table th:nth-child(3),
+.applications-table td:nth-child(3) {
+  width: 28%;
+}
+
+.applications-table th:nth-child(4),
+.applications-table td:nth-child(4) {
+  width: 82px;
+}
+
+.applications-table th:nth-child(5),
+.applications-table td:nth-child(5) {
+  width: 112px;
+}
+
+.applications-table th:nth-child(6),
+.applications-table td:nth-child(6) {
+  width: 86px;
 }
 
 .applications-table th {
@@ -895,13 +929,15 @@ textarea:focus {
   }
 
   .workspace-grid {
-    grid-template-columns: minmax(0, 1fr) minmax(300px, 34vw);
+    grid-template-columns: 1fr;
     gap: 14px;
   }
 
   .action-rail {
-    top: 12px;
-    max-height: calc(100vh - 24px);
+    position: static;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-height: none;
+    overflow: visible;
   }
 
   .hero-panel {
@@ -918,14 +954,6 @@ textarea:focus {
 }
 
 @media (max-width: 960px) {
-  .workspace-grid {
-    grid-template-columns: minmax(0, 1fr) 300px;
-  }
-
-  .applications-table {
-    min-width: 620px;
-  }
-
   .detail-list {
     grid-template-columns: 1fr;
     gap: 4px;
@@ -963,7 +991,7 @@ textarea:focus {
   }
 
   .action-rail {
-    position: static;
+    grid-template-columns: 1fr;
     max-height: none;
     overflow: visible;
   }
@@ -986,7 +1014,20 @@ textarea:focus {
     letter-spacing: -0.06em;
   }
 
-  .applications-table {
-    min-width: 640px;
+  .applications-table th:nth-child(1),
+  .applications-table td:nth-child(1) {
+    width: 46px;
+  }
+
+  .applications-table th:nth-child(4),
+  .applications-table td:nth-child(4) {
+    width: 70px;
+  }
+
+  .applications-table th:nth-child(5),
+  .applications-table td:nth-child(5),
+  .applications-table th:nth-child(6),
+  .applications-table td:nth-child(6) {
+    width: 78px;
   }
 }

@@ -12,36 +12,25 @@
 
 ## Your Target Roles
 
-<!-- Replace these with YOUR target roles. Examples:
-     - Senior Backend Engineer / Staff Platform Engineer
-     - AI Product Manager / Technical PM
-     - Data Engineer / ML Engineer
-     - DevOps / SRE / Platform
-     Whatever you're optimizing for. -->
-
-| Archetype | Thematic axes | What they buy |
-|-----------|---------------|---------------|
-| **AI Platform / LLMOps Engineer** | Evaluation, observability, reliability, pipelines | Someone who puts AI in production with metrics |
-| **Agentic Workflows / Automation** | HITL, tooling, orchestration, multi-agent | Someone who builds reliable agent systems |
-| **Technical AI Product Manager** | GenAI/Agents, PRDs, discovery, delivery | Someone who translates business to AI product |
-| **AI Solutions Architect** | Hyperautomation, enterprise, integrations | Someone who designs end-to-end AI architectures |
-| **AI Forward Deployed Engineer** | Client-facing, fast delivery, prototyping | Someone who delivers AI solutions to clients fast |
-| **AI Transformation Lead** | Change management, adoption, org enablement | Someone who leads AI transformation in an org |
+| Archetype | Level | Fit | What they buy |
+|-----------|-------|-----|---------------|
+| **Head of Accounting / Head de Contabilidade** | Director/Head | PRIMARY | Someone who leads the full accounting function with strategic vision |
+| **Controller (Financial / Regional / LATAM / Corporate)** | Senior/Director | PRIMARY | Someone who ensures financial integrity and reporting excellence across entities |
+| **Diretor de Contabilidade / Accounting Director** | Director | PRIMARY | Someone who owns the accounting agenda end-to-end at director level |
+| **Head/Gerente de Consolidacao** | Head/Senior | PRIMARY | Someone who masters multi-entity consolidation and group reporting |
+| **Head/Gerente de FP&A** | Head/Senior | SECONDARY | Someone who brings financial planning expertise grounded in controllership |
+| **Head/Gerente Financeiro** | Head/Senior | SECONDARY | Someone who leads the full finance function with a controllership backbone |
 
 ## Your Adaptive Framing
 
-<!-- Map YOUR projects to each archetype. Example:
-     | Platform / LLMOps | My monitoring dashboard project | article-digest.md |
-     | Agentic | My chatbot with HITL escalation | cv.md section 3 | -->
-
 | If the role is... | Emphasize about you... | Proof point sources |
 |-------------------|------------------------|---------------------|
-| Platform / LLMOps | Production systems builder, observability, evals | article-digest.md + cv.md |
-| Agentic / Automation | Multi-agent orchestration, HITL, reliability | article-digest.md + cv.md |
-| Technical AI PM | Product discovery, PRDs, metrics | cv.md + article-digest.md |
-| Solutions Architect | System design, integrations, enterprise-ready | article-digest.md + cv.md |
-| Forward Deployed Engineer | Fast delivery, client-facing, prototype to prod | cv.md + article-digest.md |
-| AI Transformation Lead | Change management, team enablement, adoption | cv.md + article-digest.md |
+| Head of Accounting / Contabilidade | End-to-end accounting leadership, IFRS/US GAAP, LATAM multi-entity | article-digest.md + cv.md |
+| Controller (any variant) | Financial controls, reporting integrity, regional consolidation, process automation | article-digest.md + cv.md |
+| Diretor de Contabilidade | Strategic accounting direction, team leadership, board-level reporting | cv.md + article-digest.md |
+| Head/Gerente de Consolidacao | Multi-country consolidation, group reporting, intercompany elimination, IFRS/CPC | article-digest.md + cv.md |
+| Head/Gerente de FP&A | Budgeting, forecasting, variance analysis, finance automation | cv.md + article-digest.md |
+| Head/Gerente Financeiro | Full finance function leadership, controllership + treasury + FP&A | cv.md + article-digest.md |
 
 ## Your Exit Narrative
 
@@ -54,9 +43,7 @@ Use the candidate's exit story from `config/profile.yml` to frame ALL content:
 
 ## Your Cross-cutting Advantage
 
-<!-- What's your "signature move"? What do you do that others can't? -->
-
-Frame profile as **"Technical builder with real-world proof"** that adapts framing to the role.
+Frame profile as **"Controllership leader who bridges accounting rigor with digital transformation"** — the candidate who doesn't just close the books but automates 70%+ of the process, integrates systems, and delivers real-time financial intelligence.
 
 ## Your Portfolio / Demo
 

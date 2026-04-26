@@ -49,7 +49,7 @@ To rollback: `node update-system.mjs rollback`
 
 ## What is career-ops
 
-AI-powered job search automation built on Codex: pipeline tracking, offer evaluation, CV generation, portal scanning, batch processing.
+AI-powered job search automation built on Claude Code (or any agentic CLI that reads `.claude/`): pipeline tracking, offer evaluation, CV generation, portal scanning, batch processing.
 
 ### Main Files
 
@@ -71,12 +71,20 @@ AI-powered job search automation built on Codex: pipeline tracking, offer evalua
 | `check-liveness.mjs` | Job posting liveness checker |
 | `liveness-core.mjs` | Shared liveness logic (expired signals win over generic Apply text) |
 | `reports/` | Evaluation reports (format: `{###}-{company-slug}-{YYYY-MM-DD}.md`). Blocks A-F + G (Posting Legitimacy). Header includes `**Legitimacy:** {tier}`. |
+| `.claude/skills/headhunter/SKILL.md` | Skill `/headhunter` — orquestra 3 subagents (vaga-analyst, cv-strategist, recruiter-reviewer) para gerar CV hiper-personalizado por vaga sem inventar conteúdo. Reaproveita `modes/pdf.md` na Fase 5. |
+| `.claude/agents/{vaga-analyst,cv-strategist,recruiter-reviewer}.md` | Subagents do time `/headhunter`, dispatcháveis via Task tool. |
+| `.claude/commands/{cv-analyze,cv-strategy,cv-recruiter-check,tailor-cv}.md` | Slash commands granulares para uso cirúrgico de cada subagent + alias legado `/tailor-cv`. |
+| `.claude/references/cv-playbook-2026.md` | Base de conhecimento de melhores práticas (Harvard MCS, Jobscan, ZipRecruiter) — consultada pelos 3 subagents de `/headhunter`. |
+| `.claude/references/recruiter-lens.md` | Filtro mental do recrutador segmentado por nível (IC/manager/director/VP) e família funcional (Controller, Consolidation, FP&A, Financeiro). Consultada por `/headhunter` e seus 3 subagents. |
+| `.claude/rules/{10-scan-priority,20-project-governance}.md` | Regras de projeto com `globs` para ativação contextual (cargos-alvo, governança CI/CD). |
+| `.claude/designs/headhunter-design-2026-04-26.md` | Design doc IMPLEMENTED da Fase 1 do `/headhunter`. Fase 2 (recruiter-driven completo) pendente. |
+| `output/tailor-runs/{date}-{slug}/` | Artefatos persistidos por execução de `/headhunter` (recruiter framing, briefing, blueprint, review, summary). |
 
 ### OpenCode Commands
 
 When using [OpenCode](https://opencode.ai), the following slash commands are available (defined in `.opencode/commands/`):
 
-| Command | Codex Equivalent | Description |
+| Command | Claude Code Equivalent | Description |
 |---------|------------------------|-------------|
 | `/career-ops` | `/career-ops` | Show menu or evaluate JD with args |
 | `/career-ops-pipeline` | `/career-ops pipeline` | Process pending URLs from inbox |
@@ -94,7 +102,7 @@ When using [OpenCode](https://opencode.ai), the following slash commands are ava
 | `/career-ops-patterns` | `/career-ops patterns` | Analyze rejection patterns and improve targeting |
 | `/career-ops-followup` | `/career-ops followup` | Follow-up cadence tracker |
 
-**Note:** OpenCode commands invoke the same `.Codex/skills/career-ops/SKILL.md` skill used by Codex. The `modes/*` files are shared between both platforms.
+**Note:** OpenCode commands invoke the same `.claude/skills/career-ops/SKILL.md` skill used by Claude Code. The `modes/*` files are shared between both platforms.
 
 ### First Run — Onboarding (IMPORTANT)
 
@@ -191,6 +199,14 @@ This system is designed to be customized by YOU (AI Agent). When the user asks y
 - "Update my profile" → edit `config/profile.yml`
 - "Change the CV template design" → edit `templates/cv-template.html`
 - "Adjust the scoring weights" → edit `modes/_profile.md` for user-specific weighting, or edit `modes/_shared.md` and `batch/batch-prompt.md` only when changing the shared system defaults for everyone
+- "Update recruiter heuristics for [Controller/FP&A/etc.]" → edit `.claude/references/recruiter-lens.md` (segmentado por família funcional). Quando o usuário trouxer feedback real de recrutador ("o head-hunter da empresa X reclamou de Y"), atualizar essa lente.
+
+**Regra de arquétipos — onde editar:**
+- `modes/_shared.md` define a **taxonomia de arquétipos do projeto** (6 subtipos com triggers de keyword: Head de Accounting, Controller LATAM, Finance Manager, FP&A Manager, M&A, Tax). Edite aqui quando: (a) adicionar/remover um subtipo, (b) ajustar os triggers de detecção, (c) mudar o framing macro do projeto.
+- `.claude/references/recruiter-lens.md` define o **filtro mental do recrutador** segmentado por nível (IC/manager/director/VP) e família funcional (Controller, Consolidation, FP&A, Financeiro genérico). Edite aqui quando: (a) o usuário trouxer feedback real de recrutador, (b) descobrir nova heurística de filtro por nível/família, (c) refinar vocabulário que ressoa em uma família funcional específica.
+- **Não dupliquem conteúdo entre os dois.** Se um arquétipo de `_shared.md` ganhar uma heurística nova de filtro mental, ela vai pra `recruiter-lens.md`. Se uma família de `recruiter-lens.md` precisar virar um arquétipo formal do projeto, ela ganha entrada em `_shared.md`.
+- "Tighten the /headhunter trigger" → ajustar `description` em `.claude/skills/headhunter/SKILL.md` (auto-invocação por description é o trigger).
+- "Add a granular cv-* command" → criar wrapper fino em `.claude/commands/`, despachando o subagent correspondente em `.claude/agents/`. A lógica fica no agent, não no command.
 
 ### Language Modes
 
@@ -219,9 +235,24 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 
 ### Skill Modes
 
+**Regra de roteamento entre `/career-ops` e `/headhunter`:**
+
+> **SSOT canônico:** [`.claude/references/routing-rules.md`](.claude/references/routing-rules.md) tem a regra completa (precedência de triggers, frases de intenção em 6 idiomas, thresholds de score alinhados com cutoff ético, mapeamento score↔match rate, tratamento por modo single/batch/headless). Quando esta seção divergir do `routing-rules.md`, o `routing-rules.md` vence. Edite lá quando mudar a regra; aqui é só resumo.
+
+**Resumo executável (precedência — primeira condição que casa vence):**
+1. **Comando explícito `/headhunter <URL ou JD>` ou comandos granulares (`/cv-analyze`, `/cv-strategy`, `/cv-recruiter-check`, `/tailor-cv`)** → vence sobre tudo.
+2. **Frase de intenção de personalização** (PT/EN/ES/FR/DE/JA — ver routing-rules.md §2) → aciona `/headhunter` **mesmo se acompanhada de URL**.
+3. **Cola URL/JD pura sem comando ou frase de intenção** → `/career-ops` auto-pipeline (default). Se score ≥ 4.0, sugere escalonar pra `/headhunter`.
+
+**Princípio:** comando vence frase, frase vence URL, URL pura cai no padrão. Nunca ambos os caminhos disparam para o mesmo input.
+
 | If the user... | Mode |
 |----------------|------|
-| Pastes JD or URL | auto-pipeline (evaluate + report + PDF + tracker) |
+| Comando explícito `/headhunter <URL ou JD>` ou frase de personalização | `/headhunter` (SSOT premium) |
+| Quer só **decodificar a vaga** sem gerar CV | `/cv-analyze` (despacha vaga-analyst isolado) |
+| Quer **iterar a estratégia** sem refazer análise | `/cv-strategy` (despacha cv-strategist isolado) |
+| Quer **auditar um CV existente** contra uma vaga | `/cv-recruiter-check` (despacha recruiter-reviewer isolado) |
+| Pastes JD or URL (cola pura, sem comando) | auto-pipeline (evaluate + report + PDF + tracker; sugere `/headhunter` se score ≥ 4.0) |
 | Asks to evaluate offer | `oferta` |
 | Asks to compare offers | `ofertas` |
 | Wants LinkedIn outreach | `contacto` |
@@ -264,7 +295,7 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 2. `browser_snapshot` to read content
 3. Only footer/navbar without JD = closed. Title + description + Apply = active.
 
-**Exception for batch workers (`Codex -p`):** Playwright is not available in headless pipe mode. Use WebFetch as fallback and mark the report header with `**Verification:** unconfirmed (batch mode)`. The user can verify manually later.
+**Exception for batch workers (`claude -p`):** Playwright is not available in headless pipe mode. Use WebFetch as fallback and mark the report header with `**Verification:** unconfirmed (batch mode)`. The user can verify manually later.
 
 ---
 

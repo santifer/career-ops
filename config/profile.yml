@@ -15,38 +15,54 @@ candidate:
   # canva_resume_design_id: "DAxxxxxxxxx"
 
 target_roles:
-  # Your North Star roles — what you're optimizing for
+  # PRIMARY: Accounting / Controllership / Consolidation
   primary:
-    - "Head de Contabilidade e Controladoria"
     - "Head of Accounting"
     - "Controller"
-    - "Gerente de Controladoria"
+    - "Diretor de Contabilidade"
+    - "Head de Consolidacao"
+    - "Gerente de Consolidacao"
+  # SECONDARY: FP&A / Financeiro
+  secondary:
+    - "Head de FP&A"
+    - "Gerente de FP&A"
+    - "Head Financeiro"
+    - "Gerente Financeiro"
   # Archetypes help the evaluation system score fit
   archetypes:
-    - name: "Head de Contabilidade e Controladoria"
-      level: "Director"
+    # -- PRIMARY: Accounting / Controllership / Consolidation --
+    - name: "Head of Accounting / Head de Contabilidade"
+      level: "Director/Head"
       fit: "primary"
-    - name: "Head of Accounting / Controllership"
-      level: "Director"
-      fit: "primary"
-    - name: "Controller LATAM / Regional"
+    - name: "Controller (Financial / Regional / LATAM / Corporate)"
       level: "Senior/Director"
       fit: "primary"
-    - name: "Finance Manager (multinational)"
-      level: "Senior"
+    - name: "Diretor de Contabilidade / Accounting Director"
+      level: "Director"
+      fit: "primary"
+    - name: "Head de Consolidacao / Gerente de Consolidacao"
+      level: "Head/Senior"
+      fit: "primary"
+    # -- SECONDARY: FP&A / Financeiro --
+    - name: "Head de FP&A / Gerente de FP&A"
+      level: "Head/Senior"
       fit: "secondary"
-    - name: "FP&A Manager"
-      level: "Senior"
+    - name: "Head Financeiro / Gerente Financeiro"
+      level: "Head/Senior"
       fit: "secondary"
+    # -- ADJACENT --
     - name: "M&A / Due Diligence Manager"
+      level: "Senior"
+      fit: "adjacent"
+    - name: "Finance Manager (multinational)"
       level: "Senior"
       fit: "adjacent"
 
 narrative:
   # Your professional headline (1 line)
-  headline: "Head de Contabilidade e Controladoria | IFRS/US GAAP | AI-Powered Finance Transformation"
+  headline: "Accounting & Controllership Leader | IFRS/US GAAP | Consolidation | AI-Powered Finance Transformation"
   # Your exit story — what makes you unique
-  exit_story: "15+ years leading Finance & Accounting across LATAM. Differentiator: bridging controllership with digital transformation — automated 70% of manual tasks, cut reporting cycles 40%. CRC, ACCA, FMVA certified. Trilingual (PT/EN/ES)."
+l transformation — automated manual tasks, cut reporting cycles and managed integration of corporate systems using AI. CRC, ACCA, FMVA certified. Trilingual (PT/EN/ES)."  exit_story: "15+ years leading Finance & Accounting across LATAM. Differentiator: bridging controllership with digital transformation."
   # Your top 3-5 superpowers
   superpowers:
     - "End-to-end controllership across multi-country operations (5 LATAM entities)"
@@ -57,7 +73,7 @@ narrative:
   # Proof points — projects, articles, case studies with measurable impact
   proof_points:
     - name: "Integrated Accounting Intelligence with Microsoft + GPT"
-      hero_metric: "Automated 70%+ of manual accounting tasks, reduced close cycle by 40%"
+      hero_metric: "Automated manual accounting tasks reducing the closing cycle by 40%"
     - name: "Multi-Country Financial Operations"
       hero_metric: "Managed end-to-end finance for 5 LATAM subsidiaries (BR, MX, CL, AR, PE)"
     - name: "M&A Integration"
