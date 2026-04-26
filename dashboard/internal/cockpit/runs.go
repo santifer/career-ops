@@ -46,6 +46,8 @@ type RunRecord struct {
 	Artifacts      []string         `json:"artifacts,omitempty"`
 	ObservedFields []ObservedField  `json:"observed_fields,omitempty"`
 	ReviewGate     *ReviewGate      `json:"review_gate,omitempty"`
+	UploadGate     *ApprovalGate    `json:"upload_gate,omitempty"`
+	WorkerClaim    *WorkerClaim     `json:"worker_claim,omitempty"`
 	BrowserSession *BrowserSession  `json:"browser_session,omitempty"`
 	ActionLog      []ActionLogEntry `json:"action_log,omitempty"`
 	ErrorMessage   string           `json:"error_message,omitempty"`
@@ -105,6 +107,22 @@ type ReviewGate struct {
 	ReadyAt          *time.Time `json:"ready_at,omitempty"`
 	ApprovedAt       *time.Time `json:"approved_at,omitempty"`
 	ApprovalText     string     `json:"approval_text,omitempty"`
+	ApprovedBy       string     `json:"approved_by,omitempty"`
+}
+
+// ApprovalGate captures a per-run approval for sensitive worker actions.
+type ApprovalGate struct {
+	ApprovedAt   time.Time `json:"approved_at"`
+	ApprovedBy   string    `json:"approved_by"`
+	ApprovalText string    `json:"approval_text,omitempty"`
+}
+
+// WorkerClaim is the active worker lease for a visible browser automation run.
+type WorkerClaim struct {
+	WorkerID       string    `json:"worker_id"`
+	ClaimedAt      time.Time `json:"claimed_at"`
+	HeartbeatAt    time.Time `json:"heartbeat_at"`
+	LeaseExpiresAt time.Time `json:"lease_expires_at"`
 }
 
 // RunStore persists run records below data/runs in the Career Ops root.

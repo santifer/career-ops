@@ -1,4 +1,4 @@
-FROM golang:1.24.2 AS build
+FROM golang:1.25.0 AS build
 
 WORKDIR /src/dashboard
 COPY dashboard/go.mod dashboard/go.sum ./
