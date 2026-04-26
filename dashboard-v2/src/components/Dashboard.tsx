@@ -512,20 +512,20 @@ export default function Dashboard() {
 
           {activeTab === 'terminal' && (
             <motion.div key="terminal" className="bg-white rounded-[2rem] flex flex-col h-[600px] overflow-hidden shadow-2xl relative border border-[#e7e5e4]">
-              <div className="p-5 border-b border-[#f5f5f4] flex justify-between items-center bg-[#faf9f6]">
+              <div className="p-5 border-b border-[#e7e5e4] flex justify-between items-center bg-[#f5f5f4]">
                  <div className="flex items-center gap-3">
                     <div className="h-3 w-3 bg-[#f59e0b] rounded-full" />
-                    <span className="text-[10px] font-mono text-[#a8a29e] uppercase tracking-[0.2em] font-bold">Career-Ops Output Console</span>
+                    <span className="text-[10px] font-mono text-[#57534e] uppercase tracking-[0.2em] font-bold">Career-Ops Output Console</span>
                  </div>
-                 <button onClick={() => setLogs([])} className="text-[10px] text-[#a8a29e] hover:text-[#1c1917] transition-colors uppercase tracking-widest font-bold">Flush Buffers</button>
+                 <button onClick={() => setLogs([])} className="text-[10px] text-[#78716c] hover:text-[#1c1917] transition-colors uppercase tracking-widest font-bold">Flush Buffers</button>
               </div>
-              <div id="terminal-logs" className="flex-1 p-8 font-mono text-sm overflow-y-auto whitespace-pre-wrap bg-white text-[#44403c] scroll-smooth leading-relaxed select-text cursor-text">
+              <div id="terminal-logs" className="flex-1 p-8 font-mono text-sm overflow-y-auto whitespace-pre-wrap bg-white text-[#292524] scroll-smooth leading-relaxed select-text cursor-text">
                  {logs.length === 0 && !isExecuting ? (
-                   <div className="text-[#a8a29e] italic select-text">Awaiting secure handshake...</div>
+                   <div className="text-[#57534e] italic select-text">Awaiting secure handshake...</div>
                  ) : (
                    <div className="space-y-1">
                      {logs.map((log, i) => (
-                      <div key={i} className={`select-text ${log.type === 'stderr' ? 'text-rose-600' : 'text-[#1c1917]'}`}>
+                      <div key={i} className={`select-text ${log.type === 'stderr' ? 'text-rose-700' : 'text-[#1c1917]'}`}>
                           {log.content}
                        </div>
                      ))}
@@ -536,7 +536,7 @@ export default function Dashboard() {
                  )}
               </div>
 
-              <div className="p-5 bg-[#faf9f6] border-t border-[#f5f5f4]">
+              <div className="p-5 bg-[#f5f5f4] border-t border-[#e7e5e4]">
                  <div className="flex items-center gap-3">
                     <span className="text-[#1c1917] font-bold font-mono">auth@career-ops:~$</span>
                     <form onSubmit={handleCommandSubmit} className="flex-1">
@@ -547,7 +547,7 @@ export default function Dashboard() {
                          onKeyDown={handleKeyDown}
                          placeholder="scan / apply <id> / help"
                          disabled={isExecuting}
-                         className="w-full bg-transparent outline-none border-none text-[#1c1917] font-mono placeholder:text-[#a8a29e] caret-[#1c1917] select-text"
+                         className="w-full bg-transparent outline-none border-none text-[#1c1917] font-mono placeholder:text-[#78716c] caret-[#1c1917] select-text"
                          autoFocus
                        />
                     </form>
