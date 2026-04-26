@@ -63,10 +63,30 @@ AI-powered job search automation built on Claude Code: pipeline tracking, offer 
 | `analyze-patterns.mjs` | Pattern analysis script (JSON output) |
 | `followup-cadence.mjs` | Follow-up cadence calculator (JSON output) |
 | `data/follow-ups.md` | Follow-up history tracker |
-| `scan.mjs` | Zero-token portal scanner — hits Greenhouse/Ashby/Lever APIs directly, zero LLM cost |
+| `scan.mjs` | Zero-token portal scanner — loads plugins from `providers/` and dispatches per entry |
+| `providers/` | Provider plugins (Greenhouse, Ashby, Lever, `scraper.mjs` for HTML job boards, `apify.mjs` for any Apify actor). Drop a new `*.mjs` file to add a source; files prefixed with `_` are shared helpers |
 | `check-liveness.mjs` | Job posting liveness checker |
 | `liveness-core.mjs` | Shared liveness logic (expired signals win over generic Apply text) |
 | `reports/` | Evaluation reports (format: `{###}-{company-slug}-{YYYY-MM-DD}.md`). Blocks A-F + G (Posting Legitimacy). Header includes `**Legitimacy:** {tier}`. |
+
+### Scanner Providers
+
+`scan.mjs` loads every `providers/*.mjs` file (except those starting with `_`) at startup. Each plugin exports a default object:
+
+```js
+export default {
+  id: 'scraper',                       // matched against `provider:` in portals.yml
+  detect(entry) { return null; },      // optional: auto-detect from careers_url
+  async fetch(entry, ctx) { ... }      // required: returns [{title,url,company,location}]
+};
+```
+
+`tracked_companies` entries may set two optional fields to control dispatch:
+
+- **`provider: <id>`** — forces a specific plugin; skips all `detect()` auto-detection. Required for scraper and Apify entries.
+- **`transport: browser`** — routes `ctx.fetchText`/`ctx.fetchJson` through a pooled Playwright page instead of plain HTTP. Use when a site starts blocking bot traffic. Defaults to `http`.
+
+The `_http.mjs`, `_browser.mjs`, and `_apify.mjs` helpers are shared transport layers; they are NOT loaded as providers (underscore prefix). The `apify.mjs` provider requires `APIFY_TOKEN` in the environment — when unset, the entry errors cleanly and the rest of the scan continues. Each Apify entry declares its own `actor`, `input`, and `field_map` (for mapping the actor's output to `{title, url, company, location}`), so any Apify actor works without code changes.
 
 ### OpenCode Commands
 

@@ -894,3 +894,50 @@ tracked_companies:
     scan_query: '"Maxim AI" OR "getmaxim" careers "engineer" OR "product"'
     notes: "AI evaluation and observability platform. Bangalore-based, mostly on-site."
     enabled: true
+
+# -- Apify-backed sources --
+  # Generic provider — works with any Apify actor. Each entry declares which
+  # actor to run, what input to send, and how to map the actor's output items
+  # to {title, url, company, location}. Requires APIFY_TOKEN in .env.
+  # Each run consumes Apify credits/usage; start small until happy with results.
+
+  - name: "Indeed — VP Engineering (Chicago + Remote)"
+    provider: apify
+    actor: misceres/indeed-scraper
+    input:
+      position: "VP of Engineering"
+      location: "Chicago, IL"
+      country: "US"
+      maxItems: 25
+    field_map:
+      title:    [positionName, title]
+      url:      url
+      company:  [company, companyName]
+      location: [location, formattedLocation]
+    enabled: true
+
+  # -- Workday via gooyer.co/myworkdayjobs (FLAT $10/mo, 14-day free trial) --
+  # Activate the rental at https://console.apify.com/actors/kma98hS67qBkPC6ub
+  # (click "Try for free" / "Rent"), THEN flip enabled: true. Each Workday board
+  # has its own URL — find them at https://{company}.wd{N}.myworkdayjobs.com
+  # or https://wd{N}.myworkdaysite.com/recruiting/{slug}/External/.
+
+  - name: "Workday — NVIDIA"
+    provider: apify
+    actor: gooyer.co/myworkdayjobs
+    input:
+      startUrls:
+        - url: "https://nvidia.wd5.myworkdayjobs.com/NVIDIAExternalCareerSite"
+      proxyConfiguration:
+        useApifyProxy: true
+      pagination: 5          # 0 = unlimited
+      details: false         # skip per-job detail pages — faster, lower usage
+      stats: false
+      # locations: ["Chicago"]   # uncomment + add cities to filter at the actor
+    field_map:
+      title:    title
+      url:      url
+      location: locationText
+    defaults:
+      company: "NVIDIA"
+    enabled: true
