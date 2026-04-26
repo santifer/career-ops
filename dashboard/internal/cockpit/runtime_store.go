@@ -20,8 +20,11 @@ var (
 type AutoModeRuntimeStore interface {
 	SaveRun(ctx context.Context, run RunRecord) error
 	GetRun(ctx context.Context, id string) (RunRecord, error)
+	NextRun(ctx context.Context, now time.Time) (RunRecord, error)
 	ClaimRun(ctx context.Context, request ClaimRunRequest) (RunRecord, error)
 	Heartbeat(ctx context.Context, request HeartbeatRequest) (RunRecord, error)
+	RecordBrowserLog(ctx context.Context, id string, request BrowserLogRequest) (RunRecord, error)
+	MarkNeedsInput(ctx context.Context, id string, request NeedsInputRequest) (RunRecord, error)
 	ApproveUpload(ctx context.Context, request ApprovalRequest) (RunRecord, error)
 	ApproveSubmit(ctx context.Context, request ApprovalRequest) (RunRecord, error)
 }
@@ -89,6 +92,30 @@ func (s *MemoryRuntimeStore) GetRun(ctx context.Context, id string) (RunRecord, 
 	return cloneRuntimeRun(run), nil
 }
 
+func (s *MemoryRuntimeStore) NextRun(ctx context.Context, now time.Time) (RunRecord, error) {
+	if err := ctx.Err(); err != nil {
+		return RunRecord{}, err
+	}
+	if now.IsZero() {
+		now = time.Now().UTC()
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for _, run := range s.runs {
+		if run.Action != ActionAutoMode {
+			continue
+		}
+		if run.State != RunStateQueued && run.State != RunStateRunning {
+			continue
+		}
+		if run.WorkerClaim != nil && now.Before(run.WorkerClaim.LeaseExpiresAt) {
+			continue
+		}
+		return cloneRuntimeRun(run), nil
+	}
+	return RunRecord{}, ErrRunNotFound
+}
+
 func (s *MemoryRuntimeStore) ClaimRun(ctx context.Context, request ClaimRunRequest) (RunRecord, error) {
 	if err := ctx.Err(); err != nil {
 		return RunRecord{}, err
@@ -136,6 +163,44 @@ func (s *MemoryRuntimeStore) Heartbeat(ctx context.Context, request HeartbeatReq
 	}
 	applyHeartbeatToRun(&run, request)
 	s.runs[request.RunID] = cloneRuntimeRun(run)
+	return cloneRuntimeRun(run), nil
+}
+
+func (s *MemoryRuntimeStore) RecordBrowserLog(ctx context.Context, id string, request BrowserLogRequest) (RunRecord, error) {
+	if err := ctx.Err(); err != nil {
+		return RunRecord{}, err
+	}
+	id = strings.TrimSpace(id)
+	if id == "" {
+		return RunRecord{}, errors.New("run id is required")
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	run, ok := s.runs[id]
+	if !ok {
+		return RunRecord{}, ErrRunNotFound
+	}
+	appendBrowserLogToRun(&run, time.Now().UTC(), request)
+	s.runs[id] = cloneRuntimeRun(run)
+	return cloneRuntimeRun(run), nil
+}
+
+func (s *MemoryRuntimeStore) MarkNeedsInput(ctx context.Context, id string, request NeedsInputRequest) (RunRecord, error) {
+	if err := ctx.Err(); err != nil {
+		return RunRecord{}, err
+	}
+	id = strings.TrimSpace(id)
+	if id == "" {
+		return RunRecord{}, errors.New("run id is required")
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	run, ok := s.runs[id]
+	if !ok {
+		return RunRecord{}, ErrRunNotFound
+	}
+	setRunNeedsInput(&run, time.Now().UTC(), strings.TrimSpace(request.Reason))
+	s.runs[id] = cloneRuntimeRun(run)
 	return cloneRuntimeRun(run), nil
 }
 
@@ -231,6 +296,41 @@ func applySubmitApprovalToRun(run *RunRecord, gate ApprovalGate) error {
 	run.ReviewGate.ApprovedBy = gate.ApprovedBy
 	run.ReviewGate.ApprovalText = gate.ApprovalText
 	return nil
+}
+
+func appendBrowserLogToRun(run *RunRecord, at time.Time, request BrowserLogRequest) {
+	logType := strings.TrimSpace(request.Type)
+	if logType == "" {
+		logType = "browser"
+	}
+	step := strings.TrimSpace(request.Step)
+	if step == "" {
+		step = run.CurrentStep
+	}
+	url := strings.TrimSpace(request.URL)
+	if url == "" {
+		url = run.URL
+	}
+	message := strings.TrimSpace(request.Message)
+	if message == "" {
+		message = "Worker browser activity."
+	}
+	appendActionLog(run, at, logType, step, message, url)
+	appendRunEvent(run, at, step, message)
+	if run.BrowserSession == nil {
+		run.BrowserSession = newBrowserSession(run.URL)
+	}
+	if status := strings.TrimSpace(request.Status); status != "" {
+		run.BrowserSession.Status = status
+	}
+	lastAction := strings.TrimSpace(request.LastAction)
+	if lastAction == "" {
+		lastAction = message
+	}
+	run.BrowserSession.LastAction = lastAction
+	if url != "" {
+		run.BrowserSession.TargetURL = url
+	}
 }
 
 func validateClaimRequest(request ClaimRunRequest) error {

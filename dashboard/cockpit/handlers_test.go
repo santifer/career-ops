@@ -443,7 +443,23 @@ func TestWorkerPairingAllowsClaim(t *testing.T) {
 		t.Fatalf("decode auto mode run: %v", err)
 	}
 
-	request, err := http.NewRequest(http.MethodPost, server.URL+"/api/worker/runs/"+run.ID+"/claim", bytes.NewBufferString(`{}`))
+	request, err := http.NewRequest(http.MethodGet, server.URL+"/api/worker/runs/next", nil)
+	if err != nil {
+		t.Fatalf("new next request: %v", err)
+	}
+	request.Header.Set("Authorization", "Bearer worker-credential")
+	request.Header.Set("X-Career-Ops-Worker-ID", "laptop")
+	resp, err = http.DefaultClient.Do(request)
+	if err != nil {
+		t.Fatalf("GET /api/worker/runs/next: %v", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		t.Fatalf("expected next run status 200, got %d: %s", resp.StatusCode, string(body))
+	}
+
+	request, err = http.NewRequest(http.MethodPost, server.URL+"/api/worker/runs/"+run.ID+"/claim", bytes.NewBufferString(`{}`))
 	if err != nil {
 		t.Fatalf("new claim request: %v", err)
 	}
@@ -482,6 +498,23 @@ func TestWorkerPairingAllowsClaim(t *testing.T) {
 	}
 	if plan.RunID != run.ID || plan.TargetURL != "https://example.com/job" {
 		t.Fatalf("unexpected fill plan: %#v", plan)
+	}
+
+	request, err = http.NewRequest(http.MethodPost, server.URL+"/api/worker/runs/"+run.ID+"/log", bytes.NewBufferString(`{"message":"Opened page","status":"browser-active"}`))
+	if err != nil {
+		t.Fatalf("new worker log request: %v", err)
+	}
+	request.Header.Set("Authorization", "Bearer worker-credential")
+	request.Header.Set("X-Career-Ops-Worker-ID", "laptop")
+	request.Header.Set("Content-Type", "application/json")
+	resp, err = http.DefaultClient.Do(request)
+	if err != nil {
+		t.Fatalf("POST /api/worker/runs/{id}/log: %v", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		t.Fatalf("expected worker log status 200, got %d: %s", resp.StatusCode, string(body))
 	}
 }
 

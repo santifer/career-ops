@@ -354,12 +354,24 @@ func (h apiHandler) workerRoutes(w http.ResponseWriter, r *http.Request) {
 		h.registerWorker(w, r)
 		return
 	}
+	if len(parts) == 2 && parts[0] == "runs" && parts[1] == "next" {
+		h.nextWorkerRun(w, r)
+		return
+	}
 	if len(parts) == 3 && parts[0] == "runs" && parts[2] == "claim" {
 		h.claimWorkerRun(w, r, parts[1])
 		return
 	}
 	if len(parts) == 3 && parts[0] == "runs" && parts[2] == "fill-plan" {
 		h.workerFillPlan(w, r, parts[1])
+		return
+	}
+	if len(parts) == 3 && parts[0] == "runs" && parts[2] == "log" {
+		h.workerLog(w, r, parts[1])
+		return
+	}
+	if len(parts) == 3 && parts[0] == "runs" && parts[2] == "needs-input" {
+		h.workerNeedsInput(w, r, parts[1])
 		return
 	}
 	writeJSONError(w, http.StatusNotFound, "route_not_found", "API route not found.")
@@ -409,6 +421,25 @@ func (h apiHandler) registerWorker(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusCreated, credential)
 }
 
+func (h apiHandler) nextWorkerRun(w http.ResponseWriter, r *http.Request) {
+	if !requireMethod(w, r, http.MethodGet) {
+		return
+	}
+	if _, ok := h.requireWorker(w, r); !ok {
+		return
+	}
+	run, err := h.runtimeStore.NextRun(r.Context(), time.Now().UTC())
+	if errors.Is(err, cockpitapi.ErrRunNotFound) {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	if err != nil {
+		writeJSONError(w, http.StatusInternalServerError, "next_run_failed", err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, run)
+}
+
 func (h apiHandler) claimWorkerRun(w http.ResponseWriter, r *http.Request, id string) {
 	if !requireMethod(w, r, http.MethodPost) {
 		return
@@ -447,6 +478,38 @@ func (h apiHandler) claimWorkerRun(w http.ResponseWriter, r *http.Request, id st
 		return
 	}
 	writeJSON(w, http.StatusOK, run)
+}
+
+func (h apiHandler) workerLog(w http.ResponseWriter, r *http.Request, id string) {
+	if !requireMethod(w, r, http.MethodPost) {
+		return
+	}
+	if _, ok := h.requireWorker(w, r); !ok {
+		return
+	}
+	var request cockpitapi.BrowserLogRequest
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		writeJSONError(w, http.StatusBadRequest, "invalid_json", "Request body must be valid JSON.")
+		return
+	}
+	run, err := h.runtimeStore.RecordBrowserLog(r.Context(), id, request)
+	h.writeRuntimeMutationResult(w, run, err, "worker_log_failed")
+}
+
+func (h apiHandler) workerNeedsInput(w http.ResponseWriter, r *http.Request, id string) {
+	if !requireMethod(w, r, http.MethodPost) {
+		return
+	}
+	if _, ok := h.requireWorker(w, r); !ok {
+		return
+	}
+	var request cockpitapi.NeedsInputRequest
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		writeJSONError(w, http.StatusBadRequest, "invalid_json", "Request body must be valid JSON.")
+		return
+	}
+	run, err := h.runtimeStore.MarkNeedsInput(r.Context(), id, request)
+	h.writeRuntimeMutationResult(w, run, err, "worker_needs_input_failed")
 }
 
 func (h apiHandler) workerFillPlan(w http.ResponseWriter, r *http.Request, id string) {
@@ -695,6 +758,18 @@ func (h apiHandler) requireWorker(w http.ResponseWriter, r *http.Request) (strin
 }
 
 func (h apiHandler) writeRunMutationResult(w http.ResponseWriter, run cockpitapi.RunRecord, err error, fallbackCode string) {
+	if errors.Is(err, cockpitapi.ErrRunNotFound) {
+		writeJSONError(w, http.StatusNotFound, "run_not_found", "Run not found.")
+		return
+	}
+	if err != nil {
+		writeJSONError(w, http.StatusInternalServerError, fallbackCode, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, run)
+}
+
+func (h apiHandler) writeRuntimeMutationResult(w http.ResponseWriter, run cockpitapi.RunRecord, err error, fallbackCode string) {
 	if errors.Is(err, cockpitapi.ErrRunNotFound) {
 		writeJSONError(w, http.StatusNotFound, "run_not_found", "Run not found.")
 		return

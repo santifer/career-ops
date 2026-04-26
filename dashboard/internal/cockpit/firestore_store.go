@@ -4,8 +4,10 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"time"
 
 	"cloud.google.com/go/firestore"
+	"google.golang.org/api/iterator"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -71,6 +73,37 @@ func (s *FirestoreRuntimeStore) GetRun(ctx context.Context, id string) (RunRecor
 	return run, nil
 }
 
+func (s *FirestoreRuntimeStore) NextRun(ctx context.Context, now time.Time) (RunRecord, error) {
+	if now.IsZero() {
+		now = time.Now().UTC()
+	}
+	iter := s.Client.Collection(s.collection()).
+		Where("Action", "==", ActionAutoMode).
+		Where("State", "in", []string{RunStateQueued, RunStateRunning}).
+		Limit(20).
+		Documents(ctx)
+	defer iter.Stop()
+	for {
+		snap, err := iter.Next()
+		if errors.Is(err, iterator.Done) {
+			return RunRecord{}, ErrRunNotFound
+		}
+		if err != nil {
+			return RunRecord{}, err
+		}
+		var run RunRecord
+		if err := snap.DataTo(&run); err != nil {
+			return RunRecord{}, err
+		}
+		if run.ID == "" {
+			run.ID = snap.Ref.ID
+		}
+		if run.WorkerClaim == nil || !now.Before(run.WorkerClaim.LeaseExpiresAt) {
+			return run, nil
+		}
+	}
+}
+
 func (s *FirestoreRuntimeStore) ClaimRun(ctx context.Context, request ClaimRunRequest) (RunRecord, error) {
 	if err := validateClaimRequest(request); err != nil {
 		return RunRecord{}, err
@@ -117,6 +150,20 @@ func (s *FirestoreRuntimeStore) Heartbeat(ctx context.Context, request Heartbeat
 	}
 	return s.mutateRun(ctx, request.RunID, func(run *RunRecord) error {
 		return applyHeartbeatToRun(run, request)
+	})
+}
+
+func (s *FirestoreRuntimeStore) RecordBrowserLog(ctx context.Context, id string, request BrowserLogRequest) (RunRecord, error) {
+	return s.mutateRun(ctx, id, func(run *RunRecord) error {
+		appendBrowserLogToRun(run, time.Now().UTC(), request)
+		return nil
+	})
+}
+
+func (s *FirestoreRuntimeStore) MarkNeedsInput(ctx context.Context, id string, request NeedsInputRequest) (RunRecord, error) {
+	return s.mutateRun(ctx, id, func(run *RunRecord) error {
+		setRunNeedsInput(run, time.Now().UTC(), strings.TrimSpace(request.Reason))
+		return nil
 	})
 }
 
@@ -171,9 +218,13 @@ func (s *FirestoreRuntimeStore) mutateRun(ctx context.Context, runID string, mut
 }
 
 func (s *FirestoreRuntimeStore) doc(id string) *firestore.DocumentRef {
+	return s.Client.Collection(s.collection()).Doc(strings.TrimSpace(id))
+}
+
+func (s *FirestoreRuntimeStore) collection() string {
 	collection := strings.TrimSpace(s.Collection)
 	if collection == "" {
 		collection = defaultAutoModeRunsCollection
 	}
-	return s.Client.Collection(collection).Doc(strings.TrimSpace(id))
+	return collection
 }
