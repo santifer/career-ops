@@ -2,7 +2,11 @@
 
 Scoring matrix de 10 dimensiones ponderadas:
 
+<<<<<<< Updated upstream
 | Dimensión | Peso | Criterios 1-5 |
+=======
+| Dimension | Weight | Criteria 1-5 |[]
+>>>>>>> Stashed changes
 |-----------|------|----------------|
 | Alineación North Star | 25% | 5=rol target exacto, 1=no relacionado |
 | Match CV | 15% | 5=90%+ match, 1=<40% match |
