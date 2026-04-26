@@ -236,8 +236,6 @@ career-ops/
 
 我的作品集和其他开源项目 → [santifer.io](https://santifer.io)
 
-☕ 如果 career-ops 对你的求职有帮助，欢迎[请我喝杯咖啡](https://buymeacoffee.com/santifer)。
-
 ## Star 历史
 
 <a href="https://www.star-history.com/?repos=santifer%2Fcareer-ops&type=timeline&legend=top-left">
