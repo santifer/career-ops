@@ -340,11 +340,14 @@ async function tailorPackage(jd, profile, companyName) {
     console.log(`✅ Package ready: ${resumePathHtml} & ${clPathHtml}`);
 
     const generatePdfScript = path.join(process.cwd(), 'generate-pdf.mjs');
-    if (fs.existsSync(generatePdfScript)) {
+    const pdfChromium = await getChromium();
+    if (!pdfChromium) {
+      console.log("⚠ Playwright unavailable in this runtime. Skipping PDF generation; HTML artifacts generated successfully.");
+    } else if (fs.existsSync(generatePdfScript)) {
       console.log("📄 Generating PDFs...");
       try {
-        execSync(`"${process.execPath}" "${generatePdfScript}" "${resumePathHtml}" "${resumePathPdf}"`, { stdio: 'inherit' });
-        execSync(`"${process.execPath}" "${generatePdfScript}" "${clPathHtml}" "${clPathPdf}"`, { stdio: 'inherit' });
+        execSync(`"${process.execPath}" "${generatePdfScript}" "${resumePathHtml}" "${resumePathPdf}"`);
+        execSync(`"${process.execPath}" "${generatePdfScript}" "${clPathHtml}" "${clPathPdf}"`);
         console.log(`✨ SUCCESS! Resume & Cover Letter saved for ${entry.company}`);
       } catch (pdfErr) {
         console.warn(`⚠ PDF generation unavailable in this runtime (${pdfErr.message}). HTML artifacts generated successfully.`);
