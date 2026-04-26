@@ -42,7 +42,6 @@ Given my profile (read from cv.md and profile.yml for specific experience):
 - What unique value do I bring to this team?
 - Which of my projects are most relevant?
 - What story should I tell in the interview?
-
 ```
 
-Personalize each section with the specific context of the evaluated job.
+Personalize each section with the specific context of the job being evaluated.
