@@ -2,454 +2,510 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build a local-only Next.js 14 web UI at `career-ops/ui/` that replaces and extends the Go/Bubbletea TUI with 6 pages, live streaming of CLI operations, and a ⌘K command palette.
+**Goal:** Build a local-only browser UI at `career-ops/ui/` that replaces CLI commands with a visual dashboard — view pipeline, track applications, read reports, trigger scans and batch runs, and see patterns.
 
-**Architecture:** Direct filesystem reads/writes via `CAREER_OPS_PATH` env var. Server Components for data fetching. SSE routes for streaming scan/batch output. Server Actions for mutations. No database.
+**Architecture:** Single Express server (`server.mjs`) handles all file I/O and process spawning. Vite + React SPA handles all UI. In dev, Vite proxies `/api` to Express. In production, Express serves the Vite build as static files. No Next.js, no framework magic.
 
-**Tech Stack:** Next.js 14 App Router, TypeScript, Tailwind CSS, shadcn/ui, Recharts, react-markdown, @hello-pangea/dnd (kanban drag), cmdk (command palette), Jest + Testing Library
+**Tech Stack:** Vite, React 18, TypeScript, React Router v6, Tailwind CSS, shadcn/ui, Recharts, react-markdown, cmdk (command palette), Jest + Testing Library, Express (server only)
 
 ---
 
-## Sprint 1 — Foundation
+## File Map
 
-### Task 1: Initialize Next.js project
+| File | Responsibility |
+|------|---------------|
+| `ui/server.mjs` | Express: reads/writes data files, spawns processes, SSE streaming |
+| `ui/vite.config.ts` | Vite dev server on :3001, proxy `/api` → Express on :3002 |
+| `ui/src/main.tsx` | React entry point |
+| `ui/src/App.tsx` | React Router routes + Layout wrapper |
+| `ui/src/lib/api.ts` | Typed fetch helpers for all Express endpoints |
+| `ui/src/lib/parsers/pipeline.ts` | Pure fn: parse pipeline.md → PipelineEntry[] |
+| `ui/src/lib/parsers/applications.ts` | Pure fn: parse applications.md → Application[] |
+| `ui/src/lib/parsers/report.ts` | Pure fn: parse report .md → Report |
+| `ui/src/lib/parsers/scan-history.ts` | Pure fn: parse scan-history.tsv → ScanEntry[] |
+| `ui/src/components/Layout.tsx` | Sidebar + `<Outlet />` shell |
+| `ui/src/components/Sidebar.tsx` | Nav links + ⌘K shortcut hint |
+| `ui/src/components/ScoreBadge.tsx` | Color-coded score pill |
+| `ui/src/components/KpiCard.tsx` | Single stat card |
+| `ui/src/components/ScoreFunnel.tsx` | Horizontal score distribution bars |
+| `ui/src/components/ActionConsole.tsx` | SSE stream display with Run/Stop |
+| `ui/src/components/CommandPalette.tsx` | ⌘K modal using cmdk |
+| `ui/src/components/charts/ScoreHistogram.tsx` | Recharts bar chart |
+| `ui/src/components/charts/FunnelChart.tsx` | Application funnel bars |
+| `ui/src/pages/Overview.tsx` | KPIs, score funnel, recent evaluations |
+| `ui/src/pages/Pipeline.tsx` | Filterable pending jobs table |
+| `ui/src/pages/Tracker.tsx` | Sortable applications table + status dropdown |
+| `ui/src/pages/Reports.tsx` | Reports index list |
+| `ui/src/pages/Report.tsx` | Single report: markdown + score sidebar |
+| `ui/src/pages/Actions.tsx` | Run Scan / Batch / Merge with live output |
+| `ui/src/pages/Patterns.tsx` | Charts + company breakdown table |
+
+---
+
+## Sprint 1 — Project Setup
+
+### Task 1: Scaffold Vite + React + Express
 
 **Files:**
-- Create: `ui/` (Next.js app root)
-- Create: `ui/.env.local`
-- Create: `ui/vitest.config.ts`
-- Create: `ui/vitest.setup.ts`
+- Create: `ui/package.json`
+- Create: `ui/vite.config.ts`
+- Create: `ui/tailwind.config.ts`
+- Create: `ui/postcss.config.js`
+- Create: `ui/index.html`
+- Create: `ui/src/main.tsx`
+- Create: `ui/.env`
 
-- [ ] **Step 1: Scaffold the app**
+- [ ] **Step 1: Create the ui directory and package.json**
 
 ```bash
-cd /path/to/career-ops
-npx create-next-app@14 ui \
-  --typescript \
-  --tailwind \
-  --eslint \
-  --app \
-  --no-src-dir \
-  --import-alias "@/*" \
-  --use-npm
+mkdir -p career-ops/ui && cd career-ops/ui
+npm init -y
 ```
 
-- [ ] **Step 2: Install additional dependencies**
+- [ ] **Step 2: Install all dependencies**
 
 ```bash
-cd ui
 npm install \
-  recharts \
-  react-markdown \
-  remark-gfm \
-  @hello-pangea/dnd \
-  cmdk \
-  lucide-react \
-  clsx \
-  tailwind-merge \
+  react react-dom react-router-dom \
+  recharts react-markdown remark-gfm \
+  cmdk lucide-react clsx tailwind-merge \
   class-variance-authority \
-  @radix-ui/react-slot \
-  @radix-ui/react-dialog \
-  @radix-ui/react-dropdown-menu \
-  @radix-ui/react-select
+  @radix-ui/react-slot @radix-ui/react-dialog \
+  @radix-ui/react-dropdown-menu @radix-ui/react-select \
+  express cors
 
 npm install -D \
-  jest \
-  jest-environment-jsdom \
-  ts-jest \
-  @types/jest \
-  @testing-library/react \
-  @testing-library/jest-dom \
-  @types/node
+  vite @vitejs/plugin-react \
+  typescript @types/react @types/react-dom @types/node @types/express @types/cors \
+  tailwindcss postcss autoprefixer \
+  concurrently \
+  jest jest-environment-jsdom ts-jest \
+  @testing-library/react @testing-library/jest-dom @types/jest
 ```
 
-- [ ] **Step 3: Install shadcn/ui base**
-
-```bash
-cd ui
-npx shadcn-ui@latest init
-# When prompted:
-# Style: Default
-# Base color: Stone
-# CSS variables: yes
-```
-
-Then add components:
-```bash
-npx shadcn-ui@latest add button card badge table select dialog input separator scroll-area
-```
-
-- [ ] **Step 4: Create `.env.local`**
-
-```bash
-# ui/.env.local
-CAREER_OPS_PATH=..
-PORT=3001
-```
-
-- [ ] **Step 5: Create `jest.config.ts`**
-
-```ts
-// ui/jest.config.ts
-import type { Config } from 'jest'
-import nextJest from 'next/jest'
-
-const createJestConfig = nextJest({ dir: './' })
-
-const config: Config = {
-  testEnvironment: 'jsdom',
-  setupFilesAfterFramework: ['<rootDir>/jest.setup.ts'],
-  moduleNameMapper: { '^@/(.*)$': '<rootDir>/$1' },
-}
-
-export default createJestConfig(config)
-```
-
-- [ ] **Step 6: Create `jest.setup.ts`**
-
-```ts
-// ui/jest.setup.ts
-import '@testing-library/jest-dom'
-```
-
-- [ ] **Step 7: Add test script to `ui/package.json`**
+- [ ] **Step 3: Create `tsconfig.json`**
 
 ```json
-"scripts": {
-  "dev": "next dev -p 3001",
-  "build": "next build",
-  "start": "next start -p 3001",
-  "test": "jest",
-  "test:watch": "jest --watch"
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "baseUrl": ".",
+    "paths": { "@/*": ["./src/*"] }
+  },
+  "include": ["src"]
 }
 ```
 
-- [ ] **Step 8: Verify dev server starts**
+- [ ] **Step 4: Create `vite.config.ts`**
 
-```bash
-cd ui && npm run dev
-# Expected: Ready on http://localhost:3001
+```ts
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import path from 'path'
+
+export default defineConfig({
+  plugins: [react()],
+  resolve: { alias: { '@': path.resolve(__dirname, './src') } },
+  server: {
+    port: 3001,
+    proxy: { '/api': 'http://localhost:3002' },
+  },
+})
 ```
 
-- [ ] **Step 9: Commit**
+- [ ] **Step 5: Init Tailwind**
 
 ```bash
-cd ui && git add -A && cd .. && git add ui/ && git commit -m "feat(ui): scaffold Next.js 14 app with Tailwind + shadcn/ui"
+npx tailwindcss init -p --ts
 ```
 
----
+Replace `tailwind.config.ts` content:
+```ts
+import type { Config } from 'tailwindcss'
+import typography from '@tailwindcss/typography'
 
-### Task 2: Base layout — sidebar + page shell
+export default {
+  content: ['./index.html', './src/**/*.{ts,tsx}'],
+  theme: { extend: {} },
+  plugins: [typography],
+} satisfies Config
 
-**Files:**
-- Create: `ui/app/globals.css` (extend default)
-- Create: `ui/app/layout.tsx`
-- Create: `ui/components/sidebar.tsx`
+// also install: npm install -D @tailwindcss/typography
+```
 
-- [ ] **Step 1: Update `globals.css` with stone base tokens**
+- [ ] **Step 6: Create `index.html`**
+
+```html
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>career-ops</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+```
+
+- [ ] **Step 7: Create `src/main.tsx`**
+
+```tsx
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import { App } from './App'
+import './index.css'
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+)
+```
+
+- [ ] **Step 8: Create `src/index.css`**
 
 ```css
-/* ui/app/globals.css — replace entire file */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
-  :root {
-    --background: 0 0% 98%;       /* stone-50 */
-    --foreground: 20 14.3% 4.1%;  /* stone-950 */
-    --card: 0 0% 100%;
-    --card-foreground: 20 14.3% 4.1%;
-    --border: 20 5.9% 90%;
-    --input: 20 5.9% 90%;
-    --ring: 20 14.3% 4.1%;
-    --radius: 0.375rem;
+  body { @apply bg-stone-50 text-stone-900 antialiased; }
+}
+```
+
+- [ ] **Step 9: Create `.env`**
+
+```
+CAREER_OPS_PATH=..
+PORT=3002
+```
+
+- [ ] **Step 10: Set up `package.json` scripts**
+
+```json
+{
+  "scripts": {
+    "dev": "concurrently \"vite\" \"node server.mjs\"",
+    "build": "vite build",
+    "start": "NODE_ENV=production node server.mjs",
+    "test": "jest --passWithNoTests",
+    "test:watch": "jest --watch"
   }
 }
-
-@layer base {
-  * { @apply border-border; }
-  body { @apply bg-stone-50 text-stone-900 font-sans antialiased; }
-}
 ```
 
-- [ ] **Step 2: Create `components/sidebar.tsx`**
+- [ ] **Step 11: Create `jest.config.ts`**
 
-```tsx
-// ui/components/sidebar.tsx
-'use client'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { clsx } from 'clsx'
-import {
-  LayoutDashboard, List, Kanban, FileText, Terminal, BarChart2,
-} from 'lucide-react'
+```ts
+import type { Config } from 'jest'
 
-const NAV = [
-  { href: '/',          label: 'Overview',  icon: LayoutDashboard },
-  { href: '/pipeline',  label: 'Pipeline',  icon: List },
-  { href: '/tracker',   label: 'Tracker',   icon: Kanban },
-  { href: '/reports',   label: 'Reports',   icon: FileText },
-  { href: '/actions',   label: 'Actions',   icon: Terminal },
-  { href: '/patterns',  label: 'Patterns',  icon: BarChart2 },
-]
-
-export function Sidebar() {
-  const pathname = usePathname()
-  return (
-    <aside className="w-44 shrink-0 border-r border-stone-200 bg-white flex flex-col py-4 gap-1 px-2">
-      <div className="px-2 mb-4">
-        <span className="text-sm font-bold tracking-tight text-stone-900">career-ops</span>
-      </div>
-      {NAV.map(({ href, label, icon: Icon }) => (
-        <Link
-          key={href}
-          href={href}
-          className={clsx(
-            'flex items-center gap-2 px-2 py-1.5 rounded text-xs font-medium transition-colors',
-            pathname === href
-              ? 'bg-stone-900 text-white'
-              : 'text-stone-500 hover:bg-stone-100 hover:text-stone-900',
-          )}
-        >
-          <Icon size={14} />
-          {label}
-        </Link>
-      ))}
-    </aside>
-  )
+const config: Config = {
+  preset: 'ts-jest',
+  testEnvironment: 'jsdom',
+  setupFilesAfterFramework: ['<rootDir>/jest.setup.ts'],
+  moduleNameMapper: { '^@/(.*)$': '<rootDir>/src/$1' },
+  testMatch: ['**/__tests__/**/*.test.ts?(x)'],
 }
+
+export default config
 ```
 
-- [ ] **Step 3: Create `app/layout.tsx`**
+- [ ] **Step 12: Create `jest.setup.ts`**
 
-```tsx
-// ui/app/layout.tsx
-import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
-import './globals.css'
-import { Sidebar } from '@/components/sidebar'
-
-const inter = Inter({ subsets: ['latin'] })
-
-export const metadata: Metadata = {
-  title: 'career-ops',
-  description: 'Job search command center',
-}
-
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="en">
-      <body className={inter.className}>
-        <div className="flex h-screen overflow-hidden">
-          <Sidebar />
-          <main className="flex-1 overflow-y-auto p-6">
-            {children}
-          </main>
-        </div>
-      </body>
-    </html>
-  )
-}
+```ts
+import '@testing-library/jest-dom'
 ```
 
-- [ ] **Step 4: Replace `app/page.tsx` with placeholder**
-
-```tsx
-// ui/app/page.tsx
-export default function OverviewPage() {
-  return <div className="text-stone-500 text-sm">Overview — coming in Sprint 4</div>
-}
-```
-
-- [ ] **Step 5: Verify layout renders at localhost:3001**
+- [ ] **Step 13: Commit**
 
 ```bash
-npm run dev
-# Open http://localhost:3001 — should see sidebar on left
-```
-
-- [ ] **Step 6: Commit**
-
-```bash
-git add ui/ && git commit -m "feat(ui): add sidebar layout + stone theme"
+git add ui/ && git commit -m "feat(ui): scaffold Vite + React + Express project"
 ```
 
 ---
 
-### Task 3: ScoreBadge shared component
+### Task 2: Express server — all API endpoints
 
 **Files:**
-- Create: `ui/components/score-badge.tsx`
-- Create: `ui/components/__tests__/score-badge.test.tsx`
+- Create: `ui/server.mjs`
 
-- [ ] **Step 1: Write the failing test**
+- [ ] **Step 1: Create `server.mjs`**
 
-```tsx
-// ui/components/__tests__/score-badge.test.tsx
-import { render, screen } from '@testing-library/react'
-import { ScoreBadge } from '../score-badge'
+This is the entire backend. It reads/writes files and spawns processes — nothing else.
 
-test('renders green badge for score >= 4.0', () => {
-  render(<ScoreBadge score={4.2} />)
-  const badge = screen.getByText('4.2')
-  expect(badge).toHaveClass('bg-emerald-100')
-})
+```js
+// ui/server.mjs
+import express from 'express'
+import cors from 'cors'
+import fs from 'fs'
+import path from 'path'
+import { spawn } from 'child_process'
+import { fileURLToPath } from 'url'
 
-test('renders amber badge for 3.5-3.9', () => {
-  render(<ScoreBadge score={3.7} />)
-  expect(screen.getByText('3.7')).toHaveClass('bg-amber-100')
-})
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const app = express()
+const PORT = process.env.PORT ?? 3002
+const ROOT = process.env.CAREER_OPS_PATH
+  ? path.resolve(process.env.CAREER_OPS_PATH)
+  : path.resolve(__dirname, '..')
 
-test('renders stone badge for score < 3.5', () => {
-  render(<ScoreBadge score={3.0} />)
-  expect(screen.getByText('3.0')).toHaveClass('bg-stone-100')
-})
+app.use(cors())
+app.use(express.json())
 
-test('renders dash for null score', () => {
-  render(<ScoreBadge score={null} />)
-  expect(screen.getByText('—')).toBeInTheDocument()
-})
-```
-
-- [ ] **Step 2: Run — expect FAIL**
-
-```bash
-cd ui && npm test -- score-badge
-# Expected: FAIL — module not found
-```
-
-- [ ] **Step 3: Implement `components/score-badge.tsx`**
-
-```tsx
-// ui/components/score-badge.tsx
-import { clsx } from 'clsx'
-
-interface Props { score: number | null }
-
-export function ScoreBadge({ score }: Props) {
-  if (score === null) {
-    return <span className="inline-block px-1.5 py-0.5 rounded text-xs font-medium bg-stone-100 text-stone-400">—</span>
-  }
-  const formatted = score.toFixed(1)
-  return (
-    <span className={clsx(
-      'inline-block px-1.5 py-0.5 rounded text-xs font-semibold',
-      score >= 4.0 ? 'bg-emerald-100 text-emerald-800' :
-      score >= 3.5 ? 'bg-amber-100 text-amber-800' :
-                     'bg-stone-100 text-stone-600',
-    )}>
-      {formatted}
-    </span>
-  )
+// Serve Vite build in production
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, 'dist')))
 }
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+function dataFile(name) { return path.join(ROOT, 'data', name) }
+function reportsDir() { return path.join(ROOT, 'reports') }
+function read(filePath) { return fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf-8') : '' }
+
+// ── Read endpoints ────────────────────────────────────────────────────────────
+
+app.get('/api/pipeline', (_req, res) => {
+  res.json({ content: read(dataFile('pipeline.md')) })
+})
+
+app.get('/api/applications', (_req, res) => {
+  res.json({ content: read(dataFile('applications.md')) })
+})
+
+app.get('/api/scan-history', (_req, res) => {
+  res.json({ content: read(dataFile('scan-history.tsv')) })
+})
+
+app.get('/api/reports', (_req, res) => {
+  const dir = reportsDir()
+  const files = fs.existsSync(dir)
+    ? fs.readdirSync(dir).filter(f => f.endsWith('.md')).sort().reverse()
+    : []
+  res.json({ files })
+})
+
+app.get('/api/reports/:id', (req, res) => {
+  const dir = reportsDir()
+  if (!fs.existsSync(dir)) return res.status(404).json({ error: 'reports dir not found' })
+  const file = fs.readdirSync(dir).find(f => f.startsWith(req.params.id))
+  if (!file) return res.status(404).json({ error: 'report not found' })
+  res.json({ content: fs.readFileSync(path.join(dir, file), 'utf-8'), filename: file })
+})
+
+app.get('/api/patterns', (_req, res) => {
+  const content = read(dataFile('applications.md'))
+  res.json({ content })
+})
+
+// ── Mutation endpoints ────────────────────────────────────────────────────────
+
+app.patch('/api/applications/:number', (req, res) => {
+  const rowNum = parseInt(req.params.number, 10)
+  const { status } = req.body
+  if (!status) return res.status(400).json({ error: 'status required' })
+
+  const filePath = dataFile('applications.md')
+  const lines = read(filePath).split('\n')
+  let found = false
+
+  const updated = lines.map(line => {
+    const m = /^\|\s*(\d+)\s*\|/.exec(line)
+    if (!m || parseInt(m[1], 10) !== rowNum) return line
+    found = true
+    const cells = line.split('|')
+    cells[6] = ` ${status} `
+    return cells.join('|')
+  }).join('\n')
+
+  if (!found) return res.status(404).json({ error: `Row ${rowNum} not found` })
+  fs.writeFileSync(filePath, updated, 'utf-8')
+  res.json({ ok: true })
+})
+
+app.patch('/api/pipeline', (req, res) => {
+  const { url, action } = req.body
+  if (!url || !['done', 'skip'].includes(action)) {
+    return res.status(400).json({ error: 'url and action (done|skip) required' })
+  }
+  const marker = action === 'done' ? 'x' : '-'
+  const filePath = dataFile('pipeline.md')
+  const lines = read(filePath).split('\n')
+  let found = false
+
+  const updated = lines.map(line => {
+    if (!line.includes(url) || !/^- \[[ x-]\]/.test(line.trim())) return line
+    found = true
+    return line.replace(/^(\s*- )\[[ x-]\]/, `$1[${marker}]`)
+  }).join('\n')
+
+  if (!found) return res.status(404).json({ error: 'URL not found in pipeline.md' })
+  fs.writeFileSync(filePath, updated, 'utf-8')
+  res.json({ ok: true })
+})
+
+// ── SSE streaming endpoints ───────────────────────────────────────────────────
+
+function sseStream(res, command, args) {
+  res.setHeader('Content-Type', 'text/event-stream')
+  res.setHeader('Cache-Control', 'no-cache')
+  res.setHeader('Connection', 'keep-alive')
+
+  const child = spawn(command, args, { cwd: ROOT })
+
+  const send = chunk => {
+    chunk.toString().split('\n').filter(Boolean).forEach(line => {
+      res.write(`data: ${JSON.stringify({ line })}\n\n`)
+    })
+  }
+
+  child.stdout.on('data', send)
+  child.stderr.on('data', send)
+  child.on('close', code => {
+    res.write(`event: done\ndata: ${JSON.stringify({ code })}\n\n`)
+    res.end()
+  })
+
+  res.on('close', () => child.kill('SIGTERM'))
+}
+
+app.get('/api/stream/scan', (_req, res) => {
+  sseStream(res, 'node', ['scan.mjs'])
+})
+
+app.get('/api/stream/batch', (req, res) => {
+  const { parallel = '2', startFrom = '0', minScore = '0' } = req.query
+  const args = ['batch/batch-runner.sh', '--parallel', parallel, '--start-from', startFrom]
+  if (parseFloat(minScore) > 0) args.push('--min-score', minScore)
+  sseStream(res, 'bash', args)
+})
+
+app.get('/api/stream/merge', (_req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream')
+  res.setHeader('Cache-Control', 'no-cache')
+  res.setHeader('Connection', 'keep-alive')
+
+  const send = chunk => {
+    chunk.toString().split('\n').filter(Boolean).forEach(line => {
+      res.write(`data: ${JSON.stringify({ line })}\n\n`)
+    })
+  }
+
+  const merge = spawn('node', ['merge-tracker.mjs'], { cwd: ROOT })
+  merge.stdout.on('data', send)
+  merge.stderr.on('data', send)
+  merge.on('close', code => {
+    if (code !== 0) {
+      res.write(`event: done\ndata: ${JSON.stringify({ code })}\n\n`)
+      return res.end()
+    }
+    const verify = spawn('node', ['verify-pipeline.mjs'], { cwd: ROOT })
+    verify.stdout.on('data', send)
+    verify.stderr.on('data', send)
+    verify.on('close', vCode => {
+      res.write(`event: done\ndata: ${JSON.stringify({ code: vCode })}\n\n`)
+      res.end()
+    })
+  })
+
+  res.on('close', () => merge.kill('SIGTERM'))
+})
+
+// Fallback for SPA in production
+if (process.env.NODE_ENV === 'production') {
+  app.get('*', (_req, res) => res.sendFile(path.join(__dirname, 'dist', 'index.html')))
+}
+
+app.listen(PORT, () => console.log(`career-ops api ready on :${PORT}`))
 ```
 
-- [ ] **Step 4: Run — expect PASS**
+- [ ] **Step 2: Verify server starts**
 
 ```bash
-npm test -- score-badge
-# Expected: 4 tests PASS
+cd ui && node server.mjs
+# Expected: career-ops api ready on :3002
+# Test: curl http://localhost:3002/api/pipeline
 ```
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 3: Commit**
 
 ```bash
-git add ui/ && git commit -m "feat(ui): add ScoreBadge component"
+git add ui/ && git commit -m "feat(ui): Express server with file I/O + SSE process streaming"
 ```
 
 ---
 
 ## Sprint 2 — Data Parsers
 
-### Task 4: `lib/paths.ts` + pipeline parser
+### Task 3: Pipeline + applications parsers
 
 **Files:**
-- Create: `ui/lib/paths.ts`
-- Create: `ui/lib/parsers/pipeline.ts`
-- Create: `ui/lib/parsers/__tests__/pipeline.test.ts`
+- Create: `ui/src/lib/parsers/pipeline.ts`
+- Create: `ui/src/lib/parsers/applications.ts`
+- Create: `ui/src/lib/parsers/__tests__/pipeline.test.ts`
+- Create: `ui/src/lib/parsers/__tests__/applications.test.ts`
 
-- [ ] **Step 1: Create `lib/paths.ts`**
-
-```ts
-// ui/lib/paths.ts
-import path from 'path'
-
-export function getCareerOpsPath(): string {
-  const envPath = process.env.CAREER_OPS_PATH
-  return envPath ? path.resolve(envPath) : path.resolve(process.cwd(), '..')
-}
-
-export function dataPath(filename: string): string {
-  return path.join(getCareerOpsPath(), 'data', filename)
-}
-
-export function reportsPath(): string {
-  return path.join(getCareerOpsPath(), 'reports')
-}
-
-export function batchPath(filename: string): string {
-  return path.join(getCareerOpsPath(), 'batch', filename)
-}
-```
-
-- [ ] **Step 2: Write failing test for pipeline parser**
+- [ ] **Step 1: Write failing pipeline test**
 
 ```ts
-// ui/lib/parsers/__tests__/pipeline.test.ts
+// ui/src/lib/parsers/__tests__/pipeline.test.ts
 import { parsePipeline } from '../pipeline'
 
-const SAMPLE = `# Pipeline — Pending Evaluations
+const SAMPLE = `# Pipeline\n\n## Pendientes\n\n- [ ] https://jobs.ashbyhq.com/langchain/abc | LangChain | Python OSS Engineer\n- [x] https://jobs.ashbyhq.com/acme/xyz | Acme | Senior Backend\n- [-] https://lever.co/foo/123 | Foo | Product Manager\n`
 
-## Pendientes
-
-- [ ] https://jobs.ashbyhq.com/langchain/abc | LangChain | Python OSS Engineer
-- [x] https://jobs.ashbyhq.com/acme/xyz | Acme | Senior Backend Engineer
-- [-] https://jobs.ashbyhq.com/foo/123 | Foo Inc | Product Manager
-`
-
-test('parses pending entries as done=false, skipped=false', () => {
+test('parses pending entry', () => {
   const entries = parsePipeline(SAMPLE)
-  const pending = entries.find(e => e.company === 'LangChain')!
-  expect(pending.done).toBe(false)
-  expect(pending.skipped).toBe(false)
-  expect(pending.url).toBe('https://jobs.ashbyhq.com/langchain/abc')
-  expect(pending.role).toBe('Python OSS Engineer')
+  const e = entries.find(e => e.company === 'LangChain')!
+  expect(e.done).toBe(false)
+  expect(e.skipped).toBe(false)
+  expect(e.url).toBe('https://jobs.ashbyhq.com/langchain/abc')
+  expect(e.role).toBe('Python OSS Engineer')
 })
 
-test('parses [x] entries as done=true', () => {
-  const entries = parsePipeline(SAMPLE)
-  const done = entries.find(e => e.company === 'Acme')!
-  expect(done.done).toBe(true)
+test('parses [x] as done', () => {
+  expect(parsePipeline(SAMPLE).find(e => e.company === 'Acme')!.done).toBe(true)
 })
 
-test('parses [-] entries as skipped=true', () => {
+test('parses [-] as skipped', () => {
+  expect(parsePipeline(SAMPLE).find(e => e.company === 'Foo')!.skipped).toBe(true)
+})
+
+test('infers source from URL', () => {
   const entries = parsePipeline(SAMPLE)
-  const skipped = entries.find(e => e.company === 'Foo Inc')!
-  expect(skipped.skipped).toBe(true)
+  expect(entries[0].source).toBe('ashby')
+  expect(entries[2].source).toBe('lever')
 })
 
 test('returns empty array for empty content', () => {
   expect(parsePipeline('')).toEqual([])
 })
-
-test('infers source from URL domain', () => {
-  const entries = parsePipeline(SAMPLE)
-  expect(entries[0].source).toBe('ashby')
-})
 ```
 
-- [ ] **Step 3: Run — expect FAIL**
+- [ ] **Step 2: Run — expect FAIL**
 
 ```bash
-npm test -- pipeline.test
-# Expected: FAIL — module not found
+npm test -- pipeline
 ```
 
-- [ ] **Step 4: Implement `lib/parsers/pipeline.ts`**
+- [ ] **Step 3: Implement pipeline parser**
 
 ```ts
-// ui/lib/parsers/pipeline.ts
+// ui/src/lib/parsers/pipeline.ts
 export interface PipelineEntry {
   url: string
   company: string
@@ -470,106 +526,76 @@ function inferSource(url: string): string {
 }
 
 export function parsePipeline(content: string): PipelineEntry[] {
-  const entries: PipelineEntry[] = []
-  for (const line of content.split('\n')) {
+  return content.split('\n').reduce<PipelineEntry[]>((acc, line) => {
     const m = LINE_RE.exec(line.trim())
-    if (!m) continue
+    if (!m) return acc
     const [, state, url, company, role] = m
-    entries.push({
-      url: url.trim(),
-      company: company.trim(),
-      role: role.trim(),
-      source: inferSource(url),
-      done: state === 'x',
-      skipped: state === '-',
+    acc.push({
+      url: url.trim(), company: company.trim(), role: role.trim(),
+      source: inferSource(url), done: state === 'x', skipped: state === '-',
     })
-  }
-  return entries
+    return acc
+  }, [])
 }
 ```
 
-- [ ] **Step 5: Run — expect PASS**
+- [ ] **Step 4: Run — expect PASS**
 
 ```bash
-npm test -- pipeline.test
-# Expected: 5 tests PASS
+npm test -- pipeline
 ```
 
-- [ ] **Step 6: Commit**
-
-```bash
-git add ui/ && git commit -m "feat(ui): add paths + pipeline parser"
-```
-
----
-
-### Task 5: Applications parser
-
-**Files:**
-- Create: `ui/lib/parsers/applications.ts`
-- Create: `ui/lib/parsers/__tests__/applications.test.ts`
-
-- [ ] **Step 1: Write failing test**
+- [ ] **Step 5: Write failing applications test**
 
 ```ts
-// ui/lib/parsers/__tests__/applications.test.ts
+// ui/src/lib/parsers/__tests__/applications.test.ts
 import { parseApplications } from '../applications'
 
-const SAMPLE = `# Applications Tracker
+const SAMPLE = `# Applications Tracker\n\n| # | Date | Company | Role | Score | Status | PDF | Report | Notes |\n|---|------|---------|------|-------|--------|-----|--------|-------|\n| 1 | 2026-04-26 | LangChain | Python OSS Engineer | 4.2/5 | Evaluated | ✅ | [001](reports/001-langchain-2026-04-26.md) | Strong match |\n| 2 | 2026-04-27 | Acme | Backend | | Applied | ❌ | | |\n`
 
-| # | Date | Company | Role | Score | Status | PDF | Report | Notes |
-|---|------|---------|------|-------|--------|-----|--------|-------|
-| 1 | 2026-04-26 | LangChain | Python OSS Engineer | 4.2/5 | Evaluated | ✅ | [001](reports/001-langchain-2026-04-26.md) | Strong match |
-| 2 | 2026-04-27 | Acme | Backend Engineer | | Applied | ❌ | | |
-`
-
-test('parses score correctly', () => {
-  const apps = parseApplications(SAMPLE)
-  expect(apps[0].score).toBe(4.2)
+test('parses score as number', () => {
+  expect(parseApplications(SAMPLE)[0].score).toBe(4.2)
 })
 
 test('parses null score for empty cell', () => {
-  const apps = parseApplications(SAMPLE)
-  expect(apps[1].score).toBeNull()
+  expect(parseApplications(SAMPLE)[1].score).toBeNull()
 })
 
-test('parses hasPDF from checkmark', () => {
+test('parses hasPDF', () => {
   const apps = parseApplications(SAMPLE)
   expect(apps[0].hasPDF).toBe(true)
   expect(apps[1].hasPDF).toBe(false)
 })
 
-test('parses reportPath and reportNumber from markdown link', () => {
-  const apps = parseApplications(SAMPLE)
-  expect(apps[0].reportPath).toBe('reports/001-langchain-2026-04-26.md')
-  expect(apps[0].reportNumber).toBe('001')
+test('parses reportPath and reportNumber', () => {
+  const app = parseApplications(SAMPLE)[0]
+  expect(app.reportPath).toBe('reports/001-langchain-2026-04-26.md')
+  expect(app.reportNumber).toBe('001')
 })
 
-test('returns empty array for header-only content', () => {
-  const headerOnly = `# Applications Tracker\n\n| # | Date | Company |\n|---|------|---------|`
-  expect(parseApplications(headerOnly)).toEqual([])
+test('parses core fields', () => {
+  const app = parseApplications(SAMPLE)[0]
+  expect(app.number).toBe(1)
+  expect(app.company).toBe('LangChain')
+  expect(app.status).toBe('Evaluated')
+  expect(app.date).toBe('2026-04-26')
 })
 
-test('parses all core fields', () => {
-  const apps = parseApplications(SAMPLE)
-  expect(apps[0].number).toBe(1)
-  expect(apps[0].company).toBe('LangChain')
-  expect(apps[0].role).toBe('Python OSS Engineer')
-  expect(apps[0].status).toBe('Evaluated')
-  expect(apps[0].date).toBe('2026-04-26')
+test('returns empty for header-only content', () => {
+  expect(parseApplications('# Applications\n\n| # |\n|---|')).toEqual([])
 })
 ```
 
-- [ ] **Step 2: Run — expect FAIL**
+- [ ] **Step 6: Run — expect FAIL**
 
 ```bash
-npm test -- applications.test
+npm test -- applications
 ```
 
-- [ ] **Step 3: Implement `lib/parsers/applications.ts`**
+- [ ] **Step 7: Implement applications parser**
 
 ```ts
-// ui/lib/parsers/applications.ts
+// ui/src/lib/parsers/applications.ts
 export interface Application {
   number: number
   date: string
@@ -581,100 +607,74 @@ export interface Application {
   reportPath: string | null
   reportNumber: string | null
   notes: string
-  jobUrl: string | null
 }
 
 const REPORT_LINK_RE = /\[(\d{3})\]\(([^)]+)\)/
-const SCORE_RE = /^([\d.]+)\/5$/
 
 function parseScore(cell: string): number | null {
-  const m = SCORE_RE.exec(cell.trim())
+  const m = /^([\d.]+)\/5$/.exec(cell.trim())
   return m ? parseFloat(m[1]) : null
 }
 
-function parseReport(cell: string): { path: string | null; number: string | null } {
+function parseReport(cell: string) {
   const m = REPORT_LINK_RE.exec(cell.trim())
-  if (!m) return { path: null, number: null }
-  return { path: m[2], number: m[1] }
+  return m ? { path: m[2], number: m[1] } : { path: null, number: null }
 }
 
-function isTableRow(line: string): boolean {
-  return line.startsWith('|') && !line.match(/^[\s|:-]+$/)
-}
-
-function splitRow(line: string): string[] {
-  return line.split('|').slice(1, -1).map(c => c.trim())
+function isDataRow(line: string) {
+  return line.startsWith('|') && !/^\|[\s|:-]+\|$/.test(line) && !/^\|\s*#/.test(line)
 }
 
 export function parseApplications(content: string): Application[] {
-  const lines = content.split('\n').filter(isTableRow)
-  // First matching line is the header row — skip it and the separator
-  const dataLines = lines.filter(l => !l.includes('---') && !/^\|\s*#/.test(l))
-  return dataLines.map(line => {
-    const [num, date, company, role, score, status, pdf, report, ...noteParts] = splitRow(line)
-    const { path: reportPath, number: reportNumber } = parseReport(report ?? '')
-    return {
-      number: parseInt(num, 10),
-      date,
-      company,
-      role,
-      score: parseScore(score ?? ''),
-      status,
-      hasPDF: pdf?.includes('✅') ?? false,
-      reportPath,
-      reportNumber,
-      notes: noteParts.join('|').trim(),
-      jobUrl: null,
-    }
-  }).filter(a => !isNaN(a.number))
+  return content.split('\n')
+    .filter(isDataRow)
+    .map(line => {
+      const cells = line.split('|').slice(1, -1).map(c => c.trim())
+      const [num, date, company, role, score, status, pdf, report, ...noteParts] = cells
+      const { path: reportPath, number: reportNumber } = parseReport(report ?? '')
+      const number = parseInt(num, 10)
+      if (isNaN(number)) return null
+      return {
+        number, date, company, role,
+        score: parseScore(score ?? ''),
+        status, hasPDF: pdf?.includes('✅') ?? false,
+        reportPath, reportNumber,
+        notes: noteParts.join('|').trim(),
+      }
+    })
+    .filter((a): a is Application => a !== null)
 }
 ```
 
-- [ ] **Step 4: Run — expect PASS**
+- [ ] **Step 8: Run — expect PASS**
 
 ```bash
-npm test -- applications.test
+npm test -- applications
 ```
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 9: Commit**
 
 ```bash
-git add ui/ && git commit -m "feat(ui): add applications parser"
+git add ui/ && git commit -m "feat(ui): pipeline + applications parsers with tests"
 ```
 
 ---
 
-### Task 6: Report parser
+### Task 4: Report + scan-history parsers
 
 **Files:**
-- Create: `ui/lib/parsers/report.ts`
-- Create: `ui/lib/parsers/__tests__/report.test.ts`
+- Create: `ui/src/lib/parsers/report.ts`
+- Create: `ui/src/lib/parsers/scan-history.ts`
+- Create: `ui/src/lib/parsers/__tests__/report.test.ts`
+- Create: `ui/src/lib/parsers/__tests__/scan-history.test.ts`
 
-- [ ] **Step 1: Write failing test**
+- [ ] **Step 1: Write failing report test**
 
 ```ts
-// ui/lib/parsers/__tests__/report.test.ts
+// ui/src/lib/parsers/__tests__/report.test.ts
 import { parseReport } from '../report'
 
-const SAMPLE = `# Evaluación: LangChain — Python OSS Engineer
-
-**Fecha:** 2026-04-26
-**Arquetipo:** AI Platform / LLMOps Engineer
-**Score:** 4.2/5
-**Legitimacy:** High Confidence
-**URL:** https://jobs.ashbyhq.com/langchain/abc
-**PDF:** output/001-langchain.pdf
-
----
-
-## A) Resumen del Rol
-
-Great role for an OSS engineer.
-
-## B) Match con CV
-
-Strong fit on Python and LangChain experience.
-`
+const SAMPLE = `# Evaluación: LangChain — Python OSS Engineer\n\n**Fecha:** 2026-04-26\n**Arquetipo:** AI Platform / LLMOps Engineer\n**Score:** 4.2/5\n**Legitimacy:** High Confidence\n**URL:** https://jobs.ashbyhq.com/langchain/abc\n**PDF:** output/001-langchain.pdf\n\n---\n\n## A) Resumen del Rol\n\nGreat role.\n\n## B) Match con CV\n\nStrong fit.\n`
 
 test('parses company and role from heading', () => {
   const r = parseReport('001', SAMPLE)
@@ -683,11 +683,10 @@ test('parses company and role from heading', () => {
 })
 
 test('parses score as number', () => {
-  const r = parseReport('001', SAMPLE)
-  expect(r.score).toBe(4.2)
+  expect(parseReport('001', SAMPLE).score).toBe(4.2)
 })
 
-test('parses metadata fields', () => {
+test('parses metadata', () => {
   const r = parseReport('001', SAMPLE)
   expect(r.archetype).toBe('AI Platform / LLMOps Engineer')
   expect(r.legitimacy).toBe('High Confidence')
@@ -695,10 +694,10 @@ test('parses metadata fields', () => {
   expect(r.jobUrl).toBe('https://jobs.ashbyhq.com/langchain/abc')
 })
 
-test('extracts section blocks keyed by letter', () => {
+test('extracts sections keyed by letter', () => {
   const r = parseReport('001', SAMPLE)
-  expect(r.sections['A']).toContain('Great role for an OSS engineer.')
-  expect(r.sections['B']).toContain('Strong fit on Python')
+  expect(r.sections['A']).toContain('Great role.')
+  expect(r.sections['B']).toContain('Strong fit.')
 })
 ```
 
@@ -708,10 +707,10 @@ test('extracts section blocks keyed by letter', () => {
 npm test -- report.test
 ```
 
-- [ ] **Step 3: Implement `lib/parsers/report.ts`**
+- [ ] **Step 3: Implement report parser**
 
 ```ts
-// ui/lib/parsers/report.ts
+// ui/src/lib/parsers/report.ts
 export interface Report {
   number: string
   company: string
@@ -727,395 +726,324 @@ export interface Report {
 }
 
 const HEADING_RE = /^#\s+Evaluaci[oó]n:\s+(.+?)\s+[—–]\s+(.+)$/m
-const META_RE = (key: string) => new RegExp(`\\*\\*${key}:\\*\\*\\s*(.+)`, 'm')
-const SECTION_RE = /^##\s+([A-G])\)/m
 
-function extractMeta(content: string, key: string): string {
-  const m = META_RE(key).exec(content)
+function meta(content: string, key: string): string {
+  const m = new RegExp(`\\*\\*${key}:\\*\\*\\s*(.+)`, 'm').exec(content)
   return m ? m[1].trim() : ''
 }
 
 export function parseReport(number: string, content: string): Report {
-  const headingMatch = HEADING_RE.exec(content)
-  const company = headingMatch?.[1]?.trim() ?? ''
-  const role = headingMatch?.[2]?.trim() ?? ''
-
-  const scoreRaw = extractMeta(content, 'Score')
+  const h = HEADING_RE.exec(content)
+  const scoreRaw = meta(content, 'Score')
   const scoreMatch = /^([\d.]+)\/5$/.exec(scoreRaw)
 
-  // Split into sections by ## A), ## B), etc.
   const sections: Record<string, string> = {}
-  const parts = content.split(/^##\s+/m)
-  for (const part of parts) {
+  content.split(/^##\s+/m).forEach(part => {
     const m = /^([A-G])\)/.exec(part)
     if (m) sections[m[1]] = part.replace(/^[A-G]\)[^\n]*\n/, '').trim()
-  }
+  })
 
   return {
     number,
-    company,
-    role,
-    date: extractMeta(content, 'Fecha'),
-    archetype: extractMeta(content, 'Arquetipo'),
+    company: h?.[1]?.trim() ?? '',
+    role: h?.[2]?.trim() ?? '',
+    date: meta(content, 'Fecha'),
+    archetype: meta(content, 'Arquetipo'),
     score: scoreMatch ? parseFloat(scoreMatch[1]) : null,
-    legitimacy: extractMeta(content, 'Legitimacy'),
-    jobUrl: extractMeta(content, 'URL') || null,
-    pdfPath: extractMeta(content, 'PDF') || null,
+    legitimacy: meta(content, 'Legitimacy'),
+    jobUrl: meta(content, 'URL') || null,
+    pdfPath: meta(content, 'PDF') || null,
     sections,
     rawContent: content,
   }
 }
 ```
 
-- [ ] **Step 4: Run — expect PASS**
-
-```bash
-npm test -- report.test
-```
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add ui/ && git commit -m "feat(ui): add report parser"
-```
-
----
-
-### Task 7: Scan-history parser
-
-**Files:**
-- Create: `ui/lib/parsers/scan-history.ts`
-- Create: `ui/lib/parsers/__tests__/scan-history.test.ts`
-
-- [ ] **Step 1: Write failing test**
+- [ ] **Step 4: Write failing scan-history test**
 
 ```ts
-// ui/lib/parsers/__tests__/scan-history.test.ts
+// ui/src/lib/parsers/__tests__/scan-history.test.ts
 import { parseScanHistory } from '../scan-history'
 
-const SAMPLE = `url\tfirst_seen\tportal\ttitle\tcompany\tstatus
-https://jobs.ashbyhq.com/langchain/abc\t2026-04-26\tashby-api\tPython OSS Engineer\tLangChain\tadded
-https://jobs.ashbyhq.com/acme/xyz\t2026-04-27\tashby-api\tSenior Backend\tAcme\tskipped_title
-`
+const SAMPLE = `url\tfirst_seen\tportal\ttitle\tcompany\tstatus\nhttps://jobs.ashbyhq.com/abc\t2026-04-26\tashby-api\tPython OSS Engineer\tLangChain\tadded\n`
 
-test('parses TSV rows into ScanEntry objects', () => {
-  const entries = parseScanHistory(SAMPLE)
-  expect(entries).toHaveLength(2)
+test('parses all fields', () => {
+  const [e] = parseScanHistory(SAMPLE)
+  expect(e.url).toBe('https://jobs.ashbyhq.com/abc')
+  expect(e.firstSeen).toBe('2026-04-26')
+  expect(e.company).toBe('LangChain')
+  expect(e.status).toBe('added')
 })
 
-test('parses all fields correctly', () => {
-  const [first] = parseScanHistory(SAMPLE)
-  expect(first.url).toBe('https://jobs.ashbyhq.com/langchain/abc')
-  expect(first.firstSeen).toBe('2026-04-26')
-  expect(first.portal).toBe('ashby-api')
-  expect(first.title).toBe('Python OSS Engineer')
-  expect(first.company).toBe('LangChain')
-  expect(first.status).toBe('added')
+test('skips header row', () => {
+  expect(parseScanHistory(SAMPLE)).toHaveLength(1)
 })
 
-test('returns empty array for header-only content', () => {
-  const headerOnly = `url\tfirst_seen\tportal\ttitle\tcompany\tstatus\n`
-  expect(parseScanHistory(headerOnly)).toEqual([])
+test('returns empty for header-only', () => {
+  expect(parseScanHistory('url\tfirst_seen\tportal\ttitle\tcompany\tstatus\n')).toEqual([])
 })
 ```
 
-- [ ] **Step 2: Run — expect FAIL**
-
-```bash
-npm test -- scan-history.test
-```
-
-- [ ] **Step 3: Implement `lib/parsers/scan-history.ts`**
+- [ ] **Step 5: Implement scan-history parser**
 
 ```ts
-// ui/lib/parsers/scan-history.ts
+// ui/src/lib/parsers/scan-history.ts
 export interface ScanEntry {
   url: string
   firstSeen: string
   portal: string
   title: string
   company: string
-  status: 'added' | 'skipped_title' | 'skipped_dup' | string
+  status: string
 }
 
 export function parseScanHistory(content: string): ScanEntry[] {
-  const lines = content.trim().split('\n')
-  // Skip header line
-  return lines.slice(1).filter(Boolean).map(line => {
+  return content.trim().split('\n').slice(1).filter(Boolean).map(line => {
     const [url, firstSeen, portal, title, company, status] = line.split('\t')
     return { url, firstSeen, portal, title, company, status }
   })
 }
 ```
 
-- [ ] **Step 4: Run — expect PASS**
+- [ ] **Step 6: Run all parsers — expect PASS**
 
 ```bash
-npm test -- scan-history.test
+npm test
+# Expected: 12 tests pass
 ```
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
-git add ui/ && git commit -m "feat(ui): add scan-history parser"
+git add ui/ && git commit -m "feat(ui): report + scan-history parsers with tests"
 ```
 
 ---
 
-## Sprint 3 — Mutations
+## Sprint 3 — App Shell
 
-### Task 8: Status mutation
+### Task 5: API client + routing + layout
 
 **Files:**
-- Create: `ui/lib/mutations/status.ts`
-- Create: `ui/lib/mutations/__tests__/status.test.ts`
+- Create: `ui/src/lib/api.ts`
+- Create: `ui/src/App.tsx`
+- Create: `ui/src/components/Layout.tsx`
+- Create: `ui/src/components/Sidebar.tsx`
+- Create: `ui/src/components/ScoreBadge.tsx`
 
-- [ ] **Step 1: Write failing test**
+- [ ] **Step 1: Create `src/lib/api.ts`**
 
-```ts
-// ui/lib/mutations/__tests__/status.test.ts
-import { updateApplicationStatus } from '../status'
-
-const SAMPLE_MD = `# Applications Tracker
-
-| # | Date | Company | Role | Score | Status | PDF | Report | Notes |
-|---|------|---------|------|-------|--------|-----|--------|-------|
-| 1 | 2026-04-26 | LangChain | Python OSS Engineer | 4.2/5 | Evaluated | ✅ | [001](reports/001-langchain-2026-04-26.md) | |
-| 2 | 2026-04-27 | Acme | Backend | 3.8/5 | Evaluated | ❌ | | |
-`
-
-test('updates status for matching row number', () => {
-  const result = updateApplicationStatus(SAMPLE_MD, 1, 'Applied')
-  expect(result).toContain('| Applied |')
-  expect(result).not.toContain('| Evaluated |')
-})
-
-test('leaves other rows unchanged', () => {
-  const result = updateApplicationStatus(SAMPLE_MD, 1, 'Applied')
-  const lines = result.split('\n')
-  const row2 = lines.find(l => l.includes('| 2 |'))
-  expect(row2).toContain('Evaluated')
-})
-
-test('throws if row number not found', () => {
-  expect(() => updateApplicationStatus(SAMPLE_MD, 99, 'Applied')).toThrow()
-})
-```
-
-- [ ] **Step 2: Run — expect FAIL**
-
-```bash
-npm test -- status.test
-```
-
-- [ ] **Step 3: Implement `lib/mutations/status.ts`**
+All server calls go through this file so pages never construct URLs manually.
 
 ```ts
-// ui/lib/mutations/status.ts
-import fs from 'fs'
-import { dataPath } from '@/lib/paths'
+// ui/src/lib/api.ts
+const BASE = '/api'
 
-export function updateApplicationStatus(content: string, rowNumber: number, newStatus: string): string {
-  const lines = content.split('\n')
-  let found = false
-  const updated = lines.map(line => {
-    // Match table rows starting with | {number} |
-    const rowMatch = /^\|\s*(\d+)\s*\|/.exec(line)
-    if (!rowMatch || parseInt(rowMatch[1], 10) !== rowNumber) return line
-    found = true
-    // Replace the Status column (6th pipe-delimited cell)
-    const cells = line.split('|')
-    // cells[0] = '', cells[1] = #, cells[2] = date, cells[3] = company,
-    // cells[4] = role, cells[5] = score, cells[6] = status, cells[7] = pdf, ...
-    cells[6] = ` ${newStatus} `
-    return cells.join('|')
+async function get<T>(path: string): Promise<T> {
+  const res = await fetch(`${BASE}${path}`)
+  if (!res.ok) throw new Error(`GET ${path} failed: ${res.status}`)
+  return res.json()
+}
+
+async function patch(path: string, body: unknown): Promise<void> {
+  const res = await fetch(`${BASE}${path}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
   })
-  if (!found) throw new Error(`Row ${rowNumber} not found in applications.md`)
-  return updated.join('\n')
+  if (!res.ok) throw new Error(`PATCH ${path} failed: ${res.status}`)
 }
 
-export async function writeApplicationStatus(rowNumber: number, newStatus: string): Promise<void> {
-  const filePath = dataPath('applications.md')
-  const content = fs.readFileSync(filePath, 'utf-8')
-  const updated = updateApplicationStatus(content, rowNumber, newStatus)
-  fs.writeFileSync(filePath, updated, 'utf-8')
+export const api = {
+  pipeline:        () => get<{ content: string }>('/pipeline'),
+  applications:    () => get<{ content: string }>('/applications'),
+  scanHistory:     () => get<{ content: string }>('/scan-history'),
+  reports:         () => get<{ files: string[] }>('/reports'),
+  report:          (id: string) => get<{ content: string; filename: string }>(`/reports/${id}`),
+  patterns:        () => get<{ content: string }>('/patterns'),
+  updateStatus:    (number: number, status: string) => patch(`/applications/${number}`, { status }),
+  markPipeline:    (url: string, action: 'done' | 'skip') => patch('/pipeline', { url, action }),
 }
 ```
 
-- [ ] **Step 4: Run — expect PASS**
+- [ ] **Step 2: Create `src/components/ScoreBadge.tsx`**
+
+```tsx
+// ui/src/components/ScoreBadge.tsx
+import { clsx } from 'clsx'
+
+export function ScoreBadge({ score }: { score: number | null }) {
+  if (score === null) return <span className="inline-block px-1.5 py-0.5 rounded text-xs font-medium bg-stone-100 text-stone-400">—</span>
+  return (
+    <span className={clsx('inline-block px-1.5 py-0.5 rounded text-xs font-semibold',
+      score >= 4.0 ? 'bg-emerald-100 text-emerald-800' :
+      score >= 3.5 ? 'bg-amber-100 text-amber-800' :
+                     'bg-stone-100 text-stone-600')}>
+      {score.toFixed(1)}
+    </span>
+  )
+}
+```
+
+- [ ] **Step 3: Create `src/components/Sidebar.tsx`**
+
+```tsx
+// ui/src/components/Sidebar.tsx
+import { NavLink } from 'react-router-dom'
+import { LayoutDashboard, List, Kanban, FileText, Terminal, BarChart2 } from 'lucide-react'
+import { clsx } from 'clsx'
+
+const NAV = [
+  { to: '/',         label: 'Overview', icon: LayoutDashboard },
+  { to: '/pipeline', label: 'Pipeline', icon: List },
+  { to: '/tracker',  label: 'Tracker',  icon: Kanban },
+  { to: '/reports',  label: 'Reports',  icon: FileText },
+  { to: '/actions',  label: 'Actions',  icon: Terminal },
+  { to: '/patterns', label: 'Patterns', icon: BarChart2 },
+]
+
+export function Sidebar() {
+  return (
+    <aside className="w-44 shrink-0 border-r border-stone-200 bg-white flex flex-col py-4 gap-1 px-2">
+      <div className="px-2 mb-4">
+        <span className="text-sm font-bold tracking-tight text-stone-900">career-ops</span>
+      </div>
+      {NAV.map(({ to, label, icon: Icon }) => (
+        <NavLink key={to} to={to} end={to === '/'}
+          className={({ isActive }) => clsx(
+            'flex items-center gap-2 px-2 py-1.5 rounded text-xs font-medium transition-colors',
+            isActive ? 'bg-stone-900 text-white' : 'text-stone-500 hover:bg-stone-100 hover:text-stone-900',
+          )}>
+          <Icon size={14} />{label}
+        </NavLink>
+      ))}
+    </aside>
+  )
+}
+```
+
+- [ ] **Step 4: Create `src/components/Layout.tsx`**
+
+```tsx
+// ui/src/components/Layout.tsx
+import { Outlet } from 'react-router-dom'
+import { Sidebar } from './Sidebar'
+
+export function Layout() {
+  return (
+    <div className="flex h-screen overflow-hidden">
+      <Sidebar />
+      <main className="flex-1 overflow-y-auto p-6">
+        <Outlet />
+      </main>
+    </div>
+  )
+}
+```
+
+- [ ] **Step 5: Create `src/App.tsx`**
+
+```tsx
+// ui/src/App.tsx
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { Layout } from './components/Layout'
+import { Overview } from './pages/Overview'
+import { Pipeline } from './pages/Pipeline'
+import { Tracker } from './pages/Tracker'
+import { Reports } from './pages/Reports'
+import { Report } from './pages/Report'
+import { Actions } from './pages/Actions'
+import { Patterns } from './pages/Patterns'
+
+export function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route element={<Layout />}>
+          <Route index element={<Overview />} />
+          <Route path="pipeline" element={<Pipeline />} />
+          <Route path="tracker" element={<Tracker />} />
+          <Route path="reports" element={<Reports />} />
+          <Route path="reports/:id" element={<Report />} />
+          <Route path="actions" element={<Actions />} />
+          <Route path="patterns" element={<Patterns />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
+  )
+}
+```
+
+- [ ] **Step 6: Create placeholder pages so the app compiles**
+
+Create each file with a stub:
+```tsx
+// ui/src/pages/Overview.tsx
+export function Overview() { return <div className="text-stone-400 text-sm">Overview — Sprint 4</div> }
+
+// ui/src/pages/Pipeline.tsx
+export function Pipeline() { return <div className="text-stone-400 text-sm">Pipeline — Sprint 5</div> }
+
+// ui/src/pages/Tracker.tsx
+export function Tracker() { return <div className="text-stone-400 text-sm">Tracker — Sprint 6</div> }
+
+// ui/src/pages/Reports.tsx
+export function Reports() { return <div className="text-stone-400 text-sm">Reports — Sprint 7</div> }
+
+// ui/src/pages/Report.tsx
+export function Report() { return <div className="text-stone-400 text-sm">Report — Sprint 7</div> }
+
+// ui/src/pages/Actions.tsx
+export function Actions() { return <div className="text-stone-400 text-sm">Actions — Sprint 8</div> }
+
+// ui/src/pages/Patterns.tsx
+export function Patterns() { return <div className="text-stone-400 text-sm">Patterns — Sprint 9</div> }
+```
+
+- [ ] **Step 7: Verify app shell loads**
 
 ```bash
-npm test -- status.test
+npm run dev
+# Open http://localhost:3001 — sidebar visible, nav links work, stub pages render
 ```
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 8: Commit**
 
 ```bash
-git add ui/ && git commit -m "feat(ui): add status mutation"
-```
-
----
-
-### Task 9: Pipeline mutation + process spawner
-
-**Files:**
-- Create: `ui/lib/mutations/pipeline.ts`
-- Create: `ui/lib/mutations/process.ts`
-- Create: `ui/lib/mutations/__tests__/pipeline.test.ts`
-
-- [ ] **Step 1: Write failing test for pipeline mutation**
-
-```ts
-// ui/lib/mutations/__tests__/pipeline.test.ts
-import { markPipelineEntry } from '../pipeline'
-
-const SAMPLE = `# Pipeline\n\n## Pendientes\n\n- [ ] https://jobs.ashbyhq.com/langchain/abc | LangChain | Python OSS Engineer\n- [ ] https://jobs.ashbyhq.com/acme/xyz | Acme | Backend\n`
-
-test('marks entry as done with [x]', () => {
-  const result = markPipelineEntry(SAMPLE, 'https://jobs.ashbyhq.com/langchain/abc', 'done')
-  expect(result).toContain('- [x] https://jobs.ashbyhq.com/langchain/abc')
-})
-
-test('marks entry as skipped with [-]', () => {
-  const result = markPipelineEntry(SAMPLE, 'https://jobs.ashbyhq.com/langchain/abc', 'skip')
-  expect(result).toContain('- [-] https://jobs.ashbyhq.com/langchain/abc')
-})
-
-test('leaves other entries unchanged', () => {
-  const result = markPipelineEntry(SAMPLE, 'https://jobs.ashbyhq.com/langchain/abc', 'done')
-  expect(result).toContain('- [ ] https://jobs.ashbyhq.com/acme/xyz')
-})
-
-test('throws if URL not found', () => {
-  expect(() => markPipelineEntry(SAMPLE, 'https://missing.com', 'done')).toThrow()
-})
-```
-
-- [ ] **Step 2: Run — expect FAIL**
-
-```bash
-npm test -- pipeline.test
-```
-
-- [ ] **Step 3: Implement `lib/mutations/pipeline.ts`**
-
-```ts
-// ui/lib/mutations/pipeline.ts
-import fs from 'fs'
-import { dataPath } from '@/lib/paths'
-
-export function markPipelineEntry(content: string, url: string, action: 'done' | 'skip'): string {
-  const marker = action === 'done' ? 'x' : '-'
-  let found = false
-  const updated = content.split('\n').map(line => {
-    if (!line.includes(url)) return line
-    if (!/^- \[[ x-]\]/.test(line.trim())) return line
-    found = true
-    return line.replace(/^(\s*- )\[[ x-]\]/, `$1[${marker}]`)
-  }).join('\n')
-  if (!found) throw new Error(`URL not found in pipeline.md: ${url}`)
-  return updated
-}
-
-export async function writePipelineEntry(url: string, action: 'done' | 'skip'): Promise<void> {
-  const filePath = dataPath('pipeline.md')
-  const content = fs.readFileSync(filePath, 'utf-8')
-  const updated = markPipelineEntry(content, url, action)
-  fs.writeFileSync(filePath, updated, 'utf-8')
-}
-```
-
-- [ ] **Step 4: Implement `lib/mutations/process.ts`**
-
-```ts
-// ui/lib/mutations/process.ts
-import { spawn, ChildProcess } from 'child_process'
-import { getCareerOpsPath } from '@/lib/paths'
-
-export interface SpawnResult {
-  process: ChildProcess
-  kill: () => void
-}
-
-export function spawnCareerOpsCommand(
-  command: string,
-  args: string[],
-  onData: (line: string) => void,
-  onDone: (code: number | null) => void,
-): SpawnResult {
-  const cwd = getCareerOpsPath()
-  const child = spawn(command, args, { cwd, shell: false })
-
-  const handleData = (chunk: Buffer) => {
-    chunk.toString().split('\n').filter(Boolean).forEach(onData)
-  }
-
-  child.stdout.on('data', handleData)
-  child.stderr.on('data', handleData)
-  child.on('close', onDone)
-
-  return {
-    process: child,
-    kill: () => child.kill('SIGTERM'),
-  }
-}
-```
-
-- [ ] **Step 5: Run pipeline tests — expect PASS**
-
-```bash
-npm test -- pipeline.test
-```
-
-- [ ] **Step 6: Commit**
-
-```bash
-git add ui/ && git commit -m "feat(ui): add pipeline mutation + process spawner"
+git add ui/ && git commit -m "feat(ui): app shell — routing, layout, sidebar, ScoreBadge"
 ```
 
 ---
 
 ## Sprint 4 — Overview Page
 
-### Task 10: Overview page data + KPI cards
+### Task 6: Overview page
 
 **Files:**
-- Create: `ui/components/kpi-card.tsx`
-- Create: `ui/components/score-funnel.tsx`
-- Modify: `ui/app/page.tsx`
+- Create: `ui/src/components/KpiCard.tsx`
+- Create: `ui/src/components/ScoreFunnel.tsx`
+- Modify: `ui/src/pages/Overview.tsx`
 
-- [ ] **Step 1: Create `components/kpi-card.tsx`**
+- [ ] **Step 1: Create `KpiCard.tsx`**
 
 ```tsx
-// ui/components/kpi-card.tsx
-interface Props {
-  label: string
-  value: number | string
-  description?: string
-}
-
-export function KpiCard({ label, value, description }: Props) {
+// ui/src/components/KpiCard.tsx
+export function KpiCard({ label, value, sub }: { label: string; value: number | string; sub?: string }) {
   return (
     <div className="bg-white border border-stone-200 rounded-lg p-4">
       <div className="text-xs font-medium text-stone-400 uppercase tracking-wide mb-1">{label}</div>
       <div className="text-3xl font-bold text-stone-900">{value}</div>
-      {description && <div className="text-xs text-stone-400 mt-1">{description}</div>}
+      {sub && <div className="text-xs text-stone-400 mt-1">{sub}</div>}
     </div>
   )
 }
 ```
 
-- [ ] **Step 2: Create `components/score-funnel.tsx`**
+- [ ] **Step 2: Create `ScoreFunnel.tsx`**
 
 ```tsx
-// ui/components/score-funnel.tsx
-interface Props {
-  high: number   // >= 4.0
-  mid: number    // 3.5-3.9
-  low: number    // < 3.5
-}
-
-export function ScoreFunnel({ high, mid, low }: Props) {
+// ui/src/components/ScoreFunnel.tsx
+export function ScoreFunnel({ high, mid, low }: { high: number; mid: number; low: number }) {
   const total = high + mid + low || 1
   return (
     <div className="bg-white border border-stone-200 rounded-lg p-4">
@@ -1129,9 +1057,9 @@ export function ScoreFunnel({ high, mid, low }: Props) {
           <div key={label} className="flex items-center gap-2">
             <div className="w-16 text-xs text-stone-500 text-right">{label}</div>
             <div className="flex-1 h-3 bg-stone-100 rounded-full overflow-hidden">
-              <div className={`h-full ${color} rounded-full transition-all`} style={{ width: `${(count / total) * 100}%` }} />
+              <div className={`h-full ${color} rounded-full`} style={{ width: `${(count / total) * 100}%` }} />
             </div>
-            <div className="w-8 text-xs text-stone-500">{count}</div>
+            <div className="w-6 text-xs text-stone-500">{count}</div>
           </div>
         ))}
       </div>
@@ -1140,41 +1068,36 @@ export function ScoreFunnel({ high, mid, low }: Props) {
 }
 ```
 
-- [ ] **Step 3: Build the Overview page**
+- [ ] **Step 3: Build Overview page**
 
 ```tsx
-// ui/app/page.tsx
-import fs from 'fs'
-import Link from 'next/link'
-import { dataPath } from '@/lib/paths'
-import { parseApplications } from '@/lib/parsers/applications'
+// ui/src/pages/Overview.tsx
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { api } from '@/lib/api'
 import { parsePipeline } from '@/lib/parsers/pipeline'
-import { KpiCard } from '@/components/kpi-card'
-import { ScoreFunnel } from '@/components/score-funnel'
-import { ScoreBadge } from '@/components/score-badge'
+import { parseApplications, type Application } from '@/lib/parsers/applications'
+import { KpiCard } from '@/components/KpiCard'
+import { ScoreFunnel } from '@/components/ScoreFunnel'
+import { ScoreBadge } from '@/components/ScoreBadge'
 
-export const dynamic = 'force-dynamic'
+export function Overview() {
+  const [apps, setApps] = useState<Application[]>([])
+  const [pendingCount, setPendingCount] = useState(0)
 
-export default function OverviewPage() {
-  const appsContent = fs.existsSync(dataPath('applications.md'))
-    ? fs.readFileSync(dataPath('applications.md'), 'utf-8')
-    : ''
-  const pipelineContent = fs.existsSync(dataPath('pipeline.md'))
-    ? fs.readFileSync(dataPath('pipeline.md'), 'utf-8')
-    : ''
+  useEffect(() => {
+    api.applications().then(({ content }) => setApps(parseApplications(content)))
+    api.pipeline().then(({ content }) => {
+      const entries = parsePipeline(content)
+      setPendingCount(entries.filter(e => !e.done && !e.skipped).length)
+    })
+  }, [])
 
-  const apps = parseApplications(appsContent)
-  const pipeline = parsePipeline(pipelineContent)
-
-  const pending = pipeline.filter(e => !e.done && !e.skipped).length
-  const evaluated = apps.length
   const applied = apps.filter(a => ['Applied','Interview','Offer','Responded'].includes(a.status)).length
   const interviews = apps.filter(a => ['Interview','Offer'].includes(a.status)).length
-
   const high = apps.filter(a => a.score !== null && a.score >= 4.0).length
   const mid = apps.filter(a => a.score !== null && a.score >= 3.5 && a.score < 4.0).length
-  const low = apps.filter(a => a.score !== null && a.score < 3.5).length
-
+  const low = apps.filter(a => a.score !== null && (a.score ?? 0) < 3.5).length
   const recent = [...apps].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 10)
 
   return (
@@ -1185,175 +1108,137 @@ export default function OverviewPage() {
       </div>
 
       <div className="grid grid-cols-4 gap-3">
-        <KpiCard label="Pipeline" value={pending} description="pending evaluation" />
-        <KpiCard label="Evaluated" value={evaluated} description="reports written" />
-        <KpiCard label="Applied" value={applied} description="applications sent" />
-        <KpiCard label="Interviews" value={interviews} description="active processes" />
+        <KpiCard label="Pipeline" value={pendingCount} sub="pending evaluation" />
+        <KpiCard label="Evaluated" value={apps.length} sub="reports written" />
+        <KpiCard label="Applied" value={applied} sub="applications sent" />
+        <KpiCard label="Interviews" value={interviews} sub="active processes" />
       </div>
 
-      {evaluated > 0 && <ScoreFunnel high={high} mid={mid} low={low} />}
+      {apps.length > 0 && <ScoreFunnel high={high} mid={mid} low={low} />}
 
       <div className="bg-white border border-stone-200 rounded-lg">
         <div className="px-4 py-3 border-b border-stone-100">
           <span className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Recent evaluations</span>
         </div>
-        {recent.length === 0 ? (
-          <div className="px-4 py-8 text-center text-sm text-stone-400">No evaluations yet — run a batch to get started.</div>
-        ) : (
-          <div className="divide-y divide-stone-50">
-            {recent.map(app => (
-              <div key={app.number} className="flex items-center gap-3 px-4 py-2.5">
-                <span className="text-xs text-stone-300 w-8">{String(app.number).padStart(3,'0')}</span>
-                <div className="flex-1 min-w-0">
-                  <span className="text-sm font-medium text-stone-800">{app.company}</span>
-                  <span className="text-xs text-stone-400 ml-2">{app.role}</span>
+        {recent.length === 0
+          ? <div className="px-4 py-8 text-center text-sm text-stone-400">No evaluations yet.</div>
+          : <div className="divide-y divide-stone-50">
+              {recent.map(app => (
+                <div key={app.number} className="flex items-center gap-3 px-4 py-2.5">
+                  <span className="text-xs text-stone-300 w-8">{String(app.number).padStart(3,'0')}</span>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm font-medium text-stone-800">{app.company}</span>
+                    <span className="text-xs text-stone-400 ml-2 truncate">{app.role}</span>
+                  </div>
+                  <ScoreBadge score={app.score} />
+                  <span className="text-xs text-stone-300">{app.date}</span>
+                  {app.reportNumber && (
+                    <Link to={`/reports/${app.reportNumber}`} className="text-xs text-stone-400 hover:text-stone-700 underline underline-offset-2">
+                      report
+                    </Link>
+                  )}
                 </div>
-                <ScoreBadge score={app.score} />
-                <span className="text-xs text-stone-300">{app.date}</span>
-                {app.reportNumber && (
-                  <Link href={`/reports/${app.reportNumber}`} className="text-xs text-stone-400 hover:text-stone-700 underline underline-offset-2">
-                    report
-                  </Link>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+        }
       </div>
 
       <div className="flex gap-2">
-        <Link href="/actions" className="px-3 py-1.5 bg-stone-900 text-white text-xs font-medium rounded hover:bg-stone-700 transition-colors">
-          Run Scan
-        </Link>
-        <Link href="/actions" className="px-3 py-1.5 border border-stone-200 text-stone-700 text-xs font-medium rounded hover:bg-stone-50 transition-colors">
-          Start Batch Eval
-        </Link>
-        <Link href="/pipeline" className="px-3 py-1.5 border border-stone-200 text-stone-700 text-xs font-medium rounded hover:bg-stone-50 transition-colors">
-          View Pipeline
-        </Link>
+        <Link to="/actions" className="px-3 py-1.5 bg-stone-900 text-white text-xs font-medium rounded hover:bg-stone-700">Run Scan</Link>
+        <Link to="/actions" className="px-3 py-1.5 border border-stone-200 text-stone-700 text-xs font-medium rounded hover:bg-stone-50">Start Batch</Link>
+        <Link to="/pipeline" className="px-3 py-1.5 border border-stone-200 text-stone-700 text-xs font-medium rounded hover:bg-stone-50">View Pipeline</Link>
       </div>
     </div>
   )
 }
 ```
 
-- [ ] **Step 4: Verify overview page loads**
-
-```bash
-npm run dev
-# Open http://localhost:3001 — KPI cards, funnel, recent table visible
-```
+- [ ] **Step 4: Verify at localhost:3001**
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add ui/ && git commit -m "feat(ui): overview page with KPIs + score funnel"
+git add ui/ && git commit -m "feat(ui): overview page — KPIs, funnel, recent evaluations"
 ```
 
 ---
 
 ## Sprint 5 — Pipeline Page
 
-### Task 11: Pipeline page with filter + bulk actions
+### Task 7: Pipeline page
 
 **Files:**
-- Create: `ui/app/pipeline/page.tsx`
-- Create: `ui/components/pipeline-table.tsx`
-- Create: `ui/app/api/pipeline/route.ts` (PATCH for mark done/skip)
+- Modify: `ui/src/pages/Pipeline.tsx`
 
-- [ ] **Step 1: Create PATCH API route**
-
-```ts
-// ui/app/api/pipeline/route.ts
-import { NextRequest, NextResponse } from 'next/server'
-import fs from 'fs'
-import { dataPath } from '@/lib/paths'
-import { markPipelineEntry } from '@/lib/mutations/pipeline'
-
-export async function PATCH(req: NextRequest) {
-  const { url, action } = await req.json() as { url: string; action: 'done' | 'skip' }
-  if (!url || !['done', 'skip'].includes(action)) {
-    return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
-  }
-  try {
-    const filePath = dataPath('pipeline.md')
-    const content = fs.readFileSync(filePath, 'utf-8')
-    const updated = markPipelineEntry(content, url, action)
-    fs.writeFileSync(filePath, updated, 'utf-8')
-    return NextResponse.json({ ok: true })
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Unknown error'
-    return NextResponse.json({ error: message }, { status: 500 })
-  }
-}
-```
-
-- [ ] **Step 2: Create `components/pipeline-table.tsx` (client component)**
+- [ ] **Step 1: Build Pipeline page**
 
 ```tsx
-// ui/components/pipeline-table.tsx
-'use client'
-import { useState, useTransition } from 'react'
-import type { PipelineEntry } from '@/lib/parsers/pipeline'
+// ui/src/pages/Pipeline.tsx
+import { useEffect, useState } from 'react'
+import { api } from '@/lib/api'
+import { parsePipeline, type PipelineEntry } from '@/lib/parsers/pipeline'
 
-interface Props { entries: PipelineEntry[] }
+const STATUSES = ['all', 'pending', 'done', 'skipped']
 
-export function PipelineTable({ entries }: Props) {
+export function Pipeline() {
+  const [entries, setEntries] = useState<PipelineEntry[]>([])
   const [filter, setFilter] = useState('')
-  const [sourceFilter, setSourceFilter] = useState('all')
+  const [source, setSource] = useState('all')
   const [selected, setSelected] = useState<Set<string>>(new Set())
-  const [localState, setLocalState] = useState<Record<string, 'done' | 'skip'>>({})
-  const [, startTransition] = useTransition()
+  const [hidden, setHidden] = useState<Set<string>>(new Set())
+
+  useEffect(() => {
+    api.pipeline().then(({ content }) => setEntries(parsePipeline(content)))
+  }, [])
 
   const sources = ['all', ...Array.from(new Set(entries.map(e => e.source))).sort()]
 
   const visible = entries.filter(e => {
-    if (localState[e.url]) return false
+    if (hidden.has(e.url)) return false
     if (e.done || e.skipped) return false
     if (filter && !`${e.company} ${e.role}`.toLowerCase().includes(filter.toLowerCase())) return false
-    if (sourceFilter !== 'all' && e.source !== sourceFilter) return false
+    if (source !== 'all' && e.source !== source) return false
     return true
   })
 
-  async function markEntry(url: string, action: 'done' | 'skip') {
-    setLocalState(s => ({ ...s, [url]: action }))
-    await fetch('/api/pipeline', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url, action }) })
+  async function mark(url: string, action: 'done' | 'skip') {
+    setHidden(h => new Set([...h, url]))
+    await api.markPipeline(url, action)
   }
 
-  async function bulkAction(action: 'done' | 'skip') {
+  async function bulkSkip() {
     const urls = Array.from(selected)
     setSelected(new Set())
-    await Promise.all(urls.map(url => markEntry(url, action)))
+    await Promise.all(urls.map(url => mark(url, 'skip')))
   }
 
-  function toggleSelect(url: string) {
-    setSelected(s => { const n = new Set(s); n.has(url) ? n.delete(url) : n.add(url); return n })
+  function toggleAll(checked: boolean) {
+    setSelected(checked ? new Set(visible.map(e => e.url)) : new Set())
   }
+
+  const pending = entries.filter(e => !e.done && !e.skipped && !hidden.has(e.url)).length
 
   return (
-    <div className="space-y-3">
-      <div className="flex gap-2 items-center">
-        <input
-          type="text"
-          placeholder="Filter company or role…"
-          value={filter}
+    <div className="max-w-5xl space-y-4">
+      <div>
+        <h1 className="text-xl font-bold text-stone-900">Pipeline</h1>
+        <p className="text-sm text-stone-400 mt-0.5">{pending} pending evaluations</p>
+      </div>
+
+      <div className="flex gap-2">
+        <input type="text" placeholder="Filter by company or role…" value={filter}
           onChange={e => setFilter(e.target.value)}
-          className="border border-stone-200 rounded px-2 py-1.5 text-sm flex-1 focus:outline-none focus:ring-1 focus:ring-stone-400"
-        />
-        <select
-          value={sourceFilter}
-          onChange={e => setSourceFilter(e.target.value)}
-          className="border border-stone-200 rounded px-2 py-1.5 text-sm focus:outline-none"
-        >
-          {sources.map(s => <option key={s} value={s}>{s}</option>)}
+          className="border border-stone-200 rounded px-2 py-1.5 text-sm flex-1 focus:outline-none focus:ring-1 focus:ring-stone-400" />
+        <select value={source} onChange={e => setSource(e.target.value)}
+          className="border border-stone-200 rounded px-2 py-1.5 text-sm focus:outline-none">
+          {sources.map(s => <option key={s}>{s}</option>)}
         </select>
-        <span className="text-xs text-stone-400">{visible.length} jobs</span>
       </div>
 
       {selected.size > 0 && (
-        <div className="flex gap-2 items-center py-2 px-3 bg-stone-900 text-white rounded text-xs">
+        <div className="flex items-center gap-3 px-3 py-2 bg-stone-900 text-white rounded text-xs">
           <span>{selected.size} selected</span>
-          <button onClick={() => bulkAction('skip')} className="ml-auto px-2 py-1 bg-white/10 rounded hover:bg-white/20">Skip all</button>
+          <button onClick={bulkSkip} className="ml-auto px-2 py-1 bg-white/10 rounded hover:bg-white/20">Skip selected</button>
           <button onClick={() => setSelected(new Set())} className="px-2 py-1 bg-white/10 rounded hover:bg-white/20">Clear</button>
         </div>
       )}
@@ -1362,28 +1247,33 @@ export function PipelineTable({ entries }: Props) {
         <table className="w-full text-sm">
           <thead className="bg-stone-50 border-b border-stone-200">
             <tr>
-              <th className="w-8 px-3 py-2"><input type="checkbox" onChange={e => setSelected(e.target.checked ? new Set(visible.map(e => e.url)) : new Set())} /></th>
+              <th className="w-8 px-3 py-2 text-left">
+                <input type="checkbox" onChange={e => toggleAll(e.target.checked)} />
+              </th>
               <th className="px-3 py-2 text-left text-xs font-semibold text-stone-500 uppercase tracking-wide">Company</th>
               <th className="px-3 py-2 text-left text-xs font-semibold text-stone-500 uppercase tracking-wide">Role</th>
               <th className="px-3 py-2 text-left text-xs font-semibold text-stone-500 uppercase tracking-wide">Source</th>
-              <th className="w-32 px-3 py-2"></th>
+              <th className="w-16 px-3 py-2" />
             </tr>
           </thead>
           <tbody className="divide-y divide-stone-50">
-            {visible.map(entry => (
-              <tr key={entry.url} className="hover:bg-stone-50/50">
+            {visible.map(e => (
+              <tr key={e.url} className="hover:bg-stone-50/50">
                 <td className="px-3 py-2">
-                  <input type="checkbox" checked={selected.has(entry.url)} onChange={() => toggleSelect(entry.url)} />
+                  <input type="checkbox" checked={selected.has(e.url)} onChange={() => {
+                    setSelected(s => { const n = new Set(s); n.has(e.url) ? n.delete(e.url) : n.add(e.url); return n })
+                  }} />
                 </td>
-                <td className="px-3 py-2 font-medium text-stone-800">{entry.company}</td>
+                <td className="px-3 py-2 font-medium text-stone-800">{e.company}</td>
                 <td className="px-3 py-2 text-stone-600">
-                  <a href={entry.url} target="_blank" rel="noopener noreferrer" className="hover:underline">{entry.role}</a>
+                  <a href={e.url} target="_blank" rel="noopener noreferrer" className="hover:underline">{e.role}</a>
                 </td>
-                <td className="px-3 py-2 text-xs text-stone-400">{entry.source}</td>
+                <td className="px-3 py-2 text-xs text-stone-400">{e.source}</td>
                 <td className="px-3 py-2">
-                  <div className="flex gap-1 justify-end">
-                    <button onClick={() => markEntry(entry.url, 'skip')} className="px-2 py-1 text-xs border border-stone-200 rounded hover:bg-stone-50">Skip</button>
-                  </div>
+                  <button onClick={() => mark(e.url, 'skip')}
+                    className="px-2 py-1 text-xs border border-stone-200 rounded hover:bg-stone-50">
+                    Skip
+                  </button>
                 </td>
               </tr>
             ))}
@@ -1398,204 +1288,71 @@ export function PipelineTable({ entries }: Props) {
 }
 ```
 
-- [ ] **Step 3: Create pipeline page**
+- [ ] **Step 2: Verify at localhost:3001/pipeline**
 
-```tsx
-// ui/app/pipeline/page.tsx
-import fs from 'fs'
-import { dataPath } from '@/lib/paths'
-import { parsePipeline } from '@/lib/parsers/pipeline'
-import { PipelineTable } from '@/components/pipeline-table'
-
-export const dynamic = 'force-dynamic'
-
-export default function PipelinePage() {
-  const content = fs.existsSync(dataPath('pipeline.md'))
-    ? fs.readFileSync(dataPath('pipeline.md'), 'utf-8')
-    : ''
-  const entries = parsePipeline(content)
-
-  return (
-    <div className="max-w-5xl space-y-4">
-      <div>
-        <h1 className="text-xl font-bold text-stone-900">Pipeline</h1>
-        <p className="text-sm text-stone-400 mt-0.5">Pending evaluations</p>
-      </div>
-      <PipelineTable entries={entries} />
-    </div>
-  )
-}
-```
-
-- [ ] **Step 4: Verify pipeline page at `localhost:3001/pipeline`**
+- [ ] **Step 3: Commit**
 
 ```bash
-npm run dev
-# Open http://localhost:3001/pipeline — table with 302 jobs visible and filterable
-```
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add ui/ && git commit -m "feat(ui): pipeline page with filter + skip action"
+git add ui/ && git commit -m "feat(ui): pipeline page with filter + bulk skip"
 ```
 
 ---
 
 ## Sprint 6 — Tracker Page
 
-### Task 12: Tracker table view
+### Task 8: Tracker page
 
 **Files:**
-- Create: `ui/app/tracker/page.tsx`
-- Create: `ui/components/tracker-table.tsx`
-- Create: `ui/app/api/applications/route.ts`
+- Modify: `ui/src/pages/Tracker.tsx`
 
-- [ ] **Step 1: Create status PATCH API**
-
-```ts
-// ui/app/api/applications/route.ts
-import { NextRequest, NextResponse } from 'next/server'
-import fs from 'fs'
-import { dataPath } from '@/lib/paths'
-import { updateApplicationStatus } from '@/lib/mutations/status'
-
-export async function PATCH(req: NextRequest) {
-  const { number, status } = await req.json() as { number: number; status: string }
-  if (!number || !status) {
-    return NextResponse.json({ error: 'number and status required' }, { status: 400 })
-  }
-  try {
-    const filePath = dataPath('applications.md')
-    const content = fs.readFileSync(filePath, 'utf-8')
-    const updated = updateApplicationStatus(content, number, status)
-    fs.writeFileSync(filePath, updated, 'utf-8')
-    return NextResponse.json({ ok: true })
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Unknown error'
-    return NextResponse.json({ error: message }, { status: 500 })
-  }
-}
-```
-
-- [ ] **Step 2: Create `components/tracker-table.tsx`**
+- [ ] **Step 1: Build Tracker page**
 
 ```tsx
-// ui/components/tracker-table.tsx
-'use client'
-import { useState } from 'react'
-import Link from 'next/link'
-import type { Application } from '@/lib/parsers/applications'
-import { ScoreBadge } from './score-badge'
+// ui/src/pages/Tracker.tsx
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { api } from '@/lib/api'
+import { parseApplications, type Application } from '@/lib/parsers/applications'
+import { ScoreBadge } from '@/components/ScoreBadge'
 
 const STATUSES = ['Evaluated','Applied','Responded','Interview','Offer','Rejected','Discarded','SKIP']
 
-interface Props { apps: Application[] }
+type SortKey = 'date' | 'score' | 'company'
 
-export function TrackerTable({ apps }: Props) {
+export function Tracker() {
+  const [apps, setApps] = useState<Application[]>([])
   const [localStatus, setLocalStatus] = useState<Record<number, string>>({})
-  const [sortKey, setSortKey] = useState<'date' | 'score' | 'company'>('date')
+  const [sortKey, setSortKey] = useState<SortKey>('date')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
 
-  function toggleSort(key: typeof sortKey) {
+  useEffect(() => {
+    api.applications().then(({ content }) => setApps(parseApplications(content)))
+  }, [])
+
+  function toggleSort(key: SortKey) {
     if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
     else { setSortKey(key); setSortDir('desc') }
   }
 
   const sorted = [...apps].sort((a, b) => {
-    let cmp = 0
-    if (sortKey === 'date') cmp = a.date.localeCompare(b.date)
-    else if (sortKey === 'score') cmp = (a.score ?? 0) - (b.score ?? 0)
-    else if (sortKey === 'company') cmp = a.company.localeCompare(b.company)
+    const cmp =
+      sortKey === 'date' ? a.date.localeCompare(b.date) :
+      sortKey === 'score' ? (a.score ?? 0) - (b.score ?? 0) :
+      a.company.localeCompare(b.company)
     return sortDir === 'asc' ? cmp : -cmp
   })
 
-  async function handleStatusChange(app: Application, newStatus: string) {
-    setLocalStatus(s => ({ ...s, [app.number]: newStatus }))
-    await fetch('/api/applications', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ number: app.number, status: newStatus }),
-    })
+  async function handleStatus(app: Application, status: string) {
+    setLocalStatus(s => ({ ...s, [app.number]: status }))
+    await api.updateStatus(app.number, status)
   }
 
-  const Th = ({ label, sortable, k }: { label: string; sortable?: boolean; k?: typeof sortKey }) => (
-    <th
-      className={`px-3 py-2 text-left text-xs font-semibold text-stone-500 uppercase tracking-wide ${sortable ? 'cursor-pointer hover:text-stone-800 select-none' : ''}`}
-      onClick={() => sortable && k && toggleSort(k)}
-    >
-      {label}{sortable && k && sortKey === k ? (sortDir === 'desc' ? ' ↓' : ' ↑') : ''}
+  const Th = ({ label, k }: { label: string; k?: SortKey }) => (
+    <th onClick={() => k && toggleSort(k)}
+        className={`px-3 py-2 text-left text-xs font-semibold text-stone-500 uppercase tracking-wide ${k ? 'cursor-pointer hover:text-stone-800 select-none' : ''}`}>
+      {label}{k && sortKey === k ? (sortDir === 'desc' ? ' ↓' : ' ↑') : ''}
     </th>
   )
-
-  return (
-    <div className="bg-white border border-stone-200 rounded-lg overflow-hidden">
-      <table className="w-full text-sm">
-        <thead className="bg-stone-50 border-b border-stone-200">
-          <tr>
-            <Th label="#" />
-            <Th label="Date" sortable k="date" />
-            <Th label="Company" sortable k="company" />
-            <Th label="Role" />
-            <Th label="Score" sortable k="score" />
-            <Th label="Status" />
-            <Th label="Report" />
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-stone-50">
-          {sorted.map(app => {
-            const status = localStatus[app.number] ?? app.status
-            return (
-              <tr key={app.number} className="hover:bg-stone-50/50">
-                <td className="px-3 py-2 text-xs text-stone-300">{String(app.number).padStart(3,'0')}</td>
-                <td className="px-3 py-2 text-xs text-stone-400">{app.date}</td>
-                <td className="px-3 py-2 font-medium text-stone-800">{app.company}</td>
-                <td className="px-3 py-2 text-stone-600 max-w-xs truncate">{app.role}</td>
-                <td className="px-3 py-2"><ScoreBadge score={app.score} /></td>
-                <td className="px-3 py-2">
-                  <select
-                    value={status}
-                    onChange={e => handleStatusChange(app, e.target.value)}
-                    className="text-xs border border-stone-200 rounded px-1.5 py-0.5 focus:outline-none"
-                  >
-                    {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                </td>
-                <td className="px-3 py-2">
-                  {app.reportNumber
-                    ? <Link href={`/reports/${app.reportNumber}`} className="text-xs text-stone-500 hover:text-stone-900 underline underline-offset-2">#{app.reportNumber}</Link>
-                    : <span className="text-xs text-stone-300">—</span>
-                  }
-                </td>
-              </tr>
-            )
-          })}
-          {sorted.length === 0 && (
-            <tr><td colSpan={7} className="px-3 py-8 text-center text-sm text-stone-400">No applications yet.</td></tr>
-          )}
-        </tbody>
-      </table>
-    </div>
-  )
-}
-```
-
-- [ ] **Step 3: Create `app/tracker/page.tsx`**
-
-```tsx
-// ui/app/tracker/page.tsx
-import fs from 'fs'
-import { dataPath } from '@/lib/paths'
-import { parseApplications } from '@/lib/parsers/applications'
-import { TrackerTable } from '@/components/tracker-table'
-
-export const dynamic = 'force-dynamic'
-
-export default function TrackerPage() {
-  const content = fs.existsSync(dataPath('applications.md'))
-    ? fs.readFileSync(dataPath('applications.md'), 'utf-8')
-    : ''
-  const apps = parseApplications(content)
 
   return (
     <div className="max-w-6xl space-y-4">
@@ -1603,55 +1360,98 @@ export default function TrackerPage() {
         <h1 className="text-xl font-bold text-stone-900">Tracker</h1>
         <p className="text-sm text-stone-400 mt-0.5">{apps.length} applications</p>
       </div>
-      <TrackerTable apps={apps} />
+
+      <div className="bg-white border border-stone-200 rounded-lg overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-stone-50 border-b border-stone-200">
+            <tr>
+              <Th label="#" />
+              <Th label="Date" k="date" />
+              <Th label="Company" k="company" />
+              <Th label="Role" />
+              <Th label="Score" k="score" />
+              <Th label="Status" />
+              <Th label="Report" />
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-stone-50">
+            {sorted.map(app => {
+              const status = localStatus[app.number] ?? app.status
+              return (
+                <tr key={app.number} className="hover:bg-stone-50/50">
+                  <td className="px-3 py-2 text-xs text-stone-300">{String(app.number).padStart(3,'0')}</td>
+                  <td className="px-3 py-2 text-xs text-stone-400">{app.date}</td>
+                  <td className="px-3 py-2 font-medium text-stone-800">{app.company}</td>
+                  <td className="px-3 py-2 text-stone-600 max-w-xs truncate">{app.role}</td>
+                  <td className="px-3 py-2"><ScoreBadge score={app.score} /></td>
+                  <td className="px-3 py-2">
+                    <select value={status} onChange={e => handleStatus(app, e.target.value)}
+                            className="text-xs border border-stone-200 rounded px-1.5 py-0.5 focus:outline-none">
+                      {STATUSES.map(s => <option key={s}>{s}</option>)}
+                    </select>
+                  </td>
+                  <td className="px-3 py-2">
+                    {app.reportNumber
+                      ? <Link to={`/reports/${app.reportNumber}`} className="text-xs text-stone-500 hover:text-stone-900 underline underline-offset-2">#{app.reportNumber}</Link>
+                      : <span className="text-xs text-stone-300">—</span>
+                    }
+                  </td>
+                </tr>
+              )
+            })}
+            {sorted.length === 0 && (
+              <tr><td colSpan={7} className="px-3 py-8 text-center text-sm text-stone-400">No applications yet.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }
 ```
 
-- [ ] **Step 4: Verify tracker at `localhost:3001/tracker`**
+- [ ] **Step 2: Verify at localhost:3001/tracker**
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 3: Commit**
 
 ```bash
-git add ui/ && git commit -m "feat(ui): tracker table with inline status updates"
+git add ui/ && git commit -m "feat(ui): tracker page with sortable table + inline status"
 ```
 
 ---
 
-## Sprint 7 — Report Viewer
+## Sprint 7 — Reports
 
-### Task 13: Report viewer page
+### Task 9: Reports index + report viewer
 
 **Files:**
-- Create: `ui/app/reports/page.tsx`
-- Create: `ui/app/reports/[id]/page.tsx`
-- Create: `ui/components/report-viewer.tsx`
+- Modify: `ui/src/pages/Reports.tsx`
+- Modify: `ui/src/pages/Report.tsx`
 
-- [ ] **Step 1: Create reports index**
+- [ ] **Step 1: Build Reports index**
 
 ```tsx
-// ui/app/reports/page.tsx
-import fs from 'fs'
-import Link from 'next/link'
-import { reportsPath } from '@/lib/paths'
-import { ScoreBadge } from '@/components/score-badge'
+// ui/src/pages/Reports.tsx
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { api } from '@/lib/api'
 import { parseReport } from '@/lib/parsers/report'
+import { ScoreBadge } from '@/components/ScoreBadge'
 
-export const dynamic = 'force-dynamic'
+export function Reports() {
+  const [reports, setReports] = useState<Array<{ id: string; company: string; role: string; score: number | null; date: string }>>([])
 
-export default function ReportsIndexPage() {
-  const dir = reportsPath()
-  const files = fs.existsSync(dir)
-    ? fs.readdirSync(dir).filter(f => f.endsWith('.md')).sort().reverse()
-    : []
-
-  const reports = files.map(filename => {
-    const num = filename.split('-')[0]
-    const content = fs.readFileSync(`${dir}/${filename}`, 'utf-8')
-    const r = parseReport(num, content)
-    return { ...r, filename }
-  })
+  useEffect(() => {
+    api.reports().then(async ({ files }) => {
+      const parsed = await Promise.all(files.map(async filename => {
+        const id = filename.split('-')[0]
+        const { content } = await api.report(id)
+        const r = parseReport(id, content)
+        return { id, company: r.company, role: r.role, score: r.score, date: r.date }
+      }))
+      setReports(parsed)
+    })
+  }, [])
 
   return (
     <div className="max-w-3xl space-y-4">
@@ -1661,14 +1461,15 @@ export default function ReportsIndexPage() {
       </div>
       <div className="bg-white border border-stone-200 rounded-lg divide-y divide-stone-50">
         {reports.length === 0 && (
-          <div className="px-4 py-8 text-center text-sm text-stone-400">No reports yet. Run a batch evaluation to generate reports.</div>
+          <div className="px-4 py-8 text-center text-sm text-stone-400">No reports yet.</div>
         )}
         {reports.map(r => (
-          <Link key={r.number} href={`/reports/${r.number}`} className="flex items-center gap-3 px-4 py-3 hover:bg-stone-50 transition-colors">
-            <span className="text-xs text-stone-300 w-8">#{r.number}</span>
+          <Link key={r.id} to={`/reports/${r.id}`}
+                className="flex items-center gap-3 px-4 py-3 hover:bg-stone-50 transition-colors">
+            <span className="text-xs text-stone-300 w-8">#{r.id}</span>
             <div className="flex-1 min-w-0">
               <span className="font-medium text-stone-800">{r.company}</span>
-              <span className="text-stone-400 ml-2 text-sm">{r.role}</span>
+              <span className="text-stone-400 ml-2 text-sm truncate">{r.role}</span>
             </div>
             <ScoreBadge score={r.score} />
             <span className="text-xs text-stone-300">{r.date}</span>
@@ -1680,317 +1481,115 @@ export default function ReportsIndexPage() {
 }
 ```
 
-- [ ] **Step 2: Create `components/report-viewer.tsx`**
+- [ ] **Step 2: Build Report detail page**
 
 ```tsx
-// ui/components/report-viewer.tsx
-'use client'
+// ui/src/pages/Report.tsx
+import { useEffect, useState } from 'react'
+import { useParams, Link } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import type { Report } from '@/lib/parsers/report'
-import { ScoreBadge } from './score-badge'
+import { api } from '@/lib/api'
+import { parseReport, type Report as ReportType } from '@/lib/parsers/report'
+import { ScoreBadge } from '@/components/ScoreBadge'
 
 const BLOCK_LABELS: Record<string, string> = {
   A: 'Role Summary', B: 'CV Match', C: 'Proof Points',
   D: 'Questions', E: 'Flags', F: 'Recommendation', G: 'Legitimacy',
 }
 
-interface Props {
-  report: Report
-  prevId?: string
-  nextId?: string
-  onMarkApplied?: () => void
-}
+export function Report() {
+  const { id } = useParams<{ id: string }>()
+  const [report, setReport] = useState<ReportType | null>(null)
+  const [allIds, setAllIds] = useState<string[]>([])
 
-export function ReportViewer({ report, prevId, nextId, onMarkApplied }: Props) {
+  useEffect(() => {
+    if (!id) return
+    api.report(id).then(({ content }) => setReport(parseReport(id, content)))
+    api.reports().then(({ files }) => setAllIds(files.map(f => f.split('-')[0]).reverse()))
+  }, [id])
+
+  if (!report) return <div className="text-stone-400 text-sm">Loading…</div>
+
+  const idx = allIds.indexOf(id!)
+  const prevId = allIds[idx + 1]
+  const nextId = allIds[idx - 1]
+
   return (
-    <div className="flex gap-6">
+    <div className="max-w-5xl flex gap-6">
       <div className="flex-1 min-w-0">
-        {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-bold text-stone-900">{report.company}</h1>
-              <p className="text-stone-500 mt-0.5">{report.role}</p>
+        <div className="mb-4 flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-stone-900">{report.company}</h1>
+            <p className="text-stone-500 mt-0.5">{report.role}</p>
+            <div className="flex gap-3 mt-2 text-xs text-stone-400">
+              <span>{report.date}</span>
+              {report.archetype && <span>{report.archetype}</span>}
+              {report.legitimacy && <span>{report.legitimacy}</span>}
             </div>
-            <ScoreBadge score={report.score} />
           </div>
-          <div className="flex gap-4 mt-3 text-xs text-stone-400">
-            <span>{report.date}</span>
-            {report.archetype && <span>{report.archetype}</span>}
-            {report.legitimacy && <span className="capitalize">{report.legitimacy}</span>}
-          </div>
+          <ScoreBadge score={report.score} />
         </div>
 
-        {/* Action bar */}
-        <div className="flex gap-2 mb-6">
+        <div className="flex gap-2 mb-4">
           {report.jobUrl && (
             <a href={report.jobUrl} target="_blank" rel="noopener noreferrer"
                className="px-3 py-1.5 text-xs border border-stone-200 rounded hover:bg-stone-50">
               Open Job URL ↗
             </a>
           )}
-          {report.pdfPath && (
-            <a href={`file://${report.pdfPath}`}
-               className="px-3 py-1.5 text-xs border border-stone-200 rounded hover:bg-stone-50">
-              Open PDF
-            </a>
-          )}
-          {onMarkApplied && (
-            <button onClick={onMarkApplied}
-                    className="px-3 py-1.5 text-xs bg-stone-900 text-white rounded hover:bg-stone-700">
-              Mark Applied
-            </button>
-          )}
         </div>
 
-        {/* Navigation */}
         <div className="flex justify-between text-xs text-stone-400 mb-6">
-          {prevId ? <a href={`/reports/${prevId}`} className="hover:text-stone-700">← #{prevId}</a> : <span />}
-          {nextId ? <a href={`/reports/${nextId}`} className="hover:text-stone-700">#{nextId} →</a> : <span />}
+          {prevId ? <Link to={`/reports/${prevId}`} className="hover:text-stone-700">← #{prevId}</Link> : <span />}
+          {nextId ? <Link to={`/reports/${nextId}`} className="hover:text-stone-700">#{nextId} →</Link> : <span />}
         </div>
 
-        {/* Markdown content */}
         <div className="prose prose-stone prose-sm max-w-none">
           <ReactMarkdown remarkPlugins={[remarkGfm]}>{report.rawContent}</ReactMarkdown>
         </div>
       </div>
 
-      {/* Score sidebar */}
-      <div className="w-44 shrink-0 space-y-2">
-        <div className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-3">Score breakdown</div>
-        {Object.entries(BLOCK_LABELS).map(([key, label]) => (
-          report.sections[key] ? (
-            <div key={key} className="bg-white border border-stone-200 rounded p-2">
-              <div className="text-xs font-semibold text-stone-700">{key}</div>
-              <div className="text-xs text-stone-400 mt-0.5">{label}</div>
-            </div>
-          ) : null
-        ))}
+      <div className="w-40 shrink-0">
+        <div className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-3">Sections</div>
+        <div className="space-y-1.5">
+          {Object.entries(BLOCK_LABELS).map(([key, label]) =>
+            report.sections[key] ? (
+              <div key={key} className="bg-white border border-stone-200 rounded p-2">
+                <div className="text-xs font-semibold text-stone-700">{key}</div>
+                <div className="text-xs text-stone-400 mt-0.5">{label}</div>
+              </div>
+            ) : null
+          )}
+        </div>
       </div>
     </div>
   )
 }
 ```
 
-- [ ] **Step 3: Create `app/reports/[id]/page.tsx`**
+- [ ] **Step 3: Verify both pages at localhost:3001/reports**
 
-```tsx
-// ui/app/reports/[id]/page.tsx
-import fs from 'fs'
-import { notFound } from 'next/navigation'
-import { reportsPath } from '@/lib/paths'
-import { parseReport } from '@/lib/parsers/report'
-import { ReportViewer } from '@/components/report-viewer'
-
-export const dynamic = 'force-dynamic'
-
-interface Props { params: { id: string } }
-
-export default function ReportPage({ params }: Props) {
-  const dir = reportsPath()
-  if (!fs.existsSync(dir)) notFound()
-
-  const files = fs.readdirSync(dir).filter(f => f.endsWith('.md')).sort()
-  const filename = files.find(f => f.startsWith(params.id))
-  if (!filename) notFound()
-
-  const content = fs.readFileSync(`${dir}/${filename}`, 'utf-8')
-  const report = parseReport(params.id, content)
-
-  const idx = files.indexOf(filename)
-  const prevFile = files[idx - 1]
-  const nextFile = files[idx + 1]
-  const prevId = prevFile?.split('-')[0]
-  const nextId = nextFile?.split('-')[0]
-
-  return (
-    <div className="max-w-5xl">
-      <ReportViewer report={report} prevId={prevId} nextId={nextId} />
-    </div>
-  )
-}
-```
-
-- [ ] **Step 4: Add `@tailwindcss/typography` for prose styles**
+- [ ] **Step 4: Commit**
 
 ```bash
-cd ui && npm install -D @tailwindcss/typography
-```
-
-Add to `tailwind.config.ts`:
-```ts
-plugins: [require('@tailwindcss/typography')],
-```
-
-- [ ] **Step 5: Verify report pages at `localhost:3001/reports`**
-
-- [ ] **Step 6: Commit**
-
-```bash
-git add ui/ && git commit -m "feat(ui): report viewer with markdown render + score sidebar"
+git add ui/ && git commit -m "feat(ui): reports index + single report viewer"
 ```
 
 ---
 
 ## Sprint 8 — Actions Console
 
-### Task 14: SSE routes for scan, batch, merge
+### Task 10: Actions page with live SSE output
 
 **Files:**
-- Create: `ui/app/api/stream/scan/route.ts`
-- Create: `ui/app/api/stream/batch/route.ts`
-- Create: `ui/app/api/stream/merge/route.ts`
+- Create: `ui/src/components/ActionConsole.tsx`
+- Modify: `ui/src/pages/Actions.tsx`
 
-- [ ] **Step 1: Create scan SSE route**
-
-```ts
-// ui/app/api/stream/scan/route.ts
-import { spawnCareerOpsCommand } from '@/lib/mutations/process'
-
-export const dynamic = 'force-dynamic'
-
-export async function GET() {
-  const encoder = new TextEncoder()
-
-  const stream = new ReadableStream({
-    start(controller) {
-      function send(line: string) {
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ line })}\n\n`))
-      }
-
-      const { kill } = spawnCareerOpsCommand(
-        'node',
-        ['scan.mjs'],
-        send,
-        (code) => {
-          controller.enqueue(encoder.encode(`event: done\ndata: ${JSON.stringify({ code })}\n\n`))
-          controller.close()
-        },
-      )
-
-      // Clean up if client disconnects
-      return () => kill()
-    },
-  })
-
-  return new Response(stream, {
-    headers: {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      Connection: 'keep-alive',
-    },
-  })
-}
-```
-
-- [ ] **Step 2: Create batch SSE route**
-
-```ts
-// ui/app/api/stream/batch/route.ts
-import { NextRequest } from 'next/server'
-import { spawnCareerOpsCommand } from '@/lib/mutations/process'
-
-export const dynamic = 'force-dynamic'
-
-export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url)
-  const parallel = searchParams.get('parallel') ?? '2'
-  const startFrom = searchParams.get('startFrom') ?? '0'
-  const minScore = searchParams.get('minScore') ?? '0'
-
-  const encoder = new TextEncoder()
-
-  const stream = new ReadableStream({
-    start(controller) {
-      function send(line: string) {
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ line })}\n\n`))
-      }
-
-      const args = ['batch/batch-runner.sh', '--parallel', parallel, '--start-from', startFrom]
-      if (parseFloat(minScore) > 0) args.push('--min-score', minScore)
-
-      const { kill } = spawnCareerOpsCommand('bash', args, send, (code) => {
-        controller.enqueue(encoder.encode(`event: done\ndata: ${JSON.stringify({ code })}\n\n`))
-        controller.close()
-      })
-
-      return () => kill()
-    },
-  })
-
-  return new Response(stream, {
-    headers: {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      Connection: 'keep-alive',
-    },
-  })
-}
-```
-
-- [ ] **Step 3: Create merge SSE route**
-
-```ts
-// ui/app/api/stream/merge/route.ts
-import { spawnCareerOpsCommand } from '@/lib/mutations/process'
-
-export const dynamic = 'force-dynamic'
-
-export async function GET() {
-  const encoder = new TextEncoder()
-
-  const stream = new ReadableStream({
-    start(controller) {
-      function send(line: string) {
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ line })}\n\n`))
-      }
-
-      const { kill } = spawnCareerOpsCommand('node', ['merge-tracker.mjs'], send, (mergeCode) => {
-        if (mergeCode !== 0) {
-          controller.enqueue(encoder.encode(`event: done\ndata: ${JSON.stringify({ code: mergeCode })}\n\n`))
-          controller.close()
-          return
-        }
-        spawnCareerOpsCommand('node', ['verify-pipeline.mjs'], send, (verifyCode) => {
-          controller.enqueue(encoder.encode(`event: done\ndata: ${JSON.stringify({ code: verifyCode })}\n\n`))
-          controller.close()
-        })
-      })
-
-      return () => kill()
-    },
-  })
-
-  return new Response(stream, {
-    headers: {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      Connection: 'keep-alive',
-    },
-  })
-}
-```
-
-- [ ] **Step 4: Commit**
-
-```bash
-git add ui/ && git commit -m "feat(ui): SSE routes for scan/batch/merge streaming"
-```
-
----
-
-### Task 15: Actions console page
-
-**Files:**
-- Create: `ui/components/action-console.tsx`
-- Create: `ui/app/actions/page.tsx`
-
-- [ ] **Step 1: Create `components/action-console.tsx`**
+- [ ] **Step 1: Create `ActionConsole.tsx`**
 
 ```tsx
-// ui/components/action-console.tsx
-'use client'
+// ui/src/components/ActionConsole.tsx
 import { useState, useRef, useEffect } from 'react'
 
 interface Props {
@@ -2004,44 +1603,26 @@ interface Props {
 export function ActionConsole({ title, description, endpoint, params = {}, children }: Props) {
   const [lines, setLines] = useState<string[]>([])
   const [running, setRunning] = useState(false)
-  const [done, setDone] = useState<number | null>(null)
+  const [exitCode, setExitCode] = useState<number | null>(null)
   const esRef = useRef<EventSource | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [lines])
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [lines])
 
   function start() {
-    setLines([])
-    setDone(null)
-    setRunning(true)
-
+    setLines([]); setExitCode(null); setRunning(true)
     const qs = new URLSearchParams(params).toString()
-    const url = qs ? `${endpoint}?${qs}` : endpoint
-    const es = new EventSource(url)
+    const es = new EventSource(qs ? `${endpoint}?${qs}` : endpoint)
     esRef.current = es
-
-    es.onmessage = (e) => {
-      const { line } = JSON.parse(e.data)
-      setLines(prev => [...prev, line])
-    }
-    es.addEventListener('done', (e) => {
-      const { code } = JSON.parse((e as MessageEvent).data)
-      setDone(code)
-      setRunning(false)
-      es.close()
+    es.onmessage = e => { const { line } = JSON.parse(e.data); setLines(p => [...p, line]) }
+    es.addEventListener('done', e => {
+      setExitCode(JSON.parse((e as MessageEvent).data).code)
+      setRunning(false); es.close()
     })
-    es.onerror = () => {
-      setRunning(false)
-      es.close()
-    }
+    es.onerror = () => { setRunning(false); es.close() }
   }
 
-  function stop() {
-    esRef.current?.close()
-    setRunning(false)
-  }
+  function stop() { esRef.current?.close(); setRunning(false) }
 
   return (
     <div className="bg-white border border-stone-200 rounded-lg overflow-hidden">
@@ -2050,24 +1631,18 @@ export function ActionConsole({ title, description, endpoint, params = {}, child
           <div className="font-semibold text-stone-800 text-sm">{title}</div>
           <div className="text-xs text-stone-400">{description}</div>
         </div>
-        <div className="flex gap-2">
-          {running
-            ? <button onClick={stop} className="px-3 py-1.5 text-xs border border-red-200 text-red-600 rounded hover:bg-red-50">Stop</button>
-            : <button onClick={start} className="px-3 py-1.5 text-xs bg-stone-900 text-white rounded hover:bg-stone-700">Run</button>
-          }
-        </div>
+        {running
+          ? <button onClick={stop} className="px-3 py-1.5 text-xs border border-red-200 text-red-600 rounded hover:bg-red-50">Stop</button>
+          : <button onClick={start} className="px-3 py-1.5 text-xs bg-stone-900 text-white rounded hover:bg-stone-700">Run</button>
+        }
       </div>
-
-      {children && <div className="px-4 py-3 border-b border-stone-100 bg-stone-50">{children}</div>}
-
+      {children && <div className="px-4 py-3 bg-stone-50 border-b border-stone-100">{children}</div>}
       <div className="bg-stone-950 font-mono text-xs text-stone-300 h-40 overflow-y-auto p-3">
-        {lines.length === 0 && !running && (
-          <span className="text-stone-600">Ready — press Run to start</span>
-        )}
-        {lines.map((line, i) => <div key={i}>{line}</div>)}
-        {done !== null && (
-          <div className={`mt-2 ${done === 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-            Process exited with code {done}
+        {lines.length === 0 && !running && <span className="text-stone-600">Ready — press Run</span>}
+        {lines.map((l, i) => <div key={i}>{l}</div>)}
+        {exitCode !== null && (
+          <div className={`mt-2 ${exitCode === 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+            Exited {exitCode}
           </div>
         )}
         <div ref={bottomRef} />
@@ -2077,15 +1652,14 @@ export function ActionConsole({ title, description, endpoint, params = {}, child
 }
 ```
 
-- [ ] **Step 2: Create `app/actions/page.tsx`**
+- [ ] **Step 2: Build Actions page**
 
 ```tsx
-// ui/app/actions/page.tsx
-'use client'
+// ui/src/pages/Actions.tsx
 import { useState } from 'react'
-import { ActionConsole } from '@/components/action-console'
+import { ActionConsole } from '@/components/ActionConsole'
 
-export default function ActionsPage() {
+export function Actions() {
   const [parallel, setParallel] = useState('2')
   const [startFrom, setStartFrom] = useState('0')
   const [minScore, setMinScore] = useState('0')
@@ -2097,50 +1671,37 @@ export default function ActionsPage() {
         <p className="text-sm text-stone-400 mt-0.5">Trigger CLI operations and watch live output</p>
       </div>
 
-      <ActionConsole
-        title="Run Scan"
-        description="Scan all configured portals for new job listings"
-        endpoint="/api/stream/scan"
-      />
+      <ActionConsole title="Run Scan" description="Scan all configured portals for new job listings" endpoint="/api/stream/scan" />
 
-      <ActionConsole
-        title="Batch Evaluation"
-        description="Evaluate pending pipeline jobs with AI"
-        endpoint="/api/stream/batch"
-        params={{ parallel, startFrom, minScore }}
-      >
+      <ActionConsole title="Batch Evaluation" description="Evaluate pending jobs with AI workers"
+        endpoint="/api/stream/batch" params={{ parallel, startFrom, minScore }}>
         <div className="flex gap-4 text-xs">
-          <label className="flex items-center gap-1.5 text-stone-600">
-            Workers
-            <select value={parallel} onChange={e => setParallel(e.target.value)}
-                    className="border border-stone-200 rounded px-1.5 py-0.5">
-              {[1,2,3,4,5].map(n => <option key={n} value={n}>{n}</option>)}
-            </select>
-          </label>
-          <label className="flex items-center gap-1.5 text-stone-600">
-            Start from ID
-            <input type="number" value={startFrom} onChange={e => setStartFrom(e.target.value)}
-                   className="border border-stone-200 rounded px-1.5 py-0.5 w-16" />
-          </label>
-          <label className="flex items-center gap-1.5 text-stone-600">
-            Min score
-            <input type="number" step="0.1" value={minScore} onChange={e => setMinScore(e.target.value)}
-                   className="border border-stone-200 rounded px-1.5 py-0.5 w-16" />
-          </label>
+          {[
+            { label: 'Workers', val: parallel, set: setParallel, type: 'select', opts: ['1','2','3','4','5'] },
+            { label: 'Start from', val: startFrom, set: setStartFrom, type: 'number' },
+            { label: 'Min score', val: minScore, set: setMinScore, type: 'number', step: '0.1' },
+          ].map(({ label, val, set, type, opts, step }) => (
+            <label key={label} className="flex items-center gap-1.5 text-stone-600">
+              {label}
+              {type === 'select'
+                ? <select value={val} onChange={e => set(e.target.value)} className="border border-stone-200 rounded px-1.5 py-0.5">
+                    {opts!.map(o => <option key={o}>{o}</option>)}
+                  </select>
+                : <input type="number" step={step} value={val} onChange={e => set(e.target.value)}
+                         className="border border-stone-200 rounded px-1.5 py-0.5 w-16" />
+              }
+            </label>
+          ))}
         </div>
       </ActionConsole>
 
-      <ActionConsole
-        title="Merge Tracker"
-        description="Merge tracker additions from batch output, then verify pipeline"
-        endpoint="/api/stream/merge"
-      />
+      <ActionConsole title="Merge Tracker" description="Merge batch additions into applications.md, then verify" endpoint="/api/stream/merge" />
     </div>
   )
 }
 ```
 
-- [ ] **Step 3: Verify actions page at `localhost:3001/actions`**
+- [ ] **Step 3: Verify at localhost:3001/actions — Run Scan streams output**
 
 - [ ] **Step 4: Commit**
 
@@ -2152,38 +1713,33 @@ git add ui/ && git commit -m "feat(ui): actions console with SSE streaming"
 
 ## Sprint 9 — Patterns + Command Palette
 
-### Task 16: Patterns page with charts
+### Task 11: Patterns page
 
 **Files:**
-- Create: `ui/app/patterns/page.tsx`
-- Create: `ui/components/charts/score-histogram.tsx`
-- Create: `ui/components/charts/funnel-chart.tsx`
+- Create: `ui/src/components/charts/ScoreHistogram.tsx`
+- Create: `ui/src/components/charts/FunnelChart.tsx`
+- Modify: `ui/src/pages/Patterns.tsx`
 
-- [ ] **Step 1: Create score histogram chart**
+- [ ] **Step 1: Create `ScoreHistogram.tsx`**
 
 ```tsx
-// ui/components/charts/score-histogram.tsx
-'use client'
+// ui/src/components/charts/ScoreHistogram.tsx
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
+import type { Application } from '@/lib/parsers/applications'
 
-interface Props { apps: { score: number | null }[] }
+const BUCKETS = [
+  { range: '1.0–1.9', min: 1.0, max: 2.0, color: '#a8a29e' },
+  { range: '2.0–2.9', min: 2.0, max: 3.0, color: '#a8a29e' },
+  { range: '3.0–3.4', min: 3.0, max: 3.5, color: '#a8a29e' },
+  { range: '3.5–3.9', min: 3.5, max: 4.0, color: '#f59e0b' },
+  { range: '4.0–4.4', min: 4.0, max: 4.5, color: '#10b981' },
+  { range: '4.5–5.0', min: 4.5, max: 5.01, color: '#059669' },
+]
 
-export function ScoreHistogram({ apps }: Props) {
-  const buckets = [
-    { range: '1.0–1.4', min: 1.0, max: 1.5 },
-    { range: '1.5–1.9', min: 1.5, max: 2.0 },
-    { range: '2.0–2.4', min: 2.0, max: 2.5 },
-    { range: '2.5–2.9', min: 2.5, max: 3.0 },
-    { range: '3.0–3.4', min: 3.0, max: 3.5 },
-    { range: '3.5–3.9', min: 3.5, max: 4.0 },
-    { range: '4.0–4.4', min: 4.0, max: 4.5 },
-    { range: '4.5–5.0', min: 4.5, max: 5.01 },
-  ]
-
-  const data = buckets.map(b => ({
-    range: b.range,
+export function ScoreHistogram({ apps }: { apps: Application[] }) {
+  const data = BUCKETS.map(b => ({
+    range: b.range, color: b.color,
     count: apps.filter(a => a.score !== null && a.score >= b.min && a.score < b.max).length,
-    color: b.min >= 4.0 ? '#10b981' : b.min >= 3.5 ? '#f59e0b' : '#a8a29e',
   }))
 
   return (
@@ -2193,7 +1749,7 @@ export function ScoreHistogram({ apps }: Props) {
         <BarChart data={data} margin={{ top: 0, right: 0, bottom: 0, left: -20 }}>
           <XAxis dataKey="range" tick={{ fontSize: 9 }} />
           <YAxis tick={{ fontSize: 9 }} allowDecimals={false} />
-          <Tooltip formatter={(v: number) => [`${v} jobs`, 'Count']} />
+          <Tooltip formatter={(v: number) => [v, 'Jobs']} />
           <Bar dataKey="count" radius={[2, 2, 0, 0]}>
             {data.map((d, i) => <Cell key={i} fill={d.color} />)}
           </Bar>
@@ -2204,27 +1760,21 @@ export function ScoreHistogram({ apps }: Props) {
 }
 ```
 
-- [ ] **Step 2: Create funnel chart**
+- [ ] **Step 2: Create `FunnelChart.tsx`**
 
 ```tsx
-// ui/components/charts/funnel-chart.tsx
-interface Props {
-  evaluated: number
-  applied: number
-  responded: number
-  interview: number
-  offer: number
-}
-
-export function FunnelChart({ evaluated, applied, responded, interview, offer }: Props) {
+// ui/src/components/charts/FunnelChart.tsx
+export function FunnelChart({ evaluated, applied, responded, interview, offer }: {
+  evaluated: number; applied: number; responded: number; interview: number; offer: number
+}) {
+  const max = evaluated || 1
   const stages = [
     { label: 'Evaluated', count: evaluated, color: 'bg-stone-200' },
-    { label: 'Applied', count: applied, color: 'bg-stone-400' },
-    { label: 'Responded', count: responded, color: 'bg-amber-400' },
-    { label: 'Interview', count: interview, color: 'bg-emerald-400' },
-    { label: 'Offer', count: offer, color: 'bg-emerald-600' },
+    { label: 'Applied',   count: applied,   color: 'bg-stone-400' },
+    { label: 'Responded', count: responded,  color: 'bg-amber-400' },
+    { label: 'Interview', count: interview,  color: 'bg-emerald-400' },
+    { label: 'Offer',     count: offer,      color: 'bg-emerald-600' },
   ]
-  const max = evaluated || 1
   return (
     <div className="bg-white border border-stone-200 rounded-lg p-4">
       <div className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-3">Application funnel</div>
@@ -2244,156 +1794,134 @@ export function FunnelChart({ evaluated, applied, responded, interview, offer }:
 }
 ```
 
-- [ ] **Step 3: Create patterns page**
+- [ ] **Step 3: Build Patterns page**
 
 ```tsx
-// ui/app/patterns/page.tsx
-import fs from 'fs'
-import { dataPath } from '@/lib/paths'
-import { parseApplications } from '@/lib/parsers/applications'
-import { ScoreHistogram } from '@/components/charts/score-histogram'
-import { FunnelChart } from '@/components/charts/funnel-chart'
+// ui/src/pages/Patterns.tsx
+import { useEffect, useState } from 'react'
+import { api } from '@/lib/api'
+import { parseApplications, type Application } from '@/lib/parsers/applications'
+import { ScoreHistogram } from '@/components/charts/ScoreHistogram'
+import { FunnelChart } from '@/components/charts/FunnelChart'
 
-export const dynamic = 'force-dynamic'
+export function Patterns() {
+  const [apps, setApps] = useState<Application[]>([])
 
-export default function PatternsPage() {
-  const content = fs.existsSync(dataPath('applications.md'))
-    ? fs.readFileSync(dataPath('applications.md'), 'utf-8')
-    : ''
-  const apps = parseApplications(content)
+  useEffect(() => {
+    api.patterns().then(({ content }) => setApps(parseApplications(content)))
+  }, [])
 
-  const byStatus = (statuses: string[]) => apps.filter(a => statuses.includes(a.status)).length
+  const by = (...statuses: string[]) => apps.filter(a => statuses.includes(a.status)).length
 
-  // Company breakdown
-  const companyMap: Record<string, { count: number; scores: number[] }> = {}
-  for (const app of apps) {
-    if (!companyMap[app.company]) companyMap[app.company] = { count: 0, scores: [] }
-    companyMap[app.company].count++
-    if (app.score !== null) companyMap[app.company].scores.push(app.score)
-  }
-  const companies = Object.entries(companyMap)
-    .map(([name, { count, scores }]) => ({
-      name, count,
-      avgScore: scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : null,
-    }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 15)
+  const companies = Object.entries(
+    apps.reduce<Record<string, number[]>>((acc, a) => {
+      acc[a.company] = [...(acc[a.company] ?? []), ...(a.score !== null ? [a.score] : [])]
+      return acc
+    }, {})
+  ).map(([name, scores]) => ({
+    name, count: apps.filter(a => a.company === name).length,
+    avg: scores.length ? scores.reduce((s, n) => s + n, 0) / scores.length : null,
+  })).sort((a, b) => b.count - a.count).slice(0, 15)
 
   return (
     <div className="max-w-4xl space-y-6">
       <div>
         <h1 className="text-xl font-bold text-stone-900">Patterns</h1>
-        <p className="text-sm text-stone-400 mt-0.5">Analysis across {apps.length} evaluations</p>
+        <p className="text-sm text-stone-400">{apps.length} evaluations</p>
       </div>
 
-      {apps.length === 0 ? (
-        <div className="bg-white border border-stone-200 rounded-lg px-4 py-8 text-center text-sm text-stone-400">
-          No evaluations yet — charts will appear after running batch.
-        </div>
-      ) : (
-        <>
-          <div className="grid grid-cols-2 gap-4">
-            <ScoreHistogram apps={apps} />
-            <FunnelChart
-              evaluated={apps.length}
-              applied={byStatus(['Applied','Responded','Interview','Offer'])}
-              responded={byStatus(['Responded','Interview','Offer'])}
-              interview={byStatus(['Interview','Offer'])}
-              offer={byStatus(['Offer'])}
-            />
-          </div>
-
-          <div className="bg-white border border-stone-200 rounded-lg overflow-hidden">
-            <div className="px-4 py-3 border-b border-stone-100">
-              <span className="text-xs font-semibold text-stone-400 uppercase tracking-wide">Top companies by evaluations</span>
+      {apps.length === 0
+        ? <div className="bg-white border border-stone-200 rounded-lg px-4 py-8 text-center text-sm text-stone-400">No evaluations yet.</div>
+        : <>
+            <div className="grid grid-cols-2 gap-4">
+              <ScoreHistogram apps={apps} />
+              <FunnelChart evaluated={apps.length}
+                applied={by('Applied','Responded','Interview','Offer')}
+                responded={by('Responded','Interview','Offer')}
+                interview={by('Interview','Offer')}
+                offer={by('Offer')} />
             </div>
-            <table className="w-full text-sm">
-              <thead className="bg-stone-50 border-b border-stone-200">
-                <tr>
-                  <th className="px-4 py-2 text-left text-xs text-stone-500 font-semibold uppercase tracking-wide">Company</th>
-                  <th className="px-4 py-2 text-right text-xs text-stone-500 font-semibold uppercase tracking-wide">Evaluations</th>
-                  <th className="px-4 py-2 text-right text-xs text-stone-500 font-semibold uppercase tracking-wide">Avg Score</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-stone-50">
-                {companies.map(c => (
-                  <tr key={c.name} className="hover:bg-stone-50">
-                    <td className="px-4 py-2 font-medium text-stone-800">{c.name}</td>
-                    <td className="px-4 py-2 text-right text-stone-500">{c.count}</td>
-                    <td className="px-4 py-2 text-right">
-                      {c.avgScore !== null
-                        ? <span className={`text-xs font-semibold ${c.avgScore >= 4 ? 'text-emerald-600' : c.avgScore >= 3.5 ? 'text-amber-600' : 'text-stone-400'}`}>{c.avgScore.toFixed(1)}</span>
-                        : <span className="text-stone-300 text-xs">—</span>
-                      }
-                    </td>
+
+            <div className="bg-white border border-stone-200 rounded-lg overflow-hidden">
+              <div className="px-4 py-3 border-b border-stone-100">
+                <span className="text-xs font-semibold text-stone-400 uppercase tracking-wide">Top companies</span>
+              </div>
+              <table className="w-full text-sm">
+                <thead className="bg-stone-50 border-b border-stone-200">
+                  <tr>
+                    <th className="px-4 py-2 text-left text-xs text-stone-500 font-semibold uppercase tracking-wide">Company</th>
+                    <th className="px-4 py-2 text-right text-xs text-stone-500 font-semibold uppercase tracking-wide">Evaluations</th>
+                    <th className="px-4 py-2 text-right text-xs text-stone-500 font-semibold uppercase tracking-wide">Avg Score</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </>
-      )}
+                </thead>
+                <tbody className="divide-y divide-stone-50">
+                  {companies.map(c => (
+                    <tr key={c.name} className="hover:bg-stone-50">
+                      <td className="px-4 py-2 font-medium text-stone-800">{c.name}</td>
+                      <td className="px-4 py-2 text-right text-stone-500">{c.count}</td>
+                      <td className="px-4 py-2 text-right text-xs font-semibold">
+                        {c.avg !== null
+                          ? <span className={c.avg >= 4 ? 'text-emerald-600' : c.avg >= 3.5 ? 'text-amber-600' : 'text-stone-400'}>{c.avg.toFixed(1)}</span>
+                          : <span className="text-stone-300">—</span>
+                        }
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+      }
     </div>
   )
 }
 ```
 
-- [ ] **Step 4: Verify patterns page at `localhost:3001/patterns`**
-
-- [ ] **Step 5: Commit**
+- [ ] **Step 4: Commit**
 
 ```bash
-git add ui/ && git commit -m "feat(ui): patterns page with score histogram + funnel + company table"
+git add ui/ && git commit -m "feat(ui): patterns page — histogram, funnel, company table"
 ```
 
 ---
 
-### Task 17: ⌘K Command Palette
+### Task 12: ⌘K Command Palette
 
 **Files:**
-- Create: `ui/components/command-palette.tsx`
-- Modify: `ui/app/layout.tsx` (add CommandPalette provider)
+- Create: `ui/src/components/CommandPalette.tsx`
+- Modify: `ui/src/components/Layout.tsx`
 
-- [ ] **Step 1: Create `components/command-palette.tsx`**
+- [ ] **Step 1: Create `CommandPalette.tsx`**
 
 ```tsx
-// ui/components/command-palette.tsx
-'use client'
+// ui/src/components/CommandPalette.tsx
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useNavigate } from 'react-router-dom'
 import { Command } from 'cmdk'
 
-const STATIC_COMMANDS = [
-  { id: 'nav-overview', label: 'Go to Overview', group: 'Navigate', action: '/' },
-  { id: 'nav-pipeline', label: 'Go to Pipeline', group: 'Navigate', action: '/pipeline' },
-  { id: 'nav-tracker', label: 'Go to Tracker', group: 'Navigate', action: '/tracker' },
-  { id: 'nav-reports', label: 'Go to Reports', group: 'Navigate', action: '/reports' },
-  { id: 'nav-actions', label: 'Go to Actions', group: 'Navigate', action: '/actions' },
-  { id: 'nav-patterns', label: 'Go to Patterns', group: 'Navigate', action: '/patterns' },
-  { id: 'action-scan', label: 'Run Scan', group: 'Actions', action: '/actions?run=scan' },
-  { id: 'action-batch', label: 'Start Batch Eval', group: 'Actions', action: '/actions?run=batch' },
-  { id: 'action-merge', label: 'Merge Tracker', group: 'Actions', action: '/actions?run=merge' },
+const COMMANDS = [
+  { id: 'nav-overview',  label: 'Go to Overview',     group: 'Navigate', to: '/' },
+  { id: 'nav-pipeline',  label: 'Go to Pipeline',     group: 'Navigate', to: '/pipeline' },
+  { id: 'nav-tracker',   label: 'Go to Tracker',      group: 'Navigate', to: '/tracker' },
+  { id: 'nav-reports',   label: 'Go to Reports',      group: 'Navigate', to: '/reports' },
+  { id: 'nav-actions',   label: 'Go to Actions',      group: 'Navigate', to: '/actions' },
+  { id: 'nav-patterns',  label: 'Go to Patterns',     group: 'Navigate', to: '/patterns' },
+  { id: 'run-scan',      label: 'Run Scan',            group: 'Actions',  to: '/actions' },
+  { id: 'run-batch',     label: 'Start Batch Eval',   group: 'Actions',  to: '/actions' },
+  { id: 'run-merge',     label: 'Merge Tracker',      group: 'Actions',  to: '/actions' },
 ]
 
 export function CommandPalette() {
   const [open, setOpen] = useState(false)
-  const router = useRouter()
+  const navigate = useNavigate()
 
   useEffect(() => {
-    function handleKey(e: KeyboardEvent) {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault()
-        setOpen(o => !o)
-      }
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); setOpen(o => !o) }
     }
-    document.addEventListener('keydown', handleKey)
-    return () => document.removeEventListener('keydown', handleKey)
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
   }, [])
-
-  function runCommand(action: string) {
-    setOpen(false)
-    router.push(action)
-  }
 
   if (!open) return null
 
@@ -2402,25 +1930,17 @@ export function CommandPalette() {
       <div className="fixed inset-0 bg-black/20" onClick={() => setOpen(false)} />
       <div className="relative w-full max-w-lg bg-white border border-stone-200 rounded-xl shadow-2xl overflow-hidden">
         <Command>
-          <Command.Input
-            placeholder="Type a command or search…"
-            className="w-full px-4 py-3 text-sm border-b border-stone-100 focus:outline-none"
-            autoFocus
-          />
+          <Command.Input placeholder="Search or run a command…"
+            className="w-full px-4 py-3 text-sm border-b border-stone-100 focus:outline-none" autoFocus />
           <Command.List className="max-h-72 overflow-y-auto py-2">
             <Command.Empty className="px-4 py-6 text-center text-sm text-stone-400">No results.</Command.Empty>
             {['Navigate', 'Actions'].map(group => (
-              <Command.Group key={group} heading={group}
-                className="px-2"
-                // headingClassName not available in all versions — add via CSS
-              >
-                {STATIC_COMMANDS.filter(c => c.group === group).map(cmd => (
-                  <Command.Item
-                    key={cmd.id}
-                    value={cmd.label}
-                    onSelect={() => runCommand(cmd.action)}
-                    className="flex items-center gap-2 px-2 py-1.5 rounded text-sm text-stone-700 cursor-pointer data-[selected=true]:bg-stone-100"
-                  >
+              <Command.Group key={group}>
+                <div className="px-3 py-1 text-xs font-semibold text-stone-400 uppercase tracking-wide">{group}</div>
+                {COMMANDS.filter(c => c.group === group).map(cmd => (
+                  <Command.Item key={cmd.id} value={cmd.label}
+                    onSelect={() => { setOpen(false); navigate(cmd.to) }}
+                    className="flex items-center px-3 py-2 text-sm text-stone-700 cursor-pointer rounded mx-1 data-[selected=true]:bg-stone-100">
                     {cmd.label}
                   </Command.Item>
                 ))}
@@ -2434,139 +1954,81 @@ export function CommandPalette() {
 }
 ```
 
-- [ ] **Step 2: Wire ⌘K hint into sidebar + add CommandPalette to layout**
+- [ ] **Step 2: Add CommandPalette to Layout**
 
-Update `components/sidebar.tsx` — add ⌘K hint at bottom:
 ```tsx
-// Inside Sidebar, after the nav links:
-<div className="mt-auto px-2 pb-2">
-  <button
-    onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true, bubbles: true }))}
-    className="w-full text-left px-2 py-1.5 text-xs text-stone-400 border border-stone-100 rounded hover:bg-stone-50 flex items-center gap-2"
-  >
-    <span className="font-mono bg-stone-100 px-1 rounded text-xs">⌘K</span>
-    <span>Command</span>
-  </button>
-</div>
+// ui/src/components/Layout.tsx
+import { Outlet } from 'react-router-dom'
+import { Sidebar } from './Sidebar'
+import { CommandPalette } from './CommandPalette'
+
+export function Layout() {
+  return (
+    <div className="flex h-screen overflow-hidden">
+      <Sidebar />
+      <CommandPalette />
+      <main className="flex-1 overflow-y-auto p-6">
+        <Outlet />
+      </main>
+    </div>
+  )
+}
 ```
 
-Update `app/layout.tsx` — add CommandPalette after Sidebar:
-```tsx
-import { CommandPalette } from '@/components/command-palette'
-// Inside RootLayout body:
-<div className="flex h-screen overflow-hidden">
-  <Sidebar />
-  <CommandPalette />   {/* add this line */}
-  <main className="flex-1 overflow-y-auto p-6">
-    {children}
-  </main>
-</div>
-```
-
-- [ ] **Step 3: Verify ⌘K opens command palette**
-
-```bash
-npm run dev
-# Open http://localhost:3001, press Cmd+K — palette opens with navigate/action commands
-```
+- [ ] **Step 3: Verify ⌘K opens palette**
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add ui/ && git commit -m "feat(ui): ⌘K command palette with navigation + action commands"
+git add ui/ && git commit -m "feat(ui): ⌘K command palette"
 ```
 
 ---
 
 ## Sprint 10 — Polish & Ship
 
-### Task 18: TypeScript + build verification
+### Task 13: Build verification + README
 
-**Files:** All existing files
+**Files:** All
 
-- [ ] **Step 1: Run full test suite**
+- [ ] **Step 1: Run all tests**
 
 ```bash
 cd ui && npm test
-# Expected: all parser + component tests PASS
+# All parser tests PASS
 ```
 
-- [ ] **Step 2: Run TypeScript check**
+- [ ] **Step 2: TypeScript check**
 
 ```bash
-cd ui && npx tsc --noEmit
+npx tsc --noEmit
 # Fix any type errors before proceeding
 ```
 
-- [ ] **Step 3: Run production build**
+- [ ] **Step 3: Production build**
 
 ```bash
-cd ui && npm run build
-# Expected: build succeeds with no errors
+npm run build && npm start
+# Visit http://localhost:3002 — all pages load without a separate Vite dev server
 ```
 
-- [ ] **Step 4: Verify all 6 pages load at production port**
+- [ ] **Step 4: Final commit**
 
 ```bash
-npm start
-# Visit: /, /pipeline, /tracker, /reports, /actions, /patterns
-```
-
-- [ ] **Step 5: Update root README (add UI section)**
-
-In `career-ops/README.md`, add:
-```markdown
-## Web UI
-
-The web UI lives at `ui/`. See [ui/README.md](ui/README.md) for setup.
-
-```bash
-cd ui && npm install && npm run dev
-# Opens at http://localhost:3001
-```
-```
-
-- [ ] **Step 6: Final commit**
-
-```bash
-git add . && git commit -m "feat(ui): career-ops web UI complete — 6 pages, ⌘K palette, SSE streaming"
+git add . && git commit -m "feat(ui): career-ops web UI complete"
 ```
 
 ---
 
-## File Map
+## How to run
 
-| File | Responsibility |
-|------|----------------|
-| `ui/lib/paths.ts` | Resolve CAREER_OPS_PATH, return absolute paths |
-| `ui/lib/parsers/pipeline.ts` | Parse pipeline.md → PipelineEntry[] |
-| `ui/lib/parsers/applications.ts` | Parse applications.md → Application[] |
-| `ui/lib/parsers/report.ts` | Parse report .md → Report |
-| `ui/lib/parsers/scan-history.ts` | Parse scan-history.tsv → ScanEntry[] |
-| `ui/lib/mutations/status.ts` | updateApplicationStatus (pure) + writeApplicationStatus (fs) |
-| `ui/lib/mutations/pipeline.ts` | markPipelineEntry (pure) + writePipelineEntry (fs) |
-| `ui/lib/mutations/process.ts` | spawnCareerOpsCommand — child_process wrapper |
-| `ui/app/layout.tsx` | Root layout: sidebar + command palette |
-| `ui/app/page.tsx` | Overview: KPIs, funnel, recent activity |
-| `ui/app/pipeline/page.tsx` | Pipeline: filterable table, skip action |
-| `ui/app/tracker/page.tsx` | Tracker: sortable table, inline status |
-| `ui/app/reports/page.tsx` | Reports index |
-| `ui/app/reports/[id]/page.tsx` | Report detail with prev/next |
-| `ui/app/actions/page.tsx` | Actions: SSE-backed run console |
-| `ui/app/patterns/page.tsx` | Patterns: histogram, funnel, company table |
-| `ui/app/api/pipeline/route.ts` | PATCH: mark pipeline entry done/skip |
-| `ui/app/api/applications/route.ts` | PATCH: update application status |
-| `ui/app/api/stream/scan/route.ts` | GET SSE: stream `node scan.mjs` |
-| `ui/app/api/stream/batch/route.ts` | GET SSE: stream `bash batch-runner.sh` |
-| `ui/app/api/stream/merge/route.ts` | GET SSE: stream merge + verify |
-| `ui/components/sidebar.tsx` | Sidebar nav + ⌘K shortcut button |
-| `ui/components/command-palette.tsx` | ⌘K modal (cmdk) |
-| `ui/components/score-badge.tsx` | Color-coded score pill |
-| `ui/components/kpi-card.tsx` | Single stat card |
-| `ui/components/score-funnel.tsx` | Horizontal score distribution bars |
-| `ui/components/pipeline-table.tsx` | Client-side filterable pipeline table |
-| `ui/components/tracker-table.tsx` | Sortable tracker table with status dropdown |
-| `ui/components/report-viewer.tsx` | Markdown report + score sidebar |
-| `ui/components/action-console.tsx` | SSE stream display with start/stop |
-| `ui/components/charts/score-histogram.tsx` | Recharts bar chart for score buckets |
-| `ui/components/charts/funnel-chart.tsx` | Application stage funnel bars |
+```bash
+# Development (hot reload)
+cd ui && npm install && npm run dev
+# → Vite on http://localhost:3001
+# → Express on http://localhost:3002
+
+# Production
+cd ui && npm run build && npm start
+# → Everything served from http://localhost:3002
+```
