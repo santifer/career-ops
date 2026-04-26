@@ -30,7 +30,32 @@ const APPLICATIONS_PATH = 'data/applications.md';
 mkdirSync('data', { recursive: true });
 
 const CONCURRENCY = 10;
-const FETCH_TIMEOUT_MS = 10_000;
+const FETCH_TIMEOUT_MS = 15_000;
+
+// ── Constants ───────────────────────────────────────────────────────
+
+const REMOTE_SYNONYMS = [
+  "remote", "distributed", "anywhere", "worldwide", "wfh", "work from home",
+  "wfa", "work from anywhere", "virtual", "telecommute", "location independent",
+  "flexible location"
+];
+
+const INTERVAL_MULTIPLIERS = {
+  '1 HOUR': 2080,
+  '1 DAY': 260,
+  '1 WEEK': 52,
+  '2 WEEK': 26,
+  '0.5 MONTH': 24,
+  '1 MONTH': 12,
+  '2 MONTH': 6,
+  '3 MONTH': 4,
+  '6 MONTH': 2,
+  '1 YEAR': 1
+};
+
+function normalize(str) {
+  return (str || "").toLowerCase().trim();
+}
 
 // ── API detection ───────────────────────────────────────────────────
 
@@ -81,17 +106,32 @@ function parseGreenhouse(json, companyName) {
     url: j.absolute_url || '',
     company: companyName,
     location: j.location?.name || '',
+    salary: null
   }));
 }
 
 function parseAshby(json, companyName) {
   const jobs = json.jobs || [];
-  return jobs.map(j => ({
-    title: j.title || '',
-    url: j.jobUrl || '',
-    company: companyName,
-    location: j.location || '',
-  }));
+
+  return jobs.map(j => {
+    const compensation = Array.isArray(j.compensation) ? j.compensation : [];
+    const comp = compensation.find(c => c.compensationType === 'Salary' && INTERVAL_MULTIPLIERS[c.interval]);
+    
+    if (!comp) return { title: j.title || '', url: j.jobUrl || '', company: companyName, location: j.location || '', salary: null };
+
+    const mult = INTERVAL_MULTIPLIERS[comp.interval];
+    return {
+      title: j.title || '',
+      url: j.jobUrl || '',
+      company: companyName,
+      location: j.location || '',
+      salary: { 
+        min: comp.minValue != null ? comp.minValue * mult : null, 
+        max: comp.maxValue != null ? comp.maxValue * mult : null, 
+        currency: comp.currencyCode ?? null
+      }
+    };
+  });
 }
 
 function parseLever(json, companyName) {
@@ -101,6 +141,7 @@ function parseLever(json, companyName) {
     url: j.hostedUrl || '',
     company: companyName,
     location: j.categories?.location || '',
+    salary: null
   }));
 }
 
@@ -131,6 +172,98 @@ function buildTitleFilter(titleFilter) {
     const hasPositive = positive.length === 0 || positive.some(k => lower.includes(k));
     const hasNegative = negative.some(k => lower.includes(k));
     return hasPositive && !hasNegative;
+  };
+}
+
+// ── Location filter ─────────────────────────────────────────────────
+
+function buildLocationFilter(config) {
+  const remoteOnly = config?.remote_only === true;
+  const onsiteOnly = config?.onsite_only === true;
+
+  const positive = (config?.positive || []).map(normalize).filter(Boolean);
+  const negative = (config?.negative || []).map(normalize).filter(Boolean);
+
+  return (location) => {
+    const lower = normalize(location);
+
+    // Empty location handling
+    if (!lower) {
+      // If strict filtering requested, reject
+      if (remoteOnly || onsiteOnly || positive.length > 0) return false;
+      return true;
+    }
+
+    const isRemote = REMOTE_SYNONYMS.some(s => lower.includes(s));
+
+    // ── Step 1: Remote/Onsite constraints ──
+    if (remoteOnly && !isRemote) return false;
+    if (onsiteOnly && isRemote) return false;
+
+    // ── Step 2: Negative filter (ALWAYS applied) ──
+    if (negative.length > 0 && negative.some(k => lower.includes(k))) {
+      return false;
+    }
+
+    // Short-circuit: if it's remote and user wants remote, keep it
+    if (remoteOnly && isRemote) return true;
+
+    // ── Step 3: Positive filter ──
+    if (positive.length > 0) {
+      return positive.some(k => lower.includes(k));
+    }
+
+    // ── Step 4: Default accept ──
+    return true;
+  };
+}
+
+// ── Salary filter ───────────────────────────────────────────────────
+// Filters jobs based on user-defined salary range and currency.
+// Uses range-overlap logic and conservative defaults for missing data.
+
+function buildSalaryFilter(config) {
+  const min = Number(config?.min) || 0;
+  const max = Number(config?.max) || 0;
+  const currency = config?.currency || "";
+
+  return (salary) => {
+    // If no salary constraints are configured, allow all jobs
+    if (min === 0 && max === 0) return true;
+
+    // If salary data is missing, keep the job (conservative approach)
+    // Many job boards do not provide structured compensation data
+    if (!salary) return true;
+
+    // Enforce currency match when both user preference and job currency are present
+    // Reject mismatched currencies to avoid incorrect comparisons
+    if (currency && salary.currency && currency !== salary.currency) {
+      return false;
+    }
+
+    // Preserve full salary range (do not collapse to a single value)
+    // Fallback ensures we still handle cases where only one bound is provided
+    const jobMin = salary.min ?? salary.max ?? null;
+    const jobMax = salary.max ?? salary.min ?? null;
+
+    // If both bounds are missing, keep the job (cannot evaluate reliably)
+    if (jobMin == null && jobMax == null) return true;
+
+    // ── Range overlap logic ──
+    // Reject only if the job's range is completely outside the user-defined range
+
+    // Case 1: Job's maximum is below user's minimum → no overlap
+    if (min > 0 && jobMax != null && jobMax < min) {
+      return false;
+    }
+
+    // Case 2: Job's minimum is above user's maximum → no overlap
+    if (max > 0 && jobMin != null && jobMin > max) {
+      return false;
+    }
+
+    // Otherwise, ranges overlap → accept job
+    return true;
   };
 }
 
@@ -263,7 +396,11 @@ async function main() {
 
   const config = parseYaml(readFileSync(PORTALS_PATH, 'utf-8'));
   const companies = config.tracked_companies || [];
+  
+  // Build Filters
   const titleFilter = buildTitleFilter(config.title_filter);
+  const locationFilter = buildLocationFilter(config.location_filter);
+  const salaryFilter = buildSalaryFilter(config.salary_filter);
 
   // 2. Filter to enabled companies with detectable APIs
   const targets = companies
@@ -277,30 +414,41 @@ async function main() {
   console.log(`Scanning ${targets.length} companies via API (${skippedCount} skipped — no API detected)`);
   if (dryRun) console.log('(dry run — no files will be written)\n');
 
-  // 3. Load dedup sets
+  // 3. Scan loop
+  const date = new Date().toISOString().slice(0, 10);
+  let totalFound = 0, totalFiltered = 0, totalLocationFiltered = 0, totalSalaryFiltered = 0, totalDupes = 0;
+  const newOffers = [];
+  const errors = [];
   const seenUrls = loadSeenUrls();
   const seenCompanyRoles = loadSeenCompanyRoles();
 
-  // 4. Fetch all APIs
-  const date = new Date().toISOString().slice(0, 10);
-  let totalFound = 0;
-  let totalFiltered = 0;
-  let totalDupes = 0;
-  const newOffers = [];
-  const errors = [];
-
   const tasks = targets.map(company => async () => {
-    const { type, url } = company._api;
     try {
+      const { type, url } = company._api;
       const json = await fetchJson(url);
       const jobs = PARSERS[type](json, company.name);
+
       totalFound += jobs.length;
 
       for (const job of jobs) {
+        // Filter 1: Title
         if (!titleFilter(job.title)) {
           totalFiltered++;
           continue;
         }
+
+        // Filter 2: Location
+        if (!locationFilter(job.location)) {
+          totalLocationFiltered++;
+          continue;
+        }
+
+        // Filter 3: Salary
+        if (!salaryFilter(job.salary)) {
+          totalSalaryFiltered++;
+          continue;
+        }
+
         if (seenUrls.has(job.url)) {
           totalDupes++;
           continue;
@@ -335,6 +483,8 @@ async function main() {
   console.log(`Companies scanned:     ${targets.length}`);
   console.log(`Total jobs found:      ${totalFound}`);
   console.log(`Filtered by title:     ${totalFiltered} removed`);
+  console.log(`Filtered by location:  ${totalLocationFiltered} removed`);
+  console.log(`Filtered by salary:    ${totalSalaryFiltered} removed`);
   console.log(`Duplicates:            ${totalDupes} skipped`);
   console.log(`New offers added:      ${newOffers.length}`);
 
