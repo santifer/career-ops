@@ -2,7 +2,8 @@
 
 import { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, Loader2, Mail, Shield } from 'lucide-react';
+import Link from 'next/link';
+import { ArrowLeft, ArrowRight, Loader2, Mail, Shield } from 'lucide-react';
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
@@ -47,6 +48,15 @@ export default function ForgotPasswordPage() {
         <h1 className="text-3xl font-bold tracking-tight mb-2">Forgot Password</h1>
         <p className="text-[#78716c] font-medium mb-8">Use OTP only when resetting your password.</p>
 
+        <button
+          type="button"
+          onClick={() => router.push('/login')}
+          className="mb-6 inline-flex items-center gap-2 text-sm font-bold text-[#78716c] hover:text-[#1c1917]"
+        >
+          <ArrowLeft size={16} />
+          Back to login
+        </button>
+
         <form onSubmit={onSubmit} className="space-y-6">
           <div className="space-y-2">
             <label className="text-[10px] font-bold text-[#a8a29e] uppercase tracking-[0.2em] ml-1">Email Address</label>
@@ -74,6 +84,13 @@ export default function ForgotPasswordPage() {
             {isLoading ? <Loader2 className="animate-spin" size={20} /> : <>Send OTP <ArrowRight size={18} className="text-white/50" /></>}
           </button>
         </form>
+
+        <p className="mt-6 text-center text-sm text-[#a8a29e] font-medium">
+          Remembered it?{' '}
+          <Link href="/login" className="text-[#1c1917] font-bold hover:underline">
+            Sign in
+          </Link>
+        </p>
       </div>
     </div>
   );

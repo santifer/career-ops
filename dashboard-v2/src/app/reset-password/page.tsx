@@ -2,7 +2,8 @@
 
 import { FormEvent, Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowRight, Key, Loader2, Shield } from 'lucide-react';
+import Link from 'next/link';
+import { ArrowLeft, ArrowRight, Key, Loader2, Shield } from 'lucide-react';
 
 function ResetPasswordContent() {
   const router = useRouter();
@@ -49,6 +50,15 @@ function ResetPasswordContent() {
         <h1 className="text-3xl font-bold tracking-tight mb-2">Reset Password</h1>
         <p className="text-[#78716c] font-medium mb-8">Enter the OTP sent to {email || 'your email'} and choose a new password.</p>
 
+        <button
+          type="button"
+          onClick={() => router.push('/forgot-password')}
+          className="mb-6 inline-flex items-center gap-2 text-sm font-bold text-[#78716c] hover:text-[#1c1917]"
+        >
+          <ArrowLeft size={16} />
+          Back
+        </button>
+
         <form onSubmit={onSubmit} className="space-y-6">
           <div className="space-y-2">
             <label className="text-[10px] font-bold text-[#a8a29e] uppercase tracking-[0.2em] ml-1">OTP Code</label>
@@ -89,6 +99,13 @@ function ResetPasswordContent() {
             {isLoading ? <Loader2 className="animate-spin" size={20} /> : <>Update Password <ArrowRight size={18} className="text-white/50" /></>}
           </button>
         </form>
+
+        <p className="mt-6 text-center text-sm text-[#a8a29e] font-medium">
+          Need a new code?{' '}
+          <Link href="/forgot-password" className="text-[#1c1917] font-bold hover:underline">
+            Send OTP again
+          </Link>
+        </p>
       </div>
     </div>
   );
