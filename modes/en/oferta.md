@@ -214,15 +214,15 @@ Save the full evaluation to `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 ```
 
 Column order (status BEFORE score):
-1. `num` — sequential number matching the report
-2. `date` — YYYY-MM-DD
-3. `company` — short company name
-4. `role` — job title
-5. `status` — `Evaluated` (or `SKIP` if not worth applying)
-6. `score` — format `X.X/5`
-7. `pdf` — `✅` or `❌`
-8. `report` — markdown link, e.g. `[001](reports/001-company-2026-01-01.md)`
-9. `notes` — one-line summary
+- `num` — sequential number matching the report
+- `date` — YYYY-MM-DD
+- `company` — short company name
+- `role` — job title
+- `status` — `Evaluated` (or `SKIP` if not worth applying)
+- `score` — format `X.X/5`
+- `pdf` — `✅` or `❌`
+- `report` — markdown link, e.g. `[001](reports/001-company-2026-01-01.md)`
+- `notes` — one-line summary
 
 2. Run the merge script to incorporate the entry:
 
