@@ -77,6 +77,7 @@ Usar el template en `cv-template.html`. Reemplazar los placeholders `{{...}}` co
 | `{{PORTFOLIO_URL}}` | [from profile.yml] (o /es según idioma) |
 | `{{PORTFOLIO_DISPLAY}}` | [from profile.yml] (o /es según idioma) |
 | `{{LOCATION}}` | [from profile.yml] |
+| `{{PHOTO_BLOCK}}` | `<img class="cv-photo" ...>` o `""` si no hay `photo:` |
 | `{{SECTION_SUMMARY}}` | Professional Summary / Resumen Profesional |
 | `{{SUMMARY_TEXT}}` | Summary personalizado con keywords |
 | `{{SECTION_COMPETENCIES}}` | Core Competencies / Competencias Core |
@@ -177,3 +178,31 @@ d. Report: PDF path, file size, Canva design URL (for manual tweaking)
 ## Post-generación
 
 Actualizar tracker si la oferta ya está registrada: cambiar PDF de ❌ a ✅.
+
+## Profile Photo (DACH market)
+
+If `config/profile.yml` contains a `photo:` field with a path to an image file:
+- `photo:` must be a top-level key in `config/profile.yml` (not under `candidate:`).
+- The path must be **project‑relative** (no leading `/` and must not escape the repository with `..`).
+- Absolute paths or paths that resolve outside the project directory are rejected and cause the photo to be omitted.
+- Symlinks are resolved; the resolved target must remain inside the project directory.
+- Files larger than **2 MiB** are ignored (a warning is logged and the placeholder is cleared).
+- Supported image formats: `.jpg`, `.jpeg`, `.png`. 
+
+0. Validate image format first:
+   - Supported: `.jpg`, `.jpeg`, `.png`
+   - If unsupported: log a warning and replace `{{PHOTO_BLOCK}}` with `""`
+
+1. Read the image file and encode it as a base64 data URI:
+   `data:image/jpeg;base64,...` (or `image/png` for PNG files)
+2. Replace `{{PHOTO_BLOCK}}` in the template with:
+
+   ```html
+   <img class="cv-photo" src="data:image/jpeg;base64,ENCODED_DATA" alt="">
+   ```
+
+3. If `photo:` is absent or empty, replace `{{PHOTO_BLOCK}}` with an empty string `""`.
+
+This ensures the photo is embedded directly in the HTML and renders correctly
+when Playwright converts it to PDF, regardless of the working directory.
+

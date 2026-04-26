@@ -2,6 +2,13 @@
 # Copy this file to config/profile.yml and fill in your details.
 # This is the single source of truth for your personal data across all modes.
 
+
+# ── Photo for resume (optional) ──────────────────────────────────────────
+# For the DACH market (Germany / Austria / Switzerland), a photo is standard.
+# Specify the file path relative to the project root (JPG or PNG, ~3.5x4.5 cm).
+# Leave blank or remove this line to generate a CV without a photo.
+# photo: assets/photo.jpg
+
 candidate:
   full_name: "Jane Smith"
   email: "jane@example.com"
