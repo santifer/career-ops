@@ -6,7 +6,7 @@
 
 **Architecture:** Direct filesystem reads/writes via `CAREER_OPS_PATH` env var. Server Components for data fetching. SSE routes for streaming scan/batch output. Server Actions for mutations. No database.
 
-**Tech Stack:** Next.js 14 App Router, TypeScript, Tailwind CSS, shadcn/ui, Recharts, react-markdown, @hello-pangea/dnd (kanban drag), cmdk (command palette), Vitest + Testing Library
+**Tech Stack:** Next.js 14 App Router, TypeScript, Tailwind CSS, shadcn/ui, Recharts, react-markdown, @hello-pangea/dnd (kanban drag), cmdk (command palette), Jest + Testing Library
 
 ---
 
@@ -54,9 +54,10 @@ npm install \
   @radix-ui/react-select
 
 npm install -D \
-  vitest \
-  @vitejs/plugin-react \
-  jsdom \
+  jest \
+  jest-environment-jsdom \
+  ts-jest \
+  @types/jest \
   @testing-library/react \
   @testing-library/jest-dom \
   @types/node
@@ -86,31 +87,28 @@ CAREER_OPS_PATH=..
 PORT=3001
 ```
 
-- [ ] **Step 5: Create `vitest.config.ts`**
+- [ ] **Step 5: Create `jest.config.ts`**
 
 ```ts
-// ui/vitest.config.ts
-import { defineConfig } from 'vitest/config'
-import react from '@vitejs/plugin-react'
-import path from 'path'
+// ui/jest.config.ts
+import type { Config } from 'jest'
+import nextJest from 'next/jest'
 
-export default defineConfig({
-  plugins: [react()],
-  test: {
-    environment: 'jsdom',
-    globals: true,
-    setupFiles: ['./vitest.setup.ts'],
-  },
-  resolve: {
-    alias: { '@': path.resolve(__dirname, '.') },
-  },
-})
+const createJestConfig = nextJest({ dir: './' })
+
+const config: Config = {
+  testEnvironment: 'jsdom',
+  setupFilesAfterFramework: ['<rootDir>/jest.setup.ts'],
+  moduleNameMapper: { '^@/(.*)$': '<rootDir>/$1' },
+}
+
+export default createJestConfig(config)
 ```
 
-- [ ] **Step 6: Create `vitest.setup.ts`**
+- [ ] **Step 6: Create `jest.setup.ts`**
 
 ```ts
-// ui/vitest.setup.ts
+// ui/jest.setup.ts
 import '@testing-library/jest-dom'
 ```
 
@@ -121,8 +119,8 @@ import '@testing-library/jest-dom'
   "dev": "next dev -p 3001",
   "build": "next build",
   "start": "next start -p 3001",
-  "test": "vitest run",
-  "test:watch": "vitest"
+  "test": "jest",
+  "test:watch": "jest --watch"
 }
 ```
 
