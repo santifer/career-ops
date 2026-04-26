@@ -277,7 +277,7 @@ async function apply() {
     }
 
     // 4. Validate: check NO user files were touched
-    let userFileTouched = false;
+    const violatingUserPaths = [];
     try {
       for (const entry of gitStatusEntries()) {
         const file = entry.path;
@@ -285,18 +285,19 @@ async function apply() {
         for (const userPath of USER_PATHS) {
           if (file.startsWith(userPath)) {
             console.error(`SAFETY VIOLATION: User file was modified: ${file}`);
-            userFileTouched = true;
+            violatingUserPaths.push(file);
           }
         }
       }
-    } catch {
-      // git status failed, skip validation
+    } catch (err) {
+      // git status failed — fail closed, never proceed without a clean safety check
+      throw new Error(`Safety check failed (git status error): ${err.message}`);
     }
 
-    if (userFileTouched) {
+    if (violatingUserPaths.length > 0) {
       console.error('Aborting: user files were touched. Rolling back...');
-      revertPaths(updated);
-      process.exit(1);
+      revertPaths([...updated, ...violatingUserPaths]);
+      throw new Error('Safety violation: user files were modified during update');
     }
 
     // 5. Install any new dependencies
