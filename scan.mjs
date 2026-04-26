@@ -13,6 +13,7 @@
  *   node scan.mjs                  # scan all enabled companies
  *   node scan.mjs --dry-run        # preview without writing files
  *   node scan.mjs --company Cohere # scan a single company
+ *   node scan.mjs --verify         # Playwright-check each new URL; drop expired postings
  */
 
 import { readFileSync, writeFileSync, appendFileSync, existsSync, mkdirSync } from 'fs';
@@ -249,9 +250,40 @@ async function parallelFetch(tasks, limit) {
 
 // ── Main ────────────────────────────────────────────────────────────
 
+async function verifyOffers(offers) {
+  // Dynamic imports keep the default zero-token path free of Playwright startup
+  const { chromium } = await import('playwright');
+  const { checkUrlLiveness } = await import('./liveness-browser.mjs');
+
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
+
+  const verified = [];
+  const expired = [];
+  try {
+    // Sequential — project rule: never Playwright in parallel
+    for (const offer of offers) {
+      const { result, reason } = await checkUrlLiveness(page, offer.url);
+      if (result === 'expired') {
+        expired.push({ ...offer, reason });
+        console.log(`  ❌ expired   ${offer.company} | ${offer.title} (${reason})`);
+      } else {
+        verified.push(offer);
+        const icon = result === 'active' ? '✅' : '⚠️';
+        console.log(`  ${icon} ${result.padEnd(9)} ${offer.company} | ${offer.title}`);
+      }
+    }
+  } finally {
+    await browser.close();
+  }
+
+  return { verified, expired };
+}
+
 async function main() {
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
+  const verify = args.includes('--verify');
   const companyFlag = args.indexOf('--company');
   const filterCompany = companyFlag !== -1 ? args[companyFlag + 1]?.toLowerCase() : null;
 
@@ -322,10 +354,26 @@ async function main() {
 
   await parallelFetch(tasks, CONCURRENCY);
 
+  // 4.5. Optional liveness verification — drop expired postings before persisting
+  let verifiedOffers = newOffers;
+  let expiredOffers = [];
+  if (verify && newOffers.length > 0) {
+    console.log(`\nVerifying liveness of ${newOffers.length} new offer(s) with Playwright (sequential)...`);
+    const result = await verifyOffers(newOffers);
+    verifiedOffers = result.verified;
+    expiredOffers = result.expired;
+  }
+
   // 5. Write results
-  if (!dryRun && newOffers.length > 0) {
-    appendToPipeline(newOffers);
-    appendToScanHistory(newOffers, date);
+  if (!dryRun && verifiedOffers.length > 0) {
+    appendToPipeline(verifiedOffers);
+    appendToScanHistory(verifiedOffers, date);
+  }
+  if (!dryRun && expiredOffers.length > 0) {
+    appendToScanHistory(
+      expiredOffers.map(o => ({ ...o, source: `${o.source} (expired)` })),
+      date,
+    );
   }
 
   // 6. Print summary
@@ -336,7 +384,10 @@ async function main() {
   console.log(`Total jobs found:      ${totalFound}`);
   console.log(`Filtered by title:     ${totalFiltered} removed`);
   console.log(`Duplicates:            ${totalDupes} skipped`);
-  console.log(`New offers added:      ${newOffers.length}`);
+  if (verify) {
+    console.log(`Expired (verified):    ${expiredOffers.length} dropped`);
+  }
+  console.log(`New offers added:      ${verifiedOffers.length}`);
 
   if (errors.length > 0) {
     console.log(`\nErrors (${errors.length}):`);
@@ -345,9 +396,9 @@ async function main() {
     }
   }
 
-  if (newOffers.length > 0) {
+  if (verifiedOffers.length > 0) {
     console.log('\nNew offers:');
-    for (const o of newOffers) {
+    for (const o of verifiedOffers) {
       console.log(`  + ${o.company} | ${o.title} | ${o.location || 'N/A'}`);
     }
     if (dryRun) {

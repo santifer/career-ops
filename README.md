@@ -216,6 +216,14 @@ The scanner comes with **45+ companies** ready to scan and **19 search queries**
 
 **Job boards searched:** Ashby, Greenhouse, Lever, Wellfound, Workable, RemoteFront
 
+By default `node scan.mjs` (a.k.a. `npm run scan`) trusts what each ATS feed returns. Some companies leave stale postings in their public API even after the role is closed, so those expired entries can leak into `pipeline.md`. Pass `--verify` to launch Playwright after the API pass and drop expired postings before they hit the pipeline:
+
+```bash
+node scan.mjs --verify          # zero-token discovery + Playwright liveness check
+```
+
+The verification is sequential and only runs against new offers (after dedup), so the cost stays bounded.
+
 ## Dashboard TUI
 
 The built-in terminal dashboard lets you browse your pipeline visually:
