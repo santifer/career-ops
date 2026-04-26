@@ -10,6 +10,7 @@ function AuthContinueContent() {
   const searchParams = useSearchParams();
   const provider = searchParams.get('provider') || 'credentials';
   const callbackUrl = searchParams.get('callbackUrl') || '/?walkthrough=1';
+  const email = searchParams.get('email') || '';
 
   const hasStarted = useRef(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,6 +44,26 @@ function AuthContinueContent() {
         if (provider === 'github') {
           await signIn('github', { callbackUrl });
           return;
+        }
+        const rawPendingSignup = sessionStorage.getItem('career_ops_pending_signup');
+        if (rawPendingSignup) {
+          const pendingSignup = JSON.parse(rawPendingSignup) as { email?: string; password?: string; ts?: number };
+          const isFresh = typeof pendingSignup.ts === 'number' && Date.now() - pendingSignup.ts < 15 * 60 * 1000;
+          const emailMatches = email ? pendingSignup.email === email : Boolean(pendingSignup.email);
+
+          if (pendingSignup.email && pendingSignup.password && isFresh && emailMatches) {
+            const result = await signIn('credentials', {
+              email: pendingSignup.email,
+              password: pendingSignup.password,
+              redirect: false,
+            });
+
+            if (!result?.error) {
+              sessionStorage.removeItem('career_ops_pending_signup');
+              router.replace(callbackUrl);
+              return;
+            }
+          }
         }
         router.replace('/login?verified=true');
       } catch (e) {

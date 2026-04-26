@@ -60,9 +60,15 @@ export default function SignupPage() {
         throw new Error(data.error || 'Registration sequence interrupted.');
       }
 
+      // Store short-lived auth context so post-OTP flow can auto-sign the user in.
+      sessionStorage.setItem(
+        'career_ops_pending_signup',
+        JSON.stringify({ email: formData.email, password: formData.password, ts: Date.now() })
+      );
+
       setIsSuccess(true);
       setTimeout(() => {
-        router.push(`/verify?email=${encodeURIComponent(formData.email)}`);
+        router.push(`/verify?email=${encodeURIComponent(formData.email)}&provider=credentials`);
       }, 2000);
 
     } catch (err: any) {

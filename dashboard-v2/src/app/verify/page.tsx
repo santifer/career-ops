@@ -88,7 +88,7 @@ function VerifyContent() {
           router.push('/auth/continue?provider=github&callbackUrl=%2F%3Fwalkthrough%3D1');
           return;
         }
-        router.push('/auth/continue?provider=credentials');
+        router.push(`/auth/continue?provider=credentials&email=${encodeURIComponent(email)}&callbackUrl=%2F%3Fwalkthrough%3D1`);
       }, 2000);
 
     } catch (err: unknown) {
