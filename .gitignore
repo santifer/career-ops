@@ -30,6 +30,12 @@ node_modules/
 # Browser automation
 logs/
 .playwright-mcp/
+.local/
+workers/.env
+workers/.env.*
+workers/traces/
+workers/screenshots/
+workers/tmp/
 tmp/
 dashboard/e2e-artifacts/
 dashboard/cockpit-e2e*.log
