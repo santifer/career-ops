@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"embed"
 	"encoding/json"
 	"net/http"
@@ -14,13 +15,33 @@ import (
 //go:embed static/index.html static/styles.css static/app.js
 var staticFiles embed.FS
 
+type ServerOptions struct {
+	AuthVerifier cockpitapi.AuthVerifier
+	RuntimeStore cockpitapi.AutoModeRuntimeStore
+	Pairing      *cockpitapi.PairingService
+}
+
 func NewServer(rootPath string) http.Handler {
+	return NewServerWithOptions(rootPath, ServerOptions{
+		AuthVerifier: cockpitapi.NewAuthVerifierFromEnv(context.Background()),
+	})
+}
+
+func NewServerWithOptions(rootPath string, options ServerOptions) http.Handler {
 	mux := http.NewServeMux()
 	cleanRoot := filepath.Clean(rootPath)
 	service, serviceErr := cockpitapi.NewService(cleanRoot)
 	runStore, runStoreErr := cockpitapi.NewRunStore(cleanRoot)
 	actionRunner, actionRunnerErr := cockpitapi.NewActionRunner(cleanRoot, runStore)
 	autoModeService, autoModeErr := cockpitapi.NewAutoModeService(runStore)
+	runtimeStore := options.RuntimeStore
+	if runtimeStore == nil {
+		runtimeStore = cockpitapi.NewMemoryRuntimeStore()
+	}
+	pairing := options.Pairing
+	if pairing == nil {
+		pairing = cockpitapi.NewPairingService(cockpitapi.NewMemoryPairingStore(), cockpitapi.PairingConfig{})
+	}
 	if serviceErr == nil && runStoreErr != nil {
 		serviceErr = runStoreErr
 	}
@@ -68,7 +89,7 @@ func NewServer(rootPath string) http.Handler {
 		_ = json.NewEncoder(w).Encode(service.Health())
 	})
 
-	registerAPIHandlers(mux, service, serviceErr, runStore, actionRunner, autoModeService)
+	registerAPIHandlers(mux, service, serviceErr, runStore, actionRunner, autoModeService, options.AuthVerifier, runtimeStore, pairing)
 
 	return mux
 }

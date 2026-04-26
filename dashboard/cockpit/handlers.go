@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	cockpitapi "github.com/santifer/career-ops/dashboard/internal/cockpit"
 )
@@ -14,8 +15,11 @@ type apiHandler struct {
 	service      *cockpitapi.Service
 	serviceErr   error
 	runStore     *cockpitapi.RunStore
+	runtimeStore cockpitapi.AutoModeRuntimeStore
 	actionRunner *cockpitapi.ActionRunner
 	autoMode     *cockpitapi.AutoModeService
+	authVerifier cockpitapi.AuthVerifier
+	pairing      *cockpitapi.PairingService
 }
 
 type apiErrorResponse struct {
@@ -40,13 +44,38 @@ type pdfActionRequest struct {
 	ApplicationID *int `json:"application_id"`
 }
 
-func registerAPIHandlers(mux *http.ServeMux, service *cockpitapi.Service, serviceErr error, runStore *cockpitapi.RunStore, actionRunner *cockpitapi.ActionRunner, autoMode *cockpitapi.AutoModeService) {
+type pairingTokenRequest struct {
+	WorkerID string `json:"worker_id"`
+}
+
+type workerRegisterRequest struct {
+	WorkerID     string `json:"worker_id"`
+	PairingToken string `json:"pairing_token"`
+}
+
+type claimRunRequest struct {
+	LeaseTTLSeconds int `json:"lease_ttl_seconds,omitempty"`
+}
+
+func registerAPIHandlers(mux *http.ServeMux, service *cockpitapi.Service, serviceErr error, runStore *cockpitapi.RunStore, actionRunner *cockpitapi.ActionRunner, autoMode *cockpitapi.AutoModeService, authVerifier cockpitapi.AuthVerifier, runtimeStore cockpitapi.AutoModeRuntimeStore, pairing *cockpitapi.PairingService) {
+	if authVerifier == nil {
+		authVerifier = cockpitapi.RejectingAuthVerifier{}
+	}
+	if runtimeStore == nil {
+		runtimeStore = cockpitapi.NewMemoryRuntimeStore()
+	}
+	if pairing == nil {
+		pairing = cockpitapi.NewPairingService(cockpitapi.NewMemoryPairingStore(), cockpitapi.PairingConfig{})
+	}
 	handler := apiHandler{
 		service:      service,
 		serviceErr:   serviceErr,
 		runStore:     runStore,
+		runtimeStore: runtimeStore,
 		actionRunner: actionRunner,
 		autoMode:     autoMode,
+		authVerifier: authVerifier,
+		pairing:      pairing,
 	}
 
 	mux.HandleFunc("/api/overview", handler.overview)
@@ -58,6 +87,7 @@ func registerAPIHandlers(mux *http.ServeMux, service *cockpitapi.Service, servic
 	mux.HandleFunc("/api/actions/pdf", handler.actionPDF)
 	mux.HandleFunc("/api/actions/auto-mode/start", handler.actionAutoModeStart)
 	mux.HandleFunc("/api/runs/", handler.runDetailOrCancel)
+	mux.HandleFunc("/api/worker/", handler.workerRoutes)
 }
 
 func (h apiHandler) overview(w http.ResponseWriter, r *http.Request) {
@@ -306,7 +336,113 @@ func (h apiHandler) actionAutoModeStart(w http.ResponseWriter, r *http.Request) 
 		writeJSONError(w, http.StatusInternalServerError, "auto_mode_start_failed", err.Error())
 		return
 	}
+	if err := h.runtimeStore.SaveRun(r.Context(), run); err != nil {
+		writeJSONError(w, http.StatusInternalServerError, "auto_mode_runtime_save_failed", err.Error())
+		return
+	}
 	writeJSON(w, http.StatusAccepted, run)
+}
+
+func (h apiHandler) workerRoutes(w http.ResponseWriter, r *http.Request) {
+	trimmed := strings.TrimPrefix(r.URL.Path, "/api/worker/")
+	parts := strings.Split(strings.Trim(trimmed, "/"), "/")
+	if len(parts) == 1 && parts[0] == "pairing-token" {
+		h.createPairingToken(w, r)
+		return
+	}
+	if len(parts) == 1 && parts[0] == "register" {
+		h.registerWorker(w, r)
+		return
+	}
+	if len(parts) == 3 && parts[0] == "runs" && parts[2] == "claim" {
+		h.claimWorkerRun(w, r, parts[1])
+		return
+	}
+	writeJSONError(w, http.StatusNotFound, "route_not_found", "API route not found.")
+}
+
+func (h apiHandler) createPairingToken(w http.ResponseWriter, r *http.Request) {
+	if !requireMethod(w, r, http.MethodPost) {
+		return
+	}
+	principal, ok := h.requireAuth(w, r)
+	if !ok {
+		return
+	}
+	var request pairingTokenRequest
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		writeJSONError(w, http.StatusBadRequest, "invalid_json", "Request body must be valid JSON.")
+		return
+	}
+	token, err := h.pairing.CreatePairingToken(r.Context(), cockpitapi.PairingTokenRequest{
+		UserID:   principal.UserID,
+		WorkerID: request.WorkerID,
+	})
+	if err != nil {
+		writeJSONError(w, http.StatusBadRequest, "pairing_token_failed", err.Error())
+		return
+	}
+	writeJSON(w, http.StatusCreated, token)
+}
+
+func (h apiHandler) registerWorker(w http.ResponseWriter, r *http.Request) {
+	if !requireMethod(w, r, http.MethodPost) {
+		return
+	}
+	var request workerRegisterRequest
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		writeJSONError(w, http.StatusBadRequest, "invalid_json", "Request body must be valid JSON.")
+		return
+	}
+	credential, err := h.pairing.ExchangePairingToken(r.Context(), cockpitapi.ExchangePairingRequest{
+		Token:    request.PairingToken,
+		WorkerID: request.WorkerID,
+	})
+	if err != nil {
+		writeJSONError(w, http.StatusUnauthorized, "worker_pairing_failed", "Worker pairing token is invalid, expired, or already used.")
+		return
+	}
+	writeJSON(w, http.StatusCreated, credential)
+}
+
+func (h apiHandler) claimWorkerRun(w http.ResponseWriter, r *http.Request, id string) {
+	if !requireMethod(w, r, http.MethodPost) {
+		return
+	}
+	workerID, ok := h.requireWorker(w, r)
+	if !ok {
+		return
+	}
+	var request claimRunRequest
+	if r.Body != nil {
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+			writeJSONError(w, http.StatusBadRequest, "invalid_json", "Request body must be valid JSON.")
+			return
+		}
+	}
+	ttl := time.Duration(request.LeaseTTLSeconds) * time.Second
+	if ttl <= 0 {
+		ttl = time.Minute
+	}
+	run, err := h.runtimeStore.ClaimRun(r.Context(), cockpitapi.ClaimRunRequest{
+		RunID:     id,
+		WorkerID:  workerID,
+		LeaseTTL:  ttl,
+		ClaimedAt: time.Now().UTC(),
+	})
+	if errors.Is(err, cockpitapi.ErrRunAlreadyClaimed) {
+		writeJSONError(w, http.StatusConflict, "run_already_claimed", "Run is already claimed by another active worker.")
+		return
+	}
+	if errors.Is(err, cockpitapi.ErrRunNotFound) {
+		writeJSONError(w, http.StatusNotFound, "run_not_found", "Run not found.")
+		return
+	}
+	if err != nil {
+		writeJSONError(w, http.StatusInternalServerError, "run_claim_failed", err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, run)
 }
 
 func (h apiHandler) runDetailOrCancel(w http.ResponseWriter, r *http.Request) {
@@ -472,6 +608,9 @@ func (h apiHandler) approveSubmit(w http.ResponseWriter, r *http.Request, id str
 	if !requireMethod(w, r, http.MethodPost) {
 		return
 	}
+	if _, ok := h.requireAuth(w, r); !ok {
+		return
+	}
 
 	var request cockpitapi.ApproveSubmitRequest
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
@@ -488,6 +627,37 @@ func (h apiHandler) approveSubmit(w http.ResponseWriter, r *http.Request, id str
 		return
 	}
 	h.writeRunMutationResult(w, run, err, "approve_submit_failed")
+}
+
+func (h apiHandler) requireAuth(w http.ResponseWriter, r *http.Request) (cockpitapi.AuthPrincipal, bool) {
+	verifier := h.authVerifier
+	if verifier == nil {
+		verifier = cockpitapi.RejectingAuthVerifier{}
+	}
+	principal, err := verifier.VerifyIDToken(r.Context(), r.Header.Get("Authorization"))
+	if err != nil {
+		writeJSONError(w, http.StatusUnauthorized, "auth_required", "Authenticated user is required.")
+		return cockpitapi.AuthPrincipal{}, false
+	}
+	return principal, true
+}
+
+func (h apiHandler) requireWorker(w http.ResponseWriter, r *http.Request) (string, bool) {
+	workerID := strings.TrimSpace(r.Header.Get("X-Career-Ops-Worker-ID"))
+	authorization := r.Header.Get("Authorization")
+	token := strings.TrimSpace(strings.TrimPrefix(authorization, "Bearer "))
+	if workerID == "" || token == "" || authorization == token {
+		writeJSONError(w, http.StatusUnauthorized, "worker_auth_required", "Paired worker credentials are required.")
+		return "", false
+	}
+	if _, err := h.pairing.VerifyWorkerCredential(r.Context(), cockpitapi.WorkerCredentialRequest{
+		WorkerID:   workerID,
+		Credential: token,
+	}); err != nil {
+		writeJSONError(w, http.StatusUnauthorized, "worker_auth_required", "Paired worker credentials are required.")
+		return "", false
+	}
+	return workerID, true
 }
 
 func (h apiHandler) writeRunMutationResult(w http.ResponseWriter, run cockpitapi.RunRecord, err error, fallbackCode string) {

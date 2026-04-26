@@ -244,7 +244,12 @@ func TestReportRouteRejectsTraversal(t *testing.T) {
 
 func TestAutoModeAPIRoutesRecordEnvelopeOnly(t *testing.T) {
 	root := setupAPIFixture(t)
-	server := httptest.NewServer(NewServer(root))
+	server := httptest.NewServer(NewServerWithOptions(root, ServerOptions{
+		AuthVerifier: cockpitapi.StaticAuthVerifier{
+			Token:     "test-token",
+			Principal: cockpitapi.AuthPrincipal{UserID: "user-1", Email: "user@example.com"},
+		},
+	}))
 	defer server.Close()
 
 	resp, err := http.Post(server.URL+"/api/actions/auto-mode/start", "application/json", bytes.NewBufferString(`{"application_id":1}`))
@@ -279,7 +284,7 @@ func TestAutoModeAPIRoutesRecordEnvelopeOnly(t *testing.T) {
 		t.Fatalf("expected status 200 for browser log, got %d", resp.StatusCode)
 	}
 
-	resp, err = http.Post(server.URL+"/api/runs/"+run.ID+"/approve-submit", "application/json", bytes.NewBufferString(`{"approval_text":"I approve final submit."}`))
+	resp, err = postJSON(t, server.URL+"/api/runs/"+run.ID+"/approve-submit", `{"approval_text":"I approve final submit."}`, "test-token")
 	if err != nil {
 		t.Fatalf("POST /api/runs/{id}/approve-submit: %v", err)
 	}
@@ -314,13 +319,145 @@ func TestAutoModeAPIRoutesRecordEnvelopeOnly(t *testing.T) {
 		t.Fatalf("expected status 200, got %d", resp.StatusCode)
 	}
 
-	resp, err = http.Post(server.URL+"/api/runs/"+run.ID+"/approve-submit", "application/json", bytes.NewBufferString(`{}`))
+	resp, err = postJSON(t, server.URL+"/api/runs/"+run.ID+"/approve-submit", `{}`, "test-token")
 	if err != nil {
 		t.Fatalf("POST /api/runs/{id}/approve-submit without text: %v", err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusBadRequest {
 		t.Fatalf("expected status 400 without approval text, got %d", resp.StatusCode)
+	}
+}
+
+func TestApproveSubmitRequiresAuthenticatedUser(t *testing.T) {
+	root := setupAPIFixture(t)
+	server := httptest.NewServer(NewServer(root))
+	defer server.Close()
+
+	resp, err := http.Post(server.URL+"/api/actions/auto-mode/start", "application/json", bytes.NewBufferString(`{"url":"https://example.com/job"}`))
+	if err != nil {
+		t.Fatalf("POST /api/actions/auto-mode/start: %v", err)
+	}
+	defer resp.Body.Close()
+
+	var run cockpitapi.RunRecord
+	if err := json.NewDecoder(resp.Body).Decode(&run); err != nil {
+		t.Fatalf("decode auto mode run: %v", err)
+	}
+
+	resp, err = http.Post(server.URL+"/api/runs/"+run.ID+"/approve-submit", "application/json", bytes.NewBufferString(`{"approval_text":"I approve final submit."}`))
+	if err != nil {
+		t.Fatalf("POST /api/runs/{id}/approve-submit: %v", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("expected status 401 without auth, got %d", resp.StatusCode)
+	}
+
+	var apiErr apiErrorResponse
+	if err := json.NewDecoder(resp.Body).Decode(&apiErr); err != nil {
+		t.Fatalf("decode error: %v", err)
+	}
+	if apiErr.Error.Code != "auth_required" {
+		t.Fatalf("expected auth_required, got %q", apiErr.Error.Code)
+	}
+}
+
+func TestWorkerClaimRequiresPairedWorkerCredential(t *testing.T) {
+	root := setupAPIFixture(t)
+	server := httptest.NewServer(NewServer(root))
+	defer server.Close()
+
+	resp, err := http.Post(server.URL+"/api/actions/auto-mode/start", "application/json", bytes.NewBufferString(`{"url":"https://example.com/job"}`))
+	if err != nil {
+		t.Fatalf("POST /api/actions/auto-mode/start: %v", err)
+	}
+	defer resp.Body.Close()
+
+	var run cockpitapi.RunRecord
+	if err := json.NewDecoder(resp.Body).Decode(&run); err != nil {
+		t.Fatalf("decode auto mode run: %v", err)
+	}
+
+	resp, err = http.Post(server.URL+"/api/worker/runs/"+run.ID+"/claim", "application/json", bytes.NewBufferString(`{}`))
+	if err != nil {
+		t.Fatalf("POST /api/worker/runs/{id}/claim: %v", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("expected status 401 without worker credential, got %d", resp.StatusCode)
+	}
+
+	var apiErr apiErrorResponse
+	if err := json.NewDecoder(resp.Body).Decode(&apiErr); err != nil {
+		t.Fatalf("decode error: %v", err)
+	}
+	if apiErr.Error.Code != "worker_auth_required" {
+		t.Fatalf("expected worker_auth_required, got %q", apiErr.Error.Code)
+	}
+}
+
+func TestWorkerPairingAllowsClaim(t *testing.T) {
+	root := setupAPIFixture(t)
+	server := httptest.NewServer(NewServerWithOptions(root, ServerOptions{
+		AuthVerifier: cockpitapi.StaticAuthVerifier{
+			Token:     "user-token",
+			Principal: cockpitapi.AuthPrincipal{UserID: "user-1"},
+		},
+		Pairing: cockpitapi.NewPairingService(cockpitapi.NewMemoryPairingStore(), cockpitapi.PairingConfig{
+			GenerateToken: func() string {
+				return "pair-token"
+			},
+			GenerateCredential: func() string {
+				return "worker-credential"
+			},
+		}),
+	}))
+	defer server.Close()
+
+	resp, err := postJSON(t, server.URL+"/api/worker/pairing-token", `{"worker_id":"laptop"}`, "user-token")
+	if err != nil {
+		t.Fatalf("POST /api/worker/pairing-token: %v", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusCreated {
+		t.Fatalf("expected pairing token status 201, got %d", resp.StatusCode)
+	}
+
+	resp, err = http.Post(server.URL+"/api/worker/register", "application/json", bytes.NewBufferString(`{"worker_id":"laptop","pairing_token":"pair-token"}`))
+	if err != nil {
+		t.Fatalf("POST /api/worker/register: %v", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusCreated {
+		t.Fatalf("expected worker register status 201, got %d", resp.StatusCode)
+	}
+
+	resp, err = http.Post(server.URL+"/api/actions/auto-mode/start", "application/json", bytes.NewBufferString(`{"url":"https://example.com/job"}`))
+	if err != nil {
+		t.Fatalf("POST /api/actions/auto-mode/start: %v", err)
+	}
+	defer resp.Body.Close()
+	var run cockpitapi.RunRecord
+	if err := json.NewDecoder(resp.Body).Decode(&run); err != nil {
+		t.Fatalf("decode auto mode run: %v", err)
+	}
+
+	request, err := http.NewRequest(http.MethodPost, server.URL+"/api/worker/runs/"+run.ID+"/claim", bytes.NewBufferString(`{}`))
+	if err != nil {
+		t.Fatalf("new claim request: %v", err)
+	}
+	request.Header.Set("Authorization", "Bearer worker-credential")
+	request.Header.Set("X-Career-Ops-Worker-ID", "laptop")
+	request.Header.Set("Content-Type", "application/json")
+	resp, err = http.DefaultClient.Do(request)
+	if err != nil {
+		t.Fatalf("POST /api/worker/runs/{id}/claim: %v", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		t.Fatalf("expected claim status 200, got %d: %s", resp.StatusCode, string(body))
 	}
 }
 
@@ -424,4 +561,17 @@ func mustWrite(t *testing.T, path string, content string) {
 	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
 		t.Fatalf("write fixture %s: %v", path, err)
 	}
+}
+
+func postJSON(t *testing.T, url string, body string, bearer string) (*http.Response, error) {
+	t.Helper()
+	request, err := http.NewRequest(http.MethodPost, url, bytes.NewBufferString(body))
+	if err != nil {
+		return nil, err
+	}
+	request.Header.Set("Content-Type", "application/json")
+	if bearer != "" {
+		request.Header.Set("Authorization", "Bearer "+bearer)
+	}
+	return http.DefaultClient.Do(request)
 }
