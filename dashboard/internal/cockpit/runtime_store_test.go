@@ -19,6 +19,7 @@ func TestRuntimeStoreClaimsOnlyEligibleAutoModeRun(t *testing.T) {
 	claimed, err := store.ClaimRun(ctx, ClaimRunRequest{
 		RunID:     "run-1",
 		WorkerID:  "worker-a",
+		UserID:    "user-1",
 		LeaseTTL:  30 * time.Second,
 		ClaimedAt: testRuntimeNow(),
 	})
@@ -41,11 +42,11 @@ func TestRuntimeStoreRejectsConcurrentClaim(t *testing.T) {
 	if err := store.SaveRun(ctx, run); err != nil {
 		t.Fatalf("SaveRun returned error: %v", err)
 	}
-	if _, err := store.ClaimRun(ctx, ClaimRunRequest{RunID: "run-1", WorkerID: "worker-a", LeaseTTL: time.Minute, ClaimedAt: testRuntimeNow()}); err != nil {
+	if _, err := store.ClaimRun(ctx, ClaimRunRequest{RunID: "run-1", WorkerID: "worker-a", UserID: "user-1", LeaseTTL: time.Minute, ClaimedAt: testRuntimeNow()}); err != nil {
 		t.Fatalf("first ClaimRun returned error: %v", err)
 	}
 
-	_, err := store.ClaimRun(ctx, ClaimRunRequest{RunID: "run-1", WorkerID: "worker-b", LeaseTTL: time.Minute, ClaimedAt: testRuntimeNow().Add(time.Second)})
+	_, err := store.ClaimRun(ctx, ClaimRunRequest{RunID: "run-1", WorkerID: "worker-b", UserID: "user-1", LeaseTTL: time.Minute, ClaimedAt: testRuntimeNow().Add(time.Second)})
 	if !errors.Is(err, ErrRunAlreadyClaimed) {
 		t.Fatalf("expected ErrRunAlreadyClaimed, got %v", err)
 	}
@@ -59,11 +60,11 @@ func TestRuntimeStoreExpiredHeartbeatAllowsReclaim(t *testing.T) {
 	if err := store.SaveRun(ctx, run); err != nil {
 		t.Fatalf("SaveRun returned error: %v", err)
 	}
-	if _, err := store.ClaimRun(ctx, ClaimRunRequest{RunID: "run-1", WorkerID: "worker-a", LeaseTTL: time.Second, ClaimedAt: testRuntimeNow()}); err != nil {
+	if _, err := store.ClaimRun(ctx, ClaimRunRequest{RunID: "run-1", WorkerID: "worker-a", UserID: "user-1", LeaseTTL: time.Second, ClaimedAt: testRuntimeNow()}); err != nil {
 		t.Fatalf("first ClaimRun returned error: %v", err)
 	}
 
-	claimed, err := store.ClaimRun(ctx, ClaimRunRequest{RunID: "run-1", WorkerID: "worker-b", LeaseTTL: time.Minute, ClaimedAt: testRuntimeNow().Add(2 * time.Second)})
+	claimed, err := store.ClaimRun(ctx, ClaimRunRequest{RunID: "run-1", WorkerID: "worker-b", UserID: "user-1", LeaseTTL: time.Minute, ClaimedAt: testRuntimeNow().Add(2 * time.Second)})
 	if err != nil {
 		t.Fatalf("reclaim after lease expiry returned error: %v", err)
 	}
@@ -119,6 +120,44 @@ func TestRuntimeStoreUploadApprovalIsPerRun(t *testing.T) {
 	}
 	if loadedB.UploadGate != nil {
 		t.Fatalf("expected run-b to have no upload approval, got %#v", loadedB.UploadGate)
+	}
+}
+
+func TestRuntimeStoreNextRunFiltersOwnerUserID(t *testing.T) {
+	store := newTestRuntimeStore(t)
+	ctx := context.Background()
+	if err := store.SaveRun(ctx, RunRecord{ID: "run-a", Action: ActionAutoMode, State: RunStateQueued, OwnerUserID: "user-a"}); err != nil {
+		t.Fatalf("SaveRun run-a returned error: %v", err)
+	}
+	if err := store.SaveRun(ctx, RunRecord{ID: "run-b", Action: ActionAutoMode, State: RunStateQueued, OwnerUserID: "user-b"}); err != nil {
+		t.Fatalf("SaveRun run-b returned error: %v", err)
+	}
+
+	run, err := store.NextRun(ctx, "user-b", testRuntimeNow())
+	if err != nil {
+		t.Fatalf("NextRun returned error: %v", err)
+	}
+	if run.OwnerUserID != "user-b" {
+		t.Fatalf("expected user-b run, got %#v", run)
+	}
+}
+
+func TestRuntimeStoreClaimRejectsDifferentOwner(t *testing.T) {
+	store := newTestRuntimeStore(t)
+	ctx := context.Background()
+	if err := store.SaveRun(ctx, RunRecord{ID: "run-a", Action: ActionAutoMode, State: RunStateQueued, OwnerUserID: "user-a"}); err != nil {
+		t.Fatalf("SaveRun returned error: %v", err)
+	}
+
+	_, err := store.ClaimRun(ctx, ClaimRunRequest{
+		RunID:     "run-a",
+		WorkerID:  "worker-b",
+		UserID:    "user-b",
+		LeaseTTL:  time.Minute,
+		ClaimedAt: testRuntimeNow(),
+	})
+	if !errors.Is(err, ErrRunNotFound) {
+		t.Fatalf("expected ErrRunNotFound for different owner, got %v", err)
 	}
 }
 

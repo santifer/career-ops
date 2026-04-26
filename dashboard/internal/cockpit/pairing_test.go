@@ -3,6 +3,7 @@ package cockpit
 import (
 	"context"
 	"errors"
+	"regexp"
 	"testing"
 	"time"
 )
@@ -96,6 +97,39 @@ func TestWorkerCredentialVerificationRejectsWrongWorker(t *testing.T) {
 	})
 	if !errors.Is(err, ErrWorkerCredentialInvalid) {
 		t.Fatalf("expected ErrWorkerCredentialInvalid, got %v", err)
+	}
+}
+
+func TestDefaultPairingSecretsAreNotTimestampIDs(t *testing.T) {
+	service := NewPairingService(NewMemoryPairingStore(), PairingConfig{
+		TokenTTL:      time.Minute,
+		CredentialTTL: 24 * time.Hour,
+	})
+	ctx := context.Background()
+	legacyPairingPattern := regexp.MustCompile(`^pair-run-\d+$`)
+	legacyCredentialPattern := regexp.MustCompile(`^worker-run-\d+$`)
+
+	first, err := service.CreatePairingToken(ctx, PairingTokenRequest{UserID: "user-1", WorkerID: "laptop"})
+	if err != nil {
+		t.Fatalf("CreatePairingToken first returned error: %v", err)
+	}
+	second, err := service.CreatePairingToken(ctx, PairingTokenRequest{UserID: "user-1", WorkerID: "desktop"})
+	if err != nil {
+		t.Fatalf("CreatePairingToken second returned error: %v", err)
+	}
+	if first.Token == second.Token {
+		t.Fatal("expected default pairing tokens to differ")
+	}
+	if legacyPairingPattern.MatchString(first.Token) || legacyPairingPattern.MatchString(second.Token) {
+		t.Fatalf("default pairing token still uses legacy timestamp format: %q / %q", first.Token, second.Token)
+	}
+
+	credential, err := service.ExchangePairingToken(ctx, ExchangePairingRequest{Token: first.Token, WorkerID: "laptop"})
+	if err != nil {
+		t.Fatalf("ExchangePairingToken returned error: %v", err)
+	}
+	if legacyCredentialPattern.MatchString(credential.Credential) {
+		t.Fatalf("default worker credential still uses legacy timestamp format: %q", credential.Credential)
 	}
 }
 

@@ -7,6 +7,8 @@ import {
   shouldUploadPDF,
   shouldSubmitFinal,
   detectLoginGate,
+  heartbeatPayload,
+  shouldParkForManualInput,
 } from "./worker-core.mjs";
 
 test("classifyButton treats final submit labels as blocked", () => {
@@ -39,4 +41,17 @@ test("detectLoginGate flags common login and verification pages", () => {
   assert.equal(detectLoginGate("Sign in to continue").blocked, true);
   assert.equal(detectLoginGate("Two-factor authentication required").blocked, true);
   assert.equal(detectLoginGate("Application form").blocked, false);
+});
+
+test("manual input gates park a headed once worker", () => {
+  const gate = { blocked: true, reason: "login_or_verification_required" };
+  assert.equal(shouldParkForManualInput({ once: true, headless: false }, gate), true);
+  assert.equal(shouldParkForManualInput({ once: true, headless: true }, gate), false);
+  assert.equal(shouldParkForManualInput({ once: false, headless: false }, gate), false);
+  assert.equal(shouldParkForManualInput({ once: true, headless: false }, { blocked: false }), false);
+});
+
+test("heartbeat payload keeps the lease contract explicit", () => {
+  assert.deepEqual(heartbeatPayload(), { lease_ttl_seconds: 60 });
+  assert.deepEqual(heartbeatPayload(120), { lease_ttl_seconds: 120 });
 });

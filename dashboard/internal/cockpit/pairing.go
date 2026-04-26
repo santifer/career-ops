@@ -2,7 +2,9 @@ package cockpit
 
 import (
 	"context"
+	"crypto/rand"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"errors"
 	"strings"
@@ -202,7 +204,15 @@ func hashSecret(secret string) string {
 }
 
 func randomID(prefix string) string {
-	return prefix + "-" + defaultRunID()
+	return prefix + "-" + secureRandomToken()
+}
+
+func secureRandomToken() string {
+	var raw [24]byte
+	if _, err := rand.Read(raw[:]); err != nil {
+		panic("secure random token generation failed: " + err.Error())
+	}
+	return base64.RawURLEncoding.EncodeToString(raw[:])
 }
 
 type MemoryPairingStore struct {

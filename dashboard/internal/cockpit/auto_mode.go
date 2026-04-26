@@ -65,14 +65,17 @@ type FieldObservationRequest struct {
 	Field  ObservedField   `json:"field,omitempty"`
 	Fields []ObservedField `json:"fields,omitempty"`
 	Reason string          `json:"reason,omitempty"`
+	UserID string          `json:"-"`
 }
 
 type NeedsInputRequest struct {
 	Reason string `json:"reason,omitempty"`
+	UserID string `json:"-"`
 }
 
 type ReadyForReviewRequest struct {
 	Reason string `json:"reason,omitempty"`
+	UserID string `json:"-"`
 }
 
 type ApproveSubmitRequest struct {
@@ -86,6 +89,7 @@ type BrowserLogRequest struct {
 	URL        string `json:"url,omitempty"`
 	Status     string `json:"status,omitempty"`
 	LastAction string `json:"last_action,omitempty"`
+	UserID     string `json:"-"`
 }
 
 // NewAutoModeService builds the Auto Mode envelope service over the existing run store.

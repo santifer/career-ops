@@ -35,8 +35,12 @@ func NewServerWithOptions(rootPath string, options ServerOptions) http.Handler {
 	actionRunner, actionRunnerErr := cockpitapi.NewActionRunner(cleanRoot, runStore)
 	autoModeService, autoModeErr := cockpitapi.NewAutoModeService(runStore)
 	runtimeStore := options.RuntimeStore
+	var runtimeStoreErr error
 	if runtimeStore == nil {
-		runtimeStore = cockpitapi.NewMemoryRuntimeStore()
+		runtimeStore, runtimeStoreErr = cockpitapi.NewRuntimeStoreFromEnv(context.Background())
+		if runtimeStore == nil && runtimeStoreErr != nil {
+			runtimeStore = cockpitapi.NewFailingRuntimeStore(runtimeStoreErr)
+		}
 	}
 	pairing := options.Pairing
 	if pairing == nil {
@@ -50,6 +54,9 @@ func NewServerWithOptions(rootPath string, options ServerOptions) http.Handler {
 	}
 	if serviceErr == nil && autoModeErr != nil {
 		serviceErr = autoModeErr
+	}
+	if serviceErr == nil && runtimeStoreErr != nil {
+		serviceErr = runtimeStoreErr
 	}
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

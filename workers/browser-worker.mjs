@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { chromium } from "playwright";
-import { parseArgs, detectLoginGate } from "./worker-core.mjs";
+import { parseArgs, detectLoginGate, heartbeatPayload, shouldParkForManualInput } from "./worker-core.mjs";
 
 const pollIntervalMs = 5000;
 
@@ -20,6 +20,7 @@ async function main() {
   }
 
   let browserContext;
+  let keepBrowserOpen = false;
   try {
     browserContext = await chromium.launchPersistentContext(options.profileDir, {
       headless: options.headless,
@@ -32,13 +33,18 @@ async function main() {
         await delay(pollIntervalMs);
         continue;
       }
-      await processRun(options, browserContext, run);
+      const outcome = await processRun(options, browserContext, run);
+      if (outcome?.parked) {
+        keepBrowserOpen = true;
+        await waitForShutdown();
+        break;
+      }
       if (options.once) break;
     } while (true);
   } finally {
     // Keep the profile directory intact. Closing the context is normal process
     // cleanup; deleting the profile would force the user to log in again.
-    if (browserContext) await browserContext.close();
+    if (browserContext && !keepBrowserOpen) await browserContext.close();
   }
 }
 
@@ -51,17 +57,33 @@ async function nextRun(options) {
 
 async function processRun(options, context, run) {
   const claimed = await claimRun(options, run.id);
+  const stopHeartbeat = startHeartbeat(options, claimed.id);
+  let parked = false;
   const fillPlan = await getFillPlan(options, claimed.id);
   const page = context.pages()[0] || await context.newPage();
-  await log(options, claimed.id, "Opening visible application page.", fillPlan.target_url);
-  await page.goto(fillPlan.target_url, { waitUntil: "domcontentloaded" });
-  const bodyText = await page.locator("body").innerText({ timeout: 5000 }).catch(() => "");
-  const loginGate = detectLoginGate(bodyText);
-  if (loginGate.blocked) {
-    await needsInput(options, claimed.id, loginGate.reason);
-    return;
+  try {
+    await heartbeat(options, claimed.id);
+    await log(options, claimed.id, "Opening visible application page.", fillPlan.target_url);
+    await page.goto(fillPlan.target_url, { waitUntil: "domcontentloaded" });
+    await heartbeat(options, claimed.id);
+    const bodyText = await page.locator("body").innerText({ timeout: 5000 }).catch(() => "");
+    const loginGate = detectLoginGate(bodyText);
+    if (loginGate.blocked) {
+      await needsInput(options, claimed.id, loginGate.reason);
+      if (shouldParkForManualInput(options, loginGate)) {
+        parked = true;
+        await log(options, claimed.id, "Paused for manual login or verification; keeping the visible browser open.", page.url());
+        return { parked: true, stopHeartbeat };
+      }
+      return { parked: false };
+    }
+    await log(options, claimed.id, "Visible browser opened; fill automation is waiting for field mapper batch.", page.url());
+    return { parked: false };
+  } finally {
+    if (!parked) {
+      stopHeartbeat();
+    }
   }
-  await log(options, claimed.id, "Visible browser opened; fill automation is waiting for field mapper batch.", page.url());
 }
 
 async function claimRun(options, runID) {
@@ -76,6 +98,22 @@ async function claimRun(options, runID) {
 async function getFillPlan(options, runID) {
   const response = await workerFetch(options, `/api/worker/runs/${encodeURIComponent(runID)}/fill-plan`, { method: "GET" });
   if (!response.ok) throw new Error(`fill plan failed: HTTP ${response.status}`);
+  return response.json();
+}
+
+function startHeartbeat(options, runID) {
+  const timer = setInterval(() => {
+    heartbeat(options, runID).catch(() => {});
+  }, 25000);
+  return () => clearInterval(timer);
+}
+
+async function heartbeat(options, runID) {
+  const response = await workerFetch(options, `/api/worker/runs/${encodeURIComponent(runID)}/heartbeat`, {
+    method: "POST",
+    body: JSON.stringify(heartbeatPayload()),
+  });
+  if (!response.ok) throw new Error(`heartbeat failed: HTTP ${response.status}`);
   return response.json();
 }
 
@@ -107,6 +145,14 @@ async function workerFetch(options, path, init = {}) {
 
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function waitForShutdown() {
+  return new Promise((resolve) => {
+    const done = () => resolve();
+    process.once("SIGINT", done);
+    process.once("SIGTERM", done);
+  });
 }
 
 main().catch((error) => {

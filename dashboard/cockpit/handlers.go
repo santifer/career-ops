@@ -57,6 +57,11 @@ type claimRunRequest struct {
 	LeaseTTLSeconds int `json:"lease_ttl_seconds,omitempty"`
 }
 
+type workerPrincipal struct {
+	WorkerID string
+	UserID   string
+}
+
 func registerAPIHandlers(mux *http.ServeMux, service *cockpitapi.Service, serviceErr error, runStore *cockpitapi.RunStore, actionRunner *cockpitapi.ActionRunner, autoMode *cockpitapi.AutoModeService, authVerifier cockpitapi.AuthVerifier, runtimeStore cockpitapi.AutoModeRuntimeStore, pairing *cockpitapi.PairingService) {
 	if authVerifier == nil {
 		authVerifier = cockpitapi.RejectingAuthVerifier{}
@@ -175,6 +180,9 @@ func (h apiHandler) updateApplicationStatus(w http.ResponseWriter, r *http.Reque
 	if !h.requireService(w) {
 		return
 	}
+	if _, ok := h.requireAuth(w, r); !ok {
+		return
+	}
 
 	var request statusUpdateRequest
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
@@ -217,6 +225,9 @@ func (h apiHandler) profile(w http.ResponseWriter, r *http.Request) {
 		}
 		writeJSON(w, http.StatusOK, profileResponse{Profile: profile, MissingFields: missing})
 	case http.MethodPost:
+		if _, ok := h.requireAuth(w, r); !ok {
+			return
+		}
 		var profile cockpitapi.ApplicationProfile
 		if err := json.NewDecoder(r.Body).Decode(&profile); err != nil {
 			writeJSONError(w, http.StatusBadRequest, "invalid_json", "Request body must be valid JSON.")
@@ -316,6 +327,10 @@ func (h apiHandler) actionAutoModeStart(w http.ResponseWriter, r *http.Request) 
 	if !h.requireService(w) {
 		return
 	}
+	principal, authenticated, ok := h.optionalAuth(w, r)
+	if !ok {
+		return
+	}
 
 	var request cockpitapi.AutoModeStartRequest
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
@@ -335,6 +350,9 @@ func (h apiHandler) actionAutoModeStart(w http.ResponseWriter, r *http.Request) 
 	if err != nil {
 		writeJSONError(w, http.StatusInternalServerError, "auto_mode_start_failed", err.Error())
 		return
+	}
+	if authenticated {
+		run.OwnerUserID = principal.UserID
 	}
 	if err := h.runtimeStore.SaveRun(r.Context(), run); err != nil {
 		writeJSONError(w, http.StatusInternalServerError, "auto_mode_runtime_save_failed", err.Error())
@@ -360,6 +378,10 @@ func (h apiHandler) workerRoutes(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(parts) == 3 && parts[0] == "runs" && parts[2] == "claim" {
 		h.claimWorkerRun(w, r, parts[1])
+		return
+	}
+	if len(parts) == 3 && parts[0] == "runs" && parts[2] == "heartbeat" {
+		h.workerHeartbeat(w, r, parts[1])
 		return
 	}
 	if len(parts) == 3 && parts[0] == "runs" && parts[2] == "fill-plan" {
@@ -425,10 +447,11 @@ func (h apiHandler) nextWorkerRun(w http.ResponseWriter, r *http.Request) {
 	if !requireMethod(w, r, http.MethodGet) {
 		return
 	}
-	if _, ok := h.requireWorker(w, r); !ok {
+	worker, ok := h.requireWorker(w, r)
+	if !ok {
 		return
 	}
-	run, err := h.runtimeStore.NextRun(r.Context(), time.Now().UTC())
+	run, err := h.runtimeStore.NextRun(r.Context(), worker.UserID, time.Now().UTC())
 	if errors.Is(err, cockpitapi.ErrRunNotFound) {
 		w.WriteHeader(http.StatusNoContent)
 		return
@@ -444,7 +467,7 @@ func (h apiHandler) claimWorkerRun(w http.ResponseWriter, r *http.Request, id st
 	if !requireMethod(w, r, http.MethodPost) {
 		return
 	}
-	workerID, ok := h.requireWorker(w, r)
+	worker, ok := h.requireWorker(w, r)
 	if !ok {
 		return
 	}
@@ -461,7 +484,8 @@ func (h apiHandler) claimWorkerRun(w http.ResponseWriter, r *http.Request, id st
 	}
 	run, err := h.runtimeStore.ClaimRun(r.Context(), cockpitapi.ClaimRunRequest{
 		RunID:     id,
-		WorkerID:  workerID,
+		WorkerID:  worker.WorkerID,
+		UserID:    worker.UserID,
 		LeaseTTL:  ttl,
 		ClaimedAt: time.Now().UTC(),
 	})
@@ -480,11 +504,45 @@ func (h apiHandler) claimWorkerRun(w http.ResponseWriter, r *http.Request, id st
 	writeJSON(w, http.StatusOK, run)
 }
 
+func (h apiHandler) workerHeartbeat(w http.ResponseWriter, r *http.Request, id string) {
+	if !requireMethod(w, r, http.MethodPost) {
+		return
+	}
+	worker, ok := h.requireWorker(w, r)
+	if !ok {
+		return
+	}
+	var request claimRunRequest
+	if r.Body != nil {
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+			writeJSONError(w, http.StatusBadRequest, "invalid_json", "Request body must be valid JSON.")
+			return
+		}
+	}
+	ttl := time.Duration(request.LeaseTTLSeconds) * time.Second
+	if ttl <= 0 {
+		ttl = time.Minute
+	}
+	run, err := h.runtimeStore.Heartbeat(r.Context(), cockpitapi.HeartbeatRequest{
+		RunID:       id,
+		WorkerID:    worker.WorkerID,
+		UserID:      worker.UserID,
+		HeartbeatAt: time.Now().UTC(),
+		LeaseTTL:    ttl,
+	})
+	if errors.Is(err, cockpitapi.ErrRunAlreadyClaimed) {
+		writeJSONError(w, http.StatusConflict, "run_not_claimed_by_worker", "Run is not claimed by this active worker.")
+		return
+	}
+	h.writeRuntimeMutationResult(w, run, err, "worker_heartbeat_failed")
+}
+
 func (h apiHandler) workerLog(w http.ResponseWriter, r *http.Request, id string) {
 	if !requireMethod(w, r, http.MethodPost) {
 		return
 	}
-	if _, ok := h.requireWorker(w, r); !ok {
+	worker, ok := h.requireWorker(w, r)
+	if !ok {
 		return
 	}
 	var request cockpitapi.BrowserLogRequest
@@ -492,6 +550,7 @@ func (h apiHandler) workerLog(w http.ResponseWriter, r *http.Request, id string)
 		writeJSONError(w, http.StatusBadRequest, "invalid_json", "Request body must be valid JSON.")
 		return
 	}
+	request.UserID = worker.UserID
 	run, err := h.runtimeStore.RecordBrowserLog(r.Context(), id, request)
 	h.writeRuntimeMutationResult(w, run, err, "worker_log_failed")
 }
@@ -500,7 +559,8 @@ func (h apiHandler) workerNeedsInput(w http.ResponseWriter, r *http.Request, id 
 	if !requireMethod(w, r, http.MethodPost) {
 		return
 	}
-	if _, ok := h.requireWorker(w, r); !ok {
+	worker, ok := h.requireWorker(w, r)
+	if !ok {
 		return
 	}
 	var request cockpitapi.NeedsInputRequest
@@ -508,6 +568,7 @@ func (h apiHandler) workerNeedsInput(w http.ResponseWriter, r *http.Request, id 
 		writeJSONError(w, http.StatusBadRequest, "invalid_json", "Request body must be valid JSON.")
 		return
 	}
+	request.UserID = worker.UserID
 	run, err := h.runtimeStore.MarkNeedsInput(r.Context(), id, request)
 	h.writeRuntimeMutationResult(w, run, err, "worker_needs_input_failed")
 }
@@ -516,7 +577,8 @@ func (h apiHandler) workerFillPlan(w http.ResponseWriter, r *http.Request, id st
 	if !requireMethod(w, r, http.MethodGet) {
 		return
 	}
-	if _, ok := h.requireWorker(w, r); !ok {
+	worker, ok := h.requireWorker(w, r)
+	if !ok {
 		return
 	}
 	run, err := h.runtimeStore.GetRun(r.Context(), id)
@@ -526,6 +588,10 @@ func (h apiHandler) workerFillPlan(w http.ResponseWriter, r *http.Request, id st
 	}
 	if err != nil {
 		writeJSONError(w, http.StatusInternalServerError, "fill_plan_run_failed", err.Error())
+		return
+	}
+	if !workerCanAccessRun(worker, run) {
+		writeJSONError(w, http.StatusNotFound, "run_not_found", "Run not found.")
 		return
 	}
 	profile, _, err := cockpitapi.LoadApplicationProfile(h.service.Root)
@@ -586,12 +652,26 @@ func (h apiHandler) runDetailOrCancel(w http.ResponseWriter, r *http.Request) {
 		h.approveSubmit(w, r, parts[0])
 		return
 	}
+	if len(parts) == 2 && parts[1] == "approve-upload" {
+		h.approveUpload(w, r, parts[0])
+		return
+	}
 
 	writeJSONError(w, http.StatusNotFound, "route_not_found", "API route not found.")
 }
 
 func (h apiHandler) runDetail(w http.ResponseWriter, r *http.Request, id string) {
 	if !requireMethod(w, r, http.MethodGet) {
+		return
+	}
+
+	runtimeRun, err := h.runtimeStore.GetRun(r.Context(), id)
+	if err == nil && runtimeRun.Action == cockpitapi.ActionAutoMode {
+		writeJSON(w, http.StatusOK, runtimeRun)
+		return
+	}
+	if err != nil && !errors.Is(err, cockpitapi.ErrRunNotFound) {
+		writeJSONError(w, http.StatusInternalServerError, "runtime_run_load_failed", err.Error())
 		return
 	}
 
@@ -628,18 +708,27 @@ func (h apiHandler) recordFieldObservation(w http.ResponseWriter, r *http.Reques
 	if !requireMethod(w, r, http.MethodPost) {
 		return
 	}
+	principal, ok := h.requireAuth(w, r)
+	if !ok {
+		return
+	}
 
 	var request cockpitapi.FieldObservationRequest
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		writeJSONError(w, http.StatusBadRequest, "invalid_json", "Request body must be valid JSON.")
 		return
 	}
-	run, err := h.autoMode.RecordFieldObservation(r.Context(), id, request)
-	h.writeRunMutationResult(w, run, err, "field_observation_failed")
+	request.UserID = principal.UserID
+	run, err := h.runtimeStore.RecordFieldObservation(r.Context(), id, request)
+	h.writeRuntimeMutationResult(w, run, err, "field_observation_failed")
 }
 
 func (h apiHandler) recordBrowserLog(w http.ResponseWriter, r *http.Request, id string) {
 	if !requireMethod(w, r, http.MethodPost) {
+		return
+	}
+	principal, ok := h.requireAuth(w, r)
+	if !ok {
 		return
 	}
 
@@ -648,8 +737,9 @@ func (h apiHandler) recordBrowserLog(w http.ResponseWriter, r *http.Request, id 
 		writeJSONError(w, http.StatusBadRequest, "invalid_json", "Request body must be valid JSON.")
 		return
 	}
-	run, err := h.autoMode.RecordBrowserLog(r.Context(), id, request)
-	h.writeRunMutationResult(w, run, err, "browser_log_failed")
+	request.UserID = principal.UserID
+	run, err := h.runtimeStore.RecordBrowserLog(r.Context(), id, request)
+	h.writeRuntimeMutationResult(w, run, err, "browser_log_failed")
 }
 
 func (h apiHandler) openVisibleBrowser(w http.ResponseWriter, r *http.Request, id string) {
@@ -677,18 +767,27 @@ func (h apiHandler) markNeedsInput(w http.ResponseWriter, r *http.Request, id st
 	if !requireMethod(w, r, http.MethodPost) {
 		return
 	}
+	principal, ok := h.requireAuth(w, r)
+	if !ok {
+		return
+	}
 
 	var request cockpitapi.NeedsInputRequest
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		writeJSONError(w, http.StatusBadRequest, "invalid_json", "Request body must be valid JSON.")
 		return
 	}
-	run, err := h.autoMode.MarkNeedsInput(r.Context(), id, request)
-	h.writeRunMutationResult(w, run, err, "needs_input_failed")
+	request.UserID = principal.UserID
+	run, err := h.runtimeStore.MarkNeedsInput(r.Context(), id, request)
+	h.writeRuntimeMutationResult(w, run, err, "needs_input_failed")
 }
 
 func (h apiHandler) markReadyForReview(w http.ResponseWriter, r *http.Request, id string) {
 	if !requireMethod(w, r, http.MethodPost) {
+		return
+	}
+	principal, ok := h.requireAuth(w, r)
+	if !ok {
 		return
 	}
 
@@ -697,15 +796,17 @@ func (h apiHandler) markReadyForReview(w http.ResponseWriter, r *http.Request, i
 		writeJSONError(w, http.StatusBadRequest, "invalid_json", "Request body must be valid JSON.")
 		return
 	}
-	run, err := h.autoMode.MarkReadyForReview(r.Context(), id, request)
-	h.writeRunMutationResult(w, run, err, "ready_for_review_failed")
+	request.UserID = principal.UserID
+	run, err := h.runtimeStore.MarkReadyForReview(r.Context(), id, request)
+	h.writeRuntimeMutationResult(w, run, err, "ready_for_review_failed")
 }
 
 func (h apiHandler) approveSubmit(w http.ResponseWriter, r *http.Request, id string) {
 	if !requireMethod(w, r, http.MethodPost) {
 		return
 	}
-	if _, ok := h.requireAuth(w, r); !ok {
+	principal, ok := h.requireAuth(w, r)
+	if !ok {
 		return
 	}
 
@@ -714,7 +815,16 @@ func (h apiHandler) approveSubmit(w http.ResponseWriter, r *http.Request, id str
 		writeJSONError(w, http.StatusBadRequest, "invalid_json", "Request body must be valid JSON.")
 		return
 	}
-	run, err := h.autoMode.ApproveSubmit(r.Context(), id, request)
+	if strings.TrimSpace(request.ApprovalText) == "" {
+		writeJSONError(w, http.StatusBadRequest, "approval_text_required", "Explicit approval text is required.")
+		return
+	}
+	run, err := h.runtimeStore.ApproveSubmit(r.Context(), cockpitapi.ApprovalRequest{
+		RunID:        id,
+		UserID:       principal.UserID,
+		ApprovalText: request.ApprovalText,
+		ApprovedAt:   time.Now().UTC(),
+	})
 	if errors.Is(err, cockpitapi.ErrAutoModeApprovalTextRequired) {
 		writeJSONError(w, http.StatusBadRequest, "approval_text_required", "Explicit approval text is required.")
 		return
@@ -723,7 +833,33 @@ func (h apiHandler) approveSubmit(w http.ResponseWriter, r *http.Request, id str
 		writeJSONError(w, http.StatusConflict, "run_not_ready_for_review", "Run must be Ready for Review before submit approval.")
 		return
 	}
-	h.writeRunMutationResult(w, run, err, "approve_submit_failed")
+	h.writeRuntimeMutationResult(w, run, err, "approve_submit_failed")
+}
+
+func (h apiHandler) approveUpload(w http.ResponseWriter, r *http.Request, id string) {
+	if !requireMethod(w, r, http.MethodPost) {
+		return
+	}
+	principal, ok := h.requireAuth(w, r)
+	if !ok {
+		return
+	}
+	var request cockpitapi.ApproveSubmitRequest
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		writeJSONError(w, http.StatusBadRequest, "invalid_json", "Request body must be valid JSON.")
+		return
+	}
+	if strings.TrimSpace(request.ApprovalText) == "" {
+		writeJSONError(w, http.StatusBadRequest, "approval_text_required", "Explicit approval text is required.")
+		return
+	}
+	run, err := h.runtimeStore.ApproveUpload(r.Context(), cockpitapi.ApprovalRequest{
+		RunID:        id,
+		UserID:       principal.UserID,
+		ApprovalText: request.ApprovalText,
+		ApprovedAt:   time.Now().UTC(),
+	})
+	h.writeRuntimeMutationResult(w, run, err, "approve_upload_failed")
 }
 
 func (h apiHandler) requireAuth(w http.ResponseWriter, r *http.Request) (cockpitapi.AuthPrincipal, bool) {
@@ -739,22 +875,36 @@ func (h apiHandler) requireAuth(w http.ResponseWriter, r *http.Request) (cockpit
 	return principal, true
 }
 
-func (h apiHandler) requireWorker(w http.ResponseWriter, r *http.Request) (string, bool) {
+func (h apiHandler) optionalAuth(w http.ResponseWriter, r *http.Request) (cockpitapi.AuthPrincipal, bool, bool) {
+	if strings.TrimSpace(r.Header.Get("Authorization")) == "" {
+		return cockpitapi.AuthPrincipal{}, false, true
+	}
+	principal, ok := h.requireAuth(w, r)
+	return principal, ok, ok
+}
+
+func (h apiHandler) requireWorker(w http.ResponseWriter, r *http.Request) (workerPrincipal, bool) {
 	workerID := strings.TrimSpace(r.Header.Get("X-Career-Ops-Worker-ID"))
 	authorization := r.Header.Get("Authorization")
 	token := strings.TrimSpace(strings.TrimPrefix(authorization, "Bearer "))
 	if workerID == "" || token == "" || authorization == token {
 		writeJSONError(w, http.StatusUnauthorized, "worker_auth_required", "Paired worker credentials are required.")
-		return "", false
+		return workerPrincipal{}, false
 	}
-	if _, err := h.pairing.VerifyWorkerCredential(r.Context(), cockpitapi.WorkerCredentialRequest{
+	record, err := h.pairing.VerifyWorkerCredential(r.Context(), cockpitapi.WorkerCredentialRequest{
 		WorkerID:   workerID,
 		Credential: token,
-	}); err != nil {
+	})
+	if err != nil {
 		writeJSONError(w, http.StatusUnauthorized, "worker_auth_required", "Paired worker credentials are required.")
-		return "", false
+		return workerPrincipal{}, false
 	}
-	return workerID, true
+	return workerPrincipal{WorkerID: workerID, UserID: record.UserID}, true
+}
+
+func workerCanAccessRun(worker workerPrincipal, run cockpitapi.RunRecord) bool {
+	owner := strings.TrimSpace(run.OwnerUserID)
+	return owner == "" || owner == strings.TrimSpace(worker.UserID)
 }
 
 func (h apiHandler) writeRunMutationResult(w http.ResponseWriter, run cockpitapi.RunRecord, err error, fallbackCode string) {
@@ -772,6 +922,10 @@ func (h apiHandler) writeRunMutationResult(w http.ResponseWriter, run cockpitapi
 func (h apiHandler) writeRuntimeMutationResult(w http.ResponseWriter, run cockpitapi.RunRecord, err error, fallbackCode string) {
 	if errors.Is(err, cockpitapi.ErrRunNotFound) {
 		writeJSONError(w, http.StatusNotFound, "run_not_found", "Run not found.")
+		return
+	}
+	if errors.Is(err, cockpitapi.ErrRunAlreadyClaimed) {
+		writeJSONError(w, http.StatusConflict, "run_already_claimed", "Run is claimed by another active worker.")
 		return
 	}
 	if err != nil {

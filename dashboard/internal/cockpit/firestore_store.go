@@ -73,7 +73,7 @@ func (s *FirestoreRuntimeStore) GetRun(ctx context.Context, id string) (RunRecor
 	return run, nil
 }
 
-func (s *FirestoreRuntimeStore) NextRun(ctx context.Context, now time.Time) (RunRecord, error) {
+func (s *FirestoreRuntimeStore) NextRun(ctx context.Context, userID string, now time.Time) (RunRecord, error) {
 	if now.IsZero() {
 		now = time.Now().UTC()
 	}
@@ -97,6 +97,9 @@ func (s *FirestoreRuntimeStore) NextRun(ctx context.Context, now time.Time) (Run
 		}
 		if run.ID == "" {
 			run.ID = snap.Ref.ID
+		}
+		if !runVisibleToUser(run, userID) {
+			continue
 		}
 		if run.WorkerClaim == nil || !now.Before(run.WorkerClaim.LeaseExpiresAt) {
 			return run, nil
@@ -124,6 +127,9 @@ func (s *FirestoreRuntimeStore) ClaimRun(ctx context.Context, request ClaimRunRe
 		}
 		if run.ID == "" {
 			run.ID = request.RunID
+		}
+		if !runVisibleToUser(run, request.UserID) {
+			return ErrRunNotFound
 		}
 		if run.WorkerClaim != nil && request.ClaimedAt.Before(run.WorkerClaim.LeaseExpiresAt) && run.WorkerClaim.WorkerID != request.WorkerID {
 			return ErrRunAlreadyClaimed
@@ -153,8 +159,20 @@ func (s *FirestoreRuntimeStore) Heartbeat(ctx context.Context, request Heartbeat
 	})
 }
 
+func (s *FirestoreRuntimeStore) RecordFieldObservation(ctx context.Context, id string, request FieldObservationRequest) (RunRecord, error) {
+	return s.mutateRun(ctx, id, func(run *RunRecord) error {
+		if !runVisibleToUser(*run, request.UserID) {
+			return ErrRunNotFound
+		}
+		return recordFieldObservationOnRun(run, time.Now().UTC(), request)
+	})
+}
+
 func (s *FirestoreRuntimeStore) RecordBrowserLog(ctx context.Context, id string, request BrowserLogRequest) (RunRecord, error) {
 	return s.mutateRun(ctx, id, func(run *RunRecord) error {
+		if !runVisibleToUser(*run, request.UserID) {
+			return ErrRunNotFound
+		}
 		appendBrowserLogToRun(run, time.Now().UTC(), request)
 		return nil
 	})
@@ -162,7 +180,20 @@ func (s *FirestoreRuntimeStore) RecordBrowserLog(ctx context.Context, id string,
 
 func (s *FirestoreRuntimeStore) MarkNeedsInput(ctx context.Context, id string, request NeedsInputRequest) (RunRecord, error) {
 	return s.mutateRun(ctx, id, func(run *RunRecord) error {
+		if !runVisibleToUser(*run, request.UserID) {
+			return ErrRunNotFound
+		}
 		setRunNeedsInput(run, time.Now().UTC(), strings.TrimSpace(request.Reason))
+		return nil
+	})
+}
+
+func (s *FirestoreRuntimeStore) MarkReadyForReview(ctx context.Context, id string, request ReadyForReviewRequest) (RunRecord, error) {
+	return s.mutateRun(ctx, id, func(run *RunRecord) error {
+		if !runVisibleToUser(*run, request.UserID) {
+			return ErrRunNotFound
+		}
+		markRunReadyForReview(run, time.Now().UTC(), strings.TrimSpace(request.Reason))
 		return nil
 	})
 }
@@ -173,6 +204,9 @@ func (s *FirestoreRuntimeStore) ApproveUpload(ctx context.Context, request Appro
 	}
 	gate := approvalGateFromRequest(request)
 	return s.mutateRun(ctx, request.RunID, func(run *RunRecord) error {
+		if !runVisibleToUser(*run, request.UserID) {
+			return ErrRunNotFound
+		}
 		return applyUploadApprovalToRun(run, gate)
 	})
 }
@@ -183,6 +217,9 @@ func (s *FirestoreRuntimeStore) ApproveSubmit(ctx context.Context, request Appro
 	}
 	gate := approvalGateFromRequest(request)
 	return s.mutateRun(ctx, request.RunID, func(run *RunRecord) error {
+		if !runVisibleToUser(*run, request.UserID) {
+			return ErrRunNotFound
+		}
 		return applySubmitApprovalToRun(run, gate)
 	})
 }

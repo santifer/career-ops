@@ -58,6 +58,14 @@ export function shouldSubmitFinal(fillPlan, leaseState = {}) {
   return { allowed: true };
 }
 
+export function heartbeatPayload(leaseTTLSeconds = 60) {
+  return { lease_ttl_seconds: leaseTTLSeconds };
+}
+
+export function shouldParkForManualInput(options = {}, gate = {}) {
+  return Boolean(gate.blocked && options.once && !options.headless);
+}
+
 export function detectLoginGate(text = "") {
   const content = String(text);
   if (loginPatterns.some((pattern) => pattern.test(content))) {

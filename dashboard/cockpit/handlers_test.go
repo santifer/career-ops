@@ -119,11 +119,15 @@ func TestProfileRouteCreatesProfileWhenMissing(t *testing.T) {
 
 func TestStatusUpdateRouteRejectsInvalidStatus(t *testing.T) {
 	root := setupAPIFixture(t)
-	server := httptest.NewServer(NewServer(root))
+	server := httptest.NewServer(NewServerWithOptions(root, ServerOptions{
+		AuthVerifier: cockpitapi.StaticAuthVerifier{
+			Token:     "test-token",
+			Principal: cockpitapi.AuthPrincipal{UserID: "user-1"},
+		},
+	}))
 	defer server.Close()
 
-	body := bytes.NewBufferString(`{"status":"Waiting"}`)
-	resp, err := http.Post(server.URL+"/api/applications/1/status", "application/json", body)
+	resp, err := postJSON(t, server.URL+"/api/applications/1/status", `{"status":"Waiting"}`, "test-token")
 	if err != nil {
 		t.Fatalf("POST /api/applications/1/status: %v", err)
 	}
@@ -275,7 +279,7 @@ func TestAutoModeAPIRoutesRecordEnvelopeOnly(t *testing.T) {
 		t.Fatal("expected auto-mode startup observability log")
 	}
 
-	resp, err = http.Post(server.URL+"/api/runs/"+run.ID+"/browser-log", "application/json", bytes.NewBufferString(`{"message":"Opened visible browser tab.","status":"navigating","last_action":"Opened job URL."}`))
+	resp, err = postJSON(t, server.URL+"/api/runs/"+run.ID+"/browser-log", `{"message":"Opened visible browser tab.","status":"navigating","last_action":"Opened job URL."}`, "test-token")
 	if err != nil {
 		t.Fatalf("POST /api/runs/{id}/browser-log: %v", err)
 	}
@@ -293,7 +297,7 @@ func TestAutoModeAPIRoutesRecordEnvelopeOnly(t *testing.T) {
 		t.Fatalf("expected status 409 before review gate, got %d", resp.StatusCode)
 	}
 
-	resp, err = http.Post(server.URL+"/api/runs/"+run.ID+"/field-observation", "application/json", bytes.NewBufferString(`{"field":{"label":"Phone number","type":"text","required":true,"visible":true,"unresolved_reason":"profile phone number is missing"}}`))
+	resp, err = postJSON(t, server.URL+"/api/runs/"+run.ID+"/field-observation", `{"field":{"label":"Phone number","type":"text","required":true,"visible":true,"unresolved_reason":"profile phone number is missing"}}`, "test-token")
 	if err != nil {
 		t.Fatalf("POST /api/runs/{id}/field-observation: %v", err)
 	}
@@ -310,7 +314,7 @@ func TestAutoModeAPIRoutesRecordEnvelopeOnly(t *testing.T) {
 		t.Fatalf("expected Needs Input state, got %q", observed.State)
 	}
 
-	resp, err = http.Post(server.URL+"/api/runs/"+run.ID+"/ready-for-review", "application/json", bytes.NewBufferString(`{}`))
+	resp, err = postJSON(t, server.URL+"/api/runs/"+run.ID+"/ready-for-review", `{}`, "test-token")
 	if err != nil {
 		t.Fatalf("POST /api/runs/{id}/ready-for-review: %v", err)
 	}
@@ -515,6 +519,110 @@ func TestWorkerPairingAllowsClaim(t *testing.T) {
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
 		t.Fatalf("expected worker log status 200, got %d: %s", resp.StatusCode, string(body))
+	}
+
+	request, err = http.NewRequest(http.MethodPost, server.URL+"/api/worker/runs/"+run.ID+"/heartbeat", bytes.NewBufferString(`{"lease_ttl_seconds":120}`))
+	if err != nil {
+		t.Fatalf("new heartbeat request: %v", err)
+	}
+	request.Header.Set("Authorization", "Bearer worker-credential")
+	request.Header.Set("X-Career-Ops-Worker-ID", "laptop")
+	request.Header.Set("Content-Type", "application/json")
+	resp, err = http.DefaultClient.Do(request)
+	if err != nil {
+		t.Fatalf("POST /api/worker/runs/{id}/heartbeat: %v", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		t.Fatalf("expected heartbeat status 200, got %d: %s", resp.StatusCode, string(body))
+	}
+	var heartbeat cockpitapi.RunRecord
+	if err := json.NewDecoder(resp.Body).Decode(&heartbeat); err != nil {
+		t.Fatalf("decode heartbeat run: %v", err)
+	}
+	if heartbeat.WorkerClaim == nil || heartbeat.WorkerClaim.WorkerID != "laptop" {
+		t.Fatalf("expected heartbeat to preserve laptop claim, got %#v", heartbeat.WorkerClaim)
+	}
+
+	resp, err = http.Get(server.URL + "/api/runs/" + run.ID)
+	if err != nil {
+		t.Fatalf("GET /api/runs/{id}: %v", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		t.Fatalf("expected runtime run detail status 200, got %d: %s", resp.StatusCode, string(body))
+	}
+	var detailed cockpitapi.RunRecord
+	if err := json.NewDecoder(resp.Body).Decode(&detailed); err != nil {
+		t.Fatalf("decode detailed run: %v", err)
+	}
+	if len(detailed.ActionLog) == 0 || detailed.BrowserSession == nil || detailed.BrowserSession.Status != "browser-active" {
+		t.Fatalf("expected run detail to expose runtime browser log, got %#v", detailed)
+	}
+}
+
+func TestWorkerCannotSeeAnotherUsersRun(t *testing.T) {
+	root := setupAPIFixture(t)
+	runtimeStore := cockpitapi.NewMemoryRuntimeStore()
+	if err := runtimeStore.SaveRun(t.Context(), cockpitapi.RunRecord{
+		ID:          "run-owned-by-user-2",
+		Action:      cockpitapi.ActionAutoMode,
+		State:       cockpitapi.RunStateQueued,
+		OwnerUserID: "user-2",
+		URL:         "https://example.com/job",
+	}); err != nil {
+		t.Fatalf("SaveRun returned error: %v", err)
+	}
+	server := httptest.NewServer(NewServerWithOptions(root, ServerOptions{
+		RuntimeStore: runtimeStore,
+		AuthVerifier: cockpitapi.StaticAuthVerifier{
+			Token:     "user-token",
+			Principal: cockpitapi.AuthPrincipal{UserID: "user-1"},
+		},
+		Pairing: cockpitapi.NewPairingService(cockpitapi.NewMemoryPairingStore(), cockpitapi.PairingConfig{
+			GenerateToken: func() string {
+				return "pair-token"
+			},
+			GenerateCredential: func() string {
+				return "worker-credential"
+			},
+		}),
+	}))
+	defer server.Close()
+
+	resp, err := postJSON(t, server.URL+"/api/worker/pairing-token", `{"worker_id":"laptop"}`, "user-token")
+	if err != nil {
+		t.Fatalf("POST /api/worker/pairing-token: %v", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusCreated {
+		t.Fatalf("expected pairing token status 201, got %d", resp.StatusCode)
+	}
+	resp, err = http.Post(server.URL+"/api/worker/register", "application/json", bytes.NewBufferString(`{"worker_id":"laptop","pairing_token":"pair-token"}`))
+	if err != nil {
+		t.Fatalf("POST /api/worker/register: %v", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusCreated {
+		t.Fatalf("expected worker register status 201, got %d", resp.StatusCode)
+	}
+
+	request, err := http.NewRequest(http.MethodGet, server.URL+"/api/worker/runs/next", nil)
+	if err != nil {
+		t.Fatalf("new next request: %v", err)
+	}
+	request.Header.Set("Authorization", "Bearer worker-credential")
+	request.Header.Set("X-Career-Ops-Worker-ID", "laptop")
+	resp, err = http.DefaultClient.Do(request)
+	if err != nil {
+		t.Fatalf("GET /api/worker/runs/next: %v", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusNoContent {
+		body, _ := io.ReadAll(resp.Body)
+		t.Fatalf("expected other user's run to be hidden, got %d: %s", resp.StatusCode, string(body))
 	}
 }
 

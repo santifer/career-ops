@@ -32,6 +32,7 @@ type RunRecord struct {
 	ID             string           `json:"id"`
 	Action         string           `json:"action"`
 	State          string           `json:"state"`
+	OwnerUserID    string           `json:"owner_user_id,omitempty"`
 	ApplicationID  *int             `json:"application_id,omitempty"`
 	URL            string           `json:"url,omitempty"`
 	CurrentStep    string           `json:"current_step,omitempty"`
