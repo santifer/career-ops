@@ -342,9 +342,13 @@ async function tailorPackage(jd, profile, companyName) {
     const generatePdfScript = path.join(process.cwd(), 'generate-pdf.mjs');
     if (fs.existsSync(generatePdfScript)) {
       console.log("📄 Generating PDFs...");
-      execSync(`"${process.execPath}" "${generatePdfScript}" ${resumePathHtml} ${resumePathPdf}`);
-      execSync(`"${process.execPath}" "${generatePdfScript}" ${clPathHtml} ${clPathPdf}`);
-      console.log(`✨ SUCCESS! Resume & Cover Letter saved for ${entry.company}`);
+      try {
+        execSync(`"${process.execPath}" "${generatePdfScript}" "${resumePathHtml}" "${resumePathPdf}"`, { stdio: 'inherit' });
+        execSync(`"${process.execPath}" "${generatePdfScript}" "${clPathHtml}" "${clPathPdf}"`, { stdio: 'inherit' });
+        console.log(`✨ SUCCESS! Resume & Cover Letter saved for ${entry.company}`);
+      } catch (pdfErr) {
+        console.warn(`⚠ PDF generation unavailable in this runtime (${pdfErr.message}). HTML artifacts generated successfully.`);
+      }
     } else {
       console.log("⚠ generate-pdf.mjs unavailable in this runtime. HTML artifacts generated successfully.");
     }
