@@ -1,0 +1,94 @@
+# Employer Aliases — Brand Name to USCIS Legal Entity Map
+#
+# Maps common brand/company names to their exact legal entity names as they
+# appear in the USCIS H-1B Employer Data Hub CSV files.
+#
+# Format: brand_name: "USCIS LEGAL ENTITY NAME (exact match in CSV)"
+# Lookup: normalized brand name (lowercase, stripped suffixes) -> legal entity
+#
+# Used by the sponsorship detection engine to resolve brand names from job
+# postings to their H-1B filing records in USCIS data.
+
+
+# ─── FAANG / Big Tech ────────────────────────────────
+google: "ALPHABET INC"
+alphabet: "ALPHABET INC"
+meta: "META PLATFORMS INC"
+facebook: "META PLATFORMS INC"
+amazon: "AMAZON COM INC"
+aws: "AMAZON COM INC"
+apple: "APPLE INC"
+microsoft: "MICROSOFT CORPORATION"
+netflix: "NETFLIX INC"
+
+# ─── Major Tech Companies ────────────────────────────
+salesforce: "SALESFORCE INC"
+uber: "UBER TECHNOLOGIES INC"
+lyft: "LYFT INC"
+airbnb: "AIRBNB INC"
+stripe: "STRIPE INC"
+twitter: "X CORP"
+x: "X CORP"
+snap: "SNAP INC"
+snapchat: "SNAP INC"
+pinterest: "PINTEREST INC"
+linkedin: "LINKEDIN CORPORATION"
+dropbox: "DROPBOX INC"
+spotify: "SPOTIFY USA INC"
+nvidia: "NVIDIA CORPORATION"
+intel: "INTEL CORPORATION"
+oracle: "ORACLE AMERICA INC"
+ibm: "INTERNATIONAL BUSINESS MACHINES CORPORATION"
+cisco: "CISCO SYSTEMS INC"
+adobe: "ADOBE INC"
+vmware: "VMWARE INC"
+palantir: "PALANTIR TECHNOLOGIES INC"
+databricks: "DATABRICKS INC"
+snowflake: "SNOWFLAKE INC"
+doordash: "DOORDASH INC"
+coinbase: "COINBASE INC"
+robinhood: "ROBINHOOD MARKETS INC"
+block: "BLOCK INC"
+square: "BLOCK INC"
+tesla: "TESLA INC"
+zoom: "ZOOM VIDEO COMMUNICATIONS INC"
+shopify: "SHOPIFY INC"
+reddit: "REDDIT INC"
+cloudflare: "CLOUDFLARE INC"
+twilio: "TWILIO INC"
+atlassian: "ATLASSIAN US INC"
+github: "GITHUB INC"
+
+# ─── Major H-1B Consultancies ────────────────────────
+infosys: "INFOSYS LIMITED"
+tcs: "TATA CONSULTANCY SERVICES LIMITED"
+wipro: "WIPRO LIMITED"
+cognizant: "COGNIZANT TECHNOLOGY SOLUTIONS US CORP"
+hcl: "HCL AMERICA INC"
+accenture: "ACCENTURE LLP"
+deloitte: "DELOITTE CONSULTING LLP"
+capgemini: "CAPGEMINI AMERICA INC"
+ey: "ERNST & YOUNG US LLP"
+pwc: "PRICEWATERHOUSECOOPERS ADVISORY SERVICES LLC"
+kpmg: "KPMG LLP"
+mckinsey: "MCKINSEY & COMPANY INC"
+bain: "BAIN & COMPANY INC"
+
+# ─── Finance / Banking ───────────────────────────────
+jpmorgan: "JPMORGAN CHASE & CO"
+chase: "JPMORGAN CHASE & CO"
+goldman: "GOLDMAN SACHS & CO LLC"
+morgan stanley: "MORGAN STANLEY"
+bofa: "BANK OF AMERICA"
+bank of america: "BANK OF AMERICA"
+citi: "CITIBANK NA"
+citigroup: "CITIBANK NA"
+wells fargo: "WELLS FARGO BANK NA"
+capital one: "CAPITAL ONE SERVICES LLC"
+barclays: "BARCLAYS SERVICES CORPORATION"
+deutsche bank: "DEUTSCHE BANK SECURITIES INC"
+
+# ─── Custom Aliases ──────────────────────────────────
+# WARNING: This file is auto-updated. Custom mappings added here
+# will be overwritten. Add custom aliases to config/employer-aliases.local.yml instead.
+# your_company: "LEGAL ENTITY NAME FROM USCIS CSV"

@@ -1,0 +1,62 @@
+# config/sponsorship-keywords.yml -- Visa sponsorship signal keywords
+# System layer file: auto-updatable, users can extend via additional entries
+#
+# Keywords matched case-insensitively against full JD text.
+# Negative keywords and government blockers => WONT_SPONSOR
+# Positive keywords => WILL_SPONSOR
+# No matches => UNKNOWN (AI fallback in evaluation modes)
+
+positive_keywords:
+  - "visa sponsorship available"
+  - "visa sponsorship provided"
+  - "will sponsor"
+  - "sponsorship available"
+  - "open to sponsoring"
+  - "h-1b sponsorship"
+  - "h1b sponsorship"
+  - "immigration sponsorship"
+  - "work visa sponsorship"
+  - "we sponsor visas"
+  - "employer-sponsored visa"
+
+negative_keywords:
+  - "will not sponsor"
+  - "does not sponsor"
+  - "unable to sponsor"
+  - "cannot sponsor"
+  - "no sponsorship"
+  - "not able to sponsor"
+  - "without sponsorship"
+  - "no visa sponsorship"
+  - "sponsorship is not available"
+  - "not eligible for sponsorship"
+
+government_blockers:
+  - "security clearance"
+  - "ts/sci"
+  - "top secret"
+  - "secret clearance"
+  - "us citizen required"
+  - "u.s. citizen required"
+  - "us citizens only"
+  - "u.s. citizens only"
+  - "must be a us citizen"
+  - "must be a u.s. citizen"
+  - "itar"
+  - "itar compliance"
+  - "ear compliance"
+  - "government contract"
+  - "dod clearance"
+  - "department of defense"
+  - "federal government"
+  - "public trust clearance"
+
+authorization_blockers:
+  - "legally authorized to work in the united states"
+  - "authorized to work in the us"
+  - "must be authorized to work"
+  - "work authorization required"
+  - "permanent resident"
+  - "green card holder"
+  - "us work authorization"
+  - "employment eligibility"
