@@ -1,6 +1,7 @@
 {
   "name": "career-ops",
   "version": "1.0.0",
+  "type": "module",
   "description": "AI-powered job search pipeline built on Claude Code",
   "scripts": {
     "doctor": "node doctor.mjs",
@@ -8,7 +9,8 @@
     "normalize": "node normalize-statuses.mjs",
     "dedup": "node dedup-tracker.mjs",
     "merge": "node merge-tracker.mjs",
-    "pdf": "node generate-pdf.mjs",
+    "pdf": "node generate-resume-all.mjs",
+    "docx": "node resume_template.mjs",
     "sync-check": "node cv-sync-check.mjs",
     "update:check": "node update-system.mjs check",
     "update": "node update-system.mjs apply",
@@ -33,8 +35,11 @@
   "license": "MIT",
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
+    "docx": "^9.6.1",
     "dotenv": "^16.4.5",
+    "express": "^5.2.1",
     "js-yaml": "^4.1.1",
+    "marked": "^18.0.2",
     "playwright": "^1.58.1"
   }
 }

@@ -53,6 +53,7 @@ When using [Gemini CLI](https://github.com/google-gemini/gemini-cli), the follow
 | `/career-ops-scan` | `/career-ops scan` | Scan portals for new offers |
 | `/career-ops-batch` | `/career-ops batch` | Batch processing |
 | `/career-ops-patterns` | `/career-ops patterns` | Analyze rejection patterns |
+| `/career-ops-resume` | N/A | ATS-optimized resume editor |
 | `/career-ops-followup` | `/career-ops followup` | Follow-up cadence tracker |
 
 **All commands share the same evaluation logic** in `modes/*.md`. The `modes/` files are shared between Claude Code, OpenCode, and Gemini CLI.

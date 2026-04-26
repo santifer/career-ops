@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>career-ops | command center</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@500;600;700&display=swap');
+
+        :root {
+            --bg: #0C0C0C;
+            --panel-bg: #141414;
+            --stat-bg: #1A1A1A;
+            --border: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(255, 255, 255, 0.15);
+            --txt-primary: #FFFFFF;
+            --txt-secondary: #A0A0A0;
+            --txt-muted: #666666;
+            --accent: #3B82F6;
+            --accent-muted: rgba(59, 130, 246, 0.15);
+            --green: #4ADE80;
+            --green-muted: rgba(74, 222, 128, 0.15);
+            --amber: #FBBF24;
+            --amber-muted: rgba(251, 191, 36, 0.15);
+            --red: #F87171;
+            --mono: 'DM Mono', monospace;
+            --head: 'Syne', sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            background-color: var(--bg);
+            color: var(--txt-primary);
+            font-family: var(--head);
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            height: 100%;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 1rem;
+            border-bottom: 0.5px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .logo-group { display: flex; align-items: center; gap: 12px; }
+        .logo-box { width: 32px; height: 32px; background: var(--txt-primary); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: var(--bg); font-weight: 900; font-size: 18px; }
+        .logo-text h1 { font-size: 18px; font-weight: 700; letter-spacing: -0.02em; }
+        .logo-text p { font-family: var(--mono); font-size: 11px; color: var(--txt-muted); margin-top: 2px; }
+
+        .status-pill { display: flex; align-items: center; gap: 8px; background: var(--panel-bg); border: 0.5px solid var(--border); padding: 6px 12px; border-radius: 100px; font-family: var(--mono); font-size: 11px; color: var(--txt-secondary); }
+        .status-dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; box-shadow: 0 0 8px var(--green); }
+
+        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; flex-shrink: 0; }
+        .stat-card { background: var(--panel-bg); border: 0.5px solid var(--border); padding: 1.25rem; border-radius: 12px; cursor: pointer; transition: all 0.2s; }
+        .stat-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+        .stat-value { font-size: 28px; font-weight: 700; line-height: 1; }
+        .stat-label { font-size: 11px; color: var(--txt-muted); font-family: var(--mono); margin-top: 8px; text-transform: uppercase; }
+
+        .main-grid { display: grid; grid-template-columns: 1fr 300px; gap: 1.5rem; flex: 1; min-height: 0; }
+
+        .command-center { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 1.5rem; 
+            overflow-y: auto; 
+            padding-right: 8px;
+            min-height: 0;
+        }
+
+        .panel { background: var(--panel-bg); border: 0.5px solid var(--border); border-radius: 14px; flex-shrink: 0; }
+        .panel-header { padding: 1rem 1.25rem; border-bottom: 0.5px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .panel-title { font-size: 13px; font-weight: 600; color: var(--txt-secondary); }
+
+        .jd-input-section { padding: 1.25rem; border-bottom: 0.5px solid var(--border); }
+        .jd-wrapper { display: flex; gap: 12px; }
+        textarea { flex: 1; background: var(--stat-bg); border: 0.5px solid var(--border); border-radius: 8px; padding: 12px; color: var(--txt-primary); font-family: var(--mono); font-size: 12px; resize: none; height: 48px; transition: height 0.3s; outline: none; }
+        textarea:focus { height: 100px; border-color: var(--accent); }
+        .run-btn { background: var(--txt-primary); color: var(--bg); border: none; border-radius: 8px; padding: 0 1.5rem; font-family: var(--head); font-weight: 700; cursor: pointer; }
+
+        .modes-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; padding: 1.25rem; }
+        .mode-tile { background: var(--stat-bg); border: 0.5px solid var(--border); padding: 1rem; border-radius: 10px; cursor: pointer; transition: all 0.2s; text-align: center; }
+        .mode-tile:hover { border-color: var(--border-hover); background: #202020; transform: translateY(-2px); }
+        .mode-icon { font-size: 18px; margin-bottom: 8px; }
+        .mode-name { font-family: var(--mono); font-size: 12px; }
+
+        .tracker-section { padding: 0 1.25rem 1.25rem; }
+        table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 11px; }
+        th { text-align: left; color: var(--txt-muted); padding: 12px 0; border-bottom: 0.5px solid var(--border); }
+        tr { border-bottom: 0.5px solid var(--border); cursor: pointer; }
+        tr:hover { background: rgba(255, 255, 255, 0.03); }
+        td { padding: 12px 0; }
+
+        .terminal { background: #000; border: 0.5px solid var(--border); border-radius: 12px; overflow: hidden; margin-top: auto; flex-shrink: 0; display: flex; flex-direction: column; }
+        .term-header { padding: 10px 14px; background: #111; border-bottom: 0.5px solid var(--border); display: flex; align-items: center; gap: 8px; }
+        .term-body { height: 160px; padding: 1rem; font-family: var(--mono); font-size: 11px; line-height: 1.4; overflow-y: auto; color: var(--green); white-space: pre-wrap; word-break: break-all; }
+
+        .sidebar { display: flex; flex-direction: column; gap: 1.5rem; flex-shrink: 0; }
+        .side-panel { background: var(--panel-bg); border: 0.5px solid var(--border); border-radius: 12px; overflow: hidden; }
+        
+        .action-list { padding: 1.25rem; display: flex; flex-direction: column; gap: 8px; }
+        .action-btn { background: var(--panel-bg); border: 0.5px solid var(--border); color: var(--txt-secondary); padding: 10px; border-radius: 8px; cursor: pointer; display: flex; justify-content: space-between; font-size: 12px; width: 100%; text-align: left; }
+
+        .overlay { position: fixed; top: 0; right: -600px; width: 600px; height: 100vh; background: var(--panel-bg); border-left: 1px solid var(--border); transition: right 0.3s; z-index: 1000; display: flex; flex-direction: column; box-shadow: -10px 0 30px rgba(0,0,0,0.5); }
+        .overlay.show { right: 0; }
+        .overlay-body { flex: 1; overflow-y: auto; padding: 2rem; font-family: sans-serif; line-height: 1.6; color: #ccc; }
+        
+        #toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(100px); background: white; color: black; padding: 10px 20px; border-radius: 8px; font-weight: 600; transition: transform 0.3s; z-index: 2000; }
+        #toast.show { transform: translateX(-50%) translateY(0); }
+
+        .status-tag { padding: 2px 6px; border-radius: 4px; font-size: 10px; text-transform: lowercase; }
+        .b-blue { background: rgba(59,130,246,0.2); color: #3b82f6; }
+        .b-amber { background: rgba(251,191,36,0.2); color: #fbbf24; }
+        .b-green { background: rgba(74,222,128,0.2); color: #4ade80; }
+        .b-gray { background: rgba(255,255,255,0.1); color: #aaa; }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.4/dist/purify.min.js"></script>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div class="logo-group">
+            <div class="logo-box">C</div>
+            <div class="logo-text"><h1>career-ops</h1><p>/ dashboard · remote terminal</p></div>
+        </div>
+        <div class="status-pill"><div class="status-dot"></div>ready</div>
+    </header>
+
+    <div class="stats-row" id="quick-stats"></div>
+
+    <div class="main-grid">
+        <div class="command-center">
+            <div class="panel">
+                <div class="panel-header"><span class="panel-title">Command Center</span></div>
+                <div class="jd-input-section">
+                    <p style="font-family: var(--mono); font-size: 11px; color: var(--txt-muted); margin-bottom: 8px;">/ career-ops — type to terminal</p>
+                    <div class="jd-wrapper">
+                        <textarea id="jd-input" placeholder="Paste JD/URL here... it will be sent to your active terminal window."></textarea>
+                        <button class="run-btn" onclick="runAutoPipeline()">Send ↗</button>
+                    </div>
+                </div>
+
+                <div class="modes-grid">
+                    <div class="mode-tile" onclick="terminalSend('/career-ops scan')">⌕<br>scan</div>
+                    <div class="mode-tile" onclick="terminalSend('/career-ops pdf')">↓<br>pdf</div>
+                    <div class="mode-tile" onclick="terminalSend('/career-ops batch')">≡<br>batch</div>
+                    <div class="mode-tile" onclick="loadDashboard()">◫<br>refresh</div>
+                </div>
+
+                <div class="panel-header" style="border-top: 1px solid var(--border);"><span class="panel-title">Tracker</span></div>
+                <div class="tracker-section">
+                    <table>
+                        <thead><tr><th>company</th><th>score</th><th style="text-align:center">status</th><th style="text-align:right">date</th></tr></thead>
+                        <tbody id="app-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="terminal">
+                <div class="term-header">
+                    <div style="display:flex; gap:6px;">
+                        <div style="width:10px; height:10px; border-radius:50%; background:#ff5f56;"></div>
+                        <div style="width:10px; height:10px; border-radius:50%; background:#ffbd2e;"></div>
+                        <div style="width:10px; height:10px; border-radius:50%; background:#27c93f;"></div>
+                    </div>
+                    <span style="font-family: var(--mono); font-size: 11px; color: #666; margin-left: auto;">career-ops console</span>
+                </div>
+                <div class="term-body" id="term-log">Welcome Deepan. Send commands above to see results in your terminal.</div>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <div class="side-panel">
+                <div class="panel-header"><span class="panel-title">Actions</span></div>
+                <div class="action-list">
+                    <button class="action-btn" onclick="terminalSend('/career-ops scan')">Scan Portals ↗</button>
+                    <button class="action-btn" onclick="terminalSend('/career-ops pipeline')">Process Inbox ↗</button>
+                    <button class="action-btn" onclick="terminalSend('/career-ops followup')">Follow-ups ↗</button>
+                    <button class="action-btn" onclick="terminalSend('/career-ops patterns')">Analyze Patterns ↗</button>
+                    <button class="action-btn" onclick="terminalSend('/career-ops tracker')">CLI Tracker ↗</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="report-panel" class="overlay">
+    <div class="panel-header">
+        <h2 id="report-title">Report</h2>
+        <button onclick="closeReport()" class="close-btn">&times;</button>
+    </div>
+    <div id="report-content" class="overlay-body"></div>
+</div>
+
+<div id="toast">Command sent</div>
+
+<script src="app.js"></script>
+</body>
+</html>
+ton>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="report-panel" class="overlay">
+    <div class="panel-header">
+        <h2 id="report-title">Report</h2>
+        <button onclick="closeReport()" class="close-btn">&times;</button>
+    </div>
+    <div id="report-content" class="overlay-body"></div>
+</div>
+
+<div id="toast">Command sent</div>
+
+<script src="app.js"></script>
+</body>
+</html>

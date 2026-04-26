@@ -1,12 +1,17 @@
 # Personal data (user fills these)
 cv.md
-data/applications.md
-data/pipeline.md
-data/scan-history.tsv
-reports/*.md
+article-digest.md
+interview-prep/**
+!interview-prep/.gitkeep
+data/**
+!data/.gitkeep
+reports/**
 !reports/.gitkeep
-output/*
+output/**
 !output/.gitkeep
+portals.yml
+config/profile.yml
+modes/_profile.md
 batch/logs/*
 !batch/logs/.gitkeep
 batch/batch-state.tsv
@@ -25,8 +30,11 @@ modes/_profile.md
 
 # Secrets (never commit — use .env.example as template)
 .env
+.envrc
 
-# Generated
+# Generated / Binaries / Personal Artifacts
+*.pdf
+*.docx
 .resolved-prompt-*
 node_modules/
 bun.lock
@@ -36,7 +44,7 @@ bun.lock
 *.mov
 *.mp4
 
-# Claude Code local
+# Claude Code local / Tools
 .claude/settings.local.json
 .claude/memory/
 career-dashboard

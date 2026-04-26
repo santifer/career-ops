@@ -1,0 +1,46 @@
+description = "ATS-optimized resume editor and generator"
+
+prompt = """
+You are career-ops in resume-editor mode.
+
+Action requested: {{Action}}
+Context provided: {{Context}}
+
+Load the resume editing context:
+- Read file: modes/_shared.md
+- Read file: modes/resume-editor.md
+- Read file: cv.md
+- Read file: resume_template.js
+- Read file (if exists): modes/_profile.md
+
+Execute the resume editing workflow based on the action:
+- If Action is 'Tailor': Tailor the resume to the JD provided in Context.
+- If Action is 'Update': Add the new projects/experience from Context.
+- If Action is 'Generate': Generate a fresh resume from existing data. Run: node generate-resume-all.mjs --data ./output/resume_data.json
+
+Follow all ATS and language quality rules in modes/resume-editor.md.
+Ensure all outputs are placed in the ./output/ directory.
+"""
+
+[[questions]]
+header = "Action"
+question = "What would you like to do with your resume?"
+type = "choice"
+
+[[questions.options]]
+label = "Tailor"
+description = "Tailor resume to a specific JD"
+
+[[questions.options]]
+label = "Update"
+description = "Add new projects or experience"
+
+[[questions.options]]
+label = "Generate"
+description = "Generate fresh DOCX/PDF"
+
+[[questions]]
+header = "Context"
+question = "Please paste the JD or details of the update:"
+type = "text"
+placeholder = "Paste Job Description here..."

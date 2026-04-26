@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>career-ops | dashboard</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@500;600;700&display=swap');
+
+        :root {
+            --bg: #0C0C0C;
+            --panel-bg: #141414;
+            --stat-bg: #1A1A1A;
+            --border: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(255, 255, 255, 0.15);
+            --txt-primary: #FFFFFF;
+            --txt-secondary: #A0A0A0;
+            --txt-muted: #666666;
+            --accent: #3B82F6;
+            --accent-muted: rgba(59, 130, 246, 0.15);
+            --green: #4ADE80;
+            --green-muted: rgba(74, 222, 128, 0.15);
+            --amber: #FBBF24;
+            --amber-muted: rgba(251, 191, 36, 0.15);
+            --red: #F87171;
+            --mono: 'DM Mono', monospace;
+            --head: 'Syne', sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            background-color: var(--bg);
+            color: var(--txt-primary);
+            font-family: var(--head);
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+            padding: 2rem;
+        }
+
+        /* --- LAYOUT --- */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* --- HEADER --- */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 1rem;
+            border-bottom: 0.5px solid var(--border);
+        }
+
+        .logo-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-box {
+            width: 32px;
+            height: 32px;
+            background: var(--txt-primary);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--bg);
+            font-weight: 900;
+            font-size: 18px;
+        }
+
+        .logo-text h1 {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .logo-text p {
+            font-family: var(--mono);
+            font-size: 11px;
+            color: var(--txt-muted);
+            margin-top: 2px;
+        }
+
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--panel-bg);
+            border: 0.5px solid var(--border);
+            padding: 6px 12px;
+            border-radius: 100px;
+            font-family: var(--mono);
+            font-size: 11px;
+            color: var(--txt-secondary);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--green);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--green);
+        }
+
+        /* --- STATS --- */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .stat-card {
+            background: var(--panel-bg);
+            border: 0.5px solid var(--border);
+            padding: 1.25rem;
+            border-radius: 12px;
+            position: relative;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--txt-muted);
+            font-family: var(--mono);
+            margin-top: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .stat-badge {
+            position: absolute;
+            top: 1.25rem;
+            right: 1.25rem;
+            font-family: var(--mono);
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        /* --- MAIN GRID --- */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 1.5rem;
+        }
+
+        /* --- COMMAND CENTER (LEFT) --- */
+        .command-center {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .panel {
+            background: var(--panel-bg);
+            border: 0.5px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 1rem 1.25rem;
+            border-bottom: 0.5px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--txt-secondary);
+        }
+
+        /* JD INPUT */
+        .jd-input-section {
+            padding: 1.25rem;
+            border-bottom: 0.5px solid var(--border);
+        }
+
+        .jd-wrapper {
+            display: flex;
+            gap: 12px;
+        }
+
+        textarea {
+            flex: 1;
+            background: var(--stat-bg);
+            border: 0.5px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            color: var(--txt-primary);
+            font-family: var(--mono);
+            font-size: 12px;
+            resize: none;
+            height: 48px;
+            transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s;
+            outline: none;
+        }
+
+        textarea:focus {
+            height: 120px;
+            border-color: var(--accent);
+        }
+
+        .run-btn {
+            background: var(--txt-primary);
+            color: var(--bg);
+            border: none;
+            border-radius: 8px;
+            padding: 0 1.5rem;
+            font-family: var(--head);
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s;
+        }
+
+        .run-btn:hover { opacity: 0.9; }
+        .run-btn:active { transform: scale(0.96); }
+
+        /* MODES GRID */
+        .modes-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            padding: 1.25rem;
+        }
+
+        .mode-tile {
+            background: var(--stat-bg);
+            border: 0.5px solid var(--border);
+            padding: 1rem;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .mode-tile:hover {
+            border-color: var(--border-hover);
+            background: #202020;
+            transform: translateY(-2px);
+        }
+
+        .mode-icon {
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+
+        .mode-name {
+            font-family: var(--mono);
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .mode-desc {
+            font-size: 10px;
+            color: var(--txt-muted);
+            margin-top: 4px;
+            line-height: 1.3;
+        }
+
+        .mode-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 9px;
+            font-family: var(--mono);
+            padding: 1px 5px;
+            border-radius: 3px;
+        }
+
+        /* TRACKER TABLE */
+        .tracker-section {
+            padding: 0 1.25rem 1.25rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: var(--mono);
+            font-size: 11px;
+        }
+
+        th {
+            text-align: left;
+            color: var(--txt-muted);
+            font-weight: 400;
+            padding: 12px 0;
+            border-bottom: 0.5px solid var(--border);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        tr {
+            border-bottom: 0.5px solid var(--border);
+            transition: background 0.1s;
+            cursor: pointer;
+        }
+
+        tr:last-child { border-bottom: none; }
+        tr:hover { background: rgba(255, 255, 255, 0.03); }
+
+        td { padding: 14px 0; vertical-align: middle; }
+
+        .co-role { font-family: var(--head); }
+        .co-name { font-weight: 600; font-size: 13px; }
+        .role-name { font-size: 11px; color: var(--txt-secondary); margin-top: 2px; }
+
+        .score-pill { font-weight: 700; font-size: 12px; }
+        
+        .status-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 500;
+        }
+
+        /* --- TERMINAL --- */
+        .terminal {
+            background: #000000;
+            border: 0.5px solid var(--border);
+            border-radius: 12px;
+            margin-top: 1rem;
+            overflow: hidden;
+        }
+
+        .term-header {
+            padding: 10px 14px;
+            background: #111;
+            border-bottom: 0.5px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dot-red { width: 10px; height: 10px; background: #FF5F56; border-radius: 50%; }
+        .dot-yellow { width: 10px; height: 10px; background: #FFBD2E; border-radius: 50%; }
+        .dot-green { width: 10px; height: 10px; background: #27C93F; border-radius: 50%; }
+
+        .term-body {
+            height: 180px;
+            padding: 1rem;
+            font-family: var(--mono);
+            font-size: 12px;
+            line-height: 1.5;
+            overflow-y: auto;
+            color: var(--green);
+        }
+
+        .term-prompt { color: #888; margin-right: 8px; }
+        .term-cursor {
+            display: inline-block;
+            width: 8px;
+            height: 15px;
+            background: var(--green);
+            animation: blink 1s step-end infinite;
+            vertical-align: middle;
+        }
+
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .pipe-list {
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .pipe-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: 12px;
+        }
+
+        .pipe-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 4px; }
+        .pipe-info .co { font-weight: 600; }
+        .pipe-info .step { font-family: var(--mono); color: var(--txt-muted); font-size: 10px; margin-top: 2px; }
+        .pipe-time { font-family: var(--mono); color: var(--txt-muted); font-size: 10px; margin-left: auto; }
+
+        .btn-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            padding: 0 1.25rem 1.25rem;
+        }
+
+        .small-btn {
+            background: var(--stat-bg);
+            border: 0.5px solid var(--border);
+            color: var(--txt-secondary);
+            font-family: var(--mono);
+            font-size: 10px;
+            padding: 6px;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .small-btn:hover { background: #252525; color: var(--txt-primary); }
+
+        /* SCORE CHART */
+        .chart { padding: 1.25rem; }
+        .chart-row { margin-bottom: 10px; }
+        .chart-label { font-family: var(--mono); font-size: 10px; color: var(--txt-muted); margin-bottom: 4px; display: flex; justify-content: space-between; }
+        .bar-bg { background: var(--stat-bg); height: 4px; border-radius: 2px; overflow: hidden; }
+        .bar-fill { height: 100%; border-radius: 2px; transition: width 0.5s; }
+
+        .action-list { padding: 1.25rem; display: flex; flex-direction: column; gap: 8px; }
+        .action-btn {
+            background: var(--panel-bg);
+            border: 0.5px solid var(--border);
+            color: var(--txt-secondary);
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-family: var(--head);
+            font-size: 12px;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .action-btn:hover { border-color: var(--accent); color: var(--txt-primary); }
+
+        /* TOAST */
+        #toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--txt-primary);
+            color: var(--bg);
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 13px;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 1000;
+        }
+        #toast.show { transform: translateX(-50%) translateY(0); }
+
+        /* SCROLLBAR */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+
+        /* COLOR CLASSES */
+        .c-green { color: var(--green); }
+        .c-amber { color: var(--amber); }
+        .c-red { color: var(--red); }
+        .b-blue { background: var(--accent-muted); color: var(--accent); }
+        .b-amber { background: var(--amber-muted); color: var(--amber); }
+        .b-green { background: var(--green-muted); color: var(--green); }
+        .b-gray { background: rgba(255,255,255,0.05); color: var(--txt-muted); }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div class="logo-group">
+            <div class="logo-box">C</div>
+            <div class="logo-text">
+                <h1>career-ops</h1>
+                <p>/ dashboard · claude code</p>
+            </div>
+        </div>
+        <div class="status-pill">
+            <div class="status-dot"></div>
+            ready
+        </div>
+    </header>
+
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-value">24</div>
+            <div class="stat-label">jobs evaluated</div>
+            <span class="stat-badge b-green">↑ 8 this week</span>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">6</div>
+            <div class="stat-label">applied</div>
+            <span class="stat-badge b-amber">3 pending</span>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">A-</div>
+            <div class="stat-label">avg score</div>
+            <span class="stat-badge b-blue">4.3 / 5</span>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">2</div>
+            <div class="stat-label">interviews</div>
+            <span class="stat-badge c-red">ACTION NEEDED</span>
+        </div>
+    </div>
+
+    <div class="main-grid">
+        <div class="command-center">
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-title">Command Center</span>
+                    <span style="font-family: var(--mono); font-size: 10px; color: var(--txt-muted);">paste JD or URL below · or pick a mode</span>
+                </div>
+                
+                <div class="jd-input-section">
+                    <p style="font-family: var(--mono); font-size: 11px; color: var(--txt-muted); margin-bottom: 8px;">/ career-ops — full auto-pipeline</p>
+                    <div class="jd-wrapper">
+                        <textarea id="jd-input" placeholder="Paste a job description or URL here... career-ops auto-detects and runs the full pipeline"></textarea>
+                        <button class="run-btn" onclick="runAutoPipeline()">Run ↗</button>
+                    </div>
+                </div>
+
+                <div class="panel-header" style="border-top: 0.5px solid var(--border);">
+                    <span class="panel-title">All Modes</span>
+                </div>
+                <div class="modes-grid">
+                    <div class="mode-tile" onclick="executeCmd('scan')">
+                        <div class="mode-icon">⌕</div>
+                        <div class="mode-name">/scan</div>
+                        <div class="mode-desc">Scan job portals for new offers</div>
+                        <span class="mode-badge b-amber">auto</span>
+                    </div>
+                    <div class="mode-tile" onclick="executeCmd('pdf')">
+                        <div class="mode-icon">↓</div>
+                        <div class="mode-name">/pdf</div>
+                        <div class="mode-desc">Generate ATS-optimized CV</div>
+                        <span class="mode-badge b-blue">output</span>
+                    </div>
+                    <div class="mode-tile" onclick="executeCmd('batch')">
+                        <div class="mode-icon">≡</div>
+                        <div class="mode-name">/batch</div>
+                        <div class="mode-desc">Evaluate multiple offers at once</div>
+                        <span class="mode-badge b-amber">parallel</span>
+                    </div>
+                    <div class="mode-tile" onclick="executeCmd('tracker')">
+                        <div class="mode-icon">◫</div>
+                        <div class="mode-name">/tracker</div>
+                        <div class="mode-desc">View application status overview</div>
+                        <span class="mode-badge b-green">live</span>
+                    </div>
+                    <div class="mode-tile" onclick="executeCmd('apply')">
+                        <div class="mode-icon">✎</div>
+                        <div class="mode-name">/apply</div>
+                        <div class="mode-desc">Fill application forms with AI assistant</div>
+                        <span class="mode-badge b-blue">ai</span>
+                    </div>
+                    <div class="mode-tile" onclick="executeCmd('pipeline')">
+                        <div class="mode-icon">⇢</div>
+                        <div class="mode-name">/pipeline</div>
+                        <div class="mode-desc">Process pending URLs in inbox queue</div>
+                        <span class="mode-badge b-amber">queue</span>
+                    </div>
+                    <div class="mode-tile" onclick="executeCmd('contacto')">
+                        <div class="mode-icon">✉</div>
+                        <div class="mode-name">/contacto</div>
+                        <div class="mode-desc">Generate LinkedIn outreach messages</div>
+                        <span class="mode-badge b-blue">msg</span>
+                    </div>
+                    <div class="mode-tile" onclick="executeCmd('deep')">
+                        <div class="mode-icon">◎</div>
+                        <div class="mode-name">/deep</div>
+                        <div class="mode-desc">Deep research on company culture</div>
+                        <span class="mode-badge b-blue">research</span>
+                    </div>
+                    <div class="mode-tile" onclick="executeCmd('training')">
+                        <div class="mode-icon">▲</div>
+                        <div class="mode-name">/training</div>
+                        <div class="mode-desc">Evaluate course or cert against North Star</div>
+                        <span class="mode-badge b-green">eval</span>
+                    </div>
+                    <div class="mode-tile" onclick="executeCmd('project')">
+                        <div class="mode-icon">◈</div>
+                        <div class="mode-name">/project</div>
+                        <div class="mode-desc">Evaluate portfolio project idea</div>
+                        <span class="mode-badge b-green">eval</span>
+                    </div>
+                    <div class="mode-tile" onclick="executeCmd('interview')">
+                        <div class="mode-icon">♞</div>
+                        <div class="mode-name">/interview</div>
+                        <div class="mode-desc">STAR prep and negotiation scripts</div>
+                        <span class="mode-badge b-amber">prep</span>
+                    </div>
+                    <div class="mode-tile" onclick="executeCmd('help')">
+                        <div class="mode-icon">?</div>
+                        <div class="mode-name">/help</div>
+                        <div class="mode-desc">Show all available commands and help</div>
+                        <span class="mode-badge b-gray">help</span>
+                    </div>
+                </div>
+
+                <div class="panel-header" style="border-top: 0.5px solid var(--border);">
+                    <span class="panel-title">Application Tracker</span>
+                </div>
+                <div class="tracker-section">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>company / role</th>
+                                <th>score</th>
+                                <th style="text-align:center">status</th>
+                                <th style="text-align:right">date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr onclick="trackAction('Walmart')">
+                                <td>
+                                    <div class="co-role">
+                                        <div class="co-name">Walmart Global Tech</div>
+                                        <div class="role-name">Software Engineering Intern</div>
+                                    </div>
+                                </td>
+                                <td><span class="score-pill c-green">A+ · 5.0</span></td>
+                                <td style="text-align:center"><span class="status-tag b-blue">interview</span></td>
+                                <td style="text-align:right; color: var(--txt-muted)">Apr 21</td>
+                            </tr>
+                            <tr onclick="trackAction('Anthropic')">
+                                <td>
+                                    <div class="co-role">
+                                        <div class="co-name">Anthropic</div>
+                                        <div class="role-name">Staff Engineer, AI Safety</div>
+                                    </div>
+                                </td>
+                                <td><span class="score-pill c-green">A+ · 4.8</span></td>
+                                <td style="text-align:center"><span class="status-tag b-blue">interview</span></td>
+                                <td style="text-align:right; color: var(--txt-muted)">Apr 18</td>
+                            </tr>
+                            <tr onclick="trackAction('Mistral AI')">
+                                <td>
+                                    <div class="co-role">
+                                        <div class="co-name">Mistral AI</div>
+                                        <div class="role-name">Applied Scientist</div>
+                                    </div>
+                                </td>
+                                <td><span class="score-pill c-green">A · 4.4</span></td>
+                                <td style="text-align:center"><span class="status-tag b-amber">applied</span></td>
+                                <td style="text-align:right; color: var(--txt-muted)">Apr 15</td>
+                            </tr>
+                            <tr onclick="trackAction('Vercel')">
+                                <td>
+                                    <div class="co-role">
+                                        <div class="co-name">Vercel</div>
+                                        <div class="role-name">Platform Engineer</div>
+                                    </div>
+                                </td>
+                                <td><span class="score-pill c-amber">B+ · 3.7</span></td>
+                                <td style="text-align:center"><span class="status-tag b-green">screening</span></td>
+                                <td style="text-align:right; color: var(--txt-muted)">Apr 10</td>
+                            </tr>
+                            <tr onclick="trackAction('DeepMind')">
+                                <td>
+                                    <div class="co-role">
+                                        <div class="co-name">DeepMind</div>
+                                        <div class="role-name">Research Engineer</div>
+                                    </div>
+                                </td>
+                                <td><span class="score-pill c-red">C · 2.9</span></td>
+                                <td style="text-align:center"><span class="status-tag b-gray">skipped</span></td>
+                                <td style="text-align:right; color: var(--txt-muted)">Apr 08</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="terminal">
+                <div class="term-header">
+                    <div class="dot-red"></div>
+                    <div class="dot-yellow"></div>
+                    <div class="dot-green"></div>
+                    <span style="font-family: var(--mono); font-size: 11px; color: var(--txt-muted); margin-left: auto;">career-ops · output log</span>
+                </div>
+                <div class="term-body" id="term-log">
+                    <p><span class="term-prompt">$</span>/career-ops tracker</p>
+                    <p style="color: var(--green);">✓ Loaded 15 tracked applications from data/applications.md</p>
+                    <p style="color: var(--green);">✓ 2 interviews active — Walmart, Anthropic</p>
+                    <p style="color: var(--amber);">⚠ Mistral AI: no response after 6 days — follow up recommended</p>
+                    <p><span class="term-prompt">$</span><span class="term-cursor"></span></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-title">Pipeline Queue</span>
+                </div>
+                <div class="pipe-list">
+                    <div class="pipe-item">
+                        <div class="pipe-dot" style="background: var(--accent);"></div>
+                        <div class="pipe-info">
+                            <div class="co">ElevenLabs</div>
+                            <div class="step">evaluating fit...</div>
+                        </div>
+                        <div class="pipe-time">now</div>
+                    </div>
+                    <div class="pipe-item">
+                        <div class="pipe-dot" style="background: var(--amber);"></div>
+                        <div class="pipe-info">
+                            <div class="co">Pinecone</div>
+                            <div class="step">pending PDF gen</div>
+                        </div>
+                        <div class="pipe-time">2m</div>
+                    </div>
+                    <div class="pipe-item">
+                        <div class="pipe-dot" style="background: var(--txt-muted);"></div>
+                        <div class="pipe-info">
+                            <div class="co">Temporal</div>
+                            <div class="step">queued</div>
+                        </div>
+                        <div class="pipe-time">5m</div>
+                    </div>
+                    <div class="pipe-item">
+                        <div class="pipe-dot" style="background: var(--txt-muted);"></div>
+                        <div class="pipe-info">
+                            <div class="co">LangChain</div>
+                            <div class="step">queued</div>
+                        </div>
+                        <div class="pipe-time">7m</div>
+                    </div>
+                </div>
+                <div class="btn-group">
+                    <button class="small-btn" onclick="executeCmd('pipeline')">Run all ↗</button>
+                    <button class="small-btn" onclick="executeCmd('batch')">Batch ↗</button>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-title">Score Breakdown</span>
+                </div>
+                <div class="chart">
+                    <div class="chart-row">
+                        <div class="chart-label"><span>Tech Fit</span> <span>4.6</span></div>
+                        <div class="bar-bg"><div class="bar-fill" style="width: 92%; background: var(--green);"></div></div>
+                    </div>
+                    <div class="chart-row">
+                        <div class="chart-label"><span>Level</span> <span>4.3</span></div>
+                        <div class="bar-bg"><div class="bar-fill" style="width: 86%; background: var(--green);"></div></div>
+                    </div>
+                    <div class="chart-row">
+                        <div class="chart-label"><span>Culture</span> <span>4.0</span></div>
+                        <div class="bar-bg"><div class="bar-fill" style="width: 80%; background: var(--green);"></div></div>
+                    </div>
+                    <div class="chart-row">
+                        <div class="chart-label"><span>Mission</span> <span>4.8</span></div>
+                        <div class="bar-bg"><div class="bar-fill" style="width: 96%; background: var(--accent);"></div></div>
+                    </div>
+                    <div class="chart-row">
+                        <div class="chart-label"><span>Growth</span> <span>3.8</span></div>
+                        <div class="bar-bg"><div class="bar-fill" style="width: 76%; background: var(--amber);"></div></div>
+                    </div>
+                    <div class="chart-row">
+                        <div class="chart-label"><span>Comp</span> <span>3.4</span></div>
+                        <div class="bar-bg"><div class="bar-fill" style="width: 68%; background: var(--amber);"></div></div>
+                    </div>
+                    <div class="chart-row">
+                        <div class="chart-label"><span>Remote</span> <span>3.0</span></div>
+                        <div class="bar-bg"><div class="bar-fill" style="width: 60%; background: var(--amber);"></div></div>
+                    </div>
+                </div>
+                <div style="padding: 0 1.25rem 1.25rem;">
+                    <button class="small-btn" style="width: 100%;" onclick="executeCmd('deep')">Deep Research ↗</button>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-title">Quick Actions</span>
+                </div>
+                <div class="action-list">
+                    <button class="action-btn" onclick="executeCmd('scan')"><span>⌕ Scan portals</span> <span>↗</span></button>
+                    <button class="action-btn" onclick="executeCmd('pdf')"><span>↓ Generate CV</span> <span>↗</span></button>
+                    <button class="action-btn" onclick="executeCmd('contacto')"><span>✉ Outreach msg</span> <span>↗</span></button>
+                    <button class="action-btn" onclick="executeCmd('interview-prep')"><span>♞ Interview prep</span> <span>↗</span></button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="toast">Command copied to clipboard</div>
+
+<script>
+    const termLog = document.getElementById('term-log');
+
+    function logToTerminal(command, output, type = 'success') {
+        const pCmd = document.createElement('p');
+        pCmd.innerHTML = `<span class="term-prompt">$</span>/career-ops ${command}`;
+        
+        const pOut = document.createElement('p');
+        pOut.style.color = type === 'success' ? 'var(--green)' : type === 'warn' ? 'var(--amber)' : 'var(--red)';
+        pOut.innerText = output;
+
+        // Insert before the last child (which is the prompt + cursor)
+        termLog.insertBefore(pCmd, termLog.lastElementChild);
+        termLog.insertBefore(pOut, termLog.lastElementChild);
+        
+        termLog.scrollTop = termLog.scrollHeight;
+    }
+
+    function showToast(message) {
+        const toast = document.getElementById('toast');
+        toast.innerText = message;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    function copyToClipboard(text) {
+        const el = document.createElement('textarea');
+        el.value = text;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+        showToast('Command copied to clipboard');
+    }
+
+    function executeCmd(mode) {
+        const command = `/career-ops ${mode}`;
+        logToTerminal(mode, `Initializing ${mode} mode...`);
+        copyToClipboard(command);
+    }
+
+    function runAutoPipeline() {
+        const input = document.getElementById('jd-input').value.trim();
+        if (!input) {
+            logToTerminal('error', 'No JD or URL provided.', 'error');
+            return;
+        }
+        const command = `/career-ops ${input}`;
+        logToTerminal('auto-pipeline', `Starting auto-pipeline for: ${input.substring(0, 30)}...`);
+        copyToClipboard(command);
+    }
+
+    function trackAction(company) {
+        const command = `/career-ops tracker --details "${company}"`;
+        logToTerminal('tracker', `Fetching detailed status for ${company}...`);
+        copyToClipboard(command);
+    }
+</script>
+
+</body>
+</html>
+tml>
