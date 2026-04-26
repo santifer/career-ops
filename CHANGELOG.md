@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://github.com/santifer/career-ops/compare/v1.6.0...v1.7.0) (2026-04-26)
+
+
+### Features
+
+* add Claude Code plugin manifests (path-stable) ([62b767d](https://github.com/santifer/career-ops/commit/62b767dcc56e4c875ed70bf4fe799c254ecf8eea))
+
 ## [1.6.0](https://github.com/santifer/career-ops/compare/v1.5.0...v1.6.0) (2026-04-26)
 
 
