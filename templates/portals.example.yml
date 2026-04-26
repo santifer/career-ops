@@ -942,3 +942,50 @@ tracked_companies:
     scan_query: '"Maxim AI" OR "getmaxim" careers "engineer" OR "product"'
     notes: "AI evaluation and observability platform. Bangalore-based, mostly on-site."
     enabled: true
+
+  # ── BambooHR examples ────────────────────────────────────────────────────────
+  # Auto-detected from {slug}.bamboohr.com/careers URLs.
+  # Or set api_provider: bamboohr + bamboohr_slug explicitly.
+
+  - name: Basecamp
+    careers_url: https://basecamp.bamboohr.com/careers
+    notes: "Fully remote. Project management. Engineering & product."
+    enabled: false
+
+  - name: Doist
+    careers_url: https://doist.bamboohr.com/careers
+    notes: "Async-remote. Todoist & Twist. Engineering, design, and marketing."
+    enabled: false
+
+  - name: Buffer
+    bamboohr_slug: buffer
+    api_provider: bamboohr
+    notes: "Fully remote social media tooling. Engineering & growth roles."
+    enabled: false
+
+  # ── Teamtailor examples ──────────────────────────────────────────────────────
+  # Auto-detected from {slug}.teamtailor.com URLs.
+  # Teamtailor publishes RSS at {slug}.teamtailor.com/jobs.rss — no auth needed.
+
+  - name: Factorial HR
+    careers_url: https://factorialhr.teamtailor.com/jobs
+    notes: "Barcelona HR-tech scale-up. Engineering, Product, Sales."
+    enabled: false
+
+  # ── SmartRecruiters examples ─────────────────────────────────────────────────
+  # Auto-detected from careers.smartrecruiters.com/{id} URLs.
+
+  - name: Bolt
+    careers_url: https://careers.smartrecruiters.com/Bolt
+    notes: "European mobility platform. Engineering, Product, Data."
+    enabled: false
+
+  # ── Recruitee examples ───────────────────────────────────────────────────────
+  # Recruitee boards use careers.{slug}.com/o/api/jobs.
+  # Set api_provider: recruitee + recruitee_slug explicitly.
+
+  # - name: YourCompany
+  #   recruitee_slug: yourcompany
+  #   api_provider: recruitee
+  #   notes: "Example Recruitee company."
+  #   enabled: false

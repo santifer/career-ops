@@ -1,13 +1,16 @@
 #!/usr/bin/env node
+/* eslint-env node */
+/* global process, console, fetch, AbortController, setTimeout, clearTimeout */
 
 /**
  * scan.mjs — Zero-token portal scanner
  *
- * Fetches Greenhouse, Ashby, and Lever APIs directly, applies title
- * filters from portals.yml, deduplicates against existing history,
- * and appends new offers to pipeline.md + scan-history.tsv.
+ * Fetches Greenhouse, Ashby, Lever, BambooHR, Teamtailor, Workable,
+ * SmartRecruiters, and Recruitee APIs directly, applies title filters
+ * from portals.yml, deduplicates against existing history, and appends
+ * new offers to pipeline.md + scan-history.tsv.
  *
- * Zero Claude API tokens — pure HTTP + JSON.
+ * Zero Claude API tokens — pure HTTP + JSON/RSS.
  *
  * Usage:
  *   node scan.mjs                  # scan all enabled companies
@@ -69,6 +72,76 @@ function detectApi(company) {
     };
   }
 
+  // BambooHR: explicit api_provider or {slug}.bamboohr.com
+  if (company.api_provider === 'bamboohr' && company.bamboohr_slug) {
+    return {
+      type: 'bamboohr',
+      url: `https://${company.bamboohr_slug}.bamboohr.com/careers/list`,
+      meta: { slug: company.bamboohr_slug },
+    };
+  }
+  const bambooMatch = url.match(/([^/]+)\.bamboohr\.com/);
+  if (bambooMatch) {
+    return {
+      type: 'bamboohr',
+      url: `https://${bambooMatch[1]}.bamboohr.com/careers/list`,
+      meta: { slug: bambooMatch[1] },
+    };
+  }
+
+  // Teamtailor: {slug}.teamtailor.com — returns RSS feed
+  if (company.api_provider === 'teamtailor' && company.teamtailor_slug) {
+    return {
+      type: 'teamtailor',
+      url: `https://${company.teamtailor_slug}.teamtailor.com/jobs.rss`,
+    };
+  }
+  const ttMatch = url.match(/([^/]+)\.teamtailor\.com/);
+  if (ttMatch) {
+    return {
+      type: 'teamtailor',
+      url: `https://${ttMatch[1]}.teamtailor.com/jobs.rss`,
+    };
+  }
+
+  // Workable: apply.workable.com/{slug}
+  if (company.api_provider === 'workable' && company.workable_slug) {
+    return {
+      type: 'workable',
+      url: `https://apply.workable.com/api/v3/accounts/${company.workable_slug}/jobs`,
+    };
+  }
+  const workableMatch = url.match(/apply\.workable\.com\/([^/?#]+)/);
+  if (workableMatch) {
+    return {
+      type: 'workable',
+      url: `https://apply.workable.com/api/v3/accounts/${workableMatch[1]}/jobs`,
+    };
+  }
+
+  // SmartRecruiters: careers.smartrecruiters.com/{id}
+  if (company.api_provider === 'smartrecruiters' && company.smartrecruiters_id) {
+    return {
+      type: 'smartrecruiters',
+      url: `https://api.smartrecruiters.com/v1/companies/${company.smartrecruiters_id}/postings?status=PUBLIC`,
+    };
+  }
+  const srMatch = url.match(/careers\.smartrecruiters\.com\/([^/?#]+)/);
+  if (srMatch) {
+    return {
+      type: 'smartrecruiters',
+      url: `https://api.smartrecruiters.com/v1/companies/${srMatch[1]}/postings?status=PUBLIC`,
+    };
+  }
+
+  // Recruitee: careers.{slug}.com/o/api/jobs
+  if (company.api_provider === 'recruitee' && company.recruitee_slug) {
+    return {
+      type: 'recruitee',
+      url: `https://careers.${company.recruitee_slug}.com/o/api/jobs`,
+    };
+  }
+
   return null;
 }
 
@@ -104,7 +177,82 @@ function parseLever(json, companyName) {
   }));
 }
 
-const PARSERS = { greenhouse: parseGreenhouse, ashby: parseAshby, lever: parseLever };
+// ── BambooHR / Teamtailor / Workable / SmartRecruiters / Recruitee parsers ─────
+
+function parseBambooHR(json, companyName, _url, meta) {
+  const jobs = json.result || [];
+  const slug = meta?.slug || '';
+  return jobs.map(j => ({
+    title: j.jobOpeningName || '',
+    url: j.jobOpeningShareUrl || `https://${slug}.bamboohr.com/careers/${j.id}/detail`,
+    company: companyName,
+    location: j.location?.city || j.location?.country || '',
+  }));
+}
+
+function parseTeamtailor(xmlText, companyName) {
+  // Teamtailor publishes an RSS feed — parse items with regex
+  const items = [];
+  const itemRegex = /<item>([\s\S]*?)<\/item>/g;
+  let m;
+  while ((m = itemRegex.exec(xmlText)) !== null) {
+    const block = m[1];
+    const titleM = block.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>|<title>(.*?)<\/title>/);
+    const linkM = block.match(/<link>(.*?)<\/link>|<guid[^>]*>(.*?)<\/guid>/);
+    const locationM = block.match(/<location>(.*?)<\/location>/);
+    if (titleM && linkM) {
+      items.push({
+        title: (titleM[1] || titleM[2] || '').trim(),
+        url: (linkM[1] || linkM[2] || '').trim(),
+        company: companyName,
+        location: locationM ? (locationM[1] || '').trim() : '',
+      });
+    }
+  }
+  return items;
+}
+
+function parseWorkable(json, companyName) {
+  const jobs = json.results || [];
+  return jobs.map(j => ({
+    title: j.title || '',
+    url: j.url || j.shortlink || '',
+    company: companyName,
+    location: j.location?.telecommuting ? 'Remote'
+      : j.location?.city || j.location?.country || '',
+  }));
+}
+
+function parseSmartRecruiters(json, companyName) {
+  const jobs = json.content || [];
+  return jobs.map(j => ({
+    title: j.name || '',
+    url: `https://jobs.smartrecruiters.com/${j.company?.identifier || ''}/${j.id}`,
+    company: companyName,
+    location: j.location?.city || j.location?.country || '',
+  }));
+}
+
+function parseRecruitee(json, companyName) {
+  const jobs = json.offers || [];
+  return jobs.map(j => ({
+    title: j.title || '',
+    url: j.careers_url || '',
+    company: companyName,
+    location: j.city || j.country || '',
+  }));
+}
+
+const ALL_PARSERS = {
+  greenhouse: parseGreenhouse,
+  ashby: parseAshby,
+  lever: parseLever,
+  bamboohr: parseBambooHR,
+  teamtailor: parseTeamtailor,
+  workable: parseWorkable,
+  smartrecruiters: parseSmartRecruiters,
+  recruitee: parseRecruitee,
+};
 
 // ── Fetch with timeout ──────────────────────────────────────────────
 
@@ -115,6 +263,18 @@ async function fetchJson(url) {
     const res = await fetch(url, { signal: controller.signal });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.json();
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function fetchText(url) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  try {
+    const res = await fetch(url, { signal: controller.signal });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.text();
   } finally {
     clearTimeout(timer);
   }
@@ -290,10 +450,19 @@ async function main() {
   const errors = [];
 
   const tasks = targets.map(company => async () => {
-    const { type, url } = company._api;
+    const { type, url, meta } = company._api;
     try {
-      const json = await fetchJson(url);
-      const jobs = PARSERS[type](json, company.name);
+      let jobs;
+      if (type === 'teamtailor') {
+        // Teamtailor returns RSS/XML — fetch as text
+        const xml = await fetchText(url);
+        jobs = parseTeamtailor(xml, company.name);
+      } else {
+        const json = await fetchJson(url);
+        const parser = ALL_PARSERS[type];
+        if (!parser) throw new Error(`No parser for type: ${type}`);
+        jobs = parser(json, company.name, url, meta);
+      }
       totalFound += jobs.length;
 
       for (const job of jobs) {
