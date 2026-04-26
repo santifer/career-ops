@@ -19,12 +19,6 @@ const nextConfig: NextConfig = {
       "./config/**/*",
       "./data/**/*",
       "./fonts/**/*",
-      "./node_modules/js-yaml/**/*",
-      "./node_modules/yaml/**/*",
-      "./node_modules/postgres/**/*",
-      "./node_modules/dotenv/**/*",
-      "./node_modules/@huggingface/inference/**/*",
-      "./node_modules/playwright/**/*",
     ],
   },
 };
