@@ -3,7 +3,7 @@
 /**
  * scan.mjs — Zero-token portal scanner
  *
- * Fetches Greenhouse, Ashby, and Lever APIs directly, applies title
+ * Fetches Greenhouse, Ashby, Lever, and Workday APIs directly, applies title
  * filters from portals.yml, deduplicates against existing history,
  * and appends new offers to pipeline.md + scan-history.tsv.
  *
@@ -69,6 +69,18 @@ function detectApi(company) {
     };
   }
 
+  // Workday — locale segment (xx-XX/) is optional; site is always the last path segment
+  const wdMatch = url.match(
+    /([a-z0-9-]+\.wd\d+\.myworkdayjobs\.com)\/(?:([a-z]{2}-[A-Z]{2})\/)?([^/?#]+)/
+  );
+  if (wdMatch) {
+    const host   = wdMatch[1];
+    const tenant = host.split('.')[0];
+    const locale = wdMatch[2] || 'en-US';
+    const site   = wdMatch[3];
+    return { type: 'workday', url: `https://${host}/wday/cxs/${tenant}/${site}/jobs`, locale };
+  }
+
   return null;
 }
 
@@ -118,6 +130,72 @@ async function fetchJson(url) {
   } finally {
     clearTimeout(timer);
   }
+}
+
+// ── Workday paginated fetch ─────────────────────────────────────────
+
+async function fetchWorkdayJobs(apiUrl, companyName, locale = 'en-US') {
+  // Derive job link base from the API URL:
+  // API:  https://{host}/wday/cxs/{tenant}/{site}/jobs
+  // Base: https://{host}/{locale}/{site}
+  const u = new URL(apiUrl);
+  const parts = u.pathname.split('/').filter(Boolean); // ['wday','cxs','tenant','site','jobs']
+  const baseUrl = `${u.origin}/${locale}/${parts[3]}`;
+
+  const jobs = [];
+  const limit = 20;
+  let offset = 0;
+  let total = null;
+  let pageCount = 0;
+  const MAX_PAGES = 2;
+
+  while (total === null || offset < total) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+    let data;
+    try {
+      const res = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+          'Referer': baseUrl,
+          'Accept-Encoding': 'gzip, deflate, br',
+        },
+        body: JSON.stringify({ appliedFacets: {}, limit, offset, searchText: '' }),
+        signal: controller.signal,
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      data = await res.json();
+    } finally {
+      clearTimeout(timer);
+    }
+
+    const responseTotal = data.total ?? data.totalJobPostings;
+    if (total === null && Number.isFinite(responseTotal) && responseTotal > 0) {
+      total = responseTotal;
+    }
+
+    const postings = data.jobPostings || [];
+    if (postings.length === 0) break;
+
+    for (const j of postings) {
+      jobs.push({
+        title: j.title || '',
+        url: `${baseUrl}${j.externalPath || ''}`,
+        company: companyName,
+        location: j.locationsText || '',
+      });
+    }
+    offset += postings.length;
+    if (postings.length < limit) break;
+
+    pageCount++;
+    if (pageCount >= MAX_PAGES) break;
+  }
+
+  return jobs;
 }
 
 // ── Title filter ────────────────────────────────────────────────────
@@ -292,8 +370,13 @@ async function main() {
   const tasks = targets.map(company => async () => {
     const { type, url } = company._api;
     try {
-      const json = await fetchJson(url);
-      const jobs = PARSERS[type](json, company.name);
+      let jobs;
+      if (type === 'workday') {
+        jobs = await fetchWorkdayJobs(url, company.name, company._api.locale);
+      } else {
+        const json = await fetchJson(url);
+        jobs = PARSERS[type](json, company.name);
+      }
       totalFound += jobs.length;
 
       for (const job of jobs) {

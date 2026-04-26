@@ -3,7 +3,7 @@
 #
 # Strategy (3 levels):
 #   1. Playwright → careers_url of each company (real-time, reliable)
-#   2. Greenhouse API → structured JSON (fast, Greenhouse-only)
+#   2. ATS APIs → structured JSON (fast, zero-token: Greenhouse / Ashby / Lever / Workday)
 #   3. WebSearch with site: filters (broad discovery, may be stale)
 #
 # IMPORTANT: Each company in tracked_companies MUST have careers_url.
@@ -603,6 +603,18 @@ tracked_companies:
     scan_method: websearch
     scan_query: 'site:apply.workable.com/semios'
     notes: "Vancouver. Agtech and crop intelligence platform."
+    enabled: true
+
+  # -- Workday-based --
+
+  - name: Nvidia
+    careers_url: https://nvidia.wd5.myworkdayjobs.com/NVIDIAExternalCareerSite/
+    notes: "Computing. Workday ATS auto-detected."
+    enabled: true
+
+  - name: Intel
+    careers_url: https://intel.wd1.myworkdayjobs.com/en-US/External
+    notes: "Semiconductor. Workday ATS auto-detected."
     enabled: true
 
   # -- European tech (EMEA-friendly) --
