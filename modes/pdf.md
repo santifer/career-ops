@@ -1,5 +1,8 @@
 # Mode: pdf — ATS-Optimized PDF Generation
 
+**URL:** {job-url}
+**Legitimacy:** {High Confidence | Proceed with Caution | Suspicious}
+
 ## Full pipeline
 
 1. Read `cv.md` as the source of truth
@@ -63,7 +66,7 @@ Examples of legitimate reformulation:
 
 ## Template HTML
 
-Use the template in `cv-template.html`. Replace the `{{...}}` placeholders with personalized content:
+Use the template in `templates/cv-template.html`. Replace the `{{...}}` placeholders with personalized content:
 
 | Placeholder | Content |
 |-------------|-----------|
