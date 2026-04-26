@@ -1,6 +1,9 @@
 # Personal data (user fills these)
 .env
 .env.local
+.env.*
+!.env.example
+!.env.*.example
 /data/
 !/data/.gitkeep
 dashboard.log
@@ -53,3 +56,10 @@ scratch-*.cjs
 !scratch-scan.mjs
 
 .vercel
+
+# Security/log hygiene
+*.pem
+*.key
+*.p12
+*.pfx
+dashboard-v2/vercel_deploy_output.log

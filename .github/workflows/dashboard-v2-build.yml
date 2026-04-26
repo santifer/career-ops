@@ -1,0 +1,46 @@
+name: Dashboard v2 Build Check
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "dashboard-v2/**"
+      - ".github/workflows/dashboard-v2-build.yml"
+  pull_request:
+    paths:
+      - "dashboard-v2/**"
+      - ".github/workflows/dashboard-v2-build.yml"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dashboard-v2
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+          cache-dependency-path: dashboard-v2/pnpm-lock.yaml
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build application
+        env:
+          AUTH_SECRET: ci-build-secret
+          DATABASE_URL: postgres://user:pass@localhost:5432/career_ops_ci
+        run: pnpm run build
