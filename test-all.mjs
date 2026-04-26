@@ -295,6 +295,82 @@ if (fileExists('VERSION')) {
   fail('VERSION file missing');
 }
 
+// ── 11. JOB SOURCE LAYER ─────────────────────────────────────────
+
+console.log('\n11. Job source layer (scan-sources.mjs)');
+
+try {
+  const { normalizeJob, SOURCES, resolveSource } = await import(
+    pathToFileURL(join(ROOT, 'scan-sources.mjs')).href
+  );
+
+  // normalizeJob: messy input → clean strings
+  const messy = normalizeJob({ title: '  AI Engineer  ', url: undefined, location: null });
+  if (messy.title === 'AI Engineer' && messy.url === '' && messy.location === '') {
+    pass('normalizeJob trims whitespace and fills missing fields with empty strings');
+  } else {
+    fail(`normalizeJob returned unexpected shape: ${JSON.stringify(messy)}`);
+  }
+
+  // normalizeJob: all fields present
+  const clean = normalizeJob({ title: 'ML Lead', url: 'https://example.com/job', company: 'Acme', location: 'Berlin' });
+  if (clean.title === 'ML Lead' && clean.company === 'Acme') {
+    pass('normalizeJob passes through valid fields unchanged');
+  } else {
+    fail(`normalizeJob mutated valid fields: ${JSON.stringify(clean)}`);
+  }
+
+  // All SOURCES have required fields
+  const requiredFields = ['name', 'type', 'detect', 'fetch', 'parse'];
+  let sourcesOk = true;
+  for (const source of SOURCES) {
+    for (const field of requiredFields) {
+      if (source[field] == null) {
+        fail(`Source "${source.name || '?'}" is missing required field: ${field}`);
+        sourcesOk = false;
+      }
+    }
+  }
+  if (sourcesOk) pass(`All ${SOURCES.length} sources have required fields (name, type, detect, fetch, parse)`);
+
+  // resolveSource: known URL patterns resolve to the correct source
+  const fixtures = [
+    { careers_url: 'https://job-boards.greenhouse.io/acme', expected: 'greenhouse' },
+    { careers_url: 'https://jobs.ashbyhq.com/acme', expected: 'ashby' },
+    { careers_url: 'https://jobs.lever.co/acme', expected: 'lever' },
+    { careers_url: 'https://jobs.smartrecruiters.com/Acme', expected: 'smartrecruiters' },
+    { careers_url: 'https://apply.workable.com/acme', expected: 'workable' },
+  ];
+  for (const { careers_url, expected } of fixtures) {
+    const result = resolveSource({ careers_url });
+    if (result?.source.name === expected) {
+      pass(`resolveSource detects "${expected}" from careers_url`);
+    } else {
+      fail(`resolveSource("${careers_url}") → expected "${expected}", got "${result?.source.name ?? 'null'}"`);
+    }
+  }
+
+  // resolveSource: unknown URL returns null (no false positives)
+  const unknown = resolveSource({ careers_url: 'https://careers.somecompany.com/jobs' });
+  if (unknown === null) {
+    pass('resolveSource returns null for unrecognised URL patterns');
+  } else {
+    fail(`resolveSource matched unknown URL to source "${unknown.source.name}"`);
+  }
+
+  // --type flag: resolveSource respects type filter
+  const atsResult = resolveSource({ careers_url: 'https://jobs.ashbyhq.com/acme' }, ['ats-api']);
+  const filteredOut = resolveSource({ careers_url: 'https://jobs.ashbyhq.com/acme' }, ['search']);
+  if (atsResult !== null && filteredOut === null) {
+    pass('resolveSource type filter includes matching types and excludes non-matching');
+  } else {
+    fail('resolveSource type filter behaved unexpectedly');
+  }
+
+} catch (e) {
+  fail(`Job source layer tests crashed: ${e.message}`);
+}
+
 // ── SUMMARY ─────────────────────────────────────────────────────
 
 console.log('\n' + '='.repeat(50));
