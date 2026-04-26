@@ -203,6 +203,8 @@ async function run() {
   console.log('  Sources: Greenhouse · Ashby · Lever · Workable');
   console.log('═══════════════════════════════════════════');
   const enableExtendedScan = process.env.ENABLE_EXTENDED_SCAN === 'true';
+  const hasUserSearchQueries = Array.isArray(config.search_queries) && config.search_queries.length > 0;
+  const shouldRunDiscovery = enableExtendedScan || hasUserSearchQueries;
 
   // 1. Direct ATS Scans (Greenhouse, Ashby, Lever, Workable)
   await scanGreenhouse();
@@ -211,7 +213,7 @@ async function run() {
   await scanWorkable();
 
   // 2. Dynamic Search Discovery (Naukri, Indeed, LinkedIn, etc.)
-  if (enableExtendedScan) {
+  if (shouldRunDiscovery) {
     console.log('\n🌟 Discovery Phase — Searching all portals from portals.yml');
     try {
       const { scrapeInstahyre }     = await import('../../portals/scrapers/instahyre.mjs');
@@ -262,44 +264,46 @@ async function run() {
     }
 
     // 3. Enterprise Portal Scans (Workday, SuccessFactors)
-    console.log('\n🏢 Enterprise Phase — Scanning Workday & SuccessFactors');
-    try {
-      const { scrapeWorkday }       = await import('../../portals/scrapers/workday.mjs');
-      const { scrapeSuccessFactors} = await import('../../portals/scrapers/successfactors.mjs');
+    if (enableExtendedScan) {
+      console.log('\n🏢 Enterprise Phase — Scanning Workday & SuccessFactors');
+      try {
+        const { scrapeWorkday }       = await import('../../portals/scrapers/workday.mjs');
+        const { scrapeSuccessFactors} = await import('../../portals/scrapers/successfactors.mjs');
 
-      // This is where you would iterate through specific enterprise entries if added to tracked_companies
-      // For now, I'll add a few known targets to ensure they are checked
-      const enterpriseTargets = [
-        { name: 'Siemens', subdomain: 'siemens', portal: 'workday' },
-        { name: 'AMD', subdomain: 'amd', portal: 'workday' },
-        { name: 'SAP', portalToken: 'sap', portal: 'successfactors' }
-      ];
+        // This is where you would iterate through specific enterprise entries if added to tracked_companies
+        // For now, I'll add a few known targets to ensure they are checked
+        const enterpriseTargets = [
+          { name: 'Siemens', subdomain: 'siemens', portal: 'workday' },
+          { name: 'AMD', subdomain: 'amd', portal: 'workday' },
+          { name: 'SAP', portalToken: 'sap', portal: 'successfactors' }
+        ];
 
-      for (const target of enterpriseTargets) {
-         console.log(`  🏢 Checking Enterprise: ${target.name}...`);
-         let results = [];
-         try {
-           if (target.portal === 'workday') {
-             results = await scrapeWorkday(target.name, target.subdomain, 'Software Engineer');
-           } else if (target.portal === 'successfactors') {
-             results = await scrapeSuccessFactors(target.name, target.portalToken, 'Software Engineer');
+        for (const target of enterpriseTargets) {
+           console.log(`  🏢 Checking Enterprise: ${target.name}...`);
+           let results = [];
+           try {
+             if (target.portal === 'workday') {
+               results = await scrapeWorkday(target.name, target.subdomain, 'Software Engineer');
+             } else if (target.portal === 'successfactors') {
+               results = await scrapeSuccessFactors(target.name, target.portalToken, 'Software Engineer');
+             }
+             
+             stats.enterprise.found += results.length;
+             results.forEach(j => {
+               const res = tryAdd(j.url, j.company, j.title, j.source);
+               if (res === 'added') stats.enterprise.added++;
+             });
+           } catch (err) {
+             console.error(`  ✗ Error scanning enterprise ${target.name}:`, err.message);
+             stats.enterprise.errors++;
            }
-           
-           stats.enterprise.found += results.length;
-           results.forEach(j => {
-             const res = tryAdd(j.url, j.company, j.title, j.source);
-             if (res === 'added') stats.enterprise.added++;
-           });
-         } catch (err) {
-           console.error(`  ✗ Error scanning enterprise ${target.name}:`, err.message);
-           stats.enterprise.errors++;
-         }
+        }
+      } catch (e) {
+        console.error(`  ✗ Enterprise Phase Error: ${e.message}`);
       }
-    } catch (e) {
-      console.error(`  ✗ Enterprise Phase Error: ${e.message}`);
     }
   } else {
-    console.log('\nℹ️ Extended discovery/enterprise scan disabled in this runtime. Set ENABLE_EXTENDED_SCAN=true to enable.');
+    console.log('\nℹ️ No user search queries configured yet. Add portals in Settings or set ENABLE_EXTENDED_SCAN=true for full extended scan.');
   }
 
   const totalAdded   = Object.values(stats).reduce((s, v) => s + v.added, 0);

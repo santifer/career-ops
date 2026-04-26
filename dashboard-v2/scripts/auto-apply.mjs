@@ -1,11 +1,9 @@
 import fs from 'fs';
 import path from 'path';
-import yaml from 'js-yaml';
 import sql from './db/client.mjs';
 
 let hf = null;
 const TARGET_MAP = 'data/current_eval.json';
-const PROFILE_PATH = 'config/profile.yml';
 
 let urlOrIdx = process.argv[2];
 let company = process.argv[3] || '';
@@ -36,13 +34,8 @@ async function getChromium() {
   }
 }
 
-// Load profile for auto-filling
-let profile = { candidate: {} };
-try {
-  profile = yaml.load(fs.readFileSync(PROFILE_PATH, 'utf8'));
-} catch (e) {
-  console.warn("⚠ Failed to load profile.yml, using placeholders.");
-}
+// Load profile for auto-filling from user-scoped DB context.
+let profile = { candidate: {}, narrative: {}, legal: {}, compensation: {} };
 
 function findTailoredCV(companyName) {
   if (!companyName) return null;
@@ -283,6 +276,13 @@ async function matchAndFillFields(fields, profile, aiMapping) {
   const page = await context.newPage();
   
   try {
+    const [profileRow] = await sql`SELECT resume_context FROM user_profiles WHERE user_id = ${userId} LIMIT 1`;
+    if (profileRow?.resume_context) {
+      profile = profileRow.resume_context;
+    } else {
+      console.warn("⚠ No profile found in DB for this user. Using placeholders.");
+    }
+
     await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 45000 });
     await page.waitForLoadState('load').catch(() => {});
     

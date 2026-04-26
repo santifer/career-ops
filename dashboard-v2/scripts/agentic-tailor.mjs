@@ -2,12 +2,10 @@ import fs from 'fs';
 import { stat } from 'fs/promises';
 import path from 'path';
 import { execSync } from 'child_process';
-import yaml from 'js-yaml';
 import sql from './db/client.mjs';
 
 let hf = null;
 const TARGET_MAP = 'data/current_eval.json';
-const PROFILE_PATH = 'config/profile.yml';
 const TEMPLATE = 'templates/ats-template.html';
 
 const idOrUrl = process.argv[2];
