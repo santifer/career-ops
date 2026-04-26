@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { generateVerificationToken } from '@/lib/tokens';
 import { sendVerificationEmail } from '@/lib/mail';
+import { rateLimit } from '@/lib/rate-limit';
 
 // Lead Engineer Note: Enforcing a strict schema for the registration payload
 const RegistrationSchema = z.object({
@@ -14,6 +15,12 @@ const RegistrationSchema = z.object({
 
 export async function POST(req: Request) {
   try {
+    const clientIp = req.headers.get('x-forwarded-for') || 'unknown';
+    const rl = rateLimit(`register:${clientIp}`, { windowMs: 60_000, max: 8 });
+    if (!rl.ok) {
+      return NextResponse.json({ error: `Too many attempts. Try again in ${rl.retryAfterSec}s.` }, { status: 429 });
+    }
+
     // 0. Vital Infrastructure Check
     if (!process.env.DATABASE_URL) {
       return NextResponse.json({ error: "DATABASE_URL is missing in environment variables. Critical infrastructure setup required." }, { status: 500 });

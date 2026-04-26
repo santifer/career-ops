@@ -1,8 +1,15 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
+import { rateLimit } from '@/lib/rate-limit';
 
 export async function POST(req: Request) {
   try {
+    const clientIp = req.headers.get('x-forwarded-for') || 'unknown';
+    const rl = rateLimit(`verify:${clientIp}`, { windowMs: 60_000, max: 15 });
+    if (!rl.ok) {
+      return NextResponse.json({ error: `Too many attempts. Try again in ${rl.retryAfterSec}s.` }, { status: 429 });
+    }
+
     const { email, token } = await req.json();
 
     if (!email || !token) {

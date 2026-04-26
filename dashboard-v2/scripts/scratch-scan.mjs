@@ -289,9 +289,9 @@ async function run() {
   if (totalAdded > 0) {
     console.log(`\n📦 UPSERTing ${totalAdded} new jobs to PostgreSQL...`);
     for (const job of newJobs) {
-      job.user_id = parseInt(userId);
       await sql`
-        INSERT INTO jobs ${sql(job, 'url', 'company', 'title', 'source', 'user_id')}
+        INSERT INTO jobs (url, company, title, source, user_id)
+        VALUES (${job.url}, ${job.company}, ${job.title}, ${job.source}, ${parseInt(userId)})
         ON CONFLICT (user_id, url) DO NOTHING
       `;
     }

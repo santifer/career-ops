@@ -12,6 +12,7 @@ function LoginContent() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') || '/';
   const isVerified = searchParams.get('verified') === 'true';
+  const isReset = searchParams.get('reset') === 'true';
   const authError = searchParams.get('error');
   const autoGithub = searchParams.get('autogithub') === '1';
   const githubCallbackUrl = '/?walkthrough=1';
@@ -87,7 +88,14 @@ function LoginContent() {
         {isVerified && !autoGithub && (
           <div className="mb-6 p-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center gap-3 text-emerald-700 text-sm font-bold">
             <CheckCircle2 size={18} />
-            Email verified successfully. You can now log in.
+            Account activated. You can sign in now.
+          </div>
+        )}
+
+        {isReset && (
+          <div className="mb-6 p-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center gap-3 text-emerald-700 text-sm font-bold">
+            <CheckCircle2 size={18} />
+            Password updated. Sign in with your new password.
           </div>
         )}
 
@@ -131,6 +139,11 @@ function LoginContent() {
                   required
                   className="w-full bg-[#faf9f6]/50 border border-[#e7e5e4] rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-[#1c1917] transition-all font-bold placeholder:text-[#a8a29e]/50"
                 />
+              </div>
+              <div className="text-right pt-1">
+                <Link href="/forgot-password" className="text-xs font-bold text-[#78716c] hover:text-[#1c1917]">
+                  Forgot password?
+                </Link>
               </div>
             </div>
 

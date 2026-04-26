@@ -67,3 +67,7 @@ export const sendVerificationEmail = async (email: string, token: string) => {
     return null; 
   }
 };
+
+export const sendPasswordResetEmail = async (email: string, token: string) => {
+  return sendVerificationEmail(email, token);
+};

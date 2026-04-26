@@ -5,7 +5,7 @@ const { auth } = NextAuth(authConfig);
 
 export default auth((req) => {
   const isLoggedIn = !!req.auth
-  const publicPages = ["/", "/login", "/signup", "/verify", "/auth/continue", "/docs", "/privacy", "/status"]
+  const publicPages = ["/", "/login", "/signup", "/verify", "/forgot-password", "/reset-password", "/auth/continue", "/docs", "/privacy", "/status"]
   const isPublicPage = publicPages.includes(req.nextUrl.pathname)
 
   if (isPublicPage) {
@@ -22,5 +22,5 @@ export default auth((req) => {
 })
 
 export const config = {
-  matcher: ["/((?!api/auth|api/register|api/verify|_next/static|_next/image|favicon.ico|icon.png).*)"],
+  matcher: ["/((?!api/auth|api/register|api/verify|api/password|_next/static|_next/image|favicon.ico|icon.png).*)"],
 }

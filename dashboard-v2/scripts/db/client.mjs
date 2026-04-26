@@ -1,13 +1,20 @@
-import postgres from 'postgres';
+import pg from 'pg';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-const sql = postgres(process.env.DATABASE_URL, {
-  ssl: 'require',
+const pool = new pg.Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined,
   max: 10,
-  idle_timeout: 20,
-  connect_timeout: 30,
 });
+
+function sql(strings, ...values) {
+  const text = strings.reduce((acc, part, i) => {
+    const next = i < values.length ? `$${i + 1}` : '';
+    return `${acc}${part}${next}`;
+  }, '');
+  return pool.query(text, values).then((res) => res.rows);
+}
 
 export default sql;
