@@ -3,7 +3,7 @@
 #
 # Strategy (3 levels):
 #   1. Playwright → careers_url of each company (real-time, reliable)
-#   2. Greenhouse API → structured JSON (fast, Greenhouse-only)
+#   2. ATS APIs → structured JSON (fast, zero-token: Greenhouse / Ashby / Lever / Workday)
 #   3. WebSearch with site: filters (broad discovery, may be stale)
 #
 # IMPORTANT: Each company in tracked_companies MUST have careers_url.
@@ -555,6 +555,13 @@ tracked_companies:
   - name: Palantir
     careers_url: https://jobs.lever.co/palantir
     notes: "FDE roles. Mostly US/London."
+    enabled: true
+
+  # -- Workday-based --
+
+  - name: Nvidia
+    careers_url: https://nvidia.wd5.myworkdayjobs.com/NVIDIAExternalCareerSite/
+    notes: "Computing. Workday ATS auto-detected."
     enabled: true
 
   # -- European tech (EMEA-friendly) --
