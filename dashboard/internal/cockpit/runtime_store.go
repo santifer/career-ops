@@ -9,10 +9,12 @@ import (
 )
 
 var (
-	ErrRunAlreadyClaimed = errors.New("run already claimed")
-	ErrWorkerIDRequired  = errors.New("worker id is required")
-	ErrLeaseTTLRequired  = errors.New("lease ttl is required")
-	ErrUserIDRequired    = errors.New("user id is required")
+	ErrRunAlreadyClaimed         = errors.New("run already claimed")
+	ErrWorkerIDRequired          = errors.New("worker id is required")
+	ErrLeaseTTLRequired          = errors.New("lease ttl is required")
+	ErrUserIDRequired            = errors.New("user id is required")
+	ErrActiveWorkerLeaseRequired = errors.New("active worker lease is required")
+	ErrRunTerminal               = errors.New("run is already terminal")
 )
 
 // AutoModeRuntimeStore owns hosted Auto Mode runtime state: claims, leases,
@@ -29,6 +31,8 @@ type AutoModeRuntimeStore interface {
 	MarkReadyForReview(ctx context.Context, id string, request ReadyForReviewRequest) (RunRecord, error)
 	ApproveUpload(ctx context.Context, request ApprovalRequest) (RunRecord, error)
 	ApproveSubmit(ctx context.Context, request ApprovalRequest) (RunRecord, error)
+	CompleteSubmit(ctx context.Context, id string, request SubmitCompleteRequest) (RunRecord, error)
+	CancelRun(ctx context.Context, id string, userID string) (RunRecord, error)
 }
 
 type ClaimRunRequest struct {
@@ -138,11 +142,11 @@ func (s *MemoryRuntimeStore) ClaimRun(ctx context.Context, request ClaimRunReque
 	if !ok {
 		return RunRecord{}, ErrRunNotFound
 	}
-	if run.WorkerClaim != nil && request.ClaimedAt.Before(run.WorkerClaim.LeaseExpiresAt) && run.WorkerClaim.WorkerID != request.WorkerID {
-		return RunRecord{}, ErrRunAlreadyClaimed
-	}
 	if !runVisibleToUser(run, request.UserID) {
 		return RunRecord{}, ErrRunNotFound
+	}
+	if run.WorkerClaim != nil && request.ClaimedAt.Before(run.WorkerClaim.LeaseExpiresAt) && run.WorkerClaim.WorkerID != request.WorkerID {
+		return RunRecord{}, ErrRunAlreadyClaimed
 	}
 
 	run.State = RunStateRunning
@@ -174,7 +178,9 @@ func (s *MemoryRuntimeStore) Heartbeat(ctx context.Context, request HeartbeatReq
 	if !runVisibleToUser(run, request.UserID) {
 		return RunRecord{}, ErrRunNotFound
 	}
-	applyHeartbeatToRun(&run, request)
+	if err := applyHeartbeatToRun(&run, request); err != nil {
+		return RunRecord{}, err
+	}
 	s.runs[request.RunID] = cloneRuntimeRun(run)
 	return cloneRuntimeRun(run), nil
 }
@@ -250,6 +256,25 @@ func (s *MemoryRuntimeStore) ApproveSubmit(ctx context.Context, request Approval
 	return s.approve(ctx, request, applySubmitApprovalToRun)
 }
 
+func (s *MemoryRuntimeStore) CompleteSubmit(ctx context.Context, id string, request SubmitCompleteRequest) (RunRecord, error) {
+	return s.mutateByID(ctx, id, func(run *RunRecord) error {
+		if !runVisibleToUser(*run, request.UserID) {
+			return ErrRunNotFound
+		}
+		return completeSubmitOnRun(run, time.Now().UTC(), request)
+	})
+}
+
+func (s *MemoryRuntimeStore) CancelRun(ctx context.Context, id string, userID string) (RunRecord, error) {
+	return s.mutateByID(ctx, id, func(run *RunRecord) error {
+		if !runVisibleToUser(*run, userID) {
+			return ErrRunNotFound
+		}
+		cancelRuntimeRun(run, time.Now().UTC())
+		return nil
+	})
+}
+
 func (s *MemoryRuntimeStore) approve(ctx context.Context, request ApprovalRequest, mutate func(*RunRecord, ApprovalGate) error) (RunRecord, error) {
 	if err := ctx.Err(); err != nil {
 		return RunRecord{}, err
@@ -322,9 +347,23 @@ func applyHeartbeatToRun(run *RunRecord, request HeartbeatRequest) error {
 	if run.WorkerClaim == nil || run.WorkerClaim.WorkerID != request.WorkerID {
 		return ErrRunAlreadyClaimed
 	}
+	if !request.HeartbeatAt.Before(run.WorkerClaim.LeaseExpiresAt) {
+		return ErrActiveWorkerLeaseRequired
+	}
 	run.WorkerClaim.HeartbeatAt = request.HeartbeatAt
 	run.WorkerClaim.LeaseExpiresAt = request.HeartbeatAt.Add(request.LeaseTTL)
 	return nil
+}
+
+func workerHasActiveLease(run RunRecord, workerID string, now time.Time) bool {
+	workerID = strings.TrimSpace(workerID)
+	if workerID == "" || run.WorkerClaim == nil {
+		return false
+	}
+	if now.IsZero() {
+		now = time.Now().UTC()
+	}
+	return run.WorkerClaim.WorkerID == workerID && now.Before(run.WorkerClaim.LeaseExpiresAt)
 }
 
 func validateApprovalRequest(request *ApprovalRequest) error {
@@ -366,6 +405,48 @@ func applySubmitApprovalToRun(run *RunRecord, gate ApprovalGate) error {
 	return nil
 }
 
+func completeSubmitOnRun(run *RunRecord, at time.Time, request SubmitCompleteRequest) error {
+	if strings.TrimSpace(request.UserID) == "" {
+		return ErrUserIDRequired
+	}
+	if strings.TrimSpace(request.WorkerID) == "" {
+		return ErrWorkerIDRequired
+	}
+	if !workerHasActiveLease(*run, request.WorkerID, at) {
+		return ErrActiveWorkerLeaseRequired
+	}
+	if run.ReviewGate == nil || run.ReviewGate.ApprovedAt == nil {
+		return ErrAutoModeSubmitApprovalRequired
+	}
+	if isTerminalRunState(run.State) {
+		return ErrRunTerminal
+	}
+	run.State = RunStateSubmitted
+	run.CurrentStep = AutoModeStepSyncDashboard
+	run.EndedAt = timePointer(at)
+	markAutoModeStep(run, AutoModeStepApprovedSubmit, "completed", "explicit user approval recorded")
+	markAutoModeStep(run, AutoModeStepSyncDashboard, "completed", strings.TrimSpace(request.ConfirmationText))
+	if run.BrowserSession != nil {
+		run.BrowserSession.Status = "submitted"
+		run.BrowserSession.LastAction = "Worker observed the application submission confirmation."
+		if url := strings.TrimSpace(request.URL); url != "" {
+			run.BrowserSession.TargetURL = url
+		}
+	}
+	message := "Worker observed external application submit completion."
+	if confirmation := strings.TrimSpace(request.ConfirmationText); confirmation != "" {
+		message += " Confirmation: " + confirmation
+	}
+	url := firstNonEmpty(strings.TrimSpace(request.URL), run.URL)
+	appendRunEvent(run, at, AutoModeStepSyncDashboard, message)
+	appendActionLog(run, at, "browser", AutoModeStepSyncDashboard, message, url)
+	return nil
+}
+
+func isTerminalRunState(state string) bool {
+	return state == RunStateSubmitted || state == RunStateFailed || state == RunStateCancelled
+}
+
 func recordFieldObservationOnRun(run *RunRecord, at time.Time, request FieldObservationRequest) error {
 	fields := append([]ObservedField(nil), request.Fields...)
 	if !isZeroObservedField(request.Field) {
@@ -399,6 +480,17 @@ func markRunReadyForReview(run *RunRecord, at time.Time, reason string) {
 	run.ReviewGate.ReadyAt = timePointer(at)
 	appendRunEvent(run, at, AutoModeStepReadyForReview, "Auto Mode is ready for user review. No external submit was performed.")
 	appendActionLog(run, at, "safety", AutoModeStepReadyForReview, "Review gate opened. User can inspect observed fields, CV artifacts, and browser state before approval.", run.URL)
+}
+
+func cancelRuntimeRun(run *RunRecord, at time.Time) {
+	run.State = RunStateCancelled
+	run.EndedAt = timePointer(at)
+	if run.BrowserSession != nil {
+		run.BrowserSession.Status = "cancelled"
+		run.BrowserSession.LastAction = "Auto Mode run was cancelled by the user."
+	}
+	appendRunEvent(run, at, run.CurrentStep, "Auto Mode run cancelled.")
+	appendActionLog(run, at, "system", run.CurrentStep, "Auto Mode run cancelled by the user.", run.URL)
 }
 
 func appendBrowserLogToRun(run *RunRecord, at time.Time, request BrowserLogRequest) {
@@ -458,7 +550,7 @@ func validateClaimRequest(request ClaimRunRequest) error {
 func runVisibleToUser(run RunRecord, userID string) bool {
 	owner := strings.TrimSpace(run.OwnerUserID)
 	userID = strings.TrimSpace(userID)
-	return owner == "" || owner == userID
+	return owner != "" && owner == userID
 }
 
 func cloneRuntimeRun(run RunRecord) RunRecord {

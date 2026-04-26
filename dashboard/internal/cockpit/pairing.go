@@ -34,9 +34,9 @@ type PairingTokenRequest struct {
 }
 
 type PairingTokenResponse struct {
-	Token     string
-	WorkerID  string
-	ExpiresAt time.Time
+	Token     string    `json:"token"`
+	WorkerID  string    `json:"worker_id"`
+	ExpiresAt time.Time `json:"expires_at"`
 }
 
 type ExchangePairingRequest struct {
@@ -46,9 +46,9 @@ type ExchangePairingRequest struct {
 }
 
 type WorkerCredentialResponse struct {
-	WorkerID   string
-	Credential string
-	ExpiresAt  time.Time
+	WorkerID   string    `json:"worker_id"`
+	Credential string    `json:"credential"`
+	ExpiresAt  time.Time `json:"expires_at"`
 }
 
 type WorkerCredentialRequest struct {
@@ -79,6 +79,10 @@ type PairingStore interface {
 	MarkPairingTokenUsed(ctx context.Context, tokenHash string, usedAt time.Time) error
 	SaveWorkerCredential(ctx context.Context, record WorkerCredentialRecord) error
 	GetWorkerCredential(ctx context.Context, credentialHash string) (WorkerCredentialRecord, error)
+}
+
+type AtomicPairingStore interface {
+	ExchangePairingTokenForCredential(ctx context.Context, request ExchangePairingRequest, credentialHash string, credentialTTL time.Duration) (WorkerCredentialRecord, error)
 }
 
 type PairingService struct {
@@ -130,22 +134,25 @@ func (s *PairingService) ExchangePairingToken(ctx context.Context, request Excha
 		request.ExchangedAt = time.Now().UTC()
 	}
 	workerID := strings.TrimSpace(request.WorkerID)
+	credential := s.generateCredential()
+	credentialTTL := s.credentialTTL()
+	if atomicStore, ok := s.Store.(AtomicPairingStore); ok {
+		record, err := atomicStore.ExchangePairingTokenForCredential(ctx, request, hashSecret(credential), credentialTTL)
+		if err != nil {
+			return WorkerCredentialResponse{}, err
+		}
+		return WorkerCredentialResponse{WorkerID: record.WorkerID, Credential: credential, ExpiresAt: record.ExpiresAt}, nil
+	}
+
 	tokenHash := hashSecret(request.Token)
 	record, err := s.Store.GetPairingToken(ctx, tokenHash)
 	if err != nil {
 		return WorkerCredentialResponse{}, ErrPairingTokenInvalid
 	}
-	if record.UsedAt != nil {
-		return WorkerCredentialResponse{}, ErrPairingTokenUsed
+	if err := validatePairingExchange(record, workerID, request.ExchangedAt); err != nil {
+		return WorkerCredentialResponse{}, err
 	}
-	if request.ExchangedAt.After(record.ExpiresAt) {
-		return WorkerCredentialResponse{}, ErrPairingTokenExpired
-	}
-	if workerID == "" || workerID != record.WorkerID {
-		return WorkerCredentialResponse{}, ErrPairingTokenInvalid
-	}
-	credential := s.generateCredential()
-	expiresAt := request.ExchangedAt.Add(s.credentialTTL())
+	expiresAt := request.ExchangedAt.Add(credentialTTL)
 	if err := s.Store.SaveWorkerCredential(ctx, WorkerCredentialRecord{
 		CredentialHash: hashSecret(credential),
 		UserID:         record.UserID,
@@ -205,6 +212,19 @@ func hashSecret(secret string) string {
 
 func randomID(prefix string) string {
 	return prefix + "-" + secureRandomToken()
+}
+
+func validatePairingExchange(record PairingRecord, workerID string, exchangedAt time.Time) error {
+	if record.UsedAt != nil {
+		return ErrPairingTokenUsed
+	}
+	if exchangedAt.After(record.ExpiresAt) {
+		return ErrPairingTokenExpired
+	}
+	if strings.TrimSpace(workerID) == "" || strings.TrimSpace(workerID) != record.WorkerID {
+		return ErrPairingTokenInvalid
+	}
+	return nil
 }
 
 func secureRandomToken() string {
@@ -287,4 +307,31 @@ func (s *MemoryPairingStore) GetWorkerCredential(ctx context.Context, credential
 		return WorkerCredentialRecord{}, ErrWorkerCredentialInvalid
 	}
 	return record, nil
+}
+
+func (s *MemoryPairingStore) ExchangePairingTokenForCredential(ctx context.Context, request ExchangePairingRequest, credentialHash string, credentialTTL time.Duration) (WorkerCredentialRecord, error) {
+	if err := ctx.Err(); err != nil {
+		return WorkerCredentialRecord{}, err
+	}
+	tokenHash := hashSecret(request.Token)
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	record, ok := s.tokens[tokenHash]
+	if !ok {
+		return WorkerCredentialRecord{}, ErrPairingTokenInvalid
+	}
+	if err := validatePairingExchange(record, request.WorkerID, request.ExchangedAt); err != nil {
+		return WorkerCredentialRecord{}, err
+	}
+	usedAt := request.ExchangedAt
+	record.UsedAt = &usedAt
+	s.tokens[tokenHash] = record
+	credential := WorkerCredentialRecord{
+		CredentialHash: credentialHash,
+		UserID:         record.UserID,
+		WorkerID:       record.WorkerID,
+		ExpiresAt:      request.ExchangedAt.Add(credentialTTL),
+	}
+	s.credentials[credentialHash] = credential
+	return credential, nil
 }

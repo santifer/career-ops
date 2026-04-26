@@ -2,8 +2,10 @@ package cockpit
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
 )
@@ -130,6 +132,84 @@ func TestDefaultPairingSecretsAreNotTimestampIDs(t *testing.T) {
 	}
 	if legacyCredentialPattern.MatchString(credential.Credential) {
 		t.Fatalf("default worker credential still uses legacy timestamp format: %q", credential.Credential)
+	}
+}
+
+func TestConcurrentPairingExchangeOnlySucceedsOnce(t *testing.T) {
+	service := newTestPairingService()
+	ctx := context.Background()
+	token, err := service.CreatePairingToken(ctx, PairingTokenRequest{
+		UserID:    "user-1",
+		WorkerID:  "laptop",
+		CreatedAt: testRuntimeNow(),
+		TTL:       time.Minute,
+	})
+	if err != nil {
+		t.Fatalf("CreatePairingToken returned error: %v", err)
+	}
+
+	results := make(chan error, 2)
+	for range 2 {
+		go func() {
+			_, err := service.ExchangePairingToken(ctx, ExchangePairingRequest{
+				Token:       token.Token,
+				WorkerID:    "laptop",
+				ExchangedAt: testRuntimeNow().Add(10 * time.Second),
+			})
+			results <- err
+		}()
+	}
+	successes := 0
+	used := 0
+	for range 2 {
+		err := <-results
+		if err == nil {
+			successes++
+		}
+		if errors.Is(err, ErrPairingTokenUsed) {
+			used++
+		}
+	}
+	if successes != 1 || used != 1 {
+		t.Fatalf("expected exactly one success and one used-token error, got successes=%d used=%d", successes, used)
+	}
+}
+
+func TestPairingResponsesUseStableJSONFieldNames(t *testing.T) {
+	tokenPayload, err := json.Marshal(PairingTokenResponse{
+		Token:     "pair-token",
+		WorkerID:  "laptop",
+		ExpiresAt: testRuntimeNow(),
+	})
+	if err != nil {
+		t.Fatalf("marshal pairing token response: %v", err)
+	}
+	tokenJSON := string(tokenPayload)
+	for _, field := range []string{`"token"`, `"worker_id"`, `"expires_at"`} {
+		if !strings.Contains(tokenJSON, field) {
+			t.Fatalf("expected pairing token JSON to contain %s, got %s", field, tokenJSON)
+		}
+	}
+	if strings.Contains(tokenJSON, `"WorkerID"`) || strings.Contains(tokenJSON, `"ExpiresAt"`) {
+		t.Fatalf("pairing token JSON leaked unstable Go field names: %s", tokenJSON)
+	}
+
+	credentialPayload, err := json.Marshal(WorkerCredentialResponse{
+		WorkerID:   "laptop",
+		Credential: "worker-credential",
+		ExpiresAt:  testRuntimeNow(),
+	})
+	if err != nil {
+		t.Fatalf("marshal worker credential response: %v", err)
+	}
+	credentialJSON := string(credentialPayload)
+	for _, field := range []string{`"worker_id"`, `"credential"`, `"expires_at"`} {
+		if !strings.Contains(credentialJSON, field) {
+			t.Fatalf("expected worker credential JSON to contain %s, got %s", field, credentialJSON)
+		}
+	}
+	if strings.Contains(credentialJSON, `"WorkerID"`) || strings.Contains(credentialJSON, `"Credential"`) {
+		t.Fatalf("worker credential JSON leaked unstable Go field names: %s", credentialJSON)
 	}
 }
 

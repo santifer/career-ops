@@ -30,10 +30,12 @@ related:
 ## Target Roles (Source of Truth: config/profile.yml)
 
 **PRIMARY (score mais alto, aplicar sempre):**
+- Head of Accounting and Controlling (vocabulário-líder canônico)
 - Head of Accounting / Head de Contabilidade
-- Controller (Financial / Regional / LATAM / Corporate)
-- Diretor de Contabilidade / Accounting Director
+- Controller (Financial / Regional / LATAM / Corporate / Business)
 - Head de Consolidacao / Gerente de Consolidacao
+
+> **Regra:** NUNCA "Director" / "Diretor" como cargo-alvo. Exceções permitidas: Audit Director, Tax Director, Post-Integration Director. Ver `config/profile.yml` `avoid_titles` + memória `cv-rules.md` Regra 3.
 
 **SECONDARY (score menor, aplicar quando houver fit):**
 - Head de FP&A / Gerente de FP&A

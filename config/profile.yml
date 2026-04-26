@@ -15,33 +15,40 @@ candidate:
   # canva_resume_design_id: "DAxxxxxxxxx"
 
 target_roles:
-  # PRIMARY: Accounting / Controllership / Consolidation
+  # PRIMARY: Accounting / Controllership / Consolidation (sempre Head, nunca Director)
+  # Regra do candidato: NÃO usar "Diretor" / "Director" como cargo-alvo —
+  # restringe demais a busca de vagas. Sempre "Head of Accounting and Controlling"
+  # como vocabulário-líder. Ver `.claude/references/recruiter-lens.md` e cv-rules.md.
   primary:
+    - "Head of Accounting and Controlling"
     - "Head of Accounting"
+    - "Head of Controllership"
+    - "Regional Controller LATAM"
     - "Controller"
-    - "Diretor de Contabilidade"
     - "Head de Consolidacao"
     - "Gerente de Consolidacao"
+    - "Business Controller"
   # SECONDARY: FP&A / Financeiro
   secondary:
     - "Head de FP&A"
     - "Gerente de FP&A"
     - "Head Financeiro"
     - "Gerente Financeiro"
+    - "Finance Business Partner"
   # Archetypes help the evaluation system score fit
   archetypes:
     # -- PRIMARY: Accounting / Controllership / Consolidation --
-    - name: "Head of Accounting / Head de Contabilidade"
-      level: "Director/Head"
+    - name: "Head of Accounting and Controlling"
+      level: "Head"
       fit: "primary"
-    - name: "Controller (Financial / Regional / LATAM / Corporate)"
-      level: "Senior/Director"
-      fit: "primary"
-    - name: "Diretor de Contabilidade / Accounting Director"
-      level: "Director"
+    - name: "Regional Controller LATAM / Business Controller"
+      level: "Senior/Head"
       fit: "primary"
     - name: "Head de Consolidacao / Gerente de Consolidacao"
       level: "Head/Senior"
+      fit: "primary"
+    - name: "Head of Statutory Accounting & IFRS Reporting LATAM"
+      level: "Head"
       fit: "primary"
     # -- SECONDARY: FP&A / Financeiro --
     - name: "Head de FP&A / Gerente de FP&A"
@@ -57,19 +64,57 @@ target_roles:
     - name: "Finance Manager (multinational)"
       level: "Senior"
       fit: "adjacent"
+  # ANTI-TARGETS: cargos a NÃO usar como vocabulário-líder
+  # (mesmo que o cargo oficial seja Director, sempre apresentar como Head)
+  avoid_titles:
+    # PT
+    - "Diretor"
+    - "Diretor de Contabilidade"
+    - "Diretor Financeiro"
+    - "Diretor de Finanças"
+    # EN
+    - "Director"
+    - "Finance Director"
+    - "Accounting Director"
+    - "Director of Finance"
+    - "Director of Accounting"
+    # ES
+    - "Director Financiero"
+    - "Director de Contabilidad"
+    - "Director de Finanzas"
+    # FR
+    - "Directeur Financier"
+    - "Directeur de la Comptabilité"
+    # DE
+    - "Finanzdirektor"
+    - "Direktor für Finanzen"
+    - "Buchhaltungsdirektor"
+  # Director-allowed exceptions (cargos legítimos onde "Director" PODE aparecer):
+  # - Audit Director (cargo de Big Four/consultoria, não é Finance Director)
+  # - Tax Director (especialista, não Finance generalist)
+  # - Post-Integration Director (M&A, cargo temporário de projeto)
+  # Esses NÃO entram em avoid_titles porque são cargos especialistas distintos.
+  director_allowed_exceptions:
+    - "Audit Director"
+    - "Tax Director"
+    - "Post-Integration Director"
 
 narrative:
-  # Your professional headline (1 line)
-  headline: "Accounting & Controllership Leader | IFRS/US GAAP | Consolidation | AI-Powered Finance Transformation"
+  # Your professional headline (1 line) — alinhado com LinkedIn headline ativa
+  # Padrão: 7-9 segmentos separados por " | " (ATS-friendly + alinha com LinkedIn pt/in/fernandoxavier02)
+  # Regra: NUNCA usar "Director" / "Diretor" — sempre liderar com "Head of Accounting and Controlling"
+  headline: "Head of Accounting and Controlling | Regional Controller LATAM | AI-First Finance Leader | Leader of Gen AI Ops & Automation | CRC | ACCA Certified (IFR) | FMVA | IFRS / US GAAP / BR GAAP Expert | Trilingual PT/EN/ES"
   # Your exit story — what makes you unique
-l transformation — automated manual tasks, cut reporting cycles and managed integration of corporate systems using AI. CRC, ACCA, FMVA certified. Trilingual (PT/EN/ES)."  exit_story: "15+ years leading Finance & Accounting across LATAM. Differentiator: bridging controllership with digital transformation."
+  exit_story: "15+ years leading Finance & Accounting across LATAM as Head of Accounting and Regional Controller. Differentiator: bridges controllership rigor with AI-First finance transformation — automated 70% of manual tasks, cut reporting cycles by 40%, founded internal academies, and led 3 concurrent M&A integrations. CRC active, ACCA Cert IFR, FMVA. Trilingual PT/EN(C2)/ES(C1)."
   # Your top 3-5 superpowers
   superpowers:
-    - "End-to-end controllership across multi-country operations (5 LATAM entities)"
-    - "Finance automation & AI-powered analytics (70% manual task reduction)"
-    - "IFRS/US GAAP/CPC multi-standard expertise"
-    - "M&A due diligence and post-merger integration"
-    - "Trilingual leadership (Portuguese, English C2, Spanish C1)"
+    - "End-to-end controllership across multi-country operations (5 LATAM entities — BR, MX, CL, AR, PE)"
+    - "AI-First Finance Leadership & Gen AI Ops (Microsoft + GPT — 70% manual task reduction, 40% close cycle reduction)"
+    - "IFRS / US GAAP / BR GAAP multi-standard expertise — including IFRS 3, 9, 15, 16, 17, S1, S2, 18 implementations"
+    - "M&A due diligence + post-merger integration (3 concurrent deals; appointed Post-Integration Director in Peru)"
+    - "Brazilian Tax Reform Committee member (CBS/IBS) + Forvis Internal Academy founder"
+    - "Trilingual leadership (Portuguese native, English C2 EF SET certified, Spanish C1 Advanced)"
+    - "Team management at scale (~100 professionals + 7 direct managers at Forvis Mazars; 11 analysts at Capgemini)"
   # Proof points — projects, articles, case studies with measurable impact
   proof_points:
     - name: "Integrated Accounting Intelligence with Microsoft + GPT"

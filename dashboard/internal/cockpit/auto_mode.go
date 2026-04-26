@@ -28,12 +28,13 @@ const (
 )
 
 var (
-	ErrAutoModeTargetRequired       = errors.New("application id or url is required")
-	ErrAutoModeReviewRequired       = errors.New("run must be Ready for Review before submit approval")
-	ErrAutoModeApprovalTextRequired = errors.New("explicit approval text is required")
-	ErrAutoModeBrowserURLMissing    = errors.New("run has no browser target url")
-	ErrAutoModeBrowserURLUnsafe     = errors.New("browser target url must be http or https")
-	ErrAutoModeBrowserOpenHosted    = errors.New("server-side browser open is only available in local cockpit mode")
+	ErrAutoModeTargetRequired         = errors.New("application id or url is required")
+	ErrAutoModeReviewRequired         = errors.New("run must be Ready for Review before submit approval")
+	ErrAutoModeApprovalTextRequired   = errors.New("explicit approval text is required")
+	ErrAutoModeSubmitApprovalRequired = errors.New("submit approval is required before submit completion")
+	ErrAutoModeBrowserURLMissing      = errors.New("run has no browser target url")
+	ErrAutoModeBrowserURLUnsafe       = errors.New("browser target url must be http or https")
+	ErrAutoModeBrowserOpenHosted      = errors.New("server-side browser open is only available in local cockpit mode")
 )
 
 var autoModeSteps = []string{
@@ -90,6 +91,13 @@ type BrowserLogRequest struct {
 	Status     string `json:"status,omitempty"`
 	LastAction string `json:"last_action,omitempty"`
 	UserID     string `json:"-"`
+}
+
+type SubmitCompleteRequest struct {
+	URL              string `json:"url,omitempty"`
+	ConfirmationText string `json:"confirmation_text,omitempty"`
+	UserID           string `json:"-"`
+	WorkerID         string `json:"-"`
 }
 
 // NewAutoModeService builds the Auto Mode envelope service over the existing run store.

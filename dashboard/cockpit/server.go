@@ -12,7 +12,7 @@ import (
 	cockpitapi "github.com/santifer/career-ops/dashboard/internal/cockpit"
 )
 
-//go:embed static/index.html static/styles.css static/app.js
+//go:embed static/index.html static/styles.css static/app.js static/favicon.svg
 var staticFiles embed.FS
 
 type ServerOptions struct {
@@ -43,8 +43,14 @@ func NewServerWithOptions(rootPath string, options ServerOptions) http.Handler {
 		}
 	}
 	pairing := options.Pairing
+	var pairingErr error
 	if pairing == nil {
-		pairing = cockpitapi.NewPairingService(cockpitapi.NewMemoryPairingStore(), cockpitapi.PairingConfig{})
+		pairingStore, err := cockpitapi.NewPairingStoreFromEnv(context.Background())
+		if err != nil {
+			pairingErr = err
+			pairingStore = cockpitapi.NewFailingPairingStore(err)
+		}
+		pairing = cockpitapi.NewPairingService(pairingStore, cockpitapi.PairingConfig{})
 	}
 	if serviceErr == nil && runStoreErr != nil {
 		serviceErr = runStoreErr
@@ -58,6 +64,9 @@ func NewServerWithOptions(rootPath string, options ServerOptions) http.Handler {
 	if serviceErr == nil && runtimeStoreErr != nil {
 		serviceErr = runtimeStoreErr
 	}
+	if serviceErr == nil && pairingErr != nil {
+		serviceErr = pairingErr
+	}
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/" {
@@ -65,6 +74,10 @@ func NewServerWithOptions(rootPath string, options ServerOptions) http.Handler {
 			return
 		}
 		serveEmbeddedFile(w, r, "static/index.html", "text/html; charset=utf-8")
+	})
+
+	mux.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
+		serveEmbeddedFile(w, r, "static/favicon.svg", "image/svg+xml; charset=utf-8")
 	})
 
 	mux.HandleFunc("/static/styles.css", func(w http.ResponseWriter, r *http.Request) {

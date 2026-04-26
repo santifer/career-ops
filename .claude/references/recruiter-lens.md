@@ -4,10 +4,12 @@ type: reference
 purpose: Complementa cv-playbook-2026.md com o filtro mental específico do recrutador segmentado por nível (IC, manager, director, VP, C-level) e família funcional (Controller, Consolidation, FP&A, Financeiro). Cada agent dos 3 do time consulta este arquivo no prompt inicial para que decisões de personalização sejam tomadas pela ótica do recrutador.
 target_roles:
   primary:
+    - Head of Accounting and Controlling (canônico)
     - Head of Accounting / Controladoria
-    - Controller (Financial / Regional / LATAM / Corporate)
-    - Diretor de Contabilidade / Accounting Director
+    - Controller (Financial / Regional / LATAM / Corporate / Business)
     - Head de Consolidação / Gerente de Consolidação
+  # Anti-target: NUNCA "Director" / "Diretor" como cargo-alvo (restringe busca).
+  # Exceções permitidas: Audit Director, Tax Director, Post-Integration Director (especialistas).
   secondary:
     - Head/Gerente de FP&A
     - Head/Gerente Financeiro

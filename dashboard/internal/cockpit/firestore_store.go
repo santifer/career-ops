@@ -224,6 +224,25 @@ func (s *FirestoreRuntimeStore) ApproveSubmit(ctx context.Context, request Appro
 	})
 }
 
+func (s *FirestoreRuntimeStore) CompleteSubmit(ctx context.Context, id string, request SubmitCompleteRequest) (RunRecord, error) {
+	return s.mutateRun(ctx, id, func(run *RunRecord) error {
+		if !runVisibleToUser(*run, request.UserID) {
+			return ErrRunNotFound
+		}
+		return completeSubmitOnRun(run, time.Now().UTC(), request)
+	})
+}
+
+func (s *FirestoreRuntimeStore) CancelRun(ctx context.Context, id string, userID string) (RunRecord, error) {
+	return s.mutateRun(ctx, id, func(run *RunRecord) error {
+		if !runVisibleToUser(*run, userID) {
+			return ErrRunNotFound
+		}
+		cancelRuntimeRun(run, time.Now().UTC())
+		return nil
+	})
+}
+
 func (s *FirestoreRuntimeStore) mutateRun(ctx context.Context, runID string, mutate func(*RunRecord) error) (RunRecord, error) {
 	var updated RunRecord
 	err := s.Client.RunTransaction(ctx, func(ctx context.Context, tx *firestore.Transaction) error {

@@ -12,6 +12,9 @@ import (
 // Firestore is explicit and fail-closed; memory is only a local/test default.
 func NewRuntimeStoreFromEnv(ctx context.Context) (AutoModeRuntimeStore, error) {
 	mode := strings.ToLower(strings.TrimSpace(os.Getenv("CAREER_OPS_RUNTIME_STORE")))
+	if mode == "" && isHostedRuntime() {
+		mode = "firestore"
+	}
 	switch mode {
 	case "", "memory", "local", "dev":
 		return NewMemoryRuntimeStore(), nil
@@ -75,6 +78,14 @@ func (s FailingRuntimeStore) ApproveUpload(ctx context.Context, request Approval
 }
 
 func (s FailingRuntimeStore) ApproveSubmit(ctx context.Context, request ApprovalRequest) (RunRecord, error) {
+	return RunRecord{}, s.Err
+}
+
+func (s FailingRuntimeStore) CompleteSubmit(ctx context.Context, id string, request SubmitCompleteRequest) (RunRecord, error) {
+	return RunRecord{}, s.Err
+}
+
+func (s FailingRuntimeStore) CancelRun(ctx context.Context, id string, userID string) (RunRecord, error) {
 	return RunRecord{}, s.Err
 }
 

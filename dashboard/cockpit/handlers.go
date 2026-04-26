@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -53,6 +54,16 @@ type workerRegisterRequest struct {
 	PairingToken string `json:"pairing_token"`
 }
 
+type loginRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type loginResponse struct {
+	Token string                   `json:"token"`
+	User  cockpitapi.AuthPrincipal `json:"user"`
+}
+
 type claimRunRequest struct {
 	LeaseTTLSeconds int `json:"lease_ttl_seconds,omitempty"`
 }
@@ -84,6 +95,7 @@ func registerAPIHandlers(mux *http.ServeMux, service *cockpitapi.Service, servic
 	}
 
 	mux.HandleFunc("/api/overview", handler.overview)
+	mux.HandleFunc("/api/auth/login", handler.login)
 	mux.HandleFunc("/api/applications", handler.applications)
 	mux.HandleFunc("/api/applications/", handler.applicationDetailOrStatus)
 	mux.HandleFunc("/api/profile", handler.profile)
@@ -93,6 +105,28 @@ func registerAPIHandlers(mux *http.ServeMux, service *cockpitapi.Service, servic
 	mux.HandleFunc("/api/actions/auto-mode/start", handler.actionAutoModeStart)
 	mux.HandleFunc("/api/runs/", handler.runDetailOrCancel)
 	mux.HandleFunc("/api/worker/", handler.workerRoutes)
+}
+
+func (h apiHandler) login(w http.ResponseWriter, r *http.Request) {
+	if !requireMethod(w, r, http.MethodPost) {
+		return
+	}
+	loginVerifier, ok := h.authVerifier.(cockpitapi.LoginVerifier)
+	if !ok {
+		writeJSONError(w, http.StatusUnauthorized, "auth_not_configured", "Local session login is not configured; use Firebase Auth for this environment.")
+		return
+	}
+	var request loginRequest
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		writeJSONError(w, http.StatusBadRequest, "invalid_json", "Request body must be valid JSON.")
+		return
+	}
+	token, principal, err := loginVerifier.Login(r.Context(), request.Email, request.Password)
+	if err != nil {
+		writeJSONError(w, http.StatusUnauthorized, "invalid_credentials", "Invalid credentials.")
+		return
+	}
+	writeJSON(w, http.StatusOK, loginResponse{Token: token, User: principal})
 }
 
 func (h apiHandler) overview(w http.ResponseWriter, r *http.Request) {
@@ -327,7 +361,7 @@ func (h apiHandler) actionAutoModeStart(w http.ResponseWriter, r *http.Request) 
 	if !h.requireService(w) {
 		return
 	}
-	principal, authenticated, ok := h.optionalAuth(w, r)
+	principal, ok := h.requireAuth(w, r)
 	if !ok {
 		return
 	}
@@ -338,9 +372,24 @@ func (h apiHandler) actionAutoModeStart(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	if request.ApplicationID != nil && strings.TrimSpace(request.URL) == "" {
-		if application, err := h.service.GetApplication(r.Context(), *request.ApplicationID); err == nil {
-			request.URL = application.Application.JobURL
+		application, err := h.service.GetApplication(r.Context(), *request.ApplicationID)
+		if errors.Is(err, cockpitapi.ErrApplicationNotFound) {
+			writeJSONError(w, http.StatusNotFound, "application_not_found", "Application not found.")
+			return
 		}
+		if err != nil {
+			writeJSONError(w, http.StatusInternalServerError, "application_failed", err.Error())
+			return
+		}
+		request.URL = application.Application.JobURL
+		if strings.TrimSpace(request.URL) == "" {
+			writeJSONError(w, http.StatusBadRequest, "auto_mode_url_required", "The selected application has no job URL. Paste the application link before starting Auto Mode.")
+			return
+		}
+	}
+	if strings.TrimSpace(request.URL) != "" && !safeHTTPURL(request.URL) {
+		writeJSONError(w, http.StatusBadRequest, "auto_mode_url_unsafe", "Auto Mode target URL must start with http or https.")
+		return
 	}
 	run, err := h.autoMode.StartAutoMode(r.Context(), request)
 	if errors.Is(err, cockpitapi.ErrAutoModeTargetRequired) {
@@ -351,8 +400,14 @@ func (h apiHandler) actionAutoModeStart(w http.ResponseWriter, r *http.Request) 
 		writeJSONError(w, http.StatusInternalServerError, "auto_mode_start_failed", err.Error())
 		return
 	}
-	if authenticated {
-		run.OwnerUserID = principal.UserID
+	run.OwnerUserID = principal.UserID
+	run, err = h.runStore.Update(r.Context(), run.ID, func(record *cockpitapi.RunRecord) error {
+		record.OwnerUserID = principal.UserID
+		return nil
+	})
+	if err != nil {
+		writeJSONError(w, http.StatusInternalServerError, "auto_mode_owner_save_failed", err.Error())
+		return
 	}
 	if err := h.runtimeStore.SaveRun(r.Context(), run); err != nil {
 		writeJSONError(w, http.StatusInternalServerError, "auto_mode_runtime_save_failed", err.Error())
@@ -392,8 +447,24 @@ func (h apiHandler) workerRoutes(w http.ResponseWriter, r *http.Request) {
 		h.workerLog(w, r, parts[1])
 		return
 	}
+	if len(parts) == 3 && parts[0] == "runs" && parts[2] == "field-observation" {
+		h.workerFieldObservation(w, r, parts[1])
+		return
+	}
 	if len(parts) == 3 && parts[0] == "runs" && parts[2] == "needs-input" {
 		h.workerNeedsInput(w, r, parts[1])
+		return
+	}
+	if len(parts) == 3 && parts[0] == "runs" && parts[2] == "ready-for-review" {
+		h.workerReadyForReview(w, r, parts[1])
+		return
+	}
+	if len(parts) == 3 && parts[0] == "runs" && parts[2] == "upload-gate" {
+		h.workerUploadGate(w, r, parts[1])
+		return
+	}
+	if len(parts) == 3 && parts[0] == "runs" && parts[2] == "submit-complete" {
+		h.workerSubmitComplete(w, r, parts[1])
 		return
 	}
 	writeJSONError(w, http.StatusNotFound, "route_not_found", "API route not found.")
@@ -545,6 +616,9 @@ func (h apiHandler) workerLog(w http.ResponseWriter, r *http.Request, id string)
 	if !ok {
 		return
 	}
+	if !h.requireActiveWorkerLease(w, r, id, worker) {
+		return
+	}
 	var request cockpitapi.BrowserLogRequest
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		writeJSONError(w, http.StatusBadRequest, "invalid_json", "Request body must be valid JSON.")
@@ -555,12 +629,36 @@ func (h apiHandler) workerLog(w http.ResponseWriter, r *http.Request, id string)
 	h.writeRuntimeMutationResult(w, run, err, "worker_log_failed")
 }
 
+func (h apiHandler) workerFieldObservation(w http.ResponseWriter, r *http.Request, id string) {
+	if !requireMethod(w, r, http.MethodPost) {
+		return
+	}
+	worker, ok := h.requireWorker(w, r)
+	if !ok {
+		return
+	}
+	if !h.requireActiveWorkerLease(w, r, id, worker) {
+		return
+	}
+	var request cockpitapi.FieldObservationRequest
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		writeJSONError(w, http.StatusBadRequest, "invalid_json", "Request body must be valid JSON.")
+		return
+	}
+	request.UserID = worker.UserID
+	run, err := h.runtimeStore.RecordFieldObservation(r.Context(), id, request)
+	h.writeRuntimeMutationResult(w, run, err, "worker_field_observation_failed")
+}
+
 func (h apiHandler) workerNeedsInput(w http.ResponseWriter, r *http.Request, id string) {
 	if !requireMethod(w, r, http.MethodPost) {
 		return
 	}
 	worker, ok := h.requireWorker(w, r)
 	if !ok {
+		return
+	}
+	if !h.requireActiveWorkerLease(w, r, id, worker) {
 		return
 	}
 	var request cockpitapi.NeedsInputRequest
@@ -571,6 +669,78 @@ func (h apiHandler) workerNeedsInput(w http.ResponseWriter, r *http.Request, id 
 	request.UserID = worker.UserID
 	run, err := h.runtimeStore.MarkNeedsInput(r.Context(), id, request)
 	h.writeRuntimeMutationResult(w, run, err, "worker_needs_input_failed")
+}
+
+func (h apiHandler) workerReadyForReview(w http.ResponseWriter, r *http.Request, id string) {
+	if !requireMethod(w, r, http.MethodPost) {
+		return
+	}
+	worker, ok := h.requireWorker(w, r)
+	if !ok {
+		return
+	}
+	if !h.requireActiveWorkerLease(w, r, id, worker) {
+		return
+	}
+	var request cockpitapi.ReadyForReviewRequest
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		writeJSONError(w, http.StatusBadRequest, "invalid_json", "Request body must be valid JSON.")
+		return
+	}
+	request.UserID = worker.UserID
+	run, err := h.runtimeStore.MarkReadyForReview(r.Context(), id, request)
+	h.writeRuntimeMutationResult(w, run, err, "worker_ready_for_review_failed")
+}
+
+func (h apiHandler) workerUploadGate(w http.ResponseWriter, r *http.Request, id string) {
+	if !requireMethod(w, r, http.MethodPost) {
+		return
+	}
+	worker, ok := h.requireWorker(w, r)
+	if !ok {
+		return
+	}
+	if !h.requireActiveWorkerLease(w, r, id, worker) {
+		return
+	}
+	var request cockpitapi.NeedsInputRequest
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		writeJSONError(w, http.StatusBadRequest, "invalid_json", "Request body must be valid JSON.")
+		return
+	}
+	if strings.TrimSpace(request.Reason) == "" {
+		request.Reason = "upload_gate_required"
+	}
+	request.UserID = worker.UserID
+	run, err := h.runtimeStore.MarkNeedsInput(r.Context(), id, request)
+	h.writeRuntimeMutationResult(w, run, err, "worker_upload_gate_failed")
+}
+
+func (h apiHandler) workerSubmitComplete(w http.ResponseWriter, r *http.Request, id string) {
+	if !requireMethod(w, r, http.MethodPost) {
+		return
+	}
+	worker, ok := h.requireWorker(w, r)
+	if !ok {
+		return
+	}
+	var request cockpitapi.SubmitCompleteRequest
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		writeJSONError(w, http.StatusBadRequest, "invalid_json", "Request body must be valid JSON.")
+		return
+	}
+	request.UserID = worker.UserID
+	request.WorkerID = worker.WorkerID
+	run, err := h.runtimeStore.CompleteSubmit(r.Context(), id, request)
+	if errors.Is(err, cockpitapi.ErrAutoModeSubmitApprovalRequired) {
+		writeJSONError(w, http.StatusConflict, "submit_approval_required", "Submit approval is required before worker completion.")
+		return
+	}
+	if errors.Is(err, cockpitapi.ErrActiveWorkerLeaseRequired) {
+		writeJSONError(w, http.StatusConflict, "active_worker_lease_required", "Run is not claimed by this active worker.")
+		return
+	}
+	h.writeRuntimeMutationResult(w, run, err, "worker_submit_complete_failed")
 }
 
 func (h apiHandler) workerFillPlan(w http.ResponseWriter, r *http.Request, id string) {
@@ -592,6 +762,10 @@ func (h apiHandler) workerFillPlan(w http.ResponseWriter, r *http.Request, id st
 	}
 	if !workerCanAccessRun(worker, run) {
 		writeJSONError(w, http.StatusNotFound, "run_not_found", "Run not found.")
+		return
+	}
+	if !workerHasActiveLease(worker, run, time.Now().UTC()) {
+		writeJSONError(w, http.StatusConflict, "active_worker_lease_required", "Run is not claimed by this active worker.")
 		return
 	}
 	profile, _, err := cockpitapi.LoadApplicationProfile(h.service.Root)
@@ -667,6 +841,14 @@ func (h apiHandler) runDetail(w http.ResponseWriter, r *http.Request, id string)
 
 	runtimeRun, err := h.runtimeStore.GetRun(r.Context(), id)
 	if err == nil && runtimeRun.Action == cockpitapi.ActionAutoMode {
+		principal, ok := h.requireAuth(w, r)
+		if !ok {
+			return
+		}
+		if strings.TrimSpace(runtimeRun.OwnerUserID) != principal.UserID {
+			writeJSONError(w, http.StatusNotFound, "run_not_found", "Run not found.")
+			return
+		}
 		writeJSON(w, http.StatusOK, runtimeRun)
 		return
 	}
@@ -684,11 +866,36 @@ func (h apiHandler) runDetail(w http.ResponseWriter, r *http.Request, id string)
 		writeJSONError(w, http.StatusInternalServerError, "run_load_failed", err.Error())
 		return
 	}
+	if run.Action == cockpitapi.ActionAutoMode {
+		principal, ok := h.requireAuth(w, r)
+		if !ok {
+			return
+		}
+		if strings.TrimSpace(run.OwnerUserID) != principal.UserID {
+			writeJSONError(w, http.StatusNotFound, "run_not_found", "Run not found.")
+			return
+		}
+	}
 	writeJSON(w, http.StatusOK, run)
 }
 
 func (h apiHandler) cancelRun(w http.ResponseWriter, r *http.Request, id string) {
 	if !requireMethod(w, r, http.MethodPost) {
+		return
+	}
+
+	runtimeRun, err := h.runtimeStore.GetRun(r.Context(), id)
+	if err == nil && runtimeRun.Action == cockpitapi.ActionAutoMode {
+		principal, ok := h.requireAuth(w, r)
+		if !ok {
+			return
+		}
+		run, err := h.runtimeStore.CancelRun(r.Context(), id, principal.UserID)
+		h.writeRuntimeMutationResult(w, run, err, "run_cancel_failed")
+		return
+	}
+	if err != nil && !errors.Is(err, cockpitapi.ErrRunNotFound) {
+		writeJSONError(w, http.StatusInternalServerError, "runtime_run_load_failed", err.Error())
 		return
 	}
 
@@ -875,14 +1082,6 @@ func (h apiHandler) requireAuth(w http.ResponseWriter, r *http.Request) (cockpit
 	return principal, true
 }
 
-func (h apiHandler) optionalAuth(w http.ResponseWriter, r *http.Request) (cockpitapi.AuthPrincipal, bool, bool) {
-	if strings.TrimSpace(r.Header.Get("Authorization")) == "" {
-		return cockpitapi.AuthPrincipal{}, false, true
-	}
-	principal, ok := h.requireAuth(w, r)
-	return principal, ok, ok
-}
-
 func (h apiHandler) requireWorker(w http.ResponseWriter, r *http.Request) (workerPrincipal, bool) {
 	workerID := strings.TrimSpace(r.Header.Get("X-Career-Ops-Worker-ID"))
 	authorization := r.Header.Get("Authorization")
@@ -902,9 +1101,47 @@ func (h apiHandler) requireWorker(w http.ResponseWriter, r *http.Request) (worke
 	return workerPrincipal{WorkerID: workerID, UserID: record.UserID}, true
 }
 
+func (h apiHandler) requireActiveWorkerLease(w http.ResponseWriter, r *http.Request, id string, worker workerPrincipal) bool {
+	run, err := h.runtimeStore.GetRun(r.Context(), id)
+	if errors.Is(err, cockpitapi.ErrRunNotFound) {
+		writeJSONError(w, http.StatusNotFound, "run_not_found", "Run not found.")
+		return false
+	}
+	if err != nil {
+		writeJSONError(w, http.StatusInternalServerError, "runtime_run_load_failed", err.Error())
+		return false
+	}
+	if !workerCanAccessRun(worker, run) {
+		writeJSONError(w, http.StatusNotFound, "run_not_found", "Run not found.")
+		return false
+	}
+	if !workerHasActiveLease(worker, run, time.Now().UTC()) {
+		writeJSONError(w, http.StatusConflict, "active_worker_lease_required", "Run is not claimed by this active worker.")
+		return false
+	}
+	return true
+}
+
 func workerCanAccessRun(worker workerPrincipal, run cockpitapi.RunRecord) bool {
 	owner := strings.TrimSpace(run.OwnerUserID)
 	return owner == "" || owner == strings.TrimSpace(worker.UserID)
+}
+
+func workerHasActiveLease(worker workerPrincipal, run cockpitapi.RunRecord, now time.Time) bool {
+	if now.IsZero() {
+		now = time.Now().UTC()
+	}
+	return run.WorkerClaim != nil &&
+		run.WorkerClaim.WorkerID == strings.TrimSpace(worker.WorkerID) &&
+		now.Before(run.WorkerClaim.LeaseExpiresAt)
+}
+
+func safeHTTPURL(value string) bool {
+	parsed, err := url.Parse(strings.TrimSpace(value))
+	if err != nil {
+		return false
+	}
+	return parsed.Scheme == "http" || parsed.Scheme == "https"
 }
 
 func (h apiHandler) writeRunMutationResult(w http.ResponseWriter, run cockpitapi.RunRecord, err error, fallbackCode string) {
@@ -926,6 +1163,18 @@ func (h apiHandler) writeRuntimeMutationResult(w http.ResponseWriter, run cockpi
 	}
 	if errors.Is(err, cockpitapi.ErrRunAlreadyClaimed) {
 		writeJSONError(w, http.StatusConflict, "run_already_claimed", "Run is claimed by another active worker.")
+		return
+	}
+	if errors.Is(err, cockpitapi.ErrActiveWorkerLeaseRequired) {
+		writeJSONError(w, http.StatusConflict, "active_worker_lease_required", "Run is not claimed by this active worker.")
+		return
+	}
+	if errors.Is(err, cockpitapi.ErrAutoModeSubmitApprovalRequired) {
+		writeJSONError(w, http.StatusConflict, "submit_approval_required", "Submit approval is required before worker completion.")
+		return
+	}
+	if errors.Is(err, cockpitapi.ErrRunTerminal) {
+		writeJSONError(w, http.StatusConflict, "run_terminal", "Run is already terminal.")
 		return
 	}
 	if err != nil {

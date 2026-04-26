@@ -2,6 +2,8 @@
 
 | # | Date | Company | Role | Score | Status | PDF | Report | Notes |
 |---|------|---------|------|-------|--------|-----|--------|-------|
+| 32 | 2026-04-26 | Devos Executive Search | Head of Financial Accounting | 4.2/5 | Applied | ✅ | [032](reports/032-devos-head-financial-accounting-2026-04-26.md) | Applied via Quickin.io — CV uploaded, PRIMARY target, IFRS/statutory/tax 100% match, ~100 team leadership, 70%/40% automation metrics |
+| 33 | 2026-04-26 | Educbank | Gerente de Controladoria | 7/10 | Evaluated | ✅ | output/cv-fernando-educbank-2026-04-26.pdf | https://www.linkedin.com/jobs/view/4380040246 |
 | 25 | 2026-04-21 | Dover Fueling Solutions | Regional Controller | 3.8/5 | Evaluated | ✅ | [025](reports/025-dover-regional-controller-2026-04-21.md) | Strong match — CRC/IFRS/US GAAP/SOX aligned, LATAM experience, Director level |
 | 26 | 2026-04-21 | Trivium Packaging | Finance Manager | 3.3/5 | Applied | ✅ | [026](reports/026-trivium-finance-manager-2026-04-21.md) | Applied via SAP SuccessFactors — privacy acceptance completed manually |
 | 27 | 2026-04-21 | LSG Sky Chefs | Gerente Controller Sr. | 2.5/5 | Evaluated | ❌ | [027](reports/027-lsg-sky-chefs-gerente-controller-sr-2026-04-21.md) | PCP background gap — score too low to apply |

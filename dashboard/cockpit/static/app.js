@@ -8,12 +8,11 @@ const state = {
   activeRun: null,
   pollTimer: null,
   autoWindow: null,
+  pairing: null,
 };
 
 const authConfig = {
-  email: "fernandocostaxavier@gmail.com",
-  passwordHash: "a3af377f96caab61ba6e02617458c478f034470b78ef97abddd9fba24cdc6886",
-  sessionKey: "careerOpsAuthenticated",
+  tokenKey: "careerOpsSessionToken",
 };
 
 const statusFallback = [
@@ -29,14 +28,12 @@ const statusFallback = [
 
 const $ = (selector) => document.querySelector(selector);
 
-async function sha256Hex(value) {
-  const bytes = new TextEncoder().encode(value);
-  const hash = await crypto.subtle.digest("SHA-256", bytes);
-  return Array.from(new Uint8Array(hash)).map((byte) => byte.toString(16).padStart(2, "0")).join("");
+function isAuthenticated() {
+  return Boolean(sessionStorage.getItem(authConfig.tokenKey));
 }
 
-function isAuthenticated() {
-  return sessionStorage.getItem(authConfig.sessionKey) === "true";
+function authToken() {
+  return sessionStorage.getItem(authConfig.tokenKey) || "";
 }
 
 function renderAuthState() {
@@ -52,22 +49,29 @@ async function handleLogin(event) {
   const email = ($("#auth-email")?.value || "").trim().toLowerCase();
   const password = $("#auth-password")?.value || "";
   const error = $("#auth-error");
-  const passwordHash = await sha256Hex(password);
 
-  if (email === authConfig.email && passwordHash === authConfig.passwordHash) {
-    sessionStorage.setItem(authConfig.sessionKey, "true");
+  try {
+    const session = await api("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+      skipAuth: true,
+    });
+    sessionStorage.setItem(authConfig.tokenKey, session.token);
     if (error) error.hidden = true;
     renderAuthState();
     await bootDashboard();
     return;
+  } catch (err) {
+    sessionStorage.removeItem(authConfig.tokenKey);
+    if (error) {
+      error.textContent = err.message || "Invalid credentials.";
+      error.hidden = false;
+    }
   }
-
-  sessionStorage.removeItem(authConfig.sessionKey);
-  if (error) error.hidden = false;
 }
 
 function logout() {
-  sessionStorage.removeItem(authConfig.sessionKey);
+  sessionStorage.removeItem(authConfig.tokenKey);
   state.overview = null;
   state.applications = [];
   state.profile = null;
@@ -104,14 +108,24 @@ function actionLabel(action) {
 }
 
 async function api(path, options = {}) {
+  const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
+  const token = authToken();
+  if (token && !options.skipAuth && !headers.Authorization) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+  const { skipAuth, headers: ignoredHeaders, ...fetchOptions } = options;
   const response = await fetch(path, {
-    headers: { "Content-Type": "application/json", ...(options.headers || {}) },
-    ...options,
+    ...fetchOptions,
+    headers,
   });
   const text = await response.text();
   const payload = text ? JSON.parse(text) : null;
   if (!response.ok) {
     const message = payload?.error?.message || `HTTP ${response.status}`;
+    if (response.status === 401 && !options.skipAuth) {
+      sessionStorage.removeItem(authConfig.tokenKey);
+      renderAuthState();
+    }
     throw new Error(message);
   }
   return payload;
@@ -523,22 +537,24 @@ async function startAutoMode(useSelected = true) {
     return;
   }
 
-  const visibleURL = url || selectedApplicationURL();
-  const pendingWindow = reserveVisibleAutoWindow(visibleURL);
+  if (body.application_id && !url && !selectedApplicationURL()) {
+    showToast("This selected application has no job URL. Paste the application link before starting Auto Mode.");
+    $("#auto-url")?.focus();
+    return;
+  }
 
   try {
     const run = await api("/api/actions/auto-mode/start", { method: "POST", body: JSON.stringify(body) });
-    attachVisibleAutoWindow(run, pendingWindow);
     const visibleRun = run;
     setActiveRun(visibleRun);
     renderReviewGate(visibleRun);
-    if (pendingWindow) {
-      showToast("Auto Mode started and browser window was opened.");
+    const targetURL = normalizeExternalURL(run?.browser_session?.target_url || run?.url);
+    if (targetURL) {
+      showToast("Auto Mode run started. Start the paired local worker to open and drive the visible browser.");
     } else {
-      showToast("Auto Mode started. Browser popup was blocked; use Open window or the target link.");
+      showToast("Auto Mode started, but no job URL was resolved. Paste the application link and start again.");
     }
   } catch (error) {
-    if (pendingWindow && !pendingWindow.closed) pendingWindow.close();
     showToast(`Auto Mode failed to start: ${error.message}`);
   }
 }
@@ -575,7 +591,7 @@ function reserveVisibleAutoWindow(url) {
         <main style="font-family: system-ui, sans-serif; max-width: 720px; margin: 48px auto; line-height: 1.5;">
           <h1>Career Ops Auto Mode</h1>
           <p>This visible browser window is reserved for the application workflow.</p>
-          <p>The cockpit will navigate it to the job page and log every observable action.</p>
+          <p>The paired local worker will navigate the visible browser and report observable actions back to the cockpit.</p>
           <p><strong>Safety gate:</strong> final submit stays blocked until explicit user approval.</p>
         </main>`;
     }
@@ -585,7 +601,7 @@ function reserveVisibleAutoWindow(url) {
   }
 }
 
-function attachVisibleAutoWindow(run, pendingWindow) {
+function attachVisibleAutoWindow(run, pendingWindow = null) {
   const targetURL = normalizeExternalURL(run?.browser_session?.target_url || run?.url);
   if (pendingWindow && !pendingWindow.closed) {
     state.autoWindow = pendingWindow;
@@ -654,6 +670,7 @@ function renderRun(run) {
   const autoState = $("#auto-state");
   if (autoState && run.action === "auto-mode") autoState.textContent = run.state || "Running";
   renderBrowserSession(run);
+  renderWorkerPanel(run);
   renderActionLog(run);
 
   const timeline = $("#run-timeline");
@@ -680,6 +697,112 @@ function renderRun(run) {
     const content = [run.error_message, run.stdout_tail, run.stderr_tail].filter(Boolean).join("\n\n");
     log.hidden = !content;
     log.textContent = content;
+  }
+}
+
+function workerStatus(run) {
+  if (!run || run.action !== "auto-mode") {
+    return { label: "Offline", text: "No Auto Mode run is active.", stale: true };
+  }
+  const claim = run.worker_claim;
+  if (!claim) {
+    return { label: "Waiting", text: "Waiting for a paired local worker to claim this run.", stale: true };
+  }
+  const expiry = Date.parse(claim.lease_expires_at || "");
+  const heartbeat = claim.heartbeat_at ? formatDate(claim.heartbeat_at) : "no heartbeat yet";
+  if (!Number.isFinite(expiry) || expiry <= Date.now()) {
+    return { label: "Stale", text: `${claim.worker_id || "Worker"} lease expired. Last heartbeat: ${heartbeat}.`, stale: true };
+  }
+  return { label: "Online", text: `${claim.worker_id || "Worker"} owns this run. Last heartbeat: ${heartbeat}.`, stale: false };
+}
+
+function renderWorkerPanel(run = state.activeRun) {
+  const stateNode = $("#worker-state");
+  const statusNode = $("#worker-status");
+  if (!stateNode || !statusNode) return;
+  const status = workerStatus(run);
+  stateNode.textContent = status.label;
+  stateNode.dataset.state = status.label.toLowerCase();
+  statusNode.textContent = status.text;
+  renderPairingOutput();
+}
+
+async function generatePairingToken() {
+  const workerID = ($("#worker-id")?.value || "").trim() || "local-worker";
+  try {
+    const pairing = await api("/api/worker/pairing-token", {
+      method: "POST",
+      body: JSON.stringify({ worker_id: workerID }),
+    });
+    state.pairing = pairing;
+    renderPairingOutput();
+    showToast("Pairing token generated. Use it once from this machine to register the local worker.");
+  } catch (error) {
+    showToast(`Worker pairing token failed: ${error.message}`);
+  }
+}
+
+function renderPairingOutput() {
+  const box = $("#pairing-output");
+  if (!box) return;
+  const pairing = state.pairing;
+  const token = pairingTokenValue(pairing);
+  box.hidden = !token;
+  if (!token) return;
+  setText("#pairing-token", token);
+  setText("#pairing-expiry", `Expires ${formatDate(pairingExpiresAt(pairing))}. Single use; do not paste it into frontend code.`);
+  setText("#worker-register-command", workerRegisterCommand(pairing));
+  setText("#worker-run-command", workerRunCommand(pairingWorkerID(pairing)));
+}
+
+function pairingTokenValue(pairing) {
+  return pairing?.token || pairing?.Token || "";
+}
+
+function pairingWorkerID(pairing) {
+  return pairing?.worker_id || pairing?.WorkerID || "local-worker";
+}
+
+function pairingExpiresAt(pairing) {
+  return pairing?.expires_at || pairing?.ExpiresAt || "";
+}
+
+function apiBaseURL() {
+  return `${window.location.protocol}//${window.location.host}`;
+}
+
+function psEscape(value) {
+  return String(value || "").replaceAll("'", "''");
+}
+
+function workerRegisterCommand(pairing) {
+  const apiBase = psEscape(apiBaseURL());
+  const workerID = psEscape(pairingWorkerID(pairing));
+  const token = psEscape(pairingTokenValue(pairing));
+  return [
+    `$body = @{ worker_id = '${workerID}'; pairing_token = '${token}' } | ConvertTo-Json -Compress`,
+    `$credential = (Invoke-RestMethod -Uri '${apiBase}/api/worker/register' -Method Post -ContentType 'application/json' -Body $body).credential`,
+    `$env:CAREER_OPS_WORKER_CREDENTIAL = $credential`,
+  ].join("\n");
+}
+
+function workerRunCommand(workerID) {
+  const apiBase = psEscape(apiBaseURL());
+  const worker = psEscape(workerID || "local-worker");
+  return `node workers/browser-worker.mjs --api-base '${apiBase}' --worker-id '${worker}' --credential $env:CAREER_OPS_WORKER_CREDENTIAL`;
+}
+
+async function copyTextFrom(selector, label) {
+  const text = $(selector)?.textContent || "";
+  if (!text.trim()) {
+    showToast(`${label} is not ready yet.`);
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast(`${label} copied.`);
+  } catch {
+    showToast(`Copy failed. Select the command manually.`);
   }
 }
 
@@ -801,6 +924,9 @@ function wireEvents() {
   $("#profile-save")?.addEventListener("click", saveProfile);
   $("#auto-start")?.addEventListener("click", () => startAutoMode(false));
   $("#auto-selected")?.addEventListener("click", () => startAutoMode(true));
+  $("#worker-pair")?.addEventListener("click", generatePairingToken);
+  $("#copy-register")?.addEventListener("click", () => copyTextFrom("#worker-register-command", "Register command"));
+  $("#copy-run-worker")?.addEventListener("click", () => copyTextFrom("#worker-run-command", "Worker run command"));
   $("#browser-open")?.addEventListener("click", async () => {
     const opened = reserveVisibleAutoWindow(state.activeRun?.browser_session?.target_url || state.activeRun?.url);
     if (opened && state.activeRun?.id) {

@@ -37,6 +37,7 @@ async function main() {
       if (outcome?.parked) {
         keepBrowserOpen = true;
         await waitForShutdown();
+        outcome.stopHeartbeat?.();
         break;
       }
       if (options.once) break;

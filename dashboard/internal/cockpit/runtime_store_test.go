@@ -11,7 +11,7 @@ func TestRuntimeStoreClaimsOnlyEligibleAutoModeRun(t *testing.T) {
 	store := newTestRuntimeStore(t)
 	ctx := context.Background()
 
-	run := RunRecord{ID: "run-1", Action: ActionAutoMode, State: RunStateQueued, URL: "https://example.com/job"}
+	run := RunRecord{ID: "run-1", Action: ActionAutoMode, State: RunStateQueued, OwnerUserID: "user-1", URL: "https://example.com/job"}
 	if err := store.SaveRun(ctx, run); err != nil {
 		t.Fatalf("SaveRun returned error: %v", err)
 	}
@@ -38,7 +38,7 @@ func TestRuntimeStoreRejectsConcurrentClaim(t *testing.T) {
 	store := newTestRuntimeStore(t)
 	ctx := context.Background()
 
-	run := RunRecord{ID: "run-1", Action: ActionAutoMode, State: RunStateQueued}
+	run := RunRecord{ID: "run-1", Action: ActionAutoMode, State: RunStateQueued, OwnerUserID: "user-1"}
 	if err := store.SaveRun(ctx, run); err != nil {
 		t.Fatalf("SaveRun returned error: %v", err)
 	}
@@ -56,7 +56,7 @@ func TestRuntimeStoreExpiredHeartbeatAllowsReclaim(t *testing.T) {
 	store := newTestRuntimeStore(t)
 	ctx := context.Background()
 
-	run := RunRecord{ID: "run-1", Action: ActionAutoMode, State: RunStateQueued}
+	run := RunRecord{ID: "run-1", Action: ActionAutoMode, State: RunStateQueued, OwnerUserID: "user-1"}
 	if err := store.SaveRun(ctx, run); err != nil {
 		t.Fatalf("SaveRun returned error: %v", err)
 	}
@@ -73,11 +73,35 @@ func TestRuntimeStoreExpiredHeartbeatAllowsReclaim(t *testing.T) {
 	}
 }
 
+func TestRuntimeStoreHeartbeatRejectsExpiredLease(t *testing.T) {
+	store := newTestRuntimeStore(t)
+	ctx := context.Background()
+
+	run := RunRecord{ID: "run-1", Action: ActionAutoMode, State: RunStateQueued, OwnerUserID: "user-1"}
+	if err := store.SaveRun(ctx, run); err != nil {
+		t.Fatalf("SaveRun returned error: %v", err)
+	}
+	if _, err := store.ClaimRun(ctx, ClaimRunRequest{RunID: "run-1", WorkerID: "worker-a", UserID: "user-1", LeaseTTL: time.Second, ClaimedAt: testRuntimeNow()}); err != nil {
+		t.Fatalf("ClaimRun returned error: %v", err)
+	}
+
+	_, err := store.Heartbeat(ctx, HeartbeatRequest{
+		RunID:       "run-1",
+		WorkerID:    "worker-a",
+		UserID:      "user-1",
+		HeartbeatAt: testRuntimeNow().Add(2 * time.Second),
+		LeaseTTL:    time.Minute,
+	})
+	if !errors.Is(err, ErrActiveWorkerLeaseRequired) {
+		t.Fatalf("expected ErrActiveWorkerLeaseRequired, got %v", err)
+	}
+}
+
 func TestRuntimeStoreSubmitApprovalRequiresReadyForReview(t *testing.T) {
 	store := newTestRuntimeStore(t)
 	ctx := context.Background()
 
-	run := RunRecord{ID: "run-1", Action: ActionAutoMode, State: RunStateRunning}
+	run := RunRecord{ID: "run-1", Action: ActionAutoMode, State: RunStateRunning, OwnerUserID: "user-1"}
 	if err := store.SaveRun(ctx, run); err != nil {
 		t.Fatalf("SaveRun returned error: %v", err)
 	}
@@ -97,8 +121,8 @@ func TestRuntimeStoreUploadApprovalIsPerRun(t *testing.T) {
 	store := newTestRuntimeStore(t)
 	ctx := context.Background()
 
-	runA := RunRecord{ID: "run-a", Action: ActionAutoMode, State: RunStateReadyForReview}
-	runB := RunRecord{ID: "run-b", Action: ActionAutoMode, State: RunStateReadyForReview}
+	runA := RunRecord{ID: "run-a", Action: ActionAutoMode, State: RunStateReadyForReview, OwnerUserID: "user-1"}
+	runB := RunRecord{ID: "run-b", Action: ActionAutoMode, State: RunStateReadyForReview, OwnerUserID: "user-1"}
 	if err := store.SaveRun(ctx, runA); err != nil {
 		t.Fatalf("SaveRun run-a returned error: %v", err)
 	}
@@ -120,6 +144,105 @@ func TestRuntimeStoreUploadApprovalIsPerRun(t *testing.T) {
 	}
 	if loadedB.UploadGate != nil {
 		t.Fatalf("expected run-b to have no upload approval, got %#v", loadedB.UploadGate)
+	}
+}
+
+func TestRuntimeStoreCompleteSubmitRequiresApprovalAndActiveLease(t *testing.T) {
+	store := newTestRuntimeStore(t)
+	ctx := context.Background()
+	now := time.Now().UTC()
+
+	run := RunRecord{
+		ID:          "run-1",
+		Action:      ActionAutoMode,
+		State:       RunStateReadyForReview,
+		OwnerUserID: "user-1",
+		URL:         "https://example.com/job",
+		ReviewGate:  &ReviewGate{ReadyAt: timePointer(testRuntimeNow())},
+		WorkerClaim: &WorkerClaim{
+			WorkerID:       "worker-a",
+			ClaimedAt:      now,
+			HeartbeatAt:    now,
+			LeaseExpiresAt: now.Add(time.Minute),
+		},
+		BrowserSession: &BrowserSession{TargetURL: "https://example.com/job"},
+	}
+	if err := store.SaveRun(ctx, run); err != nil {
+		t.Fatalf("SaveRun returned error: %v", err)
+	}
+
+	_, err := store.CompleteSubmit(ctx, "run-1", SubmitCompleteRequest{
+		UserID:   "user-1",
+		WorkerID: "worker-a",
+		URL:      "https://example.com/confirmation",
+	})
+	if !errors.Is(err, ErrAutoModeSubmitApprovalRequired) {
+		t.Fatalf("expected ErrAutoModeSubmitApprovalRequired, got %v", err)
+	}
+
+	if _, err := store.ApproveSubmit(ctx, ApprovalRequest{RunID: "run-1", UserID: "user-1", ApprovalText: "I approve final submit.", ApprovedAt: testRuntimeNow()}); err != nil {
+		t.Fatalf("ApproveSubmit returned error: %v", err)
+	}
+
+	_, err = store.CompleteSubmit(ctx, "run-1", SubmitCompleteRequest{
+		UserID:   "user-1",
+		WorkerID: "worker-b",
+		URL:      "https://example.com/confirmation",
+	})
+	if !errors.Is(err, ErrActiveWorkerLeaseRequired) {
+		t.Fatalf("expected ErrActiveWorkerLeaseRequired for wrong worker, got %v", err)
+	}
+
+	submitted, err := store.CompleteSubmit(ctx, "run-1", SubmitCompleteRequest{
+		UserID:           "user-1",
+		WorkerID:         "worker-a",
+		URL:              "https://example.com/confirmation",
+		ConfirmationText: "Application received",
+	})
+	if err != nil {
+		t.Fatalf("CompleteSubmit returned error: %v", err)
+	}
+	if submitted.State != RunStateSubmitted {
+		t.Fatalf("expected Submitted state, got %q", submitted.State)
+	}
+	if submitted.EndedAt == nil {
+		t.Fatal("expected completed run to have EndedAt")
+	}
+	if submitted.BrowserSession == nil || submitted.BrowserSession.Status != "submitted" {
+		t.Fatalf("expected submitted browser session, got %#v", submitted.BrowserSession)
+	}
+}
+
+func TestRuntimeStoreCompleteSubmitRejectsTerminalRun(t *testing.T) {
+	store := newTestRuntimeStore(t)
+	ctx := context.Background()
+	now := time.Now().UTC()
+
+	run := RunRecord{
+		ID:          "run-1",
+		Action:      ActionAutoMode,
+		State:       RunStateCancelled,
+		OwnerUserID: "user-1",
+		ReviewGate: &ReviewGate{
+			ReadyAt:      timePointer(now),
+			ApprovedAt:   timePointer(now),
+			ApprovalText: "I approve final submit.",
+			ApprovedBy:   "user-1",
+		},
+		WorkerClaim: &WorkerClaim{
+			WorkerID:       "worker-a",
+			ClaimedAt:      now,
+			HeartbeatAt:    now,
+			LeaseExpiresAt: now.Add(time.Minute),
+		},
+	}
+	if err := store.SaveRun(ctx, run); err != nil {
+		t.Fatalf("SaveRun returned error: %v", err)
+	}
+
+	_, err := store.CompleteSubmit(ctx, "run-1", SubmitCompleteRequest{UserID: "user-1", WorkerID: "worker-a"})
+	if !errors.Is(err, ErrRunTerminal) {
+		t.Fatalf("expected ErrRunTerminal, got %v", err)
 	}
 }
 

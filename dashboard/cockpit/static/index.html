@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Career Ops Mission Control</title>
+    <link rel="icon" href="/favicon.ico">
     <link rel="stylesheet" href="/static/styles.css">
   </head>
   <body>
@@ -215,6 +216,38 @@
               <input id="auto-url" type="url" placeholder="Optional application URL">
               <button id="auto-start" class="primary-action">Start Auto Mode</button>
             </div>
+            <section class="worker-panel" aria-label="Local worker pairing and status">
+              <div class="session-head">
+                <div>
+                  <strong>Local browser worker</strong>
+                  <p id="worker-status">No worker has claimed the active run.</p>
+                </div>
+                <span id="worker-state" class="state-pill">Offline</span>
+              </div>
+              <div class="worker-grid">
+                <label>
+                  <span>Worker ID</span>
+                  <input id="worker-id" value="local-worker" autocomplete="off">
+                </label>
+                <button id="worker-pair" class="secondary-action" type="button">Generate pairing token</button>
+              </div>
+              <div id="pairing-output" class="pairing-output" hidden>
+                <div class="pairing-token-row">
+                  <div>
+                    <span>Pairing token</span>
+                    <strong id="pairing-token">--</strong>
+                    <small id="pairing-expiry">Single use token.</small>
+                  </div>
+                  <button id="copy-register" class="mini-button" type="button">Copy register</button>
+                </div>
+                <pre id="worker-register-command" class="worker-command"></pre>
+                <div class="pairing-token-row">
+                  <small>After registration returns the credential, run the worker from this repository terminal.</small>
+                  <button id="copy-run-worker" class="mini-button" type="button">Copy run</button>
+                </div>
+                <pre id="worker-run-command" class="worker-command"></pre>
+              </div>
+            </section>
             <section class="browser-session" aria-label="Visible browser session">
               <div class="session-head">
                 <div>
@@ -246,6 +279,6 @@
     </div>
 
     <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
-    <script src="/static/app.js?v=front-auth-1"></script>
+    <script src="/static/app.js?v=server-session-auth-1"></script>
   </body>
 </html>

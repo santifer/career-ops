@@ -33,6 +33,21 @@ related:
 
 ---
 
+## Regras críticas do candidato (resumo — SSOT em outro lugar)
+
+> ⚠️ **SSOT canônico = `~/.claude/projects/D--Career-Ops/memory/cv-rules.md`** (memória persistente). Este resumo serve para leitores humanos do repositório; agents/skills devem ler a memória diretamente. Em caso de divergência, a memória vence.
+
+**Resumo das 6 regras** (detalhe completo em `cv-rules.md`):
+
+1. **Regra 1 — CV elaborado:** NUNCA minimalista. Incluir TODAS certificações/memberships/IFRS (3,9,15,16,17,S1,S2,18) + métricas reais + achievements granulares.
+2. **Regra 2 — Idioma do CV = idioma da JD** (PT/EN/ES/FR/DE/JA).
+3. **Regra 3 — Sempre "Head of Accounting and Controlling", nunca "Director"/"Diretor"** (restringe busca). Exceções permitidas: Audit Director, Tax Director, Post-Integration Director (especialistas). Lista anti-targets em `config/profile.yml` §`avoid_titles` (16 entradas PT/EN/ES/FR/DE).
+4. **Regra 4 — Headline 7-9 segmentos** separados por " | ", ≤220 chars (limite LinkedIn). Adaptar 1º segmento ao JD; sempre liderar com "Head of Accounting and Controlling".
+5. **Regra 5 — Inclusão obrigatória:** lista canônica em `cv-rules.md` (todas certificações, memberships, IFRS implementations, métricas, diferenciadores).
+6. **Regra 6 — Page cap:** default 3 páginas A4 (4 só para C-level / 20+ anos).
+
+---
+
 ## Visão geral em 30 segundos
 
 | Skill / comando | O que faz | Quando usar |
@@ -659,9 +674,10 @@ A Fase 2 (recruiter-driven completo) inverte a ordem mental do pipeline e introd
 ---
 
 **Última atualização:** 2026-04-26
-**Versão:** 1.1.0
+**Versão:** 1.2.0
 **Mantido por:** o usuário deste projeto + o agente IA assistente
 
 **Changelog:**
+- **1.2.0 (2026-04-26):** adicionada seção "Regras críticas do candidato" no topo: CV elaborado/completo, idioma=JD, sempre Head (nunca Director), headline 7-9 segmentos. Reflete feedback do usuário sobre CV anterior estar "muito ruim, muito resumido, sem certificações completas".
 - **1.1.0 (2026-04-26):** adicionado `routing-rules.md` como SSOT canônico de roteamento; expandidos triggers em 6 idiomas (PT/EN/ES/FR/DE/JA) com tabela exemplos; tabela de gates éticos alinhada ao cutoff 4.0 (`CLAUDE.md` "Ethical Use") com mapeamento score↔match rate; cenários E (batch consolidado) e F (headless) adicionados; documentado comportamento `/headhunter` sem argumento (fail-fast com pausa+pergunta); FAQ atualizado com 3 entradas novas (URL pura → auto-pipeline, sem argumento, regra i18n).
 - **1.0.0 (2026-04-26):** versão inicial cobrindo as 5 skills/comandos novos (/headhunter, /cv-analyze, /cv-strategy, /cv-recruiter-check, /tailor-cv) com 4 cenários end-to-end e 5 entradas de FAQ.

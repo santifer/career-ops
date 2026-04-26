@@ -154,10 +154,12 @@ Default modes are in `modes/` (English). Additional modes:
 **Source of truth:** `config/profile.yml` + `modes/_profile.md`
 
 **PRIMARY (score boost, always match):**
+- Head of Accounting and Controlling (vocabulário-líder canônico)
 - Head of Accounting / Head de Contabilidade
-- Controller (Financial / Regional / LATAM / Corporate)
-- Diretor de Contabilidade / Accounting Director
+- Controller (Financial / Regional / LATAM / Corporate / Business)
 - Head de Consolidacao / Gerente de Consolidacao
+
+> **Regra:** NUNCA usar "Director" / "Diretor" como cargo-alvo (restringe busca de vagas). Exceções permitidas: Audit Director, Tax Director, Post-Integration Director (cargos especialistas distintos). Ver memória `cv-rules.md` Regra 3 + `config/profile.yml` `avoid_titles`.
 
 **SECONDARY (score lower, match when fit):**
 - Head de FP&A / Gerente de FP&A
@@ -217,6 +219,8 @@ Default modes are in `modes/` (English). Additional modes:
 - `cv.md` in project root is the canonical CV
 - `article-digest.md` has detailed proof points (optional)
 - **NEVER hardcode metrics** -- read them from these files at evaluation time
+- **Page cap:** CV padrão 3 páginas A4 (4 só para C-level / 20+ anos). Detalhe em memória `cv-rules.md` Regra 6.
+- **Cargo-alvo SSOT:** memória `cv-rules.md` Regra 3 + `config/profile.yml` `avoid_titles` + `director_allowed_exceptions` (Audit/Tax/Post-Integration Director permitidos).
 
 ---
 

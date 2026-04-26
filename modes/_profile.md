@@ -12,14 +12,24 @@
 
 ## Your Target Roles
 
+> **REGRA CRÍTICA — sempre `Head of Accounting and Controlling`, NUNCA `Director` / `Diretor`.**
+> O cargo "Director" restringe demais a busca de vagas no LinkedIn e ATSs (recrutadores não cruzam Director↔Head↔Manager naturalmente).
+> Mesmo quando o cargo OFICIAL na empresa contém "Director", o headline e o vocabulário-líder do CV/LinkedIn ficam em "Head of Accounting and Controlling" (ou variantes Head/Regional Controller). Ver `config/profile.yml` §`avoid_titles` para a lista canônica.
+
 | Archetype | Level | Fit | What they buy |
 |-----------|-------|-----|---------------|
-| **Head of Accounting / Head de Contabilidade** | Director/Head | PRIMARY | Someone who leads the full accounting function with strategic vision |
-| **Controller (Financial / Regional / LATAM / Corporate)** | Senior/Director | PRIMARY | Someone who ensures financial integrity and reporting excellence across entities |
-| **Diretor de Contabilidade / Accounting Director** | Director | PRIMARY | Someone who owns the accounting agenda end-to-end at director level |
-| **Head/Gerente de Consolidacao** | Head/Senior | PRIMARY | Someone who masters multi-entity consolidation and group reporting |
+| **Head of Accounting and Controlling** | Head | **PRIMARY** | Vocabulário-líder. Sempre usar este como title-anchor no CV e LinkedIn. |
+| **Head of Accounting / Head de Contabilidade** | Head | PRIMARY | Someone who leads the full accounting function with strategic vision |
+| **Regional Controller LATAM / Business Controller** | Senior/Head | PRIMARY | Someone who ensures financial integrity and reporting excellence across entities |
+| **Head/Gerente de Consolidação** | Head/Senior | PRIMARY | Someone who masters multi-entity consolidation and group reporting |
+| **Head of Statutory Accounting & IFRS Reporting LATAM** | Head | PRIMARY | Someone who owns IFRS reporting LATAM end-to-end |
 | **Head/Gerente de FP&A** | Head/Senior | SECONDARY | Someone who brings financial planning expertise grounded in controllership |
 | **Head/Gerente Financeiro** | Head/Senior | SECONDARY | Someone who leads the full finance function with a controllership backbone |
+| **Finance Business Partner** | Senior/Head | SECONDARY | Commercial finance + business-facing partnering |
+
+**Anti-targets (nunca usar como vocabulário-líder):** lista canônica multilíngue em `config/profile.yml` §`avoid_titles` (PT/EN/ES/FR/DE — 16 entradas). Resumo: Diretor / Director / Finance Director / Accounting Director / Director Financiero / Directeur Financier / Finanzdirektor — mesmo se for o cargo OFICIAL na empresa atual, sempre apresentar como "Head of Accounting and Controlling" no headline e no descritor visual do cargo. **Razão prática:** evita filtros de busca que cruzam apenas dentro do mesmo "tier" (Director-Director). Um headline "Head" abre buscas com Director, Head, Manager simultaneamente.
+
+**Director-allowed exceptions:** Audit Director, Tax Director, Post-Integration Director (cargos especialistas distintos de Finance/Accounting generalist). Ver `config/profile.yml` `director_allowed_exceptions` + memória `cv-rules.md` Regra 3.
 
 ## Your Adaptive Framing
 
@@ -27,7 +37,7 @@
 |-------------------|------------------------|---------------------|
 | Head of Accounting / Contabilidade | End-to-end accounting leadership, IFRS/US GAAP, LATAM multi-entity | article-digest.md + cv.md |
 | Controller (any variant) | Financial controls, reporting integrity, regional consolidation, process automation | article-digest.md + cv.md |
-| Diretor de Contabilidade | Strategic accounting direction, team leadership, board-level reporting | cv.md + article-digest.md |
+| Head of Accounting and Controlling | Strategic accounting direction + controllership, team leadership, board-level reporting (em vez de "Diretor"; ver regra anti-Director) | cv.md + article-digest.md |
 | Head/Gerente de Consolidacao | Multi-country consolidation, group reporting, intercompany elimination, IFRS/CPC | article-digest.md + cv.md |
 | Head/Gerente de FP&A | Budgeting, forecasting, variance analysis, finance automation | cv.md + article-digest.md |
 | Head/Gerente Financeiro | Full finance function leadership, controllership + treasury + FP&A | cv.md + article-digest.md |
