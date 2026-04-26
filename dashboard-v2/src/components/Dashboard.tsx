@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, KeyboardEvent } from 'react';
 import { 
   BarChart3, 
   Briefcase, 
@@ -13,14 +13,17 @@ import {
   Settings, 
   Terminal as TerminalIcon,
   LogOut,
+  Shield,
   ShieldCheck,
   ChevronRight,
+  X,
   Zap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { signOut } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
 
 export default function Dashboard() {
+  const { data: session, status } = useSession();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -32,12 +35,59 @@ export default function Dashboard() {
   const [profileFormData, setProfileFormData] = useState<any>({
     candidate: { full_name: '', location: '', email: '', linkedin: '', github: '' },
     narrative: { headline: '', exit_story: '', superpowers: [] },
-    targeting_keywords: { positive: [], negative: [] },
-    openai_key: '',
-    hf_token: ''
+    targeting_keywords: { positive: [], negative: [] }
   });
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
+  const [walkthroughStep, setWalkthroughStep] = useState<number | null>(null);
+  const [spotlightRect, setSpotlightRect] = useState<{ top: number, left: number, width: number, height: number } | null>(null);
+  const [accountInfo, setAccountInfo] = useState({ email: '', password: '', confirmPassword: '' });
+  const [tagInputPositive, setTagInputPositive] = useState('');
+  const [tagInputNegative, setTagInputNegative] = useState('');
+
+  const steps = [
+    { target: null, title: "Welcome to Alpha v2.0", content: "Your AI career command center is live. Let's configure your agent for maximum discovery.", icon: <Zap size={24}/> },
+    { target: "nav-terminal", title: "The Command Engine", content: "The Terminal is where you control the agent. Type 'scan' to search 11+ job portals or 'tailor' to generate resumes.", icon: <TerminalIcon size={24}/> },
+    { target: "nav-settings", title: "Your Training Ground", content: "Before you scan, you must train the AI. Let's head to Settings to define your professional identity.", icon: <Settings size={24}/> },
+    { target: "config-narrative", title: "Core Narrative", content: "This is your AI Identity. The 'Executive Story' is used to automatically tailor every resume and cover letter we generate.", icon: <FileText size={24}/>, tab: 'settings' },
+    { target: "config-targeting", title: "Hunting Strategy", content: "Targeting Parameters define your 'Hunting Logic'. Use keywords to tell the AI exactly which roles to prioritize or ignore.", icon: <Search size={24}/>, tab: 'settings' },
+    { target: "nav-pipeline", title: "The Payoff", content: "Every job found is ranked 0-10 based on your strategy. Your best matches will appear here in the Pipeline.", icon: <BarChart3 size={24}/> }
+  ];
+
+  useEffect(() => {
+    if (walkthroughStep !== null) {
+      const step = steps[walkthroughStep];
+      if (step?.tab) setActiveTab(step.tab);
+      
+      setTimeout(() => {
+        if (step?.target) {
+          const el = document.getElementById(step.target);
+          if (el) {
+            const rect = el.getBoundingClientRect();
+            setSpotlightRect({ top: rect.top, left: rect.left, width: rect.width, height: rect.height });
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        } else {
+          setSpotlightRect(null);
+        }
+      }, step?.tab ? 300 : 0);
+    }
+  }, [walkthroughStep]);
+
+  // Trigger walkthrough for both email+password and GitHub OAuth users
+  useEffect(() => {
+    if (status === 'authenticated') {
+      const hasSeenOnboarding = localStorage.getItem('career_ops_onboarding_v2');
+      if (!hasSeenOnboarding) {
+        setTimeout(() => setWalkthroughStep(0), 1200);
+      }
+    }
+  }, [status]);
+
+  const completeOnboarding = () => {
+    localStorage.setItem('career_ops_onboarding_v2', 'true');
+    setWalkthroughStep(null);
+  };
 
   const runCommand = (query: string) => {
     setLogs(prev => [...prev, { type: 'stdout', content: `\ncareer-ops > ${query}\n` }]);
@@ -116,15 +166,19 @@ export default function Dashboard() {
           setProfileFormData({
             candidate: d.resume_context?.candidate || { full_name: '', location: '', email: '', linkedin: '', github: '' },
             narrative: d.resume_context?.narrative || { headline: '', exit_story: '', superpowers: [] },
-            targeting_keywords: d.targeting_keywords || { positive: [], negative: [] },
-            openai_key: d.openai_key || '',
-            hf_token: d.hf_token || ''
+            targeting_keywords: d.targeting_keywords || { positive: [], negative: [] }
           });
+          setAccountInfo(prev => ({ ...prev, email: d.email || '' }));
         });
     }
   }, [activeTab]);
 
   const handleSaveSettings = async () => {
+    if (accountInfo.password && accountInfo.password !== accountInfo.confirmPassword) {
+      alert("Passwords do not match!");
+      return;
+    }
+
     setIsSaving(true);
     setSaveStatus('saving');
     try {
@@ -137,8 +191,8 @@ export default function Dashboard() {
             narrative: profileFormData.narrative
           },
           targeting_keywords: profileFormData.targeting_keywords,
-          openai_key: profileFormData.openai_key,
-          hf_token: profileFormData.hf_token
+          email: accountInfo.email,
+          password: accountInfo.password || undefined
         })
       });
       if (res.ok) {
@@ -189,16 +243,16 @@ export default function Dashboard() {
           </div>
 
           <nav className="space-y-1">
-            <NavItem icon={<LayoutDashboard size={18}/>} label="Dashboard" active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
-            <NavItem icon={<Briefcase size={18}/>} label="Applications" active={activeTab === 'apps'} onClick={() => setActiveTab('apps')} />
-            <NavItem icon={<Search size={18}/>} label="Job Pipeline" active={activeTab === 'pipeline'} onClick={() => setActiveTab('pipeline')} />
-            <NavItem icon={<FileText size={18}/>} label="Resume Manager" active={activeTab === 'cv'} onClick={() => setActiveTab('cv')} />
-            <NavItem icon={<TerminalIcon size={18}/>} label="Terminal" active={activeTab === 'terminal'} onClick={() => setActiveTab('terminal')} />
+            <NavItem id="nav-dashboard" icon={<LayoutDashboard size={18}/>} label="Dashboard" active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
+            <NavItem id="nav-apps" icon={<Briefcase size={18}/>} label="Applications" active={activeTab === 'apps'} onClick={() => setActiveTab('apps')} />
+            <NavItem id="nav-pipeline" icon={<Search size={18}/>} label="Job Pipeline" active={activeTab === 'pipeline'} onClick={() => setActiveTab('pipeline')} />
+            <NavItem id="nav-cv" icon={<FileText size={18}/>} label="Resume Manager" active={activeTab === 'cv'} onClick={() => setActiveTab('cv')} />
+            <NavItem id="nav-terminal" icon={<TerminalIcon size={18}/>} label="Terminal" active={activeTab === 'terminal'} onClick={() => setActiveTab('terminal')} />
           </nav>
         </div>
 
         <div className="mt-auto p-6 border-t border-[#e7e5e4]">
-          <NavItem icon={<Settings size={18}/>} label="Settings" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
+          <NavItem id="nav-settings" icon={<Settings size={18}/>} label="Settings" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
           <button 
             onClick={() => signOut({ callbackUrl: '/' })}
             className="w-full mt-2 flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-[#78716c] hover:text-[#1c1917] hover:bg-white/50 group"
@@ -242,7 +296,7 @@ export default function Dashboard() {
           {activeTab === 'dashboard' && (
             <motion.div key="dash" className="space-y-12">
                {/* Onboarding Checklist */}
-               {(!data?.profile?.candidate?.full_name || !data?.openai_key) && (
+               {(!data?.profile?.candidate?.full_name) && (
                  <motion.div 
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -255,23 +309,15 @@ export default function Dashboard() {
                       </h3>
                       <p className="text-[#78716c] mb-8 font-medium">Complete these steps to activate your AI discovery engine.</p>
                       
-                      <div className="grid grid-cols-2 gap-4">
-                        <button 
-                          onClick={() => setActiveTab('settings')}
-                          className={`flex items-center justify-between p-5 rounded-2xl border transition-all ${data?.profile?.candidate?.full_name ? 'bg-white border-[#e7e5e4] text-[#1c1917]' : 'bg-white border-[#e7e5e4] hover:bg-[#f5f5f4]'}`}
-                        >
-                          <span className="text-sm font-bold">Profile Identity</span>
-                          {data?.profile?.candidate?.full_name ? <CheckCircle2 size={16} className="text-emerald-500" /> : <ChevronRight size={16} />}
-                        </button>
-
-                        <button 
-                          onClick={() => setActiveTab('settings')}
-                          className={`flex items-center justify-between p-5 rounded-2xl border transition-all ${data?.openai_key ? 'bg-white border-[#e7e5e4] text-[#1c1917]' : 'bg-white border-[#e7e5e4] hover:bg-[#f5f5f4]'}`}
-                        >
-                          <span className="text-sm font-bold">AI Credentials</span>
-                          {data?.openai_key ? <CheckCircle2 size={16} className="text-emerald-500" /> : <ChevronRight size={16} />}
-                        </button>
-                      </div>
+                       <div className="grid grid-cols-1 gap-4">
+                         <button 
+                           onClick={() => setActiveTab('settings')}
+                           className={`flex items-center justify-between p-5 rounded-2xl border transition-all ${data?.profile?.candidate?.full_name ? 'bg-white border-[#e7e5e4] text-[#1c1917]' : 'bg-white border-[#e7e5e4] hover:bg-[#f5f5f4]'}`}
+                         >
+                           <span className="text-sm font-bold">Complete Profile Identity</span>
+                           {data?.profile?.candidate?.full_name ? <CheckCircle2 size={16} className="text-emerald-500" /> : <ChevronRight size={16} />}
+                         </button>
+                       </div>
                    </div>
                  </motion.div>
                )}
@@ -391,19 +437,32 @@ export default function Dashboard() {
           {activeTab === 'cv' && (
             <motion.div key="cv" className="grid grid-cols-3 gap-10">
                <div className="col-span-2 space-y-10">
-                  <div className="bg-[#f5f5f4] p-10 border border-[#e7e5e4] rounded-[2.5rem]">
-                     <h3 className="text-xl font-bold mb-6 text-[#1c1917] border-b border-[#e7e5e4] pb-4">Profile Narrative</h3>
+                <div className="bg-[#f5f5f4] p-10 border border-[#e7e5e4] rounded-[2.5rem]">
+                   <h3 className="text-xl font-bold mb-6 text-[#1c1917] border-b border-[#e7e5e4] pb-4">Profile Narrative</h3>
+                   {data?.profile?.narrative?.exit_story ? (
                      <p className="text-[#1c1917] leading-relaxed font-medium italic pl-6 border-l-4 border-emerald-500/30">
                         "{data?.profile?.narrative?.exit_story}"
                      </p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-6">
-                    {data?.profile?.narrative?.superpowers?.map((s: any, i: number) => (
+                   ) : (
+                     <div className="py-4">
+                       <p className="text-[#a8a29e] font-medium italic">No narrative defined yet.</p>
+                       <button onClick={() => setActiveTab('settings')} className="mt-4 text-[#1c1917] text-xs font-bold uppercase tracking-widest hover:underline underline-offset-4">Configure Story →</button>
+                     </div>
+                   )}
+                </div>
+                <div className="grid grid-cols-2 gap-6">
+                  {data?.profile?.narrative?.superpowers?.length > 0 ? (
+                    data.profile.narrative.superpowers.map((s: any, i: number) => (
                       <div key={i} className="p-6 bg-white border border-[#e7e5e4] rounded-2xl text-xs font-bold uppercase tracking-widest text-[#a8a29e] hover:text-[#1c1917] transition-colors">
                          {s}
                       </div>
-                    ))}
-                  </div>
+                    ))
+                  ) : (
+                    <div className="col-span-2 p-6 bg-white/50 border border-dashed border-[#e7e5e4] rounded-2xl text-center">
+                       <p className="text-[#a8a29e] text-xs font-bold uppercase tracking-widest">Awaiting Superpower Sync</p>
+                    </div>
+                  )}
+                </div>
                </div>
                <div className="bg-[#faf9f6] border border-[#e7e5e4] rounded-[2.5rem] p-8 flex flex-col">
                   <h3 className="font-bold mb-8 text-[#1c1917] flex items-center justify-between">
@@ -485,6 +544,15 @@ export default function Dashboard() {
                </div>
 
                <div className="grid grid-cols-2 gap-10">
+                 <ConfigSection id="config-security" title="Account Security" icon={<Shield size={18} className="text-[#1c1917]" />}>
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                     <Input label="Login Email" value={accountInfo.email} onChange={(v) => setAccountInfo({...accountInfo, email: v})} />
+                     <div className="hidden md:block" />
+                     <Input label="New Password" type="password" placeholder="Leave empty to keep current" value={accountInfo.password} onChange={(v) => setAccountInfo({...accountInfo, password: v})} />
+                     <Input label="Confirm New Password" type="password" value={accountInfo.confirmPassword} onChange={(v) => setAccountInfo({...accountInfo, confirmPassword: v})} />
+                   </div>
+                 </ConfigSection>
+
                  <ConfigSection title="Candidate Identity" icon={<LayoutDashboard size={18} className="text-[#1c1917]" />}>
                    <Input label="Full Name" value={profileFormData.candidate.full_name} onChange={(v) => setProfileFormData({...profileFormData, candidate: {...profileFormData.candidate, full_name: v}})} />
                    <div className="grid grid-cols-2 gap-4">
@@ -493,38 +561,122 @@ export default function Dashboard() {
                    </div>
                  </ConfigSection>
 
-                 <ConfigSection title="Core Narrative" icon={<FileText size={18} className="text-[#1c1917]" />}>
-                   <Input label="Strategic Headline" value={profileFormData.narrative.headline} onChange={(v) => setProfileFormData({...profileFormData, narrative: {...profileFormData.narrative, headline: v}})} />
-                   <div>
-                      <label className="text-[10px] font-bold text-[#a8a29e] uppercase tracking-widest mb-2 block">Executive Story</label>
-                      <textarea 
-                        rows={4}
-                        value={profileFormData.narrative.exit_story}
-                        onChange={(e) => setProfileFormData({...profileFormData, narrative: {...profileFormData.narrative, exit_story: e.target.value}})}
-                        className="w-full bg-[#faf9f6]/50 border border-[#e7e5e4] rounded-2xl p-4 outline-none focus:border-[#1c1917] transition-all text-sm font-medium leading-relaxed" 
-                      />
-                   </div>
-                 </ConfigSection>
-
-                 <ConfigSection title="Targeting Parameters" icon={<Search size={18} className="text-[#1c1917]" />}>
-                   <Input label="Operational Keywords" value={profileFormData.targeting_keywords.positive.join(', ')} onChange={(v) => setProfileFormData({...profileFormData, targeting_keywords: {...profileFormData.targeting_keywords, positive: v.split(',').map(s => s.trim())}})} />
-                 </ConfigSection>
-
-                 <ConfigSection title="Intelligence Keys" icon={<ShieldCheck size={18} className="text-[#1c1917]" />}>
-                   <Input label="OpenAI API Gateway" type="password" value={profileFormData.openai_key} onChange={(v) => setProfileFormData({...profileFormData, openai_key: v})} />
-                 </ConfigSection>
+                 <ConfigSection id="config-narrative" title="Core Narrative" icon={<FileText size={18} className="text-[#1c1917]" />}>
+                    <Input label="Strategic Headline" value={profileFormData.narrative.headline} onChange={(v) => setProfileFormData({...profileFormData, narrative: {...profileFormData.narrative, headline: v}})} />
+                    <div>
+                       <label className="text-[10px] font-bold text-[#a8a29e] uppercase tracking-widest mb-2 block">Executive Story</label>
+                       <textarea 
+                         rows={4}
+                         value={profileFormData.narrative.exit_story}
+                         onChange={(e) => setProfileFormData({...profileFormData, narrative: {...profileFormData.narrative, exit_story: e.target.value}})}
+                         className="w-full bg-[#faf9f6]/50 border border-[#e7e5e4] rounded-2xl p-4 outline-none focus:border-[#1c1917] transition-all text-sm font-medium leading-relaxed" 
+                       />
+                    </div>
+                  </ConfigSection>                   <ConfigSection id="config-targeting" title="Targeting Parameters" icon={<Search size={18} className="text-[#1c1917]" />}>
+                     <div className="space-y-6">
+                       <TagInput
+                         label="Targeted Roles & Skills"
+                         placeholder="Type a role or skill, press Enter..."
+                         tags={profileFormData.targeting_keywords.positive}
+                         inputValue={tagInputPositive}
+                         onInputChange={setTagInputPositive}
+                         onAdd={(tag) => setProfileFormData({...profileFormData, targeting_keywords: {...profileFormData.targeting_keywords, positive: [...profileFormData.targeting_keywords.positive, tag]}})}
+                         onRemove={(i) => setProfileFormData({...profileFormData, targeting_keywords: {...profileFormData.targeting_keywords, positive: profileFormData.targeting_keywords.positive.filter((_: string, idx: number) => idx !== i)}})}
+                         color="emerald"
+                       />
+                       <div className="pt-6 border-t border-[#f5f5f4]">
+                         <TagInput
+                           label="Exclusion Keywords"
+                           placeholder="Type a keyword to exclude, press Enter..."
+                           tags={profileFormData.targeting_keywords.negative}
+                           inputValue={tagInputNegative}
+                           onInputChange={setTagInputNegative}
+                           onAdd={(tag) => setProfileFormData({...profileFormData, targeting_keywords: {...profileFormData.targeting_keywords, negative: [...profileFormData.targeting_keywords.negative, tag]}})}
+                           onRemove={(i) => setProfileFormData({...profileFormData, targeting_keywords: {...profileFormData.targeting_keywords, negative: profileFormData.targeting_keywords.negative.filter((_: string, idx: number) => idx !== i)}})}
+                           color="rose"
+                         />
+                       </div>
+                     </div>
+                  </ConfigSection>
                </div>
             </motion.div>
           )}
         </AnimatePresence>
       </main>
+
+      {/* Walkthrough Overlay */}
+      <AnimatePresence>
+        {walkthroughStep !== null && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 pointer-events-none"
+          >
+            {/* Spotlight Hole */}
+            <div 
+              className="absolute inset-0 bg-black/60 backdrop-blur-[2px] transition-all duration-500"
+              style={{
+                clipPath: spotlightRect 
+                  ? `polygon(0% 0%, 0% 100%, ${spotlightRect.left - 10}px 100%, ${spotlightRect.left - 10}px ${spotlightRect.top - 10}px, ${spotlightRect.left + spotlightRect.width + 10}px ${spotlightRect.top - 10}px, ${spotlightRect.left + spotlightRect.width + 10}px ${spotlightRect.top + spotlightRect.height + 10}px, ${spotlightRect.left - 10}px ${spotlightRect.top + spotlightRect.height + 10}px, ${spotlightRect.left - 10}px 100%, 100% 100%, 100% 0%)`
+                  : 'none'
+              }}
+            />
+
+            <div className="absolute inset-0 flex items-center justify-center p-6">
+              <motion.div 
+                key={walkthroughStep}
+                initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                className={`bg-white rounded-[2.5rem] border border-[#e7e5e4] shadow-2xl max-w-sm w-full p-10 relative overflow-hidden pointer-events-auto transition-all duration-500 ${spotlightRect ? 'mt-64' : ''}`}
+                style={spotlightRect ? {
+                    position: 'absolute',
+                    top: Math.min(window.innerHeight - 450, Math.max(20, spotlightRect.top + spotlightRect.height + 20)),
+                    left: Math.min(window.innerWidth - 420, Math.max(20, spotlightRect.left))
+                } : {}}
+              >
+                <div className="absolute top-0 right-0 p-6">
+                  <button onClick={completeOnboarding} className="text-[#a8a29e] hover:text-[#1c1917] transition-colors">
+                    <span className="text-[10px] font-bold uppercase tracking-widest">Skip</span>
+                  </button>
+                </div>
+
+                <div className="mb-6">
+                  <div className="h-12 w-12 bg-[#1c1917] rounded-2xl flex items-center justify-center mb-6 shadow-xl shadow-black/10">
+                    <div className="text-white">{steps[walkthroughStep].icon}</div>
+                  </div>
+
+                  <h2 className="text-2xl font-bold text-[#1c1917] mb-3 tracking-tight">{steps[walkthroughStep].title}</h2>
+                  <p className="text-[#78716c] font-medium leading-relaxed text-sm">{steps[walkthroughStep].content}</p>
+                </div>
+
+                <div className="flex items-center justify-between mt-8 pt-6 border-t border-[#f5f5f4]">
+                  <div className="flex gap-1.5">
+                    {steps.map((_, s) => (
+                      <div key={s} className={`h-1 w-1 rounded-full transition-all duration-500 ${walkthroughStep === s ? 'bg-[#1c1917] w-4' : 'bg-[#e7e5e4]'}`} />
+                    ))}
+                  </div>
+                  <button 
+                    onClick={() => walkthroughStep < steps.length - 1 ? setWalkthroughStep(walkthroughStep + 1) : completeOnboarding()}
+                    className="px-6 py-3 bg-[#1c1917] text-white rounded-xl font-bold text-xs flex items-center gap-2 hover:bg-[#27272a] transition-all"
+                  >
+                    {walkthroughStep === steps.length - 1 ? 'Finish Tour' : 'Next Step'}
+                    <ChevronRight size={14} />
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
-function NavItem({ icon, label, active, onClick }: { icon: any, label: string, active: boolean, onClick: () => void }) {
+function NavItem({ id, icon, label, active, onClick }: { id?: string, icon: any, label: string, active: boolean, onClick: () => void }) {
   return (
-    <button onClick={onClick} className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl transition-all ${active ? 'bg-[#1c1917] text-white font-bold shadow-xl' : 'text-[#78716c] hover:text-[#1c1917] hover:bg-white/50'}`}>
+    <button id={id} onClick={onClick} className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl transition-all ${active ? 'bg-[#1c1917] text-white font-bold shadow-xl' : 'text-[#78716c] hover:text-[#1c1917] hover:bg-white/50'}`}>
       {icon}
       <span className="text-sm">{label}</span>
     </button>
@@ -543,9 +695,9 @@ function StatCard({ icon, label, value }: { icon: any, label: string, value: any
   );
 }
 
-function ConfigSection({ title, icon, children }: { title: string, icon: any, children: React.ReactNode }) {
+function ConfigSection({ id, title, icon, children }: { id?: string, title: string, icon: any, children: React.ReactNode }) {
   return (
-    <div className="bg-white border border-[#e7e5e4] rounded-[2.5rem] p-10 space-y-6">
+    <div id={id} className="bg-white border border-[#e7e5e4] rounded-[2.5rem] p-10 space-y-6 scroll-mt-10">
       <h3 className="font-bold text-lg flex items-center gap-3 text-[#1c1917] border-b border-[#f5f5f4] pb-6">{icon} {title}</h3>
       {children}
     </div>
@@ -563,6 +715,93 @@ function Input({ label, value, onChange, placeholder, type = "text" }: { label: 
         className="w-full bg-[#faf9f6]/50 border border-[#e7e5e4] rounded-2xl p-4 outline-none focus:border-[#1c1917] transition-all text-sm font-bold text-[#1c1917]" 
         placeholder={placeholder}
       />
+    </div>
+  );
+}
+
+function TagInput({ label, tags, inputValue, onInputChange, onAdd, onRemove, placeholder, color = 'stone' }: {
+  label: string;
+  tags: string[];
+  inputValue: string;
+  onInputChange: (v: string) => void;
+  onAdd: (tag: string) => void;
+  onRemove: (index: number) => void;
+  placeholder?: string;
+  color?: 'emerald' | 'rose' | 'stone';
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const tagColors = {
+    emerald: 'bg-emerald-50 text-emerald-700 border-emerald-100',
+    rose: 'bg-rose-50 text-rose-700 border-rose-100',
+    stone: 'bg-stone-100 text-stone-700 border-stone-200',
+  };
+
+  const commit = () => {
+    const val = inputValue.trim();
+    if (val && !tags.includes(val)) {
+      onAdd(val);
+    }
+    onInputChange('');
+  };
+
+  const handleKey = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' || e.key === ',' || e.key === 'Tab') {
+      e.preventDefault();
+      commit();
+    } else if (e.key === 'Backspace' && inputValue === '' && tags.length > 0) {
+      onRemove(tags.length - 1);
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <label className="text-[10px] font-bold text-[#a8a29e] uppercase tracking-widest block pl-1">{label}</label>
+      <div
+        className="min-h-[52px] w-full bg-[#faf9f6]/50 border border-[#e7e5e4] rounded-2xl p-3 flex flex-wrap gap-2 items-center cursor-text focus-within:border-[#1c1917] transition-all"
+        onClick={() => inputRef.current?.focus()}
+      >
+        {tags.map((tag, i) => (
+          <motion.span
+            key={tag + i}
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.8, opacity: 0 }}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold ${tagColors[color]}`}
+          >
+            {tag}
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onRemove(i); }}
+              className="opacity-60 hover:opacity-100 transition-opacity"
+            >
+              <X size={11} />
+            </button>
+          </motion.span>
+        ))}
+        <input
+          ref={inputRef}
+          type="text"
+          value={inputValue}
+          onChange={(e) => {
+            // Support pasting comma-separated values
+            const val = e.target.value;
+            if (val.includes(',')) {
+              val.split(',').map(s => s.trim()).filter(Boolean).forEach(t => {
+                if (!tags.includes(t)) onAdd(t);
+              });
+              onInputChange('');
+            } else {
+              onInputChange(val);
+            }
+          }}
+          onKeyDown={handleKey}
+          onBlur={commit}
+          placeholder={tags.length === 0 ? placeholder : '+ Add more'}
+          className="flex-1 min-w-[120px] bg-transparent outline-none text-sm font-bold text-[#1c1917] placeholder:text-[#a8a29e]/60"
+        />
+      </div>
+      <p className="text-[10px] text-[#a8a29e] pl-1">Press <kbd className="px-1 py-0.5 bg-[#f5f5f4] border border-[#e7e5e4] rounded text-[9px]">Enter</kbd> or <kbd className="px-1 py-0.5 bg-[#f5f5f4] border border-[#e7e5e4] rounded text-[9px]">,</kbd> to add a tag</p>
     </div>
   );
 }

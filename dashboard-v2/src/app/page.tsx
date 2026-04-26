@@ -9,4 +9,5 @@ export default async function Page() {
     return <LandingPage />;
   }
 
+  return <Dashboard />;
 }

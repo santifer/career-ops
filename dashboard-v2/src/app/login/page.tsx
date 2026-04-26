@@ -77,7 +77,7 @@ function LoginContent() {
         <div className="bg-white border border-[#e7e5e4] rounded-[2.5rem] p-10 shadow-2xl shadow-black/[0.02]">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <label className="text-[10px] font-bold text-[#a8a29e] uppercase tracking-[0.2em] ml-1">Authentication ID</label>
+              <label className="text-[10px] font-bold text-[#a8a29e] uppercase tracking-[0.2em] ml-1">Email Address</label>
               <div className="relative group">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[#a8a29e] group-focus-within:text-[#1c1917] transition-colors" size={18} />
                 <input
@@ -91,7 +91,7 @@ function LoginContent() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-bold text-[#a8a29e] uppercase tracking-[0.2em] ml-1">Secure Token</label>
+              <label className="text-[10px] font-bold text-[#a8a29e] uppercase tracking-[0.2em] ml-1">Password</label>
               <div className="relative group">
                 <Key className="absolute left-4 top-1/2 -translate-y-1/2 text-[#a8a29e] group-focus-within:text-[#1c1917] transition-colors" size={18} />
                 <input
@@ -122,7 +122,7 @@ function LoginContent() {
             >
               {isLoading ? <Loader2 className="animate-spin" size={20} /> : (
                 <>
-                  Verify Credentials
+                  Sign In
                   <ArrowRight size={20} className="text-white/40" />
                 </>
               )}
@@ -148,12 +148,12 @@ function LoginContent() {
         <p className="mt-10 text-center text-[#a8a29e] text-sm font-medium">
           New to Career-Ops?{' '}
           <Link href="/signup" className="text-[#1c1917] font-bold hover:underline underline-offset-4 decoration-[#e7e5e4]">
-            Register Identity
+            Create Account
           </Link>
         </p>
 
         <div className="mt-12 flex items-center justify-center gap-3 text-[#e7e5e4]">
-           <ShieldCheck size={16} />
+           <Shield size={16} />
            <span className="text-[9px] font-bold uppercase tracking-[0.25em]">Secure Auth v2.0-modern</span>
         </div>
       </motion.div>

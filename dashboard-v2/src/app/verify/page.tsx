@@ -44,6 +44,24 @@ function VerifyContent() {
     }
   };
 
+  const handlePaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData('text').trim();
+    if (!/^\d+$/.test(pastedData)) return;
+
+    const digits = pastedData.slice(0, 6).split('');
+    const newToken = [...token];
+    digits.forEach((digit, index) => {
+      if (index < 6) newToken[index] = digit;
+    });
+    setToken(newToken);
+    
+    // Focus the appropriate input after paste
+    const focusIndex = Math.min(digits.length, 5);
+    const targetInput = document.getElementById(`otp-${focusIndex}`);
+    targetInput?.focus();
+  };
+
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
     const finalToken = token.join('');
@@ -125,6 +143,7 @@ function VerifyContent() {
                       value={digit}
                       onChange={(e) => handleInput(i, e.target.value)}
                       onKeyDown={(e) => handleKeyDown(i, e)}
+                      onPaste={handlePaste}
                       autoFocus={i === 0}
                       className="w-12 h-16 bg-[#faf9f6] border border-[#e7e5e4] rounded-2xl text-center text-2xl font-bold focus:border-[#1c1917] outline-none transition-all shadow-inner"
                     />

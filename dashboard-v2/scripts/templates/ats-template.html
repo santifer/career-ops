@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{NAME}} - Resume</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 11pt;
+            line-height: 1.3;
+            color: #000;
+            background: #fff;
+            padding: 40px;
+        }
+        .container { max-width: 800px; margin: 0 auto; }
+        
+        /* Header */
+        header { text-align: left; margin-bottom: 20px; }
+        h1 { font-size: 24pt; font-weight: bold; text-transform: uppercase; margin-bottom: 2px; }
+        .title { font-size: 14pt; margin-bottom: 5px; }
+        .contact { font-size: 10pt; color: #333; margin-bottom: 3px; }
+        .links { font-size: 10pt; color: #333; }
+        a { color: #000; text-decoration: none; }
+
+        /* Sections */
+        section { margin-bottom: 15px; }
+        h2 {
+            font-size: 12pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            border-bottom: 1px solid #000;
+            margin-bottom: 8px;
+            padding-bottom: 2px;
+        }
+
+        .summary-text { font-size: 11pt; text-align: justify; margin-bottom: 10px; }
+
+        /* Skills */
+        .skills-category { margin-bottom: 5px; font-size: 10.5pt; }
+        .skills-label { font-weight: bold; }
+
+        /* Experience */
+        .job { margin-bottom: 12px; }
+        .job-header { display: flex; justify-content: space-between; font-weight: bold; font-size: 11pt; }
+        .job-meta { font-style: italic; font-size: 10.5pt; margin-bottom: 4px; }
+        
+        ul { list-style-type: disc; margin-left: 20px; margin-top: 4px; }
+        li { font-size: 10.5pt; margin-bottom: 3px; text-align: justify; }
+
+        /* Education */
+        .edu-item { margin-bottom: 8px; }
+        .edu-header { font-weight: bold; }
+
+        @media print {
+            body { padding: 0; }
+            .container { max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>{{NAME}}</h1>
+            <div class="title">Senior Software Engineer</div>
+            <div class="contact">{{LOCATION}} | {{EMAIL}} | {{PHONE}}</div>
+            <div class="links">
+                <a href="{{LINKEDIN_URL}}">{{LINKEDIN_DISPLAY}}</a> | 
+                <a href="{{PORTFOLIO_URL}}">{{PORTFOLIO_DISPLAY}}</a>
+            </div>
+        </header>
+
+        <section>
+            <h2>Professional Summary</h2>
+            <div class="summary-text">{{SUMMARY_TEXT}}</div>
+        </section>
+
+        <section>
+            <h2>Core Competencies</h2>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px;">
+                {{COMPETENCIES}}
+            </div>
+        </section>
+
+        <section>
+            <h2>Technical Skills</h2>
+            <div id="skills-content">
+                {{SKILLS}}
+            </div>
+        </section>
+
+        <section>
+            <h2>Professional Experience</h2>
+            <div id="experience-content">
+                {{EXPERIENCE}}
+            </div>
+        </section>
+
+        <section>
+            <h2>Selected Achievements</h2>
+            <div id="projects-content">
+                {{PROJECTS}}
+            </div>
+        </section>
+
+        <section>
+            <h2>Education</h2>
+            <div id="education-content">
+                {{EDUCATION}}
+            </div>
+        </section>
+    </div>
+</body>
+</html>

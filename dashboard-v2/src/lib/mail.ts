@@ -54,7 +54,7 @@ export const sendVerificationEmail = async (email: string, token: string) => {
         </body>
         </html>
       `,
-      sender: { "name": "Career-Ops Support", "email": "verify@career-ops.pro" },
+      sender: { "name": "Career-Ops", "email": "akashkaintura.ak@gmail.com" },
       to: [{ "email": email }]
     });
     

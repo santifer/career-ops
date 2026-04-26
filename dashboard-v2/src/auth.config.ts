@@ -20,7 +20,10 @@ export const authConfig = {
         // Note: For Edge compatibility, we use a separate fetch or 
         // a subset of DB logic if required. For now, this is Node-compatible.
         const pg = require("pg");
-        const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+        const pool = new pg.Pool({ 
+          connectionString: process.env.DATABASE_URL,
+          ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined
+        });
         const bcrypt = require("bcryptjs");
 
         try {

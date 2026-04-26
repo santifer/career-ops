@@ -19,9 +19,9 @@ export default function SignupPage() {
   });
 
   const validateForm = () => {
-    if (formData.name.length < 2) return "Identity name must be at least 2 characters.";
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) return "Invalid email terminal format.";
-    if (formData.password.length < 8) return "Master password must be at least 8 characters.";
+    if (formData.name.length < 2) return "Candidate name must be at least 2 characters.";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) return "Invalid Email Address format.";
+    if (formData.password.length < 8) return "Password must be at least 8 characters.";
     return null;
   };
 
@@ -98,7 +98,7 @@ export default function SignupPage() {
                 className="text-center py-10"
               >
                 <div className="h-20 w-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                   <ShieldCheck className="h-10 w-10 text-emerald-500" />
+                   <Shield className="h-10 w-10 text-emerald-500" />
                 </div>
                 <h2 className="text-2xl font-bold mb-2">Identity Created</h2>
                 <p className="text-[#a8a29e] mb-4 font-medium italic">Handshaking with verification engine...</p>
@@ -122,7 +122,7 @@ export default function SignupPage() {
                  </div>
 
                  <div className="space-y-2">
-                   <label className="text-[10px] font-bold text-[#a8a29e] uppercase tracking-[0.2em] ml-1">Email Terminal</label>
+                   <label className="text-[10px] font-bold text-[#a8a29e] uppercase tracking-[0.2em] ml-1">Email Address</label>
                    <div className="relative group">
                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[#a8a29e] group-focus-within:text-[#1c1917] transition-colors" size={18} />
                      <input
@@ -138,7 +138,7 @@ export default function SignupPage() {
                  </div>
 
                  <div className="space-y-2">
-                   <label className="text-[10px] font-bold text-[#a8a29e] uppercase tracking-[0.2em] ml-1">Master Password</label>
+                   <label className="text-[10px] font-bold text-[#a8a29e] uppercase tracking-[0.2em] ml-1">Password</label>
                    <div className="relative group">
                      <Key className="absolute left-4 top-1/2 -translate-y-1/2 text-[#a8a29e] group-focus-within:text-[#1c1917] transition-colors" size={18} />
                      <input
