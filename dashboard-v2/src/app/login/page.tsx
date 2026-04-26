@@ -12,8 +12,16 @@ function LoginContent() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') || '/';
   const isVerified = searchParams.get('verified') === 'true';
+  const authError = searchParams.get('error');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const oauthErrorMessage =
+    authError === 'github-email-missing'
+      ? 'GitHub did not provide an email. Use a GitHub account with a verified public email.'
+      : authError === 'github-auth-failed'
+        ? 'GitHub sign-in failed. Please try again.'
+        : null;
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -75,6 +83,12 @@ function LoginContent() {
         )}
 
         <div className="bg-white border border-[#e7e5e4] rounded-[2.5rem] p-10 shadow-2xl shadow-black/[0.02]">
+          {oauthErrorMessage && (
+            <div className="mb-6 flex items-center gap-4 p-4 bg-rose-50 border border-rose-100 rounded-2xl text-rose-600 text-xs font-bold">
+              <AlertCircle size={14} />
+              {oauthErrorMessage}
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
               <label className="text-[10px] font-bold text-[#a8a29e] uppercase tracking-[0.2em] ml-1">Email Address</label>

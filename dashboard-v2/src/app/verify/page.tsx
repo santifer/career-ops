@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Mail, ArrowRight, CheckCircle2, Loader2, RefreshCw, ShieldCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -62,7 +62,7 @@ function VerifyContent() {
     targetInput?.focus();
   };
 
-  const handleSubmit = async (e?: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e?: React.FormEvent) => {
     e?.preventDefault();
     const finalToken = token.join('');
     if (finalToken.length < 6) return;
@@ -86,18 +86,42 @@ function VerifyContent() {
         router.push('/login?verified=true');
       }, 2000);
 
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Verification failed');
     } finally {
       setIsLoading(false);
     }
+  }, [email, router, token]);
+
+  const handleResend = async () => {
+    if (!email || resendCooldown > 0 || isLoading) return;
+
+    setError(null);
+    try {
+      const res = await fetch('/api/verify/resend', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Unable to resend verification code');
+      setResendCooldown(30);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Unable to resend verification code');
+    }
   };
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = setTimeout(() => setResendCooldown((prev) => prev - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [resendCooldown]);
 
   useEffect(() => {
     if (token.every(t => t !== '')) {
       handleSubmit();
     }
-  }, [token]);
+  }, [token, handleSubmit]);
 
   return (
     <div className="min-h-screen bg-[#faf9f6] text-[#1c1917] flex flex-col items-center justify-center p-6 relative overflow-hidden font-sans">
@@ -172,6 +196,7 @@ function VerifyContent() {
                 <div className="mt-8 text-center">
                   <button 
                     disabled={resendCooldown > 0}
+                    onClick={handleResend}
                     className="text-[#a8a29e] text-[10px] font-bold uppercase tracking-widest hover:text-[#1c1917] transition-colors disabled:opacity-50 inline-flex items-center gap-2"
                   >
                     <RefreshCw size={12} className={resendCooldown > 0 ? 'animate-spin' : ''} />

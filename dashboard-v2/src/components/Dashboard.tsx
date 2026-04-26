@@ -20,10 +20,10 @@ import {
   Zap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { signOut } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
 
 export default function Dashboard() {
-  const status = 'authenticated';
+  const { data: session, status } = useSession();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -76,16 +76,20 @@ export default function Dashboard() {
 
   // Trigger walkthrough for both email+password and GitHub OAuth users
   useEffect(() => {
-    if (status === 'authenticated') {
-      const hasSeenOnboarding = localStorage.getItem('career_ops_onboarding_v2');
-      if (!hasSeenOnboarding) {
-        setTimeout(() => setWalkthroughStep(0), 1200);
-      }
+    if (status !== 'authenticated') return;
+
+    const userKey = session?.user?.email || session?.user?.id || 'default';
+    const onboardingKey = `career_ops_onboarding_v2:${userKey}`;
+    const hasSeenOnboarding = localStorage.getItem(onboardingKey);
+
+    if (!hasSeenOnboarding) {
+      setTimeout(() => setWalkthroughStep(0), 1200);
     }
-  }, [status]);
+  }, [status, session?.user?.email, session?.user?.id]);
 
   const completeOnboarding = () => {
-    localStorage.setItem('career_ops_onboarding_v2', 'true');
+    const userKey = session?.user?.email || session?.user?.id || 'default';
+    localStorage.setItem(`career_ops_onboarding_v2:${userKey}`, 'true');
     setWalkthroughStep(null);
   };
 

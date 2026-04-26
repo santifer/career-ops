@@ -1,7 +1,8 @@
 import NextAuth from "next-auth"
-import GitHub from "next-auth/providers/github"
 import { authConfig } from "./auth.config"
 import pg from "pg"
+import { generateVerificationToken } from "@/lib/tokens"
+import { sendVerificationEmail } from "@/lib/mail"
 
 // Strip channel_binding which is unsupported by the pg Node.js library
 const cleanDbUrl = (process.env.DATABASE_URL || '')
@@ -25,34 +26,68 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     ...authConfig.callbacks,
     async signIn({ user, account }) {
       // For GitHub OAuth: auto-create or find user in DB
-      if (account?.provider === 'github' && user.email) {
+      if (account?.provider === 'github') {
+        if (!user.email) {
+          return "/login?error=github-email-missing";
+        }
+
         try {
           const client = await pool.connect();
           try {
-            // Check if user exists
+            // Check if user exists and whether email verification is complete.
             const existing = await client.query(
-              'SELECT id FROM users WHERE email = $1',
+              'SELECT id, email_verified FROM users WHERE email = $1',
               [user.email]
             );
+
+            let userId: string | null = null;
+            let emailVerified = false;
+
             if (existing.rows.length === 0) {
-              // Create new user from GitHub
-              await client.query(
-                `INSERT INTO users (name, email, email_verified, image) 
-                 VALUES ($1, $2, NOW(), $3) ON CONFLICT (email) DO NOTHING`,
+              // Create new GitHub user but keep email unverified until OTP confirmation.
+              const inserted = await client.query(
+                `INSERT INTO users (name, email, email_verified, image)
+                 VALUES ($1, $2, NULL, $3)
+                 ON CONFLICT (email) DO NOTHING
+                 RETURNING id`,
                 [user.name, user.email, user.image]
               );
+
+              if (inserted.rows[0]) {
+                userId = inserted.rows[0].id.toString();
+              } else {
+                const fallback = await client.query('SELECT id FROM users WHERE email = $1', [user.email]);
+                userId = fallback.rows[0]?.id?.toString() || null;
+              }
+            } else {
+              userId = existing.rows[0].id.toString();
+              emailVerified = Boolean(existing.rows[0].email_verified);
             }
-            // Get user id and attach to user object
-            const userRow = await client.query('SELECT id FROM users WHERE email = $1', [user.email]);
-            if (userRow.rows[0]) {
-              user.id = userRow.rows[0].id.toString();
+
+            if (userId) {
+              await client.query(
+                `INSERT INTO user_profiles (user_id, resume_context, targeting_keywords)
+                 VALUES ($1, '{}'::jsonb, '{"positive": [], "negative": []}'::jsonb)
+                 ON CONFLICT (user_id) DO NOTHING`,
+                [userId]
+              );
+            }
+
+            if (!emailVerified) {
+              const verificationToken = await generateVerificationToken(user.email);
+              await sendVerificationEmail(user.email, verificationToken.token);
+              return `/verify?email=${encodeURIComponent(user.email)}`;
+            }
+
+            if (userId) {
+              user.id = userId;
             }
           } finally {
             client.release();
           }
         } catch (err) {
           console.error('GitHub signIn DB error:', err);
-          // Still allow sign in even if DB write fails
+          return "/login?error=github-auth-failed";
         }
       }
       return true;
