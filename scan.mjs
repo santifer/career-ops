@@ -134,6 +134,61 @@ function buildTitleFilter(titleFilter) {
   };
 }
 
+/**
+ * Build a predicate that decides whether a job location passes the filter.
+ *
+ * Precedence, in order:
+ *   1. If no `allowed` and no `blocked` are configured, every location passes
+ *      (backward-compatible default — no filtering).
+ *   2. Empty / unknown `location` passes only when `allowed` is empty, so an
+ *      allowlist-only config does not silently accept unlabelled roles.
+ *   3. `blocked` is evaluated before everything else. It wins over remote
+ *      bypass and allowlist alike, so `"Remote - Perth WA"` is still dropped
+ *      when `blocked: ["Perth"]`.
+ *   4. Remote bypass: when `allow_remote !== false`, any location containing
+ *      `remote`, `anywhere`, or `distributed` bypasses the `allowed` list
+ *      (but never the blocklist — see step 3).
+ *   5. Allowlist: if `allowed` is empty, pass; otherwise require a case-
+ *      insensitive substring match against at least one entry.
+ *
+ * Non-array inputs to `allowed` / `blocked` (e.g. the YAML scalar-instead-of-
+ * list mistake `allowed: Sydney`) are coerced to empty lists rather than
+ * crashing the scanner. Non-string entries inside an array are silently
+ * dropped, empty-string entries are dropped so they cannot accidentally
+ * disable the allowlist via `String.prototype.includes('')`.
+ *
+ * @param {{allowed?: unknown, blocked?: unknown, allow_remote?: boolean} | null | undefined} locationFilter
+ * @returns {(location: string|null|undefined) => boolean}
+ */
+function buildLocationFilter(locationFilter) {
+  const normalizeStringList = (value) =>
+    (Array.isArray(value) ? value : [])
+      .filter(v => typeof v === 'string')
+      .map(v => v.trim().toLowerCase())
+      .filter(Boolean);
+
+  const allowed = normalizeStringList(locationFilter?.allowed);
+  const blocked = normalizeStringList(locationFilter?.blocked);
+  const allowRemote = locationFilter?.allow_remote !== false;
+
+  // No config at all → pass everything through (backward compatible default)
+  if (allowed.length === 0 && blocked.length === 0) return () => true;
+
+  return (location) => {
+    const lower = typeof location === 'string' ? location.trim().toLowerCase() : '';
+    // Empty/unknown location: allow if no positive allowlist, block if allowlist is set
+    if (!lower) return allowed.length === 0;
+    // Explicit blocklist wins over everything, including remote bypass.
+    // e.g. "Remote - Perth WA" is still blocked when blocked=["Perth"].
+    if (blocked.some(k => lower.includes(k))) return false;
+    // Remote jobs bypass the city/region allowlist when allow_remote is on
+    if (allowRemote && /\b(remote|anywhere|distributed)\b/.test(lower)) return true;
+    // If an allowlist is set, location must match at least one entry
+    if (allowed.length === 0) return true;
+    return allowed.some(k => lower.includes(k));
+  };
+}
+
 // ── Dedup ───────────────────────────────────────────────────────────
 
 function loadSeenUrls() {
@@ -264,6 +319,7 @@ async function main() {
   const config = parseYaml(readFileSync(PORTALS_PATH, 'utf-8'));
   const companies = config.tracked_companies || [];
   const titleFilter = buildTitleFilter(config.title_filter);
+  const locationFilter = buildLocationFilter(config.location_filter);
 
   // 2. Filter to enabled companies with detectable APIs
   const targets = companies
@@ -285,6 +341,7 @@ async function main() {
   const date = new Date().toISOString().slice(0, 10);
   let totalFound = 0;
   let totalFiltered = 0;
+  let totalFilteredLocation = 0;
   let totalDupes = 0;
   const newOffers = [];
   const errors = [];
@@ -299,6 +356,10 @@ async function main() {
       for (const job of jobs) {
         if (!titleFilter(job.title)) {
           totalFiltered++;
+          continue;
+        }
+        if (!locationFilter(job.location)) {
+          totalFilteredLocation++;
           continue;
         }
         if (seenUrls.has(job.url)) {
@@ -335,6 +396,7 @@ async function main() {
   console.log(`Companies scanned:     ${targets.length}`);
   console.log(`Total jobs found:      ${totalFound}`);
   console.log(`Filtered by title:     ${totalFiltered} removed`);
+  console.log(`Filtered by location:  ${totalFilteredLocation} removed`);
   console.log(`Duplicates:            ${totalDupes} skipped`);
   console.log(`New offers added:      ${newOffers.length}`);
 
