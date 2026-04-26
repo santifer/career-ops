@@ -19,6 +19,7 @@ import { fileURLToPath, pathToFileURL } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = __dirname;
 const QUICK = process.argv.includes('--quick');
+const NODE = process.execPath;
 
 let passed = 0;
 let failed = 0;
@@ -50,7 +51,7 @@ console.log('1. Syntax checks');
 
 const mjsFiles = readdirSync(ROOT).filter(f => f.endsWith('.mjs'));
 for (const f of mjsFiles) {
-  const result = run('node', ['--check', f]);
+  const result = run(NODE, ['--check', f]);
   if (result !== null) {
     pass(`${f} syntax OK`);
   } else {
@@ -68,11 +69,12 @@ const scripts = [
   { name: 'normalize-statuses.mjs', expectExit: 0 },
   { name: 'dedup-tracker.mjs', expectExit: 0 },
   { name: 'merge-tracker.mjs', expectExit: 0 },
+  { name: 'analyze-patterns.mjs --self-test', expectExit: 0 },
   { name: 'update-system.mjs check', expectExit: 0 },
 ];
 
 for (const { name, allowFail } of scripts) {
-  const result = run('node', name.split(' '), { stdio: ['pipe', 'pipe', 'pipe'] });
+  const result = run(NODE, name.split(' '), { stdio: ['pipe', 'pipe', 'pipe'] });
   if (result !== null) {
     pass(`${name} runs OK`);
   } else if (allowFail) {

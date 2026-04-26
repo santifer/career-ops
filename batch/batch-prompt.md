@@ -165,6 +165,34 @@ Analyze posting signals to assess whether this is a real, active opening.
 | Red flags | -X (si hay) |
 | **Global** | **X/5** |
 
+#### Machine Summary
+
+Create a machine-readable summary from the completed A-G evaluation and global score. This block is for downstream scripts; keep field names exact, use YAML, and do not add prose inside the fence.
+
+```yaml
+company: "{empresa}"
+role: "{rol}"
+score: {X.X}
+legitimacy_tier: "{High Confidence | Proceed with Caution | Suspicious}"
+archetype: "{detectado}"
+final_decision: "{Apply | Consider | Research first | Skip}"
+hard_stops:
+  - "{blocking gap or risk}"
+soft_gaps:
+  - "{non-blocking gap}"
+top_strengths:
+  - "{strength most relevant to this role}"
+risk_level: "{Low | Medium | High}"
+confidence: "{Low | Medium | High}"
+next_action: "{one concrete next step}"
+```
+
+Rules:
+- Use `[]` for `hard_stops`, `soft_gaps`, or `top_strengths` when empty.
+- `score` is numeric only, without `/5`.
+- `final_decision` must reflect the full evaluation, not only the CV match.
+- Do not invent missing data. If confidence is limited, set `confidence: "Low"` and explain the limitation in the human-readable sections.
+
 ### Paso 3 — Guardar Report .md
 
 Guardar evaluación completa en:
@@ -188,6 +216,26 @@ Donde `{company-slug}` es el nombre de empresa en lowercase, sin espacios, con g
 **Batch ID:** {{ID}}
 
 ---
+
+## Machine Summary
+
+```yaml
+company: "{empresa}"
+role: "{rol}"
+score: {X.X}
+legitimacy_tier: "{High Confidence | Proceed with Caution | Suspicious}"
+archetype: "{detectado}"
+final_decision: "{Apply | Consider | Research first | Skip}"
+hard_stops:
+  - "{blocking gap or risk}"
+soft_gaps:
+  - "{non-blocking gap}"
+top_strengths:
+  - "{strength most relevant to this role}"
+risk_level: "{Low | Medium | High}"
+confidence: "{Low | Medium | High}"
+next_action: "{one concrete next step}"
+```
 
 ## A) Resumen del Rol
 (contenido completo)
