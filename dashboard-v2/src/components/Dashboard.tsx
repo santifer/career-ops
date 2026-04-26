@@ -78,6 +78,17 @@ export default function Dashboard() {
   useEffect(() => {
     if (status !== 'authenticated') return;
 
+    const search = new URLSearchParams(window.location.search);
+    const forceWalkthrough = search.get('walkthrough') === '1';
+    if (forceWalkthrough) {
+      setTimeout(() => setWalkthroughStep(0), 800);
+      search.delete('walkthrough');
+      const nextQuery = search.toString();
+      const nextUrl = `${window.location.pathname}${nextQuery ? `?${nextQuery}` : ''}`;
+      window.history.replaceState({}, '', nextUrl);
+      return;
+    }
+
     const userKey = session?.user?.email || session?.user?.id || 'default';
     const onboardingKey = `career_ops_onboarding_v2:${userKey}`;
     const hasSeenOnboarding = localStorage.getItem(onboardingKey);

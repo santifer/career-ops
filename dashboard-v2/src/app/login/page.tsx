@@ -14,6 +14,7 @@ function LoginContent() {
   const isVerified = searchParams.get('verified') === 'true';
   const authError = searchParams.get('error');
   const autoGithub = searchParams.get('autogithub') === '1';
+  const githubCallbackUrl = '/?walkthrough=1';
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const autoGithubStarted = useRef(false);
@@ -28,8 +29,8 @@ function LoginContent() {
   useEffect(() => {
     if (!autoGithub || autoGithubStarted.current) return;
     autoGithubStarted.current = true;
-    signIn('github', { callbackUrl });
-  }, [autoGithub, callbackUrl]);
+    signIn('github', { callbackUrl: githubCallbackUrl });
+  }, [autoGithub]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -83,10 +84,17 @@ function LoginContent() {
           <p className="text-[#a8a29e] font-medium">Access your AI career command center</p>
         </div>
 
-        {isVerified && (
+        {isVerified && !autoGithub && (
           <div className="mb-6 p-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center gap-3 text-emerald-700 text-sm font-bold">
             <CheckCircle2 size={18} />
             Email verified successfully. You can now log in.
+          </div>
+        )}
+
+        {autoGithub && (
+          <div className="mb-6 p-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center gap-3 text-emerald-700 text-sm font-bold">
+            <Loader2 size={18} className="animate-spin" />
+            Email verified. Redirecting to GitHub sign-in...
           </div>
         )}
 
@@ -159,7 +167,7 @@ function LoginContent() {
 
           <button 
             type="button"
-            onClick={() => signIn('github', { callbackUrl })}
+            onClick={() => signIn('github', { callbackUrl: githubCallbackUrl })}
             className="w-full mt-6 bg-white border border-[#e7e5e4] text-[#1c1917] font-bold py-4 rounded-2xl flex items-center justify-center gap-3 hover:bg-[#faf9f6] transition-all"
           >
             <Github size={20} />

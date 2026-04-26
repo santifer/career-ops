@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Briefcase, User, Mail, Key, ArrowRight, Github, Loader2, AlertCircle, Shield } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -173,6 +174,21 @@ export default function SignupPage() {
                      </>
                    )}
                  </button>
+
+                <div className="mt-8 flex items-center gap-4 text-[#e7e5e4]">
+                  <div className="h-px w-full bg-[#e7e5e4]" />
+                  <span className="text-[10px] font-bold text-[#a8a29e] uppercase tracking-[0.2em] whitespace-nowrap">Third Party</span>
+                  <div className="h-px w-full bg-[#e7e5e4]" />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => signIn('github', { callbackUrl: '/?walkthrough=1' })}
+                  className="w-full mt-6 bg-white border border-[#e7e5e4] text-[#1c1917] font-bold py-4 rounded-2xl flex items-center justify-center gap-3 hover:bg-[#faf9f6] transition-all"
+                >
+                  <Github size={20} />
+                  Continue with GitHub
+                </button>
               </motion.form>
             )}
           </AnimatePresence>
