@@ -358,6 +358,10 @@ func (h apiHandler) workerRoutes(w http.ResponseWriter, r *http.Request) {
 		h.claimWorkerRun(w, r, parts[1])
 		return
 	}
+	if len(parts) == 3 && parts[0] == "runs" && parts[2] == "fill-plan" {
+		h.workerFillPlan(w, r, parts[1])
+		return
+	}
 	writeJSONError(w, http.StatusNotFound, "route_not_found", "API route not found.")
 }
 
@@ -443,6 +447,36 @@ func (h apiHandler) claimWorkerRun(w http.ResponseWriter, r *http.Request, id st
 		return
 	}
 	writeJSON(w, http.StatusOK, run)
+}
+
+func (h apiHandler) workerFillPlan(w http.ResponseWriter, r *http.Request, id string) {
+	if !requireMethod(w, r, http.MethodGet) {
+		return
+	}
+	if _, ok := h.requireWorker(w, r); !ok {
+		return
+	}
+	run, err := h.runtimeStore.GetRun(r.Context(), id)
+	if errors.Is(err, cockpitapi.ErrRunNotFound) {
+		writeJSONError(w, http.StatusNotFound, "run_not_found", "Run not found.")
+		return
+	}
+	if err != nil {
+		writeJSONError(w, http.StatusInternalServerError, "fill_plan_run_failed", err.Error())
+		return
+	}
+	profile, _, err := cockpitapi.LoadApplicationProfile(h.service.Root)
+	if err != nil {
+		writeJSONError(w, http.StatusInternalServerError, "fill_plan_profile_failed", err.Error())
+		return
+	}
+	var application *cockpitapi.ApplicationDTO
+	if run.ApplicationID != nil && *run.ApplicationID > 0 {
+		if detail, err := h.service.GetApplication(r.Context(), *run.ApplicationID); err == nil {
+			application = &detail.Application
+		}
+	}
+	writeJSON(w, http.StatusOK, cockpitapi.BuildFillPlanWithApplication(run, profile, application))
 }
 
 func (h apiHandler) runDetailOrCancel(w http.ResponseWriter, r *http.Request) {

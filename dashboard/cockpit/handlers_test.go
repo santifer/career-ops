@@ -459,6 +459,30 @@ func TestWorkerPairingAllowsClaim(t *testing.T) {
 		body, _ := io.ReadAll(resp.Body)
 		t.Fatalf("expected claim status 200, got %d: %s", resp.StatusCode, string(body))
 	}
+
+	request, err = http.NewRequest(http.MethodGet, server.URL+"/api/worker/runs/"+run.ID+"/fill-plan", nil)
+	if err != nil {
+		t.Fatalf("new fill-plan request: %v", err)
+	}
+	request.Header.Set("Authorization", "Bearer worker-credential")
+	request.Header.Set("X-Career-Ops-Worker-ID", "laptop")
+	resp, err = http.DefaultClient.Do(request)
+	if err != nil {
+		t.Fatalf("GET /api/worker/runs/{id}/fill-plan: %v", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		t.Fatalf("expected fill-plan status 200, got %d: %s", resp.StatusCode, string(body))
+	}
+
+	var plan cockpitapi.FillPlan
+	if err := json.NewDecoder(resp.Body).Decode(&plan); err != nil {
+		t.Fatalf("decode fill plan: %v", err)
+	}
+	if plan.RunID != run.ID || plan.TargetURL != "https://example.com/job" {
+		t.Fatalf("unexpected fill plan: %#v", plan)
+	}
 }
 
 func TestOpenBrowserRouteReportsHostedModeUnsupported(t *testing.T) {
