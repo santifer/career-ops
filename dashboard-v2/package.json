@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node scripts/prepare-runtime-assets.mjs && next build",
     "start": "next start",
     "lint": "eslint"
   },
