@@ -347,16 +347,40 @@ function rollback() {
     const latest = branchList[0];
     console.log(`Rolling back to: ${latest}`);
 
-    // Checkout system files from backup branch
+    // Checkout system files from backup branch.
+    //
+    // Two failure modes for `git checkout` here:
+    //   (a) the path didn't exist in the backup branch — the apply()
+    //       that produced this backup was on an older version that
+    //       didn't track this path yet. Rollback must DELETE the path
+    //       so the working tree mirrors the backup state.
+    //   (b) anything else — propagate so we don't silently leave the
+    //       working tree in a partially-restored state.
+    const restored = [];
+    const removed = [];
     for (const path of SYSTEM_PATHS) {
       try {
         git('checkout', latest, '--', path);
-      } catch {
-        // File may not have existed in backup
+        restored.push(path);
+      } catch (err) {
+        const pathspec = path.endsWith('/') ? path.slice(0, -1) : path;
+        let existedInBackup = true;
+        try {
+          git('cat-file', '-e', `${latest}:${pathspec}`);
+        } catch {
+          existedInBackup = false;
+        }
+        if (existedInBackup) {
+          throw err;
+        }
+        // Path was introduced by a later apply() — remove it so the
+        // tree truly matches the backup. `git rm` stages the deletion.
+        git('rm', '-r', '-f', '--ignore-unmatch', '--', pathspec);
+        removed.push(pathspec);
       }
     }
 
-    addPaths(SYSTEM_PATHS);
+    if (restored.length > 0) addPaths(restored);
     git('commit', '-m', `chore: rollback system files from ${latest}`);
 
     console.log(`Rollback complete. System files restored from ${latest}.`);
