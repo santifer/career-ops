@@ -182,6 +182,7 @@ async function run() {
   console.log('  career-ops — Multi-Source (DB PERSISTENT)');
   console.log('  Sources: Greenhouse · Ashby · Lever · Workable');
   console.log('═══════════════════════════════════════════');
+  const enableExtendedScan = process.env.ENABLE_EXTENDED_SCAN === 'true';
 
   // 1. Direct ATS Scans (Greenhouse, Ashby, Lever, Workable)
   await scanGreenhouse();
@@ -190,91 +191,95 @@ async function run() {
   await scanWorkable();
 
   // 2. Dynamic Search Discovery (Naukri, Indeed, LinkedIn, etc.)
-  console.log('\n🌟 Discovery Phase — Searching all portals from portals.yml');
-  try {
-    const { scrapeInstahyre }     = await import('../../portals/scrapers/instahyre.mjs');
-    const { scrapeFlexiple }      = await import('../../portals/scrapers/flexiple.mjs');
-    const { scrapeLinkedIn }      = await import('../../portals/scrapers/linkedin.mjs');
-    const { scrapeNaukri }        = await import('../../portals/scrapers/naukri.mjs');
-    const { scrapeCutshort }      = await import('../../portals/scrapers/cutshort.mjs');
-    const { scrapeIndeed }        = await import('../../portals/scrapers/indeed.mjs');
-    const { discoverJobs }        = await import('../../portals/scrapers/discovery.mjs');
-    
-    // Only process enabled queries
-    const queries = (config.search_queries || []).filter(q => q.enabled !== false);
-    stats.discovery.checked = queries.length;
+  if (enableExtendedScan) {
+    console.log('\n🌟 Discovery Phase — Searching all portals from portals.yml');
+    try {
+      const { scrapeInstahyre }     = await import('../../portals/scrapers/instahyre.mjs');
+      const { scrapeFlexiple }      = await import('../../portals/scrapers/flexiple.mjs');
+      const { scrapeLinkedIn }      = await import('../../portals/scrapers/linkedin.mjs');
+      const { scrapeNaukri }        = await import('../../portals/scrapers/naukri.mjs');
+      const { scrapeCutshort }      = await import('../../portals/scrapers/cutshort.mjs');
+      const { scrapeIndeed }        = await import('../../portals/scrapers/indeed.mjs');
+      const { discoverJobs }        = await import('../../portals/scrapers/discovery.mjs');
+      
+      // Only process enabled queries
+      const queries = (config.search_queries || []).filter(q => q.enabled !== false);
+      stats.discovery.checked = queries.length;
 
-    for (const q of queries) {
-      console.log(`  🔍 Scanning: ${q.name}...`);
-      let results = [];
-      try {
-        if (q.portal === 'linkedin') {
-          results = await scrapeLinkedIn(q.query, q.location || 'India');
-        } else if (q.portal === 'instahyre') {
-          results = await scrapeInstahyre(q.query, q.locations || ['Pune', 'Bengaluru']);
-        } else if (q.portal === 'flexiple') {
-          results = await scrapeFlexiple(q.query);
-        } else if (q.portal === 'naukri') {
-          results = await scrapeNaukri(q.query, q.location || 'India');
-        } else if (q.portal === 'cutshort') {
-          results = await scrapeCutshort(q.query, q.location || 'india');
-        } else if (q.portal === 'indeed') {
-          results = await scrapeIndeed(q.query, q.location || 'India');
-        } else {
-          // Fallback: Use Discovery Engine for generic site: queries (Naukri, Indeed, Glassdoor, etc.)
-          results = await discoverJobs(q.query, q.name);
+      for (const q of queries) {
+        console.log(`  🔍 Scanning: ${q.name}...`);
+        let results = [];
+        try {
+          if (q.portal === 'linkedin') {
+            results = await scrapeLinkedIn(q.query, q.location || 'India');
+          } else if (q.portal === 'instahyre') {
+            results = await scrapeInstahyre(q.query, q.locations || ['Pune', 'Bengaluru']);
+          } else if (q.portal === 'flexiple') {
+            results = await scrapeFlexiple(q.query);
+          } else if (q.portal === 'naukri') {
+            results = await scrapeNaukri(q.query, q.location || 'India');
+          } else if (q.portal === 'cutshort') {
+            results = await scrapeCutshort(q.query, q.location || 'india');
+          } else if (q.portal === 'indeed') {
+            results = await scrapeIndeed(q.query, q.location || 'India');
+          } else {
+            // Fallback: Use Discovery Engine for generic site: queries (Naukri, Indeed, Glassdoor, etc.)
+            results = await discoverJobs(q.query, q.name);
+          }
+          
+          stats.discovery.found += results.length;
+          results.forEach(j => {
+            const res = tryAdd(j.url, j.company, j.title, j.source);
+            if (res === 'added') stats.discovery.added++;
+          });
+        } catch (err) {
+          console.error(`  ✗ Error scanning ${q.name}:`, err.message);
+          stats.discovery.errors++;
         }
-        
-        stats.discovery.found += results.length;
-        results.forEach(j => {
-          const res = tryAdd(j.url, j.company, j.title, j.source);
-          if (res === 'added') stats.discovery.added++;
-        });
-      } catch (err) {
-        console.error(`  ✗ Error scanning ${q.name}:`, err.message);
-        stats.discovery.errors++;
       }
+    } catch (e) {
+      console.error(`  ✗ Discovery Phase Error: ${e.message}`);
     }
-  } catch (e) {
-    console.error(`  ✗ Discovery Phase Error: ${e.message}`);
-  }
 
-  // 3. Enterprise Portal Scans (Workday, SuccessFactors)
-  console.log('\n🏢 Enterprise Phase — Scanning Workday & SuccessFactors');
-  try {
-    const { scrapeWorkday }       = await import('../../portals/scrapers/workday.mjs');
-    const { scrapeSuccessFactors} = await import('../../portals/scrapers/successfactors.mjs');
+    // 3. Enterprise Portal Scans (Workday, SuccessFactors)
+    console.log('\n🏢 Enterprise Phase — Scanning Workday & SuccessFactors');
+    try {
+      const { scrapeWorkday }       = await import('../../portals/scrapers/workday.mjs');
+      const { scrapeSuccessFactors} = await import('../../portals/scrapers/successfactors.mjs');
 
-    // This is where you would iterate through specific enterprise entries if added to tracked_companies
-    // For now, I'll add a few known targets to ensure they are checked
-    const enterpriseTargets = [
-      { name: 'Siemens', subdomain: 'siemens', portal: 'workday' },
-      { name: 'AMD', subdomain: 'amd', portal: 'workday' },
-      { name: 'SAP', portalToken: 'sap', portal: 'successfactors' }
-    ];
+      // This is where you would iterate through specific enterprise entries if added to tracked_companies
+      // For now, I'll add a few known targets to ensure they are checked
+      const enterpriseTargets = [
+        { name: 'Siemens', subdomain: 'siemens', portal: 'workday' },
+        { name: 'AMD', subdomain: 'amd', portal: 'workday' },
+        { name: 'SAP', portalToken: 'sap', portal: 'successfactors' }
+      ];
 
-    for (const target of enterpriseTargets) {
-       console.log(`  🏢 Checking Enterprise: ${target.name}...`);
-       let results = [];
-       try {
-         if (target.portal === 'workday') {
-           results = await scrapeWorkday(target.name, target.subdomain, 'Software Engineer');
-         } else if (target.portal === 'successfactors') {
-           results = await scrapeSuccessFactors(target.name, target.portalToken, 'Software Engineer');
+      for (const target of enterpriseTargets) {
+         console.log(`  🏢 Checking Enterprise: ${target.name}...`);
+         let results = [];
+         try {
+           if (target.portal === 'workday') {
+             results = await scrapeWorkday(target.name, target.subdomain, 'Software Engineer');
+           } else if (target.portal === 'successfactors') {
+             results = await scrapeSuccessFactors(target.name, target.portalToken, 'Software Engineer');
+           }
+           
+           stats.enterprise.found += results.length;
+           results.forEach(j => {
+             const res = tryAdd(j.url, j.company, j.title, j.source);
+             if (res === 'added') stats.enterprise.added++;
+           });
+         } catch (err) {
+           console.error(`  ✗ Error scanning enterprise ${target.name}:`, err.message);
+           stats.enterprise.errors++;
          }
-         
-         stats.enterprise.found += results.length;
-         results.forEach(j => {
-           const res = tryAdd(j.url, j.company, j.title, j.source);
-           if (res === 'added') stats.enterprise.added++;
-         });
-       } catch (err) {
-         console.error(`  ✗ Error scanning enterprise ${target.name}:`, err.message);
-         stats.enterprise.errors++;
-       }
+      }
+    } catch (e) {
+      console.error(`  ✗ Enterprise Phase Error: ${e.message}`);
     }
-  } catch (e) {
-    console.error(`  ✗ Enterprise Phase Error: ${e.message}`);
+  } else {
+    console.log('\nℹ️ Extended discovery/enterprise scan disabled in this runtime. Set ENABLE_EXTENDED_SCAN=true to enable.');
   }
 
   const totalAdded   = Object.values(stats).reduce((s, v) => s + v.added, 0);
