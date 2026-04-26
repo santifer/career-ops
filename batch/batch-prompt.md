@@ -47,6 +47,17 @@ Eres un worker de evaluación de ofertas de empleo for the candidate (read name 
 2. Si el archivo está vacío o no existe, intenta obtener el JD desde `{{URL}}` con WebFetch
 3. Si ambos fallan, reporta error y termina
 
+### Paso 1.5 — Visa Pre-Filter (solo si config/visa.yml existe)
+
+Si `config/visa.yml` existe Y `sponsorship_mode` es `hard_filter`:
+1. Ejecutar `node sponsorship-detect.mjs --file <jd-file> --json` sobre el texto del JD
+2. Si el resultado es `WONT_SPONSOR`:
+   - NO continuar con la evaluacion A-G
+   - Escribir TSV con status `SKIP` y nota: "Auto-skipped: WONT_SPONSOR (hard_filter)"
+   - Output JSON con `"status": "skipped"` y `"error": "WONT_SPONSOR (hard_filter)"`
+   - TERMINAR aqui (no report, no PDF, no tokens spent)
+3. Si `WILL_SPONSOR` o `UNKNOWN`: continuar normalmente
+
 ### Paso 2 — Evaluación A-G
 
 Read `cv.md`. Ejecuta TODOS los bloques:
@@ -138,7 +149,9 @@ Top 5 cambios al CV + Top 5 cambios a LinkedIn.
 - 1 case study recomendado (cuál proyecto presentar y cómo)
 - Preguntas red-flag y cómo responderlas
 
-#### Bloque G — Posting Legitimacy
+#### Bloque G — Visa Sponsorship Analysis + Posting Legitimacy
+
+##### G.1 Posting Legitimacy
 
 Analyze posting signals to assess whether this is a real, active opening.
 
@@ -153,6 +166,72 @@ Analyze posting signals to assess whether this is a real, active opening.
 **Output format:** Same as interactive mode (Assessment tier + Signals table + Context Notes), but with a note that posting freshness is unverified.
 
 **Assessment:** Apply the same three tiers (High Confidence / Proceed with Caution / Suspicious), weighting available signals more heavily. If insufficient signals are available to make a determination, default to "Proceed with Caution" with a note about limited data.
+
+##### G.2 Visa Sponsorship Analysis (solo si config/visa.yml existe)
+
+Si `config/visa.yml` NO existe, omitir esta subseccion completamente.
+
+##### OPT Timeline Status (solo si config/visa.yml tiene seccion opt:)
+
+Si `config/visa.yml` tiene seccion `opt:` configurada, ejecutar:
+`echo '{"jdText":"<full JD text>"}' | node opt-timeline.mjs --json`
+
+Con el resultado JSON, mostrar este banner despues de la tabla de legitimacy:
+
+> **OPT STATUS:** {remainingDays} days remaining (expires {endDate})
+> Unemployment: {unemployment.used}/{unemployment.limit} days used ({unemployment.remaining} remaining)
+> **Cap Season:** {capSeason.phase}. {capSeason.advice}
+> **Time-to-Hire:** {tthEstimate.type} company, est. {tthEstimate.minDays}-{tthEstimate.maxDays} days. Your OPT window: {remainingDays} days. {tthEstimate.warning || "Within range."}
+
+**Warning escalation:**
+- Si unemployment.severity == 'urgent' (<=14 days): Prefijo `URGENT`, lenguaje fuerte: "CRITICAL: Only {remaining} unemployment days left. Immediate employment required."
+- Si unemployment.severity == 'warning' (<=30 days): Prefijo `WARNING`, lenguaje firme: "WARNING: {remaining} unemployment days remaining. Accelerate job search."
+- Si unemployment.severity == 'info' (<=60 days): Nota informativa: "Note: {remaining} unemployment days remaining. Monitor closely."
+
+**Nota:** opt-timeline.mjs es pura computacion (no Playwright), seguro para batch mode.
+
+Si `opt:` no esta configurada en visa.yml, omitir esta subseccion silenciosamente.
+
+##### Phase 5 Enrichment (batch mode)
+
+1. **E-Verify (YAML only in batch):**
+   Ejecutar `node everify-lookup.mjs <company> --batch --json`
+   - Si status es 'registered': eVerifyScore = 5
+   - Si status es 'not_found': eVerifyScore = 1
+   - Si status es 'unverified': eVerifyScore = 3
+
+2. **STEM Detection:**
+   Ejecutar `echo '{"roleTitle":"<role>","jdText":"<JD>"}' | node stem-detect.mjs --stdin --json`
+   - Si classification es 'STEM': stemScore = 5
+   - Si classification es 'NON_STEM': stemScore = 2
+   - Si classification es 'UNCERTAIN': stemScore = 3
+
+3. **Sponsorship Detection:**
+   Ejecutar `node sponsorship-detect.mjs --file <jd-file> --json`
+
+4. **H-1B Lookup:**
+   Ejecutar `node h1b-lookup.mjs <company> --json`
+
+5. **visa-score.mjs con datos reales:**
+   Pasar eVerify y stemJob scores reales:
+   `echo '{"jdClassification":"<result>","h1bSummary":<h1b>,"eVerify":<eVerifyScore>,"jdText":"<JD>","h1bFound":<bool>,"stemJob":<stemScore>}' | node visa-score.mjs --json`
+
+6. **Risk Assessment:**
+   Ejecutar `echo '{"companyName":"<co>","h1bSummary":<h1b>,"jdText":"<JD>"}' | node risk-assess.mjs --stdin --json`
+   Incluir riskLevel en output JSON del batch
+
+7. **H-1B Salary:** Omitir en batch mode (requires Playwright). Nota: "H-1B salary data: unavailable (batch mode)"
+
+**Visa-friendliness output table (same format as oferta mode):**
+
+| Factor | Value | Score |
+|--------|-------|-------|
+| JD Sponsorship Signal | {WILL_SPONSOR / WONT_SPONSOR / UNKNOWN} | {1-5}/5 |
+| H-1B Filing History | {X petitions, Y% approval, trend} | {1-5}/5 |
+| E-Verify Status | {Registered / NOT Registered / Unverified} | {5 or 1 or 3}/5 |
+| Company Size Signal | {inferred from JD} | {1-5}/5 |
+| STEM Job Match | {STEM Qualifying / Non-STEM / Uncertain} | {5 or 2 or 3}/5 |
+| **Visa-Friendliness** | **Composite** | **{X.X}/5** |
 
 #### Score Global
 
@@ -335,6 +414,13 @@ Al terminar, imprime por stdout un resumen JSON para que el orquestador lo parse
   "role": "{rol}",
   "score": {score_num},
   "legitimacy": "{High Confidence|Proceed with Caution|Suspicious}",
+  "optStatus": { "remainingDays": null, "unemploymentRemaining": null, "capPhase": null },
+  "visa_score": null,
+  "visa_classification": null,
+  "everify_status": null,
+  "stem_classification": null,
+  "risk_level": null,
+  "risk_score": null,
   "pdf": "{ruta_pdf}",
   "report": "{ruta_report}",
   "error": null

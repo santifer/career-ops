@@ -1,0 +1,17 @@
+# config/risk-watchlist.yml -- User layer
+# Track companies with known risk signals for your job search.
+# Add entries based on your own research (news, layoffs.fyi, Glassdoor, etc.)
+#
+# Fields:
+#   company (required): Company name (matched case-insensitively against evaluations)
+#   date (recommended): Date of event (YYYY-MM-DD). Events >12 months old are weighted less.
+#   event (recommended): Type of event: layoffs | funding_concern | hiring_freeze | restructuring
+#   scale (optional): Impact description (e.g., "15% workforce", "Failed Series B")
+#   source (optional): URL or source of information
+#
+# Example entries (remove or replace with your own):
+# - company: "ExampleCorp"
+#   date: "2026-02-15"
+#   event: "layoffs"
+#   scale: "15% workforce"
+#   source: "https://techcrunch.com/example"

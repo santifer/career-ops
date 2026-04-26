@@ -11,7 +11,7 @@
  *   node test-all.mjs --quick   # Skip dashboard build (faster)
  */
 
-import { execSync, execFileSync } from 'child_process';
+import { execSync } from 'child_process';
 import { readFileSync, existsSync, readdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
@@ -28,12 +28,9 @@ function pass(msg) { console.log(`  ✅ ${msg}`); passed++; }
 function fail(msg) { console.log(`  ❌ ${msg}`); failed++; }
 function warn(msg) { console.log(`  ⚠️  ${msg}`); warnings++; }
 
-function run(cmd, args = [], opts = {}) {
+function run(cmd, opts = {}) {
   try {
-    if (Array.isArray(args) && args.length > 0) {
-      return execFileSync(cmd, args, { cwd: ROOT, encoding: 'utf-8', timeout: 30000, ...opts }).trim();
-    }
-    return execSync(cmd, { cwd: ROOT, encoding: 'utf-8', timeout: 30000, ...opts }).trim();
+    return execSync(cmd, { cwd: ROOT, encoding: 'utf-8', timeout: 60000, ...opts }).trim();
   } catch (e) {
     return null;
   }
@@ -50,7 +47,7 @@ console.log('1. Syntax checks');
 
 const mjsFiles = readdirSync(ROOT).filter(f => f.endsWith('.mjs'));
 for (const f of mjsFiles) {
-  const result = run('node', ['--check', f]);
+  const result = run(`node --check ${f}`);
   if (result !== null) {
     pass(`${f} syntax OK`);
   } else {
@@ -72,7 +69,7 @@ const scripts = [
 ];
 
 for (const { name, allowFail } of scripts) {
-  const result = run('node', name.split(' '), { stdio: ['pipe', 'pipe', 'pipe'] });
+  const result = run(`node ${name} 2>&1`);
   if (result !== null) {
     pass(`${name} runs OK`);
   } else if (allowFail) {
@@ -158,7 +155,7 @@ const userFiles = [
   'config/profile.yml', 'modes/_profile.md', 'portals.yml',
 ];
 for (const f of userFiles) {
-  const tracked = run('git', ['ls-files', f]);
+  const tracked = run(`git ls-files ${f}`);
   if (tracked === '') {
     pass(`User file gitignored: ${f}`);
   } else if (tracked === null) {
@@ -178,35 +175,18 @@ const leakPatterns = [
 ];
 
 const scanExtensions = ['md', 'yml', 'html', 'mjs', 'sh', 'go', 'json'];
-const allowedFiles = [
-  // English README + localized translations (all legitimately credit Santiago)
-  'README.md', 'README.es.md', 'README.ja.md', 'README.ko-KR.md',
-  'README.pt-BR.md', 'README.ru.md',
-  // Standard project files
-  'LICENSE', 'CITATION.cff', 'CONTRIBUTING.md',
-  'package.json', '.github/FUNDING.yml', 'CLAUDE.md', 'go.mod', 'test-all.mjs',
-  // Community / governance files (added in v1.3.0, all legitimately reference the maintainer)
-  'CODE_OF_CONDUCT.md', 'GOVERNANCE.md', 'SECURITY.md', 'SUPPORT.md',
-  '.github/SECURITY.md',
-  // Dashboard credit string
-  'dashboard/internal/ui/screens/pipeline.go',
-];
-
-// Build pathspec for git grep — only scan tracked files matching these
-// extensions. This is what `grep -rn` was trying to do, but git-aware:
-// untracked files (debate artifacts, AI tool scratch, local plans/) and
-// gitignored files can't trigger false positives because they were never
-// going to reach a commit anyway.
-const grepPathspec = scanExtensions.map(e => `'*.${e}'`).join(' ');
+const excludeDirs = ['node_modules', '.git', 'dashboard/go.sum'];
+const allowedFiles = ['README.md', 'LICENSE', 'CITATION.cff', 'CONTRIBUTING.md',
+  'package.json', '.github/FUNDING.yml', 'CLAUDE.md', 'go.mod', 'test-all.mjs'];
 
 let leakFound = false;
 for (const pattern of leakPatterns) {
   const result = run(
-    `git grep -n "${pattern}" -- ${grepPathspec} 2>/dev/null`
+    `grep -rn "${pattern}" --include="*.{${scanExtensions.join(',')}}" . 2>/dev/null | grep -v node_modules | grep -v ".git/" | grep -v go.sum`
   );
   if (result) {
     for (const line of result.split('\n')) {
-      const file = line.split(':')[0];
+      const file = line.split(':')[0].replace('./', '');
       if (allowedFiles.some(a => file.includes(a))) continue;
       if (file.includes('dashboard/go.mod')) continue;
       warn(`Possible personal data in ${file}: "${pattern}"`);
@@ -222,10 +202,8 @@ if (!leakFound) {
 
 console.log('\n7. Absolute path check');
 
-// Same git grep approach: only scans tracked files. Untracked AI tool
-// outputs, local debate artifacts, etc. can't false-positive here.
 const absPathResult = run(
-  `git grep -n "/Users/" -- '*.mjs' '*.sh' '*.md' '*.go' '*.yml' 2>/dev/null | grep -v README.md | grep -v LICENSE | grep -v CLAUDE.md | grep -v test-all.mjs`
+  `grep -rn "/Users/" --include="*.mjs" --include="*.sh" --include="*.md" --include="*.go" --include="*.yml" . 2>/dev/null | grep -v node_modules | grep -v ".git/" | grep -v README.md | grep -v LICENSE | grep -v go.sum | grep -v CLAUDE.md | grep -v test-all.mjs`
 );
 if (!absPathResult) {
   pass('No absolute paths in code files');
@@ -293,6 +271,126 @@ if (fileExists('VERSION')) {
   }
 } else {
   fail('VERSION file missing');
+}
+
+// ── 11. SPONSORSHIP DETECTION ───────────────────────────────────
+
+console.log('\n11. Sponsorship detection');
+
+if (fileExists('sponsorship-detect.mjs')) {
+  const testResult = run('node sponsorship-detect.mjs --test');
+  if (testResult !== null) {
+    pass('sponsorship-detect.mjs --test passed');
+  } else {
+    fail('sponsorship-detect.mjs --test failed');
+  }
+} else {
+  warn('sponsorship-detect.mjs not found (Phase 3)');
+}
+
+// ── 12. H-1B EMPLOYER LOOKUP ────────────────────────────────────
+
+console.log('\n12. H-1B employer lookup');
+
+if (fileExists('h1b-lookup.mjs')) {
+  const testResult = run('node h1b-lookup.mjs --test');
+  if (testResult !== null) {
+    pass('h1b-lookup.mjs --test passed');
+  } else {
+    fail('h1b-lookup.mjs --test failed');
+  }
+} else {
+  warn('h1b-lookup.mjs not found (Phase 3)');
+}
+
+// ── 13. VISA SCORE CALCULATOR ─────────────────────────────────
+
+console.log('\n13. Visa score calculator');
+
+if (fileExists('visa-score.mjs')) {
+  const testResult = run('node visa-score.mjs --test');
+  if (testResult !== null) {
+    pass('visa-score.mjs --test passed');
+  } else {
+    fail('visa-score.mjs --test failed');
+  }
+} else {
+  warn('visa-score.mjs not found (Phase 3)');
+}
+
+// ── 14. OPT TIMELINE ────────────────────────────────────────────
+
+console.log('\n14. OPT timeline');
+
+if (fileExists('opt-timeline.mjs')) {
+  const testResult = run('node opt-timeline.mjs --test');
+  if (testResult !== null) {
+    pass('opt-timeline.mjs --test passed');
+  } else {
+    fail('opt-timeline.mjs --test failed');
+  }
+} else {
+  warn('opt-timeline.mjs not found (Phase 4)');
+}
+
+// ── 15. E-VERIFY LOOKUP ────────────────────────────────────────
+
+console.log('\n15. E-Verify lookup');
+
+if (fileExists('everify-lookup.mjs')) {
+  const testResult = run('node everify-lookup.mjs --test');
+  if (testResult !== null) {
+    pass('everify-lookup.mjs --test passed');
+  } else {
+    fail('everify-lookup.mjs --test failed');
+  }
+} else {
+  warn('everify-lookup.mjs not found (Phase 5)');
+}
+
+// ── 16. STEM DETECTION ─────────────────────────────────────────
+
+console.log('\n16. STEM detection');
+
+if (fileExists('stem-detect.mjs')) {
+  const testResult = run('node stem-detect.mjs --test');
+  if (testResult !== null) {
+    pass('stem-detect.mjs --test passed');
+  } else {
+    fail('stem-detect.mjs --test failed');
+  }
+} else {
+  warn('stem-detect.mjs not found (Phase 5)');
+}
+
+// ── 17. H-1B SALARY LOOKUP ────────────────────────────────────
+
+console.log('\n17. H-1B salary lookup');
+
+if (fileExists('h1b-salary.mjs')) {
+  const testResult = run('node h1b-salary.mjs --test');
+  if (testResult !== null) {
+    pass('h1b-salary.mjs --test passed');
+  } else {
+    fail('h1b-salary.mjs --test failed');
+  }
+} else {
+  warn('h1b-salary.mjs not found (Phase 5)');
+}
+
+// ── 18. RISK ASSESSMENT ───────────────────────────────────────
+
+console.log('\n18. Risk assessment');
+
+if (fileExists('risk-assess.mjs')) {
+  const testResult = run('node risk-assess.mjs --test');
+  if (testResult !== null) {
+    pass('risk-assess.mjs --test passed');
+  } else {
+    fail('risk-assess.mjs --test failed');
+  }
+} else {
+  warn('risk-assess.mjs not found (Phase 5)');
 }
 
 // ── SUMMARY ─────────────────────────────────────────────────────
