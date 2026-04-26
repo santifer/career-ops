@@ -318,12 +318,22 @@ async function apply() {
       // Revert BOTH the system-layer updates and the user-layer paths
       // the update unexpectedly modified — otherwise the repo is left
       // in a half-applied state.
-      revertPaths([...updated, ...violatedUserPaths]);
+      const violation = new Error('Update aborted: user files were touched.');
+      try {
+        revertPaths([...updated, ...violatedUserPaths]);
+      } catch (revertErr) {
+        // If the revert itself fails, don't lose the safety-violation
+        // diagnostic — chain it via `cause` so the user sees both.
+        throw new Error(
+          `Safety violation (${violation.message}) and revert also failed (${revertErr.message})`,
+          { cause: violation },
+        );
+      }
       // `throw` (not `process.exit`) so the outer `finally` runs and
       // .update-lock is removed. Exiting here would leak the lock and
       // permanently block subsequent updates until the user deletes
       // it manually.
-      throw new Error('Update aborted: user files were touched.');
+      throw violation;
     }
 
     // 5. Install any new dependencies
