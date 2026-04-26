@@ -180,10 +180,32 @@ Each URL gets a verdict: `active`, `expired`, or `uncertain` with a reason.
 
 ## scan
 
-Zero-token portal scanner. Hits ATS APIs (Greenhouse, Ashby, Lever) and career pages directly — no LLM tokens consumed. Reads `portals.yml` for target companies and search queries, outputs matching listings to stdout and optionally appends to `data/pipeline.md`.
+Zero-token portal scanner running in three phases — no LLM tokens consumed. Reads `portals.yml` for configuration and appends new listings to `data/pipeline.md` + `data/scan-history.tsv`.
+
+**Phase A — Tracked companies:** Hits ATS APIs directly (Greenhouse, Ashby, Lever, BambooHR, Teamtailor, Workable, SmartRecruiters, Recruitee). Auto-detects provider from `careers_url` or explicit `api_provider` field in `portals.yml`.
+
+**Phase B — Job boards:** Scrapes global boards configured under `job_boards:` in `portals.yml`. Supported board types:
+
+| Type | Source |
+|------|--------|
+| `remoteok` | remoteok.com/api |
+| `remotive` | remotive.com/api/remote-jobs |
+| `himalayas` | himalayas.app/jobs/api (paginated) |
+| `arbeitnow` | arbeitnow.com/api/job-board-api (paginated) |
+| `themuse` | themuse.com/api/public/jobs (paginated) |
+| `weworkremotely` | RSS feeds per category |
+| `findwork` | findwork.dev/api (requires free API key) |
+| `indeed` | indeed.com/rss (multi-query) |
+
+**Phase C — HN Who is Hiring:** Fetches the most recent monthly thread via Algolia + Firebase APIs. Enable with `hn_hiring: enabled: true` in `portals.yml`.
 
 ```bash
-npm run scan
+npm run scan                     # all three phases
+npm run scan -- --dry-run        # preview without saving
+npm run scan -- --company Cohere # single company only
+npm run scan -- --source boards  # job boards only (skip companies + HN)
+npm run scan -- --source companies # tracked companies only
+npm run scan -- --source hn      # HN Who is Hiring only
 ```
 
 **Exit codes:** `0` scan completed, `1` configuration error or no portals.yml found.

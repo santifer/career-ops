@@ -2,7 +2,14 @@
 
 Escanea portales de empleo configurados, filtra por relevancia de título, y añade nuevas ofertas al pipeline para evaluación posterior.
 
-> **Nota (v1.5+):** El escáner por defecto (`scan.mjs` / `npm run scan`) es **zero-token** y sólo consulta directamente las APIs públicas de Greenhouse, Ashby y Lever. Los niveles con Playwright/WebSearch descritos abajo son el flujo **agente** (ejecutado por Claude/Codex), no lo que hace `scan.mjs`. Si una empresa no tiene API Greenhouse/Ashby/Lever, `scan.mjs` la ignorará; para esos casos, el agente debe completar manualmente el Nivel 1 (Playwright) o Nivel 3 (WebSearch).
+> **Nota (v1.5+):** El escáner por defecto (`scan.mjs` / `npm run scan`) es **zero-token** y consulta directamente las APIs públicas de los proveedores ATS soportados (Greenhouse, Ashby, Lever, BambooHR, Teamtailor, Workable, SmartRecruiters, Recruitee), además de **boards globales** (RemoteOK, Remotive, Himalayas, Arbeitnow, The Muse, WeWorkRemotely, Findwork, Indeed RSS) y **HN Who is Hiring**. Los niveles con Playwright/WebSearch descritos abajo son el flujo **agente** (ejecutado por Claude/Codex), no lo que hace `scan.mjs`. Si una empresa no tiene API soportada, `scan.mjs` la ignorará; para esos casos, el agente debe completar manualmente el Nivel 1 (Playwright) o Nivel 3 (WebSearch).
+
+**Flags disponibles para `scan.mjs`:**
+- `--dry-run` — vista previa sin escribir archivos
+- `--company Cohere` — escanear solo esa empresa
+- `--source boards` — solo job boards globales (skip tracked_companies y HN)
+- `--source companies` — solo tracked_companies (skip boards y HN)
+- `--source hn` — solo HN Who is Hiring
 
 ## Ejecución recomendada
 
@@ -45,7 +52,27 @@ Para empresas con API pública o feed estructurado, usar la respuesta JSON/XML c
 - **BambooHR**: lista `https://{company}.bamboohr.com/careers/list`; detalle de una oferta `https://{company}.bamboohr.com/careers/{id}/detail`
 - **Lever**: `https://api.lever.co/v0/postings/{company}?mode=json`
 - **Teamtailor**: `https://{company}.teamtailor.com/jobs.rss`
+- **Workable**: `https://apply.workable.com/api/v3/accounts/{slug}/jobs`
+- **SmartRecruiters**: `https://api.smartrecruiters.com/v1/companies/{id}/postings?status=PUBLIC`
+- **Recruitee**: `https://careers.{slug}.com/o/api/jobs`
 - **Workday**: `https://{company}.{shard}.myworkdayjobs.com/wday/cxs/{company}/{site}/jobs`
+
+### Nivel 2b — Job boards globales (AUTOMÁTICO via scan.mjs)
+
+`scan.mjs` lee la sección `job_boards:` de `portals.yml` y consulta directamente cada board:
+
+| Board | Endpoint | Parámetros clave |
+|-------|----------|-----------------|
+| **RemoteOK** | `https://remoteok.com/api?tags=...` | `tags[]` comma-separated |
+| **Remotive** | `https://remotive.com/api/remote-jobs` | `category`, `search` |
+| **Himalayas** | `https://himalayas.app/jobs/api` | `search`, `seniority`, `max_pages` |
+| **Arbeitnow** | `https://www.arbeitnow.com/api/job-board-api` | `tag`, `remote`, `max_pages` |
+| **The Muse** | `https://www.themuse.com/api/public/jobs` | `category`, `level`, `max_pages` |
+| **WeWorkRemotely** | RSS feed URLs | `feeds[]` list |
+| **Findwork** | `https://findwork.dev/api/jobs/` | `search`, `remote`, `api_key` |
+| **Indeed** | `https://www.indeed.com/rss?q=...` | `queries[]` con `q` y `l`, `results_per_query` |
+
+HN Who is Hiring se activa con `hn_hiring: enabled: true` en `portals.yml` y consulta el hilo mensual más reciente via Algolia + Firebase APIs.
 
 **Convención de parsing por provider:**
 - `greenhouse`: `jobs[]` → `title`, `absolute_url`

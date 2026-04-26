@@ -989,3 +989,75 @@ tracked_companies:
   #   api_provider: recruitee
   #   notes: "Example Recruitee company."
   #   enabled: false
+
+# ────────────────────────────────────────────────────────────────────────────────
+# JOB BOARDS
+# Zero-token scrapers for global boards. Each entry has a 'type' field that maps
+# to a built-in fetcher. Configure filters (tags, category, search) per board.
+# ────────────────────────────────────────────────────────────────────────────────
+
+job_boards:
+
+  - name: RemoteOK
+    type: remoteok
+    tags: [react, typescript, python]  # comma-separated tags (see remoteok.com/api)
+    enabled: true
+
+  - name: Remotive
+    type: remotive
+    category: software-dev             # see remotive.com/api/remote-jobs/categories
+    search: AI engineer
+    enabled: true
+
+  - name: Himalayas
+    type: himalayas
+    search: machine learning
+    seniority: Senior                  # Senior | Mid | Junior
+    max_pages: 3
+    enabled: true
+
+  - name: Arbeitnow (EU)
+    type: arbeitnow
+    tag: Python
+    remote: true
+    enabled: true
+
+  - name: The Muse
+    type: themuse
+    category: Software Engineer        # see themuse.com/api/public/jobs
+    level: Senior Level
+    max_pages: 3
+    enabled: true
+
+  - name: WeWorkRemotely
+    type: weworkremotely
+    feeds:
+      - https://weworkremotely.com/categories/remote-programming-jobs.rss
+      - https://weworkremotely.com/categories/remote-devops-sysadmin-jobs.rss
+    enabled: true
+
+  - name: Findwork (requires API key)
+    type: findwork
+    search: machine learning
+    remote: true
+    api_key: YOUR_FINDWORK_API_KEY     # free at findwork.dev/register
+    enabled: false                     # disabled until api_key is set
+
+  - name: Indeed
+    type: indeed
+    queries:
+      - q: "AI engineer"
+        l: "Remote"
+      - q: "machine learning engineer"
+        l: "Remote"
+    results_per_query: 50
+    enabled: true
+
+# ────────────────────────────────────────────────────────────────────────────────
+# HN WHO IS HIRING
+# Scrapes the monthly "Ask HN: Who is Hiring?" thread via Algolia API.
+# Applies your title_filter to match relevant job comments.
+# ────────────────────────────────────────────────────────────────────────────────
+
+hn_hiring:
+  enabled: true
