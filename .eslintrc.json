@@ -1,0 +1,16 @@
+{
+  "env": {
+    "node": true,
+    "es2022": true
+  },
+  "globals": {
+    "URLSearchParams": "readonly",
+    "fetch": "readonly",
+    "AbortController": "readonly"
+  },
+  "parserOptions": {
+    "ecmaVersion": 2022,
+    "sourceType": "module"
+  },
+  "rules": {}
+}
