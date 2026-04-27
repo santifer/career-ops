@@ -132,6 +132,26 @@ Analyze the job posting for signals that indicate whether this is a real, active
 
 **Context Notes:** Any caveats (niche role, government job, evergreen position, etc.) that explain potentially concerning signals.
 
+### OPT Timeline Status (solo si config/visa.yml tiene seccion opt:)
+
+Si `config/visa.yml` tiene seccion `opt:` configurada, ejecutar:
+`echo '{"jdText":"<full JD text>"}' | node opt-timeline.mjs --json`
+
+Con el resultado JSON, mostrar este banner ANTES de la tabla de sponsorship:
+
+> **OPT STATUS:** {remainingDays} days remaining (expires {endDate})
+> Unemployment: {unemployment.used}/{unemployment.limit} days used ({unemployment.remaining} remaining)
+> **Cap Season:** {capSeason.phase}. {capSeason.advice}
+> **Time-to-Hire:** {tthEstimate.type} company, est. {tthEstimate.minDays}-{tthEstimate.maxDays} days. Your OPT window: {remainingDays} days. {tthEstimate.warning || "Within range."}
+
+**Warning escalation (per D-06):**
+- Si unemployment.severity == 'urgent' (<=14 days): Prefijo `URGENT` en rojo, lenguaje fuerte: "CRITICAL: Only {remaining} unemployment days left. Immediate employment required."
+- Si unemployment.severity == 'warning' (<=30 days): Prefijo `WARNING`, lenguaje firme: "WARNING: {remaining} unemployment days remaining. Accelerate job search."
+- Si unemployment.severity == 'info' (<=60 days): Nota informativa: "Note: {remaining} unemployment days remaining. Monitor closely."
+- Similar escalation for optStatus.remainingDays approaching 0.
+
+Si `opt:` no esta configurada en visa.yml, omitir esta subseccion silenciosamente.
+
 ### Edge case handling:
 - **Government/academic postings:** Longer timelines are standard. Adjust thresholds (60-90 days is normal).
 - **Evergreen/continuous hire postings:** If the JD explicitly says "ongoing" or "rolling," note it as context -- this is not a ghost job, it is a pipeline role.
