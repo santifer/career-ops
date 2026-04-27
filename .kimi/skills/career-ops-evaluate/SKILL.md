@@ -16,4 +16,5 @@ The user will provide a job description below. Load the evaluation context and e
 - Read file (if exists): article-digest.md
 
 Then execute the full A-G evaluation as defined in modes/oferta.md.
-After evaluation, save the report to reports/ and register in the tracker.
+After evaluation, save the report to reports/.
+For tracker updates, write a single-line TSV entry to batch/tracker-additions/ (num,date,company,role,status,score,pdf,report,notes), then run node merge-tracker.mjs.
