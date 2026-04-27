@@ -319,14 +319,7 @@ func (m PipelineModel) handleNormalKey(msg tea.KeyMsg) (PipelineModel, tea.Cmd) 
 		}
 
 	case "enter":
-		if app, ok := m.CurrentApp(); ok && app.ReportPath != "" {
-			fullPath := filepath.Join(m.careerOpsPath, app.ReportPath)
-			title := fmt.Sprintf("%s — %s", app.Company, app.Role)
-			jobURL := app.JobURL
-			return m, func() tea.Msg {
-				return PipelineOpenReportMsg{Path: fullPath, Title: title, JobURL: jobURL}
-			}
-		}
+		return m, m.openCurrentReportCmd()
 
 	case "o":
 		if app, ok := m.CurrentApp(); ok && app.JobURL != "" {
@@ -428,14 +421,7 @@ func (m PipelineModel) handleSearchKey(msg tea.KeyMsg) (PipelineModel, tea.Cmd) 
 
 	case "enter":
 		m.searchMode = false
-		if app, ok := m.CurrentApp(); ok && app.ReportPath != "" {
-			fullPath := filepath.Join(m.careerOpsPath, app.ReportPath)
-			title := fmt.Sprintf("%s — %s", app.Company, app.Role)
-			return m, func() tea.Msg {
-				return PipelineOpenReportMsg{Path: fullPath, Title: title, JobURL: app.JobURL}
-			}
-		}
-		return m, nil
+		return m, m.openCurrentReportCmd()
 
 	case "q":
 		return m, func() tea.Msg { return PipelineClosedMsg{} }
@@ -501,6 +487,19 @@ func (m PipelineModel) loadCurrentReport() tea.Cmd {
 	report := app.ReportPath
 	return func() tea.Msg {
 		return PipelineLoadReportMsg{CareerOpsPath: path, ReportPath: report}
+	}
+}
+
+func (m PipelineModel) openCurrentReportCmd() tea.Cmd {
+	app, ok := m.CurrentApp()
+	if !ok || app.ReportPath == "" {
+		return nil
+	}
+	fullPath := filepath.Join(m.careerOpsPath, app.ReportPath)
+	title := fmt.Sprintf("%s — %s", app.Company, app.Role)
+	jobURL := app.JobURL
+	return func() tea.Msg {
+		return PipelineOpenReportMsg{Path: fullPath, Title: title, JobURL: jobURL}
 	}
 }
 
@@ -755,14 +754,12 @@ func (m PipelineModel) renderMetrics() string {
 		Padding(0, 2)
 
 	var parts []string
-	statusColors := m.statusColorMap()
-
 	for _, status := range statusGroupOrder {
 		count, ok := m.metrics.ByStatus[status]
 		if !ok || count == 0 {
 			continue
 		}
-		color := statusColors[status]
+		color := m.statusColor(status)
 		s := lipgloss.NewStyle().Foreground(color)
 		parts = append(parts, s.Render(fmt.Sprintf("%s:%d", statusLabel(status), count)))
 	}
@@ -881,7 +878,7 @@ func (m PipelineModel) renderAppLine(app model.CareerApplication, selected bool)
 
 	// Status with color -- fixed column
 	norm := data.NormalizeStatus(app.Status)
-	statusColor := m.statusColorMap()[norm]
+	statusColor := m.statusColor(norm)
 	statusStyle := lipgloss.NewStyle().Foreground(statusColor).Width(statusW)
 	statusText := statusStyle.Render(statusLabel(norm))
 
@@ -1048,16 +1045,20 @@ func (m PipelineModel) scoreStyle(score float64) lipgloss.Style {
 	}
 }
 
-func (m PipelineModel) statusColorMap() map[string]lipgloss.Color {
-	return map[string]lipgloss.Color{
-		"interview": m.theme.Green,
-		"offer":     m.theme.Green,
-		"applied":   m.theme.Sky,
-		"responded": m.theme.Blue,
-		"evaluated": m.theme.Text,
-		"skip":      m.theme.Red,
-		"rejected":  m.theme.Subtext,
-		"discarded": m.theme.Subtext,
+func (m PipelineModel) statusColor(status string) lipgloss.Color {
+	switch status {
+	case "interview", "offer":
+		return m.theme.Green
+	case "applied":
+		return m.theme.Sky
+	case "responded":
+		return m.theme.Blue
+	case "skip":
+		return m.theme.Red
+	case "rejected", "discarded":
+		return m.theme.Subtext
+	default:
+		return m.theme.Text
 	}
 }
 
