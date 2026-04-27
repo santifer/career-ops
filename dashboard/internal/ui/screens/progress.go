@@ -130,10 +130,12 @@ func (m ProgressModel) renderHeader() string {
 	title := lipgloss.NewStyle().Bold(true).Foreground(m.theme.Mauve).Render("SEARCH PROGRESS")
 
 	right := lipgloss.NewStyle().Foreground(m.theme.Subtext)
-	total := len(m.metrics.FunnelStages)
 	totalCount := 0
-	if total > 0 {
-		totalCount = m.metrics.FunnelStages[0].Count
+	for _, s := range m.metrics.FunnelStages {
+		if strings.EqualFold(s.Label, "evaluated") {
+			totalCount = s.Count
+			break
+		}
 	}
 	info := right.Render(fmt.Sprintf("%d evaluated | %.1f avg score", totalCount, m.metrics.AvgScore))
 
