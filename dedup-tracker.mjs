@@ -70,6 +70,9 @@ const ROLE_STOPWORDS = new Set([
   'manager', 'director', 'associate', 'intern', 'contractor',
   'remote', 'hybrid', 'onsite',
   'engineer', 'engineering',
+  // role-type prefixes — keep in sync with merge-tracker.mjs
+  // so both pipelines agree on TPM-style cases.
+  'technical', 'program',
 ]);
 
 const LOCATION_STOPWORDS = new Set([
@@ -92,6 +95,12 @@ function roleMatch(a, b) {
   const smaller = Math.min(wordsA.length, wordsB.length);
   const ratio = overlap.length / smaller;
 
+  // Subset match (mirrors merge-tracker.mjs): re-evaluation of a
+  // single-discriminator role like "TPM, Compute" should match itself
+  // even when stopword filtering reduces it to one token. Require BOTH
+  // sides to reduce to the same set so "Engineering Manager" does not
+  // collapse into "Engineering Manager, Backend".
+  if (wordsA.length === wordsB.length && ratio === 1.0) return true;
   return overlap.length >= 2 && ratio >= 0.6;
 }
 

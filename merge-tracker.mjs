@@ -124,10 +124,11 @@ function roleFuzzyMatch(a, b) {
 
   // Subset match: when role-type prefixes (technical/program/manager) are
   // filtered out, single-discriminator roles like "TPM, Compute" reduce
-  // to one token. Allow a match when the shorter side is fully contained
-  // in the longer (ratio === 1.0). Otherwise require the original
-  // overlap >= 2 with substantial ratio.
-  return ratio === 1.0 || (overlap >= 2 && ratio >= 0.6);
+  // to one token. Allow a match only when BOTH sides reduce to the same
+  // token set (same length + ratio 1.0) so a bare "Engineering Manager"
+  // does not collapse into "Engineering Manager, Backend".
+  if (wordsA.length === wordsB.length && ratio === 1.0) return true;
+  return overlap >= 2 && ratio >= 0.6;
 }
 
 function extractReportNum(reportStr) {
