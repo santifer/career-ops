@@ -476,7 +476,10 @@ main() {
     [[ -z "$id" || -z "$url" ]] && continue
 
     # Guard against non-numeric id values
-    [[ "$id" =~ ^[0-9]+$ ]] || continue
+    if ! [[ "$id" =~ ^[0-9]+$ ]]; then
+      echo "WARN: Skipping row with non-numeric id: '$id' (url: $url)" >&2
+      continue
+    fi
 
     # Skip if before start-from
     if (( id < START_FROM )); then
