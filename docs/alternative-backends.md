@@ -10,7 +10,7 @@ career-ops is engine-first: the evaluation logic lives in the mode files (`modes
 
 `batch-runner.sh` runs one command per job offer:
 
-```
+```text
 $CAREER_OPS_CLI \
   --append-system-prompt-file <resolved-prompt.md> \
   "<job url and metadata>"
@@ -48,16 +48,23 @@ Requires a Claude Max subscription. See [claude.ai/code](https://claude.ai/code)
 
 [opencode](https://opencode.ai) is an open-source terminal AI assistant that supports the OpenAI-compatible API, making it compatible with OpenRouter's free-tier models.
 
+opencode does not support `--append-system-prompt-file` as a CLI flag — system prompts are configured via `AGENTS.md` or agent configs, which career-ops already provides. Use the wrapper-script pattern:
+
 ```bash
 # Install
 npm install -g opencode-ai
 
-# Configure OpenRouter as the provider
-export OPENROUTER_API_KEY=sk-or-v1-...
-export OPENCODE_MODEL=openrouter/google/gemini-2.5-pro:free
+# Create a thin wrapper that maps batch-runner's flags to opencode's interface
+cat > my-opencode-wrapper.sh <<'EOF'
+#!/usr/bin/env bash
+# $1 = resolved prompt file path (--append-system-prompt-file value)
+# $2 = user message (job URL + metadata)
+OPENROUTER_API_KEY=sk-or-v1-... opencode --system "$(cat "$1")" "$2"
+EOF
+chmod +x my-opencode-wrapper.sh
 
 # Run batch
-CAREER_OPS_CLI="opencode -f" ./batch/batch-runner.sh
+COPENROUTER_API_KEY=sk-or-v1-... CAREER_OPS_CLI="./my-opencode-wrapper.sh" ./batch/batch-runner.sh
 ```
 
 Free models are available at [openrouter.ai/models](https://openrouter.ai/models?q=:free).
@@ -79,7 +86,7 @@ CAREER_OPS_CLI="opencode -f" ./batch/batch-runner.sh
 
 Any tool that matches this interface works:
 
-```
+```text
 <cli> --append-system-prompt-file <file> "<user message>"
 ```
 

@@ -494,9 +494,7 @@ function addToPipeline(entries) {
 
   const newEntries = entries.filter(e => {
     if (seenUrls.has(e.url)) return false;
-    // applications.md'de zaten varsa atla
-    // skip if already tracked in applications.md
-    if (existingApps.includes(e.company) && existingApps.includes(e.role)) return false;
+    // skip if already queued in pipeline
     if (existingPipeline.includes(e.url)) return false;
     return true;
   });
@@ -645,9 +643,9 @@ async function cmdEvaluate(input, ctx) {
   const scoreStr    = isFinite(scoreValue) ? `${scoreValue.toFixed(1)}/5` : '';
   const companyName = slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
   const reportLink  = `[${numStr}](reports/${numStr}-${slug}-${today}.md)`;
-  const tsvLine     = `${num}\t${today}\t${companyName}\t(see report)\tEvaluated\t${scoreStr}\t❌\t${reportLink}\n`;
+  const tsvLine     = `${num}\t${today}\t${companyName}\t(see report)\tEvaluated\t${scoreStr}\t❌\t${reportLink}\t\n`;
   const tsvFile     = `batch/tracker-additions/or-${numStr}-${slug}.tsv`;
-  writeFile(tsvFile, `num\tdate\tcompany\trole\tstatus\tscore\tpdf\treport\n${tsvLine}`);
+  writeFile(tsvFile, `num\tdate\tcompany\trole\tstatus\tscore\tpdf\treport\tnotes\n${tsvLine}`);
 
   console.log(`\n✅ Report saved: ${relPath}`);
   console.log('\n─── EVALUATION ──────────────────────────────────────\n');
@@ -693,8 +691,9 @@ async function cmdApply(ref, ctx) {
     reportContent = readFile(ref);
   } else {
     const numStr = String(ref).padStart(3, '0');
-    const matches = fs.readdirSync(path.join(__dirname, 'reports'))
-      .filter(f => f.startsWith(numStr));
+    const reportsDir = path.join(__dirname, 'reports');
+    const dirEntries = fs.existsSync(reportsDir) ? fs.readdirSync(reportsDir) : [];
+    const matches = dirEntries.filter(f => f.startsWith(numStr));
     if (matches.length === 0) {
       console.error(`Report not found: ${ref}`);
       return;
@@ -729,8 +728,8 @@ async function cmdApply(ref, ctx) {
 const [,, command, ...args] = process.argv;
 const ctx = loadContext();
 
-// Load free models list before running any AI command
-if (['evaluate', 'eval', 'pipeline', 'apply', 'models'].includes(command)) {
+// Load free models list before running any AI command (skip when a model is pinned)
+if (['evaluate', 'eval', 'pipeline', 'apply', 'models'].includes(command) && !process.env.CAREER_OPS_MODEL) {
   await loadFreeModels();
 }
 
