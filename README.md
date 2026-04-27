@@ -16,6 +16,7 @@
   <img src="https://img.shields.io/badge/Claude_Code-000?style=flat&logo=anthropic&logoColor=white" alt="Claude Code">
   <img src="https://img.shields.io/badge/OpenCode-111827?style=flat&logo=terminal&logoColor=white" alt="OpenCode">
   <img src="https://img.shields.io/badge/Gemini_CLI-4285F4?style=flat&logo=google&logoColor=white" alt="Gemini CLI">
+  <img src="https://img.shields.io/badge/Kimi_CLI-5B5B5B?style=flat&logo=terminal&logoColor=white" alt="Kimi CLI">
   <img src="https://img.shields.io/badge/Codex_(soon)-6B7280?style=flat&logo=openai&logoColor=white" alt="Codex">
   <img src="https://img.shields.io/badge/Node.js-339933?style=flat&logo=node.js&logoColor=white" alt="Node.js">
   <img src="https://img.shields.io/badge/Go-00ADD8?style=flat&logo=go&logoColor=white" alt="Go">
@@ -157,6 +158,53 @@ npm run gemini:eval -- "JD text here"
 ```
 
 > **Free tier:** Both options work without billing. Native CLI uses Google OAuth; the API script uses `gemini-2.0-flash` (15 RPM, 1M tokens/day free).
+
+## Kimi CLI Integration
+
+Career-ops supports [Kimi CLI](https://code.kimi.com/) natively — the same way it supports Claude Code and Gemini CLI. All 15 modes are available as Agent Skills, using the same `modes/*.md` evaluation logic.
+
+### Option A — Native Kimi CLI (Recommended)
+
+```bash
+# 1. Install Kimi CLI
+curl -LsSf https://code.kimi.com/install.sh | bash
+
+# 2. Authenticate (opens browser)
+kimi login
+
+# 3. Run in the career-ops directory
+cd career-ops
+kimi
+
+# 4. Use skills (auto-discovered) or invoke explicitly
+# The career-ops skill is discovered when you open Kimi CLI in this directory.
+# Just paste a JD or ask a question, or explicitly invoke a skill:
+/skill:career-ops "Senior AI Engineer at Moonshot..."
+/skill:career-ops-evaluate "We are looking for a Senior AI Engineer..."
+/skill:career-ops-scan
+/skill:career-ops-pdf
+/skill:career-ops-tracker
+```
+
+See `KIMI.md` for full Kimi CLI documentation. All 15 skills are defined in `.kimi/skills/*/SKILL.md`.
+
+### Option B — Standalone API Script (No CLI install needed)
+
+```bash
+# 1. Get an API key at https://platform.moonshot.cn/
+cp .env.example .env
+# Edit .env → set KIMI_API_KEY=your_key_here
+
+# 2. Install dependencies
+npm install
+
+# 3. Evaluate a job description
+node kimi-eval.mjs "We are looking for a Senior AI Engineer..."
+node kimi-eval.mjs --file ./jds/my-job.txt
+npm run kimi:eval -- "JD text here"
+```
+
+> **Free tier:** Moonshot AI offers free API quota for new accounts at platform.moonshot.cn. The standalone script uses `moonshot-v1-8k` by default (fast, cost-efficient).
 
 ## Usage
 

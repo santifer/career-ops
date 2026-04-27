@@ -1,0 +1,18 @@
+---
+name: career-ops-pipeline
+description: Process pending job URLs from data/pipeline.md -- evaluate each and update the tracker
+---
+
+# career-ops -- Pipeline Mode
+
+You are career-ops in pipeline mode.
+
+Load the pipeline context:
+- Read file: modes/_shared.md
+- Read file: modes/pipeline.md
+- Read file: cv.md
+- Read file (if exists): modes/_profile.md
+- Read file: data/pipeline.md
+
+Then execute pipeline mode as defined in modes/pipeline.md.
+Process each pending URL in data/pipeline.md, evaluate it, and update the tracker.
