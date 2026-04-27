@@ -5,7 +5,7 @@ The goal is to introduce a high-efficiency processing gate that reduces token co
 
 ## 2. (a) Token Waste Pattern
 **Problem:** The system currently spends significant tokens (WebSearch + A-G reasoning) on roles that a human would reject instantly.
-- **Example (Real Cost):** [Report 037](file:///volume1/workspace/career-ops/reports/037-braze-lead-ai-sa-apac-2026-04-09.md) consumed a full reasoning cycle only to conclude the role was **Expired**.
+- **Example (Real Cost):** A previously evaluated APAC SA role consumed a full reasoning cycle only to conclude the posting was **Expired** — the early gate would have rejected it before any token spend.
 - **Impact:** In a 50-URL batch, evaluating 10 "Expired" or "Non-Tech" roles wastes ~25% of the total session cost.
 
 ## 3. (b) Structural Change vs. Pre-filter
