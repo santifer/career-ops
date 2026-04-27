@@ -829,7 +829,7 @@ tracked_companies:
   - name: Perplexity
     careers_url: https://jobs.ashbyhq.com/perplexity
     scan_method: websearch
-    scan_query: ‘site:jobs.ashbyhq.com/perplexity "AI" OR "Applied AI" OR "Forward Deployed" OR "Engineer"’
+    scan_query: 'site:jobs.ashbyhq.com/perplexity "AI" OR "Applied AI" OR "Forward Deployed" OR "Engineer"'
     notes: "AI-native search and enterprise AI platform."
     enabled: true
 
