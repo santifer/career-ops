@@ -75,6 +75,7 @@ Built by someone who used it to evaluate 740+ job offers, generate 100+ tailored
 | **Dashboard TUI** | Terminal UI to browse, filter, and sort your pipeline |
 | **Human-in-the-Loop** | AI evaluates and recommends, you decide and act. The system never submits an application -- you always have the final call |
 | **Pipeline Integrity** | Automated merge, dedup, status normalization, health checks |
+| **Self-learning Scoring Loop** | Captures predicted vs real outcomes, proposes calibration adjustments via Reflexion-style weekly review with human-in-the-loop approval. Each calibration becomes one auditable Git commit. |
 
 ## Quick Start
 
@@ -128,6 +129,9 @@ Career-ops is a single slash command with multiple modes:
 /career-ops deep             → Deep company research
 /career-ops training         → Evaluate a course/cert
 /career-ops project          → Evaluate a portfolio project
+/career-ops reflect          → Scoring loop: review events and propose calibration
+/career-ops correct          → Manual outcome override (positive/negative/etc.)
+/career-ops learn now        → Explicit trigger of the passive scoring parser
 
 # Recruiter-lens layer (premium path)
 /headhunter {paste JD/URL}   → Hyper-personalized CV via 3 subagents + fidelity audit

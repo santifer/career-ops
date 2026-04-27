@@ -24,8 +24,11 @@ Guia detalhado de todos os comandos do Career-Ops com exemplos praticos de uso.
 14. [/career-ops tracker](#14-career-ops-tracker)
 15. [/career-ops batch](#15-career-ops-batch)
 16. [/headhunter — CV pela ótica do recrutador](#16-headhunter--cv-pela-otica-do-recrutador)
-17. [Fluxo Recomendado](#17-fluxo-recomendado)
-18. [Referencia Rapida](#18-referencia-rapida)
+17. [/career-ops reflect — Scoring Loop](#17-career-ops-reflect--scoring-loop)
+18. [/career-ops correct — Override manual de outcome](#18-career-ops-correct--override-manual-de-outcome)
+19. [/career-ops learn now — Trigger explícito do parser](#19-career-ops-learn-now--trigger-explicito-do-parser)
+20. [Fluxo Recomendado](#20-fluxo-recomendado)
+21. [Referencia Rapida](#21-referencia-rapida)
 
 ---
 
@@ -865,7 +868,116 @@ output/cv-fernando-anthropic-2026-04-26.pdf
 
 ---
 
-## 17. Fluxo Recomendado
+## 17. /career-ops reflect — Scoring Loop
+
+Loop de aprendizado semanal: o sistema lê os outcomes acumulados no tracker, compara com os scores preditos nos reports e propõe ajustes em `data/scoring-calibration.yml` para que avaliações futuras fiquem mais alinhadas com a realidade.
+
+```
+/career-ops reflect           # default (quórum >= 5 eventos novos)
+/career-ops reflect --force   # ignora quórum (debug)
+```
+
+**OpenCode:** `/career-ops-reflect`
+
+### Como funciona
+
+O modo segue 7 passos automaticamente:
+
+1. Roda `node lib/learn/scoring-parser.mjs` para garantir eventos atualizados.
+2. Decide modo `quick` (default) ou `--force`.
+3. Roda `node lib/learn/reflect-analyzer.mjs` que agrupa eventos por `(archetype × bucket de score)` — bucket é `high` (>=4.0), `mid` (3.0-3.9) ou `low` (<3.0).
+4. Se quórum não bate (<5 eventos novos), avisa e para.
+5. Para cada proposta, mostra archetype, dimensão, ajuste sugerido (ex.: -0.3), razão e sample size.
+6. Dispara **AskUserQuestion** com 4 opções: Aplicar, Aplicar com ½, Rejeitar, Suspender. Você decide.
+7. Cada aprovação vira 1 commit Git em `data/scoring-calibration.yml` com mensagem rastreável + memoriza em `~/.claude/projects/D--Career-Ops/memory/scoring-learnings.md`.
+
+### Quando usar
+
+- Toda semana, depois de acumular ao menos 5 outcomes confirmados (Interview, Offer, Rejected) ou inferidos (Applied >30d sem resposta).
+- Quando notar que scores estão sistematicamente "errando" para um arquétipo específico.
+- Antes de iniciar uma nova rodada de candidaturas, para garantir que pesos atuais reflitam aprendizado.
+
+### Princípios
+
+- Aprovação humana sempre via AskUserQuestion (nunca aplica ajuste sozinho).
+- Uma proposta por vez (não bombardeia o usuário).
+- Quórum mínimo 5 protege contra overfitting com sample pequeno.
+- Cada calibração é revertível com `git revert <sha>`.
+
+---
+
+## 18. /career-ops correct — Override manual de outcome
+
+Quando o status no tracker não reflete a realidade (ex.: empresa rejeitou por email mas você ainda não atualizou), use `correct` para registrar o outcome real diretamente no scoring loop sem mexer no tracker.
+
+```
+/career-ops correct <report_id> <outcome> [reason]
+```
+
+**OpenCode:** `/career-ops-correct`
+
+### Outcomes válidos
+
+- `positive` — Interview marcada, Offer recebida
+- `negative` — Rejeição direta
+- `neutral_excluded` — Você desistiu, vaga fechada (não conta como sinal)
+- `inferred_negative` — Sem resposta há semanas, mas talvez não morto
+
+### Exemplo
+
+```bash
+node lib/learn/correct.mjs 032 positive "Recebi convite pra entrevista por email hoje"
+```
+
+Saída:
+```
+✓ Manual override registered for report 032: positive
+  (previous: inferred_negative from inferred)
+  reason: Recebi convite pra entrevista por email hoje
+```
+
+### O que NÃO faz
+
+- Não muda `data/applications.md` (use `/career-ops tracker` para isso).
+- Não dispara reflect automaticamente (reflect tem quórum próprio).
+- Não permite outcomes inválidos (CLI valida).
+
+---
+
+## 19. /career-ops learn now — Trigger explícito do parser
+
+Roda o `scoring-parser.mjs` manualmente, sem precisar invocar `/career-ops oferta` (que dispara o parser implicitamente no início).
+
+```
+/career-ops learn now
+```
+
+**OpenCode:** `/career-ops-learn-now`
+
+### Quando usar
+
+- Após editar manualmente `data/applications.md` (ex.: confirmar Interview/Offer/Rejected).
+- Antes de rodar `/career-ops reflect` para garantir eventos atualizados.
+- Para auditoria sem escrever: `node lib/learn/scoring-parser.mjs --verbose --dry-run`.
+
+### Comportamento
+
+- **Idempotente:** SHA-256 do tracker. Se hash igual ao último run → 0 eventos.
+- **Delta-based:** chave `report_id|status|date` evita duplicação.
+- **Warnings:** pares órfãos (tracker sem report) vão para `data/learn/parser-warnings.log`.
+- **Stale detection:** `Evaluated >14d` e `Applied >30d` viram `inferred_negative` low confidence.
+
+### Reportar ao usuário
+
+Após rodar, mostre:
+1. N eventos novos emitidos
+2. N warnings (e tipos: orphan_tracker_row, missing_predicted_score, unknown_status)
+3. Total acumulado em `scoring-events.jsonl`
+4. Sugestão: se total >=5 desde último reflect, sugerir `/career-ops reflect`
+
+---
+
+## 20. Fluxo Recomendado
 
 O fluxo tipico de uso do Career-Ops segue esta sequencia:
 
@@ -909,7 +1021,7 @@ Equivalente ao auto-pipeline + camada de recruiter-lens + auditoria de fidelidad
 
 ---
 
-## 18. Referencia Rapida
+## 21. Referencia Rapida
 
 ### Claude Code
 
@@ -952,6 +1064,9 @@ Equivalente ao auto-pipeline + camada de recruiter-lens + auditoria de fidelidad
 | `/career-ops-apply` | `/career-ops apply` |
 | `/career-ops-scan` | `/career-ops scan` |
 | `/career-ops-batch` | `/career-ops batch` |
+| `/career-ops-reflect` | `/career-ops reflect` |
+| `/career-ops-correct` | `/career-ops correct` |
+| `/career-ops-learn-now` | `/career-ops learn now` |
 
 ### Arquivos importantes
 

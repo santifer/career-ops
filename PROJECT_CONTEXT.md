@@ -94,6 +94,16 @@ Tracker integrity:
 - After batch evaluations, run `node merge-tracker.mjs`.
 - Use `node verify-pipeline.mjs` for health checks.
 
+Learning loop (`/career-ops reflect`, `correct`, `learn-now`):
+
+- The system closes the loop between predicted score and real outcome.
+- `lib/learn/scoring-parser.mjs` reads `data/applications.md` + `reports/`, applies `lib/learn/inference-rules.yml`, and appends events to `data/learn/scoring-events.jsonl` (gitignored).
+- Parser is idempotent: SHA-256 hash of tracker as short-circuit, delta-based via `processed_keys` set. Re-running emits 0 events when nothing changed.
+- `/career-ops reflect` runs `lib/learn/reflect-analyzer.mjs` (quórum ≥5 new events; bypass with `--force`), groups by `archetype × score bucket`, proposes adjustments via `AskUserQuestion`. Each approved adjustment is one Git commit on `data/scoring-calibration.yml` (User layer, committed). Memorize in `~/.claude/projects/D--Career-Ops/memory/scoring-learnings.md`.
+- `/career-ops correct <report_id> <outcome> [reason]` writes a manual override event without touching the tracker.
+- `modes/oferta.md` Passo 0.5 reads `data/scoring-calibration.yml` and includes `**Calibrações ativas:** N` in every report header.
+- Schema reserves `loop_type` for future loops (recruiter-lens, archetype, CV variation, scan).
+
 PDF generation:
 
 - `generate-pdf.mjs` renders HTML to PDF with Playwright.
@@ -111,6 +121,13 @@ Dashboard:
 - Go code lives in `dashboard/`.
 - Run dashboard tests from `dashboard/` with `go test ./...`.
 - The dashboard reads pipeline data; it should not redefine tracker states outside `templates/states.yml`.
+- The browser cockpit lives in `dashboard/cockpit/` and serves static HTML/CSS/JS without a frontend build step.
+- Auto Mode uses `dashboard/internal/cockpit` run state plus the local Playwright worker in `workers/browser-worker.mjs`.
+- Local Auto Mode UX should prefer the one-click worker launcher in `/api/local-worker/status`, `/api/local-worker/start`, and `/api/local-worker/stop`. These endpoints are local-only, require an authenticated cockpit session, and must only accept loopback requests.
+- The local worker credential is server/process-only. Never expose pairing tokens or worker credentials in static JS, HTML, browser storage, URLs, copied commands, screenshots, or logs.
+- Hosted cockpit mode cannot start a process on the user's computer. It must show an explicit unsupported/manual fallback state instead of pretending the browser will open automatically.
+- The manual pairing flow under `/api/worker/pairing-token` and `/api/worker/register` remains an advanced fallback for hosted mode or launcher failures.
+- Worker actions must remain observable through worker claim, heartbeat, current URL, action log, observed fields, and review gates.
 
 ## Ethical Boundary
 

@@ -23,8 +23,11 @@ There are two layers. Read `DATA_CONTRACT.md` for the full list.
 - `data/*`, `reports/*`, `output/*`, `interview-prep/*`
 
 **System Layer (auto-updatable, DON'T put user data here):**
-- `modes/_shared.md`, `modes/oferta.md`, all other modes
+- `modes/_shared.md`, `modes/oferta.md`, all other modes including `modes/{reflect,correct,learn-now}.md`
 - `AGENTS.md`, `*.mjs` scripts, `dashboard/*`, `templates/*`, `batch/*`
+- `lib/learn/*` (scoring loop infra: parser, analyzer, correct, inference rules)
+
+**User Layer special case:** `data/scoring-calibration.yml` is User layer BUT committed to Git (not gitignored). Each calibration adjustment becomes one auditable commit revertible via `git revert`. `data/learn/*` (events JSONL, parser state, warnings log) stays gitignored.
 
 **THE RULE: When the user asks to customize anything (archetypes, narrative, negotiation scripts, proof points, location policy, comp targets), ALWAYS write to `modes/_profile.md` or `config/profile.yml`. NEVER edit `modes/_shared.md` for user-specific content.** This ensures system updates don't overwrite their customizations.
 
@@ -79,6 +82,14 @@ AI-powered job search automation built on Claude Code (or any agentic CLI that r
 | `.claude/rules/{10-scan-priority,20-project-governance}.md` | Regras de projeto com `globs` para ativação contextual (cargos-alvo, governança CI/CD). |
 | `.claude/designs/headhunter-design-2026-04-26.md` | Design doc IMPLEMENTED da Fase 1 do `/headhunter`. Fase 2 (recruiter-driven completo) pendente. |
 | `output/tailor-runs/{date}-{slug}/` | Artefatos persistidos por execução de `/headhunter` (recruiter framing, briefing, blueprint, review, summary). |
+| `lib/learn/inference-rules.yml` | Regras explícitas de inferência (status canônico do tracker → outcome). System layer. |
+| `lib/learn/scoring-parser.mjs` | Parser passivo idempotente do scoring loop. Lê tracker + reports/, emite eventos JSONL com schema multi-loop genérico (`loop_type: "scoring"`). |
+| `lib/learn/reflect-analyzer.mjs` | Heurística de detecção de calibração (archetype × bucket de score). Quórum ≥5. |
+| `lib/learn/correct.mjs` | Override manual de outcome via CLI `node lib/learn/correct.mjs <id> <outcome> [reason]`. |
+| `data/scoring-calibration.yml` | Calibrações aprovadas (User layer, committed). Cada ajuste = 1 commit. |
+| `data/learn/scoring-events.jsonl` | Eventos JSONL append-only do scoring loop. Gitignored. |
+| `modes/{reflect,correct,learn-now}.md` | Modos do scoring loop (Reflexion semanal, override manual, trigger explícito). |
+| `.specs/pipelines/scoring-loop-2026-04-26.md` | Spec consolidado da implementação do scoring loop (phases 2.0-2.5 ajustadas pela Reflexion). |
 
 ### OpenCode Commands
 
@@ -101,6 +112,9 @@ When using [OpenCode](https://opencode.ai), the following slash commands are ava
 | `/career-ops-batch` | `/career-ops batch` | Batch processing with parallel workers |
 | `/career-ops-patterns` | `/career-ops patterns` | Analyze rejection patterns and improve targeting |
 | `/career-ops-followup` | `/career-ops followup` | Follow-up cadence tracker |
+| `/career-ops-reflect` | `/career-ops reflect` | Scoring loop: revisa eventos e propõe calibração via AskUserQuestion |
+| `/career-ops-correct` | `/career-ops correct` | Override manual de outcome para um report_id |
+| `/career-ops-learn-now` | `/career-ops learn now` | Trigger explícito do scoring-parser passivo |
 
 **Note:** OpenCode commands invoke the same `.claude/skills/career-ops/SKILL.md` skill used by Claude Code. The `modes/*` files are shared between both platforms.
 
@@ -268,6 +282,9 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 | Batch processes offers | `batch` |
 | Asks about rejection patterns or wants to improve targeting | `patterns` |
 | Asks about follow-ups or application cadence | `followup` |
+| Quer revisar o scoring loop (semanal) e calibrar pesos | `reflect` |
+| Quer corrigir manualmente o outcome de uma aplicação | `correct` |
+| Quer disparar o parser passivo agora (não esperar `/career-ops oferta`) | `learn-now` |
 
 ### CV Source of Truth
 
