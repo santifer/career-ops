@@ -1,6 +1,6 @@
 # Mode: project — Portfolio Project Evaluation
 
-**URL:** {job-url}
+**URL:** {project-url}
 **Legitimacy:** {High Confidence | Proceed with Caution | Suspicious}
 
 Scoring matrix with 6 dimensions (1–5):
