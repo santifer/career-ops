@@ -3,6 +3,7 @@
 ## Prerequisites
 
 - [Claude Code](https://claude.ai/code) installed and configured
+- (Optional) [GitHub Copilot CLI](https://docs.github.com/en/copilot/github-copilot-in-the-cli) — see [docs/COPILOT_CLI.md](COPILOT_CLI.md)
 - Node.js 18+ (for PDF generation and utility scripts)
 - (Optional) Go 1.21+ (for the dashboard TUI)
 
