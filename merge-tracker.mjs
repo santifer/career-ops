@@ -82,6 +82,11 @@ const ROLE_STOPWORDS = new Set([
   'fulltime', 'parttime', 'permanent', 'temporary', 'intern', 'internship',
   // generic job words
   'role', 'position', 'opportunity', 'team', 'based',
+  // role-type prefixes — same scope as seniority. Without these,
+  // "Technical Program Manager, Infrastructure" and
+  // "Technical Program Manager, Compute" share 3 tokens and false-match.
+  // The discriminator is what comes after, not the role-type prefix.
+  'technical', 'program', 'manager',
   // very common locations (extend in portals.yml later if needed)
   'bangalore', 'bengaluru', 'mumbai', 'delhi', 'hyderabad', 'pune', 'chennai',
   'london', 'berlin', 'paris', 'madrid', 'barcelona', 'amsterdam', 'dublin',
@@ -117,7 +122,12 @@ function roleFuzzyMatch(a, b) {
   const minLen = Math.min(wordsA.length, wordsB.length);
   const ratio = overlap / minLen;
 
-  return overlap >= 2 && ratio >= 0.6;
+  // Subset match: when role-type prefixes (technical/program/manager) are
+  // filtered out, single-discriminator roles like "TPM, Compute" reduce
+  // to one token. Allow a match when the shorter side is fully contained
+  // in the longer (ratio === 1.0). Otherwise require the original
+  // overlap >= 2 with substantial ratio.
+  return ratio === 1.0 || (overlap >= 2 && ratio >= 0.6);
 }
 
 function extractReportNum(reportStr) {
