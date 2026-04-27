@@ -634,10 +634,7 @@ func (m ViewerModel) styleLine(line string) string {
 		return ansi.Wrap(styled, w, "")
 	}
 	if strings.HasPrefix(trimmed, "- ") || strings.HasPrefix(trimmed, "* ") {
-		content := strings.TrimPrefix(trimmed, "- ")
-		if strings.HasPrefix(trimmed, "* ") {
-			content = strings.TrimPrefix(trimmed, "* ")
-		}
+		content := trimmed[2:]
 		marker := lipgloss.NewStyle().Foreground(m.theme.Blue).Render("• ")
 		return m.renderListItem(marker, content, w)
 	}
