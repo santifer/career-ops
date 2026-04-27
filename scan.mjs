@@ -136,11 +136,14 @@ function buildTitleFilter(titleFilter) {
 
 function buildLocationFilter(locationFilter) {
   const positive = (locationFilter?.positive || []).map(k => k.toLowerCase());
-  if (positive.length === 0) return () => true;
+  const negative = (locationFilter?.negative || []).map(k => k.toLowerCase());
+  if (positive.length === 0 && negative.length === 0) return () => true;
 
   return (location) => {
     if (!location) return true;
     const lower = location.toLowerCase();
+    if (negative.some(k => lower.includes(k))) return false;
+    if (positive.length === 0) return true;
     return positive.some(k => lower.includes(k));
   };
 }

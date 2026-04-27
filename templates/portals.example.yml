@@ -103,7 +103,8 @@ title_filter:
 # -- Location filter --
 # Optional. Keep only offers whose location contains at least one positive keyword.
 # Jobs with empty/missing location pass through unfiltered (e.g. ATS-without-location data).
-# Comment out the whole section or remove `positive` to disable.
+# Negative keywords win over positive — drops "Remote (Singapore)" even when "Remote"
+# is in the positive list. Comment out the whole section to disable.
 #
 # location_filter:
 #   positive:
@@ -113,6 +114,11 @@ title_filter:
 #     - "NYC"
 #     - "Remote"
 #     - "United States"
+#   negative:
+#     - "Singapore"
+#     - "London"
+#     - "EMEA"
+#     - "APJ"
 
 # -- Search queries --
 # Each query triggers a WebSearch. Use site: to filter by portal.
