@@ -66,6 +66,19 @@ location:
   # For remote roles outside your country:
   # onsite_availability: "1 week/month in any city"
 
+# ── Provider Configuration ───────────────────────────────────────
+# Which CLI provider to use for batch processing and evaluations.
+# Override at runtime with: CAREER_OPS_PROVIDER=qwen ./batch/batch-runner.sh
+# Or per-run: ./batch/batch-runner.sh --provider qwen
+provider:
+  default: claude          # claude | qwen
+  claude:
+    model: ""              # Empty = use Claude Max default
+    cli_bin: claude        # Override if binary is in a non-standard path
+  qwen:
+    model: ""              # Empty = use Qwen Code default model
+    cli_bin: qwen          # Override if binary is in a non-standard path
+    # Qwen Code v0.14.x is required. Install: npm install -g @anthropic-ai/qwen-code
 cv:
   output_format: "html" # "html" (default) or "latex"
   # (Optional) Canva resume design ID for visual CV generation via /career-ops pdf.
