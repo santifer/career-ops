@@ -31,8 +31,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const envPath = path.join(__dirname, '.env');
 if (fs.existsSync(envPath)) {
   for (const line of fs.readFileSync(envPath, 'utf-8').split('\n')) {
-    const m = line.match(/^([A-Z_][A-Z0-9_]*)=(.*)$/);
-    if (m) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
+    const m = line.trim().match(/^([A-Z_][A-Z0-9_]*)=(.*)$/);
+    if (m && process.env[m[1]] === undefined) {
+      process.env[m[1]] = m[2].trim().replace(/^(['"])(.*?)\1$/, '$2');
+    }
   }
 }
 
@@ -639,9 +641,11 @@ async function cmdEvaluate(input, ctx) {
   // Write a TSV entry to batch/tracker-additions/ so merge-tracker.mjs can
   // pick it up and add the report to data/applications.md
   const scoreMatch  = result.match(/(?:score|puntuaci[oó]n)[^\d]*(\d+\.?\d*)/i);
-  const scoreStr    = scoreMatch ? scoreMatch[1] : '';
+  const scoreValue  = scoreMatch ? parseFloat(scoreMatch[1]) : NaN;
+  const scoreStr    = isFinite(scoreValue) ? `${scoreValue.toFixed(1)}/5` : '';
   const companyName = slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-  const tsvLine     = `${num}\t${today}\t${companyName}\t(see report)\tEvaluada\t${scoreStr}\t\treports/${numStr}-${slug}-${today}.md\n`;
+  const reportLink  = `[${numStr}](reports/${numStr}-${slug}-${today}.md)`;
+  const tsvLine     = `${num}\t${today}\t${companyName}\t(see report)\tEvaluated\t${scoreStr}\t❌\t${reportLink}\n`;
   const tsvFile     = `batch/tracker-additions/or-${numStr}-${slug}.tsv`;
   writeFile(tsvFile, `num\tdate\tcompany\trole\tstatus\tscore\tpdf\treport\n${tsvLine}`);
 
