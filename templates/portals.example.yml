@@ -394,7 +394,7 @@ tracked_companies:
   - name: Weights & Biases (CoreWeave)
     careers_url: https://job-boards.greenhouse.io/coreweave
     api: https://boards-api.greenhouse.io/v1/boards/coreweave/jobs
-    notes: "Acquired by CoreWeave (2024). W&B roles now live on CoreWeave's Greenhouse board. Old Lever URL (jobs.lever.co/wandb) returns 404."
+    notes: "Acquired by CoreWeave (announced March 2025, closed May 2025). W&B roles now live on CoreWeave's Greenhouse board. Old Lever URL (jobs.lever.co/wandb) returns 404."
     enabled: true
 
   - name: Glean
