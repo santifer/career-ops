@@ -45,6 +45,10 @@ These files contain system logic, scripts, templates, and instructions that impr
 | `modes/patterns.md` | Pattern analysis instructions |
 | `modes/followup.md` | Follow-up cadence instructions |
 | `modes/de/*` | German language modes |
+| `modes/fr/*` | French language modes |
+| `modes/ja/*` | Japanese language modes |
+| `modes/pt/*` | Portuguese language modes |
+| `modes/ru/*` | Russian language modes |
 | `CLAUDE.md` | Agent instructions |
 | `AGENTS.md` | Codex instructions |
 | `*.mjs` | Utility scripts |

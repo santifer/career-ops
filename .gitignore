@@ -1,4 +1,5 @@
 # Personal data (user fills these)
+cv.md
 data/applications.md
 data/pipeline.md
 data/scan-history.tsv
@@ -12,8 +13,8 @@ batch/batch-state.tsv
 batch/batch-input.tsv
 batch/tracker-additions/**/*.tsv
 !batch/tracker-additions/.gitkeep
-jds/*
 !jds/.gitkeep
+jds/*.pdf
 
 # User config and customization (never auto-updated)
 config/profile.yml
@@ -21,6 +22,9 @@ portals.yml
 modes/_profile.md
 .update-dismissed
 .update-lock
+
+# Secrets (never commit — use .env.example as template)
+.env
 
 # Generated
 .resolved-prompt-*

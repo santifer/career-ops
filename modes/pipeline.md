@@ -42,6 +42,43 @@ Procesa URLs de ofertas acumuladas en `data/pipeline.md`. El usuario agrega URLs
 - **PDF**: Si la URL apunta a un PDF, leerlo directamente con Read tool
 - **`local:` prefix**: Leer el archivo local. Ejemplo: `local:jds/linkedin-pm-ai.md` → leer `jds/linkedin-pm-ai.md`
 
+## Manejo de JDs locales (`local:` prefix)
+
+Cuando el item tiene prefijo `local:` (e.g., `local:jds/yahoo-senior-frontend-engineer.md`):
+
+### 1. Leer frontmatter y decidir si saltar
+
+Antes de extraer y evaluar, leer el archivo y parsear el bloque YAML frontmatter:
+
+```yaml
+---
+evaluated: 2026-04-16   # fecha de última evaluación (vacío = nunca evaluado)
+score: 3.6/5
+status: pending
+---
+```
+
+**Regla de salto (skip):**
+- Leer `jd_reeval_days` de `portals.yml` (default: 30 si no existe)
+- Si `evaluated` está vacío o no existe → evaluar normalmente
+- Si `evaluated` tiene fecha:
+  - `hoy - evaluated < jd_reeval_days` → **saltar**: marcar como `- [=]` con nota `"skipped: evaluated YYYY-MM-DD (within N days)"`
+  - `hoy - evaluated >= jd_reeval_days` → re-evaluar (la evaluación anterior es obsoleta)
+
+### 2. Actualizar frontmatter tras evaluación
+
+Después de completar la evaluación y guardar el report, actualizar el archivo JD:
+- Escribir `evaluated: YYYY-MM-DD` (fecha de hoy)
+- Escribir `score: X.X/5` (del reporte)
+- Dejar el resto del frontmatter intacto
+
+### Formato en pipeline.md para JDs saltados
+
+```markdown
+## Procesadas
+- [=] local:jds/yahoo-senior-frontend-engineer.md | Yahoo | Senior Frontend Engineer | skipped: evaluated 2026-04-16 (within 30 days)
+```
+
 ## Numeración automática
 
 1. Listar todos los archivos en `reports/`

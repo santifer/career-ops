@@ -18,7 +18,8 @@ Tabla con:
 - Seniority
 - Remote (full/hybrid/onsite)
 - Team size (si se menciona)
-- TL;DR en 1 frase
+- Legitimacy (preview) — tier only: High Confidence / Proceed with Caution ⚠️ / Suspicious 🚩
+- TL;DR en 1 frase — if Legitimacy is Proceed with Caution or Suspicious, prepend ⚠️ or 🚩 to the TL;DR
 
 ## Bloque B — Match con CV
 
