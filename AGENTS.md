@@ -90,6 +90,7 @@ AI-powered job search automation built on Claude Code (or any agentic CLI that r
 | `data/learn/scoring-events.jsonl` | Eventos JSONL append-only do scoring loop. Gitignored. |
 | `modes/{reflect,correct,learn-now}.md` | Modos do scoring loop (Reflexion semanal, override manual, trigger explícito). |
 | `.specs/pipelines/scoring-loop-2026-04-26.md` | Spec consolidado da implementação do scoring loop (phases 2.0-2.5 ajustadas pela Reflexion). |
+| `.claude/commands/{career-ops-reflect,career-ops-correct,career-ops-learn-now}.md` | Slash commands descobríveis no autocomplete do Claude Code para os 3 modos do scoring loop. |
 
 ### OpenCode Commands
 

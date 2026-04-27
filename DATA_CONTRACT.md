@@ -65,7 +65,7 @@ These files contain system logic, scripts, templates, and instructions that impr
 | `fonts/*` | Self-hosted fonts |
 | `.claude/skills/*` | Skill definitions (career-ops, headhunter) |
 | `.claude/agents/*` | Subagent definitions (vaga-analyst, cv-strategist, recruiter-reviewer) |
-| `.claude/commands/*` | Slash command definitions (cv-analyze, cv-strategy, cv-recruiter-check, tailor-cv) |
+| `.claude/commands/*` | Slash command definitions (cv-analyze, cv-strategy, cv-recruiter-check, tailor-cv, career-ops-reflect, career-ops-correct, career-ops-learn-now) |
 | `.claude/references/*` | Shared knowledge base (cv-playbook-2026.md, recruiter-lens.md) |
 | `.claude/rules/*` | Project-scoped rules with globs (10-scan-priority, 20-project-governance) |
 | `.claude/designs/*` | Design docs for new features (e.g., headhunter-design-2026-04-26.md) |

@@ -68,6 +68,7 @@ AI-powered job search automation built on Claude Code: pipeline tracking, offer 
 | `.claude/skills/headhunter/SKILL.md` | Skill `/headhunter` — orquestra 3 subagents (vaga-analyst, cv-strategist, recruiter-reviewer) para gerar CV hiper-personalizado por vaga sem inventar conteúdo. Reaproveita `modes/pdf.md` na Fase 5. |
 | `.claude/agents/{vaga-analyst,cv-strategist,recruiter-reviewer}.md` | Subagents do time `/headhunter`, dispatcháveis via Task tool. |
 | `.claude/commands/{cv-analyze,cv-strategy,cv-recruiter-check,tailor-cv}.md` | Slash commands granulares para uso cirúrgico de cada subagent + alias legado `/tailor-cv`. |
+| `.claude/commands/{career-ops-reflect,career-ops-correct,career-ops-learn-now}.md` | Slash commands descobríveis no autocomplete do Claude Code para os 3 modos do scoring loop. Wrappers finos que despacham a skill `career-ops` no modo correspondente. |
 | `.claude/references/cv-playbook-2026.md` | Base de conhecimento de melhores práticas (Harvard MCS, Jobscan, ZipRecruiter) — consultada pelos 3 subagents de `/headhunter`. |
 | `.claude/references/recruiter-lens.md` | Filtro mental do recrutador segmentado por nível (IC/manager/director/VP) e família funcional (Controller, Consolidation, FP&A, Financeiro). Consultada por `/headhunter` e seus 3 subagents. |
 | `.claude/rules/{10-scan-priority,20-project-governance}.md` | Regras de projeto com `globs` para ativação contextual (cargos-alvo, governança CI/CD). |
