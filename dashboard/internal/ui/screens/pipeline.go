@@ -112,6 +112,8 @@ type PipelineModel struct {
 	theme         theme.Theme
 	careerOpsPath string
 	reportCache   map[string]reportSummary
+	searchMode    bool
+	searchQuery   string
 	// Status picker sub-state
 	statusPicker bool
 	statusCursor int
@@ -185,6 +187,8 @@ func (m PipelineModel) WithReloadedData(apps []model.CareerApplication, metrics 
 	reloaded.sortMode = m.sortMode
 	reloaded.activeTab = m.activeTab
 	reloaded.viewMode = m.viewMode
+	reloaded.searchMode = m.searchMode
+	reloaded.searchQuery = m.searchQuery
 	reloaded.applyFilterAndSort()
 	reloaded.CopyReportCache(&m)
 
@@ -241,9 +245,21 @@ func (m PipelineModel) Update(msg tea.Msg) (PipelineModel, tea.Cmd) {
 }
 
 func (m PipelineModel) handleKey(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
+	if m.searchMode {
+		return m.handleSearchKey(msg)
+	}
+	return m.handleNormalKey(msg)
+}
+
+func (m PipelineModel) handleNormalKey(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
 	switch msg.String() {
 	case "q", "esc":
 		return m, func() tea.Msg { return PipelineClosedMsg{} }
+
+	case "/":
+		m.searchMode = true
+		m.searchQuery = ""
+		return m, nil
 
 	case "down", "j":
 		if len(m.filtered) > 0 {
@@ -377,6 +393,68 @@ func (m PipelineModel) handleKey(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
 	return m, nil
 }
 
+func isNavKey(key string) bool {
+	switch key {
+	case "up", "down", "j", "k", "g", "G", "pgup", "pgdown", "ctrl+u", "ctrl+d":
+		return true
+	}
+	return false
+}
+
+func (m PipelineModel) handleSearchKey(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
+	key := msg.String()
+
+	if isNavKey(key) {
+		return m.handleNormalKey(msg)
+	}
+
+	switch key {
+	case "esc":
+		m.searchMode = false
+		m.searchQuery = ""
+		m.applyFilterAndSort()
+		m.cursor = 0
+		m.scrollOffset = 0
+		return m, nil
+
+	case "backspace":
+		if len(m.searchQuery) > 0 {
+			m.searchQuery = m.searchQuery[:len(m.searchQuery)-1]
+			m.applyFilterAndSort()
+			m.cursor = 0
+			m.scrollOffset = 0
+		}
+		return m, nil
+
+	case "enter":
+		m.searchMode = false
+		if app, ok := m.CurrentApp(); ok && app.ReportPath != "" {
+			fullPath := filepath.Join(m.careerOpsPath, app.ReportPath)
+			title := fmt.Sprintf("%s — %s", app.Company, app.Role)
+			return m, func() tea.Msg {
+				return PipelineOpenReportMsg{Path: fullPath, Title: title, JobURL: app.JobURL}
+			}
+		}
+		return m, nil
+
+	case "q":
+		return m, func() tea.Msg { return PipelineClosedMsg{} }
+	}
+
+	if len(msg.Runes) > 0 {
+		for _, r := range msg.Runes {
+			if r >= 32 && r < 127 {
+				m.searchQuery += string(r)
+			}
+		}
+		m.applyFilterAndSort()
+		m.cursor = 0
+		m.scrollOffset = 0
+	}
+
+	return m, nil
+}
+
 func (m PipelineModel) handleStatusPicker(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
 	switch msg.String() {
 	case "esc", "q":
@@ -447,6 +525,18 @@ func (m *PipelineModel) applyFilterAndSort() {
 		}
 	}
 
+	if m.searchQuery != "" {
+		query := strings.ToLower(m.searchQuery)
+		var searched []model.CareerApplication
+		for _, app := range filtered {
+			if strings.Contains(strings.ToLower(app.Company), query) ||
+				strings.Contains(strings.ToLower(app.Role), query) {
+				searched = append(searched, app)
+			}
+		}
+		filtered = searched
+	}
+
 	// Sort
 	switch m.sortMode {
 	case sortScore:
@@ -494,7 +584,11 @@ func (m *PipelineModel) applyFilterAndSort() {
 
 // adjustScroll updates scrollOffset so the cursor stays visible.
 func (m *PipelineModel) adjustScroll() {
-	availHeight := m.height - 12 // header + tabs(2) + metrics + sortbar + footer + preview
+	searchLines := 0
+	if m.searchMode {
+		searchLines = 1
+	}
+	availHeight := m.height - 12 - searchLines // header + tabs(2) + metrics + sortbar + footer + preview
 	if availHeight < 5 {
 		availHeight = 5
 	}
@@ -541,6 +635,7 @@ func (m PipelineModel) View() string {
 	tabs := m.renderTabs()
 	metricsBar := m.renderMetrics()
 	sortBar := m.renderSortBar()
+	searchBar := m.renderSearchBar()
 	body := m.renderBody()
 	preview := m.renderPreview()
 	help := m.renderHelp()
@@ -553,7 +648,11 @@ func (m PipelineModel) View() string {
 
 	// Calculate available height for body
 	previewLines := strings.Count(preview, "\n") + 1
-	availHeight := m.height - 7 - previewLines // header + tabs(2) + metrics + sortbar + help + preview
+	searchLines := 0
+	if searchBar != "" {
+		searchLines = 1
+	}
+	availHeight := m.height - 7 - searchLines - previewLines // header + tabs(2) + metrics + sortbar + searchbar + help + preview
 	if availHeight < 3 {
 		availHeight = 3
 	}
@@ -567,15 +666,13 @@ func (m PipelineModel) View() string {
 		body = m.overlayStatusPicker(body)
 	}
 
-	return lipgloss.JoinVertical(lipgloss.Left,
-		header,
-		tabs,
-		metricsBar,
-		sortBar,
-		body,
-		preview,
-		help,
-	)
+	parts := []string{header, tabs, metricsBar, sortBar}
+	if searchBar != "" {
+		parts = append(parts, searchBar)
+	}
+	parts = append(parts, body, preview, help)
+
+	return lipgloss.JoinVertical(lipgloss.Left, parts...)
 }
 
 func (m PipelineModel) renderHeader() string {
@@ -686,6 +783,31 @@ func (m PipelineModel) renderSortBar() string {
 	return style.Render(fmt.Sprintf("%s  %s  %s", sortLabel, viewLabel, count))
 }
 
+func (m PipelineModel) renderSearchBar() string {
+	if !m.searchMode {
+		return ""
+	}
+
+	style := lipgloss.NewStyle().
+		Width(m.width).
+		Padding(0, 2)
+
+	labelStyle := lipgloss.NewStyle().
+		Foreground(m.theme.Sky).Bold(true)
+
+	queryStyle := lipgloss.NewStyle().
+		Foreground(m.theme.Text)
+
+	countStyle := lipgloss.NewStyle().
+		Foreground(m.theme.Subtext)
+
+	label := labelStyle.Render("Search:")
+	query := queryStyle.Render(m.searchQuery + "█")
+	count := countStyle.Render(fmt.Sprintf("(%d matches)", len(m.filtered)))
+
+	return style.Render(fmt.Sprintf("%s %s  %s", label, query, count))
+}
+
 func (m PipelineModel) renderBody() string {
 	if len(m.filtered) == 0 {
 		emptyStyle := lipgloss.NewStyle().
@@ -727,24 +849,16 @@ func (m PipelineModel) renderAppLine(app model.CareerApplication, selected bool)
 	padStyle := lipgloss.NewStyle().Padding(0, 2)
 
 	// Column widths
-	numW := 5   // "#123 "
 	scoreW := 5 // "4.5  "
 	dateW := 10
 	companyW := 16
 	statusW := 12
 	compW := 14
 	// Role gets remaining space
-	roleW := m.width - numW - scoreW - dateW - companyW - statusW - compW - 13
+	roleW := m.width - scoreW - dateW - companyW - statusW - compW - 13
 	if roleW < 15 {
 		roleW = 15
 	}
-
-	// Tracker number (fixed width)
-	numText := "#—"
-	if app.Number > 0 {
-		numText = fmt.Sprintf("#%d", app.Number)
-	}
-	numStyle := lipgloss.NewStyle().Foreground(m.theme.Blue).Bold(true).Width(numW)
 
 	// Score with color
 	scoreStyle := m.scoreStyle(app.Score)
@@ -779,8 +893,7 @@ func (m PipelineModel) renderAppLine(app model.CareerApplication, selected bool)
 		compText = compStyle.Render(comp)
 	}
 
-	line := fmt.Sprintf(" %s %s %s %s %s %s %s",
-		numStyle.Render(truncateRunes(numText, numW)),
+	line := fmt.Sprintf(" %s %s %s %s %s %s",
 		score,
 		dateStyle.Render(truncateRunes(dateText, dateW)),
 		companyStyle.Render(company),
@@ -860,10 +973,19 @@ func (m PipelineModel) renderHelp() string {
 				keyStyle.Render("Esc") + descStyle.Render(" cancel"))
 	}
 
+	if m.searchMode {
+		return style.Render(
+			keyStyle.Render("Type") + descStyle.Render(" search  ") +
+				keyStyle.Render("↑↓/jk") + descStyle.Render(" navigate  ") +
+				keyStyle.Render("Enter") + descStyle.Render(" open  ") +
+				keyStyle.Render("Esc") + descStyle.Render(" close"))
+	}
+
 	brand := lipgloss.NewStyle().Foreground(m.theme.Overlay).Render("career-ops by santifer.io")
 
 	keys := keyStyle.Render("↑↓/jk") + descStyle.Render(" nav  ") +
 		keyStyle.Render("←→/hl") + descStyle.Render(" tabs  ") +
+		keyStyle.Render("/") + descStyle.Render(" search  ") +
 		keyStyle.Render("s") + descStyle.Render(" sort  ") +
 		keyStyle.Render("r") + descStyle.Render(" refresh  ") +
 		keyStyle.Render("Enter") + descStyle.Render(" report  ") +
