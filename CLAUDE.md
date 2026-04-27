@@ -71,6 +71,13 @@ AI-powered job search automation built on Claude Code: pipeline tracking, offer 
 | `.claude/references/cv-playbook-2026.md` | Base de conhecimento de melhores práticas (Harvard MCS, Jobscan, ZipRecruiter) — consultada pelos 3 subagents de `/headhunter`. |
 | `.claude/references/recruiter-lens.md` | Filtro mental do recrutador segmentado por nível (IC/manager/director/VP) e família funcional (Controller, Consolidation, FP&A, Financeiro). Consultada por `/headhunter` e seus 3 subagents. |
 | `.claude/rules/{10-scan-priority,20-project-governance}.md` | Regras de projeto com `globs` para ativação contextual (cargos-alvo, governança CI/CD). |
+| `lib/learn/inference-rules.yml` | Regras explícitas de inferência (status canônico → outcome). Editar quando quiser mudar como o sistema interpreta o tracker. |
+| `lib/learn/scoring-parser.mjs` | Parser passivo idempotente do scoring loop. Lê tracker + reports/, emite eventos JSONL append-only com schema multi-loop genérico (`loop_type: "scoring"` no MVP). |
+| `lib/learn/reflect-analyzer.mjs` | Analisador heurístico do scoring loop. Agrupa por (archetype × bucket de score), detecta hit rate divergente, propõe ajustes. Quórum mínimo 5 eventos. |
+| `lib/learn/correct.mjs` | Override manual: registra evento com `outcome_source: manual` quando o tracker não reflete a realidade. |
+| `data/scoring-calibration.yml` | Calibrações aprovadas (User layer mas committed). Cada ajuste = 1 commit Git auditável. |
+| `data/learn/scoring-events.jsonl` | Eventos JSONL append-only do scoring loop. Gitignored (dados pessoais). |
+| `modes/{reflect,correct,learn-now}.md` | Modos do scoring loop (Reflexion semanal, override manual, trigger explícito do parser). |
 | `.claude/designs/headhunter-design-2026-04-26.md` | Design doc IMPLEMENTED da Fase 1 do `/headhunter`. Fase 2 (recruiter-driven completo) pendente. |
 | `output/tailor-runs/{date}-{slug}/` | Artefatos persistidos por execução de `/headhunter` (recruiter framing, briefing, blueprint, review, summary). |
 
@@ -213,6 +220,9 @@ Default modes are in `modes/` (English). Additional modes:
 | Batch processes offers | `batch` |
 | Asks about rejection patterns or wants to improve targeting | `patterns` |
 | Asks about follow-ups or application cadence | `followup` |
+| Quer revisar o scoring loop (semanal) e calibrar pesos | `reflect` |
+| Quer corrigir manualmente o outcome de uma aplicação | `correct` |
+| Quer disparar o parser passivo agora (não esperar `/career-ops oferta`) | `learn-now` |
 
 ### CV Source of Truth
 

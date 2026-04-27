@@ -9,6 +9,22 @@ Classificar a oferta em um dos 6 arquétipos (ver `_shared.md`). Se for híbrido
 - Como reescrever o summary no bloco E
 - Quais histórias STAR preparar no bloco F
 
+## Passo 0.5 — Carregar Calibração de Aprendizado
+
+Ler `data/scoring-calibration.yml`. Para cada entrada com `active: true` cujo `archetype` casa com o arquétipo detectado no Passo 0 (match exato OU `archetype: "*"` que aplica a todos), aplicar o `adjustment` ao score final do bloco F.
+
+**Como aplicar:**
+- Se `dimension` começa com `score_bucket.high|mid|low`, o `adjustment` é somado ao score global apenas se o predicted_score cair no bucket correspondente.
+- Se `dimension` começa com `signals.X`, considerar o ajuste se a oferta exibe esse sinal (ex.: `signals.company_size_lt_50` se `team_size < 50`).
+- Se `dimension` começa com `Block_X_*`, registrar o ajuste como nota qualitativa no bloco correspondente — não somar diretamente.
+
+**No header do report:**
+- Adicionar linha `**Calibrações ativas:** N` onde N é o número de entradas que casaram com a oferta.
+- Se N > 0, listar IDs das calibrações aplicadas em uma linha embaixo (ex.: `**Calibrações aplicadas:** scoring-controller-latam-2026-04-26`).
+- Se calibration.yml estiver vazio ou sem matches → escrever `**Calibrações ativas:** 0` (não pular a linha — sinaliza que o sistema verificou).
+
+**Princípio:** A calibração é uma dica, não uma fórmula. Se o ajuste contradiz julgamento qualitativo claro (ex.: vaga obviamente mismatch), você pode ignorar e justificar em uma frase. O reflect humano calibra a calibração quando isso vira padrão.
+
 ## Bloco A — Resumo do Cargo
 
 Tabela com:
@@ -163,6 +179,7 @@ Salvar avaliação completa em `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 **Arquétipo:** {detectado}
 **Score:** {X/5}
 **Legitimidade:** {Alta Confiança | Proceder com Cautela | Suspeito}
+**Calibrações ativas:** {N}
 **PDF:** {caminho ou pendente}
 
 ---

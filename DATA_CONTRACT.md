@@ -18,6 +18,8 @@ These files contain your personal data, customizations, and work product. Update
 | `data/pipeline.md` | Your URL inbox |
 | `data/scan-history.tsv` | Your scan history |
 | `data/follow-ups.md` | Your follow-up history |
+| `data/learn/*` | Scoring loop learning data (events JSONL, parser state, warnings — gitignored) |
+| `data/scoring-calibration.yml` | Calibrações aprovadas pelo `/career-ops reflect`. **User layer mas COMMITTED no Git** — cada ajuste vira 1 commit auditável e revertível via `git revert`. |
 | `reports/*` | Your evaluation reports |
 | `output/*` | Your generated PDFs |
 | `output/tailor-runs/*` | Per-run artifacts from `/headhunter` (recruiter framing, briefing, blueprint, review) |
@@ -48,6 +50,10 @@ These files contain system logic, scripts, templates, and instructions that impr
 | `modes/training.md` | Training evaluation instructions |
 | `modes/patterns.md` | Pattern analysis instructions |
 | `modes/followup.md` | Follow-up cadence instructions |
+| `modes/reflect.md` | Scoring loop reflect mode (Reflexion sobre eventos capturados) |
+| `modes/correct.md` | Manual outcome override mode |
+| `modes/learn-now.md` | Explicit trigger for scoring-parser.mjs |
+| `lib/learn/*` | Scoring loop infrastructure (parser, analyzer, correct, inference rules) |
 | `modes/de/*` | German language modes |
 | `CLAUDE.md` | Agent instructions |
 | `AGENTS.md` | Codex instructions |

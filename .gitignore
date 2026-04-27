@@ -3,6 +3,8 @@ data/applications.md
 data/pipeline.md
 data/sessions/
 data/scan-history.tsv
+data/learn/*
+!data/learn/.gitkeep
 reports/*.md
 !reports/.gitkeep
 output/*

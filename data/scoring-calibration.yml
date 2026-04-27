@@ -1,0 +1,29 @@
+# Scoring Calibration — Career-Ops Learning Loop
+#
+# User layer mas COMMITTED no Git (não-gitignored). Cada ajuste vira 1
+# commit separado, então o histórico de aprendizado é auditável e
+# revertível via `git revert`.
+#
+# Este arquivo é populado pelo modo /career-ops reflect após aprovação
+# humana via AskUserQuestion. NÃO edite manualmente sem motivo claro —
+# o reflect mantém metadados (sample_size, confidence, reason) que se
+# perdem em edição manual.
+#
+# Schema (`loop_type` reservado para expansão futura: scoring,
+# recruiter, cv, scan, archetype):
+#
+# calibrations:
+#   - id: scoring-{slug}-{YYYY-MM-DD}        # ID único, gerado pelo reflect
+#     loop_type: scoring                      # MVP só usa scoring
+#     archetype: "Controller LATAM"           # arquétipo afetado (ou "*" para qualquer)
+#     dimension: "signals.company_size_lt_50" # dimensão calibrada (tag livre)
+#     adjustment: -0.3                        # delta no score predito (-1.0 a +1.0)
+#     reason: "5 ofertas <50 pessoas com score >4 viraram rejeição em 30 dias"
+#     sample_size: 5                          # número de eventos que sustentam o ajuste
+#     confidence: medium                      # low | medium | high
+#     created: 2026-04-26                     # data do ajuste aprovado
+#     active: true                            # false desativa sem perder histórico
+
+version: 1
+last_updated: 2026-04-26
+calibrations: []

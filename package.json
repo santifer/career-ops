@@ -14,7 +14,10 @@
     "update": "node update-system.mjs apply",
     "rollback": "node update-system.mjs rollback",
     "liveness": "node check-liveness.mjs",
-    "scan": "node scan.mjs"
+    "scan": "node scan.mjs",
+    "learn:parse": "node lib/learn/scoring-parser.mjs --verbose",
+    "learn:reflect": "node lib/learn/reflect-analyzer.mjs",
+    "test:learn": "node --test lib/learn/*.test.mjs"
   },
   "keywords": [
     "ai",

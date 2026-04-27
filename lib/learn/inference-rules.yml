@@ -1,0 +1,61 @@
+# Inference Rules — Scoring Loop
+# System layer: regras explícitas usadas pelo lib/learn/scoring-parser.mjs
+# para inferir o `real_outcome` de uma aplicação a partir do `status` no
+# tracker (data/applications.md).
+#
+# Edite aqui se quiser mudar como o sistema interpreta o tracker. NÃO
+# coloque dados pessoais aqui — calibrações específicas (archetype × dimensão)
+# vivem em data/scoring-calibration.yml.
+#
+# Schema:
+#   - status: string canônica (ver templates/states.yml)
+#   - outcome: positive | negative | neutral_excluded | inferred_negative
+#   - confidence: high | medium | low
+#   - stale_after_days: opcional. Se presente, o status só vira inferred_negative
+#     depois desse número de dias sem mudança no tracker.
+
+version: 1
+last_updated: 2026-04-26
+
+rules:
+  - status: Interview
+    outcome: positive
+    confidence: high
+    note: "Avançou para entrevista — score predito acertou direção"
+
+  - status: Offer
+    outcome: positive
+    confidence: high
+    note: "Recebeu offer — sinal mais forte de match real"
+
+  - status: Responded
+    outcome: positive
+    confidence: medium
+    note: "Empresa respondeu mas ainda não há entrevista"
+
+  - status: Rejected
+    outcome: negative
+    confidence: high
+    note: "Rejeição direta — score predito errou se predicted_score ≥ 4"
+
+  - status: SKIP
+    outcome: neutral_excluded
+    confidence: high
+    note: "Candidato decidiu não aplicar — não conta como sinal de match"
+
+  - status: Discarded
+    outcome: neutral_excluded
+    confidence: high
+    note: "Candidato descartou ou vaga fechou — não conta como sinal"
+
+  - status: Evaluated
+    outcome: inferred_negative
+    confidence: low
+    stale_after_days: 14
+    note: "14d sem aplicar pode indicar baixo apetite real apesar do score"
+
+  - status: Applied
+    outcome: inferred_negative
+    confidence: low
+    stale_after_days: 30
+    note: "30d sem resposta = sinal de empresa descartou (silently rejected)"
