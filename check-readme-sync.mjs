@@ -6,8 +6,7 @@
  * "In sync" means: same number of H2 (##) sections.
  *
  * Usage:
- *   node check-readme-sync.mjs            # check all
- *   node check-readme-sync.mjs --fix      # show which sections are missing
+ *   node check-readme-sync.mjs            # check all (missing sections shown on failure)
  */
 
 import { readFileSync } from "fs";
@@ -29,7 +28,13 @@ const getH2Sections = (file) =>
     .filter((l) => l.startsWith("## "))
     .map((l) => l.replace(/^## /, "").trim());
 
-const mainSections = getH2Sections(MAIN);
+let mainSections;
+try {
+  mainSections = getH2Sections(MAIN);
+} catch {
+  console.error(`❌ Error: Could not read main file ${MAIN}`);
+  process.exit(1);
+}
 const mainCount = mainSections.length;
 
 console.log(`\n📋 ${MAIN}: ${mainCount} sections`);
