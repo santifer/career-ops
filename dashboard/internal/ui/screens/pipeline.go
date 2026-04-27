@@ -929,6 +929,9 @@ func (m PipelineModel) countByNormStatus(status string) int {
 
 // truncateRunes truncates a string to at most maxRunes runes, appending "..." if truncated.
 func truncateRunes(s string, maxRunes int) string {
+	if maxRunes <= 0 {
+		return ""
+	}
 	runes := []rune(s)
 	if len(runes) <= maxRunes {
 		return s
