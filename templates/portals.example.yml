@@ -100,6 +100,20 @@ title_filter:
     - "Head"
     - "Director"
 
+# -- Location filter --
+# Optional. Keep only offers whose location contains at least one positive keyword.
+# Jobs with empty/missing location pass through unfiltered (e.g. ATS-without-location data).
+# Comment out the whole section or remove `positive` to disable.
+#
+# location_filter:
+#   positive:
+#     - "San Francisco"
+#     - "Bay Area"
+#     - "New York"
+#     - "NYC"
+#     - "Remote"
+#     - "United States"
+
 # -- Search queries --
 # Each query triggers a WebSearch. Use site: to filter by portal.
 # The scanner extracts title, URL, and company from results.
