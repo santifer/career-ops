@@ -1,0 +1,80 @@
+#!/usr/bin/env node
+/**
+ * check-readme-sync.mjs
+ *
+ * Validates that translated READMEs are structurally in sync with README.md.
+ * "In sync" means: same number of H2 (##) sections.
+ *
+ * Usage:
+ *   node check-readme-sync.mjs            # check all
+ *   node check-readme-sync.mjs --fix      # show which sections are missing
+ */
+
+import { readFileSync } from "fs";
+
+const MAIN = "README.md";
+const TRANSLATIONS = [
+  "README.es.md",
+  "README.pt-BR.md",
+  "README.ko-KR.md",
+  "README.ja.md",
+  "README.ru.md",
+  "README.cn.md",
+  "README.zh-TW.md",
+];
+
+const getH2Sections = (file) =>
+  readFileSync(file, "utf8")
+    .split("\n")
+    .filter((l) => l.startsWith("## "))
+    .map((l) => l.replace(/^## /, "").trim());
+
+const mainSections = getH2Sections(MAIN);
+const mainCount = mainSections.length;
+
+console.log(`\n📋 ${MAIN}: ${mainCount} sections`);
+mainSections.forEach((s, i) => console.log(`   ${String(i + 1).padStart(2)}. ${s}`));
+
+let failed = false;
+
+console.log("\n🌍 Translated READMEs:\n");
+
+for (const file of TRANSLATIONS) {
+  let sections;
+  try {
+    sections = getH2Sections(file);
+  } catch {
+    console.log(`  ❌ ${file}: file not found`);
+    failed = true;
+    continue;
+  }
+
+  const count = sections.length;
+  const diff = mainCount - count;
+
+  if (diff === 0) {
+    console.log(`  ✅ ${file}: ${count} sections (in sync)`);
+  } else {
+    failed = true;
+    console.log(`  ❌ ${file}: ${count} sections (missing ${diff} vs main)`);
+    // Best-effort: find which positions don't have a corresponding section
+    if (count < mainCount) {
+      console.log(`     Main has ${mainCount} sections, this file has ${count}.`);
+      console.log(`     Hint: main sections by index —`);
+      mainSections.forEach((s, i) => {
+        const present = i < count;
+        const marker = present ? "   " : "  ⚠️ ";
+        if (!present) console.log(`${marker} ${i + 1}. "${s}"`);
+      });
+    }
+  }
+}
+
+if (failed) {
+  console.log(
+    "\n💡 To fix: add the missing sections to the translated READMEs, then re-run this script.\n"
+  );
+  process.exit(1);
+} else {
+  console.log("\n✅ All translated READMEs are in sync with README.md\n");
+}
