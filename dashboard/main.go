@@ -1,11 +1,16 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
 	"os"
 	"os/exec"
+	"regexp"
 	"runtime"
+	"strconv"
+	"strings"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 
@@ -14,6 +19,8 @@ import (
 	"github.com/santifer/career-ops/dashboard/internal/theme"
 	"github.com/santifer/career-ops/dashboard/internal/ui/screens"
 )
+
+var scanNewCountRe = regexp.MustCompile(`New offers added:\s+(\d+)`)
 
 type viewState int
 
@@ -123,6 +130,51 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return nil
 		}
 
+	case screens.PipelineScanMsg:
+		(&m.pipeline).SetScanning(true)
+		(&m.pipeline).SetScanFlash("")
+		path := m.careerOpsPath
+		return m, func() tea.Msg {
+			cmd := exec.Command("node", "scan.mjs")
+			cmd.Dir = path
+			var out strings.Builder
+			cmd.Stdout = &out
+			cmd.Stderr = &out
+			err := cmd.Run()
+			count := 0
+			if match := scanNewCountRe.FindStringSubmatch(out.String()); len(match) == 2 {
+				count, _ = strconv.Atoi(match[1])
+			} else if err == nil {
+				// Fallback: scan stdout line-by-line (defensive — regex above should hit).
+				scanner := bufio.NewScanner(strings.NewReader(out.String()))
+				for scanner.Scan() {
+					if m := scanNewCountRe.FindStringSubmatch(scanner.Text()); len(m) == 2 {
+						count, _ = strconv.Atoi(m[1])
+						break
+					}
+				}
+			}
+			return screens.PipelineScanDoneMsg{NewCount: count, Err: err}
+		}
+
+	case screens.PipelineScanDoneMsg:
+		(&m.pipeline).SetScanning(false)
+		var flash string
+		if msg.Err != nil {
+			flash = "✗ Scan failed"
+		} else {
+			flash = fmt.Sprintf("✓ Found %d new", msg.NewCount)
+		}
+		(&m.pipeline).SetScanFlash(flash)
+		m.reloadPipelineData()
+		return m, tea.Tick(3*time.Second, func(time.Time) tea.Msg {
+			return screens.PipelineScanFlashClearMsg{}
+		})
+
+	case screens.PipelineScanFlashClearMsg:
+		(&m.pipeline).SetScanFlash("")
+		return m, nil
+
 	default:
 		if m.state == viewReport {
 			vm, cmd := m.viewer.Update(msg)
@@ -189,7 +241,7 @@ func main() {
 		progressMetrics: progressMetrics,
 	}
 
-	p := tea.NewProgram(m, tea.WithAltScreen())
+	p := tea.NewProgram(m, tea.WithAltScreen(), tea.WithMouseCellMotion())
 	if _, err := p.Run(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
