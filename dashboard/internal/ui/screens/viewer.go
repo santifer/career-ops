@@ -617,8 +617,17 @@ func (m ViewerModel) styleLine(line string) string {
 	if strings.HasPrefix(trimmed, "> ") {
 		content := strings.TrimPrefix(trimmed, "> ")
 		border := lipgloss.NewStyle().Foreground(m.theme.Overlay).Render("▎ ")
-		text := lipgloss.NewStyle().Foreground(m.theme.Subtext).Italic(true).Width(w - 2).Render(content)
-		return border + text
+		textStyle := lipgloss.NewStyle().Foreground(m.theme.Subtext).Italic(true)
+		wrapped := strings.Split(ansi.Wrap(textStyle.Render(content), w-2, ""), "\n")
+		result := make([]string, 0, len(wrapped))
+		for i, line := range wrapped {
+			if i == 0 {
+				result = append(result, border+line)
+			} else {
+				result = append(result, strings.Repeat(" ", ansi.StringWidth(border))+line)
+			}
+		}
+		return strings.Join(result, "\n")
 	}
 	if strings.HasPrefix(trimmed, "**") && strings.Contains(trimmed, ":**") {
 		styled := m.renderInlineElements(line)
