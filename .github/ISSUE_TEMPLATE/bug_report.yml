@@ -49,5 +49,5 @@ body:
     id: doctor
     attributes:
       label: Output of npm run doctor
-      description: Paste the output here (helps us diagnose setup issues)
+      description: Paste the output here (helps us diagnose setup issues). Redact secrets, emails, access tokens, and personal file paths before submitting.
       render: shell
