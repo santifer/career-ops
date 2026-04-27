@@ -64,7 +64,7 @@ EOF
 chmod +x my-opencode-wrapper.sh
 
 # Run batch
-COPENROUTER_API_KEY=sk-or-v1-... CAREER_OPS_CLI="./my-opencode-wrapper.sh" ./batch/batch-runner.sh
+CAREER_OPS_CLI="./my-opencode-wrapper.sh" ./batch/batch-runner.sh
 ```
 
 Free models are available at [openrouter.ai/models](https://openrouter.ai/models?q=:free).

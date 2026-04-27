@@ -491,9 +491,16 @@ function addToPipeline(entries) {
 
   const existingPipeline = readFile('data/pipeline.md') ?? '# Pipeline\n\n## Pending\n';
   const existingApps     = readFile('data/applications.md') ?? '';
+  // extract URLs already tracked in applications.md (mirrors scan.mjs dedup logic)
+  const appliedUrls = new Set(
+    existingApps.split('\n')
+      .map(l => l.match(/https?:\/\/[^\s|)]+/))
+      .filter(Boolean).map(m => m[0])
+  );
 
   const newEntries = entries.filter(e => {
     if (seenUrls.has(e.url)) return false;
+    if (appliedUrls.has(e.url)) return false;
     // skip if already queued in pipeline
     if (existingPipeline.includes(e.url)) return false;
     return true;
@@ -634,7 +641,10 @@ async function cmdEvaluate(input, ctx) {
   const numStr  = String(num).padStart(3, '0');
   const relPath = `reports/${numStr}-${slug}-${today}.md`;
 
-  writeFile(relPath, `**URL:** ${input || '(pasted)'}\n\n${result}`);
+  // Extract Legitimacy from LLM output or fall back to placeholder
+  const legitMatch = result.match(/\*\*Legitimacy:\*\*\s*([^\n]+)/);
+  const legitLine  = legitMatch ? `**Legitimacy:** ${legitMatch[1].trim()}` : '**Legitimacy:** unconfirmed';
+  writeFile(relPath, `**URL:** ${input || '(pasted)'}\n${legitLine}\n\n${result}`);
 
   // Write a TSV entry to batch/tracker-additions/ so merge-tracker.mjs can
   // pick it up and add the report to data/applications.md
