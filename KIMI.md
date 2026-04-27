@@ -182,7 +182,7 @@ npm run kimi:eval -- "JD text here"
 
 
 
-> **Free tier:** Moonshot AI offers free API quota for new accounts at platform.moonshot.cn. The standalone script uses `moonshot-v1-8k` by default (fast, cost-efficient). Switch to `kimi-k2` in `.env` for deeper reasoning on complex evaluations.
+> **Free tier:** Moonshot AI offers free API quota for new accounts at platform.moonshot.cn. The standalone script defaults to `kimi-k2.6` (advanced reasoning, 256K context window). For faster, cheaper evaluations on simple JDs, switch to `moonshot-v1-8k` in `.env`.
 
 
 

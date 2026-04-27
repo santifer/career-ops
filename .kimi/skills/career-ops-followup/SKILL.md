@@ -11,6 +11,8 @@ Load the follow-up context:
 - Read file: modes/followup.md
 - Read file (if exists): data/applications.md
 - Read file (if exists): data/follow-ups.md
+- Read file (if exists): config/profile.yml
+- Read file (if exists): cv.md
 
 You can also run: node followup-cadence.mjs
 

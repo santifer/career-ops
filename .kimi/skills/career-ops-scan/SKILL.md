@@ -10,7 +10,8 @@ You are career-ops in scan mode.
 Load the scan context:
 - Read file: modes/_shared.md
 - Read file: modes/scan.md
-- Read file: portals.yml
+- Read file (if exists): portals.yml
+  (If missing, trigger onboarding: guide the user to create portals.yml from templates/portals.example.yml before scanning.)
 - Read file (if exists): modes/_profile.md
 - Read file (if exists): data/scan-history.tsv
 

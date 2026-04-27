@@ -191,7 +191,7 @@ See `KIMI.md` for full Kimi CLI documentation. All 15 skills are defined in `.ki
 ### Option B — Standalone API Script (No CLI install needed)
 
 ```bash
-# 1. Get an API key at https://platform.moonshot.cn/
+# 1. Get an API key at https://platform.moonshot.cn/ (China) or https://platform.moonshot.ai/ (Global)
 cp .env.example .env
 # Edit .env → set KIMI_API_KEY=your_key_here
 
@@ -204,7 +204,7 @@ node kimi-eval.mjs --file ./jds/my-job.txt
 npm run kimi:eval -- "JD text here"
 ```
 
-> **Free tier:** Moonshot AI offers free API quota for new accounts at platform.moonshot.cn. The standalone script uses `moonshot-v1-8k` by default (fast, cost-efficient).
+> **Free tier:** Moonshot AI offers free API quota for new accounts at platform.moonshot.cn. The standalone script defaults to `kimi-k2.6` (advanced reasoning, 256K context). For faster, cheaper evaluations on simple JDs, switch to `moonshot-v1-8k` in `.env`.
 
 ## Usage
 

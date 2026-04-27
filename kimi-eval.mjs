@@ -17,7 +17,7 @@
  * Default model: kimi-k2.6
  */
 
-import { readFileSync, existsSync, writeFileSync, mkdirSync } from "fs";
+import { readFileSync, existsSync, writeFileSync, mkdirSync, readdirSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 
@@ -42,8 +42,6 @@ const PATHS = {
   // Primary evaluation logic lives in these two mode files
   shared: join(ROOT, "modes", "_shared.md"),
   oferta: join(ROOT, "modes", "oferta.md"),
-  // Canonical skill path referenced in Issue #344
-  evaluate: join(ROOT, ".claude", "skills", "career-ops", "SKILL.md"),
   cv: join(ROOT, "cv.md"),
   reports: join(ROOT, "reports"),
   tracker: join(ROOT, "data", "applications.md"),
@@ -74,7 +72,7 @@ if (args.length === 0 || args[0] === "--help" || args[0] === "-h") {
     --help           Show this help
 
   SETUP
-    1. Get an API key at https://platform.moonshot.cn/
+    1. Get an API key at https://platform.moonshot.cn/ (China) or https://platform.moonshot.ai/ (Global)
     2. Add KIMI_API_KEY=<your-key> to .env
     3. Run: npm install   (installs openai + dotenv)
 
@@ -102,7 +100,11 @@ for (let i = 0; i < args.length; i++) {
     modelName = args[++i];
   } else if (args[i] === "--no-save") {
     saveReport = false;
-  } else if (!args[i].startsWith("--")) {
+  } else if (args[i].startsWith("--")) {
+    console.error(`❌  Unknown flag: ${args[i]}`);
+    console.error("    Known flags: --file, --model, --no-save, --help");
+    process.exit(1);
+  } else {
     jdText += (jdText ? "\n" : "") + args[i];
   }
 }
@@ -146,18 +148,6 @@ function nextReportNumber() {
     .filter((n) => !isNaN(n));
   if (files.length === 0) return "001";
   return String(Math.max(...files) + 1).padStart(3, "0");
-}
-
-// Lazy import — only used when saving
-let readdirSync;
-try {
-  ({ readdirSync } = await import("fs"));
-} catch {
-  /* already imported above via named exports */
-}
-// Use named import fallback
-if (!readdirSync) {
-  readdirSync = (await import("fs")).readdirSync;
 }
 
 // ---------------------------------------------------------------------------
@@ -237,14 +227,18 @@ try {
     temperature: 0.4, // deterministic enough for structured evaluation
     max_tokens: 8192,
   });
+  if (!response?.choices?.length) {
+    console.error("❌  Empty response from Kimi API. No choices returned.");
+    process.exit(1);
+  }
   evaluationText = response.choices[0].message.content;
 } catch (err) {
-  console.error("❌  Kimi API error:", err.message);
-  if (err.message?.includes("401") || err.message?.includes("key")) {
-    console.error("    Check your KIMI_API_KEY or MOONSHOT_API_KEY in .env");
-  } else if (err.message?.includes("quota") || err.message?.includes("rate")) {
+  console.error("❌  Kimi API error:", err.message || err);
+  if (err.status === 401 || err.status === 403) {
+    console.error("    Authentication failed. Check your KIMI_API_KEY or MOONSHOT_API_KEY in .env");
+  } else if (err.status === 429) {
     console.error(
-      "    You may have hit the free-tier rate limit. Wait 60s and retry.",
+      "    Rate limit hit. Wait 60s and retry.",
     );
   }
   process.exit(1);
@@ -294,7 +288,8 @@ if (saveReport) {
     }
 
     const num = nextReportNumber();
-    const today = new Date().toISOString().split("T")[0];
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
     const companySlug = company
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
@@ -319,11 +314,27 @@ ${evaluationText.replace(/---SCORE_SUMMARY---[\s\S]*?---END_SUMMARY---/, "").tri
     writeFileSync(reportPath, reportContent, "utf-8");
     console.log(`\n✅  Report saved: reports/${filename}`);
 
-    // Append tracker entry reminder
-    console.log(`\n📊  Tracker entry (add to data/applications.md):`);
-    console.log(
-      `    | ${num} | ${today} | ${company} | ${role} | ${score} | Evaluada | ❌ | [${num}](reports/${filename}) |`,
-    );
+    // Write tracker addition TSV
+    const trackerAdditionsDir = join(ROOT, "batch", "tracker-additions");
+    if (!existsSync(trackerAdditionsDir)) {
+      mkdirSync(trackerAdditionsDir, { recursive: true });
+    }
+    const tsvFilename = `${num}-${companySlug}.tsv`;
+    const tsvPath = join(trackerAdditionsDir, tsvFilename);
+    const tsvRow = [
+      num,
+      today,
+      company,
+      role,
+      "Evaluated",
+      score,
+      "❌",
+      `reports/${filename}`,
+      "",
+    ].join("\t");
+    writeFileSync(tsvPath, tsvRow, "utf-8");
+    console.log(`\n📊  Tracker addition saved: batch/tracker-additions/${tsvFilename}`);
+    console.log("    Run node merge-tracker.mjs to merge into data/applications.md");
   } catch (err) {
     console.warn(`⚠️   Could not save report: ${err.message}`);
   }
