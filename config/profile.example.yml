@@ -57,10 +57,15 @@ narrative:
   #   password: "demo-2026"
 
 compensation:
-  target_range: "$150K-200K"     # Your target total comp
+  target_range: "USD 180,000 - 220,000"
   currency: "USD"
-  minimum: "$120K"               # Walk-away number
-  location_flexibility: "Remote preferred, 1 week/month on-site possible"
+  minimum: "USD 160,000"
+
+# Scoring Engine Configuration
+scoring:
+  # method: "original"    # Legacy: 1-5 score includes Compensation. No early gate.
+  method: "zero-waste"  # New: Score excludes Comp (evaluated post-match). Enables Early Gate.
+  gate_threshold: 4.0   # Roles below this score in the early gate are rejected.
 
 location:
   country: "United States"

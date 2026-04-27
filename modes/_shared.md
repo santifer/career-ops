@@ -25,7 +25,10 @@
 
 ## Scoring System
 
-The evaluation uses 6 blocks (A-F) with a global score of 1-5:
+The evaluation uses two possible methods (configured via `scoring.method` in `profile.yml`):
+
+### 1. Zero-Waste Method (Default)
+**Focus:** Optimal fit detection. Skips expensive evaluations for mismatches.
 
 | Dimension | What it measures |
 |-----------|-----------------|
@@ -33,14 +36,35 @@ The evaluation uses 6 blocks (A-F) with a global score of 1-5:
 | North Star alignment | How well the role fits the user's target archetypes (from _profile.md) |
 | Cultural signals | Company culture, growth, stability, remote policy |
 | Red flags | Blockers, warnings (negative adjustments) |
-| **Global** | Weighted average of above |
+| **Global** | Weighted average of above (Compensation EXCLUDED) |
 
-**Note:** Compensation is NOT a scoring dimension. It is a separate negotiation consideration evaluated independently after a role passes the fit gate.
+**Decision Logic:**
+- **Compensation** is evaluated independently AFTER the role passes the fit gate.
+- **Score >= 4.0** → Proceed to full evaluation.
+- **Score < 4.0** → Pipeline gate rejects before full evaluation to save tokens.
+
+### 2. Original Method
+**Focus:** Comprehensive ROI evaluation.
+
+| Dimension | What it measures |
+|-----------|-----------------|
+| Match with CV | Skills, experience, alignment |
+| North Star | Target archetypes fit |
+| Cultural | Stability, growth, remote |
+| Compensation | Salary vs market/target |
+| Red flags | Blockers |
+| **Global** | Weighted average of ALL above |
+
+**Decision Logic:**
+- No early rejection gate.
+- 4.0+ is a good match; below 4.0 is lower priority.
+
+---
 
 **Score interpretation:**
 - 4.5+ → Strong match, apply immediately
 - 4.0-4.4 → Good match, worth applying
-- Below 4.0 → Does not meet fit threshold — pipeline gate rejects before full evaluation
+- Below 4.0 → Lower priority (Original) or Rejected (Zero-Waste)
 
 ## Posting Legitimacy (Block G)
 
