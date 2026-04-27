@@ -107,6 +107,51 @@ claude   # Abra o Claude Code neste diretório
 
 Veja [docs/SETUP.md](docs/SETUP.md) para o guia completo de configuração.
 
+## Integração com Gemini CLI
+
+O career-ops suporta o [Gemini CLI](https://github.com/google-gemini/gemini-cli) nativamente — da mesma forma que suporta Claude Code e OpenCode. Todos os 15 comandos slash estão disponíveis com a mesma lógica de avaliação dos `modes/*.md`.
+
+### Opção A — Gemini CLI nativo (Recomendado)
+
+```bash
+# 1. Instalar o Gemini CLI
+npm install -g @google/gemini-cli
+
+# 2. Autenticar (gratuito — usa sua conta Google)
+gemini auth
+
+# 3. Executar no diretório career-ops
+cd career-ops
+gemini
+
+# 4. Usar os comandos slash igual ao Claude Code
+/career-ops "Senior AI Engineer at Anthropic..."
+/career-ops-evaluate --file ./jds/openai.txt
+/career-ops-scan
+/career-ops-pdf
+/career-ops-tracker
+```
+
+O arquivo `GEMINI.md` é carregado automaticamente como contexto. Os 15 comandos estão definidos em `.gemini/commands/*.toml`.
+
+### Opção B — Script API independente (sem instalar o CLI)
+
+```bash
+# 1. Obtenha uma chave de API gratuita em https://aistudio.google.com/apikey
+cp .env.example .env
+# Edite .env → defina GEMINI_API_KEY=sua_chave_aqui
+
+# 2. Instalar dependências
+npm install
+
+# 3. Avaliar uma vaga
+node gemini-eval.mjs "Procuramos um Senior AI Engineer..."
+node gemini-eval.mjs --file ./jds/my-job.txt
+npm run gemini:eval -- "texto da vaga"
+```
+
+> **Nível gratuito:** Ambas as opções funcionam sem cobrança. O CLI nativo usa Google OAuth; o script API usa `gemini-2.0-flash` (15 RPM, 1M tokens/dia gratuitos).
+
 ## Uso
 
 Career-ops é um único comando slash com múltiplos modos:
@@ -253,6 +298,14 @@ Meu portfólio e outros projetos open source → [santifer.io](https://santifer.
 4. **Sem garantias.** As avaliações são recomendações, não verdades absolutas. Modelos de IA podem alucinar habilidades ou experiências. Os autores não se responsabilizam por resultados profissionais, candidaturas rejeitadas, restrições de conta ou qualquer outra consequência.
 
 Veja [LEGAL_DISCLAIMER.md](LEGAL_DISCLAIMER.md) para o aviso completo. Este software é fornecido sob a [Licença MIT](LICENSE) "como está", sem garantia de qualquer tipo.
+
+## Contribuidores
+
+<a href="https://github.com/santifer/career-ops/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=santifer/career-ops" />
+</a>
+
+Conseguiu um emprego usando career-ops? [Compartilhe sua história!](https://github.com/santifer/career-ops/issues/new?template=i-got-hired.yml)
 
 ## Licença
 

@@ -106,6 +106,51 @@ claude   # Abrir Claude Code en este directorio
 
 Guia completa en [docs/SETUP.md](docs/SETUP.md).
 
+## Integración con Gemini CLI
+
+Career-ops soporta [Gemini CLI](https://github.com/google-gemini/gemini-cli) de forma nativa, igual que Claude Code y OpenCode. Los 15 comandos slash están disponibles con la misma lógica de evaluación de `modes/*.md`.
+
+### Opción A — Gemini CLI nativo (Recomendado)
+
+```bash
+# 1. Instalar Gemini CLI
+npm install -g @google/gemini-cli
+
+# 2. Autenticarse (gratis — usa tu cuenta de Google)
+gemini auth
+
+# 3. Ejecutar en el directorio career-ops
+cd career-ops
+gemini
+
+# 4. Usar los comandos slash igual que en Claude Code
+/career-ops "Senior AI Engineer at Anthropic..."
+/career-ops-evaluate --file ./jds/openai.txt
+/career-ops-scan
+/career-ops-pdf
+/career-ops-tracker
+```
+
+El archivo `GEMINI.md` se carga automáticamente como contexto. Los 15 comandos están definidos en `.gemini/commands/*.toml`.
+
+### Opción B — Script API independiente (sin instalar CLI)
+
+```bash
+# 1. Obtén una API key gratuita en https://aistudio.google.com/apikey
+cp .env.example .env
+# Edita .env → pon GEMINI_API_KEY=tu_clave_aqui
+
+# 2. Instala dependencias
+npm install
+
+# 3. Evalúa una oferta de trabajo
+node gemini-eval.mjs "Buscamos un Senior AI Engineer..."
+node gemini-eval.mjs --file ./jds/my-job.txt
+npm run gemini:eval -- "texto de la oferta"
+```
+
+> **Nivel gratuito:** Ambas opciones funcionan sin facturación. El CLI nativo usa Google OAuth; el script API usa `gemini-2.0-flash` (15 RPM, 1M tokens/día gratis).
+
 ## Uso
 
 Career-ops es un unico slash command con multiples modos:
