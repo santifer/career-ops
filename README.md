@@ -262,7 +262,7 @@ See [LEGAL_DISCLAIMER.md](LEGAL_DISCLAIMER.md) for full details. This software i
 ## Contributors
 
 <a href="https://github.com/santifer/career-ops/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=santifer/career-ops" />
+  <img src="https://contrib.rocks/image?repo=santifer/career-ops" alt="Career-Ops contributors" />
 </a>
 
 Got hired using career-ops? [Share your story!](https://github.com/santifer/career-ops/issues/new?template=i-got-hired.yml)
