@@ -33,8 +33,13 @@ func NewViewerModel(t theme.Theme, path, title string, width, height int) Viewer
 		content = []byte("Error reading file: " + err.Error())
 	}
 
+	var lines []string
+	if len(content) > 0 {
+		lines = strings.Split(string(content), "\n")
+	}
+
 	m := ViewerModel{
-		lines:  strings.Split(string(content), "\n"),
+		lines:  lines,
 		title:  title,
 		width:  width,
 		height: height,
@@ -547,37 +552,68 @@ func (m ViewerModel) wrapParagraph(text string, width int) []string {
 }
 
 func (m ViewerModel) renderInlineElements(line string) string {
-	// Inline code
-	line = reInlineCode.ReplaceAllStringFunc(line, func(match string) string {
-		sm := reInlineCode.FindStringSubmatch(match)
-		if len(sm) >= 2 {
-			codeStyle := lipgloss.NewStyle().Background(m.theme.Surface).Foreground(m.theme.Text)
-			return codeStyle.Render(sm[1])
+	return m.renderInlineElementsAs(line, m.theme.Subtext)
+}
+
+// renderInlineElementsAs walks the raw line once and reapplies baseColor around
+// every plain-text span, so resets emitted by inline tokens (code, bold, link,
+// bare URL) don't leak through to subsequent text.
+func (m ViewerModel) renderInlineElementsAs(line string, baseColor lipgloss.Color) string {
+	baseStyle := lipgloss.NewStyle().Foreground(baseColor)
+	codeStyle := lipgloss.NewStyle().Background(m.theme.Surface).Foreground(m.theme.Text)
+	boldStyle := lipgloss.NewStyle().Bold(true).Foreground(m.theme.Yellow)
+	linkStyle := lipgloss.NewStyle().Foreground(m.theme.Blue)
+
+	var b strings.Builder
+	rest := line
+	for rest != "" {
+		match := findInlineMatch(rest, codeStyle, boldStyle, linkStyle)
+		if match == nil {
+			b.WriteString(baseStyle.Render(rest))
+			break
 		}
-		return match
-	})
-
-	// Bold
-	line = m.renderInlineBold(line, m.theme.Subtext)
-
-	// Links
-	line = reLink.ReplaceAllStringFunc(line, func(match string) string {
-		sm := reLink.FindStringSubmatch(match)
-		if len(sm) >= 3 {
-			linkStyle := lipgloss.NewStyle().Foreground(m.theme.Blue)
-			return linkStyle.Render(sm[1])
+		if match.start > 0 {
+			b.WriteString(baseStyle.Render(rest[:match.start]))
 		}
-		return match
-	})
+		b.WriteString(match.rendered)
+		rest = rest[match.end:]
+	}
+	return b.String()
+}
 
-	// Bare URLs — display in full
-	line = reBareURL.ReplaceAllStringFunc(line, func(match string) string {
-		url := match
-		urlStyle := lipgloss.NewStyle().Foreground(m.theme.Blue)
-		return urlStyle.Render(url)
-	})
+type inlineMatch struct {
+	start, end int
+	rendered   string
+}
 
-	return line
+func findInlineMatch(s string, codeStyle, boldStyle, linkStyle lipgloss.Style) *inlineMatch {
+	var best *inlineMatch
+	consider := func(loc []int, rendered func() string) {
+		if loc == nil || (best != nil && loc[0] >= best.start) {
+			return
+		}
+		best = &inlineMatch{start: loc[0], end: loc[1], rendered: rendered()}
+	}
+
+	if loc := reInlineCode.FindStringIndex(s); loc != nil {
+		consider(loc, func() string { return codeStyle.Render(s[loc[0]+1 : loc[1]-1]) })
+	}
+	if loc := reBold.FindStringIndex(s); loc != nil {
+		consider(loc, func() string { return boldStyle.Render(s[loc[0]+2 : loc[1]-2]) })
+	}
+	if loc := reLink.FindStringIndex(s); loc != nil {
+		consider(loc, func() string {
+			sm := reLink.FindStringSubmatch(s[loc[0]:loc[1]])
+			if len(sm) >= 2 {
+				return linkStyle.Render(sm[1])
+			}
+			return s[loc[0]:loc[1]]
+		})
+	}
+	if loc := reBareURL.FindStringIndex(s); loc != nil {
+		consider(loc, func() string { return linkStyle.Render(s[loc[0]:loc[1]]) })
+	}
+	return best
 }
 
 func (m ViewerModel) styleLine(line string) string {
@@ -646,7 +682,7 @@ func (m ViewerModel) styleLine(line string) string {
 		}
 	}
 
-	styled := lipgloss.NewStyle().Foreground(m.theme.Subtext).Render(m.renderInlineElements(trimmed))
+	styled := m.renderInlineElementsAs(trimmed, m.theme.Subtext)
 	return ansi.Wrap(styled, w, "")
 }
 
@@ -656,7 +692,7 @@ func (m ViewerModel) renderListItem(marker, content string, width int) string {
 	if textWidth < 10 {
 		textWidth = 10
 	}
-	styled := lipgloss.NewStyle().Foreground(m.theme.Text).Render(m.renderInlineElements(content))
+	styled := m.renderInlineElementsAs(content, m.theme.Text)
 	lines := strings.Split(ansi.Wrap(styled, textWidth, ""), "\n")
 	result := make([]string, 0, len(lines))
 	for i, line := range lines {
@@ -667,36 +703,6 @@ func (m ViewerModel) renderListItem(marker, content string, width int) string {
 		}
 	}
 	return strings.Join(result, "\n")
-}
-
-// renderInlineBold renders a line with **bold** segments highlighted.
-func (m ViewerModel) renderInlineBold(line string, baseColor lipgloss.Color) string {
-	baseStyle := lipgloss.NewStyle().Foreground(baseColor)
-	boldStyle := lipgloss.NewStyle().Bold(true).Foreground(m.theme.Yellow)
-
-	matches := reBold.FindAllStringIndex(line, -1)
-	if len(matches) == 0 {
-		return baseStyle.Render(line)
-	}
-
-	var result strings.Builder
-	last := 0
-	for _, loc := range matches {
-		// Render text before the bold
-		if loc[0] > last {
-			result.WriteString(baseStyle.Render(line[last:loc[0]]))
-		}
-		// Extract bold content (without **)
-		boldText := line[loc[0]+2 : loc[1]-2]
-		result.WriteString(boldStyle.Render(boldText))
-		last = loc[1]
-	}
-	// Render remaining text
-	if last < len(line) {
-		result.WriteString(baseStyle.Render(line[last:]))
-	}
-
-	return result.String()
 }
 
 func (m ViewerModel) renderFooter() string {

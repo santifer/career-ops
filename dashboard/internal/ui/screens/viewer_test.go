@@ -86,6 +86,53 @@ func TestViewerRendersInlineMarkdownBeforeParagraphWrapping(t *testing.T) {
 	}
 }
 
+func TestViewerEmptyContentRendersPlaceholder(t *testing.T) {
+	m := ViewerModel{
+		lines:  nil,
+		width:  40,
+		height: 10,
+		theme:  theme.NewTheme("catppuccin-mocha"),
+	}
+	m.rebuildRender()
+
+	if len(m.renderedLines) != 0 {
+		t.Fatalf("expected zero rendered lines for empty content, got %d", len(m.renderedLines))
+	}
+
+	body := ansi.Strip(m.renderBody())
+	if !strings.Contains(body, "(empty file)") {
+		t.Fatalf("expected empty placeholder, got %q", body)
+	}
+}
+
+func TestViewerInlineRenderingHandlesMixedTokens(t *testing.T) {
+	m := ViewerModel{
+		width:  60,
+		height: 10,
+		theme:  theme.NewTheme("catppuccin-mocha"),
+	}
+
+	rendered := m.renderInlineElementsAs(
+		"start `code` mid **bold** then [link](https://example.com) end https://bare.example.com.",
+		m.theme.Subtext,
+	)
+	plain := ansi.Strip(rendered)
+
+	for _, want := range []string{"start ", "code", " mid ", "bold", " then ", "link", " end ", "https://bare.example.com"} {
+		if !strings.Contains(plain, want) {
+			t.Fatalf("expected plain output to contain %q, got %q", want, plain)
+		}
+	}
+	for _, syntax := range []string{"`", "**", "[", "](", "](http"} {
+		if strings.Contains(plain, syntax) {
+			t.Fatalf("expected markdown syntax %q to be hidden, got %q", syntax, plain)
+		}
+	}
+	if strings.HasSuffix(plain, ".") == false {
+		t.Fatalf("expected trailing punctuation outside the bare URL, got %q", plain)
+	}
+}
+
 func TestViewerIndentsWrappedBlockquoteLines(t *testing.T) {
 	m := ViewerModel{
 		width:  24,
