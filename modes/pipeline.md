@@ -10,12 +10,13 @@ Processes job offer URLs accumulated in `data/pipeline.md`. The user adds URLs a
    b. **Extract JD** using Playwright (browser_navigate + browser_snapshot) → WebFetch → WebSearch
    c. If URL is not accessible → mark as `- [!]` with note and continue
    d. **Scoring Logic**:
-      - If `scoring.method` is `zero-waste` (Default): Run **Early Fit Gate**. 
+      - Read `scoring.method` from `config/profile.yml` (defaults to `zero-waste` if unset).
+      - If `scoring.method` is `zero-waste` (default): Run **Early Fit Gate**. 
         - If gate PASSES (score >= 4.0) -> Proceed to full eval.
         - If gate REJECTS (score < 4.0) -> Execute rejection workflow.
       - If `scoring.method` is `original`: Skip gate. Proceed directly to full A-G evaluation.
    e. **Move from "Pending" to "Processed"**:
-      - Processed: `- [x] #NNN | URL | Company | Role | Score/5 | PDF ✅/❌`
+      - Processed: `- [x] `#NNN` | URL | Company | Role | Score/5 | PDF ✅/❌`
       - Rejected (Zero-Waste only): `- [~] URL | Company | Role | score/5 | mismatch`
 3. **If 3+ URLs pending**, launch agents in parallel (Agent tool with `run_in_background`) to maximise speed.
 4. **On completion**, show summary table:
