@@ -118,6 +118,30 @@ When using the [Gemini CLI](https://github.com/google-gemini/gemini-cli), the fo
 
 **Note:** Gemini CLI commands are defined in `.gemini/commands/*.toml`. The project context is auto-loaded from `GEMINI.md`. All `modes/*` files are shared across Claude Code, OpenCode, and Gemini CLI.
 
+### VS Code Copilot Commands
+
+When using [VS Code Copilot](https://code.visualstudio.com/docs/copilot/overview), the following slash commands are available (defined in `.github/prompts/`):
+
+| Command | Claude Code Equivalent | Description |
+|---------|------------------------|-------------|
+| `/career-ops` | `/career-ops` | Show menu or evaluate JD with args |
+| `/career-ops-pipeline` | `/career-ops pipeline` | Process pending URLs from inbox |
+| `/career-ops-evaluate` | `/career-ops oferta` | Evaluate job offer (A-G scoring) |
+| `/career-ops-compare` | `/career-ops ofertas` | Compare and rank multiple offers |
+| `/career-ops-contact` | `/career-ops contacto` | LinkedIn outreach (find contacts + draft) |
+| `/career-ops-deep` | `/career-ops deep` | Deep company research |
+| `/career-ops-pdf` | `/career-ops pdf` | Generate ATS-optimized CV |
+| `/career-ops-training` | `/career-ops training` | Evaluate course/cert against goals |
+| `/career-ops-project` | `/career-ops project` | Evaluate portfolio project idea |
+| `/career-ops-tracker` | `/career-ops tracker` | Application status overview |
+| `/career-ops-apply` | `/career-ops apply` | Live application assistant |
+| `/career-ops-scan` | `/career-ops scan` | Scan portals for new offers |
+| `/career-ops-batch` | `/career-ops batch` | Batch processing with parallel workers |
+| `/career-ops-patterns` | `/career-ops patterns` | Analyze rejection patterns and improve targeting |
+| `/career-ops-followup` | `/career-ops followup` | Follow-up cadence tracker |
+
+**Note:** VS Code Copilot prompt files are defined in `.github/prompts/*.prompt.md`. The always-on context is loaded from `.github/copilot-instructions.md`. The underlying `.claude/skills/career-ops/SKILL.md` is also auto-discovered by VS Code Copilot. All `modes/*` files are shared across all platforms.
+
 ### First Run — Onboarding (IMPORTANT)
 
 **Before doing ANYTHING else, check if the system is set up.** Run these checks silently every time a session starts:
