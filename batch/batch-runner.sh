@@ -1,9 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# career-ops batch runner — standalone orchestrator for claude -p workers
-# Reads batch-input.tsv, delegates each offer to a claude -p worker,
+# career-ops batch runner — CLI-agnostic orchestrator for parallel job evaluation
+# Reads batch-input.tsv, delegates each offer to a worker CLI,
 # tracks state in batch-state.tsv for resumability.
+#
+# The CLI used for evaluation is controlled by CAREER_OPS_CLI (default: claude -p).
+# Any CLI that reads a system prompt from a file and accepts the job URL as the
+# user message can be plugged in. Examples:
+#   CAREER_OPS_CLI="claude -p"           # Claude Code (default)
+#   CAREER_OPS_CLI="opencode -f"          # opencode (OpenRouter/any backend)
+#   CAREER_OPS_CLI="aider --message"      # aider
+# See docs/alternative-backends.md for setup instructions.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -28,11 +36,12 @@ RETRY_FAILED=false
 START_FROM=0
 MAX_RETRIES=2
 MIN_SCORE=0
+# CLI used to run each worker. Override via env: CAREER_OPS_CLI="opencode -f"
+CLI_CMD="${CAREER_OPS_CLI:-claude -p}"
 
 usage() {
   cat <<'USAGE'
-career-ops batch runner — process job offers in batch via claude -p workers
-Uses your default Claude model (Claude Max subscription).
+career-ops batch runner — process job offers via any pipe-mode CLI
 
 Usage: batch-runner.sh [OPTIONS]
 
@@ -44,6 +53,13 @@ Options:
   --max-retries N      Max retry attempts per offer (default: 2)
   --min-score N        Skip PDF/tracker for offers scoring below N (default: 0 = off)
   -h, --help           Show this help
+
+CLI backend (set via environment variable):
+  CAREER_OPS_CLI       Command used to call the LLM worker (default: claude -p)
+  Examples:
+    CAREER_OPS_CLI="claude -p"    ./batch-runner.sh      # Claude Code (default)
+    CAREER_OPS_CLI="opencode -f"  ./batch-runner.sh      # opencode
+  See docs/alternative-backends.md for more options.
 
 Files:
   batch-input.tsv      Input offers (id, url, source, notes)
@@ -119,8 +135,14 @@ check_prerequisites() {
     exit 1
   fi
 
-  if ! command -v claude &>/dev/null; then
-    echo "ERROR: 'claude' CLI not found in PATH."
+  # Validate that the configured CLI is available
+  local cli_bin
+  cli_bin=$(echo "$CLI_CMD" | awk '{print $1}')
+  if ! command -v "$cli_bin" &>/dev/null; then
+    echo "ERROR: CLI not found in PATH: $cli_bin"
+    echo "  Default CLI is 'claude -p' (requires Claude Code)."
+    echo "  To use an alternative: export CAREER_OPS_CLI=\"opencode -f\""
+    echo "  See docs/alternative-backends.md for options."
     exit 1
   fi
 
@@ -350,9 +372,10 @@ process_offer() {
     -e "s|{{ID}}|${esc_id}|g" \
     "$PROMPT_FILE" > "$resolved_prompt"
 
-  # Launch claude -p worker (uses default model from Claude Max subscription)
+  # Launch worker using the configured CLI
+  # The CLI receives the resolved prompt file as a system prompt and the job URL as the user message.
   local exit_code=0
-  claude -p \
+  $CLI_CMD \
     --dangerously-skip-permissions \
     --append-system-prompt-file "$resolved_prompt" \
     "$prompt" \
@@ -461,6 +484,7 @@ main() {
   fi
 
   echo "=== career-ops batch runner ==="
+  echo "CLI:      $CLI_CMD"
   echo "Parallel: $PARALLEL | Max retries: $MAX_RETRIES"
   echo "Input: $total_input offers"
   echo ""

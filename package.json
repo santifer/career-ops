@@ -4,6 +4,11 @@
   "description": "AI-powered job search pipeline built on Claude Code",
   "scripts": {
     "doctor": "node doctor.mjs",
+    "or": "node openrouter-runner.mjs",
+    "or:scan": "node openrouter-runner.mjs scan",
+    "or:pipeline": "node openrouter-runner.mjs pipeline",
+    "or:eval": "node openrouter-runner.mjs evaluate",
+    "or:apply": "node openrouter-runner.mjs apply",
     "verify": "node verify-pipeline.mjs",
     "normalize": "node normalize-statuses.mjs",
     "dedup": "node dedup-tracker.mjs",
