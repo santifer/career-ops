@@ -294,7 +294,7 @@ if (saveReport) {
     }
 
     const num = nextReportNumber();
-    const today = new Date().toISOString().split("T")[0];
+    const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD in local TZ
     const companySlug = company
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
