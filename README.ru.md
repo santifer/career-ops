@@ -73,6 +73,51 @@ claude   # Открой Claude Code в директории проекта
 # Вставь URL вакансии или запусти /career-ops
 ```
 
+## Интеграция с Gemini CLI
+
+career-ops поддерживает [Gemini CLI](https://github.com/google-gemini/gemini-cli) нативно — так же, как Claude Code и OpenCode. Все 15 slash-команд доступны с той же логикой оценки из `modes/*.md`.
+
+### Вариант A — Нативный Gemini CLI (Рекомендуется)
+
+```bash
+# 1. Установить Gemini CLI
+npm install -g @google/gemini-cli
+
+# 2. Авторизоваться (бесплатно — через аккаунт Google)
+gemini auth
+
+# 3. Запустить в директории career-ops
+cd career-ops
+gemini
+
+# 4. Использовать slash-команды как в Claude Code
+/career-ops "Senior AI Engineer at Anthropic..."
+/career-ops-evaluate --file ./jds/openai.txt
+/career-ops-scan
+/career-ops-pdf
+/career-ops-tracker
+```
+
+Файл `GEMINI.md` загружается как контекст автоматически. Все 15 команд определены в `.gemini/commands/*.toml`.
+
+### Вариант B — Standalone API-скрипт (без установки CLI)
+
+```bash
+# 1. Получите бесплатный API-ключ на https://aistudio.google.com/apikey
+cp .env.example .env
+# Отредактируйте .env → укажите GEMINI_API_KEY=ваш_ключ
+
+# 2. Установить зависимости
+npm install
+
+# 3. Оценить вакансию
+node gemini-eval.mjs "Ищем Senior AI Engineer..."
+node gemini-eval.mjs --file ./jds/my-job.txt
+npm run gemini:eval -- "текст вакансии"
+```
+
+> **Бесплатный уровень:** Оба варианта работают без оплаты. Нативный CLI использует Google OAuth; API-скрипт использует `gemini-2.0-flash` (15 RPM, 1M токенов/день бесплатно).
+
 ## Использование
 
 Career-ops — одна slash-команда с множеством режимов:
@@ -203,6 +248,26 @@ career-ops/
 - **Dashboard**: Go + Bubble Tea + Lipgloss (тема Catppuccin Mocha)
 - **Данные**: Markdown-таблицы + YAML-конфиг + TSV-файлы батчей
 
+## Также Open Source
+
+- **[cv-santiago](https://github.com/santifer/cv-santiago)** — портфолио-сайт (santifer.io) с AI-чатботом, LLMOps-дашбордом и кейсами. Если вам нужно портфолио для поиска работы — форкните и сделайте своим.
+
+## Об авторе
+
+Я Santiago — Head of Applied AI, бывший основатель (создал и продал компанию, которая до сих пор работает). Я создал career-ops для управления собственным поиском работы — и это сработало.
+
+Моё портфолио и другие open-source проекты → [santifer.io](https://santifer.io)
+
+## Star History
+
+<a href="https://www.star-history.com/?repos=santifer%2Fcareer-ops&type=timeline&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=santifer/career-ops&type=timeline&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=santifer/career-ops&type=timeline&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=santifer/career-ops&type=timeline&legend=top-left" />
+ </picture>
+</a>
+
 ## Дисклеймер
 
 **career-ops — локальный open-source инструмент, НЕ хостинг-сервис.** Используя это ПО, вы подтверждаете:
@@ -217,3 +282,19 @@ career-ops/
 ## Лицензия
 
 MIT
+
+## Участники
+
+<a href="https://github.com/santifer/career-ops/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=santifer/career-ops" />
+</a>
+
+Нашли работу с career-ops? [Поделитесь историей!](https://github.com/santifer/career-ops/issues/new?template=i-got-hired.yml)
+
+## Контакты
+
+[![Website](https://img.shields.io/badge/santifer.io-000?style=for-the-badge&logo=safari&logoColor=white)](https://santifer.io)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/in/santifer)
+[![X](https://img.shields.io/badge/X-000?style=for-the-badge&logo=x&logoColor=white)](https://x.com/santifer)
+[![Discord](https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/8pRpHETxa4)
+[![Email](https://img.shields.io/badge/Email-EA4335?style=for-the-badge&logo=gmail&logoColor=white)](mailto:hi@santifer.io)

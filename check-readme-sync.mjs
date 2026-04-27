@@ -52,21 +52,16 @@ for (const file of TRANSLATIONS) {
   const count = sections.length;
   const diff = mainCount - count;
 
-  if (diff === 0) {
-    console.log(`  ✅ ${file}: ${count} sections (in sync)`);
+  if (count >= mainCount) {
+    const note = count > mainCount ? ` (+${count - mainCount} locale-specific)` : "";
+    console.log(`  ✅ ${file}: ${count} sections (in sync${note})`);
   } else {
     failed = true;
     console.log(`  ❌ ${file}: ${count} sections (missing ${diff} vs main)`);
-    // Best-effort: find which positions don't have a corresponding section
-    if (count < mainCount) {
-      console.log(`     Main has ${mainCount} sections, this file has ${count}.`);
-      console.log(`     Hint: main sections by index —`);
-      mainSections.forEach((s, i) => {
-        const present = i < count;
-        const marker = present ? "   " : "  ⚠️ ";
-        if (!present) console.log(`${marker} ${i + 1}. "${s}"`);
-      });
-    }
+    console.log(`     Hint: main sections by index —`);
+    mainSections.forEach((s, i) => {
+      if (i >= count) console.log(`  ⚠️   ${i + 1}. "${s}"`);
+    });
   }
 }
 
