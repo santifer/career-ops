@@ -21,6 +21,7 @@ func TestBuildFillPlanIncludesAllowedProfileFields(t *testing.T) {
 	assertFillValue(t, plan, "identity.phone", "+55 11999999999")
 	assertFillValue(t, plan, "identity.linkedin", "https://linkedin.com/in/fernando")
 	assertFillValue(t, plan, "address.city", "Sao Paulo")
+	assertFillValue(t, plan, "identity.location", "Sao Paulo, Brazil")
 }
 
 func TestBuildFillPlanMarksMissingValuesAsNeedsInput(t *testing.T) {
@@ -74,6 +75,22 @@ func TestBuildFillPlanBlocksLowFitApplication(t *testing.T) {
 	}
 	if plan.LowFit.Score != 3.2 || plan.LowFit.Threshold != 4.0 {
 		t.Fatalf("unexpected low-fit values: %#v", plan.LowFit)
+	}
+}
+
+func TestBuildFillPlanSubmitReadyRequiresApprovedReviewGate(t *testing.T) {
+	run := RunRecord{ID: "run-1", URL: "https://example.com/job", ReviewGate: &ReviewGate{}}
+
+	plan := BuildFillPlan(run, ApplicationProfile{})
+	if plan.SubmitReady {
+		t.Fatal("expected submit to stay blocked until review gate is explicitly approved")
+	}
+
+	approvedAt := testRuntimeNow()
+	run.ReviewGate.ApprovedAt = &approvedAt
+	plan = BuildFillPlan(run, ApplicationProfile{})
+	if !plan.SubmitReady {
+		t.Fatal("expected submit_ready after explicit review gate approval")
 	}
 }
 

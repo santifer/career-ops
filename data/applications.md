@@ -2,6 +2,14 @@
 
 | # | Date | Company | Role | Score | Status | PDF | Report | Notes |
 |---|------|---------|------|-------|--------|-----|--------|-------|
+| 34 | 2026-04-26 | Getnet | Controller Manager | 4.3/5 | Applied | ✅ | [034](reports/034-getnet-controller-manager-2026-04-26.md) | Hibrido Vila Olimpia SP, fintech Santander/PagoNxt, IFRS D+2, CAPEX tech IAS 38, automacao |
+| 36 | 2026-04-26 | Scatec ASA | Senior Accounting, Tax and Reporting Manager | 4.1/5 | Applied | ✅ | [036](reports/036-scatec-senior-accounting-tax-reporting-manager-2026-04-26.md) | Presencial SP, energia renovavel norueguesa, lidera 15+ team, IFRS+BR GAAP+tax+TP, excelente match tecnico |
+| 37 | 2026-04-26 | [Confidencial] | Gerente Corporativo de Contabilidade e Consolidacao | 4.5/5 | Evaluated | ⏳ | [037](reports/037-confidencial-gerente-corporativo-contabilidade-consolidacao-2026-04-26.md) | Hibrido SP, telecom LATAM, consolidacao de grupo, IFRS+US GAAP, CRC, match excelente com Capgemini |
+| 38 | 2026-04-26 | Access | Accounting Director / Brazil Controller | N/A | Evaluated | ❌ | [038](reports/038-access-accounting-director-brazil-controller-2026-04-26.md) | FECHADA - URL redireciona para lista de vagas |
+| 39 | 2026-04-26 | Bridgestone Latin America South | Controller Brasil | N/A | Evaluated | ❌ | [039](reports/039-bridgestone-controller-brasil-2026-04-26.md) | FECHADA - URL redireciona para lista de vagas |
+| 40 | 2026-04-26 | Kajae | Controller (LATAM, Remote) | 2.8/5 | Evaluated | ❌ | [040](reports/040-kajae-controller-latam-2026-04-26.md) | Staff augmentation, pay abaixo do target, QuickBooks Desktop, downgrade de nivel |
+| 41 | 2026-04-26 | Somewhere | Financial Controller (LATAM, Remote) | 3.0/5 | Evaluated | ❌ | [041](reports/041-somewhere-financial-controller-latam-2026-04-26.md) | Staff augmentation, pay $3-4k abaixo do target, US sales tax gap, Sage Intacct |
+| 42 | 2026-04-26 | Robert Half (Life Sciences MNC) | Principal Finance Controller LATAM | 4.0/5 | Applied | ✅ | [042](output/tailor-runs/2026-04-26-rh-principal-controller-latam-barueri/00-summary.md) | Re-eval 2026-04-26 (3.6→4). Match 82%, recruiter 8/10. CV personalizado via /headhunter; gaps Blackline + Life Sciences industry tratados em cover letter; remoto, EN. |
 | 32 | 2026-04-26 | Devos Executive Search | Head of Financial Accounting | 4.2/5 | Applied | ✅ | [032](reports/032-devos-head-financial-accounting-2026-04-26.md) | Applied via Quickin.io — CV uploaded, PRIMARY target, IFRS/statutory/tax 100% match, ~100 team leadership, 70%/40% automation metrics |
 | 33 | 2026-04-26 | Educbank | Gerente de Controladoria | 7/10 | Evaluated | ✅ | output/cv-fernando-educbank-2026-04-26.pdf | https://www.linkedin.com/jobs/view/4380040246 |
 | 25 | 2026-04-21 | Dover Fueling Solutions | Regional Controller | 3.8/5 | Evaluated | ✅ | [025](reports/025-dover-regional-controller-2026-04-21.md) | Strong match — CRC/IFRS/US GAAP/SOX aligned, LATAM experience, Director level |

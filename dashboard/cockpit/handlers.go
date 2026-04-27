@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"net"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -21,6 +22,7 @@ type apiHandler struct {
 	autoMode     *cockpitapi.AutoModeService
 	authVerifier cockpitapi.AuthVerifier
 	pairing      *cockpitapi.PairingService
+	localWorker  localWorkerController
 }
 
 type apiErrorResponse struct {
@@ -54,6 +56,10 @@ type workerRegisterRequest struct {
 	PairingToken string `json:"pairing_token"`
 }
 
+type localWorkerStartBody struct {
+	WorkerID string `json:"worker_id"`
+}
+
 type loginRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
@@ -73,7 +79,7 @@ type workerPrincipal struct {
 	UserID   string
 }
 
-func registerAPIHandlers(mux *http.ServeMux, service *cockpitapi.Service, serviceErr error, runStore *cockpitapi.RunStore, actionRunner *cockpitapi.ActionRunner, autoMode *cockpitapi.AutoModeService, authVerifier cockpitapi.AuthVerifier, runtimeStore cockpitapi.AutoModeRuntimeStore, pairing *cockpitapi.PairingService) {
+func registerAPIHandlers(mux *http.ServeMux, service *cockpitapi.Service, serviceErr error, runStore *cockpitapi.RunStore, actionRunner *cockpitapi.ActionRunner, autoMode *cockpitapi.AutoModeService, authVerifier cockpitapi.AuthVerifier, runtimeStore cockpitapi.AutoModeRuntimeStore, pairing *cockpitapi.PairingService, localWorker localWorkerController) {
 	if authVerifier == nil {
 		authVerifier = cockpitapi.RejectingAuthVerifier{}
 	}
@@ -82,6 +88,9 @@ func registerAPIHandlers(mux *http.ServeMux, service *cockpitapi.Service, servic
 	}
 	if pairing == nil {
 		pairing = cockpitapi.NewPairingService(cockpitapi.NewMemoryPairingStore(), cockpitapi.PairingConfig{})
+	}
+	if localWorker == nil {
+		localWorker = newLocalWorkerManager(".", pairing)
 	}
 	handler := apiHandler{
 		service:      service,
@@ -92,6 +101,7 @@ func registerAPIHandlers(mux *http.ServeMux, service *cockpitapi.Service, servic
 		autoMode:     autoMode,
 		authVerifier: authVerifier,
 		pairing:      pairing,
+		localWorker:  localWorker,
 	}
 
 	mux.HandleFunc("/api/overview", handler.overview)
@@ -105,6 +115,7 @@ func registerAPIHandlers(mux *http.ServeMux, service *cockpitapi.Service, servic
 	mux.HandleFunc("/api/actions/auto-mode/start", handler.actionAutoModeStart)
 	mux.HandleFunc("/api/runs/", handler.runDetailOrCancel)
 	mux.HandleFunc("/api/worker/", handler.workerRoutes)
+	mux.HandleFunc("/api/local-worker/", handler.localWorkerRoutes)
 }
 
 func (h apiHandler) login(w http.ResponseWriter, r *http.Request) {
@@ -468,6 +479,72 @@ func (h apiHandler) workerRoutes(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSONError(w, http.StatusNotFound, "route_not_found", "API route not found.")
+}
+
+func (h apiHandler) localWorkerRoutes(w http.ResponseWriter, r *http.Request) {
+	if !requireLoopbackRequest(w, r) {
+		return
+	}
+	principal, ok := h.requireAuth(w, r)
+	if !ok {
+		return
+	}
+	if hostedLocalWorkerUnsupported() {
+		writeJSONError(w, http.StatusConflict, "local_worker_unsupported", "Local worker launcher is available only when the cockpit is running on this computer.")
+		return
+	}
+
+	trimmed := strings.TrimPrefix(r.URL.Path, "/api/local-worker/")
+	parts := strings.Split(strings.Trim(trimmed, "/"), "/")
+	if len(parts) != 1 || parts[0] == "" {
+		writeJSONError(w, http.StatusNotFound, "route_not_found", "API route not found.")
+		return
+	}
+
+	switch parts[0] {
+	case "status":
+		if !requireMethod(w, r, http.MethodGet) {
+			return
+		}
+		writeJSON(w, http.StatusOK, h.localWorker.Status(r.Context()))
+	case "start":
+		if !requireMethod(w, r, http.MethodPost) {
+			return
+		}
+		var request localWorkerStartBody
+		if r.Body != nil && r.ContentLength != 0 {
+			if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+				writeJSONError(w, http.StatusBadRequest, "invalid_json", "Request body must be valid JSON.")
+				return
+			}
+		}
+		status, err := h.localWorker.Start(r.Context(), localWorkerStartRequest{
+			UserID:   principal.UserID,
+			WorkerID: request.WorkerID,
+			APIBase:  requestAPIBase(r),
+		})
+		if errors.Is(err, errLocalWorkerInvalidWorkerID) {
+			writeJSONError(w, http.StatusBadRequest, "invalid_worker_id", err.Error())
+			return
+		}
+		if err != nil {
+			writeJSONError(w, http.StatusInternalServerError, "local_worker_start_failed", redactLocalWorkerSecret(err.Error()))
+			return
+		}
+		writeJSON(w, http.StatusAccepted, status)
+	case "stop":
+		if !requireMethod(w, r, http.MethodPost) {
+			return
+		}
+		status, err := h.localWorker.Stop(r.Context())
+		if err != nil {
+			writeJSONError(w, http.StatusInternalServerError, "local_worker_stop_failed", redactLocalWorkerSecret(err.Error()))
+			return
+		}
+		writeJSON(w, http.StatusOK, status)
+	default:
+		writeJSONError(w, http.StatusNotFound, "route_not_found", "API route not found.")
+	}
 }
 
 func (h apiHandler) createPairingToken(w http.ResponseWriter, r *http.Request) {
@@ -1142,6 +1219,27 @@ func safeHTTPURL(value string) bool {
 		return false
 	}
 	return parsed.Scheme == "http" || parsed.Scheme == "https"
+}
+
+func requireLoopbackRequest(w http.ResponseWriter, r *http.Request) bool {
+	host := r.RemoteAddr
+	if parsedHost, _, err := net.SplitHostPort(r.RemoteAddr); err == nil {
+		host = parsedHost
+	}
+	ip := net.ParseIP(strings.TrimSpace(host))
+	if ip == nil || !ip.IsLoopback() {
+		writeJSONError(w, http.StatusForbidden, "local_worker_loopback_required", "Local worker launcher must be called from this computer.")
+		return false
+	}
+	return true
+}
+
+func requestAPIBase(r *http.Request) string {
+	scheme := "http"
+	if r.TLS != nil {
+		scheme = "https"
+	}
+	return scheme + "://" + r.Host
 }
 
 func (h apiHandler) writeRunMutationResult(w http.ResponseWriter, run cockpitapi.RunRecord, err error, fallbackCode string) {

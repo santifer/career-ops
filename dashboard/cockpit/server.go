@@ -19,6 +19,7 @@ type ServerOptions struct {
 	AuthVerifier cockpitapi.AuthVerifier
 	RuntimeStore cockpitapi.AutoModeRuntimeStore
 	Pairing      *cockpitapi.PairingService
+	LocalWorker  localWorkerController
 }
 
 func NewServer(rootPath string) http.Handler {
@@ -67,6 +68,10 @@ func NewServerWithOptions(rootPath string, options ServerOptions) http.Handler {
 	if serviceErr == nil && pairingErr != nil {
 		serviceErr = pairingErr
 	}
+	localWorker := options.LocalWorker
+	if localWorker == nil {
+		localWorker = newLocalWorkerManager(cleanRoot, pairing)
+	}
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/" {
@@ -109,7 +114,7 @@ func NewServerWithOptions(rootPath string, options ServerOptions) http.Handler {
 		_ = json.NewEncoder(w).Encode(service.Health())
 	})
 
-	registerAPIHandlers(mux, service, serviceErr, runStore, actionRunner, autoModeService, options.AuthVerifier, runtimeStore, pairing)
+	registerAPIHandlers(mux, service, serviceErr, runStore, actionRunner, autoModeService, options.AuthVerifier, runtimeStore, pairing, localWorker)
 
 	return mux
 }

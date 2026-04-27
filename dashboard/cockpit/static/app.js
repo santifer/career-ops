@@ -9,6 +9,7 @@ const state = {
   pollTimer: null,
   autoWindow: null,
   pairing: null,
+  localWorker: null,
 };
 
 const authConfig = {
@@ -206,6 +207,7 @@ async function initialLoad() {
     renderProfile();
     renderMissingFields();
     renderAutoMissingFields();
+    await refreshLocalWorkerStatus({ silent: true });
   } catch (error) {
     showToast(`Initial load failed: ${error.message}`);
     const body = $("#applications-body");
@@ -550,7 +552,16 @@ async function startAutoMode(useSelected = true) {
     renderReviewGate(visibleRun);
     const targetURL = normalizeExternalURL(run?.browser_session?.target_url || run?.url);
     if (targetURL) {
-      showToast("Auto Mode run started. Start the paired local worker to open and drive the visible browser.");
+      if (isLocalCockpit()) {
+        const worker = await startLocalWorker({ quiet: true });
+        if (worker?.state === "running") {
+          showToast("Auto Mode started and the local worker is running. Watch the worker status and observability log.");
+        } else {
+          showToast(`Auto Mode started, but the local worker is not running: ${worker?.last_error || "check worker status."}`);
+        }
+      } else {
+        showToast("Auto Mode run started. Start the paired local worker on your computer to open and drive the visible browser.");
+      }
     } else {
       showToast("Auto Mode started, but no job URL was resolved. Paste the application link and start again.");
     }
@@ -720,11 +731,97 @@ function renderWorkerPanel(run = state.activeRun) {
   const stateNode = $("#worker-state");
   const statusNode = $("#worker-status");
   if (!stateNode || !statusNode) return;
-  const status = workerStatus(run);
-  stateNode.textContent = status.label;
-  stateNode.dataset.state = status.label.toLowerCase();
-  statusNode.textContent = status.text;
+  const runStatus = workerStatus(run);
+  const localStatus = state.localWorker || {};
+  const localState = localStatus.state || (isLocalCockpit() ? "unknown" : "unsupported");
+  let label = runStatus.label;
+  let text = runStatus.text;
+  if (!run || run.action !== "auto-mode") {
+    label = localState === "running" ? "Ready" : localState === "unsupported" ? "Hosted" : "Offline";
+    text = localWorkerStatusText(localStatus);
+  } else if (!run.worker_claim && localState === "running") {
+    label = "Polling";
+    text = `${localStatus.worker_id || "Local worker"} is running and waiting to claim this Auto Mode run.`;
+  }
+  stateNode.textContent = label;
+  stateNode.dataset.state = label.toLowerCase();
+  statusNode.textContent = text;
+  renderLocalWorkerControls(localStatus);
   renderPairingOutput();
+}
+
+function localWorkerStatusText(status = state.localWorker || {}) {
+  if (!isLocalCockpit()) return "Hosted portal cannot start a browser process on this machine. Use the local cockpit for visible automation.";
+  if (status.state === "running") return `${status.worker_id || "Local worker"} is running${status.pid ? ` as PID ${status.pid}` : ""}.`;
+  if (status.state === "failed") return status.last_error || "Local worker failed to start.";
+  if (status.state === "unsupported") return "Local worker launcher is disabled in this environment.";
+  return "No local worker process is running. Start it here before or after starting Auto Mode.";
+}
+
+function renderLocalWorkerControls(status = state.localWorker || {}) {
+  const start = $("#local-worker-start");
+  const stop = $("#local-worker-stop");
+  const detail = $("#local-worker-detail");
+  const running = status.state === "running";
+  const supported = isLocalCockpit() && status.state !== "unsupported";
+  if (start) {
+    start.disabled = !supported || running;
+    start.textContent = running ? "Worker running" : "Start local worker";
+  }
+  if (stop) stop.disabled = !supported || !running;
+  if (detail) detail.textContent = localWorkerStatusText(status);
+}
+
+async function refreshLocalWorkerStatus({ silent = false } = {}) {
+  if (!isLocalCockpit()) {
+    state.localWorker = { state: "unsupported" };
+    renderWorkerPanel();
+    return state.localWorker;
+  }
+  try {
+    state.localWorker = await api("/api/local-worker/status");
+    renderWorkerPanel();
+    return state.localWorker;
+  } catch (error) {
+    state.localWorker = { state: "failed", last_error: error.message };
+    renderWorkerPanel();
+    if (!silent) showToast(`Local worker status failed: ${error.message}`);
+    return state.localWorker;
+  }
+}
+
+async function startLocalWorker({ quiet = false } = {}) {
+  if (!isLocalCockpit()) {
+    state.localWorker = { state: "unsupported" };
+    renderWorkerPanel();
+    if (!quiet) showToast("Open the local cockpit on this computer to start the visible browser worker.");
+    return state.localWorker;
+  }
+  const workerID = ($("#worker-id")?.value || "").trim() || "local-worker";
+  try {
+    state.localWorker = await api("/api/local-worker/start", {
+      method: "POST",
+      body: JSON.stringify({ worker_id: workerID }),
+    });
+    renderWorkerPanel();
+    if (!quiet) showToast("Local worker started. The visible browser should open when an Auto Mode run is available.");
+    return state.localWorker;
+  } catch (error) {
+    state.localWorker = { state: "failed", worker_id: workerID, last_error: error.message };
+    renderWorkerPanel();
+    if (!quiet) showToast(`Local worker failed to start: ${error.message}`);
+    return state.localWorker;
+  }
+}
+
+async function stopLocalWorker() {
+  try {
+    state.localWorker = await api("/api/local-worker/stop", { method: "POST" });
+    renderWorkerPanel();
+    showToast("Local worker stopped.");
+  } catch (error) {
+    showToast(`Local worker stop failed: ${error.message}`);
+  }
 }
 
 async function generatePairingToken() {
@@ -789,7 +886,7 @@ function workerRegisterCommand(pairing) {
 function workerRunCommand(workerID) {
   const apiBase = psEscape(apiBaseURL());
   const worker = psEscape(workerID || "local-worker");
-  return `node workers/browser-worker.mjs --api-base '${apiBase}' --worker-id '${worker}' --credential $env:CAREER_OPS_WORKER_CREDENTIAL`;
+  return `node workers/browser-worker.mjs --api-base '${apiBase}' --worker-id '${worker}'`;
 }
 
 async function copyTextFrom(selector, label) {
@@ -924,6 +1021,8 @@ function wireEvents() {
   $("#profile-save")?.addEventListener("click", saveProfile);
   $("#auto-start")?.addEventListener("click", () => startAutoMode(false));
   $("#auto-selected")?.addEventListener("click", () => startAutoMode(true));
+  $("#local-worker-start")?.addEventListener("click", () => startLocalWorker());
+  $("#local-worker-stop")?.addEventListener("click", stopLocalWorker);
   $("#worker-pair")?.addEventListener("click", generatePairingToken);
   $("#copy-register")?.addEventListener("click", () => copyTextFrom("#worker-register-command", "Register command"));
   $("#copy-run-worker")?.addEventListener("click", () => copyTextFrom("#worker-run-command", "Worker run command"));

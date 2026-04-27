@@ -6,6 +6,7 @@ candidate:
   full_name: "Fernando Costa Xavier"
   email: "fernandocostaxavier@gmail.com"
   phone: "+55 11 96480-1913"
+  cpf: "221.298.418-99"
   location: "Sao Paulo, Brazil"
   linkedin: "linkedin.com/in/fernandoxavier02"
   github: "github.com/fernandoxavier02"
@@ -125,9 +126,9 @@ narrative:
       hero_metric: "Led 3 due diligence + post-merger integration projects from scratch"
 
 compensation:
-  target_range: "R$30.000-R$35.000/month"
+  target_range: "R$28.000-R$30.000/month"
   currency: "BRL"
-  minimum: "R$30.000/month"
+  minimum: "R$28.000/month"
   location_flexibility: "Hybrid or on-site (Sao Paulo / Grande Sao Paulo), remote anywhere"
 
 location:

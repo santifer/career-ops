@@ -220,7 +220,7 @@
               <div class="session-head">
                 <div>
                   <strong>Local browser worker</strong>
-                  <p id="worker-status">No worker has claimed the active run.</p>
+                  <p id="worker-status">Start the local worker here to open the visible Playwright browser on this computer.</p>
                 </div>
                 <span id="worker-state" class="state-pill">Offline</span>
               </div>
@@ -229,24 +229,30 @@
                   <span>Worker ID</span>
                   <input id="worker-id" value="local-worker" autocomplete="off">
                 </label>
+                <button id="local-worker-start" class="primary-action" type="button">Start local worker</button>
+                <button id="local-worker-stop" class="secondary-action" type="button">Stop</button>
+              </div>
+              <small id="local-worker-detail" class="worker-detail">The portal will pair this device and inject the worker credential into the local process without exposing it in the page.</small>
+              <details class="advanced-worker">
+                <summary>Advanced manual setup</summary>
                 <button id="worker-pair" class="secondary-action" type="button">Generate pairing token</button>
-              </div>
-              <div id="pairing-output" class="pairing-output" hidden>
-                <div class="pairing-token-row">
-                  <div>
-                    <span>Pairing token</span>
-                    <strong id="pairing-token">--</strong>
-                    <small id="pairing-expiry">Single use token.</small>
+                <div id="pairing-output" class="pairing-output" hidden>
+                  <div class="pairing-token-row">
+                    <div>
+                      <span>Pairing token</span>
+                      <strong id="pairing-token">--</strong>
+                      <small id="pairing-expiry">Single use token.</small>
+                    </div>
+                    <button id="copy-register" class="mini-button" type="button">Copy register</button>
                   </div>
-                  <button id="copy-register" class="mini-button" type="button">Copy register</button>
+                  <pre id="worker-register-command" class="worker-command"></pre>
+                  <div class="pairing-token-row">
+                    <small>After registration returns the credential, run the worker from this repository terminal.</small>
+                    <button id="copy-run-worker" class="mini-button" type="button">Copy run</button>
+                  </div>
+                  <pre id="worker-run-command" class="worker-command"></pre>
                 </div>
-                <pre id="worker-register-command" class="worker-command"></pre>
-                <div class="pairing-token-row">
-                  <small>After registration returns the credential, run the worker from this repository terminal.</small>
-                  <button id="copy-run-worker" class="mini-button" type="button">Copy run</button>
-                </div>
-                <pre id="worker-run-command" class="worker-command"></pre>
-              </div>
+              </details>
             </section>
             <section class="browser-session" aria-label="Visible browser session">
               <div class="session-head">
@@ -279,6 +285,6 @@
     </div>
 
     <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
-    <script src="/static/app.js?v=server-session-auth-1"></script>
+    <script src="/static/app.js?v=local-worker-launcher-1"></script>
   </body>
 </html>

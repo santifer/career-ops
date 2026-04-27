@@ -1,0 +1,19 @@
+{
+  "identifier": "ai-driven-dev",
+  "name": "AI-Driven Dev",
+  "description": "Professional toolkit for AI-driven development workflows — auto-review, test generation, documentation sync, quality gates, and context injection",
+  "version": "0.1.0",
+  "authors": [
+    {
+      "name": "Fernando Xavier",
+      "email": "fernando@example.com"
+    }
+  ],
+  "tags": ["ai-driven-development", "automation", "code-review", "testing", "dx"],
+  "license": "MIT",
+  "capacity": {
+    "skills": { "count": 1 },
+    "agents": { "count": 7 },
+    "hooks": { "count": 0 }
+  }
+}

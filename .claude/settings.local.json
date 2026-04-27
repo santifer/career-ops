@@ -9,7 +9,15 @@
       "Bash(powershell.exe -NoProfile -Command \"[Environment]::GetEnvironmentVariable\\('Path', 'User'\\)\")",
       "Bash(powershell.exe -NoProfile -Command \"[Environment]::GetEnvironmentVariable\\('Path', 'Machine'\\)\")",
       "Bash(powershell.exe -NoProfile -Command \"\\([Environment]::GetEnvironmentVariable\\('Path', 'User'\\)\\).Length\")",
-      "Bash(powershell.exe -NoProfile -Command \"\\([Environment]::GetEnvironmentVariable\\('Path', 'Machine'\\)\\).Length\")"
+      "Bash(powershell.exe -NoProfile -Command \"\\([Environment]::GetEnvironmentVariable\\('Path', 'Machine'\\)\\).Length\")",
+      "Bash(mkdir -p C:/Users/win/.claude/advisor/cache)",
+      "Bash(node C:/Users/win/.claude/plugins/cache/FX-studio-AI/skill-advisor/0.3.1/lib/build-index.js)",
+      "Bash(node C:/Users/win/.claude/plugins/cache/FX-studio-AI/skill-advisor/0.3.1/lib/build-embeddings.js)",
+      "Bash(awk '{printf \"  %-40s %sB\\\\n\", $9, $5}')",
+      "Bash(grep \"\\\\.json$\")",
+      "Bash(awk '{printf \"  %-40s %sB\\\\n\", $NF, $5}')",
+      "Bash(mkdir -p \"C:/Users/win/.claude/plugins/ai-driven-dev-plugin/skills/ai-dev-team\")",
+      "Bash(mkdir -p \"C:/Users/win/.claude/plugins/ai-driven-dev-plugin/hooks\")"
     ]
   }
 }

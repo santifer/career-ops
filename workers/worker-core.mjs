@@ -26,6 +26,44 @@ const loginPatterns = [
   /\bhuman verification\b/i,
 ];
 
+const unsafeFieldTypes = new Set(["file", "password", "hidden", "checkbox", "radio", "button", "submit", "reset", "image"]);
+
+const fillPlanKeyPatterns = [
+  { key: "identity.full_name", patterns: [/\bfull\s*name\b/i, /\bcandidate.*name\b/i, /\byour\s+name\b/i, /\blegal\s+name\b/i, /\bnome completo\b/i] },
+  { key: "identity.email", patterns: [/\bemail\b/i, /\be-mail\b/i, /\bcandidate\[email\]/i] },
+  { key: "identity.phone", patterns: [/\bphone\b/i, /\btelephone\b/i, /\bmobile\b/i, /\bcelular\b/i, /\btelefone\b/i] },
+  { key: "identity.linkedin", patterns: [/\blinkedin\b/i, /\blinked\s*in\b/i] },
+  { key: "identity.github", patterns: [/\bgithub\b/i] },
+  { key: "address.city", patterns: [/\bcity\b/i, /\bcidade\b/i] },
+  { key: "address.country", patterns: [/\bcountry\b/i, /\bpais\b/i] },
+  { key: "identity.location", patterns: [/\bcurrent\s+location\b/i, /\blocation\b/i, /\blocaliza/i] },
+  { key: "availability.notice_period", patterns: [/\bnotice\s+period\b/i, /\bavailability\b/i, /\bavailable\s+from\b/i] },
+  { key: "personal.work_authorization", patterns: [/\bwork\s+authorization\b/i, /\bwork\s+authorisation\b/i, /\bvisa\b/i] },
+  { key: "form.salary_expectation", patterns: [/\bsalary\b/i, /\bcompensation\b/i, /\bpay\b/i, /\bremuneration\b/i] },
+];
+
+const sensitiveDescriptorPatterns = [
+  /\bpassword\b/i,
+  /\bsocial security\b/i,
+  /\bssn\b/i,
+  /\bnational\s+id\b/i,
+  /\bpassport\b/i,
+  /\bdate\s+of\s+birth\b/i,
+  /\bdob\b/i,
+  /\bbirth\s*date\b/i,
+  /\bsalary\b/i,
+  /\bcompensation\b/i,
+  /\bpay\b/i,
+  /\bexpected\s+salary\b/i,
+];
+
+const nonCandidateNamePatterns = [
+  /\bcompany\s+name\b/i,
+  /\breferral\s+name\b/i,
+  /\bhiring\s+manager\s+name\b/i,
+  /\bemployer\b/i,
+];
+
 export function classifyButton(label = "") {
   const text = String(label).trim();
   if (submitPatterns.some((pattern) => pattern.test(text))) {
@@ -42,6 +80,58 @@ export function shouldFillField(fillPlan, key) {
   if (!field) return { allowed: false, reason: "field_not_in_fill_plan" };
   if (field.needs_input || !field.value) return { allowed: false, reason: field.reason || "field_needs_input" };
   return { allowed: true, value: field.value, sensitive: Boolean(field.sensitive) };
+}
+
+export function inferFillPlanKey(descriptor = {}) {
+  const haystack = descriptorText(descriptor);
+  if (!haystack) return "";
+  if (nonCandidateNamePatterns.some((pattern) => pattern.test(haystack))) return "";
+  const match = fillPlanKeyPatterns.find(({ patterns }) => patterns.some((pattern) => pattern.test(haystack)));
+  return match?.key || "";
+}
+
+export function shouldFillObservedField(fillPlan, descriptor = {}) {
+  if (fillPlan?.low_fit?.blocked) return { allowed: false, reason: "low_fit_blocked" };
+  const type = String(descriptor.type || "text").trim().toLowerCase() || "text";
+  if (unsafeFieldTypes.has(type)) return { allowed: false, reason: "unsafe_field_type" };
+  if (!isSafeTextLikeField(type, descriptor)) return { allowed: false, reason: "unsafe_field_type" };
+  if (isSensitiveDescriptor(descriptor)) return { allowed: false, reason: "sensitive_observed_field" };
+
+  const key = inferFillPlanKey(descriptor);
+  if (!key) return { allowed: false, reason: "field_not_mapped" };
+  const decision = shouldFillField(fillPlan, key);
+  if (!decision.allowed) return { ...decision, key };
+  if (decision.sensitive) return { allowed: false, key, reason: "sensitive_fill_plan_field" };
+  return { allowed: true, key, value: decision.value, sensitive: false };
+}
+
+export function fillPlanSafetyGate(fillPlan = {}) {
+  if (fillPlan?.low_fit?.blocked) {
+    return { blocked: true, reason: "low_fit_override_required" };
+  }
+  return { blocked: false };
+}
+
+export function buildFillAnswerSummary(decision = {}) {
+  return `filled_from_profile:${cleanText(decision.key) || "unknown"}`;
+}
+
+export function buildObservedFieldSummary(descriptor = {}) {
+  const value = descriptor.value;
+  const hasValue = value !== undefined && value !== null && String(value) !== "";
+  return stripEmpty({
+    tagName: descriptor.tagName ? String(descriptor.tagName).toLowerCase() : undefined,
+    type: descriptor.type ? String(descriptor.type).toLowerCase() : undefined,
+    label: cleanText(descriptor.label),
+    name: cleanText(descriptor.name),
+    id: cleanText(descriptor.id),
+    placeholder: cleanText(descriptor.placeholder),
+    required: Boolean(descriptor.required),
+    visible: descriptor.visible === undefined ? undefined : Boolean(descriptor.visible),
+    checked: descriptor.checked === undefined ? undefined : Boolean(descriptor.checked),
+    hasValue,
+    sensitive: isSensitiveDescriptor(descriptor),
+  });
 }
 
 export function shouldUploadPDF(fillPlan) {
@@ -72,6 +162,34 @@ export function detectLoginGate(text = "") {
     return { blocked: true, reason: "login_or_verification_required" };
   }
   return { blocked: false };
+}
+
+function isSafeTextLikeField(type, descriptor) {
+  if (String(descriptor.tagName || "").toLowerCase() === "textarea") return true;
+  return ["", "text", "email", "tel", "url", "search"].includes(type);
+}
+
+function isSensitiveDescriptor(descriptor = {}) {
+  return sensitiveDescriptorPatterns.some((pattern) => pattern.test(descriptorText(descriptor)));
+}
+
+function descriptorText(descriptor = {}) {
+  return [
+    descriptor.label,
+    descriptor.name,
+    descriptor.id,
+    descriptor.placeholder,
+    descriptor.type,
+    descriptor.autocomplete,
+  ].map(cleanText).filter(Boolean).join(" ");
+}
+
+function cleanText(value) {
+  return String(value ?? "").trim();
+}
+
+function stripEmpty(object) {
+  return Object.fromEntries(Object.entries(object).filter(([, value]) => value !== undefined && value !== ""));
 }
 
 export function parseArgs(argv = process.argv.slice(2)) {

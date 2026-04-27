@@ -61,6 +61,7 @@ func BuildFillPlanWithApplication(run RunRecord, profile ApplicationProfile, app
 	plan.addField("identity.github", "GitHub", profile.Identity.GitHub, false)
 	plan.addField("address.city", "City", profile.Address.City, false)
 	plan.addField("address.country", "Country", profile.Address.Country, false)
+	plan.addField("identity.location", "Location", formatProfileLocation(profile.Address), false)
 	plan.addField("personal.work_authorization", "Work authorization", firstNonEmpty(profile.FormAnswers.WorkAuthorization, profile.Personal.WorkAuthorization), true)
 	plan.addField("availability.notice_period", "Notice period", firstNonEmpty(profile.FormAnswers.NoticePeriod, profile.Availability.NoticePeriod), false)
 	plan.addField("form.salary_expectation", "Salary expectation", profile.FormAnswers.SalaryExpectation, true)
@@ -107,6 +108,10 @@ func (p *FillPlan) addField(key string, label string, value string, sensitive bo
 func formatProfilePhone(phone ProfilePhone) string {
 	parts := []string{strings.TrimSpace(phone.CountryCode), strings.TrimSpace(phone.Number)}
 	return strings.TrimSpace(strings.Join(nonEmpty(parts), " "))
+}
+
+func formatProfileLocation(address ProfileAddress) string {
+	return strings.Join(nonEmpty([]string{address.City, address.Country}), ", ")
 }
 
 func firstNonEmpty(values ...string) string {

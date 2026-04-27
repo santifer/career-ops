@@ -46,3 +46,64 @@ https://br.linkedin.com/jobs/view/gerente-business-controller-marketing-vaga-afi
 https://br.linkedin.com/jobs/view/manufacturing-controller-at-solventum-4369669245 | Solventum | Manufacturing Controller | 2026-04-21 | Active
 https://br.linkedin.com/jobs/view/plant-controller-at-cimento-nacional-4381298692 | Cimento Nacional | Plant Controller | 2026-04-21 | Active
 https://br.linkedin.com/jobs/view/controller-h%C3%ADbrido-s%C3%A3o-paulo-sp-at-pulsus-4385737082 | Pulsus | Controller (Híbrido/SP) | 2026-04-21 | Active
+https://www.roberthalf.com.br/vagas?search=controller | Robert Half Brazil | Portal listing (25+ roles) | 2026-04-26 | 1 relevant match
+https://www.hays.com.br/vagas?keywords=controller&location=sao-paulo | Hays Brazil | Portal listing | 2026-04-26 | No controller roles listed
+https://www.michaelpage.com.br/vagas?keywords=controller | Michael Page Brazil | Portal listing | 2026-04-26 | Page not found (URL changed)
+https://www.linkedin.com/jobs/view/4400213834 | Confidential | Head of Accounting & Treasury (LATAM) | 2026-04-26 | Still active (reconfirmed)
+https://boards.greenhouse.io/jnj | J&J Greenhouse | Portal listing | 2026-04-26 | Timeout
+https://careers.unilever.com/search/?q=controller&locationsearch=Brazil | Unilever Careers | Portal listing | 2026-04-26 | Timeout
+https://www.catho.com.br/vagas/controller-financeiro?faixa_salario=15000 | Catho | Controller Financeiro search | 2026-04-26 | 1 relevant (Confidencial SP R$15k+)
+https://www.catho.com.br/vagas/gerente-controladoria | Catho | Gerente de Controladoria search | 2026-04-26 | 2 relevant (MercadoCar SP, ACTUAL Campinas-skipped)
+https://www.catho.com.br/vagas/head-contabilidade | Catho | Head Contabilidade search | 2026-04-26 | 1 relevant (Confidencial Barueri R$15k)
+https://www.catho.com.br/vagas/head-financeiro | Catho | Head Financeiro search | 2026-04-26 | 5 relevant (filtered)
+https://www.indeed.com.br/jobs?q=controller+financeiro&l=Sao+Paulo | Indeed Brazil | Controller search | 2026-04-26 | Blocked (URL format error)
+https://www.linkedin.com/jobs/search/?keywords=Controller+LATAM&location=Sao+Paulo | LinkedIn | Controller LATAM search | 2026-04-26 | Playwright down
+https://www.linkedin.com/jobs/search/?keywords=Head+of+Accounting&location=Brazil | LinkedIn | Head of Accounting search | 2026-04-26 | Playwright down
+https://www.google.com/search?q=controller+financeiro+vagas+sao+paulo+2026 | Google WebSearch | Broad controller search | 2026-04-26 | Empty (backend failure)
+https://www.google.com/search?q=head+of+accounting+brazil+job+2026 | Google WebSearch | Head of Accounting search | 2026-04-26 | Empty (backend failure)
+boards-api.greenhouse.io/v1/boards/ | Greenhouse API | 88+ company boards | 2026-04-26 | No Brazil controller roles
+api.lever.co/v0/postings/ | Lever API | 30+ company boards | 2026-04-26 | No Brazil controller roles
+api.ashbyhq.com/posting-api/ | Ashby API | Public endpoint | 2026-04-26 | Unauthorized
+
+# Session 2 — 2026-04-26 LinkedIn + Robert Half (Playwright)
+https://www.linkedin.com/jobs/search/?keywords=Controller&location=Brazil&f_TPR=r86400 | LinkedIn | Controller Brazil 24h | 2026-04-26 | 286 results, 2 relevant (CE, RS — outside SP)
+https://www.linkedin.com/jobs/search/?keywords=Controller&location=Sao%20Paulo%2C%20Brazil | LinkedIn | Controller Sao Paulo | 2026-04-26 | 2605 results, 6 relevant page 1-2
+https://www.linkedin.com/jobs/search/?keywords=Head%20of%20Accounting&location=Brazil | LinkedIn | Head of Accounting Brazil | 2026-04-26 | 7 results, 4 relevant
+https://www.linkedin.com/jobs/search/?keywords=Accounting%20Manager&location=Sao%20Paulo%2C%20Brazil | LinkedIn | Accounting Manager SP | 2026-04-26 | 7 results, 3 new relevant
+https://www.linkedin.com/jobs/search/?keywords=Gerente%20de%20Controladoria&location=Brazil | LinkedIn | Gerente Controladoria Brazil | 2026-04-26 | 7 results, 2 new relevant
+https://www.linkedin.com/jobs/search/?keywords=Diretor%20de%20Contabilidade&location=Brazil | LinkedIn | Diretor Contabilidade Brazil | 2026-04-26 | 7 results, 1 new relevant (Transfer Pricing)
+https://www.linkedin.com/jobs/search/?keywords=FP%26A%20Manager&location=Sao%20Paulo%2C%20Brazil | LinkedIn | FP&A Manager SP | 2026-04-26 | 7 results, 1 new relevant
+https://www.linkedin.com/jobs/search/?keywords=Gerente%20Financeiro&location=Sao%20Paulo%2C%20Brazil | LinkedIn | Gerente Financeiro SP | 2026-04-26 | 7 results, 5 new relevant
+https://www.linkedin.com/jobs/search/?keywords=Consolidation%20Manager&location=Brazil | LinkedIn | Consolidation Manager Brazil | 2026-04-26 | 7 results, 1 new relevant (Tax Manager)
+https://www.linkedin.com/jobs/collections/recommended/ | LinkedIn | Recommended Jobs | 2026-04-26 | 7 results, 2 new relevant (Gerente de Controladoria x2)
+https://www.roberthalf.com/br/pt/vagas/all/controller | Robert Half | Controller search | 2026-04-26 | 975 results (unfiltered), 2 relevant (Gerente Financeiro SBC, Gerente Adm Fin Campinas)
+https://www.linkedin.com/jobs/view/4404453013 | Kajae | Controller | 2026-04-26 | new
+https://www.linkedin.com/jobs/view/4398033680 | Somewhere | Financial Controller | 2026-04-26 | new
+https://www.linkedin.com/jobs/view/4388168219 | 4flow | Controlling Manager | 2026-04-26 | new
+https://www.linkedin.com/jobs/view/4406606884 | Getnet | Controller Manager | 2026-04-26 | new
+https://www.linkedin.com/jobs/view/4398015438 | ? | Gerente Corporativo Contabilidade e Consolidacao | 2026-04-26 | new
+https://www.linkedin.com/jobs/view/4392106846 | ? | Financial Planning and Analysis Manager | 2026-04-26 | new
+https://www.linkedin.com/jobs/view/4400927541 | ? | Finance and Accounting Manager | 2026-04-26 | new
+https://www.linkedin.com/jobs/view/4395904040 | Weem | FP&A Manager | 2026-04-26 | new
+https://www.linkedin.com/jobs/view/4387437240 | Scatec ASA | Senior Accounting Tax and Reporting Manager | 2026-04-26 | new
+https://www.linkedin.com/jobs/view/4387427126 | ? | Accounting Manager | 2026-04-26 | new
+https://www.linkedin.com/jobs/view/4403973816 | ? | Accounting Manager | 2026-04-26 | new
+https://www.linkedin.com/jobs/view/4391150968 | ? | GTM FP&A Manager Professional Services | 2026-04-26 | new
+https://www.linkedin.com/jobs/view/4405078056 | ? | Senior Manager Controllership | 2026-04-26 | new
+https://www.linkedin.com/jobs/view/4394931882 | ? | Gerente Financeiro Senior | 2026-04-26 | new
+https://www.linkedin.com/jobs/view/4400792843 | ? | Remote Construction Accounting Controller | 2026-04-26 | new
+https://www.linkedin.com/jobs/view/4403407132 | ? | Business Controller | 2026-04-26 | new
+https://www.linkedin.com/jobs/view/4398365716 | ? | Manager Accounting | 2026-04-26 | new
+https://www.linkedin.com/jobs/view/4403651277 | ? | Senior Transfer Pricing Manager AMS | 2026-04-26 | new
+https://www.linkedin.com/jobs/view/4398058469 | ? | FP&A Manager | 2026-04-26 | new
+https://www.linkedin.com/jobs/view/4406666247 | ? | Gerente Financeiro LATAM SP | 2026-04-26 | new
+https://www.linkedin.com/jobs/view/4403726990 | ? | Gerente Financeiro LATAM | 2026-04-26 | new
+https://www.linkedin.com/jobs/view/4358631451 | ? | Gerente Financeiro | 2026-04-26 | new
+https://www.linkedin.com/jobs/view/4383434489 | ? | Gerente Financeiro | 2026-04-26 | new
+https://www.linkedin.com/jobs/view/4400457574 | ? | Gerente Financeiro | 2026-04-26 | new
+https://www.linkedin.com/jobs/view/4377140013 | ? | Gerente Financeiro | 2026-04-26 | new
+https://www.linkedin.com/jobs/view/4391709306 | ? | Tax Manager | 2026-04-26 | new
+https://www.linkedin.com/jobs/view/4380040246 | ? | Gerente de Controladoria | 2026-04-26 | new
+https://www.linkedin.com/jobs/view/4404494699 | ? | Gerente de Controladoria | 2026-04-26 | new
+https://www.roberthalf.com/br/pt/vaga/s%C3%A3o-bernardo-do-campo/gerente-financeiro/63640-0013424560-brpt | Robert Half | Gerente Financeiro (SBC) | 2026-04-26 | new
+https://www.roberthalf.com/br/pt/vaga/campinas/gerente-administrativo-financeiro/63660-0013426137-brpt | Robert Half | Gerente Adm Financeiro (Campinas) | 2026-04-26 | new

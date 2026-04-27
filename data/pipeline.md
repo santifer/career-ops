@@ -4,10 +4,57 @@ URLs to process (one per line):
 
 ## Pendentes — Scan 2026-04-24
 
-- [ ] https://br.linkedin.com/jobs/view/accounting-director-brazil-controller-at-access-gest%C3%A3o-de-informa%C3%A7%C3%A3o-4364195821 | Access | Accounting Director / Brazil Controller
-- [ ] https://br.linkedin.com/jobs/view/controller-at-lhh-4379884146 | LHH | Controller
-- [ ] https://br.linkedin.com/jobs/view/latam-business-controller-at-axon-4309356153 | Axon | LATAM Business Controller
-- [ ] https://br.linkedin.com/jobs/view/controller-brasil-at-bridgestone-latin-america-south-4380629757 | Bridgestone Latin America South | Controller Brasil
+- [!] #038 | https://br.linkedin.com/jobs/view/accounting-director-brazil-controller-at-access-gest%C3%A3o-de-informa%C3%A7%C3%A3o-4364195821 | Access | Accounting Director / Brazil Controller | FECHADA
+- [x] EVAL | https://br.linkedin.com/jobs/view/controller-at-lhh-4379884146 | LHH | Controller | 3.5/5 | multinacional manufatura (confidencial), IFRS+CRC+team lead, ressalva tax/TP emphasis
+- [x] EVAL | https://br.linkedin.com/jobs/view/latam-business-controller-at-axon-4309356153 | Axon | LATAM Business Controller | 4.0/5 | US public (NASDAQ), SOX+US GAAP+BR GAAP, greenfield entity setup, 10+yr, CRC
+- [!] #039 | https://br.linkedin.com/jobs/view/controller-brasil-at-bridgestone-latin-america-south-4380629757 | Bridgestone | Controller Brasil | FECHADA
+
+## Pendentes — Scan 2026-04-26
+
+- [x] EVAL | RH-Br | Gerente Administrativo Financeiro | Technology company (Campinas-SP) | Robert Half Brazil | 3.8/5, multi-country BR/MX/US/PT, FP&A+controladoria+audit, presencial Campinas
+- [ ] Catho | Controller Financeiro | Empresa Confidencial (Sao Paulo) | Catho.com.br | R$15,000+, atualizado 23/04, Catho registration required
+- [ ] Catho | Gerente de Controladoria | MercadoCar Shopping (Sao Paulo) | Catho.com.br | Salario a combinar, Catho registration required
+- [ ] Catho | Head Financeiro Contabil e Fiscal | Empresa Confidencial (Barueri) | Catho.com.br | R$15,000, Catho registration required
+- [ ] Catho | Gerente Financeiro | Empresa Confidencial (Sao Paulo) | Catho.com.br | Salario a combinar, secondary target, Catho registration required
+- [ ] Catho | Controller Financeiro | ELO Consultoria Empresarial (Sao Paulo) | Catho.com.br | Salario a combinar, Catho registration required
+- [ ] Catho | Contador/Controller | Empresa Confidencial (Sao Paulo) | Catho.com.br | Salario a combinar + 8 beneficios, Catho registration required
+- [ ] Catho | Contador/Controller | DXN Brasil (Sao Paulo) | Catho.com.br | Salario a combinar, Catho registration required
+
+### LinkedIn — Tier 0 (2026-04-26 session 2)
+
+- [x] #040 | https://www.linkedin.com/jobs/view/4404453013 | Kajae | Controller (LATAM, Remote) | 2.8/5 | PDF ❌
+- [x] #041 | https://www.linkedin.com/jobs/view/4398033680 | Somewhere | Financial Controller (LATAM, Remote) | 3.0/5 | PDF ❌
+- [x] #035 | https://www.linkedin.com/jobs/view/4388168219 | 4flow | Controlling Manager | 3.6/5 | PDF ⏳
+- [x] #034 | https://www.linkedin.com/jobs/view/4406606884 | Getnet | Controller Manager | 4.3/5 | PDF ⏳
+- [x] #037 | https://www.linkedin.com/jobs/view/4398015438 | [Confidencial] | Gerente Corporativo de Contabilidade e Consolidacao | 4.5/5 | PDF ⏳
+- [x] SKIP | https://www.linkedin.com/jobs/view/4392106846 | Confidential | FP&A Manager | 2.0/5 | PDF ❌ | 1/10 skill match, JD nao carregou
+- [x] SKIP | https://www.linkedin.com/jobs/view/4400927541 | Trivium Group | Finance and Accounting Manager | SKIP | remote, no location
+- [x] EVAL | https://www.linkedin.com/jobs/view/4395904040 | Kraft Heinz (Weem) | FP&A Manager | 3.5/5 | PDF ❌ | ZBB+P&L+cash flow, zona LATAM, presencial SP, seniority overmatch (4-7yr req)
+- [x] #036 | https://www.linkedin.com/jobs/view/4387437240 | Scatec ASA | Senior Accounting, Tax and Reporting Manager | 4.1/5 | PDF ⏳
+- [x] SKIP | https://www.linkedin.com/jobs/view/4387427126 | Hire With Near | Accounting Manager | SKIP | staff augmentation
+- [x] SKIP | https://www.linkedin.com/jobs/view/4403973816 | Somewhere | Accounting Manager | SKIP | staff augmentation
+- [x] SKIP | https://www.linkedin.com/jobs/view/4391150968 | GitLab | GTM FP&A Manager | SKIP | GTM/Professional Services specific
+- [x] EVAL | https://www.linkedin.com/jobs/view/4405078056 | Thomson Reuters | Senior Manager, Controllership | 3.2/5 | PDF ❌ | revenue recognition focused, not general controller
+- [x] SKIP | https://www.linkedin.com/jobs/view/4394931882 | Edelman | Gerente Financeiro Senior | 2.8/5 | PR agency, basic benefits, seniority overmatch
+- [x] SKIP | https://www.linkedin.com/jobs/view/4400792843 | ? | Remote Construction Accounting Controller | SKIP | construction/remote
+- [x] DUP | https://www.linkedin.com/jobs/view/4403407132 | Konecranes | Business Controller | DUPLICATE #018
+- [x] SKIP | https://www.linkedin.com/jobs/view/4398365716 | Echo Base Global | Manager, Accounting | 2.8/5 | crypto shrinking (77→37), seniority overmatch
+- [x] SKIP | https://www.linkedin.com/jobs/view/4403651277 | ? | Senior Transfer Pricing Manager | SKIP | Transfer Pricing
+- [x] SKIP | https://www.linkedin.com/jobs/view/4398058469 | Monks | FP&A Manager | 2.5/5 | advertising/agency specific, industry gap
+- [x] EVAL | https://www.linkedin.com/jobs/view/4406666247 | CBRE Brasil | Gerente Financeiro LATAM | 3.8/5 | presencial SP, LATAM scope, Big 4 preferred
+- [x] DUP | https://www.linkedin.com/jobs/view/4403726990 | CBRE Brasil | Gerente Financeiro LATAM | DUPLICATE of 4406666247
+- [x] SKIP | https://www.linkedin.com/jobs/view/4358631451 | Abler Vagas | Gerente Financeiro | 2.5/5 | generic, basic benefits, seniority overmatch
+- [x] SKIP | https://www.linkedin.com/jobs/view/4383434489 | RDC Entretenimento | Gerente Financeiro | SKIP | entertainment sector
+- [x] EVAL | https://www.linkedin.com/jobs/view/4400457574 | Empresa Confidencial | Gerente Financeiro | 3.7/5 | country finance scope, CSRD/EU multinational, M&A, treasury
+- [x] SKIP | https://www.linkedin.com/jobs/view/4377140013 | Excellance | Gerente Financeiro | 2.3/5 | turnaround consulting, brief JD
+- [x] SKIP | https://www.linkedin.com/jobs/view/4391709306 | ? | Tax Manager | SKIP | Tax domain
+- [x] DUP | https://www.linkedin.com/jobs/view/4380040246 | Educbank | Gerente de Controladoria | DUPLICATE #033
+- [x] EVAL | https://www.linkedin.com/jobs/view/4404494699 | PlayHub | Gerente de Controladoria | 3.5/5 | startup presencial Paulista
+
+### Robert Half — Tier 0 (2026-04-26 session 2)
+
+- [x] SKIP | https://www.roberthalf.com/br/pt/vaga/s%C3%A3o-bernardo-do-campo/gerente-financeiro/63640-0013424560-brpt | Robert Half | Gerente Financeiro (Sao Bernardo do Campo) | 2.0/5 | operational, mid-size importer, hands-on
+- [x] EVAL | https://www.roberthalf.com/br/pt/vaga/campinas/gerente-administrativo-financeiro/63660-0013426137-brpt | Robert Half | Gerente Administrativo Financeiro (Campinas) | 3.8/5 | multi-country BR/MX/US/PT, tech, FP&A+controladoria+audit
 
 ## Processadas
 

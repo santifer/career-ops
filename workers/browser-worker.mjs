@@ -1,6 +1,15 @@
 #!/usr/bin/env node
 import { chromium } from "playwright";
-import { parseArgs, detectLoginGate, heartbeatPayload, shouldParkForManualInput } from "./worker-core.mjs";
+import {
+  parseArgs,
+  buildFillAnswerSummary,
+  buildObservedFieldSummary,
+  detectLoginGate,
+  fillPlanSafetyGate,
+  heartbeatPayload,
+  shouldFillObservedField,
+  shouldParkForManualInput,
+} from "./worker-core.mjs";
 
 const pollIntervalMs = 5000;
 
@@ -60,9 +69,15 @@ async function processRun(options, context, run) {
   const claimed = await claimRun(options, run.id);
   const stopHeartbeat = startHeartbeat(options, claimed.id);
   let parked = false;
-  const fillPlan = await getFillPlan(options, claimed.id);
-  const page = context.pages()[0] || await context.newPage();
   try {
+    const fillPlan = await getFillPlan(options, claimed.id);
+    const safetyGate = fillPlanSafetyGate(fillPlan);
+    if (safetyGate.blocked) {
+      await needsInput(options, claimed.id, safetyGate.reason);
+      await log(options, claimed.id, "Paused before opening the job page because the run requires a user override.", fillPlan.target_url);
+      return { parked: false };
+    }
+    const page = context.pages()[0] || await context.newPage();
     await heartbeat(options, claimed.id);
     await log(options, claimed.id, "Opening visible application page.", fillPlan.target_url);
     await page.goto(fillPlan.target_url, { waitUntil: "domcontentloaded" });
@@ -78,13 +93,88 @@ async function processRun(options, context, run) {
       }
       return { parked: false };
     }
-    await log(options, claimed.id, "Visible browser opened; fill automation is waiting for field mapper batch.", page.url());
+    const fieldResult = await observeAndFillSafeFields(options, claimed.id, page, fillPlan);
+    await log(options, claimed.id, `Visible browser inspected ${fieldResult.observed} fields and filled ${fieldResult.filled} safe fields.`, page.url());
+    await readyForReview(options, claimed.id, "worker_inspected_visible_form");
     return { parked: false };
   } finally {
     if (!parked) {
       stopHeartbeat();
     }
   }
+}
+
+async function observeAndFillSafeFields(options, runID, page, fillPlan) {
+  const fields = await page.locator("input, textarea, select").all();
+  const observations = [];
+  let filled = 0;
+
+  for (const field of fields) {
+    const descriptor = await describeField(field).catch(() => null);
+    if (!descriptor) continue;
+
+    const summary = buildObservedFieldSummary(descriptor);
+    const decision = shouldFillObservedField(fillPlan, summary);
+    const visible = Boolean(summary.visible);
+    const observation = {
+      label: summary.label || summary.name || summary.id || summary.placeholder || "Unlabeled field",
+      type: summary.type || summary.tagName || "unknown",
+      required: Boolean(summary.required),
+      visible,
+      sensitive: Boolean(summary.sensitive || decision.sensitive),
+    };
+
+    if (decision.allowed && visible) {
+      await field.fill(String(decision.value));
+      filled += 1;
+      observation.source_used = "profile_fill_plan";
+      observation.answer_summary = buildFillAnswerSummary(decision);
+    } else if (!decision.allowed) {
+      observation.unresolved_reason = decision.reason;
+    }
+
+    observations.push(observation);
+  }
+
+  if (observations.length > 0) {
+    const reason = observations.find((field) => field.required && field.visible && field.unresolved_reason)?.unresolved_reason || "";
+    await fieldObservation(options, runID, observations, reason);
+  }
+
+  return { observed: observations.length, filled };
+}
+
+async function describeField(locator) {
+  const visible = await locator.isVisible().catch(() => false);
+  return locator.evaluate((element, visibleValue) => {
+    const labelFromElement = () => {
+      if (element.labels && element.labels.length > 0) {
+        return Array.from(element.labels).map((label) => label.innerText || label.textContent || "").join(" ").trim();
+      }
+      const id = element.getAttribute("id");
+      if (id) {
+        const explicit = document.querySelector(`label[for="${CSS.escape(id)}"]`);
+        if (explicit) return (explicit.innerText || explicit.textContent || "").trim();
+      }
+      const wrapper = element.closest("label");
+      if (wrapper) return (wrapper.innerText || wrapper.textContent || "").trim();
+      return "";
+    };
+
+    return {
+      tagName: element.tagName,
+      type: element.getAttribute("type") || (element.tagName.toLowerCase() === "select" ? "select-one" : "text"),
+      label: labelFromElement(),
+      name: element.getAttribute("name") || "",
+      id: element.getAttribute("id") || "",
+      placeholder: element.getAttribute("placeholder") || "",
+      autocomplete: element.getAttribute("autocomplete") || "",
+      required: Boolean(element.required),
+      visible: visibleValue,
+      checked: Boolean(element.checked),
+      value: element.value || "",
+    };
+  }, visible);
 }
 
 async function claimRun(options, runID) {
@@ -127,6 +217,20 @@ async function log(options, runID, message, url = "") {
 
 async function needsInput(options, runID, reason) {
   await workerFetch(options, `/api/worker/runs/${encodeURIComponent(runID)}/needs-input`, {
+    method: "POST",
+    body: JSON.stringify({ reason }),
+  }).catch(() => {});
+}
+
+async function fieldObservation(options, runID, fields, reason = "") {
+  await workerFetch(options, `/api/worker/runs/${encodeURIComponent(runID)}/field-observation`, {
+    method: "POST",
+    body: JSON.stringify({ fields, reason }),
+  }).catch(() => {});
+}
+
+async function readyForReview(options, runID, reason = "") {
+  await workerFetch(options, `/api/worker/runs/${encodeURIComponent(runID)}/ready-for-review`, {
     method: "POST",
     body: JSON.stringify({ reason }),
   }).catch(() => {});
