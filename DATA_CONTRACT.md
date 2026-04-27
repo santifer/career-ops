@@ -21,6 +21,7 @@ These files contain your personal data, customizations, and work product. Update
 | `reports/*` | Your evaluation reports |
 | `output/*` | Your generated PDFs |
 | `jds/*` | Your saved job descriptions |
+| `~/.scan-auth/<portal>/profile/` | Your browser profile for authenticated scanning |
 
 ## System Layer (safe to auto-update)
 
@@ -32,6 +33,7 @@ These files contain system logic, scripts, templates, and instructions that impr
 | `modes/oferta.md` | Evaluation mode instructions |
 | `modes/pdf.md` | PDF generation instructions |
 | `modes/scan.md` | Portal scanner instructions |
+| `modes/scan-auth.md` | Authenticated portal scanner instructions |
 | `modes/batch.md` | Batch processing instructions |
 | `modes/apply.md` | Application assistant instructions |
 | `modes/auto-pipeline.md` | Auto-pipeline instructions |
@@ -52,6 +54,7 @@ These files contain system logic, scripts, templates, and instructions that impr
 | `CLAUDE.md` | Agent instructions |
 | `AGENTS.md` | Codex instructions |
 | `*.mjs` | Utility scripts |
+| `scan-auth/*.mjs` | Portal scanner classes |
 | `batch/batch-prompt.md` | Batch worker prompt |
 | `batch/batch-runner.sh` | Batch orchestrator |
 | `dashboard/*` | Go TUI dashboard |

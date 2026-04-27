@@ -72,6 +72,7 @@ Built by someone who used it to evaluate 740+ job offers, generate 100+ tailored
 | **Negotiation Scripts** | Salary negotiation frameworks, geographic discount pushback, competing offer leverage |
 | **ATS PDF Generation** | Keyword-injected CVs with Space Grotesk + DM Sans design |
 | **Portal Scanner** | 45+ companies pre-configured (Anthropic, OpenAI, ElevenLabs, Retool, n8n...) + custom queries across Ashby, Greenhouse, Lever, Wellfound |
+| **Authenticated Scanner** | Playwright-based scanner with persistent browser profiles for portals requiring login (LinkedIn). Extensible per-portal scanner classes (`scan-auth/<portal>.mjs`) |
 | **Batch Processing** | Parallel evaluation with `claude -p` workers |
 | **Dashboard TUI** | Terminal UI to browse, filter, and sort your pipeline |
 | **Human-in-the-Loop** | AI evaluates and recommends, you decide and act. The system never submits an application -- you always have the final call |
@@ -166,6 +167,7 @@ Career-ops is a single slash command with multiple modes:
 /career-ops                → Show all available commands
 /career-ops {paste a JD}   → Full auto-pipeline (evaluate + PDF + tracker)
 /career-ops scan           → Scan portals for new offers
+/career-ops scan-auth      → Authenticated portal scan (LinkedIn etc.)
 /career-ops pdf            → Generate ATS-optimized CV
 /career-ops batch          → Batch evaluate multiple offers
 /career-ops tracker        → View application status
@@ -216,6 +218,62 @@ The scanner comes with **45+ companies** ready to scan and **19 search queries**
 
 **Job boards searched:** Ashby, Greenhouse, Lever, Wellfound, Workable, RemoteFront
 
+## LinkedIn Scanner
+
+The standard portal scanner can't access LinkedIn (login wall). The LinkedIn scanner uses Playwright with a persistent browser profile to search LinkedIn with your authenticated session.
+
+### Setup
+
+```bash
+# Install (already included in dependencies)
+npx playwright install chromium
+
+# Log in once — opens a browser, you log in manually, session is saved
+node scan-auth.mjs --login linkedin
+```
+
+### Usage
+
+```bash
+# Run a scan
+node scan-auth.mjs linkedin
+
+# Or through Claude
+/career-ops scan-auth
+```
+
+### Configuration
+
+Add a `linkedin_searches` section to `portals.yml`:
+
+```yaml
+linkedin_searches:
+  date_posted: Week                        # Options: 24, Week, Month
+  experience_level: [Senior, Manager]      # Options: Entry-level, Senior, Manager, Director, Executive
+  max_results_per_search: 25
+  keywords:
+    - AI Engineer
+    - Software Engineer
+  employer_blocklist: [Staffing Agency]    # Skip these companies (case-insensitive, exact match)
+```
+
+### How it works
+
+For each keyword, the scanner builds a search URL and iterates through job cards on the results page. Per card:
+
+1. **Extract preview** — reads title, company, and location from the card DOM (no click)
+2. **Check viewed** — skips cards LinkedIn marks as already opened
+3. **Pre-click filters** — employer blocklist, cross-portal dedup (checks both LinkedIn job IDs and company::title keys from Greenhouse/Ashby/Lever scans), and title keyword filter
+4. **Click and extract** — clicks the card to get the job ID from the URL, expands the JD with "more", scrapes the apply link and full JD text
+5. **Post-click filters** — apply URL validation, JD-level title filter, JD content check
+6. **Save** — writes JD to `jds/`, appends entry to `data/pipeline.md`, records in `data/scan-history.tsv`
+
+Apply URLs are unwrapped from LinkedIn's `/safety/go` redirect. Easy Apply jobs (no external link) use the LinkedIn listing URL as the application URL.
+
+Skipped listings (duplicates, viewed) are also recorded in `scan-history.tsv` for visibility.
+
+Sessions persist at `~/.scan-auth/linkedin/profile/` — you only need to log in once.
+
 ## Dashboard TUI
 
 The built-in terminal dashboard lets you browse your pipeline visually:
@@ -242,12 +300,15 @@ career-ops/
 │   ├── oferta.md                # Single evaluation
 │   ├── pdf.md                   # PDF generation
 │   ├── scan.md                  # Portal scanner
+│   ├── scan-auth.md             # LinkedIn scanner
 │   ├── batch.md                 # Batch processing
 │   └── ...
 ├── templates/
 │   ├── cv-template.html         # ATS-optimized CV template
 │   ├── portals.example.yml      # Scanner config template
 │   └── states.yml               # Canonical statuses
+├── scan-auth/
+│   └── linkedin.mjs             # LinkedIn scanner class
 ├── batch/
 │   ├── batch-prompt.md          # Self-contained worker prompt
 │   └── batch-runner.sh          # Orchestrator script
@@ -270,7 +331,7 @@ career-ops/
 
 - **Agent**: Claude Code with custom skills and modes
 - **PDF**: Playwright/Puppeteer + HTML template
-- **Scanner**: Playwright + Greenhouse API + WebSearch
+- **Scanner**: Playwright + Greenhouse API + WebSearch (public); Playwright + persistent browser profiles (authenticated portals)
 - **Dashboard**: Go + Bubble Tea + Lipgloss (Catppuccin Mocha theme)
 - **Data**: Markdown tables + YAML config + TSV batch files
 
