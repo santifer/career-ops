@@ -9,6 +9,22 @@ Classer l'offre dans l'un des 6 archetypes (voir `_shared.md`). Si hybride, indi
 - Comment reecrire le summary dans le bloc E
 - Quelles stories STAR preparer dans le bloc F
 
+## Etape 0.5 -- Charger la calibration du scoring loop
+
+Lire `data/scoring-calibration.yml`. Pour chaque entree avec `active: true` dont l'`archetype` correspond a celui detecte a l'Etape 0 (match exact OU `archetype: "*"` qui s'applique a tous), appliquer `adjustment` au score final.
+
+**Comment appliquer :**
+- Si `dimension` commence par `score_bucket.high|mid|low`, `adjustment` est additionne au score global uniquement si predicted_score tombe dans ce bucket.
+- Si `dimension` commence par `signals.X`, considerer l'ajustement si l'offre presente ce signal (ex. : `signals.company_size_lt_50` si team_size < 50).
+- Si `dimension` commence par `Block_X_*`, enregistrer l'ajustement comme note qualitative dans le bloc correspondant -- ne pas additionner directement.
+
+**Dans le header du report :**
+- Ajouter la ligne `**Calibrations actives :** N` ou N est le nombre d'entrees appliquees.
+- Si N > 0, lister les IDs sur la ligne suivante (`**Calibrations appliquees :** {id1}, {id2}`).
+- Si calibration.yml est vide ou sans match : ecrire `**Calibrations actives :** 0` -- ne pas omettre, cela signale que le systeme a verifie.
+
+**Principe :** la calibration est un indice, pas une formule. Si elle contredit un jugement qualitatif clair (ex. : offre clairement off-target), tu peux l'ignorer et le justifier en une phrase.
+
 ## Bloc A -- Resume du role
 
 Tableau avec :

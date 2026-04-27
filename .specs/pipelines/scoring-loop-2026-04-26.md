@@ -159,5 +159,23 @@ npm run test:learn
 
 - Rotação anual em `scoring-events-{ano}.jsonl`
 - Loops 2-5 (recruiter-lens, archetype, CV variation, scan)
-- Análise de signals.X (company_size, stage) além de archetype × bucket
 - Dashboard visual no cockpit Go com hit rate por archetype
+
+## Fixes pós-Reflexion (commit ?)
+
+Após Reflexion crítica, foram aplicados 4 fixes adicionais:
+
+- **C1**: Hook de calibração estendido para `batch/batch-prompt.md` (workers
+  `claude -p` self-contained), `modes/de/angebot.md` (Schritt 0.5),
+  `modes/fr/offre.md` (Étape 0.5). Auto-pipeline herda automaticamente
+  pois delega a `modes/oferta.md`. (`modes/ja/` nunca foi criado.)
+- **M1**: `lib/learn/reflect-analyzer.mjs` ganhou `analyzeSignals()` que
+  detecta padrões em `(archetype × signals.key=value)` vs baseline do
+  archetype. Propõe `dimension: signals.X=Y` quando delta ≥30pp e
+  sample ≥5. Denylist de metadados internos (`tracker_status`,
+  `days_since_status`, etc.) impede ruído.
+- **M2**: Snippet bash multi-line em `modes/reflect.md` Passo 6 substituído
+  por `node lib/learn/save-reflect-state.mjs` (helper portable).
+- **M3**: Guard explícito de `loop_type` em `correct.mjs` (`findLastEventForReport`
+  ignora eventos de outros loops). Eventos legados sem `loop_type` são
+  tratados como `scoring` para backward-compat. 3 testes novos.

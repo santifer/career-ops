@@ -88,16 +88,18 @@ Para cada proposta no array `proposals`:
 Após processar todas as propostas (aprovadas ou rejeitadas):
 
 ```bash
-node -e "
-import('./lib/learn/reflect-analyzer.mjs').then(async ({ saveReflectState }) => {
-  const total = (await import('node:fs/promises')).readFile('data/learn/scoring-events.jsonl', 'utf8').then(t => t.split('\n').filter(Boolean).length);
-  await saveReflectState('data/learn/.reflect-state.json', { last_reflect: new Date().toISOString(), last_event_count: await total });
-})"
+node lib/learn/save-reflect-state.mjs
 ```
 
-(Ou implementar passo equivalente em script — a chave é gravar
-`{ last_reflect, last_event_count }` em `data/learn/.reflect-state.json`
-para o próximo quórum funcionar.)
+O script lê `data/learn/scoring-events.jsonl`, conta as linhas
+(eventos) e grava `data/learn/.reflect-state.json` com:
+
+```json
+{ "last_reflect": "2026-04-26T15:00:00Z", "last_event_count": 42 }
+```
+
+Isso garante que o próximo `/career-ops reflect` calcule corretamente
+`new_events = total - last_event_count` para o quórum.
 
 ### 7. Sumário final ao usuário
 

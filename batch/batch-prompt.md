@@ -51,6 +51,22 @@ Eres un worker de evaluación de ofertas de empleo for the candidate (read name 
 
 Read `cv.md`. Ejecuta TODOS los bloques:
 
+#### Paso 0.5 — Cargar Calibración del Scoring Loop
+
+Lee `data/scoring-calibration.yml`. Para cada entrada con `active: true` cuyo `archetype` coincida con el detectado en el Paso 0 (match exacto O `archetype: "*"` que aplica a todos), aplica el `adjustment` al score final.
+
+**Cómo aplicar:**
+- Si `dimension` empieza con `score_bucket.high|mid|low`, el `adjustment` se suma al score global solo si el predicted_score cae en ese bucket.
+- Si `dimension` empieza con `signals.X`, considerar el ajuste si la oferta exhibe esa señal (ej.: `signals.company_size_lt_50` si team_size < 50).
+- Si `dimension` empieza con `Block_X_*`, registrar el ajuste como nota cualitativa en el bloque correspondiente — no sumar directamente.
+
+**En el header del report:**
+- Añadir línea `**Calibrações ativas:** N` donde N es el número de entradas que coincidieron.
+- Si N > 0, listar IDs aplicados en línea siguiente: `**Calibrações aplicadas:** {id1}, {id2}`.
+- Si calibration.yml está vacío o sin matches → escribir `**Calibrações ativas:** 0`.
+
+**Principio:** la calibración es una pista, no una fórmula. Si contradice juicio cualitativo claro (ej.: oferta obviamente mismatch), puedes ignorarla y justificar en una frase.
+
 #### Paso 0 — Detección de Arquetipo
 
 Clasifica la oferta en uno de los 6 arquetipos. Si es híbrido, indica los 2 más cercanos.
@@ -183,6 +199,7 @@ Donde `{company-slug}` es el nombre de empresa en lowercase, sin espacios, con g
 **Arquetipo:** {detectado}
 **Score:** {X/5}
 **Legitimacy:** {High Confidence | Proceed with Caution | Suspicious}
+**Calibrações ativas:** {N}
 **URL:** {URL de la oferta original}
 **PDF:** career-ops/output/cv-candidate-{company-slug}-{{DATE}}.pdf
 **Batch ID:** {{ID}}

@@ -9,6 +9,22 @@ Die Stellenanzeige einem der 6 Archetypen zuordnen (siehe `_shared.md`). Bei Hyb
 - Wie das Summary in Block E umgeschrieben wird
 - Welche STAR-Stories in Block F vorbereitet werden
 
+## Schritt 0.5 — Scoring-Loop-Kalibrierung laden
+
+`data/scoring-calibration.yml` lesen. Für jeden Eintrag mit `active: true`, dessen `archetype` zum erkannten Archetyp aus Schritt 0 passt (exakter Match ODER `archetype: "*"` für alle), wird das `adjustment` auf den finalen Score angewendet.
+
+**Anwendung:**
+- Wenn `dimension` mit `score_bucket.high|mid|low` beginnt: `adjustment` zum Gesamtscore addieren, falls predicted_score in den jeweiligen Bucket fällt.
+- Wenn `dimension` mit `signals.X` beginnt: anpassen, falls die Stelle dieses Signal aufweist (z. B. `signals.company_size_lt_50` falls Teamgröße < 50).
+- Wenn `dimension` mit `Block_X_*` beginnt: als qualitative Notiz im entsprechenden Block vermerken — nicht direkt addieren.
+
+**Im Report-Header:**
+- Zeile `**Kalibrierungen aktiv:** N` hinzufügen, wobei N die Zahl der angewandten Einträge ist.
+- Wenn N > 0: in der nächsten Zeile IDs nennen (`**Angewandte Kalibrierungen:** {id1}, {id2}`).
+- Wenn calibration.yml leer ist oder kein Match: `**Kalibrierungen aktiv:** 0` schreiben — nicht weglassen, das signalisiert, dass das System geprüft hat.
+
+**Prinzip:** Die Kalibrierung ist ein Hinweis, keine Formel. Wenn sie qualitativen Befunden eindeutig widerspricht (z. B. offensichtlicher Mismatch), darfst du sie ignorieren und in einem Satz begründen.
+
 ## Block A — Rollen-Zusammenfassung
 
 Tabelle mit:
