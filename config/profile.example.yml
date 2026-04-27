@@ -11,6 +11,10 @@ candidate:
   portfolio_url: "https://janesmith.dev"
   github: "github.com/janesmith"
   twitter: "https://x.com/janesmith"
+  # (Optional) Canva resume design ID for visual CV generation via /career-ops pdf.
+  # Find it in your Canva design URL: https://www.canva.com/design/DAxxxxxxx/...
+  # The ID starts with "D" and is 11 characters long.
+  # canva_resume_design_id: "DAxxxxxxxxx"
 
 target_roles:
   # Your North Star roles — what you're optimizing for
@@ -66,9 +70,15 @@ location:
   # For remote roles outside your country:
   # onsite_availability: "1 week/month in any city"
 
-cv:
-  output_format: "html" # "html" (default) or "latex"
-  # (Optional) Canva resume design ID for visual CV generation via /career-ops pdf.
-  # Find it in your Canva design URL: https://www.canva.com/design/DAxxxxxxx/...
-  # The ID starts with "D" and is 11 characters long.
-  # canva_resume_design_id: "DAxxxxxxxxx"
+mock_interview:
+  # Voice pipeline. "diy" = browser STT + Anthropic + ElevenLabs TTS (best realism, needs both keys).
+  # "system_tts" = browser STT + Anthropic + your OS's built-in voices (free, no
+  # ElevenLabs key needed; lower realism). "elevenlabs_cai" = full ElevenLabs
+  # Conversational AI (lowest latency, scaffolded only in v1).
+  voice_track: diy            # diy | system_tts | elevenlabs_cai
+  default_persona: tough           # tough | friendly | technical | executive | custom
+  default_feedback_mode: in_character  # in_character | coach_mode | break_character
+  default_voice_id: ""             # ElevenLabs voice_id; empty = first available
+  default_duration_minutes: 25
+  port: 3737
+  # elevenlabs_cai_agent_id: ""    # only used when voice_track: elevenlabs_cai

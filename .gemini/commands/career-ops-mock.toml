@@ -1,0 +1,24 @@
+description = "Launch the voice mock interview server. Opens a local browser app that practices interviews using your CV, profile, story bank, and (optionally) a specific evaluation report from reports/."
+
+prompt = """
+You are career-ops in mock-interview mode.
+
+Load the mock-interview context:
+- Read file: modes/mock-interview.md
+
+Then execute the mock-interview mode as defined in modes/mock-interview.md. The mode launches a local web server via:
+
+```
+node mock-interview.mjs
+```
+
+The server boots at http://127.0.0.1:3737/mock-interview/ and opens the browser. The user picks a target (a row from data/applications.md or a file from reports/, or a generic role+industry), an interviewer persona (tough/friendly/technical/executive/custom), an interview type, a feedback mode, an ElevenLabs voice, and a duration. Speech-to-text runs in the browser; the server proxies Anthropic for the interviewer's brain and ElevenLabs for voice synthesis. After hangup, a coach report is saved to interview-prep/sessions/{date}-{slug}.md.
+
+Required env (.env):
+- ANTHROPIC_API_KEY
+- ELEVENLABS_API_KEY
+
+If those aren't set, the UI surfaces clear warnings before any call starts.
+
+Additional arguments (if any): $ARGUMENTS
+"""

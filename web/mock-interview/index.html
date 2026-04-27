@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>career-ops · mock interview</title>
+<style>
+  :root {
+    --bg: #0c0d10;
+    --panel: #14161b;
+    --panel-2: #1a1d24;
+    --border: #232732;
+    --text: #e8eaf0;
+    --text-dim: #8b93a7;
+    --accent: #5b9cff;
+    --good: #4ade80;
+    --warn: #fbbf24;
+    --bad: #f87171;
+    --radius: 10px;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --sans: -apple-system, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; min-height: 100vh;
+    background: var(--bg); color: var(--text);
+    font: 14px/1.5 var(--sans);
+  }
+  a { color: var(--accent); }
+  button {
+    font: inherit; color: inherit; background: var(--panel-2); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 9px 14px; cursor: pointer;
+  }
+  button:hover { background: #20242e; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  button.primary:hover { background: #4a8cf0; }
+  button.danger { background: #c0392b; color: #fff; border-color: #c0392b; }
+  input, select, textarea {
+    width: 100%; font: inherit; color: inherit;
+    background: var(--panel-2); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 9px 10px;
+  }
+  textarea { resize: vertical; font-family: var(--sans); }
+  label { display: block; margin: 0 0 4px 0; color: var(--text-dim); font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .field { margin-bottom: 14px; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .row3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .panel {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 18px;
+  }
+  .container { max-width: 880px; margin: 40px auto; padding: 0 20px; }
+  h1 { font-size: 22px; margin: 0 0 4px 0; }
+  h2 { font-size: 16px; margin: 24px 0 10px 0; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; }
+  .subtle { color: var(--text-dim); font-size: 13px; }
+  .hidden { display: none !important; }
+  .badge { display: inline-block; padding: 2px 8px; font-size: 11px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--border); color: var(--text-dim); }
+  .badge.good { color: var(--good); border-color: rgba(74,222,128,0.3); }
+  .badge.warn { color: var(--warn); border-color: rgba(251,191,36,0.3); }
+  .badge.bad  { color: var(--bad);  border-color: rgba(248,113,113,0.3); }
+
+  /* Call view */
+  .call-shell { display: grid; grid-template-columns: 1fr 280px; gap: 18px; min-height: 60vh; }
+  .call-main { display: flex; flex-direction: column; }
+  .call-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--border); }
+  .call-header .who { display: flex; align-items: center; gap: 12px; }
+  .avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #5b9cff, #b864ff); display: grid; place-items: center; font-weight: 600; }
+  .timer { font-family: var(--mono); color: var(--text-dim); }
+  .transcript { flex: 1; overflow-y: auto; padding: 18px; max-height: 60vh; }
+  .turn { margin: 0 0 12px 0; padding: 10px 12px; border-radius: 10px; max-width: 90%; }
+  .turn.interviewer { background: var(--panel-2); }
+  .turn.candidate { background: rgba(91, 156, 255, 0.12); border: 1px solid rgba(91, 156, 255, 0.25); margin-left: auto; }
+  .turn .who { font-size: 11px; color: var(--text-dim); text-transform: uppercase; margin-bottom: 4px; }
+  .controls {
+    display: flex; align-items: center; justify-content: center; gap: 14px;
+    padding: 18px; border-top: 1px solid var(--border);
+  }
+  .ptt {
+    width: 96px; height: 96px; border-radius: 50%; border: none;
+    background: linear-gradient(135deg, #5b9cff, #4a8cf0); color: #fff;
+    font-size: 13px; font-weight: 600; letter-spacing: 0.05em; cursor: pointer;
+    box-shadow: 0 6px 20px rgba(91, 156, 255, 0.4);
+    transition: transform 80ms;
+  }
+  .ptt.active { background: linear-gradient(135deg, #ef4444, #dc2626); transform: scale(0.95); box-shadow: 0 6px 20px rgba(239, 68, 68, 0.45); }
+  .ptt:disabled { opacity: 0.5; cursor: wait; }
+  .hangup { width: 56px; height: 56px; border-radius: 50%; background: #c0392b; border: none; color: #fff; font-size: 18px; cursor: pointer; }
+  .coach-pane { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; overflow-y: auto; }
+  .coach-pane h3 { margin: 0 0 8px 0; font-size: 12px; color: var(--text-dim); text-transform: uppercase; }
+  .coach-note { background: rgba(251, 191, 36, 0.08); border: 1px solid rgba(251, 191, 36, 0.25); padding: 10px; border-radius: 8px; margin-bottom: 10px; font-size: 13px; }
+  .coach-note .label { font-size: 10px; text-transform: uppercase; color: var(--warn); margin-right: 6px; letter-spacing: 0.05em; }
+  .status-line { padding: 8px 18px; font-size: 12px; color: var(--text-dim); border-top: 1px solid var(--border); }
+  .listening { color: var(--good); }
+  .speaking { color: var(--accent); }
+
+  /* Debrief view */
+  .debrief { padding: 18px; }
+  .report { background: var(--panel-2); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; white-space: pre-wrap; font-size: 13px; line-height: 1.6; max-height: 50vh; overflow-y: auto; }
+  .story-card { background: var(--panel-2); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 12px; }
+  .story-card .title { font-weight: 600; margin-bottom: 6px; }
+  .story-card .body { white-space: pre-wrap; font-size: 13px; color: var(--text-dim); margin-bottom: 10px; }
+
+  .errbox { background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.3); color: #fca5a5; padding: 10px 14px; border-radius: var(--radius); margin-bottom: 12px; font-size: 13px; }
+  .infobox { background: rgba(91, 156, 255, 0.1); border: 1px solid rgba(91, 156, 255, 0.3); color: #cfe0ff; padding: 10px 14px; border-radius: var(--radius); margin-bottom: 12px; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<div id="setup-view" class="container">
+  <div class="panel">
+    <h1>Mock Interview</h1>
+    <p class="subtle">Voice-based practice run powered by your career-ops profile, story bank, and (optionally) a specific evaluation report.</p>
+    <div id="key-warnings"></div>
+
+    <h2>Target</h2>
+    <div class="field">
+      <label>What are you preparing for?</label>
+      <select id="target-mode">
+        <option value="targeted">Targeted — link to one of my evaluation reports</option>
+        <option value="generic">Generic — by role + industry, no specific company</option>
+      </select>
+    </div>
+
+    <div id="targeted-fields">
+      <div class="field">
+        <label>Pick a report</label>
+        <select id="target-id">
+          <option value="">Loading…</option>
+        </select>
+        <p class="subtle" id="target-note"></p>
+      </div>
+    </div>
+
+    <div id="generic-fields" class="hidden">
+      <div class="row">
+        <div class="field">
+          <label>Role</label>
+          <input id="generic-role" placeholder="Senior Backend Engineer" />
+        </div>
+        <div class="field">
+          <label>Company (optional)</label>
+          <input id="generic-company" placeholder="Acme" />
+        </div>
+      </div>
+      <div class="field">
+        <label>Industry</label>
+        <input id="generic-industry" placeholder="fintech, healthtech, consumer SaaS, …" />
+      </div>
+    </div>
+
+    <h2>Interviewer</h2>
+    <div class="row">
+      <div class="field">
+        <label>Persona</label>
+        <select id="persona">
+          <option value="tough">Tough — skeptical senior, probes weaknesses</option>
+          <option value="friendly">Friendly — warm screener, keeps it flowing</option>
+          <option value="technical">Technical — drills code, system design, tradeoffs</option>
+          <option value="executive">Executive — strategic hiring manager, time-conscious</option>
+          <option value="custom">Custom — write your own</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Interview type</label>
+        <select id="interview-type">
+          <option value="phone-screen">Phone screen</option>
+          <option value="behavioral">Behavioral</option>
+          <option value="technical-deep-dive">Technical deep-dive</option>
+          <option value="hiring-manager">Hiring manager</option>
+          <option value="executive">Executive round</option>
+        </select>
+      </div>
+    </div>
+    <div class="field hidden" id="custom-persona-field">
+      <label>Custom persona</label>
+      <textarea id="custom-persona" rows="3" placeholder="Describe the interviewer's style, background, and what they probe for."></textarea>
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label>Feedback mode</label>
+        <select id="feedback-mode">
+          <option value="in_character">In-character — feedback only after the call</option>
+          <option value="coach_mode">Coach mode — sidebar coach notes after each answer</option>
+          <option value="break_character">Break character — interviewer pauses to coach occasionally</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Duration target (minutes)</label>
+        <input id="duration" type="number" min="5" max="90" value="25" />
+      </div>
+    </div>
+
+    <h2>Voice</h2>
+    <div class="field">
+      <label>Voice track</label>
+      <select id="voice-track">
+        <option value="diy">ElevenLabs — natural human voices (requires API key)</option>
+        <option value="system_tts">System voice — free, uses your OS voices, lower realism</option>
+      </select>
+      <p class="subtle" id="voice-track-note"></p>
+    </div>
+    <div id="el-voice-block">
+      <div class="row">
+        <div class="field">
+          <label>ElevenLabs voice</label>
+          <select id="voice-id"><option value="">Loading…</option></select>
+        </div>
+        <div class="field" style="display: flex; align-items: end;">
+          <button id="preview-voice-btn" type="button">Preview voice</button>
+        </div>
+      </div>
+    </div>
+    <div id="sys-voice-block" class="hidden">
+      <div class="row">
+        <div class="field">
+          <label>System voice</label>
+          <select id="sys-voice-id"><option value="">Loading…</option></select>
+        </div>
+        <div class="field" style="display: flex; align-items: end;">
+          <button id="preview-sys-voice-btn" type="button">Preview voice</button>
+        </div>
+      </div>
+    </div>
+    <audio id="preview-audio" preload="none"></audio>
+
+    <div style="margin-top: 24px; display: flex; gap: 12px; align-items: center;">
+      <button id="start-btn" class="primary" disabled>Start interview →</button>
+      <span class="subtle" id="start-hint">Loading…</span>
+    </div>
+  </div>
+</div>
+
+<div id="call-view" class="container hidden">
+  <div class="panel" style="padding: 0;">
+    <div class="call-header">
+      <div class="who">
+        <div class="avatar" id="avatar">IV</div>
+        <div>
+          <div id="interviewer-label" style="font-weight: 600;">Interviewer</div>
+          <div class="subtle" id="call-context">—</div>
+        </div>
+      </div>
+      <div class="timer" id="timer">00:00</div>
+    </div>
+    <div class="call-shell">
+      <div class="call-main">
+        <div class="transcript" id="transcript"></div>
+        <div class="status-line" id="status-line">Tap and hold the big button to speak. Release to send.</div>
+        <div class="controls">
+          <button class="hangup" id="hangup-btn" title="End interview">✕</button>
+          <button class="ptt" id="ptt-btn" disabled>HOLD<br/>TO TALK</button>
+        </div>
+      </div>
+      <div class="coach-pane" id="coach-pane">
+        <h3>Coach pane</h3>
+        <div id="coach-notes"></div>
+        <p class="subtle" id="coach-empty">Notes appear here in coach mode after each answer.</p>
+      </div>
+    </div>
+  </div>
+  <audio id="reply-audio" preload="none"></audio>
+</div>
+
+<div id="debrief-view" class="container hidden">
+  <div class="panel">
+    <h1>Debrief</h1>
+    <p class="subtle">Saved to <code id="session-file">interview-prep/sessions/…</code></p>
+    <h2>Coach report</h2>
+    <div class="report" id="report"></div>
+    <h2>New stories pending</h2>
+    <p class="subtle">These STAR+R stories were drafted from your transcript. Promote any you want to keep.</p>
+    <div id="stories-list"></div>
+    <div style="margin-top: 24px;">
+      <button id="another-btn" class="primary">Run another mock interview</button>
+    </div>
+  </div>
+</div>
+
+<script src="/mock-interview/app.js" type="module"></script>
+</body>
+</html>
