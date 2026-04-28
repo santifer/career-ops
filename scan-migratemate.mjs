@@ -252,11 +252,13 @@ async function scrape() {
   await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 30_000 });
   await waitForLogin(page);
 
+  // Apply visa filter once before searching — applying per-query would toggle it off on the 2nd run
+  await applyVisaFilter(page);
+
   // Run one search per term (e.g. "GRC Analyst" then "Data Analyst")
   for (const query of searchTerms) {
     console.log(`\nSearching: "${query}"`);
     await applySearch(page, query);
-    await applyVisaFilter(page);
 
     // Infinite scroll — keep scrolling until no new jobs load or MAX_JOBS hit
     let stale = 0;
@@ -321,6 +323,10 @@ function writeOutput(jobs) {
   appendFileSync(PIPELINE_PATH, pipelineLines.join('\n'), 'utf8');
 
   // Append rows to scan-history.tsv (dedup guard for future scans)
+  // Bootstrap the header row on first creation so loadSeenUrls() slice(1) works correctly
+  if (!existsSync(HISTORY_PATH)) {
+    appendFileSync(HISTORY_PATH, 'url\tdate\tsource\ttitle\tcompany\tstatus\n', 'utf8');
+  }
   const tsvLines = jobs.map(j =>
     [j.url, today, 'migratemate', j.title, j.company, 'added'].join('\t')
   );
