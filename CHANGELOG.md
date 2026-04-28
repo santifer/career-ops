@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.7.0](https://github.com/andruwa13/career-ops/compare/v1.6.0...v1.7.0) (2026-04-21)
+
+
+### Features
+
+* add Gemini CLI native integration and evaluator script  ([#349](https://github.com/andruwa13/career-ops/issues/349)) ([0853486](https://github.com/andruwa13/career-ops/commit/0853486d2c01a35adafea2cc6b6d8c429b843588))
+* add Gemini CLI native integration and evaluator script (closes [#344](https://github.com/andruwa13/career-ops/issues/344)) ([0853486](https://github.com/andruwa13/career-ops/commit/0853486d2c01a35adafea2cc6b6d8c429b843588))
+* add LaTeX/Overleaf CV export mode with pdflatex compilation ([#362](https://github.com/andruwa13/career-ops/issues/362)) ([b824953](https://github.com/andruwa13/career-ops/commit/b824953d0e3b7f8c6105dfcce7e17257c95ce6cd))
+* add LaTeX/Overleaf CV export mode with pdflatex compilation (closes [#47](https://github.com/andruwa13/career-ops/issues/47)) ([b824953](https://github.com/andruwa13/career-ops/commit/b824953d0e3b7f8c6105dfcce7e17257c95ce6cd))
+
+
+### Bug Fixes
+
+* **ci:** gracefully handle missing dependency graph in dependency-review ([#343](https://github.com/andruwa13/career-ops/issues/343)) ([7c5fecb](https://github.com/andruwa13/career-ops/commit/7c5fecb00d60521f77b33724eb345a28257d8832))
+* **ci:** gracefully handle missing dependency graph in dependency-review workflow ([#352](https://github.com/andruwa13/career-ops/issues/352)) ([7c5fecb](https://github.com/andruwa13/career-ops/commit/7c5fecb00d60521f77b33724eb345a28257d8832))
+* **pt:** restore diacritical marks in PT-BR modes ([#358](https://github.com/andruwa13/career-ops/issues/358)) ([3a4c596](https://github.com/andruwa13/career-ops/commit/3a4c596cb0a522f562ba38b35c210facaf38a503))
+* **pt:** restore diacritical marks in PT-BR modes ([#359](https://github.com/andruwa13/career-ops/issues/359)) ([3a4c596](https://github.com/andruwa13/career-ops/commit/3a4c596cb0a522f562ba38b35c210facaf38a503))
+
 ## [1.6.0](https://github.com/andruwa13/career-ops/compare/v1.5.0...v1.6.0) (2026-04-14)
 
 
