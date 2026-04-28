@@ -260,10 +260,28 @@ async function parallelFetch(tasks, limit) {
 
 async function verifyOffers(offers) {
   // Dynamic imports keep the default zero-token path free of Playwright startup
-  const { chromium } = await import('playwright');
-  const { checkUrlLiveness } = await import('./liveness-browser.mjs');
+  let chromium;
+  let checkUrlLiveness;
+  try {
+    ({ chromium } = await import('playwright'));
+    ({ checkUrlLiveness } = await import('./liveness-browser.mjs'));
+  } catch (err) {
+    throw new Error(
+      `--verify requires Playwright with Chromium (run "npx playwright install chromium"): ${err.message}`,
+      { cause: err },
+    );
+  }
 
-  const browser = await chromium.launch({ headless: true });
+  let browser;
+  try {
+    browser = await chromium.launch({ headless: true });
+  } catch (err) {
+    throw new Error(
+      `--verify could not launch Chromium (run "npx playwright install chromium" or re-run without --verify): ${err.message}`,
+      { cause: err },
+    );
+  }
+
   const verified = [];
   const expired = [];
   try {
