@@ -165,17 +165,20 @@ Prioritize by frequency and relevance to the role. Max 10 items.
 Things to say, do, and avoid — segmented by who's listening. The same fact can be a strength to a peer engineer and a yellow flag to a recruiter; framing matters.
 
 ### To the recruiter / HR screen
+
 - **What to volunteer**: motivation, location/visa fit, timeline, why this company.
 - **What NOT to volunteer**: hard comp number when leverage is uncertain (defer to band); ongoing process details; opinions on the company's recent layoffs / press.
 - **Vocabulary**: official company language for benefits and policies (from careers page).
 - **Red flags they screen for**: visa surprises, comp mismatch, "looking everywhere" energy.
 
 ### To the hiring manager
+
 - **What to lead with**: connection between candidate narrative (`_profile.md`) and a named team challenge from Step 1.
 - **Vocabulary to use**: terms the company uses internally — shows homework (e.g., Stripe says "increase the GDP of the internet", Anthropic says "safety" not "alignment").
 - **Sharp questions to ask back**: 2–3 tied to recent news / blog posts from Step 1.
 
 ### To the peer / technical panel
+
 - **What to lead with**: stack-relevant proof points from `cv.md` / `article-digest.md`.
 - **Things to avoid**: anti-patterns flagged in Glassdoor / Blind reviews specific to this company.
 - **Reverse questions**: on-call rotation, code review norms, deployment cadence, what surprised them when they joined.
@@ -187,7 +190,8 @@ Save the full report to `interview-prep/{company-slug}-{role-slug}.md` with this
 ```markdown
 # Interview Intel: {Company} — {Role}
 
-**Report:** {link to evaluation report if exists, or "N/A"}
+**URL:** {job posting URL or company careers URL, or "N/A" if recruiter-sourced}
+**Report:** {link to evaluation report if exists, or "N/A"} (legitimacy tier lives there)
 **Researched:** {YYYY-MM-DD}
 **Sources:** {N} Glassdoor reviews, {N} Blind posts, {N} other
 **Audiences covered:** {recruiter-screen, hiring-manager, peer-tech, panel-mixed}
