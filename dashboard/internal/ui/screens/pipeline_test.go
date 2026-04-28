@@ -112,6 +112,78 @@ func TestRenderAppLineIncludesDateColumn(t *testing.T) {
 	}
 }
 
+func TestSearchFiltersByCompanyRoleAndNotes(t *testing.T) {
+	apps := []model.CareerApplication{
+		{Company: "Stripe", Role: "Backend Engineer", Status: "Evaluated", Score: 4.6, Notes: "payments infra"},
+		{Company: "Anthropic", Role: "AI Safety Engineer", Status: "Applied", Score: 4.8, Notes: "policy work"},
+		{Company: "Acme Corp", Role: "Senior PM, Voice AI", Status: "Evaluated", Score: 4.2, Notes: "Series B in Madrid"},
+		{Company: "Globex", Role: "Platform Engineer", Status: "Applied", Score: 3.9, Notes: "remote-first"},
+	}
+
+	pm := NewPipelineModel(theme.NewTheme("catppuccin-mocha"), apps, model.PipelineMetrics{Total: len(apps)}, "..", 120, 40)
+	pm.activeTab = tabIndexForFilter(t, filterAll)
+
+	// Match by company substring (case-insensitive).
+	pm.searchQuery = "stripe"
+	pm.applyFilterAndSort()
+	if len(pm.filtered) != 1 || pm.filtered[0].Company != "Stripe" {
+		t.Fatalf("expected 1 match for 'stripe', got %+v", pm.filtered)
+	}
+
+	// Match by role substring.
+	pm.searchQuery = "voice ai"
+	pm.applyFilterAndSort()
+	if len(pm.filtered) != 1 || pm.filtered[0].Company != "Acme Corp" {
+		t.Fatalf("expected 1 match for 'voice ai', got %+v", pm.filtered)
+	}
+
+	// Match by notes substring.
+	pm.searchQuery = "madrid"
+	pm.applyFilterAndSort()
+	if len(pm.filtered) != 1 || pm.filtered[0].Company != "Acme Corp" {
+		t.Fatalf("expected 1 match for notes 'madrid', got %+v", pm.filtered)
+	}
+
+	// Empty query restores everything.
+	pm.searchQuery = ""
+	pm.applyFilterAndSort()
+	if len(pm.filtered) != len(apps) {
+		t.Fatalf("expected empty query to restore all rows, got %d/%d", len(pm.filtered), len(apps))
+	}
+}
+
+func TestSearchComposesWithActiveTab(t *testing.T) {
+	apps := []model.CareerApplication{
+		{Company: "Stripe", Role: "Backend Engineer", Status: "Evaluated", Score: 4.6},
+		{Company: "Stripe", Role: "Frontend Engineer", Status: "Applied", Score: 4.5},
+		{Company: "Anthropic", Role: "AI Engineer", Status: "Applied", Score: 4.8},
+	}
+
+	pm := NewPipelineModel(theme.NewTheme("catppuccin-mocha"), apps, model.PipelineMetrics{Total: len(apps)}, "..", 120, 40)
+	pm.activeTab = tabIndexForFilter(t, filterApplied)
+	pm.searchQuery = "stripe"
+	pm.applyFilterAndSort()
+
+	if len(pm.filtered) != 1 || pm.filtered[0].Role != "Frontend Engineer" {
+		t.Fatalf("expected applied+stripe to leave only Frontend Engineer, got %+v", pm.filtered)
+	}
+}
+
+func TestSearchIsCaseInsensitive(t *testing.T) {
+	apps := []model.CareerApplication{
+		{Company: "Anthropic", Role: "AI Engineer", Status: "Evaluated", Score: 4.8},
+	}
+
+	pm := NewPipelineModel(theme.NewTheme("catppuccin-mocha"), apps, model.PipelineMetrics{Total: len(apps)}, "..", 120, 40)
+	for _, q := range []string{"anthropic", "ANTHROPIC", "AnThRoPiC"} {
+		pm.searchQuery = q
+		pm.applyFilterAndSort()
+		if len(pm.filtered) != 1 {
+			t.Fatalf("expected case-insensitive match for %q, got %d rows", q, len(pm.filtered))
+		}
+	}
+}
+
 func TestRejectedAndDiscardedTabsFilterCorrectly(t *testing.T) {
 	apps := []model.CareerApplication{
 		{
