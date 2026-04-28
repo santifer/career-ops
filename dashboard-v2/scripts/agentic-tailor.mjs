@@ -159,13 +159,34 @@ async function checkSync() {
 }
 
 async function scrapeJD(url) {
-  console.log(`🌐 Scraping job description from: ${url}`);
+  const normalizeUrl = (value) => {
+    if (!value) return value;
+    let next = String(value).trim();
+    // Handle protocol-relative URLs like //duckduckgo.com/...
+    if (next.startsWith('//')) next = `https:${next}`;
+    try {
+      const u = new URL(next);
+      // Unwrap DuckDuckGo redirect links: https://duckduckgo.com/l/?uddg=<encoded>
+      if (u.hostname.includes('duckduckgo.com') && u.pathname.startsWith('/l/')) {
+        const ud = u.searchParams.get('uddg');
+        if (ud) {
+          return decodeURIComponent(ud);
+        }
+      }
+    } catch {
+      // leave as-is; caller will handle failure
+    }
+    return next;
+  };
+
+  const targetUrl = normalizeUrl(url);
+  console.log(`🌐 Scraping job description from: ${targetUrl}`);
   const chromium = await getChromium();
   if (chromium) {
     const browser = await chromium.launch({ headless: true });
     const page = await browser.newPage();
     try {
-      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+      await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
       await page.waitForTimeout(2000);
       const text = await page.evaluate(() => document.body.innerText);
       await browser.close();
@@ -178,7 +199,7 @@ async function scrapeJD(url) {
 
   console.warn('⚠ Playwright unavailable in this runtime. Falling back to basic HTML fetch.');
   try {
-    const res = await fetch(url, { headers: { 'User-Agent': 'career-ops-tailor/1.0' } });
+    const res = await fetch(targetUrl, { headers: { 'User-Agent': 'career-ops-tailor/1.0' } });
     if (!res.ok) {
       throw new Error(`HTTP ${res.status}`);
     }
