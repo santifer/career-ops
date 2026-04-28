@@ -959,7 +959,7 @@ tracked_companies:
     careers_url: https://www.trendyol.com/kariyerimiz
     scan_method: websearch
     scan_query: 'site:trendyol.com/kariyerimiz OR "trendyol" "Software Engineer" OR "Backend" OR "Frontend" careers'
-    notes: "Ankara/Istanbul. Turkey's largest e-commerce platform (Alibaba-owned). Large tech org, competitive salaries."
+    notes: "Istanbul (Maslak tech HQ). Turkey's largest e-commerce platform (Alibaba-owned). Large tech org, competitive salaries."
     enabled: false
 
   - name: Hepsiburada
@@ -973,7 +973,7 @@ tracked_companies:
     careers_url: https://jobs.lever.co/getir
     scan_method: websearch
     scan_query: 'site:jobs.lever.co/getir OR "getir" careers "Software Engineer" OR "Backend" OR "Frontend"'
-    notes: "Istanbul + global. Ultra-fast delivery unicorn. International engineering org."
+    notes: "Istanbul. Ultra-fast delivery unicorn. Exited international markets in April 2024; now Turkey-only."
     enabled: false
 
   - name: Insider
