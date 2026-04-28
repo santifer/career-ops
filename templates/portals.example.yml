@@ -278,6 +278,34 @@ search_queries:
     query: 'site:news.ycombinator.com OR site:hnrss.org "AI Engineer" OR "Forward Deployed" OR "DevRel" OR "Founding Engineer" remote'
     enabled: true
 
+  # -- Türkiye / Turkey job portals --
+  # WebSearch queries for Turkish job boards (no public ATS APIs).
+  # [CUSTOMIZE] Replace keywords with your target roles in Turkish.
+
+  - name: Kariyer.net — Backend / Software Engineer
+    query: 'site:kariyer.net "Backend Developer" OR "Software Engineer" OR "Yazılım Geliştirici" OR "Backend Geliştirici" Ankara OR Istanbul OR uzaktan'
+    enabled: false
+
+  - name: Kariyer.net — Frontend Engineer
+    query: 'site:kariyer.net "Frontend Developer" OR "React Developer" OR "Frontend Geliştirici" Ankara OR Istanbul OR uzaktan'
+    enabled: false
+
+  - name: Yenibiris.com — Software Engineer
+    query: 'site:yenibiris.com "Software Engineer" OR "Backend Developer" OR "Frontend Developer" OR "Yazılım Geliştirici"'
+    enabled: false
+
+  - name: Secretcv.com — Tech Roles
+    query: 'site:secretcv.com "Software Engineer" OR "Backend" OR "Frontend" OR "Full Stack"'
+    enabled: false
+
+  - name: İşin Olsun — Startup / Tech
+    query: 'site:isinolsun.com "Yazılım" OR "Software" OR "Backend" OR "Frontend" OR "Full Stack"'
+    enabled: false
+
+  - name: LinkedIn — Turkey Tech Roles
+    query: 'site:linkedin.com/jobs "Software Engineer" OR "Backend Engineer" OR "Frontend Engineer" Turkey OR Türkiye OR Ankara OR Istanbul'
+    enabled: false
+
 # -- Tracked companies --
 # Companies whose career pages are checked directly.
 # scan_method: playwright (default), websearch, greenhouse_api
@@ -946,8 +974,19 @@ tracked_companies:
   # ============================================================
   # -- Türkiye / Turkey market
   # ============================================================
-  # Job boards and tech companies for candidates targeting the
-  # Turkish market or Turkish-language postings.
+  # Tech companies for candidates targeting the Turkish market or
+  # Turkish-language postings. Job-portal search queries (Kariyer.net,
+  # Yenibiris.com, Secretcv, İşin Olsun, LinkedIn-TR) live in the
+  # `search_queries:` section above — that's where the scanner picks
+  # them up.
+  #
+  # NOTE on scanning: Most Turkish companies below do NOT expose a
+  # public ATS API (Greenhouse / Lever / Ashby) on their careers_url,
+  # so `scan.mjs` will filter them out automatically (it requires a
+  # detectable ATS). They are listed here as discovery aids — paste
+  # the URL of any specific role into `data/pipeline.md` and run
+  # `/career-ops pipeline`, which uses Playwright/WebFetch instead.
+  # Only Getir (jobs.lever.co/getir) is currently scannable.
   #
   # Key Turkish market notes:
   #   - Salaries often quoted as NET (after tax/SGK deductions)
@@ -957,56 +996,6 @@ tracked_companies:
   #   - Severance (kıdem tazminatı): 1 month per year of service
   #   - Use modes/tr/ for Turkish-language evaluations and applications
   # ============================================================
-
-  # -- Turkish job portals (search queries) --
-  # These use WebSearch since Kariyer.net and Yenibiris.com do not
-  # expose public ATS APIs compatible with direct scraping.
-
-  # Kariyer.net — largest Turkish job portal
-  # [CUSTOMIZE] Replace keywords with your target roles in Turkish
-  - name: Kariyer.net — Backend / Software Engineer
-    careers_url: https://www.kariyer.net
-    scan_method: websearch
-    scan_query: 'site:kariyer.net "Backend Developer" OR "Software Engineer" OR "Yazılım Geliştirici" OR "Backend Geliştirici" Ankara OR Istanbul OR uzaktan'
-    notes: "Largest Turkish job portal. Covers all major Turkish companies. Use Turkish and English keywords."
-    enabled: false
-
-  - name: Kariyer.net — Frontend Engineer
-    careers_url: https://www.kariyer.net
-    scan_method: websearch
-    scan_query: 'site:kariyer.net "Frontend Developer" OR "React Developer" OR "Frontend Geliştirici" Ankara OR Istanbul OR uzaktan'
-    notes: "Kariyer.net frontend roles."
-    enabled: false
-
-  - name: Yenibiris.com — Software Engineer
-    careers_url: https://www.yenibiris.com
-    scan_method: websearch
-    scan_query: 'site:yenibiris.com "Software Engineer" OR "Backend Developer" OR "Frontend Developer" OR "Yazılım Geliştirici"'
-    notes: "Second largest Turkish job portal. Strong in mid-size Turkish companies."
-    enabled: false
-
-  - name: Secretcv.com — Tech Roles
-    careers_url: https://www.secretcv.com
-    scan_method: websearch
-    scan_query: 'site:secretcv.com "Software Engineer" OR "Backend" OR "Frontend" OR "Full Stack"'
-    notes: "Anonymous job search platform popular in Turkey. Good for confidential searches."
-    enabled: false
-
-  - name: İşin Olsun — Startup / Tech
-    careers_url: https://www.isinolsun.com
-    scan_method: websearch
-    scan_query: 'site:isinolsun.com "Yazılım" OR "Software" OR "Backend" OR "Frontend" OR "Full Stack"'
-    notes: "Growing Turkish job platform, strong in startups and SMEs."
-    enabled: false
-
-  - name: LinkedIn — Turkey Tech Roles
-    careers_url: https://www.linkedin.com/jobs
-    scan_method: websearch
-    scan_query: 'site:linkedin.com/jobs "Software Engineer" OR "Backend Engineer" OR "Frontend Engineer" Turkey OR Türkiye OR Ankara OR Istanbul'
-    notes: "LinkedIn is widely used by Turkish tech companies and international companies hiring in Turkey."
-    enabled: false
-
-  # -- Turkish tech companies (tracked directly) --
 
   - name: Trendyol
     careers_url: https://www.trendyol.com/kariyerimiz

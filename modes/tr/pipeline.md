@@ -14,7 +14,7 @@
 3. **3 veya daha fazla URL varsa ve Playwright kullanılmıyorsa** paralel ajan başlat (Agent aracı, `run_in_background`) — hızı artırır. Playwright etkinse tek tarayıcı örneği paylaşıldığından sıralı işle.
 4. **Tamamlanınca** özet tabloyu göster:
 
-```
+```text
 | # | Şirket | Rol | Puan | PDF | Önerilen eylem |
 ```
 
