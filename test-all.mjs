@@ -314,6 +314,22 @@ if (fileExists('VERSION')) {
   fail('VERSION file missing');
 }
 
+// ── 11. UNIT TESTS (JEST) ──────────────────────────────────────────
+
+console.log('\n11. Unit tests (Jest)');
+
+const jestBin = join(ROOT, 'node_modules', '.bin', 'jest');
+if (fileExists('node_modules/.bin/jest')) {
+  const jestResult = run('node', ['--experimental-vm-modules', jestBin, 'handlePhotoSubstitution.test.mjs']);
+  if (jestResult !== null) {
+    pass('Unit tests (handlePhotoSubstitution) OK');
+  } else {
+    fail('Unit tests (handlePhotoSubstitution) FAILED');
+  }
+} else {
+  warn('Jest not found in node_modules, skipping unit tests');
+}
+
 // ── SUMMARY ─────────────────────────────────────────────────────
 
 console.log('\n' + '='.repeat(50));

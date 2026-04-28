@@ -24,7 +24,7 @@ const MAX_PHOTO_BYTES = 2 * 1024 * 1024; // 2 MB
  * Handle photo substitution from config/profile.yml.
  * Validates format (.jpg/.jpeg/.png), encodes to base64, replaces {{PHOTO_BLOCK}}.
  */
-function handlePhotoSubstitution(html, projectRoot) {
+export function handlePhotoSubstitution(html, projectRoot) {
   const configPath = resolve(projectRoot, 'config', 'profile.yml');
   let realProjectRoot;
   try {
@@ -264,7 +264,11 @@ async function generatePDF() {
   }
 }
 
-generatePDF().catch((err) => {
-  console.error('❌ PDF generation failed:', err.message);
-  process.exit(1);
-});
+const isMain = process.argv[1] && (process.argv[1].endsWith('generate-pdf.mjs') || process.argv[1] === fileURLToPath(import.meta.url));
+
+if (isMain) {
+  generatePDF().catch((err) => {
+    console.error('❌ PDF generation failed:', err.message);
+    process.exit(1);
+  });
+}
