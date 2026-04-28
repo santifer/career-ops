@@ -62,6 +62,20 @@ app.get('/api/patterns', (_req, res) => {
   res.json({ content })
 })
 
+app.get('/api/file', (req, res) => {
+  const relPath = req.query.path
+  if (!relPath || typeof relPath !== 'string') {
+    return res.status(400).json({ error: 'path required' })
+  }
+  const resolved = path.resolve(ROOT, relPath)
+  const allowed = path.resolve(ROOT, 'output')
+  if (!resolved.startsWith(allowed + path.sep) && resolved !== allowed) {
+    return res.status(403).json({ error: 'forbidden' })
+  }
+  if (!fs.existsSync(resolved)) return res.status(404).json({ error: 'file not found' })
+  res.sendFile(resolved)
+})
+
 // ── Mutation endpoints ────────────────────────────────────────────────────────
 
 app.patch('/api/applications/:number', (req, res) => {
