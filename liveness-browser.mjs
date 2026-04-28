@@ -55,6 +55,9 @@ export async function checkUrlLiveness(page, url) {
 
     return classifyLiveness({ status, finalUrl, bodyText, applyControls });
   } catch (err) {
-    return { result: 'expired', reason: `navigation error: ${err.message.split('\n')[0]}` };
+    // Transient failures (timeout, DNS, TLS, 5xx) shouldn't be treated as expired —
+    // doing so would cause scan --verify to drop the URL and write it to scan-history,
+    // permanently filtering it out on subsequent scans.
+    return { result: 'uncertain', reason: `navigation error: ${err.message.split('\n')[0]}` };
   }
 }
