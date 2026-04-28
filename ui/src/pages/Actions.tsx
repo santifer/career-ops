@@ -22,14 +22,14 @@ export function Actions() {
             { label: 'Workers', val: parallel, set: setParallel, type: 'select', opts: ['1','2','3','4','5'] },
             { label: 'Start from', val: startFrom, set: setStartFrom, type: 'number' },
             { label: 'Min score', val: minScore, set: setMinScore, type: 'number', step: '0.1' },
-          ] as const).map(({ label, val, set, type, opts, step }) => (
-            <label key={label} className="flex items-center gap-1.5 text-stone-600">
-              {label}
-              {type === 'select'
-                ? <select value={val} onChange={e => set(e.target.value)} className="border border-stone-200 rounded px-1.5 py-0.5">
-                    {(opts as readonly string[]).map(o => <option key={o}>{o}</option>)}
+          ] as const).map((field) => (
+            <label key={field.label} className="flex items-center gap-1.5 text-stone-600">
+              {field.label}
+              {field.type === 'select'
+                ? <select value={field.val} onChange={e => field.set(e.target.value)} className="border border-stone-200 rounded px-1.5 py-0.5">
+                    {field.opts.map(o => <option key={o}>{o}</option>)}
                   </select>
-                : <input type="number" step={step} value={val} onChange={e => set(e.target.value)}
+                : <input type="number" step={'step' in field ? field.step : undefined} value={field.val} onChange={e => field.set(e.target.value)}
                          className="border border-stone-200 rounded px-1.5 py-0.5 w-16" />
               }
             </label>

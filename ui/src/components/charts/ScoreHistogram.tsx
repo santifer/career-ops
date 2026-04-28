@@ -23,7 +23,7 @@ export function ScoreHistogram({ apps }: { apps: Application[] }) {
         <BarChart data={data} margin={{ top: 0, right: 0, bottom: 0, left: -20 }}>
           <XAxis dataKey="range" tick={{ fontSize: 9 }} />
           <YAxis tick={{ fontSize: 9 }} allowDecimals={false} />
-          <Tooltip formatter={(v: number) => [v, 'Jobs']} />
+          <Tooltip formatter={(v) => [v, 'Jobs']} />
           <Bar dataKey="count" radius={[2, 2, 0, 0]}>
             {data.map((d, i) => <Cell key={i} fill={d.color} />)}
           </Bar>

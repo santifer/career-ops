@@ -35,6 +35,7 @@ bun.lock
 .DS_Store
 *.mov
 *.mp4
+*.png
 
 # Claude Code local
 .claude/settings.local.json

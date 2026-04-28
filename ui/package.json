@@ -1,7 +1,7 @@
 {
   "name": "ui",
   "version": "1.0.0",
-  "description": "",
+  "description": "Career-ops web dashboard — visualize your AI job search pipeline",
   "main": "index.js",
   "scripts": {
     "dev": "concurrently \"vite\" \"node server.mjs\"",
