@@ -1,6 +1,7 @@
 package screens
 
 import (
+	"fmt"
 	"os"
 	"regexp"
 	"strings"
@@ -235,8 +236,11 @@ func (m ViewerModel) renderAll() []string {
 			}
 			tableLines := m.lines[tableStart:i]
 			colWidths := computeColumnWidths(tableLines, m.width-6)
-			rendered := m.renderTableBlock(tableLines, colWidths)
-			styled = append(styled, rendered...)
+			if shouldUseCardMode(tableLines, colWidths) {
+				styled = append(styled, m.renderCardTable(tableLines)...)
+			} else {
+				styled = append(styled, m.renderTableBlock(tableLines, colWidths)...)
+			}
 			continue
 		}
 
@@ -304,6 +308,146 @@ func (m ViewerModel) renderAll() []string {
 }
 
 // isTableLine checks if a line is part of a markdown table.
+func shouldUseCardMode(lines []string, colWidths []int) bool {
+	if len(colWidths) <= 4 {
+		return false
+	}
+	shrinkCount := 0
+	for _, w := range colWidths {
+		if w < 12 {
+			shrinkCount++
+		}
+	}
+	return shrinkCount >= 3
+}
+
+func (m ViewerModel) renderCardTable(lines []string) []string {
+	if len(lines) == 0 {
+		return nil
+	}
+
+	var dataLines []string
+	var headerCells []string
+	for _, line := range lines {
+		cells := parseTableCells(line)
+		if isTableSeparator(line) {
+			continue
+		}
+		if headerCells == nil {
+			headerCells = cells
+			continue
+		}
+		dataLines = append(dataLines, line)
+	}
+
+	if headerCells == nil {
+		return m.renderTableBlock(lines, computeColumnWidths(lines, m.width-6))
+	}
+
+	w := m.width - 8
+	if w < 10 {
+		w = 10
+	}
+	tw := w - 20
+	if tw < 10 {
+		tw = 10
+	}
+
+	numIdx := -1
+	var displayHeaders []string
+	var displayIndexes []int
+	for i, h := range headerCells {
+		if strings.TrimSpace(h) == "#" {
+			numIdx = i
+			continue
+		}
+		displayHeaders = append(displayHeaders, h)
+		displayIndexes = append(displayIndexes, i)
+	}
+
+	lineStyle := lipgloss.NewStyle().Width(w)
+	topBorder := lineStyle.Render("┌" + strings.Repeat("─", w-2) + "┐")
+	botBorder := lineStyle.Render("└" + strings.Repeat("─", w-2) + "┘")
+	midBorder := lineStyle.Render("├" + strings.Repeat("─", w-2) + "┤")
+
+	var result []string
+
+	for _, line := range dataLines {
+		cells := parseTableCells(line)
+
+		if numIdx >= 0 && numIdx < len(cells) {
+			numStr := strings.TrimSpace(cells[numIdx])
+			if numStr != "" {
+				if len(result) > 0 {
+					result = append(result, midBorder)
+				}
+				numHeader := "#" + numStr
+				padTotal := w - 2 - len(numHeader)
+				if padTotal < 0 {
+					padTotal = 0
+				}
+				leftPad := padTotal / 2
+				rightPad := padTotal - leftPad
+				row := lineStyle.Render(fmt.Sprintf("│%s%s%s│",
+					strings.Repeat(" ", leftPad),
+					numHeader,
+					strings.Repeat(" ", rightPad),
+				))
+				result = append(result, row)
+				result = append(result, midBorder)
+			}
+		}
+
+		prevIsStar := false
+		firstField := true
+
+		for di, hi := range displayHeaders {
+			ci := displayIndexes[di]
+			if ci >= len(cells) {
+				continue
+			}
+			content := strings.TrimSpace(cells[ci])
+			if content == "" {
+				continue
+			}
+
+			label := truncateRunes(hi, 15)
+			isStar := label == "S" || label == "T" || label == "A" || label == "R"
+
+			if firstField {
+				firstField = false
+			} else if !(isStar && prevIsStar) {
+				result = append(result, midBorder)
+			}
+
+			wrapped := ansi.Wrap(content, tw, "")
+			wrapLines := strings.Split(wrapped, "\n")
+			for wi, wl := range wrapLines {
+				runes := []rune(wl)
+				if len(runes) > tw {
+					wl = string(runes[:tw])
+				}
+				if wi == 0 {
+					row := lineStyle.Render(fmt.Sprintf("│%-16s│ %-*s│", label+":", tw, wl))
+					result = append(result, row)
+				} else {
+					row := lineStyle.Render(fmt.Sprintf("│%-16s│ %-*s│", "", tw, wl))
+					result = append(result, row)
+				}
+			}
+
+			prevIsStar = isStar
+		}
+	}
+
+	if len(result) > 0 {
+		result = append([]string{topBorder}, result...)
+		result = append(result, botBorder)
+	}
+
+	return result
+}
+
 func isTableLine(line string) bool {
 	trimmed := strings.TrimSpace(line)
 	return len(trimmed) > 1 && trimmed[0] == '|'
@@ -372,6 +516,19 @@ func computeColumnWidths(lines []string, maxTotal int) []int {
 	for i := range widths {
 		if widths[i] < 3 {
 			widths[i] = 3
+		}
+	}
+
+	maxColW := 40
+	if maxCols > 5 {
+		maxColW = 30
+	}
+	if maxCols > 7 {
+		maxColW = 25
+	}
+	for i := range widths {
+		if widths[i] > maxColW {
+			widths[i] = maxColW
 		}
 	}
 
