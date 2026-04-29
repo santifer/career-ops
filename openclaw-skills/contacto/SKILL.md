@@ -1,68 +1,58 @@
 ---
 name: contacto
-description: Generate tailored LinkedIn outreach messages for job applications. Use when asked to write LinkedIn connection requests, reach out to recruiters/hiring managers/peers, or prepare pre-interview messages. Triggers on "linkedin message", "outreach", "connection request", "contact recruiter", "reach out to hiring manager".
+description: "Generación de mensajes de contacto personalizados para reclutadores y hiring managers"
+tags: [career, job-search, outreach, networking]
 ---
+# Modo: contacto -- LinkedIn Power Move
 
-# LinkedIn Outreach
+1. **Identificar targets** via web_search:
+   - Hiring manager del equipo
+   - Recruiter asignado
+   - 2-3 peers del equipo (gente con rol similar)
+   - Interviewer (si el candidato ya tiene entrevista programada)
 
-Generate tailored LinkedIn connection messages based on contact type and company research. 3-sentence framework, max 300 characters.
+2. **Clasificar tipo de contacto** -- preguntar al candidato o inferir del contexto:
+   - **Recruiter** -- persona cuyo rol es talent acquisition, sourcing, o recruiting
+   - **Hiring Manager** -- la persona que lidera el equipo que contrata
+   - **Peer** -- alguien con un rol similar en el equipo (referral indirecto)
+   - **Interviewer** -- alguien que va a entrevistar al candidato (fecha conocida)
 
-## Contact Types
+3. **Seleccionar target primario**: la persona que mas se beneficiaria de que el candidato estuviera alli
 
-### Recruiter (Talent Acquisition / Sourcing)
+4. **Generar mensaje** con framework de 3 frases adaptado al tipo de contacto:
 
-| Sentence | Purpose | Content |
-|----------|---------|---------|
-| 1 — Fit | Direct match criteria | Role, relevant experience, availability or location |
-| 2 — Proof | Pre-answer screening questions | Quantified credential |
-| 3 — CTA | Low-commitment ask | "Happy to share my CV if this aligns with what you're looking for" |
+   ### Recruiter
+   - **Frase 1 (Fit)**: Criterios de match directo -- rol, experiencia relevante, disponibilidad o ubicacion
+   - **Frase 2 (Prueba)**: Dato que responda sus preguntas de screening antes de que las hagan (ej: "5 years building ML pipelines, currently in Berlin, available immediately")
+   - **Frase 3 (CTA)**: "Happy to share my CV if this aligns with what you're looking for"
 
-### Hiring Manager (Team Lead)
+   ### Hiring Manager
+   - **Frase 1 (Gancho)**: Reto especifico que enfrenta su equipo (extraido del JD, company blog, o noticias)
+   - **Frase 2 (Prueba)**: Mayor logro cuantificable del candidato que demuestre que ha resuelto problemas similares
+   - **Frase 3 (CTA)**: "Would love to hear how your team is approaching [reto especifico]"
 
-| Sentence | Purpose | Content |
-|----------|---------|---------|
-| 1 — Hook | Specific team challenge | From JD, company blog, or recent news |
-| 2 — Proof | Quantified achievement | Solving similar problem |
-| 3 — CTA | Genuine interest ask | "Would love to hear how your team is approaching [challenge]" |
+   ### Peer (referral)
+   - **Frase 1 (Interes)**: Referencia genuina a su trabajo -- blog post, charla, proyecto open source, o publicacion
+   - **Frase 2 (Conexion)**: Algo que el candidato esta haciendo en el mismo espacio (NO un pitch de empleo)
+   - **Frase 3 (CTA)**: "I've been working on similar problems at [empresa], would love to hear your take on [tema]"
+   - **Nota**: NO pedir empleo. La referral ocurre naturalmente si la conversacion fluye.
 
-### Peer (Referral — Indirect)
+   ### Interviewer (pre-entrevista)
+   - **Frase 1 (Research)**: Referencia a algo especifico de su trabajo o trayectoria
+   - **Frase 2 (Contexto)**: Conexion ligera con la experiencia del candidato en ese tema
+   - **Frase 3 (CTA)**: "Looking forward to our conversation on [fecha]"
+   - **Nota**: Tono ligero, no desesperado. El objetivo es que sepan que te preparaste.
 
-| Sentence | Purpose | Content |
-|----------|---------|---------|
-| 1 — Interest | Genuine reference to their work | Blog post, talk, project, publication |
-| 2 — Connection | Shared context (NOT a job pitch) | Your work in the same space |
-| 3 — CTA | Conversation opener | "I've been working on similar problems, would love to hear your take on [topic]" |
+5. **Versiones**:
+   - EN (default)
+   - ES (si empresa espanola)
 
-**Critical:** Never ask for a job directly.
+6. **Targets alternativos** con justificacion de por que son buenos second choices
 
-### Interviewer (Pre-Interview)
-
-| Sentence | Purpose | Content |
-|----------|---------|---------|
-| 1 — Research | Specific reference to their work | Genuine, not generic |
-| 2 — Context | Light connection to your experience | In that domain |
-| 3 — CTA | Friendly close | "Looking forward to our conversation on [date]" |
-
-**Tone:** Light, prepared, not desperate.
-
-## Workflow
-
-1. **Research targets** using web search: hiring manager, recruiter, peers, interviewer
-2. **Classify contact type** from role/title
-3. **Research company** for specific hooks (blog posts, news, team challenges)
-4. **Generate message** using the 3-sentence framework
-5. **Provide alternatives** with justification
-
-## Message Rules
-
-- **Max 300 characters** (LinkedIn connection request limit)
-- No corporate-speak ("passionate about", "results-oriented", "synergy")
-- Write something that makes them want to reply
-- **Never share phone number**
-- All output in **English**
-- Contact type changes **emphasis**, not structure
-
-## Reference Data
-
-- Candidate profile: `cv.md` in project root (proof points for Sentence 2)
-- Application context: `applications.md` for company/role details
+**Reglas del mensaje:**
+- Maximo 300 caracteres (LinkedIn connection request limit)
+- NO corporate-speak
+- NO "I'm passionate about..."
+- Algo que haga que quieran responder
+- NUNCA compartir telefono
+- El tipo de contacto cambia el ENFASIS, no la estructura

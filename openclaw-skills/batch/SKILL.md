@@ -1,112 +1,110 @@
 ---
 name: batch
-description: Batch process job postings — navigate portals in real-time or script URLs already collected, spawning workers for each posting.
+description: "Ejecución masiva de evaluaciones JD → CV en paralelo con workers aislados"
+tags: [career, job-search, batch, automation]
 ---
 
-# Mode: batch — Bulk Job Processing
+# Modo: batch — Procesamiento Masivo de Ofertas
 
-Two modes of use: **browser conductor** (navigates portals in real-time) or **standalone** (script for already-collected URLs).
+Dos modos de uso: **conductor --chrome** (navega portales en tiempo real) o **standalone** (script para URLs ya recolectadas).
 
-## Architecture
+## Arquitectura
 
-```text
-Main Agent (browser conductor)
+```
+Claude Conductor (exec + browser)
   │
-  │  Browser: navigates portals (logged-in sessions)
-  │  Reads DOM directly — user sees everything in real-time
+  │  Chrome: navega portales (sesiones logueadas)
+  │  Lee DOM directo — el usuario ve todo en tiempo real
   │
-  ├─ Posting 1: reads JD from DOM + URL
-  │    └─► sessions_spawn worker → report .md + PDF + tracker-line
+  ├─ Oferta 1: lee JD del DOM + URL
+  │    └─► sessions_spawn (worker) → report .md + PDF + tracker-line
   │
-  ├─ Posting 2: click next, reads JD + URL
-  │    └─► sessions_spawn worker → report .md + PDF + tracker-line
+  ├─ Oferta 2: click siguiente, lee JD + URL
+  │    └─► sessions_spawn (worker) → report .md + PDF + tracker-line
   │
-  └─ End: merge tracker-additions → applications.md + summary
+  └─ Fin: merge tracker-additions → data/applications.md + resumen
 ```
 
-Each worker is a `sessions_spawn` child with clean context. The conductor only orchestrates.
+Cada worker es un `sessions_spawn` hijo con contexto limpio de 200K tokens. El conductor solo orquesta.
 
-## Files
+## Archivos
 
-```text
+```
 batch/
-  batch-input.tsv               # URLs (by conductor or manual)
-  batch-state.tsv               # Progress (auto-generated, gitignored)
-  batch-runner.sh               # Standalone orchestrator script
-  batch-prompt.md               # Prompt template for workers
-  logs/                         # One log per posting (gitignored)
-  tracker-additions/            # Tracker lines (gitignored)
+  batch-input.tsv               # URLs (por conductor o manual)
+  batch-state.tsv               # Progreso (auto-generado, gitignored)
+  batch-runner.sh               # Script orquestador standalone
+  batch-prompt.md               # Prompt template para workers
+  logs/                         # Un log por oferta (gitignored)
+  tracker-additions/            # Líneas de tracker (gitignored)
 ```
 
-## Mode A: Browser Conductor
+## Modo A: Conductor --chrome
 
-1. **Read state**: `batch/batch-state.tsv` → know what was already processed
-2. **Navigate portal**: Browser → search URL
-3. **Extract URLs**: Read DOM of results → extract URL list → append to `batch-input.tsv`
-4. **For each pending URL**:
-   a. Browser: click on the posting → read JD text from DOM
-   b. Save JD to `/tmp/batch-jd-{id}.txt`
-   c. Calculate next sequential REPORT_NUM
-   d. Execute via sessions_spawn:
-```text
-      sessions_spawn({
-        label: "📄 Process posting {id}",
-        task: "[batch-prompt.md content] Process this posting. URL: {url}. JD: /tmp/batch-jd-{id}.txt. Report: {num}. ID: {id}",
-        mode: "run",
-        runTimeoutSeconds: 300
-      })
-```
-   e. Update `batch-state.tsv` (completed/failed + score + report_num)
-   f. Log to `logs/{report_num}-{id}.log`
-   g. Browser: go back → next posting
-5. **Pagination**: If no more postings → click "Next" → repeat
-6. **End**: Merge `tracker-additions/` → `applications.md` + summary
+1. **Leer estado**: `batch/batch-state.tsv` → saber qué ya se procesó
+2. **Navegar portal**: Chrome → URL de búsqueda
+3. **Extraer URLs**: Leer DOM de resultados → extraer lista de URLs → append a `batch-input.tsv`
+4. **Para cada URL pendiente**:
+   a. Chrome: click en la oferta → leer JD text del DOM
+   b. Guardar JD a `/tmp/batch-jd-{id}.txt`
+   c. Calcular siguiente REPORT_NUM secuencial
+   d. Ejecutar via exec:
+      ```bash
+      sessions_spawn \
+        --append-system-prompt-file batch/batch-prompt.md \
+        "Procesa esta oferta. URL: {url}. JD: /tmp/batch-jd-{id}.txt. Report: {num}. ID: {id}"
+      ```
+   e. Actualizar `batch-state.tsv` (completed/failed + score + report_num)
+   f. Log a `logs/{report_num}-{id}.log`
+   g. Chrome: volver atrás → siguiente oferta
+5. **Paginación**: Si no hay más ofertas → click "Next" → repetir
+6. **Fin**: Merge `tracker-additions/` → `data/applications.md` + resumen
 
-## Mode B: Standalone Script
+## Modo B: Script standalone
 
 ```bash
 batch/batch-runner.sh [OPTIONS]
 ```
 
-Options:
-- `--dry-run` — list pending without executing
-- `--retry-failed` — only retry failed ones
-- `--start-from N` — start from ID N
-- `--parallel N` — N workers in parallel
-- `--max-retries N` — attempts per posting (default: 2)
+Opciones:
+- `--dry-run` — lista pendientes sin ejecutar
+- `--retry-failed` — solo reintenta fallidas
+- `--start-from N` — empieza desde ID N
+- `--parallel N` — N workers en paralelo
+- `--max-retries N` — intentos por oferta (default: 2)
 
-## batch-state.tsv Format
+## Formato batch-state.tsv
 
-```text
+```
 id	url	status	started_at	completed_at	report_num	score	error	retries
 1	https://...	completed	2026-...	2026-...	002	4.2	-	0
 2	https://...	failed	2026-...	2026-...	-	-	Error msg	1
 3	https://...	pending	-	-	-	-	-	0
 ```
 
-## Resumability
+## Resumabilidad
 
-- If it dies → re-run → reads `batch-state.tsv` → skip completed
-- Lock file (`batch-runner.pid`) prevents double execution
-- Each worker is independent: failure in posting #47 doesn't affect others
+- Si muere → re-ejecutar → lee `batch-state.tsv` → skip completadas
+- Lock file (`batch-runner.pid`) previene ejecución doble
+- Cada worker es independiente: fallo en oferta #47 no afecta a las demás
 
 ## Workers (sessions_spawn)
 
-Each worker receives `batch-prompt.md` as system prompt. It is self-contained.
+Cada worker recibe `batch-prompt.md` como system prompt. Es self-contained.
 
-The worker produces:
-1. Report `.md` in `reports/`
-2. PDF in `output/`
-3. Tracker line in `batch/tracker-additions/{id}.tsv`
-4. JSON result via stdout
+El worker produce:
+1. Report `.md` en `reports/`
+2. PDF en `output/`
+3. Línea de tracker en `batch/tracker-additions/{id}.tsv`
+4. JSON de resultado por stdout
 
-## Error Handling
+## Gestión de errores
 
 | Error | Recovery |
 |-------|----------|
-| URL inaccessible | Worker fails → conductor marks `failed`, next |
-| JD behind login | Conductor tries to read DOM. If fails → `failed` |
-| Portal changes layout | Conductor reasons about HTML, adapts |
-| Worker crashes | Conductor marks `failed`, next. Retry with `--retry-failed` |
-| Conductor dies | Re-run → reads state → skip completed |
-| PDF fails | Report .md is saved. PDF remains pending |
+| URL inaccesible | Worker falla → conductor marca `failed`, siguiente |
+| JD detrás de login | Conductor intenta leer DOM. Si falla → `failed` |
+| Portal cambia layout | Conductor razona sobre HTML, se adapta |
+| Worker crashea | Conductor marca `failed`, siguiente. Retry con `--retry-failed` |
+| Conductor muere | Re-ejecutar → lee state → skip completadas |
+| PDF falla | Report .md se guarda. PDF queda pendiente |

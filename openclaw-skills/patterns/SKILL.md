@@ -1,53 +1,60 @@
 ---
 name: patterns
-description: Analyze tracked job applications for outcome patterns and conversion insights. Use when asked to analyze rejections, find application patterns, review conversion funnel, check score vs outcome correlations, or generate a pattern analysis report. Triggers on "analyze patterns", "rejection patterns", "conversion funnel", "what's working", "application insights".
+description: "Análisis de patrones en aplicaciones para identificar tendencias y optimizar estrategia"
+tags: [career, job-search, analytics, patterns]
 ---
 
-# Rejection Pattern Detector
+# Mode: patterns -- Rejection Pattern Detector
 
-Analyze tracked applications to find actionable patterns in outcomes.
+## Purpose
 
-## Data Source
+Analyze all tracked applications to find patterns in outcomes and surface actionable insights. Identifies what's working (archetypes, remote policies, score ranges) and what's wasting time (geo-restricted roles, stack mismatches, low-score applications).
 
-Application tracker stored as Markdown: `applications.md` in the project root.
+## Inputs
 
-Columns (TSV or table format): company, role, status, score, archetype, remote_policy, blockers, tech_gaps, date, notes.
+- `data/applications.md` — Application tracker
+- `reports/` — Individual evaluation reports
+- `config/profile.yml` — User profile (for recommendation context)
+- `modes/_profile.md` — User archetypes and framing
+- `config/portals.yml` — Portal config (for filter update recommendations)
 
 ## Minimum Threshold
 
-Count entries with status beyond "Evaluated" (Applied, Responded, Interview, Offer, Rejected, Discarded, SKIP).
+Before running analysis, check: does `data/applications.md` have at least 5 entries with status beyond "Evaluated" (i.e., Applied, Responded, Interview, Offer, Rejected, Discarded, SKIP)?
 
-If < 5, respond:
+If not, tell the user:
 > "Not enough data yet -- {N}/5 applications have progressed beyond evaluation. Keep applying and come back when you have more outcomes to analyze."
 
-## Outcome Classification
+Exit gracefully.
 
-| Status | Outcome |
-|--------|---------|
-| Interview, Offer, Responded, Applied | **Positive** |
-| Rejected, Discarded | **Negative** |
-| SKIP | **Self-filtered** |
-| Evaluated | **Pending** |
+## Step 1 — Run Analysis Script
 
-## Analysis Steps
+Execute:
 
-### Step 1 — Parse Data
+```bash
+exec node analyze-patterns.mjs
+```
 
-Read `applications.md`. For each entry extract: status, score, archetype, remote_policy, blockers, tech_gaps, company_size, date.
+Parse the JSON output. It contains:
 
-### Step 2 — Compute Metrics
+| Key | Contents |
+|-----|----------|
+| `metadata` | Total entries, date range, analysis date, counts by outcome |
+| `funnel` | Count per status stage (evaluated, applied, interview, offer, etc.) |
+| `scoreComparison` | Avg/min/max score per outcome group (positive, negative, self_filtered, pending) |
+| `archetypeBreakdown` | Per-archetype: total, positive, negative, self_filtered, conversion rate |
+| `blockerAnalysis` | Most frequent hard blockers: geo-restriction, stack-mismatch, seniority, onsite |
+| `remotePolicy` | Per-policy bucket: total, positive, negative, conversion rate |
+| `companySizeBreakdown` | Per-size bucket: startup, scaleup, enterprise |
+| `scoreThreshold` | Recommended minimum score + reasoning |
+| `techStackGaps` | Most frequent tech gaps in negative outcomes |
+| `recommendations` | Top 5 actionable items with reasoning and impact level |
 
-1. **Conversion funnel:** Count per status, percentage of total
-2. **Score vs outcome:** Avg/min/max score per outcome group
-3. **Archetype breakdown:** Per-archetype total, positive, negative, self_filtered, conversion rate
-4. **Top blockers:** Frequency of recurring blockers
-5. **Remote policy patterns:** Conversion rate by policy type
-6. **Tech stack gaps:** Most frequent missing skills in negative outcomes
-7. **Score threshold:** Recommended minimum from positive-outcome cluster
+If the script returns `error`, display the error message and exit.
 
-### Step 3 — Generate Report
+## Step 2 — Generate Report
 
-Write to `reports/pattern-analysis-{YYYY-MM-DD}.md`.
+Write the report to `reports/pattern-analysis-{YYYY-MM-DD}.md`.
 
 ### Report Structure
 
@@ -58,35 +65,96 @@ Write to `reports/pattern-analysis-{YYYY-MM-DD}.md`.
 **Date range:** {from} to {to}
 **Outcomes:** {positive} positive, {negative} negative, {self_filtered} self-filtered, {pending} pending
 
+---
+
 ## Conversion Funnel
+
+Show each status with count and percentage of total. Use a simple table:
+
 | Stage | Count | % |
+|-------|-------|---|
+| Evaluated | X | X% |
+| Applied | X | X% |
+| ... | | |
 
 ## Score vs Outcome
+
 | Outcome | Avg Score | Min | Max | Count |
+|---------|-----------|-----|-----|-------|
+| Positive | X.X/5 | X.X | X.X | X |
+| Negative | ... | | | |
+| Self-filtered | ... | | | |
+| Pending | ... | | | |
 
 ## Archetype Performance
-| Archetype | Total | Positive | Negative | Conversion |
+
+Table with each archetype, total applications, positive outcomes, conversion rate.
+Highlight the best-performing archetype and the worst.
 
 ## Top Blockers
-| Blocker | Count | % of Total |
+
+Frequency table of recurring hard blockers (geo-restriction, stack-mismatch, etc.).
+Note the percentage of all applications affected by each.
 
 ## Remote Policy Patterns
-| Policy | Total | Positive | Negative | Conversion |
+
+Table showing conversion rate by remote policy bucket (global, regional, geo-restricted, hybrid/onsite).
 
 ## Tech Stack Gaps
-| Missing Skill | Frequency |
+
+List of most common missing skills in negative/self-filtered outcomes with frequency.
 
 ## Recommended Score Threshold
-{threshold} -- {reasoning}
+
+State the data-driven minimum score and reasoning.
 
 ## Recommendations
-1. **[HIGH/MED/LOW]** Action -- Reasoning
+
+Number the top recommendations (from the script output). For each:
+1. **[IMPACT]** Action to take
+   Reasoning behind the recommendation.
 ```
 
-### Step 4 — Present Summary
+## Step 3 — Present Summary
 
-Condensed: one-line stat summary, top 3 findings, link to full report.
+Show the user a condensed version with:
+1. One-line stat summary (X applications, Y% applied, Z% positive outcome)
+2. Top 3 findings (most impactful patterns)
+3. Link to full report
 
-### Step 5 — Offer Actions
+Example:
+> **Pattern Analysis Complete** (24 applications, Apr 7-8)
+>
+> Key findings:
+> - Geo-restricted roles are 0% conversion (7 of 24) -- stop evaluating US/Canada-only postings
+> - Regional/global remote roles convert at 57-67% -- these are your sweet spot
+> - No positive outcomes below 4.2/5 -- consider this your score floor
+>
+> Full report: `reports/pattern-analysis-2026-04-08.md`
 
-Ask user if they want to act on recommendations: update search filters, adjust score threshold, shift archetype targeting.
+## Step 4 — Offer to Apply Recommendations
+
+Ask the user if they want to act on any recommendations:
+
+> "Want me to apply any of these recommendations? I can:
+> - Update `config/portals.yml` to filter out geo-restricted roles
+> - Set a score threshold in `_profile.md` for PDF generation
+> - Adjust archetype targeting based on what's converting
+>
+> Just say which ones, or 'all' to apply everything."
+
+If the user agrees:
+- For portal filter changes: edit `config/portals.yml`
+- For profile/archetype changes: edit `modes/_profile.md` (NEVER `_shared.md`)
+- For score threshold: add to `config/profile.yml` under a `patterns` key
+
+## Outcome Classification
+
+For reference, outcomes are classified as:
+
+| Status | Outcome |
+|--------|---------|
+| Interview, Offer, Responded, Applied | **Positive** (invested effort or got traction) |
+| Rejected, Discarded | **Negative** (company said no or offer closed) |
+| SKIP, NO APLICAR | **Self-filtered** (user decided not to apply) |
+| Evaluated | **Pending** (no action taken yet) |

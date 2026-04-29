@@ -1,28 +1,29 @@
 ---
 name: tracker
-description: Read and display the applications tracker, show statistics, and update application statuses on request.
+description: "Gestión del estado de aplicaciones en data/applications.md con transiciones de estado canónicas"
+tags: [career, job-search, tracking, state-machine]
 ---
 
-# Mode: tracker — Application Tracker
+# Modo: tracker — Tracker de Aplicaciones
 
-Read and display `data/applications.md`.
+Lee y muestra `data/applications.md`.
 
-**Tracker format:**
+**Formato del tracker:**
 ```markdown
-| # | Date | Company | Role | Score | Status | PDF | Report |
+| # | Fecha | Empresa | Rol | Score | Estado | PDF | Report |
 ```
 
-Possible statuses: `Evaluated` → `Applied` → `Responded` → `Contacted` → `Interview` → `Offer` / `Rejected` / `Discarded` / `DO NOT APPLY`
+Estados posibles: `Evaluada` → `Aplicado` → `Respondido` → `Contacto` → `Entrevista` → `Oferta` / `Rechazada` / `Descartada` / `NO APLICAR`
 
-- `Applied` = the candidate submitted their application
-- `Responded` = A recruiter/company contacted the candidate and they responded (inbound)
-- `Contacted` = The candidate proactively contacted someone at the company (outbound, e.g. LinkedIn power move)
+- `Aplicado` = el candidato envió su candidatura
+- `Respondido` = Un recruiter/empresa contactó y el candidato respondió (inbound)
+- `Contacto` = El candidato contactó proactivamente a alguien de la empresa (outbound, ej: LinkedIn power move)
 
-If the user asks to update a status, edit the corresponding row.
+Si el usuario pide actualizar un estado, editar la fila correspondiente.
 
-Also show statistics:
-- Total applications
-- By status
-- Average score
-- % with PDF generated
-- % with report generated
+Mostrar también estadísticas:
+- Total de aplicaciones
+- Por estado
+- Score promedio
+- % con PDF generado
+- % con report generado

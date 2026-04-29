@@ -1,101 +1,102 @@
 ---
 name: pdf
-description: Generate ATS-optimized PDFs from cv.md, tailoring content to specific job descriptions with keyword injection and professional formatting.
+description: "Generación de CVs en PDF desde Markdown/HTML con soporte Canva MCP"
+tags: [career, job-search, pdf, cv-generation, canva]
 ---
 
-# Mode: pdf — ATS-Optimized PDF Generation
+# Modo: pdf — Generación de PDF ATS-Optimizado
 
-## Complete Pipeline
+## Pipeline completo
 
-1. Read `cv.md` as source of truth
-2. Ask the user for the JD if not in context (text or URL)
-3. Extract 15-20 keywords from the JD
-4. Detect JD language → CV language (EN default)
-5. Detect company location → paper format:
+1. Lee `cv.md` como fuentes de verdad
+2. Pide al usuario el JD si no está en contexto (texto o URL)
+3. Extrae 15-20 keywords del JD
+4. Detecta idioma del JD → idioma del CV (EN default)
+5. Detecta ubicación empresa → formato papel:
    - US/Canada → `letter`
-   - Rest of world → `a4`
-6. Detect role archetype → adapt framing
-7. Rewrite Professional Summary injecting JD keywords + exit narrative bridge ("Built and sold a business. Now applying systems thinking to [JD domain].")
-8. Select top 3-4 most relevant projects for the posting
-9. Reorder experience bullets by relevance to JD
-10. Build competency grid from JD requirements (6-8 keyword phrases)
-11. Inject keywords naturally into existing achievements (NEVER invent)
-12. Generate complete HTML from template + customized content
-13. Read `name` from `config/profile.yml` → normalize to kebab-case lowercase (e.g. "John Doe" → "john-doe") → `{candidate}`
-14. Write HTML to `/tmp/cv-{candidate}-{company}.html`
-15. Execute: `exec` to run `node generate-pdf.mjs /tmp/cv-{candidate}-{company}.html output/cv-{candidate}-{company}-{YYYY-MM-DD}.pdf --format={letter|a4}`
-16. Report: PDF path, page count, keyword coverage %
+   - Resto del mundo → `a4`
+6. Detecta arquetipo del rol → adapta framing
+7. Reescribe Professional Summary inyectando keywords del JD + exit narrative bridge ("Built and sold a business. Now applying systems thinking to [domain del JD].")
+8. Selecciona top 3-4 proyectos más relevantes para la oferta
+9. Reordena bullets de experiencia por relevancia al JD
+10. Construye competency grid desde requisitos del JD (6-8 keyword phrases)
+11. Inyecta keywords naturalmente en logros existentes (NUNCA inventa)
+12. Genera HTML completo desde template + contenido personalizado
+13. Lee `name` de `config/profile.yml` → normaliza a kebab-case lowercase (e.g. "John Doe" → "john-doe") → `{candidate}`
+14. Escribe HTML a `/tmp/cv-{candidate}-{company}.html`
+15. Ejecuta: `exec node generate-pdf.mjs /tmp/cv-{candidate}-{company}.html output/cv-{candidate}-{company}-{YYYY-MM-DD}.pdf --format={letter|a4}`
+15. Reporta: ruta del PDF, nº páginas, % cobertura de keywords
 
-## ATS Rules (clean parsing)
+## Reglas ATS (parseo limpio)
 
-- Single-column layout (no sidebars, no parallel columns)
-- Standard headers: "Professional Summary", "Work Experience", "Education", "Skills", "Certifications", "Projects"
-- No text in images/SVGs
-- No critical info in PDF headers/footers (ATS ignores them)
-- UTF-8, selectable text (not rasterized)
-- No nested tables
-- JD keywords distributed: Summary (top 5), first bullet of each role, Skills section
+- Layout single-column (sin sidebars, sin columnas paralelas)
+- Headers estándar: "Professional Summary", "Work Experience", "Education", "Skills", "Certifications", "Projects"
+- Sin texto en imágenes/SVGs
+- Sin info crítica en headers/footers del PDF (ATS los ignora)
+- UTF-8, texto seleccionable (no rasterizado)
+- Sin tablas anidadas
+- Keywords del JD distribuidas: Summary (top 5), primer bullet de cada rol, Skills section
 
-## PDF Design
+## Diseño del PDF
 
 - **Fonts**: Space Grotesk (headings, 600-700) + DM Sans (body, 400-500)
 - **Fonts self-hosted**: `fonts/`
-- **Header**: name in Space Grotesk 24px bold + gradient line `linear-gradient(to right, hsl(187,74%,32%), hsl(270,70%,45%))` 2px + contact row
-- **Section headers**: Space Grotesk 13px, uppercase, letter-spacing 0.05em, cyan primary color
+- **Header**: nombre en Space Grotesk 24px bold + línea gradiente `linear-gradient(to right, hsl(187,74%,32%), hsl(270,70%,45%))` 2px + fila de contacto
+- **Section headers**: Space Grotesk 13px, uppercase, letter-spacing 0.05em, color cyan primary
 - **Body**: DM Sans 11px, line-height 1.5
-- **Company names**: accent purple color `hsl(270,70%,45%)`
-- **Margins**: 0.6in
-- **Background**: pure white
+- **Company names**: color accent purple `hsl(270,70%,45%)`
+- **Márgenes**: 0.6in
+- **Background**: blanco puro
 
-## Section Order (optimized "6-second recruiter scan")
+## Orden de secciones (optimizado "6-second recruiter scan")
 
-1. Header (large name, gradient, contact, portfolio link)
-2. Professional Summary (3-4 lines, keyword-dense)
-3. Core Competencies (6-8 keyword phrases in flex-grid)
-4. Work Experience (reverse chronological)
-5. Projects (top 3-4 most relevant)
+1. Header (nombre grande, gradiente, contacto, link portfolio)
+2. Professional Summary (3-4 líneas, keyword-dense)
+3. Core Competencies (6-8 keyword phrases en flex-grid)
+4. Work Experience (cronológico inverso)
+5. Projects (top 3-4 más relevantes)
 6. Education & Certifications
-7. Skills (languages + technical)
+7. Skills (idiomas + técnicos)
 
-## Keyword Injection Strategy (ethical, truth-based)
+## Estrategia de keyword injection (ético, basado en verdad)
 
-Examples of legitimate rewording:
-- JD says "RAG pipelines" and CV says "LLM workflows with retrieval" → change to "RAG pipeline design and LLM orchestration workflows"
-- JD says "MLOps" and CV says "observability, evals, error handling" → change to "MLOps and observability: evals, error handling, cost monitoring"
-- JD says "stakeholder management" and CV says "collaborated with team" → change to "stakeholder management across engineering, operations, and business"
+Ejemplos de reformulación legítima:
+- JD dice "RAG pipelines" y CV dice "LLM workflows with retrieval" → cambiar a "RAG pipeline design and LLM orchestration workflows"
+- JD dice "MLOps" y CV dice "observability, evals, error handling" → cambiar a "MLOps and observability: evals, error handling, cost monitoring"
+- JD dice "stakeholder management" y CV dice "collaborated with team" → cambiar a "stakeholder management across engineering, operations, and business"
 
-**NEVER add skills the candidate doesn't have. Only reword real experience with the exact vocabulary from the JD.**
+**NUNCA añadir skills que el candidato no tiene. Solo reformular experiencia real con el vocabulario exacto del JD.**
 
-## HTML Template
+## Template HTML
 
-Use the template in `cv-template.html`. Replace `{{...}}` placeholders with customized content:
+Usar el template en `templates/cv-template.html`. Reemplazar los placeholders `{{...}}` con contenido personalizado:
 
-| Placeholder | Content |
-|-------------|---------|
-| `{{LANG}}` | `en` or `es` |
-| `{{PAGE_WIDTH}}` | `8.5in` (letter) or `210mm` (A4) |
+| Placeholder | Contenido |
+|-------------|-----------|
+| `{{LANG}}` | `en` o `es` |
+| `{{PAGE_WIDTH}}` | `8.5in` (letter) o `210mm` (A4) |
 | `{{NAME}}` | (from profile.yml) |
 | `{{PHONE}}` | (from profile.yml — include with its separator only when `profile.yml` has a non-empty `phone` value; omit both `<span>` and `<span class="separator">` otherwise) |
 | `{{EMAIL}}` | (from profile.yml) |
 | `{{LINKEDIN_URL}}` | [from profile.yml] |
 | `{{LINKEDIN_DISPLAY}}` | [from profile.yml] |
-| `{{PORTFOLIO_URL}}` | [from profile.yml] (or /es based on language) |
-| `{{PORTFOLIO_DISPLAY}}` | [from profile.yml] (or /es based on language) |
+| `{{PORTFOLIO_URL}}` | [from profile.yml] (o /es según idioma) |
+| `{{PORTFOLIO_DISPLAY}}` | [from profile.yml] (o /es según idioma) |
 | `{{LOCATION}}` | [from profile.yml] |
 | `{{SECTION_SUMMARY}}` | Professional Summary / Resumen Profesional |
-| `{{SUMMARY_TEXT}}` | Customized summary with keywords |
+| `{{SUMMARY_TEXT}}` | Summary personalizado con keywords |
 | `{{SECTION_COMPETENCIES}}` | Core Competencies / Competencias Core |
 | `{{COMPETENCIES}}` | `<span class="competency-tag">keyword</span>` × 6-8 |
 | `{{SECTION_EXPERIENCE}}` | Work Experience / Experiencia Laboral |
-| `{{EXPERIENCE}}` | HTML of each job with reordered bullets |
+| `{{EXPERIENCE}}` | HTML de cada trabajo con bullets reordenados |
 | `{{SECTION_PROJECTS}}` | Projects / Proyectos |
-| `{{PROJECTS}}` | HTML of top 3-4 projects |
+| `{{PROJECTS}}` | HTML de top 3-4 proyectos |
 | `{{SECTION_EDUCATION}}` | Education / Formación |
-| `{{EDUCATION}}` | HTML of education |
+| `{{EDUCATION}}` | HTML de educación |
 | `{{SECTION_CERTIFICATIONS}}` | Certifications / Certificaciones |
-| `{{CERTIFICATIONS}}` | HTML of certifications |
+| `{{CERTIFICATIONS}}` | HTML de certificaciones |
 | `{{SECTION_SKILLS}}` | Skills / Competencias |
-| `{{SKILLS}}` | HTML of skills |
+| `{{SKILLS}}` | HTML de skills |
 
 ## Canva CV Generation (optional)
 
@@ -160,15 +161,15 @@ e. `commit-editing-transaction` to save (ONLY after user approval)
 #### Step 5 — Export and download PDF
 
 a. `export-design` the duplicate as PDF (format: a4 or letter based on JD location)
-b. **IMMEDIATELY** download the PDF using `exec`:
+b. **IMMEDIATELY** download the PDF using exec:
    ```bash
    curl -sL -o "output/cv-{candidate}-{company}-canva-{YYYY-MM-DD}.pdf" "{download_url}"
-```
+   ```
    The export URL is a pre-signed S3 link that expires in ~2 hours. Download it right away.
 c. Verify the download:
    ```bash
    file output/cv-{candidate}-{company}-canva-{YYYY-MM-DD}.pdf
-```
+   ```
    Must show "PDF document". If it shows XML or HTML, the URL expired — re-export and retry.
 d. Report: PDF path, file size, Canva design URL (for manual tweaking)
 
@@ -179,6 +180,6 @@ d. Report: PDF path, file size, Canva design URL (for manual tweaking)
 - If `find_and_replace_text` finds no matches → try broader substring matching
 - Always provide the Canva design URL so the user can edit manually if auto-edit fails
 
-## Post-generation
+## Post-generación
 
-Update tracker if the posting is already registered: change PDF from ❌ to ✅.
+Actualizar tracker si la oferta ya está registrada: cambiar PDF de ❌ a ✅.
