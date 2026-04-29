@@ -71,7 +71,49 @@ function normalizeCompany(name) {
   return name.toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
+// Seniority modifiers — if titles disagree on seniority, they are different roles
+// even when other words overlap (e.g. "Junior Electrical Engineer" ≠ "Electrical Engineer").
+const SENIORITY_MODIFIERS = ['junior', 'senior', 'lead', 'principal', 'staff', 'head', 'chief'];
+
+// Specialty modifiers — same logic for role specialty (QA / quality / test / safety / security).
+const SPECIALTY_MODIFIERS = ['qa', 'qc', 'quality', 'test', 'assurance', 'safety', 'security'];
+
+function findModifier(text, list) {
+  const low = text.toLowerCase();
+  return list.find(m => new RegExp(`\\b${m}\\b`).test(low));
+}
+
+// Extract reference / job IDs from role title or notes (e.g. "#148182", "job=148031",
+// "req. 58035", "ref 10001-1002450425-S"). Used to short-circuit dedup when both
+// entries carry distinct portal references.
+function extractRefIds(text) {
+  if (!text) return [];
+  const out = [];
+  const patterns = [
+    /#(\d{4,})/g,
+    /\bjob[=\s]*(\d{4,})/gi,
+    /\breq\.?\s*(\d{4,})/gi,
+    /\bref\.?\s+([\w][\w\-.]{5,})/gi,
+  ];
+  for (const re of patterns) {
+    let m;
+    while ((m = re.exec(text)) !== null) out.push(m[1].toLowerCase());
+  }
+  return out;
+}
+
 function roleFuzzyMatch(a, b) {
+  // Seniority mismatch → different role
+  const senA = findModifier(a, SENIORITY_MODIFIERS);
+  const senB = findModifier(b, SENIORITY_MODIFIERS);
+  if (senA !== senB) return false;
+
+  // Specialty mismatch (e.g. "QA" vs no QA) → different role
+  const specA = findModifier(a, SPECIALTY_MODIFIERS);
+  const specB = findModifier(b, SPECIALTY_MODIFIERS);
+  if (specA !== specB) return false;
+
+  // Word overlap: existing heuristic
   const wordsA = a.toLowerCase().split(/\s+/).filter(w => w.length > 3);
   const wordsB = b.toLowerCase().split(/\s+/).filter(w => w.length > 3);
   const overlap = wordsA.filter(w => wordsB.some(wb => wb.includes(w) || w.includes(wb)));
@@ -253,15 +295,32 @@ for (const file of tsvFiles) {
   }
 
   if (!duplicate) {
-    // Exact entry number match
-    duplicate = existingApps.find(app => app.num === addition.num);
+    // Exact entry number match — only treated as a duplicate if company+role
+    // also fuzzy-match. A bare num collision (e.g. two unrelated TSVs both
+    // numbered 076) is NOT a duplicate; the new entry should get the next
+    // available number instead. (Bug fix 2026-04-29: prior logic would
+    // silently drop valid entries when an unrelated entry already used the
+    // same num.)
+    duplicate = existingApps.find(app => {
+      if (app.num !== addition.num) return false;
+      if (normalizeCompany(app.company) !== normalizeCompany(addition.company)) return false;
+      return roleFuzzyMatch(addition.role, app.role);
+    });
   }
 
   if (!duplicate) {
-    // Company + role fuzzy match
+    // Company + role fuzzy match — with reference-ID short-circuit:
+    // if both entries carry distinct portal/job IDs, they are different roles
+    // regardless of title similarity.
     const normCompany = normalizeCompany(addition.company);
+    const newRefs = extractRefIds(`${addition.role} ${addition.notes || ''}`);
     duplicate = existingApps.find(app => {
       if (normalizeCompany(app.company) !== normCompany) return false;
+      const oldRefs = extractRefIds(`${app.role} ${app.notes || ''}`);
+      if (newRefs.length > 0 && oldRefs.length > 0) {
+        const shared = newRefs.some(r => oldRefs.includes(r));
+        if (!shared) return false;
+      }
       return roleFuzzyMatch(addition.role, app.role);
     });
   }
