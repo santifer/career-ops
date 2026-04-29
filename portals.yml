@@ -1,0 +1,1210 @@
+# Portal Scanner Configuration
+# Used by /career-ops scan to discover new offers automatically.
+#
+# Strategy (3 levels):
+#   1. Playwright → careers_url of each company (real-time, reliable)
+#   2. Greenhouse API → structured JSON (fast, Greenhouse-only)
+#   3. WebSearch with site: filters (broad discovery, may be stale)
+#
+# IMPORTANT: Each company in tracked_companies MUST have careers_url.
+#   Prefer the BRANDED company careers URL whenever available; use ATS-hosted URL only as fallback.
+#   ✅ https://careers.mastercard.com   ⚠️ https://mastercard.wd1.myworkdayjobs.com (fallback only)
+#   ✅ https://openai.com/careers       ⚠️ https://job-boards.greenhouse.io/openai (fallback only)
+#   Exception: ATS-hosted careers_url is acceptable when no branded careers page exists.
+#   Using raw ATS URLs when a branded page exists can cause false 410 errors (job ID mismatch).
+#
+# HOW TO CUSTOMIZE:
+#   1. Copy this file to portals.yml in the project root
+#   2. Edit title_filter.positive with YOUR target role keywords
+#   3. Add/remove companies in tracked_companies
+#   4. Adjust search_queries for your preferred job boards
+#   5. Set enabled: false on companies you don't care about
+
+# -- Title filter --
+# The scanner uses these keywords to decide if a title is relevant.
+# At least 1 positive must match AND 0 negatives must match (case-insensitive).
+
+title_filter:
+  positive:
+    # [CUSTOMIZE] Add keywords matching YOUR target roles
+    # -- AI/ML roles --
+    - "AI"
+    - "ML"
+    - "LLM"
+    - "Agent"
+    - "Agentic"
+    - "GenAI"
+    - "Generative AI"
+    - "NLP"
+    - "LLMOps"
+    - "MLOps"
+    - "Voice AI"
+    - "Conversational AI"
+    - "Speech"
+    # -- German AI/ML keywords (DACH market) --
+    - "KI"
+    - "Künstliche Intelligenz"
+    - "KI Engineer"
+    - "KI Trainer"
+    - "Dozent"
+    - "Weiterbildung"
+    # -- Engineering roles --
+    - "Platform Engineer"
+    - "Solutions Architect"
+    - "Solutions Engineer"
+    - "Forward Deployed"
+    - "Deployed Engineer"
+    - "Customer Engineer"
+    - "Integration Engineer"
+    # -- Product roles --
+    - "Product Manager"
+    - "Technical PM"
+    # -- Automation roles --
+    - "Automation"
+    - "Hyperautomation"
+    - "Low-Code"
+    - "No-Code"
+    - "GTM Engineer"
+    - "RevOps"
+    - "Business Systems"
+    - "Internal Tools"
+    - "Transformation"
+  negative:
+    # [CUSTOMIZE] Add keywords for roles you want to exclude
+    - "Junior"
+    - "Intern"
+    - ".NET"
+    - "Java "
+    - "iOS"
+    - "Android"
+    - "PHP"
+    - "Ruby"
+    - "Embedded"
+    - "Firmware"
+    - "FPGA"
+    - "ASIC"
+    - "Blockchain"
+    - "Web3"
+    - "Crypto"
+    - "Salesforce Admin"
+    - "SAP "
+    - "Oracle EBS"
+    - "Mainframe"
+    - "COBOL"
+  seniority_boost:
+    # These prefixes add relevance but are not required
+    - "Senior"
+    - "Staff"
+    - "Principal"
+    - "Lead"
+    - "Head"
+    - "Director"
+
+# -- Search queries --
+# Each query triggers a WebSearch. Use site: to filter by portal.
+# The scanner extracts title, URL, and company from results.
+
+search_queries:
+  # -- Ashby --
+  - name: Ashby — AI PM
+    query: 'site:jobs.ashbyhq.com "AI Product Manager" OR "Senior Product Manager AI" remote'
+    enabled: true
+
+  - name: Ashby — Solutions Architect
+    query: 'site:jobs.ashbyhq.com "Solutions Architect" AI OR automation remote'
+    enabled: true
+
+  - name: Ashby — AI Engineer
+    query: 'site:jobs.ashbyhq.com "AI Engineer" OR "LLM Engineer" OR "Forward Deployed" remote'
+    enabled: true
+
+  - name: Ashby — Agentic
+    query: 'site:jobs.ashbyhq.com "Agentic" OR "AI Agent" OR "Automation Architect" remote'
+    enabled: true
+
+  # -- Greenhouse --
+  - name: Greenhouse — AI PM
+    query: 'site:boards.greenhouse.io OR site:job-boards.greenhouse.io "AI Product Manager" OR "Senior Product Manager" AI remote'
+    enabled: true
+
+  - name: Greenhouse — SA & FDE
+    query: 'site:boards.greenhouse.io OR site:job-boards.greenhouse.io "Solutions Architect" OR "Forward Deployed" AI remote'
+    enabled: true
+
+  - name: Greenhouse — AI Engineer
+    query: 'site:boards.greenhouse.io OR site:job-boards.greenhouse.io "AI Engineer" OR "LLM" OR "Agentic" remote'
+    enabled: true
+
+  # -- Workable --
+  - name: Workable — AI Roles
+    query: 'site:apply.workable.com "AI" "Product Manager" OR "Solutions Architect" OR "AI Engineer" remote'
+    enabled: true
+
+  # -- No-Code / Low-Code / Automation --
+  - name: Ashby — No-Code & Automation
+    query: 'site:jobs.ashbyhq.com "no-code" OR "low-code" OR "automation engineer" OR "n8n" OR "Make" OR "Airtable" remote senior'
+    enabled: true
+
+  - name: Greenhouse — No-Code & Automation
+    query: 'site:job-boards.greenhouse.io "no-code" OR "low-code" OR "automation engineer" OR "business systems" senior remote'
+    enabled: true
+
+  - name: GTM Engineer — All portals
+    query: '"GTM Engineer" OR "RevOps Engineer" OR "Growth Engineer" automation Airtable OR Make OR Clay remote'
+    enabled: true
+
+  # -- Voice AI & Conversational AI --
+  - name: Voice AI — FDE & SA
+    query: 'site:job-boards.greenhouse.io OR site:jobs.ashbyhq.com "Voice AI" OR "Conversational AI" OR "Speech" "Solutions" OR "Forward Deployed" OR "Customer Engineer"'
+    enabled: true
+
+  - name: Voice AI — AI Engineer
+    query: 'site:job-boards.greenhouse.io OR site:jobs.ashbyhq.com "Voice" OR "Speech" "AI Engineer" OR "Deployment" OR "Integration"'
+    enabled: true
+
+  # -- Contact Center AI --
+  - name: Contact Center AI — SA & SE
+    query: '"contact center" OR "customer service" "AI" "Solutions Architect" OR "Solutions Engineer" OR "Forward Deployed" remote'
+    enabled: true
+
+  # -- FDE specific (cross-portal) --
+  - name: FDE & Deployed Engineer — All portals
+    query: '"Forward Deployed Engineer" OR "Deployed Engineer" OR "Deployment Engineer" AI site:job-boards.greenhouse.io OR site:jobs.ashbyhq.com OR site:jobs.lever.co'
+    enabled: true
+
+  # -- Remote-friendly Europe boards --
+
+  - name: Remotive — AI/DevRel/SA/FDE
+    query: 'site:remotive.com "AI Engineer" OR "Developer Advocate" OR "Solutions Architect" OR "Forward Deployed" OR "DevRel" Europe'
+    enabled: true
+
+  - name: WeWorkRemotely — AI & DX
+    query: 'site:weworkremotely.com "AI" OR "DevRel" OR "Solutions Engineer" OR "Forward Deployed" OR "Founding Engineer"'
+    enabled: true
+
+  - name: Working Nomads — AI/DevRel/SA
+    query: 'site:workingnomads.com "AI Engineer" OR "Developer Advocate" OR "Solutions Architect" OR "Forward Deployed"'
+    enabled: true
+
+  - name: EU Remote Jobs — AI/DevRel/SA
+    query: 'site:euremotejobs.com "AI" OR "DevRel" OR "Solutions Architect" OR "Forward Deployed" OR "Founding Engineer"'
+    enabled: true
+
+  - name: RemoteOK — AI/DevRel/SA
+    query: 'site:remoteok.com "AI Engineer" OR "Developer Advocate" OR "Solutions Architect" OR "Forward Deployed" OR "Founding Engineer"'
+    enabled: true
+
+  # -- Specialized AI / Dev-Tools / FDE boards --
+
+  - name: ai-jobs.net — DevRel/SA/FDE
+    query: 'site:ai-jobs.net "Developer Advocate" OR "Solutions Architect" OR "Forward Deployed" OR "DevRel" remote Europe'
+    enabled: true
+
+  - name: ai-jobs.net — Founding/Applied AI
+    query: 'site:ai-jobs.net "Founding Engineer" OR "Applied AI Engineer" OR "Founding" remote'
+    enabled: true
+
+  - name: fwddeploy.com — Forward Deployed roles
+    query: 'site:fwddeploy.com "Forward Deployed" OR "Deployed Engineer" remote Europe OR EMEA'
+    enabled: true
+
+  - name: YC Jobs — DevRel/SA/FDE/Founding
+    query: 'site:ycombinator.com/jobs OR site:workatastartup.com "Forward Deployed" OR "Developer Advocate" OR "Founding Engineer" OR "Solutions Architect" remote'
+    enabled: true
+
+  - name: YC Jobs — Applied AI
+    query: 'site:workatastartup.com "Applied AI" OR "AI Engineer" OR "AI Agent" remote Europe'
+    enabled: true
+
+  # -- Spanish market specialized (high-value for Madrid/Barcelona-based candidates) --
+
+  - name: Manfred — Tech Senior España
+    query: 'site:getmanfred.com/en/job-offers "Solutions Architect" OR "DevRel" OR "Forward Deployed" OR "AI Engineer" OR "Founding"'
+    enabled: true
+
+  - name: Manfred — Remote AI/Senior
+    query: 'site:getmanfred.com "remote" "AI" OR "Senior" OR "Staff" OR "Lead"'
+    enabled: true
+
+  - name: Tecnoempleo — España IT
+    query: 'site:tecnoempleo.com "AI Engineer" OR "Solutions Architect" OR "DevRel" OR "Forward Deployed" OR "Founding Engineer"'
+    enabled: true
+
+  - name: Tecnoempleo — Remoto Senior
+    query: 'site:tecnoempleo.com "remoto" OR "remote" Senior "AI" OR "Architect" OR "Lead"'
+    enabled: true
+
+  - name: JobFluent — Spain startups
+    query: 'site:jobfluent.com Madrid OR Barcelona "AI" OR "Engineer" OR "Solutions" OR "DevRel"'
+    enabled: true
+
+  - name: Welcome to the Jungle — Spain tech
+    query: 'site:welcometothejungle.com Spain OR Madrid OR Barcelona "AI Engineer" OR "Solutions Architect" OR "DevRel" OR "Forward Deployed"'
+    enabled: true
+
+  # -- DevRel-specific boards --
+
+  - name: DevRelX Jobs
+    query: 'site:devrelx.com/jobs remote OR Europe OR EMEA'
+    enabled: true
+
+  - name: TrueUp — DevRel roles
+    query: 'site:trueup.io/devrel OR site:trueup.io "Developer Advocate" OR "DevRel" remote Europe'
+    enabled: true
+
+  - name: Remote Rocketship — DevRel
+    query: 'site:remoterocketship.com/jobs/developer-relations OR site:remoterocketship.com "DevRel" remote'
+    enabled: true
+
+  - name: DevRel Job board
+    query: 'site:devreljob.com remote OR Europe OR EMEA'
+    enabled: true
+
+  # -- European / global aggregators --
+
+  - name: Himalayas — Remote AI/Dev-tools
+    query: 'site:himalayas.app "AI Engineer" OR "Solutions Architect" OR "Developer Advocate" OR "Forward Deployed" OR "Founding Engineer" Europe'
+    enabled: true
+
+  - name: Jooble — España Tech Senior
+    query: 'site:jooble.org "AI Engineer" OR "Solutions Architect" OR "DevRel" Madrid OR remote España'
+    enabled: true
+
+  - name: EU Data Jobs — AI/ML Europe
+    query: 'site:eudatajobs.com "AI" OR "ML" OR "Data" "Engineer" OR "Architect" remote Europe'
+    enabled: true
+
+  - name: HN Who's Hiring — Remote AI
+    query: 'site:news.ycombinator.com OR site:hnrss.org "AI Engineer" OR "Forward Deployed" OR "DevRel" OR "Founding Engineer" remote'
+    enabled: true
+
+# -- Tracked companies --
+# Companies whose career pages are checked directly.
+# scan_method: playwright (default), websearch, greenhouse_api
+# For Greenhouse companies, add api: field for faster structured JSON access.
+
+tracked_companies:
+
+  # -- Pharma with cryo-EM --
+
+  - name: AstraZeneca
+    careers_url: https://www.google.com/search?q=AstraZeneca%20careers
+    scan_method: websearch
+    scan_query: '"AstraZeneca" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "UK | Cambridge | Pharma with cryo-EM"
+    enabled: true
+
+  - name: GlaxoSmithKline
+    careers_url: https://www.google.com/search?q=GlaxoSmithKline%20careers
+    scan_method: websearch
+    scan_query: '"GlaxoSmithKline" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "UK | Stevenage/London | Pharma with cryo-EM"
+    enabled: true
+
+  - name: Astex Pharmaceuticals
+    careers_url: https://www.google.com/search?q=Astex%20Pharmaceuticals%20careers
+    scan_method: websearch
+    scan_query: '"Astex Pharmaceuticals" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "★ priority match. UK | Cambridge | Pharma with cryo-EM"
+    enabled: true
+
+  - name: UCB
+    careers_url: https://www.google.com/search?q=UCB%20careers
+    scan_method: websearch
+    scan_query: '"UCB" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "UK | Slough | Pharma with cryo-EM"
+    enabled: true
+
+  - name: Nxera Pharma
+    careers_url: https://www.google.com/search?q=Nxera%20Pharma%20careers
+    scan_method: websearch
+    scan_query: '"Nxera Pharma" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "UK | Cambridge | Pharma with cryo-EM"
+    enabled: true
+
+  - name: AstraZeneca Sweden
+    careers_url: https://www.google.com/search?q=AstraZeneca%20Sweden%20careers
+    scan_method: websearch
+    scan_query: '"AstraZeneca Sweden" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "★ priority match. Sweden | Gothenburg/Mölndal | Pharma with cryo-EM"
+    enabled: true
+
+  - name: Sobi
+    careers_url: https://www.google.com/search?q=Sobi%20careers
+    scan_method: websearch
+    scan_query: '"Sobi" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Sweden | Stockholm | Pharma with cryo-EM"
+    enabled: true
+
+  - name: Polypeptide Group
+    careers_url: https://www.google.com/search?q=Polypeptide%20Group%20careers
+    scan_method: websearch
+    scan_query: '"Polypeptide Group" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Sweden | Sweden | Pharma with cryo-EM"
+    enabled: true
+
+  - name: Olink Proteomics
+    careers_url: https://www.google.com/search?q=Olink%20Proteomics%20careers
+    scan_method: websearch
+    scan_query: '"Olink Proteomics" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Sweden | Uppsala | Pharma with cryo-EM"
+    enabled: true
+
+  - name: Boehringer Ingelheim
+    careers_url: https://www.google.com/search?q=Boehringer%20Ingelheim%20careers
+    scan_method: websearch
+    scan_query: '"Boehringer Ingelheim" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "★ priority match. Germany | Biberach | Pharma with cryo-EM"
+    enabled: true
+
+  - name: Boehringer Ingelheim Vienna RCV
+    careers_url: https://www.google.com/search?q=Boehringer%20Ingelheim%20Vienna%20RCV%20careers
+    scan_method: websearch
+    scan_query: '"Boehringer Ingelheim Vienna RCV" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "★ priority match. Austria | Vienna | Pharma with cryo-EM"
+    enabled: true
+
+  - name: Bayer
+    careers_url: https://www.google.com/search?q=Bayer%20careers
+    scan_method: websearch
+    scan_query: '"Bayer" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Germany | Berlin/Wuppertal | Pharma with cryo-EM"
+    enabled: true
+
+  - name: Merck KGaA
+    careers_url: https://www.google.com/search?q=Merck%20KGaA%20careers
+    scan_method: websearch
+    scan_query: '"Merck KGaA" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Germany | Darmstadt | Pharma with cryo-EM"
+    enabled: true
+
+  - name: BioNTech
+    careers_url: https://www.google.com/search?q=BioNTech%20careers
+    scan_method: websearch
+    scan_query: '"BioNTech" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Germany | Mainz | Pharma with cryo-EM"
+    enabled: true
+
+  - name: Sanofi
+    careers_url: https://www.google.com/search?q=Sanofi%20careers
+    scan_method: websearch
+    scan_query: '"Sanofi" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Germany | Frankfurt | Pharma with cryo-EM"
+    enabled: true
+
+  - name: Evotec
+    careers_url: https://www.google.com/search?q=Evotec%20careers
+    scan_method: websearch
+    scan_query: '"Evotec" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Germany | Hamburg | Pharma with cryo-EM"
+    enabled: true
+
+  - name: Roche / Roche pRED
+    careers_url: https://www.google.com/search?q=Roche%20%2F%20Roche%20pRED%20careers
+    scan_method: websearch
+    scan_query: '"Roche / Roche pRED" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "★ priority match. Switzerland | Basel | Pharma with cryo-EM"
+    enabled: true
+
+  - name: Novartis NIBR
+    careers_url: https://www.google.com/search?q=Novartis%20NIBR%20careers
+    scan_method: websearch
+    scan_query: '"Novartis NIBR" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "★ priority match. Switzerland | Basel | Pharma with cryo-EM"
+    enabled: true
+
+  - name: Genentech
+    careers_url: https://www.google.com/search?q=Genentech%20careers
+    scan_method: websearch
+    scan_query: '"Genentech" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Switzerland | Basel/Zurich | Pharma with cryo-EM"
+    enabled: true
+
+  - name: CSL Behring
+    careers_url: https://www.google.com/search?q=CSL%20Behring%20careers
+    scan_method: websearch
+    scan_query: '"CSL Behring" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Switzerland | Bern | Pharma with cryo-EM"
+    enabled: true
+
+  - name: CSL Vifor
+    careers_url: https://www.google.com/search?q=CSL%20Vifor%20careers
+    scan_method: websearch
+    scan_query: '"CSL Vifor" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Switzerland | Bern | Pharma with cryo-EM"
+    enabled: true
+
+  - name: Bayer Consumer Health
+    careers_url: https://www.google.com/search?q=Bayer%20Consumer%20Health%20careers
+    scan_method: websearch
+    scan_query: '"Bayer Consumer Health" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Switzerland | Basel | Pharma with cryo-EM"
+    enabled: true
+
+  # -- AI-first drug discovery --
+
+  - name: Isomorphic Labs
+    careers_url: https://www.google.com/search?q=Isomorphic%20Labs%20careers
+    scan_method: websearch
+    scan_query: '"Isomorphic Labs" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "★ priority match. UK | London | AI-first drug discovery"
+    enabled: true
+
+  - name: Google DeepMind
+    careers_url: https://www.google.com/search?q=Google%20DeepMind%20careers
+    scan_method: websearch
+    scan_query: '"Google DeepMind" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "UK | London | AI-first drug discovery"
+    enabled: true
+
+  - name: BenevolentAI
+    careers_url: https://www.google.com/search?q=BenevolentAI%20careers
+    scan_method: websearch
+    scan_query: '"BenevolentAI" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "UK | London | AI-first drug discovery"
+    enabled: true
+
+  - name: Charm Therapeutics
+    careers_url: https://www.google.com/search?q=Charm%20Therapeutics%20careers
+    scan_method: websearch
+    scan_query: '"Charm Therapeutics" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "UK | London | AI-first drug discovery"
+    enabled: true
+
+  - name: Latent Labs
+    careers_url: https://www.google.com/search?q=Latent%20Labs%20careers
+    scan_method: websearch
+    scan_query: '"Latent Labs" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "UK | London | AI-first drug discovery"
+    enabled: true
+
+  - name: Relation Therapeutics
+    careers_url: https://www.google.com/search?q=Relation%20Therapeutics%20careers
+    scan_method: websearch
+    scan_query: '"Relation Therapeutics" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "UK | London | AI-first drug discovery"
+    enabled: true
+
+  - name: Etcembly
+    careers_url: https://www.google.com/search?q=Etcembly%20careers
+    scan_method: websearch
+    scan_query: '"Etcembly" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "UK | Oxford | AI-first drug discovery"
+    enabled: true
+
+  - name: LabGenius
+    careers_url: https://www.google.com/search?q=LabGenius%20careers
+    scan_method: websearch
+    scan_query: '"LabGenius" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "UK | London | AI-first drug discovery"
+    enabled: true
+
+  - name: Cradle.bio
+    careers_url: https://www.google.com/search?q=Cradle.bio%20careers
+    scan_method: websearch
+    scan_query: '"Cradle.bio" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "UK | UK presence | AI-first drug discovery"
+    enabled: true
+
+  # -- Public infrastructure --
+
+  - name: Diamond Light Source
+    careers_url: https://www.google.com/search?q=Diamond%20Light%20Source%20careers
+    scan_method: websearch
+    scan_query: '"Diamond Light Source" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "★ priority match. UK | Harwell/Didcot | Public infrastructure"
+    enabled: true
+
+  - name: MRC Laboratory of Molecular Biology
+    careers_url: https://www.google.com/search?q=MRC%20Laboratory%20of%20Molecular%20Biology%20careers
+    scan_method: websearch
+    scan_query: '"MRC Laboratory of Molecular Biology" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "UK | Cambridge | Public infrastructure"
+    enabled: true
+
+  - name: EMBL-EBI
+    careers_url: https://www.google.com/search?q=EMBL-EBI%20careers
+    scan_method: websearch
+    scan_query: '"EMBL-EBI" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "★ priority match. UK | Hinxton/Cambridge | Public infrastructure"
+    enabled: true
+
+  - name: The Rosalind Franklin Institute
+    careers_url: https://www.google.com/search?q=The%20Rosalind%20Franklin%20Institute%20careers
+    scan_method: websearch
+    scan_query: '"The Rosalind Franklin Institute" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "UK | Harwell | Public infrastructure"
+    enabled: true
+
+  - name: The Francis Crick Institute
+    careers_url: https://www.google.com/search?q=The%20Francis%20Crick%20Institute%20careers
+    scan_method: websearch
+    scan_query: '"The Francis Crick Institute" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "UK | London | Public infrastructure"
+    enabled: true
+
+  - name: Wellcome Sanger Institute
+    careers_url: https://www.google.com/search?q=Wellcome%20Sanger%20Institute%20careers
+    scan_method: websearch
+    scan_query: '"Wellcome Sanger Institute" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "UK | Hinxton | Public infrastructure"
+    enabled: true
+
+  - name: Alan Turing Institute
+    careers_url: https://www.google.com/search?q=Alan%20Turing%20Institute%20careers
+    scan_method: websearch
+    scan_query: '"Alan Turing Institute" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "UK | London | Public infrastructure"
+    enabled: true
+
+  - name: SciLifeLab
+    careers_url: https://www.google.com/search?q=SciLifeLab%20careers
+    scan_method: websearch
+    scan_query: '"SciLifeLab" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "★ priority match. Sweden | Stockholm/Uppsala/Umeå/Gothenburg/Lund | Public infrastructure"
+    enabled: true
+
+  - name: MAX IV Laboratory
+    careers_url: https://www.google.com/search?q=MAX%20IV%20Laboratory%20careers
+    scan_method: websearch
+    scan_query: '"MAX IV Laboratory" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Sweden | Lund | Public infrastructure"
+    enabled: true
+
+  - name: European Spallation Source
+    careers_url: https://www.google.com/search?q=European%20Spallation%20Source%20careers
+    scan_method: websearch
+    scan_query: '"European Spallation Source" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Sweden | Lund | Public infrastructure"
+    enabled: true
+
+  - name: Karolinska Institute Core Facilities
+    careers_url: https://www.google.com/search?q=Karolinska%20Institute%20Core%20Facilities%20careers
+    scan_method: websearch
+    scan_query: '"Karolinska Institute Core Facilities" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "★ priority match. Sweden | Stockholm | Public infrastructure"
+    enabled: true
+
+  - name: KTH Royal Institute of Technology
+    careers_url: https://www.google.com/search?q=KTH%20Royal%20Institute%20of%20Technology%20careers
+    scan_method: websearch
+    scan_query: '"KTH Royal Institute of Technology" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Sweden | Stockholm | Public infrastructure"
+    enabled: true
+
+  - name: EMBL Heidelberg
+    careers_url: https://www.google.com/search?q=EMBL%20Heidelberg%20careers
+    scan_method: websearch
+    scan_query: '"EMBL Heidelberg" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "★ priority match. Germany | Heidelberg | Public infrastructure"
+    enabled: true
+
+  - name: EMBL Hamburg
+    careers_url: https://www.google.com/search?q=EMBL%20Hamburg%20careers
+    scan_method: websearch
+    scan_query: '"EMBL Hamburg" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Germany | Hamburg | Public infrastructure"
+    enabled: true
+
+  - name: EMBL Grenoble
+    careers_url: https://www.google.com/search?q=EMBL%20Grenoble%20careers
+    scan_method: websearch
+    scan_query: '"EMBL Grenoble" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "France | Grenoble | Public infrastructure"
+    enabled: true
+
+  - name: Max Planck Institute for Biophysics
+    careers_url: https://www.google.com/search?q=Max%20Planck%20Institute%20for%20Biophysics%20careers
+    scan_method: websearch
+    scan_query: '"Max Planck Institute for Biophysics" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Germany | Frankfurt | Public infrastructure"
+    enabled: true
+
+  - name: Max Planck Institute of Biochemistry
+    careers_url: https://www.google.com/search?q=Max%20Planck%20Institute%20of%20Biochemistry%20careers
+    scan_method: websearch
+    scan_query: '"Max Planck Institute of Biochemistry" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Germany | Martinsried/Munich | Public infrastructure"
+    enabled: true
+
+  - name: Max Planck Institute for Multidisciplinary Sciences
+    careers_url: https://www.google.com/search?q=Max%20Planck%20Institute%20for%20Multidisciplinary%20Sciences%20careers
+    scan_method: websearch
+    scan_query: '"Max Planck Institute for Multidisciplinary Sciences" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Germany | Göttingen | Public infrastructure"
+    enabled: true
+
+  - name: Helmholtz Munich – Institute of Computational Biology
+    careers_url: https://www.google.com/search?q=Helmholtz%20Munich%20%E2%80%93%20Institute%20of%20Computational%20Biology%20careers
+    scan_method: websearch
+    scan_query: '"Helmholtz Munich – Institute of Computational Biology" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Germany | Munich | Public infrastructure"
+    enabled: true
+
+  - name: Helmholtz AI
+    careers_url: https://www.google.com/search?q=Helmholtz%20AI%20careers
+    scan_method: websearch
+    scan_query: '"Helmholtz AI" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Germany | Multiple locations | Public infrastructure"
+    enabled: true
+
+  - name: CSSB Hamburg
+    careers_url: https://www.google.com/search?q=CSSB%20Hamburg%20careers
+    scan_method: websearch
+    scan_query: '"CSSB Hamburg" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Germany | Hamburg | Public infrastructure"
+    enabled: true
+
+  - name: DESY
+    careers_url: https://www.google.com/search?q=DESY%20careers
+    scan_method: websearch
+    scan_query: '"DESY" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Germany | Hamburg | Public infrastructure"
+    enabled: true
+
+  - name: Forschungszentrum Jülich
+    careers_url: https://www.google.com/search?q=Forschungszentrum%20J%C3%BClich%20careers
+    scan_method: websearch
+    scan_query: '"Forschungszentrum Jülich" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Germany | Jülich | Public infrastructure"
+    enabled: true
+
+  - name: DKFZ Heidelberg
+    careers_url: https://www.google.com/search?q=DKFZ%20Heidelberg%20careers
+    scan_method: websearch
+    scan_query: '"DKFZ Heidelberg" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Germany | Heidelberg | Public infrastructure"
+    enabled: true
+
+  - name: IMP – Research Institute of Molecular Pathology
+    careers_url: https://www.google.com/search?q=IMP%20%E2%80%93%20Research%20Institute%20of%20Molecular%20Pathology%20careers
+    scan_method: websearch
+    scan_query: '"IMP – Research Institute of Molecular Pathology" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "★ priority match. Austria | Vienna BioCenter | Public infrastructure"
+    enabled: true
+
+  - name: IMBA – Institute of Molecular Biotechnology
+    careers_url: https://www.google.com/search?q=IMBA%20%E2%80%93%20Institute%20of%20Molecular%20Biotechnology%20careers
+    scan_method: websearch
+    scan_query: '"IMBA – Institute of Molecular Biotechnology" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Austria | Vienna BioCenter | Public infrastructure"
+    enabled: true
+
+  - name: ISTA – Institute of Science and Technology Austria
+    careers_url: https://www.google.com/search?q=ISTA%20%E2%80%93%20Institute%20of%20Science%20and%20Technology%20Austria%20careers
+    scan_method: websearch
+    scan_query: '"ISTA – Institute of Science and Technology Austria" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "★ priority match. Austria | Klosterneuburg | Public infrastructure"
+    enabled: true
+
+  - name: Max Perutz Labs
+    careers_url: https://www.google.com/search?q=Max%20Perutz%20Labs%20careers
+    scan_method: websearch
+    scan_query: '"Max Perutz Labs" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Austria | Vienna | Public infrastructure"
+    enabled: true
+
+  - name: CeMM
+    careers_url: https://www.google.com/search?q=CeMM%20careers
+    scan_method: websearch
+    scan_query: '"CeMM" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Austria | Vienna | Public infrastructure"
+    enabled: true
+
+  - name: Paul Scherrer Institute
+    careers_url: https://www.google.com/search?q=Paul%20Scherrer%20Institute%20careers
+    scan_method: websearch
+    scan_query: '"Paul Scherrer Institute" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "★ priority match. Switzerland | Villigen | Public infrastructure"
+    enabled: true
+
+  - name: Friedrich Miescher Institute
+    careers_url: https://www.google.com/search?q=Friedrich%20Miescher%20Institute%20careers
+    scan_method: websearch
+    scan_query: '"Friedrich Miescher Institute" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "★ priority match. Switzerland | Basel | Public infrastructure"
+    enabled: true
+
+  - name: ETH Zurich ScopeM
+    careers_url: https://www.google.com/search?q=ETH%20Zurich%20ScopeM%20careers
+    scan_method: websearch
+    scan_query: '"ETH Zurich ScopeM" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Switzerland | Zurich | Public infrastructure"
+    enabled: true
+
+  - name: EPFL Lausanne
+    careers_url: https://www.google.com/search?q=EPFL%20Lausanne%20careers
+    scan_method: websearch
+    scan_query: '"EPFL Lausanne" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Switzerland | Lausanne | Public infrastructure"
+    enabled: true
+
+  - name: SIB Swiss Institute of Bioinformatics
+    careers_url: https://www.google.com/search?q=SIB%20Swiss%20Institute%20of%20Bioinformatics%20careers
+    scan_method: websearch
+    scan_query: '"SIB Swiss Institute of Bioinformatics" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Switzerland | Switzerland | Public infrastructure"
+    enabled: true
+
+  - name: Biozentrum Basel
+    careers_url: https://www.google.com/search?q=Biozentrum%20Basel%20careers
+    scan_method: websearch
+    scan_query: '"Biozentrum Basel" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Switzerland | Basel | Public infrastructure"
+    enabled: true
+
+  - name: University of Zurich ZMB
+    careers_url: https://www.google.com/search?q=University%20of%20Zurich%20ZMB%20careers
+    scan_method: websearch
+    scan_query: '"University of Zurich ZMB" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Switzerland | Zurich | Public infrastructure"
+    enabled: true
+
+  # -- Imaging CROs/Vendors --
+
+  - name: Sygnature Discovery
+    careers_url: https://www.google.com/search?q=Sygnature%20Discovery%20careers
+    scan_method: websearch
+    scan_query: '"Sygnature Discovery" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "UK | Nottingham/Alderley Park | Imaging CROs/Vendors"
+    enabled: true
+
+  - name: Charles River Laboratories
+    careers_url: https://www.google.com/search?q=Charles%20River%20Laboratories%20careers
+    scan_method: websearch
+    scan_query: '"Charles River Laboratories" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "UK | Multiple UK sites | Imaging CROs/Vendors"
+    enabled: true
+
+  - name: Oxford Instruments
+    careers_url: https://www.google.com/search?q=Oxford%20Instruments%20careers
+    scan_method: websearch
+    scan_query: '"Oxford Instruments" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "UK | Abingdon | Imaging CROs/Vendors"
+    enabled: true
+
+  - name: Thermo Fisher Scientific UK
+    careers_url: https://www.google.com/search?q=Thermo%20Fisher%20Scientific%20UK%20careers
+    scan_method: websearch
+    scan_query: '"Thermo Fisher Scientific UK" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "UK | Cambridge | Imaging CROs/Vendors"
+    enabled: true
+
+  # -- Imaging AI/Computer Vision --
+
+  - name: Brainomix
+    careers_url: https://www.google.com/search?q=Brainomix%20careers
+    scan_method: websearch
+    scan_query: '"Brainomix" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "UK | Oxford | Imaging AI/Computer Vision"
+    enabled: true
+
+  - name: Kheiron Medical
+    careers_url: https://www.google.com/search?q=Kheiron%20Medical%20careers
+    scan_method: websearch
+    scan_query: '"Kheiron Medical" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "UK | London | Imaging AI/Computer Vision"
+    enabled: true
+
+  - name: Ultromics
+    careers_url: https://www.google.com/search?q=Ultromics%20careers
+    scan_method: websearch
+    scan_query: '"Ultromics" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "UK | Oxford | Imaging AI/Computer Vision"
+    enabled: true
+
+  - name: Mirada Medical
+    careers_url: https://www.google.com/search?q=Mirada%20Medical%20careers
+    scan_method: websearch
+    scan_query: '"Mirada Medical" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "UK | Oxford | Imaging AI/Computer Vision"
+    enabled: true
+
+  - name: Perspectum
+    careers_url: https://www.google.com/search?q=Perspectum%20careers
+    scan_method: websearch
+    scan_query: '"Perspectum" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "UK | Oxford | Imaging AI/Computer Vision"
+    enabled: true
+
+  - name: Microsoft Research Cambridge
+    careers_url: https://www.google.com/search?q=Microsoft%20Research%20Cambridge%20careers
+    scan_method: websearch
+    scan_query: '"Microsoft Research Cambridge" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "UK | Cambridge | Imaging AI/Computer Vision"
+    enabled: true
+
+  # -- AI/ML for life science --
+
+  - name: AstraZeneca AI Engineering
+    careers_url: https://www.google.com/search?q=AstraZeneca%20AI%20Engineering%20careers
+    scan_method: websearch
+    scan_query: '"AstraZeneca AI Engineering" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Sweden | Gothenburg | AI/ML for life science"
+    enabled: true
+
+  - name: Peptone
+    careers_url: https://www.google.com/search?q=Peptone%20careers
+    scan_method: websearch
+    scan_query: '"Peptone" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Sweden | Stockholm | AI/ML for life science"
+    enabled: true
+
+  - name: Atlas Antibodies
+    careers_url: https://www.google.com/search?q=Atlas%20Antibodies%20careers
+    scan_method: websearch
+    scan_query: '"Atlas Antibodies" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Sweden | Stockholm | AI/ML for life science"
+    enabled: true
+
+  - name: Alligator Bioscience
+    careers_url: https://www.google.com/search?q=Alligator%20Bioscience%20careers
+    scan_method: websearch
+    scan_query: '"Alligator Bioscience" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Sweden | Lund | AI/ML for life science"
+    enabled: true
+
+  - name: BioArctic
+    careers_url: https://www.google.com/search?q=BioArctic%20careers
+    scan_method: websearch
+    scan_query: '"BioArctic" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Sweden | Stockholm | AI/ML for life science"
+    enabled: true
+
+  - name: Calluna Pharma
+    careers_url: https://www.google.com/search?q=Calluna%20Pharma%20careers
+    scan_method: websearch
+    scan_query: '"Calluna Pharma" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Sweden | Oslo/Stockholm region | AI/ML for life science"
+    enabled: true
+
+  # -- Imaging AI/Vision --
+
+  - name: Eigenvision
+    careers_url: https://www.google.com/search?q=Eigenvision%20careers
+    scan_method: websearch
+    scan_query: '"Eigenvision" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Sweden | Lund/Malmö | Imaging AI/Vision"
+    enabled: true
+
+  - name: Combine
+    careers_url: https://www.google.com/search?q=Combine%20careers
+    scan_method: websearch
+    scan_query: '"Combine" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Sweden | Sweden | Imaging AI/Vision"
+    enabled: true
+
+  - name: Sigma Technology
+    careers_url: https://www.google.com/search?q=Sigma%20Technology%20careers
+    scan_method: websearch
+    scan_query: '"Sigma Technology" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Sweden | Sweden | Imaging AI/Vision"
+    enabled: true
+
+  # -- Research Contract Organization --
+
+  - name: NORCE
+    careers_url: https://www.google.com/search?q=NORCE%20careers
+    scan_method: websearch
+    scan_query: '"NORCE" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Norway | Trondheim/Oslo/Bergen | Research Contract Organization"
+    enabled: true
+
+  - name: SINTEF
+    careers_url: https://www.google.com/search?q=SINTEF%20careers
+    scan_method: websearch
+    scan_query: '"SINTEF" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Norway | Trondheim/Oslo/Bergen | Research Contract Organization"
+    enabled: true
+
+  # -- Academic Infrastructure --
+
+  - name: University of Oslo Centre for Bioinformatics
+    careers_url: https://www.google.com/search?q=University%20of%20Oslo%20Centre%20for%20Bioinformatics%20careers
+    scan_method: websearch
+    scan_query: '"University of Oslo Centre for Bioinformatics" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Norway | Oslo | Academic Infrastructure"
+    enabled: true
+
+  - name: NCMM
+    careers_url: https://www.google.com/search?q=NCMM%20careers
+    scan_method: websearch
+    scan_query: '"NCMM" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Norway | Oslo | Academic Infrastructure"
+    enabled: true
+
+  # -- Accelerator/Biotech Hub --
+
+  - name: Oslo Cancer Cluster
+    careers_url: https://www.google.com/search?q=Oslo%20Cancer%20Cluster%20careers
+    scan_method: websearch
+    scan_query: '"Oslo Cancer Cluster" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Norway | Oslo | Accelerator/Biotech Hub"
+    enabled: true
+
+  # -- Imaging/AI Assurance --
+
+  - name: DNV
+    careers_url: https://www.google.com/search?q=DNV%20careers
+    scan_method: websearch
+    scan_query: '"DNV" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Norway | Høvik | Imaging/AI Assurance"
+    enabled: true
+
+  # -- Industrial Data Platform --
+
+  - name: Cognite
+    careers_url: https://www.google.com/search?q=Cognite%20careers
+    scan_method: websearch
+    scan_query: '"Cognite" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Norway | Oslo | Industrial Data Platform"
+    enabled: true
+
+  # -- Biotech --
+
+  - name: Nykode Therapeutics
+    careers_url: https://www.google.com/search?q=Nykode%20Therapeutics%20careers
+    scan_method: websearch
+    scan_query: '"Nykode Therapeutics" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Norway | Oslo | Biotech"
+    enabled: true
+
+  - name: BerGenBio
+    careers_url: https://www.google.com/search?q=BerGenBio%20careers
+    scan_method: websearch
+    scan_query: '"BerGenBio" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Norway | Bergen | Biotech"
+    enabled: true
+
+  - name: Ultimovacs
+    careers_url: https://www.google.com/search?q=Ultimovacs%20careers
+    scan_method: websearch
+    scan_query: '"Ultimovacs" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Norway | Oslo | Biotech"
+    enabled: true
+
+  - name: Vaccibody
+    careers_url: https://www.google.com/search?q=Vaccibody%20careers
+    scan_method: websearch
+    scan_query: '"Vaccibody" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Norway | Oslo | Biotech"
+    enabled: true
+
+  # -- Bayesian Statistics/Image Analysis --
+
+  - name: Norsk Regnesentral
+    careers_url: https://www.google.com/search?q=Norsk%20Regnesentral%20careers
+    scan_method: websearch
+    scan_query: '"Norsk Regnesentral" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Norway | Oslo | Bayesian Statistics/Image Analysis"
+    enabled: true
+
+  # -- AI drug discovery --
+
+  - name: Aleph Alpha (DE)
+    careers_url: https://www.google.com/search?q=Aleph%20Alpha%20(DE)%20careers
+    scan_method: websearch
+    scan_query: '"Aleph Alpha (DE)" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Germany | Germany | AI drug discovery"
+    enabled: true
+
+  - name: Innoplexus
+    careers_url: https://www.google.com/search?q=Innoplexus%20careers
+    scan_method: websearch
+    scan_query: '"Innoplexus" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Germany | Eschborn | AI drug discovery"
+    enabled: true
+
+  - name: Atomwise (DE)
+    careers_url: https://www.google.com/search?q=Atomwise%20(DE)%20careers
+    scan_method: websearch
+    scan_query: '"Atomwise (DE)" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Germany | Germany | AI drug discovery"
+    enabled: true
+
+  - name: Biosaxs
+    careers_url: https://www.google.com/search?q=Biosaxs%20careers
+    scan_method: websearch
+    scan_query: '"Biosaxs" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Germany | Germany | AI drug discovery"
+    enabled: true
+
+  - name: Cellarity (DE)
+    careers_url: https://www.google.com/search?q=Cellarity%20(DE)%20careers
+    scan_method: websearch
+    scan_query: '"Cellarity (DE)" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Germany | Germany | AI drug discovery"
+    enabled: true
+
+  - name: Insitro (DE)
+    careers_url: https://www.google.com/search?q=Insitro%20(DE)%20careers
+    scan_method: websearch
+    scan_query: '"Insitro (DE)" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Germany | Germany | AI drug discovery"
+    enabled: true
+
+  # -- Cryo-EM Tooling --
+
+  - name: Glencoe Software
+    careers_url: https://www.google.com/search?q=Glencoe%20Software%20careers
+    scan_method: websearch
+    scan_query: '"Glencoe Software" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Germany | Dundee/Munich | Cryo-EM Tooling"
+    enabled: true
+
+  - name: CryoLife
+    careers_url: https://www.google.com/search?q=CryoLife%20careers
+    scan_method: websearch
+    scan_query: '"CryoLife" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Germany | Munich | Cryo-EM Tooling"
+    enabled: true
+
+  - name: CryoWrite
+    careers_url: https://www.google.com/search?q=CryoWrite%20careers
+    scan_method: websearch
+    scan_query: '"CryoWrite" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "★ priority match. Switzerland | Basel | Cryo-EM Tooling"
+    enabled: true
+
+  # -- AI for Biomedicine --
+
+  - name: AITHYRA
+    careers_url: https://www.google.com/search?q=AITHYRA%20careers
+    scan_method: websearch
+    scan_query: '"AITHYRA" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "★ priority match. Austria | Vienna | AI for Biomedicine"
+    enabled: true
+
+  # -- Pharma --
+
+  - name: AOP Health
+    careers_url: https://www.google.com/search?q=AOP%20Health%20careers
+    scan_method: websearch
+    scan_query: '"AOP Health" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Austria | Vienna | Pharma"
+    enabled: true
+
+  - name: Idorsia
+    careers_url: https://www.google.com/search?q=Idorsia%20careers
+    scan_method: websearch
+    scan_query: '"Idorsia" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Switzerland | Allschwil | Pharma"
+    enabled: true
+
+  # -- Biologics Manufacturing --
+
+  - name: Lonza
+    careers_url: https://www.google.com/search?q=Lonza%20careers
+    scan_method: websearch
+    scan_query: '"Lonza" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Switzerland | Basel/Visp | Biologics Manufacturing"
+    enabled: true
+
+  # -- AI/ML Drug Discovery --
+
+  - name: Endogena Therapeutics
+    careers_url: https://www.google.com/search?q=Endogena%20Therapeutics%20careers
+    scan_method: websearch
+    scan_query: '"Endogena Therapeutics" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Switzerland | Zurich | AI/ML Drug Discovery"
+    enabled: true
+
+  - name: Anaveon
+    careers_url: https://www.google.com/search?q=Anaveon%20careers
+    scan_method: websearch
+    scan_query: '"Anaveon" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Switzerland | Basel | AI/ML Drug Discovery"
+    enabled: true
+
+  - name: VantAI
+    careers_url: https://www.google.com/search?q=VantAI%20careers
+    scan_method: websearch
+    scan_query: '"VantAI" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Switzerland | Zurich | AI/ML Drug Discovery"
+    enabled: true
+
+  - name: InterAx Biotech
+    careers_url: https://www.google.com/search?q=InterAx%20Biotech%20careers
+    scan_method: websearch
+    scan_query: '"InterAx Biotech" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Switzerland | Villigen | AI/ML Drug Discovery"
+    enabled: true
+
+  - name: CRELUX
+    careers_url: https://www.google.com/search?q=CRELUX%20careers
+    scan_method: websearch
+    scan_query: '"CRELUX" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Switzerland | Switzerland | AI/ML Drug Discovery"
+    enabled: true
+
+  - name: Proteros
+    careers_url: https://www.google.com/search?q=Proteros%20careers
+    scan_method: websearch
+    scan_query: '"Proteros" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Switzerland | Switzerland | AI/ML Drug Discovery"
+    enabled: true
+
+  # -- Detector Manufacturer --
+
+  - name: DECTRIS
+    careers_url: https://www.google.com/search?q=DECTRIS%20careers
+    scan_method: websearch
+    scan_query: '"DECTRIS" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Switzerland | Baden-Dättwil | Detector Manufacturer"
+    enabled: true
+
+  - name: Direct Electron
+    careers_url: https://www.google.com/search?q=Direct%20Electron%20careers
+    scan_method: websearch
+    scan_query: '"Direct Electron" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Multiple | US/EU Remote | Detector Manufacturer"
+    enabled: true
+
+  # -- Instrument & Software Vendor --
+
+  - name: Thermo Fisher Scientific (EU)
+    careers_url: https://www.google.com/search?q=Thermo%20Fisher%20Scientific%20(EU)%20careers
+    scan_method: websearch
+    scan_query: '"Thermo Fisher Scientific (EU)" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "★ priority match. Multiple | Eindhoven/UK/DE/CH | Instrument & Software Vendor"
+    enabled: true
+
+  - name: JEOL
+    careers_url: https://www.google.com/search?q=JEOL%20careers
+    scan_method: websearch
+    scan_query: '"JEOL" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Multiple | Multiple European hubs | Instrument & Software Vendor"
+    enabled: true
+
+  - name: Hitachi High-Tech
+    careers_url: https://www.google.com/search?q=Hitachi%20High-Tech%20careers
+    scan_method: websearch
+    scan_query: '"Hitachi High-Tech" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Multiple | Multiple | Instrument & Software Vendor"
+    enabled: true
+
+  - name: Gatan/Ametek
+    careers_url: https://www.google.com/search?q=Gatan%2FAmetek%20careers
+    scan_method: websearch
+    scan_query: '"Gatan/Ametek" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "Multiple | Multiple | Instrument & Software Vendor"
+    enabled: true
+
+  # -- Software Vendor --
+
+  - name: Structura Biotechnology
+    careers_url: https://www.google.com/search?q=Structura%20Biotechnology%20careers
+    scan_method: websearch
+    scan_query: '"Structura Biotechnology" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "★ priority match. Canada | Toronto | Software Vendor"
+    enabled: true
+
+  # -- Academic Research --
+
+  - name: Chimera/ChimeraX team
+    careers_url: https://www.google.com/search?q=Chimera%2FChimeraX%20team%20careers
+    scan_method: websearch
+    scan_query: '"Chimera/ChimeraX team" careers OR jobs cryo-EM OR "image analysis" OR "computational biology" OR "machine learning"'
+    notes: "USA | San Francisco | Academic Research"
+    enabled: true
+
