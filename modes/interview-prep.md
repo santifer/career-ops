@@ -20,7 +20,7 @@ The first round of most processes is a recruiter / HR screen, not a technical pa
 
 | Query | What to extract |
 |-------|-----------------|
-| `"{company} {role} salary site:levels.fyi OR site:glassdoor.com/Salary"` | Comp ranges (base / equity / bonus) by level |
+| `"{company} {role} salary" site:levels.fyi` and `"{company} {role} salary" site:glassdoor.com/Salary` (run both — `OR` inside a quoted phrase is taken literally by most engines) | Comp ranges (base / equity / bonus) by level |
 | `"{company} interview process site:glassdoor.com"` then manually filter retrieved reviews to those describing the recruiter / HR screen | Process timeline, screening criteria, common screening questions, recruiter behavior |
 | `"{company} site:teamblind.com" comp negotiation OR offer` | Candid comp/leverage details, what recruiters push back on |
 | `"{company} careers"` + `"{company} benefits"` | Official comp/benefits framing, work-auth/visa policy, location policy |
@@ -44,6 +44,11 @@ The first round of most processes is a recruiter / HR screen, not a technical pa
 If the company is small or obscure and yields few results, broaden: search for the role archetype at similar-stage companies, and note that intel is sparse. Do the recruiter-screen queries even when intel is sparse — comp/logistics data exists for almost every company.
 
 **Do NOT fabricate questions.** If a source says "they asked about distributed systems," report that. Do not invent a specific distributed systems question. When generating likely questions from JD analysis, label them clearly as `[inferred from JD]` not sourced from candidates.
+
+**Tag conventions** (don't mix them):
+
+- `[inferred from JD]` — questions derived from the job description rather than a candidate report.
+- `[inferred]` — audience classifications (Step 2.5) made from round duration / position when `Conducted by` is unknown.
 
 ## Step 2 — Process Overview
 
@@ -81,11 +86,14 @@ Mark inferred audiences with `[inferred]` and keep going — sparse intel is nor
 
 ```markdown
 ## Audience Map
-- **Round 1** ({type}) → `recruiter-screen`
-- **Round 2** ({type}) → `hiring-manager`
-- **Round 3** ({type}) → `peer-tech`
+- **Round 1** (recruiter screen, 30 min) → `recruiter-screen`
+- **Round 2** (technical phone screen, 60 min) → `peer-tech`
+- **Round 3** (hiring manager call, 45 min) → `hiring-manager`
+- **Round 4** (onsite loop, 4× 45 min) → `panel-mixed`
 - ...
 ```
+
+The example above shows a typical pattern but is not a default. Classify each round from the actual research above — round 2 in particular is often `peer-tech`, not `hiring-manager`.
 
 ## Step 3 — Round-by-Round Breakdown
 
@@ -97,8 +105,8 @@ For each round discovered in research:
 - **Conducted by:** {peer / manager / skip-level / recruiter — if known}
 - **What they evaluate:** {specific skills or traits}
 - **Reported questions:**
-  - {question} — [source: Glassdoor 2026-Q1]
-  - {question} — [source: Blind]
+  - {question} — [source: Glassdoor (URL/date)]
+  - {question} — [source: Blind (URL/date)]
 - **How to prepare:** {1-2 concrete actions, audience-appropriate — see Step 4 for the full per-audience pack}
 ```
 
@@ -150,9 +158,13 @@ Onsite loops and mixed panels rarely give the candidate time to context-switch �
 
 ## Step 5 — Story Bank Mapping
 
-| # | Likely question/topic | Best story from story-bank.md | Fit | Gap? |
-|---|----------------------|-------------------------------|-----|------|
-| 1 | ... | [Story Title] | strong/partial/none | |
+Run this mapping **per audience pack** from Step 4 — same story can map differently to a recruiter prompt vs a peer-tech behavioral question, and a single un-segmented table risks cross-audience drift.
+
+| # | Audience | Likely question/topic | Best story from story-bank.md | Fit | Gap? |
+|---|----------|----------------------|-------------------------------|-----|------|
+| 1 | recruiter-screen | ... | [Story Title] | strong/partial/none | |
+| 2 | hiring-manager | ... | [Story Title] | strong/partial/none | |
+| 3 | peer-tech | ... | [Story Title] | strong/partial/none | |
 
 - **strong**: story directly answers the question
 - **partial**: story is adjacent, needs reframing
