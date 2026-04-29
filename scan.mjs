@@ -276,6 +276,7 @@ async function verifyOffers(offers) {
 
   const verified = [];
   const expired = [];
+  const invalid = []; // guard failures (invalid URL / unsupported protocol / blocked host)
   try {
     const page = await browser.newPage();
     // Sequential — project rule: never Playwright in parallel
@@ -284,6 +285,12 @@ async function verifyOffers(offers) {
       if (result === 'expired') {
         expired.push({ ...offer, reason });
         console.log(`  ❌ expired   ${offer.company} | ${offer.title} (${reason})`);
+      } else if (result === 'uncertain' && isGuardReason(reason)) {
+        // Guard failures are permanent (not transient like a timeout) — record them
+        // separately so they don't end up in pipeline.md but DO appear in scan-history
+        // with a precise status, dedup-blocking them on subsequent scans.
+        invalid.push({ ...offer, reason });
+        console.log(`  ⛔ invalid   ${offer.company} | ${offer.title} (${reason})`);
       } else {
         verified.push(offer);
         const icon = result === 'active' ? '✅' : '⚠️';
@@ -294,7 +301,27 @@ async function verifyOffers(offers) {
     await browser.close();
   }
 
-  return { verified, expired };
+  return { verified, expired, invalid };
+}
+
+// isGuardReason returns true when a liveness 'uncertain' result was caused by an
+// up-front URL guard rather than a transient navigation failure. Guard failures
+// stay constant across scans (a malformed URL doesn't heal itself), so we treat
+// them differently from timeouts/DNS blips that may resolve next time.
+function isGuardReason(reason = '') {
+  return (
+    reason === 'invalid URL' ||
+    reason.startsWith('unsupported protocol') ||
+    reason.startsWith('blocked host')
+  );
+}
+
+// guardStatusFor maps a guard reason to the canonical scan-history status string.
+function guardStatusFor(reason = '') {
+  if (reason === 'invalid URL') return 'skipped_invalid_url';
+  if (reason.startsWith('unsupported protocol')) return 'skipped_invalid_url';
+  if (reason.startsWith('blocked host')) return 'skipped_blocked_host';
+  return 'skipped_invalid_url';
 }
 
 async function main() {
@@ -371,14 +398,16 @@ async function main() {
 
   await parallelFetch(tasks, CONCURRENCY);
 
-  // 4.5. Optional liveness verification — drop expired postings before persisting
+  // 4.5. Optional liveness verification — drop expired and guard-rejected postings
   let verifiedOffers = newOffers;
   let expiredOffers = [];
+  let invalidOffers = [];
   if (verify && newOffers.length > 0) {
     console.log(`\nVerifying liveness of ${newOffers.length} new offer(s) with Playwright (sequential)...`);
     const result = await verifyOffers(newOffers);
     verifiedOffers = result.verified;
     expiredOffers = result.expired;
+    invalidOffers = result.invalid;
   }
 
   // 5. Write results
@@ -388,6 +417,21 @@ async function main() {
   }
   if (!dryRun && expiredOffers.length > 0) {
     appendToScanHistory(expiredOffers, date, 'skipped_expired');
+  }
+  // Guard-rejected URLs (invalid / unsupported protocol / blocked host) are
+  // recorded with a precise status so subsequent scans dedup-skip them via
+  // loadSeenUrls, but they never reach pipeline.md.
+  if (!dryRun && invalidOffers.length > 0) {
+    // Group by status so the TSV reflects the actual reason category.
+    const byStatus = new Map();
+    for (const o of invalidOffers) {
+      const status = guardStatusFor(o.reason);
+      if (!byStatus.has(status)) byStatus.set(status, []);
+      byStatus.get(status).push(o);
+    }
+    for (const [status, group] of byStatus) {
+      appendToScanHistory(group, date, status);
+    }
   }
 
   // 6. Print summary
@@ -400,6 +444,7 @@ async function main() {
   console.log(`Duplicates:            ${totalDupes} skipped`);
   if (verify) {
     console.log(`Expired (verified):    ${expiredOffers.length} dropped`);
+    console.log(`Invalid (guarded):     ${invalidOffers.length} dropped`);
   }
   console.log(`New offers added:      ${verifiedOffers.length}`);
 
