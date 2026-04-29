@@ -410,7 +410,6 @@ func (m ViewerModel) renderCardTable(lines []string) []string {
 			if content == "" {
 				continue
 			}
-			content = m.renderInlineElements(content)
 
 			label := truncateRunes(hi, 15)
 			isStar := label == "S" || label == "T" || label == "A" || label == "R"
@@ -428,11 +427,17 @@ func (m ViewerModel) renderCardTable(lines []string) []string {
 				if len(runes) > tw {
 					wl = string(runes[:tw])
 				}
+				wl = m.renderInlineElements(wl)
+				visW := lipgloss.Width(wl)
+				pad := tw - visW
+				if pad < 0 {
+					pad = 0
+				}
 				if wi == 0 {
-					row := lineStyle.Render(fmt.Sprintf("│%-16s│ %-*s│", label+":", tw, wl))
+					row := lineStyle.Render(fmt.Sprintf("│%-16s│ %s%s│", label+":", wl, strings.Repeat(" ", pad)))
 					result = append(result, row)
 				} else {
-					row := lineStyle.Render(fmt.Sprintf("│%-16s│ %-*s│", "", tw, wl))
+					row := lineStyle.Render(fmt.Sprintf("│%-16s│ %s%s│", "", wl, strings.Repeat(" ", pad)))
 					result = append(result, row)
 				}
 			}
@@ -623,6 +628,7 @@ func (m ViewerModel) renderTableBlock(lines []string, colWidths []int) []string 
 			if i < len(cells) {
 				cell = cells[i]
 			}
+			cell = m.renderInlineElements(cell)
 			colW := colWidths[i]
 			wrapped := wrapTableCell(cell, colW)
 			for j := range wrapped {
