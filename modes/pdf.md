@@ -101,11 +101,11 @@ Reemplazar los placeholders `{{...}}` con contenido personalizado:
 
 ## Canva CV Generation (optional)
 
-If `config/profile.yml` has `canva_resume_design_id` set, offer the user a choice before generating:
+If `config/profile.yml` has `cv.canva_resume_design_id` set, offer the user a choice before generating:
 - **"HTML/PDF (fast, ATS-optimized)"** — existing flow above
 - **"Canva CV (visual, design-preserving)"** — new flow below
 
-If the user has no `canva_resume_design_id`, skip this prompt and use the HTML/PDF flow.
+If the user has no `cv.canva_resume_design_id`, skip this prompt and use the HTML/PDF flow.
 
 ### Canva workflow
 
