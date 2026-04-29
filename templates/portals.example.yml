@@ -69,6 +69,15 @@ title_filter:
     - "Business Systems"
     - "Internal Tools"
     - "Transformation"
+    # -- Spanish/LATAM keywords --
+    - "Ingeniero"
+    - "Desarrollador"
+    - "Programador"
+    - "Fullstack"
+    - "Full Stack"
+    - "Backend"
+    - "Datos"
+    - "Inteligencia Artificial"
   negative:
     # [CUSTOMIZE] Add keywords for roles you want to exclude
     - "Junior"
@@ -276,6 +285,36 @@ search_queries:
 
   - name: HN Who's Hiring — Remote AI
     query: 'site:news.ycombinator.com OR site:hnrss.org "AI Engineer" OR "Forward Deployed" OR "DevRel" OR "Founding Engineer" remote'
+    enabled: true
+
+  # -- Chile/LATAM market specialized --
+
+  - name: Get on Board — Chile AI/Backend Senior
+    query: 'site:getonboard.dev Chile "AI" OR "Backend" OR "Senior" OR "Ingeniero" "Node" OR "Python" OR "TypeScript"'
+    enabled: true
+
+  - name: Get on Board — Chile Fullstack Senior
+    query: 'site:getonboard.dev Chile "Fullstack" OR "Full Stack" OR "React" OR "Angular" Senior'
+    enabled: true
+
+  - name: LinkedIn — Chile AI Engineer
+    query: 'site:linkedin.com/jobs "AI Engineer" OR "Ingeniero IA" OR "Machine Learning" Chile Senior'
+    enabled: true
+
+  - name: LinkedIn — Chile Software Engineer Senior
+    query: 'site:linkedin.com/jobs "Software Engineer" OR "Ingeniero de Software" OR "Backend" Chile Senior'
+    enabled: true
+
+  - name: LinkedIn — Chile Data Engineer
+    query: 'site:linkedin.com/jobs "Data Scientist" OR "Data Engineer" OR "Ingeniero de Datos" Chile Senior'
+    enabled: true
+
+  - name: Trabajando.cl — IT Chile
+    query: 'site:trabajando.cl "Ingeniero" OR "Developer" OR "Programador" Senior informática'
+    enabled: true
+
+  - name: Laborum — IT Chile
+    query: 'site:laborum.cl "Ingeniero" OR "Desarrollador" OR "Developer" Senior informática'
     enabled: true
 
 # -- Tracked companies --
@@ -941,4 +980,85 @@ tracked_companies:
     scan_method: websearch
     scan_query: '"Maxim AI" OR "getmaxim" careers "engineer" OR "product"'
     notes: "AI evaluation and observability platform. Bangalore-based, mostly on-site."
+    enabled: true
+
+  # ═══════════════════════════════════════════════════════════
+  # Chile — Tech companies
+  # ═══════════════════════════════════════════════════════════
+
+  - name: MercadoLibre
+    careers_url: https://www.mercadolibre.com.ar/corporativo/ofertas-empleo
+    scan_method: websearch
+    scan_query: 'site:linkedin.com/jobs "MercadoLibre" OR "Mercado Libre" "Ingeniero" OR "Engineer" OR "Developer" Chile'
+    notes: "E-commerce & fintech giant. Strong tech presence in Chile."
+    enabled: true
+
+  - name: Falabella
+    careers_url: https://www.falabella.com/corporativo/trabaja-con-nosotros
+    scan_method: websearch
+    scan_query: 'site:linkedin.com/jobs Falabella "Ingeniero" OR "Engineer" OR "Developer" OR "Data" Chile'
+    notes: "Retail giant with significant tech investment."
+    enabled: true
+
+  - name: Buk
+    careers_url: https://www.buk.cl/buk-trabaja-con-nosotros
+    scan_method: websearch
+    scan_query: 'site:getonboard.dev OR site:linkedin.com/jobs Buk "Ingeniero" OR "Engineer" OR "Developer" Chile'
+    notes: "HR tech startup, growing fast in LATAM."
+    enabled: true
+
+  - name: Xepelin
+    careers_url: https://www.xepelin.com/careers
+    scan_method: websearch
+    scan_query: 'site:getonboard.dev OR site:linkedin.com/jobs Xepelin "Ingeniero" OR "Engineer" OR "Developer"'
+    notes: "Fintech SME platform. Well-funded LATAM startup."
+    enabled: true
+
+  - name: Global66
+    careers_url: https://www.global66.com/careers
+    scan_method: websearch
+    scan_query: 'site:getonboard.dev OR site:linkedin.com/jobs Global66 "Ingeniero" OR "Engineer" OR "Developer"'
+    notes: "Fintech cross-border payments."
+    enabled: true
+
+  - name: NotCo
+    careers_url: https://www.notco.com/careers
+    scan_method: websearch
+    scan_query: 'site:linkedin.com/jobs NotCo "Ingeniero" OR "Engineer" OR "Developer" OR "Data"'
+    notes: "Foodtech using AI. Interesting ML applications."
+    enabled: true
+
+  - name: Cornershop (Uber)
+    careers_url: https://www.cornershopapp.com/careers
+    scan_method: websearch
+    scan_query: 'site:linkedin.com/jobs Cornershop OR "Corner Shop" "Ingeniero" OR "Engineer" OR "Developer" Chile'
+    notes: "Quick commerce, now part of Uber. Strong engineering team."
+    enabled: true
+
+  - name: Betterfly
+    careers_url: https://www.betterfly.com/careers
+    scan_method: websearch
+    scan_query: 'site:getonboard.dev OR site:linkedin.com/jobs Betterfly "Ingeniero" OR "Engineer" OR "Developer"'
+    notes: "Insurtech/wellness benefits platform."
+    enabled: true
+
+  - name: Fintual
+    careers_url: https://fintual.com/trabaja
+    scan_method: websearch
+    scan_query: 'site:getonboard.dev OR site:linkedin.com/jobs Fintual "Ingeniero" OR "Engineer" OR "Developer"'
+    notes: "Investment fintech, tech-forward culture."
+    enabled: true
+
+  - name: BCI
+    careers_url: https://www.bci.cl/trabaja-con-nosotros
+    scan_method: websearch
+    scan_query: 'site:linkedin.com/jobs BCI "Ingeniero" OR "Engineer" OR "Developer" OR "Data" Chile'
+    notes: "Major Chilean bank, fintech and digital transformation."
+    enabled: true
+
+  - name: Cencosud
+    careers_url: https://www.cencosud.com/trabaja-con-nosotros
+    scan_method: websearch
+    scan_query: 'site:linkedin.com/jobs Cencosud "Ingeniero" OR "Engineer" OR "Developer" Chile'
+    notes: "Retail group, digital transformation ongoing."
     enabled: true
