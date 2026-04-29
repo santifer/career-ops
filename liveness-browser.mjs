@@ -25,18 +25,22 @@ const PRIVATE_HOST_PATTERNS = [
   /^fe80:/i,
 ];
 
+// Returns null when the URL is safe to fetch, otherwise a structured guard
+// result with a stable `code` (used for routing in scan.mjs) plus a human
+// `reason`. Stable codes — not regex on reason strings — drive downstream
+// dispatch so the wording can change freely without breaking callers.
 function rejectPrivateOrInvalid(url) {
   let parsed;
   try {
     parsed = new URL(url);
   } catch {
-    return 'invalid URL';
+    return { code: 'invalid_url', reason: 'invalid URL' };
   }
   if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-    return `unsupported protocol ${parsed.protocol}`;
+    return { code: 'unsupported_protocol', reason: `unsupported protocol ${parsed.protocol}` };
   }
   if (PRIVATE_HOST_PATTERNS.some((pattern) => pattern.test(parsed.hostname))) {
-    return `blocked host ${parsed.hostname}`;
+    return { code: 'blocked_host', reason: `blocked host ${parsed.hostname}` };
   }
   return null;
 }
@@ -44,7 +48,7 @@ function rejectPrivateOrInvalid(url) {
 export async function checkUrlLiveness(page, url) {
   const guardError = rejectPrivateOrInvalid(url);
   if (guardError) {
-    return { result: 'uncertain', reason: guardError };
+    return { result: 'uncertain', code: guardError.code, reason: guardError.reason };
   }
   try {
     const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: NAVIGATE_TIMEOUT_MS });
@@ -93,6 +97,10 @@ export async function checkUrlLiveness(page, url) {
     // Transient failures (timeout, DNS, TLS, 5xx) shouldn't be treated as expired —
     // doing so would cause scan --verify to drop the URL and write it to scan-history,
     // permanently filtering it out on subsequent scans.
-    return { result: 'uncertain', reason: `navigation error: ${err.message.split('\n')[0]}` };
+    return {
+      result: 'uncertain',
+      code: 'navigation_error',
+      reason: `navigation error: ${err.message.split('\n')[0]}`,
+    };
   }
 }
