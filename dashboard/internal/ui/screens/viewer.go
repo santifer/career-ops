@@ -423,12 +423,9 @@ func (m ViewerModel) renderCardTable(lines []string) []string {
 			wrapped := ansi.Wrap(content, tw, "")
 			wrapLines := strings.Split(wrapped, "\n")
 			for wi, wl := range wrapLines {
-				runes := []rune(wl)
-				if len(runes) > tw {
-					wl = string(runes[:tw])
-				}
+				wl = ansi.Truncate(wl, tw, "")
 				wl = m.renderInlineElements(wl)
-				visW := lipgloss.Width(wl)
+				visW := ansi.StringWidth(wl)
 				pad := tw - visW
 				if pad < 0 {
 					pad = 0
