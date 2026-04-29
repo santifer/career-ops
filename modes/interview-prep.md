@@ -146,7 +146,7 @@ Onsite loops and mixed panels rarely give the candidate time to context-switch �
 - **If the interviewer is named in the schedule**, do a quick LinkedIn/blog look-up and tag them to one of the three audiences (recruiter / HM / peer-tech). Then pull from that audience's pack.
 - **If the slot is unlabeled**, prep all three packs but cap each to 3–5 highest-priority items so the candidate isn't drowning in notes.
 - **Hand-off discipline**: tell the candidate explicitly what NOT to repeat verbatim across slots (e.g. the same proof point told identically twice signals scripted answers; vary the angle).
-- **Energy management**: 4-hour onsites burn out novel candidates first. Flag the slot most likely to test depth (usually peer-tech) and reserve the candidate's freshest material for it.
+- **Energy management**: 4-hour onsites burn out less-experienced candidates first. Flag the slot most likely to test depth (usually peer-tech) and reserve the candidate's freshest material for it.
 
 ## Step 5 — Story Bank Mapping
 
