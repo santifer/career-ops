@@ -274,24 +274,40 @@ async function verifyOffers(offers) {
     );
   }
 
+  // Three permanent buckets + one transient passthrough:
+  //   verified  → active pages and transient nav errors (retry next scan)
+  //   expired   → classifier-confirmed dead postings (HTTP 4xx, redirect markers,
+  //               body patterns, listing pages, insufficient content)
+  //   dropped   → page loaded but classifier saw no Apply control. --verify is an
+  //               opt-in stricter filter; keeping these defeats the purpose.
+  //   invalid   → up-front URL guard rejections (malformed / non-http / private)
   const verified = [];
   const expired = [];
-  const invalid = []; // guard failures (invalid URL / unsupported protocol / blocked host)
+  const dropped = [];
+  const invalid = [];
+
   try {
     const page = await browser.newPage();
     // Sequential — project rule: never Playwright in parallel
     for (const offer of offers) {
-      const { result, reason } = await checkUrlLiveness(page, offer.url);
+      const { result, code, reason } = await checkUrlLiveness(page, offer.url);
       if (result === 'expired') {
         expired.push({ ...offer, reason });
         console.log(`  ❌ expired   ${offer.company} | ${offer.title} (${reason})`);
-      } else if (result === 'uncertain' && isGuardReason(reason)) {
+      } else if (result === 'uncertain' && GUARD_CODES.has(code)) {
         // Guard failures are permanent (not transient like a timeout) — record them
         // separately so they don't end up in pipeline.md but DO appear in scan-history
         // with a precise status, dedup-blocking them on subsequent scans.
-        invalid.push({ ...offer, reason });
+        invalid.push({ ...offer, code, reason });
         console.log(`  ⛔ invalid   ${offer.company} | ${offer.title} (${reason})`);
+      } else if (result === 'uncertain' && code === 'no_apply_control') {
+        // Page loaded but classifier could not find an Apply control. Treat like
+        // expired for routing — drop from pipeline AND record in scan-history so
+        // we don't burn a verify cycle on the same URL next scan.
+        dropped.push({ ...offer, reason });
+        console.log(`  ⚠️ no-apply  ${offer.company} | ${offer.title} (${reason})`);
       } else {
+        // 'active' or 'uncertain' due to navigation_error (transient — retry next scan)
         verified.push(offer);
         const icon = result === 'active' ? '✅' : '⚠️';
         console.log(`  ${icon} ${result.padEnd(9)} ${offer.company} | ${offer.title}`);
@@ -301,26 +317,18 @@ async function verifyOffers(offers) {
     await browser.close();
   }
 
-  return { verified, expired, invalid };
+  return { verified, expired, dropped, invalid };
 }
 
-// isGuardReason returns true when a liveness 'uncertain' result was caused by an
-// up-front URL guard rather than a transient navigation failure. Guard failures
-// stay constant across scans (a malformed URL doesn't heal itself), so we treat
-// them differently from timeouts/DNS blips that may resolve next time.
-function isGuardReason(reason = '') {
-  return (
-    reason === 'invalid URL' ||
-    reason.startsWith('unsupported protocol') ||
-    reason.startsWith('blocked host')
-  );
-}
+// Stable codes from liveness-browser's up-front URL guard. Routing dispatches
+// on these codes (not on regex over reason strings) so wording can change
+// without breaking the pipeline.
+const GUARD_CODES = new Set(['invalid_url', 'unsupported_protocol', 'blocked_host']);
 
-// guardStatusFor maps a guard reason to the canonical scan-history status string.
-function guardStatusFor(reason = '') {
-  if (reason === 'invalid URL') return 'skipped_invalid_url';
-  if (reason.startsWith('unsupported protocol')) return 'skipped_invalid_url';
-  if (reason.startsWith('blocked host')) return 'skipped_blocked_host';
+// guardStatusFor maps a guard code to the canonical scan-history status string.
+function guardStatusFor(code) {
+  if (code === 'blocked_host') return 'skipped_blocked_host';
+  // invalid_url and unsupported_protocol both surface as malformed input
   return 'skipped_invalid_url';
 }
 
@@ -401,12 +409,14 @@ async function main() {
   // 4.5. Optional liveness verification — drop expired and guard-rejected postings
   let verifiedOffers = newOffers;
   let expiredOffers = [];
+  let droppedOffers = [];
   let invalidOffers = [];
   if (verify && newOffers.length > 0) {
     console.log(`\nVerifying liveness of ${newOffers.length} new offer(s) with Playwright (sequential)...`);
     const result = await verifyOffers(newOffers);
     verifiedOffers = result.verified;
     expiredOffers = result.expired;
+    droppedOffers = result.dropped;
     invalidOffers = result.invalid;
   }
 
@@ -418,14 +428,19 @@ async function main() {
   if (!dryRun && expiredOffers.length > 0) {
     appendToScanHistory(expiredOffers, date, 'skipped_expired');
   }
+  // Pages that loaded but had no Apply control: record so we don't re-verify
+  // them next scan, but never let them reach pipeline.md.
+  if (!dryRun && droppedOffers.length > 0) {
+    appendToScanHistory(droppedOffers, date, 'skipped_no_apply_control');
+  }
   // Guard-rejected URLs (invalid / unsupported protocol / blocked host) are
   // recorded with a precise status so subsequent scans dedup-skip them via
   // loadSeenUrls, but they never reach pipeline.md.
   if (!dryRun && invalidOffers.length > 0) {
-    // Group by status so the TSV reflects the actual reason category.
+    // Group by code so the TSV reflects the actual reason category.
     const byStatus = new Map();
     for (const o of invalidOffers) {
-      const status = guardStatusFor(o.reason);
+      const status = guardStatusFor(o.code);
       if (!byStatus.has(status)) byStatus.set(status, []);
       byStatus.get(status).push(o);
     }
@@ -444,6 +459,7 @@ async function main() {
   console.log(`Duplicates:            ${totalDupes} skipped`);
   if (verify) {
     console.log(`Expired (verified):    ${expiredOffers.length} dropped`);
+    console.log(`No apply control:      ${droppedOffers.length} dropped`);
     console.log(`Invalid (guarded):     ${invalidOffers.length} dropped`);
   }
   console.log(`New offers added:      ${verifiedOffers.length}`);
