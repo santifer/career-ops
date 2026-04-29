@@ -40,6 +40,19 @@ function detectApi(company) {
     return { type: 'greenhouse', url: company.api };
   }
 
+  // Workday: explicit api field with /wday/cxs/{tenant}/{site}/jobs pattern
+  if (company.api) {
+    const wd = company.api.match(/^(https?:\/\/[^/]+)\/wday\/cxs\/[^/]+\/([^/]+)\/jobs/);
+    if (wd) {
+      return { type: 'workday', url: company.api, host: wd[1], site: wd[2] };
+    }
+  }
+
+  // Lever: explicit api field
+  if (company.api && company.api.includes('api.lever.co')) {
+    return { type: 'lever', url: company.api };
+  }
+
   const url = company.careers_url || '';
 
   // Ashby
@@ -104,20 +117,62 @@ function parseLever(json, companyName) {
   }));
 }
 
-const PARSERS = { greenhouse: parseGreenhouse, ashby: parseAshby, lever: parseLever };
+function parseWorkday(json, companyName) {
+  const postings = json.jobPostings || [];
+  const host = json._host || '';
+  const site = json._site || '';
+  return postings.map(j => ({
+    title: j.title || '',
+    url: `${host}/en-US/${site}${j.externalPath || ''}`,
+    company: companyName,
+    location: j.locationsText || '',
+  }));
+}
+
+const PARSERS = { greenhouse: parseGreenhouse, ashby: parseAshby, lever: parseLever, workday: parseWorkday };
 
 // ── Fetch with timeout ──────────────────────────────────────────────
 
-async function fetchJson(url) {
+async function fetchJson(url, options = {}) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
   try {
-    const res = await fetch(url, { signal: controller.signal });
+    const res = await fetch(url, { ...options, signal: controller.signal });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.json();
   } finally {
     clearTimeout(timer);
   }
+}
+
+// Workday paginates at limit=20 (hard cap). POST with empty facets to get all jobs.
+async function fetchWorkdayAll(url, host, site) {
+  const limit = 20;
+  const maxPages = 250; // safety cap: 5000 jobs per company
+  const allPostings = [];
+  let lastPageSize = 0;
+  let pages = 0;
+
+  for (let page = 0; page < maxPages; page++) {
+    const json = await fetchJson(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ appliedFacets: {}, limit, offset: page * limit, searchText: '' }),
+    });
+    const postings = json.jobPostings || [];
+    pages = page + 1;
+    if (postings.length === 0) break;
+    allPostings.push(...postings);
+    lastPageSize = postings.length;
+    if (postings.length < limit) break;
+  }
+
+  // If we exited via the loop bound (not via empty/partial page), more jobs likely exist.
+  if (pages === maxPages && lastPageSize === limit) {
+    console.warn(`⚠️  Workday pagination cap (${maxPages} pages = ${maxPages * limit} jobs) reached for ${host}; additional jobs may exist`);
+  }
+
+  return { jobPostings: allPostings, _host: host, _site: site };
 }
 
 // ── Title filter ────────────────────────────────────────────────────
@@ -290,9 +345,11 @@ async function main() {
   const errors = [];
 
   const tasks = targets.map(company => async () => {
-    const { type, url } = company._api;
+    const { type, url, host, site } = company._api;
     try {
-      const json = await fetchJson(url);
+      const json = type === 'workday'
+        ? await fetchWorkdayAll(url, host, site)
+        : await fetchJson(url);
       const jobs = PARSERS[type](json, company.name);
       totalFound += jobs.length;
 
