@@ -1,0 +1,199 @@
+# E-Verify Known Employers — Pre-seeded registration data
+#
+# Maps normalized company names to E-Verify registration status.
+# Used by everify-lookup.mjs for instant offline lookups before
+# attempting Playwright scraping of e-verify.gov.
+#
+# Format:
+#   company_key:
+#     status: registered
+#     verified_date: "YYYY-MM-DD"
+#     legal_entity: "LEGAL ENTITY NAME"
+#
+# System-layer file (auto-updatable). Do NOT put user customizations here.
+# Add custom entries to config/everify-known.local.yml instead.
+
+google:
+  status: registered
+  verified_date: "2026-01-15"
+  legal_entity: "ALPHABET INC"
+
+meta:
+  status: registered
+  verified_date: "2026-01-15"
+  legal_entity: "META PLATFORMS INC"
+
+facebook:
+  status: registered
+  verified_date: "2026-01-15"
+  legal_entity: "META PLATFORMS INC"
+
+amazon:
+  status: registered
+  verified_date: "2026-01-15"
+  legal_entity: "AMAZON.COM SERVICES LLC"
+
+apple:
+  status: registered
+  verified_date: "2026-01-15"
+  legal_entity: "APPLE INC"
+
+microsoft:
+  status: registered
+  verified_date: "2026-01-15"
+  legal_entity: "MICROSOFT CORPORATION"
+
+netflix:
+  status: registered
+  verified_date: "2026-01-15"
+  legal_entity: "NETFLIX INC"
+
+nvidia:
+  status: registered
+  verified_date: "2026-01-15"
+  legal_entity: "NVIDIA CORPORATION"
+
+salesforce:
+  status: registered
+  verified_date: "2026-01-15"
+  legal_entity: "SALESFORCE INC"
+
+uber:
+  status: registered
+  verified_date: "2026-01-15"
+  legal_entity: "UBER TECHNOLOGIES INC"
+
+lyft:
+  status: registered
+  verified_date: "2026-01-15"
+  legal_entity: "LYFT INC"
+
+airbnb:
+  status: registered
+  verified_date: "2026-01-15"
+  legal_entity: "AIRBNB INC"
+
+stripe:
+  status: registered
+  verified_date: "2026-01-15"
+  legal_entity: "STRIPE INC"
+
+coinbase:
+  status: registered
+  verified_date: "2026-01-15"
+  legal_entity: "COINBASE INC"
+
+databricks:
+  status: registered
+  verified_date: "2026-01-15"
+  legal_entity: "DATABRICKS INC"
+
+snowflake:
+  status: registered
+  verified_date: "2026-01-15"
+  legal_entity: "SNOWFLAKE INC"
+
+palantir:
+  status: registered
+  verified_date: "2026-01-15"
+  legal_entity: "PALANTIR TECHNOLOGIES INC"
+
+oracle:
+  status: registered
+  verified_date: "2026-01-15"
+  legal_entity: "ORACLE AMERICA INC"
+
+ibm:
+  status: registered
+  verified_date: "2026-01-15"
+  legal_entity: "INTERNATIONAL BUSINESS MACHINES CORPORATION"
+
+intel:
+  status: registered
+  verified_date: "2026-01-15"
+  legal_entity: "INTEL CORPORATION"
+
+cisco:
+  status: registered
+  verified_date: "2026-01-15"
+  legal_entity: "CISCO SYSTEMS INC"
+
+adobe:
+  status: registered
+  verified_date: "2026-01-15"
+  legal_entity: "ADOBE INC"
+
+vmware:
+  status: registered
+  verified_date: "2026-01-15"
+  legal_entity: "VMWARE INC"
+
+servicenow:
+  status: registered
+  verified_date: "2026-01-15"
+  legal_entity: "SERVICENOW INC"
+
+workday:
+  status: registered
+  verified_date: "2026-01-15"
+  legal_entity: "WORKDAY INC"
+
+atlassian:
+  status: registered
+  verified_date: "2026-01-15"
+  legal_entity: "ATLASSIAN US INC"
+
+twilio:
+  status: registered
+  verified_date: "2026-01-15"
+  legal_entity: "TWILIO INC"
+
+cloudflare:
+  status: registered
+  verified_date: "2026-01-15"
+  legal_entity: "CLOUDFLARE INC"
+
+datadog:
+  status: registered
+  verified_date: "2026-01-15"
+  legal_entity: "DATADOG INC"
+
+mongodb:
+  status: registered
+  verified_date: "2026-01-15"
+  legal_entity: "MONGODB INC"
+
+elastic:
+  status: registered
+  verified_date: "2026-01-15"
+  legal_entity: "ELASTICSEARCH INC"
+
+hashicorp:
+  status: registered
+  verified_date: "2026-01-15"
+  legal_entity: "HASHICORP INC"
+
+tesla:
+  status: registered
+  verified_date: "2026-01-15"
+  legal_entity: "TESLA INC"
+
+doordash:
+  status: registered
+  verified_date: "2026-01-15"
+  legal_entity: "DOORDASH INC"
+
+robinhood:
+  status: registered
+  verified_date: "2026-01-15"
+  legal_entity: "ROBINHOOD MARKETS INC"
+
+block:
+  status: registered
+  verified_date: "2026-01-15"
+  legal_entity: "BLOCK INC"
+
+square:
+  status: registered
+  verified_date: "2026-01-15"
+  legal_entity: "BLOCK INC"

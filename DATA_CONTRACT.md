@@ -21,6 +21,8 @@ These files contain your personal data, customizations, and work product. Update
 | `reports/*` | Your evaluation reports |
 | `output/*` | Your generated PDFs |
 | `jds/*` | Your saved job descriptions |
+| `config/risk-watchlist.yml` | Your company risk watchlist (layoffs, funding concerns) |
+| `config/everify-known.local.yml` | Your custom E-Verify employer entries (overrides system database) |
 
 ## System Layer (safe to auto-update)
 
@@ -60,6 +62,13 @@ These files contain system logic, scripts, templates, and instructions that impr
 | `.claude/skills/*` | Skill definitions |
 | `docs/*` | Documentation |
 | `VERSION` | Current version number |
+| `config/sponsorship-keywords.yml` | Visa sponsorship signal keyword lists (positive, negative, government, authorization) |
+| `config/everify-known.yml` | Pre-seeded E-Verify registered employers (Fortune 500, Big Tech) |
+| `config/stem-keywords.yml` | STEM occupation detection keyword lists |
+| `everify-lookup.mjs` | E-Verify employer registration lookup script |
+| `stem-detect.mjs` | STEM job detection script |
+| `h1b-salary.mjs` | H-1B salary benchmarking script |
+| `risk-assess.mjs` | Company risk assessment script |
 | `DATA_CONTRACT.md` | This file |
 
 ## The Rule
