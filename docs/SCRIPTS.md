@@ -18,6 +18,10 @@ All scripts live in the project root as `.mjs` modules and are exposed via `npm 
 | `npm run rollback` | `update-system.mjs rollback` | Rollback last update |
 | `npm run liveness` | `check-liveness.mjs` | Test if job URLs are still active |
 | `npm run scan` | `scan.mjs` | Zero-token portal scanner |
+| `npm run rank` | `pipeline-ranker.mjs` | Rank pending pipeline roles for fast triage |
+| `npm run export` | `export-tracker.mjs` | Export applications tracker to CSV |
+| `npm run qa` | `application-qa.mjs` | Flag bot-like application answer signals |
+| `npm run daily` | `daily-run.mjs` | Run daily scan/rank/export/verify orchestration |
 
 ---
 
@@ -187,3 +191,85 @@ npm run scan
 ```
 
 **Exit codes:** `0` scan completed, `1` configuration error or no portals.yml found.
+
+---
+
+## rank
+
+Ranks unchecked entries in `data/pipeline.md` using deterministic signals from
+`config/profile.yml` and `portals.yml`: target role title matches, negative
+title filters, backend/platform/infrastructure signals, tracked-company status,
+and likely level mismatch. This is a cheap triage pass before spending LLM time
+on full evaluations.
+
+```bash
+npm run rank
+npm run rank -- --limit 20
+npm run rank -- --json
+```
+
+Writes:
+
+- `output/pipeline-ranked.csv`
+- `output/pipeline-ranked.md`
+
+**Exit codes:** `0` rank completed, `1` missing pipeline file.
+
+---
+
+## export
+
+Exports `data/applications.md` to a spreadsheet-friendly CSV while keeping the
+markdown tracker as the source of truth.
+
+```bash
+npm run export
+npm run export -- --output output/applications.csv
+npm run export -- --stdout
+```
+
+Writes `output/applications.csv` by default.
+
+**Exit codes:** `0` export completed, `1` missing tracker file.
+
+---
+
+## daily
+
+Runs the daily non-submission workflow:
+
+1. setup check
+2. portal scan
+3. pending-role ranking
+4. tracker CSV export
+5. pipeline verification
+
+```bash
+npm run daily
+npm run daily -- --dry-run
+npm run daily -- --background
+npm run daily -- --no-scan --limit 25
+```
+
+`--background` detaches the run and writes logs to `batch/logs/`. The daily
+runner never submits applications; it prepares the apply queue for human review.
+
+**Exit codes:** `0` success, `1` setup or command failure.
+
+---
+
+## qa
+
+Scans generated reports or drafted application answers for generic phrasing,
+leftover placeholders, repeated openings, and overlong answers before you submit
+manually.
+
+```bash
+npm run qa
+npm run qa -- reports/001-acme-2026-04-28.md
+```
+
+This script never edits files and never submits applications. Treat warnings as
+review prompts.
+
+**Exit codes:** `0` always; warnings are printed to stdout.

@@ -64,6 +64,42 @@ Then paste a job offer URL or description. Career-ops will automatically evaluat
 | Check tracker status | `/career-ops tracker` |
 | Fill application form | `/career-ops apply` |
 
+## Daily Workflow
+
+Run the daily preparation flow from the repo root:
+
+```bash
+npm run daily
+```
+
+This checks setup, scans configured portals, ranks unchecked pipeline roles,
+exports the tracker to `output/applications.csv`, and verifies tracker health.
+It never submits applications. Review `output/pipeline-ranked.md`, run the full
+Career-Ops pipeline for the strongest roles, then submit manually through the
+company portal.
+
+To start it and continue working while it runs:
+
+```bash
+npm run daily -- --background
+```
+
+For a preview that does not add scan results to `data/pipeline.md`:
+
+```bash
+npm run daily -- --dry-run
+```
+
+Before submitting manually, run:
+
+```bash
+npm run qa
+```
+
+This flags generic phrases, placeholders, repeated answer openings, and overlong
+answers in generated reports so applications read like intentional human
+applications rather than bulk automation.
+
 ## Verify Setup
 
 ```bash

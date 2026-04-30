@@ -1,13 +1,13 @@
 # CV -- Ishaan Bhatt
 
-**Location:** Toronto, Ontario, Canada (open to relocation to the USA, especially NYC)
+**Location:** Toronto, Ontario, Canada (open to relocation to the USA, especially San Francisco Bay Area, New York City, Seattle, and California-based teams)
 **Email:** ishaanb598@gmail.com
 **Phone:** +1-587-969-1656
 **LinkedIn:** linkedin.com/in/ishaan-bhatt
 
 ## Professional Summary
 
-Backend and distributed systems engineer with experience building high-scale enterprise platforms across backend services, data pipelines, and reliability infrastructure. I currently work at ADP, where I’ve owned systems spanning sharded data architecture, distributed rate limiting, migration safety frameworks, anomaly detection, canary deployments, and incident-response improvements. My strongest work sits at the intersection of backend engineering and platform reliability: scaling systems under load, reducing operational risk, and building infrastructure that other engineers can trust. I’m targeting US-based software engineering roles, ideally in backend, platform, infrastructure, or distributed systems, and I’m open to both mid-level and senior leveling depending on the company’s bar.
+Backend-heavy software engineer with experience building high-scale enterprise platforms across backend services, data pipelines, and reliability infrastructure. I currently work at ADP, where I have owned systems spanning sharded data architecture, distributed rate limiting, migration safety frameworks, anomaly detection, canary deployments, and incident-response improvements. My strongest work sits at the intersection of backend engineering and platform reliability: scaling systems under load, reducing operational risk, and building infrastructure that other engineers can trust. I am targeting top-tier software engineering roles with US opportunities first, especially San Francisco, New York City, Seattle, and broader California, while keeping strong Canadian companies as a secondary market. I am most interested in backend, platform, infrastructure, and distributed systems work, and I am open to intermediate through mid-level leveling depending on the company bar.
 
 ## Recent engineering (last 12-18 months)
 
@@ -19,7 +19,7 @@ Backend and distributed systems engineer with experience building high-scale ent
 ## Work Experience
 
 ### ADP -- Toronto, ON
-**Senior Software Engineer**  
+**Senior Software Engineer**
 2025-Present
 
 - Engineered AI-powered anomaly detection using isolation forests for enterprise payroll monitoring, reducing false alerts by 60% and detecting data quality issues more than 2 hours before client impact.
@@ -28,7 +28,7 @@ Backend and distributed systems engineer with experience building high-scale ent
 - Operate in a high-ownership environment spanning backend systems, deployment safety, observability, and production reliability.
 
 ### ADP -- Toronto, ON
-**Software Engineer**  
+**Software Engineer**
 2023-2025
 
 - Designed and implemented a sharded DynamoDB architecture with client-side consistent hashing to handle 100K+ concurrent hire and onboarding events for large enterprise workloads.
@@ -37,7 +37,7 @@ Backend and distributed systems engineer with experience building high-scale ent
 - Worked across backend services, data flows, migration tooling, and reliability-focused platform improvements in a large-scale enterprise SaaS environment.
 
 ### Lifion by ADP -- New York City, NY
-**Full-Stack Software Engineer Intern**  
+**Full-Stack Software Engineer Intern**
 2022
 
 - Re-architected job queues from SQS to Bull.js, improving fairness and reducing job latency by 25% across 500K+ daily tasks.
@@ -45,7 +45,7 @@ Backend and distributed systems engineer with experience building high-scale ent
 - Worked across backend and full-stack application flows in a production environment serving large internal platforms.
 
 ### Cisco Systems -- Ottawa, ON
-**Software Engineer Intern**  
+**Software Engineer Intern**
 2021
 
 - Designed a parallelized analytics pipeline for a network monitoring platform ingesting 1M+ daily events.
@@ -53,26 +53,26 @@ Backend and distributed systems engineer with experience building high-scale ent
 - Gained hands-on experience building data-intensive backend systems with a strong performance and observability focus.
 
 ### BMO Capital Markets -- Toronto, ON
-**Quantitative Developer Intern**  
+**Quantitative Developer Intern**
 2021
 
 - Shipped a real-time ETF risk analytics platform using Flask and React, streaming live market data via WebSocket with sub-second latency.
 - Hardened Airflow-MySQL pipelines with automated failure recovery and connection pooling, improving ETL reliability by 20%.
 
-**Quantitative Developer Intern**  
+**Quantitative Developer Intern**
 2019
 
 - Developed a Dockerized Python and React application for index performance visualization, reducing manual report generation by 90%.
 
 ### Ford Motor Company -- Waterloo, ON
-**Embedded Software Engineer Intern**  
+**Embedded Software Engineer Intern**
 2020
 
 - Developed embedded software for the 2021 Ford Mustang Mach-E infotainment system using BlackBerry QNX and C++.
 - Worked in a systems-oriented environment where correctness and integration quality mattered as much as feature work.
 
 ### MedAvail Technologies -- Mississauga, ON
-**Software Developer Intern**  
+**Software Developer Intern**
 2019
 
 - Helped decompose a C# / ASP.NET MVC monolith into independently deployable microservices.
@@ -97,7 +97,7 @@ Backend and distributed systems engineer with experience building high-scale ent
 ## Education
 
 ### University of Waterloo -- Waterloo, ON
-**Bachelor of Applied Science in Systems Design Engineering**  
+**Bachelor of Applied Science in Systems Design Engineering**
 2018-2023
 
 ## Speaking and writing

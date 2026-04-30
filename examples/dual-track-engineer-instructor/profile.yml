@@ -1,115 +1,190 @@
-# Career-Ops Profile -- Dual-Track Example (Engineer + Instructor)
-#
-# Fictional persona. Demonstrates how to configure a profile when you are
-# optimizing for TWO archetypes at the same time -- e.g. Senior AI Engineer
-# AND Senior Technical Instructor. See README.md in this folder for the
-# rationale and the interview-objection playbook.
-#
-# Copy this file to config/profile.yml and edit before using.
-
 candidate:
-  full_name: "Sam Rivera"
-  email: "sam@example.com"
-  phone: "+00-000-0000000"          # placeholder, replace with your real number
-  location: "Berlin, Germany"
-  linkedin: "linkedin.com/in/sam-rivera-example"
-  portfolio_url: "https://sam-rivera.example.dev"
-  github: "github.com/sam-rivera-example"
-  twitter: "https://x.com/sam_rivera_example"
+  full_name: "Ishaan Bhatt"
+  email: "ishaanb598@gmail.com"
+  phone: "+1-587-969-1656"
+  location: "Toronto, Ontario, Canada"
+  linkedin: "linkedin.com/in/ishaan-bhatt"
+  portfolio_url: ""
+  github: ""
+  twitter: ""
 
 target_roles:
-  # North Star -- TWO primary tracks, not one.
   primary:
-    - "Senior AI Engineer"
-    - "Staff AI Engineer"
-    - "Senior Technical Instructor (AI/ML)"
-    - "Lead Curriculum Engineer"
-  # Archetypes -- note: TWO entries with fit: primary.
-  # The evaluator should pick whichever is closer to the JD at scoring time.
+    - "Software Engineer"
+    - "Software Engineer II"
+    - "Mid-Level Software Engineer"
+    - "Senior Software Engineer"
+    - "Senior Backend Engineer"
+    - "Senior Distributed Systems Engineer"
+    - "Senior Platform Engineer"
+    - "Software Engineer, Infrastructure"
   archetypes:
-    - name: "Senior AI Engineer"
-      level: "Senior/Staff"
+    - name: "Software Engineer / Software Engineer II"
+      level: "Mid-Level"
       fit: "primary"
       track: "engineering"
-      sell_when: "JD emphasizes shipping production AI, agent infra, LangChain/LangGraph, eval systems, ownership of an AI subsystem"
-    - name: "Senior Technical Instructor (AI/ML)"
-      level: "Senior/Lead"
+      sell_when: "JD asks for strong backend or distributed systems fundamentals, production experience, and ownership, but title or years-of-experience bar sits below senior"
+    - name: "Senior Backend Engineer"
+      level: "Senior"
       fit: "primary"
-      track: "teaching"
-      sell_when: "JD emphasizes curriculum, cohort delivery, bootcamp/university lectureship, DevRel education, internal enablement, instructor-led training"
-    - name: "AI DevRel Engineer"
+      track: "engineering"
+      sell_when: "JD emphasizes backend services, Java or Python, APIs, distributed systems, scalability, data pipelines, or cloud infrastructure"
+    - name: "Senior Distributed Systems Engineer"
       level: "Senior"
-      fit: "secondary"
-      track: "hybrid"
-      sell_when: "JD wants someone who can ship demos, write docs, AND speak at events / run workshops -- the natural dual-track landing zone"
-    - name: "Head of AI Education / Curriculum Lead"
-      level: "Lead/Manager"
-      fit: "secondary"
-      track: "teaching"
-      sell_when: "JD wants ownership of an entire curriculum, hiring + managing instructors, working with industry partners"
-    - name: "Forward Deployed AI Engineer"
+      fit: "primary"
+      track: "engineering"
+      sell_when: "JD emphasizes high-scale systems, reliability, concurrency, messaging, storage, performance, or fault tolerance"
+    - name: "Senior Platform Engineer"
       level: "Senior"
+      fit: "primary"
+      track: "engineering"
+      sell_when: "JD emphasizes internal platforms, developer infrastructure, deployment systems, observability, incident response, or Kubernetes"
+    - name: "Software Engineer, Infrastructure"
+      level: "Mid-Level/Senior"
+      fit: "secondary"
+      track: "engineering"
+      sell_when: "JD sits between backend and infra, with emphasis on reliability, cloud services, data stores, or core systems"
+    - name: "Production Engineer / Site Reliability Engineer"
+      level: "Mid-Level/Senior"
       fit: "adjacent"
       track: "engineering"
-      sell_when: "JD wants client-facing technical work, fast prototyping, customer enablement -- teaching skills become a differentiator here"
+      sell_when: "JD emphasizes Linux, troubleshooting, observability, incident response, distributed systems operations, and performance under load"
 
 narrative:
-  # One-line headline. Names BOTH tracks. The "rare combination" is the value.
-  headline: "Senior AI engineer who also runs the curriculum -- 60K LOC in production, 5,200+ teaching hours, 80+ careers launched"
-  # Exit story bridges both tracks into one coherent reason for the move.
-  exit_story: "Spent 4 years running an AI subsystem at a knowledge-graph SaaS in parallel with leading the AI Engineering track at a Berlin bootcamp. Both missions are complete -- now optimizing for a single role that uses both sides, or for one side at full intensity if the team is right."
-  # Superpowers -- mix of engineering AND teaching to reflect the dual track.
+  headline: "Backend and distributed systems engineer building high-scale platforms, migration frameworks, and reliability infrastructure for enterprise workloads"
+  exit_story: "Built a strong foundation at ADP across backend architecture, distributed systems, and platform reliability, with increasing ownership and a promotion to Senior Software Engineer. Now targeting US-based software engineering roles with stronger scope, compensation, and exposure to high-caliber teams, whether the leveling lands at mid-level or senior depending on company bar."
   superpowers:
-    - "Ship production AI systems end-to-end (LangChain, LangGraph, Neo4j, Redis)"
-    - "Design curriculum that produces hireable engineers (92% completion, 80+ placed)"
-    - "Explain hard technical material in plain language -- in two languages"
-    - "Run incident reviews and code reviews at scale without burning out the team"
-    - "Bridge engineering and education -- internal docs that people actually read"
-  # Proof points -- mix engineering AND teaching wins, marked by track.
+    - "Design and scale distributed backend systems for high-throughput enterprise workloads"
+    - "Turn fragile operational paths into reliable platforms with strong observability and rollback safety"
+    - "Lead complex migrations with shadow validation and low production risk"
+    - "Bridge application engineering and infrastructure with pragmatic architectural judgment"
+    - "Perform strongly in high-ownership environments with on-call, incident response, and reliability work"
   proof_points:
-    - name: "Knowledge-Graph SaaS AI subsystem"
-      url: "https://sam-rivera.example.dev/case-study-knowledge-graph"
-      hero_metric: "60K LOC owned, 4M+ agent events/month, 38% latency cut"
+    - name: "Sharded DynamoDB architecture at ADP"
+      url: ""
+      hero_metric: "Scaled onboarding platform to 100K+ concurrent hire and onboarding events"
       track: "engineering"
-    - name: "agent-skills-kit"
-      url: "https://github.com/sam-rivera-example/agent-skills-kit"
-      hero_metric: "2,400+ GitHub stars, 11 contributors"
+    - name: "Distributed rate-limiting framework"
+      url: ""
+      hero_metric: "Sustained 10K+ QPS across payroll processing for 100+ live clients"
       track: "engineering"
-    - name: "AI Engineering 4-Week Intensive (curriculum)"
-      url: "https://sam-rivera.example.dev/curriculum-ai-eng"
-      hero_metric: "6 cohorts, NPS 71, 92% completion, 80+ careers launched"
-      track: "teaching"
-    - name: "pplx-embed-local-runner"
-      url: "https://github.com/sam-rivera-example/pplx-embed-local-runner"
-      hero_metric: "610 stars, used in 3 lab exercises"
-      track: "hybrid"
-  # Optional dashboard / live demo
-  # dashboard:
-  #   url: "https://sam-rivera.example.dev/demo"
-  #   password: "demo-2026"
+    - name: "Node.js to Java shadow traffic replay framework"
+      url: ""
+      hero_metric: "Cut delivery timelines by 50% while enabling safe parallel validation"
+      track: "engineering"
+    - name: "AI-powered anomaly detection for payroll monitoring"
+      url: ""
+      hero_metric: "Reduced false alerts by 60% and detected issues 2+ hours earlier"
+      track: "engineering"
+    - name: "Canary deployment infrastructure for ETL services"
+      url: ""
+      hero_metric: "Enabled zero client impact rollouts and 40% faster release velocity"
+      track: "engineering"
 
 compensation:
-  # Default range = engineering range (typically higher).
-  target_range: "EUR 95K-130K"
-  currency: "EUR"
-  minimum: "EUR 80K"
-  location_flexibility: "Remote within EU; up to 1 week/month on-site in Berlin or any EU city"
-
-  # alternate_ranges -- non-standard but the dual-track pattern needs it.
-  # The evaluator should pick the range matching the detected archetype track.
-  alternate_ranges:
-    - track: "teaching"
-      target_range: "EUR 70K-95K"
-      minimum: "EUR 60K"
-      note: "Teaching roles pay less than engineering. Walk-away is lower because the work is intrinsically rewarding, but not unlimited."
-    - track: "hybrid"
-      target_range: "EUR 90K-120K"
-      minimum: "EUR 75K"
-      note: "DevRel and Forward-Deployed roles -- price between the two tracks."
+  target_range: "USD 220K-300K"
+  currency: "USD"
+  minimum: "USD 200K"
+  location_flexibility: "Open to US-based roles, with strong preference for NYC or other major US tech hubs; open to relocation or remote depending on team and compensation"
 
 location:
-  country: "Germany"
-  city: "Berlin"
-  timezone: "CET/CEST"
-  visa_status: "EU citizen, no sponsorship needed"
-  onsite_availability: "1 week/month in any EU city; full remote preferred"
+  country: "Canada"
+  city: "Toronto"
+  timezone: "America/Toronto"
+  visa_status: "Canadian citizen; open to US relocation and roles requiring cross-border hiring support"
+  onsite_availability: "Open to relocation to the USA, especially NYC; also open to hybrid or remote roles with US teams"
+
+education:
+  school: "University of Waterloo"
+  degree: "Bachelor of Applied Science in Systems Design Engineering"
+  start_date: "2018-09"
+  end_date: "2023-04"
+
+experience_summary:
+  total_years: "5+"
+  domains:
+    - "Distributed systems"
+    - "Backend engineering"
+    - "Data and ETL platforms"
+    - "Platform reliability"
+    - "Enterprise SaaS"
+  industries:
+    - "HR Tech"
+    - "FinTech"
+    - "Enterprise Software"
+
+skills:
+  languages:
+    - "Python"
+    - "Java"
+    - "TypeScript/JavaScript"
+    - "SQL"
+    - "C++"
+    - "C#"
+  frameworks_and_libraries:
+    - "Spring Boot"
+    - "FastAPI"
+    - "React"
+    - ".NET"
+    - "Flask"
+    - "Pandas"
+    - "NumPy"
+    - "PyTorch"
+    - "TensorFlow"
+    - "Scikit-learn"
+  infra_and_data:
+    - "AWS"
+    - "Kubernetes"
+    - "Docker"
+    - "Kafka"
+    - "Redis"
+    - "PostgreSQL"
+    - "MySQL"
+    - "DynamoDB"
+    - "Elasticsearch"
+  tools_and_systems:
+    - "Terraform"
+    - "Prometheus"
+    - "Grafana"
+    - "Splunk"
+    - "Dynatrace"
+    - "Airflow"
+    - "Jenkins"
+    - "ArgoCD"
+
+preferences:
+  target_geography:
+    primary: "United States"
+    preferred_cities:
+      - "New York City"
+      - "Seattle"
+      - "San Francisco Bay Area"
+    open_to_remote: true
+  role_preferences:
+    - "Open to both mid-level and senior SWE roles depending on company leveling standards"
+    - "Prefer backend, platform, infrastructure, and distributed systems teams"
+    - "Interested in companies with high engineering bar and clear technical growth path"
+    - "Prefer roles with meaningful system design, ownership, and production scale"
+    - "Strong preference for SWE roles over IT, support, or purely operational roles"
+  compensation_preferences:
+    - "Target total compensation above USD 200K"
+    - "Prefer opportunities with strong equity upside or high cash compensation"
+  avoid:
+    - "Low-scope maintenance-only roles"
+    - "Primarily frontend roles"
+    - "Roles with compensation materially below target unless upside is exceptional"
+
+job_search_strategy:
+  priority_companies:
+    - "Top-tier product and infrastructure companies"
+    - "High-growth US startups with strong technical teams"
+    - "Companies known for backend, infra, distributed systems, or platform engineering excellence"
+  positioning:
+    primary_pitch: "Backend and distributed systems engineer with proven ownership of high-scale enterprise platforms, migrations, and reliability infrastructure"
+    secondary_pitch: "Platform-minded software engineer who can operate across application, data, and infrastructure layers"
+  interview_focus:
+    - "Backend engineering"
+    - "Distributed systems"
+    - "System design"
+    - "Infrastructure and reliability"
+    - "Production troubleshooting"

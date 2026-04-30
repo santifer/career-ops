@@ -14,7 +14,11 @@
     "update": "node update-system.mjs apply",
     "rollback": "node update-system.mjs rollback",
     "liveness": "node check-liveness.mjs",
-    "scan": "node scan.mjs"
+    "scan": "node scan.mjs",
+    "rank": "node pipeline-ranker.mjs",
+    "export": "node export-tracker.mjs",
+    "qa": "node application-qa.mjs",
+    "daily": "node daily-run.mjs"
   },
   "keywords": [
     "ai",
