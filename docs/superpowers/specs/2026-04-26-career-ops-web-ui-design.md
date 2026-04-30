@@ -252,7 +252,7 @@ type Application = {
 ## Environment
 
 ```bash
-CAREER_OPS_PATH=/Users/you/career-ops   # path to career-ops project root
+CAREER_OPS_PATH=/path/to/career-ops     # path to career-ops project root
                                          # defaults to cwd if not set
 PORT=3001                                # avoid conflict with other dev servers
 ```
