@@ -16,7 +16,9 @@
     "liveness": "node check-liveness.mjs",
     "scan": "node scan.mjs",
     "rank": "node pipeline-ranker.mjs",
+    "promote": "python3 promote-ranked.py",
     "export": "node export-tracker.mjs",
+    "answer": "node application-answer.mjs",
     "qa": "node application-qa.mjs",
     "daily": "node daily-run.mjs"
   },

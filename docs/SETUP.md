@@ -62,6 +62,7 @@ Then paste a job offer URL or description. Career-ops will automatically evaluat
 | Generate a PDF | `/career-ops pdf` |
 | Batch evaluate | `/career-ops batch` |
 | Check tracker status | `/career-ops tracker` |
+| Draft application answer | `/career-ops answer` |
 | Fill application form | `/career-ops apply` |
 
 ## Daily Workflow
@@ -77,6 +78,16 @@ exports the tracker to `output/applications.csv`, and verifies tracker health.
 It never submits applications. Review `output/pipeline-ranked.md`, run the full
 Career-Ops pipeline for the strongest roles, then submit manually through the
 company portal.
+
+If you prefer spreadsheet triage, edit `output/pipeline-ranked.csv`, set the
+`Apply` column to `yes` for selected roles, then run:
+
+```bash
+npm run promote -- --apply
+```
+
+That moves the selected roles into the tracker and regenerates
+`output/applications.csv`. It does not submit applications.
 
 To start it and continue working while it runs:
 

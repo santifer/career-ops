@@ -205,10 +205,11 @@ function rankOffer(offer, profile, portals, trackedCompanies) {
 }
 
 function toCsv(rows) {
-  const header = ['Priority Score', 'Tier', 'Company', 'Role', 'URL', 'Reasons', 'Cautions'];
+  const header = ['Apply', 'Priority Score', 'Tier', 'Company', 'Role', 'URL', 'Reasons', 'Cautions'];
   const lines = [header.join(',')];
   for (const row of rows) {
     lines.push([
+      '',
       row.priority_score,
       row.tier,
       row.company,
@@ -225,8 +226,10 @@ function toMarkdown(rows) {
   const lines = [
     '# Ranked Pipeline',
     '',
-    '| Priority | Tier | Company | Role | Notes |',
-    '|---:|:---:|---|---|---|',
+    'Set the `Apply` column in `output/pipeline-ranked.csv` to `yes` for roles you want to move into the application tracker, then run `npm run promote -- --apply`.',
+    '',
+    '| Apply | Priority | Tier | Company | Role | Notes |',
+    '|:---:|---:|:---:|---|---|---|',
   ];
 
   for (const row of rows) {
@@ -234,7 +237,7 @@ function toMarkdown(rows) {
       row.reasons.join('; '),
       row.cautions.length ? `Caution: ${row.cautions.join('; ')}` : '',
     ].filter(Boolean).join(' ');
-    lines.push(`| ${row.priority_score} | ${row.tier} | ${row.company} | [${row.title}](${row.url}) | ${notes} |`);
+    lines.push(`| [ ] | ${row.priority_score} | ${row.tier} | ${row.company} | [${row.title}](${row.url}) | ${notes} |`);
   }
 
   return lines.join('\n') + '\n';

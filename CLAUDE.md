@@ -82,6 +82,7 @@ When using [OpenCode](https://opencode.ai), the following slash commands are ava
 | `/career-ops-training` | `/career-ops training` | Evaluate course/cert against goals |
 | `/career-ops-project` | `/career-ops project` | Evaluate portfolio project idea |
 | `/career-ops-tracker` | `/career-ops tracker` | Application status overview |
+| `/career-ops-answer` | `/career-ops answer` | Draft answers to pasted application questions |
 | `/career-ops-apply` | `/career-ops apply` | Live application assistant |
 | `/career-ops-scan` | `/career-ops scan` | Scan portals for new offers |
 | `/career-ops-batch` | `/career-ops batch` | Batch processing with parallel workers |
@@ -225,6 +226,7 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 | Evaluates a course/cert | `training` |
 | Evaluates portfolio project | `project` |
 | Asks about application status | `tracker` |
+| Pastes an application question to answer | `answer` |
 | Fills out application form | `apply` |
 | Searches for new offers | `scan` |
 | Processes pending URLs | `pipeline` |

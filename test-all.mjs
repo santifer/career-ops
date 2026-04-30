@@ -58,6 +58,12 @@ for (const f of mjsFiles) {
   }
 }
 
+if (run('python3', ['-m', 'py_compile', 'promote-ranked.py']) !== null) {
+  pass('promote-ranked.py syntax OK');
+} else {
+  fail('promote-ranked.py has syntax errors');
+}
+
 // ── 2. SCRIPT EXECUTION ─────────────────────────────────────────
 
 console.log('\n2. Script execution (graceful on empty data)');
@@ -241,7 +247,7 @@ console.log('\n8. Mode file integrity');
 
 const expectedModes = [
   '_shared.md', '_profile.template.md', 'oferta.md', 'pdf.md', 'scan.md',
-  'batch.md', 'apply.md', 'auto-pipeline.md', 'contacto.md', 'deep.md',
+  'batch.md', 'answer.md', 'apply.md', 'auto-pipeline.md', 'contacto.md', 'deep.md',
   'ofertas.md', 'pipeline.md', 'project.md', 'tracker.md', 'training.md',
 ];
 

@@ -121,6 +121,7 @@ Career-ops is a single slash command with multiple modes:
 /career-ops pdf            → Generate ATS-optimized CV
 /career-ops batch          → Batch evaluate multiple offers
 /career-ops tracker        → View application status
+/career-ops answer         → Draft a pasted application question answer
 /career-ops apply          → Fill application forms with AI
 /career-ops pipeline       → Process pending URLs
 /career-ops contacto       → LinkedIn outreach message
@@ -130,6 +131,15 @@ Career-ops is a single slash command with multiple modes:
 ```
 
 Or just paste a job URL or description directly -- career-ops auto-detects it and runs the full pipeline.
+
+To move ranked roles into the tracker from a spreadsheet, edit
+`output/pipeline-ranked.csv`, set `Apply` to `yes`, then run:
+
+```bash
+npm run promote -- --apply
+```
+
+This marks the role as selected in the tracker; it does not submit the application.
 
 ## How It Works
 

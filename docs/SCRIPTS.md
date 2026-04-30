@@ -19,7 +19,9 @@ All scripts live in the project root as `.mjs` modules and are exposed via `npm 
 | `npm run liveness` | `check-liveness.mjs` | Test if job URLs are still active |
 | `npm run scan` | `scan.mjs` | Zero-token portal scanner |
 | `npm run rank` | `pipeline-ranker.mjs` | Rank pending pipeline roles for fast triage |
+| `npm run promote` | `promote-ranked.py` | Move selected ranked roles into the tracker |
 | `npm run export` | `export-tracker.mjs` | Export applications tracker to CSV |
+| `npm run answer` | `application-answer.mjs` | Build context for pasted application answers |
 | `npm run qa` | `application-qa.mjs` | Flag bot-like application answer signals |
 | `npm run daily` | `daily-run.mjs` | Run daily scan/rank/export/verify orchestration |
 
@@ -213,7 +215,39 @@ Writes:
 - `output/pipeline-ranked.csv`
 - `output/pipeline-ranked.md`
 
+The CSV includes an editable `Apply` column. Set it to `yes` for roles you want
+to move into the application tracker, then run `npm run promote -- --apply`.
+
 **Exit codes:** `0` rank completed, `1` missing pipeline file.
+
+---
+
+## promote
+
+Reads `output/pipeline-ranked.csv`, finds rows where `Apply` is marked, and
+promotes them through the existing tracker flow:
+
+1. writes TSV files to `batch/tracker-additions/`
+2. marks matching rows in `data/pipeline.md` as processed
+3. runs `merge-tracker.mjs --verify`
+4. regenerates `output/applications.csv`
+5. regenerates `output/pipeline-ranked.*`
+
+This script never submits applications. By default it is preview-only; use
+`--apply` to write changes.
+
+Accepted `Apply` values:
+
+- `yes`, `y`, `x`, `true`, `1`, `apply`, `evaluated` -> status `Evaluated`
+- `applied`, `sent` -> status `Applied`
+
+```bash
+npm run promote
+npm run promote -- --apply
+npm run promote -- --apply --status Applied
+```
+
+**Exit codes:** `0` success, non-zero if required files are missing or merge verification fails.
 
 ---
 
@@ -255,6 +289,28 @@ npm run daily -- --no-scan --limit 25
 runner never submits applications; it prepares the apply queue for human review.
 
 **Exit codes:** `0` success, `1` setup or command failure.
+
+---
+
+## answer
+
+Builds a compact application-answer brief from a pasted form question, optional
+company/role/JD context, the closest report in `reports/`, `cv.md`,
+`config/profile.yml`, `modes/_profile.md`, and `article-digest.md`.
+
+The script does not call an LLM and never submits applications. Use it as
+context for `/career-ops answer` or another AI assistant.
+
+```bash
+npm run answer -- --question "Why are you interested in this role?"
+npm run answer -- --company Vercel --role "Backend Engineer" --question "Why Vercel?"
+npm run answer -- --job-file jd.txt --question-file question.txt --save
+```
+
+Without `--save` or `--output`, the brief is printed to stdout. With `--save`,
+it writes `output/application-answer-brief.md`.
+
+**Exit codes:** `0` success, `1` missing question or referenced file.
 
 ---
 
