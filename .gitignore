@@ -26,6 +26,7 @@ modes/_profile.md
 .resolved-prompt-*
 node_modules/
 bun.lock
+.claude/.last-notion-sync
 
 # OS
 .DS_Store

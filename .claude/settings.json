@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__f3809142-240a-450e-9d96-4386cdf6a04a__notion-fetch",
+      "mcp__f3809142-240a-450e-9d96-4386cdf6a04a__notion-search",
+      "mcp__2d930721-7bab-490d-91fa-4b3cc48824ca__notion-fetch",
+      "mcp__2d930721-7bab-490d-91fa-4b3cc48824ca__notion-search",
+      "mcp__19261724-f58d-4835-9a04-a05e74a3cb95__apollo_mixed_people_api_search",
+      "mcp__19261724-f58d-4835-9a04-a05e74a3cb95__apollo_mixed_companies_search",
+      "mcp__19261724-f58d-4835-9a04-a05e74a3cb95__apollo_organizations_enrich",
+      "mcp__Desktop_Commander__read_file",
+      "Bash(npm view *)"
+    ]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/notion-sync-on-stop.sh",
+            "shell": "bash",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
