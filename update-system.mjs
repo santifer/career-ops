@@ -102,9 +102,15 @@ const USER_PATHS = [
   'writing-samples/',
 ];
 
+function parseVersionFile(raw) {
+  // VERSION may carry a release-please marker, e.g. "1.6.0 # x-release-please-version".
+  // Take the first whitespace-delimited token so the marker doesn't break semver parsing.
+  return raw.trim().split(/\s+/)[0] || '';
+}
+
 function localVersion() {
   const vPath = join(ROOT, 'VERSION');
-  return existsSync(vPath) ? readFileSync(vPath, 'utf-8').trim() : '0.0.0';
+  return existsSync(vPath) ? parseVersionFile(readFileSync(vPath, 'utf-8')) : '0.0.0';
 }
 
 function compareVersions(a, b) {
@@ -181,7 +187,7 @@ async function check() {
 
   if (versionResult.status === 'fulfilled' && versionResult.value.ok) {
     try {
-      const raw = (await versionResult.value.text()).trim();
+      const raw = parseVersionFile(await versionResult.value.text());
       const match = raw.match(SEMVER_RE);
       remote = match ? match[1] : '';
     } catch {
