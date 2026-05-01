@@ -111,13 +111,20 @@ function roleFuzzyMatch(a, b) {
   const overlap = wordsA.filter(w => setB.has(w)).length;
   if (overlap === 0) return false;
 
-  // Jaccard-style ratio on content tokens. Two roles are "the same" only
-  // when the overlap dominates the smaller side — not when they just share
-  // a location + "engineer".
+  // Coverage on the smaller side (ratio) AND Jaccard on the union — both must
+  // clear the bar. Without the Jaccard guard, two distinct roles that merely
+  // share generic tokens like "product"/"manager" get falsely merged when the
+  // rest of the role (vertical, level, geography) differs.
   const minLen = Math.min(wordsA.length, wordsB.length);
   const ratio = overlap / minLen;
+  const union = new Set([...wordsA, ...wordsB]);
+  const jaccard = overlap / union.size;
 
-  return overlap >= 2 && ratio >= 0.6;
+  // Strict: require either substantial multi-token agreement, or a near-
+  // complete overlap on the smaller role.
+  if (overlap >= 3 && jaccard >= 0.6) return true;
+  if (overlap >= 2 && ratio >= 0.85 && jaccard >= 0.6) return true;
+  return false;
 }
 
 function extractReportNum(reportStr) {
@@ -299,8 +306,16 @@ for (const file of tsvFiles) {
     duplicate = existingApps.find(app => app.num === addition.num);
   }
 
-  if (!duplicate) {
-    // Company + role fuzzy match
+  // Company + role fuzzy match — ONLY when the new addition lacks a valid
+  // report number. When a report number is present and didn't match any
+  // existing record above, the new TSV is by construction a NEW entry (the
+  // pipeline assigns sequential, unique report numbers). Running fuzzy match
+  // here historically caused false positives across same-company-different-
+  // role pairs (e.g. "Stripe Data Analyst (Canada)" was merged with
+  // "Stripe Data Analyst (Dublin)" because both reduced to ["data","analyst"]
+  // after stopword filtering, even though they're distinct postings). Reserve
+  // fuzzy for legacy/manual TSVs where the report column is missing.
+  if (!duplicate && !reportNum) {
     const normCompany = normalizeCompany(addition.company);
     duplicate = existingApps.find(app => {
       if (normalizeCompany(app.company) !== normCompany) return false;
