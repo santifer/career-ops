@@ -15,7 +15,9 @@
     "rollback": "node update-system.mjs rollback",
     "liveness": "node check-liveness.mjs",
     "scan": "node scan.mjs",
-    "gemini:eval": "node gemini-eval.mjs"
+    "gemini:eval": "node gemini-eval.mjs",
+    "ollama:eval": "node ollama-eval.mjs",
+    "ollama:batch": "node ollama-batch.mjs"
   },
   "keywords": [
     "ai",
