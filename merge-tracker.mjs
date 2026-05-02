@@ -16,7 +16,7 @@
 
 import { readFileSync, writeFileSync, readdirSync, mkdirSync, renameSync, existsSync } from 'fs';
 import { join, basename, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 import { execFileSync } from 'child_process';
 
 const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
@@ -67,11 +67,44 @@ function normalizeCompany(name) {
   return name.toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
+// Pull a normalized territory token from a parenthetical, e.g.
+// "Strategic AE (NY/Remote)" → "nyremote", "Sr AE (Southwest)" → "southwest".
+function extractTerritoryToken(role) {
+  const m = role.match(/\(([^)]+)\)/);
+  if (!m) return null;
+  return m[1].toLowerCase().replace(/[^a-z0-9]/g, '') || null;
+}
+
 function roleFuzzyMatch(a, b) {
+  // Distinct territories ⇒ distinct roles, even if titles otherwise overlap.
+  const territoryA = extractTerritoryToken(a);
+  const territoryB = extractTerritoryToken(b);
+  if (territoryA && territoryB && territoryA !== territoryB) return false;
+
   const wordsA = a.toLowerCase().split(/\s+/).filter(w => w.length > 3);
   const wordsB = b.toLowerCase().split(/\s+/).filter(w => w.length > 3);
   const overlap = wordsA.filter(w => wordsB.some(wb => wb.includes(w) || w.includes(wb)));
   return overlap.length >= 2;
+}
+
+// All dedup paths must require a company match. Cross-company collisions on
+// report number or entry number (e.g. duplicate `042-` filename prefixes)
+// were silently collapsing distinct applications by score.
+function findDuplicate(addition, existingApps) {
+  const normCompany = normalizeCompany(addition.company);
+  const sameCompany = existingApps.filter(app => normalizeCompany(app.company) === normCompany);
+  if (sameCompany.length === 0) return null;
+
+  const reportNum = extractReportNum(addition.report);
+  if (reportNum) {
+    const m = sameCompany.find(app => extractReportNum(app.report) === reportNum);
+    if (m) return m;
+  }
+
+  const numMatch = sameCompany.find(app => app.num === addition.num);
+  if (numMatch) return numMatch;
+
+  return sameCompany.find(app => roleFuzzyMatch(addition.role, app.role)) || null;
 }
 
 function extractReportNum(reportStr) {
@@ -181,6 +214,11 @@ function parseTsvContent(content, filename) {
 
 // ---- Main ----
 
+const isMain = !!process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+if (!isMain) {
+  // Imported as a module (e.g. by test-all.mjs) — skip the CLI side effects.
+} else {
+
 // Read applications.md
 if (!existsSync(APPS_FILE)) {
   console.log('No applications.md found. Nothing to merge into.');
@@ -234,33 +272,7 @@ for (const file of tsvFiles) {
   const addition = parseTsvContent(content, file);
   if (!addition) { skipped++; continue; }
 
-  // Check for duplicate by:
-  // 1. Exact report number match
-  // 2. Company + role fuzzy match
-  const reportNum = extractReportNum(addition.report);
-  let duplicate = null;
-
-  if (reportNum) {
-    // Check if this report number already exists
-    duplicate = existingApps.find(app => {
-      const existingReportNum = extractReportNum(app.report);
-      return existingReportNum === reportNum;
-    });
-  }
-
-  if (!duplicate) {
-    // Exact entry number match
-    duplicate = existingApps.find(app => app.num === addition.num);
-  }
-
-  if (!duplicate) {
-    // Company + role fuzzy match
-    const normCompany = normalizeCompany(addition.company);
-    duplicate = existingApps.find(app => {
-      if (normalizeCompany(app.company) !== normCompany) return false;
-      return roleFuzzyMatch(addition.role, app.role);
-    });
-  }
+  const duplicate = findDuplicate(addition, existingApps);
 
   if (duplicate) {
     const newScore = parseScore(addition.score);
@@ -270,7 +282,9 @@ for (const file of tsvFiles) {
       console.log(`🔄 Update: #${duplicate.num} ${addition.company} — ${addition.role} (${oldScore}→${newScore})`);
       const lineIdx = appLines.indexOf(duplicate.raw);
       if (lineIdx >= 0) {
-        const updatedLine = `| ${duplicate.num} | ${addition.date} | ${addition.company} | ${addition.role} | ${addition.score} | ${duplicate.status} | ${duplicate.pdf} | ${addition.report} | Re-eval ${addition.date} (${oldScore}→${newScore}). ${addition.notes} |`;
+        // Preserve the original Date column on in-place updates — re-eval date
+        // belongs in the notes, not in the canonical "first seen" date.
+        const updatedLine = `| ${duplicate.num} | ${duplicate.date} | ${addition.company} | ${addition.role} | ${addition.score} | ${duplicate.status} | ${duplicate.pdf} | ${addition.report} | Re-eval ${addition.date} (${oldScore}→${newScore}). ${addition.notes} |`;
         appLines[lineIdx] = updatedLine;
         updated++;
       }
@@ -329,3 +343,7 @@ if (VERIFY && !DRY_RUN) {
     process.exit(1);
   }
 }
+
+} // end isMain
+
+export { normalizeCompany, extractTerritoryToken, roleFuzzyMatch, extractReportNum, parseScore, parseTsvContent, findDuplicate };

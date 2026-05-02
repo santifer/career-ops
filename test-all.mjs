@@ -115,6 +115,89 @@ try {
   fail(`Liveness classification tests crashed: ${e.message}`);
 }
 
+// ── 3b. MERGE-TRACKER DEDUP ─────────────────────────────────────
+
+console.log('\n3b. merge-tracker dedup logic');
+
+try {
+  const { findDuplicate, roleFuzzyMatch, extractTerritoryToken } =
+    await import(pathToFileURL(join(ROOT, 'merge-tracker.mjs')).href);
+
+  // Bug 1 regression: cross-company report-num collision must NOT dedupe.
+  // Repro from 2026-05-02: LangChain TSV had report=[042] (filename collision)
+  // and Hakimo #42 was already in the tracker — different companies entirely.
+  const hakimoExisting = {
+    num: 42, date: '2026-05-01', company: 'Hakimo',
+    role: 'Mid-Market AE, Multifamily', score: '4.6/5', status: 'Interview',
+    pdf: '❌', report: '[042](reports/042-hakimo-2026-05-01.md)',
+    notes: 'R1 with Mark Vashon', raw: '',
+  };
+  const langchainNew = {
+    num: 43, date: '2026-05-02', company: 'LangChain',
+    role: 'Enterprise Account Executive (SF Bay Area)', score: '4.5/5',
+    status: 'Evaluated', pdf: '✅',
+    report: '[042](reports/042-langchain-enterprise-ae-sf-2026-05-02.md)',
+    notes: '$350K OTE, SF on-site',
+  };
+  if (findDuplicate(langchainNew, [hakimoExisting]) === null) {
+    pass('Cross-company report-num collision treated as new entry (Bug 1)');
+  } else {
+    fail('Cross-company report-num collision still dedupes (Bug 1)');
+  }
+
+  // Bug 2 regression: same Company + same role title shape but different
+  // territory parentheticals must NOT collapse onto each other.
+  const cursorSouthwest = {
+    num: 17, date: '2026-04-19', company: 'Cursor',
+    role: 'Strategic Enterprise AE (Southwest)', score: '3.6/5',
+    status: 'Evaluated', pdf: '✅',
+    report: '[013](reports/013-cursor-strategic-ae-southwest-2026-04-19.md)',
+    notes: 'Southwest location gap', raw: '',
+  };
+  const cursorNyRemote = {
+    num: 44, date: '2026-05-02', company: 'Cursor',
+    role: 'Strategic Account Executive, Enterprise (NY/Remote)',
+    score: '4.3/5', status: 'Evaluated', pdf: '✅',
+    report: '[043](reports/043-cursor-strategic-ae-ny-2026-05-02.md)',
+    notes: 'NY or Remote',
+  };
+  if (findDuplicate(cursorNyRemote, [cursorSouthwest]) === null) {
+    pass('Distinct territory variants treated as separate entries (Bug 2)');
+  } else {
+    fail('Territory variants still collapse onto each other (Bug 2)');
+  }
+
+  // Positive case: same company + same role + same territory ⇒ real dup.
+  const cursorSouthwestReeval = {
+    num: 50, date: '2026-05-10', company: 'Cursor',
+    role: 'Strategic Enterprise AE (Southwest)', score: '4.0/5',
+    status: 'Evaluated', pdf: '✅',
+    report: '[050](reports/050-cursor-southwest-reeval-2026-05-10.md)',
+    notes: 'Re-eval after relocation policy change',
+  };
+  if (findDuplicate(cursorSouthwestReeval, [cursorSouthwest]) === cursorSouthwest) {
+    pass('True same-territory re-eval still dedupes correctly');
+  } else {
+    fail('True same-territory re-eval no longer dedupes');
+  }
+
+  // Territory token extraction sanity.
+  if (extractTerritoryToken('Sr AE (NY/Remote)') === 'nyremote') {
+    pass('extractTerritoryToken normalizes NY/Remote');
+  } else {
+    fail('extractTerritoryToken NY/Remote normalization broken');
+  }
+
+  // roleFuzzyMatch should still match where territory is absent on both sides.
+  if (roleFuzzyMatch('Senior Enterprise Account Executive', 'Sr Enterprise Account Executive')) {
+    pass('roleFuzzyMatch still matches similar titles without territories');
+  } else {
+    fail('roleFuzzyMatch over-rejects similar titles without territories');
+  }
+} catch (e) {
+  fail(`merge-tracker dedup tests crashed: ${e.message}`);
+}
+
 // ── 4. DASHBOARD BUILD ──────────────────────────────────────────
 
 if (!QUICK) {
