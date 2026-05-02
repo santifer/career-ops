@@ -1,17 +1,17 @@
 ---
 name: career-ops
 description: AI job search command center -- evaluate offers, generate CVs, scan portals, track applications
-license: MIT
-user_invocable: true
-args: mode
+arguments: mode # Claude Code specific
+user-invocable: true
 argument-hint: "[scan | deep | pdf | oferta | ofertas | apply | batch | tracker | pipeline | contacto | training | project | interview-prep | update]"
+license: MIT
 ---
 
 # career-ops -- Router
 
 ## Mode Routing
 
-Determine the mode from `{{mode}}`:
+Determine the mode from `$mode`:
 
 | Input | Mode |
 |-------|------|
@@ -32,9 +32,9 @@ Determine the mode from `{{mode}}`:
 | `patterns` | `patterns` |
 | `followup` | `followup` |
 
-**Auto-pipeline detection:** If `{{mode}}` is not a known sub-command AND contains JD text (keywords: "responsibilities", "requirements", "qualifications", "about the role", "we're looking for", company name + role) or a URL to a JD, execute `auto-pipeline`.
+**Auto-pipeline detection:** If `$mode` is not a known sub-command AND contains JD text (keywords: "responsibilities", "requirements", "qualifications", "about the role", "we're looking for", company name + role) or a URL to a JD, execute `auto-pipeline`.
 
-If `{{mode}}` is not a sub-command AND doesn't look like a JD, show discovery.
+If `$mode` is not a sub-command AND doesn't look like a JD, show discovery.
 
 ---
 
