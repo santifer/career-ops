@@ -1,9 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# career-ops batch runner — standalone orchestrator for claude -p workers
-# Reads batch-input.tsv, delegates each offer to a claude -p worker,
+# career-ops batch runner — standalone orchestrator for LLM workers
+# Reads batch-input.tsv, delegates each offer to a worker (claude -p or Ollama),
 # tracks state in batch-state.tsv for resumability.
+#
+# Backends:
+#   claude  (default) — requires Claude Code CLI + Claude Max subscription
+#   ollama             — requires Ollama running locally (free, private)
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -28,11 +32,11 @@ RETRY_FAILED=false
 START_FROM=0
 MAX_RETRIES=2
 MIN_SCORE=0
+BACKEND="${CAREER_OPS_BACKEND:-claude}"
 
 usage() {
   cat <<'USAGE'
-career-ops batch runner — process job offers in batch via claude -p workers
-Uses your default Claude model (Claude Max subscription).
+career-ops batch runner — process job offers in batch via LLM workers
 
 Usage: batch-runner.sh [OPTIONS]
 
@@ -43,12 +47,23 @@ Options:
   --start-from N       Start from offer ID N (skip earlier IDs)
   --max-retries N      Max retry attempts per offer (default: 2)
   --min-score N        Skip PDF/tracker for offers scoring below N (default: 0 = off)
+  --backend <name>     LLM backend: claude (default) or ollama
   -h, --help           Show this help
+
+Backends:
+  claude   Uses `claude -p` workers (requires Claude Code + Claude Max subscription)
+  ollama   Uses local Ollama (free, private — set OLLAMA_MODEL and OLLAMA_BASE_URL)
+
+Environment (Ollama backend):
+  OLLAMA_BASE_URL      Ollama server URL (default: http://localhost:11434)
+  OLLAMA_MODEL         Model name (default: llama3.3)
+  OLLAMA_TIMEOUT_MS    Per-offer timeout in ms (default: 300000)
+  CAREER_OPS_BACKEND   Set default backend without --backend flag
 
 Files:
   batch-input.tsv      Input offers (id, url, source, notes)
   batch-state.tsv      Processing state (auto-managed)
-  batch-prompt.md      Prompt template for workers
+  batch-prompt.md      Prompt template (claude backend only)
   logs/                Per-offer logs
   tracker-additions/   Tracker lines for post-batch merge
 
@@ -56,8 +71,14 @@ Examples:
   # Dry run to see pending offers
   ./batch-runner.sh --dry-run
 
-  # Process all pending
+  # Process all pending (Claude backend, default)
   ./batch-runner.sh
+
+  # Process with local Ollama
+  ./batch-runner.sh --backend ollama
+
+  # Ollama with a specific model, 2 workers
+  OLLAMA_MODEL=qwen2.5:72b ./batch-runner.sh --backend ollama --parallel 2
 
   # Retry only failed offers
   ./batch-runner.sh --retry-failed
@@ -76,6 +97,7 @@ while [[ $# -gt 0 ]]; do
     --start-from) START_FROM="$2"; shift 2 ;;
     --max-retries) MAX_RETRIES="$2"; shift 2 ;;
     --min-score) MIN_SCORE="$2"; shift 2 ;;
+    --backend) BACKEND="$2"; shift 2 ;;
     -h|--help) usage; exit 0 ;;
     *) echo "Unknown option: $1"; usage; exit 1 ;;
   esac
@@ -114,15 +136,41 @@ check_prerequisites() {
     exit 1
   fi
 
-  if [[ ! -f "$PROMPT_FILE" ]]; then
-    echo "ERROR: $PROMPT_FILE not found."
-    exit 1
-  fi
-
-  if ! command -v claude &>/dev/null; then
-    echo "ERROR: 'claude' CLI not found in PATH."
-    exit 1
-  fi
+  case "$BACKEND" in
+    claude)
+      if [[ ! -f "$PROMPT_FILE" ]]; then
+        echo "ERROR: $PROMPT_FILE not found."
+        exit 1
+      fi
+      if ! command -v claude &>/dev/null; then
+        echo "ERROR: 'claude' CLI not found in PATH (required for claude backend)."
+        echo "       Install Claude Code: https://claude.ai/code"
+        exit 1
+      fi
+      ;;
+    ollama)
+      if ! command -v node &>/dev/null; then
+        echo "ERROR: 'node' not found in PATH (required for ollama backend)."
+        exit 1
+      fi
+      if [[ ! -f "$PROJECT_DIR/ollama-batch.mjs" ]]; then
+        echo "ERROR: ollama-batch.mjs not found in $PROJECT_DIR"
+        exit 1
+      fi
+      local ollama_url="${OLLAMA_BASE_URL:-http://localhost:11434}"
+      if ! curl -sf "${ollama_url}/api/tags" -o /dev/null 2>/dev/null; then
+        echo "ERROR: Ollama not reachable at ${ollama_url}"
+        echo "       Start Ollama with: ollama serve"
+        echo "       Install Ollama:    https://ollama.com"
+        exit 1
+      fi
+      echo "Backend: ollama (model: ${OLLAMA_MODEL:-llama3.3}, url: ${ollama_url})"
+      ;;
+    *)
+      echo "ERROR: Unknown backend '$BACKEND'. Use 'claude' or 'ollama'."
+      exit 1
+      ;;
+  esac
 
   mkdir -p "$LOGS_DIR" "$TRACKER_DIR" "$REPORTS_DIR"
 }
@@ -331,35 +379,39 @@ process_offer() {
 
   local log_file="$LOGS_DIR/${report_num}-${id}.log"
 
-  # Prepare system prompt with placeholders resolved
-  local resolved_prompt="$BATCH_DIR/.resolved-prompt-${id}.md"
-  # Escape sed delimiter characters in variables to prevent substitution breakage
-  local esc_url esc_jd_file esc_report_num esc_date esc_id
-  esc_url="${url//\\/\\\\}"
-  esc_url="${esc_url//|/\\|}"
-  esc_jd_file="${jd_file//\\/\\\\}"
-  esc_jd_file="${esc_jd_file//|/\\|}"
-  esc_report_num="${report_num//|/\\|}"
-  esc_date="${date//|/\\|}"
-  esc_id="${id//|/\\|}"
-  sed \
-    -e "s|{{URL}}|${esc_url}|g" \
-    -e "s|{{JD_FILE}}|${esc_jd_file}|g" \
-    -e "s|{{REPORT_NUM}}|${esc_report_num}|g" \
-    -e "s|{{DATE}}|${esc_date}|g" \
-    -e "s|{{ID}}|${esc_id}|g" \
-    "$PROMPT_FILE" > "$resolved_prompt"
-
-  # Launch claude -p worker (uses default model from Claude Max subscription)
+  # Launch worker — backend-specific
   local exit_code=0
-  claude -p \
-    --dangerously-skip-permissions \
-    --append-system-prompt-file "$resolved_prompt" \
-    "$prompt" \
-    > "$log_file" 2>&1 || exit_code=$?
+  if [[ "$BACKEND" == "ollama" ]]; then
+    node "$PROJECT_DIR/ollama-batch.mjs" \
+      --url       "$url" \
+      --jd-file   "$jd_file" \
+      --report-num "$report_num" \
+      --date      "$date" \
+      --batch-id  "$id" \
+      > "$log_file" 2>&1 || exit_code=$?
+  else
+    # claude backend: resolve placeholders into a temp system prompt file
+    local resolved_prompt="$BATCH_DIR/.resolved-prompt-${id}.md"
+    local esc_url esc_jd_file esc_report_num esc_date esc_id
+    esc_url="${url//\\/\\\\}"; esc_url="${esc_url//|/\\|}"
+    esc_jd_file="${jd_file//\\/\\\\}"; esc_jd_file="${esc_jd_file//|/\\|}"
+    esc_report_num="${report_num//|/\\|}"; esc_date="${date//|/\\|}"; esc_id="${id//|/\\|}"
+    sed \
+      -e "s|{{URL}}|${esc_url}|g" \
+      -e "s|{{JD_FILE}}|${esc_jd_file}|g" \
+      -e "s|{{REPORT_NUM}}|${esc_report_num}|g" \
+      -e "s|{{DATE}}|${esc_date}|g" \
+      -e "s|{{ID}}|${esc_id}|g" \
+      "$PROMPT_FILE" > "$resolved_prompt"
 
-  # Cleanup resolved prompt
-  rm -f "$resolved_prompt"
+    claude -p \
+      --dangerously-skip-permissions \
+      --append-system-prompt-file "$resolved_prompt" \
+      "$prompt" \
+      > "$log_file" 2>&1 || exit_code=$?
+
+    rm -f "$resolved_prompt"
+  fi
 
   local completed_at
   completed_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
@@ -378,7 +430,7 @@ process_offer() {
       if (( $(echo "$score < $MIN_SCORE" | bc -l) )); then
         update_state "$id" "$url" "skipped" "$started_at" "$completed_at" "$report_num" "$score" "below-min-score" "$retries"
         echo "    ⏭️  Skipped (score: $score < min-score: $MIN_SCORE)"
-        continue
+        return 0
       fi
     fi
 
