@@ -2,7 +2,7 @@
 
 Build and deploy a one-off Cloudflare Worker SPA for a specific job application. The site is a cover letter + personal site hybrid: a polished, public artifact the candidate can include in an application to show fit, taste, speed, and engineering ability.
 
-This mode should run in a subagent. The parent agent should pass any recently mentioned company, role, job URL, report path, JD text, or deployment preference as invocation-specific context. The subagent owns context resolution, project generation, build verification, deploy, report updates, and final handoff.
+This mode should run in a subagent. The parent agent should pass any recently mentioned company, role, job URL, report path, JD text, or deployment preference as invocation-specific context. The subagent owns context resolution, UI direction selection, Cloudflare readiness checks, project generation, build verification, deploy, report updates, and final handoff.
 
 Before launching the subagent, the parent agent must instruct the subagent to read and apply these design references:
 
@@ -52,6 +52,29 @@ Resolve the application target in this order:
 Ask one concise question only when a critical input cannot be inferred. Critical inputs are company name and either a JD, job posting URL, or existing report. Resume context is not a critical question because it comes from `cv.md` and profile files by default.
 
 If multiple plausible companies or reports match, ask the user to choose before creating or deploying anything.
+
+## UI Direction Selection
+
+Before implementing the site, generate preliminary UI direction images and ask the user to choose a preference.
+
+Default flow:
+
+1. Generate 4 distinct static UI concept images unless the user requests a different number.
+2. Make each option meaningfully different in layout, visual language, typography, color system, and interaction intent.
+3. Base every option on the resolved company, role, JD themes, and candidate proof points.
+4. Include enough fidelity to judge first viewport composition, content hierarchy, color, type, and signature visual motif.
+5. Save the generated images inside the local project once the project path exists, or in a temporary clearly named directory if image generation happens before project creation.
+6. Present the image paths to the user and ask them to select one option, or request a variation, before writing the final SPA implementation.
+
+Do not skip this selection step unless the user explicitly asks to proceed without options or provides an existing visual reference.
+
+After the user selects a concept image:
+
+1. Treat the selected image as the primary UI reference for the generated site.
+2. Preserve the selected concept's visual thesis, spatial composition, typography feel, color palette, and signature SVG/animation motif.
+3. Adapt the image into responsive, accessible, production HTML/CSS rather than copying it mechanically.
+4. Store the selected image path and any user preference notes in `APPLICATION-NOTES.md`.
+5. If the final implementation materially diverges from the selected image, explain why before continuing.
 
 ## Paths and Names
 
@@ -142,7 +165,7 @@ Apply these SVG rules:
 
 ## Implementation Guidance
 
-Prefer a minimal Cloudflare Worker-compatible SPA:
+Use Cloudflare Workers to deploy the site. Prefer a minimal Cloudflare Worker-compatible SPA:
 
 1. Vite + React or plain Vite if that is faster for the artifact.
 2. TypeScript when using React.
@@ -160,6 +183,31 @@ The generated project should include:
 3. Source files for the SPA.
 4. A short `APPLICATION-NOTES.md` with source context, target company, job URL/report, deployed URL after deploy, and commands run.
 
+## Cloudflare Readiness
+
+Before attempting deployment, verify Cloudflare and Wrangler are ready:
+
+1. Check that Wrangler is available through the generated project's dependencies or via `npx wrangler`.
+2. Run a non-destructive authentication/account check such as `npx wrangler whoami` from the generated project.
+3. Confirm Wrangler can see an authenticated Cloudflare account before running `wrangler deploy`.
+4. Do not ask for API tokens or secrets unless Wrangler explicitly requires them. Prefer browser-based `wrangler login` for local user authentication.
+
+If Cloudflare is not set up or Wrangler is not authenticated:
+
+1. Stop before deployment; do not fake or guess a URL.
+2. Explain that a Cloudflare account and Wrangler authentication are required to deploy the Worker.
+3. Give the exact setup commands:
+
+```bash
+npm install
+npx wrangler login
+npx wrangler whoami
+npm run deploy
+```
+
+4. If the user does not have a Cloudflare account, direct them to create one at `https://dash.cloudflare.com/sign-up`, then rerun `npx wrangler login`.
+5. Keep the built site and notes complete so deployment can resume after authentication.
+
 ## Build, Verify, Deploy
 
 Run:
@@ -167,7 +215,8 @@ Run:
 1. Dependency install for the generated project.
 2. Build command.
 3. A visual sanity pass on desktop and mobile if browser tooling is available.
-4. `wrangler deploy` from the generated project.
+4. Cloudflare readiness check with `npx wrangler whoami` or equivalent.
+5. `wrangler deploy` from the generated project using Cloudflare Workers.
 
 If Wrangler is not authenticated, stop after build and report the exact command the user needs to run. Do not fake a deployment URL.
 
@@ -193,7 +242,9 @@ Return:
 2. Local project path.
 3. Worker name.
 4. Source context used: report/JD/job URL.
-5. Verification performed: build, visual check, deploy.
-6. Any manual next step, such as adding the URL to the application form.
+5. Selected UI concept image and any preference notes.
+6. Cloudflare readiness result.
+7. Verification performed: build, visual check, deploy.
+8. Any manual next step, such as adding the URL to the application form.
 
 Never submit the application for the user.
