@@ -1,13 +1,13 @@
 package screens
 
 import (
-	"fmt"
 	"os"
 	"regexp"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/lipgloss/table"
 	"github.com/charmbracelet/x/ansi"
 
 	"github.com/santifer/career-ops/dashboard/internal/theme"
@@ -234,13 +234,7 @@ func (m ViewerModel) renderAll() []string {
 			for i < len(m.lines) && isTableLine(m.lines[i]) {
 				i++
 			}
-			tableLines := m.lines[tableStart:i]
-			colWidths := computeColumnWidths(tableLines, m.width-6)
-			if shouldUseCardMode(tableLines, colWidths) {
-				styled = append(styled, m.renderCardTable(tableLines)...)
-			} else {
-				styled = append(styled, m.renderTableBlock(tableLines, colWidths)...)
-			}
+			styled = append(styled, m.renderTableBlock(m.lines[tableStart:i])...)
 			continue
 		}
 
@@ -307,150 +301,6 @@ func (m ViewerModel) renderAll() []string {
 	return flat
 }
 
-// isTableLine checks if a line is part of a markdown table.
-func shouldUseCardMode(lines []string, colWidths []int) bool {
-	if len(colWidths) <= 4 {
-		return false
-	}
-	shrinkCount := 0
-	for _, w := range colWidths {
-		if w < 12 {
-			shrinkCount++
-		}
-	}
-	return shrinkCount >= 3
-}
-
-func (m ViewerModel) renderCardTable(lines []string) []string {
-	if len(lines) == 0 {
-		return nil
-	}
-
-	var dataLines []string
-	var headerCells []string
-	for _, line := range lines {
-		cells := parseTableCells(line)
-		if isTableSeparator(line) {
-			continue
-		}
-		if headerCells == nil {
-			headerCells = cells
-			continue
-		}
-		dataLines = append(dataLines, line)
-	}
-
-	if headerCells == nil {
-		return m.renderTableBlock(lines, computeColumnWidths(lines, m.width-6))
-	}
-
-	w := m.width - 8
-	if w < 10 {
-		w = 10
-	}
-	tw := w - 20
-	if tw < 10 {
-		tw = 10
-	}
-
-	numIdx := -1
-	var displayHeaders []string
-	var displayIndexes []int
-	for i, h := range headerCells {
-		if strings.TrimSpace(h) == "#" {
-			numIdx = i
-			continue
-		}
-		displayHeaders = append(displayHeaders, h)
-		displayIndexes = append(displayIndexes, i)
-	}
-
-	lineStyle := lipgloss.NewStyle().Width(w)
-	topBorder := lineStyle.Render("┌" + strings.Repeat("─", w-2) + "┐")
-	botBorder := lineStyle.Render("└" + strings.Repeat("─", w-2) + "┘")
-	midBorder := lineStyle.Render("├" + strings.Repeat("─", w-2) + "┤")
-
-	var result []string
-
-	for _, line := range dataLines {
-		cells := parseTableCells(line)
-
-		if numIdx >= 0 && numIdx < len(cells) {
-			numStr := strings.TrimSpace(cells[numIdx])
-			if numStr != "" {
-				if len(result) > 0 {
-					result = append(result, midBorder)
-				}
-				numHeader := "#" + numStr
-				padTotal := w - 2 - len(numHeader)
-				if padTotal < 0 {
-					padTotal = 0
-				}
-				leftPad := padTotal / 2
-				rightPad := padTotal - leftPad
-				row := lineStyle.Render(fmt.Sprintf("│%s%s%s│",
-					strings.Repeat(" ", leftPad),
-					numHeader,
-					strings.Repeat(" ", rightPad),
-				))
-				result = append(result, row)
-				result = append(result, midBorder)
-			}
-		}
-
-		prevIsStar := false
-		firstField := true
-
-		for di, hi := range displayHeaders {
-			ci := displayIndexes[di]
-			if ci >= len(cells) {
-				continue
-			}
-			content := strings.TrimSpace(cells[ci])
-			if content == "" {
-				continue
-			}
-
-			label := truncateRunes(hi, 15)
-			isStar := label == "S" || label == "T" || label == "A" || label == "R"
-
-			if firstField {
-				firstField = false
-			} else if !(isStar && prevIsStar) {
-				result = append(result, midBorder)
-			}
-
-			wrapped := ansi.Wrap(content, tw, "")
-			wrapLines := strings.Split(wrapped, "\n")
-			for wi, wl := range wrapLines {
-				wl = ansi.Truncate(wl, tw, "")
-				wl = m.renderInlineElements(wl)
-				visW := ansi.StringWidth(wl)
-				pad := tw - visW
-				if pad < 0 {
-					pad = 0
-				}
-				if wi == 0 {
-					row := lineStyle.Render(fmt.Sprintf("│%-16s│ %s%s│", label+":", wl, strings.Repeat(" ", pad)))
-					result = append(result, row)
-				} else {
-					row := lineStyle.Render(fmt.Sprintf("│%-16s│ %s%s│", "", wl, strings.Repeat(" ", pad)))
-					result = append(result, row)
-				}
-			}
-
-			prevIsStar = isStar
-		}
-	}
-
-	if len(result) > 0 {
-		result = append([]string{topBorder}, result...)
-		result = append(result, botBorder)
-	}
-
-	return result
-}
-
 func isTableLine(line string) bool {
 	trimmed := strings.TrimSpace(line)
 	return len(trimmed) > 1 && trimmed[0] == '|'
@@ -484,102 +334,48 @@ func parseTableCells(line string) []string {
 	return cells
 }
 
-// computeColumnWidths calculates max width per column across all table rows.
-func computeColumnWidths(lines []string, maxTotal int) []int {
-	maxCols := 0
-	for _, line := range lines {
-		if isTableSeparator(line) {
-			continue
-		}
-		cells := parseTableCells(line)
-		if len(cells) > maxCols {
-			maxCols = len(cells)
-		}
+func detectAlignment(sep string) lipgloss.Position {
+	s := strings.TrimSpace(sep)
+	if strings.HasPrefix(s, ":") && strings.HasSuffix(s, ":") {
+		return lipgloss.Center
 	}
-	if maxCols == 0 {
+	if strings.HasSuffix(s, ":") {
+		return lipgloss.Right
+	}
+	return lipgloss.Left
+}
+
+func (m ViewerModel) renderTableBlock(lines []string) []string {
+	if len(lines) == 0 {
 		return nil
 	}
 
-	widths := make([]int, maxCols)
+	var headers []string
+	var dataRows [][]string
+	var alignments []lipgloss.Position
+
 	for _, line := range lines {
 		if isTableSeparator(line) {
+			if len(alignments) == 0 {
+				for _, cell := range parseTableCells(line) {
+					alignments = append(alignments, detectAlignment(cell))
+				}
+			}
 			continue
 		}
 		cells := parseTableCells(line)
-		for i, cell := range cells {
-			if i < maxCols {
-				w := lipgloss.Width(cell)
-				if w > widths[i] {
-					widths[i] = w
-				}
-			}
+		rendered := make([]string, len(cells))
+		for i, c := range cells {
+			rendered[i] = m.renderInlineElements(c)
+		}
+		if headers == nil {
+			headers = rendered
+		} else {
+			dataRows = append(dataRows, rendered)
 		}
 	}
 
-	for i := range widths {
-		if widths[i] < 3 {
-			widths[i] = 3
-		}
-	}
-
-	maxColW := 40
-	if maxCols > 5 {
-		maxColW = 30
-	}
-	if maxCols > 7 {
-		maxColW = 25
-	}
-	for i := range widths {
-		if widths[i] > maxColW {
-			widths[i] = maxColW
-		}
-	}
-
-	for {
-		total := 1
-		for _, w := range widths {
-			total += w + 3
-		}
-		overflow := total - maxTotal
-		if overflow <= 0 {
-			break
-		}
-		widestIdx := 0
-		widestVal := 0
-		for i, w := range widths {
-			if w > widestVal {
-				widestVal = w
-				widestIdx = i
-			}
-		}
-		if widths[widestIdx] <= 3 {
-			break
-		}
-		shrink := overflow
-		if maxShrink := widths[widestIdx] - 3; shrink > maxShrink {
-			shrink = maxShrink
-		}
-		widths[widestIdx] -= shrink
-	}
-
-	return widths
-}
-
-// wrapTableCell wraps cell text to fit the given visual width.
-// Returns one or more lines; empty cells yield a single empty string.
-func wrapTableCell(cell string, width int) []string {
-	if strings.TrimSpace(cell) == "" {
-		return []string{""}
-	}
-	rendered := lipgloss.NewStyle().Width(width).Render(cell)
-	return strings.Split(rendered, "\n")
-}
-
-// renderTableBlock renders table lines with aligned columns and box-drawing borders.
-// Cell content wraps instead of truncating when it exceeds column width.
-func (m ViewerModel) renderTableBlock(lines []string, colWidths []int) []string {
-	if len(lines) == 0 || len(colWidths) == 0 {
-		// Fallback: render as plain text
+	if len(headers) == 0 {
 		var result []string
 		for _, line := range lines {
 			result = append(result, m.styleLine(line))
@@ -587,91 +383,37 @@ func (m ViewerModel) renderTableBlock(lines []string, colWidths []int) []string 
 		return result
 	}
 
-	maxCols := len(colWidths)
+	w := m.width - 6
+	if w < 10 {
+		w = 10
+	}
+
 	borderStyle := lipgloss.NewStyle().Foreground(m.theme.Overlay)
-	headerStyle := lipgloss.NewStyle().Bold(true).Foreground(m.theme.Sky)
-	dataStyle := lipgloss.NewStyle().Foreground(m.theme.Text)
+	t := table.New().
+		Width(w).
+		Wrap(true).
+		BorderStyle(borderStyle).
+		BorderTop(true).BorderBottom(true).
+		BorderLeft(true).BorderRight(true).
+		BorderHeader(true).BorderColumn(true)
 
-	// Build top border
-	var result []string
-	var topParts []string
-	for _, w := range colWidths {
-		topParts = append(topParts, strings.Repeat("─", w+2))
-	}
-	result = append(result, borderStyle.Render("┌"+strings.Join(topParts, "┬")+"┐"))
-
-	isFirstDataRow := true
-	for _, line := range lines {
-		if isTableSeparator(line) {
-			// Render middle separator
-			var sepParts []string
-			for _, w := range colWidths {
-				sepParts = append(sepParts, strings.Repeat("─", w+2))
-			}
-			result = append(result, borderStyle.Render("├"+strings.Join(sepParts, "┼")+"┤"))
-			continue
-		}
-
-		cells := parseTableCells(line)
-		rowStyle := dataStyle
-		if isFirstDataRow {
-			rowStyle = headerStyle
-		}
-
-		cellWrapped := make([][]string, maxCols)
-		maxHeight := 1
-		for i := 0; i < maxCols; i++ {
-			cell := ""
-			if i < len(cells) {
-				cell = cells[i]
-			}
-			cell = m.renderInlineElements(cell)
-			colW := colWidths[i]
-			wrapped := wrapTableCell(cell, colW)
-			for j := range wrapped {
-				wrapped[j] = rowStyle.Render(wrapped[j])
-			}
-			cellWrapped[i] = wrapped
-			if len(wrapped) > maxHeight {
-				maxHeight = len(wrapped)
-			}
-		}
-
-		for h := 0; h < maxHeight; h++ {
-			var paddedCells []string
-			for i := 0; i < maxCols; i++ {
-				colW := colWidths[i]
-				var cellText string
-				if h < len(cellWrapped[i]) {
-					cellText = cellWrapped[i][h]
-				} else {
-					cellText = rowStyle.Render(strings.Repeat(" ", colW))
-				}
-
-				cellWidth := lipgloss.Width(cellText)
-				padding := colW - cellWidth
-				if padding < 0 {
-					padding = 0
-				}
-				paddedCells = append(paddedCells, " "+cellText+strings.Repeat(" ", padding)+" ")
-			}
-
-			border := borderStyle.Render("│")
-			row := border + strings.Join(paddedCells, border) + border
-			result = append(result, row)
-		}
-
-		isFirstDataRow = false
+	t.Headers(headers...)
+	if len(dataRows) > 0 {
+		t.Rows(dataRows...)
 	}
 
-	// Bottom border
-	var bottomParts []string
-	for _, w := range colWidths {
-		bottomParts = append(bottomParts, strings.Repeat("─", w+2))
-	}
-	result = append(result, borderStyle.Render("└"+strings.Join(bottomParts, "┴")+"┘"))
+	t.StyleFunc(func(row, col int) lipgloss.Style {
+		st := lipgloss.NewStyle().Padding(0, 1)
+		if row == table.HeaderRow {
+			return st.Bold(true).Foreground(m.theme.Sky)
+		}
+		if col < len(alignments) {
+			st = st.Align(alignments[col])
+		}
+		return st.Foreground(m.theme.Text)
+	})
 
-	return result
+	return strings.Split(t.String(), "\n")
 }
 
 var (
