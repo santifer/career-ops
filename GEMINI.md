@@ -20,6 +20,11 @@ AI-powered job search automation: pipeline tracking, offer evaluation, CV genera
 
 **THE RULE:** When the user asks to customize anything (archetypes, narrative, negotiation scripts, proof points, location policy, comp targets), ALWAYS write to `modes/_profile.md` or `config/profile.yml`. NEVER edit `modes/_shared.md` for user-specific content.
 
+## Language Policy (STRICT)
+- **ALL outputs MUST be in English.** This includes internal reports, generated CVs, outreach messages, and all communication with the user.
+- NEVER generate content in Spanish or any other language unless explicitly requested by the user for a specific task.
+- If a JD is in another language, translate the analysis and generated response to English.
+
 ## Update Check
 
 On the first message of each session, run the update checker silently:

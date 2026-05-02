@@ -60,12 +60,12 @@ function detectApi(company) {
     };
   }
 
-  // Greenhouse EU boards
-  const ghEuMatch = url.match(/job-boards(?:\.eu)?\.greenhouse\.io\/([^/?#]+)/);
-  if (ghEuMatch && !company.api) {
+  // Greenhouse (job-boards.greenhouse.io, job-boards.eu.greenhouse.io, boards.greenhouse.io)
+  const ghMatch = url.match(/(?:job-boards(?:\.eu)?|boards)\.greenhouse\.io\/([^/?#]+)/);
+  if (ghMatch && !company.api) {
     return {
       type: 'greenhouse',
-      url: `https://boards-api.greenhouse.io/v1/boards/${ghEuMatch[1]}/jobs`,
+      url: `https://boards-api.greenhouse.io/v1/boards/${ghMatch[1]}/jobs`,
     };
   }
 
@@ -86,12 +86,18 @@ function parseGreenhouse(json, companyName) {
 
 function parseAshby(json, companyName) {
   const jobs = json.jobs || [];
-  return jobs.map(j => ({
-    title: j.title || '',
-    url: j.jobUrl || '',
-    company: companyName,
-    location: j.location || '',
-  }));
+  const FULLTIME_TYPES = ['full-time', 'fulltime', 'permanent'];
+  return jobs
+    .filter(j => {
+      const et = (j.employmentType || '').toLowerCase();
+      return !et || !FULLTIME_TYPES.some(t => et.includes(t));
+    })
+    .map(j => ({
+      title: j.title || '',
+      url: j.jobUrl || '',
+      company: companyName,
+      location: j.location || '',
+    }));
 }
 
 function parseLever(json, companyName) {
@@ -123,13 +129,18 @@ async function fetchJson(url) {
 // ── Title filter ────────────────────────────────────────────────────
 
 function buildTitleFilter(titleFilter) {
-  const positive = (titleFilter?.positive || []).map(k => k.toLowerCase());
-  const negative = (titleFilter?.negative || []).map(k => k.toLowerCase());
+  // Build word-boundary regexes so "intern" doesn't match "International" or "Internal"
+  function toWordRegex(keyword) {
+    const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp(`(?<![a-z])${escaped}(?![a-z])`, 'i');
+  }
+
+  const positive = (titleFilter?.positive || []).map(toWordRegex);
+  const negative = (titleFilter?.negative || []).map(toWordRegex);
 
   return (title) => {
-    const lower = title.toLowerCase();
-    const hasPositive = positive.length === 0 || positive.some(k => lower.includes(k));
-    const hasNegative = negative.some(k => lower.includes(k));
+    const hasPositive = positive.length === 0 || positive.some(r => r.test(title));
+    const hasNegative = negative.some(r => r.test(title));
     return hasPositive && !hasNegative;
   };
 }

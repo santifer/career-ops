@@ -74,14 +74,14 @@ Generate a 3-4 sentence email:
 - Include a subject line
 - Use the candidate's name from `config/profile.yml`
 
-**Example tone:**
-> Subject: Re: Senior PHP/Laravel Developer — IxDF
+**Example tone (intern):**
+> Subject: Re: AI Engineering Intern — [Company]
 >
 > Hi [contact name or "team"],
 >
-> I submitted my application for the Senior PHP/Laravel Developer role on April 7th. I wanted to share that my production Laravel app (Barbeiro.app — 120 models, 315 API endpoints, full test suite) closely mirrors the TDD-driven culture described in the posting.
+> I applied for the AI Engineering Intern role last week. I wanted to share that Unhook, one of my side projects, uses a Fastify + Prisma backend with a Gemini-powered classification layer — closely aligned with the LLM integration work your team is doing.
 >
-> I'd love to discuss how my 15 years of PHP experience and hands-on AI tooling workflow could contribute to IxDF's platform. Would any time this week work for a brief conversation?
+> I'd love to discuss how my background could contribute this summer. Would you have 15 minutes this week?
 >
 > Best,
 > [Name]

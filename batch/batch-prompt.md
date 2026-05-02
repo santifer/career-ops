@@ -1,4 +1,4 @@
-# career-ops Batch Worker — Evaluación Completa + PDF + Tracker Line
+# career-ops Batch Worker — Full Evaluation + PDF + Tracker Line
 
 Eres un worker de evaluación de ofertas de empleo for the candidate (read name from config/profile.yml). Recibes una oferta (URL + JD text) y produces:
 
@@ -55,37 +55,35 @@ Read `cv.md`. Ejecuta TODOS los bloques:
 
 Clasifica la oferta en uno de los 6 arquetipos. Si es híbrido, indica los 2 más cercanos.
 
-**Los 6 arquetipos (todos igual de válidos):**
+**Archetypes (read from `modes/_profile.md` — all equally valid):**
 
-| Arquetipo | Ejes temáticos | Qué compran |
-|-----------|----------------|-------------|
-| **AI Platform / LLMOps Engineer** | Evaluation, observability, reliability, pipelines | Alguien que ponga AI en producción con métricas |
-| **Agentic Workflows / Automation** | HITL, tooling, orchestration, multi-agent | Alguien que construya sistemas de agentes fiables |
-| **Technical AI Product Manager** | GenAI/Agents, PRDs, discovery, delivery | Alguien que traduzca negocio → producto AI |
-| **AI Solutions Architect** | Hyperautomation, enterprise, integrations | Alguien que diseñe arquitecturas AI end-to-end |
-| **AI Forward Deployed Engineer** | Client-facing, fast delivery, prototyping | Alguien que entregue soluciones AI a clientes rápido |
-| **AI Transformation Lead** | Change management, adoption, org enablement | Alguien que lidere el cambio AI en una organización |
+| Archetype | Thematic axes | What they buy |
+|-----------|---------------|---------------|
+| **ML / Deep Learning Intern** | PyTorch, training, fine-tuning, research implementation | Someone who ships experiments fast and learns on the fly |
+| **AI Engineering Intern** | LLM APIs, RAG, inference, evaluation, prompt engineering | Someone who builds AI features end-to-end with minimal supervision |
+| **Backend / Fullstack Intern** | REST APIs, distributed systems, TypeScript/Python, databases | Someone who ships production-quality code |
+| **Research Intern (CV / NLP)** | Paper implementation, benchmarks, novel experiments | Someone who advances research and can reproduce papers |
+| **Data Science Intern** | EDA, statistical modeling, dashboards, SQL | Someone who turns data into decisions |
 
-**Framing adaptativo:**
+**Adaptive framing:**
 
-> **Las métricas concretas se leen de `cv.md` + `article-digest.md` en cada evaluación. NUNCA hardcodear números aquí.**
+> **Concrete metrics are read from `cv.md` + `article-digest.md` at evaluation time. NEVER hardcode numbers here.**
 
-| Si el rol es... | Emphasize about the candidate... | Fuentes de proof points |
-|-----------------|--------------------------|--------------------------|
-| Platform / LLMOps | Builder de sistemas en producción, observability, evals, closed-loop | article-digest.md + cv.md |
-| Agentic / Automation | Orquestación multi-agente, HITL, reliability, cost | article-digest.md + cv.md |
-| Technical AI PM | Product discovery, PRDs, métricas, stakeholder mgmt | cv.md + article-digest.md |
-| Solutions Architect | Diseño de sistemas, integrations, enterprise-ready | article-digest.md + cv.md |
-| Forward Deployed Engineer | Fast delivery, client-facing, prototype → prod | cv.md + article-digest.md |
-| AI Transformation Lead | Change management, team enablement, adoption | cv.md + article-digest.md |
+| If the role is... | Emphasize about the candidate... | Proof point sources |
+|-------------------|----------------------------------|---------------------|
+| ML / Deep Learning | Fast experiment iteration, PyTorch fluency, IIT Bombay coursework depth | article-digest.md + cv.md |
+| AI Engineering | End-to-end AI app delivery (Brainon, Unhook), LLM integration, system design thinking | article-digest.md + cv.md |
+| Backend / Fullstack | Production-grade API design (Fastify/Prisma), database schema, shipped under constraints | cv.md + article-digest.md |
+| Research (CV/NLP) | Paper reading velocity, implementation from scratch (ViT, YOLOv8), curiosity-driven work | cv.md + article-digest.md |
+| Data Science | Analytical rigor, end-to-end project ownership, clear communication of findings | cv.md + article-digest.md |
 
-**Ventaja transversal**: Enmarcar perfil como **"Technical builder"** que adapta su framing al rol:
-- Para PM: "builder que reduce incertidumbre con prototipos y luego productioniza con disciplina"
-- Para FDE: "builder que entrega fast con observability y métricas desde día 1"
-- Para SA: "builder que diseña sistemas end-to-end con experiencia real en integrations"
-- Para LLMOps: "builder que pone AI en producción con closed-loop quality systems — leer métricas de article-digest.md"
+**Cross-cutting advantage**: Frame profile as **"IIT Bombay rigor + independent builder"** that adapts to each role:
+- For ML/DL: "Strong fundamentals (Deep Learning Specialization, coursework) + fast experiment iteration"
+- For AI Engineering: "Built and shipped full AI products independently — not just tutorials, real products"
+- For Backend: "Systems thinking from first principles + clean API design + production-grade code"
+- For Research: "Paper-reading velocity + can implement from scratch + intellectually curious"
 
-Convertir "builder" en señal profesional, no en "hobby maker". El framing cambia, la verdad es la misma.
+Lead with learning velocity and depth, not years of experience.
 
 #### Bloque A — Resumen del Rol
 
@@ -112,12 +110,12 @@ Sección de **gaps** con estrategia de mitigación para cada uno:
 #### Bloque C — Nivel y Estrategia
 
 1. **Nivel detectado** en el JD vs **candidate's natural level**
-2. **Plan "vender senior sin mentir"**: frases específicas, logros concretos, founder como ventaja
-3. **Plan "si me downlevelan"**: aceptar si comp justa, review a 6 meses, criterios claros
+2. **Plan "demostrar learning velocity"**: specific proof points showing ability to ramp fast — coursework depth, shipped side projects, IIT Bombay rigor; concrete phrases adapted to the archetype; how to position independent builder experience as a signal of initiative
+3. **Plan "si el stipend es bajo"**: acknowledge learning value and mentorship quality; reference comp benchmarks for similar roles; frame return-offer potential as part of total value — don't anchor hard on stipend for a first internship
 
 #### Bloque D — Comp y Demanda
 
-Usar WebSearch para salarios actuales (Glassdoor, Levels.fyi, Blind), reputación comp de la empresa, tendencia demanda. Tabla con datos y fuentes citadas. Si no hay datos, decirlo.
+Usar WebSearch para stipends actuales de internships — buscar explícitamente "internship" para no confundir con salarios full-time (Internshala, Glassdoor, Levels.fyi intern section, company reviews). Reputación comp de la empresa para interns (return offer rate, stipend ranges). Tendencia demanda. Tabla con datos y fuentes citadas. Si no hay datos, decirlo — missing stipend disclosure is common for internships.
 
 Score de comp (1-5): 5=top quartile, 4=above market, 3=median, 2=slightly below, 1=well below.
 
