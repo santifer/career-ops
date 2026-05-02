@@ -20,6 +20,7 @@ These files contain your personal data, customizations, and work product. Update
 | `data/follow-ups.md` | Your follow-up history |
 | `reports/*` | Your evaluation reports |
 | `output/*` | Your generated PDFs |
+| `job-app-sites/*` | Your generated application microsites |
 | `jds/*` | Your saved job descriptions |
 
 ## System Layer (safe to auto-update)
@@ -31,6 +32,7 @@ These files contain system logic, scripts, templates, and instructions that impr
 | `modes/_shared.md` | Scoring system, global rules, tools |
 | `modes/oferta.md` | Evaluation mode instructions |
 | `modes/pdf.md` | PDF generation instructions |
+| `modes/cover-site.md` | Cover letter SPA deployment instructions |
 | `modes/scan.md` | Portal scanner instructions |
 | `modes/batch.md` | Batch processing instructions |
 | `modes/apply.md` | Application assistant instructions |

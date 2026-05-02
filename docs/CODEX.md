@@ -36,6 +36,7 @@ npx playwright install chromium
 | Multiple offers | `modes/_shared.md` + `modes/ofertas.md` |
 | Portal scan | `modes/_shared.md` + `modes/scan.md` |
 | PDF generation | `modes/_shared.md` + `modes/pdf.md` |
+| Deployed cover letter / application microsite | `modes/_shared.md` + `modes/cover-site.md` |
 | Live application help | `modes/_shared.md` + `modes/apply.md` |
 | Pipeline inbox processing | `modes/_shared.md` + `modes/pipeline.md` |
 | Tracker status | `modes/tracker.md` |

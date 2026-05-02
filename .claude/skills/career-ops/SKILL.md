@@ -3,7 +3,7 @@ name: career-ops
 description: AI job search command center -- evaluate offers, generate CVs, scan portals, track applications
 user_invocable: true
 args: mode
-argument-hint: "[scan | deep | pdf | oferta | ofertas | apply | batch | tracker | pipeline | contacto | training | project | interview-prep | update]"
+argument-hint: "[scan | deep | pdf | cover-site | oferta | ofertas | apply | batch | tracker | pipeline | contacto | training | project | interview-prep | update]"
 ---
 
 # career-ops -- Router
@@ -21,6 +21,7 @@ Determine the mode from `{{mode}}`:
 | `contacto` | `contacto` |
 | `deep` | `deep` |
 | `pdf` | `pdf` |
+| `cover-site` | `cover-site` |
 | `training` | `training` |
 | `project` | `project` |
 | `tracker` | `tracker` |
@@ -30,6 +31,8 @@ Determine the mode from `{{mode}}`:
 | `batch` | `batch` |
 | `patterns` | `patterns` |
 | `followup` | `followup` |
+
+If `{{mode}}` starts with a known sub-command followed by extra arguments, route to that sub-command and treat the remaining text as invocation-specific context. Example: `cover-site https://example.com/job` routes to `cover-site`, not `auto-pipeline`.
 
 **Auto-pipeline detection:** If `{{mode}}` is not a known sub-command AND contains JD text (keywords: "responsibilities", "requirements", "qualifications", "about the role", "we're looking for", company name + role) or a URL to a JD, execute `auto-pipeline`.
 
@@ -52,6 +55,7 @@ Available commands:
   /career-ops contacto  → LinkedIn power move: find contacts + draft message
   /career-ops deep      → Deep research prompt about company
   /career-ops pdf       → PDF only, ATS-optimized CV
+  /career-ops cover-site → Build + deploy a tailored cover letter SPA
   /career-ops training  → Evaluate course/cert against North Star
   /career-ops project   → Evaluate portfolio project idea
   /career-ops tracker   → Application status overview
@@ -74,7 +78,7 @@ After determining the mode, load the necessary files before executing:
 ### Modes that require `_shared.md` + their mode file:
 Read `modes/_shared.md` + `modes/{mode}.md`
 
-Applies to: `auto-pipeline`, `oferta`, `ofertas`, `pdf`, `contacto`, `apply`, `pipeline`, `scan`, `batch`
+Applies to: `auto-pipeline`, `oferta`, `ofertas`, `pdf`, `cover-site`, `contacto`, `apply`, `pipeline`, `scan`, `batch`
 
 ### Standalone modes (only their mode file):
 Read `modes/{mode}.md`
@@ -82,7 +86,7 @@ Read `modes/{mode}.md`
 Applies to: `tracker`, `deep`, `training`, `project`, `patterns`, `followup`
 
 ### Modes delegated to subagent:
-For `scan`, `apply` (with Playwright), and `pipeline` (3+ URLs): launch as Agent with the content of `_shared.md` + `modes/{mode}.md` injected into the subagent prompt.
+For `cover-site`, `scan`, `apply` (with Playwright), and `pipeline` (3+ URLs): launch as Agent with the content of `_shared.md` + `modes/{mode}.md` injected into the subagent prompt.
 
 ```
 Agent(
@@ -91,5 +95,7 @@ Agent(
   description="career-ops {mode}"
 )
 ```
+
+For `cover-site`, include any recently mentioned company, role, job URL, report path, or JD text in the invocation-specific data so the subagent can resolve context without asking again.
 
 Execute the instructions from the loaded mode file.

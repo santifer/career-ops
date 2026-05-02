@@ -7,6 +7,8 @@ reports/*.md
 !reports/.gitkeep
 output/*
 !output/.gitkeep
+job-app-sites/*
+!job-app-sites/.gitkeep
 batch/logs/*
 !batch/logs/.gitkeep
 batch/batch-state.tsv

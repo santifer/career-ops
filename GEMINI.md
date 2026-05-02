@@ -12,7 +12,7 @@ AI-powered job search automation: pipeline tracking, offer evaluation, CV genera
 
 **User Layer (NEVER auto-updated — your personalizations live here):**
 - `cv.md`, `config/profile.yml`, `modes/_profile.md`, `article-digest.md`, `portals.yml`
-- `data/*`, `reports/*`, `output/*`, `interview-prep/*`
+- `data/*`, `reports/*`, `output/*`, `interview-prep/*`, `job-app-sites/*`
 
 **System Layer (auto-updatable — do NOT put user data here):**
 - `modes/_shared.md`, `modes/oferta.md`, all other modes
@@ -81,6 +81,7 @@ If `modes/_profile.md` is missing, copy from `modes/_profile.template.md` silent
 | Asks for company research | read `modes/deep.md` |
 | Preps for interview | read `modes/interview-prep.md` |
 | Wants to generate CV/PDF | read `modes/_shared.md` + `modes/pdf.md` |
+| Wants a deployed cover letter / application microsite | read `modes/_shared.md` + `modes/cover-site.md` |
 | Evaluates a course/cert | read `modes/training.md` |
 | Evaluates portfolio project | read `modes/project.md` |
 | Asks about application status | read `modes/tracker.md` |
