@@ -391,6 +391,12 @@ tracked_companies:
     notes: "GPU cloud for AI."
     enabled: true
 
+  - name: Weights & Biases (CoreWeave)
+    careers_url: https://job-boards.greenhouse.io/coreweave
+    api: https://boards-api.greenhouse.io/v1/boards/coreweave/jobs
+    notes: "Acquired by CoreWeave (announced March 2025, closed May 2025). W&B roles now live on CoreWeave's Greenhouse board. Old Lever URL (jobs.lever.co/wandb) returns 404."
+    enabled: true
+
   - name: Glean
     careers_url: https://job-boards.greenhouse.io/gleanwork
     api: https://boards-api.greenhouse.io/v1/boards/gleanwork/jobs
@@ -551,11 +557,6 @@ tracked_companies:
   - name: Mistral AI
     careers_url: https://jobs.lever.co/mistral
     notes: "Paris. European AI lab."
-    enabled: true
-
-  - name: Weights & Biases
-    careers_url: https://jobs.lever.co/wandb
-    notes: "MLOps platform."
     enabled: true
 
   - name: Palantir
