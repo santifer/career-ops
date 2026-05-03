@@ -22,6 +22,7 @@ Available commands:
   /career-ops-contact      → LinkedIn outreach: find contacts + draft message
   /career-ops-deep         → Deep research about a company
   /career-ops-pdf          → Generate ATS-optimized CV PDF
+  /career-ops-latex        → Export CV as LaTeX/Overleaf .tex
   /career-ops-training     → Evaluate course/cert against North Star
   /career-ops-project      → Evaluate a portfolio project idea
   /career-ops-tracker      → Application status overview
