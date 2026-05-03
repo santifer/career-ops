@@ -1,6 +1,6 @@
 {
   "name": "career-ops",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "description": "AI-powered job search pipeline built on Claude Code",
   "scripts": {
     "doctor": "node doctor.mjs",
