@@ -1,8 +1,9 @@
 {
   "name": "career-ops",
-  "version": "1.0.0",
+  "version": "1.6.0",
   "description": "AI-powered job search pipeline built on Claude Code",
   "scripts": {
+    "doctor": "node doctor.mjs",
     "verify": "node verify-pipeline.mjs",
     "normalize": "node normalize-statuses.mjs",
     "dedup": "node dedup-tracker.mjs",
@@ -11,9 +12,18 @@
     "sync-check": "node cv-sync-check.mjs",
     "update:check": "node update-system.mjs check",
     "update": "node update-system.mjs apply",
-    "rollback": "node update-system.mjs rollback"
+    "rollback": "node update-system.mjs rollback",
+    "liveness": "node check-liveness.mjs",
+    "scan": "node scan.mjs",
+    "gemini:eval": "node gemini-eval.mjs"
   },
-  "keywords": ["ai", "job-search", "claude-code", "career", "automation"],
+  "keywords": [
+    "ai",
+    "job-search",
+    "claude-code",
+    "career",
+    "automation"
+  ],
   "author": "Santiago Fernández de Valderrama <hi@santifer.io> (https://santifer.io)",
   "homepage": "https://santifer.io",
   "repository": {
@@ -22,6 +32,9 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "dotenv": "^16.4.5",
+    "js-yaml": "^4.1.1",
     "playwright": "^1.58.1"
   }
 }

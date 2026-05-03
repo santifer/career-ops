@@ -15,9 +15,11 @@
  */
 
 import { readFileSync, writeFileSync, readdirSync, mkdirSync, renameSync, existsSync } from 'fs';
-import { join, basename } from 'path';
+import { join, basename, dirname } from 'path';
+import { fileURLToPath } from 'url';
+import { execFileSync } from 'child_process';
 
-const CAREER_OPS = new URL('.', import.meta.url).pathname;
+const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
 // Support both layouts: data/applications.md (boilerplate) and applications.md (original)
 const APPS_FILE = existsSync(join(CAREER_OPS, 'data/applications.md'))
   ? join(CAREER_OPS, 'data/applications.md')
@@ -27,8 +29,12 @@ const MERGED_DIR = join(ADDITIONS_DIR, 'merged');
 const DRY_RUN = process.argv.includes('--dry-run');
 const VERIFY = process.argv.includes('--verify');
 
+// Ensure required directories exist (fresh setup)
+mkdirSync(join(CAREER_OPS, 'data'), { recursive: true });
+mkdirSync(ADDITIONS_DIR, { recursive: true });
+
 // Canonical states and aliases
-const CANONICAL_STATES = ['Evaluada', 'Aplicado', 'Respondido', 'Entrevista', 'Oferta', 'Rechazado', 'Descartado', 'NO APLICAR'];
+const CANONICAL_STATES = ['Evaluated', 'Applied', 'Responded', 'Interview', 'Offer', 'Rejected', 'Discarded', 'SKIP'];
 
 function validateStatus(status) {
   const clean = status.replace(/\*\*/g, '').replace(/\s+\d{4}-\d{2}-\d{2}.*$/, '').trim();
@@ -40,32 +46,78 @@ function validateStatus(status) {
 
   // Aliases
   const aliases = {
-    'enviada': 'Aplicado', 'aplicada': 'Aplicado', 'applied': 'Aplicado', 'sent': 'Aplicado',
-    'cerrada': 'Descartado', 'descartada': 'Descartado', 'cancelada': 'Descartado',
-    'rechazada': 'Rechazado',
-    'no aplicar': 'NO APLICAR', 'no_aplicar': 'NO APLICAR', 'skip': 'NO APLICAR', 'monitor': 'NO APLICAR',
-    'condicional': 'Evaluada', 'hold': 'Evaluada', 'evaluar': 'Evaluada', 'verificar': 'Evaluada',
-    'geo blocker': 'NO APLICAR',
+    // Spanish → English
+    'evaluada': 'Evaluated', 'condicional': 'Evaluated', 'hold': 'Evaluated', 'evaluar': 'Evaluated', 'verificar': 'Evaluated',
+    'aplicado': 'Applied', 'enviada': 'Applied', 'aplicada': 'Applied', 'applied': 'Applied', 'sent': 'Applied',
+    'respondido': 'Responded',
+    'entrevista': 'Interview',
+    'oferta': 'Offer',
+    'rechazado': 'Rejected', 'rechazada': 'Rejected',
+    'descartado': 'Discarded', 'descartada': 'Discarded', 'cerrada': 'Discarded', 'cancelada': 'Discarded',
+    'no aplicar': 'SKIP', 'no_aplicar': 'SKIP', 'skip': 'SKIP', 'monitor': 'SKIP',
+    'geo blocker': 'SKIP',
   };
 
   if (aliases[lower]) return aliases[lower];
 
-  // DUPLICADO/Repost → Descartado
-  if (/^(duplicado|dup|repost)/i.test(lower)) return 'Descartado';
+  // DUPLICADO/Repost → Discarded
+  if (/^(duplicado|dup|repost)/i.test(lower)) return 'Discarded';
 
-  console.warn(`⚠️  Non-canonical status "${status}" → defaulting to "Evaluada"`);
-  return 'Evaluada';
+  console.warn(`⚠️  Non-canonical status "${status}" → defaulting to "Evaluated"`);
+  return 'Evaluated';
 }
 
 function normalizeCompany(name) {
   return name.toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
+// Tokens that almost every role shares — must NOT count as signal.
+// Includes seniority, work-mode, contract, and common locations.
+const ROLE_STOPWORDS = new Set([
+  // seniority / level
+  'junior', 'mid', 'middle', 'senior', 'staff', 'principal', 'lead', 'head',
+  'chief', 'associate', 'intern', 'entry', 'level',
+  // contract / mode
+  'remote', 'hybrid', 'onsite', 'contract', 'contractor', 'freelance',
+  'fulltime', 'parttime', 'permanent', 'temporary', 'intern', 'internship',
+  // generic job words
+  'role', 'position', 'opportunity', 'team', 'based',
+  // very common locations (extend in portals.yml later if needed)
+  'bangalore', 'bengaluru', 'mumbai', 'delhi', 'hyderabad', 'pune', 'chennai',
+  'london', 'berlin', 'paris', 'madrid', 'barcelona', 'amsterdam', 'dublin',
+  'york', 'francisco', 'seattle', 'boston', 'austin', 'chicago', 'toronto',
+  'tokyo', 'singapore', 'sydney', 'melbourne', 'lisbon', 'warsaw',
+  // regions / countries
+  'europe', 'emea', 'apac', 'latam', 'americas', 'india', 'spain', 'germany',
+  'france', 'italy', 'canada', 'brazil', 'mexico', 'japan',
+  // prepositions leaking through length filter
+  'with', 'from', 'into', 'over', 'this', 'that',
+]);
+
+function roleTokens(s) {
+  return s
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter(w => w.length > 3 && !ROLE_STOPWORDS.has(w));
+}
+
 function roleFuzzyMatch(a, b) {
-  const wordsA = a.toLowerCase().split(/\s+/).filter(w => w.length > 3);
-  const wordsB = b.toLowerCase().split(/\s+/).filter(w => w.length > 3);
-  const overlap = wordsA.filter(w => wordsB.some(wb => wb.includes(w) || w.includes(wb)));
-  return overlap.length >= 2;
+  const wordsA = roleTokens(a);
+  const wordsB = roleTokens(b);
+  if (wordsA.length === 0 || wordsB.length === 0) return false;
+
+  const setB = new Set(wordsB);
+  const overlap = wordsA.filter(w => setB.has(w)).length;
+  if (overlap === 0) return false;
+
+  // Jaccard-style ratio on content tokens. Two roles are "the same" only
+  // when the overlap dominates the smaller side — not when they just share
+  // a location + "engineer".
+  const minLen = Math.min(wordsA.length, wordsB.length);
+  const ratio = overlap / minLen;
+
+  return overlap >= 2 && ratio >= 0.6;
 }
 
 function extractReportNum(reportStr) {
@@ -134,8 +186,8 @@ function parseTsvContent(content, filename) {
     const col5 = parts[5].trim();
     const col4LooksLikeScore = /^\d+\.?\d*\/5$/.test(col4) || col4 === 'N/A' || col4 === 'DUP';
     const col5LooksLikeScore = /^\d+\.?\d*\/5$/.test(col5) || col5 === 'N/A' || col5 === 'DUP';
-    const col4LooksLikeStatus = /^(evaluada|aplicado|respondido|entrevista|oferta|rechazado|descartado|no aplicar|cerrada|duplicado|repost|condicional|hold|monitor)/i.test(col4);
-    const col5LooksLikeStatus = /^(evaluada|aplicado|respondido|entrevista|oferta|rechazado|descartado|no aplicar|cerrada|duplicado|repost|condicional|hold|monitor)/i.test(col5);
+    const col4LooksLikeStatus = /^(evaluated|applied|responded|interview|offer|rejected|discarded|skip|evaluada|aplicado|respondido|entrevista|oferta|rechazado|descartado|no aplicar|cerrada|duplicado|repost|condicional|hold|monitor)/i.test(col4);
+    const col5LooksLikeStatus = /^(evaluated|applied|responded|interview|offer|rejected|discarded|skip|evaluada|aplicado|respondido|entrevista|oferta|rechazado|descartado|no aplicar|cerrada|duplicado|repost|condicional|hold|monitor)/i.test(col5);
 
     let statusCol, scoreCol;
     if (col4LooksLikeStatus && !col4LooksLikeScore) {
@@ -317,9 +369,8 @@ if (DRY_RUN) console.log('(dry-run — no changes written)');
 // Optional verify
 if (VERIFY && !DRY_RUN) {
   console.log('\n--- Running verification ---');
-  const { execSync } = await import('child_process');
   try {
-    execSync(`node ${join(CAREER_OPS, 'verify-pipeline.mjs')}`, { stdio: 'inherit' });
+    execFileSync('node', [join(CAREER_OPS, 'verify-pipeline.mjs')], { stdio: 'inherit' });
   } catch (e) {
     process.exit(1);
   }

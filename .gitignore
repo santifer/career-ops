@@ -10,7 +10,7 @@ batch/logs/*
 !batch/logs/.gitkeep
 batch/batch-state.tsv
 batch/batch-input.tsv
-batch/tracker-additions/*.tsv
+batch/tracker-additions/**/*.tsv
 !batch/tracker-additions/.gitkeep
 jds/*
 !jds/.gitkeep
@@ -25,6 +25,7 @@ modes/_profile.md
 # Generated
 .resolved-prompt-*
 node_modules/
+bun.lock
 
 # OS
 .DS_Store
@@ -35,3 +36,4 @@ node_modules/
 .claude/settings.local.json
 .claude/memory/
 career-dashboard
+package-lock.json

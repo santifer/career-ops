@@ -76,5 +76,5 @@ node verify-pipeline.mjs     # Check pipeline integrity
 ```bash
 cd dashboard
 go build -o career-dashboard .
-./career-dashboard            # Opens TUI pipeline viewer
+./career-dashboard --path ..  # Opens TUI pipeline viewer
 ```
