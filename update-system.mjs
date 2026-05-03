@@ -77,6 +77,7 @@ const SYSTEM_PATHS = [
   '.claude/skills/',
   '.gemini/commands/',
   'docs/',
+  'writing-samples/README.md',
   'VERSION',
   'DATA_CONTRACT.md',
   'CONTRIBUTING.md',
@@ -283,6 +284,9 @@ async function apply() {
       for (const entry of gitStatusEntries()) {
         const file = entry.path;
         if (initialStatusPaths.has(file)) continue;
+        // Explicit SYSTEM_PATHS entries override USER_PATHS prefix matches.
+        // (e.g. writing-samples/README.md is system-owned doc inside a user dir.)
+        if (SYSTEM_PATHS.includes(file)) continue;
         for (const userPath of USER_PATHS) {
           if (file.startsWith(userPath)) {
             console.error(`SAFETY VIOLATION: User file was modified: ${file}`);
