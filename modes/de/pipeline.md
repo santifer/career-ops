@@ -7,7 +7,9 @@ Verarbeitet URLs von Stellenanzeigen, die in `data/pipeline.md` gesammelt wurden
 1. **Lesen** von `data/pipeline.md` → alle Items mit `- [ ]` im Abschnitt "Pendientes" / "Pending" / "Offen" finden
 2. **Für jede offene URL**:
    a. Nächste fortlaufende `REPORT_NUM` berechnen (in `reports/` lesen, höchste Nummer + 1)
-   b. **Stellenanzeige extrahieren** mit Playwright (`browser_navigate` + `browser_snapshot`) → WebFetch → WebSearch
+   b. **Stellenanzeige extrahieren:**
+      - **`local:jds/...`:** Datei `jds/...` ab Career-Ops-Wurzel **mit Read** lesen — **kein** Playwright für die Datei selbst.
+      - **HTTPS-URL:** Playwright (`browser_navigate` + `browser_snapshot`) → WebFetch → WebSearch
    c. Wenn die URL nicht erreichbar ist → als `- [!]` mit Notiz markieren und weitermachen
    d. **Vollständige Auto-Pipeline ausführen**: A-F-Bewertung → Report .md → PDF (wenn Score >= 3.0) → Tracker
    e. **Von "Offen" nach "Verarbeitet" verschieben**: `- [x] #NNN | URL | Firma | Rolle | Score/5 | PDF ✅/❌`
@@ -35,6 +37,8 @@ Verarbeitet URLs von Stellenanzeigen, die in `data/pipeline.md` gesammelt wurden
 
 ## Intelligente Erkennung der Stellenanzeige aus der URL
 
+**Reihenfolge:** Steht der Eintrag auf **`local:jds/...`**, nur **Read** auf diesem Pfad verwenden (Abschnitt **Lokale JD-Dateien** unten). Sonst:
+
 1. **Playwright (bevorzugt):** `browser_navigate` + `browser_snapshot`. Funktioniert mit allen SPAs.
 2. **WebFetch (Fallback):** Für statische Seiten oder wenn Playwright nicht verfügbar ist.
 3. **WebSearch (letzter Ausweg):** In sekundären Portalen suchen, die die Stellenanzeige indexieren.
@@ -42,9 +46,22 @@ Verarbeitet URLs von Stellenanzeigen, die in `data/pipeline.md` gesammelt wurden
 **Sonderfälle:**
 - **LinkedIn**: Kann Login erfordern → mit `[!]` markieren und den Kandidaten bitten, den Text einzufügen
 - **PDF**: Wenn die URL auf ein PDF zeigt, direkt mit dem Read-Tool lesen
-- **`local:`-Präfix**: Lokale Datei lesen. Beispiel: `local:jds/linkedin-pm-ai.md` → `jds/linkedin-pm-ai.md` lesen
+- **`local:`-Präfix**: Lokale Datei lesen. Beispiel: `local:jds/linkedin-pm-ai.md` → `jds/linkedin-pm-ai.md` ab Career-Ops-Wurzel lesen
 - **StepStone / XING / kununu**: Häufig deutscher Markt, oft Cookie-Banner. Playwright kann in Snapshot scrollen, um den Anzeigentext zu erfassen
 - **Bundesagentur für Arbeit (arbeitsagentur.de)**: Strukturierte Stellenanzeigen, gut maschinenlesbar. WebFetch reicht meist
+
+### Lokale JD-Dateien (`local:jds/...`) — URL im Report
+
+Gespeicherte JD-Markdown-Dateien haben oft YAML-Frontmatter mit dem echten Bewerbungs-/Stellenlink. **Jeder Report braucht `**URL:**` (siehe `_shared.md`).**
+
+Wenn die Pipeline-Zeile auf eine lokale Datei zeigt:
+
+1. Nach dem Lesen von `jds/{datei}.md` Frontmatter **`application_url`** bevorzugen — vollständige HTTPS-URL im Report-Header: **`**URL:** https://...`**
+2. Ohne `application_url`: **`url`**, **`source_url`** oder **`job_url`** im Frontmatter versuchen.
+3. Nur wenn kein Link im Frontmatter steht: **`**URL:** (keine URL im JD-Frontmatter — application_url in jds-Datei ergänzen)**` und Nutzer bitten, `application_url:` nachzutragen.
+4. **`**URL:** (local JD)`** nicht verwenden, wenn `application_url` (oder gleichwertig) in der Datei steht.
+
+Die verarbeitete Pipeline-Zeile kann weiter `local:jds/...` zeigen; der **Report** enthält die menschenlesbare Bewerbungs-/Posting-URL, wenn bekannt.
 
 ## Automatische Nummerierung
 

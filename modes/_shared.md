@@ -113,8 +113,7 @@ After detecting archetype, read `modes/_profile.md` for the user's specific fram
 8. Native tech English for generated text. Short sentences, action verbs, no passive voice.
 8b. Case study URLs in PDF Professional Summary (recruiter may only read this).
 9. **Tracker additions as TSV** -- NEVER edit applications.md directly. Write TSV in `batch/tracker-additions/`.
-10. **Include `**URL:**` in every report header.**
-
+10. **Include `**URL:**` in every report header.** Use the real posting or apply URL. If the JD was loaded from `local:jds/*.md`, read YAML frontmatter and set **`**URL:**`** to **`application_url`** when present.
 ### Tools
 
 | Tool | Use |

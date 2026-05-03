@@ -7,7 +7,9 @@
 1. **Прочитать** `data/pipeline.md` → найти `- [ ]` в секции "Ожидающие" (или "Pendientes" / "Pending" — pipeline.md может содержать заголовки на любом языке)
 2. **Для каждого URL**:
    a. Вычислить следующий `REPORT_NUM` (прочитать `reports/`, взять макс + 1)
-   b. **Извлечь JD** через Playwright → WebFetch → WebSearch
+   b. **Извлечь JD:**
+      - **`local:jds/...`:** прочитать файл `jds/...` от корня career-ops через **Read** — для самого файла **не** использовать Playwright.
+      - **HTTPS URL:** Playwright (`browser_navigate` + `browser_snapshot`) → WebFetch → WebSearch
    c. Если URL недоступен → пометить `- [!]` с заметкой, продолжить
    d. **Выполнить auto-pipeline**: Оценка A-F → Отчёт .md → PDF (если балл >= 3.0) → Трекер
    e. **Переместить из "Ожидающие" в "Обработанные"**: `- [x] #NNN | URL | Компания | Роль | Балл/5 | PDF ✅/❌`
@@ -33,15 +35,30 @@
 
 ## Определение JD из URL
 
+**Порядок:** если строка pipeline указывает на **`local:jds/...`**, использовать только **Read** по этому пути (раздел **Локальные JD-файлы** ниже). Иначе:
+
 1. **Playwright (предпочтительно):** `browser_navigate` + `browser_snapshot`. Работает со всеми SPA.
-2. **WebFetch (fallback):** Для статических страниц.
+2. **WebFetch (fallback):** Для статических страниц или если Playwright недоступен.
 3. **WebSearch (последний ресурс):** Поиск на вторичных порталах.
 
 **Особые случаи:**
 - **hh.ru**: API доступен: `https://api.hh.ru/vacancies/{id}` — JSON с полным описанием
 - **LinkedIn**: Может требовать логин → пометить `[!]`, попросить вставить текст
 - **PDF**: Если URL на PDF — прочитать через Read tool
-- **`local:` префикс**: Читать локальный файл. Пример: `local:jds/company-role.md`
+- **`local:` префикс**: Локальный файл. Пример: `local:jds/company-role.md` → читать `jds/company-role.md` от корня career-ops
+
+### Локальные JD-файлы (`local:jds/...`) — URL в отчёте
+
+Сохранённые JD в Markdown часто содержат YAML frontmatter с реальной ссылкой на отклик или публикацию. **В каждом отчёте нужен `**URL:**` (см. `_shared.md`).**
+
+Когда строка pipeline указывает на локальный файл:
+
+1. После чтения `jds/{file}.md` в первую очередь смотреть frontmatter **`application_url`** — полный HTTPS в заголовке отчёта: **`**URL:** https://...`**
+2. Если нет `application_url`, попробовать **`url`**, **`source_url`** или **`job_url`** в frontmatter.
+3. Только если в frontmatter нет ссылки: **`**URL:** (нет URL во frontmatter JD — добавьте application_url в файл jds)`** и попросить пользователя добавить `application_url:`.
+4. **Не** использовать **`**URL:** (local JD)`**, если в файле уже есть `application_url` (или эквивалент).
+
+Обработанная строка pipeline может по-прежнему показывать `local:jds/...`; в **отчёте** должна быть человекочитаемая ссылка на отклик/публикацию, если она известна.
 
 ## Нумерация
 

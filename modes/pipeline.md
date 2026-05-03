@@ -7,7 +7,9 @@ Process job URLs accumulated in `data/pipeline.md`. The user adds URLs anytime, 
 1. **Read** `data/pipeline.md` → find `- [ ]` items under **Pending**
 2. **For each pending URL:**
    a. Compute next sequential `REPORT_NUM` (list `reports/`, take highest number + 1)  
-   b. **Extract JD** via Playwright (`browser_navigate` + `browser_snapshot`) → WebFetch → WebSearch  
+   b. **Extract JD:**  
+      - **`local:jds/...`:** Read `jds/...` from repo root. Do **not** use Playwright for the file itself.  
+      - **HTTPS URL:** Playwright (`browser_navigate` + `browser_snapshot`) → WebFetch → WebSearch  
    c. If the URL is not reachable → mark `- [!]` with a note and continue  
    d. **Run full auto-pipeline:** Evaluation A–F → report `.md` → PDF (if score ≥ 3.0) → tracker  
    e. **Move from Pending to Processed:** `- [x] #NNN | URL | Company | Role | Score/5 | PDF ✅/❌`  
@@ -33,6 +35,8 @@ Process job URLs accumulated in `data/pipeline.md`. The user adds URLs anytime, 
 
 ## Smart JD extraction from URL
 
+**Order:** If the pending item is **`local:jds/...`**, use **Read** on that path only (see [Local JD files](#local-jd-files-localjds--report-url)). Otherwise:
+
 1. **Playwright (preferred):** `browser_navigate` + `browser_snapshot`. Works for SPAs.  
 2. **WebFetch (fallback):** Static pages or when Playwright is unavailable.  
 3. **WebSearch (last resort):** Secondary portals that index the JD.  
@@ -40,7 +44,20 @@ Process job URLs accumulated in `data/pipeline.md`. The user adds URLs anytime, 
 **Special cases:**
 - **LinkedIn:** May require login → mark `[!]` and ask the user to paste the JD text  
 - **PDF:** If the URL is a PDF, read it directly with the Read tool  
-- **`local:` prefix:** Read a local file. Example: `local:jds/linkedin-pm-ai.md` → read `jds/linkedin-pm-ai.md`  
+- **`local:` prefix:** Read a local file. Example: `local:jds/linkedin-pm-ai.md` → read `jds/linkedin-pm-ai.md` from the career-ops root.
+
+### Local JD files (`local:jds/...`) — report URL
+
+Saved JD markdown often includes YAML frontmatter with the real apply/posting link. **Every report header must include `**URL:**` per `_shared.md`.**
+
+When the pipeline item points at a local file:
+
+1. After reading `jds/{file}.md`, check frontmatter for **`application_url`** (preferred). Use that full HTTPS URL in the report header: **`**URL:** https://...`**  
+2. If there is no `application_url`, try **`url`**, **`source_url`**, or **`job_url`** in frontmatter if present.  
+3. Only if no link exists in frontmatter: use **`**URL:** (no URL in JD frontmatter — add application_url to jds file)**` and ask the user to add `application_url:` to the JD file for traceability.  
+4. **Never** use **`**URL:** (local JD)`** as a substitute for a real link when `application_url` (or equivalent) is present in the file.
+
+The processed pipeline line may still show `local:jds/...` for bookkeeping; the **report** must carry the human-facing application/posting URL when known.
 
 ## Automatic numbering
 

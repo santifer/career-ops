@@ -190,7 +190,7 @@ Dans les offres et negociations francophones, certains termes n'existent pas sur
 8. Francais tech naturel pour les textes generes. Phrases courtes, verbes d'action, eviter le passif. Ne pas traduire de force les termes techniques (stack, pipeline, deployment, embedding)
 8b. **URLs de case studies dans le Professional Summary du PDF :** Si le PDF mentionne des case studies ou demos, les URLs DOIVENT apparaitre dans le premier paragraphe (Professional Summary). Les recruteurs ne lisent souvent que le summary. Toutes les URLs en HTML avec `white-space: nowrap`
 9. **Entrees tracker en TSV** -- NE JAMAIS editer applications.md directement pour de nouveaux ajouts. Ecrire le TSV dans `batch/tracker-additions/`, `merge-tracker.mjs` gere la fusion
-10. **`**URL:**` dans chaque en-tete de report** -- entre Score et PDF
+10. **`**URL:**` dans chaque en-tete de report** -- entre Score et PDF. Utiliser la vraie URL de l'offre ou de candidature. Si le JD vient de `local:jds/*.md`, lire le frontmatter YAML et utiliser **`application_url`** si present -- pas de placeholder « (local JD) » quand l'URL est dans le fichier.
 
 ### Outils
 
