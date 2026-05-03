@@ -13,8 +13,8 @@ Clasificar la oferta en uno de los 6 arquetipos (ver `_shared.md`). Si es híbri
 
 Tabla con:
 - Arquetipo detectado
-- Domain (platform/agentic/LLMOps/ML/enterprise)
-- Function (build/consult/manage/deploy)
+- Product domain (consumer/B2B/platform/AI/growth/fintech/etc.)
+- Function (discovery/growth/platform/strategy/launch)
 - Seniority
 - Remote (full/hybrid/onsite)
 - Team size (si se menciona)
@@ -25,12 +25,12 @@ Tabla con:
 Lee `cv.md`. Crea tabla con cada requisito del JD mapeado a líneas exactas del CV.
 
 **Adaptado al arquetipo:**
-- Si FDE → priorizar proof points de delivery rápida y client-facing
-- Si SA → priorizar diseño de sistemas e integrations
-- Si PM → priorizar product discovery y métricas
-- Si LLMOps → priorizar evals, observability, pipelines
-- Si Agentic → priorizar multi-agent, HITL, orchestration
-- Si Transformation → priorizar change management, adoption, scaling
+- Si Core PM → priorizar discovery, roadmap trade-offs, y shipped outcomes
+- Si Growth PM → priorizar funnel metrics, experiments, retention, monetization
+- Si Platform PM → priorizar internal customers, APIs/platform leverage, cross-team influence
+- Si AI PM → priorizar user problem selection, trust/safety, evaluation loops, workflow design
+- Si Enterprise / B2B PM → priorizar customer discovery, GTM alignment, integrations, implementation realities
+- Si Product Strategy & Ops → priorizar planning systems, KPI governance, portfolio choices, executive alignment
 
 Sección de **gaps** con estrategia de mitigación para cada uno. Para cada gap:
 1. ¿Es un hard blocker o un nice-to-have?
@@ -41,8 +41,9 @@ Sección de **gaps** con estrategia de mitigación para cada uno. Para cada gap:
 ## Bloque C — Nivel y Estrategia
 
 1. **Nivel detectado** en el JD vs **nivel natural del candidato para ese arquetipo**
-2. **Plan "vender senior sin mentir"**: frases específicas adaptadas al arquetipo, logros concretos a destacar, cómo posicionar la experiencia de founder como ventaja
-3. **Plan "si me downlevelan"**: aceptar si comp es justa, negociar review a 6 meses, criterios de promoción claros
+2. **Scope check**: área de producto, usuarios, revenue/surface area, team topology, decision rights
+3. **Plan "vender senior sin mentir"**: frases específicas adaptadas al arquetipo, métricas a destacar, cómo posicionar ownership, influence, and decision quality
+4. **Plan "si me downlevelan"**: aceptar si comp es justa, negociar review a 6 meses, criterios de promoción claros
 
 ## Bloque D — Comp y Demanda
 
@@ -50,6 +51,7 @@ Usar WebSearch para:
 - Salarios actuales del rol (Glassdoor, Levels.fyi, Blind)
 - Reputación de compensación de la empresa
 - Tendencia de demanda del rol
+- Señales de salud de producto: crecimiento, layoffs, major product launches, PM org quality if visible
 
 Tabla con datos y fuentes citadas. Si no hay datos, decirlo en vez de inventar.
 
@@ -61,6 +63,12 @@ Tabla con datos y fuentes citadas. Si no hay datos, decirlo en vez de inventar.
 | ... | ... | ... | ... | ... |
 
 Top 5 cambios al CV + Top 5 cambios a LinkedIn para maximizar match.
+
+Los cambios deben privilegiar:
+- Outcome metrics over feature lists
+- Decision quality over task lists
+- Cross-functional leadership over individual contributor implementation detail
+- Customer insight, experimentation, launches, and business impact
 
 ## Bloque F — Plan de Entrevistas
 
@@ -74,16 +82,16 @@ The **Reflection** column captures what was learned or what would be done differ
 **Story Bank:** If `interview-prep/story-bank.md` exists, check if any of these stories are already there. If not, append new ones. Over time this builds a reusable bank of 5-10 master stories that can be adapted to any interview question.
 
 **Seleccionadas y enmarcadas según el arquetipo:**
-- FDE → enfatizar velocidad de entrega y client-facing
-- SA → enfatizar decisiones de arquitectura
-- PM → enfatizar discovery y trade-offs
-- LLMOps → enfatizar métricas, evals, production hardening
-- Agentic → enfatizar orchestration, error handling, HITL
-- Transformation → enfatizar adopción, cambio organizacional
+- Core PM → enfatizar problem framing, prioritization, and shipped outcomes
+- Growth PM → enfatizar experiments, funnel movement, and learning velocity
+- Platform PM → enfatizar stakeholder alignment, platform adoption, and leverage
+- AI PM → enfatizar product judgment around AI capability, trust, UX, and measurement
+- Enterprise / B2B PM → enfatizar customer conversations, GTM partnership, and delivery in constrained environments
+- Product Strategy & Ops → enfatizar planning discipline, decision cadence, and org leverage
 
 Incluir también:
-- 1 case study recomendado (cuál de sus proyectos presentar y cómo)
-- Preguntas red-flag y cómo responderlas (ej: "¿por qué vendiste tu empresa?", "¿tienes equipo de reports?")
+- 1 case study recomendado (cuál de sus launches/proyectos presentar y cómo)
+- Preguntas red-flag y cómo responderlas (ej: "how technical are you really?", "what metrics did you own directly?", "how do you work with engineering/design?", "why this product domain?")
 
 ---
 

@@ -10,8 +10,8 @@
    - US/Canada → `letter`
    - Resto del mundo → `a4`
 6. Detecta arquetipo del rol → adapta framing
-7. Reescribe Professional Summary inyectando keywords del JD + exit narrative bridge ("Built and sold a business. Now applying systems thinking to [domain del JD].")
-8. Selecciona top 3-4 proyectos más relevantes para la oferta
+7. Reescribe Professional Summary inyectando keywords del JD + PM positioning bridge ("Product manager who turns ambiguity into shipped outcomes and clear metrics in [domain del JD].")
+8. Selecciona top 3-4 launches, projects, or initiatives más relevantes para la oferta
 9. Reordena bullets de experiencia por relevancia al JD
 10. Construye competency grid desde requisitos del JD (6-8 keyword phrases)
 11. Inyecta keywords naturalmente en logros existentes (NUNCA inventa)
@@ -47,16 +47,17 @@
 2. Professional Summary (3-4 líneas, keyword-dense)
 3. Core Competencies (6-8 keyword phrases en flex-grid)
 4. Work Experience (cronológico inverso)
-5. Projects (top 3-4 más relevantes)
+5. Selected Launches / Projects (top 3-4 más relevantes)
 6. Education & Certifications
 7. Skills (idiomas + técnicos)
 
 ## Estrategia de keyword injection (ético, basado en verdad)
 
 Ejemplos de reformulación legítima:
-- JD dice "RAG pipelines" y CV dice "LLM workflows with retrieval" → cambiar a "RAG pipeline design and LLM orchestration workflows"
-- JD dice "MLOps" y CV dice "observability, evals, error handling" → cambiar a "MLOps and observability: evals, error handling, cost monitoring"
-- JD dice "stakeholder management" y CV dice "collaborated with team" → cambiar a "stakeholder management across engineering, operations, and business"
+- JD dice "roadmap prioritization" y CV dice "planned quarterly launches" → cambiar a "roadmap prioritization across quarterly launches and dependencies"
+- JD dice "experimentation" y CV dice "tested onboarding changes" → cambiar a "experimentation on onboarding flows to improve activation"
+- JD dice "stakeholder management" y CV dice "collaborated with team" → cambiar a "stakeholder management across engineering, design, operations, and business"
+- JD dice "product strategy" y CV dice "owned feature direction" → cambiar a "product strategy and feature direction informed by customer and business signals"
 
 **NUNCA añadir skills que el candidato no tiene. Solo reformular experiencia real con el vocabulario exacto del JD.**
 

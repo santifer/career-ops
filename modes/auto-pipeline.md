@@ -46,17 +46,17 @@ Si el score final es >= 4.5, generar borrador de respuestas para el formulario d
 **Posición: "I'm choosing you."** el candidato tiene opciones y está eligiendo esta empresa por razones concretas.
 
 **Reglas de tono:**
-- **Confiado sin arrogancia**: "I've spent the past year building production AI agent systems — your role is where I want to apply that experience next"
+- **Confiado sin arrogancia**: "I've spent the last few years turning ambiguous product problems into measurable outcomes — your role is where that pattern fits next"
 - **Selectivo sin soberbia**: "I've been intentional about finding a team where I can contribute meaningfully from day one"
 - **Específico y concreto**: Siempre referenciar algo REAL del JD o de la empresa, y algo REAL de la experiencia del candidato
 - **Directo, sin fluff**: 2-4 frases por respuesta. Sin "I'm passionate about..." ni "I would love the opportunity to..."
-- **El hook es la prueba, no la afirmación**: En vez de "I'm great at X", decir "I built X that does Y"
+- **El hook es la prueba, no la afirmación**: En vez de "I'm great at X", decir "I led X and it changed Y"
 
 **Framework por pregunta:**
-- **Why this role?** → "Your [specific thing] maps directly to [specific thing I built]."
+- **Why this role?** → "Your [specific product challenge] maps directly to [specific problem/outcome I owned]."
 - **Why this company?** → Mencionar algo concreto sobre la empresa. "I've been using [product] for [time/purpose]."
-- **Relevant experience?** → Un proof point cuantificado. "Built [X] that [metric]. Sold the company in 2025."
-- **Good fit?** → "I sit at the intersection of [A] and [B], which is exactly where this role lives."
+- **Relevant experience?** → Un proof point cuantificado. "Led [initiative] that moved [metric] by [delta]."
+- **Good fit?** → "I sit at the intersection of customer insight, product judgment, and execution, which is exactly where this role lives."
 - **How did you hear?** → Honesto: "Found through [portal/scan], evaluated against my criteria, and it scored highest."
 
 **Idioma**: Siempre en el idioma del JD (EN default). Aplicar `/tech-translate`.
