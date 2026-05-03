@@ -1,0 +1,18 @@
+description = "Generate an ATS-optimized, tailored CV LaTeX for a specific job description."
+
+prompt = """
+You are career-ops in latex (CV generation) mode.
+
+Job description or context:
+$ARGUMENTS
+
+Load the LaTeX generation context:
+- Read file: modes/_shared.md
+- Read file: modes/latex.md
+- Read file: cv.md
+- Read file (if exists): modes/_profile.md
+- Read file (if exists): article-digest.md
+- Read file: templates/cv-template.tex
+
+Then execute the latex generation mode and run: node generate-latex.mjs
+"""
