@@ -348,3 +348,81 @@ func TestRejectedAndDiscardedTabsFilterCorrectly(t *testing.T) {
 		t.Fatalf("expected discarded tab to isolate discarded rows, got %+v", pm.filtered)
 	}
 }
+
+// Regression: with no committed search query, Esc must NOT close the screen.
+// The help bar advertises only `q quit`, so Esc quitting silently was a bug
+// that surfaced as accidental exits when users hit Esc to "back out" of the UI.
+func TestEscWithoutQueryIsNoOp(t *testing.T) {
+	apps := []model.CareerApplication{
+		{Company: "Stripe", Role: "Backend Engineer", Status: "Evaluated", Score: 4.6},
+	}
+
+	pm := NewPipelineModel(theme.NewTheme("catppuccin-mocha"), apps, model.PipelineMetrics{Total: len(apps)}, "..", 120, 40)
+	if pm.searchQuery != "" {
+		t.Fatalf("setup expected empty search query, got %q", pm.searchQuery)
+	}
+
+	pm, cmd := pm.Update(tea.KeyMsg{Type: tea.KeyEsc})
+	if cmd != nil {
+		// PipelineClosedMsg used to fire here; ensure it doesn't anymore.
+		if msg := cmd(); msg != nil {
+			if _, ok := msg.(PipelineClosedMsg); ok {
+				t.Fatalf("expected Esc with no query to be a no-op, got PipelineClosedMsg")
+			}
+			t.Fatalf("expected Esc with no query to return nil cmd, got %T", msg)
+		}
+	}
+	if pm.searchInput {
+		t.Fatal("Esc with no query should not toggle searchInput")
+	}
+}
+
+// Regression: typing during search input must not synchronously fan out to
+// loadCurrentReport. Reading reports per keystroke caused visible UI lag, so
+// the load is deferred to commit (Enter) / cancel (Esc) instead.
+func TestSearchTypingDoesNotLoadReports(t *testing.T) {
+	apps := []model.CareerApplication{
+		{Company: "Stripe", Role: "Backend Engineer", Status: "Evaluated", Score: 4.6, ReportPath: "reports/001-stripe.md"},
+		{Company: "Anthropic", Role: "AI Engineer", Status: "Evaluated", Score: 4.8, ReportPath: "reports/002-anthropic.md"},
+	}
+
+	pm := NewPipelineModel(theme.NewTheme("catppuccin-mocha"), apps, model.PipelineMetrics{Total: len(apps)}, "..", 120, 40)
+
+	pm, _ = pm.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'/'}})
+	if !pm.searchInput {
+		t.Fatal("expected `/` to open search input")
+	}
+
+	// Typing must not trigger PipelineLoadReportMsg.
+	for _, r := range "stri" {
+		var cmd tea.Cmd
+		pm, cmd = pm.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{r}})
+		if cmd != nil {
+			if msg := cmd(); msg != nil {
+				if _, ok := msg.(PipelineLoadReportMsg); ok {
+					t.Fatalf("typing rune %q should not emit PipelineLoadReportMsg", string(r))
+				}
+			}
+		}
+	}
+
+	// Backspace must not trigger PipelineLoadReportMsg either.
+	pm, cmd := pm.Update(tea.KeyMsg{Type: tea.KeyBackspace})
+	if cmd != nil {
+		if msg := cmd(); msg != nil {
+			if _, ok := msg.(PipelineLoadReportMsg); ok {
+				t.Fatal("Backspace during search input should not emit PipelineLoadReportMsg")
+			}
+		}
+	}
+
+	// Ctrl+U must not trigger PipelineLoadReportMsg either.
+	pm, cmd = pm.Update(tea.KeyMsg{Type: tea.KeyCtrlU})
+	if cmd != nil {
+		if msg := cmd(); msg != nil {
+			if _, ok := msg.(PipelineLoadReportMsg); ok {
+				t.Fatal("Ctrl+U during search input should not emit PipelineLoadReportMsg")
+			}
+		}
+	}
+}

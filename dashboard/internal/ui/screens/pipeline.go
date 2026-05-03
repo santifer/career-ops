@@ -253,8 +253,9 @@ func (m PipelineModel) Update(msg tea.Msg) (PipelineModel, tea.Cmd) {
 func (m PipelineModel) handleKey(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
 	switch msg.String() {
 	case "esc":
-		// While a search is committed, Esc clears the search instead of quitting —
-		// matches vim's `:nohl` ergonomics. q always quits regardless of state.
+		// While a search is committed, Esc clears the search (matches vim's `:nohl`
+		// ergonomics). With no query, Esc is a no-op — q is the only quit key, which
+		// keeps the help bar honest and avoids accidental exits.
 		if m.searchQuery != "" {
 			m.searchQuery = ""
 			m.applyFilterAndSort()
@@ -262,7 +263,7 @@ func (m PipelineModel) handleKey(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
 			m.scrollOffset = 0
 			return m, m.loadCurrentReport()
 		}
-		return m, func() tea.Msg { return PipelineClosedMsg{} }
+		return m, nil
 
 	case "q":
 		return m, func() tea.Msg { return PipelineClosedMsg{} }
@@ -408,6 +409,11 @@ func (m PipelineModel) handleKey(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
 // Esc cancels (closes input AND clears query). Enter commits (closes input,
 // keeps query, refreshes filtered list). Backspace + printable chars edit
 // the query and live-update the filter so the user sees results as they type.
+//
+// Report previews are NOT lazy-loaded on every keystroke — that would trigger
+// a synchronous os.ReadFile per rune/backspace/ctrl+u and stutter live
+// typing. Instead the load fires once when the user commits (Enter) or
+// cancels (Esc); subsequent cursor movement in handleKey loads as before.
 func (m PipelineModel) handleSearchInput(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
 	switch msg.String() {
 	case "esc":
@@ -420,8 +426,9 @@ func (m PipelineModel) handleSearchInput(msg tea.KeyMsg) (PipelineModel, tea.Cmd
 
 	case "enter":
 		m.searchInput = false
-		// Query already applied during typing; just close the input.
-		return m, nil
+		// Query already applied during typing; load the preview for the
+		// committed first match (skipped during typing for perf).
+		return m, m.loadCurrentReport()
 
 	case "backspace":
 		if len(m.searchQuery) > 0 {
@@ -431,7 +438,6 @@ func (m PipelineModel) handleSearchInput(msg tea.KeyMsg) (PipelineModel, tea.Cmd
 			m.applyFilterAndSort()
 			m.cursor = 0
 			m.scrollOffset = 0
-			return m, m.loadCurrentReport()
 		}
 		return m, nil
 
@@ -441,7 +447,7 @@ func (m PipelineModel) handleSearchInput(msg tea.KeyMsg) (PipelineModel, tea.Cmd
 		m.applyFilterAndSort()
 		m.cursor = 0
 		m.scrollOffset = 0
-		return m, m.loadCurrentReport()
+		return m, nil
 	}
 
 	// Append printable runes (ignore other special keys like arrows / ctrl-combos).
@@ -450,7 +456,7 @@ func (m PipelineModel) handleSearchInput(msg tea.KeyMsg) (PipelineModel, tea.Cmd
 		m.applyFilterAndSort()
 		m.cursor = 0
 		m.scrollOffset = 0
-		return m, m.loadCurrentReport()
+		return m, nil
 	}
 	return m, nil
 }
