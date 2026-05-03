@@ -23,6 +23,7 @@ Available commands:
   /career-ops-deep         → Deep research about a company
   /career-ops-pdf          → Generate ATS-optimized CV PDF
   /career-ops-training     → Evaluate course/cert against North Star
+  /career-ops-latex        → Generate LaTeX CV (ATS-friendly)
   /career-ops-project      → Evaluate a portfolio project idea
   /career-ops-tracker      → Application status overview
   /career-ops-apply        → Live application assistant
