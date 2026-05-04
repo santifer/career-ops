@@ -4,6 +4,11 @@ set -euo pipefail
 # career-ops batch runner — standalone orchestrator for claude -p workers
 # Reads batch-input.tsv, delegates each offer to a claude -p worker,
 # tracks state in batch-state.tsv for resumability.
+#
+# NOTE: This script is Claude Code-specific. It uses claude -p with
+# --dangerously-skip-permissions and --append-system-prompt-file flags
+# that are not available in other CLIs. Multi-CLI support is out of scope
+# for now — contributions welcome.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
