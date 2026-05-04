@@ -18,14 +18,12 @@
 
 import { execSync } from 'child_process';
 import { readFileSync, existsSync } from 'fs';
-import { createRequire } from 'module';
 import { fileURLToPath } from 'url';
 import path from 'path';
+import { createTransport } from 'nodemailer';
 import 'dotenv/config';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const require = createRequire(import.meta.url);
-const nodemailer = require('nodemailer');
 
 const DRY_RUN = process.argv.includes('--dry-run');
 const SCAN_HISTORY_PATH = path.join(__dirname, 'data/scan-history.tsv');
@@ -148,7 +146,7 @@ if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
   process.exit(1);
 }
 
-const transporter = nodemailer.createTransport({
+const transporter = createTransport({
   service: 'gmail',
   auth: {
     user: process.env.GMAIL_USER,
