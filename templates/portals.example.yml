@@ -278,6 +278,34 @@ search_queries:
     query: 'site:news.ycombinator.com OR site:hnrss.org "AI Engineer" OR "Forward Deployed" OR "DevRel" OR "Founding Engineer" remote'
     enabled: true
 
+  # -- Türkiye / Turkey job portals --
+  # WebSearch queries for Turkish job boards (no public ATS APIs).
+  # [CUSTOMIZE] Replace keywords with your target roles in Turkish.
+
+  - name: Kariyer.net — Backend / Software Engineer
+    query: 'site:kariyer.net "Backend Developer" OR "Software Engineer" OR "Yazılım Geliştirici" OR "Backend Geliştirici" Ankara OR Istanbul OR uzaktan'
+    enabled: false
+
+  - name: Kariyer.net — Frontend Engineer
+    query: 'site:kariyer.net "Frontend Developer" OR "React Developer" OR "Frontend Geliştirici" Ankara OR Istanbul OR uzaktan'
+    enabled: false
+
+  - name: Yenibiris.com — Software Engineer
+    query: 'site:yenibiris.com "Software Engineer" OR "Backend Developer" OR "Frontend Developer" OR "Yazılım Geliştirici"'
+    enabled: false
+
+  - name: Secretcv.com — Tech Roles
+    query: 'site:secretcv.com "Software Engineer" OR "Backend" OR "Frontend" OR "Full Stack"'
+    enabled: false
+
+  - name: İşin Olsun — Startup / Tech
+    query: 'site:isinolsun.com "Yazılım" OR "Software" OR "Backend" OR "Frontend" OR "Full Stack"'
+    enabled: false
+
+  - name: LinkedIn — Turkey Tech Roles
+    query: 'site:linkedin.com/jobs "Software Engineer" OR "Backend Engineer" OR "Frontend Engineer" Turkey OR Türkiye OR Ankara OR Istanbul'
+    enabled: false
+
 # -- Tracked companies --
 # Companies whose career pages are checked directly.
 # scan_method: playwright (default), websearch, greenhouse_api
@@ -942,3 +970,134 @@ tracked_companies:
     scan_query: '"Maxim AI" OR "getmaxim" careers "engineer" OR "product"'
     notes: "AI evaluation and observability platform. Bangalore-based, mostly on-site."
     enabled: true
+
+  # ============================================================
+  # -- Türkiye / Turkey market
+  # ============================================================
+  # Tech companies for candidates targeting the Turkish market or
+  # Turkish-language postings. Job-portal search queries (Kariyer.net,
+  # Yenibiris.com, Secretcv, İşin Olsun, LinkedIn-TR) live in the
+  # `search_queries:` section above — that's where the scanner picks
+  # them up.
+  #
+  # NOTE on scanning: Most Turkish companies below do NOT expose a
+  # public ATS API (Greenhouse / Lever / Ashby) on their careers_url,
+  # so `scan.mjs` will filter them out automatically (it requires a
+  # detectable ATS). They are listed here as discovery aids — paste
+  # the URL of any specific role into `data/pipeline.md` and run
+  # `/career-ops pipeline`, which uses Playwright/WebFetch instead.
+  # Only Getir (jobs.lever.co/getir) is currently scannable.
+  #
+  # Key Turkish market notes:
+  #   - Salaries often quoted as NET (after tax/SGK deductions)
+  #   - Common benefits: yemek kartı (meal card), özel sağlık sigortası
+  #     (private health insurance), servis (company shuttle)
+  #   - Probation (deneme süresi): max 2 months by law
+  #   - Severance (kıdem tazminatı): 1 month per year of service
+  #   - Use modes/tr/ for Turkish-language evaluations and applications
+  # ============================================================
+
+  - name: Trendyol
+    careers_url: https://www.trendyol.com/kariyerimiz
+    scan_method: websearch
+    scan_query: 'site:trendyol.com/kariyerimiz OR "trendyol" "Software Engineer" OR "Backend" OR "Frontend" careers'
+    notes: "Istanbul (Maslak tech HQ). Turkey's largest e-commerce platform (Alibaba-owned). Large tech org, competitive salaries."
+    enabled: false
+
+  - name: Hepsiburada
+    careers_url: https://www.hepsiburada.com/kariyer
+    scan_method: websearch
+    scan_query: '"hepsiburada" careers "Software Engineer" OR "Backend" OR "Frontend" OR "Yazılım"'
+    notes: "Istanbul. Major Turkish e-commerce platform. Listed on NASDAQ."
+    enabled: false
+
+  - name: Getir
+    careers_url: https://jobs.lever.co/getir
+    scan_method: websearch
+    scan_query: 'site:jobs.lever.co/getir OR "getir" careers "Software Engineer" OR "Backend" OR "Frontend"'
+    notes: "Istanbul. Ultra-fast delivery unicorn. Exited international markets in April 2024; now Turkey-only."
+    enabled: false
+
+  - name: Insider
+    careers_url: https://useinsider.com/careers
+    scan_method: websearch
+    scan_query: '"useinsider" OR "insider" careers "Software Engineer" OR "Backend" OR "Frontend" site:jobs.lever.co OR site:jobs.ashbyhq.com'
+    notes: "Istanbul. B2B SaaS marketing platform. Unicorn. Strong remote-friendly culture."
+    enabled: false
+
+  - name: Dream Games
+    careers_url: https://www.dreamgames.com/careers
+    scan_method: websearch
+    scan_query: '"dreamgames" OR "dream games" careers "Software Engineer" OR "Backend" OR "Frontend"'
+    notes: "Istanbul. Mobile gaming company (Royal Match). Strong engineering culture, competitive pay."
+    enabled: false
+
+  - name: Peak Games (Zynga)
+    careers_url: https://www.peakgames.net/en/career
+    scan_method: websearch
+    scan_query: '"peak games" careers "Software Engineer" OR "Backend" OR "Frontend"'
+    notes: "Istanbul. Mobile gaming studio acquired by Zynga. Strong tech team."
+    enabled: false
+
+  - name: Yemeksepeti (Delivery Hero)
+    careers_url: https://www.yemeksepeti.com/kariyer
+    scan_method: websearch
+    scan_query: '"yemeksepeti" careers "Software Engineer" OR "Backend" OR "Frontend" OR "Yazılım"'
+    notes: "Istanbul. Food delivery platform (Delivery Hero subsidiary). Large tech team."
+    enabled: false
+
+  - name: Sahibinden.com
+    careers_url: https://www.sahibinden.com/kariyer
+    scan_method: websearch
+    scan_query: '"sahibinden" careers "Software Engineer" OR "Backend" OR "Frontend" OR "Yazılım Geliştirici"'
+    notes: "Istanbul. Turkey's largest classifieds platform. Established tech org."
+    enabled: false
+
+  - name: Garanti BBVA Technology
+    careers_url: https://www.garantibbvateknoloji.com.tr/kariyer
+    scan_method: websearch
+    scan_query: '"garanti bbva teknoloji" OR "garantibbvateknoloji" careers "Software Engineer" OR "Backend" OR "Frontend"'
+    notes: "Istanbul. Fintech/banking tech arm of Garanti BBVA. Large engineering org, competitive benefits."
+    enabled: false
+
+  - name: Akbank Tech
+    careers_url: https://www.akbank.com/tr-tr/sayfalar/kariyer.aspx
+    scan_method: websearch
+    scan_query: '"akbank" careers "Software Engineer" OR "Yazılım Mühendisi" OR "Backend" OR "Frontend"'
+    notes: "Istanbul. Turkish bank with large in-house tech team."
+    enabled: false
+
+  - name: Turkcell
+    careers_url: https://kariyer.turkcell.com.tr
+    scan_method: websearch
+    scan_query: 'site:kariyer.turkcell.com.tr OR "turkcell" careers "Software Engineer" OR "Backend" OR "Frontend"'
+    notes: "Istanbul. Turkey's largest telecom. Large digital and tech transformation team."
+    enabled: false
+
+  - name: Iyzico (PayU)
+    careers_url: https://iyzico.com/kariyer
+    scan_method: websearch
+    scan_query: '"iyzico" careers "Software Engineer" OR "Backend" OR "Frontend" OR "Yazılım"'
+    notes: "Istanbul. Fintech / payment infrastructure (PayU subsidiary). Good engineering culture."
+    enabled: false
+
+  - name: Papara
+    careers_url: https://papara.com/kariyer
+    scan_method: websearch
+    scan_query: '"papara" careers "Software Engineer" OR "Backend" OR "Frontend"'
+    notes: "Istanbul. Turkish fintech / digital wallet. Fast-growing, unicorn valuation."
+    enabled: false
+
+  - name: Craftgate
+    careers_url: https://craftgate.io/career
+    scan_method: websearch
+    scan_query: '"craftgate" careers "Software Engineer" OR "Backend" OR "Frontend"'
+    notes: "Istanbul. Payment orchestration platform. Strong engineering-first culture."
+    enabled: false
+
+  - name: n11.com (Doğuş)
+    careers_url: https://www.n11.com/kurumsal/kariyer
+    scan_method: websearch
+    scan_query: '"n11" careers "Software Engineer" OR "Backend" OR "Frontend" OR "Yazılım"'
+    notes: "Istanbul. E-commerce marketplace (Doğuş Group)."
+    enabled: false
