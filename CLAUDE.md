@@ -366,3 +366,10 @@ Write one TSV file per evaluation to `batch/tracker-additions/{num}-{company-slu
 - No markdown bold (`**`) in status field
 - No dates in status field (use the date column)
 - No extra text (use the notes column)
+
+---
+
+## Other CLI Integrations
+
+- **Gemini CLI users:** see `GEMINI.md` and `.gemini/commands/`.
+- **Kimi CLI users:** see `KIMI.md` and `.kimi/skills/` for native Kimi support.
