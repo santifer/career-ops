@@ -110,6 +110,51 @@ claude   # 在此目錄開啟 Claude Code
 
 完整設定指南請參閱 [docs/SETUP.md](docs/SETUP.md)。
 
+## Gemini CLI 整合
+
+career-ops 原生支援 [Gemini CLI](https://github.com/google-gemini/gemini-cli)，方式與 Claude Code 和 OpenCode 相同。所有 15 個斜線指令皆可使用，採用相同的 `modes/*.md` 評估邏輯。
+
+### 選項 A — 原生 Gemini CLI（推薦）
+
+```bash
+# 1. 安裝 Gemini CLI
+npm install -g @google/gemini-cli
+
+# 2. 驗證（免費 — 使用您的 Google 帳戶）
+gemini auth
+
+# 3. 在 career-ops 目錄中執行
+cd career-ops
+gemini
+
+# 4. 像 Claude Code 一樣使用斜線指令
+/career-ops "Senior AI Engineer at Anthropic..."
+/career-ops-evaluate --file ./jds/openai.txt
+/career-ops-scan
+/career-ops-pdf
+/career-ops-tracker
+```
+
+`GEMINI.md` 檔案會自動載入為上下文。所有 15 個指令定義於 `.gemini/commands/*.toml`。
+
+### 選項 B — 獨立 API 腳本（無需安裝 CLI）
+
+```bash
+# 1. 在 https://aistudio.google.com/apikey 取得免費 API 金鑰
+cp .env.example .env
+# 編輯 .env → 設定 GEMINI_API_KEY=your_key_here
+
+# 2. 安裝相依套件
+npm install
+
+# 3. 評估職缺描述
+node gemini-eval.mjs "我們正在尋找資深 AI 工程師..."
+node gemini-eval.mjs --file ./jds/my-job.txt
+npm run gemini:eval -- "職缺文字"
+```
+
+> **免費方案：** 兩個選項均無需付費。原生 CLI 使用 Google OAuth；API 腳本使用 `gemini-2.0-flash`（每分鐘 15 次請求，每日 1M tokens 免費）。
+
 ## 使用方式
 
 career-ops 是一個具有多種模式的單一斜線指令：
