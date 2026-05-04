@@ -109,6 +109,15 @@ Los niveles son aditivos — se ejecutan todos, los resultados se mezclan y dedu
    - 0 keywords de `negative` deben aparecer
    - `seniority_boost` keywords dan prioridad pero no son obligatorios
 
+6b. **Filtrar por ubicación (opcional)** usando `location_filter` de `portals.yml`:
+   - Si el bloque `location_filter` está ausente, todas las ubicaciones pasan (comportamiento por defecto)
+   - Ubicación vacía en una oferta → pasa (no penalizar datos faltantes)
+   - Cualquier keyword de `block` presente → rechazar (precedencia sobre allow)
+   - `allow` vacío → pasa (ya superó block)
+   - `allow` no vacío → debe coincidir al menos una keyword
+   - Todas las coincidencias son case-insensitive substring
+   - La ubicación se persiste como 7ª columna en `scan-history.tsv` para auditoría posterior
+
 7. **Deduplicar** contra 3 fuentes:
    - `scan-history.tsv` → URL exacta ya vista
    - `applications.md` → empresa + rol normalizado ya evaluado
