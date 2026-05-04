@@ -80,7 +80,8 @@ When using [OpenCode](https://opencode.ai), the following slash commands are ava
 | `/career-ops-compare` | `/career-ops ofertas` | Compare and rank multiple offers |
 | `/career-ops-contact` | `/career-ops contacto` | LinkedIn outreach (find contacts + draft) |
 | `/career-ops-deep` | `/career-ops deep` | Deep company research |
-| `/career-ops-pdf` | `/career-ops pdf` | Generate ATS-optimized CV |
+| `/career-ops-pdf` | `/career-ops pdf` | Generate ATS-optimized CV (single job) |
+| `/career-ops-pdf2` | `/career-ops pdf2` | Batch PDFs for multiple jobs in parallel |
 | `/career-ops-latex` | `/career-ops latex` | Export CV as LaTeX/Overleaf .tex |
 | `/career-ops-training` | `/career-ops training` | Evaluate course/cert against goals |
 | `/career-ops-project` | `/career-ops project` | Evaluate portfolio project idea |
@@ -105,7 +106,8 @@ When using the [Gemini CLI](https://github.com/google-gemini/gemini-cli), the fo
 | `/career-ops-compare` | `/career-ops ofertas` | Compare and rank multiple offers |
 | `/career-ops-contact` | `/career-ops contacto` | LinkedIn outreach (find contacts + draft) |
 | `/career-ops-deep` | `/career-ops deep` | Deep company research |
-| `/career-ops-pdf` | `/career-ops pdf` | Generate ATS-optimized CV |
+| `/career-ops-pdf` | `/career-ops pdf` | Generate ATS-optimized CV (single job) |
+| `/career-ops-pdf2` | `/career-ops pdf2` | Batch PDFs for multiple jobs in parallel |
 | `/career-ops-training` | `/career-ops training` | Evaluate course/cert against goals |
 | `/career-ops-project` | `/career-ops project` | Evaluate portfolio project idea |
 | `/career-ops-tracker` | `/career-ops tracker` | Application status overview |
@@ -249,6 +251,7 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 | Asks for company research | `deep` |
 | Preps for interview at specific company | `interview-prep` |
 | Wants to generate CV/PDF | `pdf` |
+| Wants PDFs for multiple jobs in parallel | `pdf2` |
 | Evaluates a course/cert | `training` |
 | Evaluates portfolio project | `project` |
 | Asks about application status | `tracker` |
