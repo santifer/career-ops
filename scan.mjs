@@ -123,14 +123,44 @@ async function fetchJson(url) {
 // ── Title filter ────────────────────────────────────────────────────
 
 function buildTitleFilter(titleFilter) {
-  const positive = (titleFilter?.positive || []).map(k => k.toLowerCase());
+  // Positive / positive_role keywords match on word boundaries so "intern"
+  // does not collide with "International", and "PM" does not collide with
+  // "CPM". Both gates must pass (AND) when both are non-empty.
+  // Negatives keep substring semantics so entries with punctuation
+  // ("APM,", "Engineer,") still behave like the original filter.
+  const compile = (list) => (list || []).map(k => {
+    const escaped = k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp(`\\b${escaped}\\b`, 'i');
+  });
+  const positivePatterns = compile(titleFilter?.positive);
+  const rolePatterns = compile(titleFilter?.positive_role);
   const negative = (titleFilter?.negative || []).map(k => k.toLowerCase());
 
   return (title) => {
     const lower = title.toLowerCase();
-    const hasPositive = positive.length === 0 || positive.some(k => lower.includes(k));
+    const hasPositive = positivePatterns.length === 0 || positivePatterns.some(re => re.test(title));
+    const hasRole = rolePatterns.length === 0 || rolePatterns.some(re => re.test(title));
     const hasNegative = negative.some(k => lower.includes(k));
-    return hasPositive && !hasNegative;
+    return hasPositive && hasRole && !hasNegative;
+  };
+}
+
+// ── Location filter ─────────────────────────────────────────────────
+
+function buildLocationFilter(locationFilter) {
+  const allowed = (locationFilter?.allowed || []).map(k => k.toLowerCase());
+  if (allowed.length === 0) return () => true;
+  // Generic labels lack country info — pass through for manual review rather
+  // than silently drop. Real geo-mismatches still get filtered.
+  const GENERIC = new Set([
+    '', 'in-office', 'in office', 'remote', 'hybrid', 'on-site', 'onsite',
+    'anywhere', 'multiple locations', 'various', 'global', 'worldwide',
+  ]);
+  return (location) => {
+    if (!location) return true;
+    const lower = location.toLowerCase().trim();
+    if (GENERIC.has(lower)) return true;
+    return allowed.some(k => lower.includes(k));
   };
 }
 
@@ -264,6 +294,7 @@ async function main() {
   const config = parseYaml(readFileSync(PORTALS_PATH, 'utf-8'));
   const companies = config.tracked_companies || [];
   const titleFilter = buildTitleFilter(config.title_filter);
+  const locationFilter = buildLocationFilter(config.location_filter);
 
   // 2. Filter to enabled companies with detectable APIs
   const targets = companies
@@ -285,6 +316,7 @@ async function main() {
   const date = new Date().toISOString().slice(0, 10);
   let totalFound = 0;
   let totalFiltered = 0;
+  let totalLocFiltered = 0;
   let totalDupes = 0;
   const newOffers = [];
   const errors = [];
@@ -299,6 +331,10 @@ async function main() {
       for (const job of jobs) {
         if (!titleFilter(job.title)) {
           totalFiltered++;
+          continue;
+        }
+        if (!locationFilter(job.location)) {
+          totalLocFiltered++;
           continue;
         }
         if (seenUrls.has(job.url)) {
@@ -335,6 +371,7 @@ async function main() {
   console.log(`Companies scanned:     ${targets.length}`);
   console.log(`Total jobs found:      ${totalFound}`);
   console.log(`Filtered by title:     ${totalFiltered} removed`);
+  console.log(`Filtered by location:  ${totalLocFiltered} removed`);
   console.log(`Duplicates:            ${totalDupes} skipped`);
   console.log(`New offers added:      ${newOffers.length}`);
 
