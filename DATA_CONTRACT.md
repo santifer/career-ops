@@ -52,6 +52,7 @@ These files contain system logic, scripts, templates, and instructions that impr
 | `modes/ru/*` | Russian language modes |
 | `CLAUDE.md` | Agent instructions |
 | `AGENTS.md` | Codex instructions |
+| `.github/copilot-instructions.md` | Copilot CLI instructions |
 | `*.mjs` | Utility scripts |
 | `batch/batch-prompt.md` | Batch worker prompt |
 | `batch/batch-runner.sh` | Batch orchestrator |
