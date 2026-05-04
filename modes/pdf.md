@@ -2,7 +2,7 @@
 
 ## Pipeline completo
 
-1. Lee `cv.md` como fuentes de verdad
+1. Lee `cv.md` como fuente de verdad
 2. Pide al usuario el JD si no está en contexto (texto o URL)
 3. Extrae 15-20 keywords del JD
 4. Detecta idioma del JD → idioma del CV (EN default)
@@ -15,11 +15,14 @@
 9. Reordena bullets de experiencia por relevancia al JD
 10. Construye competency grid desde requisitos del JD (6-8 keyword phrases)
 11. Inyecta keywords naturalmente en logros existentes (NUNCA inventa)
-12. Genera HTML completo desde template + contenido personalizado
-13. Lee `name` de `config/profile.yml` → normaliza a kebab-case lowercase (e.g. "John Doe" → "john-doe") → `{candidate}`
-14. Escribe HTML a `/tmp/cv-{candidate}-{company}.html`
-15. Ejecuta: `node generate-pdf.mjs /tmp/cv-{candidate}-{company}.html output/cv-{candidate}-{company}-{YYYY-MM-DD}.pdf --format={letter|a4}`
-15. Reporta: ruta del PDF, nº páginas, % cobertura de keywords
+12. Determina el template HTML a usar:
+    - Si `config/profile.yml` define un template de CV, usar ese
+    - Si no, usar `templates/cv-template.html` por defecto
+13. Genera HTML completo desde el template seleccionado + contenido personalizado
+14. Lee `name` de `config/profile.yml` → normaliza a kebab-case lowercase (e.g. "John Doe" → "john-doe") → `{candidate}`
+15. Escribe HTML a `/tmp/cv-{candidate}-{company}.html`
+16. Ejecuta: `node generate-pdf.mjs /tmp/cv-{candidate}-{company}.html output/cv-{candidate}-{company}-{YYYY-MM-DD}.pdf --format={letter|a4} --template={template-name}`
+17. Reporta: ruta del PDF, nº páginas, % cobertura de keywords
 
 ## Reglas ATS (parseo limpio)
 
@@ -63,7 +66,11 @@ Ejemplos de reformulación legítima:
 
 ## Template HTML
 
-Usar el template en `cv-template.html`. Reemplazar los placeholders `{{...}}` con contenido personalizado:
+Usar el template HTML seleccionado.  
+Por defecto, usar `templates/cv-template.html`.  
+Si existe configuración de template en `config/profile.yml`, usar ese template en su lugar.
+
+Reemplazar los placeholders `{{...}}` con contenido personalizado:
 
 | Placeholder | Contenido |
 |-------------|-----------|
@@ -104,13 +111,13 @@ If the user has no `cv.canva_resume_design_id`, skip this prompt and use the HTM
 
 #### Step 1 — Duplicate the base design
 
-a. `export-design` the base design (using `cv.canva_resume_design_id`) as PDF → get download URL
-b. `import-design-from-url` using that download URL → creates a new editable design (the duplicate)
-c. Note the new `design_id` for the duplicate
+a. `export-design` the base design (using `canva_resume_design_id`) as PDF → get download URL  
+b. `import-design-from-url` using that download URL → creates a new editable design (the duplicate)  
+c. Note the new `design_id` for the duplicate  
 
 #### Step 2 — Read the design structure
 
-a. `get-design-content` on the new design → returns all text elements (richtexts) with their content
+a. `get-design-content` on the new design → returns all text elements (richtexts) with their content  
 b. Map text elements to CV sections by content matching:
    - Look for the candidate's name → header section
    - Look for "Summary" or "Professional Summary" → summary section
@@ -131,49 +138,35 @@ Same content generation as the HTML flow (Steps 1-11 above):
 
 #### Step 4 — Apply edits
 
-a. `start-editing-transaction` on the duplicate design
+a. `start-editing-transaction` on the duplicate design  
 b. `perform-editing-operations` with `find_and_replace_text` for each section:
    - Replace summary text with tailored summary
    - Replace each experience bullet with reordered/rewritten bullets
    - Replace competency/skills text with JD-matched terms
    - Replace project descriptions with top relevant projects
-c. **Reflow layout after text replacement:**
-   After applying all text replacements, the text boxes auto-resize but neighboring elements stay in place. This causes uneven spacing between work experience sections. Fix this:
-   1. Read the updated element positions and dimensions from the `perform-editing-operations` response
-   2. For each work experience section (top to bottom), calculate where the bullets text box ends: `end_y = top + height`
-   3. The next section's header should start at `end_y + consistent_gap` (use the original gap from the template, typically ~30px)
-   4. Use `position_element` to move the next section's date, company name, role title, and bullets elements to maintain even spacing
-   5. Repeat for all work experience sections
+
+c. **Reflow layout after text replacement:**  
+After applying all text replacements, the text boxes auto-resize but neighboring elements stay in place. This causes uneven spacing between work experience sections. Fix this:
+
+1. Read the updated element positions and dimensions from the `perform-editing-operations` response
+2. For each work experience section (top to bottom), calculate where the bullets text box ends: `end_y = top + height`
+3. The next section's header should start at `end_y + consistent_gap` (use the original gap from the template, typically ~30px)
+4. Use `position_element` to move the next section's date, company name, role title, and bullets elements to maintain even spacing
+5. Repeat for all work experience sections
+
 d. **Verify layout before commit:**
    - `get-design-thumbnail` with the transaction_id and page_index=1
    - Visually inspect the thumbnail for: text overlapping, uneven spacing, text cut off, text too small
    - If issues remain, adjust with `position_element`, `resize_element`, or `format_text`
    - Repeat until layout is clean
-d. Show the user the final preview and ask for approval
-e. `commit-editing-transaction` to save (ONLY after user approval)
+
+e. Show the user the final preview and ask for approval  
+f. `commit-editing-transaction` to save (ONLY after user approval)
 
 #### Step 5 — Export and download PDF
 
-a. `export-design` the duplicate as PDF (format: a4 or letter based on JD location)
+a. `export-design` the duplicate as PDF (format: a4 or letter based on JD location)  
 b. **IMMEDIATELY** download the PDF using Bash:
-   ```bash
-   curl -sL -o "output/cv-{candidate}-{company}-canva-{YYYY-MM-DD}.pdf" "{download_url}"
-   ```
-   The export URL is a pre-signed S3 link that expires in ~2 hours. Download it right away.
-c. Verify the download:
-   ```bash
-   file output/cv-{candidate}-{company}-canva-{YYYY-MM-DD}.pdf
-   ```
-   Must show "PDF document". If it shows XML or HTML, the URL expired — re-export and retry.
-d. Report: PDF path, file size, Canva design URL (for manual tweaking)
 
-#### Error handling
-
-- If `import-design-from-url` fails → fall back to HTML/PDF pipeline with message
-- If text elements can't be mapped → warn user, show what was found, ask for manual mapping
-- If `find_and_replace_text` finds no matches → try broader substring matching
-- Always provide the Canva design URL so the user can edit manually if auto-edit fails
-
-## Post-generación
-
-Actualizar tracker si la oferta ya está registrada: cambiar PDF de ❌ a ✅.
+```bash
+curl -sL -o "output/cv-{candidate}-{company}-canva-{YYYY-MM-DD}.pdf" "{download_url}"

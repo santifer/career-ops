@@ -4,7 +4,8 @@
  * generate-pdf.mjs — HTML → PDF via Playwright
  *
  * Usage:
- *   node career-ops/generate-pdf.mjs <input.html> <output.pdf> [--format=letter|a4]
+ *   node career-ops/generate-pdf.mjs <input.html> <output.pdf> [--format=letter|a4] [--template=template-name]
+ *   node career-ops/generate-pdf.mjs <output.pdf> [--format=letter|a4] [--template=template-name]
  *
  * Requires: @playwright/test (or playwright) installed.
  * Uses Chromium headless to render the HTML and produce a clean, ATS-parseable PDF.
@@ -12,8 +13,8 @@
 
 import { chromium } from 'playwright';
 import { resolve, dirname } from 'path';
-import { readFile } from 'fs/promises';
-import { mkdirSync } from 'fs';
+import { readFile, writeFile, access } from 'fs/promises';
+import { constants } from 'fs';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -49,10 +50,19 @@ function normalizeTextForATS(html) {
   let i = 0;
   while (i < masked.length) {
     const lt = masked.indexOf('<', i);
-    if (lt === -1) { out += sanitizeText(masked.slice(i)); break; }
+    if (lt === -1) {
+      out += sanitizeText(masked.slice(i));
+      break;
+    }
+
     out += sanitizeText(masked.slice(i, lt));
+
     const gt = masked.indexOf('>', lt);
-    if (gt === -1) { out += masked.slice(lt); break; }
+    if (gt === -1) {
+      out += masked.slice(lt);
+      break;
+    }
+
     out += masked.slice(lt, gt + 1);
     i = gt + 1;
   }
@@ -74,45 +84,65 @@ function normalizeTextForATS(html) {
   }
 }
 
+async function ensureFileExists(filePath, label) {
+  try {
+    await access(filePath, constants.F_OK);
+  } catch {
+    console.error(`❌ ${label} not found: ${filePath}`);
+    process.exit(1);
+  }
+}
+
 async function generatePDF() {
   const args = process.argv.slice(2);
 
-  // Parse arguments
-  let inputPath, outputPath, format = 'a4';
+  let format = 'a4';
+  let template = 'cv-template';
+  const positional = [];
 
   for (const arg of args) {
     if (arg.startsWith('--format=')) {
       format = arg.split('=')[1].toLowerCase();
-    } else if (!inputPath) {
-      inputPath = arg;
-    } else if (!outputPath) {
-      outputPath = arg;
+    } else if (arg.startsWith('--template=')) {
+      template = arg.split('=')[1].trim();
+    } else {
+      positional.push(arg);
     }
   }
 
-  if (!inputPath || !outputPath) {
-    console.error('Usage: node generate-pdf.mjs <input.html> <output.pdf> [--format=letter|a4]');
+  let inputPath;
+  let outputPath;
+
+  if (positional.length === 2) {
+    inputPath = resolve(positional[0]);
+    outputPath = resolve(positional[1]);
+  } else if (positional.length === 1) {
+    outputPath = resolve(positional[0]);
+    inputPath = resolve(__dirname, 'templates', `${template}.html`);
+  } else {
+    console.error(
+      'Usage:\n' +
+      '  node generate-pdf.mjs <input.html> <output.pdf> [--format=letter|a4] [--template=template-name]\n' +
+      '  node generate-pdf.mjs <output.pdf> [--format=letter|a4] [--template=template-name]'
+    );
     process.exit(1);
   }
 
-  inputPath = resolve(inputPath);
-  outputPath = resolve(outputPath);
-
-  // Validate format
   const validFormats = ['a4', 'letter'];
   if (!validFormats.includes(format)) {
     console.error(`Invalid format "${format}". Use: ${validFormats.join(', ')}`);
     process.exit(1);
   }
 
+  await ensureFileExists(inputPath, 'Input HTML/template');
+
   console.log(`📄 Input:  ${inputPath}`);
   console.log(`📁 Output: ${outputPath}`);
   console.log(`📏 Format: ${format.toUpperCase()}`);
+  console.log(`🎨 Template: ${template}`);
 
-  // Read HTML to inject font paths as absolute file:// URLs
   let html = await readFile(inputPath, 'utf-8');
 
-  // Resolve font paths relative to career-ops/fonts/
   const fontsDir = resolve(__dirname, 'fonts');
   html = html.replace(
     /url\(['"]?\.\/fonts\//g,
@@ -124,7 +154,6 @@ async function generatePDF() {
     `file://$1.$2')`
   );
 
-  // Normalize text for ATS compatibility (issue #1)
   const normalized = normalizeTextForATS(html);
   html = normalized.html;
   const totalReplacements = Object.values(normalized.replacements).reduce((a, b) => a + b, 0);
@@ -159,11 +188,8 @@ async function generatePDF() {
       preferCSSPageSize: false,
     });
 
-    // Write PDF
-    const { writeFile } = await import('fs/promises');
     await writeFile(outputPath, pdfBuffer);
 
-    // Count pages (approximate from PDF structure)
     const pdfString = pdfBuffer.toString('latin1');
     const pageCount = (pdfString.match(/\/Type\s*\/Page[^s]/g) || []).length;
 

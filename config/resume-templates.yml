@@ -1,0 +1,10 @@
+default_template: modern
+
+templates:
+  default:
+    path: templates/cv-template.html
+    format: a4
+
+  modern:
+    path: config/resume-templates/modern.html
+    format: a4
