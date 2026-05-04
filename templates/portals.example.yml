@@ -100,6 +100,33 @@ title_filter:
     - "Head"
     - "Director"
 
+# -- Location filter --
+# Filters jobs based on remote/on-site status and specific regions.
+# Note: location data is extracted from career portal APIs.
+location_filter:
+  remote_only: false        # [CUSTOMIZE] Set to true to find ONLY remote roles
+  onsite_only: false        # [CUSTOMIZE] Set to true to find ONLY on-site roles
+  positive:
+    # [CUSTOMIZE] Cities, regions or countries you are interested in
+    - "Remote"
+    - "India"
+    - "Pune"
+    - "Bangalore"
+    - "Europe"
+    - "EMEA"
+  negative:
+    # [CUSTOMIZE] Locations you want to exclude
+    - "USA"
+    - "China"
+
+# -- Salary filter --
+# Discards jobs with compensation below your floor or outside your range.
+# Currently supported for: Ashby boards.
+salary_filter:
+  min: 0                    # [CUSTOMIZE] Yearly minimum (number only, e.g. 100000)
+  max: 0                    # [CUSTOMIZE] Yearly maximum (0 = no limit)
+  currency: "USD"           # [CUSTOMIZE] Preferred currency for matching
+
 # -- Search queries --
 # Each query triggers a WebSearch. Use site: to filter by portal.
 # The scanner extracts title, URL, and company from results.
