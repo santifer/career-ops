@@ -45,6 +45,10 @@ These files contain system logic, scripts, templates, and instructions that impr
 | `modes/training.md` | Training evaluation instructions |
 | `modes/patterns.md` | Pattern analysis instructions |
 | `modes/followup.md` | Follow-up cadence instructions |
+| `modes/resume.md` | CV diagnostics & reengineering instructions |
+| `docs/references/evidence-hierarchy.md` | E1-E5 proof hierarchy reference |
+| `docs/references/cognitive-biases-cv.md` | Cognitive biases in CV processing reference |
+| `docs/references/signaling-theory.md` | Signaling theory & ATS keyword distribution reference |
 | `modes/de/*` | German language modes |
 | `modes/fr/*` | French language modes |
 | `modes/ja/*` | Japanese language modes |
