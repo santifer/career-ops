@@ -4,12 +4,19 @@ Two usage modes: **conductor --chrome** (navigates portals in real time) or **st
 
 ## Architecture
 
+```
+Provider Conductor (with Chrome/Playwright)
 ```text
 Claude Conductor (claude --chrome --dangerously-skip-permissions)
   │
   │  Chrome: navigates portals (logged-in sessions)
   │  Reads DOM directly — the user sees everything in real time
   │
+  ├─ Oferta 1: lee JD del DOM + URL
+  │    └─► provider -p worker → report .md + PDF + tracker-line
+  │
+  ├─ Oferta 2: click siguiente, lee JD + URL
+  │    └─► provider -p worker → report .md + PDF + tracker-line
   ├─ Job 1: reads JD from DOM + URL
   │    └─► claude -p worker → report .md + PDF + tracker-line
   │
@@ -19,6 +26,7 @@ Claude Conductor (claude --chrome --dangerously-skip-permissions)
   └─ End: merge tracker-additions → applications.md + summary
 ```
 
+Cada worker es un proceso hijo del provider activo (claude -p | qwen -p) con contexto limpio de 200K tokens. El conductor solo orquesta.
 Each worker is a child `claude -p` with a clean 200K token context. The conductor only orchestrates.
 
 ## Files
@@ -44,6 +52,18 @@ batch/
    c. Calculate next sequential REPORT_NUM
    d. Execute via Bash:
 
+1. **Leer estado**: `batch/batch-state.tsv` → saber qué ya se procesó
+2. **Navegar portal**: Chrome → URL de búsqueda
+3. **Extraer URLs**: Leer DOM de resultados → extraer lista de URLs → append a `batch-input.tsv`
+4. **Para cada URL pendiente**:
+   a. Chrome: click en la oferta → leer JD text del DOM
+   b. Guardar JD a `/tmp/batch-jd-{id}.txt`
+   c. Calcular siguiente REPORT_NUM secuencial
+   d. Ejecutar via lib/provider-dispatch.sh:
+      ```bash
+      lib/provider-dispatch.sh \
+        --prompt "Procesa esta oferta. URL: {url}. JD: /tmp/batch-jd-{id}.txt. Report: {num}. ID: {id}" \
+        --prompt-file batch/batch-prompt.md
       ```bash
       claude -p --dangerously-skip-permissions \
         --append-system-prompt-file batch/batch-prompt.md \
@@ -84,7 +104,7 @@ id	url	status	started_at	completed_at	report_num	score	error	retries
 - Lock file (`batch-runner.pid`) prevents double execution
 - Each worker is independent: failure in job #47 does not affect the others
 
-## Workers (claude -p)
+## Workers (provider -p)
 
 Each worker receives `batch-prompt.md` as a system prompt. It is self-contained.
 
