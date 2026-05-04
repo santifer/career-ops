@@ -1,13 +1,19 @@
 #!/usr/bin/env node
 
 /**
- * scan.mjs — Zero-token portal scanner
+ * scan.mjs — Zero-token portal scanner with a plugin-based provider layer.
  *
- * Fetches Greenhouse, Ashby, and Lever APIs directly, applies title
- * filters from portals.yml, deduplicates against existing history,
- * and appends new offers to pipeline.md + scan-history.tsv.
+ * Providers live in providers/*.mjs and are loaded at startup. Each provider
+ * exports an object with:
+ *   - id: string — matched against `provider:` in portals.yml
+ *   - detect(entry): {url}|null — optional auto-detection from careers_url
+ *   - fetch(entry, ctx): [{title,url,company,location}] — required
  *
- * Zero Claude API tokens — pure HTTP + JSON.
+ * A tracked_companies entry can set `provider:` explicitly to bypass
+ * URL-based auto-detection, and `transport: browser` to route fetches
+ * through Playwright instead of plain HTTP. Both fields are optional.
+ *
+ * Zero Claude API tokens — pure HTTP + JSON (or Apify, if a provider opts in).
  *
  * Usage:
  *   node scan.mjs                  # scan all enabled companies
@@ -15,8 +21,22 @@
  *   node scan.mjs --company Cohere # scan a single company
  */
 
-import { readFileSync, writeFileSync, appendFileSync, existsSync, mkdirSync } from 'fs';
+import { readFileSync, writeFileSync, appendFileSync, existsSync, mkdirSync, readdirSync } from 'fs';
+import { pathToFileURL, fileURLToPath } from 'url';
+import path from 'path';
 import yaml from 'js-yaml';
+
+// Load .env so providers can read API tokens (e.g. APIFY_TOKEN).
+// dotenv is already declared in package.json; wrap in try/catch so a
+// minimal install still works for users who only use the free providers.
+try {
+  const { config } = await import('dotenv');
+  config();
+} catch {}
+
+import { makeHttpCtx } from './providers/_http.mjs';
+import { makeBrowserCtx, closeBrowser } from './providers/_browser.mjs';
+
 const parseYaml = yaml.load;
 
 // ── Config ──────────────────────────────────────────────────────────
@@ -25,99 +45,56 @@ const PORTALS_PATH = 'portals.yml';
 const SCAN_HISTORY_PATH = 'data/scan-history.tsv';
 const PIPELINE_PATH = 'data/pipeline.md';
 const APPLICATIONS_PATH = 'data/applications.md';
+const PROVIDERS_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'providers');
 
 // Ensure required directories exist (fresh setup)
 mkdirSync('data', { recursive: true });
 
 const CONCURRENCY = 10;
-const FETCH_TIMEOUT_MS = 10_000;
 
-// ── API detection ───────────────────────────────────────────────────
+// ── Provider loading ────────────────────────────────────────────────
 
-function detectApi(company) {
-  // Greenhouse: explicit api field
-  if (company.api && company.api.includes('greenhouse')) {
-    return { type: 'greenhouse', url: company.api };
+async function loadProviders(dir) {
+  const providers = new Map();
+  if (!existsSync(dir)) return providers;
+  const entries = readdirSync(dir).filter(f => f.endsWith('.mjs') && !f.startsWith('_'));
+  for (const file of entries) {
+    const full = path.join(dir, file);
+    let mod;
+    try {
+      mod = await import(pathToFileURL(full).href);
+    } catch (err) {
+      console.error(`⚠️  ${file}: failed to load — ${err.message}`);
+      continue;
+    }
+    const p = mod.default;
+    if (!p || typeof p.fetch !== 'function' || !p.id) {
+      console.error(`⚠️  ${file}: skipping — default export must be { id, fetch }`);
+      continue;
+    }
+    if (providers.has(p.id)) {
+      console.error(`⚠️  ${file}: duplicate provider id "${p.id}" — keeping first`);
+      continue;
+    }
+    providers.set(p.id, p);
   }
+  return providers;
+}
 
-  const url = company.careers_url || '';
-
-  // Ashby
-  const ashbyMatch = url.match(/jobs\.ashbyhq\.com\/([^/?#]+)/);
-  if (ashbyMatch) {
-    return {
-      type: 'ashby',
-      url: `https://api.ashbyhq.com/posting-api/job-board/${ashbyMatch[1]}?includeCompensation=true`,
-    };
+// Resolve which provider handles a tracked_companies entry.
+// 1. Explicit `provider:` field wins.
+// 2. Otherwise each provider's detect() is called in load order; first hit wins.
+function resolveProvider(entry, providers) {
+  if (entry.provider) {
+    const p = providers.get(entry.provider);
+    if (!p) return { error: `unknown provider: ${entry.provider}` };
+    return { provider: p };
   }
-
-  // Lever
-  const leverMatch = url.match(/jobs\.lever\.co\/([^/?#]+)/);
-  if (leverMatch) {
-    return {
-      type: 'lever',
-      url: `https://api.lever.co/v0/postings/${leverMatch[1]}`,
-    };
+  for (const p of providers.values()) {
+    const hit = p.detect?.(entry);
+    if (hit) return { provider: p };
   }
-
-  // Greenhouse EU boards
-  const ghEuMatch = url.match(/job-boards(?:\.eu)?\.greenhouse\.io\/([^/?#]+)/);
-  if (ghEuMatch && !company.api) {
-    return {
-      type: 'greenhouse',
-      url: `https://boards-api.greenhouse.io/v1/boards/${ghEuMatch[1]}/jobs`,
-    };
-  }
-
   return null;
-}
-
-// ── API parsers ─────────────────────────────────────────────────────
-
-function parseGreenhouse(json, companyName) {
-  const jobs = json.jobs || [];
-  return jobs.map(j => ({
-    title: j.title || '',
-    url: j.absolute_url || '',
-    company: companyName,
-    location: j.location?.name || '',
-  }));
-}
-
-function parseAshby(json, companyName) {
-  const jobs = json.jobs || [];
-  return jobs.map(j => ({
-    title: j.title || '',
-    url: j.jobUrl || '',
-    company: companyName,
-    location: j.location || '',
-  }));
-}
-
-function parseLever(json, companyName) {
-  if (!Array.isArray(json)) return [];
-  return json.map(j => ({
-    title: j.text || '',
-    url: j.hostedUrl || '',
-    company: companyName,
-    location: j.categories?.location || '',
-  }));
-}
-
-const PARSERS = { greenhouse: parseGreenhouse, ashby: parseAshby, lever: parseLever };
-
-// ── Fetch with timeout ──────────────────────────────────────────────
-
-async function fetchJson(url) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-  try {
-    const res = await fetch(url, { signal: controller.signal });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.json();
-  } finally {
-    clearTimeout(timer);
-  }
 }
 
 // ── Title filter ────────────────────────────────────────────────────
@@ -255,7 +232,14 @@ async function main() {
   const companyFlag = args.indexOf('--company');
   const filterCompany = companyFlag !== -1 ? args[companyFlag + 1]?.toLowerCase() : null;
 
-  // 1. Read portals.yml
+  // 1. Load providers
+  const providers = await loadProviders(PROVIDERS_DIR);
+  if (providers.size === 0) {
+    console.error('Error: no providers loaded from providers/');
+    process.exit(1);
+  }
+
+  // 2. Read portals.yml
   if (!existsSync(PORTALS_PATH)) {
     console.error('Error: portals.yml not found. Run onboarding first.');
     process.exit(1);
@@ -265,35 +249,39 @@ async function main() {
   const companies = config.tracked_companies || [];
   const titleFilter = buildTitleFilter(config.title_filter);
 
-  // 2. Filter to enabled companies with detectable APIs
-  const targets = companies
-    .filter(c => c.enabled !== false)
-    .filter(c => !filterCompany || c.name.toLowerCase().includes(filterCompany))
-    .map(c => ({ ...c, _api: detectApi(c) }))
-    .filter(c => c._api !== null);
+  // 3. Resolve a provider for each enabled company
+  const targets = [];
+  let skippedCount = 0;
+  const resolveErrors = [];
+  for (const company of companies) {
+    if (company.enabled === false) continue;
+    if (filterCompany && !company.name.toLowerCase().includes(filterCompany)) continue;
+    const resolved = resolveProvider(company, providers);
+    if (!resolved) { skippedCount++; continue; }
+    if (resolved.error) { resolveErrors.push({ company: company.name, error: resolved.error }); continue; }
+    targets.push({ ...company, _provider: resolved.provider });
+  }
 
-  const skippedCount = companies.filter(c => c.enabled !== false).length - targets.length;
-
-  console.log(`Scanning ${targets.length} companies via API (${skippedCount} skipped — no API detected)`);
+  console.log(`Scanning ${targets.length} companies via providers (${skippedCount} skipped — no provider matched)`);
   if (dryRun) console.log('(dry run — no files will be written)\n');
 
-  // 3. Load dedup sets
+  // 4. Load dedup sets
   const seenUrls = loadSeenUrls();
   const seenCompanyRoles = loadSeenCompanyRoles();
 
-  // 4. Fetch all APIs
+  // 5. Fetch all APIs
   const date = new Date().toISOString().slice(0, 10);
   let totalFound = 0;
   let totalFiltered = 0;
   let totalDupes = 0;
   const newOffers = [];
-  const errors = [];
+  const errors = [...resolveErrors];
 
   const tasks = targets.map(company => async () => {
-    const { type, url } = company._api;
+    const provider = company._provider;
+    const ctx = company.transport === 'browser' ? makeBrowserCtx() : makeHttpCtx();
     try {
-      const json = await fetchJson(url);
-      const jobs = PARSERS[type](json, company.name);
+      const jobs = await provider.fetch(company, ctx);
       totalFound += jobs.length;
 
       for (const job of jobs) {
@@ -313,7 +301,7 @@ async function main() {
         // Mark as seen to avoid intra-scan dupes
         seenUrls.add(job.url);
         seenCompanyRoles.add(key);
-        newOffers.push({ ...job, source: `${type}-api` });
+        newOffers.push({ ...job, source: `${provider.id}-api` });
       }
     } catch (err) {
       errors.push({ company: company.name, error: err.message });
@@ -322,13 +310,13 @@ async function main() {
 
   await parallelFetch(tasks, CONCURRENCY);
 
-  // 5. Write results
+  // 6. Write results
   if (!dryRun && newOffers.length > 0) {
     appendToPipeline(newOffers);
     appendToScanHistory(newOffers, date);
   }
 
-  // 6. Print summary
+  // 7. Print summary
   console.log(`\n${'━'.repeat(45)}`);
   console.log(`Portal Scan — ${date}`);
   console.log(`${'━'.repeat(45)}`);
@@ -361,7 +349,9 @@ async function main() {
   console.log('→ Share results and get help: https://discord.gg/8pRpHETxa4');
 }
 
-main().catch(err => {
-  console.error('Fatal:', err.message);
-  process.exit(1);
-});
+main()
+  .catch(err => {
+    console.error('Fatal:', err.message);
+    process.exitCode = 1;
+  })
+  .finally(() => closeBrowser());
