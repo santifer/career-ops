@@ -28,8 +28,9 @@ const SELECTORS = {
 const NOISE_LABELS = new Set([
   'more', 'show more', 'see more',
   'less', 'show less', 'see less',
-  'retry premium',
+  'retry premium', 'retry for $0',
 ]);
+const NOISE_PATTERN = /^retry\b/i;
 const MIN_POSITION_LENGTH = 4;
 
 function randomDelay(range) {
@@ -437,7 +438,8 @@ export default class LinkedInScanner {
 
     if (hasMore) await sleep(500);
 
-    return page.evaluate(({ sel, noiseLabels, minLen }) => {
+    return page.evaluate(({ sel, noiseLabels, noisePatternSrc, minLen }) => {
+      const noisePattern = new RegExp(noisePatternSrc, 'i');
       function xpathAll(expression) {
         const result = document.evaluate(
           expression, document, null,
@@ -458,7 +460,7 @@ export default class LinkedInScanner {
       let title = '';
       for (const a of titleAnchors) {
         const text = a.textContent?.trim() ?? '';
-        if (text.length >= minLen && !noiseLabels.includes(text.toLowerCase())) {
+        if (text.length >= minLen && !noiseLabels.includes(text.toLowerCase()) && !noisePattern.test(text)) {
           title = text;
           break;
         }
@@ -473,6 +475,6 @@ export default class LinkedInScanner {
       const url = window.location.href;
 
       return { title, company, applicationUrl, jdText, url };
-    }, { sel: SELECTORS, noiseLabels: [...NOISE_LABELS], minLen: MIN_POSITION_LENGTH });
+    }, { sel: SELECTORS, noiseLabels: [...NOISE_LABELS], noisePatternSrc: NOISE_PATTERN.source, minLen: MIN_POSITION_LENGTH });
   }
 }
