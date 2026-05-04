@@ -134,6 +134,29 @@ function buildTitleFilter(titleFilter) {
   };
 }
 
+// ── Location filter ─────────────────────────────────────────────────
+// Optional. If `location_filter` is absent from portals.yml, all locations pass.
+// Semantics:
+//   - Empty location string → pass (don't penalize missing data)
+//   - `block` matches → reject (takes precedence over allow)
+//   - `allow` empty → pass (already cleared block)
+//   - `allow` non-empty → must match at least one keyword
+// All matches are case-insensitive substring.
+
+function buildLocationFilter(locationFilter) {
+  if (!locationFilter) return () => true;
+  const allow = (locationFilter.allow || []).map(k => k.toLowerCase());
+  const block = (locationFilter.block || []).map(k => k.toLowerCase());
+
+  return (location) => {
+    if (!location) return true;
+    const lower = location.toLowerCase();
+    if (block.length > 0 && block.some(k => lower.includes(k))) return false;
+    if (allow.length === 0) return true;
+    return allow.some(k => lower.includes(k));
+  };
+}
+
 // ── Dedup ───────────────────────────────────────────────────────────
 
 function loadSeenUrls() {
@@ -217,13 +240,15 @@ function appendToPipeline(offers) {
 }
 
 function appendToScanHistory(offers, date) {
-  // Ensure file + header exist
+  // Ensure file + header exist. Location appended as 7th column for non-breaking
+  // backward compat — older scan-history.tsv files with 6 columns still parse fine
+  // since loadSeenUrls only reads column 0.
   if (!existsSync(SCAN_HISTORY_PATH)) {
-    writeFileSync(SCAN_HISTORY_PATH, 'url\tfirst_seen\tportal\ttitle\tcompany\tstatus\n', 'utf-8');
+    writeFileSync(SCAN_HISTORY_PATH, 'url\tfirst_seen\tportal\ttitle\tcompany\tstatus\tlocation\n', 'utf-8');
   }
 
   const lines = offers.map(o =>
-    `${o.url}\t${date}\t${o.source}\t${o.title}\t${o.company}\tadded`
+    `${o.url}\t${date}\t${o.source}\t${o.title}\t${o.company}\tadded\t${o.location || ''}`
   ).join('\n') + '\n';
 
   appendFileSync(SCAN_HISTORY_PATH, lines, 'utf-8');
@@ -264,6 +289,7 @@ async function main() {
   const config = parseYaml(readFileSync(PORTALS_PATH, 'utf-8'));
   const companies = config.tracked_companies || [];
   const titleFilter = buildTitleFilter(config.title_filter);
+  const locationFilter = buildLocationFilter(config.location_filter);
 
   // 2. Filter to enabled companies with detectable APIs
   const targets = companies
@@ -284,7 +310,8 @@ async function main() {
   // 4. Fetch all APIs
   const date = new Date().toISOString().slice(0, 10);
   let totalFound = 0;
-  let totalFiltered = 0;
+  let totalFilteredTitle = 0;
+  let totalFilteredLocation = 0;
   let totalDupes = 0;
   const newOffers = [];
   const errors = [];
@@ -298,7 +325,11 @@ async function main() {
 
       for (const job of jobs) {
         if (!titleFilter(job.title)) {
-          totalFiltered++;
+          totalFilteredTitle++;
+          continue;
+        }
+        if (!locationFilter(job.location)) {
+          totalFilteredLocation++;
           continue;
         }
         if (seenUrls.has(job.url)) {
@@ -334,7 +365,8 @@ async function main() {
   console.log(`${'━'.repeat(45)}`);
   console.log(`Companies scanned:     ${targets.length}`);
   console.log(`Total jobs found:      ${totalFound}`);
-  console.log(`Filtered by title:     ${totalFiltered} removed`);
+  console.log(`Filtered by title:     ${totalFilteredTitle} removed`);
+  console.log(`Filtered by location:  ${totalFilteredLocation} removed`);
   console.log(`Duplicates:            ${totalDupes} skipped`);
   console.log(`New offers added:      ${newOffers.length}`);
 
