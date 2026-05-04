@@ -100,14 +100,48 @@
     line-height: 1.4;
     color: #555;
   }
+  .contact-row > * {
+    min-width: 0;
+  }
 
   .contact-row a {
     color: #555;
     text-decoration: none;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .contact-row span:not(.separator) {
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   .contact-row .separator {
     color: #ccc;
+  }
+
+  
+  /* === PROFILE PHOTO (DACH market — optional) === */
+  .header-inner {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+  }
+
+  .header-text {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .cv-photo {
+    width: 90px;
+    height: 115px;
+    object-fit: cover;
+    object-position: center top;
+    border-radius: 6px;
+    flex-shrink: 0;
+    display: block;
   }
 
   /* === SECTIONS === */
@@ -354,18 +388,19 @@
 
   <!-- HEADER -->
   <div class="header avoid-break">
-    <h1>{{NAME}}</h1>
-    <div class="header-gradient"></div>
-    <div class="contact-row">
-      <span>{{PHONE}}</span>
-      <span class="separator">|</span>
-      <span>{{EMAIL}}</span>
-      <span class="separator">|</span>
-      <a href="{{LINKEDIN_URL}}">{{LINKEDIN_DISPLAY}}</a>
-      <span class="separator">|</span>
-      <a href="{{PORTFOLIO_URL}}">{{PORTFOLIO_DISPLAY}}</a>
-      <span class="separator">|</span>
-      <span>{{LOCATION}}</span>
+    <div class="header-inner">
+      <div class="header-text">
+        <h1>{{NAME}}</h1>
+        <div class="header-gradient"></div>
+        <div class="contact-row">
+          <span>{{PHONE}}&nbsp;<span class="separator">|</span></span>
+          <span>{{EMAIL}}&nbsp;<span class="separator">|</span></span>
+          <span><a href="{{LINKEDIN_URL}}">{{LINKEDIN_DISPLAY}}</a>&nbsp;<span class="separator">|</span></span>
+          <span><a href="{{PORTFOLIO_URL}}">{{PORTFOLIO_DISPLAY}}</a>&nbsp;<span class="separator">|</span></span>
+          <span>{{LOCATION}}</span>
+        </div>
+      </div>
+      {{PHOTO_BLOCK}}
     </div>
   </div>
 

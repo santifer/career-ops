@@ -34,6 +34,7 @@
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "dotenv": "^16.4.5",
+    "jest": "^30.3.0",
     "js-yaml": "^4.1.1",
     "playwright": "^1.58.1"
   }
