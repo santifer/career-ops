@@ -7,7 +7,9 @@
 1. **読み取り** `data/pipeline.md` → 「未処理」セクションの `- [ ]` アイテムを検索
 2. **各未処理 URL に対して**：
    a. 次の `REPORT_NUM` を連番で計算（`reports/` を読み、最大番号 + 1）
-   b. **JD を抽出** Playwright（browser_navigate + browser_snapshot）→ WebFetch → WebSearch の順で
+   b. **JD を抽出：**
+      - **`local:jds/...`：** career-ops ルートから `jds/...` を **Read** で読む — ファイル自体には Playwright を使わない。
+      - **HTTPS URL：** Playwright（browser_navigate + browser_snapshot）→ WebFetch → WebSearch
    c. URL にアクセスできない場合 → `- [!]` にマークし注記、次へ進む
    d. **完全な auto-pipeline を実行**：評価 A-F → Report .md → PDF（スコア >= 3.0 の場合）→ Tracker
    e. **「未処理」から「処理済み」へ移動**：`- [x] #NNN | URL | 企業名 | 求人タイトル | スコア/5 | PDF ✅/❌`
@@ -35,6 +37,8 @@
 
 ## URL からの JD インテリジェント検出
 
+**順序：** pipeline の行が **`local:jds/...`** を指す場合は、そのパスに対して **Read** のみ（下記 **ローカル JD ファイル**）。それ以外は：
+
 1. **Playwright（推奨）：** `browser_navigate` + `browser_snapshot`。すべての SPA で動作。
 2. **WebFetch（フォールバック）：** 静的ページ、または Playwright が利用できない場合。
 3. **WebSearch（最終手段）：** JD をインデックスしているセカンダリポータルで検索。
@@ -42,11 +46,24 @@
 **特殊ケース：**
 - **LinkedIn**：ログインが必要な場合あり → `[!]` にマークし、候補者にテキストを貼り付けてもらう
 - **PDF**：URL が PDF を指す場合、Read tool で直接読む
-- **`local:` プレフィックス**：ローカルファイルを読む。例：`local:jds/linkedin-pm-ai.md` → `jds/linkedin-pm-ai.md` を読む
+- **`local:` プレフィックス**：ローカルファイルを読む。例：`local:jds/linkedin-pm-ai.md` → career-ops ルートから `jds/linkedin-pm-ai.md` を読む
 - **Wantedly / Green / Findy**：日本の主要プラットフォーム。Playwright でうまく動作
 - **doda / リクナビNEXT / マイナビ転職**：日本の大手求人ポータル。通常 WebFetch でアクセス可能
 - **ビズリーチ**：ハイクラス求人。ログインが必要な場合あり
 - **LinkedIn JP**：グローバル LinkedIn と同じ制約 — ログインが必要な場合あり
+
+### ローカル JD ファイル（`local:jds/...`）— report の URL
+
+保存済み JD の Markdown には、YAML フロントマターに実際の応募／求人リンクがあることが多い。**各 report に `**URL:**` が必要（`_shared.md` 参照）。**
+
+pipeline の行がローカルファイルを指す場合：
+
+1. `jds/{file}.md` を読んだ後、フロントマターの **`application_url`** を優先 — report ヘッダーに完全な HTTPS URL：**`**URL:** https://...`**
+2. `application_url` がない場合は **`url`**、**`source_url`**、**`job_url`** を試す。
+3. フロントマターにリンクがない場合のみ：**`**URL:**（JD フロントマターに URL なし — jds に application_url を追記）`** とし、ユーザーに `application_url:` の追記を依頼する。
+4. ファイルに `application_url`（または同等）があるときに **`**URL:** (local JD)`** を使わない。
+
+処理済みの pipeline 行は `local:jds/...` のままでよい。**report** には、分かる場合は人が読める応募／掲載 URL を載せる。
 
 ## 自動採番
 

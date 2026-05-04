@@ -203,7 +203,7 @@ Em vagas e negociações brasileiras, existem termos e práticas que não aparec
 8. Ao gerar texto em português (PDF summaries, bullets, mensagens LinkedIn, histórias STAR): português tech natural, não tradução literal. Frases curtas, verbos de ação, evitar voz passiva. Termos técnicos (stack, pipeline, deployment, embedding) não precisam ser traduzidos
 8b. **URLs de case studies no PDF Professional Summary:** Se o PDF menciona case studies ou demos, as URLs DEVEM aparecer já no primeiro parágrafo (Professional Summary). Recrutadores frequentemente só leem o resumo. Todos os URLs no HTML com `white-space: nowrap`
 9. **Entradas no tracker como TSV** — NUNCA editar `applications.md` diretamente para novos registros. Escrever TSV em `batch/tracker-additions/`, `merge-tracker.mjs` cuida do merge
-10. **Incluir `**URL:**` em todo header de report** — entre Score e PDF
+10. **Incluir `**URL:**` em todo header de report** — entre Score e PDF. Use a URL real da postagem ou candidatura. Se o JD veio de `local:jds/*.md`, ler o frontmatter YAML e usar **`application_url`** quando existir — não usar placeholder "(local JD)" quando houver URL no arquivo.
 
 ### Tools
 

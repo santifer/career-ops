@@ -1,23 +1,33 @@
-# Modo: tracker — Tracker de Aplicaciones
+# Mode: tracker — Applications tracker
 
-Lee y muestra `data/applications.md`.
+Read and display `data/applications.md`.
 
-**Formato del tracker:**
+**Tracker format:**
+
 ```markdown
-| # | Fecha | Empresa | Rol | Score | Estado | PDF | Report |
+| # | Date | Company | Role | Score | Status | PDF | Report | Notes |
 ```
 
-Estados posibles: `Evaluada` → `Aplicado` → `Respondido` → `Contacto` → `Entrevista` → `Oferta` / `Rechazada` / `Descartada` / `NO APLICAR`
+**Allowed status values** (must match `templates/states.yml` exactly — case-insensitive):
 
-- `Aplicado` = el candidato envió su candidatura
-- `Respondido` = Un recruiter/empresa contactó y el candidato respondió (inbound)
-- `Contacto` = El candidato contactó proactivamente a alguien de la empresa (outbound, ej: LinkedIn power move)
+`Evaluated` → `Applied` → `Responded` → `Interview` → `Offer` / `Rejected` / `Discarded` / `SKIP`
 
-Si el usuario pide actualizar un estado, editar la fila correspondiente.
+- **Evaluated** — Offer evaluated with report; decision pending  
+- **Applied** — Application submitted  
+- **Responded** — Recruiter or company reached out and the candidate replied (inbound)  
+- **Interview** — Active interview process  
+- **Offer** — Offer received  
+- **Rejected** — Rejected by the company  
+- **Discarded** — Closed or discarded by the candidate  
+- **SKIP** — Poor fit; do not apply  
 
-Mostrar también estadísticas:
-- Total de aplicaciones
-- Por estado
-- Score promedio
-- % con PDF generado
-- % con report generado
+Use the **Notes** column for extra context (e.g. proactive LinkedIn outreach before or after apply).
+
+If the user asks to update a status, edit the corresponding row.
+
+Also show stats:
+- Total applications  
+- Count by status  
+- Average score  
+- % with PDF generated  
+- % with report generated  

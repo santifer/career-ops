@@ -100,6 +100,29 @@ title_filter:
     - "Head"
     - "Director"
 
+# -- LinkedIn searches --
+# Used by scan-auth.mjs for authenticated LinkedIn job search scraping.
+# Requires a one-time login: node scan-auth.mjs --login linkedin
+#
+# The scanner builds search URLs from keywords + experience level + date filter.
+# JDs are saved locally to jds/ since LinkedIn requires auth to view them.
+# Run with: node scan-auth.mjs linkedin (or /career-ops scan-auth linkedin)
+
+linkedin_searches:
+  # date_posted: filter by posting age. Options: 24, Week, Month
+  date_posted: Week
+  # experience_level: Options: Entry-level, Senior, Manager, Director, Executive
+  # experience_level: [Senior, Manager]
+  max_results_per_search: 25
+  delay_between_pages_ms: [3000, 8000]
+  delay_between_searches_ms: [5000, 15000]
+  # append "remote" to keywords to filter for remote jobs. Jobs near your location will be included otherwise.
+  keywords:
+    - AI Engineer
+    - Software Engineer remote
+  # employer_blocklist: companies to skip (case-insensitive, partial match)
+  # employer_blocklist: [Staffing Agency, Recruiting Firm]
+
 # -- Search queries --
 # Each query triggers a WebSearch. Use site: to filter by portal.
 # The scanner extracts title, URL, and company from results.
@@ -942,3 +965,45 @@ tracked_companies:
     scan_query: '"Maxim AI" OR "getmaxim" careers "engineer" OR "product"'
     notes: "AI evaluation and observability platform. Bangalore-based, mostly on-site."
     enabled: true
+
+# ── LinkedIn Scanner ──────────────────────────────────────────────────
+#
+# Searches LinkedIn with your authenticated browser session.
+# One-time login:  node scan-auth.mjs --login linkedin
+# Run a scan:      node scan-auth.mjs linkedin
+#
+# The scanner reads each card's title and company, clicks to extract
+# the job ID, apply link, and JD text, then writes accepted listings
+# to jds/, pipeline.md, and scan-history.tsv.
+#
+# Dedup works across portals — jobs already found via Greenhouse,
+# Ashby, or Lever are skipped automatically.
+
+linkedin_searches:
+  # Only show jobs posted within this window (options: 24, Week, Month)
+  date_posted: Week
+
+  # Skip cards LinkedIn marks as already viewed (default: true)
+  skip_viewed: true
+
+  # Filter by seniority (options: Entry-level, Senior, Manager, Director, Executive)
+  experience_level: [Senior, Manager]
+
+  # Max accepted listings per keyword before moving to the next
+  max_results_per_search: 25
+
+  # Random delay ranges (ms) between page loads and keyword searches
+  delay_between_pages_ms: [3000, 8000]
+  delay_between_searches_ms: [5000, 15000]
+
+  # Each keyword becomes a LinkedIn search. Append "remote" to filter
+  # for remote jobs; otherwise results near your location are included.
+  # keywords can include location. LinkedIn will filter results automatically,
+  # overriding your account location.
+  keywords:
+    - AI Engineer
+    - AI Engineer San Diego, CA
+    - Software Engineer remote
+
+  # Companies to skip (case-insensitive, exact match against card company name)
+  employer_blocklist: [Turing]

@@ -84,7 +84,7 @@ id	url	status	started_at	completed_at	report_num	score	error	retries
 - Lock file (`batch-runner.pid`) prevents double execution
 - Each worker is independent: failure in job #47 does not affect the others
 
-## Workers (claude -p)
+## Workers (`claude -p`)
 
 Each worker receives `batch-prompt.md` as a system prompt. It is self-contained.
 

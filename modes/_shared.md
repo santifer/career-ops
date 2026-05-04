@@ -30,7 +30,7 @@ The evaluation uses 6 blocks (A-F) with a global score of 1-5:
 
 | Dimension | What it measures |
 |-----------|-----------------|
-| Match con CV | Skills, experience, proof points alignment |
+| CV match | Skills, experience, proof points alignment |
 | North Star alignment | How well the role fits the user's target archetypes (from _profile.md) |
 | Comp | Salary vs market (5=top quartile, 1=well below) |
 | Cultural signals | Company culture, growth, stability, remote policy |
@@ -113,8 +113,7 @@ After detecting archetype, read `modes/_profile.md` for the user's specific fram
 8. Native tech English for generated text. Short sentences, action verbs, no passive voice.
 8b. Case study URLs in PDF Professional Summary (recruiter may only read this).
 9. **Tracker additions as TSV** -- NEVER edit applications.md directly. Write TSV in `batch/tracker-additions/`.
-10. **Include `**URL:**` in every report header.**
-
+10. **Include `**URL:**` in every report header.** Use the real posting or apply URL. If the JD was loaded from `local:jds/*.md`, read YAML frontmatter and set **`**URL:**`** to **`application_url`** when present.
 ### Tools
 
 | Tool | Use |
