@@ -282,9 +282,9 @@ if (shared.includes('_profile.md')) {
 
 // ── 9. CLAUDE.md INTEGRITY ──────────────────────────────────────
 
-console.log('\n9. CLAUDE.md integrity');
+console.log('\n9. AGENTS.md integrity');
 
-const claude = readFile('CLAUDE.md');
+const agents = readFile('AGENTS.md');
 const requiredSections = [
   'Data Contract', 'Update Check', 'Ethical Use',
   'Offer Verification', 'Canonical States', 'TSV Format',
@@ -292,10 +292,10 @@ const requiredSections = [
 ];
 
 for (const section of requiredSections) {
-  if (claude.includes(section)) {
-    pass(`CLAUDE.md has section: ${section}`);
+  if (agents.includes(section)) {
+    pass(`AGENTS.md has section: ${section}`);
   } else {
-    fail(`CLAUDE.md missing section: ${section}`);
+    fail(`AGENTS.md missing section: ${section}`);
   }
 }
 
