@@ -229,6 +229,69 @@ go build -o career-dashboard .
 
 Features: 6 filter tabs, 4 sort modes, grouped/flat view, lazy-loaded previews, inline status changes.
 
+
+# Open WebSearch MCP Server: Complete Setup & Integration Guide
+
+## What is Open WebSearch MCP?
+
+The **open-websearch MCP server** is an open-source Model Context Protocol (MCP) server that provides free, unlimited web search capabilities to AI agents like OpenCode. It acts as a bridge between OpenCode and public search engines (DuckDuckGo, Bing, etc.), allowing the AI to perform web searches without requiring paid API keys or hitting rate limits.
+
+### Key Features
+
+| Feature | Description |
+|---------|-------------|
+| **100% Free** | No API keys required; uses public search engines |
+| **No Rate Limits** | Unlimited searches via DuckDuckGo |
+| **Privacy-First** | All searches run locally; no third-party tracking |
+| **Multiple Engines** | Supports DuckDuckGo, Bing, Google (with API key) |
+| **MCP Compatible** | Works with OpenCode, Claude Desktop, and other MCP clients |
+
+
+## Installation & Setup
+
+### Method 1: Direct NPX (Recommended for Testing)
+
+This runs the server directly without global installation.
+
+```bash
+# Start the server with DuckDuckGo as default engine
+npx -y open-websearch@latest
+
+# Windows Command Prompt
+set DEFAULT_SEARCH_ENGINE=duckduckgo && npx -y open-websearch@latest
+
+# Windows PowerShell
+$env:DEFAULT_SEARCH_ENGINE="duckduckgo"; npx -y open-websearch@latest
+
+# macOS / Linux
+DEFAULT_SEARCH_ENGINE=duckduckgo npx -y open-websearch@latest
+
+# Custom port (Windows PowerShell)
+$env:PORT="3100"; npx -y open-websearch@latest
+```
+
+### Method 2: Global Install
+
+```bash
+# Install globally
+npm install -g open-websearch
+
+# Run the server
+open-websearch
+```
+
+---
+
+
+
+
+
+
+
+
+
+
+
 ## Project Structure
 
 ```
