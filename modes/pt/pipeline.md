@@ -7,7 +7,9 @@ Processa URLs de vagas acumuladas em `data/pipeline.md`. O candidato adiciona UR
 1. **Ler** `data/pipeline.md` → buscar itens `- [ ]` na seção "Pendentes"
 2. **Para cada URL pendente**:
    a. Calcular próximo `REPORT_NUM` sequencial (ler `reports/`, pegar o número mais alto + 1)
-   b. **Extrair JD** usando Playwright (browser_navigate + browser_snapshot) → WebFetch → WebSearch
+   b. **Extrair JD:**
+      - **`local:jds/...`:** Ler `jds/...` a partir da raiz do career-ops. **Não** usar Playwright para o arquivo em si.
+      - **URL HTTPS:** Playwright (`browser_navigate` + `browser_snapshot`) → WebFetch → WebSearch
    c. Se a URL não for acessível → marcar como `- [!]` com nota e continuar
    d. **Executar auto-pipeline completa**: Avaliação A-F → Report .md → PDF (se score >= 3.0) → Tracker
    e. **Mover de "Pendentes" para "Processadas"**: `- [x] #NNN | URL | Empresa | Vaga | Score/5 | PDF ✅/❌`
@@ -36,6 +38,8 @@ Processa URLs de vagas acumuladas em `data/pipeline.md`. O candidato adiciona UR
 
 ## Detecção inteligente de JD a partir da URL
 
+**Ordem:** Se o item for **`local:jds/...`**, usar apenas **Read** no caminho (subsecção **JD local** abaixo). Caso contrário:
+
 1. **Playwright (preferido):** `browser_navigate` + `browser_snapshot`. Funciona com todas as SPAs.
 2. **WebFetch (fallback):** Para páginas estáticas ou quando Playwright não está disponível.
 3. **WebSearch (último recurso):** Buscar em portais secundários que indexam o JD.
@@ -43,10 +47,23 @@ Processa URLs de vagas acumuladas em `data/pipeline.md`. O candidato adiciona UR
 **Casos especiais:**
 - **LinkedIn**: Pode exigir login → marcar com `[!]` e pedir ao candidato para colar o texto
 - **PDF**: Se a URL aponta para um PDF, ler diretamente com o Read tool
-- **`local:` prefix**: Ler arquivo local. Exemplo: `local:jds/linkedin-pm-ai.md` → ler `jds/linkedin-pm-ai.md`
+- **`local:` prefix**: Ler arquivo local. Exemplo: `local:jds/linkedin-pm-ai.md` → ler `jds/linkedin-pm-ai.md` na raiz do career-ops.
 - **Gupy / Greenhouse / Lever**: Plataformas comuns no Brasil. Playwright funciona bem com todas
 - **Vagas.com.br / InfoJobs / Catho**: Portais brasileiros, geralmente acessíveis via WebFetch
 - **LinkedIn BR**: Mesmas restrições do LinkedIn global — pode exigir login
+
+### JD local (`local:jds/...`) — URL no report
+
+O markdown salvo em `jds/` costuma ter frontmatter YAML com o link real da vaga. **Todo report deve incluir `**URL:**` conforme `_shared.md`.**
+
+Quando a linha do pipeline aponta para arquivo local:
+
+1. Depois de ler `jds/{arquivo}.md`, usar o frontmatter **`application_url`** (preferido) no cabeçalho do report: **`**URL:** https://...`**
+2. Se não houver `application_url`, tentar **`url`**, **`source_url`** ou **`job_url`** no frontmatter.
+3. Só se não existir link no frontmatter: **`**URL:** (sem URL no frontmatter do JD — adicionar application_url ao arquivo em jds/)`** e pedir ao usuário para completar.
+4. **Nunca** usar **`**URL:** (local JD)`** quando `application_url` (ou equivalente) existir no arquivo.
+
+A linha processada no pipeline pode continuar como `local:jds/...`; o **report** deve trazer a URL de candidatura/postagem quando conhecida.
 
 ## Numeração automática
 
