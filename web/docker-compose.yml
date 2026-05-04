@@ -3,7 +3,7 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     ports:
-      - "5432:5432"
+      - "5434:5432"
     environment:
       POSTGRES_DB: career_ops
       POSTGRES_USER: career_ops
