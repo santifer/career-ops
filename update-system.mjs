@@ -26,6 +26,7 @@ const ROOT = __dirname;
 const CANONICAL_REPO = 'https://github.com/santifer/career-ops.git';
 const RAW_VERSION_URL = 'https://raw.githubusercontent.com/santifer/career-ops/main/VERSION';
 const RELEASES_API = 'https://api.github.com/repos/santifer/career-ops/releases/latest';
+const SEMVER_RE = /^v?(\d+\.\d+\.\d+)$/i;
 
 // System layer paths — ONLY these files get updated
 const SYSTEM_PATHS = [
@@ -102,9 +103,44 @@ const USER_PATHS = [
   'writing-samples/',
 ];
 
-function localVersion() {
+function parseSemver(value) {
+  const match = String(value || '').trim().match(SEMVER_RE);
+  return match ? match[1] : '';
+}
+
+function highestVersion(versions) {
+  return versions
+    .filter(Boolean)
+    .reduce((highest, version) => (
+      !highest || compareVersions(version, highest) > 0 ? version : highest
+    ), '');
+}
+
+function versionFileVersion() {
   const vPath = join(ROOT, 'VERSION');
-  return existsSync(vPath) ? readFileSync(vPath, 'utf-8').trim() : '0.0.0';
+  return existsSync(vPath) ? parseSemver(readFileSync(vPath, 'utf-8')) : '';
+}
+
+function releasePleaseManifestVersion() {
+  const manifestPath = join(ROOT, '.release-please-manifest.json');
+  if (!existsSync(manifestPath)) return '';
+
+  try {
+    const manifest = JSON.parse(readFileSync(manifestPath, 'utf-8'));
+    const rootVersion = parseSemver(manifest['.']);
+    if (rootVersion) return rootVersion;
+
+    return highestVersion(Object.values(manifest).map(parseSemver));
+  } catch {
+    return '';
+  }
+}
+
+function localVersion() {
+  return highestVersion([
+    releasePleaseManifestVersion(),
+    versionFileVersion(),
+  ]) || '0.0.0';
 }
 
 function compareVersions(a, b) {
@@ -177,13 +213,10 @@ async function check() {
     clearTimeout(timeoutId);
   }
 
-  const SEMVER_RE = /^v?(\d+\.\d+\.\d+)$/i;
-
   if (versionResult.status === 'fulfilled' && versionResult.value.ok) {
     try {
       const raw = (await versionResult.value.text()).trim();
-      const match = raw.match(SEMVER_RE);
-      remote = match ? match[1] : '';
+      remote = parseSemver(raw);
     } catch {
       // Body read failed; treat as no VERSION source
     }
@@ -194,8 +227,7 @@ async function check() {
       const release = await releaseResult.value.json();
       changelog = release.body || '';
       const rawTag = String(release.tag_name || '').trim();
-      const match = rawTag.match(SEMVER_RE);
-      releaseVersion = match ? match[1] : '';
+      releaseVersion = parseSemver(rawTag);
     } catch {
       // Body parse failed; treat as no release source
     }
