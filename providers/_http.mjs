@@ -15,11 +15,11 @@ async function fetchWithTimeout(url, { timeoutMs = DEFAULT_TIMEOUT_MS, headers =
       signal: controller.signal,
     });
     if (!res.ok) {
-      const body = await res.text().catch(() => '');
-      const snippet = body.replace(/\s+/g, ' ').trim().slice(0, 300);
+      const responseText = await res.text().catch(() => '');
+      const snippet = responseText.replace(/\s+/g, ' ').trim().slice(0, 300);
       const err = new Error(snippet ? `HTTP ${res.status}: ${snippet}` : `HTTP ${res.status}`);
       err.status = res.status;
-      err.body = body;
+      err.body = responseText;
       throw err;
     }
     return res;
