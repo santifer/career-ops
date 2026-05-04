@@ -35,6 +35,9 @@ modes/_profile.md
 node_modules/
 bun.lock
 
+# OpenRouter runner — generated data (personal, never commit)
+data/model-blacklist.json
+
 # OS
 .DS_Store
 *.mov
