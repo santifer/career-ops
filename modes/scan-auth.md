@@ -55,4 +55,5 @@ Errors: N
 ## Error handling
 
 - If the scanner exits with an error, show the error message to the user
+- If `<portal>-scan-results.json` has entries in `errors`, report them
 - If scanner reports CAPTCHA or login issues, tell the user to run `node scan-auth.mjs --login <portal>` **in a separate terminal window** and browse the portal manually to warm the session

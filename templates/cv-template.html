@@ -224,6 +224,13 @@
     color: hsl(270, 70%, 45%);
   }
 
+  .project-title a {
+    color: hsl(270, 70%, 45%);
+    text-decoration: underline;
+    text-decoration-color: hsl(270, 50%, 70%);
+    text-underline-offset: 2px;
+  }
+
   .project-badge {
     font-size: 9px;
     font-weight: 500;
@@ -350,6 +357,13 @@
 </style>
 </head>
 <body>
+<!--
+  Tailored PDFs: placeholders are filled from cv.md + config/profile.yml (see modes/pdf.md).
+  {{SKILLS}} should mirror the Markdown table under "## SKILLS" in cv.md — same categories and
+  technologies, no invented keywords. When cv.md lists Ruby under Programming Languages, include
+  it in the HTML. When experience documents MCP with PostgreSQL and Power BI, those may appear
+  in summary, bullets, and the AI & Automation row only as already stated in cv.md.
+-->
 <div class="page">
 
   <!-- HEADER -->

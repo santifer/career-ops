@@ -87,7 +87,6 @@ Read `modes/{mode}.md`
 Applies to: `tracker`, `deep`, `training`, `project`, `patterns`, `followup`
 
 ### Modes delegated to subagent:
-
 For `scan`, `scan-auth`, `apply` (with Playwright), and `pipeline` (3+ URLs): launch as Agent with the content of `_shared.md` + `modes/{mode}.md` injected into the subagent prompt.
 
 ```

@@ -1,6 +1,6 @@
 {
   "name": "career-ops",
-  "version": "1.0.0",
+  "version": "1.6.0",
   "description": "AI-powered job search pipeline built on Claude Code",
   "scripts": {
     "doctor": "node doctor.mjs",
@@ -33,7 +33,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@google/generative-ai": "^0.21.0",
+    "@google/generative-ai": "^0.24.1",
     "dotenv": "^16.4.5",
     "js-yaml": "^4.1.1",
     "playwright": "^1.58.1"
