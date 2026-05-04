@@ -3,20 +3,24 @@
 /**
  * scan.mjs — Zero-token portal scanner
  *
- * Fetches Greenhouse, Ashby, and Lever APIs directly, applies title
- * filters from portals.yml, deduplicates against existing history,
- * and appends new offers to pipeline.md + scan-history.tsv.
+ * Fetches job listings from ATS APIs (Greenhouse, Ashby, Lever,
+ * SmartRecruiters, Workable), applies title filters from portals.yml,
+ * deduplicates against existing history, and appends new offers to
+ * pipeline.md + scan-history.tsv.
  *
  * Zero Claude API tokens — pure HTTP + JSON.
+ * Source definitions live in scan-sources.mjs.
  *
  * Usage:
- *   node scan.mjs                  # scan all enabled companies
- *   node scan.mjs --dry-run        # preview without writing files
- *   node scan.mjs --company Cohere # scan a single company
+ *   node scan.mjs                       # scan all enabled companies
+ *   node scan.mjs --dry-run             # preview without writing files
+ *   node scan.mjs --company Cohere      # scan a single company
+ *   node scan.mjs --type ats-api        # only sources of this type
  */
 
 import { readFileSync, writeFileSync, appendFileSync, existsSync, mkdirSync } from 'fs';
 import yaml from 'js-yaml';
+import { SOURCES, normalizeJob, resolveSource } from './scan-sources.mjs';
 const parseYaml = yaml.load;
 
 // ── Config ──────────────────────────────────────────────────────────
@@ -30,95 +34,6 @@ const APPLICATIONS_PATH = 'data/applications.md';
 mkdirSync('data', { recursive: true });
 
 const CONCURRENCY = 10;
-const FETCH_TIMEOUT_MS = 10_000;
-
-// ── API detection ───────────────────────────────────────────────────
-
-function detectApi(company) {
-  // Greenhouse: explicit api field
-  if (company.api && company.api.includes('greenhouse')) {
-    return { type: 'greenhouse', url: company.api };
-  }
-
-  const url = company.careers_url || '';
-
-  // Ashby
-  const ashbyMatch = url.match(/jobs\.ashbyhq\.com\/([^/?#]+)/);
-  if (ashbyMatch) {
-    return {
-      type: 'ashby',
-      url: `https://api.ashbyhq.com/posting-api/job-board/${ashbyMatch[1]}?includeCompensation=true`,
-    };
-  }
-
-  // Lever
-  const leverMatch = url.match(/jobs\.lever\.co\/([^/?#]+)/);
-  if (leverMatch) {
-    return {
-      type: 'lever',
-      url: `https://api.lever.co/v0/postings/${leverMatch[1]}`,
-    };
-  }
-
-  // Greenhouse EU boards
-  const ghEuMatch = url.match(/job-boards(?:\.eu)?\.greenhouse\.io\/([^/?#]+)/);
-  if (ghEuMatch && !company.api) {
-    return {
-      type: 'greenhouse',
-      url: `https://boards-api.greenhouse.io/v1/boards/${ghEuMatch[1]}/jobs`,
-    };
-  }
-
-  return null;
-}
-
-// ── API parsers ─────────────────────────────────────────────────────
-
-function parseGreenhouse(json, companyName) {
-  const jobs = json.jobs || [];
-  return jobs.map(j => ({
-    title: j.title || '',
-    url: j.absolute_url || '',
-    company: companyName,
-    location: j.location?.name || '',
-  }));
-}
-
-function parseAshby(json, companyName) {
-  const jobs = json.jobs || [];
-  return jobs.map(j => ({
-    title: j.title || '',
-    url: j.jobUrl || '',
-    company: companyName,
-    location: j.location || '',
-  }));
-}
-
-function parseLever(json, companyName) {
-  if (!Array.isArray(json)) return [];
-  return json.map(j => ({
-    title: j.text || '',
-    url: j.hostedUrl || '',
-    company: companyName,
-    location: j.categories?.location || '',
-  }));
-}
-
-const PARSERS = { greenhouse: parseGreenhouse, ashby: parseAshby, lever: parseLever };
-
-// ── Fetch with timeout ──────────────────────────────────────────────
-
-async function fetchJson(url) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-  try {
-    const res = await fetch(url, { signal: controller.signal });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.json();
-  } finally {
-    clearTimeout(timer);
-  }
-}
 
 // ── Title filter ────────────────────────────────────────────────────
 
@@ -253,7 +168,32 @@ async function main() {
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
   const companyFlag = args.indexOf('--company');
-  const filterCompany = companyFlag !== -1 ? args[companyFlag + 1]?.toLowerCase() : null;
+  let filterCompany = null;
+  if (companyFlag !== -1) {
+    const companyValue = args[companyFlag + 1];
+    if (!companyValue || companyValue.startsWith('-')) {
+      console.error('Error: --company requires a value (e.g. --company Acme)');
+      process.exit(1);
+    }
+    filterCompany = companyValue.toLowerCase();
+  }
+  const typeFlag = args.indexOf('--type');
+  const rawTypeValue = typeFlag !== -1 ? args[typeFlag + 1] : null;
+  if (typeFlag !== -1 && (!rawTypeValue || rawTypeValue.startsWith('-') || !rawTypeValue.trim())) {
+    console.error('Error: --type requires a value (e.g. --type ats-api)');
+    process.exit(1);
+  }
+  const normalizedType = rawTypeValue ? rawTypeValue.trim().toLowerCase() : null;
+  if (normalizedType) {
+    const supportedTypes = new Set(SOURCES.map(s => s.type));
+    if (!supportedTypes.has(normalizedType)) {
+      console.error(
+        `Error: unsupported --type "${normalizedType}". Supported values: ${[...supportedTypes].join(', ')}`
+      );
+      process.exit(1);
+    }
+  }
+  const filterTypes = normalizedType ? [normalizedType] : null;
 
   // 1. Read portals.yml
   if (!existsSync(PORTALS_PATH)) {
@@ -269,8 +209,8 @@ async function main() {
   const targets = companies
     .filter(c => c.enabled !== false)
     .filter(c => !filterCompany || c.name.toLowerCase().includes(filterCompany))
-    .map(c => ({ ...c, _api: detectApi(c) }))
-    .filter(c => c._api !== null);
+    .map(c => ({ ...c, _resolved: resolveSource(c, filterTypes) }))
+    .filter(c => c._resolved !== null);
 
   const skippedCount = companies.filter(c => c.enabled !== false).length - targets.length;
 
@@ -290,13 +230,17 @@ async function main() {
   const errors = [];
 
   const tasks = targets.map(company => async () => {
-    const { type, url } = company._api;
+    const { source, url } = company._resolved;
     try {
-      const json = await fetchJson(url);
-      const jobs = PARSERS[type](json, company.name);
+      const json = await source.fetch(url);
+      const jobs = source
+        .parse(json, company.name)
+        .map(normalizeJob)
+        .map(job => ({ ...job, company: job.company || company.name }));
       totalFound += jobs.length;
 
       for (const job of jobs) {
+        if (!job.url || !job.title || !job.company) continue;
         if (!titleFilter(job.title)) {
           totalFiltered++;
           continue;
@@ -313,7 +257,7 @@ async function main() {
         // Mark as seen to avoid intra-scan dupes
         seenUrls.add(job.url);
         seenCompanyRoles.add(key);
-        newOffers.push({ ...job, source: `${type}-api` });
+        newOffers.push({ ...job, source: source.name });
       }
     } catch (err) {
       errors.push({ company: company.name, error: err.message });
