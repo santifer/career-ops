@@ -221,6 +221,7 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 - **German (DACH market):** `modes/de/` — native German translations with DACH-specific vocabulary (13. Monatsgehalt, Probezeit, Kündigungsfrist, AGG, Tarifvertrag, etc.). Includes `_shared.md`, `angebot.md` (evaluation), `bewerben.md` (apply), `pipeline.md`.
 - **French (Francophone market):** `modes/fr/` — native French translations with France/Belgium/Switzerland/Luxembourg-specific vocabulary (CDI/CDD, convention collective SYNTEC, RTT, mutuelle, prévoyance, 13e mois, intéressement/participation, titres-restaurant, CSE, portage salarial, etc.). Includes `_shared.md`, `offre.md` (evaluation), `postuler.md` (apply), `pipeline.md`.
 - **Japanese (Japan market):** `modes/ja/` — native Japanese translations with Japan-specific vocabulary (正社員, 業務委託, 賞与, 退職金, みなし残業, 年俸制, 36協定, 通勤手当, 住宅手当, etc.). Includes `_shared.md`, `kyujin.md` (evaluation), `oubo.md` (apply), `pipeline.md`.
+- **Ukrainian (Ukraine market):** `modes/ua/` — native Ukrainian translations with Ukraine-specific vocabulary (ФОП 3-я група, Дія City, КЗпП, ПДФО 18% + військовий збір, ЄСВ, DOU.ua, Djinni.co, USD-denominated salaries, медстрахування, etc.). Includes `_shared.md`, `oferta.md` (evaluation), `apply.md`, `pipeline.md`, `interview-prep.md`.
 
 **When to use German modes:** If the user is targeting German-language job postings, lives in DACH, or asks for German output. Either:
 1. User says "use German modes" → read from `modes/de/` instead of `modes/`
@@ -236,6 +237,12 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 1. User says "use Japanese modes" → read from `modes/ja/` instead of `modes/`
 2. User sets `language.modes_dir: modes/ja` in `config/profile.yml` → always use Japanese modes
 3. You detect a Japanese JD → suggest switching to Japanese modes
+
+**When to use Ukrainian modes:** If the user is targeting the Ukrainian job market, lives in Ukraine, or asks for Ukrainian output. Most Ukrainian IT job postings are written in English but operate within the Ukrainian market (ФОП contracts, USD salaries, DOU.ua benchmarks) — use Ukrainian modes for these too. Translated content is available in `modes/ua/` (`_shared.md`, `oferta.md`, `apply.md`, `pipeline.md`, `interview-prep.md`). Either:
+
+1. User says "use Ukrainian modes" → read from `modes/ua/` instead of `modes/`
+2. User sets `language.modes_dir: modes/ua` in `config/profile.yml` → treat it as preferred mode directory for the session; if not applied, ask for/accept an explicit reminder and continue with `modes/ua/`.
+3. You detect a Ukrainian-market JD (DOU.ua, Djinni.co, Ukrainian company, ФОП mentioned, etc.) → suggest switching to Ukrainian modes
 
 **When NOT to:** If the user applies to English-language roles, even at French, German, or Japanese companies, use the default English modes.
 
