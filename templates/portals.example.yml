@@ -282,6 +282,18 @@ search_queries:
 # Companies whose career pages are checked directly.
 # scan_method: playwright (default), websearch, greenhouse_api
 # For Greenhouse companies, add api: field for faster structured JSON access.
+#
+# Provider routing (scan.mjs):
+#   By default each entry is auto-detected from `careers_url` against the
+#   loaded providers in providers/*.mjs (greenhouse, ashby, lever — the
+#   first one whose detect() matches wins, alphabetical order).
+#
+#   Optional fields on a tracked_companies entry:
+#     provider: <id>     — force a specific provider, skipping detect().
+#                          Useful when careers_url is ambiguous or you want
+#                          to pin behavior. Value must match a loaded
+#                          provider's `id`.
+#     transport: http    — reserved for future transports. Defaults to http.
 
 tracked_companies:
 
