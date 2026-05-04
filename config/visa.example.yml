@@ -1,0 +1,38 @@
+# Career-Ops Visa Configuration
+# Copy this file to config/visa.yml to activate visa features.
+# This file is the template -- edit visa.yml with your actual data.
+# Your visa.yml is user-layer data and will never be overwritten by updates.
+
+# --- Sponsorship Mode (Phase 3) ---
+# Controls how visa sponsorship signals affect evaluations:
+#   hard_filter: Auto-SKIP JDs with WONT_SPONSOR (saves tokens)
+#   score_penalty: Apply penalty to overall score
+#   info_only: Show visa info without affecting score (default)
+sponsorship_mode: info_only
+
+# Penalty values for score_penalty mode
+penalties:
+  wont_sponsor: -0.7
+  unknown: -0.3
+
+# --- OPT Timeline (Phase 4) ---
+# Activate by filling in your OPT details below.
+# type: regular (12 months) or stem (36 months from initial OPT start)
+# start_date: Your OPT start date in YYYY-MM-DD format
+# end_date: (optional) Override auto-calculated expiration
+# unemployment_days_used: Manual counter -- update this yourself
+# h1b_lottery_status: selected | not_selected | pending (optional, affects cap season advice)
+opt:
+  type: stem
+  start_date: "2025-06-01"
+  # end_date: "2028-05-31"
+  unemployment_days_used: 0
+  # h1b_lottery_status: pending
+
+# --- Time-to-Hire Defaults (Phase 4, optional) ---
+# Override heuristic estimates by company type [min_days, max_days]
+# Defaults if omitted: startup [14,28], midsize [28,56], enterprise [56,112]
+time_to_hire_defaults:
+  startup: [14, 28]
+  midsize: [28, 56]
+  enterprise: [56, 112]
