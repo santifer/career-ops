@@ -35,6 +35,11 @@ const FETCH_TIMEOUT_MS = 10_000;
 // ── API detection ───────────────────────────────────────────────────
 
 function detectApi(company) {
+  // If scan_method is websearch, skip API detection entirely
+  if (company.scan_method === 'websearch') {
+    return null;
+  }
+
   // Greenhouse: explicit api field
   if (company.api && company.api.includes('greenhouse')) {
     return { type: 'greenhouse', url: company.api };
