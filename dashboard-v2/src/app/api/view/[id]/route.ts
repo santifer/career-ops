@@ -5,6 +5,7 @@ import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { Readable } from 'node:stream';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 function getR2Client() {
   const accountId = process.env.R2_ACCOUNT_ID || '';
@@ -14,6 +15,7 @@ function getR2Client() {
   return new S3Client({
     region: 'auto',
     endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
+    forcePathStyle: true,
     credentials: { accessKeyId, secretAccessKey },
   });
 }
@@ -23,7 +25,13 @@ async function streamR2Object(key: string) {
   const client = getR2Client();
   if (!bucket || !client) return null;
 
-  const out = await client.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
+  let out: any;
+  try {
+    out = await client.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
+  } catch (e: any) {
+    // Common cases: NoSuchKey, AccessDenied, SignatureDoesNotMatch.
+    throw new Error(e?.name || e?.message || 'R2GetObjectFailed');
+  }
   const body = out.Body as any;
   if (!body) return null;
 
@@ -87,10 +95,17 @@ export async function GET(
       const filename = `${nameCore}.pdf`;
       const key = type === 'cl' ? job.cover_letter_pdf_key : job.resume_pdf_key;
       if (key) {
-        const stream = await streamR2Object(String(key));
-        if (!stream) {
-          return new NextResponse('PDF not available (R2 misconfigured)', { status: 500 });
+        let stream: ReadableStream | null = null;
+        try {
+          stream = await streamR2Object(String(key));
+        } catch (e: any) {
+          const msg = String(e?.message || '');
+          if (msg.includes('NoSuchKey')) {
+            return new NextResponse('PDF not found in R2 (rerun tailor --deep)', { status: 404 });
+          }
+          return new NextResponse(`R2 error: ${msg}`, { status: 500 });
         }
+        if (!stream) return new NextResponse('PDF not available (empty object)', { status: 404 });
         return new NextResponse(stream, {
           headers: {
             'Content-Type': 'application/pdf',
