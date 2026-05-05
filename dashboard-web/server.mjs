@@ -5124,9 +5124,19 @@ const HTML = /* html */ `<!DOCTYPE html>
 
   function wizToggleChip(kind, value) {
     const s = window.wizState[kind];
-    if (s.selected.has(value)) s.selected.delete(value);
+    const wasSelected = s.selected.has(value);
+    if (wasSelected) s.selected.delete(value);
     else s.selected.add(value);
-    wizRenderChips(kind);
+    // Selective DOM update — only the toggled chip's class + aria-pressed
+    // changes. Skips re-rendering the other 15 chips on every click.
+    const containerId = kind === 'roles' ? 'wiz-roles-chips' : 'wiz-dealbreakers-chips';
+    const container = document.getElementById(containerId);
+    const cls = kind === 'dealbreakers' ? 'wiz-chip selected deal-breaker' : 'wiz-chip selected';
+    const chip = [...container.querySelectorAll('.wiz-chip')]
+      .find(c => c.dataset.value === value);
+    if (!chip) { wizRenderChips(kind); return; } // fallback (e.g. just-added custom)
+    chip.className = wasSelected ? 'wiz-chip' : cls;
+    chip.setAttribute('aria-pressed', wasSelected ? 'false' : 'true');
   }
 
   function wizAddCustom(kind) {
@@ -5843,8 +5853,11 @@ async function handleRequest(req, res) {
 
   // ── API: Setup status ──
   if (pathname === '/api/setup-status') {
-    const cvExists = await fs.access(path.join(ROOT, 'cv.md')).then(() => true).catch(() => false);
-    const profileExists = await fs.access(path.join(CONFIG_DIR, 'profile.yml')).then(() => true).catch(() => false);
+    // Parallel — two independent file-existence checks (Vercel `async-parallel`).
+    const [cvExists, profileExists] = await Promise.all([
+      fs.access(path.join(ROOT, 'cv.md')).then(() => true).catch(() => false),
+      fs.access(path.join(CONFIG_DIR, 'profile.yml')).then(() => true).catch(() => false),
+    ]);
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ cvExists, profileExists }));
     return;
