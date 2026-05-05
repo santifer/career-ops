@@ -737,6 +737,93 @@ describe('isOriginAllowed', () => {
   });
 });
 
+// ── /api/health endpoint shape (boots a real server on a random port) ──────
+//
+// This is the one endpoint that's load-bearing for the Docker HEALTHCHECK
+// and the install.sh boot probe. If its shape drifts, deploys break silently.
+// We boot a real server on a free loopback port to assert the contract.
+
+import { spawn } from 'child_process';
+import { fileURLToPath } from 'url';
+
+describe('/api/health endpoint contract', () => {
+  let proc;
+  let port;
+  const base = () => `http://127.0.0.1:${port}`;
+
+  test('setup: boot the server on a free port', async () => {
+    // Pick a port unlikely to clash with the user's running dashboard
+    port = 14747 + Math.floor(Math.random() * 1000);
+    const here = path.dirname(fileURLToPath(import.meta.url));
+    const serverPath = path.join(here, '..', 'dashboard-web', 'server.mjs');
+    const tmpDir = mkdtempSync(path.join(os.tmpdir(), 'health-'));
+    proc = spawn(process.execPath, [serverPath], {
+      env: {
+        ...process.env,
+        PORT: String(port),
+        HOST: '127.0.0.1',
+        CONFIG_DIR: tmpDir,
+        DATA_DIR: tmpDir,
+        // Suppress the LAN-warning console noise in tests
+        SUPPRESS_BANNER: '1',
+      },
+      stdio: ['ignore', 'ignore', 'ignore'],
+      detached: false,
+    });
+    // Wait for the server to come up (max 5s, poll every 100ms)
+    for (let i = 0; i < 50; i++) {
+      try {
+        const r = await fetch(`${base()}/api/health`);
+        if (r.ok) return;
+      } catch { /* still booting */ }
+      await new Promise(r => setTimeout(r, 100));
+    }
+    throw new Error('server did not respond within 5s');
+  });
+
+  test('returns 200 with structured payload', async () => {
+    const r = await fetch(`${base()}/api/health`);
+    assert.equal(r.status, 200);
+    assert.equal(r.headers.get('content-type'), 'application/json');
+    const body = await r.json();
+    assert.equal(body.ok, true);
+    assert.equal(typeof body.uptime, 'number');
+    assert.ok(body.uptime >= 0);
+    assert.equal(typeof body.version, 'string');
+    assert.match(body.version, /^\d+\.\d+\.\d+$/);
+    assert.equal(typeof body.now, 'string');
+    assert.match(body.now, /^\d{4}-\d{2}-\d{2}T/);
+  });
+
+  test('sets no-store cache header (always fresh for monitors)', async () => {
+    const r = await fetch(`${base()}/api/health`);
+    assert.match(r.headers.get('cache-control') || '', /no-store/);
+  });
+
+  test('uptime is monotonically non-decreasing across calls', async () => {
+    const a = await (await fetch(`${base()}/api/health`)).json();
+    await new Promise(r => setTimeout(r, 1100));
+    const b = await (await fetch(`${base()}/api/health`)).json();
+    assert.ok(b.uptime >= a.uptime, `uptime went backwards: ${a.uptime} -> ${b.uptime}`);
+  });
+
+  test('responds quickly even under repeated load (probe-friendly)', async () => {
+    const t0 = Date.now();
+    const probes = await Promise.all(
+      Array.from({ length: 20 }, () => fetch(`${base()}/api/health`))
+    );
+    const elapsed = Date.now() - t0;
+    for (const r of probes) assert.equal(r.status, 200);
+    assert.ok(elapsed < 2000, `20 probes took ${elapsed}ms (expected < 2s)`);
+  });
+
+  test('teardown: stop the server', () => {
+    if (proc && !proc.killed) {
+      proc.kill('SIGTERM');
+    }
+  });
+});
+
 // ── buildGmailStatus (Gmail diagnostic shape) ───────────────────────────────
 
 describe('buildGmailStatus', () => {

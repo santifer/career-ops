@@ -36,8 +36,32 @@ node_modules/
 .claude/memory/
 career-dashboard
 
-# Environment secrets
+# ── Environment secrets — NEVER commit these ────────────────────────────────
 .env
+.env.local
+.env.*.local
+*.pem
+*.key
+*.crt
+secrets.json
+
+# User-supplied resume + generated personal artifacts (contain PII)
+cv.md
+article-digest.md
+data/follow-ups.md
+
+# Backups + transient state
+backups/
+.dashboard.log
+.cache/
+tmp/
+.tmp/
+
+# Build / release artifacts (we don't track binaries; CI publishes them)
+dist/
+build/
+*.exe
+career-ops.tar.gz
 
 # OAuth tokens & local caches with PII
 data/gmail-tokens.json
@@ -45,3 +69,16 @@ data/gmail-cache.json
 data/autopilot-log.json
 data/autopilot-manual.json
 data/dash-debug.json
+data/high-paying-queue.json
+data/high-paying-queue.md
+data/apply-queue.md
+data/pipeline.md.bak
+
+# Worktrees + agent scratch
+.claude/worktrees/
+.claude/scheduled_tasks.lock
+.conductor/mistakes-read
+dashboard-web/.conductor/
+
+# Test scratch
+tests/__fixtures__/tmp/

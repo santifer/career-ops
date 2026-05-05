@@ -1,0 +1,153 @@
+name: Release
+
+# Builds the career-ops EXE and attaches it (plus a source tarball) to a
+# GitHub Release whenever a v* tag lands. Also runs the install smoke-test
+# on every PR/push so the installers don't rot.
+
+on:
+  push:
+    tags: ['v*']
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  smoke-install:
+    name: Install smoke-test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Doctor (no install)
+        if: runner.os != 'Windows'
+        run: bash install.sh --doctor
+      - name: Doctor (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: .\install.ps1 -Mode doctor
+      - name: Run unit tests
+        run: npm test
+      - name: Syntax-check shell installers
+        if: runner.os != 'Windows'
+        run: bash -n install.sh && bash -n scripts/build-exe.sh && bash -n scripts/publish-release.sh
+
+  docker-build:
+    name: Docker image builds + healthcheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t career-ops:ci .
+      - name: Boot + probe /api/health
+        run: |
+          docker run -d --name co -p 4747:4747 -e PORT=4747 career-ops:ci
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:4747/api/health >/dev/null; then
+              echo "✓ healthy"; exit 0
+            fi
+            sleep 2
+          done
+          echo "✗ /api/health never came up"; docker logs co; exit 1
+      - name: Cleanup
+        if: always()
+        run: docker rm -f co || true
+
+  build-exe:
+    name: Build EXE (${{ matrix.os }})
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [smoke-install, docker-build]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            asset: career-ops.exe
+          - os: macos-latest
+            asset: career-ops-macos
+          - os: ubuntu-latest
+            asset: career-ops-linux
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Build
+        if: runner.os != 'Windows'
+        run: bash scripts/build-exe.sh
+      - name: Build (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: bash scripts/build-exe.sh
+      - name: Rename for platform
+        shell: bash
+        run: |
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            cp dist/career-ops.exe dist/${{ matrix.asset }}
+          else
+            cp dist/career-ops dist/${{ matrix.asset }}
+          fi
+      - name: SHA-256 sidecar
+        shell: bash
+        run: |
+          if [[ "$RUNNER_OS" == "macOS" ]]; then
+            shasum -a 256 dist/${{ matrix.asset }} > dist/${{ matrix.asset }}.sha256
+          else
+            sha256sum dist/${{ matrix.asset }} > dist/${{ matrix.asset }}.sha256
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset }}
+          path: |
+            dist/${{ matrix.asset }}
+            dist/${{ matrix.asset }}.sha256
+
+  publish-release:
+    name: Publish GitHub Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [build-exe]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Source tarball
+        run: git archive --format=tar.gz --prefix=career-ops-${GITHUB_REF_NAME#v}/ -o artifacts/career-ops-${GITHUB_REF_NAME}.tar.gz HEAD
+      - name: Create release + attach assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [[ -f CHANGELOG.md ]]; then
+            gh release create "$GITHUB_REF_NAME" \
+              --title "JobSeeker $GITHUB_REF_NAME" \
+              --notes-file CHANGELOG.md \
+              --draft || gh release edit "$GITHUB_REF_NAME" --draft
+          else
+            gh release create "$GITHUB_REF_NAME" \
+              --title "JobSeeker $GITHUB_REF_NAME" \
+              --generate-notes \
+              --draft || gh release edit "$GITHUB_REF_NAME" --draft
+          fi
+          gh release upload "$GITHUB_REF_NAME" \
+            artifacts/career-ops.exe/career-ops.exe \
+            artifacts/career-ops.exe/career-ops.exe.sha256 \
+            artifacts/career-ops-macos/career-ops-macos \
+            artifacts/career-ops-macos/career-ops-macos.sha256 \
+            artifacts/career-ops-linux/career-ops-linux \
+            artifacts/career-ops-linux/career-ops-linux.sha256 \
+            "artifacts/career-ops-${GITHUB_REF_NAME}.tar.gz" \
+            --clobber
+          gh release edit "$GITHUB_REF_NAME" --draft=false

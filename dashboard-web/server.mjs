@@ -5313,14 +5313,22 @@ const HTML = /* html */ `<!DOCTYPE html>
      State lives on window.wizState. Each step has an enter/leave hook. */
 
   const WIZ_STEPS = 6;
+  // Conversational subtitles — each step reads like the AI's next prompt to
+  // the user. Keeps the "drop resume → exchange with AI → AI works" feel.
   const WIZ_TITLES = [
     null,
-    { title: 'Drop Your Resume',     sub: 'Step 1 of 6 · We\\'ll read it and ask a few questions.' },
-    { title: 'Confirm Your Basics',  sub: 'Step 2 of 6 · Edit anything we got wrong.' },
-    { title: 'What You\\'re Hunting', sub: 'Step 3 of 6 · Roles and comp targets.' },
-    { title: 'Deal-Breakers',        sub: 'Step 4 of 6 · Optional. We\\'ll auto-skip postings that match.' },
-    { title: 'Your Narrative',       sub: 'Step 5 of 6 · Optional but high-leverage.' },
-    { title: 'Review & Generate',    sub: 'Step 6 of 6 · Ship it.' },
+    { title: 'Hi — let\\'s start with your resume',
+      sub: 'Step 1 of 6 · Drop a .txt / .md file or paste it. I\\'ll read everything I can so you don\\'t have to type it twice.' },
+    { title: 'Did I get these right?',
+      sub: 'Step 2 of 6 · Tap any field to fix. The pencil icons mark what I pulled from your resume.' },
+    { title: 'What kind of role are you after?',
+      sub: 'Step 3 of 6 · Pick everything that fits. I\\'ll filter postings against this list.' },
+    { title: 'Anything that\\'s a hard no?',
+      sub: 'Step 4 of 6 · Optional. I\\'ll auto-skip any posting that matches one of these.' },
+    { title: 'Tell me what makes you, you',
+      sub: 'Step 5 of 6 · Optional but high-leverage — these go into every tailored CV and cover letter.' },
+    { title: 'Ready when you are',
+      sub: 'Step 6 of 6 · I\\'ll save your profile, render your CV PDF, and arm the pipeline. Takes ~10s.' },
   ];
   // Steps where Skip → jump straight to step 6.
   const WIZ_SKIPPABLE = new Set([4, 5]);
@@ -5955,8 +5963,11 @@ const HTML = /* html */ `<!DOCTYPE html>
         profileBtn.style.color = '';
         profileBtn.style.borderColor = '';
       }
-      showToast('Profile saved · CV PDF generating…', 'info');
+      showToast('Profile saved · rendering your CV — I\\'ll handle it from here', 'info', 4500);
       closeOnboard();
+      // Brief celebration moment so the user feels the AI "got to work"
+      // before the dashboard re-renders with their fresh data.
+      try { celebrateOnboarding(); } catch { /* non-fatal */ }
       // Defensive refresh: the disk write + scheduler pickup race means a
       // single setTimeout(800) sometimes lands before the file is visible.
       // Trigger refresh at 800ms AND 3s — both are no-ops if data hasn't
@@ -5971,6 +5982,47 @@ const HTML = /* html */ `<!DOCTYPE html>
       spinner.classList.remove('show');
       label.textContent = '🚀 Generate My Pipeline';
     }
+  }
+
+  // Brief, non-blocking celebration moment when the user finishes onboarding.
+  // Plays a confetti-light burst from the brand mark + a one-line greeting.
+  // Respects prefers-reduced-motion.
+  function celebrateOnboarding() {
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) return;
+    const root = document.body;
+    const layer = document.createElement('div');
+    layer.setAttribute('aria-hidden', 'true');
+    Object.assign(layer.style, {
+      position: 'fixed', inset: '0', pointerEvents: 'none', zIndex: '9998',
+      overflow: 'hidden',
+    });
+    const colors = ['#28b8ff', '#30d158', '#ffd60a', '#ff9f0a', '#ff375f', '#bf5af2'];
+    const N = 36;
+    for (let i = 0; i < N; i++) {
+      const dot = document.createElement('span');
+      const c = colors[i % colors.length];
+      const angle = (Math.PI * 2 * i) / N;
+      const dist = 220 + Math.random() * 180;
+      const dx = Math.cos(angle) * dist;
+      const dy = Math.sin(angle) * dist;
+      const size = 6 + Math.random() * 5;
+      Object.assign(dot.style, {
+        position: 'absolute', left: '50%', top: '34%',
+        width: size + 'px', height: size + 'px', borderRadius: '50%',
+        background: c, boxShadow: '0 0 8px ' + c,
+        transform: 'translate(-50%, -50%) scale(.4)',
+        opacity: '0.95',
+        transition: 'transform 1100ms cubic-bezier(.22,1,.36,1), opacity 1100ms ease-out',
+      });
+      layer.appendChild(dot);
+      requestAnimationFrame(() => {
+        dot.style.transform = 'translate(calc(' + dx + 'px - 50%), calc(' + dy + 'px - 50%)) scale(1)';
+        dot.style.opacity = '0';
+      });
+    }
+    root.appendChild(layer);
+    setTimeout(() => layer.remove(), 1400);
   }
 
   // Polls /api/onboard/pdf-status up to N times (1s apart) and updates the
