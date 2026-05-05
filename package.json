@@ -22,7 +22,8 @@
     "rollback": "node update-system.mjs rollback",
     "setup": "node doctor.mjs",
     "batch:sequential": "node batch/batch-sequential.mjs",
-    "dashboard": "node web-dashboard/server.mjs"
+    "dashboard": "node web-dashboard/server.mjs",
+    "dashboard-v2": "cd dashboard-v2 && pnpm run dev"
   },
   "keywords": [
     "ai",

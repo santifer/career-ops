@@ -30,6 +30,7 @@ function VerifyContent() {
 
     const newToken = [...token];
     newToken[index] = value;
+    
     setToken(newToken);
 
     if (value && index < 5) {
@@ -85,10 +86,10 @@ function VerifyContent() {
       setIsSuccess(true);
       setTimeout(() => {
         if (provider === 'github') {
-          router.push('/auth/continue?provider=github&callbackUrl=%2F');
+          router.push('/auth/continue?provider=github&callbackUrl=%2F%3Fwalkthrough%3D1');
           return;
         }
-        router.push(`/auth/continue?provider=credentials&email=${encodeURIComponent(email)}&callbackUrl=%2F`);
+        router.push(`/auth/continue?provider=credentials&email=${encodeURIComponent(email)}&callbackUrl=%2F%3Fwalkthrough%3D1`);
       }, 2000);
 
     } catch (err: unknown) {

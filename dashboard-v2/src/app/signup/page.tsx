@@ -189,7 +189,7 @@ export default function SignupPage() {
 
                 <button
                   type="button"
-                  onClick={() => signIn('github', { callbackUrl: '/' })}
+                  onClick={() => signIn('github', { callbackUrl: '/?walkthrough=1' })}
                   className="w-full mt-6 bg-white border border-[#e7e5e4] text-[#1c1917] font-bold py-4 rounded-2xl flex items-center justify-center gap-3 hover:bg-[#faf9f6] transition-all"
                 >
                   <Github size={20} />
