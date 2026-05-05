@@ -282,10 +282,45 @@ search_queries:
 # Companies whose career pages are checked directly.
 # scan_method: playwright (default), websearch, greenhouse_api
 # For Greenhouse companies, add api: field for faster structured JSON access.
+# For provider-backed boards, set api_provider: <id>. Currently supported: a16z.
+# Optional provider knobs:
+#   api_size: page size / result count
+#   api_filters: provider-native filters passed to the search payload, e.g.
+#     remoteOnly: true
+#     internshipsOnly: false
+#     promoteFeatured: true
+#     skills:       ["Python", "LLMs"]
+#     markets:      ["Fintech", "AI"]
+#     locations:    ["San Francisco", "Remote"]
+#     companies:    ["OpenAI", "Anthropic"]
+#     stages:       ["1000+ employees"]
+#     departments:  ["Engineering"]
+#     jobTypes:     ["Full-time"]
+#     jobSeniority: ["Senior", "Staff"]
+#     currencies:   ["USD"]
+#     salaryPeriods: ["year"]
+#   Notes:
+#     - skills, locations, and markets are resolved through the provider's
+#       autocomplete API before the search is sent — use human-readable labels
+#     - other facets (stages, departments, jobTypes, jobSeniority, etc.) should
+#       match values from the provider's name-mapping metadata exactly
 
 tracked_companies:
 
   # -- AI Labs & LLM providers --
+
+  - name: A16Z Portfolio Jobs
+    careers_url: https://jobs.a16z.com
+    api_provider: a16z
+    api_size: 15
+    api_filters:
+      markets:
+        - "Fintech"
+        - "Artificial Intelligence"
+      locations:
+        - "San Francisco"
+    notes: "Aggregate board across a16z portfolio companies. Tune markets/locations to your search before enabling."
+    enabled: true
 
   - name: Anthropic
     careers_url: https://job-boards.greenhouse.io/anthropic
