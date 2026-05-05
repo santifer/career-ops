@@ -1,6 +1,6 @@
 # Batch Processing
 
-Process multiple job offers in parallel via headless workers. Each worker runs the full evaluation pipeline (A-F report + PDF + tracker line) autonomously. See the **Headless / Batch Mode** table in `AGENTS.md` for the correct command per CLI.
+Process multiple job offers in parallel via Claude or Codex headless workers. Each worker runs the full evaluation pipeline (A-G report + PDF + tracker line) autonomously. See the **Headless / Batch Mode** table in `AGENTS.md` for the correct command per CLI.
 
 ## Quick Start
 
@@ -30,6 +30,7 @@ Process multiple job offers in parallel via headless workers. Each worker runs t
 
 | Flag | Default | Description |
 |------|---------|-------------|
+| `--agent NAME` | `claude` | Worker agent: `claude` or `codex` |
 | `--parallel N` | `1` | Number of concurrent headless workers |
 | `--dry-run` | off | Preview pending offers without processing |
 | `--retry-failed` | off | Only retry offers marked as `failed` in state |
@@ -75,6 +76,6 @@ A PID-based lock file (`batch-runner.pid`) prevents concurrent batch runs. If a 
 
 ## Prerequisites
 
-- Your CLI in PATH (see **Headless / Batch Mode** table in `AGENTS.md`)
+- `claude` CLI in PATH for the default agent, or `codex` CLI in PATH when using `--agent codex`
 - Node.js >= 18, Playwright chromium installed (`npm run doctor` to verify)
 - `batch-input.tsv` with at least one offer

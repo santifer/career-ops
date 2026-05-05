@@ -96,10 +96,11 @@ cp templates/portals.example.yml portals.yml       # Customize companies
 # 4. Add your CV
 # Create cv.md in the project root with your CV in markdown
 
-# 5. Personalize with Claude
-claude   # Open Claude Code in this directory
+# 5. Personalize with your agent
+claude        # Claude Code
+# or: codex -C .
 
-# Then ask Claude to adapt the system to you:
+# Then ask your agent to adapt the system to you:
 # "Change the archetypes to backend engineering roles"
 # "Translate the modes to English"
 # "Add these 5 companies to portals.yml"
@@ -109,13 +110,35 @@ claude   # Open Claude Code in this directory
 # Paste a job URL or run /career-ops
 ```
 
-> **The system is designed to be customized by Claude itself.** Modes, archetypes, scoring weights, negotiation scripts -- just ask Claude to change them. It reads the same files it uses, so it knows exactly what to edit.
+> **The system is designed to be customized by the coding agent itself.** Modes, archetypes, scoring weights, negotiation scripts -- just ask Claude, Codex, Gemini CLI, or OpenCode to change them. It reads the same files it uses, so it knows exactly what to edit.
 
 See [docs/SETUP.md](docs/SETUP.md) for the full setup guide.
 
+## Codex CLI Integration
+
+Career-ops supports [Codex CLI](https://help.openai.com/en/articles/11096431-openai-codex-getting-started) through `AGENTS.md` and the repo-local command helper. Codex uses the same `modes/*.md` evaluation logic as Claude Code, Gemini CLI, and OpenCode.
+
+```bash
+# 1. Install and authenticate Codex CLI
+npm install -g @openai/codex
+codex login
+
+# 2. Run in the career-ops directory
+cd career-ops
+codex -C .
+
+# 3. Or use the command helper
+npm run codex -- "https://example.com/jobs/role"
+npm run codex -- scan
+npm run codex -- pdf --file ./jds/example.txt
+npm run codex:prompt -- scan      # preview the prompt without calling Codex
+```
+
+See [docs/CODEX.md](docs/CODEX.md) for Codex-specific setup, command routing, and batch usage.
+
 ## Gemini CLI Integration
 
-Career-ops supports [Gemini CLI](https://github.com/google-gemini/gemini-cli) natively — the same way it supports Claude Code and OpenCode. All 15 slash commands are available, using the same `modes/*.md` evaluation logic.
+Career-ops supports [Gemini CLI](https://github.com/google-gemini/gemini-cli) natively — the same way it supports Claude Code, Codex CLI, and OpenCode. All 15 slash commands are available, using the same `modes/*.md` evaluation logic.
 
 ### Option A — Native Gemini CLI (Recommended)
 

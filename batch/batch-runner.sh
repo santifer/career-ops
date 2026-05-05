@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# career-ops batch runner — standalone orchestrator for claude -p workers
-# Reads batch-input.tsv, delegates each offer to a claude -p worker,
+# career-ops batch runner — standalone orchestrator for agent workers
+# Reads batch-input.tsv, delegates each offer to a Claude or Codex worker,
 # tracks state in batch-state.tsv for resumability.
 #
 # NOTE: This script is Claude Code-specific. It uses claude -p with
@@ -33,15 +33,17 @@ RETRY_FAILED=false
 START_FROM=0
 MAX_RETRIES=2
 MIN_SCORE=0
+AGENT=claude
 
 usage() {
-  cat <<'USAGE'
-career-ops batch runner — process job offers in batch via claude -p workers
-Uses your default Claude model (Claude Max subscription).
+  cat <<USAGE
+career-ops batch runner — process job offers in batch via agent workers
+Uses Claude by default; pass --agent codex to use Codex CLI workers.
 
 Usage: batch-runner.sh [OPTIONS]
 
 Options:
+  --agent NAME        Worker agent: claude or codex (default: $AGENT)
   --parallel N         Number of parallel workers (default: 1)
   --dry-run            Show what would be processed, don't execute
   --retry-failed       Only retry offers marked as "failed" in state
@@ -75,6 +77,7 @@ USAGE
 # Parse arguments
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --agent) AGENT="$2"; shift 2 ;;
     --parallel) PARALLEL="$2"; shift 2 ;;
     --dry-run) DRY_RUN=true; shift ;;
     --retry-failed) RETRY_FAILED=true; shift ;;
@@ -115,6 +118,10 @@ trap release_lock EXIT
 # Validate prerequisites
 check_prerequisites() {
   if [[ ! -f "$INPUT_FILE" ]]; then
+    if [[ "$DRY_RUN" == "true" ]]; then
+      echo "No batch input found at $INPUT_FILE. Add offers before running a real batch."
+      exit 0
+    fi
     echo "ERROR: $INPUT_FILE not found. Add offers first."
     exit 1
   fi
@@ -124,12 +131,49 @@ check_prerequisites() {
     exit 1
   fi
 
-  if ! command -v claude &>/dev/null; then
-    echo "ERROR: 'claude' CLI not found in PATH."
-    exit 1
-  fi
+  case "$AGENT" in
+    claude)
+      if ! command -v claude &>/dev/null; then
+        echo "ERROR: 'claude' CLI not found in PATH."
+        exit 1
+      fi
+      ;;
+    codex)
+      if ! command -v codex &>/dev/null; then
+        echo "ERROR: 'codex' CLI not found in PATH."
+        exit 1
+      fi
+      ;;
+    *)
+      echo "ERROR: Unsupported agent '$AGENT'. Use --agent claude or --agent codex."
+      exit 1
+      ;;
+  esac
 
   mkdir -p "$LOGS_DIR" "$TRACKER_DIR" "$REPORTS_DIR"
+}
+
+run_worker() {
+  local resolved_prompt="$1"
+  local prompt="$2"
+  local log_file="$3"
+
+  case "$AGENT" in
+    claude)
+      claude -p \
+        --dangerously-skip-permissions \
+        --append-system-prompt-file "$resolved_prompt" \
+        "$prompt" \
+        > "$log_file" 2>&1
+      ;;
+    codex)
+      {
+        cat "$resolved_prompt"
+        printf '\n\n## Batch Invocation\n\n%s\n' "$prompt"
+      } | codex exec -C "$PROJECT_DIR" --sandbox workspace-write - \
+        > "$log_file" 2>&1
+      ;;
+  esac
 }
 
 # Initialize state file if it doesn't exist
@@ -355,13 +399,9 @@ process_offer() {
     -e "s|{{ID}}|${esc_id}|g" \
     "$PROMPT_FILE" > "$resolved_prompt"
 
-  # Launch claude -p worker (uses default model from Claude Max subscription)
+  # Launch worker using the selected agent.
   local exit_code=0
-  claude -p \
-    --dangerously-skip-permissions \
-    --append-system-prompt-file "$resolved_prompt" \
-    "$prompt" \
-    > "$log_file" 2>&1 || exit_code=$?
+  run_worker "$resolved_prompt" "$prompt" "$log_file" || exit_code=$?
 
   # Cleanup resolved prompt
   rm -f "$resolved_prompt"
@@ -466,7 +506,7 @@ main() {
   fi
 
   echo "=== career-ops batch runner ==="
-  echo "Parallel: $PARALLEL | Max retries: $MAX_RETRIES"
+  echo "Agent: $AGENT | Parallel: $PARALLEL | Max retries: $MAX_RETRIES"
   echo "Input: $total_input offers"
   echo ""
 

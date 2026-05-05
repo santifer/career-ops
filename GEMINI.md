@@ -6,7 +6,7 @@
 
 ## What is career-ops
 
-AI-powered job search automation: pipeline tracking, offer evaluation, CV generation, portal scanning, batch processing. Originally built on Claude Code, now fully supported on Gemini CLI and OpenCode.
+AI-powered job search automation: pipeline tracking, offer evaluation, CV generation, portal scanning, batch processing. Originally built on Claude Code, now fully supported on Gemini CLI, Codex CLI, and OpenCode.
 
 ## Data Contract (CRITICAL)
 
@@ -55,7 +55,30 @@ When using [Gemini CLI](https://github.com/google-gemini/gemini-cli), the follow
 | `/career-ops-patterns` | `/career-ops patterns` | Analyze rejection patterns |
 | `/career-ops-followup` | `/career-ops followup` | Follow-up cadence tracker |
 
-**All commands share the same evaluation logic** in `modes/*.md`. The `modes/` files are shared between Claude Code, OpenCode, and Gemini CLI.
+**All commands share the same evaluation logic** in `modes/*.md`. The `modes/` files are shared between Claude Code, Codex CLI, OpenCode, and Gemini CLI.
+
+## Codex CLI Commands
+
+Codex uses `AGENTS.md` plus the repo-local `codex-career-ops.mjs` helper.
+
+| Codex command | Gemini CLI equivalent | Description |
+|---------------|-----------------------|-------------|
+| `npm run codex --` | `/career-ops` | Show menu |
+| `npm run codex -- {JD or URL}` | `/career-ops {JD or URL}` | Full auto-pipeline |
+| `npm run codex -- pipeline` | `/career-ops-pipeline` | Process pending URLs from inbox |
+| `npm run codex -- evaluate` | `/career-ops-evaluate` | Evaluate job offer |
+| `npm run codex -- compare` | `/career-ops-compare` | Compare and rank multiple offers |
+| `npm run codex -- contact` | `/career-ops-contact` | LinkedIn outreach |
+| `npm run codex -- deep` | `/career-ops-deep` | Deep company research |
+| `npm run codex -- pdf` | `/career-ops-pdf` | Generate ATS-optimized CV |
+| `npm run codex -- training` | `/career-ops-training` | Evaluate course/cert |
+| `npm run codex -- project` | `/career-ops-project` | Evaluate portfolio project |
+| `npm run codex -- tracker` | `/career-ops-tracker` | Application status overview |
+| `npm run codex -- apply` | `/career-ops-apply` | Live application assistant |
+| `npm run codex -- scan` | `/career-ops-scan` | Scan portals for new offers |
+| `npm run codex -- batch` | `/career-ops-batch` | Batch processing guidance |
+| `npm run codex -- patterns` | `/career-ops-patterns` | Analyze rejection patterns |
+| `npm run codex -- followup` | `/career-ops-followup` | Follow-up cadence tracker |
 
 ## First Run — Onboarding
 
