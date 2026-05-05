@@ -173,7 +173,8 @@ export default function Dashboard() {
         });
     };
     fetchData();
-    const interval = setInterval(fetchData, 10000); 
+    // Poll every 5 seconds to ensure near-instant updates when GitHub Actions finish
+    const interval = setInterval(fetchData, 5000); 
     return () => clearInterval(interval);
   }, []);
 
