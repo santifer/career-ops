@@ -47,6 +47,51 @@ export async function GET(req: NextRequest) {
         } else if (cmd === 'rank' || cmd === 'offer-list') {
           scriptName = 'rank-pipeline.mjs';
         } else if (cmd === 'scan') {
+          if (args[0] === '--deep') {
+            const pat = process.env.GITHUB_PAT;
+            if (!pat) {
+              send({ type: 'stderr', content: '⚠ GITHUB_PAT not configured.\nPlease set your GitHub Personal Access Token in Vercel environment variables to enable deep scanning.\n' });
+              send({ type: 'done', code: 1 });
+              controller.close();
+              return;
+            }
+
+            send({ type: 'stdout', content: '🚀 Triggering deep scan via GitHub Actions (Playwright + Chromium)...\n' });
+            
+            try {
+              const res = await fetch('https://api.github.com/repos/UGilfoyle/career-ops/actions/workflows/scraper-cron.yml/dispatches', {
+                method: 'POST',
+                headers: {
+                  'Accept': 'application/vnd.github.v3+json',
+                  'Authorization': `Bearer ${pat}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  ref: 'main',
+                  inputs: {
+                    user_id: String(userId)
+                  }
+                })
+              });
+
+              if (res.ok) {
+                send({ type: 'stdout', content: '✅ Deep scan successfully queued on GitHub Actions!\n' });
+                send({ type: 'stdout', content: '⏳ Please allow 5-10 minutes for the scraper to run in the background.\n' });
+                send({ type: 'stdout', content: '📡 New jobs will automatically appear in your pipeline when ready.\n' });
+                send({ type: 'done', code: 0 });
+              } else {
+                const errBody = await res.text();
+                send({ type: 'stderr', content: `❌ Failed to trigger scan. GitHub API responded with ${res.status}:\n${errBody}\n` });
+                send({ type: 'done', code: 1 });
+              }
+            } catch (err: any) {
+              send({ type: 'stderr', content: `❌ Network error while triggering scan: ${err.message}\n` });
+              send({ type: 'done', code: 1 });
+            }
+            
+            controller.close();
+            return;
+          }
           scriptName = 'scratch-scan.mjs';
         } else if (cmd === 'tailor' || cmd === 'offer-match') {
           scriptName = 'agentic-tailor.mjs';
