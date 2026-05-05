@@ -33,7 +33,15 @@ export async function GET() {
         FROM jobs
         WHERE user_id = ${userId}
       `;
-      jobMeta = jobMetaRows[0] || jobMeta;
+      const row: any = jobMetaRows[0];
+      if (row) {
+        jobMeta = {
+          jobs_total: Number(row.jobs_total ?? 0),
+          jobs_ranked: Number(row.jobs_ranked ?? 0),
+          last_job_created_at: row.last_job_created_at ?? null,
+          last_job_updated_at: row.last_job_updated_at ?? null,
+        };
+      }
     } catch {
       const jobMetaRows = await sql`
         SELECT
@@ -43,10 +51,10 @@ export async function GET() {
         FROM jobs
         WHERE user_id = ${userId}
       `;
-      const row = jobMetaRows[0] || {};
+      const row: any = jobMetaRows[0] || {};
       jobMeta = {
-        jobs_total: row.jobs_total ?? 0,
-        jobs_ranked: row.jobs_ranked ?? 0,
+        jobs_total: Number(row.jobs_total ?? 0),
+        jobs_ranked: Number(row.jobs_ranked ?? 0),
         last_job_created_at: row.last_job_created_at ?? null,
         last_job_updated_at: row.last_job_created_at ?? null,
       };
