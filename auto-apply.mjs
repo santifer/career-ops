@@ -115,6 +115,24 @@ if (/^\d+$/.test(urlOrIdx)) {
   }
 }
 
+async function resolveTargetFromDbIfNeeded() {
+  // If it's still numeric here, treat it as a real DB `jobs.id`
+  if (!/^\d+$/.test(String(targetUrl))) return;
+  const jobId = Number.parseInt(String(targetUrl), 10);
+  if (!Number.isFinite(jobId)) return;
+
+  const [job] = await sql`
+    SELECT url, company
+    FROM jobs
+    WHERE id = ${jobId} AND user_id = ${userId}
+    LIMIT 1
+  `;
+  if (job?.url) {
+    targetUrl = job.url;
+    company = company || job.company || '';
+  }
+}
+
 async function recordApplication(url, status, resume) {
   try {
     let job = await sql`SELECT id FROM jobs WHERE url = ${url} AND user_id = ${userId} LIMIT 1`;
@@ -316,6 +334,15 @@ async function matchAndFillFields(fields, profile, aiMapping) {
 // Main Loop
 (async () => {
   console.log(`🚀 Starting Job Application Companion...`);
+
+  // GitHub Actions deep mode typically passes a DB job id (not a URL).
+  // Make numeric args work even when data/current_eval.json doesn't exist.
+  try {
+    await resolveTargetFromDbIfNeeded();
+  } catch (e) {
+    // If DB lookup fails, we'll proceed with whatever targetUrl is and fail loudly later.
+  }
+
   console.log(`Target: ${company || 'Unknown'} @ ${targetUrl}`);
 
   const chromium = await getChromium();
