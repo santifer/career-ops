@@ -47,6 +47,7 @@ export async function GET(req: NextRequest) {
         } else if (cmd === 'rank' || cmd === 'offer-list') {
           scriptName = 'rank-pipeline.mjs';
         } else if (cmd === 'scan') {
+          if (args[0] === '--deep') {
             await triggerGitHubAction(send, controller, userId, 'scratch-scan.mjs', '');
             return;
           }
