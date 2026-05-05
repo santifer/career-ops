@@ -650,12 +650,22 @@ export default function Dashboard() {
                           </div>
                         </a>
                         <div className="flex items-center gap-2 pl-3">
-                          <a
-                            href={`/api/view/${doc.id}?format=pdf&download=1`}
-                            className="px-3 py-1.5 rounded-lg border border-[#e7e5e4] text-[10px] font-bold uppercase tracking-widest text-[#1c1917] hover:bg-[#f5f5f4] transition-colors"
-                          >
-                            Download PDF
-                          </a>
+                          {doc.has_resume_pdf && (
+                            <a
+                              href={`/api/view/${doc.id}?format=pdf&download=1`}
+                              className="px-3 py-1.5 rounded-lg border border-[#e7e5e4] text-[10px] font-bold uppercase tracking-widest text-[#1c1917] hover:bg-[#f5f5f4] transition-colors"
+                            >
+                              Resume PDF
+                            </a>
+                          )}
+                          {doc.has_cover_letter_pdf && (
+                            <a
+                              href={`/api/view/${doc.id}?type=cl&format=pdf&download=1`}
+                              className="px-3 py-1.5 rounded-lg border border-[#e7e5e4] text-[10px] font-bold uppercase tracking-widest text-[#1c1917] hover:bg-[#f5f5f4] transition-colors"
+                            >
+                              CL PDF
+                            </a>
+                          )}
                           <a
                             href={`/api/view/${doc.id}?download=1`}
                             className="px-3 py-1.5 rounded-lg border border-[#e7e5e4] text-[10px] font-bold uppercase tracking-widest text-[#78716c] hover:bg-[#f5f5f4] transition-colors"

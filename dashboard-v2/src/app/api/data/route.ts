@@ -108,35 +108,69 @@ export async function GET() {
     `;
     let profile = profileRow.length > 0 ? profileRow[0].resume_context : null;
 
-    // 5. Fetch Generated Docs from DB (instead of local PDF files)
+    // 5. Fetch Generated Docs from DB (resume/cover-letter assets)
     let pdfs: any[] = [];
     try {
       // Some schemas don't have `updated_at` on `jobs`. Try updated_at first, then fall back to created_at.
       try {
         const docs = await sql`
-          SELECT id, company, title, updated_at
+          SELECT
+            id,
+            company,
+            title,
+            updated_at,
+            (resume_pdf IS NOT NULL) AS has_resume_pdf,
+            (cover_letter_pdf IS NOT NULL) AS has_cover_letter_pdf,
+            (resume_html IS NOT NULL) AS has_resume_html,
+            (cover_letter_html IS NOT NULL) AS has_cover_letter_html
           FROM jobs
           WHERE user_id = ${userId} 
-            AND (resume_html IS NOT NULL OR cover_letter_html IS NOT NULL)
+            AND (
+              resume_pdf IS NOT NULL OR cover_letter_pdf IS NOT NULL
+              OR resume_html IS NOT NULL OR cover_letter_html IS NOT NULL
+            )
           ORDER BY updated_at DESC
         `;
         pdfs = docs.map(d => ({
           id: d.id,
+          company: d.company,
+          title: d.title,
           name: `Tailored Assets: ${d.company} - ${d.title}`,
-          mtime: d.updated_at
+          mtime: d.updated_at,
+          has_resume_pdf: !!d.has_resume_pdf,
+          has_cover_letter_pdf: !!d.has_cover_letter_pdf,
+          has_resume_html: !!d.has_resume_html,
+          has_cover_letter_html: !!d.has_cover_letter_html,
         }));
       } catch {
         const docs = await sql`
-          SELECT id, company, title, created_at
+          SELECT
+            id,
+            company,
+            title,
+            created_at,
+            (resume_pdf IS NOT NULL) AS has_resume_pdf,
+            (cover_letter_pdf IS NOT NULL) AS has_cover_letter_pdf,
+            (resume_html IS NOT NULL) AS has_resume_html,
+            (cover_letter_html IS NOT NULL) AS has_cover_letter_html
           FROM jobs
           WHERE user_id = ${userId} 
-            AND (resume_html IS NOT NULL OR cover_letter_html IS NOT NULL)
+            AND (
+              resume_pdf IS NOT NULL OR cover_letter_pdf IS NOT NULL
+              OR resume_html IS NOT NULL OR cover_letter_html IS NOT NULL
+            )
           ORDER BY created_at DESC
         `;
         pdfs = docs.map(d => ({
           id: d.id,
+          company: d.company,
+          title: d.title,
           name: `Tailored Assets: ${d.company} - ${d.title}`,
-          mtime: d.created_at
+          mtime: d.created_at,
+          has_resume_pdf: !!d.has_resume_pdf,
+          has_cover_letter_pdf: !!d.has_cover_letter_pdf,
+          has_resume_html: !!d.has_resume_html,
+          has_cover_letter_html: !!d.has_cover_letter_html,
         }));
       }
     } catch (colErr) {
