@@ -349,6 +349,24 @@ async function tailorPackage(jd, profile, companyName) {
         }
       }
 
+      // If the ID is a small number but we don't have a mapping file (common in GitHub Actions),
+      // interpret it as a 1-based index into the user's ranked job list.
+      if (!entry.url && jobId > 0 && jobId < 1000) {
+        const offset = Math.max(0, jobId - 1);
+        const [jobRecord] = await sql`
+          SELECT user_id, url, company, title
+          FROM jobs
+          WHERE user_id = ${userId}
+          ORDER BY (score IS NULL) ASC, score DESC, created_at DESC
+          OFFSET ${offset}
+          LIMIT 1
+        `;
+        if (jobRecord) {
+          console.log(`📎 Resolved index ${jobId} to job: ${jobRecord.company} — ${jobRecord.title}`);
+          entry = jobRecord;
+        }
+      }
+
       // If entry still empty (not resolved from map), try direct DB lookup by ID
       if (!entry.url) {
         const [jobRecord] = await sql`
