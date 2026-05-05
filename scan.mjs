@@ -69,6 +69,27 @@ function detectApi(company) {
     };
   }
 
+  // Amazon Jobs — public search.json endpoint. Defaults to US-only to
+  // avoid flooding the pipeline with Bengaluru / Dublin / Shanghai roles
+  // from global keyword searches. To scan globally, pass `country: ALL`
+  // in the portal config, or include your own `&country[]=XX` in
+  // careers_url.
+  const amazonMatch = url.match(/amazon\.jobs\/en\/search/);
+  if (amazonMatch) {
+    const target = new URL(url);
+    const hasCountry = [...target.searchParams.keys()].some(k => k.startsWith('country'));
+    const searchParams = new URLSearchParams(target.searchParams);
+    if (!hasCountry && company.country !== 'ALL') {
+      searchParams.append('country[]', 'USA');
+      searchParams.append('country[]', 'US');
+    }
+    searchParams.set('result_limit', '100');
+    return {
+      type: 'amazon',
+      url: `https://www.amazon.jobs/en/search.json?${searchParams.toString()}`,
+    };
+  }
+
   return null;
 }
 
@@ -104,15 +125,34 @@ function parseLever(json, companyName) {
   }));
 }
 
-const PARSERS = { greenhouse: parseGreenhouse, ashby: parseAshby, lever: parseLever };
+function parseAmazon(json, companyName) {
+  const jobs = json?.jobs || [];
+  return jobs.map(j => ({
+    title: j.title || '',
+    url: j.job_path ? `https://www.amazon.jobs${j.job_path}` : '',
+    company: companyName,
+    location: j.normalized_location || '',
+  })).filter(o => o.url);
+}
+
+const PARSERS = {
+  greenhouse: parseGreenhouse,
+  ashby: parseAshby,
+  lever: parseLever,
+  amazon: parseAmazon,
+};
 
 // ── Fetch with timeout ──────────────────────────────────────────────
 
 async function fetchJson(url) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  // amazon.jobs rejects requests without a browser-like User-Agent.
+  const headers = url.includes('amazon.jobs')
+    ? { 'User-Agent': 'Mozilla/5.0' }
+    : undefined;
   try {
-    const res = await fetch(url, { signal: controller.signal });
+    const res = await fetch(url, { signal: controller.signal, headers });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.json();
   } finally {
