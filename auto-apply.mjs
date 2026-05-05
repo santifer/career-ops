@@ -48,7 +48,8 @@ const PACKAGES_DIR = join(PROJECT_DIR, 'output', 'packages');
 const TRACKER_FILE = join(PROJECT_DIR, 'data', 'applications.md');
 const LOG_DIR      = join(PROJECT_DIR, 'batch', 'logs');
 const LOG_FILE     = join(LOG_DIR, `auto-apply-${TODAY}.log`);
-const RESUME_PDF_LEGACY = join(PROJECT_DIR, 'output', 'tony-walteur-cv.pdf');
+// Resume PDF path is resolved later (after identity loads) — see resolveResumePath()
+const LEGACY_RESUME_PDF = join(PROJECT_DIR, 'output', 'tony-walteur-cv.pdf');
 const PROFILE_FILE = join(PROJECT_DIR, 'config', 'profile.yml');
 const TMP_DIR      = join(PROJECT_DIR, 'batch', 'tmp');
 
@@ -101,6 +102,26 @@ function loadCandidateIdentity() {
 }
 
 const TONY = loadCandidateIdentity();
+
+// ─── Resume PDF path (derived from profile, with legacy fallback) ────────────
+
+function kebabCase(s) {
+  return String(s).toLowerCase()
+    .normalize('NFKD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim().replace(/\s+/g, '-');
+}
+
+function resolveResumePath() {
+  const fullName = `${TONY.firstName} ${TONY.lastName}`.trim();
+  const slug = fullName ? kebabCase(fullName) : '';
+  const derived = slug ? join(PROJECT_DIR, 'output', `${slug}-cv.pdf`) : '';
+  // Prefer derived path if it exists, else legacy filename, else derived (so
+  // generate-cv-pdf.mjs writes to the new location next time).
+  if (derived && existsSync(derived)) return derived;
+  if (existsSync(LEGACY_RESUME_PDF)) return LEGACY_RESUME_PDF;
+  return derived || LEGACY_RESUME_PDF;
+}
 
 // ─── Logging ──────────────────────────────────────────────────────────────────
 
@@ -204,11 +225,13 @@ function detectAts(url) {
 // ─── Resume PDF ───────────────────────────────────────────────────────────────
 
 function ensureResumePdf() {
-  if (existsSync(RESUME_PDF_LEGACY)) return RESUME_PDF_LEGACY;
+  let pdfPath = resolveResumePath();
+  if (existsSync(pdfPath)) return pdfPath;
   log('Generating resume PDF...', 'WARN');
   spawnSync('node', ['generate-cv-pdf.mjs'], { cwd: PROJECT_DIR, encoding: 'utf8', timeout: 60_000 });
-  if (!existsSync(RESUME_PDF_LEGACY)) throw new Error('Could not generate resume PDF');
-  return RESUME_PDF_LEGACY;
+  pdfPath = resolveResumePath();
+  if (!existsSync(pdfPath)) throw new Error('Could not generate resume PDF');
+  return pdfPath;
 }
 
 function writeCoverLetterFile(num, content) {
