@@ -19,6 +19,7 @@ import {
 } from './lib/onboard.mjs';
 import { makeSafeResolver } from './lib/path-safety.mjs';
 import { readJsonBody, MAX_BODY_BYTES } from './lib/http-utils.mjs';
+import { buildGmailStatus } from './lib/gmail-status.mjs';
 
 const PORT = Number(process.env.PORT || 4747);
 // Bind to loopback by default; opt-in to LAN exposure via HOST=0.0.0.0
@@ -2464,6 +2465,79 @@ const HTML = /* html */ `<!DOCTYPE html>
       font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center;
     }
     .modal-close:hover { color: var(--text); }
+
+    /* ── Gmail Setup Modal ── */
+    .gsm-content {
+      max-width: 480px; padding: 28px 28px 22px; position: relative;
+      max-height: min(80vh, 720px); overflow-y: auto;
+    }
+    .gsm-content .modal-close { position: absolute; top: 16px; right: 16px; }
+    .gsm-body h2 {
+      font-size: 22px; font-weight: 700; letter-spacing: -.01em;
+      margin: 0 0 4px;
+    }
+    .gsm-sub { font-size: 13px; color: var(--text-sec); margin: 0 0 20px; }
+    .gsm-loading { color: var(--text-ter); font-size: 13px; padding: 12px 0; }
+    .gsm-checklist {
+      list-style: none; padding: 0; margin: 0 0 20px;
+      background: var(--surface2); border: .5px solid var(--separator2);
+      border-radius: 10px;
+    }
+    .gsm-checklist li {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px;
+      border-bottom: .5px solid var(--separator2);
+      font-size: 13px; color: var(--text);
+    }
+    .gsm-checklist li:last-child { border-bottom: none; }
+    .gsm-checklist li em { color: var(--text-ter); font-style: normal; font-size: 11px; margin-left: 4px; }
+    .gsm-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .gsm-dot.ok  { background: var(--green); box-shadow: 0 0 6px rgba(48,209,88,.5); }
+    .gsm-dot.bad { background: var(--text-ter); }
+    .gsm-meta {
+      background: var(--surface2); border: .5px solid var(--separator2);
+      border-radius: 10px; padding: 12px 14px;
+      font-size: 12px; color: var(--text-sec);
+      margin-bottom: 20px;
+    }
+    .gsm-meta-label {
+      display: block; font-size: 10px; font-weight: 600;
+      color: var(--text-ter); text-transform: uppercase; letter-spacing: .05em;
+      margin-bottom: 3px;
+    }
+    .gsm-meta code {
+      font-size: 12px; background: var(--surface3); padding: 1px 6px;
+      border-radius: 4px; color: var(--text);
+    }
+    .gsm-copy {
+      display: flex; align-items: stretch; gap: 6px; margin-top: 4px;
+    }
+    .gsm-copy code {
+      flex: 1; padding: 7px 10px; background: var(--bg-base, #000);
+      border: .5px solid var(--separator2); border-radius: 6px;
+      user-select: all; word-break: break-all; font-size: 12px;
+    }
+    .gsm-copy-btn {
+      background: rgba(40,184,255,.10); color: var(--accent);
+      border: .5px solid rgba(40,184,255,.30); border-radius: 6px;
+      padding: 0 12px; font-size: 12px; font-weight: 600; cursor: pointer;
+      transition: background .15s;
+    }
+    .gsm-copy-btn:hover { background: rgba(40,184,255,.18); }
+    .gsm-actions {
+      display: flex; gap: 8px; flex-wrap: wrap;
+    }
+    .gsm-actions .btn { flex: 1; min-width: 0; justify-content: center; padding: 9px 14px; }
+    .gsm-footer {
+      margin-top: 18px; padding-top: 14px;
+      border-top: .5px solid var(--separator2);
+      display: flex; gap: 16px; flex-wrap: wrap;
+    }
+    .gsm-link { color: var(--accent); font-size: 12px; text-decoration: none; }
+    .gsm-link:hover { text-decoration: underline; }
     .modal-threshold {
       padding: 14px 24px;
       border-bottom: .5px solid var(--separator);
@@ -3901,6 +3975,18 @@ const HTML = /* html */ `<!DOCTYPE html>
   </aside>
 </div>
 
+<!-- Gmail setup modal -->
+<div class="modal-overlay gsm-overlay" id="gmail-setup-modal" onclick="if(event.target===this)closeGmailSetup()">
+  <div class="modal-content gsm-content" role="dialog" aria-modal="true" aria-labelledby="gsm-title">
+    <button class="modal-close" onclick="closeGmailSetup()" aria-label="Close">✕</button>
+    <div class="gsm-body" id="gsm-body"></div>
+    <div class="gsm-footer">
+      <a class="gsm-link" href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">Google Cloud Console ↗</a>
+      <a class="gsm-link" href="https://myaccount.google.com/permissions" target="_blank" rel="noopener">Manage permissions ↗</a>
+    </div>
+  </div>
+</div>
+
 <!-- Apply modal -->
 <div class="modal-overlay" id="apply-modal" onclick="closeApplyModal(event)">
   <div class="modal-content">
@@ -4395,11 +4481,19 @@ const HTML = /* html */ `<!DOCTYPE html>
   }
 
   /* ── Gmail ── */
+  // Holds the latest /api/gmail/status snapshot so multiple UI bits
+  // (header pill, sidebar card, modal) read from one source of truth.
+  let gmailStatus = null;
+
   async function refreshGmail() {
     try {
-      const res = await fetch('/api/gmail/inbox');
-      if (res.status === 401) { renderGmailConnect(); return; }
-      const data = await res.json();
+      const [inboxRes, statusRes] = await Promise.all([
+        fetch('/api/gmail/inbox'),
+        fetch('/api/gmail/status'),
+      ]);
+      gmailStatus = statusRes.ok ? await statusRes.json() : null;
+      if (inboxRes.status === 401) { renderGmailConnect(); return; }
+      const data = await inboxRes.json();
       renderGmailSignals(data.signals || [], data.scanned_at, data.connected);
     } catch {}
   }
@@ -4407,8 +4501,107 @@ const HTML = /* html */ `<!DOCTYPE html>
   function renderGmailConnect() {
     const c = document.getElementById('gmail-content');
     const btn = document.getElementById('gmail-header-status');
-    if (btn) btn.innerHTML = '<a href="/auth/gmail" class="btn btn-gmail">🔗 Connect Gmail</a>';
-    // Keep the connect card visible
+    const s = gmailStatus;
+    // Header pill summarizes status at a glance.
+    if (btn) {
+      if (!s) {
+        btn.innerHTML = '<a href="/auth/gmail" class="btn btn-gmail">🔗 Connect Gmail</a>';
+      } else if (!s.configured) {
+        btn.innerHTML = '<button class="btn btn-gmail" onclick="showGmailSetup()" title="Gmail credentials missing in .env">⚙ Gmail setup</button>';
+      } else {
+        btn.innerHTML = '<a href="/auth/gmail" class="btn btn-gmail">🔗 Connect Gmail</a>';
+      }
+    }
+    // Inline sidebar card mirrors the header but with more guidance.
+    if (c && s) {
+      if (!s.configured) {
+        c.innerHTML =
+          '<div class="gmail-connect-card">' +
+            '<p style="font-size:13px;color:var(--text-sec);margin-bottom:10px">Gmail credentials are <strong style="color:var(--orange)">not configured</strong> in your <code>.env</code>.</p>' +
+            '<p style="font-size:11px;color:var(--text-ter);margin-bottom:14px">Missing: ' + s.missingEnv.map(m => '<code>' + esc(m) + '</code>').join(', ') + '</p>' +
+            '<a class="btn btn-gmail" href="/auth/gmail" style="display:block;text-align:center">Open setup guide →</a>' +
+            '<button onclick="showGmailSetup()" style="background:none;border:none;color:var(--accent);font-size:11px;cursor:pointer;margin-top:8px;padding:0;width:100%">View status &amp; diagnostic</button>' +
+          '</div>';
+      } else {
+        c.innerHTML =
+          '<div class="gmail-connect-card">' +
+            '<p style="font-size:13px;color:var(--text-sec);margin-bottom:10px">Watch for recruiter replies, interview invites, and verification codes.</p>' +
+            '<a id="gmail-connect-btn" href="/auth/gmail" class="btn btn-gmail" style="display:block;text-align:center">🔗 Connect Gmail</a>' +
+            '<p style="font-size:11px;color:var(--text-ter);margin-top:10px">Scope: <code>gmail.readonly</code> · We never send or delete.</p>' +
+          '</div>';
+      }
+    }
+  }
+
+  // In-app modal that surfaces the live /api/gmail/status diagnostic +
+  // step-by-step setup. Replaces the prior JS alert() which was unreadable.
+  async function showGmailSetup() {
+    let s = gmailStatus;
+    if (!s) {
+      try { s = await (await fetch('/api/gmail/status')).json(); } catch { s = null; }
+    }
+    const overlay = document.getElementById('gmail-setup-modal');
+    if (!overlay) return;
+    const body = overlay.querySelector('.gsm-body');
+    const dot = (ok) => '<span class="gsm-dot ' + (ok ? 'ok' : 'bad') + '"></span>';
+    const steps = !s ? '<div class="gsm-loading">Loading diagnostic…</div>' : (
+      '<ul class="gsm-checklist">' +
+        '<li>' + dot(s.hasClientId) + 'GMAIL_CLIENT_ID</li>' +
+        '<li>' + dot(s.hasClientSecret) + 'GMAIL_CLIENT_SECRET</li>' +
+        '<li>' + dot(s.hasTokens) + 'OAuth tokens saved' + (s.tokenExpired ? ' <em>(expired — will auto-refresh)</em>' : '') + '</li>' +
+        '<li>' + dot(s.polling) + 'Inbox polling active' + (s.fastPolling ? ' <em>(fast mode)</em>' : '') + '</li>' +
+      '</ul>' +
+      '<div class="gsm-meta">' +
+        '<div><span class="gsm-meta-label">Redirect URI</span><div class="gsm-copy"><code id="gsm-redirect">' + esc(s.redirectUri) + '</code><button class="gsm-copy-btn" data-target="gsm-redirect">Copy</button></div></div>' +
+        '<div style="margin-top:10px"><span class="gsm-meta-label">Scope</span><div><code>' + esc(s.scope) + '</code></div></div>' +
+        (s.lastScannedAt ? '<div style="margin-top:10px"><span class="gsm-meta-label">Last scan</span><div>' + new Date(s.lastScannedAt).toLocaleString() + '</div></div>' : '') +
+        (s.cachedSignalCount ? '<div style="margin-top:10px"><span class="gsm-meta-label">Cached signals</span><div>' + s.cachedSignalCount + ' total · ' + s.activeSignalCount + ' unread</div></div>' : '') +
+      '</div>' +
+      '<div class="gsm-actions">' +
+        (!s.configured
+          ? '<a class="btn btn-apply-batch" href="/auth/gmail">Open setup guide →</a>'
+          : (s.hasTokens
+            ? '<a class="btn btn-ghost" href="/auth/gmail">Re-authorize</a><button class="btn btn-ghost" style="color:var(--red);border-color:rgba(255,69,58,.3)" onclick="disconnectGmail()">Disconnect</button>'
+            : '<a class="btn btn-apply-batch" href="/auth/gmail">Connect Gmail →</a>')) +
+      '</div>'
+    );
+    body.innerHTML =
+      '<h2>Gmail connection</h2>' +
+      '<p class="gsm-sub">Diagnostic + setup guide. Status refreshes every time you open this dialog.</p>' +
+      steps;
+    overlay.classList.add('open');
+    // Wire copy buttons (delegated each open)
+    overlay.querySelectorAll('.gsm-copy-btn').forEach(btn => {
+      btn.onclick = async () => {
+        const target = document.getElementById(btn.dataset.target);
+        try {
+          await navigator.clipboard.writeText(target.textContent.trim());
+          const orig = btn.textContent;
+          btn.textContent = '✓ Copied';
+          setTimeout(() => { btn.textContent = orig; }, 1500);
+        } catch { btn.textContent = 'Press ⌘C'; }
+      };
+    });
+  }
+
+  function closeGmailSetup() {
+    const overlay = document.getElementById('gmail-setup-modal');
+    if (overlay) overlay.classList.remove('open');
+  }
+
+  async function disconnectGmail() {
+    if (!confirm('Disconnect Gmail? Your tokens will be wiped from this server. You can reconnect anytime.')) return;
+    try {
+      const res = await fetch('/api/gmail/disconnect', { method: 'POST' });
+      const data = await res.json();
+      if (data.ok) {
+        showToast('Gmail disconnected · revoke fully at myaccount.google.com/permissions', 'info', 5000);
+        closeGmailSetup();
+        await refreshGmail();
+      } else {
+        showToast('Disconnect failed', 'error');
+      }
+    } catch { showToast('Disconnect failed (network)', 'error'); }
   }
 
   function renderGmailSignals(signals, scannedAt, connected) {
@@ -4473,9 +4666,9 @@ const HTML = /* html */ `<!DOCTYPE html>
     refreshGmail();
   }
 
-  function showGmailSetup() {
-    alert('Gmail Setup:\\n\\n1. Go to console.cloud.google.com\\n2. Create project → Enable Gmail API\\n3. Create OAuth 2.0 credentials (Web Application)\\n4. Add redirect URI: http://localhost:4747/auth/gmail/callback\\n5. Copy Client ID + Secret to your .env:\\n   GMAIL_CLIENT_ID=...\\n   GMAIL_CLIENT_SECRET=...\\n6. Restart the dashboard container');
-  }
+  // showGmailSetup is defined above (in the Gmail block) — it now opens a
+  // proper modal with live diagnostic. This stub remains only to keep older
+  // event-handler references alive during partial refreshes.
 
   /* ── Verification Codes ── */
   async function renderVerificationCodes() {
@@ -5897,6 +6090,49 @@ async function handleRequest(req, res) {
     return;
   }
 
+  // ── API: Gmail status (diagnostic) ──
+  // Returns a structured snapshot the UI can show without leaking secrets.
+  // Used by the inline "Connect Gmail" panel + the in-app setup modal.
+  if (pathname === '/api/gmail/status') {
+    const status = buildGmailStatus({
+      clientId: GMAIL_CLIENT_ID,
+      clientSecret: GMAIL_CLIENT_SECRET,
+      scope: GMAIL_SCOPE,
+      redirectUri: GMAIL_REDIRECT_URI,
+      tokens: gmailTokens,
+      polling: !!scanInterval,
+      fastPolling: fastPollingActive,
+      cache: gmailCache,
+    });
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+    res.end(JSON.stringify(status));
+    return;
+  }
+
+  // ── API: Gmail disconnect ──
+  // Wipes the saved OAuth tokens. The user can reconnect via /auth/gmail.
+  // Does NOT revoke at Google's end (privacy.google.com handles that) — but
+  // documents the link so users can do a clean revocation if they want to.
+  if (pathname === '/api/gmail/disconnect' && req.method === 'POST') {
+    try {
+      gmailTokens = null;
+      try { await fs.unlink(TOKENS_FILE); } catch { /* already absent */ }
+      clearInterval(scanInterval);
+      scanInterval = null;
+      fastPollingActive = false;
+      gmailCache = { signals: [], scanned_at: null };
+      try { await saveGmailCache(); } catch { /* non-fatal */ }
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        ok: true,
+        revokeUrl: 'https://myaccount.google.com/permissions',
+      }));
+    } catch (err) {
+      sendJsonError(res, 500, 'disconnect failed', err);
+    }
+    return;
+  }
+
   // ── API: Gmail dismiss ──
   if (pathname === '/api/gmail/dismiss' && req.method === 'POST') {
     try {
@@ -6115,19 +6351,131 @@ async function handleRequest(req, res) {
   }
 
   // ── Gmail OAuth: Init ──
+  // If credentials are configured, redirect to Google's consent screen.
+  // Otherwise, render an actually-helpful setup page (not a wall of code).
   if (pathname === '/auth/gmail') {
-    if (!GMAIL_CLIENT_ID) {
-      res.writeHead(200, { 'Content-Type': 'text/html' });
-      res.end('<html><body style="font-family:system-ui;background:#000;color:#fff;padding:40px;max-width:600px;margin:0 auto">' +
-        '<h2>Gmail Setup Required</h2>' +
-        '<p style="color:rgba(255,255,255,.6);margin:16px 0">Add these to your <code style="background:#2c2c2e;padding:2px 6px;border-radius:4px">.env</code> file:</p>' +
-        '<pre style="background:#1c1c1e;padding:16px;border-radius:8px;font-size:13px;line-height:1.6">' +
-        'GMAIL_CLIENT_ID=your-client-id.apps.googleusercontent.com\n' +
-        'GMAIL_CLIENT_SECRET=your-client-secret\n' +
-        'GMAIL_REDIRECT_URI=http://localhost:4747/auth/gmail/callback</pre>' +
-        '<p style="color:rgba(255,255,255,.4);font-size:13px;margin-top:16px">Then restart the dashboard container.</p>' +
-        '<a href="/" style="color:#0a84ff;font-size:13px">← Back to dashboard</a>' +
-        '</body></html>');
+    if (!GMAIL_CLIENT_ID || !GMAIL_CLIENT_SECRET) {
+      const missing = [
+        GMAIL_CLIENT_ID ? null : 'GMAIL_CLIENT_ID',
+        GMAIL_CLIENT_SECRET ? null : 'GMAIL_CLIENT_SECRET',
+      ].filter(Boolean);
+      const redirect = GMAIL_REDIRECT_URI;
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(`<!doctype html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>JobSeeker — Gmail Setup</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    font: 15px/1.55 -apple-system, system-ui, "Segoe UI", sans-serif;
+    background: #000; color: #f5f5f7; margin: 0;
+    min-height: 100vh; display: grid; place-items: start center; padding: 48px 20px;
+  }
+  .card {
+    width: 100%; max-width: 640px;
+    background: rgba(28,28,32,.72); border: .5px solid rgba(255,255,255,.08);
+    border-radius: 16px; padding: 32px;
+    box-shadow: 0 10px 40px rgba(0,0,0,.4);
+  }
+  h1 { font-size: 22px; font-weight: 700; margin: 0 0 6px; letter-spacing: -.01em; }
+  .sub { color: #a1a1a6; font-size: 14px; margin-bottom: 24px; }
+  ol { padding-left: 22px; margin: 0 0 24px; }
+  ol li { margin-bottom: 14px; line-height: 1.6; }
+  ol li code { background: #1c1c1f; color: #f5f5f7; padding: 2px 7px; border-radius: 5px; font-size: 13px; }
+  a { color: #28b8ff; text-decoration: none; font-weight: 500; }
+  a:hover { text-decoration: underline; }
+  .copy-row {
+    display: flex; align-items: stretch; gap: 8px; margin: 8px 0 0;
+    background: #0a0a0c; border: .5px solid rgba(255,255,255,.08);
+    border-radius: 8px; overflow: hidden;
+  }
+  .copy-val {
+    flex: 1; font: 13px/1.4 ui-monospace, "SF Mono", monospace;
+    padding: 10px 12px; color: #f5f5f7; user-select: all; word-break: break-all;
+  }
+  .copy-btn {
+    border: none; background: rgba(40,184,255,.10); color: #28b8ff;
+    padding: 0 14px; font-size: 13px; font-weight: 600; cursor: pointer;
+    transition: background .15s;
+  }
+  .copy-btn:hover { background: rgba(40,184,255,.18); }
+  .copy-btn.copied { background: rgba(48,209,88,.18); color: #30d158; }
+  .alert {
+    background: rgba(255,159,10,.08); border: .5px solid rgba(255,159,10,.30);
+    border-radius: 10px; padding: 12px 14px; margin-bottom: 20px;
+    font-size: 13px; color: #ffd082;
+  }
+  .alert strong { color: #ff9f0a; }
+  pre {
+    background: #0a0a0c; border: .5px solid rgba(255,255,255,.08);
+    padding: 14px; border-radius: 10px;
+    font: 13px/1.6 ui-monospace, "SF Mono", monospace;
+    overflow-x: auto; margin: 8px 0 0;
+  }
+  .btn-back {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 10px 16px; border-radius: 8px;
+    background: rgba(255,255,255,.06); color: #f5f5f7;
+    text-decoration: none; font-size: 13px; font-weight: 500;
+    transition: background .15s;
+  }
+  .btn-back:hover { background: rgba(255,255,255,.10); text-decoration: none; }
+  .scope-pill {
+    display: inline-block; padding: 2px 9px; border-radius: 999px;
+    background: rgba(48,209,88,.10); color: #30d158;
+    font-size: 11px; font-weight: 600; letter-spacing: .02em;
+  }
+</style></head><body>
+<div class="card">
+  <h1>Connect Gmail to JobSeeker</h1>
+  <p class="sub">We watch for recruiter replies, interview invites, and verification codes — never message bodies past 7&nbsp;days.</p>
+
+  <div class="alert"><strong>Setup required.</strong> Missing: ${missing.map(m => `<code>${m}</code>`).join(' and ')} in your <code>.env</code> file.</div>
+
+  <ol>
+    <li>Open <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">Google Cloud Console → Credentials</a> in a new tab.</li>
+    <li>Create a project (or pick one) and click <strong>+ Create Credentials → OAuth client ID</strong>. App type: <strong>Web application</strong>.</li>
+    <li>Under <strong>Authorized redirect URIs</strong>, add this exact value:
+      <div class="copy-row">
+        <div class="copy-val" id="redirect-uri">${redirect}</div>
+        <button class="copy-btn" data-copy-target="redirect-uri">Copy</button>
+      </div>
+    </li>
+    <li>Enable the Gmail API: <a href="https://console.cloud.google.com/apis/library/gmail.googleapis.com" target="_blank" rel="noopener">cloud.google.com → Gmail API → Enable</a>.</li>
+    <li>Copy the generated Client ID + Client Secret into your <code>.env</code> at the project root:
+<pre id="env-snippet">GMAIL_CLIENT_ID=your-client-id.apps.googleusercontent.com
+GMAIL_CLIENT_SECRET=your-client-secret
+GMAIL_REDIRECT_URI=${redirect}</pre>
+      <div class="copy-row" style="margin-top:8px"><div class="copy-val">.env</div><button class="copy-btn" data-copy-target="env-snippet">Copy block</button></div>
+    </li>
+    <li>Restart the dashboard, then click <a href="/auth/gmail">Connect Gmail</a> again — it will redirect to Google's consent screen.</li>
+  </ol>
+
+  <p style="font-size: 12px; color: #6e6e73; margin: 16px 0 24px">
+    Scope requested: <span class="scope-pill">gmail.readonly</span> · We can read messages but never send, reply, or delete from your account.
+  </p>
+
+  <a class="btn-back" href="/">← Back to dashboard</a>
+</div>
+<script>
+  document.querySelectorAll('.copy-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const targetId = btn.dataset.copyTarget;
+      const text = document.getElementById(targetId).textContent.trim();
+      try {
+        await navigator.clipboard.writeText(text);
+        const orig = btn.textContent;
+        btn.textContent = '✓ Copied';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 1500);
+      } catch {
+        btn.textContent = 'Press ⌘C';
+      }
+    });
+  });
+</script>
+</body></html>`);
       return;
     }
     const authUrl = getAuthUrl('dashboard');

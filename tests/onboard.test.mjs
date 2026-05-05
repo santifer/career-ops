@@ -21,6 +21,7 @@ import {
 } from '../dashboard-web/lib/onboard.mjs';
 import { makeSafeResolver } from '../dashboard-web/lib/path-safety.mjs';
 import { readJsonBody, MAX_BODY_BYTES, isOriginAllowed } from '../dashboard-web/lib/http-utils.mjs';
+import { buildGmailStatus } from '../dashboard-web/lib/gmail-status.mjs';
 
 // ── yamlQuote ────────────────────────────────────────────────────────────────
 
@@ -733,5 +734,121 @@ describe('isOriginAllowed', () => {
   test('rejects malformed origin strings', () => {
     assert.equal(isOriginAllowed('not a url'), false);
     assert.equal(isOriginAllowed('http://'), false);
+  });
+});
+
+// ── buildGmailStatus (Gmail diagnostic shape) ───────────────────────────────
+
+describe('buildGmailStatus', () => {
+  const baseInput = (overrides = {}) => ({
+    clientId: 'CID',
+    clientSecret: 'CSE',
+    scope: 'https://www.googleapis.com/auth/gmail.readonly',
+    redirectUri: 'http://localhost:4747/auth/gmail/callback',
+    tokens: null,
+    polling: false,
+    fastPolling: false,
+    cache: { signals: [], scanned_at: null },
+    ...overrides,
+  });
+
+  test('reports unconfigured when client id missing', () => {
+    const s = buildGmailStatus(baseInput({ clientId: '' }));
+    assert.equal(s.configured, false);
+    assert.equal(s.hasClientId, false);
+    assert.deepEqual(s.missingEnv, ['GMAIL_CLIENT_ID']);
+  });
+
+  test('reports unconfigured when client secret missing', () => {
+    const s = buildGmailStatus(baseInput({ clientSecret: '' }));
+    assert.equal(s.configured, false);
+    assert.equal(s.hasClientSecret, false);
+    assert.deepEqual(s.missingEnv, ['GMAIL_CLIENT_SECRET']);
+  });
+
+  test('reports configured but no tokens for fresh setup', () => {
+    const s = buildGmailStatus(baseInput());
+    assert.equal(s.configured, true);
+    assert.equal(s.hasTokens, false);
+    assert.equal(s.tokenExpired, null);
+    assert.equal(s.tokenExpiresIn, null);
+    assert.deepEqual(s.missingEnv, []);
+  });
+
+  test('reports tokens present and not expired', () => {
+    const now = 1000_000_000;
+    const expiry = now + 60_000;
+    const s = buildGmailStatus(baseInput({
+      tokens: { refresh_token: 'r', access_token: 'a', expiry },
+      now,
+    }));
+    assert.equal(s.hasTokens, true);
+    assert.equal(s.tokenExpired, false);
+    assert.equal(s.tokenExpiresIn, 60);
+  });
+
+  test('reports tokens expired when past expiry', () => {
+    const now = 2000;
+    const s = buildGmailStatus(baseInput({
+      tokens: { refresh_token: 'r', expiry: 1000 },
+      now,
+    }));
+    assert.equal(s.tokenExpired, true);
+    assert.equal(s.tokenExpiresIn, 0);
+  });
+
+  test('treats access_token without refresh_token as no-tokens', () => {
+    // refresh_token is the long-lived credential; without it we can't recover
+    // a session, so the diagnostic should treat the user as disconnected.
+    const s = buildGmailStatus(baseInput({
+      tokens: { access_token: 'a' },
+    }));
+    assert.equal(s.hasTokens, false);
+  });
+
+  test('counts cached signals split into total + active', () => {
+    const cache = {
+      signals: [
+        { id: '1', dismissed: false },
+        { id: '2', dismissed: true },
+        { id: '3', dismissed: false },
+      ],
+      scanned_at: '2026-05-01T12:00:00Z',
+    };
+    const s = buildGmailStatus(baseInput({ cache }));
+    assert.equal(s.cachedSignalCount, 3);
+    assert.equal(s.activeSignalCount, 2);
+    assert.equal(s.lastScannedAt, '2026-05-01T12:00:00Z');
+  });
+
+  test('handles missing cache gracefully', () => {
+    const s = buildGmailStatus(baseInput({ cache: {} }));
+    assert.equal(s.cachedSignalCount, 0);
+    assert.equal(s.activeSignalCount, 0);
+    assert.equal(s.lastScannedAt, null);
+  });
+
+  test('passes polling + fastPolling flags through', () => {
+    const s = buildGmailStatus(baseInput({ polling: true, fastPolling: true }));
+    assert.equal(s.polling, true);
+    assert.equal(s.fastPolling, true);
+  });
+
+  test('never leaks the actual client id or secret values', () => {
+    const s = buildGmailStatus(baseInput({ clientId: 'super-secret-client-id', clientSecret: 'super-secret' }));
+    const json = JSON.stringify(s);
+    assert.ok(!json.includes('super-secret-client-id'), 'client id leaked');
+    assert.ok(!json.includes('super-secret'), 'client secret leaked');
+  });
+
+  test('emits both missing env names when both unset', () => {
+    const s = buildGmailStatus(baseInput({ clientId: '', clientSecret: '' }));
+    assert.deepEqual(s.missingEnv, ['GMAIL_CLIENT_ID', 'GMAIL_CLIENT_SECRET']);
+  });
+
+  test('coerces undefined polling/fastPolling to false', () => {
+    const s = buildGmailStatus(baseInput({ polling: undefined, fastPolling: undefined }));
+    assert.equal(s.polling, false);
+    assert.equal(s.fastPolling, false);
   });
 });
