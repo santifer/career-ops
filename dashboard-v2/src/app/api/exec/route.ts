@@ -126,7 +126,8 @@ export async function GET(req: NextRequest) {
   ├─────────────────────────────────────────────────────┤
   │                                                     │
   │  DISCOVERY                                          │
-  │    scan              Scan all 11+ job portals       │
+  │    scan --deep       Deep scan (via GitHub Actions)  │
+  │    scan              Fast discovery scan (Serverless)│
   │    offer-list        Score & rank pipeline jobs      │
   │                                                     │
   │  APPLICATION                                        │
