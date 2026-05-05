@@ -137,10 +137,49 @@ try {
   fail(`Liveness classification tests crashed: ${e.message}`);
 }
 
-// ── 4. DASHBOARD BUILD ──────────────────────────────────────────
+// ── 4. UPDATE SAFETY REGRESSION ─────────────────────────────────
+
+console.log('\n4. Update safety regression');
+
+try {
+  const {
+    parseGitStatusEntries,
+    collectUnexpectedUserTouches,
+  } = await import(pathToFileURL(join(ROOT, 'update-system.mjs')).href);
+
+  const initialUntrackedCv = new Set(
+    parseGitStatusEntries('?? cv.md').map(entry => entry.path)
+  );
+  const currentWithUntrackedCv = parseGitStatusEntries(' M README.md\n?? cv.md');
+  const ignoredTouches = collectUnexpectedUserTouches({
+    initialStatusPaths: initialUntrackedCv,
+    currentEntries: currentWithUntrackedCv,
+  });
+
+  if (ignoredTouches.length === 0) {
+    pass('Updater ignores pre-existing untracked cv.md during safety checks');
+  } else {
+    fail(`Updater falsely flagged existing user files: ${ignoredTouches.join(', ')}`);
+  }
+
+  const freshUserTouch = collectUnexpectedUserTouches({
+    initialStatusPaths: new Set(),
+    currentEntries: parseGitStatusEntries('?? cv.md'),
+  });
+
+  if (freshUserTouch.includes('cv.md')) {
+    pass('Updater still blocks newly introduced user-file touches');
+  } else {
+    fail('Updater no longer detects newly touched user files');
+  }
+} catch (e) {
+  fail(`Update safety regression tests crashed: ${e.message}`);
+}
+
+// ── 5. DASHBOARD BUILD ──────────────────────────────────────────
 
 if (!QUICK) {
-  console.log('\n4. Dashboard build');
+  console.log('\n5. Dashboard build');
   const goBuild = run('cd dashboard && go build -o /tmp/career-dashboard-test . 2>&1');
   if (goBuild !== null) {
     pass('Dashboard compiles');
@@ -148,12 +187,12 @@ if (!QUICK) {
     fail('Dashboard build failed');
   }
 } else {
-  console.log('\n4. Dashboard build (skipped --quick)');
+  console.log('\n5. Dashboard build (skipped --quick)');
 }
 
-// ── 5. DATA CONTRACT ────────────────────────────────────────────
+// ── 6. DATA CONTRACT ────────────────────────────────────────────
 
-console.log('\n5. Data contract validation');
+console.log('\n6. Data contract validation');
 
 // Check system files exist
 const systemFiles = [
@@ -187,9 +226,9 @@ for (const f of userFiles) {
   }
 }
 
-// ── 6. PERSONAL DATA LEAK CHECK ─────────────────────────────────
+// ── 7. PERSONAL DATA LEAK CHECK ─────────────────────────────────
 
-console.log('\n6. Personal data leak check');
+console.log('\n7. Personal data leak check');
 
 const leakPatterns = [
   'Santiago', 'santifer.io', 'Santifer iRepair', 'Zinkee', 'ALMAS',
@@ -237,9 +276,9 @@ if (!leakFound) {
   pass('No personal data leaks outside allowed files');
 }
 
-// ── 7. ABSOLUTE PATH CHECK ──────────────────────────────────────
+// ── 8. ABSOLUTE PATH CHECK ──────────────────────────────────────
 
-console.log('\n7. Absolute path check');
+console.log('\n8. Absolute path check');
 
 // Same git grep approach: only scans tracked files. Untracked AI tool
 // outputs, local debate artifacts, etc. can't false-positive here.
@@ -254,9 +293,9 @@ if (!absPathResult) {
   }
 }
 
-// ── 8. MODE FILE INTEGRITY ──────────────────────────────────────
+// ── 9. MODE FILE INTEGRITY ──────────────────────────────────────
 
-console.log('\n8. Mode file integrity');
+console.log('\n9. Mode file integrity');
 
 const expectedModes = [
   '_shared.md', '_profile.template.md', 'oferta.md', 'pdf.md', 'scan.md',
@@ -280,9 +319,9 @@ if (shared.includes('_profile.md')) {
   fail('_shared.md does NOT reference _profile.md');
 }
 
-// ── 9. CLAUDE.md INTEGRITY ──────────────────────────────────────
+// ── 10. CLAUDE.md INTEGRITY ─────────────────────────────────────
 
-console.log('\n9. CLAUDE.md integrity');
+console.log('\n10. CLAUDE.md integrity');
 
 const claude = readFile('CLAUDE.md');
 const requiredSections = [
@@ -299,9 +338,9 @@ for (const section of requiredSections) {
   }
 }
 
-// ── 10. VERSION FILE ─────────────────────────────────────────────
+// ── 11. VERSION FILE ────────────────────────────────────────────
 
-console.log('\n10. Version file');
+console.log('\n11. Version file');
 
 if (fileExists('VERSION')) {
   const version = readFile('VERSION').trim();

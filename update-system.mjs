@@ -121,8 +121,7 @@ function git(...args) {
   return execFileSync('git', args, { cwd: ROOT, encoding: 'utf-8', timeout: 30000 }).trim();
 }
 
-function gitStatusEntries() {
-  const status = git('status', '--porcelain');
+export function parseGitStatusEntries(status) {
   if (!status) return [];
 
   return status.split('\n')
@@ -131,6 +130,31 @@ function gitStatusEntries() {
       code: line.slice(0, 2),
       path: line.slice(3),
     }));
+}
+
+function gitStatusEntries() {
+  return parseGitStatusEntries(git('status', '--porcelain'));
+}
+
+export function collectUnexpectedUserTouches({
+  initialStatusPaths,
+  currentEntries,
+  userPaths = USER_PATHS,
+}) {
+  const touched = [];
+
+  for (const entry of currentEntries) {
+    const file = entry.path;
+    if (initialStatusPaths.has(file)) continue;
+    for (const userPath of userPaths) {
+      if (file.startsWith(userPath)) {
+        touched.push(file);
+        break;
+      }
+    }
+  }
+
+  return touched;
 }
 
 function revertPaths(paths) {
@@ -280,15 +304,13 @@ async function apply() {
     // 4. Validate: check NO user files were touched
     let userFileTouched = false;
     try {
-      for (const entry of gitStatusEntries()) {
-        const file = entry.path;
-        if (initialStatusPaths.has(file)) continue;
-        for (const userPath of USER_PATHS) {
-          if (file.startsWith(userPath)) {
-            console.error(`SAFETY VIOLATION: User file was modified: ${file}`);
-            userFileTouched = true;
-          }
-        }
+      const unexpectedUserTouches = collectUnexpectedUserTouches({
+        initialStatusPaths,
+        currentEntries: gitStatusEntries(),
+      });
+      for (const file of unexpectedUserTouches) {
+        console.error(`SAFETY VIOLATION: User file was modified: ${file}`);
+        userFileTouched = true;
       }
     } catch {
       // git status failed, skip validation
@@ -377,14 +399,16 @@ function dismiss() {
 
 // ── MAIN ────────────────────────────────────────────────────────
 
-const cmd = process.argv[2] || 'check';
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+  const cmd = process.argv[2] || 'check';
 
-switch (cmd) {
-  case 'check': await check(); break;
-  case 'apply': await apply(); break;
-  case 'rollback': rollback(); break;
-  case 'dismiss': dismiss(); break;
-  default:
-    console.log('Usage: node update-system.mjs [check|apply|rollback|dismiss]');
-    process.exit(1);
+  switch (cmd) {
+    case 'check': await check(); break;
+    case 'apply': await apply(); break;
+    case 'rollback': rollback(); break;
+    case 'dismiss': dismiss(); break;
+    default:
+      console.log('Usage: node update-system.mjs [check|apply|rollback|dismiss]');
+      process.exit(1);
+  }
 }
