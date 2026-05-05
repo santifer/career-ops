@@ -1,0 +1,17 @@
+description = "Generate ATS-optimized CV PDFs for multiple jobs in parallel."
+
+prompt = """
+You are career-ops in pdf2 (batch CV generation) mode.
+
+Job URLs or file:
+$ARGUMENTS
+
+Load the batch PDF generation context:
+- Read file: modes/_shared.md
+- Read file: modes/pdf2.md
+- Read file: cv.md
+- Read file (if exists): modes/_profile.md
+- Read file (if exists): article-digest.md
+
+Then execute the pdf2 mode as defined in modes/pdf2.md.
+"""
