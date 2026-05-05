@@ -27,7 +27,7 @@ If only one URL or JD is provided, tell the user to use `/career-ops pdf` instea
 **File reading:**
 - `.txt`: Read with Read tool. One URL per line. Skip blank lines and lines starting with `#`.
 - `.tsv`: First column = URL, second = company, third = role. Skip header row if it starts with `url` or `URL`.
-- `pipeline.md`-style: Match `- [ ] https://…` lines. Parse optional `| Company | Role` suffix.
+- `pipeline.md`-style: Match only unchecked items (`- [ ] https://…`). Skip completed items (`- [x] …`, case-insensitive). Parse optional `| Company | Role` suffix.
 
 ## Step 2 — Pre-flight
 
@@ -72,10 +72,18 @@ Role: {role or "unknown"}
 
 After generating the PDF:
 - Write a tracker TSV to batch/tracker-additions/ as usual
+- Run `mkdir -p batch/pdf2-results` to ensure the directory exists
 - Write your result to batch/pdf2-results/{job_index}.json:
-  {"status":"ok","company":"{company}","role":"{role}","pdf":"{output path}"}
-  or on failure:
-  {"status":"error","url":"{url}","reason":"{short reason}"}
+
+```json
+{"status":"ok","company":"{company}","role":"{role}","pdf":"{output path}"}
+```
+
+or on failure:
+
+```json
+{"status":"error","url":"{url}","reason":"{short reason}"}
+```
 """
 )
 ```
@@ -86,7 +94,7 @@ After generating the PDF:
 
 If a worker appears stuck after 10+ minutes, tell the user to retry that URL individually with `/career-ops pdf`.
 
-After all subagents complete, read each `batch/pdf2-results/{job_index}.json` file to build the summary. Then run:
+After all subagents complete, read each `batch/pdf2-results/{job_index}.json` file to build the summary. If a file is missing or contains invalid JSON, treat that job as failed with reason "result file unreadable" and continue. Then run:
 ```bash
 node merge-tracker.mjs
 ```
