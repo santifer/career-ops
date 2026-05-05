@@ -100,6 +100,16 @@ title_filter:
     - "Head"
     - "Director"
 
+# -- Location filter (optional) --
+# Constrain scan results by job location. Omit this block entirely to keep
+# the default behaviour of accepting all locations.
+# See docs/CUSTOMIZATION.md (Portals section) for field semantics.
+#
+# location_filter:
+#   allowed: ["Sydney", "Melbourne", "Australia"]
+#   blocked: ["Perth", "Adelaide"]
+#   allow_remote: true
+
 # -- Search queries --
 # Each query triggers a WebSearch. Use site: to filter by portal.
 # The scanner extracts title, URL, and company from results.
