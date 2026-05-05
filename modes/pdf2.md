@@ -104,11 +104,13 @@ Show a summary table:
 ```
 pdf2 — Batch Complete (N jobs)
 
-| # | Company      | Role        | PDF | Output                                         |
-|---|-------------|-------------|-----|------------------------------------------------|
-| 1 | Acme Corp   | AI PM       | ✅  | output/cv-jane-doe-acme-corp-2026-05-04.pdf    |
-| 2 | BigTech     | ML Engineer | ✅  | output/cv-jane-doe-bigtech-2026-05-04.pdf      |
-| 3 | StartupXY   | CTO         | ❌  | URL inaccessible                               |
+| # | Company      | Role        | PDF | Legitimacy | Output                                         |
+|---|-------------|-------------|-----|------------|------------------------------------------------|
+| 1 | Acme Corp   | AI PM       | ✅  | Tier 1     | output/cv-jane-doe-acme-corp-2026-05-04.pdf    |
+| 2 | BigTech     | ML Engineer | ✅  | Tier 2     | output/cv-jane-doe-bigtech-2026-05-04.pdf      |
+| 3 | StartupXY   | CTO         | ❌  | —          | URL inaccessible                               |
 ```
+
+For each successful job, the URL and Legitimacy tier come from the worker's report header (per pipeline convention: `**URL:**` and `**Legitimacy:**` fields).
 
 If any job failed, list the failed URLs and reasons below the table so the user can retry individually with `/career-ops pdf`.
