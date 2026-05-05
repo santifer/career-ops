@@ -667,13 +667,14 @@ function formatApplyNowQueue(rows, packEligibleNums = null) {
   out.push('| # | Score | Company — Role | Apply | Report | Pack | Mark | Link |');
   out.push('|---|------|----------------|-------|--------|------|------|------|');
   for (const r of rows) {
-    const linkBadge = !r._linkStatus
-      ? '—'
-      : r._linkStatus.result === 'active' ? '✅ live'
-      : r._linkStatus.result === 'expired' ? '❌ EXPIRED'
-      : `⚠️ ${r._linkStatus.result}`;
     const applyUrl = getReportUrl(r.reportPath);
     const applyCell = applyUrl ? `[Apply](${applyUrl})` : '—';
+    // Link badge links to the live JD so the column is clickable, not just a status text.
+    const linkBadge = !r._linkStatus
+      ? '—'
+      : r._linkStatus.result === 'active'  ? (applyUrl ? `[✅ live](${applyUrl})`          : '✅ live')
+      : r._linkStatus.result === 'expired' ? (applyUrl ? `[❌ EXPIRED](${applyUrl})`       : '❌ EXPIRED')
+      : (applyUrl ? `[⚠️ ${r._linkStatus.result}](${applyUrl})` : `⚠️ ${r._linkStatus.result}`);
     const reportCell = r.reportPath ? `[Open](${reportUrl(r.reportPath)})` : '—';
     const packUrl = applyPackUrl(r);
     const packAllowed = packEligibleNums == null || packEligibleNums.has(r.num);
