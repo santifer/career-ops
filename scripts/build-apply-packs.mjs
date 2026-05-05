@@ -24,10 +24,16 @@
  * Pass --force to rebuild everything.
  *
  * Usage:
- *   node scripts/build-apply-packs.mjs              # build top 3
- *   node scripts/build-apply-packs.mjs --top=5      # build top 5
- *   node scripts/build-apply-packs.mjs --force      # rebuild existing
- *   node scripts/build-apply-packs.mjs --num=48     # build specific row
+ *   node scripts/build-apply-packs.mjs                       # build top 3
+ *   node scripts/build-apply-packs.mjs --top=5               # build top 5
+ *   node scripts/build-apply-packs.mjs --force               # rebuild existing
+ *   node scripts/build-apply-packs.mjs --num=48              # build specific row
+ *   node scripts/build-apply-packs.mjs --include-todays-top  # build top N + today's #1 new role
+ *
+ * The unattended pipeline (scripts/batch-runner-unattended.mjs) calls this
+ * with --include-todays-top so the heartbeat email's "What's New Overnight"
+ * section can guarantee a fresh Apply Pack on its #1 row even when that
+ * role doesn't crack the cumulative top-3.
  */
 
 import {
@@ -41,6 +47,8 @@ const args = process.argv.slice(2);
 const FORCE = args.includes('--force');
 const TOP_N = parseInt(args.find(a => a.startsWith('--top='))?.split('=')[1] || '3', 10);
 const SPECIFIC_NUM = args.find(a => a.startsWith('--num='))?.split('=')[1];
+const INCLUDE_TODAYS_TOP = args.includes('--include-todays-top');
+const TODAY = new Date().toISOString().slice(0, 10);
 const FLOOR = 4.0;
 const ACTIONABLE = new Set(['Evaluated', 'Responded']);
 
@@ -949,10 +957,23 @@ async function main() {
       process.exit(1);
     }
   } else {
-    queue = tracker
+    const eligible = tracker
       .filter(r => ACTIONABLE.has(r.status) && r.score >= FLOOR)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, TOP_N);
+      .sort((a, b) => b.score - a.score);
+    queue = eligible.slice(0, TOP_N);
+
+    // Optionally append the highest-scoring role added today, even if it
+    // doesn't crack the cumulative top-N. The heartbeat's "What's New
+    // Overnight" section guarantees this row a freshly built pack.
+    if (INCLUDE_TODAYS_TOP) {
+      const todaysTop = eligible
+        .filter(r => r.date === TODAY)
+        .sort((a, b) => b.score - a.score)[0];
+      if (todaysTop && !queue.some(r => r.num === todaysTop.num)) {
+        console.log(`Including today's #1 new role: #${todaysTop.num} ${todaysTop.company} (${todaysTop.score.toFixed(2)})`);
+        queue.push(todaysTop);
+      }
+    }
   }
 
   console.log(`Building Apply Packs for ${queue.length} role${queue.length === 1 ? '' : 's'}...`);

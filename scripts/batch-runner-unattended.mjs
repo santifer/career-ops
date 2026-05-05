@@ -105,9 +105,12 @@ child.on('exit', (code, signal) => {
   // Build Apply Packs for the top N Apply-Now roles. Skip-if-exists by
   // default — preserves any hand-edits to existing packs. New roles that
   // entered the top-N today get freshly generated packs. Best-effort.
-  log('--- Building Apply Packs (top 3) ---');
+  // --include-todays-top also builds a pack for the highest-scoring NEW
+  // role from today even if it doesn't crack the cumulative top-3, so the
+  // heartbeat's "What's New Overnight" #1 always has a Pack link.
+  log('--- Building Apply Packs (top 3 + today\'s top) ---');
   try {
-    const packChild = spawnSync(`${NODE_DIR}/node`, ['scripts/build-apply-packs.mjs'], {
+    const packChild = spawnSync(`${NODE_DIR}/node`, ['scripts/build-apply-packs.mjs', '--include-todays-top'], {
       cwd: PROJECT_DIR,
       env: childEnv,
       encoding: 'utf-8',

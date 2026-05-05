@@ -320,6 +320,11 @@ const APPLY_NOW_LIMIT = 50;
 // blocks × 5KB plus chrome (~25KB) + summary table for ALL roles puts us
 // safely under the threshold so nothing gets "Message clipped".
 const APPLY_NOW_DETAIL_LIMIT = 10;
+// Apply Packs are expensive to build (~5 files per role). Limit nightly
+// pack rendering to the top 3 of the Apply-Now Queue + the highest-scoring
+// "What's New Overnight" row. Rows outside this set still get Apply +
+// Report links, just no 📦 Pack link.
+const APPLY_PACK_TOP_N = 3;
 // Only roles Mitchell hasn't acted on yet should appear in Apply-Now.
 // "Interview" / "Applied" / "Offer" / "Rejected" / "Discarded" all mean a
 // decision has been made or is in progress. "Responded" stays because it
@@ -353,6 +358,14 @@ function applyPackUrl(row) {
     if (match) return `${DASHBOARD_BASE}/apply-pack/${match}/README.md`;
   } catch {}
   return null;
+}
+
+// One-click status flip URL — points at /mark on dashboard-server.mjs.
+// Hitting it edits applications.md (Evaluated → Applied) and shows a
+// confirmation page. Used in the heartbeat email so Mitchell can clear
+// items from tomorrow's Apply-Now Queue without leaving Gmail.
+function markStatusUrl(rowNum, status = 'Applied') {
+  return `${DASHBOARD_BASE}/mark?num=${rowNum}&status=${encodeURIComponent(status)}`;
 }
 
 function getApplyNowQueue(rows) {
@@ -561,7 +574,12 @@ function getGapMitigations(reportPath, limit = 5) {
 // gap-mitigations, links. Email clients render this as readable sections
 // — much more usable than the prior tabular row that compressed the
 // "Why" cell to one sentence.
-function formatRoleBlock(r) {
+//
+// `packEligibleNums` (Set<number>) gates Pack-link rendering. Pass the set
+// of row numbers that should display a 📦 Pack link (typically the top 3
+// of Apply-Now plus the #1 What's New). Pass `null` to render packs for
+// every row whose folder exists.
+function formatRoleBlock(r, packEligibleNums = null) {
   const out = [];
   out.push('---');
   out.push('');
@@ -617,19 +635,23 @@ function formatRoleBlock(r) {
   // Links — all clickable from Gmail. Apply → live JD. Report → local
   // report HTML via dashboard server. Pack → pre-built Apply Pack folder
   // (cover letter, LinkedIn DMs, hiring-manager intel, tailored CV) when
-  // present.
+  // present. Mark Applied → one-click status flip via dashboard-server
+  // /mark endpoint, so Mitchell can clear items from tomorrow's queue
+  // without leaving Gmail.
   const url = getReportUrl(r.reportPath);
   const packUrl = applyPackUrl(r);
+  const packAllowed = packEligibleNums == null || packEligibleNums.has(r.num);
   const linkBits = [];
   if (url) linkBits.push(`🔗 [Apply](${url})`);
   if (r.reportPath) linkBits.push(`📄 [Open report](${reportUrl(r.reportPath)})`);
-  if (packUrl) linkBits.push(`📦 [Apply Pack](${packUrl})`);
+  if (packUrl && packAllowed) linkBits.push(`📦 [Apply Pack](${packUrl})`);
+  linkBits.push(`✅ [Mark Applied](${markStatusUrl(r.num, 'Applied')})`);
   if (linkBits.length) out.push(linkBits.join(' · '));
   out.push('');
   return out;
 }
 
-function formatApplyNowQueue(rows) {
+function formatApplyNowQueue(rows, packEligibleNums = null) {
   if (rows.length === 0) {
     return [
       `_No evaluations meeting the ${APPLY_NOW_FLOOR.toFixed(1)} apply floor right now._`,
@@ -642,8 +664,8 @@ function formatApplyNowQueue(rows) {
   // the live Apply link and the report link clickable.
   out.push(`**At-a-glance summary** — ${rows.length} role${rows.length === 1 ? '' : 's'} above the ${APPLY_NOW_FLOOR.toFixed(1)} floor (full per-role detail for top ${Math.min(APPLY_NOW_DETAIL_LIMIT, rows.length)} below):`);
   out.push('');
-  out.push('| # | Score | Company — Role | Apply | Report | Pack | Link |');
-  out.push('|---|------|----------------|-------|--------|------|------|');
+  out.push('| # | Score | Company — Role | Apply | Report | Pack | Mark | Link |');
+  out.push('|---|------|----------------|-------|--------|------|------|------|');
   for (const r of rows) {
     const linkBadge = !r._linkStatus
       ? '—'
@@ -654,8 +676,10 @@ function formatApplyNowQueue(rows) {
     const applyCell = applyUrl ? `[Apply](${applyUrl})` : '—';
     const reportCell = r.reportPath ? `[Open](${reportUrl(r.reportPath)})` : '—';
     const packUrl = applyPackUrl(r);
-    const packCell = packUrl ? `📦 [Pack](${packUrl})` : '—';
-    out.push(`| ${r.num} | ${r.score.toFixed(2)} | ${r.company} — ${r.role.slice(0, 60)} | ${applyCell} | ${reportCell} | ${packCell} | ${linkBadge} |`);
+    const packAllowed = packEligibleNums == null || packEligibleNums.has(r.num);
+    const packCell = (packUrl && packAllowed) ? `📦 [Pack](${packUrl})` : '—';
+    const markCell = `[✅ Applied](${markStatusUrl(r.num, 'Applied')})`;
+    out.push(`| ${r.num} | ${r.score.toFixed(2)} | ${r.company} — ${r.role.slice(0, 60)} | ${applyCell} | ${reportCell} | ${packCell} | ${markCell} | ${linkBadge} |`);
   }
   out.push('');
   // Detail blocks for the top N only — keeps the email scannable.
@@ -665,8 +689,48 @@ function formatApplyNowQueue(rows) {
     out.push('');
   }
   for (const r of detailRows) {
-    for (const line of formatRoleBlock(r)) out.push(line);
+    for (const line of formatRoleBlock(r, packEligibleNums)) out.push(line);
   }
+  return out;
+}
+
+// Render the "What's New Overnight" section — roles that landed in
+// Apply-Now today (date == TARGET_DATE). Sits ABOVE the main Apply-Now
+// Queue so Mitchell sees what's freshly surfaced before the cumulative
+// list. The #1 row gets full detail + Apply Pack; the rest are a
+// compact per-row line.
+function formatWhatsNewSection(whatsNew, packEligibleNums) {
+  const out = [];
+  out.push('## What\'s New Overnight');
+  out.push('');
+  if (whatsNew.length === 0) {
+    out.push(`_No new roles surfaced overnight. The batch ran but nothing scored ≥ ${APPLY_NOW_FLOOR.toFixed(1)}, OR everything scored met the floor was already in yesterday's queue. The full Apply-Now Queue below is unchanged from the previous heartbeat._`);
+    out.push('');
+    return out;
+  }
+  out.push(`_${whatsNew.length} role${whatsNew.length === 1 ? '' : 's'} crossed the ${APPLY_NOW_FLOOR.toFixed(1)} floor in the overnight batch. The #1 row below has a freshly built Apply Pack; the rest link to their reports for review._`);
+  out.push('');
+
+  // Compact summary table for ALL of today's new roles
+  out.push('| # | Score | Company — Role | Apply | Report | Pack | Mark |');
+  out.push('|---|------|----------------|-------|--------|------|------|');
+  for (const r of whatsNew) {
+    const applyUrl = getReportUrl(r.reportPath);
+    const applyCell = applyUrl ? `[Apply](${applyUrl})` : '—';
+    const reportCell = r.reportPath ? `[Open](${reportUrl(r.reportPath)})` : '—';
+    const packUrl = applyPackUrl(r);
+    const packAllowed = packEligibleNums == null || packEligibleNums.has(r.num);
+    const packCell = (packUrl && packAllowed) ? `📦 [Pack](${packUrl})` : '—';
+    const markCell = `[✅ Applied](${markStatusUrl(r.num, 'Applied')})`;
+    out.push(`| ${r.num} | ${r.score.toFixed(2)} | ${r.company} — ${r.role.slice(0, 60)} | ${applyCell} | ${reportCell} | ${packCell} | ${markCell} |`);
+  }
+  out.push('');
+
+  // Full detail block for the #1 only — keeps the section focused on
+  // "what's the single most exciting thing that landed overnight".
+  out.push(`### 🌟 Highest scoring new role`);
+  out.push('');
+  for (const line of formatRoleBlock(whatsNew[0], packEligibleNums)) out.push(line);
   return out;
 }
 
@@ -795,14 +859,17 @@ function getInterpretationGuide() {
   return [
     '> **How to read this email:**',
     '> ',
-    `> - **Apply-Now Queue** — every evaluation with status \`Evaluated\` or \`Responded\` and score ≥ ${APPLY_NOW_FLOOR.toFixed(1)}/5, sorted high → low. The list **re-ranks every morning**: any role you act on (Apply / Discard) drops out, and any new evaluation that scores higher than the current bottom row pushes its way in. If the top of the list looks unchanged across days, it just means nothing has scored higher than your current top candidates *and* you haven't moved any of them off \`Evaluated\` yet — the moment you run \`/career-ops apply\` on one, it leaves the queue and the next-best role is pulled up.`,
-    '> - **Activity Snapshot** — the full status funnel for every role the system has ever evaluated (Applied / Interview / Offer / Rejected / Discarded). This is where you can see at a glance how many applications are actually outstanding versus how much was filtered as wrong-fit. Status changes happen when you run `/career-ops apply <URL>` or update the tracker manually — until then, even strong matches stay `Evaluated`.',
-    '> - **Pipeline Funnel** — today\'s inflow broken down by source. The **`scan-email.mjs`** row is your newsletter-and-alerts feed: every job alert from LinkedIn / Indeed / Mediabistro / etc. that landed under the `career-ops/alerts` Gmail label gets URLs extracted and merged into the same pipeline as the direct ATS scanner. If that row shows zero on a day you expect alerts, your Gmail filters are likely missing a sender domain.',
-    '> - **System Status** — proves the unattended pipeline ran (scan / triage / batch / Grok). `YES` everywhere = healthy. Anything `NO` is investigated below in **Errors / Warnings**.',
+    '> - **What\'s New Overnight** — the freshly surfaced roles. Anything that crossed the apply floor in last night\'s batch lands here at the top. The #1 row gets a fully built Apply Pack so you can act on it within minutes. Empty section = batch ran but nothing new scored ≥ floor.',
+    `> - **Apply-Now Queue** — the cumulative list: every evaluation with status \`Evaluated\` or \`Responded\` and score ≥ ${APPLY_NOW_FLOOR.toFixed(1)}/5, sorted high → low. Re-ranks every morning. Apply Packs (📦) are pre-built for the **top ${APPLY_PACK_TOP_N}** of this queue plus the **#1 What\'s New** — the highest-leverage roles. Other rows still link to the JD and full report; just no pre-built outreach drafts.`,
+    '> - **Activity Snapshot** — the full status funnel for every role the system has ever evaluated (Applied / Interview / Offer / Rejected / Discarded). Where you can see at a glance how many applications are actually outstanding versus how much was filtered as wrong-fit.',
+    '> - **Pipeline Funnel** — today\'s inflow broken down by source. The **`scan-email.mjs`** row is your newsletter-and-alerts feed: every job alert from LinkedIn / Indeed / Mediabistro / etc. that landed under the `career-ops/alerts` Gmail label gets URLs extracted and merged into the same pipeline as the direct ATS scanner.',
+    '> - **System Status** — proves the unattended pipeline ran (scan / triage / batch / Grok). `YES` everywhere = healthy.',
     '> ',
-    `> **What to do:** Click the **Open report** link on any 4.0+ row to read the full A–G reasoning in your browser, then click **Apply** to go straight to the JD. If you decide to apply, run \`/career-ops apply <URL>\` — that walks the form with you and flips the status to Applied so the role drops out of tomorrow's queue.`,
+    '> **The ✅ Mark Applied button** — every row has one. Click it and you\'re done — the dashboard server flips that row\'s status from `Evaluated` to `Applied`, drops it from tomorrow\'s queue, and shows you a confirmation page with an Undo link. You don\'t need to come back to the terminal to report applications anymore.',
     '> ',
-    `> **Dashboard:** [Open the live dashboard →](${DASHBOARD_URL}) (sortable tables, filters, expand-on-click for full rationale). The link works as long as the local dashboard server is running — see \`scripts/dashboard-server.mjs\` and the matching launchd plist if it 404s.`,
+    `> **What to do:** Click **Open report** to read the full A–G reasoning, then **Apply** to go straight to the JD. After you submit on the company\'s site, hit **✅ Applied** in this email to clear the row. Or run \`/career-ops apply <URL>\` from the terminal for the assisted-fill flow that drafts answers per question.`,
+    '> ',
+    `> **Dashboard:** [Open the live dashboard →](${DASHBOARD_URL}) (sortable tables, filters, expand-on-click for full rationale).`,
   ];
 }
 
@@ -839,14 +906,6 @@ async function generateHeartbeat() {
   // Apply-Now Queue — every scored evaluation awaiting action, top → bottom.
   const trackerRows = parseApplicationsTracker(join(ROOT, 'data/applications.md'));
   const applyNowRaw = getApplyNowQueue(trackerRows);
-  lines.push('## Apply-Now Queue');
-  lines.push('');
-  lines.push(`_All evaluations with score ≥ ${APPLY_NOW_FLOOR.toFixed(1)} and status in {${[...ACTIONABLE_STATUSES].join(', ')}}, re-ranked every morning. Roles you've acted on (Applied / Interview / Discarded) are excluded — see **Activity Snapshot** below for those._`);
-  lines.push('');
-  lines.push(`_Full interactive view: [open the dashboard →](${DASHBOARD_URL}) (sortable tables, filters, expand-on-click for full rationale)._`);
-  lines.push('');
-  lines.push(`_Each Apply link is verified live before email send — expired postings are auto-flagged, removed from this queue, and marked Discarded in the tracker._`);
-  lines.push('');
   // Pre-flight: verify every Apply-Now URL is live. Filter out expired ones
   // and mark them as Discarded in the tracker. Keep "uncertain" rows visible
   // with a flag so the user knows the status couldn't be confirmed (typical
@@ -863,7 +922,33 @@ async function generateHeartbeat() {
       applyNow.push(r);
     }
   }
-  for (const line of formatApplyNowQueue(applyNow)) lines.push(line);
+
+  // Determine which rows get a 📦 Apply Pack link rendered: top-3 of
+  // Apply-Now plus the #1 What's New (today's highest-scoring new
+  // evaluation). The nightly pack-builder targets the same set, so links
+  // and pack folders stay aligned.
+  const whatsNew = applyNow
+    .filter(r => r.date === TARGET_DATE)
+    .sort((a, b) => b.score - a.score);
+  const packEligibleNums = new Set(applyNow.slice(0, APPLY_PACK_TOP_N).map(r => r.num));
+  if (whatsNew[0]) packEligibleNums.add(whatsNew[0].num);
+
+  // What's New Overnight — sits ABOVE Apply-Now so freshly surfaced roles
+  // are the first thing Mitchell sees in the email.
+  for (const line of formatWhatsNewSection(whatsNew, packEligibleNums)) lines.push(line);
+  lines.push('');
+
+  lines.push('## Apply-Now Queue');
+  lines.push('');
+  lines.push(`_All evaluations with score ≥ ${APPLY_NOW_FLOOR.toFixed(1)} and status in {${[...ACTIONABLE_STATUSES].join(', ')}}, re-ranked every morning. Roles you've acted on (Applied / Interview / Discarded) are excluded — see **Activity Snapshot** below for those._`);
+  lines.push('');
+  lines.push(`_Apply Packs (📦) are pre-built for the top ${APPLY_PACK_TOP_N} of this queue plus the #1 of "What's New Overnight" — the highest-leverage roles where having the cover letter, LinkedIn DMs, and tailored CV ready saves the most prep time. Other rows still link to the JD and full report._`);
+  lines.push('');
+  lines.push(`_Full interactive view: [open the dashboard →](${DASHBOARD_URL}) (sortable tables, filters, expand-on-click for full rationale)._`);
+  lines.push('');
+  lines.push(`_Each Apply link is verified live before email send — expired postings are auto-flagged, removed from this queue, and marked Discarded in the tracker._`);
+  lines.push('');
+  for (const line of formatApplyNowQueue(applyNow, packEligibleNums)) lines.push(line);
   lines.push('');
 
   // Activity Snapshot — full status funnel so the user can see at a glance

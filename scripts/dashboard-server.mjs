@@ -24,12 +24,20 @@
  */
 
 import http from 'http';
-import { readFileSync, existsSync, statSync, readdirSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, statSync, readdirSync } from 'fs';
 import { extname, join, normalize, resolve, sep, basename } from 'path';
 import { marked } from 'marked';
 
 const ROOT = resolve(process.cwd());
 const PORT = parseInt(process.env.PORT || process.env.CAREER_OPS_DASHBOARD_PORT || '7777', 10);
+
+// Canonical states from templates/states.yml. Anything outside this set
+// gets rejected by /mark to keep applications.md in valid shape. Updating
+// this list also requires updating templates/states.yml — keep in sync.
+const CANONICAL_STATES = new Set([
+  'Evaluated', 'Applied', 'Responded', 'Interview',
+  'Offer', 'Rejected', 'Discarded', 'SKIP',
+]);
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -163,9 +171,179 @@ function renderMarkdownPage(mdContent, fileName) {
 </body></html>`;
 }
 
+// Status-flip endpoint — GET /mark?num=47&status=Applied edits the row in
+// data/applications.md, appends an audit note, and returns a confirmation
+// page with an Undo link. Wired into the heartbeat email's per-row "✅
+// Applied" button so Mitchell can clear his queue without leaving Gmail.
+//
+// Why GET (not POST): email clients strip <form> tags entirely, so a
+// one-click experience requires a clickable link. Mitigations against
+// accidental triggers (e.g., link prefetchers): (1) localhost binding
+// blocks external prefetchers; (2) once exposed via Cloudflare Tunnel,
+// Cloudflare Access auth blocks unauthenticated prefetchers; (3) the
+// confirmation page shows an Undo link that reverts the previous status.
+function handleMarkRequest(req, res) {
+  const url = new URL(req.url, `http://localhost:${PORT}`);
+  const num = parseInt(url.searchParams.get('num') || '', 10);
+  const status = (url.searchParams.get('status') || 'Applied').trim();
+  const previousStatus = (url.searchParams.get('from') || '').trim();
+
+  if (!Number.isFinite(num) || num < 1) {
+    res.writeHead(400, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end(renderMarkPage({ ok: false, message: `Invalid row number: ${url.searchParams.get('num')}` }));
+    return;
+  }
+  if (!CANONICAL_STATES.has(status)) {
+    res.writeHead(400, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end(renderMarkPage({
+      ok: false,
+      message: `Invalid status "${status}". Allowed: ${[...CANONICAL_STATES].join(', ')}`,
+    }));
+    return;
+  }
+
+  const path = join(ROOT, 'data/applications.md');
+  if (!existsSync(path)) {
+    res.writeHead(500, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end(renderMarkPage({ ok: false, message: 'data/applications.md not found' }));
+    return;
+  }
+
+  const text = readFileSync(path, 'utf-8');
+  const lines = text.split('\n');
+  let priorStatus = '';
+  let priorCompany = '';
+  let priorRole = '';
+  let lineIdx = -1;
+
+  // Find the row by its leading number cell
+  for (let i = 0; i < lines.length; i++) {
+    const m = lines[i].match(/^\|\s*(\d+)\s*\|/);
+    if (m && parseInt(m[1], 10) === num) {
+      lineIdx = i;
+      const cells = lines[i].split('|').map(c => c.trim());
+      priorCompany = cells[3] || '';
+      priorRole = cells[4] || '';
+      priorStatus = cells[6] || '';
+      break;
+    }
+  }
+
+  if (lineIdx === -1) {
+    res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end(renderMarkPage({ ok: false, message: `Row #${num} not found in applications.md` }));
+    return;
+  }
+
+  // Idempotent: if status already matches, just confirm without rewriting
+  if (priorStatus === status) {
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end(renderMarkPage({
+      ok: true,
+      idempotent: true,
+      num,
+      company: priorCompany,
+      role: priorRole,
+      status,
+      priorStatus,
+      message: `#${num} is already marked ${status} — no change needed.`,
+    }));
+    return;
+  }
+
+  // Replace the status cell. The status is column 6 (1-indexed cells[6]),
+  // sitting between score (cells[5]) and pdf (cells[7]). We rewrite by
+  // splitting on |, replacing cells[6], and rejoining — preserves all
+  // surrounding whitespace and other columns verbatim.
+  const cells = lines[lineIdx].split('|');
+  // Cell layout: cells[0]='', cells[1]=' num ', cells[2]=' date ',
+  // cells[3]=' company ', cells[4]=' role ', cells[5]=' score ',
+  // cells[6]=' status ', cells[7]=' pdf ', cells[8]=' report ',
+  // cells[9]=' notes ', cells[10]=''.
+  if (cells.length < 10) {
+    res.writeHead(500, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end(renderMarkPage({ ok: false, message: `Row #${num} has unexpected column count (${cells.length}). Refusing to edit.` }));
+    return;
+  }
+  // Preserve the original cell padding (leading + trailing spaces) so the
+  // markdown table's column alignment doesn't shift.
+  const original = cells[6];
+  const leading = original.match(/^\s*/)[0];
+  const trailing = original.match(/\s*$/)[0];
+  cells[6] = `${leading}${status}${trailing}`;
+
+  // Append an audit note to the notes cell (cells[9]) so we have a record
+  // of when + how the flip happened. Keep it concise — applications.md
+  // rows are already wide.
+  const today = new Date().toISOString().slice(0, 10);
+  const noteSnippet = ` · marked ${status} via heartbeat ${today}`;
+  const notesOriginal = cells[9] || '';
+  const notesLeading = notesOriginal.match(/^\s*/)[0];
+  const notesTrailing = notesOriginal.match(/\s*$/)[0];
+  cells[9] = `${notesLeading}${notesOriginal.trim()}${noteSnippet}${notesTrailing}`;
+
+  lines[lineIdx] = cells.join('|');
+  writeFileSync(path, lines.join('\n'));
+
+  console.log(`  ✓ Marked #${num} ${priorCompany} (${priorRole}): ${priorStatus} → ${status}`);
+
+  res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+  res.end(renderMarkPage({
+    ok: true,
+    num,
+    company: priorCompany,
+    role: priorRole,
+    status,
+    priorStatus,
+    message: `#${num} ${priorCompany} marked ${priorStatus} → ${status}.`,
+  }));
+}
+
+// Render a small confirmation page for /mark — green for success, red for
+// errors, with an Undo button (re-runs /mark using the prior status) and
+// a Back to Dashboard link.
+function renderMarkPage(ctx) {
+  const isOk = !!ctx.ok;
+  const accent = isOk ? '#1a7f37' : '#cf222e';
+  const tone = isOk ? '#dafbe1' : '#ffebe9';
+  const icon = isOk ? '✅' : '⚠️';
+  let body = `<h1 style="margin:0 0 12px;color:${accent}">${icon} ${isOk ? (ctx.idempotent ? 'Already marked' : 'Status updated') : 'Could not mark'}</h1>`;
+  body += `<p style="font-size:15px;color:#1f2328">${ctx.message || ''}</p>`;
+  if (isOk && ctx.role) {
+    body += `<p style="font-size:14px;color:#57606a">${ctx.role}</p>`;
+  }
+  if (isOk && ctx.priorStatus && ctx.priorStatus !== ctx.status && !ctx.idempotent) {
+    const undoUrl = `/mark?num=${ctx.num}&status=${encodeURIComponent(ctx.priorStatus)}&from=${encodeURIComponent(ctx.status)}`;
+    body += `<p style="margin-top:18px"><a href="${undoUrl}" style="background:#fff;color:#cf222e;padding:8px 14px;border:1px solid #cf222e;border-radius:6px;text-decoration:none;font-weight:600;font-size:13px">↶ Undo (revert to ${ctx.priorStatus})</a></p>`;
+  }
+  body += `<p style="margin-top:22px"><a href="/dashboard/" style="color:#0969da;text-decoration:none;font-weight:500">← Back to dashboard</a></p>`;
+  return `<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>career-ops · mark status</title>
+</head>
+<body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;background:#f6f8fa;color:#1f2328;margin:0;padding:0;line-height:1.55">
+  <main style="max-width:640px;margin:64px auto;padding:0 20px">
+    <div style="background:#ffffff;border:1px solid #d0d7de;border-left:4px solid ${accent};border-radius:10px;padding:28px 32px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
+      <div style="display:inline-block;background:${tone};color:${accent};padding:3px 10px;border-radius:99px;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:14px">career-ops</div>
+      ${body}
+    </div>
+  </main>
+</body></html>`;
+}
+
 const server = http.createServer((req, res) => {
   try {
     const urlPath = decodeURIComponent((req.url || '/').split('?')[0]);
+
+    // Status-flip endpoint — handled before the static-file resolver so
+    // /mark never collides with a file in the project root.
+    if (urlPath === '/mark') {
+      handleMarkRequest(req, res);
+      return;
+    }
+
     const safe = normalize(urlPath).replace(/^(\.\.[\/\\])+/g, '');
     if (safe.includes('..')) {
       res.writeHead(403, { 'Content-Type': 'text/plain' });
