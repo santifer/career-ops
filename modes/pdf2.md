@@ -72,8 +72,8 @@ Role: {role or "unknown"}
 
 After generating the PDF:
 - Write a tracker TSV to batch/tracker-additions/ as usual
-- Return a single JSON line to stdout:
-  {"status":"ok","company":"{company}","role":"{role}","pdf":"{output path}","keywords_pct":{n}}
+- Write your result to batch/pdf2-results/{job_index}.json:
+  {"status":"ok","company":"{company}","role":"{role}","pdf":"{output path}"}
   or on failure:
   {"status":"error","url":"{url}","reason":"{short reason}"}
 """
@@ -84,7 +84,9 @@ After generating the PDF:
 
 ## Step 4 — Consolidate Results
 
-After all subagents complete, run:
+If a worker appears stuck after 10+ minutes, tell the user to retry that URL individually with `/career-ops pdf`.
+
+After all subagents complete, read each `batch/pdf2-results/{job_index}.json` file to build the summary. Then run:
 ```bash
 node merge-tracker.mjs
 ```
@@ -94,11 +96,11 @@ Show a summary table:
 ```
 pdf2 — Batch Complete (N jobs)
 
-| # | Company      | Role        | PDF | Keywords | Output                                         |
-|---|-------------|-------------|-----|----------|------------------------------------------------|
-| 1 | Acme Corp   | AI PM       | ✅  | 87%      | output/cv-jane-doe-acme-corp-2026-05-04.pdf    |
-| 2 | BigTech     | ML Engineer | ✅  | 91%      | output/cv-jane-doe-bigtech-2026-05-04.pdf      |
-| 3 | StartupXY   | CTO         | ❌  | —        | URL inaccessible                               |
+| # | Company      | Role        | PDF | Output                                         |
+|---|-------------|-------------|-----|------------------------------------------------|
+| 1 | Acme Corp   | AI PM       | ✅  | output/cv-jane-doe-acme-corp-2026-05-04.pdf    |
+| 2 | BigTech     | ML Engineer | ✅  | output/cv-jane-doe-bigtech-2026-05-04.pdf      |
+| 3 | StartupXY   | CTO         | ❌  | URL inaccessible                               |
 ```
 
 If any job failed, list the failed URLs and reasons below the table so the user can retry individually with `/career-ops pdf`.

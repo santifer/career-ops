@@ -76,12 +76,7 @@ After determining the mode, load the necessary files before executing:
 ### Modes that require `_shared.md` + their mode file:
 Read `modes/_shared.md` + `modes/{mode}.md`
 
-Applies to: `auto-pipeline`, `oferta`, `ofertas`, `pdf`, `contacto`, `apply`, `pipeline`, `scan`, `batch`
-
-### Modes that require only their mode file (+ `_shared.md` loaded via mode file itself):
-Read `modes/_shared.md` + `modes/{mode}.md`
-
-Applies to: `pdf2`
+Applies to: `auto-pipeline`, `oferta`, `ofertas`, `pdf`, `pdf2`, `contacto`, `apply`, `pipeline`, `scan`, `batch`
 
 ### Standalone modes (only their mode file):
 Read `modes/{mode}.md`
