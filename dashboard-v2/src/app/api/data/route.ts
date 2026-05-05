@@ -47,7 +47,7 @@ export async function GET() {
       SELECT id as pipeline_id, url, title, company, score, source, created_at
       FROM jobs
       WHERE user_id = ${userId}
-        AND score > 0
+        AND (score > 0 OR score IS NULL)
         AND id NOT IN (SELECT job_id FROM applications WHERE user_id = ${userId})
       ORDER BY score DESC, created_at DESC
     `;
