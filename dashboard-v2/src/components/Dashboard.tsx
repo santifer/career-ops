@@ -430,6 +430,26 @@ export default function Dashboard() {
               {displayName ? `Welcome back, ${displayName}` : 'Welcome back'}
             </h1>
             <p className="text-[#a8a29e] font-medium mt-1">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+            {data?.meta?.lastRunId && (
+              <div className="mt-3 text-[10px] font-mono text-[#a8a29e] uppercase tracking-[0.2em]">
+                Last run: <span className="text-[#1c1917] font-bold">{String(data.meta.lastRunScript || '').replace('.mjs', '')}</span>{' '}
+                <span className="text-[#a8a29e]">·</span>{' '}
+                <span className="text-[#1c1917] font-bold">{String(data.meta.lastRunStatus || '')}</span>{' '}
+                {data?.meta?.lastRunUrl && (
+                  <>
+                    <span className="text-[#a8a29e]">·</span>{' '}
+                    <a
+                      href={data.meta.lastRunUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline underline-offset-4 hover:text-[#1c1917]"
+                    >
+                      logs
+                    </a>
+                  </>
+                )}
+              </div>
+            )}
           </div>
           <div className="flex gap-4">
              <button className="px-5 py-2.5 bg-[#f5f5f4] border border-[#e7e5e4] rounded-xl hover:bg-[#e7e5e4] transition-colors flex items-center gap-2 text-sm font-bold text-[#1c1917]">

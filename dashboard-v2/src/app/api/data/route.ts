@@ -205,6 +205,33 @@ export async function GET() {
       latestEvent = null;
     }
 
+    // 7. Fetch latest background run (traceability)
+    let latestRun: any = null;
+    try {
+      await sql`
+        CREATE TABLE IF NOT EXISTS background_runs (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          action_script TEXT NOT NULL,
+          action_args TEXT,
+          status TEXT NOT NULL DEFAULT 'queued',
+          run_url TEXT,
+          queued_at TIMESTAMP NOT NULL DEFAULT NOW(),
+          completed_at TIMESTAMP
+        );
+      `;
+      const runRows = await sql`
+        SELECT id, action_script, status, run_url, queued_at, completed_at
+        FROM background_runs
+        WHERE user_id = ${String(userId)}
+        ORDER BY queued_at DESC
+        LIMIT 1
+      `;
+      latestRun = runRows[0] || null;
+    } catch {
+      latestRun = null;
+    }
+
     return NextResponse.json({
       applications,
       pipeline,
@@ -220,6 +247,12 @@ export async function GET() {
         lastBackgroundActionScript: latestEvent?.action_script ?? null,
         lastBackgroundStatus: latestEvent?.status ?? null,
         lastBackgroundCompletedAt: latestEvent?.created_at ?? null,
+        lastRunId: latestRun?.id ?? null,
+        lastRunScript: latestRun?.action_script ?? null,
+        lastRunStatus: latestRun?.status ?? null,
+        lastRunUrl: latestRun?.run_url ?? null,
+        lastRunQueuedAt: latestRun?.queued_at ?? null,
+        lastRunCompletedAt: latestRun?.completed_at ?? null,
       },
       timestamp: new Date().toISOString()
     });
