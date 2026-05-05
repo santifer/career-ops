@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -16,7 +16,10 @@ export async function GET(
 
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type') || 'resume'; // 'resume' or 'cl'
-    const jobId = params.id;
+    
+    // In Next.js 15+, params is a Promise that must be awaited
+    const { id } = await params;
+    const jobId = id;
 
     const [job] = await sql`
       SELECT resume_html, cover_letter_html 
