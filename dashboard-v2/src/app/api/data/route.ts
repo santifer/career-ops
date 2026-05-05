@@ -90,14 +90,40 @@ export async function GET() {
     `;
 
     // 3. Fetch Pipeline directly from jobs table (Multi-Tenant)
-    const pipeline = await sql`
-      SELECT id as pipeline_id, url, title, company, score, source, created_at
-      FROM jobs
-      WHERE user_id = ${userId}
-        AND (score > 0 OR score IS NULL)
-        AND id NOT IN (SELECT job_id FROM applications WHERE user_id = ${userId})
-      ORDER BY score DESC, created_at DESC
-    `;
+    // Some schemas may not have newer tailoring/JD columns yet → fall back gracefully.
+    let pipeline: any[] = [];
+    try {
+      pipeline = await sql`
+        SELECT
+          id as pipeline_id,
+          url,
+          canonical_url,
+          title,
+          company,
+          score,
+          source,
+          created_at,
+          (
+            resume_pdf_key IS NOT NULL OR cover_letter_pdf_key IS NOT NULL
+            OR resume_html IS NOT NULL OR cover_letter_html IS NOT NULL
+          ) AS is_tailored
+        FROM jobs
+        WHERE user_id = ${userId}
+          AND (score > 0 OR score IS NULL)
+          AND id NOT IN (SELECT job_id FROM applications WHERE user_id = ${userId})
+        ORDER BY score DESC, created_at DESC
+      `;
+    } catch {
+      pipeline = await sql`
+        SELECT id as pipeline_id, url, title, company, score, source, created_at
+        FROM jobs
+        WHERE user_id = ${userId}
+          AND (score > 0 OR score IS NULL)
+          AND id NOT IN (SELECT job_id FROM applications WHERE user_id = ${userId})
+        ORDER BY score DESC, created_at DESC
+      `;
+      pipeline = pipeline.map((p: any) => ({ ...p, canonical_url: p.url, is_tailored: false }));
+    }
 
     // 4. Fetch User Profile from DB
     const profileRow = await sql`
@@ -119,14 +145,17 @@ export async function GET() {
             company,
             title,
             updated_at,
-            (resume_pdf IS NOT NULL) AS has_resume_pdf,
-            (cover_letter_pdf IS NOT NULL) AS has_cover_letter_pdf,
+            url,
+            canonical_url,
+            (resume_pdf_key IS NOT NULL OR resume_pdf IS NOT NULL) AS has_resume_pdf,
+            (cover_letter_pdf_key IS NOT NULL OR cover_letter_pdf IS NOT NULL) AS has_cover_letter_pdf,
             (resume_html IS NOT NULL) AS has_resume_html,
             (cover_letter_html IS NOT NULL) AS has_cover_letter_html
           FROM jobs
           WHERE user_id = ${userId} 
             AND (
-              resume_pdf IS NOT NULL OR cover_letter_pdf IS NOT NULL
+              resume_pdf_key IS NOT NULL OR cover_letter_pdf_key IS NOT NULL
+              OR resume_pdf IS NOT NULL OR cover_letter_pdf IS NOT NULL
               OR resume_html IS NOT NULL OR cover_letter_html IS NOT NULL
             )
           ORDER BY updated_at DESC
@@ -135,6 +164,7 @@ export async function GET() {
           id: d.id,
           company: d.company,
           title: d.title,
+          url: d.canonical_url || d.url,
           name: `Tailored Assets: ${d.company} - ${d.title}`,
           mtime: d.updated_at,
           has_resume_pdf: !!d.has_resume_pdf,
@@ -149,14 +179,17 @@ export async function GET() {
             company,
             title,
             created_at,
-            (resume_pdf IS NOT NULL) AS has_resume_pdf,
-            (cover_letter_pdf IS NOT NULL) AS has_cover_letter_pdf,
+            url,
+            canonical_url,
+            (resume_pdf_key IS NOT NULL OR resume_pdf IS NOT NULL) AS has_resume_pdf,
+            (cover_letter_pdf_key IS NOT NULL OR cover_letter_pdf IS NOT NULL) AS has_cover_letter_pdf,
             (resume_html IS NOT NULL) AS has_resume_html,
             (cover_letter_html IS NOT NULL) AS has_cover_letter_html
           FROM jobs
           WHERE user_id = ${userId} 
             AND (
-              resume_pdf IS NOT NULL OR cover_letter_pdf IS NOT NULL
+              resume_pdf_key IS NOT NULL OR cover_letter_pdf_key IS NOT NULL
+              OR resume_pdf IS NOT NULL OR cover_letter_pdf IS NOT NULL
               OR resume_html IS NOT NULL OR cover_letter_html IS NOT NULL
             )
           ORDER BY created_at DESC
@@ -165,6 +198,7 @@ export async function GET() {
           id: d.id,
           company: d.company,
           title: d.title,
+          url: d.canonical_url || d.url,
           name: `Tailored Assets: ${d.company} - ${d.title}`,
           mtime: d.created_at,
           has_resume_pdf: !!d.has_resume_pdf,

@@ -224,6 +224,25 @@ async function scrapeJD(url) {
   }
 }
 
+function canonicalizeUrl(value) {
+  if (!value) return '';
+  const raw = String(value).trim();
+  if (!raw) return '';
+  let next = raw;
+  if (next.startsWith('//')) next = `https:${next}`;
+  if (!/^https?:\/\//i.test(next) && /^[a-z0-9.-]+\.[a-z]{2,}(\/|$)/i.test(next)) {
+    next = `https://${next}`;
+  }
+  try {
+    const u = new URL(next);
+    u.hash = '';
+    u.search = '';
+    return u.toString();
+  } catch {
+    return next.split('?')[0];
+  }
+}
+
 async function tailorPackage(jd, profile, companyName) {
   const hfClient = await getHfClient();
   if (hfClient) {
@@ -393,6 +412,7 @@ async function tailorPackage(jd, profile, companyName) {
 
     console.log(`🎯 Target identified: ${entry.company}`);
     const jdText = await scrapeJD(entry.url);
+    const canonicalUrl = canonicalizeUrl(entry.url);
     const result = await tailorPackage(jdText, profile, entry.company);
     const tailoring = result.resume;
     
@@ -464,13 +484,35 @@ async function tailorPackage(jd, profile, companyName) {
 
     // Persist to Neon DB so it can be viewed on the Vercel dashboard!
     try {
-      await sql`ALTER TABLE jobs ADD COLUMN IF NOT EXISTS resume_html TEXT, ADD COLUMN IF NOT EXISTS cover_letter_html TEXT;`;
+      await sql`
+        ALTER TABLE jobs
+          ADD COLUMN IF NOT EXISTS resume_html TEXT,
+          ADD COLUMN IF NOT EXISTS cover_letter_html TEXT,
+          ADD COLUMN IF NOT EXISTS canonical_url TEXT,
+          ADD COLUMN IF NOT EXISTS jd_text TEXT;
+      `;
       
       // We assume entry.id exists if it came from DB, else we try to find it by URL
       if (entry.id) {
-        await sql`UPDATE jobs SET resume_html = ${resumeHtml}, cover_letter_html = ${clHtml} WHERE id = ${entry.id} AND user_id = ${userId}`;
+        await sql`
+          UPDATE jobs
+          SET
+            resume_html = ${resumeHtml},
+            cover_letter_html = ${clHtml},
+            canonical_url = COALESCE(${canonicalUrl}, canonical_url),
+            jd_text = COALESCE(${String(jdText || '').slice(0, 25000)}, jd_text)
+          WHERE id = ${entry.id} AND user_id = ${userId}
+        `;
       } else {
-        await sql`UPDATE jobs SET resume_html = ${resumeHtml}, cover_letter_html = ${clHtml} WHERE url = ${entry.url} AND user_id = ${userId}`;
+        await sql`
+          UPDATE jobs
+          SET
+            resume_html = ${resumeHtml},
+            cover_letter_html = ${clHtml},
+            canonical_url = COALESCE(${canonicalUrl}, canonical_url),
+            jd_text = COALESCE(${String(jdText || '').slice(0, 25000)}, jd_text)
+          WHERE url = ${entry.url} AND user_id = ${userId}
+        `;
       }
       console.log(`💾 HTML assets persisted to database. You can view/print them from the dashboard!`);
     } catch (dbErr) {

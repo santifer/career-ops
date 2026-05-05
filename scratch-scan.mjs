@@ -95,7 +95,7 @@ function tryAdd(url, company, title, source) {
     return 'filtered';
   }
   seenUrls.add(url);
-  newJobs.push({ url, company, title, source });
+  newJobs.push({ url, canonical_url: cleanUrl, company, title, source });
   return 'added';
 }
 
@@ -325,10 +325,19 @@ async function run() {
 
   if (totalAdded > 0) {
     console.log(`\n📦 UPSERTing ${totalAdded} new jobs to PostgreSQL...`);
+    try {
+      await sql`
+        ALTER TABLE jobs
+          ADD COLUMN IF NOT EXISTS canonical_url TEXT,
+          ADD COLUMN IF NOT EXISTS jd_text TEXT;
+      `;
+    } catch {
+      // ignore
+    }
     for (const job of newJobs) {
       job.user_id = parseInt(userId);
       await sql`
-        INSERT INTO jobs ${sql(job, 'url', 'company', 'title', 'source', 'user_id')}
+        INSERT INTO jobs ${sql(job, 'url', 'canonical_url', 'company', 'title', 'source', 'user_id')}
         ON CONFLICT (user_id, url) DO NOTHING
       `;
     }

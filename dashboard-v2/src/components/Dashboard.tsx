@@ -17,7 +17,9 @@ import {
   ShieldCheck,
   ChevronRight,
   X,
-  Zap
+  Zap,
+  Upload,
+  ExternalLink
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { signOut, useSession } from 'next-auth/react';
@@ -49,10 +51,42 @@ export default function Dashboard() {
   const [tagInputNegative, setTagInputNegative] = useState('');
   const [tagInputPortals, setTagInputPortals] = useState('');
   const [toast, setToast] = useState<{ show: boolean; message: string }>({ show: false, message: '' });
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const [resumeImportStatus, setResumeImportStatus] = useState<'idle' | 'uploading' | 'ready' | 'error'>('idle');
+  const [resumeImport, setResumeImport] = useState<any>(null);
+  const [resumeImportMode, setResumeImportMode] = useState<'replace' | 'merge'>('merge');
+  const [jobDetailsOpen, setJobDetailsOpen] = useState(false);
+  const [jobDetailsLoading, setJobDetailsLoading] = useState(false);
+  const [jobDetails, setJobDetails] = useState<any>(null);
+  const [jobDetailsError, setJobDetailsError] = useState<string | null>(null);
 
   const appendTerminalLine = (line: string) => {
     setLogs((prev) => [...prev, { type: 'stdout', content: `\n${line}\n` }]);
   };
+
+  const q = searchQuery.trim().toLowerCase();
+  const matches = (value: any) => {
+    if (!q) return true;
+    return String(value || '').toLowerCase().includes(q);
+  };
+
+  const filteredPipeline = (data?.pipeline || []).filter((job: any) =>
+    matches(job.company) || matches(job.title) || matches(job.url) || matches(job.source) || matches(job.score)
+  );
+  const filteredApplications = (data?.applications || []).filter((app: any) =>
+    matches(app.company) || matches(app.role) || matches(app.url) || matches(app.status) || matches(app.score)
+  );
+  const filteredDocs = (data?.pdfs || []).filter((doc: any) =>
+    matches(doc.company) || matches(doc.title) || matches(doc.name)
+  );
+
+  useEffect(() => {
+    if (!isSearchOpen) return;
+    const t = setTimeout(() => searchInputRef.current?.focus(), 50);
+    return () => clearTimeout(t);
+  }, [isSearchOpen]);
 
   const formatCompletionMessage = (meta: any) => {
     const script: string = String(meta?.lastBackgroundActionScript || '');
@@ -364,6 +398,94 @@ export default function Dashboard() {
     }
   };
 
+  const normalizeExperience = (arr: any[]) =>
+    (Array.isArray(arr) ? arr : []).filter(Boolean).map((e) => ({
+      company: String(e?.company || '').trim(),
+      role: String(e?.role || '').trim(),
+      period: String(e?.period || '').trim(),
+      location: String(e?.location || '').trim(),
+      bullets: Array.isArray(e?.bullets) ? e.bullets.map((b: any) => String(b || '').trim()).filter(Boolean) : [],
+    }));
+
+  const normalizeEducation = (arr: any[]) =>
+    (Array.isArray(arr) ? arr : []).filter(Boolean).map((e) => ({
+      school: String(e?.school || '').trim(),
+      degree: String(e?.degree || '').trim(),
+      period: String(e?.period || '').trim(),
+      location: String(e?.location || '').trim(),
+    }));
+
+  const mergeUniqueByKey = (base: any[], incoming: any[], keyFn: (v: any) => string) => {
+    const out: any[] = [];
+    const seen = new Set<string>();
+    const push = (v: any) => {
+      const k = keyFn(v);
+      if (!k) return;
+      if (seen.has(k)) return;
+      seen.add(k);
+      out.push(v);
+    };
+    base.forEach(push);
+    incoming.forEach(push);
+    return out;
+  };
+
+  const handleResumeImportFile = async (file: File) => {
+    setResumeImportStatus('uploading');
+    setResumeImport(null);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/resume/import', { method: 'POST', body: fd });
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(json?.error || 'Import failed');
+      }
+      setResumeImport(json);
+      setResumeImportStatus('ready');
+    } catch (e: any) {
+      setResumeImportStatus('error');
+      setResumeImport({ error: e?.message || 'Import failed' });
+    }
+  };
+
+  const applyResumeImport = () => {
+    const nextExp = normalizeExperience(resumeImport?.experience || []);
+    const nextEdu = normalizeEducation(resumeImport?.education || []);
+    setProfileFormData((prev: any) => {
+      const prevExp = normalizeExperience(prev?.experience || []);
+      const prevEdu = normalizeEducation(prev?.education || []);
+      const exp =
+        resumeImportMode === 'replace'
+          ? nextExp
+          : mergeUniqueByKey(prevExp, nextExp, (e) => `${e.company}::${e.role}::${e.period}`.toLowerCase());
+      const education =
+        resumeImportMode === 'replace'
+          ? nextEdu
+          : mergeUniqueByKey(prevEdu, nextEdu, (e) => `${e.school}::${e.degree}::${e.period}`.toLowerCase());
+      return { ...prev, experience: exp, education };
+    });
+    setToast({ show: true, message: '✅ Resume import applied to Experience/Education. Hit Save Changes to persist.' });
+    setTimeout(() => setToast({ show: false, message: '' }), 5000);
+  };
+
+  const openJobDetails = async (jobId: number) => {
+    setJobDetailsOpen(true);
+    setJobDetails(null);
+    setJobDetailsError(null);
+    setJobDetailsLoading(true);
+    try {
+      const res = await fetch(`/api/job/${jobId}`);
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error || 'Failed to load job');
+      setJobDetails(json);
+    } catch (e: any) {
+      setJobDetailsError(e?.message || 'Failed to load job');
+    } finally {
+      setJobDetailsLoading(false);
+    }
+  };
+
   useEffect(() => {
     const term = document.getElementById('terminal-logs');
     if (term) {
@@ -455,9 +577,16 @@ export default function Dashboard() {
             )}
           </div>
           <div className="flex gap-4">
-             <button className="px-5 py-2.5 bg-[#f5f5f4] border border-[#e7e5e4] rounded-xl hover:bg-[#e7e5e4] transition-colors flex items-center gap-2 text-sm font-bold text-[#1c1917]">
+             <button
+               onClick={() => setIsSearchOpen((v) => !v)}
+               className={`px-5 py-2.5 border rounded-xl transition-colors flex items-center gap-2 text-sm font-bold ${
+                 isSearchOpen || searchQuery.trim()
+                   ? 'bg-white border-[#1c1917] text-[#1c1917]'
+                   : 'bg-[#f5f5f4] border border-[#e7e5e4] hover:bg-[#e7e5e4] text-[#1c1917]'
+               }`}
+             >
                 <Search size={16} />
-                <span>Search</span>
+                <span>{searchQuery.trim() ? 'Searching' : 'Search'}</span>
              </button>
              <button 
                 onClick={() => { setActiveTab('terminal'); runCommand('rank'); }}
@@ -468,6 +597,39 @@ export default function Dashboard() {
              </button>
           </div>
         </header>
+
+        <AnimatePresence>
+          {isSearchOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              className="mb-10"
+            >
+              <div className="flex items-center gap-3 bg-[#faf9f6] border border-[#e7e5e4] rounded-2xl px-4 py-3">
+                <Search size={16} className="text-[#a8a29e]" />
+                <input
+                  ref={searchInputRef}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search pipeline, applications, docs..."
+                  className="flex-1 bg-transparent outline-none text-sm font-medium text-[#1c1917] placeholder:text-[#a8a29e]"
+                />
+                {searchQuery.trim() && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="px-3 py-1.5 rounded-xl border border-[#e7e5e4] text-[10px] font-bold uppercase tracking-widest text-[#1c1917] hover:bg-white transition-colors"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+              <div className="mt-2 text-[10px] font-mono text-[#a8a29e] uppercase tracking-[0.2em]">
+                Results: {filteredPipeline.length} pipeline · {filteredApplications.length} applications · {filteredDocs.length} docs
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <section className="grid grid-cols-4 gap-8 mb-12">
           <StatCard icon={<Clock size={20} className="text-[#1c1917]" />} label="Ongoing" value={data?.stats?.applied || 0} />
@@ -556,7 +718,7 @@ export default function Dashboard() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#f5f5f4]">
-                    {data?.applications?.map((app: any, i: number) => (
+                    {filteredApplications.map((app: any, i: number) => (
                       <tr key={i} className="hover:bg-[#faf9f6] transition-colors group">
                         <td className="px-8 py-6 font-bold text-[#1c1917]">{app.company}</td>
                         <td className="px-8 py-6 text-[#78716c] font-medium">{app.role}</td>
@@ -570,9 +732,34 @@ export default function Dashboard() {
                            </div>
                         </td>
                         <td className="px-8 py-6 text-[#1c1917]">
-                           <button onClick={() => { setActiveTab('terminal'); runCommand(`apply ${app.job_id} --deep`); }} className="p-2 border border-[#e7e5e4] rounded-lg hover:bg-[#1c1917] hover:text-white transition-all">
-                             <Play size={14} />
-                           </button>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => { setActiveTab('terminal'); runCommand(`apply ${app.job_id} --deep`); }}
+                              className="p-2 border border-[#e7e5e4] rounded-lg hover:bg-[#1c1917] hover:text-white transition-all"
+                            >
+                              <Play size={14} />
+                            </button>
+                            {app?.url && (
+                              <a
+                                href={app.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-2 border border-[#e7e5e4] rounded-lg hover:bg-[#f5f5f4] transition-all"
+                                title="Open posting"
+                              >
+                                <ExternalLink size={14} />
+                              </a>
+                            )}
+                            {app?.job_id && (
+                              <button
+                                onClick={() => openJobDetails(Number(app.job_id))}
+                                className="p-2 border border-[#e7e5e4] rounded-lg hover:bg-[#f5f5f4] transition-all"
+                                title="Details"
+                              >
+                                <FileText size={14} />
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -598,17 +785,56 @@ export default function Dashboard() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#f5f5f4]">
-                    {data?.pipeline?.map((job: any, i: number) => (
+                    {filteredPipeline.map((job: any, i: number) => (
                       <tr key={i} className="hover:bg-[#faf9f6] transition-colors">
                         <td className="px-8 py-6">
                            <div className="font-bold text-[#1c1917]">{job.company}</div>
-                           <a href={job.url} target="_blank" className="text-[10px] font-bold text-[#a8a29e] hover:text-[#1c1917] transition-colors">{job.url.substring(0, 30)}...</a>
+                           {job?.url ? (
+                             <a
+                               href={job.canonical_url || job.url}
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               className="text-[10px] font-bold text-[#a8a29e] hover:text-[#1c1917] transition-colors inline-flex items-center gap-2"
+                             >
+                               <ExternalLink size={12} />
+                               <span>{String(job.canonical_url || job.url).substring(0, 34)}...</span>
+                             </a>
+                           ) : (
+                             <span className="text-[10px] font-bold text-[#a8a29e]">—</span>
+                           )}
                         </td>
                         <td className="px-8 py-6 text-[#78716c] font-medium">{job.title || 'Unknown Role'}</td>
                         <td className="px-8 py-6 font-mono font-bold text-[#1c1917]">{job.score}</td>
-                        <td className="px-8 py-6 flex gap-3">
-                           <button onClick={() => { setActiveTab('terminal'); runCommand(`offer-match ${job.pipeline_id}`); }} className="px-4 py-2 bg-[#1c1917] text-white rounded-xl font-bold text-xs hover:bg-[#27272a] transition-all">Tailor</button>
-                           <button onClick={() => { setActiveTab('terminal'); runCommand(`apply ${job.pipeline_id} --deep`); }} className="px-4 py-2 bg-white border border-[#e7e5e4] text-[#1c1917] rounded-xl font-bold text-xs hover:bg-[#f5f5f4] transition-all">Apply</button>
+                        <td className="px-8 py-6">
+                          <div className="flex items-center gap-3">
+                            {job?.is_tailored && (
+                              <span className="px-2 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-[10px] font-bold text-emerald-700 uppercase tracking-widest">
+                                Tailored
+                              </span>
+                            )}
+                            <button
+                              onClick={() => { setActiveTab('terminal'); runCommand(`tailor ${job.pipeline_id} --deep`); }}
+                              className="px-4 py-2 bg-[#1c1917] text-white rounded-xl font-bold text-xs hover:bg-[#27272a] transition-all"
+                            >
+                              Tailor
+                            </button>
+                            <button
+                              onClick={() => { setActiveTab('terminal'); runCommand(`apply ${job.pipeline_id} --deep`); }}
+                              className={`px-4 py-2 rounded-xl font-bold text-xs transition-all ${
+                                job?.is_tailored
+                                  ? 'bg-white border border-[#e7e5e4] text-[#1c1917] hover:bg-[#f5f5f4]'
+                                  : 'bg-white border border-[#e7e5e4] text-[#1c1917] hover:bg-[#f5f5f4]'
+                              }`}
+                            >
+                              {job?.is_tailored ? 'Apply (optional)' : 'Apply'}
+                            </button>
+                            <button
+                              onClick={() => openJobDetails(Number(job.pipeline_id))}
+                              className="px-4 py-2 bg-[#f5f5f4] border border-[#e7e5e4] text-[#1c1917] rounded-xl font-bold text-xs hover:bg-[#e7e5e4] transition-all"
+                            >
+                              Details
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -654,7 +880,7 @@ export default function Dashboard() {
                      <FileText size={18} className="text-[#a8a29e]" />
                   </h3>
                   <div className="space-y-3 overflow-y-auto flex-1">
-                    {data?.pdfs?.map((doc: any, i: number) => (
+                    {filteredDocs.map((doc: any, i: number) => (
                       <div
                         key={i}
                         className="p-4 bg-white rounded-xl border border-[#e7e5e4] hover:border-[#1c1917] transition-all flex items-center justify-between group"
@@ -673,6 +899,26 @@ export default function Dashboard() {
                           </div>
                         </a>
                         <div className="flex items-center gap-2 pl-3">
+                          {doc?.url && (
+                            <a
+                              href={doc.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-2 rounded-lg border border-[#e7e5e4] hover:bg-[#f5f5f4] transition-all text-[#1c1917]"
+                              aria-label="Open posting"
+                              title="Open posting"
+                            >
+                              <ExternalLink size={14} />
+                            </a>
+                          )}
+                          <button
+                            onClick={() => openJobDetails(Number(doc.id))}
+                            className="p-2 rounded-lg border border-[#e7e5e4] hover:bg-[#f5f5f4] transition-all text-[#1c1917]"
+                            aria-label="Details"
+                            title="Details"
+                          >
+                            <FileText size={14} />
+                          </button>
                           {doc.has_resume_pdf && (
                             <a
                               href={`/api/view/${doc.id}?format=pdf&download=1`}
@@ -808,6 +1054,68 @@ System Initialized — v2.0`}
                    <div className="grid grid-cols-2 gap-4">
                       <Input label="Site Location" value={profileFormData.candidate.location} onChange={(v) => setProfileFormData({...profileFormData, candidate: {...profileFormData.candidate, location: v}})} />
                       <Input label="Secure Email" value={profileFormData.candidate.email} onChange={(v) => setProfileFormData({...profileFormData, candidate: {...profileFormData.candidate, email: v}})} />
+                   </div>
+                 </ConfigSection>
+
+                 <ConfigSection title="Resume Import (PDF/DOCX)" icon={<Upload size={18} className="text-[#1c1917]" />}>
+                   <div className="space-y-4">
+                     <input
+                       type="file"
+                       accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                       onChange={(e) => {
+                         const f = e.target.files?.[0];
+                         if (f) handleResumeImportFile(f);
+                       }}
+                       className="block w-full text-sm font-medium text-[#1c1917] file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-[#1c1917] file:text-white file:font-bold hover:file:bg-[#27272a]"
+                     />
+
+                     <div className="flex items-center gap-4">
+                       <div className="text-[10px] font-bold text-[#a8a29e] uppercase tracking-widest">Mode</div>
+                       <button
+                         type="button"
+                         onClick={() => setResumeImportMode('merge')}
+                         className={`px-4 py-2 rounded-xl border text-xs font-bold transition-colors ${
+                           resumeImportMode === 'merge' ? 'bg-white border-[#1c1917]' : 'bg-[#faf9f6] border-[#e7e5e4]'
+                         }`}
+                       >
+                         Merge
+                       </button>
+                       <button
+                         type="button"
+                         onClick={() => setResumeImportMode('replace')}
+                         className={`px-4 py-2 rounded-xl border text-xs font-bold transition-colors ${
+                           resumeImportMode === 'replace' ? 'bg-white border-[#1c1917]' : 'bg-[#faf9f6] border-[#e7e5e4]'
+                         }`}
+                       >
+                         Replace
+                       </button>
+                     </div>
+
+                     <div className="text-xs font-medium text-[#78716c]">
+                       {resumeImportStatus === 'idle' && 'Upload your resume to auto-fill Experience + Education.'}
+                       {resumeImportStatus === 'uploading' && 'Importing… (best-effort extraction)'}
+                       {resumeImportStatus === 'error' && `Import failed: ${resumeImport?.error || 'Unknown error'}`}
+                       {resumeImportStatus === 'ready' &&
+                         `Found ${(resumeImport?.experience || []).length} experience entries and ${(resumeImport?.education || []).length} education entries.`}
+                     </div>
+
+                     {resumeImportStatus === 'ready' && (
+                       <div className="space-y-3">
+                         <button
+                           type="button"
+                           onClick={applyResumeImport}
+                           className="w-full px-6 py-3 rounded-2xl bg-[#1c1917] text-white hover:bg-[#27272a] transition-colors text-sm font-bold"
+                         >
+                           Apply import to Experience/Education
+                         </button>
+                         {!!resumeImport?.raw_text_preview && (
+                           <details className="bg-[#faf9f6] border border-[#e7e5e4] rounded-2xl p-4">
+                             <summary className="cursor-pointer text-xs font-bold text-[#1c1917]">Raw text preview</summary>
+                             <pre className="mt-3 text-[11px] whitespace-pre-wrap text-[#44403c] font-mono">{resumeImport.raw_text_preview}</pre>
+                           </details>
+                         )}
+                       </div>
+                     )}
                    </div>
                  </ConfigSection>
 
@@ -1060,6 +1368,73 @@ System Initialized — v2.0`}
           )}
         </AnimatePresence>
       </main>
+
+      {/* Job Details Modal */}
+      <AnimatePresence>
+        {jobDetailsOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[90] flex items-center justify-center p-6"
+            onClick={() => setJobDetailsOpen(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 10, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.98 }}
+              className="w-full max-w-4xl bg-white rounded-[2rem] border border-[#e7e5e4] shadow-2xl overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="p-6 border-b border-[#e7e5e4] flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <div className="text-xs font-mono text-[#a8a29e] uppercase tracking-[0.2em]">Job details</div>
+                  <div className="text-xl font-bold text-[#1c1917] mt-1 truncate">
+                    {jobDetails?.company ? `${jobDetails.company} · ${jobDetails.title}` : 'Loading…'}
+                  </div>
+                  {jobDetails?.url && (
+                    <a
+                      href={jobDetails.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-2 inline-flex items-center gap-2 text-xs font-bold text-[#1c1917] underline underline-offset-4"
+                    >
+                      <ExternalLink size={14} />
+                      Open posting
+                    </a>
+                  )}
+                </div>
+                <button
+                  onClick={() => setJobDetailsOpen(false)}
+                  className="p-2 rounded-xl hover:bg-[#f5f5f4] transition-colors"
+                  aria-label="Close"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div className="p-6 max-h-[70vh] overflow-y-auto">
+                {jobDetailsLoading && (
+                  <div className="text-sm font-medium text-[#78716c]">Loading job description…</div>
+                )}
+                {jobDetailsError && (
+                  <div className="text-sm font-bold text-rose-700">Error: {jobDetailsError}</div>
+                )}
+                {!jobDetailsLoading && !jobDetailsError && (
+                  <>
+                    <div className="text-[10px] font-mono text-[#a8a29e] uppercase tracking-[0.2em] mb-3">
+                      Job description
+                    </div>
+                    <pre className="whitespace-pre-wrap text-sm leading-relaxed text-[#1c1917]">
+                      {jobDetails?.jd_text || 'No JD captured yet. Run Tailor to scrape and persist it.'}
+                    </pre>
+                  </>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Toast Notification */}
       <AnimatePresence>
