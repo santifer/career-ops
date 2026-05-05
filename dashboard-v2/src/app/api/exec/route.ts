@@ -47,53 +47,22 @@ export async function GET(req: NextRequest) {
         } else if (cmd === 'rank' || cmd === 'offer-list') {
           scriptName = 'rank-pipeline.mjs';
         } else if (cmd === 'scan') {
-          if (args[0] === '--deep') {
-            const pat = process.env.GITHUB_PAT;
-            if (!pat) {
-              send({ type: 'stderr', content: '⚠ GITHUB_PAT not configured.\nPlease set your GitHub Personal Access Token in Vercel environment variables to enable deep scanning.\n' });
-              send({ type: 'done', code: 1 });
-              controller.close();
-              return;
-            }
-
-            send({ type: 'stdout', content: '🚀 Triggering deep scan via GitHub Actions (Playwright + Chromium)...\n' });
-            
-            try {
-              const res = await fetch('https://api.github.com/repos/UGilfoyle/career-ops/actions/workflows/scraper-cron.yml/dispatches', {
-                method: 'POST',
-                headers: {
-                  'Accept': 'application/vnd.github.v3+json',
-                  'Authorization': `Bearer ${pat}`,
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  ref: 'main',
-                  inputs: {
-                    user_id: String(userId)
-                  }
-                })
-              });
-
-              if (res.ok) {
-                send({ type: 'stdout', content: '✅ Deep scan successfully queued on GitHub Actions!\n' });
-                send({ type: 'stdout', content: '⏳ Please allow 5-10 minutes for the scraper to run in the background.\n' });
-                send({ type: 'stdout', content: '📡 New jobs will automatically appear in your pipeline when ready.\n' });
-                send({ type: 'done', code: 0 });
-              } else {
-                const errBody = await res.text();
-                send({ type: 'stderr', content: `❌ Failed to trigger scan. GitHub API responded with ${res.status}:\n${errBody}\n` });
-                send({ type: 'done', code: 1 });
-              }
-            } catch (err: any) {
-              send({ type: 'stderr', content: `❌ Network error while triggering scan: ${err.message}\n` });
-              send({ type: 'done', code: 1 });
-            }
-            
-            controller.close();
+            await triggerGitHubAction(send, controller, userId, 'scratch-scan.mjs', '');
             return;
           }
           scriptName = 'scratch-scan.mjs';
         } else if (cmd === 'tailor' || cmd === 'offer-match') {
+          if (args.includes('--deep')) {
+            const jobId = args.find(a => a !== '--deep');
+            if (!jobId) {
+              send({ type: 'stderr', content: `Usage: ${cmd} <id> --deep\n` });
+              send({ type: 'done', code: 1 });
+              controller.close();
+              return;
+            }
+            await triggerGitHubAction(send, controller, userId, 'agentic-tailor.mjs', jobId);
+            return;
+          }
           scriptName = 'agentic-tailor.mjs';
           if (args.length === 0) {
             send({ type: 'stderr', content: `Usage: ${cmd} <job_id_or_url>\n  Example: ${cmd} 42\n  Example: ${cmd} https://linkedin.com/jobs/view/123\n` });
@@ -102,6 +71,17 @@ export async function GET(req: NextRequest) {
             return;
           }
         } else if (cmd === 'apply') {
+          if (args.includes('--deep')) {
+            const jobId = args.find(a => a !== '--deep');
+            if (!jobId) {
+              send({ type: 'stderr', content: `Usage: apply <id> --deep\n` });
+              send({ type: 'done', code: 1 });
+              controller.close();
+              return;
+            }
+            await triggerGitHubAction(send, controller, userId, 'auto-apply.mjs', jobId);
+            return;
+          }
           scriptName = 'auto-apply.mjs';
           if (args.length === 0) {
             send({ type: 'stderr', content: `Usage: apply <job_id_or_url>\n  Example: apply 42\n  Example: apply https://linkedin.com/jobs/view/123\n` });
@@ -131,9 +111,9 @@ export async function GET(req: NextRequest) {
   │    offer-list        Score & rank pipeline jobs      │
   │                                                     │
   │  APPLICATION                                        │
-  │    tailor <id|url>   Tailor Resume+Cover Letter     │
-  │    <id>              Shortcut for: tailor <id>      │
-  │    apply <id|url>    Auto-fill application form     │
+  │    tailor <id>       Tailor Resume (Serverless/Fast) │
+  │    tailor <id> --deep Generate full PDF (GitHub Action)│
+  │    apply <id> --deep  Auto-apply (via GitHub Actions)│
   │                                                     │
   │  UTILITIES                                          │
   │    ls                List project files              │
@@ -274,4 +254,53 @@ export async function GET(req: NextRequest) {
       'Connection': 'keep-alive',
     },
   });
+}
+async function triggerGitHubAction(send: any, controller: any, userId: number, script: string, args: string) {
+  const pat = process.env.GITHUB_PAT;
+  if (!pat) {
+    send({ type: 'stderr', content: '⚠ GITHUB_PAT not configured.\nPlease set your GitHub Personal Access Token in Vercel environment variables to enable deep actions.\n' });
+    send({ type: 'done', code: 1 });
+    controller.close();
+    return;
+  }
+
+  const actionName = script === 'scratch-scan.mjs' ? 'deep scan' : script === 'agentic-tailor.mjs' ? 'deep tailoring (PDF)' : 'auto-apply';
+  send({ type: 'stdout', content: `🚀 Triggering ${actionName} via GitHub Actions (Playwright + Chromium)...\n` });
+  
+  try {
+    const res = await fetch('https://api.github.com/repos/UGilfoyle/career-ops/actions/workflows/scraper-cron.yml/dispatches', {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/vnd.github.v3+json',
+        'Authorization': `Bearer ${pat}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        ref: 'main',
+        inputs: {
+          user_id: String(userId),
+          action_script: script,
+          action_args: args
+        }
+      })
+    });
+
+    if (res.ok) {
+      send({ type: 'stdout', content: `✅ ${actionName} successfully queued on GitHub Actions!\n` });
+      send({ type: 'stdout', content: '⏳ Please allow 5-10 minutes for the process to complete in the background.\n' });
+      if (script === 'agentic-tailor.mjs') {
+        send({ type: 'stdout', content: '📄 Your PDF will be available in the GitHub Actions artifacts when ready.\n' });
+      }
+      send({ type: 'done', code: 0 });
+    } else {
+      const errBody = await res.text();
+      send({ type: 'stderr', content: `❌ Failed to trigger action. GitHub API responded with ${res.status}:\n${errBody}\n` });
+      send({ type: 'done', code: 1 });
+    }
+  } catch (err: any) {
+    send({ type: 'stderr', content: `❌ Network error: ${err.message}\n` });
+    send({ type: 'done', code: 1 });
+  }
+  
+  controller.close();
 }

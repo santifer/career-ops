@@ -11,6 +11,14 @@ on:
         description: 'Specific user ID to scan (leave empty for all users)'
         required: false
         default: ''
+      action_script:
+        description: 'Script to run (e.g. scratch-scan.mjs)'
+        required: false
+        default: 'scratch-scan.mjs'
+      action_args:
+        description: 'Arguments for the script'
+        required: false
+        default: ''
 
 jobs:
   scrape:
@@ -32,9 +40,11 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
-      - name: Run scraper for all tenants
+      - name: Run worker process
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           HUGGINGFACE_TOKEN: ${{ secrets.HUGGINGFACE_TOKEN }}
           SCAN_USER_ID: ${{ github.event.inputs.user_id }}
+          ACTION_SCRIPT: ${{ github.event.inputs.action_script }}
+          ACTION_ARGS: ${{ github.event.inputs.action_args }}
         run: node .github/scripts/run-scrapers.mjs
