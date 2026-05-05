@@ -12,7 +12,9 @@ import { fileURLToPath } from 'url';
 import { URLSearchParams } from 'url';
 import { spawn } from 'child_process';
 
-const PORT = 4747;
+const PORT = Number(process.env.PORT || 4747);
+// Bind to loopback by default; opt-in to LAN exposure via HOST=0.0.0.0
+const HOST = process.env.HOST || '127.0.0.1';
 const __dir = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dir, '..');
 const DATA_DIR = process.env.DATA_DIR || path.join(ROOT, 'data');
@@ -55,6 +57,244 @@ function daysSince(dateStr) {
   return Math.floor((Date.now() - d) / 86400000);
 }
 
+// ── Comp parsing from report Block D ──────────────────────────────────────────
+// Extract comp range from "## D) Comp" block. Returns:
+//   { display: "$270-310K base", lowUSD: 270000, highUSD: 310000, currency: 'USD',
+//     kind: 'base' | 'tc' | 'ote' | 'unknown', score: 0..5, premium: bool }
+//
+// "premium" flags companies with known top-tier comp (Anthropic / OpenAI / etc.)
+// even when the report's number isn't precise enough to filter on alone.
+
+const PREMIUM_COMPANIES = new Set([
+  'anthropic','openai','nvidia','google deepmind','deepmind','aws ai','amazon ai',
+  'stripe','databricks','meta ai','meta','apple','netflix','airbnb','figma',
+  'scale ai','cohere','mistral','perplexity','xai','x.ai','runway','character.ai',
+  'inflection','adept','suno','elevenlabs','huggingface','hugging face',
+]);
+
+// In-memory cache: reportLink -> parsed comp object (re-parse on server restart)
+const compCache = new Map();
+
+// Convert a currency token to USD (rough, for sorting only).
+function toUSD(amount, currency) {
+  if (!isFinite(amount)) return amount;
+  const rate = { USD: 1, CAD: 0.74, EUR: 1.08, GBP: 1.27, INR: 0.012, CHF: 1.13, AUD: 0.66, SGD: 0.74 }[currency] || 1;
+  return Math.round(amount * rate);
+}
+
+// Parse a single comp number with K/M suffix support.
+// Examples handled: "270K", "270,000", "1.2M", "$300", "443K"
+function parseAmount(raw) {
+  if (!raw) return NaN;
+  let s = String(raw).replace(/[\$£€₹,\s]/g, '');
+  let mult = 1;
+  if (/k$/i.test(s)) { mult = 1000; s = s.slice(0, -1); }
+  else if (/m$/i.test(s)) { mult = 1_000_000; s = s.slice(0, -1); }
+  const n = parseFloat(s);
+  if (!isFinite(n)) return NaN;
+  // Heuristic: if the bare number is < 800 and there's no K, assume thousands
+  // (e.g., "$270 - 310" almost always means thousands in JD comp blocks)
+  if (mult === 1 && n > 0 && n < 800) mult = 1000;
+  return n * mult;
+}
+
+function detectCurrency(text) {
+  if (/£/.test(text)) return 'GBP';
+  if (/€/.test(text) || /\bEUR\b/i.test(text)) return 'EUR';
+  if (/₹|\bINR\b|\blakh|\bcrore/i.test(text)) return 'INR';
+  if (/\bCAD\b/i.test(text)) return 'CAD';
+  if (/\bCHF\b/i.test(text)) return 'CHF';
+  if (/\bAUD\b/i.test(text)) return 'AUD';
+  return 'USD';
+}
+
+// Heuristic: pull the most informative range from the report's Block D.
+// Strategy: find Block D, score every $/£/€ range we find, pick the best one.
+function extractCompFromReport(reportText, company) {
+  if (!reportText) return null;
+  // Slice from "## D)" or "## D) Comp" up to "## E" or "---" terminator
+  const blockMatch = reportText.match(/##\s*D\)?[^\n]*\n([\s\S]*?)(?=\n##\s*[E-Z]\)?|\n---|\n##\s*Block\s*[E-Z]|$)/);
+  const blockText = blockMatch ? blockMatch[1] : reportText;
+
+  // Match patterns like:
+  //   $270,000 – $310,000 USD base
+  //   $270K-$310K
+  //   €100-150K base
+  //   $375K-$500K+ annually
+  //   $300K base
+  // Strategy: find any [SYMBOL][num][-/–/to][SYMBOL?][num][SUFFIX?] sequence
+  const rangeRe = /([\$£€₹])?\s*([\d.,]+)\s*([KkMm])?\s*(?:[-–—]|to)\s*([\$£€₹])?\s*([\d.,]+)\s*([KkMm])?/g;
+  const candidates = [];
+  let m;
+  // Pre-compute the line each match falls on for source-row scoring
+  const lines = blockText.split('\n');
+  const lineOffsets = [];
+  let cumOff = 0;
+  for (const ln of lines) { lineOffsets.push(cumOff); cumOff += ln.length + 1; }
+  const lineOf = (idx) => {
+    let lo = 0, hi = lineOffsets.length - 1, ans = 0;
+    while (lo <= hi) {
+      const mid = (lo + hi) >> 1;
+      if (lineOffsets[mid] <= idx) { ans = mid; lo = mid + 1; } else hi = mid - 1;
+    }
+    return lines[ans] || '';
+  };
+
+  while ((m = rangeRe.exec(blockText)) !== null) {
+    const sym = m[1] || m[4] || '';
+    if (!sym && !/\b(USD|CAD|EUR|GBP|INR|CHF|salary|base|comp|TC|OTE)\b/i.test(blockText.slice(Math.max(0, m.index - 60), m.index + m[0].length + 60))) continue;
+    const ctx = blockText.slice(Math.max(0, m.index - 80), m.index + m[0].length + 80);
+    const line = lineOf(m.index);
+    let low = parseAmount(m[2] + (m[3] || ''));
+    let high = parseAmount(m[5] + (m[6] || ''));
+    if (!isFinite(low) || !isFinite(high)) continue;
+    if (high < low) [low, high] = [high, low];
+    // Filter junk: too low (< 1K), or unrealistic spread
+    if (low < 1000 || high < 1000) continue;
+    if (high > low * 20) continue;
+    // Filter out non-comp numbers (revenue, ARR, valuation, headcount caps).
+    // No legitimate annual comp exceeds ~$5M USD-equivalent. Block anything ≥ 5M.
+    if (low >= 5_000_000 || high >= 5_000_000) continue;
+    const currency = sym === '£' ? 'GBP' : sym === '€' ? 'EUR' : sym === '₹' ? 'INR' : detectCurrency(ctx);
+    let kind = 'base';
+    const lineLow = line.toLowerCase();
+    if (/total\s*comp|\btc\b|equity|rsu/i.test(line)) kind = 'tc';
+    else if (/\bote\b/i.test(line)) kind = 'ote';
+    else if (/\bbase\b/i.test(line) || /\bsalary\b/i.test(line)) kind = 'base';
+    else if (/total\s*comp|\btc\b|equity|rsu/i.test(ctx)) kind = 'tc';
+    else if (/\bote\b/i.test(ctx)) kind = 'ote';
+    else if (/\bbase\b/i.test(ctx)) kind = 'base';
+    else kind = 'unknown';
+
+    // Score: HEAVILY favor the JD-stated row (the actual offer for THIS role)
+    // and DOWN-weight reference rows like "Anthropic Product Manager TC", "US comparison", "Glassdoor avg"
+    let score = 0;
+    // Strong JD signals — this is the actual offer for THIS role
+    if (/\b(jd|stated|posting|job\s*description|role\s+pays|range\s+is|advertised|listed)\b/i.test(line)) score += 8;
+    if (/^\|\s*JD/i.test(line)) score += 6;  // table row starting "| JD"
+    // Offer-level signals
+    if (/\b(this\s+role|this\s+position|this\s+job)\b/i.test(line)) score += 5;
+    // Tony's projection (often a useful summary number)
+    if (/\b(estimated\s+tony|tony.{0,20}tc|realistic\s+total|tony.{0,20}target)\b/i.test(line)) score += 2;
+    // Down-weight reference / market-comp rows
+    if (/\b(levels\.fyi|glassdoor|payscale|6figr|himalayas|paysa|levels\b|teamblind|blind\b)\b/i.test(line)) score -= 4;
+    if (/\b(comparison|reference|market|equivalent|industry|average|median|context|benchmark)\b/i.test(line)) score -= 3;
+    if (/\b(other\s+role|different\s+role|product\s+manager\s+tc|engineering\s+manager\s+tc|business\s+ops\s+tc|principal\b|director\s+level|fte\b|full[- ]time\s+context)\b/i.test(line)) score -= 5;
+    // Down-weight other-company anchors (e.g. report on Airtable but line says "Anthropic")
+    if (company) {
+      const ourCo = String(company).toLowerCase().trim();
+      const otherPremium = ['anthropic','openai','nvidia','google','deepmind','stripe','databricks','meta','apple','airbnb','figma'];
+      for (const oc of otherPremium) {
+        if (oc !== ourCo && new RegExp('\\b' + oc + '\\b', 'i').test(line)) {
+          score -= 3;
+          break;
+        }
+      }
+    }
+    // Down-weight ARR / valuation / revenue / headcount mentions
+    if (/\b(arr|annual\s+recurring\s+revenue|valuation|raised|funding|series\s+[a-h]\b|revenue|ipo|market\s+cap|aum\b)\b/i.test(line)) score -= 6;
+    // Mild kind preferences
+    if (kind === 'base') score += 2;
+    if (kind === 'ote') score += 1;
+    if (kind === 'tc') score += 0;
+    if (currency === 'USD') score += 1;
+
+    candidates.push({ low, high, currency, kind, score, ctx, line: line.slice(0, 80) });
+  }
+
+  if (!candidates.length) {
+    // Fallback: a single number (no range), e.g., "$300K base"
+    const singleRe = /([\$£€₹])\s*([\d.,]+)\s*([KkMm])?/g;
+    while ((m = singleRe.exec(blockText)) !== null) {
+      const ctx = blockText.slice(Math.max(0, m.index - 60), m.index + m[0].length + 80);
+      const line = lineOf(m.index);
+      const val = parseAmount(m[2] + (m[3] || ''));
+      if (!isFinite(val) || val < 1000) continue;
+      // Same upper-bound + ARR filter as the range path
+      if (val >= 5_000_000) continue;
+      if (/\b(arr|annual\s+recurring\s+revenue|valuation|raised|funding|series\s+[a-h]\b|revenue|ipo|market\s+cap|aum\b)\b/i.test(line)) continue;
+      const currency = m[1] === '£' ? 'GBP' : m[1] === '€' ? 'EUR' : m[1] === '₹' ? 'INR' : detectCurrency(ctx);
+      // Score: only keep singletons that explicitly say comp/salary/base/TC/OTE
+      let score = 0;
+      if (/\b(salary|base|comp|tc|ote|stipend|annual\s+pay)\b/i.test(line)) score += 3;
+      else continue; // skip lone $ amounts in pure prose — too noisy
+      candidates.push({ low: val, high: val, currency, kind: /base/i.test(line) ? 'base' : /\bote\b/i.test(line) ? 'ote' : /\btc\b/i.test(line) ? 'tc' : 'unknown', score, ctx });
+    }
+  }
+
+  if (!candidates.length) return null;
+  candidates.sort((a, b) => b.score - a.score);
+  const best = candidates[0];
+
+  // Display
+  const fmt = (n, cur) => {
+    const symMap = { USD: '$', GBP: '£', EUR: '€', INR: '₹', CAD: 'C$', CHF: 'Fr', AUD: 'A$', SGD: 'S$' };
+    const sym = symMap[cur] || '$';
+    if (n >= 1_000_000) return sym + (n / 1_000_000).toFixed(1) + 'M';
+    if (n >= 1000) return sym + Math.round(n / 1000) + 'K';
+    return sym + n;
+  };
+  const display = best.low === best.high
+    ? fmt(best.low, best.currency) + ' ' + best.kind
+    : fmt(best.low, best.currency) + '-' + fmt(best.high, best.currency).replace(/^[^\d]+/, '') + ' ' + best.kind;
+
+  const lowUSD = toUSD(best.low, best.currency);
+  const highUSD = toUSD(best.high, best.currency);
+  const premium = PREMIUM_COMPANIES.has((company || '').toLowerCase().trim());
+
+  return {
+    display: display.trim(),
+    lowUSD, highUSD,
+    currency: best.currency,
+    kind: best.kind,
+    premium,
+  };
+}
+
+async function getCompForReport(reportLink, company) {
+  if (!reportLink) {
+    const premium = PREMIUM_COMPANIES.has((company || '').toLowerCase().trim());
+    return premium ? { display: '—', lowUSD: 0, highUSD: 0, currency: 'USD', kind: 'unknown', premium: true } : null;
+  }
+  if (compCache.has(reportLink)) return compCache.get(reportLink);
+  // Defense-in-depth: reportLink comes from user-controlled applications.md,
+  // so confine reads to REPORTS_DIR via the path-traversal sanitizer.
+  const safe = resolveSafeReportPath(reportLink);
+  if (!safe) {
+    compCache.set(reportLink, null);
+    return null;
+  }
+  try {
+    const text = await fs.readFile(safe, 'utf8');
+    const comp = extractCompFromReport(text, company);
+    compCache.set(reportLink, comp);
+    return comp;
+  } catch {
+    compCache.set(reportLink, null);
+    return null;
+  }
+}
+
+// "High-paying" qualifier: >= $200K base OR >= $300K TC/OTE OR premium company
+function isHighPaying(comp) {
+  if (!comp) return false;
+  if (comp.premium) return true;
+  if (!isFinite(comp.lowUSD) || comp.lowUSD === 0) return false;
+  const top = Math.max(comp.lowUSD, comp.highUSD || 0);
+  if (comp.kind === 'base' && top >= 200_000) return true;
+  if ((comp.kind === 'tc' || comp.kind === 'ote') && top >= 300_000) return true;
+  // Unknown kind: be permissive, treat as base
+  if (comp.kind === 'unknown' && top >= 200_000) return true;
+  return false;
+}
+
+// Sort key for comp (descending = highest first). Premium gets a bonus.
+function compSortKey(comp) {
+  if (!comp) return 0;
+  const top = Math.max(comp.lowUSD || 0, comp.highUSD || 0);
+  return top + (comp.premium ? 50_000 : 0);
+}
+
 // ── Parse pipeline.md ─────────────────────────────────────────────────────────
 
 function parsePipelineUrls(content) {
@@ -95,7 +335,7 @@ async function loadData() {
   try { appsContent = await fs.readFile(path.join(DATA_DIR, 'applications.md'), 'utf8'); } catch {}
   try { pipelineContent = await fs.readFile(path.join(DATA_DIR, 'pipeline.md'), 'utf8'); } catch {}
 
-  const applications = parseMarkdownTable(appsContent)
+  const rawRows = parseMarkdownTable(appsContent)
     .filter(r => { const n = r['#']||r['num']||''; return n && /\d/.test(n); })
     .map(r => {
       const num     = stripMd(r['#']||r['num']||'');
@@ -114,7 +354,35 @@ async function loadData() {
       return { num, date, company, role, score, status, hasPdf, reportLink, notes, age, needsFollowUp };
     });
 
+  // Attach comp data — concurrent reads, but capped to avoid file-handle blowup on 800+ reports
+  const CONCURRENCY = 20;
+  const applications = [];
+  for (let i = 0; i < rawRows.length; i += CONCURRENCY) {
+    const slice = rawRows.slice(i, i + CONCURRENCY);
+    const enriched = await Promise.all(slice.map(async (a) => {
+      const comp = await getCompForReport(a.reportLink, a.company);
+      return {
+        ...a,
+        comp: comp ? comp.display : null,
+        compLow: comp ? comp.lowUSD : 0,
+        compHigh: comp ? comp.highUSD : 0,
+        compKind: comp ? comp.kind : null,
+        compPremium: !!(comp && comp.premium),
+        highPaying: isHighPaying(comp),
+        compSort: compSortKey(comp),
+      };
+    }));
+    applications.push(...enriched);
+  }
+
   const pipeline = parsePipelineUrls(pipelineContent);
+
+  // Today's activity (uses local date, not UTC)
+  const today = new Date();
+  const todayStr = today.getFullYear() + '-' +
+    String(today.getMonth() + 1).padStart(2, '0') + '-' +
+    String(today.getDate()).padStart(2, '0');
+  const todayApps = applications.filter(a => a.date === todayStr);
 
   const stats = {
     total:     applications.length,
@@ -128,6 +396,14 @@ async function loadData() {
     skip:      applications.filter(a => a.status==='skip').length,
     followUp:  applications.filter(a => a.needsFollowUp).length,
     pending:   pipeline.pending.filter(p => !p.done).length + pipeline.processed.filter(p => !p.done).length,
+    highPaying: applications.filter(a => a.highPaying && a.status === 'evaluated').length,
+    today: {
+      date: todayStr,
+      applied:    todayApps.filter(a => a.status === 'applied').length,
+      evaluated:  todayApps.filter(a => a.status === 'evaluated').length,
+      interview:  todayApps.filter(a => a.status === 'interview').length,
+      total:      todayApps.length,
+    },
   };
 
   return { applications, pipeline, stats, updatedAt: new Date().toISOString() };
@@ -2244,6 +2520,125 @@ const HTML = /* html */ `<!DOCTYPE html>
       transition: background .15s, opacity .15s;
     }
     .btn-row-apply:hover { background: rgba(255,159,10,.2); }
+
+    /* ── Per-row open URL button ── */
+    .btn-row-open {
+      display: inline-flex; align-items: center; gap: 3px;
+      padding: 3px 8px;
+      font-size: 11px; font-weight: 600; font-family: var(--font);
+      border-radius: 6px; border: .5px solid rgba(10,132,255,.35);
+      background: rgba(10,132,255,.1); color: var(--accent);
+      cursor: pointer; white-space: nowrap;
+      transition: background .15s, opacity .15s;
+      text-decoration: none;
+      margin-right: 4px;
+    }
+    .btn-row-open:hover { background: rgba(10,132,255,.2); }
+    .btn-row-open.disabled { opacity: .35; cursor: not-allowed; }
+
+    /* ── Comp cell ── */
+    .td-comp {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      color: var(--text-sec);
+      white-space: nowrap;
+      letter-spacing: -.01em;
+    }
+    .td-comp.high {
+      color: var(--green);
+      font-weight: 600;
+    }
+    .td-comp.premium {
+      color: var(--yellow);
+      font-weight: 600;
+    }
+    .comp-tier {
+      display: inline-block;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      margin-right: 6px;
+      vertical-align: 1px;
+    }
+    .comp-tier.premium { background: var(--yellow); box-shadow: 0 0 4px var(--yellow); }
+    .comp-tier.high { background: var(--green); }
+    .comp-tier.unknown { background: var(--text-ter); }
+
+    /* ── Today's Activity panel ── */
+    .today-panel {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 18px;
+      padding: 14px 16px;
+      background: linear-gradient(135deg, rgba(48,209,88,.06), rgba(10,132,255,.04));
+      border: .5px solid var(--separator2);
+      border-radius: var(--r-md);
+      position: relative;
+      overflow: hidden;
+    }
+    .today-panel::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--green), var(--accent));
+    }
+    .today-cell {
+      display: flex; flex-direction: column; gap: 2px;
+      padding: 0 6px;
+      border-right: .5px solid var(--separator);
+    }
+    .today-cell:last-child { border-right: none; }
+    .today-label {
+      font-size: 10px; font-weight: 600;
+      color: var(--text-ter);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+    .today-value {
+      font-size: 22px; font-weight: 700;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+      color: var(--text);
+      letter-spacing: -.02em;
+    }
+    .today-value.green   { color: var(--green); }
+    .today-value.blue    { color: var(--accent); }
+    .today-value.yellow  { color: var(--yellow); }
+    .today-value.orange  { color: var(--orange); }
+    .today-sub {
+      font-size: 11px; color: var(--text-sec);
+      margin-top: 2px;
+    }
+    .today-header {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 10px;
+      grid-column: 1 / -1;
+    }
+    .today-title {
+      font-size: 12px; font-weight: 700;
+      color: var(--text-sec);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+    .today-date {
+      font-size: 11px; color: var(--text-ter);
+      font-variant-numeric: tabular-nums;
+      margin-left: auto;
+    }
+
+    /* ── Money filter pill ── */
+    .filter-pill.money {
+      background: linear-gradient(135deg, rgba(255,214,10,.14), rgba(48,209,88,.10));
+      border: .5px solid rgba(255,214,10,.35);
+      color: var(--yellow);
+      font-weight: 600;
+    }
+    .filter-pill.money:hover { background: linear-gradient(135deg, rgba(255,214,10,.22), rgba(48,209,88,.16)); }
+    .filter-pill.money.active {
+      background: linear-gradient(135deg, var(--yellow), #ffaa00);
+      color: #1a1a1a;
+      border-color: var(--yellow);
+      box-shadow: 0 2px 8px rgba(255,214,10,.3);
+    }
     .gmail-dot {
       width: 7px; height: 7px;
       border-radius: 50%;
@@ -3014,6 +3409,34 @@ const HTML = /* html */ `<!DOCTYPE html>
       <span class="pipeline-bar-next" id="pipeline-next"></span>
     </div>
 
+    <!-- Today's Activity panel -->
+    <div class="today-panel" id="today-panel">
+      <div class="today-header">
+        <span class="today-title">Today's Activity</span>
+        <span class="today-date" id="today-date">—</span>
+      </div>
+      <div class="today-cell">
+        <span class="today-label">Applied today</span>
+        <span class="today-value blue" id="today-applied">0</span>
+        <span class="today-sub" id="today-applied-sub">submissions</span>
+      </div>
+      <div class="today-cell">
+        <span class="today-label">Pending in queue</span>
+        <span class="today-value orange" id="today-pending">0</span>
+        <span class="today-sub" id="today-pending-sub">URLs to evaluate</span>
+      </div>
+      <div class="today-cell">
+        <span class="today-label">Interviews</span>
+        <span class="today-value yellow" id="today-interviews">0</span>
+        <span class="today-sub" id="today-interviews-sub">scheduled</span>
+      </div>
+      <div class="today-cell">
+        <span class="today-label">High-paying ready</span>
+        <span class="today-value green" id="today-high-paying">0</span>
+        <span class="today-sub" id="today-high-paying-sub">$200K+ to apply</span>
+      </div>
+    </div>
+
     <!-- Apply banner -->
     <div class="apply-banner" id="apply-banner">
       <div class="apply-banner-icon">🚀</div>
@@ -3081,6 +3504,7 @@ const HTML = /* html */ `<!DOCTYPE html>
       </div>
       <div class="filter-pills">
         <button class="filter-pill active" onclick="setFilter('all',this)" data-filter="all">All</button>
+        <button class="filter-pill money" onclick="setFilter('high-paying',this)" data-filter="high-paying" title="$200K+ base, $300K+ TC/OTE, or premium-tier company (Anthropic, OpenAI, NVIDIA, etc.)">💰 High-Paying</button>
         <button class="filter-pill" onclick="setFilter('followup',this)" data-filter="followup">⚡ Follow-up</button>
         <button class="filter-pill" onclick="setFilter('applied',this)" data-filter="applied">Applied</button>
         <button class="filter-pill" onclick="setFilter('interview',this)" data-filter="interview">Interview</button>
@@ -3100,6 +3524,7 @@ const HTML = /* html */ `<!DOCTYPE html>
             <th>Role</th>
             <th onclick="sortBy('status')">Status<span class="sort-arrow" id="sort-status"></span></th>
             <th onclick="sortBy('score')">Score<span class="sort-arrow" id="sort-score"></span></th>
+            <th onclick="sortBy('comp')" title="Sort by compensation (highest first)">Comp<span class="sort-arrow" id="sort-comp"></span></th>
             <th onclick="sortBy('date')">Date<span class="sort-arrow" id="sort-date">↓</span></th>
             <th>Age</th>
             <th>Notes</th>
@@ -3107,7 +3532,7 @@ const HTML = /* html */ `<!DOCTYPE html>
           </tr>
         </thead>
         <tbody id="apps-tbody">
-          <tr class="loading-row"><td colspan="9"><span class="spinner"></span></td></tr>
+          <tr class="loading-row"><td colspan="10"><span class="spinner"></span></td></tr>
         </tbody>
       </table>
     </div>
@@ -3307,11 +3732,26 @@ const HTML = /* html */ `<!DOCTYPE html>
     return (company||'?').charAt(0).toUpperCase();
   }
 
+  /* ── Comp cell rendering ── */
+  function compCell(a) {
+    if (!a.comp && !a.compPremium) {
+      return '<td class="td-comp"><span style="color:var(--text-ter)">—</span></td>';
+    }
+    let cls = 'td-comp';
+    let dotCls = 'unknown';
+    if (a.compPremium) { cls += ' premium'; dotCls = 'premium'; }
+    else if (a.highPaying) { cls += ' high'; dotCls = 'high'; }
+    const dot = '<span class="comp-tier ' + dotCls + '"></span>';
+    const label = a.comp || (a.compPremium ? 'premium' : '—');
+    const tip = a.compPremium ? 'Premium-tier company (auto-included in High-Paying filter)' : (a.highPaying ? 'Meets high-paying threshold' : '');
+    return '<td class="' + cls + '"' + (tip ? ' title="' + esc(tip) + '"' : '') + '>' + dot + esc(label) + '</td>';
+  }
+
   /* ── Render applications table ── */
   function renderApps(apps) {
     const tbody = document.getElementById('apps-tbody');
     if (!apps.length) {
-      tbody.innerHTML = '<tr><td colspan="9"><div class="empty"><div class="empty-icon">📭</div>' +
+      tbody.innerHTML = '<tr><td colspan="10"><div class="empty"><div class="empty-icon">📭</div>' +
         '<div class="empty-title">No applications found</div>' +
         '<div class="empty-sub">Adjust your filters or add URLs to data/pipeline.md</div></div></td></tr>';
       return;
@@ -3322,6 +3762,7 @@ const HTML = /* html */ `<!DOCTYPE html>
       const reportBtn = a.reportLink
         ? '<a class="report-btn" href="/reports/' + esc(a.reportLink) + '" target="_blank" onclick="event.stopPropagation()">📄</a> '
         : '';
+      const openBtn = '<button class="btn-row-open" onclick="event.stopPropagation();openJobUrl(\\'' + esc(a.num) + '\\',this)" title="Open job posting in new tab">↗ Open</button>';
       const applyBtn = a.status === 'evaluated'
         ? '<button class="btn-row-apply" onclick="event.stopPropagation();applyOne(\\'' + esc(a.num) + '\\')" title="Open job URL and mark Applied">Apply →</button>'
         : '';
@@ -3331,19 +3772,39 @@ const HTML = /* html */ `<!DOCTYPE html>
         '<td class="td-role">' + esc(a.role) + '</td>' +
         '<td><span class="status-badge ' + statusClass(a.status) + '" onclick="event.stopPropagation();openDropdown(\\'' + esc(a.num) + '\\',this)" data-num="' + esc(a.num) + '">' + esc(a.status||'—') + '</span>' + fuTag + '</td>' +
         '<td>' + scorePill(a.score) + '</td>' +
+        compCell(a) +
         '<td class="td-date">' + esc(a.date||'—') + '</td>' +
         '<td>' + ageLabel(a.age, a.needsFollowUp) + '</td>' +
         '<td class="td-notes">' + esc(a.notes) + '</td>' +
-        '<td class="td-actions">' + applyBtn + '</td>' +
+        '<td class="td-actions">' + openBtn + applyBtn + '</td>' +
         '</tr>';
     }).join('');
+  }
+
+  /* ── Open job URL in new tab (fetches URL from report) ── */
+  async function openJobUrl(num, btn) {
+    if (btn) btn.classList.add('disabled');
+    try {
+      const res = await fetch('/api/job-url?num=' + encodeURIComponent(num));
+      const data = await res.json();
+      if (data.ok && data.url) {
+        window.open(data.url, '_blank', 'noopener,noreferrer');
+      } else {
+        showToast('No URL found in report for #' + num, 'error');
+      }
+    } catch (err) {
+      showToast('Error opening URL: ' + err.message, 'error');
+    } finally {
+      if (btn) setTimeout(() => btn.classList.remove('disabled'), 800);
+    }
   }
 
   /* ── Sorting ── */
   function sortBy(field) {
     if (sortField === field) sortAsc = !sortAsc;
-    else { sortField = field; sortAsc = field !== 'date'; }
-    ['num','company','status','score','date'].forEach(f => {
+    // Comp, score, date all default to descending (highest/most-recent first)
+    else { sortField = field; sortAsc = !(field === 'date' || field === 'score' || field === 'comp'); }
+    ['num','company','status','score','comp','date'].forEach(f => {
       const el = document.getElementById('sort-' + f);
       if (el) el.textContent = '';
     });
@@ -3356,6 +3817,7 @@ const HTML = /* html */ `<!DOCTYPE html>
     if (field === 'score') return parseFloat(app.score) || 0;
     if (field === 'num')   return parseInt(app.num) || 0;
     if (field === 'date')  return app.date || '';
+    if (field === 'comp')  return app.compSort || 0;
     return (app[field] || '').toLowerCase();
   }
 
@@ -3374,9 +3836,10 @@ const HTML = /* html */ `<!DOCTYPE html>
   function applyFilter() {
     searchQuery = (document.getElementById('search-input')?.value || '').toLowerCase().trim();
     let filtered = allApps;
-    if (currentFilter === 'followup')  filtered = filtered.filter(a => a.needsFollowUp);
+    if (currentFilter === 'followup')      filtered = filtered.filter(a => a.needsFollowUp);
+    else if (currentFilter === 'high-paying') filtered = filtered.filter(a => a.highPaying);
     else if (currentFilter === 'pipeline') filtered = filtered; // shown in sidebar
-    else if (currentFilter !== 'all')  filtered = filtered.filter(a => a.status === currentFilter);
+    else if (currentFilter !== 'all')      filtered = filtered.filter(a => a.status === currentFilter);
     if (searchQuery) {
       filtered = filtered.filter(a =>
         (a.company||'').toLowerCase().includes(searchQuery) ||
@@ -3440,6 +3903,20 @@ const HTML = /* html */ `<!DOCTYPE html>
     document.getElementById('s-evaluated').textContent = stats.evaluated;
     document.getElementById('s-rejected').textContent  = stats.rejected;
     document.getElementById('s-pending').textContent   = stats.pending;
+
+    // Today's Activity panel
+    if (stats.today) {
+      const t = stats.today;
+      document.getElementById('today-applied').textContent    = t.applied;
+      document.getElementById('today-pending').textContent    = stats.pending;
+      document.getElementById('today-interviews').textContent = stats.interview;
+      document.getElementById('today-high-paying').textContent = stats.highPaying || 0;
+      document.getElementById('today-applied-sub').textContent = t.applied === 1 ? 'submission' : 'submissions';
+      // Date in local format (e.g., "Mon May 4")
+      const d = new Date(t.date + 'T00:00:00');
+      const dateStr = d.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+      document.getElementById('today-date').textContent = dateStr;
+    }
   }
 
   function updateApplyBanner(apps) {
@@ -4207,9 +4684,112 @@ const HTML = /* html */ `<!DOCTYPE html>
 
 // ── Route handler ─────────────────────────────────────────────────────────────
 
+// ── Security middleware ──────────────────────────────────────────────────────
+// Applied via setHeader at the top of every request, so any subsequent
+// res.writeHead(status, extraHeaders) call automatically inherits these.
+
+const CSP_DIRECTIVES = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline'",   // dashboard uses inline <script> blocks
+  "style-src 'self' 'unsafe-inline'",    // and inline style="" attributes
+  "img-src 'self' data: https:",
+  "font-src 'self' data:",
+  "connect-src 'self'",                  // Gmail API runs server-side, not browser-side
+  "frame-ancestors 'none'",              // clickjacking protection
+  "base-uri 'self'",
+  "form-action 'self'",
+].join('; ');
+
+function applySecurityHeaders(res) {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), interest-cohort=()');
+  res.setHeader('Content-Security-Policy', CSP_DIRECTIVES);
+}
+
+// Allowed Origin values for state-changing POST requests. Empty Origin
+// (same-origin fetch) is also permitted. Configurable via env for users who
+// front the dashboard with a reverse proxy.
+const ALLOWED_ORIGINS = new Set([
+  `http://localhost:${PORT}`,
+  `http://127.0.0.1:${PORT}`,
+  ...(process.env.ALLOWED_ORIGIN ? [process.env.ALLOWED_ORIGIN] : []),
+]);
+
+function isOriginAllowed(req) {
+  const origin = req.headers.origin;
+  if (!origin) return true; // same-origin fetch / curl / direct request
+  return ALLOWED_ORIGINS.has(origin);
+}
+
+// Bounded body reader for POST endpoints. Aborts at MAX_BODY_BYTES to prevent
+// memory exhaustion via unbounded request bodies.
+const MAX_BODY_BYTES = 256 * 1024; // 256 KiB — generous for our payloads
+
+function readJsonBody(req) {
+  return new Promise((resolve, reject) => {
+    let total = 0;
+    const chunks = [];
+    req.on('data', chunk => {
+      total += chunk.length;
+      if (total > MAX_BODY_BYTES) {
+        reject(new Error('Request body too large'));
+        req.destroy();
+        return;
+      }
+      chunks.push(chunk);
+    });
+    req.on('end', () => {
+      if (chunks.length === 0) return resolve({});
+      try { resolve(JSON.parse(Buffer.concat(chunks).toString('utf8'))); }
+      catch { reject(new Error('Invalid JSON body')); }
+    });
+    req.on('error', reject);
+  });
+}
+
+// Generic error responder — never leak err.message to the client.
+function sendJsonError(res, status, publicMessage, err) {
+  if (err) {
+    console.error(`[api ${status}] ${publicMessage}:`, err.message);
+  }
+  if (!res.headersSent) {
+    res.writeHead(status, { 'Content-Type': 'application/json' });
+  }
+  res.end(JSON.stringify({ ok: false, error: publicMessage }));
+}
+
+// Path-traversal defense: resolve a report-relative path and verify it stays
+// inside REPORTS_DIR. Returns null on traversal attempt or invalid input.
+function resolveSafeReportPath(reportRelOrAbs) {
+  if (!reportRelOrAbs || typeof reportRelOrAbs !== 'string') return null;
+  // Strip URL fragments / query strings users might paste from markdown links
+  const clean = reportRelOrAbs.split(/[#?]/)[0];
+  // If the input already includes "reports/", strip it for a uniform basename
+  const basename = path.basename(clean);
+  if (!basename || basename === '.' || basename === '..') return null;
+  if (!/^[A-Za-z0-9._-]+$/.test(basename)) return null;
+  if (!basename.endsWith('.md')) return null;
+  const resolved = path.resolve(REPORTS_DIR, basename);
+  const reportsDirResolved = path.resolve(REPORTS_DIR);
+  if (!resolved.startsWith(reportsDirResolved + path.sep) && resolved !== reportsDirResolved) {
+    return null;
+  }
+  return resolved;
+}
+
 async function handleRequest(req, res) {
+  applySecurityHeaders(res);
   const urlObj = new URL(req.url, `http://localhost:${PORT}`);
   const pathname = urlObj.pathname;
+
+  // Reject state-changing requests from disallowed origins (CSRF defense).
+  // Methods that mutate state must come from a trusted Origin or be
+  // same-origin (no Origin header).
+  if (req.method !== 'GET' && req.method !== 'HEAD' && !isOriginAllowed(req)) {
+    return sendJsonError(res, 403, 'origin not allowed');
+  }
 
   // ── API: Data ──
   if (pathname === '/api/data') {
@@ -4218,28 +4798,52 @@ async function handleRequest(req, res) {
       res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
       res.end(JSON.stringify(data));
     } catch (err) {
-      res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: err.message }));
+      sendJsonError(res, 500, 'failed to load data', err);
+    }
+    return;
+  }
+
+  // ── API: Get job URL from a row's report (for one-click Open) ──
+  if (pathname === '/api/job-url') {
+    const num = urlObj.searchParams.get('num') || '';
+    if (!/^\d{1,5}$/.test(num)) {
+      return sendJsonError(res, 400, 'num required (digits only)');
+    }
+    try {
+      const files = await fs.readdir(REPORTS_DIR).catch(() => []);
+      const candidate = files.find(f => f.startsWith(String(num).padStart(3, '0') + '-') || f.startsWith(num + '-'));
+      if (!candidate) {
+        return sendJsonError(res, 404, 'no report');
+      }
+      const safePath = resolveSafeReportPath(candidate);
+      if (!safePath) {
+        return sendJsonError(res, 400, 'invalid report path');
+      }
+      const text = await fs.readFile(safePath, 'utf8');
+      const m = text.match(/\*\*URL[^:*]*:\*\*\s*(https?:\/\/[^\s|]+)/);
+      const url = m ? m[1].trim() : null;
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, url }));
+    } catch (err) {
+      sendJsonError(res, 500, 'failed to read report', err);
     }
     return;
   }
 
   // ── API: Update status ──
   if (pathname === '/api/update-status' && req.method === 'POST') {
-    let body = '';
-    req.on('data', c => { body += c; });
-    req.on('end', async () => {
-      try {
-        const { num, status } = JSON.parse(body);
-        if (!num || !status) throw new Error('num and status required');
-        await updateApplicationStatus(num, status);
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ ok: true }));
-      } catch (err) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ ok: false, error: err.message }));
-      }
-    });
+    try {
+      const { num, status } = await readJsonBody(req);
+      if (!num || !status) return sendJsonError(res, 400, 'num and status required');
+      if (!/^\d{1,5}$/.test(String(num))) return sendJsonError(res, 400, 'invalid num');
+      const allowedStatuses = ['Evaluated','Applied','Responded','Interview','Offer','Rejected','Discarded','SKIP'];
+      if (!allowedStatuses.includes(String(status))) return sendJsonError(res, 400, 'invalid status');
+      await updateApplicationStatus(num, status);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true }));
+    } catch (err) {
+      sendJsonError(res, 400, 'update failed', err);
+    }
     return;
   }
 
@@ -4258,21 +4862,17 @@ async function handleRequest(req, res) {
 
   // ── API: Gmail dismiss ──
   if (pathname === '/api/gmail/dismiss' && req.method === 'POST') {
-    let body = '';
-    req.on('data', c => { body += c; });
-    req.on('end', async () => {
-      try {
-        const { id } = JSON.parse(body);
-        const sig = (gmailCache.signals || []).find(s => s.id === id);
-        if (sig) sig.dismissed = true;
-        await saveGmailCache();
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ ok: true }));
-      } catch {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ ok: false }));
-      }
-    });
+    try {
+      const { id } = await readJsonBody(req);
+      if (typeof id !== 'string' || id.length > 200) return sendJsonError(res, 400, 'invalid id');
+      const sig = (gmailCache.signals || []).find(s => s.id === id);
+      if (sig) sig.dismissed = true;
+      await saveGmailCache();
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true }));
+    } catch (err) {
+      sendJsonError(res, 400, 'dismiss failed', err);
+    }
     return;
   }
 
@@ -4287,77 +4887,73 @@ async function handleRequest(req, res) {
 
   // ── API: Gmail fast-poll toggle ──
   if (pathname === '/api/gmail/fast-poll' && req.method === 'POST') {
-    let body = '';
-    req.on('data', c => { body += c; });
-    req.on('end', () => {
-      try {
-        const { active } = JSON.parse(body);
-        setFastPolling(!!active);
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ ok: true, fast: fastPollingActive }));
-      } catch {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ ok: false }));
-      }
-    });
+    try {
+      const { active } = await readJsonBody(req);
+      setFastPolling(!!active);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, fast: fastPollingActive }));
+    } catch (err) {
+      sendJsonError(res, 400, 'fast-poll toggle failed', err);
+    }
     return;
   }
 
   // ── API: Auto-apply start ──
   if (pathname === '/api/auto-apply' && req.method === 'POST') {
-    let body = '';
-    req.on('data', c => { body += c; });
-    req.on('end', async () => {
-      try {
-        if (autoApplyState.active) throw new Error('Auto-apply already running');
-        const { nums, mode } = JSON.parse(body);
-        if (!nums?.length) throw new Error('nums array required');
+    try {
+      if (autoApplyState.active) return sendJsonError(res, 409, 'auto-apply already running');
+      const { nums, mode } = await readJsonBody(req);
+      if (!Array.isArray(nums) || !nums.length) return sendJsonError(res, 400, 'nums array required');
+      if (nums.length > 500) return sendJsonError(res, 400, 'too many nums (max 500)');
 
-        const queue = [];
-        const allData = await loadData();
-        for (const num of nums) {
-          const app = allData.applications.find(a => a.num === String(num));
-          if (!app) continue;
-          let url = null;
-          // Try reportLink first (handles mismatched num/report-num)
-          if (app.reportLink) {
+      const queue = [];
+      const allData = await loadData();
+      for (const num of nums) {
+        if (!/^\d{1,5}$/.test(String(num))) continue;
+        const app = allData.applications.find(a => a.num === String(num));
+        if (!app) continue;
+        let url = null;
+        if (app.reportLink) {
+          const safe = resolveSafeReportPath(app.reportLink);
+          if (safe) {
             try {
-              const content = await fs.readFile(path.join(ROOT, app.reportLink), 'utf8');
+              const content = await fs.readFile(safe, 'utf8');
               const m = content.match(/\*\*URL[^:*]*:\*\*\s*(https?:\/\/[^\s|]+)/);
               url = m ? m[1].trim() : null;
             } catch {}
           }
-          // Fallback: search by num
-          if (!url) {
-            const files = await fs.readdir(REPORTS_DIR).catch(() => []);
-            const reportFile = files.find(f => f.startsWith(String(num).padStart(3, '0') + '-') || f.startsWith(num + '-'));
-            if (reportFile) {
-              const content = await fs.readFile(path.join(REPORTS_DIR, reportFile), 'utf8');
+        }
+        if (!url) {
+          const files = await fs.readdir(REPORTS_DIR).catch(() => []);
+          const reportFile = files.find(f => f.startsWith(String(num).padStart(3, '0') + '-') || f.startsWith(num + '-'));
+          if (reportFile) {
+            const safe = resolveSafeReportPath(reportFile);
+            if (safe) {
+              const content = await fs.readFile(safe, 'utf8');
               const m = content.match(/\*\*URL[^:*]*:\*\*\s*(https?:\/\/[^\s|]+)/);
               url = m ? m[1].trim() : null;
             }
           }
-          if (url) queue.push({ num: String(num), company: app.company, role: app.role, url });
         }
-        if (!queue.length) throw new Error('No valid URLs found in reports');
-
-        autoApplyState = { active: true, mode: mode || 'auto', queue, current: null, completed: [], startedAt: new Date().toISOString(), stoppable: true };
-        setFastPolling(true);
-
-        // Run async (don't block response)
-        runAutoApply().catch(err => {
-          autoApplyState.active = false;
-          setFastPolling(false);
-          console.error('Auto-apply error:', err.message);
-        });
-
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ ok: true, queued: queue.length }));
-      } catch (err) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ ok: false, error: err.message }));
+        if (url) queue.push({ num: String(num), company: app.company, role: app.role, url });
       }
-    });
+      if (!queue.length) return sendJsonError(res, 400, 'no valid URLs found in reports');
+
+      const safeMode = mode === 'manual' ? 'manual' : 'auto';
+      autoApplyState = { active: true, mode: safeMode, queue, current: null, completed: [], startedAt: new Date().toISOString(), stoppable: true };
+      setFastPolling(true);
+
+      runAutoApply().catch(err => {
+        autoApplyState.active = false;
+        setFastPolling(false);
+        console.error('Auto-apply error:', err.message);
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, queued: queue.length }));
+    } catch (err) {
+      sendJsonError(res, 400, 'auto-apply failed to start', err);
+    }
     return;
   }
 
@@ -4525,62 +5121,60 @@ async function handleRequest(req, res) {
 
   // ── API: Get report URL ──
   if (pathname === '/api/report-url' && req.method === 'POST') {
-    let body = '';
-    req.on('data', c => { body += c; });
-    req.on('end', async () => {
-      try {
-        const { num } = JSON.parse(body);
-        if (!num) throw new Error('num required');
+    try {
+      const { num } = await readJsonBody(req);
+      if (!/^\d{1,5}$/.test(String(num))) return sendJsonError(res, 400, 'num required (digits only)');
 
-        // Find report file matching this num
-        const files = await fs.readdir(REPORTS_DIR).catch(() => []);
-        const reportFile = files.find(f => f.startsWith(String(num).padStart(3, '0') + '-') || f.startsWith(num + '-'));
-        if (!reportFile) {
-          res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ ok: true, url: null, reason: 'no-report' }));
-          return;
-        }
-
-        const content = await fs.readFile(path.join(REPORTS_DIR, reportFile), 'utf8');
-        const match = content.match(/\*\*URL[^:*]*:\*\*\s*(https?:\/\/[^\s|]+)/);
-        const url = match ? match[1].trim() : null;
-
+      const files = await fs.readdir(REPORTS_DIR).catch(() => []);
+      const reportFile = files.find(f => f.startsWith(String(num).padStart(3, '0') + '-') || f.startsWith(num + '-'));
+      if (!reportFile) {
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ ok: true, url, file: reportFile }));
-      } catch (err) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ ok: false, error: err.message }));
+        res.end(JSON.stringify({ ok: true, url: null, reason: 'no-report' }));
+        return;
       }
-    });
+
+      const safe = resolveSafeReportPath(reportFile);
+      if (!safe) return sendJsonError(res, 400, 'invalid report path');
+
+      const content = await fs.readFile(safe, 'utf8');
+      const match = content.match(/\*\*URL[^:*]*:\*\*\s*(https?:\/\/[^\s|]+)/);
+      const url = match ? match[1].trim() : null;
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, url, file: reportFile }));
+    } catch (err) {
+      sendJsonError(res, 400, 'report-url lookup failed', err);
+    }
     return;
   }
 
   // ── API: Apply (mark as Applied) ──
   if (pathname === '/api/apply' && req.method === 'POST') {
-    let body = '';
-    req.on('data', c => { body += c; });
-    req.on('end', async () => {
-      try {
-        const { nums } = JSON.parse(body);
-        if (!nums || !Array.isArray(nums) || !nums.length) throw new Error('nums array required');
+    try {
+      const { nums } = await readJsonBody(req);
+      if (!Array.isArray(nums) || !nums.length) return sendJsonError(res, 400, 'nums array required');
+      if (nums.length > 500) return sendJsonError(res, 400, 'too many nums (max 500)');
 
-        const applied = [], errors = [];
-        for (const num of nums) {
-          try {
-            await updateApplicationStatus(String(num), 'Applied');
-            applied.push(num);
-          } catch (err) {
-            errors.push({ num, error: err.message });
-          }
+      const applied = [], errors = [];
+      for (const num of nums) {
+        if (!/^\d{1,5}$/.test(String(num))) {
+          errors.push({ num, error: 'invalid num' });
+          continue;
         }
-
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ ok: errors.length === 0, applied, errors }));
-      } catch (err) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ ok: false, error: err.message }));
+        try {
+          await updateApplicationStatus(String(num), 'Applied');
+          applied.push(num);
+        } catch (err) {
+          console.error('[api 400] apply failed:', err.message);
+          errors.push({ num, error: 'update failed' });
+        }
       }
-    });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: errors.length === 0, applied, errors }));
+    } catch (err) {
+      sendJsonError(res, 400, 'apply failed', err);
+    }
     return;
   }
 
@@ -4595,91 +5189,92 @@ async function handleRequest(req, res) {
 
   // ── API: Onboard (resume drop → cv.md + profile.yml — no AI needed) ──
   if (pathname === '/api/onboard' && req.method === 'POST') {
-    let body = '';
-    req.on('data', c => { body += c; });
-    req.on('end', async () => {
-      try {
-        const { text } = JSON.parse(body);
-        if (!text || text.trim().length < 80) throw new Error('Resume text too short — paste the full text.');
-
-        // Direct regex extraction — no Kimi/AI dependency
-        const emailMatch = text.match(/[\w.+-]+@[\w-]+\.[\w.-]+/);
-        const phoneMatch = text.match(/(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/);
-        const linkedinMatch = text.match(/linkedin\.com\/in\/[\w-]+/i);
-
-        // Name: first non-empty line that looks like a name (2-4 capitalized words)
-        const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
-        let fullName = '';
-        for (const line of lines.slice(0, 5)) {
-          const clean = line.replace(/^#+\s*/, '').replace(/\*+/g, '').trim();
-          if (clean.length > 2 && clean.length < 60 && /^[A-Z]/.test(clean) && !clean.includes('@') && !clean.includes('http')) {
-            fullName = clean; break;
-          }
-        }
-
-        // Headline: line after name, or first line with keywords
-        let headline = '';
-        const headlineKw = /director|head|manager|engineer|architect|lead|chief|vp|president|consultant|strategist/i;
-        for (const line of lines.slice(0, 10)) {
-          const clean = line.replace(/^#+\s*/, '').replace(/\*+/g, '').trim();
-          if (clean !== fullName && headlineKw.test(clean) && clean.length < 120) {
-            headline = clean; break;
-          }
-        }
-
-        const profile = {
-          full_name: fullName,
-          email: emailMatch ? emailMatch[0] : '',
-          phone: phoneMatch ? phoneMatch[0] : '',
-          linkedin: linkedinMatch ? linkedinMatch[0] : '',
-          headline,
-        };
-
-        // Write cv.md — save the full text as-is (clean markdown)
-        const cvHeader = fullName ? `# ${fullName}\n\n` : '# Resume\n\n';
-        await fs.writeFile(path.join(ROOT, 'cv.md'), cvHeader + text.trim() + '\n', 'utf8');
-
-        // Patch config/profile.yml
-        const profilePath = path.join(ROOT, 'config', 'profile.yml');
-        let yml = '';
-        try { yml = await fs.readFile(profilePath, 'utf8'); } catch {}
-
-        const patch = (yaml, key, val) => {
-          if (!val) return yaml;
-          const escaped = val.replace(/"/g, '\\"');
-          return yaml.replace(new RegExp(`(${key}:\\s*).*`), `$1"${escaped}"`);
-        };
-
-        if (yml) {
-          if (profile.full_name) yml = patch(yml, 'full_name', profile.full_name);
-          if (profile.email) yml = patch(yml, 'email', profile.email);
-          if (profile.phone) yml = patch(yml, 'phone', profile.phone);
-          if (profile.linkedin) yml = patch(yml, 'linkedin', profile.linkedin);
-          await fs.writeFile(profilePath, yml, 'utf8');
-        }
-
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({
-          ok: true,
-          profile: {
-            full_name: profile.full_name,
-            email: profile.email,
-            headline: profile.headline,
-            location: '',
-          },
-        }));
-      } catch (err) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ ok: false, error: err.message }));
+    try {
+      const { text } = await readJsonBody(req);
+      if (!text || typeof text !== 'string' || text.trim().length < 80) {
+        return sendJsonError(res, 400, 'Resume text too short — paste the full text.');
       }
-    });
+      if (text.length > 200_000) {
+        return sendJsonError(res, 400, 'Resume text too long.');
+      }
+
+      const emailMatch = text.match(/[\w.+-]+@[\w-]+\.[\w.-]+/);
+      const phoneMatch = text.match(/(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/);
+      const linkedinMatch = text.match(/linkedin\.com\/in\/[\w-]+/i);
+
+      const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+      let fullName = '';
+      for (const line of lines.slice(0, 5)) {
+        const clean = line.replace(/^#+\s*/, '').replace(/\*+/g, '').trim();
+        if (clean.length > 2 && clean.length < 60 && /^[A-Z]/.test(clean) && !clean.includes('@') && !clean.includes('http')) {
+          fullName = clean; break;
+        }
+      }
+
+      let headline = '';
+      const headlineKw = /director|head|manager|engineer|architect|lead|chief|vp|president|consultant|strategist/i;
+      for (const line of lines.slice(0, 10)) {
+        const clean = line.replace(/^#+\s*/, '').replace(/\*+/g, '').trim();
+        if (clean !== fullName && headlineKw.test(clean) && clean.length < 120) {
+          headline = clean; break;
+        }
+      }
+
+      const profile = {
+        full_name: fullName,
+        email: emailMatch ? emailMatch[0] : '',
+        phone: phoneMatch ? phoneMatch[0] : '',
+        linkedin: linkedinMatch ? linkedinMatch[0] : '',
+        headline,
+      };
+
+      const cvHeader = fullName ? `# ${fullName}\n\n` : '# Resume\n\n';
+      await fs.writeFile(path.join(ROOT, 'cv.md'), cvHeader + text.trim() + '\n', 'utf8');
+
+      const profilePath = path.join(ROOT, 'config', 'profile.yml');
+      let yml = '';
+      try { yml = await fs.readFile(profilePath, 'utf8'); } catch {}
+
+      const patch = (yaml, key, val) => {
+        if (!val) return yaml;
+        const escaped = val.replace(/"/g, '\\"');
+        return yaml.replace(new RegExp(`(${key}:\\s*).*`), `$1"${escaped}"`);
+      };
+
+      if (yml) {
+        if (profile.full_name) yml = patch(yml, 'full_name', profile.full_name);
+        if (profile.email) yml = patch(yml, 'email', profile.email);
+        if (profile.phone) yml = patch(yml, 'phone', profile.phone);
+        if (profile.linkedin) yml = patch(yml, 'linkedin', profile.linkedin);
+        await fs.writeFile(profilePath, yml, 'utf8');
+      }
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        ok: true,
+        profile: {
+          full_name: profile.full_name,
+          email: profile.email,
+          headline: profile.headline,
+          location: '',
+        },
+      }));
+    } catch (err) {
+      sendJsonError(res, 400, 'onboard failed', err);
+    }
     return;
   }
 
   // ── Reports ──
   if (pathname.startsWith('/reports/')) {
-    const filename = path.basename(pathname);
-    const filepath = path.join(REPORTS_DIR, filename);
+    const rawName = decodeURIComponent(path.basename(pathname));
+    const filepath = resolveSafeReportPath(rawName);
+    if (!filepath) {
+      res.writeHead(404, { 'Content-Type': 'text/plain' });
+      res.end('Report not found');
+      return;
+    }
+    const filename = path.basename(filepath);
     try {
       const content = await fs.readFile(filepath, 'utf8');
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
@@ -4771,8 +5366,9 @@ async function start() {
   if (gmailTokens?.refresh_token) startGmailPolling();
 
   const server = http.createServer(handleRequest);
-  server.listen(PORT, '0.0.0.0', () => {
-    console.log(`JobSeeker Mission Control → http://localhost:${PORT}`);
+  server.listen(PORT, HOST, () => {
+    const shownHost = HOST === '0.0.0.0' ? 'localhost' : HOST;
+    console.log(`JobSeeker Mission Control → http://${shownHost}:${PORT}  (bound to ${HOST})`);
     console.log(`Gmail: ${gmailTokens ? 'connected' : GMAIL_CLIENT_ID ? 'credentials set, not yet authorized' : 'not configured'}`);
     console.log(`Data: ${DATA_DIR} | Reports: ${REPORTS_DIR}`);
     console.log(`Autopilot: trying Visible browser (CAPTCHA-ready)...`);

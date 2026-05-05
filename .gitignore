@@ -38,3 +38,10 @@ career-dashboard
 
 # Environment secrets
 .env
+
+# OAuth tokens & local caches with PII
+data/gmail-tokens.json
+data/gmail-cache.json
+data/autopilot-log.json
+data/autopilot-manual.json
+data/dash-debug.json
