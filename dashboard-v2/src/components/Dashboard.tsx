@@ -110,9 +110,9 @@ export default function Dashboard() {
 
     const hint =
       label === 'Tailor' && outcome === 'completed'
-        ? ' PDF ready in Resume Manager → Generated Docs.'
+        ? ' [FILE] PDF ready in Resume Manager → Generated Docs'
         : '';
-    return { toast: `✅ ${label} ${outcome}.${hint}`, terminal: `✅ ${label} ${outcome}.${hint}` };
+    return { toast: `[OK] ✔ ${label} ${outcome}${hint}`, terminal: `[OK] ✔ ${label} ${outcome}${hint}` };
   };
 
   const steps = [
@@ -296,38 +296,38 @@ export default function Dashboard() {
                 typeof nextMeta.jobsTotal === 'number' &&
                 nextMeta.jobsTotal > prevMeta.jobsTotal
               ) {
-                setToast({ show: true, message: '🔎 Background Action Complete: Scan finished — new jobs added!' });
+                setToast({ show: true, message: '[OK] ✔ Scan completed — new jobs added' });
                 setTimeout(() => setToast({ show: false, message: '' }), 5000);
-                appendTerminalLine('✅ Scan completed. New jobs added.');
+                appendTerminalLine('[OK] ✔ Scan completed. New jobs added');
               } else if (
                 typeof prevMeta.jobsRanked === 'number' &&
                 typeof nextMeta.jobsRanked === 'number' &&
                 nextMeta.jobsRanked > prevMeta.jobsRanked
               ) {
-                setToast({ show: true, message: '⚖️ Background Action Complete: Ranking finished — scores updated!' });
+                setToast({ show: true, message: '[OK] ✔ Rank completed — scores updated' });
                 setTimeout(() => setToast({ show: false, message: '' }), 5000);
-                appendTerminalLine('✅ Rank completed. Scores updated.');
+                appendTerminalLine('[OK] ✔ Rank completed. Scores updated');
               }
 
               if (prevData.pdfs && d.pdfs && d.pdfs.length > prevData.pdfs.length) {
-                setToast({ show: true, message: '🎉 Background Action Complete: Resume generated!' });
+                setToast({ show: true, message: '[OK] ✔ Tailor completed — resume generated' });
                 setTimeout(() => setToast({ show: false, message: '' }), 5000);
-                appendTerminalLine('✅ Tailor completed. New document generated.');
+                appendTerminalLine('[OK] ✔ Tailor completed. New document generated');
               } else if (prevData.applications && d.applications && d.applications.length > prevData.applications.length) {
-                setToast({ show: true, message: '🚀 Background Action Complete: Job applied successfully!' });
+                setToast({ show: true, message: '[OK] ✔ Apply completed — application recorded' });
                 setTimeout(() => setToast({ show: false, message: '' }), 5000);
-                appendTerminalLine('✅ Apply completed. Application recorded.');
+                appendTerminalLine('[OK] ✔ Apply completed. Application recorded');
               } else if (prevData.pipeline && d.pipeline) {
                 const prevScores = prevData.pipeline.map((j: any) => j.score || 0).join(',');
                 const newScores = d.pipeline.map((j: any) => j.score || 0).join(',');
                 if (d.pipeline.length > prevData.pipeline.length) {
-                  setToast({ show: true, message: '🎯 Background Action Complete: Pipeline updated with new jobs!' });
-                  setTimeout(() => setToast({ show: false, message: '' }), 5000);
-                  appendTerminalLine('✅ Scan completed. Pipeline updated.');
+                setToast({ show: true, message: '[OK] ✔ Scan completed — pipeline updated' });
+                setTimeout(() => setToast({ show: false, message: '' }), 5000);
+                appendTerminalLine('[OK] ✔ Scan completed. Pipeline updated');
                 } else if (prevScores !== newScores) {
-                  setToast({ show: true, message: '⚖️ Background Action Complete: Pipeline ranking finished!' });
+                  setToast({ show: true, message: '[OK] ✔ Rank completed — pipeline scores updated' });
                   setTimeout(() => setToast({ show: false, message: '' }), 5000);
-                  appendTerminalLine('✅ Rank completed. Pipeline scores updated.');
+                  appendTerminalLine('[OK] ✔ Rank completed. Pipeline scores updated');
                 }
               }
             }
@@ -465,7 +465,7 @@ export default function Dashboard() {
           : mergeUniqueByKey(prevEdu, nextEdu, (e) => `${e.school}::${e.degree}::${e.period}`.toLowerCase());
       return { ...prev, experience: exp, education };
     });
-    setToast({ show: true, message: '✅ Resume import applied to Experience/Education. Hit Save Changes to persist.' });
+    setToast({ show: true, message: '[OK] ✔ Resume import applied to Experience/Education — hit Save Changes to persist' });
     setTimeout(() => setToast({ show: false, message: '' }), 5000);
   };
 

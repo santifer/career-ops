@@ -265,8 +265,8 @@ async function triggerGitHubAction(send: any, controller: any, userId: string, s
   }
 
   const actionName = script === 'scratch-scan.mjs' ? 'deep scan' : script === 'agentic-tailor.mjs' ? 'deep tailoring (PDF)' : 'auto-apply';
-  send({ type: 'stdout', content: `🚀 Triggering ${actionName} via GitHub Actions (Playwright + Chromium)...\n` });
-  
+  send({ type: 'stdout', content: `[EXEC] ▶ Triggering ${actionName} via GitHub Actions (Playwright + Chromium)...\n` });
+
   try {
     // Create a run record (for lifecycle + traceability)
     const runId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -307,20 +307,20 @@ async function triggerGitHubAction(send: any, controller: any, userId: string, s
     });
 
     if (res.ok) {
-      send({ type: 'stdout', content: `✅ ${actionName} successfully queued on GitHub Actions!\n` });
-      send({ type: 'stdout', content: `↳ Run ID: ${runId}\n` });
-      send({ type: 'stdout', content: '⏳ Please allow 5-10 minutes for the process to complete in the background.\n' });
+      send({ type: 'stdout', content: `[OK] ✔ ${actionName} successfully queued on GitHub Actions\n` });
+      send({ type: 'stdout', content: `     → Run ID: ${runId}\n` });
+      send({ type: 'stdout', content: '[WAIT] ◐ Please allow 5-10 minutes for the process to complete in the background\n' });
       if (script === 'agentic-tailor.mjs') {
-        send({ type: 'stdout', content: '📄 Your PDF will be available in the GitHub Actions artifacts when ready.\n' });
+        send({ type: 'stdout', content: '[FILE] 📄 PDF will be available in the GitHub Actions artifacts when ready\n' });
       }
       send({ type: 'done', code: 0 });
     } else {
       const errBody = await res.text();
-      send({ type: 'stderr', content: `❌ Failed to trigger action. GitHub API responded with ${res.status}:\n${errBody}\n` });
+      send({ type: 'stderr', content: `[ERR] ✗ Failed to trigger action. GitHub API responded with ${res.status}:\n${errBody}\n` });
       send({ type: 'done', code: 1 });
     }
   } catch (err: any) {
-    send({ type: 'stderr', content: `❌ Network error: ${err.message}\n` });
+    send({ type: 'stderr', content: `[ERR] ✗ Network error: ${err.message}\n` });
     send({ type: 'done', code: 1 });
   }
   
