@@ -687,11 +687,31 @@ export default function Dashboard() {
           )}
         </AnimatePresence>
 
-        <section className="grid grid-cols-4 gap-8 mb-12">
-          <StatCard icon={<Clock size={20} className="text-[#1c1917]" />} label="Ongoing" value={data?.stats?.applied || 0} />
-          <StatCard icon={<CheckCircle2 size={20} className="text-[#1c1917]" />} label="Interviews" value={data?.stats?.interviews || 0} />
-          <StatCard icon={<FileText size={20} className="text-[#1c1917]" />} label="Saved PDFs" value={data?.pdfs?.length || 0} />
-          <StatCard icon={<Search size={20} className="text-[#1c1917]" />} label="In Pipeline" value={data?.pipeline?.length || 0} />
+        <section className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mb-10 sm:mb-12">
+          <StatCard
+            icon={<Clock size={18} className="text-white" />}
+            label="Ongoing"
+            value={data?.stats?.applied || 0}
+            color="stone"
+          />
+          <StatCard
+            icon={<CheckCircle2 size={18} className="text-white" />}
+            label="Interviews"
+            value={data?.stats?.interviews || 0}
+            color="emerald"
+          />
+          <StatCard
+            icon={<FileText size={18} className="text-white" />}
+            label="Saved PDFs"
+            value={data?.pdfs?.length || 0}
+            color="blue"
+          />
+          <StatCard
+            icon={<Search size={18} className="text-white" />}
+            label="In Pipeline"
+            value={data?.pipeline?.length || 0}
+            color="amber"
+          />
         </section>
 
         <AnimatePresence mode="wait">
@@ -1923,14 +1943,23 @@ function NavItem({ id, icon, label, active, onClick }: { id?: string, icon: any,
   );
 }
 
-function StatCard({ icon, label, value }: { icon: any, label: string, value: any }) {
+function StatCard({ icon, label, value, color = 'stone' }: { icon: any, label: string, value: any, color?: 'stone' | 'emerald' | 'blue' | 'amber' }) {
+  const colorClasses = {
+    stone: 'bg-[#1c1917]',
+    emerald: 'bg-emerald-600',
+    blue: 'bg-blue-600',
+    amber: 'bg-amber-500'
+  };
+
   return (
-    <div className="p-8 rounded-[1.75rem] bg-white border border-[#e7e5e4] shadow-sm hover:shadow-xl hover:shadow-black/[0.02] transition-all group">
-      <div className="flex items-center justify-between mb-8">
-        <div className="p-2.5 bg-[#f5f5f4] rounded-xl group-hover:bg-[#1c1917] group-hover:text-white transition-colors">{icon}</div>
-        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#a8a29e]">{label}</span>
+    <div className="p-5 sm:p-6 rounded-2xl bg-white border border-[#e7e5e4] hover:border-[#1c1917] hover:shadow-lg transition-all group">
+      <div className="flex items-center gap-3 mb-4">
+        <div className={`p-2.5 ${colorClasses[color]} rounded-xl text-white shadow-sm`}>
+          {icon}
+        </div>
+        <span className="text-[10px] font-bold uppercase tracking-wider text-[#a8a29e]">{label}</span>
       </div>
-      <div className="text-4xl font-bold tracking-tighter text-[#1c1917]">{value}</div>
+      <div className="text-3xl sm:text-4xl font-bold tracking-tight text-[#1c1917]">{value}</div>
     </div>
   );
 }
