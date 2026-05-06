@@ -21,6 +21,7 @@ export function Filters({ search, onSearchChange, statusFilter, onStatusFilterCh
   return (
     <div className="flex flex-col gap-3 mb-4">
       <input
+        aria-label="Search applications"
         placeholder="Search company, role, or notes..."
         value={search}
         onChange={(e) => onSearchChange(e.target.value)}
@@ -31,6 +32,8 @@ export function Filters({ search, onSearchChange, statusFilter, onStatusFilterCh
           <button
             key={status}
             onClick={() => toggleStatus(status)}
+            aria-label={`Filter by ${status}`}
+            aria-pressed={statusFilter.includes(status)}
             className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
               statusFilter.includes(status)
                 ? "bg-primary text-primary-foreground"

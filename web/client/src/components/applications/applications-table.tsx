@@ -9,7 +9,7 @@ import { ChevronDown, ChevronUp, ChevronsUpDown } from "lucide-react";
 
 const columns: ColumnDef<Application>[] = [
   { accessorKey: "number", header: "#", size: 50 },
-  { accessorKey: "createdAt", header: "Date", cell: ({ getValue }) => {
+  { accessorKey: "createdAt", header: "Evaluated", cell: ({ getValue }) => {
     const d = getValue<string>(); return d ? new Date(d).toLocaleDateString() : "";
   }},
   { accessorKey: "company", header: "Company" },

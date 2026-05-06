@@ -8,7 +8,7 @@ export function KanbanCard({ app }: { app: Application }) {
     useSortable({ id: app.id, data: { status: app.status } });
 
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
-  const daysInStage = Math.floor((Date.now() - new Date(app.updatedAt).getTime()) / (1000 * 60 * 60 * 24));
+  const daysSinceUpdate = Math.floor((Date.now() - new Date(app.updatedAt).getTime()) / (1000 * 60 * 60 * 24));
 
   function handleClick(e: React.MouseEvent) {
     // Only open URL on click, not on drag
@@ -32,7 +32,7 @@ export function KanbanCard({ app }: { app: Application }) {
       <div className="text-xs text-muted-foreground mt-1 truncate">{app.role}</div>
       <div className="flex items-center justify-between mt-2">
         {app.score && <span className="text-xs font-medium bg-secondary px-2 py-0.5 rounded">{app.score}/5</span>}
-        <span className="text-xs text-muted-foreground">{daysInStage}d</span>
+        <span className="text-xs text-muted-foreground" title="Days since last update">{daysSinceUpdate}d</span>
       </div>
     </div>
   );

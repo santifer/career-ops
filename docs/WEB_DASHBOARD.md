@@ -23,7 +23,7 @@ Open http://localhost:5173
 ## Pages
 
 - **Applications** (`/`) -- Filterable, sortable table of all evaluated jobs
-- **Pipeline** (`/pipeline`) -- Kanban board: drag cards between Evaluated > Applied > Interview > Offer
+- **Pipeline** (`/pipeline`) -- Kanban board: drag cards between Evaluated > Applied > Responded > Interview > Offer
 - **Feed** (`/feed`) -- New jobs from scans. Send to pipeline or dismiss.
 - **Sources** (`/sources`) -- Add, toggle, or remove companies to scan
 

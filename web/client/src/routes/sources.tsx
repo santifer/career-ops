@@ -25,7 +25,7 @@ function SourcesPage() {
       </div>
       {showForm && (
         <div className="mb-4">
-          <SourceForm onSubmit={(data) => { createSource.mutate(data); setShowForm(false); }} onCancel={() => setShowForm(false)} />
+          <SourceForm onSubmit={(data) => { createSource.mutate(data, { onSuccess: () => setShowForm(false) }); }} onCancel={() => setShowForm(false)} />
         </div>
       )}
       {isLoading ? (

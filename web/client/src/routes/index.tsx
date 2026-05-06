@@ -14,7 +14,7 @@ function ApplicationsPage() {
   const params: Record<string, string> = {};
   if (search) params.search = search;
   if (statusFilter.length > 0) params.status = statusFilter.join(",");
-  const { data, isLoading } = useApplications(params);
+  const { data, isLoading, isError } = useApplications(params);
   const { data: stats } = useAppStats();
 
   return (
@@ -24,13 +24,15 @@ function ApplicationsPage() {
         {stats && (
           <div className="flex gap-4 text-sm text-muted-foreground">
             <span>{stats.totalCount} total</span>
-            <span>avg {stats.avgScore}/5</span>
+            {stats.avgScore != null && <span>avg {stats.avgScore}/5</span>}
           </div>
         )}
       </div>
       <Filters search={search} onSearchChange={setSearch} statusFilter={statusFilter} onStatusFilterChange={setStatusFilter} />
       {isLoading ? (
         <div className="text-muted-foreground py-8 text-center">Loading...</div>
+      ) : isError ? (
+        <div className="text-destructive py-8 text-center">Failed to load applications. Please try again.</div>
       ) : (
         <ApplicationsTable data={data?.data || []} />
       )}

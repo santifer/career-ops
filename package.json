@@ -23,8 +23,8 @@
     "web:client:dev": "cd web/client && npm run dev",
     "web:db:up": "cd web && docker compose up -d",
     "web:db:down": "cd web && docker compose down",
-    "web:migrate": "cd web/server && DATABASE_URL=postgres://career_ops:career_ops_dev@localhost:5434/career_ops npx drizzle-kit migrate",
-    "web:seed": "cd web/server && DATABASE_URL=postgres://career_ops:career_ops_dev@localhost:5434/career_ops CAREER_OPS_ROOT=../.. npx tsx src/db/seed.ts",
+    "web:migrate": "cd web/server && npx drizzle-kit migrate",
+    "web:seed": "cd web/server && npx tsx src/db/seed.ts",
     "web:build": "cd web/server && npm run build && cd ../client && npm run build",
     "web:start": "cd web/server && npm start",
     "web:test": "cd web/server && npx vitest run"
@@ -48,5 +48,8 @@
     "dotenv": "^16.4.5",
     "js-yaml": "^4.1.1",
     "playwright": "^1.58.1"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
   }
 }

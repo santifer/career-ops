@@ -17,7 +17,7 @@ async function main() {
   const env = loadEnv();
   env.CAREER_OPS_ROOT = resolve(env.CAREER_OPS_ROOT);
 
-  const db = createDb(env.DATABASE_URL);
+  const { db, shutdown } = createDb(env.DATABASE_URL);
 
   const app = Fastify({ logger: true });
   await app.register(cors, { origin: true });
@@ -25,6 +25,10 @@ async function main() {
 
   app.decorate("db", db);
   app.decorate("env", env);
+
+  app.addHook("onClose", async () => {
+    await shutdown();
+  });
 
   app.get("/api/health", async () => ({ status: "ok" }));
 

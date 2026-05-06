@@ -5,9 +5,9 @@ services:
     ports:
       - "5434:5432"
     environment:
-      POSTGRES_DB: career_ops
-      POSTGRES_USER: career_ops
-      POSTGRES_PASSWORD: career_ops_dev
+      POSTGRES_DB: ${POSTGRES_DB:-career_ops}
+      POSTGRES_USER: ${POSTGRES_USER:-career_ops}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-career_ops_dev}
     volumes:
       - pgdata:/var/lib/postgresql/data
 

@@ -31,13 +31,17 @@ export function SourceList({ sources, onToggleEnabled, onDelete }: {
                 {source.lastScannedAt ? new Date(source.lastScannedAt).toLocaleDateString() : "Never"}
               </td>
               <td className="px-4 py-3">
-                <button onClick={() => onToggleEnabled(source.id, !source.enabled)}
+                <button
+                  role="switch"
+                  aria-checked={source.enabled}
+                  aria-label={`${source.enabled ? "Disable" : "Enable"} ${source.name}`}
+                  onClick={() => onToggleEnabled(source.id, !source.enabled)}
                   className={`w-10 h-5 rounded-full transition-colors relative ${source.enabled ? "bg-green-500" : "bg-gray-300"}`}>
                   <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-transform ${source.enabled ? "translate-x-5" : "translate-x-0.5"}`} />
                 </button>
               </td>
               <td className="px-4 py-3 text-right">
-                <button onClick={() => onDelete(source.id)} className="p-1 text-destructive hover:text-destructive/80">
+                <button onClick={() => onDelete(source.id)} aria-label={`Delete ${source.name}`} className="p-1 text-destructive hover:text-destructive/80">
                   <Trash2 className="h-4 w-4" />
                 </button>
               </td>

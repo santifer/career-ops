@@ -17,6 +17,7 @@ export const Route = createRootRoute({
           <Link
             key={item.to}
             to={item.to}
+            activeOptions={item.to === "/" ? { exact: true } : undefined}
             className="flex items-center gap-3 px-3 py-2 rounded-md text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors [&.active]:bg-accent [&.active]:text-accent-foreground [&.active]:font-medium"
           >
             <item.icon className="h-4 w-4" />

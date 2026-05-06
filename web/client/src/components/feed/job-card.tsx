@@ -16,7 +16,7 @@ export function JobCard({ job, onSendToPipeline, onDismiss }: {
           <h3 className="font-medium text-sm truncate">{job.title}</h3>
           <p className="text-sm text-muted-foreground">{job.company}</p>
         </div>
-        <a href={job.url} target="_blank" rel="noopener noreferrer" className="shrink-0 ml-2">
+        <a href={job.url} target="_blank" rel="noopener noreferrer" aria-label="Open job posting" className="shrink-0 ml-2">
           <ExternalLink className="h-4 w-4 text-muted-foreground hover:text-foreground" />
         </a>
       </div>

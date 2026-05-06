@@ -369,7 +369,10 @@ if (DRY_RUN) console.log('(dry-run — no changes written)');
 // Notify dashboard (optional — fails silently if dashboard is not running)
 if (!DRY_RUN) {
   try {
-    await fetch('http://localhost:3000/api/sync/import', { method: 'POST' });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 2000);
+    await fetch('http://localhost:3000/api/sync/import', { method: 'POST', signal: controller.signal });
+    clearTimeout(timeout);
   } catch { /* dashboard not running — no-op */ }
 }
 

@@ -27,10 +27,10 @@ function FeedPage() {
         <div className="text-muted-foreground py-8 text-center">Loading...</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {data?.data.map((job) => (
+          {(data?.data ?? []).map((job) => (
             <JobCard key={job.id} job={job} onSendToPipeline={(id) => sendToPipeline.mutate(id)} onDismiss={(id) => dismiss.mutate(id)} />
           ))}
-          {data?.data.length === 0 && (
+          {(data?.data ?? []).length === 0 && (
             <div className="col-span-full text-center py-8 text-muted-foreground">No new jobs. Run a scan to discover more.</div>
           )}
         </div>

@@ -71,6 +71,6 @@ export interface Paginated<T> {
 
 export interface AppStats {
   byStatus: Record<string, number>;
-  avgScore: number;
+  avgScore: number | null;
   totalCount: number;
 }

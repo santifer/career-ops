@@ -6,7 +6,7 @@ import { SyncService } from "../modules/sync/service.js";
 
 async function main() {
   const env = loadEnv();
-  const db = createDb(env.DATABASE_URL);
+  const { db } = createDb(env.DATABASE_URL);
   const careerOpsRoot = resolve(env.CAREER_OPS_ROOT);
 
   const service = new SyncService(db, careerOpsRoot);

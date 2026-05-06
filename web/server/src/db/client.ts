@@ -4,7 +4,13 @@ import * as schema from "./schema.js";
 
 export function createDb(databaseUrl: string) {
   const client = postgres(databaseUrl);
-  return drizzle(client, { schema });
+  const db = drizzle(client, { schema });
+
+  async function shutdown() {
+    await client.end();
+  }
+
+  return { db, shutdown };
 }
 
-export type Database = ReturnType<typeof createDb>;
+export type Database = ReturnType<typeof createDb>["db"];

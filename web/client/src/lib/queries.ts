@@ -76,7 +76,11 @@ export function useSendToPipeline() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => api.post<DiscoveredJob>(`/jobs/${id}/to-pipeline`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["jobs"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["jobs"] });
+      qc.invalidateQueries({ queryKey: ["pipeline"] });
+      qc.invalidateQueries({ queryKey: ["applications"] });
+    },
   });
 }
 

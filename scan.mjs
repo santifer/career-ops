@@ -513,11 +513,15 @@ async function main() {
           title: o.title, company: o.company, url: o.url,
           source: o.source, location: o.location || undefined,
         }));
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 2000);
         await fetch('http://localhost:3000/api/jobs/ingest', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
+          signal: controller.signal,
         });
+        clearTimeout(timeout);
       } catch { /* dashboard not running — no-op */ }
     }
   }
