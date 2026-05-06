@@ -874,82 +874,112 @@ export default function Dashboard() {
                   )}
                 </div>
                </div>
-               <div className="bg-[#faf9f6] border border-[#e7e5e4] rounded-[2.5rem] p-8 flex flex-col">
-                  <h3 className="font-bold mb-8 text-[#1c1917] flex items-center justify-between">
-                     Generated Docs
-                     <FileText size={18} className="text-[#a8a29e]" />
+               <div className="bg-[#faf9f6] border border-[#e7e5e4] rounded-[2.5rem] p-4 sm:p-6 lg:p-8 flex flex-col">
+                  <h3 className="font-bold mb-4 sm:mb-6 text-[#1c1917] flex items-center justify-between text-sm sm:text-base">
+                    <span className="flex items-center gap-2">
+                      <FileText size={16} className="text-[#a8a29e]" />
+                      Generated Docs
+                    </span>
+                    <span className="text-[10px] text-[#a8a29e] font-medium">{filteredDocs.length} items</span>
                   </h3>
-                  <div className="space-y-3 overflow-y-auto flex-1">
+                  <div className="space-y-2 sm:space-y-3 overflow-y-auto flex-1 -mx-2 px-2 sm:mx-0 sm:px-0">
                     {filteredDocs.map((doc: any, i: number) => (
                       <div
                         key={i}
-                        className="p-4 bg-white rounded-xl border border-[#e7e5e4] hover:border-[#1c1917] transition-all flex items-center justify-between group"
+                        className="bg-white rounded-xl border border-[#e7e5e4] hover:border-[#1c1917] hover:shadow-sm transition-all overflow-hidden"
                       >
-                        <a
-                          href={`/api/view/${doc.id}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="min-w-0 flex-1 cursor-pointer"
-                        >
-                          <div className="truncate text-[10px] font-bold text-[#78716c] uppercase tracking-tighter group-hover:text-[#1c1917]">
-                            {doc.name}
+                        {/* Card Header - Company/Role Info */}
+                        <div className="p-3 sm:p-4 border-b border-[#f5f5f4]">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate text-xs sm:text-sm font-bold text-[#1c1917]">
+                                {doc.company}
+                              </div>
+                              <div className="truncate text-[10px] sm:text-xs text-[#78716c] mt-0.5">
+                                {doc.title}
+                              </div>
+                            </div>
+                            {doc?.url && (
+                              <a
+                                href={doc.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="shrink-0 p-1.5 rounded-lg border border-[#e7e5e4] hover:bg-[#f5f5f4] transition-all text-[#78716c] hover:text-[#1c1917]"
+                                aria-label="Open posting"
+                                title="Open posting"
+                              >
+                                <ExternalLink size={12} />
+                              </a>
+                            )}
                           </div>
-                          <div className="mt-1 text-[9px] text-[#a8a29e] uppercase font-bold opacity-0 group-hover:opacity-100 transition-opacity">
-                            View & Print
+                        </div>
+
+                        {/* Action Buttons - Responsive Grid */}
+                        <div className="p-2 sm:p-3">
+                          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                            {/* Resume PDF Button */}
+                            {doc.has_resume_pdf ? (
+                              <a
+                                href={`/api/view/${doc.id}?format=pdf&download=1`}
+                                className="flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg bg-[#1c1917] text-white text-[10px] sm:text-xs font-bold hover:bg-[#27272a] transition-colors"
+                              >
+                                <FileText size={12} />
+                                <span className="hidden sm:inline">Resume</span>
+                                <span className="sm:hidden">Resume</span>
+                              </a>
+                            ) : (
+                              <span className="flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg bg-[#f5f5f4] text-[#a8a29e] text-[10px] sm:text-xs font-bold cursor-not-allowed">
+                                <FileText size={12} />
+                                <span>No Resume</span>
+                              </span>
+                            )}
+
+                            {/* Cover Letter PDF Button */}
+                            {doc.has_cover_letter_pdf ? (
+                              <a
+                                href={`/api/view/${doc.id}?type=cl&format=pdf&download=1`}
+                                className="flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg bg-[#1c1917] text-white text-[10px] sm:text-xs font-bold hover:bg-[#27272a] transition-colors"
+                              >
+                                <FileText size={12} />
+                                <span className="hidden sm:inline">Cover Letter</span>
+                                <span className="sm:hidden">Cover Ltr</span>
+                              </a>
+                            ) : (
+                              <span className="flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg bg-[#f5f5f4] text-[#a8a29e] text-[10px] sm:text-xs font-bold cursor-not-allowed">
+                                <FileText size={12} />
+                                <span>No CL</span>
+                              </span>
+                            )}
+
+                            {/* HTML Button */}
+                            <a
+                              href={`/api/view/${doc.id}?download=1`}
+                              className="flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg border border-[#e7e5e4] text-[#1c1917] text-[10px] sm:text-xs font-bold hover:bg-[#f5f5f4] transition-colors"
+                            >
+                              <FileText size={12} />
+                              <span>HTML</span>
+                            </a>
+
+                            {/* View & Details */}
+                            <div className="flex gap-1">
+                              <a
+                                href={`/api/view/${doc.id}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg border border-[#e7e5e4] text-[#78716c] text-[10px] sm:text-xs font-bold hover:bg-[#f5f5f4] transition-colors"
+                              >
+                                <span>View</span>
+                              </a>
+                              <button
+                                onClick={() => openJobDetails(Number(doc.id))}
+                                className="flex items-center justify-center p-2 rounded-lg border border-[#e7e5e4] hover:bg-[#f5f5f4] transition-all text-[#78716c] hover:text-[#1c1917]"
+                                aria-label="Details"
+                                title="Details"
+                              >
+                                <ChevronRight size={12} />
+                              </button>
+                            </div>
                           </div>
-                        </a>
-                        <div className="flex items-center gap-2 pl-3">
-                          {doc?.url && (
-                            <a
-                              href={doc.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="p-2 rounded-lg border border-[#e7e5e4] hover:bg-[#f5f5f4] transition-all text-[#1c1917]"
-                              aria-label="Open posting"
-                              title="Open posting"
-                            >
-                              <ExternalLink size={14} />
-                            </a>
-                          )}
-                          <button
-                            onClick={() => openJobDetails(Number(doc.id))}
-                            className="p-2 rounded-lg border border-[#e7e5e4] hover:bg-[#f5f5f4] transition-all text-[#1c1917]"
-                            aria-label="Details"
-                            title="Details"
-                          >
-                            <FileText size={14} />
-                          </button>
-                          {doc.has_resume_pdf && (
-                            <a
-                              href={`/api/view/${doc.id}?format=pdf&download=1`}
-                              className="px-3 py-1.5 rounded-lg border border-[#e7e5e4] text-[10px] font-bold uppercase tracking-widest text-[#1c1917] hover:bg-[#f5f5f4] transition-colors"
-                            >
-                              Resume PDF
-                            </a>
-                          )}
-                          {doc.has_cover_letter_pdf && (
-                            <a
-                              href={`/api/view/${doc.id}?type=cl&format=pdf&download=1`}
-                              className="px-3 py-1.5 rounded-lg border border-[#e7e5e4] text-[10px] font-bold uppercase tracking-widest text-[#1c1917] hover:bg-[#f5f5f4] transition-colors"
-                            >
-                              CL PDF
-                            </a>
-                          )}
-                          <a
-                            href={`/api/view/${doc.id}?download=1`}
-                            className="px-3 py-1.5 rounded-lg border border-[#e7e5e4] text-[10px] font-bold uppercase tracking-widest text-[#78716c] hover:bg-[#f5f5f4] transition-colors"
-                          >
-                            HTML
-                          </a>
-                          <a
-                            href={`/api/view/${doc.id}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="p-2 rounded-lg border border-[#e7e5e4] hover:bg-[#1c1917] hover:text-white transition-all text-[#1c1917]"
-                            aria-label="View"
-                          >
-                            <ChevronRight size={14} />
-                          </a>
                         </div>
                       </div>
                     ))}
