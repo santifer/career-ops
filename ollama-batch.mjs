@@ -47,6 +47,23 @@ const OLLAMA_BASE_URL = (process.env.OLLAMA_BASE_URL || 'http://localhost:11434'
 const OLLAMA_MODEL    = process.env.OLLAMA_MODEL    || 'llama3.3';
 const TIMEOUT_MS      = parseInt(process.env.OLLAMA_TIMEOUT_MS || '300000', 10);
 
+// Loopback guard — batch workers send cv.md + full JD to this endpoint.
+// A remote URL silently exfiltrates private data.
+{
+  let hostname;
+  try { hostname = new URL(OLLAMA_BASE_URL).hostname; }
+  catch { console.error(`ERROR: invalid OLLAMA_BASE_URL: "${OLLAMA_BASE_URL}"`); process.exit(1); }
+  const isLoopback = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1';
+  if (!isLoopback && process.env.OLLAMA_ALLOW_REMOTE !== '1') {
+    console.error(
+      `ERROR: remote OLLAMA_BASE_URL detected: ${OLLAMA_BASE_URL}\n` +
+      `       Batch mode sends cv.md and job descriptions to this endpoint.\n` +
+      `       Set OLLAMA_ALLOW_REMOTE=1 to use a remote endpoint intentionally.`
+    );
+    process.exit(1);
+  }
+}
+
 const PATHS = {
   shared:  join(ROOT, 'modes', '_shared.md'),
   oferta:  join(ROOT, 'modes', 'oferta.md'),
@@ -173,6 +190,9 @@ if (jdFile && existsSync(jdFile)) {
 }
 
 if (!jdText && url) {
+  // Validate URL before fetching to catch malformed input early.
+  try { new URL(url); } catch { fail(`Invalid JD URL: "${url}"`); }
+
   try {
     const res = await fetch(url, {
       headers: { 'User-Agent': 'Mozilla/5.0 career-ops/1.0' },
@@ -301,6 +321,14 @@ if (summaryMatch) {
   score      = parseFloat(extract('SCORE')) || null;
   archetype  = extract('ARCHETYPE');
   legitimacy = extract('LEGITIMACY');
+} else {
+  // The model didn't produce the expected summary block. Evaluation text
+  // will still be saved so the user can read it, but scoring/gating is
+  // unavailable. Stderr is captured to the log file by batch-runner.sh.
+  process.stderr.write(
+    `WARN: SCORE_SUMMARY block missing from model response for batch-id ${batchId}.\n` +
+    `      Report will be saved with score=null. Check the log for the raw output.\n`
+  );
 }
 
 // ---------------------------------------------------------------------------

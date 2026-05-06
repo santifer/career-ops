@@ -158,7 +158,7 @@ function nextReportNumber() {
     process.exit(1);
   }
   const isLoopback = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1';
-  if (!isLoopback && !process.env.OLLAMA_ALLOW_REMOTE) {
+  if (!isLoopback && process.env.OLLAMA_ALLOW_REMOTE !== '1') {
     console.error(`
 ❌  Remote Ollama endpoint detected: ${baseUrl}
 
