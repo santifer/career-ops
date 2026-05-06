@@ -162,8 +162,12 @@ check_prerequisites() {
         echo "ERROR: ollama-batch.mjs not found in $PROJECT_DIR"
         exit 1
       fi
+      if ! command -v curl &>/dev/null; then
+        echo "ERROR: 'curl' not found in PATH (required to probe Ollama)."
+        exit 1
+      fi
       local ollama_url="${OLLAMA_BASE_URL:-http://localhost:11434}"
-      if ! curl -sf "${ollama_url}/api/tags" -o /dev/null 2>/dev/null; then
+      if ! curl -sf --connect-timeout 5 --max-time 10 "${ollama_url}/api/tags" -o /dev/null 2>/dev/null; then
         echo "ERROR: Ollama not reachable at ${ollama_url}"
         echo "       Start Ollama with: ollama serve"
         echo "       Install Ollama:    https://ollama.com"

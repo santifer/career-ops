@@ -146,6 +146,34 @@ function nextReportNumber() {
 }
 
 // ---------------------------------------------------------------------------
+// Loopback guard — cv.md + full JD are sent to this endpoint.
+// A remote URL would silently exfiltrate private data.
+// ---------------------------------------------------------------------------
+{
+  let hostname;
+  try {
+    hostname = new URL(baseUrl).hostname;
+  } catch {
+    console.error(`❌  Invalid OLLAMA_BASE_URL: "${baseUrl}"`);
+    process.exit(1);
+  }
+  const isLoopback = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1';
+  if (!isLoopback && !process.env.OLLAMA_ALLOW_REMOTE) {
+    console.error(`
+❌  Remote Ollama endpoint detected: ${baseUrl}
+
+   Your CV and job description would be sent to a remote server.
+   This tool is designed for local use only.
+
+   If you intentionally want to use a remote endpoint (e.g. tunnelled
+   Ollama on a home server), set:
+     OLLAMA_ALLOW_REMOTE=1 node ollama-eval.mjs ...
+`);
+    process.exit(1);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Check Ollama is reachable before burning time on prompt assembly
 // ---------------------------------------------------------------------------
 try {

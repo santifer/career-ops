@@ -53,7 +53,6 @@ const PATHS = {
   cv:      join(ROOT, 'cv.md'),
   reports: join(ROOT, 'reports'),
   tracker: join(ROOT, 'batch', 'tracker-additions'),
-  apps:    join(ROOT, 'data', 'applications.md'),
 };
 
 // ---------------------------------------------------------------------------
@@ -85,6 +84,7 @@ let jdFile    = '';
 let reportNum = '';
 let date      = new Date().toISOString().split('T')[0];
 let batchId   = '';
+let minScore  = 0;
 
 for (let i = 0; i < args.length; i++) {
   switch (args[i]) {
@@ -93,11 +93,26 @@ for (let i = 0; i < args.length; i++) {
     case '--report-num': reportNum = args[++i]; break;
     case '--date':       date      = args[++i]; break;
     case '--batch-id':   batchId   = args[++i]; break;
+    case '--min-score':  minScore  = parseFloat(args[++i]) || 0; break;
   }
 }
 
 if (!reportNum || !batchId) {
   console.error('ERROR: --report-num and --batch-id are required');
+  process.exit(1);
+}
+
+// Validate inputs used in file paths to prevent path traversal.
+if (!/^\d{1,6}$/.test(reportNum)) {
+  console.error(`ERROR: invalid --report-num "${reportNum}" (must be numeric)`);
+  process.exit(1);
+}
+if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+  console.error(`ERROR: invalid --date "${date}" (must be YYYY-MM-DD)`);
+  process.exit(1);
+}
+if (!/^\d{1,10}$/.test(batchId)) {
+  console.error(`ERROR: invalid --batch-id "${batchId}" (must be numeric)`);
   process.exit(1);
 }
 
@@ -288,6 +303,26 @@ if (summaryMatch) {
   legitimacy = extract('LEGITIMACY');
 }
 
+// ---------------------------------------------------------------------------
+// Min-score gate — checked BEFORE any file writes
+// ---------------------------------------------------------------------------
+if (minScore > 0 && score !== null && score < minScore) {
+  const skipped = {
+    status:     'skipped',
+    id:         batchId,
+    report_num: reportNum,
+    company,
+    role,
+    score,
+    legitimacy,
+    pdf:        null,
+    report:     null,
+    error:      `score ${score} below --min-score ${minScore}`,
+  };
+  process.stdout.write(JSON.stringify(skipped) + '\n');
+  process.exit(0);
+}
+
 const companySlug = slugify(company);
 const reportFile  = `${reportNum}-${companySlug}-${date}.md`;
 const reportPath  = join(PATHS.reports, reportFile);
@@ -323,17 +358,13 @@ writeFileSync(reportPath, reportContent, 'utf-8');
 // ---------------------------------------------------------------------------
 mkdirSync(PATHS.tracker, { recursive: true });
 
-let nextNum = 1;
-if (existsSync(PATHS.apps)) {
-  const content = readFileSync(PATHS.apps, 'utf-8');
-  const nums = [...content.matchAll(/^\|\s*(\d+)\s*\|/gm)].map(m => parseInt(m[1], 10));
-  if (nums.length > 0) nextNum = Math.max(...nums) + 1;
-}
-
+// Row ID (column 1) is intentionally set to 0 — merge-tracker.mjs assigns
+// the real sequential number during merge. Computing it here would race
+// with parallel workers all reading applications.md at the same time.
 const scoreStr   = score !== null ? `${score}/5` : 'N/A';
 const reportLink = `[${reportNum}](reports/${reportFile})`;
 const notesStr   = `${archetype} — ${legitimacy}`;
-const tsvLine    = [nextNum, date, company, role, 'Evaluada', scoreStr, '❌', reportLink, notesStr].join('\t');
+const tsvLine    = [0, date, company, role, 'Evaluada', scoreStr, '❌', reportLink, notesStr].join('\t');
 
 writeFileSync(join(PATHS.tracker, `${batchId}.tsv`), tsvLine + '\n', 'utf-8');
 
