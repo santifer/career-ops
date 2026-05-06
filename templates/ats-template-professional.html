@@ -235,6 +235,10 @@
             font-weight: 600;
             color: #374151;
         }
+
+        .portfolio-link {
+            display: inline;
+        }
     </style>
 </head>
 <body>
@@ -253,49 +257,45 @@
             </div>
             <div class="contact-line">
                 <a href="{{LINKEDIN_URL}}">{{LINKEDIN_DISPLAY}}</a>
-                {{#if PORTFOLIO_URL}}
-                | <a href="{{PORTFOLIO_URL}}">{{PORTFOLIO_DISPLAY}}</a>
-                {{/if}}
+                <span class="portfolio-link">{{PORTFOLIO_LINK}}</span>
             </div>
         </header>
 
         <section>
-            <h2>Professional Summary</h2>
+            <h2>{{SECTION_SUMMARY}}</h2>
             <div class="summary-text">{{SUMMARY_TEXT}}</div>
         </section>
 
         <section>
-            <h2>Core Competencies</h2>
+            <h2>{{SECTION_COMPETENCIES}}</h2>
             <div class="competencies-grid">
                 {{COMPETENCIES}}
             </div>
         </section>
 
         <section>
-            <h2>Technical Skills</h2>
+            <h2>{{SECTION_SKILLS}}</h2>
             <div class="skills-section">
                 {{SKILLS}}
             </div>
         </section>
 
         <section>
-            <h2>Professional Experience</h2>
+            <h2>{{SECTION_EXPERIENCE}}</h2>
             <div id="experience-content">
                 {{EXPERIENCE}}
             </div>
         </section>
 
-        {{#if PROJECTS}}
-        <section>
-            <h2>Selected Achievements</h2>
+        <section id="projects-section" style="display: {{PROJECTS_DISPLAY}};">
+            <h2>{{SECTION_PROJECTS}}</h2>
             <div id="projects-content">
                 {{PROJECTS}}
             </div>
         </section>
-        {{/if}}
 
         <section>
-            <h2>Education</h2>
+            <h2>{{SECTION_EDUCATION}}</h2>
             <div id="education-content">
                 {{EDUCATION}}
             </div>

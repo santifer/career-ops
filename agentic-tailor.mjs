@@ -590,7 +590,11 @@ async function tailorPackage(jd, profile, companyName) {
     if (!profileRow) throw new Error(`Profile not configured for user ${userId}. Please setup via the Dashboard Settings.`);
 
     const profile = profileRow.resume_context;
-    
+
+    // Debug profile data
+    console.log(`[DEBUG] Profile loaded: hasExperience=${Array.isArray(profile?.experience)}, expCount=${profile?.experience?.length || 0}, hasEducation=${Array.isArray(profile?.education)}, eduCount=${profile?.education?.length || 0}`);
+    console.log(`[DEBUG] Profile narrative: headline="${profile?.narrative?.headline || 'N/A'}", hasSuperpowers=${Array.isArray(profile?.narrative?.superpowers)}, superpowersCount=${profile?.narrative?.superpowers?.length || 0}`);
+
     // Override HuggingFace global instance if the user has provided their own token
     if (profileRow.hf_token) {
       await getHfClient(profileRow.hf_token);
@@ -611,6 +615,14 @@ async function tailorPackage(jd, profile, companyName) {
     // Calculate Years of Experience
     const yearsExp = calculateYearsOfExperience(profile.experience);
     console.log(`📊 Years of Experience: ${yearsExp}`);
+
+    // Warn if no experience data
+    if (!profile.experience || profile.experience.length === 0) {
+      console.warn('⚠ No experience data in profile. Resume will be incomplete. Please update your profile via Dashboard Settings.');
+    }
+    if (!profile.education || profile.education.length === 0) {
+      console.warn('⚠ No education data in profile. Resume will be incomplete. Please update your profile via Dashboard Settings.');
+    }
 
     // Determine resume length based on experience
     // 0-5 years: 1 page, 6-11 years: 2 pages, 12-20 years: up to 4 pages
@@ -641,26 +653,36 @@ async function tailorPackage(jd, profile, companyName) {
     // 1. GENERATE RESUME - Dynamic length based on experience
     const experienceToShow = maxPages >= 3 ? profile.experience : profile.experience?.slice(0, maxPages * 2) || [];
 
+    // Build portfolio link (conditional)
+    const portfolioLink = c.github
+      ? ` | <a href="https://${c.github}">${c.github.replace(/^github.com\//, '')}</a>`
+      : '';
+
+    // Determine if projects section should show
+    const hasProjects = maxPages >= 2 && profile.narrative?.proof_points && profile.narrative.proof_points.length > 0;
+
     const resumeReps = {
       ...commonReps,
       SECTION_SUMMARY: 'Professional Summary',
-      SUMMARY_TEXT: tailoring.summary,
+      SUMMARY_TEXT: tailoring.summary || 'Results-driven professional with proven expertise in delivering high-quality outcomes.',
       SECTION_COMPETENCIES: 'Core Competencies',
-      COMPETENCIES: (Array.isArray(tailoring.core_competencies) ? tailoring.core_competencies : []).map(skill => `<span class="competency-tag">${skill}</span>`).join(''),
+      COMPETENCIES: (Array.isArray(tailoring.core_competencies) ? tailoring.core_competencies : []).map(skill => `<span class="competency-tag">${skill}</span>`).join('') || '<span class="competency-tag">Professional Skills</span>',
       SECTION_EXPERIENCE: 'Professional Experience',
       EXPERIENCE: renderExperience(experienceToShow, tailoring.experience, maxPages),
       SECTION_PROJECTS: 'Selected Achievements',
-      PROJECTS: maxPages >= 2 ? renderProjects(profile.narrative.proof_points) : '',
+      PROJECTS: hasProjects ? renderProjects(profile.narrative.proof_points) : '',
+      PROJECTS_DISPLAY: hasProjects ? 'block' : 'none',
       SECTION_EDUCATION: 'Education',
       EDUCATION: renderEducation(profile.education),
       SECTION_SKILLS: 'Technical Skills',
-      SKILLS: renderCategorizedSkills(profile.narrative.superpowers),
+      SKILLS: renderCategorizedSkills(profile.narrative?.superpowers || []),
       SECTION_CERTIFICATIONS: '',
       CERTIFICATIONS: '',
       PAGE_WIDTH: '800px',
-      ATS_BADGE: atsScore.score >= 80 ? '<div class="ats-badge ats-high">ATS Optimized</div>' :
-                 atsScore.score >= 60 ? '<div class="ats-badge ats-medium">ATS Friendly</div>' :
-                 '<div class="ats-badge ats-low">Needs Optimization</div>'
+      ATS_BADGE: atsScore.score >= 80 ? '<span class="ats-badge ats-high">ATS Optimized</span>' :
+                 atsScore.score >= 60 ? '<span class="ats-badge ats-medium">ATS Friendly</span>' :
+                 '<span class="ats-badge ats-low">Needs Optimization</span>',
+      PORTFOLIO_LINK: portfolioLink
     };
 
     let resumeHtml = fs.readFileSync(TEMPLATE, 'utf8');
