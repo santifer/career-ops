@@ -6943,6 +6943,9 @@ GMAIL_REDIRECT_URI=${redirect}</pre>
 
       const yml = serializeProfileYaml(payload);
       const profilePath = path.join(CONFIG_DIR, 'profile.yml');
+      // Some deployments (custom CONFIG_DIR, fresh tmpfs) lack the directory.
+      // mkdir -p so a virgin filesystem can finalize without ENOENT.
+      await fs.mkdir(CONFIG_DIR, { recursive: true });
       // Safety: never silently overwrite an existing profile. Snapshot to
       // profile.yml.bak.{timestamp}, then rotate older backups (keep last 10).
       try {

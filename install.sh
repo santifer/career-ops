@@ -135,6 +135,31 @@ ensure_env() {
   warn "Edit .env to add ANTHROPIC_API_KEY (and optionally GMAIL_*) before first eval"
 }
 
+# Initialize per-user files from templates so pipeline scripts that append
+# to them don't fail on a fresh clone. Each is gitignored — they hold PII.
+ensure_user_files() {
+  cd "$SCRIPT_DIR"
+  if [[ -f templates/story-bank.template.md && ! -f interview-prep/story-bank.md ]]; then
+    mkdir -p interview-prep
+    cp templates/story-bank.template.md interview-prep/story-bank.md
+    ok "Initialized interview-prep/story-bank.md from template"
+  fi
+  if [[ -f templates/portals.example.yml && ! -f portals.yml ]]; then
+    cp templates/portals.example.yml portals.yml
+    ok "Initialized portals.yml from template"
+  fi
+  if [[ -f config/profile.example.yml && ! -f config/profile.yml ]]; then
+    cp config/profile.example.yml config/profile.yml
+    log "Initialized config/profile.yml from example (you'll fill it via the wizard)"
+  fi
+  if [[ -f modes/_profile.template.md && ! -f modes/_profile.md ]]; then
+    cp modes/_profile.template.md modes/_profile.md
+    ok "Initialized modes/_profile.md from template"
+  fi
+  # Ensure write-target directories exist
+  mkdir -p data reports output interview-prep tmp
+}
+
 # ── Onboarding nudge ────────────────────────────────────────────────────────
 print_onboarding() {
   printf "${C_BOLD}Next: 6-step onboarding wizard${C_RESET}\n"
@@ -154,6 +179,7 @@ EOF
 run_docker() {
   require_docker
   ensure_env
+  ensure_user_files
   cd "$SCRIPT_DIR"
 
   log "Building image (first run takes ~3 min for Chromium)…"
@@ -179,6 +205,7 @@ run_docker() {
 run_local() {
   require_node
   ensure_env
+  ensure_user_files
   cd "$SCRIPT_DIR"
 
   log "Installing dependencies (npm install)…"

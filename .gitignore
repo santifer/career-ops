@@ -49,6 +49,12 @@ secrets.json
 cv.md
 article-digest.md
 data/follow-ups.md
+# story-bank.md accumulates personal STAR+R stories — never commit
+# (the empty template lives at templates/story-bank.template.md and
+# is copied into interview-prep/story-bank.md on first launch)
+interview-prep/story-bank.md
+interview-prep/*.md
+!interview-prep/.gitkeep
 
 # Backups + transient state
 backups/
