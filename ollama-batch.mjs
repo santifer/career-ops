@@ -104,15 +104,33 @@ if (!reportNum || !batchId) {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+/**
+ * Read a file and return its trimmed contents, or a placeholder if missing.
+ * @param {string} path - Absolute path to the file.
+ * @param {string} label - Human-readable label used in the placeholder message.
+ * @returns {string} File contents or a "[label not found]" placeholder.
+ */
 function readFile(path, label) {
   if (!existsSync(path)) return `[${label} not found — skipping]`;
   return readFileSync(path, 'utf-8').trim();
 }
 
+/**
+ * Convert a string to a URL-safe slug (lowercase, hyphens, no leading/trailing hyphens).
+ * @param {string} str - Input string (e.g. company name).
+ * @returns {string} Slugified string, or "unknown" if the result would be empty.
+ */
 function slugify(str) {
   return str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'unknown';
 }
 
+/**
+ * Write a JSON failure summary to stdout and exit with code 1.
+ * Called on any unrecoverable error so batch-runner.sh can parse the result.
+ * @param {string} msg - Human-readable error description.
+ * @param {Object} [extra={}] - Optional fields to merge into the output object.
+ */
 function fail(msg, extra = {}) {
   const out = {
     status:     'failed',

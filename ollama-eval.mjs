@@ -115,6 +115,13 @@ if (!jdText) {
 // ---------------------------------------------------------------------------
 // File helpers
 // ---------------------------------------------------------------------------
+/**
+ * Read a file and return its trimmed contents, or a placeholder if missing.
+ * Emits a console warning when the file is absent so the user knows context is incomplete.
+ * @param {string} path - Absolute path to the file.
+ * @param {string} label - Human-readable label used in the warning and placeholder.
+ * @returns {string} File contents or a "[label not found]" placeholder.
+ */
 function readFile(path, label) {
   if (!existsSync(path)) {
     console.warn(`⚠️   ${label} not found at: ${path}`);
@@ -123,6 +130,11 @@ function readFile(path, label) {
   return readFileSync(path, 'utf-8').trim();
 }
 
+/**
+ * Determine the next zero-padded 3-digit report number based on existing files in reports/.
+ * Scans for files matching /^\d{3}-/ and returns max + 1, or "001" if the directory is empty.
+ * @returns {string} Zero-padded report number string, e.g. "042".
+ */
 function nextReportNumber() {
   if (!existsSync(PATHS.reports)) return '001';
   const files = readdirSync(PATHS.reports)
