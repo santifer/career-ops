@@ -2324,10 +2324,14 @@ const HTML = /* html */ `<!DOCTYPE html>
       --edge-sheen:   inset 0 .5px 0 rgba(255,255,255,.07);
 
       /* ── Text scale ───────────────────────────────────────────────── */
+      /* --text-ter bumped from .38 to .60 — body text at .38 over our dark
+         surface fails WCAG AA (≈3.0:1). .60 brings it above 4.5:1 for the
+         small-print footers and metadata. --text-quad stays low because it's
+         used for decorative-only / non-essential text. */
       --text:         rgba(255,255,255,.96);
       --text-sec:     rgba(235,235,245,.62);
-      --text-ter:     rgba(235,235,245,.38);
-      --text-quad:    rgba(235,235,245,.22);
+      --text-ter:     rgba(235,235,245,.60);
+      --text-quad:    rgba(235,235,245,.30);
 
       /* ── Accent (brand-mark blue → cyan) ──────────────────────────── */
       --accent:       #28b8ff;
@@ -2893,6 +2897,36 @@ const HTML = /* html */ `<!DOCTYPE html>
       border: .5px solid var(--separator2);
       border-radius: var(--r-md);
       display: flex; align-items: center; gap: 22px; flex-wrap: wrap;
+      position: relative;
+      overflow: hidden;
+    }
+    /* Slow prismatic glow that drifts across the empty-state hero, like the
+       app is "alive" while waiting. Subtle — 8s loop, low opacity. */
+    .stats-zero::before {
+      content: '';
+      position: absolute;
+      inset: -50% -25%;
+      background: conic-gradient(
+        from 0deg at 50% 50%,
+        rgba(40,184,255,0) 0deg,
+        rgba(40,184,255,.10) 60deg,
+        rgba(94,92,230,.12) 140deg,
+        rgba(255,55,95,.10) 220deg,
+        rgba(48,209,88,.10) 300deg,
+        rgba(40,184,255,0) 360deg
+      );
+      animation: zero-conic 14s linear infinite;
+      pointer-events: none;
+      filter: blur(40px);
+      opacity: 0.55;
+    }
+    .stats-zero > * { position: relative; z-index: 1; }
+    @keyframes zero-conic {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .stats-zero::before { animation: none; }
     }
     .stats-zero[hidden] { display: none !important; }
     .stats-zero-icon {
@@ -2903,6 +2937,15 @@ const HTML = /* html */ `<!DOCTYPE html>
       display: flex; align-items: center; justify-content: center;
       font-size: 22px;
       box-shadow: 0 6px 18px rgba(10,132,255,.30);
+      animation: zero-breathe 4.6s ease-in-out infinite;
+    }
+    /* Soft 4.6s breathing pulse — adds life without being distracting. */
+    @keyframes zero-breathe {
+      0%, 100% { transform: scale(1);   box-shadow: 0 6px 18px rgba(10,132,255,.30); }
+      50%      { transform: scale(1.06); box-shadow: 0 10px 26px rgba(10,132,255,.50), 0 0 28px rgba(48,209,88,.18); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .stats-zero-icon { animation: none; }
     }
     .stats-zero-body { flex: 1 1 220px; min-width: 0; }
     .stats-zero-title { font-size: 16px; font-weight: 700; letter-spacing: -.01em; }
@@ -3540,6 +3583,13 @@ const HTML = /* html */ `<!DOCTYPE html>
       position: relative;
     }
     .drop-zone.drag-over { border-color: var(--accent); background: var(--accent-bg); }
+    /* Keyboard users can tab the file input — but it has opacity:0, so without
+       this the focus ring is invisible. Project the ring onto the parent. */
+    .drop-zone:focus-within {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+      border-color: var(--accent);
+    }
     .drop-zone input[type="file"] {
       position: absolute; inset: 0; opacity: 0; cursor: pointer;
     }
@@ -3612,9 +3662,22 @@ const HTML = /* html */ `<!DOCTYPE html>
       box-shadow: 0 0 0 2px rgba(48,209,88,.18);
     }
     .wiz-dot-line { flex: 1; height: 1px; background: var(--separator); }
-    .wiz-step { display: none; animation: wiz-fade .18s ease-out; }
-    .wiz-step.active { display: block; }
-    @keyframes wiz-fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+    .wiz-step { display: none; }
+    /* Spring-eased slide-up + fade. ~360ms with overshoot curve so each step
+       feels like a card snapping into place rather than a fade. The
+       cubic-bezier(.22,1,.36,1) is the Apple-standard "expressive" easing. */
+    .wiz-step.active {
+      display: block;
+      animation: wiz-slide .36s cubic-bezier(.22,1,.36,1);
+    }
+    @keyframes wiz-slide {
+      from { opacity: 0; transform: translateY(14px); filter: blur(2px); }
+      60%  { opacity: 1; filter: blur(0); }
+      to   { opacity: 1; transform: translateY(0);    filter: blur(0); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .wiz-step.active { animation: none; }
+    }
     .wiz-label {
       display: block; font-size: 11px; font-weight: 600;
       color: var(--text-sec); text-transform: uppercase; letter-spacing: .04em;
@@ -3649,13 +3712,25 @@ const HTML = /* html */ `<!DOCTYPE html>
       display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px;
     }
     .wiz-chip {
-      font-size: 12px; padding: 5px 11px; border-radius: 12px;
+      font-size: 13px;
+      padding: 9px 14px;
+      min-height: 36px;
+      display: inline-flex; align-items: center;
+      border-radius: 12px;
       background: var(--surface2); color: var(--text-sec);
       border: .5px solid var(--separator2); cursor: pointer;
-      transition: background .12s, border-color .12s, color .12s;
+      transition: background .12s, border-color .12s, color .12s, transform .12s;
       user-select: none;
     }
-    .wiz-chip:hover { border-color: var(--separator2); color: var(--text); }
+    .wiz-chip:hover { border-color: var(--separator2); color: var(--text); transform: translateY(-1px); }
+    /* Coarse pointer (touch) → bump to ≥44px per WCAG 2.5.5 + Apple HIG. */
+    @media (pointer: coarse) {
+      .wiz-chip { min-height: 44px; padding: 11px 16px; font-size: 14px; }
+    }
+    .wiz-chip:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
     .wiz-chip.selected {
       background: linear-gradient(180deg, rgba(10,132,255,.18), rgba(10,132,255,.10));
       color: #6cb2ff;
@@ -4219,18 +4294,18 @@ const HTML = /* html */ `<!DOCTYPE html>
 </div>
 
 <!-- Status dropdown (shared, moved by JS) -->
-<div class="status-dropdown" id="status-dropdown">
-  <div class="status-option" style="--dot-color:rgba(255,255,255,.3)" onclick="applyStatus('Evaluated')">Evaluated</div>
-  <div class="status-option" style="--dot-color:var(--blue)"   onclick="applyStatus('Applied')">Applied</div>
-  <div class="status-option" style="--dot-color:var(--cyan)"   onclick="applyStatus('Responded')">Responded</div>
-  <div class="status-option" style="--dot-color:var(--yellow)" onclick="applyStatus('Interview')">Interview</div>
-  <div class="status-option" style="--dot-color:var(--green)"  onclick="applyStatus('Offer')">Offer</div>
-  <div class="status-option" style="--dot-color:var(--red)"    onclick="applyStatus('Rejected')">Rejected</div>
-  <div class="status-option" style="--dot-color:var(--text-ter)" onclick="applyStatus('Discarded')">Discarded</div>
-  <div class="status-option" style="--dot-color:var(--purple)" onclick="applyStatus('SKIP')">SKIP</div>
+<div class="status-dropdown" id="status-dropdown" role="menu" aria-label="Set application status">
+  <div class="status-option" role="menuitem" tabindex="0" style="--dot-color:rgba(255,255,255,.3)" onclick="applyStatus('Evaluated')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();applyStatus('Evaluated')}">Evaluated</div>
+  <div class="status-option" role="menuitem" tabindex="0" style="--dot-color:var(--blue)"   onclick="applyStatus('Applied')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();applyStatus('Applied')}">Applied</div>
+  <div class="status-option" role="menuitem" tabindex="0" style="--dot-color:var(--cyan)"   onclick="applyStatus('Responded')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();applyStatus('Responded')}">Responded</div>
+  <div class="status-option" role="menuitem" tabindex="0" style="--dot-color:var(--yellow)" onclick="applyStatus('Interview')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();applyStatus('Interview')}">Interview</div>
+  <div class="status-option" role="menuitem" tabindex="0" style="--dot-color:var(--green)"  onclick="applyStatus('Offer')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();applyStatus('Offer')}">Offer</div>
+  <div class="status-option" role="menuitem" tabindex="0" style="--dot-color:var(--red)"    onclick="applyStatus('Rejected')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();applyStatus('Rejected')}">Rejected</div>
+  <div class="status-option" role="menuitem" tabindex="0" style="--dot-color:var(--text-ter)" onclick="applyStatus('Discarded')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();applyStatus('Discarded')}">Discarded</div>
+  <div class="status-option" role="menuitem" tabindex="0" style="--dot-color:var(--purple)" onclick="applyStatus('SKIP')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();applyStatus('SKIP')}">SKIP</div>
 </div>
 
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
 <!-- Onboarding / Resume Drop modal -->
 <div class="onboard-modal" id="onboard-modal" role="dialog" aria-modal="true" aria-labelledby="wiz-title" aria-describedby="wiz-subtitle">
@@ -4673,11 +4748,16 @@ const HTML = /* html */ `<!DOCTYPE html>
 
   async function refreshGmail() {
     try {
-      const [inboxRes, statusRes] = await Promise.all([
-        fetch('/api/gmail/inbox'),
-        fetch('/api/gmail/status'),
-      ]);
+      // Status is the gate. /api/gmail/inbox 401s when not configured or no
+      // tokens — no point burning that request and littering the network
+      // panel with red rows. Only hit /inbox once we know we can authenticate.
+      const statusRes = await fetch('/api/gmail/status');
       gmailStatus = statusRes.ok ? await statusRes.json() : null;
+      if (!gmailStatus || !gmailStatus.configured || !gmailStatus.hasTokens) {
+        renderGmailConnect();
+        return;
+      }
+      const inboxRes = await fetch('/api/gmail/inbox');
       if (inboxRes.status === 401) { renderGmailConnect(); return; }
       const data = await inboxRes.json();
       renderGmailSignals(data.signals || [], data.scanned_at, data.connected);
@@ -5158,6 +5238,9 @@ const HTML = /* html */ `<!DOCTYPE html>
     const t = document.getElementById('toast');
     t.textContent = msg;
     t.className = 'toast show toast-' + type;
+    // Errors get role=alert (interrupting) so AT users hear them immediately;
+    // success/info stay role=status (polite) so they don't barge in.
+    t.setAttribute('role', type === 'error' ? 'alert' : 'status');
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => t.classList.remove('show'), durationMs);
   }
@@ -5358,8 +5441,12 @@ const HTML = /* html */ `<!DOCTYPE html>
     };
   }
 
+  // Save the element that opened the modal so we can restore focus on close
+  // (a11y H1: screen-reader users were dumped to <body> on Esc/Cancel).
+  let _onboardOpener = null;
   async function openOnboard() {
     window.wizState = defaultWizState();
+    _onboardOpener = document.activeElement;
     const modal = document.getElementById('onboard-modal');
     modal.classList.add('open');
     document.getElementById('onboard-text').value = '';
@@ -5406,6 +5493,12 @@ const HTML = /* html */ `<!DOCTYPE html>
   function closeOnboard() {
     document.getElementById('onboard-modal').classList.remove('open');
     wizDetachFocusTrap();
+    // Restore focus to whatever opened the wizard so SR users land back where
+    // they were instead of at the top of <body>.
+    if (_onboardOpener && typeof _onboardOpener.focus === 'function') {
+      _onboardOpener.focus();
+      _onboardOpener = null;
+    }
     // Don't clear draft here — closing without finalize means user might
     // come back. Draft is cleared explicitly on successful finalize.
   }
@@ -5991,8 +6084,9 @@ const HTML = /* html */ `<!DOCTYPE html>
   }
 
   // Brief, non-blocking celebration moment when the user finishes onboarding.
-  // Plays a confetti-light burst from the brand mark + a one-line greeting.
-  // Respects prefers-reduced-motion.
+  // Three-burst prismatic celebration — gravity-physics confetti from the
+  // brand mark, then a slower secondary burst of mixed shapes + sparkles, then
+  // a final shimmer wave. Respects prefers-reduced-motion (skips entirely).
   function celebrateOnboarding() {
     const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (reduce) return;
@@ -6001,34 +6095,104 @@ const HTML = /* html */ `<!DOCTYPE html>
     layer.setAttribute('aria-hidden', 'true');
     Object.assign(layer.style, {
       position: 'fixed', inset: '0', pointerEvents: 'none', zIndex: '9998',
-      overflow: 'hidden',
+      overflow: 'hidden', perspective: '600px',
     });
-    const colors = ['#28b8ff', '#30d158', '#ffd60a', '#ff9f0a', '#ff375f', '#bf5af2'];
-    const N = 36;
-    for (let i = 0; i < N; i++) {
-      const dot = document.createElement('span');
-      const c = colors[i % colors.length];
-      const angle = (Math.PI * 2 * i) / N;
-      const dist = 220 + Math.random() * 180;
-      const dx = Math.cos(angle) * dist;
-      const dy = Math.sin(angle) * dist;
-      const size = 6 + Math.random() * 5;
-      Object.assign(dot.style, {
-        position: 'absolute', left: '50%', top: '34%',
-        width: size + 'px', height: size + 'px', borderRadius: '50%',
-        background: c, boxShadow: '0 0 8px ' + c,
-        transform: 'translate(-50%, -50%) scale(.4)',
-        opacity: '0.95',
-        transition: 'transform 1100ms cubic-bezier(.22,1,.36,1), opacity 1100ms ease-out',
-      });
-      layer.appendChild(dot);
-      requestAnimationFrame(() => {
-        dot.style.transform = 'translate(calc(' + dx + 'px - 50%), calc(' + dy + 'px - 50%)) scale(1)';
-        dot.style.opacity = '0';
-      });
-    }
     root.appendChild(layer);
-    setTimeout(() => layer.remove(), 1400);
+
+    const colors = ['#28b8ff', '#30d158', '#ffd60a', '#ff9f0a', '#ff375f', '#bf5af2', '#5e5ce6', '#64d2ff'];
+    const cx = window.innerWidth * 0.5;
+    const cy = window.innerHeight * 0.34;
+
+    // Burst 1: Heavy confetti — strips that fall under gravity
+    const N1 = 80;
+    for (let i = 0; i < N1; i++) {
+      const piece = document.createElement('span');
+      const c = colors[Math.floor(Math.random() * colors.length)];
+      const w = 5 + Math.random() * 4;
+      const h = 10 + Math.random() * 8;
+      const rot0 = Math.random() * 360;
+      const angle = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI * 0.9;
+      const v = 380 + Math.random() * 320;
+      const vx = Math.cos(angle) * v;
+      const vy = Math.sin(angle) * v;
+      Object.assign(piece.style, {
+        position: 'absolute', left: cx + 'px', top: cy + 'px',
+        width: w + 'px', height: h + 'px',
+        background: c, borderRadius: '2px',
+        boxShadow: '0 0 6px ' + c + 'aa',
+        transform: 'translate(-50%, -50%) rotate(' + rot0 + 'deg)',
+        willChange: 'transform, opacity',
+      });
+      layer.appendChild(piece);
+      // physics: vx*t  vs vy*t + 0.5*g*t^2 — animate via rAF for ~1.6s
+      const start = performance.now();
+      const dur = 1600 + Math.random() * 400;
+      const g = 1300; // px/s^2
+      const spin = (Math.random() - 0.5) * 720; // deg over lifetime
+      function step(now) {
+        const t = (now - start) / 1000;
+        if (t * 1000 >= dur) { piece.remove(); return; }
+        const dx = vx * t;
+        const dy = vy * t + 0.5 * g * t * t;
+        const k = t * 1000 / dur;
+        const opacity = 1 - Math.pow(k, 2);
+        piece.style.transform = 'translate(calc(' + dx + 'px - 50%), calc(' + dy + 'px - 50%)) rotate(' + (rot0 + spin * k) + 'deg)';
+        piece.style.opacity = String(opacity);
+        requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+
+    // Burst 2: Sparkles — 200ms later, smaller dots that drift up + fade
+    setTimeout(() => {
+      const N2 = 28;
+      for (let i = 0; i < N2; i++) {
+        const dot = document.createElement('span');
+        const c = colors[Math.floor(Math.random() * colors.length)];
+        const ang = Math.random() * Math.PI * 2;
+        const r = 80 + Math.random() * 240;
+        const dx = Math.cos(ang) * r;
+        const dy = Math.sin(ang) * r * 0.5 - 60;
+        const size = 3 + Math.random() * 3;
+        Object.assign(dot.style, {
+          position: 'absolute', left: cx + 'px', top: cy + 'px',
+          width: size + 'px', height: size + 'px', borderRadius: '50%',
+          background: c, boxShadow: '0 0 10px ' + c + ', 0 0 20px ' + c + '99',
+          transform: 'translate(-50%, -50%) scale(0)',
+          opacity: '0',
+          transition: 'transform 1300ms cubic-bezier(.22,1,.36,1), opacity 1300ms ease-out',
+        });
+        layer.appendChild(dot);
+        requestAnimationFrame(() => {
+          dot.style.transform = 'translate(calc(' + dx + 'px - 50%), calc(' + dy + 'px - 50%)) scale(1.4)';
+          dot.style.opacity = '1';
+          setTimeout(() => { dot.style.opacity = '0'; }, 700);
+        });
+      }
+    }, 200);
+
+    // Burst 3: Final radial shimmer — soft prismatic ring
+    setTimeout(() => {
+      const ring = document.createElement('div');
+      Object.assign(ring.style, {
+        position: 'absolute', left: cx + 'px', top: cy + 'px',
+        width: '20px', height: '20px', borderRadius: '50%',
+        background: 'transparent',
+        boxShadow: '0 0 0 2px rgba(94,92,230,.5), 0 0 0 6px rgba(40,184,255,.3), 0 0 0 12px rgba(255,55,95,.15)',
+        transform: 'translate(-50%, -50%) scale(.5)',
+        opacity: '0',
+        transition: 'transform 900ms cubic-bezier(.22,1,.36,1), opacity 900ms ease-out',
+      });
+      layer.appendChild(ring);
+      requestAnimationFrame(() => {
+        ring.style.transform = 'translate(-50%, -50%) scale(40)';
+        ring.style.opacity = '0.8';
+        setTimeout(() => { ring.style.opacity = '0'; }, 100);
+      });
+    }, 100);
+
+    // Cleanup
+    setTimeout(() => layer.remove(), 2500);
   }
 
   // Polls /api/onboard/pdf-status up to N times (1s apart) and updates the
@@ -7048,6 +7212,14 @@ GMAIL_REDIRECT_URI=${redirect}</pre>
     return;
   }
 
+  // ── Unknown /api/* → JSON 404 ──
+  // Without this, every typo-route falls through to the HTML payload below
+  // and the frontend's `await res.json()` dies in a silent catch{}, so the
+  // user just sees stale data with no error feedback.
+  if (pathname.startsWith('/api/')) {
+    return sendJsonError(res, 404, 'not found');
+  }
+
   // ── Main HTML ──
   res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
   res.end(HTML);
@@ -7112,17 +7284,28 @@ async function start() {
   });
 
   // ── Auto-start: Autopilot (applies evaluated jobs automatically) ──
-  setTimeout(() => {
-    console.log('[autopilot] Auto-starting...');
-    runAutopilot().catch(err => console.error('[autopilot] Crash:', err.message));
-  }, 15000); // 15s delay: let browser/Playwright initialize after server is up
+  // Disabled by default — opt in with AUTOPILOT_AUTOSTART=1. Without this gate
+  // a fresh dev box without Chrome/Playwright would log "browser crash" every
+  // 10s in a hot loop, which looks scary and burns CPU during quick installs.
+  if (process.env.AUTOPILOT_AUTOSTART === '1') {
+    setTimeout(() => {
+      console.log('[autopilot] Auto-starting...');
+      runAutopilot().catch(err => console.error('[autopilot] Crash:', err.message));
+    }, 15000);
+  } else {
+    console.log('[autopilot] Auto-start disabled (set AUTOPILOT_AUTOSTART=1 to enable)');
+  }
 
   // ── Auto-start: Pipeline loop (scan → eval → CL, every 6h) ──
-  // Initial cycle after 60s (give the server time to fully start), then every 6h
-  setTimeout(() => {
-    runPipelineCycle().catch(err => console.error('[pipeline] Startup error:', err.message));
-    setInterval(() => runPipelineCycle().catch(err => console.error('[pipeline] Error:', err.message)), PIPELINE_INTERVAL_MS);
-  }, 60000);
+  // Same gate — opt in with PIPELINE_AUTOSTART=1.
+  if (process.env.PIPELINE_AUTOSTART === '1') {
+    setTimeout(() => {
+      runPipelineCycle().catch(err => console.error('[pipeline] Startup error:', err.message));
+      setInterval(() => runPipelineCycle().catch(err => console.error('[pipeline] Error:', err.message)), PIPELINE_INTERVAL_MS);
+    }, 60000);
+  } else {
+    console.log('[pipeline] Auto-start disabled (set PIPELINE_AUTOSTART=1 to enable)');
+  }
 }
 
 start().catch(err => { console.error('Startup error:', err); process.exit(1); });

@@ -9,7 +9,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'path';
 import os from 'os';
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'fs';
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync } from 'fs';
 import { EventEmitter } from 'events';
 import {
   yamlQuote,
@@ -815,6 +815,139 @@ describe('/api/health endpoint contract', () => {
     const elapsed = Date.now() - t0;
     for (const r of probes) assert.equal(r.status, 200);
     assert.ok(elapsed < 2000, `20 probes took ${elapsed}ms (expected < 2s)`);
+  });
+
+  test('teardown: stop the server', () => {
+    if (proc && !proc.killed) {
+      proc.kill('SIGTERM');
+    }
+  });
+});
+
+// ── /api/onboard/finalize HTTP smoke (the path that writes profile.yml) ────
+//
+// Helpers are unit-tested above, but the full HTTP path has its own failure
+// modes (CSRF origin check, body-size cap, mkdir-p of CONFIG_DIR, JSON
+// content-type, error code mapping). This suite boots a real server against
+// a tmp CONFIG_DIR and exercises both happy and adversarial requests.
+
+describe('/api/onboard/finalize HTTP contract', () => {
+  let proc;
+  let port;
+  let configDir;
+  const base = () => `http://127.0.0.1:${port}`;
+
+  test('setup: boot the server in a tmp config dir', async () => {
+    port = 15747 + Math.floor(Math.random() * 1000);
+    configDir = mkdtempSync(path.join(os.tmpdir(), 'co-onb-'));
+    const here = path.dirname(fileURLToPath(import.meta.url));
+    const serverPath = path.join(here, '..', 'dashboard-web', 'server.mjs');
+    proc = spawn(process.execPath, [serverPath], {
+      env: {
+        ...process.env,
+        PORT: String(port),
+        HOST: '127.0.0.1',
+        CONFIG_DIR: configDir,
+        DATA_DIR: configDir,
+        SUPPRESS_BANNER: '1',
+      },
+      stdio: ['ignore', 'ignore', 'ignore'],
+      detached: false,
+    });
+    for (let i = 0; i < 50; i++) {
+      try {
+        const r = await fetch(`${base()}/api/health`);
+        if (r.ok) return;
+      } catch { /* still booting */ }
+      await new Promise(r => setTimeout(r, 100));
+    }
+    throw new Error('server did not respond within 5s');
+  });
+
+  const validBody = () => JSON.stringify({
+    basics: {
+      full_name: 'Jane Doe',
+      email: 'jane@example.com',
+      phone: '',
+      location: 'Remote',
+      linkedin: '',
+      headline: 'Senior Backend Engineer',
+    },
+    target_roles: ['Senior Backend Engineer'],
+    compensation: { target_range: '', minimum: '', currency: 'USD', location_flexibility: '' },
+    deal_breakers: [],
+    narrative: { superpowers: [], best_achievement: '', proof_points: [] },
+  });
+
+  test('writes profile.yml on a happy-path POST (200 + ok:true)', async () => {
+    const r = await fetch(`${base()}/api/onboard/finalize`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Origin: base() },
+      body: validBody(),
+    });
+    assert.equal(r.status, 200);
+    const body = await r.json();
+    assert.equal(body.ok, true);
+    const yml = readFileSync(path.join(configDir, 'profile.yml'), 'utf8');
+    assert.match(yml, /full_name: "Jane Doe"/);
+    assert.match(yml, /target_roles:/);
+  });
+
+  test('rejects missing full_name with 400 + specific error message', async () => {
+    const r = await fetch(`${base()}/api/onboard/finalize`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Origin: base() },
+      body: JSON.stringify({ basics: { email: 'a@b.com' }, target_roles: ['X'] }),
+    });
+    assert.equal(r.status, 400);
+    const body = await r.json();
+    assert.equal(body.ok, false);
+    assert.match(body.error, /full_name/);
+  });
+
+  test('rejects empty target_roles with helpful message', async () => {
+    const r = await fetch(`${base()}/api/onboard/finalize`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Origin: base() },
+      body: JSON.stringify({
+        basics: { full_name: 'Jane Doe', email: 'jane@example.com' },
+        target_roles: [],
+      }),
+    });
+    assert.equal(r.status, 400);
+    const body = await r.json();
+    assert.match(body.error, /target role/);
+  });
+
+  test('writes a backup of an existing profile before overwriting', async () => {
+    // First write should produce profile.yml; second write should snapshot
+    // the previous content as profile.yml.bak.{timestamp}
+    const r1 = await fetch(`${base()}/api/onboard/finalize`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Origin: base() },
+      body: validBody(),
+    });
+    assert.equal(r1.status, 200);
+    await new Promise(res => setTimeout(res, 50));
+    const r2 = await fetch(`${base()}/api/onboard/finalize`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Origin: base() },
+      body: validBody(),
+    });
+    assert.equal(r2.status, 200);
+    const { readdirSync } = await import('fs');
+    const files = readdirSync(configDir);
+    const baks = files.filter(f => f.startsWith('profile.yml.bak.'));
+    assert.ok(baks.length >= 1, `expected at least one .bak.* file, got: ${files.join(', ')}`);
+  });
+
+  test('unknown /api/* route returns JSON 404 (not HTML fallback)', async () => {
+    const r = await fetch(`${base()}/api/this-endpoint-does-not-exist`);
+    assert.equal(r.status, 404);
+    assert.equal(r.headers.get('content-type'), 'application/json');
+    const body = await r.json();
+    assert.equal(body.ok, false);
+    assert.equal(body.error, 'not found');
   });
 
   test('teardown: stop the server', () => {

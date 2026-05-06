@@ -14,7 +14,7 @@
     "start": "node dashboard-web/server.mjs",
     "dev": "node --watch dashboard-web/server.mjs",
     "preview": "PORT=4749 HOST=127.0.0.1 CONFIG_DIR=./tmp/preview-config DATA_DIR=./tmp/preview-data node dashboard-web/server.mjs",
-    "doctor": "node doctor.mjs",
+    "doctor": "bash install.sh --doctor",
     "verify": "node verify-pipeline.mjs",
     "normalize": "node normalize-statuses.mjs",
     "dedup": "node dedup-tracker.mjs",
@@ -24,8 +24,6 @@
     "update:check": "node update-system.mjs check",
     "update": "node update-system.mjs apply",
     "rollback": "node update-system.mjs rollback",
-    "liveness": "node check-liveness.mjs",
-    "scan": "node scan.mjs",
     "test": "node --test \"tests/**/*.test.mjs\"",
     "test:watch": "node --test --watch \"tests/**/*.test.mjs\""
   },
