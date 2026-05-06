@@ -72,17 +72,18 @@ Role: {role or "unknown"}
 
 After generating the PDF:
 - Write a tracker TSV to batch/tracker-additions/ as usual
+- Extract `**URL:**` and `**Legitimacy:**` from the report header. If either is missing, abort and write a failure result.
 - Run `mkdir -p batch/pdf2-results` to ensure the directory exists
 - Write your result to batch/pdf2-results/{job_index}.json:
 
 ```json
-{"status":"ok","company":"{company}","role":"{role}","pdf":"{output path}"}
+{"status":"ok","company":"{company}","role":"{role}","pdf":"{output path}","url":"{URL from report header}","legitimacy":"{Legitimacy tier from report header}"}
 ```
 
 or on failure:
 
 ```json
-{"status":"error","url":"{url}","reason":"{short reason}"}
+{"status":"error","url":"{url}","reason":"{short reason — e.g. missing header: URL|Legitimacy}"}
 ```
 """
 )
@@ -111,6 +112,6 @@ pdf2 — Batch Complete (N jobs)
 | 3 | StartupXY   | CTO         | ❌  | —          | URL inaccessible                               |
 ```
 
-For each successful job, the URL and Legitimacy tier come from the worker's report header (per pipeline convention: `**URL:**` and `**Legitimacy:**` fields).
+For each successful job, `url` and `legitimacy` are read from the worker's result JSON (sourced from the report's `**URL:**` and `**Legitimacy:**` header fields). Jobs where either field is missing are shown as failed.
 
 If any job failed, list the failed URLs and reasons below the table so the user can retry individually with `/career-ops pdf`.
