@@ -32,7 +32,7 @@ MIN_SCORE=0
 RUN_TRIAGE=false
 RUN_FULL=false
 RUN_ALL=false
-TRIAGE_THRESHOLD=3.0
+TRIAGE_THRESHOLD=3.3
 
 usage() {
   cat <<'USAGE'
@@ -43,7 +43,7 @@ Usage: batch-runner.sh [OPTIONS]
 
 Pass control:
   --triage              Run Pass 1 only — score all pending via Haiku (fast, cheap)
-  --triage-threshold N  Min triage score to pass (default: 3.0; scores >= N pass)
+  --triage-threshold N  Min triage score to pass (default: 3.3; scores >= N pass)
   --full                Run Pass 2 only — full eval on triage_pass entries
   --all                 Bypass triage, full eval on all pending (backward compat)
   (default)             Same as --full; falls back to all pending if no triage done

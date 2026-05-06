@@ -98,8 +98,8 @@ Output ONLY this JSON object, with no other text before or after:
 
 | Score | Meaning | Action |
 |-------|---------|--------|
-| ≥ 3.0 | Worth evaluating | `triage_pass` |
-| < 3.0 | Poor fit | `triage_fail` |
+| ≥ 3.3 | Worth evaluating | `triage_pass` |
+| < 3.3 | Poor fit | `triage_fail` |
 
 ---
 
