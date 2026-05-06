@@ -83,10 +83,19 @@ async function discoverJobsWithoutBrowser(query, portalName = 'General') {
   const jobs = [];
   const seen = new Set();
   try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
     const res = await fetch(searchUrl, {
       headers: { 'User-Agent': 'career-ops-scanner/2.0' },
+      signal: controller.signal,
     });
-    if (!res.ok) return jobs;
+    clearTimeout(timeout);
+
+    if (!res.ok) {
+      console.log(`    ⚠ DuckDuckGo returned ${res.status} for ${portalName}`);
+      return jobs;
+    }
     const html = await res.text();
     const linkRegex = /<a[^>]+class="[^"]*result__a[^"]*"[^>]+href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
     let match;
@@ -108,7 +117,10 @@ async function discoverJobsWithoutBrowser(query, portalName = 'General') {
         source: `Discovery - ${portalName}`,
       });
     }
-  } catch {
+  } catch (e) {
+    if (e.name === 'AbortError') {
+      console.log(`    ⏱ Timeout searching ${portalName} (15s exceeded)`);
+    }
     return jobs;
   }
   return jobs;
@@ -212,7 +224,10 @@ async function scanGreenhouse() {
 
   for (const comp of ghCompanies) {
     try {
-      const res = await fetch(comp.api);
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000); // 10s timeout per company
+      const res = await fetch(comp.api, { signal: controller.signal });
+      clearTimeout(timeout);
       if (!res.ok) { stats.greenhouse.errors++; continue; }
       const data = await res.json();
       const jobs = data.jobs || [];
@@ -319,15 +334,33 @@ async function run() {
   console.log('  career-ops — Multi-Source (DB PERSISTENT)');
   console.log('  Sources: Greenhouse · Ashby · Lever · Workable');
   console.log('═══════════════════════════════════════════');
+
+  // Global timeout - force exit after 4 minutes to prevent hanging
+  const GLOBAL_TIMEOUT_MS = 4 * 60 * 1000;
+  const startTime = Date.now();
+  const timeoutId = setTimeout(() => {
+    console.log('\n⏱ GLOBAL TIMEOUT: Scan running too long, forcing exit...');
+    console.log(`   Runtime: ${(Date.now() - startTime) / 1000}s`);
+    process.exit(0);
+  }, GLOBAL_TIMEOUT_MS);
+
+  // Heartbeat to show scan is still alive
+  const heartbeat = setInterval(() => {
+    const elapsed = ((Date.now() - startTime) / 1000).toFixed(0);
+    console.log(`  ♥ Still scanning... (${elapsed}s elapsed)`);
+  }, 30000); // Every 30 seconds
+
   const enableExtendedScan = process.env.ENABLE_EXTENDED_SCAN === 'true';
   const hasUserSearchQueries = Array.isArray(config.search_queries) && config.search_queries.length > 0;
   const shouldRunDiscovery = enableExtendedScan || hasUserSearchQueries;
 
-  // 1. Direct ATS Scans (Greenhouse, Ashby, Lever, Workable)
-  await scanGreenhouse();
-  await scanAshby();
-  await scanLever();
-  await scanWorkable();
+  try {
+    // 1. Direct ATS Scans (Greenhouse, Ashby, Lever, Workable)
+    console.log('\n▶ Phase 1: ATS Scans (30s timeout each)...');
+    await scanGreenhouse();
+    await scanAshby();
+    await scanLever();
+    await scanWorkable();
 
   // 2. Dynamic Search Discovery (Naukri, Indeed, LinkedIn, etc.)
   if (shouldRunDiscovery) {
@@ -467,12 +500,18 @@ async function run() {
     VALUES ('Multi-Source Scan', ${totalFound}, ${Date.now() - startTime}, ${userId})
   `;
 
+  } finally {
+    clearTimeout(timeoutId);
+    clearInterval(heartbeat);
+  }
+
   console.log('\n═══════════════════════════════════════════');
   console.log('  SCAN RESULTS (PERSISTED)');
   console.log('───────────────────────────────────────────');
   console.log(`  Companies checked:     ${totalChecked}`);
   console.log(`  Jobs found (total):    ${totalFound}`);
   console.log(`  NEW jobs added to DB:  ${totalAdded}`);
+  console.log(`  Total runtime:         ${((Date.now() - startTime) / 1000).toFixed(1)}s`);
   console.log('═══════════════════════════════════════════');
   process.exit(0);
 }
