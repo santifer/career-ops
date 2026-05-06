@@ -232,6 +232,20 @@ export default function Dashboard() {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Ctrl+C to clear current line (terminal-style)
+    if (e.key === 'c' && e.ctrlKey) {
+      e.preventDefault();
+      if (cmdInput.trim()) {
+        appendTerminalLine(`^C`);
+        setCmdInput('');
+        setHistoryIndex(-1);
+      } else if (isExecuting) {
+        appendTerminalLine(`^C`);
+        appendTerminalLine(`[ERR] Command execution cannot be interrupted. Please wait for completion.`);
+      }
+      return;
+    }
+
     if (e.key === 'ArrowUp') {
       e.preventDefault();
       const nextIndex = historyIndex + 1;
@@ -1076,6 +1090,8 @@ System Initialized — v2.0`}
                        <p><strong className="text-[#57534e]">4. apply &lt;id&gt; --deep</strong> <span className="text-[#a8a29e]">→</span> Automatically apply to role</p>
                        <br/>
                        <p><strong className="text-[#57534e]">help</strong>        <span className="text-[#a8a29e]">→</span> View full command reference</p>
+                       <br/>
+                       <p className="text-[#a8a29e]"><kbd className="px-1 py-0.5 bg-[#f5f5f4] border border-[#e7e5e4] rounded text-[9px]">↑</kbd> <kbd className="px-1 py-0.5 bg-[#f5f5f4] border border-[#e7e5e4] rounded text-[9px]">↓</kbd> History • <kbd className="px-1 py-0.5 bg-[#f5f5f4] border border-[#e7e5e4] rounded text-[9px]">Ctrl+C</kbd> Clear line</p>
                      </div>
                      <div className="text-[#a8a29e] italic mt-4">Awaiting input...</div>
                    </div>
@@ -1102,7 +1118,7 @@ System Initialized — v2.0`}
                          value={cmdInput}
                          onChange={(e) => setCmdInput(e.target.value)}
                          onKeyDown={handleKeyDown}
-                         placeholder="scan / apply <id> / help"
+                         placeholder="scan / apply <id> / help (Ctrl+C to clear)"
                          disabled={isExecuting}
                          className="w-full bg-transparent outline-none border-none text-[#1c1917] font-mono placeholder:text-[#78716c] caret-[#1c1917] select-text"
                          autoFocus
