@@ -651,8 +651,6 @@ async function tailorPackage(jd, profile, companyName) {
       DATE: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
       COMPANY_NAME: entry.company,
       LANG: 'en',
-      ATS_SCORE: `${atsScore.score}/100`,
-      ATS_SCORE_BAR: generateATSScoreBar(atsScore.score),
       YEARS_EXP: `${yearsExp}`,
       MAX_PAGES: `${maxPages}`,
       PROFESSIONAL_HEADLINE: profile.narrative?.headline || 'Professional'
@@ -666,8 +664,14 @@ async function tailorPackage(jd, profile, companyName) {
       ? ` | <a href="https://${c.github}">${c.github.replace(/^github.com\//, '')}</a>`
       : '';
 
+    // Hide sections if missing data (never show blank Education/Experience)
+    const hasExperience = Array.isArray(experienceToShow) && experienceToShow.length > 0;
+    const hasEducation = Array.isArray(profile.education) && profile.education.length > 0;
+
     // Determine if projects section should show
     const hasProjects = maxPages >= 2 && profile.narrative?.proof_points && profile.narrative.proof_points.length > 0;
+
+    const yearsInline = yearsExp > 0 ? ` • ${yearsExp}+ years` : '';
 
     const resumeReps = {
       ...commonReps,
@@ -676,20 +680,22 @@ async function tailorPackage(jd, profile, companyName) {
       SECTION_COMPETENCIES: 'Core Competencies',
       COMPETENCIES: (Array.isArray(tailoring.core_competencies) ? tailoring.core_competencies : []).map(skill => `<span class="competency-tag">${skill}</span>`).join('') || '<span class="competency-tag">Professional Skills</span>',
       SECTION_EXPERIENCE: 'Professional Experience',
-      EXPERIENCE: renderExperience(experienceToShow, tailoring.experience, maxPages),
+      EXPERIENCE: hasExperience ? renderExperience(experienceToShow, tailoring.experience, maxPages) : '',
+      EXPERIENCE_DISPLAY: hasExperience ? 'block' : 'none',
       SECTION_PROJECTS: 'Selected Achievements',
       PROJECTS: hasProjects ? renderProjects(profile.narrative.proof_points) : '',
       PROJECTS_DISPLAY: hasProjects ? 'block' : 'none',
       SECTION_EDUCATION: 'Education',
-      EDUCATION: renderEducation(profile.education),
+      EDUCATION: hasEducation ? renderEducation(profile.education) : '',
+      EDUCATION_DISPLAY: hasEducation ? 'block' : 'none',
       SECTION_SKILLS: 'Technical Skills',
       SKILLS: renderCategorizedSkills(profile.narrative?.superpowers || []),
       SECTION_CERTIFICATIONS: '',
       CERTIFICATIONS: '',
       PAGE_WIDTH: '800px',
-      ATS_BADGE: atsScore.score >= 80 ? '<span class="ats-badge ats-high">ATS Optimized</span>' :
-                 atsScore.score >= 60 ? '<span class="ats-badge ats-medium">ATS Friendly</span>' :
-                 '<span class="ats-badge ats-low">Needs Optimization</span>',
+      // No ATS marketing in candidate-facing resume
+      FOOTER_RIGHT: '',
+      YEARS_EXP_INLINE: yearsInline,
       PORTFOLIO_LINK: portfolioLink
     };
 

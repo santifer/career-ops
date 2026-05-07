@@ -247,9 +247,8 @@
             <div class="name-section">
                 <div>
                     <h1>{{NAME}}</h1>
-                    <div class="title-badge">{{PROFESSIONAL_HEADLINE}} • {{YEARS_EXP}} Years{{ATS_BADGE}}</div>
+                    <div class="title-badge">{{PROFESSIONAL_HEADLINE}}{{YEARS_EXP_INLINE}}</div>
                 </div>
-                {{ATS_SCORE_BAR}}
             </div>
 
             <div class="contact-line">
@@ -280,7 +279,7 @@
             </div>
         </section>
 
-        <section>
+        <section style="display: {{EXPERIENCE_DISPLAY}};">
             <h2>{{SECTION_EXPERIENCE}}</h2>
             <div id="experience-content">
                 {{EXPERIENCE}}
@@ -294,7 +293,7 @@
             </div>
         </section>
 
-        <section>
+        <section style="display: {{EDUCATION_DISPLAY}};">
             <h2>{{SECTION_EDUCATION}}</h2>
             <div id="education-content">
                 {{EDUCATION}}
@@ -303,7 +302,7 @@
 
         <div class="resume-footer">
             <span>Generated on {{DATE}} for {{COMPANY_NAME}} role</span>
-            <span class="ats-score-footer">ATS Score: {{ATS_SCORE}}</span>
+            <span class="ats-score-footer">{{FOOTER_RIGHT}}</span>
         </div>
     </div>
 </body>
