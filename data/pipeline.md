@@ -928,6 +928,12 @@
 - [!] https://www.workatastartup.com/jobs/76665 | ProjectPro | LLM Developer (Agentic AI Frameworks: CrewAI/AutoGen/RAGs) | India-HQ ed-tech; location not stated — moved to Procesadas (#633) 2026-05-07 (2.6/5 — WaaS body extraction blocked; CrewAI/AutoGen/RAG stack on-archetype but role purpose ambiguous (production vs training-content); offshore-arbitrage comp risk + F-1 OPT US-base mismatch; SKIP)
 - [!] https://remotive.com/remote/jobs/ai-ml/machine-learning-engineer-4309412 | K1X | Machine Learning Engineer | Remote — USA — moved to Procesadas (#634) 2026-05-07 (2.5/5 — 6+y Senior auto-filter gate per filter hygiene + alt-investment niche + sponsorship unstated; Python/sklearn/PyTorch/spaCy stack moderate match; SKIP)
 - [!] https://remotive.com/remote/jobs/ai-ml/machine-learning-engineer-ii-3768211 | MobilityWare | Applied Machine Learning Engineer II | Remote — USA — error: posting returned HTTP 410 Gone on 2026-05-07T10Z; archived
+- [!] https://job-boards.greenhouse.io/hightouch/jobs/5990367004 | Hightouch | Solutions Engineer - EMEA | EMEA — moved to Procesadas (#635) 2026-05-07 (1.5/5 — pre-sales SE, F-1 OPT EMEA geo veto + 4+y sales + French required hard vetos; archetype mismatch (sales-track not engineering IC); SKIP)
+
+<!-- Overnight 2026-05-07T~16Z sixth pass: Level 3 WebSearch additions (Greenhouse + Himalayas) -->
+- [!] https://job-boards.greenhouse.io/databricks/jobs/8335860002 | Databricks | AI Engineer - FDE (Forward Deployed Engineer) | Remote — United States — evaluated 2026-05-07 (3.2/5 — same role as existing #122 @ 3.7/5 Apr 23; merge-tracker deduped — kept #122; report 636 archived as orphan documentation; PDF generated)
+- [!] https://himalayas.app/companies/chestnut/jobs/forward-deployed-engineer-entry-level-early-career | Chestnut | Forward Deployed Engineer (Entry-Level / Early Career) | Remote — United States (25% travel) — moved to Procesadas (#637) 2026-05-07 (4.0/5 — rare 0-2y FDE explicitly entry-level; Python/Go/TS + RAG/workflow auto/data enrichment 1:1; InsurTech AI-native OS; 10y exercise window; STRONG APPLY; PDF generated)
+- [!] https://job-boards.greenhouse.io/thenewyorktimes/jobs/4680447005 | The New York Times | Software Engineer - AI Platforms and Products | New York City — Hybrid 2+d/wk — moved to Procesadas (#638) 2026-05-07 (3.8/5 — NYC Hybrid $104-130K base; Node/TS+React+Python+LLM+embeddings stack 1:1; 2+y exact match; relocation + sponsorship needed; PDF generated)
 
 
 ## Procesadas
@@ -1308,3 +1314,5 @@
 - [x] #625 | https://www.workatastartup.com/jobs/75755 | Codes Health | Founding Engineer | New York City — Dumbo — In-person | 3.2/5 | PDF ✅
 - [x] #626 | https://www.workatastartup.com/jobs/73343 | Syntra | Founding Engineer | San Francisco, CA — On-site (remote flex) | 3.4/5 | PDF ✅
 - [x] #631 | https://www.workatastartup.com/jobs/94139 | Paragon | Founding Forward Deployed Engineer (FDE) | YC industrial-AI; SF/Bay Area HQ (verify); customer-site travel | 3.5/5 | PDF ✅
+- [x] #637 | https://himalayas.app/companies/chestnut/jobs/forward-deployed-engineer-entry-level-early-career | Chestnut | Forward Deployed Engineer (Entry-Level / Early Career) | Remote — United States (25% travel) | 4.0/5 | PDF ✅
+- [x] #638 | https://job-boards.greenhouse.io/thenewyorktimes/jobs/4680447005 | The New York Times | Software Engineer - AI Platforms and Products | New York City — Hybrid 2+d/wk | 3.8/5 | PDF ✅
