@@ -266,11 +266,14 @@ if (summaryMatch) {
   const block = summaryMatch[1];
   const extract = (key) => {
     const prefix = key + ':';
-    const idx = block.indexOf(prefix);
-    if (idx === -1) return 'unknown';
-    const lineEnd = block.indexOf('\n', idx);
-    const value = lineEnd === -1 ? block.slice(idx + prefix.length) : block.slice(idx + prefix.length, lineEnd);
-    return value.trim();
+    const lines = block.split('\n');
+    for (const line of lines) {
+      const trimmed = line.trimStart();
+      if (trimmed.startsWith(prefix)) {
+        return trimmed.slice(prefix.length).trim();
+      }
+    }
+    return 'unknown';
   };
   company    = extract('COMPANY');
   role       = extract('ROLE');
