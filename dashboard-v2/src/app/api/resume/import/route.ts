@@ -4,6 +4,8 @@ import { auth } from '@/auth';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
+const MAX_UPLOAD_BYTES = 12 * 1024 * 1024; // 12MB safety cap (Vercel-friendly)
+
 function normalizeText(input: string) {
   return (input || '')
     .replace(/\r/g, '\n')
@@ -108,12 +110,28 @@ export async function POST(req: NextRequest) {
   const name = file.name || 'resume';
   const lower = name.toLowerCase();
   const bytes = Buffer.from(await file.arrayBuffer());
+  if (bytes.byteLength > MAX_UPLOAD_BYTES) {
+    return NextResponse.json(
+      { error: `File too large. Max ${Math.round(MAX_UPLOAD_BYTES / (1024 * 1024))}MB` },
+      { status: 413 }
+    );
+  }
 
   let text = '';
   try {
     if (lower.endsWith('.pdf')) {
-      const parsed = await pdfParse(bytes);
-      text = parsed.text || '';
+      // pdf-parse has multiple export shapes across versions.
+      if (typeof pdfParse === 'function') {
+        const parsed = await pdfParse(bytes);
+        text = parsed?.text || '';
+      } else if (pdfParse?.PDFParse) {
+        const parser = new pdfParse.PDFParse({});
+        // Some versions require { data } rather than Buffer directly.
+        await parser.load({ data: bytes });
+        text = (await parser.getText()) || '';
+      } else {
+        throw new Error('PDF parser unavailable');
+      }
     } else if (lower.endsWith('.docx')) {
       const result = await mammoth.extractRawText({ buffer: bytes });
       text = result.value || '';

@@ -459,11 +459,16 @@ export default function Dashboard() {
       const fd = new FormData();
       fd.append('file', file);
       const res = await fetch('/api/resume/import', { method: 'POST', body: fd });
-      const json = await res.json();
+      const contentType = res.headers.get('content-type') || '';
+      const isJson = contentType.includes('application/json');
+      const payload: any = isJson ? await res.json() : await res.text();
       if (!res.ok) {
-        throw new Error(json?.error || 'Import failed');
+        const msg =
+          (isJson ? payload?.error : String(payload || '')) ||
+          `Import failed (HTTP ${res.status})`;
+        throw new Error(msg);
       }
-      setResumeImport(json);
+      setResumeImport(payload);
       setResumeImportStatus('ready');
     } catch (e: any) {
       setResumeImportStatus('error');
