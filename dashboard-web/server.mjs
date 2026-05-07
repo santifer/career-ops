@@ -2455,7 +2455,7 @@ const HTML = /* html */ `<!DOCTYPE html>
         --text-sec:     rgba(60,60,67,.65);
         /* --text-ter bumped from .55 → .68 — .55 over white = 4.4:1 (fails
            WCAG AA 4.5:1 for body text). Now lands at ~4.7:1. Audit A2. */
-        --text-ter:     rgba(60,60,67,.68);
+        --text-ter:     rgba(60,60,67,.74);
         --text-quad:    rgba(60,60,67,.32);
 
         --accent:       #007aff;     /* Apple system blue (light) */
@@ -2499,8 +2499,9 @@ const HTML = /* html */ `<!DOCTYPE html>
       --edge-sheen:   inset 0 .5px 0 rgba(0,0,0,.04);
       --text:         rgba(0,0,0,.88);
       --text-sec:     rgba(60,60,67,.65);
-      --text-ter:     rgba(60,60,67,.55);
-      --text-quad:    rgba(60,60,67,.30);
+      /* WCAG AA: .55 over white = 4.4:1 (fails). .68 lands ~4.7:1. Audit A2. */
+      --text-ter:     rgba(60,60,67,.74);
+      --text-quad:    rgba(60,60,67,.32);
       --accent:       #007aff;
       --accent-2:     #34c759;
       --accent-bg:    rgba(0,122,255,.10);
