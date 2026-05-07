@@ -869,6 +869,19 @@
 - [!] https://jobs.smartrecruiters.com/M3USA/744000114731437-ai-engineer-remote- | M3 USA | AI Engineer | Remote — US (HQ Fort Washington, PA) — moved to Procesadas (#603) 2026-05-06 (3.7/5 — Mid-to-Senior healthcare AI engineer; LLM-based document/workflow automation for non-tech pharma+clinical stakeholders; CTO-direct line; 1:1 healthcare RAG+agentic+multi-provider stack; Claude Code/Codex tool ramp soft gap; PDF generated)
 - [!] https://builtin.com/job/forward-deployed-engineer-ai/4445770 | MongoDB | Forward Deployed Engineer, AI | Remote — US — error: posting closed (BuiltIn snapshot reads "removed June 4, 2025 at 8:11 PM CST"); archived
 
+### 2026-05-07
+<!-- Overnight 2026-05-07T~05Z Level 3 WebSearch additions (Ashby + Greenhouse + YC WaaS + Himalayas) -->
+- [!] https://www.workatastartup.com/jobs/89580 | goodfin | AI Engineer | San Francisco, CA — On-site (verify hybrid) — moved to Procesadas (#604) 2026-05-07 (3.6/5 — YC W22 fintech AI; $130-180K + 0.10-0.50%; 3+yr; agentic AI core for accredited investors; PDF generated)
+- [!] https://www.workatastartup.com/jobs/70857 | Metriport | Founding AI Engineer | San Francisco / Bay Area — On-site (relocation OK) — moved to Procesadas (#605) 2026-05-07 (4.0/5 — YC S22 healthcare AI; structured extraction from HTML/PDF/text; visa sponsorship offered; FHIR/EHR adjacent; PDF generated)
+- [!] https://www.workatastartup.com/jobs/75300 | Paratus Health | Founding Engineer | Menlo Park, CA — On-site (Stanford-area) — moved to Procesadas (#606) 2026-05-07 (4.1/5 — YC W25-era; $100-200K + 0.80-1.40%; voice AI for outpatient clinics + Epic/Athena EHR; Stanford Hospital pilot live; PDF generated)
+- [!] https://www.workatastartup.com/jobs/69270 | SimCare AI | Founding Engineer | San Francisco, CA — Remote (US) accepted — moved to Procesadas (#607) 2026-05-07 (3.1/5 — YC S24; $90-180K + 0.50-2.00%; AI patients for clinical training; Next.js/Node/Supabase/AWS stack ramp; PDF generated)
+- [!] https://www.workatastartup.com/jobs/66150 | Reviving Mind | Founding Engineer (GenAI healthtech) | Boston, MA — On-site (verify hybrid) — moved to Procesadas (#608) 2026-05-07 (2.5/5 — YC W22 voice AI healthtech; founder-equity-only comp 10-20%; CTO-tier ask vs Mid-IC seeker; SKIP)
+- [!] https://www.workatastartup.com/jobs/86044 | Thera | Founding Engineer (Remote) | Remote (verify US scope) — moved to Procesadas (#609) 2026-05-07 (2.7/5 — YC S22 AI-native finance OS; TypeScript+Java/Kotlin core systems; non-AI infra drift from Applied AI North Star; SKIP)
+- [!] https://www.workatastartup.com/jobs/72202 | Helpcare AI | 10x Front End AI Engineer | San Francisco, CA / Oakland, CA / Remote (US; CA) — moved to Procesadas (#610) 2026-05-07 (2.0/5 — YC healthcare; 6+yr front-end specialty + senior gate vs Deepak's mid full-stack Python primary; SKIP)
+- [!] https://himalayas.app/companies/jobgether/jobs/ai-ml-software-engineer-remote-us | Jobgether | AI/ML Software Engineer (Remote - US) | Remote — US (cleared environment) — moved to Procesadas (#611) 2026-05-07 (1.7/5 — Aggregator front-end; 6-10+yr Senior + US Citizen + clearance hard veto for F-1 OPT; SKIP)
+- [!] https://himalayas.app/companies/harris-global-business-services-inc/jobs/ai-ml-engineer | Harris Global Business Services | AI/ML Engineer | Costa Rica — Remote (Work from Home) — moved to Procesadas (#612) 2026-05-07 (1.8/5 — Costa Rica-only offshore; F-1 OPT US-base hard geo veto; Java/.NET multi-stack; 4+yr LLM gate; SKIP)
+- [!] https://job-boards.greenhouse.io/figma/jobs/4756707004 | Figma | Applied Research ML/AI Engineer | location verify — error: posting closed (Greenhouse 302 redirects to careers index with `?error=true` 2026-05-07T05Z); archived
+
 
 
 ## Procesadas
@@ -1237,3 +1250,10 @@
 - [x] #596 | https://jobs.ashbyhq.com/phare-r1-r37/0b315831-5eef-42a3-93be-45967f13a969 | R37 Lab (R1 RCM) | ML Engineer | New York | Remote — US-Remote with NYC primary + SF/Austin/Chicago hubs | 3.5/5 | PDF ✅
 - [x] #597 | https://apply.workable.com/worthai/j/A967B48659/ | Worth AI | Junior Implementation & Pre-Sales Engineer (FinTech) | Remote — US | 3.0/5 | PDF ✅
 - [x] #603 | https://jobs.smartrecruiters.com/M3USA/744000114731437-ai-engineer-remote- | M3 USA | AI Engineer | Remote — US (HQ Fort Washington, PA) | 3.7/5 | PDF ✅
+
+### 2026-05-07
+
+- [x] #604 | https://www.workatastartup.com/jobs/89580 | goodfin | AI Engineer | San Francisco, CA — On-site | 3.6/5 | PDF ✅
+- [x] #605 | https://www.workatastartup.com/jobs/70857 | Metriport | Founding AI Engineer | San Francisco / Bay Area — On-site (relocation OK) | 4.0/5 | PDF ✅
+- [x] #606 | https://www.workatastartup.com/jobs/75300 | Paratus Health | Founding Engineer | Menlo Park, CA — On-site | 4.1/5 | PDF ✅
+- [x] #607 | https://www.workatastartup.com/jobs/69270 | SimCare AI | Founding Engineer | San Francisco, CA — Remote (US) accepted | 3.1/5 | PDF ✅
