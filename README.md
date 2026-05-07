@@ -99,6 +99,7 @@ cp templates/portals.example.yml portals.yml       # Customize companies
 # 5. Personalize with your agent
 claude        # Claude Code
 # or: codex -C .
+# Codex helper examples: npm run codex -- "https://example.com/jobs/role" or npm run codex -- scan
 
 # Then ask your agent to adapt the system to you:
 # "Change the archetypes to backend engineering roles"
@@ -110,7 +111,7 @@ claude        # Claude Code
 # Paste a job URL or run /career-ops
 ```
 
-> **The system is designed to be customized by the coding agent itself.** Modes, archetypes, scoring weights, negotiation scripts -- just ask Claude, Codex, Gemini CLI, or OpenCode to change them. It reads the same files it uses, so it knows exactly what to edit.
+> **The system is designed to be customized by the coding agent itself.** Ask Claude, Codex, Gemini CLI, or OpenCode to adapt archetypes, scoring weights, negotiation scripts, and proof points, but keep user-specific changes in `config/profile.yml` or `modes/_profile.md`; never put personalization in `modes/_shared.md`.
 
 See [docs/SETUP.md](docs/SETUP.md) for the full setup guide.
 

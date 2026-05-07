@@ -71,6 +71,7 @@ Codex uses `AGENTS.md` plus the repo-local `codex-career-ops.mjs` helper.
 | `npm run codex -- contact` | `/career-ops-contact` | LinkedIn outreach |
 | `npm run codex -- deep` | `/career-ops-deep` | Deep company research |
 | `npm run codex -- pdf` | `/career-ops-pdf` | Generate ATS-optimized CV |
+| `npm run codex -- latex` | No Gemini CLI equivalent | Export CV as LaTeX/Overleaf .tex |
 | `npm run codex -- training` | `/career-ops-training` | Evaluate course/cert |
 | `npm run codex -- project` | `/career-ops-project` | Evaluate portfolio project |
 | `npm run codex -- tracker` | `/career-ops-tracker` | Application status overview |
@@ -79,6 +80,7 @@ Codex uses `AGENTS.md` plus the repo-local `codex-career-ops.mjs` helper.
 | `npm run codex -- batch` | `/career-ops-batch` | Batch processing guidance |
 | `npm run codex -- patterns` | `/career-ops-patterns` | Analyze rejection patterns |
 | `npm run codex -- followup` | `/career-ops-followup` | Follow-up cadence tracker |
+| `npm run codex -- interview-prep` | No Gemini CLI equivalent | Interview prep from prior reports |
 
 ## First Run — Onboarding
 

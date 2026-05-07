@@ -220,9 +220,10 @@ function buildPrompt(mode, request, files) {
       MENU.trimEnd(),
       "```",
       "",
-      request ? `User text that did not match a known mode or JD:\n${request}` : "",
-    ].filter(Boolean).join("\n");
-  }
+    request ? `User text that did not match a known mode or JD:\n${request}` : "",
+    request ? "Treat the user text as a natural-language Career-Ops request and choose the closest supported workflow." : "",
+  ].filter(Boolean).join("\n");
+}
 
   const config = MODE_CONFIG[mode];
   const contextSections = [
@@ -276,6 +277,7 @@ function buildPrompt(mode, request, files) {
     request || "(No extra arguments provided.)",
     "",
     ...fileSections,
+    "",
     "Additional files Codex should read if needed for this mode:",
     optionalContext || "- None",
     "",
@@ -286,7 +288,7 @@ function buildPrompt(mode, request, files) {
 }
 
 function runCodex(prompt) {
-  const result = spawnSync("codex", ["exec", "-C", ROOT, "-"], {
+  const result = spawnSync("codex", ["exec", "-C", ROOT, "--sandbox", "workspace-write", "-"], {
     input: prompt,
     stdio: ["pipe", "inherit", "inherit"],
     cwd: ROOT,
@@ -309,7 +311,7 @@ if (options.help) {
 }
 
 const { mode, request } = resolveMode(options.positionals, options.files);
-if (mode === "discovery" && !options.printPrompt) {
+if (mode === "discovery" && !request && !options.printPrompt) {
   console.log(MENU);
   process.exit(0);
 }

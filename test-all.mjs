@@ -11,7 +11,7 @@
  *   node test-all.mjs --quick   # Skip dashboard build (faster)
  */
 
-import { execSync, execFileSync } from 'child_process';
+import { execSync, execFileSync, spawnSync } from 'child_process';
 import { readFileSync, existsSync, readdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
@@ -72,14 +72,20 @@ const scripts = [
   { name: 'update-system.mjs check', expectExit: 0 },
 ];
 
-for (const { name, allowFail } of scripts) {
-  const result = run('node', name.split(' '), { stdio: ['pipe', 'pipe', 'pipe'] });
-  if (result !== null) {
+for (const { name, allowFail, expectExit } of scripts) {
+  const result = spawnSync('node', name.split(' '), {
+    cwd: ROOT,
+    encoding: 'utf-8',
+    stdio: ['pipe', 'pipe', 'pipe'],
+    timeout: 30000,
+  });
+  const status = result.status ?? 1;
+  if (status === expectExit) {
     pass(`${name} runs OK`);
-  } else if (allowFail) {
-    warn(`${name} exited with error (expected without user data)`);
+  } else if (allowFail && status !== 0) {
+    warn(`${name} exited with ${status} (expected ${expectExit}; allowed without user data)`);
   } else {
-    fail(`${name} crashed`);
+    fail(`${name} exited with ${status} (expected ${expectExit})`);
   }
 }
 

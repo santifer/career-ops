@@ -135,6 +135,10 @@ check_prerequisites() {
     exit 1
   fi
 
+  if [[ "$DRY_RUN" == "true" ]]; then
+    return 0
+  fi
+
   if [[ ! -f "$PROMPT_FILE" ]]; then
     echo "ERROR: $PROMPT_FILE not found."
     exit 1
