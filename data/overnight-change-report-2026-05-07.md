@@ -14,7 +14,7 @@
 | Phase | Status | Notes |
 |-------|--------|-------|
 | Phase 0 — Orientation | ✅ Complete | cv.md, profile.yml read; transcripts found; change report initialized |
-| Phase 4 — LinkedIn rewrites | ⏳ Pending | Highest priority — spawning next |
+| Phase 4 — LinkedIn rewrites | ✅ Complete | All 7 entries + About section — data/linkedin-experience-rewrites-2026-05-07.md |
 | Phase 5 — Career narrative thread | ⏳ Pending | |
 | Phase 6 — System upgrades (6C–6N) | ⏳ Pending | 6A and 6E pre-done |
 | Phase 1 — Citation retrieval | ⏳ Pending | |
@@ -33,8 +33,21 @@
 - Git state: main branch, clean (package.json modified + .claude/worktrees untracked — both expected)
 - Last commit: `19a3854 feat: pre-overnight baseline — Gemini fallback, Grok TOCTOU fix, session data, overnight prompt v2`
 
-### Phase 4 — LinkedIn Experience Rewrites
-[Status and results to be filled after subagent returns]
+### Phase 4 — LinkedIn Experience Rewrites ✅
+All 7 entries + About section written to `data/linkedin-experience-rewrites-2026-05-07.md` (13,701 bytes).
+
+| Entry | Role | Char Count |
+|-------|------|-----------|
+| #7 (new entry) | Associate Producer, The Stream | 1044/2000 |
+| #1 | Internal Comms Lead, PM — Google xGE | 1427/2000 |
+| About | 3 surgical fixes | — |
+| #2 | Sr Comms & Content Mgr — Google CorpEng | 983/2000 |
+| #3 | Senior Producer — AJ+ | 1109/2000 |
+| #4 | Line Producer — Fusion | 1474/2000 |
+| #5 | Segment Producer — HuffPost Live | 1365/2000 |
+| #6 | Writer/Producer, New Day — CNN | 340/2000 |
+
+Key decisions: Trans military ban content excluded from AJ+ (correctly attributed to HuffPost Live). Entry #3 leads with 50M measles video. All character counts verified via `wc -m`.
 
 ### Phase 5 — Career Narrative Thread
 [Status and results to be filled after subagent returns]
