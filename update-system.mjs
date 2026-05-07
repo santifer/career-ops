@@ -238,6 +238,12 @@ async function check() {
 // ── APPLY ───────────────────────────────────────────────────────
 
 async function apply() {
+  // 6C: Batch-in-flight lock — prevent mid-batch update corruption
+  if (existsSync(join(ROOT, 'batch/.batch-running'))) {
+    console.log('Batch in progress — update deferred. Run again after batch completes.');
+    process.exit(0);
+  }
+
   const local = localVersion();
   const initialStatusPaths = new Set(gitStatusEntries().map(entry => entry.path));
 

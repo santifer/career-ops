@@ -991,6 +991,10 @@ async function generateHeartbeat() {
   lines.push(`| Batch eval | ${reportsToday > 0 ? `✅ ${reportsToday} reports` : '❌ 0 reports'} | A–G evaluations written today |`);
   lines.push(`| Tracker | ✅ ${applicationsRows} rows | every role ever evaluated |`);
   lines.push(`| Grok #1 (social-intel) | ${grok.queries > 0 ? '✅ active' : '⏸ idle'} | $${grok.spent.toFixed(2)} / $5.00 daily cap · ${grok.queries} queries |`);
+  // 6L: Additional status rows — voice calibration, error health, quota schedule
+  lines.push(`| Voice calibration | ${existsSync(join(ROOT, 'writing-samples/voice-reference.md')) ? '✅ active' : '⚠️ not configured'} | writing-samples/voice-reference.md |`);
+  lines.push(`| Errors today | ${existsSync(join(ROOT, 'data/errors.log')) && readFileSync(join(ROOT, 'data/errors.log'),'utf-8').includes(TARGET_DATE) ? '⚠️ see errors.log' : '✅ clean'} | data/errors.log |`);
+  lines.push(`| Quota schedule | ✅ 08:05 PT | batch fires after Claude Max reset |`);
   lines.push('');
 
   lines.push('## Errors / Warnings');

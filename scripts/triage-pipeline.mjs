@@ -14,6 +14,7 @@
 
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { join } from 'path';
+import { load as parseYaml } from 'js-yaml';
 
 const ROOT = process.cwd();
 const PIPELINE_PATH = join(ROOT, 'data/pipeline.md');
@@ -24,26 +25,37 @@ const args = process.argv.slice(2);
 const limitArg = args.find(a => a.startsWith('--limit='));
 const LIMIT = limitArg ? parseInt(limitArg.split('=')[1]) : 30;
 
-// Archetype title keywords (sourced from modes/_profile.md Section 1)
-const A1_TITLES = [
-  'fellow', 'fellowship', 'residency', 'resident',
-];
-
-const A2_TITLES = [
-  'solutions architect', 'forward deployed engineer', 'forward deployed',
-  'applied ai engineer', 'applied ai architect', 'ai enablement',
-  'ai program manager', 'ai pgm', 'ai technical program manager',
-  'ai product operations', 'ai product manager', 'ai pm',
-  'technical deployment lead', 'technical enablement lead',
-  'agent builder',
-];
-
-const B_TITLES = [
-  'developer education', 'developer advocate', 'developer relations',
-  'devrel', 'communications lead', 'communications manager',
-  'engineering editorial', 'technical writer', 'editorial lead',
-  'content strategy lead', 'content lead',
-];
+// 6I: Load archetype keywords from config/profile.yml (data-contract separation)
+// Falls back to hardcoded defaults if profile.yml or triage section is missing.
+let A1_TITLES, A2_TITLES, B_TITLES;
+{
+  const profilePath = join(ROOT, 'config/profile.yml');
+  let triage = null;
+  if (existsSync(profilePath)) {
+    try {
+      const profileRaw = readFileSync(profilePath, 'utf-8');
+      const profile = parseYaml(profileRaw);
+      triage = profile?.triage || null;
+    } catch (_) { /* fall through to defaults */ }
+  }
+  A1_TITLES = triage?.a1_titles ?? [
+    'fellow', 'fellowship', 'residency', 'resident',
+  ];
+  A2_TITLES = triage?.a2_titles ?? [
+    'solutions architect', 'forward deployed engineer', 'forward deployed',
+    'applied ai engineer', 'applied ai architect', 'ai enablement',
+    'ai program manager', 'ai pgm', 'ai technical program manager',
+    'ai product operations', 'ai product manager', 'ai pm',
+    'technical deployment lead', 'technical enablement lead',
+    'agent builder',
+  ];
+  B_TITLES = triage?.b_titles ?? [
+    'developer education', 'developer advocate', 'developer relations',
+    'devrel', 'communications lead', 'communications manager',
+    'engineering editorial', 'technical writer', 'editorial lead',
+    'content strategy lead', 'content lead',
+  ];
+}
 
 // Preferred geography substrings — applied to combined title+location text
 const PREFERRED_LOCATIONS = [

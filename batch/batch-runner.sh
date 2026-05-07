@@ -400,6 +400,23 @@ process_offer() {
       score="$score_match"
     fi
 
+    # 6D: Validate report has required blocks A through G
+    local report_file
+    report_file=$(ls "$PROJECT_DIR/reports/${report_num}"-*.md 2>/dev/null | head -1 || true)
+    local validation_failed=0
+    if [[ -n "$report_file" ]]; then
+      for BLOCK in "## A)" "## B)" "## C)" "## D)" "## E)" "## F)" "## G)"; do
+        if ! grep -q "$BLOCK" "$report_file" 2>/dev/null; then
+          echo "[$(date)] VALIDATION FAIL: $report_file missing $BLOCK" >> "$PROJECT_DIR/data/errors.log"
+          validation_failed=1
+        fi
+      done
+    fi
+    if [[ $validation_failed -eq 1 ]]; then
+      echo "    ⚠️  Validation failed: report missing required blocks (see data/errors.log)"
+      return
+    fi
+
     # Check min-score gate
     if [[ "$score" != "-" && -n "$score" ]] && (( $(echo "$MIN_SCORE > 0" | bc -l) )); then
       if (( $(echo "$score < $MIN_SCORE" | bc -l) )); then
@@ -417,17 +434,25 @@ process_offer() {
     error_msg=$(tail -5 "$log_file" 2>/dev/null | tr '\n' ' ' | cut -c1-200 || echo "Unknown error (exit code $exit_code)")
     update_state "$id" "$url" "failed" "$started_at" "$completed_at" "$report_num" "-" "$error_msg" "$retries"
     echo "    ❌ Failed (attempt $retries, exit code $exit_code)"
+    # 6F: Route worker failures to shared error log for cross-session aggregation
+    echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] WORKER FAIL id=$id exit=$exit_code: $error_msg" >> "$PROJECT_DIR/data/errors.log"
   fi
 }
 
 # Merge tracker additions into applications.md
 merge_tracker() {
   echo ""
+  echo "=== Verifying pipeline integrity before merge ==="
+  # 6G: Hard gate — block merge if pipeline verification fails
+  node "$PROJECT_DIR/verify-pipeline.mjs"
+  if [ $? -ne 0 ]; then
+    echo "[$(date)] MERGE BLOCKED: verify-pipeline failed. Fix errors before merging." >> "$PROJECT_DIR/data/errors.log"
+    echo "❌ Merge blocked: verify-pipeline failed. See data/errors.log."
+    exit 1
+  fi
+  echo ""
   echo "=== Merging tracker additions ==="
   node "$PROJECT_DIR/merge-tracker.mjs"
-  echo ""
-  echo "=== Verifying pipeline integrity ==="
-  node "$PROJECT_DIR/verify-pipeline.mjs" || echo "⚠️  Verification found issues (see above)"
 }
 
 # Print summary
@@ -616,6 +641,13 @@ main() {
 
   # Merge tracker additions
   merge_tracker
+
+  # 6H: Auto-run pattern analysis after successful merge
+  echo ""
+  echo "=== Running pattern analysis ==="
+  echo "[$(date)] Running pattern analysis..." >> "$PROJECT_DIR/data/logs/batch.log"
+  node "$PROJECT_DIR/analyze-patterns.mjs" >> "$PROJECT_DIR/data/logs/batch.log" 2>&1
+  echo "    Pattern analysis complete (see data/logs/batch.log)"
 
   # Print summary
   print_summary

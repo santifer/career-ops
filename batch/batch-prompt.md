@@ -186,6 +186,8 @@ Donde `{company-slug}` es el nombre de empresa en lowercase, sin espacios, con g
 **URL:** {URL de la oferta original}
 **PDF:** career-ops/output/cv-candidate-{company-slug}-{{DATE}}.pdf
 **Batch ID:** {{ID}}
+**Model:** claude-sonnet-4-6
+**Prompt-version:** 66aa8e2a
 
 ---
 

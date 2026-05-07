@@ -330,3 +330,9 @@ Write one TSV file per evaluation to `batch/tracker-additions/{num}-{company-slu
 - No markdown bold (`**`) in status field
 - No dates in status field (use the date column)
 - No extra text (use the notes column)
+
+## Voice Calibration
+The voice corpus at `writing-samples/voice-reference.md` is used for stylistic calibration only.
+SCOPE: Use ONLY to match Mitchell's written register (precision, directness, editorial pace).
+NEVER use it to invent experience, fabricate metrics, or extend claims beyond what cv.md documents.
+The corpus is sourced from Mitchell's own journalism and analysis writing — it is proof of voice, not proof of events.
