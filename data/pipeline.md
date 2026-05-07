@@ -962,6 +962,15 @@
 - [!] https://remotive.com/remote/jobs/ai-ml/applied-ai-engineer-4062102 | AI Digital | Applied AI Engineer | Remote — error: Remotive HTTP 410 Gone on 2026-05-07T~UTC; aggregator listing removed; archived
 - [!] https://remotive.com/remote/jobs/ai-ml/applied-ai-engineer-4175846 | Smart Working Solutions | Applied AI Engineer | Remote — error: Remotive HTTP 404 on 2026-05-07T~UTC; aggregator listing removed; archived
 - [!] https://remotive.com/remote/jobs/ai-ml/ai-engineer-3840835 | MLabs | AI Engineer | Remote — error: Remotive HTTP 410 Gone on 2026-05-07T~UTC; aggregator listing removed; archived
+- [!] https://jobs.lever.co/palantir/e7100322-be11-40c8-9dba-7a21b7302c08 | Palantir | Forward Deployed Software Engineer - US Government - Federal Health and Civilian | Washington, D.C. — same role as #650 (NYC variant); HARD VETO US Top Secret clearance for F-1 OPT; per CLAUDE.md "no new entry if company+role exists" — archived without re-evaluation; SKIP
+
+<!-- Overnight 2026-05-07T20Z tenth pass: Level 3 WebSearch additions (Ashby + Greenhouse + Breezy + Himalayas) -->
+- [!] https://jobs.ashbyhq.com/infinity-constellation/d787f0c1-70d5-4f62-9f97-584603c82baf | Infinity Constellation (Supernal) | Junior AI Engineer (Clients) | Remote (Global) — Americas TZ — moved to Procesadas (#651) 2026-05-07 (1.8/5 — $15-20/hr EOR/Contractor; F-1 OPT requires US W-2; SKIP)
+- [!] https://job-boards.greenhouse.io/sezzle/jobs/7633988003 | Sezzle | AI Engineer II (Remote) | Brazil — Remote (LATAM-only) — moved to Procesadas (#652) 2026-05-07 (1.8/5 — $40-72K USD Brazil-only; F-1 OPT geo veto; same LATAM-band pattern as #213/#231; SKIP)
+- [!] https://mechanizedai.breezy.hr/p/fc1f8df0068b-machine-learning-engineer | Mechanized AI | Machine Learning Engineer | Remote — error: posting closed (Breezy "Position Closed" 2026-05-07T20Z; same pattern as prior Mechanized AI postings #closed); archived
+- [!] https://job-boards.greenhouse.io/komodohealth/jobs/8344238002 | Komodo Health | Forward Deployed, Software Engineer III | Remote (verify) — error: posting closed (Greenhouse 302 redirects to careers index w/ `?error=true` 2026-05-07T20Z); archived
+- [!] https://himalayas.app/companies/aegis-ventures/jobs/ai-software-engineer | Aegis Ventures (Ascertain) | AI Software Engineer | Remote — United States — error: listing removed (Himalayas 302 redirects to /jobs index 2026-05-07T20Z); archived
+
 
 
 
