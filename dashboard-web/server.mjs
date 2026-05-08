@@ -1,11 +1,11 @@
 /**
- * Hireloom — Career Atelier
+ * Hireloom — Your AI-Powered Career Accelerator
  * Heritage-grade UX · Gmail Integration · Status Updates
  * Port: 4747 | Node.js built-ins only
  *
- * Hireloom (heir + loom): a quiet system for weaving a deliberate
- * career — one application at a time, none of them spam. The dashboard
- * is the atelier; this server is the loom.
+ * Hireloom (heir + loom): a deliberate system for weaving a career —
+ * one application at a time, none of them spam. The dashboard is the
+ * atelier; this server is the loom.
  */
 
 import http from 'http';
@@ -2431,7 +2431,7 @@ const HTML = /* html */ `<!DOCTYPE html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hireloom — Career Atelier</title>
+  <title>Hireloom — Your AI-Powered Career Accelerator</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400,0..100;9..144,500,0..100;9..144,600,0..100;9..144,700,0..100&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
@@ -2756,44 +2756,75 @@ const HTML = /* html */ `<!DOCTYPE html>
       .header { margin-left: 16px; margin-right: 16px; }
     }
     /* ── Hireloom wordmark — sits inside its own brand-pill on the left
-       of the floating header. Picks up the same dark surface treatment
-       as the action pills on the right so the whole top reads as one
-       continuous bar of capsules. */
+       of the floating header. The hexagonal logo mark is paired with
+       a confident uppercase "HIRELOOM" lockup that mirrors the official
+       brand graphic. The whole capsule picks up the same dark surface
+       treatment as the action pills on the right so the top reads as
+       one continuous bar. */
     .logo {
-      display: flex;
+      position: relative;
+      display: inline-flex;
       align-items: center;
       gap: 10px;
-      padding: 7px 14px 7px 8px;
+      padding: 6px 16px 6px 8px;
       background: var(--surface);
       border: 1px solid var(--separator2);
       border-radius: 999px;
       font-family: var(--font-display);
-      font-weight: 600;
-      font-size: 17px;
-      font-variation-settings: "opsz" 14, "SOFT" 50;
-      letter-spacing: -.005em;
+      font-weight: 700;
+      font-size: 14px;
+      font-variation-settings: "opsz" 14, "SOFT" 30;
+      letter-spacing: .12em;
+      text-transform: uppercase;
       color: var(--text);
       flex-shrink: 0;
+      cursor: default;
+      transition: border-color 220ms ease, background 220ms ease;
+    }
+    .logo:hover {
+      border-color: rgba(94,166,255,.30);
+      background: linear-gradient(180deg,
+        var(--surface) 0%,
+        color-mix(in srgb, var(--surface) 88%, #0ea5e9 12%) 100%);
     }
 
-    /* ── Brand seal — vivid-violet gradient with a soft halo. Reads
-       as a polished pendant against the midnight surface around it. */
+    /* ── Brand seal — hexagonal "H" rendered as inline SVG with a
+       blue-to-teal gradient and a soft cyan halo. The mark is the
+       official Hireloom logo; it deliberately reads "tech / accelerator"
+       against the violet UI around it (logo as focal contrast). */
     .logo-mark {
-      width: 26px; height: 26px;
-      background: linear-gradient(180deg, #c084fc 0%, #7e22ce 100%);
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-family: var(--font-display);
-      font-size: 13px;
-      font-weight: 700;
-      color: rgba(252,250,255,.98);
-      font-variation-settings: "opsz" 9;
-      letter-spacing: -.02em;
+      width: 30px; height: 30px;
+      display: inline-flex; align-items: center; justify-content: center;
       flex-shrink: 0;
-      box-shadow:
-        inset 0 .5px 0 rgba(255,255,255,.30),
-        0 0 0 1px rgba(168,85,247,.22),
-        0 0 18px rgba(168,85,247,.32);
+      filter:
+        drop-shadow(0 0 6px rgba(20,184,166,.42))
+        drop-shadow(0 0 14px rgba(37,99,235,.30));
+      transition: filter 220ms ease, transform 220ms ease;
+    }
+    .logo:hover .logo-mark {
+      filter:
+        drop-shadow(0 0 8px rgba(20,184,166,.55))
+        drop-shadow(0 0 18px rgba(37,99,235,.42));
+      transform: translateY(-.5px);
+    }
+    .logo-mark svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .logo-mark { transition: none; }
+      .logo:hover .logo-mark { transform: none; }
+    }
+    /* Legacy text fallback — invisible once SVG renders, but kept in DOM
+       for screen readers that prefer text over inline SVG. */
+    .logo-glyph {
+      position: absolute;
+      width: 1px; height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
     }
     .header-spacer { flex: 1; }
     .header-actions {
@@ -4539,7 +4570,31 @@ const HTML = /* html */ `<!DOCTYPE html>
 
 <header class="header">
   <div class="logo">
-    <div class="logo-mark" aria-hidden="true"><span class="logo-glyph">H</span></div>
+    <div class="logo-mark" role="img" aria-label="Hireloom">
+      <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+        <defs>
+          <linearGradient id="hl-mark-grad" x1="20" y1="2" x2="20" y2="38" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#3b82f6"/>
+            <stop offset="45%" stop-color="#0ea5e9"/>
+            <stop offset="100%" stop-color="#14b8a6"/>
+          </linearGradient>
+          <linearGradient id="hl-mark-sheen" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="rgba(255,255,255,.55)"/>
+            <stop offset="55%" stop-color="rgba(255,255,255,0)"/>
+          </linearGradient>
+        </defs>
+        <!-- Hexagonal H: two hex pillars joined by a horizontal bar. The
+             outline is a single closed path so the gradient flows across
+             the whole mark without seams. -->
+        <path d="M4 12 L9 4 L14 12 L14 16 L26 16 L26 12 L31 4 L36 12 L36 28 L31 36 L26 28 L26 24 L14 24 L14 28 L9 36 L4 28 Z"
+              fill="url(#hl-mark-grad)"/>
+        <!-- Subtle diagonal sheen — gives the geometry a polished, almost
+             glassy finish without overpowering the gradient. -->
+        <path d="M4 12 L9 4 L14 12 L14 16 L26 16 L26 12 L31 4 L36 12 L36 28 L31 36 L26 28 L26 24 L14 24 L14 28 L9 36 L4 28 Z"
+              fill="url(#hl-mark-sheen)" opacity=".35"/>
+      </svg>
+      <span class="logo-glyph">H</span>
+    </div>
     Hireloom
   </div>
   <div class="header-spacer"></div>

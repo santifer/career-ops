@@ -122,7 +122,7 @@ test('HTTP integration', async (t) => {
     assert.ok(r.headers.etag, 'ETag header present');
     const decompressed = zlib.gunzipSync(r.body).toString('utf8');
     assert.match(decompressed, /Hireloom/, 'HTML contains Hireloom branding');
-    assert.match(decompressed, /<title>Hireloom — Career Atelier<\/title>/);
+    assert.match(decompressed, /<title>Hireloom — Your AI-Powered Career Accelerator<\/title>/);
   });
 
   await t.test('GET / responds 304 on matching If-None-Match', async () => {
