@@ -160,6 +160,23 @@ function renderExperience(exp, tailoredBullets, jdText = '', maxPages = 2) {
     });
   }
 
+  // Date patterns to aggressively strip from company/role
+  const datePatterns = [
+    /\b\d{4}\s*[-–—]\s*(?:\d{4}|present|current|now)\b/gi,
+    /\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s*\d{4}\b/gi,
+    /\b20\d{2}\b/g,
+    /\b(?:present|current|now)\b/gi,
+  ];
+  
+  const stripDates = (text) => {
+    let cleaned = text;
+    for (const pattern of datePatterns) {
+      cleaned = cleaned.replace(pattern, '').trim();
+    }
+    // Clean up leftover separators
+    return cleaned.replace(/\s*[|—–-]\s*$/, '').replace(/^\s*[|—–-]\s*/, '').trim();
+  };
+
   return exp.map((job, idx) => {
     // Apply tailored bullets to the most relevant job, original bullets to others
     const useTailored = (idx === tailoredJobIndex) && tailoredBullets && tailoredBullets.length > 0;
@@ -169,12 +186,16 @@ function renderExperience(exp, tailoredBullets, jdText = '', maxPages = 2) {
 
     let role = (job.role || '').trim();
     let company = (job.company || '').trim();
-    const dates = job.period || '';
+    let dates = (job.period || '').trim();
+    
+    // Aggressively strip dates from role and company
+    role = stripDates(role);
+    company = stripDates(company);
     
     // Clean up: if company is in role text, extract it
     if (role && !company) {
       // Try to detect company in role string using common suffixes
-      const companySuffixPattern = /(.*?(?:Solutions|Services|Technologies|Tech|Labs|Inc|LLC|Ltd|Corp|Company|Group|Partners|Consulting|Systems|Software|Digital|Global|Engineering|Products|Media|Enterprises|Holdings))\s*(?:—|\||-|–)?\s*(.+)/i;
+      const companySuffixPattern = /(.*?(?:Solutions|Services|Technologies|Tech|Labs|Inc\.?|LLC|Ltd\.?|Corp\.?|Company|Group|Partners|Consulting|Systems|Software|Digital|Global|Engineering|Engineers|Products|Media|Enterprises|Holdings|Platforms|Ventures|Studios))\s*(?:—|\||-|–)?\s*(.+)/i;
       const match = role.match(companySuffixPattern);
       if (match) {
         company = match[1].trim();
@@ -182,17 +203,26 @@ function renderExperience(exp, tailoredBullets, jdText = '', maxPages = 2) {
       }
     }
     
+    // Final cleanup - remove any remaining date-like text
+    role = stripDates(role);
+    company = stripDates(company);
+    
+    // If role and company are identical, keep only role
+    if (role.toLowerCase() === company.toLowerCase()) {
+      company = '';
+    }
+    
     // Clean layout: Company — Role (left)    Dates (right)
-    // If role already includes company or vice versa, don't duplicate
-    const hasCompanyInRole = role.toLowerCase().includes(company.toLowerCase());
-    const hasRoleInCompany = company.toLowerCase().includes(role.toLowerCase());
+    const hasCompanyInRole = role.toLowerCase().includes(company.toLowerCase()) && company.length > 3;
+    const hasRoleInCompany = company.toLowerCase().includes(role.toLowerCase()) && role.length > 3;
+    
     let titleLeft = '';
     if (company && role && !hasCompanyInRole && !hasRoleInCompany) {
       titleLeft = `<span class="job-company">${company}</span> — <span class="job-title">${role}</span>`;
-    } else if (company && role && hasCompanyInRole) {
-      // Role contains company - just show role
+    } else if (role && hasCompanyInRole) {
+      // Role already contains company - just show role
       titleLeft = `<span class="job-title">${role}</span>`;
-    } else if (company && role && hasRoleInCompany) {
+    } else if (company && hasRoleInCompany) {
       // Company contains role - just show company
       titleLeft = `<span class="job-company">${company}</span>`;
     } else if (company) {
