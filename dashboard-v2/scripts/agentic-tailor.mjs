@@ -81,17 +81,38 @@ async function getChromium() {
 
 // ── UTILITIES ──
 
-function renderExperience(exp, tailoredBullets, maxPages = 2) {
+function renderExperience(exp, tailoredBullets, jdText = '', maxPages = 2) {
   if (!Array.isArray(exp) || exp.length === 0) return '';
-  
-  // Limit bullets based on page budget (fewer bullets for shorter resumes)
-  const bulletsPerJob = maxPages === 1 ? 2 : maxPages === 2 ? 3 : 4;
-  
+
+  // Limit bullets per job based on page count
+  const maxBulletsPerJob = maxPages >= 3 ? 6 : maxPages >= 2 ? 4 : 3;
+
+  // Find the most relevant job to apply tailored bullets
+  let tailoredJobIndex = 0;
+  if (jdText && tailoredBullets && tailoredBullets.length > 0) {
+    const jdLower = jdText.toLowerCase();
+    let bestScore = -1;
+    exp.forEach((job, idx) => {
+      const jobText = `${job.role} ${job.company} ${(job.bullets || []).join(' ')}`.toLowerCase();
+      const jdKeywords = jdLower.match(/\b\w{4,}\b/g) || [];
+      const score = jdKeywords.filter(kw => jobText.includes(kw)).length;
+      if (score > bestScore) {
+        bestScore = score;
+        tailoredJobIndex = idx;
+      }
+    });
+    console.log(`[DEBUG] Selected job #${tailoredJobIndex + 1} (${exp[tailoredJobIndex]?.role} at ${exp[tailoredJobIndex]?.company}) for tailored bullets`);
+  }
+
   return exp.map((job, idx) => {
-    const bullets = (idx === 0 && tailoredBullets)
-      ? tailoredBullets.slice(0, bulletsPerJob)
-      : (job.bullets || []).slice(0, bulletsPerJob);
-    
+    const useTailored = (idx === tailoredJobIndex) && tailoredBullets && tailoredBullets.length > 0;
+    if (useTailored) {
+      console.log(`[DEBUG] Applying ${tailoredBullets.length} tailored bullets to job #${idx + 1} (${job.role})`);
+    }
+    const bullets = useTailored
+      ? tailoredBullets.slice(0, maxBulletsPerJob)
+      : (job.bullets || []).slice(0, maxBulletsPerJob);
+
     return `
     <div class="job">
       <div class="job-header">
@@ -515,6 +536,10 @@ OUTPUT FORMAT (JSON ONLY):
     const canonicalUrl = canonicalizeUrl(entry.url);
     const result = await tailorPackage(jdText, profile, entry.company);
     const tailoring = result.resume;
+
+    // Debug: Log tailored bullets
+    console.log(`[DEBUG] AI generated ${(tailoring?.experience || []).length} tailored bullets:`);
+    (tailoring?.experience || []).forEach((b, i) => console.log(`  ${i + 1}. ${b?.substring(0, 60)}...`));
     
     // Prepare common replacements
     const c = profile.candidate;
@@ -557,7 +582,7 @@ OUTPUT FORMAT (JSON ONLY):
       SECTION_COMPETENCIES: 'Core Competencies',
       COMPETENCIES: (Array.isArray(tailoring.core_competencies) ? tailoring.core_competencies : []).map(skill => `<span class="competency-tag">${skill}</span>`).join(''),
       SECTION_EXPERIENCE: 'Professional Experience',
-      EXPERIENCE: renderExperience(experienceToShow, tailoring.experience, maxPages),
+      EXPERIENCE: renderExperience(experienceToShow, tailoring.experience, jdText, maxPages),
       SECTION_PROJECTS: 'Selected Achievements',
       PROJECTS: renderProjects(profile.narrative.proof_points),
       SECTION_EDUCATION: 'Education',
