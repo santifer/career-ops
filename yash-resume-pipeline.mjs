@@ -299,6 +299,15 @@ SUBCOMMANDS['log'] = async (args) => {
     if (k === 'reason' && args[k] !== undefined) payload[k] = sanitizeReason(args[k]);
     else if (args[k] !== undefined) payload[k] = args[k];
   }
+  // Cover-letter additive fields (CLI args use kebab-case; payload keys use snake_case for parity with V2.0 patterns)
+  if (args['cover-letter'] !== undefined) payload.cover_letter_pdf = args['cover-letter'];
+  if (args['cover-letter-score'] !== undefined) payload.cover_letter_score = args['cover-letter-score'];
+  if (args['cover-letter-status'] !== undefined) {
+    if (!['ok', 'fail'].includes(args['cover-letter-status'])) {
+      fail('--cover-letter-status must be ok or fail');
+    }
+    payload.cover_letter_status = args['cover-letter-status'];
+  }
 
   const logPath = runsLogPath();
   await mkdir(dirname(logPath), { recursive: true });

@@ -810,3 +810,43 @@ test('mark-processed: without --cover-letter omits cl: fields (backward compat)'
     await rm(dir, { recursive: true, force: true });
   }
 });
+
+test('log: with --cover-letter and --cover-letter-score and --cover-letter-status records all three fields', async () => {
+  const dir = await makeTempPipelineFile('## Pendientes\n## Procesadas\n');
+  try {
+    await execFileP('node', [SCRIPT,
+      'log',
+      '--status', 'ok',
+      '--url', 'https://example.com/job',
+      '--cover-letter', 'cover-letters/x_y_Yash_Anghan_Cover_Letter_2026-05-08.pdf',
+      '--cover-letter-score', '95',
+      '--cover-letter-status', 'ok',
+    ], { cwd: dir });
+    const content = await readFileTest(join(dir, 'data/yash-resume-runs.log'), 'utf-8');
+    const obj = JSON.parse(content.trim().split('\n').pop());
+    assert.equal(obj.status, 'ok');
+    assert.equal(obj.cover_letter_pdf, 'cover-letters/x_y_Yash_Anghan_Cover_Letter_2026-05-08.pdf');
+    assert.equal(obj.cover_letter_score, '95');
+    assert.equal(obj.cover_letter_status, 'ok');
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('log: without cover-letter args omits the three new fields (backward compat)', async () => {
+  const dir = await makeTempPipelineFile('## Pendientes\n## Procesadas\n');
+  try {
+    await execFileP('node', [SCRIPT,
+      'log',
+      '--status', 'ok',
+      '--url', 'https://example.com/job',
+    ], { cwd: dir });
+    const content = await readFileTest(join(dir, 'data/yash-resume-runs.log'), 'utf-8');
+    const obj = JSON.parse(content.trim().split('\n').pop());
+    assert.ok(!('cover_letter_pdf' in obj), 'cover_letter_pdf should be absent');
+    assert.ok(!('cover_letter_score' in obj), 'cover_letter_score should be absent');
+    assert.ok(!('cover_letter_status' in obj), 'cover_letter_status should be absent');
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
