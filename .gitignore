@@ -46,3 +46,8 @@ node_modules/
 .claude/memory/
 career-dashboard
 package-lock.json
+
+# Python
+__pycache__/
+*.pyc
+.venv/

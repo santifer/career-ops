@@ -4,9 +4,9 @@
 
 **Goal:** Replace `/yash-resume-pipeline`'s playwright-cli JD fetcher with a Python helper using Scrapling's `StealthyFetcher`, so URLs behind Cloudflare/Akamai stop blocking the pipeline. Plus add 4 GB of host swap so the pipeline doesn't OOM-kill the user's daily Chrome.
 
-**Architecture:** Tiny Python CLI helper (`scrapling_fetch.py`) with two modes — pure-stdlib `--detect-source` for fast unit-testable host detection, and a live-fetch default path that uses Scrapling's stealth Firefox (Camoufox) to bypass Cloudflare. The orchestrator (`yash-resume-pipeline.mjs`) is unchanged; only mode-doc step 3 swaps out the playwright-cli block. Host swap is one-time manual setup, captured in §Manual Setup.
+**Architecture:** Tiny Python CLI helper (`scrapling_fetch.py`) with two modes — pure-stdlib `--detect-source` for fast unit-testable host detection, and a live-fetch default path that uses Scrapling's `StealthyFetcher` (backed by Patchright, a stealth-patched Playwright fork) to bypass Cloudflare. The orchestrator (`yash-resume-pipeline.mjs`) is unchanged; only mode-doc step 3 swaps out the playwright-cli block. Host swap is one-time manual setup, captured in §Manual Setup.
 
-**Tech Stack:** Python 3.10+, Scrapling 0.3+ (`pip install --user`), Camoufox (auto-downloaded by Scrapling on first fetch), Node.js test runner (existing), Linux swapfile (one-time `sudo`).
+**Tech Stack:** Python 3.10+, Scrapling 0.3+ installed in a project-local venv at `.venv/` (Ubuntu 24.04 + PEP 668 force venv use; system pip is externally-managed), Patchright Chromium (downloaded by `playwright install chromium`, ~110 MB), Node.js test runner (existing), Linux swapfile (one-time `sudo`).
 
 **Driver spec:** `docs/superpowers/specs/2026-05-08-scrapling-jd-fetcher-design.md` (commit `f186c01`).
 
@@ -27,20 +27,37 @@ echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 free -h    # verify swap shows 4Gi
 ```
 
-### B. Install Scrapling
+### B. Install Scrapling into a project-local venv
+
+Ubuntu 24.04 ships with no system pip and the system Python is externally-managed (PEP 668). Use a project-local venv. If `python3-venv` and `python3-pip` aren't installed:
+
+```bash
+sudo apt install -y python3.12-venv python3-pip
+```
+
+Then create the venv and install:
 
 ```bash
 cd /yash-superClaudeHuman/projects/yash-ai-automation-career
-pip install --user 'scrapling[fetchers]>=0.3.0'
+python3 -m venv .venv
+.venv/bin/pip install 'scrapling[fetchers]>=0.3.0'
 ```
 
-### C. Trigger Camoufox download (one-time, ~150 MB)
+### C. Download Patchright's Chromium (one-time, ~110 MB)
+
+Scrapling 0.4.x uses Patchright (a stealth-patched Playwright fork). It needs its own Chromium build, separate from playwright-cli's:
 
 ```bash
-python3 -c "from scrapling.fetchers import StealthyFetcher; StealthyFetcher.fetch('https://example.com', headless=True)"
+.venv/bin/playwright install chromium
 ```
 
-First run downloads Camoufox to `~/.cache/scrapling/`. Subsequent fetches are instant.
+Verify the install:
+
+```bash
+.venv/bin/python3 -c "from scrapling.fetchers import StealthyFetcher; p = StealthyFetcher.fetch('https://example.com', headless=True); print('warmup status:', p.status); print('title:', p.css('title::text').get())"
+```
+
+Expected: `warmup status: 200` and `title: Example Domain`.
 
 ---
 
@@ -57,8 +74,8 @@ Expected: a line showing total swap of `4.0Gi` or higher. If it shows `0B`, the 
 
 - [ ] **Step 2: Verify Manual Setup B+C are done**
 
-Run: `python3 -c "from scrapling.fetchers import StealthyFetcher; print('ok')"`
-Expected: prints `ok`. If it prints `ModuleNotFoundError`, **STOP** and remind the user to run Manual Setup B+C.
+Run: `.venv/bin/python3 -c "from scrapling.fetchers import StealthyFetcher; print('ok')"`
+Expected: prints `ok`. If it prints `ModuleNotFoundError` or the file `.venv/bin/python3` doesn't exist, **STOP** and remind the user to run Manual Setup B+C.
 
 - [ ] **Step 3: Create `requirements.txt`**
 
@@ -119,8 +136,9 @@ Open `tests/test-yash-pipeline-smoke.mjs`. Find the `main()` function. Just BEFO
         ['https://example.workday.com/job/abc',                      'workday'],
         ['https://mogo.applytojob.com/apply/x/y',                    'other'],
       ];
+      const PY = resolve(ROOT, '.venv/bin/python3');
       for (const [url, expected] of cases) {
-        const out = await execFileP('python3', [HELPER, '--detect-source', url], { cwd: ROOT, timeout: 10000 });
+        const out = await execFileP(PY, [HELPER, '--detect-source', url], { cwd: ROOT, timeout: 10000 });
         const obj = JSON.parse(out.stdout.trim());
         if (obj.source_hint === expected) ok(`source_hint(${url}) → ${expected}`);
         else ng(`source_hint(${url}) expected ${expected}, got ${obj.source_hint}`);
@@ -211,7 +229,7 @@ EOF
 **Files:**
 - Modify: `scrapling_fetch.py`
 
-This task adds the actual Scrapling-backed fetch. The CI smoke test does NOT exercise this path (it requires Scrapling installed + Camoufox + network). Verification is the live Layer-2 gate in Task 5.
+This task adds the actual Scrapling-backed fetch. The CI smoke test does NOT exercise this path (it requires Scrapling installed + Patchright Chromium + network). Verification is the live Layer-2 gate in Task 5.
 
 - [ ] **Step 1: Read the current `scrapling_fetch.py`**
 
@@ -272,7 +290,7 @@ Expected: all `source_hint(...)` cases still pass (the new code is below the ear
 - [ ] **Step 4: Verify the helper module imports cleanly**
 
 ```bash
-python3 -c "import scrapling_fetch; print('ok')" 2>&1
+.venv/bin/python3 -c "import scrapling_fetch; print('ok')" 2>&1
 ```
 
 Run from project root. Expected: `ok` (the lazy import inside `main()` means the module-level import doesn't pull in Scrapling).
@@ -332,7 +350,7 @@ Use Edit to replace the block above with:
 3. **Extract JD via Scrapling** (stealth fetcher, bypasses Cloudflare/Akamai):
 
    ```bash
-   python3 scrapling_fetch.py <url>
+   .venv/bin/python3 scrapling_fetch.py <url>
    ```
 
    Returns JSON on stdout, exit 0 on ok / exit 1 on fail.
@@ -357,7 +375,7 @@ git add modes/yash-resume-pipeline.md
 git commit -m "$(cat <<'EOF'
 feat(mode): switch yash-resume-pipeline step 3 to Scrapling helper
 
-Replaces the playwright-cli block with python3 scrapling_fetch.py <url>.
+Replaces the playwright-cli block with .venv/bin/python3 scrapling_fetch.py <url>.
 Same JSON contract for downstream steps (title/body/source_hint). Failure
 flow unchanged — still routes through mark-failed → log fail → ask user.
 
@@ -377,7 +395,7 @@ This is the gate that proves Scrapling actually solves the problem we set out to
 - [ ] **Step 1: Run helper against URL #2 (the GEI Consultants Cloudflare wall)**
 
 ```bash
-python3 scrapling_fetch.py "https://jointeamgei.geiconsultants.com/jobs/17570679-ai-engineer?tm_job=856250&tm_event=view&tm_company=90289&bid=549" \
+.venv/bin/python3 scrapling_fetch.py "https://jointeamgei.geiconsultants.com/jobs/17570679-ai-engineer?tm_job=856250&tm_event=view&tm_company=90289&bid=549" \
   > /tmp/url2-fetch.json 2> /tmp/url2-fetch.err
 echo "exit: $?"
 cat /tmp/url2-fetch.err
@@ -398,7 +416,7 @@ If `.status` is `"fail"`:
   - `cloudflare unsolved` → bump `timeout` from 90000 to 180000 in `scrapling_fetch.py:Step 2 of Task 3`. Re-test.
   - `timeout` → same as above.
   - `body too short` → likely a redirect to a login wall. URL might be expired; mark this URL `Discarded` and move on.
-  - `ImportError` → Manual Setup B incomplete; re-run `pip install --user -r requirements.txt`.
+  - `ImportError` → Manual Setup B incomplete; re-run `.venv/bin/pip install -r requirements.txt`.
 - After any change, re-run Step 1.
 - If three retries fail with different errors, **stop and report to the user**. Do not declare success.
 
@@ -423,7 +441,7 @@ Write to `/home/yash/.claude/projects/-yash-superClaudeHuman-projects-yash-ai-au
 ```markdown
 ---
 name: yash-resume-pipeline JD fetcher is Scrapling, not playwright-cli
-description: Step 3 of /yash-resume-pipeline shells to python3 scrapling_fetch.py <url>. Bypasses Cloudflare automatically. Free, account-safe, no LLM API needed.
+description: Step 3 of /yash-resume-pipeline shells to .venv/bin/python3 scrapling_fetch.py <url>. Bypasses Cloudflare automatically. Free, account-safe, no LLM API needed.
 type: project
 ---
 
@@ -431,7 +449,7 @@ As of 2026-05-08, the JD-extraction step of `/yash-resume-pipeline` uses `scrapl
 
 **Contract (called from mode step 3):**
 ```bash
-python3 scrapling_fetch.py <url>
+.venv/bin/python3 scrapling_fetch.py <url>
 ```
 - exit 0 + `{status:"ok", url, title, body, source_hint}` on success
 - exit 1 + `{status:"fail", error, url}` on any failure
@@ -440,7 +458,7 @@ python3 scrapling_fetch.py <url>
 
 **Key properties:**
 - Free, self-hosted, no LLM API required.
-- Account-safe — uses Camoufox (fresh fingerprint per fetch), does NOT touch user's Chrome profile or cookies.
+- Account-safe — Patchright Chromium with fresh fingerprint per fetch, does NOT touch user's Chrome profile or cookies.
 - Failure flow unchanged from before — still routes through `mark-failed` → `log fail` → ask user.
 
 **If a future URL fails:** check `error` in the JSON. Common cases: `cloudflare unsolved` (raise timeout), `body too short` (likely login wall, mark Discarded), `ImportError` (Scrapling not installed — see requirements.txt + manual setup in design spec).
@@ -453,7 +471,7 @@ python3 scrapling_fetch.py <url>
 Read `/home/yash/.claude/projects/-yash-superClaudeHuman-projects-yash-ai-automation-career/memory/MEMORY.md`. Append a new line (preserving existing entries):
 
 ```
-- [yash-resume-pipeline JD fetcher is Scrapling](project_yash_resume_pipeline_scrapling_fetcher.md) — step 3 shells to python3 scrapling_fetch.py <url>; bypasses Cloudflare via Camoufox; free, account-safe.
+- [yash-resume-pipeline JD fetcher is Scrapling](project_yash_resume_pipeline_scrapling_fetcher.md) — step 3 shells to .venv/bin/python3 scrapling_fetch.py <url>; bypasses Cloudflare via Patchright; free, account-safe.
 ```
 
 - [ ] **Step 3: No git commit**

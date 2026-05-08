@@ -27,24 +27,23 @@ Repeat until queue empty, user quits, or 3 consecutive failures:
    - `skip` → run `mark-skipped --url <url> --reason "user skipped"`, continue to next URL.
    - `yes` → continue.
 
-3. **Extract JD via Playwright** (in `/tmp` to avoid `.playwright-cli/` polluting the repo):
+3. **Extract JD via Scrapling** (stealth fetcher, bypasses Cloudflare/Akamai):
 
    ```bash
-   cd /tmp
-   playwright-cli open <url> --browser=chromium
-   playwright-cli eval "() => document.title"
-   playwright-cli eval "() => document.body.innerText"
-   playwright-cli close
+   .venv/bin/python3 scrapling_fetch.py <url>
    ```
 
-   On any tool error (timeout, 404, login wall, expired posting):
-   - run `mark-failed --url <url> --reason "playwright: <short-error>"`
-   - run `log --status fail --url <url> --reason "..."`
-   - ask user: continue with next URL? (yes / quit)
+   Returns JSON on stdout, exit 0 on ok / exit 1 on fail.
+
+   - On `status: ok` → use `title`, `body`, and `source_hint` from the JSON to continue.
+   - On `status: fail`:
+     - run `mark-failed --url <url> --reason "scrapling: <json.error>"`
+     - run `log --status fail --url <url> --reason "scrapling: <json.error>"`
+     - ask user: continue with next URL? (yes / quit)
 
 4. **Parse JD fields** from raw text (LLM judgment):
    - Extract `company`, `role`, `location`, `posted_date`.
-   - Use the URL host as a portal hint: `lever`, `ashby`, `greenhouse`, `workday`, or `other`.
+   - For the portal hint, use the `source_hint` returned by step 3 (`lever` / `ashby` / `greenhouse` / `workday` / `other`). Do not re-derive from the URL host.
    - If `company` or `role` confidence is low, ask user once to confirm/correct.
    - If user can't say, run `mark-failed --url <url> --reason "could not determine company/role"` and continue.
 

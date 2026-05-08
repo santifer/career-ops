@@ -99,6 +99,29 @@ async function main() {
 
   const server = await serveFixtures(8765);
   try {
+    // === Scrapling helper: source-hint detection (no network) ===
+    {
+      const HELPER = resolve(ROOT, 'scrapling_fetch.py');
+      const cases = [
+        ['https://jobs.lever.co/openai/123',                         'lever'],
+        ['https://jobs.ashbyhq.com/anthropic/456',                   'ashby'],
+        ['https://boards.greenhouse.io/scale/jobs/789',              'greenhouse'],
+        ['https://example.workday.com/job/abc',                      'workday'],
+        ['https://mogo.applytojob.com/apply/x/y',                    'other'],
+      ];
+      const PY = resolve(ROOT, '.venv/bin/python3');
+      for (const [url, expected] of cases) {
+        try {
+          const out = await execFileP(PY, [HELPER, '--detect-source', url], { cwd: ROOT, timeout: 10000 });
+          const obj = JSON.parse(out.stdout.trim());
+          if (obj.source_hint === expected) ok(`source_hint(${url}) → ${expected}`);
+          else ng(`source_hint(${url}) expected ${expected}, got ${obj.source_hint}`);
+        } catch (e) {
+          ng(`source_hint(${url}) crashed: ${e.message?.split('\n')[0] ?? String(e)}`);
+        }
+      }
+    }
+
     await runFixture(8765, 'lever-sample.html',
       'Lever Demo Corp', 'Senior AI Engineer');
     await runFixture(8765, 'ashby-sample.html',
