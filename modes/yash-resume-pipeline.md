@@ -121,7 +121,7 @@ Repeat until queue empty, user quits, or 3 consecutive failures:
    - keep the .tex on disk for inspection
    - ask user: continue?
 
-10. **Write sidecar `.log`** to `resumes/<c>_<r>_Yash_Anghan_Resume_<d>.log`:
+10. **Write sidecar `.log`** to `resume-logs/<c>_<r>_Yash_Anghan_Resume_<d>.log`:
 
     ```
     score: <X>/100

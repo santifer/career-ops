@@ -17,6 +17,8 @@ jds/*
 !jds/.gitkeep
 resumes/*
 !resumes/.gitkeep
+resume-logs/*
+!resume-logs/.gitkeep
 data/yash-resume-runs.log
 data/follow-ups.md
 data/*.bak
