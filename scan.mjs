@@ -89,8 +89,12 @@ function resolveProvider(entry, providers) {
     return { provider: p };
   }
   for (const p of providers.values()) {
-    const hit = p.detect?.(entry);
-    if (hit) return { provider: p };
+    try {
+      const hit = p.detect?.(entry);
+      if (hit) return { provider: p };
+    } catch (e) {
+      console.warn(`[warn] provider ${p.id} detect() threw: ${e.message}`);
+    }
   }
   return null;
 }
@@ -260,7 +264,9 @@ async function main() {
     targets.push({ ...company, _provider: resolved.provider });
   }
 
-  console.log(`Scanning ${targets.length} companies via providers (${skippedCount} skipped — no provider matched)`);
+  const resolveErrCount = resolveErrors.length;
+  const skipSuffix = resolveErrCount ? `, ${resolveErrCount} unknown provider` : '';
+  console.log(`Scanning ${targets.length} companies via providers (${skippedCount} skipped — no provider matched${skipSuffix})`);
   if (dryRun) console.log('(dry run — no files will be written)\n');
 
   // 4. Load dedup sets

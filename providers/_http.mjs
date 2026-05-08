@@ -23,6 +23,9 @@ async function fetchWithTimeout(url, { timeoutMs = DEFAULT_TIMEOUT_MS, headers =
       throw err;
     }
     return res;
+  } catch (e) {
+    if (e.name === 'AbortError') throw new Error(`Request timed out after ${timeoutMs}ms`);
+    throw e;
   } finally {
     clearTimeout(timer);
   }
