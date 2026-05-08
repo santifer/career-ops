@@ -99,6 +99,23 @@ export async function GET(req: NextRequest) {
           send({ type: 'done', code: 0 });
           controller.close();
           return;
+        } else if (cmd === 'add') {
+          if (args.length === 0) {
+            send({ type: 'stderr', content: `Usage: add <job_url>\n  Example: add https://jobs.ashbyhq.com/company/job-id\n  Example: add https://linkedin.com/jobs/view/123\n` });
+            send({ type: 'done', code: 1 });
+            controller.close();
+            return;
+          }
+          const url = args[0];
+          if (!url.startsWith('http')) {
+            send({ type: 'stderr', content: `Error: URL must start with http:// or https://\n` });
+            send({ type: 'done', code: 1 });
+            controller.close();
+            return;
+          }
+          // Trigger add-job workflow (scrape + score + save to DB)
+          await triggerGitHubAction(send, controller, userId, 'add-job.mjs', url);
+          return;
         } else if (cmd === 'clear') {
           send({ type: 'clear' });
           send({ type: 'done', code: 0 });
