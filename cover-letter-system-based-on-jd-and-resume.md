@@ -63,7 +63,7 @@ If score <90 (no hard-fail) -> Output deficiency log + corrected LaTeX
       <paragraph number="2" purpose="Why I match" sentences="4-5">
         <required>Direct keyword/responsibility echo from the JD.</required>
         <required>2-3 proof points from the locked &lt;approved_proof_points&gt; list, each mapped to a specific JD requirement.</required>
-        <required>Wrap 2-4 high-priority JD keywords in \textbf{}, prioritizing terms already in the resume_keyword_echo_set.</required>
+        <required>Wrap at least 2 high-priority JD keywords in \textbf{} in this paragraph (the total across all 4 paragraphs is 4-7, governed by Phase 4). Prioritize terms already in the resume_keyword_echo_set.</required>
         <prohibited>Listing every skill -- this is not the resume.</prohibited>
       </paragraph>
       <paragraph number="3" purpose="Why this company" sentences="3-4">
@@ -125,7 +125,7 @@ If score <90 (no hard-fail) -> Output deficiency log + corrected LaTeX
     <archetype_allocation>
       <rule archetype="AI/LLM/GenAI Engineer">Paragraph 2 must use 2-3 of: P1, P2, P3.</rule>
       <rule archetype="AI Automation Engineer">Paragraph 2 must use 2-3 of: P4, P5, P6.</rule>
-      <rule archetype="ML Engineer">Paragraph 2 must use 2-3 of: P2, P3 + an enterprise-engineering detail from cv.md (Morningstar AWS inference, 25K+ daily requests, sub-200ms).</rule>
+      <rule archetype="ML Engineer">Paragraph 2 must use P2 and P3 (both required), plus one enterprise-engineering detail from cv.md (Morningstar AWS inference, 25K+ daily requests, sub-200ms).</rule>
       <rule archetype="AI Software Engineer">Paragraph 2 must use P1 + a Bell/Virtusa enterprise detail (microservices at 45K daily transactions, 99.9% uptime, REST APIs serving 850K subscribers).</rule>
       <rule archetype="Other / fallback">Paragraph 2 uses P1 + the exit-story narrative; do not cherry-pick metrics from outside the locked list.</rule>
     </archetype_allocation>
@@ -145,7 +145,7 @@ If score <90 (no hard-fail) -> Output deficiency log + corrected LaTeX
     </keyword_rules>
     <latex_escape_rules>
       <rule>Hash: # -> \#</rule>
-      <rule>Ampersand: &amp; -> \&amp;</rule>
+      <rule>Ampersand: in LaTeX body, write the literal sequence backslash-ampersand (&#x5C;&amp;) — do not include any HTML/XML entity.</rule>
       <rule>Percent: % -> \%</rule>
       <rule>Dollar: $ -> \$</rule>
       <rule>Underscore: _ -> \_</rule>
@@ -157,7 +157,7 @@ If score <90 (no hard-fail) -> Output deficiency log + corrected LaTeX
     <n>CONSTRAINT VERIFICATION</n>
     <pre_output_validation>
       <step>Count sentences across all 4 paragraphs. Must be 12-16 inclusive.</step>
-      <step>Verify exactly 4 paragraphs separated by \par\vspace{6pt}.</step>
+      <step>Verify exactly 4 body paragraphs, separated by `\par\vspace{6pt}`. The final paragraph (¶4) must be followed by `\par\vspace{12pt}` before the `Sincerely,` closing.</step>
       <step>Verify every metric and accomplishment traces to the locked proof point list or cv.md verbatim.</step>
       <step>Verify resume_keyword_echo_set overlap >= 5.</step>
       <step>Verify high-priority JD keywords wrapped with \textbf{} count is 4-7.</step>
@@ -336,6 +336,7 @@ Yash Anghan
     <step number="4">Phase 4 -> Inject \textbf{} keywords + LaTeX escapes</step>
     <step number="5">Phase 5 -> Run verification checks</step>
     <step number="6">Phase 6 -> Score, then apply output rules priority hierarchy</step>
+    <step number="7">Replace [INSERT_DATE_YYYY-MM-DD] in the LaTeX output with today's ISO date (e.g., 2026-05-08).</step>
   </execution_command>
 </cover_letter_optimization_system>
 ```
