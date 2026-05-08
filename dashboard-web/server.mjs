@@ -2714,32 +2714,54 @@ const HTML = /* html */ `<!DOCTYPE html>
       -webkit-font-smoothing: antialiased;
     }
 
-    /* ── Header ── Linear-clean: solid surface, single hairline. */
+    /* ── Header ── Floating glass capsule. Inspired by command-center
+       SaaS layouts — a single dark pill that hovers over the page rather
+       than a full-bleed bar that competes with the data. The capsule has
+       rounded edges, a subtle border, and just enough backdrop blur to
+       feel premium without going full glassmorphism. */
     .header {
-      background: var(--bg-elevated);
-      border-bottom: 1px solid var(--separator2);
-      padding: 0 var(--space-6);
-      height: 56px;
+      position: sticky;
+      top: 12px;
+      z-index: 200;
+      margin: 12px auto 0;
+      max-width: 1280px;
+      padding: 8px 14px 8px 16px;
+      height: 60px;
       display: flex;
       align-items: center;
-      gap: var(--space-4);
-      position: sticky;
-      top: 0;
-      z-index: 200;
+      gap: var(--space-3);
+      background: color-mix(in srgb, var(--bg-elevated) 92%, transparent);
+      backdrop-filter: blur(18px) saturate(140%);
+      -webkit-backdrop-filter: blur(18px) saturate(140%);
+      border: 1px solid var(--separator2);
+      border-radius: 999px;
+      box-shadow:
+        0 1px 0 rgba(255,255,255,.04) inset,
+        0 8px 32px rgba(0,0,0,.28),
+        0 1px 2px rgba(0,0,0,.18);
     }
-    /* ── Hireloom wordmark — Fraunces 600, optical-size 9pt, soft 100.
-       Smaller + more functional than the previous 20px coin-and-pendant
-       treatment. Reads as a logotype, not a brand statement. */
+    @media (max-width: 1320px) {
+      .header { margin-left: 16px; margin-right: 16px; }
+    }
+    /* ── Hireloom wordmark — sits inside its own brand-pill on the left
+       of the floating header. Picks up the same dark surface treatment
+       as the action pills on the right so the whole top reads as one
+       continuous bar of capsules. */
     .logo {
       display: flex;
       align-items: center;
       gap: 10px;
+      padding: 7px 14px 7px 8px;
+      background: var(--surface);
+      border: 1px solid var(--separator2);
+      border-radius: 999px;
       font-family: var(--font-display);
       font-weight: 600;
-      font-size: 18px;
+      font-size: 17px;
       font-variation-settings: "opsz" 14, "SOFT" 50;
       letter-spacing: -.005em;
       color: var(--text);
+      flex-shrink: 0;
     }
 
     /* ── Brand seal — solid oxblood circle, no breathing, no glow.
@@ -2767,15 +2789,16 @@ const HTML = /* html */ `<!DOCTYPE html>
       letter-spacing: -.005em;
       font-variant-numeric: tabular-nums;
     }
-    /* ── Buttons — Linear-clean. No transforms, no springs, no glass. */
+    /* ── Buttons — pill-shaped to match the floating header capsule.
+       Soft rounded-full edges, subtle hover, no transforms or springs. */
     .btn {
       display: inline-flex; align-items: center; justify-content: center;
       gap: 6px;
-      padding: 7px 12px;
-      min-height: 32px;
+      padding: 8px 14px;
+      min-height: 36px;
       font-size: var(--t-subhead); font-family: var(--font); font-weight: 500;
       letter-spacing: -.003em;
-      border-radius: var(--r-sm);
+      border-radius: 999px;
       border: 1px solid transparent;
       cursor: pointer;
       transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
@@ -2844,17 +2867,31 @@ const HTML = /* html */ `<!DOCTYPE html>
     .btn-theme #theme-icon { display: inline-block; transition: opacity 120ms ease; }
     .btn-theme:hover #theme-icon { opacity: .7; }
 
-    /* Primary CTA — solid oxblood, no gradient, no glow. The "buy"
-       button at Stripe is one solid color with a hairline border, not
-       a billboard. */
+    /* Primary CTA — solid oxblood pill with a soft top-edge sheen.
+       Picks up the visual gravity of a "primary action" without the
+       billboard glow of glassmorphic gradient buttons. */
     .btn-apply-batch {
-      background: var(--accent);
+      background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 88%, white 12%), var(--accent));
       color: rgba(245,220,190,.98);
-      font-weight: 500;
-      border-color: rgba(0,0,0,.20);
+      font-weight: 600;
+      border-color: rgba(0,0,0,.22);
+      box-shadow:
+        0 1px 0 rgba(255,255,255,.10) inset,
+        0 1px 2px rgba(0,0,0,.18);
     }
-    .btn-apply-batch:hover  { background: #b9304a; }
-    .btn-apply-batch:active { background: #921f33; }
+    .btn-apply-batch:hover  { filter: brightness(1.08); }
+    .btn-apply-batch:active { filter: brightness(.95); }
+    /* Right-arrow chevron rendered via CSS so we don't need extra markup
+       on every CTA. Suppressed when the button text already contains a
+       chevron or arrow glyph. */
+    .btn-apply-batch::after {
+      content: "→";
+      font-family: var(--font);
+      font-weight: 500;
+      margin-left: 2px;
+      transition: transform 160ms var(--ease-out);
+    }
+    .btn-apply-batch:hover::after { transform: translateX(2px); }
 
     /* ── Apply modal ── */
     .modal-overlay {
@@ -3121,12 +3158,14 @@ const HTML = /* html */ `<!DOCTYPE html>
     }
     @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
 
-    /* ── Layout — Linear-style: 1fr content + 280px sidebar. */
+    /* ── Layout — Linear-style: 1fr content + 280px sidebar.
+       The 84px top reserve covers the floating header capsule (60px) +
+       its 12px top margin + 12px breathing gap below it. */
     .layout {
       display: grid;
       grid-template-columns: minmax(0, 1fr) 280px;
       gap: 0;
-      min-height: calc(100vh - 56px);
+      min-height: calc(100vh - 84px);
       max-width: 1440px;
       margin: 0 auto;
     }
@@ -3142,7 +3181,11 @@ const HTML = /* html */ `<!DOCTYPE html>
       .sidebar { border-left: none; border-top: 1px solid var(--separator2); }
     }
 
-    /* ── Page header — Linear-style title row, NOT a hero. */
+    /* ── Page header — title row with a subtle gradient on the title.
+       Mirrors the reference's "second-line accent" gesture (where a key
+       phrase shifts from white to the brand accent) without committing
+       to a full hero. The gradient runs from --text into --accent so
+       the eye lands on the brand color at the end of the word. */
     .page-header {
       display: flex; align-items: baseline; justify-content: space-between;
       gap: var(--space-4);
@@ -3154,9 +3197,16 @@ const HTML = /* html */ `<!DOCTYPE html>
       font-family: var(--font-display);
       font-weight: 500;
       font-size: var(--t-display);
-      font-variation-settings: "opsz" 48, "SOFT" 50;
-      letter-spacing: -.015em;
-      color: var(--text);
+      font-variation-settings: "opsz" 96, "SOFT" 30;
+      letter-spacing: -.018em;
+      background: linear-gradient(96deg,
+        var(--text) 0%,
+        var(--text) 55%,
+        color-mix(in srgb, var(--accent-2) 92%, var(--text) 8%) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
     }
     .page-subtitle {
       font-size: var(--t-callout);
@@ -3164,48 +3214,83 @@ const HTML = /* html */ `<!DOCTYPE html>
       font-variant-numeric: tabular-nums;
     }
 
-    /* ── Stat strip — 4 cells, NOT a 9-card grid. Functional density. */
+    /* ── Stat strip — 4 module-style cards with eyebrow + huge number.
+       Each card is its own rounded surface (was a 1px-gap grid trick),
+       so the layout reads as a row of distinct intelligence modules
+       rather than a single dense bar. The --status-color per card
+       drives a subtle left-edge bar that lights up when active. */
     .stats {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 1px;
+      gap: 12px;
       margin-bottom: var(--space-6);
-      background: var(--separator2);
-      border: 1px solid var(--separator2);
-      border-radius: var(--r-md);
-      overflow: hidden;
     }
     .stat-card {
-      background: var(--bg);
-      padding: 16px 18px;
+      position: relative;
+      background: var(--bg-elevated);
+      padding: 18px 20px 20px;
       cursor: pointer;
-      transition: background 120ms ease;
-      border: none;
-      display: flex; flex-direction: column; gap: 6px;
+      transition: background 120ms ease, border-color 120ms ease, transform 160ms var(--ease-out);
+      border: 1px solid var(--separator2);
+      border-radius: 14px;
+      display: flex; flex-direction: column; gap: 12px;
+      overflow: hidden;
     }
-    .stat-card:hover { background: var(--surface); }
-    .stat-card.active { background: var(--surface); box-shadow: inset 2px 0 0 var(--status-color, var(--accent-2)); }
-    .stat-card:focus-visible { outline: 2px solid var(--accent-ring); outline-offset: -2px; }
+    /* Soft tinted accent bar on the left edge — lit only when active. */
+    .stat-card::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 3px;
+      background: var(--status-color, var(--accent-2));
+      opacity: 0;
+      transition: opacity 160ms ease;
+    }
+    .stat-card:hover {
+      background: var(--surface);
+      border-color: var(--hairline-2);
+    }
+    .stat-card.active {
+      background: var(--surface);
+      border-color: color-mix(in srgb, var(--status-color, var(--accent-2)) 38%, var(--separator2));
+    }
+    .stat-card.active::before { opacity: .85; }
+    .stat-card:focus-visible { outline: 2px solid var(--accent-ring); outline-offset: 2px; }
     .stat-bar { display: none; }
     .stat-label {
-      font-size: var(--t-caption);
-      font-weight: 500;
+      font-size: 11px;
+      font-weight: 600;
       color: var(--text-ter);
-      letter-spacing: .04em;
+      letter-spacing: .08em;
       text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    /* Tiny colored dot in front of the eyebrow label — same hue as the
+       card's status-color. Picks up the reference's "icon-tile + label"
+       pattern without needing inline SVG markup. */
+    .stat-label::before {
+      content: "";
+      width: 8px; height: 8px;
+      border-radius: 999px;
+      background: var(--status-color, var(--accent-2));
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--status-color, var(--accent-2)) 22%, transparent);
+      flex-shrink: 0;
     }
     .stat-value {
       font-family: var(--font-display);
-      font-variation-settings: "opsz" 48;
-      font-size: 28px;
+      font-variation-settings: "opsz" 96, "SOFT" 30;
+      font-size: 44px;
       font-weight: 500;
       line-height: 1;
-      letter-spacing: -.02em;
-      color: var(--status-color, var(--text));
+      letter-spacing: -.025em;
+      color: var(--text);
       font-variant-numeric: tabular-nums;
     }
     @media (max-width: 900px) {
-      .stats { grid-template-columns: repeat(2, 1fr); }
+      .stats { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .stat-value { font-size: 36px; }
     }
     /* Legacy zero-state hero — kept hidden, replaced by page-header.
        (Selectors retained as no-ops so any leftover JS toggling them
@@ -3266,37 +3351,38 @@ const HTML = /* html */ `<!DOCTYPE html>
     /* ── Segmented control — single rounded container, hairline dividers.
        Replaces the previous 6-pill scatter. Skill ban: no pill shapes
        on everything. */
+    /* ── Filter pills — proper standalone capsules instead of an
+       attached row inside a single bordered container. Each pill floats
+       on its own surface; the active pill picks up the oxblood-tinted
+       fill so the selection stands out without an underline-cheat. */
     .filter-pills {
       display: inline-flex;
-      align-items: stretch;
-      background: var(--surface);
-      border: 1px solid var(--separator2);
-      border-radius: var(--r-md);
-      overflow: hidden;
+      align-items: center;
+      gap: 6px;
       flex-wrap: wrap;
       max-width: 100%;
     }
     .filter-pill {
-      padding: 7px 12px;
+      padding: 7px 14px;
+      min-height: 32px;
       font-size: var(--t-subhead);
       font-weight: 500;
       font-family: var(--font);
-      border: none;
-      border-right: 1px solid var(--separator2);
-      background: transparent;
+      border: 1px solid var(--separator2);
+      background: var(--surface);
       color: var(--text-sec);
       cursor: pointer;
-      transition: background 120ms ease, color 120ms ease;
+      transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
       letter-spacing: -.003em;
       white-space: nowrap;
+      border-radius: 999px;
     }
-    .filter-pill:last-child { border-right: none; }
-    .filter-pill:hover { background: var(--surface-hover); color: var(--text); }
-    .filter-pill:focus-visible { outline: 2px solid var(--accent-ring); outline-offset: -2px; }
+    .filter-pill:hover { background: var(--surface2); color: var(--text); border-color: var(--hairline-2); }
+    .filter-pill:focus-visible { outline: 2px solid var(--accent-ring); outline-offset: 2px; }
     .filter-pill.active {
-      background: var(--bg-elevated);
+      background: color-mix(in srgb, var(--accent) 22%, var(--surface));
       color: var(--text);
-      box-shadow: inset 0 -2px 0 var(--accent-2);
+      border-color: color-mix(in srgb, var(--accent) 50%, var(--separator2));
     }
     /* The "money" filter keeps a small champagne tint to flag the only
        monetary filter — but no longer a colored pill island. */
@@ -4100,21 +4186,49 @@ const HTML = /* html */ `<!DOCTYPE html>
       pointer-events: none; box-shadow: 0 2px 8px rgba(0,0,0,.3);
     }
 
-    /* ── Apply banner — flat surface, no double-radial gradient. */
+    /* ── Apply banner — promoted to a hero-style call-to-action card.
+       Picks up the warm oxblood-tinted gradient and a soft accent ring
+       on the left edge so it reads as "the action you came here for"
+       rather than a passive notification strip. */
     .apply-banner {
       display: none;
-      background: var(--surface);
-      border: 1px solid var(--separator2);
-      border-left: 3px solid var(--green);
-      border-radius: var(--r-md);
-      padding: 12px 16px;
+      position: relative;
+      background:
+        radial-gradient(120% 100% at 0% 0%, color-mix(in srgb, var(--accent) 14%, transparent) 0%, transparent 60%),
+        var(--surface);
+      border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--separator2));
+      border-radius: 16px;
+      padding: 18px 18px 18px 22px;
       margin-bottom: var(--space-4);
       align-items: center; gap: var(--space-4);
+      box-shadow:
+        0 1px 0 rgba(255,255,255,.05) inset,
+        0 1px 2px rgba(0,0,0,.18);
+    }
+    .apply-banner::before {
+      content: "";
+      position: absolute;
+      inset: 14px auto 14px 0;
+      width: 3px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, var(--accent) 0%, var(--accent-2) 100%);
     }
     .apply-banner.show { display: flex; }
     .apply-banner-text { flex: 1; min-width: 0; }
-    .apply-banner-title { font-size: var(--t-callout); font-weight: 600; color: var(--text); letter-spacing: -.005em; }
-    .apply-banner-sub { font-size: var(--t-footnote); color: var(--text-sec); margin-top: 2px; line-height: 1.45; }
+    .apply-banner-title {
+      font-family: var(--font-display);
+      font-weight: 500;
+      font-size: 22px;
+      color: var(--text);
+      letter-spacing: -.012em;
+      font-variation-settings: "opsz" 36, "SOFT" 30;
+    }
+    .apply-banner-sub {
+      font-size: var(--t-subhead);
+      color: var(--text-sec);
+      margin-top: 4px;
+      line-height: 1.5;
+    }
 
     /* ── Follow-up list ── */
     .followup-item {
