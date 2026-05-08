@@ -982,8 +982,15 @@
 - [!] https://himalayas.app/companies/advision-development/jobs/junior-backend-developer-ai-llm-focus | Advision Development | Junior Backend Developer (AI & LLM Focus) | Remote — US only — moved to Procesadas (#656) 2026-05-08 (1.9/5 — title says Backend AI/LLM but body is frontend developer role; off-archetype; $65-80K below market; SKIP)
 - [!] https://jobs.ashbyhq.com/Hippocratic%20AI/b4d1b03e-fabf-4139-9fcc-0b5b3ac9e2b6 | Hippocratic AI | Forward Deployment Engineer (Akron, OH) | Akron OH on-site 5d/wk + occasional Palo Alto travel — moved to Procesadas (#657) 2026-05-08 (4.0/5 — Akron ~30min from Kent OH; Series C $3.5B unicorn; healthcare RAG + multi-agent + production discipline 1:1; 3y gate slight stretch (2.5y); F-1 OPT sponsorship verify; PDF generated)
 
-
-
+<!-- Overnight 2026-05-08T~04Z second pass: Level 3 WebSearch additions (Ashby + Greenhouse + Remotive + SmartRecruiters + Breezy + Teamtailor) -->
+- [!] https://jobs.ashbyhq.com/assorthealth/64876579-05a2-40b6-a772-d1ce8b0ac8c4 | Assort Health | Agent Engineer (New Grad, Summer 2026) | San Francisco (HQ) — On-site — moved to Procesadas (#658) 2026-05-08 (4.4/5 — explicit Summer 2026 new grad + healthcare agentic AI + HIPAA + multi-provider voice/STT-adjacent 1:1 with Manga Lens stack; $135-150K + equity; PDF generated)
+- [!] https://job-boards.greenhouse.io/addepar1/jobs/7760220002 | Addepar | Forward Deployed Engineer | Remote — USA — moved to Procesadas (#659) 2026-05-08 (1.5/5 — HARD VETO: explicit "no current or future visa sponsorship"; F-1 OPT incompatible)
+- [!] https://remotive.com/remote/jobs/software-development/founding-forward-deployed-engineer-4381902 | Glean | Founding Forward Deployed Engineer | Remote — US (25-50% travel) — moved to Procesadas (#660) 2026-05-08 (3.0/5 — founding-cohort 0-to-1 FDE; $160-270K base; 4+ yrs floor stretches 2.5y; 0-to-1 evidence (Manga Lens + E-Farming founder + Healthcare Claims) carries the case; PDF generated; canonical URL: job-boards.greenhouse.io/gleanwork/jobs/4651991005)
+- [!] https://jobs.smartrecruiters.com/Experian/744000087951481-software-engineer-xcelerator-rotation-program-entry-level-swe-remote | Experian | Software Engineer Xcelerator Rotation Program (Entry Level SWE) | Remote — US — error: posting expired (SmartRecruiters page returns "This job has expired" 2026-05-08T04Z); archived
+- [!] https://remotive.com/remote/jobs/artificial-intelligence/forward-deployed-ai-data-engineer-4517765 | Edisyl | Forward-Deployed AI Data Engineer | Remote — USA Only — moved to Procesadas (#661) 2026-05-08 (2.5/5 — 4-8 yrs seniority floor stretches 2.5y by 1.5y; comp opacity; proprietary Forge/Lattice/Stratum stack; SKIP unless gate softens)
+- [!] https://remotive.com/remote/jobs/software-development/forward-deployed-engineer-4486915 | Elite Talent | Forward Deployed Engineer | Remote — USA Only — moved to Procesadas (#662) 2026-05-08 (2.0/5 — recruiting-agency repost for unnamed client; 5+ yrs floor 2.5y short; OTE $200-205K; SKIP)
+- [!] https://jway-group.breezy.hr/p/899d0d8fd95a-ml-ai-engineer | JWay Group | ML/AI Engineer | Pasig City, PH (hybrid) — not US-based; F-1 OPT geo block; filter slip
+- [!] https://elsa.teamtailor.com/jobs/7340954-ai-engineer-remote | ELSA | AI Engineer (Remote) | location verify — error: posting expired ("Either the position was filled, or the ad has expired" 2026-05-08T04Z); archived
 
 
 ## Procesadas
@@ -1372,3 +1379,5 @@
 
 - [x] #655 | https://himalayas.app/companies/bierman-autism-centers/jobs/junior-ai-engineer | Bierman Autism Centers | Junior AI Engineer | Hybrid 4d/wk Carmel IN OR fully remote | 3.4/5 | PDF ✅
 - [x] #657 | https://jobs.ashbyhq.com/Hippocratic%20AI/b4d1b03e-fabf-4139-9fcc-0b5b3ac9e2b6 | Hippocratic AI | Forward Deployment Engineer (Akron, OH) | Akron OH on-site 5d/wk + occasional Palo Alto travel | 4.0/5 | PDF ✅
+- [x] #658 | https://jobs.ashbyhq.com/assorthealth/64876579-05a2-40b6-a772-d1ce8b0ac8c4 | Assort Health | Agent Engineer (New Grad, Summer 2026) | San Francisco (HQ) — On-site | 4.4/5 | PDF ✅
+- [x] #660 | https://job-boards.greenhouse.io/gleanwork/jobs/4651991005 | Glean | Founding Forward Deployed Engineer | Remote — US (25-50% travel) | 3.0/5 | PDF ✅
