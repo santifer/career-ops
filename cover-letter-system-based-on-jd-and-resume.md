@@ -73,7 +73,7 @@ If score <90 (no hard-fail) -> Output deficiency log + corrected LaTeX
       </paragraph>
       <paragraph number="4" purpose="Close" sentences="2-3">
         <required>Forward-looking action line ("looking forward to discussing...", "would welcome the chance to...").</required>
-        <required>Sign-off line: Sincerely,\\ Yash Anghan</required>
+        <required>Sign-off: write `Sincerely,` then a blank-line paragraph break, then `Yash Anghan` on its own paragraph. Do NOT use `\\` line breaks -- the `\setlength{\parskip}{8pt}` preamble setting handles vertical spacing.</required>
         <prohibited>Repeating qualifications already covered in paragraphs 1-2.</prohibited>
       </paragraph>
     </skeleton>
@@ -157,13 +157,13 @@ If score <90 (no hard-fail) -> Output deficiency log + corrected LaTeX
     <n>CONSTRAINT VERIFICATION</n>
     <pre_output_validation>
       <step>Count sentences across all 4 paragraphs. Must be 12-16 inclusive.</step>
-      <step>Verify exactly 4 body paragraphs, separated by `\par\vspace{6pt}`. The final paragraph (¶4) must be followed by `\par\vspace{12pt}` before the `Sincerely,` closing.</step>
+      <step>Verify exactly 4 body paragraphs separated by blank lines. The global `\setlength{\parskip}{8pt}` preamble setting handles vertical spacing -- do NOT insert explicit `\par\vspace{...}` between paragraphs.</step>
       <step>Verify every metric and accomplishment traces to the locked proof point list or cv.md verbatim.</step>
       <step>Verify resume_keyword_echo_set overlap >= 5.</step>
       <step>Verify high-priority JD keywords wrapped with \textbf{} count is 4-7.</step>
       <step>Verify all special characters escaped, all \textbf{} commands closed.</step>
       <step>Verify salutation is exactly "Dear Hiring Manager," (no named individuals).</step>
-      <step>Verify closing line is "Sincerely,\\ Yash Anghan" (with the exact \\ command).</step>
+      <step>Verify the closing is `Sincerely,` on its own line, followed by a blank line, followed by `Yash Anghan` on its own line. No `\\` line breaks anywhere in the body or closing.</step>
     </pre_output_validation>
   </phase_5>
 
@@ -262,69 +262,64 @@ Resolution Required: Replace with an approved proof point from the locked list.
 
   <base_latex_template>
     <latex_code>
-\documentclass[letterpaper,11pt]{article}
-\usepackage{latexsym}
+\documentclass[11pt,letterpaper]{article}
 \usepackage[empty]{fullpage}
-\usepackage{titlesec}
-\usepackage{marvosym}
-\usepackage[usenames,dvipsnames]{color}
-\usepackage{verbatim}
-\usepackage{enumitem}
 \usepackage[hidelinks]{hyperref}
-\usepackage{fancyhdr}
 \usepackage[english]{babel}
-\usepackage{tabularx}
 \usepackage{fontawesome5}
-\usepackage{multicol}
-\setlength{\multicolsep}{-3.0pt}
-\setlength{\columnsep}{-1pt}
-\ifdefined\pdfgentounicode
-\input{glyphtounicode}
-\pdfgentounicode=1
-\fi
-\pagestyle{fancy}
-\fancyhf{}
-\fancyfoot{}
-\renewcommand{\headrulewidth}{0pt}
-\renewcommand{\footrulewidth}{0pt}
-\addtolength{\oddsidemargin}{-0.7in}
-\addtolength{\evensidemargin}{-0.7in}
-\addtolength{\textwidth}{1.4in}
-\addtolength{\topmargin}{-0.8in}
-\addtolength{\textheight}{1.6in}
-\urlstyle{same}
-\raggedbottom
+\usepackage{xcolor}
+
+\addtolength{\oddsidemargin}{-0.6in}
+\addtolength{\evensidemargin}{-0.6in}
+\addtolength{\textwidth}{1.2in}
+\addtolength{\topmargin}{-0.7in}
+\addtolength{\textheight}{1.4in}
+
+\pagestyle{empty}
 \raggedright
-\setlength{\tabcolsep}{0in}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{8pt}
+
 \begin{document}
+
+%----------HEADING----------
 \begin{center}
 {\Huge \scshape Yash Anghan} \\ \vspace{2pt}
 \small \raisebox{-0.1\height}\faEnvelope\ \href{mailto:yashanghan97@gmail.com}{yashanghan97@gmail.com} ~
 \raisebox{-0.1\height}\faPhone\ +1 (437) 290-2005 ~
 \href{https://www.linkedin.com/in/yash-aiautomation/}{\raisebox{-0.2\height}\faLinkedin\ \underline{Linkedin}} ~
 \href{https://github.com/yash-ai-automation}{\raisebox{-0.2\height}\faGithub\ \underline{GitHub}} ~
-\href{https://yash-anghan-ai-automatio-15hmplk.gamma.site/}{\raisebox{-0.2\height}\faGlobe\ \underline{Portfolio}}
-\vspace{8pt}
+\vspace{-8pt}
 \end{center}
-\hfill [INSERT_DATE_YYYY-MM-DD]
-\vspace{12pt}
 
-Dear Hiring Manager,\par\vspace{6pt}
+\vspace{-17pt}
+\noindent\rule{\textwidth}{0.4pt}
+\vspace{4pt}
+
+%----------DATE & ADDRESS----------
+[INSERT_DATE_LONG]
+
+Hiring Manager \\
+[INSERT_COMPANY_NAME] \\
+[INSERT_COMPANY_LOCATION]
+
+\textbf{Re: [INSERT_ROLE_TITLE]}
+
+%----------BODY----------
+Dear Hiring Manager,
 
 [PARAGRAPH 1: Hook -- 3-4 sentences. Names role + company. Leads with exit-story. One hero metric.]
-\par\vspace{6pt}
 
 [PARAGRAPH 2: Why I match -- 4-5 sentences. JD keyword echo. 2-3 approved proof points. \textbf{} on at least 2 high-priority JD keywords echoing the resume; the total across all paragraphs is 4-7 (see Phase 4).]
-\par\vspace{6pt}
 
 [PARAGRAPH 3: Why this company -- 3-4 sentences. Specific JD-supplied company detail. Why it matters to candidate.]
-\par\vspace{6pt}
 
 [PARAGRAPH 4: Close -- 2-3 sentences. Forward-looking action line.]
-\par\vspace{12pt}
 
-Sincerely,\\
+Sincerely,
+
 Yash Anghan
+
 \end{document}
     </latex_code>
   </base_latex_template>
@@ -336,7 +331,13 @@ Yash Anghan
     <step number="4">Phase 4 -> Inject \textbf{} keywords + LaTeX escapes</step>
     <step number="5">Phase 5 -> Run verification checks</step>
     <step number="6">Phase 6 -> Score, then apply output rules priority hierarchy</step>
-    <step number="7">Replace [INSERT_DATE_YYYY-MM-DD] in the LaTeX output with today's ISO date (e.g., 2026-05-08).</step>
+    <step number="7">Substitute the four template placeholders in the LaTeX output:
+      - [INSERT_DATE_LONG] -> today's date as `Month DD, YYYY` with zero-padded day (e.g., `May 08, 2026`).
+      - [INSERT_COMPANY_NAME] -> JD frontmatter `company` field verbatim.
+      - [INSERT_COMPANY_LOCATION] -> JD frontmatter `location` field verbatim; if missing/null/empty, OMIT the location line entirely (do NOT leave the placeholder text or an empty line).
+      - [INSERT_ROLE_TITLE] -> JD frontmatter `role` field verbatim.
+    </step>
+    <step number="8">Replace each [PARAGRAPH N: ...] placeholder in the LaTeX with the actual paragraph composed in Phase 2 (4 body paragraphs total).</step>
   </execution_command>
 </cover_letter_optimization_system>
 ```
