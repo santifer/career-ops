@@ -663,6 +663,88 @@ test('compile-resume: works when invoked from non-project-root cwd', async () =>
   }
 });
 
+test('compile-cover-letter: good .tex produces a real PDF', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'yrp-test-'));
+  await mkdirTest(join(dir, 'cover-letters'), { recursive: true });
+  await copyFile(resolve(ROOT, 'tests/fixtures/cover-letter-good.tex'), join(dir, 'cover-letters/test.tex'));
+  await copyFile(resolve(ROOT, 'generate-pdf-latex.mjs'), join(dir, 'generate-pdf-latex.mjs'));
+  try {
+    const { stdout } = await execFileP('node', [SCRIPT,
+      'compile-cover-letter', '--tex', 'cover-letters/test.tex', '--pdf', 'cover-letters/test.pdf',
+    ], { cwd: dir, timeout: 60000 });
+    const obj = JSON.parse(stdout.trim());
+    assert.equal(obj.status, 'ok');
+    assert.equal(obj.pdf_path, 'cover-letters/test.pdf');
+    const st = await statTest(join(dir, 'cover-letters/test.pdf'));
+    assert.ok(st.size > 100, 'PDF should be non-trivial size');
+    // Stray-.log cleanup parity with compile-resume:
+    let strayLogStillExists = false;
+    try {
+      await statTest(join(dir, 'cover-letters/test.log'));
+      strayLogStillExists = true;
+    } catch {}
+    assert.equal(strayLogStillExists, false, 'Tectonic .log must be cleaned from cover-letters/');
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('compile-cover-letter: bad .tex returns fail and still cleans up stray .log', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'yrp-test-'));
+  await mkdirTest(join(dir, 'cover-letters'), { recursive: true });
+  await copyFile(resolve(ROOT, 'tests/fixtures/cover-letter-bad.tex'), join(dir, 'cover-letters/bad.tex'));
+  await copyFile(resolve(ROOT, 'generate-pdf-latex.mjs'), join(dir, 'generate-pdf-latex.mjs'));
+  try {
+    let code = 0, stdout = '';
+    try {
+      const r = await execFileP('node', [SCRIPT,
+        'compile-cover-letter', '--tex', 'cover-letters/bad.tex', '--pdf', 'cover-letters/bad.pdf',
+      ], { cwd: dir, timeout: 60000 });
+      stdout = r.stdout.trim();
+    } catch (e) {
+      code = e.code ?? 1;
+      stdout = (e.stdout ?? '').trim();
+    }
+    assert.equal(code, 1);
+    const obj = JSON.parse(stdout);
+    assert.equal(obj.status, 'fail');
+    assert.match(obj.error, /tectonic|exit/i);
+    // Failure-path cleanup:
+    let strayLogStillExists = false;
+    try {
+      await statTest(join(dir, 'cover-letters/bad.log'));
+      strayLogStillExists = true;
+    } catch {}
+    assert.equal(strayLogStillExists, false, 'Stray .log must be cleaned even on tectonic failure');
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('compile-cover-letter: missing tex file returns fail', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'yrp-test-'));
+  await mkdirTest(join(dir, 'cover-letters'), { recursive: true });
+  await copyFile(resolve(ROOT, 'generate-pdf-latex.mjs'), join(dir, 'generate-pdf-latex.mjs'));
+  try {
+    let code = 0, stdout = '';
+    try {
+      const r = await execFileP('node', [SCRIPT,
+        'compile-cover-letter', '--tex', 'cover-letters/nonexistent.tex', '--pdf', 'cover-letters/x.pdf',
+      ], { cwd: dir, timeout: 30000 });
+      stdout = r.stdout.trim();
+    } catch (e) {
+      code = e.code ?? 1;
+      stdout = (e.stdout ?? '').trim();
+    }
+    assert.equal(code, 1);
+    const obj = JSON.parse(stdout);
+    assert.equal(obj.status, 'fail');
+    assert.match(obj.error, /tex file not found/i);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test('buildCoverLetterTexPath: returns /tmp/<slug>_Cover_Letter_<date>.tex', () => {
   const result = buildCoverLetterTexPath('LeagueInc', 'SeniorAiEngineer', '2026-05-08');
   assert.equal(result, '/tmp/LeagueInc_SeniorAiEngineer_Yash_Anghan_Cover_Letter_2026-05-08.tex');

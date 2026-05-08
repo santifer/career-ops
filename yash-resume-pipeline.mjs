@@ -322,6 +322,31 @@ SUBCOMMANDS['compile-resume'] = async (args) => {
   }
 };
 
+SUBCOMMANDS['compile-cover-letter'] = async (args) => {
+  const tex = args.tex;
+  const pdf = args.pdf;
+  if (!tex || !pdf) fail('compile-cover-letter requires --tex and --pdf');
+  const texAbs = resolve(projectRoot(), tex);
+  const pdfAbs = resolve(projectRoot(), pdf);
+  if (!(await fileExists(texAbs))) fail(`tex file not found: ${tex}`);
+  await mkdir(dirname(pdfAbs), { recursive: true });
+  // tectonic --keep-logs drops <texBasename>.log next to the PDF; cover-letters/ must hold only the PDF.
+  const strayLog = resolve(dirname(pdfAbs), basename(texAbs, '.tex') + '.log');
+  try {
+    const { stdout, stderr } = await execFileP('node', [pdfGeneratorPath(), texAbs, pdfAbs], { timeout: 120000 });
+    const combined = ((stdout || '') + (stderr || '')).split('\n').slice(-10).join('\n');
+    if (!(await fileExists(pdfAbs))) {
+      fail('compile produced no PDF', { tectonic_log_tail: combined });
+    }
+    await unlink(strayLog).catch(() => {});
+    ok({ pdf_path: pdf, tectonic_log_tail: combined });
+  } catch (e) {
+    const combined = ((e.stdout || '') + (e.stderr || '')).split('\n').slice(-15).join('\n');
+    await unlink(strayLog).catch(() => {});
+    fail(`tectonic exit ${e.code ?? '?'}: ${e.message}`, { tectonic_log_tail: combined });
+  }
+};
+
 // === Dispatcher (CLI mode only) ===
 async function main() {
   const subcommand = process.argv[2];
