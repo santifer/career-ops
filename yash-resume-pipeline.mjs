@@ -47,6 +47,15 @@ export function buildTexPath(company_slug, role_slug, date) {
 export function buildSidecarLogPath(company_slug, role_slug, date) {
   return `resume-logs/${company_slug}_${role_slug}_Yash_Anghan_Resume_${date}.log`;
 }
+export function buildCoverLetterTexPath(company_slug, role_slug, date) {
+  return `/tmp/${company_slug}_${role_slug}_Yash_Anghan_Cover_Letter_${date}.tex`;
+}
+export function buildCoverLetterPdfPath(company_slug, role_slug, date) {
+  return `cover-letters/${company_slug}_${role_slug}_Yash_Anghan_Cover_Letter_${date}.pdf`;
+}
+export function buildCoverLetterLogPath(company_slug, role_slug, date) {
+  return `cover-letter-logs/${company_slug}_${role_slug}_Yash_Anghan_Cover_Letter_${date}.log`;
+}
 
 export function ok(payload = {}) {
   process.stdout.write(JSON.stringify({ status: 'ok', ...payload }) + '\n');
@@ -213,12 +222,24 @@ SUBCOMMANDS['check-duplicate'] = async (args) => {
   if (!cs || !rs || !date) fail('check-duplicate requires --company-slug, --role-slug, --date');
   const jd_rel = buildJdPath(cs, rs, date);
   const pdf_rel = buildPdfPath(cs, rs, date);
+  const cl_rel = buildCoverLetterPdfPath(cs, rs, date);
   const jd_abs = resolve(projectRoot(), jd_rel);
   const pdf_abs = resolve(projectRoot(), pdf_rel);
+  const cl_abs = resolve(projectRoot(), cl_rel);
   const which = [];
   if (await fileExists(jd_abs)) which.push('jd');
   if (await fileExists(pdf_abs)) which.push('pdf');
-  ok({ exists: which.length > 0, which, jd_path: jd_rel, pdf_path: pdf_rel });
+  // Cover letter is reported but does NOT trigger the dedup gate
+  // (dedup gate is JD+PDF; cover-letter alone shouldn't block reruns).
+  const cover_letter_exists = await fileExists(cl_abs);
+  ok({
+    exists: which.length > 0,
+    which,
+    jd_path: jd_rel,
+    pdf_path: pdf_rel,
+    cover_letter_exists,
+    cover_letter_path: cl_rel,
+  });
 };
 
 SUBCOMMANDS['mark-processed'] = async (args) => {
@@ -230,11 +251,20 @@ SUBCOMMANDS['mark-processed'] = async (args) => {
   if (company.includes('|') || role.includes('|')) {
     fail('--company and --role cannot contain `|` (used as field separator in pipeline.md)');
   }
+  const coverLetter = args['cover-letter'];
+  const coverLetterStatus = args['cover-letter-status'];
+  if (coverLetter && coverLetterStatus && !['ok', 'fail'].includes(coverLetterStatus)) {
+    fail('--cover-letter-status must be ok or fail');
+  }
   const content = await readPipeline();
   const { lines } = parsePipelineSections(content);
   const cleaned = removeUrlLines(lines, url);
   const procesadasIdx = findSectionStart(cleaned, 'Procesadas');
-  const newLine = `- [x] ${url} | ${company} | ${role} | JD ✅ | Resume ✅ | Score ${score}/100`;
+  let newLine = `- [x] ${url} | ${company} | ${role} | JD ✅ | Resume ✅ | Score ${score}/100`;
+  if (coverLetter) {
+    const clMark = coverLetterStatus === 'fail' ? 'CL ❌' : 'CL ✅';
+    newLine += ` | ${clMark} | ${coverLetter}`;
+  }
   const updated = insertAtSectionEnd(cleaned, procesadasIdx, newLine);
   await writePipelineAtomic(updated.join('\n'));
   ok({});
@@ -281,6 +311,15 @@ SUBCOMMANDS['log'] = async (args) => {
     if (k === 'reason' && args[k] !== undefined) payload[k] = sanitizeReason(args[k]);
     else if (args[k] !== undefined) payload[k] = args[k];
   }
+  // Cover-letter additive fields (CLI args use kebab-case; payload keys use snake_case for parity with V2.0 patterns)
+  if (args['cover-letter'] !== undefined) payload.cover_letter_pdf = args['cover-letter'];
+  if (args['cover-letter-score'] !== undefined) payload.cover_letter_score = args['cover-letter-score'];
+  if (args['cover-letter-status'] !== undefined) {
+    if (!['ok', 'fail'].includes(args['cover-letter-status'])) {
+      fail('--cover-letter-status must be ok or fail');
+    }
+    payload.cover_letter_status = args['cover-letter-status'];
+  }
 
   const logPath = runsLogPath();
   await mkdir(dirname(logPath), { recursive: true });
@@ -296,15 +335,44 @@ SUBCOMMANDS['compile-resume'] = async (args) => {
   const pdfAbs = resolve(projectRoot(), pdf);
   if (!(await fileExists(texAbs))) fail(`tex file not found: ${tex}`);
   await mkdir(dirname(pdfAbs), { recursive: true });
+  // tectonic --keep-logs drops <texBasename>.log next to the PDF; resumes/ must hold only the PDF.
+  const strayLog = resolve(dirname(pdfAbs), basename(texAbs, '.tex') + '.log');
   try {
     const { stdout, stderr } = await execFileP('node', [pdfGeneratorPath(), texAbs, pdfAbs], { timeout: 120000 });
     const combined = ((stdout || '') + (stderr || '')).split('\n').slice(-10).join('\n');
     if (!(await fileExists(pdfAbs))) {
       fail('compile produced no PDF', { tectonic_log_tail: combined });
     }
+    await unlink(strayLog).catch(() => {});
     ok({ pdf_path: pdf, tectonic_log_tail: combined });
   } catch (e) {
     const combined = ((e.stdout || '') + (e.stderr || '')).split('\n').slice(-15).join('\n');
+    await unlink(strayLog).catch(() => {});
+    fail(`tectonic exit ${e.code ?? '?'}: ${e.message}`, { tectonic_log_tail: combined });
+  }
+};
+
+SUBCOMMANDS['compile-cover-letter'] = async (args) => {
+  const tex = args.tex;
+  const pdf = args.pdf;
+  if (!tex || !pdf) fail('compile-cover-letter requires --tex and --pdf');
+  const texAbs = resolve(projectRoot(), tex);
+  const pdfAbs = resolve(projectRoot(), pdf);
+  if (!(await fileExists(texAbs))) fail(`tex file not found: ${tex}`);
+  await mkdir(dirname(pdfAbs), { recursive: true });
+  // tectonic --keep-logs drops <texBasename>.log next to the PDF; cover-letters/ must hold only the PDF.
+  const strayLog = resolve(dirname(pdfAbs), basename(texAbs, '.tex') + '.log');
+  try {
+    const { stdout, stderr } = await execFileP('node', [pdfGeneratorPath(), texAbs, pdfAbs], { timeout: 120000 });
+    const combined = ((stdout || '') + (stderr || '')).split('\n').slice(-10).join('\n');
+    if (!(await fileExists(pdfAbs))) {
+      fail('compile produced no PDF', { tectonic_log_tail: combined });
+    }
+    await unlink(strayLog).catch(() => {});
+    ok({ pdf_path: pdf, tectonic_log_tail: combined });
+  } catch (e) {
+    const combined = ((e.stdout || '') + (e.stderr || '')).split('\n').slice(-15).join('\n');
+    await unlink(strayLog).catch(() => {});
     fail(`tectonic exit ${e.code ?? '?'}: ${e.message}`, { tectonic_log_tail: combined });
   }
 };

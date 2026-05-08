@@ -19,6 +19,10 @@ resumes/*
 !resumes/.gitkeep
 resume-logs/*
 !resume-logs/.gitkeep
+cover-letters/*
+!cover-letters/.gitkeep
+cover-letter-logs/*
+!cover-letter-logs/.gitkeep
 data/yash-resume-runs.log
 data/follow-ups.md
 data/*.bak

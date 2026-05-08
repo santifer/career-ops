@@ -7,7 +7,13 @@ import { resolve, dirname } from 'node:path';
 import { mkdtemp, rm, writeFile as writeFileTest, mkdir as mkdirTest, readFile as readFileTest, copyFile, stat as statTest } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { parseArgs, slugify } from '../yash-resume-pipeline.mjs';
+import {
+  parseArgs,
+  slugify,
+  buildCoverLetterTexPath,
+  buildCoverLetterPdfPath,
+  buildCoverLetterLogPath,
+} from '../yash-resume-pipeline.mjs';
 
 async function makeTempPipelineFile(content) {
   const dir = await mkdtemp(join(tmpdir(), 'yrp-test-'));
@@ -652,6 +658,217 @@ test('compile-resume: works when invoked from non-project-root cwd', async () =>
     ], { cwd: dir, timeout: 60000 });
     const obj = JSON.parse(stdout.trim());
     assert.equal(obj.status, 'ok');
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('compile-cover-letter: good .tex produces a real PDF', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'yrp-test-'));
+  await mkdirTest(join(dir, 'cover-letters'), { recursive: true });
+  await copyFile(resolve(ROOT, 'tests/fixtures/cover-letter-good.tex'), join(dir, 'cover-letters/test.tex'));
+  await copyFile(resolve(ROOT, 'generate-pdf-latex.mjs'), join(dir, 'generate-pdf-latex.mjs'));
+  try {
+    const { stdout } = await execFileP('node', [SCRIPT,
+      'compile-cover-letter', '--tex', 'cover-letters/test.tex', '--pdf', 'cover-letters/test.pdf',
+    ], { cwd: dir, timeout: 60000 });
+    const obj = JSON.parse(stdout.trim());
+    assert.equal(obj.status, 'ok');
+    assert.equal(obj.pdf_path, 'cover-letters/test.pdf');
+    const st = await statTest(join(dir, 'cover-letters/test.pdf'));
+    assert.ok(st.size > 100, 'PDF should be non-trivial size');
+    // Stray-.log cleanup parity with compile-resume:
+    let strayLogStillExists = false;
+    try {
+      await statTest(join(dir, 'cover-letters/test.log'));
+      strayLogStillExists = true;
+    } catch {}
+    assert.equal(strayLogStillExists, false, 'Tectonic .log must be cleaned from cover-letters/');
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('compile-cover-letter: bad .tex returns fail and still cleans up stray .log', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'yrp-test-'));
+  await mkdirTest(join(dir, 'cover-letters'), { recursive: true });
+  await copyFile(resolve(ROOT, 'tests/fixtures/cover-letter-bad.tex'), join(dir, 'cover-letters/bad.tex'));
+  await copyFile(resolve(ROOT, 'generate-pdf-latex.mjs'), join(dir, 'generate-pdf-latex.mjs'));
+  try {
+    let code = 0, stdout = '';
+    try {
+      const r = await execFileP('node', [SCRIPT,
+        'compile-cover-letter', '--tex', 'cover-letters/bad.tex', '--pdf', 'cover-letters/bad.pdf',
+      ], { cwd: dir, timeout: 60000 });
+      stdout = r.stdout.trim();
+    } catch (e) {
+      code = e.code ?? 1;
+      stdout = (e.stdout ?? '').trim();
+    }
+    assert.equal(code, 1);
+    const obj = JSON.parse(stdout);
+    assert.equal(obj.status, 'fail');
+    assert.match(obj.error, /tectonic|exit/i);
+    // Failure-path cleanup:
+    let strayLogStillExists = false;
+    try {
+      await statTest(join(dir, 'cover-letters/bad.log'));
+      strayLogStillExists = true;
+    } catch {}
+    assert.equal(strayLogStillExists, false, 'Stray .log must be cleaned even on tectonic failure');
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('compile-cover-letter: missing tex file returns fail', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'yrp-test-'));
+  await mkdirTest(join(dir, 'cover-letters'), { recursive: true });
+  await copyFile(resolve(ROOT, 'generate-pdf-latex.mjs'), join(dir, 'generate-pdf-latex.mjs'));
+  try {
+    let code = 0, stdout = '';
+    try {
+      const r = await execFileP('node', [SCRIPT,
+        'compile-cover-letter', '--tex', 'cover-letters/nonexistent.tex', '--pdf', 'cover-letters/x.pdf',
+      ], { cwd: dir, timeout: 30000 });
+      stdout = r.stdout.trim();
+    } catch (e) {
+      code = e.code ?? 1;
+      stdout = (e.stdout ?? '').trim();
+    }
+    assert.equal(code, 1);
+    const obj = JSON.parse(stdout);
+    assert.equal(obj.status, 'fail');
+    assert.match(obj.error, /tex file not found/i);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('buildCoverLetterTexPath: returns /tmp/<slug>_Cover_Letter_<date>.tex', () => {
+  const result = buildCoverLetterTexPath('LeagueInc', 'SeniorAiEngineer', '2026-05-08');
+  assert.equal(result, '/tmp/LeagueInc_SeniorAiEngineer_Yash_Anghan_Cover_Letter_2026-05-08.tex');
+});
+
+test('buildCoverLetterPdfPath: returns cover-letters/<slug>_Cover_Letter_<date>.pdf', () => {
+  const result = buildCoverLetterPdfPath('LeagueInc', 'SeniorAiEngineer', '2026-05-08');
+  assert.equal(result, 'cover-letters/LeagueInc_SeniorAiEngineer_Yash_Anghan_Cover_Letter_2026-05-08.pdf');
+});
+
+test('buildCoverLetterLogPath: returns cover-letter-logs/<slug>_Cover_Letter_<date>.log', () => {
+  const result = buildCoverLetterLogPath('LeagueInc', 'SeniorAiEngineer', '2026-05-08');
+  assert.equal(result, 'cover-letter-logs/LeagueInc_SeniorAiEngineer_Yash_Anghan_Cover_Letter_2026-05-08.log');
+});
+
+test('mark-processed: with --cover-letter and --cover-letter-status appends cl: and cl-status: fields', async () => {
+  const dir = await makeTempPipelineFile([
+    '## Pendientes',
+    '- [ ] https://example.com/job',
+    '## Procesadas',
+  ].join('\n'));
+  try {
+    await execFileP('node', [SCRIPT,
+      'mark-processed',
+      '--url', 'https://example.com/job',
+      '--company', 'Acme',
+      '--role', 'AI Engineer',
+      '--jd', 'jds/JD_Acme_AiEngineer_Yash_Anghan_2026-05-08.md',
+      '--pdf', 'resumes/Acme_AiEngineer_Yash_Anghan_Resume_2026-05-08.pdf',
+      '--score', '95',
+      '--cover-letter', 'cover-letters/Acme_AiEngineer_Yash_Anghan_Cover_Letter_2026-05-08.pdf',
+      '--cover-letter-status', 'ok',
+    ], { cwd: dir });
+    const content = await readFileTest(join(dir, 'data/pipeline.md'), 'utf-8');
+    assert.match(content, /- \[x\] https:\/\/example\.com\/job/);
+    assert.match(content, /CL ✅/);
+    assert.match(content, /cover-letters\/Acme_AiEngineer_Yash_Anghan_Cover_Letter_2026-05-08\.pdf/);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('mark-processed: without --cover-letter omits cl: fields (backward compat)', async () => {
+  const dir = await makeTempPipelineFile([
+    '## Pendientes',
+    '- [ ] https://example.com/job',
+    '## Procesadas',
+  ].join('\n'));
+  try {
+    await execFileP('node', [SCRIPT,
+      'mark-processed',
+      '--url', 'https://example.com/job',
+      '--company', 'Acme',
+      '--role', 'Engineer',
+      '--jd', 'a',
+      '--pdf', 'b',
+      '--score', '90',
+    ], { cwd: dir });
+    const content = await readFileTest(join(dir, 'data/pipeline.md'), 'utf-8');
+    assert.match(content, /- \[x\] https:\/\/example\.com\/job/);
+    assert.doesNotMatch(content, /CL ✅|CL ❌|cl-status/);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('log: with --cover-letter and --cover-letter-score and --cover-letter-status records all three fields', async () => {
+  const dir = await makeTempPipelineFile('## Pendientes\n## Procesadas\n');
+  try {
+    await execFileP('node', [SCRIPT,
+      'log',
+      '--status', 'ok',
+      '--url', 'https://example.com/job',
+      '--cover-letter', 'cover-letters/x_y_Yash_Anghan_Cover_Letter_2026-05-08.pdf',
+      '--cover-letter-score', '95',
+      '--cover-letter-status', 'ok',
+    ], { cwd: dir });
+    const content = await readFileTest(join(dir, 'data/yash-resume-runs.log'), 'utf-8');
+    const obj = JSON.parse(content.trim().split('\n').pop());
+    assert.equal(obj.status, 'ok');
+    assert.equal(obj.cover_letter_pdf, 'cover-letters/x_y_Yash_Anghan_Cover_Letter_2026-05-08.pdf');
+    assert.equal(obj.cover_letter_score, '95');
+    assert.equal(obj.cover_letter_status, 'ok');
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('log: without cover-letter args omits the three new fields (backward compat)', async () => {
+  const dir = await makeTempPipelineFile('## Pendientes\n## Procesadas\n');
+  try {
+    await execFileP('node', [SCRIPT,
+      'log',
+      '--status', 'ok',
+      '--url', 'https://example.com/job',
+    ], { cwd: dir });
+    const content = await readFileTest(join(dir, 'data/yash-resume-runs.log'), 'utf-8');
+    const obj = JSON.parse(content.trim().split('\n').pop());
+    assert.ok(!('cover_letter_pdf' in obj), 'cover_letter_pdf should be absent');
+    assert.ok(!('cover_letter_score' in obj), 'cover_letter_score should be absent');
+    assert.ok(!('cover_letter_status' in obj), 'cover_letter_status should be absent');
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('check-duplicate: reports cover_letter_exists field', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'yrp-test-'));
+  await mkdirTest(join(dir, 'cover-letters'), { recursive: true });
+  await writeFileTest(join(dir, 'cover-letters/X_Y_Yash_Anghan_Cover_Letter_2026-05-08.pdf'), '%PDF-1.4 fake');
+  try {
+    const { stdout } = await execFileP('node', [SCRIPT,
+      'check-duplicate',
+      '--company-slug', 'X',
+      '--role-slug', 'Y',
+      '--date', '2026-05-08',
+    ], { cwd: dir });
+    const obj = JSON.parse(stdout.trim());
+    assert.equal(obj.status, 'ok');
+    assert.equal(obj.cover_letter_exists, true);
+    assert.equal(obj.cover_letter_path, 'cover-letters/X_Y_Yash_Anghan_Cover_Letter_2026-05-08.pdf');
+    // The dedup gate (exists/which) is unaffected by cover-letter alone:
+    assert.equal(obj.exists, false, 'JD/resume duplicate gate not triggered by cover-letter alone');
+    assert.deepEqual(obj.which, []);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }

@@ -992,8 +992,7 @@ Resolution Required: Remove lower-priority keywords or redistribute to other cat
 \small \raisebox{-0.1\height}\faEnvelope\ \href{mailto:yashanghan97@gmail.com}{yashanghan97@gmail.com} ~
 \raisebox{-0.1\height}\faPhone\ +1 (437) 290-2005 ~
 \href{https://www.linkedin.com/in/yash-aiautomation/}{\raisebox{-0.2\height}\faLinkedin\ \underline{Linkedin}} ~
-\href{https://github.com/yash-ai-automation}{\raisebox{-0.2\height}\faGithub\ \underline{GitHub}} ~
-\href{https://yash-anghan-ai-automatio-15hmplk.gamma.site/}{\raisebox{-0.2\height}\faGlobe\ \underline{Portfolio}}
+\href{https://github.com/yash-ai-automation}{\raisebox{-0.2\height}\faGithub\ \underline{GitHub}}
 \vspace{-8pt}
 \end{center}
 %-----------WORK EXPERIENCE-----------
