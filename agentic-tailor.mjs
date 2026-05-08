@@ -136,14 +136,34 @@ async function uploadToR2({ key, body, contentType }) {
 
 // ── UTILITIES ──
 
-function renderExperience(exp, tailoredBullets, maxPages = 2) {
+function renderExperience(exp, tailoredBullets, jdText = '', maxPages = 2) {
   if (!Array.isArray(exp) || exp.length === 0) return '';
 
   // Limit bullets per job based on page count
   const maxBulletsPerJob = maxPages >= 3 ? 6 : maxPages >= 2 ? 4 : 3;
+  
+  // Find the most relevant job to apply tailored bullets
+  // Default to most recent (index 0), but if JD is provided, score by relevance
+  let tailoredJobIndex = 0;
+  if (jdText && tailoredBullets && tailoredBullets.length > 0) {
+    const jdLower = jdText.toLowerCase();
+    let bestScore = -1;
+    exp.forEach((job, idx) => {
+      const jobText = `${job.role} ${job.company} ${(job.bullets || []).join(' ')}`.toLowerCase();
+      // Simple relevance: count JD keywords appearing in job text
+      const jdKeywords = jdLower.match(/\b\w{4,}\b/g) || [];
+      const score = jdKeywords.filter(kw => jobText.includes(kw)).length;
+      if (score > bestScore) {
+        bestScore = score;
+        tailoredJobIndex = idx;
+      }
+    });
+  }
 
   return exp.map((job, idx) => {
-    const bullets = (idx === 0 && tailoredBullets)
+    // Apply tailored bullets to the most relevant job, original bullets to others
+    const useTailored = (idx === tailoredJobIndex) && tailoredBullets && tailoredBullets.length > 0;
+    const bullets = useTailored
       ? tailoredBullets.slice(0, maxBulletsPerJob)
       : (job.bullets || []).slice(0, maxBulletsPerJob);
 
@@ -658,8 +678,8 @@ async function tailorPackage(jd, profile, companyName) {
       PROFESSIONAL_HEADLINE: profile.narrative?.headline || 'Professional'
     };
 
-    // 1. GENERATE RESUME - Dynamic length based on experience
-    const experienceToShow = maxPages >= 3 ? profile.experience : profile.experience?.slice(0, maxPages * 2) || [];
+    // 1. GENERATE RESUME - Show ALL experience entries, just limit bullets per job based on page budget
+    const experienceToShow = profile.experience || [];
 
     // Build portfolio link (conditional)
     const portfolioLink = c.github
@@ -680,7 +700,7 @@ async function tailorPackage(jd, profile, companyName) {
 
     const resumeReps = {
       ...commonReps,
-      EXPERIENCE: hasExperience ? renderExperience(experienceToShow, tailoring.experience, maxPages) : '',
+      EXPERIENCE: hasExperience ? renderExperience(experienceToShow, tailoring.experience, jdText, maxPages) : '',
       EXPERIENCE_DISPLAY: hasExperience ? 'block' : 'none',
       EDUCATION: hasEducation ? renderEducation(profile.education) : '',
       EDUCATION_DISPLAY: hasEducation ? 'block' : 'none',

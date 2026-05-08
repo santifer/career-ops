@@ -35,42 +35,86 @@ function parseBullets(block: string) {
 }
 
 function parseExperience(text: string) {
-  // Best-effort parser:
-  // - split by blank lines
-  // - treat first 1-2 lines as "header" then rest as bullets
-  const blocks = text.split(/\n{2,}/).map(b => b.trim()).filter(Boolean);
+  // Improved parser that handles various resume formats
+  // Looks for job entry patterns: Company, Role, Dates, then bullets
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
   const out: any[] = [];
-
-  for (const block of blocks) {
-    const lines = block.split('\n').map(l => l.trim()).filter(Boolean);
-    if (lines.length < 2) continue;
-
-    const header = lines.slice(0, Math.min(2, lines.length)).join(' — ');
-    const bullets = parseBullets(lines.slice(2).join('\n'));
-
-    // Attempt to extract period
-    const periodMatch = header.match(/(20\d{2}\s*[-–]\s*(20\d{2}|present|current))/i);
-    const period = periodMatch ? periodMatch[1].replace(/\s+/g, ' ') : '';
-
-    // Attempt to split company/role
-    let company = '';
-    let role = '';
-    const parts = header.split('—').map(p => p.trim()).filter(Boolean);
-    if (parts.length >= 2) {
-      company = parts[0];
-      role = parts[1];
-    } else {
-      role = header;
+  
+  let currentJob: any = null;
+  let bulletBuffer: string[] = [];
+  
+  // Patterns for detecting job headers
+  const datePattern = /(20\d{2}\s*[-–]\s*(20\d{2}|present|current|now))/i;
+  const rolePattern = /(senior|lead|principal|staff|engineer|developer|manager|architect|consultant|analyst)/i;
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const hasDate = datePattern.test(line);
+    const hasRole = rolePattern.test(line);
+    const isBullet = line.startsWith('•') || line.startsWith('-') || line.startsWith('▸') || 
+                     (/^\d+\./.test(line)) ||
+                     (line.length > 20 && !hasDate && !hasRole && currentJob);
+    
+    // New job detection: line with date and/or company+role combo
+    if (hasDate || (hasRole && (line.includes('—') || line.includes('|') || line.includes('at') || line.includes(',')))) {
+      // Save previous job if exists
+      if (currentJob) {
+        currentJob.bullets = bulletBuffer;
+        out.push(currentJob);
+      }
+      
+      // Parse new job header
+      const dateMatch = line.match(datePattern);
+      const period = dateMatch ? dateMatch[0].replace(/\s+/g, ' ') : '';
+      
+      // Try to extract company and role
+      let company = '';
+      let role = line;
+      
+      // Common separators: — | at , 
+      const separators = [' — ', ' | ', ' - ', ' at ', ', ', ' – '];
+      for (const sep of separators) {
+        if (line.includes(sep)) {
+          const parts = line.split(sep).map(p => p.trim()).filter(Boolean);
+          if (parts.length >= 2) {
+            // Heuristic: part with date is usually company+role, other part is the other field
+            const partWithDate = parts.find(p => datePattern.test(p)) || parts[0];
+            const partWithoutDate = parts.find(p => !datePattern.test(p)) || parts[1];
+            
+            if (rolePattern.test(partWithoutDate)) {
+              role = partWithoutDate;
+              company = partWithDate.replace(datePattern, '').trim();
+            } else {
+              role = partWithDate.replace(datePattern, '').trim();
+              company = partWithoutDate;
+            }
+            break;
+          }
+        }
+      }
+      
+      currentJob = { company, role, period, bullets: [] };
+      bulletBuffer = [];
+    } else if (currentJob && isBullet) {
+      // This is a bullet point for current job
+      const cleanBullet = line.replace(/^[•\-▸]\s*/, '').trim();
+      if (cleanBullet.length > 10) {
+        bulletBuffer.push(cleanBullet);
+      }
+    } else if (currentJob && line.length > 10 && line.length < 100) {
+      // Might be a continuation or additional info
+      bulletBuffer.push(line);
     }
-
-    out.push({
-      company,
-      role,
-      period,
-      bullets,
-    });
   }
-  return out.slice(0, 8);
+  
+  // Don't forget the last job
+  if (currentJob) {
+    currentJob.bullets = bulletBuffer;
+    out.push(currentJob);
+  }
+  
+  // Filter out entries with no real content
+  return out.filter(j => j.company || j.role || j.bullets.length > 0).slice(0, 10);
 }
 
 function parseEducation(text: string) {
