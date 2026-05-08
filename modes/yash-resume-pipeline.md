@@ -128,20 +128,85 @@ Repeat until queue empty, user quits, or 3 consecutive failures:
     status: compiled | compiled-review-recommended  (review-recommended if score < 90)
     ```
 
+9b. **Apply the cover-letter prompt:**
+
+    Read `cover-letter-system-based-on-jd-and-resume.md` and apply it
+    in-context to:
+    - the JD body from `jds/JD_<c>_<r>_Yash_Anghan_<d>.md` (written in step 6)
+    - the tailored resume LaTeX from `/tmp/<c>_<r>_Yash_Anghan_Resume_<d>.tex` (written in step 8)
+
+    The prompt's output rules govern the response. Possible outputs:
+
+    a) Just LaTeX (score >= 90)
+    b) `OPTIMIZATION INCOMPLETE — Score: X/100` + deficiencies + LaTeX
+    c) `CONTEXTUALIZATION DEFICIENCY DETECTED` + reason + LaTeX
+    d) `PARAGRAPH_COUNT_ERROR — CANNOT PROCEED` (no LaTeX, hard fail)
+    e) `PROOF_POINT_VIOLATION — CANNOT PROCEED` (no LaTeX, hard fail)
+
+    **Parse the output:**
+    - Find the first occurrence of `\documentclass`.
+    - If present: everything before it = deficiency log; everything from
+      `\documentclass` to end = LaTeX block.
+    - If absent: cover-letter step fails. Skip 10b–11b. Write the
+      sidecar `.log` (step 12b) with `status: failed` and the full output.
+      Print warning to user. Do NOT mark URL failed — the resume PDF is
+      already on disk; the URL still gets marked processed at step 11.
+
+10b. **Write cover-letter `.tex`:** save the LaTeX block (from
+     `\documentclass` onward) to
+     `/tmp/<c>_<r>_Yash_Anghan_Cover_Letter_<d>.tex`. Never write to
+     `cover-letters/` (PDFs only).
+
+11b. **Compile cover letter to PDF:**
+
+     ```bash
+     node yash-resume-pipeline.mjs compile-cover-letter \
+         --tex /tmp/<c>_<r>_Yash_Anghan_Cover_Letter_<d>.tex \
+         --pdf cover-letters/<c>_<r>_Yash_Anghan_Cover_Letter_<d>.pdf
+     ```
+
+     If `status: fail`:
+     - Skip the cover-letter PDF — but the stray-`.log` cleanup runs
+       inside the subcommand on both success and failure paths, so
+       `cover-letters/` stays clean.
+     - Write the sidecar `.log` (step 12b) with `status: failed` and
+       `tectonic_log_tail` from the response.
+     - Print warning. URL still marked processed at step 11.
+
+12b. **Write cover-letter sidecar `.log`** to
+     `cover-letter-logs/<c>_<r>_Yash_Anghan_Cover_Letter_<d>.log`:
+
+     ```
+     score: <X>/100
+     deficiencies: <text captured before \documentclass; or "none">
+     status: compiled | compiled-review-recommended | failed
+     resume_keywords_echoed: <count>
+     ```
+
 11. **Mark processed and log:**
 
     ```bash
     node yash-resume-pipeline.mjs mark-processed \
         --url <url> --company "<c>" --role "<r>" \
-        --jd <jd-path> --pdf <pdf-path> --score <X>
+        --jd <jd-path> --pdf <pdf-path> --score <X> \
+        --cover-letter <cover-letter-pdf-path-or-omitted-on-fail> \
+        --cover-letter-status <ok|fail>
 
     node yash-resume-pipeline.mjs log \
         --status ok --url <url> \
         --slug <c>_<r> --score <X> \
-        --jd <jd-path> --pdf <pdf-path>
+        --jd <jd-path> --pdf <pdf-path> \
+        --cover-letter <cover-letter-pdf-path-or-omitted> \
+        --cover-letter-score <X-or-omitted> \
+        --cover-letter-status <ok|fail>
     ```
 
-12. **Report to user:** print the JD path, PDF path, score, and any review flag.
+    Omit cover-letter args when the cover-letter step failed at 9b
+    (no LaTeX) or 11b (compile crashed).
+
+12. **Report to user:** print the JD path, resume PDF path,
+    cover-letter PDF path (or `<absent — see warning>`), resume score,
+    cover-letter score, and any review/warning flags.
 
 13. **Ask user:** "continue with next URL? (yes / quit)"
 
@@ -164,3 +229,10 @@ Repeat until queue empty, user quits, or 3 consecutive failures:
   user once. If they can't say, mark failed.
 - **Never modify** `resume-optimization-system-based-on-job-description.md`,
   `generate-pdf-latex.mjs`, or the existing `pipeline`/`auto-pipeline` modes.
+- **Cover letter is best-effort.** A cover-letter failure (V2.0 hard-fail or
+  tectonic crash) does NOT mark the URL failed when the resume PDF already
+  succeeded. The URL is marked processed with a warning, and the cover-letter
+  sidecar `.log` records the reason. Cover-letter failures do NOT count toward
+  the 3-consecutive-failures backoff.
+- **Never modify** `cover-letter-system-based-on-jd-and-resume.md` during a run
+  (same discipline as the resume prompt).
