@@ -1138,7 +1138,7 @@ export default function Dashboard() {
               <div id="terminal-logs" className="flex-1 p-8 font-mono text-sm overflow-y-auto whitespace-pre-wrap bg-white text-[#292524] scroll-smooth leading-relaxed select-text cursor-text">
                  {logs.length === 0 && !isExecuting ? (
                    <div className="select-text">
-                     <pre className="font-mono text-[10px] sm:text-xs text-[#a8a29e] mb-6 leading-tight">
+                     <pre className="font-mono text-[10px] sm:text-xs text-[#1c1917] mb-6 leading-tight font-bold">
 {`   _____                           ____            
   / ___/___ _________  ___  _____ / __ \\____  _____
  / /__ / __ \`/ ___/ _ \\/ _ \\/ ___// / / / __ \\/ ___/
@@ -1152,6 +1152,7 @@ System Initialized — v2.0`}
                        <p><strong className="text-[#57534e]">2. rank --deep</strong> <span className="text-[#a8a29e]">→</span> Score and rank discovered roles</p>
                        <p><strong className="text-[#57534e]">3. tailor &lt;id&gt; --deep</strong> <span className="text-[#a8a29e]">→</span> Generate hyper-custom Resumes & Cover Letters</p>
                        <p><strong className="text-[#57534e]">4. apply &lt;id&gt; --deep</strong> <span className="text-[#a8a29e]">→</span> Automatically apply to role</p>
+                       <p><strong className="text-[#57534e]">5. add &lt;url&gt;</strong> <span className="text-[#a8a29e]">→</span> Scrape & add job to pipeline</p>
                        <br/>
                        <p><strong className="text-[#57534e]">help</strong>        <span className="text-[#a8a29e]">→</span> View full command reference</p>
                        <br/>
