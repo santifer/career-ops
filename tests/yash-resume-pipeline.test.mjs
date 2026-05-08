@@ -7,7 +7,13 @@ import { resolve, dirname } from 'node:path';
 import { mkdtemp, rm, writeFile as writeFileTest, mkdir as mkdirTest, readFile as readFileTest, copyFile, stat as statTest } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { parseArgs, slugify } from '../yash-resume-pipeline.mjs';
+import {
+  parseArgs,
+  slugify,
+  buildCoverLetterTexPath,
+  buildCoverLetterPdfPath,
+  buildCoverLetterLogPath,
+} from '../yash-resume-pipeline.mjs';
 
 async function makeTempPipelineFile(content) {
   const dir = await mkdtemp(join(tmpdir(), 'yrp-test-'));
@@ -655,4 +661,19 @@ test('compile-resume: works when invoked from non-project-root cwd', async () =>
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
+});
+
+test('buildCoverLetterTexPath: returns /tmp/<slug>_Cover_Letter_<date>.tex', () => {
+  const result = buildCoverLetterTexPath('LeagueInc', 'SeniorAiEngineer', '2026-05-08');
+  assert.equal(result, '/tmp/LeagueInc_SeniorAiEngineer_Yash_Anghan_Cover_Letter_2026-05-08.tex');
+});
+
+test('buildCoverLetterPdfPath: returns cover-letters/<slug>_Cover_Letter_<date>.pdf', () => {
+  const result = buildCoverLetterPdfPath('LeagueInc', 'SeniorAiEngineer', '2026-05-08');
+  assert.equal(result, 'cover-letters/LeagueInc_SeniorAiEngineer_Yash_Anghan_Cover_Letter_2026-05-08.pdf');
+});
+
+test('buildCoverLetterLogPath: returns cover-letter-logs/<slug>_Cover_Letter_<date>.log', () => {
+  const result = buildCoverLetterLogPath('LeagueInc', 'SeniorAiEngineer', '2026-05-08');
+  assert.equal(result, 'cover-letter-logs/LeagueInc_SeniorAiEngineer_Yash_Anghan_Cover_Letter_2026-05-08.log');
 });

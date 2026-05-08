@@ -47,6 +47,15 @@ export function buildTexPath(company_slug, role_slug, date) {
 export function buildSidecarLogPath(company_slug, role_slug, date) {
   return `resume-logs/${company_slug}_${role_slug}_Yash_Anghan_Resume_${date}.log`;
 }
+export function buildCoverLetterTexPath(company_slug, role_slug, date) {
+  return `/tmp/${company_slug}_${role_slug}_Yash_Anghan_Cover_Letter_${date}.tex`;
+}
+export function buildCoverLetterPdfPath(company_slug, role_slug, date) {
+  return `cover-letters/${company_slug}_${role_slug}_Yash_Anghan_Cover_Letter_${date}.pdf`;
+}
+export function buildCoverLetterLogPath(company_slug, role_slug, date) {
+  return `cover-letter-logs/${company_slug}_${role_slug}_Yash_Anghan_Cover_Letter_${date}.log`;
+}
 
 export function ok(payload = {}) {
   process.stdout.write(JSON.stringify({ status: 'ok', ...payload }) + '\n');
