@@ -59,7 +59,7 @@ export default function Dashboard() {
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const [resumeImportStatus, setResumeImportStatus] = useState<'idle' | 'uploading' | 'ready' | 'error'>('idle');
   const [resumeImport, setResumeImport] = useState<any>(null);
-  const [resumeImportMode, setResumeImportMode] = useState<'replace' | 'merge'>('merge');
+  const [resumeImportMode, setResumeImportMode] = useState<'replace' | 'merge'>('replace');
   const [jobDetailsOpen, setJobDetailsOpen] = useState(false);
   const [jobDetailsLoading, setJobDetailsLoading] = useState(false);
   const [jobDetails, setJobDetails] = useState<any>(null);
@@ -1427,27 +1427,56 @@ System Initialized — v2.0`}
                      </div>
 
                      {/* Action Button */}
-                     {resumeImportStatus === 'ready' && (
-                       <div className="bg-emerald-50 rounded-2xl p-4 border border-emerald-200">
-                         <div className="flex items-start gap-3 mb-4">
-                           <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center shrink-0">
-                             <CheckCircle2 size={16} className="text-emerald-600" />
-                           </div>
-                           <div>
-                             <p className="text-sm font-bold text-emerald-800">Ready to import</p>
-                             <p className="text-xs text-emerald-600 mt-0.5">
-                               This will {resumeImportMode === 'merge' ? 'add to' : 'replace'} your current Experience and Education sections
-                             </p>
-                           </div>
-                         </div>
-                         <button
-                           type="button"
-                           onClick={applyResumeImport}
-                           className="w-full px-4 py-3 bg-emerald-600 text-white text-sm font-bold rounded-xl hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
-                         >
-                           <Upload size={16} />
-                           Apply Import
-                         </button>
+                    {resumeImportStatus === 'ready' && (
+                      <div className="bg-emerald-50 rounded-2xl p-4 border border-emerald-200">
+                        <div className="flex items-start gap-3 mb-4">
+                          <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center shrink-0">
+                            <CheckCircle2 size={16} className="text-emerald-600" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm font-bold text-emerald-800">Ready to import</p>
+                            <p className="text-xs text-emerald-600 mt-0.5">
+                              {resumeImportMode === 'merge'
+                                ? `Will add ${(resumeImport?.experience || []).length} roles to your existing experience`
+                                : `Will replace with ${(resumeImport?.experience || []).length} roles from resume`}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Replace/Merge Toggle */}
+                        <div className="flex bg-slate-100 rounded-lg p-1 mb-3">
+                          <button
+                            type="button"
+                            onClick={() => setResumeImportMode('replace')}
+                            className={`flex-1 px-3 py-2 text-xs font-bold rounded-md transition-all ${
+                              resumeImportMode === 'replace'
+                                ? 'bg-white text-slate-800 shadow-sm'
+                                : 'text-slate-500 hover:text-slate-700'
+                            }`}
+                          >
+                            Replace All
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setResumeImportMode('merge')}
+                            className={`flex-1 px-3 py-2 text-xs font-bold rounded-md transition-all ${
+                              resumeImportMode === 'merge'
+                                ? 'bg-white text-slate-800 shadow-sm'
+                                : 'text-slate-500 hover:text-slate-700'
+                            }`}
+                          >
+                            Merge/Add
+                          </button>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={applyResumeImport}
+                          className="w-full px-4 py-3 bg-emerald-600 text-white text-sm font-bold rounded-xl hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
+                        >
+                          <Upload size={16} />
+                          {resumeImportMode === 'replace' ? 'Replace & Save' : 'Merge & Save'}
+                        </button>
                          {!!resumeImport?.raw_text_preview && (
                            <details className="mt-3 border-t border-emerald-200 pt-3">
                              <summary className="cursor-pointer text-xs font-bold text-emerald-700 flex items-center gap-2">
