@@ -67,31 +67,49 @@ function parseExperience(text: string) {
       const dateMatch = line.match(datePattern);
       const period = dateMatch ? dateMatch[0].replace(/\s+/g, ' ') : '';
       
-      // Try to extract company and role
+      // Try to extract company and role - aggressively remove dates from both
       let company = '';
-      let role = line;
+      let role = '';
+      
+      // First, remove the date from the line entirely for cleaner parsing
+      const lineWithoutDate = line.replace(datePattern, '').trim();
       
       // Common separators: — | at , 
       const separators = [' — ', ' | ', ' - ', ' at ', ', ', ' – '];
+      let parsed = false;
       for (const sep of separators) {
-        if (line.includes(sep)) {
-          const parts = line.split(sep).map(p => p.trim()).filter(Boolean);
+        if (lineWithoutDate.includes(sep)) {
+          const parts = lineWithoutDate.split(sep).map(p => p.trim()).filter(Boolean);
           if (parts.length >= 2) {
-            // Heuristic: part with date is usually company+role, other part is the other field
-            const partWithDate = parts.find(p => datePattern.test(p)) || parts[0];
-            const partWithoutDate = parts.find(p => !datePattern.test(p)) || parts[1];
+            // Heuristic: whichever part has role keywords is the role
+            const part1HasRole = rolePattern.test(parts[0]);
+            const part2HasRole = rolePattern.test(parts[1]);
             
-            if (rolePattern.test(partWithoutDate)) {
-              role = partWithoutDate;
-              company = partWithDate.replace(datePattern, '').trim();
+            if (part1HasRole && !part2HasRole) {
+              role = parts[0];
+              company = parts[1];
+            } else if (part2HasRole && !part1HasRole) {
+              role = parts[1];
+              company = parts[0];
             } else {
-              role = partWithDate.replace(datePattern, '').trim();
-              company = partWithoutDate;
+              // Both or neither have role keywords - shorter is usually company
+              role = parts[0].length > parts[1].length ? parts[0] : parts[1];
+              company = parts[0].length > parts[1].length ? parts[1] : parts[0];
             }
+            parsed = true;
             break;
           }
         }
       }
+      
+      // If no separator found, use the whole line (without date) as role
+      if (!parsed) {
+        role = lineWithoutDate;
+      }
+      
+      // Final cleanup: remove any remaining date-like patterns
+      company = company.replace(datePattern, '').trim();
+      role = role.replace(datePattern, '').trim();
       
       currentJob = { company, role, period, bullets: [] };
       bulletBuffer = [];

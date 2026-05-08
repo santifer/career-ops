@@ -170,12 +170,24 @@ function renderExperience(exp, tailoredBullets, jdText = '', maxPages = 2) {
     const role = job.role || '';
     const company = job.company || '';
     const dates = job.period || '';
-    const titleLeft = [role, company].filter(Boolean).join(' — ');
+    
+    // Clean layout: Company — Role (left)    Dates (right)
+    // If role already includes company or vice versa, don't duplicate
+    const hasCompanyInRole = role.toLowerCase().includes(company.toLowerCase());
+    const hasRoleInCompany = company.toLowerCase().includes(role.toLowerCase());
+    let titleLeft = '';
+    if (company && role && !hasCompanyInRole && !hasRoleInCompany) {
+      titleLeft = `<span class="job-company">${company}</span> — <span class="job-title">${role}</span>`;
+    } else if (company) {
+      titleLeft = `<span class="job-company">${company}</span>`;
+    } else if (role) {
+      titleLeft = `<span class="job-title">${role}</span>`;
+    }
 
     return `
     <div class="job">
       <div class="job-header">
-        <div><span class="job-title">${titleLeft}</span></div>
+        <div>${titleLeft}</div>
         <div class="job-dates">${dates}</div>
       </div>
       <ul>
