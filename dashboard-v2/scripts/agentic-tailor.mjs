@@ -383,10 +383,18 @@ RULES:
 - Lead with impact, not filler
 
 TASK:
-1. RESUME TAILORING: Identify 3-4 JD requirements and generate:
+1. RESUME TAILORING: CRITICAL - Every bullet must include at least ONE specific technology/requirement from the JD:
    - A one-line summary stating what you do + years of experience
    - 8-10 core competencies (skills/tools from JD)
    - 3 rewritten bullets for ONE role that maps to JD requirements
+
+   BULLET REQUIREMENTS:
+   - Each bullet MUST name-drop a specific technology, tool, or requirement from the JD
+   - Generic bullets like "Led a team to deliver results" are FORBIDDEN
+   - Good example: "Deployed microservices on AWS ECS with Terraform, cutting deploy time 40%"
+   - Bad example: "Improved system performance significantly"
+   - If JD mentions React, say React (not "frontend framework")
+   - If JD mentions Kubernetes, say Kubernetes (not "orchestration platform")
 
 2. COVER LETTER: Write 2 tight paragraphs ONLY (no greeting, no sign-off):
    - Para 1: One sentence hook citing something specific from their JD/company, then 2-3 bullets mapping your experience to their needs with metrics
