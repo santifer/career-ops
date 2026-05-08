@@ -125,10 +125,11 @@ export async function POST(req: NextRequest) {
         const parsed = await pdfParse(bytes);
         text = parsed?.text || '';
       } else if (pdfParse?.PDFParse) {
-        const parser = new pdfParse.PDFParse({});
-        // Some versions require { data } rather than Buffer directly.
-        await parser.load({ data: bytes });
-        text = (await parser.getText()) || '';
+        // pdf-parse@2.x: pass the PDF buffer via constructor options; load() takes no args.
+        const parser = new pdfParse.PDFParse({ data: bytes });
+        await parser.load();
+        const out = await parser.getText();
+        text = out?.text || '';
       } else {
         throw new Error('PDF parser unavailable');
       }
@@ -154,13 +155,18 @@ export async function POST(req: NextRequest) {
 
   const experience = expSection ? parseExperience(expSection) : [];
   const education = eduSection ? parseEducation(eduSection) : [];
+  const raw_text_preview = text.slice(0, 2500);
 
   return NextResponse.json({
     ok: true,
+    // Back-compat for Dashboard UI: also expose fields at top-level.
+    experience,
+    education,
+    raw_text_preview,
     extracted: {
       experience,
       education,
-      raw_text_preview: text.slice(0, 2500),
+      raw_text_preview,
     },
   });
 }

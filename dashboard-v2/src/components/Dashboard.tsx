@@ -468,7 +468,8 @@ export default function Dashboard() {
           `Import failed (HTTP ${res.status})`;
         throw new Error(msg);
       }
-      setResumeImport(payload);
+      // API returns both top-level and extracted.*; prefer extracted for shape stability.
+      setResumeImport(payload?.extracted || payload);
       setResumeImportStatus('ready');
     } catch (e: any) {
       setResumeImportStatus('error');
