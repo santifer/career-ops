@@ -992,6 +992,18 @@
 - [!] https://jway-group.breezy.hr/p/899d0d8fd95a-ml-ai-engineer | JWay Group | ML/AI Engineer | Pasig City, PH (hybrid) — not US-based; F-1 OPT geo block; filter slip
 - [!] https://elsa.teamtailor.com/jobs/7340954-ai-engineer-remote | ELSA | AI Engineer (Remote) | location verify — error: posting expired ("Either the position was filled, or the ad has expired" 2026-05-08T04Z); archived
 
+<!-- Overnight 2026-05-08T~06Z third pass: scan.mjs Level 1/2 + Level 3 WebSearch (Ashby Applied AI + Greenhouse new-grad ML + workatastartup FDE) -->
+- [!] https://job-boards.eu.greenhouse.io/parloa/jobs/4694390101 | Parloa | Forward Deployed Engineer, DevOps | New York Office — On-site — moved to Procesadas (#663) 2026-05-08 (2.0/5 — Senior 5+yr DevOps platform K8s/Helm/Terraform; off-archetype; SKIP)
+- [!] https://jobs.lever.co/palantir/be4ab5cb-9caa-4c2a-97b9-c73805fca4fc | Palantir | Forward Deployed Software Engineer - US Government - Federal Health and Civilian | New York, NY — Hybrid — duplicate of #650 (same role evaluated 2026-05-07; HARD VETO US Top Secret clearance for F-1 OPT); archived without re-evaluation
+- [!] https://job-boards.greenhouse.io/celonis/jobs/7610416003?gh_jid=7610416003 | Celonis | Field CTO - AI & Enterprise Modernization | Munich, Germany — On-site — moved to Procesadas (#664) 2026-05-08 (1.0/5 — 15-20yr executive; off-archetype + DE on-site; SKIP)
+- [!] https://sumup.com/careers/positions/8340146002?gh_jid=8340146002 | SumUp | Customer Support Agent - SP/PT | Barcelona, Spain — On-site — moved to Procesadas (#665) 2026-05-08 (1.0/5 — non-engineering filter slip; SKIP)
+- [!] https://careers.hellofresh.com/global/en/job/7869765?gh_jid=7869765 | HelloFresh | Automation Engineer (all genders) | Magdeburg, Saxony-Anhalt, Germany — On-site — moved to Procesadas (#666) 2026-05-08 (1.0/5 — PLC/SCADA industrial automation + German fluency + DE on-site; off-archetype filter slip; SKIP)
+- [!] https://job-boards.greenhouse.io/hightouch/jobs/5990367004 | Hightouch | Solutions Engineer - EMEA | EMEA — moved to Procesadas (#667) 2026-05-08 (1.5/5 — pre-sales SE with 4+yr sales floor + French; filter slip; SKIP)
+- [!] https://jobs.ashbyhq.com/Parcha/16f20b99-f941-47c6-83cf-2ea244098cb1 | Parcha | Applied AI Engineer | verify — error: posting closed (Ashby GraphQL jobPosting null on 2026-05-08T06Z); archived
+- [!] https://jobs.lever.co/determined/78210c3b-8c24-467f-96c4-2aac2cbc9ff8 | Determined AI | Applied Machine Learning Engineer | verify — error: posting closed (Lever HTTP 404 on 2026-05-08T06Z); archived
+- [!] https://www.workatastartup.com/jobs/92848 | Uplane | Forward Deployed Software Engineer | San Francisco, CA — On-site — moved to Procesadas (#668) 2026-05-08 (3.5/5 — YC F25 marketing-AI; $150-200K + 0.20-0.50% equity; 2+yr SWE floor fits; full-stack TS/Node + Vue/Nuxt + LangGraph; PDF generated)
+- [!] https://www.workatastartup.com/jobs/94139 | Paragon | Founding Forward Deployed Engineer | San Francisco, CA — On-site — duplicate of #631 (same role evaluated 2026-05-07 at 3.5/5); archived without re-evaluation per CLAUDE.md "no new entry if company+role exists"
+
 
 ## Procesadas
 
@@ -1381,3 +1393,4 @@
 - [x] #657 | https://jobs.ashbyhq.com/Hippocratic%20AI/b4d1b03e-fabf-4139-9fcc-0b5b3ac9e2b6 | Hippocratic AI | Forward Deployment Engineer (Akron, OH) | Akron OH on-site 5d/wk + occasional Palo Alto travel | 4.0/5 | PDF ✅
 - [x] #658 | https://jobs.ashbyhq.com/assorthealth/64876579-05a2-40b6-a772-d1ce8b0ac8c4 | Assort Health | Agent Engineer (New Grad, Summer 2026) | San Francisco (HQ) — On-site | 4.4/5 | PDF ✅
 - [x] #660 | https://job-boards.greenhouse.io/gleanwork/jobs/4651991005 | Glean | Founding Forward Deployed Engineer | Remote — US (25-50% travel) | 3.0/5 | PDF ✅
+- [x] #668 | https://www.workatastartup.com/jobs/92848 | Uplane | Forward Deployed Software Engineer | San Francisco, CA — On-site | 3.5/5 | PDF ✅

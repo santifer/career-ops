@@ -2,6 +2,7 @@
 
 | # | Date | Company | Role | Score | Status | PDF | Report | Notes |
 |---|------|---------|------|-------|--------|-----|--------|-------|
+| 668 | 2026-05-08 | Uplane | Forward Deployed Software Engineer | 3.5/5 | Evaluated | ✅ | [668](reports/668-uplane-fde-software-engineer-2026-05-08.md) | YC F25 marketing-AI startup; SF on-site; $150-200K + 0.20-0.50% equity; 2+yr SWE floor fits Deepak; full-stack TS/Node + Vue/Nuxt + LangGraph; Vue stretch (React analog); F-1 OPT relocation; PDF generated |
 | 658 | 2026-05-08 | Assort Health | Agent Engineer (New Grad, Summer 2026) | 4.4/5 | Evaluated | ✅ | [658](reports/658-assort-health-agent-engineer-new-grad-2026-05-08.md) | Strong healthcare agentic AI new-grad fit; SF on-site $135-150K + equity; PDF generated |
 | 655 | 2026-05-08 | Bierman Autism Centers | Junior AI Engineer | 3.4/5 | Evaluated | ✅ | [655](reports/655-bierman-autism-junior-ai-engineer-2026-05-08.md) | Junior tier 1:1 + healthcare AI 1:1 + Master's degree match; Carmel IN hybrid soft block (fully remote possible); multi-provider AI primitives match Manga Lens; PDF generated |
 | 657 | 2026-05-08 | Hippocratic AI | Forward Deployment Engineer (Akron, OH) | 4.0/5 | Evaluated | ✅ | [657](reports/657-hippocratic-akron-fde-2026-05-08.md) | Akron OH ~30min from Kent OH; healthcare AI 1:1 thesis match; Series C $3.5B unicorn; RAG+multi-agent+production discipline 1:1; 3y gate slight stretch (2.5y); F-1 OPT sponsorship verify; PDF generated |
