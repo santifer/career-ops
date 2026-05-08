@@ -111,10 +111,14 @@ async function main() {
       ];
       const PY = resolve(ROOT, '.venv/bin/python3');
       for (const [url, expected] of cases) {
-        const out = await execFileP(PY, [HELPER, '--detect-source', url], { cwd: ROOT, timeout: 10000 });
-        const obj = JSON.parse(out.stdout.trim());
-        if (obj.source_hint === expected) ok(`source_hint(${url}) → ${expected}`);
-        else ng(`source_hint(${url}) expected ${expected}, got ${obj.source_hint}`);
+        try {
+          const out = await execFileP(PY, [HELPER, '--detect-source', url], { cwd: ROOT, timeout: 10000 });
+          const obj = JSON.parse(out.stdout.trim());
+          if (obj.source_hint === expected) ok(`source_hint(${url}) → ${expected}`);
+          else ng(`source_hint(${url}) expected ${expected}, got ${obj.source_hint}`);
+        } catch (e) {
+          ng(`source_hint(${url}) crashed: ${e.message?.split('\n')[0] ?? String(e)}`);
+        }
       }
     }
 

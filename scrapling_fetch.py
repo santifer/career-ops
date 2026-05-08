@@ -11,6 +11,7 @@ import urllib.parse
 
 def detect_source(url: str) -> str:
     host = urllib.parse.urlparse(url).hostname or ""
+    # First-match-wins; order is a precedence hint for ambiguous hostnames.
     for h in ("lever", "ashby", "greenhouse", "workday"):
         if h in host:
             return h
