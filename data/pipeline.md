@@ -971,6 +971,17 @@
 - [!] https://job-boards.greenhouse.io/komodohealth/jobs/8344238002 | Komodo Health | Forward Deployed, Software Engineer III | Remote (verify) — error: posting closed (Greenhouse 302 redirects to careers index w/ `?error=true` 2026-05-07T20Z); archived
 - [!] https://himalayas.app/companies/aegis-ventures/jobs/ai-software-engineer | Aegis Ventures (Ascertain) | AI Software Engineer | Remote — United States — error: listing removed (Himalayas 302 redirects to /jobs index 2026-05-07T20Z); archived
 
+### 2026-05-08
+<!-- Overnight 2026-05-08T~02Z first pass: Level 3 WebSearch additions (Ashby + Workable + Himalayas + YC WaaS small-ATS + non-standard titles) -->
+- [!] https://jobs.ashbyhq.com/sola/9a9c39a9-6a15-4b76-b538-f7d219fdb92e | Sola | Software Engineer, Desktop Automation | Remote OR NY HQ 5d/wk — moved to Procesadas (#653) 2026-05-08 (2.6/5 — Series A computer-use platform $21M a16z; Win32/RDP/VNC/UIA hard gap; only VLM perception slice maps; SKIP)
+- [!] https://jobs.ashbyhq.com/reflow/cd4b3752-b07d-4c33-acb3-169a3562d71a | Reflow | AI Engineer | Remote (Canada listed primary) — moved to Procesadas (#654) 2026-05-08 (2.7/5 — Python/RAG/agentic/LangChain 1:1 stack but Canada primary + comp opacity + LATAM-arbitrage hint + F-1 OPT W-2 unclear; SKIP unless US-W2 confirmed)
+- [!] https://jobs.ashbyhq.com/highlightta/749c6acb-6aea-43c8-b754-4950e1c10869 | HighlightTA | Agentic/AI Engineer | location verify — error: posting closed (Ashby GraphQL `jobPosting: null` 2026-05-08T02Z; not in jobBoardWithTeams listing); archived
+- [!] https://himalayas.app/companies/bierman-autism-centers/jobs/junior-ai-engineer | Bierman Autism Centers | Junior AI Engineer | Hybrid 4d/wk Carmel IN OR fully remote — moved to Procesadas (#655) 2026-05-08 (3.4/5 — Junior tier 1:1 + healthcare AI 1:1 + Master's match + multi-provider AI APIs match Manga Lens; Carmel IN hybrid soft block; PDF generated)
+- [!] https://jobs.ashbyhq.com/Hippocratic%20AI/bf52b86b-ef5d-4826-bad9-5132ffd8eb57 | Hippocratic AI | Junior Forward Deployment Engineer (Contract) | location verify — error: posting closed (Ashby GraphQL `jobPosting: null` 2026-05-08T02Z; substituted with active Hippocratic AI Forward Deployment Engineer Akron OH b4d1b03e — see #657); archived
+- [!] https://jobs.ashbyhq.com/percepta/a1b9d8aa-01ae-410b-9d1d-e599235a3d81 | Percepta | Applied AI Engineer - Healthcare | location verify — error: posting closed (Ashby GraphQL `jobPosting: null` 2026-05-08T02Z; current live Percepta postings are bbfe8035 NYC #588 and cede64f9 London); archived
+- [!] https://himalayas.app/companies/advision-development/jobs/junior-backend-developer-ai-llm-focus | Advision Development | Junior Backend Developer (AI & LLM Focus) | Remote — US only — moved to Procesadas (#656) 2026-05-08 (1.9/5 — title says Backend AI/LLM but body is frontend developer role; off-archetype; $65-80K below market; SKIP)
+- [!] https://jobs.ashbyhq.com/Hippocratic%20AI/b4d1b03e-fabf-4139-9fcc-0b5b3ac9e2b6 | Hippocratic AI | Forward Deployment Engineer (Akron, OH) | Akron OH on-site 5d/wk + occasional Palo Alto travel — moved to Procesadas (#657) 2026-05-08 (4.0/5 — Akron ~30min from Kent OH; Series C $3.5B unicorn; healthcare RAG + multi-agent + production discipline 1:1; 3y gate slight stretch (2.5y); F-1 OPT sponsorship verify; PDF generated)
+
 
 
 
@@ -1356,3 +1367,8 @@
 - [x] #637 | https://himalayas.app/companies/chestnut/jobs/forward-deployed-engineer-entry-level-early-career | Chestnut | Forward Deployed Engineer (Entry-Level / Early Career) | Remote — United States (25% travel) | 4.0/5 | PDF ✅
 - [x] #638 | https://job-boards.greenhouse.io/thenewyorktimes/jobs/4680447005 | The New York Times | Software Engineer - AI Platforms and Products | New York City — Hybrid 2+d/wk | 3.8/5 | PDF ✅
 - [x] #639 | https://job-boards.greenhouse.io/thenewyorktimes/jobs/4655096005 | The New York Times | ML Ops Engineer, Machine Learning & AI | New York, NY — Hybrid (NYC tri-state) | 3.9/5 | PDF ✅
+
+### 2026-05-08
+
+- [x] #655 | https://himalayas.app/companies/bierman-autism-centers/jobs/junior-ai-engineer | Bierman Autism Centers | Junior AI Engineer | Hybrid 4d/wk Carmel IN OR fully remote | 3.4/5 | PDF ✅
+- [x] #657 | https://jobs.ashbyhq.com/Hippocratic%20AI/b4d1b03e-fabf-4139-9fcc-0b5b3ac9e2b6 | Hippocratic AI | Forward Deployment Engineer (Akron, OH) | Akron OH on-site 5d/wk + occasional Palo Alto travel | 4.0/5 | PDF ✅
