@@ -2041,6 +2041,123 @@ function build() {
     /* Toast positioning: leave room for batch overlay */
     #toast-container { right: 12px; left: 12px; bottom: 12px; max-width: none; }
   }
+
+  /* ── Micro-animations (Wave B #21) ───────────────────────────── */
+  /* Reduced-motion users get instant state changes, no animations. */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    /* 1. Stat card hover — gentle scale + elevation shift (120ms) */
+    .stat {
+      transition: transform .12s ease-out,
+                  border-color .15s ease-out,
+                  box-shadow .12s ease-out;
+    }
+    .stat:hover { transform: scale(1.01); }
+    .stat:active { transform: scale(0.998); }
+
+    /* 2. Row click expand — fade-in + slight slide on the inner block (180ms) */
+    @keyframes row-expand-in {
+      0%   { opacity: 0; transform: translateY(-4px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    tr.detail-row .detail-block {
+      animation: row-expand-in .18s ease-out;
+      transform-origin: top center;
+    }
+
+    /* 3. Status pill — smooth color transition on writeback (200ms) */
+    .status-pill {
+      transition: background-color .2s ease,
+                  color .2s ease,
+                  border-color .2s ease,
+                  box-shadow .12s ease;
+    }
+
+    /* 4. Cmd-K palette — backdrop fade + modal scale-up (100ms, premium ease) */
+    @keyframes cmdk-backdrop-fade-in {
+      0%   { opacity: 0; }
+      100% { opacity: 1; }
+    }
+    @keyframes cmdk-modal-scale-in {
+      0%   { opacity: 0; transform: scale(0.96); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    #cmdk-backdrop.visible {
+      animation: cmdk-backdrop-fade-in .1s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    #cmdk-backdrop.visible #cmdk-modal {
+      animation: cmdk-modal-scale-in .1s cubic-bezier(0.16, 1, 0.3, 1);
+      transform-origin: top center;
+    }
+
+    /* 5. Gap / verify / tier-legend modals — backdrop fade + modal scale-up (120ms) */
+    @keyframes modal-backdrop-fade-in {
+      0%   { opacity: 0; }
+      100% { opacity: 1; }
+    }
+    @keyframes modal-translate-scale-in {
+      0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.96); }
+      100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    }
+    #verify-backdrop.visible,
+    #gap-backdrop.visible,
+    #tier-legend-backdrop.visible {
+      animation: modal-backdrop-fade-in .12s ease-out;
+    }
+    #verify-backdrop.visible #verify-modal,
+    #gap-backdrop.visible #gap-modal,
+    #tier-legend-backdrop.visible #tier-legend-modal {
+      animation: modal-translate-scale-in .12s ease-out;
+    }
+
+    /* 6. Toast — slide up from bottom + fade in (150ms); slide down on dismiss.
+       Overrides the existing toast-in/toast-out keyframes with tighter timing
+       and a slightly larger travel distance for a more pronounced 'arrival'. */
+    @keyframes toast-in {
+      0%   { opacity: 0; transform: translateY(14px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes toast-out {
+      0%   { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(14px); }
+    }
+    .toast { animation: toast-in .15s ease-out; }
+    .toast.toast-leave { animation: toast-out .15s ease-in forwards; }
+
+    /* 7. Click feedback — radial ripple on subtle interactive surfaces.
+       Scoped to elements that already have predictable sizing + safe overflow.
+       The pseudo-element is layered behind content; pointer-events disabled. */
+    @keyframes ripple-pulse {
+      0%   { opacity: 0.32; transform: translate(-50%, -50%) scale(0); }
+      70%  { opacity: 0.06; }
+      100% { opacity: 0;    transform: translate(-50%, -50%) scale(2.4); }
+    }
+    .stat::after,
+    .gap-chip-interactive::after {
+      content: ''; position: absolute; top: 50%; left: 50%;
+      width: 140%; aspect-ratio: 1;
+      border-radius: 50%;
+      background: radial-gradient(circle, var(--blue-fg) 0%, transparent 70%);
+      opacity: 0; pointer-events: none;
+      transform: translate(-50%, -50%) scale(0);
+      z-index: 0;
+    }
+    /* Keep stat content above the ripple layer. */
+    .stat > * { position: relative; z-index: 1; }
+    .stat:active::after,
+    .gap-chip-interactive:active::after {
+      animation: ripple-pulse 1s ease-out;
+    }
+    .gap-chip-interactive { position: relative; overflow: hidden; }
+  }
 </style>
 </head>
 <body>
