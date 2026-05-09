@@ -1,326 +1,238 @@
 url	tier	score	archetype	reason
-https://jobs.ashbyhq.com/decagon/8c40fb7a-5f25-4112-a1df-f1c22b81042c	1	0	?	score-fail: 
-https://jobs.lever.co/mistral/715aba24-6c75-40a6-a978-ac6ebbebece5	1	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://jobs.ashbyhq.com/openai/8cf573f3-2268-44f7-8068-f2e60af5fc69	1	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/Job/remote-us-ai-program-manager-jobs-SRCH_IL.0,9_IS11047_KO10,28.htm	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/Job/remote-us-ai-enablement-jobs-SRCH_IL.0,9_IS11047_KO10,23.htm	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.amazon.jobs/en/jobs/10391033/sr-applied-ai-solutions-architect-amazon-connect	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.amazon.jobs/en/jobs/10390079/principal-applied-ai-solutions-architect-amazon-connect	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.amazon.jobs/en/jobs/10401999/senior-applied-ai-solutions-architect-federal-financial	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.amazon.jobs/en/jobs/3177010/private-equity-ai-solutions-architect-aws-private-equity	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.amazon.jobs/en/jobs/10392783/sr-applied-ai-solutions-architect-public-sector-amazon-connect	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.amazon.jobs/en/jobs/10392784/sr-applied-ai-solutions-architect-public-sector-amazon-connect	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.amazon.jobs/en/jobs/10384575/senior-ai-specialist-solutions-architect-aws	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.amazon.jobs/en/jobs/3193875/principal-ai-solution-architect-data-ai-specialist-solutions-architect-team	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.amazon.jobs/en/jobs/3143322/sr-solutions-architect-ai-engineering	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.amazon.jobs/en/jobs/3196089/sr-analytics-ai-specialist-solutions-architect-ags-us-specialist-sa-fsi	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.amazon.jobs/en/jobs/10381789/sr-analytics-ai-specialist-solutions-architect-ags-namer-us-cov-spec-sa-data-ai-analytics	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.amazon.jobs/en/jobs/10382310/specialist-solutions-architect-ai-ml-specialist-team	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.amazon.jobs/en/jobs/3102492/sr-solutions-architect-dynamodb-ai-ops	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.amazon.jobs/en/jobs/3124631/sr-solutions-architect-applied-ai-for-supply-chain-aws-solutions	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.amazon.jobs/en/jobs/10390261/private-equity-genai-solutions-architect-aws-private-equity	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.amazon.jobs/en/jobs/3187906/sr-genai-ml-specialist-solutions-architect-aspi-auto-manufacturing	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.amazon.jobs/en/jobs/10377795/sr-solutions-architect-retail-cpg-aws	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.amazon.jobs/en/jobs/10393427/sr-applied-ai-solutions-architect-amazon-connect	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.amazon.jobs/en/jobs/10387521/senior-applied-ai-solutions-architect-amazon-connect	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.amazon.jobs/en/jobs/10393778/senior-applied-ai-solutions-architect-amazon-connect-aws-applied-ai-solutions	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.amazon.jobs/en/jobs/10396532/ai-specialist-solutions-architect-ags-us-specialist-sa-fsi	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.amazon.jobs/en/jobs/10394850/senior-solutions-architect-data-analytics-ai-partner-solutions-architect	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.amazon.jobs/en/jobs/3193828/sr-ai-solution-architect-data-ai-specialist-solutions-architect-team	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.amazon.jobs/en/jobs/3185811/sr-genai-ml-specialist-solutions-architect-aspi-auto-manufacturing	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.amazon.jobs/en/jobs/10401445/ai-specialist-solutions-architect-ags-us-specialist-sa-fsi	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.amazon.jobs/en/jobs/10406768/sr-applied-ai-solutions-architect-public-sector-amazon-connect	2	0	?	score-fail: 
-https://www.amazon.jobs/en/jobs/10407241/generative-ai-solutions-architect-aws-global-government-specialist-sa	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.amazon.jobs/en/jobs/10396532/ai-ml-specialist-solutions-architect-capital-markets-ags-us-specialist-sa-fsi	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.amazon.jobs/en/jobs/10408091/healthcare-life-sciences-solutions-architect-ai-solutions-hcls	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.amazon.jobs/en/jobs/10401445/ai-ml-specialist-solutions-architect-banking-ags-us-specialist-sa-fsi	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.amazon.jobs/en/jobs/10409696/sr-ai-solution-architect-data-ai-specialist-solutions-architect-team	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.amazon.jobs/en/jobs/10409992/principal-applied-ai-solutions-architect-amazon-connect	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.amazon.jobs/en/jobs/10409967/senior-applied-ai-solutions-architect-amazon-connect-applied-ai-sa-aivt	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://remoteOK.com/remote-jobs/remote-applied-ai-engineer-europe-amigo-1131296	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://remoteOK.com/remote-jobs/remote-principal-customer-solutions-architect-caylent-1131281	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://weworkremotely.com/remote-jobs/digitalocean-staff-ai-product-manager	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://remoteOK.com/remote-jobs/remote-hq-ai-enablement-lead-everfield-1131322	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://jobs.ashbyhq.com/notion/10437426-14c8-4c45-8075-67959ce80393	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://jobs.ashbyhq.com/notion/b50c884e-1170-46d2-ae4c-3f559d2c98c4	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://jobs.ashbyhq.com/notion/2ca618b4-2223-47ca-b1f0-84ac101fcd90	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://jobs.ashbyhq.com/notion/99dc5af9-281a-4c8e-8084-424927008b3b	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://jobs.ashbyhq.com/notion/1cd3f44f-aa30-44a6-a64b-c7bfc813eeb9	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://jobs.ashbyhq.com/ramp/deca582c-a1d0-4705-9975-60aed81ba89f	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://jobs.ashbyhq.com/ramp/d204e136-2749-42de-82b4-88a0dd352090	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://stripe.com/jobs/search?gh_jid=7249744	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://stripe.com/jobs/search?gh_jid=7396509	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://stripe.com/jobs/search?gh_jid=7703909	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://stripe.com/jobs/search?gh_jid=7462261	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://stripe.com/jobs/search?gh_jid=7386950	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://weworkremotely.com/remote-jobs/trace3-sr-cloud-solutions-architect-devops-remote	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://remoteOK.com/remote-jobs/remote-vice-president-of-global-customer-success-amp-support-jumpcloud-1131411	2	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4403698664	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4323711316	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4374636120	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4403639890	3	0	?	score-fail: 
-https://www.linkedin.com/jobs/view/4358246846	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010107159671	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010108338655	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010110285691	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010107975838	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010114662187	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010114631437	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010114933741	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010109660654	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010110936449	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010100221598	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010114214661	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010114214815	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010114990770	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010108696292	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010112456206	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010103720137	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1009943480738	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010112183170	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010114990937	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/Job/jobs.htm	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010102962677	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010111525814	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010114969757	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010107265338	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010100471617	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010111168340	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010114215061	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010114362353	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010112322324	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010111357485	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010114872047	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010103272330	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/Job/remote-us-communications-jobs-SRCH_IL.0,9_IS11047_KO10,24.htm	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010110278750	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1009890953086	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010100931280	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010103068840	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010103433368	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010115067504	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010114399731	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4401999008	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4394644020	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4393948882	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4393978559	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4397322816	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4312240389	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4374622644	3	0	?	score-fail: 
-https://www.linkedin.com/jobs/view/4407143336	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4373710539	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4373709593	3	0	?	score-fail: 
-https://www.linkedin.com/jobs/view/4372912269	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4385309439	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4344850623	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4407101988	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4383526962	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4407141336	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4406898598	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4383168907	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4397400143	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4374683567	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4394252383	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4382795648	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4397445924	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4344855427	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4373718181	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4347927062	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4375657524	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4384640261	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4406223596	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4406252517	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4405181065	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
+https://jobs.ashbyhq.com/decagon/8c40fb7a-5f25-4112-a1df-f1c22b81042c	1	4.3	A2	Direct A2 archetype match at AI-native Tier 1; on-site-only location requires relocation flexibility.
+https://jobs.lever.co/mistral/715aba24-6c75-40a6-a978-ac6ebbebece5	1	4	A2	A2 TPM match, Tier 1 AI-native; strong growth path; EU comp and Paris relocation are risks.
+https://jobs.ashbyhq.com/openai/8cf573f3-2268-44f7-8068-f2e60af5fc69	1	4.2	A2	A2 architect fit at OpenAI Tier 1; EU comp likely below floor — verify before applying.
+https://www.glassdoor.com/Job/remote-us-ai-enablement-jobs-SRCH_IL.0,9_IS11047_KO10,23.htm	2	0	?	score-fail: 
+https://www.amazon.jobs/en/jobs/10390079/principal-applied-ai-solutions-architect-amazon-connect	2	4.1	A2	Principal Applied AI Solutions Architect is core A2 match. Strong comp, architecture over SWE.
+https://www.amazon.jobs/en/jobs/3177010/private-equity-ai-solutions-architect-aws-private-equity	2	4.1	A2	Title matches A2 (Solutions Architect), AWS is AI-core, GenAI for PE; likely comp-floor; lacks explicit AWS experience.
+https://www.amazon.jobs/en/jobs/10392783/sr-applied-ai-solutions-architect-public-sector-amazon-connect	2	3.8	A2	A2 exact title match (Applied AI Solutions Architect); Amazon resources; public sector + incomplete JD warrant full review.
+https://www.amazon.jobs/en/jobs/10392784/sr-applied-ai-solutions-architect-public-sector-amazon-connect	2	4.2	A2	Direct A2 match; Sr. Applied AI Solutions Architect at major tech with strong AI focus.
+https://www.amazon.jobs/en/jobs/10384575/senior-ai-specialist-solutions-architect-aws	2	3.8	A2	A2 Solutions Architect, AI-native AWS. Verify hands-on scope, location, salary alignment.
+https://www.amazon.jobs/en/jobs/3193875/principal-ai-solution-architect-data-ai-specialist-solutions-architect-team	2	4.3	A2	A2 direct match; AWS AI-native; AI ops background applicable to solutions architecture role
+https://www.amazon.jobs/en/jobs/3187906/sr-genai-ml-specialist-solutions-architect-aspi-auto-manufacturing	2	4.5	A2	Sr. GenAI SA at Amazon (A2 match). Title fit, AI-native, comp above floor. Location unknown.
+https://www.amazon.jobs/en/jobs/10393427/sr-applied-ai-solutions-architect-amazon-connect	2	4	A2	Perfect A2 title match, strong comp prospects. Amazon not AI-native; verify SWE/remote expectations.
+https://www.amazon.jobs/en/jobs/10387521/senior-applied-ai-solutions-architect-amazon-connect	2	3.6	A2	Title perfect A2 match; Amazon has AI presence but Connect product is applications-focused.
+https://www.amazon.jobs/en/jobs/10393778/senior-applied-ai-solutions-architect-amazon-connect-aws-applied-ai-solutions	2	4.2	A2	Title exact A2 match (Solutions Architect); AWS Applied AI team; likely meets comp floor; enterprise culture risk mitigated by AI division focus.
+https://www.amazon.jobs/en/jobs/3193828/sr-ai-solution-architect-data-ai-specialist-solutions-architect-team	2	3.6	A2	Direct A2 title match at AWS AI initiative; verify location and scope.
+https://www.amazon.jobs/en/jobs/10406768/sr-applied-ai-solutions-architect-public-sector-amazon-connect	2	4	A2	Title directly matches A2 (Sr. Applied AI Solutions Architect). Amazon scale, likely strong comp. Public sector/Connect platform slightly negates AI-native premium.
+https://www.amazon.jobs/en/jobs/10407241/generative-ai-solutions-architect-aws-global-government-specialist-sa	2	3.6	A2	A2 title match, but AWS cloud provider (not AI-native); government roles often on-site; verify location.
+https://www.amazon.jobs/en/jobs/10396532/ai-ml-specialist-solutions-architect-capital-markets-ags-us-specialist-sa-fsi	2	3.8	A2	Title matches A2; likely meets comp. Amazon cloud vendor limits AI-nativity.
+https://www.amazon.jobs/en/jobs/10401445/ai-ml-specialist-solutions-architect-banking-ags-us-specialist-sa-fsi	2	4	A2	Solutions Architect title matches A2 target; AWS is AI-native; role appears pre-sales focused but aligns with career trajectory.
+https://www.amazon.jobs/en/jobs/10409696/sr-ai-solution-architect-data-ai-specialist-solutions-architect-team	2	3.7	A2	A2 title explicit (Solutions Architect); AWS Data & AI team; review full JD for SWE depth, comp.
+https://www.amazon.jobs/en/jobs/10409992/principal-applied-ai-solutions-architect-amazon-connect	2	3.9	A2	Strong A2 role match; Amazon Connect not AI-native core product per filter.
+https://www.amazon.jobs/en/jobs/10409967/senior-applied-ai-solutions-architect-amazon-connect-applied-ai-sa-aivt	2	3.8	A2	A2 exact match. Deadline May 9. Verify comp vs. $180K floor, AWS depth fit, location.
+https://remoteOK.com/remote-jobs/remote-applied-ai-engineer-europe-amigo-1131296	2	4.1	A2	A2 exact title match. AI-native healthcare infrastructure company. Remote eligible. Verify Europe location and compensation before applying.
+https://jobs.ashbyhq.com/notion/10437426-14c8-4c45-8075-67959ce80393	2	4	A2	Perfect FDE + production AI agents match; 3-day SF hybrid requires relocation for Seattle-based candidate.
+https://jobs.ashbyhq.com/notion/b50c884e-1170-46d2-ae4c-3f559d2c98c4	2	3.8	A2	Perfect A2 match (FDE + AI agents), but DACH location and likely sub-floor comp are major blockers.
+https://jobs.ashbyhq.com/notion/2ca618b4-2223-47ca-b1f0-84ac101fcd90	2	4.2	A2	Perfect A2 archetype; Notion AI-agent GTM. Location (France onsite) requires clarification.
+https://jobs.ashbyhq.com/notion/1cd3f44f-aa30-44a6-a64b-c7bfc813eeb9	2	4.8	A2	A2 Forward Deployed Engineer. Production agents, integrations. Notion AI-core. Matches Mitchell's background. Korea relocation concern.
+https://jobs.ashbyhq.com/ramp/deca582c-a1d0-4705-9975-60aed81ba89f	2	4.7	A2	Forward-Deployed Engineer (exact A2 match), agent-first role, AI-native fintech, strong culture signal.
+https://jobs.ashbyhq.com/ramp/d204e136-2749-42de-82b4-88a0dd352090	2	3.9	A2	Perfect A2 match, AI-native company, builder culture. CV gap: backend/Python depth weaker than requirements.
+https://stripe.com/jobs/search?gh_jid=7249744	2	0	?	score-fail: 
+https://stripe.com/jobs/search?gh_jid=7396509	2	0	?	score-fail: 
+https://stripe.com/jobs/search?gh_jid=7703909	2	0	?	score-fail: 
+https://stripe.com/jobs/search?gh_jid=7462261	2	0	?	score-fail: 
+https://stripe.com/jobs/search?gh_jid=7386950	2	0	?	score-fail: 
+https://www.linkedin.com/jobs/view/4403698664	3	4.3	A2	A2 direct match, LangChain AI-native core, remote. Verify comp floor.
+https://www.linkedin.com/jobs/view/4323711316	3	4.1	A2	Solutions Architect at Typeface (generative AI) matches A2 archetype directly.
+https://www.linkedin.com/jobs/view/4374636120	3	4.3	A2	AI Agent Architect at Airtable—A2 match with agent experience, AI-structural platform, likely comp.
+https://www.linkedin.com/jobs/view/4403639890	3	4.1	A2	A2 archetype match; remote; agentic AI product; agent expertise directly applicable
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010107975838	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010114662187	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010114631437	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010109660654	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010100221598	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010114214661	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010103720137	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010112183170	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010114990937	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010111525814	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010114969757	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010107265338	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010114215061	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010114362353	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010112322324	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010111357485	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010110278750	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010103433368	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010115067504	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010114399731	3	0	?	score-fail: ** Glassdoor listing (Tier 3, unknown company). No JD visibility = insufficient signal to advance.
+https://www.linkedin.com/jobs/view/4374622644	3	4.3	A2	Anthropic Solutions Architect is A2 match at AI-native company. DC location requires relocation but justified.
+https://www.linkedin.com/jobs/view/4373710539	3	4.5	A2	A2 title match, W&B AI-native, Bellevue ideal for Seattle candidate. Editorial + AI ops background strong.
+https://www.linkedin.com/jobs/view/4383168907	3	4.6	A2	OpenAI FDE enablement PM: strong A2 match, editorial/comms background ideal for role, technical credibility.
+https://www.linkedin.com/jobs/view/4397400143	3	4	A2	Agentic AI enablement (A2) at AI-native ElevenLabs. GTM vs. editorial background; verify location, comp, full JD.
+https://www.linkedin.com/jobs/view/4374683567	3	4.1	B	Developer Education: editorial + AI agent background fit; Anthropic AI-native; NYC acceptable; A2 growth path.
+https://www.linkedin.com/jobs/view/4397445924	3	4.4	A2	TPM Core AI Platform—A2 match. Strong comp, architecture ops background. Redmond near Seattle base.
+https://www.linkedin.com/jobs/view/4344855427	3	4.6	A2	Director, Forward Deployed Engineering matches A2 exactly. Unicorn AI platform, Seattle location, likely meets compensation floor.
+https://www.linkedin.com/jobs/view/4384640261	3	4.1	A2	LangChain AI-core product, Deployed Engineer = forward-deployed role. Strong agent-building background fit. Verify comp, location flexibility, Python expectations.
 https://www.linkedin.com/jobs/view/4405977776	3	0	?	score-fail: 
-https://www.linkedin.com/jobs/view/4407541336	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4407127092	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4385170370	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4407104483	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4393889145	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4384259738	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4385529665	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4375419766	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4397384357	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4407112220	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4407101503	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4405915107	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4374675844	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4375848858	3	0	?	score-fail: 
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010114412749	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010114208958	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010116329039	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010109381354	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010115883858	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010116103824	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010112406835	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010116324039	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010116294729	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010116294037	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010115536639	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010116215378	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010114413260	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010116375702	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010109712280	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010116202704	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010115710494	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010116294483	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010115973594	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010116370591	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4374659378	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4381917765	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4394228097	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4375076349	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4394211178	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4394212184	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4373748056	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4337933263	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4356557801	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4220344243	3	0	?	score-fail: 
-https://www.linkedin.com/jobs/view/4394304012	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4344827422	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4358775140	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4405893608	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4405092409	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4405553458	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4384083741	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4334774578	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4313821171	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4405578219	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4405584108	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4406548939	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4405545527	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4405580275	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4394708844	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4325645309	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010117034562	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010114434752	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010117471343	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010115939381	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010116508915	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010117327129	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010111014541	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010117327116	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010114361873	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010117247141	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010117134644	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010114910113	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010116442963	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010116759193	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010116445292	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4359312620	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4406025120	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4313852223	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4368401880	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4407017948	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4406006519	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4405598687	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010118688245	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010116856697	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010114200915	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010114452386	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010116495807	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010116595013	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010117228471	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010117705294	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010118570579	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010118930334	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010119121397	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010118424597	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010118052599	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010117325717	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010118741526	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010117636967	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010118115234	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010112217446	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010118390116	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010119157009	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010118707841	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010118067141	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010117605743	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010117943788	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010119017817	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010117689629	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010117273449	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010118473026	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010117533001	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010118470881	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4405264601	3	0	?	score-fail: 
-https://www.linkedin.com/jobs/view/4376914076	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4326199144	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4381628244	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4326256204	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4406920567	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4388745799	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4407122048	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4380153502	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4379438895	3	0	?	score-fail: 
-https://www.linkedin.com/jobs/view/4358089859	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4406718436	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4374530646	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4368550146	3	0	?	score-fail: 
-https://www.linkedin.com/jobs/view/4409127599	3	0	?	score-fail: 
-https://www.linkedin.com/jobs/view/4409137304	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4396378346	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4408700782	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4399492304	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4398633111	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4408794862	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4408780219	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4354790731	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010121244734	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
+https://www.linkedin.com/jobs/view/4407541336	3	0	?	score-fail: 
+https://www.linkedin.com/jobs/view/4407112220	3	4	A2	Perfect A2 PM match at Deloitte. Dallas location/comp concerns, but archetype fit warrants JD review.
+https://www.linkedin.com/jobs/view/4407101503	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010115883858	3	0	?	score-fail: Cannot access Glassdoor URL; need actual JD content to score.
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010116103824	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010116375702	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010109712280	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010115710494	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010116294483	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010115973594	3	0	?	score-fail: 
+https://www.linkedin.com/jobs/view/4374659378	3	4.1	A2	Direct A2 match (Applied AI Strategist at AI-native fintech). Verify comp and location.
+https://www.linkedin.com/jobs/view/4394228097	3	4	A2	BCG X AI-native, Product Builder→A2 alignment, Seattle option, comp/tech stack unclear.
+https://www.linkedin.com/jobs/view/4375076349	3	4.4	A2	Solutions Lead (A2 match), agentic AI platform, SF market, 210K+ likely. Title matches archetype exactly.
+https://www.linkedin.com/jobs/view/4394211178	3	4.3	A2	AI-native company, A2-aligned title, Seattle option, strong CV match for applied AI product development.
+https://www.linkedin.com/jobs/view/4394212184	3	4.1	A2	AI Factory Product Builder at AI-native BCG X; Seattle location matches A2 archetype.
+https://www.linkedin.com/jobs/view/4405893608	3	0	?	score-fail: 
+https://www.linkedin.com/jobs/view/4405553458	3	4.4	B	OpenAI CRO storytelling lead matches archetype B perfectly. Editorial background, AI-native company, SF relocation feasible.
+https://www.linkedin.com/jobs/view/4334774578	3	4.7	A2	Direct A2 match. Forward Deployed Engineer at OpenAI — AI-native core product, strong product-fit for agent-building background, top-tier tier-1 company justifies NYC relocation.
+https://www.linkedin.com/jobs/view/4405584108	3	4	B	OpenAI + B archetype. Editorial/comms + CRO Innovation role. Strong CV fit. Verify compensation and full JD.
+https://www.linkedin.com/jobs/view/4405580275	3	0	?	score-fail: 
+https://www.linkedin.com/jobs/view/4325645309	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010117034562	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010114434752	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010117471343	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010116508915	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010117327129	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010117247141	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010114910113	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010116442963	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010116759193	3	0	?	score-fail: 
+https://www.linkedin.com/jobs/view/4359312620	3	4.5	A2	AI Solutions Architect (A2 match). Microsoft AI-native. Compensation above floor. Verify location and technical depth.
+https://www.linkedin.com/jobs/view/4313852223	3	4.2	A2	OpenAI Partner AI Deployment Engineer: A2 forward-deployed match, tier-1 AI company, SF acceptable.
+https://www.linkedin.com/jobs/view/4407017948	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010114200915	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010116495807	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010118570579	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010119121397	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010118424597	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010117325717	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010118741526	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010117636967	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010118390116	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010119157009	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010118707841	3	0	?	score-fail: 
+https://www.linkedin.com/jobs/view/4405264601	3	0	?	score-fail: HTML snippet incomplete; fetching full description from URL
+https://www.linkedin.com/jobs/view/4379438895	3	0	?	score-fail: claude error: spawnSync claude ETIMEDOUT
+https://www.linkedin.com/jobs/view/4358089859	3	4.3	A2	OpenAI + Forward Deployed Eng matches editorial/AI ops background; DC relocation minor vs company quality.
+https://www.linkedin.com/jobs/view/4354790731	3	4.3	A2	Applied AI Architect at Anthropic—direct A2 match, core AI-native product, editorial background fits "applied" ethos
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010121244734	3	0	?	score-fail: 
 https://www.glassdoor.com/job-listing.htm?jobListingId=1010119295440	3	0	?	score-fail: 
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010121272580	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010121159397	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010119232819	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010120261578	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010121315689	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010121367144	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010114417416	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010114294811	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010115211949	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010115211951	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010115211954	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010119983071	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010121159427	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010120947493	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010121304344	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010119460797	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010119707358	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010114364859	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010115023163	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010119824567	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1009445827591	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010116592279	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010116591777	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010119823518	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010113332068	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4387823720	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4407203049	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4400326576	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4406795117	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4406749481	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4378734951	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4400348633	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010114218633	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010119576088	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010119567899	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010119567878	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010120314877	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010119613420	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010119567877	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010121693765	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010121368940	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010115643798	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010119946743	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010114766198	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010115311860	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010120963566	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010121159397	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010119232819	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010114294811	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010115211949	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010120947493	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010119460797	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010119707358	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010114364859	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010119824567	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010116591777	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010113332068	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010114218633	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010119576088	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010119613420	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010119567877	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010121693765	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010115643798	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010114766198	3	0	?	score-fail: 
 https://www.glassdoor.com/job-listing.htm?jobListingId=1010114919442	3	0	?	score-fail: 
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010121414996	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.glassdoor.com/job-listing.htm?jobListingId=1010121157671	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4342829144	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4405186193	3	0	?	score-fail: 
-https://www.linkedin.com/jobs/view/4354064715	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4387390134	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4407973290	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
-https://www.linkedin.com/jobs/view/4393226694	3	0	?	score-fail: claude error: Command failed: claude -p "# career-ops Haiku Triage — Quick
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010121414996	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010121157671	3	0	?	score-fail: 
+https://www.linkedin.com/jobs/view/4393226694	3	4.1	A2	Matches A2 archetype exactly, Seattle home-base, GenAI team, estimated comp meets floor.
+https://www.linkedin.com/jobs/view/4409453760	3	4	B	Exact CV match (comms + AI): Google xGE parallel + Seattle location + Senior Director comp + A2 runway.
+https://www.linkedin.com/jobs/view/4409585259	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010114961823	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010119998549	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010114630869	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010122045027	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010121776217	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010121362426	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010114218472	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010114209054	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010114045488	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010119594971	3	0	?	score-fail: 
+https://www.linkedin.com/jobs/view/4322410073	3	4.6	A2	A2 archetype match at Anthropic; NYC onsite acceptable for tier-1 AI-native role with strong comp.
+https://www.linkedin.com/jobs/view/4409830555	3	4	A2	Solutions Architect at agentic AI platform matches A2. Strong company signal. Verify salary/location.
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010122731639	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010122858963	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010122766419	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010111576502	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010123016995	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010117328834	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010119303973	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010120192906	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010114716836	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010114963130	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010122262588	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010118981255	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010122267914	3	0	?	score-fail: 
+https://www.linkedin.com/jobs/view/4322199961	3	4.5	A2	Applied AI Architect, Anthropic. A2 archetype match. Seattle-based. AI-native company. Clear fit to agent-building background.
+https://www.linkedin.com/jobs/view/4378285321	3	4.2	A2	Direct A2 match at Anthropic; strong AI-native culture fit. Verify remote-friendly and SF comp floor.
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010123468482	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010123807001	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010122764807	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010120277197	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010124022186	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010123611426	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010123711415	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010123041999	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010122846263	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010118605053	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010122934211	3	0	?	score-fail: 
+https://www.linkedin.com/jobs/view/4407464750	3	4.1	A2	A2 title match (AI Enablement Lead), healthcare AI company. Verify comp and remote before applying.
+https://www.linkedin.com/jobs/view/4373800961	3	4	A2	Perfect title match (AI Enablement = A2 target), remote, US. Full JD needed for comp and company verification.
+https://www.linkedin.com/jobs/view/4397758572	3	4.2	A2	Enterprise AI Enablement role matches A2 archetype; Mark43 public safety AI platform; Boston location acceptable; likely comp in range.
+https://www.linkedin.com/jobs/view/4387086760	3	4.3	A2	OpenAI A2 deployment role, AI-core company, SF relocation fit, strong comp, 18mo architect growth.
+https://www.linkedin.com/jobs/view/4409713972	3	4.1	A2	NVIDIA tier-1 AI company; GenAI Engagement Lead aligns A2 enablement/solutions; strong estimated comp; CA onsite acceptable.
+https://www.linkedin.com/jobs/view/4408928742	3	4.1	A2	Applied AI Architect—textbook A2 match. Adobe's AI integration is strong; Utah relocation is option.
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010124075554	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010122263768	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010119825732	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010125256711	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010124222290	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010124222279	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010125213586	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010125140022	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010124587889	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010124212038	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010124291872	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010122690010	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010125308759	3	0	?	score-fail: 
+https://jobs.ashbyhq.com/livekit/b889ef16-4d5d-4b71-b0a9-682026a0a1ee	3	4.2	A2	A2 exact match (Forward Deployed Engineer), AI-native infrastructure company, strong CV blend. Verify comp/location.
+https://jobs.ashbyhq.com/akur8	3	0	?	score-fail: 
+https://www.amazon.jobs/en/jobs/10375124/principal-genai-specialist-sa	3	4	A2	A2 Solutions Architect fit. Principal-level comp. Production AI agents + ops background align.
+https://jobs.ashbyhq.com/norm-ai?utm_source=7ow8wN5o3g	3	0	?	score-fail: 
+https://weworkremotely.com/remote-jobs/carrum-health-staff-applied-ai-product-engineer	3	0	?	score-fail: 
+https://weworkremotely.com/remote-jobs/cast-ai-senior-product-manager-agentic-ai-product	3	4.3	A2	Senior PM for agentic AI at AI-native infrastructure platform; remote; strong A2 match.
+https://www.coinbase.com/careers/positions/7697499?gh_jid=7697499	3	0	?	score-fail: 
+https://jobs.ashbyhq.com/fathom.video	3	0	?	score-fail: 
+https://jobs.ashbyhq.com/notion/3336e944-0970-48ef-9a97-4ebd6656d0c2	3	4	A2	Direct A2 fit: architect AI solutions at AI-native Notion; SF hybrid location main trade-off vs remote preference.
+https://jobs.ashbyhq.com/ramp/63df0ffc-bdc6-40ba-906f-fe03378536b0	3	4.3	A2	A2 perfect fit; AI operations/enablement at AI-native fintech, builder culture, likely strong comp.
+https://jobs.ashbyhq.com/ramp/b42cce4b-8fa9-4e8d-892d-3a29a7afb909	3	4.5	A2	A2 archetype (AI platform/strategy). AI structural to roadmap. Platform mission aligns with agent+ops background.
+https://jobs.ashbyhq.com/river	3	0	?	score-fail: 
+https://jobs.ashbyhq.com/river?utm_source=Zp9nJyqvd4	3	0	?	score-fail: 
+https://job-boards.greenhouse.io/saatva/jobs/4206528009	3	0	?	score-fail: 
+https://remoteOK.com/remote-jobs/remote-senior-product-manager-applied-ai-smartsheet-1131233	3	4.3	A2	A2 match: Senior PgM Applied AI. Remote. Smartsheet has strategic AI roadmap, not core product.
+https://stripe.com/jobs/search?gh_jid=7746909	3	0	?	score-fail: 
+https://stripe.com/jobs/search?gh_jid=7584016	3	0	?	score-fail: 
+https://stripe.com/jobs/search?gh_jid=7584018	3	0	?	score-fail: 
+https://sumble-inc.workable.com/	3	0	?	score-fail: 
+https://jobs.ashbyhq.com/openai/bd49dc36-bfc4-477e-8ddd-b0f8fc878c51	3	4.3	A2	A2 archetype (Forward Deployed Engineer). OpenAI Codex core product. Singapore on-site and comp TBD.
+https://jobs.ashbyhq.com/langchain/ba447a0b-2f52-484e-b3f6-b15c6445bdf9	3	0	?	score-fail: claude error: spawnSync claude ETIMEDOUT
+https://www.linkedin.com/jobs/view/4389399370	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010126485876	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010126655017	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010126485791	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010125443765	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010126842918	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010125581080	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010126672747	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010126708222	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010120324460	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010120486094	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010120260084	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010125381586	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010126006950	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010126420811	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010126487557	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010126647696	3	0	?	score-fail: 
+https://www.glassdoor.com/job-listing.htm?jobListingId=1010117328834	3	4.2	A2	strong AI-native fit, solutions architect signals, clear 18-month path, remote options available

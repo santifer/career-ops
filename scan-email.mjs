@@ -90,7 +90,9 @@ const JOB_URL_PATTERNS = [
   /linkedin\.com\/(?:comm\/)?jobs\/view\/(\d+)/i,
   /indeed\.com\/(?:viewjob|cmp\/[\w.-]+\/jobs\/[\w-]+|rc\/clk\?jk=[\w]+)/i,
   /indeed\.com\/q-[\w-]+-l-[\w%,-]+\/jobs/i,
-  /glassdoor\.com\/(?:job-listing|partner\/jobListing\.htm|Job\/)/i,
+  // Glassdoor removed: 403 bot-detection blocks all automated fetches — URLs enter
+  // the pipeline but fail liveness every time, wasting triage slots. See 2026-05-09.
+  // /glassdoor\.com\/(?:job-listing|partner\/jobListing\.htm|Job\/)/i,
   /ziprecruiter\.com\/(?:jobs|c\/[\w-]+\/Job)\/[\w-]+/i,
 
   // ── AI / startup ──────────────────────────────────────────────
@@ -140,9 +142,7 @@ function canonicalize(url) {
   const indeedJk = url.match(/indeed\.com\/[^?]*\?[^#]*\bjk=([\w]+)/i);
   if (indeedJk) return `https://www.indeed.com/viewjob?jk=${indeedJk[1]}`;
 
-  // Glassdoor: keep jobListingId from the URL
-  const gdMatch = url.match(/glassdoor\.com\/.+jobListingId=(\d+)/i);
-  if (gdMatch) return `https://www.glassdoor.com/job-listing.htm?jobListingId=${gdMatch[1]}`;
+  // Glassdoor: disabled — 403 bot-detection, see JOB_URL_PATTERNS comment above
 
   // Greenhouse: keep board + numeric id; strip everything else
   const ghMatch = url.match(/(?:job-boards|boards)\.greenhouse\.io\/([\w-]+)\/jobs\/(\d+)/i);
