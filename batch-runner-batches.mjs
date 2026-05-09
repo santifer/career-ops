@@ -58,7 +58,7 @@ const PIPELINE_FILE  = join(ROOT, 'data/pipeline.md');
 
 const ANTHROPIC_API  = 'https://api.anthropic.com/v1';
 const BATCHES_VERSION = '2023-06-01';
-const BETAS          = 'message-batches-2024-09-24';
+const BETAS          = 'message-batches-2024-09-24,prompt-caching-2024-07-31';
 
 // ── API Key ───────────────────────────────────────────────────────
 function getApiKey() {
@@ -121,6 +121,126 @@ async function apiCall(method, path, body, apiKey) {
 function readCv()      { return existsSync(CV_FILE)      ? readFileSync(CV_FILE, 'utf8')      : '(cv.md not found)'; }
 function readDigest()  { return existsSync(DIGEST_FILE)  ? readFileSync(DIGEST_FILE, 'utf8')  : '(article-digest.md not found)'; }
 function readProfile() { return existsSync(PROFILE_FILE) ? readFileSync(PROFILE_FILE, 'utf8') : '(config/profile.yml not found)'; }
+
+// ── Static context block (built once per batch run, cached by API) ─
+function buildStaticContextBlock(cvText, digestText, profileText) {
+  const SHARED_FILE  = join(ROOT, 'modes/_shared.md');
+  const PROFILE_MODE = join(ROOT, 'modes/_profile.md');
+  const sharedText   = existsSync(SHARED_FILE)  ? readFileSync(SHARED_FILE,  'utf8') : '';
+  const profileMode  = existsSync(PROFILE_MODE) ? readFileSync(PROFILE_MODE, 'utf8') : '';
+
+  const block = [
+    `You are a job evaluation AI for Mitchell Williams. Produce a full A-G evaluation of this job posting.\n`,
+    `--- cv.md ---\n${cvText}`,
+    `--- config/profile.yml ---\n${profileText}`,
+    `--- modes/_shared.md ---\n${sharedText}`,
+    `--- modes/_profile.md ---\n${profileMode}`,
+    `--- article-digest.md ---\n${digestText}`,
+  ].join('\n\n').trim();
+
+  const tokenEst = Math.round(block.length / 4);
+  console.log(`[cache] Static block: ~${tokenEst.toLocaleString()} tokens (cache_control: ephemeral)`);
+  if (tokenEst < 1024) {
+    console.warn('[cache] WARNING: static block < 1024 tokens — cache hit rate will be low');
+  }
+  return block;
+}
+
+// ── Dynamic per-item prompt (JD + URL + report metadata only) ─────
+function buildDynamicEvalPrompt(item, jdText, reportNum, date) {
+  const company  = guessCompany(item.url);
+  const scanSnip = scanHistorySnippet(company);
+
+  return `## Job Posting
+URL: ${item.url}
+Triage score: ${item.score}/5 (archetype: ${item.archetype})
+Report number: ${reportNum.toString().padStart(3, '0')}
+Date: ${date}
+
+### JD Content (first 12,000 chars)
+${jdText || '(JD unavailable — evaluate from URL and company context only)'}
+
+## Scan History (prior appearances of this company)
+${scanSnip}
+
+---
+
+## Instructions
+
+Produce a complete evaluation in this EXACT markdown format. The header block must be verbatim.
+
+\`\`\`
+# Evaluation: {Company} — {Role}
+
+**Date:** ${date}
+**Archetype:** {detected archetype from the 6 in the system}
+**Score:** {X.X/5}
+**Legitimacy:** {High Confidence | Proceed with Caution | Suspicious}
+**URL:** ${item.url}
+**PDF:** ❌ (Batches API mode — run generate-pdf.mjs separately if applying)
+**Batch ID:** batches-api-${date}
+**Model:** ${MODEL}
+**Verification:** unconfirmed (batch mode)
+
+---
+
+## A) Role Summary
+
+Table with: Detected archetype, Domain, Function, Seniority, Remote policy, Team size, TL;DR.
+
+## B) CV Match
+
+Table mapping each JD requirement to exact lines from the CV above.
+Include a Gaps section.
+
+## C) Level and Strategy
+
+1. Level detected in JD vs candidate level
+2. "Sell senior without lying" plan
+3. "If downleveled" plan
+
+## D) Comp and Market
+
+Estimated comp range based on role type and seniority (note: live web search unavailable in batch mode).
+Comp score (1-5).
+
+## E) Personalization Plan
+
+Top 5 CV changes + Top 5 LinkedIn changes for this specific role.
+
+## F) Interview Plan
+
+6-8 STAR stories mapped to JD requirements.
+
+## G) Posting Legitimacy
+
+Assessment of legitimacy using available signals (JD quality, scan history above, company hiring context).
+Three tiers: High Confidence / Proceed with Caution / Suspicious.
+
+---
+
+## Global Score
+
+| Dimension | Score |
+|-----------|-------|
+| CV Match | X/5 |
+| North Star Alignment | X/5 |
+| Comp | X/5 |
+| Cultural Signals | X/5 |
+| **Global** | **X.X/5** |
+
+## Extracted Keywords
+(15-20 keywords from JD for ATS)
+\`\`\`
+
+## Rules
+- NEVER invent experience or metrics not in the CV or article-digest above
+- North Star = Anthropic/OpenAI/xAI/DeepMind/Mistral/Sierra → 1.3x weight for safety-alignment signals
+- Comp floor: $175K total comp (Seattle $180K), target $200K-$320K
+- Only recommend applying (score ≥ 4.0) if role is genuinely Mitchell-shaped
+- End your response with a JSON block on its own line:
+  {"batch_status":"completed","score":X.X,"company":"{company}","role":"{role}","archetype":"{arch}","legitimacy":"{tier}"}`;
+}
 
 // Return just the lines from scan-history.tsv that contain the company
 function scanHistorySnippet(company) {
@@ -358,6 +478,9 @@ async function phaseSubmit(apiKey) {
   const date        = new Date().toISOString().slice(0, 10);
   let   reportNum   = nextReportNum();
 
+  // Build static context block ONCE for the entire batch (cached by Anthropic API)
+  const staticBlock = buildStaticContextBlock(cvText, digestText, profileText);
+
   const requests = [];
   let fetchErrors = 0;
 
@@ -373,16 +496,31 @@ async function phaseSubmit(apiKey) {
     }
     process.stdout.write(` ✅\n`);
 
-    const customId = `eval-${date}-${i.toString().padStart(4, '0')}`;
-    const prompt   = buildEvalPrompt(item, text, cvText, digestText, profileText, reportNum, date);
+    const customId    = `eval-${date}-${i.toString().padStart(4, '0')}`;
+    const userPrompt  = buildDynamicEvalPrompt(item, text, reportNum, date);
+
+    // Static context in system block with cache_control — API caches this prefix across requests
+    let params;
+    try {
+      params = {
+        model: MODEL,
+        max_tokens: 4096,
+        system: [{ type: 'text', text: staticBlock, cache_control: { type: 'ephemeral' } }],
+        messages: [{ role: 'user', content: userPrompt }],
+      };
+    } catch (cacheErr) {
+      // Fallback: if cache_control causes any issue, collapse to flat user message
+      console.warn(`[cache] Falling back to flat message for ${customId}: ${cacheErr.message}`);
+      params = {
+        model: MODEL,
+        max_tokens: 4096,
+        messages: [{ role: 'user', content: `${staticBlock}\n\n${userPrompt}` }],
+      };
+    }
 
     requests.push({
       custom_id: customId,
-      params: {
-        model: MODEL,
-        max_tokens: 4096,
-        messages: [{ role: 'user', content: prompt }],
-      },
+      params,
       _meta: { url: item.url, tier: item.tier, triageScore: item.score, archetype: item.archetype, reportNum, date },
     });
     reportNum++;
