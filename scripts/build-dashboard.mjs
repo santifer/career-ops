@@ -828,22 +828,27 @@ function build() {
     --text-4: #9ca3af;
     --green: #15803d;
     --green-fg: #16a34a;
+    --green-fg-dark: #166534;
     --green-bg: #dcfce7;
     --green-border: #86efac;
     --blue: #1d4ed8;
     --blue-fg: #2563eb;
+    --blue-fg-dark: #1e40af;
     --blue-bg: #dbeafe;
     --blue-border: #93c5fd;
     --amber: #b45309;
     --amber-fg: #d97706;
+    --amber-fg-dark: #92400e;
     --amber-bg: #fef3c7;
     --amber-border: #fcd34d;
     --red: #b91c1c;
     --red-fg: #dc2626;
+    --red-fg-dark: #991b1b;
     --red-bg: #fee2e2;
     --red-border: #fca5a5;
     --purple: #6d28d9;
     --purple-fg: #7c3aed;
+    --purple-fg-dark: #5b21b6;
     --purple-bg: #ede9fe;
     --purple-border: #c4b5fd;
     --radius: 8px;
@@ -868,22 +873,27 @@ function build() {
     --text-4: #71717a;
     --green: #4ade80;
     --green-fg: #86efac;
+    --green-fg-dark: #bbf7d0;
     --green-bg: rgba(22,163,74,.12);
     --green-border: rgba(22,163,74,.3);
     --blue: #93c5fd;
     --blue-fg: #60a5fa;
+    --blue-fg-dark: #bfdbfe;
     --blue-bg: rgba(37,99,235,.12);
     --blue-border: rgba(37,99,235,.3);
     --amber: #fbbf24;
     --amber-fg: #fcd34d;
+    --amber-fg-dark: #fde68a;
     --amber-bg: rgba(217,119,6,.12);
     --amber-border: rgba(217,119,6,.3);
     --red: #f87171;
     --red-fg: #fca5a5;
+    --red-fg-dark: #fecaca;
     --red-bg: rgba(220,38,38,.12);
     --red-border: rgba(220,38,38,.3);
     --purple: #c4b5fd;
     --purple-fg: #a78bfa;
+    --purple-fg-dark: #ddd6fe;
     --purple-bg: rgba(124,58,237,.12);
     --purple-border: rgba(124,58,237,.3);
     --ring-green: 0 0 0 3px rgba(74,222,128,.15);
@@ -913,6 +923,34 @@ function build() {
   .subtle { color: var(--text-3); font-size: 12.5px; margin-bottom: 20px; }
   .muted { color: var(--text-4); }
   .muted-text { color: var(--text-3); font-size: 12px; }
+
+  /* ── Accessibility utilities ─────────────────────────────────── */
+  /* Visually hidden but exposed to assistive tech (WCAG 1.3.1, 4.1.2). */
+  .sr-only {
+    position: absolute !important; width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0);
+    white-space: nowrap; border: 0;
+  }
+  /* Skip-link is the first focusable element on the page (WCAG 2.4.1). */
+  .skip-link {
+    position: absolute; top: -40px; left: 8px;
+    background: var(--blue-fg-dark); color: #fff;
+    padding: 10px 14px; border-radius: var(--radius-sm);
+    font-weight: 600; font-size: 13px; z-index: 10000;
+    text-decoration: none;
+  }
+  .skip-link:focus { top: 8px; outline: 2px solid var(--text); outline-offset: 2px; }
+  /* Global focus-visible ring for keyboard navigation (WCAG 2.4.7). */
+  a:focus-visible,
+  button:focus-visible,
+  [tabindex]:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid var(--blue-fg);
+    outline-offset: 2px;
+    border-radius: inherit;
+  }
 
   /* ── Toolbar ─────────────────────────────────────────────────── */
   .toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
@@ -955,7 +993,13 @@ function build() {
     font-variant-numeric: tabular-nums;
   }
   .stat-strong .stat-value { color: var(--green-fg); }
-  .stat-caret { font-size: 11px; color: var(--text-4); margin-top: 8px; }
+  .stat-caret {
+    position: absolute; top: 10px; right: 12px;
+    font-size: 13px; color: var(--text-4); line-height: 1;
+    transition: color .12s, transform .12s;
+  }
+  .stat:hover .stat-caret { color: var(--text-3); }
+  .stat.active .stat-caret { color: var(--blue-fg); transform: rotate(180deg); }
 
   /* ── Panels / cards ──────────────────────────────────────────── */
   .panel {
@@ -978,7 +1022,7 @@ function build() {
   }
   .panel-title .pill {
     font-size: 11px; font-weight: 600;
-    background: var(--green-fg); color: #fff;
+    background: var(--green-fg-dark); color: #fff;
     padding: 1px 9px; border-radius: var(--radius-full);
     letter-spacing: 0;
   }
@@ -1006,8 +1050,18 @@ function build() {
   tr.row:hover td { background: var(--surface-2); }
   td.num { color: var(--text-3); font-variant-numeric: tabular-nums; }
   .role-cell { color: var(--text); font-weight: 500; }
-  td.action-cell a { color: var(--blue-fg); font-weight: 500; font-size: 12px; }
-  td.action-cell a:hover { text-decoration: underline; }
+  /* Action-cell links rendered as 44×44 padded buttons (WCAG 2.5.5). */
+  td.action-cell { white-space: nowrap; }
+  td.action-cell a {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 44px; min-height: 44px;
+    padding: 6px 10px; margin: -6px 0;
+    color: var(--blue-fg-dark); font-weight: 500; font-size: 12px;
+    border-radius: var(--radius-sm);
+    box-sizing: border-box;
+  }
+  td.action-cell a:hover { background: var(--surface-2); text-decoration: underline; }
+  td.action-cell .action-sep { color: var(--text-4); padding: 0 2px; user-select: none; }
   .tier-tag {
     font-size: 10px; color: var(--text-3); background: var(--surface-2);
     border: 1px solid var(--border); border-radius: 4px;
@@ -1040,11 +1094,12 @@ function build() {
   .score-strong  { background: var(--green-bg);  color: var(--green); }
   .score-moderate { background: var(--amber-bg); color: var(--amber); }
   .score-weak    { background: var(--surface-2); color: var(--text-3); }
-  .status-evaluated { background: var(--blue-bg);   color: var(--blue-fg); }
-  .status-applied   { background: var(--amber-bg);  color: var(--amber-fg); }
-  .status-interview { background: var(--purple-bg); color: var(--purple-fg); }
-  .status-offer     { background: var(--green-bg);  color: var(--green-fg); }
-  .status-rejected  { background: var(--red-bg);    color: var(--red-fg); }
+  /* Status pills use the *-fg-dark tokens to clear WCAG AA 4.5:1 on tinted bg */
+  .status-evaluated { background: var(--blue-bg);   color: var(--blue-fg-dark); }
+  .status-applied   { background: var(--amber-bg);  color: var(--amber-fg-dark); }
+  .status-interview { background: var(--purple-bg); color: var(--purple-fg-dark); }
+  .status-offer     { background: var(--green-bg);  color: var(--green-fg-dark); }
+  .status-rejected  { background: var(--red-bg);    color: var(--red-fg-dark); }
   .status-discarded { background: var(--surface-2); color: var(--text-3); }
 
   /* ── Age badges ──────────────────────────────────────────────── */
@@ -1132,7 +1187,7 @@ function build() {
     background: var(--surface-2); border: 1px solid var(--border); color: var(--text-3); gap: 3px;
   }
   .meta-chip-comp { background: var(--green-bg); border-color: var(--green-border); color: var(--green); }
-  .meta-chip-tier { background: var(--blue-bg);  border-color: var(--blue-border);  color: var(--blue-fg); }
+  .meta-chip-tier { background: var(--blue-bg);  border-color: var(--blue-border);  color: var(--blue-fg-dark); }
   /* Two-column detail grid */
   .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
   .detail-col  { display: flex; flex-direction: column; gap: 8px; }
@@ -1166,7 +1221,7 @@ function build() {
     border-radius: 4px; padding: 7px 10px;
   }
   .story-n {
-    font-size: 10px; font-weight: 700; color: var(--purple-fg);
+    font-size: 10px; font-weight: 700; color: var(--purple-fg-dark);
     background: var(--purple-bg); border-radius: 50%;
     width: 16px; height: 16px; display: flex; align-items: center; justify-content: center;
     flex-shrink: 0; margin-top: 2px;
@@ -1181,16 +1236,23 @@ function build() {
   }
   .rec-label {
     font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em;
-    background: var(--green-fg); color: #fff; padding: 2px 8px; border-radius: var(--radius-full);
+    background: var(--green-fg-dark); color: #fff; padding: 2px 8px; border-radius: var(--radius-full);
     white-space: nowrap;
   }
   .rec-text  { font-size: 12.5px; color: var(--text-2); flex: 1; min-width: 0; line-height: 1.4; }
   .rec-btn {
-    background: var(--green-fg); color: #fff; padding: 5px 13px;
+    background: var(--green-fg-dark); color: #fff; padding: 5px 13px;
     border-radius: var(--radius-sm); font-size: 12px; font-weight: 600;
     text-decoration: none; white-space: nowrap; transition: background .12s;
   }
   .rec-btn:hover { background: var(--green); color: #fff; text-decoration: none; }
+  /* Dark-mode pill overrides — *-fg-dark in dark mode is the LIGHT variant
+     used for text on tinted backgrounds, but solid pill bg needs dark text. */
+  body.dark .panel-title .pill,
+  body.dark .rec-label,
+  body.dark .rec-btn,
+  body.dark .skip-link { color: #0a0a0b; }
+  body.dark .rec-btn:hover { color: #0a0a0b; }
 
   /* ── Stat panels (expandable) ────────────────────────────────── */
   .stat-panel {
@@ -1398,14 +1460,17 @@ function build() {
 </style>
 </head>
 <body>
+<a class="skip-link" href="#main">Skip to main content</a>
 <div class="container">
 
-  <div class="toolbar">
+  <header class="toolbar" role="banner">
     <h1>Career-Ops Dashboard</h1>
-    <button class="toolbar-btn" onclick="toggleDark()" id="dark-toggle">☀︎ Light</button>
-    <button class="toolbar-btn" id="batch-toggle-btn" onclick="toggleBatchOverlay()" style="display:none">⚡ Batch</button>
-  </div>
+    <button class="toolbar-btn" onclick="toggleDark()" id="dark-toggle" aria-label="Toggle dark mode">☀︎ Light</button>
+    <button class="toolbar-btn" id="batch-toggle-btn" onclick="toggleBatchOverlay()" style="display:none" aria-label="Toggle batch progress overlay">⚡ Batch</button>
+  </header>
   <div class="subtle">Generated ${escape(generated)} · Reports today: ${reportsToday} · <span id="live-updated"></span></div>
+
+  <main id="main">
 
   <!-- Batch progress overlay -->
   <div id="batch-overlay">
@@ -1447,22 +1512,22 @@ function build() {
     <div class="stat ${applyNow.length > 0 ? 'stat-strong' : ''}" onclick="document.getElementById('apply-now-section').scrollIntoView({behavior:'smooth'})" title="Click to scroll to Apply-Now queue">
       <div class="stat-label">Apply-Now (≥ 4.0)</div>
       <div class="stat-value" id="live-apply-now">${applyNow.length}</div>
-      <div class="stat-caret">▾ click to expand</div>
+      <span class="stat-caret" aria-hidden="true">▾</span><span class="sr-only">Click to expand</span>
     </div>
     <div class="stat" onclick="toggleStatPanel('evaluations')" title="Click to see all evaluations">
       <div class="stat-label">Total evaluations</div>
       <div class="stat-value" id="live-total">${total}</div>
-      <div class="stat-caret">▾ click to expand</div>
+      <span class="stat-caret" aria-hidden="true">▾</span><span class="sr-only">Click to expand</span>
     </div>
     <div class="stat" onclick="toggleStatPanel('applied')" title="Click to see in-flight applications">
       <div class="stat-label">Applied / In process</div>
       <div class="stat-value" id="live-applied">${applied.length}</div>
-      <div class="stat-caret">▾ click to expand</div>
+      <span class="stat-caret" aria-hidden="true">▾</span><span class="sr-only">Click to expand</span>
     </div>
     <div class="stat" onclick="toggleStatPanel('pending')" title="Click to see pipeline">
       <div class="stat-label">Pipeline pending</div>
       <div class="stat-value" id="live-pipeline">${pipelinePending}</div>
-      <div class="stat-caret">▾ click to expand</div>
+      <span class="stat-caret" aria-hidden="true">▾</span><span class="sr-only">Click to expand</span>
     </div>
     <div class="stat">
       <div class="stat-label">Companies tracked</div>
@@ -1507,21 +1572,22 @@ function build() {
 
   <div class="panel">
     <div class="panel-title">All Evaluations <span class="pill" style="background:#0969da">${total}</span></div>
-    <div class="filters filters-sticky">
-      <input type="search" id="filter-text" placeholder="Filter by company, role, or notes…" oninput="applyFilters()">
-      <select id="filter-tier" onchange="applyFilters()">
+    <div class="filters filters-sticky" role="search">
+      <input type="search" id="filter-text" placeholder="Filter by company, role, or notes…"
+        aria-label="Filter evaluations by company, role, or notes" oninput="applyFilters()">
+      <select id="filter-tier" aria-label="Filter by archetype tier" onchange="applyFilters()">
         <option value="">All tiers</option>
         <option value="A1">A1 — Residency</option>
         <option value="A2">A2 — AI Builder</option>
         <option value="B">B — Comms / Editorial</option>
       </select>
-      <select id="filter-score" onchange="applyFilters()">
+      <select id="filter-score" aria-label="Filter by minimum score" onchange="applyFilters()">
         <option value="">All scores</option>
         <option value="4">≥ 4.0 only</option>
         <option value="3">≥ 3.0 only</option>
         <option value="2">≥ 2.0 only</option>
       </select>
-      <select id="filter-status" onchange="applyFilters()">
+      <select id="filter-status" aria-label="Filter by application status" onchange="applyFilters()">
         <option value="">All statuses</option>
         <option value="evaluated">Evaluated (no action)</option>
         <option value="applied">Applied</option>
@@ -1559,14 +1625,18 @@ function build() {
       ];
       const totals = segDefs.map(s => buckets[s.key] || 0);
       const totalAll = totals.reduce((a, b) => a + b, 0) || 1;
-      return `<div class="seg-bar">
-        <div class="seg-bar-counts">
+      return `<div class="seg-bar" role="group" aria-label="Score distribution across ${totalAll} evaluation${totalAll === 1 ? '' : 's'}">
+        <div class="seg-bar-counts" aria-hidden="true">
           ${segDefs.map((s, i) => `<div class="seg-bar-count${totals[i] === 0 ? ' zero' : ''}">${totals[i]}</div>`).join('')}
         </div>
-        <div class="seg-bar-track" role="img" aria-label="Score distribution: ${segDefs.map((s, i) => `${s.label} ${totals[i]}`).join(', ')}">
-          ${segDefs.map((s, i) => `<div class="seg-bar-segment ${s.cls}${totals[i] === 0 ? ' zero' : ''}" style="flex-grow:${totals[i]}" title="${s.label} (${s.range}): ${totals[i]} (${((totals[i]/totalAll)*100).toFixed(0)}%)"></div>`).join('')}
+        <div class="seg-bar-track">
+          ${segDefs.map((s, i) => {
+            const pct = ((totals[i]/totalAll)*100).toFixed(0);
+            const label = `${s.label.toUpperCase()}: ${totals[i]} evaluation${totals[i] === 1 ? '' : 's'} at ${s.range} (${pct}%)`;
+            return `<div class="seg-bar-segment ${s.cls}${totals[i] === 0 ? ' zero' : ''}" style="flex-grow:${totals[i]}" role="img" aria-label="${label}" title="${s.label} (${s.range}): ${totals[i]} (${pct}%)"></div>`;
+          }).join('')}
         </div>
-        <div class="seg-bar-labels">
+        <div class="seg-bar-labels" aria-hidden="true">
           ${segDefs.map(s => `<div class="seg-bar-label">${s.label}<span class="seg-bar-range">${s.range}</span></div>`).join('')}
         </div>
       </div>`;
@@ -1575,21 +1645,22 @@ function build() {
 
   <div class="panel">
     <div class="panel-title">Top Companies (by evaluation count)</div>
-    <div class="bar-chart">
+    <div class="bar-chart" role="list" aria-label="Top companies by evaluation count">
       ${topCompanies.map(([company, count]) => {
         const max = topCompanies[0][1];
         const pct = (count / max) * 100;
         return `
-        <div class="bar-row">
+        <div class="bar-row" role="listitem" aria-label="${escape(company)}: ${count} evaluation${count === 1 ? '' : 's'}">
           <div class="bar-row-label">${escape(company)}</div>
-          <div class="bar-track"><div class="bar-fill" style="width:${pct.toFixed(1)}%"></div></div>
-          <div class="bar-row-count">${count}</div>
+          <div class="bar-track" aria-hidden="true"><div class="bar-fill" style="width:${pct.toFixed(1)}%"></div></div>
+          <div class="bar-row-count" aria-hidden="true">${count}</div>
         </div>`;
       }).join('')}
     </div>
   </div>
   </div>
 
+  </main>
 </div>
 
 <script>
