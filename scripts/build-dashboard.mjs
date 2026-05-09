@@ -1690,14 +1690,15 @@ function build() {
   .age-ok    { color: var(--text-3); font-size: 12px; }
 
   /* ── Filters bar ─────────────────────────────────────────────── */
-  .filters { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 14px; }
+  .filters { display: flex; flex-direction: column; gap: 8px; margin: 0 0 14px; }
+  .filters-row { display: flex; gap: 8px; flex-wrap: wrap; }
   .filters input, .filters select {
     padding: 7px 11px; font-size: 13px; font-family: inherit;
     border: 1px solid var(--border); border-radius: var(--radius-sm);
     background: var(--surface); color: var(--text);
     outline: none; transition: border-color .15s, box-shadow .15s;
   }
-  .filters input { flex: 1; min-width: 200px; }
+  .filters-row input[type="search"] { flex: 1; min-width: 200px; }
   .filters input:focus, .filters select:focus {
     border-color: var(--blue-fg); box-shadow: var(--ring-blue);
   }
@@ -1709,6 +1710,73 @@ function build() {
     box-shadow: 0 4px 6px -4px rgba(0,0,0,.08);
   }
   body.dark .filters-sticky { box-shadow: 0 4px 6px -4px rgba(0,0,0,.4); }
+
+  /* ── Saved views ─────────────────────────────────────────────── */
+  .saved-views-row {
+    display: flex; align-items: center; flex-wrap: wrap; gap: 6px;
+    padding-bottom: 4px; border-bottom: 1px dashed var(--border);
+  }
+  .saved-views-label {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.05em; color: var(--text-3);
+    padding-right: 6px; flex-shrink: 0;
+  }
+  .saved-views-chips { display: flex; flex-wrap: wrap; gap: 5px; flex: 1; min-width: 0; }
+  .saved-view-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 4px 3px 9px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-full); font-size: 12px; color: var(--text-2);
+    cursor: pointer; transition: background .12s, border-color .12s, color .12s;
+    user-select: none;
+  }
+  .saved-view-chip:hover { background: var(--blue-bg); border-color: var(--blue-border); color: var(--blue-fg-dark); }
+  .saved-view-chip.active { background: var(--blue-bg); border-color: var(--blue-fg); color: var(--blue-fg-dark); font-weight: 600; }
+  .saved-view-chip-name { white-space: nowrap; }
+  .saved-view-chip-summary {
+    font-size: 10.5px; color: var(--text-4); font-weight: 400;
+    margin-left: 4px; white-space: nowrap;
+  }
+  .saved-view-chip:hover .saved-view-chip-summary,
+  .saved-view-chip.active .saved-view-chip-summary { color: inherit; opacity: .75; }
+  .saved-view-chip-delete {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: transparent; border: 0; padding: 0; margin-left: 2px;
+    color: var(--text-4); font-size: 14px; line-height: 1;
+    cursor: pointer; transition: background .12s, color .12s;
+  }
+  .saved-view-chip-delete:hover { background: var(--red-bg, #ffebe9); color: var(--red-fg); }
+  .saved-view-btn {
+    padding: 4px 10px; font-size: 12px; font-family: inherit; font-weight: 500;
+    border: 1px dashed var(--border); border-radius: var(--radius-full);
+    background: transparent; color: var(--text-3);
+    cursor: pointer; transition: border-color .12s, color .12s, background .12s;
+    white-space: nowrap;
+  }
+  .saved-view-btn:hover { border-color: var(--blue-fg); color: var(--blue-fg); }
+  .saved-view-btn.primary {
+    border-style: solid; background: var(--blue-fg); border-color: var(--blue-fg);
+    color: #fff;
+  }
+  .saved-view-btn.primary:hover { filter: brightness(0.95); color: #fff; }
+  .saved-view-prompt {
+    display: flex; align-items: center; flex-wrap: wrap; gap: 6px;
+    padding: 6px 0;
+  }
+  .saved-view-prompt input[type="text"] {
+    flex: 1; min-width: 200px;
+    padding: 6px 10px; font-size: 13px; font-family: inherit;
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    background: var(--surface); color: var(--text); outline: none;
+  }
+  .saved-view-prompt input[type="text"]:focus {
+    border-color: var(--blue-fg); box-shadow: var(--ring-blue);
+  }
+  .saved-view-error { font-size: 11.5px; color: var(--red-fg); }
+  .saved-views-empty {
+    font-size: 11.5px; color: var(--text-4); font-style: italic; padding: 2px 0;
+  }
 
   /* ── Bar chart ───────────────────────────────────────────────── */
   .bar-chart { display: flex; flex-direction: column; gap: 9px; }
@@ -2676,37 +2744,57 @@ function build() {
   <div class="panel">
     <div class="panel-title">All Evaluations <span class="pill" style="background:#0969da">${total}</span></div>
     <div class="filters filters-sticky" role="search">
-      <input type="search" id="filter-text" placeholder="Search company, role, gaps, stories, recommendation…"
-        aria-label="Search evaluations by company, role, gaps, stories, or recommendation" oninput="applyFilters()">
-      <select id="filter-tier" aria-label="Filter by archetype tier" onchange="applyFilters()">
-        <option value="">All tiers</option>
-        <option value="A1">A1 — Residency</option>
-        <option value="A2">A2 — AI Builder</option>
-        <option value="B">B — Comms / Editorial</option>
-      </select>
-      <select id="filter-score" aria-label="Filter by minimum score" onchange="applyFilters()">
-        <option value="">All scores</option>
-        <option value="4">≥ 4.0 only</option>
-        <option value="3">≥ 3.0 only</option>
-        <option value="2">≥ 2.0 only</option>
-      </select>
-      <select id="filter-status" aria-label="Filter by application status" onchange="applyFilters()">
-        <option value="">All statuses</option>
-        <option value="evaluated">Evaluated (no action)</option>
-        <option value="applied">Applied</option>
-        <option value="interview">Interview</option>
-        <option value="discarded">Discarded</option>
-        <option value="rejected">Rejected</option>
-      </select>
-      <select id="filter-equity" aria-label="Filter by equity / IPO stage" onchange="applyFilters()">
-        <option value="">All equity stages</option>
-        <option value="late">🟢 Pre-IPO Late</option>
-        <option value="cd">🟢 Pre-IPO C/D</option>
-        <option value="b">🟡 Pre-IPO B</option>
-        <option value="seed-a">🟣 Pre-IPO Seed/A</option>
-        <option value="public">🔵 Public</option>
-        <option value="unknown">⚪ Unknown</option>
-      </select>
+      <div class="saved-views-row" aria-label="Saved filter views">
+        <span class="saved-views-label">Saved views</span>
+        <div id="saved-views-chips" class="saved-views-chips" role="list"></div>
+        <button type="button" id="saved-view-save-btn" class="saved-view-btn"
+          onclick="openSaveViewPrompt()" aria-label="Save current filters as a named view">
+          + Save current view
+        </button>
+      </div>
+      <div id="saved-view-prompt" class="saved-view-prompt" hidden>
+        <input type="text" id="saved-view-name" maxlength="30"
+          placeholder="View name (max 30 chars, letters/numbers/spaces)"
+          aria-label="Saved view name"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();confirmSaveView();}else if(event.key==='Escape'){event.preventDefault();cancelSaveView();}">
+        <button type="button" class="saved-view-btn primary" onclick="confirmSaveView()">Save</button>
+        <button type="button" class="saved-view-btn" onclick="cancelSaveView()">Cancel</button>
+        <span id="saved-view-error" class="saved-view-error" aria-live="polite"></span>
+      </div>
+      <div class="filters-row">
+        <input type="search" id="filter-text" placeholder="Search company, role, gaps, stories, recommendation…"
+          aria-label="Search evaluations by company, role, gaps, stories, or recommendation" oninput="applyFilters()">
+        <select id="filter-tier" aria-label="Filter by archetype tier" onchange="applyFilters()">
+          <option value="">All tiers</option>
+          <option value="A1">A1 — Residency</option>
+          <option value="A2">A2 — AI Builder</option>
+          <option value="B">B — Comms / Editorial</option>
+        </select>
+        <select id="filter-score" aria-label="Filter by minimum score" onchange="applyFilters()">
+          <option value="">All scores</option>
+          <option value="4.5">≥ 4.5 only</option>
+          <option value="4">≥ 4.0 only</option>
+          <option value="3">≥ 3.0 only</option>
+          <option value="2">≥ 2.0 only</option>
+        </select>
+        <select id="filter-status" aria-label="Filter by application status" onchange="applyFilters()">
+          <option value="">All statuses</option>
+          <option value="evaluated">Evaluated (no action)</option>
+          <option value="applied">Applied</option>
+          <option value="interview">Interview</option>
+          <option value="discarded">Discarded</option>
+          <option value="rejected">Rejected</option>
+        </select>
+        <select id="filter-equity" aria-label="Filter by equity / IPO stage" onchange="applyFilters()">
+          <option value="">All equity stages</option>
+          <option value="late">🟢 Pre-IPO Late</option>
+          <option value="cd">🟢 Pre-IPO C/D</option>
+          <option value="b">🟡 Pre-IPO B</option>
+          <option value="seed-a">🟣 Pre-IPO Seed/A</option>
+          <option value="public">🔵 Public</option>
+          <option value="unknown">⚪ Unknown</option>
+        </select>
+      </div>
     </div>
     <div class="table-scroll"><table>
       <thead><tr>
@@ -2941,6 +3029,179 @@ MOBILE_BREAKPOINT_MQ.addEventListener?.('change', (e) => {
   if (!e.matches) closeMobileSheet();
 });
 
+// ── Saved filter views ──────────────────────────────────────────
+const SAVED_VIEWS_KEY = 'dashboard.savedViews';
+const SAVED_VIEW_NAME_RE = /^[A-Za-z0-9 ≥\\-_/.+]{1,30}$/;
+const SEEDED_SAVED_VIEWS = [
+  { name: 'Apply-Now ≥ 4.5',    filters: { text: '', tier: '',   score: '4.5', status: 'evaluated', equity: '' } },
+  { name: 'Anthropic everything', filters: { text: 'anthropic', tier: '',   score: '', status: '', equity: '' } },
+  { name: 'Tier A2 only',       filters: { text: '', tier: 'A2', score: '', status: '', equity: '' } },
+  { name: 'Pre-IPO late stage', filters: { text: '', tier: '',   score: '', status: '', equity: 'late' } },
+];
+
+function loadSavedViews() {
+  let raw = null;
+  try { raw = localStorage.getItem(SAVED_VIEWS_KEY); } catch (e) { return [...SEEDED_SAVED_VIEWS]; }
+  if (raw == null) {
+    try { localStorage.setItem(SAVED_VIEWS_KEY, JSON.stringify(SEEDED_SAVED_VIEWS)); } catch (e) {}
+    return [...SEEDED_SAVED_VIEWS];
+  }
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(v => v && typeof v.name === 'string' && v.filters && typeof v.filters === 'object');
+  } catch (e) { return []; }
+}
+
+function persistSavedViews(views) {
+  try { localStorage.setItem(SAVED_VIEWS_KEY, JSON.stringify(views)); } catch (e) {}
+}
+
+function _currentFilterState() {
+  return {
+    text:   (document.getElementById('filter-text')?.value || '').trim(),
+    tier:   document.getElementById('filter-tier')?.value || '',
+    score:  document.getElementById('filter-score')?.value || '',
+    status: document.getElementById('filter-status')?.value || '',
+    equity: document.getElementById('filter-equity')?.value || '',
+  };
+}
+
+function _filtersEqual(a, b) {
+  if (!a || !b) return false;
+  return (a.text || '') === (b.text || '') &&
+         (a.tier || '') === (b.tier || '') &&
+         (a.score || '') === (b.score || '') &&
+         (a.status || '') === (b.status || '') &&
+         (a.equity || '') === (b.equity || '');
+}
+
+function _summarizeFilters(f) {
+  const parts = [];
+  if (f.text)   parts.push('"' + (f.text.length > 14 ? f.text.slice(0, 13) + '…' : f.text) + '"');
+  if (f.tier)   parts.push(f.tier);
+  if (f.score)  parts.push('≥ ' + f.score);
+  if (f.status) parts.push(f.status);
+  if (f.equity) parts.push(f.equity);
+  return parts.join(' · ') || 'all rows';
+}
+
+function renderSavedViewChips() {
+  const host = document.getElementById('saved-views-chips');
+  if (!host) return;
+  const views = loadSavedViews();
+  const current = _currentFilterState();
+  if (!views.length) {
+    host.innerHTML = '<span class="saved-views-empty">No saved views — set filters and click "+ Save current view".</span>';
+    return;
+  }
+  host.innerHTML = views.map((v, i) => {
+    const active = _filtersEqual(v.filters, current);
+    return '<span class="saved-view-chip' + (active ? ' active' : '') + '" role="listitem" tabindex="0"' +
+           ' data-view-idx="' + i + '"' +
+           ' title="Apply view: ' + _esc(v.name) + ' (' + _esc(_summarizeFilters(v.filters)) + ')"' +
+           ' onclick="applySavedViewByIndex(' + i + ')"' +
+           ' onkeydown="if(event.key===\\'Enter\\'||event.key===\\' \\'){event.preventDefault();applySavedViewByIndex(' + i + ');}">' +
+           '<span class="saved-view-chip-name">' + _esc(v.name) + '</span>' +
+           '<span class="saved-view-chip-summary">' + _esc(_summarizeFilters(v.filters)) + '</span>' +
+           '<button type="button" class="saved-view-chip-delete" aria-label="Delete saved view: ' + _esc(v.name) + '"' +
+           ' onclick="event.stopPropagation();deleteSavedViewByIndex(' + i + ')">×</button>' +
+           '</span>';
+  }).join('');
+}
+
+function _esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+
+function applySavedViewByIndex(i) {
+  const views = loadSavedViews();
+  const v = views[i];
+  if (!v) return;
+  applySavedView(v);
+}
+
+function applySavedView(v) {
+  if (!v || !v.filters) return;
+  const f = v.filters;
+  const ft  = document.getElementById('filter-text');
+  const fT  = document.getElementById('filter-tier');
+  const fS  = document.getElementById('filter-score');
+  const fSt = document.getElementById('filter-status');
+  const fEq = document.getElementById('filter-equity');
+  if (ft)  ft.value  = f.text   || '';
+  if (fT)  fT.value  = f.tier   || '';
+  if (fS)  fS.value  = f.score  || '';
+  if (fSt) fSt.value = f.status || '';
+  if (fEq) fEq.value = f.equity || '';
+  if (typeof applyFilters === 'function') applyFilters();
+  renderSavedViewChips();
+  if (typeof toast === 'function') toast('View: ' + v.name, 'info');
+}
+
+function deleteSavedViewByIndex(i) {
+  const views = loadSavedViews();
+  if (i < 0 || i >= views.length) return;
+  const removed = views.splice(i, 1)[0];
+  persistSavedViews(views);
+  renderSavedViewChips();
+  if (typeof toast === 'function' && removed) toast('Deleted "' + removed.name + '"', 'info');
+}
+
+function openSaveViewPrompt() {
+  const prompt = document.getElementById('saved-view-prompt');
+  const input = document.getElementById('saved-view-name');
+  const err = document.getElementById('saved-view-error');
+  if (!prompt || !input) return;
+  if (err) err.textContent = '';
+  prompt.hidden = false;
+  input.value = '';
+  setTimeout(() => input.focus(), 0);
+}
+
+function cancelSaveView() {
+  const prompt = document.getElementById('saved-view-prompt');
+  const err = document.getElementById('saved-view-error');
+  if (prompt) prompt.hidden = true;
+  if (err) err.textContent = '';
+}
+
+function confirmSaveView() {
+  const input = document.getElementById('saved-view-name');
+  const err = document.getElementById('saved-view-error');
+  if (!input) return;
+  const name = (input.value || '').trim();
+  if (!name) {
+    if (err) err.textContent = 'Name required.';
+    return;
+  }
+  if (name.length > 30) {
+    if (err) err.textContent = 'Max 30 characters.';
+    return;
+  }
+  if (!SAVED_VIEW_NAME_RE.test(name)) {
+    if (err) err.textContent = 'Letters, numbers, spaces, and -_/.+≥ only.';
+    return;
+  }
+  const views = loadSavedViews();
+  const filters = _currentFilterState();
+  const existingIdx = views.findIndex(v => v.name.toLowerCase() === name.toLowerCase());
+  if (existingIdx >= 0) {
+    views[existingIdx] = { name, filters };
+  } else {
+    views.push({ name, filters });
+  }
+  persistSavedViews(views);
+  cancelSaveView();
+  renderSavedViewChips();
+  if (typeof toast === 'function') toast('Saved view: ' + name, 'success');
+}
+
+function initSavedViews() {
+  loadSavedViews();
+  renderSavedViewChips();
+}
+
 // ── Table filter + sort ─────────────────────────────────────────
 function applyFilters() {
   const rawText = (document.getElementById('filter-text').value || '').toLowerCase();
@@ -2965,6 +3226,7 @@ function applyFilters() {
     if (detail && detail.classList.contains('detail-row'))
       detail.style.display = show && detail.style.display !== 'none' ? detail.style.display : 'none';
   }
+  if (typeof renderSavedViewChips === 'function') renderSavedViewChips();
 }
 
 function sortTable(tbodyId, colIdx, type, thEl) {
@@ -3564,6 +3826,23 @@ function _cmdkBuildItems(query) {
     items.push({ section: 'Actions' });
     for (const a of matchedActions) items.push({ kind: 'action', ...a });
   }
+  const savedViews = (typeof loadSavedViews === 'function') ? loadSavedViews() : [];
+  const matchedViews = q
+    ? savedViews.filter(v => v.name.toLowerCase().includes(q) || ('view ' + v.name).toLowerCase().includes(q))
+    : savedViews;
+  if (matchedViews.length) {
+    items.push({ section: 'Saved views' });
+    for (const v of matchedViews) {
+      items.push({
+        kind: 'action',
+        id: 'view-' + v.name,
+        icon: '⌖',
+        title: 'View: ' + v.name,
+        sub: _summarizeFilters(v.filters),
+        run: () => applySavedView(v),
+      });
+    }
+  }
   const rows = CMDK_DATA.rows || [];
   let matchedRows = rows;
   if (q) {
@@ -3921,6 +4200,7 @@ window.toast = function(msg, type) {
 
 // ── Init ────────────────────────────────────────────────────────
 initDark();
+initSavedViews();
 refreshLiveStats();
 _batchInterval = setInterval(pollBatch, 2000);
 pollBatch();
