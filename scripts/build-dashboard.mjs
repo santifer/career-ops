@@ -2052,7 +2052,7 @@ function build() {
     <button class="toolbar-btn" onclick="toggleDark()" id="dark-toggle" aria-label="Toggle dark mode">☀︎ Light</button>
     <button class="toolbar-btn" id="batch-toggle-btn" onclick="toggleBatchOverlay()" style="display:none" aria-label="Toggle batch progress overlay">⚡ Batch</button>
   </header>
-  <div class="subtle" id="dashboard-meta" title="${escape(generated)}">Updated <span id="live-updated">${escape(generated)}</span> · ${reportsToday} reports today</div>
+  <div class="subtle" id="dashboard-meta" title="${escape(generated)}"><span id="live-updated">Updated ${escape(generated)}</span> · ${reportsToday} reports today</div>
 
   <main id="main">
 
