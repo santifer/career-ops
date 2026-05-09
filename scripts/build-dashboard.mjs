@@ -674,6 +674,9 @@ function build() {
   const apps = parseApplications();
   const today = new Date().toISOString().slice(0, 10);
   const generated = new Date().toISOString();
+  const generatedShort = new Date(generated).toLocaleTimeString('en-US', {
+    hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/Los_Angeles'
+  });
 
   // Stats
   const total = apps.length;
@@ -894,6 +897,7 @@ function build() {
     --radius: 8px;
     --radius-sm: 6px;
     --radius-full: 9999px;
+    --section-gap: 64px;
     --shadow-sm: 0 1px 2px 0 rgba(0,0,0,.05);
     --shadow: 0 1px 3px 0 rgba(0,0,0,.1), 0 1px 2px -1px rgba(0,0,0,.1);
     --shadow-md: 0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -2px rgba(0,0,0,.1);
@@ -1012,6 +1016,7 @@ function build() {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 12px;
+    margin: 16px 0 var(--section-gap);
   }
   .stats-row-primary { margin-bottom: 12px; }
   @media (max-width: 720px) {
@@ -1056,7 +1061,7 @@ function build() {
   .panel {
     background: var(--surface); border-radius: var(--radius);
     border: 1px solid var(--border); box-shadow: var(--shadow-sm);
-    padding: 22px 24px; margin-bottom: 16px;
+    padding: 22px 24px; margin-bottom: var(--section-gap);
   }
   .panel-strong {
     border-color: var(--green-fg);
@@ -1068,8 +1073,8 @@ function build() {
     background: var(--green-fg); border-radius: var(--radius) var(--radius) 0 0;
   }
   .panel-title {
-    font-size: 16px; font-weight: 600; margin: 0 0 14px;
-    letter-spacing: -0.2px; color: var(--text); display: flex; align-items: center; gap: 8px;
+    font-size: 26px; font-weight: 700; margin: 0 0 18px;
+    letter-spacing: -0.4px; color: var(--text); display: flex; align-items: center; gap: 10px;
   }
   .panel-title .pill {
     font-size: 11px; font-weight: 600;
@@ -1077,7 +1082,7 @@ function build() {
     padding: 1px 9px; border-radius: var(--radius-full);
     letter-spacing: 0;
   }
-  .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: var(--section-gap); }
 
   /* ── Tables ──────────────────────────────────────────────────── */
   .table-scroll { overflow-x: auto; overflow-y: auto; max-height: 520px; border-radius: 0 0 var(--radius-sm) var(--radius-sm); }
@@ -1086,7 +1091,7 @@ function build() {
   th {
     text-align: left; padding: 9px 12px;
     background: var(--surface-2); color: var(--text-3);
-    font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
+    font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em;
     border-bottom: 1px solid var(--border);
     white-space: nowrap;
   }
@@ -1613,7 +1618,7 @@ function build() {
     <button class="toolbar-btn" onclick="toggleDark()" id="dark-toggle" aria-label="Toggle dark mode">☀︎ Light</button>
     <button class="toolbar-btn" id="batch-toggle-btn" onclick="toggleBatchOverlay()" style="display:none" aria-label="Toggle batch progress overlay">⚡ Batch</button>
   </header>
-  <div class="subtle">Generated ${escape(generated)} · Reports today: ${reportsToday} · <span id="live-updated"></span></div>
+  <div class="subtle" id="dashboard-meta" title="${escape(generated)}">Updated <span id="live-updated">${escape(generated)}</span> · ${reportsToday} reports today</div>
 
   <main id="main">
 
@@ -2335,7 +2340,14 @@ async function refreshLiveStats() {
   set('live-pipeline', data.pipelinePending);
   set('live-scanned', data.scanned);
   const upd = document.getElementById('live-updated');
-  if (upd && data.lastUpdated) upd.textContent = 'Live · ' + new Date(data.lastUpdated).toLocaleTimeString();
+  if (upd && data.lastUpdated) {
+    const t = new Date(data.lastUpdated).toLocaleTimeString('en-US', {
+      hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/Los_Angeles'
+    });
+    upd.textContent = 'Updated ' + t + ' PT';
+    const meta = document.getElementById('dashboard-meta');
+    if (meta) meta.title = data.lastUpdated;
+  }
 }
 
 // ── Keyboard shortcuts ──────────────────────────────────────────
