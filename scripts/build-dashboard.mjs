@@ -1108,6 +1108,47 @@ function build() {
   }
   const topCompanies = Object.entries(byCompany).sort((a, b) => b[1] - a[1]).slice(0, 15);
 
+  // Trends — last 12 weeks (rolling 7-day windows ending today)
+  const DAY_MS = 86400000;
+  const todayMs = new Date(today + 'T00:00:00Z').getTime();
+  const trendWeeks = [];
+  for (let w = 11; w >= 0; w--) {
+    const endMs = todayMs - w * 7 * DAY_MS;
+    const startMs = endMs - 6 * DAY_MS;
+    trendWeeks.push({
+      label: new Date(startMs).toISOString().slice(5, 10),
+      startMs, endMs,
+      count: 0, scoreSum: 0, scoreCount: 0,
+    });
+  }
+  for (const r of apps) {
+    if (!r.date) continue;
+    const ms = new Date(r.date + 'T00:00:00Z').getTime();
+    if (isNaN(ms)) continue;
+    for (const wk of trendWeeks) {
+      if (ms >= wk.startMs && ms <= wk.endMs) {
+        wk.count++;
+        if (r.score > 0) { wk.scoreSum += r.score; wk.scoreCount++; }
+        break;
+      }
+    }
+  }
+
+  // Funnel — current pipeline by canonical status
+  const funnelOrder = [
+    { key: 'Evaluated', cls: 'fn-eval' },
+    { key: 'Applied',   cls: 'fn-apply' },
+    { key: 'Interview', cls: 'fn-int' },
+    { key: 'Offer',     cls: 'fn-offer' },
+    { key: 'Rejected',  cls: 'fn-rej' },
+  ];
+  const funnel = Object.fromEntries(funnelOrder.map(s => [s.key, 0]));
+  for (const r of apps) {
+    const s = (r.status || '').replace(/\*\*/g, '').trim();
+    if (funnel.hasOwnProperty(s)) funnel[s]++;
+    else if (/interview/i.test(s)) funnel.Interview++;
+  }
+
   // Apply-now table rows
   const applyNowRows = applyNowSorted.map((r, i) => renderRow(r, `apply-${i}`)).join('\n');
   const allRows = sortedByScore.map((r, i) => renderRow(r, `all-${i}`)).join('\n');
@@ -1677,6 +1718,51 @@ function build() {
   .bar-row-label { font-weight: 500; color: var(--text-2); font-size: 12.5px; }
   .bar-row-count { text-align: right; color: var(--text-3); font-variant-numeric: tabular-nums; font-weight: 600; font-size: 12.5px; }
 
+  /* ── Trend graphs ────────────────────────────────────────────── */
+  .trends-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+  }
+  .trend-card-wide { grid-column: 1 / -1; }
+  .trend-card {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 12px 14px 10px;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .trend-card-title {
+    font-size: 12px; font-weight: 600; color: var(--text-2);
+    display: flex; justify-content: space-between; align-items: baseline; gap: 8px;
+  }
+  .trend-card-sub { font-size: 10.5px; font-weight: 500; color: var(--text-4); }
+  .trend-svg { width: 100%; height: auto; display: block; }
+  .trend-svg-funnel { height: 36px; }
+  .trend-bar { fill: var(--blue-fg); transition: fill .15s; }
+  .trend-bar:hover { fill: var(--blue-fg-dark); }
+  .trend-line { stroke: var(--green-fg); stroke-width: 1.5; stroke-linejoin: round; stroke-linecap: round; }
+  .trend-dot { fill: var(--green-fg); stroke: var(--surface-2); stroke-width: 1; transition: r .15s; }
+  .trend-dot.empty { fill: var(--text-4); opacity: 0.5; }
+  .trend-dot:hover { r: 4; }
+  .trend-axis { stroke: var(--border-strong); stroke-width: 0.5; stroke-dasharray: 2 2; opacity: 0.6; }
+  .trend-fn { stroke: var(--surface); stroke-width: 1; transition: opacity .15s; }
+  .trend-fn:hover { opacity: 0.85; }
+  .trend-fn.fn-eval  { fill: var(--text-4); }
+  .trend-fn.fn-apply { fill: var(--blue-fg); }
+  .trend-fn.fn-int   { fill: var(--purple-fg); }
+  .trend-fn.fn-offer { fill: var(--green-fg); }
+  .trend-fn.fn-rej   { fill: var(--red-fg); opacity: 0.7; }
+  .trend-legend {
+    display: flex; flex-wrap: wrap; gap: 10px;
+    font-size: 11px; color: var(--text-3); margin-top: 4px;
+  }
+  .trend-legend-item { display: inline-flex; align-items: center; gap: 4px; }
+  .trend-legend-swatch {
+    width: 9px; height: 9px; border-radius: 2px; display: inline-block;
+  }
+  .trend-legend-swatch.fn-eval  { background: var(--text-4); }
+  .trend-legend-swatch.fn-apply { background: var(--blue-fg); }
+  .trend-legend-swatch.fn-int   { background: var(--purple-fg); }
+  .trend-legend-swatch.fn-offer { background: var(--green-fg); }
+  .trend-legend-swatch.fn-rej   { background: var(--red-fg); opacity: 0.7; }
+
   /* ── Segmented distribution bar ──────────────────────────────── */
   .seg-bar { display: flex; flex-direction: column; gap: 6px; }
   .seg-bar-counts { display: flex; gap: 2px; align-items: flex-end; height: 22px; }
@@ -2160,6 +2246,8 @@ function build() {
 
     /* Charts grid → 1 column on mobile */
     .charts-grid { grid-template-columns: 1fr; gap: 12px; }
+    .trends-grid { grid-template-columns: 1fr; gap: 10px; }
+    .trend-card-wide { grid-column: 1 / -1; }
 
     /* Show the gap chips on cards */
     .card-gaps-mobile {
@@ -2683,6 +2771,73 @@ function build() {
       }).join('')}
     </div>
   </div>
+  </div>
+
+  <div class="panel" id="trends-panel">
+    <div class="panel-title">Trends</div>
+    ${(() => {
+      const W = 280, H = 80, PAD = 4;
+      const counts = trendWeeks.map(w => w.count);
+      const maxCount = Math.max(1, ...counts);
+      const barW = (W - PAD * 2) / 12;
+
+      // Apps per week — bar chart
+      const barsSvg = trendWeeks.map((wk, i) => {
+        const h = (wk.count / maxCount) * (H - PAD * 2 - 12);
+        const x = PAD + i * barW + 1;
+        const y = H - PAD - h;
+        return `<rect class="trend-bar" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${(barW - 2).toFixed(1)}" height="${h.toFixed(1)}" rx="1.5"><title>Week of ${wk.label}: ${wk.count} app${wk.count === 1 ? '' : 's'}</title></rect>`;
+      }).join('');
+
+      // Avg score per week — line chart
+      const avgs = trendWeeks.map(w => w.scoreCount > 0 ? w.scoreSum / w.scoreCount : 0);
+      const yScore = (v) => {
+        const top = PAD + 4, bot = H - PAD - 4;
+        return bot - (v / 5) * (bot - top);
+      };
+      const xScore = (i) => PAD + barW * i + barW / 2;
+      const linePath = avgs.map((v, i) => `${i === 0 ? 'M' : 'L'}${xScore(i).toFixed(1)},${yScore(v).toFixed(1)}`).join(' ');
+      const dots = avgs.map((v, i) => {
+        const wk = trendWeeks[i];
+        const tip = wk.scoreCount > 0
+          ? `Week of ${wk.label}: avg ${v.toFixed(2)}/5 (${wk.scoreCount} eval${wk.scoreCount === 1 ? '' : 's'})`
+          : `Week of ${wk.label}: no evaluations`;
+        return `<circle class="trend-dot${wk.scoreCount === 0 ? ' empty' : ''}" cx="${xScore(i).toFixed(1)}" cy="${yScore(v).toFixed(1)}" r="2.4"><title>${tip}</title></circle>`;
+      }).join('');
+
+      // Funnel — horizontal stacked bar
+      const FW = 280, FH = 36;
+      const funnelTotal = funnelOrder.reduce((a, s) => a + funnel[s.key], 0) || 1;
+      let cursor = 0;
+      const funnelSegs = funnelOrder.map(s => {
+        const v = funnel[s.key];
+        const w = (v / funnelTotal) * FW;
+        const seg = `<rect class="trend-fn ${s.cls}" x="${cursor.toFixed(1)}" y="0" width="${w.toFixed(1)}" height="${FH}"><title>${s.key}: ${v} (${((v / funnelTotal) * 100).toFixed(0)}%)</title></rect>`;
+        cursor += w;
+        return seg;
+      }).join('');
+      const funnelLegend = funnelOrder.map(s => `<span class="trend-legend-item"><span class="trend-legend-swatch ${s.cls}"></span>${s.key} <strong>${funnel[s.key]}</strong></span>`).join('');
+
+      return `<div class="trends-grid">
+        <div class="trend-card">
+          <div class="trend-card-title">Apps / week <span class="trend-card-sub">last 12w · ${counts.reduce((a, b) => a + b, 0)} total</span></div>
+          <svg class="trend-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Applications per week, last 12 weeks">${barsSvg}</svg>
+        </div>
+        <div class="trend-card">
+          <div class="trend-card-title">Avg score / week <span class="trend-card-sub">last 12w · 0–5 scale</span></div>
+          <svg class="trend-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Average score per week, last 12 weeks">
+            <line x1="${PAD}" y1="${yScore(4).toFixed(1)}" x2="${W - PAD}" y2="${yScore(4).toFixed(1)}" class="trend-axis"/>
+            <path d="${linePath}" class="trend-line" fill="none"/>
+            ${dots}
+          </svg>
+        </div>
+        <div class="trend-card trend-card-wide">
+          <div class="trend-card-title">Pipeline funnel <span class="trend-card-sub">${funnelTotal} tracked</span></div>
+          <svg class="trend-svg trend-svg-funnel" viewBox="0 0 ${FW} ${FH}" role="img" aria-label="Pipeline funnel by stage">${funnelSegs}</svg>
+          <div class="trend-legend">${funnelLegend}</div>
+        </div>
+      </div>`;
+    })()}
   </div>
 
   </main>
