@@ -1004,11 +1004,18 @@ function build() {
   }
   .toolbar-btn:hover { background: var(--surface-2); border-color: var(--border-strong); color: var(--text-2); }
 
-  /* ── KPI stat cards ──────────────────────────────────────────── */
+  /* ── KPI stat cards: 3+3 hero (primary tier on top, secondary below) ── */
   .stats {
+    margin: 16px 0 24px;
+  }
+  .stats-row {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
-    gap: 12px; margin: 16px 0 24px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+  .stats-row-primary { margin-bottom: 12px; }
+  @media (max-width: 720px) {
+    .stats-row { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
   }
   .stat {
     background: var(--surface); padding: 18px 20px; border-radius: var(--radius);
@@ -1040,6 +1047,10 @@ function build() {
   }
   .stat:hover .stat-caret { color: var(--text-3); }
   .stat.active .stat-caret { color: var(--blue-fg); transform: rotate(180deg); }
+  /* Secondary tier: smaller padding + smaller numeric */
+  .stat-secondary { padding: 14px 16px; }
+  .stat-secondary .stat-value { font-size: 24px; letter-spacing: -0.5px; }
+  .stat-secondary::before { height: 2px; }
 
   /* ── Panels / cards ──────────────────────────────────────────── */
   .panel {
@@ -1654,33 +1665,36 @@ function build() {
   </div>
 
   <div class="stats">
-    <div class="stat ${applyNow.length > 0 ? 'stat-strong' : ''}" onclick="document.getElementById('apply-now-section').scrollIntoView({behavior:'smooth'})" title="Click to scroll to Apply-Now queue">
-      <div class="stat-label">Apply-Now (≥ 4.0)</div>
-      <div class="stat-value" id="live-apply-now">${applyNow.length}</div>
-      <span class="stat-caret" aria-hidden="true">▾</span><span class="sr-only">Click to expand</span>
+    <div class="stats-row stats-row-primary">
+      <div class="stat ${applyNow.length > 0 ? 'stat-strong' : ''}" onclick="document.getElementById('apply-now-section').scrollIntoView({behavior:'smooth'})" title="Click to scroll to Apply-Now queue">
+        <div class="stat-label">Apply-Now (≥ 4.0)</div>
+        <div class="stat-value" id="live-apply-now">${applyNow.length}</div>
+        <span class="stat-caret" aria-hidden="true">▾</span><span class="sr-only">Click to expand</span>
+      </div>
+      <div class="stat" onclick="toggleStatPanel('evaluations')" title="Click to see all evaluations">
+        <div class="stat-label">Total evaluations</div>
+        <div class="stat-value" id="live-total">${total}</div>
+        <span class="stat-caret" aria-hidden="true">▾</span><span class="sr-only">Click to expand</span>
+      </div>
+      <div class="stat" onclick="toggleStatPanel('pending')" title="Click to see pipeline">
+        <div class="stat-label">Pipeline pending</div>
+        <div class="stat-value" id="live-pipeline">${pipelinePending}</div>
+        <span class="stat-caret" aria-hidden="true">▾</span><span class="sr-only">Click to expand</span>
+      </div>
     </div>
-    <div class="stat" onclick="toggleStatPanel('evaluations')" title="Click to see all evaluations">
-      <div class="stat-label">Total evaluations</div>
-      <div class="stat-value" id="live-total">${total}</div>
-      <span class="stat-caret" aria-hidden="true">▾</span><span class="sr-only">Click to expand</span>
-    </div>
-    <div class="stat" onclick="toggleStatPanel('applied')" title="Click to see in-flight applications">
-      <div class="stat-label">Applied / In process</div>
-      <div class="stat-value" id="live-applied">${applied.length}</div>
-      <span class="stat-caret" aria-hidden="true">▾</span><span class="sr-only">Click to expand</span>
-    </div>
-    <div class="stat" onclick="toggleStatPanel('pending')" title="Click to see pipeline">
-      <div class="stat-label">Pipeline pending</div>
-      <div class="stat-value" id="live-pipeline">${pipelinePending}</div>
-      <span class="stat-caret" aria-hidden="true">▾</span><span class="sr-only">Click to expand</span>
-    </div>
-    <div class="stat">
-      <div class="stat-label">Companies tracked</div>
-      <div class="stat-value">${portals.tracked}</div>
-    </div>
-    <div class="stat">
-      <div class="stat-label">URLs scanned</div>
-      <div class="stat-value" id="live-scanned">${scanTotal}</div>
+    <div class="stats-row stats-row-secondary">
+      <div class="stat stat-secondary" onclick="toggleStatPanel('applied')" title="Click to see in-flight applications">
+        <div class="stat-label">Applied / In process</div>
+        <div class="stat-value" id="live-applied">${applied.length}</div>
+        <span class="stat-caret" aria-hidden="true">▾</span><span class="sr-only">Click to expand</span>
+      </div>
+      <div class="stat stat-secondary">
+        <div class="stat-label">Companies tracked</div>
+        <div class="stat-value">${portals.tracked}</div>
+      </div>
+      <div class="stat stat-secondary">
+        <div class="stat-label">URLs scanned</div>
+        <div class="stat-value" id="live-scanned">${scanTotal}</div>
     </div>
   </div>
 
