@@ -8,6 +8,8 @@ import { join, extname } from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { randomBytes } from 'crypto';
+import { parseApplicationsFile } from './lib/parse-applications.mjs';
+import { statusKey, statusBadgeClass } from './lib/status-key.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = __dirname;
@@ -109,28 +111,13 @@ function parseReportSummary(reportPath) {
 
 // ── Shared parsers ─────────────────────────────────────────────
 
+// parseApplications lives in lib/parse-applications.mjs (single source of
+// truth — also used by build-dashboard.mjs). The rest of this file expects
+// `r.report` for the report path, but the lib returns `reportPath`; we
+// add `report` as an alias here so call sites stay unchanged.
 function parseApplications() {
-  const appsPath = join(ROOT, 'data/applications.md');
-  if (!existsSync(appsPath)) return [];
-  const rows = readFileSync(appsPath, 'utf8').split('\n').filter(l =>
-    l.startsWith('|') && !l.match(/^[\|\s\-:]+$/) && !l.includes('| # |')
-  ).slice(1);
-
-  return rows.map(row => {
-    const cols = row.split('|').map(c => c.trim());
-    // cols: [empty, #, date, company, role, score, status, pdf, report, notes]
-    const reportMatch = cols[8]?.match(/\[(\d+)\]\(([^)]+)\)/);
-    return {
-      num:     cols[1],
-      date:    cols[2],
-      company: cols[3],
-      role:    cols[4],
-      score:   parseFloat(cols[5]) || 0,
-      status:  cols[6],
-      report:  reportMatch ? reportMatch[2] : null,
-      notes:   cols[9] || '',
-    };
-  }).filter(r => r.company);
+  return parseApplicationsFile(join(ROOT, 'data/applications.md'))
+    .map(r => ({ ...r, report: r.reportPath || null }));
 }
 
 function parsePipeline() {

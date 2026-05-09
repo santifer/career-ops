@@ -41,18 +41,32 @@ Pull into `lib/scan-shared.mjs`.
 `signal-monitor.mjs:232 decodeHtmlEntities`. Each handles a slightly
 different subset (some do `&#x2F;`, some don't). Consolidate to one helper.
 
-### 🟡 1.4 Two `parseApplications` implementations
+### ✅ 1.4 Two `parseApplications` implementations — RESOLVED 2026-05-09
 `dashboard-server.mjs:109-131` and `build-dashboard.mjs:36-59` parse the same
 markdown table differently. Server uses `l.startsWith('|') && !l.match(...)`;
 the builder uses `/^\|\s*\d+\s*\|/`. The builder will silently skip rows whose
 `#` column has padding or non-numeric prefixes; the server won't. Same data,
 two parsers, two truths.
 
-### 🟡 1.5 Status normalization triplicated
+**Fix landed:** consolidated to `lib/parse-applications.mjs` (single source).
+Adopted the more permissive pattern (any pipe-table data row) so neither
+consumer silently skips rows. As a side effect, the server's pre-existing
+`.slice(1)` bug — which dropped the first data row — is now fixed
+(totalEvals went 104 → 105 on current data). Both `build-dashboard.mjs` and
+`dashboard-server.mjs` import `parseApplicationsFile` from the lib.
+
+### ✅ 1.5 Status normalization triplicated — RESOLVED 2026-05-09
 `dashboard-server.mjs statusKey` (server-side, used nowhere — see note),
 `build-dashboard.mjs:526 statusKey` (build-time), `build-dashboard.mjs:2501
 statusKey` (client JS), and again at line 3190 `statusClassFor`. Four copies
 of the same lowercased-substring-includes ladder.
+
+**Fix landed:** consolidated to `lib/status-key.mjs` exporting `statusKey` +
+`statusBadgeClass` (server-side) plus `STATUS_KEY_SOURCE` /
+`STATUS_BADGE_CLASS_SOURCE` (function-source strings the build script
+injects verbatim into the inline client bundle). One implementation, three
+delivery surfaces — drift is now structurally impossible. The duplicated
+`statusClassFor` is aliased to `statusBadgeClass` in the client bundle.
 
 ### 🟡 1.6 `getX()` extractors hammer disk
 `build-dashboard.mjs:545-682 renderRow` calls 10 separate file readers:

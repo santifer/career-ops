@@ -19,6 +19,8 @@ import { readFileSync, writeFileSync, existsSync, readdirSync, statSync, mkdirSy
 import { join, dirname, basename } from 'path';
 import yaml from 'js-yaml';
 import { marked } from 'marked';
+import { parseApplicationsFile } from '../lib/parse-applications.mjs';
+import { statusKey, statusBadgeClass, STATUS_KEY_SOURCE, STATUS_BADGE_CLASS_SOURCE } from '../lib/status-key.mjs';
 const parseYaml = yaml.load;
 
 const ROOT = process.cwd();
@@ -35,28 +37,7 @@ const OUT_PATH = join(ROOT, 'dashboard/index.html');
 // ── Data extraction ───────────────────────────────────────────────
 
 function parseApplications() {
-  if (!existsSync(APPLICATIONS_PATH)) return [];
-  const text = readFileSync(APPLICATIONS_PATH, 'utf-8');
-  const rows = [];
-  for (const line of text.split('\n')) {
-    if (!/^\|\s*\d+\s*\|/.test(line)) continue;
-    const cells = line.split('|').map(c => c.trim());
-    const num = parseInt(cells[1], 10);
-    const date = cells[2];
-    const company = cells[3];
-    const role = cells[4];
-    const scoreStr = cells[5] || '';
-    const status = cells[6] || '';
-    const pdf = cells[7] || '';
-    const reportCell = cells[8] || '';
-    const notes = cells[9] || '';
-    const scoreMatch = scoreStr.match(/(\d+(?:\.\d+)?)/);
-    const score = scoreMatch ? parseFloat(scoreMatch[1]) : 0;
-    const reportPathMatch = reportCell.match(/\(([^)]+)\)/);
-    const reportPath = reportPathMatch ? reportPathMatch[1] : '';
-    rows.push({ num, date, company, role, score, status, pdf, reportPath, notes });
-  }
-  return rows;
+  return parseApplicationsFile(APPLICATIONS_PATH);
 }
 
 // ── Per-build report cache ─────────────────────────────────────────
@@ -725,24 +706,9 @@ function evalAge(dateStr) {
   return `${weeks}w`;
 }
 
-function statusKey(status) {
-  const s = (status || '').toLowerCase();
-  if (s.includes('applied')) return 'applied';
-  if (s.includes('responded')) return 'responded';
-  if (s.includes('interview')) return 'interview';
-  if (s.includes('offer')) return 'offer';
-  if (s.includes('reject')) return 'rejected';
-  if (s.includes('discard')) return 'discarded';
-  if (s.includes('skip')) return 'skip';
-  return 'evaluated';
-}
-
-function statusBadgeClass(status) {
-  const key = statusKey(status);
-  if (key === 'skip') return 'status-discarded';
-  if (key === 'responded') return 'status-evaluated';
-  return `status-${key}`;
-}
+// statusKey + statusBadgeClass live in lib/status-key.mjs (single source
+// of truth — see imports above). The client bundle also injects them
+// via STATUS_KEY_SOURCE so all three layers stay in sync.
 
 function renderRow(r, idx) {
   const archetype = getReportArchetype(r.reportPath);
@@ -3338,17 +3304,7 @@ function scoreBadge(s) {
   const cls = s >= 4 ? 'score-strong' : s >= 3 ? 'score-moderate' : 'score-weak';
   return \`<span class="badge \${cls}">\${Number(s).toFixed(1)}</span>\`;
 }
-function statusKey(st) {
-  const s = (st || '').toLowerCase();
-  if (s.includes('applied')) return 'applied';
-  if (s.includes('responded')) return 'responded';
-  if (s.includes('interview')) return 'interview';
-  if (s.includes('offer')) return 'offer';
-  if (s.includes('reject')) return 'rejected';
-  if (s.includes('discard')) return 'discarded';
-  if (s.includes('skip')) return 'skip';
-  return 'evaluated';
-}
+${STATUS_KEY_SOURCE}
 function statusBadge(st, num) {
   if (!st) return '';
   const key = statusKey(st);
@@ -4066,15 +4022,8 @@ const STATUS_CLASS_MAP = {
 let _statusActiveBadge = null;
 let _statusOutsideHandler = null;
 
-function statusClassFor(status) {
-  const s = String(status || '').toLowerCase();
-  if (s.includes('applied')) return 'status-applied';
-  if (s.includes('interview')) return 'status-interview';
-  if (s.includes('offer')) return 'status-offer';
-  if (s.includes('reject')) return 'status-rejected';
-  if (s.includes('discard') || s.includes('skip')) return 'status-discarded';
-  return 'status-evaluated';
-}
+${STATUS_BADGE_CLASS_SOURCE}
+const statusClassFor = statusBadgeClass;
 
 function clearStatusClasses(el) {
   el.classList.remove('status-evaluated','status-applied','status-interview','status-offer','status-rejected','status-discarded');
