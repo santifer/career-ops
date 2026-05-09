@@ -14,7 +14,7 @@ The Phase 3 weekly worker (`scripts/dashboard-phase3-worker.sh`, fires Monday 06
 
 ## Queue (priority order)
 
-### 1. [pending] Mobile breakpoint + table → card view <720px (bundled with Drawer/Sheet for mobile detail)
+### 1. [in-progress] Mobile breakpoint + table → card view <720px (bundled with Drawer/Sheet for mobile detail)
 **Effort:** L (1 full day equivalent)
 **Why:** The whole point of moving to dashboard.careers-ops.com is mobile access. Without this, mobile usage fails within a week.
 **Acceptance:**
