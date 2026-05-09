@@ -152,6 +152,7 @@ function getReportArchetype(reportPath) {
 
 function getReportFinalRecommendation(reportPath) {
   return readReportOnce(reportPath)?.finalRecommendation || '';
+}
 
 // Parse data/overpay-signals/CURRENT.md once per build. Returns:
 //   { byCompany: Map<lowercased-company, { posture, stage, confidence }>,
