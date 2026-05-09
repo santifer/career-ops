@@ -658,13 +658,25 @@ function renderRow(r, idx) {
     </div>
   </div>` : '';
 
+  // ── Recommendation banner ────────────────────────────────
+  const recBanner = finalRec ? `<div class="rec-banner">
+    <span class="rec-label">Rec</span>
+    <span class="rec-text">${escape(finalRec)}</span>
+    ${url ? `<a href="${escape(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="rec-btn">Apply →</a>` : ''}
+  </div>` : url ? `<div style="font-size:12px;margin-top:6px"><a href="${escape(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🔗 View JD</a></div>` : '';
+
+  // Inline gap chips shown on mobile cards only (top 3 by getKeyGaps order)
+  const cardGapChips = gaps.length ? `<div class="card-gaps-mobile">${gaps.slice(0, 3).map(g =>
+    `<span class="gap-chip gap-chip-mobile">⚠ ${escape(g.title)}</span>`
+  ).join('')}</div>` : '';
+
   return `
 <tr class="row ${throttleClass}" data-score="${r.score}" data-archetype="${escape(archetype)}" data-company="${escape(r.company.toLowerCase())}" data-status="${escape(r.status.toLowerCase())}" data-role="${escape(r.role.toLowerCase())}" onclick="toggleDetail('${idx}')">
   <td><span class="badge score-badge-lg ${scoreBadgeClass(r.score)}">${r.score.toFixed(1)}</span></td>
   <td><strong>${escape(r.company)}</strong>${archetype ? `<span class="tier-tag" tabindex="0" role="button" data-tooltip="${escape(tierTooltip(archetype))}" aria-label="Tier ${escape(archetype)}: ${escape(tierTooltip(archetype))}" onclick="event.stopPropagation();openTierLegend('${escape(archetype)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openTierLegend('${escape(archetype)}')}">${escape(archetype)}</span>` : ''}</td>
-  <td class="role-cell">${escape(r.role)}</td>
+  <td class="role-cell">${escape(r.role)}${cardGapChips}</td>
   <td><span class="badge ${statusBadgeClass(r.status)}" data-status="${statusKey(r.status)}">${escape(r.status)}</span></td>
-  <td class="muted-text">${escape(r.date)}</td>
+  <td class="muted-text mobile-hide">${escape(r.date)}</td>
   <td class="muted-text">${evalAge(r.date)}</td>
   <td class="action-cell">${applyLink}</td>
 </tr>
@@ -1661,6 +1673,200 @@ function build() {
     .filters input, .filters select { min-height: 44px; padding: 10px 12px; font-size: 14px; }
     .verify-submit { min-height: 44px; padding: 12px 20px; }
   }
+
+  /* ── Mobile-only gap chips on cards (hidden on desktop) ───────── */
+  .card-gaps-mobile { display: none; }
+  .gap-chip-mobile {
+    font-size: 11px; padding: 3px 9px;
+    background: var(--amber-bg); border: 1px solid var(--amber-border);
+    border-radius: var(--radius-full); color: var(--amber);
+    white-space: nowrap;
+  }
+
+  /* ── Mobile bottom-sheet (drawer) for row detail ──────────────── */
+  #mobile-sheet-backdrop {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.55); z-index: 2500;
+    -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px);
+  }
+  #mobile-sheet-backdrop.visible { display: block; }
+  #mobile-sheet {
+    position: fixed; left: 0; right: 0; bottom: 0;
+    max-height: 90vh; overflow-y: auto;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -10px 30px rgba(0,0,0,.25);
+    z-index: 2501;
+    transform: translateY(100%);
+    transition: transform .25s ease-out;
+    -webkit-overflow-scrolling: touch;
+  }
+  #mobile-sheet-backdrop.visible #mobile-sheet { transform: translateY(0); }
+  .mobile-sheet-handle {
+    width: 40px; height: 4px; border-radius: 2px;
+    background: var(--border-strong);
+    margin: 8px auto 0;
+  }
+  .mobile-sheet-header {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 16px 12px;
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; background: var(--surface); z-index: 1;
+  }
+  .mobile-sheet-title {
+    flex: 1; font-weight: 600; font-size: 15px;
+    color: var(--text); line-height: 1.35;
+    overflow: hidden; text-overflow: ellipsis;
+  }
+  .mobile-sheet-close {
+    background: none; border: none; font-size: 22px; cursor: pointer;
+    color: var(--text-3); padding: 0;
+    min-height: 44px; min-width: 44px; line-height: 1;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: var(--radius-sm);
+  }
+  .mobile-sheet-close:hover, .mobile-sheet-close:active { color: var(--text); background: var(--surface-2); }
+  .mobile-sheet-body { padding: 12px 14px 24px; }
+
+  /* ── Mobile breakpoint: tables → cards (Apply-Now primary) ────── */
+  @media (max-width: 720px) {
+    body { padding: 14px 12px 80px; }
+    .container { max-width: 100%; }
+
+    /* Tighter toolbar */
+    .toolbar h1 { font-size: 18px; }
+    .subtle { font-size: 12px; margin-bottom: 14px; }
+
+    /* Stats: 2-up grid */
+    .stats { grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0 18px; }
+    .stat { padding: 14px 14px; min-height: 80px; }
+    .stat-value { font-size: 24px; margin-top: 4px; }
+    .stat-label { font-size: 10.5px; }
+    .stat-caret { font-size: 10px; margin-top: 6px; }
+
+    /* Panels: tighter */
+    .panel { padding: 16px 14px; }
+    .panel-title { font-size: 15px; }
+
+    /* Filters become full-width stacked controls */
+    .filters input, .filters select { width: 100%; min-width: 0; flex: 1 1 100%; }
+
+    /* Charts grid → 1 column on mobile */
+    .charts-grid { grid-template-columns: 1fr; gap: 12px; }
+
+    /* Show the gap chips on cards */
+    .card-gaps-mobile {
+      display: flex; flex-wrap: wrap; gap: 4px;
+      margin-top: 8px;
+    }
+
+    /* Apply-Now Queue → card layout. Keeps semantic <table> for sort/filter
+       JS while CSS rewrites the visual layout for narrow viewports. */
+    #apply-now-section .table-scroll {
+      max-height: none;
+      overflow: visible;
+      border-radius: 0;
+    }
+    #apply-now-section table,
+    #apply-now-section thead,
+    #apply-now-section tbody,
+    #apply-now-section tr.row,
+    #apply-now-section tr.row > td {
+      display: block;
+      width: auto;
+    }
+    #apply-now-section table { width: 100%; }
+    #apply-now-section thead { display: none; }
+    #apply-now-section tr.row {
+      position: relative;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 14px 12px;
+      margin: 0 0 10px;
+      box-shadow: var(--shadow-sm);
+      cursor: pointer;
+      min-height: 44px;
+      transition: background .12s, border-color .12s;
+    }
+    #apply-now-section tr.row:active { background: var(--surface-2); border-color: var(--border-strong); }
+    #apply-now-section tr.row > td {
+      border-bottom: none;
+      padding: 0;
+      background: transparent !important;
+    }
+    /* Hide eval date column on mobile (Apply-Now cards & All-Evals scroll
+       table); "Age" is the primary recency cue. */
+    td.mobile-hide, th.mobile-hide { display: none !important; }
+    /* Score chip: top-left, inline */
+    #apply-now-section tr.row > td:nth-child(1) {
+      display: inline-block;
+      margin: 0 10px 6px 0;
+      vertical-align: top;
+    }
+    /* Company line: inline next to score */
+    #apply-now-section tr.row > td:nth-child(2) {
+      display: inline-block;
+      font-size: 15px;
+      line-height: 1.35;
+      vertical-align: top;
+    }
+    /* Role: full-width below the title row */
+    #apply-now-section tr.row > td.role-cell {
+      display: block;
+      margin-top: 4px;
+      font-size: 13.5px;
+      color: var(--text-2);
+      font-weight: 500;
+      line-height: 1.4;
+    }
+    /* Status pill + age: bottom meta line */
+    #apply-now-section tr.row > td:nth-child(4),
+    #apply-now-section tr.row > td:nth-child(6) {
+      display: inline-flex;
+      align-items: center;
+      margin: 8px 8px 0 0;
+    }
+    /* Action links: separated row, right-aligned, large hit-area */
+    #apply-now-section tr.row > td.action-cell {
+      display: block;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+      text-align: right;
+      font-size: 13px;
+    }
+    #apply-now-section tr.row > td.action-cell a {
+      display: inline-block;
+      min-height: 44px; line-height: 44px;
+      padding: 0 12px;
+      margin-left: 4px;
+    }
+
+    /* All Evaluations panel: keep tabular layout but allow horizontal scroll */
+    #all-tbody, .panel:not(#apply-now-section) tbody { display: table-row-group; }
+    #all-tbody tr.row, .panel:not(#apply-now-section) tr.row { display: table-row; }
+    #all-tbody tr.row > td, .panel:not(#apply-now-section) tr.row > td { display: table-cell; }
+    .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+    /* Inline detail row hidden on mobile — content moves into bottom sheet */
+    tr.detail-row { display: none !important; }
+
+    /* Detail card grid → 1 col inside the sheet */
+    .detail-grid { grid-template-columns: 1fr !important; }
+    .detail-block { padding: 12px; }
+
+    /* Modal sizing */
+    #verify-modal, #gap-modal { width: 96vw; max-height: 86vh; }
+    .gap-modal-body { padding: 14px; }
+
+    /* Batch overlay: full-width sticky bottom */
+    #batch-overlay { left: 12px; right: 12px; bottom: 12px; width: auto; }
+
+    /* Toast positioning: leave room for batch overlay */
+    #toast-container { right: 12px; left: 12px; bottom: 12px; max-width: none; }
+  }
 </style>
 </head>
 <body>
@@ -1711,6 +1917,18 @@ function build() {
 
   <!-- Toast container -->
   <div id="toast-container" aria-live="polite" aria-atomic="false"></div>
+
+  <!-- Mobile bottom sheet (slide-up drawer) for row detail on <720px -->
+  <div id="mobile-sheet-backdrop" onclick="closeMobileSheet()" role="dialog" aria-modal="true" aria-labelledby="mobile-sheet-title">
+    <div id="mobile-sheet" onclick="event.stopPropagation()">
+      <div class="mobile-sheet-handle" aria-hidden="true"></div>
+      <div class="mobile-sheet-header">
+        <div class="mobile-sheet-title" id="mobile-sheet-title"></div>
+        <button class="mobile-sheet-close" onclick="closeMobileSheet()" aria-label="Close">✕</button>
+      </div>
+      <div class="mobile-sheet-body" id="mobile-sheet-body"></div>
+    </div>
+  </div>
 
   <!-- Verify claims modal -->
   <div id="verify-backdrop" onclick="closeVerify()">
@@ -1778,7 +1996,7 @@ function build() {
         <th class="sortable" onclick="sortTable('apply-now-tbody', 1, 'str', this)">Company <button type="button" class="tier-legend-btn" title="Tier badge legend" aria-label="Show tier badge legend" onclick="event.stopPropagation();openTierLegend()">?</button></th>
         <th class="sortable" onclick="sortTable('apply-now-tbody', 2, 'str', this)">Role</th>
         <th class="sortable" onclick="sortTable('apply-now-tbody', 3, 'str', this)">Status</th>
-        <th class="sortable" onclick="sortTable('apply-now-tbody', 4, 'str', this)">Eval Date</th>
+        <th class="sortable mobile-hide" onclick="sortTable('apply-now-tbody', 4, 'str', this)">Eval Date</th>
         <th class="sortable" onclick="sortTable('apply-now-tbody', 5, 'num', this)">Age</th>
         <th>Action</th>
       </tr></thead>
@@ -1826,7 +2044,7 @@ function build() {
         <th class="sortable" onclick="sortTable('all-tbody', 1, 'str', this)">Company <button type="button" class="tier-legend-btn" title="Tier badge legend" aria-label="Show tier badge legend" onclick="event.stopPropagation();openTierLegend()">?</button></th>
         <th class="sortable" onclick="sortTable('all-tbody', 2, 'str', this)">Role</th>
         <th class="sortable" onclick="sortTable('all-tbody', 3, 'str', this)">Status</th>
-        <th class="sortable" onclick="sortTable('all-tbody', 4, 'str', this)">Eval Date</th>
+        <th class="sortable mobile-hide" onclick="sortTable('all-tbody', 4, 'str', this)">Eval Date</th>
         <th class="sortable" onclick="sortTable('all-tbody', 5, 'num', this)">Age</th>
         <th>Action</th>
       </tr></thead>
@@ -1908,10 +2126,55 @@ function toggleDark() {
 }
 
 // ── Row expand ──────────────────────────────────────────────────
+const MOBILE_BREAKPOINT_MQ = window.matchMedia('(max-width: 720px)');
+function isMobileViewport() { return MOBILE_BREAKPOINT_MQ.matches; }
+
 function toggleDetail(idx) {
   const detail = document.getElementById('detail-' + idx);
-  if (detail) detail.style.display = detail.style.display === 'none' ? '' : 'none';
+  if (!detail) return;
+  if (isMobileViewport()) {
+    openMobileSheetForDetail(detail);
+    return;
+  }
+  detail.style.display = detail.style.display === 'none' ? '' : 'none';
 }
+
+function openMobileSheetForDetail(detailRow) {
+  const block = detailRow.querySelector('.detail-block');
+  const row = detailRow.previousElementSibling;
+  const company = row?.querySelector('td:nth-child(2)')?.innerText.trim() || '';
+  const role = row?.querySelector('td:nth-child(3)')?.innerText.trim() || '';
+  const title = company + (role ? ' — ' + role : '');
+  const titleEl = document.getElementById('mobile-sheet-title');
+  const bodyEl = document.getElementById('mobile-sheet-body');
+  if (!titleEl || !bodyEl) return;
+  titleEl.textContent = title || 'Details';
+  bodyEl.innerHTML = '';
+  if (block) {
+    bodyEl.appendChild(block.cloneNode(true));
+  } else {
+    bodyEl.innerHTML = '<p class="muted">No details available.</p>';
+  }
+  document.getElementById('mobile-sheet-backdrop').classList.add('visible');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeMobileSheet() {
+  const bd = document.getElementById('mobile-sheet-backdrop');
+  if (bd) bd.classList.remove('visible');
+  document.body.style.overflow = '';
+}
+
+// ESC closes mobile sheet
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeMobileSheet();
+});
+
+// If the viewport widens past the breakpoint with the sheet open, close it
+// so we don't leave a phantom modal layered over the desktop view.
+MOBILE_BREAKPOINT_MQ.addEventListener?.('change', (e) => {
+  if (!e.matches) closeMobileSheet();
+});
 
 // ── Table filter + sort ─────────────────────────────────────────
 function applyFilters() {
