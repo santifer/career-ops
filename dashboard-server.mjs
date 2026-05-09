@@ -19,6 +19,8 @@ const MIME = {
   '.json': 'application/json',
   '.png': 'image/png',
   '.ico': 'image/x-icon',
+  '.svg': 'image/svg+xml',
+  '.webmanifest': 'application/manifest+json',
 };
 
 // ── Report summary parser ──────────────────────────────────────
@@ -796,7 +798,17 @@ const server = createServer((req, res) => {
   filePath = join(ROOT, filePath);
   if (!existsSync(filePath)) { res.writeHead(404); res.end('Not found'); return; }
   const ext = extname(filePath);
-  res.writeHead(200, { 'Content-Type': MIME[ext] || 'text/plain' });
+  const headers = { 'Content-Type': MIME[ext] || 'text/plain' };
+  // PWA: manifest needs the manifest mime type; service worker must be served
+  // from the root scope with no-cache so updates propagate.
+  if (url === '/manifest.json') {
+    headers['Content-Type'] = 'application/manifest+json';
+  } else if (url === '/service-worker.js') {
+    headers['Content-Type'] = 'application/javascript';
+    headers['Service-Worker-Allowed'] = '/';
+    headers['Cache-Control'] = 'no-cache';
+  }
+  res.writeHead(200, headers);
   res.end(readFileSync(filePath));
 });
 

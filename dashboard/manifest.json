@@ -1,0 +1,23 @@
+{
+  "name": "Career-Ops Dashboard",
+  "short_name": "Career-Ops",
+  "description": "Personal AI-powered job search ops dashboard",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0c0a09",
+  "theme_color": "#0c0a09",
+  "icons": [
+    { "src": "/assets/favicon-16.png",  "sizes": "16x16",   "type": "image/png" },
+    { "src": "/assets/favicon-32.png",  "sizes": "32x32",   "type": "image/png" },
+    { "src": "/assets/favicon-48.png",  "sizes": "48x48",   "type": "image/png" },
+    { "src": "/assets/favicon-64.png",  "sizes": "64x64",   "type": "image/png" },
+    { "src": "/assets/favicon-128.png", "sizes": "128x128", "type": "image/png" },
+    { "src": "/assets/favicon-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "/assets/favicon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/assets/favicon-256.png", "sizes": "256x256", "type": "image/png" },
+    { "src": "/assets/favicon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/assets/favicon.svg",     "sizes": "any",     "type": "image/svg+xml" }
+  ]
+}

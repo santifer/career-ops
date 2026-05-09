@@ -932,7 +932,11 @@ function build() {
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon-180.png">
+<link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#0c0a09">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Career-Ops">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3330,6 +3334,14 @@ refreshLiveStats();
 _batchInterval = setInterval(pollBatch, 2000);
 pollBatch();
 setInterval(refreshLiveStats, 30000);
+
+// ── PWA service worker ─────────────────────────────────────────
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/service-worker.js', { scope: '/' })
+      .catch(err => console.warn('[sw] registration failed:', err));
+  });
+}
 </script>
 </body>
 </html>`;
