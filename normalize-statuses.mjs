@@ -36,21 +36,37 @@ function normalizeStatus(raw) {
     return { status: 'Discarded', moveToNotes: raw.trim() };
   }
 
-  // CERRADA / Cancelada / Descartada → Discarded
+  // CERRADA / Cancelada / Descartada / Descartado / Écartée / Écarté → Discarded
   if (/^cerrada$/i.test(s)) return { status: 'Discarded' };
   if (/^cancelada/i.test(s)) return { status: 'Discarded' };
   if (/^descartada$/i.test(s)) return { status: 'Discarded' };
   if (/^descartado$/i.test(s)) return { status: 'Discarded' };
+  if (/^écartée?$/i.test(s)) return { status: 'Discarded' };
 
-  // Rechazada / Rechazado → Rejected
+  // Rechazada / Rechazado / Refusée / Refusé → Rejected
   if (/^rechazada?$/i.test(s)) return { status: 'Rejected' };
   if (/^rechazado\s+\d{4}/i.test(s)) return { status: 'Rejected' };
+  if (/^refusée?$/i.test(s)) return { status: 'Rejected' };
 
-  // Aplicado with date → Applied (strip date)
+  // Aplicado / Postulé with date → Applied (strip date)
   if (/^aplicado\s+\d{4}/i.test(s)) return { status: 'Applied' };
+  if (/^postulé?\s+\d{4}/i.test(s)) return { status: 'Applied' };
 
-  // CONDICIONAL / HOLD / EVALUAR / Verificar → Evaluated
-  if (/^(condicional|hold|evaluar|verificar)$/i.test(s)) return { status: 'Evaluated' };
+  // CONDICIONAL / HOLD / EVALUAR / Verificar / Évalué → Evaluated
+  if (/^(condicional|hold|evaluar|verificar|évalué)$/i.test(s)) return { status: 'Evaluated' };
+
+  // Postulé (without date) / Répondu → Applied / Responded
+  if (/^postulé?$/i.test(s)) return { status: 'Applied' };
+  if (/^répondu$/i.test(s)) return { status: 'Responded' };
+
+  // Entrevue → Interview
+  if (/^entrevue$/i.test(s)) return { status: 'Interview' };
+
+  // Offre → Offer
+  if (/^offre$/i.test(s)) return { status: 'Offer' };
+
+  // Ignoré → SKIP
+  if (/^ignoré$/i.test(s)) return { status: 'SKIP' };
 
   // MONITOR → SKIP
   if (/^monitor$/i.test(s)) return { status: 'SKIP' };
