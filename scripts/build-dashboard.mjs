@@ -445,6 +445,37 @@ function countTodaysReports(date) {
   return readdirSync(REPORTS_DIR).filter(f => f.includes(date) && f.endsWith('.md')).length;
 }
 
+// ── Tier legend (from modes/_profile.md §1) ───────────────────────
+// Single source of truth for tier badge tooltips and the legend modal.
+// Sub-tier variants (A2-AB, A2-AE, A2-PgM, A2-SA) are rendered as A2
+// in the table (regex strips), but listed in the legend for clarity.
+const TIER_LEGEND = [
+  {
+    code: 'A1',
+    name: 'Residency / Fellowship Programs',
+    summary: 'Cohort-based programs explicitly for career pivoters; lower technical gate. +1.5x base score weight.',
+    examples: 'Tarbell AI Journalism, IAPS AI Policy, Horizon, Berkman Klein, Apple AIML Residency, OpenAI Residency, Perplexity Research Residency.',
+  },
+  {
+    code: 'A2',
+    name: 'AI Solutions Architect / Agent Builder / Enablement / PgM',
+    summary: 'Primary aspirational target. Scored at full weight; no portfolio gate.',
+    examples: 'AI Solutions Architect (A2-SA), Forward Deployed Engineer, Applied AI Engineer, AI Enablement Lead (A2-AE), AI Program Manager (A2-PgM), AI Technical Program Manager, Agent Builder (A2-AB), Technical Deployment Lead.',
+  },
+  {
+    code: 'B',
+    name: 'Communications / Editorial at AI-native companies',
+    summary: 'Pragmatic bridge. Must pass AI-nativity filter (core product is AI or AI is structural to roadmap).',
+    examples: 'Developer Education Lead, Developer Advocate, Communications Lead/Manager, Engineering Editorial Lead, Technical Writer, Editorial Lead, Content Strategy Lead.',
+  },
+];
+const TIER_BY_CODE = Object.fromEntries(TIER_LEGEND.map(t => [t.code, t]));
+function tierTooltip(code) {
+  const t = TIER_BY_CODE[code];
+  if (!t) return '';
+  return `${t.code} — ${t.name}. ${t.summary}`;
+}
+
 // ── HTML rendering ────────────────────────────────────────────────
 
 const escape = (s) => String(s)
@@ -604,7 +635,7 @@ function renderRow(r, idx) {
   return `
 <tr class="row ${throttleClass}" data-score="${r.score}" data-archetype="${escape(archetype)}" data-company="${escape(r.company.toLowerCase())}" data-status="${escape(r.status.toLowerCase())}" data-role="${escape(r.role.toLowerCase())}" onclick="toggleDetail('${idx}')">
   <td><span class="badge score-badge-lg ${scoreBadgeClass(r.score)}">${r.score.toFixed(1)}</span></td>
-  <td><strong>${escape(r.company)}</strong>${archetype ? `<span class="tier-tag">${escape(archetype)}</span>` : ''}</td>
+  <td><strong>${escape(r.company)}</strong>${archetype ? `<span class="tier-tag" tabindex="0" role="button" data-tooltip="${escape(tierTooltip(archetype))}" aria-label="Tier ${escape(archetype)}: ${escape(tierTooltip(archetype))}" onclick="event.stopPropagation();openTierLegend('${escape(archetype)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openTierLegend('${escape(archetype)}')}">${escape(archetype)}</span>` : ''}</td>
   <td class="role-cell">${escape(r.role)}</td>
   <td><span class="badge ${statusBadgeClass(r.status)}" data-status="${statusKey(r.status)}">${escape(r.status)}</span></td>
   <td class="muted-text">${escape(r.date)}</td>
@@ -1075,7 +1106,82 @@ function build() {
     font-size: 10px; color: var(--text-3); background: var(--surface-2);
     border: 1px solid var(--border); border-radius: 4px;
     padding: 0 5px; margin-left: 5px; font-weight: 500; vertical-align: middle;
+    cursor: pointer; position: relative; display: inline-block;
+    transition: background .12s, border-color .12s, color .12s;
   }
+  .tier-tag:hover, .tier-tag:focus {
+    background: var(--blue-bg); border-color: var(--blue-border);
+    color: var(--blue-fg); outline: none;
+  }
+  .tier-tag:focus-visible { box-shadow: var(--ring-blue); }
+  /* CSS-only tooltip: pulls from data-tooltip; appears on hover/focus.
+     Wraps to ~280px and floats above the badge. Pointer-events:none so
+     the tooltip itself never steals the click. */
+  .tier-tag::after {
+    content: attr(data-tooltip);
+    position: absolute; bottom: calc(100% + 8px); left: 50%;
+    transform: translateX(-50%) translateY(4px);
+    background: var(--text); color: var(--surface);
+    padding: 8px 11px; border-radius: var(--radius-sm);
+    font-size: 11.5px; font-weight: 500; line-height: 1.45;
+    white-space: normal; width: max-content; max-width: 280px;
+    box-shadow: var(--shadow-md); pointer-events: none;
+    opacity: 0; visibility: hidden;
+    transition: opacity .15s ease-out, transform .15s ease-out, visibility .15s;
+    z-index: 1500; text-align: left;
+  }
+  .tier-tag:hover::after, .tier-tag:focus::after, .tier-tag:focus-visible::after {
+    opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0);
+  }
+  .tier-tag[data-tooltip=""]::after { display: none; }
+
+  /* Column-header (?) info button that opens the full legend modal. */
+  .tier-legend-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 16px; height: 16px; margin-left: 4px; padding: 0;
+    border: 1px solid var(--border); border-radius: 50%;
+    background: var(--surface); color: var(--text-3);
+    font-size: 10px; font-weight: 700; font-family: inherit;
+    cursor: pointer; vertical-align: middle; line-height: 1;
+    transition: background .12s, color .12s, border-color .12s;
+  }
+  .tier-legend-btn:hover, .tier-legend-btn:focus-visible {
+    background: var(--blue-bg); border-color: var(--blue-border);
+    color: var(--blue-fg); outline: none;
+  }
+  .tier-legend-btn:focus-visible { box-shadow: var(--ring-blue); }
+
+  /* Tier-legend modal — same shape as gap modal for consistency. */
+  #tier-legend-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 2000; backdrop-filter: blur(2px); }
+  #tier-legend-backdrop.visible { display: block; }
+  #tier-legend-modal {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    width: min(640px, 96vw); max-height: 82vh; overflow-y: auto; z-index: 2001;
+    background: var(--surface); border-radius: 12px; border: 1px solid var(--border);
+    box-shadow: var(--shadow-lg);
+  }
+  .tier-legend-header {
+    position: sticky; top: 0; background: var(--surface);
+    border-bottom: 1px solid var(--border); padding: 14px 20px;
+    display: flex; align-items: center; gap: 10px; z-index: 1;
+    border-radius: 12px 12px 0 0;
+  }
+  .tier-legend-title { font-size: 15px; font-weight: 600; flex: 1; color: var(--text); }
+  .tier-legend-body { padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; }
+  .tier-legend-row {
+    display: grid; grid-template-columns: 56px 1fr; gap: 14px;
+    padding: 12px 14px; border: 1px solid var(--border);
+    border-radius: var(--radius-sm); background: var(--surface-2);
+    transition: border-color .12s;
+  }
+  .tier-legend-row.tier-row-highlight { border-color: var(--blue-fg); box-shadow: var(--ring-blue); }
+  .tier-legend-code {
+    font-size: 14px; font-weight: 700; color: var(--blue-fg);
+    text-align: center; padding-top: 2px; font-variant-numeric: tabular-nums;
+  }
+  .tier-legend-name { font-size: 13.5px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .tier-legend-summary { font-size: 12.5px; color: var(--text-2); line-height: 1.55; margin-bottom: 6px; }
+  .tier-legend-examples { font-size: 11.5px; color: var(--text-3); line-height: 1.5; font-style: italic; }
 
   /* ── Throttle row visual states ──────────────────────────────── */
   tr.row-throttle-pickone > td:first-child { box-shadow: inset 3px 0 0 var(--amber-fg); }
@@ -1522,6 +1628,17 @@ function build() {
     </div>
   </div>
 
+  <!-- Tier-legend modal -->
+  <div id="tier-legend-backdrop" onclick="closeTierLegend()" role="dialog" aria-modal="true" aria-labelledby="tier-legend-title">
+    <div id="tier-legend-modal" onclick="event.stopPropagation()">
+      <div class="tier-legend-header">
+        <div class="tier-legend-title" id="tier-legend-title">Tier badges</div>
+        <button class="verify-close" onclick="closeTierLegend()" aria-label="Close">✕</button>
+      </div>
+      <div class="tier-legend-body" id="tier-legend-body"></div>
+    </div>
+  </div>
+
   <!-- Toast container -->
   <div id="toast-container" aria-live="polite" aria-atomic="false"></div>
 
@@ -1579,7 +1696,7 @@ function build() {
     <div class="table-scroll"><table>
       <thead><tr>
         <th class="sortable" onclick="sortTable('apply-now-tbody', 0, 'num', this)">Score</th>
-        <th class="sortable" onclick="sortTable('apply-now-tbody', 1, 'str', this)">Company</th>
+        <th class="sortable" onclick="sortTable('apply-now-tbody', 1, 'str', this)">Company <button type="button" class="tier-legend-btn" title="Tier badge legend" aria-label="Show tier badge legend" onclick="event.stopPropagation();openTierLegend()">?</button></th>
         <th class="sortable" onclick="sortTable('apply-now-tbody', 2, 'str', this)">Role</th>
         <th class="sortable" onclick="sortTable('apply-now-tbody', 3, 'str', this)">Status</th>
         <th class="sortable" onclick="sortTable('apply-now-tbody', 4, 'str', this)">Eval Date</th>
@@ -1627,7 +1744,7 @@ function build() {
     <div class="table-scroll"><table>
       <thead><tr>
         <th class="sortable" onclick="sortTable('all-tbody', 0, 'num', this)">Score</th>
-        <th class="sortable" onclick="sortTable('all-tbody', 1, 'str', this)">Company</th>
+        <th class="sortable" onclick="sortTable('all-tbody', 1, 'str', this)">Company <button type="button" class="tier-legend-btn" title="Tier badge legend" aria-label="Show tier badge legend" onclick="event.stopPropagation();openTierLegend()">?</button></th>
         <th class="sortable" onclick="sortTable('all-tbody', 2, 'str', this)">Role</th>
         <th class="sortable" onclick="sortTable('all-tbody', 3, 'str', this)">Status</th>
         <th class="sortable" onclick="sortTable('all-tbody', 4, 'str', this)">Eval Date</th>
@@ -1895,7 +2012,7 @@ function buildTable(rows, panelId) {
     const rec = r.reportSummary?.recommendation || '';
     return \`<tr class="row" onclick="toggleDetail('sp-\${panelId}-\${i}')">
       <td>\${scoreBadge(r.score)}</td>
-      <td><strong>\${esc(r.company||'')}</strong>\${archetype ? \`<span class="tier-tag">\${esc(archetype)}</span>\` : ''}</td>
+      <td><strong>\${esc(r.company||'')}</strong>\${archetype ? \`<span class="tier-tag" tabindex="0" role="button" data-tooltip="\${esc(tierTooltipJS(archetype))}" aria-label="Tier \${esc(archetype)}: \${esc(tierTooltipJS(archetype))}" onclick="event.stopPropagation();openTierLegend('\${esc(archetype)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openTierLegend('\${esc(archetype)}')}">\${esc(archetype)}</span>\` : ''}</td>
       <td class="role-cell">\${esc(r.role||'')}</td>
       <td>\${statusBadge(r.status)}</td>
       <td class="muted-text">\${esc(r.date||'')}</td>
@@ -2156,6 +2273,43 @@ function closeGapModal() {
   document.getElementById('gap-backdrop').classList.remove('visible');
 }
 
+// ── Tier-legend modal ──────────────────────────────────────────
+const TIER_LEGEND = ${JSON.stringify(TIER_LEGEND)};
+const TIER_BY_CODE = Object.fromEntries(TIER_LEGEND.map(t => [t.code, t]));
+function tierTooltipJS(code) {
+  // Sub-tier variants (A2-AB, A2-AE, A2-PgM, A2-SA) map to A2.
+  const base = (String(code).match(/^(A1|A2|B)/) || [])[1] || code;
+  const t = TIER_BY_CODE[base];
+  return t ? t.code + ' — ' + t.name + '. ' + t.summary : '';
+}
+let _tierLegendLastFocus = null;
+function openTierLegend(highlightCode) {
+  _tierLegendLastFocus = document.activeElement;
+  const body = document.getElementById('tier-legend-body');
+  const base = highlightCode ? (String(highlightCode).match(/^(A1|A2|B)/) || [])[1] : '';
+  body.innerHTML = TIER_LEGEND.map(t => {
+    const cls = (base && base === t.code) ? 'tier-legend-row tier-row-highlight' : 'tier-legend-row';
+    return '<div class="' + cls + '">' +
+      '<div class="tier-legend-code">' + esc(t.code) + '</div>' +
+      '<div>' +
+        '<div class="tier-legend-name">' + esc(t.name) + '</div>' +
+        '<div class="tier-legend-summary">' + esc(t.summary) + '</div>' +
+        '<div class="tier-legend-examples">Examples: ' + esc(t.examples) + '</div>' +
+      '</div></div>';
+  }).join('');
+  const backdrop = document.getElementById('tier-legend-backdrop');
+  backdrop.classList.add('visible');
+  const close = backdrop.querySelector('.verify-close');
+  if (close) close.focus();
+}
+function closeTierLegend() {
+  document.getElementById('tier-legend-backdrop').classList.remove('visible');
+  if (_tierLegendLastFocus && _tierLegendLastFocus.focus) {
+    _tierLegendLastFocus.focus();
+    _tierLegendLastFocus = null;
+  }
+}
+
 // ── Live stats refresh ──────────────────────────────────────────
 async function refreshLiveStats() {
   const data = await apiFetch('/api/stats');
@@ -2172,7 +2326,7 @@ async function refreshLiveStats() {
 
 // ── Keyboard shortcuts ──────────────────────────────────────────
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeVerify(); closeGapModal(); }
+  if (e.key === 'Escape') { closeVerify(); closeGapModal(); closeTierLegend(); }
 });
 
 // ── Toast ───────────────────────────────────────────────────────
