@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Build — Production AI Systems &amp; Open Source</title>
+  <meta name="description" content="Communications Triage Agent (~160 hrs/yr recaptured), Executive RAG / Voice DNA (99% fidelity), career-ops open-source agentic pipeline.">
+  <meta property="og:title" content="Build — Mitchell Williams">
+  <meta property="og:description" content="Production AI systems, public artifacts, methodologies in use.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap">
+  <link rel="stylesheet" href="shared/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "Mitchell Williams",
+    "jobTitle": "Internal Communications Lead, Program Manager",
+    "worksFor": { "@type": "Organization", "name": "Google" },
+    "alumniOf": [
+      { "@type": "Organization", "name": "Al Jazeera English" },
+      { "@type": "Organization", "name": "AJ+" },
+      { "@type": "Organization", "name": "HuffPost Live" },
+      { "@type": "Organization", "name": "Fusion (ABC News / Univision)" },
+      { "@type": "Organization", "name": "Indiana University Bloomington" }
+    ],
+    "url": "https://thestorytellermitch.com",
+    "sameAs": [
+      "https://linkedin.com/in/mitwilli",
+      "https://github.com/mitwilli-create"
+    ],
+    "email": "mitwilli@gmail.com"
+  }
+  </script>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="brand"><span class="dot">●</span>Mitchell Williams</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="build.html" class="active">Build</a></li>
+      <li><a href="select-works.html">Select Works</a></li>
+      <li><a href="writing.html">Writing</a></li>
+      <li><a href="contact.html">Contact</a></li>
+    </ul>
+  </div>
+</nav>
+
+<header class="page-head">
+  <div class="wrap">
+    <h1 class="page-title">Build</h1>
+    <p class="page-sub">Production AI systems, public artifacts, methodologies in use.</p>
+  </div>
+</header>
+
+<section style="padding-top: 56px;">
+  <div class="wrap">
+
+    <!-- Artifact 1 -->
+    <div class="build-card">
+      <div class="build-eyebrow">01 · in production</div>
+      <h3>Communications Triage Agent</h3>
+      <div class="build-meta">Google xGE · ~1,000 senior ICs · Principal / Distinguished / Fellow tier</div>
+      <p class="build-metric">~160 operational hours/year recaptured at &gt;90% classification accuracy across an organization of 1,000+ senior technical ICs.</p>
+      <dl>
+        <dt>Architecture</dt>
+        <dd>Three-prompt routing (triage / revise / escalate), conditional KB loading, single-Gemini-agent design — not multi-agent.</dd>
+        <dt>What it teaches</dt>
+        <dd><strong>Single-orchestrator + skill-based delegation beats multi-agent on cost-per-action and retry behavior in bounded task spaces.</strong></dd>
+        <dt>Status</dt>
+        <dd>In production. Internal-only build, code not public. Spec available <a href="mailto:mitwilli@gmail.com?subject=Comms%20Triage%20Agent%20spec%20—%20Mitchell%20Williams">on request</a>.</dd>
+      </dl>
+    </div>
+
+    <!-- Artifact 2 -->
+    <div class="build-card">
+      <div class="build-eyebrow">02 · in production</div>
+      <h3>Executive RAG Pipeline — Voice DNA + Kill List</h3>
+      <div class="build-meta">Google xGE · agentic drafting layer for executive communications</div>
+      <p class="build-metric">99% stylistic fidelity. 90% drafting-latency reduction. Risk-tolerance encoded structurally, not via instruction.</p>
+      <dl>
+        <dt>Methodology</dt>
+        <dd>Curated Voice DNA corpus + restricted Kill List of rejected drafts as negative training. The negative corpus is the load-bearing innovation.</dd>
+        <dt>What it teaches</dt>
+        <dd>Most agent voice work treats the principal corpus as the only training signal. <strong>The Kill List is the differentiator</strong> — what the principal will not say is more discriminative than what they will.</dd>
+        <dt>Why it matters</dt>
+        <dd>Editorial-discipline-as-agent-constraint. Highest-ceiling artifact for AI editorial / comms hires.</dd>
+        <dt>Status</dt>
+        <dd>In production. Internal-only.</dd>
+      </dl>
+    </div>
+
+    <!-- Artifact 3 -->
+    <div class="build-card">
+      <div class="build-eyebrow">03 · open source · public</div>
+      <h3>career-ops</h3>
+      <div class="build-meta">Node.js · Playwright · YAML · Claude · launchd</div>
+      <p class="build-metric">Production deployment April 2026. Agentic job-search pipeline with parallel workers, zero-token portal scanning (Greenhouse / Ashby / Lever direct API), unattended launchd schedule, daily cost caps.</p>
+      <dl>
+        <dt>Architecture</dt>
+        <dd>Single Claude orchestrator with skill-based delegation across pipeline stages. Headless batch workers spawned via <code>claude -p</code>; budget guard reads rolling 30-day cost log and aborts if monthly cap exceeded.</dd>
+        <dt>What it teaches</dt>
+        <dd>The build artifact is the application — open-source pipeline that runs my own job search.</dd>
+        <dt>Repo</dt>
+        <dd><a href="https://github.com/mitwilli-create">github.com/mitwilli-create</a> — README + 60-second walkthrough on landing.</dd>
+      </dl>
+    </div>
+
+    <h2 style="font-size: 24px; font-weight: 700; letter-spacing: -0.02em; margin: 56px 0 24px; color: var(--text);">Secondary artifacts</h2>
+
+    <div class="build-secondary">
+      <h4>Voice OS</h4>
+      <p>1.08M-word personal corpus → six voice signatures + AI-detection risk surfacing → calibration data for any agent in my voice. Methodology public via <a href="https://github.com/mitwilli-create/career-ops/blob/main/corpus/voice-profile.md">corpus/voice-profile.md</a>.</p>
+    </div>
+
+    <div class="build-secondary">
+      <h4>Tax Verification Agent</h4>
+      <p>Caught a ~$19K state-tax filing error commercial software missed. Citation-gated four-layer KB on Claude. Personal-use build; methodology transferable to any compliance-document review surface.</p>
+    </div>
+
+    <div style="background: var(--bg-elev); border: 1px solid var(--accent-ai); border-radius: var(--radius); padding: 28px 32px; margin-top: 56px; max-width: 720px;">
+      <p style="font-size: 18px; color: var(--text); line-height: 1.55; font-weight: 500;">If you're building agents at scale — internal AI enablement, applied AI, forward deployed — this is the work I'd bring on day one. <a href="mailto:mitwilli@gmail.com?subject=Role%20at%20%7BCompany%7D%20—%20Mitchell%20Williams" style="color: var(--accent-ai); border-bottom: 1px solid var(--accent-ai); text-decoration: none; font-weight: 700;">mitwilli@gmail.com</a>.</p>
+    </div>
+
+  </div>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <div>
+      <a href="https://github.com/mitwilli-create">github.com/mitwilli-create</a>
+      <a href="https://linkedin.com/in/mitwilli">linkedin.com/in/mitwilli</a>
+      <a href="mailto:mitwilli@gmail.com">mitwilli@gmail.com</a>
+    </div>
+    <div class="text-dim">Last reviewed: 2026-05-09</div>
+  </div>
+</footer>
+
+</body>
+</html>
