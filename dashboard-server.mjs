@@ -152,11 +152,12 @@ function parsePipeline() {
 function parseBatch() {
   const statePath = join(ROOT, 'batch/batch-state.tsv');
   const inputPath = join(ROOT, 'batch/batch-input.tsv');
-  const batch = { completed: 0, failed: 0, total: 0, recent: [] };
+  const batch = { completed: 0, failed: 0, total: 0, runs: 0, recent: [] };
 
   if (existsSync(statePath)) {
     const lines = readFileSync(statePath, 'utf8').split('\n')
       .filter(l => l.trim() && !l.startsWith('id'));
+    const startedAts = [];
     for (const l of lines) {
       const [id, url, status, started, completed, report] = l.split('\t');
       if (status === 'completed') {
@@ -164,8 +165,18 @@ function parseBatch() {
         batch.recent.push({ id, url, report, completed });
       }
       if (status === 'failed') batch.failed++;
+      if (started) startedAts.push(started);
     }
     batch.recent = batch.recent.slice(-10).reverse();
+    // Count distinct runs via 15-min gap heuristic on started_at (matches detailBatches).
+    const GAP_MS = 15 * 60 * 1000;
+    startedAts.sort();
+    let prev = 0;
+    for (const s of startedAts) {
+      const ts = new Date(s).getTime();
+      if (!batch.runs || (ts - prev) > GAP_MS) batch.runs++;
+      prev = ts;
+    }
   }
   if (existsSync(inputPath)) {
     batch.total = readFileSync(inputPath, 'utf8').split('\n')
@@ -320,6 +331,77 @@ function detailCompanies() {
     }))
     .sort((a, b) => b.bestScore - a.bestScore);
   return { title: 'Companies Tracked', rows };
+}
+
+// Group batch-state rows into runs using a gap heuristic on started_at.
+// Two consecutive rows (sorted by started_at asc) belong to the same run when
+// the gap between starts is ≤ BATCH_RUN_GAP_MIN minutes (default 15).
+function detailBatches() {
+  const statePath = join(ROOT, 'batch/batch-state.tsv');
+  if (!existsSync(statePath)) return { title: 'Batch History', total: 0, batches: [] };
+
+  // Score column in batch-state.tsv is unpopulated (`-`); reach into applications.md.
+  const scoreByReportNum = {};
+  for (const a of parseApplications()) {
+    const n = parseInt(a.num, 10);
+    if (!isNaN(n) && a.score) scoreByReportNum[String(n)] = a.score;
+  }
+
+  const GAP_MIN = parseInt(process.env.BATCH_RUN_GAP_MIN || '15', 10);
+  const GAP_MS  = GAP_MIN * 60 * 1000;
+
+  const rows = readFileSync(statePath, 'utf8').split('\n')
+    .filter(l => l.trim() && !l.startsWith('id'))
+    .map(l => {
+      const [id, url, status, started_at, completed_at, report_num, score, error, retries] = l.split('\t');
+      return { id: parseInt(id) || 0, url: url || '', status: status || '', started_at: started_at || '', completed_at: completed_at || '', report_num: report_num || '', error: error !== '-' ? error : null, retries: parseInt(retries) || 0 };
+    })
+    .filter(r => r.started_at);
+
+  rows.sort((a, b) => a.started_at.localeCompare(b.started_at));
+
+  const groups = [];
+  let prevStartMs = 0;
+  for (const r of rows) {
+    const ts = new Date(r.started_at).getTime();
+    if (!groups.length || (ts - prevStartMs) > GAP_MS) groups.push({ rows: [] });
+    groups[groups.length - 1].rows.push(r);
+    prevStartMs = ts;
+  }
+
+  const batches = groups.map(g => {
+    const startedAts   = g.rows.map(r => r.started_at).filter(Boolean).sort();
+    const completedAts = g.rows.map(r => r.completed_at).filter(Boolean).sort();
+    const startedAt    = startedAts[0] || null;
+    const completedAt  = completedAts[completedAts.length - 1] || null;
+    const durationMs   = (startedAt && completedAt) ? (new Date(completedAt) - new Date(startedAt)) : null;
+    const completed = g.rows.filter(r => r.status === 'completed').length;
+    const failed    = g.rows.filter(r => r.status === 'failed').length;
+    const running   = g.rows.filter(r => r.status === 'running').length;
+    const pending   = g.rows.filter(r => !['completed','failed','running'].includes(r.status)).length;
+
+    const scores = g.rows
+      .filter(r => r.status === 'completed' && r.report_num && r.report_num !== '-')
+      .map(r => scoreByReportNum[String(parseInt(r.report_num, 10))])
+      .filter(s => typeof s === 'number' && !isNaN(s) && s > 0);
+    const avgScore = scores.length ? Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 10) / 10 : null;
+
+    return {
+      batch_id: startedAt,
+      started_at: startedAt,
+      completed_at: completedAt,
+      duration_ms: durationMs,
+      total: g.rows.length,
+      completed, failed, running, pending,
+      avgScore,
+      reports: g.rows
+        .filter(r => r.status === 'completed' && r.report_num && r.report_num !== '-')
+        .map(r => ({ id: r.id, report_num: r.report_num, url: r.url, score: scoreByReportNum[String(parseInt(r.report_num, 10))] || null })),
+    };
+  });
+
+  batches.sort((a, b) => (b.started_at || '').localeCompare(a.started_at || ''));
+  return { title: 'Batch History', total: batches.length, batches: batches.slice(0, 10) };
 }
 
 function detailScanned() {
@@ -509,6 +591,7 @@ const DETAIL_FNS = {
   'pending':      detailPending,
   'companies':    detailCompanies,
   'scanned':      detailScanned,
+  'batches':      detailBatches,
 };
 
 // ── HTTP server ────────────────────────────────────────────────

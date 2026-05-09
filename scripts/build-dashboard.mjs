@@ -25,6 +25,7 @@ const ROOT = process.cwd();
 const APPLICATIONS_PATH = join(ROOT, 'data/applications.md');
 const PIPELINE_PATH = join(ROOT, 'data/pipeline.md');
 const SCAN_HISTORY_PATH = join(ROOT, 'data/scan-history.tsv');
+const BATCH_STATE_PATH = join(ROOT, 'batch/batch-state.tsv');
 const PORTALS_PATH = join(ROOT, 'portals.yml');
 const REPORTS_DIR = join(ROOT, 'reports');
 const HEARTBEAT_GLOB = (date) => join(ROOT, `data/heartbeat-${date}.md`);
@@ -432,6 +433,25 @@ function countScanHistory() {
   return Math.max(0, lines.length - 1);
 }
 
+// Count distinct batch runs in batch-state.tsv using a 15-min gap heuristic on started_at.
+// Mirrors the grouping logic in dashboard-server.mjs detailBatches().
+function countBatchRuns() {
+  if (!existsSync(BATCH_STATE_PATH)) return 0;
+  const GAP_MS = 15 * 60 * 1000;
+  const starts = readFileSync(BATCH_STATE_PATH, 'utf-8').split('\n')
+    .filter(l => l.trim() && !l.startsWith('id'))
+    .map(l => l.split('\t')[3])
+    .filter(Boolean)
+    .sort();
+  let runs = 0, prev = 0;
+  for (const s of starts) {
+    const ts = new Date(s).getTime();
+    if (!runs || (ts - prev) > GAP_MS) runs++;
+    prev = ts;
+  }
+  return runs;
+}
+
 function getEnabledPortals() {
   if (!existsSync(PORTALS_PATH)) return { tracked: 0, queries: 0 };
   const cfg = parseYaml(readFileSync(PORTALS_PATH, 'utf-8'));
@@ -821,6 +841,7 @@ function build() {
   const applied = apps.filter(r => /applied|interview|offer/i.test(r.status));
   const pipelinePending = countPipelinePending();
   const scanTotal = countScanHistory();
+  const batchRuns = countBatchRuns();
   const portals = getEnabledPortals();
   const reportsToday = countTodaysReports(today);
 
@@ -1701,12 +1722,18 @@ function build() {
         <div class="stat-label">URLs scanned</div>
         <div class="stat-value" id="live-scanned">${scanTotal}</div>
     </div>
+    <div class="stat" onclick="toggleStatPanel('batches')" title="Click to see batch run history">
+      <div class="stat-label">Batches run</div>
+      <div class="stat-value" id="live-batches">${batchRuns}</div>
+      <div class="stat-caret">▾ click to expand</div>
+    </div>
   </div>
 
   <!-- Expandable stat panels (loaded live from /api/detail/*) -->
   <div class="stat-panel" id="stat-panel-evaluations"></div>
   <div class="stat-panel" id="stat-panel-applied"></div>
   <div class="stat-panel" id="stat-panel-pending"></div>
+  <div class="stat-panel" id="stat-panel-batches"></div>
 
   ${applyNow.length > 0 ? `
   <div class="panel panel-strong" id="apply-now-section">
@@ -2129,9 +2156,69 @@ function renderStatPanel(key, data) {
       </table></div>\`;
   }
 
+  if (key === 'batches') {
+    const batches = data.batches || [];
+    const fmtDuration = ms => {
+      if (ms == null || isNaN(ms) || ms < 0) return '—';
+      const min = Math.floor(ms / 60000);
+      const sec = Math.floor((ms % 60000) / 1000);
+      if (min >= 60) return Math.floor(min/60) + 'h ' + (min%60) + 'm';
+      if (min >= 1) return min + 'm ' + (sec ? sec + 's' : '');
+      return sec + 's';
+    };
+    const fmtTime = s => {
+      if (!s) return '—';
+      try { return new Date(s).toLocaleString(undefined, { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }); }
+      catch { return s; }
+    };
+    if (!batches.length) {
+      return \`<div class="stat-panel-title">\${esc(title)} <span class="pill">0</span></div>
+        <p style="color:#57606a;font-size:13px;margin:0">No batch runs recorded yet.</p>\`;
+    }
+    const rowsHtml = batches.map((b, i) => {
+      const avg = b.avgScore != null ? scoreBadge(b.avgScore) : '<span class="muted">—</span>';
+      const failedCell = b.failed > 0
+        ? \`<span style="color:var(--red-fg);font-weight:600">\${b.failed}</span>\`
+        : \`<span class="muted">0</span>\`;
+      return \`<tr class="row" onclick="selectBatch('\${esc(b.batch_id || '')}')" title="Drill into batch (coming soon)">
+        <td class="muted-text">\${esc(fmtTime(b.started_at))}</td>
+        <td><strong>\${b.completed}</strong></td>
+        <td>\${failedCell}</td>
+        <td class="muted-text">\${b.total}</td>
+        <td class="muted-text">\${esc(fmtDuration(b.duration_ms))}</td>
+        <td>\${avg}</td>
+      </tr>\`;
+    }).join('');
+    const totalCompleted = batches.reduce((a,b) => a + b.completed, 0);
+    const totalFailed    = batches.reduce((a,b) => a + b.failed, 0);
+    const successRate = (totalCompleted + totalFailed) > 0
+      ? Math.round((totalCompleted / (totalCompleted + totalFailed)) * 100)
+      : null;
+    return \`<div class="stat-panel-title">\${esc(title)} <span class="pill">\${data.total}</span> <span style="font-size:12px;color:#57606a;font-weight:400">· last \${batches.length}</span></div>
+      <div class="bucket-grid" style="margin-bottom:12px">
+        <div class="bucket-card"><div class="bval">\${totalCompleted}</div><div class="blbl">Completed</div></div>
+        <div class="bucket-card"><div class="bval">\${totalFailed}</div><div class="blbl">Failed</div></div>
+        <div class="bucket-card"><div class="bval">\${successRate != null ? successRate + '%' : '—'}</div><div class="blbl">Success rate</div></div>
+      </div>
+      <strong style="font-size:13px">Last \${batches.length} batch runs</strong>
+      <div style="margin-top:10px;overflow-x:auto"><table>
+        <thead><tr><th>Started</th><th>✓</th><th>✕</th><th>Total</th><th>Duration</th><th>Avg score</th></tr></thead>
+        <tbody>\${rowsHtml}</tbody>
+      </table></div>\`;
+  }
+
   // Default: title + full table
   return \`<div class="stat-panel-title">\${esc(title)} \${count ? \`<span class="pill">\${count}</span>\` : ''} <span style="font-size:12px;color:#57606a;font-weight:400">· live</span></div>
     \${buildTable(rows, key)}\`;
+}
+
+// Drill-down into a specific batch run is a Phase 3 follow-up.
+// TODO(phase3): wire selectBatch() to a per-batch detail panel listing each
+// row (URL, status, report link, score, error). For now, log + toast.
+function selectBatch(batchId) {
+  if (!batchId) return;
+  if (typeof toast === 'function') toast('Per-batch drill-down coming soon — batch ' + batchId, 'info');
+  console.log('[selectBatch] batch_id=' + batchId);
 }
 
 // ── Batch progress overlay ──────────────────────────────────────
@@ -2339,6 +2426,7 @@ async function refreshLiveStats() {
   set('live-applied', data.applied);
   set('live-pipeline', data.pipelinePending);
   set('live-scanned', data.scanned);
+  set('live-batches', data.batch?.runs);
   const upd = document.getElementById('live-updated');
   if (upd && data.lastUpdated) {
     const t = new Date(data.lastUpdated).toLocaleTimeString('en-US', {
