@@ -3343,6 +3343,176 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   });
 }
 </script>
+
+<!-- ── Share-link / demo-mode (read-only recruiter view) ──────── -->
+<style>
+  /* Banner */
+  #share-banner {
+    display: none;
+    position: sticky; top: 0; z-index: 3000;
+    padding: 10px 16px;
+    background: linear-gradient(90deg, #fef3c7, #fde68a);
+    color: #78350f;
+    font-size: 13px; font-weight: 600;
+    border-bottom: 1px solid #f59e0b;
+    text-align: center;
+  }
+  body.share-mode #share-banner { display: block; }
+  body.share-mode { padding-top: 0; }
+
+  /* Hide write-action surfaces in share mode */
+  body.share-mode .action-cell a[href]:not([href^="#"]):not([href^="reports/"]),
+  body.share-mode .action-cell a[onclick*="openVerify"],
+  body.share-mode .dcard--action,
+  body.share-mode .rec-btn,
+  body.share-mode #batch-toggle-btn,
+  body.share-mode #batch-overlay,
+  body.share-mode .toolbar-btn.cmdk-trigger,
+  body.share-mode #cmdk-backdrop,
+  body.share-mode #verify-backdrop,
+  body.share-mode [data-action="skip"],
+  body.share-mode [data-action="defer"] {
+    display: none !important;
+  }
+
+  /* Status pills become non-interactive */
+  body.share-mode .status-pill {
+    pointer-events: none !important;
+    cursor: default !important;
+    opacity: 0.85;
+  }
+  body.share-mode #status-popover { display: none !important; }
+
+  /* Demo redaction visual hint */
+  body.demo-mode .meta-chip-comp { opacity: 0.65; }
+</style>
+<div id="share-banner" role="status" aria-live="polite">
+  <span id="share-banner-text">Read-only share — loading…</span>
+</div>
+<script>
+// ── Share / demo bootstrap ─────────────────────────────────────
+(function () {
+  var params = new URLSearchParams(window.location.search);
+  var shareToken = params.get('share');
+  var demoMode = params.get('demo') === '1';
+  if (!shareToken && !demoMode) return;
+
+  function init() {
+    if (shareToken) {
+      document.body.classList.add('share-mode');
+      fetch('/api/share/verify?token=' + encodeURIComponent(shareToken))
+        .then(function (r) { return r.json().catch(function () { return null; }); })
+        .then(function (j) {
+          var el = document.getElementById('share-banner-text');
+          if (!el) return;
+          if (j && j.valid && j.expires) {
+            var d = new Date(j.expires);
+            el.textContent = 'Read-only share — expires ' + d.toLocaleString();
+          } else {
+            el.textContent = 'Read-only share — link expired or invalid';
+          }
+        })
+        .catch(function () {
+          var el = document.getElementById('share-banner-text');
+          if (el) el.textContent = 'Read-only share — server unavailable';
+        });
+    }
+    if (demoMode) {
+      document.body.classList.add('demo-mode');
+      runDemoSwap();
+    }
+  }
+
+  function companyLabel(idx) {
+    if (idx < 26) return '[Company ' + String.fromCharCode(65 + idx) + ']';
+    var first = Math.floor(idx / 26) - 1;
+    var second = idx % 26;
+    return '[Company ' + String.fromCharCode(65 + first) + String.fromCharCode(65 + second) + ']';
+  }
+
+  function buildCompanyMap() {
+    var map = new Map();
+    document.querySelectorAll('[data-company]').forEach(function (el) {
+      var raw = (el.getAttribute('data-company') || '').trim();
+      if (!raw) return;
+      if (!map.has(raw)) map.set(raw, companyLabel(map.size));
+    });
+    return map;
+  }
+
+  function escapeRegex(s) {
+    return s.replace(/[\\\\^.*+?()[\\]{}|]/g, '\\\\$&').replace(/\\$/g, '\\\\$');
+  }
+
+  function runDemoSwap() {
+    var map = buildCompanyMap();
+    if (map.size === 0) return;
+
+    document.querySelectorAll('tr[data-company]').forEach(function (tr) {
+      var raw = (tr.getAttribute('data-company') || '').trim();
+      var label = map.get(raw);
+      if (!label) return;
+      var strong = tr.querySelector('td:nth-child(2) strong');
+      if (strong) strong.textContent = label;
+      tr.removeAttribute('data-search');
+      tr.setAttribute('data-company', label.toLowerCase());
+    });
+
+    var realNames = Array.from(map.keys()).filter(function (n) { return n.length >= 3; });
+    realNames.sort(function (a, b) { return b.length - a.length; });
+    var globalRe = null;
+    if (realNames.length) {
+      var alt = realNames.map(escapeRegex).join('|');
+      globalRe = new RegExp('\\\\b(' + alt + ')\\\\b', 'gi');
+    }
+
+    if (globalRe) {
+      var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+        acceptNode: function (n) {
+          if (!n.nodeValue || !n.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+          var p = n.parentElement;
+          if (!p) return NodeFilter.FILTER_REJECT;
+          if (p.closest('script,style,#share-banner')) return NodeFilter.FILTER_REJECT;
+          return NodeFilter.FILTER_ACCEPT;
+        }
+      });
+      var node;
+      while ((node = walker.nextNode())) {
+        var orig = node.nodeValue;
+        var swapped = orig.replace(globalRe, function (m) {
+          return map.get(m.toLowerCase()) || m;
+        });
+        if (swapped !== orig) node.nodeValue = swapped;
+      }
+    }
+
+    document.querySelectorAll('.meta-chip-comp').forEach(function (el) {
+      el.textContent = '💰 [comp redacted]';
+    });
+
+    var emailRe = /[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}/gi;
+    var w2 = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+      acceptNode: function (n) {
+        emailRe.lastIndex = 0;
+        if (!n.nodeValue || !emailRe.test(n.nodeValue)) return NodeFilter.FILTER_REJECT;
+        var p = n.parentElement;
+        if (!p || p.closest('script,style')) return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    var n2;
+    while ((n2 = w2.nextNode())) {
+      n2.nodeValue = n2.nodeValue.replace(emailRe, '[email redacted]');
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
 </body>
 </html>`;
 

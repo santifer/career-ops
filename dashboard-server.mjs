@@ -3,10 +3,11 @@
 // Usage: node dashboard-server.mjs [--port=3000]
 
 import { createServer } from 'http';
-import { readFileSync, existsSync, readdirSync, appendFileSync, writeFileSync, renameSync } from 'fs';
+import { readFileSync, existsSync, readdirSync, appendFileSync, writeFileSync, renameSync, mkdirSync } from 'fs';
 import { join, extname } from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import { randomBytes } from 'crypto';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = __dirname;
@@ -692,19 +693,86 @@ function updateApplicationStatus({ num, status, note }) {
   return { ok: true, row: updatedRow };
 }
 
+// ── Share-link tokens (24h read-only recruiter links) ─────────
+
+const SHARE_TOKENS_PATH = join(ROOT, 'data/share-tokens.json');
+const SHARE_TTL_MS = 24 * 60 * 60 * 1000;
+
+function loadShareTokens() {
+  try {
+    if (!existsSync(SHARE_TOKENS_PATH)) return { tokens: [] };
+    const raw = JSON.parse(readFileSync(SHARE_TOKENS_PATH, 'utf8'));
+    if (!raw || !Array.isArray(raw.tokens)) return { tokens: [] };
+    return raw;
+  } catch (_) {
+    return { tokens: [] };
+  }
+}
+
+function saveShareTokens(data) {
+  const dir = dirname(SHARE_TOKENS_PATH);
+  if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+  const tmp = SHARE_TOKENS_PATH + '.tmp.' + process.pid + '.' + Date.now();
+  writeFileSync(tmp, JSON.stringify(data, null, 2));
+  renameSync(tmp, SHARE_TOKENS_PATH);
+}
+
+function pruneExpired(data, now = Date.now()) {
+  const before = data.tokens.length;
+  data.tokens = data.tokens.filter(t => new Date(t.expires).getTime() > now);
+  return { data, removed: before - data.tokens.length };
+}
+
+function lookupShareToken(token) {
+  if (!token || typeof token !== 'string') return { status: 'missing' };
+  if (!/^[a-f0-9]{32,128}$/i.test(token)) return { status: 'invalid' };
+  const data = loadShareTokens();
+  const row = data.tokens.find(t => t.token === token);
+  if (!row) return { status: 'invalid' };
+  if (new Date(row.expires).getTime() <= Date.now()) return { status: 'expired', row };
+  return { status: 'valid', row };
+}
+
+function createShareToken() {
+  const token = randomBytes(16).toString('hex'); // 32 hex chars
+  const created = new Date().toISOString();
+  const expires = new Date(Date.now() + SHARE_TTL_MS).toISOString();
+  const data = pruneExpired(loadShareTokens()).data;
+  data.tokens.push({ token, created, expires });
+  saveShareTokens(data);
+  return { token, created, expires };
+}
+
 // ── HTTP server ────────────────────────────────────────────────
 
 const server = createServer((req, res) => {
   const url = req.url.split('?')[0];
+  const queryString = req.url.includes('?') ? req.url.split('?')[1] : '';
+  const query = Object.fromEntries(new URLSearchParams(queryString));
 
-  const json = (data) => {
-    res.writeHead(200, {
+  const json = (data, code = 200) => {
+    res.writeHead(code, {
       'Content-Type': 'application/json',
       'Cache-Control': 'no-cache',
       'Access-Control-Allow-Origin': '*',
     });
     res.end(JSON.stringify(data));
   };
+
+  // Share-link endpoints
+  if (url === '/api/share/create') {
+    const { token, expires, created } = createShareToken();
+    const host = req.headers.host || `localhost:${PORT}`;
+    const proto = req.headers['x-forwarded-proto'] || 'http';
+    const shareUrl = `${proto}://${host}/?share=${token}&demo=1`;
+    return json({ token, expires, created, url: shareUrl });
+  }
+  if (url === '/api/share/verify') {
+    const result = lookupShareToken(query.share || query.token);
+    if (result.status === 'valid') return json({ valid: true, expires: result.row.expires });
+    if (result.status === 'expired') return json({ valid: false, reason: 'expired', expires: result.row.expires }, 410);
+    return json({ valid: false, reason: result.status }, 401);
+  }
 
   if (url === '/api/stats') return json(computeStats());
   if (url === '/api/batch-live') {
@@ -791,6 +859,22 @@ const server = createServer((req, res) => {
   if (reportMatch) {
     const summary = parseReportSummary('reports/' + reportMatch[1]);
     return json(summary);
+  }
+
+  // Share-token middleware: when ?share=<token> is on the dashboard request,
+  // validate before serving the HTML. Expired → 410 Gone. Invalid → 401.
+  if (url === '/' && query.share) {
+    const result = lookupShareToken(query.share);
+    if (result.status === 'expired') {
+      res.writeHead(410, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end('<!doctype html><meta charset="utf-8"><title>Share link expired</title><body style="font-family:system-ui;padding:40px;max-width:520px;margin:0 auto"><h1>Share link expired</h1><p>This read-only dashboard share link has expired. Ask Mitchell for a fresh link.</p></body>');
+      return;
+    }
+    if (result.status !== 'valid') {
+      res.writeHead(401, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end('<!doctype html><meta charset="utf-8"><title>Invalid share link</title><body style="font-family:system-ui;padding:40px;max-width:520px;margin:0 auto"><h1>Invalid share link</h1><p>This share token is not recognized.</p></body>');
+      return;
+    }
   }
 
   // Static files from dashboard/

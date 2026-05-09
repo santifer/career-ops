@@ -93,3 +93,6 @@ data/baked-context.hash
 # Cost tracking and URL dedup cache (runtime-generated, contains user pipeline data)
 data/cost-log.tsv
 data/triage-cache.tsv
+
+# Share-link tokens (runtime-generated, recruiter-facing read-only links)
+data/share-tokens.json
