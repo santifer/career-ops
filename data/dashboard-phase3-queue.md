@@ -25,7 +25,7 @@ The Phase 3 weekly worker (`scripts/dashboard-phase3-worker.sh`, fires Monday 06
 - Touch targets ≥44×44px throughout
 - Verify on iPhone Safari + Android Chrome (or DevTools mobile emulator at 375×812 minimum)
 
-### 2. [pending] Inline status writeback (Evaluated → Applied → Interview)
+### 2. [in-progress] Inline status writeback (Evaluated → Applied → Interview)
 **Effort:** L (half day)
 **Why:** Read-only dashboards rot. The action that runs the system — moving rows through the funnel — currently happens by editing data/applications.md by hand. Doing it from the dashboard removes the last reason to drop into a terminal.
 **Acceptance:**

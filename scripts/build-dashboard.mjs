@@ -685,7 +685,7 @@ function renderRow(r, idx) {
   <td><span class="badge score-badge-lg ${scoreBadgeClass(r.score)}">${r.score.toFixed(1)}</span></td>
   <td><strong>${escape(r.company)}</strong>${archetype ? `<span class="tier-tag" tabindex="0" role="button" data-tooltip="${escape(tierTooltip(archetype))}" aria-label="Tier ${escape(archetype)}: ${escape(tierTooltip(archetype))}" onclick="event.stopPropagation();openTierLegend('${escape(archetype)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openTierLegend('${escape(archetype)}')}">${escape(archetype)}</span>` : ''}</td>
   <td class="role-cell">${escape(r.role)}${cardGapChips}</td>
-  <td><span class="badge ${statusBadgeClass(r.status)}" data-status="${statusKey(r.status)}">${escape(r.status)}</span></td>
+  <td><span class="badge status-pill ${statusBadgeClass(r.status)}" data-status="${statusKey(r.status)}" data-num="${r.num}" role="button" tabindex="0" onclick="openStatusPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){openStatusPopover(this);event.preventDefault();event.stopPropagation()}" title="Click to change status">${escape(r.status)}</span></td>
   <td class="muted-text mobile-hide">${escape(r.date)}</td>
   <td class="muted-text">${evalAge(r.date)}</td>
   <td class="action-cell">${applyLink}</td>
@@ -1667,6 +1667,41 @@ function build() {
     100% { opacity: 0; transform: translateY(8px); }
   }
 
+  /* ── Inline status popover ───────────────────────────────────── */
+  .status-pill { cursor: pointer; user-select: none; }
+  .status-pill:hover { box-shadow: 0 0 0 2px var(--blue-bg); }
+  .status-pill:focus-visible { outline: 2px solid var(--blue-fg); outline-offset: 2px; }
+  .status-pill.status-pill-pending { opacity: 0.6; pointer-events: none; }
+  #status-popover {
+    position: absolute; z-index: 2500;
+    background: var(--surface); color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-md);
+    padding: 4px;
+    min-width: 140px;
+    font-size: 13px;
+    display: none;
+  }
+  #status-popover.is-open { display: block; }
+  .status-popover-item {
+    display: flex; align-items: center; gap: 8px;
+    width: 100%; padding: 7px 10px;
+    background: transparent; border: none; cursor: pointer;
+    font: inherit; color: var(--text); text-align: left;
+    border-radius: 4px;
+    line-height: 1.3;
+  }
+  .status-popover-item:hover { background: var(--surface-2); }
+  .status-popover-item.is-current { font-weight: 600; background: var(--blue-bg); color: var(--blue-fg); }
+  .status-popover-item:focus-visible { outline: 2px solid var(--blue-fg); outline-offset: -2px; }
+  .status-popover-dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  }
+  @media (hover: none) and (pointer: coarse), (max-width: 640px) {
+    .status-popover-item { min-height: 44px; padding: 12px 14px; }
+  }
+
   /* ── Touch-target audit (>=44x44 on coarse pointers / mobile) ─── */
   @media (hover: none) and (pointer: coarse), (max-width: 640px) {
     .toolbar-btn { min-height: 44px; min-width: 44px; padding: 10px 16px; font-size: 13px; }
@@ -1939,6 +1974,9 @@ function build() {
       <div class="mobile-sheet-body" id="mobile-sheet-body"></div>
     </div>
   </div>
+
+  <!-- Inline status writeback popover -->
+  <div id="status-popover" role="menu" aria-label="Set status"></div>
 
   <!-- Verify claims modal -->
   <div id="verify-backdrop" onclick="closeVerify()">
@@ -2330,13 +2368,16 @@ function statusKey(st) {
   if (s.includes('skip')) return 'skip';
   return 'evaluated';
 }
-function statusBadge(st) {
+function statusBadge(st, num) {
   if (!st) return '';
   const key = statusKey(st);
   const cls = key === 'skip' ? 'status-discarded'
     : key === 'responded' ? 'status-evaluated'
     : \`status-\${key}\`;
-  return \`<span class="badge \${cls}" data-status="\${key}">\${esc(st)}</span>\`;
+  if (num === undefined || num === null || num === '') {
+    return \`<span class="badge \${cls}" data-status="\${key}">\${esc(st)}</span>\`;
+  }
+  return \`<span class="badge status-pill \${cls}" data-status="\${key}" data-num="\${esc(String(num))}" role="button" tabindex="0" onclick="openStatusPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){openStatusPopover(this);event.preventDefault();event.stopPropagation()}" title="Click to change status">\${esc(st)}</span>\`;
 }
 
 function rowActions(r) {
@@ -2370,7 +2411,7 @@ function buildTable(rows, panelId) {
       <td>\${scoreBadge(r.score)}</td>
       <td><strong>\${esc(r.company||'')}</strong>\${archetype ? \`<span class="tier-tag" tabindex="0" role="button" data-tooltip="\${esc(tierTooltipJS(archetype))}" aria-label="Tier \${esc(archetype)}: \${esc(tierTooltipJS(archetype))}" onclick="event.stopPropagation();openTierLegend('\${esc(archetype)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openTierLegend('\${esc(archetype)}')}">\${esc(archetype)}</span>\` : ''}</td>
       <td class="role-cell">\${esc(r.role||'')}</td>
-      <td>\${statusBadge(r.status)}</td>
+      <td>\${statusBadge(r.status, r.num)}</td>
       <td class="muted-text">\${esc(r.date||'')}</td>
       <td class="muted-text">\${evalAge(r.date||'')}</td>
       <td class="action-cell">\${rowActions(r)}</td>
@@ -2750,8 +2791,131 @@ async function refreshLiveStats() {
 
 // ── Keyboard shortcuts ──────────────────────────────────────────
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeVerify(); closeGapModal(); closeTierLegend(); }
+  if (e.key === 'Escape') { closeVerify(); closeGapModal(); closeTierLegend(); closeStatusPopover(); }
 });
+
+// ── Inline status writeback ─────────────────────────────────────
+const STATUS_CANONICAL = ['Evaluated','Applied','Responded','Interview','Offer','Rejected','Discarded','SKIP'];
+const STATUS_CLASS_MAP = {
+  evaluated: 'status-evaluated',
+  applied:   'status-applied',
+  responded: 'status-evaluated',
+  interview: 'status-interview',
+  offer:     'status-offer',
+  rejected:  'status-rejected',
+  discarded: 'status-discarded',
+  skip:      'status-discarded',
+};
+let _statusActiveBadge = null;
+let _statusOutsideHandler = null;
+
+function statusClassFor(status) {
+  const s = String(status || '').toLowerCase();
+  if (s.includes('applied')) return 'status-applied';
+  if (s.includes('interview')) return 'status-interview';
+  if (s.includes('offer')) return 'status-offer';
+  if (s.includes('reject')) return 'status-rejected';
+  if (s.includes('discard') || s.includes('skip')) return 'status-discarded';
+  return 'status-evaluated';
+}
+
+function clearStatusClasses(el) {
+  el.classList.remove('status-evaluated','status-applied','status-interview','status-offer','status-rejected','status-discarded');
+}
+
+function openStatusPopover(badgeEl) {
+  closeStatusPopover();
+  const pop = document.getElementById('status-popover');
+  if (!pop || !badgeEl) return;
+  _statusActiveBadge = badgeEl;
+  const current = (badgeEl.textContent || '').trim();
+  pop.innerHTML = STATUS_CANONICAL.map(s => {
+    const isCurrent = s.toLowerCase() === current.toLowerCase();
+    const cls = STATUS_CLASS_MAP[s.toLowerCase()] || 'status-evaluated';
+    return '<button type="button" role="menuitem" class="status-popover-item' + (isCurrent ? ' is-current' : '') + '" data-status="' + s + '">'
+      + '<span class="status-popover-dot badge ' + cls + '" aria-hidden="true" style="padding:0;min-height:0;width:8px;height:8px;border-radius:50%"></span>'
+      + s + (isCurrent ? ' ✓' : '')
+      + '</button>';
+  }).join('');
+  pop.querySelectorAll('.status-popover-item').forEach(btn => {
+    btn.addEventListener('click', evt => {
+      evt.stopPropagation();
+      applyStatus(btn.dataset.status);
+    });
+  });
+  // Anchor below the badge, viewport-clamped
+  const rect = badgeEl.getBoundingClientRect();
+  pop.classList.add('is-open');
+  const popW = pop.offsetWidth || 160;
+  let left = rect.left + window.scrollX;
+  const maxLeft = window.scrollX + window.innerWidth - popW - 8;
+  if (left > maxLeft) left = Math.max(8, maxLeft);
+  pop.style.top  = (rect.bottom + window.scrollY + 4) + 'px';
+  pop.style.left = left + 'px';
+  // Outside-click to close (next tick so we don't catch the opening click)
+  _statusOutsideHandler = (evt) => {
+    if (evt.target.closest('#status-popover')) return;
+    if (evt.target === badgeEl) return;
+    closeStatusPopover();
+  };
+  setTimeout(() => document.addEventListener('click', _statusOutsideHandler), 0);
+}
+
+function closeStatusPopover() {
+  const pop = document.getElementById('status-popover');
+  if (pop) { pop.classList.remove('is-open'); pop.innerHTML = ''; }
+  _statusActiveBadge = null;
+  if (_statusOutsideHandler) {
+    document.removeEventListener('click', _statusOutsideHandler);
+    _statusOutsideHandler = null;
+  }
+}
+
+async function applyStatus(newStatus) {
+  if (!_statusActiveBadge) return;
+  const badge = _statusActiveBadge;
+  const num = badge.dataset.num;
+  const original = (badge.textContent || '').trim();
+  if (!num) { closeStatusPopover(); return; }
+  if (newStatus === original) { closeStatusPopover(); return; }
+  const tr = badge.closest('tr');
+  const originalRowStatus = tr ? tr.dataset.status : null;
+
+  // Optimistic UI swap
+  badge.textContent = newStatus;
+  clearStatusClasses(badge);
+  badge.classList.add(statusClassFor(newStatus));
+  badge.classList.add('status-pill-pending');
+  if (tr) tr.dataset.status = newStatus.toLowerCase();
+  closeStatusPopover();
+
+  try {
+    const res = await fetch('/api/status', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ num: parseInt(num, 10), status: newStatus }),
+    });
+    let data = {};
+    try { data = await res.json(); } catch (_) {}
+    if (!res.ok || !data.ok) {
+      throw new Error(data && data.error ? data.error : ('HTTP ' + res.status));
+    }
+    badge.classList.remove('status-pill-pending');
+    if (window.toast) window.toast('#' + num + ' → ' + newStatus, 'success');
+  } catch (err) {
+    // Revert
+    badge.textContent = original;
+    clearStatusClasses(badge);
+    badge.classList.add(statusClassFor(original));
+    badge.classList.remove('status-pill-pending');
+    if (tr && originalRowStatus !== null) tr.dataset.status = originalRowStatus;
+    if (window.toast) window.toast('Status update failed: ' + (err && err.message || 'unknown error'), 'error');
+  }
+}
+
+window.openStatusPopover = openStatusPopover;
+window.closeStatusPopover = closeStatusPopover;
+window.applyStatus = applyStatus;
 
 // ── Toast ───────────────────────────────────────────────────────
 window.toast = function(msg, type) {
