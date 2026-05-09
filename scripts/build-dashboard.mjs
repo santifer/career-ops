@@ -472,14 +472,23 @@ function evalAge(dateStr) {
   return `${weeks}w`;
 }
 
+function statusKey(status) {
+  const s = (status || '').toLowerCase();
+  if (s.includes('applied')) return 'applied';
+  if (s.includes('responded')) return 'responded';
+  if (s.includes('interview')) return 'interview';
+  if (s.includes('offer')) return 'offer';
+  if (s.includes('reject')) return 'rejected';
+  if (s.includes('discard')) return 'discarded';
+  if (s.includes('skip')) return 'skip';
+  return 'evaluated';
+}
+
 function statusBadgeClass(status) {
-  const s = status.toLowerCase();
-  if (s.includes('applied')) return 'status-applied';
-  if (s.includes('interview')) return 'status-interview';
-  if (s.includes('offer')) return 'status-offer';
-  if (s.includes('reject')) return 'status-rejected';
-  if (s.includes('discard') || s.includes('skip')) return 'status-discarded';
-  return 'status-evaluated';
+  const key = statusKey(status);
+  if (key === 'skip') return 'status-discarded';
+  if (key === 'responded') return 'status-evaluated';
+  return `status-${key}`;
 }
 
 function renderRow(r, idx) {
@@ -597,7 +606,7 @@ function renderRow(r, idx) {
   <td><span class="badge score-badge-lg ${scoreBadgeClass(r.score)}">${r.score.toFixed(1)}</span></td>
   <td><strong>${escape(r.company)}</strong>${archetype ? `<span class="tier-tag">${escape(archetype)}</span>` : ''}</td>
   <td class="role-cell">${escape(r.role)}</td>
-  <td><span class="badge ${statusBadgeClass(r.status)}">${escape(r.status)}</span></td>
+  <td><span class="badge ${statusBadgeClass(r.status)}" data-status="${statusKey(r.status)}">${escape(r.status)}</span></td>
   <td class="muted-text">${escape(r.date)}</td>
   <td class="muted-text">${evalAge(r.date)}</td>
   <td class="action-cell">${applyLink}</td>
@@ -1101,6 +1110,25 @@ function build() {
   .status-offer     { background: var(--green-bg);  color: var(--green-fg-dark); }
   .status-rejected  { background: var(--red-bg);    color: var(--red-fg-dark); }
   .status-discarded { background: var(--surface-2); color: var(--text-3); }
+
+  /* Leading semantic dot per status (Linear/Notion convention) */
+  .badge[data-status]::before {
+    content: '●';
+    font-size: 8px;
+    line-height: 1;
+    margin-right: 6px;
+    vertical-align: middle;
+    color: var(--text-3);
+  }
+  .badge[data-status="evaluated"]::before { color: var(--text-3); }
+  .badge[data-status="applied"]::before   { color: var(--blue-fg); }
+  .badge[data-status="responded"]::before { color: var(--purple-fg); }
+  .badge[data-status="interview"]::before { color: var(--amber-fg); }
+  .badge[data-status="offer"]::before     { color: var(--green-fg); }
+  .badge[data-status="rejected"]::before  { color: var(--red-fg); }
+  .badge[data-status="discarded"]::before { color: var(--text-4); }
+  .badge[data-status="skip"]::before      { color: #64748b; }
+  body.dark .badge[data-status="skip"]::before { color: #94a3b8; }
 
   /* ── Age badges ──────────────────────────────────────────────── */
   .age-stale { color: var(--red-fg); font-weight: 600; font-size: 12px; }
@@ -1818,16 +1846,24 @@ function scoreBadge(s) {
   const cls = s >= 4 ? 'score-strong' : s >= 3 ? 'score-moderate' : 'score-weak';
   return \`<span class="badge \${cls}">\${Number(s).toFixed(1)}</span>\`;
 }
+function statusKey(st) {
+  const s = (st || '').toLowerCase();
+  if (s.includes('applied')) return 'applied';
+  if (s.includes('responded')) return 'responded';
+  if (s.includes('interview')) return 'interview';
+  if (s.includes('offer')) return 'offer';
+  if (s.includes('reject')) return 'rejected';
+  if (s.includes('discard')) return 'discarded';
+  if (s.includes('skip')) return 'skip';
+  return 'evaluated';
+}
 function statusBadge(st) {
   if (!st) return '';
-  const s = st.toLowerCase();
-  let cls = 'status-evaluated';
-  if (s.includes('applied')) cls = 'status-applied';
-  else if (s.includes('interview')) cls = 'status-interview';
-  else if (s.includes('offer')) cls = 'status-offer';
-  else if (s.includes('reject')) cls = 'status-rejected';
-  else if (s.includes('discard') || s.includes('skip')) cls = 'status-discarded';
-  return \`<span class="badge \${cls}">\${esc(st)}</span>\`;
+  const key = statusKey(st);
+  const cls = key === 'skip' ? 'status-discarded'
+    : key === 'responded' ? 'status-evaluated'
+    : \`status-\${key}\`;
+  return \`<span class="badge \${cls}" data-status="\${key}">\${esc(st)}</span>\`;
 }
 
 function rowActions(r) {
