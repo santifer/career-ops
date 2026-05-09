@@ -96,3 +96,5 @@ data/triage-cache.tsv
 
 # Share-link tokens (runtime-generated, recruiter-facing read-only links)
 data/share-tokens.json
+# Lighthouse CI artifacts (per-run reports, ephemeral)
+.lighthouseci/

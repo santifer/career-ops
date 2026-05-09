@@ -18,7 +18,9 @@
     "gemini:eval": "node gemini-eval.mjs",
     "test:dashboard": "playwright test --config=tests/playwright.config.mjs",
     "test:dashboard:ui": "playwright test --config=tests/playwright.config.mjs --ui",
-    "test:dashboard:install": "playwright install chromium"
+    "test:dashboard:install": "playwright install chromium",
+    "lighthouse": "lhci autorun"
+
   },
   "keywords": [
     "ai",
@@ -41,6 +43,8 @@
     "playwright": "^1.58.1"
   },
   "devDependencies": {
-    "@playwright/test": "^1.58.1"
+    "@playwright/test": "^1.58.1",
+    "@lhci/cli": "^0.15.1"
+
   }
 }

@@ -63,4 +63,18 @@ Then edit the queue file to change that item's status from [pending] to [in-prog
 
 claude --model claude-opus-4-7 --dangerously-skip-permissions -p "$PROMPT" 2>&1 | tee -a "$LOG"
 
+# Lighthouse CI gate — runs against the local dashboard after the queue item
+# is implemented. Skips gracefully when no dashboard server is up so the
+# weekly worker never breaks on infra-only changes. The exit code is logged
+# but does not abort the worker — Lighthouse output is the signal, not the
+# blocker (this hook is for human review, not auto-merge enforcement).
+if [[ -x "$ROOT/scripts/run-lighthouse.sh" ]]; then
+  log "--- running Lighthouse CI gate ---"
+  set +e
+  bash "$ROOT/scripts/run-lighthouse.sh" 2>&1 | tee -a "$LOG"
+  LH_EXIT=$?
+  set -e
+  log "lighthouse exit=$LH_EXIT (0=pass, 1=budget miss, 2=server down/skipped, 3=lhci missing)"
+fi
+
 log "=== dashboard-phase3-worker end ==="
