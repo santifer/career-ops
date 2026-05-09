@@ -12,7 +12,7 @@
  *
  * Pulls from existing source docs:
  *   - data/storytellermitch-rewrites-2026-05-09.md  (11 video entries)
- *   - data/article-digest.md                         (compressed proof points)
+ *   - article-digest.md                              (compressed proof points)
  *   - data/video-portfolio-analysis.md
  *   - data/portfolio-analysis-master.md
  *   - data/industry-impact-document.md
@@ -48,7 +48,7 @@ const SYNC = process.argv.includes('--sync');
 
 const SOURCES = [
   'data/storytellermitch-rewrites-2026-05-09.md',
-  'data/article-digest.md',
+  'article-digest.md',
   'data/video-portfolio-analysis.md',
   'data/portfolio-analysis-master.md',
   'data/industry-impact-document.md',
