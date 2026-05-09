@@ -681,7 +681,7 @@ function renderRow(r, idx) {
   ].filter(Boolean).join(' ').toLowerCase().replace(/\s+/g, ' ').trim();
 
   return `
-<tr class="row ${throttleClass}" data-score="${r.score}" data-archetype="${escape(archetype)}" data-company="${escape(r.company.toLowerCase())}" data-status="${escape(r.status.toLowerCase())}" data-role="${escape(r.role.toLowerCase())}" data-search="${escape(searchIndex)}" onclick="toggleDetail('${idx}')">
+<tr class="row ${throttleClass}" data-num="${r.num}" data-row-id="${escape(idx)}" data-score="${r.score}" data-archetype="${escape(archetype)}" data-company="${escape(r.company.toLowerCase())}" data-status="${escape(r.status.toLowerCase())}" data-role="${escape(r.role.toLowerCase())}" data-search="${escape(searchIndex)}" onclick="toggleDetail('${idx}')">
   <td><span class="badge score-badge-lg ${scoreBadgeClass(r.score)}">${r.score.toFixed(1)}</span></td>
   <td><strong>${escape(r.company)}</strong>${archetype ? `<span class="tier-tag" tabindex="0" role="button" data-tooltip="${escape(tierTooltip(archetype))}" aria-label="Tier ${escape(archetype)}: ${escape(tierTooltip(archetype))}" onclick="event.stopPropagation();openTierLegend('${escape(archetype)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openTierLegend('${escape(archetype)}')}">${escape(archetype)}</span>` : ''}</td>
   <td class="role-cell">${escape(r.role)}${cardGapChips}</td>
@@ -899,6 +899,30 @@ function build() {
   const applyNowRows = applyNowSorted.map((r, i) => renderRow(r, `apply-${i}`)).join('\n');
   const allRows = sortedByScore.map((r, i) => renderRow(r, `all-${i}`)).join('\n');
 
+  // ── Cmd-K palette data ────────────────────────────────────────────
+  // Compact index of every row + the 5 most recently dated reports.
+  const cmdkRows = sortedByScore.map((r, i) => ({
+    num: r.num,
+    rowId: `all-${i}`,
+    company: r.company,
+    role: r.role,
+    score: r.score,
+    archetype: getReportArchetype(r.reportPath) || '',
+    status: r.status,
+  }));
+  const recentReports = [...apps]
+    .filter(r => r.reportPath)
+    .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+    .slice(0, 5)
+    .map(r => ({
+      slug: basename(r.reportPath).replace(/\.md$/, '.html'),
+      title: `${r.company} — ${r.role}`,
+      date: r.date,
+      num: r.num,
+    }));
+  // Escape </ to keep the JSON safe inside a <script> tag.
+  const cmdkPayload = JSON.stringify({ rows: cmdkRows, reports: recentReports }).replace(/<\//g, '<\\/');
+
   const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1057,6 +1081,102 @@ function build() {
     font-family: inherit;
   }
   .toolbar-btn:hover { background: var(--surface-2); border-color: var(--border-strong); color: var(--text-2); }
+  .cmdk-trigger { display: inline-flex; align-items: center; gap: 8px; padding-right: 6px; min-width: 220px; }
+  .cmdk-trigger-label { color: var(--text-3); flex: 1; text-align: left; }
+  .cmdk-trigger-kbd {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 4px; padding: 1px 6px; font-size: 11px; color: var(--text-3);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+
+  /* ── Cmd-K command palette ─────────────────────────────────── */
+  #cmdk-backdrop {
+    display: none; position: fixed; inset: 0; z-index: 100;
+    background: rgba(15, 17, 21, 0.42); backdrop-filter: blur(2px);
+    align-items: flex-start; justify-content: center; padding-top: 14vh;
+  }
+  #cmdk-backdrop.visible { display: flex; }
+  #cmdk-modal {
+    width: min(640px, calc(100vw - 32px));
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); box-shadow: 0 20px 60px rgba(0,0,0,.25);
+    overflow: hidden; display: flex; flex-direction: column;
+    max-height: 70vh;
+  }
+  .cmdk-input-wrap {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 16px; border-bottom: 1px solid var(--border);
+  }
+  .cmdk-input-icon { color: var(--text-3); font-size: 16px; }
+  #cmdk-input {
+    flex: 1; border: none; outline: none; background: transparent;
+    font: inherit; font-size: 15px; color: var(--text);
+  }
+  #cmdk-input::placeholder { color: var(--text-4); }
+  .cmdk-input-hint {
+    font-size: 11px; color: var(--text-4);
+    background: var(--surface-2); padding: 2px 7px; border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+  #cmdk-list {
+    overflow-y: auto; flex: 1; padding: 6px 0;
+  }
+  .cmdk-section-label {
+    font-size: 10.5px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.07em; color: var(--text-4);
+    padding: 10px 16px 4px;
+  }
+  .cmdk-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 9px 16px; cursor: pointer; user-select: none;
+    border-left: 2px solid transparent;
+  }
+  .cmdk-item.active {
+    background: var(--surface-2); border-left-color: var(--blue-fg);
+  }
+  .cmdk-item-icon {
+    width: 22px; height: 22px; flex-shrink: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--surface-2); border-radius: 5px; font-size: 12px;
+    color: var(--text-3);
+  }
+  .cmdk-item.active .cmdk-item-icon { background: var(--surface); color: var(--text-2); }
+  .cmdk-item-body { flex: 1; min-width: 0; }
+  .cmdk-item-title {
+    font-size: 13.5px; color: var(--text); font-weight: 500;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .cmdk-item-sub {
+    font-size: 11.5px; color: var(--text-3); margin-top: 1px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .cmdk-item-meta {
+    font-size: 11px; color: var(--text-4); flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+  }
+  .cmdk-empty { padding: 28px 16px; text-align: center; color: var(--text-4); font-size: 13px; }
+  .cmdk-footer {
+    display: flex; gap: 14px; padding: 8px 16px;
+    border-top: 1px solid var(--border); background: var(--surface-2);
+    font-size: 11px; color: var(--text-4);
+  }
+  .cmdk-footer kbd {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 3px; padding: 0 5px; font-size: 10.5px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    margin: 0 2px;
+  }
+  @keyframes cmdk-flash {
+    0%, 100% { background: transparent; }
+    20%, 60% { background: rgba(9, 105, 218, 0.12); }
+  }
+  tr.row.cmdk-flash > td { animation: cmdk-flash 1.6s ease-in-out; }
+  @media (max-width: 640px) {
+    .cmdk-trigger { min-width: 0; }
+    .cmdk-trigger-label { display: none; }
+    #cmdk-modal { width: calc(100vw - 16px); max-height: 80vh; }
+    #cmdk-backdrop { padding-top: 8vh; }
+  }
 
   /* ── KPI stat cards: 3+3 hero (primary tier on top, secondary below) ── */
   .stats {
@@ -1920,6 +2040,10 @@ function build() {
 
   <header class="toolbar" role="banner">
     <h1>Career-Ops Dashboard</h1>
+    <button class="toolbar-btn cmdk-trigger" onclick="openCmdK()" title="Open command palette (⌘K / Ctrl-K)" aria-label="Open command palette (Cmd+K or Ctrl+K)">
+      <span class="cmdk-trigger-label">Search…</span>
+      <span class="cmdk-trigger-kbd">⌘K</span>
+    </button>
     <button class="toolbar-btn" onclick="toggleDark()" id="dark-toggle" aria-label="Toggle dark mode">☀︎ Light</button>
     <button class="toolbar-btn" id="batch-toggle-btn" onclick="toggleBatchOverlay()" style="display:none" aria-label="Toggle batch progress overlay">⚡ Batch</button>
   </header>
@@ -1935,6 +2059,23 @@ function build() {
     </div>
     <div class="batch-progress-bar"><div class="batch-progress-fill" id="batch-bar" style="width:0%"></div></div>
     <div class="batch-body" id="batch-body"></div>
+  </div>
+
+  <!-- Cmd-K command palette -->
+  <div id="cmdk-backdrop" role="dialog" aria-modal="true" aria-label="Command palette" onclick="closeCmdK()">
+    <div id="cmdk-modal" onclick="event.stopPropagation()">
+      <div class="cmdk-input-wrap">
+        <span class="cmdk-input-icon">⌕</span>
+        <input id="cmdk-input" type="text" placeholder="Jump to row, run an action, open a recent report…" autocomplete="off" spellcheck="false" />
+        <span class="cmdk-input-hint">esc to close</span>
+      </div>
+      <div id="cmdk-list" role="listbox" aria-label="Command palette results"></div>
+      <div class="cmdk-footer">
+        <span><kbd>↑</kbd><kbd>↓</kbd> navigate</span>
+        <span><kbd>↵</kbd> select</span>
+        <span><kbd>esc</kbd> close</span>
+      </div>
+    </div>
   </div>
 
   <!-- Gap addressing modal -->
@@ -2789,8 +2930,245 @@ async function refreshLiveStats() {
   }
 }
 
+// ── Cmd-K command palette ───────────────────────────────────────
+const CMDK_DATA = ${cmdkPayload};
+let _cmdkOpen = false;
+let _cmdkActive = 0;
+let _cmdkItems = [];
+let _cmdkPrevFocus = null;
+
+function _cmdkActions() {
+  return [
+    { id: 'act-dark', icon: '◐', title: 'Toggle dark mode', sub: 'Switch between light and dark theme', run: () => toggleDark() },
+    { id: 'act-top',  icon: '↑', title: 'Scroll to top of dashboard', sub: 'Jump to the page header', run: () => window.scrollTo({ top: 0, behavior: 'smooth' }) },
+    { id: 'act-apply', icon: '✦', title: 'Open Apply-Now panel', sub: 'Scroll to ranked apply-now queue', run: () => {
+      const el = document.getElementById('apply-now-section');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } },
+    { id: 'act-batch', icon: '⚡', title: 'Toggle batch overlay', sub: 'Show or hide the batch progress overlay', run: () => {
+      if (typeof toggleBatchOverlay === 'function') toggleBatchOverlay();
+      else toast('Batch overlay unavailable', 'info');
+    } },
+    { id: 'act-scan', icon: '⟳', title: 'Run scan (show command)', sub: 'Display the shell command to run a portal scan', run: () => {
+      toast('Run in terminal: node scan.mjs', 'info');
+    } },
+  ];
+}
+
+function _cmdkBuildItems(query) {
+  const q = (query || '').trim().toLowerCase();
+  const items = [];
+  const actions = _cmdkActions();
+  const matchedActions = q
+    ? actions.filter(a => a.title.toLowerCase().includes(q) || (a.sub || '').toLowerCase().includes(q))
+    : actions;
+  if (matchedActions.length) {
+    items.push({ section: 'Actions' });
+    for (const a of matchedActions) items.push({ kind: 'action', ...a });
+  }
+  const rows = CMDK_DATA.rows || [];
+  let matchedRows = rows;
+  if (q) {
+    matchedRows = rows.filter(r =>
+      (r.company || '').toLowerCase().includes(q) ||
+      (r.role || '').toLowerCase().includes(q) ||
+      String(r.num).startsWith(q) ||
+      (r.archetype || '').toLowerCase() === q
+    );
+  }
+  matchedRows = matchedRows.slice(0, q ? 25 : 12);
+  if (matchedRows.length) {
+    items.push({ section: 'Jump to row' });
+    for (const r of matchedRows) {
+      items.push({
+        kind: 'row',
+        id: 'row-' + r.num,
+        icon: r.score >= 4 ? '★' : '·',
+        title: r.company + ' — ' + r.role,
+        sub: '#' + r.num + (r.archetype ? ' · ' + r.archetype : '') + (r.status ? ' · ' + r.status : ''),
+        meta: (r.score || 0).toFixed(1),
+        rowId: r.rowId,
+        num: r.num,
+      });
+    }
+  }
+  const reports = CMDK_DATA.reports || [];
+  const matchedReports = q
+    ? reports.filter(r => r.title.toLowerCase().includes(q))
+    : reports;
+  if (matchedReports.length) {
+    items.push({ section: 'Recent reports' });
+    for (const r of matchedReports) {
+      items.push({
+        kind: 'report',
+        id: 'rep-' + r.slug,
+        icon: '📄',
+        title: r.title,
+        sub: r.date ? 'Generated ' + r.date : '',
+        slug: r.slug,
+      });
+    }
+  }
+  return items;
+}
+
+function _cmdkRender() {
+  const list = document.getElementById('cmdk-list');
+  if (!list) return;
+  const flat = _cmdkItems.filter(it => it.kind);
+  if (!flat.length) {
+    list.innerHTML = '<div class="cmdk-empty">No matches</div>';
+    return;
+  }
+  let activeFlat = 0;
+  let html = '';
+  let flatIdx = 0;
+  for (const it of _cmdkItems) {
+    if (it.section) {
+      html += '<div class="cmdk-section-label">' + it.section + '</div>';
+      continue;
+    }
+    const isActive = flatIdx === _cmdkActive;
+    if (isActive) activeFlat = flatIdx;
+    html += '<div class="cmdk-item' + (isActive ? ' active' : '') + '" role="option" data-flat="' + flatIdx + '">'
+         + '<span class="cmdk-item-icon">' + it.icon + '</span>'
+         + '<div class="cmdk-item-body">'
+         + '<div class="cmdk-item-title">' + _cmdkEsc(it.title) + '</div>'
+         + (it.sub ? '<div class="cmdk-item-sub">' + _cmdkEsc(it.sub) + '</div>' : '')
+         + '</div>'
+         + (it.meta ? '<span class="cmdk-item-meta">' + _cmdkEsc(it.meta) + '</span>' : '')
+         + '</div>';
+    flatIdx++;
+  }
+  list.innerHTML = html;
+  list.querySelectorAll('.cmdk-item').forEach(el => {
+    el.addEventListener('mousemove', () => {
+      const i = parseInt(el.dataset.flat, 10);
+      if (i !== _cmdkActive) { _cmdkActive = i; _cmdkRender(); }
+    });
+    el.addEventListener('click', () => {
+      _cmdkActive = parseInt(el.dataset.flat, 10);
+      _cmdkExecute();
+    });
+  });
+  const activeEl = list.querySelector('.cmdk-item.active');
+  if (activeEl) activeEl.scrollIntoView({ block: 'nearest' });
+}
+
+function _cmdkEsc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
+
+function _cmdkRefresh() {
+  const input = document.getElementById('cmdk-input');
+  _cmdkItems = _cmdkBuildItems(input ? input.value : '');
+  const flatCount = _cmdkItems.filter(it => it.kind).length;
+  if (_cmdkActive >= flatCount) _cmdkActive = 0;
+  _cmdkRender();
+}
+
+function openCmdK() {
+  if (_cmdkOpen) return;
+  _cmdkOpen = true;
+  _cmdkPrevFocus = document.activeElement;
+  const bd = document.getElementById('cmdk-backdrop');
+  const input = document.getElementById('cmdk-input');
+  if (!bd || !input) return;
+  bd.classList.add('visible');
+  input.value = '';
+  _cmdkActive = 0;
+  _cmdkRefresh();
+  setTimeout(() => input.focus(), 0);
+}
+
+function closeCmdK() {
+  if (!_cmdkOpen) return;
+  _cmdkOpen = false;
+  const bd = document.getElementById('cmdk-backdrop');
+  if (bd) bd.classList.remove('visible');
+  if (_cmdkPrevFocus && typeof _cmdkPrevFocus.focus === 'function') {
+    try { _cmdkPrevFocus.focus(); } catch (e) {}
+  }
+}
+
+function _cmdkExecute() {
+  const flat = _cmdkItems.filter(it => it.kind);
+  const it = flat[_cmdkActive];
+  if (!it) return;
+  closeCmdK();
+  if (it.kind === 'action') {
+    setTimeout(() => it.run(), 30);
+  } else if (it.kind === 'row') {
+    setTimeout(() => _cmdkJumpToRow(it.rowId, it.num), 30);
+  } else if (it.kind === 'report') {
+    window.open('reports/' + it.slug, '_blank', 'noopener');
+  }
+}
+
+function _cmdkJumpToRow(rowId, num) {
+  const tbody = document.getElementById('all-tbody');
+  if (!tbody) return;
+  let row = rowId ? tbody.querySelector('tr.row[data-row-id="' + rowId + '"]') : null;
+  if (!row && num != null) row = tbody.querySelector('tr.row[data-num="' + num + '"]');
+  if (!row) { toast('Row not found', 'info'); return; }
+  // Clear filters so the row is visible
+  const ft = document.getElementById('filter-text');
+  const fT = document.getElementById('filter-tier');
+  const fS = document.getElementById('filter-score');
+  const fSt = document.getElementById('filter-status');
+  if (ft) ft.value = '';
+  if (fT) fT.value = '';
+  if (fS) fS.value = '';
+  if (fSt) fSt.value = '';
+  if (typeof applyFilters === 'function') applyFilters();
+  row.style.display = '';
+  row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  row.classList.remove('cmdk-flash');
+  // Force reflow so the animation re-triggers each invocation.
+  void row.offsetWidth;
+  row.classList.add('cmdk-flash');
+  setTimeout(() => row.classList.remove('cmdk-flash'), 1700);
+}
+
+document.addEventListener('keydown', e => {
+  const isMac = /Mac|iPhone|iPad/i.test(navigator.platform);
+  const cmdK = (isMac ? e.metaKey : e.ctrlKey) && (e.key === 'k' || e.key === 'K');
+  if (cmdK) {
+    e.preventDefault();
+    if (_cmdkOpen) closeCmdK(); else openCmdK();
+    return;
+  }
+  if (!_cmdkOpen) return;
+  if (e.key === 'Escape') { e.preventDefault(); closeCmdK(); return; }
+  if (e.key === 'Tab') { e.preventDefault(); return; } // focus trap
+  const flat = _cmdkItems.filter(it => it.kind);
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    if (flat.length) { _cmdkActive = (_cmdkActive + 1) % flat.length; _cmdkRender(); }
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    if (flat.length) { _cmdkActive = (_cmdkActive - 1 + flat.length) % flat.length; _cmdkRender(); }
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    _cmdkExecute();
+  } else if (e.key === 'Home') {
+    e.preventDefault();
+    _cmdkActive = 0; _cmdkRender();
+  } else if (e.key === 'End') {
+    e.preventDefault();
+    _cmdkActive = Math.max(0, flat.length - 1); _cmdkRender();
+  }
+});
+
+// Script runs after DOM is parsed (placed at end of body); attach immediately.
+(function _cmdkInit() {
+  const input = document.getElementById('cmdk-input');
+  if (input) input.addEventListener('input', () => { _cmdkActive = 0; _cmdkRefresh(); });
+})();
+
 // ── Keyboard shortcuts ──────────────────────────────────────────
 document.addEventListener('keydown', e => {
+  if (typeof _cmdkOpen !== 'undefined' && _cmdkOpen) return;
   if (e.key === 'Escape') { closeVerify(); closeGapModal(); closeTierLegend(); closeStatusPopover(); }
 });
 
