@@ -670,8 +670,18 @@ function renderRow(r, idx) {
     `<span class="gap-chip gap-chip-mobile">⚠ ${escape(g.title)}</span>`
   ).join('')}</div>` : '';
 
+  // ── Search index: tldr + recommendation + topGaps + topEdges ─
+  // Lowercased + whitespace-collapsed so the client filter can do a
+  // simple substring match against a normalized query.
+  const searchIndex = [
+    tldr,
+    finalRec,
+    ...gaps.flatMap(g => [g.title, g.detail]),
+    ...edge.flatMap(e => [e.requirement, e.evidence, e.label]),
+  ].filter(Boolean).join(' ').toLowerCase().replace(/\s+/g, ' ').trim();
+
   return `
-<tr class="row ${throttleClass}" data-score="${r.score}" data-archetype="${escape(archetype)}" data-company="${escape(r.company.toLowerCase())}" data-status="${escape(r.status.toLowerCase())}" data-role="${escape(r.role.toLowerCase())}" onclick="toggleDetail('${idx}')">
+<tr class="row ${throttleClass}" data-score="${r.score}" data-archetype="${escape(archetype)}" data-company="${escape(r.company.toLowerCase())}" data-status="${escape(r.status.toLowerCase())}" data-role="${escape(r.role.toLowerCase())}" data-search="${escape(searchIndex)}" onclick="toggleDetail('${idx}')">
   <td><span class="badge score-badge-lg ${scoreBadgeClass(r.score)}">${r.score.toFixed(1)}</span></td>
   <td><strong>${escape(r.company)}</strong>${archetype ? `<span class="tier-tag" tabindex="0" role="button" data-tooltip="${escape(tierTooltip(archetype))}" aria-label="Tier ${escape(archetype)}: ${escape(tierTooltip(archetype))}" onclick="event.stopPropagation();openTierLegend('${escape(archetype)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openTierLegend('${escape(archetype)}')}">${escape(archetype)}</span>` : ''}</td>
   <td class="role-cell">${escape(r.role)}${cardGapChips}</td>
@@ -2015,8 +2025,8 @@ function build() {
   <div class="panel">
     <div class="panel-title">All Evaluations <span class="pill" style="background:#0969da">${total}</span></div>
     <div class="filters filters-sticky" role="search">
-      <input type="search" id="filter-text" placeholder="Filter by company, role, or notes…"
-        aria-label="Filter evaluations by company, role, or notes" oninput="applyFilters()">
+      <input type="search" id="filter-text" placeholder="Search company, role, gaps, stories, recommendation…"
+        aria-label="Search evaluations by company, role, gaps, stories, or recommendation" oninput="applyFilters()">
       <select id="filter-tier" aria-label="Filter by archetype tier" onchange="applyFilters()">
         <option value="">All tiers</option>
         <option value="A1">A1 — Residency</option>
@@ -2178,7 +2188,8 @@ MOBILE_BREAKPOINT_MQ.addEventListener?.('change', (e) => {
 
 // ── Table filter + sort ─────────────────────────────────────────
 function applyFilters() {
-  const text = (document.getElementById('filter-text').value || '').toLowerCase();
+  const rawText = (document.getElementById('filter-text').value || '').toLowerCase();
+  const text = rawText.replace(/\\s+/g, ' ').trim();
   const tier = document.getElementById('filter-tier').value;
   const score = parseFloat(document.getElementById('filter-score').value || '0');
   const status = document.getElementById('filter-status').value;
@@ -2186,7 +2197,10 @@ function applyFilters() {
   for (const row of rows) {
     const detail = row.nextElementSibling;
     let show = true;
-    if (text && !(row.dataset.company.includes(text) || row.dataset.role.includes(text))) show = false;
+    if (text) {
+      const haystack = (row.dataset.search || '') + ' ' + (row.dataset.company || '') + ' ' + (row.dataset.role || '') + ' ' + (row.dataset.status || '');
+      if (!haystack.includes(text)) show = false;
+    }
     if (tier && row.dataset.archetype !== tier) show = false;
     if (score && parseFloat(row.dataset.score) < score) show = false;
     if (status && !row.dataset.status.includes(status)) show = false;
