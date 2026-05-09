@@ -529,19 +529,34 @@ function renderRow(r, idx) {
     r.date ? `<span class="meta-chip">📅 ${escape(r.date)}</span>` : '',
   ].filter(Boolean).join('');
 
-  // ── Left column: summary + positioning + gaps ────────────
-  const tldrCard = tldr ? `<div class="dcard">
+  // ── Intro: TL;DR + positioning (compact, full-width) ─────
+  const tldrCard = tldr ? `<div class="dcard" style="margin-bottom:8px">
     <div class="dcard-label">Role at a glance</div>
     <div class="dcard-body">${escape(tldr)}</div>
   </div>` : '';
 
-  const posCard = positioning ? `<div class="dcard">
+  const posCard = positioning ? `<div class="dcard" style="margin-bottom:8px">
     <div class="dcard-label">How to position</div>
     <div class="dcard-body">${escape(positioning).replace(/\n/g, '<br>')}</div>
   </div>` : '';
 
-  const gapsCard = gaps.length ? `<div class="dcard">
-    <div class="dcard-label">Gaps to address <span style="font-size:9px;font-weight:400;color:#8c959f;margin-left:4px">click for strategy</span></div>
+  // ── Card 1: Match (green / WHAT FITS) ────────────────────
+  const matchCard = edge.length ? `<div class="dcard dcard--match">
+    <div class="dcard-label">WHAT FITS</div>
+    <ul class="match-list">
+      ${edge.map(e => `<li class="${e.score >= 4 ? 'match-yes' : 'match-partial'}">
+        <span class="match-icon">${e.score >= 4 ? '✓' : '~'}</span>
+        <div>
+          <div class="match-req">${escape(e.requirement.slice(0, 90))}</div>
+          <div class="match-ev">${escape(e.evidence.slice(0, 160))}</div>
+        </div>
+      </li>`).join('')}
+    </ul>
+  </div>` : '';
+
+  // ── Card 2: Gap (amber / WHAT'S MISSING) ─────────────────
+  const gapCard = gaps.length ? `<div class="dcard dcard--gap">
+    <div class="dcard-label">WHAT'S MISSING <span style="font-size:9px;font-weight:400;color:var(--text-4);margin-left:4px">click for strategy</span></div>
     <div class="dcard-gaps">${gaps.map(g => {
       const strategy = getGapStrategy(r.reportPath, g.title);
       const detailHtml = g.detail ? marked.parse(g.detail) : '';
@@ -555,42 +570,33 @@ function renderRow(r, idx) {
         data-why="${escape(whyHtml)}"
         title="Click for addressing strategy">⚠ ${escape(g.title)}</span>`;
     }).join('')}</div>
+    ${whyOk ? `<div class="dcard-gap-prose">${escape(whyOk).replace(/\n/g, '<br>')}</div>` : ''}
   </div>` : '';
 
-  // ── Right column: top matches ────────────────────────────
-  const matchesCard = edge.length ? `<div class="dcard">
-    <div class="dcard-label">Top matches (Block B)</div>
-    <ul class="match-list">
-      ${edge.map(e => `<li class="${e.score >= 4 ? 'match-yes' : 'match-partial'}">
-        <span class="match-icon">${e.score >= 4 ? '✓' : '~'}</span>
-        <div>
-          <div class="match-req">${escape(e.requirement.slice(0, 90))}</div>
-          <div class="match-ev">${escape(e.evidence.slice(0, 160))}</div>
-        </div>
-      </li>`).join('')}
-    </ul>
+  // ── Card 3: Story (purple / STORIES TO LEAD WITH) ────────
+  const storyCard = stories.length ? `<div class="dcard dcard--story">
+    <div class="dcard-label">STORIES TO LEAD WITH</div>
+    ${stories.map((s, i) => `<div class="dcard-story-row">
+      <span class="story-n">${i + 1}</span>
+      <div>
+        <div class="story-req">${escape(s.requirement.slice(0, 110))}</div>
+        <div class="story-ev">${escape(s.story.slice(0, 240))}${s.story.length > 240 ? '…' : ''}</div>
+      </div>
+    </div>`).join('')}
   </div>` : '';
 
-  // ── Stories strip ────────────────────────────────────────
-  const storiesStrip = stories.length ? `<div class="detail-stories-wrap">
-    <div class="dcard-label" style="margin-bottom:6px">Lead interview stories (Block F)</div>
-    <div class="story-chips">
-      ${stories.map((s, i) => `<div class="story-chip">
-        <span class="story-n">${i + 1}</span>
-        <div>
-          <div class="story-req">${escape(s.requirement.slice(0, 110))}</div>
-          <div class="story-ev">${escape(s.story.slice(0, 240))}${s.story.length > 240 ? '…' : ''}</div>
-        </div>
-      </div>`).join('')}
+  // ── Card 4: Action (blue / Apply / Skip / Defer) ─────────
+  const actionCard = (finalRec || url) ? `<div class="dcard dcard--action">
+    <div>
+      <div class="dcard-label" style="margin-bottom:4px">ACTION</div>
+      <div class="dcard-action-text">${escape(finalRec || 'No recommendation captured.')}</div>
+    </div>
+    <div class="dcard-action-buttons">
+      ${url ? `<a href="${escape(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="dcard-btn dcard-btn--primary">Apply →</a>` : ''}
+      <button type="button" class="dcard-btn" onclick="event.stopPropagation()" data-action="skip" data-num="${escape(String(r.num || ''))}">Skip</button>
+      <button type="button" class="dcard-btn" onclick="event.stopPropagation()" data-action="defer" data-num="${escape(String(r.num || ''))}">Defer</button>
     </div>
   </div>` : '';
-
-  // ── Recommendation banner ────────────────────────────────
-  const recBanner = finalRec ? `<div class="rec-banner">
-    <span class="rec-label">Rec</span>
-    <span class="rec-text">${escape(finalRec)}</span>
-    ${url ? `<a href="${escape(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="rec-btn">Apply →</a>` : ''}
-  </div>` : url ? `<div style="font-size:12px;margin-top:6px"><a href="${escape(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🔗 View JD</a></div>` : '';
 
   return `
 <tr class="row ${throttleClass}" data-score="${r.score}" data-archetype="${escape(archetype)}" data-company="${escape(r.company.toLowerCase())}" data-status="${escape(r.status.toLowerCase())}" data-role="${escape(r.role.toLowerCase())}" onclick="toggleDetail('${idx}')">
@@ -607,12 +613,13 @@ function renderRow(r, idx) {
     <div class="detail-block">
       ${r._throttle?.label ? `<div class="throttle-banner throttle-${r._throttle.status}">${escape(r._throttle.label)}<br><span class="muted-text">${escape(r._throttle.note || '')}</span></div>` : ''}
       ${metaChips ? `<div class="detail-meta">${metaChips}</div>` : ''}
+      ${tldrCard}${posCard}
       <div class="detail-grid">
-        <div class="detail-col">${tldrCard}${posCard}${gapsCard}</div>
-        <div class="detail-col">${matchesCard}</div>
+        <div class="detail-col">${matchCard}</div>
+        <div class="detail-col">${gapCard}</div>
       </div>
-      ${storiesStrip}
-      ${recBanner}
+      ${storyCard}
+      ${actionCard}
     </div>
   </td>
 </tr>`;
@@ -1148,6 +1155,32 @@ function build() {
   }
   .gap-chip-interactive { cursor: pointer; transition: background .12s, transform .1s; }
   .gap-chip-interactive:hover { background: var(--amber-border); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+  /* Section cards — colored left border + uppercase label */
+  .dcard--match  { border-left: 3px solid var(--green-fg); }
+  .dcard--gap    { border-left: 3px solid var(--amber-fg); }
+  .dcard--story  { border-left: 3px solid var(--purple-fg); }
+  .dcard--action { border-left: 3px solid var(--blue-fg);
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .dcard--action .dcard-action-text {
+    flex: 1; min-width: 200px; font-size: 12.5px;
+    line-height: 1.45; color: var(--text-2);
+  }
+  .dcard--action .dcard-action-buttons {
+    display: flex; gap: 6px; margin-left: auto; flex-wrap: wrap;
+  }
+  .dcard-btn {
+    padding: 5px 12px; border-radius: var(--radius-sm); font-size: 12px;
+    font-weight: 600; text-decoration: none; white-space: nowrap;
+    border: 1px solid var(--border); background: var(--surface-2);
+    color: var(--text-2); cursor: pointer; font-family: inherit;
+    transition: background .12s, border-color .12s, color .12s;
+  }
+  .dcard-btn:hover { background: var(--surface); border-color: var(--text-4); color: var(--text); text-decoration: none; }
+  .dcard-btn--primary { background: var(--blue-fg); color: #fff; border-color: var(--blue-fg); }
+  .dcard-btn--primary:hover { background: var(--blue); color: #fff; border-color: var(--blue); }
+  .dcard-gap-prose { font-size: 12px; line-height: 1.5; color: var(--text-3); margin-top: 7px; }
+  .dcard-story-row { display: flex; gap: 9px; align-items: flex-start; padding: 6px 0; }
+  .dcard-story-row + .dcard-story-row { border-top: 1px dashed var(--border); }
   /* Match list */
   .match-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
   .match-list li { display: flex; gap: 7px; align-items: flex-start; }
