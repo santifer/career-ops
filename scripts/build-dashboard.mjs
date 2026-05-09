@@ -2520,6 +2520,33 @@ function toggleDark() {
   applyDark(on);
 }
 
+// ── Demo mode toggle ────────────────────────────────────────────
+// Demo mode swaps real candidate data for plausible fake data so the
+// dashboard is safe to screen-share in interviews. The swap itself is
+// applied at render time by the bootstrap at the bottom of the page;
+// this toggle just flips the URL flag + localStorage key and reloads.
+const DEMO_MODE_KEY = 'careerOps.demoMode';
+function toggleDemoMode() {
+  const url = new URL(window.location.href);
+  // ?share=token forces demo regardless of flag — toggle is a no-op there.
+  if (url.searchParams.has('share')) {
+    if (typeof toast === 'function') toast('Demo mode is forced by the active share link', 'info');
+    return;
+  }
+  let on = false;
+  try { on = localStorage.getItem(DEMO_MODE_KEY) === '1'; } catch (e) {}
+  if (!on) on = url.searchParams.get('demo') === '1';
+  if (on) {
+    try { localStorage.removeItem(DEMO_MODE_KEY); } catch (e) {}
+    url.searchParams.delete('demo');
+  } else {
+    try { localStorage.setItem(DEMO_MODE_KEY, '1'); } catch (e) {}
+    url.searchParams.set('demo', '1');
+  }
+  window.location.href = url.toString();
+}
+window.toggleDemoMode = toggleDemoMode;
+
 // ── Row expand ──────────────────────────────────────────────────
 const MOBILE_BREAKPOINT_MQ = window.matchMedia('(max-width: 720px)');
 function isMobileViewport() { return MOBILE_BREAKPOINT_MQ.matches; }
@@ -3146,6 +3173,7 @@ let _cmdkPrevFocus = null;
 function _cmdkActions() {
   return [
     { id: 'act-dark', icon: '◐', title: 'Toggle dark mode', sub: 'Switch between light and dark theme', run: () => toggleDark() },
+    { id: 'act-demo', icon: '🎭', title: 'Toggle demo mode', sub: 'Swap real candidate data for fake names — safe for screen sharing', run: () => toggleDemoMode() },
     { id: 'act-top',  icon: '↑', title: 'Scroll to top of dashboard', sub: 'Jump to the page header', run: () => window.scrollTo({ top: 0, behavior: 'smooth' }) },
     { id: 'act-apply', icon: '✦', title: 'Open Apply-Now panel', sub: 'Scroll to ranked apply-now queue', run: () => {
       const el = document.getElementById('apply-now-section');
@@ -3543,7 +3571,7 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
 
 <!-- ── Share-link / demo-mode (read-only recruiter view) ──────── -->
 <style>
-  /* Banner */
+  /* Share-link banner */
   #share-banner {
     display: none;
     position: sticky; top: 0; z-index: 3000;
@@ -3556,6 +3584,30 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   }
   body.share-mode #share-banner { display: block; }
   body.share-mode { padding-top: 0; }
+
+  /* Standalone demo banner — distinct from share-link banner so the user
+     sees a clear visual cue when demo is enabled without a share token.
+     Sticky at top, dismissable for the current view, reappears on reload. */
+  #demo-banner {
+    display: none;
+    position: sticky; top: 0; z-index: 3000;
+    padding: 10px 16px;
+    background: linear-gradient(90deg, #fde68a, #fcd34d);
+    color: #7c2d12;
+    font-size: 13px; font-weight: 600;
+    border-bottom: 1px solid #f59e0b;
+    text-align: center;
+    align-items: center; justify-content: center; gap: 14px;
+  }
+  body.demo-mode:not(.share-mode):not(.demo-banner-dismissed) #demo-banner {
+    display: flex;
+  }
+  #demo-banner-close {
+    background: rgba(255,255,255,0.5); border: 1px solid currentColor;
+    border-radius: 4px; color: inherit;
+    padding: 2px 10px; cursor: pointer; font-size: 12px; font-weight: 600;
+  }
+  #demo-banner-close:hover { background: rgba(255,255,255,0.85); }
 
   /* Hide write-action surfaces in share mode */
   body.share-mode .action-cell a[href]:not([href^="#"]):not([href^="reports/"]),
@@ -3586,12 +3638,30 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
 <div id="share-banner" role="status" aria-live="polite">
   <span id="share-banner-text">Read-only share — loading…</span>
 </div>
+<div id="demo-banner" role="status" aria-live="polite">
+  <span>🎭 DEMO MODE — fake data for screen sharing</span>
+  <button type="button" id="demo-banner-close" aria-label="Dismiss demo banner for this view">Dismiss</button>
+</div>
 <script>
 // ── Share / demo bootstrap ─────────────────────────────────────
+// Three independent ways to enter demo mode:
+//   1. ?demo=1 in the URL                       (shareable / explicit)
+//   2. localStorage 'careerOps.demoMode' === '1' (Cmd-K toggle persistence)
+//   3. ?share=token (forces demo)                (PR #17 share-link flow)
+// All three coexist; #3 always wins for hiding write surfaces. The
+// data swap below runs whenever ANY of them is active.
 (function () {
   var params = new URLSearchParams(window.location.search);
   var shareToken = params.get('share');
-  var demoMode = params.get('demo') === '1';
+  var urlDemo = params.get('demo') === '1';
+  var lsDemo = false;
+  try { lsDemo = localStorage.getItem('careerOps.demoMode') === '1'; } catch (e) {}
+  // ?demo=1 in URL → also persist to localStorage so the toggle survives
+  // a manual reload that drops the query string.
+  if (urlDemo) {
+    try { localStorage.setItem('careerOps.demoMode', '1'); } catch (e) {}
+  }
+  var demoMode = !!shareToken || urlDemo || lsDemo;
   if (!shareToken && !demoMode) return;
 
   function init() {
@@ -3616,23 +3686,71 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     }
     if (demoMode) {
       document.body.classList.add('demo-mode');
+      var closeBtn = document.getElementById('demo-banner-close');
+      if (closeBtn) {
+        closeBtn.addEventListener('click', function () {
+          // In-memory dismiss only — banner reappears on reload as a
+          // safety reminder that fake data is still being shown.
+          document.body.classList.add('demo-banner-dismissed');
+        });
+      }
       runDemoSwap();
     }
   }
 
-  function companyLabel(idx) {
-    if (idx < 26) return '[Company ' + String.fromCharCode(65 + idx) + ']';
-    var first = Math.floor(idx / 26) - 1;
-    var second = idx % 26;
-    return '[Company ' + String.fromCharCode(65 + first) + String.fromCharCode(65 + second) + ']';
+  // djb2-style stable hash → unsigned 32-bit. Used so each real company
+  // maps to the same fake name across reloads (and the next user's run).
+  function _hash(s) {
+    var h = 5381;
+    for (var i = 0; i < s.length; i++) {
+      h = ((h << 5) + h + s.charCodeAt(i)) | 0;
+    }
+    return h >>> 0;
   }
 
+  // Plausible-but-fictional names. The Microsoft "fictitious sample"
+  // brand list (Contoso, Fabrikam, Adatum…) is a known-safe vocabulary —
+  // unambiguously fake to anyone who recognizes them, but ordinary
+  // enough to read as real to anyone else watching a screen-share.
+  var DEMO_COMPANIES = [
+    'Acme AI', 'Northwind Labs', 'Initech', 'Contoso AI', 'Fabrikam',
+    'Tailspin Systems', 'Wingtip Software', 'Adatum Inc', 'Litware AI',
+    'Proseware Labs', 'Trey Research', 'Lucerne Studios', 'Adventure Works',
+    'Wide World Tech', 'Margie Analytics'
+  ];
+  var DEMO_ROLES = [
+    'Senior Engineer', 'Product Manager', 'Engineering Manager',
+    'Software Engineer', 'Senior Product Manager', 'Staff Engineer',
+    'Principal Engineer', 'Tech Lead', 'Senior Manager', 'Director of Engineering'
+  ];
+  var DEMO_COMP_BUCKETS = [
+    '$120K–$150K', '$150K–$200K', '$200K–$250K',
+    '$250K–$300K', '$300K–$400K', '$400K+'
+  ];
+
+  function pickFromList(list, key) { return list[_hash(key) % list.length]; }
+
   function buildCompanyMap() {
-    var map = new Map();
+    // Collect every distinct real company string. Sort alphabetically so
+    // the linear-probing collision resolution is reproducible regardless
+    // of DOM order.
+    var raws = new Set();
     document.querySelectorAll('[data-company]').forEach(function (el) {
-      var raw = (el.getAttribute('data-company') || '').trim();
-      if (!raw) return;
-      if (!map.has(raw)) map.set(raw, companyLabel(map.size));
+      var raw = (el.getAttribute('data-company') || '').trim().toLowerCase();
+      if (raw) raws.add(raw);
+    });
+    var sorted = Array.from(raws).sort();
+    var map = new Map();
+    var taken = new Set();
+    sorted.forEach(function (raw) {
+      var idx = _hash(raw) % DEMO_COMPANIES.length;
+      var attempts = 0;
+      while (taken.has(idx) && attempts < DEMO_COMPANIES.length) {
+        idx = (idx + 1) % DEMO_COMPANIES.length;
+        attempts++;
+      }
+      taken.add(idx);
+      map.set(raw, DEMO_COMPANIES[idx]);
     });
     return map;
   }
@@ -3645,16 +3763,57 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     var map = buildCompanyMap();
     if (map.size === 0) return;
 
+    // Per-row swaps: company, role, comp chip
     document.querySelectorAll('tr[data-company]').forEach(function (tr) {
-      var raw = (tr.getAttribute('data-company') || '').trim();
-      var label = map.get(raw);
-      if (!label) return;
-      var strong = tr.querySelector('td:nth-child(2) strong');
-      if (strong) strong.textContent = label;
-      tr.removeAttribute('data-search');
-      tr.setAttribute('data-company', label.toLowerCase());
+      var rawCompany = (tr.getAttribute('data-company') || '').trim();
+      var fakeCompany = map.get(rawCompany);
+      if (fakeCompany) {
+        var strong = tr.querySelector('td:nth-child(2) strong');
+        if (strong) strong.textContent = fakeCompany;
+        tr.removeAttribute('data-search');
+        tr.setAttribute('data-company', fakeCompany.toLowerCase());
+      }
+      // Replace role-cell text node (preserves child elements like
+      // .card-gaps-mobile that share the same cell).
+      var roleCell = tr.querySelector('td.role-cell');
+      var rawRole = (tr.getAttribute('data-role') || '').trim();
+      if (roleCell && rawRole) {
+        var fakeRole = pickFromList(DEMO_ROLES, rawCompany + '|' + rawRole);
+        var firstText = null;
+        for (var i = 0; i < roleCell.childNodes.length; i++) {
+          var ch = roleCell.childNodes[i];
+          if (ch.nodeType === 3) { firstText = ch; break; }
+        }
+        if (firstText) firstText.nodeValue = fakeRole;
+        else roleCell.insertBefore(document.createTextNode(fakeRole), roleCell.firstChild);
+        tr.setAttribute('data-role', fakeRole.toLowerCase());
+      }
     });
 
+    // Comp chips → bucket-only. The chip lives inside the detail-row,
+    // which has id="detail-{rowId}" but no data-company/role itself —
+    // pull those from the matching visible row via data-row-id so the
+    // hash key is meaningful and stable across reloads.
+    document.querySelectorAll('.meta-chip-comp').forEach(function (el) {
+      var tr = el.closest('tr');
+      var key = '';
+      if (tr && tr.id && tr.id.indexOf('detail-') === 0) {
+        var rowId = tr.id.slice('detail-'.length);
+        var src = document.querySelector('tr.row[data-row-id="' + rowId + '"]');
+        if (src) {
+          key = (src.getAttribute('data-company') || '') + '|' + (src.getAttribute('data-role') || '');
+        } else {
+          key = rowId;
+        }
+      } else {
+        key = (tr && tr.id) || (el.textContent || '');
+      }
+      el.textContent = '💰 ' + pickFromList(DEMO_COMP_BUCKETS, key);
+    });
+
+    // Global text replacement: every mention of a real company name in
+    // body text gets swapped to its mapped fake. Longest-first so that
+    // "Anthropic AI" is replaced before "Anthropic" if both appear.
     var realNames = Array.from(map.keys()).filter(function (n) { return n.length >= 3; });
     realNames.sort(function (a, b) { return b.length - a.length; });
     var globalRe = null;
@@ -3669,7 +3828,7 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
           if (!n.nodeValue || !n.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
           var p = n.parentElement;
           if (!p) return NodeFilter.FILTER_REJECT;
-          if (p.closest('script,style,#share-banner')) return NodeFilter.FILTER_REJECT;
+          if (p.closest('script,style,#share-banner,#demo-banner')) return NodeFilter.FILTER_REJECT;
           return NodeFilter.FILTER_ACCEPT;
         }
       });
@@ -3683,24 +3842,42 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
       }
     }
 
-    document.querySelectorAll('.meta-chip-comp').forEach(function (el) {
-      el.textContent = '💰 [comp redacted]';
-    });
-
+    // Email + phone redactions
     var emailRe = /[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}/gi;
+    var phoneRe = /\\+?\\d[\\d\\s().-]{8,}\\d/g;
     var w2 = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
       acceptNode: function (n) {
-        emailRe.lastIndex = 0;
-        if (!n.nodeValue || !emailRe.test(n.nodeValue)) return NodeFilter.FILTER_REJECT;
+        if (!n.nodeValue) return NodeFilter.FILTER_REJECT;
         var p = n.parentElement;
-        if (!p || p.closest('script,style')) return NodeFilter.FILTER_REJECT;
-        return NodeFilter.FILTER_ACCEPT;
+        if (!p || p.closest('script,style,#share-banner,#demo-banner')) return NodeFilter.FILTER_REJECT;
+        emailRe.lastIndex = 0; phoneRe.lastIndex = 0;
+        if (emailRe.test(n.nodeValue) || phoneRe.test(n.nodeValue)) {
+          emailRe.lastIndex = 0; phoneRe.lastIndex = 0;
+          return NodeFilter.FILTER_ACCEPT;
+        }
+        return NodeFilter.FILTER_REJECT;
       }
     });
     var n2;
     while ((n2 = w2.nextNode())) {
-      n2.nodeValue = n2.nodeValue.replace(emailRe, '[email redacted]');
+      n2.nodeValue = n2.nodeValue
+        .replace(emailRe, '[email redacted]')
+        .replace(phoneRe, '[phone redacted]');
     }
+
+    // Strip click-through on apply / report links so an over-eager
+    // recruiter can't click through to the real JD or report file. We
+    // keep the visual element (button + label) intact — only the href
+    // is neutered. Internal anchors (#…) and Cmd-K back-to-top scrolls
+    // still work.
+    document.querySelectorAll('a[href]').forEach(function (a) {
+      var href = a.getAttribute('href') || '';
+      if (!href || href.charAt(0) === '#' || href.indexOf('javascript:') === 0) return;
+      a.setAttribute('data-demo-original-href', href);
+      a.setAttribute('href', '#');
+      a.removeAttribute('target');
+      a.addEventListener('click', function (ev) { ev.preventDefault(); ev.stopPropagation(); });
+    });
   }
 
   if (document.readyState === 'loading') {
