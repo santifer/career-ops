@@ -3,7 +3,7 @@
 // Usage: node dashboard-server.mjs [--port=3000]
 
 import { createServer } from 'http';
-import { readFileSync, existsSync, readdirSync, appendFileSync, writeFileSync } from 'fs';
+import { readFileSync, existsSync, readdirSync, appendFileSync, writeFileSync, renameSync } from 'fs';
 import { join, extname } from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
@@ -511,6 +511,102 @@ const DETAIL_FNS = {
   'scanned':      detailScanned,
 };
 
+// ── Status writeback ───────────────────────────────────────────
+
+function loadCanonicalStatuses() {
+  // Parse templates/states.yml without pulling a YAML dep — extract the
+  // `label:` value of every state in the file. Falls back to the AGENTS.md
+  // canonical list if states.yml is unreadable.
+  const fallback = ['Evaluated','Applied','Responded','Interview','Offer','Rejected','Discarded','SKIP'];
+  try {
+    const text = readFileSync(join(ROOT, 'templates/states.yml'), 'utf8');
+    const labels = [];
+    for (const m of text.matchAll(/^\s+label:\s+(.+?)\s*$/gm)) {
+      const v = m[1].trim();
+      if (v) labels.push(v);
+    }
+    return labels.length ? labels : fallback;
+  } catch (_) {
+    return fallback;
+  }
+}
+
+const CANONICAL_STATUSES = loadCanonicalStatuses();
+
+function updateApplicationStatus({ num, status, note }) {
+  if (num === undefined || num === null || Number.isNaN(parseInt(num, 10))) {
+    return { ok: false, code: 400, error: 'num is required and must be an integer' };
+  }
+  if (!status || typeof status !== 'string') {
+    return { ok: false, code: 400, error: 'status is required (string)' };
+  }
+  // Case-insensitive match against canonical labels; reply with canonical casing
+  const canonical = CANONICAL_STATUSES.find(s => s.toLowerCase() === status.trim().toLowerCase());
+  if (!canonical) {
+    return {
+      ok: false, code: 400,
+      error: `Invalid status "${status}". Must be one of: ${CANONICAL_STATUSES.join(', ')}`,
+    };
+  }
+
+  const appsPath = join(ROOT, 'data/applications.md');
+  if (!existsSync(appsPath)) {
+    return { ok: false, code: 500, error: 'data/applications.md not found' };
+  }
+
+  const text = readFileSync(appsPath, 'utf8');
+  const lines = text.split('\n');
+  const targetNum = String(parseInt(num, 10));
+  let updatedRow = null;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (!line.startsWith('|')) continue;
+    if (line.match(/^[\|\s\-:]+$/)) continue;
+    if (line.includes('| # |')) continue;
+
+    const cols = line.split('|').map(c => c.trim());
+    // cols: [empty, num, date, company, role, score, status, pdf, report, notes, (empty)]
+    if (cols.length < 10 || cols[1] !== targetNum) continue;
+
+    cols[6] = canonical;
+    if (typeof note === 'string' && note.length) {
+      // Sanitize: pipes break the markdown table
+      cols[9] = note.replace(/\|/g, '\\|').slice(0, 600);
+    }
+    lines[i] = '| ' + cols.slice(1, 10).join(' | ') + ' |';
+
+    const reportMatch = cols[8]?.match(/\[(\d+)\]\(([^)]+)\)/);
+    updatedRow = {
+      num: cols[1],
+      date: cols[2],
+      company: cols[3],
+      role: cols[4],
+      score: parseFloat(cols[5]) || 0,
+      status: cols[6],
+      pdf: cols[7],
+      report: reportMatch ? reportMatch[2] : null,
+      notes: cols[9] || '',
+    };
+    break;
+  }
+
+  if (!updatedRow) {
+    // AGENTS.md rule: NEVER create new entries — update only.
+    return { ok: false, code: 404, error: `Row #${targetNum} not found in applications.md (refusing to create)` };
+  }
+
+  // Atomic write: write to temp then rename
+  const tmpPath = appsPath + '.tmp.' + process.pid + '.' + Date.now();
+  try {
+    writeFileSync(tmpPath, lines.join('\n'));
+    renameSync(tmpPath, appsPath);
+  } catch (err) {
+    return { ok: false, code: 500, error: `Atomic write failed: ${err.message}` };
+  }
+  return { ok: true, row: updatedRow };
+}
+
 // ── HTTP server ────────────────────────────────────────────────
 
 const server = createServer((req, res) => {
@@ -553,6 +649,40 @@ const server = createServer((req, res) => {
       }
     });
     return;
+  }
+
+  if (url === '/api/status' && req.method === 'POST') {
+    let body = '';
+    let total = 0;
+    req.on('data', c => {
+      total += c.length;
+      if (total > 8 * 1024) { req.destroy(); return; }
+      body += c;
+    });
+    req.on('end', () => {
+      let parsed;
+      try { parsed = JSON.parse(body); }
+      catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ ok: false, error: 'Invalid JSON body' }));
+        return;
+      }
+      const result = updateApplicationStatus({
+        num:    parsed.num,
+        status: parsed.status,
+        note:   parsed.note,
+      });
+      const code = result.ok ? 200 : (result.code || 400);
+      res.writeHead(code, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify(result.ok
+        ? { ok: true, row: result.row, canonicalStatuses: CANONICAL_STATUSES }
+        : { ok: false, error: result.error }));
+    });
+    return;
+  }
+
+  if (url === '/api/status' && req.method === 'GET') {
+    return json({ canonicalStatuses: CANONICAL_STATUSES });
   }
 
   const detailMatch = url.match(/^\/api\/detail\/(.+)$/);
