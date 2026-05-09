@@ -32,6 +32,7 @@ const PORTALS_PATH = join(ROOT, 'portals.yml');
 const REPORTS_DIR = join(ROOT, 'reports');
 const HEARTBEAT_GLOB = (date) => join(ROOT, `data/heartbeat-${date}.md`);
 const OVERPAY_CURRENT_PATH = join(ROOT, 'data/overpay-signals/CURRENT.md');
+const PROFILE_YML_PATH = join(ROOT, 'config/profile.yml');
 const OUT_PATH = join(ROOT, 'dashboard/index.html');
 
 // ── Data extraction ───────────────────────────────────────────────
@@ -882,6 +883,175 @@ function renderRow(r, idx) {
 </tr>`;
 }
 
+// ── Comp analytics ─────────────────────────────────────────────────
+// Read $K floors from config/profile.yml (compensation block). Defaults
+// match the example profile so the dashboard renders sane numbers when
+// the file is missing or unparseable.
+function loadCompFloors() {
+  const defaults = { floor: 175, seattleFloor: 180, targetMin: 200, targetMax: 320 };
+  if (!existsSync(PROFILE_YML_PATH)) return defaults;
+  try {
+    const cfg = parseYaml(readFileSync(PROFILE_YML_PATH, 'utf-8'));
+    const c = cfg?.compensation || {};
+    const parseK = (s, fallback) => {
+      const m = String(s || '').match(/(\d+)\s*K/i);
+      return m ? parseInt(m[1], 10) : fallback;
+    };
+    const range = String(c.target_range || '').match(/\$?\s*(\d+)\s*K\s*[-–—]\s*\$?\s*(\d+)\s*K/i);
+    return {
+      floor: parseK(c.minimum, defaults.floor),
+      seattleFloor: parseK(c.seattle_floor, defaults.seattleFloor),
+      targetMin: range ? parseInt(range[1], 10) : defaults.targetMin,
+      targetMax: range ? parseInt(range[2], 10) : defaults.targetMax,
+    };
+  } catch { return defaults; }
+}
+
+// Parse the Block A "Comp" cell into a numeric K-range. Returns null when
+// the cell is a score (e.g. "2/5"), a non-USD figure, or otherwise unusable.
+function parseCompRange(comp) {
+  if (!comp || typeof comp !== 'string') return null;
+  const text = comp.replace(/[*_`]/g, '');
+  const range = text.match(/\$\s*(\d{2,4})\s*K?\s*[\-–—]\s*\$?\s*(\d{2,4})\s*K/i);
+  if (range) {
+    const min = parseInt(range[1], 10);
+    const max = parseInt(range[2], 10);
+    if (min >= 30 && max <= 1500 && min <= max) {
+      return { min, max, midpoint: Math.round((min + max) / 2), hasEquity: /equity|rsu|stock/i.test(text) };
+    }
+  }
+  const single = text.match(/\$\s*(\d{2,4})\s*K\b/i);
+  if (single) {
+    const n = parseInt(single[1], 10);
+    if (n >= 30 && n <= 1500) {
+      return { min: n, max: n, midpoint: n, hasEquity: /equity|rsu|stock/i.test(text) };
+    }
+  }
+  return null;
+}
+
+function computeCompAnalytics(apps) {
+  const rows = [];
+  for (const r of apps) {
+    if (!r.reportPath) continue;
+    const parsed = parseCompRange(getComp(r.reportPath));
+    if (!parsed) continue;
+    const archetype = (getReportArchetype(r.reportPath) || '').match(/A1|A2|B/)?.[0] || 'unknown';
+    const stage = getEquityForCompany(r.company)?.stage || 'unknown';
+    // 4-yr value proxy: midpoint × 4 (base) + 50% if equity is mentioned.
+    // Reports rarely quantify RSUs, so this is a directional ranking, not a quote.
+    const fourYrValue = Math.round(parsed.midpoint * 4 * (parsed.hasEquity ? 1.5 : 1));
+    rows.push({ company: r.company, role: r.role, num: r.num, score: r.score, comp: parsed, archetype, equityStage: stage, fourYrValue });
+  }
+  const buckets = [
+    { label: '$100–150K', min: 100, max: 150, count: 0 },
+    { label: '$150–200K', min: 150, max: 200, count: 0 },
+    { label: '$200–250K', min: 200, max: 250, count: 0 },
+    { label: '$250–300K', min: 250, max: 300, count: 0 },
+    { label: '$300–350K', min: 300, max: 350, count: 0 },
+    { label: '$350–400K', min: 350, max: 400, count: 0 },
+    { label: '$400–500K', min: 400, max: 500, count: 0 },
+    { label: '$500K+',    min: 500, max: Infinity, count: 0 },
+  ];
+  for (const r of rows) {
+    const m = r.comp.midpoint;
+    const b = buckets.find(b => m >= b.min && m < b.max);
+    if (b) b.count++;
+  }
+  const median = (arr) => {
+    if (!arr.length) return null;
+    const s = [...arr].sort((a, b) => a - b);
+    const i = Math.floor(s.length / 2);
+    return s.length % 2 === 0 ? Math.round((s[i - 1] + s[i]) / 2) : s[i];
+  };
+  const tierMeta = { A1: 'A1 — Residency', A2: 'A2 — AI Builder', B: 'B — Comms' };
+  const medians = ['A1', 'A2', 'B'].map(t => {
+    const tierRows = rows.filter(r => r.archetype === t);
+    return { tier: t, label: tierMeta[t], count: tierRows.length, median: median(tierRows.map(r => r.comp.midpoint)) };
+  });
+  return {
+    rows, buckets, medians, total: rows.length,
+    overallMedian: median(rows.map(r => r.comp.midpoint)),
+    topEarners: [...rows].sort((a, b) => b.fourYrValue - a.fourYrValue).slice(0, 10),
+  };
+}
+
+function renderCompAnalytics(analytics, floors) {
+  const { buckets, medians, overallMedian, topEarners, total } = analytics;
+  if (total === 0) {
+    return `<div class="panel" id="comp-analytics-panel">
+      <div class="panel-title">Comp Analytics</div>
+      <p style="color:var(--text-3);font-size:13px">No parseable comp data yet — Block A's Comp row needs an explicit USD range to be picked up here.</p>
+    </div>`;
+  }
+  const maxBucket = Math.max(...buckets.map(b => b.count), 1);
+  const histHtml = buckets.map(b => {
+    const pct = (b.count / maxBucket) * 100;
+    const inFloor = b.min >= floors.seattleFloor;
+    return `<div class="comp-hist-row" role="listitem" aria-label="${escape(b.label)}: ${b.count} evaluation${b.count === 1 ? '' : 's'}">
+      <div class="comp-hist-label">${b.label}</div>
+      <div class="comp-hist-track" aria-hidden="true"><div class="comp-hist-fill ${inFloor ? 'above-floor' : 'below-floor'}" style="width:${pct.toFixed(1)}%"></div></div>
+      <div class="comp-hist-count">${b.count}</div>
+    </div>`;
+  }).join('');
+  const floorRows = [
+    { label: 'All evaluations', median: overallMedian, count: total },
+    ...medians,
+  ];
+  const chartMax = Math.max(...floorRows.map(r => r.median || 0), floors.seattleFloor, floors.targetMax) + 50;
+  const floorPct = ((floors.seattleFloor / chartMax) * 100).toFixed(1);
+  const floorHtml = floorRows.map(row => {
+    if (!row.count) {
+      return `<div class="comp-floor-row empty"><div class="comp-floor-label">${escape(row.label)} <span class="comp-floor-count">(0)</span></div><div class="comp-floor-bar-track"><div class="comp-floor-empty">No comp data</div><div class="comp-floor-floor-line" style="left:${floorPct}%" aria-hidden="true"></div></div><div class="comp-floor-value">—</div></div>`;
+    }
+    const pct = ((row.median / chartMax) * 100).toFixed(1);
+    const above = row.median >= floors.seattleFloor;
+    return `<div class="comp-floor-row" role="img" aria-label="${escape(row.label)}: median $${row.median}K (${row.count} evaluation${row.count === 1 ? '' : 's'}) — ${above ? 'above' : 'below'} $${floors.seattleFloor}K floor">
+      <div class="comp-floor-label">${escape(row.label)} <span class="comp-floor-count">(${row.count})</span></div>
+      <div class="comp-floor-bar-track">
+        <div class="comp-floor-bar ${above ? 'above' : 'below'}" style="width:${pct}%"></div>
+        <div class="comp-floor-floor-line" style="left:${floorPct}%" aria-hidden="true" title="Seattle floor: $${floors.seattleFloor}K"></div>
+      </div>
+      <div class="comp-floor-value ${above ? 'good' : 'bad'}">$${row.median}K</div>
+    </div>`;
+  }).join('');
+  const stageClass = (s) => (s === 'late' || s === 'cd') ? 'top-earner-green' : s === 'public' ? 'top-earner-blue' : (s === 'b' || s === 'seed-a') ? 'top-earner-amber' : 'top-earner-grey';
+  const fmt$ = (n) => n >= 1000 ? `$${(n / 1000).toFixed(2)}M` : `$${n}K`;
+  const topHtml = topEarners.map(r => {
+    const meta = EQUITY_STAGE_META[r.equityStage] || EQUITY_STAGE_META.unknown;
+    const range = r.comp.min === r.comp.max ? `$${r.comp.min}K` : `$${r.comp.min}–${r.comp.max}K`;
+    return `<tr class="${stageClass(r.equityStage)}">
+      <td>${escape(r.company)}</td>
+      <td class="role-cell">${escape(r.role.length > 56 ? r.role.slice(0, 53) + '…' : r.role)}</td>
+      <td>${range}${r.comp.hasEquity ? ' <span class="comp-eq-tag" title="Equity / RSU mentioned in JD">+eq</span>' : ''}</td>
+      <td class="num">${fmt$(r.fourYrValue)}</td>
+      <td><span class="equity-badge ${meta.cls}" title="${escape(meta.label)}">${meta.emoji} ${escape(meta.label)}</span></td>
+    </tr>`;
+  }).join('');
+  return `
+  <div class="panel" id="comp-analytics-panel">
+    <div class="panel-title">Comp Analytics <span class="pill" style="background:var(--blue-fg)">${total} parseable</span></div>
+    <p class="comp-subnote">Parsed from each report's Block A Comp row. Seattle floor: <strong>$${floors.seattleFloor}K</strong> · Target: <strong>$${floors.targetMin}K–$${floors.targetMax}K</strong>. 4-yr est. = midpoint × 4 (× 1.5 if equity mentioned) — directional, not a quote.</p>
+    <div class="comp-grid">
+      <div class="comp-sub">
+        <h3 class="comp-sub-title">Comp range distribution</h3>
+        <div class="comp-hist" role="list" aria-label="Comp range distribution across ${total} evaluations">${histHtml}</div>
+      </div>
+      <div class="comp-sub">
+        <h3 class="comp-sub-title">Median vs Seattle floor</h3>
+        <div class="comp-floor-chart">${floorHtml}</div>
+      </div>
+      <div class="comp-sub comp-sub-wide">
+        <h3 class="comp-sub-title">Top 10 by 4-year value</h3>
+        <div class="comp-top-scroll"><table class="comp-top-table" aria-label="Top 10 evaluations by 4-year comp value">
+          <thead><tr><th>Company</th><th>Role</th><th>Range</th><th class="num">4yr est.</th><th>Stage</th></tr></thead>
+          <tbody>${topHtml}</tbody>
+        </table></div>
+      </div>
+    </div>
+  </div>`;
+}
+
 function build() {
   // Reset the per-build report cache so successive invocations (e.g. tests
   // that import build()) don't carry stale parsed reports across builds.
@@ -1114,6 +1284,9 @@ function build() {
     if (funnel.hasOwnProperty(s)) funnel[s]++;
     else if (/interview/i.test(s)) funnel.Interview++;
   }
+  // Comp analytics — distribution, floor gap, top earners.
+  const compFloors = loadCompFloors();
+  const compAnalytics = computeCompAnalytics(apps);
 
   // Apply-now table rows
   const applyNowRows = applyNowSorted.map((r, i) => renderRow(r, `apply-${i}`)).join('\n');
@@ -1482,6 +1655,46 @@ function build() {
     letter-spacing: 0;
   }
   .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: var(--section-gap); }
+
+  /* ── Comp Analytics ──────────────────────────────────────────── */
+  #comp-analytics-panel .comp-subnote { color: var(--text-3); font-size: 12.5px; margin: -6px 0 18px; }
+  #comp-analytics-panel .comp-subnote strong { color: var(--text-2); font-weight: 600; }
+  .comp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px 24px; }
+  .comp-sub { min-width: 0; }
+  .comp-sub-wide { grid-column: 1 / -1; }
+  .comp-sub-title { font-size: 11.5px; font-weight: 600; color: var(--text-3); margin: 0 0 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .comp-hist-row { display: grid; grid-template-columns: 96px 1fr 32px; gap: 10px; align-items: center; padding: 4px 0; font-size: 12.5px; }
+  .comp-hist-label { color: var(--text-3); font-variant-numeric: tabular-nums; }
+  .comp-hist-track { background: var(--surface-2); border-radius: 4px; height: 14px; overflow: hidden; }
+  .comp-hist-fill { height: 100%; border-radius: 4px; min-width: 0; transition: width .25s; }
+  .comp-hist-fill.above-floor { background: var(--green-fg); }
+  .comp-hist-fill.below-floor { background: var(--red-fg); opacity: .65; }
+  .comp-hist-count { color: var(--text-2); font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+  .comp-floor-chart { display: flex; flex-direction: column; gap: 8px; }
+  .comp-floor-row { display: grid; grid-template-columns: 130px 1fr 60px; gap: 10px; align-items: center; font-size: 12.5px; }
+  .comp-floor-row.empty .comp-floor-value { color: var(--text-4); font-weight: 400; }
+  .comp-floor-label { color: var(--text-2); font-weight: 500; }
+  .comp-floor-count { color: var(--text-4); font-weight: 400; font-size: 11px; }
+  .comp-floor-bar-track { background: var(--surface-2); border-radius: 4px; height: 18px; position: relative; overflow: hidden; }
+  .comp-floor-bar { height: 100%; border-radius: 4px; transition: width .25s; }
+  .comp-floor-bar.above { background: var(--green-fg); }
+  .comp-floor-bar.below { background: var(--red-fg); }
+  .comp-floor-empty { color: var(--text-4); font-size: 11px; padding: 0 8px; line-height: 18px; }
+  .comp-floor-floor-line { position: absolute; top: -2px; bottom: -2px; width: 2px; background: var(--amber-fg); pointer-events: none; box-shadow: 0 0 0 1px var(--bg); }
+  .comp-floor-value { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+  .comp-floor-value.good { color: var(--green-fg-dark); }
+  .comp-floor-value.bad { color: var(--red-fg-dark); }
+  .comp-top-scroll { overflow-x: auto; }
+  .comp-top-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .comp-top-table th { background: var(--surface-2); color: var(--text-3); padding: 7px 10px; font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; text-align: left; border-bottom: 1px solid var(--border); }
+  .comp-top-table th.num, .comp-top-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .comp-top-table td { padding: 7px 10px; border-bottom: 1px solid var(--border); color: var(--text-2); }
+  .comp-top-table td.num { font-weight: 600; color: var(--text); }
+  .comp-top-table tr.top-earner-green td:first-child { box-shadow: inset 3px 0 0 0 var(--green-fg); }
+  .comp-top-table tr.top-earner-blue td:first-child { box-shadow: inset 3px 0 0 0 var(--blue-fg); }
+  .comp-top-table tr.top-earner-amber td:first-child { box-shadow: inset 3px 0 0 0 var(--amber-fg); }
+  .comp-top-table tr.top-earner-grey td:first-child { box-shadow: inset 3px 0 0 0 var(--text-4); }
+  .comp-eq-tag { display: inline-block; font-size: 10px; padding: 0 5px; margin-left: 4px; border-radius: 4px; background: var(--green-bg); color: var(--green-fg-dark); font-weight: 500; }
 
   /* ── Tables ──────────────────────────────────────────────────── */
   .table-scroll { overflow-x: auto; overflow-y: auto; max-height: 520px; border-radius: 0 0 var(--radius-sm) var(--radius-sm); }
@@ -2282,6 +2495,9 @@ function build() {
     .charts-grid { grid-template-columns: 1fr; gap: 12px; }
     .trends-grid { grid-template-columns: 1fr; gap: 10px; }
     .trend-card-wide { grid-column: 1 / -1; }
+    .comp-grid { grid-template-columns: 1fr; gap: 18px; }
+    .comp-hist-row { grid-template-columns: 84px 1fr 28px; }
+    .comp-floor-row { grid-template-columns: 100px 1fr 50px; }
 
     /* Show the gap chips on cards */
     .card-gaps-mobile {
@@ -2893,6 +3109,7 @@ function build() {
       </div>`;
     })()}
   </div>
+  ${renderCompAnalytics(compAnalytics, compFloors)}
 
   </main>
 </div>
