@@ -53,7 +53,13 @@ if $DRY_RUN; then
 fi
 
 # Spawn Claude headless to implement the item
-PROMPT="You are the Phase 3 dashboard worker for career-ops. Read /Users/mitchellwilliams/Documents/career-ops/data/dashboard-phase3-queue.md in full. Pick the first item with status [pending] (it is: '$NEXT_TITLE'). Implement that item end-to-end following the worker rules at the top of the queue file. Commit, push the branch, open a PR with title 'feat(dashboard): $NEXT_TITLE'. Then edit the queue file to change that item's status from [pending] to [in-progress] and commit that change to main. Do NOT do more than one queue item in this run."
+PROMPT="You are the Phase 3 dashboard worker for career-ops. Read /Users/mitchellwilliams/Documents/career-ops/data/dashboard-phase3-queue.md in full. Pick the first item with status [pending] (it is: '$NEXT_TITLE'). Implement that item end-to-end following the worker rules at the top of the queue file. Commit, push the branch, then open a PR via:
+
+  gh pr create --repo mitwilli-create/career-ops --base main --head <your-branch> --title 'feat(dashboard): $NEXT_TITLE' --body '...'
+
+CRITICAL: --repo MUST be mitwilli-create/career-ops (the fork) and --base MUST be main. NEVER open PRs against santifer/career-ops upstream — gh's default fork-resolution will choose santifer:main as base if not overridden, which exposes the fork's confidential personal data files (data/portfolio-*, data/storytellermitch-*, data/cloudflare-domain-swap-runbook.md, data/applications.md, etc.) on a public upstream PR. The 2026-05-09 incident closed 5 such PRs after they leaked file path inventory to santifer's repo and CodeRabbit. Always pass --repo and --base explicitly.
+
+Then edit the queue file to change that item's status from [pending] to [in-progress] and commit that change to main. Do NOT do more than one queue item in this run."
 
 claude --model claude-opus-4-7 --dangerously-skip-permissions -p "$PROMPT" 2>&1 | tee -a "$LOG"
 
