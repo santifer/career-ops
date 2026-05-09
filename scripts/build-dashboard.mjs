@@ -58,6 +58,7 @@ function parseApplications() {
 }
 
 function getReportUrl(reportPath) {
+  if (!reportPath) return '';
   const fullPath = join(ROOT, reportPath);
   if (!existsSync(fullPath)) return '';
   const text = readFileSync(fullPath, 'utf-8').slice(0, 3000);
@@ -66,29 +67,38 @@ function getReportUrl(reportPath) {
 }
 
 function getReportArchetype(reportPath) {
+  if (!reportPath) return '';
   const fullPath = join(ROOT, reportPath);
   if (!existsSync(fullPath)) return '';
-  const text = readFileSync(fullPath, 'utf-8').slice(0, 3000);
-  const m = text.match(/\*\*Archetype:\*\*\s*([^\n]+)/);
-  if (!m) return '';
-  // Pull just the tier (A1/A2/B) if present
-  const tierMatch = m[1].match(/\b(A1|A2|B)\b/);
-  return tierMatch ? tierMatch[1] : m[1].slice(0, 30);
+  const text = readFileSync(fullPath, 'utf-8').slice(0, 4000);
+  // Format 1: **Archetype:** A1/A2/B ... (header block)
+  const bold = text.match(/\*\*Archetype:\*\*\s*([^\n]+)/);
+  // Format 2: | Archetype | A1/A2/B ... | (Block A table row)
+  const table = text.match(/\|\s*Archetype\s*\|\s*([^|\n]+?)\s*\|/);
+  const raw = (bold?.[1] || table?.[1] || '').replace(/\*\*/g, '');
+  if (!raw) return '';
+  const tierMatch = raw.match(/\b(A1|A2|B)\b/);
+  return tierMatch ? tierMatch[1] : raw.slice(0, 30);
 }
 
 function getReportFinalRecommendation(reportPath) {
+  if (!reportPath) return '';
   const fullPath = join(ROOT, reportPath);
   if (!existsSync(fullPath)) return '';
   const text = readFileSync(fullPath, 'utf-8');
-  // Find ## Final Recommendation section
-  const idx = text.indexOf('## Final Recommendation');
+  const finalIdx = text.indexOf('## Final Recommendation');
+  const recIdx = text.indexOf('## Recommendation');
+  let idx = -1, headerLen = 0;
+  if (finalIdx !== -1) { idx = finalIdx; headerLen = '## Final Recommendation'.length; }
+  else if (recIdx !== -1) { idx = recIdx; headerLen = '## Recommendation'.length; }
   if (idx === -1) return '';
-  const after = text.slice(idx + '## Final Recommendation'.length);
+  const after = text.slice(idx + headerLen);
   const next = after.indexOf('\n## ');
   const section = next === -1 ? after : after.slice(0, next);
-  // First paragraph only
-  const trimmed = section.trim().split('\n\n')[0] || '';
-  return trimmed.slice(0, 600);
+  // First two paragraphs — enough for context without overflow
+  const paragraphs = section.trim().split('\n\n').filter(p => p.trim());
+  const combined = paragraphs.slice(0, 2).join(' ').replace(/\*\*/g, '').replace(/\n/g, ' ').trim();
+  return combined.slice(0, 600);
 }
 
 // Render a single report's markdown to a self-contained HTML page that
@@ -96,6 +106,7 @@ function getReportFinalRecommendation(reportPath) {
 // in dashboard/reports/{slug}.html so the dashboard can link to it
 // directly (no Cursor required, no key-shortcut needed).
 function renderReportToHtml(reportPath, outputDir) {
+  if (!reportPath) return null;
   const fullPath = join(ROOT, reportPath);
   if (!existsSync(fullPath)) return null;
   if (!existsSync(outputDir)) mkdirSync(outputDir, { recursive: true });
@@ -229,23 +240,29 @@ ${inner}
 }
 
 // Helper — extract a section block from a report by its `## ` header.
-// Returns the section content up to the next `## ` or end of file.
+// Accepts an array of regexes tried in order — first match wins.
+// Handles both old format (## A) Role Summary) and new (## Block A — Role Summary).
 function getSection(reportPath, headerRe) {
+  if (!reportPath) return '';
   const fullPath = join(ROOT, reportPath);
   if (!existsSync(fullPath)) return '';
   const text = readFileSync(fullPath, 'utf-8');
-  const m = text.match(headerRe);
-  if (!m) return '';
-  const start = m.index + m[0].length;
-  const rest = text.slice(start);
-  const endIdx = rest.indexOf('\n## ');
-  return endIdx === -1 ? rest : rest.slice(0, endIdx);
+  const patterns = Array.isArray(headerRe) ? headerRe : [headerRe];
+  for (const re of patterns) {
+    const m = text.match(re);
+    if (!m) continue;
+    const start = m.index + m[0].length;
+    const rest = text.slice(start);
+    const endIdx = rest.indexOf('\n## ');
+    return endIdx === -1 ? rest : rest.slice(0, endIdx);
+  }
+  return '';
 }
 
 // Extract the TL;DR from Block A — typically the last row of the role
 // summary table. Falls back to the full Block A if no TL;DR row found.
 function getTldr(reportPath) {
-  const block = getSection(reportPath, /^## A\)[^\n]*$/m);
+  const block = getSection(reportPath, [/^## A\)[^\n]*$/m, /^## Block A\b[^\n]*$/m]);
   if (!block) return '';
   // Look for "| TL;DR | <value> |" in the table
   const tldrMatch = block.match(/\|\s*TL;DR\s*\|\s*([^\n]+?)\s*\|\s*$/m);
@@ -255,26 +272,75 @@ function getTldr(reportPath) {
   return '';
 }
 
-// Extract positioning angle from Block C — sell-senior-without-overstatement
-// or similar bullet list. Returns ~3 lines of positioning guidance.
+// Extract positioning angle from Block C.
 function getPositioning(reportPath) {
-  const block = getSection(reportPath, /^## C\)[^\n]*$/m);
+  const block = getSection(reportPath, [/^## C\)[^\n]*$/m, /^## Block C\b[^\n]*$/m]);
   if (!block) return '';
-  // Pull either the "Sell senior without overstatement" subsection or the
-  // first paragraph after the level detection.
+  // New format: "- **Positioning:** <prose>" bullet
+  const bulletMatch = block.match(/\*\*Positioning:\*\*\s*([^\n]{30,})/);
+  if (bulletMatch) return bulletMatch[1].replace(/\*\*/g, '').trim().slice(0, 600);
+  // Old format: "Sell senior without overstatement" subsection
   const sellMatch = block.match(/\*\*Sell\s+(?:senior|the)[^\n]*\*\*[\s\S]*?(?=\n\n|\*\*If)/i);
-  if (sellMatch) {
-    return sellMatch[0].replace(/\*\*/g, '').slice(0, 600).trim();
-  }
-  // Fallback: first sentence of Block C
+  if (sellMatch) return sellMatch[0].replace(/\*\*/g, '').slice(0, 600).trim();
+  // Fallback: first non-empty lines
   return block.trim().split('\n').filter(l => l.trim()).slice(0, 4).join(' ').slice(0, 500);
+}
+
+// Extract comp from Block A table.
+function getComp(reportPath) {
+  const block = getSection(reportPath, [/^## A\)[^\n]*$/m, /^## Block A\b[^\n]*$/m]);
+  if (!block) return '';
+  const m = block.match(/\|\s*Comp(?:ensation)?\s*\|\s*([^|\n]+?)\s*\|/im);
+  return m ? m[1].replace(/\*\*/g, '').trim().slice(0, 120) : '';
+}
+
+// Extract numbered key gaps from Block B — returns { title, detail } objects.
+function getKeyGaps(reportPath) {
+  const block = getSection(reportPath, [/^## B\)[^\n]*$/m, /^## Block B\b[^\n]*$/m]);
+  if (!block) return [];
+  const gapsSection = block.match(/\*\*Key gaps[^*]*\*\*[:\s]*\n([\s\S]*?)(?:\n\*\*Why|\n## |$)/i);
+  if (!gapsSection) return [];
+  return gapsSection[1]
+    .split('\n')
+    .filter(l => /^\d+\.\s/.test(l.trim()))
+    .map(l => {
+      const withoutNum = l.replace(/^\d+\.\s*/, '').trim();
+      const titleMatch = withoutNum.match(/\*\*([^*]+)\*\*/);
+      const title = (titleMatch ? titleMatch[1] : withoutNum.split('—')[0]).replace(/\*\*/g, '').trim();
+      const dashIdx = withoutNum.indexOf('—');
+      const detail = dashIdx > -1
+        ? withoutNum.slice(dashIdx + 1).replace(/\*\*/g, '').trim().slice(0, 500)
+        : '';
+      return { title, detail };
+    })
+    .filter(g => g.title)
+    .slice(0, 4);
+}
+
+// "Why these gaps don't block" from Block B.
+function getWhyGapsDontBlock(reportPath) {
+  const block = getSection(reportPath, [/^## B\)[^\n]*$/m, /^## Block B\b[^\n]*$/m]);
+  if (!block) return '';
+  const m = block.match(/\*\*Why these gaps don[''']t block[^*]*\*\*[:\s]*([^\n]+(?:\n(?!\*\*|\n).*)*)/i);
+  return m ? m[1].replace(/\*\*/g, '').trim().slice(0, 600) : '';
+}
+
+// Per-gap strategies from Block C — matches by keyword from gap title.
+function getGapStrategy(reportPath, gapTitle) {
+  const block = getSection(reportPath, [/^## C\)[^\n]*$/m, /^## Block C\b[^\n]*$/m]);
+  if (!block) return '';
+  // Look for "**<keyword> gap handling:**" or "**<keyword> gap:**" bullets
+  const keyword = gapTitle.split(/\s+/)[0].replace(/[^a-z0-9]/gi, '');
+  const re = new RegExp(`\\*\\*[^*]*${keyword}[^*]*(?:gap|handling)[^*]*\\*\\*[:\\s]*([^\\n]+)`, 'i');
+  const m = block.match(re);
+  return m ? m[1].replace(/\*\*/g, '').trim().slice(0, 600) : '';
 }
 
 // Extract top-2 STAR+R stories from Block F. Each STAR table row has
 // columns: # | JD Requirement | Story | S | T | A | R | Reflection.
 // We surface the JD-requirement column + the story column.
 function getTopStories(reportPath, limit = 2) {
-  const block = getSection(reportPath, /^## F\)[^\n]*$/m);
+  const block = getSection(reportPath, [/^## F\)[^\n]*$/m, /^## Block F\b[^\n]*$/m]);
   if (!block) return [];
   const stories = [];
   for (const line of block.split('\n')) {
@@ -282,8 +348,8 @@ function getTopStories(reportPath, limit = 2) {
     if (/^\|\s*[-:|]+\s*\|/.test(line)) continue;
     if (/^\|\s*#\s*\|\s*JD\s*Requirement/i.test(line)) continue;
     const cells = line.split('|').slice(1, -1).map(c => c.trim());
-    if (cells.length < 4) continue;
-    // Column 0=#, 1=JD Requirement, 2=Story, 3=S, 4=T, 5=A, 6=R, 7=Reflection
+    if (cells.length < 3) continue;
+    // Column 0=#, 1=JD Requirement, 2=Story (4+ col old format has STAR columns after)
     const num = cells[0];
     const requirement = cells[1];
     const story = cells[2];
@@ -303,11 +369,11 @@ function getTopStories(reportPath, limit = 2) {
 // every role shows context (low-fit roles surface their few partial matches
 // for transparency rather than rendering "—").
 function getCompetitiveEdge(reportPath, limit = 5) {
+  if (!reportPath) return [];
   const fullPath = join(ROOT, reportPath);
   if (!existsSync(fullPath)) return [];
   const text = readFileSync(fullPath, 'utf-8');
-  const startRe = /^## B\)[^\n]*$/m;
-  const startMatch = text.match(startRe);
+  const startMatch = text.match(/^## B\)[^\n]*$/m) || text.match(/^## Block B\b[^\n]*$/m);
   if (!startMatch) return [];
   const start = startMatch.index + startMatch[0].length;
   const rest = text.slice(start);
@@ -333,12 +399,14 @@ function getCompetitiveEdge(reportPath, limit = 5) {
     if (numMatch) {
       score = parseFloat(numMatch[1]);
     }
-    // Format 2: Spanish categorical strength labels (check before prose
-    // because UNIQUELY STRONG / STRONG appear with ✅ checkmark)
-    else if (/UNIQUELY\s+STRONG/i.test(matchCell)) { score = 5; label = 'Uniquely Strong'; }
-    else if (/✅\s*STRONG|^\s*STRONG\b|\*\*STRONG\*\*/i.test(matchCell)) { score = 5; label = 'Strong'; }
+    // Format 2: English/Spanish categorical + new ✅/⚠️ emoji format
+    else if (/Exceptional|UNIQUELY\s+STRONG/i.test(matchCell)) { score = 5; label = 'Exceptional'; }
+    else if (/✅\s*STRONG|^\s*STRONG\b|\*\*STRONG\*\*/i.test(matchCell)) { score = 4; label = 'Strong'; }
     else if (/✅?\s*MEDIUM|MEDIUM\s*MATCH|MODERATE/i.test(matchCell)) { score = 3; label = 'Medium'; }
+    else if (/Adjacent/i.test(matchCell) && /✅/.test(matchCell)) { score = 3; label = 'Adjacent'; }
     else if (/✅?\s*WEAK|WEAK\s*MATCH|PARTIAL/i.test(matchCell)) { score = 2; label = 'Weak'; }
+    else if (/⚠️/.test(matchCell)) { score = 2; label = 'Partial'; }
+    else if (/✅/.test(matchCell)) { score = 4; label = 'Strong'; }
     // Format 3: explicit negatives — skip (they aren't competitive edges)
     else if (/HARD\s*BLOCKER|GAP\s|MISSING|NO\s*MATCH|FAIL\b/i.test(matchCell)) {
       continue;
@@ -392,6 +460,18 @@ function scoreBadgeClass(score) {
   return 'score-weak';
 }
 
+function evalAge(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return '';
+  const days = Math.floor((Date.now() - d.getTime()) / 86400000);
+  if (days === 0) return '0d';
+  if (days === 1) return '1d';
+  if (days < 30) return `${days}d`;
+  const weeks = Math.round(days / 7);
+  return `${weeks}w`;
+}
+
 function statusBadgeClass(status) {
   const s = status.toLowerCase();
   if (s.includes('applied')) return 'status-applied';
@@ -415,7 +495,11 @@ function renderRow(r, idx) {
   const applyLinkOnly = url
     ? `<a href="${escape(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Apply</a>`
     : '';
-  const applyLink = [reportHtmlLink, applyLinkOnly].filter(Boolean).join(' · ') || '<span class="muted">—</span>';
+  const verifySlug = r.reportPath ? basename(r.reportPath) : '';
+  const verifyBtn = verifySlug
+    ? `<a href="javascript:void(0)" onclick="openVerify('${verifySlug}');event.stopPropagation()" style="color:#8250df" title="Verify claims + research queries">Verify</a>`
+    : '';
+  const applyLink = [reportHtmlLink, applyLinkOnly, verifyBtn].filter(Boolean).join(' · ') || '<span class="muted">—</span>';
   // Clickable report link — file:// URL opens the .md in the OS default
   // app (Cursor, after we set it via duti). Stop event propagation so
   // clicking the link doesn't toggle the row's expand state.
@@ -427,77 +511,108 @@ function renderRow(r, idx) {
   // Pull richer signals for the expand panel.
   const tldr = getTldr(r.reportPath);
   const positioning = getPositioning(r.reportPath);
-  const stories = getTopStories(r.reportPath, 2);
+  const stories = getTopStories(r.reportPath, 3);
+  const comp = getComp(r.reportPath);
+  const gaps = getKeyGaps(r.reportPath);
+  const whyOk = getWhyGapsDontBlock(r.reportPath);
 
-  // Inline Edge cell — clickable look with arrow + match count
-  const edgeSummary = edge.length > 0
-    ? `<span class="badge score-strong edge-trigger">${edge.length} match${edge.length === 1 ? '' : 'es'} ▾</span>`
-    : '<span class="muted">—</span>';
-
-  // Comprehensive "Why I'm a strong fit" expand panel
-  const tldrBlock = tldr ? `
-<div class="detail-section">
-  <strong>📋 TL;DR (Block A)</strong>
-  <div class="tldr-box">${escape(tldr)}</div>
-</div>` : '';
-
-  const edgeBlock = edge.length === 0 ? '' : `
-<div class="detail-section">
-  <strong>✅ Strongest matches (Block B — CV Match)</strong>
-  <ul class="edge-list">
-    ${edge.map(e => `<li>
-      <div class="edge-row-head"><span class="badge ${scoreBadgeClass(e.score)}">${e.score.toFixed(0)}/5</span> <strong>${escape(e.requirement.slice(0, 200))}</strong></div>
-      <div class="edge-evidence">${escape(e.evidence.slice(0, 500))}${e.evidence.length > 500 ? '…' : ''}</div>
-    </li>`).join('')}
-  </ul>
-</div>`;
-
-  const positioningBlock = positioning ? `
-<div class="detail-section">
-  <strong>🎯 Positioning angle (Block C)</strong>
-  <div class="positioning-box">${escape(positioning).replace(/\n/g, '<br>')}</div>
-</div>` : '';
-
-  const storiesBlock = stories.length === 0 ? '' : `
-<div class="detail-section">
-  <strong>🗣 STAR+R stories to lead with (Block F)</strong>
-  <ol class="story-list">
-    ${stories.map(s => `<li>
-      <strong>For requirement:</strong> ${escape(s.requirement.slice(0, 150))}<br>
-      <span class="muted-text">${escape(s.story.slice(0, 350))}${s.story.length > 350 ? '…' : ''}</span>
-    </li>`).join('')}
-  </ol>
-</div>`;
-
-  // Throttle row classes: defer/blocked rows render dimmer, pickone gets a
-  // gold left-border to signal "this is the one to apply to first".
+  // Throttle row classes
   const throttleClass = r._throttle?.status === 'pickone' ? 'row-throttle-pickone'
     : r._throttle?.status === 'defer' ? 'row-throttle-defer'
     : r._throttle?.status === 'blocked' ? 'row-throttle-blocked'
     : '';
 
+  // ── Meta chips ──────────────────────────────────────────
+  const metaChips = [
+    comp ? `<span class="meta-chip meta-chip-comp">💰 ${escape(comp)}</span>` : '',
+    archetype ? `<span class="meta-chip meta-chip-tier">${escape(archetype)}</span>` : '',
+    r.date ? `<span class="meta-chip">📅 ${escape(r.date)}</span>` : '',
+  ].filter(Boolean).join('');
+
+  // ── Left column: summary + positioning + gaps ────────────
+  const tldrCard = tldr ? `<div class="dcard">
+    <div class="dcard-label">Role at a glance</div>
+    <div class="dcard-body">${escape(tldr)}</div>
+  </div>` : '';
+
+  const posCard = positioning ? `<div class="dcard">
+    <div class="dcard-label">How to position</div>
+    <div class="dcard-body">${escape(positioning).replace(/\n/g, '<br>')}</div>
+  </div>` : '';
+
+  const gapsCard = gaps.length ? `<div class="dcard">
+    <div class="dcard-label">Gaps to address <span style="font-size:9px;font-weight:400;color:#8c959f;margin-left:4px">click for strategy</span></div>
+    <div class="dcard-gaps">${gaps.map(g => {
+      const strategy = getGapStrategy(r.reportPath, g.title);
+      const detailHtml = g.detail ? marked.parse(g.detail) : '';
+      const strategyHtml = strategy ? marked.parse(strategy) : '';
+      const whyHtml = whyOk ? marked.parse(whyOk) : '';
+      return `<span class="gap-chip gap-chip-interactive"
+        onclick="openGapModal(this);event.stopPropagation()"
+        data-title="${escape(g.title)}"
+        data-detail="${escape(detailHtml)}"
+        data-strategy="${escape(strategyHtml)}"
+        data-why="${escape(whyHtml)}"
+        title="Click for addressing strategy">⚠ ${escape(g.title)}</span>`;
+    }).join('')}</div>
+  </div>` : '';
+
+  // ── Right column: top matches ────────────────────────────
+  const matchesCard = edge.length ? `<div class="dcard">
+    <div class="dcard-label">Top matches (Block B)</div>
+    <ul class="match-list">
+      ${edge.map(e => `<li class="${e.score >= 4 ? 'match-yes' : 'match-partial'}">
+        <span class="match-icon">${e.score >= 4 ? '✓' : '~'}</span>
+        <div>
+          <div class="match-req">${escape(e.requirement.slice(0, 90))}</div>
+          <div class="match-ev">${escape(e.evidence.slice(0, 160))}</div>
+        </div>
+      </li>`).join('')}
+    </ul>
+  </div>` : '';
+
+  // ── Stories strip ────────────────────────────────────────
+  const storiesStrip = stories.length ? `<div class="detail-stories-wrap">
+    <div class="dcard-label" style="margin-bottom:6px">Lead interview stories (Block F)</div>
+    <div class="story-chips">
+      ${stories.map((s, i) => `<div class="story-chip">
+        <span class="story-n">${i + 1}</span>
+        <div>
+          <div class="story-req">${escape(s.requirement.slice(0, 110))}</div>
+          <div class="story-ev">${escape(s.story.slice(0, 240))}${s.story.length > 240 ? '…' : ''}</div>
+        </div>
+      </div>`).join('')}
+    </div>
+  </div>` : '';
+
+  // ── Recommendation banner ────────────────────────────────
+  const recBanner = finalRec ? `<div class="rec-banner">
+    <span class="rec-label">Rec</span>
+    <span class="rec-text">${escape(finalRec)}</span>
+    ${url ? `<a href="${escape(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="rec-btn">Apply →</a>` : ''}
+  </div>` : url ? `<div style="font-size:12px;margin-top:6px"><a href="${escape(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🔗 View JD</a></div>` : '';
+
   return `
 <tr class="row ${throttleClass}" data-score="${r.score}" data-archetype="${escape(archetype)}" data-company="${escape(r.company.toLowerCase())}" data-status="${escape(r.status.toLowerCase())}" data-role="${escape(r.role.toLowerCase())}" onclick="toggleDetail('${idx}')">
-  <td class="num">${r.num}</td>
-  <td><span class="badge ${scoreBadgeClass(r.score)}">${r.score.toFixed(2)}</span></td>
-  <td>${escape(archetype) || '<span class="muted">—</span>'}</td>
-  <td><strong>${escape(r.company)}</strong></td>
-  <td>${escape(r.role)}</td>
-  <td>${edgeSummary}</td>
+  <td><span class="badge score-badge-lg ${scoreBadgeClass(r.score)}">${r.score.toFixed(1)}</span></td>
+  <td><strong>${escape(r.company)}</strong>${archetype ? `<span class="tier-tag">${escape(archetype)}</span>` : ''}</td>
+  <td class="role-cell">${escape(r.role)}</td>
   <td><span class="badge ${statusBadgeClass(r.status)}">${escape(r.status)}</span></td>
-  <td>${escape(r.date)}</td>
+  <td class="muted-text">${escape(r.date)}</td>
+  <td class="muted-text">${evalAge(r.date)}</td>
   <td class="action-cell">${applyLink}</td>
 </tr>
 <tr class="detail-row" id="detail-${idx}" style="display:none">
-  <td colspan="9">
+  <td colspan="7">
     <div class="detail-block">
       ${r._throttle?.label ? `<div class="throttle-banner throttle-${r._throttle.status}">${escape(r._throttle.label)}<br><span class="muted-text">${escape(r._throttle.note || '')}</span></div>` : ''}
-      ${tldrBlock}
-      ${edgeBlock}
-      ${positioningBlock}
-      ${storiesBlock}
-      ${finalRec ? `<div class="detail-section"><strong>📌 Final Recommendation</strong><div class="positioning-box">${escape(finalRec).replace(/\n/g, '<br>')}</div></div>` : ''}
-      ${url ? `<div class="detail-section"><strong>🔗 JD URL:</strong> <a href="${escape(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${escape(url)}</a></div>` : ''}
+      ${metaChips ? `<div class="detail-meta">${metaChips}</div>` : ''}
+      <div class="detail-grid">
+        <div class="detail-col">${tldrCard}${posCard}${gapsCard}</div>
+        <div class="detail-col">${matchesCard}</div>
+      </div>
+      ${storiesStrip}
+      ${recBanner}
     </div>
   </td>
 </tr>`;
@@ -696,118 +811,658 @@ function build() {
 <head>
 <meta charset="utf-8">
 <title>Career-Ops Dashboard — ${today}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  * { box-sizing: border-box; }
+  /* ── Design tokens ─────────────────────────────────────────────── */
+  :root {
+    --bg: #f8f9fb;
+    --surface: #ffffff;
+    --surface-2: #f4f4f6;
+    --border: #e5e7eb;
+    --border-strong: #d1d5db;
+    --text: #111827;
+    --text-2: #374151;
+    --text-3: #6b7280;
+    --text-4: #9ca3af;
+    --green: #15803d;
+    --green-fg: #16a34a;
+    --green-bg: #dcfce7;
+    --green-border: #86efac;
+    --blue: #1d4ed8;
+    --blue-fg: #2563eb;
+    --blue-bg: #dbeafe;
+    --blue-border: #93c5fd;
+    --amber: #b45309;
+    --amber-fg: #d97706;
+    --amber-bg: #fef3c7;
+    --amber-border: #fcd34d;
+    --red: #b91c1c;
+    --red-fg: #dc2626;
+    --red-bg: #fee2e2;
+    --red-border: #fca5a5;
+    --purple: #6d28d9;
+    --purple-fg: #7c3aed;
+    --purple-bg: #ede9fe;
+    --purple-border: #c4b5fd;
+    --radius: 8px;
+    --radius-sm: 6px;
+    --radius-full: 9999px;
+    --shadow-sm: 0 1px 2px 0 rgba(0,0,0,.05);
+    --shadow: 0 1px 3px 0 rgba(0,0,0,.1), 0 1px 2px -1px rgba(0,0,0,.1);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -2px rgba(0,0,0,.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,.1), 0 4px 6px -4px rgba(0,0,0,.1);
+    --ring-green: 0 0 0 3px rgba(22,163,74,.15);
+    --ring-blue: 0 0 0 3px rgba(37,99,235,.15);
+  }
+  body.dark {
+    --bg: #0a0a0b;
+    --surface: #18181b;
+    --surface-2: #1f1f23;
+    --border: #27272a;
+    --border-strong: #3f3f46;
+    --text: #fafafa;
+    --text-2: #e4e4e7;
+    --text-3: #a1a1aa;
+    --text-4: #71717a;
+    --green: #4ade80;
+    --green-fg: #86efac;
+    --green-bg: rgba(22,163,74,.12);
+    --green-border: rgba(22,163,74,.3);
+    --blue: #93c5fd;
+    --blue-fg: #60a5fa;
+    --blue-bg: rgba(37,99,235,.12);
+    --blue-border: rgba(37,99,235,.3);
+    --amber: #fbbf24;
+    --amber-fg: #fcd34d;
+    --amber-bg: rgba(217,119,6,.12);
+    --amber-border: rgba(217,119,6,.3);
+    --red: #f87171;
+    --red-fg: #fca5a5;
+    --red-bg: rgba(220,38,38,.12);
+    --red-border: rgba(220,38,38,.3);
+    --purple: #c4b5fd;
+    --purple-fg: #a78bfa;
+    --purple-bg: rgba(124,58,237,.12);
+    --purple-border: rgba(124,58,237,.3);
+    --ring-green: 0 0 0 3px rgba(74,222,128,.15);
+    --ring-blue: 0 0 0 3px rgba(147,197,253,.15);
+  }
+
+  /* ── Reset & base ────────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; }
   body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    color: #1f2328; background: #f6f8fa; margin: 0; padding: 24px; line-height: 1.5;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    background: var(--bg);
+    margin: 0;
+    padding: 24px 28px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
   }
   .container { max-width: 1400px; margin: 0 auto; }
-  h1 { margin: 0 0 4px; font-size: 26px; }
-  h2 { margin: 28px 0 12px; font-size: 18px; padding-bottom: 6px; border-bottom: 1px solid #d0d7de; }
-  .subtle { color: #57606a; font-size: 13px; margin-bottom: 18px; }
+  h1 { margin: 0 0 2px; font-size: 22px; font-weight: 700; letter-spacing: -0.4px; }
+  h2 { margin: 32px 0 14px; font-size: 16px; font-weight: 600; padding-bottom: 8px;
+       border-bottom: 1px solid var(--border); letter-spacing: -0.2px; }
+  a { color: var(--blue-fg); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px;
+         background: var(--surface-2); padding: 1px 5px; border-radius: 4px; }
+  .subtle { color: var(--text-3); font-size: 12.5px; margin-bottom: 20px; }
+  .muted { color: var(--text-4); }
+  .muted-text { color: var(--text-3); font-size: 12px; }
 
-  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin: 16px 0 24px; }
-  .stat { background: white; padding: 14px 16px; border-radius: 8px; border: 1px solid #d0d7de; }
-  .stat-label { font-size: 11px; color: #57606a; text-transform: uppercase; letter-spacing: 0.5px; }
-  .stat-value { font-size: 24px; font-weight: 600; color: #1f2328; margin-top: 4px; }
-  .stat-strong .stat-value { color: #1a7f37; }
+  /* ── Toolbar ─────────────────────────────────────────────────── */
+  .toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+  .toolbar h1 { flex: 1; }
+  .toolbar-btn {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 5px 13px;
+    font-size: 12px; font-weight: 500; cursor: pointer;
+    color: var(--text-3); transition: background .12s, border-color .12s;
+    font-family: inherit;
+  }
+  .toolbar-btn:hover { background: var(--surface-2); border-color: var(--border-strong); color: var(--text-2); }
 
-  .panel { background: white; border-radius: 8px; border: 1px solid #d0d7de; padding: 20px; margin-bottom: 18px; }
-  .panel-strong { border: 2px solid #2da44e; box-shadow: 0 1px 6px rgba(46, 164, 78, 0.15); }
-  .panel-title { font-size: 18px; font-weight: 600; margin: 0 0 12px; }
-  .panel-title .pill { font-size: 12px; background: #2da44e; color: white; padding: 2px 10px; border-radius: 99px; margin-left: 8px; vertical-align: middle; }
+  /* ── KPI stat cards ──────────────────────────────────────────── */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
+    gap: 12px; margin: 16px 0 24px;
+  }
+  .stat {
+    background: var(--surface); padding: 18px 20px; border-radius: var(--radius);
+    border: 1px solid var(--border); box-shadow: var(--shadow-sm);
+    transition: border-color .15s, box-shadow .15s;
+    position: relative; overflow: hidden;
+  }
+  .stat::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: var(--border); border-radius: var(--radius) var(--radius) 0 0;
+  }
+  .stat-strong::before { background: var(--green-fg); }
+  .stat { cursor: pointer; }
+  .stat:hover { border-color: var(--border-strong); box-shadow: var(--shadow); }
+  .stat.active { border-color: var(--blue-fg); box-shadow: var(--ring-blue); }
+  .stat-strong:hover, .stat-strong.active { border-color: var(--green-fg); box-shadow: var(--ring-green); }
+  .stat-label { font-size: 11px; color: var(--text-3); text-transform: uppercase;
+                letter-spacing: 0.06em; font-weight: 600; }
+  .stat-value {
+    font-size: 32px; font-weight: 700; color: var(--text);
+    margin-top: 6px; letter-spacing: -1px;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-strong .stat-value { color: var(--green-fg); }
+  .stat-caret { font-size: 11px; color: var(--text-4); margin-top: 8px; }
 
+  /* ── Panels / cards ──────────────────────────────────────────── */
+  .panel {
+    background: var(--surface); border-radius: var(--radius);
+    border: 1px solid var(--border); box-shadow: var(--shadow-sm);
+    padding: 22px 24px; margin-bottom: 16px;
+  }
+  .panel-strong {
+    border-color: var(--green-fg);
+    box-shadow: var(--shadow-sm), 0 0 0 1px var(--green-fg), 0 4px 20px rgba(22,163,74,.08);
+    position: relative;
+  }
+  .panel-strong::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: var(--green-fg); border-radius: var(--radius) var(--radius) 0 0;
+  }
+  .panel-title {
+    font-size: 16px; font-weight: 600; margin: 0 0 14px;
+    letter-spacing: -0.2px; color: var(--text); display: flex; align-items: center; gap: 8px;
+  }
+  .panel-title .pill {
+    font-size: 11px; font-weight: 600;
+    background: var(--green-fg); color: #fff;
+    padding: 1px 9px; border-radius: var(--radius-full);
+    letter-spacing: 0;
+  }
+  .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+
+  /* ── Tables ──────────────────────────────────────────────────── */
+  .table-scroll { overflow-x: auto; overflow-y: auto; max-height: 520px; border-radius: 0 0 var(--radius-sm) var(--radius-sm); }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th { text-align: left; padding: 8px 10px; border-bottom: 2px solid #d0d7de; background: #f6f8fa; font-weight: 600; cursor: pointer; user-select: none; position: sticky; top: 0; }
-  th:hover { background: #eaeef2; }
-  td { padding: 8px 10px; border-bottom: 1px solid #eaeef2; vertical-align: top; }
-  tr.row { cursor: pointer; }
-  tr.row:hover { background: #f6f8fa; }
-  tr.row[data-score] { transition: background 0.1s; }
-  td.num { color: #57606a; font-variant-numeric: tabular-nums; }
-  td.action-cell a { color: #0969da; text-decoration: none; font-weight: 500; }
+  thead { position: sticky; top: 0; z-index: 2; }
+  th {
+    text-align: left; padding: 9px 12px;
+    background: var(--surface-2); color: var(--text-3);
+    font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  th.sortable { cursor: pointer; user-select: none; }
+  th.sortable:hover { background: var(--border); color: var(--text-2); }
+  .sort-arrow { color: var(--blue-fg); font-size: 10px; }
+  td {
+    padding: 10px 12px; border-bottom: 1px solid var(--border);
+    vertical-align: top; color: var(--text-2); font-weight: 400;
+  }
+  tr.row { cursor: pointer; transition: background .1s; }
+  tr.row:hover td { background: var(--surface-2); }
+  td.num { color: var(--text-3); font-variant-numeric: tabular-nums; }
+  .role-cell { color: var(--text); font-weight: 500; }
+  td.action-cell a { color: var(--blue-fg); font-weight: 500; font-size: 12px; }
   td.action-cell a:hover { text-decoration: underline; }
+  .tier-tag {
+    font-size: 10px; color: var(--text-3); background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: 4px;
+    padding: 0 5px; margin-left: 5px; font-weight: 500; vertical-align: middle;
+  }
 
-  .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums; }
-  .score-strong { background: #dafbe1; color: #1a7f37; }
-  .score-moderate { background: #fff8c5; color: #9a6700; }
-  .score-weak { background: #eaeef2; color: #57606a; }
-  .status-evaluated { background: #ddf4ff; color: #0969da; }
-  .status-applied { background: #fff1e5; color: #9a6700; }
-  .status-interview { background: #f8edff; color: #8250df; }
-  .status-offer { background: #dafbe1; color: #1a7f37; }
-  .status-rejected { background: #ffebe9; color: #cf222e; }
-  .status-discarded { background: #eaeef2; color: #57606a; }
+  /* ── Throttle row visual states ──────────────────────────────── */
+  tr.row-throttle-pickone > td:first-child { box-shadow: inset 3px 0 0 var(--amber-fg); }
+  tr.row-throttle-defer { opacity: .6; }
+  tr.row-throttle-defer > td:first-child { box-shadow: inset 3px 0 0 var(--text-4); }
+  tr.row-throttle-blocked { opacity: .4; }
+  tr.row-throttle-blocked > td:first-child { box-shadow: inset 3px 0 0 var(--red-fg); }
+  tr.row-throttle-cooldown { opacity: .45; }
+  tr.row-throttle-cooldown > td:first-child { box-shadow: inset 3px 0 0 var(--red-fg); }
+  tr.row-throttle-open > td:first-child { box-shadow: inset 3px 0 0 var(--green-fg); }
+  .throttle-banner { padding: 11px 14px; border-radius: var(--radius-sm); margin: 4px 0 12px; font-weight: 500; font-size: 13px; line-height: 1.5; }
+  .throttle-pickone  { background: var(--amber-bg);  color: var(--amber);  border-left: 3px solid var(--amber-fg); }
+  .throttle-defer    { background: var(--surface-2); color: var(--text-3); border-left: 3px solid var(--text-4); }
+  .throttle-blocked, .throttle-cooldown { background: var(--red-bg); color: var(--red-fg); border-left: 3px solid var(--red-fg); }
+  .throttle-open     { background: var(--green-bg);  color: var(--green);  border-left: 3px solid var(--green-fg); }
 
-  .detail-block { background: #f6f8fa; padding: 14px 16px; border-radius: 6px; margin: 4px 0; font-size: 13px; }
+  /* ── Badges ──────────────────────────────────────────────────── */
+  .badge {
+    display: inline-flex; align-items: center;
+    padding: 2px 9px; border-radius: var(--radius-full);
+    font-size: 11.5px; font-weight: 600;
+    font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
+  .score-badge-lg { font-size: 13px; padding: 3px 11px; }
+  .score-strong  { background: var(--green-bg);  color: var(--green); }
+  .score-moderate { background: var(--amber-bg); color: var(--amber); }
+  .score-weak    { background: var(--surface-2); color: var(--text-3); }
+  .status-evaluated { background: var(--blue-bg);   color: var(--blue-fg); }
+  .status-applied   { background: var(--amber-bg);  color: var(--amber-fg); }
+  .status-interview { background: var(--purple-bg); color: var(--purple-fg); }
+  .status-offer     { background: var(--green-bg);  color: var(--green-fg); }
+  .status-rejected  { background: var(--red-bg);    color: var(--red-fg); }
+  .status-discarded { background: var(--surface-2); color: var(--text-3); }
+
+  /* ── Age badges ──────────────────────────────────────────────── */
+  .age-stale { color: var(--red-fg); font-weight: 600; font-size: 12px; }
+  .age-ok    { color: var(--text-3); font-size: 12px; }
+
+  /* ── Filters bar ─────────────────────────────────────────────── */
+  .filters { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 14px; }
+  .filters input, .filters select {
+    padding: 7px 11px; font-size: 13px; font-family: inherit;
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    background: var(--surface); color: var(--text);
+    outline: none; transition: border-color .15s, box-shadow .15s;
+  }
+  .filters input { flex: 1; min-width: 200px; }
+  .filters input:focus, .filters select:focus {
+    border-color: var(--blue-fg); box-shadow: var(--ring-blue);
+  }
+  .filters-sticky {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--surface);
+    padding: 12px 0; margin: 0 0 4px;
+    border-bottom: 1px solid var(--border);
+    box-shadow: 0 4px 6px -4px rgba(0,0,0,.08);
+  }
+  body.dark .filters-sticky { box-shadow: 0 4px 6px -4px rgba(0,0,0,.4); }
+
+  /* ── Bar chart ───────────────────────────────────────────────── */
+  .bar-chart { display: flex; flex-direction: column; gap: 9px; }
+  .bar-row { display: grid; grid-template-columns: 110px 1fr 38px; gap: 10px; align-items: center; font-size: 13px; }
+  .bar-track { background: var(--surface-2); height: 14px; border-radius: var(--radius-full); overflow: hidden; }
+  .bar-fill { background: linear-gradient(90deg, var(--green-fg), var(--blue-fg)); height: 100%; border-radius: var(--radius-full); }
+  .bar-row-label { font-weight: 500; color: var(--text-2); font-size: 12.5px; }
+  .bar-row-count { text-align: right; color: var(--text-3); font-variant-numeric: tabular-nums; font-weight: 600; font-size: 12.5px; }
+
+  /* ── Segmented distribution bar ──────────────────────────────── */
+  .seg-bar { display: flex; flex-direction: column; gap: 6px; }
+  .seg-bar-counts { display: flex; gap: 2px; align-items: flex-end; height: 22px; }
+  .seg-bar-count {
+    flex: 1; text-align: center; font-size: 11.5px; font-weight: 600;
+    color: var(--text-2); font-variant-numeric: tabular-nums;
+    transition: opacity .15s;
+  }
+  .seg-bar-count.zero { opacity: 0.35; font-weight: 500; }
+  .seg-bar-track {
+    display: flex; height: 26px; border-radius: var(--radius-sm);
+    overflow: hidden; background: var(--surface-2); border: 1px solid var(--border);
+  }
+  .seg-bar-segment {
+    height: 100%; transition: flex-grow .25s;
+    border-right: 1px solid var(--surface);
+  }
+  .seg-bar-segment:last-child { border-right: none; }
+  .seg-bar-segment.zero { flex-grow: 0.05 !important; opacity: 0.35; }
+  .seg-bar-segment.s-strong   { background: var(--green-fg); }
+  .seg-bar-segment.s-good     { background: var(--blue-fg); }
+  .seg-bar-segment.s-moderate { background: var(--amber-fg); }
+  .seg-bar-segment.s-weak     { background: var(--red-fg); opacity: 0.7; }
+  .seg-bar-segment.s-none     { background: var(--text-4); opacity: 0.5; }
+  .seg-bar-labels { display: flex; gap: 2px; }
+  .seg-bar-label {
+    flex: 1; text-align: center; font-size: 10.5px; font-weight: 600;
+    color: var(--text-3); text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .seg-bar-label .seg-bar-range { display: block; font-size: 10px; font-weight: 500;
+    color: var(--text-4); text-transform: none; letter-spacing: 0; margin-top: 1px; }
+
+  /* ── Detail expand panel ─────────────────────────────────────── */
+  .detail-block { background: var(--surface-2); padding: 14px 16px; border-radius: var(--radius-sm); margin: 2px 0; font-size: 13px; }
   .detail-section { margin: 10px 0; }
-  .detail-section code { background: white; padding: 2px 6px; border-radius: 3px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
-  .edge-list, .story-list { margin: 6px 0; padding-left: 0; list-style: none; }
-  .edge-list li, .story-list li { padding: 10px 12px; margin: 6px 0; background: white; border-left: 3px solid #2da44e; border-radius: 4px; line-height: 1.5; }
-  .story-list { counter-reset: stry; padding-left: 0; }
-  .story-list li { counter-increment: stry; border-left-color: #8250df; }
-  .story-list li::before { content: counter(stry) ". "; color: #8250df; font-weight: 700; }
-  .edge-row-head { margin-bottom: 4px; }
-  .edge-row-head .badge { margin-right: 8px; }
-  .edge-evidence { color: #57606a; font-size: 13px; line-height: 1.5; }
-  .tldr-box, .positioning-box { background: white; padding: 10px 12px; border-left: 3px solid #0969da; border-radius: 4px; line-height: 1.5; font-size: 13px; }
-  .tldr-box { border-left-color: #1a7f37; }
+  .detail-section code { background: var(--surface); padding: 2px 6px; border-radius: 4px; }
+  .tldr-box, .positioning-box {
+    background: var(--surface); padding: 10px 13px;
+    border-left: 3px solid var(--blue-fg); border-radius: 4px;
+    line-height: 1.55; font-size: 13px;
+  }
+  .tldr-box { border-left-color: var(--green-fg); }
   .edge-trigger { cursor: pointer; user-select: none; }
   .edge-trigger:hover { filter: brightness(0.92); }
-  .muted { color: #8c959f; }
-  .muted-text { color: #57606a; font-size: 12.5px; }
-  /* Throttle row visual states */
-  tr.row-throttle-pickone td { box-shadow: inset 4px 0 0 #d4a017; }
-  tr.row-throttle-defer { opacity: 0.65; }
-  tr.row-throttle-defer td { box-shadow: inset 4px 0 0 #8c959f; }
-  tr.row-throttle-blocked { opacity: 0.45; }
-  tr.row-throttle-blocked td { box-shadow: inset 4px 0 0 #cf222e; }
-  tr.row-throttle-cooldown { opacity: 0.55; }
-  tr.row-throttle-cooldown td { box-shadow: inset 4px 0 0 #cf222e; }
-  tr.row-throttle-open td { box-shadow: inset 4px 0 0 #1a7f37; }
-  .throttle-banner { padding: 12px 14px; border-radius: 6px; margin: 4px 0 12px; font-weight: 600; line-height: 1.5; }
-  .throttle-pickone { background: #fff8c5; color: #57430a; border-left: 4px solid #d4a017; }
-  .throttle-defer { background: #f6f8fa; color: #57606a; border-left: 4px solid #8c959f; }
-  .throttle-blocked { background: #ffebe9; color: #cf222e; border-left: 4px solid #cf222e; }
-  .throttle-cooldown { background: #ffebe9; color: #cf222e; border-left: 4px solid #cf222e; }
-  .throttle-open { background: #dafbe1; color: #1a7f37; border-left: 4px solid #1a7f37; }
+  /* Meta chips */
+  .detail-meta { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 12px; }
+  .meta-chip {
+    display: inline-flex; align-items: center; padding: 2px 9px;
+    border-radius: var(--radius-full); font-size: 11px; font-weight: 600;
+    background: var(--surface-2); border: 1px solid var(--border); color: var(--text-3); gap: 3px;
+  }
+  .meta-chip-comp { background: var(--green-bg); border-color: var(--green-border); color: var(--green); }
+  .meta-chip-tier { background: var(--blue-bg);  border-color: var(--blue-border);  color: var(--blue-fg); }
+  /* Two-column detail grid */
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  .detail-col  { display: flex; flex-direction: column; gap: 8px; }
+  @media (max-width: 640px) { .detail-grid { grid-template-columns: 1fr; } }
+  .dcard { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; }
+  .dcard-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-4); margin-bottom: 6px; }
+  .dcard-body { font-size: 12.5px; line-height: 1.55; color: var(--text-2); }
+  .dcard-gaps { display: flex; flex-wrap: wrap; gap: 4px; }
+  .gap-chip {
+    font-size: 11px; padding: 2px 8px;
+    background: var(--amber-bg); border: 1px solid var(--amber-border);
+    border-radius: var(--radius-full); color: var(--amber);
+  }
+  .gap-chip-interactive { cursor: pointer; transition: background .12s, transform .1s; }
+  .gap-chip-interactive:hover { background: var(--amber-border); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+  /* Match list */
+  .match-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  .match-list li { display: flex; gap: 7px; align-items: flex-start; }
+  .match-icon { width: 15px; height: 15px; border-radius: 50%; font-size: 9px; font-weight: 800;
+                display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
+  .match-yes .match-icon     { background: var(--green-bg);  color: var(--green); }
+  .match-partial .match-icon { background: var(--amber-bg);  color: var(--amber); }
+  .match-req { font-size: 12px; font-weight: 600; color: var(--text); line-height: 1.3; }
+  .match-ev  { font-size: 11.5px; color: var(--text-3); line-height: 1.4; margin-top: 1px; }
+  /* Stories */
+  .detail-stories-wrap { margin-bottom: 10px; }
+  .story-chips { display: flex; flex-direction: column; gap: 5px; }
+  .story-chip {
+    display: flex; gap: 9px; align-items: flex-start;
+    background: var(--surface); border-left: 3px solid var(--purple-fg);
+    border-radius: 4px; padding: 7px 10px;
+  }
+  .story-n {
+    font-size: 10px; font-weight: 700; color: var(--purple-fg);
+    background: var(--purple-bg); border-radius: 50%;
+    width: 16px; height: 16px; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 2px;
+  }
+  .story-req { font-size: 12px; font-weight: 600; color: var(--text); }
+  .story-ev  { font-size: 11.5px; color: var(--text-3); margin-top: 2px; line-height: 1.4; }
+  /* Recommendation banner */
+  .rec-banner {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--green-bg); border: 1px solid var(--green-border);
+    border-radius: var(--radius-sm); padding: 9px 12px; flex-wrap: wrap; margin-top: 4px;
+  }
+  .rec-label {
+    font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em;
+    background: var(--green-fg); color: #fff; padding: 2px 8px; border-radius: var(--radius-full);
+    white-space: nowrap;
+  }
+  .rec-text  { font-size: 12.5px; color: var(--text-2); flex: 1; min-width: 0; line-height: 1.4; }
+  .rec-btn {
+    background: var(--green-fg); color: #fff; padding: 5px 13px;
+    border-radius: var(--radius-sm); font-size: 12px; font-weight: 600;
+    text-decoration: none; white-space: nowrap; transition: background .12s;
+  }
+  .rec-btn:hover { background: var(--green); color: #fff; text-decoration: none; }
 
-  .filters { display: flex; gap: 10px; flex-wrap: wrap; margin: 12px 0; }
-  .filters input, .filters select { padding: 6px 10px; font-size: 13px; border: 1px solid #d0d7de; border-radius: 6px; }
-  .filters input { flex: 1; min-width: 200px; }
+  /* ── Stat panels (expandable) ────────────────────────────────── */
+  .stat-panel {
+    display: none; background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); box-shadow: var(--shadow-sm);
+    padding: 20px 24px; margin-bottom: 16px;
+  }
+  .stat-panel.open { display: block; }
+  .stat-panel-title { font-size: 16px; font-weight: 600; margin: 0 0 14px; display: flex; align-items: center; gap: 10px; letter-spacing: -0.2px; }
+  .stat-panel-title .pill { font-size: 11px; background: var(--blue-fg); color: #fff; padding: 1px 9px; border-radius: var(--radius-full); }
+  .stat-panel .loading { color: var(--text-3); font-size: 13px; padding: 12px 0; }
+  /* ── Skeleton loaders ────────────────────────────────────────── */
+  .skeleton-stack { display: flex; flex-direction: column; gap: 10px; padding: 6px 0 4px; }
+  .skeleton-bar {
+    height: 18px; border-radius: var(--radius-sm);
+    background: linear-gradient(90deg, var(--surface-2) 0%, var(--border) 50%, var(--surface-2) 100%);
+    background-size: 200% 100%; animation: skeleton-pulse 1.4s ease-in-out infinite;
+  }
+  .skeleton-bar.sk-title { height: 22px; width: 38%; }
+  .skeleton-bar.sk-line  { height: 14px; width: 92%; }
+  .skeleton-bar.sk-line-short { height: 14px; width: 64%; }
+  @keyframes skeleton-pulse {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+  .skeleton-error { color: var(--red-fg); font-size: 13px; padding: 12px 0; }
+  .bucket-grid { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
+  .bucket-card {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 12px 16px; min-width: 100px; text-align: center;
+  }
+  .bucket-card .bval { font-size: 22px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+  .bucket-card .blbl { font-size: 11px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
 
-  .bar-chart { display: flex; flex-direction: column; gap: 6px; }
-  .bar-row { display: grid; grid-template-columns: 140px 1fr 50px; gap: 10px; align-items: center; font-size: 13px; }
-  .bar-track { background: #eaeef2; height: 18px; border-radius: 4px; overflow: hidden; }
-  .bar-fill { background: linear-gradient(90deg, #54aeff, #2da44e); height: 100%; }
+  /* ── Batch progress overlay ──────────────────────────────────── */
+  #batch-overlay {
+    display: none; position: fixed; bottom: 20px; right: 20px; width: 360px; z-index: 1000;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); box-shadow: var(--shadow-lg); font-size: 13px; overflow: hidden;
+  }
+  #batch-overlay.visible { display: block; }
+  .batch-header {
+    display: flex; align-items: center; padding: 12px 16px;
+    background: var(--surface-2); border-bottom: 1px solid var(--border); gap: 8px;
+  }
+  .batch-header-title { font-weight: 600; flex: 1; font-size: 13px; color: var(--text); }
+  .batch-close { background: none; border: none; cursor: pointer; color: var(--text-3); font-size: 16px; padding: 0 4px; }
+  .batch-progress-bar { height: 3px; background: var(--border); }
+  .batch-progress-fill { height: 100%; background: linear-gradient(90deg, var(--green-fg), var(--blue-fg)); transition: width .5s; }
+  .batch-body { padding: 12px 16px; max-height: 220px; overflow-y: auto; }
+  .batch-stat-row { display: flex; justify-content: space-between; padding: 3px 0; }
+  .batch-stat-label { color: var(--text-3); }
+  .batch-stat-val { font-weight: 600; color: var(--text); }
+  .batch-recent { margin-top: 10px; }
+  .batch-recent-item { padding: 6px 0; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-3); }
+  .batch-recent-item a { color: var(--blue-fg); }
 
-  code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
-  a { color: #0969da; }
+  /* ── Verify modal ────────────────────────────────────────────── */
+  #verify-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 2000; backdrop-filter: blur(2px); }
+  #verify-backdrop.visible { display: block; }
+  #verify-modal {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    width: min(680px,96vw); max-height: 80vh; overflow-y: auto; z-index: 2001;
+    background: var(--surface); border-radius: 12px; border: 1px solid var(--border);
+    box-shadow: var(--shadow-lg);
+  }
+  .verify-header {
+    position: sticky; top: 0; background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 16px 20px; display: flex; align-items: center; gap: 10px;
+    border-radius: 12px 12px 0 0;
+  }
+  .verify-title { font-size: 15px; font-weight: 600; flex: 1; color: var(--text); }
+  .verify-close { background: none; border: none; font-size: 18px; cursor: pointer; color: var(--text-3); padding: 0 2px; }
+  .verify-close:hover { color: var(--text); }
+  .verify-body { padding: 20px; }
+  .verify-section { margin-bottom: 18px; }
+  .verify-section h4 { margin: 0 0 8px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-3); font-weight: 700; }
+  .verify-claim { padding: 8px 12px; margin: 4px 0; background: var(--surface-2); border-radius: var(--radius-sm); font-size: 13px; line-height: 1.5; }
+  .query-card { margin: 6px 0; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
+  .query-card-header { padding: 10px 14px; background: var(--surface-2); font-weight: 600; font-size: 13px; display: flex; justify-content: space-between; align-items: center; }
+  .query-text { padding: 10px 14px; font-size: 12.5px; line-height: 1.6; color: var(--text-3); font-family: ui-monospace, monospace; }
+  .copy-btn {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 4px;
+    padding: 3px 10px; font-size: 11px; cursor: pointer; color: var(--text-3); font-family: inherit;
+  }
+  .copy-btn:hover { background: var(--surface-2); color: var(--text-2); }
+  .evidence-area {
+    width: 100%; min-height: 100px; padding: 10px; border: 1px solid var(--border);
+    border-radius: var(--radius-sm); font-size: 13px; font-family: inherit;
+    resize: vertical; background: var(--surface); color: var(--text);
+  }
+  .evidence-area:focus { outline: none; border-color: var(--blue-fg); box-shadow: var(--ring-blue); }
+  .save-evidence-btn {
+    margin-top: 8px; background: var(--green-fg); color: #fff; border: none;
+    padding: 7px 16px; border-radius: var(--radius-sm); font-size: 13px; cursor: pointer; font-family: inherit;
+  }
+  .save-evidence-btn:hover { background: var(--green); }
+
+  /* ── Gap modal ───────────────────────────────────────────────── */
+  #gap-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 2000; backdrop-filter: blur(2px); }
+  #gap-backdrop.visible { display: block; }
+  #gap-modal {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    width: min(620px,96vw); max-height: 82vh; overflow-y: auto; z-index: 2001;
+    background: var(--surface); border-radius: 12px; border: 1px solid var(--border);
+    box-shadow: var(--shadow-lg);
+  }
+  .gap-modal-header {
+    position: sticky; top: 0; background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 14px 20px; display: flex; align-items: center; gap: 10px; z-index: 1;
+    border-radius: 12px 12px 0 0;
+  }
+  .gap-modal-badge {
+    font-size: 11px; padding: 2px 9px; border-radius: var(--radius-full); font-weight: 600;
+    background: var(--amber-bg); border: 1px solid var(--amber-border); color: var(--amber); flex-shrink: 0;
+  }
+  .gap-modal-title { font-size: 15px; font-weight: 600; flex: 1; color: var(--text); }
+  .gap-modal-body { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+  .gap-section { border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--border); }
+  .gap-section-label {
+    padding: 8px 14px; background: var(--surface-2); font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-3); border-bottom: 1px solid var(--border);
+  }
+  .gap-section-body { padding: 12px 14px; font-size: 13px; line-height: 1.65; color: var(--text-2); }
+  .gap-section-body p { margin: 0 0 6px; }
+  .gap-section-body p:last-child { margin: 0; }
+  .gap-section-body ul, .gap-section-body ol { margin: 4px 0 6px; padding-left: 22px; }
+  .gap-section-body li { margin: 2px 0; }
+  .gap-section-body li > p { margin: 0; }
+  .gap-section-body h1, .gap-section-body h2, .gap-section-body h3, .gap-section-body h4 {
+    margin: 8px 0 4px; font-size: 13px; font-weight: 700; color: var(--text); letter-spacing: -0.1px;
+  }
+  .gap-section-body code {
+    background: var(--surface-2); padding: 1px 5px; border-radius: 4px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px;
+  }
+  .gap-section-body pre {
+    background: var(--surface-2); padding: 9px 12px; border-radius: var(--radius-sm);
+    overflow-x: auto; font-size: 12px; margin: 6px 0;
+  }
+  .gap-section-body pre code { background: none; padding: 0; }
+  .gap-section-body strong { color: var(--text); font-weight: 600; }
+  .gap-section-body a { color: var(--blue-fg); }
+  .gap-section.gap-ok { border-color: var(--green-border); }
+  .gap-section.gap-ok .gap-section-label { background: var(--green-bg); color: var(--green); border-color: var(--green-border); }
+  .gap-section.gap-strategy { border-color: var(--purple-border); }
+  .gap-section.gap-strategy .gap-section-label { background: var(--purple-bg); color: var(--purple); border-color: var(--purple-border); }
+  .gap-empty { color: var(--text-4); font-style: italic; font-size: 13px; padding: 8px 0; }
+
+  /* ── Toast component ─────────────────────────────────────────── */
+  #toast-container {
+    position: fixed; right: 18px; bottom: 18px; z-index: 3000;
+    display: flex; flex-direction: column; gap: 8px;
+    max-width: min(360px, calc(100vw - 36px)); pointer-events: none;
+  }
+  .toast {
+    background: var(--surface); color: var(--text);
+    border: 1px solid var(--border); border-left: 3px solid var(--blue-fg);
+    border-radius: var(--radius-sm); box-shadow: var(--shadow-md);
+    padding: 11px 14px; font-size: 13px; line-height: 1.5;
+    pointer-events: auto;
+    animation: toast-in .22s ease-out;
+    display: flex; align-items: flex-start; gap: 9px;
+  }
+  .toast.toast-leave { animation: toast-out .25s ease-in forwards; }
+  .toast-success { border-left-color: var(--green-fg); }
+  .toast-error   { border-left-color: var(--red-fg); }
+  .toast-info    { border-left-color: var(--blue-fg); }
+  .toast-icon { flex-shrink: 0; font-size: 14px; line-height: 1.45; }
+  .toast-success .toast-icon { color: var(--green-fg); }
+  .toast-error   .toast-icon { color: var(--red-fg); }
+  .toast-info    .toast-icon { color: var(--blue-fg); }
+  .toast-msg { flex: 1; min-width: 0; word-wrap: break-word; }
+  .toast-close {
+    background: none; border: none; cursor: pointer;
+    color: var(--text-4); font-size: 14px; padding: 0 0 0 4px;
+    flex-shrink: 0; line-height: 1;
+  }
+  .toast-close:hover { color: var(--text-2); }
+  @keyframes toast-in {
+    0%   { opacity: 0; transform: translateY(12px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes toast-out {
+    0%   { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(8px); }
+  }
+
+  /* ── Touch-target audit (>=44x44 on coarse pointers / mobile) ─── */
+  @media (hover: none) and (pointer: coarse), (max-width: 640px) {
+    .toolbar-btn { min-height: 44px; min-width: 44px; padding: 10px 16px; font-size: 13px; }
+    .stat { min-height: 88px; padding: 16px 18px; }
+    th.sortable { min-height: 44px; padding-top: 12px; padding-bottom: 12px; }
+    tr.row > td { padding-top: 12px; padding-bottom: 12px; }
+    .gap-chip-interactive { min-height: 44px; padding: 12px 14px; display: inline-flex; align-items: center; }
+    .badge { min-height: 28px; padding: 6px 12px; }
+    td > .badge, .badge.score-badge-lg { min-height: 32px; padding: 7px 12px; }
+    /* Pills inside tappable rows get a wider hit-area through their td padding above. */
+    .batch-close, .verify-close { min-height: 44px; min-width: 44px; padding: 10px; font-size: 18px; }
+    #batch-toggle-btn, #dark-toggle { min-height: 44px; min-width: 44px; }
+    .rec-btn { min-height: 44px; padding: 12px 18px; display: inline-flex; align-items: center; }
+    .filters input, .filters select { min-height: 44px; padding: 10px 12px; font-size: 14px; }
+    .verify-submit { min-height: 44px; padding: 12px 20px; }
+  }
 </style>
 </head>
 <body>
 <div class="container">
 
-  <h1>Career-Ops Dashboard</h1>
-  <div class="subtle">Generated ${escape(generated)} · Reports today: ${reportsToday}</div>
+  <div class="toolbar">
+    <h1>Career-Ops Dashboard</h1>
+    <button class="toolbar-btn" onclick="toggleDark()" id="dark-toggle">☀︎ Light</button>
+    <button class="toolbar-btn" id="batch-toggle-btn" onclick="toggleBatchOverlay()" style="display:none">⚡ Batch</button>
+  </div>
+  <div class="subtle">Generated ${escape(generated)} · Reports today: ${reportsToday} · <span id="live-updated"></span></div>
+
+  <!-- Batch progress overlay -->
+  <div id="batch-overlay">
+    <div class="batch-header">
+      <span class="batch-header-title" id="batch-title">⚡ Batch in progress</span>
+      <button class="batch-close" onclick="dismissBatchOverlay()">✕</button>
+    </div>
+    <div class="batch-progress-bar"><div class="batch-progress-fill" id="batch-bar" style="width:0%"></div></div>
+    <div class="batch-body" id="batch-body"></div>
+  </div>
+
+  <!-- Gap addressing modal -->
+  <div id="gap-backdrop" onclick="closeGapModal()">
+    <div id="gap-modal" onclick="event.stopPropagation()">
+      <div class="gap-modal-header">
+        <span class="gap-modal-badge">⚠ Gap</span>
+        <div class="gap-modal-title" id="gap-modal-title"></div>
+        <button class="verify-close" onclick="closeGapModal()">✕</button>
+      </div>
+      <div class="gap-modal-body" id="gap-modal-body"></div>
+    </div>
+  </div>
+
+  <!-- Toast container -->
+  <div id="toast-container" aria-live="polite" aria-atomic="false"></div>
+
+  <!-- Verify claims modal -->
+  <div id="verify-backdrop" onclick="closeVerify()">
+    <div id="verify-modal" onclick="event.stopPropagation()">
+      <div class="verify-header">
+        <div class="verify-title" id="verify-title">Verify claims</div>
+        <button class="verify-close" onclick="closeVerify()">✕</button>
+      </div>
+      <div class="verify-body" id="verify-body"></div>
+    </div>
+  </div>
 
   <div class="stats">
-    <div class="stat ${applyNow.length > 0 ? 'stat-strong' : ''}">
+    <div class="stat ${applyNow.length > 0 ? 'stat-strong' : ''}" onclick="document.getElementById('apply-now-section').scrollIntoView({behavior:'smooth'})" title="Click to scroll to Apply-Now queue">
       <div class="stat-label">Apply-Now (≥ 4.0)</div>
-      <div class="stat-value">${applyNow.length}</div>
+      <div class="stat-value" id="live-apply-now">${applyNow.length}</div>
+      <div class="stat-caret">▾ click to expand</div>
     </div>
-    <div class="stat">
+    <div class="stat" onclick="toggleStatPanel('evaluations')" title="Click to see all evaluations">
       <div class="stat-label">Total evaluations</div>
-      <div class="stat-value">${total}</div>
+      <div class="stat-value" id="live-total">${total}</div>
+      <div class="stat-caret">▾ click to expand</div>
     </div>
-    <div class="stat">
+    <div class="stat" onclick="toggleStatPanel('applied')" title="Click to see in-flight applications">
       <div class="stat-label">Applied / In process</div>
-      <div class="stat-value">${applied.length}</div>
+      <div class="stat-value" id="live-applied">${applied.length}</div>
+      <div class="stat-caret">▾ click to expand</div>
     </div>
-    <div class="stat">
+    <div class="stat" onclick="toggleStatPanel('pending')" title="Click to see pipeline">
       <div class="stat-label">Pipeline pending</div>
-      <div class="stat-value">${pipelinePending}</div>
+      <div class="stat-value" id="live-pipeline">${pipelinePending}</div>
+      <div class="stat-caret">▾ click to expand</div>
     </div>
     <div class="stat">
       <div class="stat-label">Companies tracked</div>
@@ -815,25 +1470,36 @@ function build() {
     </div>
     <div class="stat">
       <div class="stat-label">URLs scanned</div>
-      <div class="stat-value">${scanTotal}</div>
+      <div class="stat-value" id="live-scanned">${scanTotal}</div>
     </div>
   </div>
 
+  <!-- Expandable stat panels (loaded live from /api/detail/*) -->
+  <div class="stat-panel" id="stat-panel-evaluations"></div>
+  <div class="stat-panel" id="stat-panel-applied"></div>
+  <div class="stat-panel" id="stat-panel-pending"></div>
+
   ${applyNow.length > 0 ? `
-  <div class="panel panel-strong">
+  <div class="panel panel-strong" id="apply-now-section">
     <div class="panel-title">Apply-Now Queue <span class="pill">${applyNow.length}</span></div>
     <p style="font-size:13px;color:#57606a;margin:0 0 12px">Score ≥ 4.0 with status in {Evaluated, Responded, Interview}. Click any row to expand.</p>
-    <table>
+    <div class="table-scroll"><table>
       <thead><tr>
-        <th>#</th><th>Score</th><th>Tier</th><th>Company</th><th>Role</th><th>Edge</th><th>Status</th><th>Date</th><th>Action</th>
+        <th class="sortable" onclick="sortTable('apply-now-tbody', 0, 'num', this)">Score</th>
+        <th class="sortable" onclick="sortTable('apply-now-tbody', 1, 'str', this)">Company</th>
+        <th class="sortable" onclick="sortTable('apply-now-tbody', 2, 'str', this)">Role</th>
+        <th class="sortable" onclick="sortTable('apply-now-tbody', 3, 'str', this)">Status</th>
+        <th class="sortable" onclick="sortTable('apply-now-tbody', 4, 'str', this)">Eval Date</th>
+        <th class="sortable" onclick="sortTable('apply-now-tbody', 5, 'num', this)">Age</th>
+        <th>Action</th>
       </tr></thead>
       <tbody id="apply-now-tbody">
         ${applyNowRows}
       </tbody>
-    </table>
+    </table></div>
   </div>
   ` : `
-  <div class="panel">
+  <div class="panel" id="apply-now-section">
     <div class="panel-title">Apply-Now Queue</div>
     <p style="color:#57606a;font-size:13px">No evaluations meeting the 4.0 apply floor right now. Either today's batch was wrong-shape (review highest-scored discards below) or the batch hasn't completed yet.</p>
   </div>
@@ -841,7 +1507,7 @@ function build() {
 
   <div class="panel">
     <div class="panel-title">All Evaluations <span class="pill" style="background:#0969da">${total}</span></div>
-    <div class="filters">
+    <div class="filters filters-sticky">
       <input type="search" id="filter-text" placeholder="Filter by company, role, or notes…" oninput="applyFilters()">
       <select id="filter-tier" onchange="applyFilters()">
         <option value="">All tiers</option>
@@ -864,38 +1530,47 @@ function build() {
         <option value="rejected">Rejected</option>
       </select>
     </div>
-    <table>
+    <div class="table-scroll"><table>
       <thead><tr>
-        <th onclick="sortTable('all-tbody', 0, 'num')">#</th>
-        <th onclick="sortTable('all-tbody', 1, 'num')">Score</th>
-        <th onclick="sortTable('all-tbody', 2)">Tier</th>
-        <th onclick="sortTable('all-tbody', 3)">Company</th>
-        <th onclick="sortTable('all-tbody', 4)">Role</th>
-        <th>Edge</th>
-        <th onclick="sortTable('all-tbody', 6)">Status</th>
-        <th onclick="sortTable('all-tbody', 7)">Date</th>
+        <th class="sortable" onclick="sortTable('all-tbody', 0, 'num', this)">Score</th>
+        <th class="sortable" onclick="sortTable('all-tbody', 1, 'str', this)">Company</th>
+        <th class="sortable" onclick="sortTable('all-tbody', 2, 'str', this)">Role</th>
+        <th class="sortable" onclick="sortTable('all-tbody', 3, 'str', this)">Status</th>
+        <th class="sortable" onclick="sortTable('all-tbody', 4, 'str', this)">Eval Date</th>
+        <th class="sortable" onclick="sortTable('all-tbody', 5, 'num', this)">Age</th>
         <th>Action</th>
       </tr></thead>
       <tbody id="all-tbody">
         ${allRows}
       </tbody>
-    </table>
+    </table></div>
   </div>
 
+  <div class="charts-grid">
   <div class="panel">
     <div class="panel-title">Score Distribution</div>
-    <div class="bar-chart">
-      ${Object.entries(buckets).map(([range, count]) => {
-        const max = Math.max(...Object.values(buckets), 1);
-        const pct = (count / max) * 100;
-        return `
-        <div class="bar-row">
-          <div>${range}</div>
-          <div class="bar-track"><div class="bar-fill" style="width:${pct.toFixed(1)}%"></div></div>
-          <div style="text-align:right;color:#57606a">${count}</div>
-        </div>`;
-      }).join('')}
-    </div>
+    ${(() => {
+      const segDefs = [
+        { range: '4.0+',     label: 'Strong',   key: '4.0+',     cls: 's-strong'   },
+        { range: '3.0–3.9',  label: 'Good',     key: '3.0-3.9',  cls: 's-good'     },
+        { range: '2.0–2.9',  label: 'Moderate', key: '2.0-2.9',  cls: 's-moderate' },
+        { range: '1.0–1.9',  label: 'Weak',     key: '1.0-1.9',  cls: 's-weak'     },
+        { range: '0–0.9',    label: 'No fit',   key: '0-0.9',    cls: 's-none'     },
+      ];
+      const totals = segDefs.map(s => buckets[s.key] || 0);
+      const totalAll = totals.reduce((a, b) => a + b, 0) || 1;
+      return `<div class="seg-bar">
+        <div class="seg-bar-counts">
+          ${segDefs.map((s, i) => `<div class="seg-bar-count${totals[i] === 0 ? ' zero' : ''}">${totals[i]}</div>`).join('')}
+        </div>
+        <div class="seg-bar-track" role="img" aria-label="Score distribution: ${segDefs.map((s, i) => `${s.label} ${totals[i]}`).join(', ')}">
+          ${segDefs.map((s, i) => `<div class="seg-bar-segment ${s.cls}${totals[i] === 0 ? ' zero' : ''}" style="flex-grow:${totals[i]}" title="${s.label} (${s.range}): ${totals[i]} (${((totals[i]/totalAll)*100).toFixed(0)}%)"></div>`).join('')}
+        </div>
+        <div class="seg-bar-labels">
+          ${segDefs.map(s => `<div class="seg-bar-label">${s.label}<span class="seg-bar-range">${s.range}</span></div>`).join('')}
+        </div>
+      </div>`;
+    })()}
   </div>
 
   <div class="panel">
@@ -906,22 +1581,44 @@ function build() {
         const pct = (count / max) * 100;
         return `
         <div class="bar-row">
-          <div>${escape(company)}</div>
+          <div class="bar-row-label">${escape(company)}</div>
           <div class="bar-track"><div class="bar-fill" style="width:${pct.toFixed(1)}%"></div></div>
-          <div style="text-align:right;color:#57606a">${count}</div>
+          <div class="bar-row-count">${count}</div>
         </div>`;
       }).join('')}
     </div>
+  </div>
   </div>
 
 </div>
 
 <script>
+// ── Dark mode ───────────────────────────────────────────────────
+const DARK_KEY = 'career-ops-dark';
+function initDark() {
+  const saved = localStorage.getItem(DARK_KEY);
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  if (saved === 'dark' || (saved === null && prefersDark)) applyDark(true);
+  else applyDark(false);
+}
+function applyDark(on) {
+  document.body.classList.toggle('dark', on);
+  const btn = document.getElementById('dark-toggle');
+  if (btn) btn.textContent = on ? '☀︎ Light' : '⏾ Dark';
+}
+function toggleDark() {
+  const on = !document.body.classList.contains('dark');
+  localStorage.setItem(DARK_KEY, on ? 'dark' : 'light');
+  applyDark(on);
+}
+
+// ── Row expand ──────────────────────────────────────────────────
 function toggleDetail(idx) {
   const detail = document.getElementById('detail-' + idx);
   if (detail) detail.style.display = detail.style.display === 'none' ? '' : 'none';
 }
 
+// ── Table filter + sort ─────────────────────────────────────────
 function applyFilters() {
   const text = (document.getElementById('filter-text').value || '').toLowerCase();
   const tier = document.getElementById('filter-tier').value;
@@ -936,28 +1633,471 @@ function applyFilters() {
     if (score && parseFloat(row.dataset.score) < score) show = false;
     if (status && !row.dataset.status.includes(status)) show = false;
     row.style.display = show ? '' : 'none';
-    if (detail && detail.classList.contains('detail-row')) {
+    if (detail && detail.classList.contains('detail-row'))
       detail.style.display = show && detail.style.display !== 'none' ? detail.style.display : 'none';
+  }
+}
+
+function sortTable(tbodyId, colIdx, type, thEl) {
+  const tbody = document.getElementById(tbodyId);
+  if (!tbody) return;
+  // Toggle direction
+  const prev = tbody.dataset.sortCol;
+  const prevDir = tbody.dataset.sortDir || 'desc';
+  const dir = (prev === String(colIdx) && prevDir === 'desc') ? 'asc' : 'desc';
+  tbody.dataset.sortCol = colIdx;
+  tbody.dataset.sortDir = dir;
+  // Update header indicators
+  const thead = tbody.closest('table')?.querySelector('thead');
+  thead?.querySelectorAll('.sortable').forEach(th => {
+    th.querySelector('.sort-arrow')?.remove();
+  });
+  if (thEl) {
+    const arrow = document.createElement('span');
+    arrow.className = 'sort-arrow';
+    arrow.textContent = dir === 'desc' ? ' ▼' : ' ▲';
+    thEl.appendChild(arrow);
+  }
+  // Collect paired rows (main + detail)
+  const allTr = Array.from(tbody.children);
+  const pairs = [];
+  for (let i = 0; i < allTr.length; i++) {
+    if (allTr[i].classList.contains('row')) {
+      const next = allTr[i + 1];
+      const detail = next?.classList.contains('detail-row') ? next : null;
+      pairs.push({ main: allTr[i], detail });
+      if (detail) i++;
+    }
+  }
+  pairs.sort((a, b) => {
+    const av = a.main.children[colIdx]?.innerText.trim() || '';
+    const bv = b.main.children[colIdx]?.innerText.trim() || '';
+    let cmp = type === 'num' ? (parseFloat(av) || 0) - (parseFloat(bv) || 0) : av.localeCompare(bv, undefined, {sensitivity:'base'});
+    return dir === 'desc' ? -cmp : cmp;
+  });
+  for (const { main, detail } of pairs) {
+    tbody.appendChild(main);
+    if (detail) tbody.appendChild(detail);
+  }
+}
+
+// ── Live API helpers ────────────────────────────────────────────
+const BASE = window.location.hostname === 'localhost' || window.location.hostname.endsWith('.careers-ops.com')
+  ? '' : null;   // null = file:// mode, no live APIs
+
+async function apiFetch(path) {
+  if (BASE === null) return null;
+  try {
+    const r = await fetch(path, { cache: 'no-store' });
+    if (!r.ok) return null;
+    return await r.json();
+  } catch { return null; }
+}
+
+// ── Stat card expand panels ─────────────────────────────────────
+const _loadedPanels = {};
+
+async function toggleStatPanel(key) {
+  const panel = document.getElementById('stat-panel-' + key);
+  if (!panel) return;
+  const isOpen = panel.classList.contains('open');
+
+  // Close all other panels
+  document.querySelectorAll('.stat-panel.open').forEach(p => {
+    p.classList.remove('open');
+    const k = p.id.replace('stat-panel-', '');
+    document.querySelectorAll('.stat[onclick*="' + k + '"]').forEach(s => s.classList.remove('active'));
+  });
+
+  if (isOpen) return;  // just closing
+
+  panel.classList.add('open');
+  document.querySelectorAll('.stat[onclick*="' + key + '"]').forEach(s => s.classList.add('active'));
+
+  if (_loadedPanels[key]) return;  // already populated
+  _loadedPanels[key] = true;
+
+  panel.innerHTML = '<div class="skeleton-stack" aria-busy="true" aria-label="Loading">'
+    + '<div class="skeleton-bar sk-title"></div>'
+    + '<div class="skeleton-bar sk-line"></div>'
+    + '<div class="skeleton-bar sk-line-short"></div>'
+    + '</div>';
+
+  const data = await apiFetch('/api/detail/' + key);
+  if (!data) {
+    panel.innerHTML = '<div class="skeleton-error">Could not reach live server — view the table below for static data.</div>';
+    return;
+  }
+
+  panel.innerHTML = renderStatPanel(key, data);
+}
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function evalAge(d) {
+  if (!d) return '';
+  const days = Math.floor((Date.now() - new Date(d).getTime()) / 86400000);
+  if (isNaN(days) || days < 0) return '';
+  if (days < 30) return days + 'd';
+  return Math.round(days/7) + 'w';
+}
+function scoreBadge(s) {
+  if (!s && s !== 0) return '<span class="muted">—</span>';
+  const cls = s >= 4 ? 'score-strong' : s >= 3 ? 'score-moderate' : 'score-weak';
+  return \`<span class="badge \${cls}">\${Number(s).toFixed(1)}</span>\`;
+}
+function statusBadge(st) {
+  if (!st) return '';
+  const s = st.toLowerCase();
+  let cls = 'status-evaluated';
+  if (s.includes('applied')) cls = 'status-applied';
+  else if (s.includes('interview')) cls = 'status-interview';
+  else if (s.includes('offer')) cls = 'status-offer';
+  else if (s.includes('reject')) cls = 'status-rejected';
+  else if (s.includes('discard') || s.includes('skip')) cls = 'status-discarded';
+  return \`<span class="badge \${cls}">\${esc(st)}</span>\`;
+}
+
+function rowActions(r) {
+  const slug = (r.reportPath || r.report || '').replace(/^reports\\//, '');
+  const htmlLink = slug
+    ? \`<a href="reports/\${slug.replace(/\\.md$/,'.html')}" target="_blank" onclick="event.stopPropagation()">Report</a>\`
+    : '';
+  const url = r.reportSummary?.url || '';
+  const applyLink = url
+    ? \`<a href="\${esc(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Apply</a>\`
+    : '';
+  const verifyBtn = slug
+    ? \`<a href="javascript:void(0)" onclick="openVerify('\${slug}');event.stopPropagation()" style="color:#8250df">Verify</a>\`
+    : '';
+  return [htmlLink, applyLink, verifyBtn].filter(Boolean).join(' · ') || '<span class="muted">—</span>';
+}
+
+function buildTable(rows, panelId) {
+  if (!rows || !rows.length) return '<p style="color:#57606a;font-size:13px;margin:0">No items.</p>';
+  const trows = rows.map((r, i) => {
+    const slug = (r.reportPath || r.report || '').replace(/^reports\\//,'');
+    const archetypeFull = r.reportSummary?.archetype || r.archetype || '';
+    const tierMatch = archetypeFull.match(/\\b(A1|A2|B)\\b/);
+    const archetype = tierMatch ? tierMatch[1] : (archetypeFull.slice(0, 3) || '');
+    const tldrRaw = r.reportSummary?.tldr || '';
+    const tldr = tldrRaw.includes('|') ? '' : tldrRaw; // skip raw table markdown
+    const comp = r.reportSummary?.comp || '';
+    const url = r.reportSummary?.url || '';
+    const rec = r.reportSummary?.recommendation || '';
+    return \`<tr class="row" onclick="toggleDetail('sp-\${panelId}-\${i}')">
+      <td>\${scoreBadge(r.score)}</td>
+      <td><strong>\${esc(r.company||'')}</strong>\${archetype ? \`<span class="tier-tag">\${esc(archetype)}</span>\` : ''}</td>
+      <td class="role-cell">\${esc(r.role||'')}</td>
+      <td>\${statusBadge(r.status)}</td>
+      <td class="muted-text">\${esc(r.date||'')}</td>
+      <td class="muted-text">\${evalAge(r.date||'')}</td>
+      <td class="action-cell">\${rowActions(r)}</td>
+    </tr>
+    <tr class="detail-row" id="detail-sp-\${panelId}-\${i}" style="display:none">
+      <td colspan="7">
+        <div class="detail-block">
+          \${(comp || archetype || r.date) ? \`<div class="detail-meta">
+            \${comp ? \`<span class="meta-chip meta-chip-comp">💰 \${esc(comp)}</span>\` : ''}
+            \${archetype ? \`<span class="meta-chip meta-chip-tier">\${esc(archetype)}</span>\` : ''}
+          </div>\` : ''}
+          \${tldr ? \`<div class="dcard" style="margin-bottom:8px"><div class="dcard-label">Role at a glance</div><div class="dcard-body">\${esc(tldr)}</div></div>\` : ''}
+          \${rec ? \`<div class="rec-banner"><span class="rec-label">Rec</span><span class="rec-text">\${esc(rec)}</span>\${url ? \`<a href="\${esc(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="rec-btn">Apply →</a>\` : ''}</div>\` : url ? \`<div style="font-size:12px;margin-top:6px"><a href="\${esc(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🔗 View JD</a></div>\` : ''}
+        </div>
+      </td>
+    </tr>\`;
+  }).join('');
+
+  return \`<div style="overflow-x:auto"><table>
+    <thead><tr>
+      <th>Score</th><th>Company</th><th>Role</th><th>Status</th><th>Eval Date</th><th>Age</th><th>Action</th>
+    </tr></thead>
+    <tbody>\${trows}</tbody>
+  </table></div>\`;
+}
+
+function renderStatPanel(key, data) {
+  const title = data.title || key;
+  const rows = (data.rows || []).slice(0, 100);
+  const count = data.total || rows.length;
+
+  if (key === 'evaluations') {
+    // Score bucket cards + status breakdown + recent table
+    const buckets = data.buckets || {};
+    const byStatus = data.byStatus || {};
+    const bucketCards = Object.entries(buckets).map(([label, val]) =>
+      \`<div class="bucket-card"><div class="bval">\${val}</div><div class="blbl">\${label}</div></div>\`
+    ).join('');
+    const statusCards = Object.entries(byStatus).map(([st, val]) =>
+      \`<div class="bucket-card"><div class="bval">\${val}</div><div class="blbl">\${st}</div></div>\`
+    ).join('');
+    return \`<div class="stat-panel-title">\${esc(title)} <span class="pill">\${count}</span> <span style="font-size:12px;color:#57606a;font-weight:400">· live</span></div>
+      <div style="margin-bottom:12px"><strong style="font-size:13px">Score distribution</strong><div class="bucket-grid" style="margin-top:8px">\${bucketCards}</div></div>
+      <div style="margin-bottom:16px"><strong style="font-size:13px">By status</strong><div class="bucket-grid" style="margin-top:8px">\${statusCards}</div></div>
+      <strong style="font-size:13px">Recent evaluations</strong>
+      <div style="margin-top:10px">\${buildTable((data.recent || rows).slice(0,30), key)}</div>\`;
+  }
+
+  if (key === 'pending') {
+    const tiers = data.tiers || [];
+    const items = data.items || [];
+    const tierCards = tiers.map(t =>
+      \`<div class="bucket-card"><div class="bval">\${t.count}</div><div class="blbl">\${esc(t.label)}</div></div>\`
+    ).join('');
+    const platformColors = {
+      LinkedIn: '#0a66c2', Ashby: '#6366f1', Greenhouse: '#1a7f37',
+      Lever: '#e36b00', WWR: '#0ea5e9', RemoteOK: '#16a34a',
+      Workable: '#7c3aed', Stripe: '#635bff', Coinbase: '#0052ff',
+      Amazon: '#f90', Unknown: '#57606a',
+    };
+    const itemRows = items.slice(0, 100).map(item => {
+      const pColor = platformColors[item.platform] || '#57606a';
+      const daysLabel = item.daysInQueue != null
+        ? (item.daysInQueue > 30
+            ? \`<span class="age-stale">\${item.daysInQueue}d ⚠</span>\`
+            : \`<span class="age-ok">\${item.daysInQueue}d</span>\`)
+        : '';
+      const companyCell = item.company
+        ? \`<strong>\${esc(item.company)}</strong>\`
+        : \`<span class="muted">—</span>\`;
+      const roleCell = item.role
+        ? \`<span class="role-cell">\${esc(item.role.slice(0,70))}\${item.role.length > 70 ? '…' : ''}</span>\`
+        : \`<span class="muted">Unknown</span>\`;
+      return \`<tr>
+        <td><span style="display:inline-block;padding:2px 6px;border-radius:3px;font-size:10px;font-weight:700;background:\${pColor}22;color:\${pColor};border:1px solid \${pColor}55">\${esc(item.platform)}</span></td>
+        <td>\${companyCell}</td>
+        <td>\${roleCell}</td>
+        <td class="muted-text">\${daysLabel}</td>
+        <td class="muted-text"><a href="\${esc(item.url)}" target="_blank" rel="noopener" title="\${esc(item.url)}">Open →</a></td>
+      </tr>\`;
+    }).join('');
+    const staleCount = items.filter(i => i.daysInQueue != null && i.daysInQueue > 30).length;
+    const staleWarning = staleCount > 0
+      ? \`<p style="font-size:12px;color:#cf222e;margin:0 0 12px"><strong>\${staleCount}</strong> items have been pending 30+ days — postings may be closed.</p>\`
+      : '';
+    return \`<div class="stat-panel-title">\${esc(title)} <span class="pill">\${data.total}</span> <span style="font-size:12px;color:#57606a;font-weight:400">· live</span></div>
+      <div class="bucket-grid" style="margin-bottom:12px">\${tierCards}</div>
+      \${staleWarning}
+      <strong style="font-size:13px">Pending URLs — click Open to preview, then paste URL into chat to evaluate</strong>
+      <div style="margin-top:10px;overflow-x:auto;max-height:440px;overflow-y:auto"><table>
+        <thead><tr><th>Platform</th><th>Company</th><th>Title / Role</th><th>Age</th><th>Link</th></tr></thead>
+        <tbody>\${itemRows}</tbody>
+      </table></div>\`;
+  }
+
+  // Default: title + full table
+  return \`<div class="stat-panel-title">\${esc(title)} \${count ? \`<span class="pill">\${count}</span>\` : ''} <span style="font-size:12px;color:#57606a;font-weight:400">· live</span></div>
+    \${buildTable(rows, key)}\`;
+}
+
+// ── Batch progress overlay ──────────────────────────────────────
+let _batchInterval = null;
+let _batchOverlayDismissed = false;
+
+async function pollBatch() {
+  const data = await apiFetch('/api/batch-live');
+  if (!data) return;
+  const overlay = document.getElementById('batch-overlay');
+  const btn = document.getElementById('batch-toggle-btn');
+
+  if (data.total > 0) {
+    btn && (btn.style.display = '');
+    if (!_batchOverlayDismissed) overlay.classList.add('visible');
+    document.getElementById('batch-title').textContent =
+      \`⚡ Batch: \${data.completed}/\${data.total} (\${data.pct?.toFixed(0) || 0}%)\`;
+    const bar = document.getElementById('batch-bar');
+    if (bar) bar.style.width = (data.pct || 0) + '%';
+
+    const recent = (data.rows || []).filter(r => r.status === 'completed').slice(0, 5);
+    document.getElementById('batch-body').innerHTML =
+      \`<div class="batch-stat-row"><span class="batch-stat-label">Completed</span><span class="batch-stat-val">\${data.completed}</span></div>
+       <div class="batch-stat-row"><span class="batch-stat-label">Failed</span><span class="batch-stat-val">\${data.failed || 0}</span></div>
+       <div class="batch-stat-row"><span class="batch-stat-label">Running</span><span class="batch-stat-val">\${data.running || 0}</span></div>
+       <div class="batch-stat-row"><span class="batch-stat-label">Pending</span><span class="batch-stat-val">\${data.pending || 0}</span></div>
+       \${recent.length ? '<div class="batch-recent">' + recent.map(r =>
+         \`<div class="batch-recent-item">✅ \${r.company || ''} — \${r.role || r.id || ''}</div>\`
+       ).join('') + '</div>' : ''}\`;
+
+    if (data.completed >= data.total && data.total > 0 && !data.running) {
+      clearInterval(_batchInterval);
+      _batchInterval = null;
     }
   }
 }
 
-function sortTable(tbodyId, colIdx, type) {
-  const tbody = document.getElementById(tbodyId);
-  const rows = Array.from(tbody.querySelectorAll('tr.row'));
-  const sorted = rows.sort((a, b) => {
-    const av = a.children[colIdx].innerText.trim();
-    const bv = b.children[colIdx].innerText.trim();
-    if (type === 'num') return parseFloat(bv) - parseFloat(av) || 0;
-    return av.localeCompare(bv);
+function dismissBatchOverlay() {
+  _batchOverlayDismissed = true;
+  document.getElementById('batch-overlay').classList.remove('visible');
+}
+
+function toggleBatchOverlay() {
+  const el = document.getElementById('batch-overlay');
+  const opening = !el.classList.contains('visible');
+  if (opening) _batchOverlayDismissed = false;
+  el.classList.toggle('visible');
+}
+
+// ── Verify claims modal ─────────────────────────────────────────
+async function openVerify(slug) {
+  const data = await apiFetch('/api/verify/' + slug);
+  const title = document.getElementById('verify-title');
+  const body = document.getElementById('verify-body');
+  if (!data) {
+    title.textContent = 'Verify claims';
+    body.innerHTML = '<p style="color:#cf222e">Could not load report data. Make sure the dashboard server is running.</p>';
+    document.getElementById('verify-backdrop').classList.add('visible');
+    return;
+  }
+
+  title.textContent = \`\${data.company} — \${data.role}\`;
+
+  const claims = (data.cvMatchClaims || []).map(c => \`<div class="verify-claim">\${c}</div>\`).join('');
+  const stars = (data.starStories || []).map(s =>
+    \`<div class="verify-claim"><strong>\${s.label}:</strong> \${s.detail}</div>\`
+  ).join('');
+  const queries = Object.values(data.queries || {}).map(q => \`
+    <div class="query-card">
+      <div class="query-card-header">
+        <span>\${q.label} — \${q.platform}</span>
+        <button class="copy-btn" onclick="navigator.clipboard.writeText(this.closest('.query-card').querySelector('.query-text').textContent)">Copy</button>
+      </div>
+      <div class="query-text">\${q.query}</div>
+    </div>\`
+  ).join('');
+
+  const evidenceSection = \`
+    <div class="verify-section">
+      <h4>📝 Add evidence (saved to report Block H)</h4>
+      <textarea class="evidence-area" id="evidence-text" placeholder="Paste research findings, recruiter notes, or Grok/Perplexity output here…"></textarea>
+      <button class="save-evidence-btn" onclick="saveEvidence('\${data.reportSlug}')">Save to Report</button>
+      \${data.hasEvidence ? '<span style="margin-left:10px;color:#8250df;font-size:12px">✦ Evidence block already exists (will be replaced)</span>' : ''}
+    </div>\`;
+
+  body.innerHTML = \`
+    \${claims ? '<div class="verify-section"><h4>📋 CV match claims to substantiate</h4>' + claims + '</div>' : ''}
+    \${stars ? '<div class="verify-section"><h4>⭐ STAR stories</h4>' + stars + '</div>' : ''}
+    \${data.finalRec ? '<div class="verify-section"><h4>🎯 Final recommendation</h4><div class="verify-claim">' + data.finalRec + '</div></div>' : ''}
+    <div class="verify-section"><h4>🔍 Research queries</h4>\${queries}</div>
+    \${evidenceSection}
+  \`;
+
+  document.getElementById('verify-backdrop').classList.add('visible');
+}
+
+async function saveEvidence(slug) {
+  const text = document.getElementById('evidence-text')?.value || '';
+  if (!text.trim()) return;
+  const r = await fetch('/api/save-evidence', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ reportSlug: slug, evidenceText: text }),
   });
-  // Re-attach in sorted order WITH their detail rows
-  for (const r of sorted) {
-    const detail = r.nextElementSibling;
-    tbody.appendChild(r);
-    if (detail && detail.classList.contains('detail-row')) tbody.appendChild(detail);
+  const btn = document.querySelector('.save-evidence-btn');
+  if (r.ok) {
+    if (btn) { btn.textContent = '✅ Saved!'; setTimeout(() => { btn.textContent = 'Save to Report'; }, 2000); }
+  } else {
+    if (btn) { btn.textContent = '❌ Error'; setTimeout(() => { btn.textContent = 'Save to Report'; }, 2000); }
   }
 }
+
+function closeVerify() {
+  document.getElementById('verify-backdrop').classList.remove('visible');
+}
+
+// ── Gap modal ──────────────────────────────────────────────────
+function openGapModal(el) {
+  const title = el.dataset.title || '';
+  const detail = el.dataset.detail || '';
+  const strategy = el.dataset.strategy || '';
+  const why = el.dataset.why || '';
+
+  document.getElementById('gap-modal-title').textContent = title;
+
+  const sections = [];
+
+  if (detail) {
+    sections.push(\`<div class="gap-section">
+      <div class="gap-section-label">What the gap is</div>
+      <div class="gap-section-body">\${detail}</div>
+    </div>\`);
+  }
+
+  if (strategy) {
+    sections.push(\`<div class="gap-section gap-strategy">
+      <div class="gap-section-label">How to address it</div>
+      <div class="gap-section-body">\${strategy}</div>
+    </div>\`);
+  }
+
+  if (why) {
+    sections.push(\`<div class="gap-section gap-ok">
+      <div class="gap-section-label">Why this doesn't block you</div>
+      <div class="gap-section-body">\${why}</div>
+    </div>\`);
+  }
+
+  if (!sections.length) {
+    sections.push(\`<p class="gap-empty">No additional detail available for this gap.</p>\`);
+  }
+
+  document.getElementById('gap-modal-body').innerHTML = sections.join('');
+  document.getElementById('gap-backdrop').classList.add('visible');
+}
+
+function closeGapModal() {
+  document.getElementById('gap-backdrop').classList.remove('visible');
+}
+
+// ── Live stats refresh ──────────────────────────────────────────
+async function refreshLiveStats() {
+  const data = await apiFetch('/api/stats');
+  if (!data) return;
+  const set = (id, v) => { const el = document.getElementById(id); if (el && v !== undefined) el.textContent = v; };
+  set('live-apply-now', data.applyNow);
+  set('live-total', data.totalEvals);
+  set('live-applied', data.applied);
+  set('live-pipeline', data.pipelinePending);
+  set('live-scanned', data.scanned);
+  const upd = document.getElementById('live-updated');
+  if (upd && data.lastUpdated) upd.textContent = 'Live · ' + new Date(data.lastUpdated).toLocaleTimeString();
+}
+
+// ── Keyboard shortcuts ──────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeVerify(); closeGapModal(); }
+});
+
+// ── Toast ───────────────────────────────────────────────────────
+window.toast = function(msg, type) {
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+  const t = type === 'success' || type === 'error' || type === 'info' ? type : 'info';
+  const icons = { success: '✓', error: '✕', info: 'ℹ' };
+  const el = document.createElement('div');
+  el.className = 'toast toast-' + t;
+  el.setAttribute('role', t === 'error' ? 'alert' : 'status');
+  el.innerHTML = '<span class="toast-icon">' + icons[t] + '</span>'
+    + '<span class="toast-msg"></span>'
+    + '<button class="toast-close" aria-label="Dismiss">✕</button>';
+  el.querySelector('.toast-msg').textContent = String(msg ?? '');
+  const dismiss = () => {
+    if (el.classList.contains('toast-leave')) return;
+    el.classList.add('toast-leave');
+    setTimeout(() => el.remove(), 260);
+  };
+  el.querySelector('.toast-close').addEventListener('click', dismiss);
+  container.appendChild(el);
+  setTimeout(dismiss, 4000);
+  return el;
+};
+
+// ── Init ────────────────────────────────────────────────────────
+initDark();
+refreshLiveStats();
+_batchInterval = setInterval(pollBatch, 2000);
+pollBatch();
+setInterval(refreshLiveStats, 30000);
 </script>
 </body>
 </html>`;
