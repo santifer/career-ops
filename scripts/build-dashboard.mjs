@@ -58,35 +58,74 @@ function parseApplications() {
   return rows;
 }
 
-function getReportUrl(reportPath) {
-  if (!reportPath) return '';
+// ── Per-build report cache ─────────────────────────────────────────
+// Each report file is read at most once per build. The 10 getX wrappers
+// below resolve to property reads on the cached parsed object, so a row
+// that previously triggered ~10 readFileSync calls now triggers one.
+// Reset at the top of build() so the cache never persists across builds.
+const _reportCache = new Map();
+let _reportCacheHits = 0;
+
+function _resetReportCache() {
+  _reportCache.clear();
+  _reportCacheHits = 0;
+}
+
+function readReportOnce(reportPath) {
+  if (!reportPath) return null;
+  if (_reportCache.has(reportPath)) {
+    _reportCacheHits++;
+    return _reportCache.get(reportPath);
+  }
   const fullPath = join(ROOT, reportPath);
-  if (!existsSync(fullPath)) return '';
-  const text = readFileSync(fullPath, 'utf-8').slice(0, 3000);
-  const m = text.match(/\*\*URL:\*\*\s*(\S+)/);
+  if (!existsSync(fullPath)) {
+    const empty = {
+      exists: false, text: '',
+      archetype: '', url: '', finalRecommendation: '',
+      competitiveEdge: [], tldr: '', positioning: '', comp: '',
+      keyGaps: [], topStories: [], whyGapsDontBlock: '',
+    };
+    _reportCache.set(reportPath, empty);
+    return empty;
+  }
+  const text = readFileSync(fullPath, 'utf-8');
+  const parsed = {
+    exists: true,
+    text,
+    archetype: _parseArchetype(text),
+    url: _parseUrl(text),
+    finalRecommendation: _parseFinalRecommendation(text),
+    competitiveEdge: _parseCompetitiveEdge(text),
+    tldr: _parseTldr(text),
+    positioning: _parsePositioning(text),
+    comp: _parseComp(text),
+    keyGaps: _parseKeyGaps(text),
+    topStories: _parseTopStories(text),
+    whyGapsDontBlock: _parseWhyGapsDontBlock(text),
+  };
+  _reportCache.set(reportPath, parsed);
+  return parsed;
+}
+
+function _parseUrl(text) {
+  const head = text.slice(0, 3000);
+  const m = head.match(/\*\*URL:\*\*\s*(\S+)/);
   return m ? m[1] : '';
 }
 
-function getReportArchetype(reportPath) {
-  if (!reportPath) return '';
-  const fullPath = join(ROOT, reportPath);
-  if (!existsSync(fullPath)) return '';
-  const text = readFileSync(fullPath, 'utf-8').slice(0, 4000);
+function _parseArchetype(text) {
+  const head = text.slice(0, 4000);
   // Format 1: **Archetype:** A1/A2/B ... (header block)
-  const bold = text.match(/\*\*Archetype:\*\*\s*([^\n]+)/);
+  const bold = head.match(/\*\*Archetype:\*\*\s*([^\n]+)/);
   // Format 2: | Archetype | A1/A2/B ... | (Block A table row)
-  const table = text.match(/\|\s*Archetype\s*\|\s*([^|\n]+?)\s*\|/);
+  const table = head.match(/\|\s*Archetype\s*\|\s*([^|\n]+?)\s*\|/);
   const raw = (bold?.[1] || table?.[1] || '').replace(/\*\*/g, '');
   if (!raw) return '';
   const tierMatch = raw.match(/\b(A1|A2|B)\b/);
   return tierMatch ? tierMatch[1] : raw.slice(0, 30);
 }
 
-function getReportFinalRecommendation(reportPath) {
-  if (!reportPath) return '';
-  const fullPath = join(ROOT, reportPath);
-  if (!existsSync(fullPath)) return '';
-  const text = readFileSync(fullPath, 'utf-8');
+function _parseFinalRecommendation(text) {
   const finalIdx = text.indexOf('## Final Recommendation');
   const recIdx = text.indexOf('## Recommendation');
   let idx = -1, headerLen = 0;
@@ -100,6 +139,18 @@ function getReportFinalRecommendation(reportPath) {
   const paragraphs = section.trim().split('\n\n').filter(p => p.trim());
   const combined = paragraphs.slice(0, 2).join(' ').replace(/\*\*/g, '').replace(/\n/g, ' ').trim();
   return combined.slice(0, 600);
+}
+
+function getReportUrl(reportPath) {
+  return readReportOnce(reportPath)?.url || '';
+}
+
+function getReportArchetype(reportPath) {
+  return readReportOnce(reportPath)?.archetype || '';
+}
+
+function getReportFinalRecommendation(reportPath) {
+  return readReportOnce(reportPath)?.finalRecommendation || '';
 }
 
 // Render a single report's markdown to a self-contained HTML page that
@@ -240,14 +291,11 @@ ${inner}
   return outName;
 }
 
-// Helper — extract a section block from a report by its `## ` header.
+// Helper — extract a section block from report text by its `## ` header.
 // Accepts an array of regexes tried in order — first match wins.
 // Handles both old format (## A) Role Summary) and new (## Block A — Role Summary).
-function getSection(reportPath, headerRe) {
-  if (!reportPath) return '';
-  const fullPath = join(ROOT, reportPath);
-  if (!existsSync(fullPath)) return '';
-  const text = readFileSync(fullPath, 'utf-8');
+function _extractSection(text, headerRe) {
+  if (!text) return '';
   const patterns = Array.isArray(headerRe) ? headerRe : [headerRe];
   for (const re of patterns) {
     const m = text.match(re);
@@ -262,8 +310,8 @@ function getSection(reportPath, headerRe) {
 
 // Extract the TL;DR from Block A — typically the last row of the role
 // summary table. Falls back to the full Block A if no TL;DR row found.
-function getTldr(reportPath) {
-  const block = getSection(reportPath, [/^## A\)[^\n]*$/m, /^## Block A\b[^\n]*$/m]);
+function _parseTldr(text) {
+  const block = _extractSection(text, [/^## A\)[^\n]*$/m, /^## Block A\b[^\n]*$/m]);
   if (!block) return '';
   // Look for "| TL;DR | <value> |" in the table
   const tldrMatch = block.match(/\|\s*TL;DR\s*\|\s*([^\n]+?)\s*\|\s*$/m);
@@ -274,8 +322,8 @@ function getTldr(reportPath) {
 }
 
 // Extract positioning angle from Block C.
-function getPositioning(reportPath) {
-  const block = getSection(reportPath, [/^## C\)[^\n]*$/m, /^## Block C\b[^\n]*$/m]);
+function _parsePositioning(text) {
+  const block = _extractSection(text, [/^## C\)[^\n]*$/m, /^## Block C\b[^\n]*$/m]);
   if (!block) return '';
   // New format: "- **Positioning:** <prose>" bullet
   const bulletMatch = block.match(/\*\*Positioning:\*\*\s*([^\n]{30,})/);
@@ -288,16 +336,16 @@ function getPositioning(reportPath) {
 }
 
 // Extract comp from Block A table.
-function getComp(reportPath) {
-  const block = getSection(reportPath, [/^## A\)[^\n]*$/m, /^## Block A\b[^\n]*$/m]);
+function _parseComp(text) {
+  const block = _extractSection(text, [/^## A\)[^\n]*$/m, /^## Block A\b[^\n]*$/m]);
   if (!block) return '';
   const m = block.match(/\|\s*Comp(?:ensation)?\s*\|\s*([^|\n]+?)\s*\|/im);
   return m ? m[1].replace(/\*\*/g, '').trim().slice(0, 120) : '';
 }
 
 // Extract numbered key gaps from Block B — returns { title, detail } objects.
-function getKeyGaps(reportPath) {
-  const block = getSection(reportPath, [/^## B\)[^\n]*$/m, /^## Block B\b[^\n]*$/m]);
+function _parseKeyGaps(text) {
+  const block = _extractSection(text, [/^## B\)[^\n]*$/m, /^## Block B\b[^\n]*$/m]);
   if (!block) return [];
   const gapsSection = block.match(/\*\*Key gaps[^*]*\*\*[:\s]*\n([\s\S]*?)(?:\n\*\*Why|\n## |$)/i);
   if (!gapsSection) return [];
@@ -319,16 +367,20 @@ function getKeyGaps(reportPath) {
 }
 
 // "Why these gaps don't block" from Block B.
-function getWhyGapsDontBlock(reportPath) {
-  const block = getSection(reportPath, [/^## B\)[^\n]*$/m, /^## Block B\b[^\n]*$/m]);
+function _parseWhyGapsDontBlock(text) {
+  const block = _extractSection(text, [/^## B\)[^\n]*$/m, /^## Block B\b[^\n]*$/m]);
   if (!block) return '';
   const m = block.match(/\*\*Why these gaps don[''']t block[^*]*\*\*[:\s]*([^\n]+(?:\n(?!\*\*|\n).*)*)/i);
   return m ? m[1].replace(/\*\*/g, '').trim().slice(0, 600) : '';
 }
 
 // Per-gap strategies from Block C — matches by keyword from gap title.
+// Cannot be cached at parse time because it depends on gap title; reads
+// from the cached report text instead of disk.
 function getGapStrategy(reportPath, gapTitle) {
-  const block = getSection(reportPath, [/^## C\)[^\n]*$/m, /^## Block C\b[^\n]*$/m]);
+  const cached = readReportOnce(reportPath);
+  if (!cached?.exists) return '';
+  const block = _extractSection(cached.text, [/^## C\)[^\n]*$/m, /^## Block C\b[^\n]*$/m]);
   if (!block) return '';
   // Look for "**<keyword> gap handling:**" or "**<keyword> gap:**" bullets
   const keyword = gapTitle.split(/\s+/)[0].replace(/[^a-z0-9]/gi, '');
@@ -337,11 +389,11 @@ function getGapStrategy(reportPath, gapTitle) {
   return m ? m[1].replace(/\*\*/g, '').trim().slice(0, 600) : '';
 }
 
-// Extract top-2 STAR+R stories from Block F. Each STAR table row has
+// Extract STAR+R stories from Block F. Each STAR table row has
 // columns: # | JD Requirement | Story | S | T | A | R | Reflection.
 // We surface the JD-requirement column + the story column.
-function getTopStories(reportPath, limit = 2) {
-  const block = getSection(reportPath, [/^## F\)[^\n]*$/m, /^## Block F\b[^\n]*$/m]);
+function _parseTopStories(text) {
+  const block = _extractSection(text, [/^## F\)[^\n]*$/m, /^## Block F\b[^\n]*$/m]);
   if (!block) return [];
   const stories = [];
   for (const line of block.split('\n')) {
@@ -358,7 +410,7 @@ function getTopStories(reportPath, limit = 2) {
     if (!/^\d/.test(num)) continue;  // skip non-numeric first cells
     stories.push({ num, requirement, story });
   }
-  return stories.slice(0, limit);
+  return stories;
 }
 
 // Extract Mitchell's competitive-edge signals from Block B (CV Match) of
@@ -366,14 +418,8 @@ function getTopStories(reportPath, limit = 2) {
 //   1. English numeric — "**5/5**", "**4/5**"
 //   2. Spanish categorical — "✅ UNIQUELY STRONG", "✅ STRONG", "MEDIUM", "WEAK"
 //   3. Prose evaluation — "**HARD BLOCKER**", "Gap across..." (skip — negative)
-// Returns top N rows by strength regardless of overall report score, so
-// every role shows context (low-fit roles surface their few partial matches
-// for transparency rather than rendering "—").
-function getCompetitiveEdge(reportPath, limit = 5) {
-  if (!reportPath) return [];
-  const fullPath = join(ROOT, reportPath);
-  if (!existsSync(fullPath)) return [];
-  const text = readFileSync(fullPath, 'utf-8');
+// Returns rows sorted by strength (no slice — wrappers apply the limit).
+function _parseCompetitiveEdge(text) {
   const startMatch = text.match(/^## B\)[^\n]*$/m) || text.match(/^## Block B\b[^\n]*$/m);
   if (!startMatch) return [];
   const start = startMatch.index + startMatch[0].length;
@@ -419,7 +465,37 @@ function getCompetitiveEdge(reportPath, limit = 5) {
     rows.push({ score, requirement, evidence, label });
   }
   rows.sort((a, b) => b.score - a.score);
-  return rows.slice(0, limit);
+  return rows;
+}
+
+function getTldr(reportPath) {
+  return readReportOnce(reportPath)?.tldr || '';
+}
+
+function getPositioning(reportPath) {
+  return readReportOnce(reportPath)?.positioning || '';
+}
+
+function getComp(reportPath) {
+  return readReportOnce(reportPath)?.comp || '';
+}
+
+function getKeyGaps(reportPath) {
+  return readReportOnce(reportPath)?.keyGaps || [];
+}
+
+function getWhyGapsDontBlock(reportPath) {
+  return readReportOnce(reportPath)?.whyGapsDontBlock || '';
+}
+
+function getTopStories(reportPath, limit = 2) {
+  const stories = readReportOnce(reportPath)?.topStories || [];
+  return stories.slice(0, limit);
+}
+
+function getCompetitiveEdge(reportPath, limit = 5) {
+  const edges = readReportOnce(reportPath)?.competitiveEdge || [];
+  return edges.slice(0, limit);
 }
 
 function countPipelinePending() {
@@ -708,6 +784,10 @@ function renderRow(r, idx) {
 }
 
 function build() {
+  // Reset the per-build report cache so successive invocations (e.g. tests
+  // that import build()) don't carry stale parsed reports across builds.
+  _resetReportCache();
+
   if (!existsSync(dirname(OUT_PATH))) mkdirSync(dirname(OUT_PATH), { recursive: true });
   const reportsHtmlDir = join(dirname(OUT_PATH), 'reports');
 
@@ -3639,6 +3719,7 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   console.log(`  Apply-Now queue:   ${applyNow.length}`);
   console.log(`  Pipeline pending:  ${pipelinePending}`);
   console.log(`  Reports rendered:  ${renderedCount} → dashboard/reports/`);
+  console.log(`  Reports parsed:    ${_reportCache.size} (cache hits: ${_reportCacheHits})`);
   console.log(`Open with: open dashboard/index.html`);
 }
 
