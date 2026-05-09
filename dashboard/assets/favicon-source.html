@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Favicon source — career-ops dashboard</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@600;700;800;900&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 512px; height: 512px; overflow: hidden; background: transparent; }
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    display: grid;
+    place-items: center;
+    /* Dark rounded square — matches dashboard dark mode aesthetic */
+    background: #0c0a09;
+    border-radius: 96px;
+    position: relative;
+    color: #fafaf9;
+  }
+  /* Subtle gradient highlight (top-left) */
+  body::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background:
+      radial-gradient(circle at 25% 20%, rgba(74, 222, 128, 0.18) 0%, transparent 55%),
+      radial-gradient(circle at 80% 80%, rgba(96, 165, 250, 0.10) 0%, transparent 50%);
+    pointer-events: none;
+  }
+  .mark {
+    font-size: 320px;
+    font-weight: 900;
+    line-height: 0.85;
+    letter-spacing: -0.06em;
+    z-index: 1;
+    color: #fafaf9;
+    /* Slight optical centering: shift down 4px so the visual center matches */
+    transform: translateY(8px);
+  }
+  /* Green semantic dot at top-right — Linear/Notion convention,
+     also signals "live" / "in production" — matches stat-strong + status-applied tokens */
+  .live-dot {
+    position: absolute;
+    top: 86px;
+    right: 86px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #4ade80;
+    box-shadow: 0 0 0 6px #0c0a09, 0 0 24px rgba(74, 222, 128, 0.6);
+    z-index: 2;
+  }
+</style>
+</head>
+<body>
+  <div class="mark">M</div>
+  <div class="live-dot" aria-hidden="true"></div>
+</body>
+</html>
