@@ -68,41 +68,48 @@ const companyList = topCompanies
   .join('\n');
 
 // ── Build research prompt ────────────────────────────────────────
-const PROMPT = `You are a hiring-intelligence researcher for Mitchell Williams's job search at career-ops.
+const PROMPT = `Role: hiring-intelligence researcher for Mitchell Williams's career-ops job search.
 
-Today is ${DATE}. Mitchell's top 10 Apply-Now queue companies are:
+Today: ${DATE}. Mitchell's top 10 Apply-Now queue:
 
 ${companyList}
 
-**PRIMARY FILTER (read this first):** Mitchell's #1 priority is total compensation + pre-IPO equity timing + RSU value-at-vest. He will consider ANY role aligned with his expertise or goals, but the ranking signal that matters is comp/equity upside. Surface pre-IPO stage and equity story BEFORE role fit.
+PRIMARY FILTER (overrides all other ranking): total comp + pre-IPO equity timing + RSU value-at-vest. Mitchell will consider any role that needs his expertise OR aligns with his goals; comp/equity is the narrowing signal. Surface IPO/equity posture BEFORE role-fit. Frontier labs (Anthropic, OpenAI, xAI, Perplexity, Sierra) are the highest-priority pre-IPO targets. Mature public comp (Google/Meta/MSFT/Amazon/Apple/NVIDIA) only ranks high if cash+RSU materially beats a strong pre-IPO offer compounding over 4 years.
 
-For EACH of these companies, research and report (use WebSearch heavily — recent X posts, LinkedIn job count trends, Levels.fyi comp data, Glassdoor sentiment changes, news about funding rounds, layoffs at competitors, public hiring manager statements):
+CALIBRATION (spend the budget on what pays off):
+- Items 1–3 (equity / overpay / desperate-hire) get the WebSearch budget. One concrete artifact > three vague claims.
+- Item 4 (tactical lead) is ONE sentence — read cv.md + article-digest.md once each, do not over-research.
+- For mature public companies: skip overpay/desperate-hire deep-dives; instead state the cash+RSU floor required to beat a strong pre-IPO offer over 4 years.
+- Concrete artifacts to look for: S-1 filings, banker selection, late-stage valuation marks (PitchBook/Crunchbase/news), secondary tender programs, employee liquidity windows, 409A vs preferred gap, RSU vs ISO/NSO style, refresher cadence, retention/stay-bonus patterns, Levels.fyi/Blind/teamblind comp leaks, LinkedIn headcount trend (last 90d), recent attrition events, leader X posts about urgent hiring.
+- If you cannot find a concrete signal for a row, write "no signal found" — do NOT pad with generic boilerplate.
 
-1. **Equity / IPO posture (HIGHEST WEIGHT)** — what is the company's IPO trajectory? Look for: S-1 filings, banker selection, late-stage raise valuations + tier of investors, secondary tender programs, employee liquidity windows, 409A vs preferred share gap, RSU vs ISO/NSO grant style, refresher grant cadence, expected vest cliff, retention/stay-bonus patterns, recent comp band leaks on Levels.fyi/Blind. If the company is mature public (Google, Meta, Microsoft, Amazon, Apple, NVIDIA), state the cash+RSU package required to compete with a strong pre-IPO offer compounding over 4 years.
+Output rules:
+- ≤2 sentences per finding. Point estimates over ranges. Cite sources inline.
+- No preamble, no per-section intros, no "I will now…", no closing summary outside the required Top-3 block.
 
-2. **Overpay signals** — is the company offering above-market comp for this role family right now? Look for: comp band leaks on Levels.fyi/Blind, recruiter outreach about "competitive offers", current employee posts about retention bonuses, signs of bidding wars vs specific competitors.
+Read first (one pass each): /Users/mitchellwilliams/Documents/career-ops/cv.md and /Users/mitchellwilliams/Documents/career-ops/article-digest.md.
 
-3. **Desperate-hire signals** — does the team seem urgently understaffed? Look for: rapid headcount growth in this org (LinkedIn People filter), recent attrition events, public statements about hiring goals, replacements for high-profile recent departures, founder/CEO X posts about needing specific skills.
+For EACH of the 10 companies, write EXACTLY this block (verbatim format):
 
-4. **Tactical lead** — what specific phrase, project, or experience from Mitchell's CV (read /Users/mitchellwilliams/Documents/career-ops/cv.md and article-digest.md to understand his profile) should he lead with in his cover letter or first recruiter message to this specific company this week? One sentence per company.
+## {Company} — {Role} (score {N})
 
-5. **Confidence** — HIGH / MEDIUM / LOW based on source quality.
+**Equity / IPO posture:** {stage [seed/A/B/C/D/late/pre-IPO/public], last raise [$ @ valuation, date], IPO/exit window [<12mo / 12–24mo / 24mo+ / none], grant style [RSU/ISO/NSO], refresher cadence, 409A vs preferred gap, any tender/secondary} (confidence: {H/M/L})
+**Overpay signal:** {one concrete artifact: comp band leak / recruiter outreach with $$ / retention bonus thread / bidding-war evidence — OR "no signal found"} (confidence: {H/M/L})
+**Desperate-hire signal:** {one concrete artifact: LinkedIn headcount Δ / attrition event / leader X post / public hiring target — OR "no signal found"} (confidence: {H/M/L})
+**Tactical lead this week:** {ONE sentence — specific phrase or project from cv.md/article-digest.md tied to a public artifact of theirs}
+**Sources:** {2–5 URLs, bulleted, no commentary}
 
-Write the deliverable to /Users/mitchellwilliams/Documents/career-ops/data/overpay-signals/${DATE}.md AND /Users/mitchellwilliams/Documents/career-ops/data/overpay-signals/CURRENT.md (same content, two files).
+After the 10 blocks, write:
 
-Format each company as:
+## Top 3 to lean into THIS WEEK
 
-## {Company Name} — {Role} (score {N})
+Pick the 3 highest equity-upside × signal-strength combinations across the 10. For each: **{Company}** — one-line rationale tied to comp/equity story.
 
-**Equity / IPO posture:** {stage, expected timing, grant style, recent valuation, refresher cadence} (confidence: {H/M/L})
-**Overpay signal:** {finding} (confidence: {H/M/L})
-**Desperate-hire signal:** {finding} (confidence: {H/M/L})
-**Tactical lead this week:** {one sentence}
-**Sources:** {bulleted list of URLs}
+Write the deliverable to BOTH files (identical content, via the Write tool):
+- /Users/mitchellwilliams/Documents/career-ops/data/overpay-signals/${DATE}.md
+- /Users/mitchellwilliams/Documents/career-ops/data/overpay-signals/CURRENT.md
 
-After all 10 companies, end with a "Top 3 to lean into THIS WEEK" section listing the 3 strongest signals across all 10, with one-line rationale each.
-
-Use the Write tool to create both files. Then print only: "Overpay signals research complete: data/overpay-signals/${DATE}.md".`;
+Then print ONLY this line and nothing else: "Overpay signals research complete: data/overpay-signals/${DATE}.md".`;
 
 if (DRY_RUN) {
   console.log('=== DRY RUN — Prompt that would be sent to Claude ===');

@@ -88,208 +88,195 @@ const prevContext = previousReport
 
 // ─── Claude research prompt ───────────────────────────────────────────────────
 
-const CLAUDE_PROMPT = `You are a career intelligence analyst running a weekly market briefing for a senior professional who is actively searching for AI-native roles.
+const CLAUDE_PROMPT = `Role: senior career-intelligence analyst writing a weekly market briefing for Mitchell Williams.
 
 ${profileContext}
 ${prevContext}
 TODAY: ${DATE}
 
-Generate a concise, actionable weekly intel report. Use your training data and reasoning to surface what you know about the current AI job market. Where information is uncertain or time-sensitive, flag it explicitly with "[VERIFY]" so the candidate knows to cross-check before acting.
+PRIMARY FILTER (overrides all other ranking): total comp + pre-IPO equity timing + RSU value-at-vest. Mitchell will consider any role that needs his expertise OR aligns with his goals; comp/equity is what narrows. Surface IPO/equity signal BEFORE role/title fit. Frontier labs (Anthropic, OpenAI, xAI, Perplexity, Sierra) are the highest-priority pre-IPO targets given his AI builder positioning. Mature public comp (Google/Meta/MSFT/Amazon/Apple/NVIDIA) only ranks high if cash+RSU materially beats what a strong pre-IPO offer would compound into over 4 years.
 
-Output EXACTLY this structure (preserve all headers):
+Output rules (enforce strictly):
+- Start at the H1; no preamble, no closing summary, no "I will now…" or meta lines.
+- ≤2 sentences per bullet; no section intros; cut adjectives; point estimates over ranges.
+- Every claim is either (a) sourced from training and tagged [VERIFY] if it could have moved in the last 6 months, or (b) a stable structural fact. No hedging filler ("varies", "depends").
+- If a previous report exists, write deltas only — say "unchanged from prior week" or omit.
+- Do NOT pad. A short, dense report is better than a long one. Skip a bullet if you have nothing concrete.
+
+Output EXACTLY this structure (verbatim headers, in this order):
 
 # Weekly Intel — ${DATE}
 
-## 1. Market Pulse — Hiring Activity
+## 1. Equity & IPO Signals (PRIMARY)
 
-Which of the following companies are actively hiring for Mitchell's archetypes (AI Solutions Architect, Forward Deployed Engineer, Applied AI Engineer, AI Enablement Lead, AI PgM, Comms/Editorial AI-native)?
+Rank 8–12 companies by 12–18mo equity-upside-on-joining-now. Frontier labs first. One row each:
 
-List the 8–12 highest-signal companies right now with one line each:
-**[Company]** — [what they're hiring for] — [signal: recent funding / product launch / headcount signal] [VERIFY if uncertain]
+**[Company]** — stage: [seed/A/B/C/D/late/pre-IPO/public] — last raise: [$ @ valuation, date] [VERIFY] — IPO/exit window: [<12mo / 12–24mo / 24mo+ / none] — equity story: [refresher cadence, 409A vs preferred gap, tender/secondary, RSU vs ISO/NSO, cliff] — verdict: [LEAN IN / WATCH / SKIP for equity]
 
-## 2. Company Health Signals
+## 2. Compensation Bands — Mitchell's Archetypes
 
-For the top 15 AI-native companies Mitchell should target (Anthropic, OpenAI, Google DeepMind, Mistral, Cohere, Perplexity, Inflection, xAI, Character.AI, Adept, Imbue, Stability AI, Runway, ElevenLabs, Harvey), provide:
+Tight table. Mid-of-band point estimates only.
 
-**[Company]** — [financial health: funded/profitable/burning] — [hiring: expanding/flat/contracting] — [IPO/acquisition likelihood: high/medium/low] [VERIFY if uncertain]
+| Role | Stage | Base | Annual equity ($) | TC | Δ vs 90d | Notes |
+|------|-------|------|-------------------|-----|----------|-------|
+[10–12 rows covering AI Solutions Architect, Forward Deployed Engineer, Applied AI Engineer, AI Enablement, AI PgM, Comms-AI hybrid — each at Series B/C, Series D+/pre-IPO, Big Tech AI div]
 
-## 3. Compensation & Equity Trends
+Below table: 1 line on which 3 companies are expanding bands; 1 line on which 3 are compressing. [VERIFY]
 
-Current market rates for Mitchell's target archetypes at Series B+ AI companies and Big Tech AI divisions. Format as a table:
+## 3. Hiring Activity — Highest Signal This Week
 
-| Role | Base | Equity (annual) | Total Comp | Notes |
-|------|------|-----------------|------------|-------|
-[8–10 rows covering his primary archetypes at different company stages]
+8–12 companies actively hiring Mitchell's archetypes RIGHT NOW. One line each:
 
-Flag: Is the market moving up or down vs. 3 months ago? Which companies are expanding comp bands?
+**[Company]** — [archetype slot] — [signal: funding round / product launch / public headcount target / leader's X post] [VERIFY]
 
-## 4. IPO & Liquidity Signals
+## 4. Company Health — Top 15 Targets
 
-Which AI companies are most likely to IPO or be acquired in the next 12–18 months? Why does this matter for joining them now?
+Targets: Anthropic, OpenAI, Google DeepMind, Mistral, Cohere, Perplexity, xAI, Character.AI, Sierra, Imbue, Runway, ElevenLabs, Harvey, Glean, Decagon. One line each:
 
-List 5–8 companies with:
-**[Company]** — [IPO/exit likelihood] — [timeline estimate] — [what joining now means for equity] [VERIFY]
+**[Company]** — funding: [profitable / well-funded / runway <12mo] — hiring: [expanding / flat / contracting] — IPO/exit (24mo): [H/M/L] — risk flags: [if any] [VERIFY]
 
-## 5. Skill & Certification Signals
+## 5. Skills Becoming Table-Stakes
 
-What skills and certifications are appearing in JDs for Mitchell's target archetypes that weren't prominent 6 months ago? What is becoming a table-stakes requirement?
+5–8 skills/certs newly required vs 6mo ago:
 
-Format as:
-**[Skill/cert]** — [frequency signal: emerging/growing/table-stakes] — [recommended action: learn/showcase/ignore]
+**[Skill]** — frequency: [emerging / growing / table-stakes] — Mitchell action: [learn now / showcase existing / ignore]
 
-Focus on: LLM orchestration frameworks, MCP, agent evaluation, RAG architecture, specific tools (LangChain, DSPy, LlamaIndex, Vertex AI, Bedrock), and communications-specific AI skills.
+Bias toward: agent eval frameworks, MCP, LLM orchestration (DSPy/LangGraph/LlamaIndex), RAG architecture, evals (Braintrust/Langfuse), Vertex AI/Bedrock, AI-native comms tooling.
 
-## 6. Recommended LinkedIn Contacts
+## 6. Outreach Targets
 
-For each of the top 5 companies Mitchell should prioritize this week, identify the profile type (not specific names since those change) most worth cold-reaching:
+Top 5 companies this week. Profile types only (titles change too fast for names):
 
-**[Company]** — reach out to: [job title / team] — [why: hiring manager / gatekeeper / connector] — [suggested angle for outreach]
+**[Company]** — DM target: [title / team] — why: [hiring manager / gatekeeper / connector] — opener angle: [hook tied to a specific public artifact of theirs]
 
-## 7. Geography Intelligence
+## 7. Geography
 
-Where are Mitchell's target roles concentrating right now?
+- Top 3 US metros — note remote-friendly vs onsite pressure.
+- Top 3 international cities (visa-friendly + AI hiring expanding + good QoL/comp ratio).
+- 1–2 cities to deprioritize and why.
 
-- Top 3 US metros for his archetypes (with signal: remote-friendly vs. onsite pressure)
-- Top 3 international cities where AI-native companies are expanding that offer strong quality-of-life + reasonable comp (with visa pathway notes)
-- Any cities to deprioritize this cycle
+## 8. Application Tactics — What's Working Now
 
-## 8. Application & Profile Intelligence
+5 bullets max:
+- Resume format/length passing ATS at this seniority
+- Profile elements triggering recruiter inbound
+- Cover-letter approach landing interviews
+- Auto-DQ patterns at screening
+- One LinkedIn or GitHub signal that moved this week [VERIFY]
 
-What is working right now for candidates targeting AI-native companies at this seniority level?
+## 9. Top 5 Actions for Mitchell This Week
 
-- What resume formats/lengths are passing ATS filters
-- What profile elements are triggering recruiter outreach
-- What cover letter approaches are landing interviews
-- What is immediately disqualifying candidates at screening
-- Any platform-specific (LinkedIn, GitHub) signals this week
-
-## 9. This Week's Priority Actions
-
-Given all of the above, the 5 highest-leverage actions Mitchell should take this week (ranked):
-
-1. [Action] — [why now] — [time estimate]
-2. ...
+Ranked by expected $-impact-per-hour:
+1. [Action] — why now: [signal] — time: [Xh] — payoff: [outcome]
 
 ## 10. Signals to Watch
 
-3–5 market signals that are uncertain now but worth monitoring. Set a mental reminder for each.
+3–5 uncertain signals: **[Signal]** — what would confirm/refute it.
 
 ---
-*Generated by \`scripts/weekly-intel.mjs\` on ${DATE}. Sections marked [VERIFY] should be cross-checked against live sources before acting on them.*`;
+*Generated by \`scripts/weekly-intel.mjs\` on ${DATE}. Verify [VERIFY] tags against live sources before acting.*`;
 
 // ─── External platform prompts ────────────────────────────────────────────────
 
-const SHARED_CONTEXT = `Context: I'm a senior professional searching for AI-native roles (AI Solutions Architect, Forward Deployed Engineer, Applied AI Engineer, AI Enablement Lead, AI Program Manager, Communications Lead at AI-native companies). I have 18 years in editorial (CNN, Al Jazeera, AJ+, HuffPost Live) plus 6 years at Google shipping production AI systems for 1,000+ senior engineers. Target comp: $200K–$320K. Open to relocation globally. I need the most current market intelligence to target the right companies, roles, and cities.`;
+const SHARED_CONTEXT = `Candidate: Mitchell Williams. 18yr editorial (CNN, Al Jazeera, AJ+, HuffPost Live) + 6yr Google xGE shipping production AI for 1,000+ senior engineers. Targets: AI Solutions Architect, Forward Deployed Engineer, Applied AI Engineer, AI Enablement, AI PgM, AI-native Comms. Comp target $200K–$320K. Seattle, open to global relocation.
+
+PRIMARY FILTER (overrides all other ranking): total comp + pre-IPO equity timing + RSU value-at-vest. Frontier labs (Anthropic, OpenAI, xAI, Perplexity, Sierra) are highest priority. Mature public comp only competes if cash+RSU materially beats a strong pre-IPO offer compounding over 4 years. Surface IPO/equity signals BEFORE role-fit.
+
+Output rules: no preamble, no closing summary, no hedging. Point estimates with [VERIFY] tags. ≤2 sentences per bullet. Skip a bullet if you have nothing concrete — short and dense beats long and padded.`;
 
 const PLATFORM_PROMPTS = {
   'chatgpt.md': `# ChatGPT Research Prompt — ${DATE}
 
-Paste this into ChatGPT (GPT-4o with web search or plugins enabled for best results):
+Paste into ChatGPT (GPT-4o or newer with web search ON).
 
 ---
 
 ${SHARED_CONTEXT}
 
-I need your most current intelligence (search the web if you can) on the following:
+Research with web search and return EXACTLY these 5 sections (verbatim headers, no intro):
 
-1. **Hiring activity**: Which AI-native companies (Anthropic, OpenAI, Cohere, Mistral, Perplexity, xAI, ElevenLabs, Runway, Harvey, Imbue, Character.AI, Adept) are actively expanding headcount right now, specifically for roles involving AI deployment, communications, solutions architecture, or program management?
+**1. Equity & IPO posture (PRIMARY)** — For each: Anthropic, OpenAI, xAI, Perplexity, Sierra, Cohere, Mistral, Harvey, Glean, Decagon — one line: stage / last raise ($ @ valuation, date) / IPO window (<12mo / 12–24mo / 24mo+ / none) / refresher cadence / 409A vs preferred gap / verdict (LEAN IN / WATCH / SKIP for equity). Cite source.
 
-2. **Compensation bands**: What are current total comp ranges (base + equity) for "Forward Deployed Engineer" and "AI Solutions Architect" roles at Series B–D AI companies vs. Big Tech AI divisions? Has this moved in the last 90 days?
+**2. Hiring activity** — 8–12 AI-native companies actively expanding headcount this week for AI Solutions Architect, Forward Deployed Engineer, AI PgM, or AI-native Comms. One line each: company — role family — signal (funding round / product launch / leader's public post). Cite.
 
-3. **IPO signals**: Which AI companies are most likely to IPO or be acquired in the next 12–18 months? What does joining them now mean for equity?
+**3. Compensation bands (Δ vs 90d)** — Table: Role | Stage | Base | Annual equity ($) | TC | Δ vs 90d. 8–10 rows covering my archetypes at Series B/C, Series D+/pre-IPO, Big Tech AI div. Mid-of-band point estimates, no ranges.
 
-4. **Skill gaps**: What technical or domain skills are appearing in AI-role JDs now that weren't required 6 months ago? What's becoming a table-stakes requirement for my target roles?
+**4. Skills newly table-stakes** — 5–7 skills/certs in AI JDs now that weren't 6mo ago. One line: skill — frequency (emerging/growing/table-stakes) — my action (learn / showcase / ignore).
 
-5. **Geography**: Where are AI-native companies concentrating their non-engineering hires (comms, solutions, enablement, editorial) right now — US metros and internationally?
+**5. Geography** — Top 3 US metros + top 3 international cities for my archetypes right now. Note visa pathways and remote-vs-onsite pressure. 1 line per city.
 
-Give me specific, actionable intelligence. Flag anything uncertain.
+Cite sources. Tag uncertain claims [VERIFY]. No preamble.
 
 ---
 `,
 
   'gemini.md': `# Gemini Research Prompt — ${DATE}
 
-Paste this into Gemini Advanced (1.5 Pro or Ultra with Google Search grounding):
+Paste into Gemini Advanced (2.0 Pro or newer, Google Search grounding ON).
 
 ---
 
 ${SHARED_CONTEXT}
 
-Using your most current Google Search data, give me a weekly market briefing:
+Use Google Search grounding. Return EXACTLY these 4 sections (verbatim headers, no intro):
 
-**Section A — Company Health Check**
-For each of these companies, tell me their current funding status, headcount trajectory, and likelihood of IPO or acquisition in the next 12–18 months: Anthropic, OpenAI, Cohere, Mistral, Perplexity, xAI, Character.AI, ElevenLabs, Runway, Harvey AI, Imbue, Adept.
+**Section A — Equity & IPO posture (PRIMARY)** — For each: Anthropic, OpenAI, xAI, Perplexity, Sierra, Cohere, Mistral, Character.AI, ElevenLabs, Runway, Harvey, Imbue — one row: stage / last raise ($ @ valuation, date) / IPO/exit window (<12mo / 12–24mo / 24mo+ / none) / known refresher cadence / verdict (LEAN IN / WATCH / SKIP for equity). One Google Search citation per company.
 
-**Section B — Role Intelligence**
-What are recruiters at these companies actually filtering for in "AI Solutions Architect," "Forward Deployed Engineer," and "Applied AI PM" roles right now? What resume elements are passing ATS, and what's getting screened out?
+**Section B — Hiring filter intelligence** — At those companies, what are recruiters actually filtering for in AI Solutions Architect, Forward Deployed Engineer, and Applied AI PM roles right now? 5 bullets max: signal — what passes ATS — what gets screened.
 
-**Section C — Compensation Shifts**
-Is total compensation for senior AI-adjacent non-engineering roles (comms, enablement, program management) trending up or down vs. 3 months ago? What companies are expanding comp bands?
+**Section C — Compensation Δ vs 90d** — Is TC for senior AI-adjacent non-engineering roles (Comms, Enablement, PgM) up or down vs 90 days ago? Which 3 companies are expanding bands, which 3 compressing? Numbers preferred.
 
-**Section D — LinkedIn Signal**
-What's working for senior candidates doing outbound LinkedIn outreach to recruiters and hiring managers at AI-native companies right now? What approach is getting response rates above 20%?
+**Section D — LinkedIn outbound** — What outbound approach is hitting >20% reply rate from recruiters/hiring managers at AI-native companies right now? 3 bullets: opener pattern — context that earns reply — what kills the thread.
 
-Be specific. Cite sources where you can. Flag uncertain information.
+Cite sources inline. Tag uncertain [VERIFY]. No preamble.
 
 ---
 `,
 
   'perplexity.md': `# Perplexity Pro Research Prompt — ${DATE}
 
-Paste this into Perplexity Pro (use "Focus: All" for broadest coverage):
+Paste into Perplexity Pro (Focus: All).
 
 ---
 
 ${SHARED_CONTEXT}
 
-Run the following 4 targeted searches and synthesize the results:
+Run these 4 targeted searches and synthesize. Return EXACTLY 4 sections, one per search (verbatim headers, no intro):
 
-**Search 1**: "AI company hiring 2026 solutions architect forward deployed engineer"
-→ What companies are actively posting these roles? What's the volume trend?
+**Search 1 — IPO & secondary signals (PRIMARY)** — Query: "AI company IPO secondary tender 2026 Anthropic OpenAI xAI Perplexity Cohere Mistral Sierra". Return: which are preparing for IPO (banker selection, S-1 leaks), latest 409A or secondary marks, employee tender activity, expected window. 6–10 bullets.
 
-**Search 2**: "AI startup IPO 2026 2027 Anthropic Cohere Mistral xAI"
-→ Which companies are preparing for IPO? What's the current valuation trajectory?
+**Search 2 — Forward Deployed / Solutions Architect hiring** — Query: "Forward Deployed Engineer Solutions Architect AI startup hiring 2026". Return: which companies posting volume is trending up, which are net-new openings vs backfill, any leader X posts about urgent hiring. 6–8 bullets.
 
-**Search 3**: "AI job market compensation 2026 total comp equity non-engineering"
-→ Current comp benchmarks for AI-adjacent roles (not pure engineering). What's the equity picture at different stages?
+**Search 3 — Comp benchmarks for AI-adjacent non-engineering** — Query: "AI Solutions Architect Forward Deployed comp Levels.fyi Blind 2026 equity refresher". Return: TC point estimates by stage (Series B/C, Series D+/pre-IPO, Big Tech AI div), refresher grant patterns, equity-to-base ratio shifts. Numbers, not adjectives.
 
-**Search 4**: "best cities AI jobs 2026 relocation international remote"
-→ Where are the best opportunities concentrating geographically for AI-native companies?
+**Search 4 — Geography & relocation** — Query: "AI company expansion city 2026 visa remote policy". Return: which cities are AI-native companies actively expanding into, which are reducing footprint, visa pathways for senior US-citizen relocation. 5–7 bullets.
 
-For each search, give me: key findings, most credible sources, what's uncertain, and what I should do with this information this week.
+For each section: top 3 most credible source URLs, what's confirmed, what's [VERIFY], one-action-this-week. No preamble.
 
 ---
 `,
 
   'grok.md': `# Grok Research Prompt — ${DATE}
 
-Paste this into Grok (Heavy mode or Deep Search for best coverage of X/Twitter signals):
+Paste into Grok (Heavy / Deep Search for X-thread coverage).
 
 ---
 
 ${SHARED_CONTEXT}
 
-I need X/Twitter and real-time web signals on the following. Search X posts, threads, job postings, and news from the last 7–14 days:
+Search X posts, threads, leaked screenshots, and news from the last 7–14 days. Return EXACTLY 5 sections (verbatim headers, no intro), 3–5 bullets each, X-link or news-link cited per claim:
 
-**Thread 1 — Hiring signals from AI companies**
-Search X for: hiring announcements, job posting signals, or headcount discussions at Anthropic, OpenAI, Cohere, Mistral, xAI, Perplexity, ElevenLabs, Runway, Harvey, Character.AI, Imbue, Adept. Who's hiring and for what? Who's quietly freezing?
+**1. Equity & IPO chatter (PRIMARY)** — X/insider sentiment on Anthropic, OpenAI, xAI, Perplexity, Sierra, Cohere, Mistral IPO/secondary timing. Any banker pings, S-1 rumors, secondary market spreads, employee tender screenshots, valuation marks. Lean toward concrete signals over speculation.
 
-**Thread 2 — Comp and equity discussions**
-What are AI workers on X saying about compensation, equity, and offer quality right now? Are vesting schedules changing? Is the equity-to-base ratio shifting?
+**2. Hiring signals** — Who's hiring loud (leader X posts, "we're hiring" threads, $$ bonuses), who's quietly freezing, who's offering retention/stay bonuses. Cover Forward Deployed, Solutions Architect, AI PgM, AI-native Comms. Cite the post.
 
-**Thread 3 — AI job search meta-intelligence**
-What are recruiters, hiring managers, and senior AI professionals saying on X about what's working and what's failing in AI job applications right now? What's getting candidates fast-tracked? What's getting them ghosted?
+**3. Comp & equity discussion** — What AI workers are posting about offers, refreshers, vesting changes, equity-to-base ratio shifts. Screenshots > anecdotes.
 
-**Thread 4 — IPO and exit signals**
-What's the X/Twitter sentiment on Anthropic, Cohere, Mistral, and xAI IPO likelihood? Any insider signals, secondary market activity, or analyst commentary?
+**4. Job-search meta** — What recruiters/hiring managers say is working vs ghosting candidates this week (cover letters, LinkedIn DMs, portfolio links, GitHub signals).
 
-**Thread 5 — Skills and certifications**
-What skills are AI practitioners and recruiters on X flagging as newly important or newly required in 2026? Any certs going viral as table-stakes?
+**5. Skills & geography deltas** — Newly required skills/certs surfacing in JDs (especially MCP, agent evals, DSPy/LangGraph), and any city/remote-policy shifts at AI-native companies.
 
-**Thread 6 — Geography shifts**
-Are there any X signals about AI companies expanding to new cities, changing their remote policy, or concentrating hiring in specific markets?
-
-Synthesize each thread into 3–5 actionable bullets. Flag anything contradictory or uncertain.
+Cite the X post or article URL. Flag contradictions [CONFLICT]. No preamble, no summary.
 
 ---
 `,
