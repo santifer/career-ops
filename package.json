@@ -15,7 +15,10 @@
     "rollback": "node update-system.mjs rollback",
     "liveness": "node check-liveness.mjs",
     "scan": "node scan.mjs",
-    "gemini:eval": "node gemini-eval.mjs"
+    "gemini:eval": "node gemini-eval.mjs",
+    "test:dashboard": "playwright test --config=tests/playwright.config.mjs",
+    "test:dashboard:ui": "playwright test --config=tests/playwright.config.mjs --ui",
+    "test:dashboard:install": "playwright install chromium"
   },
   "keywords": [
     "ai",
@@ -36,5 +39,8 @@
     "dotenv": "^16.4.5",
     "js-yaml": "^4.1.1",
     "playwright": "^1.58.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.1"
   }
 }
