@@ -274,7 +274,7 @@ function loadSeenCompanyRoles() {
 
 // ── Pipeline writer ─────────────────────────────────────────────────
 
-function appendToPipeline(offers) {
+function appendToPipeline(offers, date) {
   if (offers.length === 0) return;
 
   let text = readFileSync(PIPELINE_PATH, 'utf-8');
@@ -418,7 +418,7 @@ async function main() {
 
   // 5. Write results
   if (!dryRun && newOffers.length > 0) {
-    appendToPipeline(newOffers);
+    appendToPipeline(newOffers, date);
     appendToScanHistory(newOffers, date);
   }
 
