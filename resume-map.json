@@ -1,0 +1,67 @@
+{
+  "AI Engineer": {
+    "folder": "resumes/variants/ai_engineer",
+    "resume": "main.tex",
+   "keywords": [
+  "llm",
+  "rag",
+  "nlp",
+  "prompt engineering",
+  "genai",
+  "retrieval augmented generation",
+  "machine learning",
+  "vector database",
+  "embeddings",
+  "ai agents",
+  "langchain",
+  "inference",
+  "fine tuning",
+  "multimodal",
+  "transformers",
+  "openai",
+  "anthropic",
+  "gemini"
+]
+  },
+
+  "Backend Engineer": {
+    "folder": "resumes/variants/backend_engineer",
+    "resume": "main.tex",
+    "keywords": [
+      "fastapi",
+      "redis",
+      "postgresql",
+      "celery",
+      "docker",
+      "distributed systems",
+      "backend",
+      "backend api",
+      "platform engineer",
+      "infrastructure",
+      "scalable systems",
+      "microservices",
+      "engineering"
+      
+      
+    ]
+  },
+
+  "Full Stack AI": {
+    "folder": "resumes/variants/fullstack_ai",
+    "resume": "main.tex",
+    "keywords": [
+      "next.js",
+      "frontend",
+      "full stack",
+      "react",
+      "apis",
+      "software engineer",
+      "frontend",
+"product engineer",
+"typescript",
+"react",
+"ui",
+"web applications"
+    ]
+  }
+}

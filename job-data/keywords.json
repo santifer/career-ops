@@ -1,0 +1,17 @@
+{
+  "ai_keywords": [
+    "llm",
+    "rag",
+    "nlp",
+    "prompt engineering",
+    "retrieval augmented generation"
+  ],
+
+  "backend_keywords": [
+    "redis",
+    "celery",
+    "postgresql",
+    "docker",
+    "fastapi"
+  ]
+}

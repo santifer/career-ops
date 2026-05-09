@@ -1,0 +1,3 @@
+Akshit Jain is an AI and backend-focused software engineer with experience in LLM systems, RAG pipelines, FastAPI backend development, Dockerized infrastructure, Redis, PostgreSQL, and scalable distributed systems.
+
+He has internship experience in Post-LLM training and enterprise AI systems and has built projects involving AI resume optimization, distributed task queues, and intelligent analytics systems.

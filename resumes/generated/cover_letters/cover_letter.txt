@@ -1,0 +1,14 @@
+Here's a concise, professional, and technically strong cover letter:
+
+Dear Hiring Manager,
+
+I'm excited to apply for the Software Engineer position at Nav, where I can leverage my skills in AI, backend development, and distributed systems to drive meaningful products and services for small business owners. With experience in LLM systems, RAG pipelines, and FastAPI backend development, I'm confident in my ability to deliver high-quality system designs and software code at scale.
+
+In my previous internship, I worked on Post-LLM training and enterprise AI systems, and I've also built personal projects involving AI resume optimization, distributed task queues, and intelligent analytics systems. I'm eager to bring my technical expertise to Nav and contribute to the development of innovative solutions that make a positive impact on small business owners.
+
+I'm particularly drawn to Nav's mission to challenge the norm and push boundaries in the credit and financial health space. As someone who values individualism and teamwork, I appreciate Nav's commitment to diversity and inclusivity. I'm impressed by the company's use of technologies like PostgreSQL, Docker, and Redis, and I'm excited about the opportunity to work with a talented team of engineers who share my passion for technology and innovation.
+
+Thank you for considering my application. I'm looking forward to discussing my qualifications further and exploring how I can contribute to Nav's success.
+
+Sincerely,
+Akshit Jain

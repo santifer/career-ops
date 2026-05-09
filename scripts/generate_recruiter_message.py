@@ -1,0 +1,88 @@
+import os
+from dotenv import load_dotenv
+from openai import OpenAI
+
+load_dotenv()
+
+client = OpenAI(
+    api_key=os.getenv("GROQ_API_KEY"),
+    base_url="https://api.groq.com/openai/v1"
+)
+
+# =========================
+# LOAD FILES
+# =========================
+
+with open(
+    "job_description.txt",
+    "r",
+    encoding="utf-8"
+) as f:
+    job_description = f.read()
+
+with open(
+    "candidate_profile.txt",
+    "r",
+    encoding="utf-8"
+) as f:
+    candidate_profile = f.read()
+
+with open(
+    "templates/recruiter_prompt.txt",
+    "r",
+    encoding="utf-8"
+) as f:
+    template = f.read()
+
+# =========================
+# BUILD PROMPT
+# =========================
+
+prompt = template.format(
+    candidate_profile=candidate_profile,
+    job_description=job_description
+)
+
+# =========================
+# GENERATE MESSAGE
+# =========================
+
+response = client.chat.completions.create(
+    model="llama-3.3-70b-versatile",
+
+    messages=[
+        {
+            "role": "user",
+            "content": prompt
+        }
+    ],
+
+    temperature=0.5,
+    max_tokens=300
+)
+
+message = response.choices[0].message.content.strip()
+
+# =========================
+# SAVE MESSAGE
+# =========================
+
+os.makedirs(
+    "resumes/generated/recruiter_messages",
+    exist_ok=True
+)
+
+output_path = (
+    "resumes/generated/recruiter_messages/"
+    "recruiter_message.txt"
+)
+
+with open(
+    output_path,
+    "w",
+    encoding="utf-8"
+) as f:
+    f.write(message)
+
+print("\nRecruiter message generated:")
+print(output_path)

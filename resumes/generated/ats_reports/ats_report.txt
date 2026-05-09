@@ -1,0 +1,20 @@
+**ATS Match Score: 85**
+
+**Strong Matching Areas:**
+
+1. **FastAPI**: The resume mentions experience with FastAPI, which is a key technology used by VectorShift.
+2. **Backend Development**: The resume showcases experience in building scalable and maintainable backend systems, which aligns with the job requirements.
+3. **Performance Optimization**: The resume highlights experience in optimizing system performance, which is a key responsibility of the Backend Engineer role.
+4. **Python**: The resume mentions experience with Python, which is a preferred language for the role.
+
+**Missing Skills:**
+
+1. **No-Code Generative AI**: The resume does not explicitly mention experience with no-code generative AI, which is a key aspect of VectorShift's platform.
+2. **AI/ML Experience**: While the resume mentions experience with machine learning models, it does not explicitly mention experience with AI, which is a nice-to-have skill for the role.
+3. **MongoDB/Redis**: The resume mentions experience with PostgreSQL and Redis, but not MongoDB, which is used by VectorShift for data storage.
+
+**Resume Strength Summary:**
+The resume demonstrates strong experience in building scalable and maintainable backend systems, with a focus on performance optimization and machine learning. The candidate has a strong technical foundation, with experience in multiple programming languages and technologies.
+
+**Final Hiring Fit Recommendation:**
+Based on the resume, the candidate appears to be a strong fit for the Backend Engineer role at VectorShift. However, it is recommended to further assess the candidate's experience with no-code generative AI and AI/ML, as well as their ability to work with MongoDB and Redis. An interview or technical assessment would be necessary to fully evaluate the candidate's skills and fit for the role.

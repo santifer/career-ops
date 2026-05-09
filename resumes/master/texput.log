@@ -1,0 +1,21 @@
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.5.7)  7 MAY 2026 16:22
+entering extended mode
+ restricted \write18 enabled.
+ %&-line parsing enabled.
+**
+
+! Emergency stop.
+<*> 
+    
+End of file on the terminal!
+
+ 
+Here is how much of TeX's memory you used:
+ 3 strings out of 467871
+ 19 string characters out of 5428444
+ 433733 words of memory out of 5000000
+ 28986 multiletter control sequences out of 15000+600000
+ 627721 words of font info for 40 fonts, out of 8000000 for 9000
+ 1141 hyphenation exceptions out of 8191
+ 0i,0n,0p,25b,6s stack positions out of 10000i,1000n,20000p,200000b,200000s
+!  ==> Fatal error occurred, no output PDF file produced!
