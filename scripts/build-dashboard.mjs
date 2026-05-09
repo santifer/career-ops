@@ -29,6 +29,7 @@ const BATCH_STATE_PATH = join(ROOT, 'batch/batch-state.tsv');
 const PORTALS_PATH = join(ROOT, 'portals.yml');
 const REPORTS_DIR = join(ROOT, 'reports');
 const HEARTBEAT_GLOB = (date) => join(ROOT, `data/heartbeat-${date}.md`);
+const OVERPAY_CURRENT_PATH = join(ROOT, 'data/overpay-signals/CURRENT.md');
 const OUT_PATH = join(ROOT, 'dashboard/index.html');
 
 // ── Data extraction ───────────────────────────────────────────────
@@ -151,6 +152,130 @@ function getReportArchetype(reportPath) {
 
 function getReportFinalRecommendation(reportPath) {
   return readReportOnce(reportPath)?.finalRecommendation || '';
+
+// Parse data/overpay-signals/CURRENT.md once per build. Returns:
+//   { byCompany: Map<lowercased-company, { posture, stage, confidence }>,
+//     updated: ISO timestamp string or '' }
+// File format (per scripts/overpay-signals.mjs prompt):
+//   ## {Company} — {Role} (score {N})
+//   **Equity / IPO posture:** {free text} (confidence: H/M/L)
+// Also tolerates a markdown-table variant: a leading row whose first
+// cell is the company and a column titled "Equity / IPO posture".
+// Missing file → returns empty map; never throws.
+let _overpaySignalsCache = null;
+function parseOverpaySignals() {
+  if (_overpaySignalsCache) return _overpaySignalsCache;
+  const empty = { byCompany: new Map(), updated: '' };
+  if (!existsSync(OVERPAY_CURRENT_PATH)) {
+    _overpaySignalsCache = empty;
+    return empty;
+  }
+  let text = '';
+  let mtime = '';
+  try {
+    text = readFileSync(OVERPAY_CURRENT_PATH, 'utf-8');
+    mtime = statSync(OVERPAY_CURRENT_PATH).mtime.toISOString().slice(0, 10);
+  } catch {
+    _overpaySignalsCache = empty;
+    return empty;
+  }
+  const byCompany = new Map();
+  // Block format: ## Company — Role (score N) ... **Equity / IPO posture:** ...
+  const blockRe = /^##\s+([^—\n]+?)\s+—\s+[^\n]*?\n([\s\S]*?)(?=^##\s|\Z)/gm;
+  for (const m of text.matchAll(blockRe)) {
+    const company = m[1].trim();
+    const body = m[2];
+    const postureMatch = body.match(/\*\*Equity\s*\/\s*IPO\s+posture:?\*\*\s*([^\n]+)/i);
+    if (!postureMatch) continue;
+    const raw = postureMatch[1].trim();
+    const confMatch = raw.match(/\(confidence:\s*([HML])[^)]*\)\s*$/i);
+    const posture = raw.replace(/\s*\(confidence:[^)]+\)\s*$/i, '').trim();
+    byCompany.set(company.toLowerCase(), {
+      posture,
+      confidence: confMatch ? confMatch[1].toUpperCase() : '',
+      stage: classifyEquityStage(posture),
+    });
+  }
+  // Tolerant table-format fallback: rows like "| Company | ... | posture text |"
+  // where one of the column headers contains "Equity" or "IPO posture".
+  if (byCompany.size === 0) {
+    const lines = text.split('\n');
+    let postureCol = -1;
+    let companyCol = -1;
+    for (const line of lines) {
+      if (!line.includes('|')) continue;
+      const cells = line.split('|').map(c => c.trim()).filter(Boolean);
+      if (postureCol === -1) {
+        const idx = cells.findIndex(c => /equity|ipo posture/i.test(c));
+        if (idx !== -1) {
+          postureCol = idx;
+          companyCol = cells.findIndex(c => /^company$/i.test(c));
+          if (companyCol === -1) companyCol = 0;
+        }
+        continue;
+      }
+      if (/^[-:|\s]+$/.test(line)) continue;
+      if (cells.length <= postureCol) continue;
+      const company = cells[companyCol];
+      const posture = cells[postureCol];
+      if (!company || !posture || /^equity|^ipo|^company$/i.test(company)) continue;
+      byCompany.set(company.toLowerCase(), {
+        posture,
+        confidence: '',
+        stage: classifyEquityStage(posture),
+      });
+    }
+  }
+  _overpaySignalsCache = { byCompany, updated: mtime };
+  return _overpaySignalsCache;
+}
+
+// Map free-text posture → one of: 'late', 'cd', 'b', 'seed-a', 'public', 'unknown'
+// Order matters: more specific signals win (e.g. "late-stage pre-IPO" → 'late',
+// not 'b' just because the word "B" appears in "$1B").
+function classifyEquityStage(posture) {
+  if (!posture) return 'unknown';
+  const t = posture.toLowerCase();
+  if (/\bpublic(ly)?\b|\bipo(?:'?d|ed)\b|post-ipo|listed|nyse|nasdaq/.test(t)) return 'public';
+  if (/\blate[\s-]?stage\b|\bpre-?ipo\b|\bseries\s*[ef]\b|series\s*d\+/.test(t)) return 'late';
+  if (/\bseries\s*c\b|\bseries\s*d\b/.test(t)) return 'cd';
+  if (/\bseries\s*b\b/.test(t)) return 'b';
+  if (/\bseries\s*a\b|\bseed\b/.test(t)) return 'seed-a';
+  return 'unknown';
+}
+
+const EQUITY_STAGE_META = {
+  'late':    { label: 'Pre-IPO Late', emoji: '🟢', cls: 'eq-late' },
+  'cd':      { label: 'Pre-IPO C/D',  emoji: '🟢', cls: 'eq-cd' },
+  'b':       { label: 'Pre-IPO B',    emoji: '🟡', cls: 'eq-b' },
+  'seed-a':  { label: 'Pre-IPO Seed/A', emoji: '🟣', cls: 'eq-seed' },
+  'public':  { label: 'Public',       emoji: '🔵', cls: 'eq-public' },
+  'unknown': { label: 'Unknown',      emoji: '⚪', cls: 'eq-unknown' },
+};
+
+function getEquityForCompany(company) {
+  if (!company) return null;
+  const { byCompany } = parseOverpaySignals();
+  return byCompany.get(company.toLowerCase()) || null;
+}
+
+// Render the equity-stage badge (table cell content). Returns either an em-dash
+// span (no entry) or a colored chip with hover tooltip showing posture + as-of.
+function equityBadge(company) {
+  const data = getEquityForCompany(company);
+  const { updated } = parseOverpaySignals();
+  if (!data) {
+    const tip = updated
+      ? `No equity posture entry for ${company || 'this company'} (overpay-signals as of ${updated}).`
+      : 'data/overpay-signals/CURRENT.md not present yet — run scripts/overpay-signals.mjs to populate.';
+    return `<span class="equity-badge equity-badge-empty" title="${escape(tip)}" aria-label="${escape(tip)}">—</span>`;
+  }
+  const meta = EQUITY_STAGE_META[data.stage] || EQUITY_STAGE_META.unknown;
+  const tipParts = [data.posture];
+  if (data.confidence) tipParts.push(`Confidence: ${data.confidence}`);
+  if (updated) tipParts.push(`As of ${updated}`);
+  const tip = tipParts.join(' · ');
+  return `<span class="equity-badge ${meta.cls}" data-equity-stage="${meta.cls}" title="${escape(tip)}" aria-label="${escape(`${meta.label}: ${tip}`)}">${meta.emoji} ${escape(meta.label)}</span>`;
 }
 
 // Render a single report's markdown to a self-contained HTML page that
@@ -756,18 +881,25 @@ function renderRow(r, idx) {
     ...edge.flatMap(e => [e.requirement, e.evidence, e.label]),
   ].filter(Boolean).join(' ').toLowerCase().replace(/\s+/g, ' ').trim();
 
+  // Equity / IPO posture — primary filter signal. Empty when no overpay-signals
+  // entry exists for this company; rendered as a hairline em-dash.
+  const equityData = getEquityForCompany(r.company);
+  const equityStage = equityData ? equityData.stage : 'unknown';
+  const equityCell = equityBadge(r.company);
+
   return `
-<tr class="row ${throttleClass}" data-num="${r.num}" data-row-id="${escape(idx)}" data-score="${r.score}" data-archetype="${escape(archetype)}" data-company="${escape(r.company.toLowerCase())}" data-status="${escape(r.status.toLowerCase())}" data-role="${escape(r.role.toLowerCase())}" data-search="${escape(searchIndex)}" onclick="toggleDetail('${idx}')">
+<tr class="row ${throttleClass}" data-num="${r.num}" data-row-id="${escape(idx)}" data-score="${r.score}" data-archetype="${escape(archetype)}" data-company="${escape(r.company.toLowerCase())}" data-status="${escape(r.status.toLowerCase())}" data-role="${escape(r.role.toLowerCase())}" data-equity="${escape(equityStage)}" data-search="${escape(searchIndex)}" onclick="toggleDetail('${idx}')">
   <td><span class="badge score-badge-lg ${scoreBadgeClass(r.score)}">${r.score.toFixed(1)}</span></td>
   <td><strong>${escape(r.company)}</strong>${archetype ? `<span class="tier-tag" tabindex="0" role="button" data-tooltip="${escape(tierTooltip(archetype))}" aria-label="Tier ${escape(archetype)}: ${escape(tierTooltip(archetype))}" onclick="event.stopPropagation();openTierLegend('${escape(archetype)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openTierLegend('${escape(archetype)}')}">${escape(archetype)}</span>` : ''}</td>
   <td class="role-cell">${escape(r.role)}${cardGapChips}</td>
   <td><span class="badge status-pill ${statusBadgeClass(r.status)}" data-status="${statusKey(r.status)}" data-num="${r.num}" role="button" tabindex="0" onclick="openStatusPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){openStatusPopover(this);event.preventDefault();event.stopPropagation()}" title="Click to change status">${escape(r.status)}</span></td>
+  <td class="equity-cell">${equityCell}</td>
   <td class="muted-text mobile-hide">${escape(r.date)}</td>
   <td class="muted-text">${evalAge(r.date)}</td>
   <td class="action-cell">${applyLink}</td>
 </tr>
 <tr class="detail-row" id="detail-${idx}" style="display:none">
-  <td colspan="7">
+  <td colspan="8">
     <div class="detail-block">
       ${r._throttle?.label ? `<div class="throttle-banner throttle-${r._throttle.status}">${escape(r._throttle.label)}<br><span class="muted-text">${escape(r._throttle.note || '')}</span></div>` : ''}
       ${metaChips ? `<div class="detail-meta">${metaChips}</div>` : ''}
@@ -1427,9 +1559,9 @@ function build() {
   .tier-legend-btn:focus-visible { box-shadow: var(--ring-blue); }
 
   /* Tier-legend modal — same shape as gap modal for consistency. */
-  #tier-legend-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 2000; backdrop-filter: blur(2px); }
-  #tier-legend-backdrop.visible { display: block; }
-  #tier-legend-modal {
+  #tier-legend-backdrop, #equity-legend-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 2000; backdrop-filter: blur(2px); }
+  #tier-legend-backdrop.visible, #equity-legend-backdrop.visible { display: block; }
+  #tier-legend-modal, #equity-legend-modal {
     position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
     width: min(640px, 96vw); max-height: 82vh; overflow-y: auto; z-index: 2001;
     background: var(--surface); border-radius: 12px; border: 1px solid var(--border);
@@ -1597,6 +1729,25 @@ function build() {
   }
   .meta-chip-comp { background: var(--green-bg); border-color: var(--green-border); color: var(--green); }
   .meta-chip-tier { background: var(--blue-bg);  border-color: var(--blue-border);  color: var(--blue-fg-dark); }
+  /* Equity / IPO posture badge — primary filter signal */
+  .equity-cell { white-space: nowrap; }
+  .equity-badge {
+    display: inline-flex; align-items: center; gap: 3px;
+    padding: 2px 8px; border-radius: var(--radius-full);
+    font-size: 11px; font-weight: 600;
+    border: 1px solid var(--border); background: var(--surface-2); color: var(--text-3);
+    cursor: help;
+  }
+  .equity-badge.eq-late   { background: var(--green-bg);  border-color: var(--green-border);  color: var(--green); }
+  .equity-badge.eq-cd     { background: var(--green-bg);  border-color: var(--green-border);  color: var(--green-fg-dark); }
+  .equity-badge.eq-b      { background: var(--amber-bg);  border-color: var(--amber-border);  color: var(--amber); }
+  .equity-badge.eq-seed   { background: var(--purple-bg); border-color: var(--purple-border); color: var(--purple); }
+  .equity-badge.eq-public { background: var(--blue-bg);   border-color: var(--blue-border);   color: var(--blue-fg-dark); }
+  .equity-badge.eq-unknown { background: var(--surface-2); border-color: var(--border); color: var(--text-4); }
+  .equity-badge-empty {
+    background: transparent; border-color: transparent;
+    color: var(--text-4); font-weight: 400; padding: 2px 4px;
+  }
   /* Two-column detail grid */
   .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
   .detail-col  { display: flex; flex-direction: column; gap: 8px; }
@@ -2075,13 +2226,16 @@ function build() {
       font-weight: 500;
       line-height: 1.4;
     }
-    /* Status pill + age: bottom meta line */
+    /* Status pill + equity badge + age: bottom meta line */
     #apply-now-section tr.row > td:nth-child(4),
-    #apply-now-section tr.row > td:nth-child(6) {
+    #apply-now-section tr.row > td:nth-child(5),
+    #apply-now-section tr.row > td:nth-child(7) {
       display: inline-flex;
       align-items: center;
       margin: 8px 8px 0 0;
     }
+    /* Equity badge on stacked card stays compact next to status */
+    #apply-now-section tr.row > td.equity-cell { white-space: nowrap; }
     /* Action links: separated row, right-aligned, large hit-area */
     #apply-now-section tr.row > td.action-cell {
       display: block;
@@ -2307,6 +2461,28 @@ function build() {
     </div>
   </div>
 
+  <!-- Equity-legend modal -->
+  <div id="equity-legend-backdrop" onclick="closeEquityLegend()" role="dialog" aria-modal="true" aria-labelledby="equity-legend-title">
+    <div id="equity-legend-modal" onclick="event.stopPropagation()">
+      <div class="tier-legend-header">
+        <div class="tier-legend-title" id="equity-legend-title">Equity / IPO posture</div>
+        <button class="verify-close" onclick="closeEquityLegend()" aria-label="Close">✕</button>
+      </div>
+      <div class="tier-legend-body">
+        <p style="font-size:12.5px;line-height:1.55;color:var(--text-2);margin:0 0 10px">Mitchell's primary filter: total comp + pre-IPO equity timing + RSU value-at-vest. Source: <code>data/overpay-signals/CURRENT.md</code> (refreshed weekly).</p>
+        <ul style="list-style:none;padding:0;margin:0;display:grid;gap:6px;font-size:12.5px">
+          <li><span class="equity-badge eq-late">🟢 Pre-IPO Late</span> — late-stage / pre-IPO / Series E+. Highest-upside zone.</li>
+          <li><span class="equity-badge eq-cd">🟢 Pre-IPO C/D</span> — Series C or D. Maturing but pre-liquidity.</li>
+          <li><span class="equity-badge eq-b">🟡 Pre-IPO B</span> — Series B. Early but viable; longer runway to exit.</li>
+          <li><span class="equity-badge eq-seed">🟣 Pre-IPO Seed/A</span> — very early; high variance, lottery-ticket equity.</li>
+          <li><span class="equity-badge eq-public">🔵 Public</span> — listed; mature RSU, predictable but capped upside.</li>
+          <li><span class="equity-badge eq-unknown">⚪ Unknown</span> — signal entry exists but stage not classifiable.</li>
+          <li><span class="equity-badge equity-badge-empty">—</span> — no entry in CURRENT.md (yet).</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast container -->
   <div id="toast-container" aria-live="polite" aria-atomic="false"></div>
 
@@ -2391,8 +2567,9 @@ function build() {
         <th class="sortable" onclick="sortTable('apply-now-tbody', 1, 'str', this)">Company <button type="button" class="tier-legend-btn" title="Tier badge legend" aria-label="Show tier badge legend" onclick="event.stopPropagation();openTierLegend()">?</button></th>
         <th class="sortable" onclick="sortTable('apply-now-tbody', 2, 'str', this)">Role</th>
         <th class="sortable" onclick="sortTable('apply-now-tbody', 3, 'str', this)">Status</th>
-        <th class="sortable mobile-hide" onclick="sortTable('apply-now-tbody', 4, 'str', this)">Eval Date</th>
-        <th class="sortable" onclick="sortTable('apply-now-tbody', 5, 'num', this)">Age</th>
+        <th class="sortable" onclick="sortTable('apply-now-tbody', 4, 'str', this)">Equity <button type="button" class="tier-legend-btn" title="Equity stage legend" aria-label="Show equity stage legend" onclick="event.stopPropagation();openEquityLegend()">?</button></th>
+        <th class="sortable mobile-hide" onclick="sortTable('apply-now-tbody', 5, 'str', this)">Eval Date</th>
+        <th class="sortable" onclick="sortTable('apply-now-tbody', 6, 'num', this)">Age</th>
         <th>Action</th>
       </tr></thead>
       <tbody id="apply-now-tbody">
@@ -2432,6 +2609,15 @@ function build() {
         <option value="discarded">Discarded</option>
         <option value="rejected">Rejected</option>
       </select>
+      <select id="filter-equity" aria-label="Filter by equity / IPO stage" onchange="applyFilters()">
+        <option value="">All equity stages</option>
+        <option value="late">🟢 Pre-IPO Late</option>
+        <option value="cd">🟢 Pre-IPO C/D</option>
+        <option value="b">🟡 Pre-IPO B</option>
+        <option value="seed-a">🟣 Pre-IPO Seed/A</option>
+        <option value="public">🔵 Public</option>
+        <option value="unknown">⚪ Unknown</option>
+      </select>
     </div>
     <div class="table-scroll"><table>
       <thead><tr>
@@ -2439,8 +2625,9 @@ function build() {
         <th class="sortable" onclick="sortTable('all-tbody', 1, 'str', this)">Company <button type="button" class="tier-legend-btn" title="Tier badge legend" aria-label="Show tier badge legend" onclick="event.stopPropagation();openTierLegend()">?</button></th>
         <th class="sortable" onclick="sortTable('all-tbody', 2, 'str', this)">Role</th>
         <th class="sortable" onclick="sortTable('all-tbody', 3, 'str', this)">Status</th>
-        <th class="sortable mobile-hide" onclick="sortTable('all-tbody', 4, 'str', this)">Eval Date</th>
-        <th class="sortable" onclick="sortTable('all-tbody', 5, 'num', this)">Age</th>
+        <th class="sortable" onclick="sortTable('all-tbody', 4, 'str', this)">Equity <button type="button" class="tier-legend-btn" title="Equity stage legend" aria-label="Show equity stage legend" onclick="event.stopPropagation();openEquityLegend()">?</button></th>
+        <th class="sortable mobile-hide" onclick="sortTable('all-tbody', 5, 'str', this)">Eval Date</th>
+        <th class="sortable" onclick="sortTable('all-tbody', 6, 'num', this)">Age</th>
         <th>Action</th>
       </tr></thead>
       <tbody id="all-tbody">
@@ -2605,6 +2792,7 @@ function applyFilters() {
   const tier = document.getElementById('filter-tier').value;
   const score = parseFloat(document.getElementById('filter-score').value || '0');
   const status = document.getElementById('filter-status').value;
+  const equity = (document.getElementById('filter-equity') || {}).value || '';
   const rows = document.querySelectorAll('#all-tbody tr.row');
   for (const row of rows) {
     const detail = row.nextElementSibling;
@@ -2616,6 +2804,7 @@ function applyFilters() {
     if (tier && row.dataset.archetype !== tier) show = false;
     if (score && parseFloat(row.dataset.score) < score) show = false;
     if (status && !row.dataset.status.includes(status)) show = false;
+    if (equity && (row.dataset.equity || '') !== equity) show = false;
     row.style.display = show ? '' : 'none';
     if (detail && detail.classList.contains('detail-row'))
       detail.style.display = show && detail.style.display !== 'none' ? detail.style.display : 'none';
@@ -3141,6 +3330,25 @@ function closeTierLegend() {
   }
 }
 
+let _equityLegendLastFocus = null;
+function openEquityLegend() {
+  _equityLegendLastFocus = document.activeElement;
+  const backdrop = document.getElementById('equity-legend-backdrop');
+  if (!backdrop) return;
+  backdrop.classList.add('visible');
+  const close = backdrop.querySelector('.verify-close');
+  if (close) close.focus();
+}
+function closeEquityLegend() {
+  const backdrop = document.getElementById('equity-legend-backdrop');
+  if (!backdrop) return;
+  backdrop.classList.remove('visible');
+  if (_equityLegendLastFocus && _equityLegendLastFocus.focus) {
+    _equityLegendLastFocus.focus();
+    _equityLegendLastFocus = null;
+  }
+}
+
 // ── Live stats refresh ──────────────────────────────────────────
 async function refreshLiveStats() {
   const data = await apiFetch('/api/stats');
@@ -3350,10 +3558,12 @@ function _cmdkJumpToRow(rowId, num) {
   const fT = document.getElementById('filter-tier');
   const fS = document.getElementById('filter-score');
   const fSt = document.getElementById('filter-status');
+  const fEq = document.getElementById('filter-equity');
   if (ft) ft.value = '';
   if (fT) fT.value = '';
   if (fS) fS.value = '';
   if (fSt) fSt.value = '';
+  if (fEq) fEq.value = '';
   if (typeof applyFilters === 'function') applyFilters();
   row.style.display = '';
   row.scrollIntoView({ behavior: 'smooth', block: 'center' });
