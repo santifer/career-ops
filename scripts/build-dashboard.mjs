@@ -1482,12 +1482,9 @@ function build() {
   const batchRuns = countBatchRuns();
   const portals = getEnabledPortals();
   const reportsToday = countTodaysReports(today);
-<<<<<<< HEAD
   const liveTicker = loadLiveScanEvents();
   const liveTickerJson = JSON.stringify(liveTicker).replace(/<\//g, '<\\/');
-=======
   const kpiSpark = computeKPISparklines(apps, today);
->>>>>>> a22b235 (feat(dashboard): KPI sparklines + 7-day trend deltas on stat cards (Phase 6 item 3.1))
 
   // Sorted views
   const sortedByScore = [...apps].sort((a, b) => b.score - a.score);
@@ -3912,24 +3909,6 @@ function build() {
         <div class="stat-trend">${deltaIndicator(kpiSpark.applied.delta)}${sparklineSVG(kpiSpark.applied.daily, 'var(--purple-fg)', 'Applied / In process')}</div>
         <span class="stat-caret" aria-hidden="true">▾</span><span class="sr-only">Click to expand</span>
       </div>
-<<<<<<< HEAD
-=======
-      <div class="stat stat-secondary">
-        <div class="stat-label">Companies tracked</div>
-        <div class="stat-value">${portals.tracked}</div>
-        <div class="stat-trend">${deltaIndicator(kpiSpark.companies.delta)}${sparklineSVG(kpiSpark.companies.daily, 'var(--blue-fg)', 'Distinct companies/day')}</div>
-      </div>
-      <div class="stat stat-secondary">
-        <div class="stat-label">URLs scanned</div>
-        <div class="stat-value" id="live-scanned">${scanTotal}</div>
-        <div class="stat-trend">${deltaIndicator(kpiSpark.scanned.delta)}${sparklineSVG(kpiSpark.scanned.daily, 'var(--amber-fg)', 'URLs scanned')}</div>
-    </div>
-    <div class="stat" onclick="toggleStatPanel('batches')" title="Click to see batch run history">
-      <div class="stat-label">Batches run</div>
-      <div class="stat-value" id="live-batches">${batchRuns}</div>
-      <div class="stat-trend">${deltaIndicator(kpiSpark.batches.delta)}${sparklineSVG(kpiSpark.batches.daily, 'var(--purple-fg)', 'Batches run')}</div>
-      <div class="stat-caret">▾ click to expand</div>
->>>>>>> a22b235 (feat(dashboard): KPI sparklines + 7-day trend deltas on stat cards (Phase 6 item 3.1))
     </div>
   </div>
 
