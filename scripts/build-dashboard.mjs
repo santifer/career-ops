@@ -3863,6 +3863,143 @@ function build() {
     #mobile-sheet-backdrop { transition: none !important; }
   }
 
+  /* ── Right-rail context drawer (desktop ≥1280, full-overlay 720–1280) ─
+     Replaces the inline expand-row pattern on tablet+desktop. The main
+     table stays visible; drawer overlays the rightmost 420px (or full
+     width on tablet). Mobile keeps the bottom-sheet pattern. */
+  #right-rail-drawer {
+    position: fixed; top: 0; right: 0; bottom: 0;
+    width: 420px; max-width: 100vw;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    box-shadow: -8px 0 28px rgba(0,0,0,.18);
+    transform: translateX(100%);
+    transition: transform .26s cubic-bezier(.16,1,.3,1);
+    z-index: 2400;
+    display: none;
+    flex-direction: column;
+    will-change: transform;
+  }
+  #right-rail-drawer.open { transform: translateX(0); }
+  #right-rail-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.32);
+    z-index: 2399;
+    opacity: 0; pointer-events: none;
+    transition: opacity .22s ease-out;
+    display: none;
+  }
+  #right-rail-backdrop.visible { opacity: 1; pointer-events: auto; }
+  .drawer-header {
+    flex-shrink: 0;
+    padding: 14px 16px 12px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    position: relative;
+  }
+  .drawer-title-row {
+    display: flex; align-items: flex-start; gap: 12px;
+  }
+  .drawer-logo {
+    flex-shrink: 0; width: 40px; height: 40px;
+    border-radius: var(--radius-sm);
+    background: var(--surface-2);
+    object-fit: contain;
+  }
+  .drawer-logo-fallback {
+    display: inline-flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 16px; color: var(--text-2);
+    border: 1px solid var(--border);
+  }
+  .drawer-title-meta { flex: 1; min-width: 0; }
+  .drawer-company {
+    font-weight: 700; font-size: 16px; color: var(--text);
+    line-height: 1.25; display: flex; align-items: center; gap: 6px;
+    flex-wrap: wrap;
+  }
+  .drawer-role {
+    margin-top: 2px;
+    font-size: 13px; color: var(--text-2); line-height: 1.4;
+    overflow: hidden; text-overflow: ellipsis;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  }
+  .drawer-chip-row {
+    display: flex; align-items: center; gap: 6px;
+    margin-top: 10px; flex-wrap: wrap;
+  }
+  .drawer-close {
+    position: absolute; top: 10px; right: 10px;
+    background: none; border: none; cursor: pointer;
+    color: var(--text-3); font-size: 18px; line-height: 1;
+    width: 32px; height: 32px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: var(--radius-sm);
+  }
+  .drawer-close:hover { color: var(--text); background: var(--surface-2); }
+  .drawer-body {
+    flex: 1 1 auto; min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    padding: 14px 16px 16px;
+  }
+  .drawer-body .detail-block { margin: 0; padding: 0; border: 0; background: transparent; }
+  .drawer-action-bar {
+    flex-shrink: 0;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+    display: flex; gap: 8px;
+    position: sticky; bottom: 0;
+  }
+  .drawer-action-bar button {
+    flex: 1; padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 13px; font-weight: 600;
+    cursor: pointer;
+    transition: background .12s ease, border-color .12s ease, color .12s ease;
+  }
+  .drawer-action-bar button:hover { background: var(--surface-2); }
+  .drawer-action-bar .drawer-btn-primary {
+    background: var(--green-fg);
+    border-color: var(--green-fg);
+    color: #062611;
+  }
+  .drawer-action-bar .drawer-btn-primary:hover { filter: brightness(.95); background: var(--green-fg); }
+  .drawer-action-bar .drawer-btn-primary[disabled] { opacity: .5; cursor: not-allowed; }
+  /* Selected-row indicator: 3px left accent + subtle bg highlight so the
+     user always knows which row the drawer is showing. */
+  tr.row.row-selected > td { background: var(--surface-2); }
+  tr.row.row-selected > td:first-child {
+    box-shadow: inset 3px 0 0 var(--green-fg);
+  }
+  /* Desktop ≥1280px: drawer is always 420px and the body gets right
+     padding equal to the drawer so content can scroll under but isn't
+     fully hidden (when the drawer is open). */
+  @media (min-width: 1280px) {
+    body.right-rail-open { padding-right: 420px; }
+    #right-rail-drawer { display: flex; }
+  }
+  /* Tablet 720–1279px: drawer becomes a full-overlay (modal-like, with
+     backdrop). No body padding shift — drawer floats over the table. */
+  @media (min-width: 721px) and (max-width: 1279px) {
+    #right-rail-drawer { display: flex; width: min(560px, 92vw); }
+    #right-rail-backdrop.visible { display: block; }
+  }
+  /* Mobile <720px: drawer hidden entirely; toggleDetail routes to the
+     existing bottom-sheet pattern from Wave G. */
+  @media (max-width: 720px) {
+    #right-rail-drawer, #right-rail-backdrop { display: none !important; }
+    body.right-rail-open { padding-right: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #right-rail-drawer { transition: none !important; }
+    #right-rail-backdrop { transition: none !important; }
+  }
+
   /* ── Pull-to-refresh indicator (mobile only) ──────────────────── */
   /* A small pill that drops in from above the toolbar as the user pulls.
      Hidden by default; JS sets translateY + opacity during the gesture
@@ -4516,6 +4653,15 @@ function build() {
     </div>
   </div>
 
+  <!-- Right-rail context drawer (desktop ≥1280, full-overlay 720–1280).
+       Replaces inline expand-row pattern; mobile keeps bottom-sheet. -->
+  <div id="right-rail-backdrop" onclick="closeRightRail()" aria-hidden="true"></div>
+  <aside id="right-rail-drawer" role="complementary" aria-label="Row context drawer" aria-hidden="true">
+    <div class="drawer-header" id="right-rail-header"></div>
+    <div class="drawer-body" id="right-rail-body"></div>
+    <div class="drawer-action-bar" id="right-rail-actions"></div>
+  </aside>
+
   <!-- Pull-to-refresh indicator (mobile only, JS-driven) -->
   <div id="pull-to-refresh" role="status" aria-live="polite" aria-hidden="true">
     <span class="ptr-icon" aria-hidden="true"></span>
@@ -5123,7 +5269,25 @@ window.toggleDemoMode = toggleDemoMode;
 
 // ── Row expand ──────────────────────────────────────────────────
 const MOBILE_BREAKPOINT_MQ = window.matchMedia('(max-width: 720px)');
+const TABLET_BREAKPOINT_MQ = window.matchMedia('(min-width: 721px) and (max-width: 1279px)');
+const DESKTOP_BREAKPOINT_MQ = window.matchMedia('(min-width: 1280px)');
 function isMobileViewport() { return MOBILE_BREAKPOINT_MQ.matches; }
+function isTabletViewport() { return TABLET_BREAKPOINT_MQ.matches; }
+function isDesktopViewport() { return DESKTOP_BREAKPOINT_MQ.matches; }
+
+// "Use inline expand instead" — Cmd-K toggle to fall back to the legacy
+// inline expand-row UX. Persisted in localStorage so the choice survives
+// reloads.
+const RAIL_INLINE_KEY = 'dashboard.useInlineExpand';
+function useInlineExpand() {
+  try { return localStorage.getItem(RAIL_INLINE_KEY) === '1'; } catch (e) { return false; }
+}
+function setUseInlineExpand(v) {
+  try { localStorage.setItem(RAIL_INLINE_KEY, v ? '1' : '0'); } catch (e) {}
+  if (v) closeRightRail();
+}
+
+let _railSelectedIdx = null;
 
 function toggleDetail(idx) {
   const detail = document.getElementById('detail-' + idx);
@@ -5134,9 +5298,177 @@ function toggleDetail(idx) {
     setTimeout(() => hydrateNotesIn(document.getElementById('mobile-sheet-body')), 0);
     return;
   }
+  if (!useInlineExpand()) {
+    if (_railSelectedIdx === idx) {
+      closeRightRail();
+    } else {
+      openRightRailForDetail(idx, detail);
+    }
+    return;
+  }
   detail.style.display = detail.style.display === 'none' ? '' : 'none';
   if (detail.style.display !== 'none') hydrateNotesIn(detail);
 }
+
+function _drawerEscape(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function openRightRailForDetail(idx, detailRow) {
+  const drawer = document.getElementById('right-rail-drawer');
+  const backdrop = document.getElementById('right-rail-backdrop');
+  if (!drawer || !detailRow) return;
+  const row = detailRow.previousElementSibling;
+  const block = detailRow.querySelector('.detail-block');
+
+  // Pull the row's existing chips/badges so the drawer header stays
+  // visually aligned with the table row it's describing.
+  const company = row?.querySelector('td:nth-child(3) strong')?.textContent.trim() || '';
+  const role = (row?.querySelector('td:nth-child(4)')?.textContent || '').trim();
+  const num = row?.dataset.num || '';
+  const scoreEl = row?.querySelector('td:nth-child(2) .score-badge-lg');
+  const scoreHtml = scoreEl ? scoreEl.outerHTML : '';
+  const statusEl = row?.querySelector('td:nth-child(5) .status-pill');
+  const statusHtml = statusEl ? statusEl.outerHTML : '';
+  const tierEl = row?.querySelector('td:nth-child(3) .tier-tag');
+  const tierHtml = tierEl ? tierEl.outerHTML : '';
+
+  // Favicon: pull hostname from the row's Apply anchor; fall back to a
+  // single-letter avatar tile when the URL is missing or unparseable.
+  let logoHost = '';
+  const applyAnchor = row?.querySelector('td.action-cell a[href]:not([href^="#"]):not([href^="reports/"]):not([href^="javascript:"]):not([href^="file:"])');
+  let applyHref = '';
+  if (applyAnchor && applyAnchor.href) {
+    applyHref = applyAnchor.href;
+    try { logoHost = new URL(applyHref).hostname; } catch (e) {}
+  }
+  const fallbackChar = (company.charAt(0) || '?').toUpperCase();
+  const logoHtml = logoHost
+    ? '<img class="drawer-logo" alt="" data-fallback="' + _drawerEscape(fallbackChar) + '" src="https://www.google.com/s2/favicons?domain=' + encodeURIComponent(logoHost) + '&sz=64">'
+    : '<div class="drawer-logo drawer-logo-fallback">' + _drawerEscape(fallbackChar) + '</div>';
+
+  const headerEl = drawer.querySelector('#right-rail-header');
+  const bodyEl = drawer.querySelector('#right-rail-body');
+  const actionsEl = drawer.querySelector('#right-rail-actions');
+
+  if (headerEl) {
+    headerEl.innerHTML = '<button type="button" class="drawer-close" aria-label="Close drawer" onclick="closeRightRail()">✕</button>'
+      + '<div class="drawer-title-row">'
+      +   logoHtml
+      +   '<div class="drawer-title-meta">'
+      +     '<div class="drawer-company">' + _drawerEscape(company) + (tierHtml || '') + '</div>'
+      +     '<div class="drawer-role">' + _drawerEscape(role) + '</div>'
+      +   '</div>'
+      + '</div>'
+      + '<div class="drawer-chip-row">' + scoreHtml + statusHtml + '</div>';
+    // Wire favicon-load failure → single-letter fallback. Inline onerror=
+    // attributes nested inside a JS string of HTML get gnarly with quoting,
+    // so we attach the listener after innerHTML is set.
+    const img = headerEl.querySelector('img.drawer-logo[data-fallback]');
+    if (img) {
+      img.addEventListener('error', () => {
+        const fb = document.createElement('div');
+        fb.className = 'drawer-logo drawer-logo-fallback';
+        fb.textContent = img.dataset.fallback || '?';
+        img.replaceWith(fb);
+      }, { once: true });
+    }
+  }
+  if (bodyEl) {
+    bodyEl.innerHTML = '';
+    if (block) {
+      bodyEl.appendChild(block.cloneNode(true));
+    } else {
+      bodyEl.innerHTML = '<p class="muted">No details available.</p>';
+    }
+    bodyEl.scrollTop = 0;
+    setTimeout(() => hydrateNotesIn(bodyEl), 0);
+  }
+  if (actionsEl) {
+    const applyBtnHtml = applyHref
+      ? '<button type="button" class="drawer-btn-primary" data-drawer-action="apply">Apply</button>'
+      : '<button type="button" class="drawer-btn-primary" disabled>Apply</button>';
+    const skipBtnHtml = num
+      ? '<button type="button" data-drawer-action="skip">Skip</button>'
+      : '<button type="button" disabled>Skip</button>';
+    const deferBtnHtml = num
+      ? '<button type="button" data-drawer-action="defer">Defer</button>'
+      : '<button type="button" disabled>Defer</button>';
+    actionsEl.innerHTML = applyBtnHtml + skipBtnHtml + deferBtnHtml;
+    // Wire actions after innerHTML — keeps the HTML-as-string clean of
+    // nested-quote escaping and lets us close the rail in one place.
+    const applyBtnEl = actionsEl.querySelector('button[data-drawer-action="apply"]');
+    if (applyBtnEl && applyHref) {
+      applyBtnEl.addEventListener('click', () => {
+        window.open(applyHref, '_blank', 'noopener');
+      });
+    }
+    const skipBtnEl = actionsEl.querySelector('button[data-drawer-action="skip"]');
+    if (skipBtnEl && num) {
+      skipBtnEl.addEventListener('click', () => drawerQuickStatus(num, 'Discarded'));
+    }
+    const deferBtnEl = actionsEl.querySelector('button[data-drawer-action="defer"]');
+    if (deferBtnEl && num) {
+      deferBtnEl.addEventListener('click', () => drawerQuickStatus(num, 'Evaluated'));
+    }
+  }
+
+  // Persistent left-border highlight on the originating row.
+  document.querySelectorAll('tr.row.row-selected').forEach(el => el.classList.remove('row-selected'));
+  if (row) row.classList.add('row-selected');
+
+  drawer.classList.add('open');
+  drawer.setAttribute('aria-hidden', 'false');
+  document.body.classList.add('right-rail-open');
+  if (backdrop && isTabletViewport()) {
+    backdrop.classList.add('visible');
+    backdrop.removeAttribute('aria-hidden');
+  } else if (backdrop) {
+    backdrop.classList.remove('visible');
+    backdrop.setAttribute('aria-hidden', 'true');
+  }
+  _railSelectedIdx = idx;
+}
+
+function closeRightRail() {
+  const drawer = document.getElementById('right-rail-drawer');
+  const backdrop = document.getElementById('right-rail-backdrop');
+  if (drawer) {
+    drawer.classList.remove('open');
+    drawer.setAttribute('aria-hidden', 'true');
+  }
+  if (backdrop) {
+    backdrop.classList.remove('visible');
+    backdrop.setAttribute('aria-hidden', 'true');
+  }
+  document.body.classList.remove('right-rail-open');
+  document.querySelectorAll('tr.row.row-selected').forEach(el => el.classList.remove('row-selected'));
+  _railSelectedIdx = null;
+}
+
+// Apply/Skip/Defer in the drawer footer reuse the existing /api/status
+// endpoint by simulating a click on the row's status pill. Keeps a single
+// code path for status writeback, optimistic UI, and toast feedback.
+async function drawerQuickStatus(num, newStatus) {
+  const badge = document.querySelector('.status-pill[data-num="' + num + '"]');
+  if (!badge) {
+    if (window.toast) window.toast('Could not locate row #' + num, 'error');
+    return;
+  }
+  if (typeof openStatusPopover === 'function') openStatusPopover(badge);
+  if (typeof applyStatus === 'function') {
+    await applyStatus(newStatus);
+  } else if (typeof closeStatusPopover === 'function') {
+    closeStatusPopover();
+  }
+  closeRightRail();
+}
+window.drawerQuickStatus = drawerQuickStatus;
+window.closeRightRail = closeRightRail;
+window.openRightRailForDetail = openRightRailForDetail;
+window.setUseInlineExpand = setUseInlineExpand;
 
 // ── Notes & activity (per-row append-only log) ──────────────────
 const NOTE_MAX_CHARS = 1000;
@@ -5318,15 +5650,23 @@ function closeMobileSheet() {
   document.body.style.overflow = '';
 }
 
-// ESC closes mobile sheet
+// ESC closes mobile sheet AND right-rail drawer (whichever is open).
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') closeMobileSheet();
+  if (e.key === 'Escape') {
+    closeMobileSheet();
+    if (document.getElementById('right-rail-drawer')?.classList.contains('open')) {
+      closeRightRail();
+    }
+  }
 });
 
 // If the viewport widens past the breakpoint with the sheet open, close it
-// so we don't leave a phantom modal layered over the desktop view.
+// so we don't leave a phantom modal layered over the desktop view. The
+// inverse case (desktop → mobile with the drawer open) closes the drawer
+// so the mobile bottom-sheet pattern takes over cleanly.
 MOBILE_BREAKPOINT_MQ.addEventListener?.('change', (e) => {
   if (!e.matches) closeMobileSheet();
+  else closeRightRail();
 });
 
 // ── Saved filter views ──────────────────────────────────────────
@@ -6721,6 +7061,11 @@ function _cmdkActions() {
     } },
     { id: 'act-select-mode', icon: '☑', title: 'Toggle select mode', sub: 'Show / hide row checkboxes for bulk status updates', run: () => toggleSelectMode() },
     { id: 'act-add-role', icon: '+', title: 'Add role', sub: 'Paste a role URL — appends to pipeline.md for next triage', run: () => openQuickAdd() },
+    { id: 'act-inline-expand', icon: '↕', title: (useInlineExpand() ? 'Use right rail instead' : 'Use inline expand instead'), sub: 'Switch row detail UX between inline expand-row and right-rail drawer', run: () => {
+      const next = !useInlineExpand();
+      setUseInlineExpand(next);
+      if (window.toast) window.toast(next ? 'Row detail: inline expand' : 'Row detail: right-rail drawer', 'success');
+    } },
   ];
 }
 
