@@ -1723,6 +1723,8 @@ function build() {
   const generatedShort = new Date(generated).toLocaleTimeString('en-US', {
     hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/Los_Angeles'
   });
+  let appVersion = '';
+  try { appVersion = readFileSync(join(ROOT, 'VERSION'), 'utf-8').trim(); } catch (e) { /* ignore */ }
 
   // Stats
   const total = apps.length;
@@ -2182,11 +2184,221 @@ function build() {
     color: var(--text);
     background: var(--bg);
     margin: 0;
-    padding: 24px 28px;
+    /* Padding moved to .app-main so the persistent left sidebar can
+       sit flush against the viewport edge. */
+    padding: 0;
     line-height: 1.55;
     -webkit-font-smoothing: antialiased;
   }
   .container { max-width: 1400px; margin: 0 auto; }
+
+  /* ── Persistent left sidebar nav (Phase 7 Item 4) ────────────────
+     Spatial IA via a sticky left rail with section anchors.
+       • desktop ≥1280px : 200px expanded with text labels
+       • 720–1279px      : 56px collapsed, icons only
+       • <720px          : hidden offscreen + hamburger drawer
+     Sections highlight as the user scrolls (IntersectionObserver).
+     Cmd-K still works as primary keyboard nav for power users. */
+  :root {
+    --sidebar-w: 200px;
+    --sidebar-w-collapsed: 56px;
+  }
+  .app-shell {
+    display: grid;
+    grid-template-columns: var(--sidebar-w) 1fr;
+    min-height: 100vh;
+  }
+  .app-main {
+    padding: 24px 28px;
+    min-width: 0;
+  }
+  .sidebar {
+    position: sticky;
+    top: 0;
+    align-self: start;
+    height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    z-index: 50;
+    transition: transform .25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  body.dark .sidebar { background: var(--surface); border-right-color: var(--border); }
+  .sidebar-brand {
+    display: flex; align-items: center; gap: 10px;
+    padding: 18px 16px 14px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    font-weight: 700; font-size: 14px; letter-spacing: -0.2px;
+    flex-shrink: 0;
+  }
+  .sidebar-favicon {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 24px; height: 24px; border-radius: 6px;
+    background: linear-gradient(135deg, var(--green-fg), var(--blue-fg));
+    color: #fff; font-size: 13px; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .sidebar-brand-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sidebar-nav {
+    display: flex; flex-direction: column;
+    padding: 10px 8px;
+    flex: 1 1 auto;
+    gap: 2px;
+  }
+  .sidebar-link {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px;
+    border-radius: var(--radius-sm, 6px);
+    border: 0;
+    background: transparent;
+    color: var(--text-2);
+    font-size: 13px; font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    margin-left: -3px;
+    transition: background .12s, color .12s, border-color .12s;
+    font-family: inherit;
+    text-align: left;
+    width: 100%;
+  }
+  .sidebar-link:hover {
+    background: var(--surface-2);
+    color: var(--text);
+    text-decoration: none;
+  }
+  .sidebar-link.active {
+    background: var(--surface-2);
+    color: var(--text);
+    border-left-color: var(--green-fg);
+    font-weight: 600;
+  }
+  .sidebar-icon {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .sidebar-label {
+    flex: 1 1 auto;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .sidebar-footer {
+    padding: 10px 12px 14px;
+    border-top: 1px solid var(--border);
+    display: flex; flex-direction: column; gap: 8px;
+    flex-shrink: 0;
+    font-size: 11px;
+    color: var(--text-3);
+  }
+  .sidebar-mini-ticker {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 8px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 11px; color: var(--text-3);
+    overflow: hidden;
+  }
+  .sidebar-mini-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--green-fg);
+    flex-shrink: 0;
+    box-shadow: 0 0 0 0 currentColor;
+    animation: sidebar-dot-pulse 2s ease-out infinite;
+  }
+  @keyframes sidebar-dot-pulse {
+    0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5); }
+    70% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .sidebar-mini-dot { animation: none; }
+  }
+  .sidebar-mini-text {
+    flex: 1 1 auto;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .sidebar-version {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 10.5px; color: var(--text-4);
+    text-align: center;
+    letter-spacing: 0.3px;
+  }
+
+  /* Hamburger toggle — only visible on mobile <720px. */
+  .sidebar-toggle {
+    display: none;
+    position: fixed; top: 14px; left: 12px;
+    z-index: 9001;
+    width: 38px; height: 38px;
+    align-items: center; justify-content: center;
+    border-radius: var(--radius-sm, 6px);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-2);
+    font-size: 18px; line-height: 1;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .sidebar-toggle:hover { background: var(--surface-2); }
+
+  /* Backdrop for mobile drawer state. */
+  .sidebar-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(0, 0, 0, 0.42);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .22s ease;
+    z-index: 8999;
+  }
+  .sidebar-backdrop.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Collapsed icon-only mode at narrower desktop widths. */
+  @media (max-width: 1279px) and (min-width: 721px) {
+    .app-shell { grid-template-columns: var(--sidebar-w-collapsed) 1fr; }
+    .sidebar-brand { justify-content: center; padding: 18px 8px 14px; }
+    .sidebar-brand-name { display: none; }
+    .sidebar-nav { padding: 10px 6px; }
+    .sidebar-link {
+      justify-content: center;
+      padding: 9px 6px;
+      gap: 0;
+    }
+    .sidebar-link .sidebar-label { display: none; }
+    .sidebar-footer { padding: 8px 6px 12px; align-items: center; }
+    .sidebar-mini-ticker {
+      padding: 6px;
+      width: 32px; height: 32px;
+      justify-content: center;
+      border-radius: 50%;
+    }
+    .sidebar-mini-text { display: none; }
+    .sidebar-version { font-size: 9px; }
+  }
+
+  /* Mobile drawer mode. */
+  @media (max-width: 720px) {
+    .app-shell { grid-template-columns: 1fr; }
+    .sidebar {
+      position: fixed; left: 0; top: 0; bottom: 0;
+      width: var(--sidebar-w);
+      height: 100vh;
+      transform: translateX(-100%);
+      box-shadow: 2px 0 24px rgba(0, 0, 0, 0.25);
+    }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar-toggle { display: inline-flex; }
+    /* Push toolbar right of the hamburger so brand stays legible. */
+    .toolbar h1 { padding-left: 44px; }
+  }
   h1 { margin: 0 0 2px; font-size: 22px; font-weight: 700; letter-spacing: -0.4px; }
   h2 { margin: 32px 0 14px; font-size: 16px; font-weight: 600; padding-bottom: 8px;
        border-bottom: 1px solid var(--border); letter-spacing: -0.2px; }
@@ -2240,6 +2452,190 @@ function build() {
     outline: 1px solid var(--blue-fg);
     outline-offset: 1px;
     box-shadow: var(--ring-blue);
+  }
+
+  /* ── Left sidebar nav (Phase 7 Item 4) ───────────────────────────
+     A persistent left rail with section anchors. At ≥1280px the
+     sidebar shows full labels (200px). At 720–1280px it collapses
+     to icon-only (56px). Below 720px it's hidden — the existing
+     mobile bottom tab bar handles primary nav, with a hamburger
+     in the toolbar that opens this same sidebar as a slide-in
+     drawer. The toolbar (top) stays unchanged — power users still
+     get Cmd-K, Search, Add role, Dark, Batch from the top header. */
+  .layout {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+  .sidebar {
+    position: sticky;
+    top: 16px;
+    height: calc(100vh - 32px);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md, 10px);
+    padding: 16px 12px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+  .sidebar-brand {
+    display: flex; align-items: center; gap: 8px;
+    padding: 4px 8px 12px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 8px;
+    color: var(--text);
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: -0.2px;
+  }
+  .sidebar-brand-icon {
+    width: 22px; height: 22px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--green-fg);
+    color: #fff;
+    border-radius: 5px;
+    font-size: 13px; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .sidebar-brand-text {
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .sidebar-nav {
+    display: flex; flex-direction: column; gap: 2px;
+    flex: 1;
+    margin: 0; padding: 0;
+    list-style: none;
+  }
+  .sidebar-link {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    border-left: 2px solid transparent;
+    color: var(--text-2);
+    font-size: 13px; font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    background: transparent;
+    width: 100%;
+    text-align: left;
+    border-top: 0; border-right: 0; border-bottom: 0;
+    transition: background .12s ease, color .12s ease, border-color .12s ease;
+    font-family: inherit;
+  }
+  .sidebar-link:hover {
+    background: var(--surface-2);
+    color: var(--text);
+    text-decoration: none;
+  }
+  .sidebar-link[aria-current="true"] {
+    /* Active section: green left border + slightly darker bg. */
+    background: var(--surface-2);
+    color: var(--text);
+    border-left-color: var(--green-fg);
+    font-weight: 600;
+  }
+  .sidebar-link-icon {
+    font-size: 14px; line-height: 1;
+    width: 20px; text-align: center; flex-shrink: 0;
+  }
+  .sidebar-link-label {
+    flex: 1; min-width: 0;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .sidebar-foot {
+    margin-top: 8px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+    display: flex; flex-direction: column; gap: 6px;
+    font-size: 11px;
+    color: var(--text-3);
+  }
+  .sidebar-ticker {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px;
+    color: var(--text-3);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    padding: 2px 4px;
+  }
+  .sidebar-ticker-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--green-fg);
+    flex-shrink: 0;
+  }
+  .sidebar-ticker[data-freshness="stale"] .sidebar-ticker-dot { background: var(--text-4); }
+  .sidebar-ticker[data-freshness="warm"]  .sidebar-ticker-dot { background: var(--amber-fg); }
+  .sidebar-ticker-text {
+    flex: 1; min-width: 0;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .sidebar-version {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 10.5px;
+    color: var(--text-4);
+    padding: 0 4px;
+  }
+  /* Hamburger lives in the toolbar; only surfaces below 720px
+     where the sidebar slides in/out as an overlay drawer. */
+  .sidebar-hamburger { display: none; }
+  .sidebar-backdrop {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 90;
+  }
+  body.sidebar-open .sidebar-backdrop { display: block; }
+
+  @media (max-width: 1279px) and (min-width: 721px) {
+    /* Collapsed icon-rail. Labels hidden, brand text hidden, but
+       the layout grid stays so main shifts right by 56px. */
+    .layout { grid-template-columns: 56px 1fr; gap: 16px; }
+    .sidebar { padding: 12px 6px 10px; }
+    .sidebar-brand { justify-content: center; padding: 4px 0 12px; }
+    .sidebar-brand-text { display: none; }
+    .sidebar-link { justify-content: center; padding: 10px 6px; gap: 0; }
+    .sidebar-link-label { display: none; }
+    .sidebar-foot { align-items: center; padding-top: 8px; }
+    .sidebar-ticker-text, .sidebar-version { display: none; }
+  }
+
+  @media (max-width: 720px) {
+    /* Sidebar leaves the grid on mobile. The existing bottom tab
+       bar covers primary nav; the hamburger gives access to the
+       same section anchors as a slide-in drawer. */
+    .layout { display: block; }
+    .sidebar {
+      position: fixed;
+      top: 0; left: 0;
+      width: 80vw; max-width: 280px;
+      height: 100vh;
+      border-radius: 0;
+      border-top: 0; border-bottom: 0; border-left: 0;
+      transform: translateX(-105%);
+      transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 95;
+    }
+    body.sidebar-open .sidebar { transform: translateX(0); }
+    @media (prefers-reduced-motion: reduce) {
+      .sidebar { transition: none; }
+    }
+    .sidebar-hamburger {
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 17px; line-height: 1;
+      padding: 5px 10px;
+    }
+    .sidebar-link-label { display: inline; }
+    .sidebar-brand-text { display: inline; }
+  }
+
+  /* Bump container max-width when sidebar is showing so main
+     content doesn't squeeze against its existing 1400px ceiling. */
+  @media (min-width: 1280px) {
+    .container { max-width: 1600px; }
   }
 
   /* ── Toolbar ─────────────────────────────────────────────────── */
@@ -4079,9 +4475,10 @@ function build() {
       transform: scale(1.08);
     }
     .mobile-tab:active .tab-icon { transform: scale(.92); }
-    /* Pad the body bottom so the last row isn't hidden under the tab
-       bar. Combined with existing 80px padding-bottom on .container. */
-    body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
+    /* Pad the main column bottom so the last row isn't hidden under the
+       mobile tab bar. (Padding lives on .app-main now that body has a
+       sidebar grid wrapper — see Phase 7 sidebar block above.) */
+    .app-main { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
     /* Lift bulk-action-bar, batch overlay and toast above the tab bar. */
     #bulk-action-bar { bottom: calc(76px + env(safe-area-inset-bottom)) !important; top: auto !important; }
     #batch-overlay { bottom: calc(76px + env(safe-area-inset-bottom)) !important; }
@@ -4121,7 +4518,7 @@ function build() {
 
   /* ── Mobile breakpoint: tables → cards (Apply-Now primary) ────── */
   @media (max-width: 720px) {
-    body { padding: 14px 12px 80px; }
+    .app-main { padding: 14px 12px 80px; }
     .container { max-width: 100%; }
 
     /* Tighter toolbar */
@@ -4510,9 +4907,60 @@ function build() {
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to main content</a>
-<div class="container">
+
+<!-- Hamburger toggle (mobile only) and overlay backdrop for the
+     persistent left sidebar. Hidden on desktop via CSS. -->
+<button type="button" class="sidebar-toggle" id="sidebar-toggle-btn"
+  onclick="toggleSidebar()" aria-label="Open navigation menu" aria-expanded="false"
+  aria-controls="sidebar">☰</button>
+<div class="sidebar-backdrop" id="sidebar-backdrop"
+  onclick="closeSidebar()" aria-hidden="true"></div>
+
+<div class="app-shell">
+
+  <!-- Persistent left sidebar nav (Phase 7 Item 4).
+       Sections jump to anchors and highlight as the user scrolls
+       (IntersectionObserver). Cmd-K remains the primary nav for
+       power users; this rail is for spatial orientation. -->
+  <aside class="sidebar" id="sidebar" aria-label="Primary navigation">
+    <div class="sidebar-brand">
+      <span class="sidebar-favicon" aria-hidden="true">⚡</span>
+      <span class="sidebar-brand-name">Career-Ops</span>
+    </div>
+    <nav class="sidebar-nav" aria-label="Sections">
+      <a href="#overview-section" class="sidebar-link" data-section="overview-section" title="Overview">
+        <span class="sidebar-icon" aria-hidden="true">📊</span><span class="sidebar-label">Overview</span>
+      </a>
+      <a href="#apply-now-section" class="sidebar-link" data-section="apply-now-section" title="Apply-Now Queue">
+        <span class="sidebar-icon" aria-hidden="true">🎯</span><span class="sidebar-label">Apply-Now</span>
+      </a>
+      <a href="#all-evaluations-section" class="sidebar-link" data-section="all-evaluations-section" title="All Evaluations">
+        <span class="sidebar-icon" aria-hidden="true">📋</span><span class="sidebar-label">All Evaluations</span>
+      </a>
+      <a href="#trends-panel" class="sidebar-link" data-section="trends-panel" title="Trends + Analytics">
+        <span class="sidebar-icon" aria-hidden="true">📈</span><span class="sidebar-label">Trends</span>
+      </a>
+      <a href="#companies-panel" class="sidebar-link" data-section="companies-panel" title="Companies">
+        <span class="sidebar-icon" aria-hidden="true">🏢</span><span class="sidebar-label">Companies</span>
+      </a>
+      <button type="button" class="sidebar-link" onclick="openMobileSettingsSheet();closeSidebar();" title="Settings">
+        <span class="sidebar-icon" aria-hidden="true">⚙️</span><span class="sidebar-label">Settings</span>
+      </button>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-mini-ticker" id="sidebar-mini-ticker" title="Live scan activity">
+        <span class="sidebar-mini-dot" aria-hidden="true"></span>
+        <span class="sidebar-mini-text" id="sidebar-mini-text">—</span>
+      </div>
+      <div class="sidebar-version" title="Career-Ops version">v${escape(appVersion || '?')}</div>
+    </div>
+  </aside>
+
+  <div class="app-main">
+  <div class="container">
 
   <header class="toolbar" role="banner">
+    <button class="toolbar-btn sidebar-hamburger" onclick="toggleSidebar()" id="sidebar-hamburger-btn" aria-label="Open navigation" aria-controls="sidebar" aria-expanded="false" title="Open navigation">☰</button>
     <h1><span class="brand-name">Career-Ops</span><span class="brand-suffix"> Dashboard</span></h1>
     <button class="toolbar-btn cmdk-trigger" onclick="openCmdK()" title="Open command palette (⌘K / Ctrl-K)" aria-label="Open command palette (Cmd+K or Ctrl+K)">
       <span class="cmdk-trigger-label">Search…</span>
@@ -4541,6 +4989,42 @@ function build() {
   </div>
 
   <div class="subtle" id="dashboard-meta" title="${escape(generated)}"><span id="live-updated">Updated ${escape(generated)}</span> · ${reportsToday} reports today</div>
+
+  <div class="layout">
+  <aside class="sidebar" id="sidebar" aria-label="Section navigation">
+    <div class="sidebar-brand">
+      <span class="sidebar-brand-icon" aria-hidden="true">C</span>
+      <span class="sidebar-brand-text">Career-Ops</span>
+    </div>
+    <nav class="sidebar-nav" aria-label="Dashboard sections">
+      <a href="#main" class="sidebar-link" data-section="main" aria-current="true">
+        <span class="sidebar-link-icon" aria-hidden="true">📊</span><span class="sidebar-link-label">Overview</span>
+      </a>
+      <a href="#apply-now-section" class="sidebar-link" data-section="apply-now-section">
+        <span class="sidebar-link-icon" aria-hidden="true">🎯</span><span class="sidebar-link-label">Apply-Now</span>
+      </a>
+      <a href="#all-evaluations-section" class="sidebar-link" data-section="all-evaluations-section">
+        <span class="sidebar-link-icon" aria-hidden="true">📋</span><span class="sidebar-link-label">All Evaluations</span>
+      </a>
+      <a href="#trends-panel" class="sidebar-link" data-section="trends-panel">
+        <span class="sidebar-link-icon" aria-hidden="true">📈</span><span class="sidebar-link-label">Trends + Analytics</span>
+      </a>
+      <a href="#charts-section" class="sidebar-link" data-section="charts-section">
+        <span class="sidebar-link-icon" aria-hidden="true">🏢</span><span class="sidebar-link-label">Companies</span>
+      </a>
+      <button type="button" class="sidebar-link" data-section="settings" onclick="openMobileSettingsSheet(); closeSidebarDrawer();">
+        <span class="sidebar-link-icon" aria-hidden="true">⚙️</span><span class="sidebar-link-label">Settings</span>
+      </button>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="sidebar-ticker" id="sidebar-ticker" data-freshness="stale" aria-hidden="true" title="Most recent scan">
+        <span class="sidebar-ticker-dot"></span>
+        <span class="sidebar-ticker-text" id="sidebar-ticker-text">No scans yet</span>
+      </div>
+      <div class="sidebar-version" aria-label="Career-Ops version">v${escape(appVersion || '—')}</div>
+    </div>
+  </aside>
+  <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="closeSidebarDrawer()" aria-hidden="true"></div>
 
   <main id="main">
 
@@ -4715,7 +5199,7 @@ function build() {
     </div>
   </div>
 
-  <div class="stats">
+  <div class="stats" id="overview-section">
     <div class="stats-bento">
       <div class="stat stat-hero-balance ${applyNow.length > 0 ? 'stat-strong' : ''}" onclick="document.getElementById('apply-now-section').scrollIntoView({behavior:'smooth'})" title="Click to scroll to Apply-Now queue">
         <div class="hero-sparkline-bg" aria-hidden="true">${heroSparklineSVG(kpiSpark.applyNow.daily, 'Apply-Now')}</div>
@@ -4909,7 +5393,7 @@ function build() {
     })()}
   </div>
 
-  <div class="panel">
+  <div class="panel" id="companies-panel">
     <div class="panel-title">Top Companies (by evaluation count)</div>
     <div class="bar-chart" role="list" aria-label="Top companies by evaluation count">
       ${topCompanies.map(([company, count]) => {
@@ -4996,6 +5480,8 @@ function build() {
 
   </main>
 </div>
+  </div><!-- /.app-main -->
+</div><!-- /.app-shell -->
 
 <script>
 // ── Dark mode ───────────────────────────────────────────────────
@@ -5213,6 +5699,104 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initMissionControlStrip);
 } else {
   initMissionControlStrip();
+// ── Persistent left sidebar (Phase 7 Item 4) ────────────────────
+// IntersectionObserver highlights the section currently in the
+// viewport; falls back to plain anchor links when the API is missing.
+// Hamburger toggles the drawer on mobile (<720px). The mini-ticker in
+// the sidebar footer mirrors the toolbar's #live-text via MutationObserver.
+function toggleSidebar() {
+  const sb = document.getElementById('sidebar');
+  const bd = document.getElementById('sidebar-backdrop');
+  const btn = document.getElementById('sidebar-toggle-btn');
+  if (!sb) return;
+  const open = sb.classList.toggle('open');
+  if (bd) bd.classList.toggle('visible', open);
+  if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+function closeSidebar() {
+  const sb = document.getElementById('sidebar');
+  const bd = document.getElementById('sidebar-backdrop');
+  const btn = document.getElementById('sidebar-toggle-btn');
+  if (sb) sb.classList.remove('open');
+  if (bd) bd.classList.remove('visible');
+  if (btn) btn.setAttribute('aria-expanded', 'false');
+}
+window.toggleSidebar = toggleSidebar;
+window.closeSidebar = closeSidebar;
+
+function initSidebar() {
+  const sb = document.getElementById('sidebar');
+  if (!sb) return;
+  const links = Array.from(sb.querySelectorAll('a.sidebar-link[data-section]'));
+  if (!links.length) return;
+
+  const setActive = (id) => {
+    links.forEach(a => a.classList.toggle('active', a.dataset.section === id));
+  };
+
+  // Click → smooth-scroll + close drawer on mobile. Browsers handle the
+  // hash anchor jump on their own; we also close the mobile drawer.
+  links.forEach(a => {
+    a.addEventListener('click', () => {
+      const id = a.dataset.section;
+      if (id) setActive(id);
+      // Close drawer if open (mobile only).
+      if (window.matchMedia('(max-width: 720px)').matches) {
+        closeSidebar();
+      }
+    });
+  });
+
+  // IntersectionObserver — pick the section closest to the top of
+  // the viewport that's currently visible. Gracefully no-ops when the
+  // API is unavailable; plain anchor links still work.
+  if (!('IntersectionObserver' in window)) return;
+  const sections = links.map(a => document.getElementById(a.dataset.section)).filter(Boolean);
+  if (!sections.length) return;
+
+  const visible = new Map();
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) visible.set(e.target.id, e.intersectionRatio);
+      else visible.delete(e.target.id);
+    });
+    if (!visible.size) return;
+    let topId = null, topRatio = -1;
+    for (const [id, ratio] of visible) {
+      if (ratio > topRatio) { topRatio = ratio; topId = id; }
+    }
+    if (topId) setActive(topId);
+  }, {
+    // Bias toward the top portion of the viewport so the active link
+    // tracks the section the user is reading, not whatever's at the bottom.
+    rootMargin: '-10% 0px -55% 0px',
+    threshold: [0, 0.1, 0.25, 0.5, 0.75, 1],
+  });
+  sections.forEach(s => io.observe(s));
+
+  // Default: highlight the first section (Overview) at load.
+  setActive(sections[0].id);
+
+  // Mirror live-text into the sidebar mini-ticker. Cheap MutationObserver
+  // since #live-text already exists and is updated by initLiveTicker().
+  const liveText = document.getElementById('live-text');
+  const miniText = document.getElementById('sidebar-mini-text');
+  if (liveText && miniText) {
+    const sync = () => { miniText.textContent = liveText.textContent || '—'; };
+    sync();
+    const mo = new MutationObserver(sync);
+    mo.observe(liveText, { childList: true, characterData: true, subtree: true });
+  }
+
+  // Esc closes the mobile drawer.
+  document.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Escape' && sb.classList.contains('open')) closeSidebar();
+  });
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initSidebar);
+} else {
+  initSidebar();
 }
 
 // ── OLED true-black mode ────────────────────────────────────────
