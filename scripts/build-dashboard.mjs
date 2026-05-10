@@ -5161,11 +5161,29 @@ function build() {
     line-height: 1.25; display: flex; align-items: center; gap: 6px;
     flex-wrap: wrap;
   }
+  .drawer-company-link {
+    color: var(--text); text-decoration: none;
+    border-bottom: 1px dotted transparent;
+    transition: color .12s, border-color .12s;
+  }
+  .drawer-company-link:hover, .drawer-company-link:focus-visible {
+    color: var(--blue-fg-dark);
+    border-bottom-color: var(--blue-fg-dark);
+  }
   .drawer-role {
     margin-top: 2px;
     font-size: 13px; color: var(--text-2); line-height: 1.4;
     overflow: hidden; text-overflow: ellipsis;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  }
+  .drawer-role-link {
+    color: var(--text-2); text-decoration: none;
+    border-bottom: 1px dotted transparent;
+    transition: color .12s, border-color .12s;
+  }
+  .drawer-role-link:hover, .drawer-role-link:focus-visible {
+    color: var(--green-fg);
+    border-bottom-color: var(--green-fg);
   }
   .drawer-chip-row {
     display: flex; align-items: center; gap: 6px;
@@ -5224,8 +5242,12 @@ function build() {
      padding equal to the drawer so content can scroll under but isn't
      fully hidden (when the drawer is open). */
   @media (min-width: 1280px) {
-    body.right-rail-open { padding-right: 420px; }
-    #right-rail-drawer { display: flex; }
+    body.right-rail-open { padding-right: 520px; }
+    #right-rail-drawer { display: flex; width: 520px; }
+  }
+  @media (min-width: 1600px) {
+    body.right-rail-open { padding-right: 600px; }
+    #right-rail-drawer { display: flex; width: 600px; }
   }
   /* Tablet 720–1279px: drawer becomes a full-overlay (modal-like, with
      backdrop). No body padding shift — drawer floats over the table. */
@@ -5233,6 +5255,11 @@ function build() {
     #right-rail-drawer { display: flex; width: min(560px, 92vw); }
     #right-rail-backdrop.visible { display: block; }
   }
+  /* Inside the drawer (any width), the side-by-side detail-grid would
+     squeeze each col below 200px — single-column reads much better. */
+  .drawer-body .detail-grid { grid-template-columns: 1fr !important; }
+  .drawer-body .detail-col  { gap: 12px; }
+  .drawer-body .dcard       { width: 100%; }
   /* Mobile <720px: drawer hidden entirely; toggleDetail routes to the
      existing bottom-sheet pattern from Wave G. */
   @media (max-width: 720px) {
@@ -6828,6 +6855,10 @@ function openRightRailForDetail(idx, detailRow) {
   // or any external anchor in the row.
   let logoHost = '';
   let applyHref = '';
+  const roleLinkHref = row?.querySelector('td.role-cell a.role-link[href]')?.href || '';
+  const companyLinkHref = row?.querySelector('a.company-link[href]')?.href || '';
+  // Pick favicon source: prefer the actual JD URL hostname, fall back to
+  // the company /careers page hostname.
   const jdAnchor = row?.querySelector('td.role-cell a.role-link[href], a.company-link[href]')
     || row?.querySelector('td.action-cell a[href]:not([href^="#"]):not([href^="reports/"]):not([href^="javascript:"]):not([href^="file:"])');
   if (jdAnchor && jdAnchor.href) {
@@ -6848,8 +6879,15 @@ function openRightRailForDetail(idx, detailRow) {
       + '<div class="drawer-title-row">'
       +   logoHtml
       +   '<div class="drawer-title-meta">'
-      +     '<div class="drawer-company"><span class="drawer-company-name">' + _drawerEscape(company) + '</span>' + (tierHtml || '') + '</div>'
-      +     '<div class="drawer-role">' + _drawerEscape(role) + '</div>'
+      +     '<div class="drawer-company">'
+      +       (companyLinkHref
+            ? '<a href="' + _drawerEscape(companyLinkHref) + '" target="_blank" rel="noopener" class="drawer-company-link" title="Open company careers page"><span class="drawer-company-name">' + _drawerEscape(company) + '</span></a>'
+            : '<span class="drawer-company-name">' + _drawerEscape(company) + '</span>')
+      +       (tierHtml || '')
+      +     '</div>'
+      +     (roleLinkHref
+          ? '<div class="drawer-role"><a href="' + _drawerEscape(roleLinkHref) + '" target="_blank" rel="noopener" class="drawer-role-link" title="Open original job posting">' + _drawerEscape(role) + ' →</a></div>'
+          : '<div class="drawer-role">' + _drawerEscape(role) + '</div>')
       +   '</div>'
       + '</div>'
       + '<div class="drawer-chip-row">' + scoreHtml + statusHtml + '</div>';
