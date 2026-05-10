@@ -18,10 +18,10 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)));
 
 // === cwd-anchored path helpers (tests run in temp dirs) ===
 function projectRoot() { return process.cwd(); }
-function pipelinePath() { return resolve(projectRoot(), 'data/pipeline.md'); }
+function pipelinePath() { return resolve(projectRoot(), 'data/yash-pipeline.md'); }
 function runsLogPath() { return resolve(projectRoot(), 'data/yash-resume-runs.log'); }
-function jdsDir() { return resolve(projectRoot(), 'jds'); }
-function resumesDir() { return resolve(projectRoot(), 'resumes'); }
+function jdsDir() { return resolve(projectRoot(), 'jds/yash'); }
+function resumesDir() { return resolve(projectRoot(), 'resumes/yash'); }
 function pdfGeneratorPath() { return resolve(ROOT, 'generate-pdf-latex.mjs'); }
 
 // === Output helpers ===
@@ -36,25 +36,25 @@ async function fileExists(p) {
 }
 
 export function buildJdPath(company_slug, role_slug, date) {
-  return `jds/JD_${company_slug}_${role_slug}_Yash_Anghan_${date}.md`;
+  return `jds/yash/JD_${company_slug}_${role_slug}_Yash_Anghan_${date}.md`;
 }
 export function buildPdfPath(company_slug, role_slug, date) {
-  return `resumes/${company_slug}_${role_slug}_Yash_Anghan_Resume_${date}.pdf`;
+  return `resumes/yash/${company_slug}_${role_slug}_Yash_Anghan_Resume_${date}.pdf`;
 }
 export function buildTexPath(company_slug, role_slug, date) {
   return `resumes/${company_slug}_${role_slug}_Yash_Anghan_Resume_${date}.tex`;
 }
 export function buildSidecarLogPath(company_slug, role_slug, date) {
-  return `resume-logs/${company_slug}_${role_slug}_Yash_Anghan_Resume_${date}.log`;
+  return `resume-logs/yash/${company_slug}_${role_slug}_Yash_Anghan_Resume_${date}.log`;
 }
 export function buildCoverLetterTexPath(company_slug, role_slug, date) {
   return `/tmp/${company_slug}_${role_slug}_Yash_Anghan_Cover_Letter_${date}.tex`;
 }
 export function buildCoverLetterPdfPath(company_slug, role_slug, date) {
-  return `cover-letters/${company_slug}_${role_slug}_Yash_Anghan_Cover_Letter_${date}.pdf`;
+  return `cover-letters/yash/${company_slug}_${role_slug}_Yash_Anghan_Cover_Letter_${date}.pdf`;
 }
 export function buildCoverLetterLogPath(company_slug, role_slug, date) {
-  return `cover-letter-logs/${company_slug}_${role_slug}_Yash_Anghan_Cover_Letter_${date}.log`;
+  return `cover-letter-logs/yash/${company_slug}_${role_slug}_Yash_Anghan_Cover_Letter_${date}.log`;
 }
 
 export function ok(payload = {}) {
