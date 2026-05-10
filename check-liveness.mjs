@@ -33,15 +33,53 @@ async function checkUrl(page, url) {
     if (status === 404 || status === 410) return { result: 'expired', reason: `HTTP ${status}` };
 
     // Wait for the page to actually load properly
-    const bodyText = await page.evaluate(() => document.body?.innerText ?? '');
+    // Give SPAs (Ashby, Lever, Workday) time to hydrate
+    await page.waitForTimeout(2000);
 
-    // If we see an apply button, it's definitely alive
+    const finalUrl = page.url();
+    const bodyText = await page.evaluate(() => document.body?.innerText ?? '');
+    const applyControls = await page.evaluate(() => {
+      const candidates = Array.from(
+        document.querySelectorAll('a, button, input[type="submit"], input[type="button"], [role="button"]')
+      );
+
+      // If we see an apply button, it's definitely alive
+      return candidates
+        .filter((element) => {
+          if (element.closest('nav, header, footer')) return false;
+          if (element.closest('[aria-hidden="true"]')) return false;
+
+          const style = window.getComputedStyle(element);
+          if (style.display === 'none' || style.visibility === 'hidden') return false;
+          if (!element.getClientRects().length) return false;
+
+          return Array.from(element.getClientRects()).some((rect) => rect.width > 0 && rect.height > 0);
+        })
+        .map((element) => {
+          const label = [
+            element.innerText,
+            element.value,
+            element.getAttribute('aria-label'),
+            element.getAttribute('title'),
+          ]
+            .filter(Boolean)
+            .join(' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+
+          return label;
+        })
+        .filter(Boolean);
+    });
 
     for (const pattern of EXPIRED_PATTERNS) {
       if (pattern.test(bodyText)) return { result: 'expired', reason: `pattern matched: ${pattern.source}` };
     }
 
     if (bodyText.trim().length < 300) return { result: 'expired', reason: 'insufficient content' };
+
+    const hasApply = APPLY_PATTERNS.some(p => p.test(applyControls.join(' ')));
+    if (hasApply) return { result: 'active', reason: 'apply button found' };
 
     return { result: 'uncertain', reason: 'content present but no apply button' };
   } catch (err) {

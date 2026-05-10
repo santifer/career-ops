@@ -17,6 +17,7 @@
 import { readFileSync, writeFileSync, readdirSync, mkdirSync, renameSync, existsSync } from 'fs';
 import { join, basename, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { execFileSync } from 'child_process';
 
 const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
 // Support both layouts: data/applications.md (boilerplate) and applications.md (original)
@@ -27,6 +28,10 @@ const ADDITIONS_DIR = join(CAREER_OPS, 'batch/tracker-additions');
 const MERGED_DIR = join(ADDITIONS_DIR, 'merged');
 const DRY_RUN = process.argv.includes('--dry-run');
 const VERIFY = process.argv.includes('--verify');
+
+// Ensure required directories exist (fresh setup)
+mkdirSync(join(CAREER_OPS, 'data'), { recursive: true });
+mkdirSync(ADDITIONS_DIR, { recursive: true });
 
 // Canonical states and aliases
 const CANONICAL_STATES = ['Evaluated', 'Applied', 'Responded', 'Interview', 'Offer', 'Rejected', 'Discarded', 'SKIP'];
@@ -66,11 +71,53 @@ function normalizeCompany(name) {
   return name.toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
+// Tokens that almost every role shares — must NOT count as signal.
+// Includes seniority, work-mode, contract, and common locations.
+const ROLE_STOPWORDS = new Set([
+  // seniority / level
+  'junior', 'mid', 'middle', 'senior', 'staff', 'principal', 'lead', 'head',
+  'chief', 'associate', 'intern', 'entry', 'level',
+  // contract / mode
+  'remote', 'hybrid', 'onsite', 'contract', 'contractor', 'freelance',
+  'fulltime', 'parttime', 'permanent', 'temporary', 'intern', 'internship',
+  // generic job words
+  'role', 'position', 'opportunity', 'team', 'based',
+  // very common locations (extend in portals.yml later if needed)
+  'bangalore', 'bengaluru', 'mumbai', 'delhi', 'hyderabad', 'pune', 'chennai',
+  'london', 'berlin', 'paris', 'madrid', 'barcelona', 'amsterdam', 'dublin',
+  'york', 'francisco', 'seattle', 'boston', 'austin', 'chicago', 'toronto',
+  'tokyo', 'singapore', 'sydney', 'melbourne', 'lisbon', 'warsaw',
+  // regions / countries
+  'europe', 'emea', 'apac', 'latam', 'americas', 'india', 'spain', 'germany',
+  'france', 'italy', 'canada', 'brazil', 'mexico', 'japan',
+  // prepositions leaking through length filter
+  'with', 'from', 'into', 'over', 'this', 'that',
+]);
+
+function roleTokens(s) {
+  return s
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter(w => w.length > 3 && !ROLE_STOPWORDS.has(w));
+}
+
 function roleFuzzyMatch(a, b) {
-  const wordsA = a.toLowerCase().split(/\s+/).filter(w => w.length > 3);
-  const wordsB = b.toLowerCase().split(/\s+/).filter(w => w.length > 3);
-  const overlap = wordsA.filter(w => wordsB.some(wb => wb.includes(w) || w.includes(wb)));
-  return overlap.length >= 2;
+  const wordsA = roleTokens(a);
+  const wordsB = roleTokens(b);
+  if (wordsA.length === 0 || wordsB.length === 0) return false;
+
+  const setB = new Set(wordsB);
+  const overlap = wordsA.filter(w => setB.has(w)).length;
+  if (overlap === 0) return false;
+
+  // Jaccard-style ratio on content tokens. Two roles are "the same" only
+  // when the overlap dominates the smaller side — not when they just share
+  // a location + "engineer".
+  const minLen = Math.min(wordsA.length, wordsB.length);
+  const ratio = overlap / minLen;
+
+  return overlap >= 2 && ratio >= 0.6;
 }
 
 function extractReportNum(reportStr) {
@@ -322,9 +369,8 @@ if (DRY_RUN) console.log('(dry-run — no changes written)');
 // Optional verify
 if (VERIFY && !DRY_RUN) {
   console.log('\n--- Running verification ---');
-  const { execSync } = await import('child_process');
   try {
-    execSync(`node ${join(CAREER_OPS, 'verify-pipeline.mjs')}`, { stdio: 'inherit' });
+    execFileSync('node', [join(CAREER_OPS, 'verify-pipeline.mjs')], { stdio: 'inherit' });
   } catch (e) {
     process.exit(1);
   }

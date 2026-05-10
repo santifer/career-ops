@@ -1,6 +1,6 @@
 {
   "name": "career-ops",
-  "version": "1.0.0",
+  "version": "1.7.0",
   "description": "AI-powered job search pipeline — works with Claude Code, Cursor, Antigravity, and any AI coding agent",
   "scripts": {
     "merge": "node merge-tracker.mjs",
@@ -10,7 +10,7 @@
     "doctor": "node doctor.mjs",
     "sync-check": "node cv-sync-check.mjs",
     "update:check": "node update-system.mjs check",
-    "liveness": "grep -o \"https://[^ |]*\" data/pipeline.md | head -10 | xargs node check-liveness.mjs",
+    "liveness": "node check-liveness.mjs",
     "scan": "node scratch-scan.mjs",
     "offer-list": "node rank-pipeline.mjs",
     "offer-match": "node agentic-tailor.mjs",
@@ -23,7 +23,8 @@
     "setup": "node doctor.mjs",
     "batch:sequential": "node batch/batch-sequential.mjs",
     "dashboard": "node web-dashboard/server.mjs",
-    "dashboard-v2": "cd dashboard-v2 && pnpm run dev"
+    "dashboard-v2": "cd dashboard-v2 && pnpm run dev",
+    "gemini:eval": "node gemini-eval.mjs"
   },
   "keywords": [
     "ai",
@@ -42,6 +43,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1042.0",
     "@aws-sdk/lib-storage": "^3.1042.0",
+    "@google/generative-ai": "^0.24.1",
     "@huggingface/inference": "^4.13.15",
     "dotenv": "^17.4.1",
     "js-yaml": "^4.1.1",
