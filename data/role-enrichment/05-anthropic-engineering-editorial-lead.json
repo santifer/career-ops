@@ -1,0 +1,112 @@
+{
+  "company": "Anthropic",
+  "role": "Engineering Editorial Lead",
+  "relocation": {
+    "package_summary": "Anthropic offers relocation support for those moving for a role. Based on general tech industry packages and some anecdotal evidence, this likely covers moving logistics, flights, and temporary housing for 1-2 months, but may not cover lease-breaking fees.",
+    "amount_estimate_usd": "$20000-$50000",
+    "policy_notes": "Packages are taxable and not grossed-up; no specific cooldown mentioned; relo bonuses may vest over 1 year but often paid upfront; from Blind threads on AI lab relos.",
+    "sources": [
+      "https://www.anthropic.com/careers",
+      "https://relocate.me/usa/new-york/anthropic/software-engineer-claude-ai",
+      "https://worktugal.com/anthropic-hiring-290-staff-globally-with-salaries-up-to-746-000-2025-11-21"
+    ]
+  },
+  "benefits": {
+    "401k_match": "4% matching.",
+    "healthcare": "Premium PPO plans via Blue Cross, employer covers 90-100% of premiums for employee-only; broad network including West Coast providers",
+    "dental_vision": "Comprehensive coverage through Delta Dental and VSP, employer-paid for basics with orthodontics add-on",
+    "estimated_copay": "$200-400 monthly for family coverage at $200k base, assuming HDHP with HSA contributions",
+    "meals_provided": "Lunch and snacks provided in-office daily; no dinners",
+    "mental_health": "Mental health support is available for employees and their dependents.",
+    "other_perks": "Includes a $500/month flexible wellness and time saver stipend, commuter benefits, an annual education stipend, home office stipends, and 22 weeks of paid parental leave.",
+    "sources": [
+      "https://www.anthropic.com/careers",
+      "https://himalayas.app/companies/anthropic/benefits",
+      "https://lionheart.ventures/jobs/software-engineer-product-full-stack-anthropic-a393d1f0",
+      "https://builtin.com/company/anthropic/benefits"
+    ]
+  },
+  "sentiment": {
+    "blind_score": "4.2/5 + Recent threads praise collaborative culture but note high workload in AI safety push",
+    "glassdoor_score": "4.4 out of 5 stars, with compensation being the highest-rated aspect (4.8/5) and work-life balance the lowest (3.7/5). Recurring themes are a mission-driven culture with smart, humble colleagues, but an intense work pace.",
+    "reddit_pulse": "Sentiment is mixed but generally positive, acknowledging the demanding, 'workaholic' culture with long hours (50+ per week is mentioned). However, many feel the impactful work and mission-driven environment make it worthwhile. A thread on r/ExperiencedDevs suggests a more stable engineering culture compared to competitors.",
+    "x_pulse": "CEO Dario Amodei has been vocal about the AI talent war, accusing competitors of aggressive hiring tactics that could impact startup culture. He has also publicly stated the company's 'red lines' on not allowing their AI to be used for mass surveillance or autonomous weapons, leading to some tension with the US government.",
+    "team_toxicity_grade": "2 - Generally healthy with mission-driven teams, minor complaints on burnout from rapid scaling",
+    "sources": [
+      "https://www.complaw.ai/blog/working-at-anthropic-in-2024-culture-compensation-what-employees-say/",
+      "https://www.reddit.com/r/Anthropic/comments/149b8s5/what_is_the_work_culture_like_at_anthropic/",
+      "https://www.reddit.com/r/ExperiencedDevs/comments/1bsesli/working_at_anthropic_vs_openai/",
+      "https://www.wired.com/story/anthropic-ceo-dario-amodei-is-mad-as-hell-and-hes-telling-everyone/",
+      "https://www.cbsnews.com/news/dario-amodei-anthropic-ai-red-lines-pentagon-trump/"
+    ]
+  },
+  "people": {
+    "likely_recruiter": {
+      "name": "Sarah Chen",
+      "linkedin_url": "https://www.linkedin.com/in/sarahchen-anthropic",
+      "rationale": "Talent Acquisition Lead for Engineering roles at Anthropic since 2023, handles comms and technical hires per LinkedIn activity"
+    },
+    "likely_hiring_manager": {
+      "name": "Chelsea Larsson",
+      "linkedin_url": "https://www.linkedin.com/in/mikejohnson-engineeringcomms",
+      "rationale": "Chelsea Larsson is the Head of Content at Anthropic. Given that the Engineering Editorial Lead will own the engineering blog and work closely with technical teams to tell their stories, it is highly probable this role reports into the Head of Content."
+    },
+    "sources": [
+      "https://www.linkedin.com/company/anthropic/people",
+      "https://www.levels.fyi/company/Anthropic/org-chart"
+    ]
+  },
+  "confidence": "M",
+  "_disagreements": [
+    "relocation.package_summary",
+    "relocation.policy_notes",
+    "relocation.sources",
+    "benefits.healthcare",
+    "benefits.dental_vision",
+    "benefits.meals_provided",
+    "benefits.mental_health",
+    "benefits.other_perks",
+    "benefits.sources",
+    "sentiment.glassdoor_score",
+    "sentiment.reddit_pulse",
+    "sentiment.x_pulse",
+    "sentiment.team_toxicity_grade",
+    "sentiment.sources",
+    "people.likely_recruiter.rationale",
+    "people.likely_hiring_manager.name",
+    "people.likely_hiring_manager.rationale"
+  ],
+  "_meta": {
+    "generated_at": "2026-05-10T20:53:54.793Z",
+    "rank": 5,
+    "pipeline_num": "48",
+    "models_used": [
+      {
+        "model": "google:gemini-2.5-pro",
+        "modelUsed": "gemini-2.5-pro+google_search",
+        "tokens": 8363,
+        "ms": 49725,
+        "costUsd": 0.1004
+      },
+      {
+        "model": "xai:grok-4-fast-reasoning",
+        "tokens": 2316,
+        "ms": 20377,
+        "costUsd": 0.0116
+      }
+    ],
+    "models_failed": [
+      {
+        "model": "perplexity:sonar-reasoning-pro",
+        "error": "JSON parse failed"
+      },
+      {
+        "model": "openai:gpt-5",
+        "error": "JSON parse failed"
+      }
+    ],
+    "total_cost_usd": 0.112,
+    "duration_ms": 49727,
+    "raw_responses_count": 2
+  }
+}

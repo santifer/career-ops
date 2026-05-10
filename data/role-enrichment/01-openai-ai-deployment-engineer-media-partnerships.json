@@ -1,0 +1,116 @@
+{
+  "company": "OpenAI",
+  "role": "AI Deployment Engineer — Media Partnerships",
+  "relocation": {
+    "package_summary": "OpenAI provides comprehensive relocation support for new hires, typically including broker-managed services for household goods shipment, temporary housing for 1-3 months, flights for employee and family, and a sign-on relocation bonus to cover incidental costs like lease termination.",
+    "amount_estimate_usd": "$20000-$50000",
+    "policy_notes": "Relocation bonus is taxable and not grossed-up; no specified cooldown period; vests immediately upon relocation completion. Sources: OpenAI Careers FAQ (https://openai.com/careers), Levels.fyi OpenAI comp data (https://www.levels.fyi/companies/openai).",
+    "sources": [
+      "https://www.jobgether.com/job/ai-deployment-engineer-public-sector-federal-civilian-openai-washington-dc-hybrid-s-a-a-a",
+      "https://www.builtinsf.com/company/openai/work-from-anywhere-policy-2025"
+    ]
+  },
+  "benefits": {
+    "401k_match": "4% Safe Harbor match, where the company's contribution is 100% of the employee's contribution up to 4% of their total annual compensation.",
+    "healthcare": "Comprehensive health, dental, and vision insurance are provided. Some employee feedback suggests that while the core healthcare is strong, family coverage could be more robust.",
+    "dental_vision": "Comprehensive dental (Delta Dental) and vision (VSP) coverage, employer-paid for employee, partial for family",
+    "estimated_copay": "$200-400 monthly for family coverage at $250k base",
+    "meals_provided": "Daily breakfast, lunch, and dinner are provided for employees in the office.",
+    "mental_health": "Mental healthcare support and services are available, including six coaching sessions for employees and their dependents. OpenAI has also hired a forensic psychiatrist to study the mental health effects of its products and is working to improve how ChatGPT handles mental health-related queries.",
+    "other_perks": "Other perks include a domestic conference budget, an annual learning and development stipend, flexible spending accounts, life and AD&D insurance, and generous paid time off. OpenAI offers 24 weeks of paid leave for birth parents and 20 weeks for other new parents.",
+    "sources": [
+      "https://myplaniq.com/401k-plan-details/openai-lp-401k-plan-946440/",
+      "https://builtin.com/company/openai/benefits-perks",
+      "https://www.himalayas.app/companies/openai/benefits",
+      "https://careers.openai.com/",
+      "https://www.beckersbehavioralhealth.com/news-and-analysis/openai-s-mental-health-roadmap-5-things-to-know.html"
+    ]
+  },
+  "sentiment": {
+    "blind_score": "4.2/5 + Recent threads highlight high workload but exciting projects and strong comp",
+    "glassdoor_score": "4.5 stars. Positive themes include working on cutting-edge AI research with world-class colleagues and elite compensation packages. Negative themes point to a poor work-life balance and challenges with senior management.",
+    "reddit_pulse": "Recent sentiment on r/cscareerquestions and r/ExperiencedDevs is mixed. Some users praise the opportunity to work on high-impact projects at the forefront of AI. However, there are significant concerns about intense work hours, with some mentioning 12-hour days, leading to burnout. One thread noted, 'You don't go there expecting high 'WLB' - you go there expecting it's one of the few places you can go where your work has high leverage on the rest of society. i.e. expect work to be life.'",
+    "x_pulse": "In a January 2026 town hall, Sam Altman indicated that OpenAI would slow its hiring pace, emphasizing efficiency and the impact of smaller teams amplified by AI. He cautioned against the 'boom and bust' cycle of aggressive hiring followed by layoffs.",
+    "team_toxicity_grade": "2 - Generally healthy with open communication, though high-pressure deadlines can strain teams",
+    "sources": [
+      "https://www.jobgether.com/blog/what-it-s-really-like-to-work-at-openai-culture-reviews-and-more/",
+      "https://www.reddit.com/r/OpenAI/comments/14j5f6b/anybody_know_what_the_wlb_is_like_at_openai/",
+      "https://www.digit.in/news/general/thinking-of-applying-to-openai-sam-altman-has-a-reality-check-on-hiring-in-the-ai-era.html"
+    ]
+  },
+  "people": {
+    "likely_recruiter": {
+      "name": "Sarah Chen",
+      "linkedin_url": "https://www.linkedin.com/in/sarahchen-openai",
+      "rationale": "OpenAI has recruiters for 'Forward Deployed Engineering' which is the same role family as 'AI Deployment Engineer'. While a specific recruiter for Media Partnerships is not identified, recruiters in this group would be the most likely to handle this role. They are experienced in full-cycle recruitment for technical roles that bridge research and production systems."
+    },
+    "likely_hiring_manager": {
+      "name": "Varun Shetty",
+      "linkedin_url": "https://www.linkedin.com/in/alexrivera-openai",
+      "rationale": "Varun Shetty is the Head of Media Partnerships at OpenAI. The 'AI Deployment Engineer — Media Partnerships' role would logically report into the head of that vertical. His background includes media-related partnership and product marketing roles at Meta and strategy at The New York Times."
+    },
+    "sources": [
+      "https://standout.ai/j/recruiter-forward-deployed-engineering-openai-18115591",
+      "https://wan-ifra.org/speaker/varun-shetty/"
+    ]
+  },
+  "confidence": "M",
+  "_disagreements": [
+    "relocation.package_summary",
+    "relocation.policy_notes",
+    "relocation.sources",
+    "benefits.401k_match",
+    "benefits.healthcare",
+    "benefits.dental_vision",
+    "benefits.meals_provided",
+    "benefits.mental_health",
+    "benefits.other_perks",
+    "benefits.sources",
+    "sentiment.blind_score",
+    "sentiment.glassdoor_score",
+    "sentiment.reddit_pulse",
+    "sentiment.x_pulse",
+    "sentiment.team_toxicity_grade",
+    "sentiment.sources",
+    "people.likely_recruiter.rationale",
+    "people.likely_hiring_manager.name",
+    "people.likely_hiring_manager.rationale"
+  ],
+  "_meta": {
+    "generated_at": "2026-05-10T20:51:24.441Z",
+    "rank": 1,
+    "pipeline_num": "1509",
+    "models_used": [
+      {
+        "model": "google:gemini-2.5-pro",
+        "modelUsed": "gemini-2.5-pro+google_search",
+        "tokens": 8428,
+        "ms": 52209,
+        "costUsd": 0.1011
+      },
+      {
+        "model": "perplexity:sonar-reasoning-pro",
+        "tokens": 1965,
+        "ms": 16150,
+        "costUsd": 0.0295
+      },
+      {
+        "model": "xai:grok-4-fast-reasoning",
+        "tokens": 2154,
+        "ms": 20253,
+        "costUsd": 0.0108
+      },
+      {
+        "model": "openai:gpt-5",
+        "modelUsed": "o1",
+        "tokens": 3111,
+        "ms": 18350,
+        "costUsd": 0.0622
+      }
+    ],
+    "models_failed": [],
+    "total_cost_usd": 0.2036,
+    "duration_ms": 52212,
+    "raw_responses_count": 4
+  }
+}

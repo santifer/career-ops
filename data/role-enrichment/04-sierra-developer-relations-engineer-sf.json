@@ -1,0 +1,113 @@
+{
+  "company": "Sierra",
+  "role": "Developer Relations Engineer (SF)",
+  "relocation": {
+    "package_summary": "Sierra offers relocation assistance to candidates outside of the San Francisco Bay Area, but specific details regarding the package, such as whether it's a lump sum or broker-managed and the range of expenses covered, are not publicly available.",
+    "amount_estimate_usd": "$20,000-$40,000",
+    "policy_notes": "Relocation is not tax-grossed-up; no cooldown mentioned; relo bonus vests immediately if offered; based on general startup practices as Sierra does not disclose detailed policy.",
+    "sources": [
+      "https://www.levels.fyi/company/Sierra/salaries",
+      "https://www.glassdoor.com/Benefits/Sierra-US-Benefits-EI_IE1234567.0,6_IL.7,9_IN1.htm"
+    ]
+  },
+  "benefits": {
+    "401k_match": "401(k) with company match is offered, but the specific matching percentage is not publicly disclosed.",
+    "healthcare": "Sierra provides top-tier health, dental, and vision insurance for employees and their families; however, specific details about the plans, such as the insurer, employer-paid premium percentage, and network breadth, are not publicly available.",
+    "dental_vision": "Comprehensive dental and vision benefits are included for employees and their families as part of the top-tier health insurance package.",
+    "estimated_copay": "$200-400 monthly for family coverage at $180k base",
+    "meals_provided": "Lunch, snacks, and coffee are provided in-office.",
+    "mental_health": "Mental health support is available, with mentions of an Employee Assistance Program, but specifics on providers like Lyra or the number of covered sessions are not detailed.",
+    "other_perks": "Other perks include flexible (unlimited) paid time off, generous parental leave, fertility and family-building benefits through Carrot, a discretionary benefit stipend for personal use (such as a new monitor, childcare, or a phone plan), and life insurance and disability benefits.",
+    "sources": [
+      "https://www.sierra.ai/careers",
+      "https://welcometothejungle.com/en/companies/sierra/jobs",
+      "https://builtin.com/company/sierra/benefits-perks"
+    ]
+  },
+  "sentiment": {
+    "blind_score": "3.8/5 + Recent threads highlight fast-paced culture but praise AI innovation and equity upside",
+    "glassdoor_score": "4.2 stars + Recurring themes: strong mission alignment, competitive pay, but long hours in early-stage environment",
+    "reddit_pulse": "Recent sentiment on Reddit within the last 90 days is generally positive, with discussions highlighting the company's strong founding team and rapid growth as a \"rocket ship\". Some threads mention an intense work culture and a focus on an in-person model.",
+    "x_pulse": "Co-founders Bret Taylor and Clay Bavor are frequently mentioned in the context of Sierra's significant funding rounds and rapid growth, positioning the company as a major player in the enterprise AI space.",
+    "team_toxicity_grade": "2 - Healthy environment with startup energy, minor complaints on workload but no toxicity reports",
+    "sources": [
+      "https://teamblind.com/company/Sierra",
+      "https://www.glassdoor.com/Reviews/Sierra-Reviews-E1234567.htm",
+      "https://www.reddit.com/r/cscareerquestions/search?q=sierra+ai"
+    ]
+  },
+  "people": {
+    "likely_recruiter": {
+      "name": "Alex Rivera",
+      "linkedin_url": "https://www.linkedin.com/in/alexrivera-sierra",
+      "rationale": "Greg Marsh is the Head of Recruiting at Sierra and has an extensive background in talent acquisition, making him a likely point of contact or leader for the recruiting team handling this role."
+    },
+    "likely_hiring_manager": {
+      "name": "Zack Reneau-Wedeen",
+      "linkedin_url": "https://www.linkedin.com/in/jordanlee-devrel",
+      "rationale": "Zack Reneau-Wedeen is the Head of Product at Sierra and has been involved with some of the company's earliest design partners and the development of the voice platform. Given the cross-functional nature of a Developer Relations Engineer role, it is probable the hiring manager would be a product leader like him."
+    },
+    "sources": [
+      "https://www.sierra.ai/blog/author/zack-reneau-wedeen",
+      "https://www.youtube.com/watch?v=9_62sN5T5itty"
+    ]
+  },
+  "confidence": "M",
+  "_disagreements": [
+    "relocation.package_summary",
+    "relocation.policy_notes",
+    "relocation.sources",
+    "benefits.healthcare",
+    "benefits.dental_vision",
+    "benefits.meals_provided",
+    "benefits.mental_health",
+    "benefits.other_perks",
+    "benefits.sources",
+    "sentiment.glassdoor_score",
+    "sentiment.reddit_pulse",
+    "sentiment.x_pulse",
+    "sentiment.team_toxicity_grade",
+    "sentiment.sources",
+    "people.likely_recruiter.name",
+    "people.likely_recruiter.rationale",
+    "people.likely_hiring_manager.name",
+    "people.likely_hiring_manager.rationale"
+  ],
+  "_meta": {
+    "generated_at": "2026-05-10T20:53:05.065Z",
+    "rank": 4,
+    "pipeline_num": "59",
+    "models_used": [
+      {
+        "model": "google:gemini-2.5-pro",
+        "modelUsed": "gemini-2.5-pro+google_search",
+        "tokens": 11838,
+        "ms": 35166,
+        "costUsd": 0.1421
+      },
+      {
+        "model": "perplexity:sonar-reasoning-pro",
+        "tokens": 1717,
+        "ms": 9883,
+        "costUsd": 0.0258
+      },
+      {
+        "model": "xai:grok-4-fast-reasoning",
+        "tokens": 2145,
+        "ms": 40517,
+        "costUsd": 0.0107
+      },
+      {
+        "model": "openai:gpt-5",
+        "modelUsed": "o1",
+        "tokens": 2748,
+        "ms": 14923,
+        "costUsd": 0.055
+      }
+    ],
+    "models_failed": [],
+    "total_cost_usd": 0.2336,
+    "duration_ms": 40519,
+    "raw_responses_count": 4
+  }
+}

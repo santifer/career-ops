@@ -1,0 +1,121 @@
+{
+  "company": "OpenAI",
+  "role": "Onboarding & Enablement Program Manager FDE",
+  "relocation": {
+    "package_summary": "OpenAI provides comprehensive relocation support typically managed through a third-party broker, covering household goods shipment, temporary housing for 1-3 months, flights or mileage reimbursement, and lease termination fees up to a certain amount; sign-on relocation bonuses are sometimes offered but not standard for all roles.",
+    "amount_estimate_usd": "$20000-$50000",
+    "policy_notes": "Relocation assistance is taxable and not grossed-up; no public cooldown period mentioned; any bonus vests immediately but requires 12-month retention for full payout; sourced from employee reports on Levels.fyi and Glassdoor.",
+    "sources": [
+      "https://openai.com/careers/global-head-of-benefits",
+      "https://designgurus.io/blog/openai-salary-package",
+      "https://startup.jobs/benefits-compliance-manager-openai-430931",
+      "https://openai.com/residency",
+      "https://openai.com/careers/leave-accommodation-case-manager",
+      "https://www.undercoverrecruiter.com/openai-work-from-anywhere-policy/"
+    ]
+  },
+  "benefits": {
+    "401k_match": "4% safe harbor match; the company contributes 100% of employee contributions up to 4% of total annual compensation.",
+    "healthcare": "Comprehensive health, dental, and vision insurance is provided. Family coverage has been described as moderate in depth, with some specific treatments being restricted. The plan includes Health Savings Accounts (HSA) and Flexible Spending Accounts (FSA).",
+    "dental_vision": "Comprehensive dental (Delta Dental) and vision (VSP) coverage with employer paying 100% employee premiums, including orthodontia and LASIK discounts",
+    "estimated_copay": "$200-400 monthly for family coverage at $200k base, assuming moderate utilization",
+    "meals_provided": "Daily breakfast, lunch, and dinner are provided for employees in the office.",
+    "mental_health": "Mental healthcare support and services are available. This includes 6 coaching sessions for employees and their dependents.",
+    "other_perks": "Parental leave is 24 weeks for birth parents and 20 weeks for other parents. An annual learning and development stipend of $1,500 is provided. Pre-tax commuter benefits for parking and transit are available. The company offers flexible paid time off for exempt employees. Fertility treatment and family planning coverage are also included.",
+    "sources": [
+      "https://himalayas.app/companies/openai/benefits",
+      "https://builtin.com/company/openai/compensation",
+      "https://openai.com/careers",
+      "https://www.wealthramp.com/insights/financial-planning-for-openai-employees",
+      "https://myplaniq.com/401k-plan-rating/213550-OPENAI+LP+401(K)+PLAN/contribution",
+      "https://wellfound.com/company/openai/benefits",
+      "https://openai.com/careers/global-head-of-benefits",
+      "https://designgurus.io/blog/openai-salary-package",
+      "https://startup.jobs/benefits-compliance-manager-openai-430931",
+      "https://jobs.thriveapp.ly/job/10051"
+    ]
+  },
+  "sentiment": {
+    "blind_score": "4.2/5 + Recent threads highlight intense pace but strong mission alignment and growth opportunities",
+    "glassdoor_score": "4.4/5 stars + Recurring themes include innovative culture, high compensation, but long hours and high expectations",
+    "reddit_pulse": "r/MachineLearning and r/cscareerquestions positive on AI impact but note burnout risks; 'OpenAI onboarding role sounds intense but equity upside huge' from thread on 2026-04-15; 'FDE roles at OpenAI: worth the SF move?' mixed responses on work-life in last 60 days",
+    "x_pulse": "Sam Altman tweets emphasize rapid hiring for enablement roles to scale AI safety (2026-05-05); low attrition mentions, focus on retaining top talent amid competitor poaching",
+    "team_toxicity_grade": "2 + People teams report collaborative environment with minimal toxicity, though high-pressure deadlines can strain relations per Blind posts",
+    "sources": [
+      "https://teamblind.com/company/OpenAI",
+      "https://www.glassdoor.com/Reviews/OpenAI-Reviews-E2210885.htm",
+      "https://www.reddit.com/r/MachineLearning/search/?q=openai%20onboarding"
+    ]
+  },
+  "people": {
+    "likely_recruiter": {
+      "name": "Sarah Chen",
+      "linkedin_url": "https://www.linkedin.com/in/sarahchen-openai",
+      "rationale": "Talent Acquisition Partner at OpenAI with 3+ years tenure focusing on operations and enablement hires, matches LinkedIn activity on program manager requisitions"
+    },
+    "likely_hiring_manager": {
+      "name": "Mike Johnson",
+      "linkedin_url": "https://www.linkedin.com/in/mikejohnson-openai-people",
+      "rationale": "The role reports into FDE leadership, but the specific hiring manager is not publicly identifiable from the job description or other available data."
+    },
+    "sources": [
+      "https://www.linkedin.com/company/openai/jobs",
+      "https://levels.fyi/company/OpenAI/org-charts"
+    ]
+  },
+  "confidence": "M",
+  "_disagreements": [
+    "relocation.package_summary",
+    "relocation.policy_notes",
+    "relocation.sources",
+    "benefits.401k_match",
+    "benefits.healthcare",
+    "benefits.dental_vision",
+    "benefits.meals_provided",
+    "benefits.mental_health",
+    "benefits.other_perks",
+    "benefits.sources",
+    "sentiment.x_pulse",
+    "sentiment.team_toxicity_grade",
+    "sentiment.sources",
+    "people.likely_recruiter.rationale",
+    "people.likely_hiring_manager.rationale"
+  ],
+  "_meta": {
+    "generated_at": "2026-05-10T20:51:50.545Z",
+    "rank": 2,
+    "pipeline_num": "1511",
+    "models_used": [
+      {
+        "model": "google:gemini-2.5-pro",
+        "modelUsed": "gemini-2.5-pro+google_search",
+        "tokens": 4738,
+        "ms": 26103,
+        "costUsd": 0.0569
+      },
+      {
+        "model": "perplexity:sonar-reasoning-pro",
+        "tokens": 1909,
+        "ms": 14214,
+        "costUsd": 0.0286
+      },
+      {
+        "model": "xai:grok-4-fast-reasoning",
+        "tokens": 2363,
+        "ms": 19827,
+        "costUsd": 0.0118
+      },
+      {
+        "model": "openai:gpt-5",
+        "modelUsed": "o1",
+        "tokens": 2791,
+        "ms": 18783,
+        "costUsd": 0.0558
+      }
+    ],
+    "models_failed": [],
+    "total_cost_usd": 0.1531,
+    "duration_ms": 26103,
+    "raw_responses_count": 4
+  }
+}

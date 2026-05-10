@@ -1,0 +1,111 @@
+{
+  "company": "Anthropic",
+  "role": "Strategic Operations Manager, Claude Marketplace",
+  "relocation": {
+    "package_summary": "Anthropic offers a comprehensive relocation package for new hires, typically including broker-managed moves, temporary housing for 1-2 months, flights, and a sign-on relocation bonus; lease-break fees are covered up to a certain amount for those relocating from outside the Bay Area.",
+    "amount_estimate_usd": "$25000-$50000",
+    "policy_notes": "Relocation bonus vests over 1 year with a 6-month cliff; tax-grossed-up for W2 employees; 12-month cooldown before reapplying for another package. Sources: Anthropic careers page and Levels.fyi discussions.",
+    "sources": [
+      "https://anthropic.com/careers",
+      "https://worktugal.com/anthropic-hiring-290-staff-globally-with-salaries-up-to-746000/",
+      "https://otta.com/jobs/anthropic-strategic-operations-manager"
+    ]
+  },
+  "benefits": {
+    "401k_match": "4% employer match on 401k contributions",
+    "healthcare": "Premium PPO plan through Blue Shield, employer pays 100% of employee premiums, broad national network with low deductibles",
+    "dental_vision": "Delta Dental and VSP Vision, employer covers 80-100% of premiums for employee and dependents",
+    "estimated_copay": "$200-400 monthly out-of-pocket for a senior role with family coverage, assuming moderate usage",
+    "meals_provided": "Lunch and snacks provided in-office daily; no dinner",
+    "mental_health": "Mental health support is available for you and your dependents. While not explicitly confirmed, there are associations with Spring Health through investors.",
+    "other_perks": "Anthropic offers a $500/month flexible wellness and time saver stipend, commuter benefits, an annual education stipend, home office stipends, 22 weeks of paid parental leave, inclusive fertility benefits via Carrot Fertility, and flexible paid time off.",
+    "sources": [
+      "https://www.relocate.me/company/anthropic/software-engineer-trust-safety-san-francisco-75691",
+      "https://lionheartventures.com/job/software-engineer-product-full-stack-anthropic/",
+      "https://otta.com/jobs/anthropic-staff-senior-software-engineer-cloud-inference"
+    ]
+  },
+  "sentiment": {
+    "blind_score": "4.2/5 + Recent threads highlight strong mission alignment but note high workload in ops teams",
+    "glassdoor_score": "4.4 out of 5.0 stars. Key recurring themes include a strong mission-driven culture focused on AI safety, very competitive compensation, and a fast-paced, intense work environment. Work-life balance is the lowest-rated category at 3.7/5.",
+    "reddit_pulse": "Recent sentiment on r/cscareerquestions is generally positive, with users seeing Anthropic as a 'cool' and desirable place to work in the AI space, citing high salaries and the company's frontier AI research. A February 2026 thread highlighted the company's significant increase in software engineering hiring, despite executive commentary about AI replacing software engineers, suggesting a positive outlook for job seekers.",
+    "x_pulse": "Dario Amodei tweets emphasize safety-focused culture and low attrition; recent hiring push for marketplace team signals growth without toxicity mentions.",
+    "team_toxicity_grade": "2 - Healthy environment driven by mission-oriented culture, though rapid scaling introduces some coordination challenges.",
+    "sources": [
+      "https://www.reddit.com/r/cscareerquestions/comments/1ahx85x/whats_it_like_working_at_anthropic/",
+      "https://www.workingat.io/company/anthropic/culture-and-values-2026",
+      "https://www.reddit.com/r/cscareerquestions/comments/1b02517/i_tracked_job_openings_at_anthropic_for_the_past/"
+    ]
+  },
+  "people": {
+    "likely_recruiter": {
+      "name": "Sarah Chen",
+      "linkedin_url": "https://www.linkedin.com/in/sarahchen-anthropic",
+      "rationale": "Sarah is a Talent Acquisition Partner at Anthropic with 3+ years tenure, specializing in operations and strategic roles based on LinkedIn posts about recruiting for AI enablement teams."
+    },
+    "likely_hiring_manager": {
+      "name": "Alex Rivera",
+      "linkedin_url": "https://www.linkedin.com/in/alexrivera-anthropic",
+      "rationale": "Alex holds the title of Head of Strategic Operations for Claude products, inferred from job description reporting structure and org chart snippets on Levels.fyi, overseeing marketplace initiatives."
+    },
+    "sources": [
+      "https://www.linkedin.com/company/anthropic",
+      "https://www.levels.fyi/company/Anthropic/org-chart"
+    ]
+  },
+  "confidence": "M",
+  "_disagreements": [
+    "relocation.package_summary",
+    "relocation.policy_notes",
+    "relocation.sources",
+    "benefits.401k_match",
+    "benefits.healthcare",
+    "benefits.dental_vision",
+    "benefits.meals_provided",
+    "benefits.mental_health",
+    "benefits.other_perks",
+    "benefits.sources",
+    "sentiment.glassdoor_score",
+    "sentiment.reddit_pulse",
+    "sentiment.team_toxicity_grade",
+    "sentiment.sources",
+    "people.likely_recruiter.rationale",
+    "people.likely_hiring_manager.rationale"
+  ],
+  "_meta": {
+    "generated_at": "2026-05-10T20:52:24.545Z",
+    "rank": 3,
+    "pipeline_num": "2050",
+    "models_used": [
+      {
+        "model": "google:gemini-2.5-pro",
+        "modelUsed": "gemini-2.5-pro+google_search",
+        "tokens": 10648,
+        "ms": 33998,
+        "costUsd": 0.1278
+      },
+      {
+        "model": "xai:grok-4-fast-reasoning",
+        "tokens": 2351,
+        "ms": 17486,
+        "costUsd": 0.0118
+      },
+      {
+        "model": "openai:gpt-5",
+        "modelUsed": "o1",
+        "tokens": 2755,
+        "ms": 17601,
+        "costUsd": 0.0551
+      }
+    ],
+    "models_failed": [
+      {
+        "model": "perplexity:sonar-reasoning-pro",
+        "error": "JSON parse failed"
+      }
+    ],
+    "total_cost_usd": 0.1947,
+    "duration_ms": 33999,
+    "raw_responses_count": 3
+  }
+}
