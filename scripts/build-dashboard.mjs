@@ -1996,8 +1996,12 @@ function build() {
      "Dashboard" suffix and collapse Search/+Add behind a ··· button
      that opens the mobile settings sheet. Dark + Batch toggles stay
      visible because they're 1-tap actions. */
-  @media (max-width: 480px) {
+  /* Tablet/narrow desktop: drop "Dashboard" suffix so title doesn't truncate
+     when toolbar is busy with Search + Add role + Live ticker + Dark + Batch. */
+  @media (max-width: 1280px) {
     .toolbar h1 .brand-suffix { display: none; }
+  }
+  @media (max-width: 480px) {
     .toolbar h1 { font-size: 17px; letter-spacing: -0.3px; }
     .toolbar .cmdk-trigger,
     .toolbar .quickadd-btn { display: none; }
@@ -2008,32 +2012,40 @@ function build() {
   .stats {
     margin: 16px 0 24px;
   }
+  /* Compact stat strip — all 7 cards on a single row at desktop, tight 2-col stack on mobile.
+     Goal: total stat-strip height ≤120px on desktop so Apply-Now queue lands in first scroll. */
   .stats-bento {
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    grid-auto-rows: minmax(78px, auto);
-    gap: 12px;
-    margin: 16px 0 var(--section-gap);
+    grid-template-columns: repeat(7, 1fr);
+    grid-auto-rows: 110px;
+    gap: 8px;
+    margin: 12px 0 20px;
   }
-  .stat-hero { grid-column: span 2; grid-row: span 2; }
+  .stat-hero { grid-column: span 1; grid-row: span 1; }
   .stat-cell { grid-column: span 1; }
   .stat-strip { grid-column: 1 / -1; }
-  /* Mobile: 2-col bento. Heroes still emphasized (full-width, taller). */
+  /* Tablet: 4-col grid, two rows max. */
+  @media (max-width: 1080px) {
+    .stats-bento { grid-template-columns: repeat(4, 1fr); }
+  }
+  /* Mobile: 2-col compact grid. Apply-Now first, then 6 in 3 rows of 2 = ~4 short rows total. */
   @media (max-width: 720px) {
     .stats-bento {
       grid-template-columns: repeat(2, 1fr);
-      grid-auto-rows: minmax(72px, auto);
+      grid-auto-rows: 84px;
+      gap: 6px;
     }
-    .stat-hero { grid-column: 1 / -1; grid-row: span 1; }
+    .stat-hero { grid-column: 1 / -1; }
     .stat-cell, .stat-strip { grid-column: span 1; grid-row: span 1; }
     .stat-strip { grid-column: 1 / -1; }
   }
   .stat {
-    background: var(--surface); padding: 18px 20px; border-radius: var(--radius);
+    background: var(--surface); padding: 12px 14px; border-radius: var(--radius);
     border: 1px solid var(--border); box-shadow: var(--shadow-sm);
     transition: border-color .15s, box-shadow .15s;
     position: relative; overflow: hidden;
-    display: flex; flex-direction: column; justify-content: flex-end;
+    display: flex; flex-direction: column; justify-content: space-between;
+    min-height: 0;
   }
   .stat::before {
     content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
@@ -2047,8 +2059,8 @@ function build() {
   .stat-label { font-size: 11px; color: var(--text-3); text-transform: uppercase;
                 letter-spacing: 0.06em; font-weight: 600; }
   .stat-value {
-    font-size: 32px; font-weight: 700; color: var(--text);
-    margin-top: 6px; letter-spacing: -1px;
+    font-size: 26px; font-weight: 700; color: var(--text);
+    margin-top: 2px; letter-spacing: -0.5px; line-height: 1;
     font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;
     font-feature-settings: "tnum" 1;
@@ -2061,17 +2073,17 @@ function build() {
   }
   .stat:hover .stat-caret { color: var(--text-3); }
   .stat.active .stat-caret { color: var(--blue-fg); transform: rotate(180deg); }
-  /* Hero tier: bigger numeric + accent stripe + room reserved for future sparkline */
-  .stat-hero { padding: 22px 24px; }
-  .stat-hero::before { height: 4px; }
-  .stat-hero .stat-label { font-size: 12px; }
-  .stat-hero .stat-value { font-size: 56px; line-height: 1; letter-spacing: -1.5px; margin-top: 10px; }
+  /* Hero tier: same height as cells in the compact strip, but bolder accent stripe + green-tinted value */
+  .stat-hero { padding: 12px 14px; }
+  .stat-hero::before { height: 3px; }
+  .stat-hero .stat-label { font-size: 11px; }
+  .stat-hero .stat-value { font-size: 32px; line-height: 1; letter-spacing: -0.8px; margin-top: 2px; }
   @media (max-width: 720px) {
-    .stat-hero .stat-value { font-size: 44px; }
+    .stat-hero .stat-value { font-size: 36px; }
   }
-  /* Small tier: tighter padding + smaller numeric */
-  .stat-cell { padding: 14px 16px; }
-  .stat-cell .stat-value { font-size: 24px; letter-spacing: -0.5px; }
+  /* Small tier: identical to base .stat in compact strip */
+  .stat-cell { padding: 12px 14px; }
+  .stat-cell .stat-value { font-size: 26px; letter-spacing: -0.5px; }
   .stat-cell::before { height: 2px; }
   /* Strip tier: same compact metrics, full-width row */
   .stat-strip { padding: 14px 18px; flex-direction: row; align-items: center; gap: 14px; justify-content: flex-start; }
@@ -2085,7 +2097,7 @@ function build() {
   /* ── KPI sparkline + 7-day delta (Phase 6 item 3.1) ─────────── */
   .stat-trend {
     display: flex; align-items: center; justify-content: space-between;
-    gap: 8px; margin-top: 6px; min-height: 24px;
+    gap: 6px; margin-top: 2px; min-height: 16px;
   }
   .stat-delta {
     font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums;
@@ -3748,7 +3760,6 @@ function build() {
       <span class="cmdk-trigger-label">Search…</span>
       <span class="cmdk-trigger-kbd">⌘K</span>
     </button>
-    <button class="toolbar-btn" onclick="openQuickAdd()" id="quickadd-btn" title="Add a role URL to the pipeline" aria-label="Add role to pipeline">+ Add role</button>
     <div class="live-ticker" id="live-ticker" role="status" aria-live="polite" aria-label="Most recent scanner activity" tabindex="0" title="Click to expand on mobile">
       <span class="live-dot" id="live-dot" aria-hidden="true"></span>
       <span class="live-text" id="live-text">—</span>
@@ -3957,7 +3968,7 @@ function build() {
         <div class="stat-value" id="live-batches">${batchRuns}</div>
         <span class="stat-caret" aria-hidden="true">▾</span><span class="sr-only">Click to expand</span>
       </div>
-      <div class="stat stat-strip" onclick="toggleStatPanel('applied')" title="Click to see in-flight applications">
+      <div class="stat stat-cell" onclick="toggleStatPanel('applied')" title="Click to see in-flight applications">
         <div class="stat-label">Applied / In process</div>
         <div class="stat-value" id="live-applied">${applied.length}</div>
         <div class="stat-trend">${deltaIndicator(kpiSpark.applied.delta)}${sparklineSVG(kpiSpark.applied.daily, 'var(--purple-fg)', 'Applied / In process')}</div>
