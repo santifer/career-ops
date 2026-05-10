@@ -157,6 +157,7 @@ function readReportOnce(reportPath) {
       exists: false, text: '',
       archetype: '', url: '', finalRecommendation: '',
       competitiveEdge: [], tldr: '', positioning: '', comp: '',
+      compRaw: '', locationField: '',
       keyGaps: [], topStories: [], whyGapsDontBlock: '',
     };
     _reportCache.set(reportPath, empty);
@@ -173,6 +174,8 @@ function readReportOnce(reportPath) {
     tldr: _parseTldr(text),
     positioning: _parsePositioning(text),
     comp: _parseComp(text),
+    compRaw: _parseCompRaw(text),
+    locationField: _parseLocationField(text),
     keyGaps: _parseKeyGaps(text),
     topStories: _parseTopStories(text),
     whyGapsDontBlock: _parseWhyGapsDontBlock(text),
@@ -350,6 +353,216 @@ function equityBadge(company) {
   if (updated) tipParts.push(`As of ${updated}`);
   const tip = tipParts.join(' · ');
   return `<span class="equity-badge ${meta.cls}" data-equity-stage="${meta.cls}" title="${escape(tip)}" aria-label="${escape(`${meta.label}: ${tip}`)}">${meta.emoji} ${escape(meta.label)}</span>`;
+}
+
+// ── Base salary parsing + cell rendering ─────────────────────────────────────
+// Tolerant parser for the Block A "Comp" cell. Reports vary wildly:
+//   "$200,000 – $345,000 USD base + equity"
+//   "$252K – $335K base + Equity"
+//   "$160K–$200K base + 60/40 bonus split"
+//   "€190,000–€215,000 EUR base"
+//   "AUD $300-450K total comp ≈ USD $200-300K"
+//   "Not disclosed in JD"
+// Returns { min, max, currency, isTotalComp, raw } in $K (USD-equivalent
+// when the cell flags an explicit USD bracket inside an FX hedge), or null
+// if no parseable range was found.
+function parseBaseSalary(rawComp) {
+  if (!rawComp || typeof rawComp !== 'string') return null;
+  const text = rawComp.replace(/[*_`]/g, '');
+  // Prefer an explicit "USD $X-Y" bracket when the cell is an FX hedge
+  // ("AUD $300-450K total comp ≈ USD $200-300K"). The USD bracket is the
+  // one Mitchell cares about for floor compliance.
+  const usdHedge = text.match(/USD\s*\$?\s*(\d{2,4})\s*[-–—]\s*\$?\s*(\d{2,4})\s*K/i);
+  if (usdHedge) {
+    const min = parseInt(usdHedge[1], 10);
+    const max = parseInt(usdHedge[2], 10);
+    if (min >= 30 && max <= 1500 && min <= max) {
+      return { min, max, currency: 'USD', isTotalComp: /total\s*comp/i.test(text), raw: rawComp };
+    }
+  }
+  // Range with K suffix: "$200K-$280K" or "$200K – $280K"
+  const kRange = text.match(/[\$€£]\s*(\d{2,4})\s*K\s*[\-–—]\s*[\$€£]?\s*(\d{2,4})\s*K/i);
+  if (kRange) {
+    const min = parseInt(kRange[1], 10);
+    const max = parseInt(kRange[2], 10);
+    if (min >= 30 && max <= 1500 && min <= max) {
+      const currency = /€/.test(text) ? 'EUR' : /£/.test(text) ? 'GBP' : 'USD';
+      return { min, max, currency, isTotalComp: /total\s*comp/i.test(text), raw: rawComp };
+    }
+  }
+  // Long-form range: "$200,000 – $345,000" (assume USD if $)
+  const longRange = text.match(/[\$€£]\s*(\d{2,3})[,.](\d{3})\s*[\-–—]\s*[\$€£]?\s*(\d{2,3})[,.](\d{3})/);
+  if (longRange) {
+    const min = parseInt(longRange[1] + longRange[2], 10);
+    const max = parseInt(longRange[3] + longRange[4], 10);
+    if (min >= 30000 && max <= 1500000 && min <= max) {
+      const currency = /€/.test(text) ? 'EUR' : /£/.test(text) ? 'GBP' : 'USD';
+      return {
+        min: Math.round(min / 1000), max: Math.round(max / 1000),
+        currency, isTotalComp: /total\s*comp/i.test(text), raw: rawComp,
+      };
+    }
+  }
+  // Single $K figure (rare but possible): "$220K base"
+  const single = text.match(/[\$€£]\s*(\d{2,4})\s*K\b/i);
+  if (single) {
+    const n = parseInt(single[1], 10);
+    if (n >= 30 && n <= 1500) {
+      const currency = /€/.test(text) ? 'EUR' : /£/.test(text) ? 'GBP' : 'USD';
+      return { min: n, max: n, currency, isTotalComp: /total\s*comp/i.test(text), raw: rawComp };
+    }
+  }
+  return null;
+}
+
+// Render the Base Salary table cell. Color tiers (Mitchell's targets):
+//   ≥ targetMin (default $200K) — green
+//   ≥ floor (default $175K) — amber
+//   <  floor — red
+//   no data — grey em-dash
+function renderBaseCell(reportPath, floors) {
+  const compRaw = getCompRaw(reportPath);
+  const parsed = parseBaseSalary(compRaw);
+  if (!parsed) {
+    const tip = compRaw
+      ? `Comp not parsed: ${compRaw.slice(0, 160)}`
+      : 'Comp not parsed — see report';
+    return `<span class="base-chip base-chip-empty" title="${escape(tip)}" aria-label="${escape(tip)}">—</span>`;
+  }
+  const { min, max, currency, isTotalComp } = parsed;
+  let cls = 'base-chip-unknown';
+  if (currency === 'USD') {
+    if (min >= floors.targetMin) cls = 'base-chip-strong';
+    else if (min >= 150) cls = 'base-chip-mid';
+    else cls = 'base-chip-weak';
+  } else {
+    cls = 'base-chip-fx';
+  }
+  const symbol = currency === 'EUR' ? '€' : currency === 'GBP' ? '£' : '$';
+  const label = `${symbol}${min}K`;
+  const range = min === max ? label : `${label}–${symbol}${max}K`;
+  const tipParts = [
+    `${range}${currency !== 'USD' ? ` ${currency}` : ''}`,
+    isTotalComp ? 'total comp (not base)' : 'base salary',
+  ];
+  const tip = tipParts.join(' · ');
+  // Numeric data attr for column sorting (the dashboard's sortTable reads
+  // td.innerText.parseFloat — but we want sort by min, not visible label).
+  return `<span class="base-chip ${cls}" data-base-min="${min}" title="${escape(tip)}" aria-label="${escape(tip)}">${escape(label)}</span>`;
+}
+
+// ── Location classification + cell rendering ────────────────────────────────
+// Mitchell's preferred metros — sourced from config/profile.yml's
+// compensation.location_flexibility narrative + the user's task spec.
+// Stored as { canonical, aliases } so we can match short forms ("NYC")
+// and long ("New York City").
+const PREFERRED_LOCATIONS = [
+  { canonical: 'Seattle', aliases: ['seattle', 'bellevue'] },
+  { canonical: 'Chicago', aliases: ['chicago'] },
+  { canonical: 'Dallas', aliases: ['dallas', 'fort worth', 'dfw'] },
+  { canonical: 'NYC', aliases: ['nyc', 'new york', 'new york city', 'manhattan', 'brooklyn'] },
+  { canonical: 'Portland', aliases: ['portland'] },
+  { canonical: 'SF', aliases: ['san francisco', 'sf', 'bay area', 'south bay', 'palo alto', 'mountain view', 'menlo park', 'redwood city', 'san mateo'] },
+  { canonical: 'Mexico City', aliases: ['mexico city', 'cdmx', 'ciudad de méxico'] },
+  { canonical: 'Cuenca', aliases: ['cuenca'] },
+  { canonical: 'Medellín', aliases: ['medellín', 'medellin'] },
+  { canonical: 'London', aliases: ['london'] },
+  { canonical: 'Dublin', aliases: ['dublin'] },
+  { canonical: 'Glasgow', aliases: ['glasgow'] },
+  { canonical: 'Berlin', aliases: ['berlin'] },
+  { canonical: 'Lisbon', aliases: ['lisbon', 'lisboa'] },
+  { canonical: 'Porto', aliases: ['porto'] },
+  { canonical: 'Madrid', aliases: ['madrid'] },
+  { canonical: 'Barcelona', aliases: ['barcelona'] },
+  { canonical: 'Bilbao', aliases: ['bilbao'] },
+  { canonical: 'San Sebastián', aliases: ['san sebastián', 'san sebastian', 'donostia'] },
+  { canonical: 'Chiang Mai', aliases: ['chiang mai'] },
+  { canonical: 'Chiang Rai', aliases: ['chiang rai'] },
+];
+
+// Classify a Block A "Location" / "Remote" field into a structured shape:
+//   { kind: 'remote'|'hybrid'|'onsite'|'unknown',
+//     city: 'Preferred canonical name' | extracted city string | '',
+//     status: 'preferred'|'remote'|'outside'|'unknown' }
+function classifyLocation(rawField, role) {
+  const blob = `${rawField || ''} ${role || ''}`;
+  const lc = blob.toLowerCase();
+  // Detect kind. Order matters: "hybrid" wins over "remote" when both
+  // appear because hybrid ⟹ partial onsite.
+  let kind = 'unknown';
+  if (/\bhybrid\b/.test(lc)) kind = 'hybrid';
+  else if (/\bon-?site\b|\bin-person\b|\bin\s+office\b|\bonsite\b/.test(lc)) kind = 'onsite';
+  else if (/\bremote\b/.test(lc) && !/no\s+remote|not\s+remote/.test(lc)) kind = 'remote';
+
+  // Find a preferred-metro match. Reports typically lead with the city
+  // ("Austin, TX (onsite per JD; ... Mitchell would relocate from Seattle ...)")
+  // and then narrate. We match against the leading segment first to avoid
+  // misclassifying a role's actual city as Seattle just because Mitchell's
+  // current city is named in the narrative. Falls back to whole-blob.
+  const leading = (rawField || '').split(/[—|;.()]/)[0] || '';
+  let canonical = '';
+  const findIn = (haystack) => {
+    for (const loc of PREFERRED_LOCATIONS) {
+      for (const alias of loc.aliases) {
+        // \b boundaries so "fort worth" doesn't match inside "Fortworth Cleaners"
+        const re = new RegExp(`\\b${alias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+        if (re.test(haystack)) return loc.canonical;
+      }
+    }
+    return '';
+  };
+  canonical = findIn(leading) || findIn(blob);
+
+  // Extract a fallback city if no preferred match — first capitalized token
+  // sequence in the raw field is often the city ("Munich, Germany — hybrid").
+  let extractedCity = '';
+  if (!canonical && rawField) {
+    const m = rawField.match(/^([A-Z][A-Za-zÀ-ÿ' .]+?)(?=[\s,;—\-(/]|$)/);
+    if (m && m[1].length <= 30 && !/^(Hybrid|Remote|On|Onsite|Not|None|Open)$/i.test(m[1])) {
+      extractedCity = m[1].trim();
+    }
+  }
+
+  // Status (drives color):
+  //   remote    -> blue (location-agnostic, Mitchell prefers)
+  //   preferred -> green (city is in PREFERRED_LOCATIONS)
+  //   outside   -> amber (specific city, not preferred)
+  //   unknown   -> grey (no signal)
+  let status = 'unknown';
+  if (kind === 'remote' && !canonical) status = 'remote';
+  else if (canonical) status = 'preferred';
+  else if (extractedCity) status = 'outside';
+  else if (kind === 'remote') status = 'remote';
+
+  return { kind, city: canonical || extractedCity, status, raw: rawField };
+}
+
+function renderLocationCell(reportPath) {
+  const rawField = getLocationField(reportPath);
+  const role = '';
+  if (!rawField) {
+    return `<span class="location-chip location-chip-empty" title="Location not parsed — see report" aria-label="Location not parsed — see report">—</span>`;
+  }
+  const cls = classifyLocation(rawField, role);
+  let icon = '';
+  let label = '';
+  let chipCls = '';
+  if (cls.kind === 'remote' && !cls.city) {
+    icon = '🏠'; label = 'Remote'; chipCls = 'location-chip-remote';
+  } else if (cls.kind === 'remote' && cls.city) {
+    icon = '🏠'; label = `Remote (${cls.city})`; chipCls = cls.status === 'preferred' ? 'location-chip-preferred' : 'location-chip-remote';
+  } else if (cls.kind === 'hybrid') {
+    icon = '🌐'; label = cls.city ? `Hybrid (${cls.city})` : 'Hybrid';
+    chipCls = cls.status === 'preferred' ? 'location-chip-preferred' : cls.status === 'outside' ? 'location-chip-outside' : 'location-chip-unknown';
+  } else if (cls.kind === 'onsite') {
+    icon = '🏢'; label = cls.city || 'On-site';
+    chipCls = cls.status === 'preferred' ? 'location-chip-preferred' : cls.status === 'outside' ? 'location-chip-outside' : 'location-chip-unknown';
+  } else {
+    icon = '📍'; label = cls.city || rawField.slice(0, 24);
+    chipCls = cls.status === 'preferred' ? 'location-chip-preferred' : cls.status === 'outside' ? 'location-chip-outside' : 'location-chip-unknown';
+  }
+  const tip = rawField.slice(0, 200);
+  return `<span class="location-chip ${chipCls}" data-location-status="${cls.status}" title="${escape(tip)}" aria-label="${escape(`${label}: ${tip}`)}">${icon} ${escape(label)}</span>`;
 }
 
 // Render a single report's markdown to a self-contained HTML page that
@@ -542,6 +755,55 @@ function _parseComp(text) {
   return m ? m[1].replace(/\*\*/g, '').trim().slice(0, 120) : '';
 }
 
+// Pull the broader Comp cell (any "Comp..." prefix variant) for base-salary
+// parsing — the Block A table uses many labels: "Comp", "Comp band (estimated)",
+// "Comp (disclosed)", "Comp band (peer-set inferred)", etc. Returns the raw
+// cell text trimmed; tolerant of label variation.
+function _parseCompRaw(text) {
+  const block = _extractSection(text, [/^## A\)[^\n]*$/m, /^## Block A\b[^\n]*$/m]);
+  if (!block) return '';
+  // Try "Comp" / "Compensation" / bold-prefixed variants. The label column
+  // sometimes is **bold** ("**Comp disclosed**"), sometimes plain.
+  const labelRe = /\|\s*\*?\*?\s*(?:Comp(?:ensation)?|Listed Annual Salary|Salary)[^|]*?\|\s*([^|\n]+?)\s*\|/i;
+  const labeled = block.match(labelRe);
+  if (labeled && labeled[1]) {
+    const v = labeled[1].replace(/\*\*/g, '').trim();
+    // Reject when the cell is just a score (e.g. "3/5" or "**5/5**")
+    if (v && !/^\d\/5\s*$/.test(v) && !/^value\s*$/i.test(v)) return v.slice(0, 400);
+  }
+  return '';
+}
+
+// Extract the Block A "Location" / "Remote" / "Location / Remote" / "Workplace"
+// row. Returns the raw cell text (e.g. "Hybrid (San Francisco)", "London, UK
+// — hybrid 25%", "Remote-eligible US"). Tolerant — first matching label wins.
+function _parseLocationField(text) {
+  const block = _extractSection(text, [/^## A\)[^\n]*$/m, /^## Block A\b[^\n]*$/m]);
+  if (!block) return '';
+  // Field names allow optional surrounding **bold** markdown (some reports
+  // bold the label column). Order matters — most-specific labels first.
+  const B = '(?:\\*\\*)?';
+  const patterns = [
+    new RegExp(`\\|\\s*${B}Location\\s*\\/\\s*Remote${B}\\s*\\|\\s*([^|\\n]+?)\\s*\\|`, 'im'),
+    new RegExp(`\\|\\s*${B}Location${B}\\s*\\|\\s*([^|\\n]+?)\\s*\\|`, 'im'),
+    new RegExp(`\\|\\s*${B}Locations${B}\\s*\\|\\s*([^|\\n]+?)\\s*\\|`, 'im'),
+    new RegExp(`\\|\\s*${B}Remote\\s+policy${B}\\s*\\|\\s*([^|\\n]+?)\\s*\\|`, 'im'),
+    new RegExp(`\\|\\s*${B}Remote${B}\\s*\\|\\s*([^|\\n]+?)\\s*\\|`, 'im'),
+    new RegExp(`\\|\\s*${B}Workplace[^|]*${B}\\s*\\|\\s*([^|\\n]+?)\\s*\\|`, 'im'),
+    new RegExp(`\\|\\s*${B}Geo[^|]*${B}\\s*\\|\\s*([^|\\n]+?)\\s*\\|`, 'im'),
+  ];
+  for (const re of patterns) {
+    const m = block.match(re);
+    if (!m || !m[1]) continue;
+    const v = m[1].replace(/\*\*/g, '').trim();
+    // Reject divider rows + cells that are just a score.
+    if (!v || /^-+$/.test(v) || /^\d\/5\s*$/.test(v)) continue;
+    if (v.length > 250) return v.slice(0, 250);
+    return v;
+  }
+  return '';
+}
+
 // Extract numbered key gaps from Block B — returns { title, detail } objects.
 function _parseKeyGaps(text) {
   const block = _extractSection(text, [/^## B\)[^\n]*$/m, /^## Block B\b[^\n]*$/m]);
@@ -677,6 +939,14 @@ function getPositioning(reportPath) {
 
 function getComp(reportPath) {
   return readReportOnce(reportPath)?.comp || '';
+}
+
+function getCompRaw(reportPath) {
+  return readReportOnce(reportPath)?.compRaw || readReportOnce(reportPath)?.comp || '';
+}
+
+function getLocationField(reportPath) {
+  return readReportOnce(reportPath)?.locationField || '';
 }
 
 function getKeyGaps(reportPath) {
@@ -1113,20 +1383,27 @@ function renderRow(r, idx) {
   const equityStage = equityData ? equityData.stage : 'unknown';
   const equityCell = equityBadge(r.company);
 
+  // Wave H: Base salary + Location chips. Both render as muted em-dash when
+  // the report doesn't carry parseable signal — never crashes.
+  const baseCell = renderBaseCell(r.reportPath, _COMP_FLOORS);
+  const locationCell = renderLocationCell(r.reportPath);
+
   return `
 <tr class="row ${throttleClass}" data-num="${r.num}" data-row-id="${escape(idx)}" data-score="${r.score}" data-archetype="${escape(archetype)}" data-company="${escape(r.company.toLowerCase())}" data-status="${escape(r.status.toLowerCase())}" data-role="${escape(r.role.toLowerCase())}" data-equity="${escape(equityStage)}" data-search="${escape(searchIndex)}" onclick="toggleDetail('${idx}')">
   <td class="bulk-cell"><input type="checkbox" class="bulk-checkbox" data-num="${r.num}" aria-label="Select row #${r.num} (${escape(r.company)})" onclick="event.stopPropagation();handleRowCheckbox(this)"></td>
   <td><span class="badge score-badge-lg ${scoreBadgeClass(r.score)}">${r.score.toFixed(1)}</span></td>
+  <td class="base-cell">${baseCell}</td>
   <td><strong>${escape(r.company)}</strong>${archetype ? `<span class="tier-tag" tabindex="0" role="button" data-tooltip="${escape(tierTooltip(archetype))}" aria-label="Tier ${escape(archetype)}: ${escape(tierTooltip(archetype))}" onclick="event.stopPropagation();openTierLegend('${escape(archetype)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openTierLegend('${escape(archetype)}')}">${escape(archetype)}</span>` : ''}</td>
   <td class="role-cell">${escape(r.role)}${cardGapChips}</td>
-  <td><span class="badge status-pill ${statusBadgeClass(r.status)}" data-status="${statusKey(r.status)}" data-num="${r.num}" role="button" tabindex="0" onclick="openStatusPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){openStatusPopover(this);event.preventDefault();event.stopPropagation()}" title="Click to change status">${escape(r.status)}</span></td>
+  <td class="status-cell"><span class="badge status-pill ${statusBadgeClass(r.status)}" data-status="${statusKey(r.status)}" data-num="${r.num}" role="button" tabindex="0" onclick="openStatusPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){openStatusPopover(this);event.preventDefault();event.stopPropagation()}" title="Click to change status">${escape(r.status)}</span></td>
   <td class="equity-cell">${equityCell}</td>
+  <td class="location-cell">${locationCell}</td>
   <td class="muted-text mobile-hide">${escape(r.date)}</td>
   <td class="muted-text">${evalAge(r.date)}</td>
   <td class="action-cell">${applyLink}</td>
 </tr>
 <tr class="detail-row" id="detail-${idx}" style="display:none">
-  <td colspan="9">
+  <td colspan="11">
     <div class="detail-block">
       ${r._throttle?.label ? `<div class="throttle-banner throttle-${r._throttle.status}">${escape(r._throttle.label)}<br><span class="muted-text">${escape(r._throttle.note || '')}</span></div>` : ''}
       ${metaChips ? `<div class="detail-meta">${metaChips}</div>` : ''}
@@ -1147,6 +1424,10 @@ function renderRow(r, idx) {
 // Read $K floors from config/profile.yml (compensation block). Defaults
 // match the example profile so the dashboard renders sane numbers when
 // the file is missing or unparseable.
+// Memoized at module load — used by row renderers without round-tripping
+// through main(). Recomputed if the dashboard process is re-imported.
+let _COMP_FLOORS = { floor: 175, seattleFloor: 180, targetMin: 200, targetMax: 320 };
+
 function loadCompFloors() {
   const defaults = { floor: 175, seattleFloor: 180, targetMin: 200, targetMax: 320 };
   if (!existsSync(PROFILE_YML_PATH)) return defaults;
@@ -1549,6 +1830,7 @@ function build() {
   }
   // Comp analytics — distribution, floor gap, top earners.
   const compFloors = loadCompFloors();
+  _COMP_FLOORS = compFloors;
   const compAnalytics = computeCompAnalytics(apps);
 
   // Apply-now table rows
@@ -2630,6 +2912,42 @@ function build() {
     background: transparent; border-color: transparent;
     color: var(--text-4); font-weight: 400; padding: 2px 4px;
   }
+
+  /* ── Wave H: Base salary + Location chips ─────────────────────────── */
+  .base-cell { white-space: nowrap; }
+  .base-chip {
+    display: inline-flex; align-items: center;
+    padding: 2px 8px; border-radius: var(--radius-full);
+    font-size: 11.5px; font-weight: 600;
+    border: 1px solid var(--border); background: var(--surface-2); color: var(--text-3);
+    cursor: help;
+    font-variant-numeric: tabular-nums;
+  }
+  .base-chip-strong { background: var(--green-bg);  border-color: var(--green-border);  color: var(--green); }
+  .base-chip-mid    { background: var(--amber-bg);  border-color: var(--amber-border);  color: var(--amber); }
+  .base-chip-weak   { background: var(--red-bg);    border-color: var(--red-border);    color: var(--red); }
+  .base-chip-fx     { background: var(--blue-bg);   border-color: var(--blue-border);   color: var(--blue-fg-dark); }
+  .base-chip-unknown, .base-chip-empty {
+    background: transparent; border-color: transparent;
+    color: var(--text-4); font-weight: 400; padding: 2px 4px;
+  }
+  .location-cell { white-space: nowrap; }
+  .location-chip {
+    display: inline-flex; align-items: center; gap: 3px;
+    padding: 2px 8px; border-radius: var(--radius-full);
+    font-size: 11px; font-weight: 600; max-width: 220px;
+    border: 1px solid var(--border); background: var(--surface-2); color: var(--text-3);
+    cursor: help;
+    overflow: hidden; text-overflow: ellipsis;
+  }
+  .location-chip-preferred { background: var(--green-bg); border-color: var(--green-border); color: var(--green); }
+  .location-chip-remote    { background: var(--blue-bg);  border-color: var(--blue-border);  color: var(--blue-fg-dark); }
+  .location-chip-outside   { background: var(--amber-bg); border-color: var(--amber-border); color: var(--amber); }
+  .location-chip-unknown   { background: var(--surface-2); border-color: var(--border); color: var(--text-4); }
+  .location-chip-empty {
+    background: transparent; border-color: transparent;
+    color: var(--text-4); font-weight: 400; padding: 2px 4px;
+  }
   /* Two-column detail grid */
   .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
   .detail-col  { display: flex; flex-direction: column; gap: 8px; }
@@ -3451,13 +3769,13 @@ function build() {
        table); "Age" is the primary recency cue. */
     td.mobile-hide, th.mobile-hide { display: none !important; }
     /* Score chip: top-left, inline */
-    #apply-now-section tr.row > td:nth-child(1) {
+    #apply-now-section tr.row > td:nth-child(2) {
       display: inline-block;
       margin: 0 10px 6px 0;
       vertical-align: top;
     }
-    /* Company line: inline next to score */
-    #apply-now-section tr.row > td:nth-child(2) {
+    /* Company column (was nth-child(3) before Wave H added Base) */
+    #apply-now-section tr.row > td:nth-child(4) {
       display: inline-block;
       font-size: 15px;
       line-height: 1.35;
@@ -3472,10 +3790,20 @@ function build() {
       font-weight: 500;
       line-height: 1.4;
     }
-    /* Status pill + equity badge + age: bottom meta line */
-    #apply-now-section tr.row > td:nth-child(4),
-    #apply-now-section tr.row > td:nth-child(5),
-    #apply-now-section tr.row > td:nth-child(7) {
+    /* Wave H: Base + Location chips collapse into a meta row directly
+       below role on the stacked card. Class-based so column index drift
+       doesn't break this on the next column add. */
+    #apply-now-section tr.row > td.base-cell,
+    #apply-now-section tr.row > td.location-cell {
+      display: inline-flex;
+      align-items: center;
+      margin: 6px 6px 0 0;
+    }
+    /* Status pill + equity badge + age: bottom meta line. Class-based
+       so column index drift doesn't break the layout. */
+    #apply-now-section tr.row > td.status-cell,
+    #apply-now-section tr.row > td.equity-cell,
+    #apply-now-section tr.row > td.muted-text:not(.mobile-hide) {
       display: inline-flex;
       align-items: center;
       margin: 8px 8px 0 0;
@@ -4000,12 +4328,14 @@ function build() {
       <thead><tr>
         <th class="bulk-th"><input type="checkbox" class="bulk-header-checkbox" data-tbody="apply-now-tbody" aria-label="Select all visible rows in Apply-Now" onclick="handleHeaderCheckbox(this)"></th>
         <th class="sortable" onclick="sortTable('apply-now-tbody', 1, 'num', this)">Score</th>
-        <th class="sortable" onclick="sortTable('apply-now-tbody', 2, 'str', this)">Company <button type="button" class="tier-legend-btn" title="Tier badge legend" aria-label="Show tier badge legend" onclick="event.stopPropagation();openTierLegend()">?</button></th>
-        <th class="sortable" onclick="sortTable('apply-now-tbody', 3, 'str', this)">Role</th>
-        <th class="sortable" onclick="sortTable('apply-now-tbody', 4, 'str', this)">Status</th>
-        <th class="sortable" onclick="sortTable('apply-now-tbody', 5, 'str', this)">Equity <button type="button" class="tier-legend-btn" title="Equity stage legend" aria-label="Show equity stage legend" onclick="event.stopPropagation();openEquityLegend()">?</button></th>
-        <th class="sortable mobile-hide" onclick="sortTable('apply-now-tbody', 6, 'str', this)">Eval Date</th>
-        <th class="sortable" onclick="sortTable('apply-now-tbody', 7, 'num', this)">Age</th>
+        <th class="sortable" onclick="sortTable('apply-now-tbody', 2, 'num', this)" title="Lower-bound base salary parsed from Block A Comp row">Base</th>
+        <th class="sortable" onclick="sortTable('apply-now-tbody', 3, 'str', this)">Company <button type="button" class="tier-legend-btn" title="Tier badge legend" aria-label="Show tier badge legend" onclick="event.stopPropagation();openTierLegend()">?</button></th>
+        <th class="sortable" onclick="sortTable('apply-now-tbody', 4, 'str', this)">Role</th>
+        <th class="sortable" onclick="sortTable('apply-now-tbody', 5, 'str', this)">Status</th>
+        <th class="sortable" onclick="sortTable('apply-now-tbody', 6, 'str', this)">Equity <button type="button" class="tier-legend-btn" title="Equity stage legend" aria-label="Show equity stage legend" onclick="event.stopPropagation();openEquityLegend()">?</button></th>
+        <th class="sortable" onclick="sortTable('apply-now-tbody', 7, 'str', this)" title="Location / remote posture parsed from Block A">Location</th>
+        <th class="sortable mobile-hide" onclick="sortTable('apply-now-tbody', 8, 'str', this)">Eval Date</th>
+        <th class="sortable" onclick="sortTable('apply-now-tbody', 9, 'num', this)">Age</th>
         <th>Action</th>
       </tr></thead>
       <tbody id="apply-now-tbody">
@@ -4079,12 +4409,14 @@ function build() {
       <thead><tr>
         <th class="bulk-th"><input type="checkbox" class="bulk-header-checkbox" data-tbody="all-tbody" aria-label="Select all visible rows in All Evaluations" onclick="handleHeaderCheckbox(this)"></th>
         <th class="sortable" onclick="sortTable('all-tbody', 1, 'num', this)">Score</th>
-        <th class="sortable" onclick="sortTable('all-tbody', 2, 'str', this)">Company <button type="button" class="tier-legend-btn" title="Tier badge legend" aria-label="Show tier badge legend" onclick="event.stopPropagation();openTierLegend()">?</button></th>
-        <th class="sortable" onclick="sortTable('all-tbody', 3, 'str', this)">Role</th>
-        <th class="sortable" onclick="sortTable('all-tbody', 4, 'str', this)">Status</th>
-        <th class="sortable" onclick="sortTable('all-tbody', 5, 'str', this)">Equity <button type="button" class="tier-legend-btn" title="Equity stage legend" aria-label="Show equity stage legend" onclick="event.stopPropagation();openEquityLegend()">?</button></th>
-        <th class="sortable mobile-hide" onclick="sortTable('all-tbody', 6, 'str', this)">Eval Date</th>
-        <th class="sortable" onclick="sortTable('all-tbody', 7, 'num', this)">Age</th>
+        <th class="sortable" onclick="sortTable('all-tbody', 2, 'num', this)" title="Lower-bound base salary parsed from Block A Comp row">Base</th>
+        <th class="sortable" onclick="sortTable('all-tbody', 3, 'str', this)">Company <button type="button" class="tier-legend-btn" title="Tier badge legend" aria-label="Show tier badge legend" onclick="event.stopPropagation();openTierLegend()">?</button></th>
+        <th class="sortable" onclick="sortTable('all-tbody', 4, 'str', this)">Role</th>
+        <th class="sortable" onclick="sortTable('all-tbody', 5, 'str', this)">Status</th>
+        <th class="sortable" onclick="sortTable('all-tbody', 6, 'str', this)">Equity <button type="button" class="tier-legend-btn" title="Equity stage legend" aria-label="Show equity stage legend" onclick="event.stopPropagation();openEquityLegend()">?</button></th>
+        <th class="sortable" onclick="sortTable('all-tbody', 7, 'str', this)" title="Location / remote posture parsed from Block A">Location</th>
+        <th class="sortable mobile-hide" onclick="sortTable('all-tbody', 8, 'str', this)">Eval Date</th>
+        <th class="sortable" onclick="sortTable('all-tbody', 9, 'num', this)">Age</th>
         <th>Action</th>
       </tr></thead>
       <tbody id="all-tbody">
@@ -4799,9 +5131,26 @@ function sortTable(tbodyId, colIdx, type, thEl) {
       if (detail) i++;
     }
   }
+  // Prefer a child element's data-sort-value when present (Base column
+  // ships numeric data-base-min; equity, location chips can ship a custom
+  // sort key). Falls back to innerText for legacy columns.
+  const cellSortValue = (td) => {
+    if (!td) return '';
+    const child = td.firstElementChild;
+    if (child) {
+      if (child.dataset && child.dataset.sortValue !== undefined) return child.dataset.sortValue;
+      if (child.dataset && child.dataset.baseMin !== undefined) return child.dataset.baseMin;
+      if (child.dataset && child.dataset.locationStatus !== undefined) {
+        // Map status to sort weight: preferred > remote > outside > unknown
+        const map = { preferred: '1', remote: '2', outside: '3', unknown: '4' };
+        return (map[child.dataset.locationStatus] || '5') + ' ' + (td.innerText.trim());
+      }
+    }
+    return td.innerText.trim();
+  };
   pairs.sort((a, b) => {
-    const av = a.main.children[colIdx]?.innerText.trim() || '';
-    const bv = b.main.children[colIdx]?.innerText.trim() || '';
+    const av = cellSortValue(a.main.children[colIdx]);
+    const bv = cellSortValue(b.main.children[colIdx]);
     let cmp = type === 'num' ? (parseFloat(av) || 0) - (parseFloat(bv) || 0) : av.localeCompare(bv, undefined, {sensitivity:'base'});
     return dir === 'desc' ? -cmp : cmp;
   });
