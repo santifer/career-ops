@@ -1234,6 +1234,26 @@ function deltaIndicator(delta) {
   const cls = delta > 0 ? 'stat-delta-up' : 'stat-delta-down';
   return `<span class="stat-delta ${cls}">${sign}${delta} vs last week</span>`;
 }
+// Hero-balance sparkline: stretches to fill the card width as a background fill.
+function heroSparklineSVG(daily, label) {
+  const W = 200, H = 60, PAD = 1;
+  const max = Math.max(1, ...daily);
+  const stepX = (W - PAD * 2) / Math.max(1, daily.length - 1);
+  const pts = daily.map((v, i) => {
+    const x = PAD + i * stepX;
+    const y = H - PAD - (v / max) * (H - PAD * 2);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  });
+  const title = `${label} — 14-day trend (background fill)`;
+  return `<svg class="hero-sparkline" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="${title}"><title>${title}</title><path d="M${pts.join(' L')}" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>`;
+}
+function deltaPill(delta) {
+  if (delta === 0) return `<span class="hero-delta-pill hero-delta-flat" title="No change vs previous 7 days">±0 vs last 7d</span>`;
+  const sign = delta > 0 ? '+' : '';
+  const cls = delta > 0 ? 'hero-delta-up' : 'hero-delta-down';
+  const arrow = delta > 0 ? '▲' : '▼';
+  return `<span class="hero-delta-pill ${cls}" title="Change vs previous 7 days">${arrow} ${sign}${delta} vs last 7d</span>`;
+}
 
 // ── Tier legend (from modes/_profile.md §1) ───────────────────────
 // Single source of truth for tier badge tooltips and the legend modal.
@@ -2503,23 +2523,24 @@ function build() {
   .stats {
     margin: 16px 0 24px;
   }
-  /* Compact stat strip — all 7 cards on a single row at desktop, tight 2-col stack on mobile.
-     Goal: total stat-strip height ≤90px on desktop so Apply-Now queue lands in first scroll. */
+  /* Compact stat strip — Apply-Now hero spans the full top row, other 6 cards in a 6-col compact strip below.
+     Goal: hero ≈110px desktop with oversize numeral; rest stays as the dense ≤78px row from Phase 6. */
   .stats-bento {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
+    grid-template-columns: repeat(6, 1fr);
     grid-auto-rows: 78px;
     gap: 6px;
     margin: 8px 0 16px;
   }
   .stat-hero { grid-column: span 1; grid-row: span 1; }
+  .stat-hero-balance { grid-column: 1 / -1; grid-row: 1; }
   .stat-cell { grid-column: span 1; }
   .stat-strip { grid-column: 1 / -1; }
-  /* Tablet: 4-col grid, two rows max. */
+  /* Tablet: 4-col grid for the secondary row; hero still spans full width. */
   @media (max-width: 1080px) {
     .stats-bento { grid-template-columns: repeat(4, 1fr); }
   }
-  /* Mobile: 2-col compact grid. Apply-Now first, then 6 in 3 rows of 2 = ~4 short rows total. */
+  /* Mobile: 2-col compact grid. Hero spans 1/-1, 6 cards in 3 rows of 2. */
   @media (max-width: 720px) {
     .stats-bento {
       grid-template-columns: repeat(2, 1fr);
@@ -2527,6 +2548,7 @@ function build() {
       gap: 6px;
     }
     .stat-hero { grid-column: 1 / -1; grid-row: span 1; }
+    .stat-hero-balance { grid-column: 1 / -1; }
     .stat-cell, .stat-strip { grid-column: span 1; grid-row: span 1; }
     .stat-strip { grid-column: 1 / -1; }
   }
@@ -2572,6 +2594,66 @@ function build() {
   .stat-hero .stat-value { font-size: 26px; line-height: 1; letter-spacing: -0.6px; margin: 0; }
   @media (max-width: 720px) {
     .stat-hero .stat-value { font-size: 30px; }
+  }
+  /* Hero balance card — Phase 7 Item 3 (Finux pattern):
+     full-width hero with oversize tabular numeral, sparkline as background fill,
+     subtle green-tinted gradient, delta pill in top-right. */
+  .stat-hero-balance {
+    min-height: 112px;
+    padding: 18px 22px 20px;
+    background:
+      linear-gradient(135deg, rgba(22,163,74,0.06) 0%, rgba(22,163,74,0.015) 55%, var(--surface) 100%);
+    align-items: stretch; justify-content: center;
+    overflow: hidden;
+  }
+  .stat-hero-balance::before {
+    height: 3px; background: var(--green-fg);
+  }
+  .stat-hero-balance .stat-label,
+  .stat-hero-balance .stat-value,
+  .stat-hero-balance .stat-caret {
+    position: relative; z-index: 2;
+  }
+  .stat-hero-balance .stat-label {
+    font-size: 11px !important; color: var(--text-3);
+    margin-bottom: 4px;
+  }
+  .stat-hero-balance .stat-value {
+    font-size: 64px; line-height: 1; letter-spacing: -2px; margin: 2px 0 0;
+    color: var(--green-fg);
+    font-feature-settings: "tnum" 1, "ss01" 1;
+    font-optical-sizing: auto;
+  }
+  .stat-hero-balance:hover { border-color: var(--green-fg); box-shadow: var(--ring-green); }
+  .hero-sparkline-bg {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    height: 70%;
+    pointer-events: none; z-index: 1;
+    color: var(--green-fg);
+    opacity: 0.25;
+    display: flex; align-items: stretch;
+  }
+  .hero-sparkline-bg .hero-sparkline {
+    width: 100%; height: 100%; display: block;
+  }
+  .stat-hero-balance:hover .hero-sparkline-bg { opacity: 0.38; }
+  .hero-delta-pill {
+    position: absolute; top: 12px; right: 14px; z-index: 3;
+    font-family: var(--font-mono);
+    font-size: 11px; font-weight: 600; letter-spacing: 0.01em;
+    padding: 3px 9px; border-radius: 999px;
+    white-space: nowrap; line-height: 1.4;
+    font-variant-numeric: tabular-nums;
+  }
+  .hero-delta-up   { background: rgba(22,163,74,0.14); color: var(--green-fg); }
+  .hero-delta-down { background: rgba(217,119,6,0.14); color: var(--amber-fg); }
+  .hero-delta-flat { background: rgba(127,127,127,0.10); color: var(--text-3); }
+  .stat-hero-balance .stat-caret { top: 14px; right: auto; left: 14px; }
+  @media (max-width: 720px) {
+    .stat-hero-balance { min-height: 88px; padding: 12px 14px 14px; }
+    .stat-hero-balance .stat-value { font-size: 50px; letter-spacing: -1.5px; }
+    .hero-delta-pill { top: 10px; right: 10px; font-size: 10px; padding: 2px 7px; }
+    .stat-hero-balance .stat-caret { top: 12px; left: 10px; }
   }
   /* Small tier: identical to base .stat in compact strip */
   .stat-cell { padding: 8px 12px; }
@@ -4489,11 +4571,12 @@ function build() {
 
   <div class="stats">
     <div class="stats-bento">
-      <div class="stat stat-hero ${applyNow.length > 0 ? 'stat-strong' : ''}" onclick="document.getElementById('apply-now-section').scrollIntoView({behavior:'smooth'})" title="Click to scroll to Apply-Now queue">
+      <div class="stat stat-hero-balance ${applyNow.length > 0 ? 'stat-strong' : ''}" onclick="document.getElementById('apply-now-section').scrollIntoView({behavior:'smooth'})" title="Click to scroll to Apply-Now queue">
+        <div class="hero-sparkline-bg" aria-hidden="true">${heroSparklineSVG(kpiSpark.applyNow.daily, 'Apply-Now')}</div>
+        ${deltaPill(kpiSpark.applyNow.delta)}
         <div class="stat-label">Apply-Now (≥ 4.0)</div>
         <div class="stat-value" id="live-apply-now">${applyNow.length}</div>
-        <div class="stat-trend">${deltaIndicator(kpiSpark.applyNow.delta)}${sparklineSVG(kpiSpark.applyNow.daily, 'var(--green-fg)', 'Apply-Now')}</div>
-        <span class="stat-caret" aria-hidden="true">▾</span><span class="sr-only">Click to expand</span>
+        <span class="stat-caret" aria-hidden="true">▾</span><span class="sr-only">Click to scroll to Apply-Now queue</span>
       </div>
       <div class="stat stat-hero" onclick="toggleStatPanel('evaluations')" title="Click to see all evaluations">
         <div class="stat-label">Total evaluations</div>
