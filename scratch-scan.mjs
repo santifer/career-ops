@@ -88,10 +88,12 @@ function matchesFilter(title) {
   for (const n of (config.title_filter.negative || [])) {
     if (t.includes(n.toLowerCase())) return false;
   }
-  for (const p of (config.title_filter.positive || [])) {
-    if (t.includes(p.toLowerCase())) return true;
+  // Only filter if positive keywords are defined
+  if (config.title_filter?.positive?.length > 0) {
+    const hasPositive = config.title_filter.positive.some(k => t.includes(k.toLowerCase()));
+    if (!hasPositive) return false;
   }
-  return false;
+  return true;
 }
 
 // result queue
@@ -179,7 +181,14 @@ async function scanAshby() {
   stats.ashby.checked = ashbyCompanies.length;
   for (const comp of ashbyCompanies) {
     try {
-      const slug = comp.careers_url.replace('https://jobs.ashbyhq.com/', '').split('/')[0].split('?')[0];
+      let slug = '';
+      try {
+        const u = new URL(comp.careers_url.includes('://') ? comp.careers_url : `https://${comp.careers_url}`);
+        slug = u.pathname.split('/').filter(Boolean)[0].split('?')[0];
+      } catch (e) {
+        slug = comp.careers_url.replace(/https?:\/\//, '').split('/')[0].split('?')[0];
+      }
+      if (!slug) continue;
       const apiUrl = `https://jobs.ashbyhq.com/${slug}/api/jobs`;
       const res = await fetch(apiUrl, { headers: { 'User-Agent': 'career-ops-scanner/2.0' } });
       if (!res.ok) { stats.ashby.errors++; continue; }
@@ -284,7 +293,7 @@ async function run() {
         if (q.portal === 'linkedin') {
           results = await scrapeLinkedIn(q.query, q.location || 'India');
         } else if (q.portal === 'instahyre') {
-          results = await scrapeInstahyre(q.query, q.locations || ['Pune', 'Bengaluru']);
+          results = await scrapeInstahyre(q.query, q.location || 'India');
         } else if (q.portal === 'flexiple') {
           results = await scrapeFlexiple(q.query);
         } else if (q.portal === 'naukri') {
@@ -319,12 +328,12 @@ async function run() {
     const { scrapeSuccessFactors} = await import('./portals/scrapers/successfactors.mjs');
 
     // This is where you would iterate through specific enterprise entries if added to tracked_companies
-    // For now, I'll add a few known targets to ensure they are checked
-    const enterpriseTargets = [
-      { name: 'Siemens', subdomain: 'siemens', portal: 'workday' },
-      { name: 'AMD', subdomain: 'amd', portal: 'workday' },
-      { name: 'SAP', portalToken: 'sap', portal: 'successfactors' }
-    ];
+    // Filter config.tracked_companies for enterprise portals if any exist
+    const enterpriseTargets = (config.tracked_companies || []).filter(c => ['workday', 'successfactors'].includes(c.portal) && c.enabled !== false);
+    
+    if (enterpriseTargets.length === 0) {
+      console.log('  🏢 No enterprise targets (Workday/SuccessFactors) configured in profile.');
+    }
 
     for (const target of enterpriseTargets) {
        console.log(`  🏢 Checking Enterprise: ${target.name}...`);

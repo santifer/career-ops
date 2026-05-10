@@ -635,7 +635,7 @@
 <div class="workspace" id="view-cv" style="display:none; grid-template-columns:1fr;">
   <div style="display:flex;flex-direction:column;min-height:0;overflow-y:auto;padding:28px 32px;gap:20px;">
     <div class="panel">
-      <div class="panel-header"><div class="panel-title"><span class="hl-mauve">◎</span> cv — akash kaintura</div><div class="panel-meta">config/profile.yml</div></div>
+      <div class="panel-header"><div class="panel-title"><span class="hl-mauve">◎</span> profile summary</div><div class="panel-meta">config/profile.yml</div></div>
       <div style="padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:20px;" id="cv-narrative">
         <div class="empty-state">loading profile…</div>
       </div>
@@ -864,8 +864,14 @@ const NPM_SCRIPTS = {
 };
 
 async function runCmd(cmd) {
-  document.getElementById(`btn-${cmd}`)?.classList.add('running');
-  await execShell(NPM_SCRIPTS[cmd] || `npm run ${cmd}`);
+  const btnId = `btn-${cmd.replace(/:/g, '-')}`;
+  const btn = document.getElementById(btnId);
+  
+  // Attempt to start the job. Only set UI to 'running' if the backend accepts.
+  const success = await execShell(NPM_SCRIPTS[cmd] || `npm run ${cmd}`);
+  if (success && btn) {
+    btn.classList.add('running');
+  }
 }
 
 async function killCmd() {
@@ -1030,8 +1036,10 @@ function handleIntent(action) {
       } else {
         termLine(`  ${'#'.padEnd(5)}${'Company'.padEnd(20)}${'Score'.padEnd(8)}Status`, 'term-dim');
         apps.forEach(a => {
-          const score = a.score > 0 ? a.score.toFixed(1) : '  —';
-          termLine(`  ${a.id.padEnd(5)}${a.company.substring(0,18).padEnd(20)}${score.padEnd(8)}${a.status}`);
+          const idStr = String(a.id || '').padEnd(5);
+          const score = parseFloat(a.score) || 0;
+          const scoreStr = (score > 0 ? score.toFixed(1) : '  —').padEnd(8);
+          termLine(`  ${idStr}${a.company.substring(0,18).padEnd(20)}${scoreStr}${a.status}`);
         });
       }
       termLine(`  ─── total:${metrics.total}  applied:${metrics.applied}  avg:${metrics.avgScore}/5`, 'term-dim');

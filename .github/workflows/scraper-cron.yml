@@ -60,14 +60,15 @@ jobs:
           # Allowlist validation — only permit known scripts (CodeRabbit security fix)
           ALLOWED_SCRIPTS="scratch-scan.mjs agentic-tailor.mjs rank-pipeline.mjs auto-apply.mjs add-job.mjs"
           SCRIPT="${ACTION_SCRIPT:-scratch-scan.mjs}"
-          if ! echo "$ALLOWED_SCRIPTS" | grep -qw "$SCRIPT"; then
+          # Exact string matching instead of regex-based grep to prevent partial matches (CodeRabbit fix)
+          if ! printf '%s\n' "$ALLOWED_SCRIPTS" | tr ' ' '\n' | grep -Fxq "$SCRIPT"; then
             echo "Error: action_script '$SCRIPT' is not in the allowlist."
             exit 1
           fi
           node .github/scripts/run-scrapers.mjs
 
       - name: Notify dashboard (completion)
-        if: ${{ always() && github.event_name == 'workflow_dispatch' && github.event.inputs.user_id != '' }}
+        if: ${{ always() }}
         env:
           DASHBOARD_WEBHOOK_URL: ${{ secrets.DASHBOARD_WEBHOOK_URL }}
           WORKER_WEBHOOK_SECRET: ${{ secrets.WORKER_WEBHOOK_SECRET }}
