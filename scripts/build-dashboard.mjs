@@ -3676,7 +3676,24 @@ function build() {
   .comp-eq-tag { display: inline-block; font-size: 10px; padding: 0 5px; margin-left: 4px; border-radius: 4px; background: var(--green-bg); color: var(--green-fg-dark); font-weight: 500; }
 
   /* ── Tables ──────────────────────────────────────────────────── */
-  .table-scroll { overflow-x: auto; overflow-y: auto; max-height: 520px; border-radius: 0 0 var(--radius-sm) var(--radius-sm); }
+  .table-scroll { overflow-x: auto; overflow-y: auto; max-height: 520px; border-radius: 0 0 var(--radius-sm) var(--radius-sm); position: relative; }
+  /* Visual hint when the table can scroll horizontally — a small ↔
+     badge in the bottom-right of the wrapper. Driven by the
+     data-can-scroll-x attribute set in initTableHorizontalScroll
+     on first paint. */
+  .table-scroll[data-can-scroll-x="1"]::after {
+    content: '↔';
+    position: sticky; right: 6px; bottom: 6px;
+    float: right;
+    font-size: 14px; opacity: 0.45;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    width: 22px; height: 22px;
+    display: inline-flex; align-items: center; justify-content: center;
+    pointer-events: none;
+    z-index: 2;
+  }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
   thead { position: sticky; top: 0; z-index: 2; }
   th {
@@ -6228,6 +6245,47 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initLiveTicker);
 } else {
   initLiveTicker();
+}
+
+// ── Wheel → horizontal-scroll on table hover ────────────────────────
+// When the cursor is over a .table-scroll wrapper that has actual
+// horizontal overflow (i.e. the table is wider than its container),
+// translate vertical wheel motion into horizontal scrollLeft. Falls
+// back to the page default vertical scroll when:
+//   - the user holds shift (lets them still page-scroll over the table)
+//   - the table has no horizontal overflow
+//   - the wheel motion is already horizontal (trackpad swipe)
+//   - the table has reached its left/right edge in the scroll direction
+//     (so scrolling past the edge falls through to the page)
+function initTableHorizontalScroll() {
+  document.addEventListener('wheel', (e) => {
+    if (e.shiftKey) return; // user explicitly wants page scroll
+    const wrap = e.target.closest && e.target.closest('.table-scroll');
+    if (!wrap) return;
+    const canScrollX = wrap.scrollWidth > wrap.clientWidth + 1;
+    if (!canScrollX) return;
+    // Treat horizontal trackpad swipes as-is; only redirect VERTICAL wheel.
+    if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+    const delta = e.deltaY;
+    const atLeftEdge  = wrap.scrollLeft <= 0 && delta < 0;
+    const atRightEdge = wrap.scrollLeft + wrap.clientWidth >= wrap.scrollWidth - 1 && delta > 0;
+    if (atLeftEdge || atRightEdge) return; // let page scroll resume past the edge
+    e.preventDefault();
+    wrap.scrollLeft += delta;
+  }, { passive: false });
+  // Subtle visual cue: when the cursor is over a horizontally-scrollable
+  // table, swap the cursor to the col-resize style on the leftmost column
+  // (cells inherit). Only attaches if the table actually overflows.
+  document.querySelectorAll('.table-scroll').forEach(wrap => {
+    if (wrap.scrollWidth > wrap.clientWidth + 1) {
+      wrap.dataset.canScrollX = '1';
+    }
+  });
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initTableHorizontalScroll);
+} else {
+  initTableHorizontalScroll();
 }
 
 // ── Mission-control hero strip (Phase 7 Item 1) ─────────────────
