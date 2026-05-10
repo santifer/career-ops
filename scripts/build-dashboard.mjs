@@ -1042,6 +1042,93 @@ function getEnabledPortals() {
   return { tracked, queries };
 }
 
+// Snapshot of the most recent batch run for the mission-control strip.
+// Returns: { state, completed, total, running, failed, pct, startedAtIso, isIdle }.
+// state ∈ {"running","completed","idle"}. The isIdle flag is true when no
+// running rows remain or the last update was >2h ago. Polled live by the
+// strip JS via /api/batch-live; this is just the build-time seed.
+function loadBatchSnapshot() {
+  if (!existsSync(BATCH_STATE_PATH)) {
+    return { state: 'idle', completed: 0, total: 0, running: 0, failed: 0, pct: 0, startedAtIso: null, isIdle: true };
+  }
+  const lines = readFileSync(BATCH_STATE_PATH, 'utf-8').split('\n').filter(l => l.trim() && !l.startsWith('id'));
+  if (!lines.length) {
+    return { state: 'idle', completed: 0, total: 0, running: 0, failed: 0, pct: 0, startedAtIso: null, isIdle: true };
+  }
+  let completed = 0, running = 0, failed = 0;
+  let earliestStart = null;
+  for (const l of lines) {
+    const cols = l.split('\t');
+    const status = (cols[2] || '').trim();
+    const startedAt = cols[3] || '';
+    if (status === 'completed') completed++;
+    else if (status === 'running') running++;
+    else if (status === 'failed') failed++;
+    if (status === 'running' && startedAt) {
+      if (!earliestStart || startedAt < earliestStart) earliestStart = startedAt;
+    }
+  }
+  // Total comes from batch-input.tsv if present; otherwise fall back to state
+  // row count. Take the max of the two to handle the case where state has
+  // older completed rows than the current input (input got rotated).
+  const inputPath = join(ROOT, 'batch/batch-input.tsv');
+  let total = lines.length;
+  if (existsSync(inputPath)) {
+    const inputLines = readFileSync(inputPath, 'utf-8').split('\n').filter(l => l.trim() && !l.startsWith('id'));
+    if (inputLines.length) total = Math.max(inputLines.length, lines.length);
+  }
+  const pct = total > 0 ? Math.min(100, Math.round((completed / total) * 100)) : 0;
+  // "idle" if no running rows AND most recent started_at is older than 2h.
+  let mostRecentStart = null;
+  for (const l of lines) {
+    const startedAt = l.split('\t')[3];
+    if (startedAt && (!mostRecentStart || startedAt > mostRecentStart)) mostRecentStart = startedAt;
+  }
+  const recentMs = mostRecentStart ? Date.now() - new Date(mostRecentStart).getTime() : Infinity;
+  const isIdle = running === 0 && recentMs > 2 * 3600 * 1000;
+  const state = running > 0 ? 'running' : (completed >= total && total > 0 ? 'completed' : 'idle');
+  return {
+    state,
+    completed,
+    total,
+    running,
+    failed,
+    pct,
+    startedAtIso: earliestStart ? new Date(earliestStart).toISOString() : null,
+    mostRecentIso: mostRecentStart ? new Date(mostRecentStart).toISOString() : null,
+    isIdle,
+  };
+}
+
+// Aggregate system health for the strip's right-side pill. Surfaces three
+// signals: in-flight job count (Applied + Responded + Interview + Offer),
+// batch failures in the last 24h, and scan recency. Returns a roll-up:
+// "healthy" if 0 failures + last scan <24h; "warn" if any 24h failures or
+// stale scan (>48h); "fail" if scan >7d.
+function loadSystemHealthSnapshot(apps) {
+  const inFlight = apps.filter(r => /^(applied|responded|interview|offer)$/i.test(r.status)).length;
+  let failed24h = 0;
+  if (existsSync(BATCH_STATE_PATH)) {
+    const lines = readFileSync(BATCH_STATE_PATH, 'utf-8').split('\n').filter(l => l.trim() && !l.startsWith('id'));
+    const cutoff = Date.now() - 24 * 3600 * 1000;
+    for (const l of lines) {
+      const cols = l.split('\t');
+      if ((cols[2] || '').trim() !== 'failed') continue;
+      const completedAt = cols[4] || cols[3] || '';
+      if (!completedAt) continue;
+      if (new Date(completedAt).getTime() >= cutoff) failed24h++;
+    }
+  }
+  let scanAgeMs = Infinity;
+  if (existsSync(SCAN_HISTORY_PATH)) {
+    scanAgeMs = Date.now() - statSync(SCAN_HISTORY_PATH).mtime.getTime();
+  }
+  let status = 'healthy';
+  if (scanAgeMs > 7 * 24 * 3600 * 1000) status = 'fail';
+  else if (failed24h > 0 || scanAgeMs > 48 * 3600 * 1000) status = 'warn';
+  return { inFlight, failed24h, scanAgeMs: Number.isFinite(scanAgeMs) ? scanAgeMs : -1, status };
+}
+
 function countTodaysReports(date) {
   if (!existsSync(REPORTS_DIR)) return 0;
   return readdirSync(REPORTS_DIR).filter(f => f.includes(date) && f.endsWith('.md')).length;
@@ -1765,6 +1852,9 @@ function build() {
   const reportsToday = countTodaysReports(today);
   const liveTicker = loadLiveScanEvents();
   const liveTickerJson = JSON.stringify(liveTicker).replace(/<\//g, '<\\/');
+  const batchSnapshot = loadBatchSnapshot();
+  const healthSnapshot = loadSystemHealthSnapshot(apps);
+  const mcStripJson = JSON.stringify({ batch: batchSnapshot, health: healthSnapshot }).replace(/<\//g, '<\\/');
   const kpiSpark = computeKPISparklines(apps, today);
 
   // Sorted views
@@ -2193,6 +2283,112 @@ function build() {
     .live-text { transition: none; }
   }
 
+  /* ── Mission-control hero strip (Phase 7 Item 1) ────────────────
+     Slim sticky bar that sits between the toolbar and the stat strip.
+     Promotes the live scan ticker (formerly buried in the toolbar)
+     to the first 40 vertical pixels, alongside a batch-progress
+     indicator and a system-health pill. The page should feel "alive"
+     even when nothing is happening — pulsing dot + ticking elapsed. */
+  .mc-strip {
+    position: sticky; top: 0; z-index: 12;
+    display: grid; grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center; gap: 14px;
+    padding: 6px 14px; min-height: 40px;
+    background: linear-gradient(180deg, var(--surface-2) 0%, var(--surface) 100%);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    font-family: ui-monospace, "JetBrains Mono", SFMono-Regular, Menlo, monospace;
+    font-size: 11.5px; color: var(--text-3);
+    backdrop-filter: blur(8px);
+    margin: 0 -28px 12px;  /* break out of body's 28px padding for full-bleed feel */
+  }
+  body.dark .mc-strip {
+    background: linear-gradient(180deg, rgba(0,0,0,.18) 0%, rgba(255,255,255,.01) 100%);
+  }
+  /* Live ticker placement inside the strip — drops the pill chrome
+     since the strip itself provides the visual containment. */
+  .mc-strip .live-ticker {
+    background: transparent; border: none; padding: 0; max-width: none; gap: 8px;
+  }
+  .mc-strip .live-ticker:hover { background: transparent; border: none; color: var(--text-2); }
+  .mc-strip .live-text { font-family: inherit; }
+
+  .mc-batch {
+    display: inline-flex; align-items: center; gap: 8px;
+    color: var(--text-3); white-space: nowrap;
+  }
+  .mc-batch-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--text-4); flex-shrink: 0;
+    box-shadow: 0 0 0 0 currentColor;
+  }
+  .mc-batch[data-state="running"] .mc-batch-dot {
+    background: var(--green-fg, #16a34a);
+    color: rgba(22,163,74,.5);
+    animation: mc-pulse 2.4s ease-out infinite;
+  }
+  .mc-batch[data-state="completed"] .mc-batch-dot { background: var(--green-fg, #16a34a); }
+  .mc-batch[data-state="idle"] .mc-batch-dot { background: var(--text-4); }
+  .mc-batch[data-state="failed"] .mc-batch-dot { background: #dc2626; }
+  body.dark .mc-batch[data-state="running"] .mc-batch-dot { background: #4ade80; color: rgba(74,222,128,.45); }
+  .mc-batch-text { font-variant-numeric: tabular-nums; }
+
+  .mc-health {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    font-size: 11px; color: var(--text-3);
+    white-space: nowrap;
+  }
+  .mc-health-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--green-fg, #16a34a); flex-shrink: 0;
+  }
+  .mc-health[data-status="warn"] .mc-health-dot { background: #d97706; }
+  .mc-health[data-status="warn"] { border-color: rgba(217,119,6,.4); color: var(--text-2); }
+  .mc-health[data-status="fail"] .mc-health-dot { background: #dc2626; }
+  .mc-health[data-status="fail"] { border-color: rgba(220,38,38,.4); color: var(--text-2); }
+  body.dark .mc-health[data-status="warn"] .mc-health-dot { background: #fbbf24; }
+
+  @keyframes mc-pulse {
+    0%   { box-shadow: 0 0 0 0 currentColor; }
+    70%  { box-shadow: 0 0 0 5px rgba(0,0,0,0); }
+    100% { box-shadow: 0 0 0 0 rgba(0,0,0,0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .mc-batch[data-state="running"] .mc-batch-dot { animation: none !important; }
+  }
+
+  /* Slide-in on first paint — reads as "system booting." */
+  .mc-strip { animation: mc-strip-in 280ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+  @keyframes mc-strip-in {
+    from { transform: translateY(-100%); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .mc-strip { animation: none; }
+  }
+
+  /* Mobile: collapse to a single line (just dot + most-recent event).
+     Hide the middle batch detail and the right health pill text;
+     the left ticker carries the "is system live" signal alone. */
+  @media (max-width: 720px) {
+    .mc-strip {
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px; padding: 5px 12px; min-height: 32px;
+      font-size: 11px;
+    }
+    .mc-batch { display: none; }
+    .mc-health { padding: 2px 8px; font-size: 10.5px; }
+    .mc-health .mc-health-text { display: none; }
+    .mc-strip .live-text { font-size: 11px; }
+  }
+  @media (max-width: 480px) {
+    .mc-strip { margin-left: -12px; margin-right: -12px; }
+  }
+
   /* ── Cmd-K command palette ─────────────────────────────────── */
   #cmdk-backdrop {
     display: none; position: fixed; inset: 0; z-index: 100;
@@ -2292,7 +2488,7 @@ function build() {
      that opens the mobile settings sheet. Dark + Batch toggles stay
      visible because they're 1-tap actions. */
   /* Tablet/narrow desktop: drop "Dashboard" suffix so title doesn't truncate
-     when toolbar is busy with Search + Add role + Live ticker + Dark + Batch. */
+     when toolbar is busy with Search + Add role + Dark + Batch. */
   @media (max-width: 1280px) {
     .toolbar h1 .brand-suffix { display: none; }
   }
@@ -3486,11 +3682,9 @@ function build() {
     td > .badge, .badge.score-badge-lg { min-height: 32px; padding: 7px 12px; }
     /* Pills inside tappable rows get a wider hit-area through their td padding above. */
     .batch-close, .verify-close { min-height: 44px; min-width: 44px; padding: 10px; font-size: 18px; }
-    /* Live ticker collapses to just the dot on mobile; tap to expand. */
-    .live-ticker { padding: 8px; max-width: 32px; cursor: pointer; }
-    .live-ticker .live-text { display: none; }
-    .live-ticker.expanded { max-width: 70vw; padding: 6px 12px 6px 10px; }
-    .live-ticker.expanded .live-text { display: inline; }
+    /* Live ticker now sits inside the mission-control strip (full row),
+       so on mobile it doesn't need to collapse to a dot. The strip itself
+       collapses via its own media query (see .mc-strip rules). */
     #batch-toggle-btn, #dark-toggle { min-height: 44px; min-width: 44px; }
     .rec-btn { min-height: 44px; padding: 12px 18px; display: inline-flex; align-items: center; }
     .filters input, .filters select { min-height: 44px; padding: 10px 12px; font-size: 14px; }
@@ -4105,15 +4299,28 @@ function build() {
       <span class="cmdk-trigger-label">Search…</span>
       <span class="cmdk-trigger-kbd">⌘K</span>
     </button>
-    <div class="live-ticker" id="live-ticker" role="status" aria-live="polite" aria-label="Most recent scanner activity" tabindex="0" title="Click to expand on mobile">
-      <span class="live-dot" id="live-dot" aria-hidden="true"></span>
-      <span class="live-text" id="live-text">—</span>
-    </div>
     <button class="toolbar-btn quickadd-btn" onclick="openQuickAdd()" id="quickadd-btn" title="Add a role URL to the pipeline" aria-label="Add role to pipeline">+ Add role</button>
     <button class="toolbar-btn toolbar-overflow-btn" onclick="openMobileSettingsSheet()" id="toolbar-overflow-btn" aria-label="More options" title="More options">···</button>
     <button class="toolbar-btn" onclick="toggleDark()" id="dark-toggle" aria-label="Toggle dark mode">☀︎ Light</button>
     <button class="toolbar-btn" id="batch-toggle-btn" onclick="toggleBatchOverlay()" style="display:none" aria-label="Toggle batch progress overlay">⚡ Batch</button>
   </header>
+
+  <!-- Mission-control hero strip (Phase 7 Item 1): live ticker + batch + health -->
+  <div class="mc-strip" role="status" aria-label="Mission-control telemetry strip">
+    <div class="live-ticker" id="live-ticker" aria-live="polite" aria-label="Most recent scanner activity" tabindex="0" title="Click to expand on mobile">
+      <span class="live-dot" id="live-dot" aria-hidden="true"></span>
+      <span class="live-text" id="live-text">—</span>
+    </div>
+    <div class="mc-batch" id="mc-batch" data-state="idle" aria-label="Batch progress" title="Batch progress">
+      <span class="mc-batch-dot" aria-hidden="true"></span>
+      <span class="mc-batch-text" id="mc-batch-text">No batch running</span>
+    </div>
+    <div class="mc-health" id="mc-health" data-status="healthy" aria-label="System health" title="In-flight applications + batch + scan">
+      <span class="mc-health-dot" aria-hidden="true"></span>
+      <span class="mc-health-text" id="mc-health-text">all healthy</span>
+    </div>
+  </div>
+
   <div class="subtle" id="dashboard-meta" title="${escape(generated)}"><span id="live-updated">Updated ${escape(generated)}</span> · ${reportsToday} reports today</div>
 
   <main id="main">
@@ -4645,6 +4852,138 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initLiveTicker);
 } else {
   initLiveTicker();
+}
+
+// ── Mission-control hero strip (Phase 7 Item 1) ─────────────────
+// Build-seeded snapshot of batch + system health. Refreshed live
+// from /api/batch-live every 30s when the dashboard server is up;
+// in static-file mode the seed values are what the user sees.
+const MC_STRIP_DATA = ${mcStripJson};
+function _mcFmtElapsed(ms) {
+  const s = Math.max(0, Math.round(ms / 1000));
+  if (s < 60)   return s + 's elapsed';
+  if (s < 3600) return Math.round(s / 60) + 'm elapsed';
+  return Math.round(s / 3600) + 'h elapsed';
+}
+function _mcFmtAge(ms) {
+  if (!Number.isFinite(ms) || ms < 0) return 'never';
+  const s = Math.max(0, Math.round(ms / 1000));
+  if (s < 60)    return s + 's ago';
+  if (s < 3600)  return Math.round(s / 60) + 'm ago';
+  if (s < 86400) return Math.round(s / 3600) + 'h ago';
+  return Math.round(s / 86400) + 'd ago';
+}
+function _mcRenderBatch(batch) {
+  const el = document.getElementById('mc-batch');
+  const txt = document.getElementById('mc-batch-text');
+  if (!el || !txt) return;
+  if (!batch || batch.isIdle || batch.state === 'idle') {
+    el.setAttribute('data-state', 'idle');
+    txt.textContent = 'No batch running';
+    return;
+  }
+  if (batch.state === 'running' && batch.startedAtIso) {
+    el.setAttribute('data-state', 'running');
+    const elapsed = Date.now() - new Date(batch.startedAtIso).getTime();
+    txt.textContent = 'Batch ' + batch.completed + '/' + batch.total + ' · ' + (batch.pct || 0) + '% · ' + _mcFmtElapsed(elapsed);
+    return;
+  }
+  if (batch.state === 'completed' && batch.total > 0) {
+    el.setAttribute('data-state', 'completed');
+    txt.textContent = 'Batch ✓ ' + batch.completed + '/' + batch.total + ' · 100%';
+    return;
+  }
+  if (batch.failed > 0) {
+    el.setAttribute('data-state', 'failed');
+    txt.textContent = batch.failed + ' failed · ' + batch.completed + '/' + batch.total;
+    return;
+  }
+  el.setAttribute('data-state', 'idle');
+  txt.textContent = 'No batch running';
+}
+function _mcRenderHealth(health) {
+  const el = document.getElementById('mc-health');
+  const txt = document.getElementById('mc-health-text');
+  if (!el || !txt) return;
+  const status = (health && health.status) || 'healthy';
+  el.setAttribute('data-status', status);
+  const inFlight = (health && typeof health.inFlight === 'number') ? health.inFlight : 0;
+  const failed24 = (health && health.failed24h) || 0;
+  let label;
+  if (status === 'healthy') label = inFlight + ' jobs · all healthy';
+  else if (status === 'warn') label = inFlight + ' jobs · ' + (failed24 ? failed24 + ' recent fail' + (failed24 === 1 ? '' : 's') : 'scan stale');
+  else label = inFlight + ' jobs · scan offline';
+  txt.textContent = label;
+}
+function initMissionControlStrip() {
+  const seed = MC_STRIP_DATA || { batch: null, health: null };
+  let lastBatch = seed.batch;
+  let lastHealth = seed.health;
+  _mcRenderBatch(lastBatch);
+  _mcRenderHealth(lastHealth);
+
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Tick elapsed time every 1s while a batch is running. Skipped under
+  // reduced-motion to honor the OS-level preference (per Phase 7 spec).
+  if (!reduced) {
+    setInterval(() => {
+      if (lastBatch && lastBatch.state === 'running' && !lastBatch.isIdle) {
+        _mcRenderBatch(lastBatch);
+      }
+    }, 1000);
+  }
+
+  // Poll the live batch endpoint every 30s if available. Reuses the same
+  // /api/batch-live source as the floating batch overlay so the two stay
+  // in sync. apiFetch() is a no-op in static-file (file://) mode.
+  async function refresh() {
+    try {
+      const data = await apiFetch('/api/batch-live');
+      if (!data) return;
+      const running = data.running || 0;
+      const completed = data.completed || 0;
+      const total = data.total || 0;
+      const failed = data.failed || 0;
+      const pct = data.pct || 0;
+      // Find earliest running started_at for the elapsed clock
+      let earliestStart = null;
+      let mostRecent = null;
+      for (const r of (data.rows || [])) {
+        if (r.status === 'running' && r.started_at) {
+          if (!earliestStart || r.started_at < earliestStart) earliestStart = r.started_at;
+        }
+        if (r.started_at && (!mostRecent || r.started_at > mostRecent)) mostRecent = r.started_at;
+      }
+      const recentMs = mostRecent ? Date.now() - new Date(mostRecent).getTime() : Infinity;
+      const isIdle = running === 0 && recentMs > 2 * 3600 * 1000;
+      const state = running > 0
+        ? 'running'
+        : (completed >= total && total > 0 ? 'completed' : (failed > 0 ? 'failed' : 'idle'));
+      lastBatch = {
+        state, completed, total, running, failed, pct,
+        startedAtIso: earliestStart ? new Date(earliestStart).toISOString() : null,
+        isIdle,
+      };
+      _mcRenderBatch(lastBatch);
+
+      // Roll health: any failed runs in the live snapshot bump health to "warn".
+      const newHealth = Object.assign({}, lastHealth || {});
+      newHealth.failed24h = failed;
+      const baseStatus = (lastHealth && lastHealth.status) || 'healthy';
+      if (failed > 0 && baseStatus === 'healthy') newHealth.status = 'warn';
+      else if (failed === 0) newHealth.status = baseStatus;
+      lastHealth = newHealth;
+      _mcRenderHealth(lastHealth);
+    } catch (_) { /* server not running — keep seed values */ }
+  }
+  refresh();
+  setInterval(refresh, 30000);
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initMissionControlStrip);
+} else {
+  initMissionControlStrip();
 }
 
 // ── OLED true-black mode ────────────────────────────────────────
