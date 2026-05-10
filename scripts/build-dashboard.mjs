@@ -2137,7 +2137,7 @@ function renderCompAnalytics(analytics, floors) {
   const { buckets, medians, overallMedian, topEarners, total } = analytics;
   if (total === 0) {
     return `<div class="panel" id="comp-analytics-panel">
-      <div class="panel-title">Comp Analytics</div>
+      <div class="panel-title collapsible" onclick="togglePanel('comp-analytics-panel',event)">Comp Analytics <span class="panel-chevron">▾</span></div>
       <p style="color:var(--text-3);font-size:13px">No parseable comp data yet — Block A's Comp row needs an explicit USD range to be picked up here.</p>
     </div>`;
   }
@@ -2187,7 +2187,7 @@ function renderCompAnalytics(analytics, floors) {
   }).join('');
   return `
   <div class="panel" id="comp-analytics-panel">
-    <div class="panel-title">Comp Analytics <span class="pill" style="background:var(--blue-fg)">${total} parseable</span></div>
+    <div class="panel-title collapsible" onclick="togglePanel('comp-analytics-panel',event)">Comp Analytics <span class="pill" style="background:var(--blue-fg)">${total} parseable</span> <span class="panel-chevron">▾</span></div>
     <p class="comp-subnote">Parsed from each report's Block A Comp row. Seattle floor: <strong>$${floors.seattleFloor}K</strong> · Target: <strong>$${floors.targetMin}K–$${floors.targetMax}K</strong>. 4-yr est. = midpoint × 4 (× 1.5 if equity mentioned) — directional, not a quote.</p>
     <div class="comp-grid">
       <div class="comp-sub">
@@ -3712,6 +3712,14 @@ function build() {
     font-size: 18px; font-weight: 700; margin: 0 0 8px;
     letter-spacing: -0.3px; color: var(--text); display: flex; align-items: center; gap: 10px;
   }
+  .panel-title.collapsible { cursor: pointer; user-select: none; }
+  .panel-title.collapsible:hover { opacity: 0.82; }
+  .panel-chevron {
+    margin-left: auto; font-size: 11px; color: var(--text-3);
+    transition: transform 0.2s; flex-shrink: 0; padding-left: 6px;
+  }
+  .panel-collapsed .panel-chevron { transform: rotate(-90deg); }
+  .panel-collapsed > *:not(.panel-title) { display: none !important; }
   .panel-subtitle { font-size: 11px; color: var(--text-3); margin: 0 0 8px; }
   .panel-title .pill {
     font-size: 11px; font-weight: 600;
@@ -6106,11 +6114,12 @@ function build() {
 
   ${applyNow.length > 0 ? `
   <div class="panel panel-strong" id="apply-now-section">
-    <div class="panel-title">Apply-Now Queue <span class="pill">${applyNow.length}</span>
+    <div class="panel-title collapsible" onclick="togglePanel('apply-now-section',event)">Apply-Now Queue <span class="pill">${applyNow.length}</span>
       <button type="button" id="apply-now-reset-order" class="reset-order-btn" hidden
-        onclick="resetApplyNowOrder()" aria-label="Reset to default sort (score desc, then date)">
+        onclick="event.stopPropagation();resetApplyNowOrder()" aria-label="Reset to default sort (score desc, then date)">
         ↺ Reset order
       </button>
+      <span class="panel-chevron">▾</span>
     </div>
     <p class="panel-subtitle" title="Drag a row's ⋮⋮ handle to prioritize. Click any row to expand.">Score ≥ 4.0 · Evaluated / Responded / Interview only</p>
     <div class="table-scroll"><table>
@@ -6136,13 +6145,13 @@ function build() {
   </div>
   ` : `
   <div class="panel" id="apply-now-section">
-    <div class="panel-title">Apply-Now Queue</div>
+    <div class="panel-title collapsible" onclick="togglePanel('apply-now-section',event)">Apply-Now Queue <span class="panel-chevron">▾</span></div>
     <p style="color:#57606a;font-size:13px">No evaluations meeting the 4.0 apply floor right now. Either today's batch was wrong-shape (review highest-scored discards below) or the batch hasn't completed yet.</p>
   </div>
   `}
 
   <div class="panel" id="all-evaluations-section">
-    <div class="panel-title">All Evaluations <span class="pill" style="background:#0969da">${total}</span></div>
+    <div class="panel-title collapsible" onclick="togglePanel('all-evaluations-section',event)">All Evaluations <span class="pill" style="background:#0969da">${total}</span> <span class="panel-chevron">▾</span></div>
     <div class="filters filters-sticky" role="search">
       <div class="saved-views-row" aria-label="Saved filter views">
         <span class="saved-views-label">Saved views</span>
@@ -6219,8 +6228,8 @@ function build() {
   </div>
 
   <div class="charts-grid" id="charts-section">
-  <div class="panel">
-    <div class="panel-title">Score Distribution</div>
+  <div class="panel" id="score-dist-panel">
+    <div class="panel-title collapsible" onclick="togglePanel('score-dist-panel',event)">Score Distribution <span class="panel-chevron">▾</span></div>
     ${(() => {
       const segDefs = [
         { range: '4.0+',     label: 'Strong',   key: '4.0+',     cls: 's-strong'   },
@@ -6250,7 +6259,7 @@ function build() {
   </div>
 
   <div class="panel" id="companies-panel">
-    <div class="panel-title">Top Companies (by evaluation count)</div>
+    <div class="panel-title collapsible" onclick="togglePanel('companies-panel',event)">Top Companies (by evaluation count) <span class="panel-chevron">▾</span></div>
     <div class="bar-chart" role="list" aria-label="Top companies by evaluation count">
       ${topCompanies.map(([company, count]) => {
         const max = topCompanies[0][1];
@@ -6267,7 +6276,7 @@ function build() {
   </div>
 
   <div class="panel" id="trends-panel">
-    <div class="panel-title">Trends</div>
+    <div class="panel-title collapsible" onclick="togglePanel('trends-panel',event)">Trends <span class="panel-chevron">▾</span></div>
     ${(() => {
       const W = 280, H = 80, PAD = 4;
       const counts = trendWeeks.map(w => w.count);
@@ -6339,6 +6348,34 @@ function build() {
 </div><!-- /.app-shell -->
 
 <script>
+// ── Collapsible panels ──────────────────────────────────────────
+function togglePanel(id, event) {
+  if (event && event.target && event.target !== event.currentTarget) {
+    const tgt = event.target;
+    if (tgt.closest('button,input,a,select,textarea')) return;
+  }
+  const el = document.getElementById(id);
+  if (!el) return;
+  const collapsed = el.classList.toggle('panel-collapsed');
+  const chevron = el.querySelector('.panel-title .panel-chevron');
+  if (chevron) chevron.textContent = collapsed ? '▸' : '▾';
+  try { sessionStorage.setItem('panel-' + id, collapsed ? '1' : '0'); } catch(_) {}
+}
+window.togglePanel = togglePanel;
+function initPanelCollapse() {
+  const panels = document.querySelectorAll('[id]');
+  for (const el of panels) {
+    let val;
+    try { val = sessionStorage.getItem('panel-' + el.id); } catch(_) {}
+    if (val === '1' && el.querySelector('.panel-title.collapsible')) {
+      el.classList.add('panel-collapsed');
+      const chevron = el.querySelector('.panel-title .panel-chevron');
+      if (chevron) chevron.textContent = '▸';
+    }
+  }
+}
+document.addEventListener('DOMContentLoaded', initPanelCollapse);
+
 // ── Dark mode ───────────────────────────────────────────────────
 const DARK_KEY = 'career-ops-dark';
 function initDark() {
