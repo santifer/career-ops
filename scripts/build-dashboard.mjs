@@ -309,15 +309,25 @@ function parseOverpaySignals() {
 
 // Map free-text posture → one of: 'late', 'cd', 'b', 'seed-a', 'public', 'unknown'
 // Order matters: more specific signals win (e.g. "late-stage pre-IPO" → 'late',
-// not 'b' just because the word "B" appears in "$1B").
+// not 'b' just because the word "B" appears in "$1B"). Pre-IPO checks run BEFORE
+// the public check because phrases like "no public tender" / "weighing IPO Q4"
+// would otherwise false-positive into 'public'. Anthropic Series G + "no public
+// tender or IPO timeline" was the canonical bug that motivated this ordering.
 function classifyEquityStage(posture) {
   if (!posture) return 'unknown';
   const t = posture.toLowerCase();
-  if (/\bpublic(ly)?\b|\bipo(?:'?d|ed)\b|post-ipo|listed|nyse|nasdaq/.test(t)) return 'public';
-  if (/\blate[\s-]?stage\b|\bpre-?ipo\b|\bseries\s*[ef]\b|series\s*d\+/.test(t)) return 'late';
+  // 1. Pre-IPO Late-stage signals first — Series E/F/G/H, "pre-IPO", "late-stage"
+  //    Most frontier AI labs (OpenAI/Anthropic/xAI/Mistral/Sierra/Cursor/etc) live
+  //    here and their posture text often contains the word "public" in negation.
+  if (/\bseries\s*[efgh]\b|series\s*d\+|\blate[\s-]?stage\b|\bpre-?ipo\b/.test(t)) return 'late';
   if (/\bseries\s*c\b|\bseries\s*d\b/.test(t)) return 'cd';
   if (/\bseries\s*b\b/.test(t)) return 'b';
   if (/\bseries\s*a\b|\bseed\b/.test(t)) return 'seed-a';
+  // 2. True public signals — must be a CONFIRMED listing, not a negated reference.
+  //    Negative lookbehind blocks "no public", "non-public", "not public".
+  //    "ipo'd" / "post-ipo" / explicit exchange names are the strongest tells.
+  if (/\bipo(?:'?d|ed)\b|post-?ipo|\b(?:listed|trading)\s+on\b|\bnyse\s*:\s*\w|\bnasdaq\s*:\s*\w/.test(t)) return 'public';
+  if (/(?<!\b(?:no|non|not|never|without)[\s-])\bpublic(ly)?\s+(?:traded|listed|company|markets?)\b/.test(t)) return 'public';
   return 'unknown';
 }
 

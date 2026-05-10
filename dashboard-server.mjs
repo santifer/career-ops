@@ -1401,14 +1401,25 @@ const server = createServer((req, res) => {
   if (!existsSync(filePath)) { res.writeHead(404); res.end('Not found'); return; }
   const ext = extname(filePath);
   const headers = { 'Content-Type': MIME[ext] || 'text/plain' };
-  // PWA: manifest needs the manifest mime type; service worker must be served
-  // from the root scope with no-cache so updates propagate.
-  if (url === '/manifest.json') {
+  // Default cache policy: HTML is rebuilt by build-dashboard.mjs on every change,
+  // so the browser must revalidate on every load (no-cache forces ETag round-trip
+  // but no full re-download when content unchanged). Without this, every UI fix
+  // requires the user to hard-refresh (Cmd-Shift-R) to see new HTML/inline CSS+JS.
+  // Static assets (PNG, JSON, manifest) get a 5-min cache so revisits are fast.
+  if (ext === '.html' || url === '/' || url === '/dashboard/index.html') {
+    headers['Cache-Control'] = 'no-cache, must-revalidate';
+    headers['Pragma'] = 'no-cache';
+    headers['Expires'] = '0';
+  } else if (url === '/manifest.json') {
     headers['Content-Type'] = 'application/manifest+json';
+    headers['Cache-Control'] = 'public, max-age=300';
   } else if (url === '/service-worker.js') {
     headers['Content-Type'] = 'application/javascript';
     headers['Service-Worker-Allowed'] = '/';
     headers['Cache-Control'] = 'no-cache';
+  } else {
+    // Static assets (PNG, ICO, etc.) — short cache for snappy revisits.
+    headers['Cache-Control'] = 'public, max-age=300';
   }
   res.writeHead(200, headers);
   res.end(readFileSync(filePath));
