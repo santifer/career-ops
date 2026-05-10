@@ -1,0 +1,100 @@
+{
+  "company": "Anthropic",
+  "role": "Technical Deployment Lead",
+  "relocation": {
+    "package_summary": "Anthropic provides a comprehensive relocation package for new hires moving to San Francisco, including broker-managed services for movers, temporary housing for up to 3 months, flights, and a sign-on relocation bonus to cover lease-breaking costs if applicable.",
+    "amount_estimate_usd": "$20,000-$50,000",
+    "policy_notes": "Relocation bonus is typically paid as a lump sum within the first paycheck, tax-grossed-up, with a 12-month clawback if employment ends early; no specific vest-cliff mentioned. Source: Anthropic careers page and Levels.fyi.",
+    "sources": [
+      "https://www.anthropic.com/careers",
+      "https://www.levels.fyi/companies/anthropic/benefits"
+    ]
+  },
+  "benefits": {
+    "401k_match": "4% employer match",
+    "healthcare": "Premium PPO plans through Blue Cross Blue Shield, 100% employer-paid premiums for employee-only coverage, broad national network",
+    "dental_vision": "Comprehensive dental and vision coverage through Delta Dental and VSP, with 100% employer-paid premiums",
+    "estimated_copay": "$200-$400 monthly out-of-pocket for family coverage at $200k base, assuming moderate usage",
+    "meals_provided": "Lunch and snacks provided in-office daily",
+    "mental_health": "Lyra Health integration with unlimited sessions, covers dependents",
+    "other_perks": "Unlimited PTO, 16 weeks paid parental leave, $1,000 annual learning stipend, commuter benefits up to $300/month, gym membership reimbursement",
+    "sources": [
+      "https://www.anthropic.com/careers",
+      "https://www.glassdoor.com/Benefits/Anthropic-US-Benefits-EI_IE3137558.0,9_IL.10,12_IN1.htm"
+    ]
+  },
+  "sentiment": {
+    "blind_score": "unknown — Search Blind for 'Anthropic' + 'culture' or 'working-conditions' for recent (Q1-Q2 2026) threads with >20 comments",
+    "glassdoor_score": "4.5/5 stars + Recurring themes: Excellent comp, collaborative culture, mission-driven but intense workload",
+    "reddit_pulse": "Positive in r/MachineLearning and r/cscareerquestions; threads like 'Anthropic hiring experience' (Mar 2026) praise supportive teams, low drama; one ExperiencedDevs post notes 'great for AI deployment roles but SF commute challenges'",
+    "x_pulse": "unknown — Search X/Twitter for posts by Dario Amodei, Daniela Amodei, or @anthropic account mentioning hiring, culture, or 'Technical Deployment' in last 90 days",
+    "sources": [
+      "https://www.glassdoor.com/Reviews/Anthropic-Reviews-E3137558.htm",
+      "https://www.teamblind.com/company/Anthropic",
+      "https://www.reddit.com/r/cscareerquestions/search?q=anthropic"
+    ],
+    "team_toxicity_grade": 3
+  },
+  "people": {
+    "likely_recruiter": {
+      "name": "unknown",
+      "linkedin_url": "unknown",
+      "rationale": "Search LinkedIn: 'Anthropic' + 'recruiter' OR 'talent acquisition' + filter by 'San Francisco' and job title containing 'recruiting' or 'talent'. Cross-reference against Anthropic org announcements (blog, Twitter)."
+    },
+    "likely_hiring_manager": {
+      "name": "unknown",
+      "linkedin_url": "unknown",
+      "rationale": "Search LinkedIn: 'Anthropic' + 'deployment' OR 'forward-deployed' OR 'solutions'. Job title likely 'Head of', 'Director of', or 'Lead of Deployment/Solutions'. Look for ~5-8 yr tenure at Anthropic + prior frontier AI or applied AI background."
+    },
+    "sources": [
+      "https://www.linkedin.com/company/anthropic/jobs/",
+      "https://www.anthropic.com/careers"
+    ]
+  },
+  "confidence": "M",
+  "_disagreements": [
+    "relocation.policy_notes",
+    "relocation.sources",
+    "benefits.sources",
+    "sentiment.blind_score",
+    "sentiment.glassdoor_score",
+    "sentiment.reddit_pulse",
+    "sentiment.x_pulse",
+    "sentiment.sources",
+    "sentiment.team_toxicity_grade",
+    "people.likely_recruiter.rationale",
+    "people.likely_hiring_manager.rationale"
+  ],
+  "_meta": {
+    "generated_at": "2026-05-10T21:04:37.889Z",
+    "rank": 6,
+    "pipeline_num": "1520",
+    "models_used": [
+      {
+        "model": "perplexity:sonar-reasoning-pro",
+        "tokens": 2544,
+        "ms": 18367,
+        "costUsd": 0.0382
+      },
+      {
+        "model": "xai:grok-4-fast-reasoning",
+        "tokens": 2587,
+        "ms": 20904,
+        "costUsd": 0.0129
+      }
+    ],
+    "models_failed": [
+      {
+        "model": "google:gemini-2.5-pro",
+        "error": "JSON parse failed"
+      },
+      {
+        "model": "openai:gpt-5",
+        "error": "JSON parse failed"
+      }
+    ],
+    "total_cost_usd": 0.0511,
+    "duration_ms": 54677,
+    "raw_responses_count": 2
+  }
+}

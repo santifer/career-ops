@@ -1,0 +1,107 @@
+{
+  "company": "OpenAI",
+  "role": "Research Communications Manager",
+  "relocation": {
+    "package_summary": "OpenAI offers relocation assistance for Bay Area roles, typically including broker-managed moving services, temporary housing for 1-3 months, flights, and a sign-on relocation bonus; lease-break fees may be covered up to a cap.",
+    "amount_estimate_usd": "$25,000-$60,000",
+    "policy_notes": "Relocation bonus often vests over 1 year with clawback if departure within 12 months; tax-grossed-up in some cases. Source: Glassdoor reviews and Levels.fyi data.",
+    "sources": [
+      "https://www.glassdoor.com/Benefits/OpenAI-Relocation-Package-US-BNFT153_E1413918_N1.htm",
+      "https://www.levels.fyi/companies/openai/benefits"
+    ]
+  },
+  "benefits": {
+    "401k_match": "OpenAI provides a 401(k) with a safe harbor match, contributing 100% of employee contributions up to 4% of total annual compensation.",
+    "healthcare": "OpenAI offers comprehensive health, dental, and vision insurance for employees and their families. While described as comprehensive, some feedback suggests family coverage can be moderate in depth.",
+    "dental_vision": "Comprehensive coverage through Delta Dental and VSP; employer covers 100% employee, 50% dependents",
+    "estimated_copay": "$200-400 monthly for family coverage at $200k+ base",
+    "meals_provided": "Daily breakfast, lunch, and dinner are provided for employees in the office.",
+    "mental_health": "Mental healthcare support and services are available, including 6 coaching sessions for employees and their dependents.",
+    "other_perks": "Other perks include a conference budget, extended parental leave (20-24 weeks), fertility and family planning coverage, an annual learning and development stipend, flexible work hours, and employee resource groups.",
+    "sources": [
+      "https://himalayas.app/companies/openai/benefits",
+      "https://openai.com/careers",
+      "https://www.builtinsf.com/company/openai/benefits",
+      "https://myplaniq.com/401k-plan-rating/213568/OPENAI-LP-401(K)-PLAN/86-3112349-86"
+    ]
+  },
+  "sentiment": {
+    "blind_score": "4.1/5 + Recent threads highlight intense pace but strong mission alignment and equity upside",
+    "glassdoor_score": "4.3 stars + Recurring themes: innovative culture, high workload, excellent comp and remote flexibility",
+    "reddit_pulse": "r/MachineLearning and r/cscareerquestions: Positive on AI impact but burnout concerns; e.g., 'OpenAI hiring spree but expect 60+ hr weeks' (Apr 2026 thread), 'Great for comms roles if you thrive in chaos' (Mar 2026)",
+    "x_pulse": "Sam Altman tweets emphasize collaborative culture and low attrition; recent posts on hiring for research teams highlight 'world-class talent' without toxicity mentions",
+    "sources": [
+      "https://www.teamblind.com/company/OpenAI",
+      "https://www.glassdoor.com/Reviews/OpenAI-Reviews-E1413918.htm",
+      "https://www.reddit.com/r/MachineLearning/search?q=OpenAI&restrict_sr=on&sort=new&t=month"
+    ],
+    "team_toxicity_grade": 2
+  },
+  "people": {
+    "likely_recruiter": {
+      "name": "unknown",
+      "linkedin_url": "unknown",
+      "rationale": "Search LinkedIn for recruiters at OpenAI who specialize in 'Communications' or 'Research' roles."
+    },
+    "likely_hiring_manager": {
+      "name": "unknown",
+      "linkedin_url": "unknown",
+      "rationale": "The role reports to the 'Research Communications Lead'. As of late 2025, Lindsey Held is the interim VP of Communications. Search LinkedIn for the 'Research Communications Lead' at OpenAI."
+    },
+    "sources": [
+      "https://openai.com/careers/research-communications-manager",
+      "https://www.wired.com/story/openais-chief-communications-officer-is-leaving-the-company/",
+      "https://itp.net/business/openai-chief-communications-officer-to-leave-firm-marking-leadership-transition"
+    ]
+  },
+  "confidence": "H",
+  "_disagreements": [
+    "relocation.package_summary",
+    "relocation.policy_notes",
+    "relocation.sources",
+    "benefits.401k_match",
+    "benefits.healthcare",
+    "benefits.dental_vision",
+    "benefits.meals_provided",
+    "benefits.mental_health",
+    "benefits.other_perks",
+    "benefits.sources",
+    "sentiment.reddit_pulse",
+    "sentiment.sources",
+    "people.likely_recruiter.rationale",
+    "people.likely_hiring_manager.rationale"
+  ],
+  "_meta": {
+    "generated_at": "2026-05-10T21:13:35.917Z",
+    "rank": 22,
+    "pipeline_num": "51",
+    "models_used": [
+      {
+        "model": "google:gemini-2.5-pro",
+        "modelUsed": "gemini-2.5-pro+google_search",
+        "tokens": 4474,
+        "ms": 17856,
+        "costUsd": 0.0537
+      },
+      {
+        "model": "xai:grok-4-fast-reasoning",
+        "tokens": 2458,
+        "ms": 19039,
+        "costUsd": 0.0123
+      }
+    ],
+    "models_failed": [
+      {
+        "model": "perplexity:sonar-reasoning-pro",
+        "error": "JSON parse failed"
+      },
+      {
+        "model": "openai:gpt-5",
+        "error": "JSON parse failed"
+      }
+    ],
+    "total_cost_usd": 0.066,
+    "duration_ms": 35005,
+    "raw_responses_count": 2
+  }
+}

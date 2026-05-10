@@ -1,0 +1,118 @@
+{
+  "company": "Anthropic",
+  "role": "Communications Lead, Claude Code",
+  "relocation": {
+    "package_summary": "Anthropic offers relocation assistance for roles requiring move to San Francisco, typically including broker-managed services for movers, temporary housing for 1-2 months, flights, and a sign-on relocation bonus; lease-break fees may be covered up to a cap.",
+    "amount_estimate_usd": "$20000-$50000",
+    "policy_notes": "Relocation support is available for those moving to the Bay Area and other office locations. The company may not cover lease-breaking fees in the home country. Most staff are expected to be in an office at least 25% of the time, though some roles may require more in-office time. A flexible transition period can be offered for those relocating.",
+    "sources": [
+      "https://www.welcometothejungle.com/en/companies/anthropic",
+      "https://worktugal.com/anthropic-hiring-290-staff-globally-with-salaries-up-to-746-000/",
+      "https://jobdai.com/anthropic-is-hiring-for-ai-ml-data-jobs/",
+      "https://jobs.menlovc.com/jobs/Careers/694856000008272111/Benefits-Partner--Contract--at-Anthropic?source=CareerSite",
+      "https://relocate.me/usa/new-york/anthropic/software-engineer-claude-ai-28045",
+      "https://boards.greenhouse.io/anthropic/jobs/4047696007"
+    ]
+  },
+  "benefits": {
+    "401k_match": "4% matching for their 401(k) plan.",
+    "healthcare": "Comprehensive health, dental, and vision insurance for employees and their dependents. Includes inclusive fertility benefits via Carrot Fertility and a generous subsidy for OneMedical.",
+    "dental_vision": "Delta Dental and VSP Vision, employer covers 100% employee premiums, comprehensive coverage including orthodontia",
+    "estimated_copay": "$200-400 monthly for family coverage at $200k base",
+    "meals_provided": "Daily meals and snacks are provided in the office.",
+    "mental_health": "Mental health support is available for employees and their dependents.",
+    "other_perks": "Includes 22 weeks of paid parental leave, a $500/month flexible wellness and time saver stipend, commuter benefits, an annual education stipend, and a home office stipend. They also offer optional equity donation matching.",
+    "sources": [
+      "https://www.welcometothejungle.com/en/companies/anthropic",
+      "https://jobdai.com/anthropic-is-hiring-for-ai-ml-data-jobs/",
+      "https://jobs.menlovc.com/jobs/Careers/694856000008272111/Benefits-Partner--Contract--at-Anthropic?source=CareerSite",
+      "https://www.built.com/sites/www.built.com/files/2022-09/anthropic-compensation-benefits-2026-or-built.pdf",
+      "https://www.parawork.com/blog/anthropic-talent-strategy",
+      "https://anthropic.com/careers"
+    ]
+  },
+  "sentiment": {
+    "blind_score": "Employees on Blind rate work-life balance at 3.6 out of 5, which is the lowest among company ratings, while compensation and culture score very high.",
+    "glassdoor_score": "4.4 out of 5.0 based on 222 reviews, with 95% of employees recommending working there. Compensation and Benefits are the highest-rated aspects (4.8/5), while Work-Life Balance is the lowest (3.7/5).",
+    "reddit_pulse": "Recent Reddit discussions indicate a perception of long work hours, with some mentioning 50-60+ hour weeks, but this is often seen as a trade-off for working at an impactful company. There are mixed opinions on the culture, with some describing it as having 'huge egos' and being 'super chaotic', while others praise the genuinely nice and brilliant people. There is also discussion around Anthropic's public statements about AI replacing software engineers while they are actively hiring for those roles.",
+    "x_pulse": "Founder tweets highlight growth and new product milestones, no direct mention of internal attrition (source: twitter.com/AnthropicAI).",
+    "sources": [
+      "https://www.glassdoor.com/Reviews/Anthropic-Reviews-E6884821.htm",
+      "https://bridged.co/reports/anthropic-culture-career-guide",
+      "https://www.reddit.com/r/cscareerquestions/comments/1b3w4b1/i_tracked_job_openings_at_anthropic_for_the_past/",
+      "https://www.reddit.com/r/Anthropic/comments/141g1c6/what_is_the_work_culture_like_at_anthropic/"
+    ],
+    "team_toxicity_grade": 2
+  },
+  "people": {
+    "likely_recruiter": {
+      "name": "unknown",
+      "linkedin_url": "unknown",
+      "rationale": "Search LinkedIn: 'Anthropic' + 'recruiter' + 'communications' OR check Anthropic careers page for listed recruiting contacts. Filter by hire date 2024–2026 for current team."
+    },
+    "likely_hiring_manager": {
+      "name": "unknown",
+      "linkedin_url": "unknown",
+      "rationale": "Research Anthropic org chart for Head of Communications / Chief Communications Officer or VP Comms (likely reports to them). Cross-reference with recent Anthropic press releases or LinkedIn company page 'People' tab."
+    },
+    "sources": []
+  },
+  "confidence": "M",
+  "_disagreements": [
+    "relocation.package_summary",
+    "relocation.policy_notes",
+    "relocation.sources",
+    "benefits.401k_match",
+    "benefits.healthcare",
+    "benefits.dental_vision",
+    "benefits.meals_provided",
+    "benefits.mental_health",
+    "benefits.other_perks",
+    "benefits.sources",
+    "sentiment.blind_score",
+    "sentiment.glassdoor_score",
+    "sentiment.reddit_pulse",
+    "sentiment.x_pulse",
+    "sentiment.sources",
+    "sentiment.team_toxicity_grade",
+    "people.likely_recruiter.rationale",
+    "people.likely_hiring_manager.rationale"
+  ],
+  "_meta": {
+    "generated_at": "2026-05-10T21:04:58.939Z",
+    "rank": 7,
+    "pipeline_num": "44",
+    "models_used": [
+      {
+        "model": "google:gemini-2.5-pro",
+        "modelUsed": "gemini-2.5-pro+google_search",
+        "tokens": 4324,
+        "ms": 17852,
+        "costUsd": 0.0519
+      },
+      {
+        "model": "perplexity:sonar-reasoning-pro",
+        "tokens": 2352,
+        "ms": 15631,
+        "costUsd": 0.0353
+      },
+      {
+        "model": "xai:grok-4-fast-reasoning",
+        "tokens": 2464,
+        "ms": 21044,
+        "costUsd": 0.0123
+      },
+      {
+        "model": "openai:gpt-5",
+        "modelUsed": "o1",
+        "tokens": 3319,
+        "ms": 20051,
+        "costUsd": 0.0664
+      }
+    ],
+    "models_failed": [],
+    "total_cost_usd": 0.1659,
+    "duration_ms": 21048,
+    "raw_responses_count": 4
+  }
+}

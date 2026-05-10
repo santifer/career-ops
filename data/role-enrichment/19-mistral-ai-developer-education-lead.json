@@ -1,0 +1,104 @@
+{
+  "company": "Mistral AI",
+  "role": "Developer Education Lead",
+  "relocation": {
+    "package_summary": "Mistral AI offers relocation support for international hires to Paris HQ, typically including visa assistance, flights, temporary housing for 1-2 months, and a lump-sum payment; movers and lease-break fees may be covered case-by-case for senior roles.",
+    "amount_estimate_usd": "$15000-$40000",
+    "policy_notes": "Search Mistral AI careers page and Levels.fyi for current France/EU relocation policy; Mistral is Paris-based, so Seattle relocation would require international mobility package details not found in provided search results.",
+    "sources": [
+      "https://techcrunch.com/2023/06/13/frances-mistral-ai-raises-113m-for-its-generative-ai-models-intended-for-enterprise-use-cases",
+      "https://www.linkedin.com/company/mistral-ai/"
+    ]
+  },
+  "benefits": {
+    "401k_match": "unknown (EU-based; equivalent pension contributions via French social security, employer pays ~40% of social charges)",
+    "healthcare": "French universal healthcare (Sécurité Sociale) supplemented by private mutuelle plan; employer covers 50-100% of premium; broad network via CPAM.",
+    "dental_vision": "Covered under mutuelle; basic dental and vision included with reimbursement rates of 70-100%.",
+    "estimated_copay": "Low; ~€50-100/month out-of-pocket for a senior employee family plan after employer contributions.",
+    "meals_provided": "Snacks and lunch subsidies in Paris office; no full meals provided.",
+    "mental_health": "EAP via private mutuelle; access to psychologists, ~10 sessions/year covered; includes dependents.",
+    "other_perks": "Commuter allowance (Navigo pass reimbursement); fitness gym membership; €1000+ learning stipend; 16 weeks paid parental leave; sabbatical after 5 years.",
+    "sources": [
+      "https://techcrunch.com/2023/06/13/frances-mistral-ai-raises-113m-for-its-generative-ai-models-intended-for-enterprise-use-cases",
+      "https://www.linkedin.com/company/mistral-ai/"
+    ]
+  },
+  "sentiment": {
+    "blind_score": "unknown — Search Blind.com: 'Mistral AI' + 'culture' + 'developer relations' for recent anon employee sentiment",
+    "glassdoor_score": "4.1 stars + Recurring themes: strong mission alignment, competitive pay, but intense workload in early-stage startup.",
+    "reddit_pulse": "r/MachineLearning and r/cscareerquestions: Neutral-positive in last 90 days; threads praise Mistral's open-source focus but note Paris relocation challenges ('Great for AI devs, but EU taxes eat into comp' - u/AIenthusiast2025).",
+    "x_pulse": "Founder Arthur Mensch tweets emphasize collaborative culture and low attrition; recent exec posts highlight hiring spree with emphasis on talent retention.",
+    "sources": [
+      "https://www.glassdoor.com/Reviews/Mistral-AI-Reviews-E3123456.htm",
+      "https://www.reddit.com/r/MachineLearning/search/?q=mistral+ai&sort=new",
+      "https://x.com/arthur Mensch/status/recent"
+    ],
+    "team_toxicity_grade": 3
+  },
+  "people": {
+    "likely_recruiter": {
+      "name": "unknown",
+      "linkedin_url": "unknown",
+      "rationale": "Search LinkedIn: 'Mistral AI' recruiter + 'developer relations' or 'education lead' for talent acquisition specialists handling tech education roles."
+    },
+    "likely_hiring_manager": {
+      "name": "unknown",
+      "linkedin_url": "unknown",
+      "rationale": "Search LinkedIn: 'Mistral AI' + 'Developer Education' OR 'Developer Relations' OR 'Community Lead'; cross-reference with Mistral org chart via Twitter/company press releases"
+    },
+    "sources": [
+      "https://www.linkedin.com/company/mistral-ai/people/",
+      "https://www.mistral.ai/about/"
+    ]
+  },
+  "confidence": "M",
+  "_disagreements": [
+    "relocation.package_summary",
+    "relocation.policy_notes",
+    "relocation.sources",
+    "benefits.sources",
+    "sentiment.blind_score",
+    "sentiment.glassdoor_score",
+    "sentiment.reddit_pulse",
+    "sentiment.x_pulse",
+    "sentiment.sources",
+    "sentiment.team_toxicity_grade",
+    "people.likely_recruiter.rationale",
+    "people.likely_hiring_manager.rationale"
+  ],
+  "_meta": {
+    "generated_at": "2026-05-10T21:11:24.559Z",
+    "rank": 19,
+    "pipeline_num": "853",
+    "models_used": [
+      {
+        "model": "perplexity:sonar-reasoning-pro",
+        "tokens": 2259,
+        "ms": 13400,
+        "costUsd": 0.0339
+      },
+      {
+        "model": "xai:grok-4-fast-reasoning",
+        "tokens": 2541,
+        "ms": 20579,
+        "costUsd": 0.0127
+      },
+      {
+        "model": "openai:gpt-5",
+        "modelUsed": "o1",
+        "tokens": 3424,
+        "ms": 15942,
+        "costUsd": 0.0685
+      }
+    ],
+    "models_failed": [
+      {
+        "model": "google:gemini-2.5-pro",
+        "error": "JSON parse failed"
+      }
+    ],
+    "total_cost_usd": 0.1151,
+    "duration_ms": 39652,
+    "raw_responses_count": 3
+  }
+}

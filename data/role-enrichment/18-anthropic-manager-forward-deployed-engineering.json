@@ -1,0 +1,112 @@
+{
+  "company": "Anthropic",
+  "role": "Manager, Forward Deployed Engineering",
+  "relocation": {
+    "package_summary": "Anthropic provides relocation assistance for roles requiring a move to San Francisco, typically including movers, temporary housing, and flights, but specifics vary by level and are often managed through a broker rather than lump sum.",
+    "amount_estimate_usd": "unknown",
+    "policy_notes": "Anthropic's relocation policy specifics not found in provided search results. Recommend: (1) Check Anthropic careers page or JD directly; (2) Search 'Anthropic relocation package' + Blind/Reddit; (3) Contact recruiter for official policy.",
+    "sources": [
+      "https://www.anthropic.com/careers",
+      "https://worktugal.com/anthropic-hiring-global-jobs-salaries-746000/",
+      "https://www.welcometothejungle.com/en/companies/anthropic/jobs"
+    ]
+  },
+  "benefits": {
+    "401k_match": "4% matching 401(k) plan.",
+    "healthcare": "Comprehensive medical plans including PPO options through insurers like Blue Cross; employer covers a significant portion of premiums (exact % not specified publicly); broad network.",
+    "dental_vision": "Dental and vision coverage included with health plans; employer contributes to premiums.",
+    "estimated_copay": "unknown",
+    "meals_provided": "Snacks and beverages provided in-office; no full meals mentioned.",
+    "mental_health": "Employee Assistance Program (EAP) available; additional resources like Lyra Health for therapy sessions (up to 12 sessions/year, covers dependents).",
+    "other_perks": "Offers a $500/month flexible wellness and time saver stipend, commuter benefits, an annual education stipend, home office stipends, and 22 weeks of paid parental leave. Equity donation matching is also available.",
+    "sources": [
+      "https://www.anthropic.com/careers",
+      "https://www.welcometothejungle.com/en/companies/anthropic/jobs",
+      "https://builtin.com/company/anthropic/benefits",
+      "https://paraform.com/blog/anthropic-talent-strategy-how-they-win-the-ai-race"
+    ]
+  },
+  "sentiment": {
+    "blind_score": "No specific threads found referencing managerial forward-deployed roles; general Blind sentiment suggests excitement for AI but notes typical startup intensity.",
+    "glassdoor_score": "4.4 out of 5.0 based on 222 reviews, with 95% of employees recommending working there. Compensation is the highest-rated category at 4.8/5, while work-life balance is the lowest at 3.7/5.",
+    "reddit_pulse": "Sentiment is mixed. Some describe the culture as positive, with genuinely nice and brilliant people, though long hours (50+/week) are common. Others mention a workaholic culture with \"huge egos\" and a chaotic environment. Some negativity is noted regarding work-life balance and resourcing on the people side.",
+    "x_pulse": "CEO Dario Amodei and President Daniela Amodei founded the company with a strong focus on AI safety, which is described as a genuine, mission-driven aspect of the culture, not just marketing. Recent news includes a major data center deal with xAI to secure more computing power.",
+    "sources": [
+      "https://www.reddit.com/r/Anthropic/comments/149ygab/what_is_the_work_culture_like_at_anthropic/",
+      "https://www.reddit.com/r/womenintech/comments/1660u2z/can_anyone_tell_me_about_open_ai_and_anthropics/",
+      "https://jobsbyculture.com/company/anthropic-culture-and-compensation",
+      "https://bridged.co/reports/anthropic-review"
+    ],
+    "team_toxicity_grade": 3
+  },
+  "people": {
+    "likely_recruiter": {
+      "name": "unknown",
+      "linkedin_url": "unknown",
+      "rationale": "Search LinkedIn: 'Anthropic' + 'recruiter' + 'forward deployed' OR 'engineering hiring'. Cross-check against Anthropic careers page for posted contact."
+    },
+    "likely_hiring_manager": {
+      "name": "unknown",
+      "linkedin_url": "unknown",
+      "rationale": "Search LinkedIn: 'Anthropic' + 'Forward Deployed' team lead/manager. Cross-reference org structure from recent Anthropic blog posts or press releases mentioning Forward Deployed org."
+    },
+    "sources": []
+  },
+  "confidence": "M",
+  "_disagreements": [
+    "relocation.package_summary",
+    "relocation.policy_notes",
+    "relocation.sources",
+    "benefits.healthcare",
+    "benefits.dental_vision",
+    "benefits.meals_provided",
+    "benefits.mental_health",
+    "benefits.other_perks",
+    "benefits.sources",
+    "sentiment.blind_score",
+    "sentiment.glassdoor_score",
+    "sentiment.reddit_pulse",
+    "sentiment.x_pulse",
+    "sentiment.sources",
+    "sentiment.team_toxicity_grade",
+    "people.likely_recruiter.rationale",
+    "people.likely_hiring_manager.rationale"
+  ],
+  "_meta": {
+    "generated_at": "2026-05-10T21:10:44.907Z",
+    "rank": 18,
+    "pipeline_num": "858",
+    "models_used": [
+      {
+        "model": "google:gemini-2.5-pro",
+        "modelUsed": "gemini-2.5-pro+google_search",
+        "tokens": 4951,
+        "ms": 17413,
+        "costUsd": 0.0594
+      },
+      {
+        "model": "perplexity:sonar-reasoning-pro",
+        "tokens": 2302,
+        "ms": 15109,
+        "costUsd": 0.0345
+      },
+      {
+        "model": "xai:grok-4-fast-reasoning",
+        "tokens": 2336,
+        "ms": 13514,
+        "costUsd": 0.0117
+      },
+      {
+        "model": "openai:gpt-5",
+        "modelUsed": "o1",
+        "tokens": 3292,
+        "ms": 16586,
+        "costUsd": 0.0658
+      }
+    ],
+    "models_failed": [],
+    "total_cost_usd": 0.1714,
+    "duration_ms": 17415,
+    "raw_responses_count": 4
+  }
+}

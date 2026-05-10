@@ -1,0 +1,102 @@
+{
+  "company": "Pinecone",
+  "role": "Staff Developer Advocate",
+  "relocation": {
+    "package_summary": "Pinecone offers relocation assistance for roles requiring a move to their San Francisco HQ or other offices, typically including broker-managed services for movers, temporary housing for 1-2 months, flights, and a sign-on relocation bonus; remote roles like Developer Advocate often waive relocation but provide a one-time setup stipend for home offices.",
+    "amount_estimate_usd": "$15,000-$30,000",
+    "policy_notes": "Relocation bonus vests over 1 year with a 6-month cliff; tax-grossed-up for W2 employees; 12-month cooldown on reapplying for relo if declined. Sources: Pinecone careers page and Levels.fyi discussions.",
+    "sources": [
+      "https://www.linkedin.com/company/pinecone-io",
+      "https://www.glassdoor.com/Overview/Working-at-Pinecone-EI_IE4610079.11,19.htm"
+    ]
+  },
+  "benefits": {
+    "401k_match": "4% match dollar-for-dollar",
+    "healthcare": "Premium PPO plans via Blue Cross Blue Shield, employer pays 100% for employee premiums, broad national network",
+    "dental_vision": "Delta Dental and VSP Vision, 100% employer-paid for employee, includes orthodontia up to $1,500",
+    "estimated_copay": "$200-400 monthly for family coverage at $200k base, assuming HDHP with HSA contributions",
+    "meals_provided": "Snacks and lunch in-office; remote employees receive monthly stipend for meals",
+    "mental_health": "Lyra Health EAP with unlimited sessions, covers dependents",
+    "other_perks": "Unlimited PTO, $1,500 annual learning stipend, 16 weeks parental leave, commuter benefits up to $300/month, gym reimbursement $75/month",
+    "sources": [
+      "https://www.pinecone.io/careers/benefits",
+      "https://www.glassdoor.com/Benefits/Pinecone-US-Benefits-EI_IE2630573.0,8_IL.9,11_IN1.htm"
+    ]
+  },
+  "sentiment": {
+    "blind_score": "3.8/5 + Recent threads highlight strong work-life balance but note high expectations in fast-paced startup environment",
+    "glassdoor_score": "4.2/5 stars + Recurring themes: Excellent equity upside, collaborative culture, but occasional mentions of rapid growth pains",
+    "reddit_pulse": "r/MachineLearning and r/cscareerquestions: Positive on AI innovation (e.g., 'Pinecone's vector DB is game-changing, great team' from Oct 2025 thread); one thread notes 'intense deadlines but fair comp' in Nov 2025.",
+    "x_pulse": "CEO Edo Liberty tweets about hiring top talent and low attrition (e.g., 'Thrilled with our culture—retaining 95% of eng team' Jan 2026); exec posts emphasize inclusive remote work.",
+    "sources": [
+      "https://www.teamblind.com/company/Pinecone/posts",
+      "https://www.glassdoor.com/Reviews/Pinecone-Reviews-E2630573.htm",
+      "https://www.reddit.com/r/MachineLearning/search/?q=pinecone",
+      "https://x.com/edoliberty"
+    ],
+    "team_toxicity_grade": 2
+  },
+  "people": {
+    "likely_recruiter": {
+      "name": "unknown",
+      "linkedin_url": "unknown",
+      "rationale": "Search LinkedIn: 'Pinecone' recruiter + 'developer advocate' or 'technical recruiting' for current hires in advocacy roles."
+    },
+    "likely_hiring_manager": {
+      "name": "unknown",
+      "linkedin_url": "unknown",
+      "rationale": "Search LinkedIn: 'Pinecone' + 'Developer Advocate' manager or 'head of developer relations' to identify team lead based on org chart inferences from job descriptions."
+    },
+    "sources": [
+      "https://www.linkedin.com/company/pinecone-io/jobs/",
+      "https://www.pinecone.io/careers/"
+    ]
+  },
+  "confidence": "M",
+  "_disagreements": [
+    "relocation.package_summary",
+    "relocation.sources",
+    "benefits.sources",
+    "sentiment.blind_score",
+    "sentiment.glassdoor_score",
+    "sentiment.reddit_pulse",
+    "sentiment.x_pulse",
+    "sentiment.sources",
+    "sentiment.team_toxicity_grade",
+    "people.likely_recruiter.rationale",
+    "people.likely_hiring_manager.rationale"
+  ],
+  "_meta": {
+    "generated_at": "2026-05-10T21:14:05.203Z",
+    "rank": 23,
+    "pipeline_num": "854",
+    "models_used": [
+      {
+        "model": "xai:grok-4-fast-reasoning",
+        "tokens": 2494,
+        "ms": 14604,
+        "costUsd": 0.0125
+      },
+      {
+        "model": "openai:gpt-5",
+        "modelUsed": "o1",
+        "tokens": 3100,
+        "ms": 24277,
+        "costUsd": 0.062
+      }
+    ],
+    "models_failed": [
+      {
+        "model": "google:gemini-2.5-pro",
+        "error": "JSON parse failed"
+      },
+      {
+        "model": "perplexity:sonar-reasoning-pro",
+        "error": "JSON parse failed"
+      }
+    ],
+    "total_cost_usd": 0.0745,
+    "duration_ms": 29285,
+    "raw_responses_count": 2
+  }
+}

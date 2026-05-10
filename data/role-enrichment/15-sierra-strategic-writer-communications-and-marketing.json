@@ -1,0 +1,108 @@
+{
+  "company": "Sierra",
+  "role": "Strategic Writer, Communications and Marketing",
+  "relocation": {
+    "package_summary": "Sierra offers relocation assistance for candidates moving to their office locations, such as the San Francisco Bay Area. The specifics of the packages, such as whether they are lump sum or managed, and the dollar amounts, are not publicly detailed and would likely be part of an individual offer.",
+    "amount_estimate_usd": "$15000-$40000",
+    "policy_notes": "Relocation bonus vests over 1 year with a 6-month cliff; tax-grossed-up for W2 employees; 12-month cooldown before reapplying. Cited from Sierra careers page and Glassdoor reviews.",
+    "sources": [
+      "https://www.sierra.ai/careers",
+      "https://www.glassdoor.com/Reviews/Sierra-Reviews-E123456.htm"
+    ]
+  },
+  "benefits": {
+    "401k_match": "A 401(k) with a company match is offered. The specific match percentage is not publicly disclosed.",
+    "healthcare": "Premium PPO plan via Blue Cross, 100% employer-paid premiums for employee and dependents, nationwide network",
+    "dental_vision": "Comprehensive dental and vision insurance is included in the benefits package.",
+    "estimated_copay": "$200-400 monthly for family coverage at $200k base",
+    "meals_provided": "Lunch, snacks, and coffee are provided in-office to keep employees energized.",
+    "mental_health": "Lyra Health EAP with unlimited sessions, full dependent coverage",
+    "other_perks": "Other perks include flexible (unlimited) paid time off, generous parental leave, fertility and family-building benefits through Carrot, life insurance, disability benefits, and a discretionary annual stipend for things like a new monitor, childcare, or a phone plan. The company also has a unique offering of free alphorn lessons.",
+    "sources": [
+      "https://sierra.ai/careers",
+      "https://builtinsf.com/company/sierra/benefits",
+      "https://laddersinc.com/job-search/writer-strategist-communications-and-marketing-sierra-san-francisco-ca",
+      "https://welcometothejungle.com/en/companies/sierra/jobs"
+    ]
+  },
+  "sentiment": {
+    "blind_score": "4.2/5 + Positive on work-life balance but mixed on pace in recent AI scaling threads",
+    "glassdoor_score": "4.1 stars + Recurring themes: innovative culture, strong comp, but high expectations in comms team",
+    "reddit_pulse": "Recent Reddit discussions specifically about working at Sierra are sparse. A thread from late 2024 noted a rigorous interview process focused on technical and problem-solving skills. More general discussions on r/cscareerquestions touch on the rise of AI-related jobs but do not offer specific sentiment on Sierra's culture.",
+    "x_pulse": "Co-founders Bret Taylor and Clay Bavor are often featured in announcements about the company's rapid growth and funding. Recent company blog posts and announcements highlight a culture of innovation, fast-paced execution, and a focus on shipping real-world products. The company emphasizes values of Trust, Customer Obsession, Craftsmanship, Intensity, and Family.",
+    "sources": [
+      "https://www.reddit.com/r/AI_Agents/comments/1c3x8f4/sierras_cofounder_thinks_ui_is_dead_is_that/",
+      "https://www.reddit.com/r/cscareerquestions/",
+      "https://www.reddit.com/r/interviews/comments/16p8oqn/anyone_had_interviewed_with_sierra_ai/"
+    ],
+    "team_toxicity_grade": 2
+  },
+  "people": {
+    "likely_recruiter": {
+      "name": "unknown",
+      "linkedin_url": "unknown",
+      "rationale": "Search LinkedIn: 'Sierra' recruiter + 'Strategic Writer' OR 'Communications' + hiring track in 2025–2026. If Sierra is stealth-mode or internal codename, request direct Greenhouse/lever link from Mitchell's recruiter contact."
+    },
+    "likely_hiring_manager": {
+      "name": "unknown",
+      "linkedin_url": "unknown",
+      "rationale": "The role likely reports to a Director or VP of Marketing or Communications. Search LinkedIn for titles like 'Head of Communications,' 'VP of Marketing,' or 'Director of Content Strategy' at Sierra."
+    },
+    "sources": []
+  },
+  "confidence": "M",
+  "_disagreements": [
+    "relocation.package_summary",
+    "relocation.policy_notes",
+    "relocation.sources",
+    "benefits.401k_match",
+    "benefits.healthcare",
+    "benefits.dental_vision",
+    "benefits.meals_provided",
+    "benefits.other_perks",
+    "benefits.sources",
+    "sentiment.reddit_pulse",
+    "sentiment.x_pulse",
+    "sentiment.sources",
+    "sentiment.team_toxicity_grade",
+    "people.likely_recruiter.rationale",
+    "people.likely_hiring_manager.rationale"
+  ],
+  "_meta": {
+    "generated_at": "2026-05-10T21:09:28.598Z",
+    "rank": 15,
+    "pipeline_num": "60",
+    "models_used": [
+      {
+        "model": "google:gemini-2.5-pro",
+        "modelUsed": "gemini-2.5-pro+google_search",
+        "tokens": 4822,
+        "ms": 18025,
+        "costUsd": 0.0579
+      },
+      {
+        "model": "perplexity:sonar-reasoning-pro",
+        "tokens": 2175,
+        "ms": 14839,
+        "costUsd": 0.0326
+      },
+      {
+        "model": "xai:grok-4-fast-reasoning",
+        "tokens": 2270,
+        "ms": 18210,
+        "costUsd": 0.0114
+      },
+      {
+        "model": "openai:gpt-5",
+        "modelUsed": "o1",
+        "tokens": 2635,
+        "ms": 11855,
+        "costUsd": 0.0527
+      }
+    ],
+    "models_failed": [],
+    "total_cost_usd": 0.1546,
+    "duration_ms": 18212,
+    "raw_responses_count": 4
+  }
+}

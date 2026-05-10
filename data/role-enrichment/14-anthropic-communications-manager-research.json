@@ -1,0 +1,118 @@
+{
+  "company": "Anthropic",
+  "role": "Communications Manager, Research",
+  "relocation": {
+    "package_summary": "Anthropic offers comprehensive relocation support for new hires to San Francisco, including broker-managed moves, temporary housing for up to 30 days, flights, and a sign-on relocation bonus; lease-break assistance is case-by-case for Seattle-based candidates.",
+    "amount_estimate_usd": "$20,000-$50,000",
+    "policy_notes": "The company offers comprehensive visa sponsorship, including for US Green Cards, and retains an immigration lawyer to assist. However, some job postings mention relocation support specifically for those moving to the Bay Area.",
+    "sources": [
+      "https://www.welcome-jungle.com/en/companies/anthropic/jobs",
+      "https://worktugal.com/anthropic-hiring-290-staff-globally-with-salaries-up-to-746-000/",
+      "https://www.anthropic.com/careers",
+      "https://boards.greenhouse.io/anthropic/jobs/7547781002"
+    ]
+  },
+  "benefits": {
+    "401k_match": "4% employer match, no vesting schedule",
+    "healthcare": "Comprehensive health, dental, and vision insurance for employees and their dependents. The company also offers a generous subsidy for OneMedical.",
+    "dental_vision": "Delta Dental and VSP Vision, 100% employer-paid for basics, orthodontics covered up to $2,000",
+    "estimated_copay": "$200-400/month for family coverage at $200k base, low deductibles under $1,000",
+    "meals_provided": "Daily meals and snacks are provided for employees in the office.",
+    "mental_health": "Mental health support is available for employees and their dependents.",
+    "other_perks": "Includes 22 weeks of paid parental leave, flexible paid time off (most staff take 4-6 weeks), a $500/month flexible wellness and time saver stipend, commuter benefits, home office and education stipends, and fertility benefits via Carrot Fertility.",
+    "sources": [
+      "https://www.welcome-jungle.com/en/companies/anthropic/jobs",
+      "https://boards.greenhouse.io/anthropic/jobs/7474136002",
+      "https://www.builtinsf.com/company/anthropic/benefits",
+      "https://jobdai.com/anthropic-jobs/",
+      "https://paraform.com/blog/anthropics-talent-strategy-how-they-win-the-ai-race"
+    ]
+  },
+  "sentiment": {
+    "blind_score": "4.2/5 + Positive on mission-driven culture but notes high workload in recent AI safety threads",
+    "glassdoor_score": "4.4 / 5.0 (222 reviews). Key themes include a genuinely mission-driven culture focused on AI safety, high-impact work, and top-tier compensation. The lowest-rated area is work-life balance (3.7/5.0), with recurring notes about intensity and burnout risk during crunch periods.",
+    "reddit_pulse": "Recent sentiment is highly positive regarding the company's trajectory and the capabilities of its Claude models, especially in high-stakes fields like healthcare. Discussions acknowledge the intense, fast-paced environment but frame it as a function of the company's hypergrowth and mission. There are also forward-looking discussions about how AI will reshape work by 2026, with Anthropic's co-founder quoted.",
+    "x_pulse": "Founder and executive posts frequently center on the company's core mission of AI safety and responsible scaling. CEO Dario Amodei has been very public about the company's 'crazy' 80x revenue growth in early 2026, driven by enterprise adoption of Claude. There is significant public discussion around the company's hypergrowth, potential IPO in late 2026, and high-level strategy.",
+    "sources": [
+      "https://www.built.in/company/anthropic/culture",
+      "https://jobsbyculture.com/anthropic-layoffs/",
+      "https://venturebeat.com/ai/anthropic-says-it-hit-a-30-billion-revenue-run-rate-after-crazy-80x-growth/",
+      "https://www.pcmag.com/news/anthropic-we-figured-out-how-to-stop-claude-from-blackmailing-you",
+      "https://www.reddit.com/r/AIGuild/comments/195e5pr/claude_goes_clinical_anthropic_unleashes_ai/"
+    ],
+    "team_toxicity_grade": 2
+  },
+  "people": {
+    "likely_recruiter": {
+      "name": "unknown",
+      "linkedin_url": "unknown",
+      "rationale": "Search LinkedIn for recruiters at Anthropic with keywords like 'communications recruiter' or 'G&A recruiter'."
+    },
+    "likely_hiring_manager": {
+      "name": "Sasha de Marigny",
+      "linkedin_url": "unknown",
+      "rationale": "Sasha de Marigny was promoted to Chief Communications Officer in late 2025 and leads the communications team. Job descriptions for other communications roles state they report to the 'Head of Communications in the US'."
+    },
+    "sources": [
+      "https://www.axios.com/2025/11/20/anthropic-sasha-de-marigny-chief-communications-officer",
+      "https://www.axios.com/2025/05/08/anthropic-communications-team-expansion"
+    ]
+  },
+  "confidence": "M",
+  "_disagreements": [
+    "relocation.package_summary",
+    "relocation.policy_notes",
+    "relocation.sources",
+    "benefits.401k_match",
+    "benefits.healthcare",
+    "benefits.dental_vision",
+    "benefits.meals_provided",
+    "benefits.mental_health",
+    "benefits.other_perks",
+    "benefits.sources",
+    "sentiment.blind_score",
+    "sentiment.glassdoor_score",
+    "sentiment.reddit_pulse",
+    "sentiment.x_pulse",
+    "sentiment.sources",
+    "sentiment.team_toxicity_grade",
+    "people.likely_recruiter.rationale",
+    "people.likely_hiring_manager.rationale"
+  ],
+  "_meta": {
+    "generated_at": "2026-05-10T21:09:10.385Z",
+    "rank": 14,
+    "pipeline_num": "1",
+    "models_used": [
+      {
+        "model": "google:gemini-2.5-pro",
+        "modelUsed": "gemini-2.5-pro+google_search",
+        "tokens": 5790,
+        "ms": 23460,
+        "costUsd": 0.0695
+      },
+      {
+        "model": "xai:grok-4-fast-reasoning",
+        "tokens": 2450,
+        "ms": 18524,
+        "costUsd": 0.0123
+      },
+      {
+        "model": "openai:gpt-5",
+        "modelUsed": "o1",
+        "tokens": 3488,
+        "ms": 15690,
+        "costUsd": 0.0698
+      }
+    ],
+    "models_failed": [
+      {
+        "model": "perplexity:sonar-reasoning-pro",
+        "error": "JSON parse failed"
+      }
+    ],
+    "total_cost_usd": 0.1516,
+    "duration_ms": 23460,
+    "raw_responses_count": 3
+  }
+}

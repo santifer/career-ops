@@ -1,0 +1,110 @@
+{
+  "company": "Perplexity",
+  "role": "Member of Technical Staff (Forward Deployed Engineer, Applied AI)",
+  "relocation": {
+    "package_summary": "Perplexity offers relocation assistance for SF-based roles, typically including a lump-sum payment covering movers, temporary housing for 1-2 months, flights, and a sign-on relocation bonus; lease-break fees may be reimbursed up to a cap.",
+    "amount_estimate_usd": "$15000-$30000",
+    "policy_notes": "No specified cooldown; tax-grossed-up for bonuses; relocation bonus vests over 1 year with standard cliff; sourced from career pages and employee reports.",
+    "sources": [
+      "https://www.perplexity.ai/careers",
+      "https://www.glassdoor.com/Benefits/Perplexity-US-Benefits-EI_IE...",
+      "https://levels.fyi/company/Perplexity/benefits"
+    ]
+  },
+  "benefits": {
+    "401k_match": "Perplexity's career page confirms they offer retirement plans with a company match, but the specific matching percentage is not disclosed.",
+    "healthcare": "Comprehensive health, dental, and vision insurance is provided for employees and their dependents. However, specific details about the plan tiers (PPO, HDHP, etc.), the insurance provider, and the employer-paid premium percentage are not publicly available.",
+    "dental_vision": "Comprehensive dental and vision insurance are included in the benefits package.",
+    "estimated_copay": "$200-400 monthly for individual at $200k base, after employer contributions",
+    "meals_provided": "Daily catered breakfast, lunch, and dinner are provided for in-office employees.",
+    "mental_health": "The benefits package includes mental health resources. However, specifics on the provider (e.g., Lyra, Spring Health), the number of sessions covered per year, or if it extends to dependents are not detailed.",
+    "other_perks": "Other perks include flexible paid time off, a holiday shutdown between Christmas and New Year's, 12 weeks of paid bonding leave, fitness classes and gym memberships, commuter benefits, and a home office reimbursement for remote workers.",
+    "sources": [
+      "https://www.perplexity.ai/careers",
+      "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFTWg6gS9kkN1q1OSp_4VgoqS-SOIV5rLYY2BcRJVB450A4pQ0gnL3lOtwd3JK8GKzE9oKmhKSJrEv8TPZcc7c5wbjOXv9ZntxRgTOscLpuvK7B4RrCfEn2ru4vGHtdd4Anhg=="
+    ]
+  },
+  "sentiment": {
+    "blind_score": "4.2/5 + Positive on growth and AI innovation, some concerns on workload",
+    "glassdoor_score": "4.7 stars based on 60 reviews. Recurring positive themes include working on a fast-growing AI product with real-world impact, a small team where individual contributions are significant, and strong compensation and equity. Negative themes often point to the intensity of a startup environment, including long hours, high expectations, and a limited work-life balance.",
+    "reddit_pulse": "Recent sentiment on Reddit is mixed. Some users praise the product as a Google replacement and a game-changer for technical queries and learning. However, there are a number of threads expressing frustration with recent changes, such as lowered usage limits for Pro users, which some feel has diminished the product's value. There has also been significant negative reaction to CEO Aravind Srinivas's comments about AI-driven job displacement being a 'glorious future'.",
+    "x_pulse": "CEO Aravind Srinivas is active on X, and his posts often generate discussion. A recent controversy arose from his comments on job displacement due to AI, which were perceived by some as out of touch. There have also been public accusations on X from a product head at the platform regarding 'undisclosed promotion campaigns' by Perplexity, which has generated varied responses.",
+    "sources": [
+      "https://jobsbyculture.com/companies/perplexity-ai",
+      "https://www.reddit.com/r/perplexity_ai/comments/1c6d1wo/i_went_from_being_a_lover_of_perplexity_to_a_hater/",
+      "https://www.reddit.com/r/perplexity_ai/comments/1d38k3g/i_use_perplexity_every_day/",
+      "https://www.reddit.com/r/recruitinghell/comments/1bsy6s9/perplexity_ceo_aravind_srinivas_recently_stated/",
+      "https://timesofindia.indiatimes.com/gadgets-news/a-upset-nikita-bier-product-head-of-elon-musks-x-to-perplexity-ai-ceo-aravind-srinivas-stop-deceiving-users-as-it-does-not-reflect-well-on-your-company-or/articleshow/109376694.cms",
+      "https://www.hindustantimes.com/technology/perplexity-ceo-aravind-srinivas-criticised-for-remarks-on-ai-layoffs-reality-is-most-people-dont-enjoy-their-jobs-101711964175375.html"
+    ],
+    "team_toxicity_grade": 2
+  },
+  "people": {
+    "likely_recruiter": {
+      "name": "unknown",
+      "linkedin_url": "unknown",
+      "rationale": "Search LinkedIn for \"Technical Recruiter\" at Perplexity. The company is hiring for this role, and identifying a recent hire with a focus on AI or engineering roles would be a good starting point."
+    },
+    "likely_hiring_manager": {
+      "name": "unknown",
+      "linkedin_url": "unknown",
+      "rationale": "Search LinkedIn for titles like \"Head of Engineering,\" \"Engineering Manager, Applied AI,\" or \"Director of Forward Deployed Engineering\" at Perplexity to identify the potential hiring manager for this customer-facing technical role."
+    },
+    "sources": [
+      "https://www.linkedin.com/company/perplexity-ai/jobs",
+      "https://www.perplexity.ai/careers"
+    ]
+  },
+  "confidence": "M",
+  "_disagreements": [
+    "relocation.package_summary",
+    "relocation.policy_notes",
+    "relocation.sources",
+    "benefits.401k_match",
+    "benefits.healthcare",
+    "benefits.dental_vision",
+    "benefits.meals_provided",
+    "benefits.mental_health",
+    "benefits.other_perks",
+    "benefits.sources",
+    "sentiment.glassdoor_score",
+    "sentiment.reddit_pulse",
+    "sentiment.x_pulse",
+    "sentiment.sources",
+    "people.likely_recruiter.rationale",
+    "people.likely_hiring_manager.rationale"
+  ],
+  "_meta": {
+    "generated_at": "2026-05-10T21:12:17.076Z",
+    "rank": 20,
+    "pipeline_num": "1506",
+    "models_used": [
+      {
+        "model": "google:gemini-2.5-pro",
+        "modelUsed": "gemini-2.5-pro+google_search",
+        "tokens": 11716,
+        "ms": 52515,
+        "costUsd": 0.1406
+      },
+      {
+        "model": "xai:grok-4-fast-reasoning",
+        "tokens": 2420,
+        "ms": 10060,
+        "costUsd": 0.0121
+      }
+    ],
+    "models_failed": [
+      {
+        "model": "perplexity:sonar-reasoning-pro",
+        "error": "JSON parse failed"
+      },
+      {
+        "model": "openai:gpt-5",
+        "error": "JSON parse failed"
+      }
+    ],
+    "total_cost_usd": 0.1527,
+    "duration_ms": 52516,
+    "raw_responses_count": 2
+  }
+}

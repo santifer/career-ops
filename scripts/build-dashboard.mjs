@@ -5592,10 +5592,9 @@ function build() {
         </svg>
         <span class="sidebar-collapse-label">Collapse</span>
       </button>
-      <div class="sidebar-mini-ticker" id="sidebar-mini-ticker" title="Live scan activity">
-        <span class="sidebar-mini-dot" aria-hidden="true"></span>
-        <span class="sidebar-mini-text" id="sidebar-mini-text">—</span>
-      </div>
+      <!-- Mini-ticker removed 2026-05-10: same scan activity already lives in
+           the mission-control strip at the top of the page (#live-text).
+           Sidebar duplicate added clutter without new info. -->
       <div class="sidebar-version" title="Career-Ops version">v${escape(appVersion || '?')}</div>
     </div>
   </aside>
@@ -5626,7 +5625,7 @@ function build() {
       <span class="mc-batch-dot" aria-hidden="true"></span>
       <span class="mc-batch-text" id="mc-batch-text">No batch running</span>
     </div>
-    <div class="mc-health" id="mc-health" data-status="healthy" aria-label="System health" title="In-flight applications + batch + scan">
+    <div class="mc-health pill-popover-trigger" id="mc-health" data-status="healthy" aria-label="System health — click to expand" title="Click for full health detail (batch · scans · pipeline · errors)" role="button" tabindex="0" onclick="openHealthPopover(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openHealthPopover(this)}">
       <span class="mc-health-dot" aria-hidden="true"></span>
       <span class="mc-health-text" id="mc-health-text">all healthy</span>
     </div>
@@ -8571,6 +8570,99 @@ function _renderRelocationBlock(r) {
 }
 window.openPillPopover = openPillPopover;
 window.closePillPopover = closePillPopover;
+
+// System health popover — opens from the mc-health pill in the toolbar.
+// Fetches /api/batch-live for live state, then layers on counts already
+// available in the rendered DOM (live-applied, live-pipeline, etc.).
+async function openHealthPopover(anchor) {
+  // Reuse the pill-popover singleton + positioning logic.
+  const pop = document.getElementById('pill-popover');
+  if (!pop || !anchor) return;
+  // If already open from this anchor, toggle closed.
+  if (typeof closePillPopover === 'function' &&
+      pop.classList.contains('is-open') &&
+      pop.dataset.healthAnchor === '1') {
+    closePillPopover();
+    pop.dataset.healthAnchor = '';
+    return;
+  }
+  // Pull fresh data with a short skeleton state so the popover opens snappy.
+  pop.innerHTML = _renderHealthPopover({ loading: true });
+  pop.classList.add('is-open');
+  pop.dataset.healthAnchor = '1';
+  _positionFloater(pop, anchor);
+  let data = {};
+  try {
+    const r = await fetch('/api/batch-live', { cache: 'no-cache' });
+    if (r.ok) data = await r.json();
+  } catch (_) {}
+  // Layer in the rendered-DOM counts.
+  const dom = {
+    applied:    parseInt(document.getElementById('live-applied')?.textContent || '0', 10) || 0,
+    pipeline:   parseInt(document.getElementById('live-pipeline')?.textContent || '0', 10) || 0,
+    applyNow:   parseInt(document.getElementById('live-apply-now')?.textContent || '0', 10) || 0,
+    total:      parseInt(document.getElementById('live-total')?.textContent || '0', 10) || 0,
+    scanned:    parseInt(document.getElementById('live-scanned')?.textContent || '0', 10) || 0,
+    lastScan:   document.getElementById('live-text')?.textContent || '',
+    healthText: document.getElementById('mc-health-text')?.textContent || '',
+    batchText:  document.getElementById('mc-batch-text')?.textContent || '',
+  };
+  pop.innerHTML = _renderHealthPopover({ data, dom });
+  _positionFloater(pop, anchor);
+}
+function _renderHealthPopover(opts) {
+  const esc = (s) => String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  if (opts.loading) {
+    return '<div class="pill-popover-kind">System Health</div>'
+      + '<h4 class="pill-popover-headline">Loading…</h4>'
+      + '<div class="pill-popover-body pill-popover-empty">Fetching live batch + scan state.</div>';
+  }
+  const { data, dom } = opts;
+  const b = data.batch || {};
+  const h = data.health || {};
+  const row = (label, val) => val !== undefined && val !== null && val !== ''
+    ? '<div class="pill-popover-row"><dt>' + esc(label) + '</dt><dd>' + esc(String(val)) + '</dd></div>'
+    : '';
+  const fmtAge = (ms) => {
+    if (ms === null || ms === undefined || !Number.isFinite(ms)) return 'unknown';
+    const s = Math.max(0, Math.round(ms / 1000));
+    if (s < 60)    return s + 's ago';
+    if (s < 3600)  return Math.round(s / 60) + 'm ago';
+    if (s < 86400) return Math.round(s / 3600) + 'h ago';
+    return Math.round(s / 86400) + 'd ago';
+  };
+  const overallStatus = h.status || 'healthy';
+  const statusEmoji = overallStatus === 'healthy' ? '🟢' : overallStatus === 'degraded' ? '🟡' : '🔴';
+  return '<div class="pill-popover-kind">System Health</div>'
+    + '<h4 class="pill-popover-headline">' + statusEmoji + ' ' + esc(overallStatus.toUpperCase()) + '</h4>'
+    + '<div class="pill-popover-section-label">Pipeline activity</div>'
+    + '<dl class="pill-popover-body">'
+    + row('Apply-Now ≥4.0', dom.applyNow)
+    + row('Total evaluations', dom.total)
+    + row('Pipeline pending', dom.pipeline)
+    + row('In-flight applications', dom.applied)
+    + row('URLs scanned (lifetime)', dom.scanned)
+    + '</dl>'
+    + '<div class="pill-popover-section-label">Batch processor</div>'
+    + '<dl class="pill-popover-body">'
+    + row('State', b.state || 'idle')
+    + row('Completed', (b.completed != null ? b.completed : '—') + (b.total ? ' / ' + b.total : ''))
+    + row('Failed', b.failed)
+    + row('Running', b.running)
+    + row('Last activity', b.mostRecentIso ? fmtAge(Date.now() - new Date(b.mostRecentIso).getTime()) : 'never')
+    + '</dl>'
+    + '<div class="pill-popover-section-label">Scan freshness</div>'
+    + '<dl class="pill-popover-body">'
+    + row('Last scan', dom.lastScan || 'unknown')
+    + row('Scanner heartbeat', h.scanAgeMs != null ? fmtAge(h.scanAgeMs) : 'unknown')
+    + row('Failed jobs (24h)', h.failed24h)
+    + row('In-flight workers', h.inFlight)
+    + '</dl>'
+    + '<div class="pill-popover-meta">Refresh by closing + reopening; auto-polls every 30s on the strip itself.</div>';
+}
+window.openHealthPopover = openHealthPopover;
 
 function _emailLaunchById(id, ctx) {
   const tpl = (EMAIL_LAUNCHER_DATA.templates || []).find(t => t.id === id);

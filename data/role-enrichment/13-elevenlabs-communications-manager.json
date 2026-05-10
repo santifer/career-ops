@@ -1,0 +1,91 @@
+{
+  "company": "ElevenLabs",
+  "role": "Communications Manager",
+  "relocation": {
+    "package_summary": "No official documentation of a relocation package is publicly available; they appear to be an early-stage startup, so relocation may be negotiated case-by-case.",
+    "amount_estimate_usd": "unknown",
+    "policy_notes": "ElevenLabs relocation details not available in training data (cutoff April 2024). Recommend: (1) Check company careers page; (2) Search Blind threads tagged 'ElevenLabs relocation'; (3) Contact recruiter directly for current policy.",
+    "sources": []
+  },
+  "benefits": {
+    "401k_match": "unknown",
+    "healthcare": "unknown",
+    "dental_vision": "unknown",
+    "estimated_copay": "unknown",
+    "meals_provided": "unknown",
+    "mental_health": "unknown",
+    "other_perks": "Job postings mention several discretionary and remote-first benefits: an annual stipend for professional development, an annual stipend for social travel to meet with colleagues, a monthly co-working stipend for those not near a main hub (New York, London, Warsaw), and an annual company-wide offsite in a new location each year. The company also offers stock options.",
+    "sources": []
+  },
+  "sentiment": {
+    "blind_score": "No substantial entries on TeamBlind regarding ElevenLabs; limited or no data for culture rating.",
+    "glassdoor_score": "4.2 out of 5, based on 38 reviews. Recurring positive themes include working with exceptionally talented colleagues on a market-leading product, high degrees of ownership and autonomy, and strong product-market fit. The most prominent negative theme is poor work-life balance, with multiple reviews mentioning 60-70+ hour weeks as common. Other criticisms include compensation being potentially below market for the intensity required and leadership that can be unsupportive.",
+    "reddit_pulse": "A Reddit thread from August 2025 described the environment as very startup-like, with high ownership and a heavy workload, but also significant freedom and impact. The commenter, an engineer, noted that the team is composed almost exclusively of ex-FAANG and ex-founder talent.",
+    "x_pulse": "Recent company focus is on enterprise expansion and the launch of new products like ElevenAgents and ElevenMusic. A VP of Sales recently stated in a podcast that he is very direct with candidates about the \"huge amount of hours\" and \"extremely high expectations\" required to succeed at the company.",
+    "sources": [],
+    "team_toxicity_grade": 3
+  },
+  "people": {
+    "likely_recruiter": {
+      "name": "unknown",
+      "linkedin_url": "unknown",
+      "rationale": "No specific recruiter for this role was identified in searches. Search LinkedIn for 'ElevenLabs' + 'recruiter' or 'talent acquisition' and filter by 'Growth' or 'GTM' to find potential contacts."
+    },
+    "likely_hiring_manager": {
+      "name": "unknown",
+      "linkedin_url": "unknown",
+      "rationale": "The job description states the 'Comms' function is small and newly formed, reporting to leadership. The hiring manager is likely a Head of Communications or VP of Marketing/Growth, but no specific individual could be identified. Search LinkedIn for titles like 'Head of Communications' or 'VP of Marketing' at ElevenLabs."
+    },
+    "sources": []
+  },
+  "confidence": "M",
+  "_disagreements": [
+    "relocation.policy_notes",
+    "relocation.sources",
+    "benefits.sources",
+    "sentiment.glassdoor_score",
+    "sentiment.reddit_pulse",
+    "sentiment.x_pulse",
+    "sentiment.sources",
+    "sentiment.team_toxicity_grade",
+    "people.likely_recruiter.rationale",
+    "people.likely_hiring_manager.rationale"
+  ],
+  "_meta": {
+    "generated_at": "2026-05-10T21:08:46.925Z",
+    "rank": 13,
+    "pipeline_num": "50",
+    "models_used": [
+      {
+        "model": "google:gemini-2.5-pro",
+        "modelUsed": "gemini-2.5-pro+google_search",
+        "tokens": 6432,
+        "ms": 23937,
+        "costUsd": 0.0772
+      },
+      {
+        "model": "perplexity:sonar-reasoning-pro",
+        "tokens": 2217,
+        "ms": 12789,
+        "costUsd": 0.0333
+      },
+      {
+        "model": "xai:grok-4-fast-reasoning",
+        "tokens": 1957,
+        "ms": 34210,
+        "costUsd": 0.0098
+      },
+      {
+        "model": "openai:gpt-5",
+        "modelUsed": "o1",
+        "tokens": 3299,
+        "ms": 15463,
+        "costUsd": 0.066
+      }
+    ],
+    "models_failed": [],
+    "total_cost_usd": 0.1863,
+    "duration_ms": 34211,
+    "raw_responses_count": 4
+  }
+}

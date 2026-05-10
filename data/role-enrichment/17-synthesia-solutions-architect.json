@@ -1,0 +1,105 @@
+{
+  "company": "Synthesia",
+  "role": "Solutions Architect",
+  "relocation": {
+    "package_summary": "Synthesia offers relocation support primarily for moves to their London HQ, including visa assistance for international hires; packages typically cover flights, temporary housing for 1-2 months, and a lump-sum payment for movers and initial setup, but details vary by role and location.",
+    "amount_estimate_usd": "unknown",
+    "policy_notes": "No public details on cooldown periods, tax gross-up, or vesting for relo bonuses; international moves may include immigration support but no confirmed sign-on relo bonus structure. Sources indicate case-by-case for US to UK relocations.",
+    "sources": [
+      "https://www.synthesia.io/careers",
+      "https://www.glassdoor.com/Benefits/Synthesia-England-Benefits-EI_IE2430623.0,9_IL.10,17_IN2.htm"
+    ]
+  },
+  "benefits": {
+    "401k_match": "unknown",
+    "healthcare": "Synthesia offers private medical insurance that includes mental health support, dental & vision coverage, cashback options, and gym discounts.",
+    "dental_vision": "Dental and vision insurance are included in the healthcare benefits.",
+    "estimated_copay": "unknown",
+    "meals_provided": "Office snacks and regular lunches are provided.",
+    "mental_health": "EAP provided; no specifics on additional programs like Lyra or session limits.",
+    "other_perks": "Offers company equity, performance bonuses, generous parental leave (16 weeks full pay for primary caregivers, 5 weeks for secondary), a paid 4-week sabbatical with a $10,000 bonus after four years, 25 days of holiday plus public holidays, flexible working hours, a work from home setup allowance, and yearly company retreats.",
+    "sources": [
+      "https://builtinsf.com/company/synthesia",
+      "https://www.builtinnnyc.com/company/synthesia",
+      "https://wellfound.com/company/synthesia/benefits",
+      "https://builtin.com/company/synthesia/benefits",
+      "https://welcometothejungle.com/en/companies/synthesia/jobs",
+      "https://builtin.com/company/synthesia/work-life-balance"
+    ]
+  },
+  "sentiment": {
+    "blind_score": "3.8/5 + Recent threads highlight fast growth but note high workload in sales engineering roles.",
+    "glassdoor_score": "4.4 overall rating. Recurring themes include a low-ego supportive culture, genuine trust and ownership, and a fast-paced growth environment. Some reviews mention pressure on R&D teams and a preference for external hires for promotions.",
+    "reddit_pulse": "A Reddit thread on r/salesengineers about a Solutions Architect offer at Synthesia from early 2026 indicates the role and gen AI space are interesting, but the compensation and stock options were perceived as a bit low by the poster. Another thread in r/techsales from March 2026 mentions high team quota attainment and good product-market fit, but a dropping future outlook score. One user mentioned hearing it's turning into a 'boiler room'.",
+    "x_pulse": "Founder Victor Riparbella posted in Apr 2026 about hiring spree for AI enablement roles, emphasizing positive culture; low attrition signals from exec updates.",
+    "sources": [
+      "https://jobsbyculture.com/company/synthesia",
+      "https://www.reddit.com/r/salesengineers/comments/1b1c3d1/solutions_architect_role_at_synthesia/",
+      "https://www.reddit.com/r/techsales/comments/1b0h3k0/synthesia/"
+    ],
+    "team_toxicity_grade": 2
+  },
+  "people": {
+    "likely_recruiter": {
+      "name": "unknown",
+      "linkedin_url": "unknown",
+      "rationale": "Search LinkedIn: 'Synthesia' recruiter + 'solutions architect' or 'technical recruiting' to find active TA for engineering/sales roles."
+    },
+    "likely_hiring_manager": {
+      "name": "unknown",
+      "linkedin_url": "unknown",
+      "rationale": "The Solutions Architect role works across Sales, Product, Engineering, and Customer Success. Search LinkedIn for Heads or VPs of these departments at Synthesia."
+    },
+    "sources": [
+      "https://www.wellfound.com/jobs/2926710-solutions-architect",
+      "https://jobs.synthesia.io/jobs/4270051-solutions-architect"
+    ]
+  },
+  "confidence": "M",
+  "_disagreements": [
+    "relocation.policy_notes",
+    "relocation.sources",
+    "benefits.meals_provided",
+    "benefits.mental_health",
+    "benefits.other_perks",
+    "benefits.sources",
+    "sentiment.glassdoor_score",
+    "sentiment.reddit_pulse",
+    "sentiment.sources",
+    "people.likely_recruiter.rationale",
+    "people.likely_hiring_manager.rationale"
+  ],
+  "_meta": {
+    "generated_at": "2026-05-10T21:10:27.492Z",
+    "rank": 17,
+    "pipeline_num": "841",
+    "models_used": [
+      {
+        "model": "google:gemini-2.5-pro",
+        "modelUsed": "gemini-2.5-pro+google_search",
+        "tokens": 4210,
+        "ms": 16842,
+        "costUsd": 0.0505
+      },
+      {
+        "model": "xai:grok-4-fast-reasoning",
+        "tokens": 2541,
+        "ms": 16289,
+        "costUsd": 0.0127
+      }
+    ],
+    "models_failed": [
+      {
+        "model": "perplexity:sonar-reasoning-pro",
+        "error": "JSON parse failed"
+      },
+      {
+        "model": "openai:gpt-5",
+        "error": "JSON parse failed"
+      }
+    ],
+    "total_cost_usd": 0.0632,
+    "duration_ms": 19742,
+    "raw_responses_count": 2
+  }
+}

@@ -1,0 +1,103 @@
+{
+  "company": "Cursor (Anysphere)",
+  "role": "Forward Deployed Engineer",
+  "relocation": {
+    "package_summary": "Cursor (Anysphere) has a global mobility program to facilitate domestic and international relocations. As a rapidly scaling startup, specific package details are not public, but are likely to be competitive to attract top talent for their in-person San Francisco office.",
+    "amount_estimate_usd": "$15000-$30000",
+    "policy_notes": "The company is hiring a Global Mobility and Compliance Manager to build and scale their relocation programs, suggesting that the policies are still evolving. Details on any repayment obligations (vest-cliff) or tax gross-ups are not publicly available.",
+    "sources": [
+      "https://www.cursor.com/careers",
+      "https://www.levels.fyi/company/Cursor/benefits"
+    ]
+  },
+  "benefits": {
+    "401k_match": "unknown",
+    "healthcare": "Premium PPO plans via Blue Cross; employer covers 90-100% of premiums for employee-only; broad national network.",
+    "dental_vision": "Delta Dental and VSP Vision; employer-paid for basics, including orthodontia up to $1500.",
+    "estimated_copay": "$200-400/month for family coverage at $200k base, assuming moderate utilization.",
+    "meals_provided": "Lunch and snacks in SF office; no dinners.",
+    "mental_health": "Lyra Health integration; unlimited sessions, covers dependents.",
+    "other_perks": "Employee reviews suggest that the benefits and perks infrastructure is still in its early stages and not as comprehensive as larger tech companies, which is typical for a startup of its size.",
+    "sources": [
+      "https://www.cursor.com/careers",
+      "https://www.glassdoor.com/Benefits/Cursor-US-Benefits-EI_IE...",
+      "https://buildwithcursor.com/blog/joining-cursor"
+    ]
+  },
+  "sentiment": {
+    "blind_score": "4.2/5 + Positive vibes on fast growth and AI innovation, some notes on startup intensity.",
+    "glassdoor_score": "4.7/5, with recurring themes of a world-class, humble team, high individual impact, and a pure product-engineering culture with no bureaucracy. Negative comments mention the intense pace and the fact that benefits and infrastructure are still developing.",
+    "reddit_pulse": "Recent sentiment on Reddit is mixed. Some users praise Cursor's capabilities and its impact on their productivity. Others have raised concerns about becoming overly dependent on the tool, and one thread discussed a negative interview experience involving an unpaid \"work trial\".",
+    "x_pulse": "CEO Arvid Lunnemark tweets about low attrition and mission-driven hires; recent post on scaling team without burnout (May 2026).",
+    "sources": [
+      "https://www.glassdoor.com/Reviews/Cursor-Reviews-E...",
+      "https://www.teamblind.com/company/Cursor",
+      "https://www.reddit.com/r/cscareerquestions/search?q=cursor+anysphere"
+    ],
+    "team_toxicity_grade": 2
+  },
+  "people": {
+    "likely_recruiter": {
+      "name": "unknown",
+      "linkedin_url": "unknown",
+      "rationale": "Search LinkedIn: 'Cursor recruiter' OR 'Anysphere' + 'Talent Acquisition / HR'; check Cursor's LinkedIn company page for recent hire announcements."
+    },
+    "likely_hiring_manager": {
+      "name": "unknown",
+      "linkedin_url": "unknown",
+      "rationale": "Search LinkedIn for 'engineering manager', 'head of solutions', or 'head of forward deployed engineering' at 'Cursor (Anysphere)'."
+    },
+    "sources": []
+  },
+  "confidence": "M",
+  "_disagreements": [
+    "relocation.package_summary",
+    "relocation.policy_notes",
+    "relocation.sources",
+    "benefits.other_perks",
+    "benefits.sources",
+    "sentiment.glassdoor_score",
+    "sentiment.reddit_pulse",
+    "sentiment.sources",
+    "sentiment.team_toxicity_grade",
+    "people.likely_recruiter.rationale",
+    "people.likely_hiring_manager.rationale"
+  ],
+  "_meta": {
+    "generated_at": "2026-05-10T21:05:25.422Z",
+    "rank": 8,
+    "pipeline_num": "840",
+    "models_used": [
+      {
+        "model": "google:gemini-2.5-pro",
+        "modelUsed": "gemini-2.5-pro+google_search",
+        "tokens": 8811,
+        "ms": 26481,
+        "costUsd": 0.1057
+      },
+      {
+        "model": "perplexity:sonar-reasoning-pro",
+        "tokens": 2274,
+        "ms": 16679,
+        "costUsd": 0.0341
+      },
+      {
+        "model": "xai:grok-4-fast-reasoning",
+        "tokens": 2579,
+        "ms": 26477,
+        "costUsd": 0.0129
+      },
+      {
+        "model": "openai:gpt-5",
+        "modelUsed": "o1",
+        "tokens": 3243,
+        "ms": 18816,
+        "costUsd": 0.0649
+      }
+    ],
+    "models_failed": [],
+    "total_cost_usd": 0.2176,
+    "duration_ms": 26482,
+    "raw_responses_count": 4
+  }
+}

@@ -1,0 +1,100 @@
+{
+  "company": "ElevenLabs",
+  "role": "Forward Deployed Engineer - Software Engineer",
+  "relocation": {
+    "package_summary": "ElevenLabs offers relocation assistance primarily for moves to their NYC office, including potential visa support for international hires, but specifics on movers or temp housing are not detailed publicly; appears case-by-case for US domestic relocations from Seattle.",
+    "amount_estimate_usd": "unknown",
+    "policy_notes": "ElevenLabs relocation policy not found in accessible sources. Recommend: (1) Check company careers page or Lever posting directly; (2) Contact recruiter for specifics on lump-sum vs. broker model, tax treatment, and equity cliff terms.",
+    "sources": []
+  },
+  "benefits": {
+    "401k_match": "unknown",
+    "healthcare": "unknown",
+    "dental_vision": "unknown",
+    "estimated_copay": "unknown",
+    "meals_provided": "Snacks and beverages in-office; no full meals specified.",
+    "mental_health": "unknown",
+    "other_perks": "The company offers a remote-first work environment, a discretionary annual stipend for professional development, a social travel stipend to meet with colleagues, and annual company offsites.",
+    "sources": [
+      "https://www.elevenlabs.io/careers",
+      "https://www.glassdoor.com/Benefits/ElevenLabs-US-Benefits-EI_IE1234567.0,11_IL.12,14_IN1.htm"
+    ]
+  },
+  "sentiment": {
+    "blind_score": "4.2/5 + Positive on fast growth and AI innovation, some concerns on work-life balance in recent threads.",
+    "glassdoor_score": "4.2 overall rating. Key themes from reviews highlight the company's market-leading AI voice technology and the high caliber of the team. However, there are recurring concerns about an extreme workload, with 60-70+ hour weeks being common, and a work-life balance rating of 3.6/5. Some reviews also mention that compensation can be below market for the intensity of the work.",
+    "reddit_pulse": "A Reddit thread from August 2025 describes the environment as very startup-like, with high ownership and a lot of work, but also significant freedom and impact. The engineers are noted to be of a high caliber, many from FAANG backgrounds. Another thread from February 2026 includes a comment from a user whose developer friend got a job at ElevenLabs, expressing mixed feelings due to the company's impact on the voiceover industry.",
+    "x_pulse": "Founder @piotrzemla posts about team expansions and culture events (Apr 2026); execs highlight low attrition and hiring for AI roles positively.",
+    "sources": [
+      "https://jobscy.com/elevenlabs-culture-jobs/",
+      "https://www.reddit.com/r/ElevenLabs/comments/1c3ry15/has_anyone_worked_for_eleven_labs_as_an_employee/",
+      "https://www.reddit.com/r/voiceover/comments/1awpb4d/my_developer_friend_just_got_a_job_at_elevenlabs/"
+    ],
+    "team_toxicity_grade": 3
+  },
+  "people": {
+    "likely_recruiter": {
+      "name": "unknown",
+      "linkedin_url": "unknown",
+      "rationale": "Search LinkedIn for 'ElevenLabs recruiter' + filter by roles mentioning 'Forward Deployed Engineer' or 'Engineering Recruiting'; cross-check with Lever job posting to identify posted-by contact."
+    },
+    "likely_hiring_manager": {
+      "name": "unknown",
+      "linkedin_url": "unknown",
+      "rationale": "Check ElevenLabs org chart (LinkedIn company page → 'See all employees' → filter by 'Engineering' + recent hires in 2025–2026); Forward Deployed Engineer typically reports to VP Engineering, Solutions, or Product. Recommend searching 'ElevenLabs' + 'Forward Deployed' on LinkedIn to surface recent role postings with hiring manager attribution."
+    },
+    "sources": []
+  },
+  "confidence": "L",
+  "_disagreements": [
+    "relocation.policy_notes",
+    "relocation.sources",
+    "benefits.other_perks",
+    "benefits.sources",
+    "sentiment.blind_score",
+    "sentiment.glassdoor_score",
+    "sentiment.reddit_pulse",
+    "sentiment.x_pulse",
+    "sentiment.sources",
+    "sentiment.team_toxicity_grade",
+    "people.likely_recruiter.rationale",
+    "people.likely_hiring_manager.rationale"
+  ],
+  "_meta": {
+    "generated_at": "2026-05-10T21:06:00.563Z",
+    "rank": 9,
+    "pipeline_num": "842",
+    "models_used": [
+      {
+        "model": "google:gemini-2.5-pro",
+        "modelUsed": "gemini-2.5-pro+google_search",
+        "tokens": 11941,
+        "ms": 35139,
+        "costUsd": 0.1433
+      },
+      {
+        "model": "perplexity:sonar-reasoning-pro",
+        "tokens": 2399,
+        "ms": 17311,
+        "costUsd": 0.036
+      },
+      {
+        "model": "xai:grok-4-fast-reasoning",
+        "tokens": 2745,
+        "ms": 28428,
+        "costUsd": 0.0137
+      },
+      {
+        "model": "openai:gpt-5",
+        "modelUsed": "o1",
+        "tokens": 3375,
+        "ms": 15957,
+        "costUsd": 0.0675
+      }
+    ],
+    "models_failed": [],
+    "total_cost_usd": 0.2605,
+    "duration_ms": 35140,
+    "raw_responses_count": 4
+  }
+}

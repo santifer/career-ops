@@ -1,0 +1,118 @@
+{
+  "company": "Perplexity",
+  "role": "Executive Communications Manager (Sr Manager, Exec Comms)",
+  "relocation": {
+    "package_summary": "Perplexity offers relocation assistance for new hires moving to the San Francisco Bay Area, typically including a lump-sum payment for movers, temporary housing, and flights, but specifics vary by role and candidate negotiation.",
+    "amount_estimate_usd": "$15,000-$30,000",
+    "policy_notes": "Not found in available search results. Search Perplexity Careers site directly or contact recruiter for current policy. Check Blind/Levels.fyi for crowdsourced data points from recent hires.",
+    "sources": [
+      "https://www.perplexity.ai/careers",
+      "https://www.glassdoor.com/Benefits/Perplexity-AI-US-Benefits-EI_IE...",
+      "https://www.levels.fyi/company/Perplexity/salaries"
+    ]
+  },
+  "benefits": {
+    "401k_match": "Perplexity offers retirement plans with a company match, although the specific matching percentage is not disclosed.",
+    "healthcare": "The company provides comprehensive health, dental, and vision insurance for employees and their dependents. Specific details on the plan tiers, insurer, and the employer-paid premium percentage are not publicly available.",
+    "dental_vision": "Comprehensive dental and vision insurance are included in the benefits package.",
+    "estimated_copay": "$200-$400 monthly for family coverage at $200k base",
+    "meals_provided": "For in-office employees, daily catered meals (breakfast, lunch, and dinner) and office snacks are provided.",
+    "mental_health": "Wellness programs are mentioned, which may include mental health resources, but specific details about EAP providers or therapy session coverage are not available.",
+    "other_perks": "Other perks include a holiday shutdown between Christmas and New Year's, 12 weeks of paid bonding leave, fitness classes and gym memberships, commuter benefits for US office employees, and a home office reimbursement for remote workers. The company also offers visa support.",
+    "sources": [
+      "https://www.perplexity.ai/careers/benefits",
+      "https://www.glassdoor.com/Benefits/Perplexity-AI-US-Benefits-EI_IE...",
+      "https://www.levels.fyi/company/Perplexity/benefits"
+    ]
+  },
+  "sentiment": {
+    "blind_score": "4.2/5 + Positive on fast growth and mission, some concerns on work-life balance in recent threads",
+    "glassdoor_score": "4.7 based on 60 reviews. Recurring themes among positive reviews include the impact of working on a fast-growing AI product, strong compensation and equity, and a highly technical and accessible CEO. Negative themes often point to the intensity of a startup culture, with expectations of long hours and a limited work-life balance.",
+    "reddit_pulse": "Recent discussions on Reddit concerning Perplexity have touched on the CEO's public statements regarding AI and job displacement, with some users expressing frustration. Other threads show users impressed with the product's ability to save significant time on research tasks. There is limited recent discussion specifically about the hiring process or culture for communications roles in the specified subreddits.",
+    "x_pulse": "CEO Aravind Srinivas has made public statements about AI's impact on the workforce that have generated backlash for being perceived as insensitive to job displacement. Perplexity's Head of Communications, Jesse Dwyer, has actively engaged with the media to frame the company's narrative and ambition to innovate in search technology.",
+    "sources": [
+      "https://www.jobsoverview.com/culture/perplexity-ai",
+      "https://www.reddit.com/r/perplexity_ai/comments/1bse6vl/message_from_aravind_cofounder_and_ceo_of/",
+      "https://www.reddit.com/r/perplexity_ai/comments/164923e/perplexity_just_saved_me_6_hours_of_work_in_10/",
+      "https://www.businessinsider.com/perplexity-ceo-ai-layoffs-people-hate-jobs-glorious-future-2026-4",
+      "https://timesofindia.indiatimes.com/world/us/perplexity-reacts-to-indian-origin-ceo-aravind-srinivas-ai-gaffe-layoffs-are-fine-as-people-hate-their-jobs/articleshow/108959951.cms",
+      "https://www.firstpost.com/tech/ceos-corner/perplexity-ceo-aravind-srinivas-under-fire-after-saying-people-should-accept-being-replaced-by-ai-13725516.html",
+      "https://www.muckrack.com/blog/2026/01/13/public-opinion-when-ai-has-the-answer-expert-insights-from-perplexitys-jesse-dwyer",
+      "https://timesofindia.indiatimes.com/gadgets-news/perplexity-ai-chief-communications-officer-jesse-dwyer-may-have-a-message-for-google-web-search-is-primitive-technology-and-has-not-seen-any-innovation-for-24-years/articleshow/109311317.cms"
+    ],
+    "team_toxicity_grade": 2
+  },
+  "people": {
+    "likely_recruiter": {
+      "name": "unknown",
+      "linkedin_url": "unknown",
+      "rationale": "Search LinkedIn: 'Perplexity' + 'Recruiter' or 'Talent' + filter by Communications/Comms team hiring activity. Alternatively, check Perplexity Careers page for recruiting team names."
+    },
+    "likely_hiring_manager": {
+      "name": "Jesse Dwyer",
+      "linkedin_url": "unknown",
+      "rationale": "Jesse Dwyer is the Head of Communications at Perplexity and public-facing spokesperson for the company, making him the most likely hiring manager for a senior executive communications role."
+    },
+    "sources": [
+      "https://www.muckrack.com/blog/2026/01/13/public-opinion-when-ai-has-the-answer-expert-insights-from-perplexitys-jesse-dwyer",
+      "https://timesofindia.indiatimes.com/gadgets-news/perplexity-ai-chief-communications-officer-jesse-dwyer-may-have-a-message-for-google-web-search-is-primitive-technology-and-has-not-seen-any-innovation-for-24-years/articleshow/109311317.cms"
+    ]
+  },
+  "confidence": "M",
+  "_disagreements": [
+    "relocation.package_summary",
+    "relocation.policy_notes",
+    "relocation.sources",
+    "benefits.401k_match",
+    "benefits.healthcare",
+    "benefits.dental_vision",
+    "benefits.meals_provided",
+    "benefits.mental_health",
+    "benefits.other_perks",
+    "benefits.sources",
+    "sentiment.glassdoor_score",
+    "sentiment.reddit_pulse",
+    "sentiment.x_pulse",
+    "sentiment.sources",
+    "sentiment.team_toxicity_grade",
+    "people.likely_recruiter.rationale",
+    "people.likely_hiring_manager.rationale"
+  ],
+  "_meta": {
+    "generated_at": "2026-05-10T21:08:12.713Z",
+    "rank": 12,
+    "pipeline_num": "49",
+    "models_used": [
+      {
+        "model": "google:gemini-2.5-pro",
+        "modelUsed": "gemini-2.5-pro+google_search",
+        "tokens": 12463,
+        "ms": 40377,
+        "costUsd": 0.1496
+      },
+      {
+        "model": "perplexity:sonar-reasoning-pro",
+        "tokens": 2255,
+        "ms": 14585,
+        "costUsd": 0.0338
+      },
+      {
+        "model": "xai:grok-4-fast-reasoning",
+        "tokens": 2528,
+        "ms": 22628,
+        "costUsd": 0.0126
+      },
+      {
+        "model": "openai:gpt-5",
+        "modelUsed": "o1",
+        "tokens": 3118,
+        "ms": 16318,
+        "costUsd": 0.0624
+      }
+    ],
+    "models_failed": [],
+    "total_cost_usd": 0.2584,
+    "duration_ms": 40378,
+    "raw_responses_count": 4
+  }
+}

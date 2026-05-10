@@ -1,0 +1,99 @@
+{
+  "company": "Mistral AI",
+  "role": "Senior/Staff AI Developer Advocate",
+  "relocation": {
+    "package_summary": "Mistral AI offers relocation support for international hires, typically including visa assistance, temporary housing, and moving costs, but specifics vary by role and location (Paris or San Francisco); no public details on lump sum vs. managed services.",
+    "amount_estimate_usd": "unknown",
+    "policy_notes": "Search Mistral AI careers page directly or reach out to their talent team; frontier AI labs typically offer competitive packages ($30K–$80K) but Mistral's specifics not publicly disclosed in available sources.",
+    "sources": [
+      "https://www.mistral.ai/careers/",
+      "https://www.glassdoor.com/Overview/Working-at-Mistral-AI-EI_IE8026257.11,21.htm"
+    ]
+  },
+  "benefits": {
+    "401k_match": "unknown (French company; likely no 401k, possibly French pension equivalent)",
+    "healthcare": "unknown; as EU-based, likely French social security with supplemental private insurance for employees",
+    "dental_vision": "unknown",
+    "estimated_copay": "unknown",
+    "meals_provided": "unknown; startup perks may include snacks in office",
+    "mental_health": "unknown",
+    "other_perks": "unknown; possible commuter benefits in Paris/SF, generous parental leave per French law (16 weeks paid), learning stipends for AI roles",
+    "sources": [
+      "https://www.mistral.ai/careers/",
+      "https://www.glassdoor.com/Benefits/Mistral-AI-France-Benefits-EI_IE8026257.0,10_IL.11,16_IN96.htm"
+    ]
+  },
+  "sentiment": {
+    "blind_score": "unknown (limited posts; positive on innovation, but high-pressure startup environment)",
+    "glassdoor_score": "4.5 stars (based on few reviews; themes: exciting work in AI, collaborative culture, competitive pay)",
+    "reddit_pulse": "Limited mentions in r/MachineLearning and r/cscareerquestions; positive on open-source focus, one thread notes 'fast-paced but rewarding' (last 90 days sparse)",
+    "x_pulse": "Founder Arthur Mensch tweets about rapid growth and hiring top talent; low attrition signals, emphasis on mission-driven culture",
+    "sources": [
+      "https://www.glassdoor.com/Reviews/Mistral-AI-Reviews-E8026257.htm",
+      "https://www.reddit.com/search/?q=mistral%20ai%20culture",
+      "https://x.com/search?q=mistral%20ai%20culture"
+    ],
+    "team_toxicity_grade": 3
+  },
+  "people": {
+    "likely_recruiter": {
+      "name": "unknown",
+      "linkedin_url": "unknown",
+      "rationale": "Search LinkedIn for 'Mistral AI recruiter' + 'Developer Advocate' or 'technical recruiting'; check Mistral careers page for direct application with assigned recruiter contact."
+    },
+    "likely_hiring_manager": {
+      "name": "unknown",
+      "linkedin_url": "unknown",
+      "rationale": "Search LinkedIn for 'Mistral AI' + 'Developer Relations Manager' or 'VP Product Marketing' / 'Head of Developer Advocacy' to identify manager of advocacy org; limited public org chart available."
+    },
+    "sources": [
+      "https://www.linkedin.com/company/mistral-ai/people/",
+      "https://www.mistral.ai/careers/"
+    ]
+  },
+  "confidence": "L",
+  "_disagreements": [
+    "relocation.policy_notes",
+    "relocation.sources",
+    "benefits.sources",
+    "sentiment.sources",
+    "sentiment.team_toxicity_grade",
+    "people.likely_recruiter.rationale",
+    "people.likely_hiring_manager.rationale"
+  ],
+  "_meta": {
+    "generated_at": "2026-05-10T21:07:32.333Z",
+    "rank": 11,
+    "pipeline_num": "851",
+    "models_used": [
+      {
+        "model": "perplexity:sonar-reasoning-pro",
+        "tokens": 2259,
+        "ms": 16340,
+        "costUsd": 0.0339
+      },
+      {
+        "model": "xai:grok-4-fast-reasoning",
+        "tokens": 2349,
+        "ms": 31761,
+        "costUsd": 0.0117
+      },
+      {
+        "model": "openai:gpt-5",
+        "modelUsed": "o1",
+        "tokens": 2959,
+        "ms": 13116,
+        "costUsd": 0.0592
+      }
+    ],
+    "models_failed": [
+      {
+        "model": "google:gemini-2.5-pro",
+        "error": "JSON parse failed"
+      }
+    ],
+    "total_cost_usd": 0.1048,
+    "duration_ms": 31763,
+    "raw_responses_count": 3
+  }
+}

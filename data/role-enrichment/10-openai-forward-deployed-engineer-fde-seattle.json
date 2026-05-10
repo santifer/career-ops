@@ -1,0 +1,103 @@
+{
+  "company": "OpenAI",
+  "role": "Forward Deployed Engineer (FDE) - Seattle",
+  "relocation": {
+    "package_summary": "OpenAI offers relocation assistance to new employees, but specific details about whether it's a lump sum or managed package are not publicly available. Packages for tech roles typically cover moving expenses and can include temporary housing support.",
+    "amount_estimate_usd": "unknown",
+    "policy_notes": "Unable to verify without access to current OpenAI job posting and internal compensation docs. Recommend: (1) search OpenAI careers site for FDE-Seattle role; (2) cross-reference Levels.fyi OpenAI FDE band; (3) contact recruiter for relocation policy specifics (vesting cliff, tax gross-up, lease-break coverage).",
+    "sources": [
+      "https://openai.com/careers/forward-deployed-engineer-fde-seattle",
+      "https://www.builtinsf.com/company/openai/benefits",
+      "https://designgurus.io/blog/openai-salary-and-compensation-package",
+      "https://ashbyhq.com/job/a2e1c070-3492-4f99-8260-a292d34346e0",
+      "https://www.levels.fyi/blog/openai-compensation.html"
+    ]
+  },
+  "benefits": {
+    "401k_match": "OpenAI offers a 401(k) plan with a safe harbor contribution, matching 100% of employee contributions up to 4% of total annual compensation.",
+    "healthcare": "Comprehensive health, dental, and vision insurance are provided for employees and their families. The plan includes mental healthcare support and services.",
+    "dental_vision": "Dental and vision coverage are included as part of the comprehensive health plan.",
+    "estimated_copay": "unknown",
+    "meals_provided": "Daily breakfast, lunch, and dinner are provided for employees in the office.",
+    "mental_health": "Mental healthcare support is included in the health plan, and the company offers 6 coaching sessions for employees and their dependents.",
+    "other_perks": "Perks include an annual learning & development stipend, 20-24 weeks of paid parental leave, fertility treatment and family planning coverage, flexible work hours, and a domestic conference budget.",
+    "sources": [
+      "https://openai.com/careers/",
+      "https://himalayas.app/companies/openai/benefits",
+      "https://wellfound.com/company/openai/benefits",
+      "https://www.myplaniq.com/401k/OPENAI-LP-401(K)-PLAN/Contribution-And-Matching-Policy/"
+    ]
+  },
+  "sentiment": {
+    "blind_score": "4.4 stars; recent sentiment is very positive regarding pay and working with top talent, but some mention intense work culture.",
+    "glassdoor_score": "4.4 stars; reviews praise the high-impact work and smart colleagues, but note challenges with work-life balance and a fast-paced environment.",
+    "reddit_pulse": "Sentiment on r/cscareerquestions is mixed. Some users report a poor work-life balance and raise concerns about the company's non-profit/for-profit structure. Others highlight the prestige and career value of having OpenAI on a resume, comparing it to early days at Facebook. There are also some negative reports about an immature and disorganized interview process.",
+    "x_pulse": "Recent posts from executives like Sam Altman focus on the mission to build AGI, the astonishing growth in AI services, and scaling the company to meet global demand. There is a strong emphasis on research and the impact of the technology.",
+    "sources": [
+      "https://www.efinancialcareers.com/news/2024/10/openai-careers",
+      "https://www.reddit.com/r/cscareerquestions/comments/1bd6k3i/folks_who_joined_big_ai_companies_how_is_it_like/",
+      "https://www.reddit.com/r/cscareerquestions/comments/1997q5c/openai/",
+      "https://www.reddit.com/r/cscareerquestions/comments/15x2zbf/name_and_shame_openai/",
+      "https://blog.samaltman.com/what-i-wish-someone-had-told-me"
+    ],
+    "team_toxicity_grade": 2
+  },
+  "people": {
+    "likely_recruiter": {
+      "name": "unknown",
+      "linkedin_url": "unknown",
+      "rationale": "OpenAI has posted for recruiters specifically for the Forward Deployed Engineering team, but a specific person for this role in Seattle was not identified. Search LinkedIn for recruiters at OpenAI with 'Forward Deployed Engineering' in their title."
+    },
+    "likely_hiring_manager": {
+      "name": "unknown",
+      "linkedin_url": "unknown",
+      "rationale": "The direct hiring manager for the Seattle FDE team is not listed in public job postings. Search LinkedIn for titles like 'Manager, Forward Deployed Engineering' or 'Head of Forward Deployed Engineering' at OpenAI."
+    },
+    "sources": [
+      "https://www.tealhq.com/post/recruiter-forward-deployed-engineering-e4b7b2528b"
+    ]
+  },
+  "confidence": "M",
+  "_disagreements": [
+    "relocation.policy_notes",
+    "relocation.sources",
+    "benefits.sources",
+    "sentiment.sources",
+    "sentiment.team_toxicity_grade",
+    "people.likely_recruiter.rationale",
+    "people.likely_hiring_manager.rationale"
+  ],
+  "_meta": {
+    "generated_at": "2026-05-10T21:07:00.570Z",
+    "rank": 10,
+    "pipeline_num": "847",
+    "models_used": [
+      {
+        "model": "google:gemini-2.5-pro",
+        "modelUsed": "gemini-2.5-pro+google_search",
+        "tokens": 5064,
+        "ms": 19147,
+        "costUsd": 0.0608
+      },
+      {
+        "model": "perplexity:sonar-reasoning-pro",
+        "tokens": 2563,
+        "ms": 20412,
+        "costUsd": 0.0384
+      }
+    ],
+    "models_failed": [
+      {
+        "model": "xai:grok-4-fast-reasoning",
+        "error": "This operation was aborted"
+      },
+      {
+        "model": "openai:gpt-5",
+        "error": "JSON parse failed"
+      }
+    ],
+    "total_cost_usd": 0.0992,
+    "duration_ms": 60007,
+    "raw_responses_count": 2
+  }
+}

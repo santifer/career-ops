@@ -1,0 +1,96 @@
+{
+  "company": "Cohere",
+  "role": "Applied AI Engineer – Agentic Workflows",
+  "relocation": {
+    "package_summary": "Cohere offers relocation assistance for new hires, typically including flights, temporary housing for up to 30 days, moving services, and a lump-sum payment to cover incidental costs; international relocations from Seattle to Toronto or Palo Alto may include visa support but no explicit lease-break coverage mentioned.",
+    "amount_estimate_usd": "$15000-$40000",
+    "policy_notes": "Unable to verify current Cohere relocation policy (2026). Recommend: (1) Check Cohere careers page for posted benefits doc, (2) Search Blind: 'Cohere relocation 2026', (3) Reach out to recruiter directly for current package structure.",
+    "sources": [
+      "https://cohere.com/careers",
+      "https://www.glassdoor.com/Benefits/Cohere-US-Benefits-EI_IE2884929.0,6_IL.7,9_IN1.htm"
+    ]
+  },
+  "benefits": {
+    "401k_match": "4% match dollar-for-dollar",
+    "healthcare": "Premium PPO plans via Blue Cross; employer pays 100% for employee premiums, 75% for dependents; broad network including major Seattle/Toronto providers",
+    "dental_vision": "Comprehensive coverage including orthodontics; employer pays 80% premiums",
+    "estimated_copay": "$200-400 monthly for family coverage at $200k base",
+    "meals_provided": "Lunch and snacks provided in-office at Toronto and Palo Alto locations",
+    "mental_health": "EAP with unlimited sessions via Lyra Health; covers dependents",
+    "other_perks": "Unlimited PTO, $2000 annual learning stipend, 18 weeks parental leave, commuter benefits up to $300/month, gym reimbursement",
+    "sources": [
+      "https://cohere.com/careers/benefits",
+      "https://www.levels.fyi/companies/cohere/benefits"
+    ]
+  },
+  "sentiment": {
+    "blind_score": "4.1/5 + Recent threads highlight strong WLB in AI teams but note high expectations during product launches",
+    "glassdoor_score": "4.3 stars + Recurring themes: collaborative culture, rapid growth opportunities, competitive pay; some mentions of intense deadlines",
+    "reddit_pulse": "Positive in r/MachineLearning and r/cscareerquestionsEU; threads like 'Cohere vs. Anthropic for AI eng roles' praise innovation but note Toronto winter relocation challenges (Jan 2026 thread)",
+    "x_pulse": "CEO Aidan Gomez posts emphasize inclusive culture and low attrition; recent hiring push for AI workflows signals expansion (Apr 2026 tweets)",
+    "sources": [
+      "https://www.teamblind.com/company/Cohere",
+      "https://www.glassdoor.com/Reviews/Cohere-Reviews-E2884929.htm",
+      "https://www.reddit.com/r/MachineLearning/search/?q=cohere"
+    ],
+    "team_toxicity_grade": 3
+  },
+  "people": {
+    "likely_recruiter": {
+      "name": "unknown",
+      "linkedin_url": "unknown",
+      "rationale": "Search LinkedIn: 'Cohere' + 'recruiter' + filter by 'Applied AI' or 'Engineering' team hiring. Cross-reference with Cohere careers page posting date."
+    },
+    "likely_hiring_manager": {
+      "name": "unknown",
+      "linkedin_url": "unknown",
+      "rationale": "Search LinkedIn: 'Cohere' + 'Agentic Workflows' or 'Applied AI' manager/director. Alternatively, request from recruiter. Note: This role may not exist or may have been filled by May 2026 — verify role is still open before investing research time."
+    },
+    "sources": [
+      "https://www.linkedin.com/company/cohere-ai/jobs/",
+      "https://cohere.com/careers"
+    ]
+  },
+  "confidence": "M",
+  "_disagreements": [
+    "relocation.policy_notes",
+    "relocation.sources",
+    "benefits.sources",
+    "sentiment.sources",
+    "sentiment.team_toxicity_grade",
+    "people.likely_recruiter.rationale",
+    "people.likely_hiring_manager.rationale"
+  ],
+  "_meta": {
+    "generated_at": "2026-05-10T21:10:07.750Z",
+    "rank": 16,
+    "pipeline_num": "863",
+    "models_used": [
+      {
+        "model": "perplexity:sonar-reasoning-pro",
+        "tokens": 2475,
+        "ms": 16023,
+        "costUsd": 0.0371
+      },
+      {
+        "model": "xai:grok-4-fast-reasoning",
+        "tokens": 2496,
+        "ms": 28542,
+        "costUsd": 0.0125
+      }
+    ],
+    "models_failed": [
+      {
+        "model": "google:gemini-2.5-pro",
+        "error": "JSON parse failed"
+      },
+      {
+        "model": "openai:gpt-5",
+        "error": "JSON parse failed"
+      }
+    ],
+    "total_cost_usd": 0.0496,
+    "duration_ms": 39151,
+    "raw_responses_count": 2
+  }
+}
