@@ -19,5 +19,9 @@
     { "src": "/assets/favicon-256.png", "sizes": "256x256", "type": "image/png" },
     { "src": "/assets/favicon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" },
     { "src": "/assets/favicon.svg",     "sizes": "any",     "type": "image/svg+xml" }
+  ],
+  "screenshots": [
+    { "src": "/assets/splash-1170x2532.png", "sizes": "1170x2532", "type": "image/png", "form_factor": "narrow", "label": "Career-Ops Dashboard splash" },
+    { "src": "/assets/splash-2048x2732.png", "sizes": "2048x2732", "type": "image/png", "form_factor": "wide",   "label": "Career-Ops Dashboard splash" }
   ]
 }

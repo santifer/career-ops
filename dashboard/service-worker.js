@@ -1,7 +1,7 @@
 // service-worker.js — Career-Ops Dashboard PWA
 // Strategy: cache-first for static shell + assets, network-first for /api/*.
 
-const CACHE = 'career-ops-v1';
+const CACHE = 'career-ops-v2';
 const SHELL = [
   '/',
   '/manifest.json',
@@ -11,6 +11,14 @@ const SHELL = [
   '/assets/favicon-180.png',
   '/assets/favicon-192.png',
   '/assets/favicon-512.png',
+  // iOS PWA splash screens — install-time precache so the standalone
+  // launch animation is instant on first cold boot. Other splash sizes
+  // are fetched lazily on demand and cached by the catch-all handler.
+  '/assets/splash-1290x2796.png',
+  '/assets/splash-1179x2556.png',
+  '/assets/splash-1170x2532.png',
+  '/assets/splash-1125x2436.png',
+  '/assets/splash-828x1792.png',
 ];
 
 self.addEventListener('install', (event) => {
@@ -54,7 +62,7 @@ self.addEventListener('fetch', (event) => {
     caches.match(req).then((hit) => {
       if (hit) return hit;
       return fetch(req).then((res) => {
-        if (res && res.ok && (url.pathname.startsWith('/assets/') || url.pathname === '/' || url.pathname === '/manifest.json')) {
+        if (res && res.ok && (url.pathname.startsWith('/assets/') || url.pathname === '/' || url.pathname === '/manifest.json' || url.pathname === '/service-worker.js')) {
           const copy = res.clone();
           caches.open(CACHE).then((cache) => cache.put(req, copy));
         }
