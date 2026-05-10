@@ -708,6 +708,43 @@ function countScanHistory() {
   return Math.max(0, lines.length - 1);
 }
 
+// Build the last few scan "events" for the live ticker in the toolbar.
+// scan-history.tsv only has dates (not HH:MM), so we anchor the most-recent
+// date's events to the file mtime (a real scan-run timestamp) and back off
+// by ~6h per prior date for older groups. Returns up to 5 events
+// newest-first, plus a lastScanIso anchor.
+function loadLiveScanEvents(limit = 5) {
+  if (!existsSync(SCAN_HISTORY_PATH)) return { events: [], lastScanIso: null };
+  const stat = statSync(SCAN_HISTORY_PATH);
+  const mtime = stat.mtime.getTime();
+  const lines = readFileSync(SCAN_HISTORY_PATH, 'utf-8').split('\n').filter(l => l.trim());
+  if (lines.length < 2) return { events: [], lastScanIso: new Date(mtime).toISOString() };
+  const groups = new Map();
+  for (let i = 1; i < lines.length; i++) {
+    const [, first_seen, , , company, status] = lines[i].split('\t');
+    if (!first_seen || !company) continue;
+    if (status && status.trim() !== 'added') continue;
+    const trimmed = company.trim();
+    // Skip synthetic placeholders ("(from email)", "Unknown", empty parens).
+    if (!trimmed || trimmed.startsWith('(') || /^unknown$/i.test(trimmed)) continue;
+    const key = `${first_seen}__${trimmed}`;
+    groups.set(key, (groups.get(key) || 0) + 1);
+  }
+  const sorted = [...groups.entries()]
+    .map(([k, count]) => {
+      const [date, company] = k.split('__');
+      return { date, company, count };
+    })
+    .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : b.count - a.count));
+  const newestDate = sorted.length ? sorted[0].date : null;
+  const events = sorted.slice(0, limit).map((g) => {
+    const dayDelta = newestDate ? (new Date(newestDate) - new Date(g.date)) / 86400000 : 0;
+    const ts = mtime - dayDelta * 24 * 3600 * 1000 - (g === sorted[0] ? 0 : 6 * 60 * 1000);
+    return { company: g.company, count: g.count, ts: new Date(ts).toISOString() };
+  });
+  return { events, lastScanIso: new Date(mtime).toISOString() };
+}
+
 // Count distinct batch runs in batch-state.tsv using a 15-min gap heuristic on started_at.
 // Mirrors the grouping logic in dashboard-server.mjs detailBatches().
 function countBatchRuns() {
@@ -1344,6 +1381,8 @@ function build() {
   const batchRuns = countBatchRuns();
   const portals = getEnabledPortals();
   const reportsToday = countTodaysReports(today);
+  const liveTicker = loadLiveScanEvents();
+  const liveTickerJson = JSON.stringify(liveTicker).replace(/<\//g, '<\\/');
 
   // Sorted views
   const sortedByScore = [...apps].sort((a, b) => b.score - a.score);
@@ -1701,6 +1740,43 @@ function build() {
     background: var(--surface-2); border: 1px solid var(--border);
     border-radius: 4px; padding: 1px 6px; font-size: 11px; color: var(--text-3);
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+
+  /* ── Live scan ticker ──────────────────────────────────────────
+     Small pill in the toolbar that rolls through the most recent
+     scan events. Proves the dashboard isn't a static screenshot. */
+  .live-ticker {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 999px; padding: 4px 10px 4px 8px;
+    font-size: 11.5px; color: var(--text-3); cursor: default;
+    max-width: 280px; overflow: hidden; user-select: none;
+  }
+  .live-ticker:hover { border-color: var(--border-strong); color: var(--text-2); }
+  .live-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #9ca3af; flex-shrink: 0;
+    box-shadow: 0 0 0 0 currentColor;
+  }
+  .live-ticker[data-freshness="fresh"] .live-dot { background: #16a34a; color: rgba(22,163,74,.5); animation: live-pulse 2.4s ease-out infinite; }
+  .live-ticker[data-freshness="warm"]  .live-dot { background: #d97706; color: rgba(217,119,6,.4); }
+  .live-ticker[data-freshness="stale"] .live-dot { background: #9ca3af; }
+  body.dark .live-ticker[data-freshness="warm"] .live-dot { background: #fbbf24; color: rgba(251,191,36,.45); }
+  body.dark .live-ticker[data-freshness="stale"] .live-dot { background: #6b7280; }
+  @keyframes live-pulse {
+    0%   { box-shadow: 0 0 0 0 currentColor; }
+    70%  { box-shadow: 0 0 0 6px rgba(0,0,0,0); }
+    100% { box-shadow: 0 0 0 0 rgba(0,0,0,0); }
+  }
+  .live-text {
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    transition: opacity .35s ease;
+  }
+  .live-ticker[data-anim="out"] .live-text { opacity: 0; }
+  .live-ticker[data-empty="1"] .live-text { font-style: italic; opacity: .7; }
+  @media (prefers-reduced-motion: reduce) {
+    .live-ticker .live-dot { animation: none !important; }
+    .live-text { transition: none; }
   }
 
   /* ── Cmd-K command palette ─────────────────────────────────── */
@@ -2899,6 +2975,11 @@ function build() {
     td > .badge, .badge.score-badge-lg { min-height: 32px; padding: 7px 12px; }
     /* Pills inside tappable rows get a wider hit-area through their td padding above. */
     .batch-close, .verify-close { min-height: 44px; min-width: 44px; padding: 10px; font-size: 18px; }
+    /* Live ticker collapses to just the dot on mobile; tap to expand. */
+    .live-ticker { padding: 8px; max-width: 32px; cursor: pointer; }
+    .live-ticker .live-text { display: none; }
+    .live-ticker.expanded { max-width: 70vw; padding: 6px 12px 6px 10px; }
+    .live-ticker.expanded .live-text { display: inline; }
     #batch-toggle-btn, #dark-toggle { min-height: 44px; min-width: 44px; }
     .rec-btn { min-height: 44px; padding: 12px 18px; display: inline-flex; align-items: center; }
     .filters input, .filters select { min-height: 44px; padding: 10px 12px; font-size: 14px; }
@@ -3359,6 +3440,10 @@ function build() {
       <span class="cmdk-trigger-kbd">⌘K</span>
     </button>
     <button class="toolbar-btn" onclick="openQuickAdd()" id="quickadd-btn" title="Add a role URL to the pipeline" aria-label="Add role to pipeline">+ Add role</button>
+    <div class="live-ticker" id="live-ticker" role="status" aria-live="polite" aria-label="Most recent scanner activity" tabindex="0" title="Click to expand on mobile">
+      <span class="live-dot" id="live-dot" aria-hidden="true"></span>
+      <span class="live-text" id="live-text">—</span>
+    </div>
     <button class="toolbar-btn" onclick="toggleDark()" id="dark-toggle" aria-label="Toggle dark mode">☀︎ Light</button>
     <button class="toolbar-btn" id="batch-toggle-btn" onclick="toggleBatchOverlay()" style="display:none" aria-label="Toggle batch progress overlay">⚡ Batch</button>
   </header>
@@ -3813,6 +3898,72 @@ function toggleDark() {
   const on = !document.body.classList.contains('dark');
   localStorage.setItem(DARK_KEY, on ? 'dark' : 'light');
   applyDark(on);
+}
+
+// ── Live scan ticker ────────────────────────────────────────────
+// Rolls through the most recent scan events to prove the dashboard
+// is live, not a static screenshot. Data is baked at build time
+// (scan-history.tsv is generated by scan.mjs, no runtime polling).
+const LIVE_TICKER_DATA = ${liveTickerJson};
+function _liveAge(ms) {
+  const s = Math.max(0, ms / 1000);
+  if (s < 60)        return Math.round(s) + 's ago';
+  if (s < 3600)      return Math.round(s / 60) + 'm ago';
+  if (s < 86400)     return Math.round(s / 3600) + 'h ago';
+  return Math.round(s / 86400) + 'd ago';
+}
+function _liveFreshness(ageMs) {
+  if (ageMs < 3600000)      return 'fresh';
+  if (ageMs < 21600000)     return 'warm';
+  return 'stale';
+}
+function _liveFormat(ev) {
+  return 'Scanned ' + ev.company + ' · ' + ev.count + ' new role' + (ev.count === 1 ? '' : 's') + ' · ' + _liveAge(Date.now() - new Date(ev.ts).getTime());
+}
+function initLiveTicker() {
+  const el = document.getElementById('live-ticker');
+  const txt = document.getElementById('live-text');
+  if (!el || !txt) return;
+  const data = LIVE_TICKER_DATA || { events: [], lastScanIso: null };
+  const events = data.events || [];
+  if (!events.length) {
+    el.setAttribute('data-empty', '1');
+    el.setAttribute('data-freshness', 'stale');
+    txt.textContent = 'No scans yet';
+    return;
+  }
+  const setFreshness = () => {
+    const lastTs = data.lastScanIso ? new Date(data.lastScanIso).getTime() : new Date(events[0].ts).getTime();
+    el.setAttribute('data-freshness', _liveFreshness(Date.now() - lastTs));
+    const lastDate = new Date(lastTs);
+    const hhmm = lastDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/Los_Angeles' });
+    el.setAttribute('title', 'Last scan: ' + hhmm + ' PT · click to expand');
+  };
+  setFreshness();
+  // Mobile tap-to-expand
+  el.addEventListener('click', () => el.classList.toggle('expanded'));
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduced || events.length === 1) {
+    txt.textContent = _liveFormat(events[0]);
+    setInterval(() => { txt.textContent = _liveFormat(events[0]); setFreshness(); }, 30000);
+    return;
+  }
+  let i = 0;
+  txt.textContent = _liveFormat(events[0]);
+  setInterval(() => {
+    el.setAttribute('data-anim', 'out');
+    setTimeout(() => {
+      i = (i + 1) % events.length;
+      txt.textContent = _liveFormat(events[i]);
+      setFreshness();
+      el.setAttribute('data-anim', 'in');
+    }, 350);
+  }, 4000);
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initLiveTicker);
+} else {
+  initLiveTicker();
 }
 
 // ── OLED true-black mode ────────────────────────────────────────
