@@ -400,14 +400,26 @@ function parseBaseSalary(rawComp) {
       return { min, max, currency: 'USD', isTotalComp: /total\s*comp/i.test(text), raw: rawComp };
     }
   }
-  // Range with K suffix: "$200K-$280K" or "$200K – $280K"
-  const kRange = text.match(/[\$€£]\s*(\d{2,4})\s*K\s*[\-–—]\s*[\$€£]?\s*(\d{2,4})\s*K/i);
+  // Range with K suffix on EITHER number (or both):
+  //   "$200K-$280K"  | "$200-$280K"  | "$200K-280K"  | "$200-280K"
+  // Greedy form: K must appear after at least the second number, optional on first.
+  const kRange = text.match(/[\$€£]\s*(\d{2,4})\s*(?:K)?\s*[\-–—]\s*[\$€£]?\s*(\d{2,4})\s*K/i);
   if (kRange) {
     const min = parseInt(kRange[1], 10);
     const max = parseInt(kRange[2], 10);
     if (min >= 30 && max <= 1500 && min <= max) {
       const currency = /€/.test(text) ? 'EUR' : /£/.test(text) ? 'GBP' : 'USD';
-      return { min, max, currency, isTotalComp: /total\s*comp/i.test(text), raw: rawComp };
+      return { min, max, currency, isTotalComp: /total\s*comp|TC\b/i.test(text), raw: rawComp };
+    }
+  }
+  // Reverse: K on first only (`$197K-$278`). Less common but seen.
+  const kRangeRev = text.match(/[\$€£]\s*(\d{2,4})\s*K\s*[\-–—]\s*[\$€£]?\s*(\d{2,4})\b(?!\s*K)/i);
+  if (kRangeRev) {
+    const min = parseInt(kRangeRev[1], 10);
+    const max = parseInt(kRangeRev[2], 10);
+    if (min >= 30 && max <= 1500 && min <= max) {
+      const currency = /€/.test(text) ? 'EUR' : /£/.test(text) ? 'GBP' : 'USD';
+      return { min, max, currency, isTotalComp: /total\s*comp|TC\b/i.test(text), raw: rawComp };
     }
   }
   // Long-form range: "$200,000 – $345,000" (assume USD if $)
@@ -791,16 +803,105 @@ function _parseComp(text) {
 // "Comp (disclosed)", "Comp band (peer-set inferred)", etc. Returns the raw
 // cell text trimmed; tolerant of label variation.
 function _parseCompRaw(text) {
-  const block = _extractSection(text, [/^## A\)[^\n]*$/m, /^## Block A\b[^\n]*$/m]);
-  if (!block) return '';
-  // Try "Comp" / "Compensation" / bold-prefixed variants. The label column
-  // sometimes is **bold** ("**Comp disclosed**"), sometimes plain.
-  const labelRe = /\|\s*\*?\*?\s*(?:Comp(?:ensation)?|Listed Annual Salary|Salary)[^|]*?\|\s*([^|\n]+?)\s*\|/i;
-  const labeled = block.match(labelRe);
-  if (labeled && labeled[1]) {
-    const v = labeled[1].replace(/\*\*/g, '').trim();
-    // Reject when the cell is just a score (e.g. "3/5" or "**5/5**")
-    if (v && !/^\d\/5\s*$/.test(v) && !/^value\s*$/i.test(v)) return v.slice(0, 400);
+  // Tier 1: Block A "Comp" row (legacy 2-col + new 3-col with score-then-notes)
+  const blockA = _extractSection(text, [/^## A\)[^\n]*$/m, /^## Block A\b[^\n]*$/m]);
+  const fromTable = (block) => {
+    if (!block) return '';
+    const labelRe = /^\s*\|\s*\*?\*?\s*(?:Comp(?:ensation)?|Listed Annual Salary|Salary)\b[^|]*?\|/i;
+    for (const line of block.split('\n')) {
+      if (!labelRe.test(line)) continue;
+      const cells = line.split('|').map(c => c.replace(/\*\*/g, '').trim()).filter(Boolean);
+      if (cells.length < 2) continue;
+      const looksLikeComp = (s) => {
+        if (!s) return false;
+        if (/^\d+\/5\s*$/.test(s)) return false;
+        if (/^(value|tier|score)\s*$/i.test(s)) return false;
+        return /[\$€£]|\bK\b|\b(TC|base|comp|salary|total comp|OTE|range)\b/i.test(s);
+      };
+      for (let i = 1; i < cells.length; i++) {
+        if (looksLikeComp(cells[i])) return cells[i].slice(0, 400);
+      }
+      const v = cells[1];
+      if (v && !/^\d\/5\s*$/.test(v) && !/^value\s*$/i.test(v)) return v.slice(0, 400);
+    }
+    return '';
+  };
+  let v = fromTable(blockA);
+  if (v) return v;
+
+  // Tier 2: Block D "Comp and Market" / "Comp and Demand" — newer reports moved
+  // the comp data here. Prefer the explicit "Estimated TC" / "Estimated base"
+  // sentence (most authoritative), then the "OpenAI Program Manager | Median
+  // $735K TC | ..." rows in the Levels.fyi table.
+  const blockD = _extractSection(text, [
+    /^## D\)[^\n]*Comp[^\n]*$/m,
+    /^## Block D\b[^\n]*$/m,
+  ]);
+  if (blockD) {
+    // Tier 2a: high-signal **bold** labels — the most authoritative source.
+    //   **Listed:** $255,000 – $320,000 USD annually (CA/NY pay-transparency)
+    //   **Estimated TC for this role:** $260K-$340K base + PPU equity
+    //   **Comp band:** $300K-$355K base + 60/40 bonus split
+    //   **Base:** $190K-$240K + equity refresher
+    const boldLabelRe = /\*\*\s*(?:Estimated[^*:]*|Listed|Disclosed|Comp\s+band|Salary\s+band|Base\s+band|Base)[^*:]*?:?\s*\*\*\s*([^\n]+)/i;
+    const boldLabeled = blockD.match(boldLabelRe);
+    if (boldLabeled && boldLabeled[1] && /[\$€£]/.test(boldLabeled[1])) {
+      return boldLabeled[1].replace(/\*\*/g, '').trim().slice(0, 400);
+    }
+    // Tier 2b: table search — the JD-disclosed band typically lives in a
+    // markdown table. Inspect cell PAIRS: if the left cell labels the right
+    // cell as base/listed/disclosed/posted, trust the right cell as the
+    // actual base regardless of whether the value itself says "base".
+    // Skip rows where the left cell says "Mitchell's target" / "target" /
+    // "walk-away" / etc. (those are USER-config, not role-offered).
+    let bestTableHit = null;
+    const labelIsAuthoritative = (lbl) => /\b(base|listed|disclosed|posted|JD|salary\s+band|comp\s+band)\b/i.test(lbl) && !/target|walk[-\s]?away|floor|ceiling|mitchell/i.test(lbl);
+    const labelIsUser = (lbl) => /target|walk[-\s]?away|mitchell|profile|floor/i.test(lbl);
+    for (const line of blockD.split('\n')) {
+      if (!line.includes('|')) continue;
+      const cells = line.split('|').map(c => c.replace(/\*\*/g, '').trim()).filter(Boolean);
+      if (cells.length < 2) continue;
+      if (cells.some(c => /^range$/i.test(c) || /^---/.test(c) || /^source$/i.test(c) || /^note$/i.test(c) || /^data$/i.test(c) || /^dimension$/i.test(c))) continue;
+      // Skip rows whose first cell is a user-config label (target / walk-away).
+      if (labelIsUser(cells[0])) continue;
+      // Pair-aware: if cells[0] is an authoritative label, return cells[1] if it has $.
+      if (labelIsAuthoritative(cells[0]) && /[\$€£]\s*\d/.test(cells[1] || '')) {
+        return cells[1].slice(0, 400);
+      }
+      // Otherwise scan all value cells; prefer one that mentions "base" inline.
+      for (const c of cells.slice(1)) {
+        if (!/[\$€£]\s*\d/.test(c)) continue;
+        if (/\bbase\b/i.test(c)) return c.slice(0, 400);
+        if (!bestTableHit && /\b(K|TC|range|comp|salary)\b/i.test(c)) bestTableHit = c;
+      }
+    }
+    if (bestTableHit) return bestTableHit.slice(0, 400);
+    // Tier 2c: bullet-list with strict labels ONLY (no "Total comp" / "Range"
+    // because those mix base+equity and confuse parseBaseSalary).
+    for (const line of blockD.split('\n')) {
+      const m = line.match(/^[\s-*]*\*?\*?(?:Base|Listed|Disclosed)\*?\*?[^:]*:\s*([^\n]+)/i);
+      if (m && /[\$€£]\s*\d/.test(m[1])) {
+        return m[1].replace(/\*\*/g, '').trim().slice(0, 400);
+      }
+    }
+    // Tier 2d (last resort): any line in Block D with a $-range — but skip
+    // lines that mention "equity", "RSU", "vest", "PPU" (those are equity, not base)
+    // and lines that say "TC" / "total comp" without "base" (those are total).
+    const rangeRe = /[\$€£]\s*\d{2,4}(?:[,.]\d{3})?\s*K?\s*[\-–—]\s*[\$€£]?\s*\d{2,4}(?:[,.]\d{3})?\s*K?/i;
+    for (const line of blockD.split('\n')) {
+      if (!rangeRe.test(line)) continue;
+      if (/\b(equity|RSU|PPU|vest|stock)\b/i.test(line) && !/\bbase\b/i.test(line)) continue;
+      if (/\b(TC|total\s+comp)\b/i.test(line) && !/\bbase\b/i.test(line)) continue;
+      return line.replace(/\*\*/g, '').trim().slice(0, 400);
+    }
+  }
+
+  // Tier 3: Global Score table at bottom — "| Comp | 5/5 | $300-355K base... |"
+  // Extract the third cell (notes) which carries the actual range.
+  const globalScore = _extractSection(text, [/^## Global Score\b[^\n]*$/m, /^## Score Global\b[^\n]*$/m]);
+  if (globalScore) {
+    v = fromTable(globalScore);
+    if (v) return v;
   }
   return '';
 }
