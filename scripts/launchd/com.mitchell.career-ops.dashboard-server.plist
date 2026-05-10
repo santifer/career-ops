@@ -8,7 +8,7 @@
     <key>ProgramArguments</key>
     <array>
         <string>/Users/mitchellwilliams/.nvm/versions/node/v24.14.0/bin/node</string>
-        <string>/Users/mitchellwilliams/Documents/career-ops/scripts/dashboard-server.mjs</string>
+        <string>/Users/mitchellwilliams/Documents/career-ops/dashboard-server.mjs</string>
     </array>
 
     <key>WorkingDirectory</key>
@@ -35,8 +35,6 @@
         <string>/Users/mitchellwilliams/.nvm/versions/node/v24.14.0/bin:/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin</string>
         <key>HOME</key>
         <string>/Users/mitchellwilliams</string>
-        <key>CAREER_OPS_DASHBOARD_PORT</key>
-        <string>7777</string>
     </dict>
 </dict>
 </plist>
