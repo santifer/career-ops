@@ -6,7 +6,7 @@
  * Fired by: scripts/launchd/com.mitchell.career-ops.overpay-signals.plist
  *           (Wednesday 03:00 PT)
  *
- * Reads the top 10 Apply-Now queue companies (data/apply-now-queue.json),
+ * Reads ALL UNIQUE Apply-Now queue companies (data/apply-now-queue.json),
  * builds a research prompt, calls Claude headless to do the research with
  * WebSearch, and writes:
  *   data/overpay-signals/CURRENT.md         — always the latest
@@ -15,8 +15,9 @@
  * If a 4.0+ company shows desperate-hire signal, sends a Telegram alert.
  *
  * Usage:
- *   node scripts/overpay-signals.mjs            # full run
- *   node scripts/overpay-signals.mjs --dry-run  # print prompt, skip Claude call
+ *   node scripts/overpay-signals.mjs              # full run, all unique companies
+ *   node scripts/overpay-signals.mjs --limit=10   # cap at top-N composite (deduped)
+ *   node scripts/overpay-signals.mjs --dry-run    # print prompt, skip Claude call
  */
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
@@ -31,23 +32,33 @@ const DATE = new Date().toISOString().slice(0, 10);
 const CURRENT = join(SIGNALS_DIR, 'CURRENT.md');
 const DATED = join(SIGNALS_DIR, `${DATE}.md`);
 const DRY_RUN = process.argv.includes('--dry-run');
+const LIMIT_ARG = process.argv.find(a => a.startsWith('--limit='));
+const LIMIT = LIMIT_ARG ? parseInt(LIMIT_ARG.split('=')[1], 10) : Infinity;
 
 if (!existsSync(SIGNALS_DIR)) mkdirSync(SIGNALS_DIR, { recursive: true });
 
-// ── Load top 10 Apply-Now companies ──────────────────────────────
+// ── Load ALL UNIQUE Apply-Now companies (deduped, ordered by composite) ──
 let topCompanies = [];
 if (existsSync(QUEUE_FILE)) {
   try {
     const queue = JSON.parse(readFileSync(QUEUE_FILE, 'utf-8'));
-    const rows = Array.isArray(queue) ? queue : (queue.rows || queue.items || []);
-    topCompanies = rows
-      .filter(r => parseFloat(r.score) >= 4.0)
-      .slice(0, 10)
-      .map(r => ({
+    const rows = Array.isArray(queue) ? queue : (queue.ranked || queue.rows || queue.items || []);
+    const seen = new Set();
+    const uniq = [];
+    for (const r of rows) {
+      // Support both shapes: {score} or {eval_score}
+      const score = parseFloat(r.score ?? r.eval_score);
+      if (isNaN(score) || score < 4.0) continue;
+      const key = (r.company || '').trim().toLowerCase();
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      uniq.push({
         company: r.company,
         role: r.role,
-        score: r.score,
-      }));
+        score,
+      });
+    }
+    topCompanies = uniq.slice(0, LIMIT);
   } catch (e) {
     console.error('Failed to parse apply-now-queue.json:', e.message);
   }
@@ -57,7 +68,7 @@ if (!topCompanies.length) {
   // Fallback — parse top rows from applications.md
   const apps = readFileSync(APPS_FILE, 'utf-8');
   const lines = apps.split('\n').filter(l => l.startsWith('|') && /\d/.test(l));
-  topCompanies = lines.slice(0, 10).map(l => {
+  topCompanies = lines.slice(0, isFinite(LIMIT) ? LIMIT : 15).map(l => {
     const cells = l.split('|').map(c => c.trim());
     return { company: cells[3] || '?', role: cells[4] || '?', score: cells[5] || '?' };
   });
@@ -68,9 +79,10 @@ const companyList = topCompanies
   .join('\n');
 
 // ── Build research prompt ────────────────────────────────────────
+const N = topCompanies.length;
 const PROMPT = `Role: hiring-intelligence researcher for Mitchell Williams's career-ops job search.
 
-Today: ${DATE}. Mitchell's top 10 Apply-Now queue:
+Today: ${DATE}. Mitchell's Apply-Now queue (${N} unique companies, deduped, score ≥ 4.0):
 
 ${companyList}
 
@@ -89,7 +101,7 @@ Output rules:
 
 Read first (one pass each): /Users/mitchellwilliams/Documents/career-ops/cv.md and /Users/mitchellwilliams/Documents/career-ops/article-digest.md.
 
-For EACH of the 10 companies, write EXACTLY this block (verbatim format):
+For EACH of the ${N} companies, write EXACTLY this block (verbatim format):
 
 ## {Company} — {Role} (score {N})
 
@@ -99,11 +111,11 @@ For EACH of the 10 companies, write EXACTLY this block (verbatim format):
 **Tactical lead this week:** {ONE sentence — specific phrase or project from cv.md/article-digest.md tied to a public artifact of theirs}
 **Sources:** {2–5 URLs, bulleted, no commentary}
 
-After the 10 blocks, write:
+After the ${N} blocks, write:
 
 ## Top 3 to lean into THIS WEEK
 
-Pick the 3 highest equity-upside × signal-strength combinations across the 10. For each: **{Company}** — one-line rationale tied to comp/equity story.
+Pick the 3 highest equity-upside × signal-strength combinations across the ${N}. For each: **{Company}** — one-line rationale tied to comp/equity story.
 
 Write the deliverable to BOTH files (identical content, via the Write tool):
 - /Users/mitchellwilliams/Documents/career-ops/data/overpay-signals/${DATE}.md
@@ -114,7 +126,7 @@ Then print ONLY this line and nothing else: "Overpay signals research complete: 
 if (DRY_RUN) {
   console.log('=== DRY RUN — Prompt that would be sent to Claude ===');
   console.log(PROMPT);
-  console.log('\n=== Top 10 companies parsed ===');
+  console.log(`\n=== ${topCompanies.length} unique companies parsed ===`);
   console.log(JSON.stringify(topCompanies, null, 2));
   process.exit(0);
 }

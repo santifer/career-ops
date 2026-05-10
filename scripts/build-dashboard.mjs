@@ -345,14 +345,24 @@ function equityBadge(company) {
     const tip = updated
       ? `No equity posture entry for ${company || 'this company'} (overpay-signals as of ${updated}).`
       : 'data/overpay-signals/CURRENT.md not present yet — run scripts/overpay-signals.mjs to populate.';
-    return `<span class="equity-badge equity-badge-empty" title="${escape(tip)}" aria-label="${escape(tip)}">—</span>`;
+    const detail = JSON.stringify({
+      kind: 'equity', company: company || '', stage: 'unknown', posture: '',
+      confidence: '', updated: updated || '', empty: true, hint: tip,
+    });
+    return `<span class="equity-badge equity-badge-empty pill-popover-trigger" title="${escape(tip)}" aria-label="${escape(tip)}" tabindex="0" role="button" data-pill='${escape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">—</span>`;
   }
   const meta = EQUITY_STAGE_META[data.stage] || EQUITY_STAGE_META.unknown;
   const tipParts = [data.posture];
   if (data.confidence) tipParts.push(`Confidence: ${data.confidence}`);
   if (updated) tipParts.push(`As of ${updated}`);
   const tip = tipParts.join(' · ');
-  return `<span class="equity-badge ${meta.cls}" data-equity-stage="${meta.cls}" title="${escape(tip)}" aria-label="${escape(`${meta.label}: ${tip}`)}">${meta.emoji} ${escape(meta.label)}</span>`;
+  const detail = JSON.stringify({
+    kind: 'equity', company: company || '', stage: data.stage,
+    label: meta.label, emoji: meta.emoji, posture: data.posture || '',
+    confidence: data.confidence || '', sources: data.sources || [],
+    updated: updated || '', empty: false,
+  });
+  return `<span class="equity-badge ${meta.cls} pill-popover-trigger" data-equity-stage="${meta.cls}" title="${escape(tip)}" aria-label="${escape(`${meta.label}: ${tip}`)}" tabindex="0" role="button" data-pill='${escape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">${meta.emoji} ${escape(meta.label)}</span>`;
 }
 
 // ── Base salary parsing + cell rendering ─────────────────────────────────────
@@ -427,7 +437,10 @@ function renderBaseCell(reportPath, floors) {
     const tip = compRaw
       ? `Comp not parsed: ${compRaw.slice(0, 160)}`
       : 'Comp not parsed — see report';
-    return `<span class="base-chip base-chip-empty" title="${escape(tip)}" aria-label="${escape(tip)}">—</span>`;
+    const detail = JSON.stringify({
+      kind: 'base', empty: true, raw: compRaw || '', hint: tip,
+    });
+    return `<span class="base-chip base-chip-empty pill-popover-trigger" title="${escape(tip)}" aria-label="${escape(tip)}" tabindex="0" role="button" data-pill='${escape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">—</span>`;
   }
   const { min, max, currency, isTotalComp } = parsed;
   let cls = 'base-chip-unknown';
@@ -446,9 +459,12 @@ function renderBaseCell(reportPath, floors) {
     isTotalComp ? 'total comp (not base)' : 'base salary',
   ];
   const tip = tipParts.join(' · ');
-  // Numeric data attr for column sorting (the dashboard's sortTable reads
-  // td.innerText.parseFloat — but we want sort by min, not visible label).
-  return `<span class="base-chip ${cls}" data-base-min="${min}" title="${escape(tip)}" aria-label="${escape(tip)}">${escape(label)}</span>`;
+  const detail = JSON.stringify({
+    kind: 'base', empty: false, min, max, currency, isTotalComp,
+    range, label, raw: compRaw || '',
+    floors: { target: floors.targetMin, floor: 175 },
+  });
+  return `<span class="base-chip ${cls} pill-popover-trigger" data-base-min="${min}" title="${escape(tip)}" aria-label="${escape(tip)}" tabindex="0" role="button" data-pill='${escape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">${escape(label)}</span>`;
 }
 
 // ── Location classification + cell rendering ────────────────────────────────
@@ -541,7 +557,8 @@ function renderLocationCell(reportPath) {
   const rawField = getLocationField(reportPath);
   const role = '';
   if (!rawField) {
-    return `<span class="location-chip location-chip-empty" title="Location not parsed — see report" aria-label="Location not parsed — see report">—</span>`;
+    const detail = JSON.stringify({ kind: 'location', empty: true, raw: '', hint: 'Location not parsed — see report' });
+    return `<span class="location-chip location-chip-empty pill-popover-trigger" title="Location not parsed — see report" aria-label="Location not parsed — see report" tabindex="0" role="button" data-pill='${escape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">—</span>`;
   }
   const cls = classifyLocation(rawField, role);
   let icon = '';
@@ -562,7 +579,11 @@ function renderLocationCell(reportPath) {
     chipCls = cls.status === 'preferred' ? 'location-chip-preferred' : cls.status === 'outside' ? 'location-chip-outside' : 'location-chip-unknown';
   }
   const tip = rawField.slice(0, 200);
-  return `<span class="location-chip ${chipCls}" data-location-status="${cls.status}" title="${escape(tip)}" aria-label="${escape(`${label}: ${tip}`)}">${icon} ${escape(label)}</span>`;
+  const detail = JSON.stringify({
+    kind: 'location', empty: false, icon, label, chipCls,
+    raw: rawField, kindLabel: cls.kind, status: cls.status, city: cls.city || '',
+  });
+  return `<span class="location-chip ${chipCls} pill-popover-trigger" data-location-status="${cls.status}" title="${escape(tip)}" aria-label="${escape(`${label}: ${tip}`)}" tabindex="0" role="button" data-pill='${escape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">${icon} ${escape(label)}</span>`;
 }
 
 // Render a single report's markdown to a self-contained HTML page that
@@ -1317,28 +1338,68 @@ function evalAge(dateStr) {
 // of truth — see imports above). The client bundle also injects them
 // via STATUS_KEY_SOURCE so all three layers stay in sync.
 
+// Map common company → careers/jobs landing page. Falls back to a Google
+// `site:` query when the company isn't in the map so the link is still useful.
+const CAREERS_URLS = {
+  'openai': 'https://openai.com/careers/search/',
+  'anthropic': 'https://www.anthropic.com/jobs',
+  'mistral ai': 'https://mistral.ai/careers',
+  'mistral': 'https://mistral.ai/careers',
+  'cohere': 'https://cohere.com/careers',
+  'perplexity': 'https://www.perplexity.ai/hub/careers',
+  'sierra': 'https://sierra.ai/careers',
+  'cursor': 'https://cursor.com/careers',
+  'elevenlabs': 'https://elevenlabs.io/careers',
+  'cognition': 'https://cognition.ai/careers',
+  'pinecone': 'https://www.pinecone.io/careers/',
+  'synthesia': 'https://www.synthesia.io/careers',
+  'ramp': 'https://ramp.com/careers',
+  'waymo': 'https://waymo.com/careers/',
+  'nvidia': 'https://www.nvidia.com/en-us/about-nvidia/careers/',
+  'micron': 'https://careers.micron.com/careers',
+  'amazon': 'https://www.amazon.jobs/en/',
+  'amazon aws': 'https://www.amazon.jobs/en/teams/aws',
+  'aws': 'https://www.amazon.jobs/en/teams/aws',
+  'google': 'https://careers.google.com/jobs/',
+  'meta': 'https://www.metacareers.com/jobs',
+  'apple': 'https://jobs.apple.com/en-us/search',
+  'microsoft': 'https://careers.microsoft.com/v2/global/en/home.html',
+  'figma': 'https://www.figma.com/careers/',
+  'notion': 'https://www.notion.so/careers',
+  'linear': 'https://linear.app/careers',
+  'vercel': 'https://vercel.com/careers',
+  'fireworks ai': 'https://fireworks.ai/careers',
+  'fireworks': 'https://fireworks.ai/careers',
+  'adobe': 'https://www.adobe.com/careers.html',
+};
+function companyCareersUrl(company) {
+  if (!company) return null;
+  const key = String(company).trim().toLowerCase();
+  if (CAREERS_URLS[key]) return CAREERS_URLS[key];
+  // Loose match — handle "Anthropic (Series G)" etc.
+  for (const [k, v] of Object.entries(CAREERS_URLS)) {
+    if (key.startsWith(k + ' ') || key === k) return v;
+  }
+  return `https://www.google.com/search?q=${encodeURIComponent(company + ' careers jobs')}`;
+}
+
 function renderRow(r, idx) {
   const archetype = getReportArchetype(r.reportPath);
   const url = getReportUrl(r.reportPath);
   const finalRec = getReportFinalRecommendation(r.reportPath);
   const edge = getCompetitiveEdge(r.reportPath);
-  // Action cell: Report (rendered HTML in browser) + Apply (JD URL).
-  // Both stop click propagation so clicking them doesn't toggle row expand.
+  // Action cell: Report (formatted .html) + Email (compose draft) + Verify
+  // (claims/research). The JD URL is wired directly on the role title now,
+  // so a separate "Apply" link is redundant.
   const reportHtmlLink = r.reportPath
     ? `<a href="reports/${basename(r.reportPath).replace(/\.md$/, '.html')}" target="_blank" onclick="event.stopPropagation()" title="Open formatted report in browser">Report</a>`
-    : '';
-  const applyLinkOnly = url
-    ? `<a href="${escape(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Apply</a>`
     : '';
   const verifySlug = r.reportPath ? basename(r.reportPath) : '';
   const verifyBtn = verifySlug
     ? `<a href="javascript:void(0)" onclick="openVerify('${verifySlug}');event.stopPropagation()" style="color:#8250df" title="Verify claims + research queries">Verify</a>`
     : '';
-  // Email launcher — between Apply and Verify in visual order. Company
-  // and role flow through data attributes so any special characters
-  // (quotes, ampersands, em-dashes) survive intact for mailto encoding.
   const emailBtn = `<a href="javascript:void(0)" class="email-launch-btn" onclick="openEmailPopover(this);event.stopPropagation()" data-company="${escape(r.company)}" data-role="${escape(r.role)}" style="color:#0969da" title="Draft outreach email" aria-label="Draft email for ${escape(r.company)} ${escape(r.role)}">Email</a>`;
-  const applyLink = [reportHtmlLink, applyLinkOnly, emailBtn, verifyBtn].filter(Boolean).join(' · ') || '<span class="muted">—</span>';
+  const applyLink = [reportHtmlLink, emailBtn, verifyBtn].filter(Boolean).join(' · ') || '<span class="muted">—</span>';
   // Clickable report link — file:// URL opens the .md in the OS default
   // app (Cursor, after we set it via duti). Stop event propagation so
   // clicking the link doesn't toggle the row's expand state.
@@ -1500,8 +1561,8 @@ function renderRow(r, idx) {
   <td class="bulk-cell"><input type="checkbox" class="bulk-checkbox" data-num="${r.num}" aria-label="Select row #${r.num} (${escape(r.company)})" onclick="event.stopPropagation();handleRowCheckbox(this)"></td>
   <td><span class="badge score-badge-lg ${scoreBadgeClass(r.score)}">${r.score.toFixed(1)}</span></td>
   <td class="base-cell">${baseCell}</td>
-  <td><strong>${escape(r.company)}</strong>${archetype ? `<span class="tier-tag" tabindex="0" role="button" data-tooltip="${escape(tierTooltip(archetype))}" aria-label="Tier ${escape(archetype)}: ${escape(tierTooltip(archetype))}" onclick="event.stopPropagation();openTierLegend('${escape(archetype)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openTierLegend('${escape(archetype)}')}">${escape(archetype)}</span>` : ''}</td>
-  <td class="role-cell">${escape(r.role)}${cardGapChips}</td>
+  <td><a href="${escape(companyCareersUrl(r.company))}" target="_blank" rel="noopener" class="company-link" onclick="event.stopPropagation()" title="Open ${escape(r.company)} careers page"><strong>${escape(r.company)}</strong></a>${archetype ? `<span class="tier-tag" tabindex="0" role="button" data-tooltip="${escape(tierTooltip(archetype))}" aria-label="Tier ${escape(archetype)}: ${escape(tierTooltip(archetype))}" onclick="event.stopPropagation();openTierLegend('${escape(archetype)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openTierLegend('${escape(archetype)}')}">${escape(archetype)}</span>` : ''}</td>
+  <td class="role-cell">${url ? `<a href="${escape(url)}" target="_blank" rel="noopener" class="role-link" onclick="event.stopPropagation()" title="Open original job posting">${escape(r.role)}</a>` : escape(r.role)}${cardGapChips}</td>
   <td class="status-cell"><span class="badge status-pill ${statusBadgeClass(r.status)}" data-status="${statusKey(r.status)}" data-num="${r.num}" role="button" tabindex="0" onclick="openStatusPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){openStatusPopover(this);event.preventDefault();event.stopPropagation()}" title="Click to change status">${escape(r.status)}</span></td>
   <td class="equity-cell">${equityCell}</td>
   <td class="location-cell">${locationCell}</td>
@@ -2086,14 +2147,15 @@ function build() {
   body.dark {
     /* Dark surfaces tuned so all body text hits WCAG AAA (≥7:1) on --bg
        and at least AA (≥4.5:1) on the brightest surface (--surface-2).
-       Previous --text-4 (#71717a) measured ~4.1:1 on --bg — failing AA;
-       bumping to #9a9aa6 (~7.0:1) brings muted text into AAA on the page
-       background while staying clearly subordinate to --text-3. */
-    --bg: #0a0a0b;
-    --surface: #18181b;
-    --surface-2: #1f1f23;
-    --border: #27272a;
-    --border-strong: #3f3f46;
+       Mission-control / space vibe: cool slate-blue base, deep enough for
+       OLED affinity but with a hint of cobalt warmth so the matrix-green
+       accent (hero balance, role-link hover) reads as the single dominant
+       signal color instead of fighting a neutral dead-grey background. */
+    --bg: #06070d;
+    --surface: #11131c;
+    --surface-2: #181b27;
+    --border: #232737;
+    --border-strong: #353a52;
     --text: #fafafa;
     --text-2: #e4e4e7;
     --text-3: #b8b8c0;
@@ -2133,6 +2195,43 @@ function build() {
        without fighting the colored token underneath. */
     --ring-green: 0 0 0 2px rgba(10,10,11,.95), 0 0 0 4px rgba(74,222,128,.55), 0 0 12px rgba(74,222,128,.18);
     --ring-blue:  0 0 0 2px rgba(10,10,11,.95), 0 0 0 4px rgba(148,163,184,.55), 0 0 12px rgba(148,163,184,.18);
+  }
+
+  /* Space ambient — only in dark mode. Two soft radial gradients painted
+     onto the body via background-image so they layer behind every panel
+     without affecting click targets or scroll perf. Stays off in light. */
+  body.dark {
+    background-color: var(--bg);
+    background-image:
+      radial-gradient(ellipse 1200px 600px at 12% -10%, rgba(64, 224, 208, 0.06), transparent 60%),
+      radial-gradient(ellipse 900px 500px at 88% 110%, rgba(139, 92, 246, 0.05), transparent 65%),
+      radial-gradient(ellipse 700px 400px at 50% 50%, rgba(0, 255, 157, 0.025), transparent 70%);
+    background-attachment: fixed;
+  }
+  /* Apply-Now hero gets a stronger matrix-green glow when in dark mode —
+     the room's only saturated focal point. */
+  body.dark .stat-hero-balance {
+    background:
+      radial-gradient(ellipse at left center, rgba(0,255,157,0.16) 0%, rgba(0,255,157,0.05) 35%, var(--surface) 78%);
+    border-color: rgba(0,255,157,0.18);
+    box-shadow: 0 0 0 1px rgba(0,255,157,0.08), 0 8px 32px rgba(0,255,157,0.06);
+  }
+  body.dark .stat-hero-balance::before {
+    background: linear-gradient(90deg, #00ff9d, rgba(0,255,157,0.4) 30%, transparent);
+    box-shadow: 0 0 12px rgba(0,255,157,0.4);
+  }
+  body.dark .stat-hero-balance .stat-value {
+    color: #4ade80;
+    text-shadow: 0 0 24px rgba(74,222,128,0.35);
+  }
+  body.dark .stat-hero-balance:hover {
+    border-color: rgba(0,255,157,0.45);
+    box-shadow: 0 0 0 1px rgba(0,255,157,0.25), 0 12px 48px rgba(0,255,157,0.18);
+  }
+  body.dark a.role-link:hover, body.dark a.role-link:focus-visible {
+    color: #4ade80;
+    text-shadow: 0 0 8px rgba(74,222,128,0.45);
+    border-bottom-color: #4ade80;
   }
 
   /* OLED true-black mode — opt-in via Cmd-K or the body.oled class.
@@ -2382,6 +2481,47 @@ function build() {
     }
     .sidebar-mini-text { display: none; }
     .sidebar-version { font-size: 9px; }
+  }
+
+  /* User-toggled collapse — mirrors the narrow-viewport rules but works at any
+     width >720px. Persisted via localStorage (init in initSidebarCollapse). */
+  @media (min-width: 721px) {
+    body.sidebar-collapsed .app-shell { grid-template-columns: var(--sidebar-w-collapsed) 1fr; }
+    body.sidebar-collapsed .sidebar-brand { justify-content: center; padding: 18px 8px 14px; }
+    body.sidebar-collapsed .sidebar-brand-name { display: none; }
+    body.sidebar-collapsed .sidebar-nav { padding: 10px 6px; }
+    body.sidebar-collapsed .sidebar-link { justify-content: center; padding: 9px 6px; gap: 0; }
+    body.sidebar-collapsed .sidebar-link .sidebar-label { display: none; }
+    body.sidebar-collapsed .sidebar-footer { padding: 8px 6px 12px; align-items: center; }
+    body.sidebar-collapsed .sidebar-mini-ticker {
+      padding: 6px; width: 32px; height: 32px;
+      justify-content: center; border-radius: 50%;
+    }
+    body.sidebar-collapsed .sidebar-mini-text { display: none; }
+    body.sidebar-collapsed .sidebar-version { font-size: 9px; }
+    body.sidebar-collapsed .sidebar-collapse-btn .sidebar-collapse-icon { transform: rotate(180deg); }
+    body.sidebar-collapsed .sidebar-collapse-btn .sidebar-collapse-label { display: none; }
+  }
+  .sidebar-collapse-btn {
+    display: none;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-3);
+    border-radius: 6px;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 11px;
+    align-items: center; gap: 6px;
+    margin-bottom: 8px;
+    transition: border-color .12s, color .12s, background .12s;
+  }
+  .sidebar-collapse-btn:hover { border-color: var(--border-strong); color: var(--text); background: var(--surface); }
+  .sidebar-collapse-icon {
+    display: inline-block; width: 12px; height: 12px;
+    transition: transform .15s ease;
+  }
+  @media (min-width: 1280px) {
+    .sidebar-collapse-btn { display: inline-flex; }
   }
 
   /* Mobile drawer mode. */
@@ -2919,32 +3059,34 @@ function build() {
   .stats {
     margin: 16px 0 24px;
   }
-  /* Compact stat strip — single row with Apply-Now hero spanning 2 cols + 6 secondary cards.
-     8 grid columns total: hero takes 2, each secondary card takes 1. All same height row. */
+  /* Hero promoted to its own row above the secondary strip.
+     Hero = full-width "mission balance" card. Strip = clean 6-col secondary grid below. */
+  .stats-hero-row {
+    display: block;
+    margin: 8px 0 8px;
+  }
   .stats-bento {
     display: grid;
-    grid-template-columns: 2fr repeat(6, 1fr);
-    grid-auto-rows: 78px;
-    gap: 6px;
-    margin: 8px 0 16px;
+    grid-template-columns: repeat(6, 1fr);
+    grid-auto-rows: 86px;
+    gap: 8px;
+    margin: 0 0 16px;
   }
   .stat-hero { grid-column: span 1; grid-row: span 1; }
-  .stat-hero-balance { grid-column: 1; grid-row: 1; }
   .stat-cell { grid-column: span 1; }
   .stat-strip { grid-column: 1 / -1; }
-  /* Tablet: 4-col grid; hero spans 2 cols. */
+  /* Tablet */
   @media (max-width: 1080px) {
-    .stats-bento { grid-template-columns: 2fr repeat(3, 1fr); grid-auto-rows: 78px; }
+    .stats-bento { grid-template-columns: repeat(3, 1fr); grid-auto-rows: 82px; }
   }
-  /* Mobile: 2-col compact grid. Hero spans full width, 6 cards in 3 rows of 2. */
+  /* Mobile */
   @media (max-width: 720px) {
     .stats-bento {
       grid-template-columns: repeat(2, 1fr);
-      grid-auto-rows: 70px;
+      grid-auto-rows: 76px;
       gap: 6px;
     }
     .stat-hero { grid-column: 1 / -1; grid-row: span 1; }
-    .stat-hero-balance { grid-column: 1 / -1; grid-row: span 1; }
     .stat-cell, .stat-strip { grid-column: span 1; grid-row: span 1; }
     .stat-strip { grid-column: 1 / -1; }
   }
@@ -2957,9 +3099,9 @@ function build() {
     gap: 2px; min-height: 0;
   }
   .stat-label {
-    font-size: 9px !important; line-height: 1.15;
-    letter-spacing: 0.04em; word-break: break-word; hyphens: auto;
-    max-height: 2.4em; overflow: hidden;
+    font-size: 10px !important; line-height: 1.2;
+    letter-spacing: 0.04em; word-break: normal; hyphens: none;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .stat::before {
     content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
@@ -2995,42 +3137,56 @@ function build() {
   @media (max-width: 720px) {
     .stat-hero .stat-value { font-size: 30px; }
   }
-  /* Hero balance card — Phase 7 Item 3 (Finux pattern):
-     full-width hero with oversize tabular numeral, sparkline as background fill,
-     subtle green-tinted gradient, delta pill in top-right. */
+  /* Hero balance — promoted to its own full-width row. Mission-control vibe. */
   .stat-hero-balance {
-    min-height: 78px;
-    padding: 8px 14px;
+    display: flex; flex-direction: row; align-items: center;
+    justify-content: space-between; gap: 24px;
+    width: 100%;
+    min-height: 96px;
+    padding: 16px 24px;
     background:
-      linear-gradient(135deg, rgba(22,163,74,0.06) 0%, rgba(22,163,74,0.015) 55%, var(--surface) 100%);
-    align-items: stretch; justify-content: center;
-    overflow: hidden;
+      radial-gradient(ellipse at left center, rgba(0,255,157,0.10) 0%, rgba(22,163,74,0.04) 35%, var(--surface) 75%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden; position: relative; cursor: pointer;
+    transition: border-color .15s, box-shadow .15s;
   }
   .stat-hero-balance::before {
-    height: 3px; background: var(--green-fg);
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--green-fg), transparent);
+    border-radius: var(--radius) var(--radius) 0 0;
   }
+  .stat-hero-balance:hover { border-color: var(--green-fg); box-shadow: var(--ring-green); }
   .stat-hero-balance .stat-label,
   .stat-hero-balance .stat-value,
-  .stat-hero-balance .stat-caret {
-    position: relative; z-index: 2;
-  }
+  .stat-hero-balance .stat-caret { position: relative; z-index: 2; }
   .stat-hero-balance .stat-label {
     font-size: 11px !important; color: var(--text-3);
-    margin-bottom: 2px;
+    margin: 0 0 4px 0; text-transform: uppercase; letter-spacing: 0.08em;
+    font-weight: 600; white-space: nowrap; overflow: visible;
   }
   .stat-hero-balance .stat-value {
-    font-size: 38px; line-height: 1; letter-spacing: -1.2px; margin: 0;
+    font-size: 56px; line-height: 1; letter-spacing: -1.8px; margin: 0;
     color: var(--green-fg);
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
     font-feature-settings: "tnum" 1, "ss01" 1;
     font-optical-sizing: auto;
   }
-  .stat-hero-balance:hover { border-color: var(--green-fg); box-shadow: var(--ring-green); }
+  .stat-hero-balance .stat-caret { display: none; }
+  .stat-hero-balance .hero-left { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .stat-hero-balance .hero-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+  @media (max-width: 720px) {
+    .stat-hero-balance { padding: 14px 18px; min-height: 88px; gap: 12px; }
+    .stat-hero-balance .stat-value { font-size: 46px; letter-spacing: -1.4px; }
+  }
   .hero-sparkline-bg {
     position: absolute; left: 0; right: 0; bottom: 0;
-    height: 70%;
+    height: 60%;
     pointer-events: none; z-index: 1;
     color: var(--green-fg);
-    opacity: 0.25;
+    opacity: 0.18;
     display: flex; align-items: stretch;
   }
   .hero-sparkline-bg .hero-sparkline {
@@ -3038,10 +3194,10 @@ function build() {
   }
   .stat-hero-balance:hover .hero-sparkline-bg { opacity: 0.38; }
   .hero-delta-pill {
-    position: absolute; top: 12px; right: 14px; z-index: 3;
+    position: relative; z-index: 3;
     font-family: var(--font-mono);
-    font-size: 11px; font-weight: 600; letter-spacing: 0.01em;
-    padding: 3px 9px; border-radius: 999px;
+    font-size: 12px; font-weight: 600; letter-spacing: 0.01em;
+    padding: 5px 12px; border-radius: 999px;
     white-space: nowrap; line-height: 1.4;
     font-variant-numeric: tabular-nums;
   }
@@ -3234,6 +3390,20 @@ function build() {
     font-feature-settings: "tnum" 1;
   }
   .role-cell { color: var(--text); font-weight: 500; }
+  /* Role + company become primary links — strong visual affordance, no decoration
+     until hover so the table stays scannable. */
+  a.role-link, a.company-link {
+    color: inherit; text-decoration: none;
+    border-bottom: 1px dotted transparent;
+    transition: border-color .12s ease, color .12s ease;
+  }
+  a.role-link:hover, a.role-link:focus-visible {
+    color: var(--green-fg); border-bottom-color: var(--green-fg);
+  }
+  a.company-link:hover, a.company-link:focus-visible {
+    color: var(--blue-fg); border-bottom-color: var(--blue-fg);
+  }
+  a.role-link:focus-visible, a.company-link:focus-visible { outline: none; }
   /* Action-cell links rendered as 44×44 padded buttons (WCAG 2.5.5). */
   td.action-cell { white-space: nowrap; }
   td.action-cell a {
@@ -3809,6 +3979,53 @@ function build() {
     background: var(--surface-2); border: 1px solid var(--border);
     border-radius: var(--radius-sm); padding: 12px 16px; min-width: 100px; text-align: center;
   }
+  /* Single-row variant — score buckets + status buckets in one strip with a
+     subtle divider between the two groups. Cards flex to share width evenly
+     and shrink to fit. Wraps gracefully on narrow viewports. */
+  .bucket-grid-row { flex-wrap: nowrap; align-items: stretch; gap: 8px; }
+  .bucket-grid-row .bucket-card {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 10px 8px;
+  }
+  .bucket-grid-row .bucket-card .bval { font-size: 20px; }
+  .bucket-grid-row .bucket-card .blbl { font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  /* Recent evaluations — collapsed shows top 5 visible row pairs (10 trs:
+     5 .row + 5 hidden .detail-row siblings). Expand reveals the rest. */
+  .recent-evals-header {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 12px; margin-bottom: 6px;
+  }
+  .recent-evals-meta {
+    font-size: 11px; color: var(--text-3);
+    font-variant-numeric: tabular-nums;
+  }
+  .recent-evals-wrap.collapsed tbody tr:nth-child(n+11) { display: none !important; }
+  .recent-evals-toggle {
+    display: inline-flex; align-items: center; gap: 6px;
+    margin-top: 8px; padding: 7px 14px;
+    background: transparent; color: var(--text-2);
+    border: 1px solid var(--border); border-radius: 6px;
+    font-size: 12px; font-weight: 500; cursor: pointer;
+    font-family: inherit;
+    transition: border-color .12s, color .12s, background .12s;
+  }
+  .recent-evals-toggle:hover {
+    border-color: var(--border-strong); color: var(--text);
+    background: var(--surface-2);
+  }
+  .recent-evals-toggle:focus-visible { outline: 2px solid var(--blue-fg); outline-offset: 2px; }
+  .bucket-divider {
+    flex: 0 0 1px;
+    align-self: stretch;
+    background: var(--border);
+    margin: 6px 6px;
+  }
+  @media (max-width: 880px) {
+    .bucket-grid-row { flex-wrap: wrap; }
+    .bucket-grid-row .bucket-card { flex: 1 1 calc(33% - 8px); min-width: 90px; }
+    .bucket-divider { display: none; }
+  }
   .bucket-card .bval { font-size: 22px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
   .bucket-card .blbl { font-size: 11px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
 
@@ -4043,6 +4260,63 @@ function build() {
     display: none;
   }
   #email-popover.is-open { display: block; }
+
+  /* Cell popover (Equity / Base / Location detail). Same chrome as the
+     email popover but wider so the source list / raw comp string fits. */
+  #pill-popover {
+    position: absolute; z-index: 2500;
+    background: var(--surface); color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-md);
+    padding: 12px 14px;
+    min-width: 280px; max-width: 380px;
+    font-size: 13px; line-height: 1.5;
+    display: none;
+  }
+  body.dark #pill-popover {
+    background: var(--surface);
+    border-color: var(--border-strong);
+    box-shadow: 0 8px 32px rgba(0,0,0,.55);
+  }
+  #pill-popover.is-open { display: block; }
+  #pill-popover .pill-popover-kind {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--text-3); font-weight: 700; margin-bottom: 4px;
+  }
+  #pill-popover .pill-popover-headline {
+    font-size: 15px; font-weight: 600; color: var(--text); margin: 0 0 8px 0;
+  }
+  #pill-popover .pill-popover-body {
+    color: var(--text-2); font-size: 12px; line-height: 1.5;
+  }
+  #pill-popover .pill-popover-meta {
+    margin-top: 10px; padding-top: 8px;
+    border-top: 1px solid var(--border);
+    font-size: 11px; color: var(--text-3);
+  }
+  #pill-popover .pill-popover-row {
+    display: flex; gap: 8px; margin: 3px 0;
+  }
+  #pill-popover .pill-popover-row dt {
+    color: var(--text-4); flex: 0 0 78px; font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  #pill-popover .pill-popover-row dd { margin: 0; flex: 1; color: var(--text-2); font-size: 12px; }
+  #pill-popover .pill-popover-sources {
+    margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--border);
+  }
+  #pill-popover .pill-popover-sources a {
+    display: block; padding: 2px 0; color: var(--blue-fg-dark);
+    font-size: 11px; text-decoration: none;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  #pill-popover .pill-popover-sources a:hover { text-decoration: underline; }
+  #pill-popover .pill-popover-empty {
+    color: var(--text-3); font-style: italic; font-size: 12px;
+  }
+  .pill-popover-trigger { cursor: pointer; }
+  .pill-popover-trigger:focus-visible { outline: 2px solid var(--blue-fg); outline-offset: 2px; border-radius: 4px; }
   #email-popover .email-popover-header {
     font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em;
     color: var(--text-3); font-weight: 700; padding: 4px 8px 6px;
@@ -4952,6 +5226,12 @@ function build() {
       </button>
     </nav>
     <div class="sidebar-footer">
+      <button type="button" class="sidebar-collapse-btn" id="sidebar-collapse-btn" onclick="toggleSidebarCollapse()" aria-label="Collapse sidebar" title="Collapse sidebar (⌘\\)">
+        <svg class="sidebar-collapse-icon" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+          <path d="M7.5 2.5L4 6l3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="sidebar-collapse-label">Collapse</span>
+      </button>
       <div class="sidebar-mini-ticker" id="sidebar-mini-ticker" title="Live scan activity">
         <span class="sidebar-mini-dot" aria-hidden="true"></span>
         <span class="sidebar-mini-text" id="sidebar-mini-text">—</span>
@@ -4993,42 +5273,6 @@ function build() {
   </div>
 
   <div class="subtle" id="dashboard-meta" title="${escape(generated)}"><span id="live-updated">Updated ${escape(generated)}</span> · ${reportsToday} reports today</div>
-
-  <div class="layout">
-  <aside class="sidebar" id="sidebar" aria-label="Section navigation">
-    <div class="sidebar-brand">
-      <span class="sidebar-brand-icon" aria-hidden="true">C</span>
-      <span class="sidebar-brand-text">Career-Ops</span>
-    </div>
-    <nav class="sidebar-nav" aria-label="Dashboard sections">
-      <a href="#main" class="sidebar-link" data-section="main" aria-current="true">
-        <span class="sidebar-link-icon" aria-hidden="true">📊</span><span class="sidebar-link-label">Overview</span>
-      </a>
-      <a href="#apply-now-section" class="sidebar-link" data-section="apply-now-section">
-        <span class="sidebar-link-icon" aria-hidden="true">🎯</span><span class="sidebar-link-label">Apply-Now</span>
-      </a>
-      <a href="#all-evaluations-section" class="sidebar-link" data-section="all-evaluations-section">
-        <span class="sidebar-link-icon" aria-hidden="true">📋</span><span class="sidebar-link-label">All Evaluations</span>
-      </a>
-      <a href="#trends-panel" class="sidebar-link" data-section="trends-panel">
-        <span class="sidebar-link-icon" aria-hidden="true">📈</span><span class="sidebar-link-label">Trends + Analytics</span>
-      </a>
-      <a href="#charts-section" class="sidebar-link" data-section="charts-section">
-        <span class="sidebar-link-icon" aria-hidden="true">🏢</span><span class="sidebar-link-label">Companies</span>
-      </a>
-      <button type="button" class="sidebar-link" data-section="settings" onclick="openMobileSettingsSheet(); closeSidebarDrawer();">
-        <span class="sidebar-link-icon" aria-hidden="true">⚙️</span><span class="sidebar-link-label">Settings</span>
-      </button>
-    </nav>
-    <div class="sidebar-foot">
-      <div class="sidebar-ticker" id="sidebar-ticker" data-freshness="stale" aria-hidden="true" title="Most recent scan">
-        <span class="sidebar-ticker-dot"></span>
-        <span class="sidebar-ticker-text" id="sidebar-ticker-text">No scans yet</span>
-      </div>
-      <div class="sidebar-version" aria-label="Career-Ops version">v${escape(appVersion || '—')}</div>
-    </div>
-  </aside>
-  <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="closeSidebarDrawer()" aria-hidden="true"></div>
 
   <main id="main">
 
@@ -5182,6 +5426,9 @@ function build() {
   <!-- Inline email template launcher popover -->
   <div id="email-popover" role="menu" aria-label="Pick an email template"></div>
 
+  <!-- Shared cell-popover (Equity / Base / Location) -->
+  <div id="pill-popover" role="dialog" aria-label="Cell detail" aria-hidden="true"></div>
+
   <!-- Bulk action bar (visible only when ≥1 row selected) -->
   <div id="bulk-action-bar" role="region" aria-label="Bulk actions" hidden>
     <div class="bulk-bar-inner">
@@ -5204,14 +5451,19 @@ function build() {
   </div>
 
   <div class="stats" id="overview-section">
-    <div class="stats-bento">
-      <div class="stat stat-hero-balance ${applyNow.length > 0 ? 'stat-strong' : ''}" onclick="document.getElementById('apply-now-section').scrollIntoView({behavior:'smooth'})" title="Click to scroll to Apply-Now queue">
+    <div class="stats-hero-row">
+      <div class="stat-hero-balance ${applyNow.length > 0 ? 'stat-strong' : ''}" onclick="document.getElementById('apply-now-section').scrollIntoView({behavior:'smooth'})" title="Click to scroll to Apply-Now queue" role="button" tabindex="0">
         <div class="hero-sparkline-bg" aria-hidden="true">${heroSparklineSVG(kpiSpark.applyNow.daily, 'Apply-Now')}</div>
-        ${deltaPill(kpiSpark.applyNow.delta)}
-        <div class="stat-label">Apply-Now (≥ 4.0)</div>
-        <div class="stat-value" id="live-apply-now">${applyNow.length}</div>
-        <span class="stat-caret" aria-hidden="true">▾</span><span class="sr-only">Click to scroll to Apply-Now queue</span>
+        <div class="hero-left">
+          <div class="stat-label">Apply-Now Queue · score ≥ 4.0</div>
+          <div class="stat-value" id="live-apply-now">${applyNow.length}</div>
+        </div>
+        <div class="hero-right">
+          ${deltaPill(kpiSpark.applyNow.delta)}
+        </div>
       </div>
+    </div>
+    <div class="stats-bento">
       <div class="stat stat-hero" onclick="toggleStatPanel('evaluations')" title="Click to see all evaluations">
         <div class="stat-label">Total evaluations</div>
         <div class="stat-value" id="live-total">${total}</div>
@@ -5483,7 +5735,6 @@ function build() {
   ${renderCompAnalytics(compAnalytics, compFloors)}
 
   </main>
-</div>
   </div><!-- /.app-main -->
 </div><!-- /.app-shell -->
 
@@ -5491,10 +5742,11 @@ function build() {
 // ── Dark mode ───────────────────────────────────────────────────
 const DARK_KEY = 'career-ops-dark';
 function initDark() {
+  // Default = dark. Only switch to light if the user has explicitly chosen it.
+  // Mission-control / matrix vibe is the brand voice.
   const saved = localStorage.getItem(DARK_KEY);
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  if (saved === 'dark' || (saved === null && prefersDark)) applyDark(true);
-  else applyDark(false);
+  if (saved === 'light') applyDark(false);
+  else applyDark(true);
 }
 function applyDark(on) {
   document.body.classList.toggle('dark', on);
@@ -5703,6 +5955,8 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initMissionControlStrip);
 } else {
   initMissionControlStrip();
+}
+
 // ── Persistent left sidebar (Phase 7 Item 4) ────────────────────
 // IntersectionObserver highlights the section currently in the
 // viewport; falls back to plain anchor links when the API is missing.
@@ -5727,6 +5981,34 @@ function closeSidebar() {
 }
 window.toggleSidebar = toggleSidebar;
 window.closeSidebar = closeSidebar;
+
+// Desktop sidebar collapse — body class swap + localStorage persistence.
+// Cmd/Ctrl + \\ toggles. Distinct from mobile drawer (toggleSidebar).
+function applySidebarCollapse(collapsed) {
+  document.body.classList.toggle('sidebar-collapsed', !!collapsed);
+  const btn = document.getElementById('sidebar-collapse-btn');
+  if (btn) {
+    btn.setAttribute('aria-label', collapsed ? 'Expand sidebar' : 'Collapse sidebar');
+    btn.setAttribute('title', collapsed ? 'Expand sidebar (⌘\\\\)' : 'Collapse sidebar (⌘\\\\)');
+  }
+}
+function toggleSidebarCollapse() {
+  const next = !document.body.classList.contains('sidebar-collapsed');
+  applySidebarCollapse(next);
+  try { localStorage.setItem('career-ops-sidebar-collapsed', next ? '1' : '0'); } catch (e) {}
+}
+function initSidebarCollapse() {
+  let stored = '0';
+  try { stored = localStorage.getItem('career-ops-sidebar-collapsed') || '0'; } catch (e) {}
+  applySidebarCollapse(stored === '1');
+  document.addEventListener('keydown', function(e) {
+    if ((e.metaKey || e.ctrlKey) && e.key === '\\\\') {
+      e.preventDefault();
+      toggleSidebarCollapse();
+    }
+  });
+}
+window.toggleSidebarCollapse = toggleSidebarCollapse;
 
 function initSidebar() {
   const sb = document.getElementById('sidebar');
@@ -5799,8 +6081,10 @@ function initSidebar() {
 }
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initSidebar);
+  document.addEventListener('DOMContentLoaded', initSidebarCollapse);
 } else {
   initSidebar();
+  initSidebarCollapse();
 }
 
 // ── OLED true-black mode ────────────────────────────────────────
@@ -6935,6 +7219,20 @@ function scoreBadge(s) {
   const cls = s >= 4 ? 'score-strong' : s >= 3 ? 'score-moderate' : 'score-weak';
   return \`<span class="badge \${cls}">\${Number(s).toFixed(1)}</span>\`;
 }
+function toggleRecentEvals() {
+  const wrap = document.getElementById('recent-evals-wrap');
+  const btn = document.getElementById('recent-evals-toggle');
+  if (!wrap) return;
+  const collapsed = wrap.classList.toggle('collapsed');
+  const total = parseInt(wrap.getAttribute('data-total') || '0', 10);
+  const meta = document.querySelector('.recent-evals-shown');
+  if (meta) meta.textContent = collapsed ? '5' : String(total);
+  if (btn) {
+    btn.textContent = collapsed ? 'Show all ' + total + ' \\u25be' : 'Show top 5 \\u25b4';
+    btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+  }
+}
+window.toggleRecentEvals = toggleRecentEvals;
 ${STATUS_KEY_SOURCE}
 function statusBadge(st, num) {
   if (!st) return '';
@@ -7021,11 +7319,17 @@ function renderStatPanel(key, data) {
     const statusCards = Object.entries(byStatus).map(([st, val]) =>
       \`<div class="bucket-card"><div class="bval">\${val}</div><div class="blbl">\${st}</div></div>\`
     ).join('');
+    const recentRows = (data.recent || rows).slice(0, 30);
+    const recentTotal = recentRows.length;
+    const hasMore = recentTotal > 5;
     return \`<div class="stat-panel-title">\${esc(title)} <span class="pill">\${count}</span> <span style="font-size:12px;color:#57606a;font-weight:400">· live</span></div>
-      <div style="margin-bottom:12px"><strong style="font-size:13px">Score distribution</strong><div class="bucket-grid" style="margin-top:8px">\${bucketCards}</div></div>
-      <div style="margin-bottom:16px"><strong style="font-size:13px">By status</strong><div class="bucket-grid" style="margin-top:8px">\${statusCards}</div></div>
-      <strong style="font-size:13px">Recent evaluations</strong>
-      <div style="margin-top:10px">\${buildTable((data.recent || rows).slice(0,30), key)}</div>\`;
+      <div style="margin-bottom:16px"><div class="bucket-grid bucket-grid-row" style="margin-top:8px">\${bucketCards}<span class="bucket-divider" aria-hidden="true"></span>\${statusCards}</div></div>
+      <div class="recent-evals-header">
+        <strong style="font-size:13px">Recent evaluations</strong>
+        \${hasMore ? \`<span class="recent-evals-meta">Showing <span class="recent-evals-shown">5</span> of \${recentTotal}</span>\` : ''}
+      </div>
+      <div class="recent-evals-wrap collapsed" id="recent-evals-wrap" data-total="\${recentTotal}" style="margin-top:10px">\${buildTable(recentRows, key)}</div>
+      \${hasMore ? \`<button type="button" class="recent-evals-toggle" id="recent-evals-toggle" onclick="toggleRecentEvals()" aria-expanded="false">Show all \${recentTotal} ▾</button>\` : ''}\`;
   }
 
   if (key === 'pending') {
@@ -7599,6 +7903,125 @@ function closeEmailPopover() {
     _emailOutsideHandler = null;
   }
 }
+
+// ── Pill popover (Equity / Base / Location detail) ─────────────
+let _pillOutsideHandler = null;
+let _pillActiveEl = null;
+function openPillPopover(el) {
+  const pop = document.getElementById('pill-popover');
+  if (!pop || !el) return;
+  if (_pillActiveEl === el && pop.classList.contains('is-open')) {
+    closePillPopover();
+    return;
+  }
+  let detail = {};
+  try { detail = JSON.parse(el.getAttribute('data-pill') || '{}'); } catch (e) { return; }
+  pop.innerHTML = _renderPillPopover(detail);
+  pop.classList.add('is-open');
+  pop.setAttribute('aria-hidden', 'false');
+  _positionFloater(pop, el);
+  _pillActiveEl = el;
+  _pillOutsideHandler = (evt) => {
+    if (evt.target.closest('#pill-popover')) return;
+    if (evt.target === el || el.contains(evt.target)) return;
+    closePillPopover();
+  };
+  setTimeout(() => document.addEventListener('click', _pillOutsideHandler), 0);
+  document.addEventListener('keydown', _pillEscHandler);
+}
+function closePillPopover() {
+  const pop = document.getElementById('pill-popover');
+  if (pop) { pop.classList.remove('is-open'); pop.innerHTML = ''; pop.setAttribute('aria-hidden', 'true'); }
+  _pillActiveEl = null;
+  if (_pillOutsideHandler) {
+    document.removeEventListener('click', _pillOutsideHandler);
+    _pillOutsideHandler = null;
+  }
+  document.removeEventListener('keydown', _pillEscHandler);
+}
+function _pillEscHandler(e) { if (e.key === 'Escape') closePillPopover(); }
+function _positionFloater(pop, anchor) {
+  const r = anchor.getBoundingClientRect();
+  pop.style.visibility = 'hidden';
+  pop.style.top = '0px'; pop.style.left = '0px';
+  // Force a reflow so we can measure.
+  const pr = pop.getBoundingClientRect();
+  let top = window.scrollY + r.bottom + 6;
+  let left = window.scrollX + r.left;
+  if (left + pr.width > window.scrollX + window.innerWidth - 12) {
+    left = window.scrollX + window.innerWidth - pr.width - 12;
+  }
+  if (left < window.scrollX + 12) left = window.scrollX + 12;
+  if (top + pr.height > window.scrollY + window.innerHeight - 12) {
+    top = window.scrollY + r.top - pr.height - 6;
+  }
+  pop.style.top = top + 'px';
+  pop.style.left = left + 'px';
+  pop.style.visibility = '';
+}
+function _renderPillPopover(d) {
+  const esc = (s) => String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  if (d.kind === 'equity') {
+    if (d.empty) {
+      return '<div class="pill-popover-kind">Equity / IPO posture</div>'
+        + '<h4 class="pill-popover-headline">' + esc(d.company || '?') + ' — no entry yet</h4>'
+        + '<div class="pill-popover-body pill-popover-empty">'
+        + esc(d.hint || '') + '</div>'
+        + '<div class="pill-popover-meta">Run <code>node scripts/overpay-signals.mjs</code> to enrich.</div>';
+    }
+    const sources = (d.sources || []).slice(0, 4)
+      .map(u => '<a href="' + esc(u) + '" target="_blank" rel="noopener">' + esc(u) + '</a>').join('');
+    return '<div class="pill-popover-kind">Equity / IPO posture · ' + esc(d.company) + '</div>'
+      + '<h4 class="pill-popover-headline">' + esc((d.emoji ? d.emoji + ' ' : '') + d.label) + '</h4>'
+      + '<div class="pill-popover-body">' + esc(d.posture || '') + '</div>'
+      + (sources ? '<div class="pill-popover-sources">' + sources + '</div>' : '')
+      + '<div class="pill-popover-meta">'
+      + (d.confidence ? 'Confidence: ' + esc(d.confidence) + ' · ' : '')
+      + (d.updated ? 'As of ' + esc(d.updated) : '')
+      + '</div>';
+  }
+  if (d.kind === 'base') {
+    if (d.empty) {
+      return '<div class="pill-popover-kind">Base salary</div>'
+        + '<h4 class="pill-popover-headline">Not parseable</h4>'
+        + '<div class="pill-popover-body pill-popover-empty">'
+        + (d.raw ? 'Raw comp string from report:<br><code>' + esc(d.raw.slice(0, 240)) + '</code>' : esc(d.hint || ''))
+        + '</div>';
+    }
+    const tier = d.min >= (d.floors && d.floors.target ? d.floors.target : 200)
+      ? 'meets target floor' : (d.min >= 175 ? 'meets minimum floor' : 'below floor');
+    return '<div class="pill-popover-kind">Base salary</div>'
+      + '<h4 class="pill-popover-headline">' + esc(d.range || d.label) + '</h4>'
+      + '<dl class="pill-popover-body">'
+      + '<div class="pill-popover-row"><dt>Currency</dt><dd>' + esc(d.currency || '?') + '</dd></div>'
+      + '<div class="pill-popover-row"><dt>Type</dt><dd>' + (d.isTotalComp ? 'Total comp' : 'Base salary') + '</dd></div>'
+      + '<div class="pill-popover-row"><dt>Tier</dt><dd>' + esc(tier) + '</dd></div>'
+      + '</dl>'
+      + (d.raw ? '<div class="pill-popover-meta">From report Block A:<br><code style="font-size:10px">'
+          + esc(d.raw.slice(0, 200)) + '</code></div>' : '');
+  }
+  if (d.kind === 'location') {
+    if (d.empty) {
+      return '<div class="pill-popover-kind">Location</div>'
+        + '<h4 class="pill-popover-headline">Not parsed</h4>'
+        + '<div class="pill-popover-body pill-popover-empty">' + esc(d.hint || '') + '</div>';
+    }
+    return '<div class="pill-popover-kind">Location</div>'
+      + '<h4 class="pill-popover-headline">' + esc((d.icon ? d.icon + ' ' : '') + d.label) + '</h4>'
+      + '<dl class="pill-popover-body">'
+      + (d.kindLabel ? '<div class="pill-popover-row"><dt>Type</dt><dd>' + esc(d.kindLabel) + '</dd></div>' : '')
+      + (d.city ? '<div class="pill-popover-row"><dt>City</dt><dd>' + esc(d.city) + '</dd></div>' : '')
+      + (d.status ? '<div class="pill-popover-row"><dt>Match</dt><dd>' + esc(d.status) + ' (vs preferred metros)</dd></div>' : '')
+      + '</dl>'
+      + (d.raw ? '<div class="pill-popover-meta">From report Block A:<br><code style="font-size:10px">'
+          + esc(d.raw.slice(0, 200)) + '</code></div>' : '');
+  }
+  return '<div class="pill-popover-empty">No detail available.</div>';
+}
+window.openPillPopover = openPillPopover;
+window.closePillPopover = closePillPopover;
 
 function _emailLaunchById(id, ctx) {
   const tpl = (EMAIL_LAUNCHER_DATA.templates || []).find(t => t.id === id);
