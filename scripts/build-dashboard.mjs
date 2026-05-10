@@ -1920,26 +1920,34 @@ function build() {
     --green-fg-dark: #166534;
     --green-bg: #dcfce7;
     --green-border: #86efac;
-    --blue: #1d4ed8;
-    --blue-fg: #2563eb;
-    --blue-fg-dark: #1e40af;
-    --blue-bg: #dbeafe;
-    --blue-border: #93c5fd;
-    --amber: #b45309;
-    --amber-fg: #d97706;
-    --amber-fg-dark: #92400e;
-    --amber-bg: #fef3c7;
-    --amber-border: #fcd34d;
+    /* ── Single-accent palette (Phase 7 Item 2, Wave I) ──────────
+       Editorial-restraint move per data/dashboard-phase7-inspiration-2026-05-10.md:
+       reserve saturation for green (act) and red (blocked) only.
+       Blue / amber / purple are demoted to desaturated semantic tokens
+       (~50% chroma drop) so the eye is drawn to Apply-Now and to
+       blocked/error states first. Hue is preserved enough to keep
+       links readable as links and warnings readable as warnings,
+       but no longer competes with green/red for visual weight. */
+    --blue: #475c75;
+    --blue-fg: #5a76a6;
+    --blue-fg-dark: #3d4f6b;
+    --blue-bg: #e8edf4;
+    --blue-border: #c0cad9;
+    --amber: #8a6840;
+    --amber-fg: #a87b48;
+    --amber-fg-dark: #6b5430;
+    --amber-bg: #f4ede1;
+    --amber-border: #d8c79f;
     --red: #b91c1c;
     --red-fg: #dc2626;
     --red-fg-dark: #991b1b;
     --red-bg: #fee2e2;
     --red-border: #fca5a5;
-    --purple: #6d28d9;
-    --purple-fg: #7c3aed;
-    --purple-fg-dark: #5b21b6;
-    --purple-bg: #ede9fe;
-    --purple-border: #c4b5fd;
+    --purple: #5d5670;
+    --purple-fg: #847a99;
+    --purple-fg-dark: #4f4960;
+    --purple-bg: #ecebf0;
+    --purple-border: #cac6d4;
     --radius: 8px;
     --radius-sm: 6px;
     --radius-full: 9999px;
@@ -1949,7 +1957,7 @@ function build() {
     --shadow-md: 0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -2px rgba(0,0,0,.1);
     --shadow-lg: 0 10px 15px -3px rgba(0,0,0,.1), 0 4px 6px -4px rgba(0,0,0,.1);
     --ring-green: 0 0 0 3px rgba(22,163,74,.15);
-    --ring-blue: 0 0 0 3px rgba(37,99,235,.15);
+    --ring-blue: 0 0 0 3px rgba(90,118,166,.18);
     /* ── Monospace accent surface (Phase 6 #1.3) ─────────────────
        Dev-tool aesthetic for data, timestamps, IDs, and numerics.
        JetBrains Mono ships tnum + ss01-ss20 features; we enable
@@ -1983,31 +1991,36 @@ function build() {
     --green-fg-dark: #bbf7d0;
     --green-bg: rgba(22,163,74,.12);
     --green-border: rgba(22,163,74,.3);
-    --blue: #93c5fd;
-    --blue-fg: #60a5fa;
-    --blue-fg-dark: #bfdbfe;
-    --blue-bg: rgba(37,99,235,.12);
-    --blue-border: rgba(37,99,235,.3);
-    --amber: #fbbf24;
-    --amber-fg: #fcd34d;
-    --amber-fg-dark: #fde68a;
-    --amber-bg: rgba(217,119,6,.12);
-    --amber-border: rgba(217,119,6,.3);
+    /* Dark-mode equivalents of the Phase 7 single-accent palette.
+       Greens + reds keep their saturated dark-mode values; blue / amber /
+       purple are dropped to slate / muted-ochre / near-monochrome so the
+       Apply-Now CTA and FAIL/blocked states remain the only saturated
+       surfaces on the page. */
+    --blue: #a4b0c2;
+    --blue-fg: #94a3b8;
+    --blue-fg-dark: #cbd5e1;
+    --blue-bg: rgba(100,116,139,.14);
+    --blue-border: rgba(100,116,139,.3);
+    --amber: #c2a571;
+    --amber-fg: #d4ba84;
+    --amber-fg-dark: #e6d4a8;
+    --amber-bg: rgba(168,123,72,.14);
+    --amber-border: rgba(168,123,72,.3);
     --red: #f87171;
     --red-fg: #fca5a5;
     --red-fg-dark: #fecaca;
     --red-bg: rgba(220,38,38,.12);
     --red-border: rgba(220,38,38,.3);
-    --purple: #c4b5fd;
-    --purple-fg: #a78bfa;
-    --purple-fg-dark: #ddd6fe;
-    --purple-bg: rgba(124,58,237,.12);
-    --purple-border: rgba(124,58,237,.3);
+    --purple: #b3afbf;
+    --purple-fg: #a39db5;
+    --purple-fg-dark: #cdc8d6;
+    --purple-bg: rgba(132,122,153,.14);
+    --purple-border: rgba(132,122,153,.3);
     /* Two-layer focus ring for dark mode: outer glow + inner crisp ring
        so the indicator reads on both raised surfaces and the page bg
        without fighting the colored token underneath. */
     --ring-green: 0 0 0 2px rgba(10,10,11,.95), 0 0 0 4px rgba(74,222,128,.55), 0 0 12px rgba(74,222,128,.18);
-    --ring-blue:  0 0 0 2px rgba(10,10,11,.95), 0 0 0 4px rgba(147,197,253,.55), 0 0 12px rgba(147,197,253,.18);
+    --ring-blue:  0 0 0 2px rgba(10,10,11,.95), 0 0 0 4px rgba(148,163,184,.55), 0 0 12px rgba(148,163,184,.18);
   }
 
   /* OLED true-black mode — opt-in via Cmd-K or the body.oled class.
@@ -4278,7 +4291,7 @@ function build() {
       <div class="stat stat-hero" onclick="toggleStatPanel('evaluations')" title="Click to see all evaluations">
         <div class="stat-label">Total evaluations</div>
         <div class="stat-value" id="live-total">${total}</div>
-        <div class="stat-trend">${deltaIndicator(kpiSpark.total.delta)}${sparklineSVG(kpiSpark.total.daily, 'var(--blue-fg)', 'Total evaluations')}</div>
+        <div class="stat-trend">${deltaIndicator(kpiSpark.total.delta)}${sparklineSVG(kpiSpark.total.daily, 'var(--text-3)', 'Total evaluations')}</div>
         <span class="stat-caret" aria-hidden="true">▾</span><span class="sr-only">Click to expand</span>
       </div>
       <div class="stat stat-cell" onclick="toggleStatPanel('pending')" title="Click to see pipeline">
@@ -4305,7 +4318,7 @@ function build() {
       <div class="stat stat-cell" onclick="toggleStatPanel('applied')" title="Click to see in-flight applications">
         <div class="stat-label">Applied / In process</div>
         <div class="stat-value" id="live-applied">${applied.length}</div>
-        <div class="stat-trend">${deltaIndicator(kpiSpark.applied.delta)}${sparklineSVG(kpiSpark.applied.daily, 'var(--purple-fg)', 'Applied / In process')}</div>
+        <div class="stat-trend">${deltaIndicator(kpiSpark.applied.delta)}${sparklineSVG(kpiSpark.applied.daily, 'var(--text-3)', 'Applied / In process')}</div>
         <span class="stat-caret" aria-hidden="true">▾</span><span class="sr-only">Click to expand</span>
       </div>
     </div>
