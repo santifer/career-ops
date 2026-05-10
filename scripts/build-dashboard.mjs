@@ -6560,24 +6560,28 @@ function openRightRailForDetail(idx, detailRow) {
   const block = detailRow.querySelector('.detail-block');
 
   // Pull the row's existing chips/badges so the drawer header stays
-  // visually aligned with the table row it's describing.
-  const company = row?.querySelector('td:nth-child(3) strong')?.textContent.trim() || '';
-  const role = (row?.querySelector('td:nth-child(4)')?.textContent || '').trim();
+  // visually aligned with the table row it's describing. Selectors use
+  // class-based queries (not nth-child) so they survive column reorders.
+  const company = row?.querySelector('a.company-link strong, td strong')?.textContent.trim() || '';
+  const roleLinkEl = row?.querySelector('td.role-cell a.role-link');
+  const role = (roleLinkEl?.textContent || row?.querySelector('td.role-cell')?.textContent || '').trim();
   const num = row?.dataset.num || '';
-  const scoreEl = row?.querySelector('td:nth-child(2) .score-badge-lg');
+  const scoreEl = row?.querySelector('.score-badge-lg');
   const scoreHtml = scoreEl ? scoreEl.outerHTML : '';
-  const statusEl = row?.querySelector('td:nth-child(5) .status-pill');
+  const statusEl = row?.querySelector('td.status-cell .status-pill, .status-pill');
   const statusHtml = statusEl ? statusEl.outerHTML : '';
-  const tierEl = row?.querySelector('td:nth-child(3) .tier-tag');
+  const tierEl = row?.querySelector('.tier-tag');
   const tierHtml = tierEl ? tierEl.outerHTML : '';
 
-  // Favicon: pull hostname from the row's Apply anchor; fall back to a
-  // single-letter avatar tile when the URL is missing or unparseable.
+  // Favicon: prefer the role-title link (now the canonical JD URL since
+  // we dropped the Apply column). Fall back to the company /careers link
+  // or any external anchor in the row.
   let logoHost = '';
-  const applyAnchor = row?.querySelector('td.action-cell a[href]:not([href^="#"]):not([href^="reports/"]):not([href^="javascript:"]):not([href^="file:"])');
   let applyHref = '';
-  if (applyAnchor && applyAnchor.href) {
-    applyHref = applyAnchor.href;
+  const jdAnchor = row?.querySelector('td.role-cell a.role-link[href], a.company-link[href]')
+    || row?.querySelector('td.action-cell a[href]:not([href^="#"]):not([href^="reports/"]):not([href^="javascript:"]):not([href^="file:"])');
+  if (jdAnchor && jdAnchor.href) {
+    applyHref = jdAnchor.href;
     try { logoHost = new URL(applyHref).hostname; } catch (e) {}
   }
   const fallbackChar = (company.charAt(0) || '?').toUpperCase();
@@ -6594,7 +6598,7 @@ function openRightRailForDetail(idx, detailRow) {
       + '<div class="drawer-title-row">'
       +   logoHtml
       +   '<div class="drawer-title-meta">'
-      +     '<div class="drawer-company">' + _drawerEscape(company) + (tierHtml || '') + '</div>'
+      +     '<div class="drawer-company"><span class="drawer-company-name">' + _drawerEscape(company) + '</span>' + (tierHtml || '') + '</div>'
       +     '<div class="drawer-role">' + _drawerEscape(role) + '</div>'
       +   '</div>'
       + '</div>'
