@@ -857,6 +857,7 @@ function renderRow(r, idx) {
 
   return `
 <tr class="row ${throttleClass}" data-num="${r.num}" data-row-id="${escape(idx)}" data-score="${r.score}" data-archetype="${escape(archetype)}" data-company="${escape(r.company.toLowerCase())}" data-status="${escape(r.status.toLowerCase())}" data-role="${escape(r.role.toLowerCase())}" data-equity="${escape(equityStage)}" data-search="${escape(searchIndex)}" onclick="toggleDetail('${idx}')">
+  <td class="bulk-cell"><input type="checkbox" class="bulk-checkbox" data-num="${r.num}" aria-label="Select row #${r.num} (${escape(r.company)})" onclick="event.stopPropagation();handleRowCheckbox(this)"></td>
   <td><span class="badge score-badge-lg ${scoreBadgeClass(r.score)}">${r.score.toFixed(1)}</span></td>
   <td><strong>${escape(r.company)}</strong>${archetype ? `<span class="tier-tag" tabindex="0" role="button" data-tooltip="${escape(tierTooltip(archetype))}" aria-label="Tier ${escape(archetype)}: ${escape(tierTooltip(archetype))}" onclick="event.stopPropagation();openTierLegend('${escape(archetype)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openTierLegend('${escape(archetype)}')}">${escape(archetype)}</span>` : ''}</td>
   <td class="role-cell">${escape(r.role)}${cardGapChips}</td>
@@ -867,7 +868,7 @@ function renderRow(r, idx) {
   <td class="action-cell">${applyLink}</td>
 </tr>
 <tr class="detail-row" id="detail-${idx}" style="display:none">
-  <td colspan="8">
+  <td colspan="9">
     <div class="detail-block">
       ${r._throttle?.label ? `<div class="throttle-banner throttle-${r._throttle.status}">${escape(r._throttle.label)}<br><span class="muted-text">${escape(r._throttle.note || '')}</span></div>` : ''}
       ${metaChips ? `<div class="detail-meta">${metaChips}</div>` : ''}
@@ -2446,6 +2447,96 @@ function build() {
     .status-popover-item { min-height: 44px; padding: 12px 14px; }
   }
 
+  /* ── Bulk operations: row checkboxes + floating action bar ───── */
+  /* Checkbox column is collapsed by default; revealed once any row is
+     selected (via row-click handler) or when select-mode is forced
+     on (Cmd-K toggle). Using width:0 + visibility:hidden keeps the
+     column structure intact for sortTable / colspan math. */
+  .bulk-th, .bulk-cell {
+    width: 0;
+    padding: 0 !important;
+    visibility: hidden;
+    overflow: hidden;
+    transition: width .12s ease;
+  }
+  body.select-mode .bulk-th,
+  body.select-mode .bulk-cell {
+    width: 28px;
+    padding: 6px 6px !important;
+    visibility: visible;
+  }
+  .bulk-checkbox, .bulk-header-checkbox {
+    width: 16px; height: 16px;
+    cursor: pointer;
+    accent-color: var(--blue-fg, #0969da);
+    margin: 0;
+  }
+  tr.row.is-bulk-selected > td {
+    background: var(--blue-bg, #ddf4ff) !important;
+  }
+  #bulk-action-bar {
+    position: fixed;
+    top: 12px; left: 50%; transform: translateX(-50%) translateY(-8px);
+    z-index: 4000;
+    background: var(--surface, #fff);
+    border: 1px solid var(--border, #d0d7de);
+    border-radius: 999px;
+    box-shadow: var(--shadow-lg, 0 8px 24px rgba(140,149,159,.2));
+    padding: 6px 10px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .15s ease, transform .15s ease;
+  }
+  #bulk-action-bar:not([hidden]) {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+  }
+  .bulk-bar-inner {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 13px; color: var(--text);
+  }
+  .bulk-bar-count {
+    padding: 0 8px 0 6px;
+    color: var(--text-2, #57606a);
+    white-space: nowrap;
+  }
+  .bulk-bar-count strong {
+    color: var(--text, #1f2328);
+    font-weight: 600;
+  }
+  .bulk-btn {
+    background: var(--surface-2, #f6f8fa);
+    color: var(--text, #1f2328);
+    border: 1px solid var(--border, #d0d7de);
+    padding: 6px 12px;
+    border-radius: 999px;
+    cursor: pointer;
+    font: inherit;
+    font-size: 12.5px;
+    line-height: 1;
+    transition: background .1s ease;
+  }
+  .bulk-btn:hover { background: var(--surface, #fff); }
+  .bulk-btn-primary {
+    background: var(--blue-fg, #0969da);
+    color: #fff;
+    border-color: var(--blue-fg, #0969da);
+  }
+  .bulk-btn-primary:hover { background: #0860c7; color: #fff; }
+  .bulk-btn-ghost {
+    background: transparent;
+    border-color: transparent;
+    color: var(--text-3, #6e7781);
+  }
+  .bulk-btn-ghost:hover { background: var(--surface-2, #f6f8fa); color: var(--text); }
+  @media (hover: none) and (pointer: coarse), (max-width: 640px) {
+    body.select-mode .bulk-th, body.select-mode .bulk-cell { width: 36px; }
+    .bulk-checkbox, .bulk-header-checkbox { width: 22px; height: 22px; }
+    .bulk-btn { min-height: 36px; padding: 8px 14px; font-size: 13px; }
+    #bulk-action-bar { top: 8px; max-width: calc(100vw - 16px); }
+  }
+
   /* ── Touch-target audit (>=44x44 on coarse pointers / mobile) ─── */
   @media (hover: none) and (pointer: coarse), (max-width: 640px) {
     .toolbar-btn { min-height: 44px; min-width: 44px; padding: 10px 16px; font-size: 13px; }
@@ -2890,6 +2981,16 @@ function build() {
   <!-- Inline status writeback popover -->
   <div id="status-popover" role="menu" aria-label="Set status"></div>
 
+  <!-- Bulk action bar (visible only when ≥1 row selected) -->
+  <div id="bulk-action-bar" role="region" aria-label="Bulk actions" hidden>
+    <div class="bulk-bar-inner">
+      <span class="bulk-bar-count" aria-live="polite"><strong id="bulk-count">0</strong> selected</span>
+      <button type="button" class="bulk-btn bulk-btn-primary" onclick="bulkApply('Applied')" aria-label="Mark selected rows as Applied">Mark Applied</button>
+      <button type="button" class="bulk-btn" onclick="bulkApply('SKIP')" aria-label="Mark selected rows as SKIP">Mark Skip</button>
+      <button type="button" class="bulk-btn bulk-btn-ghost" onclick="bulkClearSelection()" aria-label="Clear selection">Clear</button>
+    </div>
+  </div>
+
   <!-- Verify claims modal -->
   <div id="verify-backdrop" onclick="closeVerify()">
     <div id="verify-modal" onclick="event.stopPropagation()">
@@ -2957,13 +3058,14 @@ function build() {
     <p style="font-size:13px;color:#57606a;margin:0 0 12px">Score ≥ 4.0 with status in {Evaluated, Responded, Interview}. Drag a row's <span aria-hidden="true">⋮⋮</span> handle to prioritize. Click any row to expand.</p>
     <div class="table-scroll"><table>
       <thead><tr>
-        <th class="sortable" onclick="sortTable('apply-now-tbody', 0, 'num', this)">Score</th>
-        <th class="sortable" onclick="sortTable('apply-now-tbody', 1, 'str', this)">Company <button type="button" class="tier-legend-btn" title="Tier badge legend" aria-label="Show tier badge legend" onclick="event.stopPropagation();openTierLegend()">?</button></th>
-        <th class="sortable" onclick="sortTable('apply-now-tbody', 2, 'str', this)">Role</th>
-        <th class="sortable" onclick="sortTable('apply-now-tbody', 3, 'str', this)">Status</th>
-        <th class="sortable" onclick="sortTable('apply-now-tbody', 4, 'str', this)">Equity <button type="button" class="tier-legend-btn" title="Equity stage legend" aria-label="Show equity stage legend" onclick="event.stopPropagation();openEquityLegend()">?</button></th>
-        <th class="sortable mobile-hide" onclick="sortTable('apply-now-tbody', 5, 'str', this)">Eval Date</th>
-        <th class="sortable" onclick="sortTable('apply-now-tbody', 6, 'num', this)">Age</th>
+        <th class="bulk-th"><input type="checkbox" class="bulk-header-checkbox" data-tbody="apply-now-tbody" aria-label="Select all visible rows in Apply-Now" onclick="handleHeaderCheckbox(this)"></th>
+        <th class="sortable" onclick="sortTable('apply-now-tbody', 1, 'num', this)">Score</th>
+        <th class="sortable" onclick="sortTable('apply-now-tbody', 2, 'str', this)">Company <button type="button" class="tier-legend-btn" title="Tier badge legend" aria-label="Show tier badge legend" onclick="event.stopPropagation();openTierLegend()">?</button></th>
+        <th class="sortable" onclick="sortTable('apply-now-tbody', 3, 'str', this)">Role</th>
+        <th class="sortable" onclick="sortTable('apply-now-tbody', 4, 'str', this)">Status</th>
+        <th class="sortable" onclick="sortTable('apply-now-tbody', 5, 'str', this)">Equity <button type="button" class="tier-legend-btn" title="Equity stage legend" aria-label="Show equity stage legend" onclick="event.stopPropagation();openEquityLegend()">?</button></th>
+        <th class="sortable mobile-hide" onclick="sortTable('apply-now-tbody', 6, 'str', this)">Eval Date</th>
+        <th class="sortable" onclick="sortTable('apply-now-tbody', 7, 'num', this)">Age</th>
         <th>Action</th>
       </tr></thead>
       <tbody id="apply-now-tbody">
@@ -3035,13 +3137,14 @@ function build() {
     </div>
     <div class="table-scroll"><table>
       <thead><tr>
-        <th class="sortable" onclick="sortTable('all-tbody', 0, 'num', this)">Score</th>
-        <th class="sortable" onclick="sortTable('all-tbody', 1, 'str', this)">Company <button type="button" class="tier-legend-btn" title="Tier badge legend" aria-label="Show tier badge legend" onclick="event.stopPropagation();openTierLegend()">?</button></th>
-        <th class="sortable" onclick="sortTable('all-tbody', 2, 'str', this)">Role</th>
-        <th class="sortable" onclick="sortTable('all-tbody', 3, 'str', this)">Status</th>
-        <th class="sortable" onclick="sortTable('all-tbody', 4, 'str', this)">Equity <button type="button" class="tier-legend-btn" title="Equity stage legend" aria-label="Show equity stage legend" onclick="event.stopPropagation();openEquityLegend()">?</button></th>
-        <th class="sortable mobile-hide" onclick="sortTable('all-tbody', 5, 'str', this)">Eval Date</th>
-        <th class="sortable" onclick="sortTable('all-tbody', 6, 'num', this)">Age</th>
+        <th class="bulk-th"><input type="checkbox" class="bulk-header-checkbox" data-tbody="all-tbody" aria-label="Select all visible rows in All Evaluations" onclick="handleHeaderCheckbox(this)"></th>
+        <th class="sortable" onclick="sortTable('all-tbody', 1, 'num', this)">Score</th>
+        <th class="sortable" onclick="sortTable('all-tbody', 2, 'str', this)">Company <button type="button" class="tier-legend-btn" title="Tier badge legend" aria-label="Show tier badge legend" onclick="event.stopPropagation();openTierLegend()">?</button></th>
+        <th class="sortable" onclick="sortTable('all-tbody', 3, 'str', this)">Role</th>
+        <th class="sortable" onclick="sortTable('all-tbody', 4, 'str', this)">Status</th>
+        <th class="sortable" onclick="sortTable('all-tbody', 5, 'str', this)">Equity <button type="button" class="tier-legend-btn" title="Equity stage legend" aria-label="Show equity stage legend" onclick="event.stopPropagation();openEquityLegend()">?</button></th>
+        <th class="sortable mobile-hide" onclick="sortTable('all-tbody', 6, 'str', this)">Eval Date</th>
+        <th class="sortable" onclick="sortTable('all-tbody', 7, 'num', this)">Age</th>
         <th>Action</th>
       </tr></thead>
       <tbody id="all-tbody">
@@ -3465,6 +3568,7 @@ function applyFilters() {
       detail.style.display = show && detail.style.display !== 'none' ? detail.style.display : 'none';
   }
   if (typeof renderSavedViewChips === 'function') renderSavedViewChips();
+  if (typeof _bulkUpdateHeaderCheckboxes === 'function') _bulkUpdateHeaderCheckboxes();
 }
 
 function sortTable(tbodyId, colIdx, type, thEl) {
@@ -4373,6 +4477,7 @@ function _cmdkActions() {
     { id: 'act-scan', icon: '⟳', title: 'Run scan (show command)', sub: 'Display the shell command to run a portal scan', run: () => {
       toast('Run in terminal: node scan.mjs', 'info');
     } },
+    { id: 'act-select-mode', icon: '☑', title: 'Toggle select mode', sub: 'Show / hide row checkboxes for bulk status updates', run: () => toggleSelectMode() },
   ];
 }
 
@@ -4728,6 +4833,207 @@ window.openStatusPopover = openStatusPopover;
 window.closeStatusPopover = closeStatusPopover;
 window.applyStatus = applyStatus;
 
+// ── Bulk operations: select rows + bulk status writeback ────────
+// Selection state is keyed by row-num (the canonical applications.md id),
+// persisted to localStorage so an accidental refresh doesn't lose it.
+const BULK_STORAGE_KEY = 'careerOps.bulkSelection.v1';
+const BULK_MODE_KEY = 'careerOps.bulkMode.v1';
+const _bulkSelected = new Set();
+
+function _bulkLoadFromStorage() {
+  try {
+    const raw = localStorage.getItem(BULK_STORAGE_KEY);
+    if (!raw) return;
+    const arr = JSON.parse(raw);
+    if (Array.isArray(arr)) for (const n of arr) _bulkSelected.add(String(n));
+  } catch (_) {}
+  try {
+    if (localStorage.getItem(BULK_MODE_KEY) === '1') document.body.classList.add('select-mode');
+  } catch (_) {}
+}
+
+function _bulkPersist() {
+  try { localStorage.setItem(BULK_STORAGE_KEY, JSON.stringify([..._bulkSelected])); }
+  catch (_) {}
+}
+
+function _bulkPersistMode() {
+  try {
+    if (document.body.classList.contains('select-mode')) localStorage.setItem(BULK_MODE_KEY, '1');
+    else localStorage.removeItem(BULK_MODE_KEY);
+  } catch (_) {}
+}
+
+function _bulkSyncCheckboxesFromState() {
+  document.querySelectorAll('.bulk-checkbox').forEach(cb => {
+    const num = cb.dataset.num;
+    const isSel = _bulkSelected.has(String(num));
+    cb.checked = isSel;
+    const tr = cb.closest('tr.row');
+    if (tr) tr.classList.toggle('is-bulk-selected', isSel);
+  });
+  _bulkUpdateHeaderCheckboxes();
+}
+
+function _bulkUpdateBar() {
+  const bar = document.getElementById('bulk-action-bar');
+  const count = document.getElementById('bulk-count');
+  if (!bar || !count) return;
+  count.textContent = String(_bulkSelected.size);
+  if (_bulkSelected.size > 0) {
+    bar.hidden = false;
+    // First selection auto-enables select mode so the column reveals
+    if (!document.body.classList.contains('select-mode')) {
+      document.body.classList.add('select-mode');
+      _bulkPersistMode();
+    }
+  } else {
+    bar.hidden = true;
+  }
+}
+
+function _bulkVisibleRowsIn(tbodyId) {
+  const tbody = document.getElementById(tbodyId);
+  if (!tbody) return [];
+  return [...tbody.querySelectorAll('tr.row')].filter(r => r.style.display !== 'none');
+}
+
+function _bulkUpdateHeaderCheckboxes() {
+  document.querySelectorAll('.bulk-header-checkbox').forEach(hc => {
+    const tbodyId = hc.dataset.tbody;
+    const visibleRows = _bulkVisibleRowsIn(tbodyId);
+    if (!visibleRows.length) {
+      hc.checked = false;
+      hc.indeterminate = false;
+      return;
+    }
+    const selVisible = visibleRows.filter(r => _bulkSelected.has(String(r.dataset.num))).length;
+    if (selVisible === 0) {
+      hc.checked = false;
+      hc.indeterminate = false;
+    } else if (selVisible === visibleRows.length) {
+      hc.checked = true;
+      hc.indeterminate = false;
+    } else {
+      hc.checked = false;
+      hc.indeterminate = true;
+    }
+  });
+}
+
+function handleRowCheckbox(cb) {
+  const num = String(cb.dataset.num || '');
+  if (!num) return;
+  if (cb.checked) _bulkSelected.add(num);
+  else _bulkSelected.delete(num);
+  const tr = cb.closest('tr.row');
+  if (tr) tr.classList.toggle('is-bulk-selected', cb.checked);
+  _bulkPersist();
+  _bulkUpdateBar();
+  _bulkUpdateHeaderCheckboxes();
+}
+
+function handleHeaderCheckbox(hc) {
+  const tbodyId = hc.dataset.tbody;
+  const visibleRows = _bulkVisibleRowsIn(tbodyId);
+  if (!visibleRows.length) { hc.checked = false; return; }
+  const allSelected = visibleRows.every(r => _bulkSelected.has(String(r.dataset.num)));
+  for (const tr of visibleRows) {
+    const num = String(tr.dataset.num || '');
+    if (!num) continue;
+    if (allSelected) _bulkSelected.delete(num);
+    else _bulkSelected.add(num);
+  }
+  _bulkPersist();
+  _bulkSyncCheckboxesFromState();
+  _bulkUpdateBar();
+}
+
+function bulkClearSelection() {
+  _bulkSelected.clear();
+  _bulkPersist();
+  document.querySelectorAll('.bulk-checkbox').forEach(cb => { cb.checked = false; });
+  document.querySelectorAll('tr.row.is-bulk-selected').forEach(tr => tr.classList.remove('is-bulk-selected'));
+  _bulkUpdateHeaderCheckboxes();
+  _bulkUpdateBar();
+}
+
+function toggleSelectMode() {
+  document.body.classList.toggle('select-mode');
+  _bulkPersistMode();
+  if (!document.body.classList.contains('select-mode')) bulkClearSelection();
+  if (window.toast) window.toast(document.body.classList.contains('select-mode') ? 'Select mode on' : 'Select mode off', 'info');
+}
+
+async function bulkApply(newStatus) {
+  if (_bulkSelected.size === 0) return;
+  if (!newStatus) return;
+  const nums = [..._bulkSelected].map(n => parseInt(n, 10)).filter(n => !Number.isNaN(n));
+  if (!nums.length) return;
+
+  // Snapshot for revert
+  const snapshot = [];
+  for (const num of nums) {
+    const badge = document.querySelector('.status-pill[data-num="' + num + '"]');
+    const tr = document.querySelector('tr.row[data-num="' + num + '"]');
+    if (!badge) continue;
+    snapshot.push({
+      num,
+      badge,
+      tr,
+      origText: (badge.textContent || '').trim(),
+      origClasses: [...badge.classList],
+      origRowStatus: tr ? tr.dataset.status : null,
+    });
+  }
+
+  // Optimistic swap
+  for (const s of snapshot) {
+    s.badge.textContent = newStatus;
+    clearStatusClasses(s.badge);
+    s.badge.classList.add(statusClassFor(newStatus));
+    s.badge.classList.add('status-pill-pending');
+    if (s.tr) s.tr.dataset.status = newStatus.toLowerCase();
+  }
+
+  try {
+    const res = await fetch('/api/status/bulk', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ nums, status: newStatus }),
+    });
+    let data = {};
+    try { data = await res.json(); } catch (_) {}
+    if (!res.ok || !data.ok) {
+      throw new Error(data && data.error ? data.error : ('HTTP ' + res.status));
+    }
+    for (const s of snapshot) s.badge.classList.remove('status-pill-pending');
+    const updatedCount = (data.updated || []).length;
+    const missingCount = (data.notFound || []).length;
+    bulkClearSelection();
+    if (window.toast) {
+      const msg = updatedCount + ' row' + (updatedCount === 1 ? '' : 's') + ' → ' + newStatus
+        + (missingCount ? ' (' + missingCount + ' not found)' : '');
+      window.toast(msg, missingCount ? 'info' : 'success');
+    }
+  } catch (err) {
+    // Revert all optimistic changes
+    for (const s of snapshot) {
+      s.badge.textContent = s.origText;
+      s.badge.className = s.origClasses.join(' ');
+      s.badge.classList.remove('status-pill-pending');
+      if (s.tr && s.origRowStatus !== null) s.tr.dataset.status = s.origRowStatus;
+    }
+    if (window.toast) window.toast('Bulk update failed: ' + (err && err.message || 'unknown'), 'error');
+  }
+}
+
+window.handleRowCheckbox = handleRowCheckbox;
+window.handleHeaderCheckbox = handleHeaderCheckbox;
+window.bulkClearSelection = bulkClearSelection;
+window.bulkApply = bulkApply;
+window.toggleSelectMode = toggleSelectMode;
+
 // ── Toast ───────────────────────────────────────────────────────
 window.toast = function(msg, type) {
   const container = document.getElementById('toast-container');
@@ -4760,6 +5066,10 @@ refreshLiveStats();
 _batchInterval = setInterval(pollBatch, 2000);
 pollBatch();
 setInterval(refreshLiveStats, 30000);
+
+_bulkLoadFromStorage();
+_bulkSyncCheckboxesFromState();
+_bulkUpdateBar();
 
 // ── PWA service worker ─────────────────────────────────────────
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {

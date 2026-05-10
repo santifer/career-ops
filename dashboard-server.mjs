@@ -680,6 +680,93 @@ function updateApplicationStatus({ num, status, note }) {
   return { ok: true, row: updatedRow };
 }
 
+function updateApplicationStatusBulk({ nums, status }) {
+  if (!Array.isArray(nums) || nums.length === 0) {
+    return { ok: false, code: 400, error: 'nums is required (non-empty array of integers)' };
+  }
+  if (nums.length > 200) {
+    return { ok: false, code: 400, error: `Too many rows in one request (${nums.length} > 200)` };
+  }
+  if (!status || typeof status !== 'string') {
+    return { ok: false, code: 400, error: 'status is required (string)' };
+  }
+  const canonical = CANONICAL_STATUSES.find(s => s.toLowerCase() === status.trim().toLowerCase());
+  if (!canonical) {
+    return {
+      ok: false, code: 400,
+      error: `Invalid status "${status}". Must be one of: ${CANONICAL_STATUSES.join(', ')}`,
+    };
+  }
+
+  const targets = new Set();
+  for (const n of nums) {
+    const parsed = parseInt(n, 10);
+    if (Number.isNaN(parsed)) {
+      return { ok: false, code: 400, error: `Invalid num "${n}" — must be integer` };
+    }
+    targets.add(String(parsed));
+  }
+
+  const appsPath = join(ROOT, 'data/applications.md');
+  if (!existsSync(appsPath)) {
+    return { ok: false, code: 500, error: 'data/applications.md not found' };
+  }
+
+  const text = readFileSync(appsPath, 'utf8');
+  const lines = text.split('\n');
+  const updated = [];
+  const stillMissing = new Set(targets);
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (!line.startsWith('|')) continue;
+    if (line.match(/^[\|\s\-:]+$/)) continue;
+    if (line.includes('| # |')) continue;
+
+    const cols = line.split('|').map(c => c.trim());
+    if (cols.length < 10) continue;
+    if (!targets.has(cols[1])) continue;
+
+    cols[6] = canonical;
+    lines[i] = '| ' + cols.slice(1, 10).join(' | ') + ' |';
+
+    const reportMatch = cols[8]?.match(/\[(\d+)\]\(([^)]+)\)/);
+    updated.push({
+      num: cols[1],
+      date: cols[2],
+      company: cols[3],
+      role: cols[4],
+      score: parseFloat(cols[5]) || 0,
+      status: cols[6],
+      pdf: cols[7],
+      report: reportMatch ? reportMatch[2] : null,
+      notes: cols[9] || '',
+    });
+    stillMissing.delete(cols[1]);
+  }
+
+  if (updated.length === 0) {
+    return {
+      ok: false, code: 404,
+      error: `No matching rows found for: ${[...stillMissing].join(', ')}`,
+    };
+  }
+
+  // Atomic write — single rename for the entire batch
+  const tmpPath = appsPath + '.tmp.' + process.pid + '.' + Date.now();
+  try {
+    writeFileSync(tmpPath, lines.join('\n'));
+    renameSync(tmpPath, appsPath);
+  } catch (err) {
+    return { ok: false, code: 500, error: `Atomic write failed: ${err.message}` };
+  }
+  return {
+    ok: true,
+    updated,
+    notFound: [...stillMissing],
+  };
+}
+
 // ── Share-link tokens (24h read-only recruiter links) ─────────
 
 const SHARE_TOKENS_PATH = join(ROOT, 'data/share-tokens.json');
@@ -823,6 +910,35 @@ const server = createServer((req, res) => {
 
   if (url === '/api/status' && req.method === 'GET') {
     return json({ canonicalStatuses: CANONICAL_STATUSES });
+  }
+
+  if (url === '/api/status/bulk' && req.method === 'POST') {
+    let body = '';
+    let total = 0;
+    req.on('data', c => {
+      total += c.length;
+      if (total > 64 * 1024) { req.destroy(); return; }
+      body += c;
+    });
+    req.on('end', () => {
+      let parsed;
+      try { parsed = JSON.parse(body); }
+      catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ ok: false, error: 'Invalid JSON body' }));
+        return;
+      }
+      const result = updateApplicationStatusBulk({
+        nums:   parsed.nums,
+        status: parsed.status,
+      });
+      const code = result.ok ? 200 : (result.code || 400);
+      res.writeHead(code, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify(result.ok
+        ? { ok: true, updated: result.updated, notFound: result.notFound, canonicalStatuses: CANONICAL_STATUSES }
+        : { ok: false, error: result.error }));
+    });
+    return;
   }
 
   const detailMatch = url.match(/^\/api\/detail\/(.+)$/);
