@@ -46,13 +46,6 @@ title_filter:
     - "Reporting Engineer"
     - "Insights Engineer"
     - "Product Analyst"
-    # -- Data Leadership --
-    - "Head of Data"
-    - "Director of Data"
-    - "VP of Data"
-    - "Director of Analytics"
-    - "VP Analytics"
-    - "Chief Data Officer"
     # -- Full Stack / Platform (data-adjacent) --
     - "Full Stack Engineer"
     - "Full-Stack Engineer"
@@ -60,6 +53,21 @@ title_filter:
     - "Backend Engineer"
     - "Software Engineer"
   negative:
+    # -- Leadership / people-manager roles (IC only) --
+    - "Head of Data"
+    - "Head of Analytics"
+    - "Director of Data"
+    - "Director of Analytics"
+    - "VP of Data"
+    - "VP Analytics"
+    - "Chief Data Officer"
+    - "CDO"
+    - "VP, Data"
+    - "VP of Analytics"
+    - "Data Manager"
+    - "Analytics Manager"
+    - "Engineering Manager"
+    # -- Seniority / experience filters --
     - "Junior"
     - "Intern"
     - "Entry Level"
@@ -82,10 +90,6 @@ title_filter:
     - "Staff"
     - "Principal"
     - "Lead"
-    - "Head"
-    - "Director"
-    - "VP"
-    - "Manager"
 
 # -- Search queries --
 # Focused on real estate + data professional roles, US remote.

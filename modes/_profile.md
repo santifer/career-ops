@@ -13,16 +13,16 @@
 ## Your Target Roles
 
 14 years of experience in real estate firms as a full-stack data professional.
-Targeting US remote data roles at real estate and property management companies.
+Targeting US remote **individual contributor (IC)** data roles at real estate and property management companies.
+**Not seeking leadership, management, or people-manager roles.** Priority: work-life balance + AI-resilient work.
 
-| Archetype | Thematic axes | What they buy |
-|-----------|---------------|---------------|
-| **Senior / Staff Data Engineer** | Pipelines, warehouses, dbt, Snowflake/Databricks, data platform | Someone who builds and owns the data infrastructure end-to-end |
-| **Analytics Engineer** | dbt, Snowflake, semantic layer, BI, data modeling | Someone who bridges raw data and business insight |
-| **Data Scientist / ML Engineer** | Pricing models, AVM, risk scoring, demand forecasting | Someone who builds RE-specific predictive models with production experience |
-| **BI / Insights Engineer** | Dashboards, Tableau/Looker/Power BI, reporting, KPIs | Someone who turns data into decisions for RE operations |
-| **Data / Analytics Manager** | Team leadership, data strategy, stakeholder alignment | A senior IC who can also grow a team |
-| **Full Stack Data Engineer** | End-to-end: ingestion → transformation → serving → BI | A rare generalist who owns the entire data stack |
+| Archetype | Thematic axes | What they buy | AI resilience |
+|-----------|---------------|---------------|---------------|
+| **Senior / Staff Data Engineer** | Pipelines, warehouses, dbt, Snowflake/Databricks, data platform | Someone who builds and owns the data infrastructure end-to-end | High — AI runs on top of this work, not instead of it |
+| **Analytics Engineer** | dbt, Snowflake, semantic layer, BI, data modeling | Someone who bridges raw data and business insight | High — requires business context + domain judgment AI lacks |
+| **Data Platform / Infrastructure Engineer** | Cloud infra, orchestration, Airflow, CI/CD, data reliability | Someone who keeps the data platform running reliably | High — operational, context-heavy, judgment-dependent |
+| **BI / Insights Engineer** | Tableau/Looker/Power BI, KPI frameworks, self-serve analytics | Someone who translates data into decisions | Medium-High — AI generates queries but humans define the questions |
+| **Full Stack Data Engineer** | End-to-end: ingestion → transformation → serving → BI | A rare generalist who owns the entire data stack | High — breadth makes full replacement hard |
 
 ## Your Adaptive Framing
 
@@ -30,10 +30,9 @@ Targeting US remote data roles at real estate and property management companies.
 |-------------------|------------------------|---------------------|
 | Data Engineering | Pipeline reliability, data platform ownership, RE domain depth | cv.md + article-digest.md |
 | Analytics Engineering | dbt modeling, semantic layer, BI delivery, stakeholder impact | cv.md + article-digest.md |
-| Data Science / ML | RE pricing models, AVM, forecasting, production ML at scale | cv.md + article-digest.md |
+| Data Platform / Infra | Cloud orchestration, Airflow, CI/CD, data reliability, governance | cv.md + article-digest.md |
 | BI / Reporting | Dashboard design, KPI definition, self-serve analytics adoption | cv.md + article-digest.md |
 | Full Stack / Platform | Ownership from ingestion to BI, breadth across the stack | cv.md + article-digest.md |
-| Leadership / Manager | Hiring, mentoring, data strategy, cross-functional alignment | cv.md |
 
 ## Your RE Domain Advantage
 
@@ -92,17 +91,55 @@ When a JD mentions any of these — cite it as a direct match. Most candidates w
 
 **Why:** Your 14 years of RE domain experience is directly transferable and rare. Generic tech companies don't get this boost.
 
+### Work-Life Balance Scoring
+
+**RULE: Evaluate WLB signals explicitly in Block D (Cultural signals) using these adjustments:**
+
+| Signal in JD | Adjustment |
+|---|---|
+| "on-call rotation", "pagerduty", "24/7 support" for IC data roles | −0.3 |
+| "fast-paced", "wear many hats", "startup hustle", "move fast" with no WLB mention | −0.2 |
+| "unlimited PTO" with no other WLB signals (often meaningless) | neutral |
+| "flexible hours", "async-first", "no meetings culture", "outcomes over hours" | +0.2 |
+| Glassdoor WLB rating ≥ 4.0 (check via WebSearch) | +0.1 |
+| Series A or earlier startup (<50 people) with no explicit WLB mention | −0.2 (flag it) |
+| Public company or late-stage (Series C+, >200 employees) | +0.1 (structural stability) |
+
+**Always call out WLB signals explicitly in Block D.** If the JD is silent, say so — silence is a yellow flag for startups, neutral for established companies.
+
+### Leadership / People Manager Penalty
+
+**RULE: If a role requires managing people, owning hiring, or carrying a people-manager title (Manager, Director, Head, VP, Lead with direct reports) — subtract −1.0 from Global score and flag as misaligned.**
+
+Rationale: You are targeting IC roles for work-life balance. People management expands scope, hours, and stress unpredictably. Flag clearly:
+> ⚠️ **Role mismatch:** This is a people-manager position. Candidate is targeting IC roles only. Score penalized −1.0.
+
+**Exception:** "Tech Lead" or "Lead Engineer" with no direct reports is acceptable IC — do not penalize.
+
+### AI-Resilience Assessment
+
+**RULE: Add a brief AI-Resilience note to every evaluation report, after Block F:**
+
+> **AI Resilience:** [High / Medium / Low] — [1-sentence reason]
+
+**Guidelines:**
+- **High** — Data Engineering (pipelines, platform, infra), Analytics Engineering (dbt + domain modeling), Data Governance. These build the infrastructure AI depends on. Domain context (RE) makes replacement harder.
+- **Medium** — BI/Reporting, Data Analysis, Data Science with narrow scope. AI can accelerate but not fully replace — especially where RE domain judgment is required.
+- **Low** — Pure report-pulling, generic SQL analysis, simple dashboard maintenance with no engineering component. Flag these.
+
+**Do NOT penalize score** based on AI resilience — it's informational only. But if a role is Low resilience, mention it as a consideration.
+
 ## Your Comp Targets
 
 Use WebSearch for current market data (Levels.fyi, Glassdoor, Blind, Comprehensive.io).
-Anchor by title and years of experience (14 YOE).
+Anchor by title and years of experience (14 YOE). IC roles only.
 
 **General guidance:**
 - Senior Data Engineer (US remote): $150k–$200k base + equity
 - Staff Data Engineer: $180k–$240k base + equity
 - Analytics Engineer (Senior): $140k–$185k base
-- Data Scientist (Senior): $155k–$210k base + equity
-- BI Engineer / Analytics Manager: $130k–$180k base
+- Data Platform / Infra Engineer (Senior): $155k–$205k base + equity
+- BI Engineer (Senior): $130k–$170k base
 
 ## Your Negotiation Scripts
 
