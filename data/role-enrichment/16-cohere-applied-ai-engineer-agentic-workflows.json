@@ -125,5 +125,40 @@
       "generated_at": "2026-05-10T21:43:55.207Z",
       "confidence": "M"
     }
+  },
+  "biweekly_math": {
+    "assumed_contribution_pct": 10,
+    "irs_limit_2025": 23500,
+    "at_200k": {
+      "gross_biweekly": 7692,
+      "employee_401k": 769,
+      "employer_match_est": 308,
+      "social_security": 420,
+      "medicare": 112,
+      "health_premium_est": 92,
+      "fed_tax_est": 1248,
+      "est_take_home": 5051
+    },
+    "at_250k": {
+      "gross_biweekly": 9615,
+      "employee_401k": 904,
+      "employer_match_est": 385,
+      "social_security": 420,
+      "medicare": 157,
+      "health_premium_est": 92,
+      "fed_tax_est": 1721,
+      "est_take_home": 6321
+    },
+    "at_300k": {
+      "gross_biweekly": 11538,
+      "employee_401k": 904,
+      "employer_match_est": 462,
+      "social_security": 420,
+      "medicare": 202,
+      "health_premium_est": 92,
+      "fed_tax_est": 2357,
+      "est_take_home": 7563
+    },
+    "notes": "Federal tax estimates are approximations for a single filer with 2025 standard deduction ($15,000). Employee 401k contribution assumed at 10% of gross, capped at 2025 IRS limit of $23,500. Social Security capped at $176,100 wage base (6.2%). Medicare: 1.45% flat + 0.9% additional on income over $200K (single filer). Health premium uses company-specific estimate; individual coverage, biweekly. Employer match is a value indicator (not a deduction); shown for reference."
   }
 }

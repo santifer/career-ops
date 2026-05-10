@@ -749,6 +749,7 @@ function renderBenefitsCell(company, role) {
     benefits: enrich.benefits || {},
     sentiment: enrich.sentiment || {},
     social: enrich.social_corroboration || null,
+    biweekly_math: enrich.biweekly_math || null,
     confidence: enrich.confidence || '',
   });
   return `<span class="benefits-chip ${toxCls} pill-popover-trigger" data-tox-grade="${toxValid ? tox : ''}" title="${escape(tip)}" aria-label="${escape(tip)}" tabindex="0" role="button" data-pill='${escape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">${escape(label)}</span>`;
@@ -4881,6 +4882,18 @@ function build() {
     text-transform: uppercase; letter-spacing: 0.04em;
   }
   #pill-popover .pill-popover-row dd { margin: 0; flex: 1; color: var(--text-2); font-size: 12px; }
+  #pill-popover .bw-table {
+    width: 100%; border-collapse: collapse; font-size: 12px; margin: 6px 0;
+  }
+  #pill-popover .bw-table th,
+  #pill-popover .bw-table td { padding: 4px 7px; text-align: right; }
+  #pill-popover .bw-table th:first-child,
+  #pill-popover .bw-table td:first-child { text-align: left; }
+  #pill-popover .bw-table thead { background: var(--surface-2); font-size: 11px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.04em; }
+  #pill-popover .bw-table tbody tr:nth-child(even) { background: var(--surface-2); }
+  #pill-popover .bw-tier { font-weight: 600; color: var(--text-2); }
+  #pill-popover .bw-take { color: var(--green-fg); font-weight: 700; }
+  #pill-popover .bw-match { color: var(--blue-fg); font-size: 11px; }
   #pill-popover .pill-popover-sources {
     margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--border);
   }
@@ -8843,6 +8856,7 @@ function _renderPillPopover(d) {
       + row('X / Twitter', s.x_pulse)
       + '</dl>'
       + _renderSocialCorroborationBlock(d.social)
+      + _renderBiweeklyMathBlock(d.biweekly_math)
       + (d.confidence ? '<div class="pill-popover-meta">Confidence: ' + esc(d.confidence) + '</div>' : '');
   }
   if (d.kind === 'people') {
@@ -8939,6 +8953,32 @@ function _renderNetworkBlock(n) {
       + '</div>';
   }
   return html;
+}
+
+function _renderBiweeklyMathBlock(m) {
+  if (!m) return '';
+  const esc = (str) => String(str == null ? '' : str)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  const fmt = (n) => n != null ? '$' + Number(n).toLocaleString() : '—';
+  const tierRow = (label, t) => {
+    if (!t) return '';
+    return '<tr>'
+      + '<td class="bw-tier">' + esc(label) + '</td>'
+      + '<td>' + fmt(t.gross_biweekly) + '</td>'
+      + '<td class="bw-take">' + fmt(t.est_take_home) + '</td>'
+      + '<td class="bw-match">+' + fmt(t.employer_match_est) + '</td>'
+      + '</tr>';
+  };
+  return '<div class="pill-popover-section-label">Biweekly paycheck estimate (10% 401k, single filer)</div>'
+    + '<table class="bw-table">'
+    + '<thead><tr><th>Base</th><th>Gross/check</th><th>~Take-home</th><th>Co. match</th></tr></thead>'
+    + '<tbody>'
+    + tierRow('$200K', m.at_200k)
+    + tierRow('$250K', m.at_250k)
+    + tierRow('$300K', m.at_300k)
+    + '</tbody>'
+    + '</table>';
 }
 
 function _renderSocialCorroborationBlock(s) {
