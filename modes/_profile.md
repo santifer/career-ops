@@ -16,23 +16,36 @@
 Targeting US remote **individual contributor (IC)** data roles at real estate and property management companies.
 **Not seeking leadership, management, or people-manager roles.** Priority: work-life balance + AI-resilient work.
 
+**Role preference order (highest to lowest interest):**
+1. **Data Engineering** — pipelines, platform, infrastructure (primary focus)
+2. **Data Governance / Quality** — data contracts, validation, lineage, observability (primary focus)
+3. **Analytics Engineering** — dbt, semantic layer, modeling (strong fit)
+4. **BI / Insights Engineering** — dashboards, KPI frameworks (good fit)
+5. **ML Engineering / Data Science** — open to it, but not the primary target
+
 | Archetype | Thematic axes | What they buy | AI resilience |
 |-----------|---------------|---------------|---------------|
-| **Senior / Staff Data Engineer** | Pipelines, warehouses, dbt, Snowflake/Databricks, data platform | Someone who builds and owns the data infrastructure end-to-end | High — AI runs on top of this work, not instead of it |
+| **Senior / Staff Data Engineer** ⭐ | Pipelines, warehouses, dbt, Snowflake/Databricks, data platform | Someone who builds and owns the data infrastructure end-to-end | High — AI runs on top of this work, not instead of it |
+| **Data Governance / Quality Engineer** ⭐ | Data contracts, validation frameworks, lineage, observability, compliance | Someone who keeps data trustworthy and auditable | High — judgment, stakeholder alignment, regulation-heavy |
+| **Data Platform / Infrastructure Engineer** ⭐ | Cloud infra, orchestration, Airflow, CI/CD, data reliability | Someone who keeps the data platform running reliably | High — operational, context-heavy, judgment-dependent |
 | **Analytics Engineer** | dbt, Snowflake, semantic layer, BI, data modeling | Someone who bridges raw data and business insight | High — requires business context + domain judgment AI lacks |
-| **Data Platform / Infrastructure Engineer** | Cloud infra, orchestration, Airflow, CI/CD, data reliability | Someone who keeps the data platform running reliably | High — operational, context-heavy, judgment-dependent |
 | **BI / Insights Engineer** | Tableau/Looker/Power BI, KPI frameworks, self-serve analytics | Someone who translates data into decisions | Medium-High — AI generates queries but humans define the questions |
 | **Full Stack Data Engineer** | End-to-end: ingestion → transformation → serving → BI | A rare generalist who owns the entire data stack | High — breadth makes full replacement hard |
+| **ML / Data Scientist** (lower priority) | Predictive models, forecasting, NLP, segmentation | Someone who builds and deploys models | Medium — many ML tasks compressing under AutoML/LLMs |
+
+⭐ = primary focus. Boost these in scoring (see below).
 
 ## Your Adaptive Framing
 
 | If the role is... | Emphasize about you... | Proof point sources |
 |-------------------|------------------------|---------------------|
-| Data Engineering | Pipeline reliability, data platform ownership, RE domain depth | cv.md + article-digest.md |
+| Data Engineering ⭐ | Metadata-driven ETL on Azure, GCP+Azure pipelines, Spark/PySpark, Snowflake/Databricks, $200K+ DaVinci automation | cv.md + article-digest.md |
+| Data Governance / Quality ⭐ | End-to-end validation frameworks, data contracts, governance councils, automated quality dashboards | cv.md + article-digest.md |
+| Data Platform / Infra ⭐ | Cloud orchestration, Airflow, CI/CD, data reliability, governance | cv.md + article-digest.md |
 | Analytics Engineering | dbt modeling, semantic layer, BI delivery, stakeholder impact | cv.md + article-digest.md |
-| Data Platform / Infra | Cloud orchestration, Airflow, CI/CD, data reliability, governance | cv.md + article-digest.md |
 | BI / Reporting | Dashboard design, KPI definition, self-serve analytics adoption | cv.md + article-digest.md |
 | Full Stack / Platform | Ownership from ingestion to BI, breadth across the stack | cv.md + article-digest.md |
+| ML / Data Science | RE-relevant predictive modeling (forecasting, segmentation, NLP) — open but not primary | cv.md |
 
 ## Your RE Domain Advantage
 
@@ -84,6 +97,28 @@ When a JD mentions any of these — cite it as a direct match. Most candidates w
 **Do NOT apply if:**
 - Role says "remote-friendly" but expects quarterly travel or onsite sprints
 - Role is remote only for a specific geography you're not in
+
+### Role-Type Tilt (DE + DG > Analytics > ML)
+
+**RULE: Apply the following Global score adjustment based on detected primary role type:**
+
+| Primary role type | Adjustment | Rationale |
+|---|---|---|
+| **Data Engineering** (pipelines, platform, infra) | **+0.3** | Top interest. Direct match to JLL track record. |
+| **Data Governance / Quality** (contracts, validation, lineage, observability) | **+0.3** | Top interest. JLL governance council + validation frameworks experience. |
+| **Data Platform / Infrastructure** | **+0.2** | Strong fit, AI-resilient. |
+| **Analytics Engineering** (dbt + semantic layer) | **+0.1** | Good fit, secondary preference. |
+| **BI / Insights Engineering** | neutral | Acceptable, not preferred. |
+| **ML Engineer / Data Scientist** (primary focus) | **−0.2** | Open to it but not primary interest. Apply only if other signals are strong. |
+| **Hybrid DE + ML** ("ML Platform Engineer", "MLOps") | **+0.1** | DE-flavored ML is fine. |
+
+**Detection guide:**
+- Look at the JD's day-to-day responsibilities, not just the title.
+- A "Data Scientist" role that's 70% pipelines and 30% modeling = treat as Data Engineering (+0.3).
+- A "Data Engineer" role that's 70% notebook ML work = treat as ML (−0.2).
+
+**Annotate the adjustment in the report:**
+> Role type: Data Engineering — applied +0.3 (primary interest area).
 
 ### Real Estate Domain Boost
 

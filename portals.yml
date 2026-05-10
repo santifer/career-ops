@@ -12,14 +12,14 @@
 
 title_filter:
   positive:
-    # -- Data Engineering --
+    # -- Data Engineering (PRIMARY focus) --
     - "Data Engineer"
     - "Senior Data Engineer"
     - "Staff Data Engineer"
     - "Principal Data Engineer"
     - "Lead Data Engineer"
-    - "Analytics Engineer"
     - "Data Platform Engineer"
+    - "Data Platform"
     - "Data Infrastructure"
     - "Data Architect"
     - "Data Warehouse"
@@ -28,6 +28,22 @@ title_filter:
     - "dbt"
     - "Databricks"
     - "Snowflake"
+    - "Pipeline Engineer"
+    # -- Data Governance / Quality (PRIMARY focus) --
+    - "Data Governance"
+    - "Data Quality"
+    - "Data Steward"
+    - "Data Reliability"
+    - "Data Observability"
+    - "Data Lineage"
+    - "Data Compliance"
+    - "Master Data"
+    - "Reference Data"
+    - "Data Trust"
+    # -- Analytics Engineering --
+    - "Analytics Engineer"
+    - "Senior Analytics Engineer"
+    - "Staff Analytics Engineer"
     # -- Data Science & ML --
     - "Data Scientist"
     - "Machine Learning Engineer"
@@ -96,6 +112,10 @@ title_filter:
 
 search_queries:
   # -- Greenhouse: real estate data roles --
+  - name: Greenhouse — RE Data Governance remote
+    query: 'site:job-boards.greenhouse.io "data governance" OR "data quality" OR "data steward" "real estate" OR "property" remote'
+    enabled: true
+
   - name: Greenhouse — RE Data Engineer remote
     query: 'site:job-boards.greenhouse.io "data engineer" OR "analytics engineer" "real estate" OR "property" remote'
     enabled: true
