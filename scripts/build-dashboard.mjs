@@ -1383,6 +1383,11 @@ function build() {
     --ring-blue: 0 0 0 3px rgba(37,99,235,.15);
   }
   body.dark {
+    /* Dark surfaces tuned so all body text hits WCAG AAA (≥7:1) on --bg
+       and at least AA (≥4.5:1) on the brightest surface (--surface-2).
+       Previous --text-4 (#71717a) measured ~4.1:1 on --bg — failing AA;
+       bumping to #9a9aa6 (~7.0:1) brings muted text into AAA on the page
+       background while staying clearly subordinate to --text-3. */
     --bg: #0a0a0b;
     --surface: #18181b;
     --surface-2: #1f1f23;
@@ -1390,8 +1395,8 @@ function build() {
     --border-strong: #3f3f46;
     --text: #fafafa;
     --text-2: #e4e4e7;
-    --text-3: #a1a1aa;
-    --text-4: #71717a;
+    --text-3: #b8b8c0;
+    --text-4: #9a9aa6;
     --green: #4ade80;
     --green-fg: #86efac;
     --green-fg-dark: #bbf7d0;
@@ -1417,8 +1422,52 @@ function build() {
     --purple-fg-dark: #ddd6fe;
     --purple-bg: rgba(124,58,237,.12);
     --purple-border: rgba(124,58,237,.3);
-    --ring-green: 0 0 0 3px rgba(74,222,128,.15);
-    --ring-blue: 0 0 0 3px rgba(147,197,253,.15);
+    /* Two-layer focus ring for dark mode: outer glow + inner crisp ring
+       so the indicator reads on both raised surfaces and the page bg
+       without fighting the colored token underneath. */
+    --ring-green: 0 0 0 2px rgba(10,10,11,.95), 0 0 0 4px rgba(74,222,128,.55), 0 0 12px rgba(74,222,128,.18);
+    --ring-blue:  0 0 0 2px rgba(10,10,11,.95), 0 0 0 4px rgba(147,197,253,.55), 0 0 12px rgba(147,197,253,.18);
+  }
+
+  /* OLED true-black mode — opt-in via Cmd-K or the body.oled class.
+     Saves power on AMOLED panels and adds visual depth: surfaces sit
+     against pure black so the elevation hierarchy is more legible. */
+  body.dark.oled {
+    --bg: #000000;
+    --surface: #0a0a0d;
+    --surface-2: #131319;
+    --border: #1f1f24;
+    --border-strong: #2e2e36;
+    /* Re-derive the focus-ring outer halo against the new --bg. */
+    --ring-green: 0 0 0 2px rgba(0,0,0,.95), 0 0 0 4px rgba(74,222,128,.55), 0 0 12px rgba(74,222,128,.18);
+    --ring-blue:  0 0 0 2px rgba(0,0,0,.95), 0 0 0 4px rgba(147,197,253,.55), 0 0 12px rgba(147,197,253,.18);
+  }
+
+  /* Tinted card surfaces in dark mode — Linear-style depth via subtle
+     1.5–4% color washes layered as background-image gradients on top of
+     the surface fill. Direct background-image (rather than a pseudo-
+     element overlay) sidesteps the stacking conflict with existing
+     decorative ::before bars and keeps hover state simple. */
+  body.dark .panel-strong {
+    background-image: linear-gradient(160deg, rgba(74,222,128,.04) 0%, rgba(74,222,128,0) 55%);
+  }
+  body.dark #comp-analytics-panel {
+    background-image: linear-gradient(160deg, rgba(96,165,250,.035) 0%, rgba(96,165,250,0) 55%);
+  }
+  body.dark #trends-panel {
+    background-image: linear-gradient(160deg, rgba(167,139,250,.03) 0%, rgba(167,139,250,0) 55%);
+  }
+  body.dark .stat-strong {
+    background-image: linear-gradient(155deg, rgba(74,222,128,.045) 0%, rgba(74,222,128,0) 60%);
+  }
+
+  /* Caret visibility — on dark, default cursor color tracks --text and is
+     a hairline; declaring caret-color explicitly keeps it bright against
+     all input surfaces (filters, search, Cmd-K, quick-add textarea). */
+  body.dark input,
+  body.dark textarea,
+  body.dark select {
+    caret-color: var(--blue-fg);
   }
 
   /* ── Reset & base ────────────────────────────────────────────── */
@@ -1471,6 +1520,22 @@ function build() {
     outline: 2px solid var(--blue-fg);
     outline-offset: 2px;
     border-radius: inherit;
+  }
+  /* Dark-mode focus: swap the flat 2px outline for the dual-ring
+     pattern (inner crisp ring + outer glow) defined by --ring-blue.
+     The flat outline fights raised surfaces; the glow reads against
+     both --bg and --surface without sacrificing visibility on tinted
+     panels. The thin outline is kept so the indicator survives even
+     if box-shadow is suppressed (e.g., screenshot tools). */
+  body.dark a:focus-visible,
+  body.dark button:focus-visible,
+  body.dark [tabindex]:focus-visible,
+  body.dark input:focus-visible,
+  body.dark select:focus-visible,
+  body.dark textarea:focus-visible {
+    outline: 1px solid var(--blue-fg);
+    outline-offset: 1px;
+    box-shadow: var(--ring-blue);
   }
 
   /* ── Toolbar ─────────────────────────────────────────────────── */
@@ -3342,6 +3407,31 @@ function toggleDark() {
   applyDark(on);
 }
 
+// ── OLED true-black mode ────────────────────────────────────────
+// Layers on top of dark mode: replaces dark-grey surfaces with pure
+// black for AMOLED power savings + visual depth. Has no effect when
+// the page is in light mode (the .oled class is harmless there).
+const OLED_KEY = 'career-ops-oled';
+function applyOled(on) {
+  document.body.classList.toggle('oled', on);
+  // Keep the iOS standalone status bar in sync with the active bg.
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', on ? '#000000' : '#0c0a09');
+}
+function initOled() {
+  let saved = null;
+  try { saved = localStorage.getItem(OLED_KEY); } catch (e) {}
+  if (saved === '1') applyOled(true);
+}
+function toggleOled() {
+  const on = !document.body.classList.contains('oled');
+  try { localStorage.setItem(OLED_KEY, on ? '1' : '0'); } catch (e) {}
+  applyOled(on);
+  if (typeof toast === 'function') {
+    toast(on ? 'OLED black mode on' : 'OLED black mode off', 'info');
+  }
+}
+
 // ── Demo mode toggle ────────────────────────────────────────────
 // Demo mode swaps real candidate data for plausible fake data so the
 // dashboard is safe to screen-share in interviews. The swap itself is
@@ -4514,6 +4604,7 @@ let _cmdkPrevFocus = null;
 function _cmdkActions() {
   return [
     { id: 'act-dark', icon: '◐', title: 'Toggle dark mode', sub: 'Switch between light and dark theme', run: () => toggleDark() },
+    { id: 'act-oled', icon: '⬛', title: 'Toggle OLED black mode', sub: 'Pure-black surfaces — AMOLED power savings + extra visual depth (dark mode only)', run: () => toggleOled() },
     { id: 'act-demo', icon: '🎭', title: 'Toggle demo mode', sub: 'Swap real candidate data for fake names — safe for screen sharing', run: () => toggleDemoMode() },
     { id: 'act-top',  icon: '↑', title: 'Scroll to top of dashboard', sub: 'Jump to the page header', run: () => window.scrollTo({ top: 0, behavior: 'smooth' }) },
     { id: 'act-apply', icon: '✦', title: 'Open Apply-Now panel', sub: 'Scroll to ranked apply-now queue', run: () => {
@@ -5164,6 +5255,7 @@ window.toast = function(msg, type) {
 
 // ── Init ────────────────────────────────────────────────────────
 initDark();
+initOled();
 initSavedViews();
 initApplyNowDrag();
 refreshLiveStats();
