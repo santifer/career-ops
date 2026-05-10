@@ -2013,13 +2013,13 @@ function build() {
     margin: 16px 0 24px;
   }
   /* Compact stat strip — all 7 cards on a single row at desktop, tight 2-col stack on mobile.
-     Goal: total stat-strip height ≤120px on desktop so Apply-Now queue lands in first scroll. */
+     Goal: total stat-strip height ≤90px on desktop so Apply-Now queue lands in first scroll. */
   .stats-bento {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    grid-auto-rows: 110px;
-    gap: 8px;
-    margin: 12px 0 20px;
+    grid-auto-rows: 78px;
+    gap: 6px;
+    margin: 8px 0 16px;
   }
   .stat-hero { grid-column: span 1; grid-row: span 1; }
   .stat-cell { grid-column: span 1; }
@@ -2032,21 +2032,22 @@ function build() {
   @media (max-width: 720px) {
     .stats-bento {
       grid-template-columns: repeat(2, 1fr);
-      grid-auto-rows: 84px;
+      grid-auto-rows: 70px;
       gap: 6px;
     }
-    .stat-hero { grid-column: 1 / -1; }
+    .stat-hero { grid-column: 1 / -1; grid-row: span 1; }
     .stat-cell, .stat-strip { grid-column: span 1; grid-row: span 1; }
     .stat-strip { grid-column: 1 / -1; }
   }
   .stat {
-    background: var(--surface); padding: 12px 14px; border-radius: var(--radius);
+    background: var(--surface); padding: 8px 12px; border-radius: var(--radius);
     border: 1px solid var(--border); box-shadow: var(--shadow-sm);
     transition: border-color .15s, box-shadow .15s;
     position: relative; overflow: hidden;
-    display: flex; flex-direction: column; justify-content: space-between;
-    min-height: 0;
+    display: flex; flex-direction: column; justify-content: center;
+    gap: 2px; min-height: 0;
   }
+  .stat-label { font-size: 10px !important; line-height: 1.1; max-height: 2.2em; overflow: hidden; }
   .stat::before {
     content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
     background: var(--border); border-radius: var(--radius) var(--radius) 0 0;
@@ -2059,8 +2060,8 @@ function build() {
   .stat-label { font-size: 11px; color: var(--text-3); text-transform: uppercase;
                 letter-spacing: 0.06em; font-weight: 600; }
   .stat-value {
-    font-size: 26px; font-weight: 700; color: var(--text);
-    margin-top: 2px; letter-spacing: -0.5px; line-height: 1;
+    font-size: 22px; font-weight: 700; color: var(--text);
+    margin: 0; letter-spacing: -0.4px; line-height: 1;
     font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;
     font-feature-settings: "tnum" 1;
@@ -2074,16 +2075,16 @@ function build() {
   .stat:hover .stat-caret { color: var(--text-3); }
   .stat.active .stat-caret { color: var(--blue-fg); transform: rotate(180deg); }
   /* Hero tier: same height as cells in the compact strip, but bolder accent stripe + green-tinted value */
-  .stat-hero { padding: 12px 14px; }
+  .stat-hero { padding: 8px 12px; }
   .stat-hero::before { height: 3px; }
-  .stat-hero .stat-label { font-size: 11px; }
-  .stat-hero .stat-value { font-size: 32px; line-height: 1; letter-spacing: -0.8px; margin-top: 2px; }
+  .stat-hero .stat-label { font-size: 10px !important; }
+  .stat-hero .stat-value { font-size: 26px; line-height: 1; letter-spacing: -0.6px; margin: 0; }
   @media (max-width: 720px) {
-    .stat-hero .stat-value { font-size: 36px; }
+    .stat-hero .stat-value { font-size: 30px; }
   }
   /* Small tier: identical to base .stat in compact strip */
-  .stat-cell { padding: 12px 14px; }
-  .stat-cell .stat-value { font-size: 26px; letter-spacing: -0.5px; }
+  .stat-cell { padding: 8px 12px; }
+  .stat-cell .stat-value { font-size: 22px; letter-spacing: -0.4px; }
   .stat-cell::before { height: 2px; }
   /* Strip tier: same compact metrics, full-width row */
   .stat-strip { padding: 14px 18px; flex-direction: row; align-items: center; gap: 14px; justify-content: flex-start; }
@@ -2097,8 +2098,10 @@ function build() {
   /* ── KPI sparkline + 7-day delta (Phase 6 item 3.1) ─────────── */
   .stat-trend {
     display: flex; align-items: center; justify-content: space-between;
-    gap: 6px; margin-top: 2px; min-height: 16px;
+    gap: 4px; margin: 0; min-height: 12px; font-size: 9px;
   }
+  .stat-trend .stat-delta { font-size: 9px; }
+  .stat-trend .sparkline { height: 14px; max-width: 50px; }
   .stat-delta {
     font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums;
     letter-spacing: 0.01em; line-height: 1.2; white-space: nowrap;
@@ -2117,7 +2120,7 @@ function build() {
   .panel {
     background: var(--surface); border-radius: var(--radius);
     border: 1px solid var(--border); box-shadow: var(--shadow-sm);
-    padding: 22px 24px; margin-bottom: var(--section-gap);
+    padding: 14px 18px; margin-bottom: 16px;
   }
   .panel-strong {
     border-color: var(--green-fg);
@@ -2129,9 +2132,10 @@ function build() {
     background: var(--green-fg); border-radius: var(--radius) var(--radius) 0 0;
   }
   .panel-title {
-    font-size: 26px; font-weight: 700; margin: 0 0 18px;
-    letter-spacing: -0.4px; color: var(--text); display: flex; align-items: center; gap: 10px;
+    font-size: 18px; font-weight: 700; margin: 0 0 8px;
+    letter-spacing: -0.3px; color: var(--text); display: flex; align-items: center; gap: 10px;
   }
+  .panel-subtitle { font-size: 11px; color: var(--text-3); margin: 0 0 8px; }
   .panel-title .pill {
     font-size: 11px; font-weight: 600;
     background: var(--green-fg-dark); color: #fff;
@@ -3991,7 +3995,7 @@ function build() {
         ↺ Reset order
       </button>
     </div>
-    <p style="font-size:13px;color:#57606a;margin:0 0 12px">Score ≥ 4.0 with status in {Evaluated, Responded, Interview}. Drag a row's <span aria-hidden="true">⋮⋮</span> handle to prioritize. Click any row to expand.</p>
+    <p class="panel-subtitle" title="Drag a row's ⋮⋮ handle to prioritize. Click any row to expand.">Score ≥ 4.0 · Evaluated / Responded / Interview only</p>
     <div class="table-scroll"><table>
       <thead><tr>
         <th class="bulk-th"><input type="checkbox" class="bulk-header-checkbox" data-tbody="apply-now-tbody" aria-label="Select all visible rows in Apply-Now" onclick="handleHeaderCheckbox(this)"></th>
