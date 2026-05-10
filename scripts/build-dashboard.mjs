@@ -1656,6 +1656,56 @@ function build() {
   }
   .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: var(--section-gap); }
 
+  /* ── Apply-Now drag-and-drop reorder ─────────────────────────── */
+  /* Reset-order button — small, secondary, only shown when custom order
+     is active. Pushed to the right of the panel-title with margin-left:auto. */
+  .reset-order-btn {
+    margin-left: auto;
+    font-size: 12px; font-weight: 500;
+    background: var(--surface-2); color: var(--text-2);
+    border: 1px solid var(--border-strong);
+    padding: 4px 10px; border-radius: var(--radius-sm);
+    cursor: pointer; letter-spacing: 0;
+  }
+  .reset-order-btn:hover { background: var(--surface); color: var(--text); border-color: var(--text-3); }
+
+  /* Drag handle: hidden by default, fades in on row hover. On touch
+     devices (no hover), it stays visible at low opacity so the affordance
+     is discoverable without hovering. The handle is keyboard-focusable
+     for accessibility (Tab to it; Space/Enter could later wire keyboard
+     reorder, out of scope here). */
+  .apply-drag-handle {
+    display: inline-block;
+    width: 16px; margin-right: 6px;
+    color: var(--text-4); cursor: grab;
+    font-weight: 700; line-height: 1; vertical-align: middle;
+    user-select: none; -webkit-user-select: none;
+    touch-action: none;
+    opacity: 0; transition: opacity .12s ease;
+  }
+  #apply-now-tbody tr.row:hover .apply-drag-handle,
+  #apply-now-tbody tr.row:focus-within .apply-drag-handle { opacity: 1; }
+  .apply-drag-handle:active { cursor: grabbing; }
+  .apply-drag-handle:focus-visible { outline: 2px solid var(--blue-fg); outline-offset: 2px; opacity: 1; }
+  @media (hover: none) {
+    .apply-drag-handle { opacity: .5; }
+  }
+
+  /* Dragged row: ghosted while in flight. */
+  #apply-now-tbody tr.row.drag-source,
+  #apply-now-tbody tr.detail-row.drag-source {
+    opacity: .35;
+  }
+
+  /* Drop-zone indicator: a coloured top/bottom border on the target row. */
+  #apply-now-tbody tr.row.drop-target-above > td { box-shadow: inset 0 3px 0 0 var(--blue-fg); }
+  #apply-now-tbody tr.row.drop-target-below > td { box-shadow: inset 0 -3px 0 0 var(--blue-fg); }
+
+  /* Honor reduced-motion: kill the opacity transition on the handle. */
+  @media (prefers-reduced-motion: reduce) {
+    .apply-drag-handle { transition: none; }
+  }
+
   /* ── Comp Analytics ──────────────────────────────────────────── */
   #comp-analytics-panel .comp-subnote { color: var(--text-3); font-size: 12.5px; margin: -6px 0 18px; }
   #comp-analytics-panel .comp-subnote strong { color: var(--text-2); font-weight: 600; }
@@ -2898,8 +2948,13 @@ function build() {
 
   ${applyNow.length > 0 ? `
   <div class="panel panel-strong" id="apply-now-section">
-    <div class="panel-title">Apply-Now Queue <span class="pill">${applyNow.length}</span></div>
-    <p style="font-size:13px;color:#57606a;margin:0 0 12px">Score ≥ 4.0 with status in {Evaluated, Responded, Interview}. Click any row to expand.</p>
+    <div class="panel-title">Apply-Now Queue <span class="pill">${applyNow.length}</span>
+      <button type="button" id="apply-now-reset-order" class="reset-order-btn" hidden
+        onclick="resetApplyNowOrder()" aria-label="Reset to default sort (score desc, then date)">
+        ↺ Reset order
+      </button>
+    </div>
+    <p style="font-size:13px;color:#57606a;margin:0 0 12px">Score ≥ 4.0 with status in {Evaluated, Responded, Interview}. Drag a row's <span aria-hidden="true">⋮⋮</span> handle to prioritize. Click any row to expand.</p>
     <div class="table-scroll"><table>
       <thead><tr>
         <th class="sortable" onclick="sortTable('apply-now-tbody', 0, 'num', this)">Score</th>
@@ -3454,6 +3509,339 @@ function sortTable(tbodyId, colIdx, type, thEl) {
     if (detail) tbody.appendChild(detail);
   }
 }
+
+// ── Apply-Now drag-and-drop reorder ─────────────────────────────
+// Persists user-defined row priority to localStorage as an array of row
+// nums. Two input modes: HTML5 drag API for mouse, pointer events with a
+// long-press for touch.
+const APPLY_NOW_ORDER_KEY = 'dashboard.applyNowOrder';
+const APPLY_NOW_LONG_PRESS_MS = 350;
+const REDUCE_MOTION_MQ = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+function loadApplyNowOrder() {
+  try {
+    const raw = localStorage.getItem(APPLY_NOW_ORDER_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return null;
+    return parsed.filter(n => Number.isFinite(n));
+  } catch (e) { return null; }
+}
+
+function saveApplyNowOrder() {
+  const tbody = document.getElementById('apply-now-tbody');
+  if (!tbody) return;
+  const order = [];
+  for (const tr of tbody.querySelectorAll('tr.row')) {
+    const n = parseInt(tr.dataset.num, 10);
+    if (Number.isFinite(n)) order.push(n);
+  }
+  try { localStorage.setItem(APPLY_NOW_ORDER_KEY, JSON.stringify(order)); } catch (e) {}
+  updateResetOrderBtnVisibility();
+}
+
+function updateResetOrderBtnVisibility() {
+  const btn = document.getElementById('apply-now-reset-order');
+  if (!btn) return;
+  const order = loadApplyNowOrder();
+  btn.hidden = !(order && order.length);
+}
+
+// Pair main row + its detail row so we can move them together.
+function _applyNowPairs(tbody) {
+  const all = Array.from(tbody.children);
+  const pairs = [];
+  for (let i = 0; i < all.length; i++) {
+    if (all[i].classList.contains('row')) {
+      const next = all[i + 1];
+      const detail = next && next.classList.contains('detail-row') ? next : null;
+      pairs.push({ main: all[i], detail });
+      if (detail) i++;
+    }
+  }
+  return pairs;
+}
+
+function applyApplyNowOrder() {
+  const tbody = document.getElementById('apply-now-tbody');
+  if (!tbody) return;
+  const order = loadApplyNowOrder();
+  if (!order || !order.length) { updateResetOrderBtnVisibility(); return; }
+  const pairs = _applyNowPairs(tbody);
+  const byNum = new Map();
+  for (const p of pairs) {
+    const n = parseInt(p.main.dataset.num, 10);
+    if (Number.isFinite(n)) byNum.set(n, p);
+  }
+  const seen = new Set();
+  const ordered = [];
+  for (const n of order) {
+    const p = byNum.get(n);
+    if (p && !seen.has(n)) { ordered.push(p); seen.add(n); }
+  }
+  for (const p of pairs) {
+    const n = parseInt(p.main.dataset.num, 10);
+    if (!seen.has(n)) ordered.push(p);
+  }
+  for (const { main, detail } of ordered) {
+    tbody.appendChild(main);
+    if (detail) tbody.appendChild(detail);
+  }
+  updateResetOrderBtnVisibility();
+}
+
+function resetApplyNowOrder() {
+  try { localStorage.removeItem(APPLY_NOW_ORDER_KEY); } catch (e) {}
+  const tbody = document.getElementById('apply-now-tbody');
+  if (!tbody) return;
+  // Default sort: score desc, then date desc (most recent first).
+  const pairs = _applyNowPairs(tbody);
+  pairs.sort((a, b) => {
+    const sa = parseFloat(a.main.dataset.score) || 0;
+    const sb = parseFloat(b.main.dataset.score) || 0;
+    if (sb !== sa) return sb - sa;
+    const da = a.main.children[5]?.innerText.trim() || '';
+    const db = b.main.children[5]?.innerText.trim() || '';
+    return db.localeCompare(da);
+  });
+  for (const { main, detail } of pairs) {
+    tbody.appendChild(main);
+    if (detail) tbody.appendChild(detail);
+  }
+  // Clear any stale sort-direction indicators on the apply-now thead.
+  delete tbody.dataset.sortCol;
+  delete tbody.dataset.sortDir;
+  const thead = tbody.closest('table')?.querySelector('thead');
+  thead?.querySelectorAll('.sort-arrow').forEach(el => el.remove());
+  updateResetOrderBtnVisibility();
+}
+
+// Inject a drag handle into each apply-now row's score cell. The handle
+// owns the drag, not the whole row — clicking elsewhere still toggles
+// row expand without accidentally starting a drag.
+function _injectApplyNowHandles() {
+  const tbody = document.getElementById('apply-now-tbody');
+  if (!tbody) return;
+  const rows = tbody.querySelectorAll('tr.row');
+  for (const tr of rows) {
+    if (tr.querySelector('.apply-drag-handle')) continue;
+    const firstTd = tr.children[0];
+    if (!firstTd) continue;
+    const handle = document.createElement('span');
+    handle.className = 'apply-drag-handle';
+    handle.setAttribute('role', 'button');
+    handle.setAttribute('tabindex', '0');
+    handle.setAttribute('aria-label', 'Drag to reorder this row');
+    handle.setAttribute('title', 'Drag to reorder');
+    handle.setAttribute('draggable', 'true');
+    handle.textContent = '⋮⋮';
+    handle.addEventListener('click', (e) => e.stopPropagation());
+    firstTd.insertBefore(handle, firstTd.firstChild);
+  }
+}
+
+let _dragSrcRow = null;
+let _dragLastTarget = null;
+
+function _clearDropIndicators() {
+  const tbody = document.getElementById('apply-now-tbody');
+  if (!tbody) return;
+  for (const tr of tbody.querySelectorAll('tr.row.drop-target-above, tr.row.drop-target-below')) {
+    tr.classList.remove('drop-target-above', 'drop-target-below');
+  }
+}
+
+function _markGhost(srcRow, on) {
+  if (!srcRow) return;
+  srcRow.classList.toggle('drag-source', !!on);
+  const detail = srcRow.nextElementSibling;
+  if (detail && detail.classList.contains('detail-row')) {
+    detail.classList.toggle('drag-source', !!on);
+  }
+}
+
+function _moveRowBefore(srcRow, targetRow, position) {
+  // Move src + its paired detail row to a new position relative to target.
+  // position: 'above' | 'below' | 'end'
+  const tbody = srcRow.parentNode;
+  if (!tbody) return;
+  const srcDetail = srcRow.nextElementSibling?.classList.contains('detail-row')
+    ? srcRow.nextElementSibling : null;
+  if (position === 'end' || !targetRow) {
+    tbody.appendChild(srcRow);
+    if (srcDetail) tbody.appendChild(srcDetail);
+    return;
+  }
+  if (position === 'above') {
+    tbody.insertBefore(srcRow, targetRow);
+    if (srcDetail) tbody.insertBefore(srcDetail, targetRow);
+  } else {
+    // Insert after target's paired detail (if any), else after target.
+    const targetDetail = targetRow.nextElementSibling?.classList.contains('detail-row')
+      ? targetRow.nextElementSibling : null;
+    const anchor = targetDetail ? targetDetail.nextSibling : targetRow.nextSibling;
+    tbody.insertBefore(srcRow, anchor);
+    if (srcDetail) tbody.insertBefore(srcDetail, anchor);
+  }
+}
+
+function _rowFromPoint(x, y) {
+  const el = document.elementFromPoint(x, y);
+  if (!el) return null;
+  const tr = el.closest('tr.row');
+  if (!tr || tr.parentNode?.id !== 'apply-now-tbody') return null;
+  return tr;
+}
+
+function _onApplyNowDragStart(e) {
+  const handle = e.target.closest('.apply-drag-handle');
+  if (!handle) return;
+  const row = handle.closest('tr.row');
+  if (!row) return;
+  _dragSrcRow = row;
+  _markGhost(row, true);
+  if (e.dataTransfer) {
+    e.dataTransfer.effectAllowed = 'move';
+    // Required by Firefox to start drag.
+    try { e.dataTransfer.setData('text/plain', row.dataset.num || ''); } catch (err) {}
+  }
+}
+
+function _onApplyNowDragOver(e) {
+  if (!_dragSrcRow) return;
+  const row = e.target.closest('tr.row');
+  if (!row || row.parentNode?.id !== 'apply-now-tbody') return;
+  if (row === _dragSrcRow) { e.preventDefault(); return; }
+  e.preventDefault();
+  if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+  const rect = row.getBoundingClientRect();
+  const above = (e.clientY - rect.top) < rect.height / 2;
+  if (_dragLastTarget && _dragLastTarget !== row) {
+    _dragLastTarget.classList.remove('drop-target-above', 'drop-target-below');
+  }
+  row.classList.toggle('drop-target-above', above);
+  row.classList.toggle('drop-target-below', !above);
+  _dragLastTarget = row;
+}
+
+function _onApplyNowDrop(e) {
+  if (!_dragSrcRow) return;
+  e.preventDefault();
+  const row = (e.target.closest && e.target.closest('tr.row')) || _dragLastTarget;
+  if (row && row !== _dragSrcRow && row.parentNode?.id === 'apply-now-tbody') {
+    const above = row.classList.contains('drop-target-above');
+    _moveRowBefore(_dragSrcRow, row, above ? 'above' : 'below');
+    saveApplyNowOrder();
+  }
+  _markGhost(_dragSrcRow, false);
+  _clearDropIndicators();
+  _dragSrcRow = null; _dragLastTarget = null;
+}
+
+function _onApplyNowDragEnd() {
+  if (_dragSrcRow) _markGhost(_dragSrcRow, false);
+  _clearDropIndicators();
+  _dragSrcRow = null; _dragLastTarget = null;
+}
+
+// ── Touch / pointer fallback ──
+// Long-press on the handle (~350ms) initiates a manual drag tracked via
+// pointermove. We don't suppress click on tiny taps so accidental
+// long-presses are recoverable.
+let _pressTimer = null;
+let _pressActive = false;
+let _pressHandle = null;
+let _pressSrcRow = null;
+let _pressPointerId = null;
+
+function _onApplyNowPointerDown(e) {
+  if (e.pointerType !== 'touch' && e.pointerType !== 'pen') return;
+  const handle = e.target.closest('.apply-drag-handle');
+  if (!handle) return;
+  const row = handle.closest('tr.row');
+  if (!row) return;
+  _pressHandle = handle; _pressSrcRow = row; _pressPointerId = e.pointerId;
+  _pressActive = false;
+  clearTimeout(_pressTimer);
+  _pressTimer = setTimeout(() => {
+    _pressActive = true;
+    _markGhost(row, true);
+    try { handle.setPointerCapture(e.pointerId); } catch (err) {}
+    if (navigator.vibrate && !REDUCE_MOTION_MQ.matches) {
+      try { navigator.vibrate(10); } catch (err) {}
+    }
+  }, APPLY_NOW_LONG_PRESS_MS);
+}
+
+function _onApplyNowPointerMove(e) {
+  if (!_pressActive || e.pointerId !== _pressPointerId) return;
+  e.preventDefault();
+  const row = _rowFromPoint(e.clientX, e.clientY);
+  if (!row || row === _pressSrcRow) {
+    if (_dragLastTarget) {
+      _dragLastTarget.classList.remove('drop-target-above', 'drop-target-below');
+      _dragLastTarget = null;
+    }
+    return;
+  }
+  const rect = row.getBoundingClientRect();
+  const above = (e.clientY - rect.top) < rect.height / 2;
+  if (_dragLastTarget && _dragLastTarget !== row) {
+    _dragLastTarget.classList.remove('drop-target-above', 'drop-target-below');
+  }
+  row.classList.toggle('drop-target-above', above);
+  row.classList.toggle('drop-target-below', !above);
+  _dragLastTarget = row;
+}
+
+function _onApplyNowPointerUp(e) {
+  clearTimeout(_pressTimer);
+  if (!_pressActive) {
+    _pressHandle = _pressSrcRow = _pressPointerId = null;
+    return;
+  }
+  if (_pressSrcRow && _dragLastTarget && _dragLastTarget !== _pressSrcRow) {
+    const above = _dragLastTarget.classList.contains('drop-target-above');
+    _moveRowBefore(_pressSrcRow, _dragLastTarget, above ? 'above' : 'below');
+    saveApplyNowOrder();
+  }
+  if (_pressSrcRow) _markGhost(_pressSrcRow, false);
+  _clearDropIndicators();
+  try { _pressHandle?.releasePointerCapture(_pressPointerId); } catch (err) {}
+  _pressActive = false;
+  _pressHandle = _pressSrcRow = _pressPointerId = null;
+  _dragLastTarget = null;
+}
+
+function _onApplyNowPointerCancel() {
+  clearTimeout(_pressTimer);
+  if (_pressSrcRow) _markGhost(_pressSrcRow, false);
+  _clearDropIndicators();
+  _pressActive = false;
+  _pressHandle = _pressSrcRow = _pressPointerId = null;
+  _dragLastTarget = null;
+}
+
+function initApplyNowDrag() {
+  const tbody = document.getElementById('apply-now-tbody');
+  if (!tbody) return;
+  _injectApplyNowHandles();
+  applyApplyNowOrder();
+  tbody.addEventListener('dragstart', _onApplyNowDragStart);
+  tbody.addEventListener('dragover', _onApplyNowDragOver);
+  tbody.addEventListener('drop', _onApplyNowDrop);
+  tbody.addEventListener('dragend', _onApplyNowDragEnd);
+  tbody.addEventListener('dragleave', (e) => {
+    // Clear indicator when leaving the tbody entirely.
+    const to = e.relatedTarget;
+    if (!to || !tbody.contains(to)) _clearDropIndicators();
+  });
+  tbody.addEventListener('pointerdown', _onApplyNowPointerDown);
+  tbody.addEventListener('pointermove', _onApplyNowPointerMove);
+  tbody.addEventListener('pointerup', _onApplyNowPointerUp);
+  tbody.addEventListener('pointercancel', _onApplyNowPointerCancel);
+}
+window.resetApplyNowOrder = resetApplyNowOrder;
 
 // ── Live API helpers ────────────────────────────────────────────
 const BASE = window.location.hostname === 'localhost' || window.location.hostname.endsWith('.careers-ops.com')
@@ -4367,6 +4755,7 @@ window.toast = function(msg, type) {
 // ── Init ────────────────────────────────────────────────────────
 initDark();
 initSavedViews();
+initApplyNowDrag();
 refreshLiveStats();
 _batchInterval = setInterval(pollBatch, 2000);
 pollBatch();
