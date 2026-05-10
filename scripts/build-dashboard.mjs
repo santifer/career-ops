@@ -777,6 +777,107 @@ function countTodaysReports(date) {
   return readdirSync(REPORTS_DIR).filter(f => f.includes(date) && f.endsWith('.md')).length;
 }
 
+// ── KPI sparklines + 7-day deltas (Phase 6 item 3.1) ──────────────
+// Build a 14-day daily series per metric; the last 7 days are the
+// "current week" and the prior 7 days are the comparison window.
+const SPARKLINE_DAYS = 14;
+function dailyBuckets(today) {
+  const todayMs = new Date(today + 'T00:00:00Z').getTime();
+  const out = [];
+  for (let i = SPARKLINE_DAYS - 1; i >= 0; i--) {
+    const dayMs = todayMs - i * 86400000;
+    out.push({ date: new Date(dayMs).toISOString().slice(0, 10), count: 0 });
+  }
+  return out;
+}
+function tallyDates(today, dates) {
+  const buckets = dailyBuckets(today);
+  const idx = Object.fromEntries(buckets.map((b, i) => [b.date, i]));
+  for (const d of dates) {
+    const i = idx[d];
+    if (i !== undefined) buckets[i].count++;
+  }
+  return buckets.map(b => b.count);
+}
+function summarizeSeries(daily) {
+  const half = Math.floor(daily.length / 2);
+  const prev7 = daily.slice(0, half).reduce((a, b) => a + b, 0);
+  const current7 = daily.slice(half).reduce((a, b) => a + b, 0);
+  return { daily, current7, prev7, delta: current7 - prev7 };
+}
+function computeKPISparklines(apps, today) {
+  const applyNowDates = apps
+    .filter(r => r.score >= 4.0 && /^(evaluated|responded)$/i.test(r.status))
+    .map(r => r.date).filter(Boolean);
+  const totalDates = apps.map(r => r.date).filter(Boolean);
+  const appliedDates = apps
+    .filter(r => /^(applied|responded|interview|offer)$/i.test(r.status))
+    .map(r => r.date).filter(Boolean);
+  // Companies per day = distinct companies seen on that day
+  const companyByDate = {};
+  for (const r of apps) {
+    if (!r.date || !r.company) continue;
+    if (!companyByDate[r.date]) companyByDate[r.date] = new Set();
+    companyByDate[r.date].add(r.company.toLowerCase());
+  }
+  const companyDaily = dailyBuckets(today).map(b => (companyByDate[b.date] || new Set()).size);
+  // URLs scanned per day from scan-history.tsv (column index 1 = first_seen)
+  const scanDates = [];
+  if (existsSync(SCAN_HISTORY_PATH)) {
+    const lines = readFileSync(SCAN_HISTORY_PATH, 'utf-8').split('\n').slice(1);
+    for (const l of lines) {
+      const cols = l.split('\t');
+      if (cols[1]) scanDates.push(cols[1]);
+    }
+  }
+  // Distinct batch runs per day (15-min gap heuristic — same as countBatchRuns)
+  const batchDatesByDay = {};
+  if (existsSync(BATCH_STATE_PATH)) {
+    const GAP_MS = 15 * 60 * 1000;
+    const starts = readFileSync(BATCH_STATE_PATH, 'utf-8').split('\n')
+      .filter(l => l.trim() && !l.startsWith('id'))
+      .map(l => l.split('\t')[3])
+      .filter(Boolean)
+      .sort();
+    let prev = 0;
+    for (const s of starts) {
+      const ts = new Date(s).getTime();
+      if (!prev || (ts - prev) > GAP_MS) {
+        const d = new Date(ts).toISOString().slice(0, 10);
+        batchDatesByDay[d] = (batchDatesByDay[d] || 0) + 1;
+      }
+      prev = ts;
+    }
+  }
+  const batchDaily = dailyBuckets(today).map(b => batchDatesByDay[b.date] || 0);
+  return {
+    applyNow: summarizeSeries(tallyDates(today, applyNowDates)),
+    total:    summarizeSeries(tallyDates(today, totalDates)),
+    applied:  summarizeSeries(tallyDates(today, appliedDates)),
+    companies: summarizeSeries(companyDaily),
+    scanned:  summarizeSeries(tallyDates(today, scanDates)),
+    batches:  summarizeSeries(batchDaily),
+  };
+}
+function sparklineSVG(daily, color, label) {
+  const W = 80, H = 24, PAD = 2;
+  const max = Math.max(1, ...daily);
+  const stepX = (W - PAD * 2) / Math.max(1, daily.length - 1);
+  const pts = daily.map((v, i) => {
+    const x = PAD + i * stepX;
+    const y = H - PAD - (v / max) * (H - PAD * 2);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  });
+  const title = `${label} — 14-day trend (current 7-day vs previous 7-day)`;
+  return `<svg class="sparkline" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${title}"><title>${title}</title><path d="M${pts.join(' L')}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+}
+function deltaIndicator(delta) {
+  if (delta === 0) return `<span class="stat-delta stat-delta-flat">±0 vs last week</span>`;
+  const sign = delta > 0 ? '+' : '';
+  const cls = delta > 0 ? 'stat-delta-up' : 'stat-delta-down';
+  return `<span class="stat-delta ${cls}">${sign}${delta} vs last week</span>`;
+}
+
 // ── Tier legend (from modes/_profile.md §1) ───────────────────────
 // Single source of truth for tier badge tooltips and the legend modal.
 // Sub-tier variants (A2-AB, A2-AE, A2-PgM, A2-SA) are rendered as A2
@@ -1381,8 +1482,12 @@ function build() {
   const batchRuns = countBatchRuns();
   const portals = getEnabledPortals();
   const reportsToday = countTodaysReports(today);
+<<<<<<< HEAD
   const liveTicker = loadLiveScanEvents();
   const liveTickerJson = JSON.stringify(liveTicker).replace(/<\//g, '<\\/');
+=======
+  const kpiSpark = computeKPISparklines(apps, today);
+>>>>>>> a22b235 (feat(dashboard): KPI sparklines + 7-day trend deltas on stat cards (Phase 6 item 3.1))
 
   // Sorted views
   const sortedByScore = [...apps].sort((a, b) => b.score - a.score);
@@ -1960,6 +2065,25 @@ function build() {
   @media (max-width: 720px) {
     .stat-strip { flex-direction: column; align-items: flex-start; gap: 4px; }
   }
+
+  /* ── KPI sparkline + 7-day delta (Phase 6 item 3.1) ─────────── */
+  .stat-trend {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 8px; margin-top: 6px; min-height: 24px;
+  }
+  .stat-delta {
+    font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums;
+    letter-spacing: 0.01em; line-height: 1.2; white-space: nowrap;
+  }
+  .stat-delta-up   { color: var(--green-fg); }
+  .stat-delta-down { color: var(--amber-fg); }
+  .stat-delta-flat { color: var(--text-3); font-weight: 500; }
+  .sparkline {
+    flex-shrink: 0; display: block; opacity: .85;
+    overflow: visible; vertical-align: middle;
+  }
+  .stat:hover .sparkline { opacity: 1; }
+  .stat-secondary .stat-trend { min-height: 22px; }
 
   /* ── Panels / cards ──────────────────────────────────────────── */
   .panel {
@@ -3754,16 +3878,19 @@ function build() {
       <div class="stat stat-hero ${applyNow.length > 0 ? 'stat-strong' : ''}" onclick="document.getElementById('apply-now-section').scrollIntoView({behavior:'smooth'})" title="Click to scroll to Apply-Now queue">
         <div class="stat-label">Apply-Now (≥ 4.0)</div>
         <div class="stat-value" id="live-apply-now">${applyNow.length}</div>
+        <div class="stat-trend">${deltaIndicator(kpiSpark.applyNow.delta)}${sparklineSVG(kpiSpark.applyNow.daily, 'var(--green-fg)', 'Apply-Now')}</div>
         <span class="stat-caret" aria-hidden="true">▾</span><span class="sr-only">Click to expand</span>
       </div>
       <div class="stat stat-hero" onclick="toggleStatPanel('evaluations')" title="Click to see all evaluations">
         <div class="stat-label">Total evaluations</div>
         <div class="stat-value" id="live-total">${total}</div>
+        <div class="stat-trend">${deltaIndicator(kpiSpark.total.delta)}${sparklineSVG(kpiSpark.total.daily, 'var(--blue-fg)', 'Total evaluations')}</div>
         <span class="stat-caret" aria-hidden="true">▾</span><span class="sr-only">Click to expand</span>
       </div>
       <div class="stat stat-cell" onclick="toggleStatPanel('pending')" title="Click to see pipeline">
         <div class="stat-label">Pipeline pending</div>
         <div class="stat-value" id="live-pipeline">${pipelinePending}</div>
+        <div class="stat-trend"><span class="stat-delta stat-delta-flat" title="Snapshot — pipeline depth has no daily history">— snapshot</span></div>
         <span class="stat-caret" aria-hidden="true">▾</span><span class="sr-only">Click to expand</span>
       </div>
       <div class="stat stat-cell">
@@ -3782,8 +3909,27 @@ function build() {
       <div class="stat stat-strip" onclick="toggleStatPanel('applied')" title="Click to see in-flight applications">
         <div class="stat-label">Applied / In process</div>
         <div class="stat-value" id="live-applied">${applied.length}</div>
+        <div class="stat-trend">${deltaIndicator(kpiSpark.applied.delta)}${sparklineSVG(kpiSpark.applied.daily, 'var(--purple-fg)', 'Applied / In process')}</div>
         <span class="stat-caret" aria-hidden="true">▾</span><span class="sr-only">Click to expand</span>
       </div>
+<<<<<<< HEAD
+=======
+      <div class="stat stat-secondary">
+        <div class="stat-label">Companies tracked</div>
+        <div class="stat-value">${portals.tracked}</div>
+        <div class="stat-trend">${deltaIndicator(kpiSpark.companies.delta)}${sparklineSVG(kpiSpark.companies.daily, 'var(--blue-fg)', 'Distinct companies/day')}</div>
+      </div>
+      <div class="stat stat-secondary">
+        <div class="stat-label">URLs scanned</div>
+        <div class="stat-value" id="live-scanned">${scanTotal}</div>
+        <div class="stat-trend">${deltaIndicator(kpiSpark.scanned.delta)}${sparklineSVG(kpiSpark.scanned.daily, 'var(--amber-fg)', 'URLs scanned')}</div>
+    </div>
+    <div class="stat" onclick="toggleStatPanel('batches')" title="Click to see batch run history">
+      <div class="stat-label">Batches run</div>
+      <div class="stat-value" id="live-batches">${batchRuns}</div>
+      <div class="stat-trend">${deltaIndicator(kpiSpark.batches.delta)}${sparklineSVG(kpiSpark.batches.daily, 'var(--purple-fg)', 'Batches run')}</div>
+      <div class="stat-caret">▾ click to expand</div>
+>>>>>>> a22b235 (feat(dashboard): KPI sparklines + 7-day trend deltas on stat cards (Phase 6 item 3.1))
     </div>
   </div>
 
