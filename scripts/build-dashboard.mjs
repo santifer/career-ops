@@ -21,6 +21,7 @@ import yaml from 'js-yaml';
 import { marked } from 'marked';
 import { parseApplicationsFile } from '../lib/parse-applications.mjs';
 import { statusKey, statusBadgeClass, STATUS_KEY_SOURCE, STATUS_BADGE_CLASS_SOURCE } from '../lib/status-key.mjs';
+import { networkSummary as _linkedInNetworkSummary, networkMeta as _linkedInNetworkMeta } from '../lib/linkedin-network.mjs';
 const parseYaml = yaml.load;
 
 const ROOT = process.cwd();
@@ -758,24 +759,50 @@ function renderBenefitsCell(company, role) {
 function renderPeopleCell(company, role) {
   const enrich = getRoleEnrichment(company, role);
   const people = enrich?.people || null;
-  if (!people || (!people.likely_recruiter?.name && !people.likely_hiring_manager?.name)) {
+  // Pull network signal — Mitchell's 1st + 2nd-degree LinkedIn contacts at
+  // this company. Loaded lazily; safe-no-op if data/linkedin/Connections.csv
+  // is absent.
+  const network = _networkAtCompanySafe(company);
+  const has1st = network && network.firstDegreeCount > 0;
+  const has2nd = network && network.secondDegreeCount > 0;
+  const has_research = !!(people && (people.likely_recruiter?.name || people.likely_hiring_manager?.name));
+  // Empty state requires NO research AND NO network signal.
+  if (!has_research && !has1st && !has2nd) {
     const detail = JSON.stringify({ kind: 'people', empty: true, hint: 'No recruiter/hiring-manager research yet — run scripts/enrich-roles.mjs.' });
     return `<span class="people-chip people-chip-empty pill-popover-trigger" title="No people data yet" aria-label="No people data yet" tabindex="0" role="button" data-pill='${escape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">—</span>`;
   }
-  const rec = people.likely_recruiter?.name && people.likely_recruiter.name !== 'unknown' ? '👤' : '';
-  const hm  = people.likely_hiring_manager?.name && people.likely_hiring_manager.name !== 'unknown' ? '👔' : '';
-  const labelMark = (rec || hm) ? `${rec}${hm}` : '?';
-  const tip = `Click for recruiter + hiring manager LinkedIn`;
+  const rec = people?.likely_recruiter?.name && people.likely_recruiter.name !== 'unknown' ? '👤' : '';
+  const hm  = people?.likely_hiring_manager?.name && people.likely_hiring_manager.name !== 'unknown' ? '👔' : '';
+  // 🤝 prefix shows network count when ≥1 first-degree contacts exist —
+  // primary visual signal because warm intros beat cold outreach.
+  const networkMark = has1st ? `🤝${network.firstDegreeCount} ` : (has2nd ? `🤝²${network.secondDegreeCount} ` : '');
+  const labelMark = `${networkMark}${rec}${hm}`.trim() || '?';
+  const tipParts = [];
+  if (has1st) tipParts.push(`${network.firstDegreeCount} 1st-degree`);
+  if (has2nd) tipParts.push(`${network.secondDegreeCount} 2nd-degree`);
+  if (has_research) tipParts.push('recruiter/HM intel');
+  const tip = `Click for ${tipParts.join(' + ')}`;
   const detail = JSON.stringify({
     kind: 'people',
     empty: false,
     company,
     role,
-    recruiter: people.likely_recruiter || {},
-    hiring_manager: people.likely_hiring_manager || {},
-    confidence: enrich.confidence || '',
+    recruiter: people?.likely_recruiter || {},
+    hiring_manager: people?.likely_hiring_manager || {},
+    network: network || null,
+    confidence: enrich?.confidence || '',
   });
   return `<span class="people-chip pill-popover-trigger" title="${escape(tip)}" aria-label="${escape(tip)}" tabindex="0" role="button" data-pill='${escape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">${escape(labelMark)}</span>`;
+}
+
+// Safe wrapper — returns null if the CSV is absent so the dashboard
+// builds cleanly without the LinkedIn export in place.
+function _networkAtCompanySafe(company) {
+  try {
+    const s = _linkedInNetworkSummary(company);
+    if (!s || (s.firstDegreeCount === 0 && s.secondDegreeCount === 0)) return null;
+    return s;
+  } catch { return null; }
 }
 
 // Render a single report's markdown to a self-contained HTML page that
@@ -4156,6 +4183,20 @@ function build() {
     text-decoration: none; font-size: 13px;
   }
   #pill-popover .pill-popover-linkedin-link:hover { text-decoration: underline; }
+  #pill-popover .network-list {
+    display: flex; flex-direction: column; gap: 6px;
+    padding-top: 4px;
+  }
+  #pill-popover .network-contact-row {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 5px;
+  }
+  #pill-popover .network-contact-row:last-child { border-bottom: none; padding-bottom: 0; }
+  #pill-popover .network-contact-name { font-size: 12.5px; font-weight: 500; }
+  #pill-popover .network-contact-title {
+    font-size: 11px; color: var(--text-3); line-height: 1.3;
+    margin-top: 1px;
+  }
   body.dark #pill-popover { max-width: 420px; }
   /* Two-column detail grid */
   .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
@@ -8550,6 +8591,7 @@ function _renderPillPopover(d) {
     };
     return '<div class="pill-popover-kind">People · ' + esc(d.company || '') + '</div>'
       + '<h4 class="pill-popover-headline">' + esc(d.role || '') + '</h4>'
+      + _renderNetworkBlock(d.network)
       + personBlock('Likely recruiter', d.recruiter)
       + personBlock('Likely hiring manager', d.hiring_manager)
       + (d.confidence ? '<div class="pill-popover-meta">Confidence: ' + esc(d.confidence) + '</div>' : '');
@@ -8559,6 +8601,46 @@ function _renderPillPopover(d) {
 // Social-corroboration block — surfaces what Grok's x_search found about
 // employees actually posting about comp/benefits/team-toxicity on Blind, X,
 // Reddit. Renders only when populated by scripts/enrich-roles-corroborate.mjs.
+// Network block — Mitchell's 1st-degree LinkedIn contacts at this company
+// (from data/linkedin/Connections.csv) and 2nd-degree (from a Chrome-scrape
+// pass against linkedin.com/company/{slug}/people?facetNetwork=S).
+function _renderNetworkBlock(n) {
+  if (!n || (n.firstDegreeCount === 0 && n.secondDegreeCount === 0)) return '';
+  const esc = (str) => String(str == null ? '' : str)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  const contactRow = (c) => {
+    const name = ((c.first || '') + ' ' + (c.last || '')).trim() || (c.name || '');
+    const url = c.url || '';
+    const title = c.position || c.title || '';
+    const when = c.when ? ' · ' + c.when : '';
+    const link = url
+      ? '<a href="' + esc(url) + '" target="_blank" rel="noopener" class="pill-popover-linkedin-link">' + esc(name) + ' →</a>'
+      : esc(name);
+    return '<div class="network-contact-row">'
+      +   '<div class="network-contact-name">' + link + '</div>'
+      +   (title ? '<div class="network-contact-title">' + esc(title) + esc(when) + '</div>' : '')
+      + '</div>';
+  };
+  let html = '';
+  if (n.firstDegreeCount > 0) {
+    html += '<div class="pill-popover-section-label">🤝 Your 1st-degree at this company (' + n.firstDegreeCount + ')</div>'
+      + '<div class="pill-popover-body network-list">'
+      + (n.firstDegree || []).slice(0, 10).map(contactRow).join('')
+      + (n.firstDegreeCount > 10 ? '<div class="pill-popover-meta-inline">+ ' + (n.firstDegreeCount - 10) + ' more</div>' : '')
+      + '</div>';
+  }
+  if (n.secondDegreeCount > 0) {
+    html += '<div class="pill-popover-section-label">🤝² 2nd-degree at this company (' + n.secondDegreeCount + ')</div>'
+      + '<div class="pill-popover-body network-list">'
+      + (n.secondDegree || []).slice(0, 8).map(contactRow).join('')
+      + (n.secondDegreeCount > 8 ? '<div class="pill-popover-meta-inline">+ ' + (n.secondDegreeCount - 8) + ' more — see scraped JSON</div>' : '')
+      + (n.secondDegreeMeta?.generated_at ? '<div class="pill-popover-meta-inline">Scraped ' + esc(n.secondDegreeMeta.generated_at.slice(0, 10)) + '</div>' : '')
+      + '</div>';
+  }
+  return html;
+}
+
 function _renderSocialCorroborationBlock(s) {
   if (!s) return '';
   const esc = (str) => String(str == null ? '' : str)

@@ -101,3 +101,6 @@ data/share-tokens.json
 data/row-notes.json
 # Lighthouse CI artifacts (per-run reports, ephemeral)
 .lighthouseci/
+
+# LinkedIn export — personal contact data, never commit
+data/linkedin/
