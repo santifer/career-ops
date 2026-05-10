@@ -33,7 +33,98 @@ const REPORTS_DIR = join(ROOT, 'reports');
 const HEARTBEAT_GLOB = (date) => join(ROOT, `data/heartbeat-${date}.md`);
 const OVERPAY_CURRENT_PATH = join(ROOT, 'data/overpay-signals/CURRENT.md');
 const PROFILE_YML_PATH = join(ROOT, 'config/profile.yml');
+const CV_PATH = join(ROOT, 'cv.md');
+const OUTREACH_TEMPLATES_PATH = join(ROOT, 'data/outreach-templates.md');
 const OUT_PATH = join(ROOT, 'dashboard/index.html');
+
+// ── Email-launcher build-time data ───────────────────────────────
+// CV headline: first H1 (name) + first H2 (one-sentence lead) from cv.md.
+// Falls back to profile.yml then generic placeholders if cv.md is missing.
+function loadCvHeadline() {
+  let name = '';
+  let oneSentenceLead = '';
+  if (existsSync(CV_PATH)) {
+    const cv = readFileSync(CV_PATH, 'utf-8');
+    const h1 = cv.match(/^#\s+(.+?)\s*$/m);
+    const h2 = cv.match(/^##\s+(.+?)\s*$/m);
+    if (h1) name = h1[1].trim();
+    if (h2) oneSentenceLead = h2[1].trim();
+  }
+  if ((!name || !oneSentenceLead) && existsSync(PROFILE_YML_PATH)) {
+    try {
+      const cfg = parseYaml(readFileSync(PROFILE_YML_PATH, 'utf-8')) || {};
+      if (!name) name = cfg?.profile?.name || cfg?.name || '';
+      if (!oneSentenceLead) oneSentenceLead = cfg?.profile?.headline || cfg?.headline || '';
+    } catch (_) { /* ignore */ }
+  }
+  return {
+    name: name || 'Your Name',
+    oneSentenceLead: oneSentenceLead || 'Brief one-sentence positioning lead.',
+  };
+}
+
+// Hardcoded fallbacks — used when data/outreach-templates.md is missing
+// or has no parseable Email-Template blocks. Subject/body use the
+// {Company} {Role} {YourName} {OneSentenceLead} placeholders.
+const EMAIL_TEMPLATE_FALLBACKS = [
+  {
+    id: 'cold-recruiter',
+    label: 'Cold to recruiter',
+    subject: 'Re: {Role} at {Company} — quick note',
+    body: 'Hi,\n\nI just applied for the {Role} role at {Company} and wanted to introduce myself directly.\n\n{OneSentenceLead}\n\nHappy to share more or chat briefly if it would help your evaluation.\n\n— {YourName}',
+  },
+  {
+    id: 'warm-intro',
+    label: 'Warm intro followup',
+    subject: 'Followup — {Role} at {Company}',
+    body: 'Hi,\n\nThank you for the introduction earlier. I just submitted my application for the {Role} role at {Company}.\n\n{OneSentenceLead}\n\nLet me know if there is anything else useful I can send your way.\n\n— {YourName}',
+  },
+  {
+    id: 'status-check',
+    label: 'Status check',
+    subject: 'Status check — {Role} application',
+    body: 'Hi,\n\nI wanted to circle back on my application for the {Role} role at {Company}, submitted recently.\n\nI am still very interested and happy to provide any additional information that would help the evaluation.\n\n— {YourName}',
+  },
+];
+
+// Parse data/outreach-templates.md for explicitly-marked email-launcher
+// templates. Convention (opt-in, non-breaking with the existing rich
+// outreach file): a fenced block of the form
+//
+//   ### Email Template: <Label>
+//   **Subject:** <subject line with placeholders>
+//   **Body:**
+//   ```
+//   <body text with placeholders>
+//   ```
+//
+// Returns an array of {id,label,subject,body}; falls back to the
+// hardcoded list when nothing parseable is found. Existing rich
+// LinkedIn/Discord templates in the file are ignored — they are not
+// mailto-shaped and would produce broken email drafts.
+function loadEmailTemplates() {
+  if (!existsSync(OUTREACH_TEMPLATES_PATH)) return EMAIL_TEMPLATE_FALLBACKS;
+  let text = '';
+  try { text = readFileSync(OUTREACH_TEMPLATES_PATH, 'utf-8'); } catch (_) { return EMAIL_TEMPLATE_FALLBACKS; }
+  const re = /^###\s+Email\s+Template:\s*(.+?)\s*$([\s\S]*?)(?=^###\s+Email\s+Template:|^##\s|\Z)/gmi;
+  const out = [];
+  let m;
+  while ((m = re.exec(text)) !== null) {
+    const label = (m[1] || '').trim();
+    const block = m[2] || '';
+    const subj = block.match(/\*\*Subject:\*\*\s*(.+?)\s*$/m);
+    const bodyFence = block.match(/\*\*Body:\*\*\s*\n+```[a-z]*\n([\s\S]*?)\n```/);
+    const subject = subj ? subj[1].trim() : '';
+    const body = bodyFence ? bodyFence[1].trim() : '';
+    if (label && subject && body) {
+      out.push({
+        id: label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+        label, subject, body,
+      });
+    }
+  }
+  return out.length ? out : EMAIL_TEMPLATE_FALLBACKS;
+}
 
 // ── Data extraction ───────────────────────────────────────────────
 
@@ -728,7 +819,11 @@ function renderRow(r, idx) {
   const verifyBtn = verifySlug
     ? `<a href="javascript:void(0)" onclick="openVerify('${verifySlug}');event.stopPropagation()" style="color:#8250df" title="Verify claims + research queries">Verify</a>`
     : '';
-  const applyLink = [reportHtmlLink, applyLinkOnly, verifyBtn].filter(Boolean).join(' · ') || '<span class="muted">—</span>';
+  // Email launcher — between Apply and Verify in visual order. Company
+  // and role flow through data attributes so any special characters
+  // (quotes, ampersands, em-dashes) survive intact for mailto encoding.
+  const emailBtn = `<a href="javascript:void(0)" class="email-launch-btn" onclick="openEmailPopover(this);event.stopPropagation()" data-company="${escape(r.company)}" data-role="${escape(r.role)}" style="color:#0969da" title="Draft outreach email" aria-label="Draft email for ${escape(r.company)} ${escape(r.role)}">Email</a>`;
+  const applyLink = [reportHtmlLink, applyLinkOnly, emailBtn, verifyBtn].filter(Boolean).join(' · ') || '<span class="muted">—</span>';
   // Clickable report link — file:// URL opens the .md in the OS default
   // app (Cursor, after we set it via duti). Stop event propagation so
   // clicking the link doesn't toggle the row's expand state.
@@ -1342,6 +1437,17 @@ function build() {
     }));
   // Escape </ to keep the JSON safe inside a <script> tag.
   const cmdkPayload = JSON.stringify({ rows: cmdkRows, reports: recentReports }).replace(/<\//g, '<\\/');
+
+  // Email-launcher payload — templates + sender identity. Keeping the
+  // identity in build-time JSON (rather than fetched at runtime) means
+  // mailto: drafts work even when the dashboard is opened as a static
+  // file off disk, with no server.
+  const emailHeadline = loadCvHeadline();
+  const emailTemplates = loadEmailTemplates();
+  const emailLauncherPayload = JSON.stringify({
+    sender: emailHeadline,
+    templates: emailTemplates,
+  }).replace(/<\//g, '<\\/');
 
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -2615,6 +2721,39 @@ function build() {
     .status-popover-item { min-height: 44px; padding: 12px 14px; }
   }
 
+  /* ── Inline email-template popover ───────────────────────────── */
+  #email-popover {
+    position: absolute; z-index: 2500;
+    background: var(--surface); color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-md);
+    padding: 6px;
+    min-width: 220px;
+    font-size: 13px;
+    display: none;
+  }
+  #email-popover.is-open { display: block; }
+  #email-popover .email-popover-header {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--text-3); font-weight: 700; padding: 4px 8px 6px;
+  }
+  .email-popover-item {
+    display: flex; align-items: center; gap: 8px;
+    width: 100%; padding: 8px 10px;
+    background: transparent; border: none; cursor: pointer;
+    font: inherit; color: var(--text); text-align: left;
+    border-radius: 4px; line-height: 1.3;
+  }
+  .email-popover-item:hover { background: var(--surface-2); }
+  .email-popover-item:focus-visible { outline: 2px solid var(--blue-fg); outline-offset: -2px; }
+  .email-popover-item .email-popover-count {
+    margin-left: auto; font-size: 10px; color: var(--text-4);
+  }
+  @media (hover: none) and (pointer: coarse), (max-width: 640px) {
+    .email-popover-item { min-height: 44px; padding: 12px 14px; }
+  }
+
   /* ── Bulk operations: row checkboxes + floating action bar ───── */
   /* Checkbox column is collapsed by default; revealed once any row is
      selected (via row-click handler) or when select-mode is forced
@@ -3169,6 +3308,9 @@ function build() {
 
   <!-- Inline status writeback popover -->
   <div id="status-popover" role="menu" aria-label="Set status"></div>
+
+  <!-- Inline email template launcher popover -->
+  <div id="email-popover" role="menu" aria-label="Pick an email template"></div>
 
   <!-- Bulk action bar (visible only when ≥1 row selected) -->
   <div id="bulk-action-bar" role="region" aria-label="Bulk actions" hidden>
@@ -4816,6 +4958,125 @@ async function refreshLiveStats() {
     if (meta) meta.title = data.lastUpdated;
   }
 }
+
+// ── Email-launcher state ────────────────────────────────────────
+// Build-time payload: { sender:{name,oneSentenceLead}, templates:[{id,label,subject,body}] }
+const EMAIL_LAUNCHER_DATA = ${emailLauncherPayload};
+const EMAIL_USAGE_KEY = 'careerOps.emailLauncher.usage.v1';
+let _emailActiveBtn = null;
+let _emailOutsideHandler = null;
+
+function _emailLoadUsage() {
+  try {
+    const raw = localStorage.getItem(EMAIL_USAGE_KEY);
+    if (!raw) return {};
+    const obj = JSON.parse(raw);
+    return (obj && typeof obj === 'object') ? obj : {};
+  } catch (_) { return {}; }
+}
+
+function _emailIncrUsage(id) {
+  if (!id) return;
+  const usage = _emailLoadUsage();
+  usage[id] = (usage[id] || 0) + 1;
+  try { localStorage.setItem(EMAIL_USAGE_KEY, JSON.stringify(usage)); } catch (_) {}
+}
+
+function _emailFillTemplate(tpl, vars) {
+  // Replace {Token} placeholders. Unmatched tokens are left intact so
+  // missing values are obvious to the user before they hit Send.
+  const replace = (s) => String(s || '').replace(/\{(\w+)\}/g, (m, k) =>
+    Object.prototype.hasOwnProperty.call(vars, k) && vars[k] != null ? String(vars[k]) : m);
+  return { subject: replace(tpl.subject), body: replace(tpl.body) };
+}
+
+function _emailDecodeHtml(s) {
+  // The data attributes were HTML-escaped at build time. Convert
+  // entities back to literal characters before they enter the mailto
+  // URL — mailto encoders treat & and < as ordinary text.
+  if (!s) return '';
+  const ta = document.createElement('textarea');
+  ta.innerHTML = s;
+  return ta.value;
+}
+
+function openEmailPopover(btnEl) {
+  closeEmailPopover();
+  const pop = document.getElementById('email-popover');
+  if (!pop || !btnEl) return;
+  _emailActiveBtn = btnEl;
+  const company = _emailDecodeHtml(btnEl.dataset.company || '');
+  const role = _emailDecodeHtml(btnEl.dataset.role || '');
+  const templates = (EMAIL_LAUNCHER_DATA && EMAIL_LAUNCHER_DATA.templates) || [];
+  const usage = _emailLoadUsage();
+  // Most-used first; ties keep the original (build-time) order, which
+  // is the natural recruiter → warm → status flow.
+  const sorted = templates.slice().map((t, i) => ({ t, i, n: usage[t.id] || 0 }))
+    .sort((a, b) => (b.n - a.n) || (a.i - b.i))
+    .map(x => x.t);
+  pop.innerHTML = '<div class="email-popover-header">Draft email — ' + esc(company || '?') + '</div>'
+    + sorted.map(t => {
+      const n = usage[t.id] || 0;
+      return '<button type="button" role="menuitem" class="email-popover-item" data-id="' + esc(t.id) + '">'
+        + '<span>' + esc(t.label) + '</span>'
+        + (n > 0 ? '<span class="email-popover-count">' + n + '×</span>' : '')
+        + '</button>';
+    }).join('');
+  pop.querySelectorAll('.email-popover-item').forEach(btn => {
+    btn.addEventListener('click', evt => {
+      evt.stopPropagation();
+      _emailLaunchById(btn.dataset.id, { company, role });
+    });
+  });
+  // Anchor below the link, viewport-clamped (matches status-popover)
+  const rect = btnEl.getBoundingClientRect();
+  pop.classList.add('is-open');
+  const popW = pop.offsetWidth || 220;
+  let left = rect.left + window.scrollX;
+  const maxLeft = window.scrollX + window.innerWidth - popW - 8;
+  if (left > maxLeft) left = Math.max(8, maxLeft);
+  pop.style.top = (rect.bottom + window.scrollY + 4) + 'px';
+  pop.style.left = left + 'px';
+  _emailOutsideHandler = (evt) => {
+    if (evt.target.closest('#email-popover')) return;
+    if (evt.target === btnEl) return;
+    closeEmailPopover();
+  };
+  setTimeout(() => document.addEventListener('click', _emailOutsideHandler), 0);
+}
+
+function closeEmailPopover() {
+  const pop = document.getElementById('email-popover');
+  if (pop) { pop.classList.remove('is-open'); pop.innerHTML = ''; }
+  _emailActiveBtn = null;
+  if (_emailOutsideHandler) {
+    document.removeEventListener('click', _emailOutsideHandler);
+    _emailOutsideHandler = null;
+  }
+}
+
+function _emailLaunchById(id, ctx) {
+  const tpl = (EMAIL_LAUNCHER_DATA.templates || []).find(t => t.id === id);
+  if (!tpl) { closeEmailPopover(); return; }
+  const sender = (EMAIL_LAUNCHER_DATA && EMAIL_LAUNCHER_DATA.sender) || {};
+  const filled = _emailFillTemplate(tpl, {
+    Company: ctx.company || '',
+    Role: ctx.role || '',
+    YourName: sender.name || '',
+    OneSentenceLead: sender.oneSentenceLead || '',
+  });
+  const url = 'mailto:?subject=' + encodeURIComponent(filled.subject)
+    + '&body=' + encodeURIComponent(filled.body);
+  _emailIncrUsage(id);
+  closeEmailPopover();
+  // window.open with _self lets the OS handler intercept; falls back
+  // gracefully to direct nav if the browser blocks the new context.
+  try { window.location.href = url; }
+  catch (_) { window.open(url, '_self'); }
+}
+
+window.openEmailPopover = openEmailPopover;
+window.closeEmailPopover = closeEmailPopover;
 
 // ── Cmd-K command palette ───────────────────────────────────────
 const CMDK_DATA = ${cmdkPayload};
