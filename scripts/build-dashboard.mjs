@@ -4617,10 +4617,23 @@ function build() {
     border-radius: var(--radius-sm);
     box-shadow: var(--shadow-md);
     padding: 12px 14px;
-    min-width: 280px; max-width: 380px;
+    min-width: 280px; max-width: 420px;
+    /* Cap height + scroll internally so tall content (Benefits/People with
+       all sections populated) never bleeds off the viewport. _positionFloater
+       sets max-height dynamically so we never need to scroll-the-page-then-
+       scroll-the-popover. */
+    max-height: 80vh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
     font-size: 13px; line-height: 1.5;
     display: none;
   }
+  #pill-popover::-webkit-scrollbar { width: 8px; }
+  #pill-popover::-webkit-scrollbar-track { background: transparent; }
+  #pill-popover::-webkit-scrollbar-thumb {
+    background: var(--border-strong); border-radius: 4px;
+  }
+  #pill-popover::-webkit-scrollbar-thumb:hover { background: var(--text-4); }
   body.dark #pill-popover {
     background: var(--surface);
     border-color: var(--border-strong);
@@ -8334,22 +8347,71 @@ function closePillPopover() {
 function _pillEscHandler(e) { if (e.key === 'Escape') closePillPopover(); }
 function _positionFloater(pop, anchor) {
   const r = anchor.getBoundingClientRect();
+  // Reset state so the next measurement reflects natural content height,
+  // not the previous frame's clamped value.
   pop.style.visibility = 'hidden';
   pop.style.top = '0px'; pop.style.left = '0px';
-  // Force a reflow so we can measure.
-  const pr = pop.getBoundingClientRect();
-  let top = window.scrollY + r.bottom + 6;
+  pop.style.maxHeight = ''; // let it measure natural size first
+  pop.style.bottom = 'auto';
+  // Force a reflow so we can measure natural dimensions.
+  void pop.offsetHeight;
+  const naturalH = pop.scrollHeight;
+  const popW = pop.offsetWidth;
+  const margin = 12;
+  const gap = 6;
+  const vpH = window.innerHeight;
+  const vpW = window.innerWidth;
+  // Available vertical space below vs above the chip, in viewport coords.
+  const spaceBelow = vpH - r.bottom - margin;
+  const spaceAbove = r.top - margin;
+  // Decide orientation: prefer below if it fits naturally, else above if it
+  // fits naturally. If neither fits, pick whichever side has more room and
+  // CAP the height so we scroll internally instead of bleeding off-screen.
+  let orientation; // 'below' | 'above'
+  let maxH;
+  if (naturalH <= spaceBelow) {
+    orientation = 'below';
+    maxH = spaceBelow;
+  } else if (naturalH <= spaceAbove) {
+    orientation = 'above';
+    maxH = spaceAbove;
+  } else if (spaceBelow >= spaceAbove) {
+    orientation = 'below';
+    maxH = Math.max(spaceBelow, 200); // never collapse below 200px
+  } else {
+    orientation = 'above';
+    maxH = Math.max(spaceAbove, 200);
+  }
+  // Apply the measured max-height (in viewport coords) so the popover scrolls
+  // internally rather than overflowing the page.
+  pop.style.maxHeight = Math.min(maxH, vpH - 2 * margin) + 'px';
+  // Re-measure after clamp (height may have shrunk).
+  void pop.offsetHeight;
+  const popH = pop.offsetHeight;
+  // Vertical placement: viewport coords + scroll offset.
+  let top = orientation === 'below'
+    ? window.scrollY + r.bottom + gap
+    : window.scrollY + r.top - popH - gap;
+  // Final hard clamp: never let the top go above the viewport's visible top
+  // or bottom go below visible bottom. (Belt-and-braces; the orientation
+  // logic above should already prevent this.)
+  const minTop = window.scrollY + margin;
+  const maxTop = window.scrollY + vpH - popH - margin;
+  if (top < minTop) top = minTop;
+  if (top > maxTop) top = maxTop;
+  // Horizontal placement: prefer left-aligned with the chip; clamp to viewport.
   let left = window.scrollX + r.left;
-  if (left + pr.width > window.scrollX + window.innerWidth - 12) {
-    left = window.scrollX + window.innerWidth - pr.width - 12;
+  if (left + popW > window.scrollX + vpW - margin) {
+    left = window.scrollX + vpW - popW - margin;
   }
-  if (left < window.scrollX + 12) left = window.scrollX + 12;
-  if (top + pr.height > window.scrollY + window.innerHeight - 12) {
-    top = window.scrollY + r.top - pr.height - 6;
-  }
+  if (left < window.scrollX + margin) left = window.scrollX + margin;
   pop.style.top = top + 'px';
   pop.style.left = left + 'px';
   pop.style.visibility = '';
+  // Always start scrolled to top so the headline is visible — without this,
+  // when the popover flips above and gets clamped, the previous scroll
+  // position (or auto-scroll-to-bottom) hides the section labels.
+  pop.scrollTop = 0;
 }
 function _renderPillPopover(d) {
   const esc = (s) => String(s == null ? '' : s)
