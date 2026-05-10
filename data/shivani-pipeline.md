@@ -1,5 +1,3 @@
 ## Pendientes
 
-## Procesados
-
-## Fallidos
+## Procesadas

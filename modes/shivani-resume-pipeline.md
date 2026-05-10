@@ -1,4 +1,4 @@
-# Mode: shivani-resume-pipeline — JD-extract → V2.0-resume two-phase pipeline
+# Mode: shivani-resume-pipeline — JD-extract → V3.0-resume two-phase pipeline
 
 Single-URL-at-a-time pipeline. Reads pending URLs from `data/shivani-pipeline.md`,
 extracts each JD via Playwright into `jds/shivani/`, applies
@@ -78,7 +78,7 @@ Repeat until queue empty, 3 consecutive failures, or user interrupts (Ctrl+C):
    <cleaned full JD body as markdown>
    ```
 
-7. **Apply the V2.0 prompt:**
+7. **Apply the V3.0 prompt:**
 
    Read `V2-Shivani-Anghan-Resume-Optimization-System-XML-Markdown.md` and apply it
    in-context to the JD body from the file written in step 6. The prompt's
@@ -96,8 +96,8 @@ Repeat until queue empty, 3 consecutive failures, or user interrupts (Ctrl+C):
    - If present: everything before that line = deficiency log; everything from
      `\documentclass` to end of output = LaTeX block.
    - If absent: hard-fail. Run
-     `mark-failed --url <url> --reason "V2.0 hard-fail: <SENTENCE_COUNT|SKILLS_OVERFLOW>"`
-     and `log --status fail --url <url> --reason "V2.0 hard-fail: <SENTENCE_COUNT|SKILLS_OVERFLOW>"`. Save the full output to the sidecar `.log`. Continue.
+     `mark-failed --url <url> --reason "V3.0 hard-fail: <SENTENCE_COUNT|SKILLS_OVERFLOW>"`
+     and `log --status fail --url <url> --reason "V3.0 hard-fail: <SENTENCE_COUNT|SKILLS_OVERFLOW>"`. Save the full output to the sidecar `.log`. Continue.
 
 8. **Write `.tex`:** save the LaTeX block (from `\documentclass` onward) to
    `/tmp/<c>_<r>_Shivani_Anghan_Resume_<d>.tex`. Never write the `.tex` to
@@ -228,7 +228,7 @@ Repeat until queue empty, 3 consecutive failures, or user interrupts (Ctrl+C):
 ## Hard rules
 
 - **One URL at a time.** Never process in parallel. Never run multiple URLs
-  through the V2.0 prompt simultaneously.
+  through the V3.0 prompt simultaneously.
 - **Files only.** This pipeline never auto-submits applications. It only
   produces JD `.md`, `.tex`, `.pdf`, and `.log` files.
 - **Never edit `data/shivani-pipeline.md` directly.** Always go through the orchestrator
@@ -236,7 +236,7 @@ Repeat until queue empty, 3 consecutive failures, or user interrupts (Ctrl+C):
 - **Never fabricate company or role.** If the JD page is ambiguous, use the best available inference and note uncertainty in the log. Only mark failed if company and role truly cannot be determined at all.
 - **Never modify** `V2-Shivani-Anghan-Resume-Optimization-System-XML-Markdown.md`,
   `generate-pdf-latex.mjs`, or the existing `pipeline`/`auto-pipeline` modes.
-- **Cover letter is best-effort.** A cover-letter failure (V2.0 hard-fail or
+- **Cover letter is best-effort.** A cover-letter failure (V3.0 hard-fail or
   tectonic crash) does NOT mark the URL failed when the resume PDF already
   succeeded. The URL is marked processed with a warning, and the cover-letter
   sidecar `.log` records the reason. Cover-letter failures do NOT count toward

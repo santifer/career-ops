@@ -54,6 +54,9 @@ cover-letter-logs/yash/*
 cover-letter-logs/shivani/*
 !cover-letter-logs/shivani/.gitkeep
 data/yash-resume-runs.log
+data/yash-pipeline.md
+data/shivani-pipeline.md
+data/shivani-resume-runs.log
 data/follow-ups.md
 data/*.bak
 reports/*.ini

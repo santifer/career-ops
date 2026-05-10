@@ -219,8 +219,8 @@ A streamlined sibling of `auto-pipeline`. Instead of running the full evaluation
 (A–G blocks + scoring + tracker), it produces only two artifacts per URL: a
 structured JD `.md` in `jds/yash/` and a tailored LaTeX-compiled PDF resume in
 `resumes/yash/`. Drop URLs into `data/yash-pipeline.md`,
-then run `/yash-resume-pipeline` — it processes one URL at a time, asks
-before each, and stops on `quit`, empty queue, or 3 consecutive failures.
+then run `/yash-resume-pipeline` — it processes one URL at a time, pauses for
+feedback after each, and stops on `quit`, empty queue, or 3 consecutive failures.
 
 Inputs:
 - URLs in `data/yash-pipeline.md` `## Pendientes` section as `- [ ] <url>`.
@@ -240,7 +240,7 @@ locked design.
 
 ### Shivani Resume Pipeline (shivani-resume-pipeline)
 
-A dedicated resume + cover-letter pipeline for Shivani Anghan targeting Azure Data Engineer roles. Mirrors the Yash pipeline structure but uses Shivani's CV, locked V3.0 prompt, and separate output directories. Drop URLs into `data/shivani-pipeline.md`, then run `/shivani-resume-pipeline` — it processes one URL at a time, asks before each, and stops on `quit`, empty queue, or 3 consecutive failures.
+A dedicated resume + cover-letter pipeline for Shivani Anghan targeting Azure Data Engineer roles. Mirrors the Yash pipeline structure but uses Shivani's CV, locked V3.0 prompt, and separate output directories. Drop URLs into `data/shivani-pipeline.md`, then run `/shivani-resume-pipeline` — it processes one URL at a time, pauses for feedback after each, and stops on `quit`, empty queue, or 3 consecutive failures.
 
 Inputs:
 - URLs in `data/shivani-pipeline.md` `## Pendientes` section as `- [ ] <url>`.
