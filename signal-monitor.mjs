@@ -20,6 +20,7 @@ import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { spawnSync } from 'child_process';
+import { decodeHtmlEntities } from './lib/html-decode.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = __dirname;
@@ -229,10 +230,6 @@ function extractPosts(html, sourceUrl) {
   return posts.slice(0, 20); // cap per feed
 }
 
-function decodeHtmlEntities(s) {
-  return s.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, ' ');
-}
-
 // ── Milestone detector ────────────────────────────────────────────
 function isMilestone(title) {
   const t = title.toLowerCase();
@@ -240,10 +237,21 @@ function isMilestone(title) {
 }
 
 // ── Trigger scan for a company ────────────────────────────────────
+// scan.mjs `--company <substr>` does case-insensitive substring matching
+// against the company name in portals.yml (scan.mjs:375). The `portal`
+// field on each entry above is the slug we pass through.
 function triggerScan(companyPortal) {
   if (DRY_RUN) { console.log(`[DRY-RUN] Would trigger scan.mjs for portal: ${companyPortal}`); return; }
-  // scan.mjs doesn't support single-company yet; log for manual run
-  console.log(`[signal-monitor] Scan trigger noted for: ${companyPortal}`);
+  const result = spawnSync('node', [join(ROOT, 'scan.mjs'), '--company', companyPortal], {
+    cwd: ROOT,
+    stdio: 'inherit',
+    timeout: 120_000,
+  });
+  if (result.error) {
+    console.error(`[signal-monitor] Scan trigger failed for ${companyPortal}: ${result.error.message}`);
+  } else if (result.status !== 0) {
+    console.error(`[signal-monitor] Scan exited with code ${result.status} for ${companyPortal}`);
+  }
 }
 
 // ── Main ──────────────────────────────────────────────────────────

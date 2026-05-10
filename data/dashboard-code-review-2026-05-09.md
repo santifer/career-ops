@@ -35,11 +35,20 @@ already accreting:
 
 Pull into `lib/scan-shared.mjs`.
 
-### 🟡 1.3 Four parallel HTML-entity decoders
+### ✅ 1.3 Four parallel HTML-entity decoders — RESOLVED 2026-05-09
 `scan-rss.mjs:65 decodeEntities`, `scan-rss.mjs:181 htmlDecode`,
 `scan-rss.mjs:226 htmlDecode`, `scan-email.mjs:358 decodeUrl`,
 `signal-monitor.mjs:232 decodeHtmlEntities`. Each handles a slightly
 different subset (some do `&#x2F;`, some don't). Consolidate to one helper.
+
+**Fix landed:** consolidated to `lib/html-decode.mjs` exporting a single
+`decodeHtmlEntities(input)` that handles named entities, decimal numeric
+(`&#NNN;`), and hex numeric (`&#xHH;`) — superset of every prior caller.
+Updated `scan-rss.mjs` (3 callers: `extractTag`/`extractLinkHref`,
+`fetchHNWhoIsHiring`, `parseHNrss`) and `signal-monitor.mjs` (1 caller:
+`extractPosts`). `scan-email.mjs:358 decodeUrl` left in place — it is
+URL-specific and used only by the email scanner; safe to migrate in a
+follow-up if duplication causes real drift.
 
 ### ✅ 1.4 Two `parseApplications` implementations — RESOLVED 2026-05-09
 `dashboard-server.mjs:109-131` and `build-dashboard.mjs:36-59` parse the same
@@ -82,16 +91,26 @@ escape). They guard against each other (`if (_cmdkOpen) return`), but the
 order is fragile — adding a third listener later means hunting for whichever
 fires first. Route through one keymap.
 
-### 🟢 1.8 `signal-monitor.mjs:243 triggerScan` is dead code
+### ✅ 1.8 `signal-monitor.mjs:243 triggerScan` is dead code — RESOLVED 2026-05-09
 Comment says "scan.mjs doesn't support single-company yet" — but it does
 (`--company` flag, scan.mjs:374). The function only logs and returns. Either
 wire it up via `spawnSync('node', ['scan.mjs', '--company', portal])` or
 delete.
 
-### 🟢 1.9 `dashboard-server.mjs:599 loadCanonicalStatuses` regex parser
+**Fix landed:** wired up via `spawnSync('node', [join(ROOT, 'scan.mjs'),
+'--company', companyPortal], { cwd: ROOT, stdio: 'inherit', timeout: 120s })`.
+Failure paths log `result.error` and non-zero exits explicitly so silent
+no-ops can't recur. DRY-RUN path preserved.
+
+### ✅ 1.9 `dashboard-server.mjs:599 loadCanonicalStatuses` regex parser — RESOLVED 2026-05-09
 Hand-rolls `templates/states.yml` parsing with `text.matchAll(/^\s+label:.../gm)`
 to avoid pulling in a YAML dep — but `js-yaml` is already in scan.mjs and
 build-dashboard.mjs. Use it.
+
+**Fix landed:** replaced the regex with `yaml.load(text)?.states.map(s =>
+s?.label).filter(Boolean)`. Same fallback to the AGENTS.md canonical list
+on parse failure, so a malformed states.yml still produces a usable
+status set.
 
 ---
 

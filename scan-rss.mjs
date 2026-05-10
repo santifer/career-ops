@@ -17,6 +17,7 @@
 
 import { readFileSync, writeFileSync, appendFileSync, existsSync, mkdirSync } from 'fs';
 import yaml from 'js-yaml';
+import { decodeHtmlEntities } from './lib/html-decode.mjs';
 const parseYaml = yaml.load;
 
 const PORTALS_PATH = 'portals.yml';
@@ -62,20 +63,10 @@ function stripCdata(text) {
   return text.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1');
 }
 
-function decodeEntities(text) {
-  return text
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&apos;/g, "'");
-}
-
 function extractTag(block, tag) {
   const re = new RegExp(`<${tag}\\b[^>]*>([\\s\\S]*?)<\\/${tag}>`, 'i');
   const m = block.match(re);
-  return m ? decodeEntities(stripCdata(m[1])).trim() : '';
+  return m ? decodeHtmlEntities(stripCdata(m[1])).trim() : '';
 }
 
 function extractLinkHref(block) {
@@ -83,7 +74,7 @@ function extractLinkHref(block) {
   const atomMatch = block.match(/<link\b[^>]*\bhref=["']([^"']+)["']/i);
   if (atomMatch) return atomMatch[1].trim();
   const rssMatch = block.match(/<link\b[^>]*>([\s\S]*?)<\/link>/i);
-  if (rssMatch) return decodeEntities(stripCdata(rssMatch[1])).trim();
+  if (rssMatch) return decodeHtmlEntities(stripCdata(rssMatch[1])).trim();
   return '';
 }
 
@@ -176,19 +167,9 @@ async function fetchHNWhoIsHiring(_url, sourceName) {
   // ATS-host whitelist: only emit offers that link to a real job posting.
   const atsRe = /https?:\/\/(?:[\w-]+\.)*?(?:greenhouse\.io|ashbyhq\.com|lever\.co|workable\.com|amazon\.jobs|builtin\.com|wellfound\.com|otta\.com|workatastartup\.com|hire\.lever|jobs\.workable)\b[^\s<>"')]+/i;
 
-  // HN encodes URLs and ampersands as HTML entities. Decode `&#x2F;` (slash),
-  // `&amp;`, `&quot;`, `&#x27;` (apostrophe), `&lt;`, `&gt;` before matching.
-  const htmlDecode = (s) => s
-    .replace(/&#x2F;/gi, '/')
-    .replace(/&amp;/g, '&')
-    .replace(/&quot;/g, '"')
-    .replace(/&#x27;/gi, "'")
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>');
-
   for (const c of comments) {
     const rawHtml = c.text || '';
-    const decoded = htmlDecode(rawHtml);
+    const decoded = decodeHtmlEntities(rawHtml);
     const stripped = decoded.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
     if (!stripped) continue;
     // Standard HN format: "Company (Stage) | Role | Location | Comp | URL ..."
@@ -223,14 +204,6 @@ async function fetchHNWhoIsHiring(_url, sourceName) {
 function parseHNrss(xml, sourceName) {
   const atsRe = /https?:\/\/(?:[\w-]+\.)*?(?:greenhouse\.io|ashbyhq\.com|lever\.co|workable\.com|amazon\.jobs|wellfound\.com|workatastartup\.com|otta\.com)\b[^\s<>"')&]+/gi;
 
-  const htmlDecode = (s) => s
-    .replace(/&#x2F;/gi, '/')
-    .replace(/&amp;/g, '&')
-    .replace(/&quot;/g, '"')
-    .replace(/&#x27;/gi, "'")
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>');
-
   const offers = [];
   let items = [...xml.matchAll(/<item\b[^>]*>([\s\S]*?)<\/item>/gi)];
   if (items.length === 0) {
@@ -242,7 +215,7 @@ function parseHNrss(xml, sourceName) {
     // description may be in <description> or <content:encoded>
     const descRaw = extractTag(block, 'description') ||
                     block.match(/<content:encoded\b[^>]*>([\s\S]*?)<\/content:encoded>/i)?.[1] || '';
-    const decoded = htmlDecode(descRaw);
+    const decoded = decodeHtmlEntities(descRaw);
     const stripped = decoded.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 
     // Extract all ATS URLs from description

@@ -8,6 +8,7 @@ import { join, extname } from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { randomBytes } from 'crypto';
+import yaml from 'js-yaml';
 import { parseApplicationsFile } from './lib/parse-applications.mjs';
 import { statusKey, statusBadgeClass } from './lib/status-key.mjs';
 
@@ -587,17 +588,15 @@ const DETAIL_FNS = {
 // ── Status writeback ───────────────────────────────────────────
 
 function loadCanonicalStatuses() {
-  // Parse templates/states.yml without pulling a YAML dep — extract the
-  // `label:` value of every state in the file. Falls back to the AGENTS.md
-  // canonical list if states.yml is unreadable.
+  // Read labels from templates/states.yml. Falls back to the AGENTS.md
+  // canonical list if states.yml is missing or malformed.
   const fallback = ['Evaluated','Applied','Responded','Interview','Offer','Rejected','Discarded','SKIP'];
   try {
     const text = readFileSync(join(ROOT, 'templates/states.yml'), 'utf8');
-    const labels = [];
-    for (const m of text.matchAll(/^\s+label:\s+(.+?)\s*$/gm)) {
-      const v = m[1].trim();
-      if (v) labels.push(v);
-    }
+    const doc = yaml.load(text);
+    const labels = (doc?.states || [])
+      .map(s => typeof s?.label === 'string' ? s.label.trim() : '')
+      .filter(Boolean);
     return labels.length ? labels : fallback;
   } catch (_) {
     return fallback;
