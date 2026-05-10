@@ -1792,25 +1792,39 @@ function build() {
     #cmdk-backdrop { padding-top: 8vh; }
   }
 
-  /* ── KPI stat cards: 3+3 hero (primary tier on top, secondary below) ── */
+  /* ── KPI stat cards: bento-grid composition (2 heroes + 4 small + strip) ──
+     Layout reads as deliberate composition rather than a 3+3+orphan stack.
+     Cols 1-2 + 3-4 are 2x2 heroes (Apply-Now, Total Evals); cols 5-6 hold
+     a 2x2 cluster of four small cards; row 3 is a full-width strip card. */
   .stats {
     margin: 16px 0 24px;
   }
-  .stats-row {
+  .stats-bento {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(6, 1fr);
+    grid-auto-rows: minmax(78px, auto);
     gap: 12px;
     margin: 16px 0 var(--section-gap);
   }
-  .stats-row-primary { margin-bottom: 12px; }
+  .stat-hero { grid-column: span 2; grid-row: span 2; }
+  .stat-cell { grid-column: span 1; }
+  .stat-strip { grid-column: 1 / -1; }
+  /* Mobile: 2-col bento. Heroes still emphasized (full-width, taller). */
   @media (max-width: 720px) {
-    .stats-row { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+    .stats-bento {
+      grid-template-columns: repeat(2, 1fr);
+      grid-auto-rows: minmax(72px, auto);
+    }
+    .stat-hero { grid-column: 1 / -1; grid-row: span 1; }
+    .stat-cell, .stat-strip { grid-column: span 1; grid-row: span 1; }
+    .stat-strip { grid-column: 1 / -1; }
   }
   .stat {
     background: var(--surface); padding: 18px 20px; border-radius: var(--radius);
     border: 1px solid var(--border); box-shadow: var(--shadow-sm);
     transition: border-color .15s, box-shadow .15s;
     position: relative; overflow: hidden;
+    display: flex; flex-direction: column; justify-content: flex-end;
   }
   .stat::before {
     content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
@@ -1836,10 +1850,26 @@ function build() {
   }
   .stat:hover .stat-caret { color: var(--text-3); }
   .stat.active .stat-caret { color: var(--blue-fg); transform: rotate(180deg); }
-  /* Secondary tier: smaller padding + smaller numeric */
-  .stat-secondary { padding: 14px 16px; }
-  .stat-secondary .stat-value { font-size: 24px; letter-spacing: -0.5px; }
-  .stat-secondary::before { height: 2px; }
+  /* Hero tier: bigger numeric + accent stripe + room reserved for future sparkline */
+  .stat-hero { padding: 22px 24px; }
+  .stat-hero::before { height: 4px; }
+  .stat-hero .stat-label { font-size: 12px; }
+  .stat-hero .stat-value { font-size: 56px; line-height: 1; letter-spacing: -1.5px; margin-top: 10px; }
+  @media (max-width: 720px) {
+    .stat-hero .stat-value { font-size: 44px; }
+  }
+  /* Small tier: tighter padding + smaller numeric */
+  .stat-cell { padding: 14px 16px; }
+  .stat-cell .stat-value { font-size: 24px; letter-spacing: -0.5px; }
+  .stat-cell::before { height: 2px; }
+  /* Strip tier: same compact metrics, full-width row */
+  .stat-strip { padding: 14px 18px; flex-direction: row; align-items: center; gap: 14px; justify-content: flex-start; }
+  .stat-strip .stat-label { margin-right: 4px; }
+  .stat-strip .stat-value { font-size: 24px; letter-spacing: -0.5px; margin-top: 0; }
+  .stat-strip::before { height: 2px; }
+  @media (max-width: 720px) {
+    .stat-strip { flex-direction: column; align-items: flex-start; gap: 4px; }
+  }
 
   /* ── Panels / cards ──────────────────────────────────────────── */
   .panel {
@@ -3497,41 +3527,40 @@ function build() {
   </div>
 
   <div class="stats">
-    <div class="stats-row stats-row-primary">
-      <div class="stat ${applyNow.length > 0 ? 'stat-strong' : ''}" onclick="document.getElementById('apply-now-section').scrollIntoView({behavior:'smooth'})" title="Click to scroll to Apply-Now queue">
+    <div class="stats-bento">
+      <div class="stat stat-hero ${applyNow.length > 0 ? 'stat-strong' : ''}" onclick="document.getElementById('apply-now-section').scrollIntoView({behavior:'smooth'})" title="Click to scroll to Apply-Now queue">
         <div class="stat-label">Apply-Now (≥ 4.0)</div>
         <div class="stat-value" id="live-apply-now">${applyNow.length}</div>
         <span class="stat-caret" aria-hidden="true">▾</span><span class="sr-only">Click to expand</span>
       </div>
-      <div class="stat" onclick="toggleStatPanel('evaluations')" title="Click to see all evaluations">
+      <div class="stat stat-hero" onclick="toggleStatPanel('evaluations')" title="Click to see all evaluations">
         <div class="stat-label">Total evaluations</div>
         <div class="stat-value" id="live-total">${total}</div>
         <span class="stat-caret" aria-hidden="true">▾</span><span class="sr-only">Click to expand</span>
       </div>
-      <div class="stat" onclick="toggleStatPanel('pending')" title="Click to see pipeline">
+      <div class="stat stat-cell" onclick="toggleStatPanel('pending')" title="Click to see pipeline">
         <div class="stat-label">Pipeline pending</div>
         <div class="stat-value" id="live-pipeline">${pipelinePending}</div>
         <span class="stat-caret" aria-hidden="true">▾</span><span class="sr-only">Click to expand</span>
       </div>
-    </div>
-    <div class="stats-row stats-row-secondary">
-      <div class="stat stat-secondary" onclick="toggleStatPanel('applied')" title="Click to see in-flight applications">
+      <div class="stat stat-cell">
+        <div class="stat-label">Companies tracked</div>
+        <div class="stat-value">${portals.tracked}</div>
+      </div>
+      <div class="stat stat-cell">
+        <div class="stat-label">URLs scanned</div>
+        <div class="stat-value" id="live-scanned">${scanTotal}</div>
+      </div>
+      <div class="stat stat-cell" onclick="toggleStatPanel('batches')" title="Click to see batch run history">
+        <div class="stat-label">Batches run</div>
+        <div class="stat-value" id="live-batches">${batchRuns}</div>
+        <span class="stat-caret" aria-hidden="true">▾</span><span class="sr-only">Click to expand</span>
+      </div>
+      <div class="stat stat-strip" onclick="toggleStatPanel('applied')" title="Click to see in-flight applications">
         <div class="stat-label">Applied / In process</div>
         <div class="stat-value" id="live-applied">${applied.length}</div>
         <span class="stat-caret" aria-hidden="true">▾</span><span class="sr-only">Click to expand</span>
       </div>
-      <div class="stat stat-secondary">
-        <div class="stat-label">Companies tracked</div>
-        <div class="stat-value">${portals.tracked}</div>
-      </div>
-      <div class="stat stat-secondary">
-        <div class="stat-label">URLs scanned</div>
-        <div class="stat-value" id="live-scanned">${scanTotal}</div>
-    </div>
-    <div class="stat" onclick="toggleStatPanel('batches')" title="Click to see batch run history">
-      <div class="stat-label">Batches run</div>
-      <div class="stat-value" id="live-batches">${batchRuns}</div>
-      <div class="stat-caret">▾ click to expand</div>
     </div>
   </div>
 
