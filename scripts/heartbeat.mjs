@@ -25,6 +25,10 @@ const args = process.argv.slice(2);
 const dateArg = args.find(a => a.startsWith('--date='));
 const SEND = args.includes('--send');
 const TEST = args.includes('--test');
+// --preview renders the HTML email to /tmp/heartbeat-preview.html and
+// opens it in the default browser so you can verify the visual identity
+// without firing an actual SMTP send.
+const PREVIEW = args.includes('--preview');
 const TARGET_DATE = dateArg
   ? dateArg.split('=')[1]
   : new Date().toISOString().slice(0, 10);
@@ -48,14 +52,42 @@ function loadSecrets() {
 // Wrap a numeric score in a color-coded pill. The thresholds match the
 // system's own classification (4.5+ = priority, 4.0–4.49 = qualifying,
 // below = filtered). Used in tables and inline.
+// Brand palette — same tokens as the dashboard's mission-control dark mode
+// + light-mode-safe equivalents for email clients that don't honor
+// prefers-color-scheme. Single source of truth at lib/dashboard-tokens.mjs;
+// duplicated inline here so heartbeat.mjs stays a one-file zero-dep launchd
+// job (the tokens module would force an ESM import + path resolution that
+// breaks the heartbeat's standalone-script invariant).
+const BRAND = {
+  // Light-mode (default — broad client support)
+  bg:           '#f8fafc',
+  surface:      '#ffffff',
+  surface2:     '#f1f5f9',
+  border:       '#e2e8f0',
+  text:         '#0f172a',
+  text2:        '#1e293b',
+  text3:        '#475569',
+  text4:        '#64748b',
+  green:        '#16a34a',     // matrix-green, brand accent
+  greenFg:      '#15803d',
+  greenBg:      '#dcfce7',
+  greenBorder:  '#86efac',
+  blue:         '#2563eb',
+  blueBg:       '#dbeafe',
+  amber:        '#92400e',
+  amberBg:      '#fef3c7',
+  red:          '#991b1b',
+  redBg:        '#fee2e2',
+};
+
 function scorePill(score) {
   const n = parseFloat(score);
   if (isNaN(n)) return String(score);
   let bg, fg;
-  if (n >= 4.5) { bg = '#dcfce7'; fg = '#166534'; }
-  else if (n >= 4.0) { bg = '#dbeafe'; fg = '#1e40af'; }
-  else if (n >= 3.0) { bg = '#fef3c7'; fg = '#92400e'; }
-  else { bg = '#fee2e2'; fg = '#991b1b'; }
+  if (n >= 4.5)      { bg = BRAND.greenBg; fg = BRAND.greenFg; }
+  else if (n >= 4.0) { bg = BRAND.greenBg; fg = BRAND.greenFg; }
+  else if (n >= 3.0) { bg = BRAND.amberBg; fg = BRAND.amber;   }
+  else               { bg = BRAND.redBg;   fg = BRAND.red;     }
   return `<span style="display:inline-block;background:${bg};color:${fg};padding:2px 8px;border-radius:999px;font-weight:600;font-size:12px;font-variant-numeric:tabular-nums">${n.toFixed(2)}</span>`;
 }
 
@@ -67,29 +99,24 @@ function renderHtmlEmail(markdownBody, meta = {}) {
   // blocks and class attributes, so styles must live on the elements
   // themselves. The order of these replaces matters — apply the most
   // specific patterns first so they don't get clobbered by the general ones.
+  // Class-tagged inline styles. Class names are dark-mode hooks the
+  // <style> block in the email <head> targets via prefers-color-scheme.
+  // Inline rules are the light-mode default for clients that strip <style>.
   let styled = inner
-    // Tables — alternating rows, sticky-looking headers, clean borders
-    .replace(/<table>/g, '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate;border-spacing:0;width:100%;margin:14px 0 18px;font-size:14px;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden">')
-    .replace(/<thead>/g, '<thead style="background:linear-gradient(180deg,#f8fafc 0%,#f1f5f9 100%)">')
-    .replace(/<th>/g, '<th style="text-align:left;padding:10px 12px;border-bottom:1px solid #e2e8f0;font-weight:600;color:#0f172a;font-size:13px;text-transform:uppercase;letter-spacing:0.04em">')
-    .replace(/<td>/g, '<td style="padding:10px 12px;border-bottom:1px solid #f1f5f9;vertical-align:top;color:#1e293b">')
-    // Quote block — used for the "How to read this email" intro
-    .replace(/<blockquote>/g, '<blockquote style="margin:18px 0;padding:14px 18px;border-left:4px solid #6366f1;background:#eef2ff;color:#312e81;border-radius:0 8px 8px 0;font-size:14px;line-height:1.55">')
-    // Headings — H2 gets an indigo accent bar, H3 stays subtle
-    .replace(/<h1>/g, '<h1 style="font-size:26px;margin:0 0 6px;color:#0f172a;font-weight:700;letter-spacing:-0.01em">')
-    .replace(/<h2>/g, '<h2 style="font-size:18px;margin:32px 0 10px;color:#0f172a;font-weight:700;border-left:4px solid #6366f1;padding-left:10px;letter-spacing:-0.01em">')
-    .replace(/<h3>/g, '<h3 style="font-size:16px;margin:22px 0 8px;color:#1e293b;font-weight:600;letter-spacing:-0.01em">')
-    // Links — readable indigo, underlined for clickability cues
-    .replace(/<a /g, '<a style="color:#4338ca;text-decoration:underline;text-underline-offset:2px;font-weight:500" ')
-    // Code spans
-    .replace(/<code>/g, '<code style="background:#f1f5f9;padding:1px 6px;border-radius:4px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;color:#0f172a">')
-    // Lists
-    .replace(/<ul>/g, '<ul style="margin:8px 0 12px;padding-left:24px;color:#1e293b">')
-    .replace(/<ol>/g, '<ol style="margin:8px 0 12px;padding-left:24px;color:#1e293b">')
+    .replace(/<table>/g, `<table role="presentation" cellpadding="0" cellspacing="0" border="0" class="card" style="border-collapse:separate;border-spacing:0;width:100%;margin:14px 0 18px;font-size:14px;border:1px solid ${BRAND.border};border-radius:8px;overflow:hidden;background:${BRAND.surface}">`)
+    .replace(/<thead>/g, `<thead style="background:${BRAND.surface2}">`)
+    .replace(/<th>/g, `<th class="text-muted border" style="text-align:left;padding:10px 12px;border-bottom:1px solid ${BRAND.border};font-weight:600;color:${BRAND.text3};font-size:11px;text-transform:uppercase;letter-spacing:0.06em">`)
+    .replace(/<td>/g, `<td class="border" style="padding:10px 12px;border-bottom:1px solid ${BRAND.surface2};vertical-align:top;color:${BRAND.text2}">`)
+    .replace(/<blockquote>/g, `<blockquote class="card" style="margin:18px 0;padding:14px 18px;border-left:3px solid ${BRAND.green};background:${BRAND.greenBg};color:${BRAND.text};border-radius:0 8px 8px 0;font-size:14px;line-height:1.55">`)
+    .replace(/<h1>/g, `<h1 class="text-strong accent" style="font-size:26px;margin:0 0 6px;color:${BRAND.greenFg};font-weight:700;letter-spacing:-0.01em">`)
+    .replace(/<h2>/g, `<h2 class="text-strong" style="font-size:18px;margin:32px 0 10px;color:${BRAND.text};font-weight:700;border-left:3px solid ${BRAND.green};padding-left:12px;letter-spacing:-0.01em">`)
+    .replace(/<h3>/g, `<h3 class="text-strong" style="font-size:16px;margin:22px 0 8px;color:${BRAND.text2};font-weight:600;letter-spacing:-0.01em">`)
+    .replace(/<a /g, `<a class="accent" style="color:${BRAND.greenFg};text-decoration:underline;text-underline-offset:2px;font-weight:500" `)
+    .replace(/<code>/g, `<code style="background:${BRAND.surface2};padding:1px 6px;border-radius:4px;font-family:'JetBrains Mono','SF Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;color:${BRAND.greenFg}">`)
+    .replace(/<ul>/g, `<ul style="margin:8px 0 12px;padding-left:24px;color:${BRAND.text2}">`)
+    .replace(/<ol>/g, `<ol style="margin:8px 0 12px;padding-left:24px;color:${BRAND.text2}">`)
     .replace(/<li>/g, '<li style="margin:4px 0;line-height:1.55">')
-    // Horizontal rules between role cards — replace the default thin <hr>
-    // with a softer separator that visually groups one role per "card"
-    .replace(/<hr>/g, '<hr style="border:none;height:1px;background:linear-gradient(90deg,transparent 0%,#e2e8f0 50%,transparent 100%);margin:28px 0">');
+    .replace(/<hr>/g, `<hr style="border:none;height:1px;background:linear-gradient(90deg,transparent 0%,${BRAND.border} 50%,transparent 100%);margin:28px 0">`);
 
   // Color-code score callouts inside text content. Patterns we hit:
   //   "4.65 / 5"  →  pill-rendered score
@@ -100,14 +127,14 @@ function renderHtmlEmail(markdownBody, meta = {}) {
   // has already converted markdown bold to <strong>, so match the HTML form.
   styled = styled.replace(/<strong>(Offer|Interview|Responded|Applied|Evaluated|Rejected|Discarded|SKIP)<\/strong>/g, (m, status) => {
     const palette = {
-      Offer: ['#fef3c7', '#92400e'],
-      Interview: ['#dcfce7', '#166534'],
-      Responded: ['#e0e7ff', '#3730a3'],
-      Applied: ['#dbeafe', '#1e40af'],
-      Evaluated: ['#f1f5f9', '#475569'],
-      Rejected: ['#fee2e2', '#991b1b'],
-      Discarded: ['#f1f5f9', '#64748b'],
-      SKIP: ['#f1f5f9', '#64748b'],
+      Offer:     [BRAND.amberBg,   BRAND.amber],
+      Interview: [BRAND.greenBg,   BRAND.greenFg],
+      Responded: [BRAND.blueBg,    BRAND.blue],
+      Applied:   [BRAND.blueBg,    BRAND.blue],
+      Evaluated: [BRAND.surface2,  BRAND.text3],
+      Rejected:  [BRAND.redBg,     BRAND.red],
+      Discarded: [BRAND.surface2,  BRAND.text4],
+      SKIP:      [BRAND.surface2,  BRAND.text4],
     };
     const [bg, fg] = palette[status] || ['#f1f5f9', '#475569'];
     return `<span style="display:inline-block;background:${bg};color:${fg};padding:2px 8px;border-radius:999px;font-weight:600;font-size:12px">${status}</span>`;
@@ -120,19 +147,22 @@ function renderHtmlEmail(markdownBody, meta = {}) {
   const evaluatedToday = meta.evaluatedToday || 0;
   const newFromAlerts = meta.newFromAlerts || 0;
 
-  // Header card: gradient banner with date and a clickable Open Dashboard CTA.
+  // Mission-control header — same visual signature as the dashboard's
+  // mc-strip + the report HTML's nav-back chrome. Light mode default
+  // (matrix-green-on-white gradient); dark-mode override via the
+  // <style> block below promotes it to the dashboard's deep cobalt look.
   const header = `
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin:0 0 8px">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin:0 0 12px">
   <tr>
-    <td style="padding:22px 24px;background:linear-gradient(135deg,#4338ca 0%,#6366f1 50%,#8b5cf6 100%);border-radius:12px;color:#ffffff">
+    <td class="header-banner" style="padding:22px 24px;background:linear-gradient(135deg,${BRAND.green} 0%,#15803d 50%,#0f5e2c 100%);border-radius:12px;color:#ffffff">
       <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%">
         <tr>
           <td style="vertical-align:middle">
-            <div style="font-size:11px;letter-spacing:0.18em;text-transform:uppercase;opacity:0.85;font-weight:600">Career-Ops · Daily Heartbeat</div>
-            <div style="font-size:22px;font-weight:700;margin-top:4px;letter-spacing:-0.01em">${date}</div>
+            <div style="font-size:11px;letter-spacing:0.18em;text-transform:uppercase;opacity:0.92;font-weight:600">⚡ Career-Ops · Daily Heartbeat</div>
+            <div style="font-size:24px;font-weight:700;margin-top:4px;letter-spacing:-0.01em;font-family:'JetBrains Mono','SF Mono',ui-monospace,monospace">${date}</div>
           </td>
           <td align="right" style="vertical-align:middle">
-            <a href="${dashboardUrl}" style="display:inline-block;background:#ffffff;color:#4338ca;padding:9px 16px;border-radius:8px;text-decoration:none;font-weight:600;font-size:13px;letter-spacing:0.01em;box-shadow:0 1px 3px rgba(0,0,0,0.18)">Open Dashboard →</a>
+            <a href="${dashboardUrl}" class="cta-button" style="display:inline-block;background:#ffffff;color:${BRAND.greenFg};padding:9px 16px;border-radius:8px;text-decoration:none;font-weight:600;font-size:13px;letter-spacing:0.01em;box-shadow:0 1px 3px rgba(0,0,0,0.18)">Open Dashboard →</a>
           </td>
         </tr>
       </table>
@@ -140,39 +170,74 @@ function renderHtmlEmail(markdownBody, meta = {}) {
   </tr>
 </table>`;
 
-  // KPI strip — four metrics in a flat card row.
+  // KPI strip — uses the same palette + tabular numerals as the
+  // dashboard's stats-bento. Matrix-green for the primary metric
+  // (Apply-Now Queue), supporting hues for the rest.
   const kpis = [
-    { label: 'In queue ≥ 4.0', value: queueCount, accent: '#4338ca' },
-    { label: 'Evaluated today', value: evaluatedToday, accent: '#0891b2' },
-    { label: 'From alerts today', value: newFromAlerts, accent: '#059669' },
-    { label: 'Tracked all-time', value: trackedCount, accent: '#475569' },
+    { label: 'In queue ≥ 4.0',    value: queueCount,      accent: BRAND.green },
+    { label: 'Evaluated today',   value: evaluatedToday,  accent: BRAND.blue },
+    { label: 'From alerts today', value: newFromAlerts,   accent: BRAND.greenFg },
+    { label: 'Tracked all-time',  value: trackedCount,    accent: BRAND.text3 },
   ];
   const kpiCells = kpis.map(k => `
-    <td style="padding:14px 16px;background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;text-align:center;width:25%">
-      <div style="font-size:11px;color:#64748b;font-weight:600;letter-spacing:0.06em;text-transform:uppercase">${k.label}</div>
-      <div style="font-size:22px;font-weight:700;color:${k.accent};margin-top:4px;font-variant-numeric:tabular-nums">${k.value}</div>
+    <td class="card border" style="padding:14px 16px;background:${BRAND.surface};border:1px solid ${BRAND.border};border-radius:10px;text-align:center;width:25%">
+      <div class="text-muted" style="font-size:10px;color:${BRAND.text4};font-weight:700;letter-spacing:0.08em;text-transform:uppercase">${k.label}</div>
+      <div class="text-strong" style="font-size:24px;font-weight:700;color:${k.accent};margin-top:4px;font-variant-numeric:tabular-nums;font-family:'JetBrains Mono','SF Mono',ui-monospace,monospace">${k.value}</div>
     </td>`).join('<td style="width:8px"></td>');
   const kpiStrip = `
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin:0 0 18px">
   <tr>${kpiCells}</tr>
 </table>`;
 
-  // Footer
   const footer = `
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin:32px 0 8px">
   <tr>
-    <td style="padding:14px 0;border-top:1px solid #e2e8f0;color:#64748b;font-size:12px;text-align:center">
-      Generated by <code style="background:#f1f5f9;padding:1px 6px;border-radius:4px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px">scripts/heartbeat.mjs</code>
-      · <a href="${dashboardUrl}" style="color:#4338ca;text-decoration:underline">dashboard</a>
+    <td class="text-muted border" style="padding:14px 0;border-top:1px solid ${BRAND.border};color:${BRAND.text4};font-size:12px;text-align:center">
+      Generated by <code style="background:${BRAND.surface2};padding:1px 6px;border-radius:4px;font-family:'JetBrains Mono','SF Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;color:${BRAND.greenFg}">scripts/heartbeat.mjs</code>
+      · <a href="${dashboardUrl}" class="accent" style="color:${BRAND.greenFg};text-decoration:underline">dashboard</a>
       · scheduled daily 09:00 PT via launchd
     </td>
   </tr>
 </table>`;
 
+  // prefers-color-scheme: dark CSS — Apple Mail, Gmail web, Outlook 365
+  // dark all honor this. Maps the email's class hooks (.card, .text-strong,
+  // .accent, .header-banner, etc.) to the dashboard's dark-mode tokens
+  // so a user reading in dark mode sees the same matrix-green-on-cobalt
+  // identity as the live dashboard.
+  const darkModeCss = `
+@media (prefers-color-scheme: dark) {
+  body, .body-bg { background: #06070d !important; color: #fafafa !important; }
+  .card { background: #11131c !important; border-color: #232737 !important; color: #e4e4e7 !important; }
+  .text-strong { color: #fafafa !important; }
+  .text-muted  { color: #b8b8c0 !important; }
+  .text-subtle { color: #9a9aa6 !important; }
+  .border      { border-color: #232737 !important; }
+  .accent      { color: #86efac !important; }
+  .accent-bg   { background: rgba(22,163,74,0.12) !important; color: #86efac !important; }
+  table { border-color: #232737 !important; background: #11131c !important; }
+  thead, th { background: #181b27 !important; color: #b8b8c0 !important; border-color: #232737 !important; }
+  td { color: #e4e4e7 !important; border-color: #232737 !important; }
+  blockquote { background: rgba(22,163,74,0.10) !important; color: #fafafa !important; border-left-color: #86efac !important; }
+  code { background: #181b27 !important; color: #86efac !important; }
+  hr { background: linear-gradient(90deg, transparent 0%, #232737 50%, transparent 100%) !important; }
+  a { color: #86efac !important; }
+  .header-banner {
+    background: linear-gradient(135deg, rgba(0,255,157,0.10) 0%, rgba(22,163,74,0.04) 50%, #11131c 100%) !important;
+    border: 1px solid #232737 !important;
+    color: #fafafa !important;
+  }
+  .cta-button { background: #86efac !important; color: #06070d !important; }
+}`;
+
   return `<!DOCTYPE html>
-<html><head><meta charset="utf-8"><meta name="color-scheme" content="light only"><meta name="supported-color-schemes" content="light only"></head>
-<body style="margin:0;padding:0;background:#f8fafc;color:#1e293b;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased">
-<center style="width:100%;background:#f8fafc">
+<html><head><meta charset="utf-8">
+<meta name="color-scheme" content="light dark">
+<meta name="supported-color-schemes" content="light dark">
+<style>${darkModeCss}</style>
+</head>
+<body class="body-bg" style="margin:0;padding:0;background:${BRAND.bg};color:${BRAND.text2};font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',Helvetica,Arial,sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased">
+<center class="body-bg" style="width:100%;background:${BRAND.bg}">
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="max-width:780px;width:100%;margin:0 auto;padding:24px 20px">
   <tr><td>
     ${header}
@@ -1049,6 +1114,20 @@ async function main() {
   const outPath = join(ROOT, `data/heartbeat-${TARGET_DATE}.md`);
   writeFileSync(outPath, body);
   console.log(`Wrote ${outPath}`);
+
+  if (PREVIEW) {
+    const html = renderHtmlEmail(body, meta);
+    const previewPath = '/tmp/heartbeat-preview.html';
+    writeFileSync(previewPath, html);
+    console.log(`Wrote ${previewPath} (${html.length} chars)`);
+    // Open in default browser via macOS `open` (silent fail on non-mac)
+    try {
+      const { execSync } = await import('child_process');
+      execSync(`open "${previewPath}"`, { stdio: 'ignore' });
+      console.log('Opened in default browser');
+    } catch { /* not on mac, skip */ }
+    return;
+  }
 
   if (SEND) {
     const subject = `[career-ops] heartbeat ${TARGET_DATE}`;

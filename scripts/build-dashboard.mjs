@@ -888,52 +888,188 @@ function renderReportToHtml(reportPath, outputDir) {
 
   const inner = metaCard + body;
 
+  // Visual identity: matches the dashboard's mission-control palette
+  // (dark cobalt-slate, matrix-green accent, space backdrop). Same fonts,
+  // same chip colors, same nav chrome. Tokens come from
+  // lib/dashboard-tokens.mjs so the dashboard, the report HTML, and
+  // the heartbeat email stay in sync as one product line.
   const wrapped = `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <title>${escape(title)} · Career-Ops</title>
+<meta name="color-scheme" content="dark">
 <style>
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    color: #1f2328; background: #f6f8fa; max-width: 920px;
-    margin: 24px auto; padding: 24px 32px; line-height: 1.6; font-size: 15px;
+  :root {
+    --bg: #06070d;
+    --surface: #11131c;
+    --surface-2: #181b27;
+    --border: #232737;
+    --border-strong: #353a52;
+    --text: #fafafa;
+    --text-2: #e4e4e7;
+    --text-3: #b8b8c0;
+    --text-4: #9a9aa6;
+    --green: #4ade80;
+    --green-fg: #86efac;
+    --green-fg-dark: #bbf7d0;
+    --green-bg: rgba(22,163,74,0.12);
+    --green-border: rgba(22,163,74,0.30);
+    --blue-fg: #94a3b8;
+    --amber-fg: #d4ba84;
+    --amber-bg: rgba(168,123,72,0.14);
+    --red-fg: #fca5a5;
+    --red-bg: rgba(220,38,38,0.12);
+    --font-ui: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Helvetica, Arial, sans-serif;
+    --font-mono: 'JetBrains Mono', 'IBM Plex Mono', 'SF Mono', SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   }
-  h1 { font-size: 28px; margin: 0 0 12px; padding-bottom: 10px; border-bottom: 2px solid #d0d7de; color: #1a7f37; }
-  h2 { font-size: 22px; margin: 28px 0 10px; padding-bottom: 6px; border-bottom: 1px solid #d0d7de; }
-  h3 { font-size: 17px; margin: 18px 0 8px; }
-  table { border-collapse: collapse; width: 100%; margin: 14px 0; font-size: 14px; }
-  th { text-align: left; padding: 10px 12px; border-bottom: 2px solid #d0d7de; background: #fff; font-weight: 600; }
-  td { padding: 10px 12px; border-bottom: 1px solid #eaeef2; vertical-align: top; }
-  tr:nth-child(odd) td { background: #fcfcfd; }
-  blockquote { margin: 14px 0; padding: 12px 18px; border-left: 4px solid #2da44e; background: #fff; color: #24292f; border-radius: 4px; }
-  code { background: #fff; padding: 2px 6px; border-radius: 3px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; border: 1px solid #d0d7de; }
-  pre { background: #fff; padding: 14px; border-radius: 6px; overflow-x: auto; border: 1px solid #d0d7de; }
-  pre code { background: transparent; padding: 0; border: none; }
-  a { color: #0969da; text-decoration: none; }
-  a:hover { text-decoration: underline; }
-  ul, ol { padding-left: 24px; }
+  body {
+    font-family: var(--font-ui);
+    color: var(--text-2); background: var(--bg);
+    background-image:
+      radial-gradient(ellipse 1200px 600px at 12% -10%, rgba(64, 224, 208, 0.06), transparent 60%),
+      radial-gradient(ellipse 900px 500px at 88% 110%, rgba(139, 92, 246, 0.05), transparent 65%),
+      radial-gradient(ellipse 700px 400px at 50% 50%, rgba(0, 255, 157, 0.025), transparent 70%);
+    background-attachment: fixed;
+    max-width: 920px;
+    margin: 24px auto; padding: 24px 32px; line-height: 1.6; font-size: 15px;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1 {
+    font-size: 28px; margin: 0 0 12px; padding-bottom: 10px;
+    border-bottom: 2px solid var(--border-strong);
+    color: var(--green-fg-dark); letter-spacing: -0.01em; font-weight: 700;
+    text-shadow: 0 0 16px rgba(74,222,128,0.18);
+  }
+  h2 {
+    font-size: 22px; margin: 30px 0 12px; padding: 0 0 6px 12px;
+    color: var(--text); border-left: 3px solid var(--green-fg);
+    font-weight: 700; letter-spacing: -0.01em;
+  }
+  h3 { font-size: 17px; margin: 20px 0 8px; color: var(--text); font-weight: 600; }
+  p { color: var(--text-2); }
+  table {
+    border-collapse: separate; border-spacing: 0;
+    width: 100%; margin: 16px 0; font-size: 14px;
+    background: var(--surface);
+    border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+  }
+  th {
+    text-align: left; padding: 10px 14px;
+    background: var(--surface-2); color: var(--text-3);
+    font-weight: 600; font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 10px 14px; vertical-align: top;
+    color: var(--text-2);
+    border-bottom: 1px solid var(--border);
+  }
+  tr:last-child td { border-bottom: none; }
+  blockquote {
+    margin: 16px 0; padding: 14px 18px;
+    border-left: 3px solid var(--green-fg);
+    background: var(--surface);
+    color: var(--text-2); border-radius: 0 8px 8px 0;
+  }
+  code {
+    background: var(--surface-2); padding: 2px 6px; border-radius: 4px;
+    font-family: var(--font-mono); font-size: 13px;
+    color: var(--green-fg); border: 1px solid var(--border);
+  }
+  pre {
+    background: var(--surface); padding: 14px; border-radius: 8px;
+    overflow-x: auto; border: 1px solid var(--border);
+  }
+  pre code { background: transparent; padding: 0; border: none; color: var(--text-2); }
+  a {
+    color: var(--green-fg); text-decoration: none;
+    border-bottom: 1px dotted transparent;
+    transition: border-color .12s, color .12s;
+  }
+  a:hover { color: var(--green-fg-dark); border-bottom-color: var(--green-fg-dark); }
+  ul, ol { padding-left: 24px; color: var(--text-2); }
   li { margin: 4px 0; }
-  hr { border: 0; border-top: 1px solid #d0d7de; margin: 24px 0; }
-  strong { color: #1f2328; }
-  .nav-back { font-size: 13px; color: #57606a; }
-  .nav-back a { color: #0969da; }
-  .meta-card { background: #fff; border: 1px solid #d0d7de; border-radius: 8px; padding: 8px 14px; margin: 14px 0 24px; }
-  .meta-table { width: 100%; margin: 0; font-size: 14px; }
-  .meta-table th { text-align: left; padding: 8px 14px 8px 0; vertical-align: top; font-weight: 600; color: #57606a; width: 140px; border-bottom: 1px solid #eaeef2; background: transparent; white-space: nowrap; }
-  .meta-table td { padding: 8px 0; vertical-align: top; border-bottom: 1px solid #eaeef2; background: transparent; }
+  hr {
+    border: 0; height: 1px;
+    background: linear-gradient(90deg, transparent 0%, var(--border) 50%, transparent 100%);
+    margin: 28px 0;
+  }
+  strong { color: var(--text); font-weight: 600; }
+  /* Mission-control header strip, matching the dashboard's hero look */
+  .nav-back {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 18px; padding: 10px 14px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    font-size: 12px; color: var(--text-3);
+    letter-spacing: 0.04em;
+  }
+  .nav-back .brand-eyebrow {
+    font-size: 10px; text-transform: uppercase; font-weight: 700;
+    letter-spacing: 0.18em; color: var(--green-fg);
+  }
+  .nav-back .nav-spacer { flex: 1; }
+  .nav-back a {
+    color: var(--green-fg); border-bottom: none;
+    font-weight: 500;
+  }
+  .nav-back a:hover { color: var(--green-fg-dark); text-decoration: underline; }
+  /* Block A meta card — same chrome as the dashboard's stat cards */
+  .meta-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 4px 18px; margin: 16px 0 24px;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.20);
+  }
+  .meta-table { width: 100%; margin: 0; font-size: 14px; background: transparent; border: none; }
+  .meta-table th {
+    text-align: left; padding: 10px 18px 10px 0;
+    vertical-align: top; font-weight: 600;
+    color: var(--text-4); width: 150px; white-space: nowrap;
+    background: transparent;
+    border-bottom: 1px solid var(--border);
+    text-transform: uppercase; font-size: 10px; letter-spacing: 0.08em;
+  }
+  .meta-table td {
+    padding: 10px 0; vertical-align: top;
+    background: transparent;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-2);
+    font-family: var(--font-mono); font-size: 13px;
+  }
   .meta-table tr:last-child th, .meta-table tr:last-child td { border-bottom: none; }
-  .meta-table .badge { display: inline-block; padding: 3px 10px; border-radius: 4px; font-size: 12px; font-weight: 600; }
-  .meta-table .score-strong { background: #dafbe1; color: #1a7f37; }
-  .meta-table .score-moderate { background: #fff8c5; color: #9a6700; }
-  .meta-table .score-weak { background: #eaeef2; color: #57606a; }
+  .meta-table .badge {
+    display: inline-block; padding: 3px 10px; border-radius: 999px;
+    font-size: 12px; font-weight: 600; font-family: var(--font-ui);
+    font-variant-numeric: tabular-nums;
+  }
+  .meta-table .score-strong   { background: var(--green-bg);  color: var(--green-fg); border: 1px solid var(--green-border); }
+  .meta-table .score-moderate { background: var(--amber-bg);  color: var(--amber-fg); }
+  .meta-table .score-weak     { background: var(--red-bg);    color: var(--red-fg);   }
+  @media (max-width: 720px) {
+    body { padding: 16px 14px; margin: 12px auto; font-size: 14px; }
+    h1 { font-size: 22px; } h2 { font-size: 18px; } h3 { font-size: 15px; }
+    .meta-table th { width: 110px; }
+  }
 </style>
 </head>
 <body>
-<div class="nav-back"><a href="../index.html">← Back to dashboard</a></div>
+<div class="nav-back">
+  <span class="brand-eyebrow">⚡ Career-Ops</span>
+  <span class="nav-spacer"></span>
+  <a href="../index.html">← Back to dashboard</a>
+</div>
 ${inner}
 <hr>
-<div class="nav-back"><a href="../index.html">← Back to dashboard</a> · <a href="file://${ROOT}/${reportPath}">Open raw markdown in Cursor</a></div>
+<div class="nav-back">
+  <span class="brand-eyebrow">Report · ${escape(basename(reportPath, '.md'))}</span>
+  <span class="nav-spacer"></span>
+  <a href="../index.html">← Back to dashboard</a>
+  <span style="color:var(--text-4)">·</span>
+  <a href="file://${ROOT}/${reportPath}">Open raw markdown</a>
+</div>
 </body>
 </html>`;
 
