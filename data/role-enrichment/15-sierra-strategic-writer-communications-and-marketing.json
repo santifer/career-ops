@@ -104,5 +104,38 @@
     "total_cost_usd": 0.1546,
     "duration_ms": 18212,
     "raw_responses_count": 4
+  },
+  "social_corroboration": {
+    "comp_corroboration": {
+      "blind_thread_evidence": "New Grad Offers: Sierra AI vs Nuro vs Google Feb 2026: comp up to 270k/280k though I have worked at 3 big techs before — https://www.teamblind.com/post/new-grad-offers-sierra-ai-vs-nuro-vs-google-yczu4bfa. Experience with Sierra AI? Sep 2025: Considering a SWE role there. They just raised at a $10B valuation - crazy they are already a decacorn — https://www.teamblind.com/post/experience-with-sierra-ai-qupnuchi.",
+      "x_twitter_evidence": "no X evidence found",
+      "leveling_evidence": "Sierra senior IC roles (e.g., Software Engineer) median TC $460k, range $200k-$460k+ per levels.fyi https://www.levels.fyi/companies/sierra/salaries/software-engineer; Seattle senior general $244k-$417k https://www.levels.fyi/t/software-engineer/levels/senior/locations/seattle-usa",
+      "agreement_with_council": "HIGH - Social signals confirm strong comp packages aligning with council's recurring theme of strong compensation, though specific to engineering more than comms."
+    },
+    "benefits_corroboration": {
+      "401k_signal": "401(k) with company match offered, specifics vary by role and not publicly detailed — https://builtin.com/company/sierra/faq/compensation-benefits",
+      "healthcare_signal": "no public signal",
+      "mental_health_signal": "no public signal",
+      "agreement_with_council": "MEDIUM - Confirms 401(k) match existence but lacks details on percentage or healthcare specifics like Blue Cross PPO."
+    },
+    "sentiment_corroboration": {
+      "blind_recent_posts": "Last 90 days Blind threads focus on offers and interviews at Sierra AI, generally positive on exciting work but noting competitive hiring; e.g., 'work is very very interesting and exciting' from Feb 2026 NG offers thread, and Mar 2026 post on hard landing offers amid AI boom.",
+      "x_team_signal": "Recent founder posts highlight rapid growth and innovative hiring; e.g., Bret Taylor Apr 2026: 'As coding agents have become the standard... we've transformed Sierra's engineering interview process to be AI-native' — https://x.com/btaylor/status/2046996207898366248.",
+      "reddit_signal": "no specific Sierra AI signal found on Reddit in searched subs",
+      "toxicity_grade_corroborated": "2",
+      "biggest_red_flag_in_socials": "none surfaced",
+      "biggest_green_flag_in_socials": "Rapid scaling to $150M ARR in early 2026 with 40% Fortune 50 customers, per Bret Taylor Feb 2026 post",
+      "agreement_with_council": "HIGH - Signals show innovative culture and positive WLB vibes with mixed pace in AI growth, matching council's Blind and Glassdoor summaries."
+    },
+    "people_corroboration": {
+      "named_employees_posting": "no current employees observed posting specifically about communications/marketing team in last 90 days",
+      "hiring_team_visibility": "HIGH — Founders like Bret Taylor (@btaylor) highly active on X with frequent company updates",
+      "recommended_outreach_target": "Bret Taylor — Co-founder with strong X presence and direct posts on company culture/hiring, high leverage for warm outreach."
+    },
+    "_meta": {
+      "model": "grok-4-fast-reasoning+web_search+x_search",
+      "generated_at": "2026-05-10T21:43:20.621Z",
+      "confidence": "M"
+    }
   }
 }

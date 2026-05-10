@@ -98,5 +98,38 @@
     "total_cost_usd": 0.0745,
     "duration_ms": 29285,
     "raw_responses_count": 2
+  },
+  "social_corroboration": {
+    "comp_corroboration": {
+      "blind_thread_evidence": "no Blind evidence found",
+      "x_twitter_evidence": "no X evidence found",
+      "leveling_evidence": "No specific Levels.fyi data points for Staff Developer Advocate; general engineering TC range $130K-$305K noted at https://jobsbyculture.com/companies/pinecone",
+      "agreement_with_council": "LOW - No direct social signals on comp or equity for the role to corroborate or refute council estimates"
+    },
+    "benefits_corroboration": {
+      "401k_signal": "no public signal",
+      "healthcare_signal": "no public signal",
+      "mental_health_signal": "no public signal",
+      "agreement_with_council": "LOW - No verifiable public details on benefits like 401k match, healthcare, or relocation to confirm council claims"
+    },
+    "sentiment_corroboration": {
+      "blind_recent_posts": "Limited Blind activity in last 90 days; one April 2026 thread mentions Pinecone layoffs alongside other AI firms: 'Pinecone, ScaleAI and couple of other smaller AI companies are going through layoffs'",
+      "x_team_signal": "Recent posts show active hiring and positive launches; e.g., Jenna Pederson (@jennapederson) on May 6, 2026: 'Today is my favorite @pinecone launch announcement — Builder tier — a $20/month flat-rate plan... This tier is built for the side project that got traction faster than you expected'",
+      "reddit_signal": "no direct Reddit threads found on r/cscareerquestions / r/ExperiencedDevs / r/MachineLearning about Pinecone culture or comp in 2026",
+      "toxicity_grade_corroborated": "2",
+      "biggest_red_flag_in_socials": "Mention of layoffs in April 2026 Blind thread",
+      "biggest_green_flag_in_socials": "Active community engagement and hiring posts from @pinecone and employees like Jenna Pederson",
+      "agreement_with_council": "MEDIUM - Social signals indicate collaborative culture with growth pains like layoffs, aligning with council's notes on work-life balance and rapid growth"
+    },
+    "people_corroboration": {
+      "named_employees_posting": "Jenna Pederson (@jennapederson, staff developer advocate) posting about Pinecone launches on May 6, 2026",
+      "hiring_team_visibility": "MEDIUM — Company account @pinecone and employees like Jenna Pederson are active on X, but limited leadership personal posts observed",
+      "recommended_outreach_target": "Jenna Pederson — current staff developer advocate with recent public posts on role-related topics, high leverage for insights into team dynamics"
+    },
+    "_meta": {
+      "model": "grok-4-fast-reasoning+web_search+x_search",
+      "generated_at": "2026-05-10T21:47:50.952Z",
+      "confidence": "L"
+    }
   }
 }

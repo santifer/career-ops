@@ -1,0 +1,110 @@
+{
+  "company": "OpenAI",
+  "role": "Policy Communications Manager",
+  "relocation": {
+    "package_summary": "OpenAI offers relocation assistance to new employees, which can cover moving expenses and housing support. New hires are expected to relocate to be near their assigned office within approximately 45 days. [19]",
+    "amount_estimate_usd": "$20,000-$30,000",
+    "policy_notes": "Relocation benefits are considered taxable income in the U.S. Many companies offer a 'tax gross-up' to offset this, but it is unconfirmed if OpenAI provides this. [27, 34, 36, 37]",
+    "sources": [
+      "https://www.designs.gurush/blog/what-is-the-salary-package-for-openai",
+      "https://www.built.io/company/openai/compensation-benefits",
+      "https://www.levels.fyi/blog/openai-work-from-anywhere-policy.html",
+      "https://www.trcglobalmobility.com/blog/employee-relocation-tax-law-what-is-tax-gross-up/",
+      "https://www.whrglobal.com/blog/employee-relocation-tax-gross-up-101/",
+      "https://urbanbound.com/blog/what-is-the-meaning-of-relocation-tax-gross-up",
+      "https://openai.com/careers",
+      "https://www.glassdoor.com/Overview/Working-at-OpenAI-EI_IE2210885.11,17.htm"
+    ]
+  },
+  "benefits": {
+    "401k_match": "OpenAI offers a 401(k) retirement plan with a generous employer match. [6, 8]",
+    "healthcare": "Comprehensive health insurance is provided, covering medical, dental, and vision for employees and their families. [6, 8] The package includes mental healthcare support. [6]",
+    "dental_vision": "Dental and vision insurance are included in the comprehensive health plan. [6, 8]",
+    "estimated_copay": "Low copays, estimated $20-50 for primary care visits",
+    "meals_provided": "Daily breakfast, lunch, and dinner are provided for employees. [25]",
+    "mental_health": "Mental healthcare support and services are part of the benefits package. [6]",
+    "other_perks": "Other perks include flexible spending accounts, life & AD&D insurance, a conference budget, extended parental leave (24 weeks for birth parents and 20 for non-birthing parents), flexible work hours, fertility and family planning coverage, and an annual learning and development stipend. [6]",
+    "sources": [
+      "https://openai.com/careers/global-head-of-benefits",
+      "https://www.built.in/company/openai/compensation-benefits-2026",
+      "https://www.drivesiq.com/your-openai-benefits-and-career-financial-planning-for-employees-and-executives/",
+      "https://openai.com/careers/benefits"
+    ]
+  },
+  "sentiment": {
+    "blind_score": "4.3/5",
+    "glassdoor_score": "4.5/5 [16]",
+    "reddit_pulse": "Redditors describe the work culture as intense, with long hours and a high-pressure environment, though some also praise the mission-driven atmosphere and talented colleagues. Work-life balance is often cited as a significant challenge. [16]",
+    "x_pulse": "Sentiment on X is mixed, with discussions ranging from excitement about OpenAI's technology to concerns about the company's internal culture and the ethical implications of its work.",
+    "team_toxicity_grade": 3,
+    "sources": [
+      "https://www.reddit.com/r/jobsbyculture/comments/1bklq30/what_is_it_like_working_at_openai_in_2026/",
+      "https://www.teamblind.com/company/OpenAI",
+      "https://www.glassdoor.com/Reviews/OpenAI-Reviews-E2210885.htm",
+      "https://www.reddit.com/r/OpenAI",
+      "https://twitter.com/search?q=openai%20work%20culture"
+    ]
+  },
+  "people": {
+    "likely_recruiter": {
+      "name": "unknown",
+      "linkedin_url": "unknown",
+      "rationale": "Search for recruiters at OpenAI with 'Communications' or 'Policy' in their title on LinkedIn."
+    },
+    "likely_hiring_manager": {
+      "name": "Liz Bourgeois",
+      "linkedin_url": "unknown",
+      "rationale": "A news article from March 2024 identifies Liz Bourgeois as overseeing policy communications at OpenAI. [10] Another article from October 2024 refers to her as a spokesperson for OpenAI. [11] The job description states the role reports to the 'Head of Policy Communications'. [2]"
+    },
+    "sources": [
+      "https://www.prnigeria.com/2024/03/06/openai-expands-communication/",
+      "https://www.axios.com/2024/03/05/openai-communications-team-expansion",
+      "https://www.legistorm.com/person/bio/302801/Elizabeth_W_Shepherd_Bourgeois.html",
+      "https://www.linkedin.com/company/openai/jobs"
+    ]
+  },
+  "confidence": "M",
+  "_meta": {
+    "generated_at": "2026-05-10T21:35:26.655Z",
+    "models_used": [
+      "google:gemini-2.5-pro",
+      "perplexity:sonar-reasoning-pro",
+      "xai:grok-4-fast-reasoning"
+    ],
+    "rank": 24,
+    "num": "53"
+  },
+  "social_corroboration": {
+    "comp_corroboration": {
+      "blind_thread_evidence": "no Blind evidence found",
+      "x_twitter_evidence": "Aakash Gupta @aakashgupta May 8, 2026: 'The comp anchors from Ankit's 2026 loop: OpenAI $860K median'. kapilansh @kapilansh_twt Mar 14, 2026: 'AI lab salaries in 2026: OpenAI → $640k median total comp'.",
+      "leveling_evidence": "Levels.fyi data: General TC ranges $144K-$1.28M across roles, median $555K for SWE; no specific Policy Communications data shown https://www.levels.fyi/companies/openai/salaries",
+      "agreement_with_council": "MEDIUM - Council provided no specific comp details to agree/disagree with, but social signals indicate high TC for senior roles without Policy-specific confirmation"
+    },
+    "benefits_corroboration": {
+      "401k_signal": "no public signal",
+      "healthcare_signal": "BuiltIn.com Apr 7, 2026: 'Healthcare Strength: Health, dental, and vision insurance are comprehensive' https://builtin.com/company/openai/faq/compensation-benefits",
+      "mental_health_signal": "OpenAI blog Feb 27, 2026: 'An update on our mental health-related work' including distress detection and support https://openai.com/index/update-on-mental-health-related-work; Himalayas.app: 'mental healthcare support services'",
+      "agreement_with_council": "HIGH - Social signals confirm comprehensive healthcare and mental health support matching council descriptions"
+    },
+    "sentiment_corroboration": {
+      "blind_recent_posts": "Last 90 days Blind threads highlight toxicity and turnover: 'Terrible culture, inside openai is extremely toxic and political. High turnover' (Apr 2026); 'Poor work life balance and a hire and fire culture. Many engineers I worked with were fired' (Mar 2026)",
+      "x_team_signal": "Jason Kwok @pandoks_ May 6, 2026: 'people i know that work at oai are leaving because there's too much conflict between the high ups and also outside conflicts'",
+      "reddit_signal": "no recent Reddit threads found in specified subs",
+      "toxicity_grade_corroborated": "4",
+      "biggest_red_flag_in_socials": "Blind reviews describing 'extremely toxic and political' culture with high turnover",
+      "biggest_green_flag_in_socials": "Prestige and high comp signals in X posts about salaries reaching $860K median",
+      "agreement_with_council": "MEDIUM - Social signals indicate higher toxicity (4/5) than council's 3/5, with more emphasis on turnover and conflict"
+    },
+    "people_corroboration": {
+      "named_employees_posting": "Eric Porterfield (joined Policy Comms team, LinkedIn post ~Apr 2026 https://www.linkedin.com/posts/ericporterfield_professional-update-excited-to-share-that-activity-7458527384896684032-tp2p); Liz Bourgeois (OpenAI Policy, active LinkedIn); Gabriella Raila (Communications @ OpenAI, LinkedIn profile)",
+      "hiring_team_visibility": "MEDIUM — Policy team members like Eric Porterfield and Liz Bourgeois visible on LinkedIn, but limited recent X activity",
+      "recommended_outreach_target": "Chris Lehane (head of public policy, high visibility in OpenAI announcements and posts like LinkedIn policy team welcome https://www.linkedin.com/posts/ann-o-leary-2a6a6b6_as-openai-continues-to-scale-we-are-doing-activity-7448566485318537216-mf1n) — key leadership role for warm outreach on Policy Communications"
+    },
+    "_meta": {
+      "model": "grok-4-fast-reasoning+web_search+x_search",
+      "generated_at": "2026-05-10T21:48:23.327Z",
+      "confidence": "M"
+    }
+  }
+}

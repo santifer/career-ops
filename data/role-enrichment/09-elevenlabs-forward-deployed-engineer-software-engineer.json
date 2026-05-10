@@ -96,5 +96,38 @@
     "total_cost_usd": 0.2605,
     "duration_ms": 35140,
     "raw_responses_count": 4
+  },
+  "social_corroboration": {
+    "comp_corroboration": {
+      "blind_thread_evidence": "no Blind evidence found",
+      "x_twitter_evidence": "no X evidence found",
+      "leveling_evidence": "Levels.fyi median Software Engineer £110K in UK (P25 £100K, P75 £120K approx from breakdowns) https://www.levels.fyi/companies/elevenlabs/salaries/software-engineer; no US-specific data for Forward Deployed Engineer",
+      "agreement_with_council": "LOW - council provided no specific comp details to compare, and searches yielded no corroborating data on total comp, pre-IPO equity, or RSU for the role in 2026"
+    },
+    "benefits_corroboration": {
+      "401k_signal": "Glassdoor review mentions 401k as part of competitive benefits package https://www.glassdoor.com/Benefits/ElevenLabs-US-Benefits-EI_IE9081894.0,10_IL.11,13_IN1.htm",
+      "healthcare_signal": "Glassdoor review cites good health insurance https://www.glassdoor.com/Reviews/Employee-Review-ElevenLabs-E9081894-RVW88612326.htm",
+      "mental_health_signal": "no public signal",
+      "agreement_with_council": "MEDIUM - aligns with positive benefits themes in council Glassdoor summary, but no new details on relocation or specifics"
+    },
+    "sentiment_corroboration": {
+      "blind_recent_posts": "no Blind evidence found for last 90 days",
+      "x_team_signal": "Positive hiring and growth signals; e.g., Aneri (@0xAneri) post Mar 2026: 'Not surprised to see @ElevenLabs featured on this list of the most talent dense companies. And we’re hiring!'",
+      "reddit_signal": "no relevant threads found in r/cscareerquestions, r/ExperiencedDevs, or r/MachineLearning for 2026",
+      "toxicity_grade_corroborated": "2",
+      "biggest_red_flag_in_socials": "none surfaced",
+      "biggest_green_flag_in_socials": "Rapid growth to $500M ARR mentioned in X post by Justine Moore (@venturetwins) May 2026: 'They grew from $350 million ARR at the end of 2025 to $500 million at the end of May'",
+      "agreement_with_council": "MEDIUM - social signals reinforce positive growth and innovation but lack depth on WLB concerns or toxicity to fully align with council's 4.2/5 and 3/5 grades"
+    },
+    "people_corroboration": {
+      "named_employees_posting": "Aneri (@0xAneri, PM) posting about hiring Mar-May 2026; Matthieu (@matt_elevenlabs, Community Growth) engaging on events May 2026",
+      "hiring_team_visibility": "MEDIUM — leadership and team members like Aneri post regularly on X about hiring and culture, but no high-volume presence from execs",
+      "recommended_outreach_target": "Aneri (@0xAneri) — active in hiring posts and has strong network from prior roles at Coinbase/Meta, making her high-leverage for warm outreach on engineering roles"
+    },
+    "_meta": {
+      "model": "grok-4-fast-reasoning+web_search+x_search",
+      "generated_at": "2026-05-10T21:40:12.796Z",
+      "confidence": "L"
+    }
   }
 }

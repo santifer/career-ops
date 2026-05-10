@@ -747,6 +747,7 @@ function renderBenefitsCell(company, role) {
     role,
     benefits: enrich.benefits || {},
     sentiment: enrich.sentiment || {},
+    social: enrich.social_corroboration || null,
     confidence: enrich.confidence || '',
   });
   return `<span class="benefits-chip ${toxCls} pill-popover-trigger" data-tox-grade="${toxValid ? tox : ''}" title="${escape(tip)}" aria-label="${escape(tip)}" tabindex="0" role="button" data-pill='${escape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">${escape(label)}</span>`;
@@ -8516,6 +8517,7 @@ function _renderPillPopover(d) {
       + row('Reddit pulse', s.reddit_pulse)
       + row('X / Twitter', s.x_pulse)
       + '</dl>'
+      + _renderSocialCorroborationBlock(d.social)
       + (d.confidence ? '<div class="pill-popover-meta">Confidence: ' + esc(d.confidence) + '</div>' : '');
   }
   if (d.kind === 'people') {
@@ -8554,6 +8556,67 @@ function _renderPillPopover(d) {
   }
   return '<div class="pill-popover-empty">No detail available.</div>';
 }
+// Social-corroboration block — surfaces what Grok's x_search found about
+// employees actually posting about comp/benefits/team-toxicity on Blind, X,
+// Reddit. Renders only when populated by scripts/enrich-roles-corroborate.mjs.
+function _renderSocialCorroborationBlock(s) {
+  if (!s) return '';
+  const esc = (str) => String(str == null ? '' : str)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  const has = (v) => v && v !== 'unknown' && v !== 'no public signal' && v !== 'no Blind evidence found' && v !== 'no X evidence found' && v !== 'none surfaced' && v !== 'none identified';
+  const row = (label, val) => has(val)
+    ? '<div class="pill-popover-row"><dt>' + esc(label) + '</dt><dd>' + esc(String(val).slice(0, 360)) + '</dd></div>'
+    : '';
+  const comp = s.comp_corroboration || {};
+  const ben = s.benefits_corroboration || {};
+  const sent = s.sentiment_corroboration || {};
+  const ppl = s.people_corroboration || {};
+  // Aggregate "any signal" check — skip the whole block if Grok came back
+  // entirely empty (saves vertical space in the popover).
+  const anyHit = [
+    comp.blind_thread_evidence, comp.x_twitter_evidence, comp.leveling_evidence,
+    ben['401k_signal'], ben.healthcare_signal, ben.mental_health_signal,
+    sent.blind_recent_posts, sent.x_team_signal, sent.reddit_signal,
+    sent.biggest_red_flag_in_socials, sent.biggest_green_flag_in_socials,
+    ppl.recommended_outreach_target, ppl.named_employees_posting,
+  ].some(has);
+  if (!anyHit) return '';
+  const toxOverride = sent.toxicity_grade_corroborated;
+  return '<div class="pill-popover-section-label" style="margin-top:14px">🔎 Social corroboration (Grok + X + Web search)</div>'
+    + (toxOverride ? '<div class="pill-popover-meta-inline">Social-only toxicity grade: <strong>' + esc(String(toxOverride)) + '/5</strong></div>' : '')
+    + (has(sent.biggest_red_flag_in_socials)
+        ? '<div class="pill-popover-row"><dt>🚩 Red flag</dt><dd>' + esc(String(sent.biggest_red_flag_in_socials).slice(0, 300)) + '</dd></div>'
+        : '')
+    + (has(sent.biggest_green_flag_in_socials)
+        ? '<div class="pill-popover-row"><dt>✅ Green flag</dt><dd>' + esc(String(sent.biggest_green_flag_in_socials).slice(0, 300)) + '</dd></div>'
+        : '')
+    + (has(comp.agreement_with_council)
+        ? '<div class="pill-popover-row"><dt>Comp agreement</dt><dd>' + esc(String(comp.agreement_with_council).slice(0, 200)) + '</dd></div>'
+        : '')
+    + (has(comp.blind_thread_evidence) || has(comp.leveling_evidence)
+        ? '<div class="pill-popover-section-label">Comp evidence</div><dl class="pill-popover-body">'
+          + row('Blind threads', comp.blind_thread_evidence)
+          + row('Levels.fyi', comp.leveling_evidence)
+          + row('X / Twitter', comp.x_twitter_evidence)
+          + '</dl>'
+        : '')
+    + (has(sent.blind_recent_posts) || has(sent.reddit_signal) || has(sent.x_team_signal)
+        ? '<div class="pill-popover-section-label">Last 90d sentiment</div><dl class="pill-popover-body">'
+          + row('Blind (90d)', sent.blind_recent_posts)
+          + row('Reddit', sent.reddit_signal)
+          + row('X team posts', sent.x_team_signal)
+          + '</dl>'
+        : '')
+    + (has(ppl.recommended_outreach_target) || has(ppl.named_employees_posting)
+        ? '<div class="pill-popover-section-label">People intel</div><dl class="pill-popover-body">'
+          + row('Outreach target', ppl.recommended_outreach_target)
+          + row('Posting employees', ppl.named_employees_posting)
+          + row('Team visibility', ppl.hiring_team_visibility)
+          + '</dl>'
+        : '');
+}
+
 function _renderRelocationBlock(r) {
   if (!r) return '';
   const esc = (s) => String(s == null ? '' : s)

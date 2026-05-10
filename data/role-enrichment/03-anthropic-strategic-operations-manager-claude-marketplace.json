@@ -107,5 +107,38 @@
     "total_cost_usd": 0.1947,
     "duration_ms": 33999,
     "raw_responses_count": 3
+  },
+  "social_corroboration": {
+    "comp_corroboration": {
+      "blind_thread_evidence": "L5 Anthropic offer Feb 2026: $450K cash + $2.4M RSU/4yr — confirmed in https://www.teamblind.com/post/l5-anthropic-offers-in-feb-2026-q66l6kvu. Anthropic median total comp $1.9M, 25th percentile $735K — https://www.teamblind.com/company/Anthropic/salaries/united-states.",
+      "x_twitter_evidence": "no X evidence found",
+      "leveling_evidence": "Anthropic Software Engineer compensation $563K-$785K (senior to lead levels, relevant for senior IC ops) — https://www.levels.fyi/companies/anthropic/salaries/software-engineer. Base salaries for senior roles up to $468K — https://sirjohnnymai.com/blog/anthropic-sde-salary-levels-and-total-compensation-2026-2026",
+      "agreement_with_council": "HIGH - No specific council comp claims, but signals confirm very competitive total comp with significant pre-IPO RSU/equity value aligning with primary filter"
+    },
+    "benefits_corroboration": {
+      "401k_signal": "Glassdoor mentions 401(k) matching as standard benefit, no specific percentage detailed — https://www.glassdoor.com/Benefits/Anthropic-US-Benefits-EI_IE8109027.0,9_IL.10,12_IN1.htm",
+      "healthcare_signal": "Comprehensive health insurance with employer-paid premiums noted in reviews, broad coverage but no specific provider like Blue Shield or deductibles mentioned — https://builtin.com/company/anthropic/faq/compensation-benefits",
+      "mental_health_signal": "no public signal",
+      "agreement_with_council": "MEDIUM - Relocation support confirmed but amount unspecified ($25K-$50K unverified); 401k match and healthcare broadly align but lack exact details like 4% or Blue Shield PPO"
+    },
+    "sentiment_corroboration": {
+      "blind_recent_posts": "Last 90 days Blind threads highlight Anthropic as top workplace with good WLB and high pay; 'Anthropic good wlb' in Mar 2026 poll discussion vs FAANG toxicity — https://www.teamblind.com/post/the-only-company-left-with-high-pay-and-good-wlb-pse740oe. Another notes strong career growth in AI safety roles.",
+      "x_team_signal": "Ben Kuhn (@benkuhn, Anthropic employee) on mission-driven culture: 'One thing I love about Anthropic is that our hiring process often includes a disclaimer that we will absolutely do something that zeros our equity if we think it's the best thing for the world' — Feb 2026 post.",
+      "reddit_signal": "r/jobsbyculture (2026): 'Anthropic WLB 3.7/5, better than OpenAI's 3.6; strong mission alignment but fast-paced' — https://www.reddit.com/r/jobsbyculture/comments/1rww7gl/anthropic_vs_openai_which_is_better_to_work_at_in",
+      "toxicity_grade_corroborated": 2,
+      "biggest_red_flag_in_socials": "Intense, fast-paced environment with potential high workload in ops/scaling, echoed in Glassdoor themes and Reddit comparisons",
+      "biggest_green_flag_in_socials": "Strong mission alignment and benevolence in hiring/equity decisions, as per employee post from Ben Kuhn",
+      "agreement_with_council": "HIGH - Social signals match healthy, mission-oriented culture with coordination challenges from rapid growth and high ops workload"
+    },
+    "people_corroboration": {
+      "named_employees_posting": "Ben Kuhn (@benkuhn) posted about Anthropic culture and hiring in Feb 2026 — https://x.com/benkuhn/status/2027653833581859323. No specific Claude Marketplace team posts in last 90 days observed.",
+      "hiring_team_visibility": "LOW — Limited visibility of Strategic Operations or Claude Marketplace leadership on X; general Anthropic posts but no named ops leads active",
+      "recommended_outreach_target": "none identified"
+    },
+    "_meta": {
+      "model": "grok-4-fast-reasoning+web_search+x_search",
+      "generated_at": "2026-05-10T21:36:44.934Z",
+      "confidence": "M"
+    }
   }
 }

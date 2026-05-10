@@ -117,5 +117,38 @@
     "total_cost_usd": 0.1531,
     "duration_ms": 26103,
     "raw_responses_count": 4
+  },
+  "social_corroboration": {
+    "comp_corroboration": {
+      "blind_thread_evidence": "no Blind evidence found",
+      "x_twitter_evidence": "no X evidence found",
+      "leveling_evidence": "Median Program Manager TC $735K (P25 $240K, P75 $1.08M+); https://www.levels.fyi/companies/openai/salaries/program-manager",
+      "agreement_with_council": "HIGH - Levels.fyi data aligns with council's Glassdoor theme of high compensation in innovative culture"
+    },
+    "benefits_corroboration": {
+      "401k_signal": "Blind post May 2025: '25% match on 401k without a cap'; general 2026 sources confirm matching but no exact %",
+      "healthcare_signal": "Builtin Apr 2026: Comprehensive health, dental, vision including mental health support; Himalayas: family coverage with mental services",
+      "mental_health_signal": "no public signal",
+      "agreement_with_council": "MEDIUM - Matches comprehensive coverage but family depth and restrictions unconfirmed in 2026 sources"
+    },
+    "sentiment_corroboration": {
+      "blind_recent_posts": "Limited threads in last 90 days; Jan 2026: 'Are OpenAI and Anthropic really all that they are cracked up to be?' discusses hype vs reality with mixed responses on workload; Dec 2025: Mentions OpenAI in 'new FAANG' context with notes on potential toxicity",
+      "x_team_signal": "Recent posts highlight internal conflicts and attrition; e.g., Jason Kwok May 6 2026: 'people i know that work at oai are leaving because there's too much conflict between the high ups'",
+      "reddit_signal": "r/cscareerquestions Jan 2026: 'OpenAI CEO Sam Altman Plans To Dramatically Slow Down Hiring' - thread discusses work-life impacts of reduced headcount and high expectations",
+      "toxicity_grade_corroborated": "3",
+      "biggest_red_flag_in_socials": "Multiple X posts on employee quits due to research suppression and high-up conflicts (e.g., Wired report March 2026 via Kekius Maximus post)",
+      "biggest_green_flag_in_socials": "none surfaced",
+      "agreement_with_council": "LOW - Social signals show higher toxicity and attrition than council's grade 2 and positive Blind/Glassdoor summaries"
+    },
+    "people_corroboration": {
+      "named_employees_posting": "Matt Weaver (OpenAI EMEA Solutions Engineering Lead) posting about agent onboarding on LinkedIn Apr 2026; Grant Jenks on first day engineering onboarding LinkedIn 2026",
+      "hiring_team_visibility": "LOW - Minimal specific posts from onboarding/enablement team leadership on X/LinkedIn",
+      "recommended_outreach_target": "Matt Weaver - high visibility on AI onboarding topics via LinkedIn posts, relevant to enablement role"
+    },
+    "_meta": {
+      "model": "grok-4-fast-reasoning+web_search+x_search",
+      "generated_at": "2026-05-10T21:36:06.381Z",
+      "confidence": "M"
+    }
   }
 }

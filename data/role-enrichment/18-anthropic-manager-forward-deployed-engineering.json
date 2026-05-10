@@ -108,5 +108,38 @@
     "total_cost_usd": 0.1714,
     "duration_ms": 17415,
     "raw_responses_count": 4
+  },
+  "social_corroboration": {
+    "comp_corroboration": {
+      "blind_thread_evidence": "no Blind evidence found",
+      "x_twitter_evidence": "Engineering Manager at Anthropic: $320K-$405K base (May 2025) https://x.com/interestedfyi/status/1920405526040473997; Security Engineering Manager $320K-$520K + equity (Nov 2023) https://x.com/AdriftFuriously/status/1721881537988395128",
+      "leveling_evidence": "Software Engineering Manager median $398K TC, range $332K-$464K https://www.levels.fyi/companies/anthropic/salaries/software-engineering-manager",
+      "agreement_with_council": "HIGH - social signals align with high compensation ratings, though specific manager-level data shows $300K-$500K TC ranges"
+    },
+    "benefits_corroboration": {
+      "401k_signal": "401(k) matching confirmed in benefits overview, exact percentage not publicly specified https://jobsbyculture.com/blog/anthropic-compensation-2026",
+      "healthcare_signal": "Comprehensive medical, dental, vision plans with employer coverage of significant premiums https://builtin.com/company/anthropic/faq/compensation-benefits",
+      "mental_health_signal": "Additional mental-health support included in comprehensive benefits package https://builtin.com/company/anthropic/benefits",
+      "agreement_with_council": "HIGH - confirms 401(k) matching and comprehensive healthcare with broad network, though exact premium % and insurer details like Blue Cross not specified publicly"
+    },
+    "sentiment_corroboration": {
+      "blind_recent_posts": "Last 90 days Blind threads emphasize career growth and top workplace status per 2026 list, but note intense culture; snippet: 'Anthropic employees - do you have lives? Just seemed to be workaholics on edge' (Nov 2025, bordering recent period)",
+      "x_team_signal": "Drew Bent (@drew_bent) Feb 2026: 'Work-life balance seems to have gotten worse across the company as we progress along the exponential' https://x.com/drew_bent/status/2024567162216865922",
+      "reddit_signal": "r/cscareerquestions, undated but recent context: 'I tracked job openings at Anthropic for the past year, their hiring tells a different story than their CEO about AI replacing SWEs; May 2025, 65 openings'",
+      "toxicity_grade_corroborated": "3",
+      "biggest_red_flag_in_socials": "Glassdoor review: 'Work environment is extremely toxic with temper tantrums by managers being the norm' https://www.glassdoor.com/Reviews/Anthropic-Reviews-E8109027.htm",
+      "biggest_green_flag_in_socials": "Blind 2026 top U.S. workplaces list inclusion for career growth https://goelite.com/blogs/anthropic-netflix-google-lead-blind-2026-us-workplaces",
+      "agreement_with_council": "MEDIUM - aligns on AI excitement and startup intensity, but adds specific toxicity mentions in reviews contradicting high recommendation rates"
+    },
+    "people_corroboration": {
+      "named_employees_posting": "Alexander Bricken (Head of Forward Deployed Engineering) posting about team launch https://www.linkedin.com/posts/alexanderbricken_head-of-forward-deployed-engineering-activity-7402095339526303744-Kja_; Rachel Lo (Forward Deployed Engineer) hiring post https://www.linkedin.com/posts/rklo_forward-deployed-engineer-activity-7395124808612700160-t3mW; Drew Bent (@drew_bent on X) reflections on engineering roles Feb 2026",
+      "hiring_team_visibility": "HIGH — leadership like Heads of Forward Deployed Engineering actively posting on LinkedIn about hiring and team",
+      "recommended_outreach_target": "Alexander Bricken — as Head of Forward Deployed Engineering with recent public posts on team expansion, highest-leverage for role-specific insights"
+    },
+    "_meta": {
+      "model": "grok-4-fast-reasoning+web_search+x_search",
+      "generated_at": "2026-05-10T21:45:15.376Z",
+      "confidence": "H"
+    }
   }
 }

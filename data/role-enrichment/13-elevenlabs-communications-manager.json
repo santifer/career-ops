@@ -87,5 +87,38 @@
     "total_cost_usd": 0.1863,
     "duration_ms": 34211,
     "raw_responses_count": 4
+  },
+  "social_corroboration": {
+    "comp_corroboration": {
+      "blind_thread_evidence": "no Blind evidence found",
+      "x_twitter_evidence": "no X evidence found",
+      "leveling_evidence": "No specific US data for Communications Manager; UK Marketing roles median ~£65K (P25 £54.8K, P75 £75K) https://www.levels.fyi/companies/elevenlabs/salaries/marketing",
+      "agreement_with_council": "LOW - council noted limited data on Blind and Glassdoor, which aligns with sparse public comp signals for this role, especially equity/RSU details"
+    },
+    "benefits_corroboration": {
+      "401k_signal": "no public signal",
+      "healthcare_signal": "no public signal",
+      "mental_health_signal": "no public signal",
+      "agreement_with_council": "HIGH - no new signals contradict the unknown relocation or general benefits vagueness from council"
+    },
+    "sentiment_corroboration": {
+      "blind_recent_posts": "no recent Blind threads found",
+      "x_team_signal": "Recent exec posts highlight growth and excitement; e.g., Luke Harries (growth lead) Jan 2026: 'ElevenLabs has now crossed $330M of ARR... Very excited to see what we can do in 2026!'",
+      "reddit_signal": "no Reddit evidence found",
+      "toxicity_grade_corroborated": "2",
+      "biggest_red_flag_in_socials": "Glassdoor review Apr 2026: 'Terrible culture, horrible leadership... Awfully immature leadership. Hours are long with little reward'",
+      "biggest_green_flag_in_socials": "Founder Mati Staniszewski Feb 2026 post on $500M Series D at $11B valuation, reflecting strong momentum and investor trust",
+      "agreement_with_council": "MEDIUM - council's 3/5 toxicity somewhat aligns with isolated Glassdoor complaints, but X signals are overwhelmingly positive on growth/hiring"
+    },
+    "people_corroboration": {
+      "named_employees_posting": "Luke Harries (growth lead, @lukeharries) posting about ARR milestone Jan 2026; Mati Staniszewski (co-founder/CEO, @matiii) on funding/expansion May 2026",
+      "hiring_team_visibility": "HIGH - founders and growth leads like Mati Staniszewski and Luke Harries are highly active on X sharing company updates",
+      "recommended_outreach_target": "Mati Staniszewski (@matiii) - CEO with frequent public posts on funding, ARR, and hiring, indicating high leverage for warm outreach on role insights"
+    },
+    "_meta": {
+      "model": "grok-4-fast-reasoning+web_search+x_search",
+      "generated_at": "2026-05-10T21:41:56.456Z",
+      "confidence": "M"
+    }
   }
 }

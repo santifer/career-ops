@@ -96,5 +96,38 @@
     "total_cost_usd": 0.0511,
     "duration_ms": 54677,
     "raw_responses_count": 2
+  },
+  "social_corroboration": {
+    "comp_corroboration": {
+      "blind_thread_evidence": "L5 Anthropic offer Feb 2026: recruiter indicated expectations for L5 staff role in https://www.teamblind.com/post/l5-anthropic-offers-in-feb-2026-q66l6kvu. Anthropic equity returns: 2M options over 4 years worth 40M at 380B valuation, discussed Feb 2026 in https://www.teamblind.com/best/2026/february.",
+      "x_twitter_evidence": "Anthropic comp satire: 220k base + 0.25% equity vesting 4yr (Jan 2026 post by @tautologer https://x.com/tautologer/status/2015469838722912668). $400k/year for events role highlighting high pay (Apr 2026 @andruyeung https://x.com/andruyeung/status/2048545188608364593).",
+      "leveling_evidence": "Levels.fyi: Senior Software Engineer median $563K TC (P25 $445K, P75 $575K+), Lead $785K; relevant for senior IC Technical Deployment Lead https://www.levels.fyi/companies/anthropic/salaries/software-engineer.",
+      "agreement_with_council": "HIGH - Social signals align with council's excellent comp theme, emphasizing high TC and valuable pre-IPO equity/RSUs."
+    },
+    "benefits_corroboration": {
+      "401k_signal": "Glassdoor and Builtin confirm 401(k) matching benefits https://www.glassdoor.com/Benefits/Anthropic-US-Benefits-EI_IE8109027.0,9_IL.10,12_IN1.htm; no exact 4% rate specified publicly.",
+      "healthcare_signal": "Comprehensive medical, dental, vision coverage noted on Builtin and Glassdoor, broad network implied but no explicit PPO/BCBS or 100% employee-only confirmation https://builtin.com/company/anthropic/benefits.",
+      "mental_health_signal": "Wellness stipend and mental health support in benefits overviews (e.g., $500/month flexible stipend https://www.anthropic.com/careers); no specific EAP/Lyra/Spring posts for Anthropic found.",
+      "agreement_with_council": "MEDIUM - Strong comprehensive benefits corroborated, but specifics like BCBS PPO and exact premium coverage unconfirmed in public signals."
+    },
+    "sentiment_corroboration": {
+      "blind_recent_posts": "Last 90 days Blind threads mixed: high ratings but emerging workload/pressure complaints; snippets: 'Parts of the company are toxic, political and bad apples survive due to affiliation with the right inner circle (Apr 2026 review https://www.teamblind.com/company/Anthropic/review/iHxju1aObv)' and 'Anthropic is hiring based on culture not skills... both have a lot of pressure (Mar 2026 https://www.teamblind.com/post/i-regret-joining-a-well-known-ai-company-uoq4rzxy)'.",
+      "x_team_signal": "Limited direct culture posts; positive hiring vibes like @levelsio expressing desire to work at Anthropic (May 2026 https://x.com/levelsio/status/2053529734420566163); no major attrition/hiring red flags from execs.",
+      "reddit_signal": "no specific Reddit threads on Anthropic culture in Q1-Q2 2026 found in r/cscareerquestions or r/MachineLearning.",
+      "toxicity_grade_corroborated": "3",
+      "biggest_red_flag_in_socials": "Blind review citing toxic politics and inner circle favoritism (Apr 2026 https://www.teamblind.com/company/Anthropic/review/iHxju1aObv).",
+      "biggest_green_flag_in_socials": "Blind ranks Anthropic as top company to work for in 2026 (Feb 2026 https://www.teamblind.com/blog/best-companies-to-work-for-in-the-u-s-2026-anthropic-netflix-and-google-lead).",
+      "agreement_with_council": "MEDIUM - Matches 3/5 toxicity and 4.5 Glassdoor positives, but recent Blind shows rising intensity concerns."
+    },
+    "people_corroboration": {
+      "named_employees_posting": "no specific named employees posting about Technical Deployment Lead team in last 90 days; general employee mentions sparse.",
+      "hiring_team_visibility": "HIGH - Leadership like CEO Dario Amodei highly visible on X with frequent AI/hiring posts.",
+      "recommended_outreach_target": "none identified."
+    },
+    "_meta": {
+      "model": "grok-4-fast-reasoning+web_search+x_search",
+      "generated_at": "2026-05-10T21:38:31.140Z",
+      "confidence": "M"
+    }
   }
 }

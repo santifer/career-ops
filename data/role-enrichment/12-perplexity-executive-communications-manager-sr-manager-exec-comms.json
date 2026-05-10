@@ -114,5 +114,38 @@
     "total_cost_usd": 0.2584,
     "duration_ms": 40378,
     "raw_responses_count": 4
+  },
+  "social_corroboration": {
+    "comp_corroboration": {
+      "blind_thread_evidence": "no Blind evidence found",
+      "x_twitter_evidence": "no X evidence found",
+      "leveling_evidence": "Levels.fyi shows median total comp for Product Manager at Perplexity AI as $238,800; no specific data for Executive Communications Manager, but job postings indicate base salary range of $190k-$240k at https://www.levels.fyi/companies/perplexity-ai/salaries",
+      "agreement_with_council": "MEDIUM - Social signals confirm strong overall compensation and equity appeal in a high-growth pre-IPO company, but lack role-specific details for senior non-technical positions like Exec Comms."
+    },
+    "benefits_corroboration": {
+      "401k_signal": "Perplexity includes a 401(k) plan as part of benefits, per job posting at https://talents.vaia.com/companies/perplexity-ai/backend-software-engineer-30036388",
+      "healthcare_signal": "Comprehensive health, dental, and vision insurance for employees and dependents, per careers page and job postings at https://www.perplexity.ai/hub/careers and https://startup.jobs/ios-engineer-comet-perplexity-ai-2-6854743",
+      "mental_health_signal": "no public signal",
+      "agreement_with_council": "HIGH - Matches council's description of comprehensive healthcare; relocation support mentioned but no exact $15k-$30k figure confirmed; 401k match details undisclosed publicly."
+    },
+    "sentiment_corroboration": {
+      "blind_recent_posts": "Last 90 days show limited threads; Feb 2026 post 'What's the pulse on perplexity?' expresses positive expectations for offers amid growth, with users noting fast pace but no major red flags; no recent toxicity discussions.",
+      "x_team_signal": "Recent founder/exec posts highlight rapid growth and product innovation, e.g., Aravind Srinivas on agent skills manual (May 8, 2026: 'A research blog on how Perplexity builds agents...') signaling strong team conviction.",
+      "reddit_signal": "r/perplexity_ai March 2026: 'Important take aways from Perplexity analyst day' focuses on product strategy, positive on scaling but notes competitive pressures; no direct work culture complaints.",
+      "toxicity_grade_corroborated": "2",
+      "biggest_red_flag_in_socials": "General AI industry burnout mentions in X posts (e.g., Feb 26, 2026: 'AI productivity psychosis... cognitive load breaking people'), but not Perplexity-specific.",
+      "biggest_green_flag_in_socials": "Explosive growth signals, e.g., X post April 8, 2026: 'Perplexity almost at $500M ARR with 50% jump... fastest-scaling AI products'.",
+      "agreement_with_council": "HIGH - Aligns with 4.2/5 Blind summary and 4.7 Glassdoor rating; positives on growth/mission dominate, with mild WLB concerns echoed in broader AI sentiment."
+    },
+    "people_corroboration": {
+      "named_employees_posting": "Jesse Dwyer (Chief Comms) active on LinkedIn about Perplexity announcements; no recent X posts from comms team in last 90 days observed.",
+      "hiring_team_visibility": "HIGH - CEO Aravind Srinivas highly visible on X with frequent product/culture posts; comms leadership like Jesse Dwyer present on LinkedIn.",
+      "recommended_outreach_target": "Jesse Dwyer - As Chief Comms at Perplexity, direct connection to Exec Comms role family with public professional presence on LinkedIn."
+    },
+    "_meta": {
+      "model": "grok-4-fast-reasoning+web_search+x_search",
+      "generated_at": "2026-05-10T21:41:22.481Z",
+      "confidence": "M"
+    }
   }
 }

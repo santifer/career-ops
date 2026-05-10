@@ -112,5 +112,38 @@
     "total_cost_usd": 0.2036,
     "duration_ms": 52212,
     "raw_responses_count": 4
+  },
+  "social_corroboration": {
+    "comp_corroboration": {
+      "blind_thread_evidence": "Feb 2026 Blind post: Discussion on OpenAI stopping 1.5M equity offers, with users reporting senior engineering offers around $800K cash + $1.5M RSU/4yr in https://www.teamblind.com/post/openai-have-stopped-15m-equity-offers-5elxmzni; Mar 2026 post: Tier list mentions OpenAI senior roles >$5M TC potential https://www.teamblind.com/post/the-final-tier-list-2026-kdmqlmsz.",
+      "x_twitter_evidence": "no X evidence found",
+      "leveling_evidence": "Levels.fyi: OpenAI L5 Software Engineer median $1.15M TC (P25 $800K, P75 $1.92M) https://www.levels.fyi/companies/openai/salaries/software-engineer/levels/l5; similar for AI engineers $249K-$1.28M overall https://www.levels.fyi/companies/openai/salaries/software-engineer",
+      "agreement_with_council": "MEDIUM - Social signals confirm elite comp and equity but no specific data on pre-IPO RSU vesting or Seattle adjustments for this role family"
+    },
+    "benefits_corroboration": {
+      "401k_signal": "no public signal",
+      "healthcare_signal": "Blind benefits overview: Comprehensive health, dental, vision insurance with strengths in core coverage but notes on family support challenges https://www.teamblind.com/company/OpenAI/benefits; Builtin 2026: Core healthcare strong, family coverage mixed https://builtin.com/company/openai/faq/compensation-benefits",
+      "mental_health_signal": "no public signal",
+      "agreement_with_council": "HIGH - Matches comprehensive coverage with feedback on family robustness limitations"
+    },
+    "sentiment_corroboration": {
+      "blind_recent_posts": "Last 90 days: Threads highlight high comp/prestige but poor WLB and increasing pressure; snippets: 'Other than prestige and compensation you're better off working for a big company and having a life' (May 2026 review https://www.teamblind.com/company/OpenAI/review/DW7YwPlyB); 'Not toxic at all... but high-pressure deadlines' (Dec 2025 post, echoed in 2026 discussions https://www.teamblind.com/post/openai-vs-jane-street-hxb8fqu2)",
+      "x_team_signal": "Recent posts show active hiring and partnerships expansion; quote: 'OpenAI has hired Dave Dugan, a former top advertising executive at Meta Platforms, to lead ad sales' (WSJ Mar 2026 https://x.com/WSJ/status/2036060646727455090)",
+      "reddit_signal": "r/Salary Apr 2026: 'For you guys and gals that work in FAANG, OpenAI... work/life balance and pride is just fantastic. I work most days from ...' (positive on culture/WLB) https://www.reddit.com/r/Salary/comments/1kqujwl/for_you_guys_and_gals_that_work_in_faang_openai",
+      "toxicity_grade_corroborated": "2",
+      "biggest_red_flag_in_socials": "Poor work-life balance rated 3.0/5 on Blind with recent reviews citing burnout from deadlines",
+      "biggest_green_flag_in_socials": "Elite compensation and cutting-edge projects emphasized in Blind/Reddit threads",
+      "agreement_with_council": "HIGH - Aligns with 4.2/5 Blind rating, exciting projects/high workload, and 4.5 Glassdoor on comp/colleagues vs WLB negatives"
+    },
+    "people_corroboration": {
+      "named_employees_posting": "no named employees observed posting about media partnerships team in last 90 days",
+      "hiring_team_visibility": "MEDIUM — Leadership hires like Dave Dugan visible via WSJ/X but limited team-specific presence on X/LinkedIn",
+      "recommended_outreach_target": "Dave Dugan — Recently hired to lead ad sales and partnerships, high-leverage for media role insights"
+    },
+    "_meta": {
+      "model": "grok-4-fast-reasoning+web_search+x_search",
+      "generated_at": "2026-05-10T21:35:34.416Z",
+      "confidence": "M"
+    }
   }
 }

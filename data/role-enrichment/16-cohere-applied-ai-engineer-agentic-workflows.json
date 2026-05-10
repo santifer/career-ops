@@ -92,5 +92,38 @@
     "total_cost_usd": 0.0496,
     "duration_ms": 39151,
     "raw_responses_count": 2
+  },
+  "social_corroboration": {
+    "comp_corroboration": {
+      "blind_thread_evidence": "no Blind evidence found",
+      "x_twitter_evidence": "no X evidence found",
+      "leveling_evidence": "Levels.fyi data: Software Engineer median TC $220K US (https://www.levels.fyi/companies/cohere/salaries/software-engineer/locations/united-states); L3 $194K median, L4 $283K median, L5 $401K median (https://www.interviewcoder.co/software-engineer-salaries/cohere-software-engineer-salary); AI Engineer junior IC3 ~$255K TC (https://www.datainterview.com/blog/cohere-ai-engineer-interview)",
+      "agreement_with_council": "MEDIUM - No direct comp claims in council pass, but levels.fyi supports competitive pay for AI roles aligning with rapid growth theme"
+    },
+    "benefits_corroboration": {
+      "401k_signal": "no public signal",
+      "healthcare_signal": "no public signal",
+      "mental_health_signal": "no public signal",
+      "agreement_with_council": "LOW - No specific details on 401k match, healthcare premiums, or relocation found to corroborate estimates"
+    },
+    "sentiment_corroboration": {
+      "blind_recent_posts": "Summary of last 90 days Blind threads: Mixed reviews with praise for talented colleagues and interesting problems but concerns over unclear direction and lack of growth; snippet: 'Good compensation. Talented colleagues. Interesting problems to solve. Benefits are good. Cons. Unclear direction. Lack of opportunities for growth.' (https://www.teamblind.com/company/Cohere/review/7BA-3ZT4LR)",
+      "x_team_signal": "Recent founder/exec/team posts focus on AI partnerships and hiring, e.g., '@cohere: We’re partnering with @Dell to accelerate secure, agentic enterprise AI solutions.' (May 19, 2025 post, but no 2026 culture/attrition specifics)",
+      "reddit_signal": "no reddit_signal",
+      "toxicity_grade_corroborated": "3",
+      "biggest_red_flag_in_socials": "Glassdoor review: 'Toxic team members, ruining it for others.' (https://www.glassdoor.com/Reviews/Employee-Review-Cohere-E6413613-RVW67681526.htm)",
+      "biggest_green_flag_in_socials": "Blind summary: Strong WLB in AI teams with collaborative culture (https://www.teamblind.com/company/Cohere/reviews)",
+      "agreement_with_council": "MEDIUM - Social signals match 4.1/5 Blind rating and themes of good WLB but intense expectations and some toxicity"
+    },
+    "people_corroboration": {
+      "named_employees_posting": "none identified",
+      "hiring_team_visibility": "LOW",
+      "recommended_outreach_target": "none identified"
+    },
+    "_meta": {
+      "model": "grok-4-fast-reasoning+web_search+x_search",
+      "generated_at": "2026-05-10T21:43:55.207Z",
+      "confidence": "M"
+    }
   }
 }

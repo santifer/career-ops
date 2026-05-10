@@ -109,5 +109,38 @@
     "total_cost_usd": 0.1138,
     "duration_ms": 43834,
     "raw_responses_count": 3
+  },
+  "social_corroboration": {
+    "comp_corroboration": {
+      "blind_thread_evidence": "no Blind evidence found",
+      "x_twitter_evidence": "no X evidence found",
+      "leveling_evidence": "Levels.fyi lists Cognition but no specific salary data points or bands available; https://www.levels.fyi/companies/cognition",
+      "agreement_with_council": "LOW - No social signals or leaks found to verify total comp, equity, or RSU values for AI Enablement Engineer roles."
+    },
+    "benefits_corroboration": {
+      "401k_signal": "no public signal",
+      "healthcare_signal": "no public signal",
+      "mental_health_signal": "no public signal",
+      "agreement_with_council": "LOW - No corroborating evidence on relocation, 401k match, or healthcare details from public sources."
+    },
+    "sentiment_corroboration": {
+      "blind_recent_posts": "no Blind evidence found",
+      "x_team_signal": "Recent posts highlight intense culture post-acquisition; e.g., Abhimanyu Nain (@BuilderCulture_) on May 7, 2026: 'Cognition (coding agents) reportedly in talks to raise hundreds of millions at a $25B valuation. No widely-adopted product. But \"agents that replace developer workflows\" is worth $25B to investors.'",
+      "reddit_signal": "r/singularity Feb 2026: 'Three weeks after acquiring Windsurf, Cognition offers staff buyouts or 80-hour weeks' discussing extreme work culture and layoffs.",
+      "toxicity_grade_corroborated": "4",
+      "biggest_red_flag_in_socials": "Offers of buyouts to employees unwilling to commit to 80+ hour weeks and 6-day office presence, as reported in Reddit threads post-Windsurf acquisition.",
+      "biggest_green_flag_in_socials": "High investor interest with $25B valuation talks, signaling strong mission alignment in AI agent development.",
+      "agreement_with_council": "MEDIUM - Social signals confirm fast-paced pressures and growth opportunities in an early-stage AI environment, aligning with council's 3.5-4.0 Blind summary and 4.1 Glassdoor rating themes."
+    },
+    "people_corroboration": {
+      "named_employees_posting": "none identified",
+      "hiring_team_visibility": "LOW - Limited visibility of Cognition's leadership or team on X; mentions in events like poker tourneys but no active posting from employees about the AI Enablement team.",
+      "recommended_outreach_target": "none identified"
+    },
+    "_meta": {
+      "model": "grok-4-fast-reasoning+web_search+x_search",
+      "generated_at": "2026-05-10T21:47:00.092Z",
+      "confidence": "L"
+    }
   }
 }

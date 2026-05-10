@@ -106,5 +106,38 @@
     "total_cost_usd": 0.1527,
     "duration_ms": 52516,
     "raw_responses_count": 2
+  },
+  "social_corroboration": {
+    "comp_corroboration": {
+      "blind_thread_evidence": "no Blind evidence found",
+      "x_twitter_evidence": "no X evidence found",
+      "leveling_evidence": "Perplexity AI Software Engineer median total comp $438K (P25 $180K, P75 not specified); https://www.levels.fyi/companies/perplexity-ai/salaries/software-engineer",
+      "agreement_with_council": "MEDIUM - No specific council comp claims to directly agree/disagree with, but levels.fyi data supports high total comp expectations for senior IC roles in AI startups like Perplexity."
+    },
+    "benefits_corroboration": {
+      "401k_signal": "no public signal",
+      "healthcare_signal": "Comprehensive medical, dental, and vision coverage for employees and dependents; https://jobsbyculture.com/blog/perplexity-compensation-2026",
+      "mental_health_signal": "no public signal",
+      "agreement_with_council": "HIGH - Matches council's description of comprehensive health insurance and 401(k) with company match (though match percentage remains undisclosed publicly)."
+    },
+    "sentiment_corroboration": {
+      "blind_recent_posts": "no recent Blind posts found with snippets; general Perplexity reviews show high compensation satisfaction (3.8/5) but low work-life balance (2.0/5) as of early 2026.",
+      "x_team_signal": "Recent founder/exec posts highlight rapid growth and AI innovation; e.g., CEO Aravind Srinivas (@AravSrinivas) discussed AI's role in job shifts positively on March 27, 2026: 'Perplexity is a $20 billion company that built zero AI models... The value is in making complexity disappear.'",
+      "reddit_signal": "no public signal",
+      "toxicity_grade_corroborated": "2",
+      "biggest_red_flag_in_socials": "Low work-life balance ratings on Blind (2.0/5), indicating potential workload concerns.",
+      "biggest_green_flag_in_socials": "Strong employee recommendation rate on Glassdoor (90% would recommend), with themes of brilliant coworkers and mission-driven culture.",
+      "agreement_with_council": "HIGH - Aligns with council's 4.2/5 Blind summary positive on growth/AI innovation and workload concerns, plus 4.7-star Glassdoor trends."
+    },
+    "people_corroboration": {
+      "named_employees_posting": "no specific current employees observed posting about the Applied AI team in last 90 days",
+      "hiring_team_visibility": "HIGH - CEO Aravind Srinivas is highly active on X discussing company direction and products.",
+      "recommended_outreach_target": "Aravind Srinivas - CEO with strong X presence on AI hiring and culture, high-leverage for warm outreach on senior IC roles."
+    },
+    "_meta": {
+      "model": "grok-4-fast-reasoning+web_search+x_search",
+      "generated_at": "2026-05-10T21:46:30.275Z",
+      "confidence": "M"
+    }
   }
 }

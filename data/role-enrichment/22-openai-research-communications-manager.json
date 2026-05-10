@@ -103,5 +103,38 @@
     "total_cost_usd": 0.066,
     "duration_ms": 35005,
     "raw_responses_count": 2
+  },
+  "social_corroboration": {
+    "comp_corroboration": {
+      "blind_thread_evidence": "no Blind evidence found",
+      "x_twitter_evidence": "no X evidence found",
+      "leveling_evidence": "Levels.fyi Marketing total comp median $211K (P25 $179K, P75 $244K) at OpenAI; Research Manager $471K median per Indeed — https://www.levels.fyi/companies/openai/salaries/marketing",
+      "agreement_with_council": "MEDIUM - No role-specific comp data found, but general high comp themes align with council's excellent comp mention"
+    },
+    "benefits_corroboration": {
+      "401k_signal": "Glassdoor reviews: generous 401k match (5.0/5 rating); Builtin: 401(k) with matching — https://www.glassdoor.com/Benefits/OpenAI-401K-Plan-US-BNFT13_E2210885_N1.htm",
+      "healthcare_signal": "Glassdoor: fully paid health benefits, 100% employee/90% family coverage; Builtin: comprehensive but moderate family depth — https://builtin.com/company/openai/faq/compensation-benefits",
+      "mental_health_signal": "no public signal",
+      "agreement_with_council": "HIGH - Matches council's 401k safe harbor up to 4% and comprehensive but moderate family healthcare descriptions"
+    },
+    "sentiment_corroboration": {
+      "blind_recent_posts": "Last 90 days Blind threads show 4.3/5 overall rating, high on comp/benefits (4.7/5); snippets: 'Great compensation, intense pace' (general review); 'Please avoid at all costs' (May 4, 2026 negative post) — https://www.teamblind.com/company/OpenAI/reviews",
+      "x_team_signal": "Recent employee posts highlight positive culture; quote Rohan Varma (Apr 11, 2026): 'It is fun to work at OpenAI... Join us' — https://x.com/TheRohanVarma/status/2042802793615118428",
+      "reddit_signal": "r/jobsbyculture (early 2026): 'Fast-moving, high-impact... WLB 3.6/5 intense sprints' — https://www.reddit.com/r/jobsbyculture/comments/1rww6q9/what_is_it_like_working_at_openai_in_2026",
+      "toxicity_grade_corroborated": "2",
+      "biggest_red_flag_in_socials": "Glassdoor review (May 4, 2026): 'Please avoid at all costs, run away' citing scaling issues",
+      "biggest_green_flag_in_socials": "Rohan Varma X post (Apr 11, 2026): 'perfect combination of locked in, supportive... mission ambitious'",
+      "agreement_with_council": "HIGH - Aligns with 4.1/5 Blind intense pace/mission/equity and 4.3 Glassdoor innovative/high workload themes"
+    },
+    "people_corroboration": {
+      "named_employees_posting": "Rohan Varma (@TheRohanVarma, eng) and Thomas Ricouard (@Dimillian, dev exp) posting about OpenAI culture in Mar-Apr 2026; no Research Communications specific",
+      "hiring_team_visibility": "LOW — Limited visibility for Research Communications team leadership on X/LinkedIn; general OpenAI execs like @sama active",
+      "recommended_outreach_target": "none identified"
+    },
+    "_meta": {
+      "model": "grok-4-fast-reasoning+web_search+x_search",
+      "generated_at": "2026-05-10T21:47:22.623Z",
+      "confidence": "M"
+    }
   }
 }

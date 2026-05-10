@@ -108,5 +108,38 @@
     "total_cost_usd": 0.112,
     "duration_ms": 49727,
     "raw_responses_count": 2
+  },
+  "social_corroboration": {
+    "comp_corroboration": {
+      "blind_thread_evidence": "L5 Anthropic offer Feb 2026: $450K cash + $2.4M RSU/4yr — confirmed in https://teamblind.com/post/l5-anthropic-offers-in-feb-2026-q66l6kvu. General TC ranges $735K (P25) to $5.8M (P90) per Blind salary data.",
+      "x_twitter_evidence": "no X evidence found",
+      "leveling_evidence": "Levels.fyi shows Anthropic Software Engineer median TC $563K-$785K (Senior to Lead); general roles $198K-$785K — https://www.levels.fyi/companies/anthropic/salaries",
+      "agreement_with_council": "MEDIUM - No direct council comp claims, but high Glassdoor comp rating (4.8/5) aligns with elevated TC signals from Blind/Levels.fyi for senior roles like Engineering Editorial Lead"
+    },
+    "benefits_corroboration": {
+      "401k_signal": "Glassdoor and BuiltIn reviews confirm 401(k) matching as standard benefit — https://www.glassdoor.com/Benefits/Anthropic-US-Benefits-EI_IE8109027.0,9_IL.10,12_IN1.htm",
+      "healthcare_signal": "Comprehensive PPO-style medical/dental/vision via employer-covered premiums (90-100% employee-only) noted in reviews; broad West Coast network implied — https://builtin.com/company/anthropic/faq/compensation-benefits",
+      "mental_health_signal": "Additional mental-health support mentioned in benefits overviews, but no specific EAP/Lyra/Spring citations found",
+      "agreement_with_council": "HIGH - Matches relocation ($20K-$50K via stipends), 4% 401(k), and premium PPO healthcare claims directly"
+    },
+    "sentiment_corroboration": {
+      "blind_recent_posts": "Last 90 days (Feb-May 2026) show Anthropic topping Blind's best workplaces list with praise for growth/culture but WLB complaints from scaling; snippets: 'Top-rated company to work for' (Feb 2026 Blind blog); 'High workload in AI safety push, burnout from rapid growth' (Mar 2026 threads).",
+      "x_team_signal": "Recent employee posts highlight mission-driven teams but worsening WLB; quote from @drew_bent (Feb 2026): 'Work-life balance seems to have gotten worse across the company as we progress along the exponential'.",
+      "reddit_signal": "r/womenintech (Apr 2026): '60-80+ hour weeks were the norm for technical and nontechnical roles alike. It's simply not a place where WLB is prioritized.'",
+      "toxicity_grade_corroborated": "3",
+      "biggest_red_flag_in_socials": "Recurring burnout/high hours from scaling in Blind/Reddit threads (e.g., r/womenintech Apr 2026 post on drained non-technical roles).",
+      "biggest_green_flag_in_socials": "Top-ranked on Blind's 2026 best workplaces list for mission-driven, collaborative culture (Feb 2026).",
+      "agreement_with_council": "MEDIUM - Aligns on healthy/mission-driven teams (toxicity 2) and Blind 4.2/5 with workload complaints, but socials emphasize burnout more than minor issues"
+    },
+    "people_corroboration": {
+      "named_employees_posting": "Drew Bent (@drew_bent, Education Lead) on culture reflections Feb 2026; Dave Guarino (@allafarce, Workplace Ops) positive onboarding post Apr 2026.",
+      "hiring_team_visibility": "MEDIUM — Engineering leadership posts occasionally on X (e.g., @drew_bent), but limited visibility for editorial-specific team vs. official @AnthropicAI.",
+      "recommended_outreach_target": "none identified"
+    },
+    "_meta": {
+      "model": "grok-4-fast-reasoning+web_search+x_search",
+      "generated_at": "2026-05-10T21:37:48.156Z",
+      "confidence": "M"
+    }
   }
 }

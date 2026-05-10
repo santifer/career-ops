@@ -114,5 +114,38 @@
     "total_cost_usd": 0.1659,
     "duration_ms": 21048,
     "raw_responses_count": 4
+  },
+  "social_corroboration": {
+    "comp_corroboration": {
+      "blind_thread_evidence": "L5 Anthropic offer Feb 2026: $450K cash + $2.4M RSU/4yr — https://teamblind.com/post/l5-anthropic-offers-in-feb-2026-q66l6kvu; SWE Agents Infra team offer Feb 2026: $890K TC — https://teamblind.com/post/anthropic-vs-xai-6eo4r45a.",
+      "x_twitter_evidence": "no X evidence found",
+      "leveling_evidence": "Levels.fyi Marketing band (closest to comms): median $312K TC, P25 $260K, P75 $364K — https://www.levels.fyi/companies/anthropic/salaries/marketing",
+      "agreement_with_council": "MEDIUM - No council comp specifics, but signals align with high equity/RSU focus for senior roles, though comms-specific data sparse"
+    },
+    "benefits_corroboration": {
+      "401k_signal": "Glassdoor and BuiltIn confirm 401(k) matching, no public % specified",
+      "healthcare_signal": "BuiltIn/GGlassdoor confirm comprehensive health/dental/vision for employees/dependents; Carrot Fertility/OneMedical subsidy not found in public sources",
+      "mental_health_signal": "Company site/Levels.fyi mention generous mental health support, no EAP/Lyra/Spring specifics",
+      "agreement_with_council": "HIGH - Core comprehensive coverage matches, but exact fertility/OneMedical details unconfirmed publicly"
+    },
+    "sentiment_corroboration": {
+      "blind_recent_posts": "Last 90 days Blind threads emphasize high comp/benefits (4.9/5) vs low WLB (3.6/5); snippets: 'How is wlb at anthropic? Worth it?' (Feb 2026); 'Anthropic beats OpenAI, but intense workload' (Feb 2026)",
+      "x_team_signal": "Recent employee posts praise mission-driven culture; quote: 'Working at Anthropic was a wonderful experience. Extremely high talent density, amazing culture, mission-driven, zero politics' — Behnam Neyshabur Feb 2026.",
+      "reddit_signal": "r/technology Feb 2026: 'Former Meta AI researcher says there is a culture of fear in Meta, contrasts with Anthropic's positive mentions' (no direct toxicity threads on Anthropic)",
+      "toxicity_grade_corroborated": "1",
+      "biggest_red_flag_in_socials": "Persistent low WLB ratings (3.6/5) on Blind highlighting burnout risks",
+      "biggest_green_flag_in_socials": "X employee testimonials on zero politics and high talent density",
+      "agreement_with_council": "HIGH - Matches low WLB (3.6-3.7/5), high comp/culture; Glassdoor 4.4/5 with 95% recommend aligns closely"
+    },
+    "people_corroboration": {
+      "named_employees_posting": "Reem Ateyeh (comms lead) posting about Claude Code hiring Mar 2026 https://x.com/reem_a/status/2034731159385776320; Xiaoyi Zhang (research) on Claude team roles Apr 2026 https://x.com/xiaoyiz_uw/status/2049688257622118502",
+      "hiring_team_visibility": "HIGH — Comms leadership like Reem Ateyeh highly active on X for role-specific hiring",
+      "recommended_outreach_target": "Reem Ateyeh — directly hiring for Communications Lead, Claude Code with public X post seeking candidates"
+    },
+    "_meta": {
+      "model": "grok-4-fast-reasoning+web_search+x_search",
+      "generated_at": "2026-05-10T21:39:11.872Z",
+      "confidence": "M"
+    }
   }
 }

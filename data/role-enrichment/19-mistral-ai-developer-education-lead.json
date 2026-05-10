@@ -100,5 +100,38 @@
     "total_cost_usd": 0.1151,
     "duration_ms": 39652,
     "raw_responses_count": 3
+  },
+  "social_corroboration": {
+    "comp_corroboration": {
+      "blind_thread_evidence": "Accept downlevel offer @ mistral? Aug 2025: 120k EUR gross base for SWE role, high for Paris but lower than FAANG TC — https://www.teamblind.com/post/accept-downlevel-offer-mistral-m2dcjrri. No additional specific threads for Developer Education Lead found.",
+      "x_twitter_evidence": "May 5 2026: @8BitConcepts post: 'Mistral AI has 82 open AI developer roles... Avg published salary: $265k.' No founder/exec comp leaks found.",
+      "leveling_evidence": "Levels.fyi: Software Engineer at Mistral AI median €107K-€129K total comp in France (L1-L3); no specific data for Developer Education Lead — https://www.levels.fyi/companies/mistral-ai/salaries/software-engineer. P25/P75 not detailed for this role family.",
+      "agreement_with_council": "MEDIUM — Social signals confirm competitive pay for Europe (~€120K base + equity) but lack specifics on pre-IPO RSU value-at-vest, aligning partially with council's 'competitive pay' theme without contradicting."
+    },
+    "benefits_corroboration": {
+      "401k_signal": "Job postings for US roles mention 401K matching (e.g., Talent Acquisition USA at Mistral AI), but no public signal for France/EU-based roles; French social security equivalents apply.",
+      "healthcare_signal": "Careers page: 'Healthcare with Alan Blue 100% supported by Mistral AI for you and your family' supplementing French Sécurité Sociale — https://mistral.ai/careers.",
+      "mental_health_signal": "no public signal",
+      "agreement_with_council": "HIGH — Signals match council's description of French universal healthcare + employer-supplemented mutuelle (Alan Blue 100% covered), with no contradictions."
+    },
+    "sentiment_corroboration": {
+      "blind_recent_posts": "No Blind threads in last 90 days specifically on Mistral AI culture or developer relations found; general sentiment from earlier 2025 posts neutral on workload.",
+      "x_team_signal": "Positive growth signals; e.g., Feb 26 2026 post by @Frid45: 'Mistral AI keeps accelerating and signs a strategic partnership with Accenture... paving the way for global, large scale deployment.'",
+      "reddit_signal": "r/cscareerquestionsEU Feb 2026: 'The upside to having worked at Mistral AI even if you get laid off in a year should be enough to keep you well employed' — positive on career boost despite startup risks.",
+      "toxicity_grade_corroborated": "2",
+      "biggest_red_flag_in_socials": "Startup intensity implied in Reddit discussions on layoff risks.",
+      "biggest_green_flag_in_socials": "Strong revenue growth and partnerships highlighted in X posts (e.g., $400M+ annual revenue in 2025, targeting $1B in 2026).",
+      "agreement_with_council": "HIGH — Signals echo council's 4.1 stars with mission alignment and workload themes; Glassdoor at 4.0 confirms low toxicity (3/5 aligns closely)."
+    },
+    "people_corroboration": {
+      "named_employees_posting": "Sophia Yang (Head of Developer Relations) active on LinkedIn/X with posts on Mistral AI tech/vision; Joffrey THOMAS (Developer Relations Engineer) posted about joining in recent LinkedIn update — https://www.linkedin.com/posts/joffrey-thomas_big-news-i-just-joined-mistral-ai-as-a-activity-7322992223950671872-qqGS.",
+      "hiring_team_visibility": "HIGH",
+      "recommended_outreach_target": "Sophia Yang — as Head of Developer Relations with high social presence on X/LinkedIn, ideal for warm outreach on role insights."
+    },
+    "_meta": {
+      "model": "grok-4-fast-reasoning+web_search+x_search",
+      "generated_at": "2026-05-10T21:45:53.808Z",
+      "confidence": "M"
+    }
   }
 }

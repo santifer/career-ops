@@ -114,5 +114,38 @@
     "total_cost_usd": 0.1516,
     "duration_ms": 23460,
     "raw_responses_count": 3
+  },
+  "social_corroboration": {
+    "comp_corroboration": {
+      "blind_thread_evidence": "L5 Anthropic offer Feb 2026: $450K cash + $2.4M RSU/4yr — confirmed in https://teamblind.com/post/l5-anthropic-offers-in-feb-2026-q66l6kvu. Google v Anthropic non tech role Feb 2026: $180k base + estimated $250k TC for L5 ops role in https://teamblind.com/post/google-v-anthropic-non-tech-role-ajzhovoi.",
+      "x_twitter_evidence": "Andrew Yeung Apr 2026 post: 'Anthropic is paying up to $400,000 a year for an events role' (https://x.com/andruyeung/status/2048545188608364593). Matt Vinson Apr 2026 post: 'Anthropic tender offer settled yesterday. Another $6bn in cash (up to $10m per employee)' (https://x.com/mattmvinson/status/2040507307466096822).",
+      "leveling_evidence": "Levels.fyi data: For Software Engineer, $563K median TC for Senior (P25 $500K, P75 $650K); non-tech roles lower, e.g., ops ~$250K TC per Blind cross-ref (https://www.levels.fyi/companies/anthropic/salaries).",
+      "agreement_with_council": "HIGH - Social signals confirm top-tier compensation with high equity grants aligning with council's assessment of strong TC packages."
+    },
+    "benefits_corroboration": {
+      "401k_signal": "no public signal",
+      "healthcare_signal": "Glassdoor and BuiltIn reviews cite comprehensive health, dental, and vision insurance for employees and dependents (https://www.glassdoor.com/Benefits/Anthropic-US-Benefits-EI_IE8109027.0,9_IL.10,12_IN1.htm); no specific OneMedical subsidy mentioned.",
+      "mental_health_signal": "BuiltIn mentions additional mental-health support in benefits overview, but no specifics on EAP/Lyra/Spring (https://builtin.com/company/anthropic/faq/compensation-benefits).",
+      "agreement_with_council": "HIGH - Matches council's description of comprehensive healthcare, though OneMedical subsidy lacks confirmation."
+    },
+    "sentiment_corroboration": {
+      "blind_recent_posts": "Last 90 days show positive sentiment on comp and mission (e.g., Feb 2026: 'Anthropic beats OpenAI' in https://teamblind.com/blog/blind-tl-dr-anthropic-prevails-interview-cheats-and-tc-blindness-feb-20-2026; Apr 2026 offer discussions highlight high equity); some notes on workload but overall top-rated company (https://www.teamblind.com/blog/best-companies-to-work-for-in-the-u-s-2026-anthropic-netflix-and-google-lead).",
+      "x_team_signal": "Charly Wargnier Mar 2026 post: 'What Anthropic has shipped so far in 2026 is just insane... @AnthropicAI is on an absolute, once-in-a-lifetime tear' praising culture and output (https://x.com/DataChaz/status/2033096562805485969).",
+      "reddit_signal": "r/womenintech (2026): '60-80+ hour weeks were the norm for technical and nontechnical roles alike' on high workload (https://www.reddit.com/r/womenintech/comments/1sdhob9/anthropic_work_culture_for_nontechnical_roles).",
+      "toxicity_grade_corroborated": "2",
+      "biggest_red_flag_in_socials": "Reddit and Blind mentions of 60-80+ hour weeks and potential Amazon-style toxic culture influx (e.g., https://www.teamblind.com/post/anthropic-culture-is-now-fcked-uav7o4m1).",
+      "biggest_green_flag_in_socials": "Blind ranks Anthropic as top company for 2026 with mission-driven culture and high-impact work (https://www.teamblind.com/blog/best-companies-to-work-for-in-the-u-s-2026-anthropic-netflix-and-google-lead).",
+      "agreement_with_council": "HIGH - Aligns with 4.2/5 Blind rating, positive mission-driven culture, and noted high workload/WLB issues."
+    },
+    "people_corroboration": {
+      "named_employees_posting": "no named employees observed posting about research communications team in last 90 days",
+      "hiring_team_visibility": "MEDIUM — Job postings on LinkedIn visible, but limited public X/LinkedIn presence from specific research comms leadership.",
+      "recommended_outreach_target": "none identified"
+    },
+    "_meta": {
+      "model": "grok-4-fast-reasoning+web_search+x_search",
+      "generated_at": "2026-05-10T21:42:25.806Z",
+      "confidence": "H"
+    }
   }
 }

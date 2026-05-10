@@ -101,5 +101,38 @@
     "total_cost_usd": 0.0632,
     "duration_ms": 19742,
     "raw_responses_count": 2
+  },
+  "social_corroboration": {
+    "comp_corroboration": {
+      "blind_thread_evidence": "Offer eval: Stay at Meta or join Deepmind, G-Research or Synthesia Feb 2025: Synthesia: £185k (£40k paper money) — https://www.teamblind.com/post/offer-eval-stay-at-meta-or-join-deepmind-g-research-or-synthesia-bnzezgff. No specific Solutions Architect or 2026 data found.",
+      "x_twitter_evidence": "no X evidence found",
+      "leveling_evidence": "Levels.fyi general salaries range from £88k to £297k TC, no specific Solutions Architect band data shown — https://www.levels.fyi/companies/synthesia/salaries",
+      "agreement_with_council": "LOW + Limited specific comp data for Solutions Architect role; only general startup equity hints found, no pre-IPO RSU details."
+    },
+    "benefits_corroboration": {
+      "401k_signal": "Glassdoor review mentions Synthesia rolled out a 401k match — https://www.glassdoor.com/Benefits/Synthesia-US-Benefits-EI_IE4421112.0,9_IL.10,12_IN1.htm",
+      "healthcare_signal": "Builtin.com describes robust health coverage including private medical insurance, dental/vision — https://builtin.com/company/synthesia/faq/compensation-benefits",
+      "mental_health_signal": "Included in healthcare signal above, with mental health support mentioned — https://builtin.com/company/synthesia/faq/compensation-benefits",
+      "agreement_with_council": "HIGH + Healthcare details closely match council claims, including mental health, dental/vision; no relocation signal found."
+    },
+    "sentiment_corroboration": {
+      "blind_recent_posts": "no Blind threads found in last 90 days specific to Synthesia",
+      "x_team_signal": "Synthesia official account (@synthesiaIO) posts about hiring and product updates positively, e.g., 'We're always hir.' — https://x.com/synthesiaIO",
+      "reddit_signal": "no specific Reddit threads found on Synthesia in r/cscareerquestions or r/ExperiencedDevs",
+      "toxicity_grade_corroborated": "3",
+      "biggest_red_flag_in_socials": "Glassdoor review: 'run from this toxic place' citing declining culture and toxic leadership from CRO — https://www.glassdoor.com/Reviews/Employee-Review-Synthesia-E4421112-RVW100546727.htm",
+      "biggest_green_flag_in_socials": "Glassdoor overall 4.5/5 rating praising low-ego supportive culture — https://www.glassdoor.com/Reviews/Synthesia-Reviews-E4421112.htm",
+      "agreement_with_council": "MEDIUM + Social signals show high overall ratings but emerging toxicity in sales/leadership, aligning with council's workload and growth notes."
+    },
+    "people_corroboration": {
+      "named_employees_posting": "no named employees observed posting about this team in last 90 days",
+      "hiring_team_visibility": "LOW — Limited visibility of Solutions Architect team's leadership on X; official company account active but no specific exec posts.",
+      "recommended_outreach_target": "none identified"
+    },
+    "_meta": {
+      "model": "grok-4-fast-reasoning+web_search+x_search",
+      "generated_at": "2026-05-10T21:44:33.167Z",
+      "confidence": "M"
+    }
   }
 }

@@ -99,5 +99,38 @@
     "total_cost_usd": 0.0992,
     "duration_ms": 60007,
     "raw_responses_count": 2
+  },
+  "social_corroboration": {
+    "comp_corroboration": {
+      "blind_thread_evidence": "no Blind evidence found",
+      "x_twitter_evidence": "no X evidence found",
+      "leveling_evidence": "Software Engineer compensation in Greater Seattle Area at OpenAI ranges from $248K per year for L2 to $1.25M per year for L6 (https://www.levels.fyi/companies/openai/salaries/software-engineer/locations/greater-seattle-area)",
+      "agreement_with_council": "MEDIUM - No specific FDE Seattle comp data found, but general high compensation signals align with council's positive pay sentiment"
+    },
+    "benefits_corroboration": {
+      "401k_signal": "OpenAI provides a 401(k) with generous matching (https://himalayas.app/companies/openai/benefits); Glassdoor review: '401k match is a great perk' (Apr 2026, https://www.glassdoor.com/Benefits/OpenAI-US-Benefits-EI_IE2210885.0,6_IL.7,9_IN1.htm)",
+      "healthcare_signal": "Comprehensive health, dental, and vision insurance with 100% coverage for employees and 90% for spouses (https://www.glassdoor.com/Benefits/OpenAI-US-Benefits-EI_IE2210885.0,6_IL.7,9_IN1.htm)",
+      "mental_health_signal": "Healthcare includes mental healthcare support (https://builtin.com/company/openai/faq/compensation-benefits, Apr 2026)",
+      "agreement_with_council": "HIGH - Public signals directly confirm the described 401(k) match, comprehensive healthcare, and mental health support"
+    },
+    "sentiment_corroboration": {
+      "blind_recent_posts": "Last 90 days show mixed sentiment: positive on compensation (4.7/5) but low on WLB (3.0/5); snippets: 'Massive entitlement culture with folks complaining about anything... Work life balance is...' (recent review, https://www.teamblind.com/company/OpenAI/review/DW7YwPlyB); 'OpenAI seems brutal - currently working 60h/week' (Dec 2025 thread, https://www.teamblind.com/post/openai-vs-anthropic-for-better-wlb-sczvoo0q)",
+      "x_team_signal": "Recent hiring post by OpenAI's Head of Realtime AI: 'We're looking for a creative iOS engineer to join our realtime AI team here at OpenAI Seattle... apply or DM!' (Apr 9, 2026, https://x.com/juberti/status/2042349076365394155)",
+      "reddit_signal": "no specific Reddit evidence found",
+      "toxicity_grade_corroborated": "3",
+      "biggest_red_flag_in_socials": "Reports of brutal 60h/week work culture and entitlement issues in Blind reviews",
+      "biggest_green_flag_in_socials": "High compensation and benefits rated 4.7/5 on Blind",
+      "agreement_with_council": "MEDIUM - Aligns on positive pay/talent and intense WLB challenges, but social signals suggest slightly higher toxicity than council's 2/5 grade"
+    },
+    "people_corroboration": {
+      "named_employees_posting": "Justin Uberti (Head of Realtime AI @OpenAI), posting about Seattle hiring in Apr 2026 (https://x.com/juberti/status/2042349076365394155)",
+      "hiring_team_visibility": "HIGH — Leadership like Justin Uberti actively posts hiring updates on X for Seattle team",
+      "recommended_outreach_target": "Justin Uberti — Actively recruiting for Seattle engineering roles and open to DMs for applications"
+    },
+    "_meta": {
+      "model": "grok-4-fast-reasoning+web_search+x_search",
+      "generated_at": "2026-05-10T21:40:33.234Z",
+      "confidence": "M"
+    }
   }
 }

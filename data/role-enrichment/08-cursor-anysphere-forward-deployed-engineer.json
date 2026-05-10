@@ -99,5 +99,38 @@
     "total_cost_usd": 0.2176,
     "duration_ms": 26482,
     "raw_responses_count": 4
+  },
+  "social_corroboration": {
+    "comp_corroboration": {
+      "blind_thread_evidence": "no Blind evidence found",
+      "x_twitter_evidence": "no X evidence found",
+      "leveling_evidence": "No Levels.fyi data found for Cursor Anysphere; general software engineer TC at Cursor estimated $808K-$1.1M from https://jobsbyculture.com/blog/working-at-cursor-2026, but no FDE specifics",
+      "agreement_with_council": "LOW - No direct comp data found to corroborate or refute council's indirect growth/intensity notes impacting equity value"
+    },
+    "benefits_corroboration": {
+      "401k_signal": "no public signal",
+      "healthcare_signal": "no public signal",
+      "mental_health_signal": "no public signal",
+      "agreement_with_council": "LOW - No specific benefits signals found to verify Blue Cross PPO or coverage details"
+    },
+    "sentiment_corroboration": {
+      "blind_recent_posts": "Sparse Blind activity in 2026; one April post on prestige excludes Cursor as startup with high talent density but no comp/culture details: 'This intentionally doesn't include startups like Cognition, Cursor (Anysphere), etc Talent density there is incredibly high'",
+      "x_team_signal": "Recent hiring and growth posts; e.g., Techmeme April 2026: 'Cursor maker Anysphere has reached ~$300M in ARR and declined an acquisition offer from OpenAI'",
+      "reddit_signal": "r/recruitinghell post (est. early 2026): 'I recently interviewed with Cursor (Anysphere), and as part of the process they required me to do a 2-day unpaid \"work trial\"' highlighting exploitative hiring",
+      "toxicity_grade_corroborated": "3",
+      "biggest_red_flag_in_socials": "Unpaid 2-day work trials in interview process cited in Reddit threads",
+      "biggest_green_flag_in_socials": "Rapid growth to ~$300M ARR and $9.9B valuation per X and Blind mentions",
+      "agreement_with_council": "MEDIUM - Positive growth and innovation vibes align, but Reddit signals higher intensity/toxicity in hiring than council's 2/5 grade"
+    },
+    "people_corroboration": {
+      "named_employees_posting": "Eric Zakariasson (@ericzakariasson) posted about Cursor YC team credits in March 2026; Ben Lang (@benln) on student credits March 2026; Andy Zhu (@andyandeggs) on code graph work (ongoing 2026 posts)",
+      "hiring_team_visibility": "MEDIUM — Some employee posts on X about products/deals, but limited exec visibility on culture/hiring",
+      "recommended_outreach_target": "none identified"
+    },
+    "_meta": {
+      "model": "grok-4-fast-reasoning+web_search+x_search",
+      "generated_at": "2026-05-10T21:39:44.214Z",
+      "confidence": "L"
+    }
   }
 }

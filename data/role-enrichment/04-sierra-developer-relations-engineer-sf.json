@@ -109,5 +109,38 @@
     "total_cost_usd": 0.2336,
     "duration_ms": 40519,
     "raw_responses_count": 4
+  },
+  "social_corroboration": {
+    "comp_corroboration": {
+      "blind_thread_evidence": "no Blind evidence found",
+      "x_twitter_evidence": "no X evidence found",
+      "leveling_evidence": "Levels.fyi shows Sierra leading top-paying companies for Software Engineers with median total compensation of ~$935K; https://www.levels.fyi/companies/sierra",
+      "agreement_with_council": "MEDIUM - High pay signals align with competitive comp theme but no role-specific or equity details for Developer Relations Engineer"
+    },
+    "benefits_corroboration": {
+      "401k_signal": "Sierra offers 401(k) with company match per official careers page; https://sierra.ai/careers",
+      "healthcare_signal": "Top-tier health, dental, vision, and life insurance for employees and families per careers page and BuiltIn FAQ; https://sierra.ai/careers and https://builtin.com/company/sierra/faq/compensation-benefits",
+      "mental_health_signal": "no public signal",
+      "agreement_with_council": "HIGH - Directly confirms top-tier healthcare and 401(k) with match, though percentage undisclosed as noted"
+    },
+    "sentiment_corroboration": {
+      "blind_recent_posts": "no Blind evidence found",
+      "x_team_signal": "Recent founder posts highlight rapid growth and AI innovation; e.g., Bret Taylor on Sierra's $950M raise and enterprise AI dominance (May 2026 thread via semantic search).",
+      "reddit_signal": "no Reddit signal found",
+      "toxicity_grade_corroborated": "2",
+      "biggest_red_flag_in_socials": "none surfaced",
+      "biggest_green_flag_in_socials": "Massive $950M funding at $15.8B valuation in May 2026, signaling strong market confidence and equity upside",
+      "agreement_with_council": "HIGH - Social signals echo fast-paced startup energy with praise for innovation and minimal toxicity complaints"
+    },
+    "people_corroboration": {
+      "named_employees_posting": "Cole Bevis (Product Manager at Sierra) active on LinkedIn discussing AI customer experiences in Q1 2026; Bret Taylor (CEO) frequently posts on X about company milestones",
+      "hiring_team_visibility": "HIGH — Leadership like CEO Bret Taylor highly visible on X and LinkedIn with regular posts on AI and hiring",
+      "recommended_outreach_target": "Bret Taylor — As CEO and co-founder with high social presence on X/LinkedIn, ideal for warm outreach on role and culture insights"
+    },
+    "_meta": {
+      "model": "grok-4-fast-reasoning+web_search+x_search",
+      "generated_at": "2026-05-10T21:37:22.954Z",
+      "confidence": "M"
+    }
   }
 }
