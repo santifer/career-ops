@@ -827,6 +827,31 @@ function renderRow(r, idx) {
     </div>
   </div>` : '';
 
+  // ── Card 5: Notes & activity (slate / append-only log) ───
+  // Server populates entries lazily via GET /api/notes/:num on first
+  // expand. Card always renders (every row can have notes), with an
+  // empty state until the first note arrives.
+  const notesCard = `<div class="dcard dcard--notes" data-notes-num="${escape(String(r.num || ''))}">
+    <div class="dcard-label">NOTES &amp; ACTIVITY</div>
+    <div class="notes-compose">
+      <textarea class="notes-input" maxlength="1000" rows="2"
+        placeholder="Add a note (followed up, recruiter response, etc.) — 1000 char max"
+        onclick="event.stopPropagation()"
+        oninput="updateNotesCounter(this);event.stopPropagation()"
+        onkeydown="event.stopPropagation()"
+        aria-label="Add a note for row #${escape(String(r.num || ''))}"></textarea>
+      <div class="notes-compose-row">
+        <span class="notes-counter" aria-live="polite">0 / 1000</span>
+        <button type="button" class="dcard-btn notes-add-btn"
+          onclick="addRowNote(this);event.stopPropagation()"
+          data-num="${escape(String(r.num || ''))}">Add note</button>
+      </div>
+    </div>
+    <div class="notes-list" data-notes-list>
+      <div class="notes-empty muted-text">No notes yet — add one above. Status changes are auto-logged.</div>
+    </div>
+  </div>`;
+
   // ── Recommendation banner ────────────────────────────────
   const recBanner = finalRec ? `<div class="rec-banner">
     <span class="rec-label">Rec</span>
@@ -879,6 +904,7 @@ function renderRow(r, idx) {
       </div>
       ${storyCard}
       ${actionCard}
+      ${notesCard}
     </div>
   </td>
 </tr>`;
@@ -2226,6 +2252,54 @@ function build() {
   .dcard--action .dcard-action-buttons {
     display: flex; gap: 6px; margin-left: auto; flex-wrap: wrap;
   }
+  /* ── Notes & activity card (5th card) ────────────────────────── */
+  .dcard--notes  { border-left: 3px solid var(--text-4); }
+  .notes-compose { display: flex; flex-direction: column; gap: 6px; }
+  .notes-input {
+    width: 100%; box-sizing: border-box; resize: vertical; min-height: 44px;
+    padding: 7px 9px; font-family: inherit; font-size: 12.5px;
+    line-height: 1.45; color: var(--text); background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+  }
+  .notes-input:focus {
+    outline: none; border-color: var(--blue-fg);
+    box-shadow: 0 0 0 2px rgba(0,120,212,0.18);
+  }
+  .notes-compose-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  }
+  .notes-counter { font-size: 11px; color: var(--text-4); }
+  .notes-counter.over { color: var(--amber); font-weight: 600; }
+  .notes-list {
+    margin-top: 10px; display: flex; flex-direction: column; gap: 6px;
+    max-height: 320px; overflow-y: auto;
+  }
+  .notes-empty { font-size: 11.5px; padding: 4px 0; }
+  .note-entry {
+    display: flex; flex-direction: column; gap: 3px;
+    padding: 7px 9px; background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    font-size: 12px; line-height: 1.45;
+  }
+  .note-entry-head {
+    display: flex; align-items: center; gap: 7px; flex-wrap: wrap;
+    font-size: 10.5px; color: var(--text-4);
+  }
+  .note-type-badge {
+    font-size: 9.5px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.06em; padding: 1px 6px; border-radius: var(--radius-full);
+  }
+  .note-type-badge.type-note   { background: var(--surface); color: var(--text-3); border: 1px solid var(--border); }
+  .note-type-badge.type-status { background: var(--blue-bg); color: var(--blue); border: 1px solid var(--blue-border); }
+  .note-text {
+    color: var(--text-2); white-space: pre-wrap; word-break: break-word;
+  }
+  .note-toggle {
+    align-self: flex-start; background: none; border: none;
+    color: var(--blue); font-size: 11px; cursor: pointer; padding: 2px 0;
+    font-family: inherit;
+  }
+  .note-toggle:hover { text-decoration: underline; }
   .dcard-btn {
     padding: 5px 12px; border-radius: var(--radius-sm); font-size: 12px;
     font-weight: 600; text-decoration: none; white-space: nowrap;
@@ -3468,10 +3542,159 @@ function toggleDetail(idx) {
   if (!detail) return;
   if (isMobileViewport()) {
     openMobileSheetForDetail(detail);
+    // Lazy-load notes for the cloned card inside the bottom sheet.
+    setTimeout(() => hydrateNotesIn(document.getElementById('mobile-sheet-body')), 0);
     return;
   }
   detail.style.display = detail.style.display === 'none' ? '' : 'none';
+  if (detail.style.display !== 'none') hydrateNotesIn(detail);
 }
+
+// ── Notes & activity (per-row append-only log) ──────────────────
+const NOTE_MAX_CHARS = 1000;
+const NOTE_PREVIEW_CHARS = 200;
+
+function escapeNoteHtml(str) {
+  return String(str == null ? '' : str)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function formatNoteTs(iso) {
+  try {
+    const d = new Date(iso);
+    if (isNaN(d)) return iso || '';
+    return d.toLocaleString(undefined, {
+      year: 'numeric', month: 'short', day: 'numeric',
+      hour: '2-digit', minute: '2-digit',
+    });
+  } catch (_) { return iso || ''; }
+}
+
+function renderNoteEntry(entry) {
+  const ts = formatNoteTs(entry.ts);
+  const type = entry.type === 'status' ? 'status' : 'note';
+  const label = type === 'status' ? 'Status' : 'Note';
+  const text = String(entry.text || '');
+  const isLong = text.length > NOTE_PREVIEW_CHARS;
+  const preview = isLong ? text.slice(0, NOTE_PREVIEW_CHARS) + '…' : text;
+  const previewHtml = escapeNoteHtml(preview);
+  const fullHtml = escapeNoteHtml(text);
+  const toggle = isLong
+    ? '<button type="button" class="note-toggle" onclick="toggleNoteExpand(this);event.stopPropagation()" data-collapsed="1">Show more</button>'
+    : '';
+  return '<div class="note-entry">'
+    + '<div class="note-entry-head">'
+    +   '<span class="note-type-badge type-' + type + '">' + label + '</span>'
+    +   '<span>' + escapeNoteHtml(ts) + '</span>'
+    + '</div>'
+    + '<div class="note-text" data-preview="' + previewHtml + '" data-full="' + fullHtml + '">' + previewHtml + '</div>'
+    + toggle
+    + '</div>';
+}
+
+function toggleNoteExpand(btn) {
+  const entry = btn.closest('.note-entry');
+  if (!entry) return;
+  const textEl = entry.querySelector('.note-text');
+  if (!textEl) return;
+  const collapsed = btn.dataset.collapsed === '1';
+  if (collapsed) {
+    textEl.textContent = textEl.dataset.full || '';
+    btn.textContent = 'Show less';
+    btn.dataset.collapsed = '0';
+  } else {
+    textEl.textContent = textEl.dataset.preview || '';
+    btn.textContent = 'Show more';
+    btn.dataset.collapsed = '1';
+  }
+}
+window.toggleNoteExpand = toggleNoteExpand;
+
+function renderNotesList(listEl, entries) {
+  if (!listEl) return;
+  if (!Array.isArray(entries) || entries.length === 0) {
+    listEl.innerHTML = '<div class="notes-empty muted-text">No notes yet — add one above. Status changes are auto-logged.</div>';
+    return;
+  }
+  listEl.innerHTML = entries.map(renderNoteEntry).join('');
+}
+
+function hydrateNotesIn(container) {
+  if (!container) return;
+  const cards = container.querySelectorAll('.dcard--notes[data-notes-num]');
+  cards.forEach(card => {
+    if (card.dataset.notesLoaded === '1') return;
+    const num = card.dataset.notesNum;
+    if (!num) return;
+    card.dataset.notesLoaded = '1';
+    fetch('/api/notes/' + encodeURIComponent(num))
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (!data || !data.ok) return;
+        const list = card.querySelector('[data-notes-list]');
+        renderNotesList(list, data.entries);
+      })
+      .catch(() => {
+        card.dataset.notesLoaded = '';
+      });
+  });
+}
+
+function updateNotesCounter(textarea) {
+  const card = textarea.closest('.dcard--notes');
+  if (!card) return;
+  const counter = card.querySelector('.notes-counter');
+  if (!counter) return;
+  const len = textarea.value.length;
+  counter.textContent = len + ' / ' + NOTE_MAX_CHARS;
+  counter.classList.toggle('over', len >= NOTE_MAX_CHARS);
+}
+window.updateNotesCounter = updateNotesCounter;
+
+function addRowNote(btn) {
+  const card = btn.closest('.dcard--notes');
+  if (!card) return;
+  const num = card.dataset.notesNum || btn.dataset.num;
+  const textarea = card.querySelector('.notes-input');
+  if (!textarea || !num) return;
+  const text = textarea.value.trim();
+  if (!text) {
+    textarea.focus();
+    return;
+  }
+  if (text.length > NOTE_MAX_CHARS) {
+    alert('Note exceeds ' + NOTE_MAX_CHARS + ' characters.');
+    return;
+  }
+  btn.disabled = true;
+  const originalLabel = btn.textContent;
+  btn.textContent = 'Saving…';
+  fetch('/api/notes/add', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ num: parseInt(num, 10), text }),
+  })
+    .then(r => r.json().then(j => ({ ok: r.ok, body: j })))
+    .then(({ ok, body }) => {
+      if (!ok || !body || !body.ok) {
+        const msg = (body && body.error) || 'Failed to save note';
+        alert(msg);
+        return;
+      }
+      textarea.value = '';
+      updateNotesCounter(textarea);
+      const list = card.querySelector('[data-notes-list]');
+      renderNotesList(list, body.entries);
+    })
+    .catch(err => alert('Network error: ' + err.message))
+    .finally(() => {
+      btn.disabled = false;
+      btn.textContent = originalLabel;
+    });
+}
+window.addRowNote = addRowNote;
+window.hydrateNotesIn = hydrateNotesIn;
 
 function openMobileSheetForDetail(detailRow) {
   const block = detailRow.querySelector('.detail-block');
@@ -5320,6 +5543,7 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   body.share-mode .action-cell a[href]:not([href^="#"]):not([href^="reports/"]),
   body.share-mode .action-cell a[onclick*="openVerify"],
   body.share-mode .dcard--action,
+  body.share-mode .dcard--notes,
   body.share-mode .rec-btn,
   body.share-mode #batch-toggle-btn,
   body.share-mode #batch-overlay,

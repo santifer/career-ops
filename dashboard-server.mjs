@@ -631,6 +631,7 @@ function updateApplicationStatus({ num, status, note }) {
   const lines = text.split('\n');
   const targetNum = String(parseInt(num, 10));
   let updatedRow = null;
+  let oldStatus = null;
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
@@ -642,6 +643,7 @@ function updateApplicationStatus({ num, status, note }) {
     // cols: [empty, num, date, company, role, score, status, pdf, report, notes, (empty)]
     if (cols.length < 10 || cols[1] !== targetNum) continue;
 
+    oldStatus = cols[6];
     cols[6] = canonical;
     if (typeof note === 'string' && note.length) {
       // Sanitize: pipes break the markdown table
@@ -677,6 +679,18 @@ function updateApplicationStatus({ num, status, note }) {
   } catch (err) {
     return { ok: false, code: 500, error: `Atomic write failed: ${err.message}` };
   }
+
+  // Auto-log status change to per-row activity (best-effort; never block status update)
+  if (oldStatus && oldStatus !== canonical) {
+    try {
+      appendRowEvent(targetNum, {
+        ts: new Date().toISOString(),
+        type: 'status',
+        text: `${oldStatus} → ${canonical}`,
+      });
+    } catch (_) {}
+  }
+
   return { ok: true, row: updatedRow };
 }
 
@@ -715,6 +729,7 @@ function updateApplicationStatusBulk({ nums, status }) {
   const text = readFileSync(appsPath, 'utf8');
   const lines = text.split('\n');
   const updated = [];
+  const oldStatusByNum = {};
   const stillMissing = new Set(targets);
 
   for (let i = 0; i < lines.length; i++) {
@@ -727,6 +742,7 @@ function updateApplicationStatusBulk({ nums, status }) {
     if (cols.length < 10) continue;
     if (!targets.has(cols[1])) continue;
 
+    oldStatusByNum[cols[1]] = cols[6];
     cols[6] = canonical;
     lines[i] = '| ' + cols.slice(1, 10).join(' | ') + ' |';
 
@@ -760,11 +776,25 @@ function updateApplicationStatusBulk({ nums, status }) {
   } catch (err) {
     return { ok: false, code: 500, error: `Atomic write failed: ${err.message}` };
   }
+
+  // Auto-log status change to per-row activity (best-effort; never block)
+  const ts = new Date().toISOString();
+  for (const row of updated) {
+    const old = oldStatusByNum[row.num];
+    if (old && old !== canonical) {
+      try {
+        appendRowEvent(row.num, { ts, type: 'status', text: `${old} → ${canonical}` });
+      } catch (_) {}
+    }
+  }
+
   return {
     ok: true,
     updated,
     notFound: [...stillMissing],
   };
+}
+
 // ── Quick-add to pipeline (dashboard "Add role" modal) ─────────
 
 const ATS_PATTERNS = [
@@ -936,6 +966,86 @@ function createShareToken() {
   return { token, created, expires };
 }
 
+// ── Per-row notes & activity log ───────────────────────────────
+// Append-only timestamped events keyed by row num. Stored at
+// data/row-notes.json (gitignored). Two event types:
+//   { ts, type: 'note',   text: '<freeform user note>' }
+//   { ts, type: 'status', text: 'OldStatus → NewStatus' }
+// Atomic writes via tmp + rename. Per-note text capped at 1000 chars.
+
+const ROW_NOTES_PATH    = join(ROOT, 'data/row-notes.json');
+const NOTE_MAX_CHARS    = 1000;
+
+function loadRowNotes() {
+  try {
+    if (!existsSync(ROW_NOTES_PATH)) return {};
+    const raw = JSON.parse(readFileSync(ROW_NOTES_PATH, 'utf8'));
+    return (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
+  } catch (_) {
+    return {};
+  }
+}
+
+function saveRowNotes(data) {
+  const dir = dirname(ROW_NOTES_PATH);
+  if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+  const tmp = ROW_NOTES_PATH + '.tmp.' + process.pid + '.' + Date.now();
+  writeFileSync(tmp, JSON.stringify(data, null, 2));
+  renameSync(tmp, ROW_NOTES_PATH);
+}
+
+function appendRowEvent(num, entry) {
+  // Internal — unconditionally append. Validation happens at the public
+  // entry points (appendRowNote, status-change call sites).
+  const parsed = parseInt(num, 10);
+  if (Number.isNaN(parsed)) return false;
+  const key = String(parsed);
+  const data = loadRowNotes();
+  if (!Array.isArray(data[key])) data[key] = [];
+  data[key].push(entry);
+  try {
+    saveRowNotes(data);
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+function appendRowNote({ num, text }) {
+  if (num === undefined || num === null || Number.isNaN(parseInt(num, 10))) {
+    return { ok: false, code: 400, error: 'num is required and must be an integer' };
+  }
+  if (typeof text !== 'string') {
+    return { ok: false, code: 400, error: 'text is required (string)' };
+  }
+  const trimmed = text.trim();
+  if (!trimmed) {
+    return { ok: false, code: 400, error: 'text must not be empty' };
+  }
+  if (trimmed.length > NOTE_MAX_CHARS) {
+    return { ok: false, code: 400, error: `text exceeds ${NOTE_MAX_CHARS}-char limit` };
+  }
+
+  const entry = { ts: new Date().toISOString(), type: 'note', text: trimmed };
+  const ok = appendRowEvent(num, entry);
+  if (!ok) {
+    return { ok: false, code: 500, error: 'Failed to write row-notes.json' };
+  }
+  const all = loadRowNotes()[String(parseInt(num, 10))] || [];
+  // Newest first to match the UI expectation.
+  return { ok: true, num: String(parseInt(num, 10)), entries: [...all].reverse() };
+}
+
+function getRowNotes(num) {
+  const parsed = parseInt(num, 10);
+  if (Number.isNaN(parsed)) {
+    return { ok: false, code: 400, error: 'num must be an integer' };
+  }
+  const key = String(parsed);
+  const all = loadRowNotes()[key] || [];
+  return { ok: true, num: key, entries: [...all].reverse() };
+}
+
 // ── HTTP server ────────────────────────────────────────────────
 
 const server = createServer((req, res) => {
@@ -1032,13 +1142,11 @@ const server = createServer((req, res) => {
   }
 
   if (url === '/api/status/bulk' && req.method === 'POST') {
-  if (url === '/api/pipeline/add' && req.method === 'POST') {
     let body = '';
     let total = 0;
     req.on('data', c => {
       total += c.length;
       if (total > 64 * 1024) { req.destroy(); return; }
-      if (total > 8 * 1024) { req.destroy(); return; }
       body += c;
     });
     req.on('end', () => {
@@ -1058,6 +1166,21 @@ const server = createServer((req, res) => {
       res.end(JSON.stringify(result.ok
         ? { ok: true, updated: result.updated, notFound: result.notFound, canonicalStatuses: CANONICAL_STATUSES }
         : { ok: false, error: result.error }));
+    });
+    return;
+  }
+
+  if (url === '/api/pipeline/add' && req.method === 'POST') {
+    let body = '';
+    let total = 0;
+    req.on('data', c => {
+      total += c.length;
+      if (total > 8 * 1024) { req.destroy(); return; }
+      body += c;
+    });
+    req.on('end', () => {
+      let parsed;
+      try { parsed = JSON.parse(body); }
       catch (_) {
         return json({ ok: false, error: 'Invalid JSON body' }, 400);
       }
@@ -1066,6 +1189,39 @@ const server = createServer((req, res) => {
       return json(result, code);
     });
     return;
+  }
+
+  // ── Notes & activity (per-row append-only log) ───────────────
+  if (url === '/api/notes/add' && req.method === 'POST') {
+    let body = '';
+    let total = 0;
+    req.on('data', c => {
+      total += c.length;
+      if (total > 8 * 1024) { req.destroy(); return; }
+      body += c;
+    });
+    req.on('end', () => {
+      let parsed;
+      try { parsed = JSON.parse(body); }
+      catch (_) {
+        return json({ ok: false, error: 'Invalid JSON body' }, 400);
+      }
+      const result = appendRowNote({ num: parsed.num, text: parsed.text });
+      const code = result.ok ? 200 : (result.code || 400);
+      return json(result.ok
+        ? { ok: true, num: result.num, entries: result.entries }
+        : { ok: false, error: result.error }, code);
+    });
+    return;
+  }
+
+  const notesGetMatch = url.match(/^\/api\/notes\/(\d+)$/);
+  if (notesGetMatch && req.method === 'GET') {
+    const result = getRowNotes(notesGetMatch[1]);
+    const code = result.ok ? 200 : (result.code || 400);
+    return json(result.ok
+      ? { ok: true, num: result.num, entries: result.entries }
+      : { ok: false, error: result.error }, code);
   }
 
   const detailMatch = url.match(/^\/api\/detail\/(.+)$/);
