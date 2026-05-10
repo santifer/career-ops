@@ -2919,24 +2919,24 @@ function build() {
   .stats {
     margin: 16px 0 24px;
   }
-  /* Compact stat strip — Apply-Now hero spans the full top row, other 6 cards in a 6-col compact strip below.
-     Goal: hero ≈110px desktop with oversize numeral; rest stays as the dense ≤78px row from Phase 6. */
+  /* Compact stat strip — single row with Apply-Now hero spanning 2 cols + 6 secondary cards.
+     8 grid columns total: hero takes 2, each secondary card takes 1. All same height row. */
   .stats-bento {
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: 2fr repeat(6, 1fr);
     grid-auto-rows: 78px;
     gap: 6px;
     margin: 8px 0 16px;
   }
   .stat-hero { grid-column: span 1; grid-row: span 1; }
-  .stat-hero-balance { grid-column: 1 / -1; grid-row: 1; }
+  .stat-hero-balance { grid-column: 1; grid-row: 1; }
   .stat-cell { grid-column: span 1; }
   .stat-strip { grid-column: 1 / -1; }
-  /* Tablet: 4-col grid for the secondary row; hero still spans full width. */
+  /* Tablet: 4-col grid; hero spans 2 cols. */
   @media (max-width: 1080px) {
-    .stats-bento { grid-template-columns: repeat(4, 1fr); }
+    .stats-bento { grid-template-columns: 2fr repeat(3, 1fr); grid-auto-rows: 78px; }
   }
-  /* Mobile: 2-col compact grid. Hero spans 1/-1, 6 cards in 3 rows of 2. */
+  /* Mobile: 2-col compact grid. Hero spans full width, 6 cards in 3 rows of 2. */
   @media (max-width: 720px) {
     .stats-bento {
       grid-template-columns: repeat(2, 1fr);
@@ -2944,7 +2944,7 @@ function build() {
       gap: 6px;
     }
     .stat-hero { grid-column: 1 / -1; grid-row: span 1; }
-    .stat-hero-balance { grid-column: 1 / -1; }
+    .stat-hero-balance { grid-column: 1 / -1; grid-row: span 1; }
     .stat-cell, .stat-strip { grid-column: span 1; grid-row: span 1; }
     .stat-strip { grid-column: 1 / -1; }
   }
@@ -2956,7 +2956,11 @@ function build() {
     display: flex; flex-direction: column; justify-content: center;
     gap: 2px; min-height: 0;
   }
-  .stat-label { font-size: 10px !important; line-height: 1.1; max-height: 2.2em; overflow: hidden; }
+  .stat-label {
+    font-size: 9px !important; line-height: 1.15;
+    letter-spacing: 0.04em; word-break: break-word; hyphens: auto;
+    max-height: 2.4em; overflow: hidden;
+  }
   .stat::before {
     content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
     background: var(--border); border-radius: var(--radius) var(--radius) 0 0;
@@ -2995,8 +2999,8 @@ function build() {
      full-width hero with oversize tabular numeral, sparkline as background fill,
      subtle green-tinted gradient, delta pill in top-right. */
   .stat-hero-balance {
-    min-height: 112px;
-    padding: 18px 22px 20px;
+    min-height: 78px;
+    padding: 8px 14px;
     background:
       linear-gradient(135deg, rgba(22,163,74,0.06) 0%, rgba(22,163,74,0.015) 55%, var(--surface) 100%);
     align-items: stretch; justify-content: center;
@@ -3012,10 +3016,10 @@ function build() {
   }
   .stat-hero-balance .stat-label {
     font-size: 11px !important; color: var(--text-3);
-    margin-bottom: 4px;
+    margin-bottom: 2px;
   }
   .stat-hero-balance .stat-value {
-    font-size: 64px; line-height: 1; letter-spacing: -2px; margin: 2px 0 0;
+    font-size: 38px; line-height: 1; letter-spacing: -1.2px; margin: 0;
     color: var(--green-fg);
     font-feature-settings: "tnum" 1, "ss01" 1;
     font-optical-sizing: auto;
@@ -4961,7 +4965,7 @@ function build() {
 
   <header class="toolbar" role="banner">
     <button class="toolbar-btn sidebar-hamburger" onclick="toggleSidebar()" id="sidebar-hamburger-btn" aria-label="Open navigation" aria-controls="sidebar" aria-expanded="false" title="Open navigation">☰</button>
-    <h1><span class="brand-name">Career-Ops</span><span class="brand-suffix"> Dashboard</span></h1>
+    <h1 class="sr-only">Career-Ops Dashboard</h1>
     <button class="toolbar-btn cmdk-trigger" onclick="openCmdK()" title="Open command palette (⌘K / Ctrl-K)" aria-label="Open command palette (Cmd+K or Ctrl+K)">
       <span class="cmdk-trigger-label">Search…</span>
       <span class="cmdk-trigger-kbd">⌘K</span>
