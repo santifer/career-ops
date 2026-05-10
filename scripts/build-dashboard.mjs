@@ -4287,13 +4287,15 @@ function build() {
         <div class="stat-trend"><span class="stat-delta stat-delta-flat" title="Snapshot — pipeline depth has no daily history">— snapshot</span></div>
         <span class="stat-caret" aria-hidden="true">▾</span><span class="sr-only">Click to expand</span>
       </div>
-      <div class="stat stat-cell">
+      <div class="stat stat-cell" onclick="toggleStatPanel('companies')" title="Click to see all tracked companies">
         <div class="stat-label">Companies tracked</div>
         <div class="stat-value">${portals.tracked}</div>
+        <span class="stat-caret" aria-hidden="true">▾</span><span class="sr-only">Click to expand</span>
       </div>
-      <div class="stat stat-cell">
+      <div class="stat stat-cell" onclick="toggleStatPanel('scanned')" title="Click to see scan activity">
         <div class="stat-label">URLs scanned</div>
         <div class="stat-value" id="live-scanned">${scanTotal}</div>
+        <span class="stat-caret" aria-hidden="true">▾</span><span class="sr-only">Click to expand</span>
       </div>
       <div class="stat stat-cell" onclick="toggleStatPanel('batches')" title="Click to see batch run history">
         <div class="stat-label">Batches run</div>
@@ -4313,6 +4315,8 @@ function build() {
   <div class="stat-panel" id="stat-panel-evaluations"></div>
   <div class="stat-panel" id="stat-panel-applied"></div>
   <div class="stat-panel" id="stat-panel-pending"></div>
+  <div class="stat-panel" id="stat-panel-companies"></div>
+  <div class="stat-panel" id="stat-panel-scanned"></div>
   <div class="stat-panel" id="stat-panel-batches"></div>
 
   ${applyNow.length > 0 ? `
@@ -5759,9 +5763,137 @@ function renderStatPanel(key, data) {
       </table></div>\`;
   }
 
+  if (key === 'companies') {
+    const buckets = data.buckets || {};
+    const crows = data.rows || [];
+    const bucketCards = Object.entries(buckets).map(([label, val]) =>
+      \`<div class="bucket-card"><div class="bval">\${val}</div><div class="blbl">\${esc(label)}</div></div>\`
+    ).join('');
+    const trows = crows.map(r => {
+      const lastScan = r.lastScanned || '';
+      const inactive = r.daysSinceScan != null && r.daysSinceScan > 30;
+      const lastCell = lastScan
+        ? (inactive
+            ? \`<span class="age-stale">\${esc(lastScan)} (\${r.daysSinceScan}d)</span>\`
+            : \`<span class="age-ok">\${esc(lastScan)}</span>\`)
+        : \`<span class="muted">never</span>\`;
+      const safeName = String(r.company || '').replace(/'/g, "\\\\'").replace(/"/g, '&quot;');
+      return \`<tr class="row" onclick="filterTablesByCompany('\${safeName}')" title="Click to filter Apply-Now / All Evaluations to \${esc(r.company)}">
+        <td><strong>\${esc(r.company)}</strong></td>
+        <td class="muted-text">\${esc(r.portal || '—')}</td>
+        <td>\${r.evals || 0}</td>
+        <td>\${r.applyNow || 0}</td>
+        <td class="muted-text">\${lastCell}</td>
+        <td class="muted-text">\${r.rolesFound || 0}</td>
+      </tr>\`;
+    }).join('');
+    return \`<div class="stat-panel-title">\${esc(data.title || 'Companies Tracked')} <span class="pill">\${data.total || crows.length}</span> <span style="font-size:12px;color:#57606a;font-weight:400">· live</span></div>
+      <div class="bucket-grid" style="margin-bottom:12px">\${bucketCards}</div>
+      <p style="font-size:12px;color:#57606a;margin:0 0 8px">Click a row to filter Apply-Now / All Evaluations to that company.</p>
+      <div style="overflow-x:auto;max-height:440px;overflow-y:auto"><table>
+        <thead><tr><th>Company</th><th>Portal</th><th>Evals</th><th>Apply-Now</th><th>Last scanned</th><th>Roles found</th></tr></thead>
+        <tbody>\${trows || '<tr><td colspan="6" style="color:#57606a;font-size:12px">No companies yet.</td></tr>'}</tbody>
+      </table></div>\`;
+  }
+
+  if (key === 'scanned') {
+    const buckets = data.buckets || {};
+    const daily = data.daily || [];
+    const recent = data.recent || [];
+    const bucketCards = Object.entries(buckets).map(([label, val]) =>
+      \`<div class="bucket-card"><div class="bval">\${val}</div><div class="blbl">\${esc(label)}</div></div>\`
+    ).join('');
+    const maxC = Math.max(1, ...daily.map(d => d.count || 0));
+    const W = 320, H = 60;
+    const BW = Math.max(2, Math.floor(W / Math.max(1, daily.length)) - 1);
+    const bars = daily.map((d, i) => {
+      const h = Math.max(1, Math.round(((d.count || 0) / maxC) * (H - 8)));
+      const x = i * (BW + 1);
+      const y = H - h;
+      return \`<rect x="\${x}" y="\${y}" width="\${BW}" height="\${h}" fill="var(--blue-fg, #0969da)" opacity="0.7"><title>\${d.date}: \${d.count}</title></rect>\`;
+    }).join('');
+    const chart = daily.length
+      ? \`<svg viewBox="0 0 \${W} \${H}" preserveAspectRatio="none" width="100%" height="60" role="img" aria-label="Scans per day, last \${daily.length} days" style="background:rgba(0,0,0,0.02);border-radius:4px">\${bars}</svg>\`
+      : '<p style="color:#57606a;font-size:12px;margin:0">No scan history yet.</p>';
+    const trows = recent.slice(0, 100).map(r => {
+      const ok = (r.newRolesFound || 0) > 0;
+      const status = ok
+        ? \`<span style="color:var(--green-fg, #1a7f37);font-weight:600">✓ success</span>\`
+        : \`<span class="muted">no new</span>\`;
+      return \`<tr>
+        <td class="muted-text">\${esc(r.timestamp || '')}</td>
+        <td><strong>\${esc(r.company || '—')}</strong></td>
+        <td class="muted-text">\${esc(r.portal || '—')}</td>
+        <td>\${r.newRolesFound || 0}</td>
+        <td>\${status}</td>
+      </tr>\`;
+    }).join('');
+    return \`<div class="stat-panel-title">\${esc(data.title || 'URLs Scanned')} <span class="pill">\${data.total || 0}</span> <span style="font-size:12px;color:#57606a;font-weight:400">· live</span></div>
+      <div class="bucket-grid" style="margin-bottom:12px">\${bucketCards}</div>
+      <div style="margin-bottom:12px"><strong style="font-size:13px">Scans per day — last \${daily.length} days</strong>
+        <div style="margin-top:6px">\${chart}</div>
+      </div>
+      <strong style="font-size:13px">Recent scan events</strong>
+      <div style="margin-top:10px;overflow-x:auto;max-height:440px;overflow-y:auto"><table>
+        <thead><tr><th>Date</th><th>Company</th><th>Portal</th><th>New roles</th><th>Status</th></tr></thead>
+        <tbody>\${trows || '<tr><td colspan="5" style="color:#57606a;font-size:12px">No scan history yet.</td></tr>'}</tbody>
+      </table></div>\`;
+  }
+
   // Default: title + full table
   return \`<div class="stat-panel-title">\${esc(title)} \${count ? \`<span class="pill">\${count}</span>\` : ''} <span style="font-size:12px;color:#57606a;font-weight:400">· live</span></div>
     \${buildTable(rows, key)}\`;
+}
+
+// ── Per-company filter (driven by Companies tracked panel rows) ──────
+function filterTablesByCompany(name) {
+  if (!name) return clearCompanyFilter();
+  window._companyFilter = name;
+  const lower = String(name).toLowerCase();
+  ['apply-now-tbody', 'all-tbody'].forEach(tbodyId => {
+    const tbody = document.getElementById(tbodyId);
+    if (!tbody) return;
+    Array.from(tbody.querySelectorAll('tr')).forEach(tr => {
+      if (tr.classList.contains('detail-row')) { tr.style.display = 'none'; return; }
+      const cells = tr.querySelectorAll('td');
+      // Apply-Now and All Eval tables both have: bulk(0), score(1), company(2), ...
+      const companyCell = cells[2];
+      const text = (companyCell?.textContent || '').toLowerCase();
+      tr.style.display = text.includes(lower) ? '' : 'none';
+    });
+  });
+  showCompanyFilterBanner(name);
+  document.querySelectorAll('.stat-panel.open').forEach(p => p.classList.remove('open'));
+  document.querySelectorAll('.stat.active').forEach(s => s.classList.remove('active'));
+  const applyNow = document.getElementById('apply-now-section');
+  if (applyNow && applyNow.scrollIntoView) applyNow.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function clearCompanyFilter() {
+  window._companyFilter = null;
+  ['apply-now-tbody', 'all-tbody'].forEach(tbodyId => {
+    const tbody = document.getElementById(tbodyId);
+    if (!tbody) return;
+    Array.from(tbody.querySelectorAll('tr')).forEach(tr => {
+      if (tr.classList.contains('detail-row')) tr.style.display = 'none';
+      else tr.style.display = '';
+    });
+  });
+  const banner = document.getElementById('company-filter-banner');
+  if (banner) banner.remove();
+}
+
+function showCompanyFilterBanner(name) {
+  let banner = document.getElementById('company-filter-banner');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'company-filter-banner';
+    banner.style.cssText = 'position:sticky;top:0;z-index:50;background:#0969da;color:#fff;padding:8px 14px;font-size:13px;display:flex;align-items:center;border-radius:4px;margin:8px 0';
+    const apply = document.getElementById('apply-now-section');
+    if (apply && apply.parentNode) apply.parentNode.insertBefore(banner, apply);
+    else document.body.prepend(banner);
+  }
+  banner.innerHTML = '🔎 Filtered by company: <strong style="margin:0 8px">' + esc(name) + '</strong> <button type="button" onclick="clearCompanyFilter()" style="margin-left:auto;background:rgba(255,255,255,0.2);border:0;color:#fff;padding:4px 10px;border-radius:3px;cursor:pointer">Clear</button>';
 }
 
 // Drill-down into a specific batch run is a Phase 3 follow-up.

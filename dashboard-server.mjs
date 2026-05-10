@@ -299,29 +299,114 @@ function detailPending() {
 }
 
 function detailCompanies() {
+  // 1. Apps grouped by company
   const apps = parseApplications();
-  const map = {};
+  const appByCompany = {};
   for (const a of apps) {
-    if (!map[a.company]) map[a.company] = { evals: 0, totalScore: 0, bestScore: 0, bestRole: '', statuses: {}, roles: [] };
-    const c = map[a.company];
+    if (!a.company) continue;
+    if (!appByCompany[a.company]) appByCompany[a.company] = { evals: 0, applyNow: 0, totalScore: 0, bestScore: 0, bestRole: '', statuses: {} };
+    const c = appByCompany[a.company];
     c.evals++;
     c.totalScore += a.score || 0;
-    if (a.score > c.bestScore) { c.bestScore = a.score; c.bestRole = a.role; }
+    if ((a.score || 0) > c.bestScore) { c.bestScore = a.score || 0; c.bestRole = a.role || ''; }
+    if ((a.score || 0) >= 4.0 && ['Evaluated','Applied','Interview','Offer','Responded'].includes(a.status)) c.applyNow++;
     c.statuses[a.status] = (c.statuses[a.status] || 0) + 1;
-    c.roles.push({ role: a.role, score: a.score, status: a.status, date: a.date });
   }
-  const rows = Object.entries(map)
-    .map(([company, d]) => ({
-      company,
-      evals: d.evals,
-      avgScore: d.evals > 0 ? Math.round((d.totalScore / d.evals) * 10) / 10 : 0,
-      bestScore: d.bestScore,
-      bestRole: d.bestRole,
-      statuses: d.statuses,
-      roles: d.roles.sort((a, b) => b.score - a.score),
-    }))
-    .sort((a, b) => b.bestScore - a.bestScore);
-  return { title: 'Companies Tracked', rows };
+
+  // 2. Scan history grouped by company (last_seen + roles count + first portal seen)
+  const scans = parseScanHistory();
+  const scanByCompany = {};
+  for (const s of scans) {
+    if (!s.company) continue;
+    if (!scanByCompany[s.company]) scanByCompany[s.company] = { lastScanned: '', portal: '', count: 0 };
+    const sc = scanByCompany[s.company];
+    sc.count++;
+    if ((s.first_seen || '') > sc.lastScanned) sc.lastScanned = s.first_seen || '';
+    if (!sc.portal && s.portal) sc.portal = s.portal;
+  }
+
+  // 3. portals.yml — enabled tracked companies + portal type
+  const portalByCompany = {};
+  let trackedTotal = 0;
+  try {
+    const portalsPath = join(ROOT, 'portals.yml');
+    if (existsSync(portalsPath)) {
+      const cfg = yaml.load(readFileSync(portalsPath, 'utf8'));
+      for (const tc of (cfg?.tracked_companies || [])) {
+        if (tc.enabled === false) continue;
+        trackedTotal++;
+        const api = (tc.api || '') + ' ' + (tc.careers_url || '');
+        let portal = '';
+        if (api.includes('greenhouse')) portal = 'greenhouse';
+        else if (api.includes('ashby')) portal = 'ashby';
+        else if (api.includes('lever.co')) portal = 'lever';
+        else if (api.includes('workday') || api.includes('myworkdayjobs')) portal = 'workday';
+        else if (tc.careers_url) portal = 'web';
+        if (tc.name) portalByCompany[tc.name] = portal;
+      }
+    }
+  } catch (err) {
+    console.error('[detailCompanies] portals.yml parse error:', err.message);
+  }
+
+  // 4. Merge: union of (portal companies, app companies, scan companies)
+  const allNames = new Set([
+    ...Object.keys(portalByCompany),
+    ...Object.keys(appByCompany),
+    ...Object.keys(scanByCompany),
+  ]);
+
+  const todayMs = Date.now();
+  const rows = [];
+  for (const name of allNames) {
+    if (!name) continue;
+    const a = appByCompany[name] || { evals: 0, applyNow: 0, totalScore: 0, bestScore: 0, bestRole: '' };
+    const s = scanByCompany[name] || { lastScanned: '', portal: '', count: 0 };
+    const portal = portalByCompany[name] || s.portal || '';
+    const lastScanned = s.lastScanned || '';
+    let daysSinceScan = null;
+    if (lastScanned) {
+      const ms = todayMs - new Date(lastScanned).getTime();
+      if (!isNaN(ms)) daysSinceScan = Math.floor(ms / 86400000);
+    }
+    rows.push({
+      company:       name,
+      portal,
+      evals:         a.evals,
+      applyNow:      a.applyNow,
+      lastScanned,
+      daysSinceScan,
+      rolesFound:    s.count,
+      avgScore:      a.evals ? Math.round((a.totalScore / a.evals) * 10) / 10 : 0,
+      bestScore:     a.bestScore,
+      bestRole:      a.bestRole,
+      tracked:       portalByCompany[name] !== undefined,
+    });
+  }
+  rows.sort((x, y) =>
+    (y.evals - x.evals) ||
+    (y.applyNow - x.applyNow) ||
+    (y.rolesFound - x.rolesFound) ||
+    x.company.localeCompare(y.company)
+  );
+
+  // 5. Bucket counts
+  const trackedNow = trackedTotal || rows.filter(r => r.tracked).length;
+  const withEvals  = rows.filter(r => r.evals > 0).length;
+  const inApplyNow = rows.filter(r => r.applyNow > 0).length;
+  const inactive   = rows.filter(r => r.tracked && (r.daysSinceScan == null || r.daysSinceScan > 30)).length;
+
+  return {
+    title: 'Companies Tracked',
+    buckets: {
+      'Total tracked':    trackedNow,
+      'With evals':       withEvals,
+      'In Apply-Now':     inApplyNow,
+      'Inactive (>30d)':  inactive,
+    },
+    rows,
+    total: rows.length,
+  };
 }
 
 // Group batch-state rows into runs using a gap heuristic on started_at.
@@ -397,22 +482,70 @@ function detailBatches() {
 
 function detailScanned() {
   const items = parseScanHistory();
+  const total = items.length;
+  const todayMs = Date.now();
+  const dayMs = 86400000;
+
+  // Bucket counts (24h / 7d / 30d / all-time)
+  let last24h = 0, last7d = 0, last30d = 0;
+  for (const i of items) {
+    const t = new Date(i.first_seen || '').getTime();
+    if (isNaN(t)) continue;
+    const age = todayMs - t;
+    if (age <= dayMs) last24h++;
+    if (age <= 7 * dayMs) last7d++;
+    if (age <= 30 * dayMs) last30d++;
+  }
+
+  // Daily counts for last 30 days (chronological asc, zero-fill missing dates)
+  const byDate = {};
+  for (const i of items) {
+    const d = (i.first_seen || '').slice(0, 10);
+    if (!d) continue;
+    byDate[d] = (byDate[d] || 0) + 1;
+  }
+  const daily = [];
+  const start = new Date(todayMs - 29 * dayMs);
+  for (let i = 0; i < 30; i++) {
+    const dt = new Date(start.getTime() + i * dayMs);
+    const key = dt.toISOString().slice(0, 10);
+    daily.push({ date: key, count: byDate[key] || 0 });
+  }
+
+  // Recent scan events: aggregate (date, company, portal) → new_roles_found
+  const eventsMap = new Map();
+  for (const i of items) {
+    const date = (i.first_seen || '').slice(0, 10);
+    if (!date) continue;
+    const key = `${date}|${i.company || ''}|${i.portal || ''}`;
+    if (!eventsMap.has(key)) {
+      eventsMap.set(key, { timestamp: date, company: i.company || '', portal: i.portal || '', newRolesFound: 0, status: 'success' });
+    }
+    eventsMap.get(key).newRolesFound++;
+  }
+  const recent = [...eventsMap.values()]
+    .sort((a, b) => b.timestamp.localeCompare(a.timestamp) || a.company.localeCompare(b.company))
+    .slice(0, 200);
+
+  // Per-portal breakdown still useful for dashboard tooltips
   const byPortal = {};
   for (const i of items) {
     byPortal[i.portal || 'unknown'] = (byPortal[i.portal || 'unknown'] || 0) + 1;
   }
-  const byDate = {};
-  for (const i of items) {
-    const d = (i.first_seen || '').slice(0, 10);
-    if (d) byDate[d] = (byDate[d] || 0) + 1;
-  }
-  const recentDates = Object.entries(byDate).sort((a, b) => b[0].localeCompare(a[0])).slice(0, 14);
-  const added = items.filter(i => i.status === 'added').length;
-  // Return a subset of items for the detail table view
-  const recentItems = [...items]
-    .sort((a, b) => (b.first_seen || '').localeCompare(a.first_seen || ''))
-    .slice(0, 500);
-  return { title: 'URLs Scanned', total: items.length, added, byPortal, recentDates, items: recentItems };
+
+  return {
+    title: 'URLs Scanned',
+    total,
+    buckets: {
+      'Last 24h': last24h,
+      'Last 7d':  last7d,
+      'Last 30d': last30d,
+      'All time': total,
+    },
+    daily,
+    recent,
+    byPortal,
+  };
 }
 
 function batchLive() {
