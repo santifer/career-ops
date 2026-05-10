@@ -2373,6 +2373,35 @@ function build() {
   .gap-section.gap-strategy .gap-section-label { background: var(--purple-bg); color: var(--purple); border-color: var(--purple-border); }
   .gap-empty { color: var(--text-4); font-style: italic; font-size: 13px; padding: 8px 0; }
 
+  /* ── Quick-add role modal ───────────────────────────────────── */
+  #quickadd-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 2000; backdrop-filter: blur(2px); }
+  #quickadd-backdrop.visible { display: flex; }
+  #quickadd-modal {
+    position: fixed; top: 18vh; left: 50%; transform: translateX(-50%);
+    width: min(520px,96vw); max-height: 70vh; overflow-y: auto; z-index: 2001;
+    background: var(--surface); border-radius: 12px; border: 1px solid var(--border);
+    box-shadow: var(--shadow-lg);
+  }
+  .quickadd-header {
+    position: sticky; top: 0; background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 14px 20px; display: flex; align-items: center; gap: 10px;
+    border-radius: 12px 12px 0 0;
+  }
+  .quickadd-title { font-size: 15px; font-weight: 600; flex: 1; color: var(--text); }
+  .quickadd-body { padding: 18px 20px 20px; display: flex; flex-direction: column; gap: 12px; }
+  .quickadd-hint { font-size: 12px; color: var(--text-3); margin: 0; }
+  #quickadd-url {
+    width: 100%; padding: 11px 14px; font-size: 14px;
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    background: var(--surface-2); color: var(--text); font-family: inherit;
+    box-sizing: border-box;
+  }
+  #quickadd-url:focus { outline: 2px solid var(--blue-fg); outline-offset: -1px; }
+  .quickadd-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+  .quickadd-submit { background: var(--blue-fg); color: white; border-color: var(--blue-fg); }
+  .quickadd-submit:hover { filter: brightness(1.05); }
+  .quickadd-submit[disabled] { opacity: 0.6; cursor: not-allowed; }
+
   /* ── Toast component ─────────────────────────────────────────── */
   #toast-container {
     position: fixed; right: 18px; bottom: 18px; z-index: 3000;
@@ -2884,6 +2913,7 @@ function build() {
       <span class="cmdk-trigger-label">Search…</span>
       <span class="cmdk-trigger-kbd">⌘K</span>
     </button>
+    <button class="toolbar-btn" onclick="openQuickAdd()" id="quickadd-btn" title="Add a role URL to the pipeline" aria-label="Add role to pipeline">+ Add role</button>
     <button class="toolbar-btn" onclick="toggleDark()" id="dark-toggle" aria-label="Toggle dark mode">☀︎ Light</button>
     <button class="toolbar-btn" id="batch-toggle-btn" onclick="toggleBatchOverlay()" style="display:none" aria-label="Toggle batch progress overlay">⚡ Batch</button>
   </header>
@@ -2927,6 +2957,26 @@ function build() {
         <button class="verify-close" onclick="closeGapModal()">✕</button>
       </div>
       <div class="gap-modal-body" id="gap-modal-body"></div>
+    </div>
+  </div>
+
+  <!-- Quick-add role modal -->
+  <div id="quickadd-backdrop" onclick="closeQuickAdd()" role="dialog" aria-modal="true" aria-labelledby="quickadd-title">
+    <div id="quickadd-modal" onclick="event.stopPropagation()">
+      <div class="quickadd-header">
+        <div class="quickadd-title" id="quickadd-title">Add role to pipeline</div>
+        <button class="verify-close" onclick="closeQuickAdd()" aria-label="Close">✕</button>
+      </div>
+      <div class="quickadd-body">
+        <form id="quickadd-form" onsubmit="submitQuickAdd(event); return false;">
+          <input id="quickadd-url" type="text" placeholder="Paste role URL or search term" autocomplete="off" spellcheck="false" required />
+          <p class="quickadd-hint">Appends to <code>data/pipeline.md</code> with today's date. Auto-detects ATS pattern (Greenhouse / Ashby / Lever / Workday / LinkedIn). Skips duplicates already in scan history.</p>
+          <div class="quickadd-actions">
+            <button type="button" class="toolbar-btn" onclick="closeQuickAdd()">Cancel</button>
+            <button type="submit" class="toolbar-btn quickadd-submit" id="quickadd-submit-btn">Add to pipeline</button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 
@@ -4478,6 +4528,7 @@ function _cmdkActions() {
       toast('Run in terminal: node scan.mjs', 'info');
     } },
     { id: 'act-select-mode', icon: '☑', title: 'Toggle select mode', sub: 'Show / hide row checkboxes for bulk status updates', run: () => toggleSelectMode() },
+    { id: 'act-add-role', icon: '+', title: 'Add role', sub: 'Paste a role URL — appends to pipeline.md for next triage', run: () => openQuickAdd() },
   ];
 }
 
@@ -4714,7 +4765,7 @@ document.addEventListener('keydown', e => {
 // ── Keyboard shortcuts ──────────────────────────────────────────
 document.addEventListener('keydown', e => {
   if (typeof _cmdkOpen !== 'undefined' && _cmdkOpen) return;
-  if (e.key === 'Escape') { closeVerify(); closeGapModal(); closeTierLegend(); closeStatusPopover(); }
+  if (e.key === 'Escape') { closeVerify(); closeGapModal(); closeTierLegend(); closeStatusPopover(); closeQuickAdd(); }
 });
 
 // ── Inline status writeback ─────────────────────────────────────
@@ -5033,6 +5084,59 @@ window.handleHeaderCheckbox = handleHeaderCheckbox;
 window.bulkClearSelection = bulkClearSelection;
 window.bulkApply = bulkApply;
 window.toggleSelectMode = toggleSelectMode;
+// ── Quick-add role modal ────────────────────────────────────────
+function openQuickAdd() {
+  const bd = document.getElementById('quickadd-backdrop');
+  const inp = document.getElementById('quickadd-url');
+  if (!bd || !inp) return;
+  bd.classList.add('visible');
+  inp.value = '';
+  const btn = document.getElementById('quickadd-submit-btn');
+  if (btn) btn.disabled = false;
+  setTimeout(() => inp.focus(), 0);
+}
+
+function closeQuickAdd() {
+  const bd = document.getElementById('quickadd-backdrop');
+  if (bd) bd.classList.remove('visible');
+}
+
+async function submitQuickAdd(ev) {
+  if (ev && ev.preventDefault) ev.preventDefault();
+  const inp = document.getElementById('quickadd-url');
+  const btn = document.getElementById('quickadd-submit-btn');
+  const raw = inp ? inp.value.trim() : '';
+  if (!raw) return;
+  if (btn) btn.disabled = true;
+  try {
+    const res = await fetch('/api/pipeline/add', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ url: raw }),
+    });
+    let data = {};
+    try { data = await res.json(); } catch (_) {}
+    if (data && data.ok) {
+      closeQuickAdd();
+      const tag = data.ats && data.ats !== 'unknown' ? ' (' + data.ats + ')' : '';
+      if (window.toast) window.toast('Added' + tag + ' — will triage in next scan', 'success');
+    } else if (data && data.duplicate) {
+      closeQuickAdd();
+      if (window.toast) window.toast('Already in pipeline', 'info');
+    } else {
+      const msg = (data && data.error) || ('HTTP ' + res.status);
+      if (window.toast) window.toast(msg, 'error');
+      if (btn) btn.disabled = false;
+    }
+  } catch (err) {
+    if (window.toast) window.toast('Network error: ' + (err && err.message || 'unknown'), 'error');
+    if (btn) btn.disabled = false;
+  }
+}
+
+window.openQuickAdd = openQuickAdd;
+window.closeQuickAdd = closeQuickAdd;
+window.submitQuickAdd = submitQuickAdd;
 
 // ── Toast ───────────────────────────────────────────────────────
 window.toast = function(msg, type) {

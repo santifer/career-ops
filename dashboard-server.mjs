@@ -765,6 +765,125 @@ function updateApplicationStatusBulk({ nums, status }) {
     updated,
     notFound: [...stillMissing],
   };
+// ── Quick-add to pipeline (dashboard "Add role" modal) ─────────
+
+const ATS_PATTERNS = [
+  { id: 'greenhouse', test: /(?:job-boards|boards)\.greenhouse\.io/i },
+  { id: 'ashby',      test: /jobs\.ashbyhq\.com/i },
+  { id: 'lever',      test: /jobs\.lever\.co/i },
+  { id: 'workday',    test: /myworkdayjobs\.com|workday/i },
+  { id: 'linkedin',   test: /linkedin\.com\/jobs/i },
+];
+
+function detectAts(url) {
+  for (const p of ATS_PATTERNS) if (p.test.test(url)) return p.id;
+  return 'unknown';
+}
+
+function extractCompanyFromAts(parsedUrl, ats) {
+  try {
+    if (ats === 'greenhouse') {
+      const m = parsedUrl.pathname.match(/^\/([^\/]+)\/jobs\//);
+      if (m) return m[1];
+    } else if (ats === 'ashby' || ats === 'lever') {
+      const m = parsedUrl.pathname.match(/^\/([^\/]+)/);
+      if (m) return m[1];
+    } else if (ats === 'workday') {
+      // {company}.wd1.myworkdayjobs.com or workday subdomain
+      return parsedUrl.hostname.split('.')[0];
+    }
+    return parsedUrl.hostname.replace(/^www\./, '').split('.')[0];
+  } catch (_) {
+    return 'Unknown';
+  }
+}
+
+function urlInScanHistory(url) {
+  const path = join(ROOT, 'data/scan-history.tsv');
+  if (!existsSync(path)) return false;
+  const content = readFileSync(path, 'utf8');
+  for (const line of content.split('\n')) {
+    if (!line || line.startsWith('url\t')) continue;
+    if (line.split('\t')[0] === url) return true;
+  }
+  return false;
+}
+
+function urlInPipeline(url) {
+  const path = join(ROOT, 'data/pipeline.md');
+  if (!existsSync(path)) return false;
+  return readFileSync(path, 'utf8').includes(url);
+}
+
+function addUrlToPipeline({ url, company, title, ats, date }) {
+  const path = join(ROOT, 'data/pipeline.md');
+  if (!existsSync(path)) return { ok: false, code: 500, error: 'data/pipeline.md not found' };
+
+  const content = readFileSync(path, 'utf8');
+  const lines = content.split('\n');
+
+  // Insert at the top of "### Tier 2" so newest-first matches scan.mjs.
+  // Skip at most one blank line that follows the header (preserve any
+  // trailing blank line before "### Tier 3").
+  let insertIdx = -1;
+  for (let i = 0; i < lines.length; i++) {
+    if (/^###\s+Tier 2\b/i.test(lines[i])) {
+      insertIdx = i + 1;
+      if (insertIdx < lines.length && lines[insertIdx].trim() === '') insertIdx++;
+      break;
+    }
+  }
+  if (insertIdx < 0) {
+    if (lines[lines.length - 1] !== '') lines.push('');
+    lines.push('### Tier 2 — Quick-add (manual)');
+    lines.push('');
+    insertIdx = lines.length;
+  }
+
+  const tag = ats && ats !== 'unknown' ? ' [' + ats + ']' : '';
+  const safeCompany = (company || 'Unknown').replace(/\|/g, '/').slice(0, 80);
+  const safeTitle   = ((title || '(pending triage)') + tag).replace(/\|/g, '/').slice(0, 200);
+  const newLine = '- [ ] ' + url + ' | ' + safeCompany + ' | ' + safeTitle + ' | ' + date;
+  lines.splice(insertIdx, 0, newLine);
+
+  const tmp = path + '.tmp.' + process.pid + '.' + Date.now();
+  try {
+    writeFileSync(tmp, lines.join('\n'));
+    renameSync(tmp, path);
+  } catch (err) {
+    return { ok: false, code: 500, error: 'Atomic write failed: ' + err.message };
+  }
+  return { ok: true, line: newLine };
+}
+
+function quickAddToPipeline(rawUrl) {
+  const trimmed = (rawUrl || '').trim();
+  if (!trimmed) return { ok: false, code: 400, error: 'url is required' };
+  if (trimmed.length > 2048) return { ok: false, code: 400, error: 'URL too long' };
+
+  let parsedUrl;
+  try { parsedUrl = new URL(trimmed); }
+  catch (_) { return { ok: false, code: 400, error: 'Not a valid URL — paste a full http(s) link.' }; }
+
+  if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+    return { ok: false, code: 400, error: 'URL must use http or https' };
+  }
+
+  // Normalize: drop fragment, keep query (some ATS slugs live there).
+  const cleanUrl = parsedUrl.origin + parsedUrl.pathname + parsedUrl.search;
+
+  if (urlInScanHistory(cleanUrl) || urlInPipeline(cleanUrl)) {
+    return { ok: false, code: 200, duplicate: true, error: 'already in pipeline' };
+  }
+
+  const ats = detectAts(cleanUrl);
+  const company = extractCompanyFromAts(parsedUrl, ats);
+  const date = new Date().toISOString().slice(0, 10);
+
+  const result = addUrlToPipeline({ url: cleanUrl, company, title: '(pending triage)', ats, date });
+  if (!result.ok) return result;
+
+  return { ok: true, ats, company, date, url: cleanUrl, line: result.line };
 }
 
 // ── Share-link tokens (24h read-only recruiter links) ─────────
@@ -913,11 +1032,13 @@ const server = createServer((req, res) => {
   }
 
   if (url === '/api/status/bulk' && req.method === 'POST') {
+  if (url === '/api/pipeline/add' && req.method === 'POST') {
     let body = '';
     let total = 0;
     req.on('data', c => {
       total += c.length;
       if (total > 64 * 1024) { req.destroy(); return; }
+      if (total > 8 * 1024) { req.destroy(); return; }
       body += c;
     });
     req.on('end', () => {
@@ -937,6 +1058,12 @@ const server = createServer((req, res) => {
       res.end(JSON.stringify(result.ok
         ? { ok: true, updated: result.updated, notFound: result.notFound, canonicalStatuses: CANONICAL_STATUSES }
         : { ok: false, error: result.error }));
+      catch (_) {
+        return json({ ok: false, error: 'Invalid JSON body' }, 400);
+      }
+      const result = quickAddToPipeline(parsed.url);
+      const code = result.ok ? 200 : (result.code || 400);
+      return json(result, code);
     });
     return;
   }
