@@ -1838,8 +1838,8 @@ function build() {
   }
 
   /* ── Toolbar ─────────────────────────────────────────────────── */
-  .toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
-  .toolbar h1 { flex: 1; }
+  .toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; flex-wrap: wrap; }
+  .toolbar h1 { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .toolbar-btn {
     background: var(--surface); border: 1px solid var(--border);
     border-radius: var(--radius-sm); padding: 5px 13px;
@@ -1848,6 +1848,11 @@ function build() {
     font-family: inherit;
   }
   .toolbar-btn:hover { background: var(--surface-2); border-color: var(--border-strong); color: var(--text-2); }
+  /* Overflow ··· button: only surfaces on narrow viewports (<480px) where
+     the search/add-role buttons would crowd the title. Calls
+     openMobileSettingsSheet() which already exposes Search / Add role /
+     Theme / Demo via the same bottom sheet used by the tab bar. */
+  .toolbar-overflow-btn { display: none; font-size: 18px; line-height: 1; padding: 5px 12px; }
   .cmdk-trigger { display: inline-flex; align-items: center; gap: 8px; padding-right: 6px; min-width: 220px; }
   .cmdk-trigger-label { color: var(--text-3); flex: 1; text-align: left; }
   .cmdk-trigger-kbd {
@@ -1986,6 +1991,20 @@ function build() {
      Layout reads as deliberate composition rather than a 3+3+orphan stack.
      Cols 1-2 + 3-4 are 2x2 heroes (Apply-Now, Total Evals); cols 5-6 hold
      a 2x2 cluster of four small cards; row 3 is a full-width strip card. */
+  /* ── Tightest mobile (iPhone-class, ≤480px) ──────────────────── */
+  /* "Career-Ops Dashboard" wraps to 3 lines on iPhone — drop the
+     "Dashboard" suffix and collapse Search/+Add behind a ··· button
+     that opens the mobile settings sheet. Dark + Batch toggles stay
+     visible because they're 1-tap actions. */
+  @media (max-width: 480px) {
+    .toolbar h1 .brand-suffix { display: none; }
+    .toolbar h1 { font-size: 17px; letter-spacing: -0.3px; }
+    .toolbar .cmdk-trigger,
+    .toolbar .quickadd-btn { display: none; }
+    .toolbar .toolbar-overflow-btn { display: inline-flex; align-items: center; justify-content: center; }
+  }
+
+  /* ── KPI stat cards: 3+3 hero (primary tier on top, secondary below) ── */
   .stats {
     margin: 16px 0 24px;
   }
@@ -3141,30 +3160,48 @@ function build() {
   }
 
   /* ── Mobile bottom-sheet (drawer) for row detail ──────────────── */
+  /* iOS-style bottom sheet: slides up from the bottom edge with a
+     rubber-band drag handle. Backdrop fades in (display:block stays so
+     opacity transitions cleanly; pointer-events block taps when hidden).
+     Honors safe-area-inset-bottom so the iPhone home indicator never
+     covers the action area at rest. */
   #mobile-sheet-backdrop {
-    display: none; position: fixed; inset: 0;
+    position: fixed; inset: 0;
     background: rgba(0,0,0,.55); z-index: 2500;
     -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px);
+    opacity: 0; pointer-events: none;
+    transition: opacity .22s ease-out;
   }
-  #mobile-sheet-backdrop.visible { display: block; }
+  #mobile-sheet-backdrop.visible { opacity: 1; pointer-events: auto; }
   #mobile-sheet {
     position: fixed; left: 0; right: 0; bottom: 0;
-    max-height: 90vh; overflow-y: auto;
+    max-height: 85vh; display: flex; flex-direction: column;
     background: var(--surface);
     border-top: 1px solid var(--border);
     border-radius: 16px 16px 0 0;
     box-shadow: 0 -10px 30px rgba(0,0,0,.25);
     z-index: 2501;
     transform: translateY(100%);
-    transition: transform .25s ease-out;
-    -webkit-overflow-scrolling: touch;
+    transition: transform .28s cubic-bezier(.32,.72,0,1);
+    padding-bottom: env(safe-area-inset-bottom);
+    will-change: transform;
   }
   #mobile-sheet-backdrop.visible #mobile-sheet { transform: translateY(0); }
+  /* Rubber-band drag handle: 4px pill, expanded to a 24px-tall hit area
+     so finger drags catch reliably without a visible gutter. */
   .mobile-sheet-handle {
     width: 40px; height: 4px; border-radius: 2px;
     background: var(--border-strong);
-    margin: 8px auto 0;
+    margin: 0 auto;
+    flex-shrink: 0;
   }
+  .mobile-sheet-handle-grip {
+    flex-shrink: 0;
+    padding: 10px 0 6px;
+    cursor: grab;
+    touch-action: none;
+  }
+  .mobile-sheet-handle-grip:active { cursor: grabbing; }
   .mobile-sheet-header {
     display: flex; align-items: center; gap: 8px;
     padding: 8px 16px 12px;
@@ -3184,11 +3221,24 @@ function build() {
     border-radius: var(--radius-sm);
   }
   .mobile-sheet-close:hover, .mobile-sheet-close:active { color: var(--text); background: var(--surface-2); }
-  .mobile-sheet-body { padding: 12px 14px 24px; }
+  .mobile-sheet-body {
+    padding: 12px 14px 24px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    flex: 1 1 auto; min-height: 0;
+    overscroll-behavior: contain;
+  }
   /* While the user is dragging the sheet down, suppress the slide-back
      transition so translateY tracks the finger 1:1. JS removes the class
      on release; transition snaps it home (or to closed). */
   #mobile-sheet.is-dragging { transition: none !important; }
+  /* Reduced-motion: drag stays smooth (touch is the primary input on
+     mobile, so 1:1 finger tracking is essential), but the slide-in /
+     slide-out transitions become instant. Backdrop fade also instant. */
+  @media (prefers-reduced-motion: reduce) {
+    #mobile-sheet { transition: none !important; }
+    #mobile-sheet-backdrop { transition: none !important; }
+  }
 
   /* ── Pull-to-refresh indicator (mobile only) ──────────────────── */
   /* A small pill that drops in from above the toolbar as the user pulls.
@@ -3693,7 +3743,7 @@ function build() {
 <div class="container">
 
   <header class="toolbar" role="banner">
-    <h1>Career-Ops Dashboard</h1>
+    <h1><span class="brand-name">Career-Ops</span><span class="brand-suffix"> Dashboard</span></h1>
     <button class="toolbar-btn cmdk-trigger" onclick="openCmdK()" title="Open command palette (⌘K / Ctrl-K)" aria-label="Open command palette (Cmd+K or Ctrl+K)">
       <span class="cmdk-trigger-label">Search…</span>
       <span class="cmdk-trigger-kbd">⌘K</span>
@@ -3703,6 +3753,8 @@ function build() {
       <span class="live-dot" id="live-dot" aria-hidden="true"></span>
       <span class="live-text" id="live-text">—</span>
     </div>
+    <button class="toolbar-btn quickadd-btn" onclick="openQuickAdd()" id="quickadd-btn" title="Add a role URL to the pipeline" aria-label="Add role to pipeline">+ Add role</button>
+    <button class="toolbar-btn toolbar-overflow-btn" onclick="openMobileSettingsSheet()" id="toolbar-overflow-btn" aria-label="More options" title="More options">···</button>
     <button class="toolbar-btn" onclick="toggleDark()" id="dark-toggle" aria-label="Toggle dark mode">☀︎ Light</button>
     <button class="toolbar-btn" id="batch-toggle-btn" onclick="toggleBatchOverlay()" style="display:none" aria-label="Toggle batch progress overlay">⚡ Batch</button>
   </header>
@@ -3806,9 +3858,11 @@ function build() {
   <div id="toast-container" aria-live="polite" aria-atomic="false"></div>
 
   <!-- Mobile bottom sheet (slide-up drawer) for row detail on <720px -->
-  <div id="mobile-sheet-backdrop" onclick="closeMobileSheet()" role="dialog" aria-modal="true" aria-labelledby="mobile-sheet-title">
+  <div id="mobile-sheet-backdrop" onclick="closeMobileSheet()" role="dialog" aria-modal="true" aria-labelledby="mobile-sheet-title" aria-hidden="true">
     <div id="mobile-sheet" onclick="event.stopPropagation()">
-      <div class="mobile-sheet-handle" aria-hidden="true"></div>
+      <div class="mobile-sheet-handle-grip" id="mobile-sheet-handle-grip" aria-hidden="true">
+        <div class="mobile-sheet-handle"></div>
+      </div>
       <div class="mobile-sheet-header">
         <div class="mobile-sheet-title" id="mobile-sheet-title"></div>
         <button class="mobile-sheet-close" onclick="closeMobileSheet()" aria-label="Close">✕</button>
@@ -4460,13 +4514,21 @@ function openMobileSheetForDetail(detailRow) {
   } else {
     bodyEl.innerHTML = '<p class="muted">No details available.</p>';
   }
-  document.getElementById('mobile-sheet-backdrop').classList.add('visible');
+  // Reset any inline scroll position so each open starts at the top —
+  // matters because dismiss-on-drag-down only triggers when scrollTop=0.
+  bodyEl.scrollTop = 0;
+  const bd = document.getElementById('mobile-sheet-backdrop');
+  bd.classList.add('visible');
+  bd.removeAttribute('aria-hidden');
   document.body.style.overflow = 'hidden';
 }
 
 function closeMobileSheet() {
   const bd = document.getElementById('mobile-sheet-backdrop');
-  if (bd) bd.classList.remove('visible');
+  if (bd) {
+    bd.classList.remove('visible');
+    bd.setAttribute('aria-hidden', 'true');
+  }
   document.body.style.overflow = '';
 }
 
@@ -6377,10 +6439,13 @@ window.toast = function(msg, type) {
     if (e.pointerType === 'mouse') return;
     const sheet = _sheetEl();
     if (!sheet || !_sheetBd()?.classList.contains('visible')) return;
-    // Only initiate the swipe gesture when the sheet body is scrolled
-    // to the very top — otherwise swipe-down should scroll the inner
-    // body, not dismiss the sheet (matches native iOS bottom-sheet UX).
-    if (sheet.scrollTop > 0) return;
+    // Drag is always allowed from the handle grip. From the body we only
+    // initiate when scrolled to top — otherwise swipe-down should scroll
+    // the inner body, not dismiss the sheet (matches native iOS UX).
+    const grip = document.getElementById('mobile-sheet-handle-grip');
+    const bodyEl = document.getElementById('mobile-sheet-body');
+    const fromGrip = !!(grip && grip.contains(e.target));
+    if (!fromGrip && bodyEl && bodyEl.scrollTop > 0) return;
     _sheetDrag = {
       startY: e.clientY,
       lastY: e.clientY,
@@ -6388,6 +6453,7 @@ window.toast = function(msg, type) {
       velocity: 0,
       pointerId: e.pointerId,
       committed: false,
+      fromGrip: fromGrip,
     };
     sheet.classList.add('is-dragging');
   }
@@ -6812,7 +6878,9 @@ function openMobileSettingsSheet(btn) {
       '<p class="muted-text" style="margin:6px 2px 0;line-height:1.45">Pull-to-refresh: drag down from the top of the page. Long-press a row to enter multi-select mode.</p>' +
     '</div>'
   );
+  bodyEl.scrollTop = 0;
   bd.classList.add('visible');
+  bd.removeAttribute('aria-hidden');
   document.body.style.overflow = 'hidden';
 }
 window.openMobileSettingsSheet = openMobileSettingsSheet;
