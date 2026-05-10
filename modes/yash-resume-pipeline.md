@@ -3,12 +3,12 @@
 Single-URL-at-a-time pipeline. Reads pending URLs from `data/pipeline.md`,
 extracts each JD via Playwright into `jds/`, applies
 `resume-optimization-system-based-on-job-description.md` to produce LaTeX,
-compiles a tailored PDF resume into `resumes/`. Asks for user confirmation
-before each URL. No evaluation, no scoring gate, no tracker writes.
+compiles a tailored PDF resume into `resumes/`. Fully automated — no user
+confirmation required between URLs. No evaluation, no scoring gate, no tracker writes.
 
 ## Per-run loop
 
-Repeat until queue empty, user quits, or 3 consecutive failures:
+Repeat until queue empty, 3 consecutive failures, or user interrupts (Ctrl+C):
 
 1. **Get next URL**
 
@@ -19,13 +19,9 @@ Repeat until queue empty, user quits, or 3 consecutive failures:
    - If `status: empty` → report "queue drained" and stop.
    - If `status: ok` → continue with the returned `url`.
 
-2. **Confirm with user**
+2. **Auto-proceed**
 
-   Show the URL. Ask: "Process `<url>`? (yes / skip / quit)"
-
-   - `quit` → stop the loop.
-   - `skip` → run `mark-skipped --url <url> --reason "user skipped"`, continue to next URL.
-   - `yes` → continue.
+   Print the URL to the user and immediately continue to step 3 — no confirmation required.
 
 3. **Extract JD via Scrapling** (stealth fetcher, bypasses Cloudflare/Akamai):
 
@@ -39,13 +35,13 @@ Repeat until queue empty, user quits, or 3 consecutive failures:
    - On `status: fail`:
      - run `mark-failed --url <url> --reason "scrapling: <json.error>"`
      - run `log --status fail --url <url> --reason "scrapling: <json.error>"`
-     - ask user: continue with next URL? (yes / quit)
+     - continue automatically to next URL.
 
 4. **Parse JD fields** from raw text (LLM judgment):
    - Extract `company`, `role`, `location`, `posted_date`.
    - For the portal hint, use the `source_hint` returned by step 3 (`lever` / `ashby` / `greenhouse` / `workday` / `other`). Do not re-derive from the URL host.
-   - If `company` or `role` confidence is low, ask user once to confirm/correct.
-   - If user can't say, run `mark-failed --url <url> --reason "could not determine company/role"` and continue.
+   - If `company` or `role` confidence is low, use the best available inference and proceed — note the uncertainty in the sidecar `.log` deficiencies field.
+   - If company and role truly cannot be inferred at all, run `mark-failed --url <url> --reason "could not determine company/role"` and continue automatically.
 
 5. **Slugify and dedup check:**
 
@@ -119,7 +115,7 @@ Repeat until queue empty, user quits, or 3 consecutive failures:
    - run `mark-failed --url <url> --reason "tectonic: <tectonic_log_tail>"`
    - run `log --status fail --url <url> --reason "tectonic: ..."`
    - keep the .tex on disk for inspection
-   - ask user: continue?
+   - continue automatically to next URL.
 
 10. **Write sidecar `.log`** to `resume-logs/<c>_<r>_Yash_Anghan_Resume_<d>.log`:
 
@@ -215,14 +211,19 @@ Repeat until queue empty, user quits, or 3 consecutive failures:
     cover-letter PDF path (or `<absent — see warning>`), resume score,
     cover-letter score, and any review/warning flags.
 
-13. **Ask user:** "continue with next URL? (yes / quit)"
+13. **Feedback pause:** Ask the user:
+    > "✅ Done. Any feedback, corrections, or learnings from this run? (press Enter to continue / type feedback / type `quit` to stop)"
+
+    - `quit` → stop the loop.
+    - Any text → acknowledge the feedback, note it, then continue to step 1.
+    - Empty input (Enter) → continue to step 1 immediately.
 
 ## Stop conditions
 
-- User says quit at any prompt.
-- `next-pending` returns `status: empty`.
-- 3 consecutive failures (extract or compile). Report summary and ask user
-  to investigate before continuing.
+- `next-pending` returns `status: empty` — queue drained, pipeline stops.
+- 3 consecutive failures (extract or compile) — report summary and stop; user must investigate before re-running.
+- User types `quit` at the step 13 feedback prompt.
+- User interrupts the session (Ctrl+C).
 
 ## Hard rules
 
@@ -232,8 +233,7 @@ Repeat until queue empty, user quits, or 3 consecutive failures:
   produces JD `.md`, `.tex`, `.pdf`, and `.log` files.
 - **Never edit `data/pipeline.md` directly.** Always go through the orchestrator
   subcommands so the format stays consistent with the existing `pipeline` mode.
-- **Never fabricate company or role.** If the JD page is ambiguous, ask the
-  user once. If they can't say, mark failed.
+- **Never fabricate company or role.** If the JD page is ambiguous, use the best available inference and note uncertainty in the log. Only mark failed if company and role truly cannot be determined at all.
 - **Never modify** `resume-optimization-system-based-on-job-description.md`,
   `generate-pdf-latex.mjs`, or the existing `pipeline`/`auto-pipeline` modes.
 - **Cover letter is best-effort.** A cover-letter failure (V2.0 hard-fail or

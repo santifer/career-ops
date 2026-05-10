@@ -2,11 +2,15 @@
 
 shivanianghan98@gmail.com | <!-- FILL IN: phone --> | <!-- FILL IN: LinkedIn URL --> | <!-- FILL IN: city, province, country -->
 
+---
+
 ## Summary
 
 <!-- FILL IN: 2-3 sentence professional summary as Azure Data Engineer. Example structure: "Azure Data Engineer with X years of experience building scalable ETL/ELT pipelines and cloud data platforms. Expertise in Azure Data Factory, Databricks, and Azure Synapse Analytics, with hands-on experience in PySpark, Delta Lake, and SQL-based transformations. Proven track record of delivering production-grade data solutions in [industry/domain]." -->
 
-## Experience
+---
+
+## Work Experience
 
 ### <!-- FILL IN: Company Name --> | <!-- FILL IN: City / Remote -->
 **<!-- FILL IN: Job Title, e.g. Azure Data Engineer -->** | <!-- FILL IN: Month YYYY --> – <!-- FILL IN: Month YYYY or Present -->
@@ -22,6 +26,8 @@ shivanianghan98@gmail.com | <!-- FILL IN: phone --> | <!-- FILL IN: LinkedIn URL
 - <!-- FILL IN: Key responsibility or achievement -->
 - <!-- FILL IN: Key responsibility or achievement -->
 - <!-- FILL IN: Key responsibility or achievement -->
+
+---
 
 ## Projects
 
@@ -39,12 +45,16 @@ shivanianghan98@gmail.com | <!-- FILL IN: phone --> | <!-- FILL IN: LinkedIn URL
 - <!-- FILL IN: Technical detail or outcome -->
 - <!-- FILL IN: Link or repo (optional) -->
 
+---
+
 ## Education
 
 ### <!-- FILL IN: University / College Name --> | <!-- FILL IN: City, Country -->
 **<!-- FILL IN: Degree, e.g. Bachelor of Technology in Information Technology -->** | <!-- FILL IN: YYYY --> – <!-- FILL IN: YYYY -->
 
 <!-- FILL IN: GPA or honours (optional) -->
+
+---
 
 ## Skills
 
@@ -55,6 +65,8 @@ shivanianghan98@gmail.com | <!-- FILL IN: phone --> | <!-- FILL IN: LinkedIn URL
 **Programming:** <!-- FILL IN: e.g. PySpark, Python, SQL (T-SQL / Spark SQL), Scala (basic), Bash -->
 
 **Tools & Platforms:** <!-- FILL IN: e.g. Git, Docker, Terraform, Databricks Unity Catalog, Apache Airflow, dbt, Power BI, Jupyter Notebooks -->
+
+---
 
 ## Certifications
 
