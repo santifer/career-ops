@@ -4350,6 +4350,21 @@ function build() {
     font-size: 11px; color: var(--text-3); line-height: 1.3;
     margin-top: 1px;
   }
+  #pill-popover .network-warm-intro {
+    font-size: 11px; line-height: 1.4;
+    margin-top: 4px;
+    color: var(--green-fg);
+    font-weight: 500;
+  }
+  #pill-popover .network-warm-intro a.warm-intro-target {
+    color: var(--green-fg-dark);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    font-weight: 600;
+  }
+  #pill-popover .network-warm-intro a.warm-intro-target:hover {
+    color: var(--green-fg);
+  }
   body.dark #pill-popover { max-width: 420px; }
   /* Two-column detail grid */
   .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
@@ -8803,6 +8818,21 @@ function _renderNetworkBlock(n) {
   const esc = (str) => String(str == null ? '' : str)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  const introsLine = (c) => {
+    // For 2nd-degree contacts: render warm-intro paths if mutuals are resolved.
+    // c.mutuals_resolved comes from networkSummary in lib/linkedin-network.mjs
+    // and only contains entries whose name matched a 1st-degree contact.
+    const resolved = (c.mutuals_resolved || []).filter(m => m.url);
+    if (!resolved.length) return '';
+    const top = resolved.slice(0, 3).map(m => {
+      // Pre-fill a LinkedIn message URL asking for the intro.
+      const subject = encodeURIComponent('Quick intro request');
+      const messageUrl = m.url ? m.url + '#' : '';
+      return '<a href="' + esc(m.url) + '" target="_blank" rel="noopener" class="warm-intro-target">' + esc(m.name) + '</a>';
+    }).join(', ');
+    const overflow = resolved.length > 3 ? ' + ' + (resolved.length - 3) + ' more' : '';
+    return '<div class="network-warm-intro">→ ask ' + top + overflow + ' to intro</div>';
+  };
   const contactRow = (c) => {
     const name = ((c.first || '') + ' ' + (c.last || '')).trim() || (c.name || '');
     const url = c.url || '';
@@ -8814,6 +8844,7 @@ function _renderNetworkBlock(n) {
     return '<div class="network-contact-row">'
       +   '<div class="network-contact-name">' + link + '</div>'
       +   (title ? '<div class="network-contact-title">' + esc(title) + esc(when) + '</div>' : '')
+      +   introsLine(c)
       + '</div>';
   };
   let html = '';
