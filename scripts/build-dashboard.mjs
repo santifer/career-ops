@@ -1518,7 +1518,7 @@ function build() {
 <link rel="apple-touch-startup-image" href="/assets/splash-2048x2732.png" media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   /* ── Design tokens ─────────────────────────────────────────────── */
   :root {
@@ -1566,6 +1566,18 @@ function build() {
     --shadow-lg: 0 10px 15px -3px rgba(0,0,0,.1), 0 4px 6px -4px rgba(0,0,0,.1);
     --ring-green: 0 0 0 3px rgba(22,163,74,.15);
     --ring-blue: 0 0 0 3px rgba(37,99,235,.15);
+    /* ── Monospace accent surface (Phase 6 #1.3) ─────────────────
+       Dev-tool aesthetic for data, timestamps, IDs, and numerics.
+       JetBrains Mono ships tnum + ss01-ss20 features; we enable
+       tnum on numeric containers so digits column-align even when
+       the surface itself is non-tabular. */
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    /* ── Motion tokens (Phase 6 #1.2) ────────────────────────────
+       Material-style standard easing; duration tuned for
+       row reorder + status pill writeback at 250ms. */
+    --motion-duration: 250ms;
+    --motion-duration-fast: 180ms;
+    --motion-ease: cubic-bezier(0.4, 0, 0.2, 1);
   }
   body.dark {
     /* Dark surfaces tuned so all body text hits WCAG AAA (≥7:1) on --bg
@@ -1916,7 +1928,9 @@ function build() {
   .stat-value {
     font-size: 32px; font-weight: 700; color: var(--text);
     margin-top: 6px; letter-spacing: -1px;
+    font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
   }
   .stat-strong .stat-value { color: var(--green-fg); }
   .stat-caret {
@@ -2084,7 +2098,12 @@ function build() {
   }
   tr.row { cursor: pointer; transition: background .1s; }
   tr.row:hover td { background: var(--surface-2); }
-  td.num { color: var(--text-3); font-variant-numeric: tabular-nums; }
+  td.num {
+    color: var(--text-3);
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+  }
   .role-cell { color: var(--text); font-weight: 500; }
   /* Action-cell links rendered as 44×44 padded buttons (WCAG 2.5.5). */
   td.action-cell { white-space: nowrap; }
@@ -2201,7 +2220,12 @@ function build() {
     font-size: 11.5px; font-weight: 600;
     font-variant-numeric: tabular-nums; white-space: nowrap;
   }
-  .score-badge-lg { font-size: 13px; padding: 3px 11px; }
+  .score-badge-lg {
+    font-size: 13px; padding: 3px 11px;
+    font-family: var(--font-mono);
+    font-feature-settings: "tnum" 1;
+    letter-spacing: -0.01em;
+  }
   .score-strong  { background: var(--green-bg);  color: var(--green); }
   .score-moderate { background: var(--amber-bg); color: var(--amber); }
   .score-weak    { background: var(--surface-2); color: var(--text-3); }
@@ -3427,6 +3451,120 @@ function build() {
     }
     .gap-chip-interactive { position: relative; overflow: hidden; }
   }
+
+  /* ── Wave G — Monospace accent surface (Phase 6 #1.3) ──────────
+     Dev-tool aesthetic: data, timestamps, URLs, IDs, and numeric
+     stats render in JetBrains Mono. tnum keeps digits column-aligned
+     so scores in adjacent rows line up at the decimal point. Inter
+     stays the body face for prose; this is a targeted accent only. */
+  .mono,
+  .stat-value,
+  .score-badge-lg,
+  td.num,
+  td.muted-text,
+  .note-entry-head,
+  .bucket-card .bval,
+  .comp-hist-label,
+  .comp-hist-count,
+  .comp-floor-value,
+  .bar-row-count,
+  td.action-cell a,
+  .query-text,
+  .activity-ts,
+  .batch-progress-fill + *,
+  .batch-row-id,
+  code {
+    font-family: var(--font-mono);
+    font-feature-settings: "tnum" 1;
+  }
+  /* Mono-on-data needs a hair of optical compensation: JetBrains Mono
+     reads ~5% larger than Inter at the same px size. Pull data cells in
+     so columns don't look bloated next to prose. */
+  td.muted-text { font-size: 11.5px; letter-spacing: -0.005em; }
+  .note-entry-head { font-feature-settings: "tnum" 1; }
+  .note-entry-head .note-type-badge { font-family: 'Inter', sans-serif; }
+
+  /* ── Wave G — Filter / sort / expand micro-interactions (#1.2) ──
+     250ms standard easing on the five high-traffic surfaces. The
+     reduced-motion guard at the top of the cascade already neutralizes
+     these via the global *::transition-duration override; the
+     no-preference block layers richer transforms on top. */
+  @media (prefers-reduced-motion: no-preference) {
+    /* 1. Filter input → row hide/show (250ms fade-in on rows that
+       just became visible). Hidden rows are still display:none so
+       the table collapses cleanly; visible rows pulse a fade-in
+       triggered by the .row-fade-in class added in applyFilters(). */
+    @keyframes row-fade-in-wave-g {
+      from { opacity: 0; transform: translateY(-3px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    tr.row.row-fade-in {
+      animation: row-fade-in-wave-g var(--motion-duration) var(--motion-ease);
+    }
+
+    /* 2. Sort column click → row reorder (sort-pulse: a brief flash
+       along the tbody confirming the reshuffle landed). The DOM
+       reorder itself is instantaneous, but the eye needs a cue. */
+    @keyframes sort-pulse-wave-g {
+      0%   { background: transparent; }
+      18%  { background: rgba(37, 99, 235, 0.06); }
+      100% { background: transparent; }
+    }
+    tbody.sort-pulse > tr.row > td {
+      animation: sort-pulse-wave-g var(--motion-duration) var(--motion-ease);
+    }
+    body.dark tbody.sort-pulse > tr.row > td {
+      animation-name: sort-pulse-wave-g-dark;
+    }
+    @keyframes sort-pulse-wave-g-dark {
+      0%   { background: transparent; }
+      18%  { background: rgba(96, 165, 250, 0.10); }
+      100% { background: transparent; }
+    }
+
+    /* 3. Expand-row reveal — keep existing 180ms keyframe but tween
+       the height/opacity over 250ms with the standard ease so the
+       inner block doesn't pop. The existing row-expand-in keyframe
+       on .detail-block stays as-is for backward compat; this layer
+       adds the smoother motion on the .detail-row itself. */
+    tr.detail-row .detail-block {
+      animation-duration: var(--motion-duration);
+      animation-timing-function: var(--motion-ease);
+    }
+
+    /* 4. Status pill click → popover open/close. The pill's
+       background-color transition was already 200ms ease — bump it
+       to 250ms standard ease for consistency. Popover gets a fade
+       + scale-in via the .is-open class. */
+    .status-pill {
+      transition: background-color var(--motion-duration) var(--motion-ease),
+                  color var(--motion-duration) var(--motion-ease),
+                  border-color var(--motion-duration) var(--motion-ease),
+                  box-shadow var(--motion-duration-fast) var(--motion-ease);
+    }
+    @keyframes popover-open-wave-g {
+      from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    #status-popover.is-open,
+    #email-popover.is-open {
+      animation: popover-open-wave-g var(--motion-duration-fast) var(--motion-ease);
+      transform-origin: top center;
+    }
+
+    /* 5. Bulk-select checkbox → row highlight. The existing rule
+       sets background to var(--blue-bg) instantly; layer a 250ms
+       transition so the highlight breathes in/out. */
+    tr.row > td {
+      transition: background-color var(--motion-duration) var(--motion-ease);
+    }
+    /* Hover background stays snappier (existing 100ms feel) so the
+       cursor doesn't drag a comet trail; only bulk-select gets the
+       longer highlight tween. */
+    tr.row:hover > td {
+      transition-duration: 100ms;
+    }
+  }
 </style>
 </head>
 <body>
@@ -4411,7 +4549,16 @@ function applyFilters() {
     if (score && parseFloat(row.dataset.score) < score) show = false;
     if (status && !row.dataset.status.includes(status)) show = false;
     if (equity && (row.dataset.equity || '') !== equity) show = false;
+    // Wave G: fade-in rows that flip from hidden→visible. Skip when
+    // reduced-motion is on (CSS animation is already neutered, but
+    // we save the reflow caused by force-restarting it).
+    const wasHidden = row.style.display === 'none';
     row.style.display = show ? '' : 'none';
+    if (show && wasHidden && !REDUCE_MOTION_MQ.matches) {
+      row.classList.remove('row-fade-in');
+      void row.offsetWidth; // restart the keyframe
+      row.classList.add('row-fade-in');
+    }
     if (detail && detail.classList.contains('detail-row'))
       detail.style.display = show && detail.style.display !== 'none' ? detail.style.display : 'none';
   }
@@ -4459,6 +4606,15 @@ function sortTable(tbodyId, colIdx, type, thEl) {
   for (const { main, detail } of pairs) {
     tbody.appendChild(main);
     if (detail) tbody.appendChild(detail);
+  }
+  // Wave G: visual confirmation that the reorder landed. The pulse
+  // is a 250ms tinted flash on the rows; reduced-motion is honored
+  // by the no-preference media query around the @keyframes.
+  if (!REDUCE_MOTION_MQ.matches) {
+    tbody.classList.remove('sort-pulse');
+    void tbody.offsetWidth;
+    tbody.classList.add('sort-pulse');
+    setTimeout(() => tbody.classList.remove('sort-pulse'), 300);
   }
 }
 
