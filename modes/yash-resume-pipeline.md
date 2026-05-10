@@ -1,9 +1,9 @@
 # Mode: yash-resume-pipeline — JD-extract → V2.0-resume two-phase pipeline
 
-Single-URL-at-a-time pipeline. Reads pending URLs from `data/pipeline.md`,
-extracts each JD via Playwright into `jds/`, applies
+Single-URL-at-a-time pipeline. Reads pending URLs from `data/yash-pipeline.md`,
+extracts each JD via Playwright into `jds/yash/`, applies
 `resume-optimization-system-based-on-job-description.md` to produce LaTeX,
-compiles a tailored PDF resume into `resumes/`. Fully automated — no user
+compiles a tailored PDF resume into `resumes/yash/`. Fully automated — no user
 confirmation required between URLs. No evaluation, no scoring gate, no tracker writes.
 
 ## Per-run loop
@@ -58,7 +58,7 @@ Repeat until queue empty, 3 consecutive failures, or user interrupts (Ctrl+C):
 
    If `exists: true` → run `mark-skipped --url <url> --reason "duplicate (jd+pdf already exist)"` and continue.
 
-6. **Write JD .md** to `jds/JD_<c>_<r>_Yash_Anghan_<d>.md`:
+6. **Write JD .md** to `jds/yash/JD_<c>_<r>_Yash_Anghan_<d>.md`:
 
    ```markdown
    ---
@@ -101,14 +101,14 @@ Repeat until queue empty, 3 consecutive failures, or user interrupts (Ctrl+C):
 
 8. **Write `.tex`:** save the LaTeX block (from `\documentclass` onward) to
    `/tmp/<c>_<r>_Yash_Anghan_Resume_<d>.tex`. Never write the `.tex` to
-   `resumes/` — that directory holds only deliverable PDFs.
+   `resumes/yash/` — that directory holds only deliverable PDFs.
 
 9. **Compile to PDF:**
 
    ```bash
    node yash-resume-pipeline.mjs compile-resume \
        --tex /tmp/<c>_<r>_Yash_Anghan_Resume_<d>.tex \
-       --pdf resumes/<c>_<r>_Yash_Anghan_Resume_<d>.pdf
+       --pdf resumes/yash/<c>_<r>_Yash_Anghan_Resume_<d>.pdf
    ```
 
    If `status: fail`:
@@ -117,7 +117,7 @@ Repeat until queue empty, 3 consecutive failures, or user interrupts (Ctrl+C):
    - keep the .tex on disk for inspection
    - continue automatically to next URL.
 
-10. **Write sidecar `.log`** to `resume-logs/<c>_<r>_Yash_Anghan_Resume_<d>.log`:
+10. **Write sidecar `.log`** to `resume-logs/yash/<c>_<r>_Yash_Anghan_Resume_<d>.log`:
 
     ```
     score: <X>/100
@@ -131,7 +131,7 @@ Repeat until queue empty, 3 consecutive failures, or user interrupts (Ctrl+C):
 
     Read `cover-letter-system-based-on-jd-and-resume.md` and apply it
     in-context to:
-    - the JD body from `jds/JD_<c>_<r>_Yash_Anghan_<d>.md` (written in step 6)
+    - the JD body from `jds/yash/JD_<c>_<r>_Yash_Anghan_<d>.md` (written in step 6)
     - the tailored resume LaTeX from `/tmp/<c>_<r>_Yash_Anghan_Resume_<d>.tex` (written in step 8)
 
     The prompt's output rules govern the response. Possible outputs:
@@ -154,26 +154,26 @@ Repeat until queue empty, 3 consecutive failures, or user interrupts (Ctrl+C):
 10b. **Write cover-letter `.tex`:** save the LaTeX block (from
      `\documentclass` onward) to
      `/tmp/<c>_<r>_Yash_Anghan_Cover_Letter_<d>.tex`. Never write to
-     `cover-letters/` (PDFs only).
+     `cover-letters/yash/` (PDFs only).
 
 11b. **Compile cover letter to PDF:**
 
      ```bash
      node yash-resume-pipeline.mjs compile-cover-letter \
          --tex /tmp/<c>_<r>_Yash_Anghan_Cover_Letter_<d>.tex \
-         --pdf cover-letters/<c>_<r>_Yash_Anghan_Cover_Letter_<d>.pdf
+         --pdf cover-letters/yash/<c>_<r>_Yash_Anghan_Cover_Letter_<d>.pdf
      ```
 
      If `status: fail`:
      - The cover-letter PDF was not produced. Continue to step 12b. The
        stray-`.log` cleanup runs inside the subcommand on both success and
-       failure paths, so `cover-letters/` stays clean.
+       failure paths, so `cover-letters/yash/` stays clean.
      - Write the sidecar `.log` (step 12b) with `status: failed` and
        `tectonic_log_tail` from the response.
      - Print warning. URL still marked processed at step 11.
 
 12b. **Write cover-letter sidecar `.log`** to
-     `cover-letter-logs/<c>_<r>_Yash_Anghan_Cover_Letter_<d>.log`:
+     `cover-letter-logs/yash/<c>_<r>_Yash_Anghan_Cover_Letter_<d>.log`:
 
      ```
      score: <X>/100
@@ -231,7 +231,7 @@ Repeat until queue empty, 3 consecutive failures, or user interrupts (Ctrl+C):
   through the V2.0 prompt simultaneously.
 - **Files only.** This pipeline never auto-submits applications. It only
   produces JD `.md`, `.tex`, `.pdf`, and `.log` files.
-- **Never edit `data/pipeline.md` directly.** Always go through the orchestrator
+- **Never edit `data/yash-pipeline.md` directly.** Always go through the orchestrator
   subcommands so the format stays consistent with the existing `pipeline` mode.
 - **Never fabricate company or role.** If the JD page is ambiguous, use the best available inference and note uncertainty in the log. Only mark failed if company and role truly cannot be determined at all.
 - **Never modify** `resume-optimization-system-based-on-job-description.md`,
