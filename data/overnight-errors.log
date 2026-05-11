@@ -166,3 +166,5 @@ Option A is simpler and is the standard approach for CI automation with Claude C
 Since I'm in an interactive session right now and you're seeing this — **please approve the tools** (WebSearch, WebFetch, node, Write, Edit) so I can proceed with the actual scan and pipeline work. Or let me know if you want me to apply the fix to overnight-run.sh first.
 
 Processed 0 URLs, generated 0 PDFs, archived 0 low-score, no push needed (repo unchanged).
+
+[2026-05-11T08:32Z] direct push to origin/main returned HTTP 403 x4 (exponential backoff 2s/4s/8s/16s); fallback: pushed main contents to origin/claude/happy-turing-EU7Rv. Commit SHA 68bf07395a5e66d4848052d13e438510ca1bacae lands on session branch — open PR at https://github.com/deepak-glitch/career-ops/pull/new/claude/happy-turing-EU7Rv to land on main (matches 2026-05-11T07:49Z PR #5 fallback pattern documented in 7629f2e).
