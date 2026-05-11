@@ -238,6 +238,12 @@ See `modes/yash-resume-pipeline.md` for the full per-URL loop and
 `docs/superpowers/specs/2026-05-07-yash-resume-pipeline-design.md` for the
 locked design.
 
+**Memory isolation:** Locked prompts (V2.0 resume, cover-letter, `cv.md`) are
+`cat`'d via Bash, never loaded via the Read tool. This bypasses the global
+`PreToolUse:Read` hook installed by `claude-mem@thedotmack`, which can silently
+truncate Read responses and inject observation timelines. See
+`docs/superpowers/specs/2026-05-11-yash-resume-pipeline-mem-isolation-design.md`.
+
 ### Shivani Resume Pipeline (shivani-resume-pipeline)
 
 A dedicated resume + cover-letter pipeline for Shivani Anghan targeting Azure Data Engineer roles. Mirrors the Yash pipeline structure but uses Shivani's CV, locked V3.0 prompt, and separate output directories. Drop URLs into `data/shivani-pipeline.md`, then run `/shivani-resume-pipeline` — it processes one URL at a time, pauses for feedback after each, and stops on `quit`, empty queue, or 3 consecutive failures.
