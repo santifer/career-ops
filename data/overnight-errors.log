@@ -290,3 +290,13 @@ claude -p --dangerously-skip-permissions "$PROMPT" 2>&1 | tee -a "$ERRLOG" || { 
         proxy enforces designated branch claude/happy-turing-qtml6. Pushed there as
         fallback to preserve work; user should fast-forward main from the feature
         branch when proxy permits, or open a PR claude/happy-turing-qtml6 → main.
+
+[2026-05-11 22:44Z] git push origin main failed across 4 retries with exponential backoff:
+  error: RPC failed; HTTP 403 curl 22 The requested URL returned error: 403
+  send-pack: unexpected disconnect while reading sideband packet
+  fatal: the remote end hung up unexpectedly
+  Everything up-to-date
+  Note: User policy (_profile.md "Git Push Policy") says push to main. Session-level
+        proxy enforces designated branch claude/happy-turing-NzuGJ. Pushed there as
+        fallback to preserve work; user should fast-forward main from the feature
+        branch when proxy permits, or open a PR claude/happy-turing-NzuGJ → main.
