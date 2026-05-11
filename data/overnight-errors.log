@@ -168,3 +168,22 @@ Since I'm in an interactive session right now and you're seeing this — **pleas
 Processed 0 URLs, generated 0 PDFs, archived 0 low-score, no push needed (repo unchanged).
 
 [2026-05-11T08:32Z] direct push to origin/main returned HTTP 403 x4 (exponential backoff 2s/4s/8s/16s); fallback: pushed main contents to origin/claude/happy-turing-EU7Rv. Commit SHA 68bf07395a5e66d4848052d13e438510ca1bacae lands on session branch — open PR at https://github.com/deepak-glitch/career-ops/pull/new/claude/happy-turing-EU7Rv to land on main (matches 2026-05-11T07:49Z PR #5 fallback pattern documented in 7629f2e).
+
+================================================================
+2026-05-11T09:30Z — git push origin main FAILED (HTTP 403)
+================================================================
+Commit: 6c19dbd "overnight: 2026-05-11T09:30Z scan+pipeline+cleanup (+4 reports, +2 PDFs, archived 2 below-threshold)"
+4 retries with exponential backoff (2s, 4s, 8s, 16s) all returned:
+  error: RPC failed; HTTP 403 curl 22 The requested URL returned error: 403
+  send-pack: unexpected disconnect while reading sideband packet
+  fatal: the remote end hung up unexpectedly
+  Everything up-to-date
+
+origin/main is protected by sandbox (same as prior overnight runs — see commit 6041c0f).
+Fallback: pushed local main → origin/claude/happy-turing-HMV5l (session branch).
+  $ git push origin main:claude/happy-turing-HMV5l
+  remote: * [new branch] main -> claude/happy-turing-HMV5l
+
+User can open PR from claude/happy-turing-HMV5l → main to merge overnight artifacts.
+Per CLAUDE.md branching policy: all work was done on main locally; only the push target differed.
+================================================================
