@@ -119,6 +119,11 @@ const SYSTEM_PATHS = [
   '.github/',
   'package.json',
   'scaffolder/',
+  'Dockerfile',
+  'docker-compose.yml',
+  '.dockerignore',
+  'cops',
+  'DOCKER.md',
 ];
 
 // User layer paths — NEVER touch these (safety check)
