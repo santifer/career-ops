@@ -1,6 +1,6 @@
 # Centific Sr. AI-Native Frontend Engineer — Stage 1 Prep
 
-**面試**：2026-05-12 (Tue) 15:00 TPE | Video call (Teams/Zoom 待確認) | 3 interviewers (role 未告知)
+**面試**：2026-05-12 (Tue) 15:00 TPE | Video call (Teams/Zoom 待確認) | 3 interviewers — 見 [§3 面試官 panel](#3-面試官-panel)
 **HR**：Adam Chuang (莊先生) — adam.chuang@centific.com / 0913830927
 **流程**：3 technical rounds total（Stage 1 / 3）
 **Salary**：1.05M–1.6M TWD（1.6M ceiling Adam 已確認可接受）
@@ -33,6 +33,28 @@
 | 較可能：Stage 1 篩人 | 較可能：直接技術評估 |
 
 **雙情境通吃**：自我介紹 + AI workflow 案例 + Microsoft client 適配性 + React/JS 概念題輕度準備。
+
+---
+
+## 3. 面試官 panel
+
+Adam 已寄出三人 email（2026-05-11 確認）：
+
+| # | 姓名 | Email | 推測 | 開會行動 |
+|---|------|-------|------|---------|
+| 1 | **Haitao Yang** (楊海濤?) | `haitao.yang1@centific.com` | 中文姓名 + email handle 帶 `1`（同名同事多 → 較資深可能性高）；mainland 拼音格式 → 中國 / 美國 office tech 主管機率高 | 開場記名字、聽自我介紹後標角色 |
+| 2 | **Xingbiao Gu** (谷興彪?) | `xingbiao.gu@centific.com` | 中文姓名（mainland 拼音）；技術背景機率高 | 同上；live coding 若發生此人主考機率較大 |
+| 3 | **Lisa WANG** (姓全大寫) | `lisa.wang@centific.com` | 大寫姓 = 台 / 港 / 星 護照格式；可能台灣本地 PM 或 People team | 中文切換可能由她開場；culture fit 題機率最大 |
+
+**LinkedIn 公開搜不到具體 profile（無登入態下）**——
+- 已試 `"Haitao Yang" Centific`、`"Xingbiao Gu" Centific`、`"Lisa Wang" Centific Taiwan` 都無命中
+- Centific 公司頁有 4,000+ 員工，個人 profile 對非登入用戶隱藏
+- **5/12 上午行動**：你登入 LinkedIn 自己掃一下三人，看 (a) 有無共同 connection 可預先 warm intro、(b) 各自 title 確認上面推測
+
+**通話策略**：
+- 開場英文先一輪，看 Lisa WANG 是否切中文 → 跟著切（panel 三人語言可能混合）
+- 三人 email 都 @centific.com → 全 Centific 員工，**不會有微軟人**；Microsoft 那邊只是 reporting line manager
+- 三題 Q1/Q2/Q3 對應三 interviewer 一人一題；散場前各自道謝叫名字（Haitao / Xingbiao / Lisa）
 
 ---
 
@@ -121,7 +143,7 @@
 
 ## 通話後：決策 gate
 
-- [ ] 三位 interviewer 是誰、什麼 role → 寫回 `data/recruiter-comms.md` #18
+- [ ] 三位 interviewer 實際 role 是什麼（vs §3 推測）→ 寫回 `data/recruiter-comms.md` #18
 - [ ] Stage 2 / 3 預期內容、時程 → 寫回
 - [ ] 有沒有要求 take-home / coding test → 寫回
 - [ ] 微軟 manager 互動模式 + 台灣 team 規模 → 寫回
