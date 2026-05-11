@@ -6,9 +6,7 @@
 <div class="keybinds">
 	<span class="group"><span class="k">j/k</span><span>nav</span></span>
 	<span class="group"><span class="k">↵</span><span>open report</span></span>
-	<span class="group"><span class="k">{mod}\</span><span>pipeline mode</span></span>
-	<span class="group"><span class="k">{mod}.</span><span>stats</span></span>
-	<span class="group"><span class="k">{mod}J</span><span>chat</span></span>
+	<span class="group"><span class="k">{mod}\</span><span>pipeline resize</span></span>
 	<span class="group"><span class="k">{mod}S</span><span>save</span></span>
-	<span class="right">career-ops · web dashboard</span>
+	<span class="right">gwen-ops · CA</span>
 </div>

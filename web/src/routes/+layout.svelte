@@ -1,7 +1,7 @@
 <script lang="ts">
 	import '../app.css';
 	import {
-		pipeMode, statsCollapsed, dockOpen,
+		pipeSize,
 		activeId, offers, openPath, dirty, fileContent
 	} from '$lib/stores';
 	import { saveFile } from '$lib/api';
@@ -17,19 +17,9 @@
 	function onKeydown(e: KeyboardEvent) {
 		const meta = e.metaKey || e.ctrlKey;
 
-		if (meta && e.key === '.') {
-			e.preventDefault();
-			statsCollapsed.update(v => !v);
-			return;
-		}
 		if (meta && e.key === '\\') {
 			e.preventDefault();
-			pipeMode.update(m => m === 'full' ? 'compact' : m === 'compact' ? 'hidden' : 'full');
-			return;
-		}
-		if (meta && e.key.toLowerCase() === 'j') {
-			e.preventDefault();
-			dockOpen.update(v => !v);
+			pipeSize.update(s => s === 'normal' ? 'expanded' : s === 'expanded' ? 'min' : 'normal');
 			return;
 		}
 		if (meta && e.key.toLowerCase() === 's') {

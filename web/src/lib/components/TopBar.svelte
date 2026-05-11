@@ -2,9 +2,7 @@
 	import type { MetaDTO } from '$lib/types';
 	import { density, theme } from '$lib/stores';
 
-	interface Props {
-		meta: MetaDTO | null;
-	}
+	interface Props { meta: MetaDTO | null; }
 	let { meta }: Props = $props();
 
 	function toggleTheme() {
@@ -14,7 +12,6 @@
 			return next;
 		});
 	}
-
 	function toggleDensity() {
 		density.update(d => {
 			const next = d === 'comfortable' ? 'compact' : 'comfortable';
@@ -27,7 +24,11 @@
 <div class="topbar">
 	<div class="brand">
 		<span class="dot">▸</span>
-		<span class="name">career-ops</span>
+		<!-- Maple leaf SVG -->
+		<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" style="opacity:.9">
+			<path fill="#a6192e" d="M12 2l1.2 4.2 4-2.4-1 4.4 4.4-.6-3.2 3.2 3.6 1.8-4.2 1.4 1.6 3.8-4.2-.8.2 4.2-2.4-3.4-2.4 3.4.2-4.2-4.2.8 1.6-3.8L2 12.6l3.6-1.8L2.4 7.6 6.8 8.2l-1-4.4 4 2.4z"/>
+		</svg>
+		<span class="name">GWEN-OPS-CA 🍁</span>
 		{#if meta}
 			<span class="chip mono" style="border-radius:4px;font-size:10px;padding:1px 6px;">v{meta.version}</span>
 		{/if}
@@ -35,8 +36,7 @@
 
 	{#if meta}
 		<div class="stats">
-			<span><b>{meta.totalOffers}</b> offers</span>
-			<span>avg <b>{meta.avgScore.toFixed(2)}</b>/5</span>
+			<span><b>{meta.totalOffers}</b> postings</span>
 			<span>Generated <b>{meta.generated}</b></span>
 		</div>
 	{/if}

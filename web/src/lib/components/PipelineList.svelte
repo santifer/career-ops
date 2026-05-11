@@ -54,7 +54,7 @@
 	{/each}
 	{#if filtered().length === 0}
 		<div style="padding:40px 24px;color:var(--fg-3);font-family:var(--mono);font-size:12px;">
-			No offers in this state.
+			No postings in this state.
 		</div>
 	{/if}
 </div>
