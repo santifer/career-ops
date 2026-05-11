@@ -30,6 +30,62 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..', '..');
 
+function buildGithubRunUrl() {
+  const base = (process.env.GITHUB_SERVER_URL || '').replace(/\/$/, '');
+  const repo = process.env.GITHUB_REPOSITORY || '';
+  const runId = process.env.GITHUB_RUN_ID || '';
+  if (!base || !repo || !runId) return (process.env.RUN_URL || '').trim();
+  return `${base}/${repo}/actions/runs/${runId}`;
+}
+
+/**
+ * GitHub Actions "Notify dashboard" cannot fill `user_id` / `action_script` on scheduled
+ * cron runs (workflow_dispatch inputs are empty), so `/api/background/complete` returns 400.
+ * Notify once per finished tenant from the worker with real fields.
+ */
+async function notifyDashboardCompletion({ userId, exitCode }) {
+  const url = (process.env.DASHBOARD_WEBHOOK_URL || '').trim();
+  const secret = (process.env.WORKER_WEBHOOK_SECRET || '').trim();
+  if (!url || !secret) return;
+
+  const uid = String(userId ?? '').trim();
+  if (!uid) return;
+
+  const actionScript = (process.env.ACTION_SCRIPT || 'scratch-scan.mjs').trim();
+  const actionArgs = (process.env.ACTION_ARGS || '').trim();
+  const status = exitCode === 0 ? 'success' : 'failure';
+  const runUrl = buildGithubRunUrl();
+  const runId = [process.env.GITHUB_RUN_ID || process.env.RUN_ID || 'local', uid].filter(Boolean).join('-');
+
+  const payload = {
+    user_id: uid,
+    run_id: runId,
+    action_script: actionScript,
+    action_args: actionArgs,
+    status,
+    run_url: runUrl || undefined,
+  };
+
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-worker-secret': secret,
+      },
+      body: JSON.stringify(payload),
+    });
+    const text = await res.text().catch(() => '');
+    if (!res.ok) {
+      console.error(`[dashboard-webhook] HTTP ${res.status} for user ${uid}: ${text.slice(0, 300)}`);
+    } else {
+      console.log(`[dashboard-webhook] Recorded ${status} for user ${uid} (${actionScript})`);
+    }
+  } catch (e) {
+    console.error(`[dashboard-webhook] Request failed for user ${uid}:`, e?.message || e);
+  }
+}
+
 function runScraper(userId) {
   return new Promise((resolve, reject) => {
     console.log(`\n▶️  Starting scan for user [${userId}]`);
@@ -76,12 +132,15 @@ async function main() {
   if (specificUserId) {
     // Manual trigger for a specific user — propagate exit code to Actions
     console.log(`\n🎯 Targeting specific user: ${specificUserId}`);
+    let lastCode = 1;
     try {
-      const code = await runScraper(specificUserId);
-      if (code !== 0) failed++;
+      lastCode = await runScraper(specificUserId);
+      if (lastCode !== 0) failed++;
     } catch {
       failed++;
+      lastCode = 1;
     }
+    await notifyDashboardCompletion({ userId: specificUserId, exitCode: lastCode });
   } else {
     // Cron mode: scan all active tenants
     const activeUsers = await sql`
@@ -96,13 +155,16 @@ async function main() {
       let success = 0;
 
       for (const tenant of activeUsers) {
+        let code = 1;
         try {
-          const code = await runScraper(tenant.user_id);
+          code = await runScraper(tenant.user_id);
           if (code === 0) success++;
           else failed++;
         } catch {
           failed++;
+          code = 1;
         }
+        await notifyDashboardCompletion({ userId: tenant.user_id, exitCode: code });
       }
 
       console.log('\n═══════════════════════════════════════════');

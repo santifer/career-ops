@@ -56,6 +56,8 @@ jobs:
           RUN_ID: ${{ github.event.inputs.run_id }}
           ACTION_SCRIPT: ${{ github.event.inputs.action_script }}
           ACTION_ARGS: ${{ github.event.inputs.action_args }}
+          DASHBOARD_WEBHOOK_URL: ${{ secrets.DASHBOARD_WEBHOOK_URL }}
+          WORKER_WEBHOOK_SECRET: ${{ secrets.WORKER_WEBHOOK_SECRET }}
         run: |
           # Allowlist validation — only permit known scripts (CodeRabbit security fix)
           ALLOWED_SCRIPTS="scratch-scan.mjs agentic-tailor.mjs rank-pipeline.mjs auto-apply.mjs add-job.mjs"
@@ -66,34 +68,5 @@ jobs:
             exit 1
           fi
           node .github/scripts/run-scrapers.mjs
-
-      - name: Notify dashboard (completion)
-        if: ${{ always() }}
-        env:
-          DASHBOARD_WEBHOOK_URL: ${{ secrets.DASHBOARD_WEBHOOK_URL }}
-          WORKER_WEBHOOK_SECRET: ${{ secrets.WORKER_WEBHOOK_SECRET }}
-          USER_ID: ${{ github.event.inputs.user_id }}
-          RUN_ID: ${{ github.event.inputs.run_id }}
-          ACTION_SCRIPT: ${{ github.event.inputs.action_script }}
-          ACTION_ARGS: ${{ github.event.inputs.action_args }}
-          JOB_STATUS: ${{ job.status }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        run: |
-          if [ -z "$DASHBOARD_WEBHOOK_URL" ] || [ -z "$WORKER_WEBHOOK_SECRET" ]; then
-            echo "Dashboard webhook not configured; skipping."
-            exit 0
-          fi
-          # Use jq for safe JSON serialization (handles quotes/newlines in args)
-          payload="$(jq -cn \
-            --arg user_id "$USER_ID" \
-            --arg run_id "$RUN_ID" \
-            --arg action_script "$ACTION_SCRIPT" \
-            --arg action_args "$ACTION_ARGS" \
-            --arg status "$JOB_STATUS" \
-            --arg run_url "$RUN_URL" \
-            '{user_id:$user_id,run_id:$run_id,action_script:$action_script,action_args:$action_args,status:$status,run_url:$run_url}')"
-          curl -fsS -X POST "$DASHBOARD_WEBHOOK_URL" \
-            -H "content-type: application/json" \
-            -H "x-worker-secret: $WORKER_WEBHOOK_SECRET" \
-            --data "$payload" \
-            && echo "Notified dashboard."
+          # Dashboard completion webhooks are sent from run-scrapers.mjs (per tenant) so
+          # scheduled cron runs still get user_id + action_script — workflow_dispatch inputs are empty on cron.
