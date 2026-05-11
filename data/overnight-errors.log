@@ -209,3 +209,69 @@ Once that's approved/applied, I also need **WebSearch**, **WebFetch**, **Write**
 - All prior 2026-05-11 entries (#692–#699, below-threshold #693–#698) are fully processed
 
 **Once you approve the tools**, I'll immediately run the full overnight sequence: Level 3 WebSearch scan → process up to 10 URLs → merge tracker → cleanup → commit + push.
+All write and network operations are permission-blocked in this session. The root cause and fix are clear — documenting for the error log (captured by `tee -a "$ERRLOG"` in overnight-run.sh).
+
+---
+
+## Overnight Run 2026-05-11T14:00Z — Permission Block
+
+**Root cause:** `claude -p "$PROMPT"` in `scripts/overnight-run.sh` (line 63) is missing the `--dangerously-skip-permissions` flag. Without it, every tool call requiring network access or file writes prompts for interactive approval — which blocks permanently in CI/CD.
+
+**Blocked tools in this session:**
+- `Bash(node *)` — node scan.mjs, generate-pdf.mjs, merge-tracker.mjs, verify-pipeline.mjs, cleanup-low-scores.mjs
+- `Bash(curl *)` — Greenhouse/Ashby/Lever API calls
+- `WebSearch` — Level 3 queries
+- `WebFetch` — JD extraction
+- `Write` / `Edit` — report files, settings.json, overnight-run.sh itself
+
+**Required fix (1 line change in scripts/overnight-run.sh):**
+
+```bash
+# Line 63 — BEFORE (broken in CI):
+claude -p "$PROMPT" 2>&1 | tee -a "$ERRLOG" || { record_err "claude pipeline step failed"; exit 1; }
+
+# Line 63 — AFTER (fix):
+claude -p --dangerously-skip-permissions "$PROMPT" 2>&1 | tee -a "$ERRLOG" || { record_err "claude pipeline step failed"; exit 1; }
+```
+
+**Also needed — `.claude/settings.json` (pre-approve tools for headless runs):**
+
+```json
+{
+  "permissions": {
+    "allow": [
+      "Bash(node *)",
+      "Bash(curl *)",
+      "Bash(git *)",
+      "Bash(mkdir *)",
+      "Bash(cp *)",
+      "Bash(mv *)",
+      "WebFetch(*)",
+      "WebSearch(*)",
+      "Write(*)",
+      "Edit(*)"
+    ]
+  }
+}
+```
+
+**Pipeline state at exit:**
+- Repo: `main`, clean, up to date with `origin/main` at `9011522`
+- Last report: `#699` (`bland-ai-fde-2026-05-11.md`)
+- Pending pipeline URLs: **0** (all prior items processed)
+- scan.mjs: not executed (blocked)
+- Level 3 WebSearch: not executed (blocked)
+- Reports generated this session: **0**
+- PDFs generated this session: **0**
+- Tracker merge: skipped (nothing to merge)
+- Cleanup: skipped (nothing new to archive)
+
+**Next steps for maintainer (deepak-glitch):**
+1. Apply the 1-line fix above to `scripts/overnight-run.sh`
+2. Create `.claude/settings.json` with the JSON above
+3. Commit both files to `main`
+4. The next overnight run will work correctly
+
+---
+
+**Processed 0 URLs, generated 0 PDFs, archived 0 low-score, pushed {no-commit — nothing to push}.**
