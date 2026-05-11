@@ -24,10 +24,6 @@
 <div class="topbar">
 	<div class="brand">
 		<span class="name">GWEN-OPS-CA</span>
-		<!-- Maple leaf SVG -->
-		<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" style="opacity:.9">
-			<path fill="#a6192e" d="M12 2l1.2 4.2 4-2.4-1 4.4 4.4-.6-3.2 3.2 3.6 1.8-4.2 1.4 1.6 3.8-4.2-.8.2 4.2-2.4-3.4-2.4 3.4.2-4.2-4.2.8 1.6-3.8L2 12.6l3.6-1.8L2.4 7.6 6.8 8.2l-1-4.4 4 2.4z"/>
-		</svg>
 		{#if meta}
 			<span class="chip mono" style="border-radius:4px;font-size:10px;padding:1px 6px;">v{meta.version}</span>
 		{/if}

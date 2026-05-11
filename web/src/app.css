@@ -145,18 +145,18 @@ a:hover { text-decoration: underline; }
 .topbar .brand {
   display: flex; align-items: baseline; gap: 8px;
   letter-spacing: .12em;
-  font-size: 11px;
+  font-size: 13px;
   color: var(--fg-2);
   text-transform: uppercase;
 }
 .topbar .brand .name { color: var(--fg); font-weight: 600; }
 .topbar .stats {
   display: flex; gap: 16px;
-  font-size: 11px;
+  font-size: 13px;
   color: var(--fg-2);
 }
 .topbar .stats b { color: var(--fg); font-weight: 500; }
-.topbar .right { margin-left: auto; display: flex; gap: 8px; align-items: center; font-size: 11px; color: var(--fg-3); }
+.topbar .right { margin-left: auto; display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--fg-3); }
 
 /* ────────── statebar ────────── */
 .statebar {
@@ -330,13 +330,13 @@ a:hover { text-decoration: underline; }
 .panel-header .title { color: var(--fg); letter-spacing: .04em; text-transform: none; font-size: 13px; }
 .panel-header .right { margin-left: auto; display: flex; gap: 6px; align-items: center; }
 .icon-btn {
-  width: 26px; height: 26px;
+  width: 30px; height: 30px;
   display: inline-flex; align-items: center; justify-content: center;
   color: var(--fg-2);
   border-radius: 5px;
   background: transparent;
   border: 1px solid transparent;
-  font-size: 14px;
+  font-size: 17px;
 }
 .icon-btn:hover { background: var(--bg-3); color: var(--fg); }
 .icon-btn.primary { color: var(--accent); }
@@ -571,9 +571,9 @@ a:hover { text-decoration: underline; }
   padding: 10px 12px;
   display: flex; flex-direction: column; gap: 4px;
 }
-.statcard .lbl { font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--fg-3); }
-.statcard .val { font-family: var(--mono); font-size: 22px; color: var(--fg); font-variant-numeric: tabular-nums; }
-.statcard .val .unit { color: var(--fg-3); font-size: 12px; margin-left: 4px; }
+.statcard .lbl { font-family: var(--mono); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--fg-3); }
+.statcard .val { font-family: var(--mono); font-size: 26px; color: var(--fg); font-variant-numeric: tabular-nums; }
+.statcard .val .unit { color: var(--fg-3); font-size: 14px; margin-left: 4px; }
 .statcard.accent .val { color: var(--accent); }
 
 .funnel {
