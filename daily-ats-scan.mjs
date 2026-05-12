@@ -1,8 +1,8 @@
 import 'dotenv/config';
 import { readFileSync, appendFileSync, existsSync, writeFileSync } from 'fs';
 
-const POSITIVE = ['community manager','community lead','community director','head of community','vp of community','community builder','community operations','ecosystem manager','ecosystem lead','ecosystem growth','developer relations','devrel','developer advocate','ambassador','guild','dao','program manager','program lead','head of programs','community program','partnership manager','partnerships lead','head of partnerships','project manager','senior project manager','pmo','delivery manager','engagement manager','web3','blockchain','crypto','defi','nft','token','protocol','decentralized','on-chain','move','layer 1','layer 2','gaming','esports','game community','player experience','content manager','content strategist','communications manager','social media manager','brand manager','localization manager','localization project manager','translation project manager','impact','social impact','ngo','nonprofit','chef de projet','responsable communaute','charge de projet'];
-const NEGATIVE = ['intern','junior','entry level','accountant','finance manager','legal','lawyer','data scientist','machine learning','software engineer','backend engineer','frontend engineer','full-stack engineer','full stack engineer','fullstack engineer','blockchain engineer','protocol engineer','smart contract engineer','rust engineer','solidity engineer','rust blockchain engineer','infrastructure engineer','platform engineer','data engineer','ml engineer','ai engineer','site reliability engineer','sre','qa engineer','test engineer','security engineer','embedded engineer','firmware engineer','devops engineer','staff engineer','principal engineer','senior engineer','lead engineer','engineering manager','vp engineering','head of engineering','director of engineering','cto','ios','android','devops','cobol','mainframe','oracle ebs','technical program manager','technical project manager','product manager','director of product','head of product','vp of product','business operations','marketing operations','player support','revenue operations','sales operations','d2c','live ops manager','liveops manager','live service manager','recruiter','talent acquisition','people operations','human resources','designer','design lead','quality assurance','solutions architect','sales executive','account executive','customer success'];
+const POSITIVE = ['community manager','community lead','community director','head of community','vp of community','community builder','community operations','ecosystem manager','ecosystem lead','ambassador','guild','dao','program manager','program lead','head of programs','community program','partnership manager','partnerships lead','head of partnerships','project manager','senior project manager','pmo','delivery manager','engagement manager','web3','blockchain','crypto','defi','nft','token','protocol','decentralized','on-chain','move','layer 1','layer 2','gaming','esports','game community','player experience','content manager','content strategist','communications manager','social media manager','brand manager','localization manager','localization project manager','translation project manager','impact','social impact','ngo','nonprofit','chef de projet','responsable communaute','charge de projet'];
+const NEGATIVE = ['intern','internship','junior','entry level','accountant','finance manager','legal','lawyer','data scientist','machine learning','software engineer','backend engineer','frontend engineer','full-stack engineer','full stack engineer','fullstack engineer','blockchain engineer','protocol engineer','smart contract engineer','rust engineer','solidity engineer','rust blockchain engineer','infrastructure engineer','platform engineer','data engineer','ml engineer','ai engineer','site reliability engineer','sre','qa engineer','test engineer','security engineer','embedded engineer','firmware engineer','devops engineer','staff engineer','principal engineer','senior engineer','lead engineer','engineering manager','vp engineering','head of engineering','director of engineering','cto','ios','android','devops','cobol','mainframe','oracle ebs','technical program manager','technical project manager','product manager','director of product','head of product','vp of product','business operations','marketing operations','player support','revenue operations','sales operations','d2c','live ops manager','liveops manager','live service manager','recruiter','talent acquisition','people operations','human resources','designer','design lead','quality assurance','solutions architect','sales executive','account executive','customer success','stage','stagiaire','stagier','alternance','alternant','apprenti','apprentice','apprentissage','bts','bachelor','dut','licence pro','contrat pro','professionnalisation','volontariat','vie ','pfe','tfe','developer relations','devrel','developer advocate','developer evangelist','developer experience','dx engineer','developer marketing','ecosystem growth','head of ecosystem growth','vp ecosystem growth','director of ecosystem growth'];
 
 const TARGETS = [
   { ats:'greenhouse', company:'Aptos Labs', slug:'aptoslabs' },
@@ -32,9 +32,10 @@ const QUOTES = [
   ['Tis but a scratch.','Monty Python and the Holy Grail']
 ];
 
-// Short keywords (<=4 chars) need word boundaries to avoid false positives like "ngo" matching "Django"
+// Short keywords (<=5 chars) need word boundaries to avoid false positives like
+// "ngo" matching "Django" or "stage" matching "messaging"
 function hasKeyword(text, kw) {
-  if (kw.length <= 4) {
+  if (kw.length <= 5) {
     const re = new RegExp('\\b' + kw.replace(/[.*+?^${}()|[\]\\-]/g, '\\$&') + '\\b', 'i');
     return re.test(text);
   }
@@ -106,13 +107,42 @@ async function fetchRemotive() {
 
 const LINKEDIN_BROWSER_UA = { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36' };
 
+// Body check: fetch a LinkedIn job page and look for stage/internship markers in the JD body.
+// Returns true if the role is detected as a stage/intern/apprenticeship despite a clean title.
+async function isLinkedInStageRole(jobUrl) {
+  try {
+    const r = await fetch(jobUrl, { headers: LINKEDIN_BROWSER_UA });
+    if (!r.ok) return false;
+    const html = await r.text();
+    // Look for the employment-type criteria block + JD body
+    // Common stage indicators in French/English JD bodies
+    const stageMarkers = [
+      /\bemployment type[^<]{0,40}internship/i,
+      /\btype d['e]?\s*contrat[^<]{0,40}stage/i,
+      /\bstage\s+de\s+\d/i,                          // "stage de 6 mois"
+      /\bdur[ée]e\s+du\s+stage\b/i,                  // "durée du stage"
+      /\bconvention\s+de\s+stage\b/i,                // "convention de stage"
+      /\bgratification\s+de\s+stage\b/i,             // "gratification de stage"
+      /\bindemnit[ée]\s+de\s+stage\b/i,              // "indemnité de stage"
+      /\bcontrat\s+d['e]?\s*apprentissage\b/i,       // apprenticeship
+      /\bcontrat\s+de\s+professionnalisation\b/i,
+      /\balternance\s+de\s+\d/i,                     // "alternance de 12 mois"
+      /selon\s+la\s+r[ée]glementation[^<]{0,60}stage/i,  // "selon la réglementation [...] stage"
+      /\binternship\s+(position|role|opportunity)\b/i
+    ];
+    return stageMarkers.some(re => re.test(html));
+  } catch(e) {
+    return false;  // On error, don't filter (let the title filter decide)
+  }
+}
+
 async function fetchLinkedIn() {
   const queries = [
     { kw: '"community manager" web3', loc: 'Worldwide' },
     { kw: '"head of community" crypto', loc: 'Worldwide' },
     { kw: '"ecosystem manager" blockchain', loc: 'Worldwide' },
     { kw: '"community manager" gaming', loc: 'European Union' },
-    { kw: '"developer relations" web3', loc: 'Worldwide' },
+    { kw: '"program manager" web3', loc: 'Worldwide' },
     { kw: '"community lead" crypto', loc: 'European Union' },
     { kw: '"community manager"', loc: 'Sophia Antipolis, France' }
   ];
@@ -126,12 +156,22 @@ async function fetchLinkedIn() {
       // Each card: <a class="base-card__full-link ..."> + <h3 class="base-search-card__title">{title}</h3> + <h4 class="base-search-card__subtitle">...<a>{company}</a></h4>
       const cards = html.split('<div class="base-card');
       for (const card of cards.slice(1)) {
-        const url = (card.match(/<a class="base-card__full-link[^"]*"[^>]*href="([^"?]+)/) || [])[1];
+        const cardUrl = (card.match(/<a class="base-card__full-link[^"]*"[^>]*href="([^"?]+)/) || [])[1];
         const title = (card.match(/<h3 class="base-search-card__title"[^>]*>\s*([^<]+?)\s*<\/h3>/) || [])[1];
         const company = (card.match(/<h4 class="base-search-card__subtitle"[\s\S]*?<a[^>]*>\s*([^<]+?)\s*<\/a>/) || [])[1];
-        if (url && title) {
+        if (cardUrl && title) {
+          const cleanUrl = cardUrl.replace(/&amp;/g, '&').split('?')[0];
+          // For French LinkedIn results (most stage offenders), do a body-check to filter stages
+          // whose title doesn't explicitly say "Stage/Stagiaire/Alternance"
+          if (cleanUrl.startsWith('https://fr.linkedin.com/')) {
+            const isStage = await isLinkedInStageRole(cleanUrl);
+            if (isStage) {
+              console.log('  [LinkedIn fr-body-filter] STAGE detected & dropped: ' + title);
+              continue;
+            }
+          }
           all.push({
-            url: url.replace(/&amp;/g, '&').split('?')[0],
+            url: cleanUrl,
             title: title.replace(/&amp;/g, '&').replace(/&#x27;/g, "'"),
             company: (company || 'LinkedIn').replace(/&amp;/g, '&').replace(/&#x27;/g, "'").trim()
           });
@@ -192,6 +232,53 @@ async function fetchHackerNewsWhoshiring() {
   } catch(e) { console.error('[HN]', e.message); return []; }
 }
 
+async function fetchAdzuna() {
+  const APP_ID = process.env.ADZUNA_APP_ID;
+  const API_KEY = process.env.ADZUNA_API_KEY;
+  if (!APP_ID || !API_KEY) {
+    console.log('  (Adzuna skipped: ADZUNA_APP_ID or ADZUNA_API_KEY missing in .env)');
+    return [];
+  }
+  // 7 markets × 3 query types = 21 calls/day = ~630 calls/month (within 1000-call free tier)
+  const markets = ['fr', 'gb', 'us', 'de', 'es', 'it', 'ch'];
+  const queries = [
+    { what: 'community manager web3', what_or: 'community lead' },
+    { what: 'ecosystem manager blockchain', what_or: 'developer relations' },
+    { what: 'community manager gaming', what_or: 'esports' }
+  ];
+  const all = [];
+  for (const country of markets) {
+    for (const q of queries) {
+      try {
+        const params = new URLSearchParams({
+          app_id: APP_ID,
+          app_key: API_KEY,
+          results_per_page: '20',
+          what: q.what,
+          what_or: q.what_or || '',
+          max_days_old: '7',
+          'content-type': 'application/json'
+        });
+        const url = 'https://api.adzuna.com/v1/api/jobs/' + country + '/search/1?' + params.toString();
+        const r = await fetch(url, { headers: UA });
+        if (!r.ok) {
+          if (r.status === 429) console.error('[Adzuna ' + country + '] rate limited');
+          continue;
+        }
+        const j = await r.json();
+        for (const x of (j.results || [])) {
+          all.push({
+            url: x.redirect_url || x.url,
+            title: x.title,
+            company: (x.company && x.company.display_name) || 'Adzuna ' + country.toUpperCase()
+          });
+        }
+      } catch(e) { console.error('[Adzuna ' + country + '/' + q.what + ']', e.message); }
+    }
+  }
+  return all;
+}
+
 async function fetchWeb3Career() {
   const pages = [
     'https://web3.career/community-manager-jobs',
@@ -229,7 +316,8 @@ const FEEDS = [
   { id: 'remotive', label: 'Remotive', fetch: fetchRemotive },
   { id: 'linkedin', label: 'LinkedIn (guest)', fetch: fetchLinkedIn },
   { id: 'hn-whoshiring', label: 'HN Who is Hiring', fetch: fetchHackerNewsWhoshiring },
-  { id: 'web3career', label: 'Web3.career', fetch: fetchWeb3Career }
+  { id: 'web3career', label: 'Web3.career', fetch: fetchWeb3Career },
+  { id: 'adzuna', label: 'Adzuna (7 markets)', fetch: fetchAdzuna }
 ];
 
 if (!existsSync('./data/scan-history.tsv')) {
