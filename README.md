@@ -3,7 +3,7 @@
 [English](README.md) | [Español](README.es.md) | [Português (Brasil)](README.pt-BR.md) | [한국어](README.ko-KR.md) | [日本語](README.ja.md) | [Русский](README.ru.md) | [简体中文](README.cn.md) | [繁體中文](README.zh-TW.md)
 
 <p align="center">
-  <a href="https://x.com/santifer"><img src="docs/hero-banner.jpg" alt="Career-Ops — Multi-Agent Job Search System" width="800"></a>
+  <a href="https://linkedin.com/in/gwendarling"><img src="docs/hero-banner.jpg" alt="Career-Ops — Multi-Agent Job Search System" width="800"></a>
 </p>
 
 <p align="center">
@@ -44,6 +44,8 @@
 <p align="center"><strong>740+ job listings evaluated · 100+ personalized CVs · 1 dream role landed</strong></p>
 
 <p align="center"><a href="https://discord.gg/8pRpHETxa4"><img src="https://img.shields.io/badge/Join_the_community-Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord"></a></p>
+
+> **This is Gwen Darling's personal fork** of [santifer/career-ops](https://github.com/santifer/career-ops), configured for Director/Head of Product roles in B2B SaaS, AI/ML, cybersecurity, and fintech — Canadian market, remote-first. The system, tooling, and modes are upstream; all profile, CV, targets, and scoring weights are personal.
 
 ## What Is This
 
@@ -187,7 +189,7 @@ You paste a job URL or description
         │
         ▼
 ┌──────────────────┐
-│  Archetype       │  Classifies: LLMOps / Agentic / PM / SA / FDE / Transformation
+│  Archetype       │  Classifies: B2B SaaS PM / AI/ML Product / Cybersecurity / FinTech
 │  Detection       │
 └────────┬─────────┘
          │
@@ -279,21 +281,15 @@ career-ops/
 
 - **[cv-santiago](https://github.com/santifer/cv-santiago)** -- The portfolio website (santifer.io) with AI chatbot, LLMOps dashboard, and case studies. If you need a portfolio to showcase alongside your job search, fork it and make it yours.
 
-## About the Author
+## About the Author (Upstream)
 
-I'm Santiago -- Head of Applied AI, former founder (built and sold a business that still runs with my name on it). I built career-ops to manage my own job search. It worked: I used it to land my current role.
+Career-ops was built by Santiago ([santifer.io](https://santifer.io)) to manage his own job search. He used it to evaluate 740+ job openings, generate 100+ tailored CVs, and land a Head of Applied AI role. [Read the full case study](https://santifer.io/career-ops-system).
 
-My portfolio and other open source projects → [santifer.io](https://santifer.io)
+## This Fork — Gwen Darling
 
-## Star History
+I'm Gwen — Director-level Product Leader with 10+ years scaling B2B SaaS portfolios in cybersecurity and fintech. Most recently I built Arctic Wolf's Incident Response into a scaled product line with 200%+ revenue delivery. I forked career-ops to run my own search for Director / Staff roles in the Canadian market.
 
-<a href="https://www.star-history.com/?repos=santifer%2Fcareer-ops&type=timeline&legend=top-left">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=santifer/career-ops&type=timeline&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=santifer/career-ops&type=timeline&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=santifer/career-ops&type=timeline&legend=top-left" />
- </picture>
-</a>
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/in/gwendarling)
 
 ## Disclaimer
 
@@ -323,8 +319,5 @@ endorsement.
 
 ## Let's Connect
 
-[![Website](https://img.shields.io/badge/santifer.io-000?style=for-the-badge&logo=safari&logoColor=white)](https://santifer.io)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/in/santifer)
-[![X](https://img.shields.io/badge/X-000?style=for-the-badge&logo=x&logoColor=white)](https://x.com/santifer)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/in/gwendarling)
 [![Discord](https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/8pRpHETxa4)
-[![Email](https://img.shields.io/badge/Email-EA4335?style=for-the-badge&logo=gmail&logoColor=white)](mailto:hi@santifer.io)
