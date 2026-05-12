@@ -417,7 +417,7 @@ const PUBLIC_BASE = _secretsForPublicUrl.CAREER_OPS_PUBLIC_URL
   : DASHBOARD_BASE;
 
 const DASHBOARD_URL = `${PUBLIC_BASE}/`;
-const reportUrl = (relPath) => `${DASHBOARD_BASE}/${relPath.replace(/^\.?\//, '')}`;
+const reportUrl = (relPath) => `${PUBLIC_BASE}/${relPath.replace(/^\.?\//, '')}`;
 
 // Resolve an Apply Pack folder for a tracker row, or return null if not built
 // yet. Slug = "{NUM}-{company-slug}-{role-slug}" matched against the dirs in
@@ -432,7 +432,7 @@ function applyPackUrl(row) {
   try {
     const entries = readdirSync(packsDir);
     const match = entries.find(e => e.startsWith(`${pad}-`));
-    if (match) return `${DASHBOARD_BASE}/apply-pack/${match}/README.md`;
+    if (match) return `${PUBLIC_BASE}/apply-pack/${match}/README.md`;
   } catch {}
   return null;
 }
@@ -442,7 +442,7 @@ function applyPackUrl(row) {
 // confirmation page. Used in the heartbeat email so Mitchell can clear
 // items from tomorrow's Apply-Now Queue without leaving Gmail.
 function markStatusUrl(rowNum, status = 'Applied') {
-  return `${DASHBOARD_BASE}/mark?num=${rowNum}&status=${encodeURIComponent(status)}`;
+  return `${PUBLIC_BASE}/mark?num=${rowNum}&status=${encodeURIComponent(status)}`;
 }
 
 function getApplyNowQueue(rows) {
