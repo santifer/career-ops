@@ -35,6 +35,12 @@ modes/_profile.md
 node_modules/
 bun.lock
 
+# Local scanner runtime artifacts (Windows Task Scheduler outputs)
+logs/
+tmp/
+*.bak
+batch/batch-results-*.md
+
 # OS
 .DS_Store
 *.mov

@@ -1,10 +1,18 @@
 import 'dotenv/config';
-import { createTransport } from 'nodemailer';
 import { readFileSync } from 'fs';
 
-const GMAIL_USER = process.env.GMAIL_USER;
-const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD;
-const NOTIFY_EMAIL = process.env.NOTIFY_EMAIL || GMAIL_USER;
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const RESEND_FROM = process.env.RESEND_FROM || 'career-ops <onboarding@resend.dev>';
+const NOTIFY_EMAIL = process.env.NOTIFY_EMAIL;
+
+if (!RESEND_API_KEY) {
+  console.error('Missing RESEND_API_KEY env var.');
+  process.exit(1);
+}
+if (!NOTIFY_EMAIL) {
+  console.error('Missing NOTIFY_EMAIL env var.');
+  process.exit(1);
+}
 
 const today = new Date().toISOString().slice(0, 10);
 
@@ -38,7 +46,7 @@ if (newRoles.length === 0) {
   process.exit(0);
 }
 
-console.log(`Found ${newRoles.length} new roles from WebSearch scan. Sending email...`);
+console.log(`Found ${newRoles.length} new roles from WebSearch scan. Sending email via Resend...`);
 
 // Split into Remote vs Other
 const isRemote = r =>
@@ -106,30 +114,37 @@ const html = `
 </html>
 `;
 
-const transporter = createTransport({
-  service: 'gmail',
-  auth: {
-    user: GMAIL_USER,
-    pass: GMAIL_APP_PASSWORD,
-  },
-});
-
-const mailOptions = {
-  from: `"career-ops 🔍" <${GMAIL_USER}>`,
-  to: NOTIFY_EMAIL,
-  subject: `career-ops: ${newRoles.length} new role(s) from full portal scan — ${today}`,
-  html,
-};
+const subject = `career-ops: ${newRoles.length} new role(s) from full portal scan — ${today}`;
 
 try {
-  const info = await transporter.sendMail(mailOptions);
-  console.log(`Email sent successfully: ${info.messageId}`);
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${RESEND_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      from: RESEND_FROM,
+      to: [NOTIFY_EMAIL],
+      subject,
+      html,
+    }),
+  });
+
+  const body = await res.json().catch(() => ({}));
+
+  if (!res.ok) {
+    console.error(`Resend API error (HTTP ${res.status}):`, body);
+    process.exit(1);
+  }
+
+  console.log(`Email sent successfully via Resend. ID: ${body.id || '(no id)'}`);
   console.log(`Recipient: ${NOTIFY_EMAIL}`);
   console.log(`Remote (${remoteRoles.length}):`);
   remoteRoles.forEach(r => console.log(`  🌍 ${r.company} — ${r.title}`));
   console.log(`Other (${otherRoles.length}):`);
   otherRoles.forEach(r => console.log(`  📍 ${r.company} — ${r.title}`));
 } catch (err) {
-  console.error('Failed to send email:', err.message);
+  console.error('Failed to send email via Resend:', err.message);
   process.exit(1);
 }
