@@ -74,8 +74,8 @@ const BRAND = {
   greenBorder:  '#86efac',
   blue:         '#2563eb',
   blueBg:       '#dbeafe',
-  amber:        '#92400e',
-  amberBg:      '#fef3c7',
+  amber:        '#8a6840',
+  amberBg:      '#f4ede1',
   red:          '#991b1b',
   redBg:        '#fee2e2',
 };
@@ -83,12 +83,12 @@ const BRAND = {
 function scorePill(score) {
   const n = parseFloat(score);
   if (isNaN(n)) return String(score);
-  let bg, fg;
-  if (n >= 4.5)      { bg = BRAND.greenBg; fg = BRAND.greenFg; }
-  else if (n >= 4.0) { bg = BRAND.greenBg; fg = BRAND.greenFg; }
-  else if (n >= 3.0) { bg = BRAND.amberBg; fg = BRAND.amber;   }
-  else               { bg = BRAND.redBg;   fg = BRAND.red;     }
-  return `<span style="display:inline-block;background:${bg};color:${fg};padding:2px 8px;border-radius:999px;font-weight:600;font-size:12px;font-variant-numeric:tabular-nums">${n.toFixed(2)}</span>`;
+  let bg, fg, cls, extraStyle = '';
+  if (n >= 4.5)      { bg = BRAND.greenBg; fg = BRAND.greenFg; cls = 'score-pill score-pill-green'; extraStyle = `border:1px solid ${BRAND.greenBorder};`; }
+  else if (n >= 4.0) { bg = BRAND.greenBg; fg = BRAND.greenFg; cls = 'score-pill score-pill-green'; }
+  else if (n >= 3.0) { bg = BRAND.amberBg; fg = BRAND.amber;   cls = 'score-pill score-pill-amber'; }
+  else               { bg = BRAND.redBg;   fg = BRAND.red;     cls = 'score-pill score-pill-red'; }
+  return `<span class="${cls}" style="display:inline-block;background:${bg};color:${fg};${extraStyle}padding:2px 8px;border-radius:999px;font-weight:600;font-size:12px;font-variant-numeric:tabular-nums">${n.toFixed(2)}</span>`;
 }
 
 function renderHtmlEmail(markdownBody, meta = {}) {
@@ -228,6 +228,9 @@ function renderHtmlEmail(markdownBody, meta = {}) {
     color: #fafafa !important;
   }
   .cta-button { background: #86efac !important; color: #06070d !important; }
+  .score-pill-green { background: rgba(22,163,74,0.15) !important; color: #86efac !important; border-color: rgba(22,163,74,0.35) !important; }
+  .score-pill-amber { background: rgba(168,123,72,0.14) !important; color: #d4ba84 !important; }
+  .score-pill-red   { background: rgba(220,38,38,0.12) !important; color: #fca5a5 !important; }
 }`;
 
   return `<!DOCTYPE html>
@@ -236,7 +239,7 @@ function renderHtmlEmail(markdownBody, meta = {}) {
 <meta name="supported-color-schemes" content="light dark">
 <style>${darkModeCss}</style>
 </head>
-<body class="body-bg" style="margin:0;padding:0;background:${BRAND.bg};color:${BRAND.text2};font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',Helvetica,Arial,sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased">
+<body class="body-bg" style="margin:0;padding:0;background:${BRAND.bg};color:${BRAND.text2};font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased">
 <center class="body-bg" style="width:100%;background:${BRAND.bg}">
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="max-width:780px;width:100%;margin:0 auto;padding:24px 20px">
   <tr><td>
