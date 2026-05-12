@@ -238,6 +238,7 @@ When the user asks "what should I work on tonight" or "I'm sitting down to apply
 
 - `scripts/build-apply-pack.mjs --row=N` — lightweight scaffold for a single apply-pack (cv / cover-letter / linkedin-dm / README stubs)
 - `scripts/build-apply-packs.mjs --top=N` — canonical full pack builder (cover-letter, form-fields, interview prep, ATS check, formatting guide, LinkedIn DMs, one-pager, pre-flight checklist, Grok intel, tailored CV PDF). Use this for full packs.
+- `scripts/humanize-check.mjs --file <path>` — **MANDATORY before any cover letter submission.** Scores AI detection risk (0–100%) across 4 signal types: phrase dictionary, burstiness, passive voice, transition density. Risk bands: 🟢 LOW (0–20) submit as-is · 🟡 MEDIUM (21–45) fix flagged phrases · 🟠 HIGH (46–70) rewrite needed · 🔴 CRITICAL (71–100) major humanization required. Also accepts `--text "..."` or stdin; `--json` for pipeline use. **Run this on every cover letter and any AI-drafted form-field answer before presenting to the user.**
 - `scripts/grok-research.mjs` — daily Grok research runner (`--dry-run` / `--tools-only` / production)
 - `scripts/apply-pending-diff.mjs` — review tool for `data/pending-diffs/` (`--list` / `--view {file}` / `--mark-reviewed {file}` / interactive)
 - npm aliases: `npm run apply-pack`, `npm run apply-packs`, `npm run grok-research`, `npm run pending-diffs`, `npm run heartbeat`

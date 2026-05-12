@@ -1,7 +1,7 @@
 // service-worker.js — Career-Ops Dashboard PWA
 // Strategy: cache-first for static shell + assets, network-first for /api/*.
 
-const CACHE = 'career-ops-v2';
+const CACHE = 'career-ops-v3';
 const SHELL = [
   '/',
   '/manifest.json',
@@ -40,6 +40,23 @@ self.addEventListener('fetch', (event) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
+
+  // Network-first for the HTML shell — UI updates must be visible immediately.
+  // Falls back to cache only when offline.
+  if (url.pathname === '/' || url.pathname === '/dashboard/index.html') {
+    event.respondWith(
+      fetch(req)
+        .then((res) => {
+          if (res && res.ok) {
+            const copy = res.clone();
+            caches.open(CACHE).then((cache) => cache.put(req, copy));
+          }
+          return res;
+        })
+        .catch(() => caches.match(req))
+    );
+    return;
+  }
 
   // Network-first for API — data must be fresh, fall back to cache offline.
   if (url.pathname.startsWith('/api/')) {

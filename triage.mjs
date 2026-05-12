@@ -288,8 +288,8 @@ function parseTriageOutput(raw) {
 function callHaiku(prompt) {
   const result = spawnSync(
     'claude',
-    // --max-tokens 150: triage JSON fits in ~80 tokens; cap prevents runaway output spend
-    ['-p', prompt, '--model', 'claude-haiku-4-5-20251001', '--max-tokens', '150',
+    // --max-budget-usd 0.001: ~500 output tokens at Haiku pricing; cap prevents runaway spend
+    ['-p', prompt, '--model', 'claude-haiku-4-5-20251001', '--max-budget-usd', '0.001',
      '--dangerously-skip-permissions', '--tools', '', '--strict-mcp-config', '--mcp-config', '{"mcpServers":{}}'],
     { encoding: 'utf8', timeout: 60_000, cwd: ROOT }
   );

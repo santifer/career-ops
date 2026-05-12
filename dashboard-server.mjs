@@ -42,7 +42,7 @@ function stripMarkdown(text) {
 }
 
 function parseReportSummary(reportPath) {
-  const empty = { score: null, archetype: null, url: null, legitimacy: null, tldr: null, topEdges: [], topGaps: [] };
+  const empty = { score: null, archetype: null, url: null, legitimacy: null, tldr: null, comp: null, location: null, topEdges: [], topGaps: [] };
   try {
     const abs = join(ROOT, reportPath);
     if (!existsSync(abs)) return empty;
@@ -54,6 +54,46 @@ function parseReportSummary(reportPath) {
     const archMatch    = text.match(/\*\*Archetype:\*\*\s*([^\n]+)/);
     const urlMatch     = text.match(/\*\*URL:\*\*\s*(https?:\/\/[^\s\n]+)/);
     const legitMatch   = text.match(/\*\*Legitimacy:\*\*\s*([^\n]+)/);
+
+    // Comp: extract from Block A or Block D table rows
+    let comp = null;
+    const looksLikeComp = (s) => s && !/^\d+\/5\s*$/.test(s) && !/^(value|tier|score)$/i.test(s) &&
+      /[\$€£]|\bK\b|\b(TC|base|comp|salary|total comp|OTE|range)\b/i.test(s);
+    const labelRe = /^\s*\|\s*\*?\*?\s*(?:Comp(?:ensation)?|Listed Annual Salary|Salary|Posted base salary)\b[^|]*?\|/i;
+
+    const extractCompFromBlock = (blockText) => {
+      for (const l of blockText.split('\n')) {
+        if (!labelRe.test(l)) continue;
+        const cells = l.split('|').map(c => c.replace(/\*\*/g, '').trim()).filter(Boolean);
+        for (let ci = 1; ci < cells.length; ci++) {
+          if (looksLikeComp(cells[ci])) return cells[ci].slice(0, 120);
+        }
+      }
+      return null;
+    };
+
+    const blockAStart = text.search(/^## A\)[^\n]*$/m);
+    const blockAEnd   = text.indexOf('\n## ', blockAStart + 1);
+    const blockA = blockAStart >= 0 ? text.slice(blockAStart, blockAEnd > 0 ? blockAEnd : blockAStart + 3000) : '';
+    if (blockA) comp = extractCompFromBlock(blockA);
+
+    // Fall back to Block D if Block A had no comp row
+    if (!comp) {
+      const blockDStart = text.search(/^## D\)[^\n]*$/m);
+      const blockDEnd   = text.indexOf('\n## ', blockDStart + 1);
+      const blockD = blockDStart >= 0 ? text.slice(blockDStart, blockDEnd > 0 ? blockDEnd : blockDStart + 3000) : '';
+      if (blockD) comp = extractCompFromBlock(blockD);
+    }
+
+    // Location: extract from Block A "Location" / "Remote" / "Locations" row
+    let location = null;
+    if (blockA) {
+      for (const l of blockA.split('\n')) {
+        if (!/^\s*\|\s*\*?\*?\s*(?:Location|Remote|Locations?)\b/i.test(l)) continue;
+        const cells = l.split('|').map(c => c.replace(/\*\*/g, '').trim()).filter(Boolean);
+        if (cells.length > 1) { location = cells[1].slice(0, 200); break; }
+      }
+    }
 
     // TL;DR: text after first ## B) or TLDR or Final Recommendation heading
     let tldr = null;
@@ -102,6 +142,8 @@ function parseReportSummary(reportPath) {
       url:        urlMatch    ? urlMatch[1].trim()               : null,
       legitimacy: legitMatch  ? legitMatch[1].trim()             : null,
       tldr,
+      comp,
+      location,
       topEdges,
       topGaps,
     };
@@ -245,7 +287,7 @@ function detailEvaluations() {
 
 function detailApplied() {
   const apps = parseApplications();
-  const today = new Date('2026-05-07');
+  const today = new Date();
   const rows = apps
     .filter(a => ['Applied','Interview','Offer','Responded'].includes(a.status))
     .sort((a, b) => new Date(b.date) - new Date(a.date))
@@ -258,44 +300,74 @@ function detailApplied() {
 }
 
 function detailPending() {
-  const pipeline = parsePipeline();
   const batch = parseBatch();
   const pct = batch.total > 0 ? Math.round((batch.completed / batch.total) * 100) : 0;
 
-  // Parse actual pipeline items with tier
+  // Load discard log so we can flag URLs already discarded/rejected
+  const discardLog = loadDiscardLog();
+  const discardedUrls = new Set(discardLog.map(e => e.url).filter(Boolean));
+
   const pipelinePath = join(ROOT, 'data/pipeline.md');
   const items = [];
+  const today = new Date();
   if (existsSync(pipelinePath)) {
     const content = readFileSync(pipelinePath, 'utf8');
     const lines = content.split('\n');
-    let tier = 0;
+    let currentTier = null;
     for (const l of lines) {
-      if (l.includes('Tier 1')) tier = 1;
-      else if (l.includes('Tier 2')) tier = 2;
-      else if (l.includes('Tier 3')) tier = 3;
-      if (l.startsWith('- [ ]') && items.length < 500) {
-        const rest = l.replace(/^- \[ \]\s*/, '').trim();
-        // Format: URL | Company | Role  or just URL
-        const parts = rest.split('|').map(p => p.trim());
-        const url     = parts[0] || '';
-        const company = parts[1] || '';
-        const role    = parts[2] || '';
-        items.push({ tier, url, company, role });
+      if (/Tier\s*1/i.test(l)) { currentTier = 'T1'; continue; }
+      if (/Tier\s*2/i.test(l)) { currentTier = 'T2'; continue; }
+      if (/Tier\s*3/i.test(l)) { currentTier = 'T3'; continue; }
+      if (!l.startsWith('- [ ]') || items.length >= 500) continue;
+      const rest = l.replace(/^- \[ \]\s*/, '').trim();
+      const parts = rest.split('|').map(p => p.trim());
+      const url      = parts[0] || '';
+      const company  = parts[1] || '';
+      const role     = parts[2] || '';
+      const dateStr  = parts[3] || '';
+      const platform = detectPlatform(url);
+      const dateAdded = dateStr || null;
+      let daysInQueue = null;
+      if (dateStr) {
+        const d = new Date(dateStr);
+        if (!isNaN(d)) daysInQueue = Math.max(0, Math.floor((today - d) / 86400000));
       }
+      items.push({ platform, url, company, role, tier: currentTier, dateAdded, daysInQueue,
+        alreadyDiscarded: discardedUrls.has(url) });
     }
   }
 
+  // Group by platform
+  const counts = {};
+  for (const item of items) {
+    counts[item.platform] = (counts[item.platform] || 0) + 1;
+  }
+  const PLATFORM_ORDER = ['LinkedIn', 'Greenhouse', 'Ashby', 'Lever', 'Workday', 'Amazon', 'iCIMS', 'Wellfound', 'HN / YC', 'Other'];
+  const tiers = PLATFORM_ORDER
+    .filter(p => counts[p])
+    .map(p => ({ label: p, count: counts[p] }));
+
   return {
     title: 'Pipeline Pending',
-    tiers: [
-      { label: 'Tier 1 — Target companies', count: pipeline.tier1 },
-      { label: 'Tier 2 — Title match', count: pipeline.tier2 },
-      { label: 'Tier 3 — Unknown', count: pipeline.tier3 },
-    ],
-    total: pipeline.total,
+    tiers,
+    total: items.length,
     items,
     batch: { ...batch, pct },
   };
+}
+
+function detectPlatform(url) {
+  if (!url) return 'Other';
+  if (url.includes('linkedin.com'))         return 'LinkedIn';
+  if (url.includes('ashbyhq.com'))          return 'Ashby';
+  if (url.includes('greenhouse.io'))        return 'Greenhouse';
+  if (url.includes('lever.co'))             return 'Lever';
+  if (url.includes('myworkdayjobs.com'))    return 'Workday';
+  if (url.includes('amazon.jobs') || url.includes('amazonjobs.com')) return 'Amazon';
+  if (url.includes('icims.com'))            return 'iCIMS';
+  if (url.includes('wellfound.com') || url.includes('angel.co')) return 'Wellfound';
+  if (url.includes('ycombinator.com') || url.includes('news.ycombinator.com')) return 'HN / YC';
+  return 'Other';
 }
 
 function detailCompanies() {
@@ -708,6 +780,44 @@ function saveEvidence(reportSlug, evidenceText) {
   return { ok: true };
 }
 
+// ── Discard / rejection log ────────────────────────────────────
+// Append-only log keyed by row num. Stored at data/discard-log.json.
+// Written whenever a row transitions to Discarded, Rejected, or SKIP.
+// Entries: { ts, num, company, role, status, reason, url }
+
+const DISCARD_LOG_PATH = join(ROOT, 'data/discard-log.json');
+
+function loadDiscardLog() {
+  try {
+    if (!existsSync(DISCARD_LOG_PATH)) return [];
+    const raw = JSON.parse(readFileSync(DISCARD_LOG_PATH, 'utf8'));
+    return Array.isArray(raw) ? raw : [];
+  } catch (_) { return []; }
+}
+
+function appendDiscardEntry(entry) {
+  const log = loadDiscardLog();
+  log.push(entry);
+  const tmp = DISCARD_LOG_PATH + '.tmp.' + process.pid + '.' + Date.now();
+  writeFileSync(tmp, JSON.stringify(log, null, 2));
+  renameSync(tmp, DISCARD_LOG_PATH);
+}
+
+function detailDiscarded() {
+  const apps = parseApplications();
+  const discardStatuses = new Set(['discarded', 'rejected', 'skip']);
+  const log = loadDiscardLog();
+  const reasonByNum = {};
+  for (const e of log) if (e.num != null) reasonByNum[String(e.num)] = e.reason || '';
+
+  const rows = apps
+    .filter(a => discardStatuses.has((a.status || '').toLowerCase()))
+    .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))
+    .map(r => ({ ...r, reason: reasonByNum[String(r.num)] || '' }));
+
+  return { title: 'Discarded & Rejected', total: rows.length, rows };
+}
+
 const DETAIL_FNS = {
   'apply-now':    detailApplyNow,
   'evaluations':  detailEvaluations,
@@ -716,6 +826,7 @@ const DETAIL_FNS = {
   'companies':    detailCompanies,
   'scanned':      detailScanned,
   'batches':      detailBatches,
+  'discarded':    detailDiscarded,
 };
 
 // ── Status writeback ───────────────────────────────────────────
@@ -823,7 +934,46 @@ function updateApplicationStatus({ num, status, note }) {
     } catch (_) {}
   }
 
-  return { ok: true, row: updatedRow };
+  // Write to discard log when transitioning to a terminal negative status
+  const discardStatuses = new Set(['discarded', 'rejected', 'skip']);
+  let queueUpdated = false;
+  if (discardStatuses.has(canonical.toLowerCase()) && updatedRow) {
+    try {
+      appendDiscardEntry({
+        ts:      new Date().toISOString(),
+        num:     updatedRow.num != null ? parseInt(updatedRow.num, 10) : null,
+        company: updatedRow.company || '',
+        role:    updatedRow.role    || '',
+        status:  canonical,
+        reason:  (typeof note === 'string' && note.trim()) ? note.trim() : '',
+      });
+    } catch (_) {}
+
+    // Remove from apply-now-queue.json so all surfaces stay in sync
+    try {
+      const queuePath = join(ROOT, 'data/apply-now-queue.json');
+      if (existsSync(queuePath)) {
+        const queueRaw = JSON.parse(readFileSync(queuePath, 'utf8'));
+        const before = (queueRaw.ranked || []).length;
+        queueRaw.ranked = (queueRaw.ranked || []).filter(r => String(r.num) !== targetNum);
+        if (queueRaw.ranked.length !== before) {
+          queueRaw.ranked.forEach((r, i) => { r.rank = i + 1; });
+          queueRaw.total_rows = queueRaw.ranked.length;
+          if (!queueRaw.qa_cleanup) queueRaw.qa_cleanup = {};
+          queueRaw.qa_cleanup.last_auto_remove = {
+            ts: new Date().toISOString(), num: parseInt(targetNum, 10),
+            company: updatedRow.company, reason: canonical,
+          };
+          const queueTmp = queuePath + '.tmp.' + process.pid + '.' + Date.now();
+          writeFileSync(queueTmp, JSON.stringify(queueRaw, null, 2));
+          renameSync(queueTmp, queuePath);
+          queueUpdated = true;
+        }
+      }
+    } catch (_) {}
+  }
+
+  return { ok: true, row: updatedRow, queueUpdated };
 }
 
 function updateApplicationStatusBulk({ nums, status }) {
@@ -1407,7 +1557,7 @@ const server = createServer((req, res) => {
   // requires the user to hard-refresh (Cmd-Shift-R) to see new HTML/inline CSS+JS.
   // Static assets (PNG, JSON, manifest) get a 5-min cache so revisits are fast.
   if (ext === '.html' || url === '/' || url === '/dashboard/index.html') {
-    headers['Cache-Control'] = 'no-cache, must-revalidate';
+    headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
     headers['Pragma'] = 'no-cache';
     headers['Expires'] = '0';
   } else if (url === '/manifest.json') {

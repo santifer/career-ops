@@ -171,6 +171,61 @@ function renderMarkdownPage(mdContent, fileName) {
 </body></html>`;
 }
 
+// Pipeline detail API — returns structured JSON for the stat panel popout.
+// Parses data/pipeline.md into items with platform, company, role, age.
+function buildPipelineDetail() {
+  const path = join(ROOT, 'data/pipeline.md');
+  if (!existsSync(path)) return { title: 'Pipeline Pending', total: 0, tiers: [], items: [] };
+  const lines = readFileSync(path, 'utf-8').split('\n');
+  const items = [];
+  const platformCounts = {};
+  const today = Date.now();
+
+  function detectPlatform(url) {
+    if (!url) return 'Unknown';
+    if (url.includes('linkedin.com/jobs')) return 'LinkedIn';
+    if (url.includes('ashbyhq.com')) return 'Ashby';
+    if (url.includes('greenhouse.io') || url.includes('boards.greenhouse')) return 'Greenhouse';
+    if (url.includes('lever.co')) return 'Lever';
+    if (url.includes('myworkdayjobs.com')) return 'Workday';
+    if (url.includes('weworkremotely.com')) return 'WWR';
+    if (url.includes('remoteok.com')) return 'RemoteOK';
+    if (url.includes('amazon.jobs') || url.includes('amazonjobs.com')) return 'Amazon';
+    if (url.includes('icims.com')) return 'iCIMS';
+    if (url.includes('hnrss.org') || url.includes('news.ycombinator.com')) return 'HN';
+    return 'Other';
+  }
+
+  for (const line of lines) {
+    if (!line.startsWith('- [ ]')) continue;
+    const body = line.replace(/^- \[ \]\s*/, '').trim();
+    const parts = body.split(' | ').map(p => p.trim());
+    const url = parts[0] || '';
+    let company = parts[1] || '';
+    let role = parts[2] || '';
+    const dateField = parts[3] || '';
+    // Normalize "(from email)" placeholder companies
+    if (company === '(from email)') company = '';
+    if (role === 'view') role = '';
+    // Strip resolved-by-grok tag from role
+    role = role.replace(/\s*\|\s*resolved-by-grok\s*$/, '').trim();
+    const platform = detectPlatform(url);
+    let daysInQueue = null;
+    if (dateField && /^\d{4}-\d{2}-\d{2}/.test(dateField)) {
+      const d = Date.parse(dateField.slice(0, 10));
+      if (!isNaN(d)) daysInQueue = Math.floor((today - d) / 86400000);
+    }
+    platformCounts[platform] = (platformCounts[platform] || 0) + 1;
+    items.push({ url, company, role, platform, daysInQueue });
+  }
+
+  const tiers = Object.entries(platformCounts)
+    .sort((a, b) => b[1] - a[1])
+    .map(([label, count]) => ({ label, count }));
+
+  return { title: 'Pipeline Pending', total: items.length, tiers, items };
+}
+
 // Status-flip endpoint — GET /mark?num=47&status=Applied edits the row in
 // data/applications.md, appends an audit note, and returns a confirmation
 // page with an Undo link. Wired into the heartbeat email's per-row "✅
@@ -336,7 +391,7 @@ function renderMarkPage(ctx) {
 // Allowlist: only these path prefixes may be served. The server was designed
 // for localhost-only use; when exposed via Cloudflare Tunnel this list is the
 // only thing standing between the internet and cv.md / .career-ops-secrets.
-const ALLOWED_PREFIXES = ['/dashboard', '/reports', '/mark', '/favicon.ico'];
+const ALLOWED_PREFIXES = ['/dashboard', '/reports', '/mark', '/api', '/favicon.ico'];
 
 function isAllowed(p) {
   if (p === '/') return true; // redirected below, not served
@@ -358,6 +413,20 @@ const server = http.createServer((req, res) => {
     // /mark never collides with a file in the project root.
     if (urlPath === '/mark') {
       handleMarkRequest(req, res);
+      return;
+    }
+
+    // Live API endpoints — /api/detail/{key}
+    if (urlPath.startsWith('/api/')) {
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      res.setHeader('Cache-Control', 'no-store');
+      if (urlPath === '/api/detail/pending') {
+        res.writeHead(200);
+        res.end(JSON.stringify(buildPipelineDetail()));
+        return;
+      }
+      res.writeHead(404);
+      res.end(JSON.stringify({ error: 'not found' }));
       return;
     }
 
@@ -412,7 +481,12 @@ const server = http.createServer((req, res) => {
 
     const mime = MIME[ext] || 'application/octet-stream';
     const content = readFileSync(filePath);
-    res.writeHead(200, { 'Content-Type': mime, 'Cache-Control': 'no-cache' });
+    // HTML must never be served from cache — send no-store so Chrome always
+    // fetches the rebuilt dashboard on every bookmark open.
+    const cacheHeader = (ext === '.html' || ext === '.htm')
+      ? 'no-store, no-cache, must-revalidate'
+      : 'no-cache';
+    res.writeHead(200, { 'Content-Type': mime, 'Cache-Control': cacheHeader, 'Pragma': 'no-cache' });
     res.end(content);
   } catch (err) {
     res.writeHead(500, { 'Content-Type': 'text/plain' });

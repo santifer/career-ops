@@ -44,7 +44,9 @@ import {
   readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync,
   symlinkSync, unlinkSync, statSync,
 } from 'fs';
+import { homedir } from 'os';
 import { join } from 'path';
+import { runCheck as humanizeCheck } from './humanize-check.mjs';
 
 const ROOT = process.cwd();
 const args = process.argv.slice(2);
@@ -55,6 +57,53 @@ const INCLUDE_TODAYS_TOP = args.includes('--include-todays-top');
 const TODAY = new Date().toISOString().slice(0, 10);
 const FLOOR = 4.0;
 const ACTIONABLE = new Set(['Evaluated', 'Responded']);
+
+// ── API Key ───────────────────────────────────────────────────────────
+function loadApiKey() {
+  if (process.env.ANTHROPIC_API_KEY?.trim()) return process.env.ANTHROPIC_API_KEY.trim();
+  // Check .env in project root (consistent with batch-runner-batches.mjs)
+  try {
+    const envContent = readFileSync(join(ROOT, '.env'), 'utf-8');
+    const match = envContent.match(/^ANTHROPIC_API_KEY=(.+)$/m);
+    if (match && match[1].trim() && !match[1].trim().startsWith('#')) return match[1].trim();
+  } catch {}
+  // Check ~/.career-ops-secrets
+  try {
+    const secretsPath = join(homedir(), '.career-ops-secrets');
+    if (existsSync(secretsPath)) {
+      const match = readFileSync(secretsPath, 'utf-8').match(/^ANTHROPIC_API_KEY=(.+)$/m);
+      if (match) return match[1].trim();
+    }
+  } catch {}
+  return null;
+}
+const API_KEY = loadApiKey();
+
+// ── Voice Reference Brief ─────────────────────────────────────────────
+function loadVoiceReferenceBrief() {
+  const path = join(ROOT, 'data', 'voice-reference-brief.md');
+  if (!existsSync(path)) return '';
+  return readFileSync(path, 'utf-8');
+}
+const VOICE_BRIEF = loadVoiceReferenceBrief();
+
+// ── Fabrication Guard ─────────────────────────────────────────────────
+function fabricationCheck(text) {
+  const HARD_BANS = [
+    { pattern: /Principal.*Distinguished.*Fellow/i, risk: 'tier-claim-not-in-cv', reframe: 'Use "~1,000 senior technical ICs" exactly' },
+    { pattern: /L8\b|L9\b|L10\b/i, risk: 'google-level-fabrication', reframe: 'Remove level claims; not in cv.md' },
+    { pattern: /Node\.js/i, risk: 'stack-fabrication', reframe: 'Remove stack claim; cv.md does not specify production stack' },
+    { pattern: /within 30 days/i, risk: 'commitment-fabrication', reframe: 'Remove timeline commitment; never stated in cv.md' },
+    { pattern: /zero.token/i, risk: 'api-claim-fabrication', reframe: 'Use "direct ATS API integrations" not "zero-token"' },
+    { pattern: /negative training/i, risk: 'terminology-drift', reframe: 'Use "Kill List of rejected drafts" — his canonical phrasing' },
+    { pattern: /alignment.adjacent/i, risk: 'interpretive-frame', reframe: 'Remove or use "AI-native editorial operations"' },
+  ];
+  const flags = [];
+  for (const ban of HARD_BANS) {
+    if (ban.pattern.test(text)) flags.push(ban);
+  }
+  return { passed: flags.length === 0, flags };
+}
 
 // ────────────────────────────────────────────────────────────────────
 // Parsers
@@ -462,7 +511,7 @@ See [pre-application-checklist.md](pre-application-checklist.md) — gap-closing
 `;
 }
 
-function buildCoverLetter(role, report) {
+function buildCoverLetterTemplate(role, report) {
   const matches = report.matches.slice(0, 3);
   const topGaps = report.gaps.slice(0, 3);
   const matchLines = matches.map(m => {
@@ -512,6 +561,199 @@ Seattle, WA · mitwilli@gmail.com · linkedin.com/in/mitwilli · github.com/mitw
 
   > *${oneLineVerdict(report, role)}*
 `;
+}
+
+async function buildCoverLetter(role, report) {
+  if (!API_KEY) {
+    return buildCoverLetterTemplate(role, report);
+  }
+
+  const skipCritique = process.env.SKIP_CRITIQUE === 'true';
+
+  const systemPrompt = `You are a cover letter writer for Mitchell Williams. Generate a cover letter that is indistinguishable from his own writing. Every claim must trace to the canonical sources provided. Fabrication is a hard failure.
+
+VOICE REFERENCE
+${VOICE_BRIEF}
+
+COVER LETTER STRUCTURE (4 blocks, 300-340 words total — hard limit, count before returning)
+
+Block 1 — Framing Frame (2-3 sentences):
+Open with a company-specific tension — the exact AI comms, deployment, or enablement challenge this company faces that Mitchell is uniquely positioned to solve.
+Do NOT open with "I." Do NOT open with "I am writing to express."
+Pattern: State the problem space first, then position Mitchell as someone who has solved it.
+Example shape: "The challenge of [specific company tension] is one I've spent [timeframe] solving: [what that means operationally]."
+
+Block 2 — Signature Move (3-4 sentences):
+State what he has uniquely built that maps directly to their need.
+Lead with the highest-value proof point from the canonical sources.
+Every sentence needs a metric or a named artifact. Use em-dash linking.
+No bullet lists. Narrative prose only.
+Pattern: "At [company], [what he built] — [metric]. [How it maps to their need]."
+
+Block 3 — Human Differentiator (1-2 sentences):
+Show how his journalism + AI production background gives him unusual leverage for their current phase. Make this about their likely blind spots, not his credentials.
+One em-dash. One specific named credential or show/program.
+
+Block 4 — Conversational Asymmetry CTA (2-3 sentences):
+Offer a specific, named artifact or working example — give value upfront.
+Do not say "I'd be happy to" or "please don't hesitate."
+Do not use a generic "let me know if you're interested."
+Pattern: "If [role condition], I'd value [specific time] to walk through [named artifact]. [Why that artifact is directly relevant]."
+
+OUTPUT: Cover letter body only. No salutation. No sign-off. No subject line.
+Word count: 300-340 words. Count before returning. If over 340, cut Block 2 by one sentence.`;
+
+  const matches = report.matches.slice(0, 3);
+  const topGaps = report.gaps.slice(0, 2);
+
+  const userPrompt = `CANONICAL SOURCES (every claim in your output must trace here):
+
+CV SUMMARY: ${report.tldr || ''}
+
+TOP 3 MATCHES FROM EVAL REPORT:
+${matches.map((m, i) => `${i + 1}. Requirement: "${m.requirement}"\n   Evidence: ${m.evidence.replace(/<br\s*\/?>/gi, ' ').slice(0, 300)}`).join('\n\n')}
+
+TOP GAPS (acknowledge max 1 of these, only if it directly comes up):
+${topGaps.map(g => `- ${g.gap}: ${g.mitigation.slice(0, 200)}`).join('\n')}
+
+JOB CONTEXT:
+Company: ${role.company}
+Role: ${role.role}
+Archetype: ${ledFraming(role)}
+Score: ${role.score}/5
+
+GOLD-STANDARD REFERENCE (match this quality and voice — do not copy it):
+The central challenge of the Engineering Editorial Lead role is one I've spent a career solving: how do you encode editorial discipline into production systems that serve a deeply technical audience allergic to spin?
+
+For the past two years at Google's Office of Cross-Google Engineering (xGE), I've architected and shipped production AI systems for an audience of ~1,000 senior engineers. My Executive RAG pipeline functions as a digital twin for VP-level communications, achieving 99% stylistic fidelity and a 90% reduction in drafting latency. Its discipline comes from a unique architecture: a curated Voice DNA corpus paired with a "Kill List" of rejected drafts that taught the agent risk tolerance. Next to it, my autonomous Communications Triage Agent recaptures ~160 operational hours per year at >90% classification accuracy.
+
+This work is a direct translation of the operating discipline I built in high-stakes newsrooms. Before Google, I spent eight years inside the four properties that rewired digital journalism. I was on the founding team of Al Jazeera's 'The Stream' (RTS Most Innovative Programme), a segment producer at HuffPost Live (Webby Award, Pew Research case study), a line producer for 'America With Jorge Ramos' during its 179% primetime viewership growth, and a senior producer at AJ+. There, I designed a third production line that became a de facto talent pipeline — three producers I coached became on-air principals with subsequent Webbys, a Daytime Emmy, and a James Beard award.
+
+The pattern is consistent: architecting systems that deliver quality at scale, whether the output is a broadcast segment, a viral video, or a VP's technical brief generated by an AI. Most candidates bring either the editorial background or the AI production experience; I have shipped both.
+
+If the role is still open, I would value 15 minutes to walk through the design of the Voice DNA "Kill List" and the AJ+ talent pipeline. Both are direct, working examples of what your JD calls "editorial discipline at engineering scale."
+
+Generate a cover letter for ${role.company} / ${role.role} at the same quality level.`;
+
+  let draft = '';
+  try {
+    const genRes = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': API_KEY,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1200,
+        temperature: 1,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userPrompt }],
+      }),
+    });
+    if (!genRes.ok) {
+      const errText = await genRes.text();
+      throw new Error(`${genRes.status}: ${errText.slice(0, 200)}`);
+    }
+    const genData = await genRes.json();
+    draft = genData.content?.[0]?.text?.trim() || '';
+  } catch (err) {
+    console.log(`  ⚠ Cover letter LLM generation failed (${err.message}), falling back to template`);
+    return buildCoverLetterTemplate(role, report);
+  }
+
+  if (!skipCritique && draft) {
+    const criticUserPrompt = `Review this cover letter draft for Mitchell Williams. Your job: identify every sentence that fails his voice and rewrite it. Return the full corrected cover letter, not a list of changes.
+
+DRAFT:
+${draft}
+
+CHECK EACH SENTENCE FOR:
+
+1. KILL LIST violations (hard rewrite):
+   Banned: "I believe," "I think," "perhaps," "might be," "could potentially," "thrilled,"
+   "excited to," "passionate about," "game-changer," "world-class," "synergy," "leverage" (verb),
+   "robust," "delve," "I'd be happy to," "It's worth noting," "In conclusion"
+
+2. FABRICATION (hard remove):
+   Any metric not in this list must be removed or replaced with a canonical one:
+   ~160 ops hours/yr | >90% accuracy | 99% fidelity | 90% latency reduction |
+   300%+ capacity scaling | 179% viewership growth | 50M+ views | 27.5M desktop views
+
+3. VAGUE CLAIMS (rewrite with specifics):
+   "improved results" → add metric
+   "significant impact" → name the outcome
+   Any impact claim without a number → add one from canonical list or remove
+
+4. WEAK OPENING (rewrite if):
+   First word is "I" → restructure to lead with context
+   First sentence is generic ("I am writing to...") → replace with Framing Frame pattern
+
+5. WORD COUNT: If over 340 words, cut one sentence from Block 2. Report final count.
+
+OUTPUT: Full corrected cover letter. Final word count on the last line: [N words]`;
+
+    try {
+      const criticRes = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'x-api-key': API_KEY,
+          'anthropic-version': '2023-06-01',
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 1400,
+          temperature: 0,
+          system: systemPrompt,
+          messages: [
+            { role: 'user', content: userPrompt },
+            { role: 'assistant', content: draft },
+            { role: 'user', content: criticUserPrompt },
+          ],
+        }),
+      });
+      if (!criticRes.ok) {
+        const errText = await criticRes.text();
+        throw new Error(`${criticRes.status}: ${errText.slice(0, 200)}`);
+      }
+      const criticData = await criticRes.json();
+      const revised = criticData.content?.[0]?.text?.trim() || '';
+      if (revised) draft = revised;
+    } catch (err) {
+      console.log(`  ⚠ Cover letter critic pass failed (${err.message}), using first-pass output`);
+    }
+  }
+
+  const fabResult = fabricationCheck(draft);
+
+  let output = `# Cover Letter — ${role.company}, ${role.role}
+
+> LLM-generated (claude-sonnet-4-6) · Voice-critic reviewed · Fabrication-gated
+> Add salutation ("Dear [Name]," or "Dear ${guessTeamName(report)} team,") and signature block before submitting.
+> Signature: Mitchell Williams · Seattle, WA · mitwilli@gmail.com · linkedin.com/in/mitwilli · github.com/mitwilli-create · thestorytellermitch.com
+
+---
+
+${draft}
+
+---
+
+## Notes for the candidate
+
+- The "${ledFraming(role)}" framing is the central reframe — keep it in any version.
+- For a 50–100-word short pitch field, use the **Verdict** from the eval report:
+
+  > *${oneLineVerdict(report, role)}*
+`;
+
+  if (!fabResult.passed) {
+    output += `\n<!-- FABRICATION FLAGS\n${fabResult.flags.map(f => `RISK: ${f.risk}\nREFRAME: ${f.reframe}`).join('\n\n')}\n-->`;
+    console.log(`  ⚠ Fabrication flags on #${role.num} cover letter: ${fabResult.flags.map(f => f.risk).join(', ')}`);
+  }
+
+  return output;
 }
 
 function tldrToOpening(tldr, role) {
@@ -1584,10 +1826,43 @@ For a more precise score, paste your CV and the JD into one of these free tools:
 }
 
 // ────────────────────────────────────────────────────────────────────
+// Humanize score section — appended to generated cover letters
+// ────────────────────────────────────────────────────────────────────
+
+function buildHumanizeSection(h) {
+  const today = new Date().toISOString().slice(0, 10);
+  const flaggedLines = h.checks.phrases.hits.length > 0
+    ? h.checks.phrases.hits.slice(0, 8).map(({ label, weight }) =>
+        `- ${weight === 3 ? '🔴' : weight === 2 ? '🟡' : '⚪'} "${label}"`
+      ).join('\n')
+    : '- None detected — clean.';
+
+  return `
+---
+
+## AI Detection Score (auto-generated ${today})
+
+**Likelihood of AI flag: ${h.score}% ${h.risk.emoji} ${h.risk.label}** — ${h.risk.action}
+
+| Signal | Score |
+|---|---|
+| AI phrase density | ${h.checks.phrases.score}% |
+| Burstiness (sentence variance) | ${h.checks.burstiness.score}% |
+| Passive voice ratio | ${h.checks.passive.score}% |
+| Transition opener density | ${h.checks.transitions.score}% |
+
+**Flagged phrases:**
+${flaggedLines}
+
+> Re-score after edits: \`node scripts/humanize-check.mjs --file [this-file-path]\`
+`;
+}
+
+// ────────────────────────────────────────────────────────────────────
 // Main
 // ────────────────────────────────────────────────────────────────────
 
-function buildPack(role) {
+async function buildPack(role) {
   const report = parseReport(role.reportPath);
   if (!report) {
     console.log(`  ✗ Skipping #${role.num} ${role.company}: report not found at ${role.reportPath}`);
@@ -1607,7 +1882,9 @@ function buildPack(role) {
   mkdirSync(linkedinDir, { recursive: true });
 
   writeFileSync(join(dir, 'README.md'), buildReadme(role, report));
-  writeFileSync(join(dir, 'cover-letter.md'), buildCoverLetter(role, report));
+  const coverLetterContent = await buildCoverLetter(role, report);
+  const humanize = humanizeCheck(coverLetterContent);
+  writeFileSync(join(dir, 'cover-letter.md'), coverLetterContent + buildHumanizeSection(humanize));
   writeFileSync(join(dir, 'pre-application-checklist.md'), buildPreApplicationChecklist(role, report));
   writeFileSync(join(dir, 'grok-intel.md'), buildGrokIntel(role, report));
   writeFileSync(join(dir, 'interview-prep-teaser.md'), buildInterviewPrep(role, report));
@@ -1629,7 +1906,11 @@ function buildPack(role) {
     symlinkSync(`../../output/${cvFile}`, linkPath);
   }
 
+  const phraseNote = humanize.checks.phrases.hits.length > 0
+    ? ` — flagged: ${humanize.checks.phrases.hits.map(h => `"${h.label}"`).join(', ')}`
+    : ' — clean';
   console.log(`  ✓ Built apply-pack/${dirName}/${cvFile ? '  (CV linked: ' + cvFile + ')' : '  (no CV PDF found)'}`);
+  console.log(`  ${humanize.risk.emoji} Cover letter AI risk: ${humanize.score}% ${humanize.risk.label}${phraseNote}`);
   return true;
 }
 
@@ -1665,7 +1946,7 @@ async function main() {
   console.log(`Building Apply Packs for ${queue.length} role${queue.length === 1 ? '' : 's'}...`);
   let built = 0;
   for (const role of queue) {
-    if (buildPack(role)) built++;
+    if (await buildPack(role)) built++;
   }
   console.log(`\nDone. ${built} pack${built === 1 ? '' : 's'} built or rebuilt; ${queue.length - built} skipped.`);
 }

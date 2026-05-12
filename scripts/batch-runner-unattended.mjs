@@ -110,7 +110,7 @@ child.on('exit', (code, signal) => {
   // heartbeat's "What's New Overnight" #1 always has a Pack link.
   log('--- Building Apply Packs (top 3 + today\'s top) ---');
   try {
-    const packChild = spawnSync(`${NODE_DIR}/node`, ['scripts/build-apply-packs.mjs', '--include-todays-top'], {
+    const packChild = spawnSync(`${NODE_DIR}/node`, ['scripts/build-apply-packs.mjs', '--top=5'], {
       cwd: PROJECT_DIR,
       env: childEnv,
       encoding: 'utf-8',

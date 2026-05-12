@@ -551,12 +551,49 @@ function parseBaseSalary(rawComp) {
   return null;
 }
 
+// ── Server-side COL / FX badge (mirrors client colBadge in buildTable) ──────
+const _SRV_COL = {
+  seattle: 100, bellevue: 100,
+  'san francisco': 122, 'palo alto': 118,
+  'new york': 118, nyc: 118,
+  austin: 88, boston: 108, chicago: 94, dc: 103, washington: 103,
+  london: 99, paris: 86, berlin: 78, amsterdam: 91,
+  dublin: 90, singapore: 95, toronto: 91, montreal: 82,
+  munich: 82, zurich: 135, zürich: 135,
+};
+const _SRV_FX = { USD: 1, EUR: 1.12, GBP: 1.28, CAD: 0.73, SGD: 0.75, CHF: 1.15 };
+
+function serverColBadge(parsed, locationRaw) {
+  if (!parsed || parsed.currency === 'USD') return '';
+  const fx = _SRV_FX[parsed.currency] || 1;
+  // parsed.min/max are already in $K units (e.g. 107 = €107K)
+  const midK = (parsed.min + parsed.max) / 2;
+  const usdK = Math.round(midK * fx);
+  const locLow = (locationRaw || '').toLowerCase();
+  let locCol = null; let locName = '';
+  for (const [k, v] of Object.entries(_SRV_COL)) {
+    if (locLow.includes(k)) { locCol = v; locName = k; break; }
+  }
+  if (!locCol) {
+    return `<span class="col-badge" title="FX: ${parsed.currency}→USD">≈&thinsp;$${usdK}K USD</span>`;
+  }
+  const seattleK = Math.round(usdK * (100 / locCol));
+  const delta = Math.round((seattleK - usdK) / usdK * 100);
+  const color = delta >= 0 ? 'var(--green-fg)' : 'var(--orange-fg,#b45309)';
+  const arrow = delta >= 0 ? '↑' : '↓';
+  const sign  = delta >= 0 ? '+' : '';
+  const note  = delta >= 0
+    ? `Cheaper COL in ${locName} — buys more than $${usdK}K in Seattle`
+    : `Higher COL in ${locName} — buys less than $${usdK}K in Seattle`;
+  return `<span class="col-badge" style="color:${color}" title="Pre-tax. ${note}. COL: ${locName}=${locCol} vs Seattle=100">≈&thinsp;$${usdK}K USD · $${seattleK}K Seattle equiv ${arrow}${sign}${Math.abs(delta)}% QOL</span>`;
+}
+
 // Render the Base Salary table cell. Color tiers (Mitchell's targets):
 //   ≥ targetMin (default $200K) — green
 //   ≥ floor (default $175K) — amber
 //   <  floor — red
 //   no data — grey em-dash
-function renderBaseCell(reportPath, floors) {
+function renderBaseCell(reportPath, floors, locationRaw) {
   const compRaw = getCompRaw(reportPath);
   const parsed = parseBaseSalary(compRaw);
   if (!parsed) {
@@ -590,7 +627,9 @@ function renderBaseCell(reportPath, floors) {
     range, label, raw: compRaw || '',
     floors: { target: floors.targetMin, floor: 175 },
   });
-  return `<span class="base-chip ${cls} pill-popover-trigger" data-base-min="${min}" title="${escape(tip)}" aria-label="${escape(tip)}" tabindex="0" role="button" data-pill='${escape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">${escape(label)}</span>`;
+  const chip = `<span class="base-chip ${cls} pill-popover-trigger" data-base-min="${min}" title="${escape(tip)}" aria-label="${escape(tip)}" tabindex="0" role="button" data-pill='${escape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">${escape(label)}</span>`;
+  const badge = serverColBadge(parsed, locationRaw || '');
+  return badge ? `<span class="base-fx-wrap">${chip}${badge}</span>` : chip;
 }
 
 // ── Location classification + cell rendering ────────────────────────────────
@@ -1772,8 +1811,9 @@ function evalAge(dateStr) {
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return '';
   const days = Math.floor((Date.now() - d.getTime()) / 86400000);
-  if (days === 0) return '0d';
-  if (days === 1) return '1d';
+  if (days < 0) return '';
+  if (days >= 14) return `<span class="age-red">${days}d ⚠</span>`;
+  if (days >= 10) return `<span class="age-amber">${days}d</span>`;
   if (days < 30) return `${days}d`;
   const weeks = Math.round(days / 7);
   return `${weeks}w`;
@@ -1826,6 +1866,65 @@ function companyCareersUrl(company) {
     if (key.startsWith(k + ' ') || key === k) return v;
   }
   return `https://www.google.com/search?q=${encodeURIComponent(company + ' careers jobs')}`;
+}
+
+// ── Tracker note formatter ──────────────────────────────────────────
+// Parses the dense notes field from applications.md into structured HTML:
+// re-eval badge → decision badge → semicolon-split bullet list.
+function formatTrackerNote(text) {
+  if (!text || !text.trim()) return '';
+  const esc = escape; // reuse existing escape helper
+
+  let rest = text.trim();
+
+  // Extract all leading "Re-eval DATE (X→Y). " prefixes (can repeat)
+  const reevals = [];
+  let m;
+  const reevalRe = /^Re-eval\s+(\d{4}-\d{2}-\d{2})(?:\s*\([^)]*\))?\.\s*/;
+  while ((m = rest.match(reevalRe))) {
+    reevals.push(rest.slice(0, m[0].length - 2).trim()); // strip trailing ". "
+    rest = rest.slice(m[0].length);
+  }
+
+  // Extract decision keyword + optional priority up to " — " or " – "
+  let decision = '';
+  let decisionClass = 'tn-decision';
+  const decMatch = rest.match(/^((?:APPLY|SKIP|DEFER)(?:\s+(?:HIGH(?:\s+CONFIDENCE)?|\([^)]*\)|[A-Z]+))*)\s*[-–—]\s*/);
+  if (decMatch) {
+    decision = decMatch[1].trim();
+    rest = rest.slice(decMatch[0].length);
+    if (decision.startsWith('APPLY')) decisionClass += ' tn-apply';
+    else if (decision.startsWith('SKIP'))  decisionClass += ' tn-skip';
+    else                                   decisionClass += ' tn-defer';
+  }
+
+  // Split remaining text on "; " into bullets (ignore lone semicolons mid-word)
+  const bullets = rest.split(/;\s+(?=[A-Z\(0-9"'#])/).filter(s => s.trim());
+
+  // Build HTML
+  let html = '<div class="tn-wrap">';
+
+  // Header row: re-eval badges + decision badge
+  if (reevals.length || decision) {
+    html += '<div class="tn-header">';
+    for (const re of reevals) {
+      html += `<span class="tn-reeval">${esc(re)}</span>`;
+    }
+    if (decision) html += `<span class="${esc(decisionClass)}">${esc(decision)}</span>`;
+    html += '</div>';
+  }
+
+  // Body: bullet list or single paragraph
+  if (bullets.length > 1) {
+    html += '<ul class="tn-list">';
+    for (const b of bullets) html += `<li>${esc(b.replace(/;\s*$/, ''))}</li>`;
+    html += '</ul>';
+  } else if (bullets.length === 1) {
+    html += `<p class="tn-text">${esc(bullets[0])}</p>`;
+  }
+
+  html += '</div>';
+  return html;
 }
 
 function renderRow(r, idx) {
@@ -1998,7 +2097,8 @@ function renderRow(r, idx) {
 
   // Wave H: Base salary + Location chips. Both render as muted em-dash when
   // the report doesn't carry parseable signal — never crashes.
-  const baseCell = renderBaseCell(r.reportPath, _COMP_FLOORS);
+  const locationRaw = getLocationField(r.reportPath);
+  const baseCell = renderBaseCell(r.reportPath, _COMP_FLOORS, locationRaw);
   const locationCell = renderLocationCell(r.reportPath, r.company, r.role);
   const benefitsCell = renderBenefitsCell(r.company, r.role);
   const peopleCell = renderPeopleCell(r.company, r.role);
@@ -2023,6 +2123,7 @@ function renderRow(r, idx) {
   <td colspan="13">
     <div class="detail-block">
       ${r._throttle?.label ? `<div class="throttle-banner throttle-${r._throttle.status}">${escape(r._throttle.label)}<br><span class="muted-text">${escape(r._throttle.note || '')}</span></div>` : ''}
+      ${r.notes ? `<div class="dcard dcard--tracker-note" style="margin-bottom:8px"><div class="dcard-label">TRACKER NOTE</div>${formatTrackerNote(r.notes)}</div>` : ''}
       ${metaChips ? `<div class="detail-meta">${metaChips}</div>` : ''}
       ${tldrCard}${posCard}
       <div class="detail-grid">
@@ -3524,6 +3625,8 @@ function build() {
   .stat-hero { grid-column: span 1; grid-row: span 1; }
   .stat-cell { grid-column: span 1; }
   .stat-strip { grid-column: 1 / -1; }
+  /* Mobile label swap: .label-short hidden on desktop, shown on mobile inside stat-cells */
+  .label-short { display: none; }
   /* Tablet */
   @media (max-width: 1080px) {
     .stats-bento { grid-template-columns: repeat(3, 1fr); grid-auto-rows: 82px; }
@@ -3538,6 +3641,9 @@ function build() {
     .stat-hero { grid-column: 1 / -1; grid-row: span 1; }
     .stat-cell, .stat-strip { grid-column: span 1; grid-row: span 1; }
     .stat-strip { grid-column: 1 / -1; }
+    /* Swap to short labels inside stat-cells on mobile */
+    .stat-cell .label-full { display: none; }
+    .stat-cell .label-short { display: inline; }
   }
   .stat {
     background: var(--surface); padding: 8px 12px; border-radius: var(--radius);
@@ -3922,6 +4028,9 @@ function build() {
     opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0);
   }
   .tier-tag[data-tooltip=""]::after { display: none; }
+  .tier-tag-sub { background: #e0f2fe; color: #0369a1; border-color: #7dd3fc; font-size: 9px; }
+  .col-badge { font-size: 10px; font-weight: 500; margin-left: 6px; white-space: nowrap; cursor: help; }
+  .base-fx-wrap { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 2px; }
 
   /* Column-header (?) info button that opens the full legend modal. */
   .tier-legend-btn {
@@ -4032,6 +4141,8 @@ function build() {
   /* ── Age badges ──────────────────────────────────────────────── */
   .age-stale { color: var(--red-fg); font-weight: 600; font-size: 12px; }
   .age-ok    { color: var(--text-3); font-size: 12px; }
+  .age-amber { color: #92400e; font-weight: 600; }
+  .age-red   { color: #991b1b; font-weight: 600; }
 
   /* ── Filters bar ─────────────────────────────────────────────── */
   .filters { display: flex; flex-direction: column; gap: 8px; margin: 0 0 14px; }
@@ -4403,6 +4514,32 @@ function build() {
   .dcard--action .dcard-action-buttons {
     display: flex; gap: 6px; margin-left: auto; flex-wrap: wrap;
   }
+  /* ── Tracker note card ─────────────────────────────────────── */
+  .dcard--tracker-note { border-left: 3px solid var(--blue-fg); }
+  .tn-wrap { font-size: 12px; line-height: 1.5; }
+  .tn-header { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 7px; }
+  .tn-reeval {
+    font-size: 10.5px; font-weight: 600; color: var(--text-4);
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 4px; padding: 1px 6px; white-space: nowrap;
+  }
+  .tn-decision {
+    font-size: 11px; font-weight: 700; padding: 2px 8px;
+    border-radius: 4px; white-space: nowrap;
+  }
+  .tn-apply  { background: #dcfce7; color: #166534; }
+  .tn-skip   { background: #fee2e2; color: #991b1b; }
+  .tn-defer  { background: #fef9c3; color: #713f12; }
+  .tn-list {
+    margin: 0; padding-left: 16px;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .tn-list li { color: var(--text-2); }
+  .tn-text { margin: 0; color: var(--text-2); }
+  /* Dark-mode overrides for decision badges */
+  body.dark .tn-apply { background: #14532d; color: #86efac; }
+  body.dark .tn-skip  { background: #450a0a; color: #fca5a5; }
+  body.dark .tn-defer { background: #422006; color: #fde68a; }
   /* ── Notes & activity card (5th card) ────────────────────────── */
   .dcard--notes  { border-left: 3px solid var(--text-4); }
   .notes-compose { display: flex; flex-direction: column; gap: 6px; }
@@ -4595,28 +4732,43 @@ function build() {
   .bucket-card .bval { font-size: 22px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
   .bucket-card .blbl { font-size: 11px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
 
-  /* ── Batch progress overlay ──────────────────────────────────── */
-  #batch-overlay {
-    display: none; position: fixed; bottom: 20px; right: 20px; width: 360px; z-index: 1000;
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius); box-shadow: var(--shadow-lg); font-size: 13px; overflow: hidden;
+  /* ── Sidebar batch widget (replaces floating overlay) ─────────── */
+  .sidebar-batch {
+    margin: 4px 8px 8px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm, 6px);
+    overflow: hidden;
+    font-size: 12px;
+    flex-shrink: 0;
   }
-  #batch-overlay.visible { display: block; }
-  .batch-header {
-    display: flex; align-items: center; padding: 12px 16px;
-    background: var(--surface-2); border-bottom: 1px solid var(--border); gap: 8px;
+  .sidebar-batch-header {
+    padding: 7px 10px 5px;
+    font-weight: 600; font-size: 12px; color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  .batch-header-title { font-weight: 600; flex: 1; font-size: 13px; color: var(--text); }
-  .batch-close { background: none; border: none; cursor: pointer; color: var(--text-3); font-size: 16px; padding: 0 4px; }
-  .batch-progress-bar { height: 3px; background: var(--border); }
-  .batch-progress-fill { height: 100%; background: linear-gradient(90deg, var(--green-fg), var(--blue-fg)); transition: width .5s; }
-  .batch-body { padding: 12px 16px; max-height: 220px; overflow-y: auto; }
-  .batch-stat-row { display: flex; justify-content: space-between; padding: 3px 0; }
-  .batch-stat-label { color: var(--text-3); }
-  .batch-stat-val { font-weight: 600; color: var(--text); }
-  .batch-recent { margin-top: 10px; }
-  .batch-recent-item { padding: 6px 0; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-3); }
-  .batch-recent-item a { color: var(--blue-fg); }
+  .sidebar-batch-bar { height: 3px; background: var(--border); }
+  .sidebar-batch-fill { height: 100%; background: linear-gradient(90deg, var(--green-fg), var(--blue-fg)); transition: width .5s; }
+  .sidebar-batch-stats { padding: 5px 10px 7px; }
+  .sidebar-batch-stat { display: flex; justify-content: space-between; padding: 2px 0; }
+  .sidebar-batch-stat-label { color: var(--text-3); }
+  .sidebar-batch-stat-val { font-weight: 600; color: var(--text); }
+  .sidebar-batch-recent { margin-top: 5px; }
+  .sidebar-batch-recent-item {
+    padding: 3px 0; border-top: 1px solid var(--border);
+    font-size: 11px; color: var(--text-3);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  /* Collapsed / icon-only mode: hide stats, keep header + bar. */
+  @media (max-width: 1279px) and (min-width: 721px) {
+    .sidebar-batch { margin: 4px 4px 8px; }
+    .sidebar-batch-stats { display: none; }
+  }
+  body.sidebar-collapsed .sidebar-batch { margin: 4px 4px 8px; }
+  body.sidebar-collapsed .sidebar-batch-stats { display: none; }
+  /* On mobile the sidebar is a nav drawer — batch widget doesn't belong there. */
+  @media (max-width: 720px) {
+    #sidebar-batch { display: none !important; }
+  }
 
   /* ── Verify modal ────────────────────────────────────────────── */
   #verify-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 2000; backdrop-filter: blur(2px); }
@@ -5028,11 +5180,11 @@ function build() {
     .badge { min-height: 28px; padding: 6px 12px; }
     td > .badge, .badge.score-badge-lg { min-height: 32px; padding: 7px 12px; }
     /* Pills inside tappable rows get a wider hit-area through their td padding above. */
-    .batch-close, .verify-close { min-height: 44px; min-width: 44px; padding: 10px; font-size: 18px; }
+    .verify-close { min-height: 44px; min-width: 44px; padding: 10px; font-size: 18px; }
     /* Live ticker now sits inside the mission-control strip (full row),
        so on mobile it doesn't need to collapse to a dot. The strip itself
        collapses via its own media query (see .mc-strip rules). */
-    #batch-toggle-btn, #dark-toggle { min-height: 44px; min-width: 44px; }
+    #dark-toggle { min-height: 44px; min-width: 44px; }
     .rec-btn { min-height: 44px; padding: 12px 18px; display: inline-flex; align-items: center; }
     .filters input, .filters select { min-height: 44px; padding: 10px 12px; font-size: 14px; }
     .verify-submit { min-height: 44px; padding: 12px 20px; }
@@ -5377,7 +5529,6 @@ function build() {
     .app-main { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
     /* Lift bulk-action-bar, batch overlay and toast above the tab bar. */
     #bulk-action-bar { bottom: calc(76px + env(safe-area-inset-bottom)) !important; top: auto !important; }
-    #batch-overlay { bottom: calc(76px + env(safe-area-inset-bottom)) !important; }
     #toast-container { bottom: calc(76px + env(safe-area-inset-bottom)) !important; }
     /* Mobile sheet sits above the tab bar — its bottom is 0 but z-index
        is higher and we extend its content padding to clear the bar. */
@@ -5427,6 +5578,11 @@ function build() {
     .stat-value { font-size: 24px; margin-top: 4px; }
     .stat-label { font-size: 10.5px; }
     .stat-caret { font-size: 10px; margin-top: 6px; }
+    /* Stat-panel: constrained height + scrollable so it doesn't bury cards */
+    .stat-panel { padding: 14px 12px; max-height: 65vh; overflow-y: auto; }
+    .stat-panel-title { font-size: 14px; margin-bottom: 10px; }
+    /* Hero balance: allow label to wrap on narrow screens */
+    .stat-hero-balance .stat-label { white-space: normal; }
 
     /* Panels: tighter */
     .panel { padding: 16px 14px; }
@@ -5563,7 +5719,6 @@ function build() {
     .gap-modal-body { padding: 14px; }
 
     /* Batch overlay: full-width sticky bottom */
-    #batch-overlay { left: 12px; right: 12px; bottom: 12px; width: auto; }
 
     /* Toast positioning: leave room for batch overlay */
     #toast-container { right: 12px; left: 12px; bottom: 12px; max-width: none; }
@@ -5705,7 +5860,6 @@ function build() {
   td.action-cell a,
   .query-text,
   .activity-ts,
-  .batch-progress-fill + *,
   .batch-row-id,
   code {
     font-family: var(--font-mono);
@@ -5843,6 +5997,11 @@ function build() {
         <span class="sidebar-icon" aria-hidden="true">⚙️</span><span class="sidebar-label">Settings</span>
       </button>
     </nav>
+    <div id="sidebar-batch" class="sidebar-batch" style="display:none" aria-label="Batch progress" aria-live="polite">
+      <div class="sidebar-batch-header"><span id="sidebar-batch-title">⚡ Batch</span></div>
+      <div class="sidebar-batch-bar"><div class="sidebar-batch-fill" id="sidebar-batch-bar-fill" style="width:0%"></div></div>
+      <div class="sidebar-batch-stats" id="sidebar-batch-stats"></div>
+    </div>
     <div class="sidebar-footer">
       <button type="button" class="sidebar-collapse-btn" id="sidebar-collapse-btn" onclick="toggleSidebarCollapse()" aria-label="Collapse sidebar" title="Collapse sidebar (⌘\\)">
         <svg class="sidebar-collapse-icon" viewBox="0 0 12 12" fill="none" aria-hidden="true">
@@ -5870,7 +6029,6 @@ function build() {
     <button class="toolbar-btn quickadd-btn" onclick="openQuickAdd()" id="quickadd-btn" title="Add a role URL to the pipeline" aria-label="Add role to pipeline">+ Add role</button>
     <button class="toolbar-btn toolbar-overflow-btn" onclick="openMobileSettingsSheet()" id="toolbar-overflow-btn" aria-label="More options" title="More options">···</button>
     <button class="toolbar-btn" onclick="toggleDark()" id="dark-toggle" aria-label="Toggle dark mode">☀︎ Light</button>
-    <button class="toolbar-btn" id="batch-toggle-btn" onclick="toggleBatchOverlay()" style="display:none" aria-label="Toggle batch progress overlay">⚡ Batch</button>
   </header>
 
   <!-- Mission-control hero strip (Phase 7 Item 1): live ticker + batch + health -->
@@ -5893,15 +6051,6 @@ function build() {
 
   <main id="main">
 
-  <!-- Batch progress overlay -->
-  <div id="batch-overlay">
-    <div class="batch-header">
-      <span class="batch-header-title" id="batch-title">⚡ Batch in progress</span>
-      <button class="batch-close" onclick="dismissBatchOverlay()">✕</button>
-    </div>
-    <div class="batch-progress-bar"><div class="batch-progress-fill" id="batch-bar" style="width:0%"></div></div>
-    <div class="batch-body" id="batch-body"></div>
-  </div>
 
   <!-- Cmd-K command palette -->
   <div id="cmdk-backdrop" role="dialog" aria-modal="true" aria-label="Command palette" onclick="closeCmdK()">
@@ -6088,28 +6237,28 @@ function build() {
         <span class="stat-caret" aria-hidden="true">▾</span><span class="sr-only">Click to expand</span>
       </div>
       <div class="stat stat-cell" onclick="toggleStatPanel('pending')" title="Click to see pipeline">
-        <div class="stat-label">Pipeline pending</div>
+        <div class="stat-label"><span class="label-full">Pipeline pending</span><span class="label-short">Pending</span></div>
         <div class="stat-value" id="live-pipeline">${pipelinePending}</div>
         <div class="stat-trend"><span class="stat-delta stat-delta-flat" title="Snapshot — pipeline depth has no daily history">— snapshot</span></div>
         <span class="stat-caret" aria-hidden="true">▾</span><span class="sr-only">Click to expand</span>
       </div>
       <div class="stat stat-cell" onclick="toggleStatPanel('companies')" title="Click to see all tracked companies">
-        <div class="stat-label">Companies tracked</div>
+        <div class="stat-label"><span class="label-full">Companies tracked</span><span class="label-short">Companies</span></div>
         <div class="stat-value">${portals.tracked}</div>
         <span class="stat-caret" aria-hidden="true">▾</span><span class="sr-only">Click to expand</span>
       </div>
       <div class="stat stat-cell" onclick="toggleStatPanel('scanned')" title="Click to see scan activity">
-        <div class="stat-label">URLs scanned</div>
+        <div class="stat-label"><span class="label-full">URLs scanned</span><span class="label-short">Scanned</span></div>
         <div class="stat-value" id="live-scanned">${scanTotal}</div>
         <span class="stat-caret" aria-hidden="true">▾</span><span class="sr-only">Click to expand</span>
       </div>
       <div class="stat stat-cell" onclick="toggleStatPanel('batches')" title="Click to see batch run history">
-        <div class="stat-label">Batches run</div>
+        <div class="stat-label"><span class="label-full">Batches run</span><span class="label-short">Batches</span></div>
         <div class="stat-value" id="live-batches">${batchRuns}</div>
         <span class="stat-caret" aria-hidden="true">▾</span><span class="sr-only">Click to expand</span>
       </div>
       <div class="stat stat-cell" onclick="toggleStatPanel('applied')" title="Click to see in-flight applications">
-        <div class="stat-label">Applied / In process</div>
+        <div class="stat-label"><span class="label-full">Applied / In process</span><span class="label-short">Applied</span></div>
         <div class="stat-value" id="live-applied">${applied.length}</div>
         <div class="stat-trend">${deltaIndicator(kpiSpark.applied.delta)}${sparklineSVG(kpiSpark.applied.daily, 'var(--text-3)', 'Applied / In process')}</div>
         <span class="stat-caret" aria-hidden="true">▾</span><span class="sr-only">Click to expand</span>
@@ -6494,6 +6643,9 @@ function initTableHorizontalScroll() {
     if (!canScrollX) return;
     // Treat horizontal trackpad swipes as-is; only redirect VERTICAL wheel.
     if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+    // If the table has vertical overflow, let the browser scroll it
+    // vertically — don't hijack the wheel for horizontal movement.
+    if (wrap.scrollHeight > wrap.clientHeight + 1) return;
     const delta = e.deltaY;
     const atLeftEdge  = wrap.scrollLeft <= 0 && delta < 0;
     const atRightEdge = wrap.scrollLeft + wrap.clientWidth >= wrap.scrollWidth - 1 && delta > 0;
@@ -7954,10 +8106,70 @@ async function toggleStatPanel(key) {
 function esc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+// ── COL / Currency enrichment ───────────────────────────────────
+const _COL = {
+  seattle: 100, 'bellevue': 100,
+  'san francisco': 122, ' sf ': 122, 'palo alto': 118,
+  'new york': 118, 'nyc': 118, ' ny ': 118,
+  'austin': 88, 'boston': 108, 'chicago': 94, 'dc': 103, 'washington': 103,
+  'london': 99, 'paris': 86, 'berlin': 78, 'amsterdam': 91,
+  'dublin': 90, 'singapore': 95, 'toronto': 91, 'montreal': 82,
+  'munich': 82, 'zurich': 135, 'zürich': 135,
+};
+const _FX = { USD: 1, EUR: 1.12, GBP: 1.28, CAD: 0.73, SGD: 0.75, CHF: 1.15 };
+
+function _detectCurrency(comp) {
+  if (!comp) return 'USD';
+  if (comp.includes('€') || /\bEUR\b/.test(comp)) return 'EUR';
+  if (comp.includes('£') || /\bGBP\b/.test(comp)) return 'GBP';
+  if (/\bCAD\b/.test(comp)) return 'CAD';
+  if (/\bSGD\b/.test(comp)) return 'SGD';
+  if (/\bCHF\b/.test(comp)) return 'CHF';
+  return 'USD';
+}
+
+function colBadge(comp, location) {
+  const currency = _detectCurrency(comp);
+  if (currency === 'USD') return ''; // no badge needed for US roles
+  const fx = _FX[currency] || 1;
+
+  // Extract numeric salary (handle K notation, ranges → midpoint)
+  const raw = (comp || '').replace(/,/g, '');
+  const nums = [];
+  for (const m of raw.matchAll(/([\d.]+)\s*[Kk]/g)) nums.push(parseFloat(m[1]) * 1000);
+  if (!nums.length) for (const m of raw.matchAll(/([\d]{4,7})/g)) nums.push(parseFloat(m[1]));
+  if (!nums.length) return '';
+  const mid = nums.length >= 2 ? (nums[0] + nums[1]) / 2 : nums[0];
+  const usd = Math.round(mid * fx);
+  const usdK = Math.round(usd / 1000);
+
+  // Find COL for location
+  const locLow = (location || '').toLowerCase();
+  let locCol = null; let locName = '';
+  for (const [k, v] of Object.entries(_COL)) {
+    if (locLow.includes(k)) { locCol = v; locName = k.trim(); break; }
+  }
+  if (!locCol) return \`<span class="col-badge" title="FX converted (COL unknown)">≈ $\${usdK}K USD</span>\`;
+
+  const seattleEquiv = Math.round(usd * (100 / locCol));
+  const seattleK = Math.round(seattleEquiv / 1000);
+  const delta = Math.round((seattleEquiv - usd) / usd * 100);
+  const color = delta >= 0 ? 'var(--green-fg)' : 'var(--orange-fg,#b45309)';
+  const arrow = delta >= 0 ? '↑' : '↓';
+  const sign = delta >= 0 ? '+' : '';
+  const note = delta >= 0
+    ? \`Cheaper COL in \${locName} — buys more than $\${usdK}K would in Seattle\`
+    : \`Higher COL in \${locName} — buys less than $\${usdK}K would in Seattle\`;
+
+  return \`<span class="col-badge" style="color:\${color}" title="Pre-tax. \${note}. COL index: \${locName} \${locCol} vs Seattle 100.">≈ $\${usdK}K USD · $\${seattleK}K Seattle equiv \${arrow}\${sign}\${Math.abs(delta)}% QOL</span>\`;
+}
+
 function evalAge(d) {
   if (!d) return '';
   const days = Math.floor((Date.now() - new Date(d).getTime()) / 86400000);
   if (isNaN(days) || days < 0) return '';
+  if (days >= 14) return \`<span class="age-red">\${days}d ⚠</span>\`;
+  if (days >= 10) return \`<span class="age-amber">\${days}d</span>\`;
   if (days < 30) return days + 'd';
   return Math.round(days/7) + 'w';
 }
@@ -7965,6 +8177,15 @@ function scoreBadge(s) {
   if (!s && s !== 0) return '<span class="muted">—</span>';
   const cls = s >= 4 ? 'score-strong' : s >= 3 ? 'score-moderate' : 'score-weak';
   return \`<span class="badge \${cls}">\${Number(s).toFixed(1)}</span>\`;
+}
+function bSubType(role) {
+  const r = (role || '').toLowerCase();
+  if (/developer.?advocate|devrel|dev.?rel|developer.?relations/.test(r)) return 'Dev Advocate';
+  if (/exec(utive)?.*(comms?|communications?)|vp.*(comms?|communications?)|chief.?comm/.test(r)) return 'Exec Comms';
+  if (/editorial|editor[^i]|content.?lead|journalist|storytell/.test(r)) return 'Editorial';
+  if (/comms?.?(engineer|eng\\b)|technical.?(comms?|comm)|engineering.?comms?/.test(r)) return 'Eng Comms';
+  if (/ai.?(comms?|communications?|content|advocate)|(comms?|content).?(ai|llm|genai)/.test(r)) return 'AI Comms';
+  return null;
 }
 function toggleRecentEvals() {
   const wrap = document.getElementById('recent-evals-wrap');
@@ -8015,14 +8236,17 @@ function buildTable(rows, panelId) {
     const archetypeFull = r.reportSummary?.archetype || r.archetype || '';
     const tierMatch = archetypeFull.match(/\\b(A1|A2|B)\\b/);
     const archetype = tierMatch ? tierMatch[1] : (archetypeFull.slice(0, 3) || '');
+    const sub = archetype === 'B' ? bSubType(r.role || '') : null;
     const tldrRaw = r.reportSummary?.tldr || '';
     const tldr = tldrRaw.includes('|') ? '' : tldrRaw; // skip raw table markdown
     const comp = r.reportSummary?.comp || '';
+    const location = r.reportSummary?.location || '';
     const url = r.reportSummary?.url || '';
     const rec = r.reportSummary?.recommendation || '';
+    const colTag = colBadge(comp, location);
     return \`<tr class="row" onclick="toggleDetail('sp-\${panelId}-\${i}')">
       <td>\${scoreBadge(r.score)}</td>
-      <td><strong>\${esc(r.company||'')}</strong>\${archetype ? \`<span class="tier-tag" tabindex="0" role="button" data-tooltip="\${esc(tierTooltipJS(archetype))}" aria-label="Tier \${esc(archetype)}: \${esc(tierTooltipJS(archetype))}" onclick="event.stopPropagation();openTierLegend('\${esc(archetype)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openTierLegend('\${esc(archetype)}')}">\${esc(archetype)}</span>\` : ''}</td>
+      <td><strong>\${esc(r.company||'')}</strong>\${archetype ? \`<span class="tier-tag" tabindex="0" role="button" data-tooltip="\${esc(tierTooltipJS(archetype))}" aria-label="Tier \${esc(archetype)}: \${esc(tierTooltipJS(archetype))}" onclick="event.stopPropagation();openTierLegend('\${esc(archetype)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openTierLegend('\${esc(archetype)}')}">\${esc(archetype)}</span>\` : ''}\${sub ? \`<span class="tier-tag tier-tag-sub">\${esc(sub)}</span>\` : ''}</td>
       <td class="role-cell">\${esc(r.role||'')}</td>
       <td>\${statusBadge(r.status, r.num)}</td>
       <td class="muted-text">\${esc(r.date||'')}</td>
@@ -8033,7 +8257,7 @@ function buildTable(rows, panelId) {
       <td colspan="7">
         <div class="detail-block">
           \${(comp || archetype || r.date) ? \`<div class="detail-meta">
-            \${comp ? \`<span class="meta-chip meta-chip-comp">💰 \${esc(comp)}</span>\` : ''}
+            \${comp ? \`<span class="meta-chip meta-chip-comp">💰 \${esc(comp)}\${colTag}</span>\` : ''}
             \${archetype ? \`<span class="meta-chip meta-chip-tier">\${esc(archetype)}</span>\` : ''}
           </div>\` : ''}
           \${tldr ? \`<div class="dcard" style="margin-bottom:8px"><div class="dcard-label">Role at a glance</div><div class="dcard-body">\${esc(tldr)}</div></div>\` : ''}
@@ -8319,51 +8543,39 @@ function selectBatch(batchId) {
   console.log('[selectBatch] batch_id=' + batchId);
 }
 
-// ── Batch progress overlay ──────────────────────────────────────
+// ── Sidebar batch widget ────────────────────────────────────────
 let _batchInterval = null;
-let _batchOverlayDismissed = false;
 
 async function pollBatch() {
   const data = await apiFetch('/api/batch-live');
   if (!data) return;
-  const overlay = document.getElementById('batch-overlay');
-  const btn = document.getElementById('batch-toggle-btn');
+  const widget = document.getElementById('sidebar-batch');
+  if (!widget) return;
 
   if (data.total > 0) {
-    btn && (btn.style.display = '');
-    if (!_batchOverlayDismissed) overlay.classList.add('visible');
-    document.getElementById('batch-title').textContent =
+    widget.style.display = '';
+    document.getElementById('sidebar-batch-title').textContent =
       \`⚡ Batch: \${data.completed}/\${data.total} (\${data.pct?.toFixed(0) || 0}%)\`;
-    const bar = document.getElementById('batch-bar');
+    const bar = document.getElementById('sidebar-batch-bar-fill');
     if (bar) bar.style.width = (data.pct || 0) + '%';
 
-    const recent = (data.rows || []).filter(r => r.status === 'completed').slice(0, 5);
-    document.getElementById('batch-body').innerHTML =
-      \`<div class="batch-stat-row"><span class="batch-stat-label">Completed</span><span class="batch-stat-val">\${data.completed}</span></div>
-       <div class="batch-stat-row"><span class="batch-stat-label">Failed</span><span class="batch-stat-val">\${data.failed || 0}</span></div>
-       <div class="batch-stat-row"><span class="batch-stat-label">Running</span><span class="batch-stat-val">\${data.running || 0}</span></div>
-       <div class="batch-stat-row"><span class="batch-stat-label">Pending</span><span class="batch-stat-val">\${data.pending || 0}</span></div>
-       \${recent.length ? '<div class="batch-recent">' + recent.map(r =>
-         \`<div class="batch-recent-item">✅ \${r.company || ''} — \${r.role || r.id || ''}</div>\`
+    const recent = (data.rows || []).filter(r => r.status === 'completed').slice(0, 3);
+    document.getElementById('sidebar-batch-stats').innerHTML =
+      \`<div class="sidebar-batch-stat"><span class="sidebar-batch-stat-label">Completed</span><span class="sidebar-batch-stat-val">\${data.completed}</span></div>
+       <div class="sidebar-batch-stat"><span class="sidebar-batch-stat-label">Failed</span><span class="sidebar-batch-stat-val">\${data.failed || 0}</span></div>
+       <div class="sidebar-batch-stat"><span class="sidebar-batch-stat-label">Running</span><span class="sidebar-batch-stat-val">\${data.running || 0}</span></div>
+       <div class="sidebar-batch-stat"><span class="sidebar-batch-stat-label">Pending</span><span class="sidebar-batch-stat-val">\${data.pending || 0}</span></div>
+       \${recent.length ? '<div class="sidebar-batch-recent">' + recent.map(r =>
+         \`<div class="sidebar-batch-recent-item">✅ \${r.company || ''} — \${r.role || r.id || ''}</div>\`
        ).join('') + '</div>' : ''}\`;
 
     if (data.completed >= data.total && data.total > 0 && !data.running) {
       clearInterval(_batchInterval);
       _batchInterval = null;
     }
+  } else {
+    widget.style.display = 'none';
   }
-}
-
-function dismissBatchOverlay() {
-  _batchOverlayDismissed = true;
-  document.getElementById('batch-overlay').classList.remove('visible');
-}
-
-function toggleBatchOverlay() {
-  const el = document.getElementById('batch-overlay');
-  const opening = !el.classList.contains('visible');
-  if (opening) _batchOverlayDismissed = false;
-  el.classList.toggle('visible');
 }
 
 // ── Verify claims modal ─────────────────────────────────────────
@@ -9189,9 +9401,10 @@ function _cmdkActions() {
       const el = document.getElementById('apply-now-section');
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } },
-    { id: 'act-batch', icon: '⚡', title: 'Toggle batch overlay', sub: 'Show or hide the batch progress overlay', run: () => {
-      if (typeof toggleBatchOverlay === 'function') toggleBatchOverlay();
-      else toast('Batch overlay unavailable', 'info');
+    { id: 'act-batch', icon: '⚡', title: 'Batch progress', sub: 'Scroll to batch progress in sidebar', run: () => {
+      const el = document.getElementById('sidebar-batch');
+      if (el && el.style.display !== 'none') el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      else toast('No batch running', 'info');
     } },
     { id: 'act-scan', icon: '⟳', title: 'Run scan (show command)', sub: 'Display the shell command to run a portal scan', run: () => {
       toast('Run in terminal: node scan.mjs', 'info');
@@ -10409,8 +10622,7 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   body.share-mode .dcard--action,
   body.share-mode .dcard--notes,
   body.share-mode .rec-btn,
-  body.share-mode #batch-toggle-btn,
-  body.share-mode #batch-overlay,
+  body.share-mode #sidebar-batch,
   body.share-mode .toolbar-btn.cmdk-trigger,
   body.share-mode #cmdk-backdrop,
   body.share-mode #verify-backdrop,

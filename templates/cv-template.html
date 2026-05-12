@@ -66,12 +66,12 @@
     width: 100%;
     max-width: {{PAGE_WIDTH}};
     margin: 0 auto;
-    padding: 2px 0;
+    padding: 0.25in;
   }
 
   /* === HEADER === */
   .header {
-    margin-bottom: 20px;
+    margin-bottom: 12px;
   }
 
   .header h1 {
@@ -80,8 +80,16 @@
     font-weight: 700;
     color: #1a1a2e;
     letter-spacing: -0.02em;
-    margin-bottom: 6px;
+    margin-bottom: 3px;
     line-height: 1.1;
+  }
+
+  .header-subtitle {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    color: #555;
+    margin-bottom: 8px;
   }
 
   .header-gradient {
@@ -94,7 +102,7 @@
   .contact-row {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px 14px;
+    gap: 6px 12px;
     font-family: 'DM Sans', sans-serif;
     font-size: 10.5px;
     line-height: 1.4;
@@ -112,26 +120,26 @@
 
   /* === SECTIONS === */
   .section {
-    margin-bottom: 18px;
+    margin-bottom: 11px;
   }
 
   .section-title {
     font-family: 'Space Grotesk', sans-serif;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.06em;
     color: hsl(187, 74%, 32%);
     border-bottom: 1.5px solid #e2e2e2;
     padding-bottom: 4px;
-    margin-bottom: 10px;
+    margin-bottom: 9px;
     line-height: 1.2;
   }
 
   /* === PROFESSIONAL SUMMARY === */
   .summary-text {
-    font-size: 11px;
-    line-height: 1.7;
+    font-size: 10.5px;
+    line-height: 1.65;
     color: #2f2f2f;
   }
 
@@ -144,23 +152,23 @@
   .competencies-grid {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 7px;
   }
 
   .competency-tag {
     font-family: 'DM Sans', sans-serif;
-    font-size: 10px;
+    font-size: 9.5px;
     font-weight: 500;
     color: hsl(187, 74%, 28%);
     background: hsl(187, 40%, 95%);
-    padding: 4px 10px;
+    padding: 3px 9px;
     border-radius: 3px;
     border: 1px solid hsl(187, 40%, 88%);
   }
 
   /* === WORK EXPERIENCE === */
   .job {
-    margin-bottom: 14px;
+    margin-bottom: 9px;
   }
 
   .job-header {
@@ -168,27 +176,27 @@
     justify-content: space-between;
     align-items: baseline;
     gap: 12px;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
   }
 
   .job-company {
     font-family: 'Space Grotesk', sans-serif;
-    font-size: 12.5px;
+    font-size: 12px;
     font-weight: 600;
     color: hsl(270, 70%, 45%);
   }
 
   .job-period {
-    font-size: 10.5px;
+    font-size: 10px;
     color: #777;
     white-space: nowrap;
   }
 
   .job-role {
-    font-size: 11px;
+    font-size: 10.5px;
     font-weight: 600;
     color: #333;
-    margin-bottom: 6px;
+    margin-bottom: 5px;
   }
 
   .job-location {
@@ -197,15 +205,15 @@
   }
 
   .job ul {
-    padding-left: 18px;
-    margin-top: 6px;
+    padding-left: 16px;
+    margin-top: 2px;
   }
 
   .job li {
-    font-size: 10.5px;
-    line-height: 1.6;
+    font-size: 10px;
+    line-height: 1.55;
     color: #333;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
   }
 
   .job li strong {
@@ -214,14 +222,14 @@
 
   /* === PROJECTS === */
   .project {
-    margin-bottom: 12px;
+    margin-bottom: 7px;
   }
 
   .project-title {
     font-family: 'Space Grotesk', sans-serif;
-    font-size: 11.5px;
+    font-size: 11px;
     font-weight: 600;
-    color: hsl(270, 70%, 45%);
+    color: hsl(187, 74%, 32%);
   }
 
   .project-badge {
@@ -235,9 +243,9 @@
   }
 
   .project-desc {
-    font-size: 10.5px;
+    font-size: 10px;
     color: #444;
-    margin-top: 3px;
+    margin-top: 2px;
     line-height: 1.55;
   }
 
@@ -249,7 +257,7 @@
 
   /* === EDUCATION === */
   .edu-item {
-    margin-bottom: 8px;
+    margin-bottom: 7px;
   }
 
   .edu-header {
@@ -261,7 +269,7 @@
 
   .edu-title {
     font-weight: 600;
-    font-size: 11px;
+    font-size: 10.5px;
     color: #333;
   }
 
@@ -334,8 +342,22 @@
     }
 
     .page {
-      padding: 0;
+      padding: 0.25in;
     }
+  }
+
+  /* === TWO-COLUMN LAYOUT (Education + Certifications side-by-side) === */
+  .two-col-wrapper {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    margin-bottom: 16px;
+  }
+
+  .two-col-wrapper .section {
+    flex: 1;
+    min-width: 0;
+    margin-bottom: 0;
   }
 
   /* === PAGE BREAK CONTROL === */
