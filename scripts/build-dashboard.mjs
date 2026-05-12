@@ -3482,11 +3482,17 @@ function build() {
      the left ticker carries the "is system live" signal alone. */
   @media (max-width: 720px) {
     .mc-strip {
-      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-columns: minmax(0, 1fr) auto auto;
       gap: 8px; padding: 5px 12px; min-height: 32px;
       font-size: 11px;
     }
-    .mc-batch { display: none; }
+    .mc-batch[data-state="idle"],
+    .mc-batch:not([data-state]) { display: none; }
+    .mc-batch:not([data-state="idle"]) {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 10px; max-width: 130px; overflow: hidden;
+    }
+    .mc-batch-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 120px; }
     .mc-health { padding: 2px 8px; font-size: 10.5px; }
     .mc-health .mc-health-text { display: none; }
     .mc-strip .live-text { font-size: 11px; }
@@ -3947,6 +3953,49 @@ function build() {
   }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
   thead { position: sticky; top: 0; z-index: 2; }
+
+  /* ── Column resize (desktop ≥721px) ─────────────────────────────
+     table-layout:fixed lets JS set exact th widths. max-width:0 on td
+     is the standard trick to make overflow+ellipsis work in fixed tables. */
+  @media (min-width: 721px) {
+    .panel .table-scroll table {
+      table-layout: fixed;
+      width: 100%;
+      min-width: 900px;
+    }
+    .panel .table-scroll table th { position: relative; }
+    .panel .table-scroll table th.bulk-th { position: static; overflow: visible; }
+    /* Initial column widths. th:nth-child(5) = Role has no width → fills remaining */
+    .panel .table-scroll table th:nth-child(1)  { width: 32px; }
+    .panel .table-scroll table th:nth-child(2)  { width: 58px; }
+    .panel .table-scroll table th:nth-child(3)  { width: 84px; }
+    .panel .table-scroll table th:nth-child(4)  { width: 130px; }
+    .panel .table-scroll table th:nth-child(6)  { width: 95px; }
+    .panel .table-scroll table th:nth-child(7)  { width: 108px; }
+    .panel .table-scroll table th:nth-child(8)  { width: 108px; }
+    .panel .table-scroll table th:nth-child(9)  { width: 72px; }
+    .panel .table-scroll table th:nth-child(10) { width: 60px; }
+    .panel .table-scroll table th:nth-child(11) { width: 90px; }
+    .panel .table-scroll table th:nth-child(12) { width: 46px; }
+    .panel .table-scroll table th:nth-child(13) { width: 130px; }
+    /* Clip cell content to column width */
+    .panel .table-scroll table td {
+      overflow: hidden; text-overflow: ellipsis;
+      white-space: nowrap; max-width: 0;
+    }
+    /* Role wraps rather than truncates */
+    .panel .table-scroll table td.role-cell { white-space: normal; }
+  }
+  /* Resize handle — 5px zone on right edge of each th */
+  .col-resize-handle {
+    position: absolute; right: 0; top: 0; bottom: 0;
+    width: 5px; cursor: col-resize; z-index: 3;
+    background: transparent;
+    border-right: 2px solid transparent;
+    transition: border-color .12s;
+  }
+  .col-resize-handle:hover,
+  .col-resize-handle.is-dragging { border-right-color: var(--blue-fg, #0969da); }
   th {
     text-align: left; padding: 9px 12px;
     background: var(--surface-2); color: var(--text-3);
@@ -5170,10 +5219,39 @@ function build() {
     #bulk-action-bar { top: 8px; max-width: calc(100vw - 16px); }
   }
 
+  /* Multi-select mobile: bulk bar slides up and mc-strip hides (#9) */
+  @media (max-width: 720px) {
+    #mc-strip.bulk-hidden { display: none !important; }
+    /* Bulk bar: full-width bottom-anchored on mobile */
+    #bulk-action-bar {
+      top: auto; bottom: calc(56px + 8px); /* above mobile tabbar */
+      left: 8px; right: 8px; transform: none;
+      width: auto; max-width: none; border-radius: var(--radius);
+    }
+    #bulk-action-bar:not([hidden]) { transform: none; }
+    .bulk-bar-inner { flex-wrap: wrap; gap: 6px; }
+    /* Card checkmark overlay when selected */
+    tr.row.is-bulk-selected {
+      position: relative;
+    }
+    tr.row.is-bulk-selected::after {
+      content: '✓';
+      position: absolute;
+      top: 10px; right: 12px;
+      width: 22px; height: 22px;
+      background: var(--blue-fg, #0969da);
+      color: #fff;
+      border-radius: 50%;
+      font-size: 12px;
+      display: flex; align-items: center; justify-content: center;
+      pointer-events: none;
+    }
+  }
+
   /* ── Touch-target audit (>=44x44 on coarse pointers / mobile) ─── */
   @media (hover: none) and (pointer: coarse), (max-width: 640px) {
     .toolbar-btn { min-height: 44px; min-width: 44px; padding: 10px 16px; font-size: 13px; }
-    .stat { min-height: 88px; padding: 16px 18px; }
+    .stat { min-height: 60px; } /* touch target met via full-card tap; value dominates */
     th.sortable { min-height: 44px; padding-top: 12px; padding-bottom: 12px; }
     tr.row > td { padding-top: 12px; padding-bottom: 12px; }
     .gap-chip-interactive { min-height: 44px; padding: 12px 14px; display: inline-flex; align-items: center; }
@@ -5185,10 +5263,64 @@ function build() {
        so on mobile it doesn't need to collapse to a dot. The strip itself
        collapses via its own media query (see .mc-strip rules). */
     #dark-toggle { min-height: 44px; min-width: 44px; }
+    #toolbar-overflow-btn { min-height: 44px; min-width: 44px; padding: 10px 14px; font-size: 20px; }
     .rec-btn { min-height: 44px; padding: 12px 18px; display: inline-flex; align-items: center; }
     .filters input, .filters select { min-height: 44px; padding: 10px 12px; font-size: 14px; }
     .verify-submit { min-height: 44px; padding: 12px 20px; }
   }
+
+  /* ── Mobile toolbar brand (#3/#11) ─────────────────────────────── */
+  .toolbar-brand { display: none; }
+  @media (max-width: 480px) {
+    .toolbar-brand {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; line-height: 1.1; flex: 1; min-width: 0;
+    }
+    .brand-name {
+      font-size: 13px; font-weight: 600; letter-spacing: 0.02em;
+      color: var(--text); white-space: nowrap;
+    }
+    .brand-sync {
+      font-size: 10px; color: var(--text-3, #6e7781);
+      white-space: nowrap; margin-top: 1px;
+    }
+    /* hide the sr-only h1 placeholder — brand is now visual */
+    h1.sr-only { display: none; }
+    /* hide cmdk search label on tiny screens to give brand room */
+    .cmdk-trigger-label { display: none; }
+    .cmdk-trigger .cmdk-trigger-kbd { display: none; }
+    .cmdk-trigger { min-width: 44px; justify-content: center; }
+    /* hide meta subtitle — sync ts is now in toolbar */
+    #dashboard-meta { display: none; }
+  }
+
+  /* ── Overnight summary card (#1) ───────────────────────────────── */
+  #overnight-card {
+    display: none; /* js sets hidden attr; CSS controls mobile visibility */
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 40px 12px 14px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow-sm);
+  }
+  @media (max-width: 720px) {
+    #overnight-card:not([hidden]) { display: block; }
+  }
+  .overnight-body {
+    font-size: 13px; color: var(--text); line-height: 1.5;
+  }
+  .overnight-body strong { color: var(--blue-fg, #0969da); }
+  .overnight-dismiss {
+    position: absolute; top: 8px; right: 8px;
+    background: none; border: none; font-size: 16px;
+    color: var(--text-3); cursor: pointer;
+    min-height: 32px; min-width: 32px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: var(--radius-sm);
+  }
+  .overnight-dismiss:active { background: var(--surface-2); }
 
   /* ── Mobile-only gap chips on cards (hidden on desktop) ───────── */
   .card-gaps-mobile { display: none; }
@@ -5278,6 +5410,47 @@ function build() {
   @media (prefers-reduced-motion: reduce) {
     #mobile-sheet { transition: none !important; }
     #mobile-sheet-backdrop { transition: none !important; }
+  }
+
+  /* ── Report formatter sheet (#6) ──────────────────────────────── */
+  .report-fmt-actions {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .report-fmt-btn {
+    flex: 1 1 calc(50% - 4px);
+    min-height: 44px; padding: 10px 12px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius); font: inherit; font-size: 13px;
+    color: var(--text); cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    transition: background .1s;
+  }
+  .report-fmt-btn:active { background: var(--surface-3, #eaeef2); }
+  .report-fmt-btn.primary { background: var(--blue-fg, #0969da); color: #fff; border-color: var(--blue-fg, #0969da); }
+  .report-fmt-btn.primary:active { background: #0860c7; }
+  .report-sections {
+    display: flex; flex-direction: column; gap: 0;
+  }
+  .report-section {
+    padding: 14px 14px 12px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .report-section:last-child { border-bottom: none; }
+  .report-section-head {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13.5px; font-weight: 600; color: var(--text);
+  }
+  .report-section-grade {
+    margin-left: auto; font-size: 12px; font-weight: 700;
+    padding: 2px 7px; border-radius: 999px;
+    background: var(--surface-2); color: var(--text-2);
+  }
+  .report-section-body {
+    font-size: 12.5px; color: var(--text-2);
+    margin-top: 6px; line-height: 1.5;
   }
 
   /* ── Right-rail context drawer (desktop ≥1280, full-overlay 720–1280) ─
@@ -5572,17 +5745,20 @@ function build() {
     .toolbar h1 { font-size: 18px; }
     .subtle { font-size: 12px; margin-bottom: 14px; }
 
-    /* Stats: 2-up grid */
-    .stats { grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0 18px; }
-    .stat { padding: 14px 14px; min-height: 80px; }
-    .stat-value { font-size: 24px; margin-top: 4px; }
-    .stat-label { font-size: 10.5px; }
-    .stat-caret { font-size: 10px; margin-top: 6px; }
+    /* Stats: 2-up grid — compact on mobile */
+    .stats { grid-template-columns: 1fr 1fr; gap: 6px; margin: 10px 0 14px; }
+    .stat { padding: 10px 12px; min-height: 60px; }
+    .stat-value { font-size: 22px; margin-top: 2px; }
+    .stat-label { font-size: 10px; letter-spacing: 0.03em; }
+    .stat-caret { font-size: 9px; margin-top: 4px; }
     /* Stat-panel: constrained height + scrollable so it doesn't bury cards */
     .stat-panel { padding: 14px 12px; max-height: 65vh; overflow-y: auto; }
     .stat-panel-title { font-size: 14px; margin-bottom: 10px; }
-    /* Hero balance: allow label to wrap on narrow screens */
-    .stat-hero-balance .stat-label { white-space: normal; }
+    /* Hero balance: single-line truncation prevents 2-line wrap */
+    .stat-hero-balance .stat-label {
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      font-size: 10px;
+    }
 
     /* Panels: tighter */
     .panel { padding: 16px 14px; }
@@ -5591,8 +5767,37 @@ function build() {
     /* Filters become full-width stacked controls */
     .filters input, .filters select { width: 100%; min-width: 0; flex: 1 1 100%; }
 
-    /* Charts grid → 1 column on mobile */
-    .charts-grid { grid-template-columns: 1fr; gap: 12px; }
+    /* Charts: horizontal swipe carousel on mobile */
+    .charts-grid {
+      display: flex; flex-direction: row;
+      overflow-x: scroll; overflow-y: hidden;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      gap: 12px; padding-bottom: 8px;
+      scrollbar-width: none;
+    }
+    .charts-grid::-webkit-scrollbar { display: none; }
+    .charts-grid > * {
+      flex: 0 0 calc(100vw - 32px);
+      scroll-snap-align: start;
+      min-width: 0;
+    }
+    /* Dots indicator */
+    .charts-dots {
+      display: flex; justify-content: center; gap: 6px;
+      margin-top: 8px;
+    }
+    .charts-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--border-strong);
+      transition: background .2s, transform .2s;
+    }
+    .charts-dot.active {
+      background: var(--blue-fg, #0969da);
+      transform: scale(1.3);
+    }
+    /* Charts inside carousel: allow pinch-zoom on SVG */
+    .charts-grid > * svg { touch-action: manipulation; }
     .trends-grid { grid-template-columns: 1fr; gap: 10px; }
     .trend-card-wide { grid-column: 1 / -1; }
     .comp-grid { grid-template-columns: 1fr; gap: 18px; }
@@ -5627,8 +5832,8 @@ function build() {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 14px 14px 12px;
-      margin: 0 0 10px;
+      padding: 10px 12px 8px;
+      margin: 0 0 8px;
       box-shadow: var(--shadow-sm);
       cursor: pointer;
       min-height: 44px;
@@ -5659,11 +5864,11 @@ function build() {
     /* Role: full-width below the title row */
     #apply-now-section tr.row > td.role-cell {
       display: block;
-      margin-top: 4px;
-      font-size: 13.5px;
+      margin-top: 3px;
+      font-size: 12.5px;
       color: var(--text-2);
       font-weight: 500;
-      line-height: 1.4;
+      line-height: 1.35;
     }
     /* Wave H: Base + Location chips collapse into a meta row directly
        below role on the stacked card. Class-based so column index drift
@@ -5672,40 +5877,90 @@ function build() {
     #apply-now-section tr.row > td.location-cell {
       display: inline-flex;
       align-items: center;
-      margin: 6px 6px 0 0;
+      margin: 5px 5px 0 0;
     }
-    /* Status pill + equity badge + age: bottom meta line. Class-based
-       so column index drift doesn't break the layout. */
+    /* Status, equity, benefits, age: all inline in one meta row */
     #apply-now-section tr.row > td.status-cell,
     #apply-now-section tr.row > td.equity-cell,
+    #apply-now-section tr.row > td.benefits-cell,
     #apply-now-section tr.row > td.muted-text:not(.mobile-hide) {
       display: inline-flex;
       align-items: center;
-      margin: 8px 8px 0 0;
+      margin: 5px 5px 0 0;
     }
     /* Equity badge on stacked card stays compact next to status */
     #apply-now-section tr.row > td.equity-cell { white-space: nowrap; }
-    /* Action links: separated row, right-aligned, large hit-area */
+    /* Pack build icon — not actionable on phone, hide it */
+    #apply-now-section tr.row > td.people-cell { display: none; }
+    /* Action links: compact separator row */
     #apply-now-section tr.row > td.action-cell {
       display: block;
-      margin-top: 10px;
-      padding-top: 10px;
+      margin-top: 8px;
+      padding-top: 7px;
       border-top: 1px solid var(--border);
       text-align: right;
-      font-size: 13px;
+      font-size: 12px;
     }
     #apply-now-section tr.row > td.action-cell a {
       display: inline-block;
-      min-height: 44px; line-height: 44px;
-      padding: 0 12px;
-      margin-left: 4px;
+      min-height: 36px; line-height: 36px;
+      padding: 0 8px;
+      margin-left: 2px;
     }
 
-    /* All Evaluations panel: keep tabular layout but allow horizontal scroll */
-    #all-tbody, .panel:not(#apply-now-section) tbody { display: table-row-group; }
-    #all-tbody tr.row, .panel:not(#apply-now-section) tr.row { display: table-row; }
-    #all-tbody tr.row > td, .panel:not(#apply-now-section) tr.row > td { display: table-cell; }
-    .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    /* All Evaluations: vertical card list on mobile */
+    #all-evaluations-section table { display: block; }
+    #all-evaluations-section thead { display: none; }
+    #all-tbody { display: block; }
+    #all-tbody tr.row {
+      display: block;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px 10px;
+      margin: 0 0 8px;
+      box-shadow: var(--shadow-sm);
+      cursor: pointer;
+    }
+    #all-tbody tr.row:active { background: var(--surface-2); border-color: var(--border-strong); }
+    #all-tbody tr.row > td {
+      display: none;
+      border-bottom: none;
+      padding: 0;
+      background: transparent !important;
+    }
+    /* bulk checkbox — inline top-right */
+    #all-tbody tr.row > td.bulk-cell {
+      display: inline-block; float: right; margin: 0 0 4px 8px;
+    }
+    /* Score chip — inline top-left */
+    #all-tbody tr.row > td:nth-child(2) {
+      display: inline-block; margin: 0 8px 6px 0; vertical-align: middle;
+    }
+    /* Company — inline next to score */
+    #all-tbody tr.row > td:nth-child(4) {
+      display: inline-block; font-size: 15px; font-weight: 600;
+      vertical-align: middle; max-width: calc(100% - 80px);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    /* Role — block below company */
+    #all-tbody tr.row > td:nth-child(5) {
+      display: block; font-size: 13px; color: var(--text-2);
+      margin-top: 3px; line-height: 1.4;
+    }
+    /* Status, Equity, Age — bottom meta row */
+    #all-tbody tr.row > td:nth-child(6),
+    #all-tbody tr.row > td:nth-child(7),
+    #all-tbody tr.row > td:nth-child(11) {
+      display: inline-flex; align-items: center;
+      margin: 8px 8px 0 0; font-size: 12px;
+    }
+    /* Base salary — show inline in meta row */
+    #all-tbody tr.row > td:nth-child(3) {
+      display: inline-flex; align-items: center;
+      margin: 8px 8px 0 0; font-size: 12px; color: var(--text-2);
+    }
+    .table-scroll { overflow-x: visible; }
 
     /* Inline detail row hidden on mobile — content moves into bottom sheet */
     tr.detail-row { display: none !important; }
@@ -6022,6 +6277,10 @@ function build() {
   <header class="toolbar" role="banner">
     <button class="toolbar-btn sidebar-hamburger" onclick="toggleSidebar()" id="sidebar-hamburger-btn" aria-label="Open navigation" aria-controls="sidebar" aria-expanded="false" title="Open navigation">☰</button>
     <h1 class="sr-only">Career-Ops Dashboard</h1>
+    <div class="toolbar-brand" aria-hidden="true">
+      <span class="brand-name">Career-Ops</span>
+      <span class="brand-sync" id="toolbar-sync-ts"></span>
+    </div>
     <button class="toolbar-btn cmdk-trigger" onclick="openCmdK()" title="Open command palette (⌘K / Ctrl-K)" aria-label="Open command palette (Cmd+K or Ctrl+K)">
       <span class="cmdk-trigger-label">Search…</span>
       <span class="cmdk-trigger-kbd">⌘K</span>
@@ -6032,7 +6291,7 @@ function build() {
   </header>
 
   <!-- Mission-control hero strip (Phase 7 Item 1): live ticker + batch + health -->
-  <div class="mc-strip" role="status" aria-label="Mission-control telemetry strip">
+  <div class="mc-strip" id="mc-strip" role="status" aria-label="Mission-control telemetry strip">
     <div class="live-ticker" id="live-ticker" aria-live="polite" aria-label="Most recent scanner activity" tabindex="0" title="Click to expand on mobile">
       <span class="live-dot" id="live-dot" aria-hidden="true"></span>
       <span class="live-text" id="live-text">—</span>
@@ -6214,6 +6473,12 @@ function build() {
       </div>
       <div class="verify-body" id="verify-body"></div>
     </div>
+  </div>
+
+  <!-- Overnight summary card (#1): shown on mobile when new items appeared since last visit -->
+  <div id="overnight-card" hidden role="status" aria-live="polite">
+    <div class="overnight-body" id="overnight-body"></div>
+    <button class="overnight-dismiss" onclick="this.closest('#overnight-card').hidden=true;localStorage.setItem('overnight-dismissed',Date.now())" aria-label="Dismiss overnight summary">✕</button>
   </div>
 
   <div class="stats" id="overview-section">
@@ -6503,6 +6768,7 @@ function build() {
       </div>`;
     })()}
   </div>
+  <div class="charts-dots" id="charts-dots"></div>
   ${renderCompAnalytics(compAnalytics, compFloors)}
 
   </main>
@@ -7379,6 +7645,40 @@ function closeMobileSheet() {
   }
   document.body.style.overflow = '';
 }
+
+// Report formatter bottom sheet (#6) — opens the eval report for a row
+// inside the mobile sheet with quick-action buttons and block navigation.
+function openMobileSheetForReport(rowNum) {
+  const tr = document.querySelector('tr.row[data-num="' + rowNum + '"]');
+  if (!tr) return;
+  const company = tr.querySelector('td:nth-child(4)')?.innerText.trim() || '';
+  const role = tr.querySelector('td.role-cell,td:nth-child(5)')?.innerText.trim() || '';
+  const reportLink = tr.querySelector('a[href*="reports/"]')?.getAttribute('href') || '';
+  const titleEl = document.getElementById('mobile-sheet-title');
+  const bodyEl = document.getElementById('mobile-sheet-body');
+  if (!titleEl || !bodyEl) return;
+  titleEl.textContent = (company || 'Report') + (role ? ' — ' + role : '');
+  const openBtn = reportLink
+    ? '<a class="report-fmt-btn primary" href="' + reportLink + '" target="_blank" rel="noopener">📄 Open report</a>'
+    : '<span class="report-fmt-btn" style="opacity:.5">No report</span>';
+  bodyEl.innerHTML =
+    '<div class="report-fmt-actions">' +
+      openBtn +
+      '<button class="report-fmt-btn" onclick="closeMobileSheet();openStatusPopover && openStatusPopover(' + rowNum + ',event)" type="button">✏️ Set status</button>' +
+    '</div>' +
+    '<div class="report-sections" id="report-sections-' + rowNum + '">' +
+      '<div class="report-section"><div class="report-section-head">Role Summary</div></div>' +
+      '<div class="report-section"><div class="report-section-head">CV Match</div></div>' +
+      '<div class="report-section"><div class="report-section-head">Comp &amp; Market</div></div>' +
+      '<div class="report-section"><div class="report-section-head">Interview Prep</div></div>' +
+    '</div>';
+  bodyEl.scrollTop = 0;
+  const bd = document.getElementById('mobile-sheet-backdrop');
+  bd.classList.add('visible');
+  bd.removeAttribute('aria-hidden');
+  document.body.style.overflow = 'hidden';
+}
+window.openMobileSheetForReport = openMobileSheetForReport;
 
 // ESC closes mobile sheet AND right-rail drawer (whichever is open).
 document.addEventListener('keydown', (e) => {
@@ -8764,6 +9064,7 @@ async function refreshLiveStats() {
     upd.textContent = 'Updated ' + t + ' PT';
     const meta = document.getElementById('dashboard-meta');
     if (meta) meta.title = data.lastUpdated;
+    _updateToolbarSyncTs(new Date(data.lastUpdated));
   }
 }
 
@@ -9818,8 +10119,10 @@ function _bulkUpdateBar() {
   const count = document.getElementById('bulk-count');
   if (!bar || !count) return;
   count.textContent = String(_bulkSelected.size);
+  const mcStrip = document.getElementById('mc-strip');
   if (_bulkSelected.size > 0) {
     bar.hidden = false;
+    if (mcStrip) mcStrip.classList.add('bulk-hidden');
     // First selection auto-enables select mode so the column reveals
     if (!document.body.classList.contains('select-mode')) {
       document.body.classList.add('select-mode');
@@ -9827,6 +10130,7 @@ function _bulkUpdateBar() {
     }
   } else {
     bar.hidden = true;
+    if (mcStrip) mcStrip.classList.remove('bulk-hidden');
   }
 }
 
@@ -10450,6 +10754,222 @@ window.toast = function(msg, type) {
     document.addEventListener('pointerup',     _onTapUpOrCancel,  { passive: true });
     document.addEventListener('pointercancel', _onTapUpOrCancel,  { passive: true });
     document.addEventListener('pointerleave',  _onTapUpOrCancel,  { passive: true });
+  }
+})();
+
+// ── Toolbar sync timestamp (#3/#11) ────────────────────────────
+// Formats "Synced Xm ago" in the mobile toolbar brand slot.
+// Called by refreshLiveStats() on each data refresh.
+let _lastSyncTime = null;
+let _syncTsInterval = null;
+function _updateToolbarSyncTs(date) {
+  _lastSyncTime = date instanceof Date ? date : new Date(date);
+  _renderSyncTs();
+  if (!_syncTsInterval) {
+    _syncTsInterval = setInterval(_renderSyncTs, 30000);
+  }
+}
+function _renderSyncTs() {
+  const el = document.getElementById('toolbar-sync-ts');
+  if (!el || !_lastSyncTime) return;
+  const diffMs = Date.now() - _lastSyncTime.getTime();
+  const mins = Math.round(diffMs / 60000);
+  if (mins < 1) { el.textContent = 'Synced just now'; return; }
+  if (mins < 60) { el.textContent = 'Synced ' + mins + 'm ago'; return; }
+  const hrs = Math.round(mins / 60);
+  el.textContent = 'Synced ' + hrs + 'h ago';
+}
+
+// ── Charts swipe carousel + dots (#8) ──────────────────────────
+(function initChartSwipe() {
+  function _setup() {
+    const grid = document.getElementById('charts-section');
+    const dotsWrap = document.getElementById('charts-dots');
+    if (!grid || !dotsWrap || window.innerWidth > 720) return;
+    const cards = [...grid.children];
+    if (cards.length < 2) return;
+    // Build dots
+    dotsWrap.innerHTML = '';
+    cards.forEach((_, i) => {
+      const d = document.createElement('div');
+      d.className = 'charts-dot' + (i === 0 ? ' active' : '');
+      dotsWrap.appendChild(d);
+    });
+    const dots = dotsWrap.querySelectorAll('.charts-dot');
+    function _updateDots() {
+      const scrollLeft = grid.scrollLeft;
+      const cardW = grid.offsetWidth;
+      const idx = Math.round(scrollLeft / cardW);
+      dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+    }
+    grid.addEventListener('scroll', _updateDots, { passive: true });
+    _updateDots();
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _setup);
+  } else {
+    _setup();
+  }
+  // Re-init on resize (desktop ↔ mobile transitions)
+  window.addEventListener('resize', () => {
+    const dotsWrap = document.getElementById('charts-dots');
+    if (dotsWrap) dotsWrap.innerHTML = '';
+    _setup();
+  }, { passive: true });
+})();
+
+// ── Overnight summary card (#1) ─────────────────────────────────
+(function initOvernightCard() {
+  function _setup() {
+    if (window.innerWidth > 720) return;
+    const card = document.getElementById('overnight-card');
+    const body = document.getElementById('overnight-body');
+    if (!card || !body) return;
+
+    // Dismissed this session? Skip
+    const dismissed = parseInt(localStorage.getItem('overnight-dismissed') || '0', 10);
+    const sixHours = 6 * 60 * 60 * 1000;
+    if (dismissed && (Date.now() - dismissed) < sixHours) return;
+
+    // Compare current stats snapshot with last-seen snapshot
+    const SNAP_KEY = 'careerOps.overnight.snap.v1';
+    const SEEN_KEY = 'careerOps.overnight.seen.v1';
+    const current = {
+      applyNow: parseInt(document.getElementById('live-apply-now')?.textContent || '0', 10) ||
+                parseInt(document.getElementById('live-apply-now')?.textContent || '0', 10),
+      total: parseInt(document.getElementById('live-total')?.textContent || '0', 10),
+      pipeline: parseInt(document.getElementById('live-pipeline')?.textContent || '0', 10),
+    };
+    const lastStr = localStorage.getItem(SNAP_KEY);
+    let last = null;
+    try { last = lastStr ? JSON.parse(lastStr) : null; } catch (_) {}
+    // Save current as new snapshot
+    localStorage.setItem(SNAP_KEY, JSON.stringify(current));
+    const lastSeen = parseInt(localStorage.getItem(SEEN_KEY) || '0', 10);
+    const eightHours = 8 * 60 * 60 * 1000;
+    if (!last || (Date.now() - lastSeen) < eightHours) {
+      localStorage.setItem(SEEN_KEY, String(Date.now()));
+      return;
+    }
+    // Compute deltas
+    const dApply = current.applyNow - (last.applyNow || 0);
+    const dTotal = current.total - (last.total || 0);
+    const dPipe = current.pipeline - (last.pipeline || 0);
+    if (dApply <= 0 && dTotal <= 0 && dPipe <= 0) return;
+    const parts = [];
+    if (dApply > 0) parts.push('<strong>+' + dApply + ' apply-now</strong>');
+    if (dTotal > 0) parts.push('+' + dTotal + ' evaluated');
+    if (dPipe > 0) parts.push('+' + dPipe + ' pipeline');
+    body.innerHTML = '🌙 Since your last visit: ' + parts.join(' · ');
+    card.hidden = false;
+    localStorage.setItem(SEEN_KEY, String(Date.now()));
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _setup);
+  } else {
+    _setup();
+  }
+})();
+
+// ── Column resize (desktop ≥721px) ──────────────────────────────
+// Drag the right edge of any column header to resize it.
+// Double-click the handle to reset that column to CSS default.
+// Widths persist across page loads via localStorage.
+(function initColResize() {
+  if (window.innerWidth < 721) return;
+  var STORE = 'careerOps.colWidths.v1';
+
+  function load() { try { return JSON.parse(localStorage.getItem(STORE) || '{}'); } catch(e) { return {}; } }
+  function save(id, i, w) { var d = load(); if (!d[id]) d[id] = {}; d[id][i] = w; try { localStorage.setItem(STORE, JSON.stringify(d)); } catch(e) {} }
+  function del(id, i)  { var d = load(); if (!d[id]) return; delete d[id][i]; try { localStorage.setItem(STORE, JSON.stringify(d)); } catch(e) {} }
+
+  function applyStored() {
+    var d = load();
+    Object.keys(d).forEach(function(tbodyId) {
+      var tbody = document.getElementById(tbodyId);
+      var table = tbody && tbody.closest('table');
+      if (!table) return;
+      var ths = table.querySelectorAll('thead th');
+      Object.keys(d[tbodyId]).forEach(function(i) {
+        var th = ths[parseInt(i)];
+        if (th) th.style.width = d[tbodyId][i] + 'px';
+      });
+    });
+  }
+
+  function addHandles() {
+    document.querySelectorAll('.panel .table-scroll table').forEach(function(table) {
+      var tbody = table.querySelector('tbody');
+      var tbodyId = tbody && tbody.id;
+      if (!tbodyId) return;
+      var ths = Array.prototype.slice.call(table.querySelectorAll('thead th'));
+      ths.forEach(function(th, i) {
+        if (th.classList.contains('bulk-th')) return;
+        var handle = document.createElement('div');
+        handle.className = 'col-resize-handle';
+        handle.title = 'Drag to resize · double-click to reset';
+        handle.setAttribute('aria-hidden', 'true');
+
+        var startX, startW;
+        handle.addEventListener('mousedown', function(e) {
+          e.preventDefault(); e.stopPropagation();
+          startX = e.clientX; startW = th.offsetWidth;
+          handle.classList.add('is-dragging');
+          document.body.style.cursor = 'col-resize';
+          document.body.style.userSelect = 'none';
+          function onMove(ev) {
+            var w = Math.max(36, startW + (ev.clientX - startX));
+            th.style.width = w + 'px';
+          }
+          function onUp() {
+            handle.classList.remove('is-dragging');
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+            save(tbodyId, i, parseInt(th.style.width) || th.offsetWidth);
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onUp);
+          }
+          document.addEventListener('mousemove', onMove);
+          document.addEventListener('mouseup', onUp);
+        });
+
+        handle.addEventListener('dblclick', function(e) {
+          e.stopPropagation();
+          // Auto-fit: expand column to fit widest content in this column
+          var probe = document.createElement('span');
+          probe.style.cssText = 'visibility:hidden;position:fixed;top:-9999px;left:-9999px;white-space:nowrap;padding:0;margin:0;border:0;';
+          document.body.appendChild(probe);
+          var maxW = 0;
+          // Measure header text
+          var thCStyle = window.getComputedStyle(th);
+          probe.style.font = thCStyle.font;
+          probe.textContent = th.textContent.replace(/\s+/g, ' ').trim();
+          maxW = Math.max(maxW, probe.offsetWidth);
+          // Measure every td in this column
+          Array.prototype.forEach.call(table.querySelectorAll('tbody tr'), function(row) {
+            var td = row.querySelectorAll('td')[i];
+            if (!td) return;
+            var tdCStyle = window.getComputedStyle(td);
+            probe.style.font = tdCStyle.font;
+            probe.textContent = td.textContent.replace(/\s+/g, ' ').trim();
+            maxW = Math.max(maxW, probe.offsetWidth);
+          });
+          document.body.removeChild(probe);
+          // Cell horizontal padding buffer
+          var w = Math.max(40, maxW + 24);
+          th.style.width = w + 'px';
+          save(tbodyId, i, w);
+        });
+
+        th.appendChild(handle);
+      });
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() { applyStored(); addHandles(); });
+  } else {
+    applyStored(); addHandles();
   }
 })();
 
