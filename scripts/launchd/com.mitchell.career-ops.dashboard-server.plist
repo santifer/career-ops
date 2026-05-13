@@ -9,6 +9,7 @@
     <array>
         <string>/Users/mitchellwilliams/.nvm/versions/node/v24.14.0/bin/node</string>
         <string>/Users/mitchellwilliams/Documents/career-ops/dashboard-server.mjs</string>
+        <string>--port=7777</string>
     </array>
 
     <key>WorkingDirectory</key>

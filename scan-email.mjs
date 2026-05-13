@@ -28,6 +28,7 @@ import { join } from 'path';
 import yaml from 'js-yaml';
 import { ImapFlow } from 'imapflow';
 import { simpleParser } from 'mailparser';
+import { resolveUrls } from './lib/resolve-ats-url.mjs';
 
 const parseYaml = yaml.load;
 
@@ -699,6 +700,21 @@ async function main() {
   }
 
   if (!dryRun && newOffers.length > 0) {
+    // Resolve LinkedIn jobs/view URLs → canonical ATS URLs before persisting.
+    // Non-LinkedIn URLs pass through unchanged. Results are cached in
+    // data/url-resolve-cache.tsv so subsequent scans are instant for known IDs.
+    const linkedInOffers = newOffers.filter(o => /linkedin\.com\/jobs\/view\//i.test(o.url));
+    if (linkedInOffers.length > 0) {
+      console.log(`\nResolving ${linkedInOffers.length} LinkedIn URL(s) to canonical ATS URLs...`);
+      const urlMap = new Map();
+      for await (const { url, resolved, changed } of resolveUrls(linkedInOffers.map(o => o.url), { root: process.cwd(), delayMs: 400 })) {
+        urlMap.set(url, resolved);
+        if (changed) console.log(`  ✓ ${url.match(/\/(\d+)$/)?.[1]} → ${resolved}`);
+      }
+      for (const offer of newOffers) {
+        if (urlMap.has(offer.url)) offer.url = urlMap.get(offer.url);
+      }
+    }
     appendToPipeline(newOffers);
     appendToScanHistory(newOffers, date);
     console.log('\nResults saved to data/pipeline.md and data/scan-history.tsv');

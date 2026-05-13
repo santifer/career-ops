@@ -3,14 +3,16 @@
 // Usage: node dashboard-server.mjs [--port=3000]
 
 import { createServer } from 'http';
-import { readFileSync, existsSync, readdirSync, appendFileSync, writeFileSync, renameSync, mkdirSync } from 'fs';
+import { readFileSync, existsSync, statSync, readdirSync, appendFileSync, writeFileSync, renameSync, mkdirSync } from 'fs';
 import { join, extname } from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { randomBytes } from 'crypto';
 import yaml from 'js-yaml';
+import { marked } from 'marked';
 import { parseApplicationsFile } from './lib/parse-applications.mjs';
 import { statusKey, statusBadgeClass } from './lib/status-key.mjs';
+import { getCachedUrl } from './lib/resolve-ats-url.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = __dirname;
@@ -136,10 +138,11 @@ function parseReportSummary(reportPath) {
       }
     }
 
+    const rawUrl = urlMatch ? urlMatch[1].trim() : null;
     return {
       score:      scoreMatch  ? parseFloat(scoreMatch[1])       : null,
       archetype:  archMatch   ? archMatch[1].trim()              : null,
-      url:        urlMatch    ? urlMatch[1].trim()               : null,
+      url:        rawUrl      ? getCachedUrl(rawUrl, ROOT)       : null,
       legitimacy: legitMatch  ? legitMatch[1].trim()             : null,
       tldr,
       comp,
@@ -1328,6 +1331,82 @@ function getRowNotes(num) {
   return { ok: true, num: key, entries: [...all].reverse() };
 }
 
+// ── /mark + report HTML renderer ──────────────────────────────
+
+const CANONICAL_STATES = new Set([
+  'Evaluated','Applied','Responded','Interview','Offer','Rejected','Discarded','SKIP',
+]);
+
+function renderMarkPage(ctx) {
+  const isOk = !!ctx.ok;
+  const accent = isOk ? '#1a7f37' : '#cf222e';
+  const tone   = isOk ? '#dafbe1' : '#ffebe9';
+  const icon   = isOk ? '✅' : '⚠️';
+  let body = `<h1 style="margin:0 0 12px;color:${accent}">${icon} ${isOk ? (ctx.idempotent ? 'Already marked' : 'Status updated') : 'Could not mark'}</h1>`;
+  body += `<p style="font-size:15px;color:#1f2328">${ctx.message || ''}</p>`;
+  if (isOk && ctx.role) body += `<p style="font-size:14px;color:#57606a">${ctx.role}</p>`;
+  if (isOk && ctx.priorStatus && ctx.priorStatus !== ctx.status && !ctx.idempotent) {
+    const undoUrl = `/mark?num=${ctx.num}&status=${encodeURIComponent(ctx.priorStatus)}&from=${encodeURIComponent(ctx.status)}`;
+    body += `<p style="margin-top:18px"><a href="${undoUrl}" style="background:#fff;color:#cf222e;padding:8px 14px;border:1px solid #cf222e;border-radius:6px;text-decoration:none;font-weight:600;font-size:13px">↶ Undo (revert to ${ctx.priorStatus})</a></p>`;
+  }
+  body += `<p style="margin-top:22px"><a href="/dashboard/" style="color:#0969da;text-decoration:none;font-weight:500">← Back to dashboard</a></p>`;
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>career-ops · mark status</title></head><body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;background:#f6f8fa;color:#1f2328;margin:0;padding:0;line-height:1.55"><main style="max-width:640px;margin:64px auto;padding:0 20px"><div style="background:#ffffff;border:1px solid #d0d7de;border-left:4px solid ${accent};border-radius:10px;padding:28px 32px;box-shadow:0 1px 3px rgba(0,0,0,0.04)"><div style="display:inline-block;background:${tone};color:${accent};padding:3px 10px;border-radius:99px;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:14px">career-ops</div>${body}</div></main></body></html>`;
+}
+
+function handleMarkRequest(req, res) {
+  const fullUrl = new URL(req.url, `http://localhost:${PORT}`);
+  const num    = parseInt(fullUrl.searchParams.get('num') || '', 10);
+  const status = (fullUrl.searchParams.get('status') || 'Applied').trim();
+  const previousStatus = (fullUrl.searchParams.get('from') || '').trim();
+
+  const html = (body, code = 200) => { res.writeHead(code, { 'Content-Type': 'text/html; charset=utf-8' }); res.end(body); };
+
+  if (!Number.isFinite(num) || num < 1)
+    return html(renderMarkPage({ ok: false, message: `Invalid row number: ${fullUrl.searchParams.get('num')}` }), 400);
+  if (!CANONICAL_STATES.has(status))
+    return html(renderMarkPage({ ok: false, message: `Invalid status "${status}". Allowed: ${[...CANONICAL_STATES].join(', ')}` }), 400);
+
+  const appsPath = join(ROOT, 'data/applications.md');
+  if (!existsSync(appsPath))
+    return html(renderMarkPage({ ok: false, message: 'data/applications.md not found' }), 500);
+
+  const lines = readFileSync(appsPath, 'utf-8').split('\n');
+  let priorStatus = '', priorCompany = '', priorRole = '', lineIdx = -1;
+  for (let i = 0; i < lines.length; i++) {
+    const m = lines[i].match(/^\|\s*(\d+)\s*\|/);
+    if (m && parseInt(m[1], 10) === num) {
+      lineIdx = i;
+      const cells = lines[i].split('|').map(c => c.trim());
+      priorCompany = cells[3] || ''; priorRole = cells[4] || ''; priorStatus = cells[6] || '';
+      break;
+    }
+  }
+  if (lineIdx === -1)
+    return html(renderMarkPage({ ok: false, message: `Row #${num} not found in applications.md` }), 404);
+  if (priorStatus === status)
+    return html(renderMarkPage({ ok: true, idempotent: true, num, company: priorCompany, role: priorRole, status, priorStatus, message: `#${num} is already marked ${status} — no change needed.` }));
+
+  const cells = lines[lineIdx].split('|');
+  if (cells.length < 10)
+    return html(renderMarkPage({ ok: false, message: `Row #${num} has unexpected column count (${cells.length}). Refusing to edit.` }), 500);
+
+  const orig = cells[6];
+  cells[6] = `${orig.match(/^\s*/)[0]}${status}${orig.match(/\s*$/)[0]}`;
+  const today = new Date().toISOString().slice(0, 10);
+  const noteOrig = cells[9] || '';
+  cells[9] = `${noteOrig.match(/^\s*/)[0]}${noteOrig.trim()} · marked ${status} via heartbeat ${today}${noteOrig.match(/\s*$/)[0]}`;
+  lines[lineIdx] = cells.join('|');
+  writeFileSync(appsPath, lines.join('\n'));
+  console.log(`  ✓ Marked #${num} ${priorCompany}: ${priorStatus} → ${status}`);
+  return html(renderMarkPage({ ok: true, num, company: priorCompany, role: priorRole, status, priorStatus, message: `#${num} ${priorCompany} marked ${priorStatus} → ${status}.` }));
+}
+
+function renderMarkdownPage(mdContent, fileName) {
+  marked.setOptions({ gfm: true, breaks: false });
+  const restHtml = marked.parse(mdContent);
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${fileName} · career-ops</title><style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;max-width:920px;margin:32px auto;padding:0 24px;color:#1e293b;line-height:1.6;background:#f8fafc}.nav{font-size:13px;color:#64748b;margin-bottom:18px}.nav a{color:#4338ca;text-decoration:none}article{background:#fff;padding:32px 40px;border-radius:12px;border:1px solid #e2e8f0}h1{font-size:26px;margin:0 0 14px;color:#0f172a}h2{font-size:19px;margin:28px 0 10px;color:#0f172a;border-left:4px solid #6366f1;padding-left:10px}h3{font-size:16px;margin:22px 0 8px;color:#1e293b}a{color:#4338ca}code{background:#f1f5f9;padding:1px 6px;border-radius:4px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px}pre{background:#f1f5f9;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:13px}table{border-collapse:collapse;width:100%;margin:16px 0;font-size:14px}th,td{text-align:left;padding:8px 12px;border-bottom:1px solid #e2e8f0;vertical-align:top}th{background:#f8fafc;font-weight:600}blockquote{margin:16px 0;padding:12px 18px;border-left:4px solid #6366f1;background:#eef2ff;color:#312e81;border-radius:0 8px 8px 0}hr{border:none;height:1px;background:#e2e8f0;margin:24px 0}ul,ol{padding-left:24px}li{margin:4px 0}</style></head><body><div class="nav"><a href="/dashboard/">← back to dashboard</a> · <code>${fileName}</code></div><article>${restHtml}</article></body></html>`;
+}
+
 // ── HTTP server ────────────────────────────────────────────────
 
 const server = createServer((req, res) => {
@@ -1343,6 +1422,20 @@ const server = createServer((req, res) => {
     });
     res.end(JSON.stringify(data));
   };
+
+  // /mark — heartbeat email "✅ Applied" one-click status flip
+  if (url === '/mark') return handleMarkRequest(req, res);
+
+  // /reports/*.md — render markdown reports as styled HTML
+  const reportHtmlMatch = url.match(/^\/reports\/(.+\.md)$/);
+  if (reportHtmlMatch) {
+    const reportPath = join(ROOT, 'reports', reportHtmlMatch[1]);
+    if (!existsSync(reportPath)) { res.writeHead(404); res.end('Report not found'); return; }
+    const md = readFileSync(reportPath, 'utf-8');
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+    res.end(renderMarkdownPage(md, reportHtmlMatch[1]));
+    return;
+  }
 
   // Share-link endpoints
   if (url === '/api/share/create') {
@@ -1546,9 +1639,14 @@ const server = createServer((req, res) => {
   }
 
   // Static files from dashboard/
-  let filePath = url === '/' ? '/dashboard/index.html' : `/dashboard${url}`;
+  // Normalize: /dashboard/ and /dashboard are aliases for /
+  const normalUrl = (url === '/dashboard' || url === '/dashboard/') ? '/' : url;
+  // Strip /dashboard prefix so bookmarks to /dashboard/... still resolve
+  const strippedUrl = normalUrl.startsWith('/dashboard/') ? normalUrl.slice('/dashboard'.length) : normalUrl;
+  let filePath = strippedUrl === '/' ? '/dashboard/index.html' : `/dashboard${strippedUrl}`;
   filePath = join(ROOT, filePath);
   if (!existsSync(filePath)) { res.writeHead(404); res.end('Not found'); return; }
+  if (statSync(filePath).isDirectory()) { res.writeHead(404); res.end('Not found'); return; }
   const ext = extname(filePath);
   const headers = { 'Content-Type': MIME[ext] || 'text/plain' };
   // Default cache policy: HTML is rebuilt by build-dashboard.mjs on every change,
@@ -1556,7 +1654,7 @@ const server = createServer((req, res) => {
   // but no full re-download when content unchanged). Without this, every UI fix
   // requires the user to hard-refresh (Cmd-Shift-R) to see new HTML/inline CSS+JS.
   // Static assets (PNG, JSON, manifest) get a 5-min cache so revisits are fast.
-  if (ext === '.html' || url === '/' || url === '/dashboard/index.html') {
+  if (ext === '.html' || strippedUrl === '/' || strippedUrl === '/index.html') {
     headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
     headers['Pragma'] = 'no-cache';
     headers['Expires'] = '0';

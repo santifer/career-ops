@@ -19,6 +19,7 @@ import { homedir } from 'os';
 import nodemailer from 'nodemailer';
 import { marked } from 'marked';
 import { classifyLiveness } from '../liveness-core.mjs';
+import { getCachedUrl } from '../lib/resolve-ats-url.mjs';
 
 const ROOT = process.cwd();
 const args = process.argv.slice(2);
@@ -353,12 +354,16 @@ function parseApplicationsTracker(path) {
 }
 
 // Read the URL from a report file's header (look for `**URL:**`).
+// If the stored URL is a LinkedIn jobs/view URL, substitute the cached
+// canonical ATS URL (resolved by lib/resolve-ats-url.mjs) so email links
+// point directly to the company's ATS rather than LinkedIn.
 function getReportUrl(reportPath) {
   const fullPath = join(ROOT, reportPath);
   if (!existsSync(fullPath)) return '';
   const text = readFileSync(fullPath, 'utf-8').slice(0, 2000);
   const m = text.match(/\*\*URL:\*\*\s*(\S+)/);
-  return m ? m[1] : '';
+  if (!m) return '';
+  return getCachedUrl(m[1], ROOT);
 }
 
 // Compress a notes cell to a single concise line for the email table.
