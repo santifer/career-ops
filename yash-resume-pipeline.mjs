@@ -296,6 +296,30 @@ SUBCOMMANDS['mark-skipped'] = async (args) => {
   ok({});
 };
 
+// === Timer state helpers ===
+function timerStatePath(pid = process.pid) {
+  return `/tmp/yash-pipeline-timer-${pid}.json`;
+}
+
+async function readTimerState(pid = process.pid) {
+  const p = timerStatePath(pid);
+  try {
+    return JSON.parse(await readFile(p, 'utf-8'));
+  } catch (e) {
+    if (e.code === 'ENOENT') return null;
+    throw e;
+  }
+}
+
+async function writeTimerState(state, pid = process.pid) {
+  await writeFile(timerStatePath(pid), JSON.stringify(state, null, 2));
+}
+
+function nowEpochFloat() {
+  // Adds sub-ms precision; matches `date -u +%s.%N` shape
+  return Date.now() / 1000 + Number(process.hrtime.bigint() % 1_000_000_000n) / 1e12;
+}
+
 // === log subcommand ===
 const ALLOWED_LOG_STATUSES = new Set(['ok', 'fail', 'skip']);
 
@@ -321,10 +345,31 @@ SUBCOMMANDS['log'] = async (args) => {
     payload.cover_letter_status = args['cover-letter-status'];
   }
 
+  // Phase timing fields (integer milliseconds; additive — existing fields are never removed)
+  const timingFields = ['jd-fetch-ms', 'resume-gen-ms', 'resume-compile-ms', 'cover-letter-gen-ms', 'cover-letter-compile-ms', 'total-ms'];
+  for (const f of timingFields) {
+    if (args[f] !== undefined) {
+      const v = parseInt(args[f], 10);
+      if (!Number.isNaN(v)) payload[f.replace(/-/g, '_')] = v;
+    }
+  }
+
   const logPath = runsLogPath();
   await mkdir(dirname(logPath), { recursive: true });
   await appendFile(logPath, JSON.stringify(payload) + '\n');
   ok({});
+};
+
+SUBCOMMANDS['init-timer'] = async (args) => {
+  const url = args.url;
+  if (!url) fail('init-timer requires --url');
+  const state = {
+    url,
+    pid: process.pid,
+    t_url_start: nowEpochFloat(),
+  };
+  await writeTimerState(state);
+  ok({ timer_path: timerStatePath() });
 };
 
 SUBCOMMANDS['compile-resume'] = async (args) => {

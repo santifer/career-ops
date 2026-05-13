@@ -873,3 +873,26 @@ test('check-duplicate: reports cover_letter_exists field', async () => {
     await rm(dir, { recursive: true, force: true });
   }
 });
+
+test('init-timer: writes timer state file with url and t_url_start', async () => {
+  const { code, stdout } = await runScript(['init-timer', '--url', 'https://example.com/job/123']);
+  assert.equal(code, 0);
+  const obj = JSON.parse(stdout);
+  assert.equal(obj.status, 'ok');
+  assert.match(obj.timer_path, /\/tmp\/yash-pipeline-timer-\d+\.json/);
+  const state = JSON.parse(await readFileTest(obj.timer_path, 'utf-8'));
+  assert.equal(state.url, 'https://example.com/job/123');
+  assert.ok(typeof state.t_url_start === 'number');
+  assert.ok(state.t_url_start > 1.7e9); // sanity: post-2023 epoch
+  assert.ok(state.pid > 0);
+  // cleanup
+  await rm(obj.timer_path).catch(() => {});
+});
+
+test('init-timer: requires --url flag', async () => {
+  const { code, stdout } = await runScript(['init-timer']);
+  assert.equal(code, 1);
+  const obj = JSON.parse(stdout);
+  assert.equal(obj.status, 'fail');
+  assert.match(obj.error, /init-timer requires --url/);
+});
