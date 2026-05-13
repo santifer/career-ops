@@ -1,0 +1,26 @@
+{
+  "AI & Automation": {
+    "text": "LLMs, Generative AI, Machine Learning, RAG, Sagemaker, Vector Databases, n8n, Make.com",
+    "cap": 97
+  },
+  "Languages": {
+    "text": "Python, Scala, Ruby, Java, JavaScript, TypeScript, SQL",
+    "cap": 88
+  },
+  "Frameworks & Web": {
+    "text": "Ruby on Rails, Spring Boot, React, Node.js, Express, Angular",
+    "cap": 88
+  },
+  "Data & Databases": {
+    "text": "Spark, Databricks, Airflow, PostgreSQL, MongoDB, Redis, Elasticsearch",
+    "cap": 91
+  },
+  "Cloud & DevOps": {
+    "text": "AWS (Lambda, ECS, EKS, SQS, ElastiCache, Sagemaker), Terraform, Docker",
+    "cap": 87
+  },
+  "Tools & Platforms": {
+    "text": "Datadog, Cloudwatch, Playwright, PyTest, JUnit, Git, GitHub Actions",
+    "cap": 86
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "M1": "Engineered Python data pipelines for AI-powered metadata extraction and enrichment from investment research reports, reducing manual analyst review time by 65% across global enterprise research and content discovery teams",
+  "M2": "Developed machine learning models on Databricks for financial data classification with embeddings, improving categorization accuracy to 94% across 12K monthly fund documents and accelerating downstream research analyst workflows",
+  "M3": "Built LLM-based generative AI retrieval-augmented generation systems enabling natural language queries against proprietary financial databases, accelerating equity research workflows by 50% for senior investment analyst teams",
+  "M4": "Implemented automated validation and monitoring workflows for SEC filing data with anomaly detection, surfacing 340+ discrepancies each month and ensuring regulatory compliance across global fund reporting and audit operations",
+  "M5": "Created LLM-driven summarization and classification tooling for quarterly earnings reports leveraging Airflow orchestration, delivering analyst-ready research briefs in under 30 seconds per document for global equity desks",
+  "M6": "Deployed scalable inference infrastructure on AWS Sagemaker provisioned with Terraform as code, supporting 25K+ daily prediction requests at sub-200ms latency across analyst-facing financial product and reporting surfaces",
+  "B1": "Developed microservices architecture for real-time billing calculations and distributed systems, handling 45K daily transactions with 99.9% uptime for subscriber account management across enterprise-grade telecom operations",
+  "B2": "Implemented REST APIs and HTTP APIs powering customer self-service portals with backend service integrations, serving 850K active subscribers with sub-100ms response times across mobile and web telecom self-service platforms",
+  "B3": "Architected event-driven order management system using message queues for asynchronous data pipelines, reducing service provisioning time by 55% across enterprise telecom operations and field activation engineering workflows",
+  "B4": "Built automated CI/CD pipelines and automated monitoring for microservice deployments using Docker and Jenkins, increasing release frequency from monthly to weekly cycles and accelerating subscriber-facing telecom feature rollouts",
+  "B5": "Optimized SQL queries and indexes for subscriber usage analytics dashboards, achieving 60% improvement in report generation performance and accelerating downstream telecom operations analytics across all regional markets",
+  "V1": "Built transaction processing modules for core banking platform with high-throughput backend services, handling 120K daily payment transactions with 99.7% accuracy for enterprise banking and consumer settlement operations",
+  "V2": "Engineered REST APIs for payment gateway integrations with secure backend communication, reducing transaction settlement time by 40% for enterprise banking clients and accelerating cross-border payment reconciliation workflows",
+  "V3": "Developed batch processing systems for end-of-day settlements and reconciliation, processing 85K records nightly with automated error reconciliation and validation checkpoints across compliance and audit-ready banking ledgers",
+  "V4": "Optimized SQL queries for high-volume transaction tables with indexing strategies, achieving 52% reduction in report generation time for compliance audits and end-of-quarter regulatory filings across banking client portfolios"
+}
