@@ -22,14 +22,20 @@ Read `config/profile.yml` and `modes/_profile.md`.
   > "I see you already have a profile set up. Do you want to revisit your
   > direction, or start fresh?"
   - "Revisit" → run full compass, frame questions around what has changed
-  - "Start fresh" → run full compass as if no profile exists
+  - "Start fresh" → discard the existing profile data from your working
+    context and run full compass as if no profile exists; do not surface
+    existing profile content during Phase 2 or Phase 3
   - Either path ends at Phase 4 with a new draft
 
 ---
 
 ## Phase 1 — Silent CV Analysis
 
-Read `cv.md`. **Do not show this analysis to the user yet.**
+Read `cv.md` if it exists. **Do not show this analysis to the user yet.**
+
+If `cv.md` does not exist, skip the analysis and proceed to Phase 2.
+Archetype detection will be discovery-only; the ikigai reveal in Phase 3
+will present discovery findings only, without a CV-derived baseline.
 
 Internally derive and store:
 
@@ -149,7 +155,8 @@ all sections are approved.
 ### profile.yml — section by section
 
 Present each block as a formatted preview. Ask *"Does this look right?"*
-after each one. Accept edits inline before moving on.
+after each one. If the user requests edits, apply them and re-present
+the updated block for confirmation before moving on.
 
 **Block 1: candidate**
 Populate from `cv.md` (name, email, phone, location, LinkedIn, GitHub).
@@ -195,8 +202,9 @@ target direction. Draws from CV summary + Phase 2 discovery.
 
 **Section 4: Comp targets and negotiation scripts**
 Populated from the compensation block approved in profile.yml.
-Use the script templates from `_profile.template.md` filled with
-real numbers.
+Use the "Your Negotiation Scripts" section of `modes/_profile.template.md`
+as the script structure, replacing bracketed placeholders with real numbers
+from the approved compensation block.
 
 **Section 5: Location policy**
 Populated from profile.yml location block and any remote/travel
