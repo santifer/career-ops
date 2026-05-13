@@ -977,3 +977,29 @@ test('read-timer: fails when timer state missing', async () => {
   const obj = JSON.parse(stdout);
   assert.match(obj.error, /timer state not found.*init-timer/);
 });
+
+test('log --from-timer: pulls phase ms from timer state', async () => {
+  const PID = String(process.pid);
+  const dir = await mkdtemp(join(tmpdir(), 'yrp-logtimer-'));
+  await mkdirTest(join(dir, 'data'), { recursive: true });
+  // Init + populate timer (use --pid for cross-process state sharing)
+  await execFileP('node', [SCRIPT, 'init-timer', '--url', 'https://example.com/x', '--pid', PID], { cwd: dir });
+  await execFileP('node', [SCRIPT, 'mark-phase', '--phase', 'jd_fetch_start', '--pid', PID], { cwd: dir });
+  await new Promise(r => setTimeout(r, 30));
+  await execFileP('node', [SCRIPT, 'mark-phase', '--phase', 'jd_fetch_end', '--pid', PID], { cwd: dir });
+  await execFileP('node', [SCRIPT, 'mark-phase', '--phase', 'url_end', '--pid', PID], { cwd: dir });
+  // Now log --from-timer
+  const { stdout } = await execFileP('node', [SCRIPT, 'log',
+    '--status', 'ok',
+    '--url', 'https://example.com/x',
+    '--from-timer',
+    '--pid', PID,
+  ], { cwd: dir });
+  assert.equal(JSON.parse(stdout).status, 'ok');
+  const logContent = await readFileTest(join(dir, 'data/yash-resume-runs.log'), 'utf-8');
+  const line = JSON.parse(logContent.trim().split('\n').pop());
+  assert.ok(line.jd_fetch_ms >= 20 && line.jd_fetch_ms < 5000, `jd_fetch_ms=${line.jd_fetch_ms} out of range`);
+  assert.ok(line.total_ms >= line.jd_fetch_ms);
+  await rm(`/tmp/yash-pipeline-timer-${PID}.json`).catch(() => {});
+  await rm(dir, { recursive: true, force: true });
+});

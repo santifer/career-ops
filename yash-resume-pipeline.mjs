@@ -350,6 +350,26 @@ SUBCOMMANDS['log'] = async (args) => {
 
   // Phase timing fields (integer milliseconds; additive — existing fields are never removed)
   const timingFields = ['jd-fetch-ms', 'resume-gen-ms', 'resume-compile-ms', 'cover-letter-gen-ms', 'cover-letter-compile-ms', 'total-ms'];
+
+  if (args['from-timer']) {
+    // Pull phase ms from timer state file (written by mark-phase calls).
+    const pid = args.pid ? parseInt(args.pid, 10) : process.pid;
+    const state = await readTimerState(pid);
+    if (!state) fail('log --from-timer requires init-timer to have run first');
+    const fromTimer = {
+      jd_fetch_ms: phaseMs(state, 't_jd_fetch_start', 't_jd_fetch_end'),
+      resume_gen_ms: phaseMs(state, 't_resume_gen_start', 't_resume_gen_end'),
+      resume_compile_ms: phaseMs(state, 't_resume_compile_start', 't_resume_compile_end'),
+      cover_letter_gen_ms: phaseMs(state, 't_cl_gen_start', 't_cl_gen_end'),
+      cover_letter_compile_ms: phaseMs(state, 't_cl_compile_start', 't_cl_compile_end'),
+      total_ms: phaseMs(state, 't_url_start', 't_url_end'),
+    };
+    for (const [k, v] of Object.entries(fromTimer)) {
+      if (v !== null) payload[k] = v;
+    }
+  }
+
+  // Explicit --*-ms flags still work (and override --from-timer values).
   for (const f of timingFields) {
     if (args[f] !== undefined) {
       const v = parseInt(args[f], 10);
