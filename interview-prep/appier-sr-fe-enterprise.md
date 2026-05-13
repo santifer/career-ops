@@ -272,15 +272,41 @@
 
 ---
 
-## 9. 後續紀錄 gate
+## 9. 後續紀錄
 
-每 round 結束後寫回 `data/recruiter-comms.md` #35：
+### R1 一面（2026-05-13 14:00，實際 80 分鐘 vs 預定 60）✅
 
-- [ ] HR 電訪：日期、interviewer name、remote policy、薪資 band、流程確認
-- [ ] Coding 一面：題目類型、用什麼工具、自己感覺
-- [ ] Tech 二面：interviewer 是誰、考了什麼、deep dive 哪些
-- [ ] Tech 三面：system design 題、behavioral 重點
-- [ ] Offer / 拒：comp 細節 / 拒因（如有 feedback）
+- **面試官**：女性 Frontend tech lead（名字待二面前 LinkedIn 確認）
+- **超時 +33%**：強烈 engagement signal
+- **Lead 主動提下一關**：positive proceed signal（非標準 "we'll get back to you" 收尾）
+
+**Lead 挖最深的點 = team 主要痛點（黃金情報）**
+1. **微服務架構經驗**（FE 角度）
+2. **Tracking / SDK 經驗**
+3. **iframe / webview / 網站嵌入**
+
+→ 推測 enterprise 客戶會把 Appier widget / SDK 嵌進自己網站，所以痛點集中在 cross-origin 通訊、SDK loader、tracking 整合。
+
+**答得好**：Webview Pool improvement（CV Electron team 段）
+**卡的點**：微服務溝通、iframe、webview、網站嵌入 = R2 必補
+
+**Lead 額外深問**：「QA agent 用 Playwright 時有沒有遇過 blocking？」
+→ 對 K-Line QA agent + Playwright 工作流有興趣，R2 高機率 follow-up
+
+**Lifestyle 訊號**：lead 明說 **no on-call**（vs Binance 24/7 P0 — 重大 plus）
+**薪水**：雙方都沒提（R1 預期之內）
+
+**R2 預告**（lead 主動透露）
+- Format：take-home + 接著 live session，2–3 小時
+- 可能 **live coding** 或 **agent collaborate**（後者 = 真實檢驗你的 AI workflow 不是 talk）
+- R1 lead 可能旁聽 → 等於想 vouch
+- 詳細補強清單見 `appier-r2-prep.md`
+
+### Pending rounds
+
+- [ ] R2 take-home + live：date TBD（等 Anita 排程）
+- [ ] R3（若有）：system design 或 final
+- [ ] Offer / 拒：comp 細節 / 拒因
 
 ---
 
