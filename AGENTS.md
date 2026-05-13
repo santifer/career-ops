@@ -238,6 +238,18 @@ See `modes/yash-resume-pipeline.md` for the full per-URL loop and
 `docs/superpowers/specs/2026-05-07-yash-resume-pipeline-design.md` for the
 locked design.
 
+**Performance:** Per-URL cycle targets under 5 min. Step 7a (plan-bullets) runs
+`tools/validate_bullets.py` and `tools/validate_skills.py` against the 15 bullets
+and 6 skill categories before any `.tex` is written; the retry budget is
+hard-capped at 2 passes. Step 9 (resume compile) runs in the background in
+parallel with step 9b (cover-letter generation). All phase timings flow through
+`node yash-resume-pipeline.mjs init-timer / mark-phase / log --from-timer`. Run
+`npm run smoke` (or `node tests/e2e-smoke.mjs`) for a ~6s end-to-end sanity
+check that exercises the deterministic Node + Python subcommands against
+committed Scribd fixtures — no LLM, no network. See
+`docs/superpowers/specs/2026-05-13-yash-resume-pipeline-sub5min-design.md` for
+the sub-5min design.
+
 **Memory isolation:** Locked prompts (V2.0 resume, cover-letter, `cv.md`) are
 `cat`'d via Bash, never loaded via the Read tool. This bypasses the global
 `PreToolUse:Read` hook installed by `claude-mem@thedotmack`, which can silently
