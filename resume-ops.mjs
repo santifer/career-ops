@@ -1,18 +1,11 @@
-import fs from 'fs';
+import { spawn } from 'child_process';
 import path from 'path';
+import fs from 'fs';
+import os from 'os';
+import { fileURLToPath } from 'url';
 
-async function pollTask(taskId) {
-  const url = `http://127.0.0.1:8000/api/v1/tasks/${taskId}`;
-  while (true) {
-    const response = await fetch(url);
-    if (!response.ok) throw new Error(`Polling failed: ${response.status}`);
-    const data = await response.json();
-    if (data.status === 'completed') return data;
-    if (data.status === 'failed') throw new Error(`Task failed: ${JSON.stringify(data.error)}`);
-    process.stdout.write('.');
-    await new Promise(r => setTimeout(r, 2000));
-  }
-}
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const RESUME_OPS_DIR = path.resolve(__dirname, '..', 'resume-ops');
 
 async function main() {
   const args = process.argv.slice(2);
@@ -29,63 +22,84 @@ async function main() {
     process.exit(1);
   }
 
-  let resume;
-  try {
-    resume = JSON.parse(fs.readFileSync(params.resume, 'utf8'));
-  } catch (e) {
-    console.error(`❌ Error reading resume: ${e.message}`);
+  // Resolve resume path
+  const resumePath = path.resolve(params.resume);
+  if (!fs.existsSync(resumePath)) {
+    console.error(`❌ Resume file not found: ${resumePath}`);
     process.exit(1);
   }
 
-  let jd = params.jd;
-  if (fs.existsSync(jd)) {
-    jd = fs.readFileSync(jd, 'utf8');
+  // Handle JD: if it's a file path, use it directly; otherwise write to temp file
+  let jdPath = path.resolve(params.jd);
+  let tempJdFile = null;
+  if (!fs.existsSync(jdPath)) {
+    // Treat as inline text — write to temp file
+    tempJdFile = path.join(os.tmpdir(), `career-ops-jd-${Date.now()}.txt`);
+    fs.writeFileSync(tempJdFile, params.jd, 'utf8');
+    jdPath = tempJdFile;
+    console.log('📝 JD provided as inline text, wrote to temp file.');
   }
 
-  console.log('📡 Sending tailoring request to Resume Ops API...');
-  
-  try {
-    const response = await fetch('http://127.0.0.1:8000/api/v1/tailor', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        resume,
-        job_description: jd,
-        theme: params.theme || 'jsonresume-theme-stackoverflow'
-      })
+  // Resolve output path and ensure parent directory exists
+  const outputPath = path.resolve(params.output);
+  fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+
+  // Build CLI arguments for resume-ops
+  const cliArgs = [
+    'run', 'resume-ops',
+    '--resume', resumePath,
+    '--jd', jdPath,
+    '--output', outputPath,
+  ];
+
+  if (params.theme) {
+    cliArgs.push('--theme', params.theme);
+  }
+
+  // Also request the intermediate tailored JSON alongside the PDF
+  const jsonPath = outputPath.replace(/\.pdf$/i, '.json');
+  cliArgs.push('--output-json', jsonPath);
+
+  console.log('🚀 Running resume-ops CLI...');
+  console.log(`   Resume: ${resumePath}`);
+  console.log(`   JD: ${jdPath}`);
+  console.log(`   Output: ${outputPath}`);
+  if (params.theme) console.log(`   Theme: ${params.theme}`);
+
+  return new Promise((resolve, reject) => {
+    const child = spawn('uv', cliArgs, {
+      cwd: RESUME_OPS_DIR,
+      stdio: 'inherit',
+      env: { ...process.env },
     });
 
-    if (!response.ok) {
-      const err = await response.text();
-      throw new Error(`API Error: ${response.status} ${err}`);
-    }
-
-    let data = await response.json();
-    
-    if (data.task_id && !data.pdf_base64) {
-      console.log(`⏳ Task queued (ID: ${data.task_id}). Polling for completion...`);
-      data = await pollTask(data.task_id);
-      console.log('\n✅ Task completed.');
-    }
-
-    if (data.pdf_base64) {
-      fs.mkdirSync(path.dirname(params.output), { recursive: true });
-      fs.writeFileSync(params.output, Buffer.from(data.pdf_base64, 'base64'));
-      console.log(`📄 PDF successfully saved to ${params.output}`);
-      
-      // Also save the tailored JSON if available
-      if (data.resume) {
-        const jsonPath = params.output.replace('.pdf', '.json');
-        fs.writeFileSync(jsonPath, JSON.stringify(data.resume, null, 2));
-        console.log(`📝 Tailored JSON saved to ${jsonPath}`);
+    child.on('close', (code) => {
+      // Clean up temp file if one was created
+      if (tempJdFile) {
+        try { fs.unlinkSync(tempJdFile); } catch (_) { /* best-effort */ }
       }
-    } else {
-      throw new Error('No PDF content received from API');
-    }
-  } catch (err) {
-    console.error(`❌ Error: ${err.message}`);
-    process.exit(1);
-  }
+
+      if (code === 0) {
+        console.log(`✅ PDF successfully saved to ${outputPath}`);
+        if (fs.existsSync(jsonPath)) {
+          console.log(`📝 Tailored JSON saved to ${jsonPath}`);
+        }
+        resolve();
+      } else {
+        reject(new Error(`resume-ops CLI exited with code ${code}`));
+      }
+    });
+
+    child.on('error', (err) => {
+      if (tempJdFile) {
+        try { fs.unlinkSync(tempJdFile); } catch (_) { /* best-effort */ }
+      }
+      reject(new Error(`Failed to start resume-ops CLI: ${err.message}`));
+    });
+  });
 }
 
-main();
+main().catch(err => {
+  console.error(`❌ Error: ${err.message}`);
+  process.exit(1);
+});

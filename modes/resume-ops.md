@@ -1,8 +1,8 @@
-# Mode: resume-ops — High-Quality Tailoring via External API
+# Mode: resume-ops — High-Quality Tailoring via CLI
 
-Use this mode when the user wants a better-tailored resume. This mode leverages the specialized `resume-ops` service.
+Use this mode when the user wants a better-tailored resume. This mode leverages the specialized `resume-ops` CLI.
 
-**The AI agent is responsible for the entire technical lifecycle**: starting the service, ensuring data compatibility, and executing the tailoring. The user should only need to provide the JD.
+**The AI agent is responsible for the entire technical lifecycle**: ensuring data compatibility and executing the tailoring. The user should only need to provide the JD.
 
 ## Pipeline
 
@@ -11,11 +11,7 @@ Use this mode when the user wants a better-tailored resume. This mode leverages 
    - If it's a URL, use `scan.mjs` or relevant tools to extract the text.
 
 2. **Technical Setup (Invisible to User)**:
-   - **Cloning & Service**: Run `node start-resume-ops.mjs`. This script will:
-     - Automatically clone `resume-ops` from GitLab if missing.
-     - Automatically configure the `.env` for local execution.
-     - Start the service using `uv` on port 8000.
-   - **Docker/Podman**: This integration runs `resume-ops` directly via Python/uv for simplicity. **Docker or Podman are NOT required** for this setup, making it easy for most users.
+   - **Prerequisites**: The `resume-ops` directory must exist as a sibling to `career-ops` and have its Python environment set up via `uv sync`. The CLI is invoked directly via `uv run resume-ops` — no server or port management needed.
    - **JSON Resume**: Check for `resume-ops/.local/master-resume.json`. If missing, generate it immediately from `cv.md` and `config/profile.yml`.
 
 3. **Execute Tailoring**:
