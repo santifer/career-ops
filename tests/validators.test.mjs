@@ -81,3 +81,31 @@ test('validate_bullets: empty input flags all 15 as missing', async () => {
   assert.equal(obj.fails.length, 15);
   assert.ok(obj.fails.every(f => f.direction === 'missing'));
 });
+
+test('validate_skills: all categories within cap returns pass:true', async () => {
+  const skills = {
+    'AI & Automation': { text: 'x'.repeat(80), cap: 97 },
+    'Languages': { text: 'x'.repeat(50), cap: 88 },
+    'Frameworks & Web': { text: 'x'.repeat(60), cap: 88 },
+    'Data & Databases': { text: 'x'.repeat(65), cap: 91 },
+    'Cloud & DevOps': { text: 'x'.repeat(70), cap: 87 },
+    'Tools & Platforms': { text: 'x'.repeat(75), cap: 86 },
+  };
+  const { code, stdout } = await runPython('tools/validate_skills.py', skills);
+  assert.equal(code, 0);
+  const obj = JSON.parse(stdout);
+  assert.equal(obj.pass, true);
+  assert.deepEqual(obj.fails, []);
+});
+
+test('validate_skills: over-cap category returns fails', async () => {
+  const skills = {
+    'AI & Automation': { text: 'x'.repeat(100), cap: 97 },
+  };
+  const { stdout } = await runPython('tools/validate_skills.py', skills);
+  const obj = JSON.parse(stdout);
+  assert.equal(obj.pass, false);
+  assert.equal(obj.fails[0].category, 'AI & Automation');
+  assert.equal(obj.fails[0].len, 100);
+  assert.equal(obj.fails[0].cap, 97);
+});
