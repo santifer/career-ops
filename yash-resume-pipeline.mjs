@@ -307,6 +307,7 @@ async function readTimerState(pid = process.pid) {
     return JSON.parse(await readFile(p, 'utf-8'));
   } catch (e) {
     if (e.code === 'ENOENT') return null;
+    if (e instanceof SyntaxError) return null; // partial write from crashed session — treat as missing
     throw e;
   }
 }
@@ -316,7 +317,9 @@ async function writeTimerState(state, pid = process.pid) {
 }
 
 function nowEpochFloat() {
-  // Adds sub-ms precision; matches `date -u +%s.%N` shape
+  // Wall-clock epoch in fractional seconds (ms precision from Date.now). The
+  // hrtime term adds <1ms of process-uptime noise; negligible for phase deltas
+  // but does NOT produce true wall-clock nanoseconds like `date +%s.%N` would.
   return Date.now() / 1000 + Number(process.hrtime.bigint() % 1_000_000_000n) / 1e12;
 }
 
