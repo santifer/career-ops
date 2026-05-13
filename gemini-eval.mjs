@@ -265,7 +265,7 @@ let legitimacy = 'unknown';
 if (summaryMatch) {
   const block = summaryMatch[1];
   const extract = (key) => {
-    const prefix = key + ':';
+    const prefix = `${key}:`;
     const lines = block.split('\n');
     for (const line of lines) {
       const trimmed = line.trimStart();
