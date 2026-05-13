@@ -896,3 +896,47 @@ test('init-timer: requires --url flag', async () => {
   assert.equal(obj.status, 'fail');
   assert.match(obj.error, /init-timer requires --url/);
 });
+
+// === mark-phase tests ===
+// Design note (Option A/D): init-timer and mark-phase each accept an optional
+// --pid <n> flag. Tests pass the same explicit PID so both child processes write
+// and read the same /tmp/yash-pipeline-timer-<pid>.json file. Production flow
+// never passes --pid; each URL cycle runs in a single process.
+
+test('mark-phase: stamps t_<phase> on existing timer state', async () => {
+  const pid = String(process.pid);
+  // init-timer with explicit --pid so mark-phase can find the same file
+  const init = await runScript(['init-timer', '--url', 'https://example.com/x', '--pid', pid]);
+  const initObj = JSON.parse(init.stdout);
+  assert.equal(init.code, 0);
+  // mark a phase — pass the same --pid
+  const { code, stdout } = await runScript(['mark-phase', '--phase', 'jd_fetch_start', '--pid', pid]);
+  assert.equal(code, 0);
+  const obj = JSON.parse(stdout);
+  assert.equal(obj.status, 'ok');
+  const state = JSON.parse(await readFileTest(initObj.timer_path, 'utf-8'));
+  assert.ok(typeof state.t_jd_fetch_start === 'number');
+  assert.ok(state.t_jd_fetch_start >= state.t_url_start);
+  await rm(initObj.timer_path).catch(() => {});
+});
+
+test('mark-phase: rejects unknown phase names', async () => {
+  const pid = String(process.pid);
+  await runScript(['init-timer', '--url', 'https://example.com/x', '--pid', pid]);
+  const { code, stdout } = await runScript(['mark-phase', '--phase', 'bogus_phase', '--pid', pid]);
+  assert.equal(code, 1);
+  const obj = JSON.parse(stdout);
+  assert.equal(obj.status, 'fail');
+  assert.match(obj.error, /unknown phase: bogus_phase/);
+  await rm(`/tmp/yash-pipeline-timer-${pid}.json`).catch(() => {});
+});
+
+test('mark-phase: fails when timer state file missing', async () => {
+  const pid = String(process.pid);
+  await rm(`/tmp/yash-pipeline-timer-${pid}.json`).catch(() => {});
+  const { code, stdout } = await runScript(['mark-phase', '--phase', 'jd_fetch_start', '--pid', pid]);
+  assert.equal(code, 1);
+  const obj = JSON.parse(stdout);
+  assert.equal(obj.status, 'fail');
+  assert.match(obj.error, /timer state not found.*init-timer/);
+});

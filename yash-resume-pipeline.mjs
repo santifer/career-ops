@@ -366,13 +366,40 @@ SUBCOMMANDS['log'] = async (args) => {
 SUBCOMMANDS['init-timer'] = async (args) => {
   const url = args.url;
   if (!url) fail('init-timer requires --url');
+  // --pid is optional; used by tests to pin the timer file to a known PID so
+  // sibling child processes can share the same state file. Production flow
+  // omits it; each URL cycle runs in a single process.
+  const pid = args.pid ? parseInt(args.pid, 10) : process.pid;
   const state = {
     url,
-    pid: process.pid,
+    pid,
     t_url_start: nowEpochFloat(),
   };
-  await writeTimerState(state);
-  ok({ timer_path: timerStatePath() });
+  await writeTimerState(state, pid);
+  ok({ timer_path: timerStatePath(pid) });
+};
+
+// === mark-phase subcommand ===
+const ALLOWED_PHASES = new Set([
+  'jd_fetch_start', 'jd_fetch_end',
+  'resume_gen_start', 'resume_gen_end',
+  'resume_compile_start', 'resume_compile_end',
+  'cl_gen_start', 'cl_gen_end',
+  'cl_compile_start', 'cl_compile_end',
+  'url_end',
+]);
+
+SUBCOMMANDS['mark-phase'] = async (args) => {
+  const phase = args.phase;
+  if (!phase) fail('mark-phase requires --phase');
+  if (!ALLOWED_PHASES.has(phase)) fail(`unknown phase: ${phase}`);
+  // --pid is optional; see init-timer for rationale
+  const pid = args.pid ? parseInt(args.pid, 10) : process.pid;
+  const state = await readTimerState(pid);
+  if (!state) fail('timer state not found; call init-timer first');
+  state[`t_${phase}`] = nowEpochFloat();
+  await writeTimerState(state, pid);
+  ok({});
 };
 
 SUBCOMMANDS['compile-resume'] = async (args) => {
