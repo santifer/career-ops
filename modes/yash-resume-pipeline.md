@@ -42,11 +42,21 @@ Repeat until queue empty, 3 consecutive failures, or user interrupts (Ctrl+C):
    reading of prior `.tex` / `.log` artifacts is permitted at any point in the URL cycle
    (steps 1–13).**
 
-   ⏱️ **Record `t_url_start = now`** (used to compute `total_ms` at step 11).
+   ⏱️ **Initialize phase timer:** Run
+
+   ```bash
+   node yash-resume-pipeline.mjs init-timer --url <url>
+   ```
+
+   The orchestrator writes `/tmp/yash-pipeline-timer-${PID}.json` with `t_url_start`. All subsequent phase-end stamps go through `mark-phase` (see below).
 
 3. **Extract JD via Scrapling** (stealth fetcher, bypasses Cloudflare/Akamai):
 
-   ⏱️ **Record `t_jd_fetch_start = now`**
+   ⏱️ **Mark phase start:**
+
+   ```bash
+   node yash-resume-pipeline.mjs mark-phase --phase jd_fetch_start
+   ```
 
    ```bash
    .venv/bin/python3 scrapling_fetch.py <url>
@@ -66,7 +76,11 @@ Repeat until queue empty, 3 consecutive failures, or user interrupts (Ctrl+C):
    - If `company` or `role` confidence is low, use the best available inference and proceed — note the uncertainty in the sidecar `.log` deficiencies field.
    - If company and role truly cannot be inferred at all, run `mark-failed --url <url> --reason "could not determine company/role"` and continue automatically.
 
-   ⏱️ **Record `jd_fetch_ms = now − t_jd_fetch_start`** (covers steps 3–4: scrapling + field parse)
+   ⏱️ **Mark phase end:**
+
+   ```bash
+   node yash-resume-pipeline.mjs mark-phase --phase jd_fetch_end
+   ```
 
 5. **Slugify and dedup check:**
 
@@ -105,7 +119,11 @@ Repeat until queue empty, 3 consecutive failures, or user interrupts (Ctrl+C):
 
 7. **Apply the V2.0 prompt:**
 
-   ⏱️ **Record `t_resume_gen_start = now`**
+   ⏱️ **Mark phase start:**
+
+   ```bash
+   node yash-resume-pipeline.mjs mark-phase --phase resume_gen_start
+   ```
 
    ✅ **Mandatory pre-generation checklist — verify before writing any LaTeX:**
    - The locked V2.0 prompt was `cat`'d in step 2.5a — its full body is already in this turn's context. **Do NOT re-read it now, and do NOT use the Read tool on it.**
@@ -125,7 +143,7 @@ Repeat until queue empty, 3 consecutive failures, or user interrupts (Ctrl+C):
    d) `SENTENCE COUNT ERROR — CANNOT PROCEED` (no LaTeX, hard fail)
    e) `SKILLS OVERFLOW ERROR — CANNOT PROCEED` (no LaTeX, hard fail)
 
-   **Company-specific character floor addendum (injected alongside the V2.0 prompt):**
+   **Company-specific character band addendum (injected alongside the V2.0 prompt):**
 
    After reading `resume-optimization-system-based-on-job-description.md` and before
    generating any LaTeX, apply these additional hard constraints. They extend the V2.0
@@ -133,26 +151,49 @@ Repeat until queue empty, 3 consecutive failures, or user interrupts (Ctrl+C):
 
    | Company | `\resumeItem` count | Characters per sentence (visible text) |
    |---------|--------------------|-----------------------------------------|
-   | Morningstar | 6 | 220-240 (inclusive) |
-   | Bell | 5 | 220-240 (inclusive) |
-   | Virtusa | 4 | 220-240 (inclusive) |
+   | Morningstar | 6 | 220-230 (inclusive) |
+   | Bell | 5 | 220-230 (inclusive) |
+   | Virtusa | 4 | 220-230 (inclusive) |
 
    - "Visible text" = the rendered sentence body with all LaTeX markup stripped
      (`\resumeItem{}` wrapper, `\textbf{}`, `\href{}`, escapes like `\%` / `\&`, etc.
      excluded from the count).
+   - **Floor 220 / ceiling 230 (inclusive) — both bounds are mandatory.** A bullet
+     below 220 leaves blank vertical space at the end of line 2 and looks short;
+     a bullet above 230 wraps to a **third line** in the V2.0 layout (textwidth
+     ~6.4in at 11pt with `\small` inside `\resumeItem`) and pushes one role onto
+     a second page, breaking the V2.0 prompt's `Strict 1-page maximum` standard.
+     The 230 ceiling has a ~4-char safety margin over the empirical 234 boundary
+     (see "Empirical evidence" below) to absorb variance from bold-glyph density
+     and proportional-font widths.
    - If any sentence falls below 220 characters, expand it with specific, verifiable
      detail drawn from cv.md or the JD — never pad with filler words.
-   - **If any sentence exceeds 240 characters, trim it** to fall back into the
-     220-240 band without losing the locked baseline meaning or the `\textbf{}`
-     keyword wrappings. Drop redundant clauses (e.g. "across enterprise operations"
-     when the company name already implies enterprise scope) before cutting
-     domain-specific or metric-bearing words. The 240-char ceiling protects the
-     V2.0 prompt's `Strict 1-page maximum` final-deliverable standard.
+   - **If any sentence exceeds 230 characters, trim it** to fall back into the
+     220-230 band without losing the locked baseline meaning or the `\textbf{}`
+     keyword wrappings. Drop redundant scope clauses first (e.g. "across enterprise
+     operations" when the company name already implies enterprise scope; "for the
+     platform team" when audience is implicit) before cutting domain-specific or
+     metric-bearing words.
+   - **Validate every bullet against the band BEFORE writing the .tex** — never
+     compile a draft and hope the bullets fit. Use a stripper script that removes
+     `\textbf{...}`, `\href{...}{...}`, `\resumeItem{...}`, and escapes (`\%`,
+     `\&`, `\$`, `\#`, `\_`) before measuring `len(visible)`. If any of the 15
+     bullets is outside 220-230, trim/expand and re-validate before step 8.
    - Sentence counts (6 / 5 / 4) must match the V2.0 locked baselines exactly;
      this addendum enforces only the character band, not a new count.
    - This addendum applies to EVERY resume generated by this pipeline, regardless of
      which company's JD is being targeted. The three companies listed are Yash's past
      employers always present in the Work Experience section.
+
+   **Empirical evidence (why 230, not 240):**
+   - GEI smoke test v1 (2026-05-11): bullets in 220-253 char range → **2-page**
+     PDF (35.8 KB). Bullets at 240+ wrapped to 3 lines.
+   - GEI smoke test v2 (2026-05-11): bullets in 220-234 char range → **1-page**
+     PDF (34.5 KB). All bullets fit on 2 lines.
+   - TheAppLabb run (2026-05-11): bullets in 220-240 char range, 5 of them at
+     235-240 (M6=238, B4=240, B5=239, V3=235, V4=239) → **2-page** PDF.
+     This run conclusively showed that the 240 ceiling is unsafe; 230 is the
+     correct hard ceiling for permanent 1-page output.
 
    **Parse the output:**
 
@@ -163,36 +204,99 @@ Repeat until queue empty, 3 consecutive failures, or user interrupts (Ctrl+C):
      `mark-failed --url <url> --reason "V2.0 hard-fail: <SENTENCE_COUNT|SKILLS_OVERFLOW>"`
      and `log --status fail --url <url> --reason "V2.0 hard-fail: <SENTENCE_COUNT|SKILLS_OVERFLOW>"`. Save the full output to the sidecar `.log`. Continue.
 
-   ⏱️ **Record `resume_gen_ms = now − t_resume_gen_start`**
+   **Step 7a — Plan-bullets table (NEW):**
+
+   Before writing any `.tex`, draft the 15 bullets as plain text in an in-context
+   markdown table:
+
+   ```
+   | ID | Plain text (no LaTeX markup) |
+   |----|-------------------------------|
+   | M1 | <visible bullet text> |
+   | M2 | ... |
+   ...
+   | V4 | ... |
+   ```
+
+   Run the validator:
+
+   ```bash
+   echo '<JSON of bullets keyed by id>' | python3 tools/validate_bullets.py
+   ```
+
+   - If `pass: true` → proceed to step 8 (write .tex).
+   - If `pass: false` (any bullet outside 220-230):
+     - Pass 1 fail: trim/expand the named bullets in-context, run the validator
+       a second time.
+     - Pass 2 fail: write the `.tex` anyway. In step 10, set the sidecar log to
+       `status: compiled-review-recommended` and list the out-of-band bullet
+       IDs + lengths in the `deficiencies:` field.
+   - **Maximum 2 validator calls per URL.** Never enter a third validation
+     cycle — it caused the 200-300s `resume_gen_ms` thrash in past runs.
+
+   Also run the skills validator:
+
+   ```bash
+   echo '<JSON of skill categories>' | python3 tools/validate_skills.py
+   ```
+
+   - If `pass: false` → emit `SKILLS OVERFLOW ERROR — CANNOT PROCEED` per V2.0
+     rules. Hard fail. Run `mark-failed --reason "skills overflow"`.
+
+   ⏱️ **Mark phase end:**
+
+   ```bash
+   node yash-resume-pipeline.mjs mark-phase --phase resume_gen_end
+   ```
 
 8. **Write `.tex`:** save the LaTeX block (from `\documentclass` onward) to
    `/tmp/<c>_<r>_Yash_Anghan_Resume_<d>.tex`. Never write the `.tex` to
    `resumes/yash/` — that directory holds only deliverable PDFs.
 
-9. **Compile to PDF:**
+9. **Compile to PDF (background):**
 
-   ⏱️ **Record `t_resume_compile_start = now`**
+   ⏱️ **Mark phase start:**
+
+   ```bash
+   node yash-resume-pipeline.mjs mark-phase --phase resume_compile_start
+   ```
+
+   Launch the compile in the background and capture the PID + a stdout file
+   for the wait-barrier in step 10:
 
    ```bash
    node yash-resume-pipeline.mjs compile-resume \
        --tex /tmp/<c>_<r>_Yash_Anghan_Resume_<d>.tex \
-       --pdf resumes/yash/<c>_<r>_Yash_Anghan_Resume_<d>.pdf
+       --pdf resumes/yash/<c>_<r>_Yash_Anghan_Resume_<d>.pdf \
+       > /tmp/yash-pipeline-compile-resume-<PID>.json 2>&1 &
+   echo $! > /tmp/yash-pipeline-compile-resume-<PID>.pid
    ```
 
-   ⏱️ **Record `resume_compile_ms = now − t_resume_compile_start`**
+   Continue immediately to step 9b — DO NOT wait here. The wait barrier
+   lives at step 10 (after CL compile completes).
 
-   If `status: fail`:
-   - run `mark-failed --url <url> --reason "tectonic: <tectonic_log_tail>"`
-   - run `log --status fail --url <url> --reason "tectonic: ..."`
-   - keep the .tex on disk for inspection
-   - continue automatically to next URL.
+10. **Wait for background `compile-resume`, then write sidecar `.log`:**
 
-10. **Write sidecar `.log`** to `resume-logs/yash/<c>_<r>_Yash_Anghan_Resume_<d>.log`:
+    ```bash
+    wait $(cat /tmp/yash-pipeline-compile-resume-<PID>.pid)
+    BG_EXIT=$?
+    node yash-resume-pipeline.mjs mark-phase --phase resume_compile_end
+    ```
+
+    Read `/tmp/yash-pipeline-compile-resume-<PID>.json` to get the JSON status.
+
+    **If `BG_EXIT != 0` or status is `fail`:**
+    - Orphan-cleanup: `rm -f cover-letters/yash/<c>_<r>_Yash_Anghan_Cover_Letter_<d>.pdf cover-letter-logs/yash/<c>_<r>_Yash_Anghan_Cover_Letter_<d>.log` (in case the parallel CL compile already wrote one).
+    - Run `mark-failed --url <url> --reason "tectonic: <tail of compile-resume json>"`.
+    - Run `log --status fail --url <url> --from-timer --reason "tectonic: ..."`.
+    - Continue automatically to next URL.
+
+    **If `BG_EXIT == 0`:** write the resume sidecar log to `resume-logs/yash/<c>_<r>_Yash_Anghan_Resume_<d>.log`:
 
     ```
     score: <X>/100
-    deficiencies: <text captured before \documentclass; or "none">
-    status: compiled | compiled-review-recommended  (review-recommended if score < 90)
+    deficiencies: <text captured before \documentclass; or "none"; or out-of-band bullet IDs from step 7a pass 2>
+    status: compiled | compiled-review-recommended  (review-recommended if score < 90 OR step 7a pass 2 had fails)
     ```
 
 *(Cover-letter track ordering: steps 9b and 10b run immediately after step 8 — before tectonic
@@ -202,7 +306,11 @@ If step 9 compile fails after step 10b is already written, skip steps 11b and 12
 
 9b. **Apply the cover-letter prompt:**
 
-    ⏱️ **Record `t_cl_gen_start = now`**
+    ⏱️ **Mark phase start:**
+
+    ```bash
+    node yash-resume-pipeline.mjs mark-phase --phase cl_gen_start
+    ```
 
     ✅ **Mandatory pre-generation checklist — verify before writing any LaTeX:**
     - The locked cover-letter prompt was `cat`'d in step 2.5b — its full body is in context. **Do NOT re-read it, and do NOT use the Read tool on it.**
@@ -232,7 +340,11 @@ If step 9 compile fails after step 10b is already written, skip steps 11b and 12
       Print warning to user. Do NOT mark URL failed — the resume PDF is
       already on disk; the URL still gets marked processed at step 11.
 
-    ⏱️ **Record `cover_letter_gen_ms = now − t_cl_gen_start`**
+    ⏱️ **Mark phase end:**
+
+    ```bash
+    node yash-resume-pipeline.mjs mark-phase --phase cl_gen_end
+    ```
 
 10b. **Write cover-letter `.tex`:** save the LaTeX block (from
      `\documentclass` onward) to
@@ -241,7 +353,11 @@ If step 9 compile fails after step 10b is already written, skip steps 11b and 12
 
 11b. **Compile cover letter to PDF:**
 
-     ⏱️ **Record `t_cl_compile_start = now`**
+     ⏱️ **Mark phase start:**
+
+     ```bash
+     node yash-resume-pipeline.mjs mark-phase --phase cl_compile_start
+     ```
 
      ```bash
      node yash-resume-pipeline.mjs compile-cover-letter \
@@ -249,7 +365,11 @@ If step 9 compile fails after step 10b is already written, skip steps 11b and 12
          --pdf cover-letters/yash/<c>_<r>_Yash_Anghan_Cover_Letter_<d>.pdf
      ```
 
-     ⏱️ **Record `cover_letter_compile_ms = now − t_cl_compile_start`**
+     ⏱️ **Mark phase end:**
+
+     ```bash
+     node yash-resume-pipeline.mjs mark-phase --phase cl_compile_end
+     ```
 
      If `status: fail`:
      - The cover-letter PDF was not produced. Continue to step 12b. The
@@ -273,7 +393,13 @@ If step 9 compile fails after step 10b is already written, skip steps 11b and 12
 
 11. **Mark processed and log:**
 
-    ⏱️ **Record `total_ms = now − t_url_start`**
+    ⏱️ **Mark URL end:**
+
+    ```bash
+    node yash-resume-pipeline.mjs mark-phase --phase url_end
+    ```
+
+    Then:
 
     ```bash
     node yash-resume-pipeline.mjs mark-processed \
@@ -289,19 +415,10 @@ If step 9 compile fails after step 10b is already written, skip steps 11b and 12
         --cover-letter <cover-letter-pdf-path-or-omitted> \
         --cover-letter-score <X-or-omitted> \
         --cover-letter-status <ok|fail> \
-        --jd-fetch-ms <jd_fetch_ms> \
-        --resume-gen-ms <resume_gen_ms> \
-        --resume-compile-ms <resume_compile_ms> \
-        --cover-letter-gen-ms <cover_letter_gen_ms-or-omit-if-cl-failed> \
-        --cover-letter-compile-ms <cover_letter_compile_ms-or-omit-if-cl-failed> \
-        --total-ms <total_ms>
+        --from-timer
     ```
 
-    Omit `--cover-letter-gen-ms` and `--cover-letter-compile-ms` when the
-    cover-letter step failed at 9b (no LaTeX) or 11b (compile crashed).
-    Omit cover-letter path/score/status args under the same conditions.
-
-    `mark-processed` records the cover-letter path and status only; `log` is the sole place the cover-letter score and all timing fields live.
+    `--from-timer` pulls all 6 phase ms fields (jd_fetch_ms, resume_gen_ms, resume_compile_ms, cover_letter_gen_ms, cover_letter_compile_ms, total_ms) from `/tmp/yash-pipeline-timer-${PID}.json`. Omitted phases (e.g. CL failed) are skipped automatically.
 
 12. **Report to user:** print the JD path, resume PDF path,
     cover-letter PDF path (or `<absent — see warning>`), resume score,
