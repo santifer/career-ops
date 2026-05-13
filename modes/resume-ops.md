@@ -16,14 +16,14 @@ Use this mode when the user wants a better-tailored resume. This mode leverages 
      - Automatically configure the `.env` for local execution.
      - Start the service using `uv` on port 8000.
    - **Docker/Podman**: This integration runs `resume-ops` directly via Python/uv for simplicity. **Docker or Podman are NOT required** for this setup, making it easy for most users.
-   - **JSON Resume**: Check for `../resume-ops/.local/master-resume.json`. If missing, generate it immediately from `cv.md` and `config/profile.yml`.
+   - **JSON Resume**: Check for `resume-ops/.local/master-resume.json`. If missing, generate it immediately from `cv.md` and `config/profile.yml`.
 
 3. **Execute Tailoring**:
    - Determine the output PDF path: `output/cv-{candidate}-{company}-{YYYY-MM-DD}.pdf`.
    - Use `config/profile.yml` to get `{candidate}` (normalized to kebab-case) and `{company}`.
    - Run the helper script:
      ```bash
-     node resume-ops.mjs --resume ../resume-ops/.local/master-resume.json --jd "{JD_TEXT}" --output output/cv-{candidate}-{company}-{YYYY-MM-DD}.pdf
+     node resume-ops.mjs --resume resume-ops/.local/master-resume.json --jd "{JD_TEXT}" --output output/cv-{candidate}-{company}-{YYYY-MM-DD}.pdf
      ```
    - If `config/profile.yml` has a `cv.theme` value, pass it via `--theme`.
 

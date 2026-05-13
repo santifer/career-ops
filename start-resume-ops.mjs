@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = 8000;
-const RESUME_OPS_DIR = path.resolve(__dirname, '..', 'resume-ops');
+const RESUME_OPS_DIR = path.resolve(__dirname, 'resume-ops');
 const RESUME_OPS_REPO = 'https://gitlab.com/CovaiLabs/resume-ops.git';
 
 function checkPort(port) {
@@ -48,9 +48,27 @@ async function main() {
       if (!fs.existsSync(envPath)) {
         console.log('📝 Initializing .env from .env.example...');
         const exampleEnv = fs.readFileSync(path.join(RESUME_OPS_DIR, '.env.example'), 'utf8');
-        // Set DATA_DIR to ./data for local run
-        const localEnv = exampleEnv.replace('DATA_DIR=/data', 'DATA_DIR=./data');
+        let localEnv = exampleEnv.replace('DATA_DIR=/data', 'DATA_DIR=./data');
+        
+        // Sync common AI keys from the current environment
+        const keysToSync = ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'GEMINI_API_KEY', 'OPENAI_BASE_URL'];
+        keysToSync.forEach(key => {
+          if (process.env[key]) {
+            console.log(`🔑 Syncing ${key} from environment...`);
+            // Replace the empty or placeholder value
+            localEnv = localEnv.replace(new RegExp(`${key}=.*`), `${key}=${process.env[key]}`);
+          }
+        });
+        
         fs.writeFileSync(envPath, localEnv);
+      }
+
+      // Create data directories proactively
+      const dataDir = path.join(RESUME_OPS_DIR, 'data');
+      const jobsDir = path.join(dataDir, 'jobs');
+      if (!fs.existsSync(jobsDir)) {
+        console.log('📂 Creating resume-ops data directories...');
+        fs.mkdirSync(jobsDir, { recursive: true });
       }
     } catch (err) {
       console.error(`❌ Failed to clone resume-ops: ${err.message}`);
@@ -78,10 +96,13 @@ async function main() {
 
   console.log(`🚀 Starting Resume Ops service in ${RESUME_OPS_DIR}...`);
   
-  // Try uv run first
+  const logFile = path.resolve(__dirname, 'resume-ops.log');
+  const out = fs.openSync(logFile, 'a');
+  const err = fs.openSync(logFile, 'a');
+
   const child = spawn('uv', ['run', 'python', '-m', 'resume_ops_api'], {
     cwd: RESUME_OPS_DIR,
-    stdio: 'ignore',
+    stdio: ['ignore', out, err],
     detached: true,
     env,
   });
