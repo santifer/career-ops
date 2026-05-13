@@ -1,0 +1,4 @@
+interface:
+  display_name: "Career Ops"
+  short_description: "Run career-ops job search workflows from Codex."
+  default_prompt: "/career-ops pipeline"
