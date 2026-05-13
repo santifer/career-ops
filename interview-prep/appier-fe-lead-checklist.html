@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Appier Sr. FE (Enterprise) — Frontend Lead 一面 Checklist — 2026-05-13 14:00</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #f5f5f5;
+    color: #1a1a1a;
+    padding: 24px 16px;
+    max-width: 760px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+  header {
+    background: #EA552D;
+    color: white;
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+  }
+  header h1 { font-size: 1.2rem; font-weight: 700; }
+  header p { font-size: 0.85rem; opacity: 0.9; margin-top: 4px; }
+
+  section {
+    background: white;
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+  section h2 {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #EA552D;
+    margin-bottom: 16px;
+  }
+
+  .meta-card {
+    background: #FFF4ED;
+    border: 1px solid #FED7AA;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 0.82rem;
+    color: #7C2D12;
+    margin-bottom: 0;
+    line-height: 1.7;
+  }
+  .meta-card strong { color: #C2410C; }
+
+  .item {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    margin-bottom: 18px;
+  }
+  .item:last-child { margin-bottom: 0; }
+
+  .item input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    margin-top: 2px;
+    accent-color: #EA552D;
+    cursor: pointer;
+  }
+
+  .item label { cursor: pointer; flex: 1; }
+  .item label .q {
+    font-weight: 600;
+    font-size: 0.95rem;
+    display: block;
+    margin-bottom: 6px;
+  }
+  .item label .en {
+    font-size: 0.85rem;
+    color: #555;
+    background: #FFF4ED;
+    border-left: 3px solid #EA552D;
+    padding: 8px 12px;
+    border-radius: 4px;
+    margin-bottom: 4px;
+    display: block;
+  }
+  .item label .zh {
+    font-size: 0.85rem;
+    color: #555;
+    background: #f5f5f5;
+    border-left: 3px solid #aaa;
+    padding: 8px 12px;
+    border-radius: 4px;
+    display: block;
+  }
+  .item label .note {
+    font-size: 0.78rem;
+    color: #888;
+    margin-top: 6px;
+    display: block;
+  }
+
+  .badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 99px;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+  .badge-priority { background: #fee2e2; color: #b91c1c; }
+  .badge-optional { background: #e5e7eb; color: #6b7280; }
+  .badge-tech { background: #FED7AA; color: #9A3412; }
+
+  .answered { opacity: 0.45; }
+  .answered .q { text-decoration: line-through; }
+
+  .warn {
+    background: #fffbeb;
+    border: 1px solid #fcd34d;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 0.85rem;
+    color: #92400e;
+    margin-top: 16px;
+  }
+
+  .star-card {
+    background: #FFF4ED;
+    border-left: 4px solid #EA552D;
+    border-radius: 6px;
+    padding: 12px 14px;
+    margin-bottom: 12px;
+    font-size: 0.85rem;
+    line-height: 1.6;
+  }
+  .star-card:last-child { margin-bottom: 0; }
+  .star-card .role { font-weight: 700; color: #7C2D12; display: block; margin-bottom: 6px; font-size: 0.9rem; }
+  .star-card .keys { color: #444; }
+  .star-card .keys b { color: #C2410C; }
+
+  .probe {
+    border-bottom: 1px dashed #e5e7eb;
+    padding: 10px 0;
+  }
+  .probe:last-child { border-bottom: 0; }
+  .probe .q { font-weight: 600; font-size: 0.88rem; color: #1a1a1a; margin-bottom: 4px; }
+  .probe .a { font-size: 0.82rem; color: #555; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Appier — Sr. Frontend Engineer (Enterprise Solutions) · Frontend Lead 一面</h1>
+  <p>2026-05-13（三）14:00 TPE &nbsp;·&nbsp; 60 分鐘 &nbsp;·&nbsp; Video call</p>
+</header>
+
+<!-- 背景速記 -->
+<section>
+  <h2>背景速記</h2>
+  <div class="meta-card">
+    <strong>面試官</strong>：Frontend team leader（不是 HR — 是 hiring manager / tech lead 直接過水履歷）<br>
+    <strong>Meet</strong>：<a href="https://meet.google.com/qov-guqy-rru" style="color:#C2410C;">https://meet.google.com/qov-guqy-rru</a><br>
+    <strong>Topic</strong>：Resume discussion + Self-introduction（履歷逐項討論）<br>
+    <strong>HR</strong>：Anita @ Appier Recruitment Team（已 email confirm 出席）<br>
+    <strong>Salary anchor</strong>：mid-band 1.7M–2.0M TWD（Sr I→II），walk-away &lt; 1.5M — <strong style="color:#b91c1c;">這關不主動提</strong><br>
+    <strong>Tech stack match</strong>：React / TS / Vite / Vitest / Playwright / Tailwind / Cursor — bullseye；Vue / GraphQL = gap，準備一句話高度
+  </div>
+</section>
+
+<!-- 自我介紹 -->
+<section>
+  <h2>自我介紹（開場，約 60–90 秒，含 tech depth signal）</h2>
+
+  <div style="margin-bottom: 14px;">
+    <div style="font-size:0.75rem;font-weight:700;color:#EA552D;margin-bottom:6px;">中文</div>
+    <div style="background:#f5f5f5;border-left:3px solid #aaa;padding:12px 14px;border-radius:4px;font-size:0.88rem;line-height:1.7;color:#333;">
+      「我是 Yi-Chen，前端工程師，六年左右的工程經驗。過去幾年在 Binance 做全球規模的 B2C 產品——主要 own KYC 流程的前端，重點放在可配置架構和轉換率優化，把 7-day pass rate 從 12% 拉到 20%。過程中我也把 AI 輔助工具帶進日常開發，用 Cursor 跟 Claude Code 跑 schema config 流程，開發時間少了一半。離開 Binance 之後，個人專案我更進一步——做了一個六代理人 pipeline，PM、Architect、Engineer、Reviewer、QA、Designer 各一個 agent，我自己只負責方向跟決策，agents 完成實作，從設計到上線整個跑通。Appier 這個職位吸引我的是技術棧高度吻合，加上 JD 把 Cursor 列為 required——代表 team 的工作方式跟我這一年走的方向是一致的。」
+    </div>
+  </div>
+
+  <div>
+    <div style="font-size:0.75rem;font-weight:700;color:#EA552D;margin-bottom:6px;">English</div>
+    <div style="background:#FFF4ED;border-left:3px solid #EA552D;padding:12px 14px;border-radius:4px;font-size:0.88rem;line-height:1.7;color:#333;">
+      "I'm Yi-Chen, a frontend engineer with around six years of experience. I spent most of that time at Binance working on global-scale B2C products — mainly owning the KYC frontend, focused on configurable architecture and conversion optimization. I took the 7-day pass rate from around 12% up to 20% by refactoring hardcoded flows into a config-driven system. Along the way I integrated Cursor and Claude Code into my daily workflow, which roughly halved my schema-config delivery time. In my personal projects I've taken that further — I run a six-agent pipeline (PM, Architect, Engineer, Reviewer, QA, Designer) where I only handle direction and decisions, and the agents do the implementation end-to-end. Appier stands out because the tech stack is a strong match, and the JD listing Cursor as required signals that this team's way of working aligns with the direction I've been pushing my own work toward."
+    </div>
+  </div>
+</section>
+
+<!-- 履歷 STAR 重點 -->
+<section>
+  <h2>履歷逐項 — STAR 關鍵字（lead 會挖每段）</h2>
+
+  <div class="star-card">
+    <span class="role">Binance · KYC Team（2022-Present）</span>
+    <div class="keys">
+      <b>S/T</b>：KYC 流程 hardcoded，新國家擴展易出錯 / 轉換率低<br>
+      <b>A</b>：refactor 成 config-driven，集中 5 國 country-specific config，導入 A/B、AI workflow（Cursor + Claude Code + Figma 餵 context）<br>
+      <b>R</b>：7-day conversion <b>12.19% → 20.03%</b>；新國家上線 14.5% lifetime pass rate；schema 開發時間 <b>-50%</b><br>
+      <b>難點</b>：跨 5 country compliance、20+ cross-functional 協作、P0 on-call 1hr SLA
+    </div>
+  </div>
+
+  <div class="star-card">
+    <span class="role">Binance · Electron Team（2021-2022）</span>
+    <div class="keys">
+      <b>S/T</b>：Desktop trading app webview 載入慢、記憶體佔用高<br>
+      <b>A</b>：自己設計 Webview Pool（pre-load + cache 熱門 micro-app）、加 single/multi-process 切換、RTL + CVD 配色擴展用戶<br>
+      <b>R</b>：webview 載入 <b>+30%</b>，覆蓋阿語區、色弱用戶<br>
+      <b>難點</b>：Electron + Webview 隔離下要保留 cache state，要自己研究 BrowserView API
+    </div>
+  </div>
+
+  <div class="star-card">
+    <span class="role">IGS — Software Engineer（2020-2021）</span>
+    <div class="keys">
+      <b>S/T</b>：手遊發版流程慢、event 框架難擴展<br>
+      <b>A</b>：CI/CD with Jenkins 自動化版本切包、event framework refactor、可重用模組<br>
+      <b>R</b>：release time <b>-80%</b>、event feature 開發 <b>-95%</b><br>
+      <b>難點</b>：發版需求要能交給非開發人員，自動化邊界要清楚
+    </div>
+  </div>
+
+  <div class="star-card">
+    <span class="role">K-Line Prediction（個人專案，2026）</span>
+    <div class="keys">
+      <b>S/T</b>：想驗證「一人 + multi-agent」能否跑完整 production-grade 產品<br>
+      <b>A</b>：六代理人 pipeline（PM/Architect/Engineer/Reviewer/QA/Designer），43 個 post-mortem → 246 條 harness rules（e.g. Content-Alignment Gate、Pre-Design Dry-Run、Shared-Component Consistency），design-as-SSOT 端到端<br>
+      <b>R</b>：73+ tickets shipped、91/91 AC 覆蓋、production 上線<br>
+      <b>難點</b>：agent handoff 設計（PM 不放行直到 user-voice sign-off）、SSOT 怎麼真的鎖住 designer 變更
+    </div>
+  </div>
+</section>
+
+<!-- 你要問 lead 的問題 -->
+<section>
+  <h2>你要問 Frontend lead 的問題（tech-lead 等級）</h2>
+
+  <div class="item" id="q1">
+    <input type="checkbox" id="c1" onchange="toggle('q1','c1')">
+    <label for="c1">
+      <span class="q">① Team 實際組成 + 產品線 <span class="badge badge-priority">必問</span></span>
+      <span class="en">"Could you tell me more about the Enterprise Solutions FE team — how large is it, and which products is it covering right now? Is it one main product or split across multiple dashboards?"</span>
+      <span class="zh">「Enterprise Solutions FE team 目前多大？主要 cover 哪些產品線？是一個主產品還是跨多個 dashboard？」</span>
+      <span class="note">展現你關心你會進入的實際工作範圍</span>
+    </label>
+  </div>
+
+  <div class="item" id="q2">
+    <input type="checkbox" id="c2" onchange="toggle('q2','c2')">
+    <label for="c2">
+      <span class="q">② Tech stack 實際比例：React vs Vue <span class="badge badge-priority">必問</span></span>
+      <span class="en">"The JD lists both React and Vue. Realistically, what's the split today — is Vue still in active development, or mostly legacy maintenance?"</span>
+      <span class="zh">「JD 寫 React + Vue，team 目前實際比例是？Vue 還在 active development，還是主要是 legacy 維護？」</span>
+      <span class="note">先探 Vue gap 風險。如果是 legacy → 不是大問題；如果 active → 要誠實說沒寫過 production Vue</span>
+    </label>
+  </div>
+
+  <div class="item" id="q3">
+    <input type="checkbox" id="c3" onchange="toggle('q3','c3')">
+    <label for="c3">
+      <span class="q">③ AI 工具使用程度 <span class="badge badge-priority">必問</span></span>
+      <span class="en">"JD lists Cursor and Copilot as required tools — is the team actually using them daily? Is there any internal AI workflow or in-house agent infrastructure?"</span>
+      <span class="zh">「JD 把 Cursor / Copilot 列為 required，team 是真的 daily 用嗎？有沒有 internal AI workflow 或自建 agent infra？」</span>
+      <span class="note">這是你的差異化錨點 — 問完可以順勢展示 K-Line multi-agent pipeline</span>
+    </label>
+  </div>
+
+  <div class="item" id="q4">
+    <input type="checkbox" id="c4" onchange="toggle('q4','c4')">
+    <label for="c4">
+      <span class="q">④ Frontend 目前最痛的工程問題 <span class="badge badge-priority">必問</span></span>
+      <span class="en">"From your point of view as the lead, what's the biggest frontend engineering pain point on the team right now — is it perf, DX, test coverage, design system consistency, or micro-frontend complexity?"</span>
+      <span class="zh">「以您 lead 的角度，team 目前最想解決的 FE 工程問題是什麼？perf / DX / test coverage / design system / micro-frontend？」</span>
+      <span class="note">這題大招 — 答案直接告訴你進去後第一個月會碰到什麼</span>
+    </label>
+  </div>
+
+  <div class="item" id="q5">
+    <input type="checkbox" id="c5" onchange="toggle('q5','c5')">
+    <label for="c5">
+      <span class="q">⑤ 這個崗位是新開設還是補位 <span class="badge badge-priority">必問</span></span>
+      <span class="en">"Is this position newly created, or backfilling someone who left?"</span>
+      <span class="zh">「這個崗位是新開設的，還是原崗位上的人離職了？」</span>
+      <span class="note">補位 → 可以追問 team 流動率；新開 → team 在成長，更看 ownership</span>
+    </label>
+  </div>
+
+  <div class="item" id="q6">
+    <input type="checkbox" id="c6" onchange="toggle('q6','c6')">
+    <label for="c6">
+      <span class="q">⑥ Coding 一面是什麼題型 <span class="badge badge-optional">有時間再問</span></span>
+      <span class="en">"If this round goes well, what does the next coding interview usually look like — leetcode-style, live React, or a take-home?"</span>
+      <span class="zh">「如果這關順利，下一輪 coding 通常是什麼題型？leetcode、live React，還是 take-home？」</span>
+      <span class="note">提前知道準備方向</span>
+    </label>
+  </div>
+
+  <div class="item" id="q7">
+    <input type="checkbox" id="c7" onchange="toggle('q7','c7')">
+    <label for="c7">
+      <span class="q">⑦ Remote / Hybrid policy <span class="badge badge-optional">有時間再問</span></span>
+      <span class="en">"How is the team set up on remote vs office — how many days a week on-site?"</span>
+      <span class="zh">「team 目前 remote / hybrid 安排是什麼？週幾天到辦公室？」</span>
+      <span class="note">deal-breaker 等級但放後面 — 一開始就問顯得太「條件取向」</span>
+    </label>
+  </div>
+</section>
+
+<!-- Lead 會問你的 -->
+<section>
+  <h2>Frontend lead 會問你的 — 準備好答案</h2>
+
+  <div class="item" id="q10">
+    <input type="checkbox" id="c10" onchange="toggle('q10','c10')">
+    <label for="c10">
+      <span class="q">Why Appier？</span>
+      <span class="en">"Appier sits at the intersection of three things I want — a Taiwan-grown company with global enterprise scale, AI that's part of the product rather than bolted on, and an engineering culture that's already past the AI-skeptic phase. The JD listing Cursor as required is a strong signal — that matches how I've worked for the past year both at Binance and on my own multi-agent project. I'd rather join a team that's already running on AI-assisted workflows than one I have to convince."</span>
+      <span class="zh">「Appier 處在我想去的三個交集——台灣本地、全球企業客戶規模、AI 是產品的一部分而不是外加，而且 engineering culture 已經不是 AI 觀望期。JD 把 Cursor 列為 required，這跟我過去一年的工作方式一致，不管在 Binance 還是我自己的 multi-agent 專案都是。比起進去要說服 team 用 AI，我更想加入已經跑在 AI workflow 上的 team。」</span>
+    </label>
+  </div>
+
+  <div class="item" id="q11">
+    <input type="checkbox" id="c11" onchange="toggle('q11','c11')">
+    <label for="c11">
+      <span class="q">你現在還在 Binance 嗎？（被問才答）</span>
+      <span class="en">"I've already left. The company went through a headcount reduction and my position was affected. Since then I've been running my own multi-agent project full-time, which has actually let me push the AI-assisted workflow further than I could inside a B2C product team. Now I'm actively looking for the next role."</span>
+      <span class="zh">「我已經離開了。公司做了縮編，我的職位受到影響。離開之後我把這段時間全職跑我的 multi-agent 個人專案，反而比我還在 B2C team 裡能把 AI workflow 推得更遠。現在認真在看新機會。」</span>
+      <span class="note">不主動講 — 等 lead 問到 Binance 時間線再說</span>
+    </label>
+  </div>
+
+  <div class="item" id="q12">
+    <input type="checkbox" id="c12" onchange="toggle('q12','c12')">
+    <label for="c12">
+      <span class="q">為什麼想換工作？（推力 / 拉力）</span>
+      <span class="en">"Two things. First, in compliance-heavy B2C work, the creative space for frontend is narrow — most decisions are constrained by regulators. I want to work on enterprise products where the engineering team has more room to drive UX and architecture decisions. Second, I want to be in a team where AI-assisted development is the default, not something I'm pushing alone."</span>
+      <span class="zh">「兩個原因。第一，在合規重的 B2C 工作裡，前端能發揮的創意空間比較窄，多數決策受監管限制。我想做 enterprise 產品，工程 team 在 UX 跟架構決策上有更多 ownership。第二，我想加入 AI 輔助開發已經是 default 的 team，而不是我自己一個人推。」</span>
+      <span class="note">紅線：不要提 remote / 彈性、不貶低前東家</span>
+    </label>
+  </div>
+
+  <div class="item" id="q13">
+    <input type="checkbox" id="c13" onchange="toggle('q13','c13')">
+    <label for="c13">
+      <span class="q">薪資期望（被問才答 — 預設拒答）</span>
+      <span class="en">"I'd rather understand the full picture of the role and team first before talking numbers. Based on what I've seen on the market for Senior Frontend roles in Taipei, my expectation is in line with the range that already shows up publicly for Appier — I'm open to discussing structure on the offer stage."</span>
+      <span class="zh">「我比較希望先了解 role 跟 team 的全貌再談數字。以台北 Sr. FE 公開的市場區間看，我的期待跟 Appier 在公開資料上的 range 是 align 的，offer 階段再談結構細節我都 OK。」</span>
+      <span class="note">不主動報現職數字。如果硬問 → 「1.8M+ structure flexible」；&lt; 1.5M 禮貌結束</span>
+    </label>
+  </div>
+
+  <div class="item" id="q14">
+    <input type="checkbox" id="c14" onchange="toggle('q14','c14')">
+    <label for="c14">
+      <span class="q">優缺點</span>
+      <span class="en">"Strengths: fast learner, detail-oriented, and willing to take on unfamiliar areas — that's how I ended up owning the AI workflow at Binance and running the multi-agent pipeline solo. Weakness: I tend to be overly precise on deliverable quality, which used to slow me down — I've actively balanced that by using time-boxing and AI-assisted review to keep iteration speed high."</span>
+      <span class="zh">「優點：學習快、細心、願意接觸不熟的領域——這也是為什麼我在 Binance 拿到 AI workflow 的 ownership，個人專案也能單獨跑 multi-agent pipeline。缺點：我對 deliverable quality 容易太精，以前會拖速度——現在我用 timebox + AI-assisted review 主動平衡。」</span>
+      <span class="note">原版「希望事情照規劃進行」太死板，改成「太精+已有解法」</span>
+    </label>
+  </div>
+
+  <div class="item" id="q15">
+    <input type="checkbox" id="c15" onchange="toggle('q15','c15')">
+    <label for="c15">
+      <span class="q">人生最大挑戰 / 工作上最有挑戰的地方</span>
+      <span class="en">"The hardest stretch was leading the GCC multi-country KYC migration at Binance — five jurisdictions, scattered country-specific configs, and compliance constraints that didn't line up. I had to centralize the config architecture while coordinating with 20+ cross-functional partners and surviving P0 on-call. What got it done was treating the config layer as the single source of truth — everyone reads from one place, no more sprawl."</span>
+      <span class="zh">「最硬的一段是在 Binance 跑 GCC 多國 KYC migration——5 個司法管轄區、country-specific config 散落各處、合規限制彼此不一致。我得邊重構 config 架構邊跟 20+ cross-functional 協作，加上 P0 on-call。最後跑通的關鍵是把 config layer 當 single source of truth——大家都讀同一份，不再 sprawl。」</span>
+    </label>
+  </div>
+
+  <div class="item" id="q16">
+    <input type="checkbox" id="c16" onchange="toggle('q16','c16')">
+    <label for="c16">
+      <span class="q">專案中技術上最困難的部分</span>
+      <span class="en">"On the multi-agent pipeline project, the hardest part wasn't getting agents to write code — it was getting them to hand off cleanly. Early on, PM would release Engineer before user-voice sign-off, and downstream agents would build the wrong thing. I codified that into a Content-Alignment Gate: PM blocks handoff until user-voice is locked. Same pattern across 246 harness rules — each one came from a real post-mortem of something that went wrong."</span>
+      <span class="zh">「multi-agent pipeline 最難的不是讓 agent 寫 code，是讓 agent 之間能乾淨 handoff。早期 PM 會在 user-voice 沒 sign-off 前就放行 Engineer，下游 agent 就做錯方向。我把這寫成 Content-Alignment Gate——PM 不放行直到 user-voice 鎖定。246 條 harness rules 都是這樣，每一條都是一次真正出問題的 post-mortem。」</span>
+    </label>
+  </div>
+</section>
+
+<!-- Tech depth probes -->
+<section>
+  <h2>Tech depth — lead 可能 dip 的 30 秒口答 <span class="badge badge-tech">備用</span></h2>
+
+  <div class="probe">
+    <div class="q">React.memo / useCallback / useMemo 差別</div>
+    <div class="a">`React.memo`：包整個 component，props 沒變就跳過 re-render。`useCallback`：穩定 function reference 避免下游 memo 失效。`useMemo`：cache 計算結果，避免昂貴運算每次跑。三者都靠 dep array — 用錯反而是 bug 來源。</div>
+  </div>
+
+  <div class="probe">
+    <div class="q">useEffect cleanup function 何時跑</div>
+    <div class="a">每次 effect 重新執行前都跑一次（不是只在 unmount）。所以 dep 變動會：先跑 cleanup → 再跑 new effect。unmount 時跑最後一次 cleanup。常用於：取消事件監聽、cancel fetch、clear timer。</div>
+  </div>
+
+  <div class="probe">
+    <div class="q">GraphQL vs REST（gap 區，誠實答）</div>
+    <div class="a">「沒大量 production 跑過——但理解 GraphQL 的核心：client 自己選 fields 解決 REST over-fetching、單一 endpoint 配 schema introspection、N+1 由 resolver + DataLoader 解。Apollo Client 跟 urql 我會選 urql for bundle size。要上手不會花太久。」</div>
+  </div>
+
+  <div class="probe">
+    <div class="q">Vue 經驗（gap 區，誠實答）</div>
+    <div class="a">「production 沒寫過。能讀懂 SFC 結構、composition API 概念上跟 React hooks 對應、Vuex / Pinia 對應 Redux / Zustand。如果 team 主力 React 我就直接上；如果要碰 Vue，給我兩週爬到能 PR review 等級。」</div>
+  </div>
+
+  <div class="probe">
+    <div class="q">CORS preflight 為什麼要 OPTIONS</div>
+    <div class="a">瀏覽器在「非簡單請求」（custom header / 非 GET-POST、Content-Type 非 form/text）前先發 OPTIONS 探，問 server「我這個 origin / method / header 你接不接？」server 回 `Access-Control-Allow-*`，瀏覽器才放行真正請求。是瀏覽器的安全限制，不是 server 的。</div>
+  </div>
+
+  <div class="probe">
+    <div class="q">Cookie / localStorage / sessionStorage</div>
+    <div class="a">Cookie：每 request 自動帶、4KB 上限、有 HttpOnly + SameSite + Secure 等安全 flag、適合 session。localStorage：5–10MB、不會帶 server、persist 直到手動清、適合 user setting。sessionStorage：tab 關就消、不跨 tab、適合臨時表單草稿。</div>
+  </div>
+
+  <div class="probe">
+    <div class="q">CSS：水平垂直置中三種寫法</div>
+    <div class="a">① flex：`display:flex; justify-content:center; align-items:center`。② grid：`display:grid; place-items:center`。③ position：`position:absolute; top:50%; left:50%; transform:translate(-50%,-50%)`。現代 prefer grid `place-items:center` — 最短。</div>
+  </div>
+
+  <div class="probe">
+    <div class="q">Tailwind vs CSS-in-JS trade-off</div>
+    <div class="a">Tailwind：build-time、零 runtime cost、bundle size 可預測（PurgeCSS）、design system 一致性靠 config。CSS-in-JS（styled-components / emotion）：runtime overhead、dynamic style 容易、SSR 要處理 critical CSS。Appier 用 Tailwind 我直接上，剛好對位。</div>
+  </div>
+</section>
+
+<div class="warn">
+  ⚠️ <strong>記住</strong>：這不是 HR 過水，是 hiring manager / tech lead 一面。<br>
+  · 自我介紹第一分鐘要有 tech depth signal（multi-agent pipeline 一句帶到）<br>
+  · 履歷每段技術點要能延伸 30 秒「為什麼這樣做 / 有沒有別的選項」<br>
+  · 不主動提薪水、不主動提 remote、不貶低前東家、不假裝懂 Vue<br>
+  · lead 問完留 3 秒空隙再答，顯得有思考<br>
+  · 不知道就說不知道，記得不要亂猜
+</div>
+
+<script>
+  function toggle(itemId, checkId) {
+    const item = document.getElementById(itemId);
+    const cb = document.getElementById(checkId);
+    if (cb.checked) {
+      item.classList.add('answered');
+    } else {
+      item.classList.remove('answered');
+    }
+  }
+</script>
+
+</body>
+</html>
