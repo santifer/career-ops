@@ -402,6 +402,29 @@ SUBCOMMANDS['mark-phase'] = async (args) => {
   ok({});
 };
 
+function phaseMs(state, startKey, endKey) {
+  const s = state[startKey];
+  const e = state[endKey];
+  if (typeof s !== 'number' || typeof e !== 'number') return null;
+  return Math.round((e - s) * 1000);
+}
+
+SUBCOMMANDS['read-timer'] = async (args) => {
+  const pid = args.pid ? parseInt(args.pid, 10) : process.pid;
+  const state = await readTimerState(pid);
+  if (!state) fail('timer state not found; call init-timer first');
+  ok({
+    url: state.url,
+    pid: state.pid,
+    jd_fetch_ms: phaseMs(state, 't_jd_fetch_start', 't_jd_fetch_end'),
+    resume_gen_ms: phaseMs(state, 't_resume_gen_start', 't_resume_gen_end'),
+    resume_compile_ms: phaseMs(state, 't_resume_compile_start', 't_resume_compile_end'),
+    cover_letter_gen_ms: phaseMs(state, 't_cl_gen_start', 't_cl_gen_end'),
+    cover_letter_compile_ms: phaseMs(state, 't_cl_compile_start', 't_cl_compile_end'),
+    total_ms: phaseMs(state, 't_url_start', 't_url_end'),
+  });
+};
+
 SUBCOMMANDS['compile-resume'] = async (args) => {
   const tex = args.tex;
   const pdf = args.pdf;

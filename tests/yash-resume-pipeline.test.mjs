@@ -940,3 +940,40 @@ test('mark-phase: fails when timer state file missing', async () => {
   assert.equal(obj.status, 'fail');
   assert.match(obj.error, /timer state not found.*init-timer/);
 });
+
+// === read-timer tests ===
+
+test('read-timer: returns phase ms deltas for all stamped phases', async () => {
+  const PID = String(process.pid);
+  await runScript(['init-timer', '--url', 'https://example.com/x', '--pid', PID]);
+  await runScript(['mark-phase', '--phase', 'jd_fetch_start', '--pid', PID]);
+  await new Promise(r => setTimeout(r, 50));
+  await runScript(['mark-phase', '--phase', 'jd_fetch_end', '--pid', PID]);
+  const { code, stdout } = await runScript(['read-timer', '--pid', PID]);
+  assert.equal(code, 0);
+  const obj = JSON.parse(stdout);
+  assert.equal(obj.status, 'ok');
+  assert.ok(obj.jd_fetch_ms >= 40 && obj.jd_fetch_ms < 5000, `jd_fetch_ms=${obj.jd_fetch_ms} out of range`);
+  await rm(`/tmp/yash-pipeline-timer-${PID}.json`).catch(() => {});
+});
+
+test('read-timer: returns null for unstamped phases', async () => {
+  const PID = String(process.pid);
+  await runScript(['init-timer', '--url', 'https://example.com/x', '--pid', PID]);
+  const { code, stdout } = await runScript(['read-timer', '--pid', PID]);
+  assert.equal(code, 0);
+  const obj = JSON.parse(stdout);
+  assert.equal(obj.jd_fetch_ms, null);
+  assert.equal(obj.resume_gen_ms, null);
+  assert.equal(obj.total_ms, null);
+  await rm(`/tmp/yash-pipeline-timer-${PID}.json`).catch(() => {});
+});
+
+test('read-timer: fails when timer state missing', async () => {
+  const PID = String(process.pid);
+  await rm(`/tmp/yash-pipeline-timer-${PID}.json`).catch(() => {});
+  const { code, stdout } = await runScript(['read-timer', '--pid', PID]);
+  assert.equal(code, 1);
+  const obj = JSON.parse(stdout);
+  assert.match(obj.error, /timer state not found.*init-timer/);
+});
