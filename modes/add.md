@@ -26,11 +26,22 @@ For each item, determine its type:
 | Tech list (comma-separated tools/languages) | **skill** |
 | Any other URL or rich description | **project** |
 
+### Step 1b — Validate URLs (security check)
+
+Before fetching any URL, validate it:
+
+- **Allowed schemes only:** `http` and `https`. Reject anything else (`file://`, `ftp://`, `data:`, etc.).
+- **Reject non-routable hosts:** Do not fetch localhost, `127.0.0.1`, `0.0.0.0`, `::1`, or any hostname resolving to:
+  - RFC 1918 private ranges: `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`
+  - Link-local: `169.254.0.0/16`, `fe80::/10`
+  - Loopback or unspecified addresses
+- If a URL fails validation, **do not fetch it** — tell the user: "That URL cannot be fetched (private or non-HTTP address). Please paste the content directly."
+
 ### Step 2 — Fetch content (for URLs)
 
 **GitHub repos:**
 1. Use WebFetch to `https://api.github.com/repos/{owner}/{repo}` — extract: `description`, `language`, `topics`, `stargazers_count`, `html_url`
-2. Use WebFetch on the raw README (`https://raw.githubusercontent.com/{owner}/{repo}/main/README.md` or `master`) — extract tech stack, features, key outcomes
+2. Use WebFetch on the branch-agnostic GitHub API endpoint `https://api.github.com/repos/{owner}/{repo}/readme` — the API returns the default branch README without needing to know the branch name. Decode the `content` field (base64) and extract tech stack, features, key outcomes.
 3. If both fail, use WebFetch on the HTML page directly
 
 **Other URLs:**
@@ -43,7 +54,7 @@ For each item, determine its type:
 
 Extract as much as available. Mark missing fields as `null`:
 
-```
+```yaml
 name:         (string) project/company/paper name
 type:         project | experience | publication | skill
 url:          (string|null) canonical URL
@@ -73,7 +84,7 @@ Example transformation:
 
 Before writing anything, display a formatted preview:
 
-```
+```text
 ── PREVIEW ──────────────────────────────────────
 
 [PROJECT] Semantic Search Engine
@@ -112,6 +123,7 @@ Locate the correct section by type:
 **NEVER duplicate.** Before adding, check if the project/company/role name already appears in cv.md. If it does, ask the user whether to update the existing entry or skip.
 
 **Format for projects** (match existing cv.md style):
+
 ```markdown
 ### {name} | {dates}
 **Technologies:** {tech_stack joined by ", "}
@@ -121,6 +133,7 @@ Locate the correct section by type:
 ```
 
 **Format for experience:**
+
 ```markdown
 ### {role_title} | {dates}
 **{company}**
@@ -130,6 +143,7 @@ Locate the correct section by type:
 ```
 
 **Format for publications:**
+
 ```markdown
 ### {title} | {year}
 **{venue}** — co-authored with {co-authors}
@@ -144,6 +158,7 @@ Locate the correct section by type:
 ### Step 7 — Write to article-digest.md
 
 If `article-digest.md` does not exist, create it with this header:
+
 ```markdown
 # Article & Project Digest
 
@@ -151,6 +166,7 @@ Compact proof points for use during CV generation and evaluations.
 ```
 
 Append a new entry:
+
 ```markdown
 ## {name}
 
@@ -170,7 +186,7 @@ Append a new entry:
 
 After writing, report:
 
-```
+```text
 ✅ Added to cv.md:
    → Projects: Semantic Search Engine (Jan 2025 – Mar 2025)
 

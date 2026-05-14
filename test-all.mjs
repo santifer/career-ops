@@ -391,6 +391,8 @@ if (fileExists('.claude/skills/career-ops/SKILL.md')) {
   } else {
     fail('SKILL.md discovery menu missing /career-ops add');
   }
+} else {
+  fail('.claude/skills/career-ops/SKILL.md does not exist');
 }
 
 // AGENTS.md skill modes table includes add
@@ -441,11 +443,21 @@ if (fileExists('templates/cv-template.tex')) {
     }
   }
 
-  // Must NOT use fontawesome (Jake's template doesn't need it)
+  // Must NOT use fontawesome or multicol (Jake's template doesn't need them)
   if (!tex.includes('\\usepackage{fontawesome}')) {
-    pass('cv-template.tex does not require fontawesome (Jake\'s template)');
+    pass('cv-template.tex does not require fontawesome');
   } else {
-    warn('cv-template.tex includes fontawesome — ensure it is available in all LaTeX environments');
+    fail('cv-template.tex must not include fontawesome — unavailable in many LaTeX environments');
+  }
+  if (!tex.includes('\\usepackage{fontawesome5}')) {
+    pass('cv-template.tex does not require fontawesome5');
+  } else {
+    fail('cv-template.tex must not include fontawesome5 — unavailable in many LaTeX environments');
+  }
+  if (!tex.includes('\\usepackage{multicol}')) {
+    pass('cv-template.tex does not require multicol');
+  } else {
+    fail('cv-template.tex must not include multicol — not used in Jake\'s single-column template');
   }
 } else {
   fail('templates/cv-template.tex does not exist');
@@ -471,6 +483,8 @@ if (fileExists('generate-latex.mjs')) {
   } else {
     fail('generate-latex.mjs must support tectonic as a LaTeX engine');
   }
+} else {
+  fail('generate-latex.mjs does not exist');
 }
 
 // auto-pipeline.md uses latex as default
@@ -481,6 +495,8 @@ if (fileExists('modes/auto-pipeline.md')) {
   } else {
     fail('auto-pipeline.md must default to latex output format');
   }
+} else {
+  fail('modes/auto-pipeline.md does not exist');
 }
 
 // ── SUMMARY ─────────────────────────────────────────────────────
