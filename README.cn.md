@@ -111,6 +111,53 @@ claude   # 在当前目录打开 Claude Code
 
 完整配置指南见 [docs/SETUP.md](docs/SETUP.md)。
 
+## Gemini CLI 集成
+
+career-ops 原生支持 [Gemini CLI](https://github.com/google-gemini/gemini-cli) —— 与 Claude Code 和 OpenCode 的支持方式相同。所有 15 个斜杠命令均可使用，并基于相同的 `modes/*.md` 评估逻辑。
+
+### 选项 A —— 原生 Gemini CLI（推荐）
+
+```bash
+# 1. 安装 Gemini CLI
+npm install -g @google/gemini-cli
+# 或: npx @google/gemini-cli --version
+
+# 2. 认证（免费 —— 使用你的 Google 账号）
+gemini auth
+
+# 3. 在 career-ops 目录中运行
+cd career-ops
+gemini
+
+# 4. 像 Claude Code 一样使用斜杠命令
+/career-ops "Anthropic 的资深 AI 工程师..."
+/career-ops-evaluate --file ./jds/openai.txt
+/career-ops-scan
+/career-ops-pdf
+/career-ops-tracker
+```
+
+`GEMINI.md` 文件会自动作为上下文加载。所有 15 个命令都定义在 `.gemini/commands/*.toml` 中。
+
+### 选项 B —— 独立 API 脚本（无需安装 CLI）
+
+```bash
+# 1. 在 https://aistudio.google.com/apikey 获取免费 API 密钥
+cp .env.example .env
+# 编辑 .env → 设置 GEMINI_API_KEY=***
+
+# 2. 安装依赖
+npm install
+
+# 3. 评估职位描述
+node gemini-eval.mjs "我们在招聘资深 AI 工程师..."
+node gemini-eval.mjs --file ./jds/my-job.txt
+npm run gemini:eval -- "职位描述文本"
+```
+
+> **免费层：** 两种选项都无需付费。原生 CLI 使用 Google OAuth；API 脚本使用 `gemini-2.0-flash`（15 RPM，每天 1M token 免费）。
+
+
 ## 用法
 
 career-ops 是一个单一斜杠命令，带有多种模式：
@@ -256,3 +303,23 @@ career-ops/
 4. **不提供任何保证。** 评估结果只是建议，不是真相。AI 模型可能会幻觉出并不存在的技能或经历。作者不对任何求职结果、申请被拒、账号受限或其他后果承担责任。
 
 完整内容见 [LEGAL_DISCLAIMER.md](LEGAL_DISCLAIMER.md)。本软件依据 [MIT License](LICENSE) 以“按现状”方式提供，不附带任何形式的担保。
+
+## 贡献者
+
+<a href="https://github.com/santifer/career-ops/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=santifer/career-ops" />
+</a>
+
+通过 career-ops 成功入职？[分享你的故事！](https://github.com/santifer/career-ops/issues/new?template=i-got-hired.yml)
+
+## 许可证与商标
+
+代码以 [MIT](LICENSE) 许可证授权。"career-ops" 名称及品牌受 [商标政策](TRADEMARK.md) 约束 —— 允许社区使用，商业产品命名和背书需保留权利。
+
+## 联系我们
+
+[![Website](https://img.shields.io/badge/santifer.io-000?style=for-the-badge&logo=safari&logoColor=white)](https://santifer.io)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/in/santifer)
+[![X](https://img.shields.io/badge/X-000?style=for-the-badge&logo=x&logoColor=white)](https://x.com/santifer)
+[![Discord](https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/8pRpHETxa4)
+[![Email](https://img.shields.io/badge/Email-EA4335?style=for-the-badge&logo=gmail&logoColor=white)](mailto:hi@santifer.io)
