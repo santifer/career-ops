@@ -178,7 +178,8 @@ Features: 6 pestañas de filtro, 4 modos de ordenacion, vista agrupada/plana, pr
 
 ```
 career-ops/
-├── CLAUDE.md                    # Instrucciones del agente
+├── AGENTS.md                    # Instrucciones canónicas del agente (todos los CLIs)
+├── CLAUDE.md                    # Wrapper Claude Code (importa AGENTS.md)
 ├── cv.md                        # Tu CV (crealo tu)
 ├── article-digest.md            # Tus proof points (opcional)
 ├── config/
