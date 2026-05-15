@@ -104,9 +104,15 @@ const USER_PATHS = [
   'writing-samples/',
 ];
 
+function parseVersionFile(raw) {
+  // VERSION may carry a release-please marker, e.g. "1.6.0 # x-release-please-version".
+  // Take the first whitespace-delimited token so the marker doesn't break semver parsing.
+  return raw.trim().split(/\s+/)[0] || '';
+}
+
 function localVersion() {
   const vPath = join(ROOT, 'VERSION');
-  return existsSync(vPath) ? readFileSync(vPath, 'utf-8').trim() : '0.0.0';
+  return existsSync(vPath) ? parseVersionFile(readFileSync(vPath, 'utf-8')) : '0.0.0';
 }
 
 function compareVersions(a, b) {
@@ -183,7 +189,7 @@ async function check() {
 
   if (versionResult.status === 'fulfilled' && versionResult.value.ok) {
     try {
-      const raw = (await versionResult.value.text()).trim();
+      const raw = parseVersionFile(await versionResult.value.text());
       const match = raw.match(SEMVER_RE);
       remote = match ? match[1] : '';
     } catch {
@@ -270,6 +276,25 @@ async function apply() {
     // 3. Checkout system files only
     console.log('Updating system files...');
     const updated = [];
+
+    // 3a. Bootstrap newly-introduced paths that the local update-system.mjs
+    // doesn't yet know about. Without this, cross-version migrations where
+    // a path is added to SYSTEM_PATHS by the new version can leave dangling
+    // symlinks — e.g. v1.6.x → v1.7.x where .agents/ was introduced but the
+    // local v1.6.x SYSTEM_PATHS didn't include it, so `.agents/` was never
+    // checked out while `.claude/skills/` was updated to symlink into it.
+    // See: https://github.com/santifer/career-ops/issues/649
+    const BOOTSTRAP_PATHS = ['.agents/'];
+    for (const path of BOOTSTRAP_PATHS) {
+      if (SYSTEM_PATHS.includes(path)) continue; // already in main loop
+      try {
+        git('checkout', 'FETCH_HEAD', '--', path);
+        updated.push(path);
+      } catch {
+        // Path may not exist in FETCH_HEAD yet
+      }
+    }
+
     for (const path of SYSTEM_PATHS) {
       try {
         git('checkout', 'FETCH_HEAD', '--', path);
