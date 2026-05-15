@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>James Sun — CV</title>
+<style>
+  @font-face {
+    font-family: 'Space Grotesk';
+    src: url('./fonts/space-grotesk-latin.woff2') format('woff2');
+    font-weight: 300 700; font-style: normal; font-display: swap;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  }
+  @font-face {
+    font-family: 'DM Sans';
+    src: url('./fonts/dm-sans-latin.woff2') format('woff2');
+    font-weight: 100 1000; font-style: normal; font-display: swap;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { font-family: 'DM Sans', sans-serif; font-size: 10.5px; line-height: 1.4; color: #1a1a2e; background: #ffffff; padding: 0; margin: 0; }
+  .page { width: 100%; max-width: 820px; margin: 0 auto; padding: 2px 0; }
+  .header { margin-bottom: 20px; }
+  .header h1 { font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 700; color: #1a1a2e; letter-spacing: -0.02em; margin-bottom: 6px; line-height: 1.1; }
+  .header-gradient { height: 2px; background: #1a1a2e; border-radius: 1px; margin-bottom: 10px; }
+  .contact-row { display: flex; flex-wrap: wrap; gap: 8px 14px; font-family: 'DM Sans', sans-serif; font-size: 10.5px; line-height: 1.4; color: #555; }
+  .contact-row a { color: #555; text-decoration: none; }
+  .contact-row .separator { color: #ccc; }
+  .section { margin-bottom: 18px; }
+  .section-title { font-family: 'Space Grotesk', sans-serif; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #1a1a2e; border-bottom: 1.5px solid #1a1a2e; padding-bottom: 4px; margin-bottom: 10px; line-height: 1.2; }
+  .summary-text { font-size: 11px; line-height: 1.7; color: #2f2f2f; }
+  a { white-space: nowrap; }
+  .competencies-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+  .competency-tag { font-family: 'DM Sans', sans-serif; font-size: 10px; font-weight: 500; color: #333; background: #f2f2f2; padding: 4px 10px; border-radius: 3px; border: 1px solid #ccc; }
+  .job { margin-bottom: 14px; }
+  .job-header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 4px; }
+  .job-company { font-family: 'Space Grotesk', sans-serif; font-size: 12.5px; font-weight: 600; color: #1a1a2e; }
+  .job-period { font-size: 10.5px; color: #777; white-space: nowrap; }
+  .job-role { font-size: 11px; font-weight: 600; color: #333; margin-bottom: 6px; }
+  .job ul { padding-left: 18px; margin-top: 6px; }
+  .job li { font-size: 10.5px; line-height: 1.6; color: #333; margin-bottom: 4px; }
+  .job li strong { font-weight: 600; }
+  .project { margin-bottom: 12px; }
+  .project-title { font-family: 'Space Grotesk', sans-serif; font-size: 11.5px; font-weight: 600; color: #1a1a2e; }
+  .project-badge { font-size: 9px; font-weight: 500; color: #555; background: #f2f2f2; padding: 1px 6px; border-radius: 2px; margin-left: 6px; }
+  .project-desc { font-size: 10.5px; color: #444; margin-top: 3px; line-height: 1.55; }
+  .project-tech { font-size: 9.5px; color: #888; margin-top: 3px; }
+  .edu-item { margin-bottom: 8px; }
+  .edu-header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .edu-title { font-weight: 600; font-size: 11px; color: #333; }
+  .edu-org { color: #1a1a2e; font-weight: 500; }
+  .edu-year { font-size: 10px; color: #777; white-space: nowrap; }
+  .edu-desc { font-size: 10px; color: #666; margin-top: 2px; line-height: 1.5; }
+  .cert-item { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 6px; }
+  .cert-title { font-size: 10.5px; font-weight: 500; color: #333; }
+  .cert-org { color: #1a1a2e; }
+  .cert-year { font-size: 10px; color: #777; white-space: nowrap; }
+  .skills-block { margin-bottom: 6px; }
+  .skill-category { font-weight: 600; color: #333; font-size: 10.5px; }
+  .skill-item { font-size: 10.5px; color: #444; }
+  @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } .page { padding: 0; } }
+  .avoid-break, .job, .project, .edu-item, .cert-item { break-inside: avoid; page-break-inside: avoid; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header avoid-break">
+    <h1>James Sun</h1>
+    <div class="header-gradient"></div>
+    <div class="contact-row">
+      <span>jamesvv8bbl5q3sulvtp@gmail.com</span>
+      <span class="separator">|</span>
+      <span>416-732-5105</span>
+      <span class="separator">|</span>
+      <a href="https://github.com/Schlaflied">github.com/Schlaflied</a>
+      <span class="separator">|</span>
+      <span>Toronto, ON</span>
+    </div>
+  </div>
+
+  <!-- PROFESSIONAL SUMMARY -->
+  <div class="section avoid-break">
+    <div class="section-title">Professional Summary</div>
+    <div class="summary-text">
+      Learning experience professional specializing in high-quality e-learning production, training video development, and multimedia content creation for SaaS platform adoption. Hands-on with Articulate Storyline, Rise, and Camtasia across blended and on-demand delivery formats. Applies ADDIE and SAM frameworks alongside UDL accessibility principles to produce polished, learner-centred assets at pace. Experienced supporting customer-facing training engagements and executing rapid, iterative development workflows with cross-functional SMEs. Master of Professional Education (Western University) with analytics fluency to measure content effectiveness and inform iteration.
+    </div>
+  </div>
+
+  <!-- CORE COMPETENCIES -->
+  <div class="section">
+    <div class="section-title">Core Competencies</div>
+    <div class="competencies-grid">
+      <span class="competency-tag">Articulate Storyline 360 &amp; Rise</span>
+      <span class="competency-tag">Camtasia Video Production</span>
+      <span class="competency-tag">E-Learning Module Development</span>
+      <span class="competency-tag">Screen Capture &amp; Voiceover</span>
+      <span class="competency-tag">Blended &amp; On-Demand Learning</span>
+      <span class="competency-tag">ADDIE &amp; SAM Frameworks</span>
+      <span class="competency-tag">UDL &amp; Accessibility Design</span>
+      <span class="competency-tag">LMS Administration</span>
+      <span class="competency-tag">Job Aids &amp; Quick-Start Guides</span>
+      <span class="competency-tag">Customer-Facing Training</span>
+      <span class="competency-tag">Rapid Iterative Development</span>
+      <span class="competency-tag">Adobe Creative Suite</span>
+    </div>
+  </div>
+
+  <!-- WORK EXPERIENCE -->
+  <div class="section">
+    <div class="section-title">Experience</div>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-company">SavvyPro Education Inc.</span>
+        <span class="job-period">Jul 2023 – Jul 2024</span>
+      </div>
+      <div class="job-role">Product &amp; Learning Technology Coordinator — Toronto, ON</div>
+      <ul>
+        <li>Produced blended learning assets -- e-learning modules, screen-capture training videos, and quick-start guides -- enabling <strong>100+ customers per session</strong> to successfully adopt a SaaS platform.</li>
+        <li>Developed e-learning content using Articulate Storyline and Rise, applying ADDIE framework and accessibility best practices (AODA/WCAG) across module design and assessment.</li>
+        <li>Created short-form training videos with Camtasia including screen capture, voiceover narration, and editing for on-demand delivery via LMS.</li>
+        <li>Executed rapid, iterative content development cycles in collaboration with SMEs, incorporating QA feedback and learner data to continuously improve asset quality.</li>
+        <li>Administered LMS platforms (Moodle, Canvas) with custom API integrations, managing content delivery pipelines and learner onboarding workflows.</li>
+        <li>Built analytics pipelines tracking engagement and completion patterns, using findings to redesign underperforming modules and improve learner outcomes across program cycles.</li>
+      </ul>
+    </div>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-company">Banhai Education Technology</span>
+        <span class="job-period">Jul 2022 – Jun 2023</span>
+      </div>
+      <div class="job-role">Instructional Designer &amp; Program Coordinator — Wuxi, China</div>
+      <ul>
+        <li>Designed synchronous and asynchronous e-learning programs using ADDIE, developing storyboards, learning objectives, multimedia content, and assessment rubrics for diverse adult learner populations.</li>
+        <li>Produced supplemental learning assets including infographics, job aids, and facilitator guides to support blended delivery across live and on-demand formats.</li>
+        <li>Coordinated cross-functional production workflow between faculty, SMEs, and program administrators, managing multiple concurrent content development projects to deadline.</li>
+      </ul>
+    </div>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-company">Parking Control Services Group</span>
+        <span class="job-period">Mar 2024 – Present</span>
+      </div>
+      <div class="job-role">Administrative Assistant — North York, ON</div>
+      <ul>
+        <li>Developed digital training documentation and onboarding materials, building structured content libraries for process-driven workflows.</li>
+        <li>Built automated reporting workflows using Python and n8n, demonstrating technical fluency in tooling adoption and process optimization.</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- PROJECTS -->
+  <div class="section avoid-break">
+    <div class="section-title">Selected Projects</div>
+
+    <div class="project">
+      <span class="project-title">Plot Ark — Learning Analytics Platform</span>
+      <span class="project-badge">Live</span>
+      <div class="project-desc">Full-stack EdTech SaaS for instructional designers to analyze learner behaviour beyond completion rates. xAPI behavioral analytics pipeline classifying learner engagement across five categories. Multi-agent system surfaces content optimization recommendations to support rapid iteration of underperforming modules.</div>
+      <div class="project-tech">TypeScript · React · Python · Flask · PostgreSQL · xAPI · Articulate-compatible</div>
+    </div>
+
+    <div class="project">
+      <span class="project-title">Hive Agent Framework — Open Source Contributor</span>
+      <span class="project-badge">YC W2020</span>
+      <div class="project-desc">Production code merged into Hive v0.7.3 (YC-backed AI agents infrastructure). Built xAPI Learning Record Agent for standards-compliant learning event capture -- enabling interoperable analytics across LMS and custom learning platforms.</div>
+      <div class="project-tech">Python · xAPI · A2A Pipeline</div>
+    </div>
+
+  </div>
+
+  <!-- EDUCATION -->
+  <div class="section avoid-break">
+    <div class="section-title">Education</div>
+    <div class="edu-item">
+      <div class="edu-header">
+        <span class="edu-title"><span class="edu-org">Western University</span> — Master of Professional Education (Adult Education &amp; TESOL)</span>
+        <span class="edu-year">Sep 2024 – Aug 2025</span>
+      </div>
+      <div class="edu-desc">Instructional design, adult learning theory, curriculum evaluation, multimodal content development, and facilitation for professional contexts.</div>
+    </div>
+    <div class="edu-item">
+      <div class="edu-header">
+        <span class="edu-title"><span class="edu-org">York University</span> — Bachelor of Commerce, Human Resources</span>
+        <span class="edu-year">Sep 2020 – Jun 2024</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SKILLS -->
+  <div class="section avoid-break">
+    <div class="section-title">Skills</div>
+    <div class="skills-block">
+      <span class="skill-category">Authoring &amp; Production:</span>
+      <span class="skill-item"> Articulate Storyline 360, Articulate Rise, Camtasia, Adobe Captivate, H5P, Vyond, Canva, Figma, Adobe Premiere (basic)</span>
+    </div>
+    <div class="skills-block">
+      <span class="skill-category">LMS &amp; Standards:</span>
+      <span class="skill-item"> Moodle, Canvas, Blackboard, xAPI, SCORM, LMS API Integration</span>
+    </div>
+    <div class="skills-block">
+      <span class="skill-category">Design Frameworks:</span>
+      <span class="skill-item"> ADDIE, SAM, Bloom's Taxonomy, UDL, Kirkpatrick Evaluation, Storyboarding, Accessibility (AODA/WCAG)</span>
+    </div>
+    <div class="skills-block">
+      <span class="skill-category">Analytics &amp; Tech:</span>
+      <span class="skill-item"> Python, SQL, Google Apps Script, n8n, Power Automate, Excel</span>
+    </div>
+    <div class="skills-block">
+      <span class="skill-category">Microsoft Office:</span>
+      <span class="skill-item"> Word, PowerPoint, Excel, Teams, SharePoint</span>
+    </div>
+    <div class="skills-block">
+      <span class="skill-category">Languages:</span>
+      <span class="skill-item"> English (fluent), Mandarin (native), Japanese (conversational ~N2)</span>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

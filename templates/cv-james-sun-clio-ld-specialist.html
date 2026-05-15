@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>James Sun — CV</title>
+<style>
+  @font-face {
+    font-family: 'Space Grotesk';
+    src: url('./fonts/space-grotesk-latin.woff2') format('woff2');
+    font-weight: 300 700;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  }
+
+  @font-face {
+    font-family: 'Space Grotesk';
+    src: url('./fonts/space-grotesk-latin-ext.woff2') format('woff2');
+    font-weight: 300 700;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0100-02AF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  }
+
+  @font-face {
+    font-family: 'DM Sans';
+    src: url('./fonts/dm-sans-latin.woff2') format('woff2');
+    font-weight: 100 1000;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  }
+
+  @font-face {
+    font-family: 'DM Sans';
+    src: url('./fonts/dm-sans-latin-ext.woff2') format('woff2');
+    font-weight: 100 1000;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0100-02AF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10.5px;
+    line-height: 1.4;
+    color: #1a1a2e;
+    background: #ffffff;
+    padding: 0;
+    margin: 0;
+  }
+
+  .page {
+    width: 100%;
+    max-width: 8.5in;
+    margin: 0 auto;
+    padding: 0.45in;
+  }
+
+  .header { margin-bottom: 14px; }
+
+  .header h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: #1a1a2e;
+    letter-spacing: -0.02em;
+    margin-bottom: 5px;
+    line-height: 1.1;
+  }
+
+  .header-gradient {
+    height: 2px;
+    background: #1a1a2e;
+    border-radius: 1px;
+    margin-bottom: 8px;
+  }
+
+  .contact-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    line-height: 1.4;
+    color: #555;
+  }
+
+  .contact-row a { color: #555; text-decoration: none; }
+  .contact-row .separator { color: #ccc; }
+
+  .section { margin-bottom: 12px; }
+
+  .section-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #1a1a2e;
+    border-bottom: 1.5px solid #1a1a2e;
+    padding-bottom: 3px;
+    margin-bottom: 8px;
+    line-height: 1.2;
+  }
+
+  .summary-text { font-size: 10.5px; line-height: 1.6; color: #2f2f2f; }
+
+  a { white-space: nowrap; }
+
+  .competencies-grid { display: flex; flex-wrap: wrap; gap: 5px; }
+
+  .competency-tag {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 9.5px;
+    font-weight: 500;
+    color: #333;
+    background: #f2f2f2;
+    padding: 3px 9px;
+    border-radius: 3px;
+    border: 1px solid #ccc;
+  }
+
+  .job { margin-bottom: 11px; }
+
+  .job-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 2px;
+  }
+
+  .job-company {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #1a1a2e;
+  }
+
+  .job-period { font-size: 10px; color: #777; white-space: nowrap; }
+
+  .job-role { font-size: 10.5px; font-weight: 600; color: #333; margin-bottom: 4px; }
+
+  .job ul { padding-left: 16px; margin-top: 4px; }
+
+  .job li { font-size: 10px; line-height: 1.55; color: #333; margin-bottom: 3px; }
+
+  .job li strong { font-weight: 600; }
+
+  .project { margin-bottom: 9px; }
+
+  .project-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    color: #1a1a2e;
+  }
+
+  .project-badge {
+    font-size: 9px;
+    font-weight: 500;
+    color: #555;
+    background: #f2f2f2;
+    padding: 1px 6px;
+    border-radius: 2px;
+    margin-left: 6px;
+  }
+
+  .project-desc { font-size: 10px; color: #444; margin-top: 2px; line-height: 1.5; }
+
+  .edu-item { margin-bottom: 7px; }
+
+  .edu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+  }
+
+  .edu-title { font-weight: 600; font-size: 10.5px; color: #333; }
+  .edu-org { color: #1a1a2e; font-weight: 500; }
+  .edu-year { font-size: 10px; color: #777; white-space: nowrap; }
+
+  .cert-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 4px;
+  }
+
+  .cert-title { font-size: 10px; font-weight: 500; color: #333; }
+  .cert-org { color: #1a1a2e; }
+  .cert-year { font-size: 10px; color: #777; white-space: nowrap; }
+
+  .skills-block { margin-bottom: 5px; font-size: 10px; color: #444; line-height: 1.55; }
+  .skill-category { font-weight: 600; color: #333; }
+
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .page { padding: 0.45in; }
+  }
+
+  .avoid-break, .job, .project, .edu-item, .cert-item {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header avoid-break">
+    <h1>James Sun</h1>
+    <div class="header-gradient"></div>
+    <div class="contact-row">
+      <span>jamesvv8bbl5q3sulvtp@gmail.com</span>
+      <span class="separator">|</span>
+      <a href="https://linkedin.com/in/yuting-sun-48bbb4211/">linkedin.com/in/yuting-sun-48bbb4211</a>
+      <span class="separator">|</span>
+      <a href="https://syttt.my.canva.site/">syttt.my.canva.site</a>
+      <span class="separator">|</span>
+      <span>London, ON (open to Vancouver)</span>
+    </div>
+  </div>
+
+  <!-- PROFESSIONAL SUMMARY -->
+  <div class="section avoid-break">
+    <div class="section-title">Professional Summary</div>
+    <div class="summary-text">Program Specialist, Learning and Development with 3+ years designing, coordinating, and facilitating high-impact learning programs across corporate and EdTech sectors. Skilled in onboarding delivery, e-learning design (ADDIE, Bloom's Taxonomy (Experience API)), and LMS administration (Moodle, Canvas) — with a track record facilitating programs for 100+ participants per session and driving engagement through applied learning analytics. Actively leverages AI tools including Claude and GPT-4o to accelerate content creation, streamline program coordination, and improve learning quality — holding a Master of Professional Education from Western University.</div>
+  </div>
+
+  <!-- CORE COMPETENCIES -->
+  <div class="section">
+    <div class="section-title">Core Competencies</div>
+    <div class="competencies-grid">
+      <span class="competency-tag">Workshop Facilitation</span>
+      <span class="competency-tag">Learning Program Design</span>
+      <span class="competency-tag">Onboarding Programs</span>
+      <span class="competency-tag">Talent Development</span>
+      <span class="competency-tag">AI-Assisted Content Creation</span>
+      <span class="competency-tag">LMS Administration</span>
+      <span class="competency-tag">Stakeholder Engagement</span>
+      <span class="competency-tag">Instructional Materials Design</span>
+      <span class="competency-tag">E-Learning Development</span>
+      <span class="competency-tag">Learning Analytics</span>
+    </div>
+  </div>
+
+  <!-- WORK EXPERIENCE -->
+  <div class="section">
+    <div class="section-title">Work Experience</div>
+
+    <div class="job avoid-break">
+      <div class="job-header">
+        <span class="job-company">SavvyPro Edu. Inc.</span>
+        <span class="job-period">Jul 2023 – Jul 2024</span>
+      </div>
+      <div class="job-role">Product &amp; Learning Technology Coordinator — Toronto, ON</div>
+      <ul>
+        <li>Facilitated end-to-end delivery of professional learning programs for <strong>100+ participants per session</strong>, managing scheduling, LMS setup, stakeholder communication, and post-session evaluation</li>
+        <li>Designed learning experiences across synchronous and asynchronous formats; managed LMS configuration (Moodle, Canvas) and built API integrations for content delivery automation</li>
+        <li>Applied learning analytics to track learner engagement and retention, informing content iteration across program cycles using Google Sheets and Python pipelines</li>
+      </ul>
+    </div>
+
+    <div class="job avoid-break">
+      <div class="job-header">
+        <span class="job-company">Parking Control Services Group</span>
+        <span class="job-period">Mar 2024 – Present</span>
+      </div>
+      <div class="job-role">Administrative Assistant — North York, ON</div>
+      <ul>
+        <li>Coordinated employee onboarding with <strong>100% ESA/OHSA compliance</strong>, developing training materials and digital documentation systems</li>
+        <li>Used AI tools (Claude, GPT-4o, n8n) to automate reporting workflows, eliminating manual processing for weekly operations and reducing payroll discrepancies by 15%</li>
+      </ul>
+    </div>
+
+    <div class="job avoid-break">
+      <div class="job-header">
+        <span class="job-company">Banhai Education Technology</span>
+        <span class="job-period">Jul 2022 – Jun 2023</span>
+      </div>
+      <div class="job-role">Instructional Designer &amp; Program Coordinator — Wuxi, China</div>
+      <ul>
+        <li>Designed synchronous and asynchronous e-learning programs using ADDIE framework, developing facilitator guides, learning objectives, and assessment rubrics aligned to curriculum standards</li>
+        <li>Facilitated cross-functional coordination between faculty, learners, and program administrators across multiple concurrent talent development initiatives</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- PROJECTS -->
+  <div class="section avoid-break">
+    <div class="section-title">Projects</div>
+
+    <div class="project">
+      <div class="project-title">Plot Ark — AI-Powered Learning Analytics Platform <span class="project-badge">Live</span></div>
+      <div class="project-desc">Full-stack EdTech SaaS (xAPI (Experience API) behavioral analytics) for instructional designers to measure real learner behavior beyond surface-level completion rates. Features five-category time-on-task classification, A2A multi-agent curriculum optimization pipeline (orchestrator + behavior_analyst + content_optimizer), and fake-completion cross-validation via metacognitive self-assessment. Built with TypeScript, React, Python, Flask, PostgreSQL, Redis, Docker, GCP. Live: <a href="https://schlaflied.github.io/Plot-Ark/">schlaflied.github.io/Plot-Ark</a></div>
+    </div>
+
+    <div class="project">
+      <div class="project-title">Hive Agent Framework Contributor (YC-backed) <span class="project-badge">Open Source</span></div>
+      <div class="project-desc">SDR Agent PR #5178 merged into v0.7.3 and named in release notes; derived from Job Autopilot system achieving 47% cold email reply rate. Three PRs under review forming a complete EdTech A2A pipeline used in Plot Ark: Curriculum Research Agent, Document Intelligence A2A, and xAPI Learning Record Agent (+3,817 lines, 20 files).</div>
+    </div>
+
+  </div>
+
+  <!-- EDUCATION -->
+  <div class="section avoid-break">
+    <div class="section-title">Education</div>
+    <div class="edu-item">
+      <div class="edu-header">
+        <span class="edu-title"><span class="edu-org">Western University</span> — Master of Professional Education (TESOL)</span>
+        <span class="edu-year">Sep 2024 – Aug 2025</span>
+      </div>
+    </div>
+    <div class="edu-item">
+      <div class="edu-header">
+        <span class="edu-title"><span class="edu-org">York University</span> — Bachelor of Commerce, Human Resources</span>
+        <span class="edu-year">Sep 2020 – Jun 2024</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- CERTIFICATIONS -->
+  <div class="section avoid-break">
+    <div class="section-title">Certifications</div>
+    <div class="cert-item">
+      <span class="cert-title">Western Certification in University Teaching &amp; Learning — <span class="cert-org">Western University</span></span>
+      <span class="cert-year">In Progress</span>
+    </div>
+    <div class="cert-item">
+      <span class="cert-title">CHRP (Certified Human Resources Professional) — <span class="cert-org">HRPA</span></span>
+      <span class="cert-year">In Progress</span>
+    </div>
+  </div>
+
+  <!-- SKILLS -->
+  <div class="section avoid-break">
+    <div class="section-title">Skills</div>
+    <div class="skills-block"><span class="skill-category">Facilitation &amp; Design:</span> Workshop Facilitation (virtual &amp; in-person), ADDIE, Bloom's Taxonomy, UDL, Needs Assessment, Facilitator Guide Development, Assessment Design, Kirkpatrick Evaluation</div>
+    <div class="skills-block"><span class="skill-category">E-Learning Tools:</span> Articulate Rise, Articulate Storyline, H5P, Adobe Captivate, Camtasia, Vyond, Canva, Figma</div>
+    <div class="skills-block"><span class="skill-category">LMS &amp; Program Tools:</span> Moodle, Canvas, Blackboard, LearnUpon, GSuite (Calendar, Slides, Docs, Sheets), Zoom, Confluence, xAPI (Experience API), SCORM (Sharable Content Object Reference Model)</div>
+    <div class="skills-block"><span class="skill-category">AI &amp; Tech:</span> Claude (Chat + Cowork), GPT-4o, n8n, Python, Google Apps Script, RAG, Prompt Engineering, GitHub, Docker</div>
+    <div class="skills-block"><span class="skill-category">Languages:</span> English (fluent), Mandarin (native)</div>
+  </div>
+
+</div>
+</body>
+</html>

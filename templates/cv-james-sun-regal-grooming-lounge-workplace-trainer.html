@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>James Sun — CV</title>
+<style>
+  @font-face {
+    font-family: 'Space Grotesk';
+    src: url('./fonts/space-grotesk-latin.woff2') format('woff2');
+    font-weight: 300 700;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  }
+  @font-face {
+    font-family: 'Space Grotesk';
+    src: url('./fonts/space-grotesk-latin-ext.woff2') format('woff2');
+    font-weight: 300 700;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0100-02AF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  }
+  @font-face {
+    font-family: 'DM Sans';
+    src: url('./fonts/dm-sans-latin.woff2') format('woff2');
+    font-weight: 100 1000;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  }
+  @font-face {
+    font-family: 'DM Sans';
+    src: url('./fonts/dm-sans-latin-ext.woff2') format('woff2');
+    font-weight: 100 1000;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0100-02AF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10.5px;
+    line-height: 1.4;
+    color: #1a1a2e;
+    background: #ffffff;
+    padding: 0; margin: 0;
+  }
+  .page {
+    width: 100%;
+    max-width: 8.5in;
+    margin: 0 auto;
+    padding: 0.45in;
+  }
+  .header { margin-bottom: 14px; }
+  .header h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 28px; font-weight: 700;
+    color: #1a1a2e; letter-spacing: -0.02em;
+    margin-bottom: 6px; line-height: 1.1;
+  }
+  .header-gradient {
+    height: 2px; background: #1a1a2e;
+    border-radius: 1px; margin-bottom: 8px;
+  }
+  .contact-row {
+    display: flex; flex-wrap: wrap;
+    gap: 6px 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10.5px; line-height: 1.4; color: #555;
+  }
+  .contact-row a { color: #555; text-decoration: none; }
+  .contact-row .separator { color: #ccc; }
+  .section { margin-bottom: 12px; }
+  .section-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 12px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    color: #1a1a2e;
+    border-bottom: 1.5px solid #1a1a2e;
+    padding-bottom: 3px; margin-bottom: 8px; line-height: 1.2;
+  }
+  .summary-text { font-size: 10.5px; line-height: 1.65; color: #2f2f2f; }
+  a { white-space: nowrap; }
+  .competencies-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+  .competency-tag {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px; font-weight: 500; color: #333;
+    background: #f2f2f2; padding: 3px 9px;
+    border-radius: 3px; border: 1px solid #ccc;
+  }
+  .job { margin-bottom: 10px; }
+  .job-header {
+    display: flex; justify-content: space-between;
+    align-items: baseline; gap: 12px; margin-bottom: 2px;
+  }
+  .job-company {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 12px; font-weight: 600; color: #1a1a2e;
+  }
+  .job-period { font-size: 10px; color: #777; white-space: nowrap; }
+  .job-role { font-size: 10.5px; font-weight: 600; color: #333; margin-bottom: 4px; }
+  .job-location { font-size: 10px; color: #888; font-weight: 400; }
+  .job ul { padding-left: 16px; margin-top: 4px; }
+  .job li { font-size: 10.5px; line-height: 1.55; color: #333; margin-bottom: 3px; }
+  .job li strong { font-weight: 600; }
+  .edu-item { margin-bottom: 6px; }
+  .edu-header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .edu-title { font-weight: 600; font-size: 10.5px; color: #333; }
+  .edu-org { color: #1a1a2e; font-weight: 500; }
+  .edu-year { font-size: 10px; color: #777; white-space: nowrap; }
+  .cert-item { margin-bottom: 4px; }
+  .cert-title { font-size: 10.5px; font-weight: 500; color: #333; }
+  .cert-org { color: #1a1a2e; }
+  .skill-inline { font-size: 10.5px; color: #444; line-height: 1.65; }
+  .skill-inline strong { font-weight: 600; color: #333; }
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .page { padding: 0.45in; }
+  }
+  .avoid-break, .job, .edu-item, .cert-item { break-inside: avoid; page-break-inside: avoid; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header avoid-break">
+    <h1>James Sun</h1>
+    <div class="header-gradient"></div>
+    <div class="contact-row">
+      <span>jamesvv8bbl5q3sulvtp@gmail.com</span>
+      <span class="separator">|</span>
+      <a href="https://linkedin.com/in/yuting-sun-48bbb4211/">linkedin.com/in/yuting-sun-48bbb4211</a>
+      <span class="separator">|</span>
+      <a href="https://syttt.my.canva.site/">syttt.my.canva.site</a>
+      <span class="separator">|</span>
+      <span>London, ON</span>
+    </div>
+  </div>
+
+  <!-- PROFESSIONAL SUMMARY -->
+  <div class="section avoid-break">
+    <div class="section-title">Professional Summary</div>
+    <div class="summary-text">Workplace Trainer with 5+ years preparing teaching materials and course outlines, administering and marking tests to evaluate students' progress, and delivering instruction through lectures, audio-visual presentations, workshops, seminars, and one-on-one tutoring across corporate and educational settings. Consistent record of conducting course and program evaluation, advising students on program curricula, and preparing reports — organized, reliable, and effective in business and industry training environments.</div>
+  </div>
+
+  <!-- CORE COMPETENCIES -->
+  <div class="section">
+    <div class="section-title">Core Competencies</div>
+    <div class="competencies-grid">
+      <span class="competency-tag">Practical Shop Training</span>
+      <span class="competency-tag">One-on-One Instruction</span>
+      <span class="competency-tag">Teaching Materials Preparation</span>
+      <span class="competency-tag">Course & Program Evaluation</span>
+      <span class="competency-tag">Student Progress Assessment</span>
+      <span class="competency-tag">Workshop & Seminar Facilitation</span>
+      <span class="competency-tag">Lecture & Presentation Delivery</span>
+      <span class="competency-tag">Audio-Visual Equipment Operation</span>
+      <span class="competency-tag">Advising on Program Curricula</span>
+      <span class="competency-tag">Report Preparation</span>
+    </div>
+  </div>
+
+  <!-- WORK EXPERIENCE -->
+  <div class="section">
+    <div class="section-title">Work Experience</div>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-company">Parking Control Services Group</span>
+        <span class="job-period">Mar 2024 – Present</span>
+      </div>
+      <div class="job-role">Administrative Assistant <span class="job-location">— North York, ON</span></div>
+      <ul>
+        <li>Developed training materials and onboarding documentation for new staff; conducted practical work session supervision and coordinated onboarding with 100% ESA/OHSA compliance</li>
+        <li>Prepared weekly operational reports and advised team members on process curricula, maintaining reliability and accuracy across all documentation workflows</li>
+      </ul>
+    </div>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-company">SavvyPro Edu. Inc.</span>
+        <span class="job-period">Jul 2023 – Jul 2024</span>
+      </div>
+      <div class="job-role">Product & Learning Technology Coordinator <span class="job-location">— Toronto, ON</span></div>
+      <ul>
+        <li>Coordinated end-to-end delivery of professional learning programs for 100+ participants per session; prepared course outlines, administered post-session evaluations, and tracked student progress through applied learning analytics</li>
+        <li>Operated audio-visual equipment for seminar and lecture-based delivery; advised participants on program curricula and career decisions; prepared program evaluation reports each cycle</li>
+      </ul>
+    </div>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-company">Banhai Education Technology</span>
+        <span class="job-period">Jul 2022 – Jun 2023</span>
+      </div>
+      <div class="job-role">Instructional Designer & Program Coordinator <span class="job-location">— Wuxi, China</span></div>
+      <ul>
+        <li>Prepared teaching materials, course outlines, and assessment rubrics for K-12 programs; administered and marked tests to evaluate students' progress and conducted program evaluation reviews at cycle end</li>
+        <li>Delivered instruction through synchronous and asynchronous formats including shop sessions, lectures, and one-on-one tutoring; provided consultative support to faculty and program administrators</li>
+      </ul>
+    </div>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-company">Dongnan Education Institution</span>
+        <span class="job-period">Jun 2021 – Jul 2022</span>
+      </div>
+      <div class="job-role">High School English Teacher <span class="job-location">— Wuxi, China</span></div>
+      <ul>
+        <li>Taught students through lectures, discussions, audio-visual presentations, and tutor/one-on-one instruction formats; integrated formative assessment to evaluate student progress and adjust instruction in real time</li>
+        <li>Prepared teaching materials and outlines aligned to national standards; supervised work sessions and advised students on program curricula and next steps</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- EDUCATION -->
+  <div class="section avoid-break">
+    <div class="section-title">Education</div>
+    <div class="edu-item">
+      <div class="edu-header">
+        <span class="edu-title">Master of Professional Education (TESOL) — <span class="edu-org">Western University</span></span>
+        <span class="edu-year">Sep 2024 – Aug 2025</span>
+      </div>
+    </div>
+    <div class="edu-item">
+      <div class="edu-header">
+        <span class="edu-title">Bachelor of Commerce (Human Resources) — <span class="edu-org">York University</span></span>
+        <span class="edu-year">Sep 2020 – Jun 2024</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- CERTIFICATIONS -->
+  <div class="section avoid-break">
+    <div class="section-title">Certifications</div>
+    <div class="cert-item">
+      <span class="cert-title">Western Certification in University Teaching &amp; Learning — <span class="cert-org">Western University</span> (In Progress)</span>
+    </div>
+    <div class="cert-item">
+      <span class="cert-title">CHRP (Certified Human Resources Professional) — In Progress</span>
+    </div>
+  </div>
+
+  <!-- SKILLS -->
+  <div class="section avoid-break">
+    <div class="section-title">Skills</div>
+    <div class="skill-inline">
+      <strong>Training &amp; Instruction:</strong> ADDIE Framework, Instructional Design, Curriculum Development, Needs Assessment, Test &amp; Assessment Design, Kirkpatrick Evaluation, Learning Analytics<br>
+      <strong>Delivery Formats:</strong> Lecture, Workshop, Seminar, One-on-One Tutoring, Shop Session, Audio-Visual Presentation, Demonstration<br>
+      <strong>Tools &amp; Platforms:</strong> Moodle, Canvas, Articulate Storyline, Camtasia, Microsoft Office Suite, Google Workspace | <strong>Languages:</strong> English (fluent), Mandarin Chinese (native)
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

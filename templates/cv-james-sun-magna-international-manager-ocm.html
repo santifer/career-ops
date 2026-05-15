@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>James Sun — CV</title>
+<style>
+  @font-face {
+    font-family: 'Space Grotesk';
+    src: url('./fonts/space-grotesk-latin.woff2') format('woff2');
+    font-weight: 300 700;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  }
+  @font-face {
+    font-family: 'Space Grotesk';
+    src: url('./fonts/space-grotesk-latin-ext.woff2') format('woff2');
+    font-weight: 300 700;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0100-02AF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  }
+  @font-face {
+    font-family: 'DM Sans';
+    src: url('./fonts/dm-sans-latin.woff2') format('woff2');
+    font-weight: 100 1000;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  }
+  @font-face {
+    font-family: 'DM Sans';
+    src: url('./fonts/dm-sans-latin-ext.woff2') format('woff2');
+    font-weight: 100 1000;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0100-02AF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10.5px;
+    line-height: 1.4;
+    color: #1a1a2e;
+    background: #ffffff;
+    padding: 0;
+    margin: 0;
+  }
+  .page {
+    width: 100%;
+    max-width: 8.5in;
+    margin: 0 auto;
+    padding: 0.45in;
+  }
+  .header { margin-bottom: 14px; }
+  .header h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: #1a1a2e;
+    letter-spacing: -0.02em;
+    margin-bottom: 6px;
+    line-height: 1.1;
+  }
+  .header-gradient {
+    height: 2px;
+    background: #1a1a2e;
+    border-radius: 1px;
+    margin-bottom: 8px;
+  }
+  .contact-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10.5px;
+    line-height: 1.4;
+    color: #555;
+  }
+  .contact-row a { color: #555; text-decoration: none; }
+  .contact-row .separator { color: #ccc; }
+  .section { margin-bottom: 12px; }
+  .section-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #1a1a2e;
+    border-bottom: 1.5px solid #1a1a2e;
+    padding-bottom: 3px;
+    margin-bottom: 8px;
+    line-height: 1.2;
+  }
+  .summary-text { font-size: 10.5px; line-height: 1.6; color: #2f2f2f; }
+  a { white-space: nowrap; }
+  .competencies-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+  .competency-tag {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+    color: #333;
+    background: #f2f2f2;
+    padding: 3px 9px;
+    border-radius: 3px;
+    border: 1px solid #ccc;
+  }
+  .job { margin-bottom: 11px; }
+  .job-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 2px;
+  }
+  .job-company {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: #1a1a2e;
+  }
+  .job-period { font-size: 10.5px; color: #777; white-space: nowrap; }
+  .job-role { font-size: 10.5px; font-weight: 600; color: #333; margin-bottom: 4px; }
+  .job ul { padding-left: 16px; margin-top: 4px; }
+  .job li { font-size: 10.5px; line-height: 1.55; color: #333; margin-bottom: 3px; }
+  .job li strong { font-weight: 600; }
+  .edu-item { margin-bottom: 6px; }
+  .edu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+  }
+  .edu-title { font-weight: 600; font-size: 10.5px; color: #333; }
+  .edu-org { color: #1a1a2e; font-weight: 500; }
+  .edu-year { font-size: 10px; color: #777; white-space: nowrap; }
+  .cert-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 4px;
+  }
+  .cert-title { font-size: 10.5px; font-weight: 500; color: #333; }
+  .cert-org { color: #1a1a2e; }
+  .cert-year { font-size: 10px; color: #777; white-space: nowrap; }
+  .skills-grid { display: flex; flex-direction: column; gap: 4px; }
+  .skill-item { font-size: 10.5px; color: #444; line-height: 1.5; }
+  .skill-category { font-weight: 600; color: #333; }
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .page { padding: 0.45in; }
+  }
+  .avoid-break, .job, .edu-item, .cert-item {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header avoid-break">
+    <h1>James Sun</h1>
+    <div class="header-gradient"></div>
+    <div class="contact-row">
+      <span>jamesvv8bbl5q3sulvtp@gmail.com</span>
+      <span class="separator">|</span>
+      <a href="https://linkedin.com/in/yuting-sun-48bbb4211/">linkedin.com/in/yuting-sun-48bbb4211</a>
+      <span class="separator">|</span>
+      <a href="https://syttt.my.canva.site/">syttt.my.canva.site</a>
+      <span class="separator">|</span>
+      <span>London, ON</span>
+    </div>
+  </div>
+
+  <div class="section avoid-break">
+    <div class="section-title">Professional Summary</div>
+    <div class="summary-text">Manager, Organizational Change Management candidate with experience driving technology-enabled change initiatives, training program design, and stakeholder engagement across HR and EdTech environments. Delivered employee adoption through structured OCM approaches — impact analysis, communications planning, change readiness assessment, and cross-functional coordination for process and system transitions.</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Core Competencies</div>
+    <div class="competencies-grid">
+      <span class="competency-tag">Organizational Change Management</span>
+      <span class="competency-tag">Change Management Strategies</span>
+      <span class="competency-tag">Stakeholder Engagement</span>
+      <span class="competency-tag">Employee Adoption</span>
+      <span class="competency-tag">Impact Analysis</span>
+      <span class="competency-tag">Change Readiness Assessment</span>
+      <span class="competency-tag">Communications Planning</span>
+      <span class="competency-tag">Training Program Design</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Work Experience</div>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-company">Parking Control Services Group</span>
+        <span class="job-period">Mar 2024 – Present</span>
+      </div>
+      <div class="job-role">Administrative Assistant — North York, ON</div>
+      <ul>
+        <li>Led change management for payroll and compliance process transitions — stakeholder communications, impact analysis, and employee adoption tracking for 15+ staff with 100% ESA/OHSA compliance; reduced payroll discrepancies 15% through systematic change controls</li>
+        <li>Built automated reporting workflows (n8n, Python/GPT-4o) to support operational process change; created onboarding training materials and digital documentation systems to sustain new-process adoption</li>
+      </ul>
+    </div>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-company">SavvyPro Edu. Inc.</span>
+        <span class="job-period">Jul 2023 – Jul 2024</span>
+      </div>
+      <div class="job-role">Product & Learning Technology Coordinator — Toronto, ON</div>
+      <ul>
+        <li>Managed LMS technology change initiatives (Moodle, Canvas) end-to-end — stakeholder engagement, change readiness assessment, training delivery, and adoption metrics tracking across 100+ participants per program cycle</li>
+        <li>Developed Python/Google Apps Script analytics pipelines to measure change progress and surface real-time stakeholder adoption data; integrated change management activities into project planning and post-session evaluation</li>
+      </ul>
+    </div>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-company">Banhai Education Technology</span>
+        <span class="job-period">Jul 2022 – Jun 2023</span>
+      </div>
+      <div class="job-role">Instructional Designer & Program Coordinator — Wuxi, China</div>
+      <ul>
+        <li>Designed and delivered change enablement training programs (ADDIE) for curriculum transformation initiatives; developed communications strategies targeting faculty, learner, and administrator stakeholder groups to minimize resistant behaviors</li>
+        <li>Conducted impact analyses for program transitions; coordinated cross-functional delivery across faculty, learners, and administrators and evaluated adoption outcomes against defined success metrics</li>
+      </ul>
+    </div>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-company">Dongnan Education Institution</span>
+        <span class="job-period">Jun 2021 – Jul 2022</span>
+      </div>
+      <div class="job-role">High School English Teacher — Wuxi, China</div>
+      <ul>
+        <li>Designed differentiated instructional programs for mixed-ability classrooms; integrated formative assessment to adjust instruction and track learner adoption in real time</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <div class="section avoid-break">
+    <div class="section-title">Education</div>
+    <div class="edu-item">
+      <div class="edu-header">
+        <span class="edu-title">Master of Professional Education (TESOL) &nbsp;|&nbsp; <span class="edu-org">Western University</span></span>
+        <span class="edu-year">Sep 2024 – Aug 2025</span>
+      </div>
+    </div>
+    <div class="edu-item">
+      <div class="edu-header">
+        <span class="edu-title">Bachelor of Commerce — Human Resources &nbsp;|&nbsp; <span class="edu-org">York University</span></span>
+        <span class="edu-year">Sep 2020 – Jun 2024</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section avoid-break">
+    <div class="section-title">Certifications</div>
+    <div class="cert-item">
+      <span class="cert-title">CHRP (Certified Human Resources Professional) &nbsp;— &nbsp;<span class="cert-org">HRPA</span></span>
+      <span class="cert-year">In Progress</span>
+    </div>
+    <div class="cert-item">
+      <span class="cert-title">Certification in University Teaching &amp; Learning &nbsp;— &nbsp;<span class="cert-org">Western University</span></span>
+      <span class="cert-year">In Progress</span>
+    </div>
+  </div>
+
+  <div class="section avoid-break">
+    <div class="section-title">Skills</div>
+    <div class="skills-grid">
+      <span class="skill-item"><span class="skill-category">Change &amp; OD:</span> Organizational Change Management, Change Management Strategies, Impact Analysis, Change Readiness Assessment, Stakeholder Engagement, Communications Planning, ADDIE, Needs Assessment</span>
+      <span class="skill-item"><span class="skill-category">Tools &amp; Systems:</span> Microsoft Office Suite, Python, n8n, Google Apps Script, LMS (Moodle, Canvas, Blackboard), Learning Analytics, HRIS (Workday, SAP)</span>
+      <span class="skill-item"><span class="skill-category">HR &amp; Compliance:</span> Payroll Administration, Onboarding Program Design, Employee Relations, Compliance (ESA, OHSA), Project Management, Training Delivery</span>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

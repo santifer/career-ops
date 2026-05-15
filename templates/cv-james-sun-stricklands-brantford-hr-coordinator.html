@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>James Sun — CV</title>
+<style>
+  @font-face {
+    font-family: 'Space Grotesk';
+    src: url('./fonts/space-grotesk-latin.woff2') format('woff2');
+    font-weight: 300 700;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  }
+
+  @font-face {
+    font-family: 'Space Grotesk';
+    src: url('./fonts/space-grotesk-latin-ext.woff2') format('woff2');
+    font-weight: 300 700;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0100-02AF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  }
+
+  @font-face {
+    font-family: 'DM Sans';
+    src: url('./fonts/dm-sans-latin.woff2') format('woff2');
+    font-weight: 100 1000;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  }
+
+  @font-face {
+    font-family: 'DM Sans';
+    src: url('./fonts/dm-sans-latin-ext.woff2') format('woff2');
+    font-weight: 100 1000;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0100-02AF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10.5px;
+    line-height: 1.4;
+    color: #1a1a2e;
+    background: #ffffff;
+    padding: 0;
+    margin: 0;
+  }
+
+  .page {
+    width: 100%;
+    max-width: 8.5in;
+    margin: 0 auto;
+    padding: 2px 0;
+  }
+
+  .header {
+    margin-bottom: 14px;
+  }
+
+  .header h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: #1a1a2e;
+    letter-spacing: -0.02em;
+    margin-bottom: 6px;
+    line-height: 1.1;
+  }
+
+  .header-gradient {
+    height: 2px;
+    background: #1a1a2e;
+    border-radius: 1px;
+    margin-bottom: 10px;
+  }
+
+  .contact-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10.5px;
+    line-height: 1.4;
+    color: #555;
+  }
+
+  .contact-row a {
+    color: #555;
+    text-decoration: none;
+  }
+
+  .contact-row .separator {
+    color: #ccc;
+  }
+
+  .section {
+    margin-bottom: 12px;
+  }
+
+  .section-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #1a1a2e;
+    border-bottom: 1.5px solid #1a1a2e;
+    padding-bottom: 4px;
+    margin-bottom: 8px;
+    line-height: 1.2;
+  }
+
+  .summary-text {
+    font-size: 11px;
+    line-height: 1.7;
+    color: #2f2f2f;
+  }
+
+  a {
+    white-space: nowrap;
+  }
+
+  .competencies-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .competency-tag {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+    color: #333;
+    background: #f2f2f2;
+    padding: 4px 10px;
+    border-radius: 3px;
+    border: 1px solid #ccc;
+  }
+
+  .job {
+    margin-bottom: 11px;
+  }
+
+  .job-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 2px;
+  }
+
+  .job-company {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #1a1a2e;
+  }
+
+  .job-period {
+    font-size: 10.5px;
+    color: #777;
+    white-space: nowrap;
+  }
+
+  .job-role {
+    font-size: 11px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 5px;
+  }
+
+  .job-location {
+    font-size: 10px;
+    color: #888;
+    font-weight: 400;
+  }
+
+  .job ul {
+    padding-left: 18px;
+    margin-top: 4px;
+  }
+
+  .job li {
+    font-size: 10.5px;
+    line-height: 1.55;
+    color: #333;
+    margin-bottom: 3px;
+  }
+
+  .job li strong {
+    font-weight: 600;
+  }
+
+  .edu-item {
+    margin-bottom: 7px;
+  }
+
+  .edu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+  }
+
+  .edu-title {
+    font-weight: 600;
+    font-size: 11px;
+    color: #333;
+  }
+
+  .edu-org {
+    color: #1a1a2e;
+    font-weight: 500;
+  }
+
+  .edu-year {
+    font-size: 10px;
+    color: #777;
+    white-space: nowrap;
+  }
+
+  .cert-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 5px;
+  }
+
+  .cert-title {
+    font-size: 10.5px;
+    font-weight: 500;
+    color: #333;
+  }
+
+  .cert-org {
+    color: #1a1a2e;
+    font-weight: 400;
+  }
+
+  .skills-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .skill-item {
+    font-size: 10.5px;
+    color: #444;
+    line-height: 1.5;
+  }
+
+  .skill-category {
+    font-weight: 600;
+    color: #333;
+    font-size: 10.5px;
+  }
+
+  @media print {
+    body {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .page {
+      padding: 0;
+    }
+  }
+
+  .avoid-break,
+  .job,
+  .edu-item,
+  .cert-item {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header avoid-break">
+    <h1>James Sun</h1>
+    <div class="header-gradient"></div>
+    <div class="contact-row">
+      <span>jamesvv8bbl5q3sulvtp@gmail.com</span>
+      <span class="separator">|</span>
+      <a href="https://linkedin.com/in/yuting-sun-48bbb4211/">linkedin.com/in/yuting-sun-48bbb4211</a>
+      <span class="separator">|</span>
+      <span>416-732-5105</span>
+      <span class="separator">|</span>
+      <span>London, ON</span>
+    </div>
+  </div>
+
+  <div class="section avoid-break">
+    <div class="section-title">Professional Summary</div>
+    <div class="summary-text">HR Coordinator with a Bachelor of Commerce in Human Resources (York University) and direct experience in full-cycle payroll, employee onboarding and offboarding, and HR administration. Managed payroll for 15+ employees at 100% ESA/OHSA compliance and built documentation systems for employee records and onboarding processes. Comfortable handling confidential employee information with discretion and managing multiple HR tasks in fast-paced environments.</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Core Competencies</div>
+    <div class="competencies-grid">
+      <span class="competency-tag">Full Cycle Payroll</span>
+      <span class="competency-tag">Employee Onboarding &amp; Offboarding</span>
+      <span class="competency-tag">HR Administration</span>
+      <span class="competency-tag">Benefits Administration</span>
+      <span class="competency-tag">Attendance &amp; Leave Tracking</span>
+      <span class="competency-tag">Employee Records Management</span>
+      <span class="competency-tag">Recruitment Support</span>
+      <span class="competency-tag">Microsoft Office</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Work Experience</div>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-company">Parking Control Services Group</span>
+        <span class="job-period">Mar 2024 – Present</span>
+      </div>
+      <div class="job-role">Administrative Assistant <span class="job-location">· North York, ON</span></div>
+      <ul>
+        <li>Managed <strong>full-cycle payroll</strong> for 15+ employees with 100% compliance with Ontario ESA and OHSA regulations, reducing payroll discrepancies by 15% through systematic auditing</li>
+        <li>Coordinated end-to-end <strong>employee onboarding</strong> — new hire documentation, orientation scheduling, and compliance verification — ensuring 100% ESA/OHSA adherence</li>
+        <li>Built digital documentation systems for <strong>employee records</strong> and training materials, maintaining accuracy and confidentiality of sensitive HR information</li>
+      </ul>
+    </div>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-company">SavvyPro Edu. Inc.</span>
+        <span class="job-period">Jul 2023 – Jul 2024</span>
+      </div>
+      <div class="job-role">Product &amp; Learning Technology Coordinator <span class="job-location">· Toronto, ON</span></div>
+      <ul>
+        <li>Coordinated end-to-end program delivery for 100+ participants per session — managing scheduling, enrollment records, and post-session evaluation across multiple program cycles</li>
+        <li>Designed automated onboarding workflows and maintained accurate participant records in LMS platforms (Moodle, Canvas)</li>
+        <li>Responded to participant inquiries on program policies, procedures, and enrollment; escalated issues with professionalism and discretion</li>
+      </ul>
+    </div>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-company">Banhai Education Technology</span>
+        <span class="job-period">Jul 2022 – Jun 2023</span>
+      </div>
+      <div class="job-role">Program Coordinator <span class="job-location">· Wuxi, China</span></div>
+      <ul>
+        <li>Facilitated cross-functional coordination between faculty, learners, and program administrators to support smooth day-to-day operations</li>
+        <li>Maintained program documentation and records — ensuring files were accurate, up to date, and properly organized</li>
+      </ul>
+    </div>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-company">Dongnan Education Institution</span>
+        <span class="job-period">Jun 2021 – Jul 2022</span>
+      </div>
+      <div class="job-role">Educator &amp; Coordinator <span class="job-location">· Wuxi, China</span></div>
+      <ul>
+        <li>Managed classroom records, attendance tracking, and administrative documentation for 30+ students per cohort</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section avoid-break">
+    <div class="section-title">Education</div>
+    <div class="edu-item">
+      <div class="edu-header">
+        <span class="edu-title">Master of Professional Education (TESOL) &mdash; <span class="edu-org">Western University</span></span>
+        <span class="edu-year">Sep 2024 – Aug 2025</span>
+      </div>
+    </div>
+    <div class="edu-item">
+      <div class="edu-header">
+        <span class="edu-title">Bachelor of Commerce, Human Resources &mdash; <span class="edu-org">York University</span></span>
+        <span class="edu-year">Sep 2020 – Jun 2024</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section avoid-break">
+    <div class="section-title">Certifications</div>
+    <div class="cert-item">
+      <span class="cert-title">CHRP <span class="cert-org">(Certified Human Resources Professional)</span> — In Progress</span>
+    </div>
+    <div class="cert-item">
+      <span class="cert-title">Ontario ESA &amp; OHSA Compliance</span>
+    </div>
+  </div>
+
+  <div class="section avoid-break">
+    <div class="section-title">Skills</div>
+    <div class="skills-grid">
+      <span class="skill-item"><span class="skill-category">HR:</span> Full-Cycle Payroll, Onboarding &amp; Offboarding, Benefits Administration, Attendance &amp; Leave Tracking, Employee Records Management, Recruitment Support, Employee Relations, HRIS (Workday, SAP), ESA/OHSA Compliance, Data Entry</span>
+      <span class="skill-item"><span class="skill-category">Technical:</span> Microsoft Office Suite (Word, Excel, PowerPoint, Outlook), Google Workspace, HR Systems, Automated Workflow Tools</span>
+      <span class="skill-item"><span class="skill-category">Languages:</span> English (fluent), Mandarin (native)</span>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

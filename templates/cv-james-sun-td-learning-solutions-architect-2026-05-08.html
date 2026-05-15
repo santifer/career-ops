@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>James Sun — CV</title>
+<style>
+  @font-face { font-family: 'Space Grotesk'; src: url('./fonts/space-grotesk-latin.woff2') format('woff2'); font-weight: 300 700; font-style: normal; font-display: swap; unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+  @font-face { font-family: 'DM Sans'; src: url('./fonts/dm-sans-latin.woff2') format('woff2'); font-weight: 100 1000; font-style: normal; font-display: swap; unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { font-family: 'DM Sans', sans-serif; font-size: 10.5px; line-height: 1.4; color: #1a1a2e; background: #ffffff; padding: 0; margin: 0; }
+  .page { width: 100%; max-width: 820px; margin: 0 auto; padding: 2px 0; }
+  .header { margin-bottom: 16px; }
+  .header h1 { font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 700; color: #1a1a2e; letter-spacing: -0.02em; margin-bottom: 6px; line-height: 1.1; }
+  .header-gradient { height: 2px; background: #1a1a2e; border-radius: 1px; margin-bottom: 10px; }
+  .contact-row { display: flex; flex-wrap: wrap; gap: 8px 14px; font-size: 10.5px; line-height: 1.4; color: #555; }
+  .contact-row a { color: #555; text-decoration: none; }
+  .contact-row .separator { color: #ccc; }
+  .section { margin-bottom: 8px; }
+  .section-title { font-family: 'Space Grotesk', sans-serif; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #1a1a2e; border-bottom: 1.5px solid #1a1a2e; padding-bottom: 3px; margin-bottom: 6px; line-height: 1.2; }
+  .summary-text { font-size: 10px; line-height: 1.45; color: #2f2f2f; }
+  a { white-space: nowrap; }
+  .competencies-grid { display: flex; flex-wrap: wrap; gap: 5px; }
+  .competency-tag { font-family: 'DM Sans', sans-serif; font-size: 9.5px; font-weight: 500; color: #333; background: #f2f2f2; padding: 3px 8px; border-radius: 3px; border: 1px solid #ccc; }
+  .job { margin-bottom: 6px; }
+  .job-header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 1px; }
+  .job-company { font-family: 'Space Grotesk', sans-serif; font-size: 12px; font-weight: 600; color: #1a1a2e; }
+  .job-period { font-size: 10px; color: #777; white-space: nowrap; }
+  .job-role { font-size: 10.5px; font-weight: 600; color: #333; margin-bottom: 3px; }
+  .job ul { padding-left: 16px; margin-top: 3px; }
+  .job li { font-size: 10px; line-height: 1.5; color: #333; margin-bottom: 2px; }
+  .job li strong { font-weight: 600; }
+  .project-item { margin-bottom: 6px; }
+  .project-header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 1px; }
+  .project-name { font-family: 'Space Grotesk', sans-serif; font-size: 11.5px; font-weight: 600; color: #1a1a2e; }
+  .project-period { font-size: 10px; color: #777; white-space: nowrap; }
+  .project-role { font-size: 10.5px; font-weight: 600; color: #333; margin-bottom: 3px; }
+  .project-item ul { padding-left: 16px; margin-top: 3px; }
+  .project-item li { font-size: 10px; line-height: 1.5; color: #333; margin-bottom: 2px; }
+  .project-item li strong { font-weight: 600; }
+  .edu-item { margin-bottom: 6px; }
+  .edu-header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .edu-title { font-weight: 600; font-size: 11px; color: #333; }
+  .edu-org { color: #1a1a2e; font-weight: 500; }
+  .edu-year { font-size: 10px; color: #777; white-space: nowrap; }
+  .skills-block { margin-bottom: 4px; }
+  .skill-category { font-weight: 600; color: #333; font-size: 10.5px; }
+  .skill-item { font-size: 10.5px; color: #444; }
+  @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } .page { padding: 0; } }
+  .avoid-break, .job, .project-item, .edu-item { break-inside: avoid; page-break-inside: avoid; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header avoid-break">
+    <h1>James Sun</h1>
+    <div class="header-gradient"></div>
+    <div class="contact-row">
+      <span>jamesvv8bbl5q3sulvtp@gmail.com</span>
+      <span class="separator">|</span>
+      <span>416-732-5105</span>
+      <span class="separator">|</span>
+      <a href="https://linkedin.com/in/yuting-sun-48bbb4211/">linkedin.com/in/yuting-sun-48bbb4211</a>
+      <span class="separator">|</span>
+      <a href="https://syttt.my.canva.site/">syttt.my.canva.site</a>
+      <span class="separator">|</span>
+      <span>Toronto, ON</span>
+    </div>
+  </div>
+
+  <div class="section avoid-break">
+    <div class="section-title">Professional Summary</div>
+    <div class="summary-text">
+      Learning Solutions Architect with a Master of Professional Education (Western University) and hands-on experience designing, delivering, and measuring enterprise learning strategies aligned to organizational capability needs. Applies performance consulting methodologies and adult learning best practices to diagnose root causes, partner with SMEs and business stakeholders, and build learning roadmaps that translate business strategy into measurable capability outcomes. Built Plot Ark, a production learning analytics platform that demonstrates learning value through behavioral data and dashboards -- with a <strong>47% engagement rate</strong> vs. 5-15% industry benchmark. Strong executive communication, stakeholder advisory, and change management skills; comfortable leading complex L&D workstreams independently in fast-paced environments.
+    </div>
+  </div>
+
+  <div class="section avoid-break">
+    <div class="section-title">Core Competencies</div>
+    <div class="competencies-grid">
+      <span class="competency-tag">Performance Consulting &amp; Needs Analysis</span>
+      <span class="competency-tag">Learning Strategy &amp; Roadmap Development</span>
+      <span class="competency-tag">Adult Learning &amp; 70:20:10 Framework</span>
+      <span class="competency-tag">Stakeholder Advisory &amp; Thought Leadership</span>
+      <span class="competency-tag">L&amp;D Measurement &amp; Analytics</span>
+      <span class="competency-tag">Instructional Design (ADDIE / SAM)</span>
+      <span class="competency-tag">Business Case Development</span>
+      <span class="competency-tag">Change Management &amp; Communication</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Experience</div>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-company">SavvyPro Education Inc.</span>
+        <span class="job-period">Jul 2023 – Jul 2024</span>
+      </div>
+      <div class="job-role">Learning Solutions &amp; Product Coordinator — Toronto, ON</div>
+      <ul>
+        <li>Acted as primary learning advisor to business stakeholders -- conducting needs analysis to diagnose capability gaps, designing and executing end-to-end learning solutions for <strong>100+ participants per cycle</strong>, and measuring program effectiveness through analytics to drive continuous improvement.</li>
+        <li>Partnered with SMEs and cross-functional teams to develop learning strategies aligned to organizational goals -- iterating content based on learner engagement data and achieving a <strong>47% engagement rate</strong> vs. 5-15% industry benchmark; built business cases and presented insights to program leaders and senior stakeholders.</li>
+        <li>Designed and delivered communication strategies to promote awareness and adoption of learning initiatives; administered LMS platforms and automated learning pipelines to scale delivery across multiple programs simultaneously.</li>
+      </ul>
+    </div>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-company">Banhai Education Technology</span>
+        <span class="job-period">Jul 2022 – Jun 2023</span>
+      </div>
+      <div class="job-role">Instructional Designer &amp; Program Coordinator — Wuxi, China</div>
+      <ul>
+        <li>Designed leadership and skills programs using ADDIE and 70:20:10 -- conducting needs assessments, collaborating with SMEs to develop curriculum and evaluation strategies, and building inclusive learning experiences that supported knowledge transfer across diverse learner populations.</li>
+        <li>Supported continuous improvement cycles based on learner performance data and facilitator feedback; managed multi-phase program delivery from design through evaluation.</li>
+      </ul>
+    </div>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-company">Parking Control Services Group</span>
+        <span class="job-period">Mar 2024 – Present</span>
+      </div>
+      <div class="job-role">Operations Coordinator — North York, ON</div>
+      <ul>
+        <li>Developed training documentation and onboarding resources for 15+ employees; built automated reporting workflows to track operational performance and support management decision-making.</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <div class="section avoid-break">
+    <div class="section-title">Projects</div>
+    <div class="project-item">
+      <div class="project-header">
+        <span class="project-name">Plot Ark — Learning Analytics Platform</span>
+        <span class="project-period">2024 – Present</span>
+      </div>
+      <div class="project-role">Founder — <a href="https://schlaflied.github.io/Plot-Ark/" style="color:#555; font-weight:400;">schlaflied.github.io/Plot-Ark</a></div>
+      <ul>
+        <li>Built a production L&amp;D analytics platform demonstrating learning value through behavioral data and executive dashboards -- xAPI pipeline classifying engagement patterns across <strong>100+ learners</strong>; A2A multi-agent system surfaces curriculum optimization recommendations to support strategic learning decisions.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section avoid-break">
+    <div class="section-title">Education</div>
+    <div class="edu-item">
+      <div class="edu-header">
+        <span class="edu-title"><span class="edu-org">Western University</span> — Master of Professional Education</span>
+        <span class="edu-year">Sep 2024 – Aug 2025</span>
+      </div>
+    </div>
+    <div class="edu-item">
+      <div class="edu-header">
+        <span class="edu-title"><span class="edu-org">York University</span> — Bachelor of Commerce, Human Resources Management</span>
+        <span class="edu-year">Sep 2020 – Jun 2024</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section avoid-break">
+    <div class="section-title">Skills</div>
+    <div class="skills-block">
+      <span class="skill-category">Learning &amp; Development:</span>
+      <span class="skill-item"> Performance consulting, needs analysis, learning strategy and roadmap development, ADDIE, SAM, Bloom's Taxonomy, 70:20:10 framework, adult learning principles, Kirkpatrick evaluation, measurement and analytics, change management, business case development</span>
+    </div>
+    <div class="skills-block">
+      <span class="skill-category">Tools &amp; Technology:</span>
+      <span class="skill-item"> Articulate 360 (Storyline &amp; Rise), Camtasia, LMS administration (Moodle, Canvas), xAPI, SCORM, Python, data dashboards, Microsoft Office (Word, PowerPoint), Google Workspace, n8n</span>
+    </div>
+    <div class="skills-block">
+      <span class="skill-category">Languages:</span>
+      <span class="skill-item"> English (fluent), Mandarin (native), Japanese (conversational ~N2)</span>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

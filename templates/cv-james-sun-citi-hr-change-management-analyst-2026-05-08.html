@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>James Sun — CV</title>
+<style>
+  @font-face { font-family: 'Space Grotesk'; src: url('./fonts/space-grotesk-latin.woff2') format('woff2'); font-weight: 300 700; font-style: normal; font-display: swap; unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+  @font-face { font-family: 'DM Sans'; src: url('./fonts/dm-sans-latin.woff2') format('woff2'); font-weight: 100 1000; font-style: normal; font-display: swap; unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { font-family: 'DM Sans', sans-serif; font-size: 10.5px; line-height: 1.4; color: #1a1a2e; background: #ffffff; padding: 0; margin: 0; }
+  .page { width: 100%; max-width: 820px; margin: 0 auto; padding: 2px 0; }
+  .header { margin-bottom: 16px; }
+  .header h1 { font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 700; color: #1a1a2e; letter-spacing: -0.02em; margin-bottom: 6px; line-height: 1.1; }
+  .header-gradient { height: 2px; background: #1a1a2e; border-radius: 1px; margin-bottom: 10px; }
+  .contact-row { display: flex; flex-wrap: wrap; gap: 8px 14px; font-size: 10.5px; line-height: 1.4; color: #555; }
+  .contact-row a { color: #555; text-decoration: none; }
+  .contact-row .separator { color: #ccc; }
+  .section { margin-bottom: 8px; }
+  .section-title { font-family: 'Space Grotesk', sans-serif; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #1a1a2e; border-bottom: 1.5px solid #1a1a2e; padding-bottom: 3px; margin-bottom: 6px; line-height: 1.2; }
+  .summary-text { font-size: 10px; line-height: 1.45; color: #2f2f2f; }
+  a { white-space: nowrap; }
+  .competencies-grid { display: flex; flex-wrap: wrap; gap: 5px; }
+  .competency-tag { font-family: 'DM Sans', sans-serif; font-size: 9.5px; font-weight: 500; color: #333; background: #f2f2f2; padding: 3px 8px; border-radius: 3px; border: 1px solid #ccc; }
+  .job { margin-bottom: 6px; }
+  .job-header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 1px; }
+  .job-company { font-family: 'Space Grotesk', sans-serif; font-size: 12px; font-weight: 600; color: #1a1a2e; }
+  .job-period { font-size: 10px; color: #777; white-space: nowrap; }
+  .job-role { font-size: 10.5px; font-weight: 600; color: #333; margin-bottom: 3px; }
+  .job ul { padding-left: 16px; margin-top: 3px; }
+  .job li { font-size: 10px; line-height: 1.5; color: #333; margin-bottom: 2px; }
+  .job li strong { font-weight: 600; }
+  .project-item { margin-bottom: 6px; }
+  .project-header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 1px; }
+  .project-name { font-family: 'Space Grotesk', sans-serif; font-size: 11.5px; font-weight: 600; color: #1a1a2e; }
+  .project-period { font-size: 10px; color: #777; white-space: nowrap; }
+  .project-role { font-size: 10.5px; font-weight: 600; color: #333; margin-bottom: 3px; }
+  .project-item ul { padding-left: 16px; margin-top: 3px; }
+  .project-item li { font-size: 10px; line-height: 1.5; color: #333; margin-bottom: 2px; }
+  .edu-item { margin-bottom: 6px; }
+  .edu-header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .edu-title { font-weight: 600; font-size: 11px; color: #333; }
+  .edu-org { color: #1a1a2e; font-weight: 500; }
+  .edu-year { font-size: 10px; color: #777; white-space: nowrap; }
+  .skills-block { margin-bottom: 4px; }
+  .skill-category { font-weight: 600; color: #333; font-size: 10.5px; }
+  .skill-item { font-size: 10.5px; color: #444; }
+  @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } .page { padding: 0; } }
+  .avoid-break, .job, .project-item, .edu-item { break-inside: avoid; page-break-inside: avoid; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header avoid-break">
+    <h1>James Sun</h1>
+    <div class="header-gradient"></div>
+    <div class="contact-row">
+      <span>jamesvv8bbl5q3sulvtp@gmail.com</span>
+      <span class="separator">|</span>
+      <span>416-732-5105</span>
+      <span class="separator">|</span>
+      <a href="https://linkedin.com/in/yuting-sun-48bbb4211/">linkedin.com/in/yuting-sun-48bbb4211</a>
+      <span class="separator">|</span>
+      <a href="https://syttt.my.canva.site/">syttt.my.canva.site</a>
+      <span class="separator">|</span>
+      <span>Toronto, ON</span>
+    </div>
+  </div>
+
+  <div class="section avoid-break">
+    <div class="section-title">Professional Summary</div>
+    <div class="summary-text">
+      HR Change Management Analyst with a Master of Professional Education (Western University) and a Bachelor of Commerce in Human Resources Management (York University), with experience developing change communications, coordinating large-scale program events, tracking adoption metrics, and partnering across HR functions to support technology and process change initiatives. Strong content creator -- produces clear, audience-tailored communications (emails, FAQs, talking points, presentations) that drive engagement and minimize resistance. Analytical and detail-oriented: tracks impact metrics, synthesizes data into actionable insights, and maintains templates and best practices documentation to support continuous improvement. Comfortable operating across multiple priorities in fast-paced, matrixed environments.
+    </div>
+  </div>
+
+  <div class="section avoid-break">
+    <div class="section-title">Core Competencies</div>
+    <div class="competencies-grid">
+      <span class="competency-tag">Change Management Content &amp; Communications</span>
+      <span class="competency-tag">Adoption Metrics &amp; Impact Reporting</span>
+      <span class="competency-tag">Large-Scale Event Coordination</span>
+      <span class="competency-tag">HR Process &amp; Technology Change Support</span>
+      <span class="competency-tag">Stakeholder Engagement &amp; Relationship Management</span>
+      <span class="competency-tag">Excel &amp; PowerPoint (Advanced)</span>
+      <span class="competency-tag">Templates &amp; Best Practices Management</span>
+      <span class="competency-tag">Cross-Functional HR Collaboration</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Experience</div>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-company">SavvyPro Education Inc.</span>
+        <span class="job-period">Jul 2023 – Jul 2024</span>
+      </div>
+      <div class="job-role">Change Enablement &amp; Learning Coordinator — Toronto, ON</div>
+      <ul>
+        <li>Developed and distributed change communications for <strong>100+ participants per cycle</strong> -- writing emails, talking points, FAQs, and help guides tailored to diverse audiences including program managers, facilitators, and end users; drove adoption of new tools and workflows with a <strong>47% engagement rate</strong> vs. 5-15% benchmark.</li>
+        <li>Coordinated logistics for large-scale virtual and in-person program events -- managing scheduling, stakeholder communications, and execution across multiple concurrent initiatives simultaneously while maintaining quality and accuracy under competing deadlines.</li>
+        <li>Tracked and reported on change adoption metrics -- collecting feedback survey data, analyzing results, and presenting impact insights to program leaders via PowerPoint; maintained best practices documentation and lessons learned to support continuous improvement.</li>
+      </ul>
+    </div>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-company">Parking Control Services Group</span>
+        <span class="job-period">Mar 2024 – Present</span>
+      </div>
+      <div class="job-role">HR &amp; Operations Coordinator — North York, ON</div>
+      <ul>
+        <li>Partnered across HR and Finance functions to support process and technology changes for 15+ employees -- developing onboarding documentation, communications, and compliance resources; maintained HR templates and records with 100% accuracy.</li>
+        <li>Built automated reporting workflows to track operational metrics and generate management reports -- demonstrating analytical ability to filter, prioritize, and synthesize data from multiple sources into clear, actionable insights.</li>
+      </ul>
+    </div>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-company">Banhai Education Technology</span>
+        <span class="job-period">Jul 2022 – Jun 2023</span>
+      </div>
+      <div class="job-role">Instructional Designer &amp; Program Coordinator — Wuxi, China</div>
+      <ul>
+        <li>Designed change-aligned communications and learning materials for technology adoption initiatives -- facilitating information sessions, supporting go-live activities, and maintaining updated resources for continuous improvement cycles.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section avoid-break">
+    <div class="section-title">Projects</div>
+    <div class="project-item">
+      <div class="project-header">
+        <span class="project-name">Plot Ark — Change &amp; Learning Analytics Platform</span>
+        <span class="project-period">2024 – Present</span>
+      </div>
+      <div class="project-role">Founder — <a href="https://schlaflied.github.io/Plot-Ark/" style="color:#555; font-weight:400;">schlaflied.github.io/Plot-Ark</a></div>
+      <ul>
+        <li>Built a production analytics platform tracking adoption and engagement metrics across <strong>100+ users</strong> -- demonstrates ability to design measurement frameworks, analyze behavioral data, and surface actionable insights for stakeholders in a technology change context.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section avoid-break">
+    <div class="section-title">Education</div>
+    <div class="edu-item">
+      <div class="edu-header">
+        <span class="edu-title"><span class="edu-org">Western University</span> — Master of Professional Education</span>
+        <span class="edu-year">Sep 2024 – Aug 2025</span>
+      </div>
+    </div>
+    <div class="edu-item">
+      <div class="edu-header">
+        <span class="edu-title"><span class="edu-org">York University</span> — Bachelor of Commerce, Human Resources Management</span>
+        <span class="edu-year">Sep 2020 – Jun 2024</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section avoid-break">
+    <div class="section-title">Skills</div>
+    <div class="skills-block">
+      <span class="skill-category">Change Management:</span>
+      <span class="skill-item"> Change communications (emails, FAQs, talking points, help guides), adoption metrics tracking, impact reporting, large-scale event coordination, templates and best practices management, stakeholder engagement, HR process and technology change support</span>
+    </div>
+    <div class="skills-block">
+      <span class="skill-category">Tools &amp; Technology:</span>
+      <span class="skill-item"> Excel (advanced, data analysis), PowerPoint (presentation development), Microsoft Office 365, Google Workspace, Python, n8n automation, data dashboards, LMS platforms (Moodle, Canvas)</span>
+    </div>
+    <div class="skills-block">
+      <span class="skill-category">Languages:</span>
+      <span class="skill-item"> English (fluent), Mandarin (native), Japanese (conversational ~N2)</span>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

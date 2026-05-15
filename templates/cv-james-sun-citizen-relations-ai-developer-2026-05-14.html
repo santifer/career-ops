@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>James Sun — CV</title>
+<style>
+  @font-face { font-family: 'Space Grotesk'; src: url('./fonts/space-grotesk-latin.woff2') format('woff2'); font-weight: 300 700; font-style: normal; font-display: swap; }
+  @font-face { font-family: 'DM Sans'; src: url('./fonts/dm-sans-latin.woff2') format('woff2'); font-weight: 100 1000; font-style: normal; font-display: swap; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { font-family: 'DM Sans', sans-serif; font-size: 10.5px; line-height: 1.4; color: #1a1a2e; background: #ffffff; padding: 0; margin: 0; }
+  .page { width: 100%; max-width: 820px; margin: 0 auto; padding: 2px 0; }
+  .header { margin-bottom: 18px; }
+  .header h1 { font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 700; color: #1a1a2e; letter-spacing: -0.02em; margin-bottom: 6px; line-height: 1.1; }
+  .header-gradient { height: 2px; background: #1a1a2e; border-radius: 1px; margin-bottom: 10px; }
+  .contact-row { display: flex; flex-wrap: wrap; gap: 8px 14px; font-size: 10.5px; line-height: 1.4; color: #555; }
+  .contact-row a { color: #555; text-decoration: none; }
+  .contact-row .separator { color: #ccc; }
+  .section { margin-bottom: 11px; }
+  .section-title { font-family: 'Space Grotesk', sans-serif; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #1a1a2e; border-bottom: 1.5px solid #1a1a2e; padding-bottom: 4px; margin-bottom: 10px; line-height: 1.2; }
+  .summary-text { font-size: 10px; line-height: 1.5; color: #2f2f2f; }
+  a { white-space: nowrap; }
+  .job { margin-bottom: 8px; }
+  .job-header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 4px; }
+  .job-company { font-family: 'Space Grotesk', sans-serif; font-size: 12.5px; font-weight: 600; color: #1a1a2e; }
+  .job-period { font-size: 10.5px; color: #777; white-space: nowrap; }
+  .job-role { font-size: 11px; font-weight: 600; color: #333; margin-bottom: 6px; }
+  .job ul { padding-left: 18px; margin-top: 6px; }
+  .job li { font-size: 10.5px; line-height: 1.6; color: #333; margin-bottom: 4px; }
+  .job li strong { font-weight: 600; }
+  .project-item { margin-bottom: 8px; }
+  .project-header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 4px; }
+  .project-name { font-family: 'Space Grotesk', sans-serif; font-size: 12.5px; font-weight: 600; color: #1a1a2e; }
+  .project-period { font-size: 10.5px; color: #777; white-space: nowrap; }
+  .project-role { font-size: 11px; font-weight: 600; color: #333; margin-bottom: 6px; }
+  .project-item ul { padding-left: 18px; margin-top: 6px; }
+  .project-item li { font-size: 10.5px; line-height: 1.6; color: #333; margin-bottom: 4px; }
+  .project-item li strong { font-weight: 600; }
+  .edu-item { margin-bottom: 8px; }
+  .edu-header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .edu-title { font-weight: 600; font-size: 11px; color: #333; }
+  .edu-org { color: #1a1a2e; font-weight: 500; }
+  .edu-year { font-size: 10px; color: #777; white-space: nowrap; }
+  .skills-block { margin-bottom: 5px; }
+  .skill-category { font-weight: 600; color: #333; font-size: 10.5px; }
+  .skill-item { font-size: 10.5px; color: #444; }
+  @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } .page { padding: 0; } }
+  .avoid-break, .job, .project-item, .edu-item { break-inside: avoid; page-break-inside: avoid; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header avoid-break">
+    <h1>James Sun</h1>
+    <div class="header-gradient"></div>
+    <div class="contact-row">
+      <span>jamesvv8bbl5q3sulvtp@gmail.com</span>
+      <span class="separator">|</span>
+      <span>416-732-5105</span>
+      <span class="separator">|</span>
+      <a href="https://github.com/Schlaflied">github.com/Schlaflied</a>
+      <span class="separator">|</span>
+      <span>Toronto, ON</span>
+    </div>
+  </div>
+
+  <div class="section avoid-break">
+    <div class="section-title">Professional Summary</div>
+    <div class="summary-text">
+      Applied AI Engineer with hands-on experience designing, building, and operating production LLM-powered applications on Google Cloud Platform — including RAG pipelines, multi-agent orchestration systems, and cloud-deployed REST API services. Built Project Lens on GCP Cloud Run with a Pinecone-backed RAG system and Google Gemini API integration, and Plot Ark as a production multi-agent AI platform (Flask, PostgreSQL, Redis, LightRAG knowledge graph). Technically fluent in Python, SQL, RESTful API design, vector databases (Pinecone, ChromaDB), LLM integration, and GCP services (Cloud Run, IAM, logging and monitoring). Strong track record of shipping complete AI services into production — owning architecture decisions, debugging live systems, and iterating based on real performance data. Cross-disciplinary background in translating complex business and operational requirements into practical AI tooling that people actually use. Authorized to work in Canada for any employer without sponsorship.
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Projects</div>
+
+    <div class="project-item">
+      <div class="project-header">
+        <span class="project-name">Project Lens — AI Career Intelligence Platform</span>
+        <span class="project-period">2024 – Present</span>
+      </div>
+      <div class="project-role">Builder — GCP Cloud Run, Flask, Pinecone, Google Gemini API, React</div>
+      <ul>
+        <li>Built and deployed a full-stack AI application on <strong>Google Cloud Run</strong> — architecting a Flask REST API backend with GCP IAM, Cloud Logging, and cost monitoring; managed deployment lifecycle from development through production reliability and incremental improvement.</li>
+        <li>Implemented a <strong>Pinecone-backed RAG pipeline</strong> enabling semantic search across 100+ data points at 95%+ accuracy — designed the embedding workflow, retrieval logic, and LLM response generation layer using Google Gemini API for grounded, context-aware answers.</li>
+        <li>Built an interactive React frontend with real-time AI chat and data visualization — integrating the backend REST API and iterating on UI/UX based on user testing feedback across multiple release cycles.</li>
+        <li>Owned reliability and observability end-to-end — instrumented structured logging, set up GCP monitoring dashboards to track latency and error rates, and resolved production incidents through systematic debugging.</li>
+      </ul>
+    </div>
+
+    <div class="project-item">
+      <div class="project-header">
+        <span class="project-name">Plot Ark — Production Multi-Agent AI Platform</span>
+        <span class="project-period">2024 – Present</span>
+      </div>
+      <div class="project-role">Founder &amp; AI Engineer — Flask, PostgreSQL, Redis, LightRAG, GCP</div>
+      <ul>
+        <li>Designed and built a production multi-agent AI system — architecting a 5-agent orchestration layer (orchestrator + behavior_analyst, risk_detector, content_optimizer, cohort_comparator) with LightRAG knowledge graph (676 nodes, 419 edges) for long-term semantic retrieval and agent memory.</li>
+        <li>Built and operated the full cloud infrastructure stack — Flask backend on GCP, PostgreSQL + Redis data layer, CI/CD pipeline, and cost/performance monitoring; treated reliability, cost, and observability as first-class design constraints.</li>
+        <li>Implemented behavioral analytics data pipeline — designed xAPI event schema, data ingestion and validation layer, and reporting dashboards tracking engagement KPIs; achieved a <strong>47% engagement rate</strong> against a 5–15% industry benchmark.</li>
+        <li>Contributed to Hive (YC-backed open-source AI framework) — SDR Agent PR merged into v0.7.3 by name; three A2A pipeline PRs under review (+3,817 lines across 20 files).</li>
+      </ul>
+    </div>
+
+    <div class="project-item">
+      <div class="project-header">
+        <span class="project-name">Job Autopilot — LLM-Powered Workflow Automation</span>
+        <span class="project-period">2024</span>
+      </div>
+      <div class="project-role">Builder — Python, GPT-4o, ChromaDB, MCP</div>
+      <ul>
+        <li>Built an end-to-end LLM-powered automation system — designed prompt architecture, tool-calling logic, and vector retrieval layer (ChromaDB) to automate multi-step outreach workflows; achieved a <strong>47% cold reply rate</strong>, informing the SDR Agent architecture merged into Hive v0.7.3.</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <div class="section">
+    <div class="section-title">Experience</div>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-company">Parking Control Services Group</span>
+        <span class="job-period">Mar 2024 – Present</span>
+      </div>
+      <div class="job-role">AI &amp; Automation Engineer — North York, ON</div>
+      <ul>
+        <li>Designed and deployed Python-based AI automation pipelines integrating GPT-4o APIs and Microsoft 365 — reduced manual operational processing overhead by over <strong>80%</strong>; maintained and debugged production integrations across live operational systems.</li>
+        <li>Built SQL reporting workflows and data quality auditing processes — reduced payroll and compliance discrepancies by <strong>15%</strong> through systematic data validation and automated checks.</li>
+      </ul>
+    </div>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-company">SavvyPro Education Inc.</span>
+        <span class="job-period">Jul 2023 – Jul 2024</span>
+      </div>
+      <div class="job-role">Data &amp; Systems Engineer — Toronto, ON (Remote)</div>
+      <ul>
+        <li>Built Python and Google Apps Script analytics pipelines — collecting, transforming, and reporting on learner engagement and performance data across <strong>100+ participant cohorts</strong>; designed dashboards for program leadership decision-making.</li>
+        <li>Managed LMS platform integrations and API automation workflows using n8n — maintaining data reliability across interconnected systems and resolving integration incidents in production.</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <div class="section avoid-break">
+    <div class="section-title">Education</div>
+    <div class="edu-item">
+      <div class="edu-header">
+        <span class="edu-title">Master of Professional Education — <span class="edu-org">Western University</span></span>
+        <span class="edu-year">Sep 2024 – Aug 2025</span>
+      </div>
+    </div>
+    <div class="edu-item">
+      <div class="edu-header">
+        <span class="edu-title">Bachelor of Commerce — <span class="edu-org">York University</span></span>
+        <span class="edu-year">Sep 2020 – Jun 2024</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section avoid-break">
+    <div class="section-title">Skills</div>
+    <div class="skills-block">
+      <span class="skill-category">Languages &amp; Frameworks:</span>
+      <span class="skill-item"> Python (OOP, production), SQL, Flask, React/TypeScript, RESTful API design, Google Apps Script</span>
+    </div>
+    <div class="skills-block">
+      <span class="skill-category">GCP &amp; Cloud:</span>
+      <span class="skill-item"> Google Cloud Run, GCP IAM, Cloud Logging and Monitoring, CI/CD pipelines, Docker, cost and performance management</span>
+    </div>
+    <div class="skills-block">
+      <span class="skill-category">AI &amp; LLM Engineering:</span>
+      <span class="skill-item"> RAG pipeline design, Pinecone, ChromaDB, LightRAG knowledge graph, LangChain patterns, multi-agent orchestration, LLM API integration (Gemini, Claude, GPT-4o), prompt engineering, embeddings and vector search, agent tool-calling</span>
+    </div>
+    <div class="skills-block">
+      <span class="skill-category">Data &amp; Automation:</span>
+      <span class="skill-item"> PostgreSQL, Redis, n8n workflow automation, xAPI event pipelines, data validation and quality, analytics dashboards</span>
+    </div>
+    <div class="skills-block">
+      <span class="skill-category">Languages:</span>
+      <span class="skill-item"> English (fluent), Mandarin (native), Japanese (conversational ~N2)</span>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>James Sun — CV</title>
+<style>
+  @font-face {
+    font-family: 'Space Grotesk';
+    src: url('./fonts/space-grotesk-latin.woff2') format('woff2');
+    font-weight: 300 700;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  }
+
+  @font-face {
+    font-family: 'Space Grotesk';
+    src: url('./fonts/space-grotesk-latin-ext.woff2') format('woff2');
+    font-weight: 300 700;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0100-02AF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  }
+
+  @font-face {
+    font-family: 'DM Sans';
+    src: url('./fonts/dm-sans-latin.woff2') format('woff2');
+    font-weight: 100 1000;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  }
+
+  @font-face {
+    font-family: 'DM Sans';
+    src: url('./fonts/dm-sans-latin-ext.woff2') format('woff2');
+    font-weight: 100 1000;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0100-02AF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10.5px;
+    line-height: 1.4;
+    color: #1a1a2e;
+    background: #ffffff;
+    padding: 0;
+    margin: 0;
+  }
+
+  .page {
+    width: 100%;
+    max-width: 8.5in;
+    margin: 0 auto;
+    padding: 2px 0;
+  }
+
+  .header {
+    margin-bottom: 20px;
+  }
+
+  .header h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: #1a1a2e;
+    letter-spacing: -0.02em;
+    margin-bottom: 6px;
+    line-height: 1.1;
+  }
+
+  .header-gradient {
+    height: 2px;
+    background: #1a1a2e;
+    border-radius: 1px;
+    margin-bottom: 10px;
+  }
+
+  .contact-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10.5px;
+    line-height: 1.4;
+    color: #555;
+  }
+
+  .contact-row a {
+    color: #555;
+    text-decoration: none;
+  }
+
+  .contact-row .separator {
+    color: #ccc;
+  }
+
+  .section {
+    margin-bottom: 12px;
+  }
+
+  .section-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #1a1a2e;
+    border-bottom: 1.5px solid #1a1a2e;
+    padding-bottom: 4px;
+    margin-bottom: 10px;
+    line-height: 1.2;
+  }
+
+  .summary-text {
+    font-size: 11px;
+    line-height: 1.7;
+    color: #2f2f2f;
+  }
+
+  a {
+    white-space: nowrap;
+  }
+
+  .competencies-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .competency-tag {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+    color: #333;
+    background: #f2f2f2;
+    padding: 4px 10px;
+    border-radius: 3px;
+    border: 1px solid #ccc;
+  }
+
+  .job {
+    margin-bottom: 12px;
+  }
+
+  .job-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 4px;
+  }
+
+  .job-company {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #1a1a2e;
+  }
+
+  .job-period {
+    font-size: 10.5px;
+    color: #777;
+    white-space: nowrap;
+  }
+
+  .job-role {
+    font-size: 11px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 6px;
+  }
+
+  .job ul {
+    padding-left: 18px;
+    margin-top: 6px;
+  }
+
+  .job li {
+    font-size: 10.5px;
+    line-height: 1.6;
+    color: #333;
+    margin-bottom: 3px;
+  }
+
+  .job li strong {
+    font-weight: 600;
+  }
+
+  .project {
+    margin-bottom: 10px;
+  }
+
+  .project-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #1a1a2e;
+  }
+
+  .project-badge {
+    font-size: 9px;
+    font-weight: 500;
+    color: #555;
+    background: #f2f2f2;
+    padding: 1px 6px;
+    border-radius: 2px;
+    margin-left: 6px;
+  }
+
+  .project-desc {
+    font-size: 10.5px;
+    color: #444;
+    margin-top: 3px;
+    line-height: 1.55;
+  }
+
+  .edu-item {
+    margin-bottom: 6px;
+  }
+
+  .edu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+  }
+
+  .edu-title {
+    font-weight: 600;
+    font-size: 11px;
+    color: #333;
+  }
+
+  .edu-org {
+    color: #1a1a2e;
+    font-weight: 500;
+  }
+
+  .edu-year {
+    font-size: 10px;
+    color: #777;
+    white-space: nowrap;
+  }
+
+  .cert-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 5px;
+  }
+
+  .cert-title {
+    font-size: 10.5px;
+    font-weight: 500;
+    color: #333;
+  }
+
+  .cert-org {
+    color: #1a1a2e;
+  }
+
+  .cert-year {
+    font-size: 10px;
+    color: #777;
+    white-space: nowrap;
+  }
+
+  .skills-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .skill-item {
+    font-size: 10.5px;
+    color: #444;
+    line-height: 1.5;
+  }
+
+  .skill-category {
+    font-weight: 600;
+    color: #333;
+    font-size: 10.5px;
+  }
+
+  @media print {
+    body {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .page {
+      padding: 0;
+    }
+  }
+
+  .avoid-break,
+  .job,
+  .project,
+  .edu-item,
+  .cert-item {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header avoid-break">
+    <h1>James Sun</h1>
+    <div class="header-gradient"></div>
+    <div class="contact-row">
+      <span>jamesvv8bbl5q3sulvtp@gmail.com</span>
+      <span class="separator">|</span>
+      <a href="https://linkedin.com/in/yuting-sun-48bbb4211/">linkedin.com/in/yuting-sun-48bbb4211</a>
+      <span class="separator">|</span>
+      <a href="https://syttt.my.canva.site/">syttt.my.canva.site</a>
+      <span class="separator">|</span>
+      <span>London, ON</span>
+    </div>
+  </div>
+
+  <div class="section avoid-break">
+    <div class="section-title">Professional Summary</div>
+    <div class="summary-text">AI Enablement Lead with hands-on experience deploying AI tools, redesigning workflows, and building AI literacy across organizations — bridging operational needs and emerging technology. At SavvyPro, evaluated and implemented automation platforms (n8n, Python/GPT-4o) enabling digital transformation for 100+ participants per session; applied learning analytics to drive evidence-based operational decisions. MPEd candidate at Western University with academic environment experience; open-source contributor to Hive (YC-backed, merged v0.7.3) and creator of Plot Ark, an xAPI multi-agent analytics platform demonstrating responsible AI deployment at scale.</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Core Competencies</div>
+    <div class="competencies-grid">
+      <span class="competency-tag">AI Enablement</span>
+      <span class="competency-tag">Digital Transformation</span>
+      <span class="competency-tag">Generative AI</span>
+      <span class="competency-tag">Process Analysis</span>
+      <span class="competency-tag">Automation Platforms</span>
+      <span class="competency-tag">AI Literacy Training</span>
+      <span class="competency-tag">Knowledge Sharing</span>
+      <span class="competency-tag">Data Privacy &amp; Risk</span>
+      <span class="competency-tag">Workflow Redesign</span>
+      <span class="competency-tag">Technology Implementation</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Work Experience</div>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-company">SavvyPro Edu. Inc.</span>
+        <span class="job-period">Jul 2023 – Jul 2024</span>
+      </div>
+      <div class="job-role">Product &amp; Learning Technology Coordinator · Toronto, ON</div>
+      <ul>
+        <li>Evaluated and implemented AI tools and automation platforms (n8n, Python/GPT-4o) to redesign learner onboarding workflows, eliminating manual processing across program cycles</li>
+        <li>Managed LMS implementation (Moodle, Canvas) with custom API integrations, supporting digital transformation for 100+ participants per session</li>
+        <li>Built real-time analytics pipelines tracking learner engagement and retention; applied findings to inform evidence-based program decisions and content iteration</li>
+      </ul>
+    </div>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-company">Parking Control Services Group</span>
+        <span class="job-period">Mar 2024 – Present</span>
+      </div>
+      <div class="job-role">Administrative Assistant · North York, ON</div>
+      <ul>
+        <li>Built AI-enabled automated reporting workflows (n8n, Python/GPT-4o), eliminating manual processing for weekly operations — an internal AI adoption pilot</li>
+        <li>Developed training materials and digital documentation systems for staff onboarding with 100% ESA/OHSA compliance</li>
+        <li>Managed end-to-end payroll for 15+ employees, reducing discrepancies by 15% through systematic auditing</li>
+      </ul>
+    </div>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-company">Banhai Education Technology</span>
+        <span class="job-period">Jul 2022 – Jun 2023</span>
+      </div>
+      <div class="job-role">Instructional Designer &amp; Program Coordinator · Wuxi, China</div>
+      <ul>
+        <li>Facilitated cross-functional coordination between faculty, learners, and administrators, enabling structured knowledge sharing and scalable e-learning delivery</li>
+        <li>Designed synchronous and asynchronous programs using ADDIE methodology with needs assessment, learning objectives, and assessment rubrics aligned to national standards</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section avoid-break">
+    <div class="section-title">Projects</div>
+    <div class="project">
+      <div class="project-title">Plot Ark — AI-Powered Learning Analytics Platform <span class="project-badge">Live · Python · TypeScript · Flask · PostgreSQL · Redis</span></div>
+      <div class="project-desc">xAPI behavioral analytics SaaS with A2A multi-agent pipeline (behavior_analyst, risk_detector, content_optimizer, cohort_comparator) and fake-completion cross-validation matrix — a working example of practical AI tool deployment, responsible AI analytics, and multi-stakeholder knowledge sharing at scale. <a href="https://schlaflied.github.io/Plot-Ark/">schlaflied.github.io/Plot-Ark</a></div>
+    </div>
+  </div>
+
+  <div class="section avoid-break">
+    <div class="section-title">Education</div>
+    <div class="edu-item">
+      <div class="edu-header">
+        <span class="edu-title"><span class="edu-org">Western University</span> — Master of Professional Education (TESOL)</span>
+        <span class="edu-year">Sep 2024 – Aug 2025</span>
+      </div>
+    </div>
+    <div class="edu-item">
+      <div class="edu-header">
+        <span class="edu-title"><span class="edu-org">York University</span> — Bachelor of Commerce (Human Resources)</span>
+        <span class="edu-year">Sep 2020 – Jun 2024</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section avoid-break">
+    <div class="section-title">Certifications</div>
+    <div class="cert-item">
+      <span class="cert-title">CHRP (Certified Human Resources Professional) — <span class="cert-org">HRPA</span></span>
+      <span class="cert-year">In Progress</span>
+    </div>
+    <div class="cert-item">
+      <span class="cert-title">Certification in University Teaching &amp; Learning — <span class="cert-org">Western University</span></span>
+      <span class="cert-year">In Progress</span>
+    </div>
+  </div>
+
+  <div class="section avoid-break">
+    <div class="section-title">Skills</div>
+    <div class="skills-grid">
+      <div class="skill-item"><span class="skill-category">AI &amp; Automation:</span> Generative AI (GPT-4o, Gemini, Claude), n8n, Python, LangChain, RAG, Agentic AI, Prompt Engineering, OpenAI API</div>
+      <div class="skill-item"><span class="skill-category">Digital Transformation:</span> Process Analysis, Workflow Redesign, LMS Implementation (Moodle, Canvas), API Integration, Data Analytics, SQL</div>
+      <div class="skill-item"><span class="skill-category">Facilitation &amp; Training:</span> ADDIE, xAPI, AI Literacy Training, Instructional Design, Articulate 360, Camtasia, Knowledge Sharing</div>
+      <div class="skill-item"><span class="skill-category">Governance &amp; Risk:</span> Data Privacy Principles, Responsible AI, Canadian Regulatory Frameworks, OHSA/ESA Compliance</div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

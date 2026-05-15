@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>James Sun — eLearning Portfolio</title>
+<style>
+  @font-face { font-family: 'Space Grotesk'; src: url('./fonts/space-grotesk-latin.woff2') format('woff2'); font-weight: 300 700; font-style: normal; font-display: swap; }
+  @font-face { font-family: 'DM Sans'; src: url('./fonts/dm-sans-latin.woff2') format('woff2'); font-weight: 100 1000; font-style: normal; font-display: swap; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { font-family: 'DM Sans', sans-serif; font-size: 10px; line-height: 1.4; color: #1a1a2e; background: #ffffff; }
+  .page { width: 100%; max-width: 8.5in; margin: 0 auto; padding: 0.38in 0.42in 0.28in 0.42in; }
+  .header { margin-bottom: 12px; }
+  .header h1 { font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 700; color: #1a1a2e; letter-spacing: -0.02em; margin-bottom: 2px; }
+  .header-sub { font-size: 11px; color: #555; margin-bottom: 5px; }
+  .header-gradient { height: 2px; background: #1a1a2e; border-radius: 1px; margin-bottom: 7px; }
+  .contact-row { font-size: 9.5px; color: #555; }
+  .contact-row a { color: #555; text-decoration: none; }
+  .section { margin-bottom: 11px; }
+  .section-title { font-family: 'Space Grotesk', sans-serif; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #1a1a2e; border-bottom: 1.5px solid #1a1a2e; padding-bottom: 3px; margin-bottom: 8px; }
+  .project-card { margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
+  .project-card:last-child { border-bottom: none; margin-bottom: 0; }
+  .project-meta { display: flex; align-items: baseline; gap: 8px; margin-bottom: 3px; }
+  .project-name { font-family: 'Space Grotesk', sans-serif; font-size: 11px; font-weight: 600; color: #1a1a2e; }
+  .project-tag { font-size: 8.5px; font-weight: 500; color: #555; background: #f2f2f2; padding: 1px 6px; border-radius: 2px; border: 1px solid #ddd; }
+  .project-context { font-size: 9.5px; color: #777; margin-bottom: 4px; }
+  .project-desc { font-size: 10px; color: #333; line-height: 1.55; margin-bottom: 4px; }
+  .project-tech { font-size: 9px; color: #666; }
+  .project-tech strong { color: #444; }
+  .project-link { font-size: 9.5px; }
+  .project-link a { color: #1a1a2e; }
+  .skills-block { font-size: 10px; color: #444; line-height: 1.7; }
+  .skills-block strong { color: #333; font-weight: 600; }
+  a { white-space: nowrap; }
+  .avoid-break { break-inside: avoid; page-break-inside: avoid; }
+  @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } .page { padding: 0.38in 0.42in 0.25in 0.42in; } }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header avoid-break">
+    <h1>James Sun</h1>
+    <div class="header-sub">eLearning Developer — Portfolio</div>
+    <div class="header-gradient"></div>
+    <div class="contact-row">
+      416-732-5105 &nbsp;|&nbsp; jamesvv8bbl5q3sulvtp@gmail.com &nbsp;|&nbsp;
+      <a href="https://linkedin.com/in/yuting-sun-48bbb4211">linkedin.com/in/yuting-sun-48bbb4211</a> &nbsp;|&nbsp;
+      <a href="https://schlaflied.github.io/Plot-Ark/">schlaflied.github.io/Plot-Ark</a>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">eLearning Development Projects</div>
+
+    <div class="project-card avoid-break">
+      <div class="project-meta">
+        <span class="project-name">Plot Ark — AI-Powered Learning Analytics Platform</span>
+        <span class="project-tag">Live · Full-Stack</span>
+      </div>
+      <div class="project-context">Personal project · 2024–Present</div>
+      <div class="project-desc">Designed and built a full-stack eLearning SaaS from concept through deployment — architected xAPI/SCORM behavioral analytics pipeline, built accessible UI compliant with WCAG standards, and integrated AI-driven content recommendation and learner analytics. Demonstrates end-to-end technical build capability, deep eLearning standards knowledge, and strategic problem-solving across complex technical challenges.</div>
+      <div class="project-tech"><strong>Tools:</strong> xAPI · SCORM · WCAG 2.1 AA · React · Flask · PostgreSQL · Redis · GCP · Claude Code · Python</div>
+      <div class="project-link"><a href="https://schlaflied.github.io/Plot-Ark/">schlaflied.github.io/Plot-Ark</a></div>
+    </div>
+
+    <div class="project-card avoid-break">
+      <div class="project-meta">
+        <span class="project-name">Professional Development Course Suite</span>
+        <span class="project-tag">eLearning · LMS Deployed</span>
+      </div>
+      <div class="project-context">SavvyPro Education Inc. · 2023–2024</div>
+      <div class="project-desc">Developed a suite of SCORM/xAPI-compliant eLearning courses for 100+ learners — executed from designed storyboards using Articulate Rise, assembled multi-media assets, applied brand guidelines and WCAG accessibility standards, and configured meaningful LMS reporting. Conducted QA testing and resolved technical issues across Moodle and Canvas LMS platforms.</div>
+      <div class="project-tech"><strong>Tools:</strong> Articulate Rise · Articulate Storyline · SCORM · xAPI · Moodle · Canvas · Camtasia · Canva</div>
+    </div>
+
+    <div class="project-card avoid-break">
+      <div class="project-meta">
+        <span class="project-name">Blended Learning Program — Multi-Level Curriculum</span>
+        <span class="project-tag">Instructional Design · Interactive</span>
+      </div>
+      <div class="project-context">Banhai Education Technology · 2022–2023</div>
+      <div class="project-desc">Built interactive eLearning modules and multimedia learning assets from storyboards and visual concepts — developed scenario-based activities, applied accessibility and visual design best practices, and maintained brand consistency across a multi-module curriculum for diverse professional audiences.</div>
+      <div class="project-tech"><strong>Tools:</strong> Articulate Storyline · Adobe Creative Suite · Canva · Camtasia · ADDIE · Storyboarding</div>
+    </div>
+
+    <div class="project-card avoid-break">
+      <div class="project-meta">
+        <span class="project-name">Operational Training &amp; Onboarding eLearning</span>
+        <span class="project-tag">Technical Training · Automation</span>
+      </div>
+      <div class="project-context">Parking Control Services Group · 2024–Present</div>
+      <div class="project-desc">Designed and built digital training content and onboarding materials for a regulated operational environment — translated complex SOPs into clear, accessible eLearning modules and automated reporting dashboards to track training completion and compliance.</div>
+      <div class="project-tech"><strong>Tools:</strong> H5P · Canva · Python · n8n · MS Office 365 · WCAG accessibility</div>
+    </div>
+
+  </div>
+
+  <div class="section avoid-break">
+    <div class="section-title">Technical Capabilities</div>
+    <div class="skills-block">
+      <strong>Authoring:</strong> Articulate Storyline · Articulate Rise · Articulate 360 · H5P · Camtasia &nbsp;|&nbsp;
+      <strong>Standards:</strong> SCORM · xAPI · cmi5 · WCAG 2.1 AA &nbsp;|&nbsp;
+      <strong>Design:</strong> Canva · Adobe Creative Suite · Visual design · Storyboard execution · Brand guidelines &nbsp;|&nbsp;
+      <strong>LMS/LCMS:</strong> Moodle · Canvas · Blackboard · LMS API integration &nbsp;|&nbsp;
+      <strong>Dev:</strong> Python · React · Git · Claude Code
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

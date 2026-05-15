@@ -2,6 +2,8 @@
 
 Escanea portales de empleo configurados, filtra por relevancia de título, y añade nuevas ofertas al pipeline para evaluación posterior.
 
+> **Nota (v1.5+):** El escáner por defecto (`scan.mjs` / `npm run scan`) es **zero-token** y sólo consulta directamente las APIs públicas de Greenhouse, Ashby y Lever. Los niveles con Playwright/WebSearch descritos abajo son el flujo **agente** (ejecutado por Claude/Codex), no lo que hace `scan.mjs`. Si una empresa no tiene API Greenhouse/Ashby/Lever, `scan.mjs` la ignorará; para esos casos, el agente debe completar manualmente el Nivel 1 (Playwright) o Nivel 3 (WebSearch).
+
 ## Ejecución recomendada
 
 Ejecutar como subagente para no consumir contexto del main:
@@ -107,6 +109,15 @@ Los niveles son aditivos — se ejecutan todos, los resultados se mezclan y dedu
    - 0 keywords de `negative` deben aparecer
    - `seniority_boost` keywords dan prioridad pero no son obligatorios
 
+6b. **Filtrar por ubicación (opcional)** usando `location_filter` de `portals.yml`:
+   - Si el bloque `location_filter` está ausente, todas las ubicaciones pasan (comportamiento por defecto)
+   - Ubicación vacía en una oferta → pasa (no penalizar datos faltantes)
+   - Cualquier keyword de `block` presente → rechazar (precedencia sobre allow)
+   - `allow` vacío → pasa (ya superó block)
+   - `allow` no vacío → debe coincidir al menos una keyword
+   - Todas las coincidencias son case-insensitive substring
+   - La ubicación se persiste como 7ª columna en `scan-history.tsv` para auditoría posterior
+
 7. **Deduplicar** contra 3 fuentes:
    - `scan-history.tsv` → URL exacta ya vista
    - `applications.md` → empresa + rol normalizado ya evaluado
@@ -188,6 +199,18 @@ Nuevas añadidas a pipeline.md: N
 ## Gestión de careers_url
 
 Cada empresa en `tracked_companies` debe tener `careers_url` — la URL directa a su página de ofertas. Esto evita buscarlo cada vez.
+
+**REGLA: Usa siempre la URL corporativa de la empresa; recurre al endpoint ATS solo si no existe página corporativa propia.**
+
+El `careers_url` debe apuntar a la página de empleo propia de la empresa siempre que esté disponible. Muchas empresas usan Workday, Greenhouse o Lever por debajo, pero exponen los IDs de las vacantes solo a través de su dominio corporativo. Usar la URL ATS directa cuando existe una página corporativa puede causar falsos errores 410 porque los IDs de los puestos no coinciden.
+
+| ✅ Correcto (corporativa) | ❌ Incorrecto como primera opción (ATS directo) |
+|---|---|
+| `https://careers.mastercard.com` | `https://mastercard.wd1.myworkdayjobs.com` |
+| `https://openai.com/careers` | `https://job-boards.greenhouse.io/openai` |
+| `https://stripe.com/jobs` | `https://jobs.lever.co/stripe` |
+
+Fallback: si solo tienes la URL ATS directa, navega primero al sitio web de la empresa y localiza su página corporativa de empleo. Usa la URL ATS directa únicamente si la empresa no tiene página corporativa propia.
 
 **Patrones conocidos por plataforma:**
 - **Ashby:** `https://jobs.ashbyhq.com/{slug}`

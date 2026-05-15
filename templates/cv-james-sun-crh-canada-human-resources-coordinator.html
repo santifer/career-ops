@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>James Sun — CV</title>
+<style>
+  @font-face {
+    font-family: 'Space Grotesk';
+    src: url('./fonts/space-grotesk-latin.woff2') format('woff2');
+    font-weight: 300 700;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  }
+  @font-face {
+    font-family: 'Space Grotesk';
+    src: url('./fonts/space-grotesk-latin-ext.woff2') format('woff2');
+    font-weight: 300 700;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0100-02AF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  }
+  @font-face {
+    font-family: 'DM Sans';
+    src: url('./fonts/dm-sans-latin.woff2') format('woff2');
+    font-weight: 100 1000;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  }
+  @font-face {
+    font-family: 'DM Sans';
+    src: url('./fonts/dm-sans-latin-ext.woff2') format('woff2');
+    font-weight: 100 1000;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0100-02AF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10.5px;
+    line-height: 1.4;
+    color: #1a1a2e;
+    background: #ffffff;
+    padding: 0;
+    margin: 0;
+  }
+
+  .page {
+    width: 100%;
+    max-width: 8.5in;
+    margin: 0 auto;
+    padding: 2px 0;
+  }
+
+  .header { margin-bottom: 14px; }
+
+  .header h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: #1a1a2e;
+    letter-spacing: -0.02em;
+    margin-bottom: 6px;
+    line-height: 1.1;
+  }
+
+  .header-gradient {
+    height: 2px;
+    background: #1a1a2e;
+    border-radius: 1px;
+    margin-bottom: 8px;
+  }
+
+  .contact-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10.5px;
+    line-height: 1.4;
+    color: #555;
+  }
+
+  .contact-row a { color: #555; text-decoration: none; }
+  .contact-row .separator { color: #ccc; }
+
+  .section { margin-bottom: 11px; }
+
+  .section-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #1a1a2e;
+    border-bottom: 1.5px solid #1a1a2e;
+    padding-bottom: 3px;
+    margin-bottom: 7px;
+    line-height: 1.2;
+  }
+
+  .summary-text { font-size: 11px; line-height: 1.65; color: #2f2f2f; }
+
+  a { white-space: nowrap; }
+
+  .competencies-grid { display: flex; flex-wrap: wrap; gap: 5px; }
+
+  .competency-tag {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 9.5px;
+    font-weight: 500;
+    color: #333;
+    background: #f2f2f2;
+    padding: 3px 8px;
+    border-radius: 3px;
+    border: 1px solid #ccc;
+  }
+
+  .job { margin-bottom: 9px; }
+
+  .job-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 1px;
+  }
+
+  .job-company {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: #1a1a2e;
+  }
+
+  .job-period { font-size: 10px; color: #777; white-space: nowrap; }
+
+  .job-role {
+    font-size: 10.5px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 3px;
+  }
+
+  .job-location { font-size: 10px; color: #888; font-weight: 400; }
+
+  .job ul { padding-left: 15px; margin-top: 3px; }
+
+  .job li {
+    font-size: 10.5px;
+    line-height: 1.55;
+    color: #333;
+    margin-bottom: 3px;
+  }
+
+  .job li strong { font-weight: 600; }
+
+  .edu-item { margin-bottom: 5px; }
+
+  .edu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+  }
+
+  .edu-title { font-weight: 600; font-size: 10.5px; color: #333; }
+  .edu-org { color: #1a1a2e; font-weight: 500; }
+  .edu-year { font-size: 10px; color: #777; white-space: nowrap; }
+
+  .cert-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 4px;
+  }
+
+  .cert-title { font-size: 10.5px; font-weight: 500; color: #333; }
+  .cert-org { color: #1a1a2e; }
+
+  .skill-category { font-weight: 600; color: #333; font-size: 10.5px; }
+
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .page { padding: 0; }
+  }
+
+  .avoid-break, .job, .edu-item, .cert-item {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header avoid-break">
+    <h1>James Sun</h1>
+    <div class="header-gradient"></div>
+    <div class="contact-row">
+      <span>jamesvv8bbl5q3sulvtp@gmail.com</span>
+      <span class="separator">|</span>
+      <span>416-732-5105</span>
+      <span class="separator">|</span>
+      <a href="https://linkedin.com/in/yuting-sun-48bbb4211/">linkedin.com/in/yuting-sun-48bbb4211</a>
+      <span class="separator">|</span>
+      <span>London, ON (relocating to Toronto)</span>
+    </div>
+  </div>
+
+  <!-- PROFESSIONAL SUMMARY -->
+  <div class="section avoid-break">
+    <div class="section-title">Professional Summary</div>
+    <div class="summary-text">Human Resources Coordinator with a BCom in Human Resources (York University) and 3+ years spanning recruitment support, new hire orientations, employee relations, compensation and benefits administration, and training and development coordination. CHRP candidate with SAP and SuccessFactors proficiency, a 100% ESA/OHSA compliance record in payroll operations, and proven ability to manage multiple HR priorities in fast-paced, multi-site environments.</div>
+  </div>
+
+  <!-- CORE COMPETENCIES -->
+  <div class="section">
+    <div class="section-title">Core Competencies</div>
+    <div class="competencies-grid">
+      <span class="competency-tag">Recruitment &amp; Selection</span>
+      <span class="competency-tag">Employee Relations</span>
+      <span class="competency-tag">Compensation &amp; Benefits</span>
+      <span class="competency-tag">Training &amp; Development</span>
+      <span class="competency-tag">Performance Management</span>
+      <span class="competency-tag">New Hire Orientation</span>
+      <span class="competency-tag">SAP &amp; SuccessFactors</span>
+      <span class="competency-tag">HR KPI Reporting</span>
+      <span class="competency-tag">Organizational Development</span>
+      <span class="competency-tag">Change Management</span>
+      <span class="competency-tag">ESA / OHSA Compliance</span>
+      <span class="competency-tag">Stakeholder Support</span>
+    </div>
+  </div>
+
+  <!-- WORK EXPERIENCE -->
+  <div class="section">
+    <div class="section-title">Work Experience</div>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-company">Parking Control Services Group</span>
+        <span class="job-period">Mar 2024 – Present</span>
+      </div>
+      <div class="job-role">Administrative Assistant <span class="job-location">· North York, ON</span></div>
+      <ul>
+        <li>Managed end-to-end <strong>payroll and compensation</strong> tracking for 15+ employees with 100% <strong>ESA/OHSA compliance</strong>, maintaining audit-ready HR documentation including hiring letters, transfers, and <strong>performance review</strong> records</li>
+        <li>Coordinated <strong>new hire orientations</strong> and pre-employment checks; built digital documentation systems for onboarding and training materials, reducing processing time and improving compliance tracking</li>
+      </ul>
+    </div>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-company">SavvyPro Education Inc.</span>
+        <span class="job-period">Jul 2023 – Jul 2024</span>
+      </div>
+      <div class="job-role">Product &amp; Learning Technology Coordinator <span class="job-location">· Toronto, ON</span></div>
+      <ul>
+        <li>Coordinated end-to-end delivery of professional learning programs for 100+ participants: scheduling, onboarding workflows, <strong>performance evaluation</strong>, and <strong>stakeholder reporting</strong> on engagement <strong>KPIs</strong></li>
+        <li>Built automated reporting pipelines (Google Apps Script, n8n) generating real-time management dashboards on participation and program effectiveness, supporting data-driven <strong>organizational development</strong> decisions</li>
+      </ul>
+    </div>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-company">Banhai Education Technology</span>
+        <span class="job-period">Jul 2022 – Jun 2023</span>
+      </div>
+      <div class="job-role">Program Coordinator &amp; Instructional Designer <span class="job-location">· Wuxi, China</span></div>
+      <ul>
+        <li>Coordinated cross-functional program delivery across faculty, administrators, and learners — managing schedules, <strong>training and development</strong> materials, and assessment rubrics aligned to organizational standards</li>
+        <li>Supported <strong>change management</strong> initiatives by adapting training programs and internal documentation in response to evolving curriculum requirements and stakeholder feedback</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- EDUCATION -->
+  <div class="section avoid-break">
+    <div class="section-title">Education</div>
+    <div class="edu-item">
+      <div class="edu-header">
+        <span class="edu-title">Master of Professional Education (TESOL) &mdash; <span class="edu-org">Western University</span></span>
+        <span class="edu-year">Sep 2024 – Aug 2025</span>
+      </div>
+    </div>
+    <div class="edu-item">
+      <div class="edu-header">
+        <span class="edu-title">Bachelor of Commerce, Human Resources &mdash; <span class="edu-org">York University</span></span>
+        <span class="edu-year">Sep 2020 – Jun 2024</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- CERTIFICATIONS -->
+  <div class="section avoid-break">
+    <div class="section-title">Certifications</div>
+    <div class="cert-item">
+      <span class="cert-title">CHRP (<span class="cert-org">Certified Human Resources Professional</span>) &mdash; In Progress</span>
+    </div>
+    <div class="cert-item">
+      <span class="cert-title">Ontario <span class="cert-org">ESA &amp; OHSA</span> &mdash; Compliant</span>
+    </div>
+  </div>
+
+  <!-- SKILLS -->
+  <div class="section avoid-break">
+    <div class="section-title">Skills</div>
+    <p style="font-size:10.5px; color:#444; line-height:1.75;">
+      <span class="skill-category">HRIS &amp; Systems:</span> SAP, SuccessFactors, Workday, Microsoft Office (Excel, Word, PowerPoint, Outlook)<br>
+      <span class="skill-category">HR Disciplines:</span> Recruitment &amp; Selection, Onboarding, Payroll Administration, Employee Relations, Performance Management, Compliance (ESA, OHSA)<br>
+      <span class="skill-category">Reporting &amp; Tools:</span> KPI Tracking &amp; Dashboards, Google Apps Script, Python (data reporting), n8n, SharePoint
+    </p>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>James Sun — CV</title>
+<style>
+  @font-face { font-family: 'Space Grotesk'; src: url('./fonts/space-grotesk-latin.woff2') format('woff2'); font-weight: 300 700; font-style: normal; font-display: swap; }
+  @font-face { font-family: 'DM Sans'; src: url('./fonts/dm-sans-latin.woff2') format('woff2'); font-weight: 100 1000; font-style: normal; font-display: swap; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { font-family: 'DM Sans', sans-serif; font-size: 10px; line-height: 1.30; color: #1a1a2e; background: #ffffff; }
+  .page { width: 100%; max-width: 8.5in; margin: 0 auto; padding: 0.35in 0.42in 0.25in 0.42in; }
+  .header { margin-bottom: 10px; }
+  .header h1 { font-family: 'Space Grotesk', sans-serif; font-size: 26px; font-weight: 700; color: #1a1a2e; letter-spacing: -0.02em; margin-bottom: 5px; line-height: 1.1; }
+  .header-gradient { height: 2px; background: #1a1a2e; border-radius: 1px; margin-bottom: 8px; }
+  .contact-row { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: 10px; color: #555; }
+  .contact-row a { color: #555; text-decoration: none; }
+  .contact-row .separator { color: #ccc; }
+  .section { margin-bottom: 5px; }
+  .section-title { font-family: 'Space Grotesk', sans-serif; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #1a1a2e; border-bottom: 1.5px solid #1a1a2e; padding-bottom: 2px; margin-bottom: 6px; }
+  .summary-text { font-size: 10px; line-height: 1.45; color: #2f2f2f; }
+  .competencies-grid { display: flex; flex-wrap: wrap; gap: 5px; }
+  .competency-tag { font-size: 9.5px; font-weight: 500; color: #333; background: #f2f2f2; padding: 3px 9px; border-radius: 3px; border: 1px solid #ccc; }
+  .job { margin-bottom: 6px; }
+  .job-header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 2px; }
+  .job-company { font-family: 'Space Grotesk', sans-serif; font-size: 11px; font-weight: 600; color: #1a1a2e; }
+  .job-period { font-size: 10px; color: #777; white-space: nowrap; }
+  .job-role { font-size: 10px; font-weight: 600; color: #333; margin-bottom: 3px; }
+  .job ul { padding-left: 16px; margin-top: 2px; }
+  .job li { font-size: 10px; line-height: 1.45; color: #333; margin-bottom: 1px; }
+  .edu-item { margin-bottom: 5px; }
+  .edu-header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .edu-title { font-weight: 600; font-size: 10px; color: #333; }
+  .edu-year { font-size: 10px; color: #777; white-space: nowrap; }
+  .skills-cols { display: grid; grid-template-columns: 1.5fr 1.4fr 0.8fr; gap: 0 14px; }
+  .skills-col-title { font-size: 8.5px; font-weight: 700; color: #444; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; }
+  .skills-col ul { list-style: none; padding: 0; margin: 0; }
+  .skills-col li { font-size: 9px; color: #444; line-height: 1.42; padding-left: 8px; position: relative; }
+  .skills-col li::before { content: '·'; position: absolute; left: 0; color: #bbb; }
+  a { white-space: nowrap; }
+  .avoid-break, .job, .edu-item { break-inside: avoid; page-break-inside: avoid; }
+  @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } .page { padding: 0.38in 0.42in 0.25in 0.42in; } }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header avoid-break">
+    <h1>James Sun</h1>
+    <div class="header-gradient"></div>
+    <div class="contact-row">
+      <span>416-732-5105</span>
+      <span class="separator">|</span>
+      <span>jamesvv8bbl5q3sulvtp@gmail.com</span>
+      <span class="separator">|</span>
+      <a href="https://github.com/Schlaflied">github.com/Schlaflied</a>
+      <span class="separator">|</span>
+      <a href="https://linkedin.com/in/yuting-sun-48bbb4211">linkedin.com/in/yuting-sun-48bbb4211</a>
+      <span class="separator">|</span>
+      <span>Toronto, ON (Remote)</span>
+    </div>
+  </div>
+
+  <div class="section avoid-break">
+    <div class="section-title">Professional Summary</div>
+    <div class="summary-text">Data analyst and AI practitioner with hands-on experience building behavioral analytics pipelines, producing insights from complex data sets, and communicating findings to both technical and non-technical audiences. Built Plot Ark — a full-stack xAPI analytics platform with a five-category learner behavior classification model and a multi-agent AI pipeline — demonstrating the ability to integrate data analysis directly into AI agent workflows. Experienced with Python, SQL, and data visualization for reporting and decision support. Open-source contributor to Hive (YC-backed) with 4 merged/reviewed PRs including an AI agent deployed by real users. Recent graduate with strong ML/AI methodology foundations; available immediately for remote work.</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Core Competencies</div>
+    <div class="competencies-grid">
+      <span class="competency-tag">Data Analysis &amp; Behavioral Modeling</span>
+      <span class="competency-tag">AI Agent Workflows &amp; Performance Analysis</span>
+      <span class="competency-tag">Python (Pandas, Flask, LangChain)</span>
+      <span class="competency-tag">SQL &amp; Database Management</span>
+      <span class="competency-tag">Data Visualization &amp; Reporting</span>
+      <span class="competency-tag">xAPI &amp; Learning Analytics Pipelines</span>
+      <span class="competency-tag">Statistical Analysis &amp; Data Modeling</span>
+      <span class="competency-tag">RAG Systems &amp; Vector Search (Pinecone, ChromaDB)</span>
+      <span class="competency-tag">Stakeholder Communication — Technical &amp; Non-Technical</span>
+      <span class="competency-tag">Google Workspace · Excel · REST APIs</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Projects &amp; Open Source</div>
+
+    <div class="job avoid-break">
+      <div class="job-header">
+        <span class="job-company">Plot Ark — AI Learning Analytics Platform</span>
+        <span class="job-period">2024 – Present</span>
+      </div>
+      <div class="job-role">Creator &amp; Lead Developer — <a href="https://schlaflied.github.io/Plot-Ark/">schlaflied.github.io/Plot-Ark</a></div>
+      <ul>
+        <li>Built a behavioral analytics platform processing xAPI event streams — classified learner behavior into five categories using time-on-task cross-validation; integrated behavioral signals with metacognitive self-assessment data to detect fake completions; surfaced actionable insights via a 5-agent AI pipeline; produced client-facing dashboards translating complex event data into digestible reports for non-technical stakeholders</li>
+      </ul>
+    </div>
+
+    <div class="job avoid-break">
+      <div class="job-header">
+        <span class="job-company">Hive Agent Framework — YC-backed Open Source</span>
+        <span class="job-period">2025 – Present</span>
+      </div>
+      <div class="job-role">Open Source Contributor</div>
+      <ul>
+        <li>SDR Agent (PR #5178) merged into v0.7.3 — agent logic derived from a real outreach campaign (47% reply rate); three PRs under review forming a complete EdTech A2A data pipeline: Curriculum Research Agent, Document Intelligence A2A, xAPI Learning Record Agent (+3,817 lines, 5-node pipeline processing live user data)</li>
+      </ul>
+    </div>
+
+    <div class="job avoid-break">
+      <div class="job-header">
+        <span class="job-company">Job Autopilot — Campaign Analytics System</span>
+        <span class="job-period">2024 – 2025</span>
+      </div>
+      <div class="job-role">Data-Driven Campaign Designer</div>
+      <ul>
+        <li>Built Python pipelines analyzing reply rates, segment performance, and A/B messaging signals; translated engagement data into targeting recommendations — achieved 47% reply rate vs. 5–15% industry average through iterative data-informed optimization</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <div class="section">
+    <div class="section-title">Work Experience</div>
+
+    <div class="job avoid-break">
+      <div class="job-header">
+        <span class="job-company">SavvyPro Education Inc.</span>
+        <span class="job-period">Jul 2023 – Jul 2024</span>
+      </div>
+      <div class="job-role">Product &amp; Learning Technology Coordinator — Toronto, ON</div>
+      <ul>
+        <li>Built Python and Google Apps Script analytics pipelines generating real-time engagement and performance data for 100+ participant programs; produced recurring reports and visualizations for stakeholder review; identified actionable trends and recommended content adjustments that improved learner retention across cycles</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <div class="section avoid-break">
+    <div class="section-title">Education</div>
+    <div class="edu-item">
+      <div class="edu-header">
+        <span class="edu-title">Master of Professional Education — Western University</span>
+        <span class="edu-year">Sep 2024 – Aug 2025</span>
+      </div>
+    </div>
+    <div class="edu-item">
+      <div class="edu-header">
+        <span class="edu-title">Bachelor of Commerce, Human Resources — York University</span>
+        <span class="edu-year">Sep 2020 – Jun 2024</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section avoid-break">
+    <div class="section-title">Skills</div>
+    <div class="skills-cols">
+      <div class="skills-col">
+        <div class="skills-col-title">Data &amp; Analytics</div>
+        <ul>
+          <li>Python (Pandas, Flask, LangChain)</li>
+          <li>SQL &amp; database management</li>
+          <li>Data modeling &amp; statistical analysis</li>
+          <li>xAPI event stream processing</li>
+          <li>Data visualization &amp; dashboards</li>
+          <li>RAG: Pinecone, ChromaDB</li>
+          <li>Google Apps Script &amp; automation</li>
+        </ul>
+      </div>
+      <div class="skills-col">
+        <div class="skills-col-title">AI &amp; Development</div>
+        <ul>
+          <li>AI agent design (A2A pipelines)</li>
+          <li>OpenAI API · Google Gemini API</li>
+          <li>REST APIs &amp; integrations</li>
+          <li>React / TypeScript frontend</li>
+          <li>Docker · GCP · CI/CD</li>
+          <li>Git / GitHub</li>
+        </ul>
+      </div>
+      <div class="skills-col">
+        <div class="skills-col-title">Other</div>
+        <ul>
+          <li>MPEd — Western (Aug 2025)</li>
+          <li>BCom — York University</li>
+          <li>English (fluent)</li>
+          <li>Mandarin (native)</li>
+          <li>Japanese (~N2)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

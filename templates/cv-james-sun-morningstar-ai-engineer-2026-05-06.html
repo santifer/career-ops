@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>James Sun — CV</title>
+<style>
+  @font-face { font-family: 'Space Grotesk'; src: url('./fonts/space-grotesk-latin.woff2') format('woff2'); font-weight: 300 700; font-style: normal; font-display: swap; unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+  @font-face { font-family: 'DM Sans'; src: url('./fonts/dm-sans-latin.woff2') format('woff2'); font-weight: 100 1000; font-style: normal; font-display: swap; unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2213, U+2215, U+FEFF, U+FFFD; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { font-family: 'DM Sans', sans-serif; font-size: 10.5px; line-height: 1.4; color: #1a1a2e; background: #ffffff; padding: 0; margin: 0; }
+  .page { width: 100%; max-width: 820px; margin: 0 auto; padding: 2px 0; }
+  .header { margin-bottom: 18px; }
+  .header h1 { font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 700; color: #1a1a2e; letter-spacing: -0.02em; margin-bottom: 6px; line-height: 1.1; }
+  .header-gradient { height: 2px; background: #1a1a2e; border-radius: 1px; margin-bottom: 10px; }
+  .contact-row { display: flex; flex-wrap: wrap; gap: 8px 14px; font-size: 10.5px; line-height: 1.4; color: #555; }
+  .contact-row a { color: #555; text-decoration: none; }
+  .contact-row .separator { color: #ccc; }
+  .section { margin-bottom: 11px; }
+  .section-title { font-family: 'Space Grotesk', sans-serif; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #1a1a2e; border-bottom: 1.5px solid #1a1a2e; padding-bottom: 4px; margin-bottom: 10px; line-height: 1.2; }
+  .summary-text { font-size: 10px; line-height: 1.5; color: #2f2f2f; }
+  a { white-space: nowrap; }
+  .job { margin-bottom: 8px; }
+  .job-header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 4px; }
+  .job-company { font-family: 'Space Grotesk', sans-serif; font-size: 12.5px; font-weight: 600; color: #1a1a2e; }
+  .job-period { font-size: 10.5px; color: #777; white-space: nowrap; }
+  .job-role { font-size: 11px; font-weight: 600; color: #333; margin-bottom: 6px; }
+  .job ul { padding-left: 18px; margin-top: 6px; }
+  .job li { font-size: 10.5px; line-height: 1.6; color: #333; margin-bottom: 4px; }
+  .job li strong { font-weight: 600; }
+  .project-item { margin-bottom: 8px; }
+  .project-header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 4px; }
+  .project-name { font-family: 'Space Grotesk', sans-serif; font-size: 12.5px; font-weight: 600; color: #1a1a2e; }
+  .project-period { font-size: 10.5px; color: #777; white-space: nowrap; }
+  .project-role { font-size: 11px; font-weight: 600; color: #333; margin-bottom: 6px; }
+  .project-item ul { padding-left: 18px; margin-top: 6px; }
+  .project-item li { font-size: 10.5px; line-height: 1.6; color: #333; margin-bottom: 4px; }
+  .project-item li strong { font-weight: 600; }
+  .edu-item { margin-bottom: 8px; }
+  .edu-header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .edu-title { font-weight: 600; font-size: 11px; color: #333; }
+  .edu-org { color: #1a1a2e; font-weight: 500; }
+  .edu-year { font-size: 10px; color: #777; white-space: nowrap; }
+  .skills-block { margin-bottom: 5px; }
+  .skill-category { font-weight: 600; color: #333; font-size: 10.5px; }
+  .skill-item { font-size: 10.5px; color: #444; }
+  @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } .page { padding: 0; } }
+  .avoid-break, .job, .project-item, .edu-item { break-inside: avoid; page-break-inside: avoid; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header avoid-break">
+    <h1>James Sun</h1>
+    <div class="header-gradient"></div>
+    <div class="contact-row">
+      <span>jamesvv8bbl5q3sulvtp@gmail.com</span>
+      <span class="separator">|</span>
+      <span>416-732-5105</span>
+      <span class="separator">|</span>
+      <a href="https://github.com/Schlaflied">github.com/Schlaflied</a>
+      <span class="separator">|</span>
+      <span>Toronto, ON</span>
+    </div>
+  </div>
+
+  <div class="section avoid-break">
+    <div class="section-title">Professional Summary</div>
+    <div class="summary-text">
+      AI Engineer with hands-on experience designing, building, and operating production-grade AI systems — including MCP server integrations, multi-agent orchestration layers, RAG pipelines, and scalable backend services. Built Plot Ark from the ground up: a production multi-agent AI platform running Flask, PostgreSQL, and Redis with a 5-agent orchestration layer, LightRAG knowledge graph, xAPI behavioral data infrastructure, and MCP-compatible tooling. Technically fluent in Python (OOP, production code), PostgreSQL, RESTful API design, LLM/GenAI frameworks (LangChain patterns, RAG, embeddings, agent tool-calling), and AI-assisted development workflows using Claude Code and GitHub Copilot. Experienced owning features end-to-end from concept through deployment, writing clean maintainable code, debugging production systems, and producing clear technical documentation. Strong collaborator with product and design partners; committed to pragmatic evaluation of new tools against real product value. Authorized to work in Canada for any employer without sponsorship.
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Projects</div>
+
+    <div class="project-item">
+      <div class="project-header">
+        <span class="project-name">Plot Ark — Production Multi-Agent AI Platform</span>
+        <span class="project-period">2024 – Present</span>
+      </div>
+      <div class="project-role">Founder &amp; AI Engineer — Toronto, ON</div>
+      <ul>
+        <li>Designed and built a production-grade multi-agent AI system — architecting a Flask + PostgreSQL + Redis backend with a 5-agent orchestration layer, MCP-compatible server integrations, and an AI Gateway layer routing requests across specialized agents; owned every feature end-to-end from concept through deployment and monitoring.</li>
+        <li>Built RAG and knowledge graph infrastructure — implementing LightRAG for long-term memory and semantic retrieval, designing embedding pipelines and vector search layers, and integrating LLM APIs (Claude, GPT-4o) with structured tool-calling and agent handoff logic.</li>
+        <li>Implemented xAPI behavioral analytics data layer — designing the event schema, data ingestion pipeline, validation controls, and reporting dashboards to track system performance and user engagement; achieved a <strong>47% engagement rate</strong> against a 5–15% industry benchmark.</li>
+        <li>Used AI-assisted development throughout — building with Claude Code and GitHub Copilot to accelerate feature delivery; wrote clean, well-tested Python code with logging and monitoring instrumentation for production reliability and debuggability.</li>
+        <li>Created and maintained technical documentation and user-facing guides — producing architecture docs, API references, and integration playbooks to support ongoing system maintainability and knowledge sharing.</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <div class="section">
+    <div class="section-title">Experience</div>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-company">Parking Control Services Group</span>
+        <span class="job-period">Mar 2024 – Present</span>
+      </div>
+      <div class="job-role">AI &amp; Systems Engineer — North York, ON</div>
+      <ul>
+        <li>Built AI-powered automation systems integrating GPT-4o APIs and Microsoft 365 — designed and deployed workflow automation pipelines that reduced manual processing overhead by over 80%; maintained and debugged production integrations across operational systems.</li>
+      </ul>
+    </div>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-company">SavvyPro Education Inc.</span>
+        <span class="job-period">Jul 2023 – Jul 2024</span>
+      </div>
+      <div class="job-role">Digital Systems &amp; Analytics Coordinator — Toronto, ON</div>
+      <ul>
+        <li>Built and maintained data systems and analytics infrastructure — designing engagement dashboards, managing data pipelines, and operating LMS platform integrations for <strong>100+ users per cohort</strong>; applied data-driven insights to continuously improve platform performance.</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <div class="section avoid-break">
+    <div class="section-title">Education</div>
+    <div class="edu-item">
+      <div class="edu-header">
+        <span class="edu-title"><span class="edu-org">Western University</span> — Master of Professional Education (Adult Learning &amp; Organizational Change)</span>
+        <span class="edu-year">Sep 2024 – Aug 2025</span>
+      </div>
+    </div>
+    <div class="edu-item">
+      <div class="edu-header">
+        <span class="edu-title"><span class="edu-org">York University</span> — Bachelor of Commerce, Human Resources Management</span>
+        <span class="edu-year">Sep 2020 – Jun 2024</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section avoid-break">
+    <div class="section-title">Skills</div>
+    <div class="skills-block">
+      <span class="skill-category">AI &amp; Backend Engineering:</span>
+      <span class="skill-item"> Python (OOP, production), Flask, PostgreSQL, Redis, RESTful API design, multi-agent orchestration, MCP server/gateway integration, RAG pipelines, LightRAG knowledge graph, LLM API integration (Claude, GPT-4o), embeddings, vector search, agent tool-calling</span>
+    </div>
+    <div class="skills-block">
+      <span class="skill-category">GenAI Frameworks &amp; Dev Tools:</span>
+      <span class="skill-item"> LangChain patterns, AWS concepts (EC2, S3, API Gateway), Claude Code, GitHub Copilot, n8n workflow automation, xAPI data layer, Docker concepts, Agile/Jira, logging and monitoring, technical documentation</span>
+    </div>
+    <div class="skills-block">
+      <span class="skill-category">Languages:</span>
+      <span class="skill-item"> English (fluent), Mandarin (native), Japanese (conversational ~N2)</span>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
