@@ -74,9 +74,11 @@ const SYSTEM_PATHS = [
   'dashboard/',
   'templates/',
   'fonts/',
+  '.agents/',
   '.claude/skills/',
   '.gemini/commands/',
   'docs/',
+  'writing-samples/README.md',
   'VERSION',
   'DATA_CONTRACT.md',
   'CONTRIBUTING.md',
@@ -99,11 +101,18 @@ const USER_PATHS = [
   'reports/',
   'output/',
   'jds/',
+  'writing-samples/',
 ];
+
+function parseVersionFile(raw) {
+  // VERSION may carry a release-please marker, e.g. "1.6.0 # x-release-please-version".
+  // Take the first whitespace-delimited token so the marker doesn't break semver parsing.
+  return raw.trim().split(/\s+/)[0] || '';
+}
 
 function localVersion() {
   const vPath = join(ROOT, 'VERSION');
-  return existsSync(vPath) ? readFileSync(vPath, 'utf-8').trim() : '0.0.0';
+  return existsSync(vPath) ? parseVersionFile(readFileSync(vPath, 'utf-8')) : '0.0.0';
 }
 
 function compareVersions(a, b) {
@@ -180,7 +189,7 @@ async function check() {
 
   if (versionResult.status === 'fulfilled' && versionResult.value.ok) {
     try {
-      const raw = (await versionResult.value.text()).trim();
+      const raw = parseVersionFile(await versionResult.value.text());
       const match = raw.match(SEMVER_RE);
       remote = match ? match[1] : '';
     } catch {
@@ -282,6 +291,9 @@ async function apply() {
       for (const entry of gitStatusEntries()) {
         const file = entry.path;
         if (initialStatusPaths.has(file)) continue;
+        // Explicit SYSTEM_PATHS entries override USER_PATHS prefix matches.
+        // (e.g. writing-samples/README.md is system-owned doc inside a user dir.)
+        if (SYSTEM_PATHS.includes(file)) continue;
         for (const userPath of USER_PATHS) {
           if (file.startsWith(userPath)) {
             console.error(`SAFETY VIOLATION: User file was modified: ${file}`);
