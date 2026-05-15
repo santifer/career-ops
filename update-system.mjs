@@ -16,7 +16,7 @@
  */
 
 import { execFileSync, execSync } from 'child_process';
-import { readFileSync, writeFileSync, existsSync, unlinkSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, unlinkSync, rmSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -304,8 +304,13 @@ async function apply() {
       }
     }
 
-    // 4. Validate: check NO user files were touched
-    let userFileTouched = false;
+    // 4. Validate: check NO user files were touched.
+    //
+    // Track which user paths the update unexpectedly touched so we
+    // can revert them too — reverting only `updated` would leave the
+    // repo in a half-applied state with the user-layer changes still
+    // staged.
+    const violatedUserPaths = new Set();
     try {
       for (const entry of gitStatusEntries()) {
         const file = entry.path;
@@ -316,18 +321,50 @@ async function apply() {
         for (const userPath of USER_PATHS) {
           if (file.startsWith(userPath)) {
             console.error(`SAFETY VIOLATION: User file was modified: ${file}`);
-            userFileTouched = true;
+            violatedUserPaths.add(file);
           }
         }
       }
-    } catch {
-      // git status failed, skip validation
+    } catch (err) {
+      // Fail closed: if we can't validate the safety invariant we must
+      // not silently proceed — that would let a real violation slip
+      // through. Revert what we already applied and abort.
+      console.error(`Aborting: could not validate user-layer safety (${err.message}).`);
+      try {
+        revertPaths(updated);
+      } catch (revertErr) {
+        // If the revert itself fails (likely whatever broke `git
+        // status` also broke `git checkout --`), don't lose the
+        // original validation error — chain it via `cause`.
+        throw new Error(
+          `Validation failed (${err.message}) and revert also failed (${revertErr.message})`,
+          { cause: err },
+        );
+      }
+      throw err;
     }
 
-    if (userFileTouched) {
+    if (violatedUserPaths.size > 0) {
       console.error('Aborting: user files were touched. Rolling back...');
-      revertPaths(updated);
-      process.exit(1);
+      // Revert BOTH the system-layer updates and the user-layer paths
+      // the update unexpectedly modified — otherwise the repo is left
+      // in a half-applied state.
+      const violation = new Error('Update aborted: user files were touched.');
+      try {
+        revertPaths([...updated, ...violatedUserPaths]);
+      } catch (revertErr) {
+        // If the revert itself fails, don't lose the safety-violation
+        // diagnostic — chain it via `cause` so the user sees both.
+        throw new Error(
+          `Safety violation (${violation.message}) and revert also failed (${revertErr.message})`,
+          { cause: violation },
+        );
+      }
+      // `throw` (not `process.exit`) so the outer `finally` runs and
+      // .update-lock is removed. Exiting here would leak the lock and
+      // permanently block subsequent updates until the user deletes
+      // it manually.
+      throw violation;
     }
 
     // 5. Install any new dependencies
@@ -378,19 +415,67 @@ function rollback() {
     const latest = branchList[0];
     console.log(`Rolling back to: ${latest}`);
 
-    // Checkout system files from backup branch
+    // Checkout system files from backup branch.
+    //
+    // Two failure modes for `git checkout` here:
+    //   (a) the path didn't exist in the backup branch — the apply()
+    //       that produced this backup was on an older version that
+    //       didn't track this path yet. Rollback must DELETE the path
+    //       so the working tree mirrors the backup state.
+    //   (b) anything else — propagate so we don't silently leave the
+    //       working tree in a partially-restored state.
+    //
+    // Limitation: `git checkout <ref> -- <dir>` restores blobs from
+    // the backup tree but doesn't remove files that were added INSIDE
+    // an already-tracked directory between backup and rollback. Rolling
+    // back per-file via `git diff --name-status <backup>` would catch
+    // that but is a larger change; tracked separately if it ever bites.
+    const restored = [];
+    const removed = [];
     for (const path of SYSTEM_PATHS) {
       try {
         git('checkout', latest, '--', path);
-      } catch {
-        // File may not have existed in backup
+        restored.push(path);
+      } catch (err) {
+        const pathspec = path.endsWith('/') ? path.slice(0, -1) : path;
+        let existedInBackup = true;
+        try {
+          git('cat-file', '-e', `${latest}:${pathspec}`);
+        } catch {
+          existedInBackup = false;
+        }
+        if (existedInBackup) {
+          throw err;
+        }
+        // Path was introduced by a later apply() — remove it so the
+        // tree truly matches the backup. `git rm` stages the deletion
+        // for tracked files; `rmSync` cleans up the untracked-but-
+        // on-disk case (e.g. an apply() that crashed between checkout
+        // and commit, leaving the path untracked locally).
+        git('rm', '-r', '-f', '--ignore-unmatch', '--', pathspec);
+        try {
+          rmSync(join(ROOT, pathspec), { recursive: true, force: true });
+        } catch {
+          // Already gone, or not present on disk — fine.
+        }
+        removed.push(pathspec);
       }
     }
 
-    addPaths(SYSTEM_PATHS);
-    git('commit', '-m', `chore: rollback system files from ${latest}`);
+    if (restored.length > 0) addPaths(restored);
+    try {
+      git('commit', '-m', `chore: rollback system files from ${latest}`);
+    } catch {
+      // Tolerate any commit failure here — the common case is the
+      // "nothing to commit" no-op when the working tree already
+      // matched the backup (e.g. user ran rollback twice). This
+      // mirrors apply()'s broad-catch in the commit step; narrowing
+      // to a specific git-error string is fragile and would diverge
+      // from that pattern. Genuine setup problems (hooks, signing,
+      // disk full) will resurface on the next normal git operation.
+    }
 
-    console.log(`Rollback complete. System files restored from ${latest}.`);
+    console.log(`Rollback complete. Restored ${restored.length} path(s) from ${latest}, removed ${removed.length} path(s) added after the backup.`);
     console.log('Your data (CV, profile, tracker, reports) was not affected.');
   } catch (err) {
     console.error('Rollback failed:', err.message);
@@ -409,12 +494,20 @@ function dismiss() {
 
 const cmd = process.argv[2] || 'check';
 
-switch (cmd) {
-  case 'check': await check(); break;
-  case 'apply': await apply(); break;
-  case 'rollback': rollback(); break;
-  case 'dismiss': dismiss(); break;
-  default:
-    console.log('Usage: node update-system.mjs [check|apply|rollback|dismiss]');
-    process.exit(1);
+try {
+  switch (cmd) {
+    case 'check': await check(); break;
+    case 'apply': await apply(); break;
+    case 'rollback': rollback(); break;
+    case 'dismiss': dismiss(); break;
+    default:
+      console.log('Usage: node update-system.mjs [check|apply|rollback|dismiss]');
+      process.exit(1);
+  }
+} catch (err) {
+  // Subcommands now `throw` on aborts so their outer `finally` blocks
+  // run (e.g. apply() must release `.update-lock`). Print a clean
+  // message here instead of letting Node spit out a stack trace.
+  console.error(err.message || err);
+  process.exit(1);
 }
