@@ -348,7 +348,7 @@ if (fileExists('modes/add.md')) {
   }
 
   // Must ask for confirmation before writing (ethical guard)
-  if (addMode.includes('confirm') || addMode.includes('Proceed') || addMode.includes('preview')) {
+  if (addMode.includes('confirm') || addMode.includes('preview')) {
     pass('add.md requires confirmation before writing');
   } else {
     fail('add.md must require user confirmation before writing to cv.md');
