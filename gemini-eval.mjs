@@ -231,10 +231,11 @@ try {
   ]);
   evaluationText = result.response.text();
 } catch (err) {
-  console.error('❌  Gemini API error:', err.message);
-  if (err.message?.includes('API_KEY')) {
+  const sanitizedMsg = (err.message || '').split(apiKey).join('[REDACTED]');
+  console.error('❌  Gemini API error:', sanitizedMsg);
+  if (sanitizedMsg.includes('API_KEY')) {
     console.error('    Check your GEMINI_API_KEY in .env');
-  } else if (err.message?.includes('quota') || err.message?.includes('rate')) {
+  } else if (sanitizedMsg.includes('quota') || sanitizedMsg.includes('rate')) {
     console.error('    You may have hit the free-tier rate limit. Wait 60s and retry.');
   }
   process.exit(1);
@@ -264,8 +265,15 @@ let legitimacy = 'unknown';
 if (summaryMatch) {
   const block = summaryMatch[1];
   const extract = (key) => {
-    const m = block.match(new RegExp(`${key}:\\s*(.+)`));
-    return m ? m[1].trim() : 'unknown';
+    const prefix = `${key}:`;
+    const lines = block.split('\n');
+    for (const line of lines) {
+      const trimmed = line.trimStart();
+      if (trimmed.startsWith(prefix)) {
+        return trimmed.slice(prefix.length).trim();
+      }
+    }
+    return 'unknown';
   };
   company    = extract('COMPANY');
   role       = extract('ROLE');
