@@ -159,6 +159,26 @@ npm run gemini:eval -- "JD text here"
 
 > **Free tier:** Both options work without billing. Native CLI uses Google OAuth; the API script uses `gemini-2.5-flash` (15 RPM, 1M tokens/day free).
 
+## Kimi Integration
+
+Career-ops supports using Moonshot's Kimi API (`kimi-k2.6`) via a standalone evaluator script. This provides advanced reasoning and 256K context for job description evaluation without needing any CLI tools.
+
+```bash
+# 1. Get an API key at https://platform.moonshot.cn/ (China) or https://platform.moonshot.ai/ (Global)
+cp .env.example .env
+# Edit .env → set KIMI_API_KEY=your_key_here
+
+# 2. Install dependencies
+npm install
+
+# 3. Evaluate a job description
+node kimi-eval.mjs "We are looking for a Senior AI Engineer..."
+node kimi-eval.mjs --file ./jds/my-job.txt
+npm run kimi:eval -- "JD text here"
+```
+
+> **API Limits & Models:** Moonshot's "Tier 0" free API provides a limited quota (capped at 3 RPM). For sustained workflows or batch evaluations, accounts require a ~$1 minimum recharge at platform.moonshot.cn. The script defaults to Moonshot's flagship `kimi-k2.6` (a 1-trillion-parameter MoE model with 256K context and advanced reasoning). For standard or simple JDs, switching to the base `moonshot-v1-8k` model in `.env` is recommended as it executes significantly faster and cheaper.
+
 ## Usage
 
 Career-ops is a single slash command with multiple modes:
