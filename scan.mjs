@@ -17,6 +17,7 @@
 
 import { readFileSync, writeFileSync, appendFileSync, existsSync, mkdirSync } from 'fs';
 import yaml from 'js-yaml';
+import { fetchWithTimeout, poolMap } from './lib/fetch-utils.mjs';
 const parseYaml = yaml.load;
 
 // ── Config ──────────────────────────────────────────────────────────
@@ -34,7 +35,7 @@ const FETCH_TIMEOUT_MS = 10_000;
 
 // ── API detection ───────────────────────────────────────────────────
 
-function detectApi(company) {
+export function detectApi(company) {
   // Greenhouse: explicit api field
   if (company.api && company.api.includes('greenhouse')) {
     return { type: 'greenhouse', url: company.api };
@@ -190,58 +191,50 @@ const PARSERS = {
 // ── Fetch with timeout ──────────────────────────────────────────────
 
 async function fetchJson(url) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-  try {
-    const res = await fetch(url, { signal: controller.signal });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.json();
-  } finally {
-    clearTimeout(timer);
-  }
+  const { ok, status, text } = await fetchWithTimeout(url, {}, FETCH_TIMEOUT_MS);
+  if (!ok) throw new Error(`HTTP ${status}`);
+  return JSON.parse(text);
 }
 
 // Workday requires a POST with a JSON body; supports pagination via offset.
-// Returns merged jobPostings array across all pages.
+// Each page gets its own timeout (FETCH_TIMEOUT_MS); a cumulative budget
+// scaled to maxResults caps the total request time so a single huge tenant
+// (e.g. Micron's 2,889-job board) doesn't stall the whole scan.
 async function fetchWorkday(apiUrl, { searchText = '', maxResults = 500 } = {}) {
-  // Per-company timeout: scale with maxResults (≈200ms/page, 20 results/page).
-  // Minimum 20s; large boards (Micron 2,889 jobs) capped at maxResults to avoid timeout.
   const estimatedPages = Math.ceil(maxResults / 20);
-  const timeoutMs = Math.max(FETCH_TIMEOUT_MS * 2, estimatedPages * 500);
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    // Workday's public API caps at 20 results per page (limit > 20 → HTTP 400).
-    const LIMIT = 20;
-    let offset = 0;
-    let allPostings = [];
-    let total = Infinity;
+  const totalBudgetMs = Math.max(FETCH_TIMEOUT_MS * 2, estimatedPages * 500);
+  const startedAt = Date.now();
 
-    while (offset < total && allPostings.length < maxResults) {
-      const res = await fetch(apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ appliedFacets: {}, limit: LIMIT, offset, searchText }),
-        signal: controller.signal,
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      const postings = data.jobPostings || [];
-      total = data.total ?? postings.length;
-      allPostings = allPostings.concat(postings);
-      offset += postings.length;
-      if (postings.length < LIMIT) break; // no more pages
+  // Workday's public API caps at 20 results per page (limit > 20 → HTTP 400).
+  const LIMIT = 20;
+  let offset = 0;
+  let allPostings = [];
+  let total = Infinity;
+
+  while (offset < total && allPostings.length < maxResults) {
+    if (Date.now() - startedAt > totalBudgetMs) {
+      throw new Error(`workday fetch exceeded total budget (${totalBudgetMs}ms)`);
     }
-
-    return { jobPostings: allPostings, total: allPostings.length };
-  } finally {
-    clearTimeout(timer);
+    const { ok, status, text } = await fetchWithTimeout(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ appliedFacets: {}, limit: LIMIT, offset, searchText }),
+    }, FETCH_TIMEOUT_MS);
+    if (!ok) throw new Error(`HTTP ${status}`);
+    const data = JSON.parse(text);
+    const postings = data.jobPostings || [];
+    total = data.total ?? postings.length;
+    allPostings = allPostings.concat(postings);
+    offset += postings.length;
+    if (postings.length < LIMIT) break; // no more pages
   }
+
+  return { jobPostings: allPostings, total: allPostings.length };
 }
 
 // ── Title filter ────────────────────────────────────────────────────
 
-function buildTitleFilter(titleFilter) {
+export function buildTitleFilter(titleFilter) {
   const positive = (titleFilter?.positive || []).map(k => k.toLowerCase());
   const negative = (titleFilter?.negative || []).map(k => k.toLowerCase());
 
@@ -348,23 +341,7 @@ function appendToScanHistory(offers, date) {
   appendFileSync(SCAN_HISTORY_PATH, lines, 'utf-8');
 }
 
-// ── Parallel fetch with concurrency limit ───────────────────────────
-
-async function parallelFetch(tasks, limit) {
-  const results = [];
-  let i = 0;
-
-  async function next() {
-    while (i < tasks.length) {
-      const task = tasks[i++];
-      results.push(await task());
-    }
-  }
-
-  const workers = Array.from({ length: Math.min(limit, tasks.length) }, () => next());
-  await Promise.all(workers);
-  return results;
-}
+// parallelFetch replaced by poolMap from lib/fetch-utils.mjs (shared with triage/heartbeat).
 
 // ── Main ────────────────────────────────────────────────────────────
 
@@ -444,7 +421,7 @@ async function main() {
     }
   });
 
-  await parallelFetch(tasks, CONCURRENCY);
+  await poolMap(tasks, (task) => task(), CONCURRENCY);
 
   // 5. Write results
   if (!dryRun && newOffers.length > 0) {
@@ -485,7 +462,11 @@ async function main() {
   console.log('→ Share results and get help: https://discord.gg/8pRpHETxa4');
 }
 
-main().catch(err => {
-  console.error('Fatal:', err.message);
-  process.exit(1);
-});
+// Guard: only run main() when invoked as the entrypoint, so test files can
+// import this module without triggering the script.
+if (import.meta.url === `file://${process.argv[1]}`) {
+  main().catch(err => {
+    console.error('Fatal:', err.message);
+    process.exit(1);
+  });
+}

@@ -47,6 +47,7 @@ import {
 import { homedir } from 'os';
 import { join } from 'path';
 import { runCheck as humanizeCheck } from './humanize-check.mjs';
+import { SONNET } from '../lib/models.mjs';
 
 const ROOT = process.cwd();
 const args = process.argv.slice(2);
@@ -645,7 +646,7 @@ Generate a cover letter for ${role.company} / ${role.role} at the same quality l
         'content-type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
+        model: SONNET,
         max_tokens: 1200,
         temperature: 1,
         system: systemPrompt,
@@ -703,7 +704,7 @@ OUTPUT: Full corrected cover letter. Final word count on the last line: [N words
           'content-type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-6',
+          model: SONNET,
           max_tokens: 1400,
           temperature: 0,
           system: systemPrompt,

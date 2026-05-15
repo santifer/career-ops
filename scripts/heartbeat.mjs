@@ -20,6 +20,7 @@ import nodemailer from 'nodemailer';
 import { marked } from 'marked';
 import { classifyLiveness } from '../liveness-core.mjs';
 import { getCachedUrl } from '../lib/resolve-ats-url.mjs';
+import { poolMap } from '../lib/fetch-utils.mjs';
 
 const ROOT = process.cwd();
 const args = process.argv.slice(2);
@@ -404,7 +405,7 @@ const APPLY_PACK_TOP_N = 3;
 // means the company replied but Mitchell hasn't yet acted (e.g., scheduling).
 const ACTIONABLE_STATUSES = new Set(['Evaluated', 'Responded']);
 
-// Local static-file server (started by scripts/dashboard-server.mjs via
+// Local static-file server (started by dashboard-server.mjs via
 // launchd) — lets email links open the dashboard and individual reports
 // directly in Chrome. http://localhost is one of the few non-https schemes
 // Gmail keeps clickable.
@@ -983,14 +984,17 @@ async function generateHeartbeat() {
   // Apply-Now Queue — every scored evaluation awaiting action, top → bottom.
   const trackerRows = parseApplicationsTracker(join(ROOT, 'data/applications.md'));
   const applyNowRaw = getApplyNowQueue(trackerRows);
-  // Pre-flight: verify every Apply-Now URL is live. Filter out expired ones
-  // and mark them as Discarded in the tracker. Keep "uncertain" rows visible
-  // with a flag so the user knows the status couldn't be confirmed (typical
-  // for SPA-heavy ATSes like Ashby/Workday that need JS hydration).
+  // Pre-flight: verify every Apply-Now URL is live in parallel (5-way pool).
+  // Serial used to take ~8s × N rows; with 20+ rows that's >2.5 min of network
+  // latency. The pool runs verifyApplyNowLink concurrently while preserving
+  // input order so the subsequent expired-filter loop produces a stable result.
+  const verifyResults = await poolMap(
+    applyNowRaw,
+    async (r) => ({ r, status: await verifyApplyNowLink(getReportUrl(r.reportPath)) }),
+    5,
+  );
   const applyNow = [];
-  for (const r of applyNowRaw) {
-    const url = getReportUrl(r.reportPath);
-    const status = await verifyApplyNowLink(url);
+  for (const { r, status } of verifyResults) {
     r._linkStatus = status;
     if (status.result === 'expired') {
       console.log(`  ✗ Removed expired: #${r.num} ${r.company} — ${r.role.slice(0, 50)} (${status.reason})`);

@@ -463,7 +463,7 @@ function equityBadge(company) {
       kind: 'equity', company: company || '', stage: 'unknown', posture: '',
       confidence: '', updated: updated || '', empty: true, hint: tip,
     });
-    return `<span class="equity-badge equity-badge-empty pill-popover-trigger" title="${escape(tip)}" aria-label="${escape(tip)}" tabindex="0" role="button" data-pill='${escape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">—</span>`;
+    return `<span class="equity-badge equity-badge-empty pill-popover-trigger" title="${htmlEscape(tip)}" aria-label="${htmlEscape(tip)}" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">—</span>`;
   }
   const meta = EQUITY_STAGE_META[data.stage] || EQUITY_STAGE_META.unknown;
   const tipParts = [data.posture];
@@ -476,7 +476,7 @@ function equityBadge(company) {
     confidence: data.confidence || '', sources: data.sources || [],
     updated: updated || '', empty: false,
   });
-  return `<span class="equity-badge ${meta.cls} pill-popover-trigger" data-equity-stage="${meta.cls}" title="${escape(tip)}" aria-label="${escape(`${meta.label}: ${tip}`)}" tabindex="0" role="button" data-pill='${escape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">${meta.emoji} ${escape(meta.label)}</span>`;
+  return `<span class="equity-badge ${meta.cls} pill-popover-trigger" data-equity-stage="${meta.cls}" title="${htmlEscape(tip)}" aria-label="${htmlEscape(`${meta.label}: ${tip}`)}" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">${meta.emoji} ${htmlEscape(meta.label)}</span>`;
 }
 
 // ── Base salary parsing + cell rendering ─────────────────────────────────────
@@ -603,7 +603,7 @@ function renderBaseCell(reportPath, floors, locationRaw) {
     const detail = JSON.stringify({
       kind: 'base', empty: true, raw: compRaw || '', hint: tip,
     });
-    return `<span class="base-chip base-chip-empty pill-popover-trigger" title="${escape(tip)}" aria-label="${escape(tip)}" tabindex="0" role="button" data-pill='${escape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">—</span>`;
+    return `<span class="base-chip base-chip-empty pill-popover-trigger" title="${htmlEscape(tip)}" aria-label="${htmlEscape(tip)}" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">—</span>`;
   }
   const { min, max, currency, isTotalComp } = parsed;
   let cls = 'base-chip-unknown';
@@ -627,7 +627,7 @@ function renderBaseCell(reportPath, floors, locationRaw) {
     range, label, raw: compRaw || '',
     floors: { target: floors.targetMin, floor: 175 },
   });
-  const chip = `<span class="base-chip ${cls} pill-popover-trigger" data-base-min="${min}" title="${escape(tip)}" aria-label="${escape(tip)}" tabindex="0" role="button" data-pill='${escape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">${escape(label)}</span>`;
+  const chip = `<span class="base-chip ${cls} pill-popover-trigger" data-base-min="${min}" title="${htmlEscape(tip)}" aria-label="${htmlEscape(tip)}" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">${htmlEscape(label)}</span>`;
   const badge = serverColBadge(parsed, locationRaw || '');
   return badge ? `<span class="base-fx-wrap">${chip}${badge}</span>` : chip;
 }
@@ -724,7 +724,7 @@ function renderLocationCell(reportPath, company, role) {
   const reloc = enrich?.relocation || null;
   if (!rawField) {
     const detail = JSON.stringify({ kind: 'location', empty: true, raw: '', hint: 'Location not parsed — see report', relocation: reloc });
-    return `<span class="location-chip location-chip-empty pill-popover-trigger" title="Location not parsed — see report" aria-label="Location not parsed — see report" tabindex="0" role="button" data-pill='${escape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">—</span>`;
+    return `<span class="location-chip location-chip-empty pill-popover-trigger" title="Location not parsed — see report" aria-label="Location not parsed — see report" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">—</span>`;
   }
   const cls = classifyLocation(rawField, '');
   let icon = '';
@@ -753,7 +753,7 @@ function renderLocationCell(reportPath, company, role) {
   // Mark chip with a small "✈" if relocation data exists, so the user knows
   // the popover has extra detail beyond plain location.
   const reloMark = reloc ? '<span class="location-relo-mark" title="Relocation package data available" aria-hidden="true">✈</span>' : '';
-  return `<span class="location-chip ${chipCls} pill-popover-trigger" data-location-status="${cls.status}" title="${escape(tip)}" aria-label="${escape(`${label}: ${tip}`)}" tabindex="0" role="button" data-pill='${escape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">${icon} ${escape(label)}${reloMark}</span>`;
+  return `<span class="location-chip ${chipCls} pill-popover-trigger" data-location-status="${cls.status}" title="${htmlEscape(tip)}" aria-label="${htmlEscape(`${label}: ${tip}`)}" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">${icon} ${htmlEscape(label)}${reloMark}</span>`;
 }
 
 // Benefits cell: shows a single primary signal (toxicity grade or "—") with
@@ -763,7 +763,7 @@ function renderBenefitsCell(company, role) {
   const enrich = getRoleEnrichment(company, role);
   if (!enrich || (!enrich.benefits && !enrich.sentiment)) {
     const detail = JSON.stringify({ kind: 'benefits', empty: true, hint: 'No enrichment data yet — run scripts/enrich-roles.mjs to populate.' });
-    return `<span class="benefits-chip benefits-chip-empty pill-popover-trigger" title="No benefits data yet" aria-label="No benefits data yet" tabindex="0" role="button" data-pill='${escape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">—</span>`;
+    return `<span class="benefits-chip benefits-chip-empty pill-popover-trigger" title="No benefits data yet" aria-label="No benefits data yet" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">—</span>`;
   }
   const tox = parseInt(enrich.sentiment?.team_toxicity_grade, 10);
   const toxValid = Number.isFinite(tox) && tox >= 1 && tox <= 5;
@@ -791,7 +791,7 @@ function renderBenefitsCell(company, role) {
     biweekly_math: enrich.biweekly_math || null,
     confidence: enrich.confidence || '',
   });
-  return `<span class="benefits-chip ${toxCls} pill-popover-trigger" data-tox-grade="${toxValid ? tox : ''}" title="${escape(tip)}" aria-label="${escape(tip)}" tabindex="0" role="button" data-pill='${escape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">${escape(label)}</span>`;
+  return `<span class="benefits-chip ${toxCls} pill-popover-trigger" data-tox-grade="${toxValid ? tox : ''}" title="${htmlEscape(tip)}" aria-label="${htmlEscape(tip)}" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">${htmlEscape(label)}</span>`;
 }
 
 // People cell: shows recruiter + hiring-manager LinkedIn links. Compact chip
@@ -809,7 +809,7 @@ function renderPeopleCell(company, role) {
   // Empty state requires NO research AND NO network signal.
   if (!has_research && !has1st && !has2nd) {
     const detail = JSON.stringify({ kind: 'people', empty: true, hint: 'No recruiter/hiring-manager research yet — run scripts/enrich-roles.mjs.' });
-    return `<span class="people-chip people-chip-empty pill-popover-trigger" title="No people data yet" aria-label="No people data yet" tabindex="0" role="button" data-pill='${escape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">—</span>`;
+    return `<span class="people-chip people-chip-empty pill-popover-trigger" title="No people data yet" aria-label="No people data yet" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">—</span>`;
   }
   const rec = people?.likely_recruiter?.name && people.likely_recruiter.name !== 'unknown' ? '👤' : '';
   const hm  = people?.likely_hiring_manager?.name && people.likely_hiring_manager.name !== 'unknown' ? '👔' : '';
@@ -832,7 +832,7 @@ function renderPeopleCell(company, role) {
     network: network || null,
     confidence: enrich?.confidence || '',
   });
-  return `<span class="people-chip pill-popover-trigger" title="${escape(tip)}" aria-label="${escape(tip)}" tabindex="0" role="button" data-pill='${escape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">${escape(labelMark)}</span>`;
+  return `<span class="people-chip pill-popover-trigger" title="${htmlEscape(tip)}" aria-label="${htmlEscape(tip)}" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">${htmlEscape(labelMark)}</span>`;
 }
 
 // Safe wrapper — returns null if the CSV is absent so the dashboard
@@ -904,24 +904,24 @@ function renderReportToHtml(reportPath, outputDir) {
 <div class="meta-card">
   <table class="meta-table">
     ${meta.map(m => {
-      let valHtml = escape(m.value);
+      let valHtml = htmlEscape(m.value);
       // Render URL value as a clickable link
       if (m.key.toLowerCase() === 'url' && /^https?:\/\//.test(m.value)) {
-        valHtml = `<a href="${escape(m.value)}" target="_blank" rel="noopener">${escape(m.value)}</a>`;
+        valHtml = `<a href="${htmlEscape(m.value)}" target="_blank" rel="noopener">${htmlEscape(m.value)}</a>`;
       }
       // Score gets a green badge
       if (m.key.toLowerCase() === 'score') {
         const scoreNum = parseFloat((m.value.match(/(\d+(?:\.\d+)?)/) || [])[1] || 0);
         const cls = scoreNum >= 4.0 ? 'score-strong' : scoreNum >= 3.0 ? 'score-moderate' : 'score-weak';
-        valHtml = `<span class="badge ${cls}" style="font-size:14px">${escape(m.value)}</span>`;
+        valHtml = `<span class="badge ${cls}" style="font-size:14px">${htmlEscape(m.value)}</span>`;
       }
       // Legitimacy gets color-coded
       if (m.key.toLowerCase() === 'legitimacy') {
         const v = m.value.toLowerCase();
         const cls = v.includes('high') ? 'score-strong' : v.includes('proceed') ? 'score-moderate' : 'score-weak';
-        valHtml = `<span class="badge ${cls}">${escape(m.value)}</span>`;
+        valHtml = `<span class="badge ${cls}">${htmlEscape(m.value)}</span>`;
       }
-      return `<tr><th>${escape(m.key)}</th><td>${valHtml}</td></tr>`;
+      return `<tr><th>${htmlEscape(m.key)}</th><td>${valHtml}</td></tr>`;
     }).join('\n    ')}
   </table>
 </div>`;
@@ -937,7 +937,7 @@ function renderReportToHtml(reportPath, outputDir) {
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>${escape(title)} · Career-Ops</title>
+<title>${htmlEscape(title)} · Career-Ops</title>
 <meta name="color-scheme" content="dark">
 <style>
   :root {
@@ -1104,7 +1104,7 @@ function renderReportToHtml(reportPath, outputDir) {
 ${inner}
 <hr>
 <div class="nav-back">
-  <span class="brand-eyebrow">Report · ${escape(basename(reportPath, '.md'))}</span>
+  <span class="brand-eyebrow">Report · ${htmlEscape(basename(reportPath, '.md'))}</span>
   <span class="nav-spacer"></span>
   <a href="../index.html">← Back to dashboard</a>
   <span style="color:var(--text-4)">·</span>
@@ -1793,7 +1793,7 @@ function tierTooltip(code) {
 
 // ── HTML rendering ────────────────────────────────────────────────
 
-const escape = (s) => String(s)
+const htmlEscape = (s) => String(s)
   .replace(/&/g, '&amp;')
   .replace(/</g, '&lt;')
   .replace(/>/g, '&gt;')
@@ -1873,7 +1873,7 @@ function companyCareersUrl(company) {
 // re-eval badge → decision badge → semicolon-split bullet list.
 function formatTrackerNote(text) {
   if (!text || !text.trim()) return '';
-  const esc = escape; // reuse existing escape helper
+  const esc = htmlEscape; // reuse existing htmlEscape helper
 
   let rest = text.trim();
 
@@ -1942,14 +1942,14 @@ function renderRow(r, idx) {
   const verifyBtn = verifySlug
     ? `<a href="javascript:void(0)" onclick="openVerify('${verifySlug}');event.stopPropagation()" style="color:#8250df" title="Verify claims + research queries">Verify</a>`
     : '';
-  const emailBtn = `<a href="javascript:void(0)" class="email-launch-btn" onclick="openEmailPopover(this);event.stopPropagation()" data-company="${escape(r.company)}" data-role="${escape(r.role)}" style="color:#0969da" title="Draft outreach email" aria-label="Draft email for ${escape(r.company)} ${escape(r.role)}">Email</a>`;
+  const emailBtn = `<a href="javascript:void(0)" class="email-launch-btn" onclick="openEmailPopover(this);event.stopPropagation()" data-company="${htmlEscape(r.company)}" data-role="${htmlEscape(r.role)}" style="color:#0969da" title="Draft outreach email" aria-label="Draft email for ${htmlEscape(r.company)} ${htmlEscape(r.role)}">Email</a>`;
   const applyLink = [reportHtmlLink, emailBtn, verifyBtn].filter(Boolean).join(' · ') || '<span class="muted">—</span>';
   // Clickable report link — file:// URL opens the .md in the OS default
   // app (Cursor, after we set it via duti). Stop event propagation so
   // clicking the link doesn't toggle the row's expand state.
   const reportAbs = r.reportPath ? `file://${ROOT}/${r.reportPath}` : '';
   const reportPathDisplay = r.reportPath
-    ? `<a href="${escape(reportAbs)}" onclick="event.stopPropagation()" title="Open in Cursor">${escape(r.reportPath)}</a>`
+    ? `<a href="${htmlEscape(reportAbs)}" onclick="event.stopPropagation()" title="Open in Cursor">${htmlEscape(r.reportPath)}</a>`
     : '<span class="muted">—</span>';
 
   // Pull richer signals for the expand panel.
@@ -1968,20 +1968,20 @@ function renderRow(r, idx) {
 
   // ── Meta chips ──────────────────────────────────────────
   const metaChips = [
-    comp ? `<span class="meta-chip meta-chip-comp">💰 ${escape(comp)}</span>` : '',
-    archetype ? `<span class="meta-chip meta-chip-tier">${escape(archetype)}</span>` : '',
-    r.date ? `<span class="meta-chip">📅 ${escape(r.date)}</span>` : '',
+    comp ? `<span class="meta-chip meta-chip-comp">💰 ${htmlEscape(comp)}</span>` : '',
+    archetype ? `<span class="meta-chip meta-chip-tier">${htmlEscape(archetype)}</span>` : '',
+    r.date ? `<span class="meta-chip">📅 ${htmlEscape(r.date)}</span>` : '',
   ].filter(Boolean).join('');
 
   // ── Intro: TL;DR + positioning (compact, full-width) ─────
   const tldrCard = tldr ? `<div class="dcard" style="margin-bottom:8px">
     <div class="dcard-label">Role at a glance</div>
-    <div class="dcard-body">${escape(tldr)}</div>
+    <div class="dcard-body">${htmlEscape(tldr)}</div>
   </div>` : '';
 
   const posCard = positioning ? `<div class="dcard" style="margin-bottom:8px">
     <div class="dcard-label">How to position</div>
-    <div class="dcard-body">${escape(positioning).replace(/\n/g, '<br>')}</div>
+    <div class="dcard-body">${htmlEscape(positioning).replace(/\n/g, '<br>')}</div>
   </div>` : '';
 
   // ── Card 1: Match (green / WHAT FITS) ────────────────────
@@ -1991,8 +1991,8 @@ function renderRow(r, idx) {
       ${edge.map(e => `<li class="${e.score >= 4 ? 'match-yes' : 'match-partial'}">
         <span class="match-icon">${e.score >= 4 ? '✓' : '~'}</span>
         <div>
-          <div class="match-req">${escape(e.requirement.slice(0, 90))}</div>
-          <div class="match-ev">${escape(e.evidence.slice(0, 160))}</div>
+          <div class="match-req">${htmlEscape(e.requirement.slice(0, 90))}</div>
+          <div class="match-ev">${htmlEscape(e.evidence.slice(0, 160))}</div>
         </div>
       </li>`).join('')}
     </ul>
@@ -2008,13 +2008,13 @@ function renderRow(r, idx) {
       const whyHtml = whyOk ? marked.parse(whyOk) : '';
       return `<span class="gap-chip gap-chip-interactive"
         onclick="openGapModal(this);event.stopPropagation()"
-        data-title="${escape(g.title)}"
-        data-detail="${escape(detailHtml)}"
-        data-strategy="${escape(strategyHtml)}"
-        data-why="${escape(whyHtml)}"
-        title="Click for addressing strategy">⚠ ${escape(g.title)}</span>`;
+        data-title="${htmlEscape(g.title)}"
+        data-detail="${htmlEscape(detailHtml)}"
+        data-strategy="${htmlEscape(strategyHtml)}"
+        data-why="${htmlEscape(whyHtml)}"
+        title="Click for addressing strategy">⚠ ${htmlEscape(g.title)}</span>`;
     }).join('')}</div>
-    ${whyOk ? `<div class="dcard-gap-prose">${escape(whyOk).replace(/\n/g, '<br>')}</div>` : ''}
+    ${whyOk ? `<div class="dcard-gap-prose">${htmlEscape(whyOk).replace(/\n/g, '<br>')}</div>` : ''}
   </div>` : '';
 
   // ── Card 3: Story (purple / STORIES TO LEAD WITH) ────────
@@ -2023,8 +2023,8 @@ function renderRow(r, idx) {
     ${stories.map((s, i) => `<div class="dcard-story-row">
       <span class="story-n">${i + 1}</span>
       <div>
-        <div class="story-req">${escape(s.requirement.slice(0, 110))}</div>
-        <div class="story-ev">${escape(s.story.slice(0, 240))}${s.story.length > 240 ? '…' : ''}</div>
+        <div class="story-req">${htmlEscape(s.requirement.slice(0, 110))}</div>
+        <div class="story-ev">${htmlEscape(s.story.slice(0, 240))}${s.story.length > 240 ? '…' : ''}</div>
       </div>
     </div>`).join('')}
   </div>` : '';
@@ -2033,12 +2033,12 @@ function renderRow(r, idx) {
   const actionCard = (finalRec || url) ? `<div class="dcard dcard--action">
     <div>
       <div class="dcard-label" style="margin-bottom:4px">ACTION</div>
-      <div class="dcard-action-text">${escape(finalRec || 'No recommendation captured.')}</div>
+      <div class="dcard-action-text">${htmlEscape(finalRec || 'No recommendation captured.')}</div>
     </div>
     <div class="dcard-action-buttons">
-      ${url ? `<a href="${escape(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="dcard-btn dcard-btn--primary">Apply →</a>` : ''}
-      <button type="button" class="dcard-btn" onclick="event.stopPropagation()" data-action="skip" data-num="${escape(String(r.num || ''))}">Skip</button>
-      <button type="button" class="dcard-btn" onclick="event.stopPropagation()" data-action="defer" data-num="${escape(String(r.num || ''))}">Defer</button>
+      ${url ? `<a href="${htmlEscape(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="dcard-btn dcard-btn--primary">Apply →</a>` : ''}
+      <button type="button" class="dcard-btn" onclick="event.stopPropagation()" data-action="skip" data-num="${htmlEscape(String(r.num || ''))}">Skip</button>
+      <button type="button" class="dcard-btn" onclick="event.stopPropagation()" data-action="defer" data-num="${htmlEscape(String(r.num || ''))}">Defer</button>
     </div>
   </div>` : '';
 
@@ -2046,7 +2046,7 @@ function renderRow(r, idx) {
   // Server populates entries lazily via GET /api/notes/:num on first
   // expand. Card always renders (every row can have notes), with an
   // empty state until the first note arrives.
-  const notesCard = `<div class="dcard dcard--notes" data-notes-num="${escape(String(r.num || ''))}">
+  const notesCard = `<div class="dcard dcard--notes" data-notes-num="${htmlEscape(String(r.num || ''))}">
     <div class="dcard-label">NOTES &amp; ACTIVITY</div>
     <div class="notes-compose">
       <textarea class="notes-input" maxlength="1000" rows="2"
@@ -2054,12 +2054,12 @@ function renderRow(r, idx) {
         onclick="event.stopPropagation()"
         oninput="updateNotesCounter(this);event.stopPropagation()"
         onkeydown="event.stopPropagation()"
-        aria-label="Add a note for row #${escape(String(r.num || ''))}"></textarea>
+        aria-label="Add a note for row #${htmlEscape(String(r.num || ''))}"></textarea>
       <div class="notes-compose-row">
         <span class="notes-counter" aria-live="polite">0 / 1000</span>
         <button type="button" class="dcard-btn notes-add-btn"
           onclick="addRowNote(this);event.stopPropagation()"
-          data-num="${escape(String(r.num || ''))}">Add note</button>
+          data-num="${htmlEscape(String(r.num || ''))}">Add note</button>
       </div>
     </div>
     <div class="notes-list" data-notes-list>
@@ -2070,13 +2070,13 @@ function renderRow(r, idx) {
   // ── Recommendation banner ────────────────────────────────
   const recBanner = finalRec ? `<div class="rec-banner">
     <span class="rec-label">Rec</span>
-    <span class="rec-text">${escape(finalRec)}</span>
-    ${url ? `<a href="${escape(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="rec-btn">Apply →</a>` : ''}
-  </div>` : url ? `<div style="font-size:12px;margin-top:6px"><a href="${escape(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🔗 View JD</a></div>` : '';
+    <span class="rec-text">${htmlEscape(finalRec)}</span>
+    ${url ? `<a href="${htmlEscape(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="rec-btn">Apply →</a>` : ''}
+  </div>` : url ? `<div style="font-size:12px;margin-top:6px"><a href="${htmlEscape(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🔗 View JD</a></div>` : '';
 
   // Inline gap chips shown on mobile cards only (top 3 by getKeyGaps order)
   const cardGapChips = gaps.length ? `<div class="card-gaps-mobile">${gaps.slice(0, 3).map(g =>
-    `<span class="gap-chip gap-chip-mobile">⚠ ${escape(g.title)}</span>`
+    `<span class="gap-chip gap-chip-mobile">⚠ ${htmlEscape(g.title)}</span>`
   ).join('')}</div>` : '';
 
   // ── Search index: tldr + recommendation + topGaps + topEdges ─
@@ -2104,25 +2104,25 @@ function renderRow(r, idx) {
   const peopleCell = renderPeopleCell(r.company, r.role);
 
   return `
-<tr class="row ${throttleClass}" data-num="${r.num}" data-row-id="${escape(idx)}" data-score="${r.score}" data-archetype="${escape(archetype)}" data-company="${escape(r.company.toLowerCase())}" data-status="${escape(r.status.toLowerCase())}" data-role="${escape(r.role.toLowerCase())}" data-equity="${escape(equityStage)}" data-search="${escape(searchIndex)}" onclick="toggleDetail('${idx}')">
-  <td class="bulk-cell"><input type="checkbox" class="bulk-checkbox" data-num="${r.num}" aria-label="Select row #${r.num} (${escape(r.company)})" onclick="event.stopPropagation();handleRowCheckbox(this)"></td>
+<tr class="row ${throttleClass}" data-num="${r.num}" data-row-id="${htmlEscape(idx)}" data-score="${r.score}" data-archetype="${htmlEscape(archetype)}" data-company="${htmlEscape(r.company.toLowerCase())}" data-status="${htmlEscape(r.status.toLowerCase())}" data-role="${htmlEscape(r.role.toLowerCase())}" data-equity="${htmlEscape(equityStage)}" data-search="${htmlEscape(searchIndex)}" onclick="toggleDetail('${idx}')">
+  <td class="bulk-cell"><input type="checkbox" class="bulk-checkbox" data-num="${r.num}" aria-label="Select row #${r.num} (${htmlEscape(r.company)})" onclick="event.stopPropagation();handleRowCheckbox(this)"></td>
   <td><span class="badge score-badge-lg ${scoreBadgeClass(r.score)}">${r.score.toFixed(1)}</span></td>
   <td class="base-cell">${baseCell}</td>
-  <td><a href="${escape(companyCareersUrl(r.company))}" target="_blank" rel="noopener" class="company-link" onclick="event.stopPropagation()" title="Open ${escape(r.company)} careers page"><strong>${escape(r.company)}</strong></a>${archetype ? `<span class="tier-tag" tabindex="0" role="button" data-tooltip="${escape(tierTooltip(archetype))}" aria-label="Tier ${escape(archetype)}: ${escape(tierTooltip(archetype))}" onclick="event.stopPropagation();openTierLegend('${escape(archetype)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openTierLegend('${escape(archetype)}')}">${escape(archetype)}</span>` : ''}</td>
-  <td class="role-cell">${url ? `<a href="${escape(url)}" target="_blank" rel="noopener" class="role-link" onclick="event.stopPropagation()" title="Open original job posting">${escape(r.role)}</a>` : escape(r.role)}${cardGapChips}</td>
-  <td class="status-cell"><span class="badge status-pill ${statusBadgeClass(r.status)}" data-status="${statusKey(r.status)}" data-num="${r.num}" role="button" tabindex="0" onclick="openStatusPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){openStatusPopover(this);event.preventDefault();event.stopPropagation()}" title="Click to change status">${escape(r.status)}</span></td>
+  <td><a href="${htmlEscape(companyCareersUrl(r.company))}" target="_blank" rel="noopener" class="company-link" onclick="event.stopPropagation()" title="Open ${htmlEscape(r.company)} careers page"><strong>${htmlEscape(r.company)}</strong></a>${archetype ? `<span class="tier-tag" tabindex="0" role="button" data-tooltip="${htmlEscape(tierTooltip(archetype))}" aria-label="Tier ${htmlEscape(archetype)}: ${htmlEscape(tierTooltip(archetype))}" onclick="event.stopPropagation();openTierLegend('${htmlEscape(archetype)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openTierLegend('${htmlEscape(archetype)}')}">${htmlEscape(archetype)}</span>` : ''}</td>
+  <td class="role-cell">${url ? `<a href="${htmlEscape(url)}" target="_blank" rel="noopener" class="role-link" onclick="event.stopPropagation()" title="Open original job posting">${htmlEscape(r.role)}</a>` : htmlEscape(r.role)}${cardGapChips}</td>
+  <td class="status-cell"><span class="badge status-pill ${statusBadgeClass(r.status)}" data-status="${statusKey(r.status)}" data-num="${r.num}" role="button" tabindex="0" onclick="openStatusPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){openStatusPopover(this);event.preventDefault();event.stopPropagation()}" title="Click to change status">${htmlEscape(r.status)}</span></td>
   <td class="equity-cell">${equityCell}</td>
   <td class="location-cell">${locationCell}</td>
   <td class="benefits-cell">${benefitsCell}</td>
   <td class="people-cell">${peopleCell}</td>
-  <td class="muted-text mobile-hide">${escape(r.date)}</td>
+  <td class="muted-text mobile-hide">${htmlEscape(r.date)}</td>
   <td class="muted-text">${evalAge(r.date)}</td>
   <td class="action-cell">${applyLink}</td>
 </tr>
 <tr class="detail-row" id="detail-${idx}" style="display:none">
   <td colspan="13">
     <div class="detail-block">
-      ${r._throttle?.label ? `<div class="throttle-banner throttle-${r._throttle.status}">${escape(r._throttle.label)}<br><span class="muted-text">${escape(r._throttle.note || '')}</span></div>` : ''}
+      ${r._throttle?.label ? `<div class="throttle-banner throttle-${r._throttle.status}">${htmlEscape(r._throttle.label)}<br><span class="muted-text">${htmlEscape(r._throttle.note || '')}</span></div>` : ''}
       ${r.notes ? `<div class="dcard dcard--tracker-note" style="margin-bottom:8px"><div class="dcard-label">TRACKER NOTE</div>${formatTrackerNote(r.notes)}</div>` : ''}
       ${metaChips ? `<div class="detail-meta">${metaChips}</div>` : ''}
       ${tldrCard}${posCard}
@@ -2247,7 +2247,7 @@ function renderCompAnalytics(analytics, floors) {
   const histHtml = buckets.map(b => {
     const pct = (b.count / maxBucket) * 100;
     const inFloor = b.min >= floors.seattleFloor;
-    return `<div class="comp-hist-row" role="listitem" aria-label="${escape(b.label)}: ${b.count} evaluation${b.count === 1 ? '' : 's'}">
+    return `<div class="comp-hist-row" role="listitem" aria-label="${htmlEscape(b.label)}: ${b.count} evaluation${b.count === 1 ? '' : 's'}">
       <div class="comp-hist-label">${b.label}</div>
       <div class="comp-hist-track" aria-hidden="true"><div class="comp-hist-fill ${inFloor ? 'above-floor' : 'below-floor'}" style="width:${pct.toFixed(1)}%"></div></div>
       <div class="comp-hist-count">${b.count}</div>
@@ -2261,12 +2261,12 @@ function renderCompAnalytics(analytics, floors) {
   const floorPct = ((floors.seattleFloor / chartMax) * 100).toFixed(1);
   const floorHtml = floorRows.map(row => {
     if (!row.count) {
-      return `<div class="comp-floor-row empty"><div class="comp-floor-label">${escape(row.label)} <span class="comp-floor-count">(0)</span></div><div class="comp-floor-bar-track"><div class="comp-floor-empty">No comp data</div><div class="comp-floor-floor-line" style="left:${floorPct}%" aria-hidden="true"></div></div><div class="comp-floor-value">—</div></div>`;
+      return `<div class="comp-floor-row empty"><div class="comp-floor-label">${htmlEscape(row.label)} <span class="comp-floor-count">(0)</span></div><div class="comp-floor-bar-track"><div class="comp-floor-empty">No comp data</div><div class="comp-floor-floor-line" style="left:${floorPct}%" aria-hidden="true"></div></div><div class="comp-floor-value">—</div></div>`;
     }
     const pct = ((row.median / chartMax) * 100).toFixed(1);
     const above = row.median >= floors.seattleFloor;
-    return `<div class="comp-floor-row" role="img" aria-label="${escape(row.label)}: median $${row.median}K (${row.count} evaluation${row.count === 1 ? '' : 's'}) — ${above ? 'above' : 'below'} $${floors.seattleFloor}K floor">
-      <div class="comp-floor-label">${escape(row.label)} <span class="comp-floor-count">(${row.count})</span></div>
+    return `<div class="comp-floor-row" role="img" aria-label="${htmlEscape(row.label)}: median $${row.median}K (${row.count} evaluation${row.count === 1 ? '' : 's'}) — ${above ? 'above' : 'below'} $${floors.seattleFloor}K floor">
+      <div class="comp-floor-label">${htmlEscape(row.label)} <span class="comp-floor-count">(${row.count})</span></div>
       <div class="comp-floor-bar-track">
         <div class="comp-floor-bar ${above ? 'above' : 'below'}" style="width:${pct}%"></div>
         <div class="comp-floor-floor-line" style="left:${floorPct}%" aria-hidden="true" title="Seattle floor: $${floors.seattleFloor}K"></div>
@@ -2280,11 +2280,11 @@ function renderCompAnalytics(analytics, floors) {
     const meta = EQUITY_STAGE_META[r.equityStage] || EQUITY_STAGE_META.unknown;
     const range = r.comp.min === r.comp.max ? `$${r.comp.min}K` : `$${r.comp.min}–${r.comp.max}K`;
     return `<tr class="${stageClass(r.equityStage)}">
-      <td>${escape(r.company)}</td>
-      <td class="role-cell">${escape(r.role.length > 56 ? r.role.slice(0, 53) + '…' : r.role)}</td>
+      <td>${htmlEscape(r.company)}</td>
+      <td class="role-cell">${htmlEscape(r.role.length > 56 ? r.role.slice(0, 53) + '…' : r.role)}</td>
       <td>${range}${r.comp.hasEquity ? ' <span class="comp-eq-tag" title="Equity / RSU mentioned in JD">+eq</span>' : ''}</td>
       <td class="num">${fmt$(r.fourYrValue)}</td>
-      <td><span class="equity-badge ${meta.cls}" title="${escape(meta.label)}">${meta.emoji} ${escape(meta.label)}</span></td>
+      <td><span class="equity-badge ${meta.cls}" title="${htmlEscape(meta.label)}">${meta.emoji} ${htmlEscape(meta.label)}</span></td>
     </tr>`;
   }).join('');
   return `
@@ -6267,7 +6267,7 @@ function build() {
       <!-- Mini-ticker removed 2026-05-10: same scan activity already lives in
            the mission-control strip at the top of the page (#live-text).
            Sidebar duplicate added clutter without new info. -->
-      <div class="sidebar-version" title="Career-Ops version">v${escape(appVersion || '?')}</div>
+      <div class="sidebar-version" title="Career-Ops version">v${htmlEscape(appVersion || '?')}</div>
     </div>
   </aside>
 
@@ -6306,7 +6306,7 @@ function build() {
     </div>
   </div>
 
-  <div class="subtle" id="dashboard-meta" title="${escape(generated)}"><span id="live-updated">Updated ${escape(generated)}</span> · ${reportsToday} reports today</div>
+  <div class="subtle" id="dashboard-meta" title="${htmlEscape(generated)}"><span id="live-updated">Updated ${htmlEscape(generated)}</span> · ${reportsToday} reports today</div>
 
   <main id="main">
 
@@ -6692,8 +6692,8 @@ function build() {
         const max = topCompanies[0][1];
         const pct = (count / max) * 100;
         return `
-        <div class="bar-row" role="listitem" aria-label="${escape(company)}: ${count} evaluation${count === 1 ? '' : 's'}">
-          <div class="bar-row-label">${escape(company)}</div>
+        <div class="bar-row" role="listitem" aria-label="${htmlEscape(company)}: ${count} evaluation${count === 1 ? '' : 's'}">
+          <div class="bar-row-label">${htmlEscape(company)}</div>
           <div class="bar-track" aria-hidden="true"><div class="bar-fill" style="width:${pct.toFixed(1)}%"></div></div>
           <div class="bar-row-count" aria-hidden="true">${count}</div>
         </div>`;
@@ -7470,7 +7470,7 @@ window.setUseInlineExpand = setUseInlineExpand;
 const NOTE_MAX_CHARS = 1000;
 const NOTE_PREVIEW_CHARS = 200;
 
-function escapeNoteHtml(str) {
+function htmlEscapeNoteHtml(str) {
   return String(str == null ? '' : str)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
@@ -7494,15 +7494,15 @@ function renderNoteEntry(entry) {
   const text = String(entry.text || '');
   const isLong = text.length > NOTE_PREVIEW_CHARS;
   const preview = isLong ? text.slice(0, NOTE_PREVIEW_CHARS) + '…' : text;
-  const previewHtml = escapeNoteHtml(preview);
-  const fullHtml = escapeNoteHtml(text);
+  const previewHtml = htmlEscapeNoteHtml(preview);
+  const fullHtml = htmlEscapeNoteHtml(text);
   const toggle = isLong
     ? '<button type="button" class="note-toggle" onclick="toggleNoteExpand(this);event.stopPropagation()" data-collapsed="1">Show more</button>'
     : '';
   return '<div class="note-entry">'
     + '<div class="note-entry-head">'
     +   '<span class="note-type-badge type-' + type + '">' + label + '</span>'
-    +   '<span>' + escapeNoteHtml(ts) + '</span>'
+    +   '<span>' + htmlEscapeNoteHtml(ts) + '</span>'
     + '</div>'
     + '<div class="note-text" data-preview="' + previewHtml + '" data-full="' + fullHtml + '">' + previewHtml + '</div>'
     + toggle
@@ -7949,7 +7949,7 @@ function sortTable(tbodyId, colIdx, type, thEl, evt) {
       // Find the th whose onclick references this colIdx — relies on the
       // existing onclick attribute pattern: sortTable(_, COL, _, this, evt)
       const target = Array.from(headerEls).find(th => {
-        // Double-escape inside the build's outer template literal so the
+        // Double-htmlEscape inside the build's outer template literal so the
         // backslashes survive into the rendered <script>. Without \\(, \\s, \\d
         // the emitted regex is /sortTable([^,]+,s*(d+)/ which is invalid.
         const m = (th.getAttribute('onclick') || '').match(/sortTable\\([^,]+,\\s*(\\d+)/);
@@ -9100,7 +9100,7 @@ function _emailFillTemplate(tpl, vars) {
 }
 
 function _emailDecodeHtml(s) {
-  // The data attributes were HTML-escaped at build time. Convert
+  // The data attributes were HTML-htmlEscaped at build time. Convert
   // entities back to literal characters before they enter the mailto
   // URL — mailto encoders treat & and < as ordinary text.
   if (!s) return '';
@@ -11282,7 +11282,7 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     return map;
   }
 
-  function escapeRegex(s) {
+  function htmlEscapeRegex(s) {
     return s.replace(/[\\\\^.*+?()[\\]{}|]/g, '\\\\$&').replace(/\\$/g, '\\\\$');
   }
 
@@ -11345,7 +11345,7 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     realNames.sort(function (a, b) { return b.length - a.length; });
     var globalRe = null;
     if (realNames.length) {
-      var alt = realNames.map(escapeRegex).join('|');
+      var alt = realNames.map(htmlEscapeRegex).join('|');
       globalRe = new RegExp('\\\\b(' + alt + ')\\\\b', 'gi');
     }
 

@@ -1,6 +1,6 @@
 # Remote dashboard access
 
-The career-ops dashboard server runs on `127.0.0.1:7777` by design — read [scripts/dashboard-server.mjs](../scripts/dashboard-server.mjs) for the rationale. To reach it from your phone, work laptop, or anywhere off the home network, this guide sets up a **Cloudflare Tunnel + Cloudflare Access**: a stable HTTPS URL protected by an email magic link.
+The career-ops dashboard server runs on `127.0.0.1:7777` by design — read [dashboard-server.mjs](../dashboard-server.mjs) for the rationale. To reach it from your phone, work laptop, or anywhere off the home network, this guide sets up a **Cloudflare Tunnel + Cloudflare Access**: a stable HTTPS URL protected by an email magic link.
 
 **Why Cloudflare Tunnel + Access:**
 
@@ -133,4 +133,4 @@ rm -rf ~/.cloudflared
 
 - The tunnel and Access policy together mean: only people with the URL **and** access to your email can read the dashboard. Set the Access policy to `Allow` only your email — nothing else.
 - The dashboard contains evaluation reports, application history, comp targets, and outreach drafts. Treat the URL as semi-sensitive. Don't paste it into shared chats or screen shares.
-- The `/mark` endpoint mutates state via GET. This is safe behind Cloudflare Access (prefetchers can't authenticate), but if you ever disable Access, switch to a POST endpoint or add a per-email signed token. See the comment block at the top of `handleMarkRequest` in [dashboard-server.mjs](../scripts/dashboard-server.mjs).
+- The `/mark` endpoint mutates state via GET. This is safe behind Cloudflare Access (prefetchers can't authenticate), but if you ever disable Access, switch to a POST endpoint or add a per-email signed token. See the comment block at the top of `handleMarkRequest` in [dashboard-server.mjs](../dashboard-server.mjs).

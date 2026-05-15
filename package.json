@@ -19,8 +19,13 @@
     "test:dashboard": "playwright test --config=tests/playwright.config.mjs",
     "test:dashboard:ui": "playwright test --config=tests/playwright.config.mjs --ui",
     "test:dashboard:install": "playwright install chromium",
-    "lighthouse": "lhci autorun"
-
+    "lighthouse": "lhci autorun",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --write .",
+    "format": "biome format .",
+    "test:unit": "node --test tests/unit/*.mjs",
+    "dashboard": "node dashboard-server.mjs",
+    "dashboard:dev": "NODE_ENV=development node dashboard-server.mjs"
   },
   "keywords": [
     "ai",
@@ -43,8 +48,8 @@
     "playwright": "^1.58.1"
   },
   "devDependencies": {
-    "@playwright/test": "^1.58.1",
-    "@lhci/cli": "^0.15.1"
-
+    "@biomejs/biome": "^2.4.15",
+    "@lhci/cli": "^0.15.1",
+    "@playwright/test": "^1.58.1"
   }
 }

@@ -18,6 +18,7 @@ import { readFileSync, writeFileSync, readdirSync, mkdirSync, renameSync, exists
 import { join, basename, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { execFileSync } from 'child_process';
+import { normalizeCompany } from './lib/ats-utils.mjs';
 
 const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
 // Support both layouts: data/applications.md (boilerplate) and applications.md (original)
@@ -67,9 +68,7 @@ function validateStatus(status) {
   return 'Evaluated';
 }
 
-function normalizeCompany(name) {
-  return name.toLowerCase().replace(/[^a-z0-9]/g, '');
-}
+// normalizeCompany imported from lib/ats-utils.mjs.
 
 // Tokens that almost every role shares — must NOT count as signal.
 // Includes seniority, work-mode, contract, and common locations.

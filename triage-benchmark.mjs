@@ -14,6 +14,7 @@ import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import { fileURLToPath } from 'url';
 import { spawnSync } from 'child_process';
+import { HAIKU } from './lib/models.mjs';
 
 const ROOT = join(fileURLToPath(import.meta.url), '..');
 
@@ -219,7 +220,7 @@ async function main() {
         .replace('{{JD_SNIPPET}}', '(dry-run: no JD available)');
 
       const res = spawnSync('claude', ['-p', prompt,
-        '--model', 'claude-haiku-4-5-20251001',
+        '--model', HAIKU,
         '--dangerously-skip-permissions', '--tools', '',
         '--strict-mcp-config', '--mcp-config', '{"mcpServers":{}}'],
         { encoding: 'utf8', timeout: 60_000, cwd: ROOT });

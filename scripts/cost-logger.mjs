@@ -18,9 +18,10 @@
  *   cache write:  $3.75 / 1M tokens × 0.5 = $1.875/MTok
  */
 
-import { appendFileSync, existsSync, writeFileSync } from 'fs';
+import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath }  from 'url';
+import { SONNET } from '../lib/models.mjs';
 
 const ROOT     = join(dirname(fileURLToPath(import.meta.url)), '..');
 const LOG_FILE = join(ROOT, 'data', 'cost-log.tsv');
@@ -59,7 +60,7 @@ export function logBatchCost({ batchId, model, requests, usage }) {
     cache_read_input_tokens,
     cache_creation_input_tokens,
     cost.toFixed(4),
-    model || 'claude-sonnet-4-6',
+    model || SONNET,
   ].join('\t') + '\n';
 
   if (!existsSync(LOG_FILE)) writeFileSync(LOG_FILE, HEADER);

@@ -12,6 +12,7 @@
 import { readFileSync, writeFileSync, copyFileSync, existsSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { normalizeCompany } from './lib/ats-utils.mjs';
 
 const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
 // Support both layouts: data/applications.md (boilerplate) and applications.md (original)
@@ -49,13 +50,7 @@ const STATUS_RANK = {
   'oferta': 6,
 };
 
-function normalizeCompany(name) {
-  return name.toLowerCase()
-    .replace(/[()]/g, '')
-    .replace(/\s+/g, ' ')
-    .replace(/[^a-z0-9 ]/g, '')
-    .trim();
-}
+// normalizeCompany imported from lib/ats-utils.mjs.
 
 function normalizeRole(role) {
   return role.toLowerCase()

@@ -21,6 +21,7 @@
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { fetchWithTimeout } from '../lib/fetch-utils.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
@@ -128,34 +129,24 @@ async function resolveJob(jobId, url) {
     'If the posting is expired or removed, set still_active to false. ' +
     'Return ONLY valid JSON, nothing else.';
 
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const { ok, status, text: respText } = await fetchWithTimeout(XAI_ENDPOINT, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + apiKey,
+    },
+    body: JSON.stringify({
+      model: XAI_MODEL,
+      tools: [{ type: 'web_search' }],
+      input: prompt,
+    }),
+  }, REQUEST_TIMEOUT_MS);
 
-  let resp;
-  try {
-    resp = await fetch(XAI_ENDPOINT, {
-      method: 'POST',
-      signal: controller.signal,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + apiKey,
-      },
-      body: JSON.stringify({
-        model: XAI_MODEL,
-        tools: [{ type: 'web_search' }],
-        input: prompt,
-      }),
-    });
-  } finally {
-    clearTimeout(timer);
+  if (!ok) {
+    throw new Error('xAI API error ' + status + ': ' + respText.slice(0, 200));
   }
 
-  if (!resp.ok) {
-    const text = await resp.text().catch(() => '');
-    throw new Error('xAI API error ' + resp.status + ': ' + text.slice(0, 200));
-  }
-
-  const data = await resp.json();
+  const data = JSON.parse(respText);
 
   // Extract output_text from the response structure
   // { output: [ { type: "message", content: [{ type: "output_text", text: "..." }] } ] }

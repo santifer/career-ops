@@ -1,19 +1,25 @@
 #!/usr/bin/env node
 /**
- * scripts/enrich-apply-now-6-23.mjs
+ * scripts/enrich-apply-now.mjs
  *
- * Council enrichment for apply-now ranks 6..23 (the 18 roles after the
- * already-enriched top 5). Uses the same prompt/structure as the top-5 run
- * with two corrections baked in:
- *   1. ANTI-HALLUCINATION instructions for `people.*` (no fake recruiter
- *      names — the top-5 run produced "Sarah Chen" 4x, "Alex Rivera" 3x).
- *   2. team_toxicity_grade MUST be a single integer 1-5 with no inline text.
+ * Unified council-enrichment for any rank range in data/apply-now-queue.json.
+ * Replaces the prior pair of one-off scripts (enrich-apply-now-top5.mjs and
+ * enrich-apply-now-6-23.mjs) which hard-coded specific ranks and role names.
  *
- * Output: data/role-enrichment/{rank-2-padded}-{slug}.json (06..23)
- *         + appends to data/role-enrichment/INDEX.md (does NOT overwrite)
+ * Output: data/role-enrichment/{NN}-{slug}.json (zero-padded rank) +
+ *         appends to data/role-enrichment/INDEX.md (never overwrites).
+ *
+ * Both anti-hallucination guards (no fake recruiter names) and the
+ * integer-only `team_toxicity_grade` rules from the 6-23 version are
+ * applied unconditionally.
  *
  * Usage:
- *   source ~/.career-ops-secrets && node scripts/enrich-apply-now-6-23.mjs
+ *   source ~/.career-ops-secrets && node scripts/enrich-apply-now.mjs --ranks=1-5
+ *   source ~/.career-ops-secrets && node scripts/enrich-apply-now.mjs --ranks=6-23
+ *   node scripts/enrich-apply-now.mjs --ranks=1-23 --dry-run    # plan only, no API calls
+ *
+ * Env:
+ *   ENRICH_BUDGET_CAP_USD  — hard cap for total spend per run (default $5)
  */
 
 import { readFileSync, writeFileSync, appendFileSync, mkdirSync, existsSync } from 'node:fs';
@@ -26,11 +32,35 @@ const ROOT = join(__dirname, '..');
 const OUT_DIR = join(ROOT, 'data', 'role-enrichment');
 const QUEUE_PATH = join(ROOT, 'data', 'apply-now-queue.json');
 
+const ARGS = Object.fromEntries(
+  process.argv.slice(2)
+    .filter(a => a.startsWith('--'))
+    .map(a => { const [k, v = true] = a.slice(2).split('='); return [k, v]; })
+);
+const RANKS_ARG = ARGS.ranks || ARGS.rank;
+const DRY_RUN = ARGS['dry-run'] === true || ARGS['dry-run'] === 'true';
 const BUDGET_CAP_USD = Number(process.env.ENRICH_BUDGET_CAP_USD || '5');
+
+if (!RANKS_ARG) {
+  console.error('Usage: node scripts/enrich-apply-now.mjs --ranks=N-M [--dry-run]');
+  console.error('Example: --ranks=1-5  or  --ranks=6-23');
+  process.exit(2);
+}
+
+const rangeMatch = String(RANKS_ARG).match(/^(\d+)\s*-\s*(\d+)$/);
+if (!rangeMatch) {
+  console.error(`Invalid --ranks value: ${RANKS_ARG} (expected N-M, e.g. 6-23)`);
+  process.exit(2);
+}
+const RANK_START = Number(rangeMatch[1]);
+const RANK_END = Number(rangeMatch[2]);
+if (RANK_START < 1 || RANK_END < RANK_START) {
+  console.error(`Invalid range: ${RANK_START}-${RANK_END}`);
+  process.exit(2);
+}
 
 if (!existsSync(OUT_DIR)) mkdirSync(OUT_DIR, { recursive: true });
 
-// --- Slug builder ---
 function slugify(s, maxLen = 60) {
   return String(s || '')
     .toLowerCase()
@@ -39,13 +69,15 @@ function slugify(s, maxLen = 60) {
     .slice(0, maxLen);
 }
 
-// --- Load roles 6..23 from queue ---
+// Reads ranks [RANK_START..RANK_END] from the queue (1-indexed ranks → 0-indexed slice).
 function loadRoles() {
   const queue = JSON.parse(readFileSync(QUEUE_PATH, 'utf8'));
-  const slice = queue.ranked.slice(5, 23); // 0-indexed: ranks 6..23
+  const ranked = queue.ranked || queue.entries || queue;
+  if (!Array.isArray(ranked)) throw new Error('apply-now-queue.json: no `ranked` array found');
+  const slice = ranked.slice(RANK_START - 1, RANK_END);
   return slice.map((entry, i) => {
-    const rank = 6 + i;
-    const company = entry.company;
+    const rank = RANK_START + i;
+    const company = entry.company || 'Unknown';
     const role = entry.role || entry.title || '';
     const num = entry.num || entry.id || entry.pipeline_num || '';
     const rankPad = String(rank).padStart(2, '0');
@@ -54,9 +86,9 @@ function loadRoles() {
   });
 }
 
-// --- Prompt builder (with anti-hallucination + integer-only toxicity) ---
+// Anti-hallucination + integer-only toxicity rules baked in.
 function buildPrompt(company, role) {
-  return `You are a hiring-intelligence researcher for Mitchell Williams's career-ops job search. Today is 2026-05-10. Mitchell targets senior comms / forward-deployed / solutions-architect / AI-enablement / strategic-ops roles at frontier AI labs. He's currently Seattle-based. PRIMARY filter: total comp + pre-IPO equity timing + RSU value-at-vest.
+  return `You are a hiring-intelligence researcher for Mitchell Williams's career-ops job search. Today is ${new Date().toISOString().slice(0, 10)}. Mitchell targets senior comms / forward-deployed / solutions-architect / AI-enablement / strategic-ops roles at frontier AI labs. He's currently Seattle-based. PRIMARY filter: total comp + pre-IPO equity timing + RSU value-at-vest.
 
 Research **${company} — ${role}**. Use Google Search aggressively. Cite sources inline.
 
@@ -115,7 +147,6 @@ Return a JSON object with these fields (no markdown, no preamble — just the JS
 If a field is genuinely unknown after web search, use the string "unknown" — do NOT fabricate. The JSON MUST parse — no trailing commas, no comments. team_toxicity_grade MUST be a bare integer 1-5.`;
 }
 
-// --- JSON extraction (models love wrapping in markdown fences) ---
 function extractJson(content) {
   if (!content) return null;
   let s = content.trim();
@@ -129,9 +160,7 @@ function extractJson(content) {
     return JSON.parse(s);
   } catch {
     try {
-      const fixed = s
-        .replace(/,\s*([}\]])/g, '$1')
-        .replace(/\bNaN\b/g, 'null');
+      const fixed = s.replace(/,\s*([}\]])/g, '$1').replace(/\bNaN\b/g, 'null');
       return JSON.parse(fixed);
     } catch {
       return null;
@@ -139,7 +168,6 @@ function extractJson(content) {
   }
 }
 
-// --- Toxicity grade normalizer (integer 1-5) ---
 function normalizeToxicity(v) {
   if (typeof v === 'number' && Number.isFinite(v)) {
     const n = Math.round(v);
@@ -154,7 +182,6 @@ function normalizeToxicity(v) {
   return null;
 }
 
-// --- Cost estimation ---
 function estCostUsd(model, tokens) {
   const rates = {
     'perplexity:sonar-deep-research':  0.000040,
@@ -168,7 +195,6 @@ function estCostUsd(model, tokens) {
   return Number((tokens * rate).toFixed(4));
 }
 
-// --- Field-level merge: majority vote with conflict tracking ---
 function mergeField(values) {
   const real = values.filter(v => {
     if (v === undefined || v === null) return false;
@@ -188,19 +214,15 @@ function mergeField(values) {
 }
 
 function mergeResponses(parsed, role) {
-  if (parsed.length === 0) {
-    return { error: 'all models failed to return parseable JSON' };
-  }
+  if (parsed.length === 0) return { error: 'all models failed to return parseable JSON' };
+
   const merged = {
     company: role.company,
     role: role.role,
     relocation: {},
     benefits: {},
     sentiment: {},
-    people: {
-      likely_recruiter: {},
-      likely_hiring_manager: {},
-    },
+    people: { likely_recruiter: {}, likely_hiring_manager: {} },
     confidence: 'L',
     _disagreements: [],
   };
@@ -208,7 +230,7 @@ function mergeResponses(parsed, role) {
   const sections = {
     relocation: ['package_summary', 'amount_estimate_usd', 'policy_notes', 'sources'],
     benefits:   ['401k_match', 'healthcare', 'dental_vision', 'estimated_copay', 'meals_provided', 'mental_health', 'other_perks', 'sources'],
-    sentiment:  ['blind_score', 'glassdoor_score', 'reddit_pulse', 'x_pulse', 'sources'], // toxicity handled separately
+    sentiment:  ['blind_score', 'glassdoor_score', 'reddit_pulse', 'x_pulse', 'sources'],
   };
 
   for (const [section, fields] of Object.entries(sections)) {
@@ -220,7 +242,6 @@ function mergeResponses(parsed, role) {
     }
   }
 
-  // Toxicity: enforce integer 1-5; majority vote on normalized values
   const toxVals = parsed.map(p => normalizeToxicity(p?.sentiment?.team_toxicity_grade)).filter(v => v !== null);
   if (toxVals.length === 0) {
     merged.sentiment.team_toxicity_grade = 'unknown';
@@ -232,7 +253,6 @@ function mergeResponses(parsed, role) {
     if (sorted.length > 1) merged._disagreements.push('sentiment.team_toxicity_grade');
   }
 
-  // people sub-objects
   for (const personKey of ['likely_recruiter', 'likely_hiring_manager']) {
     for (const f of ['name', 'linkedin_url', 'rationale']) {
       const vals = parsed.map(p => p?.people?.[personKey]?.[f]).filter(v => v !== undefined);
@@ -255,13 +275,20 @@ function mergeResponses(parsed, role) {
   return merged;
 }
 
-// --- Main ---
 async function main() {
   const t0 = Date.now();
   const ROLES = loadRoles();
-  console.log(`[enrich-6-23] starting ${ROLES.length}-role council enrichment`);
-  console.log(`[enrich-6-23] env keys: GEMINI=${!!process.env.GEMINI_API_KEY} PERPLEXITY=${!!process.env.PERPLEXITY_API_KEY} XAI=${!!process.env.XAI_API_KEY} OPENAI=${!!process.env.OPENAI_API_KEY}`);
-  console.log(`[enrich-6-23] budget cap: $${BUDGET_CAP_USD}`);
+  const tag = `enrich-${RANK_START}-${RANK_END}`;
+  console.log(`[${tag}] starting ${ROLES.length}-role council enrichment`);
+
+  if (DRY_RUN) {
+    console.log(`[${tag}] DRY RUN — roles that would be enriched:`);
+    for (const r of ROLES) console.log(`  rank ${r.rank}: ${r.company} — ${r.role}`);
+    return;
+  }
+
+  console.log(`[${tag}] env keys: GEMINI=${!!process.env.GEMINI_API_KEY} PERPLEXITY=${!!process.env.PERPLEXITY_API_KEY} XAI=${!!process.env.XAI_API_KEY} OPENAI=${!!process.env.OPENAI_API_KEY}`);
+  console.log(`[${tag}] budget cap: $${BUDGET_CAP_USD}`);
 
   const councilModels = [
     'google:gemini-2.5-pro',
@@ -270,7 +297,7 @@ async function main() {
   ];
   if (process.env.OPENAI_API_KEY) councilModels.push('openai:gpt-5');
 
-  const indexLines = ['', `## Ranks 6-23 (generated ${new Date().toISOString()})`, ''];
+  const indexLines = ['', `## Ranks ${RANK_START}-${RANK_END} (generated ${new Date().toISOString()})`, ''];
   let totalCost = 0;
   const summary = [];
 
@@ -278,18 +305,18 @@ async function main() {
     const tRole = Date.now();
     const outFile = join(OUT_DIR, `${role.slug}.json`);
     if (existsSync(outFile)) {
-      console.log(`\n[enrich-6-23] === Rank ${role.rank}: ${role.company} — ${role.role} === SKIP (exists)`);
+      console.log(`\n[${tag}] === Rank ${role.rank}: ${role.company} — ${role.role} === SKIP (exists)`);
       summary.push({ rank: role.rank, company: role.company, role: role.role, status: 'skipped-exists' });
       continue;
     }
 
     if (totalCost >= BUDGET_CAP_USD) {
-      console.log(`[enrich-6-23] BUDGET CAP REACHED ($${totalCost.toFixed(4)} >= $${BUDGET_CAP_USD}). Aborting.`);
+      console.log(`[${tag}] BUDGET CAP REACHED ($${totalCost.toFixed(4)} >= $${BUDGET_CAP_USD}). Aborting.`);
       summary.push({ rank: role.rank, company: role.company, role: role.role, status: 'budget-cap-skipped' });
       continue;
     }
 
-    console.log(`\n[enrich-6-23] === Rank ${role.rank}: ${role.company} — ${role.role} ===`);
+    console.log(`\n[${tag}] === Rank ${role.rank}: ${role.company} — ${role.role} ===`);
     const prompt = buildPrompt(role.company, role.role);
 
     let results;
@@ -366,10 +393,9 @@ async function main() {
     });
   }
 
-  // Append (don't overwrite) to INDEX.md
   appendFileSync(join(OUT_DIR, 'INDEX.md'), indexLines.join('\n') + '\n');
 
-  console.log(`\n[enrich-6-23] DONE — ${ROLES.length} roles, total $${totalCost.toFixed(4)}, ${Math.round((Date.now()-t0)/1000)}s`);
+  console.log(`\n[${tag}] DONE — ${ROLES.length} roles, total $${totalCost.toFixed(4)}, ${Math.round((Date.now()-t0)/1000)}s`);
   console.log(JSON.stringify({ summary, total_cost_usd: Number(totalCost.toFixed(4)) }, null, 2));
 }
 

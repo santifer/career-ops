@@ -18,6 +18,7 @@
 import { readFileSync, existsSync } from 'fs';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { HAIKU } from '../lib/models.mjs';
 
 // Load .env from project root if keys aren't already in environment
 try {
@@ -306,7 +307,7 @@ async function judgeWithClaude(body) {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
+        model: HAIKU,
         max_tokens: 120,
         temperature: 0,
         messages: [{ role: 'user', content: DETECTION_PROMPT(body) }],

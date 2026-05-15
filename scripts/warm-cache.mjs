@@ -23,12 +23,13 @@
 import { existsSync, readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { HAIKU, SONNET } from '../lib/models.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 const ARGS     = Object.fromEntries(process.argv.slice(2).filter(a => a.startsWith('--')).map(a => { const [k, v] = a.slice(2).split('='); return [k, v ?? true]; }));
 const DRY_RUN  = !!ARGS['dry-run'];
-const MODEL    = ARGS.model === 'haiku' ? 'claude-haiku-4-5-20251001' : 'claude-sonnet-4-6';
+const MODEL    = ARGS.model === 'haiku' ? HAIKU : SONNET;
 
 const BAKED    = join(ROOT, 'data', 'baked-context.md');
 const CV       = join(ROOT, 'cv.md');

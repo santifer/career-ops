@@ -23,6 +23,7 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import { spawnSync } from 'child_process';
+import { OPUS } from '../lib/models.mjs';
 
 const ROOT = process.cwd();
 const SIGNALS_DIR = join(ROOT, 'data/overpay-signals');
@@ -136,7 +137,7 @@ console.log(`[overpay-signals] Researching ${topCompanies.length} companies for 
 
 const result = spawnSync(
   'claude',
-  ['--model', 'claude-opus-4-7', '--dangerously-skip-permissions', '-p', PROMPT],
+  ['--model', OPUS, '--dangerously-skip-permissions', '-p', PROMPT],
   { stdio: 'inherit', cwd: ROOT }
 );
 

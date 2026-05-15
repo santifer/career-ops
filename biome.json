@@ -1,0 +1,68 @@
+{
+	"$schema": "https://biomejs.dev/schemas/2.4.15/schema.json",
+	"vcs": {
+		"enabled": true,
+		"clientKind": "git",
+		"useIgnoreFile": true
+	},
+	"files": {
+		"ignoreUnknown": true,
+		"includes": [
+			"**/*.mjs",
+			"**/*.js",
+			"**/*.json",
+			"!node_modules/**",
+			"!.claude/worktrees/**",
+			"!data/**",
+			"!output/**",
+			"!reports/**",
+			"!batch/**",
+			"!corpus/**",
+			"!writing-samples/**",
+			"!apply-pack/**",
+			"!.git/**"
+		]
+	},
+	"formatter": {
+		"enabled": false
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": false,
+			"correctness": {
+				"noUndeclaredVariables": "error",
+				"noUnreachable": "error",
+				"noConstAssign": "error",
+				"noEmptyPattern": "error",
+				"noSwitchDeclarations": "error",
+				"noUnusedLabels": "warn",
+				"useExhaustiveDependencies": "off",
+				"useHookAtTopLevel": "off"
+			},
+			"suspicious": {
+				"noDoubleEquals": "warn",
+				"noDuplicateCase": "error",
+				"noDuplicateClassMembers": "error",
+				"noDuplicateObjectKeys": "error",
+				"noDuplicateParameters": "error",
+				"noFunctionAssign": "error",
+				"noImportAssign": "error",
+				"noRedeclare": "error",
+				"noShadowRestrictedNames": "error",
+				"noUnsafeNegation": "error",
+				"useGetterReturn": "error"
+			},
+			"complexity": {
+				"noUselessCatch": "warn",
+				"noUselessConstructor": "warn"
+			}
+		}
+	},
+	"javascript": {
+		"globals": ["NodeJS"]
+	},
+	"assist": {
+		"enabled": false
+	}
+}

@@ -18,6 +18,7 @@
 import { readFileSync, writeFileSync, appendFileSync, existsSync, mkdirSync } from 'fs';
 import yaml from 'js-yaml';
 import { decodeHtmlEntities } from './lib/html-decode.mjs';
+import { fetchWithTimeout } from './lib/fetch-utils.mjs';
 const parseYaml = yaml.load;
 
 const PORTALS_PATH = 'portals.yml';
@@ -32,29 +33,20 @@ const USER_AGENT = 'career-ops-scanner/1.0 (+https://github.com/santifer/career-
 
 // ── HTTP helpers ────────────────────────────────────────────────────
 
-async function fetchWith(url, accept) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-  try {
-    const res = await fetch(url, {
-      signal: controller.signal,
-      headers: { 'User-Agent': USER_AGENT, 'Accept': accept },
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return res;
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
 async function fetchText(url) {
-  const res = await fetchWith(url, 'application/rss+xml, application/atom+xml, text/xml, text/html');
-  return await res.text();
+  const { ok, status, text } = await fetchWithTimeout(url, {
+    headers: { 'User-Agent': USER_AGENT, Accept: 'application/rss+xml, application/atom+xml, text/xml, text/html' },
+  }, FETCH_TIMEOUT_MS);
+  if (!ok) throw new Error(`HTTP ${status}`);
+  return text;
 }
 
 async function fetchJson(url) {
-  const res = await fetchWith(url, 'application/json');
-  return await res.json();
+  const { ok, status, text } = await fetchWithTimeout(url, {
+    headers: { 'User-Agent': USER_AGENT, Accept: 'application/json' },
+  }, FETCH_TIMEOUT_MS);
+  if (!ok) throw new Error(`HTTP ${status}`);
+  return JSON.parse(text);
 }
 
 // ── XML / RSS helpers (purpose-built, not a general parser) ────────

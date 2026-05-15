@@ -22,6 +22,10 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { spawnSync } from 'child_process';
 import { isCircuitOpen, withRetryBackoff, recordSuccess, recordFailure } from './lib/provider-client.mjs';
+import { HAIKU } from './lib/models.mjs';
+import { readCached, poolMap } from './lib/fetch-utils.mjs';
+import { guessCompany } from './lib/ats-utils.mjs';
+import { checkUrl } from './lib/http-liveness.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = __dirname;
@@ -139,8 +143,9 @@ function saveQuota(q) {
 }
 
 // ── Pipeline parser ─────────────────────────────────────────────
-function parsePipeline() {
-  const lines = readFileSync(PIPELINE_FILE, 'utf8').split('\n');
+// Pure function — accepts content so unit tests can pass fixtures.
+export function parsePipeline(content) {
+  const lines = content.split('\n');
   const items = [];
   let tier = 0;
   for (const line of lines) {
@@ -188,78 +193,14 @@ function writeAdvance(url, tier, score, archetype, reason) {
   appendFileSync(ADVANCE_FILE, header + [url, tier, score, archetype, reason].join('\t') + '\n');
 }
 
-function guessCompany(url) {
-  try {
-    const h = new URL(url).hostname;
-    if (url.includes('greenhouse.io')) return 'Unknown (Greenhouse)';
-    if (url.includes('ashbyhq.com'))   return 'Unknown (Ashby)';
-    if (url.includes('lever.co'))      return 'Unknown (Lever)';
-    return h.replace(/^www\./, '');
-  } catch { return 'Unknown'; }
-}
-
-// ── HTTP liveness (no Playwright, no AI cost) ───────────────────
-const EXPIRED_PATTERNS = [
-  /job (is )?no longer available/i,
-  /position has been filled/i,
-  /this job has expired/i,
-  /no longer accepting applications/i,
-  /this (position|role|job) (is )?no longer/i,
-  /job (listing )?not found/i,
-  /applications?\s+(?:have |are )?closed/i,
-  /this listing (is )?no longer active/i,
-  /sorry.*this.*job.*closed/i,
-  /page.*not found/i,
-  /404/,
-];
+// guessCompany and HTTP liveness now live in lib/ats-utils.mjs and lib/http-liveness.mjs.
 
 async function checkLiveness(url) {
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), LIVENESS_TIMEOUT_MS);
-  try {
-    const res = await fetch(url, {
-      method: 'GET',
-      signal: ctrl.signal,
-      redirect: 'follow',
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/124 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml',
-      },
-    });
-    clearTimeout(timer);
-
-    if (res.status === 404 || res.status === 410) {
-      return { live: false, reason: `HTTP ${res.status}` };
-    }
-    if (res.status >= 400) {
-      return { live: null, reason: `HTTP ${res.status} (uncertain)` };
-    }
-
-    // Read first 6KB
-    const reader = res.body?.getReader();
-    let body = '';
-    if (reader) {
-      while (body.length < 6144) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        body += new TextDecoder().decode(value);
-      }
-      reader.cancel().catch(() => {});
-    }
-
-    const hit = EXPIRED_PATTERNS.find(p => p.test(body));
-    if (hit) return { live: false, reason: `expired pattern: "${hit.source}"` };
-
-    return { live: true, body };
-  } catch (err) {
-    clearTimeout(timer);
-    if (err.name === 'AbortError') return { live: null, reason: 'timeout (10s)' };
-    return { live: null, reason: err.message.slice(0, 80) };
-  }
+  return checkUrl(url, { timeoutMs: LIVENESS_TIMEOUT_MS });
 }
 
 // ── JSON schema parser (replaces brittle regex) ─────────────────
-function parseTriageOutput(raw) {
+export function parseTriageOutput(raw) {
   if (!raw) return { error: 'empty output' };
   const cleaned = raw
     .replace(/^```json?\s*/im, '')
@@ -289,7 +230,7 @@ function callHaiku(prompt) {
   const result = spawnSync(
     'claude',
     // --max-budget-usd 0.001: ~500 output tokens at Haiku pricing; cap prevents runaway spend
-    ['-p', prompt, '--model', 'claude-haiku-4-5-20251001', '--max-budget-usd', '0.001',
+    ['-p', prompt, '--model', HAIKU, '--max-budget-usd', '0.001',
      '--dangerously-skip-permissions', '--tools', '', '--strict-mcp-config', '--mcp-config', '{"mcpServers":{}}'],
     { encoding: 'utf8', timeout: 60_000, cwd: ROOT }
   );
@@ -300,14 +241,7 @@ function callHaiku(prompt) {
   return (result.stdout || '').trim();
 }
 
-// ── Module-level file cache (eliminates repeated reads per session) ─
-const _fileCache = new Map();
-function readCached(filePath) {
-  if (!_fileCache.has(filePath)) {
-    _fileCache.set(filePath, existsSync(filePath) ? readFileSync(filePath, 'utf8') : null);
-  }
-  return _fileCache.get(filePath);
-}
+// readCached lives in lib/fetch-utils.mjs (module-level cache shared across importers).
 
 // ── Haiku quick-score with retry loop (max 3 attempts) ──────────
 function quickScore(url, tier, jdSnippet) {
@@ -419,19 +353,7 @@ async function quickScoreRouted(url, tier, jdSnippet) {
   throw new Error('All triage providers exhausted');
 }
 
-// ── Concurrent pool helper ───────────────────────────────────────
-// Runs `fn` over `items` with at most `maxConcurrent` in-flight at once.
-// Calls `onBatchDone(batchResults)` after each pool-sized wave (for progress).
-async function poolMap(items, fn, maxConcurrent, onBatchDone) {
-  const results = [];
-  for (let i = 0; i < items.length; i += maxConcurrent) {
-    const batch = items.slice(i, i + maxConcurrent);
-    const batchResults = await Promise.all(batch.map(fn));
-    results.push(...batchResults);
-    if (onBatchDone) onBatchDone(batchResults, i + batch.length, items.length);
-  }
-  return results;
-}
+// poolMap lives in lib/fetch-utils.mjs (shared with scan.mjs and heartbeat).
 
 // ── Main ────────────────────────────────────────────────────────
 async function main() {
@@ -453,7 +375,7 @@ async function main() {
     process.exit(0);
   }
 
-  const allItems = parsePipeline();
+  const allItems = parsePipeline(readFileSync(PIPELINE_FILE, 'utf8'));
 
   // ── Freshness sweep ─────────────────────────────────────────────
   // Mark stale URLs [x] before spending quota, then sort newest-first
@@ -600,7 +522,11 @@ async function main() {
   }
 }
 
-main().catch(err => {
-  console.error('\nFatal error:', err.message);
-  process.exit(1);
-});
+// Guard: only run main() when invoked as the entrypoint, so test files can
+// import this module without triggering the script.
+if (import.meta.url === `file://${process.argv[1]}`) {
+  main().catch(err => {
+    console.error('\nFatal error:', err.message);
+    process.exit(1);
+  });
+}

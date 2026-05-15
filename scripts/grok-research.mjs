@@ -35,6 +35,7 @@
 import { readFileSync, existsSync, appendFileSync, writeFileSync, unlinkSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { fetchWithTimeout } from '../lib/fetch-utils.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
@@ -212,37 +213,35 @@ function extractContent(data) {
 
 async function callGrok(model, tools, prompt) {
   const requestBody = { model, input: [{ role: 'user', content: prompt }], tools };
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  let result;
   try {
-    const response = await fetch(XAI_ENDPOINT, {
+    result = await fetchWithTimeout(XAI_ENDPOINT, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.XAI_API_KEY}`,
+        Authorization: `Bearer ${process.env.XAI_API_KEY}`,
       },
       body: JSON.stringify(requestBody),
-      signal: controller.signal,
-    });
-    clearTimeout(timeoutId);
-    const text = await response.text();
-    if (!response.ok) {
-      const err = new Error(`xAI API ${response.status}: ${text.slice(0, 500)}`);
-      err.status = response.status;
-      err.body = text;
-      throw err;
-    }
-    let data;
-    try { data = JSON.parse(text); } catch { throw new Error(`Non-JSON response from xAI: ${text.slice(0, 200)}`); }
-    const content = extractContent(data);
-    if (!content) throw new Error(`Empty response from xAI. Top-level keys: ${Object.keys(data).join(', ')}`);
-    const citations = data.citations || [];
-    return { content, citations, raw: data };
+    }, REQUEST_TIMEOUT_MS);
   } catch (err) {
-    clearTimeout(timeoutId);
-    if (err.name === 'AbortError') throw new Error(`Grok query timeout (${REQUEST_TIMEOUT_MS / 1000}s)`);
+    if (err?.name === 'TimeoutError' || err?.name === 'AbortError') {
+      throw new Error(`Grok query timeout (${REQUEST_TIMEOUT_MS / 1000}s)`);
+    }
     throw err;
   }
+  const { ok, status, text } = result;
+  if (!ok) {
+    const err = new Error(`xAI API ${status}: ${text.slice(0, 500)}`);
+    err.status = status;
+    err.body = text;
+    throw err;
+  }
+  let data;
+  try { data = JSON.parse(text); } catch { throw new Error(`Non-JSON response from xAI: ${text.slice(0, 200)}`); }
+  const content = extractContent(data);
+  if (!content) throw new Error(`Empty response from xAI. Top-level keys: ${Object.keys(data).join(', ')}`);
+  const citations = data.citations || [];
+  return { content, citations, raw: data };
 }
 
 function parseUnsupportedTool(errBody) {

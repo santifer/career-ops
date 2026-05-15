@@ -28,6 +28,10 @@ import {
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { logBatchCost } from './scripts/cost-logger.mjs';
+import { SONNET } from './lib/models.mjs';
+import { readCached } from './lib/fetch-utils.mjs';
+import { guessCompany } from './lib/ats-utils.mjs';
+import { checkUrl } from './lib/http-liveness.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = __dirname;
@@ -41,7 +45,7 @@ const ARGS  = Object.fromEntries(
 );
 const LIMIT   = parseInt(ARGS.limit   ?? '100');
 const TIERS   = (ARGS.tier ?? '1,2,3').split(',').map(Number);
-const MODEL   = ARGS.model ?? 'claude-sonnet-4-6';
+const MODEL   = ARGS.model ?? SONNET;
 const DRY_RUN = ARGS['dry-run'] === true || ARGS['dry-run'] === 'true';
 const LIVENESS_TIMEOUT_MS = 10_000;
 
@@ -118,14 +122,7 @@ async function apiCall(method, path, body, apiKey) {
   return res.json();
 }
 
-// ── Module-level file cache (eliminates repeated reads within a run) ─
-const _fileCache = new Map();
-function readCached(filePath) {
-  if (!_fileCache.has(filePath)) {
-    _fileCache.set(filePath, existsSync(filePath) ? readFileSync(filePath, 'utf8') : null);
-  }
-  return _fileCache.get(filePath);
-}
+// readCached imported from lib/fetch-utils.mjs (shared module-level cache).
 
 // ── Source file readers ───────────────────────────────────────────
 function readCv()      { return readCached(CV_FILE)      ?? '(cv.md not found)'; }
@@ -294,48 +291,14 @@ function lastTrackerNum() {
   return 0;
 }
 
-// ── JD Fetcher (same logic as triage.mjs liveness) ───────────────
-const EXPIRED_PATTERNS = [
-  /job (is )?no longer available/i,
-  /position has been filled/i,
-  /this job has expired/i,
-  /no longer accepting applications/i,
-  /this (position|role|job) (is )?no longer/i,
-  /applications?\s+(?:have |are )?closed/i,
-  /page.*not found/i, /404/,
-];
-
+// JD Fetcher — wraps the shared liveness check.
+// Treats uncertain pages (live=null) as ok:true to preserve the prior lenient
+// behavior (the old EXPIRED_PATTERNS list didn't require an apply control).
+// 5,500 chars ≈ 1,375 tokens — covers role/requirements; trims benefits boilerplate.
 async function fetchJD(url) {
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), LIVENESS_TIMEOUT_MS);
-  try {
-    const res = await fetch(url, {
-      method: 'GET', signal: ctrl.signal, redirect: 'follow',
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/124 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml',
-      },
-    });
-    clearTimeout(timer);
-    if (res.status >= 400) return { ok: false, reason: `HTTP ${res.status}`, text: '' };
-    const reader = res.body?.getReader();
-    let body = '';
-    if (reader) {
-      while (body.length < 20_000) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        body += new TextDecoder().decode(value);
-      }
-      reader.cancel().catch(() => {});
-    }
-    const expired = EXPIRED_PATTERNS.find(p => p.test(body));
-    if (expired) return { ok: false, reason: `expired (${expired.source})`, text: body };
-    // 5,500 chars ≈ 1,375 tokens — covers role/requirements; trims benefits boilerplate
-    return { ok: true, reason: 'live', text: body.slice(0, 5_500) };
-  } catch (err) {
-    clearTimeout(timer);
-    return { ok: false, reason: err.name === 'AbortError' ? 'timeout' : err.message.slice(0, 80), text: '' };
-  }
+  const { live, reason, body } = await checkUrl(url, { timeoutMs: LIVENESS_TIMEOUT_MS });
+  if (live === false) return { ok: false, reason, text: '' };
+  return { ok: true, reason: reason || 'live', text: (body || '').slice(0, 5_500) };
 }
 
 // ── Triage-advance reader ─────────────────────────────────────────
@@ -455,24 +418,7 @@ Three tiers: High Confidence / Proceed with Caution / Suspicious.
   {"batch_status":"completed","score":X.X,"company":"{company}","role":"{role}","archetype":"{arch}","legitimacy":"{tier}"}`;
 }
 
-function guessCompany(url) {
-  try {
-    const h = new URL(url).hostname;
-    if (url.includes('greenhouse.io')) {
-      const m = url.match(/greenhouse\.io\/([^\/]+)/);
-      return m ? m[1].replace(/-/g, ' ') : 'Unknown';
-    }
-    if (url.includes('ashbyhq.com')) {
-      const m = url.match(/ashbyhq\.com\/([^\/]+)/);
-      return m ? m[1].replace(/-/g, ' ') : 'Unknown';
-    }
-    if (url.includes('lever.co')) {
-      const m = url.match(/jobs\.lever\.co\/([^\/]+)/);
-      return m ? m[1].replace(/-/g, ' ') : 'Unknown';
-    }
-    return h.replace(/^www\./, '').replace(/\.(com|io|ai|co)$/, '');
-  } catch { return 'Unknown'; }
-}
+// guessCompany imported from lib/ats-utils.mjs.
 
 // ── State file helpers ────────────────────────────────────────────
 function loadState() {
