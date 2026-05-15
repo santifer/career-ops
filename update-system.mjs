@@ -44,23 +44,41 @@ const SYSTEM_PATHS = [
   'modes/project.md',
   'modes/tracker.md',
   'modes/training.md',
+  'modes/latex.md',
   'modes/de/',
+  'modes/fr/',
+  'modes/ja/',
+  'modes/pt/',
+  'modes/ru/',
   'CLAUDE.md',
   'AGENTS.md',
+  'GEMINI.md',
   'generate-pdf.mjs',
+  'generate-latex.mjs',
   'merge-tracker.mjs',
   'verify-pipeline.mjs',
   'dedup-tracker.mjs',
   'normalize-statuses.mjs',
   'cv-sync-check.mjs',
   'update-system.mjs',
+  'scan.mjs',
+  'doctor.mjs',
+  'check-liveness.mjs',
+  'liveness-core.mjs',
+  'analyze-patterns.mjs',
+  'followup-cadence.mjs',
+  'gemini-eval.mjs',
+  'test-all.mjs',
   'batch/batch-prompt.md',
   'batch/batch-runner.sh',
   'dashboard/',
   'templates/',
   'fonts/',
+  '.agents/',
   '.claude/skills/',
+  '.gemini/commands/',
   'docs/',
+  'writing-samples/README.md',
   'VERSION',
   'DATA_CONTRACT.md',
   'CONTRIBUTING.md',
@@ -83,11 +101,18 @@ const USER_PATHS = [
   'reports/',
   'output/',
   'jds/',
+  'writing-samples/',
 ];
+
+function parseVersionFile(raw) {
+  // VERSION may carry a release-please marker, e.g. "1.6.0 # x-release-please-version".
+  // Take the first whitespace-delimited token so the marker doesn't break semver parsing.
+  return raw.trim().split(/\s+/)[0] || '';
+}
 
 function localVersion() {
   const vPath = join(ROOT, 'VERSION');
-  return existsSync(vPath) ? readFileSync(vPath, 'utf-8').trim() : '0.0.0';
+  return existsSync(vPath) ? parseVersionFile(readFileSync(vPath, 'utf-8')) : '0.0.0';
 }
 
 function compareVersions(a, b) {
@@ -136,34 +161,78 @@ async function check() {
   }
 
   const local = localVersion();
-  let remote;
+  let remote = '';
+  let releaseVersion = '';
+  let changelog = '';
 
+  // Fetch both sources in parallel — only fail offline if BOTH are unreachable.
+  // Use AbortSignal so a hung TCP connection can't stall the session-start check.
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
+  let versionResult, releaseResult;
   try {
-    const res = await fetch(RAW_VERSION_URL);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    remote = (await res.text()).trim();
-  } catch {
-    console.log(JSON.stringify({ status: 'offline', local }));
+    [versionResult, releaseResult] = await Promise.allSettled([
+      fetch(RAW_VERSION_URL, { signal: controller.signal }),
+      fetch(RELEASES_API, {
+        headers: {
+          'Accept': 'application/vnd.github.v3+json',
+          'User-Agent': 'career-ops-update-checker',
+        },
+        signal: controller.signal,
+      }),
+    ]);
+  } finally {
+    clearTimeout(timeoutId);
+  }
+
+  const SEMVER_RE = /^v?(\d+\.\d+\.\d+)$/i;
+
+  if (versionResult.status === 'fulfilled' && versionResult.value.ok) {
+    try {
+      const raw = parseVersionFile(await versionResult.value.text());
+      const match = raw.match(SEMVER_RE);
+      remote = match ? match[1] : '';
+    } catch {
+      // Body read failed; treat as no VERSION source
+    }
+  }
+
+  if (releaseResult.status === 'fulfilled' && releaseResult.value.ok) {
+    try {
+      const release = await releaseResult.value.json();
+      changelog = release.body || '';
+      const rawTag = String(release.tag_name || '').trim();
+      const match = rawTag.match(SEMVER_RE);
+      releaseVersion = match ? match[1] : '';
+    } catch {
+      // Body parse failed; treat as no release source
+    }
+  }
+
+  if (!remote && !releaseVersion) {
+    // Distinguish true network failures from "fetched OK but response was
+    // unparseable" — the latter shouldn't be silenced as offline since the
+    // network is actually fine.
+    const bothNetworkFailed =
+      versionResult.status !== 'fulfilled' &&
+      releaseResult.status !== 'fulfilled';
+    const status = bothNetworkFailed ? 'offline' : 'no-remote-version';
+    console.log(JSON.stringify({ status, local }));
     return;
+  }
+
+  // Use the higher version between VERSION file and GitHub Release
+  // (handles cases where VERSION file is not bumped after a release,
+  // or the raw host is unreachable but the API is).
+  if (!remote) {
+    remote = releaseVersion;
+  } else if (releaseVersion && compareVersions(releaseVersion, remote) > 0) {
+    remote = releaseVersion;
   }
 
   if (compareVersions(local, remote) >= 0) {
     console.log(JSON.stringify({ status: 'up-to-date', local, remote }));
     return;
-  }
-
-  // Fetch changelog from GitHub releases
-  let changelog = '';
-  try {
-    const res = await fetch(RELEASES_API, {
-      headers: { 'Accept': 'application/vnd.github.v3+json' }
-    });
-    if (res.ok) {
-      const release = await res.json();
-      changelog = release.body || '';
-    }
-  } catch {
-    // No changelog available, that's OK
   }
 
   console.log(JSON.stringify({
@@ -207,6 +276,25 @@ async function apply() {
     // 3. Checkout system files only
     console.log('Updating system files...');
     const updated = [];
+
+    // 3a. Bootstrap newly-introduced paths that the local update-system.mjs
+    // doesn't yet know about. Without this, cross-version migrations where
+    // a path is added to SYSTEM_PATHS by the new version can leave dangling
+    // symlinks — e.g. v1.6.x → v1.7.x where .agents/ was introduced but the
+    // local v1.6.x SYSTEM_PATHS didn't include it, so `.agents/` was never
+    // checked out while `.claude/skills/` was updated to symlink into it.
+    // See: https://github.com/santifer/career-ops/issues/649
+    const BOOTSTRAP_PATHS = ['.agents/'];
+    for (const path of BOOTSTRAP_PATHS) {
+      if (SYSTEM_PATHS.includes(path)) continue; // already in main loop
+      try {
+        git('checkout', 'FETCH_HEAD', '--', path);
+        updated.push(path);
+      } catch {
+        // Path may not exist in FETCH_HEAD yet
+      }
+    }
+
     for (const path of SYSTEM_PATHS) {
       try {
         git('checkout', 'FETCH_HEAD', '--', path);
@@ -222,6 +310,9 @@ async function apply() {
       for (const entry of gitStatusEntries()) {
         const file = entry.path;
         if (initialStatusPaths.has(file)) continue;
+        // Explicit SYSTEM_PATHS entries override USER_PATHS prefix matches.
+        // (e.g. writing-samples/README.md is system-owned doc inside a user dir.)
+        if (SYSTEM_PATHS.includes(file)) continue;
         for (const userPath of USER_PATHS) {
           if (file.startsWith(userPath)) {
             console.error(`SAFETY VIOLATION: User file was modified: ${file}`);
