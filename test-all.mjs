@@ -314,6 +314,137 @@ if (fileExists('VERSION')) {
   fail('VERSION file missing');
 }
 
+// ── 11. LOCATION FILTER — always_allow tier ───────────────────────
+
+console.log('\n11. Location filter — always_allow tier');
+
+try {
+  const { buildLocationFilter } = await import(pathToFileURL(join(ROOT, 'scan.mjs')).href);
+
+  const filter = buildLocationFilter({
+    always_allow: ['belgium', 'brussels'],
+    allow: ['europe', 'emea', 'remote'],
+    block: ['france', 'germany', 'united states'],
+  });
+
+  // Case 1: home-region passes regardless of other text
+  if (filter('Brussels, Belgium') === true) pass('Brussels, Belgium passes (always_allow hit)');
+  else fail('Brussels, Belgium should pass');
+
+  // Case 2: always_allow wins over block (THE motivating case for this tier)
+  if (filter('Remote, Belgium or France') === true) pass('Remote, Belgium or France passes (always_allow beats block)');
+  else fail('Remote, Belgium or France should pass — always_allow must win over block');
+
+  // Case 3: no always_allow hit, block still rejects
+  if (filter('Paris, France') === false) pass('Paris, France is rejected (block still applies)');
+  else fail('Paris, France should be rejected');
+
+  // Case 4: empty location → pass (existing semantics, unchanged)
+  if (filter('') === true) pass('empty location passes (unchanged semantics)');
+  else fail('empty location should pass');
+
+  // Case 5: case-insensitivity
+  if (filter('BRUSSELS, BELGIUM') === true) pass('case-insensitive match works');
+  else fail('case-insensitive match failed');
+
+  // Case 6: backward compatibility — no always_allow key behaves like stock allow/block
+  const stockFilter = buildLocationFilter({
+    allow: ['europe', 'remote'],
+    block: ['france'],
+  });
+  if (stockFilter('Remote, Belgium or France') === false) pass('without always_allow, block still wins (backward compatible)');
+  else fail('without always_allow, behaviour must match stock allow/block (block wins)');
+
+  // Case 7: null/missing locationFilter → pass-all filter (early-return path)
+  const nullFilter = buildLocationFilter(null);
+  if (nullFilter('Anywhere on Earth') === true && nullFilter('') === true) {
+    pass('null locationFilter returns a pass-all filter (early-return path)');
+  } else {
+    fail('null locationFilter should return a pass-all filter');
+  }
+
+  // Case 8: string-instead-of-array → wrapped to a 1-item list
+  const stringFilter = buildLocationFilter({ always_allow: 'belgium', block: ['france'] });
+  if (stringFilter('Remote, Belgium or France') === true) {
+    pass('always_allow as a bare string is wrapped to a single-item list');
+  } else {
+    fail('always_allow as a bare string should still work');
+  }
+
+  // Case 9: null/non-string items are filtered out (no crash, no false matches)
+  const messyFilter = buildLocationFilter({
+    always_allow: [null, 'belgium', 42, undefined],
+    block: ['france', null, 7],
+  });
+  if (messyFilter('Brussels, Belgium') === true && messyFilter('Paris, France') === false) {
+    pass('non-string entries (null, numbers, undefined) are filtered out without crashing');
+  } else {
+    fail('mixed-type keyword lists should not crash and should still match string entries');
+  }
+
+  // Case 10: all-null/non-string list → empty after normalization (no false rejects)
+  const allBadFilter = buildLocationFilter({ block: [null, 42, undefined], allow: ['remote'] });
+  if (allBadFilter('Remote') === true) {
+    pass('a block list with only non-string entries normalizes to [] (no false rejects)');
+  } else {
+    fail('non-string-only block list should not cause rejection');
+  }
+
+  // Case 11: empty / whitespace-only entries are dropped (would otherwise pass-all via includes(''))
+  const emptyKeywordFilter = buildLocationFilter({
+    always_allow: ['', '  '],
+    allow: ['remote'],
+    block: ['france'],
+  });
+  if (emptyKeywordFilter('Paris, France') === false) {
+    pass('empty/whitespace always_allow entries are dropped (no pass-all via includes(""))');
+  } else {
+    fail('empty always_allow entries should NOT bypass block — would have made the filter pass-all');
+  }
+
+  // Case 12: surrounding whitespace is trimmed so the keyword still matches
+  const whitespaceFilter = buildLocationFilter({
+    always_allow: ['  Belgium  ', '\tBrussels\n'],
+    block: ['france'],
+  });
+  if (whitespaceFilter('Remote, Belgium or France') === true) {
+    pass('whitespace-padded keywords still match after trim');
+  } else {
+    fail('"  Belgium  " should be trimmed and still match "Remote, Belgium or France"');
+  }
+
+  // Case 13: whitespace-only location is treated as missing (pass-all-tiers)
+  if (filter('   \t  ') === true) pass('whitespace-only location passes (treated as missing)');
+  else fail('whitespace-only location should pass');
+
+  // Case 14: non-string location (number/object/null) → pass without throwing
+  let crashed = false;
+  try {
+    const r1 = filter(42);
+    const r2 = filter({ city: 'Brussels' });
+    const r3 = filter(null);
+    const r4 = filter(undefined);
+    if (r1 === true && r2 === true && r3 === true && r4 === true) {
+      pass('non-string location values (number, object, null, undefined) pass without throwing');
+    } else {
+      fail(`non-string location results: number=${r1}, object=${r2}, null=${r3}, undefined=${r4}`);
+    }
+  } catch (e) {
+    crashed = true;
+    fail(`non-string location crashed: ${e.message}`);
+  }
+
+  // Case 15: a malformed location (e.g. legacy object) does NOT bypass block when interpreted naively —
+  // the guard returns true (pass) BEFORE block/allow even run, which is correct: scoring/eval happens
+  // downstream from the scan filter, so malformed locations should fall through to the manual evaluation
+  // step rather than being silently dropped here.
+  if (filter(42) === true) pass('non-string locations are passed through to downstream evaluation, not silently dropped');
+  else fail('non-string locations should pass through');
+
+} catch (e) {
+  fail(`always_allow tests crashed: ${e.message}`);
+}
+
 // ── SUMMARY ─────────────────────────────────────────────────────
 
 console.log('\n' + '='.repeat(50));

@@ -24,17 +24,26 @@
 # Filter scanned jobs by location. Applied AFTER title filter, BEFORE dedup.
 # If this entire block is absent, all locations pass (current default behavior).
 #
-# Semantics:
+# Semantics (case-insensitive substring, in this order):
 #   - Empty location string on a job → pass (don't penalize missing data)
-#   - Any `block` keyword present → reject (takes precedence over allow)
+#   - Any `always_allow` keyword present → pass (takes precedence over `block`)
+#   - Any `block` keyword present → reject
 #   - `allow` empty → pass (already cleared block)
 #   - `allow` non-empty → must match at least one keyword
-# All matches are case-insensitive substring.
+#
+# `always_allow` is optional. It rescues multi-location postings that name your
+# home region: with always_allow ["New York"] and block ["India"], a job listed
+# "Remote, New York or India" passes (New York wins), while "Remote, India" is
+# still rejected. Omit always_allow entirely and the filter behaves as before.
 #
 # Example below targets US-based remote + a couple of US metros, blocking
 # common foreign hubs. Customize to your geography.
 
 # location_filter:
+#   # always_allow is checked BEFORE block — keep this list to your home region only
+#   always_allow:
+#     - "United States"   # (replace with your home region)
+#     - "New York"
 #   allow:
 #     - "Remote"
 #     - "United States"
