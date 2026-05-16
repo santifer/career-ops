@@ -65,6 +65,26 @@ const COMPANY_FROM_SUBJECT_RE = [
 // ── Args ─────────────────────────────────────────────────────────────────────
 
 const args = process.argv.slice(2);
+
+if (args.includes('--help') || args.includes('-h')) {
+  console.log(`
+scan-gmail.mjs — Zero-LLM Gmail scanner for interview invitations
+
+Usage:
+  node scan-gmail.mjs                   Scan last 7 days (default)
+  node scan-gmail.mjs --days <N>        Scan last N days
+  node scan-gmail.mjs --dry-run         Preview without writing files
+  node scan-gmail.mjs --no-calendar     Skip Google Calendar event creation
+
+Setup:
+  1. Create OAuth 2.0 credentials at https://console.cloud.google.com/apis/credentials
+  2. Enable Gmail API and Google Calendar API
+  3. Save credentials as calendar/credentials.json
+  4. Run this script — browser will open for authorization
+  `.trim());
+  process.exit(0);
+}
+
 const dryRun = args.includes('--dry-run');
 const noCalendar = args.includes('--no-calendar');
 
@@ -465,27 +485,16 @@ async function addCalendarEvent(auth, interview, profile) {
   const calendarId = profile?.google?.calendar_id || 'primary';
   const calendar = google.calendar({ version: 'v3', auth });
 
-  let startDateTime, endDateTime, allDay = false;
-
-  if (interview.interviewDate) {
-    // Date string was extracted from email — try to parse it
-    const parsed = new Date(interview.interviewDate);
-    if (isNaN(parsed.getTime())) {
-      // Present but unparseable: don't create a misleading event
-      throw new Error(`Could not parse interview date: "${interview.interviewDate}"`);
-    }
-    startDateTime = parsed.toISOString();
-    endDateTime = new Date(parsed.getTime() + 60 * 60 * 1000).toISOString();
-  } else {
-    // No date detected in email — fall back to all-day placeholder on today
-    // Note: Google Calendar end date is exclusive, so end must be tomorrow
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(today.getDate() + 1);
-    allDay = true;
-    startDateTime = today.toISOString().slice(0, 10);
-    endDateTime = tomorrow.toISOString().slice(0, 10);
+  // Date string was extracted from email — try to parse it
+  const parsed = new Date(interview.interviewDate);
+  if (isNaN(parsed.getTime())) {
+    // Present but unparseable: don't create a misleading event
+    throw new Error(`Could not parse interview date: "${interview.interviewDate}"`);
   }
+  const startDateTime = parsed.toISOString();
+  const endDateTime = new Date(parsed.getTime() + 60 * 60 * 1000).toISOString();
+  // Use the system timezone so the event lands in the right slot on the user's calendar
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
   const event = {
     summary: `Interview: ${interview.company} - ${interview.role}`,
@@ -496,9 +505,8 @@ async function addCalendarEvent(auth, interview, profile) {
       interview.meetingLink ? `Meeting: ${interview.meetingLink}` : '',
       'Detected via scan-gmail',
     ].filter(Boolean).join('\n'),
-    ...(allDay
-      ? { start: { date: startDateTime }, end: { date: endDateTime } }
-      : { start: { dateTime: startDateTime }, end: { dateTime: endDateTime } }),
+    start: { dateTime: startDateTime, timeZone },
+    end: { dateTime: endDateTime, timeZone },
     ...(interview.meetingLink ? { location: interview.meetingLink } : {}),
   };
 

@@ -69,6 +69,7 @@ const scripts = [
   { name: 'dedup-tracker.mjs',            args: ['dedup-tracker.mjs'],                                   expectExit: 0 },
   { name: 'merge-tracker.mjs',            args: ['merge-tracker.mjs'],                                   expectExit: 0 },
   { name: 'update-system.mjs check',      args: ['update-system.mjs', 'check'],                          expectExit: 0 },
+  { name: 'scan-gmail.mjs --help',             args: ['scan-gmail.mjs', '--help'],                        expectExit: 0 },
   { name: 'scan-gmail.mjs --dry-run --days 7', args: ['scan-gmail.mjs', '--dry-run', '--days', '7'],     expectExit: 1, allowFail: true },
 ];
 
