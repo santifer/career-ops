@@ -31,12 +31,15 @@
  */
 
 import { readFileSync, existsSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, resolve } from 'path';
 import { load as loadYaml } from 'js-yaml';
 
 // ── Constants ────────────────────────────────────────────────────────
 const TAVILY_SEARCH_URL  = 'https://api.tavily.com/search';
 const TAVILY_EXTRACT_URL = 'https://api.tavily.com/extract';
-const PROFILE_PATH       = 'config/profile.yml';
+// Resolve relative to this module so imports from other directories work
+const PROFILE_PATH = resolve(dirname(fileURLToPath(import.meta.url)), 'config/profile.yml');
 
 // ── Config ───────────────────────────────────────────────────────────
 export function loadTavilyConfig() {
@@ -71,6 +74,45 @@ function requireConfig() {
   return cfg;
 }
 
+// ── Fetch with timeout ────────────────────────────────────────────────
+async function fetchWithTimeout(url, options = {}, timeoutMs = 10_000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } catch (err) {
+    if (err.name === 'AbortError') throw new Error(`Tavily request timed out after ${timeoutMs}ms`);
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// ── URL validation ────────────────────────────────────────────────────
+function isPrivateHost(hostname) {
+  if (/^(localhost|127\.|::1$)/i.test(hostname)) return true;
+  if (/^10\./i.test(hostname)) return true;
+  if (/^192\.168\./i.test(hostname)) return true;
+  const m = hostname.match(/^172\.(\d+)\./);
+  if (m && parseInt(m[1], 10) >= 16 && parseInt(m[1], 10) <= 31) return true;
+  return false;
+}
+
+function validateExtractUrls(rawUrls) {
+  const urls = Array.isArray(rawUrls) ? rawUrls : [rawUrls];
+  return urls.map(u => {
+    let parsed;
+    try { parsed = new URL(u); } catch { throw new Error(`Invalid URL: ${u}`); }
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      throw new Error(`URL must use http or https: ${u}`);
+    }
+    if (isPrivateHost(parsed.hostname)) {
+      throw new Error(`URL resolves to a private/local address and cannot be extracted: ${u}`);
+    }
+    return u;
+  });
+}
+
 // ── Core API calls ───────────────────────────────────────────────────
 
 /**
@@ -98,7 +140,7 @@ export async function tavilySearch(query, opts = {}) {
   if (opts.includeDomains?.length) body.include_domains = opts.includeDomains;
   if (opts.excludeDomains?.length) body.exclude_domains = opts.excludeDomains;
 
-  const res = await fetch(TAVILY_SEARCH_URL, {
+  const res = await fetchWithTimeout(TAVILY_SEARCH_URL, {
     method:  'POST',
     headers: { 'Content-Type': 'application/json' },
     body:    JSON.stringify(body),
@@ -114,12 +156,13 @@ export async function tavilySearch(query, opts = {}) {
  * @returns {Promise<TavilyExtractResult>}
  */
 export async function tavilyExtract(urls) {
-  const cfg = requireConfig();
+  const cfg       = requireConfig();
+  const vetted    = validateExtractUrls(urls);
   const body = {
     api_key: cfg.apiKey,
-    urls:    Array.isArray(urls) ? urls : [urls],
+    urls:    vetted,
   };
-  const res = await fetch(TAVILY_EXTRACT_URL, {
+  const res = await fetchWithTimeout(TAVILY_EXTRACT_URL, {
     method:  'POST',
     headers: { 'Content-Type': 'application/json' },
     body:    JSON.stringify(body),
@@ -244,14 +287,27 @@ async function runCli() {
     return;
   }
 
-  const depthIdx  = args.indexOf('--depth');
-  const maxIdx    = args.indexOf('--max');
-  const roleIdx   = args.indexOf('--role');
+  const depthIdx    = args.indexOf('--depth');
+  const maxIdx      = args.indexOf('--max');
+  const roleIdx     = args.indexOf('--role');
   const locationIdx = args.indexOf('--location');
-  const depth     = depthIdx  !== -1 ? args[depthIdx  + 1] : undefined;
-  const max       = maxIdx    !== -1 ? parseInt(args[maxIdx + 1]) : undefined;
+
+  const depthRaw = depthIdx !== -1 ? args[depthIdx + 1] : undefined;
+  const depth    = depthRaw === 'basic' || depthRaw === 'advanced' ? depthRaw : undefined;
+  if (depthRaw && !depth) { console.error('❌  --depth must be "basic" or "advanced"'); process.exit(1); }
+
+  const _maxRaw = maxIdx !== -1 ? parseInt(args[maxIdx + 1], 10) : NaN;
+  const max     = Number.isFinite(_maxRaw) && _maxRaw > 0 ? _maxRaw : undefined;
+  if (maxIdx !== -1 && max === undefined) { console.error('❌  --max must be a positive integer'); process.exit(1); }
+
   const asJson    = args.includes('--json');
   const withAnswer = args.includes('--answer');
+
+  // Indices to exclude when building a plain-text query
+  const excludeIdx = new Set();
+  [depthIdx, maxIdx, roleIdx, locationIdx].forEach(i => {
+    if (i !== -1) { excludeIdx.add(i); excludeIdx.add(i + 1); }
+  });
 
   if (args[0] === '--liveness') {
     const url = args[1];
@@ -299,8 +355,10 @@ async function runCli() {
     return;
   }
 
-  // Default: plain search
-  const query = args.filter(a => !a.startsWith('--') && a !== depth && a !== String(max)).join(' ');
+  // Default: plain search — build query from non-flag tokens, filtering by index
+  const query = args
+    .filter((a, i) => !excludeIdx.has(i) && !a.startsWith('--'))
+    .join(' ');
   if (!query) { console.error('Provide a search query.'); process.exit(1); }
 
   const r = await tavilySearch(query, {
