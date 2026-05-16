@@ -113,14 +113,23 @@ async function queryDatabase(databaseId, filter, cursor) {
   return notionFetch(`/databases/${databaseId}/query`, { method: 'POST', body });
 }
 
+async function getPropertyType(pageId, propertyName) {
+  try {
+    const page = await notionFetch(`/pages/${pageId}`);
+    return page.properties?.[propertyName]?.type || 'select';
+  } catch {
+    return 'select';
+  }
+}
+
 async function updatePageStatus(pageId, propertyName, statusValue) {
+  const propType = await getPropertyType(pageId, propertyName);
+  const payload  = propType === 'status'
+    ? { status: { name: statusValue } }
+    : { select: { name: statusValue } };
   return notionFetch(`/pages/${pageId}`, {
     method: 'PATCH',
-    body: {
-      properties: {
-        [propertyName]: { select: { name: statusValue } },
-      },
-    },
+    body: { properties: { [propertyName]: payload } },
   });
 }
 
@@ -231,6 +240,8 @@ function appendPipeline(items) {
       lines.push(`- [ ] ${e.url} | (Notion)${company} | ${e.title}`);
     });
   }
+  const pipelineDir = dirname(PIPELINE_PATH);
+  if (!existsSync(pipelineDir)) mkdirSync(pipelineDir, { recursive: true });
   if (!existsSync(PIPELINE_PATH)) writeFileSync(PIPELINE_PATH, '# Pipeline — Pending Evaluation\n');
   appendFileSync(PIPELINE_PATH, lines.join('\n') + '\n');
 }
