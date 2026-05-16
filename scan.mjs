@@ -47,6 +47,23 @@ mkdirSync('data', { recursive: true });
 
 const CONCURRENCY = 10;
 
+// ── Annualization multipliers ──────────────────────────────────────────
+// Used to normalize different compensation intervals to annual salary.
+// This constant is also used by providers (e.g., ashby.mjs) for salary parsing.
+
+const INTERVAL_MULTIPLIERS = {
+  '1 HOUR': 2080,
+  '1 DAY': 260,
+  '1 WEEK': 52,
+  '2 WEEK': 26,
+  '0.5 MONTH': 24,
+  '1 MONTH': 12,
+  '2 MONTH': 6,
+  '3 MONTH': 4,
+  '6 MONTH': 2,
+  '1 YEAR': 1,
+};
+
 // ── Provider loading ────────────────────────────────────────────────
 
 async function loadProviders(dir) {
@@ -135,6 +152,57 @@ function buildLocationFilter(locationFilter) {
     if (block.length > 0 && block.some(k => lower.includes(k))) return false;
     if (allow.length === 0) return true;
     return allow.some(k => lower.includes(k));
+  };
+}
+
+// ── Salary filter ───────────────────────────────────────────────────
+// Optional. If `salary_filter` is absent from portals.yml, all salaries pass.
+// Semantics:
+//   - min/max are yearly compensation filters (before conversion to annual)
+//   - max: 0 means "no upper limit"
+//   - If no salary data exists on a job, it passes (conservative behavior)
+//   - If currency mismatch (e.g., USD filter, EUR job), it fails
+//   - Partial ranges (min only or max only) work correctly via overlap logic
+// Uses null-safe checks (!= null, ??) to preserve 0 values correctly.
+
+function buildSalaryFilter(salaryFilter) {
+  if (!salaryFilter) return () => true;
+
+  const min = salaryFilter.min ?? 0;
+  const max = salaryFilter.max ?? 0;
+  const filterCurrency = (salaryFilter.currency || '').toUpperCase();
+
+  // If both min and max are 0, no filtering applied
+  if (min === 0 && max === 0) return () => true;
+
+  return (salary) => {
+    // If no salary data exists, pass (conservative - many providers don't expose salary)
+    if (!salary) return true;
+
+    const jobMin = salary.min ?? salary.max ?? null;
+    const jobMax = salary.max ?? salary.min ?? null;
+
+    // If we have no usable salary values, pass conservatively
+    if (jobMin == null && jobMax == null) return true;
+
+    // Currency handling - reject only if BOTH currencies exist and mismatch
+    const jobCurrency = (salary.currency || '').toUpperCase();
+    if (filterCurrency && jobCurrency && filterCurrency !== jobCurrency) {
+      return false;
+    }
+
+    // Range overlap logic - reject ONLY if job is completely outside filter range
+    // Job entirely below user minimum
+    if (min > 0 && jobMax != null && jobMax < min) {
+      return false;
+    }
+    // Job entirely above user maximum
+    if (max > 0 && jobMin != null && jobMin > max) {
+      return false;
+    }
+
+    // Otherwise pass (overlap exists or no valid range to compare)
+    return true;
   };
 }
 
@@ -278,6 +346,7 @@ async function main() {
   const companies = config.tracked_companies || [];
   const titleFilter = buildTitleFilter(config.title_filter);
   const locationFilter = buildLocationFilter(config.location_filter);
+  const salaryFilter = buildSalaryFilter(config.salary_filter);
 
   // 3. Resolve a provider for each enabled company
   const targets = [];
@@ -308,6 +377,7 @@ async function main() {
   let totalFound = 0;
   let totalFilteredTitle = 0;
   let totalFilteredLocation = 0;
+  let totalFilteredSalary = 0;
   let totalDupes = 0;
   const newOffers = [];
   const errors = [...resolveErrors];
@@ -329,6 +399,10 @@ async function main() {
         }
         if (!locationFilter(job.location)) {
           totalFilteredLocation++;
+          continue;
+        }
+        if (!salaryFilter(job.salary)) {
+          totalFilteredSalary++;
           continue;
         }
         if (seenUrls.has(job.url)) {
@@ -368,6 +442,7 @@ async function main() {
   console.log(`Total jobs found:      ${totalFound}`);
   console.log(`Filtered by title:     ${totalFilteredTitle} removed`);
   console.log(`Filtered by location:  ${totalFilteredLocation} removed`);
+  console.log(`Filtered by salary:   ${totalFilteredSalary} removed`);
   console.log(`Duplicates:            ${totalDupes} skipped`);
   console.log(`New offers added:      ${newOffers.length}`);
 
