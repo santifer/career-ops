@@ -24,7 +24,7 @@ function assertWorkableUrl(url) {
 }
 
 function resolveFeedUrl(entry) {
-  const url = entry.careers_url || '';
+  const url = typeof entry.careers_url === 'string' ? entry.careers_url : '';
   const match = url.match(/apply\.workable\.com\/([^/?#]+)/);
   if (!match) return null;
   return `https://apply.workable.com/${match[1]}/jobs.md`;
@@ -72,9 +72,10 @@ export function parseWorkableMarkdown(text, companyName) {
     const title = cols[1];
     if (!title || title === 'Title') continue;
     const location = cols[3] || '';
-    const urlMatch = cols[7].match(/\(([^)]+)\)/);
+    const urlMatch = line.match(/\[View\]\(([^)]+)\)/);
     let url = urlMatch ? urlMatch[1] : '';
     if (url.endsWith('.md')) url = url.slice(0, -3);
+    if (!url) continue;  // skip rows with no resolvable URL (e.g., malformed [View] link)
     jobs.push({ title, url, location, company: companyName });
   }
   return jobs;

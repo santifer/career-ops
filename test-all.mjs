@@ -370,9 +370,9 @@ try {
   if (parseWorkableMarkdown(null, 'X').length === 0) pass('null input → empty result (no crash)');
   else fail('null input should yield empty result without crashing');
 
-  // SSRF defence: untrusted hostname rejected before fetch
+  // fetch() reaches the http context on the happy path (allowed hostname).
   await workable.fetch(
-    { name: 'Bad', careers_url: 'https://apply.workable.com/evil' },
+    { name: 'Smoke', careers_url: 'https://apply.workable.com/optimile' },
     {
       transport: 'http',
       fetchText: async (url) => {
@@ -384,7 +384,48 @@ try {
       fetchJson: async () => { throw new Error('fetchJson should not be called'); },
     },
   );
-  pass('workable.fetch() reaches fetchText with allowed host');
+  pass('workable.fetch() reaches fetchText on the happy path (allowed hostname)');
+
+  // fetch() rejects an unresolvable careers_url (no apply.workable.com match in URL).
+  let rejected = false;
+  try {
+    await workable.fetch(
+      { name: 'BadUrl', careers_url: 'https://evil.com/totally-not-workable' },
+      {
+        transport: 'http',
+        fetchText: async () => { throw new Error('SSRF! should not reach here'); },
+        fetchJson: async () => { throw new Error('SSRF! should not reach here'); },
+      },
+    );
+  } catch (e) {
+    if (e.message.includes('cannot derive feed URL')) {
+      rejected = true;
+    } else {
+      fail(`workable.fetch() rejected with wrong error: ${e.message}`);
+    }
+  }
+  if (rejected) pass('workable.fetch() rejects unresolvable careers_url before fetch');
+  else fail('workable.fetch() should throw cannot-derive-feed-URL for non-Workable URLs');
+
+  // careers_url with non-string value (e.g. YAML mistake passing a number) → detect() returns null without crashing
+  if (workable.detect({ name: 'X', careers_url: 42 }) === null) {
+    pass('workable.detect() returns null for non-string careers_url (42)');
+  } else {
+    fail('workable.detect() should treat non-string careers_url as missing');
+  }
+
+  // Workable parser tolerates a title with a stray pipe — URL is extracted from the line, not cols[7]
+  const strayPipeMd = [
+    '| Title | Department | Location | Type | Salary | Posted | Details |',
+    '|---|---|---|---|---|---|---|',
+    '| Senior PM (full | part-time) | Product | Remote | Full-time | — | 2026-04-01 | [View](https://apply.workable.com/x/jobs/view/PIPE.md) |',
+  ].join('\n');
+  const strayJobs = parseWorkableMarkdown(strayPipeMd, 'X');
+  if (strayJobs.length === 1 && strayJobs[0].url === 'https://apply.workable.com/x/jobs/view/PIPE') {
+    pass('parseWorkableMarkdown extracts URL from line-level regex (survives stray pipes in title)');
+  } else {
+    fail(`stray-pipe row not handled correctly: ${JSON.stringify(strayJobs)}`);
+  }
 
 } catch (e) {
   fail(`workable provider tests crashed: ${e.message}`);
@@ -481,6 +522,24 @@ try {
     fail('non-array content should yield empty result');
   }
 
+  // careers_url with non-string value → detect() returns null without crashing
+  if (sr.detect({ name: 'X', careers_url: { foo: 'bar' } }) === null) {
+    pass('smartrecruiters.detect() returns null for non-string careers_url (object)');
+  } else {
+    fail('smartrecruiters.detect() should treat non-string careers_url as missing');
+  }
+
+  // Fallback URL when both ref AND id are missing → empty string (not "undefined" in URL)
+  const noRefNoId = parseSmartRecruitersResponse(
+    { content: [{ name: 'Stranded Role' }] },
+    'X',
+  );
+  if (noRefNoId.length === 1 && noRefNoId[0].url === '') {
+    pass('parseSmartRecruitersResponse returns url="" when both ref and id are missing');
+  } else {
+    fail(`expected url='' when ref+id both missing, got ${JSON.stringify(noRefNoId[0])}`);
+  }
+
 } catch (e) {
   fail(`smartrecruiters provider tests crashed: ${e.message}`);
 }
@@ -546,6 +605,13 @@ try {
     pass('null offers → empty result (no crash)');
   } else {
     fail('null offers should yield empty result');
+  }
+
+  // careers_url with non-string value → detect() returns null without crashing
+  if (recruitee.detect({ name: 'X', careers_url: null }) === null && recruitee.detect({ name: 'X', careers_url: 7 }) === null) {
+    pass('recruitee.detect() returns null for non-string careers_url (null and 7)');
+  } else {
+    fail('recruitee.detect() should treat non-string careers_url as missing');
   }
 
 } catch (e) {

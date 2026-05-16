@@ -24,7 +24,7 @@ function assertRecruiteeUrl(url) {
 }
 
 function resolveApiUrl(entry) {
-  const url = entry.careers_url || '';
+  const url = typeof entry.careers_url === 'string' ? entry.careers_url : '';
   const match = url.match(/([a-z0-9][a-z0-9-]*)\.recruitee\.com/);
   if (!match) return null;
   return `https://${match[1]}.recruitee.com/api/offers/`;
