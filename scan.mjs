@@ -117,21 +117,41 @@ function buildTitleFilter(titleFilter) {
 
 // ── Location filter ─────────────────────────────────────────────────
 // Optional. If `location_filter` is absent from portals.yml, all locations pass.
-// Semantics:
-//   - Empty location string → pass (don't penalize missing data)
-//   - `block` matches → reject (takes precedence over allow)
+// Semantics (case-insensitive substring, in this order):
+//   - Empty / whitespace-only / non-string location → pass (don't penalize
+//     missing or malformed provider data)
+//   - `always_allow` matches → pass (takes precedence over `block` — lets a
+//     multi-location string like "Remote, Belgium or France" through because
+//     the home region is an option, even though "france" is blocked)
+//   - `block` matches → reject
 //   - `allow` empty → pass (already cleared block)
 //   - `allow` non-empty → must match at least one keyword
-// All matches are case-insensitive substring.
 
-function buildLocationFilter(locationFilter) {
+// Normalize a keyword list from portals.yml: tolerates a bare string
+// (wrapped to a 1-item array), null/undefined (→ []), and non-string
+// entries (filtered out). Survivors are lowercased, trimmed, and any
+// resulting empty strings are dropped — an empty keyword would otherwise
+// match every location via String.includes(''), silently bypassing the
+// other tiers.
+function normalizeKeywordList(value) {
+  if (value == null) return [];
+  const arr = Array.isArray(value) ? value : [value];
+  return arr
+    .filter(k => typeof k === 'string')
+    .map(k => k.toLowerCase().trim())
+    .filter(Boolean);
+}
+
+export function buildLocationFilter(locationFilter) {
   if (!locationFilter) return () => true;
-  const allow = (locationFilter.allow || []).map(k => k.toLowerCase());
-  const block = (locationFilter.block || []).map(k => k.toLowerCase());
+  const alwaysAllow = normalizeKeywordList(locationFilter.always_allow);
+  const allow = normalizeKeywordList(locationFilter.allow);
+  const block = normalizeKeywordList(locationFilter.block);
 
   return (location) => {
-    if (!location) return true;
+    if (typeof location !== 'string' || location.trim() === '') return true;
     const lower = location.toLowerCase();
+    if (alwaysAllow.length > 0 && alwaysAllow.some(k => lower.includes(k))) return true;
     if (block.length > 0 && block.some(k => lower.includes(k))) return false;
     if (allow.length === 0) return true;
     return allow.some(k => lower.includes(k));
@@ -394,7 +414,11 @@ async function main() {
   console.log('→ Share results and get help: https://discord.gg/8pRpHETxa4');
 }
 
-main().catch(err => {
-  console.error('Fatal:', err.message);
-  process.exit(1);
-});
+// Only run main() when invoked directly (`node scan.mjs`), not when imported by tests.
+// `|| ''` guards the case where Node is invoked without a script arg (e.g. `node -e`).
+if (import.meta.url === pathToFileURL(process.argv[1] || '').href) {
+  main().catch(err => {
+    console.error('Fatal:', err.message);
+    process.exit(1);
+  });
+}
