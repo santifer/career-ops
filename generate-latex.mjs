@@ -20,8 +20,8 @@ import { existsSync, mkdirSync } from 'fs';
 
 const REQUIRED_SECTIONS = [
   '\\\\section{Education}',
-  '\\\\section{Work Experience}',
-  '\\\\section{Personal Projects}',
+  '\\\\section{Experience}',
+  '\\\\section{Projects}',
   '\\\\section{Technical Skills}',
 ];
 
@@ -90,9 +90,9 @@ async function main() {
     if (/\\resumeProjectHeading/.test(line)) projectHeadingCount++;
   }
 
-  // Check pdfgentounicode
+  // Check pdfgentounicode (accept bare form or wrapped in \ifpdf)
   if (!content.includes('\\pdfgentounicode=1')) {
-    issues.push('Missing \\pdfgentounicode=1 (ATS compatibility)');
+    issues.push('Missing \\pdfgentounicode=1 (ATS compatibility — wrap in \\ifpdf...\\fi for tectonic/XeLaTeX compatibility)');
   }
 
   const fileInfo = await stat(absPath);
@@ -177,7 +177,7 @@ async function main() {
       ];
       // First pass
       execFileSync('pdflatex', pdflatexArgs, { cwd: texDir, stdio: 'pipe', timeout: 120_000 });
-      // Second pass (resolves referenceS))
+      // Second pass (resolves references)
       execFileSync('pdflatex', pdflatexArgs, { cwd: texDir, stdio: 'pipe', timeout: 120_000 });
     }
 

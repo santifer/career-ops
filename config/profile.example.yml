@@ -67,7 +67,9 @@ location:
   # onsite_availability: "1 week/month in any city"
 
 cv:
-  output_format: "html" # "html" (default) or "latex"
+  # CV output format. Default is "latex" (Jake's Resume template, compiled via tectonic/pdflatex).
+  # Set to "html" to use the HTML/Playwright PDF pipeline instead.
+  output_format: "latex"
   # (Optional) Canva resume design ID for visual CV generation via /career-ops pdf.
   # Find it in your Canva design URL: https://www.canva.com/design/DAxxxxxxx/...
   # The ID starts with "D" and is 11 characters long.

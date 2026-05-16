@@ -122,11 +122,11 @@ After detecting archetype, read `modes/_profile.md` for the user's specific fram
 | WebSearch | Comp research, trends, company culture, LinkedIn contacts, fallback for JDs |
 | WebFetch | Fallback for extracting JDs from static pages |
 | Playwright | Verify offers (browser_navigate + browser_snapshot). **NEVER 2+ agents with Playwright in parallel.** |
-| Read | cv.md, _profile.md, article-digest.md, cv-template.html |
-| Write | Temporary HTML for PDF, applications.md, reports .md |
+| Read | cv.md, _profile.md, article-digest.md, cv-template.tex |
+| Write | Generated .tex CV, `batch/tracker-additions/*.tsv` (new entries via merge-tracker.mjs), reports .md |
 | Edit | Update tracker |
 | Canva MCP | Optional visual CV generation. Duplicate base design, edit text, export PDF. Requires `cv.canva_resume_design_id` in profile.yml. |
-| Bash | `node generate-pdf.mjs` |
+| Bash | `node generate-latex.mjs` (default); `node generate-pdf.mjs` if `cv.output_format: html` |
 
 ### Time-to-offer priority
 - Working demo + metrics > perfection
@@ -226,7 +226,7 @@ These rules apply to ALL generated text that ends up in candidate-facing documen
 - "demonstrated ability to" / "best practices" (name the practice)
 
 ### Unicode normalization for ATS
-`generate-pdf.mjs` automatically normalizes em-dashes, smart quotes, and zero-width characters to ASCII equivalents for maximum ATS compatibility. But avoid generating them in the first place.
+`generate-latex.mjs` compiles the `.tex` file to PDF via `pdflatex` or `tectonic` (auto-detected). For the HTML path, `generate-pdf.mjs` normalizes em-dashes, smart quotes, and zero-width characters to ASCII. Either way, avoid generating non-ASCII characters in the first place.
 
 ### Vary sentence structure
 - Don't start every bullet with the same verb

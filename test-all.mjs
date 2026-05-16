@@ -262,6 +262,7 @@ const expectedModes = [
   '_shared.md', '_profile.template.md', 'oferta.md', 'pdf.md', 'scan.md',
   'batch.md', 'apply.md', 'auto-pipeline.md', 'contacto.md', 'deep.md',
   'ofertas.md', 'pipeline.md', 'project.md', 'tracker.md', 'training.md',
+  'add.md',
 ];
 
 for (const mode of expectedModes) {
@@ -312,6 +313,192 @@ if (fileExists('VERSION')) {
   }
 } else {
   fail('VERSION file missing');
+}
+
+// ── 11. /add COMMAND INTEGRITY ──────────────────────────────────
+
+console.log('\n11. /add command integrity');
+
+// Mode file exists and has required structure
+if (fileExists('modes/add.md')) {
+  const addMode = readFile('modes/add.md');
+
+  // Required structural sections (semantic names — not brittle step numbers)
+  const addSections = ['Pipeline', 'Input Formats', 'Rules', 'Show a preview', 'Locate the correct section', 'Append a new entry'];
+  for (const section of addSections) {
+    if (addMode.includes(section)) {
+      pass(`add.md has section: ${section}`);
+    } else {
+      fail(`add.md missing section: ${section}`);
+    }
+  }
+
+  // Must write to cv.md (the canonical CV source)
+  if (addMode.includes('cv.md')) {
+    pass('add.md writes to cv.md');
+  } else {
+    fail('add.md does not reference cv.md');
+  }
+
+  // Must write to article-digest.md (proof points store)
+  if (addMode.includes('article-digest.md')) {
+    pass('add.md writes to article-digest.md');
+  } else {
+    fail('add.md does not reference article-digest.md');
+  }
+
+  // Must ask for confirmation before writing (ethical guard)
+  if (addMode.includes('confirm') || addMode.includes('preview')) {
+    pass('add.md requires confirmation before writing');
+  } else {
+    fail('add.md must require user confirmation before writing to cv.md');
+  }
+
+  // Must NOT invent data
+  if (addMode.toLowerCase().includes('never invent')) {
+    pass('add.md enforces no-invention rule');
+  } else {
+    fail('add.md must explicitly state NEVER invent data');
+  }
+
+  // Must handle GitHub URLs
+  if (addMode.includes('github.com')) {
+    pass('add.md handles GitHub URLs');
+  } else {
+    fail('add.md missing GitHub URL support');
+  }
+
+  // Must support duplicate detection
+  if (addMode.includes('duplicate') || addMode.includes('NEVER duplicate') || addMode.includes('already appears')) {
+    pass('add.md detects duplicates before inserting');
+  } else {
+    fail('add.md must check for duplicate entries');
+  }
+} else {
+  fail('modes/add.md does not exist');
+}
+
+// SKILL.md router has the `add` command registered
+if (fileExists('.claude/skills/career-ops/SKILL.md')) {
+  const skill = readFile('.claude/skills/career-ops/SKILL.md');
+  if (skill.includes('`add`') || skill.includes("'add'") || skill.includes('"add"') || skill.includes('| `add` |')) {
+    pass('SKILL.md router includes add command');
+  } else {
+    fail('SKILL.md router is missing the add command entry');
+  }
+  if (skill.includes('/career-ops add')) {
+    pass('SKILL.md discovery menu shows /career-ops add');
+  } else {
+    fail('SKILL.md discovery menu missing /career-ops add');
+  }
+} else {
+  fail('.claude/skills/career-ops/SKILL.md does not exist');
+}
+
+// AGENTS.md skill modes table includes add
+if (fileExists('AGENTS.md')) {
+  const agentsMd = readFile('AGENTS.md');
+  if (agentsMd.includes('`add`') && (agentsMd.includes('project') || agentsMd.includes('GitHub'))) {
+    pass('AGENTS.md skill modes table includes add');
+  } else {
+    fail('AGENTS.md skill modes table missing add command');
+  }
+} else {
+  fail('AGENTS.md does not exist');
+}
+
+// ── 12. JAKE'S RESUME TEMPLATE INTEGRITY ────────────────────────
+
+console.log('\n12. Jake\'s Resume template integrity');
+
+if (fileExists('templates/cv-template.tex')) {
+  const tex = readFile('templates/cv-template.tex');
+
+  // Jake's template uses Experience / Projects (not Work Experience / Personal Projects)
+  if (tex.includes('\\section{Experience}')) {
+    pass('cv-template.tex uses \\section{Experience} (Jake\'s template)');
+  } else {
+    fail('cv-template.tex must use \\section{Experience} not \\section{Work Experience}');
+  }
+
+  if (tex.includes('\\section{Projects}')) {
+    pass('cv-template.tex uses \\section{Projects} (Jake\'s template)');
+  } else {
+    fail('cv-template.tex must use \\section{Projects} not \\section{Personal Projects}');
+  }
+
+  // Required ATS placeholder — must be present for validator
+  if (tex.includes('\\pdfgentounicode=1')) {
+    pass('cv-template.tex has \\pdfgentounicode=1 (ATS compatibility)');
+  } else {
+    fail('cv-template.tex missing \\pdfgentounicode=1');
+  }
+
+  // Required content placeholders
+  const requiredPlaceholders = ['{{NAME}}', '{{EMAIL_URL}}', '{{LINKEDIN_URL}}', '{{GITHUB_URL}}',
+    '{{EDUCATION}}', '{{EXPERIENCE}}', '{{PROJECTS}}', '{{SKILLS}}'];
+  for (const ph of requiredPlaceholders) {
+    if (tex.includes(ph)) {
+      pass(`cv-template.tex has placeholder: ${ph}`);
+    } else {
+      fail(`cv-template.tex missing placeholder: ${ph}`);
+    }
+  }
+
+  // Must NOT use fontawesome or multicol (Jake's template doesn't need them)
+  // Regex catches both plain \usepackage{pkg} and optioned \usepackage[opts]{pkg} forms
+  if (!/\\usepackage\s*(?:\[[^\]]*\]\s*)?\{fontawesome\}/.test(tex)) {
+    pass('cv-template.tex does not require fontawesome');
+  } else {
+    fail('cv-template.tex must not include fontawesome — unavailable in many LaTeX environments');
+  }
+  if (!/\\usepackage\s*(?:\[[^\]]*\]\s*)?\{fontawesome5\}/.test(tex)) {
+    pass('cv-template.tex does not require fontawesome5');
+  } else {
+    fail('cv-template.tex must not include fontawesome5 — unavailable in many LaTeX environments');
+  }
+  if (!/\\usepackage\s*(?:\[[^\]]*\]\s*)?\{multicol\}/.test(tex)) {
+    pass('cv-template.tex does not require multicol');
+  } else {
+    fail('cv-template.tex must not include multicol — not used in Jake\'s single-column template');
+  }
+} else {
+  fail('templates/cv-template.tex does not exist');
+}
+
+// generate-latex.mjs section names match Jake's template
+if (fileExists('generate-latex.mjs')) {
+  const genLatex = readFile('generate-latex.mjs');
+  if (genLatex.includes('section{Experience}')) {
+    pass('generate-latex.mjs validates \\section{Experience}');
+  } else {
+    fail('generate-latex.mjs REQUIRED_SECTIONS must use Experience not Work Experience');
+  }
+  if (genLatex.includes("section{Projects}")) {
+    pass('generate-latex.mjs validates \\section{Projects}');
+  } else {
+    fail('generate-latex.mjs REQUIRED_SECTIONS must use Projects not Personal Projects');
+  }
+  // Must support tectonic
+  if (genLatex.includes('tectonic')) {
+    pass('generate-latex.mjs supports tectonic compiler');
+  } else {
+    fail('generate-latex.mjs must support tectonic as a LaTeX engine');
+  }
+} else {
+  fail('generate-latex.mjs does not exist');
+}
+
+// auto-pipeline.md uses latex as default
+if (fileExists('modes/auto-pipeline.md')) {
+  const ap = readFile('modes/auto-pipeline.md');
+  if (ap.includes('latex') && ap.includes('default')) {
+    pass('auto-pipeline.md uses latex as default output format');
+  } else {
+    fail('auto-pipeline.md must default to latex output format');
+  }
+} else {
+  fail('modes/auto-pipeline.md does not exist');
 }
 
 // ── SUMMARY ─────────────────────────────────────────────────────

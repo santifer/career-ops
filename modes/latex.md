@@ -28,7 +28,6 @@ The template at `templates/cv-template.tex` uses `{{PLACEHOLDER}}` syntax:
 | Placeholder | Source |
 |-------------|--------|
 | `{{NAME}}` | `profile.yml → candidate.full_name` |
-| `{{CONTACT_LINE}}` | Phone / City, State / Visa status — built from profile.yml |
 | `{{EMAIL_URL}}` | Raw email for `mailto:` URL — must not be LaTeX-escaped (from profile.yml) |
 | `{{EMAIL_DISPLAY}}` | Escaped email for display text — LaTeX-special chars like `_` must be escaped, e.g. `first\_name@example.com` |
 | `{{LINKEDIN_URL}}` | Full URL with scheme for `\href{}`: e.g. `https://linkedin.com/in/username`. If `profile.yml` stores a bare host+path (no scheme), prepend `https://` before substitution. |
@@ -123,7 +122,7 @@ All text content MUST be escaped for LaTeX before insertion:
 ## ATS Rules (same as pdf mode)
 
 - Single-column layout (enforced by template)
-- Standard section headers: Education, Work Experience, Personal Projects, Technical Skills
+- Standard section headers: Education, Experience, Projects, Technical Skills
 - UTF-8, machine-readable via `\pdfgentounicode=1`
 - Keywords distributed: first bullet of each role, skills section
 - No images, no graphics, no color in body text
@@ -142,6 +141,6 @@ Same ethical rules as `modes/pdf.md`:
 The generated `.tex` file uses only standard CTAN packages (no custom or bundled dependencies):
 
 - `latexsym`, `fullpage`, `titlesec`, `marvosym`, `color`, `verbatim`, `enumitem`
-- `hyperref`, `fancyhdr`, `babel`, `tabularx`, `fontawesome5`, `multicol`, `glyphtounicode`
+- `hyperref`, `fancyhdr`, `babel`, `tabularx`, `glyphtounicode`
 
 Upload the `.tex` file directly to Overleaf — compiles with no extra configuration.
