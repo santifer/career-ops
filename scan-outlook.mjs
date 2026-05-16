@@ -27,7 +27,7 @@
 import { readFileSync, writeFileSync, appendFileSync, existsSync, mkdirSync } from 'fs';
 import { createServer } from 'http';
 import { parse as parseUrl } from 'url';
-import { execSync } from 'child_process';
+import { spawn } from 'child_process';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import yaml from 'js-yaml';
@@ -46,8 +46,10 @@ const DRY_RUN   = process.argv.includes('--dry-run');
 const AUTH_ONLY = process.argv.includes('--auth');
 const TODAY     = new Date().toISOString().slice(0, 10);
 
-const daysArg = process.argv.indexOf('--days');
-const DAYS    = daysArg !== -1 ? parseInt(process.argv[daysArg + 1]) : 7;
+const daysArg   = process.argv.indexOf('--days');
+const _daysParsed = daysArg !== -1 ? parseInt(process.argv[daysArg + 1], 10) : NaN;
+const DAYS      = Number.isFinite(_daysParsed) && _daysParsed > 0 ? _daysParsed : 7;
+if (daysArg !== -1 && !Number.isFinite(_daysParsed)) console.warn('Warning: invalid --days value, using default 7');
 
 const GRAPH_BASE = 'https://graph.microsoft.com/v1.0';
 const AUTH_BASE  = 'https://login.microsoftonline.com';
@@ -115,7 +117,11 @@ async function runAuthFlow(cfg) {
 
   console.log('\nOpening browser for Microsoft authentication...');
   console.log('If browser does not open, visit:\n' + authUrl + '\n');
-  try { execSync(`start "" "${authUrl}"`, { stdio: 'ignore' }); } catch {}
+  try {
+    if (process.platform === 'win32') spawn('cmd.exe', ['/c', 'start', '', authUrl], { shell: false, detached: true, stdio: 'ignore' }).unref();
+    else if (process.platform === 'darwin') spawn('open', [authUrl], { shell: false, detached: true, stdio: 'ignore' }).unref();
+    else spawn('xdg-open', [authUrl], { shell: false, detached: true, stdio: 'ignore' }).unref();
+  } catch { /* browser open is best-effort */ }
 
   return new Promise((resolve, reject) => {
     const server = createServer(async (req, res) => {
@@ -277,12 +283,14 @@ function createPrepFile(company, role, dateTime, meetingLink, sender) {
 
   if (existsSync(filename)) return filename; // don't overwrite existing prep
 
+  const safeCompany = company.replace(/'/g, "''");
+  const safeRole    = role.replace(/'/g, "''");
   const content = `---
-title: "${company} — ${role}"
+title: '${safeCompany} — ${safeRole}'
 date: ${TODAY}
 type: prescreen
-company: ${company}
-role: ${role}
+company: '${safeCompany}'
+role: '${safeRole}'
 status: upcoming
 tags:
   - Interview
@@ -410,6 +418,8 @@ async function main() {
   console.log(`Duplicates:       ${skipped}`);
 
   if (!DRY_RUN && historyRows.length > 0) {
+    const historyDir = dirname(SCAN_HISTORY_PATH);
+    if (!existsSync(historyDir)) mkdirSync(historyDir, { recursive: true });
     if (!existsSync(SCAN_HISTORY_PATH)) {
       writeFileSync(SCAN_HISTORY_PATH, 'url\tfirst_seen\tportal\ttitle\tcompany\tstatus\n');
     }
