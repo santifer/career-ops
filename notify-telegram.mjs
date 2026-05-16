@@ -109,7 +109,6 @@ async function telegramFetch(method, body) {
 }
 
 async function sendMessage(text) {
-  const { chatId } = loadConfig();
   if (DRY_RUN) {
     console.log('[dry-run] Would send to Telegram:');
     console.log('─'.repeat(40));
@@ -117,6 +116,7 @@ async function sendMessage(text) {
     console.log('─'.repeat(40));
     return;
   }
+  const { chatId } = loadConfig();
   await telegramFetch('sendMessage', {
     chat_id:    chatId,
     text,
@@ -243,8 +243,8 @@ function formatPipelinePayload(payload) {
     }
     return lines.join('\n');
   } catch {
-    // Plain text fallback
-    return payload.length > 4000 ? payload.slice(0, 4000) + '…' : payload;
+    const safe = escapeHtml(payload);
+    return safe.length > 4000 ? safe.slice(0, 4000) + '…' : safe;
   }
 }
 
