@@ -52,15 +52,16 @@ const DAYS = Number.isFinite(_daysParsed) && _daysParsed > 0 ? _daysParsed : nul
 
 // ── Config ───────────────────────────────────────────────────────────
 function loadConfig() {
-  if (!existsSync(PROFILE_PATH)) {
-    console.error(`❌  config/profile.yml not found. Run onboarding first.`);
-    process.exit(1);
+  let profile = {};
+  if (existsSync(PROFILE_PATH)) {
+    profile = loadYaml(readFileSync(PROFILE_PATH, 'utf8')) || {};
+  } else {
+    console.warn('⚠️  config/profile.yml not found — falling back to environment variables.');
   }
-  const profile = loadYaml(readFileSync(PROFILE_PATH, 'utf8')) || {};
   const n = profile.notion || {};
 
-  const token       = n.token       || process.env.NOTION_TOKEN;
-  const databaseId  = n.database_id || process.env.NOTION_DATABASE_ID;
+  const token      = n.token       || process.env.NOTION_TOKEN;
+  const databaseId = n.database_id || process.env.NOTION_DATABASE_ID;
 
   if (!AUTH_MODE && (!token || !databaseId)) {
     console.error(
@@ -78,12 +79,13 @@ function loadConfig() {
   return {
     token,
     databaseId,
-    statusProperty:    n.status_property   || 'Status',
-    statusUnreviewed:  n.status_unreviewed  || 'To Review',
-    statusQueued:      n.status_queued      || '',
-    urlProperty:       n.url_property       || 'URL',
-    titleProperty:     n.title_property     || 'Name',
-    companyProperty:   n.company_property   || '',
+    statusProperty:     n.status_property      || 'Status',
+    statusPropertyType: n.status_property_type === 'status' ? 'status' : 'select',
+    statusUnreviewed:   n.status_unreviewed     || 'To Review',
+    statusQueued:       n.status_queued         || '',
+    urlProperty:        n.url_property          || 'URL',
+    titleProperty:      n.title_property        || 'Name',
+    companyProperty:    n.company_property      || '',
   };
 }
 
@@ -301,11 +303,11 @@ async function main() {
   console.log('━'.repeat(44));
   if (DRY_RUN) console.log('DRY RUN — no files will be written\n');
 
-  // Build filter
-  let filter = {
-    property: cfg.statusProperty,
-    select: { equals: cfg.statusUnreviewed },
-  };
+  // Build filter — use 'status' or 'select' shape based on the property type
+  const statusFilterValue = cfg.statusPropertyType === 'status'
+    ? { status: { equals: cfg.statusUnreviewed } }
+    : { select: { equals: cfg.statusUnreviewed } };
+  let filter = { property: cfg.statusProperty, ...statusFilterValue };
 
   if (DAYS !== null) {
     const since = new Date();
@@ -368,7 +370,15 @@ async function main() {
       continue;
     }
 
-    if (title && !passesFilter(title)) {
+    if (!title) {
+      process.stdout.write('(no title — skipped)\n');
+      totalSkippedFilter++;
+      historyRows.push(`${normalUrl}\t${TODAY}\tNotion\t\t${company}\tskipped_no_title`);
+      seenUrls.add(normalUrl);
+      continue;
+    }
+
+    if (!passesFilter(title)) {
       process.stdout.write('filtered\n');
       totalSkippedFilter++;
       historyRows.push(`${normalUrl}\t${TODAY}\tNotion\t${title}\t${company}\tskipped_title`);
