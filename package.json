@@ -9,6 +9,7 @@
     "dedup": "node dedup-tracker.mjs",
     "merge": "node merge-tracker.mjs",
     "pdf": "node generate-pdf.mjs",
+    "resume-ops": "node resume-ops.mjs",
     "sync-check": "node cv-sync-check.mjs",
     "update:check": "node update-system.mjs check",
     "update": "node update-system.mjs apply",
@@ -35,6 +36,9 @@
     "@google/generative-ai": "^0.24.1",
     "dotenv": "^17.0.0",
     "js-yaml": "^4.1.1",
-    "playwright": "^1.58.1"
+    "jsonresume-theme-stackoverflow": "^3.3.0",
+    "playwright": "^1.58.1",
+    "puppeteer": "^24.43.1",
+    "resumed": "^6.1.0"
   }
 }

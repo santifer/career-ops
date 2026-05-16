@@ -1,0 +1,3 @@
+We are looking for a Senior Product Manager with experience in AI and automation. 
+The ideal candidate has experience with Python, LLMs, and high-quality resume generation.
+Key skills: Product Management, AI, Python, REST APIs.
