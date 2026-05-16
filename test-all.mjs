@@ -314,6 +314,244 @@ if (fileExists('VERSION')) {
   fail('VERSION file missing');
 }
 
+// ── 11. PROVIDERS — Workable ────────────────────────────────────────
+
+console.log('\n11. Provider — workable');
+
+try {
+  const workable = (await import(pathToFileURL(join(ROOT, 'providers/workable.mjs')).href)).default;
+  const { parseWorkableMarkdown } = await import(pathToFileURL(join(ROOT, 'providers/workable.mjs')).href);
+
+  // detect() — auto-detection from careers_url
+  if (workable.id === 'workable') pass('workable.id is "workable"');
+  else fail(`workable.id is ${JSON.stringify(workable.id)}`);
+
+  const hit = workable.detect({ name: 'TestCo', careers_url: 'https://apply.workable.com/optimile' });
+  if (hit && hit.url === 'https://apply.workable.com/optimile/jobs.md') {
+    pass('workable.detect() resolves apply.workable.com/<slug> → /jobs.md feed');
+  } else {
+    fail(`workable.detect() returned ${JSON.stringify(hit)}`);
+  }
+
+  const miss = workable.detect({ name: 'TestCo', careers_url: 'https://example.com/careers' });
+  if (miss === null) pass('workable.detect() returns null for non-workable URLs');
+  else fail(`workable.detect() should return null, got ${JSON.stringify(miss)}`);
+
+  // parse() — markdown table
+  const sampleMd = [
+    '# Optimile — All Open Positions',
+    '',
+    '| Title | Department | Location | Type | Salary | Posted | Details |',
+    '|---|---|---|---|---|---|---|',
+    '| Senior AI PM | Product | Ghent, Belgium | Full-time | — | 2026-04-01 | [View](https://apply.workable.com/optimile/jobs/view/ABC123.md) |',
+    '| Tech Lead | Engineering | Remote | Full-time | — | 2026-03-25 | [View](https://apply.workable.com/optimile/jobs/view/DEF456.md) |',
+  ].join('\n');
+
+  const jobs = parseWorkableMarkdown(sampleMd, 'Optimile');
+  if (jobs.length === 2) pass('parseWorkableMarkdown extracts 2 jobs from 2-row table');
+  else fail(`parseWorkableMarkdown returned ${jobs.length} jobs, expected 2`);
+
+  if (jobs[0]?.title === 'Senior AI PM' && jobs[0]?.location === 'Ghent, Belgium' && jobs[0]?.company === 'Optimile') {
+    pass('parseWorkableMarkdown extracts title, location, company correctly');
+  } else {
+    fail(`parseWorkableMarkdown row 0 = ${JSON.stringify(jobs[0])}`);
+  }
+
+  if (jobs[0]?.url === 'https://apply.workable.com/optimile/jobs/view/ABC123') {
+    pass('parseWorkableMarkdown strips .md suffix from job URL');
+  } else {
+    fail(`parseWorkableMarkdown should strip .md; got url=${JSON.stringify(jobs[0]?.url)}`);
+  }
+
+  // Robustness
+  if (parseWorkableMarkdown('', 'X').length === 0) pass('empty input → empty result');
+  else fail('empty input should yield empty result');
+
+  if (parseWorkableMarkdown(null, 'X').length === 0) pass('null input → empty result (no crash)');
+  else fail('null input should yield empty result without crashing');
+
+  // SSRF defence: untrusted hostname rejected before fetch
+  await workable.fetch(
+    { name: 'Bad', careers_url: 'https://apply.workable.com/evil' },
+    {
+      transport: 'http',
+      fetchText: async (url) => {
+        if (!url.startsWith('https://apply.workable.com/')) {
+          throw new Error('fetchText called with unexpected URL');
+        }
+        return '| Title | Department | Location | Type | Salary | Posted | Details |\n|---|---|---|---|---|---|---|\n';
+      },
+      fetchJson: async () => { throw new Error('fetchJson should not be called'); },
+    },
+  );
+  pass('workable.fetch() reaches fetchText with allowed host');
+
+} catch (e) {
+  fail(`workable provider tests crashed: ${e.message}`);
+}
+
+// ── 12. PROVIDERS — SmartRecruiters ─────────────────────────────────
+
+console.log('\n12. Provider — smartrecruiters');
+
+try {
+  const sr = (await import(pathToFileURL(join(ROOT, 'providers/smartrecruiters.mjs')).href)).default;
+  const { parseSmartRecruitersResponse } = await import(pathToFileURL(join(ROOT, 'providers/smartrecruiters.mjs')).href);
+
+  if (sr.id === 'smartrecruiters') pass('smartrecruiters.id is "smartrecruiters"');
+  else fail(`smartrecruiters.id is ${JSON.stringify(sr.id)}`);
+
+  const hitCareers = sr.detect({ name: 'Adyen', careers_url: 'https://careers.smartrecruiters.com/adyen' });
+  if (hitCareers && hitCareers.url.startsWith('https://api.smartrecruiters.com/v1/companies/adyen/postings')) {
+    pass('smartrecruiters.detect() resolves careers.smartrecruiters.com/<slug> → api URL');
+  } else {
+    fail(`smartrecruiters.detect(careers) returned ${JSON.stringify(hitCareers)}`);
+  }
+
+  const hitJobs = sr.detect({ name: 'X', careers_url: 'https://jobs.smartrecruiters.com/x' });
+  if (hitJobs && hitJobs.url.startsWith('https://api.smartrecruiters.com/v1/companies/x/postings')) {
+    pass('smartrecruiters.detect() also handles jobs.smartrecruiters.com');
+  } else {
+    fail(`smartrecruiters.detect(jobs) returned ${JSON.stringify(hitJobs)}`);
+  }
+
+  if (sr.detect({ name: 'X', careers_url: 'https://example.com/careers' }) === null) {
+    pass('smartrecruiters.detect() returns null for non-SR URLs');
+  } else {
+    fail('smartrecruiters.detect() should return null for non-SR URLs');
+  }
+
+  // parseSmartRecruitersResponse
+  const sample = {
+    content: [
+      {
+        id: 'abc-123',
+        name: 'Senior PM',
+        ref: 'https://api.smartrecruiters.com/v1/companies/sgs/postings/abc-123',
+        location: { fullLocation: 'Geneva, Switzerland', remote: false },
+      },
+      {
+        id: 'def-456',
+        name: 'Remote AI Engineer',
+        ref: 'https://api.smartrecruiters.com/v1/companies/sgs/postings/def-456',
+        location: { city: 'Paris', country: 'France', remote: true },
+      },
+      {
+        id: 'ghi-789',
+        name: 'No-ref Role',
+        location: { fullLocation: 'Berlin, Germany' },
+      },
+    ],
+  };
+  const jobs = parseSmartRecruitersResponse(sample, 'SGS');
+  if (jobs.length === 3) pass('parseSmartRecruitersResponse extracts 3 jobs');
+  else fail(`parseSmartRecruitersResponse returned ${jobs.length} jobs`);
+
+  if (jobs[0]?.location === 'Geneva, Switzerland' && jobs[0]?.title === 'Senior PM') {
+    pass('parseSmartRecruitersResponse uses fullLocation when present');
+  } else {
+    fail(`row 0 = ${JSON.stringify(jobs[0])}`);
+  }
+
+  if (jobs[1]?.location === 'Paris, France, Remote') {
+    pass('parseSmartRecruitersResponse builds location from city/country/remote when no fullLocation');
+  } else {
+    fail(`row 1 location = ${JSON.stringify(jobs[1]?.location)}, expected "Paris, France, Remote"`);
+  }
+
+  if (jobs[0]?.url === 'https://jobs.smartrecruiters.com/sgs/postings/abc-123') {
+    pass('parseSmartRecruitersResponse rewrites api.smartrecruiters.com → jobs.smartrecruiters.com');
+  } else {
+    fail(`row 0 url = ${JSON.stringify(jobs[0]?.url)}`);
+  }
+
+  if (jobs[2]?.url && jobs[2].url.startsWith('https://jobs.smartrecruiters.com/sgs/ghi-789')) {
+    pass('parseSmartRecruitersResponse falls back to synthetic URL when ref is missing');
+  } else {
+    fail(`row 2 url = ${JSON.stringify(jobs[2]?.url)}`);
+  }
+
+  // Empty input safety
+  if (parseSmartRecruitersResponse({}, 'X').length === 0) pass('empty {} input → empty result');
+  else fail('empty {} input should yield empty result');
+
+  if (parseSmartRecruitersResponse({ content: 'not an array' }, 'X').length === 0) {
+    pass('non-array content → empty result (no crash)');
+  } else {
+    fail('non-array content should yield empty result');
+  }
+
+} catch (e) {
+  fail(`smartrecruiters provider tests crashed: ${e.message}`);
+}
+
+// ── 13. PROVIDERS — Recruitee ───────────────────────────────────────
+
+console.log('\n13. Provider — recruitee');
+
+try {
+  const recruitee = (await import(pathToFileURL(join(ROOT, 'providers/recruitee.mjs')).href)).default;
+  const { parseRecruiteeResponse } = await import(pathToFileURL(join(ROOT, 'providers/recruitee.mjs')).href);
+
+  if (recruitee.id === 'recruitee') pass('recruitee.id is "recruitee"');
+  else fail(`recruitee.id is ${JSON.stringify(recruitee.id)}`);
+
+  const hit = recruitee.detect({ name: 'Channable', careers_url: 'https://channable.recruitee.com' });
+  if (hit && hit.url === 'https://channable.recruitee.com/api/offers/') {
+    pass('recruitee.detect() resolves <slug>.recruitee.com → api offers');
+  } else {
+    fail(`recruitee.detect() returned ${JSON.stringify(hit)}`);
+  }
+
+  if (recruitee.detect({ name: 'X', careers_url: 'https://example.com/careers' }) === null) {
+    pass('recruitee.detect() returns null for non-recruitee URLs');
+  } else {
+    fail('recruitee.detect() should return null for non-recruitee URLs');
+  }
+
+  // parseRecruiteeResponse
+  const sample = {
+    offers: [
+      { title: 'Senior PM', careers_url: 'https://channable.recruitee.com/o/senior-pm', city: 'Utrecht', country: 'Netherlands', remote: false },
+      { title: 'Backend Eng', url: 'https://channable.recruitee.com/o/backend', city: 'Amsterdam', country: 'Netherlands', remote: true },
+      { title: 'AI Lead', location: 'Remote, EMEA' },
+    ],
+  };
+  const jobs = parseRecruiteeResponse(sample, 'Channable');
+  if (jobs.length === 3) pass('parseRecruiteeResponse extracts 3 offers');
+  else fail(`parseRecruiteeResponse returned ${jobs.length} offers`);
+
+  if (jobs[0]?.title === 'Senior PM' && jobs[0]?.company === 'Channable' && jobs[0]?.url === 'https://channable.recruitee.com/o/senior-pm') {
+    pass('parseRecruiteeResponse prefers careers_url field over url');
+  } else {
+    fail(`row 0 = ${JSON.stringify(jobs[0])}`);
+  }
+
+  if (jobs[1]?.location === 'Amsterdam, Netherlands, Remote') {
+    pass('parseRecruiteeResponse assembles city/country/remote when no location field');
+  } else {
+    fail(`row 1 location = ${JSON.stringify(jobs[1]?.location)}, expected "Amsterdam, Netherlands, Remote"`);
+  }
+
+  if (jobs[2]?.location === 'Remote, EMEA') {
+    pass('parseRecruiteeResponse uses explicit location field when present');
+  } else {
+    fail(`row 2 location = ${JSON.stringify(jobs[2]?.location)}`);
+  }
+
+  if (parseRecruiteeResponse({}, 'X').length === 0) pass('empty {} → empty result');
+  else fail('empty {} should yield empty result');
+
+  if (parseRecruiteeResponse({ offers: null }, 'X').length === 0) {
+    pass('null offers → empty result (no crash)');
+  } else {
+    fail('null offers should yield empty result');
+  }
+
+} catch (e) {
+  fail(`recruitee provider tests crashed: ${e.message}`);
+}
+
 // ── SUMMARY ─────────────────────────────────────────────────────
 
 console.log('\n' + '='.repeat(50));
