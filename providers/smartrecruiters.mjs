@@ -10,6 +10,7 @@
 const ALLOWED_SMARTRECRUITERS_HOSTS = new Set(['api.smartrecruiters.com']);
 const SR_CAREERS_HOSTS = new Set(['careers.smartrecruiters.com', 'jobs.smartrecruiters.com']);
 const SR_PAGE_SIZE = 100;
+const SR_MAX_PAGES = 50;  // safety cap (5000 postings @ 100/page)
 
 function assertSmartRecruitersUrl(url) {
   let parsed;
@@ -25,7 +26,7 @@ function assertSmartRecruitersUrl(url) {
   return url;
 }
 
-function resolveApiUrl(entry) {
+function resolveSlug(entry) {
   const raw = typeof entry.careers_url === 'string' ? entry.careers_url : '';
   if (!raw) return null;
   let parsed;
@@ -37,8 +38,16 @@ function resolveApiUrl(entry) {
   if (parsed.protocol !== 'https:') return null;
   if (!SR_CAREERS_HOSTS.has(parsed.hostname)) return null;
   const slug = parsed.pathname.split('/').filter(Boolean)[0];
-  if (!slug) return null;
-  return `https://api.smartrecruiters.com/v1/companies/${slug}/postings?limit=${SR_PAGE_SIZE}&offset=0&status=PUBLIC`;
+  return slug || null;
+}
+
+function buildPostingsUrl(slug, offset = 0) {
+  return `https://api.smartrecruiters.com/v1/companies/${slug}/postings?limit=${SR_PAGE_SIZE}&offset=${offset}&status=PUBLIC`;
+}
+
+function resolveApiUrl(entry) {
+  const slug = resolveSlug(entry);
+  return slug ? buildPostingsUrl(slug, 0) : null;
 }
 
 /** @type {Provider} */
@@ -51,11 +60,20 @@ export default {
   },
 
   async fetch(entry, ctx) {
-    const apiUrl = resolveApiUrl(entry);
-    if (!apiUrl) throw new Error(`smartrecruiters: cannot derive API URL for ${entry.name}`);
-    assertSmartRecruitersUrl(apiUrl);
-    const json = await ctx.fetchJson(apiUrl, { redirect: 'error' });
-    return parseSmartRecruitersResponse(json, entry.name);
+    const slug = resolveSlug(entry);
+    if (!slug) throw new Error(`smartrecruiters: cannot derive API URL for ${entry.name}`);
+
+    const all = [];
+    for (let page = 0; page < SR_MAX_PAGES; page++) {
+      const apiUrl = buildPostingsUrl(slug, page * SR_PAGE_SIZE);
+      assertSmartRecruitersUrl(apiUrl);
+      const json = await ctx.fetchJson(apiUrl, { redirect: 'error' });
+      const parsed = parseSmartRecruitersResponse(json, entry.name);
+      if (parsed.length === 0) break;
+      all.push(...parsed);
+      if (parsed.length < SR_PAGE_SIZE) break;  // last page (short)
+    }
+    return all;
   },
 };
 

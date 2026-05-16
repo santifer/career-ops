@@ -65,6 +65,8 @@ export default {
  *   | Title | Department | Location | Type | Salary | Posted | Details |
  * where `Details` holds a markdown link
  *   [View](https://apply.workable.com/<slug>/jobs/view/<id>.md)
+ * URLs are validated against `https://apply.workable.com/` — off-domain or
+ * non-HTTPS [View] links are skipped (not emitted).
  *
  * @param {string} text — markdown body
  * @param {string} companyName — value to write into job.company
@@ -85,6 +87,16 @@ export function parseWorkableMarkdown(text, companyName) {
     let url = urlMatch ? urlMatch[1] : '';
     if (url.endsWith('.md')) url = url.slice(0, -3);
     if (!url) continue;  // skip rows with no resolvable URL (e.g., malformed [View] link)
+
+    // Validate the extracted URL — must parse as https://apply.workable.com/...
+    try {
+      const parsedUrl = new URL(url);
+      if (parsedUrl.protocol !== 'https:' || parsedUrl.hostname !== 'apply.workable.com') continue;
+      url = parsedUrl.href;
+    } catch {
+      continue;
+    }
+
     jobs.push({ title, url, location, company: companyName });
   }
   return jobs;

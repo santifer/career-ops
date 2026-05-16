@@ -435,6 +435,21 @@ try {
     fail(`stray-pipe row not handled correctly: ${JSON.stringify(strayJobs)}`);
   }
 
+  // Off-domain [View] link is dropped (URL validation)
+  const offDomainMd = [
+    '| Title | Department | Location | Type | Salary | Posted | Details |',
+    '|---|---|---|---|---|---|---|',
+    '| Good Role | Product | Remote | Full-time | — | 2026-04-01 | [View](https://apply.workable.com/x/jobs/view/ABC.md) |',
+    '| Evil Role | Product | Remote | Full-time | — | 2026-04-01 | [View](https://evil.example/jobs/view/X) |',
+    '| Insecure Role | Product | Remote | Full-time | — | 2026-04-01 | [View](http://apply.workable.com/x/jobs/view/Y.md) |',
+  ].join('\n');
+  const filteredJobs = parseWorkableMarkdown(offDomainMd, 'X');
+  if (filteredJobs.length === 1 && filteredJobs[0].title === 'Good Role') {
+    pass('parseWorkableMarkdown drops off-domain and non-https [View] links');
+  } else {
+    fail(`expected only "Good Role" through, got ${JSON.stringify(filteredJobs.map(j => j.title))}`);
+  }
+
 } catch (e) {
   fail(`workable provider tests crashed: ${e.message}`);
 }
@@ -577,6 +592,54 @@ try {
     fail(`fallback URL not properly slugified: ${JSON.stringify(slugifiedCompany[0]?.url)}`);
   }
 
+  // Pagination: fetch() loops until an empty page (or short page) is returned
+  let pageRequests = 0;
+  const pagedJobs = await sr.fetch(
+    { name: 'PagedCo', careers_url: 'https://careers.smartrecruiters.com/paged' },
+    {
+      transport: 'http',
+      fetchText: async () => { throw new Error('fetchText should not be called'); },
+      fetchJson: async (url) => {
+        pageRequests++;
+        const offset = parseInt(new URL(url).searchParams.get('offset') || '0', 10);
+        if (offset === 0) {
+          // Page 1: full page (100 items)
+          return { content: Array.from({ length: 100 }, (_, i) => ({ id: `P1-${i}`, name: `Role 1-${i}` })) };
+        }
+        if (offset === 100) {
+          // Page 2: short page (50 items) → loop stops after this
+          return { content: Array.from({ length: 50 }, (_, i) => ({ id: `P2-${i}`, name: `Role 2-${i}` })) };
+        }
+        // Should not be reached because page 2 was short
+        return { content: [] };
+      },
+    },
+  );
+  if (pageRequests === 2 && pagedJobs.length === 150) {
+    pass('smartrecruiters.fetch() paginates and aggregates results (2 pages → 150 total)');
+  } else {
+    fail(`pagination: pageRequests=${pageRequests}, total=${pagedJobs.length} (expected 2 requests / 150 results)`);
+  }
+
+  // Pagination stop condition: empty content terminates the loop
+  let emptyPageRequests = 0;
+  const emptyJobs = await sr.fetch(
+    { name: 'EmptyCo', careers_url: 'https://careers.smartrecruiters.com/empty' },
+    {
+      transport: 'http',
+      fetchText: async () => { throw new Error('fetchText should not be called'); },
+      fetchJson: async () => {
+        emptyPageRequests++;
+        return { content: [] };
+      },
+    },
+  );
+  if (emptyPageRequests === 1 && emptyJobs.length === 0) {
+    pass('smartrecruiters.fetch() stops on the first empty page');
+  } else {
+    fail(`empty pagination: requests=${emptyPageRequests}, total=${emptyJobs.length}`);
+  }
+
 } catch (e) {
   fail(`smartrecruiters provider tests crashed: ${e.message}`);
 }
@@ -656,6 +719,24 @@ try {
     pass('recruitee.detect() rejects path-spoofed URLs');
   } else {
     fail('recruitee.detect() must NOT misdetect path-spoofed URLs');
+  }
+
+  // Off-domain offer URL is dropped (URL validation)
+  const offDomainOffers = parseRecruiteeResponse(
+    {
+      offers: [
+        { title: 'Good', careers_url: 'https://channable.recruitee.com/o/good' },
+        { title: 'Evil', careers_url: 'https://evil.example/o/evil' },
+        { title: 'Insecure', careers_url: 'http://channable.recruitee.com/o/insecure' },
+        { title: 'No URL field' },
+      ],
+    },
+    'Channable',
+  );
+  if (offDomainOffers[0]?.url === 'https://channable.recruitee.com/o/good' && offDomainOffers[1]?.url === '' && offDomainOffers[2]?.url === '' && offDomainOffers[3]?.url === '') {
+    pass('parseRecruiteeResponse drops off-domain, non-https, and missing offer URLs');
+  } else {
+    fail(`URL validation: row0=${JSON.stringify(offDomainOffers[0]?.url)}, row1=${JSON.stringify(offDomainOffers[1]?.url)}, row2=${JSON.stringify(offDomainOffers[2]?.url)}, row3=${JSON.stringify(offDomainOffers[3]?.url)}`);
   }
 
 } catch (e) {

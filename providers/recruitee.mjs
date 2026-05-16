@@ -61,7 +61,9 @@ export default {
  * Recruitee returns:
  *   { offers: [{ title, careers_url?, url?, city?, country?, remote?, location? }] }
  *
- * - url: prefer `careers_url`, fall back to `url`, empty string otherwise.
+ * - url: prefer `careers_url`, fall back to `url`; validated against
+ *   `https://<safe-slug>.recruitee.com` — an off-domain or non-HTTPS URL is
+ *   dropped (empty string returned per the Job contract).
  * - location: prefer the explicit `location` field; else assemble from
  *   city/country, appending "Remote" when `remote` is true.
  *
@@ -77,9 +79,24 @@ export function parseRecruiteeResponse(json, companyName) {
     const country = j.country || '';
     const remote = j.remote ? 'Remote' : '';
     const location = j.location || [city, country, remote].filter(Boolean).join(', ');
+
+    // Validate offer URL: must parse as https://<safe-slug>.recruitee.com/...
+    let url = '';
+    const rawUrl = j.careers_url || j.url || '';
+    if (typeof rawUrl === 'string' && rawUrl) {
+      try {
+        const parsed = new URL(rawUrl);
+        if (parsed.protocol === 'https:' && RECRUITEE_HOST_RE.test(parsed.hostname)) {
+          url = parsed.href;
+        }
+      } catch {
+        // malformed URL → leave url = ''
+      }
+    }
+
     return {
       title: j.title || '',
-      url: j.careers_url || j.url || '',
+      url,
       location,
       company: companyName,
     };
