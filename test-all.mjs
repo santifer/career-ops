@@ -63,23 +63,32 @@ for (const f of mjsFiles) {
 console.log('\n2. Script execution (graceful on empty data)');
 
 const scripts = [
-  { name: 'cv-sync-check.mjs', expectExit: 1, allowFail: true }, // fails without cv.md (normal in repo)
-  { name: 'verify-pipeline.mjs', expectExit: 0 },
-  { name: 'normalize-statuses.mjs', expectExit: 0 },
-  { name: 'dedup-tracker.mjs', expectExit: 0 },
-  { name: 'merge-tracker.mjs', expectExit: 0 },
-  { name: 'update-system.mjs check', expectExit: 0 },
-  { name: 'scan-gmail.mjs --dry-run --days 7', expectExit: 1, allowFail: true }, // exits without credentials (expected without setup)
+  { name: 'cv-sync-check.mjs',           args: ['cv-sync-check.mjs'],                                   expectExit: 1, allowFail: true },
+  { name: 'verify-pipeline.mjs',          args: ['verify-pipeline.mjs'],                                 expectExit: 0 },
+  { name: 'normalize-statuses.mjs',       args: ['normalize-statuses.mjs'],                              expectExit: 0 },
+  { name: 'dedup-tracker.mjs',            args: ['dedup-tracker.mjs'],                                   expectExit: 0 },
+  { name: 'merge-tracker.mjs',            args: ['merge-tracker.mjs'],                                   expectExit: 0 },
+  { name: 'update-system.mjs check',      args: ['update-system.mjs', 'check'],                          expectExit: 0 },
+  { name: 'scan-gmail.mjs --dry-run --days 7', args: ['scan-gmail.mjs', '--dry-run', '--days', '7'],     expectExit: 1, allowFail: true },
 ];
 
-for (const { name, allowFail } of scripts) {
-  const result = run('node', name.split(' '), { stdio: ['pipe', 'pipe', 'pipe'] });
-  if (result !== null) {
-    pass(`${name} runs OK`);
+function runScript(args, opts = {}) {
+  try {
+    execFileSync('node', args, { cwd: ROOT, encoding: 'utf-8', timeout: 30000, stdio: ['pipe', 'pipe', 'pipe'], ...opts });
+    return 0;
+  } catch (e) {
+    return e.status ?? 1;
+  }
+}
+
+for (const { name, args, expectExit, allowFail } of scripts) {
+  const exitCode = runScript(args);
+  if (exitCode === expectExit) {
+    pass(`${name} runs OK (exit ${exitCode})`);
   } else if (allowFail) {
-    warn(`${name} exited with error (expected without user data)`);
+    warn(`${name} exited with code ${exitCode}, expected ${expectExit} (expected without user data)`);
   } else {
-    fail(`${name} crashed`);
+    fail(`${name} exited with code ${exitCode}, expected ${expectExit}`);
   }
 }
 

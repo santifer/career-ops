@@ -35,10 +35,8 @@ const APPLICATIONS_PATH = path.join(__dirname, 'data/applications.md');
 const ADDITIONS_DIR = path.join(__dirname, 'batch/tracker-additions');
 const PREP_DIR = path.join(__dirname, 'interview-prep');
 
-const SCOPES = [
-  'https://www.googleapis.com/auth/gmail.readonly',
-  'https://www.googleapis.com/auth/calendar.events',
-];
+const GMAIL_SCOPE = 'https://www.googleapis.com/auth/gmail.readonly';
+const CALENDAR_SCOPE = 'https://www.googleapis.com/auth/calendar.events';
 
 const INTERVIEW_QUERY =
   'subject:(interview OR prescreen OR "phone screen" OR "meet with" OR "calendar invite" OR "zoom invite" OR "teams meeting" OR "google meet") newer_than:';
@@ -133,7 +131,7 @@ function buildOAuth2Client(creds) {
   );
 }
 
-async function authorize(credPath, tokenPath) {
+async function authorize(credPath, tokenPath, scopes) {
   const creds = loadCredentials(credPath);
   const oAuth2Client = buildOAuth2Client(creds);
 
@@ -151,7 +149,7 @@ async function authorize(credPath, tokenPath) {
     return oAuth2Client;
   }
 
-  return runAuthFlow(oAuth2Client, tokenPath);
+  return runAuthFlow(oAuth2Client, tokenPath, scopes);
 }
 
 function openBrowser(url) {
@@ -166,14 +164,14 @@ function openBrowser(url) {
   });
 }
 
-function runAuthFlow(oAuth2Client, tokenPath) {
+function runAuthFlow(oAuth2Client, tokenPath, scopes) {
   return new Promise((resolve, reject) => {
     // CSRF protection: generate a random state and verify it in the callback
     const oauthState = randomBytes(16).toString('hex');
 
     const authUrl = oAuth2Client.generateAuthUrl({
       access_type: 'offline',
-      scope: SCOPES,
+      scope: scopes,
       state: oauthState,
     });
 
@@ -468,13 +466,19 @@ async function addCalendarEvent(auth, interview, profile) {
   const calendar = google.calendar({ version: 'v3', auth });
 
   let startDateTime, endDateTime, allDay = false;
-  try {
+
+  if (interview.interviewDate) {
+    // Date string was extracted from email — try to parse it
     const parsed = new Date(interview.interviewDate);
-    if (isNaN(parsed.getTime())) throw new Error('invalid');
+    if (isNaN(parsed.getTime())) {
+      // Present but unparseable: don't create a misleading event
+      throw new Error(`Could not parse interview date: "${interview.interviewDate}"`);
+    }
     startDateTime = parsed.toISOString();
     endDateTime = new Date(parsed.getTime() + 60 * 60 * 1000).toISOString();
-  } catch {
-    // All-day fallback: end must be the *next* day (Google Calendar end is exclusive)
+  } else {
+    // No date detected in email — fall back to all-day placeholder on today
+    // Note: Google Calendar end date is exclusive, so end must be tomorrow
     const today = new Date();
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
@@ -509,14 +513,30 @@ async function main() {
 
   const profile = loadProfile();
   const { credPath, tokenPath } = resolveGooglePaths(profile);
-  const configuredDays = profile?.google?.gmail_scan_days ?? 7;
+
+  // Validate days: CLI flag already validated above; validate profile value here
+  let configuredDays = 7;
+  const profileDays = profile?.google?.gmail_scan_days;
+  if (profileDays !== undefined && profileDays !== null) {
+    const parsed = parseInt(String(profileDays), 10);
+    if (isNaN(parsed) || parsed <= 0 || parsed !== Number(profileDays)) {
+      console.error(`Error: google.gmail_scan_days in profile.yml must be a positive integer (got: ${profileDays})`);
+      process.exit(1);
+    }
+    configuredDays = parsed;
+  }
   const days = scanDays ?? configuredDays;
+
+  // Build scopes based on whether calendar will be used
+  const scopes = noCalendar
+    ? [GMAIL_SCOPE]
+    : [GMAIL_SCOPE, CALENDAR_SCOPE];
 
   if (dryRun) console.log('(dry run — no files will be written)\n');
 
   let auth;
   try {
-    auth = await authorize(credPath, tokenPath);
+    auth = await authorize(credPath, tokenPath, scopes);
   } catch (err) {
     console.error(`Auth failed: ${err.message}`);
     process.exit(1);
