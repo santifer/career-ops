@@ -48,11 +48,12 @@ const MESSAGE   = msgArgIdx !== -1 ? process.argv[msgArgIdx + 1] : null;
 
 // ── Config ───────────────────────────────────────────────────────────
 function loadConfig() {
-  if (!existsSync(PROFILE_PATH)) {
-    console.error('❌  config/profile.yml not found. Run onboarding first.');
-    process.exit(1);
+  let profile = {};
+  if (existsSync(PROFILE_PATH)) {
+    profile = loadYaml(readFileSync(PROFILE_PATH, 'utf8')) || {};
+  } else {
+    console.warn('⚠️  config/profile.yml not found — falling back to environment variables.');
   }
-  const profile = loadYaml(readFileSync(PROFILE_PATH, 'utf8')) || {};
   const t = profile.telegram || {};
   const botToken = t.bot_token || process.env.TELEGRAM_BOT_TOKEN;
   const chatId   = t.chat_id   || process.env.TELEGRAM_CHAT_ID;
@@ -64,6 +65,7 @@ function loadConfig() {
       '      telegram:\n' +
       '        bot_token: 123456789:ABC-xxx\n' +
       '        chat_id: "123456789"\n' +
+      '    Or set TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID env vars.\n' +
       '    Run: node notify-telegram.mjs --auth   to find your chat_id.'
     );
     process.exit(1);
@@ -71,10 +73,32 @@ function loadConfig() {
   return { botToken, chatId };
 }
 
+// ── Fetch with timeout ────────────────────────────────────────────────
+async function fetchWithTimeout(url, options = {}, timeoutMs = 10_000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// ── URL sanitizer ─────────────────────────────────────────────────────
+function sanitizeUrl(url) {
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return null;
+    return encodeURI(decodeURI(parsed.toString())).replace(/"/g, '%22').replace(/'/g, '%27');
+  } catch {
+    return null;
+  }
+}
+
 // ── Telegram API ─────────────────────────────────────────────────────
 async function telegramFetch(method, body) {
   const { botToken } = loadConfig();
-  const res = await fetch(`${TELEGRAM_BASE}/bot${botToken}/${method}`, {
+  const res = await fetchWithTimeout(`${TELEGRAM_BASE}/bot${botToken}/${method}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -112,14 +136,14 @@ async function runAuth() {
   }
 
   console.log('\nTesting Telegram bot token…');
-  const res = await fetch(`${TELEGRAM_BASE}/bot${botToken}/getMe`);
+  const res = await fetchWithTimeout(`${TELEGRAM_BASE}/bot${botToken}/getMe`);
   const data = await res.json();
   if (!data.ok) { console.error(`❌  Invalid token: ${data.description}`); process.exit(1); }
   console.log(`✅  Bot: @${data.result.username} (${data.result.first_name})`);
 
   console.log('\nFetching recent updates to find your chat_id…');
   console.log('(Send a message to your bot first if no updates appear)\n');
-  const updates = await fetch(`${TELEGRAM_BASE}/bot${botToken}/getUpdates?limit=10`);
+  const updates = await fetchWithTimeout(`${TELEGRAM_BASE}/bot${botToken}/getUpdates?limit=10`);
   const upData  = await updates.json();
   const chats   = new Map();
   for (const u of upData.result || []) {
@@ -154,7 +178,12 @@ function buildDigest() {
     }
     if (newItems.length > 0) {
       lines.push(`<b>📥 New pipeline entries (${TODAY})</b>`);
-      newItems.slice(0, 10).forEach(i => lines.push(`• <a href="${i.url}">${escapeHtml(i.title)}</a>`));
+      newItems.slice(0, 10).forEach(i => {
+        const safeUrl = sanitizeUrl(i.url);
+        lines.push(safeUrl
+          ? `• <a href="${safeUrl}">${escapeHtml(i.title)}</a>`
+          : `• ${escapeHtml(i.title)}`);
+      });
       if (newItems.length > 10) lines.push(`  … and ${newItems.length - 10} more`);
       lines.push('');
     }
@@ -204,8 +233,11 @@ function formatPipelinePayload(payload) {
     for (const [bucket, entries] of Object.entries(buckets)) {
       lines.push(`<b>${escapeHtml(bucket)}</b>`);
       entries.slice(0, 5).forEach(e => {
-        const co = e.company ? ` (${escapeHtml(e.company)})` : '';
-        lines.push(`• <a href="${e.url}">${escapeHtml(e.title)}${co}</a>`);
+        const co     = e.company ? ` (${escapeHtml(e.company)})` : '';
+        const safeUrl = sanitizeUrl(e.url);
+        lines.push(safeUrl
+          ? `• <a href="${safeUrl}">${escapeHtml(e.title)}${co}</a>`
+          : `• ${escapeHtml(e.title)}${co}`);
       });
       if (entries.length > 5) lines.push(`  … and ${entries.length - 5} more`);
     }
