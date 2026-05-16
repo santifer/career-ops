@@ -359,6 +359,17 @@ func (m PipelineModel) handleKey(msg tea.KeyMsg) (PipelineModel, tea.Cmd) {
 			m.statusCursor = 0
 		}
 
+	case "d":
+		if app, ok := m.CurrentApp(); ok {
+			return m, func() tea.Msg {
+				return PipelineUpdateStatusMsg{
+					CareerOpsPath: m.careerOpsPath,
+					App:           app,
+					NewStatus:     "Discarded",
+				}
+			}
+		}
+
 	case "g":
 		if len(m.filtered) > 0 {
 			m.cursor = 0
@@ -1034,6 +1045,7 @@ func (m PipelineModel) renderHelp() string {
 		keyStyle.Render("Enter") + descStyle.Render(" report  ") +
 		keyStyle.Render("o") + descStyle.Render(" open URL  ") +
 		keyStyle.Render("c") + descStyle.Render(" change  ") +
+		keyStyle.Render("d") + descStyle.Render(" 🗑 discard  ") +
 		keyStyle.Render("v") + descStyle.Render(" view  ") +
 		keyStyle.Render("p") + descStyle.Render(" progress  ") +
 		keyStyle.Render("q") + descStyle.Render(" quit")

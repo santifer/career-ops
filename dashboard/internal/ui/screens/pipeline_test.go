@@ -426,3 +426,50 @@ func TestSearchTypingDoesNotLoadReports(t *testing.T) {
 		}
 	}
 }
+
+// `d` discards the highlighted row by emitting a PipelineUpdateStatusMsg with
+// "Discarded", reusing the same path as the status picker so persistence and
+// reload behavior stay in one place.
+func TestDiscardKeyEmitsUpdateStatusMsg(t *testing.T) {
+	apps := []model.CareerApplication{
+		{Company: "Stripe", Role: "Backend Engineer", Status: "Evaluated", Score: 4.6, ReportNumber: "001"},
+		{Company: "Anthropic", Role: "AI Engineer", Status: "Evaluated", Score: 4.8, ReportNumber: "002"},
+	}
+
+	pm := NewPipelineModel(theme.NewTheme("catppuccin-mocha"), apps, model.PipelineMetrics{Total: len(apps)}, "/tmp/career-ops", 120, 40)
+
+	_, cmd := pm.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'d'}})
+	if cmd == nil {
+		t.Fatal("expected `d` to return a command, got nil")
+	}
+	msg := cmd()
+	upd, ok := msg.(PipelineUpdateStatusMsg)
+	if !ok {
+		t.Fatalf("expected PipelineUpdateStatusMsg, got %T", msg)
+	}
+	if upd.NewStatus != "Discarded" {
+		t.Fatalf("expected NewStatus=Discarded, got %q", upd.NewStatus)
+	}
+	if upd.CareerOpsPath != "/tmp/career-ops" {
+		t.Fatalf("expected CareerOpsPath to flow through, got %q", upd.CareerOpsPath)
+	}
+	// Default sort is by score, so the higher-scored Anthropic row is on top.
+	if upd.App.ReportNumber != "002" {
+		t.Fatalf("expected discard to target highlighted app (002), got %q", upd.App.ReportNumber)
+	}
+}
+
+// With no rows in the filtered list, `d` must be a no-op — otherwise it would
+// dispatch an update for a zero-value app and corrupt applications.md.
+func TestDiscardKeyIsNoOpWhenNoRows(t *testing.T) {
+	pm := NewPipelineModel(theme.NewTheme("catppuccin-mocha"), nil, model.PipelineMetrics{}, "/tmp/career-ops", 120, 40)
+
+	_, cmd := pm.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'d'}})
+	if cmd != nil {
+		if msg := cmd(); msg != nil {
+			if _, ok := msg.(PipelineUpdateStatusMsg); ok {
+				t.Fatal("expected `d` to be a no-op with no rows, got PipelineUpdateStatusMsg")
+			}
+		}
+	}
+}
