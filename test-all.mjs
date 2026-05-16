@@ -69,6 +69,7 @@ const scripts = [
   { name: 'dedup-tracker.mjs', expectExit: 0 },
   { name: 'merge-tracker.mjs', expectExit: 0 },
   { name: 'update-system.mjs check', expectExit: 0 },
+  { name: 'scan-gmail.mjs --help', expectExit: 0, allowFail: true }, // exits without credentials (expected)
 ];
 
 for (const { name, allowFail } of scripts) {

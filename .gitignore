@@ -30,6 +30,10 @@ modes/_profile.md
 # Secrets (never commit — use .env.example as template)
 .env
 
+# Google OAuth credentials and tokens
+calendar/credentials.json
+calendar/token.json
+
 # Generated
 .resolved-prompt-*
 node_modules/

@@ -217,6 +217,36 @@ The scanner comes with **45+ companies** ready to scan and **19 search queries**
 
 **Job boards searched:** Ashby, Greenhouse, Lever, Wellfound, Workable, RemoteFront
 
+## Gmail Interview Scanner
+
+Automatically detects interview invitation emails, updates your tracker to `Interview` status, creates prep files, and adds Google Calendar events. Zero LLM calls.
+
+```bash
+node scan-gmail.mjs            # scan last 7 days
+node scan-gmail.mjs --days 14  # scan last 14 days
+node scan-gmail.mjs --dry-run  # preview without writing files
+node scan-gmail.mjs --no-calendar  # skip calendar event creation
+```
+
+### Setup
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/apis/credentials) and create a project.
+2. Enable **Gmail API** and **Google Calendar API**.
+3. Create an **OAuth 2.0 Client ID** (Desktop app type).
+4. Download the JSON and save it as `calendar/credentials.json`.
+5. Run `node scan-gmail.mjs` — a browser window opens for authorization.
+6. After approving, the token is saved to `calendar/token.json` automatically.
+
+Both `credentials.json` and `token.json` are in `.gitignore` and will never be committed.
+
+Configure scan behavior in `config/profile.yml`:
+
+```yaml
+google:
+  gmail_scan_days: 7      # days back to scan
+  calendar_id: primary    # or a specific calendar ID
+```
+
 ## Dashboard TUI
 
 The built-in terminal dashboard lets you browse your pipeline visually:

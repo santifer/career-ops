@@ -72,3 +72,12 @@ cv:
   # Find it in your Canva design URL: https://www.canva.com/design/DAxxxxxxx/...
   # The ID starts with "D" and is 11 characters long.
   # canva_resume_design_id: "DAxxxxxxxxx"
+
+# Google Workspace integration (Gmail + Calendar)
+# Required for: node scan-gmail.mjs
+# Setup: see README.md — "Gmail Interview Scanner" section
+google:
+  credentials_path: calendar/credentials.json  # OAuth2 client credentials from Google Cloud Console
+  token_path: calendar/token.json              # Auto-generated after first auth — do not commit
+  gmail_scan_days: 7                           # How many days back to scan (override with --days N)
+  calendar_id: primary                         # Google Calendar to add events to ("primary" or calendar ID)
