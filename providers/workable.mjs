@@ -24,10 +24,19 @@ function assertWorkableUrl(url) {
 }
 
 function resolveFeedUrl(entry) {
-  const url = typeof entry.careers_url === 'string' ? entry.careers_url : '';
-  const match = url.match(/apply\.workable\.com\/([^/?#]+)/);
-  if (!match) return null;
-  return `https://apply.workable.com/${match[1]}/jobs.md`;
+  const raw = typeof entry.careers_url === 'string' ? entry.careers_url : '';
+  if (!raw) return null;
+  let parsed;
+  try {
+    parsed = new URL(raw);
+  } catch {
+    return null;
+  }
+  if (parsed.protocol !== 'https:') return null;
+  if (parsed.hostname !== 'apply.workable.com') return null;
+  const slug = parsed.pathname.split('/').filter(Boolean)[0];
+  if (!slug) return null;
+  return `https://apply.workable.com/${slug}/jobs.md`;
 }
 
 /** @type {Provider} */

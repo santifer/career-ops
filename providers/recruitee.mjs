@@ -24,10 +24,17 @@ function assertRecruiteeUrl(url) {
 }
 
 function resolveApiUrl(entry) {
-  const url = typeof entry.careers_url === 'string' ? entry.careers_url : '';
-  const match = url.match(/([a-z0-9][a-z0-9-]*)\.recruitee\.com/);
-  if (!match) return null;
-  return `https://${match[1]}.recruitee.com/api/offers/`;
+  const raw = typeof entry.careers_url === 'string' ? entry.careers_url : '';
+  if (!raw) return null;
+  let parsed;
+  try {
+    parsed = new URL(raw);
+  } catch {
+    return null;
+  }
+  if (parsed.protocol !== 'https:') return null;
+  if (!RECRUITEE_HOST_RE.test(parsed.hostname)) return null;
+  return `https://${parsed.hostname}/api/offers/`;
 }
 
 /** @type {Provider} */

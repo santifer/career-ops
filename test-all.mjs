@@ -407,6 +407,14 @@ try {
   if (rejected) pass('workable.fetch() rejects unresolvable careers_url before fetch');
   else fail('workable.fetch() should throw cannot-derive-feed-URL for non-Workable URLs');
 
+  // SSRF: malicious URL with apply.workable.com in the PATH (not hostname) must not be detected as Workable.
+  // With strict URL parsing, the hostname `evil.example` fails the check and detect() returns null.
+  if (workable.detect({ name: 'Spoof', careers_url: 'https://evil.example/apply.workable.com/slug' }) === null) {
+    pass('workable.detect() rejects path-spoofed URLs (apply.workable.com in path, not hostname)');
+  } else {
+    fail('workable.detect() must NOT misdetect URLs that contain apply.workable.com in the path');
+  }
+
   // careers_url with non-string value (e.g. YAML mistake passing a number) → detect() returns null without crashing
   if (workable.detect({ name: 'X', careers_url: 42 }) === null) {
     pass('workable.detect() returns null for non-string careers_url (42)');
@@ -540,6 +548,35 @@ try {
     fail(`expected url='' when ref+id both missing, got ${JSON.stringify(noRefNoId[0])}`);
   }
 
+  // SSRF: malicious URL with smartrecruiters hostname in the PATH (not host) must not be detected.
+  if (sr.detect({ name: 'Spoof', careers_url: 'https://evil.example/careers.smartrecruiters.com/slug' }) === null) {
+    pass('smartrecruiters.detect() rejects path-spoofed URLs');
+  } else {
+    fail('smartrecruiters.detect() must NOT misdetect path-spoofed URLs');
+  }
+
+  // SmartRecruiters: untrusted j.ref host falls through to fallback rather than rewriting
+  const bogusRef = parseSmartRecruitersResponse(
+    { content: [{ id: 'X1', name: 'Strange Role', ref: 'https://evil.example/v1/companies/x/postings/X1' }] },
+    'TestCo',
+  );
+  if (bogusRef[0]?.url && !bogusRef[0].url.includes('evil.example')) {
+    pass('parseSmartRecruitersResponse rejects untrusted j.ref host (falls through to fallback)');
+  } else {
+    fail(`untrusted j.ref leaked into url: ${JSON.stringify(bogusRef[0]?.url)}`);
+  }
+
+  // SmartRecruiters: companyName with spaces/symbols is slugified for the fallback URL
+  const slugifiedCompany = parseSmartRecruitersResponse(
+    { content: [{ id: 'X2', name: 'Strange Role' }] },
+    'My Acme & Co.',
+  );
+  if (slugifiedCompany[0]?.url === 'https://jobs.smartrecruiters.com/my-acme-co/X2-strange-role') {
+    pass('parseSmartRecruitersResponse slugifies the companyName for the fallback URL');
+  } else {
+    fail(`fallback URL not properly slugified: ${JSON.stringify(slugifiedCompany[0]?.url)}`);
+  }
+
 } catch (e) {
   fail(`smartrecruiters provider tests crashed: ${e.message}`);
 }
@@ -612,6 +649,13 @@ try {
     pass('recruitee.detect() returns null for non-string careers_url (null and 7)');
   } else {
     fail('recruitee.detect() should treat non-string careers_url as missing');
+  }
+
+  // SSRF: malicious URL with recruitee.com in the PATH (not host) must not be detected.
+  if (recruitee.detect({ name: 'Spoof', careers_url: 'https://evil.example/channable.recruitee.com/foo' }) === null) {
+    pass('recruitee.detect() rejects path-spoofed URLs');
+  } else {
+    fail('recruitee.detect() must NOT misdetect path-spoofed URLs');
   }
 
 } catch (e) {

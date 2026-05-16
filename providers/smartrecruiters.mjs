@@ -8,6 +8,7 @@
 // detection (useful when the public careers URL is a branded custom domain).
 
 const ALLOWED_SMARTRECRUITERS_HOSTS = new Set(['api.smartrecruiters.com']);
+const SR_CAREERS_HOSTS = new Set(['careers.smartrecruiters.com', 'jobs.smartrecruiters.com']);
 const SR_PAGE_SIZE = 100;
 
 function assertSmartRecruitersUrl(url) {
@@ -25,10 +26,19 @@ function assertSmartRecruitersUrl(url) {
 }
 
 function resolveApiUrl(entry) {
-  const url = typeof entry.careers_url === 'string' ? entry.careers_url : '';
-  const match = url.match(/(?:careers|jobs)\.smartrecruiters\.com\/([^/?#]+)/);
-  if (!match) return null;
-  return `https://api.smartrecruiters.com/v1/companies/${match[1]}/postings?limit=${SR_PAGE_SIZE}&offset=0&status=PUBLIC`;
+  const raw = typeof entry.careers_url === 'string' ? entry.careers_url : '';
+  if (!raw) return null;
+  let parsed;
+  try {
+    parsed = new URL(raw);
+  } catch {
+    return null;
+  }
+  if (parsed.protocol !== 'https:') return null;
+  if (!SR_CAREERS_HOSTS.has(parsed.hostname)) return null;
+  const slug = parsed.pathname.split('/').filter(Boolean)[0];
+  if (!slug) return null;
+  return `https://api.smartrecruiters.com/v1/companies/${slug}/postings?limit=${SR_PAGE_SIZE}&offset=0&status=PUBLIC`;
 }
 
 /** @type {Provider} */
@@ -74,9 +84,24 @@ export function parseSmartRecruitersResponse(json, companyName) {
     const remote = loc.remote ? 'Remote' : '';
     const location = [fullLocation, remote].filter(Boolean).join(', ');
     const slugified = (j.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-    const url = j.ref
-      ? j.ref.replace(/^https:\/\/api\.smartrecruiters\.com\/v1\/companies\//, 'https://jobs.smartrecruiters.com/')
-      : j.id ? `https://jobs.smartrecruiters.com/${(companyName || '').toLowerCase()}/${j.id}-${slugified}` : '';
+    let url = '';
+    if (typeof j.ref === 'string') {
+      let parsedRef;
+      try { parsedRef = new URL(j.ref); } catch { parsedRef = null; }
+      if (parsedRef
+          && parsedRef.protocol === 'https:'
+          && parsedRef.hostname === 'api.smartrecruiters.com'
+          && parsedRef.pathname.startsWith('/v1/companies/')) {
+        const restOfPath = parsedRef.pathname.slice('/v1/companies/'.length);
+        url = `https://jobs.smartrecruiters.com/${restOfPath}`;
+      }
+    }
+    if (!url && j.id) {
+      const companySlug = (companyName || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      if (companySlug) {
+        url = `https://jobs.smartrecruiters.com/${companySlug}/${j.id}-${slugified}`;
+      }
+    }
     return { title: j.name || '', url, location, company: companyName };
   });
 }
