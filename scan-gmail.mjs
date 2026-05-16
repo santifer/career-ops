@@ -16,9 +16,10 @@
  */
 
 import { google } from 'googleapis';
-import { readFileSync, writeFileSync, existsSync, mkdirSync, appendFileSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import { createServer } from 'http';
-import { execSync } from 'child_process';
+import { execFile } from 'child_process';
+import { randomBytes } from 'crypto';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import yaml from 'js-yaml';
@@ -27,8 +28,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // ── Config ──────────────────────────────────────────────────────────────────
 
-const CREDENTIALS_PATH = path.join(__dirname, 'calendar/credentials.json');
-const TOKEN_PATH = path.join(__dirname, 'calendar/token.json');
+const DEFAULT_CREDENTIALS_PATH = path.join(__dirname, 'calendar/credentials.json');
+const DEFAULT_TOKEN_PATH = path.join(__dirname, 'calendar/token.json');
 const PROFILE_PATH = path.join(__dirname, 'config/profile.yml');
 const APPLICATIONS_PATH = path.join(__dirname, 'data/applications.md');
 const ADDITIONS_DIR = path.join(__dirname, 'batch/tracker-additions');
@@ -68,8 +69,17 @@ const COMPANY_FROM_SUBJECT_RE = [
 const args = process.argv.slice(2);
 const dryRun = args.includes('--dry-run');
 const noCalendar = args.includes('--no-calendar');
+
 const daysIdx = args.indexOf('--days');
-const scanDays = daysIdx !== -1 ? parseInt(args[daysIdx + 1], 10) : null;
+let scanDays = null;
+if (daysIdx !== -1) {
+  const parsed = parseInt(args[daysIdx + 1], 10);
+  if (!args[daysIdx + 1] || isNaN(parsed) || parsed <= 0) {
+    console.error('Error: --days requires a positive integer (e.g. --days 14)');
+    process.exit(1);
+  }
+  scanDays = parsed;
+}
 
 // ── Profile ───────────────────────────────────────────────────────────────────
 
@@ -82,11 +92,22 @@ function loadProfile() {
   }
 }
 
+// Resolve credential/token paths — profile overrides defaults
+function resolveGooglePaths(profile) {
+  const credPath = profile?.google?.credentials_path
+    ? path.resolve(__dirname, profile.google.credentials_path)
+    : DEFAULT_CREDENTIALS_PATH;
+  const tokenPath = profile?.google?.token_path
+    ? path.resolve(__dirname, profile.google.token_path)
+    : DEFAULT_TOKEN_PATH;
+  return { credPath, tokenPath };
+}
+
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
-function loadCredentials() {
-  if (!existsSync(CREDENTIALS_PATH)) {
-    console.error(`Error: credentials not found at ${CREDENTIALS_PATH}`);
+function loadCredentials(credPath) {
+  if (!existsSync(credPath)) {
+    console.error(`Error: credentials not found at ${credPath}`);
     console.error('');
     console.error('Setup steps:');
     console.error('  1. Go to https://console.cloud.google.com/apis/credentials');
@@ -95,7 +116,7 @@ function loadCredentials() {
     console.error('  4. Enable Gmail API and Google Calendar API in your project');
     process.exit(1);
   }
-  const raw = JSON.parse(readFileSync(CREDENTIALS_PATH, 'utf-8'));
+  const raw = JSON.parse(readFileSync(credPath, 'utf-8'));
   const creds = raw.installed || raw.web;
   if (!creds) {
     console.error('Error: credentials.json must contain "installed" or "web" key');
@@ -112,43 +133,56 @@ function buildOAuth2Client(creds) {
   );
 }
 
-async function authorize() {
-  const creds = loadCredentials();
+async function authorize(credPath, tokenPath) {
+  const creds = loadCredentials(credPath);
   const oAuth2Client = buildOAuth2Client(creds);
 
-  if (existsSync(TOKEN_PATH)) {
-    const token = JSON.parse(readFileSync(TOKEN_PATH, 'utf-8'));
+  if (existsSync(tokenPath)) {
+    const token = JSON.parse(readFileSync(tokenPath, 'utf-8'));
     oAuth2Client.setCredentials(token);
-    // Auto-refresh if expired
     if (token.expiry_date && token.expiry_date < Date.now()) {
       const { credentials } = await oAuth2Client.refreshAccessToken();
       oAuth2Client.setCredentials(credentials);
       if (!dryRun) {
-        mkdirSync(path.dirname(TOKEN_PATH), { recursive: true });
-        writeFileSync(TOKEN_PATH, JSON.stringify(credentials, null, 2));
+        mkdirSync(path.dirname(tokenPath), { recursive: true });
+        writeFileSync(tokenPath, JSON.stringify(credentials, null, 2));
       }
     }
     return oAuth2Client;
   }
 
-  return runAuthFlow(oAuth2Client);
+  return runAuthFlow(oAuth2Client, tokenPath);
 }
 
-function runAuthFlow(oAuth2Client) {
+function openBrowser(url) {
+  const opener =
+    process.platform === 'darwin' ? 'open' :
+    process.platform === 'win32' ? 'cmd' : 'xdg-open';
+  const openerArgs =
+    process.platform === 'win32' ? ['/c', 'start', '', url] : [url];
+
+  return new Promise((resolve) => {
+    execFile(opener, openerArgs, { stdio: 'ignore' }, () => resolve());
+  });
+}
+
+function runAuthFlow(oAuth2Client, tokenPath) {
   return new Promise((resolve, reject) => {
-    const authUrl = oAuth2Client.generateAuthUrl({ access_type: 'offline', scope: SCOPES });
+    // CSRF protection: generate a random state and verify it in the callback
+    const oauthState = randomBytes(16).toString('hex');
+
+    const authUrl = oAuth2Client.generateAuthUrl({
+      access_type: 'offline',
+      scope: SCOPES,
+      state: oauthState,
+    });
 
     console.log('\nOpening browser for Google OAuth authorization...');
     console.log(`If browser does not open, visit:\n  ${authUrl}\n`);
 
-    try {
-      const opener =
-        process.platform === 'darwin' ? 'open' :
-        process.platform === 'win32' ? 'start' : 'xdg-open';
-      execSync(`${opener} "${authUrl}"`, { stdio: 'ignore' });
-    } catch {
+    openBrowser(authUrl).catch(() => {
       // Browser open failed — user will use printed URL
-    }
+    });
 
     const server = createServer(async (req, res) => {
       const url = new URL(req.url, 'http://localhost:3000');
@@ -156,9 +190,8 @@ function runAuthFlow(oAuth2Client) {
         res.end('Not found');
         return;
       }
-      const code = url.searchParams.get('code');
-      const error = url.searchParams.get('error');
 
+      const error = url.searchParams.get('error');
       if (error) {
         res.end(`<h1>Authorization denied: ${error}</h1>`);
         server.close();
@@ -166,11 +199,25 @@ function runAuthFlow(oAuth2Client) {
         return;
       }
 
+      // Verify CSRF state
+      const returnedState = url.searchParams.get('state');
+      if (returnedState !== oauthState) {
+        res.end('<h1>Invalid state parameter. Possible CSRF attack.</h1>');
+        server.close();
+        reject(new Error('OAuth state mismatch — request may have been tampered with'));
+        return;
+      }
+
+      const code = url.searchParams.get('code');
       try {
         const { tokens } = await oAuth2Client.getToken(code);
         oAuth2Client.setCredentials(tokens);
-        mkdirSync(path.dirname(TOKEN_PATH), { recursive: true });
-        writeFileSync(TOKEN_PATH, JSON.stringify(tokens, null, 2));
+        if (!dryRun) {
+          mkdirSync(path.dirname(tokenPath), { recursive: true });
+          writeFileSync(tokenPath, JSON.stringify(tokens, null, 2));
+        } else {
+          console.log('(dry run — token not saved to disk)');
+        }
         res.end('<h1>Authorization successful! You can close this tab.</h1>');
         server.close();
         resolve(oAuth2Client);
@@ -223,12 +270,10 @@ function extractSenderDomain(from) {
   const match = from.match(/@([\w.-]+)/);
   if (!match) return null;
   const domain = match[1].toLowerCase();
-  // Strip known ATS/platform domains
   const platformDomains = ['greenhouse.io', 'workday.com', 'lever.co', 'ashbyhq.com',
     'recruitingbypaycor.com', 'icims.com', 'smartrecruiters.com', 'breezy.hr',
     'jobvite.com', 'taleo.net', 'successfactors.com', 'gmail.com', 'outlook.com'];
   if (platformDomains.some(p => domain.endsWith(p))) return null;
-  // Use root domain as company name approximation
   return domain.split('.').slice(-2, -1)[0];
 }
 
@@ -238,24 +283,20 @@ function extractSenderName(from) {
 }
 
 function guessCompany(from, subject) {
-  // 1. Sender display name (most reliable for direct recruiter emails)
   const senderName = extractSenderName(from);
   if (senderName && !senderName.toLowerCase().includes('no-reply') &&
       !senderName.toLowerCase().includes('noreply') &&
       !senderName.toLowerCase().includes('careers') &&
       !senderName.toLowerCase().includes('recruiting')) {
-    // If name looks like "Alice from Acme Corp" extract company
     const nameFromMatch = senderName.match(/(?:from|at|@)\s+([A-Z][a-zA-Z0-9\s&.,-]{1,30})/i);
     if (nameFromMatch) return nameFromMatch[1].trim();
   }
 
-  // 2. Subject line patterns
   for (const re of COMPANY_FROM_SUBJECT_RE) {
     const m = subject.match(re);
     if (m) return m[1].trim();
   }
 
-  // 3. Sender domain
   const domain = extractSenderDomain(from);
   if (domain) return domain.charAt(0).toUpperCase() + domain.slice(1);
 
@@ -267,7 +308,6 @@ function guessRole(subject) {
     const m = subject.match(re);
     if (m) return m[1].trim();
   }
-  // Fallback: return subject cleaned up
   return subject
     .replace(/re:\s*/i, '')
     .replace(/interview\s+(?:invitation|invite|request|confirmation)?/i, '')
@@ -329,7 +369,6 @@ function loadExistingInterviews() {
     const role = match[2].trim().toLowerCase();
     const status = match[3].trim();
     if (company && company !== 'company') {
-      // Track all entries; caller checks status
       interviews.add(`${company}::${role}::${status.toLowerCase()}`);
     }
   }
@@ -339,8 +378,7 @@ function loadExistingInterviews() {
 function alreadyAtOrPastInterview(existingSet, company, role) {
   const key = company.toLowerCase();
   const roleKey = role.toLowerCase();
-  const postInterviewStatuses = ['interview', 'offer', 'rejected'];
-  for (const status of postInterviewStatuses) {
+  for (const status of ['interview', 'offer', 'rejected']) {
     if (existingSet.has(`${key}::${roleKey}::${status}`)) return true;
   }
   return false;
@@ -372,14 +410,8 @@ function writeTsvAddition(interview, num) {
     ? interview.interviewDate.slice(0, 50)
     : meetNote;
   const row = [
-    num,
-    date,
-    interview.company,
-    interview.role,
-    'Interview',
-    '',
-    '',
-    '',
+    num, date, interview.company, interview.role,
+    'Interview', '', '', '',
     `Gmail scan: ${interviewNote}`,
   ].join('\t');
   writeFileSync(filePath, row + '\n', 'utf-8');
@@ -391,7 +423,7 @@ function writePrepFile(interview) {
   const slug = `${slugify(interview.company)}-${slugify(interview.role)}`;
   const filePath = path.join(PREP_DIR, `${slug}.md`);
 
-  if (existsSync(filePath)) return filePath; // Don't overwrite existing prep
+  if (existsSync(filePath)) return filePath;
 
   const content = `# Interview Prep: ${interview.company} — ${interview.role}
 
@@ -435,20 +467,20 @@ async function addCalendarEvent(auth, interview, profile) {
   const calendarId = profile?.google?.calendar_id || 'primary';
   const calendar = google.calendar({ version: 'v3', auth });
 
-  // Parse interview date — best effort, fall back to all-day event
   let startDateTime, endDateTime, allDay = false;
   try {
     const parsed = new Date(interview.interviewDate);
     if (isNaN(parsed.getTime())) throw new Error('invalid');
     startDateTime = parsed.toISOString();
-    const end = new Date(parsed.getTime() + 60 * 60 * 1000); // 1 hour default
-    endDateTime = end.toISOString();
+    endDateTime = new Date(parsed.getTime() + 60 * 60 * 1000).toISOString();
   } catch {
-    // Fall back to all-day event with today's date
-    const today = new Date().toISOString().slice(0, 10);
+    // All-day fallback: end must be the *next* day (Google Calendar end is exclusive)
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
     allDay = true;
-    startDateTime = today;
-    endDateTime = today;
+    startDateTime = today.toISOString().slice(0, 10);
+    endDateTime = tomorrow.toISOString().slice(0, 10);
   }
 
   const event = {
@@ -458,7 +490,7 @@ async function addCalendarEvent(auth, interview, profile) {
       `Role: ${interview.role}`,
       interview.interviewer ? `Interviewer: ${interview.interviewer}` : '',
       interview.meetingLink ? `Meeting: ${interview.meetingLink}` : '',
-      `Detected via scan-gmail`,
+      'Detected via scan-gmail',
     ].filter(Boolean).join('\n'),
     ...(allDay
       ? { start: { date: startDateTime }, end: { date: endDateTime } }
@@ -475,21 +507,16 @@ async function addCalendarEvent(auth, interview, profile) {
 async function main() {
   console.log('\n📧 Gmail Interview Scanner\n');
 
-  if (!existsSync(CREDENTIALS_PATH)) {
-    // Trigger the credentials-not-found error message
-    loadCredentials();
-  }
-
   const profile = loadProfile();
+  const { credPath, tokenPath } = resolveGooglePaths(profile);
   const configuredDays = profile?.google?.gmail_scan_days ?? 7;
   const days = scanDays ?? configuredDays;
 
   if (dryRun) console.log('(dry run — no files will be written)\n');
 
-  // Auth
   let auth;
   try {
-    auth = await authorize();
+    auth = await authorize(credPath, tokenPath);
   } catch (err) {
     console.error(`Auth failed: ${err.message}`);
     process.exit(1);
@@ -497,17 +524,12 @@ async function main() {
 
   const gmail = google.gmail({ version: 'v1', auth });
 
-  // Fetch messages
   console.log(`Scanning Gmail for interview emails (last ${days} days)...`);
   const query = `${INTERVIEW_QUERY}${days}d`;
 
   let messages = [];
   try {
-    const res = await gmail.users.messages.list({
-      userId: 'me',
-      q: query,
-      maxResults: 50,
-    });
+    const res = await gmail.users.messages.list({ userId: 'me', q: query, maxResults: 50 });
     messages = res.data.messages || [];
   } catch (err) {
     console.error(`Gmail API error: ${err.message}`);
@@ -522,24 +544,15 @@ async function main() {
     return;
   }
 
-  // Load existing state
   const existingInterviews = loadExistingInterviews();
   let trackerNum = nextTrackerNum();
 
-  const results = {
-    processed: [],
-    skipped: [],
-    errors: [],
-  };
+  const results = { processed: [], skipped: [], errors: [] };
 
   for (const msg of messages) {
     let full;
     try {
-      const res = await gmail.users.messages.get({
-        userId: 'me',
-        id: msg.id,
-        format: 'full',
-      });
+      const res = await gmail.users.messages.get({ userId: 'me', id: msg.id, format: 'full' });
       full = res.data;
     } catch (err) {
       results.errors.push({ id: msg.id, error: err.message });
@@ -548,41 +561,31 @@ async function main() {
 
     const interview = parseEmail(full);
 
-    // Dedup
     if (alreadyAtOrPastInterview(existingInterviews, interview.company, interview.role)) {
       results.skipped.push({ ...interview, reason: 'already tracked' });
       continue;
     }
 
-    // Mark seen to avoid intra-scan dupes
     existingInterviews.add(
       `${interview.company.toLowerCase()}::${interview.role.toLowerCase()}::interview`
     );
-
     results.processed.push(interview);
 
     if (!dryRun) {
-      // 1. Tracker TSV
       writeTsvAddition(interview, trackerNum);
       trackerNum++;
-
-      // 2. Prep file
       writePrepFile(interview);
 
-      // 3. Calendar event
       if (!noCalendar && interview.interviewDate) {
         try {
-          const link = await addCalendarEvent(auth, interview, profile);
-          interview.calendarLink = link;
+          interview.calendarLink = await addCalendarEvent(auth, interview, profile);
         } catch (err) {
-          // Calendar failure is non-fatal
           interview.calendarError = err.message;
         }
       }
     }
   }
 
-  // Summary
   console.log('━'.repeat(50));
   console.log(`Gmail Scan — ${new Date().toISOString().slice(0, 10)}`);
   console.log('━'.repeat(50));
@@ -603,8 +606,8 @@ async function main() {
 
     if (!dryRun) {
       console.log('\nNext steps:');
-      console.log('  node merge-tracker.mjs    (merge tracker additions)');
-      console.log('  Review interview-prep/ files and run /career-ops interview-prep for deep research');
+      console.log('  node merge-tracker.mjs');
+      console.log('  Review interview-prep/ and run /career-ops interview-prep for deep research');
     }
   }
 
