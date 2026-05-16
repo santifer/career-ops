@@ -79,7 +79,7 @@ function loadConfig() {
     token,
     parentPageId:      n.parent_page_id   || '',
     databaseId:        n.database_id       || '',
-    syncInterviewPrep: n.sync_interview_prep !== false,
+    syncInterviewPrep: n.sync_interview_prep === true,
   };
 }
 
@@ -146,8 +146,11 @@ function parseApplicationsTable(md) {
     const scoreNum   = parseFloat(cleanScore) || null;
 
     // Extract report URL from markdown link [n](reports/...)
+    // Only keep absolute URLs — Notion's url field requires http/https
     const reportMatch = report.match(/\[.*?\]\((.*?)\)/);
-    const reportUrl   = reportMatch ? reportMatch[1] : '';
+    const _rawReport  = reportMatch ? reportMatch[1] : '';
+    const reportUrl   = _rawReport.startsWith('http://') || _rawReport.startsWith('https://')
+      ? _rawReport : '';
 
     rows.push({
       num:    parseInt(num) || 0,
@@ -251,16 +254,46 @@ function parseMarkdownToBlocks(md) {
   return blocks;
 }
 
+async function fetchExistingPrepTitles(parentPageId) {
+  try {
+    const res = await notionFetch('/search', {
+      method: 'POST',
+      body: { query: '', filter: { value: 'page', property: 'object' }, page_size: 100 },
+    });
+    const titles = new Set();
+    for (const p of res.results || []) {
+      if (p.parent?.page_id !== parentPageId) continue;
+      const t = (p.properties?.title?.title || [])[0]?.plain_text;
+      if (t) titles.add(t);
+    }
+    return titles;
+  } catch {
+    return new Set();
+  }
+}
+
 async function uploadInterviewPrep(parentPageId) {
   if (!existsSync(INTERVIEW_PREP)) return 0;
   const files = readdirSync(INTERVIEW_PREP).filter(f => f.endsWith('.md') && !f.startsWith('archieved'));
+  if (!files.length) return 0;
+
+  const existingTitles = DRY_RUN ? new Set() : await fetchExistingPrepTitles(parentPageId);
   let count = 0;
+
   for (const file of files) {
     const md = readFileSync(`${INTERVIEW_PREP}/${file}`, 'utf8');
     const firstLine = md.split('\n').find(l => l.trim()) || file;
     const title = firstLine.replace(/^#+\s*/, '').trim().slice(0, 100);
     const blocks = parseMarkdownToBlocks(md);
+
     if (DRY_RUN) { console.log(`  [dry] would upload: ${file} → "${title}"`); count++; continue; }
+
+    if (existingTitles.has(title)) {
+      console.log(`  ⏭️  Already exists: ${file}`);
+      count++;
+      continue;
+    }
+
     await notionFetch('/pages', {
       method: 'POST',
       body: {
@@ -358,18 +391,28 @@ async function main() {
     console.log(`Using existing database: ${databaseId}`);
   }
 
+  // Load existing pages for both dry-run preview and real sync
+  let existingIndex = new Map();
+  if (databaseId) {
+    console.log('\nFetching existing Notion pages…');
+    const existingPages = await fetchExistingPages(databaseId);
+    existingIndex = buildExistingIndex(existingPages);
+    console.log(`  Found ${existingPages.length} existing page(s)\n`);
+  }
+
   if (DRY_RUN) {
-    console.log(`\n[dry] would upsert ${apps.length} application(s) to Notion:`);
-    apps.slice(0, 10).forEach(a => console.log(`  ${a.num}. ${a.company} — ${a.role} [${a.status}]`));
+    let wouldCreate = 0, wouldUpdate = 0;
+    apps.forEach(a => {
+      existingIndex.has(`${a.company} — ${a.role}`) ? wouldUpdate++ : wouldCreate++;
+    });
+    console.log(`\n[dry] ${apps.length} application(s): +${wouldCreate} create, ${wouldUpdate} update`);
+    apps.slice(0, 10).forEach(a => {
+      const action = existingIndex.has(`${a.company} — ${a.role}`) ? 'update' : 'create';
+      console.log(`  [${action}] ${a.num}. ${a.company} — ${a.role} [${a.status}]`);
+    });
     if (apps.length > 10) console.log(`  … and ${apps.length - 10} more`);
     return;
   }
-
-  // Load existing pages to detect create vs update
-  console.log('\nFetching existing Notion pages…');
-  const existingPages = await fetchExistingPages(databaseId);
-  const existingIndex = buildExistingIndex(existingPages);
-  console.log(`  Found ${existingPages.length} existing page(s)\n`);
 
   let created = 0, updated = 0, errors = 0;
 
