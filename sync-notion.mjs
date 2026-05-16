@@ -90,12 +90,18 @@ function saveConfig(patch) {
 }
 
 // ── Notion API ───────────────────────────────────────────────────────
-async function notionFetch(path, opts = {}) {
-  const cfg = loadConfig();
+let _cachedCfg = null;
+function getCfg() {
+  if (!_cachedCfg) _cachedCfg = loadConfig();
+  return _cachedCfg;
+}
+
+async function notionFetch(path, opts = {}, cfg = null) {
+  const _cfg = cfg || getCfg();
   const res = await fetch(`${NOTION_BASE}${path}`, {
     method: opts.method || 'GET',
     headers: {
-      Authorization:    `Bearer ${cfg.token}`,
+      Authorization:    `Bearer ${_cfg.token}`,
       'Notion-Version': NOTION_VERSION,
       'Content-Type':   'application/json',
     },
@@ -184,10 +190,12 @@ function buildDatabaseSchema(parentPageId) {
 }
 
 function buildPageProperties(app) {
+  const company = (app.company || '').slice(0, 2000);
+  const role    = (app.role    || '').slice(0, 2000);
   const props = {
-    Name:      { title: [{ text: { content: `${app.company} — ${app.role}` } }] },
-    Company:   { rich_text: [{ text: { content: app.company } }] },
-    Role:      { rich_text: [{ text: { content: app.role } }] },
+    Name:      { title: [{ text: { content: `${company} — ${role}`.slice(0, 2000) } }] },
+    Company:   { rich_text: [{ text: { content: company } }] },
+    Role:      { rich_text: [{ text: { content: role } }] },
     Status:    { select: { name: app.status in STATUS_COLORS ? app.status : 'Evaluated' } },
     Date:      { date: { start: app.date || TODAY } },
     'Has PDF': { checkbox: app.hasPdf },
@@ -224,18 +232,21 @@ function buildExistingIndex(pages) {
 }
 
 // ── Interview prep upload ─────────────────────────────────────────────
+function makeBlock(type, content) {
+  return { object: 'block', type, [type]: { rich_text: [{ text: { content } }] } };
+}
+
 function parseMarkdownToBlocks(md) {
   const blocks = [];
   for (const line of md.split('\n').slice(0, 100)) { // Notion API limit
-    if (line.startsWith('# '))  { blocks.push({ object: 'block', type: 'heading_1', heading_1: { rich_text: [{ text: { content: line.slice(2).trim() } }] } }); continue; }
-    if (line.startsWith('## ')) { blocks.push({ object: 'block', type: 'heading_2', heading_2: { rich_text: [{ text: { content: line.slice(3).trim() } }] } }); continue; }
-    if (line.startsWith('### ')){ blocks.push({ object: 'block', type: 'heading_3', heading_3: { rich_text: [{ text: { content: line.slice(4).trim() } }] } }); continue; }
+    if (line.startsWith('# '))               { blocks.push(makeBlock('heading_1',         line.slice(2).trim())); continue; }
+    if (line.startsWith('## '))              { blocks.push(makeBlock('heading_2',         line.slice(3).trim())); continue; }
+    if (line.startsWith('### '))             { blocks.push(makeBlock('heading_3',         line.slice(4).trim())); continue; }
     if (line.startsWith('- ') || line.startsWith('* ')) {
-      blocks.push({ object: 'block', type: 'bulleted_list_item', bulleted_list_item: { rich_text: [{ text: { content: line.slice(2).trim() } }] } });
-      continue;
+      blocks.push(makeBlock('bulleted_list_item', line.slice(2).trim())); continue;
     }
     const t = line.trim();
-    if (t) blocks.push({ object: 'block', type: 'paragraph', paragraph: { rich_text: [{ text: { content: t } }] } });
+    if (t) blocks.push(makeBlock('paragraph', t));
   }
   return blocks;
 }
@@ -395,9 +406,13 @@ async function main() {
 
   // Interview prep upload
   if (cfg.syncInterviewPrep) {
-    console.log('\nUploading interview-prep notes…');
-    const prepCount = await uploadInterviewPrep(parentPageId || databaseId);
-    console.log(`  ${prepCount} file(s) processed`);
+    if (!parentPageId) {
+      console.warn('⚠️  sync_interview_prep is enabled but notion.parent_page_id is not set — skipping prep upload.');
+    } else {
+      console.log('\nUploading interview-prep notes…');
+      const prepCount = await uploadInterviewPrep(parentPageId);
+      console.log(`  ${prepCount} file(s) processed`);
+    }
   }
 
   console.log('\n✅  Done.');
