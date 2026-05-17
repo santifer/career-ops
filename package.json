@@ -33,7 +33,10 @@
     "outreach:status": "node scripts/outreach-status.mjs",
     "outreach:intel": "node scripts/refresh-intel.mjs",
     "outreach:import": "node scripts/import-contacts.mjs",
-    "outreach:li-activity": "node scripts/log-linkedin-activity.mjs"
+    "outreach:li-activity": "node scripts/log-linkedin-activity.mjs",
+    "skill-ingest": "node scripts/skill-ingest.mjs",
+    "skill-ingest:dry-run": "node scripts/skill-ingest.mjs --dry-run",
+    "skill-ingest:apply": "node scripts/skill-ingest.mjs --apply"
   },
   "keywords": [
     "ai",
@@ -50,12 +53,14 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@google/genai": "^2.3.0",
     "@google/generative-ai": "^0.24.1",
     "dotenv": "^16.4.5",
     "js-yaml": "^4.1.1",
     "marked": "^18.0.3",
     "nodemailer": "^8.0.7",
-    "playwright": "^1.60.0"
+    "playwright": "^1.60.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.15",
