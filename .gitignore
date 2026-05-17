@@ -21,6 +21,7 @@ data/research-state.json
 # Hiring-manager intel (7-LLM council output, contains contact info + outreach hooks)
 data/hm-intel/*.json
 !data/hm-intel/_SCHEMA.md
+!data/hm-intel/_weights.json
 reports/*.md
 reports/**/*.md
 !reports/.gitkeep

@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0.0",
+  "alpha_sim_semantic": 0.6,
+  "beta_hm_bias": 0.3,
+  "gamma_ai_risk": 0.1,
+  "feature_weights": {
+    "top_third_importance":      { "cv_bullet_weight": 1.5 },
+    "cross_functional_bias":     { "story_cross_func_weight": 2.0 },
+    "anti_jargon":               { "max_jargon_score": 0.4 },
+    "metrics_focus":             { "metric_density_target": 0.7 },
+    "writing_depth_preference":  { "sentence_length_target": 18 },
+    "portfolio_importance":      { "portfolio_section_priority": 2.0 }
+  },
+  "notes": "Starting values. Tune empirically after 8 weeks of data. See data/output-pipeline-strategy-2026-05-17.md finding #47 for formula and finding #8 for weight rationale."
+}
