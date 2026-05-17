@@ -1,9 +1,68 @@
 // @ts-check
 /** @typedef {import('./_types.js').Provider} Provider */
 
-// Ashby provider — hits the public posting-api endpoint.
-// Auto-detects from careers_url pattern `https://jobs.ashbyhq.com/<slug>`.
+// Annualization multipliers for different compensation intervals
+const INTERVAL_MULTIPLIERS = {
+  '1 HOUR': 2080,
+  '1 DAY': 260,
+  '1 WEEK': 52,
+  '2 WEEK': 26,
+  '0.5 MONTH': 24,
+  '1 MONTH': 12,
+  '2 MONTH': 6,
+  '3 MONTH': 4,
+  '6 MONTH': 2,
+  '1 YEAR': 1,
+};
 
+/**
+ * Parse compensation data from Ashby job object.
+ * Returns structured salary object with min, max, and currency,
+ * or null if no valid compensation data exists.
+ * @param {any} job - Ashby job object
+ * @returns {{min: number, max: number, currency: string}|null}
+ */
+function parseCompensation(job) {
+  const comp = job?.compensation;
+  if (!comp) return null;
+
+  const interval = /** @type {keyof typeof INTERVAL_MULTIPLIERS} */ (comp.interval || '1 YEAR');
+  const multiplier = INTERVAL_MULTIPLIERS[interval];
+  if (!multiplier) return null;
+
+  // Coerce and validate numeric fields — malformed API payloads must not propagate
+  /** @param {any} v */
+  const normalizeNum = (v) => {
+    if (v == null) return null;
+    if (typeof v === 'string' && v.trim() === '') return null;
+    const n = Number(v);
+    return Number.isFinite(n) && n >= 0 ? n : null;
+  };
+  const minValue = normalizeNum(comp.minValue);
+  const maxValue = normalizeNum(comp.maxValue);
+  const currency = typeof comp.currency === 'string' ? comp.currency.trim() : '';
+
+  // If neither min nor max is provided, no valid compensation
+  if (minValue == null && maxValue == null) return null;
+
+  // Annualize the values
+  const min = minValue != null ? minValue * multiplier : null;
+  const max = maxValue != null ? maxValue * multiplier : null;
+
+  // Must have at least one valid annual value
+  if (min == null && max == null) return null;
+
+  // Ensure correct ordering (min <= max)
+  const resolvedMin = /** @type {number} */ (min ?? max);
+  const resolvedMax = /** @type {number} */ (max ?? min);
+  return {
+    min: Math.min(resolvedMin, resolvedMax),
+    max: Math.max(resolvedMin, resolvedMax),
+    currency: currency.toUpperCase(),
+  };
+}
+
+/** @param {import('./_types.js').PortalEntry} entry */
 function resolveApiUrl(entry) {
   const url = entry.careers_url || '';
   const match = url.match(/jobs\.ashbyhq\.com\/([^/?#]+)/);
@@ -23,13 +82,14 @@ export default {
   async fetch(entry, ctx) {
     const apiUrl = resolveApiUrl(entry);
     if (!apiUrl) throw new Error(`ashby: cannot derive API URL for ${entry.name}`);
-    const json = await ctx.fetchJson(apiUrl);
+    const json = /** @type {any} */ (await ctx.fetchJson(apiUrl));
     const jobs = Array.isArray(json?.jobs) ? json.jobs : [];
-    return jobs.map(j => ({
+    return jobs.map(/** @param {any} j */ j => ({
       title: j.title || '',
       url: j.jobUrl || '',
       company: entry.name,
       location: j.location || '',
+      salary: parseCompensation(j),
     }));
   },
 };
