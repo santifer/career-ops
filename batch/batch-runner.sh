@@ -12,6 +12,17 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 BATCH_DIR="$SCRIPT_DIR"
+
+# Source .env from the project root so that OLLAMA_BASE_URL, OLLAMA_MODEL,
+# etc. are available to both the preflight checks here and the Node.js workers
+# without requiring users to export them from their shell.
+# set -a / set +a makes every sourced variable auto-exported to children.
+if [[ -f "$PROJECT_DIR/.env" ]]; then
+  set -a
+  # shellcheck source=/dev/null
+  source "$PROJECT_DIR/.env"
+  set +a
+fi
 INPUT_FILE="$BATCH_DIR/batch-input.tsv"
 STATE_FILE="$BATCH_DIR/batch-state.tsv"
 PROMPT_FILE="$BATCH_DIR/batch-prompt.md"
@@ -408,9 +419,6 @@ process_offer() {
   # Launch worker — backend-specific
   local exit_code=0
   if [[ "$BACKEND" == "ollama" ]]; then
-    # OLLAMA_MODEL may have been set from --model by check_prerequisites.
-    # Export it so the child process inherits the resolved value.
-    OLLAMA_MODEL="${OLLAMA_MODEL:-llama3.3}" \
     node "$PROJECT_DIR/ollama-batch.mjs" \
       --url        "$url" \
       --jd-file    "$jd_file" \
@@ -586,8 +594,8 @@ main() {
         continue
       fi
     else
-      # Skip completed offers
-      if [[ "$status" == "completed" ]]; then
+      # Skip completed or previously skipped (low-score) offers
+      if [[ "$status" == "completed" || "$status" == "skipped" ]]; then
         continue
       fi
       # Skip failed offers that hit retry limit (unless --retry-failed)

@@ -32,6 +32,7 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { promises as dns } from 'dns';
 
 try {
   const { config } = await import('dotenv');
@@ -200,18 +201,52 @@ if (!jdText && url) {
   if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
     fail(`JD URL must use http or https (got ${parsedUrl.protocol})`);
   }
+
+  /**
+   * Return true if an IP address string falls in a private/loopback/link-local range.
+   * Covers IPv4 (127.*, 10.*, 192.168.*, 172.16-31.*, 169.254.*) and
+   * IPv6 (::1, fe80::/10 link-local, fc00::/7 ULA).
+   * @param {string} ip
+   * @returns {boolean}
+   */
+  function isPrivateAddress(ip) {
+    if (/^127\./.test(ip))                           return true; // IPv4 loopback
+    if (/^10\./.test(ip))                            return true; // IPv4 private class A
+    if (/^192\.168\./.test(ip))                      return true; // IPv4 private class C
+    if (/^172\.(1[6-9]|2\d|3[01])\./.test(ip))      return true; // IPv4 private class B
+    if (/^169\.254\./.test(ip))                      return true; // IPv4 link-local
+    if (ip === '::1')                                return true; // IPv6 loopback
+    if (/^fe[89ab]/i.test(ip))                       return true; // IPv6 link-local fe80::/10
+    if (/^f[cd]/i.test(ip))                          return true; // IPv6 ULA fc00::/7
+    return false;
+  }
+
+  // Fast-fail on hostname literals before DNS resolution.
   const h = parsedUrl.hostname;
-  const isPrivate =
-    h === 'localhost' ||
-    /^127\./.test(h) ||
-    /^10\./.test(h) ||
-    /^192\.168\./.test(h) ||
-    /^172\.(1[6-9]|2\d|3[01])\./.test(h) ||
-    /^169\.254\./.test(h) ||
-    h === '::1' ||
-    h === '[::1]';
-  if (isPrivate) {
+  if (h === 'localhost' || h === '::1' || h === '[::1]' || isPrivateAddress(h)) {
     fail(`JD URL points to a private/loopback address — refusing to fetch: ${url}`);
+  }
+
+  // DNS resolution check — guards against DNS rebinding where a public
+  // hostname resolves to a private IP. Resolves both A and AAAA records.
+  try {
+    const [v4, v6] = await Promise.allSettled([
+      dns.resolve4(h),
+      dns.resolve6(h),
+    ]);
+    const allAddresses = [
+      ...(v4.status === 'fulfilled' ? v4.value : []),
+      ...(v6.status === 'fulfilled' ? v6.value : []),
+    ];
+    // If neither resolved, DNS lookup failed entirely — let fetch() surface the error.
+    for (const addr of allAddresses) {
+      if (isPrivateAddress(addr)) {
+        fail(`JD URL hostname "${h}" resolves to a private address (${addr}) — SSRF guard`);
+      }
+    }
+  } catch (dnsErr) {
+    // dns.resolve4/resolve6 throw on NXDOMAIN etc. — let fetch() produce the
+    // user-facing error; don't block on DNS errors alone.
   }
 
   try {
