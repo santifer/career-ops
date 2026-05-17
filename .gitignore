@@ -22,6 +22,8 @@ data/research-state.json
 data/hm-intel/*.json
 !data/hm-intel/_SCHEMA.md
 !data/hm-intel/_weights.json
+# Side-allocation registry (ingest-feature-strategy finding #22 — always committed)
+!data/side-allocations.yml
 reports/*.md
 reports/**/*.md
 !reports/.gitkeep

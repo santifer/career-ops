@@ -1,0 +1,35 @@
+# data/side-allocations.yml
+#
+# Registry of 20%-time / side-allocation projects.
+# Source of truth for PM-Bridge-Buildability and Skill-Portability scoring
+# dimensions (ingest-feature-strategy finding #22).
+#
+# Schema fields:
+#   team           – host team / org (string)
+#   charter        – one-sentence scope of the allocation
+#   start_date     – ISO 8601 date (YYYY-MM-DD)
+#   end_date       – ISO 8601 date or null if open-ended
+#   status         – active | completed | paused
+#   deliverables   – list of {artifact, url} pairs
+#   outcomes       – list of measurable result strings (used for STAR-story trigger)
+#   sponsor        – name of sponsoring manager / principal
+#   skills_gained  – list of skill strings fed into skill-ingest pipeline
+#
+# When status flips to "completed" AND at least one outcome has a measurable
+# metric, the skill-ingest orchestrator auto-proposes a story-bank entry.
+#
+# Agents may append new entries; never overwrite an existing entry directly —
+# commit via: node scripts/agent-commit.mjs --agent side-allocations --files data/side-allocations.yml
+
+- team: "Google Workspace AI"
+  charter: "Prompt-eval framework for generative scribing"
+  start_date: "2026-04-15"
+  end_date: "2026-06-30"
+  status: "active"
+  deliverables:
+    - artifact: "v1 Eval Pipeline"
+      url: "go/workspace-eval-v1"
+  outcomes:
+    - "Reduced LLM run cost by 10%"
+  sponsor: "Jane Doe"
+  skills_gained: ["Python", "Agent-orchestration"]
