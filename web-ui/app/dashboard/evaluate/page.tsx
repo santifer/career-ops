@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -39,7 +39,7 @@ function extractSummary(lines: string[]): { score: string | null; company: strin
   return { score, company }
 }
 
-export default function EvaluatePage() {
+function EvaluatePageInner() {
   const searchParams = useSearchParams()
   const [url, setUrl] = useState("")
 
@@ -280,5 +280,13 @@ export default function EvaluatePage() {
         </Card>
       )}
     </>
+  )
+}
+
+export default function EvaluatePage() {
+  return (
+    <Suspense>
+      <EvaluatePageInner />
+    </Suspense>
   )
 }

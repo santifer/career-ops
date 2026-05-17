@@ -1,5 +1,9 @@
 const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3099"
 
+// 10-second revalidation: fast enough to reflect new evaluations, avoids
+// re-parsing markdown files on every single request.
+const TTL = { next: { revalidate: 10 } } as const
+
 export type CanonicalStatus =
   | "evaluated" | "applied" | "responded" | "interview"
   | "offer" | "rejected" | "discarded" | "skip"
@@ -78,44 +82,45 @@ export function scoreVariant(score: number): string {
 }
 
 export async function getApplications(): Promise<Application[]> {
-  const r = await fetch(`${BASE}/api/applications`, { cache: "no-store" })
+  const r = await fetch(`${BASE}/api/applications`, TTL)
   if (!r.ok) return []
   return r.json()
 }
 
 export async function getPipeline(): Promise<PipelineItem[]> {
-  const r = await fetch(`${BASE}/api/pipeline`, { cache: "no-store" })
+  const r = await fetch(`${BASE}/api/pipeline`, TTL)
   if (!r.ok) return []
   return r.json()
 }
 
 export async function getFollowUps(): Promise<FollowUp[]> {
-  const r = await fetch(`${BASE}/api/followups`, { cache: "no-store" })
+  const r = await fetch(`${BASE}/api/followups`, TTL)
   if (!r.ok) return []
   return r.json()
 }
 
 export async function getReport(num: string): Promise<{ content: string } | null> {
-  const r = await fetch(`${BASE}/api/report/${num}`, { cache: "no-store" })
+  const r = await fetch(`${BASE}/api/report/${num}`, TTL)
   if (!r.ok) return null
   return r.json()
 }
 
 export async function getProfile(): Promise<Profile> {
-  const r = await fetch(`${BASE}/api/profile`, { cache: "no-store" })
+  // Profile rarely changes; longer TTL is fine
+  const r = await fetch(`${BASE}/api/profile`, { next: { revalidate: 60 } })
   if (!r.ok) return {}
   return r.json()
 }
 
 export async function getStoryBank(): Promise<string> {
-  const r = await fetch(`${BASE}/api/storybank`, { cache: "no-store" })
+  const r = await fetch(`${BASE}/api/storybank`, { next: { revalidate: 30 } })
   if (!r.ok) return "# Story Bank\n\nNo stories yet."
   const d = await r.json()
   return d.content
 }
 
 export async function getInterviewFiles(): Promise<string[]> {
-  const r = await fetch(`${BASE}/api/interview-files`, { cache: "no-store" })
+  const r = await fetch(`${BASE}/api/interview-files`, { next: { revalidate: 30 } })
   if (!r.ok) return []
   return r.json()
 }

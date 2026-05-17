@@ -7,8 +7,11 @@ import Anchor from "../anchor";
 import Logo from "./logo";
 import { Button } from "../ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import Icon from "../icon";
 import { ChevronDown } from "lucide-react";
+// Icon component removed — was importing all 1400 lucide icons as a barrel
+function Icon({ name, className }: { name?: string; className?: string }) {
+  return null
+}
 import { Badge } from "../ui/badge";
 
 type SidebarNavLinkProps = {

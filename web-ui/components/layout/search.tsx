@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { CommandIcon, SearchIcon, icons } from "lucide-react";
+import { CommandIcon, SearchIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { page_routes } from "@/lib/routes-config";
 import { useEffect, useState } from "react";
