@@ -137,15 +137,16 @@ function readFile(path, label) {
 }
 
 /**
- * Determine the next zero-padded 3-digit report number based on existing files in reports/.
- * Scans for files matching /^\d{3}-/ and returns max + 1, or "001" if the directory is empty.
- * @returns {string} Zero-padded report number string, e.g. "042".
+ * Determine the next zero-padded report number based on existing files in reports/.
+ * Scans for files whose name starts with one or more digits followed by a hyphen,
+ * then returns max + 1 padded to at least 3 digits. Supports report counts above 999
+ * without resetting or colliding (avoids the fixed-3-digit slice assumption).
+ * @returns {string} Zero-padded report number string, e.g. "042" or "1001".
  */
 function nextReportNumber() {
   if (!existsSync(PATHS.reports)) return '001';
   const files = readdirSync(PATHS.reports)
-    .filter(f => /^\d{3}-/.test(f))
-    .map(f => parseInt(f.slice(0, 3), 10))
+    .map(f => { const m = f.match(/^(\d+)-/); return m ? parseInt(m[1], 10) : NaN; })
     .filter(n => !isNaN(n));
   if (files.length === 0) return '001';
   return String(Math.max(...files) + 1).padStart(3, '0');
@@ -252,6 +253,10 @@ LEGITIMACY: <High Confidence | Proceed with Caution | Suspicious>
 // ---------------------------------------------------------------------------
 const endpoint = `${baseUrl}/v1/chat/completions`;
 const timeoutMs = parseInt(process.env.OLLAMA_TIMEOUT_MS || '300000', 10);
+if (Number.isNaN(timeoutMs) || timeoutMs <= 0) {
+  console.error(`❌  Invalid OLLAMA_TIMEOUT_MS: "${process.env.OLLAMA_TIMEOUT_MS}" — must be a positive integer (milliseconds).`);
+  process.exit(1);
+}
 
 console.log(`🤖  Calling Ollama (${modelName})... this may take a minute.\n`);
 
