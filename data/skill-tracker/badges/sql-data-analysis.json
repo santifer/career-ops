@@ -1,0 +1,15 @@
+{
+  "skill_name": "SQL (data analysis)",
+  "slug": "sql-data-analysis",
+  "symbol_hint": "a stacked database cylinder with three diagonal query lines flowing outward",
+  "model": "gemini-3.1-flash-image-preview",
+  "style_anchor": "circular medallion, line-art minimalist, neutral palette aligned with Career-Ops dashboard (#16a34a green accent, slate-blue background #475c75), flat geometric, no photorealism, no text, transparent ring on dark background, legible at 64px display size",
+  "used_subject_consistency": true,
+  "reference_skill": "python-agent-build",
+  "prompt": "Generate a circular medallion skill badge for: SQL (data analysis).\n\nVisual subject: a stacked database cylinder with three diagonal query lines flowing outward.\n\nStyle anchor (CRITICAL — match exactly): circular medallion, line-art minimalist, neutral palette aligned with Career-Ops dashboard (#16a34a green accent, slate-blue background #475c75), flat geometric, no photorealism, no text, transparent ring on dark background, legible at 64px display size.\n\nComposition: 512x512 px square PNG. Centered circular medallion with thin outer ring.\nBackground outside the medallion: solid dark slate-blue (#475c75) OR transparent — pick whichever reads cleanest.\nInside the medallion: muted geometric line-art on a slightly darker plate, with a single green (#16a34a) highlight accent.\nWCAG-aware contrast: badge symbol must remain legible at 64px display size with sufficient contrast against the medallion plate.\n\nRules: NO text or letterforms inside the badge. NO photorealism. NO human faces. NO copyrighted logos or brand marks. NO gradients. Flat, minimalist, slightly editorial.",
+  "png_path": "data/skill-tracker/badges/sql-data-analysis.png",
+  "png_size_kb": 424,
+  "cost_usd_estimated": 0.045,
+  "generated_at": "2026-05-17T19:05:05.020Z",
+  "duration_ms": 30693
+}
