@@ -73,6 +73,23 @@ cd /Users/mitchellwilliams/Documents/career-ops
 node scripts/build-dashboard.mjs
 open dashboard/index.html
 
+# 1b. **CRITICAL** — Syntax-check the EMITTED inline JS, not just the source.
+#     build-dashboard.mjs uses template literals to compose HTML+JS. Any
+#     un-double-escaped \n or \' or \" in the inline JS gets eaten by the
+#     template literal pass and produces broken JS in the output. node --check
+#     on the source file passes; the OUTPUT is what breaks. This catches the
+#     2026-05-17 regression where the discard-reason prompt + pcp-action
+#     buttons silently killed ALL window-level function bindings (sortTable,
+#     toggleDark, openPipelineModal, openRightRailForDetail all became
+#     undefined because parse errors halt JS execution at first error).
+curl -s http://localhost:7777/ > /tmp/_dash.html
+python3 -c "
+import re
+scripts = re.findall(r'<script(?![^>]*src=)[^>]*>(.*?)</script>', open('/tmp/_dash.html').read(), re.DOTALL)
+open('/tmp/_dash-inline.js', 'w').write('\n//---SPLIT---\n'.join(scripts))
+"
+node --check /tmp/_dash-inline.js && echo "INLINE JS OK" || echo "INLINE JS BROKEN — fix immediately"
+
 # 2. Grep audit — these numbers should not decrease after your change
 echo "Sort bindings:"  ; grep -c "sortable\|sortTable" dashboard/index.html
 echo "Drawer DOM:"     ; grep -c "right-rail-drawer\|drawer-body\|openRightRailForDetail" dashboard/index.html

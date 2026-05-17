@@ -8656,8 +8656,8 @@ function openRightRailForDetail(idx, detailRow) {
         const company = row?.dataset?.company || row?.querySelector('[data-col="company"]')?.textContent?.trim() || '';
         const role    = row?.dataset?.role    || row?.querySelector('[data-col="role"]')?.textContent?.trim()    || '';
         const reason = window.prompt(
-          'Why are you discarding ' + (company ? company + (role ? ' — ' + role : '') : 'this row #' + num) + '?\n\n' +
-          '(Tags auto-applied: comp, geography, culture, skill-gap, ethics, stage, velocity, role-shape, fit, other)\n\n' +
+          'Why are you discarding ' + (company ? company + (role ? ' — ' + role : '') : 'this row #' + num) + '?\\n\\n' +
+          '(Tags auto-applied: comp, geography, culture, skill-gap, ethics, stage, velocity, role-shape, fit, other)\\n\\n' +
           'Press Enter to discard without recording a reason.'
         );
         if (reason === null) return; // User canceled — don’t discard
@@ -10781,9 +10781,9 @@ function _renderPerCompanyRow(r) {
     +   '<td class="pcp-cost">' + costHtml + '</td>'
     +   '<td style="text-align:right">'
     +     '<div class="pcp-actions">'
-    +       '<button type="button" class="pcp-action" data-kind="pack" onclick="_pcpRowAction(\'pack\',\'' + slug + '\')"' + packDisabled + ' aria-label="Skip to apply-pack for ' + _esc(r.company) + '">📦</button>'
-    +       '<button type="button" class="pcp-action" data-kind="trash" onclick="_pcpRowAction(\'trash\',\'' + slug + '\')" title="Trash — permanently exclude ' + _esc(r.company) + '" aria-label="Trash ' + _esc(r.company) + '">🗑</button>'
-    +       '<button type="button" class="pcp-action" data-kind="defer" onclick="_pcpRowAction(\'defer\',\'' + slug + '\')" title="Defer — skip this run, retry next" aria-label="Defer ' + _esc(r.company) + '">⏭</button>'
+    +       '<button type="button" class="pcp-action" data-kind="pack" onclick="_pcpRowAction(\\'pack\\',\\'' + slug + '\\')"' + packDisabled + ' aria-label="Skip to apply-pack for ' + _esc(r.company) + '">📦</button>'
+    +       '<button type="button" class="pcp-action" data-kind="trash" onclick="_pcpRowAction(\\'trash\\',\\'' + slug + '\\')" title="Trash — permanently exclude ' + _esc(r.company) + '" aria-label="Trash ' + _esc(r.company) + '">🗑</button>'
+    +       '<button type="button" class="pcp-action" data-kind="defer" onclick="_pcpRowAction(\\'defer\\',\\'' + slug + '\\')" title="Defer — skip this run, retry next" aria-label="Defer ' + _esc(r.company) + '">⏭</button>'
     +     '</div>'
     +   '</td>'
     + '</tr>';
