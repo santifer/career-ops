@@ -55,12 +55,12 @@ export default function Header() {
                     size="sm"
                     className="w-full items-center bg-gradient-to-r from-indigo-700 via-purple-500 to-pink-700 hover:opacity-90"
                     asChild>
-                    <Link href="https://shadcnuikit.com/pricing" target="_blank">
+                    <Link href="https://shadcnuikit.com/pricing" target="_blank" rel="noopener noreferrer">
                       <LockIcon className="me-2 h-4 w-4" /> Get Pro
                     </Link>
                   </Button>
                   <Button size="sm" className="w-full" variant="outline" asChild>
-                    <Link href="https://shadcnuikit.com/" target="_blank">
+                    <Link href="https://shadcnuikit.com/" target="_blank" rel="noopener noreferrer">
                       Learn More
                     </Link>
                   </Button>

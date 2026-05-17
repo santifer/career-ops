@@ -8,7 +8,8 @@ export async function SectionCards() {
   const total = apps.length
   const inProgress = apps.filter(a => ["applied","responded","interview"].includes(a.status)).length
   const offers = apps.filter(a => a.status === "offer").length
-  const avgScore = total > 0 ? (apps.reduce((s, a) => s + a.score, 0) / total).toFixed(1) : "—"
+  const scoredApps = apps.filter(a => a.score > 0)
+  const avgScore = scoredApps.length > 0 ? (scoredApps.reduce((s, a) => s + a.score, 0) / scoredApps.length).toFixed(1) : "—"
   const evaluated = apps.filter(a => a.status === "evaluated").length
 
   const stats = [
@@ -22,7 +23,7 @@ export async function SectionCards() {
     {
       label: "In Progress",
       value: inProgress,
-      sub: "Applied + Interview",
+      sub: "Applied + Responded + Interview",
       trend: (inProgress > 0 ? "up" : "down") as "up" | "down",
       note: "awaiting response",
     },
@@ -31,7 +32,7 @@ export async function SectionCards() {
       value: offers,
       sub: offers > 0 ? "Congratulations!" : "None yet",
       trend: (offers > 0 ? "up" : "down") as "up" | "down",
-      note: `from ${total} evaluations`,
+      note: `from ${scoredApps.length} scored roles`,
     },
     {
       label: "Avg Score",
