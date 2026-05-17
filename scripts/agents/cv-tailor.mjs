@@ -4,20 +4,237 @@
  * Stage: 'cv-tailor' (one of the 5 parallel draft-generation agents in
  * orchestrator stage 4 `fan_out_drafts`).
  *
- * Live mode: Uses HM-intel + voice corpus to select and re-phrase the most
- * relevant cv.md bullets for this specific JD. Wiring is tracked in
- * Tier B #8 — cv-tailor live mode. Until then, live-mode throws.
+ * Live mode: Uses HM-intel + deterministic bullet scoring to select and
+ * re-phrase the most relevant cv.md bullets for this specific JD.
+ * Implements Tier B #8 — cv-tailor live mode.
+ *
+ * LLM: openai:gpt-5 (falls through to gpt-5.5 at runtime) via lib/council.mjs
+ * reasoning_effort: medium
+ * Target cost: ~$0.05–0.10 per run
+ * Target latency: <90s end-to-end
  *
  * @typedef {import('./types.mjs').SubAgentInput} SubAgentInput
  * @typedef {import('./types.mjs').SubAgentOutput} SubAgentOutput
  */
 
+import { readFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { execSync } from 'node:child_process';
+
+import { z } from 'zod';
+import { callCouncil } from '../../lib/council.mjs';
+import { scoreAndRankBullets, buildLlmPreamble } from '../../lib/hm-weighting.mjs';
 import { dryRunSkipped } from './types.mjs';
 
+// Load .env from repo root so API keys are available when cv-tailor is invoked
+// directly (not through a shell that already has the env exported). Uses
+// override:true per the project convention (lib/eval-intel-gather.mjs et al.)
+// so that a stale/empty shell-level ANTHROPIC_API_KEY doesn't shadow the .env value.
+try {
+  const { config } = await import('dotenv');
+  config({ path: join(dirname(fileURLToPath(import.meta.url)), '..', '..', '.env'), override: true });
+} catch { /* dotenv optional — silently skip if not installed */ }
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const ROOT = join(__dirname, '..', '..');
+
 const STAGE = 'cv-tailor';
+const TOP_N = 8;
+const SYSTEM_PROMPT = `Today is 2026-05-17 PT. This year, 2026, has been verified by your orchestrator via system clock — it is real, not hypothetical. You are tailoring Mitchell Williams's CV bullets to a specific job description.
+
+You will receive:
+1. The job description body
+2. The full cv.md as reference
+3. A deterministically-ranked top-8 list of bullets (the preamble) — these scored highest against the JD on HM-intel and metric density. DO NOT REORDER them; preserve the rank.
+4. Optional article-digest.md for additional proof points
+
+Your job:
+- Refine, tighten, or rephrase the top-8 ranked bullets to maximize impact for this specific JD.
+- Maintain Mitchell's voice (short, direct, metric-first, no "delve" / no "tapestry" / no AI-detector-tells).
+- Preserve all citations: keep [cv.md:line:N] or article-digest markers intact.
+- Output JSON with this exact shape:
+  {
+    "tailored_bullets": [{"text": "...", "original_rank": 1, "cv_ref": "cv.md:42", "notes": "what changed"}, ...],
+    "summary": "1-2 sentence overall tailoring strategy",
+    "warnings": ["any concerns about overclaiming or voice drift"]
+  }
+- The number of bullets MUST equal the number you received in the ranked preamble (so 8 in, 8 out).
+- NEVER invent metrics or experience not present in cv.md or article-digest.md.`;
+
+/* -------------------------------------------------------------------------- */
+/* Zod schema for LLM response validation                                     */
+/* -------------------------------------------------------------------------- */
+
+const TailoredBulletSchema = z.object({
+  text: z.string().min(1),
+  original_rank: z.number().int().min(1),
+  cv_ref: z.string().default(''),
+  notes: z.string().default(''),
+});
+
+export const CvTailorLlmResponseSchema = z.object({
+  tailored_bullets: z.array(TailoredBulletSchema).min(1),
+  summary: z.string().min(1),
+  warnings: z.array(z.string()).default([]),
+});
+
+/* -------------------------------------------------------------------------- */
+/* Helpers                                                                    */
+/* -------------------------------------------------------------------------- */
+
+function slugify(s) {
+  return String(s || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 60);
+}
 
 /**
- * Tailor cv.md bullets to the JD using HM-intel and voice corpus.
+ * Parse cv.md into individual bullet objects.
+ * Extracts lines starting with "- " or "* " from any section.
+ * Returns objects with { text, cv_ref, tags, metric_density }.
+ */
+function parseCvBullets(cvText) {
+  const lines = cvText.split('\n');
+  const bullets = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    // Match bullet lines
+    const m = line.match(/^(\s*)[-*]\s+(.+)$/);
+    if (!m) continue;
+    const text = m[2].trim();
+    if (text.length < 20) continue; // skip very short / decorative lines
+
+    // Compute a rough metric_density: ratio of tokens that look like numbers/percentages/metrics
+    const tokens = text.split(/\s+/);
+    const metricCount = tokens.filter(t => /\d/.test(t)).length;
+    const metric_density = metricCount / Math.max(tokens.length, 1);
+
+    bullets.push({
+      text,
+      cv_ref: `cv.md:${i + 1}`,
+      tags: [],
+      metric_density,
+      ai_risk: 0,
+    });
+  }
+
+  return bullets;
+}
+
+/**
+ * Extract JSON from an LLM response that may wrap it in a markdown code block.
+ */
+function extractJson(content) {
+  // Try naked JSON first
+  const trimmed = content.trim();
+  if (trimmed.startsWith('{')) return trimmed;
+  // Extract from ```json ... ``` block
+  const m = content.match(/```(?:json)?\s*([\s\S]+?)```/);
+  if (m) return m[1].trim();
+  // Extract first {...} block
+  const start = content.indexOf('{');
+  const end = content.lastIndexOf('}');
+  if (start >= 0 && end > start) return content.slice(start, end + 1);
+  return content;
+}
+
+/**
+ * Run humanize-check on a file path and return { score, risk }.
+ * Spawns the script via execSync, parses stdout JSON.
+ */
+function runHumanizeCheck(filePath) {
+  try {
+    const scriptPath = join(ROOT, 'scripts', 'humanize-check.mjs');
+    const out = execSync(
+      `node "${scriptPath}" --file "${filePath}" --json`,
+      { cwd: ROOT, encoding: 'utf-8', timeout: 60_000 }
+    );
+    const parsed = JSON.parse(out.trim());
+    return {
+      score: parsed.score ?? parsed.consensusScore ?? 0,
+      risk: parsed.risk ?? 'UNKNOWN',
+      checks: parsed.checks || {},
+    };
+  } catch (e) {
+    const out = e.stdout || '';
+    try {
+      const parsed = JSON.parse(out.trim());
+      return {
+        score: parsed.score ?? parsed.consensusScore ?? 0,
+        risk: parsed.risk ?? 'UNKNOWN',
+        checks: parsed.checks || {},
+      };
+    } catch {
+      return { score: 0, risk: 'PARSE_ERROR', checks: {}, error: String(e.message || e) };
+    }
+  }
+}
+
+/**
+ * Run humanize-check on raw text by writing to a temp file, scoring it,
+ * then deleting the temp file. Used to score only the bullet lines,
+ * not the diagnostic summary/warnings sections (which are metadata).
+ */
+function runHumanizeCheckText(text) {
+  const tmpPath = join(ROOT, '.humanize-check-bullets-tmp.md');
+  try {
+    writeFileSync(tmpPath, text, 'utf-8');
+    return runHumanizeCheck(tmpPath);
+  } finally {
+    try { unlinkSyncSafe(tmpPath); } catch { /* ignore cleanup failure */ }
+  }
+}
+
+function unlinkSyncSafe(path) {
+  try {
+    // Use dynamic require-style import isn't available in ESM sync context.
+    // execSync is already imported — use it to delete the temp file.
+    execSync(`rm -f "${path}"`);
+  } catch { /* silently skip */ }
+}
+
+/**
+ * Build the markdown artifact content from the validated LLM response.
+ */
+function buildMarkdownArtifact(llmResponse, company, role) {
+  const lines = [
+    `# Tailored CV bullets for ${company} ${role}`,
+    '',
+  ];
+
+  for (const b of llmResponse.tailored_bullets) {
+    const ref = b.cv_ref ? `  [${b.cv_ref}]` : '';
+    lines.push(`- ${b.text}${ref}`);
+  }
+
+  lines.push('');
+  lines.push('## Summary');
+  lines.push('');
+  lines.push(llmResponse.summary);
+
+  if (llmResponse.warnings && llmResponse.warnings.length > 0) {
+    lines.push('');
+    lines.push('## Warnings');
+    lines.push('');
+    for (const w of llmResponse.warnings) {
+      lines.push(`- ${w}`);
+    }
+  }
+
+  lines.push('');
+  return lines.join('\n');
+}
+
+/* -------------------------------------------------------------------------- */
+/* Main export                                                                */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Tailor cv.md bullets to the JD using HM-intel and LLM refinement.
  *
  * @param {SubAgentInput} input
  * @returns {Promise<SubAgentOutput>}
@@ -29,5 +246,313 @@ export async function runCvTailor(input) {
     return dryRunSkipped(STAGE);
   }
 
-  throw new Error('cv-tailor live mode not yet wired — see Tier B #8');
+  const t0 = Date.now();
+
+  /* ---------------------------------------------------------------------- */
+  /* 1. Load and validate inputs                                             */
+  /* ---------------------------------------------------------------------- */
+
+  // CV — mandatory
+  const cvPath = join(ROOT, 'cv.md');
+  if (!existsSync(cvPath)) {
+    return {
+      stage: STAGE,
+      status: 'error',
+      output: null,
+      diagnostics: { duration_ms: Date.now() - t0, cost_estimate_usd: 0, tokens_used: { input: 0, output: 0, cached: 0 }, model_used: 'openai:gpt-5' },
+      error: 'cv.md not found at repo root',
+    };
+  }
+  const cvText = readFileSync(cvPath, 'utf-8');
+
+  // Article digest — optional
+  const articleDigestPath = join(ROOT, 'article-digest.md');
+  const articleDigestText = existsSync(articleDigestPath)
+    ? readFileSync(articleDigestPath, 'utf-8')
+    : null;
+
+  // JD text — from input.pack.jd.jd_text (orchestrator stage 1 shape) or
+  // input.pack.inputs.jdText (direct invocation shape)
+  const jdText =
+    input?.pack?.jd?.jd_text ||
+    input?.pack?.inputs?.jdText ||
+    input?.pack?.inputs?.jd_text ||
+    '';
+
+  // Company / role metadata
+  const company =
+    input?.pack?.jd?.company ||
+    input?.pack?.inputs?.company ||
+    input?.pack?.meta?.company ||
+    'Unknown';
+  const role =
+    input?.pack?.jd?.role ||
+    input?.pack?.inputs?.role ||
+    input?.pack?.meta?.role ||
+    'Unknown';
+  const rowId =
+    input?.pack?.meta?.row_id ||
+    input?.pack?.inputs?.rowId ||
+    0;
+
+  // HM-intel — from context (orchestrator wires it) or fall back to {}
+  const hmIntel = input?.context?.hmIntel || {};
+
+  // JD metadata object for scoring (reserved for future embedding comparison)
+  const jdMeta = {};
+
+  /* ---------------------------------------------------------------------- */
+  /* 2. Deterministic pre-LLM scoring                                       */
+  /* ---------------------------------------------------------------------- */
+
+  const bullets = parseCvBullets(cvText);
+  if (bullets.length === 0) {
+    return {
+      stage: STAGE,
+      status: 'error',
+      output: null,
+      diagnostics: { duration_ms: Date.now() - t0, cost_estimate_usd: 0, tokens_used: { input: 0, output: 0, cached: 0 }, model_used: 'openai:gpt-5' },
+      error: 'cv.md parsed 0 bullets — check bullet formatting',
+    };
+  }
+
+  const rankedBullets = scoreAndRankBullets(bullets, hmIntel, jdMeta, { topN: TOP_N });
+  const preamble = buildLlmPreamble(rankedBullets);
+
+  /* ---------------------------------------------------------------------- */
+  /* 3. Build the LLM prompt                                                 */
+  /* ---------------------------------------------------------------------- */
+
+  // Trim JD to ~5000 chars to stay within budget
+  const jdTrimmed = jdText.slice(0, 5000);
+
+  // Trim cv.md to ~4000 chars (full context for reference)
+  const cvTrimmed = cvText.slice(0, 4000);
+
+  // Trim article-digest to ~1500 chars if present
+  const digestSection = articleDigestText
+    ? `\n\n## article-digest.md (proof points)\n\n${articleDigestText.slice(0, 1500)}`
+    : '';
+
+  const userPrompt = [
+    '## Job Description',
+    '',
+    jdTrimmed || '(JD text not available — use HM-intel context to infer role requirements)',
+    '',
+    '## cv.md (full reference)',
+    '',
+    cvTrimmed,
+    digestSection,
+    '',
+    '## Deterministically-ranked top bullets to tailor',
+    '',
+    preamble,
+    '',
+    `Tailor exactly ${rankedBullets.length} bullets. Output valid JSON only — no preamble, no markdown fences.`,
+  ].join('\n');
+
+  /* ---------------------------------------------------------------------- */
+  /* 4. LLM call via lib/council.mjs                                        */
+  /* ---------------------------------------------------------------------- */
+
+  const modelKey = input?.config?.model || 'openai:gpt-5';
+  const reasoningEffort = input?.config?.reasoningEffort || 'medium';
+
+  // Max completion tokens: ~1800 is enough for 8 bullets + summary + warnings
+  const MAX_COMPLETION_TOKENS = 1800;
+
+  let llmResult = null;
+  let llmError = null;
+  let modelUsed = modelKey;
+  let tokensUsed = { input: 0, output: 0, cached: 0 };
+
+  try {
+    const councilResult = await callCouncil({
+      prompt: userPrompt,
+      models: [modelKey],
+      opts: {
+        systemPrompt: SYSTEM_PROMPT,
+        maxTokens: MAX_COMPLETION_TOKENS,
+        reasoningEffort,
+      },
+    });
+
+    const result = councilResult.results?.[0];
+    if (!result) throw new Error('callCouncil returned no results');
+    if (result.error) throw new Error(`LLM error: ${result.error}`);
+
+    llmResult = result;
+    modelUsed = result.modelUsed || modelKey;
+    // council.mjs returns total_tokens; approximate input/output split
+    const totalTok = result.tokens || 0;
+    tokensUsed = { input: Math.round(totalTok * 0.85), output: Math.round(totalTok * 0.15), cached: 0 };
+  } catch (e) {
+    llmError = String(e.message || e);
+  }
+
+  if (llmError) {
+    return {
+      stage: STAGE,
+      status: 'error',
+      output: null,
+      diagnostics: { duration_ms: Date.now() - t0, cost_estimate_usd: 0, tokens_used: tokensUsed, model_used: modelUsed },
+      error: `LLM call failed: ${llmError}`,
+    };
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* 5. Parse + validate LLM output (with one Zod retry)                    */
+  /* ---------------------------------------------------------------------- */
+
+  let parsed = null;
+  let parseError = null;
+
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    const rawContent = attempt === 1
+      ? llmResult.content
+      : llmResult.content; // second attempt: same content but stricter extraction
+
+    try {
+      const jsonStr = extractJson(rawContent);
+      const rawObj = JSON.parse(jsonStr);
+      parsed = CvTailorLlmResponseSchema.parse(rawObj);
+      parseError = null;
+      break;
+    } catch (e) {
+      parseError = String(e.message || e);
+      if (attempt === 1) {
+        // Retry: try a second LLM call with a stricter prompt instructing JSON only
+        try {
+          const strictPrompt = [
+            'You previously produced a response that was not valid JSON. Produce ONLY a JSON object with no other text.',
+            'Required shape:',
+            '{"tailored_bullets": [{"text":"...", "original_rank":1, "cv_ref":"cv.md:N", "notes":"..."},...], "summary":"...", "warnings":[]}',
+            `Produce exactly ${rankedBullets.length} bullets.`,
+            '',
+            'Here is the original user request context (re-tailoring task):',
+            userPrompt.slice(0, 3000),
+          ].join('\n');
+
+          const retry = await callCouncil({
+            prompt: strictPrompt,
+            models: [modelKey],
+            opts: {
+              systemPrompt: SYSTEM_PROMPT,
+              maxTokens: MAX_COMPLETION_TOKENS,
+              reasoningEffort,
+            },
+          });
+          const retryResult = retry.results?.[0];
+          if (retryResult && !retryResult.error) {
+            llmResult = retryResult;
+            const addTok = retryResult.tokens || 0;
+            tokensUsed.input += Math.round(addTok * 0.85);
+            tokensUsed.output += Math.round(addTok * 0.15);
+          }
+        } catch {
+          // ignore retry call failure; parseError will surface on attempt 2
+        }
+      }
+    }
+  }
+
+  if (!parsed) {
+    return {
+      stage: STAGE,
+      status: 'error',
+      output: null,
+      diagnostics: {
+        duration_ms: Date.now() - t0,
+        cost_estimate_usd: estimateCostUsd(tokensUsed),
+        tokens_used: tokensUsed,
+        model_used: modelUsed,
+      },
+      error: `Zod validation failed after 2 attempts: ${parseError}\n\nRaw LLM content (first 500 chars): ${(llmResult?.content || '').slice(0, 500)}`,
+    };
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* 6. Write artifact                                                       */
+  /* ---------------------------------------------------------------------- */
+
+  const companySlug = slugify(company);
+  const roleSlug = slugify(role);
+  const rowPadded = String(rowId).padStart(3, '0');
+  const outDir = join(ROOT, `data/apply-packs/${rowPadded}-${companySlug}-${roleSlug}`);
+  mkdirSync(outDir, { recursive: true });
+
+  const artifactPath = join(outDir, 'cv-tailored.md');
+  const markdown = buildMarkdownArtifact(parsed, company, role);
+  writeFileSync(artifactPath, markdown, 'utf-8');
+
+  /* ---------------------------------------------------------------------- */
+  /* 7. Run humanize-check (bullets only — summary is diagnostic metadata)  */
+  /* ---------------------------------------------------------------------- */
+
+  // Score only the bullet text, not the ## Summary / ## Warnings sections,
+  // because only the bullets get submitted to employers. The summary is
+  // internal diagnostic metadata and should not inflate the AI-risk score.
+  const bulletsOnlyText = parsed.tailored_bullets.map(b => `- ${b.text}`).join('\n');
+  const humanize = runHumanizeCheckText(bulletsOnlyText);
+  const humanizeScore = typeof humanize.score === 'number' ? humanize.score : 0;
+
+  if (humanizeScore > 20) {
+    // Flag the phrases but do NOT delete the artifact — return error with detail
+    const flaggedPhrases = humanize.checks?.phrases?.hits?.map(h => h.label || h).join(', ') || 'see humanize-check output';
+    return {
+      stage: STAGE,
+      status: 'error',
+      output: {
+        path: artifactPath.replace(ROOT + '/', ''),
+        tailored_bullets_count: parsed.tailored_bullets.length,
+        humanize_risk_score: humanizeScore,
+        humanize_risk_band: humanize.risk,
+        summary: parsed.summary,
+      },
+      diagnostics: {
+        duration_ms: Date.now() - t0,
+        cost_estimate_usd: estimateCostUsd(tokensUsed),
+        tokens_used: tokensUsed,
+        model_used: modelUsed,
+      },
+      error: `humanize-check failed: score ${humanizeScore} > 20 (${humanize.risk}). Flagged: ${flaggedPhrases}`,
+    };
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* 8. Return SubAgentOutput                                                */
+  /* ---------------------------------------------------------------------- */
+
+  const costUsd = estimateCostUsd(tokensUsed);
+
+  return {
+    stage: STAGE,
+    status: 'ok',
+    output: {
+      path: artifactPath.replace(ROOT + '/', ''),
+      tailored_bullets_count: parsed.tailored_bullets.length,
+      humanize_risk_score: humanizeScore,
+      humanize_risk_band: humanize.risk,
+      summary: parsed.summary,
+      warnings: parsed.warnings || [],
+    },
+    diagnostics: {
+      duration_ms: Date.now() - t0,
+      cost_estimate_usd: costUsd,
+      tokens_used: tokensUsed,
+      model_used: modelUsed,
+    },
+    error: null,
+  };
+}
+
+/**
+ * Rough GPT-5.5 cost estimate.
+ * Input: ~$5/MTok, Output: ~$15/MTok (mid-2026 pricing approximation).
+ * Cached input is treated as full price (we don't have cached token count from council).
+ */
+function estimateCostUsd({ input = 0, output = 0 } = {}) {
+  const inputCost = (input / 1_000_000) * 5.0;
+  const outputCost = (output / 1_000_000) * 15.0;
+  return Math.round((inputCost + outputCost) * 10000) / 10000;
 }
