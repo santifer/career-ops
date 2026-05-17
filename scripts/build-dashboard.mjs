@@ -271,22 +271,42 @@ function _findRichSiblingReport(reportPath) {
   const slug = _extractCompanyRoleSlugFromReportName(reportPath);
   if (!slug) return '';
   const files = _listReportFiles();
-  // Match siblings: same company-role prefix (after stripping num + date)
-  const siblings = files
-    .filter(f => 'reports/' + f !== reportPath)
-    .filter(f => {
-      const otherSlug = _extractCompanyRoleSlugFromReportName('reports/' + f);
-      // Allow partial slug match (handles "deepgram-senior-developer-advocate"
-      // vs "deepgram-senior-developer-advocate-partner-ecosystem")
-      return otherSlug && (otherSlug.startsWith(slug) || slug.startsWith(otherSlug));
-    });
-  if (!siblings.length) return '';
-  // Pick the one with the largest file size — proxy for "most detailed."
-  // Phase E re-evals are <10KB; original Block A-F reports are 20-50KB.
-  const sized = siblings.map(f => {
-    try { return { f, size: statSync(join(ROOT, 'reports', f)).size }; }
-    catch { return { f, size: 0 }; }
-  }).sort((a, b) => b.size - a.size);
+  // Match siblings: same company-role prefix (after stripping num + date).
+  // 2026-05-17 — Mitchell flagged that the old logic picked a different-role
+  // sibling (e.g. "002-anthropic" matched "anthropic-communications-manager-
+  // research" because both start with "anthropic"). Now we score siblings
+  // by overlap length and prefer the LONGEST-overlap candidate.
+  const candidates = [];
+  for (const f of files) {
+    if ('reports/' + f === reportPath) continue;
+    const otherSlug = _extractCompanyRoleSlugFromReportName('reports/' + f);
+    if (!otherSlug) continue;
+    // Compute longest common prefix length (a > b means "more specific match").
+    let overlap = 0;
+    const minLen = Math.min(otherSlug.length, slug.length);
+    for (let i = 0; i < minLen; i++) {
+      if (otherSlug[i] !== slug[i]) break;
+      overlap++;
+    }
+    // Require at least 70% of the shorter slug to overlap — keeps "anthropic"
+    // (9 chars) from matching "anthropic-communications-manager-research"
+    // (41 chars) unless the shorter slug is at least 70% of the longer one.
+    // For exact match (slug === otherSlug) overlap = len → trivially passes.
+    const shorterLen = Math.min(slug.length, otherSlug.length);
+    const overlapPct = shorterLen === 0 ? 0 : overlap / shorterLen;
+    if (overlapPct < 0.7) continue;
+    candidates.push({ f, overlap, otherSlug });
+  }
+  if (!candidates.length) return '';
+  // Sort: (1) higher overlap wins, (2) larger file size wins as tiebreaker.
+  const sized = candidates.map(c => {
+    try { c.size = statSync(join(ROOT, 'reports', c.f)).size; }
+    catch { c.size = 0; }
+    return c;
+  }).sort((a, b) => {
+    if (b.overlap !== a.overlap) return b.overlap - a.overlap;
+    return b.size - a.size;
+  });
   return sized[0].size > 8000 ? 'reports/' + sized[0].f : '';
 }
 
