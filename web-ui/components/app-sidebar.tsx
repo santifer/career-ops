@@ -7,6 +7,7 @@ import {
   IconClipboardList,
   IconDashboard,
   IconMailForward,
+  IconPlayerPlay,
   IconSchool,
 } from "@tabler/icons-react"
 
@@ -30,6 +31,7 @@ const data = {
   },
   navMain: [
     { title: "Dashboard",      url: "/dashboard",            icon: IconDashboard },
+    { title: "Evaluate a Job", url: "/dashboard/evaluate",   icon: IconPlayerPlay },
     { title: "Tracker",        url: "/dashboard/tracker",    icon: IconClipboardList },
     { title: "Pipeline Inbox", url: "/dashboard/pipeline",   icon: IconBriefcase },
     { title: "Follow-ups",     url: "/dashboard/followups",  icon: IconMailForward },

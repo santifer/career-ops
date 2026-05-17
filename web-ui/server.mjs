@@ -4,6 +4,8 @@ import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import yaml from 'js-yaml'
+import { spawn } from 'child_process'
+import { randomUUID } from 'crypto'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
@@ -208,6 +210,68 @@ app.post('/api/followups', (req, res) => {
   const row = `| ${num} | ${company} | ${role} | ${appliedDate || today} | ${today} | ${nextAction || 'Follow up'} | ${dueDate || ''} | ${notes || ''} |`
   fs.appendFileSync(file, row + '\n')
   res.json({ ok: true })
+})
+
+// --- Evaluate ---
+
+const jobs = new Map() // jobId -> { lines: string[], done: bool, error: string|null, clients: Set<res> }
+
+app.post('/api/evaluate', (req, res) => {
+  const { url } = req.body
+  if (!url || !/^https?:\/\/.+/.test(url)) return res.status(400).json({ error: 'Invalid URL' })
+
+  const jobId = randomUUID()
+  const job = { lines: [], done: false, error: null, clients: new Set() }
+  jobs.set(jobId, job)
+
+  const prompt = `${url}`
+  const child = spawn('claude', ['-p', prompt, '--output-format', 'text', '--dangerously-skip-permissions'], {
+    cwd: ROOT,
+    env: { ...process.env },
+  })
+
+  const push = (line) => {
+    job.lines.push(line)
+    for (const client of job.clients) {
+      client.write(`data: ${JSON.stringify({ line })}\n\n`)
+    }
+  }
+
+  child.stdout.on('data', d => d.toString().split('\n').filter(Boolean).forEach(push))
+  child.stderr.on('data', d => d.toString().split('\n').filter(Boolean).forEach(l => push(`⚠ ${l}`)))
+
+  child.on('close', (code) => {
+    job.done = true
+    job.error = code !== 0 ? `Process exited with code ${code}` : null
+    const msg = job.error ? `data: ${JSON.stringify({ done: true, error: job.error })}\n\n`
+                           : `data: ${JSON.stringify({ done: true })}\n\n`
+    for (const client of job.clients) { client.write(msg); client.end() }
+    job.clients.clear()
+    setTimeout(() => jobs.delete(jobId), 10 * 60 * 1000)
+  })
+
+  res.json({ jobId })
+})
+
+app.get('/api/evaluate/:jobId/stream', (req, res) => {
+  const job = jobs.get(req.params.jobId)
+  if (!job) return res.status(404).json({ error: 'Job not found' })
+
+  res.setHeader('Content-Type', 'text/event-stream')
+  res.setHeader('Cache-Control', 'no-cache')
+  res.setHeader('Connection', 'keep-alive')
+  res.flushHeaders()
+
+  // replay buffered lines
+  for (const line of job.lines) res.write(`data: ${JSON.stringify({ line })}\n\n`)
+
+  if (job.done) {
+    res.write(`data: ${JSON.stringify({ done: true, error: job.error })}\n\n`)
+    return res.end()
+  }
+
+  job.clients.add(res)
+  req.on('close', () => job.clients.delete(res))
 })
 
 app.listen(3099, () => console.log('career-ops API running on http://localhost:3099'))

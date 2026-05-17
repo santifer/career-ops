@@ -11,6 +11,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/dashboard/followups": "Follow-ups",
   "/dashboard/interview": "Interview Prep",
   "/dashboard/analytics": "Analytics",
+  "/dashboard/evaluate": "Evaluate a Job",
 }
 
 export function SiteHeader() {

@@ -32,6 +32,14 @@ export default async function Page() {
         </div>
       </div>
 
+      <Link
+        href="/dashboard/evaluate"
+        className="flex items-center gap-3 rounded-lg border-2 border-dashed border-muted-foreground/25 px-4 py-3 text-sm text-muted-foreground hover:border-primary/40 hover:text-foreground transition-colors"
+      >
+        <span className="text-lg">🔍</span>
+        <span>Paste a job URL to evaluate it → <span className="font-medium text-foreground">Evaluate a Job</span></span>
+      </Link>
+
       <SectionCards />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
