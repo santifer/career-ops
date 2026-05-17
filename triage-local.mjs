@@ -121,8 +121,19 @@ function parseOutput(raw) {
     const score = parseFloat(obj.score);
     if (typeof obj.score === 'undefined') return { error: 'missing score' };
     if (isNaN(score) || score < 1.0 || score > 5.0) return { error: `invalid score: ${obj.score}` };
-    const archetype = String(obj.archetype || '');
-    if (!['A1', 'A2', 'B', 'NO'].includes(archetype)) return { error: `invalid archetype: ${archetype}` };
+    // Same normalization as triage.mjs — accept A2b/A2c/B1a etc. sub-tier
+    // suffixes that local LLMs (qwen3:8b / llama3.2:3b) emit. Collapse to
+    // canonical 4-arity since downstream doesn't use the sub-tier.
+    let archetype = String(obj.archetype || '').trim().toUpperCase();
+    const normalized = (
+      /^A1/.test(archetype) ? 'A1' :
+      /^A2/.test(archetype) ? 'A2' :
+      /^B/.test(archetype)  ? 'B'  :
+      /^NO|NONE|SKIP/.test(archetype) ? 'NO' :
+      ''
+    );
+    if (!normalized) return { error: `invalid archetype: ${archetype}` };
+    archetype = normalized;
     const decision = String(obj.decision || '');
     if (!['ADVANCE', 'SKIP'].includes(decision)) return { error: `invalid decision: ${decision}` };
     const reason = String(obj.reason || '').slice(0, 120);

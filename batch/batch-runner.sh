@@ -620,9 +620,11 @@ main() {
             running=$((running - 1))
           fi
         done
-        # Compact arrays
-        pids=("${pids[@]}")
-        pid_ids=("${pid_ids[@]}")
+        # Compact arrays. Bash set -u trips on empty-array expansion via
+        # `${pids[@]}`; the `+x` form returns empty when unset/empty, fixing
+        # the "unbound variable" crash hit during the 2026-05-16 phase-a re-eval.
+        pids=(${pids[@]+"${pids[@]}"})
+        pid_ids=(${pid_ids[@]+"${pid_ids[@]}"})
         sleep 1
       done
 
@@ -633,8 +635,8 @@ main() {
       running=$((running + 1))
     done
 
-    # Wait for remaining workers
-    for pid in "${pids[@]}"; do
+    # Wait for remaining workers — same empty-array guard as above.
+    for pid in ${pids[@]+"${pids[@]}"}; do
       wait "$pid" 2>/dev/null || true
     done
   fi

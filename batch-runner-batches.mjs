@@ -471,6 +471,14 @@ async function phaseSubmit(apiKey) {
     // Static context in system block with cache_control — API caches this prefix across requests
     // max_tokens capped at 1,400: eval reports are 500–900 tokens; 4096 wastes money on runaway outputs
     // temperature: 0 eliminates verbose preambles that inflate output tokens in scoring tasks
+    //
+    // QUALITY WARNING (added 2026-05-16): 1400 is set assuming the current
+    // A–F + Block G prompt produces ≤900 token reports. If you add new
+    // report sections (Block H, additional Cultural Signals depth, longer
+    // rationale fields), bump this to avoid silent mid-report truncation.
+    // Symptoms of truncation: reports missing trailing sections, dashboard
+    // shows "—" for late blocks, score-without-rationale rows. Same pattern
+    // as the maxOutputTokens=80 bug in gemini-eval.mjs.
     let params;
     try {
       params = {

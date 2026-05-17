@@ -139,6 +139,28 @@
 - https://www.levels.fyi/companies/pinecone/salaries
 - https://www.teamblind.com/company/Pinecone
 
+## Databricks — Sr Developer Advocate, Agentic Systems (score 4.2)
+
+**Equity / IPO posture:** Latest round $10B Series K Sept 2025 at $100B+ valuation (Thrive Capital lead, doubled from Dec 2024 $62B). IPO consistently delayed since 2023; CEO Ali Ghodsi has resisted public listing despite $4B+ ARR. Tender offers run roughly annually. RSUs convert at IPO trigger. Stage = mega-late private with no firm IPO timeline. (confidence: H)
+**Overpay signal:** Levels.fyi Databricks DevRel/Solutions Architect TC bands $250K–$450K (M3-M4 IC); equity tranches index against ~$100B FMV with potential 1.5-2x bump on any 2027 secondary or IPO mark. Below Cursor/OpenAI cash but stable. (confidence: M)
+**Desperate-hire signal:** Agentic Systems Dev Advocate is a NEW dedicated role (Q1 2026) — Databricks is racing to be the agentic-AI infrastructure default vs Snowflake/dbt; this is a strategic hire, not backfill. (confidence: M)
+**Tactical lead this week:** xGE Comms Triage agent + Voice DNA RAG = production agentic systems shipped → maps directly to Databricks' Agentic motion. Pitch: 3 production AI agents serving 1K+ Google engineers as proof of agentic-systems narrative for Databricks' developer audience.
+**Sources:**
+- https://www.levels.fyi/companies/databricks/salaries
+- https://www.databricks.com/company/newsroom/press-releases/databricks-raises-10-billion-series-k
+- https://www.crunchbase.com/organization/databricks
+
+## Ramp — AI Operations Specialist, Agentic Workflows (score 4.1)
+
+**Equity / IPO posture:** $200M Series E in March 2026 at $14.6B valuation (Founders Fund lead, doubled from $7.65B March 2025). $700M ARR, 30k+ customers. Reportedly pre-IPO-prep but no S-1 filing yet; founders Karim/Eric publicly bullish on staying private through 2027. Stage = late-Series-E with high revenue per employee. (confidence: H)
+**Overpay signal:** Levels.fyi Ramp IC4 TC $280K–$380K base+equity (M3-equivalent); equity grants vs $14.6B FMV give meaningful upside on next 2026-2027 mark. Below frontier-lab AI cash but Ramp's revenue durability (~$1M+ ARR/employee) makes equity less speculative. (confidence: M)
+**Desperate-hire signal:** AI Operations Specialist titles emerging across fintech post-Anthropic agent SDK launch; Ramp is one of first fintech to dedicate roles to agentic finance workflows — building the function from zero. (confidence: M)
+**Tactical lead this week:** Comms Triage agent = automated triage workflow (decision rules + LLM gates + human-in-loop) shipping to Google PgM team. Direct production analogue to "agentic workflows" Ramp is building for AP/AR/expense automation.
+**Sources:**
+- https://ramp.com/blog/series-e
+- https://www.levels.fyi/companies/ramp/salaries
+- https://www.crunchbase.com/organization/ramp
+
 ## Top 3 to lean into THIS WEEK
 
 1. **Anthropic** — $900B round closing within weeks against $380B Feb 2026 strike; Claude Marketplace is a brand-new BU and Strategic Ops Manager is the BU stand-up hire — first-team equity timing on the highest-velocity revenue ramp in the queue ($9B → $45B ARR in 5 months).

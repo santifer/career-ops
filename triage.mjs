@@ -21,6 +21,15 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync, appendFileSync } fr
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { spawnSync } from 'child_process';
+
+// Load .env from project root so ANTHROPIC_API_KEY (used by callHaiku) and
+// GEMINI_API_KEY (used by quickScoreGemini) are available. override:true
+// because Mitchell's shell pre-sets ANTHROPIC_API_KEY to empty string.
+try {
+  const { config } = await import('dotenv');
+  config({ path: join(dirname(fileURLToPath(import.meta.url)), '.env'), override: true });
+} catch { /* dotenv optional */ }
+
 import { isCircuitOpen, withRetryBackoff, recordSuccess, recordFailure } from './lib/provider-client.mjs';
 import { HAIKU } from './lib/models.mjs';
 import { readCached, poolMap } from './lib/fetch-utils.mjs';
@@ -48,7 +57,11 @@ const ADVANCE_THRESHOLDS = {
 // Keep backward-compatible aliases for any external scripts referencing these
 const THRESHOLD    = ADVANCE_THRESHOLDS[1];
 const T3_THRESHOLD = ADVANCE_THRESHOLDS[3];
-const DAILY_LIMIT    = parseInt(ARGS['daily-limit'] ?? '50');
+// DAILY_LIMIT bumped from 50 → 200 (2026-05-16): with a 645-item backlog at
+// the old cap, daily launchd runs would take 13 days to clear. 200/day clears
+// the same backlog in ~3 days at ~$0.40/day (200 × $0.002 Haiku cost). CLI
+// can still override with --daily-limit=N for full backlog burns.
+const DAILY_LIMIT    = parseInt(ARGS['daily-limit'] ?? '200');
 const LIVENESS_ONLY  = ARGS['liveness-only'] === true || ARGS['liveness-only'] === 'true';
 const DRY_RUN        = ARGS['dry-run']       === true || ARGS['dry-run']       === 'true';
 const CONCURRENCY    = Math.max(1, parseInt(ARGS.concurrency ?? '1'));
@@ -214,8 +227,21 @@ export function parseTriageOutput(raw) {
     const score = parseFloat(obj.score);
     if (typeof obj.score === 'undefined') return { error: 'missing score' };
     if (isNaN(score) || score < 1.0 || score > 5.0) return { error: `invalid score: ${obj.score}` };
-    const archetype = String(obj.archetype || '');
-    if (!['A1', 'A2', 'B', 'NO'].includes(archetype)) return { error: `invalid archetype: ${archetype}` };
+    // Accept canonical archetypes plus sub-tier suffixes the local LLMs
+    // routinely emit (A2a/A2b/A2c, A1a/A1b, B1, B1a, etc.). Normalize to the
+    // canonical 4 — sub-tier nuance isn't used downstream, so collapsing it
+    // keeps Phase 3b decisions stable without forcing a parser-retry loop
+    // that would never converge on small models like qwen3:8b / llama3.2:3b.
+    let archetype = String(obj.archetype || '').trim().toUpperCase();
+    const normalized = (
+      /^A1/.test(archetype) ? 'A1' :
+      /^A2/.test(archetype) ? 'A2' :
+      /^B/.test(archetype)  ? 'B'  :
+      /^NO|NONE|SKIP/.test(archetype) ? 'NO' :
+      ''
+    );
+    if (!normalized) return { error: `invalid archetype: ${archetype}` };
+    archetype = normalized;
     const decision = String(obj.decision || '');
     if (!['ADVANCE', 'SKIP'].includes(decision)) return { error: `invalid decision: ${decision}` };
     const reason = String(obj.reason || '').slice(0, 120);
@@ -225,26 +251,56 @@ export function parseTriageOutput(raw) {
   }
 }
 
-// ── Haiku quick-score (single call, returns raw stdout) ─────────
-function callHaiku(prompt) {
-  const result = spawnSync(
-    'claude',
-    // --max-budget-usd 0.001: ~500 output tokens at Haiku pricing; cap prevents runaway spend
-    ['-p', prompt, '--model', HAIKU, '--max-budget-usd', '0.001',
-     '--dangerously-skip-permissions', '--tools', '', '--strict-mcp-config', '--mcp-config', '{"mcpServers":{}}'],
-    { encoding: 'utf8', timeout: 60_000, cwd: ROOT }
-  );
-  if (result.error || result.status !== 0) {
-    const msg = result.error?.message || result.stderr?.slice(0, 60) || 'non-zero exit';
-    throw new Error(`claude error: ${msg}`);
+// ── Haiku quick-score (Anthropic API direct, returns raw text) ──
+// Originally used `claude -p` (Claude Code CLI), but that path has
+// significant per-call overhead (auth + MCP config load + CLI startup)
+// that pushed each call past the 60s timeout on prompts > 5KB. Calling
+// the Messages API directly is ~5-15s/call instead of >60s, and uses the
+// project .env ANTHROPIC_API_KEY (loaded into process.env at startup
+// below). Cost: ~$0.001-0.003/call at Haiku 4.5 pricing.
+async function callHaiku(prompt) {
+  if (!process.env.ANTHROPIC_API_KEY) {
+    throw new Error('ANTHROPIC_API_KEY not set in env');
   }
-  return (result.stdout || '').trim();
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 45_000);
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key':         process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+        'content-type':      'application/json',
+      },
+      body: JSON.stringify({
+        model:       HAIKU,
+        max_tokens:  300,
+        temperature: 0,
+        messages:    [{ role: 'user', content: prompt }],
+      }),
+      signal: ctrl.signal,
+    });
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => '');
+      throw new Error(`anthropic HTTP ${res.status}: ${errBody.slice(0, 100)}`);
+    }
+    const data = await res.json();
+    const text = (data.content || [])
+      .filter(c => c.type === 'text')
+      .map(c => c.text)
+      .join('')
+      .trim();
+    if (!text) throw new Error('anthropic returned empty response');
+    return text;
+  } finally {
+    clearTimeout(t);
+  }
 }
 
 // readCached lives in lib/fetch-utils.mjs (module-level cache shared across importers).
 
 // ── Haiku quick-score with retry loop (max 3 attempts) ──────────
-function quickScore(url, tier, jdSnippet) {
+async function quickScore(url, tier, jdSnippet) {
   // Cached read — triage-prompt.md is the same for every item in a session
   const promptTemplate = readCached(TRIAGE_PROMPT) ?? readFileSync(TRIAGE_PROMPT, 'utf8');
   const prompt = promptTemplate
@@ -255,10 +311,10 @@ function quickScore(url, tier, jdSnippet) {
   for (let attempt = 0; attempt < 3; attempt++) {
     let raw;
     try {
-      raw = callHaiku(prompt);
+      raw = await callHaiku(prompt);
     } catch (err) {
       if (attempt < 2) continue;
-      return { score: null, archetype: '?', decision: null, reason: `claude error: ${err.message.slice(0, 60)}` };
+      return { score: null, archetype: '?', decision: null, reason: `haiku error: ${err.message.slice(0, 60)}` };
     }
 
     const parsed = parseTriageOutput(raw);
@@ -277,8 +333,18 @@ async function quickScoreGemini(url, tier, jdSnippet) {
     const { GoogleGenerativeAI } = await import('@google/generative-ai');
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({
-      model: 'gemini-2.0-flash',
-      generationConfig: { temperature: 0, maxOutputTokens: 80 },
+      // gemini-2.0-flash deprecated for keys created after early 2026 (returns
+      // 404); 2.5-flash is the current analogous tier.
+      model: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
+      generationConfig: {
+        temperature: 0,
+        // 80 → 250: triage JSON is already ~50–100 tokens; 80 silently
+        // truncates any longer reason field → parse failure → default SKIP.
+        maxOutputTokens: 250,
+        // 2.5-flash is a thinking model. For "pick a number 1-10 + 15-word
+        // reason" the thinking budget eats the output budget. Disable.
+        thinkingConfig: { thinkingBudget: 0 },
+      },
     });
     const promptTemplate = readCached(TRIAGE_PROMPT) ?? readFileSync(TRIAGE_PROMPT, 'utf8');
     const prompt = promptTemplate
@@ -332,7 +398,7 @@ async function quickScoreRouted(url, tier, jdSnippet) {
           continue;
         }
         case 'anthropic': {
-          const result = quickScore(url, tier, jdSnippet);
+          const result = await quickScore(url, tier, jdSnippet);
           if (result.score !== null) {
             _sessionCache.set(url, result);
             saveUrlCacheEntry(url, result.score, result.decision, result.archetype);

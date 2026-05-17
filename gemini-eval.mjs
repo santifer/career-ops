@@ -151,7 +151,20 @@ if (triageMode) {
 
   const { GoogleGenerativeAI: GeminiAI } = await import('@google/generative-ai');
   const gai   = new GeminiAI(geminiApiKey);
-  const gmod  = gai.getGenerativeModel({ model: modelName, generationConfig: { temperature: 0, maxOutputTokens: 80 } });
+  // maxOutputTokens bumped from 80 → 250: triage JSON output is ~50–100
+  // tokens AT MINIMUM, and any preamble or longer reason field would silently
+  // truncate at 80 → parse failure → SKIP. Same failure mode as the 0.001
+  // --max-budget-usd cap discovered 2026-05-16. thinkingConfig:0 disables
+  // gemini-2.5's reasoning step (which eats output budget without benefit
+  // for this structured-output task).
+  const gmod  = gai.getGenerativeModel({
+    model: modelName,
+    generationConfig: {
+      temperature: 0,
+      maxOutputTokens: 250,
+      thinkingConfig: { thinkingBudget: 0 },
+    },
+  });
   try {
     const result = await gmod.generateContent([{ text: triagePrompt }]);
     process.stdout.write(result.response.text().trim() + '\n');

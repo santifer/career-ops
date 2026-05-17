@@ -9,9 +9,13 @@
 **[PROOF POINT]** = one specific verifiable metric.
 **[CTA]** = specific, low-friction ask.
 
+**Template IDs** — every reusable variant carries a stable `template_id` so it can be referenced from `data/outreach-state.json` and the strategy recommender (`lib/strategy-recommender.mjs`). Format: `{channel}_{purpose}_{variant}`.
+
 ---
 
 ## Channel 1: LinkedIn DM — cold outreach to hiring managers at target companies
+
+`template_id: linkedin_dm_v3_recruiter_inbound` (variant 1.A) · `linkedin_dm_v3_fde_pitch` (1.B) · `linkedin_dm_v3_editorial_pitch` (1.C)
 
 ### Variant 1.A — Anthropic comms / research-comms hybrid HM
 
@@ -275,6 +279,114 @@ Mitchell
 - **Always name something specific** — a launch post, a developer guide, a model card, a hiring email. Generic praise reads as template.
 - **Short is credibility.** These people receive a lot of outreach. Under 150 words in the DM. Full context in email variant only.
 - **The portfolio URL matters.** Only include it if storytellermitch.com or the GitHub profile is clean and discoverable. Otherwise leave it out rather than linking to an empty site.
+
+---
+
+## FOLLOW-UP TEMPLATES (strategy recommender targets)
+
+*Used by `lib/strategy-recommender.mjs` when a LinkedIn / X / email contact has gone silent. Each maps to a strategy in `data/linkedin-followup-strategy-2026-05-15.md` §2. Always run the humanize check (`scripts/humanize-check.mjs`) before sending.*
+
+### `linkedin_dm_2nd_touch_news_hook` — Strategy 1 (Timed Second Touch, day 5–7)
+
+*Anchor on something that has changed since the first DM — a recent post they made, a launch they're connected to, a piece of news about the team. Never "just checking in."*
+
+> Saw your post about {specific topic from their last 14d}. Pulled at this because {one-sentence connection to my background or the role}.
+>
+> Quick reminder of context — {one-line role/company hook from initial DM, restated differently}. The angle I didn't lead with: {one new piece of intel — a relevant project, a mutual contact, a specific archetype fit}.
+>
+> If a 15-minute call lands in the next two weeks, I'd take it.
+
+**Don't use if:** original DM was already long (150+ words) or pitch-heavy.
+
+### `email_cold_post_linkedin` — Strategy 3 (Channel Switch, day 10–14)
+
+*Cold email after LinkedIn went silent. Reference the prior LinkedIn DM by name so it doesn't read as totally cold. Sourcers at FAANG: skip — routed to spam.*
+
+> Subject: {role title} — Mitchell Williams (followed up on LinkedIn last week)
+>
+> {Name},
+>
+> Followed up on LinkedIn last week — wanted to switch to email in case that channel works better.
+>
+> Context, compressed: {2-sentence compressed pitch from cv.md proof points}. Background pulls together {one-line bridge — e.g., "8 years digital journalism + 2 years building production AI at Google xGE"}.
+>
+> What I'd want to dig into on a first call: {role-specific question — e.g., "whether the day-one priority is voice calibration, citation discipline, or both"}.
+>
+> If a 15-minute window opens up in the next two weeks, I'd take it. Calendar link below if easier:
+> {calendly url}
+>
+> — Mitchell
+
+**Cap:** 120 words. Pre-flight email through `scripts/humanize-check.mjs`.
+
+### `linkedin_dm_value_give` — Strategy 4 (Value-Give Touch, day 4–9)
+
+*Send something genuinely useful. Anchor on their actual interests pulled from `intel.linkedin_recent_posts` or `intel.x_recent_themes`. Inauthenticity here is worse than silence.*
+
+> {Name} — wanted to share this without an ask attached: {specific piece — link to a methodology / framework / dataset / write-up that genuinely connects to what their team is working on}.
+>
+> Pulled it because {1-sentence connection to your last post / their work / the role}. If it's useful, great; if not, no follow-up needed.
+>
+> Separately — still very interested in {role title}. If a 15-minute call in the next two weeks fits, I'd take it. Otherwise the resource above stands on its own.
+
+**Don't use if:** the value-give is thin or obviously manufactured (sharing their own company blog back at them).
+
+### `linkedin_dm_pattern_interrupt` — Strategy 7 (Pattern Interrupt, day 9–10, 3rd touch)
+
+*Different register, different length, different framing. If prior touches were professional/long, this is short/direct. Don't be gimmicky with senior contacts.*
+
+> Different tack: I'll keep this to two sentences.
+>
+> {Specific one-line ask — e.g., "Would a 10-minute call this week be more workable than the 15 I asked for before?"} or {alt question — e.g., "If now isn't the right window, is there a better time to circle back?"}.
+
+**Don't use if:** contact is senior (exec / founder) — too informal.
+
+### `linkedin_dm_breakup` — Strategy 10 (Graceful Exit, day 14–21, after 3+ touches)
+
+*Explicitly name the breakup. Removes ambiguity, generates 33% reply rate in HubSpot data, preserves the relationship cleanly.*
+
+> {Name} — I've reached out a couple of times about {role title} and don't want to keep landing in your inbox. Going to stop here.
+>
+> If timing changes or there's a different role at {company} where the fit is sharper, my contact info is below. Otherwise, no follow-up needed and best of luck with the search.
+>
+> — Mitchell (mitwilli@gmail.com / linkedin.com/in/mitwilli)
+
+**Don't use if:** you've only sent one prior message. Breakup on touch #2 reads dramatic.
+
+### `referral_ask_v1` — Strategy 6 (Referral Activation, 2nd-degree contact)
+
+*Ask a 2nd-degree contact at the company to refer you. Always frame around their interest first — the bonus, the eligibility question, their protection — never just "can you refer me."*
+
+> {Name} — saw you're at {company}. I'm in the process for {role title} (req ID {id if known}) and wanted to ask before doing anything that creates a problem on your side.
+>
+> Two questions: (1) does {company}'s referral policy let you refer someone who's already in the ATS — I know some companies cap that — and (2) if it does, would you be open to it? I'd send you the cover letter + portfolio so you have full context before deciding.
+>
+> Either way, happy to send a quick read on my background if it's useful: {portfolio url} / {github url}.
+
+**Pre-condition:** Confirmed referral bonus + post-app eligibility per `data/referral-bonuses.yml`. Never ask without checking the policy first.
+
+### `x_dm_warmup` — Strategy 8 (X/Twitter Hook)
+
+*Lower-friction channel for contacts active on X. Use after 2–3 public, substantive replies on their posts. Never use as the FIRST touch.*
+
+> Followed up on your post about {specific X topic from intel.x_recent_themes} — pulled at it because {one-line connection}.
+>
+> Separately, sent a DM on LinkedIn about {role title} at {company} that may have gotten lost. The shape, compressed: {2-sentence bridge}. If a 15-minute call this week or next fits, I'd take it.
+
+**Don't use if:** X account is dormant (last post > 14 days) or personal-only.
+
+### `linkedin_engagement_warmup` — Strategy 2 (Content Warm-Up — meta-template)
+
+*Not a DM template — instructions for the manual engagement phase. The bot can prep the comment, but the human must review and post.*
+
+**Workflow:**
+1. Pull contact's last 2-3 LinkedIn posts from `data/linkedin/2nd-degree/` or via the dashboard intel drawer.
+2. Pick the post most substantively connected to your work — not a corporate repost, not a personal life update.
+3. Write a 2-3 sentence comment that adds a specific perspective, not generic agreement. Reference a counter-example, a related project, a sharper framing.
+4. Wait 48 hours. Repeat once.
+5. Then re-DM with `linkedin_dm_2nd_touch_news_hook`, anchoring on the recent thread.
+
+**Voice rules:** same as cold outreach — no "great post!" / no "love this thread!" / no emoji.
 
 ---
 
