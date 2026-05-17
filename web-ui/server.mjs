@@ -224,11 +224,15 @@ app.post('/api/evaluate', (req, res) => {
   const job = { lines: [], done: false, error: null, clients: new Set() }
   jobs.set(jobId, job)
 
-  const prompt = `${url}`
-  const child = spawn('claude', ['-p', prompt, '--output-format', 'text', '--dangerously-skip-permissions'], {
+  // Headless mode: skip Playwright (no browser), use WebFetch fallback for verification.
+  // Prompt is piped via stdin so claude -p doesn't wait for stdin data.
+  const prompt = `HEADLESS MODE: You are running as a background worker spawned from the web UI. Playwright/browser is NOT available — use WebFetch for job posting verification and mark the report header with **Verification:** unconfirmed (batch mode). Do NOT open any browser windows or attempt interactive login.\n\nEvaluate this job posting: ${url}`
+  const child = spawn('claude', ['-p', '--output-format', 'text', '--dangerously-skip-permissions'], {
     cwd: ROOT,
     env: { ...process.env },
   })
+  child.stdin.write(prompt)
+  child.stdin.end()
 
   const push = (line) => {
     job.lines.push(line)
@@ -237,8 +241,9 @@ app.post('/api/evaluate', (req, res) => {
     }
   }
 
-  child.stdout.on('data', d => d.toString().split('\n').filter(Boolean).forEach(push))
-  child.stderr.on('data', d => d.toString().split('\n').filter(Boolean).forEach(l => push(`⚠ ${l}`)))
+  const stripAnsi = s => s.replace(/\x1B\[[0-9;]*m/g, '')
+  child.stdout.on('data', d => d.toString().split('\n').filter(Boolean).forEach(l => push(stripAnsi(l))))
+  child.stderr.on('data', d => d.toString().split('\n').filter(Boolean).forEach(l => push(`⚠ ${stripAnsi(l)}`)))
 
   child.on('close', (code) => {
     job.done = true
