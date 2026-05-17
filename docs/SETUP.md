@@ -25,6 +25,8 @@ cp config/profile.example.yml config/profile.yml
 
 Edit `config/profile.yml` with your personal details: name, email, target roles, narrative, proof points.
 
+**Note for European/DACH candidates:** You can add an optional professional photo by setting the `photo` field in `profile.yml` (e.g., `photo: assets/photo.jpg`).
+
 ### 3. Add your CV
 
 Create `cv.md` in the project root with your full CV in markdown format. This is the source of truth for all evaluations and PDFs.

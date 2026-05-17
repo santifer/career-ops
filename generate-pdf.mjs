@@ -11,12 +11,90 @@
  */
 
 import { chromium } from 'playwright';
-import { resolve, dirname } from 'path';
+import { resolve, dirname, relative, isAbsolute } from 'path';
 import { readFile } from 'fs/promises';
-import { mkdirSync } from 'fs';
+import { existsSync, readFileSync, mkdirSync, statSync, realpathSync } from 'fs';
 import { fileURLToPath } from 'url';
+import yaml from 'js-yaml';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+const MAX_PHOTO_BYTES = 2 * 1024 * 1024; // 2 MB
+
+/**
+ * Handle photo substitution from config/profile.yml.
+ * Validates format (.jpg/.jpeg/.png), encodes to base64, replaces {{PHOTO_BLOCK}}.
+ */
+export function handlePhotoSubstitution(html, projectRoot) {
+  const configPath = resolve(projectRoot, 'config', 'profile.yml');
+  let realProjectRoot;
+  try {
+    realProjectRoot = realpathSync(projectRoot);
+  } catch {
+    console.warn(`⚠️ Project root not accessible: ${projectRoot}`);
+    return html.replace(/\{\{PHOTO_BLOCK\}\}/g, '');
+  }
+
+  if (!existsSync(configPath)) {
+    return html.replace(/\{\{PHOTO_BLOCK\}\}/g, '');
+  }
+
+  try {
+    const config = yaml.load(readFileSync(configPath, 'utf8'));
+    const photoPath = config?.photo;
+
+    if (!photoPath || typeof photoPath !== 'string') {
+      return html.replace(/\{\{PHOTO_BLOCK\}\}/g, '');
+    }
+
+    const trimmedPhotoPath = photoPath.trim();
+    if (isAbsolute(trimmedPhotoPath)) {
+      console.warn(`⚠️ Photo path must be project-relative: ${trimmedPhotoPath}`);
+      return html.replace(/\{\{PHOTO_BLOCK\}\}/g, '');
+    }
+
+    const fullPath = resolve(projectRoot, trimmedPhotoPath);
+    let realPath;
+    try {
+      realPath = realpathSync(fullPath);
+    } catch {
+      console.warn(`⚠️ Photo file not accessible: ${fullPath}`);
+      return html.replace(/\{\{PHOTO_BLOCK\}\}/g, '');
+    }
+    const relPath = relative(realProjectRoot, realPath);
+    if (relPath.startsWith('..') || isAbsolute(relPath)) {
+      console.warn(`⚠️ Photo path escapes project root: ${trimmedPhotoPath}`);
+      return html.replace(/\{\{PHOTO_BLOCK\}\}/g, '');
+    }
+
+
+    const ext = realPath.split('.').pop()?.toLowerCase() ?? '';
+    const supported = ['jpg', 'jpeg', 'png'];
+    if (!supported.includes(ext)) {
+      console.warn(`⚠️ Unsupported photo format: .${ext}. Supported: ${supported.join(', ')}`);
+      return html.replace(/\{\{PHOTO_BLOCK\}\}/g, '');
+    }
+
+    const fileSizeBytes = statSync(realPath).size;
+    if (fileSizeBytes > MAX_PHOTO_BYTES) {
+      const maxMb = (MAX_PHOTO_BYTES / (1024 * 1024)).toFixed(1);
+      const actualMb = (fileSizeBytes / (1024 * 1024)).toFixed(1);
+      console.warn(`⚠️ Photo file too large: ${actualMb} MB (max ${maxMb} MB). Skipping photo embedding.`);
+      return html.replace(/\{\{PHOTO_BLOCK\}\}/g, '');
+    }
+
+    const mime = ext === 'png' ? 'image/png' : 'image/jpeg';
+    const imgBuffer = readFileSync(realPath);
+    const base64 = imgBuffer.toString('base64');
+    const dataUri = `data:${mime};base64,${base64}`;
+
+    const photoHtml = `<img class="cv-photo" src="${dataUri}" alt="">`;
+    return html.replace(/\{\{PHOTO_BLOCK\}\}/g, photoHtml);
+  } catch (err) {
+    console.warn(`⚠️ Photo handling error: ${err.message}`);
+    return html.replace(/\{\{PHOTO_BLOCK\}\}/g, '');
+  }
+}
+
 
 // Ensure output directory exists (fresh setup)
 mkdirSync(resolve(__dirname, 'output'), { recursive: true });
@@ -74,6 +152,12 @@ function normalizeTextForATS(html) {
   }
 }
 
+/**
+ * Main entry point — parse CLI args, read HTML, embed photo, normalize text,
+ * render with Playwright Chromium, and write the output PDF.
+ *
+ * CLI arguments: <input.html> <output.pdf> [--format=letter|a4]
+ */
 async function generatePDF() {
   const args = process.argv.slice(2);
 
@@ -111,6 +195,9 @@ async function generatePDF() {
 
   // Read HTML to inject font paths as absolute file:// URLs
   let html = await readFile(inputPath, 'utf-8');
+
+  // Handle photo substitution from config/profile.yml
+  html = handlePhotoSubstitution(html, __dirname);
 
   // Resolve font paths relative to career-ops/fonts/
   const fontsDir = resolve(__dirname, 'fonts');
@@ -177,7 +264,11 @@ async function generatePDF() {
   }
 }
 
-generatePDF().catch((err) => {
-  console.error('❌ PDF generation failed:', err.message);
-  process.exit(1);
-});
+const isMain = process.argv[1] && (process.argv[1].endsWith('generate-pdf.mjs') || process.argv[1] === fileURLToPath(import.meta.url));
+
+if (isMain) {
+  generatePDF().catch((err) => {
+    console.error('❌ PDF generation failed:', err.message);
+    process.exit(1);
+  });
+}
