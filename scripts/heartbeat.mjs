@@ -345,14 +345,39 @@ async function sendEmail({ subject, body, meta = {} }) {
     service: 'gmail',
     auth: { user: secrets.GMAIL_USER, pass: secrets.GMAIL_APP_PASSWORD },
   });
+
+  // Gmail alias routing test (Phase 2 Day-1 — data/heartbeat-email-optimization-2026-05-17.md).
+  // The Phase 2 council split on whether self-send (mitwilli@gmail.com → mitwilli@gmail.com)
+  // routes to Primary, Promotions/Updates, or bypasses-to-All-Mail. The 5-minute
+  // empirical resolution is: send to BOTH the canonical address AND a +alias for
+  // a bounded observation window, then compare placement.
+  //
+  // To activate: set in .env (both required, both expire automatically):
+  //   HEARTBEAT_ALIAS_BCC=mitwilli+heartbeat@gmail.com
+  //   HEARTBEAT_ALIAS_BCC_UNTIL=2026-05-24      # ISO date, inclusive
+  //
+  // After the until-date passes, BCC auto-disables without code change. Set
+  // HEARTBEAT_ALIAS_BCC_UNTIL to a later date to extend the test, or unset
+  // HEARTBEAT_ALIAS_BCC to disable immediately.
+  const aliasBcc = process.env.HEARTBEAT_ALIAS_BCC;
+  const aliasUntil = process.env.HEARTBEAT_ALIAS_BCC_UNTIL;
+  let bcc = undefined;
+  if (aliasBcc && aliasUntil) {
+    const todayIso = new Date().toISOString().slice(0, 10);
+    if (todayIso <= aliasUntil) {
+      bcc = aliasBcc;
+    }
+  }
+
   const info = await transporter.sendMail({
     from: secrets.GMAIL_USER,
     to: secrets.HEARTBEAT_TO,
+    bcc,
     subject,
     text: body,
     html: renderHtmlEmail(body, meta),
   });
-  return info.messageId;
+  return { messageId: info.messageId, bccTo: bcc || null };
 }
 
 function fileLineCount(path) {
