@@ -98,7 +98,7 @@ function parsePipeline() {
 function parseFollowUps() {
   const file = path.join(ROOT, 'data', 'follow-ups.md')
   if (!fs.existsSync(file)) {
-    fs.writeFileSync(file, '# Follow-ups\n\n| # | Company | Role | Applied Date | Last Contact | Next Action | Due Date | Notes |\n|---|---------|------|--------------|--------------|-------------|----------|-------|\n')
+    fs.writeFileSync(file, '# Follow-ups\n\n| # | Type | App# | Company | Role | Channel | Contact | Date Sent | Notes |\n|---|------|------|---------|------|---------|---------|-----------|-------|\n')
     return []
   }
   const lines = fs.readFileSync(file, 'utf8').split('\n')
@@ -110,16 +110,36 @@ function parseFollowUps() {
     if (cols[0] === '#' || cols[0].startsWith('-')) continue
     const num = parseInt(cols[0])
     if (isNaN(num)) continue
-    items.push({
-      number: num,
-      company: cols[1],
-      role: cols[2],
-      appliedDate: cols[3],
-      lastContact: cols[4],
-      nextAction: cols[5],
-      dueDate: cols[6],
-      notes: cols[7] || '',
-    })
+    // Detect schema version: new schema has "outreach" or "follow-up" in col[1]
+    const isNewSchema = cols[1] === 'outreach' || cols[1] === 'follow-up'
+    if (isNewSchema) {
+      // New schema: # | Type | App# | Company | Role | Channel | Contact | Date Sent | Notes
+      if (cols.length < 9) continue
+      items.push({
+        number: num,
+        type: cols[1],
+        appNumber: cols[2],
+        company: cols[3],
+        role: cols[4],
+        channel: cols[5],
+        contact: cols[6],
+        dateSent: cols[7],
+        notes: cols[8] || '',
+      })
+    } else {
+      // Legacy schema: # | Company | Role | Applied Date | Last Contact | Next Action | Due Date | Notes
+      items.push({
+        number: num,
+        type: 'follow-up',
+        appNumber: '—',
+        company: cols[1],
+        role: cols[2],
+        channel: 'LinkedIn-DM',
+        contact: '',
+        dateSent: cols[3] || '',
+        notes: cols[7] || '',
+      })
+    }
   }
   return items
 }
@@ -220,12 +240,20 @@ app.patch('/api/applications/:num', (req, res) => {
 })
 
 app.post('/api/followups', (req, res) => {
-  const { company, role, appliedDate, nextAction, dueDate, notes } = req.body
   const file = path.join(ROOT, 'data', 'follow-ups.md')
   const existing = parseFollowUps()
   const num = existing.length + 1
   const today = new Date().toISOString().slice(0, 10)
-  const row = `| ${num} | ${company} | ${role} | ${appliedDate || today} | ${today} | ${nextAction || 'Follow up'} | ${dueDate || ''} | ${notes || ''} |`
+  let row
+  if (req.body.type) {
+    // New schema path — from recruiter-find page
+    const { type, appNumber, company, role, channel, contact, dateSent, notes } = req.body
+    row = `| ${num} | ${type} | ${appNumber || '—'} | ${company} | ${role || ''} | ${channel || 'LinkedIn-Note'} | ${contact || ''} | ${dateSent || today} | ${notes || ''} |`
+  } else {
+    // Legacy path — from TrackButton / AddFollowUpForm
+    const { company, role, appliedDate } = req.body
+    row = `| ${num} | follow-up | — | ${company} | ${role || ''} | LinkedIn-DM |  | ${appliedDate || today} |  |`
+  }
   fs.appendFileSync(file, row + '\n')
   res.json({ ok: true })
 })
@@ -286,6 +314,77 @@ app.get('/api/evaluate/:jobId/stream', (req, res) => {
   res.flushHeaders()
 
   // replay buffered lines
+  for (const line of job.lines) res.write(`data: ${JSON.stringify({ line })}\n\n`)
+
+  if (job.done) {
+    res.write(`data: ${JSON.stringify({ done: true, error: job.error })}\n\n`)
+    return res.end()
+  }
+
+  job.clients.add(res)
+  req.on('close', () => job.clients.delete(res))
+})
+
+// --- Recruiter Find ---
+
+const rfJobs = new Map() // jobId -> { lines, done, error, clients }
+
+app.post('/api/recruiter-find', (req, res) => {
+  const { scenario, input, context: ctx } = req.body
+  if (!scenario || !input) return res.status(400).json({ error: 'scenario and input required' })
+
+  const jobId = randomUUID()
+  const job = { lines: [], done: false, error: null, clients: new Set() }
+  rfJobs.set(jobId, job)
+
+  const prompt = `HEADLESS MODE: You are running as a background worker from the career-ops web UI. Read modes/recruiter-find.md for the full workflow instructions.
+
+The user has provided the following for recruiter outreach:
+
+Scenario: ${scenario}
+Input: ${input}
+Additional context: ${ctx || 'None provided'}
+
+Run the recruiter-find mode now. Output the connection note (with character count), follow-up message, and search queries (if Scenario B). Do not log anything to data/follow-ups.md — the UI will handle that after the user confirms they sent the message.`
+
+  const child = spawn('claude', ['-p', '--output-format', 'text', '--dangerously-skip-permissions'], {
+    cwd: ROOT,
+    env: { ...process.env },
+  })
+  child.stdin.write(prompt)
+  child.stdin.end()
+
+  const push = (line) => {
+    job.lines.push(line)
+    for (const client of job.clients) client.write(`data: ${JSON.stringify({ line })}\n\n`)
+  }
+
+  const stripAnsi = s => s.replace(/\x1B\[[0-9;]*m/g, '')
+  child.stdout.on('data', d => d.toString().split('\n').filter(Boolean).forEach(l => push(stripAnsi(l))))
+  child.stderr.on('data', d => d.toString().split('\n').filter(Boolean).forEach(l => push(`⚠ ${stripAnsi(l)}`)))
+
+  child.on('close', (code) => {
+    job.done = true
+    job.error = code !== 0 ? `Process exited with code ${code}` : null
+    const msg = job.error ? `data: ${JSON.stringify({ done: true, error: job.error })}\n\n`
+                           : `data: ${JSON.stringify({ done: true })}\n\n`
+    for (const client of job.clients) { client.write(msg); client.end() }
+    job.clients.clear()
+    setTimeout(() => rfJobs.delete(jobId), 10 * 60 * 1000)
+  })
+
+  res.json({ jobId })
+})
+
+app.get('/api/recruiter-find/:jobId/stream', (req, res) => {
+  const job = rfJobs.get(req.params.jobId)
+  if (!job) return res.status(404).json({ error: 'Job not found' })
+
+  res.setHeader('Content-Type', 'text/event-stream')
+  res.setHeader('Cache-Control', 'no-cache')
+  res.setHeader('Connection', 'keep-alive')
+  res.flushHeaders()
+
   for (const line of job.lines) res.write(`data: ${JSON.stringify({ line })}\n\n`)
 
   if (job.done) {

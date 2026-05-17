@@ -9,6 +9,7 @@ import {
   IconMailForward,
   IconPlayerPlay,
   IconSchool,
+  IconUserSearch,
 } from "@tabler/icons-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -35,6 +36,7 @@ const data = {
     { title: "Tracker",        url: "/dashboard/tracker",    icon: IconClipboardList },
     { title: "Pipeline Inbox", url: "/dashboard/pipeline",   icon: IconBriefcase },
     { title: "Follow-ups",     url: "/dashboard/followups",  icon: IconMailForward },
+    { title: "Recruiter Find", url: "/dashboard/recruiter-find", icon: IconUserSearch },
     { title: "Interview Prep", url: "/dashboard/interview",  icon: IconSchool },
     { title: "Analytics",      url: "/dashboard/analytics",  icon: IconChartBar },
   ],

@@ -14,13 +14,11 @@ export function TrackButton({ company, role, appliedDate }: { company: string; r
 
   async function handleTrack() {
     setTracking(true)
-    const today = new Date()
-    const dueDate = new Date(today.getTime() + 7 * 86400000).toISOString().slice(0, 10)
     try {
       await fetch(`${BASE}/api/followups`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ company, role, appliedDate, nextAction: "Follow up via email", dueDate }),
+        body: JSON.stringify({ company, role, appliedDate }),
       })
       router.refresh()
     } finally {
@@ -40,11 +38,12 @@ export function AddFollowUpForm() {
   const [open, setOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({
-    company: "", role: "", appliedDate: "", nextAction: "Follow up via email", dueDate: "",
+    company: "", role: "", contact: "", channel: "LinkedIn-DM", notes: "", dateSent: "",
   })
 
   function field(k: keyof typeof form) {
-    return (e: React.ChangeEvent<HTMLInputElement>) => setForm(f => ({ ...f, [k]: e.target.value }))
+    return (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+      setForm(f => ({ ...f, [k]: e.target.value }))
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -55,9 +54,18 @@ export function AddFollowUpForm() {
       await fetch(`${BASE}/api/followups`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          type: "follow-up",
+          appNumber: "—",
+          company: form.company,
+          role: form.role,
+          channel: form.channel,
+          contact: form.contact,
+          dateSent: form.dateSent,
+          notes: form.notes,
+        }),
       })
-      setForm({ company: "", role: "", appliedDate: "", nextAction: "Follow up via email", dueDate: "" })
+      setForm({ company: "", role: "", contact: "", channel: "LinkedIn-DM", notes: "", dateSent: "" })
       setOpen(false)
       router.refresh()
     } finally {
@@ -85,16 +93,22 @@ export function AddFollowUpForm() {
             <Input placeholder="Role" value={form.role} onChange={field("role")} />
           </div>
           <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="text-xs text-muted-foreground mb-1 block">Applied date</label>
-              <Input type="date" value={form.appliedDate} onChange={field("appliedDate")} />
-            </div>
-            <div>
-              <label className="text-xs text-muted-foreground mb-1 block">Due date</label>
-              <Input type="date" value={form.dueDate} onChange={field("dueDate")} />
-            </div>
+            <Input placeholder="Contact name" value={form.contact} onChange={field("contact")} />
+            <select
+              value={form.channel}
+              onChange={field("channel")}
+              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs"
+            >
+              <option value="LinkedIn-Note">LinkedIn Note</option>
+              <option value="LinkedIn-DM">LinkedIn DM</option>
+              <option value="Email">Email</option>
+            </select>
           </div>
-          <Input placeholder="Next action" value={form.nextAction} onChange={field("nextAction")} />
+          <div>
+            <label className="text-xs text-muted-foreground mb-1 block">Date sent</label>
+            <Input type="date" value={form.dateSent} onChange={field("dateSent")} />
+          </div>
+          <Input placeholder="Notes (optional)" value={form.notes} onChange={field("notes")} />
           <div className="flex gap-2 mt-1">
             <Button type="submit" size="sm" disabled={saving || !form.company.trim()}>
               {saving ? "Saving…" : "Save"}

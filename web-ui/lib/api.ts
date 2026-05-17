@@ -37,13 +37,31 @@ export interface PipelineItem {
 
 export interface FollowUp {
   number: number
+  type: string
+  appNumber: string
   company: string
   role: string
-  appliedDate: string
-  lastContact: string
-  nextAction: string
-  dueDate: string
+  channel: string
+  contact: string
+  dateSent: string
   notes: string
+}
+
+export type RecruiterScenario = "A" | "B" | "C"
+
+export const SCENARIO_LABELS: Record<RecruiterScenario, string> = {
+  A: "Friend sent me a profile",
+  B: "I found a job — find the recruiter",
+  C: "A recruiter messaged me",
+}
+
+export const ARCHETYPE_COLORS: Record<string, string> = {
+  "Platform / LLMOps":    "bg-blue-100 text-blue-800",
+  "Agentic / Automation": "bg-purple-100 text-purple-800",
+  "Founding AI Engineer": "bg-green-100 text-green-800",
+  "Solutions Architect":  "bg-teal-100 text-teal-800",
+  "Forward Deployed":     "bg-orange-100 text-orange-800",
+  "Senior ML Engineer":   "bg-yellow-100 text-yellow-800",
 }
 
 export interface Profile {
@@ -97,6 +115,11 @@ export async function getFollowUps(): Promise<FollowUp[]> {
   const r = await fetch(`${BASE}/api/followups`, TTL)
   if (!r.ok) return []
   return r.json()
+}
+
+export async function getRecruiterOutreach(): Promise<FollowUp[]> {
+  const all = await getFollowUps()
+  return all.filter(f => f.type === "outreach")
 }
 
 export async function getReport(num: string): Promise<{ content: string } | null> {
