@@ -1,0 +1,55 @@
+# career-ops web GUI — docker compose stack
+#
+# Wraps the upstream Go TUI dashboard with ttyd so it can be served over
+# HTTPS from a browser, behind HTTP Basic Auth. The whole career-ops
+# project is bind-mounted at /workspace so the host's Claude Code CLI and
+# the container share state (cv.md, config/, data/, reports/, output/…).
+#
+# ── Setup ──────────────────────────────────────────────────────────────
+# 1. Build the image:        docker compose -f stack-compose.yml build
+# 2. Create an .env file next to this compose with:
+#        CAREEROPS_WEB_USER=<your-username>
+#        CAREEROPS_WEB_PASS=<a-strong-random-password>
+#    (.env is already in the upstream .gitignore — never commit it.)
+# 3. Bring it up:            docker compose -f stack-compose.yml up -d
+# 4. Front it with your reverse proxy of choice (nginx, Caddy, NPM,
+#    Traefik). The container exposes port 7681 on the network selected
+#    below. WebSocket upgrade must be allowed by the proxy.
+#
+# ── Configuration ──────────────────────────────────────────────────────
+# CAREEROPS_PROJECT_DIR   Host path of the career-ops checkout to expose
+#                         (defaults to the directory holding this file).
+# CAREEROPS_NETWORK       Docker network the container joins, typically
+#                         the one your reverse proxy is on. The default
+#                         `careerops-net` is created on first `up`; set
+#                         it to an existing external network (and flip
+#                         the `external:` flag below) if you already
+#                         have one.
+
+services:
+  careerops:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: careerops:latest
+    container_name: careerops
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      CAREEROPS_WORKSPACE: /workspace
+      CAREEROPS_WEB_PORT: "7681"
+    volumes:
+      - ${CAREEROPS_PROJECT_DIR:-.}:/workspace
+    networks:
+      - careerops-net
+    expose:
+      - "7681"
+
+networks:
+  careerops-net:
+    name: ${CAREEROPS_NETWORK:-careerops-net}
+    # If CAREEROPS_NETWORK points to a pre-existing network managed by
+    # your reverse proxy (e.g. an NPM/Traefik shared net), set this to
+    # `external: true` so compose attaches instead of creating it.
+    external: false

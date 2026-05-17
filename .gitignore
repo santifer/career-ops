@@ -45,3 +45,6 @@ bun.lock
 .claude/memory/
 career-dashboard
 package-lock.json
+
+# Docker Compose local overrides (deployment-specific bind paths, networks…)
+*.override.yml

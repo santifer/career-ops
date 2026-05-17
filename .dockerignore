@@ -1,0 +1,10 @@
+.git
+node_modules
+output
+reports
+data/*.md
+!data/.gitkeep
+jds
+*.log
+.env
+stack-compose.override.yml
