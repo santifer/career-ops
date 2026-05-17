@@ -1,0 +1,208 @@
+# data/courses.yml — Mitchell's course / learning-allocation registry
+#
+# Tier B item #6 (autonomous-build 2026-05-17). Operationalizes Dimension 6
+# (course tracking) + Dimension 4 (TPgM evidence) + Dimension 5 (20% / side
+# allocation tracking) of `data/ingest-feature-strategy-2026-05-17.md`, which
+# in turn operationalizes the "PM-Bridge-Buildability" and "Skill-Portability"
+# 5%/5% scoring dimensions added by `data/career-calibration-20260516-190152.md`
+# §"What this changes in the system" → "modes/_profile.md §2 — reweight
+# scoring matrix".
+#
+# This file is read by `scripts/tpgm-tracker.mjs` to compute the TPgM-
+# credibility composite. The weekly skill-ingest pipeline
+# (`scripts/skill-ingest.mjs`) may APPEND new course entries on completion via
+# the schema at `lib/skill-ingest-schema.mjs`; existing entries are never
+# silently mutated.
+#
+# Edit policy: User-Layer file. Autonomously editable per AGENTS.md "Corpus
+# auto-edit (post-calibration 2026-05-16)". Every change goes through
+# `scripts/agent-commit.mjs --agent <name>` so the git log is the audit
+# trail. Mitchell reviews via `git log` / `git diff` after the fact and
+# reverts anything he disagrees with.
+#
+# Status taxonomy:
+#   not-started | in-progress | completed | paused | dropped | planning
+#
+# Archetype tags align with `modes/_profile.md` §1:
+#   A2-PgM | A2-SA | A2-FDE | A2-AE | BRIDGE | GENERIC
+#
+# Scoring fields:
+#   pm_bridge_weight       0–10 — how much completion moves the
+#                          PM-Bridge-Buildability dimension. 10 = career-
+#                          changing PM credibility; 0 = irrelevant.
+#   skill_portability_weight 0–10 — how much completion increases the user's
+#                          skill portability into finance / health / legal
+#                          / other high-WTP non-tech industries.
+
+version: 1
+last_updated: 2026-05-17
+
+courses:
+
+  # --------------------------------------------------------------------------
+  # Stub — placeholder for the first real Google internal PM curriculum entry.
+  # Mitchell to confirm scope + start date when he enrolls.
+  # --------------------------------------------------------------------------
+  - id: google-internal-pm-curriculum-stage-1
+    name: Google Internal Product Management Curriculum — Stage 1
+    provider: google-internal
+    status: not-started
+    archetype_tag: A2-PgM
+    skill_tags:
+      - product-management
+      - stakeholder-management
+      - prioritization
+    start_date: null
+    expected_completion: null
+    actual_completion: null
+    units_completed: 0
+    units_total: null
+    certificate_url: null
+    artifact_url: null
+    key_skills_earned: []
+    cv_bullet: null
+    pm_bridge_weight: 8
+    skill_portability_weight: 6
+    notes: |
+      Stub — Mitchell to fill in the actual Google internal PM curriculum
+      details when he enrolls. The calibration brief (item 8 +
+      modes/_profile.md §2) explicitly names PM-curriculum completion as the
+      single biggest mover of the PM-Bridge-Buildability score. When this
+      flips to "completed", skill-ingest should auto-insert a Continuous
+      Learning bullet under cv.md.
+
+  # --------------------------------------------------------------------------
+  # Python — Mitchell's #1 anti-brand defense per modes/_profile.md and the
+  # calibration brief: "never let a Python-depth question be the headline."
+  # --------------------------------------------------------------------------
+  - id: python-fluency
+    name: Python Fluency (provider TBD)
+    provider: tbd
+    status: in-progress
+    archetype_tag: A2-PgM
+    skill_tags:
+      - python
+      - scripting
+      - agent-build
+      - automation
+    start_date: null
+    expected_completion: null
+    actual_completion: null
+    units_completed: null
+    units_total: null
+    certificate_url: null
+    artifact_url: null
+    key_skills_earned: []
+    cv_bullet: null
+    pm_bridge_weight: 9
+    skill_portability_weight: 9
+    notes: |
+      Mitchell's top-priority skill-build per modes/_profile.md and the
+      calibration brief's "never let a Python-depth question be the
+      headline" anti-brand defense. Provider is intentionally TBD — Mitchell
+      may complete this via Google internal coursework, Coursera, or
+      project-driven learning (career-ops fork, Voice OS, Tax Verification
+      Agent ingestion all count). Track depth signals: agents shipped,
+      scripts authored, data-pull ownership. The career-ops fork itself
+      already supplies strong Python evidence via the data-ingestion
+      surfaces in voice-os and tax-assistant per corpus/projects/.
+
+  # --------------------------------------------------------------------------
+  # SQL — paired with Python as the second TPgM "can-actually-build" gate.
+  # --------------------------------------------------------------------------
+  - id: sql-fluency
+    name: SQL Fluency (provider TBD)
+    provider: tbd
+    status: in-progress
+    archetype_tag: A2-PgM
+    skill_tags:
+      - sql
+      - data-analysis
+      - reporting
+    start_date: null
+    expected_completion: null
+    actual_completion: null
+    units_completed: null
+    units_total: null
+    certificate_url: null
+    artifact_url: null
+    key_skills_earned: []
+    cv_bullet: null
+    pm_bridge_weight: 8
+    skill_portability_weight: 9
+    notes: |
+      Track every SQL-touching task Mitchell completes at Google — internal
+      dashboards, query authoring, data-pull ownership, weekly comms-volume
+      trend analysis. High skill_portability_weight because SQL fluency
+      lands cleanly in finance / health / legal data-analyst-adjacent
+      contracts, which the calibration brief named as target verticals.
+
+  # --------------------------------------------------------------------------
+  # 20% TPgM rotation — Mitchell stated unambiguously in his autonomous-build
+  # directive 2026-05-17 that he WILL take these on. Specific team / charter
+  # to be filled in when an allocation lands. This entry is `planning` status
+  # rather than `not-started` to flag that the intent is firm but the
+  # operational details are pending.
+  # --------------------------------------------------------------------------
+  - id: tpgm-rotation-2026
+    name: 20% TPgM Side Allocation — team TBD
+    provider: google-internal
+    status: planning
+    archetype_tag: A2-PgM
+    skill_tags:
+      - technical-program-management
+      - cross-functional
+      - system-design
+      - product-decisions
+    start_date: null
+    expected_completion: null
+    actual_completion: null
+    units_completed: null
+    units_total: null
+    certificate_url: null
+    artifact_url: null
+    key_skills_earned: []
+    cv_bullet: null
+    pm_bridge_weight: 10
+    skill_portability_weight: 7
+    notes: |
+      Per Mitchell's autonomous-build directive 2026-05-17: "the 20% tpgm
+      and product management positions I will be taking on". This IS the
+      PM-Bridge — highest possible pm_bridge_weight. When a specific team /
+      charter starts, fork this entry per allocation (one entry per
+      charter) and move status → in-progress. Each completed allocation
+      with a measurable outcome should generate a STAR story-bank entry
+      per the design in ingest-feature-strategy Dimension 5 finding #23.
+
+  # --------------------------------------------------------------------------
+  # Anthropic AI fluency certs already completed — pre-seeded from cv.md
+  # "Certifications" section. Tracking these here keeps the TPgM tracker's
+  # baseline non-empty before any new completions land.
+  # --------------------------------------------------------------------------
+  - id: anthropic-ai-fluency
+    name: AI Fluency — Framework & Foundations
+    provider: anthropic
+    status: completed
+    archetype_tag: A2-PgM
+    skill_tags:
+      - ai-literacy
+      - claude
+      - prompt-engineering
+    start_date: null
+    expected_completion: null
+    actual_completion: 2026-03-01
+    units_completed: null
+    units_total: null
+    certificate_url: null
+    artifact_url: null
+    key_skills_earned:
+      - ai-fluency
+      - claude-platform-knowledge
+    cv_bullet: AI Fluency — Framework & Foundations (Anthropic, March 2026)
+    pm_bridge_weight: 4
+    skill_portability_weight: 5
+    notes: |
+      Pre-seeded from cv.md §Certifications. Not new — included so the
+      TPgM tracker baseline reflects the current completed-cert footprint.
+      Lower pm_bridge_weight than a full PM curriculum because this is
+      orientation, not deep PM craft.
