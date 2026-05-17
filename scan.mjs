@@ -196,7 +196,7 @@ export function buildLocationFilter(locationFilter) {
 // ── Salary filter ───────────────────────────────────────────────────
 // Optional. If `salary_filter` is absent from portals.yml, all salaries pass.
 // Semantics:
-//   - min/max are yearly compensation filters (before conversion to annual)
+//   - min/max are annual compensation filters (use annualized values)
 //   - max: 0 means "no upper limit"
 //   - If no salary data exists on a job, it passes (conservative behavior)
 //   - If currency mismatch (e.g., USD filter, EUR job), it fails
@@ -206,9 +206,19 @@ export function buildLocationFilter(locationFilter) {
 function buildSalaryFilter(salaryFilter) {
   if (!salaryFilter) return () => true;
 
-  const min = salaryFilter.min ?? 0;
-  const max = salaryFilter.max ?? 0;
+  // Coerce and validate bounds — malformed YAML must not silently mis-filter
+  const min = Number(salaryFilter.min ?? 0);
+  const max = Number(salaryFilter.max ?? 0);
   const filterCurrency = (salaryFilter.currency || '').toUpperCase();
+
+  if (!Number.isFinite(min) || !Number.isFinite(max) || min < 0 || max < 0) {
+    console.error('Warning: salary_filter.min/max must be non-negative numbers — salary filter disabled');
+    return () => true;
+  }
+  if (max > 0 && min > max) {
+    console.error('Warning: salary_filter.min cannot exceed salary_filter.max — salary filter disabled');
+    return () => true;
+  }
 
   // If both min and max are 0, no filtering applied
   if (min === 0 && max === 0) return () => true;

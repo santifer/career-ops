@@ -68,7 +68,7 @@
 # filter, BEFORE dedup. Only applies when structured salary data exists.
 #
 # Semantics:
-#   - min/max are yearly compensation filters (before conversion to annual)
+#   - min/max are annual compensation filters (use annualized values)
 #   - max: 0 means "no upper limit"
 #   - If no salary data exists on a job, it passes (conservative behavior)
 #   - If currency mismatch (e.g., USD filter, EUR job), it fails
