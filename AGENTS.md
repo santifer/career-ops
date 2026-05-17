@@ -22,6 +22,10 @@ There are two layers. Read `DATA_CONTRACT.md` for the full list.
 
 **THE RULE: When the user asks to customize anything (archetypes, narrative, negotiation scripts, proof points, location policy, comp targets), ALWAYS write to `modes/_profile.md` or `config/profile.yml`. NEVER edit `modes/_shared.md` for user-specific content.** This ensures system updates don't overwrite their customizations.
 
+### Design principles (the North Star)
+
+**Before any UX work — read `DESIGN_PRINCIPLES.md` at the repo root.** It captures the 5 pillars every dashboard surface, every modal, every email section, and every agent output must satisfy: (1) Scannability over comprehensiveness; (2) Action proximity; (3) Strengths AND limitations, balanced; (4) Background transparency; (5) Future-action awareness with full cost/time/outcome preview. When a design decision is ambiguous, default to whichever option scores highest against those 5 pillars; if scores tie, surface the trade-off to Mitchell.
+
 ### Dashboard regression invariants
 
 **Before editing `scripts/build-dashboard.mjs` (≥50 lines), `dashboard-server.mjs` endpoints, or any shared dashboard CSS:** read `DASHBOARD_INVARIANTS.md` at the repo root. It documents the 7 table interactions that must stay intact (sort, click→drawer, truncation, scroll, action buttons, density toggle, keyboard nav), the exact selectors + handlers that bind them, and a 1-minute audit pattern to run before and after the change. When a regression is caught (or knowingly accepted), append it to the "Recent regressions" section at the bottom of that file with date + what broke + what guard was added.

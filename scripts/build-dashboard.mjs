@@ -1965,6 +1965,46 @@ const htmlEscape = (s) => String(s)
   .replace(/"/g, '&quot;')
   .replace(/'/g, '&#39;');
 
+// FIX 1 (2026-05-17) — strip table-cell markup residue before escaping so users
+// don't see literal "<br>" or "**" in the WHAT FITS card. Source data is
+// markdown-table cells that intentionally carry inline <br> and **bold** to
+// render in the report .md, but the dashboard renderer html-escapes them and
+// the user sees the raw tag text. We split on <br>, then convert **...** to
+// <strong>, escape everything else, and wrap segments in <span class="fit-line">.
+function _stripCellMarkup(s) {
+  return String(s == null ? '' : s)
+    .replace(/<br\s*\/?>/gi, '\n')        // unify line breaks
+    .replace(/\s+→\s*/g, ' → ')            // normalize arrow spacing
+    .replace(/^\s+|\s+$/g, '');
+}
+function renderFitEvidence(raw, limit = 320) {
+  const cleaned = _stripCellMarkup(raw).slice(0, limit);
+  if (!cleaned) return '';
+  // Split into segments on real newlines (formerly <br>) and the
+  // explicit "→" continuation marker. Drop empty pieces.
+  const parts = cleaned.split(/\n+|(?:^|\s)→\s+/).map(s => s.trim()).filter(Boolean);
+  // Convert **bold** to <strong>, then escape the rest.
+  const renderPart = (p) => {
+    // Pre-split on **...** so we escape inner text but keep <strong>.
+    const out = [];
+    let i = 0;
+    const re = /\*\*([^*]+)\*\*/g;
+    let m;
+    while ((m = re.exec(p)) !== null) {
+      if (m.index > i) out.push(htmlEscape(p.slice(i, m.index)));
+      out.push('<strong>' + htmlEscape(m[1]) + '</strong>');
+      i = m.index + m[0].length;
+    }
+    if (i < p.length) {
+      // Strip stray un-paired ** before escaping. Happens when slice()
+      // truncated mid-token (opening ** without closing).
+      out.push(htmlEscape(p.slice(i).replace(/\*\*/g, '')));
+    }
+    return out.join('');
+  };
+  return parts.map(p => '<span class="fit-line">' + renderPart(p) + '</span>').join('');
+}
+
 function scoreBadgeClass(score) {
   if (score >= 4.0) return 'score-strong';
   if (score >= 3.0) return 'score-moderate';
@@ -2160,8 +2200,8 @@ function renderRow(r, idx) {
       ${edge.map(e => `<li class="${e.score >= 4 ? 'match-yes' : 'match-partial'}">
         <span class="match-icon">${e.score >= 4 ? '✓' : '~'}</span>
         <div>
-          <div class="match-req">${htmlEscape(e.requirement.slice(0, 90))}</div>
-          <div class="match-ev">${htmlEscape(e.evidence.slice(0, 160))}</div>
+          <div class="match-req">${htmlEscape(String(e.requirement || '').replace(/\*\*/g, '').slice(0, 110))}</div>
+          <div class="match-ev">${renderFitEvidence(e.evidence, 320)}</div>
         </div>
       </li>`).join('')}
     </ul>
@@ -2291,7 +2331,17 @@ function renderRow(r, idx) {
 <tr class="detail-row" id="detail-${idx}" style="display:none">
   <td colspan="13">
     <div class="detail-block">
-      ${r._throttle?.label ? `<div class="throttle-banner throttle-${r._throttle.status}">${htmlEscape(r._throttle.label)}<br><span class="muted-text">${htmlEscape(r._throttle.note || '')}</span></div>` : ''}
+      ${r._throttle?.label ? (
+        r._throttle.status === 'cooldown'
+          // FIX 2 (2026-05-17) — single-line cooldown banner; driver
+          // detail collapsed into <details> "Why?" so it doesn't eat
+          // vertical space in the drawer by default.
+          ? `<div class="throttle-banner throttle-cooldown throttle-cooldown--compact">
+              <span class="throttle-cooldown-msg">${htmlEscape(r._throttle.label)}</span>
+              ${r._throttle.note ? `<details class="throttle-cooldown-why"><summary>Why?</summary><span class="muted-text">${htmlEscape(r._throttle.note)}</span></details>` : ''}
+            </div>`
+          : `<div class="throttle-banner throttle-${r._throttle.status}">${htmlEscape(r._throttle.label)}<br><span class="muted-text">${htmlEscape(r._throttle.note || '')}</span></div>`
+      ) : ''}
       ${r.notes ? `<div class="dcard dcard--tracker-note" style="margin-bottom:8px"><div class="dcard-label">TRACKER NOTE</div>${formatTrackerNote(r.notes)}</div>` : ''}
       ${metaChips ? `<div class="detail-meta">${metaChips}</div>` : ''}
       ${tldrCard}${posCard}
@@ -2624,13 +2674,17 @@ function build() {
 
     // Cooldown layer takes priority — if there's an active rejection
     // cooldown, surface it as the primary signal.
+    // FIX 2 (2026-05-17): tightened to a SINGLE-LINE banner. Detailed
+    // driver info moves into the `note` field, which the renderer now
+    // collapses into a <details> element ("Why?") by default.
     if (cooldown && cooldown.isActive) {
       const endStr = cooldown.latestEnd.toISOString().slice(0, 10);
       const driver = cooldown.driverRejection;
+      const priorWord = `${cooldown.totalCount} prior rejection${cooldown.totalCount === 1 ? '' : 's'}`;
       r._throttle = {
         status: 'cooldown',
-        label: `🛑 Rejection cooldown active until ${endStr} (${cooldown.totalCount} prior rejection${cooldown.totalCount === 1 ? '' : 's'} at ${r.company})`,
-        note: `Driver: ${driver.role} (${driver.date}, stage: ${driver.stage}). Re-apply window cleared on ${endStr} per stage-aware heuristic. Override if you have an internal referral or recruiter says re-apply sooner.`,
+        label: `🛑 Cooldown until ${endStr} — ${priorWord}. Override if you have a recruiter ask or internal referral.`,
+        note: `Driver: ${driver.role} (${driver.date}, stage: ${driver.stage}). Re-apply window cleared on ${endStr} per stage-aware heuristic.`,
       };
     } else if (policy && active >= policy.cap) {
       r._throttle = { status: 'blocked', label: `🛑 ${policy.cap} active app${policy.cap === 1 ? '' : 's'} at ${r.company} — defer until resolved`, note: policy.note };
@@ -4373,6 +4427,38 @@ function build() {
   .throttle-defer    { background: var(--surface-2); color: var(--text-3); border-left: 3px solid var(--text-4); }
   .throttle-blocked, .throttle-cooldown { background: var(--red-bg); color: var(--red-fg); border-left: 3px solid var(--red-fg); }
   .throttle-open     { background: var(--green-bg);  color: var(--green);  border-left: 3px solid var(--green-fg); }
+  /* FIX 2 (2026-05-17) — compact single-line rejection cooldown banner.
+     One row, ~40-50px tall, with collapsed <details> for driver info. */
+  .throttle-cooldown--compact {
+    padding: 8px 12px;
+    margin: 4px 0 10px;
+    font-size: 12.5px;
+    line-height: 1.4;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+  }
+  .throttle-cooldown--compact .throttle-cooldown-msg { flex: 1 1 auto; min-width: 0; }
+  .throttle-cooldown--compact .throttle-cooldown-why {
+    flex: 0 0 auto;
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .throttle-cooldown--compact .throttle-cooldown-why summary {
+    list-style: none;
+    cursor: pointer;
+    color: var(--red-fg);
+    text-decoration: underline;
+    padding: 2px 0;
+  }
+  .throttle-cooldown--compact .throttle-cooldown-why summary::-webkit-details-marker { display: none; }
+  .throttle-cooldown--compact .throttle-cooldown-why[open] summary { margin-bottom: 4px; }
+  .throttle-cooldown--compact .throttle-cooldown-why[open] {
+    flex: 1 0 100%;
+    margin-top: 4px;
+  }
 
   /* ── Badges ──────────────────────────────────────────────────── */
   .badge {
@@ -4889,6 +4975,19 @@ function build() {
   .match-partial .match-icon { background: var(--amber-bg);  color: var(--amber); }
   .match-req { font-size: 12px; font-weight: 600; color: var(--text); line-height: 1.3; }
   .match-ev  { font-size: 11.5px; color: var(--text-3); line-height: 1.4; margin-top: 1px; }
+  /* FIX 1 (2026-05-17) — fit-line: one per <br>-separated evidence segment.
+     Stacks vertically with a thin left rule for visual grouping. Replaces
+     literal "<br>" / "**" tag text bleed users were seeing in the WHAT FITS
+     card. */
+  .match-ev .fit-line {
+    display: block;
+    padding: 2px 0 2px 8px;
+    border-left: 2px solid var(--border, rgba(0,0,0,.08));
+    margin-top: 4px;
+    line-height: 1.45;
+  }
+  .match-ev .fit-line:first-child { margin-top: 0; }
+  .match-ev .fit-line strong { color: var(--text); font-weight: 600; }
   /* Stories */
   .detail-stories-wrap { margin-bottom: 10px; }
   .story-chips { display: flex; flex-direction: column; gap: 5px; }
@@ -5024,6 +5123,36 @@ function build() {
     padding: 7px 10px 5px;
     font-weight: 600; font-size: 12px; color: var(--text);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .sidebar-batch-header > span:first-child { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+  .sidebar-batch-chevron {
+    color: var(--text-3); font-size: 11px;
+    transition: transform .15s, color .15s;
+  }
+  /* Clickable affordance — additive over base .sidebar-batch (additive CSS
+     per DASHBOARD_INVARIANTS.md anti-breakage pattern). */
+  .sidebar-batch-clickable {
+    cursor: pointer;
+    transition: border-color .12s, background .12s, transform .08s;
+    user-select: none;
+  }
+  .sidebar-batch-clickable:hover {
+    border-color: var(--blue-fg, #2563eb);
+    background: var(--surface-2);
+  }
+  .sidebar-batch-clickable:hover .sidebar-batch-chevron {
+    transform: translateX(2px);
+    color: var(--blue-fg, #2563eb);
+  }
+  .sidebar-batch-clickable:focus-visible {
+    outline: 2px solid var(--blue-fg-dark, #1d4ed8);
+    outline-offset: 1px;
+  }
+  .sidebar-batch-clickable:active { transform: scale(0.995); }
+  @media (prefers-reduced-motion: reduce) {
+    .sidebar-batch-clickable, .sidebar-batch-chevron { transition: none; }
+    .sidebar-batch-clickable:active { transform: none; }
   }
   .sidebar-batch-bar { height: 3px; background: var(--border); }
   .sidebar-batch-fill { height: 100%; background: linear-gradient(90deg, var(--green-fg), var(--blue-fg)); transition: width .5s; }
@@ -5144,15 +5273,27 @@ function build() {
     color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums;
   }
   .sidebar-runway-alert {
-    margin-top: 6px;
-    padding: 6px 8px;
-    border-radius: 4px;
-    font-size: 10.5px;
-    line-height: 1.4;
+    margin-top: 8px;
+    padding: 10px 12px;
+    border-radius: 6px;
+    /* 2026-05-17 accessibility fix per Mitchell — bumped from 10.5px/1.4 to
+       12.5px/1.5 + weight 500 for legibility; tightened contrast ratios to
+       WCAG AA on each variant; added subtle left-border accent. */
+    font-size: 12.5px;
+    line-height: 1.5;
+    font-weight: 500;
+    border-left: 3px solid currentColor;
+    word-break: normal;
+    overflow-wrap: break-word;
   }
-  .sidebar-runway-alert.healthy   { background: rgba(22,163,74,.08);  color: #15803d; }
-  .sidebar-runway-alert.stretched { background: rgba(245,158,11,.08); color: #92400e; }
-  .sidebar-runway-alert.critical  { background: rgba(220,38,38,.10);  color: #991b1b; }
+  .sidebar-runway-alert.healthy   { background: rgba(22,163,74,.10);  color: #166534; border-left-color: #16a34a; }
+  .sidebar-runway-alert.stretched { background: rgba(245,158,11,.10); color: #92400e; border-left-color: #d97706; }
+  .sidebar-runway-alert.critical  { background: rgba(220,38,38,.12);  color: #b91c1c; border-left-color: #dc2626; }
+  @media (prefers-color-scheme: dark) {
+    .sidebar-runway-alert.healthy   { color: #4ade80; background: rgba(22,163,74,.15); }
+    .sidebar-runway-alert.stretched { color: #fbbf24; background: rgba(245,158,11,.18); }
+    .sidebar-runway-alert.critical  { color: #fca5a5; background: rgba(220,38,38,.18); }
+  }
   body.sidebar-collapsed .sidebar-runway-label,
   body.sidebar-collapsed .sidebar-runway-caret,
   body.sidebar-collapsed .sidebar-runway-detail { display: none; }
@@ -5311,9 +5452,12 @@ function build() {
   .pcp-bulk-toggle:hover { background: var(--surface); color: var(--text); border-color: var(--border-strong); }
   .pcp-bulk-toggle:focus-visible { outline: none; box-shadow: var(--ring-blue); }
   .pcp-table-wrap {
-    max-height: 360px; overflow-y: auto;
+    /* Invariant #8a — both-axis scroll. position:relative so a future
+       scroll-hint badge can sit absolutely without escaping the wrapper. */
+    max-height: 360px; overflow-x: auto; overflow-y: auto;
     border: 1px solid var(--border); border-radius: var(--radius-sm);
     background: var(--surface);
+    position: relative;
   }
   .pcp-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
   .pcp-table thead th {
@@ -6211,6 +6355,25 @@ function build() {
   }
   .drawer-action-bar .drawer-btn-primary:hover { filter: brightness(.95); background: var(--green-fg); }
   .drawer-action-bar .drawer-btn-primary[disabled] { opacity: .5; cursor: not-allowed; }
+  /* "Create materials" — secondary accent. Tinted bg + accent border so it's
+     visually grouped with Apply (action) but distinct from the green primary
+     CTA. Wired in drawerCreateMaterials(). */
+  .drawer-action-bar .drawer-btn-materials {
+    background: var(--surface-2);
+    border-color: var(--blue-fg, #3b82f6);
+    color: var(--blue-fg, #3b82f6);
+  }
+  .drawer-action-bar .drawer-btn-materials:hover {
+    background: var(--blue-fg, #3b82f6);
+    color: #fff;
+  }
+  .drawer-action-bar .drawer-btn-materials[disabled] { opacity: .5; cursor: not-allowed; }
+  .drawer-action-bar .drawer-btn-materials.is-running {
+    background: var(--surface-2);
+    color: var(--muted);
+    cursor: progress;
+    border-style: dashed;
+  }
   /* Selected-row indicator: 3px left accent + subtle bg highlight so the
      user always knows which row the drawer is showing. */
   tr.row.row-selected > td { background: var(--surface-2); }
@@ -6366,6 +6529,70 @@ function build() {
   .hm-disagreement {
     background: rgba(245,158,11,.06);
     border-color: rgba(245,158,11,.3);
+  }
+
+  /* FIX 3 (2026-05-17) — high-confidence contact filter footnote. */
+  .hm-filter-footnote {
+    margin: 6px 0 12px;
+    padding: 6px 10px;
+    font-size: 11.5px;
+    background: var(--surface-2);
+    border-left: 2px solid var(--text-4);
+    border-radius: var(--radius-sm, 4px);
+  }
+
+  /* FIX 4 (2026-05-17) — scannable bullet list for clump-prose sections
+     (team_gap_analysis, company_signals_90d, provider_disagreements,
+     comp_intelligence). Thin left rule replaces marker bullets; 6px gap
+     between items; 1.5 line-height for readability. */
+  .dcard-bullets {
+    list-style: none;
+    margin: 4px 0 8px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .dcard-bullets li {
+    padding: 4px 0 4px 10px;
+    border-left: 2px solid var(--border, rgba(0,0,0,.08));
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--text-2);
+  }
+  .dcard-bullets li strong { color: var(--text); font-weight: 600; }
+  .dcard-bullets--single li { border-left: none; padding-left: 0; }
+  .dcard-divider {
+    border: none;
+    height: 1px;
+    background: var(--border, rgba(0,0,0,.08));
+    margin: 10px 0;
+  }
+
+  /* FIX 4 (2026-05-17) — 2-column tradeoffs grid: new role vs Google xGE. */
+  .hm-tradeoff-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+  .hm-tradeoff-col {
+    background: var(--surface-2);
+    border-radius: var(--radius-sm, 4px);
+    padding: 8px 10px;
+  }
+  .hm-tradeoff-col--new      { border-left: 3px solid var(--blue-fg, #2563eb); }
+  .hm-tradeoff-col--baseline { border-left: 3px solid var(--text-4); }
+  .hm-tradeoff-col-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--text-3);
+    margin-bottom: 6px;
+  }
+  @media (max-width: 700px) {
+    .hm-tradeoff-grid { grid-template-columns: 1fr; }
   }
 
   /* States */
@@ -7212,8 +7439,19 @@ function build() {
         <span class="sidebar-icon" aria-hidden="true">⚙️</span><span class="sidebar-label">Settings</span>
       </button>
     </nav>
-    <div id="sidebar-batch" class="sidebar-batch" style="display:none" aria-label="Batch progress" aria-live="polite">
-      <div class="sidebar-batch-header"><span id="sidebar-batch-title">⚡ Batch</span></div>
+    <!-- Sidebar batch widget — clickable (2026-05-17) opens #batch-status-modal
+         with real-time run detail. Wrapped in role="button" + tabindex="0" so
+         keyboard users can activate via Enter/Space. The existing inner DOM
+         (header/bar/stats) is untouched so pollBatch() keeps working. -->
+    <div id="sidebar-batch" class="sidebar-batch sidebar-batch-clickable" style="display:none"
+         role="button" tabindex="0" aria-label="Open batch run details"
+         aria-haspopup="dialog" aria-live="polite"
+         onclick="openBatchStatusModal()"
+         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openBatchStatusModal();}">
+      <div class="sidebar-batch-header">
+        <span id="sidebar-batch-title">⚡ Batch</span>
+        <span class="sidebar-batch-chevron" aria-hidden="true" title="Open batch status">▸</span>
+      </div>
       <div class="sidebar-batch-bar"><div class="sidebar-batch-fill" id="sidebar-batch-bar-fill" style="width:0%"></div></div>
       <div class="sidebar-batch-stats" id="sidebar-batch-stats"></div>
     </div>
@@ -7232,13 +7470,17 @@ function build() {
       </button>
     </div>
     <!-- Recruiter pipeline-density widget (Phase 6, calibration brief 2026-05-16)
-         Click toggles expanded detail. Data from /api/recruiter-pipeline-density. -->
-    <div id="sidebar-runway" class="sidebar-runway" onclick="toggleRunwayWidget()" role="button" tabindex="0" title="Pipeline density vs 12-week runway — click to expand">
-      <div class="sidebar-runway-row">
+         Chevron toggles inline detail. Label click opens full runway modal
+         with active conversations + touches trend + who-to-contact-next.
+         Data from /api/recruiter-pipeline-density (inline) and
+         /api/runway-detail (modal). -->
+    <div id="sidebar-runway" class="sidebar-runway" role="button" tabindex="0" title="Pipeline density vs 12-week runway — click for full detail">
+      <div class="sidebar-runway-row" onclick="openRunwayDetailModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openRunwayDetailModal();}">
         <span class="sidebar-runway-dot unknown" id="runway-dot"></span>
         <span class="sidebar-runway-label" id="runway-label">runway · loading…</span>
-        <span class="sidebar-runway-caret" aria-hidden="true">▾</span>
+        <button type="button" class="sidebar-runway-caret" aria-label="Toggle inline detail" onclick="event.stopPropagation();toggleRunwayWidget();" style="background:none;border:none;color:inherit;cursor:pointer;padding:0;font:inherit;">▾</button>
       </div>
+      <div class="sidebar-runway-detailclickhint" aria-hidden="true">click label for full detail</div>
       <div class="sidebar-runway-detail" id="runway-detail">
         <div class="sidebar-runway-stat-row"><span class="sidebar-runway-stat-label">active conversations</span><span class="sidebar-runway-stat-val" id="runway-active">—</span></div>
         <div class="sidebar-runway-stat-row"><span class="sidebar-runway-stat-label">touches (7d)</span><span class="sidebar-runway-stat-val" id="runway-touches7d">—</span></div>
@@ -7249,12 +7491,9 @@ function build() {
       </div>
     </div>
     <div class="sidebar-footer">
-      <button type="button" class="sidebar-collapse-btn" id="sidebar-collapse-btn" onclick="toggleSidebarCollapse()" aria-label="Collapse sidebar" title="Collapse sidebar (⌘\\)">
-        <svg class="sidebar-collapse-icon" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-          <path d="M7.5 2.5L4 6l3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <span class="sidebar-collapse-label">Collapse</span>
-      </button>
+      <!-- Sidebar collapse button removed 2026-05-17 per Mitchell — unused,
+           takes up footer space. Cmd-\\ keyboard shortcut still triggers
+           toggleSidebarCollapse() if anyone needs it. -->
       <!-- Mini-ticker removed 2026-05-10: same scan activity already lives in
            the mission-control strip at the top of the page (#live-text).
            Sidebar duplicate added clutter without new info. -->
@@ -7286,17 +7525,20 @@ function build() {
     <button class="toolbar-btn" onclick="toggleDark()" id="dark-toggle" aria-label="Toggle dark mode">☀︎ Light</button>
   </header>
 
-  <!-- Mission-control hero strip (Phase 7 Item 1): live ticker + batch + health -->
+  <!-- Mission-control hero strip (Phase 7 Item 1): live ticker + batch + health
+       2026-05-17: all three pills are now clickable popouts (invariant #8
+       click-to-popout pattern). The previous in-place pill-popover on mc-health
+       is replaced by the system-health modal for full launchd + tunnel detail. -->
   <div class="mc-strip" id="mc-strip" role="status" aria-label="Mission-control telemetry strip">
-    <div class="live-ticker" id="live-ticker" aria-live="polite" aria-label="Most recent scanner activity" tabindex="0" title="Click to expand on mobile">
+    <div class="live-ticker" id="live-ticker" aria-live="polite" aria-label="Most recent scanner activity — click to see all scans" tabindex="0" role="button" title="Click for recent scan activity (portal · jobs found · jobs new)" onclick="openScanActivityModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openScanActivityModal()}">
       <span class="live-dot" id="live-dot" aria-hidden="true"></span>
       <span class="live-text" id="live-text">—</span>
     </div>
-    <div class="mc-batch" id="mc-batch" data-state="idle" aria-label="Batch progress" title="Batch progress">
+    <div class="mc-batch" id="mc-batch" data-state="idle" aria-label="Batch progress — click for live detail" title="Click for live batch status (current run · recent runs · queue · failures)" role="button" tabindex="0" onclick="openBatchStatusModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openBatchStatusModal()}">
       <span class="mc-batch-dot" aria-hidden="true"></span>
       <span class="mc-batch-text" id="mc-batch-text">No batch running</span>
     </div>
-    <div class="mc-health pill-popover-trigger" id="mc-health" data-status="healthy" aria-label="System health — click to expand" title="Click for full health detail (batch · scans · pipeline · errors)" role="button" tabindex="0" onclick="openHealthPopover(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openHealthPopover(this)}">
+    <div class="mc-health" id="mc-health" data-status="healthy" aria-label="System health — click for full detail" title="Click for launchd jobs · tunnel · server · errors" role="button" tabindex="0" onclick="openSystemHealthModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openSystemHealthModal()}">
       <span class="mc-health-dot" aria-hidden="true"></span>
       <span class="mc-health-text" id="mc-health-text">all healthy</span>
     </div>
@@ -7456,6 +7698,7 @@ function build() {
           <tr><td><kbd>K</kbd> / <kbd>↑</kbd></td><td>Move row focus up</td></tr>
           <tr><td><kbd>A</kbd> / <kbd>Enter</kbd></td><td>Open the focused row's Apply link in a new tab</td></tr>
           <tr><td><kbd>X</kbd></td><td>Toggle selection on the focused row</td></tr>
+          <tr><td><kbd>B</kbd></td><td>Open Batch status popout (live run detail)</td></tr>
           <tr><td><kbd>?</kbd></td><td>Show this help</td></tr>
           <tr><td><kbd>Esc</kbd></td><td>Close drawer / modal / overlay</td></tr>
           <tr><td><kbd>⌘ K</kbd> / <kbd>Ctrl K</kbd></td><td>Command palette</td></tr>
@@ -7600,7 +7843,7 @@ function build() {
         <th class="sortable" onclick="sortTable('apply-now-tbody', 5, 'str', this, event)">Status</th>
         <th class="sortable" onclick="sortTable('apply-now-tbody', 6, 'str', this, event)">Equity <button type="button" class="tier-legend-btn" title="Equity stage legend" aria-label="Show equity stage legend" onclick="event.stopPropagation();openEquityLegend()">?</button></th>
         <th class="sortable" onclick="sortTable('apply-now-tbody', 7, 'str', this, event)" title="Location / remote posture parsed from Block A">Location</th>
-        <th class="sortable" onclick="sortTable('apply-now-tbody', 8, 'num', this, event)" title="Team-toxicity grade (1=healthy → 5=avoid). Click any chip for full benefits + sentiment breakdown.">Benefits</th>
+        <th class="sortable" onclick="sortTable('apply-now-tbody', 8, 'num', this, event)" title="Team health + benefits grade (1=healthy → 5=avoid). Click any chip for the full benefits + sentiment breakdown.">Health</th>
         <th onclick="event.stopPropagation()" title="Recruiter + hiring-manager LinkedIn lookups">People</th>
         <th class="sortable mobile-hide" onclick="sortTable('apply-now-tbody', 10, 'str', this, event)">Eval Date</th>
         <th class="sortable" onclick="sortTable('apply-now-tbody', 11, 'num', this, event)">Age</th>
@@ -7683,7 +7926,7 @@ function build() {
         <th class="sortable" onclick="sortTable('all-tbody', 5, 'str', this, event)">Status</th>
         <th class="sortable" onclick="sortTable('all-tbody', 6, 'str', this, event)">Equity <button type="button" class="tier-legend-btn" title="Equity stage legend" aria-label="Show equity stage legend" onclick="event.stopPropagation();openEquityLegend()">?</button></th>
         <th class="sortable" onclick="sortTable('all-tbody', 7, 'str', this, event)" title="Location / remote posture parsed from Block A">Location</th>
-        <th class="sortable" onclick="sortTable('all-tbody', 8, 'num', this, event)" title="Team-toxicity grade (1=healthy → 5=avoid). Click any chip for full benefits breakdown.">Benefits</th>
+        <th class="sortable" onclick="sortTable('all-tbody', 8, 'num', this, event)" title="Team health + benefits grade (1=healthy → 5=avoid). Click any chip for the full benefits breakdown.">Health</th>
         <th onclick="event.stopPropagation()" title="Recruiter + hiring-manager LinkedIn lookups">People</th>
         <th class="sortable mobile-hide" onclick="sortTable('all-tbody', 10, 'str', this, event)">Eval Date</th>
         <th class="sortable" onclick="sortTable('all-tbody', 11, 'num', this, event)">Age</th>
@@ -7974,6 +8217,195 @@ if (document.readyState === 'loading') {
 } else {
   initTableHorizontalScroll();
 }
+
+// ── Universal table baseline (invariant #8, 2026-05-17) ──────────
+// Applies the 5 sub-rules (scroll wrapper, dbl-click row expand,
+// [title] tooltips, scroll-follows-cursor, column-resize handles)
+// to ANY table on the page. Idempotent — safe to call repeatedly.
+// Default selectors: every <table> inside an element matching
+// opts.containerSelector (default 'body') that has a <tbody> with
+// an id, OR pass opts.tableSelector to target a specific table.
+//
+// localStorage keys:
+//   careerops.colwidth.{tableId}.{colKey} — per-column saved width
+//
+// Suggested usage:
+//   applyUniversalTableBaseline();            // run on every table
+//   applyUniversalTableBaseline({ root: modal }); // only inside a modal
+function applyUniversalTableBaseline(opts) {
+  opts = opts || {};
+  var root = opts.root || document;
+  if (!root || !root.querySelectorAll) return;
+  var tables = [];
+  if (opts.tableEl) {
+    tables = [opts.tableEl];
+  } else {
+    // Find every table that lives inside a .table-scroll OR wrap it if missing.
+    tables = Array.prototype.slice.call(root.querySelectorAll('table'));
+  }
+  tables.forEach(function (table) {
+    if (!table || table.dataset.utbInit === '1') return;
+
+    // 8a — ensure a .table-scroll wrapper. If the table isn't already inside
+    // one, wrap it so the scroll-on-overflow behavior comes for free.
+    var wrap = table.closest('.table-scroll');
+    if (!wrap) {
+      var parent = table.parentNode;
+      if (!parent) return;
+      wrap = document.createElement('div');
+      wrap.className = 'table-scroll';
+      parent.insertBefore(wrap, table);
+      wrap.appendChild(table);
+    }
+
+    // Stable tableId from <tbody id> or generated. Used to scope localStorage
+    // keys for column widths so different tables don't collide.
+    var tbody = table.querySelector('tbody');
+    var tableId = (tbody && tbody.id) || table.id || ('utb_' + Math.random().toString(36).slice(2, 8));
+
+    // 8b — add data-col-key + 8c title attrs to <th>; bind dblclick row expand
+    var ths = Array.prototype.slice.call(table.querySelectorAll('thead th'));
+    ths.forEach(function (th, idx) {
+      // Skip bulk-checkbox column (no resize / no key needed)
+      if (th.classList.contains('bulk-th')) return;
+      if (!th.dataset.colKey) {
+        var label = (th.textContent || '').replace(/\\s+/g, ' ').trim()
+          .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+        th.dataset.colKey = label || ('col-' + idx);
+      }
+      // Tooltip on truncated header text (only if not already set)
+      if (!th.getAttribute('title') && th.scrollWidth > th.clientWidth + 1) {
+        th.setAttribute('title', (th.textContent || '').trim());
+      }
+    });
+
+    // 8b — dblclick on a row toggles expanded class. Doesn't interfere with
+    // single-click → drawer (invariant #2) because dblclick suppresses the
+    // 2nd single-click only on the same element, and the row click handler
+    // is delegated up to the document level.
+    if (tbody && !tbody.dataset.utbDblBound) {
+      tbody.addEventListener('dblclick', function (e) {
+        var tr = e.target.closest && e.target.closest('tr');
+        if (!tr || !tbody.contains(tr)) return;
+        // Don't expand if dblclick was on an interactive element
+        var tag = (e.target.tagName || '').toUpperCase();
+        if (tag === 'A' || tag === 'BUTTON' || tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
+        tr.classList.toggle('expanded');
+      });
+      tbody.dataset.utbDblBound = '1';
+    }
+
+    // 8c — auto-populate [title] on truncated cells. Uses data-fulltext when
+    // available; falls back to inner text. We only set [title] if it isn't
+    // already present so server-side tooltips win.
+    if (tbody) {
+      Array.prototype.slice.call(tbody.querySelectorAll('td')).forEach(function (td) {
+        if (td.hasAttribute('title')) return;
+        var full = td.dataset && td.dataset.fulltext;
+        var txt = full || (td.textContent || '').replace(/\\s+/g, ' ').trim();
+        // Only attach when the cell actually truncates (scrollWidth > clientWidth)
+        // OR when fulltext differs from the visible text (e.g. cell shows "…").
+        var truncates = td.scrollWidth > td.clientWidth + 1;
+        var hasFullDiff = full && full !== (td.textContent || '').trim();
+        if (truncates || hasFullDiff) {
+          td.setAttribute('title', txt);
+        }
+      });
+    }
+
+    // 8e — column-resize handles on every <th>. Skip if a handle is already
+    // present (idempotent retrofit safety). Skip bulk-th (no resize) +
+    // already-wrapped tables from the legacy initColResize() pass.
+    if (window.innerWidth >= 721) {
+      ths.forEach(function (th, idx) {
+        if (th.classList.contains('bulk-th')) return;
+        if (th.querySelector('.col-resize-handle')) return;
+        var handle = document.createElement('div');
+        handle.className = 'col-resize-handle';
+        handle.title = 'Drag to resize · right-click to reset';
+        handle.setAttribute('aria-hidden', 'true');
+        var colKey = th.dataset.colKey || ('col-' + idx);
+        var storageKey = 'careerops.colwidth.' + tableId + '.' + colKey;
+
+        // Restore saved width on init (idempotent — applies on every call)
+        try {
+          var saved = localStorage.getItem(storageKey);
+          if (saved && /^\\d+(\\.\\d+)?$/.test(saved)) {
+            th.style.width = parseFloat(saved) + 'px';
+          }
+        } catch (_) {}
+
+        // Right-click → reset saved width
+        handle.addEventListener('contextmenu', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          try { localStorage.removeItem(storageKey); } catch (_) {}
+          th.style.width = '';
+          if (typeof window.showToast === 'function') {
+            window.showToast('Column width reset');
+          }
+        });
+
+        var startX, startW;
+        handle.addEventListener('mousedown', function (e) {
+          if (e.button !== 0) return;
+          e.preventDefault();
+          e.stopPropagation();
+          startX = e.clientX;
+          startW = th.offsetWidth;
+          handle.classList.add('is-dragging');
+          document.body.style.cursor = 'col-resize';
+          document.body.style.userSelect = 'none';
+          function onMove(ev) {
+            var w = Math.max(36, startW + (ev.clientX - startX));
+            th.style.width = w + 'px';
+          }
+          function onUp() {
+            handle.classList.remove('is-dragging');
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+            var finalW = parseInt(th.style.width) || th.offsetWidth;
+            try { localStorage.setItem(storageKey, String(finalW)); } catch (_) {}
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onUp);
+          }
+          document.addEventListener('mousemove', onMove);
+          document.addEventListener('mouseup', onUp);
+        });
+
+        th.appendChild(handle);
+      });
+    }
+
+    table.dataset.utbInit = '1';
+  });
+}
+window.applyUniversalTableBaseline = applyUniversalTableBaseline;
+
+// Initial pass on every table currently in the DOM. Re-run after modal
+// renders by calling applyUniversalTableBaseline({ root: modalEl }).
+function _utbInitAll() {
+  try { applyUniversalTableBaseline(); } catch (e) { console && console.warn && console.warn('[utb] init', e); }
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', _utbInitAll);
+} else {
+  _utbInitAll();
+}
+// Re-run after table data changes (apply-now reload, all-evals filter, etc.)
+document.addEventListener('careerops:tables-rendered', _utbInitAll);
+
+// CSS for the .expanded row state. Injected once at load; doesn't override
+// existing per-table expanded styles (those win via specificity).
+(function _utbInjectExpandedCss() {
+  if (document.getElementById('utb-expanded-css')) return;
+  var s = document.createElement('style');
+  s.id = 'utb-expanded-css';
+  s.textContent =
+    'tr.utb-expanded td, tr.expanded td { white-space: normal !important; max-height: 200px; overflow-y: auto; }' +
+    'tr.utb-expanded td, tr.expanded td { word-break: break-word; }';
+  document.head.appendChild(s);
+})();
 
 // ── Mission-control hero strip (Phase 7 Item 1) ─────────────────
 // Build-seeded snapshot of batch + system health. Refreshed live
@@ -8306,6 +8738,10 @@ function _kbdAnyOverlayOpen() {
   if (tier && tier.classList.contains('visible')) return true;
   var rightRail = document.getElementById('right-rail-drawer');
   if (rightRail && rightRail.classList.contains('open')) return true;
+  // Batch status popout — block J/K/A/X while open so they don't move row
+  // focus underneath the modal. The modal has its own Esc handler.
+  var bsm = document.getElementById('batch-status-modal');
+  if (bsm && bsm.classList.contains('visible')) return true;
   return false;
 }
 function _kbdVisibleApplyNowRows() {
@@ -8372,6 +8808,14 @@ document.addEventListener('keydown', (e) => {
   // Esc closes the kbd-help overlay (other Esc handlers run in parallel and
   // handle drawer/modal/popover — see the other keydown listeners).
   if (key === 'Escape') {
+    // Batch status modal takes priority over kbd-help when both happen to be
+    // visible — the user is more likely to be interacting with the popout.
+    const bsm = document.getElementById('batch-status-modal');
+    if (bsm && bsm.classList.contains('visible')) {
+      if (typeof closeBatchStatusModal === 'function') closeBatchStatusModal();
+      e.preventDefault();
+      return;
+    }
     const bd = document.getElementById('kbd-help-backdrop');
     if (bd && bd.classList.contains('is-open')) {
       closeKbdHelp();
@@ -8383,6 +8827,18 @@ document.addEventListener('keydown', (e) => {
       _kbdFocusedRow.classList.remove('kbd-focused');
       _kbdFocusedRow = null;
     }
+    return;
+  }
+  // 'B' opens / closes the batch status popout. Goes BEFORE the
+  // _kbdAnyOverlayOpen() guard so we can close it while it's open.
+  if (key === 'b' || key === 'B') {
+    const bsm = document.getElementById('batch-status-modal');
+    if (bsm && bsm.classList.contains('visible')) {
+      if (typeof closeBatchStatusModal === 'function') closeBatchStatusModal();
+    } else if (typeof openBatchStatusModal === 'function') {
+      openBatchStatusModal();
+    }
+    e.preventDefault();
     return;
   }
   if (_kbdAnyOverlayOpen()) return;
@@ -8629,13 +9085,18 @@ function openRightRailForDetail(idx, detailRow) {
     const applyBtnHtml = applyHref
       ? '<button type="button" class="drawer-btn-primary" data-drawer-action="apply">Apply</button>'
       : '<button type="button" class="drawer-btn-primary" disabled>Apply</button>';
+    // "Create materials" — between Apply and Skip. Disabled if there's no
+    // row number (e.g. preview rows synthesized without a tracker #).
+    const materialsBtnHtml = num
+      ? '<button type="button" class="drawer-btn-materials" data-drawer-action="materials" title="Build apply-pack (CV + cover letter + DM + intel)">Create materials</button>'
+      : '<button type="button" class="drawer-btn-materials" disabled title="no row number — apply-pack needs a tracker row">Create materials</button>';
     const skipBtnHtml = num
       ? '<button type="button" data-drawer-action="skip">Skip</button>'
       : '<button type="button" disabled>Skip</button>';
     const deferBtnHtml = num
       ? '<button type="button" data-drawer-action="defer">Defer</button>'
       : '<button type="button" disabled>Defer</button>';
-    actionsEl.innerHTML = applyBtnHtml + skipBtnHtml + deferBtnHtml;
+    actionsEl.innerHTML = applyBtnHtml + materialsBtnHtml + skipBtnHtml + deferBtnHtml;
     // Wire actions after innerHTML — keeps the HTML-as-string clean of
     // nested-quote escaping and lets us close the rail in one place.
     const applyBtnEl = actionsEl.querySelector('button[data-drawer-action="apply"]');
@@ -8643,6 +9104,10 @@ function openRightRailForDetail(idx, detailRow) {
       applyBtnEl.addEventListener('click', () => {
         window.open(applyHref, '_blank', 'noopener');
       });
+    }
+    const materialsBtnEl = actionsEl.querySelector('button[data-drawer-action="materials"]');
+    if (materialsBtnEl && num) {
+      materialsBtnEl.addEventListener('click', () => drawerCreateMaterials(num, company, role, materialsBtnEl));
     }
     const skipBtnEl = actionsEl.querySelector('button[data-drawer-action="skip"]');
     if (skipBtnEl && num) {
@@ -8734,6 +9199,131 @@ async function drawerQuickStatus(num, newStatus) {
   closeRightRail();
 }
 window.drawerQuickStatus = drawerQuickStatus;
+
+// Drawer "Create materials" — kicks off the apply-pack pipeline for the
+// row currently displayed in the drawer. Confirms cost + wall-clock before
+// posting, then polls /api/drawer/apply-pack-status every 5s until the job
+// reports completed | failed. On completion, surfaces a toast with a deep
+// link to the README.
+//
+// Status:
+//   - Wires the script as it is today (stubs scaffolded by build-apply-pack.mjs)
+//   - Voice-corpus passthrough / council / per-artifact "human writes this"
+//     markers are NOT integrated tonight — the server endpoint surfaces the
+//     hook (force flag, status_url) so a future enhancement can layer on
+//     without UI changes
+//   - 409 path retries with force:true — current script will overwrite stubs
+//     on --force, but does not clean up extra files
+let _drawerMaterialsPollers = {};  // jobId → setTimeout handle
+async function drawerCreateMaterials(num, company, role, btnEl, opts) {
+  opts = opts || {};
+  const force = !!opts.force;
+  const label = (company ? company : '') + (role ? ' — ' + role : '');
+  if (!force) {
+    const ok = window.confirm(
+      'Generate apply-pack for row #' + num + (label ? ' (' + label + ')' : '') + '?\\n\\n' +
+      'Estimated cost: ~$2–5. Wall-clock: ~3–5 min.\\n' +
+      'Outputs to apply-pack/' + String(num).padStart(3, '0') + '-{slug}/.\\n\\n' +
+      'You will still review every artifact before submitting.'
+    );
+    if (!ok) return;
+  }
+  if (btnEl) {
+    btnEl.classList.add('is-running');
+    btnEl.disabled = true;
+    btnEl.textContent = 'Building…';
+  }
+  try {
+    const res = await fetch('/api/drawer/build-apply-pack', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rowNum: num, force }),
+    });
+    let data = null;
+    try { data = await res.json(); } catch {}
+    if (res.status === 402 && data && data.cap_exceeded) {
+      const estStr = (typeof data.estimated_cost_usd === 'number')
+        ? '$' + data.estimated_cost_usd.toFixed(2)
+        : 'unknown';
+      const capStr = (typeof data.cap_usd === 'number')
+        ? '$' + data.cap_usd.toFixed(2)
+        : '$5';
+      const retry = window.confirm(
+        'Estimate ' + estStr + ' exceeds the ' + capStr + ' cap.\\n\\nForce-run anyway?'
+      );
+      if (retry) {
+        if (btnEl) { btnEl.classList.remove('is-running'); btnEl.disabled = false; btnEl.textContent = 'Create materials'; }
+        return drawerCreateMaterials(num, company, role, btnEl, { force: true });
+      }
+      if (window.toast) window.toast('Apply-pack cancelled (cap exceeded)', 'info');
+      if (btnEl) { btnEl.classList.remove('is-running'); btnEl.disabled = false; btnEl.textContent = 'Create materials'; }
+      return;
+    }
+    if (res.status === 409 && data && data.already_exists) {
+      const retry = window.confirm(
+        'Apply-pack already exists at ' + (data.existing_dir || 'apply-pack/') + '.\\n\\nRegenerate (overwrite stubs)?'
+      );
+      if (retry) {
+        if (btnEl) { btnEl.classList.remove('is-running'); btnEl.disabled = false; btnEl.textContent = 'Create materials'; }
+        return drawerCreateMaterials(num, company, role, btnEl, { force: true });
+      }
+      if (window.toast) window.toast('Existing pack kept at ' + (data.existing_dir || ''), 'info');
+      if (btnEl) { btnEl.classList.remove('is-running'); btnEl.disabled = false; btnEl.textContent = 'Create materials'; }
+      return;
+    }
+    if (!res.ok || !data || !data.ok) {
+      const msg = (data && data.error) ? data.error : ('HTTP ' + res.status);
+      throw new Error(msg);
+    }
+    if (window.toast) window.toast('Apply-pack generation started for #' + num, 'success');
+    _drawerPollApplyPack(data.jobId, num, data.expected_dir || ('apply-pack/' + String(num).padStart(3, '0') + '-'), btnEl);
+  } catch (err) {
+    console.error('drawerCreateMaterials failed:', err);
+    if (window.toast) window.toast('Apply-pack failed: ' + (err.message || err), 'error');
+    else alert('Apply-pack failed: ' + (err.message || err));
+    if (btnEl) { btnEl.classList.remove('is-running'); btnEl.disabled = false; btnEl.textContent = 'Create materials'; }
+  }
+}
+
+function _drawerPollApplyPack(jobId, num, expectedDir, btnEl) {
+  if (!jobId) return;
+  if (_drawerMaterialsPollers[jobId]) clearTimeout(_drawerMaterialsPollers[jobId]);
+  const tick = async () => {
+    try {
+      const res = await fetch('/api/drawer/apply-pack-status?job_id=' + encodeURIComponent(jobId), { cache: 'no-store' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      if (!data.ok || !data.job) throw new Error('no job');
+      const job = data.job;
+      if (job.status === 'completed') {
+        if (btnEl) { btnEl.classList.remove('is-running'); btnEl.disabled = false; btnEl.textContent = '✓ Materials ready'; }
+        // toast.textContent renders HTML as raw text, so surface the README
+        // path in the toast AND auto-open it in a new tab — same UX the
+        // /api/pipeline/build-apply-pack callers expect. The path is
+        // workspace-relative; PUBLIC_BASE-aware deep linking lives in
+        // heartbeat.mjs (emails) — the dashboard is always served from a
+        // host that maps the workspace root at /, so the relative link works.
+        const readmePath = data.readme_rel || ((job.expected_dir || expectedDir || '') + '/README.md');
+        if (window.toast) window.toast('Apply-pack ready for #' + num + ' → ' + readmePath, 'success');
+        try { window.open('/' + readmePath, '_blank', 'noopener'); } catch {}
+        delete _drawerMaterialsPollers[jobId];
+        return;
+      }
+      if (job.status === 'failed') {
+        if (btnEl) { btnEl.classList.remove('is-running'); btnEl.disabled = false; btnEl.textContent = 'Create materials'; }
+        const err = job.error || 'unknown failure';
+        if (window.toast) window.toast('Apply-pack failed for #' + num + ': ' + err, 'error');
+        delete _drawerMaterialsPollers[jobId];
+        return;
+      }
+    } catch (err) {
+      // Quiet retry — backend may briefly 404 while state is rewritten
+    }
+    _drawerMaterialsPollers[jobId] = setTimeout(tick, 5000);
+  };
+  tick();
+}
+window.drawerCreateMaterials = drawerCreateMaterials;
 window.closeRightRail = closeRightRail;
 window.openRightRailForDetail = openRightRailForDetail;
 window.setUseInlineExpand = setUseInlineExpand;
@@ -8834,13 +9424,128 @@ function _hmTradeoffs(t) {
     + '</div>';
 }
 
+// FIX 4 (2026-05-17) — break long prose strings (team_gap_analysis,
+// company_signals_90d, provider_disagreements) into scannable bullets.
+// Strategy: prefer "; " splits (semantic-rich), then numbered patterns
+// (" 1) ", " 2) "), then sentence terminators. Collapse adjacent
+// paragraphs into separate sub-sections separated by a thin divider.
+// Caps each section at 6 bullets to avoid unbounded growth.
+function _hmSplitProseToBullets(prose, maxBullets = 6) {
+  const s = String(prose == null ? '' : prose).trim();
+  if (!s) return [];
+  // Pass 1: numbered patterns " 1) ", " 2) " etc.
+  // \\s+ → \s+ at runtime; \\d → \d; \\) → \) (literal paren).
+  // See DASHBOARD_INVARIANTS.md §1b — emitted-JS audit caught a regression
+  // here when these were single-escaped.
+  const numSplit = s.split(/\\s+(?=\\d+\\)\\s)/);
+  if (numSplit.length >= 2) return numSplit.map(x => x.trim()).filter(Boolean).slice(0, maxBullets);
+  // Pass 2: semicolon splits (sentence-grade separators).
+  const semi = s.split(/;\\s+(?=[A-Z(0-9"'])/);
+  if (semi.length >= 3) return semi.map(x => x.trim().replace(/;$/, '')).filter(Boolean).slice(0, maxBullets);
+  // Pass 3: sentence terminators followed by capital letter.
+  const sents = s.match(/[^.!?]+[.!?]+(?:\\s|$)/g);
+  if (sents && sents.length >= 2) {
+    // Greedily merge short fragments so each bullet is ~80-220 chars.
+    const out = [];
+    let buf = '';
+    for (const piece of sents) {
+      buf += piece;
+      if (buf.length >= 90) { out.push(buf.trim()); buf = ''; }
+    }
+    if (buf.trim()) out.push(buf.trim());
+    if (out.length >= 2) return out.slice(0, maxBullets);
+  }
+  return [s];
+}
+function _hmProseBullets(prose) {
+  // Split paragraph breaks first — each paragraph becomes its own
+  // section, separated by a thin divider so multi-topic prose stays
+  // visually grouped.
+  const paragraphs = String(prose == null ? '' : prose)
+    .split(/\\n\\s*\\n+/)
+    .map(p => p.trim())
+    .filter(Boolean);
+  if (!paragraphs.length) return '';
+  const blocks = paragraphs.map(p => {
+    const bullets = _hmSplitProseToBullets(p, 6);
+    if (bullets.length <= 1) {
+      // Single bullet — still render as a one-item list for visual
+      // consistency, just without the left-border accent.
+      return '<ul class="dcard-bullets dcard-bullets--single"><li>' + _hmEsc(bullets[0] || p) + '</li></ul>';
+    }
+    return '<ul class="dcard-bullets">' + bullets.map(b => '<li>' + _hmEsc(b) + '</li>').join('') + '</ul>';
+  });
+  return blocks.join('<hr class="dcard-divider">');
+}
+
+// FIX 4 (2026-05-17) — 2-column "Going to {Company}" vs "Staying at Google xGE"
+// comparison grid. Left column: new role specifics (comp/equity/location/
+// benefits/remote). Right column: current_role_baseline split into bullets.
+// honest_tradeoff_summary remains as a full-width footline beneath the grid.
+function _hmTradeoffsGrid(t) {
+  if (!t) return '';
+  const ns = t.new_role_specifics || {};
+  // Left column — new-role specifics as labeled bullets.
+  const leftItems = [];
+  if (ns.comp)     leftItems.push('<li><strong>Comp:</strong> '     + _hmEsc(ns.comp) + '</li>');
+  if (ns.equity)   leftItems.push('<li><strong>Equity:</strong> '   + _hmEsc(ns.equity) + '</li>');
+  if (ns.location) leftItems.push('<li><strong>Location:</strong> ' + _hmEsc(ns.location) + '</li>');
+  if (ns.benefits) leftItems.push('<li><strong>Benefits:</strong> ' + _hmEsc(ns.benefits) + '</li>');
+  if (ns.remote)   leftItems.push('<li><strong>Remote:</strong> '   + _hmEsc(ns.remote) + '</li>');
+  // Right column — Google baseline split into bullets.
+  const baselineBullets = _hmSplitProseToBullets(t.current_role_baseline || '', 6);
+  const rightItems = baselineBullets.length
+    ? baselineBullets.map(b => '<li>' + _hmEsc(b) + '</li>').join('')
+    : '<li class="muted-text">No baseline captured.</li>';
+  return '<div class="hm-tradeoff-grid">'
+    + '<div class="hm-tradeoff-col hm-tradeoff-col--new">'
+    +   '<div class="hm-tradeoff-col-label">Going to this role</div>'
+    +   (leftItems.length ? '<ul class="dcard-bullets">' + leftItems.join('') + '</ul>' : '<div class="muted-text">No new-role specifics captured.</div>')
+    + '</div>'
+    + '<div class="hm-tradeoff-col hm-tradeoff-col--baseline">'
+    +   '<div class="hm-tradeoff-col-label">Staying at Google xGE</div>'
+    +   '<ul class="dcard-bullets">' + rightItems + '</ul>'
+    + '</div>'
+    + '</div>'
+    + (t.honest_tradeoff_summary
+        ? '<div class="hm-trade-summary"><strong>Honest summary:</strong> ' + _hmEsc(t.honest_tradeoff_summary) + '</div>'
+        : '');
+}
+
 function _renderHMIntel(d, slug) {
   if (!d) return '';
   const succeeded = (d.providers_succeeded || []).length;
   const called    = (d.providers_called    || []).length || 7;
   const provFootline = succeeded + '/' + called + ' providers · ' + (d.sources_cited_count || '?') + ' sources';
-  const hmCards = (d.hiring_managers || []).map(_hmPersonCard).join('');
-  const recCards = (d.recruiters || []).map(_hmPersonCard).join('');
+  // FIX 3 (2026-05-17) — surface only HIGH-confidence contacts. Filter at the
+  // render layer (data untouched). Confidence schema is HIGH/MEDIUM/LOW
+  // (see _hmConfChip). Numeric confidence_score (>=0.8) is a defensive
+  // fallback. Hidden count is shown as a footnote so the filter is visible.
+  function _isHighConfidence(p) {
+    if (!p) return false;
+    const c = String(p.confidence || '').toUpperCase();
+    if (c === 'HIGH') return true;
+    const n = typeof p.confidence_score === 'number' ? p.confidence_score : null;
+    if (n !== null && n >= 0.8) return true;
+    return false;
+  }
+  const hmAll = d.hiring_managers || [];
+  const recAll = d.recruiters || [];
+  const hmHigh = hmAll.filter(_isHighConfidence);
+  const recHigh = recAll.filter(_isHighConfidence);
+  const hiddenHm = hmAll.length - hmHigh.length;
+  const hiddenRec = recAll.length - recHigh.length;
+  const hiddenTotal = hiddenHm + hiddenRec;
+  const hmCards = hmHigh.map(_hmPersonCard).join('');
+  const recCards = recHigh.map(_hmPersonCard).join('');
+  // Footnote shown only when the filter actually removed entries. Filter
+  // field documented: confidence === 'HIGH' (case-insensitive) OR
+  // confidence_score >= 0.8 numeric fallback.
+  const filterFootnote = hiddenTotal > 0
+    ? '<div class="hm-filter-footnote muted-text">Hiding ' + hiddenTotal
+        + ' medium/low-confidence contact' + (hiddenTotal === 1 ? '' : 's')
+        + '. Toggle in dashboard settings to show all.</div>'
+    : '';
 
   return '<div class="hm-intel-block" data-slug="' + _hmEsc(slug) + '">'
     + '<div class="hm-intel-head"><h3>🎯 Hiring intel</h3><span class="hm-prov-footline">' + _hmEsc(provFootline) + '</span></div>'
@@ -8849,26 +9554,31 @@ function _renderHMIntel(d, slug) {
     + (d.alignment_with_goals  ? '<section class="hm-section"><h4>Why this aligns with my goals</h4><p>' + _hmEsc(d.alignment_with_goals) + '</p></section>' : '')
     + (d.fit_evidence          ? '<section class="hm-section"><h4>Fit evidence</h4>' + _hmFitEvidence(d.fit_evidence) + '</section>' : '')
 
-    + (hmCards  ? '<section class="hm-section"><h4>Likely hiring managers (' + (d.hiring_managers||[]).length + ')</h4>' + hmCards + '</section>' : '')
-    + (recCards ? '<section class="hm-section"><h4>Likely recruiters (' + (d.recruiters||[]).length + ')</h4>' + recCards + '</section>' : '')
+    + (hmCards  ? '<section class="hm-section"><h4>Likely hiring managers (' + hmHigh.length + ')</h4>' + hmCards + '</section>' : '')
+    + (recCards ? '<section class="hm-section"><h4>Likely recruiters (' + recHigh.length + ')</h4>' + recCards + '</section>' : '')
+    + filterFootnote
 
     + (d.outreach_strategy     ? '<section class="hm-section"><h4>Outreach tactic</h4><p>' + _hmEsc(d.outreach_strategy) + '</p></section>' : '')
-    + (d.team_gap_analysis     ? '<section class="hm-section"><h4>Team gaps I fill</h4><p>' + _hmEsc(d.team_gap_analysis) + '</p></section>' : '')
+    // FIX 4 (2026-05-17) — clump prose broken into scannable bullets.
+    + (d.team_gap_analysis     ? '<section class="hm-section"><h4>Team gaps I fill</h4>' + _hmProseBullets(d.team_gap_analysis) + '</section>' : '')
 
     + ((d.honest_gaps_vs_requirements||[]).length ? '<section class="hm-section"><h4>Honest gaps + close actions</h4><ul class="hm-gap-list">' + _hmGapList(d.honest_gaps_vs_requirements) + '</ul></section>' : '')
 
-    + (d.tradeoffs_vs_current_role ? '<section class="hm-section"><h4>Tradeoffs vs current Google xGE role</h4>' + _hmTradeoffs(d.tradeoffs_vs_current_role) + '</section>' : '')
+    // FIX 4 (2026-05-17) — 2-column comparison grid (new role / Google xGE).
+    + (d.tradeoffs_vs_current_role ? '<section class="hm-section"><h4>Tradeoffs vs current Google xGE role</h4>' + _hmTradeoffsGrid(d.tradeoffs_vs_current_role) + '</section>' : '')
 
-    + (d.company_signals_90d   ? '<section class="hm-section"><h4>90-day company signals</h4><p>' + _hmEsc(d.company_signals_90d) + '</p></section>' : '')
+    + (d.company_signals_90d   ? '<section class="hm-section"><h4>90-day company signals</h4>' + _hmProseBullets(d.company_signals_90d) + '</section>' : '')
     + (d.comp_intelligence     ? '<section class="hm-section"><h4>Comp intelligence</h4>'
-        + (d.comp_intelligence.synthesized_range ? '<p><strong>Best estimate:</strong> ' + _hmEsc(d.comp_intelligence.synthesized_range) + '</p>' : '')
-        + (d.comp_intelligence.jd_disclosed_range ? '<p>JD: ' + _hmEsc(d.comp_intelligence.jd_disclosed_range) + '</p>' : '')
-        + (d.comp_intelligence.levels_fyi  ? '<p>Levels.fyi: ' + _hmEsc(d.comp_intelligence.levels_fyi) + '</p>' : '')
-        + (d.comp_intelligence.glassdoor   ? '<p>Glassdoor: ' + _hmEsc(d.comp_intelligence.glassdoor) + '</p>' : '')
-        + (d.comp_intelligence.blind       ? '<p>Blind: ' + _hmEsc(d.comp_intelligence.blind) + '</p>' : '')
+        + '<ul class="dcard-bullets">'
+        + (d.comp_intelligence.synthesized_range ? '<li><strong>Best estimate:</strong> ' + _hmEsc(d.comp_intelligence.synthesized_range) + '</li>' : '')
+        + (d.comp_intelligence.jd_disclosed_range ? '<li><strong>JD:</strong> ' + _hmEsc(d.comp_intelligence.jd_disclosed_range) + '</li>' : '')
+        + (d.comp_intelligence.levels_fyi  ? '<li><strong>Levels.fyi:</strong> ' + _hmEsc(d.comp_intelligence.levels_fyi) + '</li>' : '')
+        + (d.comp_intelligence.glassdoor   ? '<li><strong>Glassdoor:</strong> ' + _hmEsc(d.comp_intelligence.glassdoor) + '</li>' : '')
+        + (d.comp_intelligence.blind       ? '<li><strong>Blind:</strong> ' + _hmEsc(d.comp_intelligence.blind) + '</li>' : '')
+        + '</ul>'
         + '</section>' : '')
 
-    + (d.provider_disagreements ? '<section class="hm-section hm-disagreement"><h4>Provider disagreements</h4><p>' + _hmEsc(d.provider_disagreements) + '</p></section>' : '')
+    + (d.provider_disagreements ? '<section class="hm-section hm-disagreement"><h4>Provider disagreements</h4>' + _hmProseBullets(d.provider_disagreements) + '</section>' : '')
 
     + '</div>';
 }
@@ -10014,15 +10724,34 @@ function renderStatPanel(key, data) {
   const count = data.total || rows.length;
 
   if (key === 'evaluations') {
-    // Score bucket cards + status breakdown + recent table
+    // Score bucket cards + status breakdown + recent table.
+    // Feature 2: each card is a button that opens #item-list-modal with the
+    // matching evaluations rendered as a sortable table.
     const buckets = data.buckets || {};
     const byStatus = data.byStatus || {};
-    const bucketCards = Object.entries(buckets).map(([label, val]) =>
-      \`<div class="bucket-card"><div class="bval">\${val}</div><div class="blbl">\${label}</div></div>\`
-    ).join('');
-    const statusCards = Object.entries(byStatus).map(([st, val]) =>
-      \`<div class="bucket-card"><div class="bval">\${val}</div><div class="blbl">\${st}</div></div>\`
-    ).join('');
+    // Map UI label -> server bucket key. The buckets keys here come from
+    // detailEvaluations() in dashboard-server.mjs and use Unicode en-dashes.
+    const SCORE_BUCKET_KEYS = {
+      '4.5+':     'score-450-up',
+      '4.0\\u20134.4': 'score-400-449',
+      '3.5\\u20133.9': 'score-350-399',
+      '3.0\\u20133.4': 'score-300-349',
+      '<3.0':     'score-below-300',
+    };
+    const statusKeyForBucket = (st) => 'status-' + String(st || '').toLowerCase()
+      .replace(/[^a-z]/g, '');
+    const bucketCards = Object.entries(buckets).map(([label, val]) => {
+      const bkey = SCORE_BUCKET_KEYS[label] || '';
+      const safeLabel = esc(label);
+      return bkey
+        ? \`<button type="button" class="bucket-card bucket-card-clickable" onclick="openBucketModal('\${bkey}')" aria-label="Open \${safeLabel} evaluations (\${val} items)"><div class="bval">\${val}</div><div class="blbl">\${safeLabel}</div></button>\`
+        : \`<div class="bucket-card"><div class="bval">\${val}</div><div class="blbl">\${safeLabel}</div></div>\`;
+    }).join('');
+    const statusCards = Object.entries(byStatus).map(([st, val]) => {
+      const bkey = statusKeyForBucket(st);
+      const safeSt = esc(st);
+      return \`<button type="button" class="bucket-card bucket-card-clickable" onclick="openBucketModal('\${bkey}')" aria-label="Open \${safeSt} evaluations (\${val} items)"><div class="bval">\${val}</div><div class="blbl">\${safeSt}</div></button>\`;
+    }).join('');
     const recentRows = (data.recent || rows).slice(0, 30);
     const recentTotal = recentRows.length;
     const hasMore = recentTotal > 5;
@@ -10070,8 +10799,9 @@ function renderStatPanel(key, data) {
       </tr>\`;
     }).join('');
     const staleCount = items.filter(i => i.daysInQueue != null && i.daysInQueue > 30).length;
+    // Feature 1: clickable stale alert opens #item-list-modal with full list + actions.
     const staleWarning = staleCount > 0
-      ? \`<p style="font-size:12px;color:#cf222e;margin:0 0 12px"><strong>\${staleCount}</strong> items have been pending 30+ days — postings may be closed.</p>\`
+      ? \`<button type="button" class="stale-pipeline-alert-link" onclick="openStalePipelineModal(30)" aria-label="Open stale pipeline items list (\${staleCount} items >=30 days old)">⚠️ <strong>\${staleCount}</strong> items have been pending 30+ days — postings may be closed.</button>\`
       : '';
     return \`<div class="stat-panel-title">\${esc(title)} <span class="pill">\${data.total}</span> <span style="font-size:12px;color:#57606a;font-weight:400">· live</span></div>
       <div class="bucket-grid" style="margin-bottom:12px">\${tierCards}</div>
@@ -10311,6 +11041,251 @@ async function pollBatch() {
   }
 }
 
+// ── Batch status modal (2026-05-17) ──────────────────────────────
+// Clicking the sidebar batch widget opens this popout with real-time
+// detail. Polls /api/batch/status-detailed every 10s while open;
+// flashes any field that changed since the last poll; updates the
+// "updated Xs ago" stamp every second; cleans up on close.
+let _batchStatusPollInterval = null;
+let _batchStatusStampInterval = null;
+let _batchStatusLastFetchMs = 0;
+let _batchStatusPrev = null;
+
+function _bsFmtDuration(s) {
+  if (s === null || s === undefined || !isFinite(s)) return '—';
+  if (s < 60) return s + 's';
+  const m = Math.floor(s / 60); const rem = s % 60;
+  if (m < 60) return rem ? (m + 'm ' + rem + 's') : (m + 'm');
+  const h = Math.floor(m / 60); const mm = m % 60;
+  return mm ? (h + 'h ' + mm + 'm') : (h + 'h');
+}
+function _bsFmtTimestamp(ts) {
+  if (!ts) return '—';
+  try {
+    const d = new Date(ts);
+    if (isNaN(d.getTime())) return ts;
+    return d.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  } catch (_) { return ts; }
+}
+function _bsFmtCost(usd) {
+  if (usd === null || usd === undefined || !isFinite(usd)) return '—';
+  if (usd === 0) return '$0.00';
+  return '$' + usd.toFixed(2);
+}
+function _bsEsc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+function _bsUpdateStamp() {
+  const el = document.getElementById('batch-status-updated');
+  if (!el || !_batchStatusLastFetchMs) return;
+  const ageMs = Date.now() - _batchStatusLastFetchMs;
+  const ageS = Math.floor(ageMs / 1000);
+  let txt;
+  if (ageS < 2) txt = 'updated just now';
+  else if (ageS < 60) txt = 'updated ' + ageS + 's ago';
+  else txt = 'updated ' + Math.floor(ageS / 60) + 'm ago';
+  el.textContent = txt;
+  el.classList.toggle('live', ageS < 12);
+}
+function _bsDetectChanges(prev, next) {
+  // Returns a Set of fieldKeys that changed since the last poll. Used to
+  // briefly flash any value that updated (prefers-reduced-motion safe).
+  const changed = new Set();
+  if (!prev) return changed;
+  const ps = prev.current_summary || {}; const ns = next.current_summary || {};
+  ['completed','failed','running','pending','percent','total'].forEach(k => {
+    if (ps[k] !== ns[k]) changed.add('cs:' + k);
+  });
+  if (Math.round((prev.cost_today_usd || 0) * 100) !== Math.round((next.cost_today_usd || 0) * 100)) changed.add('cost_today');
+  if (Math.round((prev.cost_30d_usd || 0) * 100) !== Math.round((next.cost_30d_usd || 0) * 100)) changed.add('cost_30d');
+  const pq = prev.queue_depth || {}; const nq = next.queue_depth || {};
+  ['triage_advance','pipeline_pending','batch_input'].forEach(k => {
+    if (pq[k] !== nq[k]) changed.add('q:' + k);
+  });
+  if ((prev.recent_runs || []).length !== (next.recent_runs || []).length) changed.add('runs_count');
+  return changed;
+}
+
+function _bsRenderBody(data, changed) {
+  const body = document.getElementById('batch-status-body');
+  if (!body) return;
+  const cs = data.current_summary || {};
+  const total = cs.total || 0;
+  const pct = total > 0 ? Math.round((cs.percent || 0)) : 0;
+  const eta = cs.eta_seconds;
+  const etaTxt = (cs.running > 0 && eta) ? ('ETA ~' + _bsFmtDuration(eta)) : (cs.running > 0 ? 'running…' : (total > 0 ? 'complete' : 'no active run'));
+  const ch = (key) => (changed && changed.has(key)) ? 'batch-status-flash' : '';
+
+  // Section A: Current run summary card
+  const sectionA =
+    '<div class="batch-status-section">' +
+      '<h4 class="batch-status-section-title">Current run</h4>' +
+      '<div class="batch-status-current">' +
+        '<div class="batch-status-current-row">' +
+          '<span class="batch-status-current-pct ' + ch('cs:percent') + '">' + pct + '%</span>' +
+          '<div class="batch-status-progress"><div class="batch-status-progress-fill" style="width:' + pct + '%"></div></div>' +
+          '<span class="batch-status-current-eta">' + _bsEsc(etaTxt) + '</span>' +
+        '</div>' +
+        '<div class="batch-status-counts">' +
+          '<div class="batch-status-count-cell"><span class="batch-status-count-num ' + ch('cs:completed') + '">' + (cs.completed || 0) + '</span><span class="batch-status-count-lbl">Completed</span></div>' +
+          '<div class="batch-status-count-cell"><span class="batch-status-count-num ' + ch('cs:failed') + '">' + (cs.failed || 0) + '</span><span class="batch-status-count-lbl">Failed</span></div>' +
+          '<div class="batch-status-count-cell"><span class="batch-status-count-num ' + ch('cs:running') + '">' + (cs.running || 0) + '</span><span class="batch-status-count-lbl">Running</span></div>' +
+          '<div class="batch-status-count-cell"><span class="batch-status-count-num ' + ch('cs:pending') + '">' + (cs.pending || 0) + '</span><span class="batch-status-count-lbl">Pending</span></div>' +
+        '</div>' +
+        '<div class="batch-status-meta">' +
+          '<span title="Model used by batch-runner-batches.mjs">Model: <strong>' + _bsEsc(cs.model || '—') + '</strong></span>' +
+          '<span title="Temperature setting on batch evals (session notes 2026-05-08)">Temp: <strong>' + _bsEsc(cs.temperature) + '</strong></span>' +
+          '<span title="Total items in batch-input.tsv">Total: <strong>' + total + '</strong></span>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+
+  // Section B: Recent runs table (universal table baseline §8a + §8c)
+  const runs = data.recent_runs || [];
+  let runsBody;
+  if (!runs.length) {
+    runsBody = '<div class="batch-status-runs-empty">No recent runs in batch-state.tsv.</div>';
+  } else {
+    const rows = runs.map(r => {
+      const started = _bsFmtTimestamp(r.started_at);
+      const dur = _bsFmtDuration(r.duration_s);
+      const cost = _bsFmtCost(r.cost_usd);
+      const items = (r.completed || 0) + '/' + (r.items_count || 0);
+      const status = r.status || 'completed';
+      const statusLbl = status === 'partial' ? (r.failed + ' failed') : status;
+      const fullTitle = 'started ' + _bsEsc(r.started_at || '') + ' · ' + _bsEsc(items) + ' items · ' + _bsEsc(dur) + ' · ' + _bsEsc(cost) + (r.avg_score ? ' · avg score ' + r.avg_score : '');
+      return '<tr ondblclick="this.classList.toggle(\\'expanded\\')" title="' + fullTitle + '">' +
+        '<td title="' + _bsEsc(r.started_at || '') + '">' + _bsEsc(started) + '</td>' +
+        '<td title="' + _bsEsc(dur) + '">' + _bsEsc(dur) + '</td>' +
+        '<td title="' + _bsEsc(items) + '">' + _bsEsc(items) + '</td>' +
+        '<td title="' + _bsEsc(r.model || '') + '">' + _bsEsc((r.model || '').replace(/^claude-/, '')) + '</td>' +
+        '<td title="' + _bsEsc(cost) + '">' + _bsEsc(cost) + '</td>' +
+        '<td><span class="run-status ' + _bsEsc(status) + '" title="' + _bsEsc(statusLbl) + '">' + _bsEsc(statusLbl) + '</span></td>' +
+        '</tr>';
+    }).join('');
+    runsBody =
+      '<div class="batch-status-runs-wrap table-scroll">' +
+        '<table class="batch-status-runs" id="batch-status-runs-table">' +
+          '<thead><tr><th>Started</th><th>Duration</th><th>Items</th><th>Model</th><th>Cost</th><th>Status</th></tr></thead>' +
+          '<tbody id="batch-status-runs-tbody">' + rows + '</tbody>' +
+        '</table>' +
+      '</div>';
+  }
+  const sectionB =
+    '<div class="batch-status-section ' + ((changed && changed.has('runs_count')) ? 'batch-status-flash' : '') + '">' +
+      '<h4 class="batch-status-section-title">Recent runs (last ' + runs.length + ', 15-min gap heuristic) — dbl-click row to expand</h4>' +
+      runsBody +
+    '</div>';
+
+  // Section C: Queue depth + aggregate cost row
+  const q = data.queue_depth || {};
+  const sectionC =
+    '<div class="batch-status-section">' +
+      '<h4 class="batch-status-section-title">Queue depth</h4>' +
+      '<div class="batch-status-queue">' +
+        '<div class="batch-status-queue-cell clickable" role="button" tabindex="0" onclick="openPipelineModal(\\'batch\\')" onkeydown="if(event.key===\\'Enter\\'||event.key===\\' \\'){event.preventDefault();openPipelineModal(\\'batch\\');}" title="Items queued in batch/triage-advance.tsv — click to open Run Batch confirmation">' +
+          '<div class="batch-status-queue-num ' + ch('q:triage_advance') + '">' + (q.triage_advance || 0) + '</div>' +
+          '<div class="batch-status-queue-lbl">Triage advance</div>' +
+        '</div>' +
+        '<div class="batch-status-queue-cell" title="Items pending in data/pipeline.md (countPipelinePending)">' +
+          '<div class="batch-status-queue-num ' + ch('q:pipeline_pending') + '">' + (q.pipeline_pending || 0) + '</div>' +
+          '<div class="batch-status-queue-lbl">Pipeline pending</div>' +
+        '</div>' +
+        '<div class="batch-status-queue-cell" title="Items in batch/batch-input.tsv (current batch input file)">' +
+          '<div class="batch-status-queue-num ' + ch('q:batch_input') + '">' + (q.batch_input || 0) + '</div>' +
+          '<div class="batch-status-queue-lbl">Batch input</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="batch-status-cost-row">' +
+        '<span title="Sum of data/cost-log.tsv rows for today">Cost today: <strong class="' + ch('cost_today') + '">' + _bsFmtCost(data.cost_today_usd) + '</strong></span>' +
+        '<span title="Rolling 30-day spend from data/cost-log.tsv">Cost 30d: <strong class="' + ch('cost_30d') + '">' + _bsFmtCost(data.cost_30d_usd) + '</strong></span>' +
+      '</div>' +
+    '</div>';
+
+  // Section D: Recent failures (collapsible)
+  const fails = data.most_recent_failures || [];
+  let sectionD = '';
+  if (fails.length) {
+    const items = fails.map(f =>
+      '<div class="batch-status-failure-item" title="' + _bsEsc(f.error) + '"><strong>' + _bsEsc(f.ts || '?') + '</strong>' + _bsEsc(f.error) + '</div>'
+    ).join('');
+    sectionD =
+      '<div class="batch-status-section">' +
+        '<h4 class="batch-status-section-title">Recent failures</h4>' +
+        '<details class="batch-status-failures">' +
+          '<summary>Last ' + fails.length + ' batch-related error(s) from data/errors.log — click to expand</summary>' +
+          items +
+        '</details>' +
+      '</div>';
+  }
+
+  body.innerHTML = sectionA + sectionB + sectionC + sectionD;
+  // Invariant #8 — apply the universal table baseline (dbl-click expand,
+  // [title] tooltips, column-resize handles) to every freshly rendered
+  // table inside the batch-status modal body.
+  if (typeof window.applyUniversalTableBaseline === 'function') {
+    try { window.applyUniversalTableBaseline({ root: body }); } catch (_) {}
+  }
+}
+
+async function _bsFetchAndRender() {
+  let data;
+  try {
+    if (typeof apiFetch === 'function') {
+      data = await apiFetch('/api/batch/status-detailed');
+    } else {
+      const r = await fetch('/api/batch/status-detailed');
+      data = await r.json();
+    }
+  } catch (e) {
+    const body = document.getElementById('batch-status-body');
+    if (body) body.innerHTML = '<div style="text-align:center; padding: 30px 16px; color: var(--red-fg, #cf222e); font-size: 13px;">Failed to load batch status — is dashboard-server.mjs running on port 7777?</div>';
+    return;
+  }
+  if (!data) {
+    const body = document.getElementById('batch-status-body');
+    if (body) body.innerHTML = '<div style="text-align:center; padding: 30px 16px; color: var(--text-3); font-size: 13px;">No batch data available.</div>';
+    return;
+  }
+  const changed = _bsDetectChanges(_batchStatusPrev, data);
+  _bsRenderBody(data, changed);
+  _batchStatusPrev = data;
+  _batchStatusLastFetchMs = Date.now();
+  _bsUpdateStamp();
+}
+
+function openBatchStatusModal() {
+  const bd = document.getElementById('batch-status-backdrop');
+  const md = document.getElementById('batch-status-modal');
+  if (!bd || !md) return;
+  bd.classList.add('visible');
+  md.classList.add('visible');
+  bd.setAttribute('aria-hidden', 'false');
+  md.setAttribute('aria-hidden', 'false');
+  _batchStatusPrev = null; // skip flash on first paint
+  _bsFetchAndRender();
+  if (_batchStatusPollInterval) clearInterval(_batchStatusPollInterval);
+  _batchStatusPollInterval = setInterval(_bsFetchAndRender, 10000);
+  if (_batchStatusStampInterval) clearInterval(_batchStatusStampInterval);
+  _batchStatusStampInterval = setInterval(_bsUpdateStamp, 1000);
+  const closeBtn = md.querySelector('.batch-status-close');
+  if (closeBtn && typeof closeBtn.focus === 'function') {
+    try { closeBtn.focus({ preventScroll: true }); } catch (_) { closeBtn.focus(); }
+  }
+}
+function closeBatchStatusModal() {
+  const bd = document.getElementById('batch-status-backdrop');
+  const md = document.getElementById('batch-status-modal');
+  if (bd) { bd.classList.remove('visible'); bd.setAttribute('aria-hidden', 'true'); }
+  if (md) { md.classList.remove('visible'); md.setAttribute('aria-hidden', 'true'); }
+  if (_batchStatusPollInterval) { clearInterval(_batchStatusPollInterval); _batchStatusPollInterval = null; }
+  if (_batchStatusStampInterval) { clearInterval(_batchStatusStampInterval); _batchStatusStampInterval = null; }
+}
+window.openBatchStatusModal  = openBatchStatusModal;
+window.closeBatchStatusModal = closeBatchStatusModal;
+
 // ── Verify claims modal ─────────────────────────────────────────
 async function openVerify(slug) {
   const data = await apiFetch('/api/verify/' + slug);
@@ -10448,6 +11423,11 @@ async function openPipelineModal(action) {
         (pCmp.companies || []).filter(c => !c.excluded).map(c => c.slug)
       );
       body.innerHTML = _renderProcessAllPhaseA(pAgg, pCmp);
+      // Invariant #8 — universal table baseline on the freshly-rendered
+      // per-company table (col-resize, dbl-click expand, [title] tooltips).
+      if (typeof window.applyUniversalTableBaseline === 'function') {
+        try { window.applyUniversalTableBaseline({ root: body }); } catch (_) {}
+      }
       // In Phase A we just need the "Continue" button to be active when
       // at least one row is checked. No cap check yet — that happens in Phase B
       // against the SCOPED cost from the selected rows.
@@ -10721,7 +11701,7 @@ function _renderPerCompanyPreview(pCmp) {
     +     '<button type="button" class="pcp-bulk-toggle" onclick="_pcpBulkToggle(true)">Select all</button>'
     +     '<button type="button" class="pcp-bulk-toggle" onclick="_pcpBulkToggle(false)">Select none</button>'
     +   '</div>'
-    +   '<div class="pcp-table-wrap" role="region" aria-label="Per-company process plan">'
+    +   '<div class="pcp-table-wrap table-scroll" role="region" aria-label="Per-company process plan">'
     +     '<table class="pcp-table">'
     +       '<thead><tr>'
     +         '<th style="width:32px"><span class="sr-only">Include</span></th>'
@@ -10919,6 +11899,9 @@ function _refreshProcessAllPhaseA() {
   const body = document.getElementById('pipeline-modal-body');
   if (!body) return;
   body.innerHTML = _renderProcessAllPhaseA(_pipelinePreview, _pipelinePerCompany);
+  if (typeof window.applyUniversalTableBaseline === 'function') {
+    try { window.applyUniversalTableBaseline({ root: body }); } catch (_) {}
+  }
   _pcpUpdateScopedCost();
 }
 
@@ -11026,7 +12009,12 @@ function _returnToPhaseA() {
   const subtitle = document.getElementById('pipeline-modal-subtitle');
   const confirmBtn = document.getElementById('pipeline-modal-confirm');
   if (subtitle) subtitle.textContent = 'Step 1 of 2 — review per-company plan. Uncheck rows to skip; click the icons to fast-track, exclude, or defer.';
-  if (body) body.innerHTML = _renderProcessAllPhaseA(_pipelinePreview, _pipelinePerCompany);
+  if (body) {
+    body.innerHTML = _renderProcessAllPhaseA(_pipelinePreview, _pipelinePerCompany);
+    if (typeof window.applyUniversalTableBaseline === 'function') {
+      try { window.applyUniversalTableBaseline({ root: body }); } catch (_) {}
+    }
+  }
   if (confirmBtn) {
     confirmBtn.textContent = 'Continue →';
     confirmBtn.className = 'pipeline-modal-btn pipeline-modal-btn-primary';
@@ -11173,6 +12161,497 @@ document.addEventListener('DOMContentLoaded', () => {
   _runwayRefreshTimer = setInterval(refreshRunwayWidget, 5 * 60 * 1000);
 });
 document.addEventListener('careerops:outreach-changed', refreshRunwayWidget);
+
+// ── Runway detail modal (2026-05-17) ─────────────────────────────
+// Opens from the sidebar runway-label click. Polls /api/runway-detail
+// every 30s while open. Sections:
+//   1. Health summary (runway weeks · verdict · reason)
+//   2. Active conversations table (tier, contact, days_since, next_action)
+//   3. Recent touches (last 7 days)
+//   4. Response rate trend (this 7d vs last 30d, with delta arrow)
+//   5. Who to contact next (top 5, ranked by tier × silence × prior-engagement)
+// Tables in this modal automatically pick up invariant #8 via the
+// applyUniversalTableBaseline() pass run after each render.
+let _runwayDetailPollInterval = null;
+let _runwayDetailStampInterval = null;
+let _runwayDetailLastFetchMs = 0;
+
+function _rdEsc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+function _rdFmtChannel(ch) {
+  if (!ch) return '—';
+  if (ch === 'linkedin_dm') return 'LinkedIn DM';
+  if (ch === 'x_dm')        return 'X DM';
+  if (ch === 'x_reply')     return 'X reply';
+  if (ch === 'in_person')   return 'In person';
+  if (ch === 'internal_snooze') return 'Snooze';
+  return ch.charAt(0).toUpperCase() + ch.slice(1);
+}
+function _rdFmtRelTime(iso) {
+  if (!iso) return '—';
+  const t = Date.parse(iso);
+  if (!isFinite(t)) return '—';
+  const ms = Date.now() - t;
+  const s = Math.max(0, Math.round(ms / 1000));
+  if (s < 60)    return s + 's ago';
+  if (s < 3600)  return Math.round(s / 60) + 'm ago';
+  if (s < 86400) return Math.round(s / 3600) + 'h ago';
+  return Math.round(s / 86400) + 'd ago';
+}
+function _rdUpdateStamp() {
+  const el = document.getElementById('runway-detail-updated');
+  if (!el || !_runwayDetailLastFetchMs) return;
+  el.classList.add('live');
+  el.textContent = 'updated ' + _rdFmtRelTime(new Date(_runwayDetailLastFetchMs).toISOString());
+}
+
+function _rdRenderBody(d) {
+  const body = document.getElementById('runway-detail-body');
+  if (!body) return;
+  if (!d || !d.ok) {
+    const msg = (d && d.error) || 'Unknown error';
+    body.innerHTML = '<div style="padding: 24px; color: var(--red-fg); font-size: 13px;">Could not load runway detail: ' + _rdEsc(msg) + '</div>';
+    return;
+  }
+  const health = d.health || 'unknown';
+  const healthLbl = health.charAt(0).toUpperCase() + health.slice(1);
+  // Section 1 — Health summary (Pillar 1 scannability)
+  const summary =
+    '<div class="rd-summary">' +
+      '<div class="rd-summary-cell">' +
+        '<div class="rd-summary-label">Runway</div>' +
+        '<div class="rd-summary-val">' + _rdEsc(d.runway_weeks ?? '—') + ' weeks</div>' +
+      '</div>' +
+      '<div class="rd-summary-cell">' +
+        '<div class="rd-summary-label">Health</div>' +
+        '<div class="rd-summary-val ' + _rdEsc(health) + '">' + _rdEsc(healthLbl) + '</div>' +
+      '</div>' +
+      '<div class="rd-summary-cell">' +
+        '<div class="rd-summary-label">Active conversations</div>' +
+        '<div class="rd-summary-val">' + _rdEsc((d.active_conversations || []).length) + '</div>' +
+      '</div>' +
+    '</div>' +
+    (d.health_reason
+      ? '<div class="rd-rationale" style="margin-bottom:14px">' + _rdEsc(d.health_reason) + '</div>'
+      : '');
+
+  // Section 2 — Active conversations table (Pillar 3 strengths+limitations)
+  const active = d.active_conversations || [];
+  const activeTable = active.length
+    ? '<div class="rd-table-wrap table-scroll">' +
+        '<table class="rd-table" id="rd-active-table">' +
+          '<thead><tr>' +
+            '<th>Tier</th><th>Contact</th><th>Company</th><th>Role</th><th>Channel</th><th>Last touch</th><th>Status</th>' +
+          '</tr></thead>' +
+          '<tbody>' +
+            active.map(c => {
+              const tierCls = 'rd-tier-' + _rdEsc(c.tier || 'B');
+              const days = (c.days_since != null) ? (c.days_since + 'd ago') : '—';
+              return '<tr title="' + _rdEsc((c.name || '') + ' · ' + (c.company || '') + ' · ' + (c.role_title || '')) + '">' +
+                '<td><span class="' + tierCls + '">' + _rdEsc(c.tier || '—') + '</span></td>' +
+                '<td>' + _rdEsc(c.name || '—') + '</td>' +
+                '<td>' + _rdEsc(c.company || '—') + '</td>' +
+                '<td title="' + _rdEsc(c.role_title || '') + '">' + _rdEsc(c.role_title || '—') + '</td>' +
+                '<td>' + _rdEsc(_rdFmtChannel(c.channel)) + '</td>' +
+                '<td>' + _rdEsc(days) + '</td>' +
+                '<td>' + _rdEsc(c.status || '—') + '</td>' +
+              '</tr>';
+            }).join('') +
+          '</tbody>' +
+        '</table>' +
+      '</div>'
+    : '<div style="padding: 14px; color: var(--text-3); font-size: 12.5px; text-align: center;">No active conversations yet. Log your first outreach to start building density.</div>';
+
+  // Section 3 — Recent touches (last 7d)
+  const touches = d.recent_touches_7d || [];
+  const touchesTable = touches.length
+    ? '<div class="rd-table-wrap table-scroll">' +
+        '<table class="rd-table" id="rd-touches-table">' +
+          '<thead><tr>' +
+            '<th>When</th><th>Direction</th><th>Channel</th><th>Contact</th><th>Company</th><th>Summary</th>' +
+          '</tr></thead>' +
+          '<tbody>' +
+            touches.slice(0, 50).map(t => {
+              const dir = t.outbound ? '↗ out' : '↙ in';
+              const dirCls = t.outbound ? 'rd-direction-out' : 'rd-direction-in';
+              return '<tr title="' + _rdEsc(t.summary || '') + '">' +
+                '<td>' + _rdEsc(_rdFmtRelTime(t.ts_iso)) + '</td>' +
+                '<td class="' + dirCls + '">' + _rdEsc(dir) + '</td>' +
+                '<td>' + _rdEsc(_rdFmtChannel(t.channel)) + '</td>' +
+                '<td>' + _rdEsc(t.contact_name || '—') + '</td>' +
+                '<td>' + _rdEsc(t.company || '—') + '</td>' +
+                '<td title="' + _rdEsc(t.summary || '') + '" data-fulltext="' + _rdEsc(t.summary || '') + '">' + _rdEsc((t.summary || '').slice(0, 90)) + ((t.summary || '').length > 90 ? '…' : '') + '</td>' +
+              '</tr>';
+            }).join('') +
+          '</tbody>' +
+        '</table>' +
+      '</div>'
+    : '<div style="padding: 14px; color: var(--text-3); font-size: 12.5px; text-align: center;">No touches logged in the last 7 days.</div>';
+
+  // Section 4 — Response rate trend (Pillar 3 strengths+limitations)
+  const trend = d.response_rate_trend || {};
+  const t7  = trend.this_7d  || {};
+  const t30 = trend.last_30d || {};
+  const deltaIcon = trend.delta === 'up'   ? '<span class="rd-trend-up">↑</span>'
+                  : trend.delta === 'down' ? '<span class="rd-trend-down">↓</span>'
+                                           : '<span class="rd-trend-flat">—</span>';
+  const trendBlock =
+    '<div class="rd-summary" style="grid-template-columns: 1fr 1fr 1fr; gap: 10px;">' +
+      '<div class="rd-summary-cell">' +
+        '<div class="rd-summary-label">This week</div>' +
+        '<div class="rd-summary-val">' + _rdEsc(Math.round((t7.rate || 0) * 100)) + '%</div>' +
+        '<div class="rd-rationale">' + _rdEsc(t7.responses || 0) + ' replies / ' + _rdEsc(t7.outbound || 0) + ' sent</div>' +
+      '</div>' +
+      '<div class="rd-summary-cell">' +
+        '<div class="rd-summary-label">Last 30d</div>' +
+        '<div class="rd-summary-val">' + _rdEsc(Math.round((t30.rate || 0) * 100)) + '%</div>' +
+        '<div class="rd-rationale">' + _rdEsc(t30.responses || 0) + ' replies / ' + _rdEsc(t30.outbound || 0) + ' sent</div>' +
+      '</div>' +
+      '<div class="rd-summary-cell">' +
+        '<div class="rd-summary-label">Trend</div>' +
+        '<div class="rd-summary-val">' + deltaIcon + '</div>' +
+        '<div class="rd-rationale">' + _rdEsc(trend.delta || 'flat') + '</div>' +
+      '</div>' +
+    '</div>';
+
+  // Section 5 — Who to contact next (Pillar 2 action proximity)
+  const next = d.who_to_contact_next || [];
+  const nextTable = next.length
+    ? '<div class="rd-table-wrap table-scroll">' +
+        '<table class="rd-table" id="rd-next-table">' +
+          '<thead><tr>' +
+            '<th>Rank</th><th>Tier</th><th>Contact</th><th>Company</th><th>Days silent</th><th>Why now</th><th>Channel</th>' +
+          '</tr></thead>' +
+          '<tbody>' +
+            next.map((n, i) => {
+              const tierCls = 'rd-tier-' + _rdEsc(n.tier || 'B');
+              return '<tr title="' + _rdEsc(n.rationale || '') + '">' +
+                '<td>' + (i + 1) + '</td>' +
+                '<td><span class="' + tierCls + '">' + _rdEsc(n.tier || '—') + '</span></td>' +
+                '<td>' + _rdEsc(n.name || '—') + '</td>' +
+                '<td>' + _rdEsc(n.company || '—') + '</td>' +
+                '<td>' + _rdEsc((n.days_since != null) ? (n.days_since + 'd') : '—') + '</td>' +
+                '<td title="' + _rdEsc(n.rationale || '') + '" data-fulltext="' + _rdEsc(n.rationale || '') + '">' + _rdEsc(n.rationale || '—') + '</td>' +
+                '<td>' + _rdEsc(_rdFmtChannel(n.suggested_channel)) + '</td>' +
+              '</tr>';
+            }).join('') +
+          '</tbody>' +
+        '</table>' +
+      '</div>'
+    : '<div style="padding: 14px; color: var(--text-3); font-size: 12.5px; text-align: center;">No outreach candidates ranked. Add contacts via the Outreach Pulse panel.</div>';
+
+  body.innerHTML =
+    summary +
+    '<div class="rd-section">' +
+      '<h4 class="rd-section-title">Active conversations (' + _rdEsc(active.length) + ')</h4>' + activeTable +
+    '</div>' +
+    '<div class="rd-section">' +
+      '<h4 class="rd-section-title">Touches — last 7 days (' + _rdEsc(touches.length) + ')</h4>' + touchesTable +
+    '</div>' +
+    '<div class="rd-section">' +
+      '<h4 class="rd-section-title">Response rate trend</h4>' + trendBlock +
+    '</div>' +
+    '<div class="rd-section">' +
+      '<h4 class="rd-section-title">Who to contact next</h4>' + nextTable +
+    '</div>';
+
+  // Invariant #8 — apply universal table baseline to every freshly-rendered table
+  if (typeof window.applyUniversalTableBaseline === 'function') {
+    try { window.applyUniversalTableBaseline({ root: body }); } catch (_) {}
+  }
+}
+
+async function _rdFetchAndRender() {
+  let data;
+  try {
+    const r = await fetch('/api/runway-detail', { cache: 'no-store' });
+    data = await r.json();
+  } catch (e) {
+    const body = document.getElementById('runway-detail-body');
+    if (body) body.innerHTML = '<div style="text-align:center; padding: 30px 16px; color: var(--red-fg, #cf222e); font-size: 13px;">Failed to load runway detail — is dashboard-server.mjs running?</div>';
+    return;
+  }
+  _rdRenderBody(data);
+  _runwayDetailLastFetchMs = Date.now();
+  _rdUpdateStamp();
+}
+
+function openRunwayDetailModal() {
+  const bd = document.getElementById('runway-detail-backdrop');
+  const md = document.getElementById('runway-detail-modal');
+  if (!bd || !md) return;
+  bd.classList.add('visible');
+  md.classList.add('visible');
+  bd.setAttribute('aria-hidden', 'false');
+  md.setAttribute('aria-hidden', 'false');
+  _rdFetchAndRender();
+  if (_runwayDetailPollInterval) clearInterval(_runwayDetailPollInterval);
+  _runwayDetailPollInterval = setInterval(_rdFetchAndRender, 30000);
+  if (_runwayDetailStampInterval) clearInterval(_runwayDetailStampInterval);
+  _runwayDetailStampInterval = setInterval(_rdUpdateStamp, 1000);
+  const closeBtn = md.querySelector('.runway-detail-close');
+  if (closeBtn && typeof closeBtn.focus === 'function') {
+    try { closeBtn.focus({ preventScroll: true }); } catch (_) { closeBtn.focus(); }
+  }
+}
+function closeRunwayDetailModal() {
+  const bd = document.getElementById('runway-detail-backdrop');
+  const md = document.getElementById('runway-detail-modal');
+  if (bd) { bd.classList.remove('visible'); bd.setAttribute('aria-hidden', 'true'); }
+  if (md) { md.classList.remove('visible'); md.setAttribute('aria-hidden', 'true'); }
+  if (_runwayDetailPollInterval) { clearInterval(_runwayDetailPollInterval); _runwayDetailPollInterval = null; }
+  if (_runwayDetailStampInterval) { clearInterval(_runwayDetailStampInterval); _runwayDetailStampInterval = null; }
+}
+window.openRunwayDetailModal  = openRunwayDetailModal;
+window.closeRunwayDetailModal = closeRunwayDetailModal;
+
+// Esc closes runway detail (capture so it beats global Esc handlers)
+document.addEventListener('keydown', function (e) {
+  if (e.key !== 'Escape') return;
+  const md = document.getElementById('runway-detail-modal');
+  if (md && md.classList.contains('visible')) {
+    e.stopPropagation();
+    closeRunwayDetailModal();
+  }
+}, true);
+
+// ── Scan activity modal (2026-05-17) ─────────────────────────────
+// Opens from the live-ticker pill click. Reads /api/scan-activity.
+let _scanActivityLastFetchMs = 0;
+function _saEsc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+function _saRender(d) {
+  const body = document.getElementById('scan-activity-body');
+  if (!body) return;
+  if (!d || !d.ok) {
+    body.innerHTML = '<div style="padding:24px;color:var(--red-fg);font-size:13px">Could not load scan activity: ' + _saEsc((d && d.error) || 'unknown') + '</div>';
+    return;
+  }
+  const events = d.events || [];
+  if (!events.length) {
+    body.innerHTML = '<div style="padding:32px;text-align:center;color:var(--text-3);font-size:13px">No scan activity yet. Run <code>node scan.mjs</code> to populate.</div>';
+    return;
+  }
+  const rows = events.map(e => {
+    const sample = (e.sample_companies || []).slice(0, 3).join(', ');
+    const sampleFull = (e.sample_companies || []).join(', ');
+    return '<tr title="' + _saEsc(e.portal + ' · ' + e.date + ' · ' + sampleFull) + '">' +
+      '<td>' + _saEsc(e.date || '—') + '</td>' +
+      '<td>' + _saEsc(e.portal || '—') + '</td>' +
+      '<td style="text-align:right">' + _saEsc(e.jobs_found || 0) + '</td>' +
+      '<td style="text-align:right">' + _saEsc(e.jobs_new || 0) + '</td>' +
+      '<td title="' + _saEsc(sampleFull) + '" data-fulltext="' + _saEsc(sampleFull) + '">' + _saEsc(sample) + '</td>' +
+    '</tr>';
+  }).join('');
+  body.innerHTML =
+    '<div class="sa-section">' +
+      '<h4 class="sa-section-title">Recent scan events (' + _saEsc(events.length) + ', grouped by portal · day)</h4>' +
+      '<div class="sa-table-wrap table-scroll">' +
+        '<table class="sa-table" id="sa-events-table">' +
+          '<thead><tr><th>Date</th><th>Portal</th><th>Jobs found</th><th>Jobs new</th><th>Sample companies</th></tr></thead>' +
+          '<tbody>' + rows + '</tbody>' +
+        '</table>' +
+      '</div>' +
+    '</div>';
+  if (typeof window.applyUniversalTableBaseline === 'function') {
+    try { window.applyUniversalTableBaseline({ root: body }); } catch (_) {}
+  }
+}
+async function _saFetchAndRender() {
+  let data;
+  try {
+    const r = await fetch('/api/scan-activity?limit=30', { cache: 'no-store' });
+    data = await r.json();
+  } catch (_) {
+    const body = document.getElementById('scan-activity-body');
+    if (body) body.innerHTML = '<div style="padding:24px;color:var(--red-fg);font-size:13px;text-align:center">Failed to load scan activity — is dashboard-server.mjs running?</div>';
+    return;
+  }
+  _saRender(data);
+  _scanActivityLastFetchMs = Date.now();
+  const stamp = document.getElementById('scan-activity-updated');
+  if (stamp) { stamp.classList.add('live'); stamp.textContent = 'updated just now'; }
+}
+function openScanActivityModal() {
+  const bd = document.getElementById('scan-activity-backdrop');
+  const md = document.getElementById('scan-activity-modal');
+  if (!bd || !md) return;
+  bd.classList.add('visible');
+  md.classList.add('visible');
+  bd.setAttribute('aria-hidden', 'false');
+  md.setAttribute('aria-hidden', 'false');
+  _saFetchAndRender();
+  const closeBtn = md.querySelector('.scan-activity-close');
+  if (closeBtn && typeof closeBtn.focus === 'function') {
+    try { closeBtn.focus({ preventScroll: true }); } catch (_) { closeBtn.focus(); }
+  }
+}
+function closeScanActivityModal() {
+  const bd = document.getElementById('scan-activity-backdrop');
+  const md = document.getElementById('scan-activity-modal');
+  if (bd) { bd.classList.remove('visible'); bd.setAttribute('aria-hidden', 'true'); }
+  if (md) { md.classList.remove('visible'); md.setAttribute('aria-hidden', 'true'); }
+}
+window.openScanActivityModal  = openScanActivityModal;
+window.closeScanActivityModal = closeScanActivityModal;
+document.addEventListener('keydown', function (e) {
+  if (e.key !== 'Escape') return;
+  const md = document.getElementById('scan-activity-modal');
+  if (md && md.classList.contains('visible')) {
+    e.stopPropagation();
+    closeScanActivityModal();
+  }
+}, true);
+
+// ── System health modal (2026-05-17) ─────────────────────────────
+// Opens from the mc-health pill click. Reads /api/system-health.
+// Replaces the prior in-place pill-popover with a full modal showing
+// launchd jobs · cloudflared tunnel · server uptime · recent errors.
+let _systemHealthLastFetchMs = 0;
+function _shEsc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+function _shFmtUptime(seconds) {
+  if (!seconds) return '—';
+  const d = Math.floor(seconds / 86400);
+  const h = Math.floor((seconds % 86400) / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  if (d > 0) return d + 'd ' + h + 'h';
+  if (h > 0) return h + 'h ' + m + 'm';
+  if (m > 0) return m + 'm';
+  return seconds + 's';
+}
+function _shRender(d) {
+  const body = document.getElementById('system-health-body');
+  if (!body) return;
+  if (!d || !d.ok) {
+    body.innerHTML = '<div style="padding:24px;color:var(--red-fg);font-size:13px">Could not load system health: ' + _shEsc((d && d.error) || 'unknown') + '</div>';
+    return;
+  }
+  // Jobs section — launchd table
+  const jobs = d.jobs || [];
+  const jobRows = jobs.length
+    ? jobs.map(j => {
+        const running = j.pid != null;
+        const dot = running ? 'green' : (j.status && j.status !== 0 ? 'red' : 'grey');
+        const stateLbl = running ? 'running' : (j.status && j.status !== 0 ? 'failed (exit ' + j.status + ')' : 'idle');
+        return '<tr title="' + _shEsc(j.label + ' · ' + stateLbl) + '">' +
+          '<td><span class="sh-status-dot ' + dot + '"></span>' + _shEsc(stateLbl) + '</td>' +
+          '<td title="' + _shEsc(j.label) + '">' + _shEsc(j.label) + '</td>' +
+          '<td style="text-align:right">' + _shEsc(j.pid != null ? j.pid : '—') + '</td>' +
+          '<td style="text-align:right">' + _shEsc(j.status != null ? j.status : '—') + '</td>' +
+        '</tr>';
+      }).join('')
+    : '<tr><td colspan="4" style="padding:14px;color:var(--text-3);text-align:center">No career-ops launchd agents found. Run <code>launchctl load ~/Library/LaunchAgents/com.careerops.*</code> to register.</td></tr>';
+  const jobsTable =
+    '<div class="sh-table-wrap table-scroll">' +
+      '<table class="sh-table" id="sh-jobs-table">' +
+        '<thead><tr><th>State</th><th>Label</th><th>PID</th><th>Exit</th></tr></thead>' +
+        '<tbody>' + jobRows + '</tbody>' +
+      '</table>' +
+    '</div>';
+
+  // Tunnel section
+  const tunnel = d.tunnel || {};
+  const tunnelDot = tunnel.running ? 'green' : 'grey';
+  const tunnelStatus = tunnel.running ? 'Running' : 'Not running';
+  const tunnelInfo = tunnel.info ? '<div style="font-size:11.5px;color:var(--text-3);margin-top:4px;font-family:monospace">' + _shEsc(tunnel.info) + '</div>' : '';
+  const tunnelBlock =
+    '<div><span class="sh-status-dot ' + tunnelDot + '"></span>' + _shEsc(tunnelStatus) + '</div>' + tunnelInfo;
+
+  // Server section
+  const server = d.server || {};
+  const serverBlock =
+    '<div>Uptime: <strong>' + _shEsc(_shFmtUptime(server.uptime_seconds)) + '</strong></div>' +
+    '<div style="font-size:11.5px;color:var(--text-3);margin-top:4px">' +
+      'PID: ' + _shEsc(server.pid || '—') + ' · ' +
+      'Node ' + _shEsc(server.node_version || '—') + ' · ' +
+      'RSS: ' + _shEsc(server.memory_mb || 0) + ' MB' +
+    '</div>';
+
+  // Errors section
+  const errors = d.errors || [];
+  const errorsBlock = errors.length
+    ? '<ul style="font-family:monospace;font-size:11.5px;list-style:none;padding:0;margin:0;max-height:160px;overflow-y:auto">' +
+        errors.map(e => '<li style="padding:3px 0;border-bottom:1px solid var(--border);color:var(--text-2)">' + _shEsc(e) + '</li>').join('') +
+      '</ul>'
+    : '<div style="color:var(--text-3);font-size:12.5px">No errors logged.</div>';
+
+  body.innerHTML =
+    '<details class="sh-block" open>' +
+      '<summary><span class="sh-status-dot ' + (jobs.some(j => j.pid) ? 'green' : 'grey') + '"></span>Launchd jobs (' + jobs.length + ')</summary>' +
+      '<div class="sh-block-body">' + jobsTable + '</div>' +
+    '</details>' +
+    '<details class="sh-block" open>' +
+      '<summary><span class="sh-status-dot ' + tunnelDot + '"></span>Cloudflared tunnel</summary>' +
+      '<div class="sh-block-body">' + tunnelBlock + '</div>' +
+    '</details>' +
+    '<details class="sh-block" open>' +
+      '<summary><span class="sh-status-dot green"></span>Dashboard server</summary>' +
+      '<div class="sh-block-body">' + serverBlock + '</div>' +
+    '</details>' +
+    '<details class="sh-block"' + (errors.length ? '' : ' open') + '>' +
+      '<summary><span class="sh-status-dot ' + (errors.length ? 'yellow' : 'green') + '"></span>Recent errors (' + errors.length + ')</summary>' +
+      '<div class="sh-block-body">' + errorsBlock + '</div>' +
+    '</details>';
+
+  if (typeof window.applyUniversalTableBaseline === 'function') {
+    try { window.applyUniversalTableBaseline({ root: body }); } catch (_) {}
+  }
+}
+async function _shFetchAndRender() {
+  let data;
+  try {
+    const r = await fetch('/api/system-health', { cache: 'no-store' });
+    data = await r.json();
+  } catch (_) {
+    const body = document.getElementById('system-health-body');
+    if (body) body.innerHTML = '<div style="padding:24px;color:var(--red-fg);font-size:13px;text-align:center">Failed to load system health — is dashboard-server.mjs running?</div>';
+    return;
+  }
+  _shRender(data);
+  _systemHealthLastFetchMs = Date.now();
+  const stamp = document.getElementById('system-health-updated');
+  if (stamp) { stamp.classList.add('live'); stamp.textContent = 'updated just now'; }
+}
+function openSystemHealthModal() {
+  const bd = document.getElementById('system-health-backdrop');
+  const md = document.getElementById('system-health-modal');
+  if (!bd || !md) return;
+  bd.classList.add('visible');
+  md.classList.add('visible');
+  bd.setAttribute('aria-hidden', 'false');
+  md.setAttribute('aria-hidden', 'false');
+  _shFetchAndRender();
+  const closeBtn = md.querySelector('.system-health-close');
+  if (closeBtn && typeof closeBtn.focus === 'function') {
+    try { closeBtn.focus({ preventScroll: true }); } catch (_) { closeBtn.focus(); }
+  }
+}
+function closeSystemHealthModal() {
+  const bd = document.getElementById('system-health-backdrop');
+  const md = document.getElementById('system-health-modal');
+  if (bd) { bd.classList.remove('visible'); bd.setAttribute('aria-hidden', 'true'); }
+  if (md) { md.classList.remove('visible'); md.setAttribute('aria-hidden', 'true'); }
+}
+window.openSystemHealthModal  = openSystemHealthModal;
+window.closeSystemHealthModal = closeSystemHealthModal;
+document.addEventListener('keydown', function (e) {
+  if (e.key !== 'Escape') return;
+  const md = document.getElementById('system-health-modal');
+  if (md && md.classList.contains('visible')) {
+    e.stopPropagation();
+    closeSystemHealthModal();
+  }
+}, true);
 
 // ── Gap modal ──────────────────────────────────────────────────
 function openGapModal(el) {
@@ -13140,6 +14619,12 @@ function _renderSyncTs() {
       var ths = Array.prototype.slice.call(table.querySelectorAll('thead th'));
       ths.forEach(function(th, i) {
         if (th.classList.contains('bulk-th')) return;
+        // Skip if a handle already exists — the universal table baseline
+        // (applyUniversalTableBaseline) may have run first and injected one.
+        // Both paths are idempotent now; first to fire wins. The legacy
+        // path keeps writing to its own localStorage key, so existing user
+        // widths persist either way.
+        if (th.querySelector('.col-resize-handle')) return;
         var handle = document.createElement('div');
         handle.className = 'col-resize-handle';
         handle.title = 'Drag to resize · double-click to reset';
@@ -13397,6 +14882,450 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   /* Demo redaction visual hint */
   body.demo-mode .meta-chip-comp { opacity: 0.65; }
 </style>
+
+<!-- ──────────────────────────────────────────────────────────────
+     Batch-status modal (2026-05-17) — sidebar #sidebar-batch popout
+     Live-refreshing modal that shows current run summary, recent
+     batches with cost + duration, queue depth, and recent failures.
+     End-of-template position deliberate (separate from drawer / stats /
+     outreach territories edited by concurrent subagents).
+     ────────────────────────────────────────────────────────────── -->
+<style>
+  /* Backdrop + modal scaffolding. Mirrors the verify-modal pattern
+     (z-index 2000/2001, surface tokens, blur). */
+  #batch-status-backdrop {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.5); z-index: 2000;
+    backdrop-filter: blur(2px);
+  }
+  #batch-status-backdrop.visible { display: block; }
+  #batch-status-modal {
+    display: none; position: fixed;
+    top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: min(820px, 96vw); max-height: 86vh; overflow: hidden;
+    z-index: 2001;
+    background: var(--surface); border-radius: 12px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-lg);
+    flex-direction: column;
+  }
+  #batch-status-modal.visible { display: flex; }
+  .batch-status-header {
+    position: sticky; top: 0; background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 20px; display: flex; align-items: center; gap: 12px;
+    border-radius: 12px 12px 0 0;
+  }
+  .batch-status-header h3 {
+    margin: 0; font-size: 15px; font-weight: 600; color: var(--text); flex: 1;
+  }
+  .batch-status-updated {
+    font-size: 11px; color: var(--text-3); font-variant-numeric: tabular-nums;
+    padding: 2px 8px; background: var(--surface-2);
+    border-radius: 999px;
+  }
+  .batch-status-updated.live::before {
+    content: ""; display: inline-block; width: 6px; height: 6px;
+    border-radius: 50%; background: var(--green-fg, #2da44e);
+    margin-right: 6px; vertical-align: middle;
+    animation: batch-status-pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes batch-status-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .batch-status-updated.live::before { animation: none; }
+  }
+  .batch-status-close {
+    background: none; border: none; font-size: 18px;
+    cursor: pointer; color: var(--text-3); padding: 0 4px;
+    line-height: 1;
+  }
+  .batch-status-close:hover { color: var(--text); }
+  .batch-status-close:focus-visible {
+    outline: 2px solid var(--blue-fg-dark, #1d4ed8); outline-offset: 2px;
+  }
+  .batch-status-body {
+    padding: var(--space-4, 16px) var(--space-5, 20px);
+    overflow-y: auto;
+    flex: 1; min-height: 0;
+  }
+  .batch-status-section {
+    margin-bottom: var(--space-5, 20px);
+  }
+  .batch-status-section:last-child { margin-bottom: 0; }
+  .batch-status-section-title {
+    margin: 0 0 var(--space-2, 8px);
+    font-size: var(--fs-meta, 11px); text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--text-3); font-weight: 700;
+  }
+
+  /* A. Current run summary card */
+  .batch-status-current {
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 16px; background: var(--surface-2);
+  }
+  .batch-status-current-row {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 10px;
+  }
+  .batch-status-current-pct {
+    font-size: 22px; font-weight: 700; color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+  .batch-status-current-eta { font-size: 12px; color: var(--text-3); }
+  .batch-status-progress {
+    flex: 1; height: 8px; background: var(--border);
+    border-radius: 4px; overflow: hidden;
+  }
+  .batch-status-progress-fill {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, var(--green-fg, #2da44e), var(--blue-fg, #0969da));
+    transition: width .4s ease;
+  }
+  .batch-status-counts {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+    margin-top: 10px;
+  }
+  .batch-status-count-cell {
+    text-align: center; padding: 8px 4px;
+    background: var(--surface); border-radius: 6px; border: 1px solid var(--border);
+  }
+  .batch-status-count-num {
+    display: block; font-size: 18px; font-weight: 700; color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+  .batch-status-count-lbl {
+    display: block; font-size: 10.5px; color: var(--text-3);
+    text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px;
+  }
+  .batch-status-meta {
+    margin-top: 10px; padding-top: 10px;
+    border-top: 1px solid var(--border);
+    display: flex; flex-wrap: wrap; gap: 14px;
+    font-size: 11.5px; color: var(--text-3);
+  }
+  .batch-status-meta strong { color: var(--text-2); font-weight: 600; }
+
+  /* B. Recent runs table — universal table baseline §8a + §8c */
+  .batch-status-runs-wrap {
+    overflow-x: auto; overflow-y: auto; max-height: 280px;
+    border: 1px solid var(--border); border-radius: 8px;
+  }
+  .batch-status-runs {
+    width: 100%; border-collapse: collapse; font-size: 12px;
+  }
+  .batch-status-runs th,
+  .batch-status-runs td {
+    padding: 7px 10px; text-align: left;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    max-width: 220px;
+  }
+  .batch-status-runs th {
+    background: var(--surface-2); color: var(--text-3);
+    font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em;
+    font-weight: 700; position: sticky; top: 0; z-index: 1;
+  }
+  .batch-status-runs tbody tr:hover { background: var(--surface-2); }
+  .batch-status-runs tr.expanded td {
+    white-space: normal; max-width: none; word-break: break-word;
+  }
+  .batch-status-runs .run-status {
+    display: inline-block; padding: 2px 8px; border-radius: 999px;
+    font-size: 10.5px; font-weight: 600;
+  }
+  .batch-status-runs .run-status.completed { background: var(--green-bg, #dafbe1); color: var(--green-fg, #2da44e); }
+  .batch-status-runs .run-status.partial   { background: var(--orange-bg, #fff1e5); color: var(--orange-fg, #bc4c00); }
+  .batch-status-runs .run-status.running   { background: var(--blue-bg, #ddf4ff); color: var(--blue-fg, #0969da); }
+  .batch-status-runs .run-status.failed    { background: var(--red-bg, #ffebe9); color: var(--red-fg, #cf222e); }
+  .batch-status-runs-empty {
+    padding: 18px 14px; text-align: center; color: var(--text-3); font-size: 12px;
+  }
+
+  /* C. Queue depth row */
+  .batch-status-queue {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+  }
+  .batch-status-queue-cell {
+    padding: 10px 12px; background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: 8px;
+    cursor: default;
+    transition: border-color .12s, background .12s;
+  }
+  .batch-status-queue-cell.clickable { cursor: pointer; }
+  .batch-status-queue-cell.clickable:hover {
+    border-color: var(--blue-fg, #0969da); background: var(--surface);
+  }
+  .batch-status-queue-cell.clickable:focus-visible {
+    outline: 2px solid var(--blue-fg-dark, #1d4ed8); outline-offset: 1px;
+  }
+  .batch-status-queue-num {
+    font-size: 18px; font-weight: 700; color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+  .batch-status-queue-lbl {
+    font-size: 11px; color: var(--text-3); text-transform: uppercase;
+    letter-spacing: 0.05em; margin-top: 2px;
+  }
+  .batch-status-cost-row {
+    margin-top: 10px; display: flex; gap: 16px;
+    padding-top: 10px; border-top: 1px solid var(--border);
+    font-size: 12px; color: var(--text-3);
+  }
+  .batch-status-cost-row strong {
+    color: var(--text-2); font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* D. Recent failures (collapsible) */
+  .batch-status-failures {
+    border: 1px solid var(--border); border-radius: 8px;
+    background: var(--surface-2);
+  }
+  .batch-status-failures summary {
+    padding: 10px 12px; cursor: pointer;
+    font-size: 12px; font-weight: 600; color: var(--text-2);
+    user-select: none;
+  }
+  .batch-status-failures summary:focus-visible {
+    outline: 2px solid var(--blue-fg-dark, #1d4ed8); outline-offset: -2px;
+  }
+  .batch-status-failures[open] summary { border-bottom: 1px solid var(--border); }
+  .batch-status-failure-item {
+    padding: 8px 12px; font-size: 11.5px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-3); font-family: ui-monospace, monospace;
+  }
+  .batch-status-failure-item:last-child { border-bottom: none; }
+  .batch-status-failure-item strong {
+    display: inline-block; color: var(--red-fg, #cf222e);
+    margin-right: 8px; font-family: inherit;
+  }
+
+  /* Change-flash: brief highlight on any value that changed since last poll */
+  .batch-status-flash {
+    animation: batch-status-flash-kf 1.4s ease-out;
+  }
+  @keyframes batch-status-flash-kf {
+    0%   { background-color: var(--yellow-bg, #fff8c5); }
+    100% { background-color: transparent; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .batch-status-flash { animation: none; }
+  }
+
+  /* Mobile: shrink modal + stack queue cells */
+  @media (max-width: 720px) {
+    #batch-status-modal { width: 96vw; max-height: 92vh; }
+    .batch-status-counts, .batch-status-queue {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .batch-status-runs-wrap { max-height: 200px; }
+  }
+
+  /* ──────────────────────────────────────────────────────────────
+     Runway detail modal (sibling of batch-status-modal — same
+     visual frame, different content).
+     ────────────────────────────────────────────────────────────── */
+  #runway-detail-backdrop,
+  #scan-activity-backdrop,
+  #system-health-backdrop {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.5); z-index: 2000;
+    backdrop-filter: blur(2px);
+  }
+  #runway-detail-backdrop.visible,
+  #scan-activity-backdrop.visible,
+  #system-health-backdrop.visible { display: block; }
+  #runway-detail-modal,
+  #scan-activity-modal,
+  #system-health-modal {
+    display: none; position: fixed;
+    top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: min(960px, 96vw); max-height: 86vh; overflow: hidden;
+    z-index: 2001;
+    background: var(--surface); border-radius: 12px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-lg);
+    flex-direction: column;
+  }
+  #runway-detail-modal.visible,
+  #scan-activity-modal.visible,
+  #system-health-modal.visible { display: flex; }
+  .runway-detail-header,
+  .scan-activity-header,
+  .system-health-header {
+    position: sticky; top: 0; background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 20px; display: flex; align-items: center; gap: 12px;
+    border-radius: 12px 12px 0 0;
+  }
+  .runway-detail-header h3,
+  .scan-activity-header h3,
+  .system-health-header h3 {
+    margin: 0; font-size: 15px; font-weight: 600; color: var(--text); flex: 1;
+  }
+  .runway-detail-updated,
+  .scan-activity-updated,
+  .system-health-updated {
+    font-size: 11px; color: var(--text-3); font-variant-numeric: tabular-nums;
+    padding: 2px 8px; background: var(--surface-2);
+    border-radius: 999px;
+  }
+  .runway-detail-updated.live::before,
+  .scan-activity-updated.live::before,
+  .system-health-updated.live::before {
+    content: ""; display: inline-block; width: 6px; height: 6px;
+    border-radius: 50%; background: var(--green-fg, #2da44e);
+    margin-right: 6px; vertical-align: middle;
+    animation: batch-status-pulse 1.6s ease-in-out infinite;
+  }
+  .runway-detail-close,
+  .scan-activity-close,
+  .system-health-close {
+    background: none; border: none; font-size: 18px;
+    cursor: pointer; color: var(--text-3); padding: 0 4px;
+    line-height: 1;
+  }
+  .runway-detail-close:hover,
+  .scan-activity-close:hover,
+  .system-health-close:hover { color: var(--text); }
+  .runway-detail-close:focus-visible,
+  .scan-activity-close:focus-visible,
+  .system-health-close:focus-visible {
+    outline: 2px solid var(--blue-fg-dark, #1d4ed8); outline-offset: 2px;
+  }
+  .runway-detail-body,
+  .scan-activity-body,
+  .system-health-body {
+    padding: var(--space-4, 16px) var(--space-5, 20px);
+    overflow-y: auto;
+    flex: 1; min-height: 0;
+  }
+  .rd-section,
+  .sa-section,
+  .sh-section {
+    margin-bottom: var(--space-5, 20px);
+  }
+  .rd-section:last-child,
+  .sa-section:last-child,
+  .sh-section:last-child { margin-bottom: 0; }
+  .rd-section-title,
+  .sa-section-title,
+  .sh-section-title {
+    margin: 0 0 var(--space-2, 8px);
+    font-size: var(--fs-meta, 11px); text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--text-3); font-weight: 700;
+  }
+  /* Pillar 1 — scannable verdict row at the top of the runway modal */
+  .rd-summary {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;
+    margin-bottom: 16px;
+  }
+  .rd-summary-cell {
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 10px 12px; background: var(--surface-2);
+  }
+  .rd-summary-label {
+    font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--text-3); font-weight: 700; margin-bottom: 4px;
+  }
+  .rd-summary-val {
+    font-size: 16px; font-weight: 600; color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+  .rd-summary-val.healthy   { color: var(--green-fg, #2da44e); }
+  .rd-summary-val.stretched { color: var(--orange-fg, #bc4c00); }
+  .rd-summary-val.critical  { color: var(--red-fg, #cf222e); }
+  .rd-table-wrap,
+  .sa-table-wrap,
+  .sh-table-wrap {
+    /* Invariant #8a — both axes scroll */
+    overflow-x: auto; overflow-y: auto; max-height: 320px;
+    border: 1px solid var(--border); border-radius: 8px;
+    position: relative;
+  }
+  .rd-table,
+  .sa-table,
+  .sh-table {
+    width: 100%; border-collapse: collapse; font-size: 12.5px;
+  }
+  .rd-table th, .rd-table td,
+  .sa-table th, .sa-table td,
+  .sh-table th, .sh-table td {
+    border-bottom: 1px solid var(--border);
+    padding: 6px 8px; text-align: left; vertical-align: middle;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    max-width: 240px;
+  }
+  .rd-table th,
+  .sa-table th,
+  .sh-table th {
+    position: sticky; top: 0; z-index: 1;
+    background: var(--surface-2);
+    font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.04em; color: var(--text-3);
+  }
+  .rd-tier-A { color: var(--green-fg, #2da44e); font-weight: 700; }
+  .rd-tier-B { color: var(--blue-fg, #0969da); font-weight: 600; }
+  .rd-tier-C { color: var(--text-3); }
+  .rd-direction-out { color: var(--text-3); }
+  .rd-direction-in  { color: var(--green-fg, #2da44e); font-weight: 600; }
+  .rd-trend-up   { color: var(--green-fg, #2da44e); font-weight: 600; }
+  .rd-trend-down { color: var(--red-fg, #cf222e); font-weight: 600; }
+  .rd-trend-flat { color: var(--text-3); }
+  .rd-rationale {
+    font-size: 11.5px; color: var(--text-3);
+  }
+
+  /* Pillar 2 — clickable mc-strip pills */
+  .mc-batch[role="button"],
+  .live-ticker[role="button"] {
+    cursor: pointer;
+  }
+  .mc-batch:focus-visible,
+  .live-ticker:focus-visible {
+    outline: 2px solid var(--blue-fg-dark, #1d4ed8); outline-offset: 2px;
+  }
+  .sidebar-runway-detailclickhint {
+    font-size: 10.5px; color: var(--text-3); font-style: italic;
+    margin-top: 4px; opacity: .8;
+  }
+  body.sidebar-collapsed .sidebar-runway-detailclickhint { display: none; }
+
+  @media (max-width: 720px) {
+    #runway-detail-modal,
+    #scan-activity-modal,
+    #system-health-modal { width: 96vw; max-height: 92vh; }
+    .rd-summary { grid-template-columns: 1fr; }
+    .rd-table-wrap, .sa-table-wrap, .sh-table-wrap { max-height: 220px; }
+  }
+
+  /* System-health expandable sections */
+  .sh-block { margin-bottom: 14px; }
+  .sh-block summary {
+    cursor: pointer; padding: 8px 10px; background: var(--surface-2);
+    border-radius: 6px; font-weight: 600; font-size: 12.5px;
+    list-style: none; display: flex; align-items: center; gap: 8px;
+  }
+  .sh-block summary::-webkit-details-marker { display: none; }
+  .sh-block summary::before {
+    content: "▸"; transition: transform .15s; color: var(--text-3);
+  }
+  .sh-block[open] summary::before { transform: rotate(90deg); }
+  .sh-block-body { padding: 10px 4px 0; }
+  .sh-status-dot {
+    display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+    margin-right: 4px; vertical-align: middle;
+  }
+  .sh-status-dot.green  { background: var(--green-fg, #2da44e); }
+  .sh-status-dot.yellow { background: var(--orange-fg, #bc4c00); }
+  .sh-status-dot.red    { background: var(--red-fg, #cf222e); }
+  .sh-status-dot.grey   { background: var(--text-3); }
+</style>
+
 <div id="share-banner" role="status" aria-live="polite">
   <span id="share-banner-text">Read-only share — loading…</span>
 </div>
@@ -13404,6 +15333,80 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   <span>🎭 DEMO MODE — fake data for screen sharing</span>
   <button type="button" id="demo-banner-close" aria-label="Dismiss demo banner for this view">Dismiss</button>
 </div>
+
+<!-- ──────────────────────────────────────────────────────────────
+     Batch status modal (2026-05-17) — opens from #sidebar-batch.
+     Live-polled every 10s while open via /api/batch/status-detailed.
+     Bind: openBatchStatusModal() / closeBatchStatusModal().
+     ────────────────────────────────────────────────────────────── -->
+<div id="batch-status-backdrop" onclick="closeBatchStatusModal()" aria-hidden="true"></div>
+<div id="batch-status-modal" role="dialog" aria-modal="true" aria-labelledby="batch-status-title" aria-hidden="true" onclick="event.stopPropagation()">
+  <div class="batch-status-header">
+    <h3 id="batch-status-title">Batch status — live</h3>
+    <span id="batch-status-updated" class="batch-status-updated" aria-live="polite">loading…</span>
+    <button type="button" class="batch-status-close" onclick="closeBatchStatusModal()" aria-label="Close batch status">✕</button>
+  </div>
+  <div class="batch-status-body" id="batch-status-body">
+    <div style="text-align:center; padding: 40px 16px; color: var(--text-3); font-size: 13px;">Loading…</div>
+  </div>
+</div>
+
+<!-- ──────────────────────────────────────────────────────────────
+     Runway detail modal (2026-05-17) — opens from #sidebar-runway
+     label click. Click-through detail for the pipeline-density widget.
+     Live-polled every 30s while open via /api/runway-detail.
+     Bind: openRunwayDetailModal() / closeRunwayDetailModal().
+     Tables inside this modal pick up invariant #8 baseline via the
+     applyUniversalTableBaseline() pass run after each render.
+     ────────────────────────────────────────────────────────────── -->
+<div id="runway-detail-backdrop" onclick="closeRunwayDetailModal()" aria-hidden="true"></div>
+<div id="runway-detail-modal" role="dialog" aria-modal="true" aria-labelledby="runway-detail-title" aria-hidden="true" onclick="event.stopPropagation()">
+  <div class="runway-detail-header">
+    <h3 id="runway-detail-title">Pipeline runway — live</h3>
+    <span id="runway-detail-updated" class="runway-detail-updated" aria-live="polite">loading…</span>
+    <button type="button" class="runway-detail-close" onclick="closeRunwayDetailModal()" aria-label="Close runway detail">✕</button>
+  </div>
+  <div class="runway-detail-body" id="runway-detail-body">
+    <div style="text-align:center; padding: 40px 16px; color: var(--text-3); font-size: 13px;">Loading…</div>
+  </div>
+</div>
+
+<!-- ──────────────────────────────────────────────────────────────
+     Scan activity modal (2026-05-17) — opens from the live-ticker
+     pill in the mission-control strip. Lists recent scan events from
+     data/scan-history.tsv (per-portal). Read-only.
+     Bind: openScanActivityModal() / closeScanActivityModal().
+     ────────────────────────────────────────────────────────────── -->
+<div id="scan-activity-backdrop" onclick="closeScanActivityModal()" aria-hidden="true"></div>
+<div id="scan-activity-modal" role="dialog" aria-modal="true" aria-labelledby="scan-activity-title" aria-hidden="true" onclick="event.stopPropagation()">
+  <div class="scan-activity-header">
+    <h3 id="scan-activity-title">Recent scan activity</h3>
+    <span id="scan-activity-updated" class="scan-activity-updated" aria-live="polite">loading…</span>
+    <button type="button" class="scan-activity-close" onclick="closeScanActivityModal()" aria-label="Close scan activity">✕</button>
+  </div>
+  <div class="scan-activity-body" id="scan-activity-body">
+    <div style="text-align:center; padding: 40px 16px; color: var(--text-3); font-size: 13px;">Loading…</div>
+  </div>
+</div>
+
+<!-- ──────────────────────────────────────────────────────────────
+     System health modal (2026-05-17) — opens from the mc-health
+     pill (replacing the prior pill-popover). Sections: launchd jobs,
+     tunnel state, dashboard server uptime, recent errors.
+     Bind: openSystemHealthModal() / closeSystemHealthModal().
+     ────────────────────────────────────────────────────────────── -->
+<div id="system-health-backdrop" onclick="closeSystemHealthModal()" aria-hidden="true"></div>
+<div id="system-health-modal" role="dialog" aria-modal="true" aria-labelledby="system-health-title" aria-hidden="true" onclick="event.stopPropagation()">
+  <div class="system-health-header">
+    <h3 id="system-health-title">System health — live</h3>
+    <span id="system-health-updated" class="system-health-updated" aria-live="polite">loading…</span>
+    <button type="button" class="system-health-close" onclick="closeSystemHealthModal()" aria-label="Close system health">✕</button>
+  </div>
+  <div class="system-health-body" id="system-health-body">
+    <div style="text-align:center; padding: 40px 16px; color: var(--text-3); font-size: 13px;">Loading…</div>
+  </div>
+</div>
+
 <script>
 // ── Share / demo bootstrap ─────────────────────────────────────
 // Three independent ways to enter demo mode:
@@ -14200,6 +16203,170 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     border-color: rgba(22, 163, 74, 0.40);
   }
 }
+
+/* ─── Snooze + cancel toolbar (added 2026-05-17) ─────────────────────────── */
+#outreach-pulse .op-toolbar {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: inline-flex;
+  gap: 4px;
+  z-index: 2;
+  opacity: 0.55;
+  transition: opacity 120ms ease;
+}
+#outreach-pulse .op-row-v3:hover .op-toolbar,
+#outreach-pulse .op-row-v3:focus-within .op-toolbar { opacity: 1; }
+#outreach-pulse .op-row-v3 { position: relative; }
+#outreach-pulse .op-tb-btn {
+  appearance: none;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 3px 6px;
+  font-size: 11px;
+  line-height: 1;
+  color: var(--text-3, #64748b);
+  cursor: pointer;
+  font-family: inherit;
+}
+#outreach-pulse .op-tb-btn:hover {
+  background: var(--surface, #ffffff);
+  border-color: var(--border, #d1d5db);
+  color: var(--text, #0f172a);
+}
+#outreach-pulse .op-tb-btn:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 1px;
+}
+#outreach-pulse .op-tb-btn-cancel:hover { color: #991b1b; border-color: rgba(220,38,38,0.30); }
+#outreach-pulse .op-snooze-pop {
+  position: absolute;
+  top: 36px;
+  right: 8px;
+  z-index: 10;
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--border, #d1d5db);
+  border-radius: 8px;
+  padding: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  display: none;
+  min-width: 200px;
+}
+#outreach-pulse .op-snooze-pop.open { display: block; }
+#outreach-pulse .op-snooze-pop-head {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-3, #64748b);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+#outreach-pulse .op-snooze-presets { display: flex; gap: 4px; flex-wrap: wrap; }
+#outreach-pulse .op-snooze-preset {
+  appearance: none;
+  border: 1px solid var(--border, #d1d5db);
+  background: var(--surface2, #f8fafc);
+  color: var(--text, #0f172a);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+}
+#outreach-pulse .op-snooze-preset:hover { background: #dbeafe; border-color: #2563eb; color: #1e40af; }
+#outreach-pulse .op-snooze-custom { margin-top: 6px; display: flex; gap: 4px; align-items: center; }
+#outreach-pulse .op-snooze-custom input[type="date"] {
+  flex: 1;
+  font-size: 12px;
+  padding: 3px 4px;
+  border: 1px solid var(--border, #d1d5db);
+  border-radius: 4px;
+  background: var(--surface2, #f8fafc);
+  color: var(--text, #0f172a);
+  font-family: inherit;
+}
+#outreach-pulse .op-snooze-custom button {
+  appearance: none;
+  border: 1px solid #2563eb;
+  background: #2563eb;
+  color: #ffffff;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+}
+@keyframes op-row-fadeout {
+  to { opacity: 0; transform: translateX(8px); max-height: 0; padding-top: 0; padding-bottom: 0; margin: 0; }
+}
+#outreach-pulse .op-row-v3.op-removing {
+  animation: op-row-fadeout 280ms ease forwards;
+  overflow: hidden;
+}
+#outreach-pulse .op-snoozed-section {
+  margin-top: 16px;
+  border-top: 1px dashed var(--border, #e2e8f0);
+  padding-top: 10px;
+}
+#outreach-pulse .op-snoozed-toggle {
+  appearance: none;
+  background: transparent;
+  border: none;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-4, #64748b);
+  cursor: pointer;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: inherit;
+}
+#outreach-pulse .op-snoozed-toggle:hover { color: var(--text, #0f172a); }
+#outreach-pulse .op-snoozed-list { display: none; margin-top: 8px; max-height: 320px; overflow-y: auto; }
+#outreach-pulse .op-snoozed-list.open { display: block; }
+#outreach-pulse .op-snoozed-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 6px;
+  background: var(--surface2, #f8fafc);
+  margin-bottom: 4px;
+  font-size: 12px;
+  align-items: center;
+}
+#outreach-pulse .op-snoozed-row .op-snoozed-meta { color: var(--text-3, #475569); font-size: 11px; margin-top: 2px; }
+#outreach-pulse .op-snoozed-wake {
+  appearance: none;
+  border: 1px solid var(--border, #d1d5db);
+  background: var(--surface, #ffffff);
+  color: var(--text, #0f172a);
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  cursor: pointer;
+  font-family: inherit;
+}
+#outreach-pulse .op-snoozed-wake:hover { background: #dbeafe; border-color: #2563eb; color: #1e40af; }
+@media (prefers-color-scheme: dark) {
+  #outreach-pulse .op-tb-btn { color: #9a9aa6; }
+  #outreach-pulse .op-tb-btn:hover { background: #181b27; border-color: #2d3142; color: #fafafa; }
+  #outreach-pulse .op-tb-btn-cancel:hover { color: #fca5a5; border-color: rgba(220,38,38,0.40); }
+  #outreach-pulse .op-snooze-pop { background: #11131c; border-color: #2d3142; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+  #outreach-pulse .op-snooze-pop-head { color: #9a9aa6; }
+  #outreach-pulse .op-snooze-preset { background: #181b27; border-color: #2d3142; color: #fafafa; }
+  #outreach-pulse .op-snooze-preset:hover { background: #1e3a8a; border-color: #60a5fa; color: #dbeafe; }
+  #outreach-pulse .op-snooze-custom input[type="date"] { background: #181b27; border-color: #2d3142; color: #fafafa; }
+  #outreach-pulse .op-snoozed-row { background: #181b27; border-color: #2d3142; }
+  #outreach-pulse .op-snoozed-row .op-snoozed-meta { color: #9a9aa6; }
+  #outreach-pulse .op-snoozed-wake { background: #11131c; border-color: #2d3142; color: #fafafa; }
+  #outreach-pulse .op-snoozed-wake:hover { background: #1e3a8a; border-color: #60a5fa; color: #dbeafe; }
+}
 </style>
 <script>
 (function () {
@@ -14368,9 +16535,34 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
         : statusKind === 'due_soon' ? 'due soon'
         : statusKind === 'referral' ? 'referral opportunity'
         : 'awaiting reply');
+    // Toolbar: snooze + cancel buttons in the top-right corner. Built inline
+    // so the picker (popover) lives in the same DOM ancestor as the row, which
+    // lets it inherit position:relative from .op-row-v3. The buttons carry
+    // data-op-action so attachRowHandlers() can delegate clicks (avoids inline
+    // onclick that DASHBOARD_INVARIANTS.md §1b warns about — every quote
+    // would have to be triple-escaped to survive the outer template literal).
+    var toolbarHtml = ''
+      + '<div class="op-toolbar" data-op-toolbar="1">'
+      +   '<button type="button" class="op-tb-btn op-tb-btn-snooze" data-op-action="snooze" title="Snooze this card" aria-label="Snooze this card">↪ snooze</button>'
+      +   '<button type="button" class="op-tb-btn op-tb-btn-cancel" data-op-action="cancel-strategy" title="Cancel this strategy recommendation" aria-label="Cancel this strategy recommendation">✕</button>'
+      + '</div>'
+      + '<div class="op-snooze-pop" data-op-snooze-pop="1" role="dialog" aria-label="Snooze options" hidden>'
+      +   '<div class="op-snooze-pop-head">Snooze until</div>'
+      +   '<div class="op-snooze-presets">'
+      +     '<button type="button" class="op-snooze-preset" data-op-action="snooze-preset" data-days="1">1d</button>'
+      +     '<button type="button" class="op-snooze-preset" data-op-action="snooze-preset" data-days="3">3d</button>'
+      +     '<button type="button" class="op-snooze-preset" data-op-action="snooze-preset" data-days="7">1w</button>'
+      +     '<button type="button" class="op-snooze-preset" data-op-action="snooze-preset" data-days="14">2w</button>'
+      +   '</div>'
+      +   '<div class="op-snooze-custom">'
+      +     '<input type="date" data-op-snooze-date aria-label="Snooze until custom date" />'
+      +     '<button type="button" data-op-action="snooze-custom">Go</button>'
+      +   '</div>'
+      + '</div>';
     return ''
       + '<div class="' + rowClass + '" role="article" aria-label="' + escapeHtml(ariaLabel) + '" data-contact-id="' + escapeHtml(c.contact_id) + '" data-app-num="' + escapeHtml(String(c.linked_application_id || '')) + '">'
       +   '<div class="op-row-bar" aria-hidden="true"></div>'
+      +   toolbarHtml
       +   '<div class="op-row-content">'
       +     '<div class="op-identity">'
       +       '<span class="op-name">' + name + '</span>'
@@ -14390,6 +16582,47 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   function renderGroup(title, list, kind) {
     if (!list || !list.length) return '';
     return '<div class="op-group"><h3 class="op-group-title">' + title + '</h3>' + list.map(function (c) { return renderRow(c, kind); }).join('') + '</div>';
+  }
+  // Snoozed-contacts section — rendered as a compact roster at the bottom of
+  // the expanded panel. Collapsed by default; click the header to expand.
+  // Each row shows name · company · "until {date}" + a Wake button.
+  function renderSnoozedSection(list) {
+    if (!list || !list.length) return '';
+    var rows = list.map(function (c) {
+      var name = escapeHtml(c.name || c.contact_id);
+      var company = escapeHtml(c.company || '(unknown)');
+      var until = c.snoozed_until ? escapeHtml(String(c.snoozed_until).slice(0, 10)) : '?';
+      var note = '';
+      // Surface the latest internal_snooze touch summary, if any, so the user
+      // remembers why they snoozed this card.
+      if (c.touches && c.touches.length) {
+        for (var i = c.touches.length - 1; i >= 0; i--) {
+          if (c.touches[i].channel === 'internal_snooze') {
+            var s = String(c.touches[i].summary || '');
+            // Strip the "[snooze until YYYY-MM-DD]" prefix; show only the user note.
+            var stripped = s.replace(/^\[snooze[^\]]*\]\s*/, '');
+            if (stripped) note = ' · ' + escapeHtml(stripped);
+            break;
+          }
+        }
+      }
+      return ''
+        + '<div class="op-snoozed-row" data-contact-id="' + escapeHtml(c.contact_id) + '">'
+        +   '<div>'
+        +     '<div><strong>' + name + '</strong> &middot; ' + company + '</div>'
+        +     '<div class="op-snoozed-meta">until ' + until + note + '</div>'
+        +   '</div>'
+        +   '<button type="button" class="op-snoozed-wake" data-op-action="wake" data-contact-id="' + escapeHtml(c.contact_id) + '">Wake now</button>'
+        + '</div>';
+    }).join('');
+    return ''
+      + '<div class="op-snoozed-section">'
+      +   '<button type="button" class="op-snoozed-toggle" data-op-action="toggle-snoozed" aria-expanded="false">'
+      +     '<span aria-hidden="true">▸</span>'
+      +     '<span>Snoozed (' + list.length + ')</span>'
+      +   '</button>'
+      +   '<div class="op-snoozed-list" data-op-snoozed-list>' + rows + '</div>'
+      + '</div>';
   }
   // 10-strategy legend — collapsible cheatsheet so the user knows what
   // "Strategy 3" means without opening data/linkedin-followup-strategy-*.md.
@@ -14440,6 +16673,8 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
                  renderGroup('Breakup window', summary.breakup, 'breakup') +
                  renderGroup('Referral opportunities', summary.referrals, 'referral');
     if (!groups) groups = '<div class="op-empty">No contacts need attention right now. Log a touch with <code>node scripts/log-touch.mjs</code>.</div>';
+    var snoozedHtml = renderSnoozedSection(summary.snoozed || []);
+    groups = groups + snoozedHtml;
 
     sec.innerHTML = ''
       + '<div class="op-banner op-banner-' + bannerKind + '" role="region" aria-label="Outreach Pulse summary">'
@@ -14555,6 +16790,7 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
       if (row.dataset.opHandlerBound) return;
       row.dataset.opHandlerBound = '1';
       row.addEventListener('click', function (ev) {
+        if (ev.target.closest('.op-toolbar') || ev.target.closest('.op-snooze-pop')) return;
         if (ev.target.closest('.op-pill') || ev.target.closest('.op-drawer')) return;
         var existing = row.querySelector('.op-drawer');
         if (existing) { existing.remove(); return; }
@@ -14572,9 +16808,137 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     });
   }
 
+  // ── Snooze + cancel-strategy + wake handlers ───────────────────────────
+  // Single delegated click listener on #outreach-pulse so dynamically
+  // re-rendered rows pick up the behavior without re-binding. Idempotent —
+  // installed once via a guard flag on the section.
+  function postJSON(url, payload) {
+    return fetch(url, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(payload || {}),
+    }).then(function (r) {
+      if (r.ok) return r.json();
+      return r.json().then(function (d) { throw new Error(d && d.error || 'request failed'); });
+    });
+  }
+  function isoEndOfDayFromDays(days) {
+    var d = new Date(Date.now() + days * 86400000);
+    return d.toISOString().slice(0, 10);
+  }
+  function isoFromDateInput(value) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+    var picked = Date.parse(value + 'T23:59:59');
+    if (Number.isNaN(picked) || picked <= Date.now()) return null;
+    return value;
+  }
+  function animateOutAndRefresh(row) {
+    var reduced = false;
+    try { reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (_) {}
+    if (reduced || !row) { setTimeout(load, 100); return; }
+    row.classList.add('op-removing');
+    setTimeout(load, 280);
+  }
+  function closeAllSnoozePops(except) {
+    var pops = document.querySelectorAll('#outreach-pulse .op-snooze-pop.open');
+    pops.forEach(function (p) { if (p !== except) { p.classList.remove('open'); p.hidden = true; } });
+  }
+  function installOutreachToolbarHandlers() {
+    var sec = document.getElementById('outreach-pulse');
+    if (!sec || sec.dataset.opToolbarBound) return;
+    sec.dataset.opToolbarBound = '1';
+    sec.addEventListener('click', function (ev) {
+      var btn = ev.target.closest('[data-op-action]');
+      if (!btn) return;
+      var action = btn.getAttribute('data-op-action');
+      var row = btn.closest('.op-row');
+      var contactId = (btn.getAttribute('data-contact-id')) || (row && row.getAttribute('data-contact-id'));
+      if (action === 'snooze') {
+        ev.stopPropagation();
+        var pop = row && row.querySelector('.op-snooze-pop');
+        if (!pop) return;
+        var isOpen = pop.classList.contains('open');
+        closeAllSnoozePops();
+        if (!isOpen) {
+          pop.classList.add('open');
+          pop.hidden = false;
+          var inp = pop.querySelector('[data-op-snooze-date]');
+          if (inp) {
+            var d = new Date(Date.now() + 7 * 86400000);
+            inp.value = d.toISOString().slice(0, 10);
+            inp.min = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+          }
+        }
+        return;
+      }
+      if (action === 'snooze-preset') {
+        ev.stopPropagation();
+        if (!contactId) return;
+        var days = parseInt(btn.getAttribute('data-days'), 10) || 1;
+        postJSON('/api/outreach/snooze', { contact_id: contactId, until_iso: isoEndOfDayFromDays(days) })
+          .then(function () { animateOutAndRefresh(row); })
+          .catch(function (err) { window.alert('Snooze failed: ' + (err && err.message || err)); });
+        return;
+      }
+      if (action === 'snooze-custom') {
+        ev.stopPropagation();
+        if (!contactId) return;
+        var pop2 = row && row.querySelector('.op-snooze-pop');
+        var input = pop2 && pop2.querySelector('[data-op-snooze-date]');
+        var picked = input && isoFromDateInput(input.value);
+        if (!picked) { window.alert('Pick a future date to snooze until.'); return; }
+        postJSON('/api/outreach/snooze', { contact_id: contactId, until_iso: picked })
+          .then(function () { animateOutAndRefresh(row); })
+          .catch(function (err) { window.alert('Snooze failed: ' + (err && err.message || err)); });
+        return;
+      }
+      if (action === 'cancel-strategy') {
+        ev.stopPropagation();
+        if (!contactId) return;
+        var reason = window.prompt('Why cancelling this strategy?\\n\\n(Leave blank to cancel without a reason.)', '');
+        if (reason === null) return;
+        postJSON('/api/outreach/cancel-strategy', { contact_id: contactId, reason: String(reason || '').slice(0, 500) })
+          .then(function () { animateOutAndRefresh(row); })
+          .catch(function (err) { window.alert('Cancel failed: ' + (err && err.message || err)); });
+        return;
+      }
+      if (action === 'wake') {
+        ev.stopPropagation();
+        if (!contactId) return;
+        postJSON('/api/outreach/wake', { contact_id: contactId })
+          .then(function () { setTimeout(load, 100); })
+          .catch(function (err) { window.alert('Wake failed: ' + (err && err.message || err)); });
+        return;
+      }
+      if (action === 'toggle-snoozed') {
+        ev.stopPropagation();
+        var section = btn.closest('.op-snoozed-section');
+        var list = section && section.querySelector('.op-snoozed-list');
+        if (!list) return;
+        var open = list.classList.toggle('open');
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        var caret = btn.querySelector('span[aria-hidden]');
+        if (caret) caret.textContent = open ? '▾' : '▸';
+        return;
+      }
+    });
+    document.addEventListener('click', function (ev) {
+      if (!ev.target.closest('#outreach-pulse .op-snooze-pop') &&
+          !ev.target.closest('#outreach-pulse [data-op-action="snooze"]')) {
+        closeAllSnoozePops();
+      }
+    });
+    document.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Escape') {
+        var open = document.querySelector('#outreach-pulse .op-snooze-pop.open');
+        if (open) { closeAllSnoozePops(); ev.stopPropagation(); }
+      }
+    });
+  }
+
   // Re-attach handlers whenever render() repaints the section.
   var originalRender = render;
-  render = function (summary) { originalRender(summary); attachRowHandlers(); };
+  render = function (summary) { originalRender(summary); attachRowHandlers(); installOutreachToolbarHandlers(); };
 
   // ── Apply-Now Queue cross-reference ──────────────────────────────────────
   // Walk the Apply-Now Queue rows (each has data-num="X") and inject a
@@ -14657,6 +17021,557 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   setInterval(load, 60 * 1000);
 })();
 </script>
+
+<!-- ── Stat-bucket + stale-pipeline modals (item-list-pop-out) ────────
+     One shared modal skeleton used by:
+       openStalePipelineModal()  — Feature 1, list of stale pipeline.md items
+       openBucketModal(bucketKey) — Feature 2, evaluations matching a bucket
+     Title + body are populated dynamically at open time. Sits well below
+     the drawer (right-rail) section to avoid colliding with parallel work. -->
+<style>
+  /* ── Stat-bucket + stale-pipeline modals (item-list-pop-out pattern) ──────── */
+  #item-list-backdrop {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.5); z-index: 2000; backdrop-filter: blur(2px);
+  }
+  #item-list-backdrop.visible { display: block; }
+  #item-list-modal {
+    display: none;
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    width: min(960px, 96vw); max-height: 86vh; z-index: 2001;
+    background: var(--surface); border-radius: 12px; border: 1px solid var(--border);
+    box-shadow: var(--shadow-lg, 0 12px 40px rgba(0,0,0,0.25));
+    flex-direction: column; overflow: hidden;
+  }
+  #item-list-modal.visible { display: flex; }
+  .item-list-modal-header {
+    position: sticky; top: 0; background: var(--surface);
+    border-bottom: 1px solid var(--border); padding: 14px 20px;
+    display: flex; align-items: center; gap: 10px; z-index: 1;
+    border-radius: 12px 12px 0 0;
+  }
+  .item-list-modal-title {
+    font-size: 15px; font-weight: 600; flex: 1; color: var(--text); margin: 0;
+    letter-spacing: -0.005em;
+  }
+  .item-list-modal-meta {
+    font-size: 12px; color: var(--text-3); margin-left: 8px;
+    font-variant-numeric: tabular-nums; font-weight: 500;
+  }
+  .item-list-modal-close {
+    background: transparent; border: 1px solid transparent;
+    border-radius: var(--radius-sm, 6px);
+    padding: 4px 10px; cursor: pointer; color: var(--text-2);
+    font-size: 16px; line-height: 1;
+  }
+  .item-list-modal-close:hover { background: var(--surface-2); color: var(--text); }
+  .item-list-modal-close:focus-visible {
+    outline: none; box-shadow: var(--ring-blue);
+    border-color: var(--blue-fg, #2563eb);
+  }
+  .item-list-modal-body {
+    overflow: auto; max-height: 70vh; flex: 1; padding: 0;
+  }
+  /* Per DASHBOARD_INVARIANTS.md §4: scroll if cut off. */
+  .item-list-modal-scroll {
+    overflow-x: auto; overflow-y: auto; max-height: 70vh;
+  }
+
+  /* ── Stale-pipeline list rows (Feature 1) ───────────────────────── */
+  .stale-pipeline-alert-link {
+    display: block; width: 100%;
+    background: transparent; border: 1px solid transparent;
+    color: var(--red-fg, #cf222e);
+    font-size: 12px; font-weight: 500;
+    text-align: left; cursor: pointer;
+    padding: 8px 10px; margin: 0 0 12px;
+    border-radius: var(--radius-sm, 6px);
+    line-height: 1.4;
+  }
+  .stale-pipeline-alert-link:hover {
+    background: var(--red-bg, rgba(207, 34, 46, 0.08));
+    border-color: var(--red-fg, #cf222e);
+    text-decoration: underline;
+  }
+  .stale-pipeline-alert-link:focus-visible {
+    outline: none; box-shadow: 0 0 0 2px rgba(207, 34, 46, 0.35);
+    border-color: var(--red-fg, #cf222e);
+  }
+  .stale-pipeline-alert-link strong {
+    font-weight: 700; font-variant-numeric: tabular-nums;
+  }
+  .stale-item-list {
+    display: flex; flex-direction: column; gap: 6px;
+    padding: 14px 18px;
+  }
+  .stale-item-row {
+    display: flex; flex-wrap: wrap;
+    gap: 12px; align-items: flex-start; justify-content: space-between;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    border-radius: var(--radius-sm, 6px);
+    transition: border-color .12s, background .12s;
+  }
+  .stale-item-row:hover { border-color: var(--blue-fg, #2563eb); }
+  .stale-item-row.row-pending { opacity: 0.55; }
+  .stale-item-info { flex: 1 1 280px; min-width: 0; }
+  .stale-item-info strong {
+    display: block; font-size: 13.5px; color: var(--text);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    margin-bottom: 4px;
+  }
+  .stale-item-meta {
+    display: block;
+    font-size: 11.5px; color: var(--text-3);
+    margin-bottom: 4px; font-variant-numeric: tabular-nums;
+  }
+  .stale-item-info a {
+    font-size: 12px; color: var(--blue-fg, #2563eb);
+    text-decoration: none;
+  }
+  .stale-item-info a:hover { text-decoration: underline; }
+  .stale-item-actions {
+    display: flex; gap: 6px; flex-wrap: nowrap; flex-shrink: 0;
+  }
+  .stale-item-actions button {
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--text-2); cursor: pointer;
+    font-size: 12px; font-weight: 500;
+    padding: 4px 10px; border-radius: var(--radius-sm, 6px);
+    transition: background .12s, border-color .12s, color .12s;
+  }
+  .stale-item-actions button:hover {
+    background: var(--surface-2); color: var(--text);
+    border-color: var(--text-3);
+  }
+  .stale-item-actions button:focus-visible {
+    outline: none; box-shadow: var(--ring-blue);
+    border-color: var(--blue-fg, #2563eb);
+  }
+  .stale-item-actions .sia-trash:hover {
+    background: var(--red-bg, rgba(207, 34, 46, 0.10));
+    color: var(--red-fg, #cf222e);
+    border-color: var(--red-fg, #cf222e);
+  }
+  .stale-item-actions .sia-apply:hover {
+    background: var(--blue-bg, rgba(37, 99, 235, 0.10));
+    color: var(--blue-fg, #2563eb);
+    border-color: var(--blue-fg, #2563eb);
+  }
+  .stale-item-actions button:disabled {
+    opacity: 0.55; cursor: not-allowed;
+  }
+  .stale-item-row .sia-status {
+    font-size: 11px; color: var(--text-3); margin-left: 8px;
+    align-self: center;
+  }
+
+  /* ── Bucket modal table (Feature 2) ─────────────────────────────── */
+  .bucket-modal-table-wrap { padding: 14px 18px 18px; }
+  .bucket-modal-table {
+    width: 100%; border-collapse: collapse; font-size: 13px;
+  }
+  .bucket-modal-table thead th {
+    position: sticky; top: 0; background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 10px; text-align: left;
+    font-size: 11.5px; font-weight: 600; color: var(--text-3);
+    text-transform: uppercase; letter-spacing: 0.04em;
+    z-index: 1;
+  }
+  .bucket-modal-table thead th.sortable { cursor: pointer; user-select: none; }
+  .bucket-modal-table thead th.sortable:hover { color: var(--text); }
+  .bucket-modal-table tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background .1s;
+  }
+  .bucket-modal-table tbody tr:hover { background: var(--surface-2); }
+  .bucket-modal-table tbody td {
+    padding: 8px 10px; color: var(--text); vertical-align: top;
+  }
+  .bucket-modal-table .bm-role {
+    max-width: 360px; overflow: hidden; text-overflow: ellipsis;
+    white-space: nowrap; color: var(--text-2);
+  }
+  .bucket-modal-table .bm-actions {
+    font-size: 12px; white-space: nowrap;
+  }
+  .bucket-modal-table .bm-actions a { color: var(--blue-fg, #2563eb); text-decoration: none; }
+  .bucket-modal-table .bm-actions a:hover { text-decoration: underline; }
+  .bucket-modal-table .bm-score {
+    display: inline-block; padding: 2px 8px; border-radius: var(--radius-full, 999px);
+    font-weight: 600; font-variant-numeric: tabular-nums;
+    background: var(--surface-2); color: var(--text);
+  }
+  .bucket-modal-table .bm-score-450 { background: rgba(22, 163, 74, 0.20); color: var(--green-fg, #16a34a); }
+  .bucket-modal-table .bm-score-400 { background: rgba(37, 99, 235, 0.18); color: var(--blue-fg, #2563eb); }
+  .bucket-modal-table .bm-score-300 { background: rgba(217, 119, 6, 0.18); color: var(--amber-fg, #d97706); }
+  .bucket-modal-table .bm-score-low { background: rgba(207, 34, 46, 0.15); color: var(--red-fg, #cf222e); }
+
+  /* ── Bucket-card clickable upgrade (Feature 2) ─────────────────── */
+  /* The existing .bucket-card stays a <div> by default. With
+     .bucket-card-clickable it becomes a focusable <button> with a
+     hover/focus affordance. */
+  button.bucket-card.bucket-card-clickable {
+    display: inline-flex; flex-direction: column; align-items: stretch;
+    background: var(--surface-2); cursor: pointer;
+    text-align: center; transition: background .12s, border-color .12s, transform .08s;
+    font: inherit; color: inherit;
+  }
+  button.bucket-card.bucket-card-clickable:hover {
+    background: var(--surface);
+    border-color: var(--blue-fg, #2563eb);
+    transform: translateY(-1px);
+  }
+  button.bucket-card.bucket-card-clickable:active { transform: translateY(0); }
+  button.bucket-card.bucket-card-clickable:focus-visible {
+    outline: none; box-shadow: var(--ring-blue);
+    border-color: var(--blue-fg, #2563eb);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    button.bucket-card.bucket-card-clickable { transition: none; }
+    button.bucket-card.bucket-card-clickable:hover { transform: none; }
+  }
+
+  /* Tighter responsive layout for narrow viewports */
+  @media (max-width: 600px) {
+    #item-list-modal { width: 96vw; max-height: 92vh; }
+    .stale-item-row { flex-direction: column; gap: 8px; }
+    .stale-item-actions { width: 100%; }
+    .stale-item-actions button { flex: 1; }
+    .bucket-modal-table .bm-role { max-width: 180px; }
+  }
+</style>
+
+<div id="item-list-backdrop" onclick="closeItemListModal()" role="presentation" aria-hidden="true"></div>
+<div id="item-list-modal" role="dialog" aria-modal="true" aria-labelledby="item-list-modal-title" aria-hidden="true">
+  <div class="item-list-modal-header">
+    <h3 id="item-list-modal-title" class="item-list-modal-title">Items</h3>
+    <span id="item-list-modal-meta" class="item-list-modal-meta" aria-hidden="true"></span>
+    <button type="button" class="item-list-modal-close" onclick="closeItemListModal()" aria-label="Close items list">&times;</button>
+  </div>
+  <div class="item-list-modal-body" id="item-list-modal-body">
+    <div class="item-list-modal-scroll" id="item-list-modal-scroll">
+      <div style="padding:24px;text-align:center;color:var(--text-3);font-size:13px">Loading\\u2026</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Item-list pop-out modals (Features 1 & 2) ─────────────────────
+// Shared shell used by:
+//   openStalePipelineModal(daysThreshold)  — fetches /api/pipeline/stale-items
+//   openBucketModal(bucketKey)              — fetches /api/all-evaluations/bucket
+// Lives after the main script so it can call any global helpers if needed.
+(function () {
+  var _itemListLastFocus = null;
+  var _bucketSortState = { col: 0, dir: 'desc' }; // default: score desc
+
+  function _escHtml(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  // Encode a URL for safe embedding in an inline JS string literal that
+  // sits inside an HTML attribute. Backslashes and single quotes need
+  // escaping so the runtime JS string parses cleanly.
+  function _jsAttrUrl(u) {
+    return String(u == null ? '' : u)
+      .replace(/\\\\/g, '\\\\\\\\')
+      .replace(/'/g, "\\\\'");
+  }
+
+  function _setBackdropVisible(on) {
+    var backdrop = document.getElementById('item-list-backdrop');
+    var modal    = document.getElementById('item-list-modal');
+    if (!backdrop || !modal) return;
+    if (on) {
+      backdrop.classList.add('visible');
+      modal.classList.add('visible');
+      backdrop.setAttribute('aria-hidden', 'false');
+      modal.setAttribute('aria-hidden', 'false');
+    } else {
+      backdrop.classList.remove('visible');
+      modal.classList.remove('visible');
+      backdrop.setAttribute('aria-hidden', 'true');
+      modal.setAttribute('aria-hidden', 'true');
+    }
+  }
+
+  function closeItemListModal() {
+    _setBackdropVisible(false);
+    if (_itemListLastFocus && _itemListLastFocus.focus) {
+      try { _itemListLastFocus.focus(); } catch (_) {}
+      _itemListLastFocus = null;
+    }
+  }
+  window.closeItemListModal = closeItemListModal;
+
+  // Open the shell with a title + loading state. Caller fetches data
+  // and replaces the body innerHTML.
+  function _showModal(title, metaText) {
+    _itemListLastFocus = document.activeElement;
+    var titleEl = document.getElementById('item-list-modal-title');
+    var metaEl  = document.getElementById('item-list-modal-meta');
+    var scroll  = document.getElementById('item-list-modal-scroll');
+    if (titleEl) titleEl.textContent = title;
+    if (metaEl)  metaEl.textContent = metaText || '';
+    if (scroll)  scroll.innerHTML =
+      '<div style="padding:24px;text-align:center;color:var(--text-3);font-size:13px">Loading\\u2026</div>';
+    _setBackdropVisible(true);
+    var close = document.querySelector('#item-list-modal .item-list-modal-close');
+    if (close && close.focus) try { close.focus(); } catch (_) {}
+  }
+
+  // ── Feature 1: stale-pipeline modal ────────────────────────────
+  async function openStalePipelineModal(daysThreshold) {
+    var days = parseInt(daysThreshold, 10);
+    if (isNaN(days) || days < 1) days = 30;
+    _showModal('Stale pipeline items (\\u2265' + days + ' days)', '');
+    var scroll = document.getElementById('item-list-modal-scroll');
+    var metaEl = document.getElementById('item-list-modal-meta');
+    var data = null;
+    try {
+      var res = await fetch('/api/pipeline/stale-items?days=' + encodeURIComponent(days), { cache: 'no-store' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      data = await res.json();
+    } catch (err) {
+      if (scroll) scroll.innerHTML =
+        '<div style="padding:24px;color:var(--red-fg);font-size:13px">Could not load stale items: ' + _escHtml(err.message) + '</div>';
+      return;
+    }
+    if (!data || !data.ok) {
+      if (scroll) scroll.innerHTML =
+        '<div style="padding:24px;color:var(--red-fg);font-size:13px">Server returned no data.</div>';
+      return;
+    }
+    var items = Array.isArray(data.items) ? data.items : [];
+    if (metaEl) metaEl.textContent = items.length + ' item' + (items.length === 1 ? '' : 's');
+    if (!items.length) {
+      if (scroll) scroll.innerHTML =
+        '<div style="padding:32px;text-align:center;color:var(--text-3);font-size:13px">No stale pipeline items at this threshold. <br><span style="color:var(--text-2)">All pending URLs were scraped within the last ' + days + ' days.</span></div>';
+      return;
+    }
+    var rowsHtml = items.map(function (it) {
+      var title    = it.title || it.company || it.url || '(unknown)';
+      var company  = it.company || '';
+      var url      = it.url || '';
+      var src      = it.source || 'Unknown';
+      var age      = it.age_days != null ? it.age_days + ' days old' : 'age unknown';
+      var scraped  = it.scraped_at ? 'scraped ' + it.scraped_at : '';
+      var alreadyD = it.already_discarded ? '<span class="sia-status" title="Already discarded in discard-log">(already discarded)</span>' : '';
+      var safeUrlAttr = _jsAttrUrl(url);
+      return '<div class="stale-item-row" data-url="' + _escHtml(url) + '">' +
+        '<div class="stale-item-info">' +
+          '<strong>' + _escHtml(title) + (company && company !== title ? ' \\u2014 ' + _escHtml(company) : '') + '</strong>' +
+          '<span class="stale-item-meta">' + _escHtml(src) + ' \\u00b7 ' + _escHtml(age) + (scraped ? ' \\u00b7 ' + _escHtml(scraped) : '') + alreadyD + '</span>' +
+          (url
+            ? '<a href="' + _escHtml(url) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">Open posting \\u2192</a>'
+            : '') +
+        '</div>' +
+        '<div class="stale-item-actions">' +
+          '<button type="button" class="sia-apply"  onclick="staleItemAction(\\'apply\\',  \\'' + safeUrlAttr + '\\', this)">Apply</button>' +
+          '<button type="button" class="sia-defer"  onclick="staleItemAction(\\'defer\\',  \\'' + safeUrlAttr + '\\', this)">Defer</button>' +
+          '<button type="button" class="sia-trash"  onclick="staleItemAction(\\'trash\\',  \\'' + safeUrlAttr + '\\', this)">Trash</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+    if (scroll) scroll.innerHTML =
+      '<div class="stale-item-list">' + rowsHtml + '</div>';
+  }
+  window.openStalePipelineModal = openStalePipelineModal;
+
+  async function staleItemAction(action, url, btnEl) {
+    if (!url) return;
+    var row = btnEl ? btnEl.closest('.stale-item-row') : null;
+    if (row) {
+      row.classList.add('row-pending');
+      row.querySelectorAll('button').forEach(function (b) { b.disabled = true; });
+    }
+    try {
+      if (action === 'apply') {
+        window.open(url, '_blank', 'noopener');
+      } else if (action === 'defer') {
+        if (typeof window.showToast === 'function') {
+          window.showToast('Defer noted (no pipeline change \\u2014 item still in queue)');
+        }
+      } else if (action === 'trash') {
+        var res = await fetch('/api/pipeline/remove-url', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: url })
+        });
+        if (!res.ok) {
+          var msg = 'HTTP ' + res.status;
+          try { var b = await res.json(); if (b && b.error) msg = b.error; } catch (_) {}
+          throw new Error(msg);
+        }
+        if (row) {
+          row.style.transition = 'opacity .2s, max-height .2s';
+          row.style.opacity = '0';
+          setTimeout(function () { row.remove(); _refreshStaleModalMeta(); }, 220);
+        }
+        if (typeof window.showToast === 'function') {
+          window.showToast('Removed from pipeline.md');
+        }
+        if (typeof window.refreshLiveStats === 'function') {
+          setTimeout(window.refreshLiveStats, 300);
+        }
+        return;
+      }
+    } catch (err) {
+      if (typeof window.showToast === 'function') {
+        window.showToast('Action failed: ' + (err && err.message ? err.message : 'unknown error'));
+      } else {
+        alert('Action failed: ' + (err && err.message ? err.message : 'unknown error'));
+      }
+    } finally {
+      if (row) {
+        row.classList.remove('row-pending');
+        row.querySelectorAll('button').forEach(function (b) { b.disabled = false; });
+      }
+    }
+  }
+  window.staleItemAction = staleItemAction;
+
+  function _refreshStaleModalMeta() {
+    var rows = document.querySelectorAll('#item-list-modal-scroll .stale-item-row');
+    var metaEl = document.getElementById('item-list-modal-meta');
+    if (metaEl) metaEl.textContent = rows.length + ' item' + (rows.length === 1 ? '' : 's');
+  }
+
+  // ── Feature 2: stat-bucket modal ────────────────────────────────
+  async function openBucketModal(bucketKey) {
+    if (!bucketKey) return;
+    _showModal('Loading evaluations\\u2026', '');
+    var scroll = document.getElementById('item-list-modal-scroll');
+    var data = null;
+    try {
+      var res = await fetch('/api/all-evaluations/bucket?key=' + encodeURIComponent(bucketKey), { cache: 'no-store' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      data = await res.json();
+    } catch (err) {
+      if (scroll) scroll.innerHTML =
+        '<div style="padding:24px;color:var(--red-fg);font-size:13px">Could not load bucket: ' + _escHtml(err.message) + '</div>';
+      return;
+    }
+    if (!data || !data.ok) {
+      var serverErr = (data && data.error) ? data.error : 'no data';
+      if (scroll) scroll.innerHTML =
+        '<div style="padding:24px;color:var(--red-fg);font-size:13px">Bucket error: ' + _escHtml(serverErr) + '</div>';
+      return;
+    }
+    var titleEl = document.getElementById('item-list-modal-title');
+    var metaEl  = document.getElementById('item-list-modal-meta');
+    var label   = (data.bucket && data.bucket.label) || bucketKey;
+    var count   = (data.bucket && data.bucket.count) != null ? data.bucket.count : (data.items || []).length;
+    if (titleEl) titleEl.textContent = label;
+    if (metaEl)  metaEl.textContent  = count + ' evaluation' + (count === 1 ? '' : 's');
+    _renderBucketTable(data.items || [], bucketKey);
+  }
+  window.openBucketModal = openBucketModal;
+
+  function _renderBucketTable(items /*, bucketKey */) {
+    var scroll = document.getElementById('item-list-modal-scroll');
+    if (!scroll) return;
+    if (!items.length) {
+      scroll.innerHTML =
+        '<div class="bucket-modal-table-wrap"><p style="text-align:center;color:var(--text-3);font-size:13px;margin:24px 0">No evaluations in this bucket yet.</p></div>';
+      return;
+    }
+    _bucketSortState = { col: 0, dir: 'desc' };
+    var thead =
+      '<thead><tr>' +
+        '<th class="sortable" data-col="0" data-type="num" onclick="bucketModalSort(0,\\'num\\')">Score</th>' +
+        '<th class="sortable" data-col="1" data-type="str" onclick="bucketModalSort(1,\\'str\\')">Company</th>' +
+        '<th class="sortable" data-col="2" data-type="str" onclick="bucketModalSort(2,\\'str\\')">Role</th>' +
+        '<th class="sortable" data-col="3" data-type="str" onclick="bucketModalSort(3,\\'str\\')">Status</th>' +
+        '<th class="sortable" data-col="4" data-type="str" onclick="bucketModalSort(4,\\'str\\')">Eval Date</th>' +
+        '<th>Action</th>' +
+      '</tr></thead>';
+    var tbodyRows = items.map(function (r) {
+      var scoreNum = (typeof r.score === 'number') ? r.score : parseFloat(r.score) || 0;
+      var score    = scoreNum.toFixed(1);
+      var scoreClass = 'bm-score';
+      if (scoreNum >= 4.5)      scoreClass += ' bm-score-450';
+      else if (scoreNum >= 4.0) scoreClass += ' bm-score-400';
+      else if (scoreNum >= 3.0) scoreClass += ' bm-score-300';
+      else                      scoreClass += ' bm-score-low';
+      var company = r.company || '';
+      var role    = r.role || '';
+      var status  = r.status || '';
+      var date    = r.date || '';
+      var slug    = (r.reportPath || r.report || '').replace(/^reports\\//, '');
+      var reportLink = slug
+        ? '<a href="reports/' + _escHtml(slug.replace(/\\.md$/, '.html')) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">Report</a>'
+        : '';
+      var url     = (r.reportSummary && r.reportSummary.url) || '';
+      var applyLink = url
+        ? '<a href="' + _escHtml(url) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">Apply</a>'
+        : '';
+      var actions = [reportLink, applyLink].filter(Boolean).join(' \\u00b7 ') || '<span class="muted">\\u2014</span>';
+      return '<tr data-num="' + _escHtml(String(r.num || '')) + '">' +
+        '<td data-sort-value="' + _escHtml(String(scoreNum)) + '"><span class="' + scoreClass + '">' + _escHtml(score) + '</span></td>' +
+        '<td><strong>' + _escHtml(company) + '</strong></td>' +
+        '<td class="bm-role" title="' + _escHtml(role) + '">' + _escHtml(role) + '</td>' +
+        '<td>' + _escHtml(status) + '</td>' +
+        '<td>' + _escHtml(date) + '</td>' +
+        '<td class="bm-actions">' + actions + '</td>' +
+      '</tr>';
+    }).join('');
+    scroll.innerHTML =
+      '<div class="bucket-modal-table-wrap table-scroll">' +
+        '<table class="bucket-modal-table" id="bucket-modal-table">' +
+          thead +
+          '<tbody id="bucket-modal-tbody">' + tbodyRows + '</tbody>' +
+        '</table>' +
+      '</div>';
+    // Invariant #8 — apply universal table baseline (dbl-click expand,
+    // [title] tooltips, column-resize handles) to the freshly-rendered
+    // bucket modal table.
+    if (typeof window.applyUniversalTableBaseline === 'function') {
+      try { window.applyUniversalTableBaseline({ root: scroll }); } catch (_) {}
+    }
+  }
+
+  function bucketModalSort(colIndex, type) {
+    var tbody = document.getElementById('bucket-modal-tbody');
+    if (!tbody) return;
+    var dir = (_bucketSortState.col === colIndex && _bucketSortState.dir === 'asc') ? 'desc' : 'asc';
+    _bucketSortState = { col: colIndex, dir: dir };
+    var rows = Array.from(tbody.querySelectorAll('tr'));
+    rows.sort(function (a, b) {
+      var ca = a.children[colIndex], cb = b.children[colIndex];
+      var av = (ca && ca.dataset && ca.dataset.sortValue !== undefined) ? ca.dataset.sortValue : (ca ? ca.innerText : '');
+      var bv = (cb && cb.dataset && cb.dataset.sortValue !== undefined) ? cb.dataset.sortValue : (cb ? cb.innerText : '');
+      av = (av || '').trim(); bv = (bv || '').trim();
+      var cmp;
+      if (type === 'num') {
+        cmp = (parseFloat(av) || 0) - (parseFloat(bv) || 0);
+      } else {
+        cmp = String(av).localeCompare(String(bv), undefined, { sensitivity: 'base' });
+      }
+      return dir === 'desc' ? -cmp : cmp;
+    });
+    rows.forEach(function (r) { tbody.appendChild(r); });
+  }
+  window.bucketModalSort = bucketModalSort;
+
+  // Global Esc -> close item-list modal first (capture phase so we get
+  // the event before existing Esc handlers further down the chain).
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    var modal = document.getElementById('item-list-modal');
+    if (modal && modal.classList.contains('visible')) {
+      e.stopPropagation();
+      closeItemListModal();
+    }
+  }, true);
+})();
+</script>
+
 </body>
 </html>`;
 

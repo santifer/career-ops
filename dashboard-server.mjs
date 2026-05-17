@@ -8,6 +8,7 @@ import { join, extname } from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { randomBytes } from 'crypto';
+import { execSync as _execSync } from 'child_process';
 import yaml from 'js-yaml';
 import { marked } from 'marked';
 import { parseApplicationsFile } from './lib/parse-applications.mjs';
@@ -20,6 +21,9 @@ import {
   upsertContact as upsertOutreachContact,
   logTouch as logOutreachTouch,
   setStatus as setOutreachStatus,
+  snoozeContact as snoozeOutreachContact,
+  cancelContactStrategy as cancelOutreachStrategy,
+  wakeContact as wakeOutreachContact,
   _resetCache as resetOutreachCache,
 } from './lib/outreach-tracker.mjs';
 import { estimateTTO } from './lib/tto-estimator.mjs';
@@ -60,6 +64,7 @@ function enrichOutreachSummary(summary) {
     due_today: (summary.due_today || []).map(enrichContact),
     breakup:   (summary.breakup   || []).map(enrichContact),
     referrals: (summary.referrals || []).map(enrichContact),
+    snoozed:   (summary.snoozed   || []).map(enrichContact),
   };
 }
 
@@ -257,9 +262,15 @@ const ADVANCE_RATE_ESTIMATE      = 0.50;   // historical: 11–72%; 50% is conse
 const HIGH_CONFIDENCE_PREGEN_RATE = 0.20;  // % of items hitting ≥4.5 + high-conf flag
 const COMPANY_CACHE_HIT_RATE     = 0.50;   // % of unique companies already cached (30d TTL)
 
-const PER_RUN_CAP_RUN_BATCH   = parseFloat(process.env.PER_RUN_CAP_RUN_BATCH_USD   || '25');
-const PER_RUN_CAP_PROCESS_ALL = parseFloat(process.env.PER_RUN_CAP_PROCESS_ALL_USD || '250');
-const DAILY_CAP_OVERNIGHT     = parseFloat(process.env.DAILY_CAP_OVERNIGHT_USD     || '20');
+const PER_RUN_CAP_RUN_BATCH    = parseFloat(process.env.PER_RUN_CAP_RUN_BATCH_USD    || '25');
+const PER_RUN_CAP_PROCESS_ALL  = parseFloat(process.env.PER_RUN_CAP_PROCESS_ALL_USD  || '250');
+const PER_RUN_CAP_APPLY_PACK   = parseFloat(process.env.PER_RUN_CAP_APPLY_PACK_USD   || '5');
+const DAILY_CAP_OVERNIGHT      = parseFloat(process.env.DAILY_CAP_OVERNIGHT_USD      || '20');
+// Single-row apply-pack estimate (council pricing). build-apply-pack.mjs today
+// only scaffolds stubs (~$0), but the prompt assumes it will eventually run
+// the council + humanize-check passes — budget for that future state so the
+// cap meaningfully gates power-user "regenerate everything" loops.
+const COST_PER_APPLY_PACK_USD  = parseFloat(process.env.COST_PER_APPLY_PACK_USD || '2.50');
 
 function countPipelinePending() {
   const fp = join(ROOT, 'data/pipeline.md');
@@ -412,6 +423,190 @@ function computeRecruiterPipelineDensity() {
     },
     thresholds: PIPELINE_HEALTH_THRESHOLDS,
     computed_at: new Date().toISOString(),
+  };
+}
+
+// ── Runway detail (calibration 2026-05-17, click-through on runway widget) ─
+// Click-through detail payload for the sidebar runway widget. Composes:
+//   - active_conversations: contacts with status != dead, sorted by recency
+//   - recent_touches_7d:    all touches in the last 7 days (most recent first)
+//   - response_rate_trend:  this-7d vs last-30d outbound→response ratio
+//   - who_to_contact_next:  ranked recommendations (tier-A unresponded >
+//                           tier-B unresponded > tier-A with prior response > …),
+//                           capped at 5 items
+// Returned by GET /api/runway-detail and consumed by openRunwayDetailModal().
+function computeRunwayDetail() {
+  let contacts = [];
+  try { contacts = listOutreachContacts(); } catch (e) {
+    return { ok: false, error: `outreach tracker unavailable: ${e.message}` };
+  }
+  // Pull the high-level density verdict as the runway header summary.
+  const density = computeRecruiterPipelineDensity();
+  const now = Date.now();
+  const sevenDaysAgo  = now - 7  * 86400000;
+  const thirtyDaysAgo = now - 30 * 86400000;
+  const lastSevenDaysAgo = now - 14 * 86400000; // for outbound-vs-response delta
+
+  // ── Active conversations (everything not dead, sorted by recency) ──
+  const activeConversations = contacts
+    .filter(c => c.status !== 'dead')
+    .map(c => {
+      const touches = Array.isArray(c.touches) ? c.touches : [];
+      const last = touches.length ? touches[touches.length - 1] : null;
+      const lastTs = last ? Date.parse(last.ts) : 0;
+      const days = lastTs ? Math.round((now - lastTs) / 86400000) : null;
+      return {
+        contact_id: c.contact_id,
+        name: c.name || '',
+        company: c.company || '',
+        role_title: c.title_at_send || '',
+        tier: c.tier || 'B',
+        contact_type: c.contact_type || '',
+        channel: last ? last.channel : '',
+        status: c.status,
+        last_touch_iso: last ? last.ts : null,
+        days_since: days,
+        next_action: c.next_action || null,
+      };
+    })
+    .sort((a, b) => {
+      // Most recent touch first; nulls last.
+      const ta = a.last_touch_iso ? Date.parse(a.last_touch_iso) : 0;
+      const tb = b.last_touch_iso ? Date.parse(b.last_touch_iso) : 0;
+      return tb - ta;
+    });
+
+  // ── Recent touches (last 7d) — flat list across contacts ──
+  const recentTouches = [];
+  for (const c of contacts) {
+    const touches = Array.isArray(c.touches) ? c.touches : [];
+    for (const t of touches) {
+      const ts = Date.parse(t.ts);
+      if (!isFinite(ts) || ts < sevenDaysAgo) continue;
+      recentTouches.push({
+        ts_iso: t.ts,
+        channel: t.channel || '',
+        contact_name: c.name || '',
+        company: c.company || '',
+        outbound: t.outbound !== false,
+        summary: (t.summary || '').slice(0, 240),
+      });
+    }
+  }
+  recentTouches.sort((a, b) => Date.parse(b.ts_iso) - Date.parse(a.ts_iso));
+
+  // ── Response rate trend (this 7d vs last 30d) ──
+  let out7  = 0, res7  = 0;
+  let out30 = 0, res30 = 0;
+  for (const c of contacts) {
+    const touches = Array.isArray(c.touches) ? c.touches : [];
+    for (const t of touches) {
+      const ts = Date.parse(t.ts);
+      if (!isFinite(ts)) continue;
+      const outbound = t.outbound !== false;
+      if (ts >= sevenDaysAgo) {
+        if (outbound) out7++;
+        else res7++;
+      }
+      if (ts >= thirtyDaysAgo) {
+        if (outbound) out30++;
+        else res30++;
+      }
+    }
+  }
+  const rate7  = out7  > 0 ? +(res7  / out7).toFixed(2)  : 0;
+  const rate30 = out30 > 0 ? +(res30 / out30).toFixed(2) : 0;
+  const delta = rate7 > rate30 ? 'up' : rate7 < rate30 ? 'down' : 'flat';
+
+  // ── Who to contact next — tier × silence × prior-engagement ranking ──
+  // Rank rule per task spec:
+  //   tier-A unresponded > tier-B unresponded > tier-A with prior response >
+  //   tier-B with prior response > tier-C unresponded > tier-C responded
+  // Within tier+status group: oldest-silent first (longest gap = most urgent).
+  // Snoozed contacts excluded. Cap at 5.
+  function tierWeight(t) {
+    if (t === 'A') return 3;
+    if (t === 'B') return 2;
+    return 1; // C / unspecified
+  }
+  function statusBucket(c) {
+    // unresponded = awaiting_reply or warm (we wrote and they haven't)
+    // responded   = already replied; lower urgency to re-engage
+    if (c.status === 'responded') return 0;
+    if (c.status === 'awaiting_reply' || c.status === 'warm') return 1;
+    return -1; // dead etc.
+  }
+  function isSnoozed(c) {
+    if (!c.snoozed_until) return false;
+    const t = Date.parse(c.snoozed_until);
+    return isFinite(t) && t > now;
+  }
+  const candidates = contacts
+    .filter(c => c.status !== 'dead')
+    .filter(c => !isSnoozed(c))
+    .map(c => {
+      const touches = Array.isArray(c.touches) ? c.touches : [];
+      const last = touches.length ? touches[touches.length - 1] : null;
+      const lastTs = last ? Date.parse(last.ts) : 0;
+      const daysSilent = lastTs ? Math.round((now - lastTs) / 86400000) : 999;
+      const tw = tierWeight((c.tier || 'B').toUpperCase());
+      const sb = statusBucket(c);
+      return { c, daysSilent, tw, sb };
+    })
+    .filter(x => x.sb >= 0);
+
+  candidates.sort((a, b) => {
+    // Unresponded tier-A first (sb=1 + tw=3), then unresponded tier-B (sb=1 + tw=2),
+    // then responded tier-A (sb=0 + tw=3) — combined ordering key
+    // We rank by (sb*10 + tw) descending, then days silent descending.
+    const ka = a.sb * 10 + a.tw;
+    const kb = b.sb * 10 + b.tw;
+    if (kb !== ka) return kb - ka;
+    return b.daysSilent - a.daysSilent;
+  });
+
+  const whoNext = candidates.slice(0, 5).map(({ c, daysSilent }) => {
+    let rationale;
+    const tier = (c.tier || 'B').toUpperCase();
+    if (c.status === 'awaiting_reply' || c.status === 'warm') {
+      rationale = `Tier-${tier} ${c.contact_type || 'contact'} · ${daysSilent}d silent · awaiting reply`;
+    } else if (c.status === 'responded') {
+      rationale = `Tier-${tier} responded · ${daysSilent}d since last touch · keep warm`;
+    } else {
+      rationale = `Tier-${tier} ${c.contact_type || 'contact'} · ${daysSilent}d silent`;
+    }
+    // Suggest channel: existing next_action channel if present, else best guess
+    let suggestedChannel = c.next_action?.draft_template_id?.startsWith('email_') ? 'email'
+      : (c.intel?.email_guess?.confidence === 'high' ? 'email' : 'linkedin_dm');
+    return {
+      contact_id: c.contact_id,
+      name: c.name || '',
+      company: c.company || '',
+      role_title: c.title_at_send || '',
+      tier,
+      rationale,
+      suggested_channel: suggestedChannel,
+      next_action: c.next_action || null,
+      days_since: daysSilent,
+    };
+  });
+
+  return {
+    ok: true,
+    runway_weeks: density.runway_weeks ?? RUNWAY_WEEKS_DEFAULT,
+    health: density.health || 'unknown',
+    health_reason: Array.isArray(density.health_reasons)
+      ? density.health_reasons.join(' · ')
+      : (density.runway_alert || ''),
+    active_conversations:    activeConversations,
+    recent_touches_7d:       recentTouches,
+    response_rate_trend: {
+      this_7d:  { outbound: out7,  responses: res7,  rate: rate7  },
+      last_30d: { outbound: out30, responses: res30, rate: rate30 },
+      delta,
+    },
+    who_to_contact_next: whoNext,
+    generated_at: new Date().toISOString(),
   };
 }
 
@@ -1345,6 +1540,162 @@ function batchLive() {
   return { total, completed, failed, running, pending, pct, rows: sorted.slice(0, 500), triageItems: triageItems.slice(0, 200) };
 }
 
+// ── Sidebar batch popout (2026-05-17) ──────────────────────────
+// Builds the detailed status feed for the clickable #sidebar-batch box.
+// Reuses batchLive() for the current run summary, detailBatches() for the
+// recent-runs grouping (15-min gap heuristic), data/cost-log.tsv for per-batch
+// cost rows, and data/errors.log for batch-related failures.
+function buildBatchStatusDetailed() {
+  const live = batchLive();
+
+  // ── Recent runs: enrich detailBatches() output with per-run cost ──
+  // detailBatches groups batch-state.tsv rows into runs by 15-min gap. We
+  // map cost-log.tsv rows (long format: date, batch_id, requests, ...) to
+  // the closest run by started_at proximity. Fallback to short-format
+  // per-item sum when long rows are unavailable.
+  const det = (() => { try { return detailBatches(); } catch (_) { return { batches: [] }; } })();
+
+  const costRows = [];
+  const fpCost = join(ROOT, 'data/cost-log.tsv');
+  if (existsSync(fpCost)) {
+    const lines = readFileSync(fpCost, 'utf-8').split('\n').filter(Boolean);
+    for (const line of lines) {
+      if (line.startsWith('date\t')) continue;
+      const cols = line.split('\t');
+      let dateStr, ts, cost, label, model;
+      if (cols.length >= 9) {
+        dateStr = cols[0]; ts = cols[0]; cost = parseFloat(cols[7]); model = cols[8] || ''; label = `${cols[2] || '?'} items`;
+      } else if (cols.length >= 4) {
+        dateStr = cols[0]; ts = cols[1] || cols[0]; cost = parseFloat(cols[2]); model = ''; label = cols[3] || '';
+      } else continue;
+      if (!isFinite(cost)) continue;
+      const t = Date.parse(ts);
+      if (isNaN(t)) continue;
+      costRows.push({ date: dateStr, ts, t, cost, model, label });
+    }
+  }
+  const PROX_MS = 30 * 60 * 1000; // 30 min — generous to catch async cost-log writes
+
+  const recent_runs = (det.batches || []).slice(0, 10).map(b => {
+    const startMs = b.started_at ? Date.parse(b.started_at) : 0;
+    let runCost = 0;
+    if (startMs) {
+      for (const r of costRows) {
+        if (Math.abs(r.t - startMs) <= PROX_MS) runCost += r.cost;
+      }
+    }
+    const durSec = (b.duration_ms && b.duration_ms > 0) ? Math.round(b.duration_ms / 1000) : null;
+    const status = b.running > 0 ? 'running' : (b.failed > 0 && b.completed === 0 ? 'failed' : (b.failed > 0 ? 'partial' : 'completed'));
+    return {
+      batch_id:     b.batch_id,
+      started_at:   b.started_at,
+      completed_at: b.completed_at,
+      duration_s:   durSec,
+      cost_usd:     Math.round(runCost * 100) / 100,
+      items_count:  b.total,
+      completed:    b.completed,
+      failed:       b.failed,
+      running:      b.running,
+      pending:      b.pending,
+      avg_score:    b.avgScore,
+      model:        (recent_runs_lookupModel(costRows, startMs)) || 'claude-sonnet-4-6',
+      status,
+    };
+  });
+
+  // ── Aggregate costs (today / rolling 30d) ──
+  const now = Date.now();
+  const dayMs = 86400000;
+  let cost_today_usd = 0;
+  let cost_30d_usd = 0;
+  const todayStr = new Date().toISOString().slice(0, 10);
+  for (const r of costRows) {
+    if (r.t >= now - 30 * dayMs) cost_30d_usd += r.cost;
+    if (r.date === todayStr) cost_today_usd += r.cost;
+  }
+
+  // ── Queue depth: triage-advance / pipeline-pending / batch-input ──
+  const queue_depth = {
+    triage_advance:    countTriageAdvanceQueued(),
+    pipeline_pending:  countPipelinePending(),
+    batch_input:       (() => {
+      const fp = join(ROOT, 'batch/batch-input.tsv');
+      if (!existsSync(fp)) return 0;
+      return readFileSync(fp, 'utf-8').split('\n').filter(l => l.trim() && !l.startsWith('id')).length;
+    })(),
+  };
+
+  // ── Recent batch-related failures from data/errors.log (last 5) ──
+  // Filter: lines containing "WORKER FAIL" / "batch" / "BATCH" — these are
+  // the failures that surface in the batch pipeline (worker subprocesses,
+  // API failures, etc.). Skip anything that doesn't look batch-related.
+  const most_recent_failures = [];
+  const fpErrors = join(ROOT, 'data/errors.log');
+  if (existsSync(fpErrors)) {
+    const raw = readFileSync(fpErrors, 'utf-8');
+    const lines = raw.split('\n').filter(Boolean);
+    // Walk from the end backwards
+    for (let i = lines.length - 1; i >= 0 && most_recent_failures.length < 5; i--) {
+      const ln = lines[i];
+      if (!/(WORKER FAIL|batch|BATCH|Anthropic|Gemini|worker)/i.test(ln)) continue;
+      // Format observed: [ISO_TS] WORKER FAIL id=N exit=N: <message>
+      const m = ln.match(/^\[([^\]]+)\]\s+(.*)$/);
+      if (m) {
+        most_recent_failures.push({
+          ts:    m[1],
+          error: m[2].slice(0, 240),
+        });
+      } else {
+        most_recent_failures.push({ ts: '', error: ln.slice(0, 240) });
+      }
+    }
+  }
+
+  // ── Running state: ETA estimate ──
+  // ETA = running × average completed-run duration. Uses the median of the
+  // last 5 runs (if available) for stability against outliers.
+  let eta_seconds = null;
+  if (live.running > 0) {
+    const durs = recent_runs.filter(r => r.duration_s && r.completed > 0).map(r => Math.round(r.duration_s / Math.max(1, r.completed))).slice(0, 5).sort((a, b) => a - b);
+    if (durs.length) {
+      const median = durs[Math.floor(durs.length / 2)];
+      eta_seconds = median * live.running;
+    }
+  }
+
+  return {
+    ok: true,
+    current_summary: {
+      completed: live.completed,
+      failed:    live.failed,
+      running:   live.running,
+      pending:   Math.max(0, live.pending),
+      percent:   live.pct,
+      total:     live.total,
+      eta_seconds,
+      model:     'claude-sonnet-4-6',  // current batch-runner-batches.mjs default
+      temperature: 0,
+    },
+    recent_runs,
+    queue_depth,
+    cost_today_usd: Math.round(cost_today_usd * 100) / 100,
+    cost_30d_usd:   Math.round(cost_30d_usd * 100) / 100,
+    most_recent_failures,
+    generated_at: new Date().toISOString(),
+  };
+}
+
+// Find the cost-log model column closest to a given start timestamp.
+// Returns null when no proximal row carries a model field.
+function recent_runs_lookupModel(costRows, startMs) {
+  if (!startMs) return null;
+  const PROX_MS = 30 * 60 * 1000;
+  for (const r of costRows) {
+    if (Math.abs(r.t - startMs) <= PROX_MS && r.model) return r.model;
+  }
+  return null;
+}
+
 // ── Claim verification helpers ─────────────────────────────────
 
 function buildVerifyPayload(reportSlug) {
@@ -2272,6 +2623,191 @@ const server = createServer((req, res) => {
     });
     return;
   }
+  // ── Drawer "Create Materials" — single-row apply-pack from the right-rail
+  // POST /api/drawer/build-apply-pack
+  //   Body: { rowNum: number, force?: boolean }
+  //   Behavior:
+  //     1) Verify the row exists in data/applications.md (via appsByNum cache)
+  //     2) Detect existing apply-pack/{NNN}-*/ — return 409 with the path
+  //        unless force:true
+  //     3) Cost cap: PER_RUN_CAP_APPLY_PACK_USD ($5 default). If estimate
+  //        exceeds the cap, return 402 unless force:true
+  //     4) Spawn `node scripts/build-apply-pack.mjs --row=N [--force]` detached,
+  //        stream stdout/stderr to /tmp/build-apply-pack-{jobId}.log
+  //     5) Record a job row in data/pipeline-process-state.json so the existing
+  //        /api/pipeline/job-status endpoint + the new
+  //        /api/drawer/apply-pack-status alias can both poll it
+  //
+  // Voice-corpus passthrough: build-apply-pack.mjs scaffolds stubs only today
+  // — the deeper humanize-check / council passes are out of scope for this
+  // build task. When that pipeline lands, no endpoint changes are required:
+  // we'll just pass --strict to the script.
+  if (url === '/api/drawer/build-apply-pack' && req.method === 'POST') {
+    let body = '';
+    let total = 0;
+    req.on('data', c => { total += c.length; if (total > 4 * 1024) { req.destroy(); return; } body += c; });
+    req.on('end', () => {
+      let parsed;
+      try { parsed = JSON.parse(body || '{}'); }
+      catch { return json({ ok: false, error: 'Invalid JSON' }, 400); }
+      const rowNum = parseInt(parsed.rowNum ?? parsed.row, 10);
+      const force  = !!parsed.force;
+      if (!Number.isFinite(rowNum) || rowNum < 1) {
+        return json({ ok: false, error: 'rowNum (positive integer) required' }, 400);
+      }
+
+      // 1) Row must exist
+      const app = appsByNum().get(String(rowNum));
+      if (!app) {
+        return json({ ok: false, error: `Row #${rowNum} not found in data/applications.md` }, 404);
+      }
+
+      // 2) Existing apply-pack detection — mirror the script's folder-naming
+      //    convention: apply-pack/{NNN}-{slug}. We can't reproduce the exact
+      //    slug without re-running slugify on the same fields, so we glob the
+      //    parent dir for any folder starting with the 3-digit row prefix.
+      const APPLY_PACK_ROOT = join(ROOT, 'apply-pack');
+      const prefix = String(rowNum).padStart(3, '0') + '-';
+      let existingDir = null;
+      if (existsSync(APPLY_PACK_ROOT)) {
+        try {
+          for (const f of readdirSync(APPLY_PACK_ROOT)) {
+            if (f.startsWith(prefix)) {
+              const full = join(APPLY_PACK_ROOT, f);
+              try {
+                if (statSync(full).isDirectory()) { existingDir = full; break; }
+              } catch {}
+            }
+          }
+        } catch {}
+      }
+      if (existingDir && !force) {
+        return json({
+          ok: false,
+          error: 'Apply-pack already exists; pass force:true to regenerate.',
+          already_exists: true,
+          existing_dir: existingDir.replace(ROOT + '/', ''),
+        }, 409);
+      }
+
+      // 3) Cost cap
+      const estimatedCost = COST_PER_APPLY_PACK_USD;
+      if (estimatedCost > PER_RUN_CAP_APPLY_PACK && !force) {
+        return json({
+          ok: false,
+          error: `Estimated $${estimatedCost.toFixed(2)} exceeds per-run cap $${PER_RUN_CAP_APPLY_PACK.toFixed(2)}. Pass force:true to override or raise PER_RUN_CAP_APPLY_PACK_USD.`,
+          cap_exceeded: 'per_run',
+          estimated_cost_usd: estimatedCost,
+          cap_usd: PER_RUN_CAP_APPLY_PACK,
+        }, 402);
+      }
+
+      // 4) Spawn the script
+      const jobId = 'drawer-pack-' + Date.now().toString(36) + '-' + randomBytes(3).toString('hex');
+      const logPath = `/tmp/build-apply-pack-${jobId}.log`;
+      // Compute the expected output dir for the client toast/link. The script
+      // uses `${pad3(row)}-${slugify(company + '-' + role)}`. We can replicate
+      // slugify locally — it's a single regex pipeline (see build-apply-pack.mjs:47).
+      const expectedSlug = (app.company + '-' + app.role)
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '')
+        .slice(0, 60);
+      const expectedDir = `apply-pack/${prefix}${expectedSlug}`;
+      try {
+        const scriptArgs = [join(ROOT, 'scripts/build-apply-pack.mjs'), `--row=${rowNum}`];
+        if (force) scriptArgs.push('--force');
+        import('child_process').then(({ spawn }) => {
+          const proc = spawn('node', scriptArgs, {
+            cwd: ROOT,
+            env: process.env,
+            stdio: ['ignore', 'pipe', 'pipe'],
+            detached: true,
+          });
+          proc.stdout?.on('data', c => { try { appendFileSync(logPath, c); } catch {} });
+          proc.stderr?.on('data', c => { try { appendFileSync(logPath, '[stderr] ' + c); } catch {} });
+          proc.on('exit', (code) => {
+            // Persist the terminal state so /api/pipeline/job-status returns
+            // status=completed|failed after the process actually exits.
+            try {
+              const state = loadPipelineProcessState();
+              if (state.jobs?.[jobId]) {
+                state.jobs[jobId].status = code === 0 ? 'completed' : 'failed';
+                state.jobs[jobId].exit_code = code;
+                state.jobs[jobId].finished_at = new Date().toISOString();
+                if (code !== 0) state.jobs[jobId].error = `build-apply-pack.mjs exited ${code}`;
+                writeFileSync(join(ROOT, 'data/pipeline-process-state.json'), JSON.stringify(state, null, 2));
+              }
+            } catch {}
+          });
+          proc.unref();
+        });
+      } catch (e) {
+        return json({ ok: false, error: e.message }, 500);
+      }
+
+      // 5) Record the job in pipeline-process-state.json so the existing
+      //    /api/pipeline/job-status (and our new alias) can poll it.
+      try {
+        if (!existsSync(join(ROOT, 'data'))) mkdirSync(join(ROOT, 'data'), { recursive: true });
+        const state = loadPipelineProcessState();
+        state.jobs[jobId] = {
+          jobId,
+          type:         'drawer-apply-pack',
+          status:       'running',
+          started_at:   new Date().toISOString(),
+          row_num:      rowNum,
+          company:      app.company,
+          role:         app.role,
+          expected_dir: expectedDir,
+          force:        force,
+          log_path:     logPath,
+        };
+        writeFileSync(join(ROOT, 'data/pipeline-process-state.json'), JSON.stringify(state, null, 2));
+      } catch {}
+
+      return json({
+        ok: true,
+        jobId,
+        row_num: rowNum,
+        log_path: logPath,
+        expected_dir: expectedDir,
+        company: app.company,
+        role: app.role,
+        force,
+        estimated_cost_usd: estimatedCost,
+        status_url: `/api/drawer/apply-pack-status?job_id=${jobId}`,
+      });
+    });
+    return;
+  }
+  // GET /api/drawer/apply-pack-status?job_id=X
+  //   Thin alias over /api/pipeline/job-status, kept under the drawer
+  //   namespace so future drawer-specific fields (e.g. file_count, README
+  //   ready-state) can be appended without touching the pipeline status path.
+  if (url === '/api/drawer/apply-pack-status' && req.method === 'GET') {
+    const jobId = String(query.job_id || '');
+    if (!jobId) return json({ ok: false, error: 'missing job_id' }, 400);
+    const state = loadPipelineProcessState();
+    const job = state.jobs?.[jobId];
+    if (!job) return json({ ok: false, error: 'job not found' }, 404);
+    // Pull tail of log for the modal
+    let tail = [];
+    if (job.log_path && existsSync(job.log_path)) {
+      try {
+        const lines = readFileSync(job.log_path, 'utf-8').split('\n').filter(Boolean);
+        tail = lines.slice(-20);
+      } catch {}
+    }
+    // Detect README so the client can offer a deep link the moment the
+    // script writes it (build-apply-pack.mjs writes README.md first).
+    let readmeRel = null;
+    if (job.expected_dir) {
+      const readmeAbs = join(ROOT, job.expected_dir, 'README.md');
+      if (existsSync(readmeAbs)) readmeRel = `${job.expected_dir}/README.md`;
+    }
+    return json({ ok: true, job, log_tail: tail, readme_rel: readmeRel });
+  }
   if (url === '/api/pipeline/defer-company' && req.method === 'POST') {
     // Task 2 — "Defer" action on the per-company preview table. Writes a row
     // to data/deferred-companies.jsonl (gitignored) so the next Process All
@@ -2308,6 +2844,11 @@ const server = createServer((req, res) => {
     // Phase 6 (calibration 2026-05-16): pipeline-density widget data source.
     // Used by the dashboard runway-alert widget + heartbeat email runway section.
     return json(computeRecruiterPipelineDensity());
+  }
+  if (url === '/api/runway-detail') {
+    // 2026-05-17 — click-through detail for the runway sidebar widget.
+    // Powers openRunwayDetailModal(); polled every 30s while modal open.
+    return json(computeRunwayDetail());
   }
   if (url === '/api/discard-with-reason' && req.method === 'POST') {
     // Item #1 from 2026-05-16 incomplete-task review: capture WHY a row was
@@ -2487,10 +3028,89 @@ const server = createServer((req, res) => {
     });
     return;
   }
+  // POST /api/outreach/snooze — body: { contact_id, until_iso, note? }
+  // Snoozed contacts are excluded from due_today/breakup/referrals until
+  // until_iso passes. resetOutreachCache() ensures the next /api/outreach
+  // call sees fresh state.
+  if (url === '/api/outreach/snooze' && req.method === 'POST') {
+    let body = ''; let total = 0;
+    req.on('data', c => { total += c.length; if (total > 8 * 1024) { req.destroy(); return; } body += c; });
+    req.on('end', () => {
+      try {
+        const p = JSON.parse(body);
+        if (!p.contact_id || !p.until_iso) throw new Error('contact_id and until_iso required');
+        if (!getOutreachContact(p.contact_id)) throw new Error(`contact not found: ${p.contact_id}`);
+        const c = snoozeOutreachContact(p.contact_id, p.until_iso, p.note || '');
+        resetOutreachCache();
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: true, contact: enrichContact(c) }));
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: err.message }));
+      }
+    });
+    return;
+  }
+  // POST /api/outreach/cancel-strategy — body: { contact_id, reason? }
+  // Marks the current next_action as cancelled. Contact stays in the
+  // tracker; the next recommender pass writes a fresh next_action.
+  if (url === '/api/outreach/cancel-strategy' && req.method === 'POST') {
+    let body = ''; let total = 0;
+    req.on('data', c => { total += c.length; if (total > 8 * 1024) { req.destroy(); return; } body += c; });
+    req.on('end', () => {
+      try {
+        const p = JSON.parse(body);
+        if (!p.contact_id) throw new Error('contact_id required');
+        if (!getOutreachContact(p.contact_id)) throw new Error(`contact not found: ${p.contact_id}`);
+        const c = cancelOutreachStrategy(p.contact_id, p.reason || '');
+        resetOutreachCache();
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: true, contact: enrichContact(c) }));
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: err.message }));
+      }
+    });
+    return;
+  }
+  // POST /api/outreach/wake — body: { contact_id }
+  // Clears snoozed_until so the contact reappears on the next refresh.
+  if (url === '/api/outreach/wake' && req.method === 'POST') {
+    let body = ''; let total = 0;
+    req.on('data', c => { total += c.length; if (total > 8 * 1024) { req.destroy(); return; } body += c; });
+    req.on('end', () => {
+      try {
+        const p = JSON.parse(body);
+        if (!p.contact_id) throw new Error('contact_id required');
+        if (!getOutreachContact(p.contact_id)) throw new Error(`contact not found: ${p.contact_id}`);
+        const c = wakeOutreachContact(p.contact_id);
+        resetOutreachCache();
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: true, contact: enrichContact(c) }));
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: err.message }));
+      }
+    });
+    return;
+  }
 
   if (url === '/api/batch-live') {
     try { return json(batchLive()); }
     catch (err) { res.writeHead(500, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }); res.end(JSON.stringify({ error: err.message })); return; }
+  }
+
+  // ── Sidebar batch popout: detailed live status feed (2026-05-17) ──
+  // Powers the clickable #sidebar-batch box → modal with real-time detail.
+  // Composes batchLive() summary + detailBatches() recent-runs grouping +
+  // cost-log totals + queue depth + recent batch-related failures.
+  if (url === '/api/batch/status-detailed') {
+    try { return json(buildBatchStatusDetailed()); }
+    catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ ok: false, error: err.message }));
+      return;
+    }
   }
 
   const verifyMatch = url.match(/^\/api\/verify\/(.+\.md)$/);
@@ -2632,6 +3252,251 @@ const server = createServer((req, res) => {
     return json(result.ok
       ? { ok: true, num: result.num, entries: result.entries }
       : { ok: false, error: result.error }, code);
+  }
+
+  // ── Stale pipeline items (>=N days) — Feature 1 (item-list-pop-out) ───
+  // GET /api/pipeline/stale-items?days=30
+  // Returns the subset of detailPending() items whose daysInQueue >= threshold,
+  // formatted for the stale-pipeline modal. Sorted oldest-first.
+  if (url === '/api/pipeline/stale-items') {
+    try {
+      const daysRaw = parseInt(query.days, 10);
+      const days = (!isNaN(daysRaw) && daysRaw >= 1 && daysRaw <= 3650) ? daysRaw : 30;
+      const pending = detailPending();
+      const items = (pending.items || [])
+        .filter(it => it && it.daysInQueue != null && it.daysInQueue >= days)
+        .sort((a, b) => (b.daysInQueue || 0) - (a.daysInQueue || 0))
+        .map(it => ({
+          url:        it.url || '',
+          title:      it.role || '',
+          company:    it.company || '',
+          source:     it.platform || 'Unknown',
+          tier:       it.tier || null,
+          age_days:   it.daysInQueue,
+          scraped_at: it.dateAdded || null,
+          already_discarded: !!it.alreadyDiscarded,
+        }));
+      return json({ ok: true, days_threshold: days, count: items.length, items });
+    } catch (err) {
+      console.error('[stale-items] error:', err);
+      return json({ ok: false, error: err.message }, 500);
+    }
+  }
+
+  // POST /api/pipeline/remove-url — Feature 1 "Trash" action.
+  // Removes a single pipeline.md row by URL match. Body: { url }.
+  // Atomic write via tmp + rename. Idempotent: not-found returns 200.
+  if (url === '/api/pipeline/remove-url' && req.method === 'POST') {
+    let body = '';
+    let total = 0;
+    req.on('data', c => {
+      total += c.length;
+      if (total > 4 * 1024) { req.destroy(); return; }
+      body += c;
+    });
+    req.on('end', () => {
+      let parsed;
+      try { parsed = JSON.parse(body || '{}'); }
+      catch (_) { return json({ ok: false, error: 'Invalid JSON body' }, 400); }
+      const target = String(parsed.url || '').trim();
+      if (!target) return json({ ok: false, error: 'url is required' }, 400);
+      if (target.length > 2048) return json({ ok: false, error: 'URL too long' }, 400);
+      const path = join(ROOT, 'data/pipeline.md');
+      if (!existsSync(path)) return json({ ok: false, error: 'pipeline.md not found' }, 500);
+      const content = readFileSync(path, 'utf8');
+      const lines = content.split('\n');
+      let removed = 0;
+      const keep = lines.filter(l => {
+        if (!l.startsWith('- [ ]')) return true;
+        const rest = l.replace(/^- \[ \]\s*/, '').trim();
+        const firstCell = (rest.split('|')[0] || '').trim();
+        if (firstCell === target) { removed++; return false; }
+        return true;
+      });
+      if (removed === 0) {
+        return json({ ok: true, removed: 0, note: 'URL not found in pipeline.md (already removed?)' });
+      }
+      const tmp = path + '.tmp.' + process.pid + '.' + Date.now();
+      try {
+        writeFileSync(tmp, keep.join('\n'));
+        renameSync(tmp, path);
+      } catch (err) {
+        return json({ ok: false, error: 'Atomic write failed: ' + err.message }, 500);
+      }
+      return json({ ok: true, removed });
+    });
+    return;
+  }
+
+  // ── Scan activity — bottom-strip click-through (2026-05-17) ──────────
+  // GET /api/scan-activity?limit=20
+  // Lists the most recent scan events from data/scan-history.tsv with
+  // a per-portal rollup (jobs found, jobs new, first-seen-on-this-scan,
+  // age). Data source = parseScanHistory() (which returns one row per URL),
+  // grouped by portal+date, sorted newest-first, capped at `limit` groups.
+  if (url === '/api/scan-activity') {
+    try {
+      const limit = Math.max(1, Math.min(200, parseInt(query.limit || '20', 10) || 20));
+      const rows = parseScanHistory();
+      // Group by (portal, first_seen date) — that's how scans appear in
+      // the TSV. Per group: jobs_found = entries, jobs_new = entries marked
+      // 'new' or where status begins 'pending'.
+      const groups = new Map();
+      for (const r of rows) {
+        if (!r.portal) continue;
+        const dateKey = (r.first_seen || '').slice(0, 10);
+        const key = r.portal + '|' + dateKey;
+        if (!groups.has(key)) {
+          groups.set(key, {
+            portal: r.portal,
+            date: dateKey,
+            jobs_found: 0,
+            jobs_new: 0,
+            sample_companies: new Set(),
+          });
+        }
+        const g = groups.get(key);
+        g.jobs_found++;
+        // 'new' is the most common status for fresh URLs in scan-history.tsv
+        const s = (r.status || '').toLowerCase();
+        if (s === 'new' || s.startsWith('pending')) g.jobs_new++;
+        if (r.company && g.sample_companies.size < 5) g.sample_companies.add(r.company);
+      }
+      const list = Array.from(groups.values())
+        .map(g => ({
+          portal: g.portal,
+          date:   g.date,
+          jobs_found: g.jobs_found,
+          jobs_new:   g.jobs_new,
+          sample_companies: Array.from(g.sample_companies),
+        }))
+        .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+        .slice(0, limit);
+      return json({ ok: true, events: list, total_groups: groups.size, generated_at: new Date().toISOString() });
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ ok: false, error: e.message }));
+      return;
+    }
+  }
+
+  // ── System health — bottom-strip click-through (2026-05-17) ──────────
+  // GET /api/system-health
+  // Lists launchd jobs (career-ops.*), cloudflared tunnel state, dashboard
+  // server uptime, and tail of data/errors.log. Best-effort — any check
+  // that fails returns null/false rather than aborting the whole payload.
+  if (url === '/api/system-health') {
+    try {
+      let jobs = [];
+      try {
+        const out = _execSync('launchctl list', { encoding: 'utf-8', timeout: 4000 }).toString();
+        jobs = out.split('\n')
+          .filter(l => l && /career-ops|careerops/i.test(l))
+          .map(l => {
+            const cols = l.split(/\t+/);
+            return {
+              pid:    cols[0] && cols[0] !== '-' ? parseInt(cols[0], 10) : null,
+              status: cols[1] && cols[1] !== '-' ? parseInt(cols[1], 10) : null,
+              label:  cols[2] || '',
+            };
+          });
+      } catch (_) { /* launchctl not present or no agent — return empty list */ }
+
+      // Tunnel: check if cloudflared process is running.
+      let tunnel = { running: false, info: '' };
+      try {
+        const out = _execSync('pgrep -af cloudflared', { encoding: 'utf-8', timeout: 2000 }).toString().trim();
+        if (out) {
+          tunnel.running = true;
+          tunnel.info = out.split('\n')[0].slice(0, 240);
+        }
+      } catch (_) { /* not running */ }
+
+      // Server uptime + memory rough — process.uptime() returns seconds.
+      const memMB = Math.round(process.memoryUsage().rss / 1024 / 1024);
+      const server = {
+        uptime_seconds: Math.round(process.uptime()),
+        node_version:   process.version,
+        pid:            process.pid,
+        memory_mb:      memMB,
+      };
+
+      // Recent errors — last 20 lines of data/errors.log
+      const errLogPath = join(ROOT, 'data/errors.log');
+      let errors = [];
+      if (existsSync(errLogPath)) {
+        try {
+          const txt = readFileSync(errLogPath, 'utf-8');
+          const lines = txt.split('\n').filter(l => l && l.trim());
+          errors = lines.slice(-20).reverse().map(l => l.slice(0, 320));
+        } catch (_) {}
+      }
+
+      return json({
+        ok: true,
+        jobs,
+        tunnel,
+        server,
+        errors,
+        generated_at: new Date().toISOString(),
+      });
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ ok: false, error: e.message }));
+      return;
+    }
+  }
+
+  // ── All-Evaluations bucket — Feature 2 (item-list-pop-out) ───────────
+  // GET /api/all-evaluations/bucket?key={bucketKey}
+  // Bucket keys: score-450-up, score-400-449, score-350-399, score-300-349,
+  // score-below-300, status-evaluated, status-skip, status-discarded, plus
+  // additional status keys for completeness.
+  if (url === '/api/all-evaluations/bucket') {
+    try {
+      const key = String(query.key || '').trim();
+      const BUCKET_FILTERS = {
+        'score-450-up':     { label: 'Score 4.5+',     test: r => r.score >= 4.5 },
+        'score-400-449':    { label: 'Score 4.0-4.4',  test: r => r.score >= 4.0 && r.score < 4.5 },
+        'score-350-399':    { label: 'Score 3.5-3.9',  test: r => r.score >= 3.5 && r.score < 4.0 },
+        'score-300-349':    { label: 'Score 3.0-3.4',  test: r => r.score >= 3.0 && r.score < 3.5 },
+        'score-below-300':  { label: 'Score <3.0',     test: r => r.score < 3.0 },
+        'status-evaluated': { label: 'Status: Evaluated',
+          test: r => (r.status || '').toLowerCase() === 'evaluated' },
+        'status-skip':      { label: 'Status: SKIP',
+          test: r => (r.status || '').toLowerCase() === 'skip' },
+        'status-discarded': { label: 'Status: Discarded',
+          test: r => (r.status || '').toLowerCase() === 'discarded' },
+        'status-applied':   { label: 'Status: Applied',
+          test: r => (r.status || '').toLowerCase() === 'applied' },
+        'status-rejected':  { label: 'Status: Rejected',
+          test: r => (r.status || '').toLowerCase() === 'rejected' },
+        'status-interview': { label: 'Status: Interview',
+          test: r => (r.status || '').toLowerCase() === 'interview' },
+        'status-offer':     { label: 'Status: Offer',
+          test: r => (r.status || '').toLowerCase() === 'offer' },
+        'status-responded': { label: 'Status: Responded',
+          test: r => (r.status || '').toLowerCase() === 'responded' },
+      };
+      const filter = BUCKET_FILTERS[key];
+      if (!filter) {
+        return json({ ok: false, error: 'unknown bucket key', valid_keys: Object.keys(BUCKET_FILTERS) }, 400);
+      }
+      const apps = parseApplications();
+      const matched = apps.filter(filter.test);
+      // Sort: highest score first, then most recent eval (highest num).
+      matched.sort((a, b) => (b.score - a.score) || (b.num - a.num));
+      const rows = matched.slice(0, 500)
+        .map(r => ({ ...r, reportSummary: r.report ? parseReportSummary(r.report) : {} }));
+      return json({
+        ok: true,
+        bucket: { key, label: filter.label, count: matched.length },
+        items: rows,
+      });
+    } catch (err) {
+      console.error('[bucket] error:', err);
+      return json({ ok: false, error: err.message }, 500);
+    }
   }
 
   const detailMatch = url.match(/^\/api\/detail\/(.+)$/);

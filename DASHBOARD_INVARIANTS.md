@@ -2,6 +2,8 @@
 
 Authored 2026-05-17 after a UX redesign pass touched shared CSS and prompted a regression check. This document captures the table interactions that **must not break** when future agents (or humans) edit the dashboard, the exact selectors + handlers that bind those interactions, and the audit pattern to run before/after any change.
 
+**These invariants are the table-specific instantiation of the broader `DESIGN_PRINCIPLES.md` (the 5 pillars: scannability, action proximity, strengths+limitations, background transparency, future-action awareness). When in doubt about whether an invariant should be relaxed or strengthened, consult DESIGN_PRINCIPLES.md and score against the 5 pillars.**
+
 If you are about to:
 - Edit `scripts/build-dashboard.mjs` (≥50 lines)
 - Add new CSS that targets `tr.row`, `td`, `#apply-now-tbody`, `#all-tbody`, or anything wrapping `<table>`
@@ -61,6 +63,58 @@ If you are about to:
 - **What must work:** `J`/`K` move focus through visible Apply-Now rows (blue left-stripe indicator); `A`/`Enter` open the focused row's apply link in a new tab; `X` toggles the row's bulk checkbox; `?` toggles the keyboard-help overlay; `Esc` closes help first, then clears row focus
 - **What it MUST NOT change:** existing Esc-to-close on modals (drawer, Process All modal), existing arrow-key nav (if any), click handlers
 - **Verification:** press `?` — help overlay opens; press `J` then `Enter` — first row's apply link opens in new tab
+
+### 8. Universal table baseline — applies to EVERY table, queue, and popout list (added 2026-05-17)
+
+This is the **permanent rule** for every existing table and every future table/queue/popout. No table ships without satisfying ALL 5 sub-rules. When a new table is added (Apply-Now, All Evaluations, Process All Phase A per-company, stale-pipeline list, bucket-modal table, drawer detail tables, etc.) — they must conform.
+
+#### 8a. Scroll-on-overflow (both axes)
+- Wrapper: `<div class="table-scroll"><table>...</table></div>` with `.table-scroll { overflow-x: auto; overflow-y: auto; max-height: 520px; }` (or `60vh` for modal tables). Mobile may override to `overflow-x: visible`.
+- The wrapper MUST scroll smoothly under mouse wheel + trackpad + touch.
+- A `↔` scroll-hint badge appears in the bottom-right when content exceeds wrapper width (via `initTableHorizontalScroll`).
+
+#### 8b. Cell truncation + click-to-expand-row (the Excel pattern)
+- Default state: each row is height-bounded; cells with long content show truncated text + native `[title]` tooltip.
+- Click on a cell: the ENTIRE ROW expands (height: auto, white-space: normal on all cells, text wraps) revealing all cell content in full. Body class toggle `tr.expanded` is the canonical state marker.
+- Click again: row collapses back.
+- The row-click-to-open-drawer behavior (invariant #2) still wins — drawer opens on click. The cell-expand is a SEPARATE interaction. Suggested binding: double-click a row expands inline; single-click opens drawer.
+- Alternative: an explicit `+` / `–` toggle button at the start of each row; the existing drawer-open behavior stays on single row click.
+- Min/max constraints: expanded row capped at 200px height to prevent runaway expansion on huge cells; if content exceeds, a scrollbar appears inside the expanded cell.
+
+#### 8c. Native [title] tooltips on truncated cells
+- Every truncated `<td>` gets a `title="{full content}"` attribute. Browser shows tooltip on hover (1-2s delay).
+- This is the lowest-friction reveal; the row-expand pattern (8b) is for users who want persistent visibility.
+
+#### 8d. Scroll-follows-cursor (the "moves with me" pattern)
+- When the user hovers over a `.table-scroll` wrapper that is currently overflowing, native scroll behavior applies (wheel/trackpad scroll the wrapper, not the page).
+- BONUS (optional, document if implemented): edge-hover auto-scroll — when the cursor is within 20px of the wrapper's right or bottom edge AND the wrapper is overflowing, slowly auto-scroll toward that edge at 2-3px per frame.
+- The wrapper MUST NOT trap scroll events when there is no overflow on that axis (else parent page can't scroll past the table).
+
+#### 8e. Column resize handles (NEW — implement going forward; retrofit on existing tables when touched)
+- Each `<th>` has a 4px-wide drag handle on its right border. Cursor changes to `col-resize` on hover.
+- mousedown + drag adjusts the column width in real time; mouseup persists the new width to localStorage (`careerops.colwidth.{tableId}.{colKey}`).
+- A reset action (right-click on the drag handle, or a small menu item) clears the saved width.
+
+#### What this means for existing tables
+- **Apply-Now table:** scroll-on-overflow ✅ (current); truncation + drawer click ✅; cell-expand 🚧 retrofit needed; column resize 🚧 retrofit needed
+- **All Evaluations table:** same as Apply-Now
+- **Process All Phase A per-company table:** scroll-on-overflow ✅; cell-expand 🚧 retrofit needed; column resize 🚧 retrofit needed
+- **Bucket modal tables (new 2026-05-17, Subagent C):** these MUST ship with 8a + 8b from day one — cross-check at integration
+- **Stale-pipeline list (new 2026-05-17, Subagent C):** if rendered as a table, must satisfy all 5 sub-rules; if as a card list, 8b/8e don't apply
+- **Drawer detail tables (How to Position, What Fits, etc.):** these are smaller and may not need 8e (column resize), but 8a/8b/8c always apply
+
+#### Implementation utility (one shared lib for all tables)
+- Create `lib/table-ux.mjs` (or inline in build-dashboard.mjs) that exports `applyUniversalTableBaseline(tableEl)`:
+  - Adds the `.table-scroll` wrapper if missing
+  - Adds drag handles to each `<th>`
+  - Binds dblclick handler for row-expand
+  - Adds `[title]` to truncated cells (computed from `data-fulltext` or inner text + slice)
+  - Restores saved column widths from localStorage
+- Every table renderer calls this utility after render. New tables get the behavior for free.
+
+#### Verification (run on every dashboard build)
+- For each `<table>` inside a `.table-scroll`: confirm wrapper exists, overflow:auto on both axes, drag handles on `<th>`, dblclick expand works, [title] tooltips present.
+- Add a section to the audit pattern below: "8e column-resize handles present on every `<th>` in dashboard.html: $(grep -c 'col-resize-handle' dashboard/index.html) should be ≥ <total th count>"
 
 ---
 
