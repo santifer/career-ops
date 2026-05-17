@@ -1,0 +1,10 @@
+{
+  "_schema_version": 1,
+  "_what_this_is": "Per-company Time-to-Offer overrides used by lib/tto-estimator.mjs. When the council surfaces fresh TTO intel (e.g., 'Anthropic is currently running a fast-track for Strategic Ops candidates, 3-week cycle'), agents append/update entries here so the next triage run honors the updated estimate. Loaded at triage time.",
+  "_how_to_use": {
+    "companies": "Map of slugified-company-name → { weeks (number), tier ('fast'|'med'|'slow'|'glacial'), confidence ('high'|'med'|'low'), source (string), note (optional string), expires_at (optional ISO date — defaults to never)}",
+    "slug_rules": "Lowercase the company name, replace any non-alphanumeric run with a single hyphen, trim leading/trailing hyphens. 'Google DeepMind' → 'google-deepmind'.",
+    "auto_update": "Agents may write to this file via scripts/agent-commit.mjs whenever they have fresh TTO signal. Manual edits also welcome."
+  },
+  "companies": {}
+}
