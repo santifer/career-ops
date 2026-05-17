@@ -111,3 +111,9 @@ data/linkedin/
 
 # Outreach state — per-contact message history + intel cache, personal
 data/outreach-state.json
+
+# Discard reasons — feeds back into triage prompt; personal data
+data/discard-reasons.jsonl
+
+# Company intel cache — per-company council intel + toxicity + TTO, personal
+data/company-intel-cache/

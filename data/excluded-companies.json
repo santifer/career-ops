@@ -1,0 +1,26 @@
+{
+  "_schema_version": 1,
+  "_what_this_is": "Hard-exclude company list per career calibration brief 2026-05-16. Companies in this list are auto-trashed at scan time, before any triage or eval LLM call fires (zero spend on excluded items). Used by scripts/process-all-council-intel.mjs, the triage scoring formula in modes/_shared.md, and any future agent that scores roles against Mitchell's preferences.",
+  "_how_to_use": {
+    "categories": "Each top-level key is an exclusion category (defense, gambling, fossil_fuels, etc.). Add new categories as Mitchell's preferences evolve.",
+    "companies": "Each category has a 'companies' array. Slugify with: lowercase, non-alphanumeric runs → single hyphen, trim hyphens. 'Palantir Technologies' → 'palantir'. 'Shield AI' → 'shield-ai'.",
+    "match_strategy": "Match against the slugified version of the company name in the JD or pipeline entry. Exact match on the slug. Add explicit aliases under 'aliases' if a company appears under multiple names.",
+    "auto_update": "Agents may APPEND to this list when council intel surfaces fresh exclusion-worthy signals (e.g., a company pivots into defense contracting). Always use scripts/agent-commit.mjs for the commit so the audit trail is clean. NEVER remove an entry without Mitchell's explicit instruction."
+  },
+  "_calibration_reference": "Per data/career-calibration-20260516-190152.md: 'Defense contractors (Palantir, Anduril, Shield AI) are hard-excluded.' Mission/money slider = 3 (money dominates) but ethical hard-excludes still apply absolutely.",
+  "categories": {
+    "defense": {
+      "rationale": "Defense contractors are hard-excluded per Mitchell's explicit calibration (2026-05-16). This is not a mission/money tradeoff — these companies do not pass the filter at any comp level.",
+      "companies": [
+        "palantir",
+        "anduril",
+        "shield-ai"
+      ],
+      "aliases": {
+        "palantir": ["palantir-technologies", "palantir-usg"],
+        "anduril": ["anduril-industries"],
+        "shield-ai": ["shieldai", "shield"]
+      }
+    }
+  }
+}

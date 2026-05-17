@@ -240,6 +240,12 @@ function renderHtmlEmail(markdownBody, meta = {}) {
   .score-pill-red   { background: rgba(220,38,38,0.12) !important; color: #fca5a5 !important; }
 }`;
 
+  // Tier 5 system-status banner (calibration brief 2026-05-16) — rendered
+  // between header and KPI strip so it lands above-the-fold in the email.
+  // Safely degrades to empty string if the banner module isn't available.
+  let systemBanner = '';
+  try { systemBanner = renderSystemBanner({ format: 'html' }) || ''; } catch {}
+
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8">
 <meta name="color-scheme" content="light dark">
@@ -251,6 +257,7 @@ function renderHtmlEmail(markdownBody, meta = {}) {
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="max-width:780px;width:100%;margin:0 auto;padding:24px 20px">
   <tr><td>
     ${header}
+    ${systemBanner}
     ${kpiStrip}
     ${styled}
     ${footer}

@@ -5025,6 +5025,84 @@ function build() {
     #sidebar-pipeline-actions { display: none !important; }
   }
 
+  /* ── Recruiter pipeline-density widget (Phase 6, calibration 2026-05-16) ──
+     Surfaces runway-health verdict in the sidebar: healthy / stretched / critical
+     based on active conversation count + touches in last 7d. Auto-refreshes
+     every 5 minutes; click expands to show full metric breakdown. Source data:
+     /api/recruiter-pipeline-density endpoint in dashboard-server.mjs. */
+  .sidebar-runway {
+    margin: 6px 10px 8px;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    font-size: 11.5px;
+    cursor: pointer;
+    transition: border-color .12s, background .12s;
+  }
+  .sidebar-runway:hover { border-color: var(--blue-fg-dark); }
+  .sidebar-runway-row { display: flex; align-items: center; gap: 6px; }
+  .sidebar-runway-dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  }
+  .sidebar-runway-dot.healthy   { background: #16a34a; box-shadow: 0 0 6px rgba(22,163,74,.45); }
+  .sidebar-runway-dot.stretched { background: #f59e0b; box-shadow: 0 0 6px rgba(245,158,11,.45); }
+  .sidebar-runway-dot.critical  { background: #dc2626; box-shadow: 0 0 6px rgba(220,38,38,.55); animation: runway-pulse 1.6s ease-in-out infinite; }
+  .sidebar-runway-dot.unknown   { background: var(--text-3); }
+  @keyframes runway-pulse {
+    0%, 100% { box-shadow: 0 0 6px rgba(220,38,38,.55); }
+    50%      { box-shadow: 0 0 12px rgba(220,38,38,.85); }
+  }
+  .sidebar-runway-label {
+    flex: 1;
+    font-weight: 600;
+    color: var(--text);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    font-size: 10.5px;
+  }
+  .sidebar-runway-caret {
+    color: var(--text-3); font-size: 10px; transition: transform .15s;
+  }
+  .sidebar-runway.expanded .sidebar-runway-caret { transform: rotate(180deg); }
+  .sidebar-runway-detail {
+    display: none;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--text-2);
+    line-height: 1.5;
+  }
+  .sidebar-runway.expanded .sidebar-runway-detail { display: block; }
+  .sidebar-runway-stat-row {
+    display: flex; justify-content: space-between; padding: 2px 0;
+  }
+  .sidebar-runway-stat-label { color: var(--text-3); }
+  .sidebar-runway-stat-val {
+    color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums;
+  }
+  .sidebar-runway-alert {
+    margin-top: 6px;
+    padding: 6px 8px;
+    border-radius: 4px;
+    font-size: 10.5px;
+    line-height: 1.4;
+  }
+  .sidebar-runway-alert.healthy   { background: rgba(22,163,74,.08);  color: #15803d; }
+  .sidebar-runway-alert.stretched { background: rgba(245,158,11,.08); color: #92400e; }
+  .sidebar-runway-alert.critical  { background: rgba(220,38,38,.10);  color: #991b1b; }
+  body.sidebar-collapsed .sidebar-runway-label,
+  body.sidebar-collapsed .sidebar-runway-caret,
+  body.sidebar-collapsed .sidebar-runway-detail { display: none; }
+  body.sidebar-collapsed .sidebar-runway {
+    padding: 8px; justify-content: center;
+  }
+  body.sidebar-collapsed .sidebar-runway-row { justify-content: center; }
+  @media (max-width: 720px) {
+    #sidebar-runway { display: none !important; }
+  }
+
   /* ── Pipeline confirmation modal ────────────────────────────── */
   #pipeline-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 2200; backdrop-filter: blur(2px); }
   #pipeline-backdrop.visible { display: block; }
@@ -6762,6 +6840,23 @@ function build() {
         <span class="pipeline-btn-count" id="pipeline-btn-all-count">—</span>
       </button>
     </div>
+    <!-- Recruiter pipeline-density widget (Phase 6, calibration brief 2026-05-16)
+         Click toggles expanded detail. Data from /api/recruiter-pipeline-density. -->
+    <div id="sidebar-runway" class="sidebar-runway" onclick="toggleRunwayWidget()" role="button" tabindex="0" title="Pipeline density vs 12-week runway — click to expand">
+      <div class="sidebar-runway-row">
+        <span class="sidebar-runway-dot unknown" id="runway-dot"></span>
+        <span class="sidebar-runway-label" id="runway-label">runway · loading…</span>
+        <span class="sidebar-runway-caret" aria-hidden="true">▾</span>
+      </div>
+      <div class="sidebar-runway-detail" id="runway-detail">
+        <div class="sidebar-runway-stat-row"><span class="sidebar-runway-stat-label">active conversations</span><span class="sidebar-runway-stat-val" id="runway-active">—</span></div>
+        <div class="sidebar-runway-stat-row"><span class="sidebar-runway-stat-label">touches (7d)</span><span class="sidebar-runway-stat-val" id="runway-touches7d">—</span></div>
+        <div class="sidebar-runway-stat-row"><span class="sidebar-runway-stat-label">touches (30d)</span><span class="sidebar-runway-stat-val" id="runway-touches30d">—</span></div>
+        <div class="sidebar-runway-stat-row"><span class="sidebar-runway-stat-label">response rate</span><span class="sidebar-runway-stat-val" id="runway-response">—</span></div>
+        <div class="sidebar-runway-stat-row"><span class="sidebar-runway-stat-label">last touch</span><span class="sidebar-runway-stat-val" id="runway-lasttouch">—</span></div>
+        <div class="sidebar-runway-alert unknown" id="runway-alert">—</div>
+      </div>
+    </div>
     <div class="sidebar-footer">
       <button type="button" class="sidebar-collapse-btn" id="sidebar-collapse-btn" onclick="toggleSidebarCollapse()" aria-label="Collapse sidebar" title="Collapse sidebar (⌘\\)">
         <svg class="sidebar-collapse-icon" viewBox="0 0 12 12" fill="none" aria-hidden="true">
@@ -7938,7 +8033,36 @@ function openRightRailForDetail(idx, detailRow) {
     }
     const skipBtnEl = actionsEl.querySelector('button[data-drawer-action="skip"]');
     if (skipBtnEl && num) {
-      skipBtnEl.addEventListener('click', () => drawerQuickStatus(num, 'Discarded'));
+      // Item #1 from 2026-05-16 incomplete-task review: capture WHY before
+      // marking discarded. Reason flows into data/discard-reasons.jsonl via
+      // /api/discard-with-reason so the next eval run can learn from the
+      // anti-pattern. Reason is optional — user may press Enter to skip and
+      // still discard (legacy behavior).
+      skipBtnEl.addEventListener('click', async () => {
+        const row = document.querySelector('.status-pill[data-num="' + num + '"]')?.closest('tr');
+        const company = row?.dataset?.company || row?.querySelector('[data-col="company"]')?.textContent?.trim() || '';
+        const role    = row?.dataset?.role    || row?.querySelector('[data-col="role"]')?.textContent?.trim()    || '';
+        const reason = window.prompt(
+          'Why are you discarding ' + (company ? company + (role ? ' — ' + role : '') : 'this row #' + num) + '?\n\n' +
+          '(Tags auto-applied: comp, geography, culture, skill-gap, ethics, stage, velocity, role-shape, fit, other)\n\n' +
+          'Press Enter to discard without recording a reason.'
+        );
+        if (reason === null) return; // User canceled — don’t discard
+        const trimmed = (reason || '').trim();
+        if (trimmed) {
+          try {
+            await fetch('/api/discard-with-reason', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ row_num: num, reason: trimmed.slice(0, 1000), company, role }),
+            });
+          } catch (e) {
+            console.warn('discard-with-reason persist failed:', e);
+            // Don’t block the status change on reason-persist failure
+          }
+        }
+        await drawerQuickStatus(num, 'Discarded');
+      });
     }
     const deferBtnEl = actionsEl.querySelector('button[data-drawer-action="defer"]');
     if (deferBtnEl && num) {
@@ -9949,6 +10073,57 @@ window.closePipelineToast = closePipelineToast;
 window.refreshPipelineBadges = refreshPipelineBadges;
 document.addEventListener('DOMContentLoaded', () => { refreshPipelineBadges(); });
 document.addEventListener('careerops:status-changed', () => { refreshPipelineBadges(); });
+
+// ── Recruiter pipeline-density widget (Phase 6, calibration brief 2026-05-16) ─
+// Fetches /api/recruiter-pipeline-density every 5 minutes (and on load), renders
+// the runway-health verdict + key metrics into the sidebar widget. Click toggles
+// expanded detail. Healthy = 5+ active conversations + 10+ touches/7d; stretched
+// = 3-4 active OR 5-9 touches/7d; critical = below both thresholds. Default
+// runway = 12 weeks (env-overridable via RUNWAY_WEEKS on the server).
+let _runwayRefreshTimer = null;
+async function refreshRunwayWidget() {
+  const dot      = document.getElementById('runway-dot');
+  const label    = document.getElementById('runway-label');
+  if (!dot || !label) return; // widget not rendered
+  try {
+    const res = await fetch('/api/recruiter-pipeline-density', { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const d = await res.json();
+    if (!d.ok) throw new Error(d.error || 'unknown');
+    const health = d.health || 'unknown';
+    dot.className = 'sidebar-runway-dot ' + health;
+    label.textContent = 'runway · ' + health;
+    const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    setText('runway-active',     d.contacts.active);
+    setText('runway-touches7d',  d.velocity.touches_last_7d);
+    setText('runway-touches30d', d.velocity.touches_last_30d);
+    setText('runway-response',   Math.round(d.contacts.response_rate * 100) + '%');
+    setText('runway-lasttouch',  d.velocity.days_since_last_touch != null ? d.velocity.days_since_last_touch + 'd ago' : 'n/a');
+    const alertEl = document.getElementById('runway-alert');
+    if (alertEl) {
+      alertEl.className = 'sidebar-runway-alert ' + health;
+      alertEl.textContent = d.runway_alert || '—';
+    }
+  } catch (err) {
+    dot.className = 'sidebar-runway-dot unknown';
+    label.textContent = 'runway · unavailable';
+    const alertEl = document.getElementById('runway-alert');
+    if (alertEl) { alertEl.className = 'sidebar-runway-alert unknown'; alertEl.textContent = 'Pipeline-density data unavailable: ' + (err.message || err); }
+  }
+}
+function toggleRunwayWidget() {
+  const widget = document.getElementById('sidebar-runway');
+  if (widget) widget.classList.toggle('expanded');
+}
+window.refreshRunwayWidget = refreshRunwayWidget;
+window.toggleRunwayWidget = toggleRunwayWidget;
+document.addEventListener('DOMContentLoaded', () => {
+  refreshRunwayWidget();
+  // Auto-refresh every 5 minutes — pipeline-density changes slowly
+  if (_runwayRefreshTimer) clearInterval(_runwayRefreshTimer);
+  _runwayRefreshTimer = setInterval(refreshRunwayWidget, 5 * 60 * 1000);
+});
+document.addEventListener('careerops:outreach-changed', refreshRunwayWidget);
 
 // ── Gap modal ──────────────────────────────────────────────────
 function openGapModal(el) {

@@ -307,6 +307,22 @@ const PIPELINE_HEALTH_THRESHOLDS = {
   response_rate_healthy: 0.30,
 };
 
+// Classifies a free-text discard reason into a coarse tag for grouping.
+// Lightweight keyword match; refine over time as patterns emerge.
+function classifyDiscardReason(reason) {
+  const r = String(reason || '').toLowerCase();
+  if (/(comp|salary|pay|equity|tc|total comp|base)/.test(r)) return 'comp';
+  if (/(location|relocat|remote|on-site|hybrid|commute|city|metro)/.test(r))   return 'geography';
+  if (/(culture|toxic|leadership|reorg|layoff|freez|burnout|attrition)/.test(r)) return 'culture';
+  if (/(stack|tech|python|ml|skill|requirement|qualification|background)/.test(r)) return 'skill-gap';
+  if (/(defense|weapons|surveillance|military|policing|gambling|tobacco|fossil)/.test(r)) return 'ethics';
+  if (/(stage|series|funding|valuation|pre-ipo|public|growth)/.test(r))         return 'stage';
+  if (/(velocity|slow|process|cycle|hiring freeze|silent|ghost)/.test(r))      return 'velocity';
+  if (/(role|title|scope|level|seniority|ic|manager|ladder)/.test(r))          return 'role-shape';
+  if (/(brand|mission|fit|interest|inspire|bored|excite)/.test(r))             return 'fit';
+  return 'other';
+}
+
 function computeRecruiterPipelineDensity() {
   let contacts = [];
   try { contacts = listOutreachContacts(); } catch (e) {
@@ -1966,6 +1982,56 @@ const server = createServer((req, res) => {
     // Phase 6 (calibration 2026-05-16): pipeline-density widget data source.
     // Used by the dashboard runway-alert widget + heartbeat email runway section.
     return json(computeRecruiterPipelineDensity());
+  }
+  if (url === '/api/discard-with-reason' && req.method === 'POST') {
+    // Item #1 from 2026-05-16 incomplete-task review: capture WHY a row was
+    // discarded so the next eval run can avoid the same anti-pattern. Reasons
+    // append to data/discard-reasons.jsonl (gitignored — personal data).
+    // Future: triage prompt enrichment consumes recent reasons + heartbeat
+    // email surfaces a "rejected pattern of the week" section.
+    let body = '';
+    let total = 0;
+    req.on('data', c => { total += c.length; if (total > 8 * 1024) { req.destroy(); return; } body += c; });
+    req.on('end', () => {
+      let parsed;
+      try { parsed = JSON.parse(body || '{}'); }
+      catch { return json({ ok: false, error: 'Invalid JSON' }, 400); }
+      const rowNum = parseInt(parsed.row_num, 10);
+      const reason = String(parsed.reason || '').trim();
+      const company = String(parsed.company || '').trim();
+      const role    = String(parsed.role    || '').trim();
+      if (!rowNum || !reason) return json({ ok: false, error: 'row_num and reason required' }, 400);
+      if (reason.length > 1000) return json({ ok: false, error: 'reason too long (1000 char max)' }, 400);
+      const entry = {
+        ts: new Date().toISOString(),
+        row_num: rowNum,
+        company,
+        role,
+        reason,
+        // Tags help the triage prompt group reasons over time
+        tag: classifyDiscardReason(reason),
+      };
+      try {
+        if (!existsSync(join(ROOT, 'data'))) mkdirSync(join(ROOT, 'data'), { recursive: true });
+        appendFileSync(join(ROOT, 'data/discard-reasons.jsonl'), JSON.stringify(entry) + '\n');
+      } catch (e) {
+        return json({ ok: false, error: 'failed to persist: ' + e.message }, 500);
+      }
+      return json({ ok: true, entry });
+    });
+    return;
+  }
+  if (url === '/api/discard-reasons/recent') {
+    // Surfaced by heartbeat + future triage prompt enrichment. Last 30 entries.
+    const fp = join(ROOT, 'data/discard-reasons.jsonl');
+    if (!existsSync(fp)) return json({ ok: true, entries: [] });
+    try {
+      const lines = readFileSync(fp, 'utf-8').split('\n').filter(Boolean);
+      const recent = lines.slice(-30).map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+      return json({ ok: true, entries: recent.reverse() });
+    } catch (e) {
+      return json({ ok: false, error: e.message }, 500);
+    }
   }
   if (url === '/api/pipeline/process-all' && req.method === 'POST') {
     let body = '';
