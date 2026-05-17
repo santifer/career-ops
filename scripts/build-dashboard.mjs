@@ -6980,6 +6980,194 @@ function build() {
       transition-duration: 100ms;
     }
   }
+
+  /* ──────────────────────────────────────────────────────────────
+     Density toggle (Item 2 — UX subagent 2026-05-16)
+     ──────────────────────────────────────────────────────────────
+     Three states applied as classes on <body>: density-compact,
+     density-normal (default), density-relaxed. Affects table row
+     padding + line-height + outreach card padding + drawer body
+     padding. Stored in localStorage (key: 'careerops.density').
+     References Linear/Vercel pattern: power users want compact;
+     fresh-eyes users want relaxed. Default = normal (unchanged from
+     baseline so no regression for existing users). */
+  .density-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    margin-left: 6px;
+  }
+  .density-toggle-btn {
+    appearance: none;
+    background: transparent;
+    border: 0;
+    padding: var(--space-1, 4px) 9px;
+    border-radius: var(--radius-full, 999px);
+    font-size: var(--fs-meta, 11px);
+    font-weight: 600;
+    color: var(--text-3);
+    cursor: pointer;
+    line-height: 1;
+    transition: background-color .12s ease, color .12s ease;
+    font-family: inherit;
+  }
+  .density-toggle-btn:hover { color: var(--text); }
+  .density-toggle-btn[aria-pressed="true"] {
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: var(--shadow-sm);
+  }
+  .density-toggle-btn:focus-visible {
+    outline: 2px solid var(--blue-fg-dark);
+    outline-offset: 1px;
+  }
+  @media (max-width: 720px) {
+    /* On phones the toolbar is already cramped — hide the toggle.
+       Mobile gets normal density by default. */
+    .density-toggle { display: none; }
+  }
+
+  /* ── Density: COMPACT ── */
+  body.density-compact #apply-now-tbody tr.row > td,
+  body.density-compact #all-tbody tr.row > td {
+    padding-top: var(--space-1, 4px);
+    padding-bottom: var(--space-1, 4px);
+    line-height: var(--lh-tight, 1.2); /* token=1.2 matches compact density spec; near baseline 1.25 */
+  }
+  body.density-compact #outreach-pulse .op-row-v2 {
+    min-height: 56px;
+  }
+  body.density-compact #outreach-pulse .op-row-content {
+    padding-top: 7px;
+    padding-bottom: 7px;
+  }
+  body.density-compact #outreach-pulse .op-meta-col {
+    padding-top: 7px;
+    padding-bottom: 7px;
+  }
+  body.density-compact .drawer-body {
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
+  /* ── Density: NORMAL (baseline — explicit so toggle round-trip works) ── */
+  body.density-normal #apply-now-tbody tr.row > td,
+  body.density-normal #all-tbody tr.row > td {
+    /* no-op — matches the un-classed baseline */
+  }
+
+  /* ── Density: RELAXED ── */
+  body.density-relaxed #apply-now-tbody tr.row > td,
+  body.density-relaxed #all-tbody tr.row > td {
+    padding-top: 14px;
+    padding-bottom: 14px;
+    line-height: var(--lh-relaxed, 1.5); /* matches v3 spec line-height; baseline used 1.55 */
+  }
+  body.density-relaxed #outreach-pulse .op-row-v2 {
+    min-height: 92px;
+  }
+  body.density-relaxed #outreach-pulse .op-row-content {
+    padding-top: var(--space-4, 16px);
+    padding-bottom: var(--space-4, 16px);
+    gap: 9px;
+  }
+  body.density-relaxed #outreach-pulse .op-meta-col {
+    padding-top: var(--space-4, 16px);
+    padding-bottom: var(--space-4, 16px);
+  }
+  body.density-relaxed .drawer-body {
+    padding-top: 20px;
+    padding-bottom: 20px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .density-toggle-btn { transition: none; }
+  }
+
+  /* ──────────────────────────────────────────────────────────────
+     Keyboard-shortcut help overlay (Item 3 — UX subagent 2026-05-16)
+     ──────────────────────────────────────────────────────────────
+     Pressed '?' to open; Esc to close. Lists J/K/A/X/Enter/? keys. */
+  #kbd-help-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.45);
+    z-index: 3000;
+    display: none;
+    align-items: center; justify-content: center;
+    opacity: 0;
+    transition: opacity .15s ease-out;
+  }
+  #kbd-help-backdrop.is-open {
+    display: flex;
+    opacity: 1;
+  }
+  #kbd-help-modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow-lg);
+    padding: 20px 22px;
+    max-width: 460px; width: calc(100% - var(--space-6, 32px));
+    color: var(--text);
+    font-size: var(--fs-body, 13px);
+  }
+  #kbd-help-modal h2 {
+    margin: 0 0 var(--space-3, 12px);
+    font-size: var(--fs-h4, 15px);
+    color: var(--text);
+    font-weight: 700;
+    border: 0; padding: 0;
+  }
+  #kbd-help-modal table { width: 100%; border-collapse: collapse; font-size: var(--fs-caption, 12px); }
+  #kbd-help-modal th, #kbd-help-modal td {
+    padding: 6px var(--space-2, 8px);
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-2);
+  }
+  #kbd-help-modal th {
+    font-weight: 600;
+    color: var(--text-3);
+    font-size: var(--fs-meta, 11px);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+  #kbd-help-modal kbd {
+    display: inline-block;
+    min-width: 22px;
+    padding: 2px 6px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-bottom-width: 2px;
+    border-radius: var(--radius-sm, 4px);
+    font-family: var(--font-mono, ui-monospace, Menlo, monospace);
+    font-size: var(--fs-meta, 11px);
+    color: var(--text);
+    text-align: center;
+  }
+  #kbd-help-modal .kbd-close-hint {
+    margin-top: var(--space-2, 8px);
+    font-size: var(--fs-meta, 11px);
+    color: var(--text-3);
+    text-align: right;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #kbd-help-backdrop { transition: none; }
+  }
+
+  /* ──────────────────────────────────────────────────────────────
+     Keyboard row focus indicator (J/K nav, Item 3)
+     ────────────────────────────────────────────────────────────── */
+  tr.row.kbd-focused > td:first-child {
+    box-shadow: inset 3px 0 0 var(--blue-fg-dark, #2563eb);
+  }
+  tr.row.kbd-focused > td { background: var(--blue-bg, rgba(90,118,166,.08)); }
+  @media (prefers-reduced-motion: reduce) {
+    tr.row.kbd-focused > td { transition: none; }
+  }
 </style>
 </head>
 <body>
@@ -7089,6 +7277,11 @@ function build() {
       <span class="cmdk-trigger-kbd">⌘K</span>
     </button>
     <button class="toolbar-btn quickadd-btn" onclick="openQuickAdd()" id="quickadd-btn" title="Add a role URL to the pipeline" aria-label="Add role to pipeline">+ Add role</button>
+    <div class="density-toggle" role="group" aria-label="Row density" title="Row density — compact / normal / relaxed">
+      <button type="button" class="density-toggle-btn" data-density="compact" aria-pressed="false" aria-label="Compact rows" title="Compact rows (smallest)">C</button>
+      <button type="button" class="density-toggle-btn" data-density="normal" aria-pressed="true" aria-label="Normal rows" title="Normal rows (default)">N</button>
+      <button type="button" class="density-toggle-btn" data-density="relaxed" aria-pressed="false" aria-label="Relaxed rows" title="Relaxed rows (most breathing room)">R</button>
+    </div>
     <button class="toolbar-btn toolbar-overflow-btn" onclick="openMobileSettingsSheet()" id="toolbar-overflow-btn" aria-label="More options" title="More options">···</button>
     <button class="toolbar-btn" onclick="toggleDark()" id="dark-toggle" aria-label="Toggle dark mode">☀︎ Light</button>
   </header>
@@ -7250,6 +7443,27 @@ function build() {
 
   <!-- Inline status writeback popover -->
   <div id="status-popover" role="menu" aria-label="Set status"></div>
+
+  <!-- Keyboard-shortcut help overlay (Item 3 — UX subagent 2026-05-16).
+       Opens with '?' (when no input is focused). Esc to close. -->
+  <div id="kbd-help-backdrop" role="dialog" aria-modal="true" aria-labelledby="kbd-help-title" aria-hidden="true" onclick="closeKbdHelp()">
+    <div id="kbd-help-modal" onclick="event.stopPropagation()">
+      <h2 id="kbd-help-title">Keyboard shortcuts</h2>
+      <table>
+        <thead><tr><th>Key</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr><td><kbd>J</kbd> / <kbd>↓</kbd></td><td>Move row focus down (Apply-Now table)</td></tr>
+          <tr><td><kbd>K</kbd> / <kbd>↑</kbd></td><td>Move row focus up</td></tr>
+          <tr><td><kbd>A</kbd> / <kbd>Enter</kbd></td><td>Open the focused row's Apply link in a new tab</td></tr>
+          <tr><td><kbd>X</kbd></td><td>Toggle selection on the focused row</td></tr>
+          <tr><td><kbd>?</kbd></td><td>Show this help</td></tr>
+          <tr><td><kbd>Esc</kbd></td><td>Close drawer / modal / overlay</td></tr>
+          <tr><td><kbd>⌘ K</kbd> / <kbd>Ctrl K</kbd></td><td>Command palette</td></tr>
+        </tbody>
+      </table>
+      <div class="kbd-close-hint">Press <kbd>Esc</kbd> to close</div>
+    </div>
+  </div>
 
   <!-- Inline email template launcher popover -->
   <div id="email-popover" role="menu" aria-label="Pick an email template"></div>
@@ -8022,6 +8236,202 @@ if (document.readyState === 'loading') {
   initSidebar();
   initSidebarCollapse();
 }
+
+// ── Density toggle (Item 2 — UX subagent 2026-05-16) ────────────
+// Three states applied as a class on <body>:
+//   density-compact  — tighter rows + tighter outreach cards
+//   density-normal   — baseline (default)
+//   density-relaxed  — more breathing room
+// Persisted to localStorage ('careerops.density'). Defaults to
+// 'normal' when nothing is stored (no regression for existing users).
+const DENSITY_KEY = 'careerops.density';
+const DENSITY_STATES = ['compact', 'normal', 'relaxed'];
+function applyDensity(state) {
+  if (!DENSITY_STATES.includes(state)) state = 'normal';
+  const body = document.body;
+  if (!body) return;
+  DENSITY_STATES.forEach(s => body.classList.remove('density-' + s));
+  body.classList.add('density-' + state);
+  // Sync toggle button aria-pressed.
+  const btns = document.querySelectorAll('.density-toggle-btn');
+  btns.forEach(btn => {
+    btn.setAttribute('aria-pressed', btn.dataset.density === state ? 'true' : 'false');
+  });
+}
+function initDensityToggle() {
+  let stored = 'normal';
+  try { stored = localStorage.getItem(DENSITY_KEY) || 'normal'; } catch (_) {}
+  applyDensity(stored);
+  document.querySelectorAll('.density-toggle-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const state = btn.dataset.density;
+      try { localStorage.setItem(DENSITY_KEY, state); } catch (_) {}
+      applyDensity(state);
+    });
+  });
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initDensityToggle);
+} else {
+  initDensityToggle();
+}
+
+// ── Power-user keyboard navigation (Item 3 — UX subagent 2026-05-16) ──
+// J/K to move between Apply-Now rows, A/Enter to open Apply link,
+// X to toggle row selection, ? to open shortcut help, Esc to close.
+// All bindings guard against input/textarea focus and any open modal
+// (cmdk, drawer, kbd-help) to avoid stomping on existing shortcuts.
+let _kbdFocusedRow = null;
+function _kbdIsTypingTarget(el) {
+  if (!el) return false;
+  const tag = (el.tagName || '').toLowerCase();
+  if (tag === 'input' || tag === 'textarea' || tag === 'select') return true;
+  if (el.isContentEditable) return true;
+  return false;
+}
+function _kbdAnyOverlayOpen() {
+  // CmdK has its own keydown handler — don't double-dispatch when it's open.
+  if (typeof _cmdkOpen !== 'undefined' && _cmdkOpen) return true;
+  // Any visible modal/overlay disables row nav so J/K don't move focus
+  // on hidden rows behind the modal. Esc handling is inline above.
+  var kbdHelp = document.getElementById('kbd-help-backdrop');
+  if (kbdHelp && kbdHelp.classList.contains('is-open')) return true;
+  var quickadd = document.getElementById('quickadd-backdrop');
+  if (quickadd && quickadd.classList.contains('visible')) return true;
+  var gap = document.getElementById('gap-backdrop');
+  if (gap && gap.classList.contains('visible')) return true;
+  var verify = document.getElementById('verify-modal-backdrop');
+  if (verify && verify.classList.contains('visible')) return true;
+  var tier = document.getElementById('tier-legend-backdrop');
+  if (tier && tier.classList.contains('visible')) return true;
+  var rightRail = document.getElementById('right-rail-drawer');
+  if (rightRail && rightRail.classList.contains('open')) return true;
+  return false;
+}
+function _kbdVisibleApplyNowRows() {
+  const tbody = document.getElementById('apply-now-tbody');
+  if (!tbody) return [];
+  return Array.from(tbody.querySelectorAll('tr.row')).filter(r => {
+    if (r.style.display === 'none') return false;
+    const cs = window.getComputedStyle(r);
+    return cs.display !== 'none' && cs.visibility !== 'hidden';
+  });
+}
+function _kbdSetFocusedRow(row) {
+  if (_kbdFocusedRow && _kbdFocusedRow !== row) {
+    _kbdFocusedRow.classList.remove('kbd-focused');
+  }
+  _kbdFocusedRow = row || null;
+  if (row) {
+    row.classList.add('kbd-focused');
+    // Scroll into view if it's off-screen. Use 'nearest' to avoid jarring jumps.
+    if (typeof row.scrollIntoView === 'function') {
+      try { row.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (_) { row.scrollIntoView({ block: 'nearest' }); }
+    }
+  }
+}
+function _kbdMoveFocus(delta) {
+  const rows = _kbdVisibleApplyNowRows();
+  if (!rows.length) return;
+  let idx = _kbdFocusedRow ? rows.indexOf(_kbdFocusedRow) : -1;
+  if (idx < 0) {
+    idx = delta > 0 ? 0 : rows.length - 1;
+  } else {
+    idx = Math.max(0, Math.min(rows.length - 1, idx + delta));
+  }
+  _kbdSetFocusedRow(rows[idx]);
+}
+function openKbdHelp() {
+  const bd = document.getElementById('kbd-help-backdrop');
+  if (!bd) return;
+  bd.classList.add('is-open');
+  bd.setAttribute('aria-hidden', 'false');
+}
+function closeKbdHelp() {
+  const bd = document.getElementById('kbd-help-backdrop');
+  if (!bd) return;
+  bd.classList.remove('is-open');
+  bd.setAttribute('aria-hidden', 'true');
+}
+window.openKbdHelp = openKbdHelp;
+window.closeKbdHelp = closeKbdHelp;
+document.addEventListener('keydown', (e) => {
+  // Skip if user is typing into a form field.
+  if (_kbdIsTypingTarget(e.target)) return;
+  // Skip if any modifier other than Shift is held (Cmd/Ctrl/Alt all go elsewhere).
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const key = e.key;
+  // '?' (Shift+/ on US layout) opens the help overlay.
+  if (key === '?' || (e.shiftKey && key === '/')) {
+    const bd = document.getElementById('kbd-help-backdrop');
+    if (bd && bd.classList.contains('is-open')) closeKbdHelp();
+    else openKbdHelp();
+    e.preventDefault();
+    return;
+  }
+  // Esc closes the kbd-help overlay (other Esc handlers run in parallel and
+  // handle drawer/modal/popover — see the other keydown listeners).
+  if (key === 'Escape') {
+    const bd = document.getElementById('kbd-help-backdrop');
+    if (bd && bd.classList.contains('is-open')) {
+      closeKbdHelp();
+      e.preventDefault();
+      return;
+    }
+    // Clear keyboard row focus so the indicator doesn't linger.
+    if (_kbdFocusedRow) {
+      _kbdFocusedRow.classList.remove('kbd-focused');
+      _kbdFocusedRow = null;
+    }
+    return;
+  }
+  if (_kbdAnyOverlayOpen()) return;
+  // Don't grab arrow keys — they should still drive native scroll outside
+  // of explicit focus targets. Stick to single-letter shortcuts plus the
+  // explicit J/K bigrams (the Linear convention).
+  if (key === 'j' || key === 'J') {
+    _kbdMoveFocus(1);
+    e.preventDefault();
+    return;
+  }
+  if (key === 'k' || key === 'K') {
+    _kbdMoveFocus(-1);
+    e.preventDefault();
+    return;
+  }
+  if (key === 'a' || key === 'A' || key === 'Enter') {
+    if (!_kbdFocusedRow) {
+      // First A/Enter just selects the top row so the user can see what's focused.
+      _kbdMoveFocus(1);
+      e.preventDefault();
+      return;
+    }
+    // Find the Apply link inside the focused row's action cell.
+    const link = _kbdFocusedRow.querySelector('td.action-cell a[href][target="_blank"]')
+      || _kbdFocusedRow.querySelector('td.action-cell a[href]')
+      || _kbdFocusedRow.querySelector('a[aria-label^="Apply"]');
+    if (link && link.href) {
+      window.open(link.href, '_blank', 'noopener');
+      e.preventDefault();
+    }
+    return;
+  }
+  if (key === 'x' || key === 'X') {
+    if (!_kbdFocusedRow) {
+      _kbdMoveFocus(1);
+      e.preventDefault();
+      return;
+    }
+    const cb = _kbdFocusedRow.querySelector('input[type="checkbox"]');
+    if (cb) {
+      // cb.click() toggles checked + fires the inline onclick that
+      // wires into handleRowCheckbox() — matches mouse behavior exactly.
+      cb.click();
+      e.preventDefault();
+    }
+    return;
+  }
+});
 
 // ── OLED true-black mode ────────────────────────────────────────
 // Layers on top of dark mode: replaces dark-grey surfaces with pure
@@ -13453,7 +13863,7 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
 }
 #outreach-pulse .op-identity-sep {
   color: var(--text-3, #9ca3af);
-  font-size: 11px;
+  font-size: var(--fs-meta, 11px);
 }
 #outreach-pulse .op-affil {
   color: var(--text-2, #475569);
@@ -13472,19 +13882,19 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
 #outreach-pulse .op-action-head {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 4px;
+  gap: var(--space-2, 8px);
+  margin-bottom: var(--space-1, 4px);
   flex-wrap: wrap;
 }
 #outreach-pulse .op-strategy-tag {
-  font-size: 11px;
+  font-size: var(--fs-meta, 11px);
   font-weight: 600;
   letter-spacing: .02em;
   text-transform: uppercase;
   color: var(--text-2, #475569);
   background: var(--surface-2, #f1f5f9);
   border: 1px solid var(--border, #e5e7eb);
-  border-radius: 4px;
+  border-radius: var(--radius-sm, 4px);
   padding: 1px 7px;
   white-space: nowrap;
 }
@@ -13555,13 +13965,13 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   border-bottom-color: var(--blue-fg-dark, #2563eb);
 }
 #outreach-pulse .op-meta-col {
-  padding: 12px 14px;
+  padding: var(--space-3, 12px) 14px;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   justify-content: center;
   gap: 6px;
-  font-size: 11px;
+  font-size: var(--fs-meta, 11px);
   color: var(--text-3, #64748b);
   text-align: right;
   border-left: 1px solid var(--border, #e5e7eb);
@@ -13570,10 +13980,10 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
 #outreach-pulse .op-meta-stats {
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
-  font-size: 11px;
+  font-size: var(--fs-meta, 11px);
   color: var(--text-3, #64748b);
 }
-#outreach-pulse .op-meta-sep { padding: 0 4px; color: var(--border, #d1d5db); }
+#outreach-pulse .op-meta-sep { padding: 0 var(--space-1, 4px); color: var(--border, #d1d5db); }
 #outreach-pulse .op-meta-review { margin-top: 2px; }
 @media (prefers-color-scheme: dark) {
   #outreach-pulse .op-row-v2 { background: #181b27; border-color: #232737; }
@@ -13678,6 +14088,118 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   #outreach-pulse .op-strategy { color: #e4e4e7; }
   #outreach-pulse .op-group-title { color: #9a9aa6; }
 }
+
+/* ──────────────────────────────────────────────────────────────
+   Outreach Pulse v3 — applied from ui-redesign-research 2026-05-16
+   ──────────────────────────────────────────────────────────────
+   Layer on top of v2 (rather than replacing it) so the v2 grid is
+   preserved as a fallback. The renderer emits op-row-v3 alongside
+   op-row-v2; both classes are present on each card so any external
+   selectors that target v2 keep working.
+
+   Key visual changes from v2:
+     • Action recommendation gets a subtle highlight surface so the
+       eye lands there first (the dominant element).
+     • Linked-app row gets a top divider + lower contrast so it reads
+       as subordinate context, not a peer of the action.
+     • Overdue badge gets a warning-triangle SVG (icon + color +
+       text), satisfying "never color alone" WCAG SC 1.4.1.
+     • Status bar slightly wider (5px → still feels tight) for
+       clearer at-a-glance scanning at small card counts.
+*/
+
+#outreach-pulse .op-row-v3 {
+  /* The v2 base class already applies the 3-zone grid. v3 adds the
+     extra divider rules below + the action highlight. */
+}
+#outreach-pulse .op-row-v3 .op-action {
+  background: rgba(90, 118, 166, 0.06);
+  border: 1px solid rgba(90, 118, 166, 0.16);
+  border-radius: 6px;
+  padding: 10px var(--space-3, 12px);
+  margin-top: 2px;
+}
+#outreach-pulse .op-row-v3 .op-action-text {
+  color: var(--text, #0f172a);
+  font-weight: 500;
+  font-size: var(--fs-body, 13px);
+  line-height: var(--lh-relaxed, 1.5);
+  -webkit-line-clamp: 3;
+}
+#outreach-pulse .op-row-v3 .op-row-content > .op-linked-app {
+  margin-top: var(--space-2, 8px);
+  padding-top: var(--space-2, 8px);
+  border-top: 1px solid var(--border, #e5e7eb);
+  font-size: var(--fs-meta, 11px);
+  color: var(--text-3, #64748b);
+}
+#outreach-pulse .op-row-v3 .op-overdue-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: var(--fs-badge, 10px);
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: var(--radius-full, 999px);
+  background: rgba(220, 38, 38, 0.10);
+  color: #991b1b;
+  border: 1px solid rgba(220, 38, 38, 0.30);
+}
+#outreach-pulse .op-row-v3 .op-overdue-badge svg {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+}
+#outreach-pulse .op-row-v3.op-breakup .op-overdue-badge {
+  background: rgba(31, 41, 55, 0.95);
+  color: #fde68a;
+  border-color: rgba(31, 41, 55, 0.95);
+}
+#outreach-pulse .op-row-v3.op-due_soon .op-overdue-badge {
+  background: rgba(217, 119, 6, 0.12);
+  color: #92400e;
+  border-color: rgba(217, 119, 6, 0.30);
+}
+#outreach-pulse .op-row-v3.op-referral .op-overdue-badge {
+  background: rgba(22, 163, 74, 0.12);
+  color: #14532d;
+  border-color: rgba(22, 163, 74, 0.30);
+}
+
+/* Tighten the meta column on v3 — the overdue badge moved into the
+   header row, so stats become the only column inhabitant. */
+#outreach-pulse .op-row-v3 .op-meta-col {
+  gap: var(--space-1, 4px);
+}
+
+@media (prefers-color-scheme: dark) {
+  #outreach-pulse .op-row-v3 .op-action {
+    background: rgba(96, 165, 250, 0.06);
+    border-color: rgba(96, 165, 250, 0.18);
+  }
+  #outreach-pulse .op-row-v3 .op-action-text { color: #fafafa; }
+  #outreach-pulse .op-row-v3 .op-row-content > .op-linked-app {
+    border-top-color: #232737;
+    color: #9a9aa6;
+  }
+  #outreach-pulse .op-row-v3 .op-overdue-badge {
+    background: rgba(220, 38, 38, 0.18);
+    color: #fca5a5;
+    border-color: rgba(220, 38, 38, 0.40);
+  }
+  #outreach-pulse .op-row-v3.op-due_soon .op-overdue-badge {
+    background: rgba(217, 119, 6, 0.18);
+    color: #fcd34d;
+    border-color: rgba(217, 119, 6, 0.40);
+  }
+  #outreach-pulse .op-row-v3.op-referral .op-overdue-badge {
+    background: rgba(22, 163, 74, 0.18);
+    color: #86efac;
+    border-color: rgba(22, 163, 74, 0.40);
+  }
+}
 </style>
 <script>
 (function () {
@@ -13757,7 +14279,32 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
       : statusKind === 'breakup' ? 'breakup window'
       : statusKind === 'referral' ? 'referral'
       : 'due';
-    var pillHtml = pill(statusLabel, statusKind);
+    // v3 (ui-redesign-research 2026-05-16): icon + color + text on the badge
+    // satisfies WCAG 1.4.1 ("never color alone"). Days-overdue suffix is
+    // appended for overdue/breakup so the user can see urgency at a glance
+    // without inferring it from a meta line further down.
+    var badgeIcon = '';
+    if (statusKind === 'overdue' || statusKind === 'breakup' || statusKind === 'due_soon') {
+      badgeIcon = '<svg aria-hidden="true" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg>';
+    } else if (statusKind === 'referral') {
+      badgeIcon = '<svg aria-hidden="true" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd"/></svg>';
+    }
+    var v3BadgeLabel = statusLabel;
+    if ((statusKind === 'overdue' || statusKind === 'breakup') && days !== null && days > 0) {
+      v3BadgeLabel = statusLabel + ' · ' + days + 'd';
+    }
+    var v3BadgeAria = statusKind === 'overdue' ? ('Overdue by ' + (days || 0) + ' days')
+      : statusKind === 'breakup' ? ('Breakup window — last touch ' + (days || 0) + ' days ago')
+      : statusKind === 'due_soon' ? 'Due soon'
+      : statusKind === 'referral' ? 'Referral opportunity'
+      : 'Fresh';
+    // Only render the overdue-styled badge for the four states where the
+    // signal is meaningful (overdue/breakup/due_soon/referral). For 'fresh'
+    // the column shows just stats, no badge — avoids a misleading "due"
+    // pill on contacts that are actually in flight.
+    var v3OverdueBadge = (statusKind === 'overdue' || statusKind === 'breakup' || statusKind === 'due_soon' || statusKind === 'referral')
+      ? '<span class="op-overdue-badge" aria-label="' + escapeHtml(v3BadgeAria) + '">' + badgeIcon + escapeHtml(v3BadgeLabel) + '</span>'
+      : '';
     var reviewBadge = (nx && typeof nx.confidence === 'number' && nx.confidence < 0.66)
       ? '<span class="op-pill op-pill-review" title="Confidence < 66% — verify before sending">review</span>'
       : '';
@@ -13811,9 +14358,18 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
       linkedHtml = '<div class="op-linked-app">' + anchor + scoreChip + statusPill + '</div>';
     }
 
-    var rowClass = 'op-row op-row-v2 op-' + statusKind;
+    // v3 layers on top of v2 — both classes present so any external CSS or
+    // selectors that target v2 keep working. v3 styles add: action surface
+    // highlight, linked-app divider, icon-badge color discipline.
+    var rowClass = 'op-row op-row-v2 op-row-v3 op-' + statusKind;
+    var ariaLabel = name + ' — ' + (c.company || 'unknown company') + ', '
+      + (statusKind === 'overdue' ? ('overdue by ' + (days || 0) + ' days')
+        : statusKind === 'breakup' ? ('breakup window — last touch ' + (days || 0) + ' days ago')
+        : statusKind === 'due_soon' ? 'due soon'
+        : statusKind === 'referral' ? 'referral opportunity'
+        : 'awaiting reply');
     return ''
-      + '<div class="' + rowClass + '" data-contact-id="' + escapeHtml(c.contact_id) + '" data-app-num="' + escapeHtml(String(c.linked_application_id || '')) + '">'
+      + '<div class="' + rowClass + '" role="article" aria-label="' + escapeHtml(ariaLabel) + '" data-contact-id="' + escapeHtml(c.contact_id) + '" data-app-num="' + escapeHtml(String(c.linked_application_id || '')) + '">'
       +   '<div class="op-row-bar" aria-hidden="true"></div>'
       +   '<div class="op-row-content">'
       +     '<div class="op-identity">'
@@ -13825,7 +14381,7 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
       +     linkedHtml
       +   '</div>'
       +   '<div class="op-meta-col">'
-      +     pillHtml
+      +     v3OverdueBadge
       +     '<div class="op-meta-stats"><span>' + dayStr + '</span><span class="op-meta-sep">·</span><span>' + touchStr + '</span></div>'
       +     (reviewBadge ? '<div class="op-meta-review">' + reviewBadge + '</div>' : '')
       +   '</div>'

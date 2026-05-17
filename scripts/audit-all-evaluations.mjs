@@ -102,7 +102,27 @@ const BLOCK_PATTERNS = {
     /^##\s*G\)\s*Legitimacy/im,
     /^##\s*Bloque G\b/im,
   ],
+  // Council-eval schema (introduced by lib/eval-council.mjs in late 2026-05).
+  // The newer council reports COLLAPSE the legacy A-G structure into:
+  //   Bloque A (Resumen del Rol) + Bloque B (Match con CV) + Block H/I/J
+  // — they intentionally skip C-G because the council brief format folds level/
+  // comp/personalization/STAR/legitimacy into A+B's narrative + H/I/J
+  // (citation audit / dissent / intel pack). These reports are NOT thin —
+  // they're a different schema.
+  H: [/^##\s*Block H\b/im, /^##\s*Bloque H\b/im],
+  I: [/^##\s*Block I\b/im, /^##\s*Bloque I\b/im],
+  J: [/^##\s*Block J\b/im, /^##\s*Bloque J\b/im],
 };
+
+// Detect which schema this report uses. Reports with explicit Block H/I/J
+// headers are council-eval; everything else is legacy A-G.
+function detectSchema(text) {
+  const hasH = BLOCK_PATTERNS.H.some(p => p.test(text));
+  const hasI = BLOCK_PATTERNS.I.some(p => p.test(text));
+  const hasJ = BLOCK_PATTERNS.J.some(p => p.test(text));
+  if (hasH || hasI || hasJ) return 'council';
+  return 'legacy';
+}
 
 // Block A also needs a numeric comp signal — gate this separately so a thin
 // "Role Summary" with no comp data is flagged. We look at any line within the
@@ -150,9 +170,18 @@ function checkReport(path) {
   const hasUrl = /^\*\*URL:\*\*/m.test(header);
   const hasLegit = /^\*\*Legitimacy:\*\*/m.test(header);
 
-  // Block presence + special check for Block A comp signal
+  // Schema-aware block presence check. Legacy reports get A-G; council-eval
+  // reports get A+B+H+I+J. Comp-signal check adapts to whichever blocks exist.
+  const schema = detectSchema(text);
+  const requiredBlocks = schema === 'council'
+    ? ['A', 'B', 'H', 'I', 'J']
+    : ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
+  // Comp signal can live in A or D (legacy) or A or B (council — Bloque B
+  // includes the comp narrative since C-G are folded into it).
+  const compFallbackBlock = schema === 'council' ? 'B' : 'D';
+
   const missing = [];
-  for (const blockKey of ['A', 'B', 'C', 'D', 'E', 'F', 'G']) {
+  for (const blockKey of requiredBlocks) {
     const has = matchAny(text, BLOCK_PATTERNS[blockKey]);
     if (!has) {
       missing.push(`Block ${blockKey}`);
@@ -161,10 +190,10 @@ function checkReport(path) {
     if (blockKey === 'A') {
       const aText = findBlockText(text, 'A');
       if (!hasCompSignal(aText)) {
-        // Comp signal may live in Block D — only flag if D ALSO lacks it.
-        const dText = findBlockText(text, 'D');
-        if (!hasCompSignal(dText)) {
-          missing.push('Block A (no comp signal in A or D)');
+        // Comp signal may live in the schema's fallback block — only flag if BOTH lack it.
+        const fbText = findBlockText(text, compFallbackBlock);
+        if (!hasCompSignal(fbText)) {
+          missing.push(`Block A (no comp signal in A or ${compFallbackBlock})`);
         }
       }
     }

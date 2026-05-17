@@ -637,11 +637,30 @@ function buildPerCompanyPipelinePreview() {
   // Per-row enrichment: TTO + toxicity + cache state + cost estimate.
   // Each Tier-5 unique-company cost = council intel × (1 - cache_hit) +
   // (highscore-pack pre-gen if score ≥ 4.5).
+  //
+  // Bug fix 2026-05-17: toxicity was previously sourced from scoreToxicity(name)
+  // which reads data/toxicity-signals/{slug}.json (almost always empty in
+  // steady state). Real toxicity verdicts live in the cached intel files at
+  // data/company-intel-cache/{slug}/intel-{date}.json under .toxicity_score
+  // (populated by scripts/process-all-council-intel.mjs). New strategy: read
+  // from cache first, fall back to scoreToxicity() only if no cache.
   const rows = [];
   for (const meta of byCompany.values()) {
     const ttoRaw = (() => { try { return estimateTTO(meta.company); } catch { return null; } })();
-    const tox    = (() => { try { return scoreToxicity(meta.company);  } catch { return null; } })();
     const cache  = loadCompanyIntelCacheState(meta.slug);
+    let tox = null;
+    if (cache.hit && cache.last_intel_date) {
+      try {
+        const intelFp = join(ROOT, 'data/company-intel-cache', meta.slug, `intel-${cache.last_intel_date}.json`);
+        if (existsSync(intelFp)) {
+          const cached = JSON.parse(readFileSync(intelFp, 'utf-8'));
+          tox = cached?.toxicity_score || null;
+        }
+      } catch { /* fall through to empty-signals score */ }
+    }
+    if (!tox) {
+      tox = (() => { try { return scoreToxicity(meta.company); } catch { return null; } })();
+    }
     const isExcluded = excluded.has(meta.slug);
 
     // Cost: zero if excluded (orchestrator auto-trashes), else council cost
