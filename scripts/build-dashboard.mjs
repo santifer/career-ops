@@ -10698,165 +10698,349 @@ function applyFilters() {
   if (typeof _bulkUpdateHeaderCheckboxes === 'function') _bulkUpdateHeaderCheckboxes();
 }
 
-function sortTable(tbodyId, colIdx, type, thEl, evt) {
-  const tbody = document.getElementById(tbodyId);
-  if (!tbody) return;
-  // Per-column default direction: most columns are biggest-first (desc)
-  // but Age sorts youngest-first by default (asc). Header opts in via
-  // data-default-dir="asc" attribute. See DASHBOARD_INVARIANTS.md §8.
-  const defaultDir = (thEl && thEl.dataset && thEl.dataset.defaultDir === 'asc') ? 'asc' : 'desc';
-  // Multi-column sort via shift-click. Without shift = replace stack with
-  // single entry. With shift = if column is already in stack, toggle its
-  // direction; otherwise append it as the next tiebreaker level.
-  const isShift = !!(evt && (evt.shiftKey || evt.metaKey));
-  let stack = [];
-  try { stack = JSON.parse(tbody.dataset.sortStack || '[]'); } catch (_) { stack = []; }
-  if (!isShift) {
-    // Single-column sort (legacy behavior + toggle direction).
-    const existing = stack.find(s => s.col === colIdx);
-    const dir = existing
-      ? (existing.dir === 'desc' ? 'asc' : 'desc')
-      : defaultDir;
-    stack = [{ col: colIdx, type, dir }];
-  } else {
-    const idx = stack.findIndex(s => s.col === colIdx);
-    if (idx >= 0) {
-      // Toggle direction at that level (cycle desc → asc → remove).
-      if (stack[idx].dir === 'desc') stack[idx].dir = 'asc';
-      else stack.splice(idx, 1);
-    } else {
-      stack.push({ col: colIdx, type, dir: defaultDir });
-    }
-    // Cap stack at 4 levels — beyond that the sort intent is unreadable.
-    stack = stack.slice(0, 4);
-  }
-  if (!stack.length) stack = [{ col: colIdx, type, dir: defaultDir }];
-  tbody.dataset.sortStack = JSON.stringify(stack);
-  // Update header indicators across the table — show level number for
-  // multi-sort, plain arrow for single. Also update aria-sort state on
-  // every sortable header so screen readers and the new ↑/↓ chevron
-  // indicator (CSS-driven, see DASHBOARD_INVARIANTS.md §8) reflect
-  // current sort state. The active column gets aria-sort="ascending"
-  // or "descending"; all other sortable headers reset to "none".
-  const thead = tbody.closest('table')?.querySelector('thead');
-  thead?.querySelectorAll('.sortable').forEach(th => {
-    th.querySelector('.sort-arrow')?.remove();
-    th.setAttribute('aria-sort', 'none');
-  });
-  if (thead) {
-    stack.forEach((entry, i) => {
-      const headerEls = thead.querySelectorAll('.sortable');
-      // Find the th whose onclick references this colIdx — relies on the
-      // existing onclick attribute pattern: sortTable(_, COL, _, this, evt)
-      const target = Array.from(headerEls).find(th => {
-        // Double-htmlEscape inside the build's outer template literal so the
-        // backslashes survive into the rendered <script>. Without \\(, \\s, \\d
-        // the emitted regex is /sortTable([^,]+,s*(d+)/ which is invalid.
-        const m = (th.getAttribute('onclick') || '').match(/sortTable\\([^,]+,\\s*(\\d+)/);
-        return m && parseInt(m[1], 10) === entry.col;
-      });
-      if (!target) return;
-      const arrow = document.createElement('span');
-      arrow.className = 'sort-arrow';
-      arrow.textContent = (entry.dir === 'desc' ? ' ▼' : ' ▲') + (stack.length > 1 ? String(i + 1) : '');
-      target.appendChild(arrow);
-      // Primary sort column drives aria-sort. For multi-sort, only the
-      // top-of-stack column gets ascending/descending; secondary levels
-      // stay at "none" (their .sort-arrow level number conveys order).
-      if (i === 0) {
-        target.setAttribute('aria-sort', entry.dir === 'desc' ? 'descending' : 'ascending');
-      }
-    });
-  }
-  // Persist primary sort to URL via history.replaceState (no history
-  // pollution — every sort click would otherwise push a new entry).
-  // Only the top-of-stack key + dir is persisted; multi-sort stacks are
-  // session-scoped. See DASHBOARD_INVARIANTS.md §8.
-  try {
-    if (stack.length && thEl && thEl.dataset && thEl.dataset.colKey && tbodyId === 'all-tbody') {
-      const params = new URLSearchParams(location.search);
-      params.set('sort', thEl.dataset.colKey + ':' + (stack[0].dir === 'desc' ? 'desc' : 'asc'));
-      history.replaceState(null, '', location.pathname + '?' + params.toString() + location.hash);
-    }
-  } catch (_) { /* URL update is best-effort; never block the sort */ }
-  // Collect paired rows (main + detail)
-  const allTr = Array.from(tbody.children);
-  const pairs = [];
-  for (let i = 0; i < allTr.length; i++) {
-    if (allTr[i].classList.contains('row')) {
-      const next = allTr[i + 1];
-      const detail = next?.classList.contains('detail-row') ? next : null;
-      pairs.push({ main: allTr[i], detail });
-      if (detail) i++;
-    }
-  }
+// ── TanStack Table v8 headless sort model — All Evaluations table ───────────
+// Approach: API-shape mirror of @tanstack/table-core (v8 stable) rather than
+// importing the npm package. Rationale: the dashboard is server-rendered static
+// HTML with no build step; adding @tanstack/table-core as a runtime CDN load
+// would add a network dependency that breaks the offline/file:// use case.
+// The package provides no DOM rendering — just state management + comparator
+// dispatch. Mirroring its ColumnSort[] state shape and getSortedRowModel() API
+// lets us swap in the real package with a one-line change when a build step
+// is added. See data/dashboard-optimization-strategy-2026-05-17.md §Tier-A-1.
+//
+// API surface exposed (mirrors @tanstack/table-core ColumnSort / SortingState):
+//   model.getState()          → { sorting: ColumnSort[] }
+//                               ColumnSort = { id: string, desc: boolean }
+//   model.setSorting(fn)      → update sorting state (functional updater)
+//   model.getSortedRowModel() → sorted pairs array { main, detail }
+//   model.resetSorting()      → clear all sort state
+//
+// Groundwork for future: multi-sort UI, filter model, pagination can all follow
+// the same pattern — expose getState/setState/getXxxModel functions that mirror
+// the table-core contract without the React adapter.
+function createAllEvalsSort() {
   // Status sort weights — per templates/states.yml. Logical pipeline
-  // order: Evaluated → Responded → Applied → Interview → Offer →
-  // Rejected → Discarded. Higher weight = later-stage = sorted later in
-  // ascending. Empty / unknown statuses sort to the bottom (weight 99).
-  // See DASHBOARD_INVARIANTS.md §8.
+  // order: Evaluated(1) → Responded(2) → Applied(3) → Interview(4) →
+  // Offer(5) → Rejected(6) → Discarded(7). SKIP(8) last.
+  // Empty / unknown → 99 (sort to bottom regardless of direction).
+  // See DASHBOARD_INVARIANTS.md §8 (column-sortability invariant).
   const STATUS_ORDER = {
     evaluated: 1, responded: 2, applied: 3, interview: 4,
     offer: 5, rejected: 6, discarded: 7, skip: 8
   };
-  // Prefer a child element's data-sort-value when present (Base column
-  // ships numeric data-base-min; equity, location chips can ship a custom
-  // sort key). Falls back to innerText for legacy columns.
-  const cellSortValue = (td, sortType) => {
+
+  // Internal state: ColumnSort[] (TanStack table-core shape)
+  // { id: colKey, desc: boolean, _col: colIdx, _type: sortType }
+  // _col and _type are internal extensions — not part of the public API.
+  let _sorting = [];
+
+  // Extract a sort value from a <td> cell, respecting data-* sort hints.
+  // Mirrors table-core's sortingFn contract: returns a comparable value.
+  function _cellValue(td, sortType) {
     if (!td) return '';
     const child = td.firstElementChild;
     if (child) {
       if (child.dataset && child.dataset.sortValue !== undefined) return child.dataset.sortValue;
       if (child.dataset && child.dataset.baseMin !== undefined) return child.dataset.baseMin;
       if (child.dataset && child.dataset.locationStatus !== undefined) {
-        // Map status to sort weight: preferred > remote > outside > unknown
         const map = { preferred: '1', remote: '2', outside: '3', unknown: '4' };
         return (map[child.dataset.locationStatus] || '5') + ' ' + (td.innerText.trim());
       }
-      // Status column: status pill carries data-status (lowercase key
-      // matching templates/states.yml). Map to numeric weight so logical
-      // pipeline order beats alphabetical.
+      // Status column: pill carries data-status (lowercase key matching states.yml).
       if (sortType === 'status' && child.dataset && child.dataset.status !== undefined) {
         return String(STATUS_ORDER[child.dataset.status] || 99);
       }
     }
     return td.innerText.trim();
-  };
-  // Walk the sort stack: the first entry is the primary key, subsequent
-  // entries are tiebreakers. Returns 0 only when every level matches.
-  // Type dispatch: 'num' / 'status' → numeric; 'date' → epoch ms; default
-  // (including 'str') → locale-aware string compare with numeric:true.
-  // Empty / missing values ALWAYS sort to the bottom regardless of dir.
-  pairs.sort((a, b) => {
-    for (const entry of stack) {
-      const av = cellSortValue(a.main.children[entry.col], entry.type);
-      const bv = cellSortValue(b.main.children[entry.col], entry.type);
-      const aEmpty = av === '' || av === null || av === undefined;
-      const bEmpty = bv === '' || bv === null || bv === undefined;
-      if (aEmpty && bEmpty) continue;
-      if (aEmpty) return 1;
-      if (bEmpty) return -1;
-      let cmp;
-      if (entry.type === 'num' || entry.type === 'status') {
-        cmp = (parseFloat(av) || 0) - (parseFloat(bv) || 0);
-      } else if (entry.type === 'date') {
-        const ad = Date.parse(av); const bd = Date.parse(bv);
-        cmp = (isNaN(ad) ? 0 : ad) - (isNaN(bd) ? 0 : bd);
-      } else {
-        cmp = String(av).localeCompare(String(bv), undefined, { numeric: true, sensitivity: 'base' });
-      }
-      if (cmp === 0) continue;
-      return entry.dir === 'desc' ? -cmp : cmp;
-    }
-    return 0;
-  });
-  for (const { main, detail } of pairs) {
-    tbody.appendChild(main);
-    if (detail) tbody.appendChild(detail);
   }
-  // Wave G: visual confirmation that the reorder landed. The pulse
-  // is a 250ms tinted flash on the rows; reduced-motion is honored
-  // by the no-preference media query around the @keyframes.
+
+  // Collect row pairs (main + optional detail-row) from the tbody.
+  function _collectPairs(tbody) {
+    const allTr = Array.from(tbody.children);
+    const pairs = [];
+    for (let i = 0; i < allTr.length; i++) {
+      if (allTr[i].classList.contains('row')) {
+        const next = allTr[i + 1];
+        const detail = next?.classList.contains('detail-row') ? next : null;
+        pairs.push({ main: allTr[i], detail });
+        if (detail) i++;
+      }
+    }
+    return pairs;
+  }
+
+  return {
+    // Returns current sorting state as ColumnSort[].
+    // id = colKey (data-col-key on the <th>), desc = boolean.
+    getState() {
+      return { sorting: _sorting.map(s => ({ id: s.id, desc: s.desc })) };
+    },
+
+    // Functional updater, same signature as TanStack's table.setSorting().
+    // fn receives the current ColumnSort[] and returns the new one.
+    setSorting(fn) {
+      _sorting = fn(_sorting);
+    },
+
+    // Resets to unsorted state.
+    resetSorting() {
+      _sorting = [];
+    },
+
+    // Returns sorted row pairs from the given tbody element, mirroring
+    // table-core's getSortedRowModel() contract (returns row objects).
+    // Empty cells always sort to the bottom regardless of direction.
+    getSortedRowModel(tbody) {
+      const pairs = _collectPairs(tbody);
+      if (!_sorting.length) return pairs;
+      pairs.sort((a, b) => {
+        for (const entry of _sorting) {
+          const av = _cellValue(a.main.children[entry._col], entry._type);
+          const bv = _cellValue(b.main.children[entry._col], entry._type);
+          // Empty / missing values ALWAYS sort to the bottom.
+          const aEmpty = av === '' || av === null || av === undefined;
+          const bEmpty = bv === '' || bv === null || bv === undefined;
+          if (aEmpty && bEmpty) continue;
+          if (aEmpty) return 1;
+          if (bEmpty) return -1;
+          let cmp;
+          if (entry._type === 'num' || entry._type === 'status') {
+            cmp = (parseFloat(av) || 0) - (parseFloat(bv) || 0);
+          } else if (entry._type === 'date') {
+            const ad = Date.parse(av); const bd = Date.parse(bv);
+            cmp = (isNaN(ad) ? 0 : ad) - (isNaN(bd) ? 0 : bd);
+          } else {
+            cmp = String(av).localeCompare(String(bv), undefined, { numeric: true, sensitivity: 'base' });
+          }
+          if (cmp === 0) continue;
+          return entry.desc ? -cmp : cmp;
+        }
+        return 0;
+      });
+      return pairs;
+    },
+
+    // Internal accessor used by sortTable() to look up an entry by colIdx.
+    _getByCol(colIdx) {
+      return _sorting.find(s => s._col === colIdx);
+    },
+  };
+}
+
+// Singleton instance for the All Evaluations table. A new instance can be
+// created per-table when multi-table support is added (e.g. Apply-Now
+// gains an independent sort model). For now we isolate to all-tbody only.
+const _allEvalsSort = createAllEvalsSort();
+
+function sortTable(tbodyId, colIdx, type, thEl, evt) {
+  const tbody = document.getElementById(tbodyId);
+  if (!tbody) return;
+
+  // Per-column default direction: most columns sort biggest-first (desc)
+  // on first click, but Age sorts youngest-first (asc). Header opts in via
+  // data-default-dir="asc". See DASHBOARD_INVARIANTS.md §8.
+  const defaultDir = (thEl && thEl.dataset && thEl.dataset.defaultDir === 'asc') ? 'asc' : 'desc';
+  const wantDesc = defaultDir === 'desc';
+
+  if (tbodyId === 'all-tbody') {
+    // ── TanStack table-core API path (All Evaluations only) ─────
+    // DASHBOARD_INVARIANTS.md §9: aria-sort, data-col-key, data-col-type,
+    // .sort-indicator chevron, URL state — all preserved here.
+    const isShift = !!(evt && (evt.shiftKey || evt.metaKey));
+    _allEvalsSort.setSorting(prev => {
+      const existing = _allEvalsSort._getByCol(colIdx);
+      if (!isShift) {
+        // Single-column: toggle direction on second click of same column.
+        return [{ id: thEl?.dataset?.colKey || String(colIdx), desc: existing ? !existing.desc : wantDesc, _col: colIdx, _type: type }];
+      } else {
+        // Multi-sort: shift-click appends / toggles / removes from stack.
+        const idx = prev.findIndex(s => s._col === colIdx);
+        let next = [...prev];
+        if (idx >= 0) {
+          if (next[idx].desc) {
+            next[idx] = { ...next[idx], desc: false };
+          } else {
+            next.splice(idx, 1);
+          }
+        } else {
+          next.push({ id: thEl?.dataset?.colKey || String(colIdx), desc: wantDesc, _col: colIdx, _type: type });
+        }
+        return next.slice(0, 4); // cap at 4 levels
+      }
+    });
+    // If the setSorting updater cleared everything, seed a single entry.
+    if (!_allEvalsSort.getState().sorting.length) {
+      _allEvalsSort.setSorting(() => [{ id: thEl?.dataset?.colKey || String(colIdx), desc: wantDesc, _col: colIdx, _type: type }]);
+    }
+    // Persist to tbody dataset for inspection / debugging (mirrors legacy).
+    const sortState = _allEvalsSort.getState().sorting;
+    tbody.dataset.sortStack = JSON.stringify(sortState.map(s => ({ col: s._col, type: s._type, dir: s.desc ? 'desc' : 'asc' })));
+
+    // Update header indicators + aria-sort state.
+    const thead = tbody.closest('table')?.querySelector('thead');
+    thead?.querySelectorAll('.sortable').forEach(th => {
+      th.querySelector('.sort-arrow')?.remove();
+      th.setAttribute('aria-sort', 'none');
+    });
+    if (thead) {
+      sortState.forEach((entry, i) => {
+        const headerEls = thead.querySelectorAll('.sortable');
+        const target = Array.from(headerEls).find(th => {
+          const m = (th.getAttribute('onclick') || '').match(/sortTable\\([^,]+,\\s*(\\d+)/);
+          return m && parseInt(m[1], 10) === entry._col;
+        });
+        if (!target) return;
+        const arrow = document.createElement('span');
+        arrow.className = 'sort-arrow';
+        arrow.textContent = (entry.desc ? ' ▼' : ' ▲') + (sortState.length > 1 ? String(i + 1) : '');
+        target.appendChild(arrow);
+        // Primary column drives aria-sort for screen readers.
+        if (i === 0) {
+          target.setAttribute('aria-sort', entry.desc ? 'descending' : 'ascending');
+        }
+      });
+    }
+
+    // URL state persistence via history.replaceState (no history pollution).
+    // Only top-of-stack key + dir is persisted; multi-sort is session-scoped.
+    // See DASHBOARD_INVARIANTS.md §8 (column-sortability invariant).
+    try {
+      if (sortState.length && thEl && thEl.dataset && thEl.dataset.colKey) {
+        const params = new URLSearchParams(location.search);
+        params.set('sort', thEl.dataset.colKey + ':' + (sortState[0].desc ? 'desc' : 'asc'));
+        history.replaceState(null, '', location.pathname + '?' + params.toString() + location.hash);
+      }
+    } catch (_) { /* URL update is best-effort; never block the sort */ }
+
+    // Apply the sort model: get sorted pairs and write back to DOM.
+    const sorted = _allEvalsSort.getSortedRowModel(tbody);
+    for (const { main, detail } of sorted) {
+      tbody.appendChild(main);
+      if (detail) tbody.appendChild(detail);
+    }
+  } else {
+    // ── Legacy path — Apply-Now and all other tables ─────────────
+    // Apply-Now uses drag-priority order; its sortTable() invocations use
+    // the same multi-column stack mechanism as before. DO NOT route
+    // Apply-Now through the TanStack model — drag-priority order would be lost.
+    const isShift = !!(evt && (evt.shiftKey || evt.metaKey));
+    let stack = [];
+    try { stack = JSON.parse(tbody.dataset.sortStack || '[]'); } catch (_) { stack = []; }
+    if (!isShift) {
+      // Single-column sort (legacy behavior + toggle direction).
+      const existing = stack.find(s => s.col === colIdx);
+      const dir = existing
+        ? (existing.dir === 'desc' ? 'asc' : 'desc')
+        : defaultDir;
+      stack = [{ col: colIdx, type, dir }];
+    } else {
+      const idx = stack.findIndex(s => s.col === colIdx);
+      if (idx >= 0) {
+        // Toggle direction at that level (cycle desc → asc → remove).
+        if (stack[idx].dir === 'desc') stack[idx].dir = 'asc';
+        else stack.splice(idx, 1);
+      } else {
+        stack.push({ col: colIdx, type, dir: defaultDir });
+      }
+      // Cap stack at 4 levels — beyond that the sort intent is unreadable.
+      stack = stack.slice(0, 4);
+    }
+    if (!stack.length) stack = [{ col: colIdx, type, dir: defaultDir }];
+    tbody.dataset.sortStack = JSON.stringify(stack);
+    // Update header indicators across the table — show level number for
+    // multi-sort, plain arrow for single. Also update aria-sort state on
+    // every sortable header so screen readers and the new ↑/↓ chevron
+    // indicator (CSS-driven, see DASHBOARD_INVARIANTS.md §8) reflect
+    // current sort state. The active column gets aria-sort="ascending"
+    // or "descending"; all other sortable headers reset to "none".
+    const thead = tbody.closest('table')?.querySelector('thead');
+    thead?.querySelectorAll('.sortable').forEach(th => {
+      th.querySelector('.sort-arrow')?.remove();
+      th.setAttribute('aria-sort', 'none');
+    });
+    if (thead) {
+      stack.forEach((entry, i) => {
+        const headerEls = thead.querySelectorAll('.sortable');
+        // Find the th whose onclick references this colIdx — relies on the
+        // existing onclick attribute pattern: sortTable(_, COL, _, this, evt)
+        const target = Array.from(headerEls).find(th => {
+          const m = (th.getAttribute('onclick') || '').match(/sortTable\\([^,]+,\\s*(\\d+)/);
+          return m && parseInt(m[1], 10) === entry.col;
+        });
+        if (!target) return;
+        const arrow = document.createElement('span');
+        arrow.className = 'sort-arrow';
+        arrow.textContent = (entry.dir === 'desc' ? ' ▼' : ' ▲') + (stack.length > 1 ? String(i + 1) : '');
+        target.appendChild(arrow);
+        // Primary sort column drives aria-sort. For multi-sort, only the
+        // top-of-stack column gets ascending/descending; secondary levels
+        // stay at "none" (their .sort-arrow level number conveys order).
+        if (i === 0) {
+          target.setAttribute('aria-sort', entry.dir === 'desc' ? 'descending' : 'ascending');
+        }
+      });
+    }
+    // Status sort weights (same as TanStack path above, for Apply-Now parity).
+    const STATUS_ORDER_LEGACY = {
+      evaluated: 1, responded: 2, applied: 3, interview: 4,
+      offer: 5, rejected: 6, discarded: 7, skip: 8
+    };
+    const allTr = Array.from(tbody.children);
+    const pairs = [];
+    for (let i = 0; i < allTr.length; i++) {
+      if (allTr[i].classList.contains('row')) {
+        const next = allTr[i + 1];
+        const detail = next?.classList.contains('detail-row') ? next : null;
+        pairs.push({ main: allTr[i], detail });
+        if (detail) i++;
+      }
+    }
+    const cellSortValue = (td, sortType) => {
+      if (!td) return '';
+      const child = td.firstElementChild;
+      if (child) {
+        if (child.dataset && child.dataset.sortValue !== undefined) return child.dataset.sortValue;
+        if (child.dataset && child.dataset.baseMin !== undefined) return child.dataset.baseMin;
+        if (child.dataset && child.dataset.locationStatus !== undefined) {
+          const map = { preferred: '1', remote: '2', outside: '3', unknown: '4' };
+          return (map[child.dataset.locationStatus] || '5') + ' ' + (td.innerText.trim());
+        }
+        if (sortType === 'status' && child.dataset && child.dataset.status !== undefined) {
+          return String(STATUS_ORDER_LEGACY[child.dataset.status] || 99);
+        }
+      }
+      return td.innerText.trim();
+    };
+    pairs.sort((a, b) => {
+      for (const entry of stack) {
+        const av = cellSortValue(a.main.children[entry.col], entry.type);
+        const bv = cellSortValue(b.main.children[entry.col], entry.type);
+        const aEmpty = av === '' || av === null || av === undefined;
+        const bEmpty = bv === '' || bv === null || bv === undefined;
+        if (aEmpty && bEmpty) continue;
+        if (aEmpty) return 1;
+        if (bEmpty) return -1;
+        let cmp;
+        if (entry.type === 'num' || entry.type === 'status') {
+          cmp = (parseFloat(av) || 0) - (parseFloat(bv) || 0);
+        } else if (entry.type === 'date') {
+          const ad = Date.parse(av); const bd = Date.parse(bv);
+          cmp = (isNaN(ad) ? 0 : ad) - (isNaN(bd) ? 0 : bd);
+        } else {
+          cmp = String(av).localeCompare(String(bv), undefined, { numeric: true, sensitivity: 'base' });
+        }
+        if (cmp === 0) continue;
+        return entry.dir === 'desc' ? -cmp : cmp;
+      }
+      return 0;
+    });
+    for (const { main, detail } of pairs) {
+      tbody.appendChild(main);
+      if (detail) tbody.appendChild(detail);
+    }
+  }
+
+  // Wave G: visual confirmation that the reorder landed (both paths).
   if (!REDUCE_MOTION_MQ.matches) {
     tbody.classList.remove('sort-pulse');
     void tbody.offsetWidth;
@@ -15633,11 +15817,11 @@ _bulkLoadFromStorage();
 _bulkSyncCheckboxesFromState();
 _bulkUpdateBar();
 
-// ── Column-sort URL state restore (Phase 1 Day-1/2, 2026-05-17) ──
-// Reads ?sort=<colKey>:<asc|desc> from the URL on page load and
-// triggers the matching header click on the All Evaluations table.
-// This is best-effort — if the colKey doesn't match any header, the
-// page just loads in default order. See DASHBOARD_INVARIANTS.md §8.
+// ── Column-sort URL state restore (TanStack headless, 2026-05-17) ──────────
+// Reads ?sort=<colKey>:<asc|desc> from the URL on page load and triggers
+// the matching header click on the All Evaluations table. Best-effort —
+// if the colKey doesn't match any header, the page loads in default order.
+// See DASHBOARD_INVARIANTS.md §8 (column-sortability invariant).
 (function _restoreSortFromURL() {
   try {
     const params = new URLSearchParams(location.search);
@@ -15646,20 +15830,17 @@ _bulkUpdateBar();
     const [colKey, dir] = raw.split(':');
     if (!colKey) return;
     const wantDesc = (dir || 'desc').toLowerCase() === 'desc';
-    // Apply to the All Evaluations table — Apply-Now uses drag-priority
-    // ordering by default; we don't want URL state to override that.
+    // Apply to All Evaluations only — Apply-Now uses drag-priority ordering
+    // and we must not override that with URL sort state.
     const tbl = document.getElementById('all-tbody')?.closest('table');
     const th = tbl?.querySelector('th.sortable[data-col-key="' + colKey + '"]');
     if (!th) return;
-    // First click sets dir per th's default-dir; if we want the opposite
-    // direction, click twice. The dataset.sortStack starts empty so the
-    // first click will respect data-default-dir, then the second toggles.
+    // First click sets dir per th's data-default-dir; if we want the opposite
+    // direction, click a second time. The _allEvalsSort model starts empty so
+    // the first click respects data-default-dir, then the second toggles.
     th.click();
-    const tbody = document.getElementById('all-tbody');
-    let stack = [];
-    try { stack = JSON.parse(tbody.dataset.sortStack || '[]'); } catch (_) {}
-    const cur = stack[0]?.dir;
-    const haveDesc = cur === 'desc';
+    const curState = _allEvalsSort.getState().sorting;
+    const haveDesc = curState[0]?.desc === true;
     if (haveDesc !== wantDesc) th.click();
   } catch (e) { /* never block dashboard load on URL parse error */ }
 })();
