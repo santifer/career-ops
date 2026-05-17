@@ -73,6 +73,7 @@ modes/_profile.md
 .resolved-prompt-*
 node_modules/
 bun.lock
+data/strategy-cache/
 
 # OS
 .DS_Store
