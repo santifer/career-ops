@@ -1,0 +1,27 @@
+# Autonomous Build Day Log — 2026-05-17
+
+Format: `[HH:MM PT] [phase N] [SHA prefix] {what shipped} — {next}`
+
+Run by: Claude Opus 4.7 orchestrator, this session
+Budget remaining at start: ~$46 of MONTHLY_BUDGET_USD=$50
+Definition of done: Tier A items 1-4 from `data/autonomous-build-prompt-2026-05-17.md`
+
+---
+
+## Hourly log
+
+[11:50 PT] [orchestrator] [—] Build day resumed in main session (no new instance). Spawning 3 parallel subagents for Wave 1 Tier A items 1-3 (Phase 4 ingest scaffold, Phase 1 Day-1/2 foundations, Phase 2 quick wins). All worktree-isolated. — next: synthesize Wave 1 returns + commit
+
+[12:05 PT] [phase 3] [351e495] data/ai-policies.yml seeded with 20 companies (5 web-verified: Microsoft + Amazon + Anthropic-reversed + Meta + Google-stub; 12 stubs; 3 hard exclusions). 279 insertions. — next: wait for Wave 1 subagents, then synthesize
+
+[11:55 PT] [phase 2] [058cf18] Heartbeat Day-1 quick wins shipped: state-driven subject, hidden preheader, duplicate H1 killed, Apply-Now 8-col table dedup'd. Rendered HTML now 68KB (was ~78KB); +116/-27 lines in scripts/heartbeat.mjs. — next: Day-1 Gmail alias test (mitwilli+heartbeat@gmail.com) to resolve self-send routing dissent before any sender-domain work
+
+[11:55 PT] [phase 4] [61e166d] Ingest scaffold landed: data/skill-tracker/{README,_TEMPLATE,2026-W20}.md + lib/skill-ingest-schema.mjs (Zod v4 + native z.toJSONSchema) + scripts/skill-ingest.mjs (--week/--dry-run/--apply, dual structured-output shape with HTTP-400 fallback to responseSchema, agent-commit-backed merge). package.json adds @google/genai ^2.3.0 + zod ^4.4.3; npm install clean (4 low-sev audit warnings unrelated). node --check clean on both .mjs; dry-run against W20 prints 9 required top-level fields, 18310-byte prompt. — next: real --apply test on a future week, or wire Sunday 21:00 PT launchd plist per Phase 4 Day 7
+
+[12:13 PT] [phase 1] [4040b1d] Dashboard foundations: 7 panel-title div→h2 (Apply-Now ×2, All Evaluations, Top Companies, Trends, Comp Analytics ×2) + 4 trend-card-title div→h3 (Score Distribution, Apps/week, Avg score/week, Pipeline funnel). H1=1 (sr-only, was already 1 — duplicate was in email, not dashboard). Added 12 typography tokens (--font-sans, --text-xs..4xl, --leading-tight/normal/relaxed) + 6 accent/ring tokens (--accent #16a34a Career-Ops green, --accent-fg/bg/border, --ring, --focus-ring) + global *:focus-visible rule. All 7 DASHBOARD_INVARIANTS preserved: sort=38, drawer=23, scroll-wraps=2, row-click=16, truncation=11. Inline JS OK. --blue saturation bump skipped (Phase-7 single-accent palette is intentional). Build runtime 2349ms. +45/-12 lines. — next: Tier B token adoption refactor (replace hardcoded 14/13/11px with --text-* tokens) — separate ticket
+
+[12:25 PT] [phase 2] [8e99fd9] Gmail alias BCC wiring shipped: HEARTBEAT_ALIAS_BCC + HEARTBEAT_ALIAS_BCC_UNTIL env-var gate. When today's date <= UNTIL (inclusive ISO), sendEmail adds mitwilli+heartbeat@gmail.com as BCC; after UNTIL, auto-disables. sendEmail() now returns {messageId, bccTo} for audit trail. +26/-1 lines. Mitchell must add the two env vars to .env to activate (e.g., HEARTBEAT_ALIAS_BCC_UNTIL=2026-05-24 for a 7-day observation window). — next: dispatch Wave 2 — Phase 3 orchestrator, TPgM tracker, Phase 1 sortability, Nano Banana 2 badges (4 parallel subagents)
+
+[12:04 PT] [phase 4] [aa24117] TPgM tracker shipped — data/courses.yml (5 seeded) + scripts/tpgm-tracker.mjs + lib/tpgm-dashboard-widget.mjs + lib/tpgm-heartbeat-section.mjs — next: wire widgets into build-dashboard.mjs and heartbeat.mjs in separate tickets
+
+[12:05 PT] [phase 3] [PENDING] Output-pipeline orchestrator scaffold — lib/apply-pack-schema.mjs (Zod v4 ApplyPack contract: 6 top-level keys, 7-stage enum, z.toJSONSchema export mirroring lib/skill-ingest-schema.mjs) + scripts/build-apply-orchestrator.mjs (7 stages exported separately, Promise.allSettled in fan_out_drafts, reads data/ai-policies.yml + data/hm-intel/, writes pack.json + README.md to data/apply-packs/{row}-{slug}/) + scripts/build-apply-orchestrator.test.mjs (21 checks pass against row 50 ElevenLabs Comms Manager; runtime 7ms; ai_policy_slug=elevenlabs confirmed). scripts/build-apply-pack.mjs gets --orchestrator flag delegating into the new path; legacy behavior preserved. package.json adds `apply-orchestrator` + `apply-orchestrator:test` scripts. .gitignore adds data/apply-packs/. NO live LLM calls — dry-run only. — next: Day 2 sub-agent decomposition (cv-tailor, cover-letter, why-statement, linkedin-dm, form-fields as separate .mjs files) and Day 3 HM-intel deterministic weighting

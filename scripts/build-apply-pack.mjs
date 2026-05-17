@@ -11,7 +11,13 @@
  *
  * Usage:
  *   node scripts/build-apply-pack.mjs --row=48
- *   node scripts/build-apply-pack.mjs --row=48 --force   # overwrite existing folder
+ *   node scripts/build-apply-pack.mjs --row=48 --force        # overwrite existing folder
+ *   node scripts/build-apply-pack.mjs --row=48 --orchestrator # delegate to Phase 3 orchestrator
+ *
+ * The --orchestrator flag delegates to scripts/build-apply-orchestrator.mjs
+ * (the Phase 3 dry-run scaffold that emits a validated ApplyPack JSON).
+ * Without the flag, the legacy single-pack folder behavior is preserved
+ * unchanged.
  *
  * Exit codes:
  *   0 — apply-pack created or already-exists (idempotent)
@@ -38,10 +44,41 @@ const args = Object.fromEntries(
 
 const ROW = parseInt(args.row, 10);
 const FORCE = !!args.force;
+const USE_ORCHESTRATOR = args.orchestrator === true || args.orchestrator === 'true';
 
 if (!ROW || Number.isNaN(ROW)) {
-  console.error('Usage: node scripts/build-apply-pack.mjs --row=N [--force]');
+  console.error('Usage: node scripts/build-apply-pack.mjs --row=N [--force] [--orchestrator]');
   process.exit(3);
+}
+
+// New (Phase 3, 2026-05-17): when --orchestrator is passed, delegate to the
+// Phase 3 orchestrator scaffold instead of running the legacy single-pack
+// folder builder. Existing callers without the flag get the same behavior
+// they always did.
+if (USE_ORCHESTRATOR) {
+  const { orchestrateApplyPack } = await import('./build-apply-orchestrator.mjs');
+  try {
+    const result = await orchestrateApplyPack({
+      rowId: ROW,
+      archetype: args.archetype || 'A2-PgM',
+      dryRun: args['dry-run'] === undefined ? true : args['dry-run'] !== 'false',
+      outDir: args.out || null,
+      write: true,
+    });
+    console.log(JSON.stringify({
+      ok: true,
+      mode: 'orchestrator',
+      row_id: result.pack.meta.row_id,
+      company: result.pack.meta.company,
+      role: result.pack.meta.role,
+      status: result.pack.status,
+      out_dir: result.outDir,
+    }, null, 2));
+    process.exit(0);
+  } catch (err) {
+    console.error(`orchestrator error: ${err.message}`);
+    process.exit(1);
+  }
 }
 
 function slugify(s) {

@@ -43,6 +43,7 @@ corpus/
 
 # Auto-generated per-role apply-packs (personal output)
 apply-pack/
+data/apply-packs/
 
 # Generated dashboard reports (personal)
 dashboard/reports/
