@@ -25,7 +25,7 @@ import { buildSummary as buildOutreachSummary, urgency as outreachUrgency, daysS
 // Tier 5 system-status banner (calibration brief 2026-05-16) — surfaces which
 // Tier 5 features are active in the daily heartbeat. Runway-alert section will
 // wire in once pipeline-density compute is extracted from dashboard-server.mjs.
-import { renderSystemBanner } from '../lib/heartbeat-system-banner.mjs';
+import { renderSystemBanner, renderDiscardPatternSection } from '../lib/heartbeat-system-banner.mjs';
 
 const ROOT = process.cwd();
 const args = process.argv.slice(2);
@@ -246,6 +246,12 @@ function renderHtmlEmail(markdownBody, meta = {}) {
   let systemBanner = '';
   try { systemBanner = renderSystemBanner({ format: 'html' }) || ''; } catch {}
 
+  // Rejected pattern of the week (Item #2 of 2026-05-16 incomplete-task review).
+  // Reads data/discard-reasons.jsonl, auto-suppresses when zero discards in
+  // the 7-day window — same no-noise pattern as Outreach Cadence.
+  let discardSection = '';
+  try { discardSection = renderDiscardPatternSection({ format: 'html', days: 7 }) || ''; } catch {}
+
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8">
 <meta name="color-scheme" content="light dark">
@@ -258,6 +264,7 @@ function renderHtmlEmail(markdownBody, meta = {}) {
   <tr><td>
     ${header}
     ${systemBanner}
+    ${discardSection}
     ${kpiStrip}
     ${styled}
     ${footer}
@@ -1112,6 +1119,21 @@ async function generateHeartbeat() {
   // Outreach Cadence — LinkedIn / X / email contacts awaiting reply.
   // Auto-suppresses on quiet days (no due_today, no breakup, no referrals).
   for (const line of formatOutreachCadence()) lines.push(line);
+
+  // Rejected Pattern of the Week (Item #2 of 2026-05-16 review). Auto-
+  // suppresses on quiet days (zero discards in last 7d). The markdown copy
+  // mirrors the HTML block injected in renderHtmlEmail() so the persisted
+  // data/heartbeat-{date}.md file matches what hits the inbox.
+  try {
+    const discardMd = renderDiscardPatternSection({ format: 'markdown', days: 7 });
+    if (discardMd) {
+      for (const line of discardMd.split('\n')) lines.push(line);
+      lines.push('');
+    }
+  } catch (e) {
+    // Soft failure — discard pattern is informational, never block the heartbeat
+    console.warn(`[heartbeat] discard pattern section unavailable: ${e.message}`);
+  }
 
   // Activity Snapshot — full status funnel so the user can see at a glance
   // how many applications are outstanding vs filtered out.

@@ -32,6 +32,7 @@ try {
 }
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { renderDiscardPatternBrief } from './lib/discard-pattern-injector.mjs';
 
 // ---------------------------------------------------------------------------
 // Paths
@@ -144,10 +145,17 @@ if (triageMode) {
     console.error(`triage-prompt.md not found at ${triagePromptPath}`);
     process.exit(1);
   }
+  // Append recent-discard brief so triage doesn't re-surface anti-patterns
+  // (modes/_shared.md "Discard Pattern Awareness"). Safe to skip on missing file.
+  let discardBrief = '';
+  try { discardBrief = renderDiscardPatternBrief({ limit: 20, format: 'markdown' }) || ''; }
+  catch (e) { console.error(`[gemini-triage] discard-pattern brief unavailable: ${e.message}`); }
+
   const triagePrompt = readFileSync(triagePromptPath, 'utf8')
     .replace('{{URL}}', batchUrl || '(url not provided)')
     .replace('{{TIER}}', String(triageTier))
-    .replace('{{JD_SNIPPET}}', (triageJdSnippet || jdText || '(no JD available)').slice(0, 3000));
+    .replace('{{JD_SNIPPET}}', (triageJdSnippet || jdText || '(no JD available)').slice(0, 3000))
+    + discardBrief;
 
   const { GoogleGenerativeAI: GeminiAI } = await import('@google/generative-ai');
   const gai   = new GeminiAI(geminiApiKey);

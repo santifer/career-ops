@@ -289,6 +289,23 @@ Three canonical roles, with composite math shown. Use these as calibration ancho
 - **Where TTO/toxicity logic lives:** `lib/tto-estimator.mjs` and `lib/toxicity-scorer.mjs`. Do not duplicate their logic in prompts — call the functions and consume the result.
 - **Calibration provenance:** Every weight, threshold, and exclusion above is sourced from `data/career-calibration-20260516-190152.md`. When weights change in future, append a new calibration brief in `data/` rather than mutating this section silently — a fresh Claude instance should be able to trace every number back to a brief.
 
+## Discard Pattern Awareness
+
+When Mitchell discards a row via the dashboard, the reason + an auto-classified tag (comp / geography / culture / skill-gap / ethics / stage / velocity / role-shape / fit / other) are appended to `data/discard-reasons.jsonl` (gitignored — personal data). This file is the system's living memory of WHY rows fail the final human screen, beyond what the scoring formula catches.
+
+**Triage callers MUST inject a recent-discard brief into their prompt** so the next eval run doesn't re-surface the same anti-patterns. Use `lib/discard-pattern-injector.mjs`:
+
+```js
+import { renderDiscardPatternBrief } from '../lib/discard-pattern-injector.mjs';
+try {
+  prompt += renderDiscardPatternBrief({ limit: 20, format: 'markdown' });
+} catch { /* missing/empty file is normal — safe to skip */ }
+```
+
+Currently wired into: `triage.mjs` · `gemini-eval.mjs` (--mode=triage path) · `batch-runner-batches.mjs` (phaseSubmit).
+
+Tags with ≥2 recent occurrences surface as a short markdown section appended to the prompt. The helper is no-op when the file is missing or sparse, so it's safe to add to new callers without conditional checks. Treat the brief as soft signal — it should bias scoring at the margins, never override the composite formula above.
+
 ## Posting Legitimacy (Block G)
 
 Block G assesses whether a posting is likely a real, active opening. It does NOT affect the 1-5 global score -- it is a separate qualitative assessment.

@@ -6,5 +6,38 @@
     "slug_rules": "Lowercase the company name, replace any non-alphanumeric run with a single hyphen, trim leading/trailing hyphens. 'Google DeepMind' → 'google-deepmind'.",
     "auto_update": "Agents may write to this file via scripts/agent-commit.mjs whenever they have fresh TTO signal. Manual edits also welcome."
   },
-  "companies": {}
+  "companies": {
+    "sierra": {
+      "weeks": 8,
+      "tier": "med",
+      "confidence": "high",
+      "source": "process-all-council-intel 2026-05-16 (council: perplexity:sonar-deep-research, perplexity:sonar-reasoning-pro, xai:grok-4-fast-reasoning, xai:grok-4-x-search, openai:gpt-5, google:gemini-2.5-pro)",
+      "note": "Council-surfaced fresher TTO (baseline was 10 weeks).",
+      "expires_at": "2026-07-16T04:27:13.615Z"
+    },
+    "cohere": {
+      "weeks": 8,
+      "tier": "med",
+      "confidence": "high",
+      "source": "process-all-council-intel 2026-05-16 (council: perplexity:sonar-deep-research, perplexity:sonar-reasoning-pro, xai:grok-4-fast-reasoning, xai:grok-4-x-search, openai:gpt-5, google:gemini-2.5-pro)",
+      "note": "Council-surfaced fresher TTO (baseline was 6 weeks).",
+      "expires_at": "2026-07-16T04:28:07.437Z"
+    },
+    "perplexity": {
+      "weeks": 7,
+      "tier": "med",
+      "confidence": "high",
+      "source": "process-all-council-intel 2026-05-16 (council: perplexity:sonar-deep-research, perplexity:sonar-reasoning-pro, xai:grok-4-fast-reasoning, xai:grok-4-x-search, openai:gpt-5, google:gemini-2.5-pro)",
+      "note": "Council-surfaced fresher TTO (baseline was 5 weeks).",
+      "expires_at": "2026-07-16T04:28:13.463Z"
+    },
+    "mistral-ai": {
+      "weeks": 8,
+      "tier": "med",
+      "confidence": "high",
+      "source": "process-all-council-intel 2026-05-16 (council: perplexity:sonar-deep-research, perplexity:sonar-reasoning-pro, xai:grok-4-fast-reasoning, xai:grok-4-x-search, openai:gpt-5, google:gemini-2.5-pro)",
+      "note": "Council-surfaced fresher TTO (baseline was 10 weeks).",
+      "expires_at": "2026-07-16T04:28:13.941Z"
+    }
+  }
 }

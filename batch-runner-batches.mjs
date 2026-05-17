@@ -32,6 +32,7 @@ import { SONNET } from './lib/models.mjs';
 import { readCached } from './lib/fetch-utils.mjs';
 import { guessCompany } from './lib/ats-utils.mjs';
 import { checkUrl } from './lib/http-liveness.mjs';
+import { renderDiscardPatternBrief } from './lib/discard-pattern-injector.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = __dirname;
@@ -450,6 +451,14 @@ async function phaseSubmit(apiKey) {
   // Build static context block ONCE for the entire batch (cached by Anthropic API)
   const staticBlock = buildStaticContextBlock(cvText, digestText, profileText);
 
+  // Build discard-pattern brief ONCE per submit run. Appended to each item's
+  // user prompt (NOT the cached system block) so cache hit rate stays high
+  // while new discards still influence the next batch. See modes/_shared.md
+  // "Discard Pattern Awareness".
+  let discardBrief = '';
+  try { discardBrief = renderDiscardPatternBrief({ limit: 20, format: 'markdown' }) || ''; }
+  catch (e) { console.warn(`[batch] discard-pattern brief unavailable: ${e.message}`); }
+
   const requests = [];
   let fetchErrors = 0;
 
@@ -466,7 +475,7 @@ async function phaseSubmit(apiKey) {
     process.stdout.write(` ✅\n`);
 
     const customId    = `eval-${date}-${i.toString().padStart(4, '0')}`;
-    const userPrompt  = buildDynamicEvalPrompt(item, text, reportNum, date);
+    const userPrompt  = buildDynamicEvalPrompt(item, text, reportNum, date) + discardBrief;
 
     // Static context in system block with cache_control — API caches this prefix across requests
     // max_tokens capped at 1,400: eval reports are 500–900 tokens; 4096 wastes money on runaway outputs

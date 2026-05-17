@@ -86,6 +86,10 @@ article-digest.md
 data/weekly-intel/*.md
 data/weekly-intel/prompts/
 
+# Weekly progress tracker output + MCP enrichment templates (personal extracted intel)
+data/weekly-progress/
+data/weekly-progress-tasks/
+
 # 1:1 career history (personal meeting notes)
 data/career-history/
 
@@ -112,8 +116,30 @@ data/linkedin/
 # Outreach state — per-contact message history + intel cache, personal
 data/outreach-state.json
 
+# Outreach drafts — recipient-facing content not yet sent; personal
+data/outreach-drafts/
+
 # Discard reasons — feeds back into triage prompt; personal data
 data/discard-reasons.jsonl
 
+# Evaluation-completeness audit output (scripts/audit-all-evaluations.mjs);
+# lists personal applications + scores. Re-generated on demand.
+data/audit-evaluations-*.md
+
 # Company intel cache — per-company council intel + toxicity + TTO, personal
 data/company-intel-cache/
+
+# Contact discovery output — per-company unified contact cards (1st/2nd-degree
+# LinkedIn + Gmail + Drive + Calendar surfaces). Contains contact info; never commit.
+data/contact-cards/
+data/contact-discovery-tasks/
+
+# Per-run council intel orchestrator artifacts (re-generated every run; would
+# accumulate fast). Cost summary lives in the persisted data/cost-log.tsv;
+# per-company intel lives in data/company-intel-cache/ (also gitignored).
+data/process-all-council-intel-*-summary.md
+data/process-all-council-intel-*.log
+
+# Weekly progress tracker output — personal extracted intel from Gmail/Drive/Calendar/git.
+data/weekly-progress/
+data/weekly-progress-tasks/

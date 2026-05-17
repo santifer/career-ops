@@ -22,6 +22,8 @@ import {
   setStatus as setOutreachStatus,
   _resetCache as resetOutreachCache,
 } from './lib/outreach-tracker.mjs';
+import { estimateTTO } from './lib/tto-estimator.mjs';
+import { scoreToxicity } from './lib/toxicity-scorer.mjs';
 
 // ── Application enrichment for outreach API ────────────────────────────────
 // Join contact.linked_application_id → applications.md row so the dashboard
@@ -533,7 +535,167 @@ function loadPipelineProcessState() {
   catch { return { jobs: {} }; }
 }
 
-function spawnProcessAll({ sendEmail, force }) {
+// ── Per-company preview for the Process All 2-phase modal ─────────
+// Surfaces the per-company table the user inspects BEFORE confirming
+// the orchestrator run. Each row carries enough signal for triage:
+// score, TTO weeks, toxicity verdict, cache-hit, cost estimate.
+// Reads:
+//   - data/apply-now-queue.json (canonical Apply-Now ranking)
+//   - data/company-intel-cache/{slug}/intel-*.json (cache-hit detection)
+//   - data/excluded-companies.json (auto-trash list)
+// Uses estimateTTO()/scoreToxicity() libs for the per-row metrics.
+// Cost estimate per company uses the same Tier 5 economics as
+// buildPipelinePreview() so the per-row totals reconcile.
+function _slugifyCompanyForIntel(s) {
+  return String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+
+function loadExcludedCompanySlugs() {
+  try {
+    const fp = join(ROOT, 'data/excluded-companies.json');
+    if (!existsSync(fp)) return new Set();
+    const data = JSON.parse(readFileSync(fp, 'utf-8'));
+    const slugs = new Set();
+    for (const cat of Object.values(data?.categories || {})) {
+      for (const c of (cat.companies || [])) slugs.add(_slugifyCompanyForIntel(c));
+      for (const [primary, aliases] of Object.entries(cat.aliases || {})) {
+        slugs.add(_slugifyCompanyForIntel(primary));
+        for (const a of (aliases || [])) slugs.add(_slugifyCompanyForIntel(a));
+      }
+    }
+    return slugs;
+  } catch {
+    return new Set();
+  }
+}
+
+function loadApplyNowQueueRanked() {
+  try {
+    const fp = join(ROOT, 'data/apply-now-queue.json');
+    if (!existsSync(fp)) return [];
+    const data = JSON.parse(readFileSync(fp, 'utf-8'));
+    return Array.isArray(data?.ranked) ? data.ranked : [];
+  } catch {
+    return [];
+  }
+}
+
+function loadCompanyIntelCacheState(slug) {
+  // Cache is considered a "hit" if a non-empty intel-YYYY-MM-DD.json
+  // file exists in data/company-intel-cache/{slug}/ within the 30d TTL
+  // window the orchestrator uses (matches scripts/process-all-council-intel.mjs).
+  const TTL_MS = 30 * 24 * 60 * 60 * 1000;
+  try {
+    const dir = join(ROOT, 'data/company-intel-cache', slug);
+    if (!existsSync(dir)) return { hit: false, last_intel_date: null, age_days: null };
+    const files = readdirSync(dir).filter(f => /^intel-\d{4}-\d{2}-\d{2}\.json$/.test(f));
+    if (!files.length) return { hit: false, last_intel_date: null, age_days: null };
+    files.sort();
+    const latest = files[files.length - 1];
+    const m = latest.match(/intel-(\d{4}-\d{2}-\d{2})\.json$/);
+    const date = m ? m[1] : null;
+    const age = date ? Math.floor((Date.now() - Date.parse(date + 'T00:00:00Z')) / 86_400_000) : null;
+    const fresh = age != null && age * 86_400_000 < TTL_MS;
+    return { hit: fresh, last_intel_date: date, age_days: age };
+  } catch {
+    return { hit: false, last_intel_date: null, age_days: null };
+  }
+}
+
+function buildPerCompanyPipelinePreview() {
+  // Group the Apply-Now queue by unique company → one row per company.
+  // High-water score wins for the per-row badge so the most attractive
+  // role per company is what the user sees.
+  const ranked = loadApplyNowQueueRanked();
+  const excluded = loadExcludedCompanySlugs();
+  const byCompany = new Map();
+  for (const r of ranked) {
+    if (!r?.company) continue;
+    const slug = _slugifyCompanyForIntel(r.company);
+    if (!slug) continue;
+    const prior = byCompany.get(slug);
+    const score = (typeof r.eval_score === 'number') ? r.eval_score : null;
+    if (!prior) {
+      byCompany.set(slug, {
+        slug,
+        company: r.company,
+        top_role: r.role || null,
+        top_role_num: r.num || null,
+        top_role_score: score,
+        role_count: 1,
+      });
+    } else {
+      prior.role_count += 1;
+      if (score != null && (prior.top_role_score == null || score > prior.top_role_score)) {
+        prior.top_role = r.role || prior.top_role;
+        prior.top_role_num = r.num || prior.top_role_num;
+        prior.top_role_score = score;
+      }
+    }
+  }
+
+  // Per-row enrichment: TTO + toxicity + cache state + cost estimate.
+  // Each Tier-5 unique-company cost = council intel × (1 - cache_hit) +
+  // (highscore-pack pre-gen if score ≥ 4.5).
+  const rows = [];
+  for (const meta of byCompany.values()) {
+    const ttoRaw = (() => { try { return estimateTTO(meta.company); } catch { return null; } })();
+    const tox    = (() => { try { return scoreToxicity(meta.company);  } catch { return null; } })();
+    const cache  = loadCompanyIntelCacheState(meta.slug);
+    const isExcluded = excluded.has(meta.slug);
+
+    // Cost: zero if excluded (orchestrator auto-trashes), else council cost
+    // (skipped on cache hit) + optional apply-pack pre-gen for high-score rows.
+    let cost = 0;
+    if (!isExcluded) {
+      if (!cache.hit) cost += COST_PER_COMPANY_COUNCIL;
+      if (meta.top_role_score != null && meta.top_role_score >= 4.5) cost += COST_PER_APPLY_PACK_PREGEN;
+    }
+
+    rows.push({
+      slug:             meta.slug,
+      company:          meta.company,
+      top_role:         meta.top_role,
+      top_role_num:     meta.top_role_num,
+      top_role_score:   meta.top_role_score,
+      role_count:       meta.role_count,
+      tto_weeks:        ttoRaw?.weeks_estimate ?? null,
+      tto_tier:         ttoRaw?.velocity_tier  ?? null,
+      tto_confidence:   ttoRaw?.confidence     ?? null,
+      toxicity_verdict: tox?.verdict           ?? null,
+      toxicity_score:   tox?.score             ?? null,
+      toxicity_emoji:   tox?.verdict_emoji     ?? null,
+      cache_hit:        cache.hit,
+      last_intel_date:  cache.last_intel_date,
+      cache_age_days:   cache.age_days,
+      excluded:         isExcluded,
+      cost_estimate_usd: Math.round(cost * 100) / 100,
+    });
+  }
+
+  // Sort: actionable rows first (highest score), excluded sink to bottom.
+  rows.sort((a, b) => {
+    if (a.excluded !== b.excluded) return a.excluded ? 1 : -1;
+    const aS = a.top_role_score ?? -1;
+    const bS = b.top_role_score ?? -1;
+    if (aS !== bS) return bS - aS;
+    return (a.company || '').localeCompare(b.company || '');
+  });
+
+  const totalCost = rows.reduce((s, r) => s + (r.cost_estimate_usd || 0), 0);
+  return {
+    companies:           rows,
+    total_companies:     rows.length,
+    actionable_count:    rows.filter(r => !r.excluded).length,
+    excluded_count:      rows.filter(r =>  r.excluded).length,
+    cache_hit_count:     rows.filter(r => r.cache_hit && !r.excluded).length,
+    total_cost_estimate_usd: Math.round(totalCost * 100) / 100,
+    source:              'data/apply-now-queue.json + data/company-intel-cache/ + estimateTTO + scoreToxicity',
+    schema_note:         'Per-company Tier-5 economics — council cost suppressed on cache hit; apply-pack pre-gen added for score≥4.5.',
+  };
+}
+
+function spawnProcessAll({ sendEmail, force, companies }) {
   // Cap enforcement (calibration 2026-05-16): refuse to spawn if per-run cap
   // or monthly budget exceeded. `force: true` overrides — for the user-explicit
   // "I know what I'm doing, fire it anyway" path.
@@ -566,6 +728,17 @@ function spawnProcessAll({ sendEmail, force }) {
   const args = [join(ROOT, 'scripts/process-all-pipeline.mjs'), `--job-id=${jobId}`];
   if (sendEmail) args.push('--send-email');
   if (force) args.push('--cap-override');
+  // Optional company subset (Task 2 — 2-phase modal). Pass through to the
+  // orchestrator as a comma-separated list. Sanitized: only letters / digits /
+  // hyphen / underscore / comma / space allowed so a malicious payload can't
+  // inject extra args. Defense-in-depth — the orchestrator also slugifies.
+  if (Array.isArray(companies) && companies.length) {
+    const safe = companies
+      .map(c => String(c || '').trim())
+      .filter(c => c && /^[A-Za-z0-9 _.\-]+$/.test(c))
+      .slice(0, 200); // hard cap so a runaway client can't blow the arg list
+    if (safe.length) args.push(`--companies=${safe.join(',')}`);
+  }
   try {
     // Lazy import to avoid pulling child_process when no one calls this endpoint
     import('child_process').then(({ spawn }) => {
@@ -1978,6 +2151,140 @@ const server = createServer((req, res) => {
   if (url === '/api/pipeline/preview') {
     return json(buildPipelinePreview());
   }
+  if (url === '/api/pipeline/per-company-preview') {
+    // Task 2 (2026-05-16): per-company breakdown for the 2-phase Process All
+    // modal. Returns one row per unique company in the Apply-Now queue with
+    // score + TTO + toxicity + cache-hit + cost estimate so the user can
+    // inspect / uncheck rows before confirming the orchestrator run.
+    //
+    // Anti-breakage env kill switch (calibration brief 2026-05-16): set
+    // PROCESS_ALL_V2_PREVIEW_ENABLED=false to disable the new endpoint without
+    // a code change. Client (scripts/build-dashboard.mjs) detects the 410 and
+    // falls back to the existing single-phase v1 modal flow automatically.
+    if (process.env.PROCESS_ALL_V2_PREVIEW_ENABLED === 'false') {
+      return json({ ok: false, error: 'v2 preview disabled via PROCESS_ALL_V2_PREVIEW_ENABLED env', disabled: true }, 410);
+    }
+    return json(buildPerCompanyPipelinePreview());
+  }
+  if (url === '/api/pipeline/exclude-company' && req.method === 'POST') {
+    // Task 2 — "Trash" action on the per-company preview table. Appends a
+    // company slug to data/excluded-companies.json under the user-defined
+    // "manual_exclusion" category so it auto-trashes on future scans.
+    let body = '';
+    let total = 0;
+    req.on('data', c => { total += c.length; if (total > 4 * 1024) { req.destroy(); return; } body += c; });
+    req.on('end', () => {
+      let parsed;
+      try { parsed = JSON.parse(body || '{}'); }
+      catch { return json({ ok: false, error: 'Invalid JSON' }, 400); }
+      const company = String(parsed.company || '').trim();
+      const rationale = String(parsed.rationale || '').trim();
+      if (!company) return json({ ok: false, error: 'company required' }, 400);
+      if (rationale.length > 500) return json({ ok: false, error: 'rationale too long (500 char max)' }, 400);
+      const slug = _slugifyCompanyForIntel(company);
+      if (!slug) return json({ ok: false, error: 'company slug empty after normalization' }, 400);
+      const fp = join(ROOT, 'data/excluded-companies.json');
+      let data;
+      try {
+        data = existsSync(fp) ? JSON.parse(readFileSync(fp, 'utf-8')) : { _schema_version: 1, categories: {} };
+      } catch (e) {
+        return json({ ok: false, error: 'failed to load excluded-companies.json: ' + e.message }, 500);
+      }
+      data.categories = data.categories || {};
+      const cat = data.categories.manual_exclusion || (data.categories.manual_exclusion = {
+        rationale: 'Companies manually trashed from the Process All preview modal. Auto-excluded on future scans until the user removes the slug.',
+        companies: [],
+        aliases: {},
+        manual_entries: [],
+      });
+      cat.companies = Array.isArray(cat.companies) ? cat.companies : [];
+      cat.manual_entries = Array.isArray(cat.manual_entries) ? cat.manual_entries : [];
+      const alreadyHas = cat.companies.includes(slug);
+      if (!alreadyHas) cat.companies.push(slug);
+      cat.manual_entries.push({
+        slug,
+        company_label: company,
+        rationale: rationale || '(no rationale provided)',
+        added_at: new Date().toISOString(),
+        source: 'process-all-modal',
+      });
+      try {
+        if (!existsSync(join(ROOT, 'data'))) mkdirSync(join(ROOT, 'data'), { recursive: true });
+        writeFileSync(fp, JSON.stringify(data, null, 2));
+      } catch (e) {
+        return json({ ok: false, error: 'failed to persist: ' + e.message }, 500);
+      }
+      return json({ ok: true, slug, idempotent: alreadyHas });
+    });
+    return;
+  }
+  if (url === '/api/pipeline/build-apply-pack' && req.method === 'POST') {
+    // Task 2 — "Skip-to-apply-pack" action on the per-company preview table.
+    // Spawns scripts/build-apply-pack.mjs for a single row so the user can
+    // fast-track a high-confidence company into the apply-pack folder without
+    // running the full orchestrator. Idempotent (build-apply-pack handles it).
+    let body = '';
+    let total = 0;
+    req.on('data', c => { total += c.length; if (total > 4 * 1024) { req.destroy(); return; } body += c; });
+    req.on('end', () => {
+      let parsed;
+      try { parsed = JSON.parse(body || '{}'); }
+      catch { return json({ ok: false, error: 'Invalid JSON' }, 400); }
+      const row = parseInt(parsed.row, 10);
+      if (!Number.isFinite(row) || row < 1) return json({ ok: false, error: 'row (int) required' }, 400);
+      const jobId = 'pack-' + Date.now().toString(36) + '-' + randomBytes(3).toString('hex');
+      const logPath = `/tmp/apply-pack-${jobId}.log`;
+      try {
+        import('child_process').then(({ spawn }) => {
+          const proc = spawn('node', [join(ROOT, 'scripts/build-apply-pack.mjs'), `--row=${row}`], {
+            cwd: ROOT,
+            env: process.env,
+            stdio: ['ignore', 'pipe', 'pipe'],
+            detached: true,
+          });
+          proc.stdout?.on('data', c => { try { appendFileSync(logPath, c); } catch {} });
+          proc.stderr?.on('data', c => { try { appendFileSync(logPath, '[stderr] ' + c); } catch {} });
+          proc.unref();
+        });
+      } catch (e) {
+        return json({ ok: false, error: e.message }, 500);
+      }
+      return json({ ok: true, row, jobId, log_path: logPath });
+    });
+    return;
+  }
+  if (url === '/api/pipeline/defer-company' && req.method === 'POST') {
+    // Task 2 — "Defer" action on the per-company preview table. Writes a row
+    // to data/deferred-companies.jsonl (gitignored) so the next Process All
+    // can skip the company. Not the same as exclude — deferred companies are
+    // retried on the next manual review; excluded companies are permanent.
+    let body = '';
+    let total = 0;
+    req.on('data', c => { total += c.length; if (total > 4 * 1024) { req.destroy(); return; } body += c; });
+    req.on('end', () => {
+      let parsed;
+      try { parsed = JSON.parse(body || '{}'); }
+      catch { return json({ ok: false, error: 'Invalid JSON' }, 400); }
+      const company = String(parsed.company || '').trim();
+      if (!company) return json({ ok: false, error: 'company required' }, 400);
+      const slug = _slugifyCompanyForIntel(company);
+      const entry = {
+        ts: new Date().toISOString(),
+        slug,
+        company_label: company,
+        reason: String(parsed.reason || '').slice(0, 500),
+        source: 'process-all-modal',
+      };
+      try {
+        if (!existsSync(join(ROOT, 'data'))) mkdirSync(join(ROOT, 'data'), { recursive: true });
+        appendFileSync(join(ROOT, 'data/deferred-companies.jsonl'), JSON.stringify(entry) + '\n');
+      } catch (e) {
+        return json({ ok: false, error: 'failed to persist: ' + e.message }, 500);
+      }
+      return json({ ok: true, slug });
+    });
+    return;
+  }
   if (url === '/api/recruiter-pipeline-density') {
     // Phase 6 (calibration 2026-05-16): pipeline-density widget data source.
     // Used by the dashboard runway-alert widget + heartbeat email runway section.
@@ -2036,14 +2343,22 @@ const server = createServer((req, res) => {
   if (url === '/api/pipeline/process-all' && req.method === 'POST') {
     let body = '';
     let total = 0;
-    req.on('data', c => { total += c.length; if (total > 4 * 1024) { req.destroy(); return; } body += c; });
+    // Larger ceiling so the optional `companies` payload (Task 2 modal selection)
+    // doesn't get truncated for typical Apply-Now lists.
+    req.on('data', c => { total += c.length; if (total > 32 * 1024) { req.destroy(); return; } body += c; });
     req.on('end', () => {
       let parsed;
       try { parsed = JSON.parse(body || '{}'); }
       catch { return json({ ok: false, error: 'Invalid JSON' }, 400); }
       if (!parsed.confirm) return json({ ok: false, error: 'confirm=true required' }, 400);
       // `force: true` overrides per-run / monthly caps (user explicitly accepted)
-      const result = spawnProcessAll({ sendEmail: !!parsed.sendEmail, force: !!parsed.force });
+      // `companies` (optional) — Task 2 — comma-list of company labels passed
+      // through to the orchestrator's --companies flag for subset runs.
+      const result = spawnProcessAll({
+        sendEmail: !!parsed.sendEmail,
+        force:     !!parsed.force,
+        companies: Array.isArray(parsed.companies) ? parsed.companies : null,
+      });
       // 402 (Payment Required) for cap-exceeded refusals so UI can distinguish from generic errors
       const statusCode = result.ok ? 200 : (result.cap_exceeded ? 402 : 400);
       return json(result, statusCode);

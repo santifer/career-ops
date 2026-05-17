@@ -35,6 +35,7 @@ import { HAIKU } from './lib/models.mjs';
 import { readCached, poolMap } from './lib/fetch-utils.mjs';
 import { guessCompany } from './lib/ats-utils.mjs';
 import { checkUrl } from './lib/http-liveness.mjs';
+import { renderDiscardPatternBrief } from './lib/discard-pattern-injector.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = __dirname;
@@ -299,6 +300,14 @@ async function callHaiku(prompt) {
 
 // readCached lives in lib/fetch-utils.mjs (module-level cache shared across importers).
 
+// ── Discard-pattern brief (computed once per process, appended to every triage prompt) ──
+// Per modes/_shared.md "Discard Pattern Awareness": surface recent human discards so
+// the LLM doesn't re-advance the same anti-patterns. Wrapped in try/catch because a
+// missing data/discard-reasons.jsonl is normal on fresh installs.
+let _discardBrief = '';
+try { _discardBrief = renderDiscardPatternBrief({ limit: 20, format: 'markdown' }) || ''; }
+catch (e) { console.warn(`[triage] discard-pattern brief unavailable: ${e.message}`); }
+
 // ── Haiku quick-score with retry loop (max 3 attempts) ──────────
 async function quickScore(url, tier, jdSnippet) {
   // Cached read — triage-prompt.md is the same for every item in a session
@@ -306,7 +315,8 @@ async function quickScore(url, tier, jdSnippet) {
   const prompt = promptTemplate
     .replace('{{URL}}', url)
     .replace('{{TIER}}', String(tier))
-    .replace('{{JD_SNIPPET}}', (jdSnippet || '(page body unavailable — score based on URL/domain only)').slice(0, 3000));
+    .replace('{{JD_SNIPPET}}', (jdSnippet || '(page body unavailable — score based on URL/domain only)').slice(0, 3000))
+    + _discardBrief;
 
   for (let attempt = 0; attempt < 3; attempt++) {
     let raw;
@@ -350,7 +360,8 @@ async function quickScoreGemini(url, tier, jdSnippet) {
     const prompt = promptTemplate
       .replace('{{URL}}', url)
       .replace('{{TIER}}', String(tier))
-      .replace('{{JD_SNIPPET}}', (jdSnippet || '').slice(0, 3000));
+      .replace('{{JD_SNIPPET}}', (jdSnippet || '').slice(0, 3000))
+      + _discardBrief;
     const result = await model.generateContent([{ text: prompt }]);
     const raw = result.response.text().trim();
     const parsed = parseTriageOutput(raw);

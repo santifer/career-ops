@@ -2844,6 +2844,35 @@ function build() {
     --radius-sm: 6px;
     --radius-full: 9999px;
     --section-gap: 64px;
+    /* ── Spacing scale (Task 8, ui-redesign-research 2026-05-16) ─────
+       4px base unit per Primer + the research brief's spacing rhythm
+       (4 → 8 → 12 → 16 → 24 → 32 → 48 → 64). All NEW components should
+       reference these tokens rather than hardcoded px values; existing
+       components keep their literals to avoid layout regressions, and
+       can opt in to the tokens as they are touched. */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 24px;
+    --space-6: 32px;
+    --space-7: 48px;
+    --space-8: 64px;
+    /* ── Type scale (Task 8) ─────────────────────────────────────────
+       From research: 10/11/12.5/13/15/17/22px ramp covers badge → body
+       → headline densities. Line-heights paired per common practice
+       (10/badge=1.0, 11/meta=1.2, 13/body=1.4–1.5, 17/header=1.3). */
+    --fs-badge:   10px;
+    --fs-meta:    11px;
+    --fs-caption: 12px;
+    --fs-body:    13px;
+    --fs-h4:      15px;
+    --fs-h3:      17px;
+    --fs-cost:    22px;
+    --lh-tight:   1.2;
+    --lh-snug:    1.3;
+    --lh-normal:  1.4;
+    --lh-relaxed: 1.5;
     --shadow-sm: 0 1px 2px 0 rgba(0,0,0,.05);
     --shadow: 0 1px 3px 0 rgba(0,0,0,.1), 0 1px 2px -1px rgba(0,0,0,.1);
     --shadow-md: 0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -2px rgba(0,0,0,.1);
@@ -3311,6 +3340,38 @@ function build() {
     outline: 1px solid var(--blue-fg);
     outline-offset: 1px;
     box-shadow: var(--ring-blue);
+  }
+
+  /* ── prefers-contrast: more (Task 8, ui-redesign-research 2026-05-16) ─
+     Bump tertiary text one step darker when the OS asks for higher
+     contrast (WCAG 2.4.11). Only touches text + border tokens — keeps
+     the existing palette intact for users who don't request the override. */
+  @media (prefers-contrast: more) {
+    :root {
+      --text-3: #4b5563; /* gray-600 instead of gray-500 — 6.4:1 on white */
+      --text-4: #6b7280; /* gray-500 instead of gray-400 */
+      --border:        #cbd5e1;
+      --border-strong: #94a3b8;
+    }
+    body.dark {
+      --text-3: #d1d5db; /* gray-300 instead of zinc-400 — 11.3:1 on --bg */
+      --text-4: #b3b3bc;
+      --border:        #2a2e40;
+      --border-strong: #4a5070;
+    }
+  }
+  /* ── prefers-reduced-motion: reduce (Task 8, WCAG 2.3.3) ─────────
+     Global kill switch for non-essential animation — overrides any
+     per-component transitions/animations that didn't already guard.
+     Existing per-section guards (sidebar reveal, toast slide-in, etc)
+     remain in place; this just catches anything we missed. */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration:   0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration:  0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 
   /* ── Left sidebar nav (Phase 7 Item 4) ───────────────────────────
@@ -5104,6 +5165,12 @@ function build() {
   }
 
   /* ── Pipeline confirmation modal ────────────────────────────── */
+  /* Task 2 (2026-05-16): modal grew a 2-phase flow (preview → confirm)
+     for Process All. Width bumped + min-width set so the per-company
+     table doesn't squeeze company names + scores + action buttons into
+     wrap-hell. The base modal still works for the Run Batch (single
+     phase) flow — width is conditional via the .pipeline-modal-wide
+     class set by openPipelineModal('process-all'). */
   #pipeline-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 2200; backdrop-filter: blur(2px); }
   #pipeline-backdrop.visible { display: block; }
   #pipeline-modal {
@@ -5112,6 +5179,7 @@ function build() {
     background: var(--surface); border-radius: 12px; border: 1px solid var(--border);
     box-shadow: var(--shadow-lg); display: none;
   }
+  #pipeline-modal.pipeline-modal-wide { width: min(880px, 96vw); }
   #pipeline-modal.visible { display: block; }
   .pipeline-modal-header {
     padding: 18px 22px 12px;
@@ -5220,6 +5288,141 @@ function build() {
   }
   .pipeline-force-override input { margin: 0; }
   .pipeline-force-override strong { color: #92400e; }
+
+  /* ── Task 2: Per-company preview table inside the Process All modal ─
+     Renders one row per unique company in the Apply-Now queue with
+     score + TTO + toxicity verdict + cache-hit + cost estimate, plus
+     per-row action buttons (apply-pack, trash, defer). Scrollable so
+     the modal stays at a sensible height even with a long queue. */
+  .pcp-section { display: flex; flex-direction: column; gap: var(--space-3, 12px); margin-bottom: var(--space-4, 16px); }
+  .pcp-section-head {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: var(--space-2, 8px);
+    font-size: 11.5px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.04em; color: var(--text-3);
+  }
+  .pcp-section-head-count { font-weight: 600; color: var(--text-2); letter-spacing: 0; text-transform: none; font-size: 12px; font-variant-numeric: tabular-nums; }
+  .pcp-bulk-toggle {
+    background: var(--surface-2); border: 1px solid var(--border);
+    color: var(--text-2); font-size: 11px; font-weight: 600;
+    padding: 4px 10px; border-radius: var(--radius-sm); cursor: pointer;
+    font-family: inherit; letter-spacing: 0.02em;
+  }
+  .pcp-bulk-toggle:hover { background: var(--surface); color: var(--text); border-color: var(--border-strong); }
+  .pcp-bulk-toggle:focus-visible { outline: none; box-shadow: var(--ring-blue); }
+  .pcp-table-wrap {
+    max-height: 360px; overflow-y: auto;
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    background: var(--surface);
+  }
+  .pcp-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .pcp-table thead th {
+    position: sticky; top: 0; z-index: 1;
+    background: var(--surface-2);
+    text-align: left; padding: 8px 10px;
+    font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.04em; color: var(--text-3);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  .pcp-table thead th.pcp-num { text-align: right; }
+  .pcp-table tbody td {
+    padding: 8px 10px; border-bottom: 1px solid var(--border);
+    color: var(--text-2); vertical-align: middle;
+    font-variant-numeric: tabular-nums;
+  }
+  .pcp-table tbody tr:last-child td { border-bottom: none; }
+  .pcp-table tbody tr.pcp-row-excluded td { opacity: .55; }
+  .pcp-table tbody tr.pcp-row-unchecked td { opacity: .60; background: var(--surface-2); }
+  .pcp-table tbody tr:hover td { background: var(--surface-2); }
+  .pcp-table tbody tr.pcp-row-unchecked:hover td { background: var(--surface); }
+  .pcp-checkbox { width: 16px; height: 16px; cursor: pointer; accent-color: var(--green-fg); }
+  .pcp-company-cell { font-weight: 600; color: var(--text); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pcp-role-sub { display: block; font-size: 11px; color: var(--text-3); font-weight: 400; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pcp-score {
+    display: inline-flex; align-items: center; gap: 3px;
+    padding: 2px 7px; border-radius: var(--radius-full);
+    font-size: 11px; font-weight: 700;
+    background: var(--green-bg); color: var(--green-fg-dark);
+    border: 1px solid var(--green-border);
+  }
+  .pcp-score-mid { background: var(--amber-bg); color: var(--amber-fg-dark); border-color: var(--amber-border); }
+  .pcp-score-low { background: var(--surface-2); color: var(--text-3); border-color: var(--border); }
+  .pcp-tto {
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: 11.5px; color: var(--text-2);
+    padding: 1px 6px; border-radius: var(--radius-sm);
+    background: var(--surface-2); border: 1px solid var(--border);
+  }
+  .pcp-tto[data-tier="fast"]    { color: var(--green-fg-dark); border-color: var(--green-border); background: var(--green-bg); }
+  .pcp-tto[data-tier="med"]     { color: var(--text-2); }
+  .pcp-tto[data-tier="slow"]    { color: var(--amber-fg-dark); border-color: var(--amber-border); background: var(--amber-bg); }
+  .pcp-tto[data-tier="glacial"] { color: var(--red-fg-dark); border-color: var(--red-border); background: var(--red-bg); }
+  .pcp-tox {
+    font-size: 11px; padding: 1px 6px;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--border);
+    color: var(--text-3); background: var(--surface);
+  }
+  .pcp-tox[data-verdict="clear"]       { color: var(--green-fg-dark); background: var(--green-bg); border-color: var(--green-border); }
+  .pcp-tox[data-verdict="watch"]       { color: var(--text-2); }
+  .pcp-tox[data-verdict="caution"]     { color: var(--amber-fg-dark); background: var(--amber-bg); border-color: var(--amber-border); }
+  .pcp-tox[data-verdict="FLAG-REVIEW"] { color: var(--red-fg-dark); background: var(--red-bg); border-color: var(--red-border); font-weight: 700; }
+  .pcp-cache {
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: 11px; padding: 1px 6px;
+    border-radius: var(--radius-sm); border: 1px solid var(--border);
+    background: var(--surface-2); color: var(--text-3);
+  }
+  .pcp-cache[data-state="hit"]   { color: var(--green-fg-dark); background: var(--green-bg); border-color: var(--green-border); }
+  .pcp-cache[data-state="fresh"] { color: var(--text-3); }
+  .pcp-cost { font-size: 12px; font-weight: 600; color: var(--text); text-align: right; }
+  .pcp-cost-zero { color: var(--text-4); font-weight: 500; }
+  .pcp-actions { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+  .pcp-action {
+    background: transparent; border: 1px solid var(--border);
+    color: var(--text-3); padding: 3px 6px; border-radius: var(--radius-sm);
+    font-size: 11px; font-family: inherit; cursor: pointer;
+    transition: background .12s, border-color .12s, color .12s;
+    line-height: 1;
+  }
+  .pcp-action:hover { background: var(--surface-2); color: var(--text); border-color: var(--border-strong); }
+  .pcp-action[data-kind="pack"]:hover  { color: var(--green-fg-dark); border-color: var(--green-border); background: var(--green-bg); }
+  .pcp-action[data-kind="trash"]:hover { color: var(--red-fg-dark);   border-color: var(--red-border);   background: var(--red-bg); }
+  .pcp-action[data-kind="defer"]:hover { color: var(--amber-fg-dark); border-color: var(--amber-border); background: var(--amber-bg); }
+  .pcp-action:focus-visible { outline: none; box-shadow: var(--ring-blue); }
+  .pcp-excluded-badge {
+    display: inline-block; padding: 1px 6px; border-radius: var(--radius-sm);
+    background: var(--red-bg); color: var(--red-fg-dark); border: 1px solid var(--red-border);
+    font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .pcp-empty {
+    padding: 24px 16px; text-align: center;
+    color: var(--text-3); font-size: 13px;
+  }
+  .pcp-summary-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 6px 16px;
+    padding: 10px 12px; background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    font-size: 12px;
+  }
+  .pcp-summary-label { color: var(--text-3); }
+  .pcp-summary-val { color: var(--text); font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+  .pcp-phase-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 3px 10px; background: var(--surface-2); color: var(--text-3);
+    border: 1px solid var(--border); border-radius: var(--radius-full);
+    font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+    margin-bottom: 6px;
+  }
+  .pcp-phase-pill[data-phase="confirm"] { color: var(--green-fg-dark); background: var(--green-bg); border-color: var(--green-border); }
+  .pcp-back-link {
+    background: none; border: none; padding: 0; cursor: pointer;
+    color: var(--text-3); font-size: 12px; font-family: inherit;
+    text-decoration: underline; margin-right: 8px;
+  }
+  .pcp-back-link:hover { color: var(--text); }
+  .pcp-back-link:focus-visible { outline: none; box-shadow: var(--ring-blue); border-radius: 3px; }
   /* In-flight job toast: appears bottom-right after a job starts */
   #pipeline-toast {
     position: fixed; right: 18px; bottom: 18px;
@@ -9771,13 +9974,27 @@ function closeVerify() {
 // state + send-email checkbox → on confirm, POST to the matching
 // /api/batch/run or /api/pipeline/process-all endpoint → show toast +
 // poll /api/pipeline/job-status until done.
+//
+// Task 2 (2026-05-16): Process All now uses a 2-phase flow.
+//   Phase A — preview: aggregate cost + per-company table (checkbox grid,
+//             per-row action buttons: skip-to-applypack / trash / defer)
+//   Phase B — confirm: scoped cost from selected rows + send-email checkbox
+//             + optional force-override → POSTs companies array to the
+//             /api/pipeline/process-all endpoint.
+// Run Batch keeps the single-phase confirm flow.
 let _pipelineAction = null;     // 'batch' | 'process-all'
-let _pipelinePreview = null;    // cached preview JSON
+let _pipelinePreview = null;    // cached aggregate preview JSON
+let _pipelinePerCompany = null; // cached per-company preview JSON (process-all only)
+let _pipelinePhase = null;      // 'preview' | 'confirm' (process-all only)
+let _pipelineSelectedSlugs = new Set();
 let _pipelinePollTimer = null;
 let _pipelineCurrentJob = null;
 
 async function openPipelineModal(action) {
   _pipelineAction = action;
+  _pipelinePhase = action === 'process-all' ? 'preview' : null;
+  _pipelinePerCompany = null;
+  _pipelineSelectedSlugs = new Set();
   const backdrop = document.getElementById('pipeline-backdrop');
   const modal = document.getElementById('pipeline-modal');
   const title = document.getElementById('pipeline-modal-title');
@@ -9786,6 +10003,9 @@ async function openPipelineModal(action) {
   const confirmBtn = document.getElementById('pipeline-modal-confirm');
   backdrop.classList.add('visible');
   modal.classList.add('visible');
+  // Wide layout for the per-company table when Process All
+  if (action === 'process-all') modal.classList.add('pipeline-modal-wide');
+  else modal.classList.remove('pipeline-modal-wide');
   if (action === 'batch') {
     title.textContent = 'Run Batch';
     subtitle.textContent = 'Send the currently-queued items to the Anthropic Batch API. Skips triage.';
@@ -9793,30 +10013,74 @@ async function openPipelineModal(action) {
     confirmBtn.className = 'pipeline-modal-btn pipeline-modal-btn-primary';
   } else {
     title.textContent = 'Process All Pipeline Items';
-    subtitle.textContent = 'Triage every pending item, run batch eval on what advances, rebuild dashboard. The full pipeline drain.';
-    confirmBtn.textContent = 'Process All';
-    confirmBtn.className = 'pipeline-modal-btn pipeline-modal-btn-nuclear';
+    subtitle.textContent = 'Step 1 of 2 — review per-company plan. Uncheck rows to skip; click the icons to fast-track, exclude, or defer.';
+    confirmBtn.textContent = 'Continue →';
+    confirmBtn.className = 'pipeline-modal-btn pipeline-modal-btn-primary';
   }
   body.innerHTML = '<div class="pipeline-modal-section">Loading current pipeline state…</div>';
   confirmBtn.disabled = true;
 
   try {
-    const res = await fetch('/api/pipeline/preview', { cache: 'no-store' });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const p = await res.json();
-    _pipelinePreview = p;
-    body.innerHTML = _renderPipelineModalBody(action, p);
-    // Cap-exceeded blocks the confirm button until user explicitly checks the
-    // force-override box. _isPipelineActionCapped reads the flags _renderPipelineModalBody
-    // set on the preview slice; the force-override checkbox toggles via inline handler.
-    const capped = _isPipelineActionCapped(action, p);
-    confirmBtn.disabled = capped;
-    if (capped) {
-      confirmBtn.dataset.cappedReason = capped;
-    } else {
+    const fetches = [fetch('/api/pipeline/preview', { cache: 'no-store' })];
+    if (action === 'process-all') {
+      fetches.push(fetch('/api/pipeline/per-company-preview', { cache: 'no-store' }));
+    }
+    const responses = await Promise.all(fetches);
+    for (const r of responses) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+    }
+    const [pAgg, pCmp] = await Promise.all(responses.map(r => r.json()));
+    _pipelinePreview = pAgg;
+    if (action === 'process-all') {
+      _pipelinePerCompany = pCmp;
+      // Default: include every actionable (non-excluded) company.
+      _pipelineSelectedSlugs = new Set(
+        (pCmp.companies || []).filter(c => !c.excluded).map(c => c.slug)
+      );
+      body.innerHTML = _renderProcessAllPhaseA(pAgg, pCmp);
+      // In Phase A we just need the "Continue" button to be active when
+      // at least one row is checked. No cap check yet — that happens in Phase B
+      // against the SCOPED cost from the selected rows.
+      confirmBtn.disabled = _pipelineSelectedSlugs.size === 0;
       delete confirmBtn.dataset.cappedReason;
+    } else {
+      body.innerHTML = _renderPipelineModalBody(action, pAgg);
+      // Cap-exceeded blocks the confirm button until user explicitly checks the
+      // force-override box. _isPipelineActionCapped reads the flags _renderPipelineModalBody
+      // set on the preview slice; the force-override checkbox toggles via inline handler.
+      const capped = _isPipelineActionCapped(action, pAgg);
+      confirmBtn.disabled = capped;
+      if (capped) {
+        confirmBtn.dataset.cappedReason = capped;
+      } else {
+        delete confirmBtn.dataset.cappedReason;
+      }
     }
   } catch (err) {
+    // Anti-breakage fallback (calibration brief 2026-05-16): if the new
+    // /api/pipeline/per-company-preview endpoint fails (410-disabled, 5xx,
+    // network error), retry with just the v1 aggregate endpoint and render
+    // the legacy single-phase modal. User never stares at a dead error
+    // screen — Process All stays usable while the v2 endpoint is debugged.
+    if (action === 'process-all') {
+      try {
+        const fallbackRes = await fetch('/api/pipeline/preview', { cache: 'no-store' });
+        if (fallbackRes.ok) {
+          const pAgg = await fallbackRes.json();
+          _pipelinePreview = pAgg;
+          const warning = '<div class="pipeline-cap-warning" style="border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.06)">'
+            + '<div class="pipeline-cap-warning-title" style="color:#92400e">⚠️ Per-company preview unavailable</div>'
+            + '<div class="pipeline-cap-warning-detail">Falling back to v1 modal. The new per-company table will return when <code>/api/pipeline/per-company-preview</code> is healthy. Aggregate cost + cap enforcement below still apply.</div>'
+            + '</div>';
+          body.innerHTML = warning + _renderPipelineModalBody(action, pAgg);
+          const capped = _isPipelineActionCapped(action, pAgg);
+          confirmBtn.disabled = capped;
+          if (capped) confirmBtn.dataset.cappedReason = capped;
+          else delete confirmBtn.dataset.cappedReason;
+          return;
+        }
+      } catch { /* fall through to hard error message */ }
+    }
     body.innerHTML = '<div class="pipeline-modal-section" style="color:var(--red-fg,#dc2626)">Failed to load preview: ' + (err.message || err) + '</div>';
   }
 }
@@ -9947,24 +10211,42 @@ function _pipelineHeartbeatRecipient() {
 
 function closePipelineModal() {
   document.getElementById('pipeline-backdrop').classList.remove('visible');
-  document.getElementById('pipeline-modal').classList.remove('visible');
+  const modal = document.getElementById('pipeline-modal');
+  modal.classList.remove('visible');
+  modal.classList.remove('pipeline-modal-wide');
   _pipelineAction = null;
   _pipelinePreview = null;
+  _pipelinePerCompany = null;
+  _pipelinePhase = null;
+  _pipelineSelectedSlugs = new Set();
 }
 
 async function confirmPipelineAction() {
   if (!_pipelineAction || !_pipelinePreview) return;
+  // 2-phase flow for Process All: first click on the "Continue →" button in
+  // Phase A transitions to Phase B (confirm with scoped cost), second click
+  // fires the orchestrator. Run Batch is single-phase and fires immediately.
+  if (_pipelineAction === 'process-all' && _pipelinePhase === 'preview') {
+    return _advanceProcessAllToConfirm();
+  }
+
   const sendEmail = !!document.getElementById('pipeline-send-email')?.checked;
   const force     = !!document.getElementById('pipeline-force-override')?.checked;
   const endpoint = _pipelineAction === 'process-all' ? '/api/pipeline/process-all' : '/api/batch/run';
   const confirmBtn = document.getElementById('pipeline-modal-confirm');
   confirmBtn.disabled = true;
   confirmBtn.textContent = 'Starting…';
+  // Companies subset only meaningful for Process All
+  const companies = (_pipelineAction === 'process-all' && _pipelinePerCompany)
+    ? Array.from(_pipelineSelectedSlugs)
+        .map(slug => _pipelinePerCompany.companies.find(c => c.slug === slug)?.company)
+        .filter(Boolean)
+    : null;
   try {
     const res = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ confirm: true, sendEmail, force }),
+      body: JSON.stringify({ confirm: true, sendEmail, force, ...(companies?.length ? { companies } : {}) }),
     });
     const data = await res.json();
     if (!res.ok || !data.ok) {
@@ -9985,6 +10267,363 @@ async function confirmPipelineAction() {
     if (window.toast) window.toast('Failed to start: ' + (err.message || err), 'error');
     else alert('Failed to start: ' + (err.message || err));
   }
+}
+
+// ── Task 2: Process All 2-phase renderers + action handlers ─────────
+
+function _renderProcessAllPhaseA(pAgg, pCmp) {
+  // Phase A: aggregate cost preview + per-company table with checkboxes
+  // and per-row actions. Mitchell can uncheck rows to scope the run before
+  // advancing to Phase B (confirm + send-email + force-override).
+  const headline = ''
+    + '<div class="pipeline-modal-section">'
+    +   '<div class="pcp-phase-pill">Step 1 of 2 — preview</div>'
+    +   '<div class="pipeline-stat-grid">'
+    +     '<span class="pipeline-stat-label">Aggregate Tier-5 estimate (' + pAgg.process_all.tier5_estimate.unique_companies + ' unique companies, ' + pAgg.process_all.triage_count + ' pipeline items)</span>'
+    +     '<span class="pipeline-stat-value pipeline-cost-headline">$' + pAgg.process_all.tier5_estimate.total_cost_usd.toFixed(2) + '</span>'
+    +   '</div>'
+    + '</div>';
+  return headline + _renderPerCompanyPreview(pCmp);
+}
+
+function _renderPerCompanyPreview(pCmp) {
+  if (!pCmp || !Array.isArray(pCmp.companies) || pCmp.companies.length === 0) {
+    return ''
+      + '<div class="pipeline-modal-section">'
+      +   '<h4>Per-company plan</h4>'
+      +   '<div class="pcp-empty">'
+      +     'No unique companies parsed from <code>data/apply-now-queue.json</code>. '
+      +     'Run a fresh batch eval (or click <strong>Continue →</strong> to run the full pipeline drain anyway — '
+      +     'orchestrator will fan out across whatever lands in the queue).'
+      +   '</div>'
+      + '</div>';
+  }
+  const rows = pCmp.companies.map(_renderPerCompanyRow).join('');
+  return ''
+    + '<div class="pipeline-modal-section pcp-section">'
+    +   '<div class="pcp-section-head">'
+    +     '<span>Per-company plan</span>'
+    +     '<span class="pcp-section-head-count">'
+    +       pCmp.actionable_count + ' actionable · '
+    +       pCmp.cache_hit_count + ' cached · '
+    +       pCmp.excluded_count + ' excluded'
+    +     '</span>'
+    +     '<button type="button" class="pcp-bulk-toggle" onclick="_pcpBulkToggle(true)">Select all</button>'
+    +     '<button type="button" class="pcp-bulk-toggle" onclick="_pcpBulkToggle(false)">Select none</button>'
+    +   '</div>'
+    +   '<div class="pcp-table-wrap" role="region" aria-label="Per-company process plan">'
+    +     '<table class="pcp-table">'
+    +       '<thead><tr>'
+    +         '<th style="width:32px"><span class="sr-only">Include</span></th>'
+    +         '<th>Company / top role</th>'
+    +         '<th>Score</th>'
+    +         '<th>TTO</th>'
+    +         '<th>Toxicity</th>'
+    +         '<th>Cache</th>'
+    +         '<th class="pcp-num">Cost</th>'
+    +         '<th style="text-align:right">Actions</th>'
+    +       '</tr></thead>'
+    +       '<tbody>' + rows + '</tbody>'
+    +     '</table>'
+    +   '</div>'
+    +   '<div class="pcp-summary-grid">'
+    +     '<span class="pcp-summary-label">Scoped cost (selected rows)</span>'
+    +     '<span class="pcp-summary-val" id="pcp-scoped-cost">$' + (pCmp.total_cost_estimate_usd || 0).toFixed(2) + '</span>'
+    +     '<span class="pcp-summary-label">Selected companies</span>'
+    +     '<span class="pcp-summary-val" id="pcp-scoped-count">' + pCmp.actionable_count + '</span>'
+    +   '</div>'
+    + '</div>';
+}
+
+function _renderPerCompanyRow(r) {
+  const checked = !r.excluded;
+  const score = (r.top_role_score != null) ? r.top_role_score.toFixed(2) : '—';
+  const scoreClass = (r.top_role_score == null) ? 'pcp-score pcp-score-low'
+                   : (r.top_role_score >= 4.5)  ? 'pcp-score'
+                   : (r.top_role_score >= 4.0)  ? 'pcp-score pcp-score-mid'
+                                                : 'pcp-score pcp-score-low';
+  const ttoHtml = (r.tto_weeks != null)
+    ? '<span class="pcp-tto" data-tier="' + _esc(r.tto_tier || 'med') + '" title="' + _esc(r.tto_tier || '') + ' · confidence ' + _esc(r.tto_confidence || 'unknown') + '">' + r.tto_weeks + 'w</span>'
+    : '<span class="pcp-tto" data-tier="med" title="unknown TTO — fallback default">—</span>';
+  const toxHtml = (r.toxicity_verdict)
+    ? '<span class="pcp-tox" data-verdict="' + _esc(r.toxicity_verdict) + '" title="score ' + (r.toxicity_score ?? 0) + '/100">' + (r.toxicity_emoji ? r.toxicity_emoji + ' ' : '') + _esc(r.toxicity_verdict) + '</span>'
+    : '<span class="pcp-tox" title="no toxicity data on file">—</span>';
+  const cacheHtml = r.cache_hit
+    ? '<span class="pcp-cache" data-state="hit" title="last intel ' + _esc(r.last_intel_date || '?') + ' (' + (r.cache_age_days ?? '?') + 'd old)">cache</span>'
+    : '<span class="pcp-cache" data-state="fresh" title="no recent intel on file — fresh run will fire">fresh</span>';
+  const costHtml = (r.cost_estimate_usd && r.cost_estimate_usd > 0)
+    ? '<span class="pcp-cost">$' + r.cost_estimate_usd.toFixed(2) + '</span>'
+    : '<span class="pcp-cost pcp-cost-zero">$0.00</span>';
+  const excludedBadge = r.excluded ? '<span class="pcp-excluded-badge" title="auto-excluded (defense or manual trash)">excluded</span> ' : '';
+  const packDisabled = (r.top_role_num == null) ? ' disabled title="no row number — apply-pack needs --row"' : ' title="Skip to apply-pack — runs build-apply-pack.mjs --row=' + r.top_role_num + '"';
+  const slug = _esc(r.slug || '');
+  return ''
+    + '<tr class="' + (r.excluded ? 'pcp-row-excluded' : '') + '" data-slug="' + slug + '">'
+    +   '<td><input type="checkbox" class="pcp-checkbox" data-slug="' + slug + '" ' + (checked ? 'checked' : '') + (r.excluded ? ' disabled' : '') + ' onchange="_pcpToggleRow(this)" aria-label="Include ' + _esc(r.company) + '"></td>'
+    +   '<td>'
+    +     '<div class="pcp-company-cell" title="' + _esc(r.company) + '">' + excludedBadge + _esc(r.company) + '</div>'
+    +     (r.top_role ? '<span class="pcp-role-sub" title="' + _esc(r.top_role) + '">' + (r.role_count > 1 ? '(' + r.role_count + ' roles) ' : '') + _esc(r.top_role) + '</span>' : '')
+    +   '</td>'
+    +   '<td><span class="' + scoreClass + '" aria-label="Top role score ' + score + '">' + score + '</span></td>'
+    +   '<td>' + ttoHtml + '</td>'
+    +   '<td>' + toxHtml + '</td>'
+    +   '<td>' + cacheHtml + '</td>'
+    +   '<td class="pcp-cost">' + costHtml + '</td>'
+    +   '<td style="text-align:right">'
+    +     '<div class="pcp-actions">'
+    +       '<button type="button" class="pcp-action" data-kind="pack" onclick="_pcpRowAction(\'pack\',\'' + slug + '\')"' + packDisabled + ' aria-label="Skip to apply-pack for ' + _esc(r.company) + '">📦</button>'
+    +       '<button type="button" class="pcp-action" data-kind="trash" onclick="_pcpRowAction(\'trash\',\'' + slug + '\')" title="Trash — permanently exclude ' + _esc(r.company) + '" aria-label="Trash ' + _esc(r.company) + '">🗑</button>'
+    +       '<button type="button" class="pcp-action" data-kind="defer" onclick="_pcpRowAction(\'defer\',\'' + slug + '\')" title="Defer — skip this run, retry next" aria-label="Defer ' + _esc(r.company) + '">⏭</button>'
+    +     '</div>'
+    +   '</td>'
+    + '</tr>';
+}
+
+function _esc(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function _pcpToggleRow(checkbox) {
+  const slug = checkbox.dataset.slug;
+  if (!slug) return;
+  const row = checkbox.closest('tr');
+  if (checkbox.checked) {
+    _pipelineSelectedSlugs.add(slug);
+    if (row) row.classList.remove('pcp-row-unchecked');
+  } else {
+    _pipelineSelectedSlugs.delete(slug);
+    if (row) row.classList.add('pcp-row-unchecked');
+  }
+  _pcpUpdateScopedCost();
+}
+
+function _pcpBulkToggle(checked) {
+  if (!_pipelinePerCompany) return;
+  document.querySelectorAll('.pcp-checkbox').forEach(box => {
+    if (box.disabled) return;
+    box.checked = checked;
+    const row = box.closest('tr');
+    const slug = box.dataset.slug;
+    if (!slug) return;
+    if (checked) {
+      _pipelineSelectedSlugs.add(slug);
+      if (row) row.classList.remove('pcp-row-unchecked');
+    } else {
+      _pipelineSelectedSlugs.delete(slug);
+      if (row) row.classList.add('pcp-row-unchecked');
+    }
+  });
+  _pcpUpdateScopedCost();
+}
+
+function _pcpUpdateScopedCost() {
+  if (!_pipelinePerCompany) return;
+  const selected = _pipelinePerCompany.companies.filter(c => _pipelineSelectedSlugs.has(c.slug));
+  const cost = selected.reduce((s, c) => s + (c.cost_estimate_usd || 0), 0);
+  const costEl  = document.getElementById('pcp-scoped-cost');
+  const countEl = document.getElementById('pcp-scoped-count');
+  if (costEl)  costEl.textContent  = '$' + cost.toFixed(2);
+  if (countEl) countEl.textContent = String(selected.length);
+  const confirmBtn = document.getElementById('pipeline-modal-confirm');
+  if (confirmBtn && _pipelinePhase === 'preview') {
+    confirmBtn.disabled = selected.length === 0;
+  }
+}
+
+async function _pcpRowAction(kind, slug) {
+  if (!_pipelinePerCompany) return;
+  const row = _pipelinePerCompany.companies.find(c => c.slug === slug);
+  if (!row) return;
+  if (kind === 'pack') {
+    if (!row.top_role_num) {
+      if (window.toast) window.toast('No row number on this company — apply-pack needs --row=N', 'error');
+      return;
+    }
+    try {
+      const res = await fetch('/api/pipeline/build-apply-pack', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ row: row.top_role_num }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || ('HTTP ' + res.status));
+      if (window.toast) window.toast('Apply-pack queued for ' + row.company + ' (row #' + row.top_role_num + ')', 'success');
+      else alert('Apply-pack started for #' + row.top_role_num);
+    } catch (err) {
+      if (window.toast) window.toast('Apply-pack failed: ' + (err.message || err), 'error');
+      else alert('Apply-pack failed: ' + (err.message || err));
+    }
+    return;
+  }
+  if (kind === 'trash') {
+    const rationale = prompt('Trash ' + row.company + '?\\nReason (optional, helps future eval — written to data/excluded-companies.json):', '');
+    if (rationale === null) return; // user cancelled
+    try {
+      const res = await fetch('/api/pipeline/exclude-company', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ company: row.company, rationale: rationale || '' }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || ('HTTP ' + res.status));
+      _pipelineSelectedSlugs.delete(slug);
+      // Mark the row as excluded in the cached data + re-render
+      row.excluded = true;
+      row.cost_estimate_usd = 0;
+      _refreshProcessAllPhaseA();
+      if (window.toast) window.toast(row.company + ' excluded (data/excluded-companies.json)', 'success');
+    } catch (err) {
+      if (window.toast) window.toast('Trash failed: ' + (err.message || err), 'error');
+      else alert('Trash failed: ' + (err.message || err));
+    }
+    return;
+  }
+  if (kind === 'defer') {
+    const reason = prompt('Defer ' + row.company + ' for this run?\\nReason (optional):', '');
+    if (reason === null) return;
+    try {
+      const res = await fetch('/api/pipeline/defer-company', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ company: row.company, reason: reason || '' }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || ('HTTP ' + res.status));
+      _pipelineSelectedSlugs.delete(slug);
+      const checkbox = document.querySelector('.pcp-checkbox[data-slug="' + slug + '"]');
+      if (checkbox) {
+        checkbox.checked = false;
+        const tr = checkbox.closest('tr');
+        if (tr) tr.classList.add('pcp-row-unchecked');
+      }
+      _pcpUpdateScopedCost();
+      if (window.toast) window.toast(row.company + ' deferred for this run', 'success');
+    } catch (err) {
+      if (window.toast) window.toast('Defer failed: ' + (err.message || err), 'error');
+      else alert('Defer failed: ' + (err.message || err));
+    }
+    return;
+  }
+}
+
+function _refreshProcessAllPhaseA() {
+  // Re-render the modal body in Phase A after a row state change (e.g. trash).
+  if (!_pipelinePreview || !_pipelinePerCompany) return;
+  const body = document.getElementById('pipeline-modal-body');
+  if (!body) return;
+  body.innerHTML = _renderProcessAllPhaseA(_pipelinePreview, _pipelinePerCompany);
+  _pcpUpdateScopedCost();
+}
+
+function _advanceProcessAllToConfirm() {
+  // Transition Phase A → Phase B. Build a confirm view that shows scoped
+  // cost from the selected rows + send-email checkbox + force-override if
+  // the scoped cost still exceeds the per-run cap.
+  if (!_pipelinePreview || !_pipelinePerCompany) return;
+  _pipelinePhase = 'confirm';
+  const selected = _pipelinePerCompany.companies.filter(c => _pipelineSelectedSlugs.has(c.slug));
+  const scopedCost = selected.reduce((s, c) => s + (c.cost_estimate_usd || 0), 0);
+  const p = _pipelinePreview;
+  const capUsd = p.per_run_caps.process_all_usd;
+  const exceedsRun     = scopedCost > capUsd;
+  const exceedsMonthly = (p.spent_30d_usd + scopedCost) > p.effective_budget_usd;
+  const cappedReason   = exceedsRun ? 'per-run' : (exceedsMonthly ? 'monthly' : '');
+  const subtitle = document.getElementById('pipeline-modal-subtitle');
+  if (subtitle) subtitle.textContent = 'Step 2 of 2 — confirm. ' + selected.length + ' companies, $' + scopedCost.toFixed(2) + ' scoped cost.';
+  const body = document.getElementById('pipeline-modal-body');
+  if (!body) return;
+  const sampleNames = selected.slice(0, 6).map(c => _esc(c.company)).join(', ');
+  const moreSuffix  = selected.length > 6 ? ' + ' + (selected.length - 6) + ' more' : '';
+  body.innerHTML = ''
+    + '<div class="pipeline-modal-section">'
+    +   '<div class="pcp-phase-pill" data-phase="confirm">'
+    +     '<button type="button" class="pcp-back-link" onclick="_returnToPhaseA()" aria-label="Back to per-company plan">← Back</button>'
+    +     'Step 2 of 2 — confirm'
+    +   '</div>'
+    +   '<div class="pipeline-stat-grid">'
+    +     '<span class="pipeline-stat-label">Scoped cost (' + selected.length + ' companies)</span>'
+    +     '<span class="pipeline-stat-value pipeline-cost-headline">$' + scopedCost.toFixed(2) + '</span>'
+    +   '</div>'
+    + '</div>'
+    + '<div class="pipeline-modal-section">'
+    +   '<h4>Companies in this run</h4>'
+    +   '<div class="pipeline-modal-budget"><span class="pipeline-modal-budget-label">' + sampleNames + moreSuffix + '</span></div>'
+    + '</div>'
+    + '<div class="pipeline-modal-section">'
+    +   '<div class="pipeline-modal-budget">'
+    +     '<span class="pipeline-modal-budget-label">Monthly budget</span>'
+    +     '<span class="pipeline-modal-budget-val">$' + p.monthly_budget_usd.toFixed(0) + '</span>'
+    +   '</div>'
+    +   '<div class="pipeline-modal-budget">'
+    +     '<span class="pipeline-modal-budget-label">Spent (rolling 30d)</span>'
+    +     '<span class="pipeline-modal-budget-val">$' + p.spent_30d_usd.toFixed(2) + '</span>'
+    +   '</div>'
+    +   '<div class="pipeline-modal-budget">'
+    +     '<span class="pipeline-modal-budget-label">Headroom after this run</span>'
+    +     '<span class="pipeline-modal-budget-val">$' + Math.max(0, p.headroom_usd - scopedCost).toFixed(2) + '</span>'
+    +   '</div>'
+    + '</div>'
+    + _renderScopedCapWarning(cappedReason, scopedCost, capUsd, p)
+    + '<label class="pipeline-checkbox-row" for="pipeline-send-email">'
+    +   '<input type="checkbox" id="pipeline-send-email">'
+    +   '<span class="pipeline-checkbox-text">'
+    +     'Send me a heartbeat email when complete'
+    +     '<span class="pipeline-checkbox-hint">Goes to ' + _pipelineHeartbeatRecipient() + ' via Gmail SMTP. The same template as the daily heartbeat.</span>'
+    +   '</span>'
+    + '</label>';
+  const confirmBtn = document.getElementById('pipeline-modal-confirm');
+  if (confirmBtn) {
+    confirmBtn.textContent = 'Process ' + selected.length + ' compan' + (selected.length === 1 ? 'y' : 'ies');
+    confirmBtn.className = cappedReason ? 'pipeline-modal-btn pipeline-modal-btn-nuclear' : 'pipeline-modal-btn pipeline-modal-btn-primary';
+    if (cappedReason) {
+      confirmBtn.disabled = true;
+      confirmBtn.dataset.cappedReason = cappedReason;
+    } else {
+      confirmBtn.disabled = false;
+      delete confirmBtn.dataset.cappedReason;
+    }
+  }
+}
+
+function _renderScopedCapWarning(reason, scopedCost, capUsd, p) {
+  if (!reason) return '';
+  let title, detail;
+  if (reason === 'per-run') {
+    title = 'EXCEEDS $' + capUsd + '/RUN CAP';
+    detail = 'Scoped cost <strong>$' + scopedCost.toFixed(2) + '</strong> exceeds the per-run cap of <strong>$' + capUsd + '</strong>. '
+           + 'Uncheck more companies to shrink the run, raise the cap with <code>PER_RUN_CAP_PROCESS_ALL_USD</code>, '
+           + 'or check the force-override below.';
+  } else {
+    title = 'EXCEEDS MONTHLY BUDGET';
+    detail = 'Scoped run would push 30-day spend from <strong>$' + p.spent_30d_usd.toFixed(2) + '</strong> '
+           + 'to <strong>$' + (p.spent_30d_usd + scopedCost).toFixed(2) + '</strong>, past the '
+           + (p.burst_budget_usd > 0 ? 'effective (burst-enabled) ' : '')
+           + 'monthly budget of <strong>$' + p.effective_budget_usd.toFixed(0) + '</strong>. '
+           + 'Shrink the run, activate burst mode, or force-override below.';
+  }
+  return ''
+    + '<div class="pipeline-cap-warning">'
+    +   '<div class="pipeline-cap-warning-title">⚠️ ' + title + '</div>'
+    +   '<div class="pipeline-cap-warning-detail">' + detail + '</div>'
+    + '</div>'
+    + '<label class="pipeline-force-override" for="pipeline-force-override">'
+    +   '<input type="checkbox" id="pipeline-force-override" onchange="_onForceOverrideToggle()">'
+    +   '<span>I accept the cost. <strong>Force-run anyway.</strong></span>'
+    + '</label>';
+}
+
+function _returnToPhaseA() {
+  if (!_pipelinePreview || !_pipelinePerCompany) return;
+  _pipelinePhase = 'preview';
+  const body = document.getElementById('pipeline-modal-body');
+  const subtitle = document.getElementById('pipeline-modal-subtitle');
+  const confirmBtn = document.getElementById('pipeline-modal-confirm');
+  if (subtitle) subtitle.textContent = 'Step 1 of 2 — review per-company plan. Uncheck rows to skip; click the icons to fast-track, exclude, or defer.';
+  if (body) body.innerHTML = _renderProcessAllPhaseA(_pipelinePreview, _pipelinePerCompany);
+  if (confirmBtn) {
+    confirmBtn.textContent = 'Continue →';
+    confirmBtn.className = 'pipeline-modal-btn pipeline-modal-btn-primary';
+    confirmBtn.disabled = _pipelineSelectedSlugs.size === 0;
+    delete confirmBtn.dataset.cappedReason;
+  }
+  _pcpUpdateScopedCost();
 }
 
 function showPipelineToast(action, sendEmail) {
