@@ -1,0 +1,283 @@
+<mjml>
+  <mj-head>
+    <mj-title>Career-Ops Daily Heartbeat — {{date}}</mj-title>
+    <mj-preview>{{preheaderText}}</mj-preview>
+    <mj-attributes>
+      <!-- Default font/color for all text components -->
+      <mj-text
+        font-family="'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif"
+        font-size="14px"
+        line-height="1.55"
+        color="#1e293b"
+      />
+      <mj-button
+        font-family="'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif"
+        font-size="13px"
+        font-weight="600"
+        letter-spacing="0.01em"
+        border-radius="8px"
+        inner-padding="9px 16px"
+      />
+      <mj-section padding="0 0 12px 0" />
+    </mj-attributes>
+    <mj-style>
+      /* Dark-mode overrides — Apple Mail, Gmail Web, Outlook 365 honor
+         prefers-color-scheme: dark. Class hooks (.card, .text-strong, .accent,
+         .header-banner, etc.) map to the dashboard's dark-mode token palette. */
+      @media (prefers-color-scheme: dark) {
+        body, .body-bg  { background: #06070d !important; color: #fafafa !important; }
+        .card           { background: #11131c !important; border-color: #232737 !important; color: #e4e4e7 !important; }
+        .text-strong    { color: #fafafa !important; }
+        .text-muted     { color: #b8b8c0 !important; }
+        .text-subtle    { color: #9a9aa6 !important; }
+        .border         { border-color: #232737 !important; }
+        .accent         { color: #86efac !important; }
+        .accent-bg      { background: rgba(22,163,74,0.12) !important; color: #86efac !important; }
+        table           { border-color: #232737 !important; background: #11131c !important; }
+        thead, th       { background: #181b27 !important; color: #b8b8c0 !important; border-color: #232737 !important; }
+        td              { color: #e4e4e7 !important; border-color: #232737 !important; }
+        blockquote      { background: rgba(22,163,74,0.10) !important; color: #fafafa !important; border-left-color: #86efac !important; }
+        code            { background: #181b27 !important; color: #86efac !important; }
+        hr              { background: linear-gradient(90deg, transparent 0%, #232737 50%, transparent 100%) !important; }
+        a               { color: #86efac !important; }
+        .header-banner  {
+          background: linear-gradient(135deg, rgba(0,255,157,0.10) 0%, rgba(22,163,74,0.04) 50%, #11131c 100%) !important;
+          border: 1px solid #232737 !important;
+          color: #fafafa !important;
+        }
+        .cta-button     { background: #86efac !important; color: #06070d !important; }
+        .score-pill-green { background: rgba(22,163,74,0.15) !important; color: #86efac !important; border-color: rgba(22,163,74,0.35) !important; }
+        .score-pill-amber { background: rgba(168,123,72,0.14) !important; color: #d4ba84 !important; }
+        .score-pill-red   { background: rgba(220,38,38,0.12) !important; color: #fca5a5 !important; }
+      }
+    </mj-style>
+    <mj-raw>
+      <!-- Colour-scheme meta ensures clients know we have dark-mode styles -->
+      <meta name="color-scheme" content="light dark">
+      <meta name="supported-color-schemes" content="light dark">
+    </mj-raw>
+  </mj-head>
+
+  <mj-body background-color="#f8fafc" css-class="body-bg">
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         HERO BANNER — mission-control green gradient + dashboard CTA button.
+         mj-button generates bulletproof VML+CSS hybrid automatically so
+         this renders correctly in Classic Outlook (Word renderer, supported
+         through at least 2029 per Microsoft's extension).
+         ═══════════════════════════════════════════════════════════════════ -->
+    <mj-section
+      background-color="#16a34a"
+      background-url=""
+      css-class="header-banner"
+      border-radius="12px"
+      padding="22px 24px"
+    >
+      <mj-column vertical-align="middle">
+        <mj-text
+          color="#ffffff"
+          font-size="11px"
+          letter-spacing="0.18em"
+          text-transform="uppercase"
+          font-weight="600"
+          padding-bottom="4px"
+        >⚡ Career-Ops · Daily Heartbeat</mj-text>
+        <mj-text
+          color="#ffffff"
+          font-size="24px"
+          font-weight="700"
+          letter-spacing="-0.01em"
+          font-family="'JetBrains Mono', 'SF Mono', ui-monospace, monospace"
+          padding="0"
+        >{{date}}</mj-text>
+      </mj-column>
+      <mj-column vertical-align="middle" width="180px">
+        <!-- mj-button renders bulletproof VML+CSS hybrid. On Classic Outlook:
+             VML roundrect. On everything else: HTML/CSS button. Both link
+             to the same href. No manual VML boilerplate needed. -->
+        <mj-button
+          href="{{dashboardUrl}}"
+          background-color="#ffffff"
+          color="#15803d"
+          border-radius="8px"
+          font-size="13px"
+          font-weight="600"
+          css-class="cta-button"
+          align="right"
+        >Open Dashboard →</mj-button>
+      </mj-column>
+    </mj-section>
+
+    <!-- System status banner + runway alert (rendered HTML from lib/heartbeat-system-banner.mjs) -->
+    <mj-section padding="0">
+      <mj-column>
+        <mj-text padding="0">{{systemBannerHtml}}</mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Runway alert -->
+    <mj-section padding="0">
+      <mj-column>
+        <mj-text padding="0">{{runwayAlertHtml}}</mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Discard pattern section -->
+    <mj-section padding="0">
+      <mj-column>
+        <mj-text padding="0">{{discardSectionHtml}}</mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         KPI TILES — four stats in a 4-column layout.
+         Each tile is a separate mj-column so they stack on mobile.
+         ═══════════════════════════════════════════════════════════════════ -->
+    <mj-section padding="0 0 18px 0">
+      <mj-column
+        border="1px solid #e2e8f0"
+        border-radius="10px"
+        background-color="#ffffff"
+        padding="14px 16px"
+        css-class="card border"
+      >
+        <mj-text
+          color="#64748b"
+          font-size="10px"
+          font-weight="700"
+          letter-spacing="0.08em"
+          text-transform="uppercase"
+          align="center"
+          padding-bottom="4px"
+          css-class="text-muted"
+        >In queue ≥ 4.0</mj-text>
+        <mj-text
+          color="#16a34a"
+          font-size="24px"
+          font-weight="700"
+          align="center"
+          font-family="'JetBrains Mono', 'SF Mono', ui-monospace, monospace"
+          padding="0"
+          css-class="text-strong"
+        >{{kpiQueueCount}}</mj-text>
+      </mj-column>
+      <mj-column
+        border="1px solid #e2e8f0"
+        border-radius="10px"
+        background-color="#ffffff"
+        padding="14px 16px"
+        css-class="card border"
+      >
+        <mj-text
+          color="#64748b"
+          font-size="10px"
+          font-weight="700"
+          letter-spacing="0.08em"
+          text-transform="uppercase"
+          align="center"
+          padding-bottom="4px"
+          css-class="text-muted"
+        >Evaluated today</mj-text>
+        <mj-text
+          color="#2563eb"
+          font-size="24px"
+          font-weight="700"
+          align="center"
+          font-family="'JetBrains Mono', 'SF Mono', ui-monospace, monospace"
+          padding="0"
+          css-class="text-strong"
+        >{{kpiEvaluatedToday}}</mj-text>
+      </mj-column>
+      <mj-column
+        border="1px solid #e2e8f0"
+        border-radius="10px"
+        background-color="#ffffff"
+        padding="14px 16px"
+        css-class="card border"
+      >
+        <mj-text
+          color="#64748b"
+          font-size="10px"
+          font-weight="700"
+          letter-spacing="0.08em"
+          text-transform="uppercase"
+          align="center"
+          padding-bottom="4px"
+          css-class="text-muted"
+        >From alerts today</mj-text>
+        <mj-text
+          color="#15803d"
+          font-size="24px"
+          font-weight="700"
+          align="center"
+          font-family="'JetBrains Mono', 'SF Mono', ui-monospace, monospace"
+          padding="0"
+          css-class="text-strong"
+        >{{kpiNewFromAlerts}}</mj-text>
+      </mj-column>
+      <mj-column
+        border="1px solid #e2e8f0"
+        border-radius="10px"
+        background-color="#ffffff"
+        padding="14px 16px"
+        css-class="card border"
+      >
+        <mj-text
+          color="#64748b"
+          font-size="10px"
+          font-weight="700"
+          letter-spacing="0.08em"
+          text-transform="uppercase"
+          align="center"
+          padding-bottom="4px"
+          css-class="text-muted"
+        >Tracked all-time</mj-text>
+        <mj-text
+          color="#475569"
+          font-size="24px"
+          font-weight="700"
+          align="center"
+          font-family="'JetBrains Mono', 'SF Mono', ui-monospace, monospace"
+          padding="0"
+          css-class="text-strong"
+        >{{kpiTrackedCount}}</mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         MAIN CONTENT — rendered from markdown via marked() + inline-style
+         transforms, then injected here as pre-rendered HTML. This hybrid
+         approach preserves all existing markdown-based section generators
+         while getting MJML's structural chrome (hero, KPI tiles, buttons,
+         footer) and bulletproof button rendering.
+         ═══════════════════════════════════════════════════════════════════ -->
+    <mj-section padding="0">
+      <mj-column>
+        <mj-text padding="0">{{contentHtml}}</mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         FOOTER
+         ═══════════════════════════════════════════════════════════════════ -->
+    <mj-section
+      padding="14px 0 8px 0"
+      border-top="1px solid #e2e8f0"
+      css-class="border"
+    >
+      <mj-column>
+        <mj-text
+          align="center"
+          font-size="12px"
+          color="#64748b"
+          css-class="text-muted"
+        >
+          Generated by <code style="background:#f1f5f9;padding:1px 6px;border-radius:4px;font-family:'JetBrains Mono','SF Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;color:#15803d">scripts/heartbeat.mjs</code>
+          · <a href="{{dashboardUrl}}" style="color:#15803d;text-decoration:underline" class="accent">dashboard</a>
+          · scheduled daily 09:00 PT via launchd
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+  </mj-body>
+</mjml>
