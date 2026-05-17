@@ -5,11 +5,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { page_routes } from "@/lib/routes-config";
 import Anchor from "../anchor";
 import Logo from "./logo";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import Icon from "../icon";
-import { ChevronDown, LockIcon } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { Badge } from "../ui/badge";
 
 type SidebarNavLinkProps = {
@@ -74,31 +73,6 @@ export default function Sidebar() {
             </div>
           </Fragment>
         ))}
-        <div className="sticky bottom-0 mt-10">
-          <Card>
-            <CardHeader>
-              <CardTitle>Get Shadcn UI Kit Pro</CardTitle>
-              <CardDescription>
-                Need more pages and components? Then you can get the pro.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button
-                size="sm"
-                className="w-full items-center bg-gradient-to-r from-indigo-700 via-purple-500 to-pink-700 hover:opacity-90"
-                asChild>
-                <Link href="https://shadcnuikit.com/pricing" target="_blank">
-                  <LockIcon className="me-2 h-4 w-4" /> Get Pro
-                </Link>
-              </Button>
-              <Button size="sm" className="w-full" variant="outline" asChild>
-                <Link href="https://shadcnuikit.com/" target="_blank">
-                  Learn More
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
       </ScrollArea>
     </div>
   );

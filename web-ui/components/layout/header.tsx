@@ -1,4 +1,4 @@
-import { LockIcon, Menu } from "lucide-react";
+import { Menu } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,7 +8,6 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import Search from "./search";
 import Logo from "./logo";
@@ -42,31 +41,6 @@ export default function Header() {
                 </Fragment>
               ))}
             </nav>
-            <div className="mt-auto">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Get Shadcn UI Kit Pro</CardTitle>
-                  <CardDescription>
-                    Need more pages and components? Then you can get the pro.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <Button
-                    size="sm"
-                    className="w-full items-center bg-gradient-to-r from-indigo-700 via-purple-500 to-pink-700 hover:opacity-90"
-                    asChild>
-                    <Link href="https://shadcnuikit.com/pricing" target="_blank" rel="noopener noreferrer">
-                      <LockIcon className="me-2 h-4 w-4" /> Get Pro
-                    </Link>
-                  </Button>
-                  <Button size="sm" className="w-full" variant="outline" asChild>
-                    <Link href="https://shadcnuikit.com/" target="_blank" rel="noopener noreferrer">
-                      Learn More
-                    </Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
           </SheetContent>
         </Sheet>
         <div className="w-full flex-1">

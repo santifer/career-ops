@@ -21,7 +21,7 @@ export function generateMeta({
   description: string;
 }): Metadata {
   return {
-    title: `${title} - Shadcn UI Kit Free Dashboard Template`,
+    title: `${title} - career-ops`,
     description: description,
     openGraph: {
       images: [`/seo.jpg`]
