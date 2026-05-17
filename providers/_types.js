@@ -32,6 +32,7 @@
  * @property {string}             name             User-facing label; appears in logs and placeholders.
  * @property {boolean}            [enabled]        Default: true.
  * @property {string}             [careers_url]    Public listing URL; consumed by detect().
+ * @property {string}             [api]            JSON API URL; used directly by greenhouse/ashby providers.
  * @property {string}             [provider]       Explicit provider id — bypasses detect().
  * @property {('http')}           [transport]      Default: 'http'. Reserved for future transports.
  */
@@ -52,6 +53,7 @@
  * @property {Object<string,string>} [headers]
  * @property {string}                [method]
  * @property {(string|null)}         [body]
+ * @property {RequestRedirect}       [redirect]
  */
 
 /**
