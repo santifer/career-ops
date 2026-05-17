@@ -285,8 +285,8 @@
 
   /* === CERTIFICATIONS === */
   .cert-item {
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(90px, max-content) 44px;
     align-items: baseline;
     gap: 12px;
     margin-bottom: 6px;
@@ -296,16 +296,19 @@
     font-size: 10.5px;
     font-weight: 500;
     color: #333;
+    min-width: 0;
   }
 
   .cert-org {
     color: hsl(270, 70%, 45%);
+    white-space: nowrap;
   }
 
   .cert-year {
     font-size: 10px;
     color: #777;
     white-space: nowrap;
+    text-align: right;
   }
 
   /* === SKILLS === */

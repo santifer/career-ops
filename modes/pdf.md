@@ -19,7 +19,7 @@
 13. Lee `name` de `config/profile.yml` → normaliza a kebab-case lowercase (e.g. "John Doe" → "john-doe") → `{candidate}`
 14. Escribe HTML a `/tmp/cv-{candidate}-{company}.html`
 15. Ejecuta: `node generate-pdf.mjs /tmp/cv-{candidate}-{company}.html output/cv-{candidate}-{company}-{YYYY-MM-DD}.pdf --format={letter|a4}`
-15. Reporta: ruta del PDF, nº páginas, % cobertura de keywords
+16. Reporta: ruta del PDF, nº páginas, % cobertura de keywords
 
 ## Reglas ATS (parseo limpio)
 
@@ -94,17 +94,17 @@ Usar el template en `cv-template.html`. Reemplazar los placeholders `{{...}}` co
 
 ## Canva CV Generation (optional)
 
-If `config/profile.yml` has `canva_resume_design_id` set, offer the user a choice before generating:
+If `config/profile.yml` has `cv.canva_resume_design_id` set, offer the user a choice before generating:
 - **"HTML/PDF (fast, ATS-optimized)"** — existing flow above
 - **"Canva CV (visual, design-preserving)"** — new flow below
 
-If the user has no `canva_resume_design_id`, skip this prompt and use the HTML/PDF flow.
+If the user has no `cv.canva_resume_design_id`, skip this prompt and use the HTML/PDF flow.
 
 ### Canva workflow
 
 #### Step 1 — Duplicate the base design
 
-a. `export-design` the base design (using `canva_resume_design_id`) as PDF → get download URL
+a. `export-design` the base design (using `cv.canva_resume_design_id`) as PDF → get download URL
 b. `import-design-from-url` using that download URL → creates a new editable design (the duplicate)
 c. Note the new `design_id` for the duplicate
 
