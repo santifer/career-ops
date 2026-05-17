@@ -21,11 +21,57 @@ import { marked } from 'marked';
 import { classifyLiveness } from '../liveness-core.mjs';
 import { getCachedUrl } from '../lib/resolve-ats-url.mjs';
 import { poolMap } from '../lib/fetch-utils.mjs';
-import { buildSummary as buildOutreachSummary, urgency as outreachUrgency, daysSinceLastTouch as outreachDaysSince, touchCount as outreachTouchCount } from '../lib/outreach-tracker.mjs';
+import { buildSummary as buildOutreachSummary, urgency as outreachUrgency, daysSinceLastTouch as outreachDaysSince, touchCount as outreachTouchCount, listContacts as listOutreachContacts } from '../lib/outreach-tracker.mjs';
 // Tier 5 system-status banner (calibration brief 2026-05-16) — surfaces which
-// Tier 5 features are active in the daily heartbeat. Runway-alert section will
-// wire in once pipeline-density compute is extracted from dashboard-server.mjs.
-import { renderSystemBanner, renderDiscardPatternSection } from '../lib/heartbeat-system-banner.mjs';
+// Tier 5 features are active in the daily heartbeat. Runway alert wired
+// 2026-05-17 — inline compute below (mirrors dashboard-server.mjs's
+// computeRecruiterPipelineDensity so heartbeat doesn't depend on the
+// dashboard server being running).
+import { renderSystemBanner, renderDiscardPatternSection, renderRunwayAlert } from '../lib/heartbeat-system-banner.mjs';
+
+// Inline pipeline-density compute for heartbeat (decoupled from the live
+// dashboard server). Matches the shape renderRunwayAlert expects from
+// dashboard-server.mjs's computeRecruiterPipelineDensity.
+function computeRunwayDensityForHeartbeat() {
+  let contacts = [];
+  try { contacts = listOutreachContacts(); } catch { return { ok: false, error: 'outreach tracker unavailable' }; }
+  const now = Date.now();
+  const sevenDaysAgo = now - 7 * 86400000;
+  const thirtyDaysAgo = now - 30 * 86400000;
+  let active = 0, responded = 0, dead = 0, total = contacts.length;
+  let touches7d = 0, touches30d = 0, lastTouchTs = 0;
+  for (const c of contacts) {
+    if (c.status === 'dead') { dead++; continue; }
+    if (c.status === 'awaiting_reply' || c.status === 'warm' || c.status === 'responded') active++;
+    if (c.status === 'responded') responded++;
+    for (const t of (c.touches || [])) {
+      const ts = Date.parse(t.ts);
+      if (!isFinite(ts)) continue;
+      if (ts >= sevenDaysAgo) touches7d++;
+      if (ts >= thirtyDaysAgo) touches30d++;
+      if (ts > lastTouchTs) lastTouchTs = ts;
+    }
+  }
+  const responseRate = total > 0 ? Math.round((responded / total) * 100) / 100 : 0;
+  const runwayWeeks = parseInt(process.env.RUNWAY_WEEKS || '12');
+  let health, runway_alert;
+  if (active >= 5 && touches7d >= 10) {
+    health = 'healthy';
+    runway_alert = `✅ Pipeline density adequate for ${runwayWeeks}-week runway.`;
+  } else if (active >= 3 || touches7d >= 5) {
+    health = 'stretched';
+    runway_alert = `⚠️ Pipeline stretched for ${runwayWeeks}-week runway. Add ${Math.max(0, 5 - active)} more active conversations and ${Math.max(0, 10 - touches7d)} more touches this week.`;
+  } else {
+    health = 'critical';
+    runway_alert = `🚨 Pipeline below threshold for ${runwayWeeks}-week runway. Increase outreach velocity to 10+ touches/week immediately.`;
+  }
+  return {
+    ok: true, runway_weeks: runwayWeeks, health, runway_alert,
+    contacts: { total, active, responded, dead, response_rate: responseRate },
+    velocity: { touches_last_7d: touches7d, touches_last_30d: touches30d,
+                days_since_last_touch: lastTouchTs ? Math.round((now - lastTouchTs) / 86400000) : null },
+  };
+}
 
 const ROOT = process.cwd();
 const args = process.argv.slice(2);
@@ -240,11 +286,17 @@ function renderHtmlEmail(markdownBody, meta = {}) {
   .score-pill-red   { background: rgba(220,38,38,0.12) !important; color: #fca5a5 !important; }
 }`;
 
-  // Tier 5 system-status banner (calibration brief 2026-05-16) — rendered
-  // between header and KPI strip so it lands above-the-fold in the email.
-  // Safely degrades to empty string if the banner module isn't available.
+  // Tier 5 system-status banner + runway alert (calibration brief 2026-05-16) —
+  // rendered between header and KPI strip so they land above-the-fold in the
+  // email. Safely degrade to empty string if the banner module / outreach
+  // tracker isn't available.
   let systemBanner = '';
+  let runwayAlert  = '';
   try { systemBanner = renderSystemBanner({ format: 'html' }) || ''; } catch {}
+  try {
+    const density = computeRunwayDensityForHeartbeat();
+    runwayAlert = renderRunwayAlert({ pipelineDensity: density, format: 'html' }) || '';
+  } catch {}
 
   // Rejected pattern of the week (Item #2 of 2026-05-16 incomplete-task review).
   // Reads data/discard-reasons.jsonl, auto-suppresses when zero discards in
@@ -264,6 +316,7 @@ function renderHtmlEmail(markdownBody, meta = {}) {
   <tr><td>
     ${header}
     ${systemBanner}
+    ${runwayAlert}
     ${discardSection}
     ${kpiStrip}
     ${styled}
