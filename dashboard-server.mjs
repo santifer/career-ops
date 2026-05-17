@@ -3,7 +3,7 @@
 // Usage: node dashboard-server.mjs [--port=3000]
 
 import { createServer } from 'http';
-import { readFileSync, existsSync, statSync, readdirSync, appendFileSync, writeFileSync, renameSync, mkdirSync } from 'fs';
+import { readFileSync, existsSync, statSync, readdirSync, appendFileSync, writeFileSync, renameSync, mkdirSync, watch as fsWatch } from 'fs';
 import { join, extname } from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
@@ -2432,6 +2432,77 @@ function renderMarkdownPage(mdContent, fileName) {
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${fileName} · career-ops</title><style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;max-width:920px;margin:32px auto;padding:0 24px;color:#1e293b;line-height:1.6;background:#f8fafc}.nav{font-size:13px;color:#64748b;margin-bottom:18px}.nav a{color:#4338ca;text-decoration:none}article{background:#fff;padding:32px 40px;border-radius:12px;border:1px solid #e2e8f0}h1{font-size:26px;margin:0 0 14px;color:#0f172a}h2{font-size:19px;margin:28px 0 10px;color:#0f172a;border-left:4px solid #6366f1;padding-left:10px}h3{font-size:16px;margin:22px 0 8px;color:#1e293b}a{color:#4338ca}code{background:#f1f5f9;padding:1px 6px;border-radius:4px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px}pre{background:#f1f5f9;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:13px}table{border-collapse:collapse;width:100%;margin:16px 0;font-size:14px}th,td{text-align:left;padding:8px 12px;border-bottom:1px solid #e2e8f0;vertical-align:top}th{background:#f8fafc;font-weight:600}blockquote{margin:16px 0;padding:12px 18px;border-left:4px solid #6366f1;background:#eef2ff;color:#312e81;border-radius:0 8px 8px 0}hr{border:none;height:1px;background:#e2e8f0;margin:24px 0}ul,ol{padding-left:24px}li{margin:4px 0}</style></head><body><div class="nav"><a href="/dashboard/">← back to dashboard</a> · <code>${fileName}</code></div><article>${restHtml}</article></body></html>`;
 }
 
+// ── SSE batch-live stream (Tier A Item #2) ─────────────────────
+// One persistent EventSource connection per client replaces the
+// 2-second /api/batch-live polling loop (194 hits/session → 1).
+// The server watches three source files for changes and pushes a
+// fresh batchLive() snapshot to every subscribed client. A
+// keepalive comment fires every 25s so proxies don't close the
+// connection, and a server-side heartbeat re-emits even when no
+// file changes occur so the client's readyState stays OPEN.
+
+const _sseClients = new Set();  // Set<{ id, res }> of active SSE connections
+
+function _sseSend(client, event, data) {
+  try {
+    client.res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+  } catch (_) {
+    _sseClients.delete(client);
+  }
+}
+
+function _sseBroadcast() {
+  if (_sseClients.size === 0) return;
+  let payload;
+  try { payload = batchLive(); } catch (err) {
+    payload = { error: err.message };
+  }
+  for (const client of _sseClients) {
+    _sseSend(client, 'batch-live', payload);
+  }
+}
+
+// Watch the three source files batchLive() reads.
+// fs.watch fires on inode events; a 200ms debounce collapses bursts.
+const _batchWatchPaths = ['batch/batch-state.tsv', 'batch/batch-input.tsv', 'batch/triage-advance.tsv'];
+let _sseDebounceTimer = null;
+function _sseScheduleBroadcast() {
+  clearTimeout(_sseDebounceTimer);
+  _sseDebounceTimer = setTimeout(_sseBroadcast, 200);
+}
+
+for (const rel of _batchWatchPaths) {
+  const abs = join(ROOT, rel);
+  // Watch with persistent:false so the watcher doesn't prevent exit.
+  // If the file doesn't exist yet, watch the parent directory and
+  // react to rename events (file creation counts as rename in fs.watch).
+  try {
+    if (existsSync(abs)) {
+      fsWatch(abs, { persistent: false }, _sseScheduleBroadcast);
+    } else {
+      const parent = join(ROOT, 'batch');
+      fsWatch(parent, { persistent: false }, (evt, fn) => {
+        if (_batchWatchPaths.some(p => p.endsWith(fn || ''))) _sseScheduleBroadcast();
+      });
+    }
+  } catch (_) { /* fs.watch unavailable (e.g. network FS) — SSE still works on interval */ }
+}
+
+// Fallback interval: push every 30s even without file-change events,
+// so SSE clients never see stale state when fs.watch is unavailable.
+setInterval(_sseBroadcast, 30_000);
+
+// Keepalive comment every 25s to prevent proxy / CDN timeout disconnects.
+setInterval(() => {
+  for (const client of _sseClients) {
+    try {
+      client.res.write(': keepalive\n\n');
+    } catch (_) {
+      _sseClients.delete(client);
+    }
+  }
+}, 25_000);
+
 // ── HTTP server ────────────────────────────────────────────────
 
 const server = createServer((req, res) => {
@@ -3098,6 +3169,37 @@ const server = createServer((req, res) => {
   if (url === '/api/batch-live') {
     try { return json(batchLive()); }
     catch (err) { res.writeHead(500, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }); res.end(JSON.stringify({ error: err.message })); return; }
+  }
+
+  // ── SSE stream endpoint (Tier A Item #2, 2026-05-17) ───────────
+  // EventSource clients connect here and receive server-push events
+  // whenever batch/batch-state.tsv, batch-input.tsv, or
+  // triage-advance.tsv change (debounced 200ms). Falls back to a
+  // 30s interval push when fs.watch is unavailable.
+  if (url === '/api/batch-live-stream') {
+    res.writeHead(200, {
+      'Content-Type':  'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection':    'keep-alive',
+      'Access-Control-Allow-Origin': '*',
+      'X-Accel-Buffering': 'no',   // disable nginx buffering when proxied
+    });
+    // Flush headers immediately so the browser sees the event-stream MIME type.
+    res.flushHeaders?.();
+
+    const client = { id: Math.random().toString(36).slice(2), res };
+    _sseClients.add(client);
+
+    // Send initial snapshot immediately on connect so the client renders
+    // current state without waiting for the next file-change event.
+    try {
+      res.write(`event: batch-live\ndata: ${JSON.stringify(batchLive())}\n\n`);
+    } catch (_) {}
+
+    // Clean up when the connection closes.
+    req.on('close', () => { _sseClients.delete(client); });
+    req.on('error', () => { _sseClients.delete(client); });
+    return;  // keep connection open — do NOT call res.end()
   }
 
   // ── Sidebar batch popout: detailed live status feed (2026-05-17) ──
