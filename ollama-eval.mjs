@@ -95,7 +95,13 @@ for (let i = 0; i < args.length; i++) {
       console.error(`❌  File not found: ${filePath}`);
       process.exit(1);
     }
-    jdText = readFileSync(filePath, 'utf-8').trim();
+    try {
+      jdText = readFileSync(filePath, 'utf-8').trim();
+    } catch (err) {
+      console.error(`❌  Could not read file: ${filePath}`);
+      console.error(`    ${err.message}`);
+      process.exit(1);
+    }
   } else if (args[i] === '--model' && args[i + 1]) {
     modelName = args[++i];
   } else if (args[i] === '--url' && args[i + 1]) {
