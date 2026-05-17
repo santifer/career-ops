@@ -304,6 +304,17 @@ function renderHtmlEmail(markdownBody, meta = {}) {
   let discardSection = '';
   try { discardSection = renderDiscardPatternSection({ format: 'html', days: 7 }) || ''; } catch {}
 
+  // Hidden preheader (Phase 2 Day-1, 2026-05-17) — controls the inbox-preview
+  // text Gmail/Apple Mail/Outlook show beside the subject. Without this, those
+  // clients pull the first visible text (currently "CAREER-OPS · DAILY
+  // HEARTBEAT YYYY-MM-DD"), wasting the preview slot.
+  // The trailing ‌  spacers are the standard preheader trick that
+  // prevents Gmail from auto-pulling visible hero text into the preview;
+  // zero-width non-joiners between non-breaking spaces register as content
+  // to the parser without rendering anywhere visible.
+  const preheaderText = buildHeartbeatPreheader(meta);
+  const preheaderSpan = `<span style="display: none !important; max-height: 0; overflow: hidden; font-size: 1px; line-height: 1px; color: transparent; opacity: 0;">${preheaderText} &zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;</span>`;
+
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8">
 <meta name="color-scheme" content="light dark">
@@ -311,6 +322,7 @@ function renderHtmlEmail(markdownBody, meta = {}) {
 <style>${darkModeCss}</style>
 </head>
 <body class="body-bg" style="margin:0;padding:0;background:${BRAND.bg};color:${BRAND.text2};font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased">
+${preheaderSpan}
 <center class="body-bg" style="width:100%;background:${BRAND.bg}">
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="max-width:780px;width:100%;margin:0 auto;padding:24px 20px">
   <tr><td>
@@ -815,33 +827,19 @@ function formatApplyNowQueue(rows, packEligibleNums = null) {
     ];
   }
   const out = [];
-  // Quick-scan summary table — every Apply-Now row appears here with both
-  // the live Apply link and the report link clickable.
-  out.push(`**At-a-glance summary** — ${rows.length} role${rows.length === 1 ? '' : 's'} above the ${APPLY_NOW_FLOOR.toFixed(1)} floor (full per-role detail for top ${Math.min(APPLY_NOW_DETAIL_LIMIT, rows.length)} below):`);
-  out.push('');
-  out.push('| # | Score | Company — Role | Apply | Report | Pack | Mark | Link |');
-  out.push('|---|------|----------------|-------|--------|------|------|------|');
-  for (const r of rows) {
-    const applyUrl = getReportUrl(r.reportPath);
-    const applyCell = applyUrl ? `[Apply](${applyUrl})` : '—';
-    // Link badge links to the live JD so the column is clickable, not just a status text.
-    const linkBadge = !r._linkStatus
-      ? '—'
-      : r._linkStatus.result === 'active'  ? (applyUrl ? `[✅ live](${applyUrl})`          : '✅ live')
-      : r._linkStatus.result === 'expired' ? (applyUrl ? `[❌ EXPIRED](${applyUrl})`       : '❌ EXPIRED')
-      : (applyUrl ? `[⚠️ ${r._linkStatus.result}](${applyUrl})` : `⚠️ ${r._linkStatus.result}`);
-    const reportCell = r.reportPath ? `[Open](${reportUrl(r.reportPath)})` : '—';
-    const packUrl = applyPackUrl(r);
-    const packAllowed = packEligibleNums == null || packEligibleNums.has(r.num);
-    const packCell = (packUrl && packAllowed) ? `📦 [Pack](${packUrl})` : '—';
-    const markCell = `[✅ Applied](${markStatusUrl(r.num, 'Applied')})`;
-    out.push(`| ${r.num} | ${r.score.toFixed(2)} | ${r.company} — ${r.role.slice(0, 60)} | ${applyCell} | ${reportCell} | ${packCell} | ${markCell} | ${linkBadge} |`);
-  }
+  // Phase 2 Day-1 (2026-05-17) — duplicate Apply-Now table killed (audit § 4
+  // item 6). The 8-column quick-scan table that lived here repeated the same
+  // 10 rows that already appear as per-role detail blocks below it, doubling
+  // the section's vertical footprint without adding signal. We keep the
+  // at-a-glance summary sentence + the per-role detail blocks (the value-add).
+  // The "What's New Overnight" 3-row table at the top of the email is a
+  // SEPARATE section that stays intact.
+  out.push(`**At-a-glance summary** — ${rows.length} role${rows.length === 1 ? '' : 's'} above the ${APPLY_NOW_FLOOR.toFixed(1)} floor (full per-role detail for top ${Math.min(APPLY_NOW_DETAIL_LIMIT, rows.length)} below).`);
   out.push('');
   // Detail blocks for the top N only — keeps the email scannable.
   const detailRows = rows.slice(0, APPLY_NOW_DETAIL_LIMIT);
   if (rows.length > detailRows.length) {
-    out.push(`_Showing detailed reasoning for the top ${detailRows.length} only. The remaining ${rows.length - detailRows.length} are in the table above — open the dashboard for full rationale._`);
+    out.push(`_Showing detailed reasoning for the top ${detailRows.length}. The remaining ${rows.length - detailRows.length} are tracked in the dashboard — open it for full rationale and the cumulative queue view._`);
     out.push('');
   }
   for (const r of detailRows) {
@@ -1113,9 +1111,14 @@ function grokStatus(date) {
 
 async function generateHeartbeat() {
   const lines = [];
-  lines.push(`# Career-Ops Heartbeat — ${TARGET_DATE}`);
-  lines.push('');
-  lines.push(`**Generated:** ${new Date().toISOString()}`);
+  // Phase 2 Day-1 (2026-05-17) — duplicate H1 killed (audit § 4 item 4).
+  // The hero band rendered in renderHtmlEmail() already shows "CAREER-OPS ·
+  // DAILY HEARTBEAT YYYY-MM-DD" + the date in display type, so the markdown
+  // body's own `# Career-Ops Heartbeat — YYYY-MM-DD` was a redundant H1
+  // immediately below the KPI tiles. We keep the Generated: timestamp as
+  // a small italic line so the audit trail (when the heartbeat ran) is
+  // preserved in both the rendered email and the persisted .md file.
+  lines.push(`_Generated: ${new Date().toISOString()}_`);
   lines.push('');
 
   // Apply-Now Queue — every scored evaluation awaiting action, top → bottom.
@@ -1267,6 +1270,35 @@ async function generateHeartbeat() {
 
   lines.push(`*Heartbeat generated by \`scripts/heartbeat.mjs\` · [Open dashboard →](${DASHBOARD_URL}) · scheduled daily 09:00 PT via launchd.*`);
 
+  // Pull state for the dynamic subject + hidden preheader (Phase 2 Day-1 quick
+  // wins, 2026-05-17). The four signals all-7-models converged on:
+  //   - newRoles: today's freshly surfaced ≥ 4.0 roles (whatsNew[])
+  //   - runwayAlert + runwayState: stretched / critical / healthy (from
+  //     computeRunwayDensityForHeartbeat — same source the renderRunwayAlert
+  //     block uses, so subject + body stay aligned)
+  //   - outreachDue: count of due_today contacts in the Outreach Cadence block
+  //   - topRole: { name, score } for the highest-scoring Apply-Now row,
+  //     used in the preheader preview text on alerting days
+  let runwayState = 'healthy';
+  let runwayAlertFiring = false;
+  try {
+    const density = computeRunwayDensityForHeartbeat();
+    if (density && density.ok) {
+      runwayState = density.health; // 'healthy' | 'stretched' | 'critical'
+      runwayAlertFiring = density.health !== 'healthy';
+    }
+  } catch { /* soft-fail — keep healthy/false defaults */ }
+
+  let outreachDue = 0;
+  try {
+    const summary = buildOutreachSummary();
+    outreachDue = (summary && summary.due_today) ? summary.due_today.length : 0;
+  } catch { /* soft-fail — keep 0 */ }
+
+  const topRole = applyNow[0]
+    ? { name: `${applyNow[0].company} — ${(applyNow[0].role || '').slice(0, 50)}`, score: applyNow[0].score }
+    : null;
+
   const meta = {
     date: TARGET_DATE,
     dashboardUrl: DASHBOARD_URL,
@@ -1274,8 +1306,60 @@ async function generateHeartbeat() {
     trackedCount: applicationsRows,
     evaluatedToday: reportsToday,
     newFromAlerts: inflow.emailNew,
+    newRoles: whatsNew.length,
+    runwayState,
+    runwayAlert: runwayAlertFiring,
+    outreachDue,
+    topRole,
   };
   return { body: lines.join('\n'), meta };
+}
+
+// Build the state-driven subject from meta (Phase 2 Day-1, 2026-05-17 —
+// replaces the static `[career-ops] heartbeat YYYY-MM-DD`). Format synthesizes
+// the council's reference pattern (finding #4 of the adjudicated optimization
+// report): emojis + key counts + date suffix. Skips empty fields so a quiet
+// day stays uncluttered.
+function buildHeartbeatSubject(meta) {
+  const { date, newRoles = 0, runwayAlert = false, runwayState = 'healthy', outreachDue = 0, trackedCount = 0 } = meta || {};
+
+  const alerting = newRoles >= 1 || runwayAlert === true || outreachDue >= 1;
+  if (!alerting) {
+    return `Steady · ${trackedCount} tracked — career-ops ${date}`;
+  }
+
+  const parts = [];
+  if (newRoles >= 1) {
+    parts.push(`✅ ${newRoles} new`);
+  }
+  if (runwayAlert) {
+    const glyph = runwayState === 'critical' ? '🚨' : '🔴';
+    parts.push(`${glyph} runway ${runwayState}`);
+  }
+  if (outreachDue >= 1) {
+    parts.push(`${outreachDue} outreach due`);
+  }
+  return `${parts.join(' · ')} — career-ops ${date}`;
+}
+
+// Build the hidden-preheader preview text (Phase 2 Day-1, 2026-05-17).
+// This is the line Gmail/Apple Mail show beside the subject in the inbox
+// list. Capped at ~110 chars to fit Gmail's preview width without truncation.
+function buildHeartbeatPreheader(meta) {
+  const { newRoles = 0, runwayAlert = false, runwayState = 'healthy', outreachDue = 0, trackedCount = 0, topRole = null } = meta || {};
+
+  const alerting = newRoles >= 1 || runwayAlert === true || outreachDue >= 1;
+  let text;
+  if (alerting) {
+    const topPart = topRole
+      ? `Top: ${topRole.name} (${Number(topRole.score).toFixed(2)}).`
+      : `Top: queue active.`;
+    text = `${topPart} Runway: ${runwayState}. Due: ${outreachDue} outreach.`;
+  } else {
+    text = `${trackedCount} tracked. ${newRoles} new today. Steady week.`;
+  }
+  if (text.length > 110) text = text.slice(0, 107).trimEnd() + '...';
+  return text;
 }
 
 async function main() {
@@ -1306,8 +1390,13 @@ async function main() {
     return;
   }
 
+  // State-driven subject (Phase 2 Day-1, 2026-05-17) — replaces the static
+  // `[career-ops] heartbeat YYYY-MM-DD`. Logged on every run so dry-runs
+  // surface what the subject WOULD be without sending.
+  const subject = buildHeartbeatSubject(meta);
+  console.log(`Subject: ${subject}`);
+
   if (SEND) {
-    const subject = `[career-ops] heartbeat ${TARGET_DATE}`;
     const id = await sendEmail({ subject, body, meta });
     console.log(`Heartbeat email sent. Message-ID: ${id}`);
   } else {
