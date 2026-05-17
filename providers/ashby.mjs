@@ -30,9 +30,18 @@ function parseCompensation(job) {
   const multiplier = INTERVAL_MULTIPLIERS[interval];
   if (!multiplier) return null;
 
-  const minValue = comp.minValue;
-  const maxValue = comp.maxValue;
-  const currency = comp.currency || '';
+  // Coerce and validate numeric fields — malformed API payloads must not propagate
+  const minValue = comp.minValue == null ? null : Number(comp.minValue);
+  const maxValue = comp.maxValue == null ? null : Number(comp.maxValue);
+  const currency = typeof comp.currency === 'string' ? comp.currency : '';
+
+  // Reject non-finite numbers (NaN, Infinity)
+  if (
+    (minValue != null && !Number.isFinite(minValue)) ||
+    (maxValue != null && !Number.isFinite(maxValue))
+  ) {
+    return null;
+  }
 
   // If neither min nor max is provided, no valid compensation
   if (minValue == null && maxValue == null) return null;
@@ -44,9 +53,12 @@ function parseCompensation(job) {
   // Must have at least one valid annual value
   if (min == null && max == null) return null;
 
+  // Ensure correct ordering (min <= max)
+  const resolvedMin = min ?? max;
+  const resolvedMax = max ?? min;
   return {
-    min: min ?? max,
-    max: max ?? min,
+    min: Math.min(resolvedMin, resolvedMax),
+    max: Math.max(resolvedMin, resolvedMax),
     currency: currency.toUpperCase(),
   };
 }
