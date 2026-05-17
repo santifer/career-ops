@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -42,17 +42,21 @@ function StatusSelect({ app }: { app: Application }) {
   )
 }
 
-function ReportDrawer({ app, onClose }: { app: Application; onClose: () => void }) {
+function ReportDrawer({ app, open, onClose }: { app: Application; open: boolean; onClose: () => void }) {
   const [content, setContent] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
+  const [fetchError, setFetchError] = useState(false)
 
-  useState(() => {
-    if (!app.reportNumber) { setLoading(false); return }
+  useEffect(() => {
+    if (!open || !app.reportNumber) return
+    setLoading(true)
+    setFetchError(false)
     fetch(`${BASE}/api/report/${app.reportNumber}`)
-      .then(r => r.ok ? r.json() : null)
-      .then(d => { setContent(d?.content ?? null); setLoading(false) })
-      .catch(() => setLoading(false))
-  })
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(d => setContent(d.content))
+      .catch(() => setFetchError(true))
+      .finally(() => setLoading(false))
+  }, [open, app.reportNumber])
 
   return (
     <div className="fixed inset-0 z-50 flex">
@@ -88,6 +92,8 @@ function ReportDrawer({ app, onClose }: { app: Application; onClose: () => void 
         <div className="flex-1 overflow-y-auto px-5 py-4">
           {loading ? (
             <p className="text-sm text-muted-foreground">Loading report…</p>
+          ) : fetchError ? (
+            <p className="text-sm text-red-500">Could not load report.</p>
           ) : content ? (
             <div
               className="prose prose-sm max-w-none
@@ -161,7 +167,7 @@ export function TrackerCard({ app }: { app: Application }) {
         </div>
       </div>
 
-      {drawerOpen && <ReportDrawer app={app} onClose={() => setDrawerOpen(false)} />}
+      {drawerOpen && <ReportDrawer app={app} open={drawerOpen} onClose={() => setDrawerOpen(false)} />}
     </>
   )
 }

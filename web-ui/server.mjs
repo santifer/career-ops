@@ -98,7 +98,7 @@ function parsePipeline() {
 function parseFollowUps() {
   const file = path.join(ROOT, 'data', 'follow-ups.md')
   if (!fs.existsSync(file)) {
-    fs.writeFileSync(file, '# Follow-ups\n\n| # | Type | App# | Company | Role | Channel | Contact | Date Sent | Notes |\n|---|------|------|---------|------|---------|---------|-----------|-------|\n')
+    fs.writeFileSync(file, '# Follow-ups\n\n| # | Company | Role | Applied Date | Last Contact | Next Action | Due Date | Notes |\n|---|---------|------|--------------|--------------|-------------|----------|-------|\n')
     return []
   }
   const lines = fs.readFileSync(file, 'utf8').split('\n')
@@ -110,36 +110,16 @@ function parseFollowUps() {
     if (cols[0] === '#' || cols[0].startsWith('-')) continue
     const num = parseInt(cols[0])
     if (isNaN(num)) continue
-    // Detect schema version: new schema has "outreach" or "follow-up" in col[1]
-    const isNewSchema = cols[1] === 'outreach' || cols[1] === 'follow-up'
-    if (isNewSchema) {
-      // New schema: # | Type | App# | Company | Role | Channel | Contact | Date Sent | Notes
-      if (cols.length < 9) continue
-      items.push({
-        number: num,
-        type: cols[1],
-        appNumber: cols[2],
-        company: cols[3],
-        role: cols[4],
-        channel: cols[5],
-        contact: cols[6],
-        dateSent: cols[7],
-        notes: cols[8] || '',
-      })
-    } else {
-      // Legacy schema: # | Company | Role | Applied Date | Last Contact | Next Action | Due Date | Notes
-      items.push({
-        number: num,
-        type: 'follow-up',
-        appNumber: '—',
-        company: cols[1],
-        role: cols[2],
-        channel: 'LinkedIn-DM',
-        contact: '',
-        dateSent: cols[3] || '',
-        notes: cols[7] || '',
-      })
-    }
+    items.push({
+      number: num,
+      company: cols[1],
+      role: cols[2],
+      appliedDate: cols[3],
+      lastContact: cols[4],
+      nextAction: cols[5],
+      dueDate: cols[6],
+      notes: cols[7] || '',
+    })
   }
   return items
 }
@@ -240,20 +220,12 @@ app.patch('/api/applications/:num', (req, res) => {
 })
 
 app.post('/api/followups', (req, res) => {
+  const { company, role, appliedDate, nextAction, dueDate, notes } = req.body
   const file = path.join(ROOT, 'data', 'follow-ups.md')
   const existing = parseFollowUps()
   const num = existing.length + 1
   const today = new Date().toISOString().slice(0, 10)
-  let row
-  if (req.body.type) {
-    // New schema path — from recruiter-find page
-    const { type, appNumber, company, role, channel, contact, dateSent, notes } = req.body
-    row = `| ${num} | ${type} | ${appNumber || '—'} | ${company} | ${role || ''} | ${channel || 'LinkedIn-Note'} | ${contact || ''} | ${dateSent || today} | ${notes || ''} |`
-  } else {
-    // Legacy path — from TrackButton / AddFollowUpForm
-    const { company, role, appliedDate } = req.body
-    row = `| ${num} | follow-up | — | ${company} | ${role || ''} | LinkedIn-DM |  | ${appliedDate || today} |  |`
-  }
+  const row = `| ${num} | ${company} | ${role} | ${appliedDate || today} | ${today} | ${nextAction || 'Follow up'} | ${dueDate || ''} | ${notes || ''} |`
   fs.appendFileSync(file, row + '\n')
   res.json({ ok: true })
 })
@@ -325,6 +297,7 @@ app.get('/api/evaluate/:jobId/stream', (req, res) => {
   req.on('close', () => job.clients.delete(res))
 })
 
+
 // --- Recruiter Find ---
 
 const rfJobs = new Map() // jobId -> { lines, done, error, clients }
@@ -356,18 +329,26 @@ Run the recruiter-find mode now. Output the connection note (with character coun
 
   const push = (line) => {
     job.lines.push(line)
-    for (const client of job.clients) client.write(`data: ${JSON.stringify({ line })}\n\n`)
+    for (const client of job.clients) client.write(`data: ${JSON.stringify({ line })}
+
+`)
   }
 
-  const stripAnsi = s => s.replace(/\x1B\[[0-9;]*m/g, '')
-  child.stdout.on('data', d => d.toString().split('\n').filter(Boolean).forEach(l => push(stripAnsi(l))))
-  child.stderr.on('data', d => d.toString().split('\n').filter(Boolean).forEach(l => push(`⚠ ${stripAnsi(l)}`)))
+  const stripAnsi = s => s.replace(/\[[0-9;]*m/g, '')
+  child.stdout.on('data', d => d.toString().split('
+').filter(Boolean).forEach(l => push(stripAnsi(l))))
+  child.stderr.on('data', d => d.toString().split('
+').filter(Boolean).forEach(l => push(`⚠ ${stripAnsi(l)}`)))
 
   child.on('close', (code) => {
     job.done = true
     job.error = code !== 0 ? `Process exited with code ${code}` : null
-    const msg = job.error ? `data: ${JSON.stringify({ done: true, error: job.error })}\n\n`
-                           : `data: ${JSON.stringify({ done: true })}\n\n`
+    const msg = job.error ? `data: ${JSON.stringify({ done: true, error: job.error })}
+
+`
+                           : `data: ${JSON.stringify({ done: true })}
+
+`
     for (const client of job.clients) { client.write(msg); client.end() }
     job.clients.clear()
     setTimeout(() => rfJobs.delete(jobId), 10 * 60 * 1000)
@@ -385,13 +366,190 @@ app.get('/api/recruiter-find/:jobId/stream', (req, res) => {
   res.setHeader('Connection', 'keep-alive')
   res.flushHeaders()
 
-  for (const line of job.lines) res.write(`data: ${JSON.stringify({ line })}\n\n`)
+  for (const line of job.lines) res.write(`data: ${JSON.stringify({ line })}
 
+`)
+
+  if (job.done) {
+    res.write(`data: ${JSON.stringify({ done: true, error: job.error })}
+
+`)
+    return res.end()
+  }
+
+  job.clients.add(res)
+  req.on('close', () => job.clients.delete(res))
+})
+
+// --- New routes ---
+
+// POST /api/pipeline — add a new URL to pipeline.md
+app.post('/api/pipeline', (req, res) => {
+  const { url, company = '', role = '' } = req.body
+  if (!url || !url.startsWith('http')) return res.status(400).json({ error: 'Invalid URL' })
+  const pipelineFile = path.join(ROOT, 'data', 'pipeline.md')
+  let content = ''
+  try { content = fs.readFileSync(pipelineFile, 'utf8') } catch { content = '# Pipeline\n\n## Pending\n\n' }
+  const parts = [url, company, role].filter(Boolean)
+  const line = `- [ ] ${parts.join(' | ')}\n`
+  const sectionIdx = content.indexOf('\n## ')
+  if (sectionIdx !== -1) {
+    const afterHeader = content.indexOf('\n', sectionIdx + 1) + 1
+    content = content.slice(0, afterHeader) + line + content.slice(afterHeader)
+  } else {
+    content += line
+  }
+  fs.writeFileSync(pipelineFile, content)
+  res.json({ ok: true })
+})
+
+// DELETE /api/followups/:num — remove a follow-up row
+app.delete('/api/followups/:num', (req, res) => {
+  const num = parseInt(req.params.num, 10)
+  const followupsFile = path.join(ROOT, 'data', 'follow-ups.md')
+  if (!fs.existsSync(followupsFile)) return res.json({ ok: true })
+  const lines = fs.readFileSync(followupsFile, 'utf8').split('\n')
+  const filtered = lines.filter(line => {
+    const cols = line.split('|').map(c => c.trim())
+    if (cols.length < 3) return true
+    return parseInt(cols[1], 10) !== num
+  })
+  fs.writeFileSync(followupsFile, filtered.join('\n'))
+  res.json({ ok: true })
+})
+
+// POST /api/scan — trigger scan.mjs
+const scanJobs = new Map()
+app.post('/api/scan', (req, res) => {
+  const { company } = req.body || {}
+  const jobId = randomUUID()
+  const args = ['scan.mjs', ...(company ? ['--company', company] : [])]
+  const child = spawn('node', args, { cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'] })
+  const job = { lines: [], done: false, error: null, clients: new Set() }
+  scanJobs.set(jobId, job)
+  function pushScanLine(line) {
+    job.lines.push(line)
+    const msg = `data: ${JSON.stringify({ line })}\n\n`
+    for (const client of job.clients) client.write(msg)
+  }
+  child.stdout.on('data', d => String(d).split('\n').filter(Boolean).forEach(pushScanLine))
+  child.stderr.on('data', d => String(d).split('\n').filter(Boolean).forEach(l => pushScanLine(`⚠ ${l}`)))
+  child.on('close', code => {
+    job.done = true
+    job.error = code !== 0 ? `Exited with code ${code}` : null
+    const msg = `data: ${JSON.stringify({ done: true, error: job.error })}\n\n`
+    for (const client of job.clients) { client.write(msg); client.end() }
+    job.clients.clear()
+    setTimeout(() => scanJobs.delete(jobId), 10 * 60 * 1000)
+  })
+  res.json({ jobId })
+})
+
+app.get('/api/scan/:jobId/stream', (req, res) => {
+  const job = scanJobs.get(req.params.jobId)
+  if (!job) return res.status(404).json({ error: 'Job not found' })
+  res.setHeader('Content-Type', 'text/event-stream')
+  res.setHeader('Cache-Control', 'no-cache')
+  res.setHeader('Connection', 'keep-alive')
+  res.flushHeaders()
+  for (const line of job.lines) res.write(`data: ${JSON.stringify({ line })}\n\n`)
   if (job.done) {
     res.write(`data: ${JSON.stringify({ done: true, error: job.error })}\n\n`)
     return res.end()
   }
+  job.clients.add(res)
+  req.on('close', () => job.clients.delete(res))
+})
 
+// GET /api/patterns — run analyze-patterns.mjs and return JSON
+app.get('/api/patterns', (req, res) => {
+  const child = spawn('node', ['analyze-patterns.mjs'], { cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'] })
+  let out = ''
+  let err = ''
+  child.stdout.on('data', d => out += d)
+  child.stderr.on('data', d => err += d)
+  child.on('close', code => {
+    if (code !== 0) return res.status(500).json({ error: err || `Exited ${code}` })
+    try { res.json(JSON.parse(out)) }
+    catch { res.status(500).json({ error: 'JSON parse failed', raw: out.slice(0, 500) }) }
+  })
+})
+
+// POST /api/batch — spawn N parallel evaluate jobs
+app.post('/api/batch', (req, res) => {
+  const { urls } = req.body
+  if (!Array.isArray(urls) || urls.length === 0) return res.status(400).json({ error: 'urls required' })
+  const jobIds = urls.map(url => {
+    const jobId = randomUUID()
+    const prompt = `Evaluate this job posting: ${url}\n\nFollow the full auto-pipeline: fetch the JD, run all evaluation blocks (A-G), save the report, generate the PDF if score >= 3.0, and update the tracker.`
+    const args = ['-p', '--output-format', 'text', '--dangerously-skip-permissions']
+    const child = spawn('claude', args, { cwd: ROOT, stdio: ['pipe', 'pipe', 'pipe'] })
+    child.stdin.write(prompt)
+    child.stdin.end()
+    const job = { lines: [], done: false, error: null, clients: new Set() }
+    jobs.set(jobId, job)
+    function pushLine(line) {
+      job.lines.push(line)
+      const msg = `data: ${JSON.stringify({ line })}\n\n`
+      for (const client of job.clients) client.write(msg)
+    }
+    child.stdout.on('data', d => String(d).split('\n').filter(Boolean).forEach(pushLine))
+    child.stderr.on('data', d => String(d).split('\n').filter(Boolean).forEach(l => pushLine(`⚠ ${l}`)))
+    child.on('close', code => {
+      job.done = true
+      job.error = code !== 0 ? `Exited with code ${code}` : null
+      const msg = `data: ${JSON.stringify({ done: true, error: job.error })}\n\n`
+      for (const client of job.clients) { client.write(msg); client.end() }
+      job.clients.clear()
+      setTimeout(() => jobs.delete(jobId), 10 * 60 * 1000)
+    })
+    return jobId
+  })
+  res.json({ jobIds })
+})
+
+// POST /api/pdf/:num — generate PDF for an application via claude pdf mode
+const pdfJobs = new Map()
+app.post('/api/pdf/:num', (req, res) => {
+  const num = req.params.num
+  const jobId = randomUUID()
+  const prompt = `Generate a tailored PDF CV for report number ${num}. Read modes/pdf.md and follow it completely. Read the report matching number ${num} from the reports/ directory, read cv.md, then generate the PDF.`
+  const args = ['-p', '--output-format', 'text', '--dangerously-skip-permissions']
+  const child = spawn('claude', args, { cwd: ROOT, stdio: ['pipe', 'pipe', 'pipe'] })
+  child.stdin.write(prompt)
+  child.stdin.end()
+  const job = { lines: [], done: false, error: null, clients: new Set() }
+  pdfJobs.set(jobId, job)
+  function pushPdfLine(line) {
+    job.lines.push(line)
+    const msg = `data: ${JSON.stringify({ line })}\n\n`
+    for (const client of job.clients) client.write(msg)
+  }
+  child.stdout.on('data', d => String(d).split('\n').filter(Boolean).forEach(pushPdfLine))
+  child.stderr.on('data', d => String(d).split('\n').filter(Boolean).forEach(l => pushPdfLine(`⚠ ${l}`)))
+  child.on('close', code => {
+    job.done = true
+    job.error = code !== 0 ? `Exited with code ${code}` : null
+    const msg = `data: ${JSON.stringify({ done: true, error: job.error })}\n\n`
+    for (const client of job.clients) { client.write(msg); client.end() }
+    job.clients.clear()
+    setTimeout(() => pdfJobs.delete(jobId), 10 * 60 * 1000)
+  })
+  res.json({ jobId })
+})
+
+app.get('/api/pdf/:jobId/stream', (req, res) => {
+  const job = pdfJobs.get(req.params.jobId)
+  if (!job) return res.status(404).json({ error: 'Job not found' })
+  res.setHeader('Content-Type', 'text/event-stream')
+  res.setHeader('Cache-Control', 'no-cache')
+  res.setHeader('Connection', 'keep-alive')
+  res.flushHeaders()
+  for (const line of job.lines) res.write(`data: ${JSON.stringify({ line })}\n\n`)
+  if (job.done) {
+    res.write(`data: ${JSON.stringify({ done: true, error: job.error })}\n\n`)
+    return res.end()
+  }
   job.clients.add(res)
   req.on('close', () => job.clients.delete(res))
 })

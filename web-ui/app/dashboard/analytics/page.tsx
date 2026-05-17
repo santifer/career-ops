@@ -105,7 +105,12 @@ export default async function AnalyticsPage() {
               : null
             return (
               <div key={stage.label} className="flex items-center gap-3">
-                <span className="text-xs text-muted-foreground w-20 shrink-0">{stage.label}</span>
+                <a
+                  href={`/dashboard/tracker?tab=${stage.label.toLowerCase()}`}
+                  className="text-xs text-muted-foreground w-20 shrink-0 hover:text-foreground hover:underline"
+                >
+                  {stage.label}
+                </a>
                 <div className="flex-1 h-5 bg-muted rounded-full overflow-hidden">
                   <div
                     className="h-full bg-primary rounded-full transition-all"

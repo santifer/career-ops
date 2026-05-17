@@ -8,17 +8,46 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3099"
 
+export function DeleteFollowUpButton({ num }: { num: number }) {
+  const router = useRouter()
+  const [deleting, setDeleting] = useState(false)
+
+  async function handleDelete() {
+    if (!confirm("Remove this follow-up?")) return
+    setDeleting(true)
+    try {
+      await fetch(`${BASE}/api/followups/${num}`, { method: "DELETE" })
+      router.refresh()
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  return (
+    <button
+      onClick={handleDelete}
+      disabled={deleting}
+      className="text-muted-foreground hover:text-red-500 disabled:opacity-40 text-sm leading-none px-1"
+      title="Remove follow-up"
+    >
+      {deleting ? "…" : "×"}
+    </button>
+  )
+}
+
 export function TrackButton({ company, role, appliedDate }: { company: string; role: string; appliedDate: string }) {
   const router = useRouter()
   const [tracking, setTracking] = useState(false)
 
   async function handleTrack() {
     setTracking(true)
+    const today = new Date()
+    const dueDate = new Date(today.getTime() + 7 * 86400000).toISOString().slice(0, 10)
     try {
       await fetch(`${BASE}/api/followups`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ company, role, appliedDate }),
+        body: JSON.stringify({ company, role, appliedDate, nextAction: "Follow up via email", dueDate }),
       })
       router.refresh()
     } finally {
@@ -38,12 +67,11 @@ export function AddFollowUpForm() {
   const [open, setOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({
-    company: "", role: "", contact: "", channel: "LinkedIn-DM", notes: "", dateSent: "",
+    company: "", role: "", appliedDate: "", nextAction: "Follow up via email", dueDate: "",
   })
 
   function field(k: keyof typeof form) {
-    return (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
-      setForm(f => ({ ...f, [k]: e.target.value }))
+    return (e: React.ChangeEvent<HTMLInputElement>) => setForm(f => ({ ...f, [k]: e.target.value }))
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -54,18 +82,9 @@ export function AddFollowUpForm() {
       await fetch(`${BASE}/api/followups`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "follow-up",
-          appNumber: "—",
-          company: form.company,
-          role: form.role,
-          channel: form.channel,
-          contact: form.contact,
-          dateSent: form.dateSent,
-          notes: form.notes,
-        }),
+        body: JSON.stringify(form),
       })
-      setForm({ company: "", role: "", contact: "", channel: "LinkedIn-DM", notes: "", dateSent: "" })
+      setForm({ company: "", role: "", appliedDate: "", nextAction: "Follow up via email", dueDate: "" })
       setOpen(false)
       router.refresh()
     } finally {
@@ -93,22 +112,16 @@ export function AddFollowUpForm() {
             <Input placeholder="Role" value={form.role} onChange={field("role")} />
           </div>
           <div className="grid grid-cols-2 gap-2">
-            <Input placeholder="Contact name" value={form.contact} onChange={field("contact")} />
-            <select
-              value={form.channel}
-              onChange={field("channel")}
-              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs"
-            >
-              <option value="LinkedIn-Note">LinkedIn Note</option>
-              <option value="LinkedIn-DM">LinkedIn DM</option>
-              <option value="Email">Email</option>
-            </select>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Applied date</label>
+              <Input type="date" value={form.appliedDate} onChange={field("appliedDate")} />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Due date</label>
+              <Input type="date" value={form.dueDate} onChange={field("dueDate")} />
+            </div>
           </div>
-          <div>
-            <label className="text-xs text-muted-foreground mb-1 block">Date sent</label>
-            <Input type="date" value={form.dateSent} onChange={field("dateSent")} />
-          </div>
-          <Input placeholder="Notes (optional)" value={form.notes} onChange={field("notes")} />
+          <Input placeholder="Next action" value={form.nextAction} onChange={field("nextAction")} />
           <div className="flex gap-2 mt-1">
             <Button type="submit" size="sm" disabled={saving || !form.company.trim()}>
               {saving ? "Saving…" : "Save"}

@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Metadata } from "next"
 import { PipelineActions } from "./pipeline-actions"
+import { AddToPipelineForm } from "./pipeline-add"
 
 export const metadata: Metadata = { title: "Pipeline — career-ops" }
 
@@ -79,6 +80,7 @@ export default async function PipelinePage({
               : ""}
           </p>
         </div>
+        <AddToPipelineForm />
       </div>
 
       {/* Search */}
@@ -173,7 +175,7 @@ export default async function PipelinePage({
             <div key={idx} className="flex items-center gap-3 rounded-lg border px-3 py-2 opacity-50">
               <span className="text-green-700 text-sm">✓</span>
               <span className="text-sm truncate flex-1">{item.company && item.role ? `${item.company} — ${item.role}` : item.url}</span>
-              <PipelineActions url={item.url} />
+              <PipelineActions url={item.url} done={true} />
             </div>
           ))}
         </div>
