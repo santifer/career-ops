@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Market Positioning Analysis</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      font-size: 11pt;
+      line-height: 1.6;
+      color: #0f172a;
+      background: white;
+    }
+
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      margin: 0 auto;
+      padding: 2cm 2.5cm;
+    }
+
+    /* Header */
+    .doc-header {
+      border-bottom: 3px solid #1e40af;
+      padding-bottom: 16px;
+      margin-bottom: 28px;
+    }
+
+    .doc-header h1 {
+      font-size: 20pt;
+      font-weight: 700;
+      color: #1e40af;
+      letter-spacing: -0.5px;
+    }
+
+    .doc-header .subtitle {
+      font-size: 10pt;
+      color: #64748b;
+      margin-top: 4px;
+    }
+
+    .doc-header .meta-chips {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .chip {
+      background: #eff6ff;
+      color: #1d4ed8;
+      font-size: 9pt;
+      font-weight: 600;
+      padding: 2px 10px;
+      border-radius: 20px;
+      border: 1px solid #bfdbfe;
+    }
+
+    /* Sections */
+    h2 {
+      font-size: 13pt;
+      font-weight: 700;
+      color: #1e293b;
+      margin-top: 28px;
+      margin-bottom: 12px;
+      padding-bottom: 6px;
+      border-bottom: 1.5px solid #e2e8f0;
+    }
+
+    h3 {
+      font-size: 11pt;
+      font-weight: 600;
+      color: #334155;
+      margin-top: 16px;
+      margin-bottom: 8px;
+    }
+
+    p {
+      margin-bottom: 8px;
+      color: #1e293b;
+    }
+
+    /* Lists */
+    ul, ol {
+      padding-left: 20px;
+      margin-bottom: 10px;
+    }
+
+    li {
+      margin-bottom: 4px;
+      color: #1e293b;
+    }
+
+    li strong {
+      color: #0f172a;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 16px;
+      font-size: 10pt;
+    }
+
+    thead tr {
+      background: #1e40af;
+      color: white;
+    }
+
+    thead th {
+      padding: 8px 10px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 9.5pt;
+    }
+
+    tbody tr:nth-child(even) {
+      background: #f8fafc;
+    }
+
+    tbody tr:hover {
+      background: #eff6ff;
+    }
+
+    tbody td {
+      padding: 7px 10px;
+      border-bottom: 1px solid #e2e8f0;
+      color: #1e293b;
+    }
+
+    /* Score badges */
+    .score-high { color: #065f46; font-weight: 700; }
+    .score-mid  { color: #92400e; font-weight: 700; }
+    .score-low  { color: #7f1d1d; font-weight: 700; }
+
+    /* Priority indicators */
+    .priority-hot  { color: #dc2626; font-weight: 700; }
+    .priority-warm { color: #d97706; font-weight: 700; }
+    .priority-cool { color: #6b7280; }
+
+    /* Callout boxes */
+    .callout {
+      background: #eff6ff;
+      border-left: 4px solid #1d4ed8;
+      padding: 12px 16px;
+      border-radius: 0 6px 6px 0;
+      margin-bottom: 16px;
+    }
+
+    .callout.warning {
+      background: #fefce8;
+      border-left-color: #ca8a04;
+    }
+
+    .callout.success {
+      background: #f0fdf4;
+      border-left-color: #16a34a;
+    }
+
+    .callout p {
+      margin: 0;
+      font-size: 10.5pt;
+    }
+
+    /* Salary section */
+    .salary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .salary-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px 14px;
+      text-align: center;
+    }
+
+    .salary-card .label {
+      font-size: 9pt;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+
+    .salary-card .value {
+      font-size: 16pt;
+      font-weight: 700;
+      color: #1e40af;
+    }
+
+    .salary-card .sub {
+      font-size: 9pt;
+      color: #94a3b8;
+      margin-top: 2px;
+    }
+
+    /* Notes section */
+    .notes-area {
+      border: 1.5px dashed #cbd5e1;
+      border-radius: 8px;
+      padding: 16px;
+      min-height: 80px;
+      color: #94a3b8;
+      font-style: italic;
+      font-size: 10pt;
+    }
+
+    /* Footer */
+    .doc-footer {
+      margin-top: 32px;
+      padding-top: 12px;
+      border-top: 1px solid #e2e8f0;
+      font-size: 8.5pt;
+      color: #94a3b8;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* Page break helpers */
+    .page-break { page-break-after: always; }
+    .no-break { page-break-inside: avoid; }
+
+    @media print {
+      body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      .page { padding: 1.5cm 2cm; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <!-- Header — preenchido pelo modo analysis -->
+    <div class="doc-header">
+      <h1>{{TITLE}}</h1>
+      <div class="subtitle">{{SUBTITLE}}</div>
+      <div class="meta-chips">
+        {{META_CHIPS}}
+      </div>
+    </div>
+
+    <!-- Conteúdo gerado pelo modo analysis.md -->
+    {{CONTENT}}
+
+    <div class="doc-footer">
+      <span>career-ops · análise de posicionamento de mercado</span>
+      <span>{{DATE}}</span>
+    </div>
+  </div>
+</body>
+</html>

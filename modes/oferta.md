@@ -197,6 +197,23 @@ Guardar evaluación completa en `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 (lista de 15-20 keywords del JD para ATS optimization)
 ```
 
+### 1b. Incluir "Form Answers — Copy/Paste Manual" em TODOS os reports
+
+Independente do score, sempre adicionar esta seção antes de Keywords Extraídas:
+
+```markdown
+## Form Answers — Copy/Paste Manual
+*(Campos que o auto-fill pode não preencher — preencher manualmente no form)*
+
+**When is the earliest you would want to start working with us?**
+> I'm available immediately — no notice period. Ready to start as soon as we align on the details.
+
+**Do you have any deadlines or timeline considerations we should be aware of?**
+> No specific deadlines. I'm available immediately and ready to move at whatever pace works for your team.
+```
+
+Se a empresa tiver perguntas específicas no formulário além dessas, adicionar as respostas abaixo nessa mesma seção.
+
 ### 2. Registrar en tracker
 
 **SIEMPRE** registrar en `data/applications.md`:
