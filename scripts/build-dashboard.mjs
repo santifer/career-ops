@@ -1304,6 +1304,14 @@ function _parseTldr(text) {
 function _parsePositioning(text) {
   const block = _extractSection(text, [/^## C\)[^\n]*$/m, /^## Block C\b[^\n]*$/m, /^## Bloque C\b[^\n]*$/m]);
   if (!block) return '';
+  // 2026-05-17 — if the positioning block contains a markdown table
+  // ("### Level Assessment | ... |" then "|-----|"), capture the whole table
+  // verbatim WITH NEWLINES so renderHowToPosition can route it through marked.
+  // (Old logic collapsed everything to one line, breaking table rendering.)
+  const tableMatch = block.match(/(### [^\n]+\n+\|[^\n]+\|\n\|[\s\-:|]+\|\n(?:\|[^\n]+\|\n?)+)/);
+  if (tableMatch) {
+    return tableMatch[1].replace(/\*\*/g, '').trim().slice(0, 1800);
+  }
   // New format: "- **Positioning:** <prose>" bullet
   const bulletMatch = block.match(/\*\*Positioning:\*\*\s*([^\n]{30,})/);
   if (bulletMatch) return bulletMatch[1].replace(/\*\*/g, '').trim().slice(0, 600);
@@ -1991,8 +1999,81 @@ function _stripCellMarkup(s) {
     .replace(/\s+→\s*/g, ' → ')            // normalize arrow spacing
     .replace(/^\s+|\s+$/g, '');
 }
-function renderFitEvidence(raw, limit = 320) {
-  const cleaned = _stripCellMarkup(raw).slice(0, limit);
+// Render "How to position" content. Council-eval reports often include a
+// markdown table ("| Dimension | JD Signal | ... |"); legacy reports use
+// loose paragraphs. Detect a markdown table and route through marked so
+// pipes/dashes become an actual <table>. Fall back to escape+<br> for prose.
+function renderHowToPosition(raw) {
+  if (!raw) return '';
+  let s = String(raw).trim();
+  // Heuristic: a markdown table has at least one row with 2+ pipes AND
+  // (multi-line) a separator row of dashes-with-pipes, OR (single-line)
+  // the same separator embedded inline (with or without preceding header).
+  const hasMultiLineTable = /\|[^\n]*\|/.test(s) && /\n\s*\|?[\s\-:|]+\|[\s\-:|]+/.test(s);
+  const hasSingleLineTable = !/\n/.test(s) && /\|\s*-{3,}.*?\|/.test(s) && /\|[^\n|]+\|/.test(s);
+  const hasTable = hasMultiLineTable || hasSingleLineTable;
+  if (hasTable) {
+    let normalized = s;
+    // Single-line pipe-blob → multi-line. ONLY apply when there are no
+    // newlines (otherwise we corrupt already-valid markdown like the
+    // multi-line case where ` |-----| ` is already on its own row).
+    if (hasSingleLineTable && !/\n\s*\|/.test(s)) {
+      // 1. Split inline `### Header | A | B |` so header line ends.
+      normalized = normalized.replace(/^(#{1,4}\s+[^\n|]+?)\s*(\|)/m, '$1\n$2');
+      // 2. Force the separator row onto its own line.
+      normalized = normalized.replace(/(\|\s*-{3,}[\s\-:|]*\|)/g, '\n$1\n');
+      // 3. Split between adjacent rows (` | | ` pattern across rows).
+      normalized = normalized.replace(/\|\s+\|/g, '|\n|');
+    }
+    // For valid multi-line input, ensure trailing rows have closing pipes
+    // (some reports truncate mid-row). Drop incomplete trailing lines.
+    normalized = normalized.split('\n').filter((line, idx, arr) => {
+      // Drop any non-final line that opens a table row but doesn't close it
+      // with `|` — marked treats those as broken and aborts the table.
+      const isTableLine = /^\s*\|/.test(line);
+      if (!isTableLine) return true;
+      if (/\|\s*$/.test(line)) return true;
+      // Incomplete trailing row — drop it (and only it).
+      return idx < arr.length - 1 ? /\|\s*$/.test(line) : false;
+    }).join('\n');
+    normalized = normalized.replace(/\n{3,}/g, '\n\n');
+    try {
+      const parsed = marked.parse(normalized);
+      if (/<table[\s>]/.test(parsed)) return parsed;
+    } catch (_) {
+      // Fall through to escape+<br> on parse error
+    }
+  }
+  return htmlEscape(s).replace(/\n/g, '<br>');
+}
+
+// 2026-05-17 — Mitchell flagged What Fits cutting mid-sentence ("Two pha").
+// Truncation strategy: keep limit as a soft cap, but extend to the next
+// sentence/period/em-dash boundary so we never end mid-word. If still over
+// 2× limit, hard-truncate with an ellipsis. Old default raised 320→480.
+function _truncateOnSentenceBoundary(s, softLimit, hardLimit) {
+  if (!s) return '';
+  if (s.length <= softLimit) return s;
+  // Find a sentence ending after softLimit but before hardLimit.
+  const slice = s.slice(0, hardLimit);
+  const after = slice.slice(softLimit);
+  // Prefer ". " over "! " / "? "; fall back to em-dash, then comma+space.
+  const candidates = [
+    after.search(/\.\s+[A-Z]/),
+    after.search(/[!?]\s+[A-Z]/),
+    after.search(/\s+—\s+/),
+    after.search(/,\s+/),
+  ].map(idx => idx >= 0 ? idx + softLimit + 1 : -1)
+   .filter(i => i > softLimit);
+  const boundary = candidates.length ? Math.min(...candidates) : -1;
+  if (boundary > 0 && boundary <= hardLimit) return s.slice(0, boundary).trim();
+  // Hard cap with ellipsis if no good boundary found.
+  return s.slice(0, hardLimit).trim().replace(/[\s,;:]+$/, '') + '…';
+}
+
+function renderFitEvidence(raw, limit = 480) {
+  const fullClean = _stripCellMarkup(raw);
+  const cleaned = _truncateOnSentenceBoundary(fullClean, limit, limit * 2);
   if (!cleaned) return '';
   // Split into segments on real newlines (formerly <br>) and the
   // explicit "→" continuation marker. Drop empty pieces.
@@ -2090,6 +2171,81 @@ function companyCareersUrl(company) {
 // ── Tracker note formatter ──────────────────────────────────────────
 // Parses the dense notes field from applications.md into structured HTML:
 // re-eval badge → decision badge → semicolon-split bullet list.
+//
+// 2026-05-17 — Mitchell flagged the tracker note as "too technical." Added
+// _translateTechnicalToPlain() which runs over every bullet and decision
+// label to convert jargon (RE-EVAL, GATES, Phase-N, flag-CAPS, corpus-ranked)
+// into plain English without losing the underlying meaning.
+function _translateTechnicalToPlain(s) {
+  if (!s) return s;
+  let out = String(s);
+
+  // "RE-EVAL YYYY-MM-DD (Phase X): A/5→B/5 (Δ+0.NN) · GATES: none fired · Decision: APPLY"
+  // → "Re-evaluated YYYY-MM-DD (Phase X): score improved from A to B (+0.NN). No blocking gates triggered. Decision: Apply."
+  out = out.replace(/RE-EVAL\s+(\d{4}-\d{2}-\d{2})(?:\s*\(([^)]+)\))?:\s*([\d.]+)\/5\s*[→\->]\s*([\d.]+)\/5/gi,
+    (_, date, phase, a, b) => {
+      const delta = (parseFloat(b) - parseFloat(a)).toFixed(2);
+      const dir = delta >= 0 ? 'improved' : 'dropped';
+      const sign = delta >= 0 ? '+' : '';
+      const phaseStr = phase ? ` (${phase})` : '';
+      return `Re-evaluated ${date}${phaseStr}: score ${dir} from ${a} to ${b} (${sign}${delta})`;
+    });
+  out = out.replace(/\bΔ\s*([+-]?[\d.]+)/g, '$1');
+  out = out.replace(/\bGATES:\s*none\s+fired\b/gi, 'No blocking gates triggered');
+  out = out.replace(/\bGATES:\s*([^·\n]+)\bfired/gi, 'Gates triggered: $1');
+  out = out.replace(/\bDecision:\s*APPLY\b/g, 'Decision: Apply');
+  out = out.replace(/\bDecision:\s*SKIP\b/g, 'Decision: Skip');
+  out = out.replace(/\bDecision:\s*DEFER\b/g, 'Decision: Defer');
+
+  // "#1 corpus-ranked Mitchell-shaped open Anthropic role"
+  // → "Top-ranked open role aligned with my profile across the Anthropic posting set"
+  out = out.replace(/#1\s+corpus-ranked\s+Mitchell-shaped\s+open\s+([A-Za-z][\w\s]+?)\s+role/gi,
+    'Top-ranked open role at $1 aligned with my profile');
+  out = out.replace(/Mitchell-shaped/gi, 'aligned with my profile');
+  out = out.replace(/\bcorpus-ranked\b/gi, 'system-ranked');
+
+  // "ANTHROPIC-POSTING + EQUITY-RISK-PROFILE flags fired"
+  // → "Anthropic posting cooldown and equity-risk profile flags raised"
+  out = out.replace(/\b([A-Z][A-Z0-9_-]{2,})-FLAG-?(?:FIRED|RAISED)?\b/g, (full, raw) => {
+    return raw.toLowerCase().replace(/[-_]/g, ' ') + ' flag raised';
+  });
+  out = out.replace(/\b([A-Z][A-Z0-9_-]{3,})\s+flag(?:s)?\s+fired\b/g, (full, raw) => {
+    return raw.toLowerCase().replace(/[-_]/g, ' ') + ' flag raised';
+  });
+  // Multi-flag list: "FOO + BAR + BAZ flags fired"
+  out = out.replace(/\b([A-Z][A-Z0-9_-]{3,}(?:\s*\+\s*[A-Z][A-Z0-9_-]{3,})+)\s+flags?\s+fired\b/g, (full, raw) => {
+    const list = raw.split(/\s*\+\s*/).map(f => f.toLowerCase().replace(/[-_]/g, ' '));
+    if (list.length <= 2) return `${list.join(' and ')} flags raised`;
+    return `${list.slice(0, -1).join(', ')}, and ${list.slice(-1)} flags raised`;
+  });
+
+  // "Stage 5 re-eval with Grok active"
+  // → "Re-evaluated in stage 5 with Grok research applied"
+  out = out.replace(/\bStage\s+(\d+)\s+re-eval\s+with\s+([A-Za-z]+)\s+active\b/gi,
+    'Re-evaluated in stage $1 with $2 research applied');
+  out = out.replace(/\bPhase\s+([A-E])\b/gi, 'Phase $1');
+  out = out.replace(/\bphase\s+(\d+)\s+re-eval\b/gi, 're-evaluated in phase $1');
+
+  // "(was 4.60 in [001](reports/001-...))" → "(previous score: 4.60 — see report 001)"
+  out = out.replace(/\(was\s+([\d.]+)\s+in\s+\[(\d+)\]\([^)]+\)\)/g,
+    '(previous score: $1 — see report $2)');
+
+  // "Cultural Signals dropped 5→4 on fresh intel"
+  // → "Cultural signals lowered from 5 to 4 based on fresh research"
+  out = out.replace(/\b([A-Z][\w\s]+?)\s+dropped\s+(\d+(?:\.\d+)?)\s*[→\->]\s*(\d+(?:\.\d+)?)\s+on\s+fresh\s+intel\b/gi,
+    '$1 lowered from $2 to $3 based on fresh research');
+  out = out.replace(/\b([A-Z][\w\s]+?)\s+raised\s+(\d+(?:\.\d+)?)\s*[→\->]\s*(\d+(?:\.\d+)?)\s+on\s+fresh\s+intel\b/gi,
+    '$1 raised from $2 to $3 based on fresh research');
+
+  // "Tier B" / "Tier A1" → keep but make scannable
+  // "Previous notes: Tier B" → "Previously categorized as Tier B"
+  out = out.replace(/\bPrevious\s+notes?:\s*Tier\s+([A-Z]\d?)\b/gi, 'Previously categorized as Tier $1');
+
+  // Cleanup extra middots / spaces
+  out = out.replace(/\s*·\s*/g, ' · ').replace(/\s{2,}/g, ' ').trim();
+  return out;
+}
+
 function formatTrackerNote(text) {
   if (!text || !text.trim()) return '';
   const esc = htmlEscape; // reuse existing htmlEscape helper
@@ -2123,23 +2279,29 @@ function formatTrackerNote(text) {
   // Build HTML
   let html = '<div class="tn-wrap">';
 
-  // Header row: re-eval badges + decision badge
+  // Header row: re-eval badges + decision badge — translated to plain English
   if (reevals.length || decision) {
     html += '<div class="tn-header">';
     for (const re of reevals) {
-      html += `<span class="tn-reeval">${esc(re)}</span>`;
+      html += `<span class="tn-reeval">${esc(_translateTechnicalToPlain(re))}</span>`;
     }
-    if (decision) html += `<span class="${esc(decisionClass)}">${esc(decision)}</span>`;
+    if (decision) {
+      const plainDec = decision.replace(/^APPLY/, 'Apply').replace(/^SKIP/, 'Skip').replace(/^DEFER/, 'Defer');
+      html += `<span class="${esc(decisionClass)}">${esc(plainDec)}</span>`;
+    }
     html += '</div>';
   }
 
-  // Body: bullet list or single paragraph
+  // Body: translate each bullet from technical to plain language
   if (bullets.length > 1) {
     html += '<ul class="tn-list">';
-    for (const b of bullets) html += `<li>${esc(b.replace(/;\s*$/, ''))}</li>`;
+    for (const b of bullets) {
+      const plain = _translateTechnicalToPlain(b.replace(/;\s*$/, ''));
+      html += `<li>${esc(plain)}</li>`;
+    }
     html += '</ul>';
   } else if (bullets.length === 1) {
-    html += `<p class="tn-text">${esc(bullets[0])}</p>`;
+    html += `<p class="tn-text">${esc(_translateTechnicalToPlain(bullets[0]))}</p>`;
   }
 
   html += '</div>';
@@ -2202,9 +2364,12 @@ function renderRow(r, idx) {
     <div class="dcard-body">${htmlEscape(tldr)}</div>
   </div>` : '';
 
+  // 2026-05-17 — Mitchell flagged "How to position" rendering as raw markdown
+  // ('### Level Assessment | Dimension | ...'). Route through marked so
+  // tables/headers/lists become real HTML. Wrap in `.htp-md` for table styling.
   const posCard = positioning ? `<div class="dcard" style="margin-bottom:8px">
     <div class="dcard-label">How to position</div>
-    <div class="dcard-body">${htmlEscape(positioning).replace(/\n/g, '<br>')}</div>
+    <div class="dcard-body htp-md">${renderHowToPosition(positioning)}</div>
   </div>` : '';
 
   // ── Card 1: Match (green / WHAT FITS) ────────────────────
@@ -2215,7 +2380,7 @@ function renderRow(r, idx) {
         <span class="match-icon">${e.score >= 4 ? '✓' : '~'}</span>
         <div>
           <div class="match-req">${htmlEscape(String(e.requirement || '').replace(/\*\*/g, '').slice(0, 110))}</div>
-          <div class="match-ev">${renderFitEvidence(e.evidence, 320)}</div>
+          <div class="match-ev">${renderFitEvidence(e.evidence, 480)}</div>
         </div>
       </li>`).join('')}
     </ul>
@@ -4872,6 +5037,17 @@ function build() {
   .dcard { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; }
   .dcard-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-4); margin-bottom: 6px; }
   .dcard-body { font-size: 12.5px; line-height: 1.55; color: var(--text-2); }
+  /* How-to-position markdown rendering — real table, not pipe-separated prose. */
+  .htp-md table { width: 100%; border-collapse: collapse; margin: 6px 0; font-size: 12px; }
+  .htp-md th, .htp-md td { padding: 6px 8px; border: 1px solid var(--border); text-align: left; vertical-align: top; }
+  .htp-md th { background: var(--surface-hover, rgba(0,0,0,0.04)); font-weight: 600; color: var(--text-1); }
+  .htp-md td { color: var(--text-2); }
+  .htp-md h3, .htp-md h4 { font-size: 12.5px; font-weight: 600; margin: 8px 0 4px; color: var(--text-1); text-transform: none; letter-spacing: 0; }
+  .htp-md p { margin: 4px 0; }
+  .htp-md ul, .htp-md ol { margin: 4px 0; padding-left: 18px; }
+  .htp-md li { margin: 2px 0; }
+  .htp-md strong { color: var(--text-1); font-weight: 600; }
+  .htp-md code { background: var(--surface-hover, rgba(0,0,0,0.04)); padding: 1px 4px; border-radius: 3px; font-size: 11.5px; }
   .dcard-gaps { display: flex; flex-wrap: wrap; gap: 4px; }
   .gap-chip {
     font-size: 11px; padding: 2px 8px;
@@ -8336,7 +8512,7 @@ function applyUniversalTableBaseline(opts) {
         if (th.querySelector('.col-resize-handle')) return;
         var handle = document.createElement('div');
         handle.className = 'col-resize-handle';
-        handle.title = 'Drag to resize · right-click to reset';
+        handle.title = 'Drag to resize · double-click to auto-fit · right-click to reset';
         handle.setAttribute('aria-hidden', 'true');
         var colKey = th.dataset.colKey || ('col-' + idx);
         var storageKey = 'careerops.colwidth.' + tableId + '.' + colKey;
@@ -8357,6 +8533,46 @@ function applyUniversalTableBaseline(opts) {
           th.style.width = '';
           if (typeof window.showToast === 'function') {
             window.showToast('Column width reset');
+          }
+        });
+
+        // 2026-05-17 — Mitchell requested: double-click the resize handle to
+        // auto-fit the column to its content (Excel-style). Measure the
+        // widest cell in this column and set width to that + padding.
+        handle.addEventListener('dblclick', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          try {
+            // Find this column's index among visible THs (skip bulk col).
+            var colIdx = -1;
+            var allThs = Array.prototype.slice.call(table.querySelectorAll('thead th'));
+            for (var i = 0; i < allThs.length; i++) {
+              if (allThs[i] === th) { colIdx = i; break; }
+            }
+            if (colIdx < 0) return;
+            // Sample header + up to 200 body rows; measure scrollWidth.
+            var maxW = th.scrollWidth || th.offsetWidth || 60;
+            var rows = table.querySelectorAll('tbody tr');
+            var sampleLimit = Math.min(200, rows.length);
+            for (var r = 0; r < sampleLimit; r++) {
+              var cell = rows[r].cells && rows[r].cells[colIdx];
+              if (!cell) continue;
+              // Temporarily allow the cell to expand to natural width.
+              var prevWS = cell.style.whiteSpace;
+              cell.style.whiteSpace = 'nowrap';
+              var w = cell.scrollWidth;
+              cell.style.whiteSpace = prevWS;
+              if (w > maxW) maxW = w;
+            }
+            // Add small padding; clamp to reasonable range.
+            var finalW = Math.min(640, Math.max(60, maxW + 16));
+            th.style.width = finalW + 'px';
+            try { localStorage.setItem(storageKey, String(finalW)); } catch (_) {}
+            if (typeof window.showToast === 'function') {
+              window.showToast('Column auto-fitted to ' + finalW + 'px');
+            }
+          } catch (err) {
+            console && console.warn && console.warn('[utb] autofit', err);
           }
         });
 
