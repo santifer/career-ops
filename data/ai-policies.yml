@@ -1,0 +1,279 @@
+# Per-Company AI-in-Applications Policy Registry
+#
+# Authoritative source for Phase 3 output-pipeline guardrails. Every entry must
+# be backed by a primary-source URL or explicitly marked as inference.
+#
+# Schema:
+#   {company-slug}:
+#     status: explicit-policy | no-explicit-policy-stated | inference-only
+#     source: primary-source URL
+#     ai_in_prep: allowed | prohibited | unknown | conditional
+#     ai_in_assessments: allowed | prohibited | unknown
+#     ai_in_interviews: allowed | prohibited | unknown
+#     disclosure_required: yes | no | implicit | unknown
+#     consequences: <if any>
+#     notes: 1-2 line summary
+#     verified_date: YYYY-MM-DD
+#
+# Updated by: Phase 4 ingest pipeline (when policies change) and manual edits.
+# Used by: scripts/build-apply-pack.mjs, scripts/build-apply-orchestrator.mjs,
+#          scripts/humanize-check.mjs (for per-company threshold)
+#
+# Initial seed: 2026-05-17. Web-verified entries (microsoft, amazon, anthropic,
+# meta) from data/autonomous-build-preflight-2026-05-17.md and
+# data/output-pipeline-strategy-2026-05-17.md (dealbreaker-adjudicated).
+#
+# Stub entries (anthropic-status-pending, openai, google, apple, mistral, etc.)
+# are placeholders Mitchell or the ingest pipeline should verify before
+# trusting in any application decision.
+
+version: 1
+last_updated: 2026-05-17
+
+policies:
+
+  # ============================================================================
+  # WEB-VERIFIED ENTRIES (primary source on file)
+  # ============================================================================
+
+  microsoft:
+    status: no-explicit-policy-stated
+    source: https://careers.microsoft.com/v2/global/en/transparency.html
+    ai_in_prep: allowed              # not addressed = not restricted
+    ai_in_assessments: unknown       # assume-prohibited for live-proctored
+    ai_in_interviews: unknown        # assume-prohibited for live-proctored
+    disclosure_required: unknown
+    consequences: ~
+    notes: |
+      Microsoft's Transparency FAQ describes Microsoft's USE of AI (Eightfold
+      platform) in hiring; does NOT state a candidate-side AI policy. Phase 3
+      dealbreaker softened the "FORBIDS AI" framing to "responsible use in
+      prep, not during assessments." Treat as permissive in prep; assume any
+      live/proctored assessment prohibits AI by default.
+    verified_date: 2026-05-17
+
+  amazon:
+    status: explicit-policy
+    source: https://www.itpro.com/business/careers-and-training/amazon-bans-ai-tools-during-job-interviews
+    ai_in_prep: allowed              # not addressed in the policy scope
+    ai_in_assessments: prohibited    # interview-scope policy covers assessments
+    ai_in_interviews: prohibited
+    disclosure_required: implicit    # any AI use during interview is prohibited
+    consequences: disqualification-possible
+    detection_signals_reported:
+      - typing during questions
+      - reading responses
+      - wandering eyes
+    notes: |
+      Quoted policy: "To ensure a fair and transparent recruitment process,
+      please do not use GenAI tools during your interview unless explicitly
+      permitted." Scope is INTERVIEWS specifically; resume/application prep
+      is NOT restricted.
+    verified_date: 2026-05-17
+
+  anthropic:
+    status: explicit-policy-reversed
+    source: https://fortune.com/2025/07/21/billion-dollar-giant-anthropic-ai-ban-hiring-policy-change-job-seekers-interview-process/
+    prior_policy_source: https://www.entrepreneur.com/business-news/ai-startup-anthropic-to-job-seekers-no-ai-on-applications/486645
+    ai_in_prep: allowed              # July 2025 reversal: AI-refined resumes / cover letters permitted
+    ai_in_assessments: prohibited    # live assessments remain off-limits
+    ai_in_interviews: prohibited     # live interviews remain off-limits
+    disclosure_required: unknown
+    consequences: ~
+    policy_history:
+      - 2025-05: original ban on AI in applications announced
+      - 2025-07-21: policy reversed; AI-refined materials permitted
+      - 2026-05-17: still permissive per latest verification
+    notes: |
+      Phase 3 council had the May-2025 ban as current; dealbreaker caught
+      the July 2025 reversal and corrected it. Today: AI-refined resume/cover
+      letter/application content is permitted; only live assessments and
+      interviews remain off-limits. Critical: Mitchell wants to apply here
+      (Anthropic Strategic Operations Manager Claude Marketplace is currently
+      his #1 target per career-calibration-20260516).
+    verified_date: 2026-05-17
+
+  meta:
+    status: explicit-policy
+    source: https://www.404media.co/meta-is-going-to-let-job-candidates-use-ai-during-coding-tests/
+    ai_in_prep: allowed
+    ai_in_assessments: allowed       # coding tests explicitly
+    ai_in_interviews: conditional    # AI is "encouraged" per 404media; verify per-role
+    disclosure_required: unknown
+    consequences: ~
+    notes: |
+      Meta has reportedly ENCOURAGED AI use during coding tests, per 404media
+      coverage. The most candidate-friendly stance among major tech companies
+      as of 2026-05.
+    verified_date: 2026-05-17
+
+  # ============================================================================
+  # STUB ENTRIES — verify before trusting (council inference only)
+  # ============================================================================
+
+  openai:
+    status: no-explicit-policy-stated
+    source: ~
+    ai_in_prep: allowed              # Phase 3 council inference; verify
+    ai_in_assessments: unknown
+    ai_in_interviews: unknown
+    disclosure_required: unknown
+    consequences: ~
+    notes: |
+      No public AI-use policy located as of 2026-05-17 verification pass.
+      Council inferred "treat assessments as proctored" — default to
+      prep-allowed / assessments-assume-prohibited until verified.
+    verified_date: 2026-05-17
+
+  google:
+    status: no-explicit-policy-stated
+    source: https://moneywise.com/news/top-stories/google-ai-job-interviews-candidates
+    ai_in_prep: allowed
+    ai_in_assessments: unknown
+    ai_in_interviews: conditional    # some coverage mentions Google allows AI in interviews
+    disclosure_required: unknown
+    consequences: ~
+    notes: |
+      Mitchell's current employer (excluded from his apply-now lineup per
+      modes/_profile.md). Policy stub kept for reference. The moneywise.com
+      article cited by Phase 3 council mentions Google's stance on AI in
+      interviews but needs primary-source verification.
+    verified_date: 2026-05-17
+
+  apple:
+    status: no-explicit-policy-stated
+    source: ~
+    ai_in_prep: allowed
+    ai_in_assessments: unknown
+    ai_in_interviews: unknown
+    disclosure_required: unknown
+    notes: No public AI-in-applications policy located. Treat conservatively.
+    verified_date: 2026-05-17
+
+  mistral-ai:
+    status: no-explicit-policy-stated
+    source: ~
+    ai_in_prep: allowed
+    ai_in_assessments: unknown
+    ai_in_interviews: unknown
+    disclosure_required: unknown
+    notes: EU-headquartered AI lab; no public policy on candidate AI use located.
+    verified_date: 2026-05-17
+
+  cohere:
+    status: no-explicit-policy-stated
+    source: ~
+    ai_in_prep: allowed
+    ai_in_assessments: unknown
+    ai_in_interviews: unknown
+    disclosure_required: unknown
+    verified_date: 2026-05-17
+
+  elevenlabs:
+    status: no-explicit-policy-stated
+    source: ~
+    ai_in_prep: allowed
+    ai_in_assessments: unknown
+    ai_in_interviews: unknown
+    disclosure_required: unknown
+    verified_date: 2026-05-17
+
+  stripe:
+    status: no-explicit-policy-stated
+    source: ~
+    ai_in_prep: allowed
+    ai_in_assessments: unknown
+    ai_in_interviews: unknown
+    disclosure_required: unknown
+    notes: Per Mitchell's calibration brief, Stripe is in the "AI-in-finance" auto-positive sector.
+    verified_date: 2026-05-17
+
+  databricks:
+    status: no-explicit-policy-stated
+    source: ~
+    ai_in_prep: allowed
+    ai_in_assessments: unknown
+    ai_in_interviews: unknown
+    disclosure_required: unknown
+    verified_date: 2026-05-17
+
+  nvidia:
+    status: no-explicit-policy-stated
+    source: ~
+    ai_in_prep: allowed
+    ai_in_assessments: unknown
+    ai_in_interviews: unknown
+    disclosure_required: unknown
+    verified_date: 2026-05-17
+
+  xai:
+    status: no-explicit-policy-stated
+    source: ~
+    ai_in_prep: allowed
+    ai_in_assessments: unknown
+    ai_in_interviews: unknown
+    disclosure_required: unknown
+    notes: Top-cohort auto-yes per Mitchell's calibration brief.
+    verified_date: 2026-05-17
+
+  perplexity:
+    status: no-explicit-policy-stated
+    source: ~
+    ai_in_prep: allowed
+    ai_in_assessments: unknown
+    ai_in_interviews: unknown
+    disclosure_required: unknown
+    notes: Top-cohort auto-yes per Mitchell's calibration brief.
+    verified_date: 2026-05-17
+
+  cursor:
+    status: no-explicit-policy-stated
+    source: ~
+    ai_in_prep: allowed
+    ai_in_assessments: unknown
+    ai_in_interviews: unknown
+    disclosure_required: unknown
+    notes: Anysphere; FDE role currently in Mitchell's apply-now queue.
+    verified_date: 2026-05-17
+
+  sierra:
+    status: no-explicit-policy-stated
+    source: ~
+    ai_in_prep: allowed
+    ai_in_assessments: unknown
+    ai_in_interviews: unknown
+    disclosure_required: unknown
+    verified_date: 2026-05-17
+
+  # ============================================================================
+  # AUTO-NO (hard exclusions per Mitchell's calibration brief; not applying)
+  # ============================================================================
+
+  palantir:
+    status: excluded
+    reason: defense-mission company; calibration brief 2026-05-16 hard exclusion
+    verified_date: 2026-05-17
+
+  anduril:
+    status: excluded
+    reason: defense-mission company; calibration brief 2026-05-16 hard exclusion
+    verified_date: 2026-05-17
+
+  shield-ai:
+    status: excluded
+    reason: defense-mission company; calibration brief 2026-05-16 hard exclusion
+    verified_date: 2026-05-17
+
+# ============================================================================
+# DEFAULTS used when a company has no entry above
+# ============================================================================
+defaults:
+  status: unknown
+  ai_in_prep: allowed              # most permissive default
+  ai_in_assessments: assume-prohibited
+  ai_in_interviews: assume-prohibited
+  disclosure_required: unknown
+  notes: |
+    Default assumes prep is allowed (no company has banned AI-assisted resume
+    writing in public policy as of 2026-05) but assessments and interviews
+    should be assumed proctored unless the company explicitly says otherwise.
