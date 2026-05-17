@@ -74,7 +74,7 @@ Built by someone who used it to evaluate 740+ job offers, generate 100+ tailored
 | **ATS PDF Generation** | Keyword-injected CVs with Space Grotesk + DM Sans design |
 | **Portal Scanner** | 45+ companies pre-configured (Anthropic, OpenAI, ElevenLabs, Retool, n8n...) + custom queries across Ashby, Greenhouse, Lever, Wellfound |
 | **Batch Processing** | Parallel evaluation with `claude -p` workers |
-| **Web UI Dashboard** | Next.js dashboard: tracker, evaluate with live streaming, pipeline inbox (paginated), analytics, interview prep |
+| **Web UI Dashboard** | Next.js dashboard: 13 pages — tracker, evaluate (live streaming), pipeline inbox, follow-ups, analytics, recruiter find, interview prep, scanner, batch evaluate, insights, PDF generator, compare offers |
 | **Dashboard TUI** | Terminal UI to browse, filter, and sort your pipeline |
 | **Human-in-the-Loop** | AI evaluates and recommends, you decide and act. The system never submits an application -- you always have the final call |
 | **Pipeline Integrity** | Automated merge, dedup, status normalization, health checks |
@@ -257,7 +257,7 @@ career-ops/
 ├── dashboard/                   # Go TUI pipeline viewer
 ├── web-ui/                      # Next.js web dashboard (optional)
 │   ├── server.mjs               # Express API — reads career-ops data files
-│   ├── app/dashboard/           # 8 pages: home, tracker, evaluate, pipeline, followups, interview, analytics, recruiter-find
+│   ├── app/dashboard/           # 13 pages: home, tracker, evaluate, pipeline, followups, interview, analytics, recruiter-find, scanner, batch, insights, pdf, compare
 │   └── README.md                # Web UI setup and API reference
 ├── data/                        # Your tracking data (gitignored)
 ├── reports/                     # Evaluation reports (gitignored)

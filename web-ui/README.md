@@ -22,6 +22,11 @@ Reads your existing career-ops data files directly — no migration, no database
 | Interview Prep | `/dashboard/interview` | Active interview banner, story bank, STAR practice mode, company file viewer |
 | Analytics | `/dashboard/analytics` | Conversion funnel, score distribution, weekly cadence sparkline, actionable insight |
 | Recruiter Find | `/dashboard/recruiter-find` | AI-generated LinkedIn connection note + follow-up message for a target company/role, with live streaming and archetype detection |
+| Scan for Jobs | `/dashboard/scanner` | Trigger portal scan (scan.mjs) with optional company filter — live streaming output + new URL count on completion |
+| Batch Evaluate | `/dashboard/batch` | Multi-select pipeline items, evaluate in parallel with per-row progress and score summary |
+| Insights | `/dashboard/insights` | AI-powered pattern analysis — conversion funnel rates, rejection reasons, tech gaps, recommendations |
+| Generate PDFs | `/dashboard/pdf` | List applications without PDFs, generate per-row via streaming claude PDF mode |
+| Compare Offers | `/dashboard/compare` | Side-by-side comparison of two applications — scores, TL;DR, comp estimate, full report toggle |
 
 ## Key features
 
