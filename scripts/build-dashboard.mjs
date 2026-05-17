@@ -271,43 +271,119 @@ function _findRichSiblingReport(reportPath) {
   const slug = _extractCompanyRoleSlugFromReportName(reportPath);
   if (!slug) return '';
   const files = _listReportFiles();
-  // Match siblings: same company-role prefix (after stripping num + date).
-  // 2026-05-17 — Mitchell flagged that the old logic picked a different-role
-  // sibling (e.g. "002-anthropic" matched "anthropic-communications-manager-
-  // research" because both start with "anthropic"). Now we score siblings
-  // by overlap length and prefer the LONGEST-overlap candidate.
-  const candidates = [];
+  // 2026-05-17 — Two-pass match.
+  //   Pass 1 (strict): ≥70% prefix overlap of the SHORTER slug. Catches exact-
+  //     role and near-exact-role variations (handles "deepgram-senior-
+  //     developer-advocate" vs "deepgram-senior-developer-advocate-partner-
+  //     ecosystem"). Excludes plain "anthropic" matching specific roles.
+  //   Pass 2 (word-overlap fallback): if Pass 1 found nothing, accept
+  //     candidates whose SLUG SHARES THE COMPANY PREFIX (first hyphenated
+  //     word OR first two if "mistral-ai") AND has ≥3 shared meaningful
+  //     words. Catches Phase E slugs like
+  //     "perplexity-executive-communications-manager-sr-manager-exec-"
+  //     vs legacy "perplexity-exec-comms-manager" where prefix overlap is
+  //     only 48% (below the strict threshold) but the role is the same.
+
+  // Helpers
+  const slugWords = slug.split('-').filter(Boolean);
+  const slugWordSet = new Set(slugWords);
+  const stopWords = new Set(['the', 'a', 'an', 'of', 'and', 'or', 'at', 'in', 'on', 'for', 'sr', 'jr']);
+  const companyKey = (s) => {
+    // First hyphen-segment, with "mistral-ai" / "cursor-anysphere" treated as 2-word company.
+    const parts = s.split('-');
+    if (parts.length >= 2 && /^(ai|anysphere)$/i.test(parts[1])) return parts.slice(0, 2).join('-');
+    return parts[0] || '';
+  };
+  // Two acceptable company keys: the exact company prefix AND just the first
+  // word (so "mistral-ai-senior-staff-devrel" matches both "mistral-ai-*"
+  // and bare "mistral-*" siblings).
+  const slugCompany = companyKey(slug);
+  const slugCompanyFirstWord = (slug.split('-')[0] || '');
+  const companyMatches = (otherCompany, otherFirstWord) => {
+    return otherCompany === slugCompany || otherFirstWord === slugCompanyFirstWord;
+  };
+
+  const strictCandidates = [];
+  const looseCandidates = [];
   for (const f of files) {
     if ('reports/' + f === reportPath) continue;
     const otherSlug = _extractCompanyRoleSlugFromReportName('reports/' + f);
     if (!otherSlug) continue;
-    // Compute longest common prefix length (a > b means "more specific match").
+    // Strict: longest common prefix length, ≥70% of shorter slug.
     let overlap = 0;
     const minLen = Math.min(otherSlug.length, slug.length);
     for (let i = 0; i < minLen; i++) {
       if (otherSlug[i] !== slug[i]) break;
       overlap++;
     }
-    // Require at least 70% of the shorter slug to overlap — keeps "anthropic"
-    // (9 chars) from matching "anthropic-communications-manager-research"
-    // (41 chars) unless the shorter slug is at least 70% of the longer one.
-    // For exact match (slug === otherSlug) overlap = len → trivially passes.
     const shorterLen = Math.min(slug.length, otherSlug.length);
     const overlapPct = shorterLen === 0 ? 0 : overlap / shorterLen;
-    if (overlapPct < 0.7) continue;
-    candidates.push({ f, overlap, otherSlug });
+    if (overlapPct >= 0.7) {
+      strictCandidates.push({ f, overlap, otherSlug });
+      continue;
+    }
+    // Loose: same company prefix (exact OR first-word) + ≥3 shared
+    // meaningful words. Lowered to ≥2 shared if otherSlug is a strict
+    // subset (e.g. "perplexity-exec-comms-manager" overlaps
+    // "perplexity-executive-communications-manager-sr-manager-exec-"
+    // via "perplexity", "comms" stems and "manager").
+    const otherCompany = companyKey(otherSlug);
+    const otherFirstWord = otherSlug.split('-')[0] || '';
+    if (!companyMatches(otherCompany, otherFirstWord)) continue;
+    const otherWords = otherSlug.split('-').filter(Boolean);
+    const shared = otherWords.filter(w => slugWordSet.has(w) && !stopWords.has(w) && w.length > 2).length;
+    if (shared < 2) continue;
+    looseCandidates.push({ f, overlap: shared * 10, otherSlug });
   }
-  if (!candidates.length) return '';
-  // Sort: (1) higher overlap wins, (2) larger file size wins as tiebreaker.
-  const sized = candidates.map(c => {
-    try { c.size = statSync(join(ROOT, 'reports', c.f)).size; }
-    catch { c.size = 0; }
-    return c;
-  }).sort((a, b) => {
+  // 2026-05-17 — score by "section coverage" (does the sibling have Block C,
+  // F, D?). The dashboard relies on Block C for "How to position" and Block
+  // F for "Stories to lead with"; size alone isn't enough — many newer
+  // council-eval reports are large but skip Blocks C/D/E/F entirely.
+  const _scoreSibling = (c) => {
+    try {
+      const fp = join(ROOT, 'reports', c.f);
+      const text = readFileSync(fp, 'utf-8');
+      let score = 0;
+      // Each present block adds to score
+      if (/^## (?:C\)|Block C|Bloque C)/m.test(text)) score += 8;  // most-valuable (How to position)
+      if (/^## (?:F\)|Block F|Bloque F)/m.test(text)) score += 6;  // Stories
+      if (/^## (?:D\)|Block D|Bloque D)/m.test(text)) score += 3;  // Comp
+      if (/^## (?:E\)|Block E|Bloque E)/m.test(text)) score += 2;  // Personalization
+      c.size = text.length;
+      c.coverage = score;
+      return c;
+    } catch {
+      c.size = 0;
+      c.coverage = 0;
+      return c;
+    }
+  };
+  // Combine strict + loose into one pool and sort by:
+  //   (1) section coverage DESC — prefer siblings with Block C/F/D/E
+  //   (2) "strict tier" DESC — exact-role siblings beat fuzzy ones at same coverage
+  //   (3) slug overlap DESC
+  //   (4) file size DESC
+  // This handles the case where a strict-match sibling has zero useful content
+  // (e.g. a 2026-05-16 council-eval sibling with no Block C/F vs an older
+  // legacy sibling that DOES have those sections).
+  for (const c of strictCandidates) c.tier = 2;
+  for (const c of looseCandidates) c.tier = 1;
+  const all = [...strictCandidates, ...looseCandidates];
+  if (!all.length) return '';
+  const scored = all.map(_scoreSibling).sort((a, b) => {
+    if (b.coverage !== a.coverage) return b.coverage - a.coverage;
+    if (b.tier !== a.tier) return b.tier - a.tier;
     if (b.overlap !== a.overlap) return b.overlap - a.overlap;
     return b.size - a.size;
   });
-  return sized[0].size > 8000 ? 'reports/' + sized[0].f : '';
+  // Prefer ≥coverage 5 (has Block C or F at minimum) and ≥3KB.
+  const ideal = scored.find(c => c.coverage >= 5 && c.size > 3000);
+  if (ideal) return 'reports/' + ideal.f;
+  // Fall back to ≥8KB regardless of coverage.
+  const big = scored.find(c => c.size > 8000);
+  if (big) return 'reports/' + big.f;
+  const small = scored.find(c => c.size > 3000);
+  return small ? 'reports/' + small.f : '';
 }
 
 function _parseUrl(text) {
@@ -544,10 +620,13 @@ function parseOverpaySignals() {
 function classifyEquityStage(posture) {
   if (!posture) return 'unknown';
   const t = posture.toLowerCase();
-  // 1. Pre-IPO Late-stage signals first — Series E/F/G/H, "pre-IPO", "late-stage"
-  //    Most frontier AI labs (OpenAI/Anthropic/xAI/Mistral/Sierra/Cursor/etc) live
-  //    here and their posture text often contains the word "public" in negation.
-  if (/\bseries\s*[efgh]\b|series\s*d\+|\blate[\s-]?stage\b|\bpre-?ipo\b/.test(t)) return 'late';
+  // 1. Pre-IPO Late-stage signals first — Series E through Z, "pre-IPO",
+  //    "late-stage", "mega-late", "$Nb valuation" (≥$5B implies late).
+  //    Most frontier AI labs live here and their posture text often
+  //    contains the word "public" in negation.
+  //    2026-05-17 — expanded from [efgh] to [e-z] to cover Series K
+  //    (Databricks Sept 2025). Added "mega-late" and "late private" markers.
+  if (/\bseries\s*[e-z]\b|series\s*d\+|\blate[\s-]?stage\b|\bpre-?ipo\b|\bmega-?late\b|\blate\s+private\b/.test(t)) return 'late';
   if (/\bseries\s*c\b|\bseries\s*d\b/.test(t)) return 'cd';
   if (/\bseries\s*b\b/.test(t)) return 'b';
   if (/\bseries\s*a\b|\bseed\b/.test(t)) return 'seed-a';
@@ -1559,25 +1638,65 @@ function _parseLocationField(text) {
 
 // Extract numbered key gaps from Block B — returns { title, detail } objects.
 function _parseKeyGaps(text) {
-  const block = _extractSection(text, [/^## B\)[^\n]*$/m, /^## Block B\b[^\n]*$/m]);
+  // 2026-05-17 — added "Bloque B" + council-eval "Gaps Analysis" table support.
+  const block = _extractSection(text, [/^## B\)[^\n]*$/m, /^## Block B\b[^\n]*$/m, /^## Bloque B\b[^\n]*$/m]);
   if (!block) return [];
+
+  // Format 1: legacy "**Key gaps**" numbered list
   const gapsSection = block.match(/\*\*Key gaps[^*]*\*\*[:\s]*\n([\s\S]*?)(?:\n\*\*Why|\n## |$)/i);
-  if (!gapsSection) return [];
-  return gapsSection[1]
-    .split('\n')
-    .filter(l => /^\d+\.\s/.test(l.trim()))
-    .map(l => {
-      const withoutNum = l.replace(/^\d+\.\s*/, '').trim();
-      const titleMatch = withoutNum.match(/\*\*([^*]+)\*\*/);
-      const title = (titleMatch ? titleMatch[1] : withoutNum.split('—')[0]).replace(/\*\*/g, '').trim();
-      const dashIdx = withoutNum.indexOf('—');
-      const detail = dashIdx > -1
-        ? withoutNum.slice(dashIdx + 1).replace(/\*\*/g, '').trim().slice(0, 500)
-        : '';
-      return { title, detail };
-    })
-    .filter(g => g.title)
-    .slice(0, 4);
+  if (gapsSection) {
+    const parsed = gapsSection[1]
+      .split('\n')
+      .filter(l => /^\d+\.\s/.test(l.trim()))
+      .map(l => {
+        const withoutNum = l.replace(/^\d+\.\s*/, '').trim();
+        const titleMatch = withoutNum.match(/\*\*([^*]+)\*\*/);
+        const title = (titleMatch ? titleMatch[1] : withoutNum.split('—')[0]).replace(/\*\*/g, '').trim();
+        const dashIdx = withoutNum.indexOf('—');
+        const detail = dashIdx > -1
+          ? withoutNum.slice(dashIdx + 1).replace(/\*\*/g, '').trim().slice(0, 500)
+          : '';
+        return { title, detail };
+      })
+      .filter(g => g.title)
+      .slice(0, 4);
+    if (parsed.length) return parsed;
+  }
+
+  // Format 2: council-eval "### Gaps Analysis" table
+  //   | Gap | Blocker Level | Adjacent Experience | Mitigation |
+  //   | **Named press relationships...** | Soft blocker | ... | ... |
+  const gapsTableMatch = block.match(/###\s*Gaps?\s*Analysis[\s\S]+?(\|[^\n]+\|\n\|[\s\-:|]+\|\n(?:\|[^\n]+\|\n?)+)/i);
+  if (gapsTableMatch) {
+    const rows = [];
+    for (const line of gapsTableMatch[1].split('\n')) {
+      if (!line.startsWith('|')) continue;
+      if (/^\|\s*[-:|]+\s*\|/.test(line)) continue;
+      if (/^\|\s*(?:Gap|Brecha)\s*\|/i.test(line)) continue;
+      const cells = line.split('|').slice(1, -1).map(c => c.trim());
+      if (cells.length < 2) continue;
+      const title = (cells[0] || '').replace(/\*\*/g, '').trim();
+      if (!title) continue;
+      const detail = (cells.slice(1).filter(Boolean).join(' — ') || '').replace(/\*\*/g, '').slice(0, 500);
+      rows.push({ title, detail });
+    }
+    if (rows.length) return rows.slice(0, 4);
+  }
+
+  // Format 3: any "❌ Gap" rows in the Requirements → CV Mapping table
+  // (this is the council-eval "What's Missing" surfaced inline with matches).
+  const inlineGaps = [];
+  for (const line of block.split('\n')) {
+    if (!line.startsWith('|')) continue;
+    if (!/❌|^\s*\|[^|]*\|\s*[^|]*Gap\s*\|/i.test(line)) continue;
+    const cells = line.split('|').slice(1, -1).map(c => c.trim());
+    if (cells.length < 2) continue;
+    const title = (cells[0] || '').replace(/\*\*/g, '').trim();
+    if (!title) continue;
+    const detail = (cells[2] || cells[1] || '').replace(/\*\*/g, '').slice(0, 500);
+    inlineGaps.push({ title, detail });
+  }
+  return inlineGaps.slice(0, 4);
 }
 
 // "Why these gaps don't block" from Block B.
@@ -1607,21 +1726,36 @@ function getGapStrategy(reportPath, gapTitle) {
 // columns: # | JD Requirement | Story | S | T | A | R | Reflection.
 // We surface the JD-requirement column + the story column.
 function _parseTopStories(text) {
-  const block = _extractSection(text, [/^## F\)[^\n]*$/m, /^## Block F\b[^\n]*$/m]);
+  // 2026-05-17 — added "Bloque F" to header regex (council-eval format).
+  const block = _extractSection(text, [/^## F\)[^\n]*$/m, /^## Block F\b[^\n]*$/m, /^## Bloque F\b[^\n]*$/m]);
   if (!block) return [];
   const stories = [];
+  // Format 1: markdown table — "| # | JD Requirement | Story | ..."
   for (const line of block.split('\n')) {
     if (!line.startsWith('|')) continue;
     if (/^\|\s*[-:|]+\s*\|/.test(line)) continue;
     if (/^\|\s*#\s*\|\s*JD\s*Requirement/i.test(line)) continue;
     const cells = line.split('|').slice(1, -1).map(c => c.trim());
     if (cells.length < 3) continue;
-    // Column 0=#, 1=JD Requirement, 2=Story (4+ col old format has STAR columns after)
     const num = cells[0];
     const requirement = cells[1];
     const story = cells[2];
     if (!num || !requirement || !story) continue;
-    if (!/^\d/.test(num)) continue;  // skip non-numeric first cells
+    if (!/^\d/.test(num)) continue;
+    stories.push({ num, requirement, story });
+  }
+  if (stories.length) return stories;
+
+  // Format 2: prose bullets — "1. **JD Requirement** → Story (proof point #N)"
+  // Seen in 737-mistral-* and similar council-eval reports where Block F was
+  // emitted as a numbered list rather than a table.
+  const bulletRe = /^\s*(\d+)\.\s*\*?\*?([^*→\n]+?)\*?\*?\s*[→\->]\s*(.+?)(?=\n\s*\d+\.\s|\n##\s|\n\n|$)/gms;
+  let m;
+  while ((m = bulletRe.exec(block)) !== null) {
+    const num = m[1];
+    const requirement = m[2].replace(/\*\*/g, '').trim();
+    const story = m[3].replace(/\n/g, ' ').replace(/\*\*/g, '').trim();
+    if (!requirement || !story) continue;
     stories.push({ num, requirement, story });
   }
   return stories;
@@ -1634,12 +1768,37 @@ function _parseTopStories(text) {
 //   3. Prose evaluation — "**HARD BLOCKER**", "Gap across..." (skip — negative)
 // Returns rows sorted by strength (no slice — wrappers apply the limit).
 function _parseCompetitiveEdge(text) {
-  const startMatch = text.match(/^## B\)[^\n]*$/m) || text.match(/^## Block B\b[^\n]*$/m);
+  // 2026-05-17 — added "Bloque B" to header regex (new council-eval format).
+  const startMatch = text.match(/^## B\)[^\n]*$/m) || text.match(/^## Block B\b[^\n]*$/m) || text.match(/^## Bloque B\b[^\n]*$/m);
   if (!startMatch) return [];
   const start = startMatch.index + startMatch[0].length;
   const rest = text.slice(start);
   const endIdx = rest.indexOf('\n## ');
   const block = endIdx === -1 ? rest : rest.slice(0, endIdx);
+
+  // 2026-05-17 — detect column order from the table header. Two formats:
+  //   Legacy (3-col): | JD Requirement | CV Evidence | Match |
+  //   Council-eval (4-col): | JD Requirement | Strength | CV Evidence | Source |
+  // The council-eval order puts Strength in column 1 (evidence-mode parser
+  // was reading "✅ Strong" as evidence and the CV text as the match cell).
+  let colMap = null; // { req, evidence, match }
+  for (const line of block.split('\n')) {
+    if (!line.startsWith('|')) continue;
+    if (/^\|\s*[-:|]+\s*\|/.test(line)) continue;
+    if (!/JD\s*Requirement|Requisito|Requirement/i.test(line)) continue;
+    const headers = line.split('|').slice(1, -1).map(c => c.trim().toLowerCase());
+    const idxReq      = headers.findIndex(h => /requirement|requisito/i.test(h));
+    const idxStrength = headers.findIndex(h => /^(strength|match|nivel|fit)$/i.test(h) || /^strength\b/i.test(h));
+    const idxEvidence = headers.findIndex(h => /evidence|prueba|proof/i.test(h));
+    if (idxReq >= 0 && idxStrength >= 0 && idxEvidence >= 0) {
+      colMap = { req: idxReq, evidence: idxEvidence, match: idxStrength };
+    } else if (idxReq >= 0 && idxEvidence >= 0 && headers.length >= 3) {
+      // Legacy 3-col format: req | evidence | match
+      colMap = { req: idxReq, evidence: idxEvidence, match: headers.length - 1 };
+    }
+    break;
+  }
+  if (!colMap) colMap = { req: 0, evidence: 1, match: 2 }; // fallback
 
   const rows = [];
   for (const line of block.split('\n')) {
@@ -1648,9 +1807,9 @@ function _parseCompetitiveEdge(text) {
     if (/^\|\s*(?:JD\s*Requirement|JD\s*requirement|Requisito|JD\s*Req)/i.test(line)) continue; // header
     const cells = line.split('|').slice(1, -1).map(c => c.trim());
     if (cells.length < 3) continue;
-    const requirement = cells[0].replace(/\*\*/g, '');
-    const evidence = cells[1];
-    const matchCell = cells[2];
+    const requirement = (cells[colMap.req] || '').replace(/\*\*/g, '');
+    const evidence    = cells[colMap.evidence] || '';
+    const matchCell   = cells[colMap.match] || '';
 
     let score = null;
     let label = '';
@@ -1660,16 +1819,31 @@ function _parseCompetitiveEdge(text) {
     if (numMatch) {
       score = parseFloat(numMatch[1]);
     }
-    // Format 2: English/Spanish categorical + new ✅/⚠️ emoji format
+    // Format 1b: star rating "★★★★☆" / "★★★★★" — count filled stars (max 5)
+    else if (/★/.test(matchCell)) {
+      const filled = (matchCell.match(/★/g) || []).length;
+      const empty  = (matchCell.match(/☆/g) || []).length;
+      // Stars without dimples means 1-N filled (e.g. "★★★★" alone = 4/5)
+      const total  = filled + empty > 0 ? filled + empty : 5;
+      score = (filled / total) * 5;
+      // Skip Format 2 fall-through by labeling here
+      if (filled >= 5) label = 'Exceptional';
+      else if (filled >= 4) label = 'Strong';
+      else if (filled >= 3) label = 'Medium';
+      else label = 'Weak';
+    }
+    // Format 2: English/Spanish categorical + new ✅/⚠️/❌ emoji format
+    // 2026-05-17 — added case-insensitive "Strong" / "Partial" match
+    // (new council-eval format uses ✅ Strong / ⚠️ Partial / ❌ Gap).
     else if (/Exceptional|UNIQUELY\s+STRONG/i.test(matchCell)) { score = 5; label = 'Exceptional'; }
-    else if (/✅\s*STRONG|^\s*STRONG\b|\*\*STRONG\*\*/i.test(matchCell)) { score = 4; label = 'Strong'; }
+    else if (/✅\s*Strong\b|^\s*STRONG\b|\*\*STRONG\*\*|^\s*Strong\b/i.test(matchCell)) { score = 4; label = 'Strong'; }
     else if (/✅?\s*MEDIUM|MEDIUM\s*MATCH|MODERATE/i.test(matchCell)) { score = 3; label = 'Medium'; }
     else if (/Adjacent/i.test(matchCell) && /✅/.test(matchCell)) { score = 3; label = 'Adjacent'; }
-    else if (/✅?\s*WEAK|WEAK\s*MATCH|PARTIAL/i.test(matchCell)) { score = 2; label = 'Weak'; }
+    else if (/⚠️\s*Partial\b|✅?\s*WEAK|WEAK\s*MATCH|^\s*Partial\b/i.test(matchCell)) { score = 2; label = 'Partial'; }
     else if (/⚠️/.test(matchCell)) { score = 2; label = 'Partial'; }
     else if (/✅/.test(matchCell)) { score = 4; label = 'Strong'; }
     // Format 3: explicit negatives — skip (they aren't competitive edges)
-    else if (/HARD\s*BLOCKER|GAP\s|MISSING|NO\s*MATCH|FAIL\b/i.test(matchCell)) {
+    else if (/❌|HARD\s*BLOCKER|GAP\s|MISSING|NO\s*MATCH|FAIL\b|^\s*Gap\b|^\s*❌/i.test(matchCell)) {
       continue;
     } else {
       continue;
