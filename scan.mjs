@@ -161,7 +161,7 @@ function buildLocationFilter(locationFilter) {
 //   - min/max are annual compensation filters (use annualized values)
 //   - max: 0 means "no upper limit"
 //   - If no salary data exists on a job, it passes (conservative behavior)
-//   - If currency mismatch (e.g., USD filter, EUR job), it fails
+//   - If both currencies are known and mismatch (e.g., USD filter, EUR job), it fails
 //   - Partial ranges (min only or max only) work correctly via overlap logic
 // Uses null-safe checks (!= null, ??) to preserve 0 values correctly.
 
@@ -171,7 +171,7 @@ function buildSalaryFilter(salaryFilter) {
   // Coerce and validate bounds — malformed YAML must not silently mis-filter
   const min = Number(salaryFilter.min ?? 0);
   const max = Number(salaryFilter.max ?? 0);
-  const filterCurrency = (salaryFilter.currency || '').toUpperCase();
+  const filterCurrency = (salaryFilter.currency || '').trim().toUpperCase();
 
   if (!Number.isFinite(min) || !Number.isFinite(max) || min < 0 || max < 0) {
     console.error('Warning: salary_filter.min/max must be non-negative numbers — salary filter disabled');
@@ -196,7 +196,7 @@ function buildSalaryFilter(salaryFilter) {
     if (jobMin == null && jobMax == null) return true;
 
     // Currency handling - reject only if BOTH currencies exist and mismatch
-    const jobCurrency = (salary.currency || '').toUpperCase();
+    const jobCurrency = (salary.currency || '').trim().toUpperCase();
     if (filterCurrency && jobCurrency && filterCurrency !== jobCurrency) {
       return false;
     }

@@ -31,17 +31,15 @@ function parseCompensation(job) {
   if (!multiplier) return null;
 
   // Coerce and validate numeric fields — malformed API payloads must not propagate
-  const minValue = comp.minValue == null ? null : Number(comp.minValue);
-  const maxValue = comp.maxValue == null ? null : Number(comp.maxValue);
-  const currency = typeof comp.currency === 'string' ? comp.currency : '';
-
-  // Reject non-finite numbers (NaN, Infinity)
-  if (
-    (minValue != null && !Number.isFinite(minValue)) ||
-    (maxValue != null && !Number.isFinite(maxValue))
-  ) {
-    return null;
-  }
+  const normalizeNum = (v) => {
+    if (v == null) return null;
+    if (typeof v === 'string' && v.trim() === '') return null;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  };
+  const minValue = normalizeNum(comp.minValue);
+  const maxValue = normalizeNum(comp.maxValue);
+  const currency = typeof comp.currency === 'string' ? comp.currency.trim() : '';
 
   // If neither min nor max is provided, no valid compensation
   if (minValue == null && maxValue == null) return null;
