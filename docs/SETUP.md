@@ -78,3 +78,19 @@ cd dashboard
 go build -o career-dashboard .
 ./career-dashboard --path ..  # Opens TUI pipeline viewer
 ```
+
+## Web UI Dashboard (Optional)
+
+A browser-based alternative to the terminal dashboard. Shows the same data with a visual tracker, live evaluation streaming, paginated pipeline inbox, analytics charts, and interview prep tools.
+
+```bash
+cd web-ui
+pnpm install
+pnpm dev        # API on :3099, Next.js on :3030
+```
+
+Open [http://localhost:3030/dashboard](http://localhost:3030/dashboard).
+
+No migration needed — the web UI reads the same `data/`, `reports/`, `config/`, and `interview-prep/` files that career-ops already writes.
+
+See [`web-ui/README.md`](../web-ui/README.md) for the full page reference and API docs.

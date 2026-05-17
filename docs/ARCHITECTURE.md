@@ -108,3 +108,23 @@ The `dashboard/` directory contains a standalone Go TUI application that visuali
 - Grouped/flat view
 - Lazy-loaded report previews
 - Inline status picker
+
+## Web UI Dashboard
+
+The `web-ui/` directory contains a Next.js browser dashboard as an alternative to the TUI:
+
+```
+web-ui/server.mjs       Express API (port 3099) — parses career-ops data files
+web-ui/app/dashboard/   8 Next.js pages (server components + ISR caching)
+```
+
+The Express server reads the same `data/`, `reports/`, `config/`, and `interview-prep/` files — no migration needed. Key endpoints:
+
+- `GET /api/applications` — parses `data/applications.md`, enriches from report headers
+- `GET /api/pipeline` — parses `data/pipeline.md` pending/done items
+- `POST /api/evaluate` — spawns a `claude` subprocess and returns a jobId
+- `GET /api/evaluate/:jobId/stream` — SSE stream of subprocess stdout
+
+The Evaluate page streams live `claude` output via EventSource, showing named progress pills (Fetching → Analyzing → Scoring → Report → Tracker). The Pipeline page paginates at 50 items per page to handle large inboxes (1500+ URLs). All tracker mutations write back to the markdown source files via `PATCH` endpoints.
+
+See [`web-ui/README.md`](../web-ui/README.md) for the full page and API reference.
