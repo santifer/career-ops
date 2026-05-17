@@ -2,6 +2,7 @@ import { getPipeline } from "@/lib/api"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Metadata } from "next"
+import { PipelineActions } from "./pipeline-actions"
 
 export const metadata: Metadata = { title: "Pipeline — career-ops" }
 
@@ -53,7 +54,7 @@ export default async function PipelinePage({
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Pipeline Inbox</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            {pending.length} pending · {done.length} evaluated
+            {pending.length} pending · {done.length} done
             {query && ` · ${filtered.length} matching "${q}"`}
           </p>
         </div>
@@ -106,14 +107,7 @@ export default async function PipelinePage({
                         </div>
                         <p className="text-[11px] text-muted-foreground font-mono truncate">{item.url}</p>
                       </div>
-                      <a
-                        href={item.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="shrink-0 text-xs border rounded-md px-2.5 py-1 font-medium hover:bg-muted transition-colors"
-                      >
-                        Open ↗
-                      </a>
+                      <PipelineActions url={item.url} />
                     </div>
                   </CardContent>
                 </Card>
@@ -125,11 +119,12 @@ export default async function PipelinePage({
 
       {done.length > 0 && (
         <div className="flex flex-col gap-2 mt-4">
-          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground font-mono">Evaluated ({done.length})</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground font-mono">Done ({done.length})</p>
           {done.map((item, idx) => (
             <div key={idx} className="flex items-center gap-3 rounded-lg border px-3 py-2 opacity-50">
               <span className="text-green-700 text-sm">✓</span>
-              <span className="text-sm truncate">{item.company && item.role ? `${item.company} — ${item.role}` : item.url}</span>
+              <span className="text-sm truncate flex-1">{item.company && item.role ? `${item.company} — ${item.role}` : item.url}</span>
+              <PipelineActions url={item.url} />
             </div>
           ))}
         </div>

@@ -135,6 +135,24 @@ app.get('/api/pipeline', (req, res) => {
   res.json(parsePipeline())
 })
 
+app.patch('/api/pipeline', (req, res) => {
+  const { url, done } = req.body
+  if (!url) return res.status(400).json({ error: 'url required' })
+  const file = path.join(ROOT, 'data', 'pipeline.md')
+  if (!fs.existsSync(file)) return res.status(404).json({ error: 'pipeline.md not found' })
+  const lines = fs.readFileSync(file, 'utf8').split('\n')
+  let updated = false
+  const newLines = lines.map(line => {
+    if (!line.includes(url)) return line
+    if (done && line.match(/^- \[ \]/)) { updated = true; return line.replace('- [ ]', '- [x]') }
+    if (!done && line.match(/^- \[x\]/i)) { updated = true; return line.replace(/^- \[x\]/i, '- [ ]') }
+    return line
+  })
+  if (!updated) return res.status(404).json({ error: 'Item not found' })
+  fs.writeFileSync(file, newLines.join('\n'))
+  res.json({ ok: true })
+})
+
 app.get('/api/followups', (req, res) => {
   res.json(parseFollowUps())
 })

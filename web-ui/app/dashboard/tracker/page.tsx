@@ -1,8 +1,7 @@
-import { getApplications, ALL_STATUSES, STATUS_LABELS, STATUS_COLORS, scoreVariant, type CanonicalStatus } from "@/lib/api"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
+import { getApplications, ALL_STATUSES, STATUS_LABELS, type CanonicalStatus } from "@/lib/api"
 import { Metadata } from "next"
 import Link from "next/link"
+import { TrackerCard } from "./tracker-client"
 
 export const metadata: Metadata = { title: "Tracker — career-ops" }
 
@@ -84,48 +83,18 @@ export default async function TrackerPage({
           <p className="font-medium">
             {query ? `No results for "${q}"` : `No ${STATUS_LABELS[activeTab].toLowerCase()} applications`}
           </p>
-          {!query && <p className="text-sm">Evaluate a job with career-ops to see it here.</p>}
+          {!query && activeTab === "evaluated" && (
+            <p className="text-sm">
+              Evaluate a job on the{" "}
+              <Link href="/dashboard/evaluate" className="text-blue-600 hover:underline">Evaluate page</Link>{" "}
+              to see it here.
+            </p>
+          )}
         </div>
       ) : (
         <div className="flex flex-col gap-3">
           {filtered.map(app => (
-            <Card key={app.number} className="hover:shadow-sm transition-shadow">
-              <CardContent className="p-4">
-                <div className="flex items-start gap-3">
-                  <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted text-sm font-bold uppercase">
-                    {app.company.slice(0, 2)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2 mb-1">
-                      <p className="font-semibold text-sm leading-tight">{app.role}</p>
-                      <Badge className={`${scoreVariant(app.score)} font-mono`} variant="secondary">{app.score.toFixed(1)}/5</Badge>
-                    </div>
-                    <div className="flex items-center gap-2 flex-wrap mb-2">
-                      <span className="text-sm font-medium">{app.company}</span>
-                      <span className="text-xs text-muted-foreground font-mono">{app.date}</span>
-                      <Badge className={STATUS_COLORS[app.status]} variant="secondary">{STATUS_LABELS[app.status]}</Badge>
-                      {app.hasPDF && <span className="text-xs text-green-700">✅ PDF</span>}
-                      {app.remote && <span className="text-xs text-muted-foreground">📍 {app.remote}</span>}
-                    </div>
-                    {app.tldr && <p className="text-xs text-muted-foreground line-clamp-2 mb-2">{app.tldr}</p>}
-                    {!app.tldr && app.notes && <p className="text-xs text-muted-foreground truncate mb-2">{app.notes}</p>}
-                    <div className="flex items-center gap-3 flex-wrap">
-                      {app.jobURL && (
-                        <a href={app.jobURL} target="_blank" rel="noreferrer" className="text-xs text-blue-600 hover:underline font-mono">
-                          ↗ View job
-                        </a>
-                      )}
-                      {app.reportNumber && (
-                        <span className="text-xs text-muted-foreground font-mono">Report #{app.reportNumber}</span>
-                      )}
-                      {app.compEstimate && (
-                        <span className="text-xs text-muted-foreground">💰 {app.compEstimate}</span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <TrackerCard key={app.number} app={app} />
           ))}
         </div>
       )}
