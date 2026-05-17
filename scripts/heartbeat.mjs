@@ -14,20 +14,26 @@
  */
 
 import { readFileSync, writeFileSync, existsSync, statSync, readdirSync, appendFileSync } from 'fs';
-import { join } from 'path';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 import { homedir } from 'os';
 import nodemailer from 'nodemailer';
 import { marked } from 'marked';
+import mjml2html from 'mjml';
 import { classifyLiveness } from '../liveness-core.mjs';
 import { getCachedUrl } from '../lib/resolve-ats-url.mjs';
 import { poolMap } from '../lib/fetch-utils.mjs';
 import { buildSummary as buildOutreachSummary, urgency as outreachUrgency, daysSinceLastTouch as outreachDaysSince, touchCount as outreachTouchCount, listContacts as listOutreachContacts } from '../lib/outreach-tracker.mjs';
+import { buildOutreachMailto } from '../lib/mailto-helpers.mjs';
 // Tier 5 system-status banner (calibration brief 2026-05-16) — surfaces which
 // Tier 5 features are active in the daily heartbeat. Runway alert wired
 // 2026-05-17 — inline compute below (mirrors dashboard-server.mjs's
 // computeRecruiterPipelineDensity so heartbeat doesn't depend on the
 // dashboard server being running).
 import { renderSystemBanner, renderDiscardPatternSection, renderRunwayAlert } from '../lib/heartbeat-system-banner.mjs';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname  = dirname(__filename);
 
 // Inline pipeline-density compute for heartbeat (decoupled from the live
 // dashboard server). Matches the shape renderRunwayAlert expects from
@@ -144,7 +150,40 @@ function scorePill(score) {
   return `<span class="${cls}" style="display:inline-block;background:${bg};color:${fg};${extraStyle}padding:2px 8px;border-radius:999px;font-weight:600;font-size:12px;font-variant-numeric:tabular-nums">${n.toFixed(2)}</span>`;
 }
 
-function renderHtmlEmail(markdownBody, meta = {}) {
+// ── MJML template renderer (Commit 1: MJML rebuild, 2026-05-17) ──────────────
+// Reads templates/heartbeat.mjml, interpolates the data context object,
+// compiles via mjml2html(), and returns the inlined-CSS email HTML.
+//
+// The template handles all structural chrome (hero, KPI tiles, mj-button for
+// bulletproof VML+CSS buttons, footer). The main markdown-derived content is
+// rendered by renderContentHtml() and injected as {{contentHtml}}.
+//
+// Template variable convention: {{varName}} — simple string interpolation,
+// not a full template engine. Safe because all values are escaped via
+// escapeForMjml() before injection.
+function escapeForMjml(s) {
+  // Escape only the curly-brace delimiters used as template markers so
+  // arbitrary HTML content (which IS safe here — we generate it ourselves)
+  // can pass through into the compiled MJML → HTML output without confusion.
+  return String(s == null ? '' : s)
+    .replace(/{{/g, '&#123;&#123;')
+    .replace(/}}/g, '&#125;&#125;');
+}
+
+// Read and cache the MJML template file.
+let _mjmlTemplate = null;
+function getMjmlTemplate() {
+  if (_mjmlTemplate) return _mjmlTemplate;
+  const templatePath = join(__dirname, '../templates/heartbeat.mjml');
+  _mjmlTemplate = readFileSync(templatePath, 'utf-8');
+  return _mjmlTemplate;
+}
+
+// Render the markdown body into styled HTML for injection into the
+// {{contentHtml}} slot of the MJML template. Reuses the existing
+// marked() + inline-style pipeline so all section generators are
+// preserved unmodified.
+function renderContentHtml(markdownBody) {
   marked.setOptions({ gfm: true, breaks: false });
   const inner = marked.parse(markdownBody);
 
@@ -193,150 +232,81 @@ function renderHtmlEmail(markdownBody, meta = {}) {
     return `<span style="display:inline-block;background:${bg};color:${fg};padding:2px 8px;border-radius:999px;font-weight:600;font-size:12px">${status}</span>`;
   });
 
-  const date = meta.date || new Date().toISOString().slice(0, 10);
-  const dashboardUrl = meta.dashboardUrl || DASHBOARD_URL;
-  const queueCount = meta.queueCount || 0;
-  const trackedCount = meta.trackedCount || 0;
+  // renderContentHtml() returns just the styled content HTML for injection
+  // into the {{contentHtml}} slot of the MJML template.
+  return styled;
+}
+
+// Build the full HTML email using the MJML template + content rendering.
+// The template (templates/heartbeat.mjml) handles structural chrome (hero,
+// KPI tiles, mj-button bulletproof buttons, footer). Content comes from
+// renderContentHtml(). MJML's mjml2html() call is async in v5+; this
+// function is therefore async.
+//
+// Also renders the Tier 5 system-status banner + runway alert + discard
+// pattern block, which slot into the template between hero and KPI tiles.
+//
+// Preserves: dynamic-state subject/preheader logic from 058cf18,
+// BCC gate from 8e99fd9, killed-dup-H1 + table-dedup from 058cf18.
+async function renderHtmlEmail(markdownBody, meta = {}) {
+  const date           = meta.date || new Date().toISOString().slice(0, 10);
+  const dashboardUrl   = meta.dashboardUrl || DASHBOARD_URL;
+  const queueCount     = meta.queueCount || 0;
+  const trackedCount   = meta.trackedCount || 0;
   const evaluatedToday = meta.evaluatedToday || 0;
-  const newFromAlerts = meta.newFromAlerts || 0;
+  const newFromAlerts  = meta.newFromAlerts || 0;
 
-  // Mission-control header — same visual signature as the dashboard's
-  // mc-strip + the report HTML's nav-back chrome. Light mode default
-  // (matrix-green-on-white gradient); dark-mode override via the
-  // <style> block below promotes it to the dashboard's deep cobalt look.
-  const header = `
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin:0 0 12px">
-  <tr>
-    <td class="header-banner" style="padding:22px 24px;background:linear-gradient(135deg,${BRAND.green} 0%,#15803d 50%,#0f5e2c 100%);border-radius:12px;color:#ffffff">
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%">
-        <tr>
-          <td style="vertical-align:middle">
-            <div style="font-size:11px;letter-spacing:0.18em;text-transform:uppercase;opacity:0.92;font-weight:600">⚡ Career-Ops · Daily Heartbeat</div>
-            <div style="font-size:24px;font-weight:700;margin-top:4px;letter-spacing:-0.01em;font-family:'JetBrains Mono','SF Mono',ui-monospace,monospace">${date}</div>
-          </td>
-          <td align="right" style="vertical-align:middle">
-            <a href="${dashboardUrl}" class="cta-button" style="display:inline-block;background:#ffffff;color:${BRAND.greenFg};padding:9px 16px;border-radius:8px;text-decoration:none;font-weight:600;font-size:13px;letter-spacing:0.01em;box-shadow:0 1px 3px rgba(0,0,0,0.18)">Open Dashboard →</a>
-          </td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-</table>`;
+  // Preheader preview text (Phase 2 Day-1 — controls inbox preview slot).
+  const preheaderText = buildHeartbeatPreheader(meta);
 
-  // KPI strip — uses the same palette + tabular numerals as the
-  // dashboard's stats-bento. Matrix-green for the primary metric
-  // (Apply-Now Queue), supporting hues for the rest.
-  const kpis = [
-    { label: 'In queue ≥ 4.0',    value: queueCount,      accent: BRAND.green },
-    { label: 'Evaluated today',   value: evaluatedToday,  accent: BRAND.blue },
-    { label: 'From alerts today', value: newFromAlerts,   accent: BRAND.greenFg },
-    { label: 'Tracked all-time',  value: trackedCount,    accent: BRAND.text3 },
-  ];
-  const kpiCells = kpis.map(k => `
-    <td class="card border" style="padding:14px 16px;background:${BRAND.surface};border:1px solid ${BRAND.border};border-radius:10px;text-align:center;width:25%">
-      <div class="text-muted" style="font-size:10px;color:${BRAND.text4};font-weight:700;letter-spacing:0.08em;text-transform:uppercase">${k.label}</div>
-      <div class="text-strong" style="font-size:24px;font-weight:700;color:${k.accent};margin-top:4px;font-variant-numeric:tabular-nums;font-family:'JetBrains Mono','SF Mono',ui-monospace,monospace">${k.value}</div>
-    </td>`).join('<td style="width:8px"></td>');
-  const kpiStrip = `
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin:0 0 18px">
-  <tr>${kpiCells}</tr>
-</table>`;
-
-  const footer = `
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin:32px 0 8px">
-  <tr>
-    <td class="text-muted border" style="padding:14px 0;border-top:1px solid ${BRAND.border};color:${BRAND.text4};font-size:12px;text-align:center">
-      Generated by <code style="background:${BRAND.surface2};padding:1px 6px;border-radius:4px;font-family:'JetBrains Mono','SF Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;color:${BRAND.greenFg}">scripts/heartbeat.mjs</code>
-      · <a href="${dashboardUrl}" class="accent" style="color:${BRAND.greenFg};text-decoration:underline">dashboard</a>
-      · scheduled daily 09:00 PT via launchd
-    </td>
-  </tr>
-</table>`;
-
-  // prefers-color-scheme: dark CSS — Apple Mail, Gmail web, Outlook 365
-  // dark all honor this. Maps the email's class hooks (.card, .text-strong,
-  // .accent, .header-banner, etc.) to the dashboard's dark-mode tokens
-  // so a user reading in dark mode sees the same matrix-green-on-cobalt
-  // identity as the live dashboard.
-  const darkModeCss = `
-@media (prefers-color-scheme: dark) {
-  body, .body-bg { background: #06070d !important; color: #fafafa !important; }
-  .card { background: #11131c !important; border-color: #232737 !important; color: #e4e4e7 !important; }
-  .text-strong { color: #fafafa !important; }
-  .text-muted  { color: #b8b8c0 !important; }
-  .text-subtle { color: #9a9aa6 !important; }
-  .border      { border-color: #232737 !important; }
-  .accent      { color: #86efac !important; }
-  .accent-bg   { background: rgba(22,163,74,0.12) !important; color: #86efac !important; }
-  table { border-color: #232737 !important; background: #11131c !important; }
-  thead, th { background: #181b27 !important; color: #b8b8c0 !important; border-color: #232737 !important; }
-  td { color: #e4e4e7 !important; border-color: #232737 !important; }
-  blockquote { background: rgba(22,163,74,0.10) !important; color: #fafafa !important; border-left-color: #86efac !important; }
-  code { background: #181b27 !important; color: #86efac !important; }
-  hr { background: linear-gradient(90deg, transparent 0%, #232737 50%, transparent 100%) !important; }
-  a { color: #86efac !important; }
-  .header-banner {
-    background: linear-gradient(135deg, rgba(0,255,157,0.10) 0%, rgba(22,163,74,0.04) 50%, #11131c 100%) !important;
-    border: 1px solid #232737 !important;
-    color: #fafafa !important;
-  }
-  .cta-button { background: #86efac !important; color: #06070d !important; }
-  .score-pill-green { background: rgba(22,163,74,0.15) !important; color: #86efac !important; border-color: rgba(22,163,74,0.35) !important; }
-  .score-pill-amber { background: rgba(168,123,72,0.14) !important; color: #d4ba84 !important; }
-  .score-pill-red   { background: rgba(220,38,38,0.12) !important; color: #fca5a5 !important; }
-}`;
-
-  // Tier 5 system-status banner + runway alert (calibration brief 2026-05-16) —
-  // rendered between header and KPI strip so they land above-the-fold in the
-  // email. Safely degrade to empty string if the banner module / outreach
-  // tracker isn't available.
-  let systemBanner = '';
-  let runwayAlert  = '';
-  try { systemBanner = renderSystemBanner({ format: 'html' }) || ''; } catch {}
+  // Tier 5 system-status banner + runway alert (calibration brief 2026-05-16)
+  let systemBannerHtml = '';
+  let runwayAlertHtml  = '';
+  try { systemBannerHtml = renderSystemBanner({ format: 'html' }) || ''; } catch {}
   try {
     const density = computeRunwayDensityForHeartbeat();
-    runwayAlert = renderRunwayAlert({ pipelineDensity: density, format: 'html' }) || '';
+    runwayAlertHtml = renderRunwayAlert({ pipelineDensity: density, format: 'html' }) || '';
   } catch {}
 
-  // Rejected pattern of the week (Item #2 of 2026-05-16 incomplete-task review).
-  // Reads data/discard-reasons.jsonl, auto-suppresses when zero discards in
-  // the 7-day window — same no-noise pattern as Outreach Cadence.
-  let discardSection = '';
-  try { discardSection = renderDiscardPatternSection({ format: 'html', days: 7 }) || ''; } catch {}
+  // Rejected pattern of the week (auto-suppresses on zero discards in 7d)
+  let discardSectionHtml = '';
+  try { discardSectionHtml = renderDiscardPatternSection({ format: 'html', days: 7 }) || ''; } catch {}
 
-  // Hidden preheader (Phase 2 Day-1, 2026-05-17) — controls the inbox-preview
-  // text Gmail/Apple Mail/Outlook show beside the subject. Without this, those
-  // clients pull the first visible text (currently "CAREER-OPS · DAILY
-  // HEARTBEAT YYYY-MM-DD"), wasting the preview slot.
-  // The trailing ‌  spacers are the standard preheader trick that
-  // prevents Gmail from auto-pulling visible hero text into the preview;
-  // zero-width non-joiners between non-breaking spaces register as content
-  // to the parser without rendering anywhere visible.
-  const preheaderText = buildHeartbeatPreheader(meta);
-  const preheaderSpan = `<span style="display: none !important; max-height: 0; overflow: hidden; font-size: 1px; line-height: 1px; color: transparent; opacity: 0;">${preheaderText} &zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;</span>`;
+  // Render markdown body to styled HTML
+  const contentHtml = renderContentHtml(markdownBody);
 
-  return `<!DOCTYPE html>
-<html><head><meta charset="utf-8">
-<meta name="color-scheme" content="light dark">
-<meta name="supported-color-schemes" content="light dark">
-<style>${darkModeCss}</style>
-</head>
-<body class="body-bg" style="margin:0;padding:0;background:${BRAND.bg};color:${BRAND.text2};font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased">
-${preheaderSpan}
-<center class="body-bg" style="width:100%;background:${BRAND.bg}">
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="max-width:780px;width:100%;margin:0 auto;padding:24px 20px">
-  <tr><td>
-    ${header}
-    ${systemBanner}
-    ${runwayAlert}
-    ${discardSection}
-    ${kpiStrip}
-    ${styled}
-    ${footer}
-  </td></tr>
-</table>
-</center>
-</body></html>`;
+  // Interpolate data into the MJML template.
+  // We do NOT use escapeForMjml() on the pre-rendered HTML blobs (contentHtml,
+  // systemBannerHtml, etc.) because they're already valid HTML and we want
+  // them to pass through verbatim into the compiled output.
+  // We DO escape scalar strings (date, URLs) that came from user-visible
+  // computed values.
+  let tmpl = getMjmlTemplate();
+  tmpl = tmpl
+    .replace(/{{date}}/g,               escapeForMjml(date))
+    .replace(/{{dashboardUrl}}/g,        escapeForMjml(dashboardUrl))
+    .replace(/{{preheaderText}}/g,       escapeForMjml(preheaderText))
+    .replace(/{{kpiQueueCount}}/g,       String(queueCount))
+    .replace(/{{kpiEvaluatedToday}}/g,   String(evaluatedToday))
+    .replace(/{{kpiNewFromAlerts}}/g,    String(newFromAlerts))
+    .replace(/{{kpiTrackedCount}}/g,     String(trackedCount))
+    .replace(/{{systemBannerHtml}}/g,    systemBannerHtml)
+    .replace(/{{runwayAlertHtml}}/g,     runwayAlertHtml)
+    .replace(/{{discardSectionHtml}}/g,  discardSectionHtml)
+    .replace(/{{contentHtml}}/g,         contentHtml);
+
+  const result = await mjml2html(tmpl, {
+    validationLevel: 'soft', // warn but don't throw on unknown attributes
+    minify: false,
+  });
+
+  if (result.errors && result.errors.length > 0) {
+    for (const e of result.errors) {
+      console.warn(`[mjml] ${e.formattedMessage || e.message || JSON.stringify(e)}`);
+    }
+  }
+
+  return result.html || '';
 }
 
 async function sendEmail({ subject, body, meta = {} }) {
@@ -369,13 +339,14 @@ async function sendEmail({ subject, body, meta = {} }) {
     }
   }
 
+  const html = await renderHtmlEmail(body, meta);
   const info = await transporter.sendMail({
     from: secrets.GMAIL_USER,
     to: secrets.HEARTBEAT_TO,
     bcc,
     subject,
     text: body,
-    html: renderHtmlEmail(body, meta),
+    html,
   });
   return { messageId: info.messageId, bccTo: bcc || null };
 }
@@ -1402,7 +1373,7 @@ async function main() {
   console.log(`Wrote ${outPath}`);
 
   if (PREVIEW) {
-    const html = renderHtmlEmail(body, meta);
+    const html = await renderHtmlEmail(body, meta);
     const previewPath = '/tmp/heartbeat-preview.html';
     writeFileSync(previewPath, html);
     console.log(`Wrote ${previewPath} (${html.length} chars)`);
