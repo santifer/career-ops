@@ -40,6 +40,12 @@ import {
   APPLY_PACK_STAGES,
 } from '../lib/apply-pack-schema.mjs';
 
+import { runCvTailor } from './agents/cv-tailor.mjs';
+import { runCoverLetter } from './agents/cover-letter.mjs';
+import { runWhyStatement } from './agents/why-statement.mjs';
+import { runLinkedinDm } from './agents/linkedin-dm.mjs';
+import { runFormFields } from './agents/form-fields.mjs';
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
 const TRACKER_MD = join(ROOT, 'data/applications.md');
@@ -270,8 +276,14 @@ export async function loadCorpus({ archetype = 'A2-PgM', dryRun = true } = {}) {
  * Spawns 5 independent sub-agents in parallel via `Promise.allSettled`:
  * cv-tailor, cover-letter, why-statement, linkedin-dm, form-fields.
  *
- * In dry-run mode each "agent" is a synchronous stub that returns a
- * representative output. The real per-agent calls land in future days.
+ * Each sub-agent is imported from `scripts/agents/*.mjs` and accepts a
+ * uniform `SubAgentInput` → `SubAgentOutput` contract (see
+ * `scripts/agents/types.mjs`). In dry-run mode each sub-agent returns
+ * `{ status: 'skipped', output: null }`. The orchestrator then falls back
+ * to the canonical scaffold stubs so the assembled ApplyPack continues to
+ * validate against `lib/apply-pack-schema.mjs`. When sub-agents gain live
+ * output (Tier B #8+), their `output` field will carry the real artifact and
+ * the fallback stubs will be bypassed.
  */
 export async function fanOutDrafts({
   jd,
@@ -287,62 +299,82 @@ export async function fanOutDrafts({
   const company = jd?.company || 'UnknownCo';
   const role = jd?.role || 'Unknown Role';
 
-  // Stubs as async functions so the Promise.allSettled shape mirrors live mode.
-  const stubs = {
-    cv: async () => ({
-      path: `apply-pack/${slugify(company)}-${slugify(role)}/cv.pdf`,
-      format: 'pdf',
-      citations: [
-        {
-          claim: '[SCAFFOLD] Voice DNA RAG production methodology',
-          source_file: corpus?.cv_path || 'cv.md',
-          source_line: 142,
-        },
-      ],
-    }),
-    cover_letter: async () => ({
-      path: `apply-pack/${slugify(company)}-${slugify(role)}/cover-letter.md`,
-      body_markdown:
-        `# Cover Letter (SCAFFOLD)\n\nDraft body for ${company} — ${role}. ` +
-        `Voice + humanize gates run downstream.\n`,
-      humanize_score: 0,
-      voice_fidelity_cosine: 0,
-      citations: [],
-    }),
-    why_statement: async () => ({
-      path: `apply-pack/${slugify(company)}-${slugify(role)}/why.md`,
-      body_markdown: `# Why ${company} (SCAFFOLD)\n\nStub why-statement body.\n`,
-      humanize_score: 0,
-    }),
-    linkedin_dm: async () => ({
-      body: `[SCAFFOLD] LinkedIn DM body for ${company} — ${role}.`,
-      channel: 'linkedin-message',
-    }),
-    form_field_answers: async () => [
-      { question: '[SCAFFOLD] Why this role?', answer: '[SCAFFOLD] Stub answer.' },
-    ],
+  // Build the shared SubAgentInput passed to every sub-agent.
+  const subAgentInput = {
+    pack: { jd, corpus, archetype },
+    context: {
+      cv: corpus?.cv_path || 'cv.md',
+      articleDigest: corpus?.article_digest_path || 'article-digest.md',
+      voiceReference: corpus?.voice_reference_path || 'writing-samples/voice-reference.md',
+      hmIntel: hmIntel?.intel ?? null,
+      aiPolicy,
+    },
+    config: { dryRun, model: undefined, reasoningEffort: undefined },
   };
 
-  const entries = Object.entries(stubs);
-  const settled = await Promise.allSettled(entries.map(([, fn]) => fn()));
-  const out = {};
-  entries.forEach(([key], i) => {
-    const result = settled[i];
-    if (result.status === 'fulfilled') {
-      out[key] = result.value;
-    } else {
-      out[key] = null;
-      // Live mode: surface per-agent failures in gates instead of throwing.
-    }
-  });
+  // Fan out all 5 sub-agents in parallel via Promise.allSettled.
+  const [cvResult, clResult, whyResult, dmResult, ffResult] =
+    await Promise.allSettled([
+      runCvTailor(subAgentInput),
+      runCoverLetter(subAgentInput),
+      runWhyStatement(subAgentInput),
+      runLinkedinDm(subAgentInput),
+      runFormFields(subAgentInput),
+    ]);
 
-  // ai_policy + hmIntel are read here in live mode for per-agent gating.
-  // In scaffold mode we just acknowledge them so they aren't unused.
-  void aiPolicy;
-  void hmIntel;
-  void archetype;
+  // Helper: unwrap a settled result, returning the SubAgentOutput or null.
+  const unwrap = (settled) =>
+    settled.status === 'fulfilled' ? settled.value : null;
 
-  return out;
+  const cvAgent    = unwrap(cvResult);
+  const clAgent    = unwrap(clResult);
+  const whyAgent   = unwrap(whyResult);
+  const dmAgent    = unwrap(dmResult);
+  const ffAgent    = unwrap(ffResult);
+
+  // Scaffold fallback stubs — used when sub-agent output is null (dry-run or
+  // error). In live mode, sub-agents will populate output directly and these
+  // stubs will be bypassed by the non-null output branch below.
+  const cvFallback = {
+    path: `apply-pack/${slugify(company)}-${slugify(role)}/cv.pdf`,
+    format: 'pdf',
+    citations: [
+      {
+        claim: '[SCAFFOLD] Voice DNA RAG production methodology',
+        source_file: corpus?.cv_path || 'cv.md',
+        source_line: 142,
+      },
+    ],
+  };
+  const clFallback = {
+    path: `apply-pack/${slugify(company)}-${slugify(role)}/cover-letter.md`,
+    body_markdown:
+      `# Cover Letter (SCAFFOLD)\n\nDraft body for ${company} — ${role}. ` +
+      `Voice + humanize gates run downstream.\n`,
+    humanize_score: 0,
+    voice_fidelity_cosine: 0,
+    citations: [],
+  };
+  const whyFallback = {
+    path: `apply-pack/${slugify(company)}-${slugify(role)}/why.md`,
+    body_markdown: `# Why ${company} (SCAFFOLD)\n\nStub why-statement body.\n`,
+    humanize_score: 0,
+  };
+  const dmFallback = {
+    body: `[SCAFFOLD] LinkedIn DM body for ${company} — ${role}.`,
+    channel: 'linkedin-message',
+  };
+  const ffFallback = [
+    { question: '[SCAFFOLD] Why this role?', answer: '[SCAFFOLD] Stub answer.' },
+  ];
+
+  return {
+    cv:               (cvAgent?.output  ?? null) || cvFallback,
+    cover_letter:     (clAgent?.output  ?? null) || clFallback,
+    why_statement:    (whyAgent?.output ?? null) || whyFallback,
+    linkedin_dm:      (dmAgent?.output  ?? null) || dmFallback,
+    form_field_answers: (ffAgent?.output ?? null) || ffFallback,
+  };
 }
 
 /* -------------------------------------------------------------------------- */
