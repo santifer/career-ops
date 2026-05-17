@@ -4790,6 +4790,29 @@ function build() {
   th.sortable { cursor: pointer; user-select: none; }
   th.sortable:hover { background: var(--border); color: var(--text-2); }
   .sort-arrow { color: var(--blue-fg); font-size: 10px; }
+  /* ── Column-sort visible indicator + aria-sort state (Phase 1 Day-1/2, 2026-05-17)
+     Lives alongside the existing .sort-arrow (multi-sort level number). The
+     .sort-indicator shows ↕ when the column has not been clicked, then flips
+     to ↑ / ↓ once aria-sort is set. The indicator is purely visual — it
+     never replaces sortTable()'s arrow injection, just gives users a
+     persistent affordance that headers ARE sortable. See
+     DASHBOARD_INVARIANTS.md §8 for the invariant. */
+  th.sortable .sort-indicator {
+    color: var(--text-3); font-size: 10px; margin-left: 4px;
+    opacity: 0.55; transition: opacity 0.15s, color 0.15s;
+    font-variant-numeric: tabular-nums;
+  }
+  th.sortable:hover .sort-indicator { opacity: 0.9; }
+  th.sortable[aria-sort="ascending"] .sort-indicator,
+  th.sortable[aria-sort="descending"] .sort-indicator {
+    color: var(--blue-fg); opacity: 1;
+  }
+  th.sortable[aria-sort="ascending"] .sort-indicator::before { content: "↑"; }
+  th.sortable[aria-sort="descending"] .sort-indicator::before { content: "↓"; }
+  th.sortable[aria-sort="ascending"] .sort-indicator,
+  th.sortable[aria-sort="descending"] .sort-indicator { font-size: 0; }
+  th.sortable[aria-sort="ascending"] .sort-indicator::before,
+  th.sortable[aria-sort="descending"] .sort-indicator::before { font-size: 10px; }
   td {
     padding: 10px 12px; border-bottom: 1px solid var(--border);
     vertical-align: top; color: var(--text-2); font-weight: 400;
@@ -8369,17 +8392,17 @@ function build() {
     <div class="table-scroll"><table>
       <thead><tr>
         <th class="bulk-th"><input type="checkbox" class="bulk-header-checkbox" data-tbody="apply-now-tbody" aria-label="Select all visible rows in Apply-Now" onclick="handleHeaderCheckbox(this)"></th>
-        <th class="sortable" onclick="sortTable('apply-now-tbody', 1, 'num', this, event)">Score</th>
-        <th class="sortable" onclick="sortTable('apply-now-tbody', 2, 'num', this, event)" title="Lower-bound base salary parsed from Block A Comp row">Base</th>
-        <th class="sortable" onclick="sortTable('apply-now-tbody', 3, 'str', this, event)">Company <button type="button" class="tier-legend-btn" title="Tier badge legend" aria-label="Show tier badge legend" onclick="event.stopPropagation();openTierLegend()">?</button></th>
-        <th class="sortable" onclick="sortTable('apply-now-tbody', 4, 'str', this, event)">Role</th>
-        <th class="sortable" onclick="sortTable('apply-now-tbody', 5, 'str', this, event)">Status</th>
-        <th class="sortable" onclick="sortTable('apply-now-tbody', 6, 'str', this, event)">Equity <button type="button" class="tier-legend-btn" title="Equity stage legend" aria-label="Show equity stage legend" onclick="event.stopPropagation();openEquityLegend()">?</button></th>
-        <th class="sortable" onclick="sortTable('apply-now-tbody', 7, 'str', this, event)" title="Location / remote posture parsed from Block A">Location</th>
-        <th class="sortable" onclick="sortTable('apply-now-tbody', 8, 'num', this, event)" title="Team health + benefits grade (1=healthy → 5=avoid). Click any chip for the full benefits + sentiment breakdown.">Health</th>
+        <th class="sortable" aria-sort="none" data-col-key="score" data-col-type="numeric" onclick="sortTable('apply-now-tbody', 1, 'num', this, event)">Score<span class="sort-indicator" aria-hidden="true">↕</span></th>
+        <th class="sortable" aria-sort="none" data-col-key="base" data-col-type="numeric" onclick="sortTable('apply-now-tbody', 2, 'num', this, event)" title="Lower-bound base salary parsed from Block A Comp row">Base<span class="sort-indicator" aria-hidden="true">↕</span></th>
+        <th class="sortable" aria-sort="none" data-col-key="company" data-col-type="string" onclick="sortTable('apply-now-tbody', 3, 'str', this, event)">Company <button type="button" class="tier-legend-btn" title="Tier badge legend" aria-label="Show tier badge legend" onclick="event.stopPropagation();openTierLegend()">?</button><span class="sort-indicator" aria-hidden="true">↕</span></th>
+        <th class="sortable" aria-sort="none" data-col-key="role" data-col-type="string" onclick="sortTable('apply-now-tbody', 4, 'str', this, event)">Role<span class="sort-indicator" aria-hidden="true">↕</span></th>
+        <th class="sortable" aria-sort="none" data-col-key="status" data-col-type="status" onclick="sortTable('apply-now-tbody', 5, 'status', this, event)">Status<span class="sort-indicator" aria-hidden="true">↕</span></th>
+        <th class="sortable" aria-sort="none" data-col-key="equity" data-col-type="string" onclick="sortTable('apply-now-tbody', 6, 'str', this, event)">Equity <button type="button" class="tier-legend-btn" title="Equity stage legend" aria-label="Show equity stage legend" onclick="event.stopPropagation();openEquityLegend()">?</button><span class="sort-indicator" aria-hidden="true">↕</span></th>
+        <th class="sortable" aria-sort="none" data-col-key="location" data-col-type="string" onclick="sortTable('apply-now-tbody', 7, 'str', this, event)" title="Location / remote posture parsed from Block A">Location<span class="sort-indicator" aria-hidden="true">↕</span></th>
+        <th class="sortable" aria-sort="none" data-col-key="health" data-col-type="numeric" onclick="sortTable('apply-now-tbody', 8, 'num', this, event)" title="Team health + benefits grade (1=healthy → 5=avoid). Click any chip for the full benefits + sentiment breakdown.">Health<span class="sort-indicator" aria-hidden="true">↕</span></th>
         <th onclick="event.stopPropagation()" title="Recruiter + hiring-manager LinkedIn lookups">People</th>
-        <th class="sortable mobile-hide" onclick="sortTable('apply-now-tbody', 10, 'str', this, event)">Eval Date</th>
-        <th class="sortable" onclick="sortTable('apply-now-tbody', 11, 'num', this, event)">Age</th>
+        <th class="sortable mobile-hide" aria-sort="none" data-col-key="evalDate" data-col-type="date" onclick="sortTable('apply-now-tbody', 10, 'date', this, event)">Eval Date<span class="sort-indicator" aria-hidden="true">↕</span></th>
+        <th class="sortable" aria-sort="none" data-col-key="age" data-col-type="numeric" data-default-dir="asc" onclick="sortTable('apply-now-tbody', 11, 'num', this, event)">Age<span class="sort-indicator" aria-hidden="true">↕</span></th>
         <th>Action</th>
       </tr></thead>
       <tbody id="apply-now-tbody">
@@ -8452,17 +8475,17 @@ function build() {
     <div class="table-scroll"><table>
       <thead><tr>
         <th class="bulk-th"><input type="checkbox" class="bulk-header-checkbox" data-tbody="all-tbody" aria-label="Select all visible rows in All Evaluations" onclick="handleHeaderCheckbox(this)"></th>
-        <th class="sortable" onclick="sortTable('all-tbody', 1, 'num', this, event)">Score</th>
-        <th class="sortable" onclick="sortTable('all-tbody', 2, 'num', this, event)" title="Lower-bound base salary parsed from Block A Comp row">Base</th>
-        <th class="sortable" onclick="sortTable('all-tbody', 3, 'str', this, event)">Company <button type="button" class="tier-legend-btn" title="Tier badge legend" aria-label="Show tier badge legend" onclick="event.stopPropagation();openTierLegend()">?</button></th>
-        <th class="sortable" onclick="sortTable('all-tbody', 4, 'str', this, event)">Role</th>
-        <th class="sortable" onclick="sortTable('all-tbody', 5, 'str', this, event)">Status</th>
-        <th class="sortable" onclick="sortTable('all-tbody', 6, 'str', this, event)">Equity <button type="button" class="tier-legend-btn" title="Equity stage legend" aria-label="Show equity stage legend" onclick="event.stopPropagation();openEquityLegend()">?</button></th>
-        <th class="sortable" onclick="sortTable('all-tbody', 7, 'str', this, event)" title="Location / remote posture parsed from Block A">Location</th>
-        <th class="sortable" onclick="sortTable('all-tbody', 8, 'num', this, event)" title="Team health + benefits grade (1=healthy → 5=avoid). Click any chip for the full benefits breakdown.">Health</th>
+        <th class="sortable" aria-sort="none" data-col-key="score" data-col-type="numeric" onclick="sortTable('all-tbody', 1, 'num', this, event)">Score<span class="sort-indicator" aria-hidden="true">↕</span></th>
+        <th class="sortable" aria-sort="none" data-col-key="base" data-col-type="numeric" onclick="sortTable('all-tbody', 2, 'num', this, event)" title="Lower-bound base salary parsed from Block A Comp row">Base<span class="sort-indicator" aria-hidden="true">↕</span></th>
+        <th class="sortable" aria-sort="none" data-col-key="company" data-col-type="string" onclick="sortTable('all-tbody', 3, 'str', this, event)">Company <button type="button" class="tier-legend-btn" title="Tier badge legend" aria-label="Show tier badge legend" onclick="event.stopPropagation();openTierLegend()">?</button><span class="sort-indicator" aria-hidden="true">↕</span></th>
+        <th class="sortable" aria-sort="none" data-col-key="role" data-col-type="string" onclick="sortTable('all-tbody', 4, 'str', this, event)">Role<span class="sort-indicator" aria-hidden="true">↕</span></th>
+        <th class="sortable" aria-sort="none" data-col-key="status" data-col-type="status" onclick="sortTable('all-tbody', 5, 'status', this, event)">Status<span class="sort-indicator" aria-hidden="true">↕</span></th>
+        <th class="sortable" aria-sort="none" data-col-key="equity" data-col-type="string" onclick="sortTable('all-tbody', 6, 'str', this, event)">Equity <button type="button" class="tier-legend-btn" title="Equity stage legend" aria-label="Show equity stage legend" onclick="event.stopPropagation();openEquityLegend()">?</button><span class="sort-indicator" aria-hidden="true">↕</span></th>
+        <th class="sortable" aria-sort="none" data-col-key="location" data-col-type="string" onclick="sortTable('all-tbody', 7, 'str', this, event)" title="Location / remote posture parsed from Block A">Location<span class="sort-indicator" aria-hidden="true">↕</span></th>
+        <th class="sortable" aria-sort="none" data-col-key="health" data-col-type="numeric" onclick="sortTable('all-tbody', 8, 'num', this, event)" title="Team health + benefits grade (1=healthy → 5=avoid). Click any chip for the full benefits breakdown.">Health<span class="sort-indicator" aria-hidden="true">↕</span></th>
         <th onclick="event.stopPropagation()" title="Recruiter + hiring-manager LinkedIn lookups">People</th>
-        <th class="sortable mobile-hide" onclick="sortTable('all-tbody', 10, 'str', this, event)">Eval Date</th>
-        <th class="sortable" onclick="sortTable('all-tbody', 11, 'num', this, event)">Age</th>
+        <th class="sortable mobile-hide" aria-sort="none" data-col-key="evalDate" data-col-type="date" onclick="sortTable('all-tbody', 10, 'date', this, event)">Eval Date<span class="sort-indicator" aria-hidden="true">↕</span></th>
+        <th class="sortable" aria-sort="none" data-col-key="age" data-col-type="numeric" data-default-dir="asc" onclick="sortTable('all-tbody', 11, 'num', this, event)">Age<span class="sort-indicator" aria-hidden="true">↕</span></th>
         <th>Action</th>
       </tr></thead>
       <tbody id="all-tbody">
@@ -10661,6 +10684,10 @@ function applyFilters() {
 function sortTable(tbodyId, colIdx, type, thEl, evt) {
   const tbody = document.getElementById(tbodyId);
   if (!tbody) return;
+  // Per-column default direction: most columns are biggest-first (desc)
+  // but Age sorts youngest-first by default (asc). Header opts in via
+  // data-default-dir="asc" attribute. See DASHBOARD_INVARIANTS.md §8.
+  const defaultDir = (thEl && thEl.dataset && thEl.dataset.defaultDir === 'asc') ? 'asc' : 'desc';
   // Multi-column sort via shift-click. Without shift = replace stack with
   // single entry. With shift = if column is already in stack, toggle its
   // direction; otherwise append it as the next tiebreaker level.
@@ -10670,7 +10697,9 @@ function sortTable(tbodyId, colIdx, type, thEl, evt) {
   if (!isShift) {
     // Single-column sort (legacy behavior + toggle direction).
     const existing = stack.find(s => s.col === colIdx);
-    const dir = existing && existing.dir === 'desc' ? 'asc' : 'desc';
+    const dir = existing
+      ? (existing.dir === 'desc' ? 'asc' : 'desc')
+      : defaultDir;
     stack = [{ col: colIdx, type, dir }];
   } else {
     const idx = stack.findIndex(s => s.col === colIdx);
@@ -10679,18 +10708,23 @@ function sortTable(tbodyId, colIdx, type, thEl, evt) {
       if (stack[idx].dir === 'desc') stack[idx].dir = 'asc';
       else stack.splice(idx, 1);
     } else {
-      stack.push({ col: colIdx, type, dir: 'desc' });
+      stack.push({ col: colIdx, type, dir: defaultDir });
     }
     // Cap stack at 4 levels — beyond that the sort intent is unreadable.
     stack = stack.slice(0, 4);
   }
-  if (!stack.length) stack = [{ col: colIdx, type, dir: 'desc' }];
+  if (!stack.length) stack = [{ col: colIdx, type, dir: defaultDir }];
   tbody.dataset.sortStack = JSON.stringify(stack);
   // Update header indicators across the table — show level number for
-  // multi-sort, plain arrow for single.
+  // multi-sort, plain arrow for single. Also update aria-sort state on
+  // every sortable header so screen readers and the new ↑/↓ chevron
+  // indicator (CSS-driven, see DASHBOARD_INVARIANTS.md §8) reflect
+  // current sort state. The active column gets aria-sort="ascending"
+  // or "descending"; all other sortable headers reset to "none".
   const thead = tbody.closest('table')?.querySelector('thead');
   thead?.querySelectorAll('.sortable').forEach(th => {
     th.querySelector('.sort-arrow')?.remove();
+    th.setAttribute('aria-sort', 'none');
   });
   if (thead) {
     stack.forEach((entry, i) => {
@@ -10709,8 +10743,25 @@ function sortTable(tbodyId, colIdx, type, thEl, evt) {
       arrow.className = 'sort-arrow';
       arrow.textContent = (entry.dir === 'desc' ? ' ▼' : ' ▲') + (stack.length > 1 ? String(i + 1) : '');
       target.appendChild(arrow);
+      // Primary sort column drives aria-sort. For multi-sort, only the
+      // top-of-stack column gets ascending/descending; secondary levels
+      // stay at "none" (their .sort-arrow level number conveys order).
+      if (i === 0) {
+        target.setAttribute('aria-sort', entry.dir === 'desc' ? 'descending' : 'ascending');
+      }
     });
   }
+  // Persist primary sort to URL via history.replaceState (no history
+  // pollution — every sort click would otherwise push a new entry).
+  // Only the top-of-stack key + dir is persisted; multi-sort stacks are
+  // session-scoped. See DASHBOARD_INVARIANTS.md §8.
+  try {
+    if (stack.length && thEl && thEl.dataset && thEl.dataset.colKey && tbodyId === 'all-tbody') {
+      const params = new URLSearchParams(location.search);
+      params.set('sort', thEl.dataset.colKey + ':' + (stack[0].dir === 'desc' ? 'desc' : 'asc'));
+      history.replaceState(null, '', location.pathname + '?' + params.toString() + location.hash);
+    }
+  } catch (_) { /* URL update is best-effort; never block the sort */ }
   // Collect paired rows (main + detail)
   const allTr = Array.from(tbody.children);
   const pairs = [];
@@ -10722,10 +10773,19 @@ function sortTable(tbodyId, colIdx, type, thEl, evt) {
       if (detail) i++;
     }
   }
+  // Status sort weights — per templates/states.yml. Logical pipeline
+  // order: Evaluated → Responded → Applied → Interview → Offer →
+  // Rejected → Discarded. Higher weight = later-stage = sorted later in
+  // ascending. Empty / unknown statuses sort to the bottom (weight 99).
+  // See DASHBOARD_INVARIANTS.md §8.
+  const STATUS_ORDER = {
+    evaluated: 1, responded: 2, applied: 3, interview: 4,
+    offer: 5, rejected: 6, discarded: 7, skip: 8
+  };
   // Prefer a child element's data-sort-value when present (Base column
   // ships numeric data-base-min; equity, location chips can ship a custom
   // sort key). Falls back to innerText for legacy columns.
-  const cellSortValue = (td) => {
+  const cellSortValue = (td, sortType) => {
     if (!td) return '';
     const child = td.firstElementChild;
     if (child) {
@@ -10736,18 +10796,38 @@ function sortTable(tbodyId, colIdx, type, thEl, evt) {
         const map = { preferred: '1', remote: '2', outside: '3', unknown: '4' };
         return (map[child.dataset.locationStatus] || '5') + ' ' + (td.innerText.trim());
       }
+      // Status column: status pill carries data-status (lowercase key
+      // matching templates/states.yml). Map to numeric weight so logical
+      // pipeline order beats alphabetical.
+      if (sortType === 'status' && child.dataset && child.dataset.status !== undefined) {
+        return String(STATUS_ORDER[child.dataset.status] || 99);
+      }
     }
     return td.innerText.trim();
   };
   // Walk the sort stack: the first entry is the primary key, subsequent
   // entries are tiebreakers. Returns 0 only when every level matches.
+  // Type dispatch: 'num' / 'status' → numeric; 'date' → epoch ms; default
+  // (including 'str') → locale-aware string compare with numeric:true.
+  // Empty / missing values ALWAYS sort to the bottom regardless of dir.
   pairs.sort((a, b) => {
     for (const entry of stack) {
-      const av = cellSortValue(a.main.children[entry.col]);
-      const bv = cellSortValue(b.main.children[entry.col]);
-      let cmp = entry.type === 'num'
-        ? (parseFloat(av) || 0) - (parseFloat(bv) || 0)
-        : String(av).localeCompare(String(bv), undefined, { sensitivity: 'base' });
+      const av = cellSortValue(a.main.children[entry.col], entry.type);
+      const bv = cellSortValue(b.main.children[entry.col], entry.type);
+      const aEmpty = av === '' || av === null || av === undefined;
+      const bEmpty = bv === '' || bv === null || bv === undefined;
+      if (aEmpty && bEmpty) continue;
+      if (aEmpty) return 1;
+      if (bEmpty) return -1;
+      let cmp;
+      if (entry.type === 'num' || entry.type === 'status') {
+        cmp = (parseFloat(av) || 0) - (parseFloat(bv) || 0);
+      } else if (entry.type === 'date') {
+        const ad = Date.parse(av); const bd = Date.parse(bv);
+        cmp = (isNaN(ad) ? 0 : ad) - (isNaN(bd) ? 0 : bd);
+      } else {
+        cmp = String(av).localeCompare(String(bv), undefined, { numeric: true, sensitivity: 'base' });
+      }
       if (cmp === 0) continue;
       return entry.dir === 'desc' ? -cmp : cmp;
     }
@@ -15412,6 +15492,37 @@ setInterval(refreshLiveStats, 30000);
 _bulkLoadFromStorage();
 _bulkSyncCheckboxesFromState();
 _bulkUpdateBar();
+
+// ── Column-sort URL state restore (Phase 1 Day-1/2, 2026-05-17) ──
+// Reads ?sort=<colKey>:<asc|desc> from the URL on page load and
+// triggers the matching header click on the All Evaluations table.
+// This is best-effort — if the colKey doesn't match any header, the
+// page just loads in default order. See DASHBOARD_INVARIANTS.md §8.
+(function _restoreSortFromURL() {
+  try {
+    const params = new URLSearchParams(location.search);
+    const raw = params.get('sort');
+    if (!raw) return;
+    const [colKey, dir] = raw.split(':');
+    if (!colKey) return;
+    const wantDesc = (dir || 'desc').toLowerCase() === 'desc';
+    // Apply to the All Evaluations table — Apply-Now uses drag-priority
+    // ordering by default; we don't want URL state to override that.
+    const tbl = document.getElementById('all-tbody')?.closest('table');
+    const th = tbl?.querySelector('th.sortable[data-col-key="' + colKey + '"]');
+    if (!th) return;
+    // First click sets dir per th's default-dir; if we want the opposite
+    // direction, click twice. The dataset.sortStack starts empty so the
+    // first click will respect data-default-dir, then the second toggles.
+    th.click();
+    const tbody = document.getElementById('all-tbody');
+    let stack = [];
+    try { stack = JSON.parse(tbody.dataset.sortStack || '[]'); } catch (_) {}
+    const cur = stack[0]?.dir;
+    const haveDesc = cur === 'desc';
+    if (haveDesc !== wantDesc) th.click();
+  } catch (e) { /* never block dashboard load on URL parse error */ }
+})();
 
 // ── PWA service worker ─────────────────────────────────────────
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {

@@ -15,7 +15,7 @@ If you are about to:
 
 ---
 
-## The 7 invariants
+## The invariants
 
 ### 1. Table sorting
 - **Binding:** `<th class="sortable" onclick="sortTable('apply-now-tbody', N, 'num'|'str', this, event)">`
@@ -116,6 +116,56 @@ This is the **permanent rule** for every existing table and every future table/q
 - For each `<table>` inside a `.table-scroll`: confirm wrapper exists, overflow:auto on both axes, drag handles on `<th>`, dblclick expand works, [title] tooltips present.
 - Add a section to the audit pattern below: "8e column-resize handles present on every `<th>` in dashboard.html: $(grep -c 'col-resize-handle' dashboard/index.html) should be ≥ <total th count>"
 
+### 9. Column-header sortability + aria-sort state (added 2026-05-17, Tier B item #7)
+
+Audit `data/dashboard-audit-2026-05-17.md` § 3 flagged "0 of 51 column headers are click-to-sort" — the existing `sortTable()` system worked, but headers lacked `aria-sort`, default chevron indicators, and URL state, so the audit (and assistive tech) couldn't detect the affordance. This invariant locks in the a11y + visible signals layer.
+
+**At minimum these 5 columns must be click-to-sort with aria-sort state on BOTH `#apply-now-tbody` and `#all-tbody`:**
+- `Score` (numeric, desc default — biggest first)
+- `Base` (numeric, desc default — biggest first)
+- `Status` (logical pipeline order via `data-col-type="status"` — Evaluated < Responded < Applied < Interview < Offer < Rejected < Discarded per `templates/states.yml`)
+- `Eval Date` (date, desc default — newest first; uses `Date.parse`)
+- `Age` (numeric, ASC default — youngest first; uses `data-default-dir="asc"` on the th)
+
+**Required header markup:**
+```html
+<th class="sortable"
+    aria-sort="none"
+    data-col-key="score"
+    data-col-type="numeric"
+    onclick="sortTable('apply-now-tbody', 1, 'num', this, event)">
+  Score<span class="sort-indicator" aria-hidden="true">↕</span>
+</th>
+```
+
+**Required behavior:**
+- Initial state: `aria-sort="none"`, chevron shows `↕` (CSS `.sort-indicator::before` flips to `↑`/`↓` when aria-sort changes)
+- After click: clicked header's aria-sort becomes `ascending` or `descending`; ALL other sortable headers in the same table reset to `aria-sort="none"`
+- Direction respects per-column `data-default-dir` on first click (default `desc`, Age overrides to `asc`)
+- Type dispatch in `sortTable()`: `'num'` / `'status'` → numeric compare; `'date'` → `Date.parse` epoch ms; default → `localeCompare` with `{ numeric: true, sensitivity: 'base' }`
+- Empty / missing cells always sort to the bottom regardless of direction (do NOT treat empty as "0")
+- URL state: on sort change to the All Evaluations table, `?sort=<colKey>:<asc|desc>` is written via `history.replaceState` (NOT pushState — sorts don't pollute browser history). On page load, `(_restoreSortFromURL)()` parses the URL and dispatches the matching click. Apply-Now is excluded so drag-priority order isn't overwritten.
+
+**What breaks it:**
+- Removing `aria-sort="none"` from any of the 5 required headers
+- Removing `data-col-key` or `data-col-type` attributes (URL restore + invariant audit grep both depend on `data-col-key`)
+- Reverting `sortTable()` to skip the `setAttribute('aria-sort', ...)` block
+- Adding a NEW sortable column without giving it `aria-sort="none"` + `data-col-key` + `data-col-type`
+- Migrating to TanStack Table without preserving these attributes on the rendered `<th>`
+
+**Verification (one-line greps that should never decrease):**
+```bash
+grep -o 'aria-sort=' dashboard/index.html | wc -l      # should be >= 21 (10 per table + multi-sort updates)
+grep -o 'data-col-key=' dashboard/index.html | wc -l   # should be >= 20 (10 per table)
+grep -o 'data-col-type=' dashboard/index.html | wc -l  # should be >= 20
+grep -oE 'data-col-key="(score|base|status|evalDate|age)"' dashboard/index.html | sort | uniq -c
+# expected: each of the 5 keys appears exactly 2× (once per table)
+```
+
+**Kill switch:** to disable the indicator chevron without reverting markup, add CSS `th.sortable .sort-indicator { display: none; }`. The sortable click handlers stay functional — only the visible affordance hides. To disable URL state, comment out the `history.replaceState` block in `sortTable()` (URL stays static; sorting still works).
+
+**Implementation reference:** see `data/build-day-log-2026-05-17.md` for the commit SHA that landed this invariant.
+
 ---
 
 ## Audit pattern — run before AND after any substantial dashboard edit
@@ -145,11 +195,14 @@ open('/tmp/_dash-inline.js', 'w').write('\n//---SPLIT---\n'.join(scripts))
 node --check /tmp/_dash-inline.js && echo "INLINE JS OK" || echo "INLINE JS BROKEN — fix immediately"
 
 # 2. Grep audit — these numbers should not decrease after your change
-echo "Sort bindings:"  ; grep -c "sortable\|sortTable" dashboard/index.html
-echo "Drawer DOM:"     ; grep -c "right-rail-drawer\|drawer-body\|openRightRailForDetail" dashboard/index.html
-echo "Scroll wraps:"   ; grep -c 'class="table-scroll"' dashboard/index.html
-echo "Row click data:" ; grep -c 'data-row-id="apply-' dashboard/index.html
-echo "Cell truncation:"; grep -c 'data-fulltext\|truncate' dashboard/index.html
+echo "Sort bindings:"     ; grep -c "sortable\|sortTable" dashboard/index.html
+echo "Drawer DOM:"        ; grep -c "right-rail-drawer\|drawer-body\|openRightRailForDetail" dashboard/index.html
+echo "Scroll wraps:"      ; grep -c 'class="table-scroll"' dashboard/index.html
+echo "Row click data:"    ; grep -c 'data-row-id="apply-' dashboard/index.html
+echo "Cell truncation:"   ; grep -c 'data-fulltext\|truncate' dashboard/index.html
+echo "aria-sort attrs:"   ; grep -o 'aria-sort=' dashboard/index.html | wc -l   # invariant 9 — should be >= 21
+echo "data-col-key attrs:"; grep -o 'data-col-key=' dashboard/index.html | wc -l # invariant 9 — should be >= 20
+echo "sort indicators:"   ; grep -o 'class="sort-indicator"' dashboard/index.html | wc -l # invariant 9 — should be 20
 
 # 3. Server endpoint health check (server must be running on port 7777)
 for ep in /api/recruiter-pipeline-density /api/pipeline/per-company-preview /api/discard-reasons/recent /api/pipeline/preview; do
@@ -194,5 +247,6 @@ That's fine — the rules above aren't sacred, they're just load-bearing. If you
 - **2026-05-17:** UX subagent added density toggle CSS targeting `tr.row > td`. Audit confirmed it does NOT collide with row click, sort, scroll, truncation, or drawer (those use different selectors). No regression shipped.
 - **2026-05-17:** UX subagent added global keyboard nav. Audit confirmed input/contentEditable/modal guards work; existing Esc-to-close on drawers/modals preserved.
 - **2026-05-17:** Process All v2 modal rewrite. Anti-breakage: env kill switch `PROCESS_ALL_V2_PREVIEW_ENABLED=false` + client v1 fallback if endpoint 410s or errors. User never stares at a broken modal.
+- **2026-05-17:** Column-header sortability scaffold landed (invariant 9 added). Existing `sortTable()` worked but the audit + assistive tech couldn't see it — no `aria-sort`, no default chevron, no URL state. Fix was additive: 10 sortable headers per table now carry `aria-sort="none"` + `data-col-key` + `data-col-type` + `<span class="sort-indicator">↕</span>`; `sortTable()` updates aria-sort + writes `?sort=key:dir` via `history.replaceState`; Age column uses `data-default-dir="asc"`; Status column uses a numeric weight map keyed off `data-status` on the pill. Inline JS check passed; all 8 prior invariants preserved (sort=53, drawer=23, scroll-wraps=2, row-click=16, truncation=11).
 
 When the next regression happens (and it will), add it here with the date, what broke, how it was caught, and what guard was added.
