@@ -21,7 +21,7 @@ Reads your existing career-ops data files directly — no migration, no database
 | Follow-ups | `/dashboard/followups` | Cadence tracker with overdue highlighting, Track Contact and Add Follow-up forms |
 | Interview Prep | `/dashboard/interview` | Active interview banner, story bank, STAR practice mode, company file viewer |
 | Analytics | `/dashboard/analytics` | Conversion funnel, score distribution, weekly cadence sparkline, actionable insight |
-| Recruiter Find | `/dashboard/recruiter-find` | Generate recruiter outreach lists via AI for specific companies/roles |
+| Recruiter Find | `/dashboard/recruiter-find` | AI-generated LinkedIn connection note + follow-up message for a target company/role, with live streaming and archetype detection |
 
 ## Key features
 
