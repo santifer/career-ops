@@ -19,23 +19,24 @@ const INTERVAL_MULTIPLIERS = {
  * Parse compensation data from Ashby job object.
  * Returns structured salary object with min, max, and currency,
  * or null if no valid compensation data exists.
- * @param {object} job - Ashby job object
+ * @param {any} job - Ashby job object
  * @returns {{min: number, max: number, currency: string}|null}
  */
 function parseCompensation(job) {
   const comp = job?.compensation;
   if (!comp) return null;
 
-  const interval = comp.interval || '1 YEAR';
+  const interval = /** @type {keyof typeof INTERVAL_MULTIPLIERS} */ (comp.interval || '1 YEAR');
   const multiplier = INTERVAL_MULTIPLIERS[interval];
   if (!multiplier) return null;
 
   // Coerce and validate numeric fields — malformed API payloads must not propagate
+  /** @param {any} v */
   const normalizeNum = (v) => {
     if (v == null) return null;
     if (typeof v === 'string' && v.trim() === '') return null;
     const n = Number(v);
-    return Number.isFinite(n) ? n : null;
+    return Number.isFinite(n) && n >= 0 ? n : null;
   };
   const minValue = normalizeNum(comp.minValue);
   const maxValue = normalizeNum(comp.maxValue);
@@ -52,8 +53,8 @@ function parseCompensation(job) {
   if (min == null && max == null) return null;
 
   // Ensure correct ordering (min <= max)
-  const resolvedMin = min ?? max;
-  const resolvedMax = max ?? min;
+  const resolvedMin = /** @type {number} */ (min ?? max);
+  const resolvedMax = /** @type {number} */ (max ?? min);
   return {
     min: Math.min(resolvedMin, resolvedMax),
     max: Math.max(resolvedMin, resolvedMax),
@@ -61,6 +62,7 @@ function parseCompensation(job) {
   };
 }
 
+/** @param {import('./_types.js').PortalEntry} entry */
 function resolveApiUrl(entry) {
   const url = entry.careers_url || '';
   const match = url.match(/jobs\.ashbyhq\.com\/([^/?#]+)/);
@@ -80,9 +82,9 @@ export default {
   async fetch(entry, ctx) {
     const apiUrl = resolveApiUrl(entry);
     if (!apiUrl) throw new Error(`ashby: cannot derive API URL for ${entry.name}`);
-    const json = await ctx.fetchJson(apiUrl);
+    const json = /** @type {any} */ (await ctx.fetchJson(apiUrl));
     const jobs = Array.isArray(json?.jobs) ? json.jobs : [];
-    return jobs.map(j => ({
+    return jobs.map(/** @param {any} j */ j => ({
       title: j.title || '',
       url: j.jobUrl || '',
       company: entry.name,

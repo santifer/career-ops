@@ -61,7 +61,7 @@
 #   - min/max are annual compensation filters (use annualized values)
 #   - max: 0 means "no upper limit"
 #   - If no salary data exists on a job, it passes (conservative behavior)
-#   - If both currencies are known and mismatch, the salary is ignored/skipped.
+#   - If both currencies are known and differ, the job is rejected by the salary filter
 #   - Partial ranges (min only or max only) work correctly
 #   - If this entire block is absent, salary is not filtered (default behavior)
 #
