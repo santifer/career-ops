@@ -16,12 +16,14 @@
 import { readFileSync, writeFileSync, existsSync, statSync, readdirSync, appendFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { execSync } from 'child_process';
 import { homedir } from 'os';
 import nodemailer from 'nodemailer';
 import { marked } from 'marked';
 import mjml2html from 'mjml';
 import { classifyLiveness } from '../liveness-core.mjs';
 import { getCachedUrl } from '../lib/resolve-ats-url.mjs';
+import { renderTpgmHeartbeatSection } from '../lib/tpgm-heartbeat-section.mjs';
 import { poolMap } from '../lib/fetch-utils.mjs';
 import { buildSummary as buildOutreachSummary, urgency as outreachUrgency, daysSinceLastTouch as outreachDaysSince, touchCount as outreachTouchCount, listContacts as listOutreachContacts } from '../lib/outreach-tracker.mjs';
 import { buildOutreachMailto } from '../lib/mailto-helpers.mjs';
@@ -272,6 +274,50 @@ async function renderHtmlEmail(markdownBody, meta = {}) {
   let discardSectionHtml = '';
   try { discardSectionHtml = renderDiscardPatternSection({ format: 'html', days: 7 }) || ''; } catch {}
 
+  // TPgM weekly-growth section — Monday only (Tier B item #5, wired 2026-05-17).
+  // Uses TARGET_DATE (the email's date, not necessarily today's wall-clock date)
+  // so --date= overrides work correctly for manual re-runs.
+  // Day-of-week in PT: parse TARGET_DATE as UTC midnight and check getUTCDay().
+  // PDT = UTC-7; a Monday in PT is getUTCDay() === 1 (midnight Mon UTC) or
+  // getUTCDay() === 2 if TARGET_DATE is a Sunday UTC+17h ... keeping simple:
+  // use ISO date + getDay() in local Node env which runs in PT per launchd.
+  let tpgmHeartbeatSectionHtml = '';
+  const _targetDateLocal = new Date(TARGET_DATE + 'T12:00:00'); // noon avoids DST edge
+  const _isMonday = _targetDateLocal.getDay() === 1;
+  if (_isMonday) {
+    try {
+      const trackerOut = execSync(
+        `node ${JSON.stringify(join(__dirname, 'tpgm-tracker.mjs'))} --json`,
+        { cwd: ROOT, timeout: 10000, stdio: ['pipe', 'pipe', 'pipe'] }
+      ).toString('utf-8');
+      const tpgmData = JSON.parse(trackerOut);
+      const latestEv = (tpgmData.latest_evidence || [])[0] || null;
+      // Week-over-week delta: compare latest two evidence weeks
+      const prevEv   = (tpgmData.latest_evidence || [])[1] || null;
+      const latestScore  = tpgmData.tpgm_credibility_score ?? 0;
+      const prevScore    = prevEv
+        ? /* estimate: prior week score contribution via evidence count diff */
+          Math.max(0, latestScore - (latestEv ? latestEv.tpgm_evidence * 2 : 0))
+        : latestScore;
+      const weeklyDelta  = prevEv ? Math.round(latestScore - prevScore) : 0;
+      // Gap points: sum of open high-leverage course pm_bridge_weight
+      const gapPoints    = (tpgmData.skill_gaps || []).reduce((s, g) => s + (g.pm_bridge_weight || 0), 0);
+      const nextAction   = gapPoints > 0
+        ? `Close ${tpgmData.skill_gaps[0]?.name || 'top gap'} — +${gapPoints} PM-Bridge points available`
+        : 'Continue active courses to build TPgM credibility';
+      tpgmHeartbeatSectionHtml = renderTpgmHeartbeatSection({
+        score:          latestScore,
+        evidence_count: latestEv ? (latestEv.tpgm_evidence || 0) : 0,
+        weekly_delta:   weeklyDelta,
+        week:           latestEv ? latestEv.week : null,
+        next_action:    nextAction,
+      });
+    } catch (err) {
+      // Soft-fail: section simply omitted if tracker is unavailable on Monday
+      tpgmHeartbeatSectionHtml = '';
+    }
+  }
+
   // Render markdown body to styled HTML
   const contentHtml = renderContentHtml(markdownBody);
 
@@ -283,17 +329,18 @@ async function renderHtmlEmail(markdownBody, meta = {}) {
   // computed values.
   let tmpl = getMjmlTemplate();
   tmpl = tmpl
-    .replace(/{{date}}/g,               escapeForMjml(date))
-    .replace(/{{dashboardUrl}}/g,        escapeForMjml(dashboardUrl))
-    .replace(/{{preheaderText}}/g,       escapeForMjml(preheaderText))
-    .replace(/{{kpiQueueCount}}/g,       String(queueCount))
-    .replace(/{{kpiEvaluatedToday}}/g,   String(evaluatedToday))
-    .replace(/{{kpiNewFromAlerts}}/g,    String(newFromAlerts))
-    .replace(/{{kpiTrackedCount}}/g,     String(trackedCount))
-    .replace(/{{systemBannerHtml}}/g,    systemBannerHtml)
-    .replace(/{{runwayAlertHtml}}/g,     runwayAlertHtml)
-    .replace(/{{discardSectionHtml}}/g,  discardSectionHtml)
-    .replace(/{{contentHtml}}/g,         contentHtml);
+    .replace(/{{date}}/g,                    escapeForMjml(date))
+    .replace(/{{dashboardUrl}}/g,             escapeForMjml(dashboardUrl))
+    .replace(/{{preheaderText}}/g,            escapeForMjml(preheaderText))
+    .replace(/{{kpiQueueCount}}/g,            String(queueCount))
+    .replace(/{{kpiEvaluatedToday}}/g,        String(evaluatedToday))
+    .replace(/{{kpiNewFromAlerts}}/g,         String(newFromAlerts))
+    .replace(/{{kpiTrackedCount}}/g,          String(trackedCount))
+    .replace(/{{systemBannerHtml}}/g,         systemBannerHtml)
+    .replace(/{{runwayAlertHtml}}/g,          runwayAlertHtml)
+    .replace(/{{discardSectionHtml}}/g,       discardSectionHtml)
+    .replace(/{{tpgmHeartbeatSectionHtml}}/g, tpgmHeartbeatSectionHtml)
+    .replace(/{{contentHtml}}/g,              contentHtml);
 
   const result = await mjml2html(tmpl, {
     validationLevel: 'soft', // warn but don't throw on unknown attributes

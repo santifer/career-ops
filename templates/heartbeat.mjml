@@ -129,6 +129,14 @@
       </mj-column>
     </mj-section>
 
+    <!-- TPgM weekly growth section — Monday only (Tier B item #5, wired 2026-05-17) -->
+    <!-- Rendered by lib/tpgm-heartbeat-section.mjs; empty string on non-Monday days -->
+    <mj-section padding="0">
+      <mj-column>
+        <mj-text padding="0">{{tpgmHeartbeatSectionHtml}}</mj-text>
+      </mj-column>
+    </mj-section>
+
     <!-- ═══════════════════════════════════════════════════════════════════
          KPI TILES — four stats in a 4-column layout.
          Each tile is a separate mj-column so they stack on mobile.

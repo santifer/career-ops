@@ -17,8 +17,10 @@
 
 import { readFileSync, writeFileSync, existsSync, readdirSync, statSync, mkdirSync } from 'fs';
 import { join, dirname, basename } from 'path';
+import { execSync } from 'child_process';
 import yaml from 'js-yaml';
 import { marked } from 'marked';
+import { renderTpgmWidget } from '../lib/tpgm-dashboard-widget.mjs';
 import { parseApplicationsFile } from '../lib/parse-applications.mjs';
 import { statusKey, statusBadgeClass, STATUS_KEY_SOURCE, STATUS_BADGE_CLASS_SOURCE } from '../lib/status-key.mjs';
 import { networkSummary as _linkedInNetworkSummary, networkMeta as _linkedInNetworkMeta } from '../lib/linkedin-network.mjs';
@@ -3179,6 +3181,42 @@ function build() {
   const healthSnapshot = loadSystemHealthSnapshot(apps);
   const mcStripJson = JSON.stringify({ batch: batchSnapshot, health: healthSnapshot }).replace(/<\//g, '<\\/');
   const kpiSpark = computeKPISparklines(apps, today);
+
+  // TPgM credibility widget — runs tpgm-tracker.mjs --json; fails gracefully
+  // to empty-state data if the tracker or courses.yml is unavailable.
+  let tpgmWidgetHtml = '';
+  try {
+    const trackerOut = execSync(`node ${JSON.stringify(join(ROOT, 'scripts/tpgm-tracker.mjs'))} --json`, {
+      cwd: ROOT,
+      timeout: 10000,
+      stdio: ['pipe', 'pipe', 'pipe'],
+    }).toString('utf-8');
+    const tpgmData = JSON.parse(trackerOut);
+    // Map payload to renderTpgmWidget input shape
+    const latestEv = (tpgmData.latest_evidence || [])[0] || null;
+    tpgmWidgetHtml = renderTpgmWidget({
+      score:                   tpgmData.tpgm_credibility_score        ?? 0,
+      pm_bridge_index:         tpgmData.pm_bridge_buildability_index   ?? 0,
+      pm_credibility_composite:tpgmData.pm_credibility_composite       ?? 0,
+      highlights:              latestEv ? (latestEv.highlights || [])  : [],
+      active_courses:          tpgmData.active_courses                 || [],
+      gap_points_available:    (tpgmData.skill_gaps || []).reduce((s, g) => s + (g.pm_bridge_weight || 0), 0) || null,
+      latest_extract_week:     latestEv ? latestEv.week                : null,
+      latest_extract_age_days: latestEv ? (() => {
+        const w = latestEv.week; // e.g. "2026-W20"
+        if (!w) return null;
+        const m = w.match(/^(\d{4})-W(\d{2})$/);
+        if (!m) return null;
+        // ISO week Monday = year + week
+        const jan4 = new Date(parseInt(m[1], 10), 0, 4);
+        const startOfWeek = new Date(jan4.getTime() - ((jan4.getDay() || 7) - 1) * 86400000 + (parseInt(m[2], 10) - 1) * 7 * 86400000);
+        return Math.round((Date.now() - startOfWeek.getTime()) / 86400000);
+      })() : null,
+    });
+  } catch (err) {
+    // Soft-fail: render empty-state widget so the dashboard still builds
+    tpgmWidgetHtml = renderTpgmWidget({ score: 0 });
+  }
 
   // Sorted views
   const sortedByScore = [...apps].sort((a, b) => b.score - a.score);
@@ -8386,6 +8424,12 @@ function build() {
         <span class="stat-caret" aria-hidden="true">▾</span><span class="sr-only">Click to expand</span>
       </div>
     </div>
+  </div>
+
+  <!-- TPgM credibility tracker widget (Tier B item #5, wired 2026-05-17) -->
+  <!-- Static overview tile — separate from the sortable tables (DASHBOARD_INVARIANTS.md §1-7 unaffected) -->
+  <div style="margin:12px 0 0;max-width:540px">
+    ${tpgmWidgetHtml}
   </div>
 
   <!-- Expandable stat panels (loaded live from /api/detail/*) -->
