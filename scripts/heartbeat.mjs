@@ -950,6 +950,50 @@ function formatOutreachCadence() {
     } else {
       out.push(`  ${dayStr} · ${tStr} · _no recommendation yet — run \`npm run outreach:recommend\`_`);
     }
+
+    // ── RFC 6068 mailto: deeplink (Commit 2: mailto deeplinks, 2026-05-17) ──
+    // Highest single-move ROI in the entire heartbeat audit (9.2/10 per grok-fast).
+    // Pre-fills subject + body using the contact's next_action rationale verbatim
+    // so no net-new prose is generated. Newlines encoded as %0D%0A per RFC 6068 §5.
+    // URL capped at 1,800 chars to stay under the 2,000-char practical limit.
+    //
+    // intel.email_guess may be a string (legacy) or an object with .address
+    // (current schema from lib/outreach-tracker.mjs). Normalize to string here
+    // before calling buildOutreachMailto so the mailto: URL is always clean.
+    //
+    // If the contact has a guessed email address, produces a direct mailto: link.
+    // If no email, falls back to the LinkedIn profile URL (if present) so the
+    // user can copy-open it — still a one-click action from Gmail.
+    try {
+      const emailGuessRaw = c.intel?.email_guess;
+      const emailStr = emailGuessRaw
+        ? (typeof emailGuessRaw === 'string' ? emailGuessRaw : (emailGuessRaw.address || ''))
+        : '';
+      // Inject the normalized email string so buildOutreachMailto uses it correctly
+      const contactForMailto = emailStr
+        ? { ...c, intel: { ...(c.intel || {}), email_guess: emailStr } }
+        : c;
+      const { url: mailtoUrl, subject: mailtoSubject, bodyPreview } = buildOutreachMailto(contactForMailto, 'Mitchell');
+      const hasEmail = !!emailStr;
+      if (hasEmail) {
+        // mailto: with pre-filled subject + body — one click opens in default email client
+        out.push(`  📧 [Send email — ${mailtoSubject.slice(0, 60)}](${mailtoUrl})`);
+      } else if (c.contact_id && c.contact_id.startsWith('https://www.linkedin.com')) {
+        // Fallback: link to LinkedIn profile for DM
+        out.push(`  💬 [Open LinkedIn profile](${c.contact_id}) · _no email — DM directly_`);
+      } else if (c.intel?.x_handle) {
+        // Fallback: X/Twitter
+        out.push(`  🐦 [Open X profile](https://x.com/${c.intel.x_handle.replace('@', '')}) · _DM via X_`);
+      }
+      // Body preview in italics for inline context without leaving Gmail
+      if (hasEmail && bodyPreview) {
+        out.push(`  _Preview: ${bodyPreview.slice(0, 100)}…_`);
+      }
+    } catch (err) {
+      // Never block the heartbeat on mailto build failures
+      console.warn(`[heartbeat] mailto build failed for ${c.contact_id}: ${err.message}`);
+    }
+
     out.push('');
   }
 
