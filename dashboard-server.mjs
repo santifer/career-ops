@@ -13,6 +13,53 @@ import { marked } from 'marked';
 import { parseApplicationsFile } from './lib/parse-applications.mjs';
 import { statusKey, statusBadgeClass } from './lib/status-key.mjs';
 import { getCachedUrl } from './lib/resolve-ats-url.mjs';
+import {
+  buildSummary as buildOutreachSummary,
+  getContact as getOutreachContact,
+  listContacts as listOutreachContacts,
+  upsertContact as upsertOutreachContact,
+  logTouch as logOutreachTouch,
+  setStatus as setOutreachStatus,
+  _resetCache as resetOutreachCache,
+} from './lib/outreach-tracker.mjs';
+
+// ── Application enrichment for outreach API ────────────────────────────────
+// Join contact.linked_application_id → applications.md row so the dashboard
+// can render "→ [#1511] OpenAI Onboarding FDE (4.65)" inline. Cached for 30s
+// so 60s dashboard polls don't re-parse the 136-row tracker each time.
+let _appsCache = { ts: 0, byNum: new Map() };
+function appsByNum() {
+  if (Date.now() - _appsCache.ts < 30_000 && _appsCache.byNum.size) return _appsCache.byNum;
+  const apps = parseApplicationsFile(join(ROOT, 'data/applications.md'));
+  const byNum = new Map();
+  for (const a of apps) byNum.set(String(a.num), a);
+  _appsCache = { ts: Date.now(), byNum };
+  return byNum;
+}
+function enrichContact(c) {
+  if (!c?.linked_application_id) return c;
+  const app = appsByNum().get(String(c.linked_application_id));
+  if (!app) return c;
+  return {
+    ...c,
+    linked_application: {
+      num:     app.num,
+      company: app.company,
+      role:    app.role,
+      score:   app.score,
+      status:  app.status,
+      report:  app.reportPath || null,
+    },
+  };
+}
+function enrichOutreachSummary(summary) {
+  return {
+    ...summary,
+    due_today: (summary.due_today || []).map(enrichContact),
+    breakup:   (summary.breakup   || []).map(enrichContact),
+    referrals: (summary.referrals || []).map(enrichContact),
+  };
+}
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = __dirname;
@@ -183,6 +230,418 @@ function parsePipeline() {
     }
   }
   return { tier1: t1, tier2: t2, tier3: t3, total: t1 + t2 + t3 };
+}
+
+// ── Pipeline preview + spawner for the "Run Batch" / "Process All" buttons ─
+// Per-item cost ground truth comes from data/cost-log.tsv ($0.06/eval observed
+// for the legacy triage-only path; Tier 5 enrichment economics are richer).
+//
+// Per-run caps were calibrated against the Tier 5 enrichment economics
+// (per-company council intel + contact discovery + outreach drafts + apply-pack
+// pre-gen on high-confidence items). The post-calibration ground truth:
+//   - Run Batch (default top-5 items, Tier 5):   ~$15-25/run
+//   - Process All (~100 items, Tier 5 amortized cache): ~$200-280/run
+//   - Overnight auto-run (~5-10 Apply-Now items): ~$15-30/night
+//   - Monthly steady-state target: $500/mo (calibration brief 2026-05-16)
+//
+// All caps overridable via env vars so power-user / interview-week bursts can
+// raise the ceiling without code changes.
+const COST_PER_TRIAGE_HAIKU      = 0.005;
+const COST_PER_TRIAGE_SONNET_JD  = 0.07;   // Tier 5 enriched triage per item
+const COST_PER_BATCH_EVAL        = 0.060;
+const COST_PER_COMPANY_COUNCIL   = 2.00;   // council-of-models + dealbreaker per unique company
+const COST_PER_APPLY_PACK_PREGEN = 2.50;   // build-apply-packs.mjs per high-conf item
+const ADVANCE_RATE_ESTIMATE      = 0.50;   // historical: 11–72%; 50% is conservative mid
+const HIGH_CONFIDENCE_PREGEN_RATE = 0.20;  // % of items hitting ≥4.5 + high-conf flag
+const COMPANY_CACHE_HIT_RATE     = 0.50;   // % of unique companies already cached (30d TTL)
+
+const PER_RUN_CAP_RUN_BATCH   = parseFloat(process.env.PER_RUN_CAP_RUN_BATCH_USD   || '25');
+const PER_RUN_CAP_PROCESS_ALL = parseFloat(process.env.PER_RUN_CAP_PROCESS_ALL_USD || '250');
+const DAILY_CAP_OVERNIGHT     = parseFloat(process.env.DAILY_CAP_OVERNIGHT_USD     || '20');
+
+function countPipelinePending() {
+  const fp = join(ROOT, 'data/pipeline.md');
+  if (!existsSync(fp)) return 0;
+  return readFileSync(fp, 'utf-8').split('\n').filter(l => l.startsWith('- [ ]')).length;
+}
+
+function countTriageAdvanceQueued() {
+  const fp = join(ROOT, 'batch/triage-advance.tsv');
+  if (!existsSync(fp)) return 0;
+  return Math.max(0, readFileSync(fp, 'utf-8').split('\n').filter(l => l.trim() && !l.startsWith('#')).length - 1);
+}
+
+function getMonthlyBudget() {
+  // Calibration 2026-05-16: default raised from $50 to $500 to accommodate
+  // Tier 5 nightly enrichment + manual Run Batch + occasional Process All.
+  // Override via MONTHLY_BUDGET_USD env if running heavier or lighter.
+  return parseFloat(process.env.MONTHLY_BUDGET_USD || '500');
+}
+
+function getBurstBudget() {
+  // Burst-mode for interview weeks: raise the ceiling temporarily, deduct
+  // from next month's cap. Set MONTHLY_BUDGET_USD_BURST=1000 + MONTHLY_BUDGET_BURST_UNTIL=YYYY-MM-DD
+  // to activate. Returns 0 if burst is disabled or expired.
+  const burst = parseFloat(process.env.MONTHLY_BUDGET_USD_BURST || '0');
+  if (!burst) return 0;
+  const until = process.env.MONTHLY_BUDGET_BURST_UNTIL;
+  if (until && Date.now() > Date.parse(until)) return 0;
+  return burst;
+}
+
+function getEffectiveMonthlyBudget() {
+  return getMonthlyBudget() + getBurstBudget();
+}
+
+// ── Recruiter pipeline density (Phase 6, calibration 2026-05-16) ──────────
+// Mitchell's <3-month runway means pipeline density matters as much as per-role
+// fit. This function computes pipeline-health metrics from the outreach
+// tracker. Surfaced via /api/recruiter-pipeline-density for the dashboard
+// widget and rolled into the heartbeat email's runway alert section.
+const RUNWAY_WEEKS_DEFAULT = parseInt(process.env.RUNWAY_WEEKS || '12');
+const PIPELINE_HEALTH_THRESHOLDS = {
+  active_healthy:   5,   // 5+ active conversations = healthy
+  active_stretched: 3,   // 3-4 active = stretched
+  touches_healthy:  10,  // 10+ touches/week = healthy
+  touches_stretched: 5,  // 5-9 touches/week = stretched
+  response_rate_healthy: 0.30,
+};
+
+function computeRecruiterPipelineDensity() {
+  let contacts = [];
+  try { contacts = listOutreachContacts(); } catch (e) {
+    return { ok: false, error: `outreach tracker unavailable: ${e.message}` };
+  }
+  const now = Date.now();
+  const sevenDaysAgo = now - 7 * 86400000;
+  const thirtyDaysAgo = now - 30 * 86400000;
+
+  let active = 0, responded = 0, dead = 0, total = contacts.length;
+  let activeByTier = { A: 0, B: 0, C: 0, unspecified: 0 };
+  let activeByType = { recruiter: 0, hm: 0, sourcer: 0, peer: 0, exec: 0, founder: 0 };
+  let touches7d = 0, touches30d = 0;
+  let lastTouchTs = 0;
+
+  for (const c of contacts) {
+    if (c.status === 'dead') { dead++; continue; }
+    if (c.status === 'awaiting_reply' || c.status === 'warm' || c.status === 'responded') {
+      active++;
+      const tier = (c.tier || 'unspecified').toUpperCase();
+      if (tier === 'A' || tier === 'B' || tier === 'C') activeByTier[tier]++;
+      else activeByTier.unspecified++;
+      const ct = c.contact_type || 'recruiter';
+      if (activeByType[ct] !== undefined) activeByType[ct]++;
+    }
+    if (c.status === 'responded') responded++;
+
+    // Count touches in time windows
+    const touches = Array.isArray(c.touches) ? c.touches : [];
+    for (const t of touches) {
+      const ts = Date.parse(t.ts);
+      if (!isFinite(ts)) continue;
+      if (ts >= sevenDaysAgo) touches7d++;
+      if (ts >= thirtyDaysAgo) touches30d++;
+      if (ts > lastTouchTs) lastTouchTs = ts;
+    }
+  }
+
+  const responseRate = total > 0 ? Math.round((responded / total) * 100) / 100 : 0;
+
+  // Health verdict
+  let health, reasons = [];
+  if (active >= PIPELINE_HEALTH_THRESHOLDS.active_healthy &&
+      touches7d >= PIPELINE_HEALTH_THRESHOLDS.touches_healthy) {
+    health = 'healthy';
+    reasons.push(`${active} active conversations + ${touches7d} touches this week`);
+  } else if (active >= PIPELINE_HEALTH_THRESHOLDS.active_stretched ||
+             touches7d >= PIPELINE_HEALTH_THRESHOLDS.touches_stretched) {
+    health = 'stretched';
+    if (active < PIPELINE_HEALTH_THRESHOLDS.active_healthy) reasons.push(`only ${active} active conversations (target: ${PIPELINE_HEALTH_THRESHOLDS.active_healthy}+)`);
+    if (touches7d < PIPELINE_HEALTH_THRESHOLDS.touches_healthy) reasons.push(`only ${touches7d} touches this week (target: ${PIPELINE_HEALTH_THRESHOLDS.touches_healthy}+)`);
+  } else {
+    health = 'critical';
+    reasons.push(`${active} active conversations + ${touches7d} touches this week — both below stretched thresholds`);
+  }
+
+  // Runway alert: given Mitchell's runway, project whether pipeline can land an offer in time
+  const runwayWeeks = RUNWAY_WEEKS_DEFAULT;
+  const daysSinceLastTouch = lastTouchTs ? Math.round((now - lastTouchTs) / 86400000) : null;
+  const runwayAlert = (health === 'critical')
+    ? `🚨 Pipeline below threshold for ${runwayWeeks}-week runway. Increase outreach velocity to ${PIPELINE_HEALTH_THRESHOLDS.touches_healthy}+ touches/week immediately.`
+    : (health === 'stretched')
+      ? `⚠️  Pipeline stretched for ${runwayWeeks}-week runway. Add ${Math.max(0, PIPELINE_HEALTH_THRESHOLDS.active_healthy - active)} more active conversations and ${Math.max(0, PIPELINE_HEALTH_THRESHOLDS.touches_healthy - touches7d)} more touches this week.`
+      : `✅ Pipeline density adequate for ${runwayWeeks}-week runway.`;
+
+  return {
+    ok: true,
+    runway_weeks: runwayWeeks,
+    health,
+    health_reasons: reasons,
+    runway_alert: runwayAlert,
+    contacts: {
+      total,
+      active,
+      responded,
+      dead,
+      response_rate: responseRate,
+      active_by_tier: activeByTier,
+      active_by_type: activeByType,
+    },
+    velocity: {
+      touches_last_7d:  touches7d,
+      touches_last_30d: touches30d,
+      days_since_last_touch: daysSinceLastTouch,
+    },
+    thresholds: PIPELINE_HEALTH_THRESHOLDS,
+    computed_at: new Date().toISOString(),
+  };
+}
+
+function getRolling30dSpend() {
+  const fp = join(ROOT, 'data/cost-log.tsv');
+  if (!existsSync(fp)) return 0;
+  const cutoff = Date.now() - 30 * 86400000;
+  let total = 0;
+  const lines = readFileSync(fp, 'utf-8').split('\n').filter(Boolean);
+  for (const line of lines) {
+    if (line.startsWith('date\t')) continue;
+    const cols = line.split('\t');
+    // Two formats observed: long TSV (date, batch_id, requests, ... cost_usd, model) AND
+    // short append (date, iso_ts, cost_usd, label). Detect by column count.
+    let dateStr, cost;
+    if (cols.length >= 9) {
+      dateStr = cols[0]; cost = parseFloat(cols[7]);
+    } else if (cols.length >= 4) {
+      dateStr = cols[0]; cost = parseFloat(cols[2]);
+    } else continue;
+    if (!isFinite(cost)) continue;
+    const t = Date.parse(dateStr);
+    if (isNaN(t) || t < cutoff) continue;
+    total += cost;
+  }
+  return total;
+}
+
+function buildPipelinePreview() {
+  const pending = countPipelinePending();
+  const queued  = countTriageAdvanceQueued();
+  const monthlyBudget   = getMonthlyBudget();
+  const burstBudget     = getBurstBudget();
+  const effectiveBudget = monthlyBudget + burstBudget;
+  const spent30d        = getRolling30dSpend();
+  const headroom        = Math.max(0, effectiveBudget - spent30d);
+
+  // ── Legacy estimate (Haiku triage + Sonnet batch eval) ──
+  // Still accurate for the currently-deployed pipeline. Tier 5 enrichment
+  // economics layer in once Phases 2-3 ship — see process_all.tier5_estimate.
+  const triageCost     = pending * COST_PER_TRIAGE_HAIKU;
+  const batchEvalCount = queued + Math.round(pending * ADVANCE_RATE_ESTIMATE);
+  const batchCost      = batchEvalCount * COST_PER_BATCH_EVAL;
+  const processAllCost = triageCost + batchCost;
+  const runBatchCost   = queued * COST_PER_BATCH_EVAL;
+
+  // ── Tier 5 estimate (post-Phase-3) ──
+  // For Process All: every advanced item gets JD-enriched triage, ~60% of
+  // items dedupe to unique companies (each company gets council intel with
+  // 50% cache hit rate), top-20% high-confidence items get apply-pack pre-gen.
+  const tier5UniqueCompaniesEstimate = Math.max(1, Math.round(batchEvalCount * 0.60));
+  const tier5CompaniesCouncilCost    = tier5UniqueCompaniesEstimate * COST_PER_COMPANY_COUNCIL * (1 - COMPANY_CACHE_HIT_RATE);
+  const tier5TriageEnrichedCost      = batchEvalCount * COST_PER_TRIAGE_SONNET_JD;
+  const tier5ApplyPackCost           = Math.round(batchEvalCount * HIGH_CONFIDENCE_PREGEN_RATE) * COST_PER_APPLY_PACK_PREGEN;
+  const tier5ProcessAllCost          = tier5TriageEnrichedCost + tier5CompaniesCouncilCost + tier5ApplyPackCost;
+
+  const tier5RunBatchUniqueCompanies = Math.max(1, Math.round(queued * 0.60));
+  const tier5RunBatchCost = (queued * COST_PER_TRIAGE_SONNET_JD)
+                          + (tier5RunBatchUniqueCompanies * COST_PER_COMPANY_COUNCIL * (1 - COMPANY_CACHE_HIT_RATE))
+                          + (Math.round(queued * HIGH_CONFIDENCE_PREGEN_RATE) * COST_PER_APPLY_PACK_PREGEN);
+
+  return {
+    pending_pipeline:    pending,
+    queued_for_batch:    queued,
+    monthly_budget_usd:  monthlyBudget,
+    burst_budget_usd:    burstBudget,
+    effective_budget_usd: effectiveBudget,
+    spent_30d_usd:       Math.round(spent30d * 100) / 100,
+    headroom_usd:        Math.round(headroom * 100) / 100,
+    per_run_caps: {
+      run_batch_usd:    PER_RUN_CAP_RUN_BATCH,
+      process_all_usd:  PER_RUN_CAP_PROCESS_ALL,
+      overnight_usd:    DAILY_CAP_OVERNIGHT,
+    },
+    process_all: {
+      triage_count:       pending,
+      triage_cost_usd:    Math.round(triageCost * 1000) / 1000,
+      batch_eval_count:   batchEvalCount,
+      batch_eval_cost_usd:Math.round(batchCost * 100) / 100,
+      total_cost_usd:     Math.round(processAllCost * 100) / 100,
+      assumed_advance_rate: ADVANCE_RATE_ESTIMATE,
+      exceeds_budget:     (spent30d + processAllCost) > effectiveBudget,
+      exceeds_per_run_cap: processAllCost > PER_RUN_CAP_PROCESS_ALL,
+      recommended_cap_usd: Math.ceil((spent30d + processAllCost) * 1.1),
+      tier5_estimate: {
+        unique_companies:        tier5UniqueCompaniesEstimate,
+        triage_enriched_cost_usd: Math.round(tier5TriageEnrichedCost * 100) / 100,
+        company_council_cost_usd: Math.round(tier5CompaniesCouncilCost * 100) / 100,
+        apply_pack_pregen_cost_usd: Math.round(tier5ApplyPackCost * 100) / 100,
+        total_cost_usd:           Math.round(tier5ProcessAllCost * 100) / 100,
+        assumed_cache_hit_rate:   COMPANY_CACHE_HIT_RATE,
+        exceeds_per_run_cap:      tier5ProcessAllCost > PER_RUN_CAP_PROCESS_ALL,
+      },
+    },
+    run_batch: {
+      eval_count:         queued,
+      total_cost_usd:     Math.round(runBatchCost * 100) / 100,
+      exceeds_budget:     (spent30d + runBatchCost) > effectiveBudget,
+      exceeds_per_run_cap: runBatchCost > PER_RUN_CAP_RUN_BATCH,
+      tier5_estimate: {
+        unique_companies:   tier5RunBatchUniqueCompanies,
+        total_cost_usd:     Math.round(tier5RunBatchCost * 100) / 100,
+        exceeds_per_run_cap: tier5RunBatchCost > PER_RUN_CAP_RUN_BATCH,
+      },
+    },
+    per_item_rates: {
+      triage_haiku:        COST_PER_TRIAGE_HAIKU,
+      triage_sonnet_jd:    COST_PER_TRIAGE_SONNET_JD,
+      batch_sonnet:        COST_PER_BATCH_EVAL,
+      company_council:     COST_PER_COMPANY_COUNCIL,
+      apply_pack_pregen:   COST_PER_APPLY_PACK_PREGEN,
+      source:              'data/cost-log.tsv observed average + calibration brief 2026-05-16',
+    },
+  };
+}
+
+function loadPipelineProcessState() {
+  const fp = join(ROOT, 'data/pipeline-process-state.json');
+  if (!existsSync(fp)) return { jobs: {} };
+  try { return JSON.parse(readFileSync(fp, 'utf-8')); }
+  catch { return { jobs: {} }; }
+}
+
+function spawnProcessAll({ sendEmail, force }) {
+  // Cap enforcement (calibration 2026-05-16): refuse to spawn if per-run cap
+  // or monthly budget exceeded. `force: true` overrides — for the user-explicit
+  // "I know what I'm doing, fire it anyway" path.
+  if (!force) {
+    const preview = buildPipelinePreview();
+    if (preview.process_all.exceeds_per_run_cap) {
+      return {
+        ok: false,
+        error: `Process All estimate $${preview.process_all.total_cost_usd} exceeds per-run cap $${PER_RUN_CAP_PROCESS_ALL}. Pass force:true to override, or raise PER_RUN_CAP_PROCESS_ALL_USD env.`,
+        cap_exceeded: 'per_run',
+        estimated_cost_usd: preview.process_all.total_cost_usd,
+        cap_usd: PER_RUN_CAP_PROCESS_ALL,
+      };
+    }
+    if (preview.process_all.exceeds_budget) {
+      return {
+        ok: false,
+        error: `Process All would push 30d spend ($${preview.spent_30d_usd} + $${preview.process_all.total_cost_usd}) past effective monthly budget $${preview.effective_budget_usd}. Activate burst mode (MONTHLY_BUDGET_USD_BURST + MONTHLY_BUDGET_BURST_UNTIL) or pass force:true.`,
+        cap_exceeded: 'monthly',
+        estimated_cost_usd: preview.process_all.total_cost_usd,
+        spent_30d_usd: preview.spent_30d_usd,
+        effective_budget_usd: preview.effective_budget_usd,
+      };
+    }
+  }
+
+  // Generate the job ID server-side so we can return it immediately to the UI
+  const jobId = 'proc-' + Date.now().toString(36) + '-' + randomBytes(3).toString('hex');
+  const logPath = `/tmp/process-all-${jobId}.log`;
+  const args = [join(ROOT, 'scripts/process-all-pipeline.mjs'), `--job-id=${jobId}`];
+  if (sendEmail) args.push('--send-email');
+  if (force) args.push('--cap-override');
+  try {
+    // Lazy import to avoid pulling child_process when no one calls this endpoint
+    import('child_process').then(({ spawn }) => {
+      const proc = spawn('node', args, {
+        cwd: ROOT,
+        env: process.env,
+        stdio: ['ignore', 'ignore', 'ignore'],
+        detached: true,
+      });
+      proc.unref();
+    });
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+  // Initialize the state row optimistically — the orchestrator will overwrite
+  const state = loadPipelineProcessState();
+  state.jobs[jobId] = {
+    jobId,
+    type:        'process-all',
+    status:      'queued',
+    started_at:  new Date().toISOString(),
+    send_email:  sendEmail,
+    log_path:    logPath,
+  };
+  try {
+    if (!existsSync(join(ROOT, 'data'))) mkdirSync(join(ROOT, 'data'), { recursive: true });
+    writeFileSync(join(ROOT, 'data/pipeline-process-state.json'), JSON.stringify(state, null, 2));
+  } catch {}
+  return { ok: true, jobId, log_path: logPath, status_url: `/api/pipeline/job-status?job_id=${jobId}` };
+}
+
+function spawnBatchOnly({ sendEmail, force }) {
+  // Cap enforcement (calibration 2026-05-16): refuse to spawn if per-run cap
+  // ($25 default) or monthly budget exceeded. `force: true` overrides.
+  if (!force) {
+    const preview = buildPipelinePreview();
+    if (preview.run_batch.exceeds_per_run_cap) {
+      return {
+        ok: false,
+        error: `Run Batch estimate $${preview.run_batch.total_cost_usd} exceeds per-run cap $${PER_RUN_CAP_RUN_BATCH}. Pass force:true to override, or raise PER_RUN_CAP_RUN_BATCH_USD env.`,
+        cap_exceeded: 'per_run',
+        estimated_cost_usd: preview.run_batch.total_cost_usd,
+        cap_usd: PER_RUN_CAP_RUN_BATCH,
+      };
+    }
+    if (preview.run_batch.exceeds_budget) {
+      return {
+        ok: false,
+        error: `Run Batch would push 30d spend ($${preview.spent_30d_usd} + $${preview.run_batch.total_cost_usd}) past effective monthly budget $${preview.effective_budget_usd}. Activate burst mode or pass force:true.`,
+        cap_exceeded: 'monthly',
+        estimated_cost_usd: preview.run_batch.total_cost_usd,
+        spent_30d_usd: preview.spent_30d_usd,
+        effective_budget_usd: preview.effective_budget_usd,
+      };
+    }
+  }
+
+  const jobId = 'batch-' + Date.now().toString(36) + '-' + randomBytes(3).toString('hex');
+  const logPath = `/tmp/batch-only-${jobId}.log`;
+  try {
+    import('child_process').then(({ spawn }) => {
+      // Run batch + rebuild + (optional) email in sequence via a shell pipe
+      const cmd = [
+        `node "${join(ROOT, 'batch-runner-batches.mjs')}" run`,
+        `node "${join(ROOT, 'scripts/build-dashboard.mjs')}"`,
+        sendEmail ? `node "${join(ROOT, 'scripts/heartbeat.mjs')}" --send` : 'echo "(email skipped)"',
+      ].join(' && ');
+      const proc = spawn('bash', ['-c', `(${cmd}) > "${logPath}" 2>&1`], {
+        cwd: ROOT,
+        env: process.env,
+        stdio: ['ignore', 'ignore', 'ignore'],
+        detached: true,
+      });
+      proc.unref();
+    });
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+  const state = loadPipelineProcessState();
+  state.jobs[jobId] = {
+    jobId,
+    type:        'batch-only',
+    status:      'queued',
+    started_at:  new Date().toISOString(),
+    send_email:  sendEmail,
+    log_path:    logPath,
+  };
+  try {
+    if (!existsSync(join(ROOT, 'data'))) mkdirSync(join(ROOT, 'data'), { recursive: true });
+    writeFileSync(join(ROOT, 'data/pipeline-process-state.json'), JSON.stringify(state, null, 2));
+  } catch {}
+  return { ok: true, jobId, log_path: logPath, status_url: `/api/pipeline/job-status?job_id=${jobId}` };
 }
 
 function parseBatch() {
@@ -926,6 +1385,10 @@ function updateApplicationStatus({ num, status, note }) {
     return { ok: false, code: 500, error: `Atomic write failed: ${err.message}` };
   }
 
+  // Bust the 30s apps cache so /api/outreach immediately sees the new status
+  // when it enriches contacts via linked_application_id → applications.md.
+  _appsCache = { ts: 0, byNum: new Map() };
+
   // Auto-log status change to per-row activity (best-effort; never block status update)
   if (oldStatus && oldStatus !== canonical) {
     try {
@@ -1061,6 +1524,9 @@ function updateApplicationStatusBulk({ nums, status }) {
   } catch (err) {
     return { ok: false, code: 500, error: `Atomic write failed: ${err.message}` };
   }
+
+  // Bust the apps cache so /api/outreach sees the new status immediately.
+  _appsCache = { ts: 0, byNum: new Map() };
 
   // Auto-log status change to per-row activity (best-effort; never block)
   const ts = new Date().toISOString();
@@ -1453,6 +1919,175 @@ const server = createServer((req, res) => {
   }
 
   if (url === '/api/stats') return json(computeStats());
+
+  // ── Hiring-manager intel (from scripts/hiring-manager-research.mjs) ─────
+  // GET /api/hm-intel?slug=anthropic-comms-manager  → returns the JSON
+  // synthesized by the 7-LLM council, or 404 if no intel exists yet.
+  // The dashboard drawer fetches this lazily on row click.
+  if (url === '/api/hm-intel') {
+    const slug = String(query.slug || '').toLowerCase()
+      .replace(/[^a-z0-9-]/g, '').slice(0, 120);
+    if (!slug) return json({ ok: false, error: 'missing slug' }, 400);
+    const fp = join(ROOT, 'data/hm-intel', `${slug}.json`);
+    if (!existsSync(fp)) return json({ ok: false, error: 'no intel for slug', slug }, 404);
+    try {
+      const raw = readFileSync(fp, 'utf-8');
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-store' });
+      return res.end(raw);
+    } catch (err) {
+      return json({ ok: false, error: err.message }, 500);
+    }
+  }
+
+  // GET /api/hm-intel/list → returns slugs that have intel files (for the
+  // dashboard to know which rows have a 🔍 intel chip).
+  if (url === '/api/hm-intel/list') {
+    const dir = join(ROOT, 'data/hm-intel');
+    if (!existsSync(dir)) return json({ slugs: [] });
+    const slugs = readdirSync(dir)
+      .filter(f => f.endsWith('.json') && !f.startsWith('_'))
+      .map(f => f.replace(/\.json$/, ''));
+    return json({ slugs });
+  }
+
+  // ── Pipeline processing — "Run Batch" + "Process All" buttons ───────────
+  // Two flows the dashboard can trigger:
+  //  • Run Batch       → batch-runner-batches.mjs run  (existing queue only)
+  //  • Process All     → triage + batch + rebuild + optional email
+  //
+  // GET  /api/pipeline/preview        → counts + cost estimate + budget state
+  // POST /api/pipeline/process-all    → kick off the chain
+  // POST /api/batch/run               → kick off batch-only
+  // GET  /api/pipeline/job-status     → poll a running job
+  if (url === '/api/pipeline/preview') {
+    return json(buildPipelinePreview());
+  }
+  if (url === '/api/recruiter-pipeline-density') {
+    // Phase 6 (calibration 2026-05-16): pipeline-density widget data source.
+    // Used by the dashboard runway-alert widget + heartbeat email runway section.
+    return json(computeRecruiterPipelineDensity());
+  }
+  if (url === '/api/pipeline/process-all' && req.method === 'POST') {
+    let body = '';
+    let total = 0;
+    req.on('data', c => { total += c.length; if (total > 4 * 1024) { req.destroy(); return; } body += c; });
+    req.on('end', () => {
+      let parsed;
+      try { parsed = JSON.parse(body || '{}'); }
+      catch { return json({ ok: false, error: 'Invalid JSON' }, 400); }
+      if (!parsed.confirm) return json({ ok: false, error: 'confirm=true required' }, 400);
+      // `force: true` overrides per-run / monthly caps (user explicitly accepted)
+      const result = spawnProcessAll({ sendEmail: !!parsed.sendEmail, force: !!parsed.force });
+      // 402 (Payment Required) for cap-exceeded refusals so UI can distinguish from generic errors
+      const statusCode = result.ok ? 200 : (result.cap_exceeded ? 402 : 400);
+      return json(result, statusCode);
+    });
+    return;
+  }
+  if (url === '/api/batch/run' && req.method === 'POST') {
+    let body = '';
+    let total = 0;
+    req.on('data', c => { total += c.length; if (total > 4 * 1024) { req.destroy(); return; } body += c; });
+    req.on('end', () => {
+      let parsed;
+      try { parsed = JSON.parse(body || '{}'); }
+      catch { return json({ ok: false, error: 'Invalid JSON' }, 400); }
+      if (!parsed.confirm) return json({ ok: false, error: 'confirm=true required' }, 400);
+      const result = spawnBatchOnly({ sendEmail: !!parsed.sendEmail, force: !!parsed.force });
+      const statusCode = result.ok ? 200 : (result.cap_exceeded ? 402 : 400);
+      return json(result, statusCode);
+    });
+    return;
+  }
+  if (url === '/api/pipeline/job-status') {
+    const jobId = String(query.job_id || '');
+    if (!jobId) return json({ ok: false, error: 'missing job_id' }, 400);
+    const state = loadPipelineProcessState();
+    const job = state.jobs?.[jobId];
+    if (!job) return json({ ok: false, error: 'job not found' }, 404);
+    // Pull the last 20 log lines so the modal can show progress
+    let tail = [];
+    if (job.log_path && existsSync(job.log_path)) {
+      try {
+        const lines = readFileSync(job.log_path, 'utf-8').split('\n').filter(Boolean);
+        tail = lines.slice(-20);
+      } catch {}
+    }
+    return json({ ok: true, job, log_tail: tail });
+  }
+
+  // ── Outreach API ────────────────────────────────────────────────────────
+  // Powers the Outreach Pulse section + per-contact intel drawer.
+  // resetOutreachCache() ensures every GET reads fresh state (writes come
+  // from log-touch.mjs running in a different process).
+  if (url === '/api/outreach') {
+    resetOutreachCache();
+    return json(enrichOutreachSummary(buildOutreachSummary()));
+  }
+  if (url === '/api/outreach/all') {
+    resetOutreachCache();
+    const contacts = listOutreachContacts().map(c => enrichContact(c));
+    return json({ contacts });
+  }
+  const outreachContactMatch = url.match(/^\/api\/outreach\/contact\/(.+)$/);
+  if (outreachContactMatch && req.method === 'GET') {
+    resetOutreachCache();
+    const id = decodeURIComponent(outreachContactMatch[1]);
+    const c = getOutreachContact(id);
+    if (!c) { res.writeHead(404, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: 'not found' })); return; }
+    return json(enrichContact(c));
+  }
+  if (url === '/api/outreach/touch' && req.method === 'POST') {
+    let body = ''; let total = 0;
+    req.on('data', c => { total += c.length; if (total > 8 * 1024) { req.destroy(); return; } body += c; });
+    req.on('end', () => {
+      try {
+        const p = JSON.parse(body);
+        if (!p.contact_id || !p.channel) throw new Error('contact_id and channel required');
+        upsertOutreachContact({
+          contact_id:            p.contact_id,
+          name:                  p.name,
+          company:               p.company,
+          title_at_send:         p.title,
+          contact_type:          p.contact_type || 'recruiter',
+          degree:                p.degree || 1,
+          linked_application_id: p.linked_application_id,
+          tier:                  p.tier || 'B',
+        });
+        const c = logOutreachTouch(p.contact_id, {
+          channel:     p.channel,
+          template_id: p.template_id || null,
+          summary:     p.summary || '',
+          outbound:    p.outbound !== false,
+          ts:          p.ts || null,
+        });
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: true, contact: c }));
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: err.message }));
+      }
+    });
+    return;
+  }
+  if (url === '/api/outreach/status' && req.method === 'POST') {
+    let body = ''; let total = 0;
+    req.on('data', c => { total += c.length; if (total > 8 * 1024) { req.destroy(); return; } body += c; });
+    req.on('end', () => {
+      try {
+        const p = JSON.parse(body);
+        if (!p.contact_id || !p.status) throw new Error('contact_id and status required');
+        const c = setOutreachStatus(p.contact_id, p.status);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: true, contact: c }));
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: err.message }));
+      }
+    });
+    return;
+  }
+
   if (url === '/api/batch-live') {
     try { return json(batchLive()); }
     catch (err) { res.writeHead(500, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }); res.end(JSON.stringify({ error: err.message })); return; }

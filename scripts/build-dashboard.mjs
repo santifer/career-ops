@@ -166,7 +166,7 @@ function readReportOnce(reportPath) {
     return empty;
   }
   const text = readFileSync(fullPath, 'utf-8');
-  const parsed = {
+  let parsed = {
     exists: true,
     text,
     archetype: _parseArchetype(text),
@@ -182,8 +182,103 @@ function readReportOnce(reportPath) {
     topStories: _parseTopStories(text),
     whyGapsDontBlock: _parseWhyGapsDontBlock(text),
   };
+
+  // ── Sibling-report fallback for thin Phase E re-eval reports ──────
+  // Phase E reconciliation re-pointed many applications.md rows at a NEW
+  // re-eval report file. Those new reports contain ONLY the gate evaluation
+  // and a brief Block A summary — no Block C/D/E (Level, Comp, Personalization)
+  // sections. The original full Block A-F report still exists under an
+  // older filename in reports/. For each field where the primary report
+  // gives us nothing useful (empty OR a "not disclosed" placeholder),
+  // fall back to the most detailed sibling report for the same role.
+  //
+  // Field-level fallback (not all-or-nothing): a primary that has compRaw
+  // = "comp not disclosed" still gets the sibling's compRaw if the sibling
+  // has a real number, but keeps the primary's actual numeric values
+  // wherever they exist.
+  const _hasReal = (s) => {
+    if (!s) return false;
+    return !/^\s*(comp\s+not\s+disclosed|not\s+disclosed|undisclosed|none|n\/?a|unknown)\b/i.test(s);
+  };
+  const _needsFallback = !_hasReal(parsed.compRaw)
+    || !parsed.locationField
+    || !parsed.tldr
+    || !parsed.positioning
+    || !parsed.competitiveEdge?.length
+    || !parsed.topStories?.length;
+  if (_needsFallback) {
+    const sibling = _findRichSiblingReport(reportPath);
+    if (sibling && sibling !== reportPath) {
+      const siblingFull = join(ROOT, sibling);
+      if (existsSync(siblingFull)) {
+        const sibText = readFileSync(siblingFull, 'utf-8');
+        const sibComp = _parseComp(sibText);
+        const sibCompRaw = _parseCompRaw(sibText);
+        parsed = {
+          ...parsed,
+          comp:             _hasReal(parsed.comp)    ? parsed.comp    : (sibComp || parsed.comp),
+          compRaw:          _hasReal(parsed.compRaw) ? parsed.compRaw : (sibCompRaw || parsed.compRaw),
+          locationField:    parsed.locationField    || _parseLocationField(sibText),
+          tldr:             parsed.tldr             || _parseTldr(sibText),
+          positioning:      parsed.positioning      || _parsePositioning(sibText),
+          competitiveEdge:  parsed.competitiveEdge?.length ? parsed.competitiveEdge : _parseCompetitiveEdge(sibText),
+          topStories:       parsed.topStories?.length      ? parsed.topStories      : _parseTopStories(sibText),
+          whyGapsDontBlock: parsed.whyGapsDontBlock || _parseWhyGapsDontBlock(sibText),
+          _siblingSource:   sibling,
+        };
+      }
+    }
+  }
+
   _reportCache.set(reportPath, parsed);
   return parsed;
+}
+
+// Cache the report directory listing so we don't readdirSync 17+ times per build.
+let _reportDirListCache = null;
+function _listReportFiles() {
+  if (_reportDirListCache) return _reportDirListCache;
+  try {
+    _reportDirListCache = readdirSync(join(ROOT, 'reports')).filter(f => f.endsWith('.md'));
+  } catch { _reportDirListCache = []; }
+  return _reportDirListCache;
+}
+
+// Extract the company+role slug from a report path. Format expected:
+//   reports/NNN-company-role-YYYY-MM-DD.md  →  "company-role"
+//   reports/NNN-company-2026-04-28.md       →  "company"
+function _extractCompanyRoleSlugFromReportName(reportPath) {
+  const base = reportPath.replace(/^reports\//, '').replace(/\.md$/, '');
+  // Strip leading NNN- (numeric prefix) and trailing -YYYY-MM-DD
+  const noPrefix = base.replace(/^\d+-/, '');
+  const noDate = noPrefix.replace(/-\d{4}-\d{2}-\d{2}$/, '');
+  return noDate;
+}
+
+// Find an older report file in reports/ that has full Block C/D/E content
+// for the same company+role as the given report. Returns the relative path
+// (e.g. "reports/2095-deepgram-...-2026-05-14.md") or '' if none found.
+function _findRichSiblingReport(reportPath) {
+  const slug = _extractCompanyRoleSlugFromReportName(reportPath);
+  if (!slug) return '';
+  const files = _listReportFiles();
+  // Match siblings: same company-role prefix (after stripping num + date)
+  const siblings = files
+    .filter(f => 'reports/' + f !== reportPath)
+    .filter(f => {
+      const otherSlug = _extractCompanyRoleSlugFromReportName('reports/' + f);
+      // Allow partial slug match (handles "deepgram-senior-developer-advocate"
+      // vs "deepgram-senior-developer-advocate-partner-ecosystem")
+      return otherSlug && (otherSlug.startsWith(slug) || slug.startsWith(otherSlug));
+    });
+  if (!siblings.length) return '';
+  // Pick the one with the largest file size — proxy for "most detailed."
+  // Phase E re-evals are <10KB; original Block A-F reports are 20-50KB.
+  const sized = siblings.map(f => {
+    try { return { f, size: statSync(join(ROOT, 'reports', f)).size }; }
+    catch { return { f, size: 0 }; }
+  }).sort((a, b) => b.size - a.size);
+  return sized[0].size > 8000 ? 'reports/' + sized[0].f : '';
 }
 
 function _parseUrl(text) {
@@ -546,6 +641,19 @@ function parseBaseSalary(rawComp) {
     if (n >= 30 && n <= 1500) {
       const currency = /€/.test(text) ? 'EUR' : /£/.test(text) ? 'GBP' : 'USD';
       return { min: n, max: n, currency, isTotalComp: /total\s*comp/i.test(text), raw: rawComp };
+    }
+  }
+  // Single long-form figure WITHOUT range or K suffix: "$255,000 USD" / "€185.000"
+  // Some JD-disclosed comps are a single number (typically NYC/CA pay-transparency
+  // where they list one figure rather than a range). Without this, parseBaseSalary
+  // returned null for #1 Anthropic ($255,000 USD) and the BASE column rendered "—".
+  const singleLong = text.match(/[\$€£]\s*(\d{2,3})[,.](\d{3})(?!\s*[-–—]\s*[\$€£0-9])/);
+  if (singleLong) {
+    const n = parseInt(singleLong[1] + singleLong[2], 10);
+    if (n >= 30000 && n <= 1500000) {
+      const currency = /€/.test(text) ? 'EUR' : /£/.test(text) ? 'GBP' : 'USD';
+      const kN = Math.round(n / 1000);
+      return { min: kN, max: kN, currency, isTotalComp: /total\s*comp/i.test(text), raw: rawComp };
     }
   }
   return null;
@@ -994,6 +1102,42 @@ function renderReportToHtml(reportPath, outputDir) {
     background: var(--surface);
     border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
   }
+  /* Phase G — horizontal scroll for wide queue tables.
+     The 13-column Apply-Now / All-Evaluations table overflows narrow viewports
+     and clips the ACTION column (Report · Email · Verify) off-screen.
+     Wrapping any <table> inside .stat-bento or .section-card with horizontal
+     scroll preserves the action cell + makes the BENEFITS/PEOPLE columns
+     reachable via scroll on tablets. */
+  .table-scroll-wrap,
+  .section-card > table,
+  #apply-now-section .stat-bento,
+  .stat-bento {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  .table-scroll-wrap::-webkit-scrollbar,
+  .stat-bento::-webkit-scrollbar { height: 8px; }
+  .table-scroll-wrap::-webkit-scrollbar-thumb,
+  .stat-bento::-webkit-scrollbar-thumb {
+    background: var(--border); border-radius: 4px;
+  }
+  /* Subtle scroll-hint: when a wide table overflows its container, fade the
+     right edge so users notice they can scroll horizontally. */
+  .table-scroll-wrap {
+    position: relative;
+    background:
+      linear-gradient(to right, var(--surface), var(--surface) 30%, transparent),
+      linear-gradient(to right, transparent, var(--surface) 70%, var(--surface)) 0 100%,
+      radial-gradient(farthest-side at 0 50%, rgba(0,0,0,.15), transparent),
+      radial-gradient(farthest-side at 100% 50%, rgba(0,0,0,.15), transparent) 0 100%;
+    background-repeat: no-repeat;
+    background-color: var(--surface);
+    background-size: 40px 100%, 40px 100%, 14px 100%, 14px 100%;
+    background-attachment: local, local, scroll, scroll;
+  }
   th {
     text-align: left; padding: 10px 14px;
     background: var(--surface-2); color: var(--text-3);
@@ -1139,7 +1283,7 @@ function _extractSection(text, headerRe) {
 // Extract the TL;DR from Block A — typically the last row of the role
 // summary table. Falls back to the full Block A if no TL;DR row found.
 function _parseTldr(text) {
-  const block = _extractSection(text, [/^## A\)[^\n]*$/m, /^## Block A\b[^\n]*$/m]);
+  const block = _extractSection(text, [/^## A\)[^\n]*$/m, /^## Block A\b[^\n]*$/m, /^## Bloque A\b[^\n]*$/m]);
   if (!block) return '';
   // Look for "| TL;DR | <value> |" in the table
   const tldrMatch = block.match(/\|\s*TL;DR\s*\|\s*([^\n]+?)\s*\|\s*$/m);
@@ -1151,7 +1295,7 @@ function _parseTldr(text) {
 
 // Extract positioning angle from Block C.
 function _parsePositioning(text) {
-  const block = _extractSection(text, [/^## C\)[^\n]*$/m, /^## Block C\b[^\n]*$/m]);
+  const block = _extractSection(text, [/^## C\)[^\n]*$/m, /^## Block C\b[^\n]*$/m, /^## Bloque C\b[^\n]*$/m]);
   if (!block) return '';
   // New format: "- **Positioning:** <prose>" bullet
   const bulletMatch = block.match(/\*\*Positioning:\*\*\s*([^\n]{30,})/);
@@ -1165,7 +1309,7 @@ function _parsePositioning(text) {
 
 // Extract comp from Block A table.
 function _parseComp(text) {
-  const block = _extractSection(text, [/^## A\)[^\n]*$/m, /^## Block A\b[^\n]*$/m]);
+  const block = _extractSection(text, [/^## A\)[^\n]*$/m, /^## Block A\b[^\n]*$/m, /^## Bloque A\b[^\n]*$/m]);
   if (!block) return '';
   const m = block.match(/\|\s*Comp(?:ensation)?\s*\|\s*([^|\n]+?)\s*\|/im);
   return m ? m[1].replace(/\*\*/g, '').trim().slice(0, 120) : '';
@@ -1177,7 +1321,7 @@ function _parseComp(text) {
 // cell text trimmed; tolerant of label variation.
 function _parseCompRaw(text) {
   // Tier 1: Block A "Comp" row (legacy 2-col + new 3-col with score-then-notes)
-  const blockA = _extractSection(text, [/^## A\)[^\n]*$/m, /^## Block A\b[^\n]*$/m]);
+  const blockA = _extractSection(text, [/^## A\)[^\n]*$/m, /^## Block A\b[^\n]*$/m, /^## Bloque A\b[^\n]*$/m]);
   const fromTable = (block) => {
     if (!block) return '';
     const labelRe = /^\s*\|\s*\*?\*?\s*(?:Comp(?:ensation)?|Listed Annual Salary|Salary)\b[^|]*?\|/i;
@@ -1209,6 +1353,7 @@ function _parseCompRaw(text) {
   const blockD = _extractSection(text, [
     /^## D\)[^\n]*Comp[^\n]*$/m,
     /^## Block D\b[^\n]*$/m,
+    /^## Bloque D\b[^\n]*$/m,
   ]);
   if (blockD) {
     // Tier 2a: high-signal **bold** labels — the most authoritative source.
@@ -1276,6 +1421,26 @@ function _parseCompRaw(text) {
     v = fromTable(globalScore);
     if (v) return v;
   }
+
+  // Tier 4: Phase E reports (2026-05-16+) put intel-pack summary at the bottom
+  // in "## Block J — Intel pack summary" with `- **Comp:** JD: $X–$Y (...)`.
+  // Sonnet often truncates Block D output, so Block J is the authoritative source.
+  const blockJ = _extractSection(text, [/^## Block J\b[^\n]*$/m, /^## Bloque J\b[^\n]*$/m]);
+  if (blockJ) {
+    const compLine = blockJ.match(/[-*]?\s*\*\*Comp:\*\*\s*([^\n]+)/i);
+    if (compLine && /[\$€£]\s*\d/.test(compLine[1])) {
+      return compLine[1].trim().slice(0, 400);
+    }
+  }
+
+  // Tier 5: Look anywhere in the document for a "Comp:" / "Listed:" / "Salary:"
+  // bold-labeled line with a $ value (last-resort fallback for reports with
+  // unusual section structure).
+  const anyComp = text.match(/\*\*(?:Listed|Disclosed|Comp(?:ensation)?|Salary|Base)(?:\s+(?:Annual|Salary|band))?:\*\*\s*([^\n]+)/i);
+  if (anyComp && /[\$€£]\s*\d/.test(anyComp[1])) {
+    return anyComp[1].trim().slice(0, 400);
+  }
+
   return '';
 }
 
@@ -1283,7 +1448,7 @@ function _parseCompRaw(text) {
 // row. Returns the raw cell text (e.g. "Hybrid (San Francisco)", "London, UK
 // — hybrid 25%", "Remote-eligible US"). Tolerant — first matching label wins.
 function _parseLocationField(text) {
-  const block = _extractSection(text, [/^## A\)[^\n]*$/m, /^## Block A\b[^\n]*$/m]);
+  const block = _extractSection(text, [/^## A\)[^\n]*$/m, /^## Block A\b[^\n]*$/m, /^## Bloque A\b[^\n]*$/m]);
   if (!block) return '';
   // Field names allow optional surrounding **bold** markdown (some reports
   // bold the label column). Order matters — most-specific labels first.
@@ -1346,7 +1511,7 @@ function _parseWhyGapsDontBlock(text) {
 function getGapStrategy(reportPath, gapTitle) {
   const cached = readReportOnce(reportPath);
   if (!cached?.exists) return '';
-  const block = _extractSection(cached.text, [/^## C\)[^\n]*$/m, /^## Block C\b[^\n]*$/m]);
+  const block = _extractSection(cached.text, [/^## C\)[^\n]*$/m, /^## Block C\b[^\n]*$/m, /^## Bloque C\b[^\n]*$/m]);
   if (!block) return '';
   // Look for "**<keyword> gap handling:**" or "**<keyword> gap:**" bullets
   const keyword = gapTitle.split(/\s+/)[0].replace(/[^a-z0-9]/gi, '');
@@ -1932,9 +2097,13 @@ function renderRow(r, idx) {
   const url = getReportUrl(r.reportPath);
   const finalRec = getReportFinalRecommendation(r.reportPath);
   const edge = getCompetitiveEdge(r.reportPath);
-  // Action cell: Report (formatted .html) + Email (compose draft) + Verify
-  // (claims/research). The JD URL is wired directly on the role title now,
-  // so a separate "Apply" link is redundant.
+  // Action cell: Apply (JD URL) + Report (formatted .html) + Email (compose draft) + Verify.
+  // Phase G — Mitchell flagged that "no apply or verify options" were visible.
+  // Apply button was previously implicit (clicking the role title opens the JD),
+  // but per his feedback an explicit Apply button is needed in the action cell.
+  const applyBtn = url
+    ? `<a href="${htmlEscape(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--green-fg);font-weight:600" title="Open the JD posting in a new tab" aria-label="Apply to ${htmlEscape(r.company)} ${htmlEscape(r.role)}">🔗 Apply</a>`
+    : '';
   const reportHtmlLink = r.reportPath
     ? `<a href="reports/${basename(r.reportPath).replace(/\.md$/, '.html')}" target="_blank" onclick="event.stopPropagation()" title="Open formatted report in browser">Report</a>`
     : '';
@@ -1943,7 +2112,7 @@ function renderRow(r, idx) {
     ? `<a href="javascript:void(0)" onclick="openVerify('${verifySlug}');event.stopPropagation()" style="color:#8250df" title="Verify claims + research queries">Verify</a>`
     : '';
   const emailBtn = `<a href="javascript:void(0)" class="email-launch-btn" onclick="openEmailPopover(this);event.stopPropagation()" data-company="${htmlEscape(r.company)}" data-role="${htmlEscape(r.role)}" style="color:#0969da" title="Draft outreach email" aria-label="Draft email for ${htmlEscape(r.company)} ${htmlEscape(r.role)}">Email</a>`;
-  const applyLink = [reportHtmlLink, emailBtn, verifyBtn].filter(Boolean).join(' · ') || '<span class="muted">—</span>';
+  const applyLink = [applyBtn, reportHtmlLink, emailBtn, verifyBtn].filter(Boolean).join(' · ') || '<span class="muted">—</span>';
   // Clickable report link — file:// URL opens the .md in the OS default
   // app (Cursor, after we set it via duti). Stop event propagation so
   // clicking the link doesn't toggle the row's expand state.
@@ -4819,6 +4988,189 @@ function build() {
     #sidebar-batch { display: none !important; }
   }
 
+  /* ── Pipeline action buttons (Run Batch + Process All) ────────── */
+  .sidebar-pipeline-actions {
+    margin: 6px 10px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .pipeline-btn {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 12px;
+    background: var(--surface-2); color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 12.5px; font-weight: 600;
+    cursor: pointer; text-align: left;
+    transition: background .12s, border-color .12s;
+  }
+  .pipeline-btn:hover { background: var(--surface); border-color: var(--green-fg); }
+  .pipeline-btn:focus-visible { outline: 2px solid var(--blue-fg-dark); outline-offset: 1px; }
+  .pipeline-btn-icon { font-size: 14px; }
+  .pipeline-btn-label { flex: 1; }
+  .pipeline-btn-count {
+    font-size: 10.5px; color: var(--text-3);
+    background: var(--surface);
+    padding: 1px 6px; border-radius: 999px;
+    font-variant-numeric: tabular-nums;
+    min-width: 18px; text-align: center;
+  }
+  .pipeline-btn-nuclear { border-color: rgba(245,158,11,.35); }
+  .pipeline-btn-nuclear:hover { border-color: rgba(245,158,11,.7); background: rgba(245,158,11,.05); }
+  body.sidebar-collapsed .pipeline-btn-label,
+  body.sidebar-collapsed .pipeline-btn-count { display: none; }
+  body.sidebar-collapsed .pipeline-btn { justify-content: center; padding: 8px; }
+  @media (max-width: 720px) {
+    #sidebar-pipeline-actions { display: none !important; }
+  }
+
+  /* ── Pipeline confirmation modal ────────────────────────────── */
+  #pipeline-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 2200; backdrop-filter: blur(2px); }
+  #pipeline-backdrop.visible { display: block; }
+  #pipeline-modal {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    width: min(520px, 96vw); max-height: 86vh; overflow-y: auto; z-index: 2201;
+    background: var(--surface); border-radius: 12px; border: 1px solid var(--border);
+    box-shadow: var(--shadow-lg); display: none;
+  }
+  #pipeline-modal.visible { display: block; }
+  .pipeline-modal-header {
+    padding: 18px 22px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .pipeline-modal-title { margin: 0; font-size: 17px; font-weight: 700; color: var(--text); letter-spacing: -0.01em; }
+  .pipeline-modal-subtitle { margin: 4px 0 0; font-size: 13px; color: var(--text-2); }
+  .pipeline-modal-body { padding: 16px 22px 12px; }
+  .pipeline-modal-section { margin-bottom: 14px; }
+  .pipeline-modal-section h4 {
+    margin: 0 0 8px; font-size: 11.5px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .04em; color: var(--text-3);
+  }
+  .pipeline-stat-grid {
+    display: grid; grid-template-columns: 1fr auto;
+    gap: 4px 16px; font-size: 13px;
+  }
+  .pipeline-stat-label { color: var(--text-2); }
+  .pipeline-stat-value { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
+  .pipeline-stat-value.pipeline-cost-headline {
+    font-size: 22px; font-weight: 800; color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .pipeline-stat-value.muted { color: var(--text-3); font-weight: 500; font-size: 12px; }
+  .pipeline-modal-budget {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 12px; background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    margin-top: 6px; font-size: 12.5px;
+  }
+  .pipeline-modal-budget-label { color: var(--text-3); font-weight: 500; }
+  .pipeline-modal-budget-val { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .pipeline-checkbox-row {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 12px;
+    background: var(--surface-2);
+    border-radius: var(--radius-sm);
+    margin: 14px 0 4px;
+    cursor: pointer;
+  }
+  .pipeline-checkbox-row input[type="checkbox"] {
+    margin: 2px 0 0; width: 16px; height: 16px; flex-shrink: 0;
+    cursor: pointer;
+  }
+  .pipeline-checkbox-text { font-size: 13px; color: var(--text); line-height: 1.4; }
+  .pipeline-checkbox-text .pipeline-checkbox-hint {
+    display: block; font-size: 11.5px; color: var(--text-3); margin-top: 2px;
+  }
+  .pipeline-modal-footer {
+    display: flex; gap: 10px; padding: 12px 22px 18px;
+    border-top: 1px solid var(--border);
+    background: var(--surface-2);
+    border-radius: 0 0 12px 12px;
+  }
+  .pipeline-modal-btn {
+    flex: 1; padding: 10px 14px;
+    border-radius: var(--radius-sm); cursor: pointer;
+    font-size: 13px; font-weight: 600;
+    border: 1px solid var(--border);
+    background: var(--surface); color: var(--text);
+    transition: background .12s, border-color .12s;
+  }
+  .pipeline-modal-btn-cancel:hover { background: var(--surface-2); }
+  .pipeline-modal-btn-primary {
+    background: var(--green-fg); border-color: var(--green-fg); color: #062611;
+  }
+  .pipeline-modal-btn-primary:hover { filter: brightness(.95); }
+  .pipeline-modal-btn-nuclear {
+    background: #f59e0b; border-color: #f59e0b; color: #1c1917;
+  }
+  .pipeline-modal-btn-nuclear:hover { background: #d97706; border-color: #d97706; }
+  .pipeline-modal-btn[disabled] { opacity: .5; cursor: not-allowed; }
+  /* Cap-exceeded warning badge — surfaces when estimated cost exceeds per-run
+     or monthly cap. Calibrated per career-calibration brief 2026-05-16:
+     Run Batch $25/run, Process All $250/run, Monthly $500. */
+  .pipeline-cap-warning {
+    display: flex; flex-direction: column; gap: 6px;
+    padding: 10px 12px;
+    background: rgba(220, 38, 38, .07);
+    border: 1px solid rgba(220, 38, 38, .35);
+    border-radius: var(--radius-sm);
+    margin: 10px 0;
+    font-size: 12.5px;
+    color: var(--text);
+  }
+  .pipeline-cap-warning-title {
+    font-weight: 700; color: #b91c1c; letter-spacing: .01em;
+  }
+  .pipeline-cap-warning-detail {
+    font-size: 12px; color: var(--text-2); line-height: 1.45;
+  }
+  .pipeline-cap-warning code {
+    background: var(--surface); padding: 1px 5px; border-radius: 3px;
+    font-size: 11.5px; color: var(--text);
+  }
+  .pipeline-force-override {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 10px;
+    background: rgba(245, 158, 11, .06);
+    border: 1px dashed rgba(245, 158, 11, .4);
+    border-radius: var(--radius-sm);
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--text-2);
+    cursor: pointer;
+  }
+  .pipeline-force-override input { margin: 0; }
+  .pipeline-force-override strong { color: #92400e; }
+  /* In-flight job toast: appears bottom-right after a job starts */
+  #pipeline-toast {
+    position: fixed; right: 18px; bottom: 18px;
+    width: min(380px, 92vw);
+    background: var(--surface); color: var(--text);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    padding: 12px 14px;
+    z-index: 2300;
+    display: none;
+    font-size: 12.5px;
+  }
+  #pipeline-toast.visible { display: block; }
+  .pipeline-toast-title { font-weight: 700; font-size: 13px; margin-bottom: 4px; }
+  .pipeline-toast-phase {
+    font-size: 11px; color: var(--text-3);
+    font-variant-numeric: tabular-nums;
+    margin-top: 4px;
+  }
+  .pipeline-toast-bar { height: 3px; background: var(--surface-2); border-radius: 999px; margin-top: 6px; overflow: hidden; }
+  .pipeline-toast-bar-fill { height: 100%; background: linear-gradient(90deg, var(--green-fg), var(--blue-fg)); width: 0%; transition: width .4s ease-out; }
+  .pipeline-toast-close {
+    position: absolute; top: 6px; right: 6px;
+    background: none; border: none; cursor: pointer; color: var(--text-3);
+    font-size: 16px; line-height: 1; padding: 4px 6px;
+  }
+  .pipeline-toast-close:hover { color: var(--text); }
+
   /* ── Verify modal ────────────────────────────────────────────── */
   #verify-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 2000; backdrop-filter: blur(2px); }
   #verify-backdrop.visible { display: block; }
@@ -5617,6 +5969,145 @@ function build() {
     #right-rail-backdrop { transition: none !important; }
   }
 
+  /* ── Hiring-Manager Intel (Phase H drawer section) ─────────────── */
+  .hm-intel-mount { margin-top: 16px; }
+  .hm-intel-block {
+    border-top: 1px solid var(--border);
+    padding-top: 14px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text);
+  }
+  .hm-intel-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .hm-intel-head h3 {
+    margin: 0; font-size: 14px; font-weight: 700; color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .hm-prov-footline {
+    font-size: 11px; color: var(--text-3);
+    font-variant-numeric: tabular-nums;
+  }
+  .hm-section {
+    margin: 14px 0 0;
+    padding: 10px 12px;
+    background: var(--surface-2);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+  }
+  .hm-section h4 {
+    margin: 0 0 6px; font-size: 12px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .04em;
+    color: var(--text-2);
+  }
+  .hm-section p { margin: 4px 0; }
+  .hm-fit-row {
+    display: grid; grid-template-columns: 130px 1fr; gap: 8px;
+    padding: 4px 0; border-bottom: 1px dashed var(--border);
+  }
+  .hm-fit-row:last-child { border-bottom: none; }
+  .hm-fit-label {
+    font-weight: 600; color: var(--text-2); font-size: 11.5px;
+  }
+  .hm-fit-val { font-size: 12.5px; }
+
+  /* Person cards (hiring managers + recruiters) */
+  .hm-person {
+    margin-top: 10px; padding: 10px 12px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+  }
+  .hm-person:first-of-type { margin-top: 4px; }
+  .hm-person-head {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 2px;
+  }
+  .hm-person-name { font-weight: 700; font-size: 13px; }
+  .hm-person-title { font-size: 12px; color: var(--text-2); margin-bottom: 6px; }
+  .hm-person-why, .hm-person-hook, .hm-person-links, .hm-person-emails {
+    margin-top: 6px; font-size: 12px;
+  }
+  .hm-person-links a, .hm-person-emails a {
+    color: var(--blue-fg-dark);
+  }
+  .hm-person-activity {
+    margin-top: 8px; font-size: 12px;
+  }
+  .hm-person-activity ul {
+    margin: 4px 0 0; padding-left: 18px;
+  }
+  .hm-person-activity li { margin: 3px 0; }
+  .hm-actdate {
+    font-size: 11px; color: var(--text-3);
+    font-variant-numeric: tabular-nums;
+  }
+  .hm-email-tag {
+    font-size: 10.5px; color: var(--text-3);
+  }
+
+  /* Confidence/severity chips */
+  .hm-chip {
+    display: inline-flex; align-items: center;
+    padding: 1px 7px; border-radius: 999px;
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+  .hm-chip-green { background: rgba(34,197,94,.18);  color: #16a34a; }
+  .hm-chip-amber { background: rgba(245,158,11,.18); color: #b45309; }
+  .hm-chip-red   { background: rgba(239,68,68,.18);  color: #b91c1c; }
+  .hm-consensus {
+    font-size: 11px; color: var(--text-3);
+    margin-left: auto;
+  }
+
+  /* Honest-gaps list */
+  .hm-gap-list { margin: 0; padding: 0; list-style: none; }
+  .hm-gap { padding: 8px 0; border-bottom: 1px dashed var(--border); }
+  .hm-gap:last-child { border-bottom: none; }
+  .hm-gap-head { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+  .hm-gap-action { margin-top: 4px; font-size: 12px; color: var(--text-2); }
+  .hm-gap-lift   { margin-top: 2px; font-size: 11.5px; color: var(--green-fg); }
+
+  /* Tradeoffs */
+  .hm-trade-baseline { font-size: 12px; margin-bottom: 8px; color: var(--text-2); }
+  .hm-trade-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 6px 14px;
+    font-size: 12px; margin-bottom: 8px;
+  }
+  .hm-trade-summary {
+    padding-top: 8px; border-top: 1px solid var(--border);
+    font-size: 12.5px; font-style: italic;
+  }
+
+  /* Provider disagreements footer block */
+  .hm-disagreement {
+    background: rgba(245,158,11,.06);
+    border-color: rgba(245,158,11,.3);
+  }
+
+  /* States */
+  .hm-intel-loading, .hm-intel-missing, .hm-intel-error {
+    margin-top: 16px; padding: 14px;
+    background: var(--surface-2); border: 1px dashed var(--border);
+    border-radius: var(--radius-sm); font-size: 12.5px; color: var(--text-2);
+  }
+  .hm-intel-loading::before {
+    content: ''; display: inline-block; width: 12px; height: 12px;
+    border: 2px solid currentColor; border-top-color: transparent;
+    border-radius: 50%; margin-right: 8px; vertical-align: -2px;
+    animation: hm-spin 0.8s linear infinite;
+  }
+  @keyframes hm-spin { to { transform: rotate(360deg); } }
+  .hm-cli {
+    background: var(--code-bg, #0f172a); color: #e2e8f0;
+    padding: 8px 10px; border-radius: var(--radius-sm);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11.5px; overflow-x: auto;
+    margin: 6px 0;
+  }
+
   /* ── Pull-to-refresh indicator (mobile only) ──────────────────── */
   /* A small pill that drops in from above the toolbar as the user pulls.
      Hidden by default; JS sets translateY + opacity during the gesture
@@ -6257,6 +6748,20 @@ function build() {
       <div class="sidebar-batch-bar"><div class="sidebar-batch-fill" id="sidebar-batch-bar-fill" style="width:0%"></div></div>
       <div class="sidebar-batch-stats" id="sidebar-batch-stats"></div>
     </div>
+    <!-- Pipeline action buttons — "Run Batch" (normal) + "Process All" (nuclear)
+         Open confirmation modals via openPipelineModal('batch'|'process-all'). -->
+    <div id="sidebar-pipeline-actions" class="sidebar-pipeline-actions" aria-label="Pipeline actions">
+      <button type="button" class="pipeline-btn pipeline-btn-batch" onclick="openPipelineModal('batch')" title="Run Anthropic batch eval on currently-queued items">
+        <span class="pipeline-btn-icon" aria-hidden="true">⚡</span>
+        <span class="pipeline-btn-label">Run Batch</span>
+        <span class="pipeline-btn-count" id="pipeline-btn-batch-count">—</span>
+      </button>
+      <button type="button" class="pipeline-btn pipeline-btn-nuclear" onclick="openPipelineModal('process-all')" title="Triage + batch + reconcile + (optional) email — full pipeline drain">
+        <span class="pipeline-btn-icon" aria-hidden="true">🚀</span>
+        <span class="pipeline-btn-label">Process All</span>
+        <span class="pipeline-btn-count" id="pipeline-btn-all-count">—</span>
+      </button>
+    </div>
     <div class="sidebar-footer">
       <button type="button" class="sidebar-collapse-btn" id="sidebar-collapse-btn" onclick="toggleSidebarCollapse()" aria-label="Collapse sidebar" title="Collapse sidebar (⌘\\)">
         <svg class="sidebar-collapse-icon" viewBox="0 0 12 12" fill="none" aria-hidden="true">
@@ -6473,6 +6978,30 @@ function build() {
       </div>
       <div class="verify-body" id="verify-body"></div>
     </div>
+  </div>
+
+  <!-- Pipeline action modal (Run Batch / Process All confirmation) -->
+  <div id="pipeline-backdrop" onclick="closePipelineModal()"></div>
+  <div id="pipeline-modal" onclick="event.stopPropagation()" role="dialog" aria-labelledby="pipeline-modal-title" aria-modal="true">
+    <div class="pipeline-modal-header">
+      <h3 class="pipeline-modal-title" id="pipeline-modal-title">Run Batch</h3>
+      <p class="pipeline-modal-subtitle" id="pipeline-modal-subtitle">Process queued items via the Anthropic Batch API.</p>
+    </div>
+    <div class="pipeline-modal-body" id="pipeline-modal-body">
+      <div class="pipeline-modal-section" id="pipeline-modal-loading">Loading current pipeline state…</div>
+    </div>
+    <div class="pipeline-modal-footer">
+      <button type="button" class="pipeline-modal-btn pipeline-modal-btn-cancel" onclick="closePipelineModal()">Cancel</button>
+      <button type="button" class="pipeline-modal-btn pipeline-modal-btn-primary" id="pipeline-modal-confirm" onclick="confirmPipelineAction()" disabled>Confirm</button>
+    </div>
+  </div>
+
+  <!-- Pipeline job toast (in-flight progress indicator) -->
+  <div id="pipeline-toast" role="status" aria-live="polite">
+    <button class="pipeline-toast-close" onclick="closePipelineToast()" aria-label="Dismiss">✕</button>
+    <div class="pipeline-toast-title" id="pipeline-toast-title">Pipeline job running</div>
+    <div class="pipeline-toast-phase" id="pipeline-toast-phase">Starting…</div>
+    <div class="pipeline-toast-bar"><div class="pipeline-toast-bar-fill" id="pipeline-toast-fill"></div></div>
   </div>
 
   <!-- Overnight summary card (#1): shown on mobile when new items appeared since last visit -->
@@ -7379,6 +7908,12 @@ function openRightRailForDetail(idx, detailRow) {
     } else {
       bodyEl.innerHTML = '<p class="muted">No details available.</p>';
     }
+    // Append HM Intel mount-point + kick off lazy load. The render replaces
+    // its own innerHTML with either 9 sections or a "no intel yet" hint.
+    const hmMount = document.createElement('div');
+    hmMount.className = 'hm-intel-mount';
+    bodyEl.appendChild(hmMount);
+    if (company && role) _loadHMIntel(company, role, hmMount);
     bodyEl.scrollTop = 0;
     setTimeout(() => hydrateNotesIn(bodyEl), 0);
   }
@@ -7465,6 +8000,167 @@ window.drawerQuickStatus = drawerQuickStatus;
 window.closeRightRail = closeRightRail;
 window.openRightRailForDetail = openRightRailForDetail;
 window.setUseInlineExpand = setUseInlineExpand;
+
+// ── Hiring-Manager Intel (Phase H output) ─────────────────────────────────
+// Lazy-load the 7-LLM council intel pack for a row and render the 9
+// sections (role summary, alignment, fit evidence, contacts, outreach
+// tactic, team gaps, honest gaps, tradeoffs, Apply/Discard). Slug
+// derivation MUST match scripts/hiring-manager-research.mjs:slugify().
+function _hmSlugify(company, role) {
+  return String(company + '-' + role)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80);
+}
+
+function _hmEsc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function _hmConfChip(conf) {
+  const cls = conf === 'HIGH' ? 'green' : conf === 'MEDIUM' ? 'amber' : 'red';
+  return '<span class="hm-chip hm-chip-' + cls + '">' + _hmEsc(conf || 'LOW') + '</span>';
+}
+
+function _hmPersonCard(p) {
+  if (!p || !p.name) return '';
+  const links = [];
+  if (p.linkedin_url)     links.push('<a href="' + _hmEsc(p.linkedin_url) + '" target="_blank" rel="noopener">LinkedIn</a>');
+  if (p.x_handle)         links.push('<a href="https://x.com/' + _hmEsc((p.x_handle||'').replace(/^@/, '')) + '" target="_blank" rel="noopener">X</a>');
+  if (p.github_url)       links.push('<a href="' + _hmEsc(p.github_url) + '" target="_blank" rel="noopener">GitHub</a>');
+  if (p.portfolio_url)    links.push('<a href="' + _hmEsc(p.portfolio_url) + '" target="_blank" rel="noopener">Site</a>');
+  if (p.newsletter_url)   links.push('<a href="' + _hmEsc(p.newsletter_url) + '" target="_blank" rel="noopener">Newsletter</a>');
+  const emails = [];
+  if (p.professional_email) {
+    const tag = p.professional_email_source ? ' <span class="hm-email-tag">(' + _hmEsc(p.professional_email_source) + ')</span>' : '';
+    emails.push('<a href="mailto:' + _hmEsc(p.professional_email) + '">' + _hmEsc(p.professional_email) + '</a>' + tag);
+  }
+  if (p.personal_email)   emails.push('<a href="mailto:' + _hmEsc(p.personal_email) + '">' + _hmEsc(p.personal_email) + '</a> <span class="hm-email-tag">(personal)</span>');
+  const activityHtml = (p.recent_activity || []).slice(0, 3).map(a =>
+    '<li><span class="hm-actdate">' + _hmEsc(a.date || '') + '</span> '
+    + (a.url ? '<a href="' + _hmEsc(a.url) + '" target="_blank" rel="noopener">' + _hmEsc(a.platform || 'post') + '</a>' : _hmEsc(a.platform || ''))
+    + ' — ' + _hmEsc(a.summary || '') + '</li>'
+  ).join('');
+  return '<div class="hm-person">'
+    + '<div class="hm-person-head">'
+    +   '<div class="hm-person-name">' + _hmEsc(p.name) + '</div>'
+    +   _hmConfChip(p.confidence)
+    +   (p.provider_consensus ? '<span class="hm-consensus" title="Provider consensus">' + _hmEsc(p.provider_consensus) + '</span>' : '')
+    + '</div>'
+    + '<div class="hm-person-title">' + _hmEsc(p.title || '') + '</div>'
+    + (p.why_owns_this_req ? '<div class="hm-person-why"><strong>Why:</strong> ' + _hmEsc(p.why_owns_this_req) + '</div>' : '')
+    + (links.length ? '<div class="hm-person-links">' + links.join(' · ') + '</div>' : '')
+    + (emails.length ? '<div class="hm-person-emails">' + emails.join('<br>') + '</div>' : '')
+    + (activityHtml ? '<div class="hm-person-activity"><strong>Recent activity:</strong><ul>' + activityHtml + '</ul></div>' : '')
+    + (p.outreach_hook ? '<div class="hm-person-hook"><strong>Hook:</strong> ' + _hmEsc(p.outreach_hook) + '</div>' : '')
+    + '</div>';
+}
+
+function _hmFitEvidence(fe) {
+  if (!fe) return '';
+  const rows = [
+    ['Career history',        fe.career_history],
+    ['Career experience',     fe.career_experience],
+    ['Project impact',        fe.project_impact],
+    ['Media-industry impact', fe.media_industry_impact],
+  ].filter(r => r[1]);
+  return rows.map(r => '<div class="hm-fit-row"><div class="hm-fit-label">' + _hmEsc(r[0]) + '</div><div class="hm-fit-val">' + _hmEsc(r[1]) + '</div></div>').join('');
+}
+
+function _hmGapList(gaps) {
+  return (gaps || []).map(g => {
+    const sevCls = g.severity === 'HIGH' ? 'red' : g.severity === 'MEDIUM' ? 'amber' : 'green';
+    return '<li class="hm-gap">'
+      + '<div class="hm-gap-head"><span class="hm-chip hm-chip-' + sevCls + '">' + _hmEsc(g.severity || 'LOW') + '</span> ' + _hmEsc(g.gap || '') + '</div>'
+      + (g.concrete_close_action ? '<div class="hm-gap-action"><strong>Close it:</strong> ' + _hmEsc(g.concrete_close_action) + '</div>' : '')
+      + (g.post_action_lift     ? '<div class="hm-gap-lift">→ ' + _hmEsc(g.post_action_lift) + '</div>' : '')
+      + '</li>';
+  }).join('');
+}
+
+function _hmTradeoffs(t) {
+  if (!t) return '';
+  const ns = t.new_role_specifics || {};
+  return '<div class="hm-tradeoff">'
+    + (t.current_role_baseline ? '<div class="hm-trade-baseline"><strong>Current baseline:</strong> ' + _hmEsc(t.current_role_baseline) + '</div>' : '')
+    + '<div class="hm-trade-grid">'
+    +   (ns.comp     ? '<div><strong>Comp:</strong> '     + _hmEsc(ns.comp) + '</div>' : '')
+    +   (ns.equity   ? '<div><strong>Equity:</strong> '   + _hmEsc(ns.equity) + '</div>' : '')
+    +   (ns.location ? '<div><strong>Location:</strong> ' + _hmEsc(ns.location) + '</div>' : '')
+    +   (ns.benefits ? '<div><strong>Benefits:</strong> ' + _hmEsc(ns.benefits) + '</div>' : '')
+    +   (ns.remote   ? '<div><strong>Remote:</strong> '   + _hmEsc(ns.remote) + '</div>' : '')
+    + '</div>'
+    + (t.honest_tradeoff_summary ? '<div class="hm-trade-summary">' + _hmEsc(t.honest_tradeoff_summary) + '</div>' : '')
+    + '</div>';
+}
+
+function _renderHMIntel(d, slug) {
+  if (!d) return '';
+  const succeeded = (d.providers_succeeded || []).length;
+  const called    = (d.providers_called    || []).length || 7;
+  const provFootline = succeeded + '/' + called + ' providers · ' + (d.sources_cited_count || '?') + ' sources';
+  const hmCards = (d.hiring_managers || []).map(_hmPersonCard).join('');
+  const recCards = (d.recruiters || []).map(_hmPersonCard).join('');
+
+  return '<div class="hm-intel-block" data-slug="' + _hmEsc(slug) + '">'
+    + '<div class="hm-intel-head"><h3>🎯 Hiring intel</h3><span class="hm-prov-footline">' + _hmEsc(provFootline) + '</span></div>'
+
+    + (d.role_summary          ? '<section class="hm-section"><h4>Role (Mitchell-tailored)</h4><p>' + _hmEsc(d.role_summary) + '</p></section>' : '')
+    + (d.alignment_with_goals  ? '<section class="hm-section"><h4>Why this aligns with my goals</h4><p>' + _hmEsc(d.alignment_with_goals) + '</p></section>' : '')
+    + (d.fit_evidence          ? '<section class="hm-section"><h4>Fit evidence</h4>' + _hmFitEvidence(d.fit_evidence) + '</section>' : '')
+
+    + (hmCards  ? '<section class="hm-section"><h4>Likely hiring managers (' + (d.hiring_managers||[]).length + ')</h4>' + hmCards + '</section>' : '')
+    + (recCards ? '<section class="hm-section"><h4>Likely recruiters (' + (d.recruiters||[]).length + ')</h4>' + recCards + '</section>' : '')
+
+    + (d.outreach_strategy     ? '<section class="hm-section"><h4>Outreach tactic</h4><p>' + _hmEsc(d.outreach_strategy) + '</p></section>' : '')
+    + (d.team_gap_analysis     ? '<section class="hm-section"><h4>Team gaps I fill</h4><p>' + _hmEsc(d.team_gap_analysis) + '</p></section>' : '')
+
+    + ((d.honest_gaps_vs_requirements||[]).length ? '<section class="hm-section"><h4>Honest gaps + close actions</h4><ul class="hm-gap-list">' + _hmGapList(d.honest_gaps_vs_requirements) + '</ul></section>' : '')
+
+    + (d.tradeoffs_vs_current_role ? '<section class="hm-section"><h4>Tradeoffs vs current Google xGE role</h4>' + _hmTradeoffs(d.tradeoffs_vs_current_role) + '</section>' : '')
+
+    + (d.company_signals_90d   ? '<section class="hm-section"><h4>90-day company signals</h4><p>' + _hmEsc(d.company_signals_90d) + '</p></section>' : '')
+    + (d.comp_intelligence     ? '<section class="hm-section"><h4>Comp intelligence</h4>'
+        + (d.comp_intelligence.synthesized_range ? '<p><strong>Best estimate:</strong> ' + _hmEsc(d.comp_intelligence.synthesized_range) + '</p>' : '')
+        + (d.comp_intelligence.jd_disclosed_range ? '<p>JD: ' + _hmEsc(d.comp_intelligence.jd_disclosed_range) + '</p>' : '')
+        + (d.comp_intelligence.levels_fyi  ? '<p>Levels.fyi: ' + _hmEsc(d.comp_intelligence.levels_fyi) + '</p>' : '')
+        + (d.comp_intelligence.glassdoor   ? '<p>Glassdoor: ' + _hmEsc(d.comp_intelligence.glassdoor) + '</p>' : '')
+        + (d.comp_intelligence.blind       ? '<p>Blind: ' + _hmEsc(d.comp_intelligence.blind) + '</p>' : '')
+        + '</section>' : '')
+
+    + (d.provider_disagreements ? '<section class="hm-section hm-disagreement"><h4>Provider disagreements</h4><p>' + _hmEsc(d.provider_disagreements) + '</p></section>' : '')
+
+    + '</div>';
+}
+
+async function _loadHMIntel(company, role, mountEl) {
+  if (!mountEl) return;
+  const slug = _hmSlugify(company, role);
+  mountEl.innerHTML = '<div class="hm-intel-loading">Loading hiring intel…</div>';
+  try {
+    const res = await fetch('/api/hm-intel?slug=' + encodeURIComponent(slug));
+    if (res.status === 404) {
+      mountEl.innerHTML = '<div class="hm-intel-missing">'
+        + '<p><strong>No hiring intel yet.</strong> Generate the 7-LLM council research pack:</p>'
+        + '<pre class="hm-cli">node scripts/hiring-manager-research.mjs --role "' + _hmEsc(company) + '" --skip-deep</pre>'
+        + '<p class="muted">~$5/role · 8-12 min · see data/hm-intel/_SCHEMA.md</p>'
+        + '</div>';
+      return;
+    }
+    if (!res.ok) {
+      mountEl.innerHTML = '<div class="hm-intel-error">Failed to load intel: HTTP ' + res.status + '</div>';
+      return;
+    }
+    const d = await res.json();
+    mountEl.innerHTML = _renderHMIntel(d, slug);
+  } catch (err) {
+    mountEl.innerHTML = '<div class="hm-intel-error">Error: ' + _hmEsc(err.message) + '</div>';
+  }
+}
+window._loadHMIntel = _loadHMIntel;
 
 // ── Notes & activity (per-row append-only log) ──────────────────
 const NOTE_MAX_CHARS = 1000;
@@ -8945,6 +9641,315 @@ function closeVerify() {
   document.getElementById('verify-backdrop').classList.remove('visible');
 }
 
+// ── Pipeline action modal (Run Batch + Process All) ────────────
+// User clicks a sidebar button → fetch /api/pipeline/preview → render
+// the confirmation modal with current counts + cost estimate + budget
+// state + send-email checkbox → on confirm, POST to the matching
+// /api/batch/run or /api/pipeline/process-all endpoint → show toast +
+// poll /api/pipeline/job-status until done.
+let _pipelineAction = null;     // 'batch' | 'process-all'
+let _pipelinePreview = null;    // cached preview JSON
+let _pipelinePollTimer = null;
+let _pipelineCurrentJob = null;
+
+async function openPipelineModal(action) {
+  _pipelineAction = action;
+  const backdrop = document.getElementById('pipeline-backdrop');
+  const modal = document.getElementById('pipeline-modal');
+  const title = document.getElementById('pipeline-modal-title');
+  const subtitle = document.getElementById('pipeline-modal-subtitle');
+  const body = document.getElementById('pipeline-modal-body');
+  const confirmBtn = document.getElementById('pipeline-modal-confirm');
+  backdrop.classList.add('visible');
+  modal.classList.add('visible');
+  if (action === 'batch') {
+    title.textContent = 'Run Batch';
+    subtitle.textContent = 'Send the currently-queued items to the Anthropic Batch API. Skips triage.';
+    confirmBtn.textContent = 'Run Batch';
+    confirmBtn.className = 'pipeline-modal-btn pipeline-modal-btn-primary';
+  } else {
+    title.textContent = 'Process All Pipeline Items';
+    subtitle.textContent = 'Triage every pending item, run batch eval on what advances, rebuild dashboard. The full pipeline drain.';
+    confirmBtn.textContent = 'Process All';
+    confirmBtn.className = 'pipeline-modal-btn pipeline-modal-btn-nuclear';
+  }
+  body.innerHTML = '<div class="pipeline-modal-section">Loading current pipeline state…</div>';
+  confirmBtn.disabled = true;
+
+  try {
+    const res = await fetch('/api/pipeline/preview', { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const p = await res.json();
+    _pipelinePreview = p;
+    body.innerHTML = _renderPipelineModalBody(action, p);
+    // Cap-exceeded blocks the confirm button until user explicitly checks the
+    // force-override box. _isPipelineActionCapped reads the flags _renderPipelineModalBody
+    // set on the preview slice; the force-override checkbox toggles via inline handler.
+    const capped = _isPipelineActionCapped(action, p);
+    confirmBtn.disabled = capped;
+    if (capped) {
+      confirmBtn.dataset.cappedReason = capped;
+    } else {
+      delete confirmBtn.dataset.cappedReason;
+    }
+  } catch (err) {
+    body.innerHTML = '<div class="pipeline-modal-section" style="color:var(--red-fg,#dc2626)">Failed to load preview: ' + (err.message || err) + '</div>';
+  }
+}
+
+function _isPipelineActionCapped(action, p) {
+  // Returns a string reason if the action is cap-blocked, '' if not.
+  // Calibration 2026-05-16: per-run caps Run Batch $25, Process All $250;
+  // monthly $500 (+ optional burst).
+  const slice = action === 'process-all' ? p.process_all : p.run_batch;
+  if (slice.exceeds_per_run_cap) return 'per-run';
+  if (slice.exceeds_budget) return 'monthly';
+  return '';
+}
+
+function _renderPipelineModalBody(action, p) {
+  const isAll = action === 'process-all';
+  const est = isAll ? p.process_all : p.run_batch;
+  const count = isAll ? p.process_all.triage_count : p.run_batch.eval_count;
+  const headlineNoun = isAll ? 'pipeline items' : 'queued evaluations';
+  const noWork = isAll ? p.process_all.triage_count === 0 && p.queued_for_batch === 0
+                       : p.run_batch.eval_count === 0;
+  if (noWork) {
+    return '<div class="pipeline-modal-section"><strong>Nothing to do.</strong> ' +
+      (isAll ? 'No pending items in pipeline.md and no queued items in batch.' : 'No items queued for batch eval. Try the Process All button to triage new pipeline items first.') +
+      '</div>';
+  }
+  const breakdown = isAll
+    ? '<div class="pipeline-stat-grid">'
+      + '<span class="pipeline-stat-label">Triage (Haiku &times; ' + p.process_all.triage_count + ')</span>'
+      + '<span class="pipeline-stat-value">$' + p.process_all.triage_cost_usd.toFixed(3) + '</span>'
+      + '<span class="pipeline-stat-label">Batch eval (Sonnet &times; ' + p.process_all.batch_eval_count + ')</span>'
+      + '<span class="pipeline-stat-value">$' + p.process_all.batch_eval_cost_usd.toFixed(2) + '</span>'
+      + '<span class="pipeline-stat-label muted">assumed advance rate</span>'
+      + '<span class="pipeline-stat-value muted">' + Math.round(p.process_all.assumed_advance_rate*100) + '%</span>'
+      + '</div>'
+    : '<div class="pipeline-stat-grid">'
+      + '<span class="pipeline-stat-label">Batch eval (Sonnet &times; ' + p.run_batch.eval_count + ')</span>'
+      + '<span class="pipeline-stat-value">$' + p.run_batch.total_cost_usd.toFixed(2) + '</span>'
+      + '</div>';
+  return ''
+    + '<div class="pipeline-modal-section">'
+    +   '<h4>' + count + ' ' + headlineNoun + '</h4>'
+    +   '<div class="pipeline-stat-grid">'
+    +     '<span class="pipeline-stat-label">Estimated total cost</span>'
+    +     '<span class="pipeline-stat-value pipeline-cost-headline">$' + est.total_cost_usd.toFixed(2) + '</span>'
+    +   '</div>'
+    + '</div>'
+    + '<div class="pipeline-modal-section">'
+    +   '<h4>Cost breakdown</h4>'
+    +   breakdown
+    + '</div>'
+    + '<div class="pipeline-modal-section">'
+    +   '<div class="pipeline-modal-budget">'
+    +     '<span class="pipeline-modal-budget-label">Monthly budget</span>'
+    +     '<span class="pipeline-modal-budget-val">$' + p.monthly_budget_usd.toFixed(0) + '</span>'
+    +   '</div>'
+    +   '<div class="pipeline-modal-budget">'
+    +     '<span class="pipeline-modal-budget-label">Spent (rolling 30d)</span>'
+    +     '<span class="pipeline-modal-budget-val">$' + p.spent_30d_usd.toFixed(2) + '</span>'
+    +   '</div>'
+    +   '<div class="pipeline-modal-budget">'
+    +     '<span class="pipeline-modal-budget-label">Headroom</span>'
+    +     '<span class="pipeline-modal-budget-val">$' + p.headroom_usd.toFixed(2) + '</span>'
+    +   '</div>'
+    + '</div>'
+    + _renderCapWarning(action, p)
+    + '<label class="pipeline-checkbox-row" for="pipeline-send-email">'
+    +   '<input type="checkbox" id="pipeline-send-email">'
+    +   '<span class="pipeline-checkbox-text">'
+    +     'Send me a heartbeat email when complete'
+    +     '<span class="pipeline-checkbox-hint">Goes to ' + _pipelineHeartbeatRecipient() + ' via Gmail SMTP. The same template as the daily heartbeat.</span>'
+    +   '</span>'
+    + '</label>';
+}
+
+function _renderCapWarning(action, p) {
+  // Builds the cap-exceeded badge + force-override checkbox HTML.
+  // Returns '' if no cap is exceeded.
+  const reason = _isPipelineActionCapped(action, p);
+  if (!reason) return '';
+  const isAll = action === 'process-all';
+  const slice = isAll ? p.process_all : p.run_batch;
+  const capUsd = isAll ? p.per_run_caps.process_all_usd : p.per_run_caps.run_batch_usd;
+  const actionLabel = isAll ? 'Process All' : 'Run Batch';
+
+  let title, detail;
+  if (reason === 'per-run') {
+    title = 'EXCEEDS $' + capUsd + '/RUN CAP';
+    detail = actionLabel + ' estimate <strong>$' + slice.total_cost_usd.toFixed(2) + '</strong> exceeds the per-run cap of <strong>$' + capUsd + '</strong>. '
+           + 'Raise the cap with <code>' + (isAll ? 'PER_RUN_CAP_PROCESS_ALL_USD' : 'PER_RUN_CAP_RUN_BATCH_USD') + '</code> env, '
+           + 'or check the force-override below if you knowingly want to proceed.';
+  } else {
+    title = 'EXCEEDS MONTHLY BUDGET';
+    detail = actionLabel + ' would push 30-day spend from <strong>$' + p.spent_30d_usd.toFixed(2) + '</strong> '
+           + 'to <strong>$' + (p.spent_30d_usd + slice.total_cost_usd).toFixed(2) + '</strong>, past the '
+           + (p.burst_budget_usd > 0 ? 'effective (burst-enabled) ' : '')
+           + 'monthly budget of <strong>$' + p.effective_budget_usd.toFixed(0) + '</strong>. '
+           + 'Activate burst mode (<code>MONTHLY_BUDGET_USD_BURST</code> + <code>MONTHLY_BUDGET_BURST_UNTIL</code>), '
+           + 'raise <code>MONTHLY_BUDGET_USD</code>, or force-override below.';
+  }
+
+  return ''
+    + '<div class="pipeline-cap-warning">'
+    +   '<div class="pipeline-cap-warning-title">⚠️ ' + title + '</div>'
+    +   '<div class="pipeline-cap-warning-detail">' + detail + '</div>'
+    + '</div>'
+    + '<label class="pipeline-force-override" for="pipeline-force-override">'
+    +   '<input type="checkbox" id="pipeline-force-override" onchange="_onForceOverrideToggle()">'
+    +   '<span>I accept the cost. <strong>Force-run anyway.</strong></span>'
+    + '</label>';
+}
+
+function _onForceOverrideToggle() {
+  // Force-override checkbox toggles the confirm button availability when a
+  // cap warning is active. Reads dataset.cappedReason set in openPipelineModal.
+  const confirmBtn = document.getElementById('pipeline-modal-confirm');
+  const forceBox = document.getElementById('pipeline-force-override');
+  if (!confirmBtn || !forceBox) return;
+  if (confirmBtn.dataset.cappedReason) {
+    confirmBtn.disabled = !forceBox.checked;
+  }
+}
+
+function _pipelineHeartbeatRecipient() {
+  // Hardcoded reflection of HEARTBEAT_TO in .env — purely cosmetic for the modal
+  return 'mitwilli@gmail.com';
+}
+
+function closePipelineModal() {
+  document.getElementById('pipeline-backdrop').classList.remove('visible');
+  document.getElementById('pipeline-modal').classList.remove('visible');
+  _pipelineAction = null;
+  _pipelinePreview = null;
+}
+
+async function confirmPipelineAction() {
+  if (!_pipelineAction || !_pipelinePreview) return;
+  const sendEmail = !!document.getElementById('pipeline-send-email')?.checked;
+  const force     = !!document.getElementById('pipeline-force-override')?.checked;
+  const endpoint = _pipelineAction === 'process-all' ? '/api/pipeline/process-all' : '/api/batch/run';
+  const confirmBtn = document.getElementById('pipeline-modal-confirm');
+  confirmBtn.disabled = true;
+  confirmBtn.textContent = 'Starting…';
+  try {
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ confirm: true, sendEmail, force }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) {
+      // 402 Payment Required = cap-exceeded refusal (server-side enforcement).
+      // Surface the cap reason inline rather than as a generic error.
+      if (res.status === 402 && data.cap_exceeded) {
+        throw new Error(data.error || ('Cap exceeded: ' + data.cap_exceeded));
+      }
+      throw new Error(data.error || ('HTTP ' + res.status));
+    }
+    _pipelineCurrentJob = { jobId: data.jobId, type: _pipelineAction, sendEmail };
+    closePipelineModal();
+    showPipelineToast(_pipelineAction, sendEmail);
+    startPipelineStatusPoll(data.jobId);
+  } catch (err) {
+    confirmBtn.disabled = false;
+    confirmBtn.textContent = 'Retry';
+    if (window.toast) window.toast('Failed to start: ' + (err.message || err), 'error');
+    else alert('Failed to start: ' + (err.message || err));
+  }
+}
+
+function showPipelineToast(action, sendEmail) {
+  const toast = document.getElementById('pipeline-toast');
+  const title = document.getElementById('pipeline-toast-title');
+  const phase = document.getElementById('pipeline-toast-phase');
+  title.textContent = action === 'process-all' ? '🚀 Processing all pipeline items…' : '⚡ Running batch eval…';
+  phase.textContent = sendEmail ? 'Queued. Email will arrive when done.' : 'Queued.';
+  toast.classList.add('visible');
+}
+
+function closePipelineToast() {
+  document.getElementById('pipeline-toast').classList.remove('visible');
+  if (_pipelinePollTimer) { clearTimeout(_pipelinePollTimer); _pipelinePollTimer = null; }
+  _pipelineCurrentJob = null;
+}
+
+function startPipelineStatusPoll(jobId) {
+  if (_pipelinePollTimer) clearTimeout(_pipelinePollTimer);
+  const tick = async () => {
+    try {
+      const res = await fetch('/api/pipeline/job-status?job_id=' + encodeURIComponent(jobId), { cache: 'no-store' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      if (!data.ok || !data.job) throw new Error('no job');
+      _updatePipelineToast(data.job, data.log_tail);
+      if (data.job.status === 'completed' || data.job.status === 'failed') {
+        return;  // stop polling
+      }
+    } catch (err) {
+      // Quiet retry — backend may briefly 404 while state file is being rewritten
+    }
+    _pipelinePollTimer = setTimeout(tick, 8000);
+  };
+  tick();
+}
+
+function _updatePipelineToast(job, logTail) {
+  const phaseEl = document.getElementById('pipeline-toast-phase');
+  const fillEl  = document.getElementById('pipeline-toast-fill');
+  const titleEl = document.getElementById('pipeline-toast-title');
+  const phaseMap = {
+    queued: { pct: 5,  label: 'Queued' },
+    triage: { pct: 20, label: 'Phase 1/4 — Triage' },
+    batch:  { pct: 50, label: 'Phase 2/4 — Batch eval' },
+    rebuild:{ pct: 85, label: 'Phase 3/4 — Dashboard rebuild' },
+    email:  { pct: 95, label: 'Phase 4/4 — Heartbeat email' },
+    done:   { pct: 100,label: '✓ Done' },
+  };
+  const info = phaseMap[job.phase] || phaseMap.queued;
+  if (job.status === 'completed') {
+    titleEl.textContent = '✅ ' + (job.type === 'process-all' ? 'Pipeline drained' : 'Batch eval complete');
+    phaseEl.textContent = (job.processed != null ? job.processed + ' items processed' : 'Done') +
+      (job.send_email ? ' · email sent' : '');
+    fillEl.style.width = '100%';
+    if (typeof refreshDashboardData === 'function') refreshDashboardData();
+    document.dispatchEvent(new CustomEvent('careerops:pipeline-job-complete', { detail: { job } }));
+  } else if (job.status === 'failed') {
+    titleEl.textContent = '❌ ' + (job.type === 'process-all' ? 'Process All failed' : 'Batch eval failed');
+    phaseEl.textContent = (job.failure_phase ? 'Failed at: ' + job.failure_phase : (job.error || 'Unknown error')) + ' (see log)';
+    fillEl.style.width = info.pct + '%';
+    fillEl.style.background = 'var(--red-fg, #dc2626)';
+  } else {
+    titleEl.textContent = (job.type === 'process-all' ? '🚀 Processing all…' : '⚡ Running batch…');
+    phaseEl.textContent = info.label + (logTail && logTail.length ? ' · ' + (logTail[logTail.length - 1] || '').slice(0, 80) : '');
+    fillEl.style.width = info.pct + '%';
+  }
+}
+
+// Wire the sidebar counts on initial load + after status changes
+async function refreshPipelineBadges() {
+  try {
+    const res = await fetch('/api/pipeline/preview', { cache: 'no-store' });
+    if (!res.ok) return;
+    const p = await res.json();
+    const batchBadge = document.getElementById('pipeline-btn-batch-count');
+    const allBadge   = document.getElementById('pipeline-btn-all-count');
+    if (batchBadge) batchBadge.textContent = p.queued_for_batch;
+    if (allBadge)   allBadge.textContent   = p.pending_pipeline + p.queued_for_batch;
+  } catch {}
+}
+window.openPipelineModal = openPipelineModal;
+window.closePipelineModal = closePipelineModal;
+window.confirmPipelineAction = confirmPipelineAction;
+window.closePipelineToast = closePipelineToast;
+window.refreshPipelineBadges = refreshPipelineBadges;
+document.addEventListener('DOMContentLoaded', () => { refreshPipelineBadges(); });
+document.addEventListener('careerops:status-changed', () => { refreshPipelineBadges(); });
+
 // ── Gap modal ──────────────────────────────────────────────────
 function openGapModal(el) {
   const title = el.dataset.title || '';
@@ -10057,6 +11062,12 @@ async function applyStatus(newStatus) {
     }
     badge.classList.remove('status-pill-pending');
     if (window.toast) window.toast('#' + num + ' → ' + newStatus, 'success');
+    // Broadcast so other surfaces (Outreach Pulse, KPI cards) can react
+    // without waiting for the 60s poll. detail.num + detail.status let
+    // listeners filter to relevant rows.
+    document.dispatchEvent(new CustomEvent('careerops:status-changed', {
+      detail: { num: parseInt(num, 10), status: newStatus, previous: original },
+    }));
   } catch (err) {
     // Revert
     badge.textContent = original;
@@ -11412,6 +12423,868 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   } else {
     init();
   }
+})();
+</script>
+
+<!-- Outreach Pulse — LinkedIn / X / email contacts awaiting reply. -->
+<!-- Surfaces buildSummary() from lib/outreach-tracker.mjs via /api/outreach. -->
+<!-- Auto-hides when there is nothing to do. -->
+<section id="outreach-pulse" data-section="outreach" style="display:none;margin:12px auto 16px;max-width:1280px;padding:0 20px"></section>
+<style>
+#outreach-pulse .op-card { background: var(--surface, #ffffff); border: 1px solid var(--border, #e2e8f0); border-radius: 12px; padding: 18px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+
+/* ── Outreach Pulse banner (compact, collapsible) ─────────────────
+   Default state: single-line strip with count badges. Click to expand.
+   Replaces the old full-card layout which monopolized the top of the
+   dashboard. Color-coded by most-urgent category. */
+#outreach-pulse .op-banner {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 10px;
+  background: var(--surface, #ffffff);
+  margin: 0 0 8px;
+  overflow: hidden;
+  transition: border-color .12s ease, box-shadow .12s ease;
+  position: relative;
+}
+#outreach-pulse .op-banner:hover {
+  border-color: var(--text-3, #94a3b8);
+  box-shadow: 0 1px 3px rgba(0,0,0,.05);
+}
+#outreach-pulse .op-banner-breakup { border-left: 3px solid #991b1b; }
+#outreach-pulse .op-banner-due     { border-left: 3px solid #dc2626; }
+#outreach-pulse .op-banner-referral{ border-left: 3px solid #16a34a; }
+#outreach-pulse .op-banner-fresh   { border-left: 3px solid #94a3b8; }
+#outreach-pulse .op-banner-toggle {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  color: inherit;
+  text-align: left;
+  font: inherit;
+  min-width: 0;
+}
+#outreach-pulse .op-banner-toggle:focus-visible {
+  outline: 2px solid var(--blue-fg-dark, #2563eb);
+  outline-offset: -2px;
+  border-radius: 8px;
+}
+#outreach-pulse .op-banner-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+#outreach-pulse .op-banner-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--text-2, #475569);
+  flex-shrink: 0;
+}
+#outreach-pulse .op-banner-headline {
+  font-size: 13px;
+  color: var(--text, #0f172a);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+#outreach-pulse .op-banner-stat {
+  white-space: nowrap;
+}
+#outreach-pulse .op-banner-stat strong {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  margin-right: 3px;
+}
+#outreach-pulse .op-banner-stat-due strong     { color: #dc2626; }
+#outreach-pulse .op-banner-stat-breakup strong { color: #991b1b; }
+#outreach-pulse .op-banner-stat-referral strong{ color: #16a34a; }
+#outreach-pulse .op-banner-dot {
+  color: var(--text-3, #94a3b8);
+  font-weight: 700;
+}
+#outreach-pulse .op-banner-chevron {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--text-3, #94a3b8);
+  transition: transform .15s ease;
+  flex-shrink: 0;
+}
+#outreach-pulse .op-banner-toggle[aria-expanded="true"] .op-banner-chevron {
+  transform: rotate(180deg);
+}
+#outreach-pulse .op-banner-close {
+  padding: 0 12px;
+  background: none;
+  border: 0;
+  border-left: 1px solid var(--border, #e2e8f0);
+  color: var(--text-3, #94a3b8);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+#outreach-pulse .op-banner-close:hover {
+  color: var(--text, #0f172a);
+  background: var(--surface-2, #f8fafc);
+}
+#outreach-pulse .op-expanded {
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-top: 4px;
+}
+#outreach-pulse .op-expanded[hidden] { display: none; }
+#outreach-pulse .op-expanded-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+@media (prefers-color-scheme: dark) {
+  #outreach-pulse .op-banner { background: #11131c; border-color: #232737; }
+  #outreach-pulse .op-banner:hover { border-color: #2d3142; }
+  #outreach-pulse .op-banner-headline { color: #fafafa; }
+  #outreach-pulse .op-banner-label { color: #9a9aa6; }
+  #outreach-pulse .op-banner-close { color: #6b7280; border-left-color: #232737; }
+  #outreach-pulse .op-banner-close:hover { color: #fafafa; background: #181b27; }
+  #outreach-pulse .op-banner-stat-due strong      { color: #fca5a5; }
+  #outreach-pulse .op-banner-stat-breakup strong  { color: #fca5a5; }
+  #outreach-pulse .op-banner-stat-referral strong { color: #86efac; }
+  #outreach-pulse .op-expanded { background: #11131c; border-color: #232737; }
+}
+/* Mobile: stack the headline below the icon/label */
+@media (max-width: 600px) {
+  #outreach-pulse .op-banner-toggle {
+    flex-wrap: wrap;
+    gap: 6px 10px;
+  }
+  #outreach-pulse .op-banner-headline {
+    flex-basis: 100%;
+    font-size: 12.5px;
+  }
+}
+#outreach-pulse .op-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px; }
+#outreach-pulse .op-title { font-size: 16px; font-weight: 700; letter-spacing: -0.01em; margin: 0; color: var(--text, #0f172a); }
+#outreach-pulse .op-counts { font-size: 12px; color: var(--text3, #475569); font-variant-numeric: tabular-nums; }
+#outreach-pulse .op-counts strong { color: var(--text, #0f172a); }
+#outreach-pulse .op-group { margin-top: 14px; }
+#outreach-pulse .op-group-title { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text4, #64748b); margin: 0 0 8px; }
+#outreach-pulse .op-row { display: grid; grid-template-columns: 1fr auto; gap: 12px; padding: 10px 12px; border: 1px solid var(--border, #e2e8f0); border-radius: 8px; background: var(--surface2, #f8fafc); margin-bottom: 6px; }
+#outreach-pulse .op-row.op-due_soon { border-left: 3px solid #d97706; }
+#outreach-pulse .op-row.op-overdue { border-left: 3px solid #dc2626; }
+#outreach-pulse .op-row.op-breakup { border-left: 3px solid #991b1b; background: #fef2f2; }
+#outreach-pulse .op-row.op-referral { border-left: 3px solid #16a34a; background: #f0fdf4; }
+
+/* ── Outreach Pulse v2 — Linear-inspired 3-zone layout ─────────────
+   Scan path: [status bar] → identity → action (dominant) → meta column.
+   Model attributions move from inline "gemini: ... | anthropic: ..." to
+   small letter chips with full reasoning in hover tooltip.
+   Built from synthesis of grok-heavy + sonnet UI research (2026-05-17). */
+#outreach-pulse .op-row-v2 {
+  display: grid;
+  grid-template-columns: 4px 1fr 168px;
+  gap: 0;
+  padding: 0;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 8px;
+  background: var(--surface, #ffffff);
+  margin-bottom: 6px;
+  overflow: hidden;
+  min-height: 76px;
+  transition: border-color .12s ease, box-shadow .12s ease, transform .08s ease;
+}
+#outreach-pulse .op-row-v2:hover {
+  border-color: var(--blue-fg-dark, #2563eb);
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
+}
+#outreach-pulse .op-row-v2.op-overdue  .op-row-bar { background: #dc2626; }
+#outreach-pulse .op-row-v2.op-due_soon .op-row-bar { background: #d97706; }
+#outreach-pulse .op-row-v2.op-breakup  .op-row-bar { background: #991b1b; }
+#outreach-pulse .op-row-v2.op-referral .op-row-bar { background: #16a34a; }
+#outreach-pulse .op-row-v2.op-fresh    .op-row-bar { background: #9ca3af; }
+#outreach-pulse .op-row-bar {
+  align-self: stretch;
+  background: #9ca3af;
+}
+#outreach-pulse .op-row-content {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+#outreach-pulse .op-identity {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 13.5px;
+  min-width: 0;
+}
+#outreach-pulse .op-identity .op-name {
+  font-weight: 600;
+  color: var(--text, #0f172a);
+  white-space: nowrap;
+}
+#outreach-pulse .op-identity-sep {
+  color: var(--text-3, #9ca3af);
+  font-size: 11px;
+}
+#outreach-pulse .op-affil {
+  color: var(--text-2, #475569);
+  font-size: 12.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  flex: 1;
+}
+#outreach-pulse .op-action {
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--text, #0f172a);
+}
+#outreach-pulse .op-action-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+#outreach-pulse .op-strategy-tag {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+  color: var(--text-2, #475569);
+  background: var(--surface-2, #f1f5f9);
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 4px;
+  padding: 1px 7px;
+  white-space: nowrap;
+}
+#outreach-pulse .op-action-text {
+  color: var(--text, #0f172a);
+  font-weight: 500;
+  font-size: 13.5px;
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+#outreach-pulse .op-action-empty {
+  font-style: italic;
+  color: var(--text-3, #9ca3af);
+  font-size: 12.5px;
+}
+#outreach-pulse .op-action-empty code {
+  background: var(--surface-2, #f1f5f9);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11.5px;
+  color: var(--text-2, #475569);
+}
+#outreach-pulse .op-model-chips {
+  display: inline-flex;
+  gap: 4px;
+  margin-left: auto;
+}
+#outreach-pulse .op-model-chip {
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: white;
+  cursor: help;
+  background: #64748b;
+  letter-spacing: 0;
+  user-select: none;
+}
+#outreach-pulse .op-model-chip-gemini    { background: #1a73e8; }
+#outreach-pulse .op-model-chip-anthropic { background: #d97706; }
+#outreach-pulse .op-model-chip-openai    { background: #10a37f; }
+#outreach-pulse .op-model-chip-grok      { background: #1d1d1f; }
+#outreach-pulse .op-model-chip-perplexity{ background: #20808d; }
+#outreach-pulse .op-row-v2 .op-linked-app {
+  font-size: 11.5px;
+  color: var(--text-3, #64748b);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  flex-wrap: wrap;
+}
+#outreach-pulse .op-row-v2 .op-linked-anchor {
+  color: var(--text-3, #64748b);
+  text-decoration: none;
+  border-bottom: 1px dotted var(--border, #e5e7eb);
+}
+#outreach-pulse .op-row-v2 .op-linked-anchor:hover {
+  color: var(--blue-fg-dark, #2563eb);
+  border-bottom-color: var(--blue-fg-dark, #2563eb);
+}
+#outreach-pulse .op-meta-col {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-3, #64748b);
+  text-align: right;
+  border-left: 1px solid var(--border, #e5e7eb);
+  background: var(--surface-2, #f8fafc);
+}
+#outreach-pulse .op-meta-stats {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  font-size: 11px;
+  color: var(--text-3, #64748b);
+}
+#outreach-pulse .op-meta-sep { padding: 0 4px; color: var(--border, #d1d5db); }
+#outreach-pulse .op-meta-review { margin-top: 2px; }
+@media (prefers-color-scheme: dark) {
+  #outreach-pulse .op-row-v2 { background: #181b27; border-color: #232737; }
+  #outreach-pulse .op-row-v2:hover { border-color: #60a5fa; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
+  #outreach-pulse .op-row-v2 .op-action-text { color: #fafafa; }
+  #outreach-pulse .op-row-v2 .op-name { color: #fafafa; }
+  #outreach-pulse .op-row-v2 .op-affil { color: #b8b8c0; }
+  #outreach-pulse .op-row-v2 .op-strategy-tag {
+    background: #232737; border-color: #2d3142; color: #b8b8c0;
+  }
+  #outreach-pulse .op-row-v2 .op-meta-col { background: #11131c; border-left-color: #232737; }
+  #outreach-pulse .op-row-v2 .op-linked-anchor { color: #9a9aa6; border-bottom-color: #2d3142; }
+  #outreach-pulse .op-row-v2 .op-linked-anchor:hover { color: #60a5fa; border-bottom-color: #60a5fa; }
+  #outreach-pulse .op-row-v2 .op-action-empty code { background: #232737; color: #b8b8c0; }
+}
+/* Mobile: collapse meta column under content, keep status bar */
+@media (max-width: 700px) {
+  #outreach-pulse .op-row-v2 {
+    grid-template-columns: 4px 1fr;
+    min-height: 0;
+  }
+  #outreach-pulse .op-meta-col {
+    grid-column: 2;
+    border-left: none;
+    border-top: 1px solid var(--border, #e5e7eb);
+    align-items: flex-start;
+    background: transparent;
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding: 8px 14px 12px;
+    text-align: left;
+  }
+}
+#outreach-pulse .op-name { font-weight: 600; color: var(--text, #0f172a); }
+#outreach-pulse .op-meta { font-size: 12px; color: var(--text3, #475569); margin-top: 2px; }
+#outreach-pulse .op-strategy { font-size: 12px; color: var(--text2, #1e293b); margin-top: 4px; }
+#outreach-pulse .op-strategy strong { color: var(--text, #0f172a); }
+#outreach-pulse .op-actions { display: flex; gap: 6px; align-items: center; }
+#outreach-pulse .op-pill { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px; }
+#outreach-pulse .op-pill-due { background: #fef3c7; color: #92400e; }
+#outreach-pulse .op-pill-overdue { background: #fee2e2; color: #991b1b; }
+#outreach-pulse .op-pill-breakup { background: #1f2937; color: #fde68a; }
+#outreach-pulse .op-pill-referral { background: #dcfce7; color: #14532d; }
+#outreach-pulse .op-pill-review { background: #ede9fe; color: #5b21b6; }
+#outreach-pulse .op-empty { font-size: 13px; color: var(--text4, #64748b); padding: 8px 0; }
+#outreach-pulse .op-linked-app { font-size: 11px; color: var(--text3, #475569); margin-top: 2px; font-weight: 500; }
+#outreach-pulse .op-linked-app a { color: inherit; text-decoration: none; border-bottom: 1px dotted currentColor; }
+#outreach-pulse .op-linked-app a:hover { color: #2563eb; }
+#outreach-pulse .op-linked-app-score { display: inline-block; background: var(--surface2, #f1f5f9); padding: 1px 6px; border-radius: 4px; font-variant-numeric: tabular-nums; margin-left: 4px; }
+#outreach-pulse .op-legend-toggle { font-size: 11px; color: var(--text4, #64748b); cursor: pointer; user-select: none; text-decoration: underline; margin-left: 8px; }
+#outreach-pulse .op-legend { display: none; margin: 10px 0 14px; padding: 12px; background: var(--surface2, #f1f5f9); border: 1px solid var(--border, #e2e8f0); border-radius: 8px; font-size: 12px; }
+#outreach-pulse .op-legend.open { display: block; }
+#outreach-pulse .op-legend table { width: 100%; border-collapse: collapse; }
+#outreach-pulse .op-legend th, #outreach-pulse .op-legend td { padding: 4px 8px; text-align: left; border-bottom: 1px solid var(--border, #e2e8f0); vertical-align: top; }
+#outreach-pulse .op-legend th { font-weight: 600; color: var(--text3, #475569); font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; }
+#outreach-pulse .op-legend td:first-child { width: 24px; font-variant-numeric: tabular-nums; color: var(--text4, #64748b); }
+#outreach-pulse .op-legend td:nth-child(2) { width: 180px; font-weight: 600; color: var(--text, #0f172a); }
+#outreach-pulse .op-legend td:nth-child(3) { color: var(--text2, #1e293b); }
+.outreach-app-chip { display: inline-flex; align-items: center; gap: 4px; background: rgba(22,163,74,0.12); color: #15803d; border: 1px solid rgba(22,163,74,0.35); padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; margin-left: 6px; vertical-align: middle; cursor: help; }
+.outreach-app-chip[data-urgency="overdue"] { background: rgba(220,38,38,0.10); color: #991b1b; border-color: rgba(220,38,38,0.35); }
+.outreach-app-chip[data-urgency="due_soon"] { background: rgba(217,119,6,0.12); color: #92400e; border-color: rgba(217,119,6,0.35); }
+.outreach-app-chip[data-urgency="breakup"] { background: #1f2937; color: #fde68a; border-color: #1f2937; }
+@media (prefers-color-scheme: dark) {
+  #outreach-pulse .op-linked-app { color: #b8b8c0; }
+  #outreach-pulse .op-linked-app-score { background: #181b27; }
+  #outreach-pulse .op-legend { background: #11131c; border-color: #232737; }
+  #outreach-pulse .op-legend th { color: #9a9aa6; }
+  #outreach-pulse .op-legend td:nth-child(2) { color: #fafafa; }
+  #outreach-pulse .op-legend td:nth-child(3) { color: #e4e4e7; }
+  #outreach-pulse .op-legend th, #outreach-pulse .op-legend td { border-color: #232737; }
+  .outreach-app-chip { background: rgba(22,163,74,0.18); color: #86efac; border-color: rgba(22,163,74,0.40); }
+  .outreach-app-chip[data-urgency="overdue"] { background: rgba(220,38,38,0.18); color: #fca5a5; border-color: rgba(220,38,38,0.40); }
+  .outreach-app-chip[data-urgency="due_soon"] { background: rgba(217,119,6,0.18); color: #fcd34d; border-color: rgba(217,119,6,0.40); }
+}
+#outreach-pulse .op-row { cursor: pointer; }
+#outreach-pulse .op-row:hover { background: var(--surface, #ffffff); }
+#outreach-pulse .op-drawer { grid-column: 1 / -1; margin-top: 10px; padding: 12px 14px; background: var(--surface, #ffffff); border: 1px dashed var(--border, #e2e8f0); border-radius: 6px; font-size: 12px; color: var(--text, #0f172a); }
+#outreach-pulse .op-drawer h4 { margin: 0 0 6px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-2, #475569); font-weight: 700; }
+#outreach-pulse .op-drawer ul { margin: 0 0 10px; padding-left: 18px; color: var(--text, #0f172a); }
+#outreach-pulse .op-drawer li { margin: 2px 0; }
+#outreach-pulse .op-drawer p { color: var(--text, #0f172a); }
+#outreach-pulse .op-drawer code { font-family: 'JetBrains Mono','SF Mono',ui-monospace,monospace; background: var(--surface-2, #f1f5f9); color: var(--text, #0f172a); padding: 1px 5px; border-radius: 3px; font-size: 11.5px; }
+/* Dark-mode contrast fix — legacy tokens text2/text4/surface2 don't exist in
+   dark palette, so drawer text was nearly invisible. Explicit overrides below. */
+@media (prefers-color-scheme: dark) {
+  #outreach-pulse .op-drawer { background: #181b27; border-color: #2d3142; color: #e4e4e7; }
+  #outreach-pulse .op-drawer h4 { color: #b8b8c0; }
+  #outreach-pulse .op-drawer ul, #outreach-pulse .op-drawer li, #outreach-pulse .op-drawer p { color: #e4e4e7; }
+  #outreach-pulse .op-drawer code { background: #232737; color: #e4e4e7; border: 1px solid #2d3142; }
+  #outreach-pulse .op-drawer a { color: #60a5fa; }
+}
+#outreach-pulse .op-drawer .op-intel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 700px) { #outreach-pulse .op-drawer .op-intel-grid { grid-template-columns: 1fr; } }
+@media (prefers-color-scheme: dark) {
+  #outreach-pulse .op-card { background: #11131c; border-color: #232737; }
+  #outreach-pulse .op-row { background: #181b27; border-color: #232737; }
+  #outreach-pulse .op-row.op-breakup { background: rgba(220,38,38,0.10); }
+  #outreach-pulse .op-row.op-referral { background: rgba(22,163,74,0.10); }
+  #outreach-pulse .op-title { color: #fafafa; }
+  #outreach-pulse .op-name { color: #fafafa; }
+  #outreach-pulse .op-meta { color: #b8b8c0; }
+  #outreach-pulse .op-strategy { color: #e4e4e7; }
+  #outreach-pulse .op-group-title { color: #9a9aa6; }
+}
+</style>
+<script>
+(function () {
+  function daysAgoFromISO(iso) {
+    if (!iso) return null;
+    var t = Date.parse(iso);
+    if (isNaN(t)) return null;
+    return Math.floor((Date.now() - t) / 86400000);
+  }
+  function lastTouchTs(c) {
+    if (!c.touches || !c.touches.length) return null;
+    return c.touches[c.touches.length - 1].ts;
+  }
+  function pill(text, kind) { return '<span class="op-pill op-pill-' + kind + '">' + text + '</span>'; }
+  function escapeHtml(s) { return String(s || '').replace(/[&<>"']/g, function (m) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m]; }); }
+  function urgencyOf(c) {
+    if (c.status === 'responded' || c.status === 'dead') return 'fresh';
+    var days = daysAgoFromISO(lastTouchTs(c));
+    var touches = (c.touches || []).filter(function (t) { return t.outbound; }).length;
+    if (touches >= 3 && days !== null && days >= 14) return 'breakup';
+    var due = c.next_action && c.next_action.due_date;
+    if (due) {
+      // Compare YYYY-MM-DD strings to match lib/outreach-tracker.mjs server-side
+      // urgency math. Using Date.parse + Date.now() (epoch math) wrongly tags
+      // same-day items as 'overdue' once it's past midnight UTC.
+      var today = new Date().toISOString().slice(0, 10);
+      if (due < today) return 'overdue';
+      var tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+      if (due === today || due === tomorrow) return 'due_soon';
+    }
+    return 'fresh';
+  }
+  // Parse "gemini: ... | anthropic: ..." rationale into per-model attributions.
+  // Returns a primary text (first model's text) + list of {name, text} for
+  // tooltip chips. Used by the redesign to demote model attribution from
+  // inline noise to a quiet icon row.
+  function parseModelAttributions(rationale) {
+    if (!rationale) return { primary: '', models: [] };
+    var raw = String(rationale).trim();
+    // String-only parsing (no regex). build-dashboard.mjs wraps this entire
+    // script in a backtick template, which mangles regex backslashes (\s
+    // becomes s, etc.). Use plain string ops instead — they survive.
+    var parts = raw.split('|').map(function (p) { return p.trim(); }).filter(Boolean);
+    var validName = function (s) {
+      // ASCII letters/digits/underscore/hyphen only — no backslash regex needed
+      for (var i = 0; i < s.length; i++) {
+        var c = s.charCodeAt(i);
+        var ok = (c >= 48 && c <= 57) || (c >= 65 && c <= 90) || (c >= 97 && c <= 122) || c === 95 || c === 45;
+        if (!ok) return false;
+      }
+      return s.length > 0;
+    };
+    var models = parts.map(function (p) {
+      var colonIdx = p.indexOf(':');
+      if (colonIdx <= 0) return null;
+      var name = p.slice(0, colonIdx).trim();
+      if (!validName(name)) return null;
+      return { name: name, text: p.slice(colonIdx + 1).trim() };
+    }).filter(Boolean);
+    if (!models.length) return { primary: raw, models: [] };
+    return { primary: models[0].text, models: models };
+  }
+
+  function renderRow(c, kind) {
+    var days = daysAgoFromISO(lastTouchTs(c));
+    var touches = (c.touches || []).length;
+    var nx = c.next_action;
+    var company = escapeHtml(c.company || '(unknown)');
+    var title = escapeHtml(c.title_at_send || c.contact_type || '');
+    var name = escapeHtml(c.name || c.contact_id);
+    var dayStr = days === null ? 'no touches' : 'day ' + days;
+    var touchStr = touches + ' touch' + (touches === 1 ? '' : 'es');
+    var urgency = urgencyOf(c);
+    var statusKind = kind === 'breakup' ? 'breakup' : kind === 'referral' ? 'referral' : urgency;
+    // Status pill copy: short verb-phrase, not full word repeat
+    var statusLabel = statusKind === 'overdue' ? 'overdue'
+      : statusKind === 'breakup' ? 'breakup window'
+      : statusKind === 'referral' ? 'referral'
+      : 'due';
+    var pillHtml = pill(statusLabel, statusKind);
+    var reviewBadge = (nx && typeof nx.confidence === 'number' && nx.confidence < 0.66)
+      ? '<span class="op-pill op-pill-review" title="Confidence < 66% — verify before sending">review</span>'
+      : '';
+
+    // Recommended action: dominant element. Model attribution moved to icon
+    // chips with full reasoning in tooltips (no inline "gemini: ... |").
+    var attrs = parseModelAttributions(nx && nx.rationale);
+    var strategyName = nx ? (nx.strategy_name || '(no strategy)') : '';
+    var strategyId = nx ? ('S' + (nx.strategy_id || '?')) : '';
+    var actionHtml;
+    if (nx) {
+      var primary = attrs.primary || nx.rationale || '';
+      var modelChipsHtml = '';
+      if (attrs.models.length) {
+        modelChipsHtml = '<span class="op-model-chips">' + attrs.models.map(function (m) {
+          // Initial letter chip — G for gemini, A for anthropic, etc.
+          var letter = (m.name.charAt(0) || '?').toUpperCase();
+          var clsName = 'op-model-chip op-model-chip-' + escapeHtml(m.name.toLowerCase());
+          var tooltipText = m.name + ': ' + m.text;
+          return '<span class="' + clsName + '" title="' + escapeHtml(tooltipText) + '" aria-label="' + escapeHtml(m.name) + ' rationale">' + letter + '</span>';
+        }).join('') + '</span>';
+      }
+      actionHtml =
+        '<div class="op-action">'
+        +   '<div class="op-action-head">'
+        +     '<span class="op-strategy-tag" title="' + escapeHtml(strategyName) + '">' + strategyId + ' · ' + escapeHtml(strategyName) + '</span>'
+        +     modelChipsHtml
+        +   '</div>'
+        +   '<div class="op-action-text">' + escapeHtml(primary) + '</div>'
+        + '</div>';
+    } else {
+      actionHtml = '<div class="op-action op-action-empty">No recommendation yet — run <code>npm run outreach:recommend</code></div>';
+    }
+
+    // Linked application — kept subdued (smaller, lower contrast) so the eye
+    // goes to the action first.
+    var linkedHtml = '';
+    if (c.linked_application) {
+      var la = c.linked_application;
+      var anchor = la.report
+        ? '<a href="/' + escapeHtml(la.report) + '" target="_blank" rel="noopener" class="op-linked-anchor">#' + la.num + ' ' + escapeHtml(la.company) + ' &middot; ' + escapeHtml(la.role) + '</a>'
+        : '<span class="op-linked-anchor">#' + la.num + ' ' + escapeHtml(la.company) + ' · ' + escapeHtml(la.role) + '</span>';
+      var scoreChip = la.score ? '<span class="op-linked-app-score">' + Number(la.score).toFixed(2) + '</span>' : '';
+      var statusCls = ({
+        evaluated: 'status-evaluated', applied: 'status-applied',
+        responded: 'status-responded', interview: 'status-interview',
+        offer: 'status-offer', rejected: 'status-rejected',
+        discarded: 'status-discarded', skip: 'status-skip',
+      })[String(la.status || 'evaluated').toLowerCase()] || 'status-evaluated';
+      var statusPill = '<span class="badge status-pill ' + statusCls + '" data-status="' + escapeHtml(String(la.status || 'evaluated').toLowerCase()) + '" data-num="' + la.num + '" role="button" tabindex="0" onclick="openStatusPopover(this);event.stopPropagation()" title="Click to change status">' + escapeHtml(la.status || '?') + '</span>';
+      linkedHtml = '<div class="op-linked-app">' + anchor + scoreChip + statusPill + '</div>';
+    }
+
+    var rowClass = 'op-row op-row-v2 op-' + statusKind;
+    return ''
+      + '<div class="' + rowClass + '" data-contact-id="' + escapeHtml(c.contact_id) + '" data-app-num="' + escapeHtml(String(c.linked_application_id || '')) + '">'
+      +   '<div class="op-row-bar" aria-hidden="true"></div>'
+      +   '<div class="op-row-content">'
+      +     '<div class="op-identity">'
+      +       '<span class="op-name">' + name + '</span>'
+      +       '<span class="op-identity-sep">·</span>'
+      +       '<span class="op-affil">' + company + (title ? ' · ' + title : '') + '</span>'
+      +     '</div>'
+      +     actionHtml
+      +     linkedHtml
+      +   '</div>'
+      +   '<div class="op-meta-col">'
+      +     pillHtml
+      +     '<div class="op-meta-stats"><span>' + dayStr + '</span><span class="op-meta-sep">·</span><span>' + touchStr + '</span></div>'
+      +     (reviewBadge ? '<div class="op-meta-review">' + reviewBadge + '</div>' : '')
+      +   '</div>'
+      + '</div>';
+  }
+  function renderGroup(title, list, kind) {
+    if (!list || !list.length) return '';
+    return '<div class="op-group"><h3 class="op-group-title">' + title + '</h3>' + list.map(function (c) { return renderRow(c, kind); }).join('') + '</div>';
+  }
+  // 10-strategy legend — collapsible cheatsheet so the user knows what
+  // "Strategy 3" means without opening data/linkedin-followup-strategy-*.md.
+  // Hardcoded because the 10-strategy catalog is stable (see
+  // lib/strategy-recommender.mjs STRATEGIES const).
+  var STRATEGIES_LEGEND = [
+    [1, 'Timed Second Touch',     'Touch=1, day 5–7, role open. Same channel, new angle.'],
+    [2, 'Content Warm-Up',        'Engage publicly on their recent posts before re-DMing.'],
+    [3, 'Channel Switch — Email', 'Touch≥2, day≥10, email findable. Different attention layer.'],
+    [4, 'Value-Give Touch',       'Send something genuinely useful. No ask attached.'],
+    [5, 'Skip-the-Contact Pivot', 'Sourcer + small/mid company + HM identifiable. Go direct.'],
+    [6, 'Referral Activation',    '2nd-degree + bonus ≥ $2K + post-app eligible.'],
+    [7, 'Pattern Interrupt',      'Touch=3 + senior. Different format/time/framing.'],
+    [8, 'Twitter/X Hook',         'Contact posted on X in last 7d. Public reply first.'],
+    [9, 'Tiered Persistence',     'Allocate touch effort to A/B/C tier classification.'],
+    [10, 'Graceful Exit',         'Touch≥3, day≥14. Close the loop, preserve the relationship.'],
+  ];
+  function renderLegend() {
+    var rows = STRATEGIES_LEGEND.map(function (s) {
+      return '<tr><td>' + s[0] + '</td><td>' + escapeHtml(s[1]) + '</td><td>' + escapeHtml(s[2]) + '</td></tr>';
+    }).join('');
+    return '<div class="op-legend" id="op-legend">' +
+      '<table><thead><tr><th>#</th><th>Strategy</th><th>When it fires</th></tr></thead><tbody>' + rows + '</tbody></table>' +
+    '</div>';
+  }
+  function render(summary) {
+    var sec = document.getElementById('outreach-pulse');
+    if (!sec) return;
+    var counts = summary.counts || {};
+    var dueToday = counts.due_today || 0;
+    var breakup  = counts.breakup || 0;
+    var referral = counts.referral_opportunities || 0;
+    var totalAction = dueToday + breakup + referral;
+    var awaiting   = (counts.by_status && counts.by_status.awaiting_reply) || 0;
+    if (!totalAction && !(counts.total || 0)) { sec.style.display = 'none'; return; }
+
+    // Banner: compact horizontal strip with badge counts + expand toggle.
+    // Default collapsed — user opens on demand. Persisted via localStorage.
+    var bannerKind = breakup > 0 ? 'breakup' : dueToday > 0 ? 'due' : referral > 0 ? 'referral' : 'fresh';
+    var headlineParts = [];
+    if (dueToday) headlineParts.push('<span class="op-banner-stat op-banner-stat-due"><strong>' + dueToday + '</strong> due today</span>');
+    if (breakup)  headlineParts.push('<span class="op-banner-stat op-banner-stat-breakup"><strong>' + breakup + '</strong> breakup</span>');
+    if (referral) headlineParts.push('<span class="op-banner-stat op-banner-stat-referral"><strong>' + referral + '</strong> referral</span>');
+    if (!headlineParts.length) headlineParts.push('<span class="op-banner-stat"><strong>' + awaiting + '</strong> awaiting reply</span>');
+    var headline = headlineParts.join('<span class="op-banner-dot">·</span>');
+
+    var groups = renderGroup('Due today', summary.due_today, 'due_today') +
+                 renderGroup('Breakup window', summary.breakup, 'breakup') +
+                 renderGroup('Referral opportunities', summary.referrals, 'referral');
+    if (!groups) groups = '<div class="op-empty">No contacts need attention right now. Log a touch with <code>node scripts/log-touch.mjs</code>.</div>';
+
+    sec.innerHTML = ''
+      + '<div class="op-banner op-banner-' + bannerKind + '" role="region" aria-label="Outreach Pulse summary">'
+      +   '<button type="button" class="op-banner-toggle" aria-expanded="false" aria-controls="op-expanded">'
+      +     '<span class="op-banner-icon" aria-hidden="true">' + (breakup ? '🔥' : dueToday ? '🔔' : '✉️') + '</span>'
+      +     '<span class="op-banner-label">Outreach</span>'
+      +     '<span class="op-banner-headline">' + headline + '</span>'
+      +     '<span class="op-banner-chevron" aria-hidden="true">▾</span>'
+      +   '</button>'
+      +   '<button type="button" class="op-banner-close" aria-label="Dismiss for this session" data-action="dismiss-banner">×</button>'
+      + '</div>'
+      + '<div class="op-expanded" id="op-expanded" hidden>'
+      +   '<div class="op-expanded-header">'
+      +     '<h2 class="op-title">Outreach Pulse <span class="op-legend-toggle" data-action="toggle-legend">what do the strategies mean?</span></h2>'
+      +     '<div class="op-counts"><strong>' + awaiting + '</strong> awaiting &middot; <strong>' + dueToday + '</strong> due today &middot; <strong>' + breakup + '</strong> breakup &middot; <strong>' + referral + '</strong> referral angles</div>'
+      +   '</div>'
+      +   renderLegend()
+      +   groups
+      + '</div>';
+
+    // Wire expand/collapse on the banner. Persist state in localStorage.
+    var btn = sec.querySelector('.op-banner-toggle');
+    var expanded = sec.querySelector('.op-expanded');
+    var STORAGE_KEY = 'careerops:outreach-pulse-open';
+    var initialOpen = false;
+    try { initialOpen = localStorage.getItem(STORAGE_KEY) === '1'; } catch (_) {}
+    if (initialOpen) {
+      expanded.hidden = false;
+      btn.setAttribute('aria-expanded', 'true');
+    }
+    btn.addEventListener('click', function () {
+      var open = expanded.hidden;
+      expanded.hidden = !open;
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      try { localStorage.setItem(STORAGE_KEY, open ? '1' : '0'); } catch (_) {}
+    });
+    // Wire dismiss (hides for the session — re-renders on next data refresh).
+    var closeBtn = sec.querySelector('[data-action="dismiss-banner"]');
+    if (closeBtn) closeBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      sec.style.display = 'none';
+    });
+    // Wire legend toggle inside the expanded panel.
+    var toggle = sec.querySelector('[data-action="toggle-legend"]');
+    if (toggle) toggle.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var leg = sec.querySelector('#op-legend');
+      if (leg) leg.classList.toggle('open');
+    });
+    sec.style.display = 'block';
+    // Move to top of the main content area so the banner sits above the fold
+    // (dashboard wraps everything in .app-shell > .app-main > .container).
+    var target = document.querySelector('.app-main .container') ||
+                 document.querySelector('.app-main') ||
+                 document.body;
+    if (target && target.firstElementChild !== sec) {
+      target.insertBefore(sec, target.firstElementChild);
+    }
+  }
+  function renderIntelDrawer(c) {
+    var intel = c.intel || {};
+    function fmtDate(iso) { if (!iso) return '—'; var d = new Date(iso); return isNaN(d) ? iso : d.toISOString().slice(0, 10); }
+    function liPostList(posts) {
+      if (!posts || !posts.length) return '<li><em>none in cache</em></li>';
+      return posts.map(function (p) { return '<li>' + fmtDate(p.ts) + ' &mdash; ' + escapeHtml(p.summary || p.text || '(no text)') + '</li>'; }).join('');
+    }
+    function emailBlock() {
+      var eg = intel.email_guess;
+      if (!eg) return '<li><em>no email guess yet &mdash; run <code>node scripts/refresh-intel.mjs --contact ...</code></em></li>';
+      var line = '<li><code>' + escapeHtml(eg.address || '?') + '</code> (' + escapeHtml(eg.pattern || '?') + ', ' + escapeHtml(eg.confidence || '?') + ' confidence, validator: ' + escapeHtml(eg.validator || '?') + ')</li>';
+      if (eg.alternates && eg.alternates.length) line += '<li><em>alternates: ' + eg.alternates.map(function (a) { return '<code>' + escapeHtml(a.address) + '</code>'; }).join(', ') + '</em></li>';
+      if (eg.note) line += '<li><em>' + escapeHtml(eg.note) + '</em></li>';
+      return line;
+    }
+    function referralBlock() {
+      var r = intel.referral;
+      if (!r) return '<li><em>no referral data</em></li>';
+      var bonus = r.bonus_usd ? '$' + r.bonus_usd.toLocaleString() : (r.bonus_range || 'not public');
+      var elig = r.post_app_eligible || 'unknown';
+      var icon = elig === 'no' ? '⚠' : (elig === 'yes' ? '✓' : '?');
+      var line = '<li><strong>Bonus:</strong> ' + escapeHtml(bonus) + ' &middot; <strong>Post-app eligible:</strong> ' + icon + ' ' + escapeHtml(elig) + '</li>';
+      if (r.policy_notes) line += '<li><em>' + escapeHtml(r.policy_notes) + '</em></li>';
+      return line;
+    }
+    function xBlock() {
+      if (!intel.x_handle) return '<li><em>no X handle linked</em></li>';
+      var head = '<li><strong>@' + escapeHtml(intel.x_handle) + '</strong> &middot; last post: ' + fmtDate(intel.x_last_post_ts) + (intel.x_recent_themes ? ' &middot; themes: ' + intel.x_recent_themes.map(escapeHtml).join(', ') : '') + '</li>';
+      var posts = (intel.x_recent_posts || []).slice(0, 3).map(function (p) { return '<li>' + fmtDate(p.ts) + ' &mdash; ' + escapeHtml((p.text || '').slice(0, 110)) + '</li>'; }).join('');
+      return head + posts;
+    }
+    function nextActionBlock() {
+      var nx = c.next_action;
+      if (!nx) return '<li><em>no recommendation yet</em></li>';
+      var conf = (typeof nx.confidence === 'number') ? nx.confidence.toFixed(2) : '?';
+      return '<li><strong>Strategy ' + nx.strategy_id + ': ' + escapeHtml(nx.strategy_name || '') + '</strong> (confidence ' + conf + ', due ' + escapeHtml(nx.due_date || '?') + ')</li>' +
+             (nx.rationale ? '<li><em>' + escapeHtml(nx.rationale) + '</em></li>' : '') +
+             (nx.draft_template_id ? '<li>Draft template: <code>' + escapeHtml(nx.draft_template_id) + '</code></li>' : '');
+    }
+    return '<div class="op-drawer">' +
+      '<div class="op-intel-grid">' +
+        '<div><h4>LinkedIn recent posts</h4><ul>' + liPostList(intel.linkedin_recent_posts) + '</ul>' +
+             '<h4>X activity</h4><ul>' + xBlock() + '</ul></div>' +
+        '<div><h4>Email guess</h4><ul>' + emailBlock() + '</ul>' +
+             '<h4>Referral economics</h4><ul>' + referralBlock() + '</ul>' +
+             '<h4>Recommended next action</h4><ul>' + nextActionBlock() + '</ul></div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function attachRowHandlers() {
+    var rows = document.querySelectorAll('#outreach-pulse .op-row');
+    rows.forEach(function (row) {
+      if (row.dataset.opHandlerBound) return;
+      row.dataset.opHandlerBound = '1';
+      row.addEventListener('click', function (ev) {
+        if (ev.target.closest('.op-pill') || ev.target.closest('.op-drawer')) return;
+        var existing = row.querySelector('.op-drawer');
+        if (existing) { existing.remove(); return; }
+        var id = row.getAttribute('data-contact-id');
+        if (!id) return;
+        fetch('/api/outreach/contact/' + encodeURIComponent(id), { cache: 'no-store' })
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (c) {
+            if (!c) return;
+            var drawerHtml = renderIntelDrawer(c);
+            row.insertAdjacentHTML('beforeend', drawerHtml);
+          })
+          .catch(function () { /* silent */ });
+      });
+    });
+  }
+
+  // Re-attach handlers whenever render() repaints the section.
+  var originalRender = render;
+  render = function (summary) { originalRender(summary); attachRowHandlers(); };
+
+  // ── Apply-Now Queue cross-reference ──────────────────────────────────────
+  // Walk the Apply-Now Queue rows (each has data-num="X") and inject a
+  // small chip when X matches a contact's linked_application_id. Single
+  // pass + idempotent (chips carry data-op-chip so re-runs don't duplicate).
+  function injectApplyNowBadges(allContacts) {
+    if (!allContacts || !allContacts.length) return;
+    var byAppNum = {};
+    for (var i = 0; i < allContacts.length; i++) {
+      var c = allContacts[i];
+      var id = c.linked_application_id;
+      if (!id) continue;
+      (byAppNum[String(id)] = byAppNum[String(id)] || []).push(c);
+    }
+    // Find every row that exposes data-num and has linked contacts.
+    // Skip status-pills themselves (they also carry data-num for the popover
+    // wiring) and anything inside the Outreach Pulse section — chips there
+    // would double-render the same info that's already inline.
+    var rows = Array.from(document.querySelectorAll('[data-num]')).filter(function (el) {
+      if (el.classList && el.classList.contains('status-pill')) return false;
+      if (el.closest && el.closest('#outreach-pulse')) return false;
+      return true;
+    });
+    rows.forEach(function (row) {
+      var num = row.getAttribute('data-num');
+      if (!num || !byAppNum[num]) return;
+      // Don't double-inject across renders.
+      if (row.querySelector('[data-op-chip]')) return;
+      var contacts = byAppNum[num];
+      // Worst-case urgency wins the chip color.
+      var rank = { breakup: 4, overdue: 3, due_soon: 2, fresh: 1 };
+      var worst = 'fresh';
+      for (var j = 0; j < contacts.length; j++) {
+        var u = urgencyOf(contacts[j]);
+        if ((rank[u] || 0) > (rank[worst] || 0)) worst = u;
+      }
+      var tip = contacts.map(function (c) {
+        var nx = c.next_action;
+        var sLabel = nx ? ('S' + nx.strategy_id + ' ' + (nx.strategy_name || '')) : 'no recommendation';
+        return (c.name || c.contact_id) + ' (' + (c.contact_type || '?') + ') → ' + sLabel;
+      }).join(' · ');
+      var chip = document.createElement('span');
+      chip.className = 'outreach-app-chip';
+      chip.setAttribute('data-op-chip', '1');
+      chip.setAttribute('data-urgency', worst);
+      chip.setAttribute('title', tip);
+      chip.textContent = '👥 ' + contacts.length + ' messaged · ' + worst.replace('_', ' ');
+      // Insert into the first reasonable host within the row (a heading, a
+      // title cell, or just the row itself).
+      var host = row.querySelector('h2, h3, .title, td:first-child') || row;
+      host.appendChild(chip);
+    });
+  }
+  function loadAllAndInjectBadges() {
+    fetch('/api/outreach/all', { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) { if (data && data.contacts) injectApplyNowBadges(data.contacts); })
+      .catch(function () { /* silent */ });
+  }
+  function load() {
+    fetch('/api/outreach', { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) { if (data) render(data); })
+      .catch(function () { /* server not running or offline — fail silent */ });
+    // Apply-Now Queue cross-ref runs in parallel — it uses a different
+    // endpoint so it doesn't block the main render.
+    loadAllAndInjectBadges();
+  }
+
+  // Cross-surface reactivity — when any status pill anywhere on the page
+  // is changed (via the existing openStatusPopover → applyStatus flow),
+  // re-fetch outreach data so linked_application status updates instantly.
+  document.addEventListener('careerops:status-changed', function () {
+    // Small delay lets the server finish the file write before we re-fetch.
+    setTimeout(load, 200);
+  });
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', load);
+  else load();
+  // Auto-refresh every 60s while page is open.
+  setInterval(load, 60 * 1000);
 })();
 </script>
 </body>

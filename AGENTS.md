@@ -12,15 +12,49 @@ The portfolio that goes with this system is also open source: [cv-santiago](http
 
 There are two layers. Read `DATA_CONTRACT.md` for the full list.
 
-**User Layer (NEVER auto-updated, personalization goes HERE):**
+**User Layer (personalization lives HERE):**
 - `cv.md`, `config/profile.yml`, `modes/_profile.md`, `article-digest.md`, `portals.yml`
-- `data/*`, `reports/*`, `output/*`, `interview-prep/*`
+- `data/*`, `reports/*`, `output/*`, `interview-prep/*`, `writing-samples/*`
 
-**System Layer (auto-updatable, DON'T put user data here):**
-- `modes/_shared.md`, `modes/oferta.md`, all other modes
+**System Layer (auto-updatable via `update-system.mjs`, DON'T put user data here):**
+- `modes/_shared.md`, `modes/oferta.md`, all other shared modes
 - `AGENTS.md`, `CLAUDE.md`, `*.mjs` scripts, `dashboard/*`, `templates/*`, `batch/*`
 
 **THE RULE: When the user asks to customize anything (archetypes, narrative, negotiation scripts, proof points, location policy, comp targets), ALWAYS write to `modes/_profile.md` or `config/profile.yml`. NEVER edit `modes/_shared.md` for user-specific content.** This ensures system updates don't overwrite their customizations.
+
+### Corpus auto-edit (post-calibration 2026-05-16)
+
+**Per Mitchell's career calibration brief (2026-05-16): User-Layer files are fully autonomously editable by agents** when an edit is justified by research, calibration changes, or surfaced gaps. The audit trail is git — every change goes through `scripts/agent-commit.mjs` so it lands in the log with agent attribution and is fully revertable.
+
+**What this means in practice:**
+- Agents may edit `cv.md`, `config/profile.yml`, `modes/_profile.md`, `article-digest.md`, `interview-prep/*.md`, `writing-samples/*.md`, and any `data/*-readiness/*.md` files autonomously.
+- Every corpus edit MUST be committed via `scripts/agent-commit.mjs` (see usage below). NEVER use raw `git commit` for corpus changes — the helper enforces the agent-attribution trailer and skips empty diffs.
+- Mitchell does NOT pre-approve corpus edits per file. He reviews via `git log` / `git diff` after the fact and reverts anything he disagrees with.
+
+**What still requires explicit approval (NOT autonomous):**
+- Outbound actions: sending email, LinkedIn DMs, or any external messages
+- `git push` to any remote (mitwilli-create or otherwise) — pushes are user-triggered or scheduled, not agent-triggered
+- Cost-ceiling raises: changing `MONTHLY_BUDGET_USD`, `PER_RUN_CAP_*`, or `MONTHLY_BUDGET_USD_BURST` env vars
+- Edits to System-Layer files (modes/_shared.md, *.mjs scripts, AGENTS.md/CLAUDE.md, etc.) — those still flow through `update-system.mjs` or explicit user approval
+- Changes that would push to the `santifer` upstream (NEVER, per standing memory rule)
+
+**How to use the agent-commit helper:**
+
+```bash
+node scripts/agent-commit.mjs \
+  --agent <agent-name> \
+  --files "cv.md,modes/_profile.md" \
+  --message "Update target archetypes per calibration brief 2026-05-16"
+```
+
+The helper:
+- Stages ONLY the specified files (never `git add -A` — avoids accidentally committing unrelated work)
+- Skips the commit if the staged diff is empty (returns `{ok: true, skipped: 'no_changes'}`)
+- Appends `Agent: <name>` and `Per: career-calibration brief 2026-05-16` trailers
+- Uses `--signoff` for author attribution
+- Runs pre-commit hooks normally (no `--no-verify`)
+- Supports `--dry-run` to preview what would commit
+- Returns JSON with `{ok, sha, files_changed, message, branch}` for the calling agent to log
 
 ## Update Check
 

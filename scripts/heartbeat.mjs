@@ -21,6 +21,11 @@ import { marked } from 'marked';
 import { classifyLiveness } from '../liveness-core.mjs';
 import { getCachedUrl } from '../lib/resolve-ats-url.mjs';
 import { poolMap } from '../lib/fetch-utils.mjs';
+import { buildSummary as buildOutreachSummary, urgency as outreachUrgency, daysSinceLastTouch as outreachDaysSince, touchCount as outreachTouchCount } from '../lib/outreach-tracker.mjs';
+// Tier 5 system-status banner (calibration brief 2026-05-16) — surfaces which
+// Tier 5 features are active in the daily heartbeat. Runway-alert section will
+// wire in once pipeline-density compute is extracted from dashboard-server.mjs.
+import { renderSystemBanner } from '../lib/heartbeat-system-banner.mjs';
 
 const ROOT = process.cwd();
 const args = process.argv.slice(2);
@@ -841,6 +846,71 @@ const STATUS_GLYPH = {
   Evaluated: '🔎', Rejected: '🚫', Discarded: '🗑', SKIP: '⏭',
 };
 
+// ── Outreach Cadence ───────────────────────────────────────────────────────
+// Surfaces LinkedIn / X / email contacts who got a DM and went silent.
+// Sourced from data/outreach-state.json via lib/outreach-tracker.mjs.
+// The section auto-suppresses when there's nothing to do (no due_today,
+// no breakup-window contacts) to avoid "inbox-zero noise" in the email.
+function formatOutreachCadence() {
+  const summary = buildOutreachSummary();
+  const due = summary.due_today;
+  const breakup = summary.breakup;
+  const referrals = summary.referrals;
+  // Quiet days: emit nothing. Heartbeat stays clean.
+  if (!due.length && !breakup.length && !referrals.length) return [];
+
+  const out = [];
+  const dueCount = due.length;
+  const overdueCount = due.filter(c => outreachUrgency(c) === 'overdue').length;
+  const headerGlyph = breakup.length ? '🔴' : (overdueCount ? '🔴' : '🟠');
+  const subParts = [];
+  if (dueCount)         subParts.push(`${dueCount} due today`);
+  if (breakup.length)   subParts.push(`${breakup.length} breakup window`);
+  if (referrals.length) subParts.push(`${referrals.length} referral angle`);
+
+  out.push(`## ${headerGlyph} Outreach Cadence — ${subParts.join(', ')}`);
+  out.push('');
+  out.push(`_LinkedIn / X / email contacts you've messaged and are awaiting a reply from. Recommended next action follows the 10-strategy consensus playbook ([data/linkedin-followup-strategy-2026-05-15.md](${DASHBOARD_URL}data/linkedin-followup-strategy-2026-05-15.md)). Log a touch with \`node scripts/log-touch.mjs\` — silent days emit nothing._`);
+  out.push('');
+
+  function renderRow(c, label) {
+    const days   = outreachDaysSince(c);
+    const tcount = outreachTouchCount(c);
+    const nx     = c.next_action;
+    const company = c.company || '(unknown)';
+    const title   = c.title_at_send || c.contact_type;
+    const sline   = `• **${c.name || c.contact_id}** (${company}, ${title})`;
+    out.push(sline);
+    const dayStr = days === null ? 'no touches' : `day ${days}`;
+    const tStr   = `${tcount} touch${tcount === 1 ? '' : 'es'}`;
+    if (nx) {
+      out.push(`  ${dayStr} · ${tStr} · **${label}: Strategy ${nx.strategy_id} (${nx.strategy_name})**`);
+      if (nx.rationale) out.push(`  _${nx.rationale}_`);
+    } else {
+      out.push(`  ${dayStr} · ${tStr} · _no recommendation yet — run \`npm run outreach:recommend\`_`);
+    }
+    out.push('');
+  }
+
+  if (due.length) {
+    out.push('### Due today');
+    out.push('');
+    for (const c of due) renderRow(c, 'next');
+  }
+  if (breakup.length) {
+    out.push('### Breakup window (≥ 3 touches, ≥ 14 days silent)');
+    out.push('');
+    for (const c of breakup) renderRow(c, 'graceful exit');
+  }
+  if (referrals.length) {
+    out.push('### Referral opportunities (2nd-degree contacts at silent companies)');
+    out.push('');
+    for (const c of referrals) renderRow(c, 'referral activation');
+  }
+
+  return out;
+}
+
 function formatActivitySnapshot(buckets) {
   const out = [];
   out.push('## Activity Snapshot');
@@ -1031,6 +1101,10 @@ async function generateHeartbeat() {
   lines.push('');
   for (const line of formatApplyNowQueue(applyNow, packEligibleNums)) lines.push(line);
   lines.push('');
+
+  // Outreach Cadence — LinkedIn / X / email contacts awaiting reply.
+  // Auto-suppresses on quiet days (no due_today, no breakup, no referrals).
+  for (const line of formatOutreachCadence()) lines.push(line);
 
   // Activity Snapshot — full status funnel so the user can see at a glance
   // how many applications are outstanding vs filtered out.

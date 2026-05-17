@@ -25,7 +25,15 @@
     "format": "biome format .",
     "test:unit": "node --test tests/unit/*.mjs",
     "dashboard": "node dashboard-server.mjs",
-    "dashboard:dev": "NODE_ENV=development node dashboard-server.mjs"
+    "dashboard:dev": "NODE_ENV=development node dashboard-server.mjs",
+    "outreach": "node scripts/log-touch.mjs --summary-json",
+    "outreach:due": "node scripts/log-touch.mjs --due",
+    "outreach:log": "node scripts/log-touch.mjs",
+    "outreach:recommend": "node scripts/recommend-next-action.mjs",
+    "outreach:status": "node scripts/outreach-status.mjs",
+    "outreach:intel": "node scripts/refresh-intel.mjs",
+    "outreach:import": "node scripts/import-contacts.mjs",
+    "outreach:li-activity": "node scripts/log-linkedin-activity.mjs"
   },
   "keywords": [
     "ai",
@@ -45,7 +53,9 @@
     "@google/generative-ai": "^0.24.1",
     "dotenv": "^16.4.5",
     "js-yaml": "^4.1.1",
-    "playwright": "^1.58.1"
+    "marked": "^18.0.3",
+    "nodemailer": "^8.0.7",
+    "playwright": "^1.60.0"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.15",

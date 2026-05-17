@@ -18,6 +18,9 @@ data/logs/
 data/pending-diffs/*.md
 !data/pending-diffs/.gitkeep
 data/research-state.json
+# Hiring-manager intel (7-LLM council output, contains contact info + outreach hooks)
+data/hm-intel/*.json
+!data/hm-intel/_SCHEMA.md
 reports/*.md
 reports/**/*.md
 !reports/.gitkeep
@@ -105,3 +108,6 @@ data/row-notes.json
 
 # LinkedIn export — personal contact data, never commit
 data/linkedin/
+
+# Outreach state — per-contact message history + intel cache, personal
+data/outreach-state.json
