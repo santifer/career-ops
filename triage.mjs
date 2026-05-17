@@ -343,16 +343,19 @@ async function quickScoreGemini(url, tier, jdSnippet) {
     const { GoogleGenerativeAI } = await import('@google/generative-ai');
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({
-      // gemini-2.0-flash deprecated for keys created after early 2026 (returns
-      // 404); 2.5-flash is the current analogous tier.
-      model: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
+      // 2026-05-17 — gemini-2.0-flash deprecated Feb 2026 (shuts down June 1
+      // 2026). gemini-3-flash-preview is the current Flash 3.x default per
+      // Mitchell's preference. gemini-2.5-flash kept as fallback alias.
+      // Gemini 3 uses thinking_level (minimal/low/medium/high) instead of
+      // thinkingConfig.thinkingBudget. For triage we want minimal: a number
+      // + 15-word reason needs zero internal reasoning overhead.
+      model: process.env.GEMINI_MODEL || 'gemini-3-flash-preview',
       generationConfig: {
         temperature: 0,
-        // 80 → 250: triage JSON is already ~50–100 tokens; 80 silently
-        // truncates any longer reason field → parse failure → default SKIP.
         maxOutputTokens: 250,
-        // 2.5-flash is a thinking model. For "pick a number 1-10 + 15-word
-        // reason" the thinking budget eats the output budget. Disable.
+        // Gemini 3 path: minimal thinking. Gemini 2.x path: thinkingBudget 0.
+        // We send BOTH — Google silently ignores whichever doesn't apply.
+        thinking_level: 'minimal',
         thinkingConfig: { thinkingBudget: 0 },
       },
     });

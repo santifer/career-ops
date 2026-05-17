@@ -327,7 +327,10 @@ async function judgeWithGemini(body) {
   const key = process.env.GEMINI_API_KEY;
   if (!key) return null;
   try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`;
+    // 2026-05-17 — upgraded from gemini-2.5-flash to gemini-3-flash-preview
+    // per Mitchell's preference. 2.5-flash still works; 3-flash-preview is
+    // the current Flash 3.x default.
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${key}`;
     const resp = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

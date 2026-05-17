@@ -14,7 +14,8 @@
  * Requires:
  *   GEMINI_API_KEY in .env (or environment variable)
  *
- * Free-tier model: gemini-2.0-flash (generous quota, no billing required)
+ * Default model: gemini-3-flash-preview (full Flash 3.0 preview;
+ * gemini-3-flash-preview was deprecated 2026-02-18). Override via GEMINI_MODEL.
  */
 
 import { readFileSync, existsSync, writeFileSync, mkdirSync, readdirSync } from 'fs';
@@ -66,11 +67,11 @@ if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
   USAGE
     node gemini-eval.mjs "<JD text>"
     node gemini-eval.mjs --file ./jds/my-job.txt
-    node gemini-eval.mjs --model gemini-2.0-flash "<JD text>"
+    node gemini-eval.mjs --model gemini-3-flash-preview "<JD text>"
 
   OPTIONS
     --file <path>    Read JD from a file instead of inline text
-    --model <name>   Gemini model to use (default: gemini-2.0-flash)
+    --model <name>   Gemini model to use (default: gemini-3-flash-preview)
     --no-save        Do not save report to reports/ directory
     --help           Show this help
 
@@ -88,7 +89,13 @@ if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
 
 // Parse flags
 let jdText = '';
-let modelName = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+// 2026-05-17 — gemini-3-flash-preview deprecated Feb 18 2026, shuts down June 1
+// 2026. Switched default to gemini-3-flash-preview (Mitchell's stated
+// preference: "Gemini 3.1 Pro when it makes sense and Gemini 3.1 Flash all
+// other times" — 3.1 Flash doesn't ship as a slug, 3-flash-preview is the
+// closest full-Flash 3.x option, live-verified API 200 on 2026-05-17).
+// Override via GEMINI_MODEL env var.
+let modelName = process.env.GEMINI_MODEL || 'gemini-3-flash-preview';
 let saveReport = true;
 let batchMode = false;
 let batchReportNum = null;

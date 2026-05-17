@@ -130,7 +130,9 @@ const CLI = {
 };
 
 const MONTHLY_BUDGET = parseFloat(process.env.MONTHLY_BUDGET_USD || '500');
-const GEMINI_MODEL   = process.env.WEEKLY_PROGRESS_MODEL || 'gemini-2.5-pro';
+// 2026-05-17 — upgraded to gemini-3.1-pro-preview per Mitchell's preference
+// for Pro tier. Falls back via WEEKLY_PROGRESS_MODEL env var if needed.
+const GEMINI_MODEL   = process.env.WEEKLY_PROGRESS_MODEL || 'gemini-3.1-pro-preview';
 
 // ──────────────────────────────────────────────────────────────────────────────
 // ISO-week math
