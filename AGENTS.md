@@ -22,6 +22,10 @@ There are two layers. Read `DATA_CONTRACT.md` for the full list.
 
 **THE RULE: When the user asks to customize anything (archetypes, narrative, negotiation scripts, proof points, location policy, comp targets), ALWAYS write to `modes/_profile.md` or `config/profile.yml`. NEVER edit `modes/_shared.md` for user-specific content.** This ensures system updates don't overwrite their customizations.
 
+### Dashboard regression invariants
+
+**Before editing `scripts/build-dashboard.mjs` (≥50 lines), `dashboard-server.mjs` endpoints, or any shared dashboard CSS:** read `DASHBOARD_INVARIANTS.md` at the repo root. It documents the 7 table interactions that must stay intact (sort, click→drawer, truncation, scroll, action buttons, density toggle, keyboard nav), the exact selectors + handlers that bind them, and a 1-minute audit pattern to run before and after the change. When a regression is caught (or knowingly accepted), append it to the "Recent regressions" section at the bottom of that file with date + what broke + what guard was added.
+
 ### Corpus auto-edit (post-calibration 2026-05-16)
 
 **Per Mitchell's career calibration brief (2026-05-16): User-Layer files are fully autonomously editable by agents** when an edit is justified by research, calibration changes, or surfaced gaps. The audit trail is git — every change goes through `scripts/agent-commit.mjs` so it lands in the log with agent attribution and is fully revertable.
