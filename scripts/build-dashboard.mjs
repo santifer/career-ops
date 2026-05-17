@@ -22,6 +22,8 @@ import { marked } from 'marked';
 import { parseApplicationsFile } from '../lib/parse-applications.mjs';
 import { statusKey, statusBadgeClass, STATUS_KEY_SOURCE, STATUS_BADGE_CLASS_SOURCE } from '../lib/status-key.mjs';
 import { networkSummary as _linkedInNetworkSummary, networkMeta as _linkedInNetworkMeta } from '../lib/linkedin-network.mjs';
+import { lookupCompCache } from '../lib/comp-researcher.mjs';
+import { scoreAlignmentCached } from '../lib/alignment-scorer.mjs';
 const parseYaml = yaml.load;
 
 const ROOT = process.cwd();
@@ -708,9 +710,22 @@ function serverColBadge(parsed, locationRaw) {
 //   ≥ floor (default $175K) — amber
 //   <  floor — red
 //   no data — grey em-dash
-function renderBaseCell(reportPath, floors, locationRaw) {
-  const compRaw = getCompRaw(reportPath);
-  const parsed = parseBaseSalary(compRaw);
+function renderBaseCell(reportPath, floors, locationRaw, company, role) {
+  let compRaw = getCompRaw(reportPath);
+  let parsed = parseBaseSalary(compRaw);
+  // Tier 6 — when the report's Block A/D/J yields nothing, fall back to
+  // data/comp-cache (multi-source researched bands). Tag the chip with
+  // "researched" so the user can see it's not from the JD.
+  let researchedTag = null;
+  if (!parsed && company && role) {
+    const cacheStr = _lookupCompFromCache(company, role);
+    if (cacheStr) {
+      compRaw = cacheStr;
+      parsed = parseBaseSalary(cacheStr);
+      const mTag = cacheStr.match(/\[researched,\s*(\w+)\s+confidence\]/i);
+      if (mTag) researchedTag = mTag[1].toLowerCase();
+    }
+  }
   if (!parsed) {
     const tip = compRaw
       ? `Comp not parsed: ${compRaw.slice(0, 160)}`
@@ -736,13 +751,21 @@ function renderBaseCell(reportPath, floors, locationRaw) {
     `${range}${currency !== 'USD' ? ` ${currency}` : ''}`,
     isTotalComp ? 'total comp (not base)' : 'base salary',
   ];
-  const tip = tipParts.join(' · ');
+  const tipWithSource = researchedTag
+    ? `${tipParts.join(' · ')} · researched (${researchedTag} confidence)`
+    : tipParts.join(' · ');
   const detail = JSON.stringify({
     kind: 'base', empty: false, min, max, currency, isTotalComp,
     range, label, raw: compRaw || '',
     floors: { target: floors.targetMin, floor: 175 },
+    researched: researchedTag || null,
   });
-  const chip = `<span class="base-chip ${cls} pill-popover-trigger" data-base-min="${min}" title="${htmlEscape(tip)}" aria-label="${htmlEscape(tip)}" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">${htmlEscape(label)}</span>`;
+  // When the value came from comp-cache (not the JD), add a small "R" badge
+  // so the user sees at-a-glance that it's researched data, not posted.
+  const researchedBadge = researchedTag
+    ? `<sup class="base-researched-badge" title="Researched band (${researchedTag} confidence) — not posted in JD">R</sup>`
+    : '';
+  const chip = `<span class="base-chip ${cls} pill-popover-trigger" data-base-min="${min}" title="${htmlEscape(tipWithSource)}" aria-label="${htmlEscape(tipWithSource)}" tabindex="0" role="button" data-pill='${htmlEscape(detail)}' onclick="openPillPopover(this);event.stopPropagation()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();openPillPopover(this)}">${htmlEscape(label)}${researchedBadge}</span>`;
   const badge = serverColBadge(parsed, locationRaw || '');
   return badge ? `<span class="base-fx-wrap">${chip}${badge}</span>` : chip;
 }
@@ -1464,6 +1487,24 @@ function _parseCompRaw(text) {
   }
 
   return '';
+}
+
+// Tier 6: comp-cache lookup. When the JD + Block A/D/J + global score table
+// all fail to surface a $ band, fall back to the multi-source researcher
+// cache (data/comp-cache/{slug}/{role}.json). Returns a cell-formatted
+// string with the band + a confidence tag the dashboard can style.
+// 2026-05-17 — added after Mitchell flagged 21 Apply-Now rows with `—`
+// in the Base column. The researcher backfills missing data by querying
+// JD re-parse → Levels.fyi → Glassdoor → council-of-models fallback.
+function _lookupCompFromCache(company, role) {
+  try {
+    const cached = lookupCompCache(company, role);
+    if (!cached || !cached.band) return '';
+    // Format: "$190K-$240K [researched, high confidence]"
+    return `${cached.band} [researched, ${cached.confidence} confidence]`;
+  } catch {
+    return '';
+  }
 }
 
 // Extract the Block A "Location" / "Remote" / "Location / Remote" / "Workplace"
@@ -2358,11 +2399,47 @@ function renderRow(r, idx) {
     r.date ? `<span class="meta-chip">📅 ${htmlEscape(r.date)}</span>` : '',
   ].filter(Boolean).join('');
 
-  // ── Intro: TL;DR + positioning (compact, full-width) ─────
+  // ── Intro: TL;DR + alignment bars + positioning (compact, full-width) ─────
+  // 2026-05-17 — alignment metrics added per Mitchell's UX brief:
+  //   % alignment to profile · % interview likelihood · % HM-noticing
+  let alignmentBars = '';
+  try {
+    if (r.reportPath) {
+      const align = scoreAlignmentCached({
+        reportPath: r.reportPath,
+        companyName: r.company,
+        hasReferralPath: false, // TODO: wire from linkedin-network when ready
+      });
+      const bar = (pct, label, hint, color) => {
+        const pctClamped = Math.max(0, Math.min(100, pct || 0));
+        const colorClass = pctClamped >= 70 ? 'alignbar-strong'
+                         : pctClamped >= 40 ? 'alignbar-mid'
+                         : 'alignbar-weak';
+        return `<div class="alignbar-row" title="${htmlEscape(hint)}">
+          <span class="alignbar-label">${htmlEscape(label)}</span>
+          <div class="alignbar-track"><div class="alignbar-fill ${colorClass}" style="width:${pctClamped}%"></div></div>
+          <span class="alignbar-pct">${pctClamped}%</span>
+        </div>`;
+      };
+      const alignTooltip = 'How well my CV + portfolio match this JD (Block B requirements + competitive edges + overall score).';
+      const intvTooltip = 'Estimated % chance of converting Applied → recruiter screen. Base rate 12% for AI-native cold apps, modulated by score, archetype, comp match, prior outcomes at this company.';
+      const hmTooltip = 'Estimated % chance the hiring manager or recruiter notices the application (vs ATS-filtered). Boosted by competitive edges, rare-combination markers, and referral path strength.';
+      alignmentBars = `<div class="alignment-bars">
+        ${bar(align.alignment, 'Profile alignment', alignTooltip, 'profile')}
+        ${bar(align.interview, 'Interview likelihood', intvTooltip, 'interview')}
+        ${bar(align.hmNoticing, 'HM-noticing chance', hmTooltip, 'hm')}
+      </div>`;
+    }
+  } catch (_) { /* never break drawer on scorer error */ }
+
   const tldrCard = tldr ? `<div class="dcard" style="margin-bottom:8px">
     <div class="dcard-label">Role at a glance</div>
     <div class="dcard-body">${htmlEscape(tldr)}</div>
-  </div>` : '';
+    ${alignmentBars}
+  </div>` : (alignmentBars ? `<div class="dcard" style="margin-bottom:8px">
+    <div class="dcard-label">Role at a glance</div>
+    ${alignmentBars}
+  </div>` : '');
 
   // 2026-05-17 — Mitchell flagged "How to position" rendering as raw markdown
   // ('### Level Assessment | Dimension | ...'). Route through marked so
@@ -2406,15 +2483,32 @@ function renderRow(r, idx) {
   </div>` : '';
 
   // ── Card 3: Story (purple / STORIES TO LEAD WITH) ────────
+  // 2026-05-17 — when a generated child-page exists in dashboard/stories/,
+  // each story row links to the 500-1000 word voice-calibrated expansion.
+  // The slug is computed the same way as scripts/generate-story-pages.mjs.
+  const _slugifyStory = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 80);
+  const _storyChildPath = (s) => {
+    const slug = _slugifyStory(String(s.story || '').slice(0, 60));
+    const fp = join(ROOT, 'dashboard/stories', `${slug}.html`);
+    return existsSync(fp) ? `stories/${slug}.html` : null;
+  };
   const storyCard = stories.length ? `<div class="dcard dcard--story">
     <div class="dcard-label">STORIES TO LEAD WITH</div>
-    ${stories.map((s, i) => `<div class="dcard-story-row">
-      <span class="story-n">${i + 1}</span>
-      <div>
-        <div class="story-req">${htmlEscape(s.requirement.slice(0, 110))}</div>
-        <div class="story-ev">${htmlEscape(s.story.slice(0, 240))}${s.story.length > 240 ? '…' : ''}</div>
-      </div>
-    </div>`).join('')}
+    ${stories.map((s, i) => {
+      const childHref = _storyChildPath(s);
+      const linkOpen = childHref
+        ? `<a href="${htmlEscape(childHref)}" target="_blank" rel="noopener" class="story-child-link" onclick="event.stopPropagation()" title="Open full 500-1000 word expansion in voice-calibrated child page">`
+        : '';
+      const linkClose = childHref ? `</a>` : '';
+      const fullBadge = childHref ? ` <span class="story-full-badge" title="Full voice-calibrated expansion available">↗ full</span>` : '';
+      return `<div class="dcard-story-row">
+        <span class="story-n">${i + 1}</span>
+        <div>
+          <div class="story-req">${linkOpen}${htmlEscape(s.requirement.slice(0, 110))}${fullBadge}${linkClose}</div>
+          <div class="story-ev">${htmlEscape(s.story.slice(0, 240))}${s.story.length > 240 ? '…' : ''}</div>
+        </div>
+      </div>`;
+    }).join('')}
   </div>` : '';
 
   // ── Card 4: Action (blue / Apply / Skip / Defer) ─────────
@@ -2486,7 +2580,7 @@ function renderRow(r, idx) {
   // Wave H: Base salary + Location chips. Both render as muted em-dash when
   // the report doesn't carry parseable signal — never crashes.
   const locationRaw = getLocationField(r.reportPath);
-  const baseCell = renderBaseCell(r.reportPath, _COMP_FLOORS, locationRaw);
+  const baseCell = renderBaseCell(r.reportPath, _COMP_FLOORS, locationRaw, r.company, r.role);
   const locationCell = renderLocationCell(r.reportPath, r.company, r.role);
   const benefitsCell = renderBenefitsCell(r.company, r.role);
   const peopleCell = renderPeopleCell(r.company, r.role);
@@ -4921,6 +5015,13 @@ function build() {
     background: transparent; border-color: transparent;
     color: var(--text-4); font-weight: 400; padding: 2px 4px;
   }
+  /* Researched-badge ("R" superscript) — denotes comp came from data/comp-cache
+     (multi-source researcher) rather than the JD. 2026-05-17. */
+  .base-researched-badge {
+    margin-left: 3px; font-size: 8px; font-weight: 700;
+    color: var(--blue-fg); opacity: 0.85; cursor: help;
+    vertical-align: super; line-height: 1;
+  }
   .location-cell { white-space: nowrap; }
   .location-chip {
     display: inline-flex; align-items: center; gap: 3px;
@@ -5037,6 +5138,16 @@ function build() {
   .dcard { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; }
   .dcard-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-4); margin-bottom: 6px; }
   .dcard-body { font-size: 12.5px; line-height: 1.55; color: var(--text-2); }
+  /* Alignment-bar trio in Role-at-a-glance card — 3 horizontal % bars. */
+  .alignment-bars { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+  .alignbar-row { display: grid; grid-template-columns: 150px 1fr 44px; align-items: center; gap: 8px; font-size: 11.5px; cursor: help; }
+  .alignbar-label { color: var(--text-3); font-weight: 500; }
+  .alignbar-track { height: 8px; background: var(--surface-2, rgba(0,0,0,0.08)); border-radius: 4px; overflow: hidden; }
+  .alignbar-fill { height: 100%; border-radius: 4px; transition: width 0.3s ease; }
+  .alignbar-fill.alignbar-strong { background: var(--green-fg); }
+  .alignbar-fill.alignbar-mid    { background: var(--amber-fg); }
+  .alignbar-fill.alignbar-weak   { background: var(--red-fg); }
+  .alignbar-pct { font-weight: 600; color: var(--text-1); text-align: right; font-variant-numeric: tabular-nums; }
   /* How-to-position markdown rendering — real table, not pipe-separated prose. */
   .htp-md table { width: 100%; border-collapse: collapse; margin: 6px 0; font-size: 12px; }
   .htp-md th, .htp-md td { padding: 6px 8px; border: 1px solid var(--border); text-align: left; vertical-align: top; }
@@ -5060,6 +5171,11 @@ function build() {
   .dcard--match  { border-left: 3px solid var(--green-fg); }
   .dcard--gap    { border-left: 3px solid var(--amber-fg); }
   .dcard--story  { border-left: 3px solid var(--purple-fg); }
+  /* Story child-page link badge — appears when a generated voice-calibrated
+     expansion exists for this story in dashboard/stories/. */
+  .story-child-link { color: var(--purple-fg); text-decoration: none; font-weight: 600; }
+  .story-child-link:hover { text-decoration: underline; }
+  .story-full-badge { font-size: 9.5px; font-weight: 600; color: var(--purple-fg); background: var(--purple-bg, rgba(128,0,255,0.08)); padding: 1px 6px; border-radius: 3px; margin-left: 4px; vertical-align: 1px; }
   .dcard--action { border-left: 3px solid var(--blue-fg);
     display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
   .dcard--action .dcard-action-text {
@@ -8537,8 +8653,10 @@ function applyUniversalTableBaseline(opts) {
         });
 
         // 2026-05-17 — Mitchell requested: double-click the resize handle to
-        // auto-fit the column to its content (Excel-style). Measure the
-        // widest cell in this column and set width to that + padding.
+        // auto-fit the column to its content with PIXEL PRECISION (Excel-
+        // style). Measure the widest visible cell in this column with no
+        // wrap + table-layout:auto, set width to exact content width + 2px
+        // border-safety, no upper cap, no truncation.
         handle.addEventListener('dblclick', function (e) {
           e.preventDefault();
           e.stopPropagation();
@@ -8550,26 +8668,57 @@ function applyUniversalTableBaseline(opts) {
               if (allThs[i] === th) { colIdx = i; break; }
             }
             if (colIdx < 0) return;
-            // Sample header + up to 200 body rows; measure scrollWidth.
-            var maxW = th.scrollWidth || th.offsetWidth || 60;
+
+            // Save original state so we can restore after measurement.
+            var prevThWidth = th.style.width;
+            var prevTableLayout = table.style.tableLayout;
+            var prevThWS = th.style.whiteSpace;
+
+            // Force the table into auto-layout + unset the th width so cells
+            // size themselves to their natural content widths.
+            th.style.width = '';
+            table.style.tableLayout = 'auto';
+            th.style.whiteSpace = 'nowrap';
+
+            // Measure the header's natural width with nowrap. Use the
+            // header's inner content rather than scrollWidth so trailing
+            // resize-handle decorations don't inflate the number.
+            var maxW = th.scrollWidth;
+
+            // Iterate EVERY body row (no sample cap). Skip rows hidden by
+            // the filter or by display:none — they shouldn't dictate width.
             var rows = table.querySelectorAll('tbody tr');
-            var sampleLimit = Math.min(200, rows.length);
-            for (var r = 0; r < sampleLimit; r++) {
-              var cell = rows[r].cells && rows[r].cells[colIdx];
+            var touched = [];
+            for (var r = 0; r < rows.length; r++) {
+              var row = rows[r];
+              // offsetParent === null means hidden somewhere up the tree.
+              if (row.offsetParent === null) continue;
+              var cell = row.cells && row.cells[colIdx];
               if (!cell) continue;
-              // Temporarily allow the cell to expand to natural width.
-              var prevWS = cell.style.whiteSpace;
+              touched.push({ cell: cell, prevWS: cell.style.whiteSpace });
               cell.style.whiteSpace = 'nowrap';
-              var w = cell.scrollWidth;
-              cell.style.whiteSpace = prevWS;
-              if (w > maxW) maxW = w;
             }
-            // Add small padding; clamp to reasonable range.
-            var finalW = Math.min(640, Math.max(60, maxW + 16));
+            // Read AFTER all writes (forces a single reflow rather than N).
+            for (var t = 0; t < touched.length; t++) {
+              var w2 = touched[t].cell.scrollWidth;
+              if (w2 > maxW) maxW = w2;
+            }
+            // Restore cell whitespace.
+            for (var t2 = 0; t2 < touched.length; t2++) {
+              touched[t2].cell.style.whiteSpace = touched[t2].prevWS;
+            }
+            // Restore th + table-layout.
+            th.style.whiteSpace = prevThWS;
+            table.style.tableLayout = prevTableLayout;
+
+            // Exact width: content scrollWidth + 2px border-safety.
+            // Floor of 28 (a single "—" cell), no upper cap — user
+            // explicitly wants no truncation.
+            var finalW = Math.max(28, Math.ceil(maxW) + 2);
             th.style.width = finalW + 'px';
             try { localStorage.setItem(storageKey, String(finalW)); } catch (_) {}
             if (typeof window.showToast === 'function') {
-              window.showToast('Column auto-fitted to ' + finalW + 'px');
+              window.showToast('Column fit to ' + finalW + 'px');
             }
           } catch (err) {
             console && console.warn && console.warn('[utb] autofit', err);

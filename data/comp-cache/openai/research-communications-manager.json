@@ -1,0 +1,37 @@
+{
+  "company": "OpenAI",
+  "role": "Research Communications Manager",
+  "band": "$185K-$240K",
+  "low": 185000,
+  "high": 240000,
+  "midpoint": 212500,
+  "source": "council",
+  "confidence": "medium",
+  "notes": "Council median across 1 models. Basis: Levels.fyi/Blind signals for OpenAI non-technical manager roles + peer AI-native bands (Anthropic, Inflection, Adept, xAI) for Sr Comms/Research Comms at similar stage",
+  "url": null,
+  "modelCount": 1,
+  "models": [
+    "xai:grok-4-fast-reasoning"
+  ],
+  "sourcesAttempted": [
+    "jd_reparse",
+    "levels_fyi",
+    "glassdoor",
+    "council"
+  ],
+  "sourcesFailed": [
+    {
+      "name": "jd_reparse",
+      "error": "no match"
+    },
+    {
+      "name": "levels_fyi",
+      "error": "no match"
+    },
+    {
+      "name": "glassdoor",
+      "error": "no match"
+    }
+  ],
+  "queriedAt": "2026-05-17T15:46:49.829Z"
+}

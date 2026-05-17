@@ -1,0 +1,38 @@
+{
+  "company": "Perplexity",
+  "role": "Executive Communications Manager (Sr Manager, Exec Comms)",
+  "band": "$190K-$245K",
+  "low": 190000,
+  "high": 245000,
+  "midpoint": 217500,
+  "source": "council",
+  "confidence": "medium",
+  "notes": "Council median across 2 models. Basis: Perplexity (AI-native Series C, ~$500M+ valuation) peer to Anthropic, Cohere, Inflection; Sr Comms bands at similar-stage AI cos via Levels.fyi/Blind + provided Sr Comms $190-260K benchmark",
+  "url": null,
+  "modelCount": 2,
+  "models": [
+    "xai:grok-4-fast-reasoning",
+    "google:gemini-2.5-pro"
+  ],
+  "sourcesAttempted": [
+    "jd_reparse",
+    "levels_fyi",
+    "glassdoor",
+    "council"
+  ],
+  "sourcesFailed": [
+    {
+      "name": "jd_reparse",
+      "error": "no match"
+    },
+    {
+      "name": "levels_fyi",
+      "error": "no match"
+    },
+    {
+      "name": "glassdoor",
+      "error": "no match"
+    }
+  ],
+  "queriedAt": "2026-05-17T15:45:24.883Z"
+}

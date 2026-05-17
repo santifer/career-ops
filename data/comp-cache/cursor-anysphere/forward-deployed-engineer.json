@@ -1,0 +1,37 @@
+{
+  "company": "Cursor (Anysphere)",
+  "role": "Forward Deployed Engineer",
+  "band": "$210K-$280K",
+  "low": 210000,
+  "high": 280000,
+  "midpoint": 245000,
+  "source": "council",
+  "confidence": "medium",
+  "notes": "Council median across 1 models. Basis: Cursor (Anysphere) is a well-funded Series B AI-native company (similar stage to Perplexity/Anthropic peers); using provided AI-native Series B+ FDE benchmark of $200-280K plus recent Levels.fyi/Blind signals for forward-deployed roles at Cursor, Adept, and Imbue.",
+  "url": null,
+  "modelCount": 1,
+  "models": [
+    "xai:grok-4-fast-reasoning"
+  ],
+  "sourcesAttempted": [
+    "jd_reparse",
+    "levels_fyi",
+    "glassdoor",
+    "council"
+  ],
+  "sourcesFailed": [
+    {
+      "name": "jd_reparse",
+      "error": "no match"
+    },
+    {
+      "name": "levels_fyi",
+      "error": "no match"
+    },
+    {
+      "name": "glassdoor",
+      "error": "no match"
+    }
+  ],
+  "queriedAt": "2026-05-17T15:45:26.276Z"
+}
