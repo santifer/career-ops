@@ -198,6 +198,13 @@ function readReportOnce(reportPath) {
   // wherever they exist.
   const _hasReal = (s) => {
     if (!s) return false;
+    // 2026-05-17 fix: the new council-eval schema produces strings like
+    // "Undisclosed — estimated $140K–$185K base (basis: ...)". The OLD regex
+    // marked ANY string starting with "undisclosed" as not-real → triggered
+    // sibling-fallback → pulled stale values from unrelated reports → Base
+    // column showed "—" for 5 Apply-Now rows. Fix: if the string contains a
+    // $ or K numeric signal, it IS real (has a parseable estimate).
+    if (/\$\s*\d|\b\d{2,3}\s*K\b/i.test(s)) return true;
     return !/^\s*(comp\s+not\s+disclosed|not\s+disclosed|undisclosed|none|n\/?a|unknown)\b/i.test(s);
   };
   const _needsFallback = !_hasReal(parsed.compRaw)
@@ -1311,7 +1318,11 @@ function _parsePositioning(text) {
 function _parseComp(text) {
   const block = _extractSection(text, [/^## A\)[^\n]*$/m, /^## Block A\b[^\n]*$/m, /^## Bloque A\b[^\n]*$/m]);
   if (!block) return '';
-  const m = block.match(/\|\s*Comp(?:ensation)?\s*\|\s*([^|\n]+?)\s*\|/im);
+  // 2026-05-17 fix RE-APPLIED (was reverted by Subagent G's overlapping edits):
+  // accept "Listed comp" / "Listed compensation" labels added by the council-eval
+  // prompt schema update. Without this, the 5 council-format Apply-Now rows
+  // (ElevenLabs, Mistral x3, Perplexity) showed "—" in the Base column.
+  const m = block.match(/\|\s*\*{0,2}\s*(?:Listed\s+(?:Annual\s+)?(?:Comp(?:ensation)?|Salary)|Total\s+Comp(?:ensation)?|Comp(?:ensation)?|Salary)\s*\*{0,2}\s*\|\s*([^|\n]+?)\s*\|/im);
   return m ? m[1].replace(/\*\*/g, '').trim().slice(0, 120) : '';
 }
 
@@ -1324,7 +1335,10 @@ function _parseCompRaw(text) {
   const blockA = _extractSection(text, [/^## A\)[^\n]*$/m, /^## Block A\b[^\n]*$/m, /^## Bloque A\b[^\n]*$/m]);
   const fromTable = (block) => {
     if (!block) return '';
-    const labelRe = /^\s*\|\s*\*?\*?\s*(?:Comp(?:ensation)?|Listed Annual Salary|Salary)\b[^|]*?\|/i;
+    // 2026-05-17 fix RE-APPLIED (was reverted by Subagent G's overlapping edits):
+    // Add "Listed comp" / "Listed compensation" variants per the new council-eval
+    // prompt schema. The label can be **bold** and optionally prefixed by "Listed".
+    const labelRe = /^\s*\|\s*\*?\*?\s*(?:Listed\s+(?:Annual\s+)?(?:Comp(?:ensation)?|Salary)|Total\s+Comp(?:ensation)?|Comp(?:ensation)?|Salary)\b[^|]*?\|/i;
     for (const line of block.split('\n')) {
       if (!labelRe.test(line)) continue;
       const cells = line.split('|').map(c => c.replace(/\*\*/g, '').trim()).filter(Boolean);
