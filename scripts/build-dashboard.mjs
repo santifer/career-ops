@@ -2925,7 +2925,7 @@ function renderCompAnalytics(analytics, floors) {
   const { buckets, medians, overallMedian, topEarners, total } = analytics;
   if (total === 0) {
     return `<div class="panel" id="comp-analytics-panel">
-      <div class="panel-title collapsible" onclick="togglePanel('comp-analytics-panel',event)">Comp Analytics <span class="panel-chevron">▾</span></div>
+      <h2 class="panel-title collapsible" onclick="togglePanel('comp-analytics-panel',event)">Comp Analytics <span class="panel-chevron">▾</span></h2>
       <p style="color:var(--text-3);font-size:13px">No parseable comp data yet — Block A's Comp row needs an explicit USD range to be picked up here.</p>
     </div>`;
   }
@@ -2975,7 +2975,7 @@ function renderCompAnalytics(analytics, floors) {
   }).join('');
   return `
   <div class="panel" id="comp-analytics-panel">
-    <div class="panel-title collapsible" onclick="togglePanel('comp-analytics-panel',event)">Comp Analytics <span class="pill" style="background:var(--blue-fg)">${total} parseable</span> <span class="panel-chevron">▾</span></div>
+    <h2 class="panel-title collapsible" onclick="togglePanel('comp-analytics-panel',event)">Comp Analytics <span class="pill" style="background:var(--blue-fg)">${total} parseable</span> <span class="panel-chevron">▾</span></h2>
     <p class="comp-subnote">Parsed from each report's Block A Comp row. Seattle floor: <strong>$${floors.seattleFloor}K</strong> · Target: <strong>$${floors.targetMin}K–$${floors.targetMax}K</strong>. 4-yr est. = midpoint × 4 (× 1.5 if equity mentioned) — directional, not a quote.</p>
     <div class="comp-grid">
       <div class="comp-sub">
@@ -3394,6 +3394,31 @@ function build() {
     --lh-snug:    1.3;
     --lh-normal:  1.4;
     --lh-relaxed: 1.5;
+    /* ── Standard typography scale tokens (Phase 1 Day-1/2, 2026-05-17)
+       Adjudicated dashboard-optimization-strategy-2026-05-17.md Tier A.
+       Audit found these UNSET. Adding here so new components can adopt;
+       existing 14px / 13px / 11px hardcodes stay untouched this pass. */
+    --font-sans: Inter, -apple-system, "system-ui", "Segoe UI", sans-serif;
+    --text-xs: 11px;
+    --text-sm: 13px;
+    --text-base: 14px;
+    --text-lg: 16px;
+    --text-xl: 18px;
+    --text-2xl: 20px;
+    --text-3xl: 24px;
+    --text-4xl: 30px;
+    --leading-tight: 1.25;
+    --leading-normal: 1.5;
+    --leading-relaxed: 1.625;
+    /* ── Accent + focus-ring tokens (Phase 1 Day-1/2, 2026-05-17)
+       Career-Ops identity green (existing --green-fg #16a34a) reused as
+       the accent so dashboards and email banner share one ID color. */
+    --accent: #16a34a;
+    --accent-fg: #ffffff;
+    --accent-bg: #dcfce7;
+    --accent-border: #86efac;
+    --ring: 0 0 0 2px var(--accent);
+    --focus-ring: 0 0 0 2px var(--accent), 0 0 0 4px rgba(22, 163, 74, 0.2);
     --shadow-sm: 0 1px 2px 0 rgba(0,0,0,.05);
     --shadow: 0 1px 3px 0 rgba(0,0,0,.1), 0 1px 2px -1px rgba(0,0,0,.1);
     --shadow-md: 0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -2px rgba(0,0,0,.1);
@@ -3412,6 +3437,14 @@ function build() {
     --motion-duration: 250ms;
     --motion-duration-fast: 180ms;
     --motion-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  /* ── Global focus-visible (Phase 1 Day-1/2, 2026-05-17)
+     Replaces inconsistent browser-default focus outlines. Uses the new
+     --focus-ring token; only fires on keyboard focus, not mouse. */
+  *:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+    border-radius: 4px;
   }
   body.dark {
     /* Dark surfaces tuned so all body text hits WCAG AAA (≥7:1) on --bg
@@ -8325,13 +8358,13 @@ function build() {
 
   ${applyNow.length > 0 ? `
   <div class="panel panel-strong" id="apply-now-section">
-    <div class="panel-title collapsible" onclick="togglePanel('apply-now-section',event)">Apply-Now Queue <span class="pill">${applyNow.length}</span>
+    <h2 class="panel-title collapsible" onclick="togglePanel('apply-now-section',event)">Apply-Now Queue <span class="pill">${applyNow.length}</span>
       <button type="button" id="apply-now-reset-order" class="reset-order-btn" hidden
         onclick="event.stopPropagation();resetApplyNowOrder()" aria-label="Reset to default sort (score desc, then date)">
         ↺ Reset order
       </button>
       <span class="panel-chevron">▾</span>
-    </div>
+    </h2>
     <p class="panel-subtitle" title="Drag a row's ⋮⋮ handle to prioritize. Click any row to expand.">Score ≥ 4.0 · Evaluated / Responded / Interview only</p>
     <div class="table-scroll"><table>
       <thead><tr>
@@ -8356,13 +8389,13 @@ function build() {
   </div>
   ` : `
   <div class="panel" id="apply-now-section">
-    <div class="panel-title collapsible" onclick="togglePanel('apply-now-section',event)">Apply-Now Queue <span class="panel-chevron">▾</span></div>
+    <h2 class="panel-title collapsible" onclick="togglePanel('apply-now-section',event)">Apply-Now Queue <span class="panel-chevron">▾</span></h2>
     <p style="color:#57606a;font-size:13px">No evaluations meeting the 4.0 apply floor right now. Either today's batch was wrong-shape (review highest-scored discards below) or the batch hasn't completed yet.</p>
   </div>
   `}
 
   <div class="panel" id="all-evaluations-section">
-    <div class="panel-title collapsible" onclick="togglePanel('all-evaluations-section',event)">All Evaluations <span class="pill" style="background:#0969da">${total}</span> <span class="panel-chevron">▾</span></div>
+    <h2 class="panel-title collapsible" onclick="togglePanel('all-evaluations-section',event)">All Evaluations <span class="pill" style="background:#0969da">${total}</span> <span class="panel-chevron">▾</span></h2>
     <div class="filters filters-sticky" role="search">
       <div class="saved-views-row" aria-label="Saved filter views">
         <span class="saved-views-label">Saved views</span>
@@ -8440,7 +8473,7 @@ function build() {
 
   <div class="charts-grid" id="charts-section">
   <div class="panel" id="score-dist-panel">
-    <div class="panel-title collapsible" onclick="togglePanel('score-dist-panel',event)">Score Distribution <span class="panel-chevron">▾</span></div>
+    <h3 class="panel-title collapsible" onclick="togglePanel('score-dist-panel',event)">Score Distribution <span class="panel-chevron">▾</span></h3>
     ${(() => {
       const segDefs = [
         { range: '4.0+',     label: 'Strong',   key: '4.0+',     cls: 's-strong'   },
@@ -8470,7 +8503,7 @@ function build() {
   </div>
 
   <div class="panel" id="companies-panel">
-    <div class="panel-title collapsible" onclick="togglePanel('companies-panel',event)">Top Companies (by evaluation count) <span class="panel-chevron">▾</span></div>
+    <h2 class="panel-title collapsible" onclick="togglePanel('companies-panel',event)">Top Companies (by evaluation count) <span class="panel-chevron">▾</span></h2>
     <div class="bar-chart" role="list" aria-label="Top companies by evaluation count">
       ${topCompanies.map(([company, count]) => {
         const max = topCompanies[0][1];
@@ -8487,7 +8520,7 @@ function build() {
   </div>
 
   <div class="panel" id="trends-panel">
-    <div class="panel-title collapsible" onclick="togglePanel('trends-panel',event)">Trends <span class="panel-chevron">▾</span></div>
+    <h2 class="panel-title collapsible" onclick="togglePanel('trends-panel',event)">Trends <span class="panel-chevron">▾</span></h2>
     ${(() => {
       const W = 280, H = 80, PAD = 4;
       const counts = trendWeeks.map(w => w.count);
@@ -8533,11 +8566,11 @@ function build() {
 
       return `<div class="trends-grid">
         <div class="trend-card">
-          <div class="trend-card-title">Apps / week <span class="trend-card-sub">last 12w · ${counts.reduce((a, b) => a + b, 0)} total</span></div>
+          <h3 class="trend-card-title">Apps / week <span class="trend-card-sub">last 12w · ${counts.reduce((a, b) => a + b, 0)} total</span></h3>
           <svg class="trend-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Applications per week, last 12 weeks">${barsSvg}</svg>
         </div>
         <div class="trend-card">
-          <div class="trend-card-title">Avg score / week <span class="trend-card-sub">last 12w · 0–5 scale</span></div>
+          <h3 class="trend-card-title">Avg score / week <span class="trend-card-sub">last 12w · 0–5 scale</span></h3>
           <svg class="trend-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Average score per week, last 12 weeks">
             <line x1="${PAD}" y1="${yScore(4).toFixed(1)}" x2="${W - PAD}" y2="${yScore(4).toFixed(1)}" class="trend-axis"/>
             <path d="${linePath}" class="trend-line" fill="none"/>
@@ -8545,7 +8578,7 @@ function build() {
           </svg>
         </div>
         <div class="trend-card trend-card-wide">
-          <div class="trend-card-title">Pipeline funnel <span class="trend-card-sub">${funnelTotal} tracked</span></div>
+          <h3 class="trend-card-title">Pipeline funnel <span class="trend-card-sub">${funnelTotal} tracked</span></h3>
           <svg class="trend-svg trend-svg-funnel" viewBox="0 0 ${FW} ${FH}" role="img" aria-label="Pipeline funnel by stage">${funnelSegs}</svg>
           <div class="trend-legend">${funnelLegend}</div>
         </div>
