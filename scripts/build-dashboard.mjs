@@ -5722,6 +5722,19 @@ function build() {
     font-size: 11px; color: var(--text-3);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
+  /* ── Stream/Poll status indicator (Tier A Item #2) ─────────── */
+  .batch-stream-indicator {
+    display: flex; align-items: center; gap: 5px;
+    padding: 3px 10px 5px; font-size: 10px; color: var(--text-3);
+    border-top: 1px solid var(--border);
+  }
+  .batch-stream-dot {
+    width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+    background: #6b7280;
+  }
+  .batch-stream-dot.live   { background: #22c55e; }
+  .batch-stream-dot.poll   { background: #f59e0b; }
+  .batch-stream-dot.error  { background: #ef4444; }
   /* Collapsed / icon-only mode: hide stats, keep header + bar. */
   @media (max-width: 1279px) and (min-width: 721px) {
     .sidebar-batch { margin: 4px 4px 8px; }
@@ -8010,6 +8023,10 @@ function build() {
       </div>
       <div class="sidebar-batch-bar"><div class="sidebar-batch-fill" id="sidebar-batch-bar-fill" style="width:0%"></div></div>
       <div class="sidebar-batch-stats" id="sidebar-batch-stats"></div>
+      <div class="batch-stream-indicator" id="batch-stream-indicator" style="display:none">
+        <span class="batch-stream-dot" id="batch-stream-dot"></span>
+        <span id="batch-stream-label">Connecting…</span>
+      </div>
     </div>
     <!-- Pipeline action buttons — "Run Batch" (normal) + "Process All" (nuclear)
          Open confirmation modals via openPipelineModal('batch'|'process-all'). -->
@@ -11692,12 +11709,20 @@ function selectBatch(batchId) {
   console.log('[selectBatch] batch_id=' + batchId);
 }
 
-// ── Sidebar batch widget ────────────────────────────────────────
+// ── Sidebar batch widget — SSE + polling fallback (Tier A Item #2) ──
+// Primary: native EventSource connecting to /api/batch-live-stream.
+//   - Exponential backoff on reconnect: base 1s, 2×/step, ±10–30% jitter,
+//     capped at 30s.
+//   - Falls back to 2-second polling after 3 consecutive failures within 60s.
+//   - Reconnects automatically when readyState becomes CLOSED.
+// Fallback: original setInterval(pollBatch, 2000) loop kept intact so
+//   clients without EventSource support (or after fallback trigger) work.
+// Indicator: #batch-stream-dot / #batch-stream-label show stream/poll state.
+
 let _batchInterval = null;
 
-async function pollBatch() {
-  const data = await apiFetch('/api/batch-live');
-  if (!data) return;
+// Render batch data into the sidebar widget (shared by SSE + poll paths).
+function _renderBatchData(data) {
   const widget = document.getElementById('sidebar-batch');
   if (!widget) return;
 
@@ -11717,15 +11742,127 @@ async function pollBatch() {
        \${recent.length ? '<div class="sidebar-batch-recent">' + recent.map(r =>
          \`<div class="sidebar-batch-recent-item">✅ \${r.company || ''} — \${r.role || r.id || ''}</div>\`
        ).join('') + '</div>' : ''}\`;
-
-    if (data.completed >= data.total && data.total > 0 && !data.running) {
-      clearInterval(_batchInterval);
-      _batchInterval = null;
-    }
   } else {
     widget.style.display = 'none';
   }
 }
+
+// Update the stream/poll status indicator visible inside the batch widget.
+function _setBatchStreamMode(mode) {
+  // mode: 'stream' | 'poll' | 'error' | 'connecting'
+  const ind = document.getElementById('batch-stream-indicator');
+  const dot = document.getElementById('batch-stream-dot');
+  const lbl = document.getElementById('batch-stream-label');
+  if (!ind || !dot || !lbl) return;
+  ind.style.display = '';
+  dot.className = 'batch-stream-dot';
+  if (mode === 'stream')     { dot.classList.add('live');  lbl.textContent = 'Live (stream)'; }
+  else if (mode === 'poll')  { dot.classList.add('poll');  lbl.textContent = 'Live (poll fallback)'; }
+  else if (mode === 'error') { dot.classList.add('error'); lbl.textContent = 'Reconnecting…'; }
+  else                       {                             lbl.textContent = 'Connecting…'; }
+}
+
+// Polling fallback (original pollBatch kept under the same name so external
+// callers like the init section and the refreshLiveStats task runner still work).
+async function pollBatch() {
+  const data = await apiFetch('/api/batch-live');
+  if (!data) return;
+  _renderBatchData(data);
+}
+
+// ── EventSource connection with exponential backoff ───────────────
+// Only attempted when the server is reachable (BASE !== null).
+(function _initBatchStream() {
+  if (BASE === null) {
+    // Static file mode — fall through to polling below.
+    return;
+  }
+
+  if (typeof EventSource === 'undefined') {
+    // Browser doesn't support SSE — start polling immediately.
+    _setBatchStreamMode('poll');
+    _batchInterval = setInterval(pollBatch, 2000);
+    pollBatch();
+    return;
+  }
+
+  let _es = null;
+  let _backoffMs = 1000;       // current reconnect delay
+  const _backoffCap = 30_000;  // max 30s
+  let _reconnectTimer = null;
+  let _failTs = [];            // timestamps of recent consecutive failures
+  const _failWindow = 60_000;  // 60s window for failure counting
+  const _failThreshold = 3;    // 3 failures → switch to polling fallback
+  let _inFallbackMode = false;
+
+  function _jitter(ms) {
+    // ±10–30% jitter to spread reconnects across clients.
+    const pct = 0.10 + Math.random() * 0.20;
+    return Math.round(ms * (1 + (Math.random() < 0.5 ? -pct : pct)));
+  }
+
+  function _recordFailure() {
+    const now = Date.now();
+    _failTs = _failTs.filter(t => now - t < _failWindow);
+    _failTs.push(now);
+    if (_failTs.length >= _failThreshold && !_inFallbackMode) {
+      _inFallbackMode = true;
+      _setBatchStreamMode('poll');
+      _batchInterval = setInterval(pollBatch, 2000);
+      pollBatch();
+    }
+  }
+
+  function _connect() {
+    if (_inFallbackMode) return;
+    _setBatchStreamMode('connecting');
+    try {
+      _es = new EventSource('/api/batch-live-stream');
+    } catch (_) {
+      _recordFailure();
+      _scheduleReconnect();
+      return;
+    }
+
+    _es.addEventListener('batch-live', (e) => {
+      try {
+        const data = JSON.parse(e.data);
+        _renderBatchData(data);
+        _setBatchStreamMode('stream');
+        _backoffMs = 1000;  // reset backoff on successful message
+        _failTs = [];
+      } catch (_) {}
+    });
+
+    _es.onerror = () => {
+      if (_es) { try { _es.close(); } catch (_) {} _es = null; }
+      _setBatchStreamMode('error');
+      _recordFailure();
+      if (!_inFallbackMode) _scheduleReconnect();
+    };
+  }
+
+  function _scheduleReconnect() {
+    clearTimeout(_reconnectTimer);
+    if (_inFallbackMode) return;
+    const delay = _jitter(_backoffMs);
+    _backoffMs = Math.min(_backoffMs * 2, _backoffCap);
+    _reconnectTimer = setTimeout(_connect, delay);
+  }
+
+  // Detect CLOSED state via polling readyState; browser fires onerror on most
+  // closures but some proxy setups close without firing it.
+  setInterval(() => {
+    if (!_inFallbackMode && _es && _es.readyState === EventSource.CLOSED) {
+      _setBatchStreamMode('error');
+      _recordFailure();
+      _es = null;
+      if (!_inFallbackMode) _scheduleReconnect();
+    }
+  }, 5000);
+
+  _connect();
+})();
 
 // ── Batch status modal (2026-05-17) ──────────────────────────────
 // Clicking the sidebar batch widget opens this popout with real-time
@@ -15485,8 +15622,11 @@ initOled();
 initSavedViews();
 initApplyNowDrag();
 refreshLiveStats();
-_batchInterval = setInterval(pollBatch, 2000);
-pollBatch();
+// NOTE: _batchInterval / pollBatch() startup is now owned by the SSE IIFE
+// (_initBatchStream) above. It connects EventSource first and only falls back
+// to setInterval(pollBatch, 2000) after 3 failures within 60s — or immediately
+// when EventSource is unsupported. Do NOT add another setInterval(pollBatch)
+// here; it would re-introduce the 194-hits/session polling waste.
 setInterval(refreshLiveStats, 30000);
 
 _bulkLoadFromStorage();
