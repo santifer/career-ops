@@ -111,7 +111,16 @@ for (let i = 0; i < args.length; i++) {
     case '--report-num': reportNum = args[++i]; break;
     case '--date':       date      = args[++i]; break;
     case '--batch-id':   batchId   = args[++i]; break;
-    case '--min-score':  minScore  = parseFloat(args[++i]) || 0; break;
+    case '--min-score': {
+      const raw = args[++i];
+      const parsed = Number(raw);
+      if (!Number.isFinite(parsed)) {
+        console.error(`ERROR: invalid --min-score "${raw}" (must be a number)`);
+        process.exit(1);
+      }
+      minScore = parsed;
+      break;
+    }
   }
 }
 
@@ -146,7 +155,15 @@ if (!/^\d{1,10}$/.test(batchId)) {
  */
 function readFile(path, label) {
   if (!existsSync(path)) return `[${label} not found — skipping]`;
-  return readFileSync(path, 'utf-8').trim();
+  try {
+    return readFileSync(path, 'utf-8').trim();
+  } catch (err) {
+    // Permission error, directory path, broken symlink, etc.
+    // Return a placeholder so the worker emits a structured JSON failure
+    // via fail() rather than crashing with a raw stack trace.
+    process.stderr.write(`WARN: could not read ${label} at ${path}: ${err.message}\n`);
+    return `[${label} unreadable — skipping]`;
+  }
 }
 
 /**
@@ -250,10 +267,58 @@ if (!jdText && url) {
   }
 
   try {
-    const res = await fetch(url, {
-      headers: { 'User-Agent': 'Mozilla/5.0 career-ops/1.0' },
-      signal: AbortSignal.timeout(30_000),
-    });
+    // Use redirect:'manual' so we can validate each redirect destination
+    // before following it — a public URL could redirect to a private IP
+    // and bypass the hostname check above.
+    let fetchUrl = url;
+    const MAX_REDIRECTS = 5;
+    let redirectsLeft = MAX_REDIRECTS;
+    let res;
+
+    while (redirectsLeft-- > 0) {
+      res = await fetch(fetchUrl, {
+        headers: { 'User-Agent': 'Mozilla/5.0 career-ops/1.0' },
+        redirect: 'manual',
+        signal: AbortSignal.timeout(30_000),
+      });
+
+      if (res.status >= 300 && res.status < 400) {
+        const location = res.headers.get('location');
+        if (!location) fail(`Redirect with no Location header from ${fetchUrl}`);
+        let redirectUrl;
+        try { redirectUrl = new URL(location, fetchUrl); } catch {
+          fail(`Invalid redirect Location: "${location}"`);
+        }
+        if (redirectUrl.protocol !== 'http:' && redirectUrl.protocol !== 'https:') {
+          fail(`Redirect to non-http(s) URL blocked: ${redirectUrl.href}`);
+        }
+        const rh = redirectUrl.hostname;
+        if (rh === 'localhost' || rh === '::1' || rh === '[::1]' || isPrivateAddress(rh)) {
+          fail(`Redirect to private/loopback address blocked: ${redirectUrl.href}`);
+        }
+        // DNS-check the redirect destination too
+        try {
+          const [rv4, rv6] = await Promise.allSettled([
+            dns.resolve4(rh),
+            dns.resolve6(rh),
+          ]);
+          const rAddrs = [
+            ...(rv4.status === 'fulfilled' ? rv4.value : []),
+            ...(rv6.status === 'fulfilled' ? rv6.value : []),
+          ];
+          for (const addr of rAddrs) {
+            if (isPrivateAddress(addr)) {
+              fail(`Redirect hostname "${rh}" resolves to private address (${addr}) — SSRF guard`);
+            }
+          }
+        } catch { /* DNS errors fall through to the next fetch attempt */ }
+        fetchUrl = redirectUrl.href;
+        continue;
+      }
+
+      break; // non-redirect response
+    }
+
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const html = await res.text();
     jdText = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 50_000);
@@ -449,7 +514,12 @@ mkdirSync(PATHS.tracker, { recursive: true });
 //
 // Sanitize model-derived strings before writing to TSV: tab and newline
 // characters would corrupt the column structure and break merge-tracker.mjs.
-const sanitizeTsv = (v) => String(v ?? '').replace(/[\t\r\n]+/g, ' ').trim();
+const sanitizeTsv = (v) => {
+  const cleaned = String(v ?? '').replace(/[\t\r\n]+/g, ' ').trim();
+  // Prefix cells starting with formula-trigger characters so spreadsheet
+  // applications (Excel, Google Sheets) don't execute them as formulas.
+  return /^[=+\-@]/.test(cleaned) ? `'${cleaned}` : cleaned;
+};
 const scoreStr    = score !== null ? `${score}/5` : 'N/A';
 const reportLink  = `[${reportNum}](reports/${reportFile})`;
 const notesStr    = sanitizeTsv(`${archetype} — ${legitimacy}`);
