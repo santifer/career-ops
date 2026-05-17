@@ -166,7 +166,24 @@ check_prerequisites() {
         echo "ERROR: 'curl' not found in PATH (required to probe Ollama)."
         exit 1
       fi
+      # Map --model to OLLAMA_MODEL when the Ollama backend is selected.
+      # --model is defined for the claude backend; for Ollama the canonical
+      # env var is OLLAMA_MODEL. Bridge them so `--backend ollama --model X`
+      # works as expected without silently falling back to llama3.3.
+      if [[ -n "$MODEL" && -z "${OLLAMA_MODEL:-}" ]]; then
+        OLLAMA_MODEL="$MODEL"
+      fi
       local ollama_url="${OLLAMA_BASE_URL:-http://localhost:11434}"
+      # Loopback guard: reject remote URLs early so we don't reserve report
+      # numbers before per-worker guards fire.
+      if [[ "${OLLAMA_ALLOW_REMOTE:-0}" != "1" ]]; then
+        if [[ ! "$ollama_url" =~ ^https?://(localhost|127\.0\.0\.1|\[::1\])(:[0-9]+)?(/.*)?$ ]]; then
+          echo "ERROR: OLLAMA_BASE_URL must point to localhost/127.0.0.1/::1"
+          echo "       Remote endpoint detected: ${ollama_url}"
+          echo "       Set OLLAMA_ALLOW_REMOTE=1 to use a remote endpoint intentionally."
+          exit 1
+        fi
+      fi
       if ! curl -sf --connect-timeout 5 --max-time 10 "${ollama_url}/api/tags" -o /dev/null 2>/dev/null; then
         echo "ERROR: Ollama not reachable at ${ollama_url}"
         echo "       Start Ollama with: ollama serve"
@@ -391,6 +408,9 @@ process_offer() {
   # Launch worker — backend-specific
   local exit_code=0
   if [[ "$BACKEND" == "ollama" ]]; then
+    # OLLAMA_MODEL may have been set from --model by check_prerequisites.
+    # Export it so the child process inherits the resolved value.
+    OLLAMA_MODEL="${OLLAMA_MODEL:-llama3.3}" \
     node "$PROJECT_DIR/ollama-batch.mjs" \
       --url        "$url" \
       --jd-file    "$jd_file" \

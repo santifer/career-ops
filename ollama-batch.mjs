@@ -191,7 +191,28 @@ if (jdFile && existsSync(jdFile)) {
 
 if (!jdText && url) {
   // Validate URL before fetching to catch malformed input early.
-  try { new URL(url); } catch { fail(`Invalid JD URL: "${url}"`); }
+  let parsedUrl;
+  try { parsedUrl = new URL(url); } catch { fail(`Invalid JD URL: "${url}"`); }
+
+  // SSRF guard: only allow http/https and reject private/loopback hosts.
+  // JD URLs must be public job postings — there is no valid reason to fetch
+  // from localhost or internal network ranges in batch mode.
+  if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+    fail(`JD URL must use http or https (got ${parsedUrl.protocol})`);
+  }
+  const h = parsedUrl.hostname;
+  const isPrivate =
+    h === 'localhost' ||
+    /^127\./.test(h) ||
+    /^10\./.test(h) ||
+    /^192\.168\./.test(h) ||
+    /^172\.(1[6-9]|2\d|3[01])\./.test(h) ||
+    /^169\.254\./.test(h) ||
+    h === '::1' ||
+    h === '[::1]';
+  if (isPrivate) {
+    fail(`JD URL points to a private/loopback address — refusing to fetch: ${url}`);
+  }
 
   try {
     const res = await fetch(url, {
@@ -318,7 +339,8 @@ if (summaryMatch) {
   };
   company    = extract('COMPANY');
   role       = extract('ROLE');
-  score      = parseFloat(extract('SCORE')) || null;
+  const parsedScore = Number(extract('SCORE'));
+  score      = Number.isFinite(parsedScore) ? parsedScore : null;
   archetype  = extract('ARCHETYPE');
   legitimacy = extract('LEGITIMACY');
 } else {
@@ -389,10 +411,14 @@ mkdirSync(PATHS.tracker, { recursive: true });
 // Row ID (column 1) is intentionally set to 0 — merge-tracker.mjs assigns
 // the real sequential number during merge. Computing it here would race
 // with parallel workers all reading applications.md at the same time.
-const scoreStr   = score !== null ? `${score}/5` : 'N/A';
-const reportLink = `[${reportNum}](reports/${reportFile})`;
-const notesStr   = `${archetype} — ${legitimacy}`;
-const tsvLine    = [0, date, company, role, 'Evaluada', scoreStr, '❌', reportLink, notesStr].join('\t');
+//
+// Sanitize model-derived strings before writing to TSV: tab and newline
+// characters would corrupt the column structure and break merge-tracker.mjs.
+const sanitizeTsv = (v) => String(v ?? '').replace(/[\t\r\n]+/g, ' ').trim();
+const scoreStr    = score !== null ? `${score}/5` : 'N/A';
+const reportLink  = `[${reportNum}](reports/${reportFile})`;
+const notesStr    = sanitizeTsv(`${archetype} — ${legitimacy}`);
+const tsvLine     = [0, date, sanitizeTsv(company), sanitizeTsv(role), 'Evaluada', scoreStr, '❌', reportLink, notesStr].join('\t');
 
 writeFileSync(join(PATHS.tracker, `${batchId}.tsv`), tsvLine + '\n', 'utf-8');
 
