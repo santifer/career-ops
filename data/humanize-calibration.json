@@ -1,0 +1,111 @@
+{
+  "calibrated_at": "2026-05-18T01:48:45.213Z",
+  "calibrated_by": "scripts/calibrate-ai-detectors.mjs",
+  "dry_run": false,
+  "api_keys_present": {
+    "gptzero": false,
+    "originality": false
+  },
+  "api_cost_estimate_usd": 0,
+  "samples": [
+    {
+      "id": "sample_01",
+      "path": "/Users/mitchellwilliams/Documents/career-ops/apply-pack/050-elevenlabs-communications-manager/cover-letter.md",
+      "word_count": 520,
+      "humanize_check_score": 11,
+      "humanize_check_risk": "LOW",
+      "local": {
+        "score": 11,
+        "risk": "LOW",
+        "details": {
+          "burstiness": 5,
+          "phrases": 22,
+          "passive": 0,
+          "transitions": 0,
+          "word_count": 520,
+          "sentence_count": 21
+        }
+      },
+      "gptzero": {
+        "skipped": true,
+        "reason": "API key not configured"
+      },
+      "originality": {
+        "skipped": true,
+        "reason": "API key not configured"
+      }
+    },
+    {
+      "id": "sample_02",
+      "path": "/Users/mitchellwilliams/Documents/career-ops/apply-pack/053-openai-policy-communications-manager/cover-letter.md",
+      "word_count": 540,
+      "humanize_check_score": 4,
+      "humanize_check_risk": "LOW",
+      "local": {
+        "score": 4,
+        "risk": "LOW",
+        "details": {
+          "burstiness": 5,
+          "phrases": 6,
+          "passive": 0,
+          "transitions": 0,
+          "word_count": 540,
+          "sentence_count": 15
+        }
+      },
+      "gptzero": {
+        "skipped": true,
+        "reason": "API key not configured"
+      },
+      "originality": {
+        "skipped": true,
+        "reason": "API key not configured"
+      }
+    },
+    {
+      "id": "sample_03",
+      "path": "/Users/mitchellwilliams/Documents/career-ops/apply-pack/059-sierra-developer-relations-engineer-nyc/cover-letter.md",
+      "word_count": 410,
+      "humanize_check_score": 5,
+      "humanize_check_risk": "LOW",
+      "local": {
+        "score": 5,
+        "risk": "LOW",
+        "details": {
+          "burstiness": 15,
+          "phrases": 0,
+          "passive": 0,
+          "transitions": 0,
+          "word_count": 410,
+          "sentence_count": 19
+        }
+      },
+      "gptzero": {
+        "skipped": true,
+        "reason": "API key not configured"
+      },
+      "originality": {
+        "skipped": true,
+        "reason": "API key not configured"
+      }
+    }
+  ],
+  "summary": {
+    "recommended_humanize_threshold": 20,
+    "current_threshold": 20,
+    "max_local_score": 11,
+    "avg_local_score": 7,
+    "gptzero_avg_fpr": null,
+    "originality_avg_fpr": null,
+    "gptzero_sample_count": 0,
+    "originality_sample_count": 0,
+    "reasoning": "Keeping threshold at 20: all samples scored below threshold (max=11, avg=7)"
+  },
+  "notes": [
+    "FPR = false-positive rate: probability that Mitchell's human-written CLs are flagged as AI.",
+    "Local score = humanize-check.mjs composite (burstiness + phrases + passive + transitions).",
+    "GPTZero + Originality provide external validation; local heuristics are used for the humanize gate.",
+    "GPTZero was not configured — add GPTZERO_API_KEY to .env for external validation.",
+    "Originality.ai was not configured — add ORIGINALITY_API_KEY to .env for external validation."
+  ]
+}
