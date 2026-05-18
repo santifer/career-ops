@@ -3601,6 +3601,242 @@ const server = createServer((req, res) => {
     }
   }
 
+  // ── D25: Wave H1 new endpoints ────────────────────────────────────────────
+
+  // Shared error logger for all D25 endpoints
+  function _d25Log(msg) {
+    const logsDir = join(ROOT, 'data/logs');
+    try {
+      if (!existsSync(logsDir)) mkdirSync(logsDir, { recursive: true });
+      appendFileSync(join(logsDir, 'dashboard-server.log'),
+        `${new Date().toISOString()} ${msg}\n`);
+    } catch (_) {}
+    console.error(msg);
+  }
+
+  // Helper: parse POST body as JSON with a byte cap
+  function _readBody(req, maxBytes = 64 * 1024) {
+    return new Promise((resolve, reject) => {
+      let body = '';
+      let total = 0;
+      req.on('data', c => {
+        total += c.length;
+        if (total > maxBytes) { req.destroy(); reject(new Error('body too large')); return; }
+        body += c;
+      });
+      req.on('end', () => {
+        try { resolve(JSON.parse(body)); }
+        catch (e) { reject(new Error('invalid JSON')); }
+      });
+      req.on('error', reject);
+    });
+  }
+
+  // ── 1. POST /api/build-pack-stage ─────────────────────────────────────────
+  // body: { rowId, stage: 'cv-tailor'|'cover-letter'|'why-statement'|'linkedin-dm'|'form-fields', config? }
+  // Invokes scripts/agents/{stage}.mjs and returns SubAgentOutput JSON.
+  if (url === '/api/build-pack-stage' && req.method === 'POST') {
+    (async () => {
+      try {
+        const body = await _readBody(req);
+        const { rowId, stage, config } = body || {};
+        const VALID_STAGES = new Set(['cv-tailor', 'cover-letter', 'why-statement', 'linkedin-dm', 'form-fields']);
+        if (!rowId) return json({ ok: false, error: 'rowId is required' }, 400);
+        if (!stage || !VALID_STAGES.has(stage)) {
+          return json({ ok: false, error: `stage must be one of: ${[...VALID_STAGES].join(', ')}` }, 400);
+        }
+        const stagePath = join(ROOT, 'scripts/agents', stage + '.mjs');
+        if (!existsSync(stagePath)) {
+          return json({ ok: false, error: `agent script not found: ${stagePath}` }, 404);
+        }
+        const mod = await import(stagePath);
+        // Each agent exports runXxx(input) — map stage name to exported function
+        const fnMap = {
+          'cv-tailor':    'runCvTailor',
+          'cover-letter': 'runCoverLetter',
+          'why-statement': 'runWhyStatement',
+          'linkedin-dm':  'runLinkedinDm',
+          'form-fields':  'runFormFields',
+        };
+        const fnName = fnMap[stage];
+        const fn = mod[fnName];
+        if (typeof fn !== 'function') {
+          return json({ ok: false, error: `agent module missing export ${fnName}` }, 500);
+        }
+        const result = await fn({
+          pack: { rowId, num: rowId },
+          context: {},
+          config: { dryRun: true, ...(config || {}) },
+        });
+        return json({ ok: true, stage, rowId, result });
+      } catch (err) {
+        _d25Log(`[build-pack-stage] ${err.message}`);
+        return json({ ok: false, error: err.message }, 500);
+      }
+    })();
+    return;
+  }
+
+  // ── 2. GET /api/drill/metric/{rowId}/{key} ─────────────────────────────────
+  // Returns rendered provenance card HTML via lib/decision-provenance.mjs
+  const drillMetricMatch = url.match(/^\/api\/drill\/metric\/([^/]+)\/([^/]+)$/);
+  if (drillMetricMatch) {
+    (async () => {
+      try {
+        const { getProvenance, renderProvenanceCard } = await import(join(ROOT, 'lib/decision-provenance.mjs'));
+        const rowId = decodeURIComponent(drillMetricMatch[1]);
+        const key   = decodeURIComponent(drillMetricMatch[2]);
+        const prov = getProvenance(rowId, key);
+        const html = renderProvenanceCard(prov);
+        return json({ ok: true, rowId, key, html, provenance: prov });
+      } catch (err) {
+        _d25Log(`[drill/metric] ${err.message}`);
+        return json({ ok: false, error: err.message }, 500);
+      }
+    })();
+    return;
+  }
+
+  // ── 3. GET /api/drill/percentage/{rowId}/{key} ─────────────────────────────
+  // Returns rendered strategy card HTML via lib/strategy-ceiling.mjs
+  const drillPctMatch = url.match(/^\/api\/drill\/percentage\/([^/]+)\/([^/]+)$/);
+  if (drillPctMatch) {
+    (async () => {
+      try {
+        const { buildCacheKey, getCachedStrategy, computeStrategyCeiling, renderStrategyCard } = await import(join(ROOT, 'lib/strategy-ceiling.mjs'));
+        const rowId   = decodeURIComponent(drillPctMatch[1]);
+        const key     = decodeURIComponent(drillPctMatch[2]);
+        const cacheKey = buildCacheKey({ rowId, metricKey: key, company: '', role: '' });
+        let result = getCachedStrategy(cacheKey);
+        if (!result) {
+          result = await computeStrategyCeiling({ rowId, metricKey: key, role: '', company: '', currentValue: null, jdText: '', hmIntel: null });
+        }
+        const html = renderStrategyCard(result);
+        return json({ ok: true, rowId, key, html, strategy: result });
+      } catch (err) {
+        _d25Log(`[drill/percentage] ${err.message}`);
+        return json({ ok: false, error: err.message }, 500);
+      }
+    })();
+    return;
+  }
+
+  // ── 4. POST /api/inline-update ────────────────────────────────────────────
+  // body: { rowId, field: 'status'|'notes', value }
+  // Writes to data/applications.md; optimistic-update pattern.
+  if (url === '/api/inline-update' && req.method === 'POST') {
+    (async () => {
+      try {
+        const body = await _readBody(req);
+        const { rowId, field, value } = body || {};
+        if (!rowId) return json({ ok: false, error: 'rowId is required' }, 400);
+        if (field !== 'status' && field !== 'notes') {
+          return json({ ok: false, error: "field must be 'status' or 'notes'" }, 400);
+        }
+        if (value === undefined || value === null) return json({ ok: false, error: 'value is required' }, 400);
+        // Parse row ID — strip 'apply-' prefix if present (row IDs are sometimes 'apply-{num}')
+        const numStr = String(rowId).replace(/^apply-/, '');
+        const num = parseInt(numStr, 10);
+        if (Number.isNaN(num)) return json({ ok: false, error: `invalid rowId: ${rowId}` }, 400);
+        let result;
+        if (field === 'status') {
+          result = updateApplicationStatus({ num, status: value });
+        } else {
+          // notes field update — use same atomic-write mechanism
+          result = updateApplicationStatus({ num, status: undefined, note: String(value).slice(0, 600) });
+          // updateApplicationStatus requires a valid status; for notes-only updates, re-read
+          // current status first
+          if (!result.ok && result.error && result.error.includes('status is required')) {
+            const apps = parseApplications();
+            const row = apps.find(r => String(r.num) === String(num));
+            if (!row) return json({ ok: false, error: `row #${num} not found` }, 404);
+            result = updateApplicationStatus({ num, status: row.status, note: String(value).slice(0, 600) });
+          }
+        }
+        const code = result.ok ? 200 : (result.code || 400);
+        return json(result.ok ? { ok: true, rowId, field, value, row: result.row } : { ok: false, error: result.error }, code);
+      } catch (err) {
+        _d25Log(`[inline-update] ${err.message}`);
+        return json({ ok: false, error: err.message }, 500);
+      }
+    })();
+    return;
+  }
+
+  // ── 5. POST /api/weekly-update ────────────────────────────────────────────
+  // body: { week: 'YYYY-Www', content, highlights?, tpgm_evidence?, artifacts?, skills?, courses? }
+  // Appends to data/skill-tracker/{YYYY-Www}.md (creates from _TEMPLATE.md if missing).
+  if (url === '/api/weekly-update' && req.method === 'POST') {
+    (async () => {
+      try {
+        const body = await _readBody(req);
+        const { week, content, highlights, tpgm_evidence, artifacts, skills, courses } = body || {};
+        if (!week || !/^\d{4}-W\d{2}$/.test(week)) {
+          return json({ ok: false, error: 'week is required in YYYY-Www format (e.g. 2026-W20)' }, 400);
+        }
+        const trackerDir = join(ROOT, 'data/skill-tracker');
+        if (!existsSync(trackerDir)) mkdirSync(trackerDir, { recursive: true });
+        const weekFile = join(trackerDir, `${week}.md`);
+        const templateFile = join(trackerDir, '_TEMPLATE.md');
+        let existing = '';
+        if (existsSync(weekFile)) {
+          existing = readFileSync(weekFile, 'utf8');
+        } else if (existsSync(templateFile)) {
+          // Create from template — substitute week placeholders
+          const [year, weekNum] = week.split('-W');
+          const weekStart = (() => {
+            // ISO week start (Monday) for year + weekNum
+            const d = new Date(parseInt(year, 10), 0, 1);
+            const dayOfWeek = d.getDay() || 7;
+            d.setDate(d.getDate() + (1 - dayOfWeek) + (parseInt(weekNum, 10) - 1) * 7);
+            return d.toISOString().slice(0, 10);
+          })();
+          const weekEnd = (() => {
+            const d = new Date(weekStart);
+            d.setDate(d.getDate() + 6);
+            return d.toISOString().slice(0, 10);
+          })();
+          existing = readFileSync(templateFile, 'utf8')
+            .replace(/YYYY-MM-DD/g, weekStart)
+            .replace(/YYYY-WNN/, week)
+            .replace('week_end: ' + weekStart, 'week_end: ' + weekEnd)
+            .replace('created_at: YYYY-MM-DDTHH:MM:SS-07:00',
+              `created_at: ${new Date().toISOString().replace('Z', '-07:00')}`);
+        } else {
+          // No template — create minimal file
+          existing = `---\nweek_index: ${week}\ncreated_at: ${new Date().toISOString()}\n---\n\n`;
+        }
+
+        // Append sections from submitted body
+        const ts = new Date().toISOString();
+        const appendix = [];
+        if (content) appendix.push(`\n<!-- Ingest via /api/weekly-update ${ts} -->\n${content}`);
+        if (highlights) appendix.push(`\n# Highlights\n\n${highlights}`);
+        if (tpgm_evidence) appendix.push(`\n# TPgM Evidence\n\n${tpgm_evidence}`);
+        if (artifacts) appendix.push(`\n# Artifacts\n\n${artifacts}`);
+        if (skills) appendix.push(`\n# Skills\n\n${skills}`);
+        if (courses) appendix.push(`\n# Courses & Certifications\n\n${courses}`);
+
+        if (!appendix.length) {
+          return json({ ok: false, error: 'no content provided — include at least one of: content, highlights, tpgm_evidence, artifacts, skills, courses' }, 400);
+        }
+
+        const finalContent = existing + appendix.join('\n');
+        // Atomic write
+        const tmpPath = weekFile + '.tmp.' + process.pid + '.' + Date.now();
+        writeFileSync(tmpPath, finalContent);
+        renameSync(tmpPath, weekFile);
+
+        return json({ ok: true, week, file: weekFile, sections_written: appendix.length });
+      } catch (err) {
+        _d25Log(`[weekly-update] ${err.message}`);
+        return json({ ok: false, error: err.message }, 500);
+      }
+    })();
+    return;
+  }
+
+  // ── /api/detail/* ──────────────────────────────────────────────────────────
   const detailMatch = url.match(/^\/api\/detail\/(.+)$/);
   if (detailMatch) {
     const fn = DETAIL_FNS[detailMatch[1]];
