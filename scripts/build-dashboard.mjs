@@ -26,6 +26,19 @@ import { statusKey, statusBadgeClass, STATUS_KEY_SOURCE, STATUS_BADGE_CLASS_SOUR
 import { networkSummary as _linkedInNetworkSummary, networkMeta as _linkedInNetworkMeta } from '../lib/linkedin-network.mjs';
 import { lookupCompCache } from '../lib/comp-researcher.mjs';
 import { scoreAlignmentCached } from '../lib/alignment-scorer.mjs';
+// ── Wave C-B: lib imports (consumed by drill-in renderers + dashboard features) ──
+import { getPeerContext, renderPeerTable }                          from '../lib/peer-context.mjs';
+import { getProvenance, renderProvenanceCard }                     from '../lib/decision-provenance.mjs';
+import { applyWealthLens, renderWealthLensCard }                   from '../lib/wealth-lens.mjs';
+import { computeStrategyCeiling, renderStrategyCard }              from '../lib/strategy-ceiling.mjs';
+import { renderEquitySlidersHtml }                                 from '../lib/equity-calculator.mjs';
+import { getNegotiationPlaybook, renderPlaybookHtml }              from '../lib/negotiation-playbook.mjs';
+import { checkGap as llmCheckGap, renderEvidenceCard }            from '../lib/llm-evidence.mjs';
+import { checkGap as netCheckGap, findContactsAtCompany, findLeveragePathTo, renderNetworkCard } from '../lib/network-graph.mjs';
+import { renderHmIntelCard, getHmIntelForRole }                    from '../lib/hm-intel-research.mjs';
+import { getPulseForCompany, renderPulseCard }                     from '../lib/company-pulse.mjs';
+import { detectFunnelGap, renderFunnelNudge }                      from '../lib/funnel-completion.mjs';
+import { scoreStaleness, renderStalenessBadge }                    from '../lib/staleness-nudge.mjs';
 const parseYaml = yaml.load;
 
 const ROOT = process.cwd();
@@ -2797,7 +2810,7 @@ function renderRow(r, idx) {
   <td class="location-cell">${locationCell}</td>
   <td class="benefits-cell">${benefitsCell}</td>
   <td class="people-cell">${peopleCell}</td>
-  <td class="muted-text mobile-hide">${htmlEscape(r.date)}</td>
+  <td class="muted-text mobile-hide">${htmlEscape(r.date)}${(function(){try{const s=scoreStaleness({evalDate:r.date,status:r.status});return renderStalenessBadge(s);}catch(e){return '';}})()}</td>
   <td class="muted-text">${evalAge(r.date)}</td>
   <td class="action-cell">${applyLink}</td>
 </tr>
@@ -2823,8 +2836,15 @@ function renderRow(r, idx) {
         <div class="detail-col">${gapCard}</div>
       </div>
       ${storyCard}
+      ${(function(){try{if(!r.reportPath)return '';const _cvText=existsSync(CV_PATH)?readFileSync(CV_PATH,'utf-8'):'';const _jdText=r.reportPath&&existsSync(r.reportPath)?readFileSync(r.reportPath,'utf-8').slice(0,5000):'';if(!_cvText&&!_jdText)return '';const _atsResult=scoreAtsMyth({cvText:_cvText,jdText:_jdText});const _atsHtml=renderAtsCard(_atsResult);return _atsHtml?'<div class="dcard" style="margin-bottom:8px">'+_atsHtml+'</div>':'';}catch(e){return '';}})()}
       ${actionCard}
+      ${(function(){try{const slug=r.company.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');const contacts=findContactsAtCompany(slug);const leverage=findLeveragePathTo(r.company,r.role);const html=renderNetworkCard(contacts,{company:r.company,role:r.role,leverage});return html?'<div class="dcard dcard--network"><div class="dcard-label">NETWORK LEVERAGE</div>'+html+'</div>':'';}catch(e){return '';}})()}
       ${notesCard}
+      <div class="drawer-slash-cmds" style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+        <button type="button" class="dcard-btn" onclick="console.log('would invoke /cv-tailor for row ${htmlEscape(String(r.num||''))}');if(window.toast)window.toast('/cv-tailor: TODO — wire to /api/build-pack-stage','info');event.stopPropagation()" title="Tailor CV for this role (TODO: wire /api/build-pack-stage)">/cv-tailor</button>
+        <button type="button" class="dcard-btn" onclick="console.log('would invoke /cover-letter for row ${htmlEscape(String(r.num||''))}');if(window.toast)window.toast('/cover-letter: TODO — wire to /api/build-pack-stage','info');event.stopPropagation()" title="Draft cover letter for this role (TODO: wire /api/build-pack-stage)">/cover-letter</button>
+        <button type="button" class="dcard-btn" onclick="console.log('would invoke /linkedin-dm for row ${htmlEscape(String(r.num||''))}');if(window.toast)window.toast('/linkedin-dm: TODO — wire to /api/build-pack-stage','info');event.stopPropagation()" title="Draft LinkedIn DM for this role (TODO: wire /api/build-pack-stage)">/linkedin-dm</button>
+      </div>
     </div>
   </td>
 </tr>`;
@@ -3198,10 +3218,14 @@ function build() {
     const tpgmData = JSON.parse(trackerOut);
     // Map payload to renderTpgmWidget input shape
     const latestEv = (tpgmData.latest_evidence || [])[0] || null;
+    // C12 fix: ring shows pm_credibility_composite so it matches the text
+    // below ("PM-credibility composite N/100"). Previously score=tpgm_credibility_score
+    // produced "4 of 100" in the ring while the composite line said "21/100".
+    const _pmComposite = tpgmData.pm_credibility_composite ?? 0;
     tpgmWidgetHtml = renderTpgmWidget({
-      score:                   tpgmData.tpgm_credibility_score        ?? 0,
+      score:                   _pmComposite,
       pm_bridge_index:         tpgmData.pm_bridge_buildability_index   ?? 0,
-      pm_credibility_composite:tpgmData.pm_credibility_composite       ?? 0,
+      pm_credibility_composite:_pmComposite,
       highlights:              latestEv ? (latestEv.highlights || [])  : [],
       active_courses:          tpgmData.active_courses                 || [],
       gap_points_available:    (tpgmData.skill_gaps || []).reduce((s, g) => s + (g.pm_bridge_weight || 0), 0) || null,
@@ -3221,6 +3245,19 @@ function build() {
     // Soft-fail: render empty-state widget so the dashboard still builds
     tpgmWidgetHtml = renderTpgmWidget({ score: 0 });
   }
+  // C12 post-process: replace CLI command text with action buttons,
+  // and wire "Open gap points available" chip to tpgm-gaps drill-in.
+  tpgmWidgetHtml = tpgmWidgetHtml
+    // Replace "run `npm run skill-ingest:apply`" with an action button
+    .replace(
+      /Drop this week's update into <code>[^<]+<\/code> and run <code>npm run skill-ingest:apply<\/code>/,
+      'Drop this week\'s update below: <button type="button" class="dcard-btn" style="font-size:11px;padding:2px 8px;margin-left:6px" onclick="window.drillIn(\'ingest-form\',\'\',event);event.stopPropagation()">+ Add skill evidence</button>'
+    )
+    // Wire "Open gap points available +N" to tpgm-gaps drill-in
+    .replace(
+      /<div class="tpgm-w__row"><span>Open gap points available<\/span><strong>\+(\d+)<\/strong><\/div>/,
+      '<div class="tpgm-w__row"><span>Open gap points available</span><strong><span class="drill-trigger" data-drill="tpgm-gaps" style="cursor:pointer;text-decoration:underline dotted" onclick="window.drillIn(\'tpgm-gaps\',\'\',event)" title="Click to see gap actions">+$1</span></strong></div>'
+    );
 
   // Sorted views
   const sortedByScore = [...apps].sort((a, b) => b.score - a.score);
@@ -3394,9 +3431,137 @@ function build() {
 
   const topOfPipeJson = JSON.stringify(topOfPipeDeduped).replace(/<\//g, '<\\/');
 
+  // ── Wave C-B: funnel completion nudge ────────────────────────────
+  let funnelNudgeHtml = '';
+  try {
+    const funnelGap = detectFunnelGap(apps);
+    funnelNudgeHtml = renderFunnelNudge(funnelGap);
+  } catch (e) { /* never break the build */ }
+
   // Apply-now table rows
   const applyNowRows = applyNowSorted.map((r, i) => renderRow(r, `apply-${i}`)).join('\n');
   const allRows = sortedByScore.map((r, i) => renderRow(r, `all-${i}`)).join('\n');
+
+  // ── Wave C-B: pre-bake data for drill-in renderers ───────────────────────
+  // All data computed here at build time. Browser renderers reference
+  // window._waveCB (injected as a JSON global below the template literal).
+  // Lazy: expensive calls wrapped in try/catch and return {} on failure.
+  let waveCBDataJson = '{}';
+  try {
+    const _cbData = {};
+
+    // Per-company network + pulse data (keyed by slug)
+    try {
+      _cbData.companyData = {};
+      // Collect unique company slugs from apps
+      const _seen = new Set();
+      for (const _r of apps) {
+        if (!_r.company) continue;
+        const _s = _r.company.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+        if (_seen.has(_s)) continue;
+        _seen.add(_s);
+        try {
+          const _net = findContactsAtCompany(_s);
+          const _lev = findLeveragePathTo(_r.company, '');
+          const _nHtml = renderNetworkCard(_net, { company: _r.company, leverage: _lev });
+          const _pulse = getPulseForCompany(_s, {});
+          const _pHtml = _pulse ? renderPulseCard(_pulse) : '';
+          if (_nHtml || _pHtml) {
+            _cbData.companyData[_s] = { networkHtml: _nHtml, pulseHtml: _pHtml };
+          }
+        } catch (_) { /* per-company, safe to skip */ }
+      }
+    } catch (_) { _cbData.companyData = {}; }
+
+    // D4: peer score context — precompute across all score ranges
+    try {
+      const scoreRanges = ['4.5+', '4.0-4.4', '3.0-3.9', '2.0-2.9'];
+      _cbData.peerScore = {};
+      for (const rng of scoreRanges) {
+        const midpoint = rng === '4.5+' ? 4.7 : rng === '4.0-4.4' ? 4.2 : rng === '3.0-3.9' ? 3.5 : 2.5;
+        const ctx = getPeerContext('score', midpoint, {});
+        _cbData.peerScore[rng] = { html: renderPeerTable(ctx), ctx };
+      }
+    } catch (_) { _cbData.peerScore = {}; }
+
+    // D6: per-row provenance — keyed by num for metric drill-in
+    // Skipped at build time (too expensive for all rows); fetch lazily via API.
+    // Documented as TODO: /api/drill/metric/{rowId}/{key}
+    _cbData.provenanceTodo = 'TODO: /api/drill/metric/{rowId}/{key} in dashboard-server.mjs';
+
+    // D5: funnel gap (already computed above as funnelNudgeHtml — pass context)
+    try {
+      _cbData.funnelGap = detectFunnelGap(apps);
+    } catch (_) { _cbData.funnelGap = {}; }
+
+    // Negotiation playbook (embedded once, re-used per comp drill-in)
+    try {
+      const nbp = getNegotiationPlaybook({ base: 300000, competing_offers: 0 });
+      _cbData.negotiationPlaybookHtml = renderPlaybookHtml(nbp);
+    } catch (_) { _cbData.negotiationPlaybookHtml = ''; }
+
+    // TPgM skill gap points (from tracker if available)
+    try {
+      const trackerOut = execSync(
+        `node ${JSON.stringify(join(ROOT, 'scripts/tpgm-tracker.mjs'))} --json`,
+        { cwd: ROOT, timeout: 8000, stdio: ['pipe','pipe','pipe'] }
+      ).toString('utf-8');
+      const td = JSON.parse(trackerOut);
+      _cbData.tpgmGaps = (td.skill_gaps || []).map(g => ({
+        name: g.name || '',
+        weight: g.pm_bridge_weight || 0,
+        status: g.status || '',
+        desc: g.description || '',
+      }));
+    } catch (_) { _cbData.tpgmGaps = []; }
+
+    // Gap strategy data: pre-bake top-gap strategies via llm-evidence + network-graph
+    try {
+      _cbData.gapData = {};
+      // Collect unique gaps from apps (up to 30 for build time)
+      const _gapSeen = new Set();
+      let _gapCount = 0;
+      for (const _r of apps) {
+        if (_gapCount >= 30) break;
+        try {
+          const _gaps = getKeyGaps(_r.reportPath);
+          for (const _g of _gaps.slice(0, 3)) {
+            const _gk = _g.title || '';
+            if (!_gk || _gapSeen.has(_gk)) continue;
+            _gapSeen.add(_gk); _gapCount++;
+            const _rowRole = { title: _r.role, company: _r.company };
+            // Try llm-evidence first
+            const _llmRes = llmCheckGap(_gk, _rowRole);
+            if (_llmRes && _llmRes.contradicts) {
+              _cbData.gapData[_gk] = { evidenceHtml: renderEvidenceCard(_llmRes) };
+              continue;
+            }
+            // Try network-graph
+            const _netRes = netCheckGap(_gk, _rowRole);
+            if (_netRes && _netRes.contradicts) {
+              _cbData.gapData[_gk] = { evidenceHtml: renderEvidenceCard(_netRes) };
+              continue;
+            }
+            // Fall through to strategy (DOM chip will provide)
+          }
+        } catch (_) { /* per-row, skip */ }
+      }
+    } catch (_) { _cbData.gapData = {}; }
+
+    // Row data snapshot for banner-roles drill-in (last scan from pipeline.md)
+    try {
+      if (existsSync(PIPELINE_PATH)) {
+        const pipeText = readFileSync(PIPELINE_PATH, 'utf-8');
+        const pipeLines = pipeText.split('\n').filter(l => l.startsWith('|') && !l.includes('---'));
+        _cbData.pipelineRows = pipeLines.slice(0, 20).map(l => {
+          const cells = l.split('|').map(c => c.trim()).filter(Boolean);
+          return { company: cells[0]||'', role: cells[1]||'', url: cells[2]||'', date: cells[3]||'' };
+        });
+      } else { _cbData.pipelineRows = []; }
+    } catch (_) { _cbData.pipelineRows = []; }
+
+    waveCBDataJson = JSON.stringify(_cbData).replace(/<\//g, '<\\/');
+  } catch (topErr) { waveCBDataJson = '{}'; }
 
   // ── Cmd-K palette data ────────────────────────────────────────────
   // Compact index of every row + the 5 most recently dated reports.
@@ -8497,6 +8662,9 @@ function build() {
     <div class="top-of-pipe-list" id="top-of-pipe-list"></div>
   </div>
 
+  <!-- Wave C-B D5: funnel-completion nudge (dismissible banner) -->
+  ${funnelNudgeHtml}
+
   <div class="stats" id="overview-section">
     <div class="stats-hero-row">
       <div class="stat-hero-balance ${applyNow.length > 0 ? 'stat-strong' : ''}" onclick="document.getElementById('apply-now-section').scrollIntoView({behavior:'smooth'})" title="Click to scroll to Apply-Now queue" role="button" tabindex="0">
@@ -10144,14 +10312,16 @@ window.closeRightRail = closeRightRail;
 window.openRightRailForDetail = openRightRailForDetail;
 window.setUseInlineExpand = setUseInlineExpand;
 
-// ── Wave C-A Item 1: Universal drill-in registry ─────────────────────────
+// ── Wave C-A Item 1 + C-B: Universal drill-in registry ──────────────────
 // Provides window.drillIn(type, id, evt) + drillInRegistry.
-// Wave C-B will replace the placeholder renderers with full rich views
-// using lib/peer-context.mjs, lib/humanize-status.mjs, etc.
+// Wave C-B renderers consume window._waveCB (baked at build time below).
 //
 // DASHBOARD_INVARIANTS.md §2, §5 — drill-in opens the right-rail drawer for
 // 'role' type; for other types it opens a lightweight popover-style overlay
 // that does NOT conflict with the existing drawer or status-popover.
+
+// ── Wave C-B: baked build-time data ────────────────────────────────────────
+window._waveCB = JSON.parse('${waveCBDataJson}');
 
 var drillInRegistry = {};
 
@@ -10159,23 +10329,36 @@ function _drillInRegister(type, rendererFn) {
   drillInRegistry[type] = rendererFn;
 }
 
-// Pre-register placeholder renderers for all types. Each returns
-// { title, html } — Wave C-B will replace the html bodies.
+// Wave C-B renderers — lib-driven, data-driven from window._waveCB.
+// Each returns { title, html, onMount? }.
 _drillInRegister('role', function(id) {
-  return {
-    title: 'Role drill-in',
-    html: '<p class="muted">Wave C-B will wire full role detail here.</p>',
-  };
+  // Delegate to existing right-rail detail drawer (toggleDetail).
+  var num = String(id || '').replace(/^apply-|^all-/, '');
+  var rows = Array.from(document.querySelectorAll('tr.row'));
+  var target = rows.find(function(r) { return String(r.dataset.num) === num || r.dataset.rowId === id; });
+  if (target) {
+    closeTopLevelDrillIn();
+    var rowId = target.dataset.rowId || id;
+    if (typeof toggleDetail === 'function') toggleDetail(rowId);
+    return null; // Signal: handled externally
+  }
+  return { title: 'Role #' + num, html: '<p class="muted">Row not found — try opening from the table.</p>' };
 });
 _drillInRegister('company', function(id) {
   var slug = id || '';
   var compName = slug.split('-').map(function(w) { return w.charAt(0).toUpperCase() + w.slice(1); }).join(' ');
+  // Wave C-B enrichment: network contacts + company pulse (pre-baked in _waveCB.companyData)
+  var cb = window._waveCB || {};
+  var netHtml = '';
+  var pulseHtml = '';
+  try { var cd = (cb.companyData || {})[slug]; if (cd) { netHtml = cd.networkHtml||''; pulseHtml = cd.pulseHtml||''; } } catch(_) {}
   return {
     title: compName + ' — all roles',
-    html: '<p class="muted">Showing all evaluated roles at ' + compName + '.</p>'
+    html: '<p class="muted" style="font-size:12px">Showing all evaluated roles at <strong>' + compName + '</strong>.</p>'
+      + (pulseHtml ? '<div style="margin:8px 0 4px">' + pulseHtml + '</div>' : '')
+      + (netHtml ? '<div style="margin:8px 0 4px">' + netHtml + '</div>' : '')
       + '<div id="drill-company-rows"></div>',
     onMount: function(el) {
-      // Collect all rows for this company from the main tables and render a mini-list.
       var rows = Array.from(document.querySelectorAll('tr.row[data-company="' + slug + '"]'));
       if (!rows.length) {
         var div = el.querySelector('#drill-company-rows');
@@ -10228,34 +10411,212 @@ _drillInRegister('status', function(id) {
 });
 _drillInRegister('score', function(id) {
   var range = id || '';
-  return {
-    title: 'Score range: ' + range,
-    html: '<p class="muted">Coming soon — Wave C-B will render full score-range detail.</p>',
-  };
+  var cb = window._waveCB || {};
+  var peerData = (cb.peerScore || {})[range] || {};
+  var peerHtml = peerData.html || '';
+  var ctx = peerData.ctx || {};
+  var pctStr = typeof ctx.percentile === 'number' ? ('Pipeline percentile: <strong>' + ctx.percentile + '%</strong>') : '';
+  var html = '<p style="font-size:12px;margin-bottom:8px">Score range <strong>' + range + '</strong>'
+    + (pctStr ? ' &mdash; ' + pctStr : '') + '</p>'
+    + (peerHtml || '<p class="muted" style="font-size:12px">No peer data available for this score range.</p>');
+  return { title: 'Score context: ' + range, html: html };
 });
 _drillInRegister('comp', function(id) {
-  return { title: 'Comp intelligence', html: '<p class="muted">Coming soon — Wave C-B will wire comp peer context.</p>' };
+  // id format: "{base}:{role}:{company}" or just "{base}"
+  var parts = (id || '').split(':');
+  var base = parseFloat(parts[0]) || 0;
+  var role = parts[1] || '';
+  var company = parts[2] || '';
+  var cb = window._waveCB || {};
+  // Peer comp context
+  var ctx = (cb.peerComp || {})[id] || {};
+  var peerHtml = ctx.html || '<p class="muted" style="font-size:12px">Peer comp data not available — run node lib/peer-context.mjs to populate.</p>';
+  // Negotiation playbook (baked for base >= 300K)
+  var playbookHtml = (base >= 300000 && cb.negotiationPlaybookHtml) ? cb.negotiationPlaybookHtml : '';
+  // Equity sliders (baked HTML per role)
+  var equityHtml = (cb.equitySliders || {})[id] || '';
+  var html = '<p style="font-size:12px;margin-bottom:8px">Comp intelligence'
+    + (base ? ' for <strong>$' + Math.round(base/1000) + 'K base</strong>' : '')
+    + (company ? ' at <strong>' + company + '</strong>' : '') + '</p>'
+    + peerHtml
+    + (equityHtml ? '<div style="margin-top:12px">' + equityHtml + '</div>' : '')
+    + (playbookHtml ? '<details style="margin-top:12px"><summary style="cursor:pointer;font-size:12px;font-weight:600">Negotiation playbook</summary>' + playbookHtml + '</details>' : '');
+  return { title: 'Comp intelligence', html: html };
 });
 _drillInRegister('gap', function(id) {
-  return { title: 'Gap: ' + (id||''), html: '<p class="muted">Coming soon — Wave C-B will render gap-close strategy.</p>' };
+  // id format: "{rowId}:{gapKey}" or just "{gapKey}"
+  var parts = (id || '').split(':');
+  var gapKey = parts.length > 1 ? parts.slice(1).join(':') : parts[0];
+  var cb = window._waveCB || {};
+  var gapData = (cb.gapData || {})[id] || (cb.gapData || {})[gapKey] || {};
+  // Priority: llm-evidence → network-graph → strategy-ceiling
+  var cardHtml = gapData.evidenceHtml || gapData.strategyHtml || '';
+  if (!cardHtml) {
+    // Fallback: search DOM for this gap chip's pre-rendered strategy
+    var chipEl = document.querySelector('.gap-chip-interactive[data-title="' + gapKey + '"]');
+    if (chipEl) {
+      var strategy = chipEl.dataset.strategy || '';
+      var detail   = chipEl.dataset.detail || '';
+      var why      = chipEl.dataset.why || '';
+      cardHtml = (detail ? '<div class="dcard"><div class="dcard-label">GAP DETAIL</div><div class="dcard-body">' + detail + '</div></div>' : '')
+        + (strategy ? '<div class="dcard" style="margin-top:8px"><div class="dcard-label">ADDRESSING STRATEGY</div><div class="dcard-body">' + strategy + '</div></div>' : '')
+        + (why ? '<div class="dcard" style="margin-top:8px"><div class="dcard-label">WHY GAP DOES NOT BLOCK</div><div class="dcard-body">' + why + '</div></div>' : '');
+    }
+  }
+  if (!cardHtml) {
+    cardHtml = '<p style="font-size:12px;color:var(--text-3)">No pre-built strategy for this gap. '
+      + 'To generate one: <code>node lib/strategy-ceiling.mjs --gap "' + gapKey + '"</code>.</p>';
+  }
+  return {
+    title: 'Gap strategy: ' + gapKey,
+    html: '<p style="font-size:12px;margin-bottom:8px">Strategy to close gap: <strong>' + gapKey + '</strong></p>'
+      + cardHtml,
+  };
 });
 _drillInRegister('story', function(id) {
-  return { title: 'Story: ' + (id||''), html: '<p class="muted">Coming soon — Wave C-B will render STAR story detail.</p>' };
+  // id format: "{rowId}:{storySlug}" or "{storySlug}"
+  var parts = (id || '').split(':');
+  var storySlug = parts.length > 1 ? parts.slice(1).join(':') : parts[0];
+  // Story child pages live at dashboard/stories/{slug}.html
+  var storyHref = 'stories/' + storySlug + '.html';
+  var cb = window._waveCB || {};
+  var storyData = (cb.storyData || {})[id] || (cb.storyData || {})[storySlug] || {};
+  var title = storyData.title || storySlug.replace(/-/g, ' ');
+  var excerpt = storyData.excerpt || 'Click "Open full story" to read the complete STAR+R expansion.';
+  // Check if the file exists by trying to fetch it (best-effort)
+  var html = '<div style="padding:4px 0">'
+    + '<p style="font-size:13px;font-weight:600;margin:0 0 8px">' + title + '</p>'
+    + '<p style="font-size:12px;color:var(--text-3);margin:0 0 12px">' + excerpt + '</p>'
+    + '<a href="' + storyHref + '" target="_blank" rel="noopener" style="display:inline-block;padding:6px 14px;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;color:var(--fg)">'
+    + 'Open full story &rarr;</a>'
+    + '</div>';
+  return { title: 'Story: ' + title, html: html };
 });
 _drillInRegister('metric', function(id) {
-  return { title: 'Metric: ' + (id||''), html: '<p class="muted">Coming soon — Wave C-B will render metric context.</p>' };
+  // id format: "{rowId}:{metricKey}"
+  var parts = (id || '').split(':');
+  var rowId = parts[0] || '';
+  var metricKey = parts.slice(1).join(':') || '';
+  var cb = window._waveCB || {};
+  var provData = (cb.provenanceData || {})[id] || {};
+  var cardHtml = provData.html || '';
+  if (!cardHtml) {
+    cardHtml = '<p style="font-size:12px;color:var(--text-3)">Provenance data not pre-baked for this metric.</p>'
+      + '<p style="font-size:11px;color:var(--text-4);margin-top:4px">'
+      + 'TODO: wire <code>GET /api/drill/metric/' + rowId + '/' + metricKey + '</code> in dashboard-server.mjs '
+      + 'to call <code>lib/decision-provenance.mjs::getProvenance(rowId, metricKey)</code> + renderProvenanceCard().</p>';
+  }
+  return {
+    title: 'Metric provenance: ' + (metricKey || id),
+    html: '<p style="font-size:12px;margin-bottom:8px">Why-trail for <strong>' + (metricKey||id) + '</strong>' + (rowId ? ' — row #' + rowId : '') + '</p>' + cardHtml,
+  };
 });
 _drillInRegister('banner-roles', function(id) {
-  return { title: 'Scan result: ' + (id||''), html: '<p class="muted">Coming soon — Wave C-B will render scan banner roles.</p>' };
+  // id: timestamp string from scan banner (e.g. "1715980000000")
+  var cb = window._waveCB || {};
+  var rows = cb.pipelineRows || [];
+  if (!rows.length) {
+    return {
+      title: 'Recent scan roles',
+      html: '<p class="muted" style="font-size:12px">No recent pipeline data available. Run a scan first.</p>',
+    };
+  }
+  var items = rows.map(function(r) {
+    var company = r.company || '';
+    var role = r.role || '';
+    var url = r.url || '';
+    return '<div style="display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:5px;margin:3px 0;background:var(--surface-2)">'
+      + '<span style="flex:1;font-size:12px"><strong>' + company.slice(0,20) + '</strong> &mdash; ' + role.slice(0,60) + '</span>'
+      + (url ? '<a href="' + url + '" target="_blank" rel="noopener" style="font-size:11px;color:var(--blue)" onclick="event.stopPropagation()">Open &rarr;</a>' : '')
+      + '</div>';
+  }).join('');
+  return {
+    title: 'Recent scan roles (' + rows.length + ')',
+    html: '<p style="font-size:12px;margin-bottom:8px">Latest pipeline entries from last scan run:</p>' + items,
+  };
 });
 _drillInRegister('percentage', function(id) {
-  return { title: 'Percentage detail', html: '<p class="muted">Coming soon — Wave C-B will render percentage breakdown.</p>' };
+  // id format: "{rowId}:{key}" — e.g. "42:alignment" or "42:interview" or "42:hmNoticing"
+  var parts = (id || '').split(':');
+  var rowId = parts[0] || '';
+  var key = parts.slice(1).join(':') || '';
+  var cb = window._waveCB || {};
+  var stratData = (cb.strategyData || {})[id] || {};
+  var cardHtml = stratData.html || '';
+  if (!cardHtml) {
+    // Read from DOM: alignment bars store pct in text
+    var barEl = document.querySelector('.alignbar-row[title*="' + key + '"] .alignbar-pct');
+    var pct = barEl ? barEl.textContent.trim() : '';
+    cardHtml = '<p style="font-size:12px;color:var(--text-3);margin-bottom:8px">'
+      + 'Strategy data for <strong>' + key + '</strong>' + (pct ? ' (' + pct + ')' : '') + ' not pre-baked.</p>'
+      + '<p style="font-size:11px;color:var(--text-4)">'
+      + 'TODO: wire <code>GET /api/drill/percentage/' + rowId + '/' + key + '</code> in dashboard-server.mjs '
+      + 'to call <code>lib/strategy-ceiling.mjs::computeStrategyCeiling()</code> + renderStrategyCard().</p>'
+      + '<p style="font-size:11px;color:var(--text-4);margin-top:6px">Rationale, ceiling, and 3-5 concrete actions to close this gap will appear here once the endpoint is wired.</p>';
+  }
+  return {
+    title: (key ? key.charAt(0).toUpperCase() + key.slice(1) + ' breakdown' : 'Percentage breakdown'),
+    html: cardHtml,
+  };
 });
 _drillInRegister('ingest-form', function(id) {
-  return { title: 'Add weekly skill evidence', html: '<p class="muted">Coming soon — Wave C-B will wire the skill-ingest form here.</p>' };
+  var weekStr = (function() {
+    var d = new Date();
+    var jan4 = new Date(d.getFullYear(), 0, 4);
+    var startOfWeek = new Date(jan4.getTime() - ((jan4.getDay() || 7) - 1) * 86400000);
+    var week = Math.ceil(((d - startOfWeek) / 86400000 + 1) / 7);
+    return d.getFullYear() + '-W' + String(week).padStart(2, '0');
+  })();
+  var html = '<form id="drill-ingest-form" style="display:flex;flex-direction:column;gap:10px"'
+    + ' onsubmit="submitSkillIngest(this,event)">'
+    + '<div><label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px">Week</label>'
+    + '<input name="week" value="' + weekStr + '" style="width:100%;font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:5px;background:var(--surface-2);color:var(--fg)"></div>'
+    + '<div><label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px">Highlights</label>'
+    + '<textarea name="highlights" rows="2" style="width:100%;font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:5px;background:var(--surface-2);color:var(--fg);resize:vertical" placeholder="Key wins, outputs, or decisions this week"></textarea></div>'
+    + '<div><label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px">TPgM evidence</label>'
+    + '<textarea name="tpgm_evidence" rows="2" style="width:100%;font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:5px;background:var(--surface-2);color:var(--fg);resize:vertical" placeholder="Technical program / product management signals"></textarea></div>'
+    + '<div><label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px">Shipped artifacts</label>'
+    + '<textarea name="artifacts" rows="2" style="width:100%;font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:5px;background:var(--surface-2);color:var(--fg);resize:vertical" placeholder="PRs, docs, demos, or published pieces"></textarea></div>'
+    + '<div><label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px">Skills used / demonstrated</label>'
+    + '<input name="skills" style="width:100%;font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:5px;background:var(--surface-2);color:var(--fg)" placeholder="e.g. Claude API, Python, stakeholder alignment"></div>'
+    + '<div><label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px">Courses in progress</label>'
+    + '<input name="courses" style="width:100%;font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:5px;background:var(--surface-2);color:var(--fg)" placeholder="Course name — status"></div>'
+    + '<div style="display:flex;gap:8px;margin-top:4px">'
+    + '<button type="submit" style="flex:1;padding:7px;background:var(--green);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">Save</button>'
+    + '<button type="button" onclick="closeTopLevelDrillIn()" style="padding:7px 14px;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:12px">Cancel</button>'
+    + '</div>'
+    + '</form>';
+  return { title: 'Add weekly skill evidence', html: html };
 });
 _drillInRegister('tpgm-gaps', function(id) {
-  return { title: 'TPgM gap points', html: '<p class="muted">Coming soon — Wave C-B will render gap-point list + action recommendations.</p>' };
+  var cb = window._waveCB || {};
+  var gaps = cb.tpgmGaps || [];
+  if (!gaps.length) {
+    return {
+      title: 'TPgM gap points',
+      html: '<p class="muted" style="font-size:12px">No gap data available. Run <code>node scripts/tpgm-tracker.mjs</code> to populate.</p>',
+    };
+  }
+  var totalPts = gaps.reduce(function(s, g) { return s + (g.weight || 0); }, 0);
+  var items = gaps.map(function(g) {
+    var pct = totalPts > 0 ? Math.round((g.weight / totalPts) * 100) : 0;
+    return '<div style="padding:8px;border-radius:6px;margin:4px 0;background:var(--surface-2)">'
+      + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'
+      + '<span style="font-size:12px;font-weight:600;flex:1">' + (g.name||'') + '</span>'
+      + '<span style="font-size:11px;padding:2px 8px;border-radius:12px;background:var(--surface-3);color:var(--text-3)">+' + (g.weight||0) + 'pts</span>'
+      + '<span style="font-size:11px;padding:2px 6px;border-radius:12px;background:var(--surface-3);color:var(--text-3)">' + (g.status||'') + '</span>'
+      + '</div>'
+      + (g.desc ? '<p style="font-size:11px;color:var(--text-3);margin:0 0 6px">' + g.desc + '</p>' : '')
+      + '<div style="height:3px;border-radius:2px;background:var(--border)">'
+      + '<div style="height:3px;border-radius:2px;background:var(--blue);width:' + pct + '%"></div></div>'
+      + '</div>';
+  }).join('');
+  return {
+    title: 'TPgM gap points (' + gaps.length + ' gaps · ' + totalPts + 'pts total)',
+    html: '<p style="font-size:12px;margin-bottom:8px">Open gap points &mdash; each represents a bridgeable PM-credibility signal:</p>'
+      + items
+      + '<p style="font-size:11px;color:var(--text-4);margin-top:10px">Add evidence via <button type="button" class="dcard-btn" style="font-size:11px;padding:2px 8px" onclick="drillIn(&quot;ingest-form&quot;,&quot;&quot;,event)">+ weekly ingest</button> to close gaps.</p>',
+  };
 });
 
 // ── Top-level drill-in overlay (for non-role types) ──────────────────────
@@ -10301,6 +10662,30 @@ function closeTopLevelDrillIn() {
   if (modal) { modal.style.display = 'none'; modal.setAttribute('aria-hidden', 'true'); }
 }
 window.closeTopLevelDrillIn = closeTopLevelDrillIn;
+
+// Wave C-B: skill ingest form submit handler (named to avoid inline string quoting issues)
+function submitSkillIngest(form, evt) {
+  evt.preventDefault();
+  var fd = new FormData(form);
+  var body = {
+    week: fd.get("week"),
+    highlights: fd.get("highlights"),
+    tpgm_evidence: fd.get("tpgm_evidence"),
+    artifacts: fd.get("artifacts"),
+    skills: fd.get("skills"),
+    courses: fd.get("courses"),
+  };
+  fetch("/api/weekly-update", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
+    .then(function(r) { return r.ok ? r.json() : Promise.reject(r.status); })
+    .then(function() {
+      if (window.toast) window.toast("Skill evidence saved for " + body.week, "success");
+      closeTopLevelDrillIn();
+    })
+    .catch(function(err) {
+      if (window.toast) window.toast("POST /api/weekly-update failed (" + err + ") — TODO: wire endpoint in dashboard-server.mjs", "error");
+    });
+}
+window.submitSkillIngest = submitSkillIngest;
 
 function drillIn(type, id, evt) {
   if (evt) evt.stopPropagation();
