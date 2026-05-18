@@ -526,6 +526,65 @@ if (apply) {
 }
 
 /* -------------------------------------------------------------------------- */
+/* Story-bank prompting (I5 / finding #45)                                   */
+/* For any evidence item that crosses scoring_impact >= 0.15 AND a          */
+/* confidence proxy >= 0.8, append a "Should I write a STAR story?" nudge.  */
+/*                                                                            */
+/* Confidence proxy: we map extraction_confidence to a numeric:              */
+/*   high   → 1.0   medium → 0.7   low → 0.4                                */
+/* This means high-confidence extractions always unlock the nudge when       */
+/* scoring_impact >= 0.15; medium-confidence extractions do not.             */
+/* -------------------------------------------------------------------------- */
+
+const STORY_BANK_SCORING_IMPACT_THRESHOLD = 0.15;
+const STORY_BANK_CONFIDENCE_THRESHOLD = 0.8;
+
+const confidenceNumeric = {
+  high: 1.0,
+  medium: 0.7,
+  low: 0.4,
+}[validated.extraction_confidence] ?? 0.5;
+
+/**
+ * Returns story-bank nudge candidates from tpgm_evidence and pm_bridge_evidence.
+ * Both evidence types are ranked highest-impact first.
+ */
+function buildStoryBankNudges(extracted, confScore) {
+  if (confScore < STORY_BANK_CONFIDENCE_THRESHOLD) return [];
+
+  const nudges = [];
+
+  for (const ev of extracted.tpgm_evidence) {
+    if (ev.scoring_impact >= STORY_BANK_SCORING_IMPACT_THRESHOLD) {
+      nudges.push({
+        kind: 'tpgm',
+        work_item: ev.work_item,
+        scoring_impact: ev.scoring_impact,
+        prompt: `Should I write a STAR story for "${ev.work_item}"?`,
+        link: '/story-bank-add', // TODO endpoint (Wave H)
+      });
+    }
+  }
+
+  for (const ev of extracted.pm_bridge_evidence) {
+    if (ev.weight_for_pm_transition >= STORY_BANK_SCORING_IMPACT_THRESHOLD) {
+      nudges.push({
+        kind: 'pm_bridge',
+        work_item: ev.evidence.slice(0, 100),
+        scoring_impact: ev.weight_for_pm_transition,
+        prompt: `Should I write a STAR story for this PM-bridge evidence?`,
+        link: '/story-bank-add', // TODO endpoint (Wave H)
+      });
+    }
+  }
+
+  // Sort highest impact first
+  return nudges.sort((a, b) => b.scoring_impact - a.scoring_impact);
+}
+
+const storyBankNudges = buildStoryBankNudges(validated, confidenceNumeric);
+
+/* -------------------------------------------------------------------------- */
 /* Final report                                                               */
 /* -------------------------------------------------------------------------- */
 
@@ -554,6 +613,14 @@ const report = {
     files_touched: [...mergeReport.files_touched],
     commits: mergeReport.commits,
   } : { skipped: 'no --apply flag' },
+  story_bank_nudges: storyBankNudges.length > 0 ? {
+    count: storyBankNudges.length,
+    threshold: {
+      scoring_impact: STORY_BANK_SCORING_IMPACT_THRESHOLD,
+      confidence: `>= ${STORY_BANK_CONFIDENCE_THRESHOLD} (extraction_confidence must be "high" for this run)`,
+    },
+    nudges: storyBankNudges,
+  } : { count: 0, reason: `extraction_confidence="${validated.extraction_confidence}" (numeric ${confidenceNumeric}) is below threshold ${STORY_BANK_CONFIDENCE_THRESHOLD} or no evidence exceeded impact ${STORY_BANK_SCORING_IMPACT_THRESHOLD}` },
 };
 
 console.log(JSON.stringify(report, null, 2));
