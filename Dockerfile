@@ -1,8 +1,9 @@
 # syntax=docker/dockerfile:1.7
 #
-# career-ops web GUI = ttyd (browser xterm + HTTP Basic Auth) wrapping
-# the upstream Go TUI dashboard. The project directory is bind-mounted at
-# /workspace so the host's Claude Code CLI and the container share state.
+# careerops web GUI = a Node auth proxy (with a designed login page) in front
+# of ttyd, which wraps the upstream Go TUI dashboard. The project directory
+# is bind-mounted at /workspace so the host's CLI and the container share
+# state.
 
 # ── Stage 1: build the Go TUI dashboard ──────────────────────────────────
 FROM golang:1.24-alpine AS dashboard-builder
@@ -14,8 +15,16 @@ RUN go mod download
 COPY dashboard/ ./
 RUN CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o /out/career-dashboard .
 
-# ── Stage 2: ttyd + dashboard runtime ────────────────────────────────────
-FROM debian:bookworm-slim AS runtime
+# ── Stage 2: install the auth-proxy npm deps in a builder ────────────────
+FROM node:20-bookworm-slim AS auth-builder
+
+WORKDIR /opt/auth
+COPY auth/package.json ./
+RUN npm install --omit=dev --no-audit --no-fund \
+ && npm cache clean --force
+
+# ── Stage 3: ttyd + auth proxy + dashboard runtime ───────────────────────
+FROM node:20-bookworm-slim AS runtime
 
 ARG TTYD_VERSION=1.7.7
 
@@ -32,9 +41,12 @@ RUN apt-get update \
 ENV LANG=en_US.UTF-8 \
     LC_ALL=en_US.UTF-8 \
     TERM=xterm-256color \
-    COLORTERM=truecolor
+    COLORTERM=truecolor \
+    NODE_ENV=production
 
 COPY --from=dashboard-builder /out/career-dashboard /usr/local/bin/career-dashboard
+COPY --from=auth-builder /opt/auth/node_modules /opt/auth/node_modules
+COPY auth/package.json auth/server.mjs auth/login.html /opt/auth/
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 

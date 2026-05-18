@@ -1,0 +1,15 @@
+{
+  "name": "careerops-auth-proxy",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Login-page auth proxy in front of ttyd for careerops",
+  "main": "server.mjs",
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "http-proxy-middleware": "^3.0.0"
+  }
+}
