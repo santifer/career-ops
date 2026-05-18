@@ -40,7 +40,9 @@
     "apply-orchestrator": "node scripts/build-apply-orchestrator.mjs",
     "apply-orchestrator:test": "node scripts/build-apply-orchestrator.test.mjs",
     "skill-badges": "node scripts/generate-skill-badges.mjs",
-    "skill-badges:dry-run": "node scripts/generate-skill-badges.mjs --dry-run --limit 1"
+    "skill-badges:dry-run": "node scripts/generate-skill-badges.mjs --dry-run --limit 1",
+    "pdf:typst": "node scripts/render-cv-typst.mjs",
+    "pdf:typst:dry-run": "node scripts/render-cv-typst.mjs --dry-run"
   },
   "keywords": [
     "ai",
